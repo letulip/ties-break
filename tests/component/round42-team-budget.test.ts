@@ -54,9 +54,14 @@ import {
   createWorld,
   hireMasseur,
   hirePsychologist,
+  // ⭐ 17.09 – the third salaried seat, and the engine's own payroll figure beside it: §5 counts the
+  // tile against what the ENGINE bills, never against a sum re-added in a test.
+  hireSparring,
   masseurWeeklyCents,
   openingCoachId,
   psychologistWeeklyCents,
+  sparringWeeklyCents,
+  supportPayrollWeeklyCents,
   tickWeek,
   toSnapshot,
   type WorldState,
@@ -426,5 +431,116 @@ describe('round 42 #23 – the payroll fits the screens that draw it', () => {
     }
     wrapper.unmount()
     document.body.innerHTML = ''
+  })
+})
+
+// =================================================================================================
+// 5 – ⭐⭐⭐ 17.09: EVERY SEAT THE SNAPSHOT SAYS IS FILLED, COUNTED AGAINST THE WIRE AND NOT A LITERAL
+// =================================================================================================
+//
+// HIS REPORT, off his own play: «спарринг не учитывается в недельных расходах на верхней плашке на
+// вкладке тренеров, его там просто нет».
+//
+// ⚠⚠ AND IT WAS NOT COSMETIC. `committedCents` is SUMMED off `seats`, so a family with a hitting
+// partner was not merely missing a row – the bar, the «committed» figure and the «/week free» figure
+// were all short by his salary, and the tile under-reported what the family had promised. It
+// disagreed with the ENGINE at the same time: `supportPayrollWeeklyCents` has counted all three
+// salaried seats since v80, so the denominator every `overBudgetCents` is cut from already knew
+// about him. Section 3's second arm is the claim that broke; this section is why it can be trusted
+// the next time a seat arrives.
+//
+// ⭐⭐ THE COMMENT ABOVE `seats` PROMISED THIS COULD NOT HAPPEN – «a fourth salaried seat added to the
+// snapshot joins THIS array and both surfaces grow the row». It was aspirational: `seats` is a
+// hand-written push per seat. So the guard below counts the tile's rows against the SNAPSHOT's own
+// `*Hired` flags, discovered from the wire rather than typed out here – a FIFTH seat reddens this by
+// existing, which is the only shape of test that could not have shipped the same defect twice.
+//
+// ⚠ MUTATION ARMS – applied alone against the real composable, watched red, reverted. Counts READ
+// OFF THE RUNS: the round's handoff carries them.
+describe('17.09 – the hitting partner is on the payroll, and the tile counts him', () => {
+  /** Every salaried seat the WIRE says is filled, found by walking the snapshot's own `<seat>Hired`
+   *  booleans. ⚠ THE COACH IS NOT IN IT AND THAT IS THE WIRE'S SHAPE, not an omission: he is flagged
+   *  by `coachId`, because a family can be coached by a parent and owe nothing. */
+  function hiredSeatKeys(snap: Snapshot): string[] {
+    return Object.keys(snap)
+      .filter((k) => k.endsWith('Hired') && (snap as unknown as Record<string, unknown>)[k] === true)
+      .map((k) => k.slice(0, -'Hired'.length))
+  }
+
+  it('⭐⭐⭐ every seat the snapshot says is filled has a row – on BOTH surfaces', async () => {
+    const world = proCareer('r44-seats-all')
+    hireMasseur(world, true)
+    hirePsychologist(world, true)
+    hireSparring(world, true)
+    const snap = toSnapshot(world)
+
+    // The instrument first: a discovery that found nothing would make every assertion below vacuous.
+    const filled = hiredSeatKeys(snap)
+    expect(filled.length, 'the wire really carries a filled payroll to count').toBe(3)
+    expect([...filled].sort()).toEqual(['masseur', 'psychologist', 'sparring'])
+
+    const expected = ['coach', ...filled].sort()
+    for (const [host, rows] of [
+      ['the market meter', seatRows(await mountMarket(snap))],
+      ['the rail shortcut', seatRows(mountRail(snap))],
+    ] as const) {
+      // ⚠ MEMBERSHIP, SORTED, AND THAT IS THE POINT OF THIS ASSERTION rather than a weakening of it.
+      // The expectation is DISCOVERED from the wire, and the wire's key order is the order somebody
+      // typed `toSnapshot`'s object literal in – `sparringHired` happens to stand above
+      // `psychologistHired` there, which is a fact about a file and not about a payroll. What the
+      // tile owes is that nobody the family pays is missing; the ORDER it draws them in is a
+      // separate claim with a separate reason, asserted on its own below.
+      expect([...rows.map((s) => s.key)].sort(), `${host}: a seat the family pays is missing from the tile`)
+        .toEqual(expected)
+    }
+    // ...AND THE ORDER, which is the Support-staff tab's own and deliberate: the masseur is the seat
+    // the owner commissioned and could not find, so he stays first, and the newest seat goes last.
+    // A literal, because it is a decision rather than a derivation.
+    expect(seatRows(mountRail(snap)).map((s) => s.key)).toEqual([
+      'coach',
+      'masseur',
+      'psychologist',
+      'sparring',
+    ])
+    // ⚠ HIS SEAT'S FIGURE IS THE ENGINE'S, rebuilt from the function that bills it rather than read
+    // back off the component or off the field the component itself reads.
+    const his = seatRows(await mountMarket(snap)).find((s) => s.key === 'sparring')!
+    expect(his.cost).toBe(`${formatCents(sparringWeeklyCents(world))} /wk`)
+    expect(his.name, 'the tab`s own name for him, taken and not invented').toBe('Hitting partner')
+  })
+
+  it('⭐⭐⭐ ...and «committed» is the engine`s payroll, not a payroll one seat short', async () => {
+    // THE HALF THAT WAS NOT COSMETIC. `committedCents` is the sum of the rows, so a missing row is a
+    // wrong number in three places at once – and the number it has to agree with is the ENGINE's own
+    // over-budget denominator, asked here of `supportPayrollWeeklyCents` rather than re-added.
+    const world = proCareer('r44-seats-money')
+    hireMasseur(world, true)
+    hirePsychologist(world, true)
+    hireSparring(world, true)
+    const snap = toSnapshot(world)
+    expect(snap.sparringSalaryCents, 'the arm needs a salary that could go missing').toBeGreaterThan(0)
+
+    const coach = snap.coachMarket.find((r) => r.current)?.weeklyCents ?? 0
+    const payroll = coach + supportPayrollWeeklyCents(world)
+    const cap = snap.coachBilling.weeklyIncomeCents
+    const wrapper = await mountMarket(snap)
+    const legend = clean(wrapper.find('.budget-legend').text())
+    expect(legend, 'the committed figure is the whole team, his seat included')
+      .toContain(`${formatCents(payroll)} committed`)
+    expect(legend, 'and it is not the payroll that forgot him').not.toContain(
+      `${formatCents(payroll - snap.sparringSalaryCents)} committed`,
+    )
+    expect(clean(wrapper.find('.budget-free').text()), 'so the free figure is not short by his salary')
+      .toContain(formatCents(Math.max(0, cap - payroll)))
+  })
+
+  it('⭐ a seat that is NOT hired draws no row – the rows are the flags and nothing else', () => {
+    // The negative half of the same claim, which is what stops «list them all» being satisfied by a
+    // list of everybody.
+    const world = proCareer('r44-seats-one')
+    hireSparring(world, true)
+    const snap = toSnapshot(world)
+    expect(hiredSeatKeys(snap), 'one seat filled, two empty').toEqual(['sparring'])
+    expect(seatRows(mountRail(snap)).map((s) => s.key)).toEqual(['coach', 'sparring'])
   })
 })

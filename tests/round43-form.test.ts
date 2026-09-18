@@ -332,8 +332,14 @@ describe('§1b the gap – read off the world', () => {
 })
 
 describe('§6 the schema move – v80', () => {
-  it('the version is 80 and a fresh career opens at neutral', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(80)
+  // ⚠ THE LADDER'S HEAD MOVED PAST THIS WAVE AND THE SECTION TITLE DID NOT. `form` arrived AT v80 and
+  // still does; round 44 took the head to v81 with an optional row key of its own. The pin follows
+  // the head, because what it is really asserting is «the constant a fresh career is stamped with».
+  // ⚠ RE-AIMED AT v82 (17.09, round 42 #51 – `coachDeal`, the coach's fee fixed at hire), NOT
+  // WEAKENED: 82 was taken by that item's own full move, `form` still arrives at v80, and this line
+  // still asserts what a fresh career is stamped with rather than when this wave landed.
+  it('the version is the ladder\'s head and a fresh career opens at neutral', () => {
+    expect(SAVE_SCHEMA_VERSION).toBe(82)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 
@@ -342,7 +348,11 @@ describe('§6 the schema move – v80', () => {
     delete v79.form
     v79.schemaVersion = 79
     const migrated = migrateSave(v79)
-    expect(migrated.schemaVersion).toBe(80)
+    // ⚠ THE WALK RUNS TO THE LADDER'S HEAD AND NOT TO THIS WAVE'S RUNG, which is what `migrateSave`
+    // has always done – it stops at `SAVE_SCHEMA_VERSION`. Round 44 added a v81 step that writes
+    // nothing, so a v79 save now comes out at 81 with `form` back-filled by v80 exactly as before.
+    // The claim this case makes is about the BACK-FILL and the line below is where it lives.
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.form).toBe(0)
   })
 

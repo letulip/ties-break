@@ -1029,6 +1029,25 @@ const RECIPES: Recipe[] = [
         // `'fork-counsel'` behind it (v74 T17, `unheard`'s own hard-won clause). That row would be the
         // card the browser boots into.
         if (pendingLifeBeat(world) !== null) return 'boots holding a blocking beat, whose card covers the week button'
+        // ⭐⭐⭐ AND NOT A **SOFT** ONE EITHER, WHICH IS THE CLAUSE THIS RECIPE WAS MISSING AND WHICH
+        // COST A RED e2e ON THE v82 REGENERATION. `liveSoftBeat` is the engine's own predicate –
+        // `soft`'s recipe REQUIRES one with exactly this call – and a `'small-talk'` row is
+        // NON-blocking, so every guard above it answers «nothing is pending» and lets the seed
+        // through. It is not pending; it is ON SCREEN. Home draws the invitation under her
+        // photograph, and this spec's whole claim is about what ONE press does, so a career booting
+        // with somebody else's card already up is a career whose press is measuring a different week.
+        //
+        // ⚠⚠ MEASURED, NOT SUSPECTED: the v82 regeneration re-hunted this fixture onto
+        // `e2e-breakup-16`, whose week 208 boots with «She came by with something small.» already on
+        // the hub. `advanceRefusal` is null, `pendingLifeBeat` is null, the engine raises the ending
+        // correctly on the next tick, and the browser's press still never produced the card.
+        //
+        // ⚠ AND IT IS ONLY GETTING MORE LIKELY, which is why this is a clause and not a re-roll:
+        // round 44 took the small-talk catalogue from 8 situations to 51, and `tools/_lifeBeats.ts`'
+        // own v74 T15 note already says tier-1 small talk «now fires from week 0 on nearly every
+        // seed». The recipes that walk past these rows without noticing them were living on borrowed
+        // time. ⚠ `belated` below shares this shape and is green today by the luck of its seed.
+        if (liveSoftBeat(world) !== null) return 'boots with a soft beat already on the hub, which the spec would be pressing past'
         const refusal = advanceRefusal(world)
         if (refusal !== null) return `the week is stopped by '${refusal}' before the ending can be reached`
 

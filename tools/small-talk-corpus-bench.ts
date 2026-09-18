@@ -136,7 +136,7 @@ function k1(): void {
   )
   for (const voice of TEMPERAMENTS) {
     for (const stage of STAGES) {
-      const ceiling = SMALL_TALK_SITUATIONS.filter((s) => s.voice === voice && s.stages.includes(stage))
+      const ceiling = SMALL_TALK_SITUATIONS.filter((s) => s.voices[voice] !== undefined && s.stages.includes(stage))
       const floor = ceiling.filter((s) => s.fact === null)
       for (const register of REGISTERS) {
         console.log(
@@ -386,16 +386,16 @@ function reportCell(name: string, c: Cell): void {
 function k4(): number {
   console.log('\n=== K4 · THE PER-SUBJECT × STAGE FLOOR (his: 3–4 reachable per subject per stage) ===')
   console.log(`   a cell is the situations ONE girl of that voice can reach; pass mark ${SUBJECT_FLOOR}`)
-  console.log('   ⚠ IT MEASURES THE SHIPPED CATALOGUE. The fourteen rebuilt situations of the corpus')
-  console.log('   spec are DRAFTS with the owner and are not in `SMALL_TALK_SITUATIONS`, so every cell')
-  console.log('   below is expected to fail today – this row is the BEFORE of that rebuild, not a bug.\n')
+  console.log('   ⚠ ROUND 44 LANDED THE CORPUS: the 43 situations of the spec ARE in')
+  console.log('   `SMALL_TALK_SITUATIONS` now, four voices each, so this table is the AFTER of the')
+  console.log('   rebuild. A cell still under the floor is a real gap and not a pending transcription.\n')
   console.log(`   ${pad('subject', 12)}${STAGES.map((s) => padL(s, 15)).join('')}`)
   let failures = 0
   for (const subject of SMALL_TALK_SUBJECTS) {
     const cells: string[] = []
     for (const stage of STAGES) {
       const counts = TEMPERAMENTS.map(
-        (v) => SMALL_TALK_SITUATIONS.filter((s) => s.voice === v && s.subject === subject && s.stages.includes(stage)).length,
+        (v) => SMALL_TALK_SITUATIONS.filter((s) => s.voices[v] !== undefined && s.subject === subject && s.stages.includes(stage)).length,
       )
       const worst = Math.min(...counts)
       const best = Math.max(...counts)
@@ -412,30 +412,38 @@ function k4(): number {
 // =================================================================================================
 //
 // ⚠ TWO QUESTIONS IN ONE ROW, and the second is the one a gate typo hides behind. (1) STRUCTURAL:
-// does the entry declare a stage at all, and does it carry an opener FRAME for every stage it
-// declares – a situation drawn at a stage it has no line for does not fall back, it THROWS inside
-// the snapshot (`smallTalkOpener`). (2) OBSERVED: did the K2 sweep, across every voice, every
+// does the entry declare a stage at all, and does the voice column it is keyed under carry a spoken
+// payload. ⭐ ROUND 44 RETIRED THE THIRD STRUCTURAL QUESTION – «does it carry an opener FRAME for
+// every stage it declares» – because there is no per-row frame left to be missing: the payload is
+// one string for both distances and the scene comes from `SMALL_TALK_FRAMES`, which is total over
+// presence. What replaced it is the EMPTY-PAYLOAD read below, which is the same question about the
+// thing that can still be absent. (2) OBSERVED: did the K2 sweep, across every voice, every
 // register and every stage a real calendar walks through, ever actually draw it.
 
 function k5(drawn: Set<string>): number {
   console.log('\n=== K5 · THE UNREACHABLE SET ===')
   let bad = 0
+  let columns = 0
   for (const s of SMALL_TALK_SITUATIONS) {
-    const key = `${s.subject}:${s.id}/${s.voice}`
-    const notes: string[] = []
-    if (s.stages.length === 0) notes.push('declares no stage')
-    for (const stage of s.stages) {
-      const frame = stage === 'school' || stage === 'after-school' ? s.opener.roof : s.opener.away
-      if (frame === undefined) notes.push(`no frame for ${stage}`)
-    }
-    if (!drawn.has(key)) notes.push(s.fact === null ? 'NEVER DRAWN in the sweep' : `never drawn (gated on ${s.fact})`)
-    if (notes.length > 0) {
-      bad++
-      console.log(`   ⚠ ${pad(key, 42)}${notes.join(' · ')}`)
+    for (const voice of TEMPERAMENTS) {
+      const column = s.voices[voice]
+      if (column === undefined) continue
+      columns++
+      const key = `${s.subject}:${s.id}/${voice}`
+      const notes: string[] = []
+      if (s.stages.length === 0) notes.push('declares no stage')
+      if (column.opener.trim().length === 0) notes.push('empty payload')
+      if (!drawn.has(key)) notes.push(s.fact === null ? 'NEVER DRAWN in the sweep' : `never drawn (gated on ${s.fact})`)
+      if (notes.length > 0) {
+        bad++
+        console.log(`   ⚠ ${pad(key, 42)}${notes.join(' · ')}`)
+      }
     }
   }
   if (bad === 0) console.log('   ✅ every situation in the catalogue was drawn by some career in the sweep')
-  console.log(`   ${SMALL_TALK_SITUATIONS.length} situations in the catalogue · ${drawn.size} drawn in the sweep`)
+  console.log(
+    `   ${SMALL_TALK_SITUATIONS.length} situations · ${columns} voice columns in the catalogue · ${drawn.size} drawn in the sweep`,
+  )
   return bad
 }
 

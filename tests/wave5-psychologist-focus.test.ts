@@ -348,17 +348,77 @@ describe('wave 5 T3 A – the pick, and what a pick is not', () => {
     expect(world.fundsCents, 'and it costs nothing beyond the retainer already running').toBe(before.funds)
   })
 
-  it('re-choosing the year already running is a NO-OP – not a refusal and not a re-stamp', () => {
-    // `setPsychologistRung`'s idempotence, for its own reason: nothing is being decided, so nothing
-    // may be thrown or written. Measured OUTSIDE the window, where a real change would be refused.
+  // ===============================================================================================
+  // ⭐⭐⭐ 17.09 – RE-AFFIRMING THE YEAR SHE ALREADY HAS. THE DEFECT HE FOUND IN PLAY.
+  // ===============================================================================================
+  //
+  // HIS REPORT: «у меня в межсезонье мигает группа плашек выбора что делать с психологом, но почему-то
+  // не выбирается повторно существующая».
+  //
+  // ⚠⚠ THE CASE THAT STOOD HERE ASSERTED THE DEFECT, which is why nothing caught it. Its own words,
+  // kept because the reasoning was half right and only the scope was wrong:
+  //
+  //     «re-choosing the year already running is a NO-OP – not a refusal and not a re-stamp.
+  //      `setPsychologistRung`'s idempotence, for its own reason: nothing is being decided, so
+  //      nothing may be thrown or written.»
+  //
+  // Nothing may be CHARGED or WRITTEN – that half stands and is asserted below. The SEASON STAMP was
+  // never part of it: confirming last year's work for THIS season buys the year and spends the
+  // once-a-season window, so an early return above the stamp meant his choice was never recorded,
+  // `psychologistFocusOpen` stayed non-empty and the marker he had followed never cleared.
+  //
+  // ⚠ MUTATION ARM, RUN AND WATCHED RED: `if ((world.psychologistFocus ?? null) === focus) return`
+  // restored to the top of `setPsychologistFocus`. The counts are in the round's handoff.
+  it('⭐⭐⭐ re-affirming the year she already has BUYS the season – the stamp moves and the row closes', () => {
+    const world = hired('psy-focus-reaffirm')
+    // The free first pick, mid-season: this is the year he arrives in the off-season carrying.
+    setPsychologistFocus(world, 'recovery')
+    const firstStamp = world.psychologistFocusSeason
+    expect(inWindow(world), 'the first pick was taken outside the window, as the free one may be').toBe(false)
+
+    // ...and now the off-season he was standing in. Walked to the calendar's own next one rather than
+    // posed, so a re-tuned `OFF_SEASON_WEEKS` moves the fixture instead of rotting it.
+    while (!isOffSeasonWeek(world.week)) world.week += 1
+    expect(inWindow(world), 'the fixture really is in the window').toBe(true)
+    expect(psychologistFocusOpen(world), 'every option is open, which is why the block glows').toContain('recovery')
+    expect(psychologistFocusRefusal(world, 'recovery'), 'including the one already running').toBeNull()
+
+    const before = { events: world.events.length, lifeLog: world.lifeLog.length, funds: world.fundsCents }
+    setPsychologistFocus(world, 'recovery') // «same again this year»
+
+    expect(world.psychologistFocus, 'the year he confirmed is the year that runs').toBe('recovery')
+    expect(world.psychologistFocusSeason, 'the stamp is the season this choice is FOR').toBe(
+      psychologistFocusSeasonFor(world.week),
+    )
+    expect(world.psychologistFocusSeason, 'and it really moved off the one the free pick bought').not.toBe(firstStamp)
+    // THE MARKER'S OWN PREDICATE – `psychologistFocusNudge` reads exactly this length, so an empty
+    // row is the dot going out. Before the repair it stayed full and the block kept glowing.
+    expect(psychologistFocusOpen(world), 'the row is spent for this season, so the marker clears').toEqual([])
+    expect(psychologistFocusRefusal(world, 'recovery'), 'and a second press this window is refused').toBe(
+      PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+    )
+    // ⚠ THE HALF OF THE OLD GUARD THAT WAS RIGHT, kept as an assertion rather than as a comment:
+    // a re-affirmation decides a year, and it still writes nothing to the feed and charges nothing.
+    expect(world.events.length, 'no feed row for a year that did not change').toBe(before.events)
+    expect(world.lifeLog.length, 'and no life-beat row either').toBe(before.lifeLog)
+    expect(world.fundsCents, 'and it costs nothing beyond the retainer already running').toBe(before.funds)
+  })
+
+  it('⚠ ...and OUTSIDE the window it is REFUSED rather than silently swallowed', () => {
+    // The stale-screen case the old early return was written for, and the refusal is now the honest
+    // answer to it: the engine re-validates every command (invariant 1), and a LIVE card cannot
+    // produce this press at all because `psychologistFocusOpen` is empty and the row is disabled.
     const world = hired('psy-focus-noop')
     setPsychologistFocus(world, 'recovery')
     const stamped = world.psychologistFocusSeason
     world.week += 1
     expect(inWindow(world), 'and this week a CHANGE would be refused').toBe(false)
-    expect(() => setPsychologistFocus(world, 'recovery')).not.toThrow()
+    expect(psychologistFocusOpen(world), 'so the card offers nothing to press').toEqual([])
+    expect(() => setPsychologistFocus(world, 'recovery'), 'the year already has its work').toThrow(
+      PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+    )
     expect(world.psychologistFocusSeason, 'the season it was chosen in did not move').toBe(stamped)
-    expect(() => setPsychologistFocus(world, 'listen'), '...but a different year is a change').toThrow(
+    expect(() => setPsychologistFocus(world, 'listen'), '...and a different year is refused by the same sentence').toThrow(
       PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
     )
   })

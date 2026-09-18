@@ -2441,7 +2441,7 @@ earned again this round), and pushes. The round ends with its own PR through `/p
 bench lands late, and anything in bundle 15 the re-measurement refuses – a physics change that fails
 its own acceptance bench does not ship because the round is ending.
 
-- [ ] **46. «можно как-то показывать игроку преимущества всех ездящих специалистов, что он получает. С
+- [x] **46. «можно как-то показывать игроку преимущества всех ездящих специалистов, что он получает. С
   главным тренером понятно, а вот с остальными двумя не очень» (15.09)** – **build, and the facts are
   already in the engine.** The travel switch is a real price (a second fare, every event week) and the
   game states what it buys for exactly one seat.
@@ -2500,6 +2500,14 @@ its own acceptance bench does not ship because the round is ending.
   game that buys match odds directly with money**. And the recommendation is to build neither yet: the
   effect discounts a number (`world.form`) that does not exist, so any rung price would be guessed,
   which is invariant 5's exact prohibition. It belongs in **F3**.
+
+  ⭐⭐ **SHIPPED 17.09, IN ROUND 44's LEFTOVERS PASS**, on his «чини, я был уверен, что уже это всё
+  готово». The three sentences above are on the cards verbatim – `SupportStaffTab.vue`'s `fareLine`,
+  one standing line at the foot of each seat's block, gated on the hire like every other control there
+  – and `tests/component/round42-fare-lines.test.ts` is the mounted net. ⚠ **The hitting partner
+  deliberately got none**: his travel sub-line already answers the fare question in the owner's own
+  17.09 words, so a fourth draft would have stood beside an approved sentence saying the same thing.
+  That negative is asserted rather than assumed (§3 of that file).
 
 - [x] **47. «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный
   этап J серия, там самые большие расходы» (15.09) – the cameo's ORIGINAL intent, recovered.** His
@@ -2618,7 +2626,7 @@ its own acceptance bench does not ship because the round is ending.
      family whose money is genuinely gone can still find no nameable gap. Yours to rule: is the
      narrowed promise the one you want, or should a truly empty wallet keep a floor under it?
 
-- [ ] **48. THE SPARRING SEAT CANNOT BE BUILT YET, and the stop is the finding (15.09).** Bundle 13
+- [x] **48. THE SPARRING SEAT CANNOT BE BUILT YET, and the stop is the finding (15.09).** Bundle 13
   refused to build it and was right twice over:
   * **`world.form` does not exist.** The seat's entire effect per its spec §4 is «cut the RHYTHM
     channel's drift by rung» – and the rhythm channel ships in wave **F1**, which never shipped
@@ -2627,6 +2635,8 @@ its own acceptance bench does not ship because the round is ending.
   * **`sparringTravels` does not exist.** The owner's 15.09 override gives the seat the same «ездит»
     switch every other seat has, and every travelling seat PERSISTS its stance. v78 was scoped before
     that override and carries only `sparringHired` / `sparringRung`.
+
+  ✅ **SHIPPED IN round 43 wave F2 – `src/engine/world/sparring.ts`, the seat with its rungs, travel and stand-down (v80).** ⚠ The box was ticked LATE, on 17.09, when an audit of this ledger found it still open – see round 44's note on why an older round's open items go quiet.
 
   ⭐ **It was PRICED instead of guessed, and the price inverts the spec's own proposal.** The rust
   census over 36 careers × 11.5 seasons: **31.4 matchless weeks a season**, of which 7.9 are drifting
@@ -2725,10 +2735,21 @@ its own acceptance bench does not ship because the round is ending.
   the same ±6 points are worth several times that and the slump becomes a thing the player fights.
   **So the honest sequence is #34 → F1 → F2**, and this round's measurement is what says so.
 
-- [ ] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
+- [~] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
   in sequence, each one better than the last: «химия между ребёнком и тренером, а не просто стиль-метч»
   → «может как-то от её темперамента исходя» → ⭐ «эта самая химия может как-то нарабатываться с разной
   динамикой – это может стать показателем, насколько ей комфортно с тренером».
+
+  ⚠⚠ **HALF-SHIPPED, AND THE ARCHITECT'S OWN TICK ON 17.09 WAS TOO GENEROUS – CORRECTED THE SAME DAY.**
+  Round 43 item #1 built the ENGINE: `coachPairs`, the affinity, the phase walk and the three event
+  channels, at v79. **But `coachPairs` never crosses the wire** – `src/shared/protocol/` does not
+  carry it and `snapshot.ts` does not build it – so the number exists, moves development, and **the
+  player cannot see it at all.**
+
+  ⭐ **That is not a missing decoration, it is the design's own signal.** His description makes the
+  RATE the thing the player reads: «если химия прибавляется по 3-5-7% в год, возможно, это не самый
+  подходящий тренер. А если 10-15 – то лучше». A rate nobody can read is not a signal. The box goes
+  back to `[~]`: the mechanic is real and the item is not delivered.
 
   **The shape, as he described it.** Chemistry is a number that ACCRUES while a coach is hired, and the
   RATE is the signal: «если химия прибавляется по 3-5-7% в год, возможно, это не самый подходящий
@@ -2775,7 +2796,7 @@ its own acceptance bench does not ship because the round is ending.
   ⚠ Needs persistence – chemistry per pair – so it is a **v79** customer, and it is a WAVE rather than a
   round item. Order: #34 (nerve gets a price) → F1 (form) → chemistry → F2 (the sparring seat).
 
-- [ ] **51. THE ANNUAL RAISE NEEDS A BASKET, NOT A TITLE (his 16.09).** «может такое быть, что всего с
+- [x] **51. THE ANNUAL RAISE NEEDS A BASKET, NOT A TITLE (his 16.09).** ⭐ **SHIPPED 17.09** on `round/44-coach-raise`, with the fee fixed at hire (his 17.09 ruling) – `docs/specs/the-coachs-raise-2026-09.md`. The basket is the four components below, weighted 0.35 / 0.25 / 0.25 / 0.15 with the residual heaviest; the corridor measured 474 of 474 asks inside 5–15%; one Slam buys at most 6.5% of it. ⚠ The refusal branch is NOT built and the spec's §8 names the reason. «может такое быть, что всего с
   1 титулом в сезон (например w250/w500) тренер будет требовать 15%? Кажется, что самого факта такого
   единственного титула маловато, нужна какая-то общая оценка прогресса». He is right, and the fix is to
   make the ask read a PROGRESS SCORE rather than a single fact. The honest components, all of which the

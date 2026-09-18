@@ -13,7 +13,7 @@ import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 // ⭐ THE LONG GOODBYE STEP 4 – her last word is the ENGINE's sentence, and the card renders it. The
 // pin goes through the symbol so a re-wording moves the assertion with the copy.
-import { lastWordLine } from '../../src/engine/ending'
+import { ENDING_TITLE, lastWordLine } from '../../src/engine/ending'
 import type { AlbumPage, CareerEndingType, EndingView, Snapshot } from '../../src/shared/protocol'
 
 function albumPage(slot: number, over: Partial<AlbumPage> = {}): AlbumPage {
@@ -212,7 +212,12 @@ describe('the album', () => {
   // sweep on purpose: it is the one ending that can be RESUMED, so its epilogue is read by a player
   // whose career is still alive, and it is the one the album has already been re-aimed for twice.
   it('⚠ opens on every ending type, college included – the whole album, to the last page', async () => {
-    const types: CareerEndingType[] = ['stopped', 'college', 'bankruptcy', 'injury', 'natural', 'plateau']
+    // ⭐ ROUND 45 – DERIVED, NOT LISTED. `ENDING_TITLE` is TOTAL over `CareerEndingType`, so its
+    // keys are every ending there is and a new one joins this sweep by existing. The hand-written
+    // array this replaces would have let `peak` and `fall` ship without the screen ever mounting
+    // them, which is exactly the hole the round's own compiler argument is about.
+    const types = Object.keys(ENDING_TITLE) as CareerEndingType[]
+    expect(types.length, 'the sweep emptied itself').toBeGreaterThanOrEqual(8)
     for (const type of types) {
       setActivePinia(createPinia())
       patchSnapshot({

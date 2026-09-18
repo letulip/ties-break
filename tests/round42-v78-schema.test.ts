@@ -561,15 +561,27 @@ describe('round 42 v78 G – the sparring seat is two keys and no behaviour', ()
     // anything about these two fields; everything else either writes the literal the schema owes
     // (`world.ts`'s `createWorld`, `migrations.ts`'s step), re-exports (`world.ts` again), declares
     // the wire shape (`shared/protocol/snapshot.ts`), derives a card fact (`world/snapshot.ts`),
-    // prices a fare (`world/sponsors.ts`), totals the payroll (`world/coachMarket.ts`) or renders it
-    // (`SupportStaffTab.vue`). A file joining this list is a decision that leaked out of the leaf,
-    // which is exactly what this census is for.
+    // prices a fare (`world/sponsors.ts`), totals the payroll (`world/coachMarket.ts` engine-side and
+    // `composables/coachingBudget.ts` on the tile) or renders it (`SupportStaffTab.vue`). A file
+    // joining this list is a decision that leaked out of the leaf, which is exactly what this census
+    // is for.
+    //
+    // ⚠⚠ `composables/coachingBudget.ts` JOINED ON 17.09, AND THE CENSUS EARNED ITS KEEP BY ASKING.
+    // It is the tile's side of `supportPayrollWeeklyCents` – the same «is this seat filled» read the
+    // engine already makes, made once more where the «committed» figure is summed – and it is here
+    // because it was MISSING: the owner found the hitting partner absent from the team budget
+    // («спарринг не учитывается в недельных расходах… его там просто нет»), and because that figure is
+    // summed off the row list, the bar and the «/week free» figure were short by his salary too. So
+    // this entry is a reader being NAMED rather than a decision leaking: nothing is decided there, the
+    // flag is read and a row is drawn. ⚠ It is added rather than pattern-excluded, which is this
+    // case's own rule and the reason a ninth file could not slip in behind it.
     //
     // ⚠ `worker/sim.worker.ts` IS ABSENT AND THAT IS CORRECT: it names the three COMMANDS
     // (`hireSparring`, `setSparringRung`, `setSparringTravels`) and never the two FIELDS, which is
     // the invariant-1 seam working – the worker routes, the engine decides.
     expect(readers, 'the seat`s whole footprint, named rather than pattern-excluded').toEqual([
       'components/SupportStaffTab.vue',
+      'composables/coachingBudget.ts',
       'engine/migrations.ts',
       'engine/world.ts',
       'engine/world/coachMarket.ts',

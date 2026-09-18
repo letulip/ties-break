@@ -30,6 +30,7 @@ import type { Temperament } from '../spirit'
 // is declared beside the mechanic that owns it (engine/chemistry.ts) rather than here, because every
 // rule about what its three numbers MEAN is argued there and a second home would be a second truth.
 import type { CoachPair } from '../chemistry'
+import type { CoachDeal } from '../coach'
 import type {
   BirthdayRecord,
   CareerEnding,
@@ -594,7 +595,87 @@ import type { AcademySupport } from '../academy'
 // Full move: this constant, the v79 -> v80 step in migrations.ts, tests/fixtures/saves/v80.json,
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
 // frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 80
+// ⭐⭐⭐ v81 – ROUND 44, `LifeBeatRecord.frame`. `docs/specs/the-frame-pool-2026-09.md`'s third
+// mechanical ruling, and it is the only one of the three that costs a schema version.
+//
+//   · `frame` – the id of the delivery frame a `'small-talk'` beat was raised in (`'kettle'`,
+//     `'call-late'`), on the ROW and not on the world. **Optional, never back-filled**, and the
+//     ABSENCE is a true statement about every older row: nothing drew a frame before this version.
+//
+// ⚠⚠ WHY IT IS STATE AT ALL, WHICH IS THE WHOLE ARGUMENT. His rule, 17.09: a frame may not change
+// after a save, a reload, **or the pool growing**. A frame DERIVED from a purpose-scoped stream keyed
+// on the career week survives a save and a reload perfectly – the key is reconstructible for the life
+// of the career – and it cannot survive the third: a pool that grows from nine lines to ten
+// re-derives a different member for a beat already on the screen. That third clause is the whole of
+// the difference between this key and `heard` one field over, which took no bump for exactly the
+// reason this one needs one.
+//
+// ⭐ AND THE FALLBACK IS WHAT KEEPS THE MIGRATION TRIVIAL. A row with no frame renders the FIRST line
+// of its presence's pool, and `kettle` / `call-middle` are exactly the two frames the shipped
+// catalogue wrapped `practice-clicked` in – so a small-talk row already sitting in a save reads back
+// byte-identically to what it showed on the week it was raised. Nothing historical is re-worded.
+//
+// ⚠⚠ THE FROZEN CAREERS MOVE, AND NOT BECAUSE OF THIS KEY. The round also lands the 43-situation
+// corpus, so the POOL a career draws from grows from 8 situations to 51 and every `lifeLog` row's
+// `detail` changes with it. That is a behaviour change, it was diffed per key before it was believed
+// (`tools/frozen-key-diff.ts`, control = this round's own change neutralised in place), and the
+// constants are re-stamped with the dated note the protocol asks for.
+//
+// ⚠ ZERO MAIN DRAWS. The frame is drawn on `seed:smalltalk:frame:<week>` – a purpose-scoped
+// sub-stream re-derived at the call site, persisting nothing – so the frozen MAIN capture
+// (41550 / e6b0c709) is untouched by construction.
+//
+// Full move: this constant, the v80 -> v81 step in migrations.ts, tests/fixtures/saves/v81.json,
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
+// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
+// ⭐⭐⭐ v82 – ROUND 42 #51 / ROUND 44, `coachDeal`. THE AGREED WEEKLY FIGURE, WRITTEN DOWN
+// (docs/specs/the-coachs-raise-2026-09.md). The owner, 17.09: «"зафиксировать при найме и пусть
+// просит, как массажист" – верно».
+//
+//   · `coachDeal` – the contract with the man currently on the payroll: his agreed LABOUR rate, the
+//     week it was struck, the marks the next ask is judged against, and the residual banked since.
+//     `null` for a self-coaching family, which is what every historical save honestly is.
+//
+// ⚠⚠ WHY IT COULD NOT BE DERIVED, WHICH IS THE ONLY QUESTION THIS KEY HAD TO ANSWER. The masseur's
+// own ask took no schema at all (`docs/specs/the-masseurs-ask-2026-09.md` §1): his rate is a pure
+// function of WEEKS SERVED, and the weeks are summed off tagged ledger rows `pruneEvents` never
+// touches. The coach's is not. A fee that is fixed AT HIRE is by definition a fact about the moment
+// it was fixed, and the market it was fixed in has moved since - her age band, her ranking and
+// therefore the whole of `bandedRateCents` - so there is no function of today's world that returns
+// it. `coachSinceWeek` is still derived, and this key deliberately does NOT duplicate it.
+//
+// ⚠ THE BACK-FILL IS `null` AND THE MIGRATION WRITES A LITERAL, which is the house rule on
+// `migrations.ts` kept rather than argued around. `null` is TRUE of every save ever written: nobody
+// has agreed a figure in writing, because there was nowhere to write one. The first tick after the
+// upgrade settles a deal for a family that already has a coach (`settleCoachDeal`), and it dates it
+// from `coachSinceWeek` - the ledger's own record of when the arrangement began - so a migrated
+// career's first anniversary arrives on the schedule it always had.
+//
+// ⚠⚠ THE FROZEN CAREERS MOVE ON SEVEN KEYS AND NOT ONE, AND THE PREDICTION THAT SAID OTHERWISE WAS
+// WRONG AND IS RECORDED AS SUCH. The build predicted a pure key append – «156 weeks ends inside
+// `coachAgeBand` 0 with no WTA rank, so the agreed labour equals the market's and no ask can fire» –
+// and the per-key diff the protocol demands BEFORE the constants are touched said otherwise on four
+// of five cells. The prediction was off by ONE WEEK: `ageAtWeek` returns whole years, she turns 17 at
+// week 156 exactly, and `walkFrozenCareer`'s last tick runs AT 156. So the final week of every
+// coached frozen career crosses an age band – where the shipped till re-drew the man's rate from a
+// dearer row and this one does not – and week 156 is also `3 x 52`, an anniversary, so the ask fires
+// on it too. `careerTotals`, `events`, `financeWeeks`, `fundsCents` and `nextEventId` move with the
+// bill and the row; the self-coached cell moves on `coachDeal` and `schemaVersion` alone.
+//
+// ⭐ THE DIFF IS WHY THIS IS A SENTENCE RATHER THAN A SURPRISE. A re-stamp done on the prediction
+// would have re-frozen a BEHAVIOUR change under a comment claiming a key append, which is the exact
+// defect that file exists to catch. The full per-key table and `rngMain`'s three canonical
+// fingerprints (unmoved) are in the dated block at the head of tests/coachTravelEdgeFixtures.ts.
+//
+// ⚠ ZERO MAIN DRAWS. The ask is a weighted mean over state the tick has already written, the score
+// draws nothing, and the fee is integer arithmetic - so the frozen MAIN capture (41550 / e6b0c709)
+// is untouched by construction.
+//
+// Full move: this constant, the v81 -> v82 step in migrations.ts, tests/fixtures/saves/v82.json,
+// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
+// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 82
 
 
 
@@ -1444,6 +1525,31 @@ export interface WorldState {
    *  `accrueSpirit`'s. ⚠ ZERO DRAWS ON ANY STREAM (O4) – `seed:form:<week>` stays reserved and
    *  unused, so the frozen MAIN capture cannot see this field. */
   form: number
+  /** ⭐⭐⭐ v82, ROUND 42 #51 / ROUND 44 – WHAT THE FAMILY AND THE MAN ON THE PAYROLL ACTUALLY AGREED
+   *  (`docs/specs/the-coachs-raise-2026-09.md`). `null` when she is coached by her parent, which is
+   *  the honest reading of «no contract»: there is nobody to have one with.
+   *
+   *  ⚠⚠ THE SHIPPED DEFECT THIS EXISTS TO CLOSE. Until v82 the hired man's figure was stored NOWHERE
+   *  and re-derived every week from her age and her ranking, so the family's payroll moved with
+   *  results nobody had agreed to price – and it could FALL. The owner watched his fall 2.2k -> 1.8k
+   *  across a season that went well: «мне кажется это не корректно».
+   *
+   *  ⚠ IT STORES HIS LABOUR AND NOT THE WEEKLY BILL, and the distinction is the fix rather than an
+   *  implementation detail. A weekly bill is `rate x hours x corridor x jitter` and three of those
+   *  four are things the family itself decides or the week itself does – freezing them would charge a
+   *  parent who cut the training dial for sessions she never took. What a contract fixes is the MAN'S
+   *  HOURLY RATE ABOVE THE COURT (`coachLabourCents`), and the court goes on floating because no
+   *  coach's contract has ever fixed a club's rent. See `bandedRateCents` for the partition.
+   *
+   *  ⚠ THE MARKS ARE TAKEN WHEN THE DEAL IS STRUCK AND RE-TAKEN WHEN IT IS RE-STRUCK, which is what
+   *  makes the annual ask a renegotiation rather than a rolling window. What he asks against is what
+   *  has happened SINCE THE LAST TIME THIS FEE WAS AGREED – and for a deal struck thirty weeks ago
+   *  that is a different and more honest question than «the last 52 weeks».
+   *
+   *  ⚠ ONE WRITER PER FIELD, deliberately: `settleCoachDeal` writes the whole object at a hire or at
+   *  an accepted ask, and `bankCoachResidual` writes `residualSince` and nothing else, once a week,
+   *  beside the form pass that has already computed the residuals. ZERO DRAWS on any stream. */
+  coachDeal: CoachDeal | null
   /** ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – HOW SHE AND EACH COACH SHE HAS WORKED WITH ACTUALLY GET ON,
    *  keyed on the coach's id (`docs/specs/the-chemistry-2026-09.md` §10). The owner, 16.09: «эта
    *  самая химия может как-то нарабатываться с разной динамикой – это может стать показателем,

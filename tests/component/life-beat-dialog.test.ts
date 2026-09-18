@@ -87,10 +87,14 @@ import {
   lifeBeatFollowUps,
   lifeBeatHeading,
   toSnapshot,
+  SMALL_TALK_FRAMES,
   SMALL_TALK_SITUATIONS,
   SMALL_TALK_STANCES,
   SMALL_TALK_STANCE_ID,
+  TEMPERAMENTS,
   type SmallTalkSituation,
+  type SmallTalkVoiceEntry,
+  type Temperament,
 } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type LifeBeatPrompt, type Snapshot } from '../../src/shared/protocol'
 
@@ -859,33 +863,57 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
     document.body.innerHTML = ''
   })
 
+  /** ⭐ ROUND 44 – EVERY (situation, voice) COLUMN, and the WORST FRAME the pool can put in front of
+   *  it. A card's first line is a pool frame joined to her payload now, so a worst-case measured off
+   *  the payload alone would be measuring a shorter card than the player can ever be shown. The
+   *  longest frame of each presence is found by measurement rather than named. */
+  const LONGEST_FRAME = Math.max(
+    ...[...SMALL_TALK_FRAMES.roof, ...SMALL_TALK_FRAMES.away].map((f) => f.line.length),
+  )
+
+  interface Col {
+    s: SmallTalkSituation
+    voice: Temperament
+    c: SmallTalkVoiceEntry
+  }
+
+  const COLUMNS: Col[] = SMALL_TALK_SITUATIONS.flatMap((s) =>
+    TEMPERAMENTS.flatMap((voice) => {
+      const c = s.voices[voice]
+      return c === undefined ? [] : [{ s, voice, c }]
+    }),
+  )
+
+  /** Her first line exactly as the card prints it: the longest frame, a space, her payload. */
+  function openerOf(col: Col): string {
+    return `${'x'.repeat(LONGEST_FRAME)} ${col.c.opener}`
+  }
+
   /** The card the engine assembles for one situation, on the prompt contract. ⚠ THE HEADING IS THE
    *  ENGINE'S, asked for rather than transcribed – a copy of his sentence here would be a second
    *  place it could be edited from, and the longest of the three is the honest one to measure. */
-  function cardFor(s: SmallTalkSituation): LifeBeatPrompt {
+  function cardFor(col: Col): LifeBeatPrompt {
     return {
       week: 1,
       kind: 'small-talk',
       heading: lifeBeatHeading('small-talk', 'bright', 'close'),
-      said: s.opener.roof ?? s.opener.away!,
+      said: openerOf(col),
       options: SMALL_TALK_STANCES.map((stance) => ({
         id: SMALL_TALK_STANCE_ID[stance],
-        label: s.branches[stance].label,
+        label: col.c.branches[stance].label,
       })),
-      followUps: lifeBeatFollowUps('small-talk', `${s.subject}:${s.id}`, s.voice, 'close'),
+      followUps: lifeBeatFollowUps('small-talk', `${col.s.subject}:${col.s.id}`, col.voice, 'close'),
       confirm: 'Proceed',
     }
   }
 
-  /** The situation whose FIRST phase prints the most – her opener plus the three answers. */
-  const worstAsking = [...SMALL_TALK_SITUATIONS].sort(
-    (a, b) => printedLength(cardFor(b)) - printedLength(cardFor(a)),
-  )[0]
+  /** The column whose FIRST phase prints the most – her opener plus the three answers. */
+  const worstAsking = [...COLUMNS].sort((a, b) => printedLength(cardFor(b)) - printedLength(cardFor(a)))[0]
 
-  /** ...and the (situation, answer) pair whose SECOND phase prints the most – her opener plus every
+  /** ...and the (column, answer) pair whose SECOND phase prints the most – her opener plus every
    *  paragraph of that route's reply. A `story` wins this by construction: it carries two. */
-  const worstReplying = SMALL_TALK_SITUATIONS.flatMap((s) =>
-    cardFor(s).followUps.map((f) => ({ s, optionId: f.optionId, size: (s.opener.roof ?? s.opener.away!).length + f.said.join(' ').length })),
+  const worstReplying = COLUMNS.flatMap((col) =>
+    cardFor(col).followUps.map((f) => ({ col, optionId: f.optionId, size: openerOf(col).length + f.said.join(' ').length })),
   ).sort((a, b) => b.size - a.size)[0]
 
   function printedLength(prompt: LifeBeatPrompt): number {
@@ -894,8 +922,11 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
 
   it('the catalogue really is what is being measured (a fixture nobody wrote passes everything)', () => {
     expect(SMALL_TALK_SITUATIONS.length, 'there are situations to measure').toBeGreaterThan(8)
-    expect(worstReplying.s.shared, 'the longest reply is a two-paragraph story, as designed').toBeTruthy()
-    expect(cardFor(worstReplying.s).followUps.length, 'and every stance earns a reply').toBe(3)
+    expect(COLUMNS.length, 'and every voice column is measured, not one per situation').toBeGreaterThan(
+      SMALL_TALK_SITUATIONS.length,
+    )
+    expect(LONGEST_FRAME, 'the pool frame is part of what the card prints').toBeGreaterThan(20)
+    expect(cardFor(worstReplying.col).followUps.length, 'and every stance earns a reply').toBe(3)
   })
 
   it('⭐⭐ PHASE 1 – her opener and the three answers, last answer inside a 375x667 phone', () => {
@@ -908,10 +939,10 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
   })
 
   it('⭐⭐⭐ PHASE 2 – her REPLY is on screen and the control that closes the beat is reachable', async () => {
-    const { w, card } = mountAttached(cardFor(worstReplying.s))
+    const { w, card } = mountAttached(cardFor(worstReplying.col))
     const chosen = [...card.querySelectorAll('button')].find(
       (b) => b.getAttribute('role') === 'radio' && b.textContent!.includes(
-        cardFor(worstReplying.s).options.find((o) => o.id === worstReplying.optionId)!.label,
+        cardFor(worstReplying.col).options.find((o) => o.id === worstReplying.optionId)!.label,
       ),
     )!
     chosen.click()
@@ -919,7 +950,7 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
     const done = card.querySelector('.life-beat-listen-done')!
     expect(done, 'phase 2 is up – nothing below is vacuous').toBeTruthy()
     // ...and both of her paragraphs really are printed, which is what makes this the tall card.
-    const follow = cardFor(worstReplying.s).followUps.find((f) => f.optionId === worstReplying.optionId)!
+    const follow = cardFor(worstReplying.col).followUps.find((f) => f.optionId === worstReplying.optionId)!
     for (const line of follow.said) expect(flat(card.textContent), 'her reply, verbatim').toContain(line)
     expect(card.lastElementChild, 'and the close is the card\'s last element').toBe(done)
     assertDismissReachable(card, done, PHONE, 'small talk (replying)')
@@ -927,7 +958,7 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
   })
 
   it('...and on the narrowest screen the app supports', async () => {
-    const { w, card } = mountAttached(cardFor(worstReplying.s), NARROW_PHONE)
+    const { w, card } = mountAttached(cardFor(worstReplying.col), NARROW_PHONE)
     ;(card.querySelectorAll('button')[0] as HTMLButtonElement).click()
     await w.vm.$nextTick()
     assertDismissReachable(card, card.querySelector('.life-beat-listen-done')!, NARROW_PHONE, 'small talk (320x568)')
@@ -939,7 +970,7 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
     // screen (proved, not assumed), and then the cap and the scroller are removed – exactly the shape
     // `TourBriefingDialog` shipped in. A test that cannot fail on the too-tall version is not this
     // test.
-    const grown = cardFor(worstReplying.s)
+    const grown = cardFor(worstReplying.col)
     const padded: LifeBeatPrompt = {
       ...grown,
       followUps: grown.followUps.map((f) => ({
@@ -966,7 +997,7 @@ describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOT
   })
 
   it('⚠ the exchange records NOTHING until the second control – #8\'s law, on tier 1', async () => {
-    const prompt = cardFor(worstReplying.s)
+    const prompt = cardFor(worstReplying.col)
     useGameStore().snapshot = snapshotWith(prompt)
     const w = mount(LifeBeatDialog, { global: { stubs: { teleport: true } } })
     const store = useGameStore()
@@ -1026,40 +1057,59 @@ describe('⭐ round 42 – the beat\'s card at 375 / 768 / 900 / 1280, in every 
 
   /** The longest card of each phase, chosen by measurement over the engine's own catalogue – the
    *  same worst-case discipline the phase tests above use. */
-  const longestAsking = [...SMALL_TALK_SITUATIONS].sort(
+  const WIDTH_LONGEST_FRAME = Math.max(
+    ...[...SMALL_TALK_FRAMES.roof, ...SMALL_TALK_FRAMES.away].map((f) => f.line.length),
+  )
+
+  interface WCol {
+    s: SmallTalkSituation
+    voice: Temperament
+    c: SmallTalkVoiceEntry
+  }
+
+  const WIDTH_COLUMNS: WCol[] = SMALL_TALK_SITUATIONS.flatMap((s) =>
+    TEMPERAMENTS.flatMap((voice) => {
+      const c = s.voices[voice]
+      return c === undefined ? [] : [{ s, voice, c }]
+    }),
+  )
+
+  /** ⭐ ROUND 44 – the card's first line is a POOL FRAME joined to her payload, so the worst case is
+   *  measured against the longest frame the pool can put in front of it. */
+  function widthOpenerOf(col: WCol): string {
+    return `${'x'.repeat(WIDTH_LONGEST_FRAME)} ${col.c.opener}`
+  }
+
+  const longestAsking = [...WIDTH_COLUMNS].sort(
     (a, b) =>
-      (b.opener.roof ?? b.opener.away!).length +
-      SMALL_TALK_STANCES.reduce((n, st) => n + b.branches[st].label.length, 0) -
-      ((a.opener.roof ?? a.opener.away!).length +
-        SMALL_TALK_STANCES.reduce((n, st) => n + a.branches[st].label.length, 0)),
+      widthOpenerOf(b).length +
+      SMALL_TALK_STANCES.reduce((n, st) => n + b.c.branches[st].label.length, 0) -
+      (widthOpenerOf(a).length + SMALL_TALK_STANCES.reduce((n, st) => n + a.c.branches[st].label.length, 0)),
   )[0]
 
-  function prompt(s: SmallTalkSituation): LifeBeatPrompt {
+  function prompt(col: WCol): LifeBeatPrompt {
     return {
       week: 1,
       kind: 'small-talk',
       heading: lifeBeatHeading('small-talk', 'bright', 'close'),
-      said: s.opener.roof ?? s.opener.away!,
+      said: widthOpenerOf(col),
       options: SMALL_TALK_STANCES.map((stance) => ({
         id: SMALL_TALK_STANCE_ID[stance],
-        label: s.branches[stance].label,
+        label: col.c.branches[stance].label,
       })),
-      followUps: lifeBeatFollowUps('small-talk', `${s.subject}:${s.id}`, s.voice, 'close'),
+      followUps: lifeBeatFollowUps('small-talk', `${col.s.subject}:${col.s.id}`, col.voice, 'close'),
       confirm: 'Proceed',
     }
   }
 
-  /** The longest CONTINUATION and the longest REACTION in the catalogue, as (situation, optionId). */
+  /** The longest CONTINUATION and the longest REACTION in the catalogue, as (column, optionId). */
   function longestReplyOf(stances: readonly ('invite' | 'respond' | 'space')[]) {
-    return SMALL_TALK_SITUATIONS.flatMap((s) =>
+    return WIDTH_COLUMNS.flatMap((col) =>
       stances.map((stance) => ({
-        s,
+        col,
         stance,
         optionId: SMALL_TALK_STANCE_ID[stance],
-        size:
-          (s.opener.roof ?? s.opener.away!).length +
-          (s.shared?.length ?? 0) +
-          s.branches[stance].said.length,
+        size: widthOpenerOf(col).length + (col.c.shared?.length ?? 0) + col.c.branches[stance].said.length,
       })),
     ).sort((a, b) => b.size - a.size)[0]
   }
@@ -1089,7 +1139,7 @@ describe('⭐ round 42 – the beat\'s card at 375 / 768 / 900 / 1280, in every 
     })
 
     it(`PHASE 2 (her CONTINUATION, after «invite more») at ${name}`, async () => {
-      const p = prompt(longestContinuation.s)
+      const p = prompt(longestContinuation.col)
       const { w, card } = mountAttached(p, vp)
       const label = p.options.find((o) => o.id === longestContinuation.optionId)!.label
       ;([...card.querySelectorAll('button')].find((b) => b.textContent!.includes(label)) as HTMLButtonElement).click()
@@ -1102,7 +1152,7 @@ describe('⭐ round 42 – the beat\'s card at 375 / 768 / 900 / 1280, in every 
     })
 
     it(`PHASE 3 (her REACTION, after «respond» / «give space») at ${name}`, async () => {
-      const p = prompt(longestReaction.s)
+      const p = prompt(longestReaction.col)
       const { w, card } = mountAttached(p, vp)
       const label = p.options.find((o) => o.id === longestReaction.optionId)!.label
       ;([...card.querySelectorAll('button')].find((b) => b.textContent!.includes(label)) as HTMLButtonElement).click()

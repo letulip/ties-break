@@ -21,6 +21,9 @@ import {
   debtWeeks,
   detectEnding,
   endingForForkAnswer,
+  // ⭐ ROUND 45 – the two doors she decides herself. Imported for the `details` sweep below, whose
+  // record is TOTAL over `CareerEndingType` and therefore could not stay green through the widening.
+  endingForLeaving,
   endingForRetirement,
   forkDue,
   // ⭐ THE LONG GOODBYE, STEP 4 – her own last word, pinned through the engine's symbol rather than
@@ -33,6 +36,7 @@ import {
   type AutoEndingView,
   type PlateauView,
 } from '../src/engine/ending'
+import { leavingView } from './helpers/leavingView'
 import {
   closeTournament,
   callUpRevealOpen,
@@ -73,6 +77,8 @@ import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 // ⭐ THE LONG GOODBYE, STEP 2 – the walk (phase 4 of the tick) and the curve the threshold is read
 // against. See the describe block that spends them for why the walk is not a whole `tickWeek`.
 import { kidAgeExact, kidAgeYears } from '../src/engine/world'
+// ⭐ v82 – the walk below hears her out before it answers the fork; see the note at its loop.
+import { pendingLifeBeat } from '../src/engine/world'
 import { growAndLive } from '../src/engine/world/phaseGrowth'
 import { ageAtPhysicalShare } from '../src/engine/development'
 
@@ -449,27 +455,76 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     return { world, wraps }
   }
 
-  it('⭐⭐⭐ 70% IS TODAY\'S RULE: the off-season her body first falls to 70% is the off-season she is first 38', () => {
+  // ⚠⚠⚠ THE ARM IS SELF-COACHED SINCE 17.09 AND THAT IS A REAL CHANGE TO WHAT IS CLAIMED, NOT A
+  // TOLERANCE MOVED TO KEEP A LINE GREEN. Round 44 gave the four paid seats a share of the weekly
+  // decline (docs/specs/the-decline-and-the-seats-2026-09.md), so the share left is no longer a
+  // function of AGE alone – staffing enters it, which §7 of that spec states in as many words. The
+  // 70% ⇔ 38 equivalence was derived from `ageAtPhysicalShare`, which walks `declineFactor` WITH NO
+  // PAYROLL IN IT, so the body it has always been about is the unstaffed one and this arm now says
+  // so out loud instead of inheriting `DEFAULT_PROFILE`'s middle coach by accident.
+  //
+  // ⚠⚠ MEASURED, AND THE OWNER SHOULD READ IT RATHER THAN THE REASSURANCE: on this seed a
+  // self-coached body is at 69.15% on the off-season she is 38 and a budget-coached one at 69.80% –
+  // both below the line, both in the same week, w1297. A MIDDLE- OR ELITE-COACHED CAREER IS STILL
+  // ABOVE IT (70.33% / 71.15%) AND CROSSES A YEAR LATER, at w1349. So the deleted
+  // `ENDINGS.stopAskingAgeYears = 38` is still exactly reproduced by the 70% dial for a body nobody
+  // is maintaining, and a maintained one is asked for the last time one winter later than the old
+  // constant would have asked her. That is the feature working – it is what «a seat softens the
+  // decline» has to mean when it reaches the endings – and it is stated here because this line's
+  // own note says that if it ever needs changing, the claim the change was sold on has stopped
+  // holding. It has not stopped holding; it has acquired a second half, and the second half is the
+  // case below this one.
+  it('⭐⭐⭐ 70% IS TODAY\'S RULE: the off-season an UNSTAFFED body first falls to 70% is the off-season she is first 38', () => {
     // THE PROOF THAT THIS IS A GENERALISATION AND NOT A NEW RULE, and it is pinned independently of
     // whatever the dial is set to, so it goes on being true after the threshold moves. `70%` is a
     // literal on purpose: it is the row of §3a's table that reproduces the deleted
     // `ENDINGS.stopAskingAgeYears = 38`, and if this line ever needs changing then the claim the
     // change was sold on has stopped holding.
-    const { wraps } = walkTheWraps({ seed: 'goodbye-generalisation', toAge: 40 })
+    const { wraps } = walkTheWraps({ seed: 'goodbye-generalisation', coachTier: 'self', toAge: 40 })
     const byBody = wraps.find((w) => w.share <= 0.7)
     const byBirthday = wraps.find((w) => w.ageYears >= 38)
     expect(byBody, 'she never fell to 70% inside the walk').toBeDefined()
     expect(byBody!.week, 'the body and the birthday name the same off-season').toBe(byBirthday!.week)
     expect(byBody!.ageYears).toBe(38)
     // ⚠ AND THE YEAR BEFORE IS ABOVE IT – otherwise the line above would be satisfied by a rule that
-    // fires on every wrap. She is 37 with 71.2% left, which is the season the old rule also left open.
+    // fires on every wrap. She is 37 with 73.2% left, which is the season the old rule also left open.
     const before = wraps[wraps.indexOf(byBody!) - 1]
     expect(before.ageYears).toBe(37)
     expect(before.share).toBeGreaterThan(0.7)
   })
 
+  it('⭐⭐ ...and A MAINTAINED body is still above the line that winter – the payroll reaches the endings', () => {
+    // ⭐⭐⭐ THE SECOND HALF OF THE CASE ABOVE, AND THE ONE THAT DID NOT EXIST (round 44, spec §7).
+    // Nothing anywhere asserted that hiring anybody changes when she is asked for the last time, so
+    // `coachMaintenanceTop` could sit at 0 – an elite coach multiplying zero past `declineStart` –
+    // and the endings would have gone on reading exactly as though the payroll were not there.
+    // ⚠ THE PAIR IS ONE SEED AND ONE DIAL APART: same career, same wraps, same 70% line, and the
+    // ONLY difference is who is on the payroll. So the year that moves is bought and not drawn.
+    const bare = walkTheWraps({ seed: 'goodbye-generalisation', coachTier: 'self', toAge: 41 })
+    const coached = walkTheWraps({ seed: 'goodbye-generalisation', coachTier: 'middle', toAge: 41 })
+    const crossingOf = (r: { wraps: Wrap[] }) => r.wraps.find((w) => w.share <= 0.7)!
+    expect(crossingOf(bare).ageYears, 'the unstaffed arm is not the one the case above pins').toBe(38)
+    // MEASURED: 70.33% on the off-season she is 38, against the bare arm's 69.15% in the same week.
+    const atBareCrossing = coached.wraps.find((w) => w.week === crossingOf(bare).week)!
+    expect(atBareCrossing.share, 'a coached body crossed with the unstaffed one – the row is doing nothing')
+      .toBeGreaterThan(0.7)
+    expect(atBareCrossing.share - crossingOf(bare).share, 'the coach\'s row is smaller than it was measured at')
+      .toBeGreaterThan(0.008)
+    // ...and she does not thereby become immortal: she crosses, one winter later. MEASURED w1349.
+    expect(crossingOf(coached).ageYears, 'a coached body never crossed at all').toBe(39)
+    expect(crossingOf(coached).week, 'and it is the NEXT off-season, not some later one')
+      .toBe(crossingOf(bare).week + WEEKS_PER_YEAR)
+  })
+
   it('⭐⭐ the last offer arrives on the first off-season AFTER her body crosses, and never before it', () => {
-    const { wraps } = walkTheWraps({ seed: 'goodbye-lands', toAge: 44 })
+    // ⚠ SELF-COACHED SINCE 17.09, for the reason the 70% case above gives at length: `crossing` is
+    // `ageAtPhysicalShare`, which walks `declineFactor` WITH NO PAYROLL IN IT (spec §6e names this
+    // deliberately), so the two sides of the comparison below are only the same body's when nobody
+    // is on the payroll. MEASURED with the shipped default's middle coach instead: the offer lands
+    // at 43.49 against a payroll-blind prediction of 41.9 – a season and a half «late», which is the
+    // helper being wrong about a staffed career rather than the offer being late. ⭐ NOT ONE NUMBER
+    // IN THIS CASE MOVED when the arm was corrected: 42 and 42.500 reproduce to the digit.
+    const { wraps } = walkTheWraps({ seed: 'goodbye-lands', coachTier: 'self', toAge: 44 })
     const first = wraps.find((w) => w.final === true)
     expect(first, 'no last offer was ever raised inside the walk').toBeDefined()
     // Threshold-independent: the crossing is continuous, the question is annual, so the offer lands
@@ -509,9 +564,19 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     // ⚠ SO IT IS A TRIPWIRE, AND A DELIBERATE ONE. The day something lands that lowers her physical
     // relative to her own peak – an atrophy term, a peak that keeps rising past 29, anything – this
     // goes red, and the right response is to re-aim it at the new spread rather than to delete it.
-    const kept = walkTheWraps({ seed: 'goodbye-13', background: 'wealthy', coachTier: 'elite', train: 85, toAge: 43 })
+    //
+    // ⚠⚠ THE STAFFING IS NOW HELD IDENTICAL AND THE PAIR IS NOT WEAKER FOR IT (17.09, round 44,
+    // spec §7). The arms used to be `wealthy`+`elite` against `working`+`self`, which made the
+    // COACH one of the variables – and once `coachMaintenanceTop` went live that difference was a
+    // shield on one arm and not the other, so the pair stopped measuring «two bodies» and started
+    // measuring «two payrolls». Exactly the confound §7 found in tests/peak-physical.test.ts's
+    // proportionality case, in a second file. Background and the training slider still vary, both
+    // arms are self-coached, and the bodies are still 22.5% apart (69.37 against 56.61) – MEASURED
+    // at every tier: x1.2253 self · x1.2143 middle · x1.2101 elite, so the premise does not depend
+    // on which tier is held, only on holding one.
+    const kept = walkTheWraps({ seed: 'goodbye-13', background: 'wealthy', coachTier: 'self', train: 85, toAge: 43 })
     const never = walkTheWraps({ seed: 'goodbye-11', background: 'working', coachTier: 'self', train: 60, toAge: 43 })
-    // 69.45 against 55.25 – the widest pair in a fourteen-seed sweep of both extremes of the game's
+    // 69.37 against 56.61 – the widest pair in a fourteen-seed sweep of both extremes of the game's
     // own management axes. If the premise ever stops holding this line is what says so.
     expect(kept.world.peakPhysical / never.world.peakPhysical, 'the two bodies really are different')
       .toBeGreaterThan(1.2)
@@ -540,7 +605,12 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
   // question nobody asks any more. Both are pinned THROUGH THE ENGINE'S OWN SYMBOL now, so a
   // re-wording moves the assertion with the copy instead of breaking it.
   it('⚠ the last-offer event and the epilogue print HER age and HER line, and no constant survives in either', () => {
-    const { world, wraps } = walkTheWraps({ seed: 'goodbye-copy', toAge: 43, stopAtFinal: true })
+    // ⚠ SELF-COACHED SINCE 17.09, same correction as the two cases above and for the same reason:
+    // a coached body crosses `lastOfferPeakShare` a season later, so with the shipped default's
+    // middle coach this walk reached 43 without the last offer ever being raised and the case was
+    // asserting about an empty list. Nothing about the CLAIM – her age and her line, no constant
+    // surviving in either – depends on which arm raises the offer.
+    const { world, wraps } = walkTheWraps({ seed: 'goodbye-copy', coachTier: 'self', toAge: 43, stopAtFinal: true })
     const last = wraps.find((w) => w.final === true)!
     const said = world.events.filter((e) => e.text.includes(LAST_WORD_OPENING))
     expect(said).toHaveLength(1)
@@ -582,6 +652,16 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
       injury: detectEnding(hurt)!.detail,
       natural: endingForRetirement({ askedWeek: 0, seasonIndex: 0, reason: 'age', final: true }, 1453, 41, 4).detail,
       plateau: endingForRetirement({ askedWeek: 0, seasonIndex: 0, reason: 'plateau', final: false }, 700, 26, 0).detail,
+      // ⭐ ROUND 45 – AND THIS RECORD IS WHERE THE WIDENING WAS FELT IN THE TESTS. It is TOTAL over
+      // `CareerEndingType` exactly as the three in `src/` are, so the two new doors could not be
+      // added to the union without arriving here with a real detail line off their real producer.
+      peak: endingForLeaving('peak', leavingView({ temperament: 'deep', endRank: 4 }), 1200, 25).detail,
+      fall: endingForLeaving(
+        'fall',
+        leavingView({ temperament: 'fiery', endRank: 59, prevEndRank: 13, points: 1584, prevPoints: 4008 }),
+        900,
+        22,
+      ).detail,
     }
     for (const type of Object.keys(details) as CareerEndingType[]) {
       const { world } = freshWorld(`epilogue-${type}`)
@@ -1307,6 +1387,26 @@ describe('⚠ a career saved before this wave existed', () => {
     const openedAt = world.week
     // Play it. No entries, no commands - just the weeks, exactly as a fast-forward would.
     for (let i = 0; i < 1400 && world.ending === null; i++) {
+      // ⭐⭐ v82 – AND THE WALK HEARS HER OUT FIRST, which is a step a real player takes and this loop
+      //    never had. `answerFork` refuses while a BLOCKING beat is pending – «she has said what she
+      //    wants and nobody has answered her» – and that rule shipped long before this wave. The loop
+      //    answered the fork, the retirement offer and the tournament reveal, so a week that raised a
+      //    beat AND opened the fork threw.
+      //
+      // ⚠⚠ IT WENT RED ON ROUND 42 #51's ECONOMY CHANGE AND THE CAUSE IS TIMING, NOT A STALL,
+      //    measured rather than assumed: this file PASSES on the branch point with the three commits
+      //    neutralised in place. Fixing the coach's fee at hire moves what the family spends, which
+      //    moves her entries, which moves which week raises a beat – and on this v38 fixture it now
+      //    coincides with the fork. Nothing is unreachable in play: the screen surfaces the beat, the
+      //    player answers it, and the fork is then open. This line is that player.
+      //
+      // ⚠ `drainLifeBeats` AND NOT A HAND-ROLLED `answerLifeBeat(world, 'listen')` – v74 T6's own
+      //    ruling: `'listen'` is not an option on every kind, and every hand-written call site threw
+      //    when wave 3's `'met'` beat landed. One drain for every beat kind, in one place.
+      if (pendingLifeBeat(world) !== null) {
+        drainLifeBeats(world)
+        continue
+      }
       if (world.fork !== null && world.fork.answer === null) {
         answerFork(world, 'continue')
         continue

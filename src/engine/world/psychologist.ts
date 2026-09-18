@@ -522,10 +522,35 @@ export function psychologistFocusDetailOf(world: WorldState): string {
  *  document, and `tests/round24-college-refusals.test.ts` holds this command to the same table as
  *  theirs («no specialist decision should reach a girl the programme is coaching»).
  *
- *  ⚠ RE-CHOOSING THE YEAR ALREADY RUNNING IS A NO-OP AND NOT A REFUSAL – `setPsychologistRung`'s own
- *  idempotence, for its own reason: nothing is being decided, so nothing may be charged, written or
- *  thrown. It is deliberately BEFORE the refusal read: a stale screen pressing the live option must
- *  not be told the year is locked, because from the player's side nothing was asked for.
+ *  ⚠⚠ RE-AFFIRMING THE YEAR SHE ALREADY HAS IS A FULL DECISION, AND FOR ONE ROUND IT DID NOTHING AT
+ *  ALL. The owner, off his own play on 17.09: «у меня в межсезонье мигает группа плашек выбора что
+ *  делать с психологом, но почему-то не выбирается повторно существующая». The kept text of the guard
+ *  that caused it, because the sentence was right about its own purpose and wrong about its scope:
+ *
+ *      «RE-CHOOSING THE YEAR ALREADY RUNNING IS A NO-OP AND NOT A REFUSAL – `setPsychologistRung`'s
+ *       own idempotence, for its own reason: nothing is being decided, so nothing may be charged,
+ *       written or thrown.»
+ *
+ *  It stood one line ABOVE the refusal read and four above the stamp, so the sequence he hit was:
+ *  arrive in the off-season carrying LAST season's focus, every option open and the block glowing;
+ *  press the one already running – «same again this year» – and return on the spot. No stamp, so
+ *  `psychologistFocusRefusal` went on saying yes, `psychologistFocusOpen` stayed non-empty, the
+ *  marker never cleared, and the year he chose was never recorded. ⭐ Choosing a DIFFERENT focus
+ *  worked throughout, which is exactly why his sentence names the existing one.
+ *
+ *  ⚠ THE TWO HALVES ARE SEPARATED RATHER THAN THE GUARD DELETED. «Nothing may be charged or written»
+ *  still holds and is what the paragraph above was FOR; the SEASON STAMP was never part of that
+ *  no-op. Confirming last year's work for THIS season buys the year and spends the once-a-season
+ *  window – the decision this whole gate exists to price – so the refusal read and the stamp are
+ *  unconditional, and the focus write is idempotent by being an assignment. There is no ledger row
+ *  on this command today (`tests/wave5-psychologist-focus.test.ts` §A holds it silent); the day one
+ *  is written it goes behind a «did the focus actually move» read taken BEFORE the assignment, which
+ *  is the only half of the old guard that was ever about the feed.
+ *
+ *  ⚠ AND THE STALE SCREEN NOW HEARS THE REFUSAL, which is the correct half of that trade: a press
+ *  arriving after the window closed is refused by the same sentence every other closed press gets
+ *  (R10-16, one story), and it cannot happen from a LIVE screen at all because `psychologistFocusOpen`
+ *  is empty there and the card disables the row.
  *
  *  ZERO draws on any stream. */
 export function setPsychologistFocus(world: WorldState, focus: PsyFocus): void {
@@ -533,13 +558,13 @@ export function setPsychologistFocus(world: WorldState, focus: PsyFocus): void {
   // not be able to start a year of work for a girl who has retired.
   guardNotEnded(world)
   if (!PSY_FOCUSES.includes(focus)) throw new Error(PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL)
-  if ((world.psychologistFocus ?? null) === focus) return
   const refusal = psychologistFocusRefusal(world, focus)
   if (refusal) throw new Error(refusal)
   world.psychologistFocus = focus
-  // ⚠ STAMPED ON EVERY ACCEPTED PICK, the free first one included – and it is the season the choice
-  // is FOR, never the week the click happened in (ruling I, and `psychologistFocusSeasonFor`'s own
-  // note). The guard above compares against THIS function and not against a re-typed copy of it,
-  // which is what makes «one choice a year» one rule instead of two that can disagree.
+  // ⚠ STAMPED ON EVERY ACCEPTED PICK, the free first one included AND the re-affirmation with it –
+  // and it is the season the choice is FOR, never the week the click happened in (ruling I, and
+  // `psychologistFocusSeasonFor`'s own note). The refusal above compares against THIS function and
+  // not against a re-typed copy of it, which is what makes «one choice a year» one rule instead of
+  // two that can disagree.
   world.psychologistFocusSeason = psychologistFocusSeasonFor(world.week)
 }

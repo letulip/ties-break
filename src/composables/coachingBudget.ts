@@ -81,11 +81,11 @@ export const TEAM_BUDGET_LABEL = 'Team budget'
 
 /** ⭐ ONE FILLED SEAT ON THE PAYROLL, with what it costs a week. */
 export interface TeamSeat {
-  /** `coach` · `masseur` · `psychologist` – the seat's own id, for keys and for tests. */
+  /** `coach` · `masseur` · `psychologist` · `sparring` – the seat's own id, for keys and for tests. */
   key: string
-  /** What the app already calls this person. ⚠ TAKEN, NOT INVENTED: `Masseur` and `Psychologist` are
-   *  `SupportStaffTab`'s own two names for the two seats, verbatim, and `Coach` is the word the
-   *  coaches page and every ledger row about him already use. */
+  /** What the app already calls this person. ⚠ TAKEN, NOT INVENTED: `Masseur`, `Psychologist` and
+   *  `Hitting partner` are `SupportStaffTab`'s own three names for the three seats, verbatim, and
+   *  `Coach` is the word the coaches page and every ledger row about him already use. */
   label: string
   /** The weekly bill for that seat, in cents – the engine's own figure in every case. */
   weeklyCents: number
@@ -116,14 +116,20 @@ export interface CoachingBudget {
    *  family that has hired nobody, which is every career's first years – and a tile that listed an
    *  empty payroll would be saying «nothing» at length.
    *
-   *  ⚠ THE FUTURE SEATS COME FREE, which is the shape of the list rather than a promise: a fourth
-   *  salaried seat added to the snapshot joins THIS array and both surfaces grow the row, because
-   *  neither of them names a person.
+   *  ⚠⚠ THE FUTURE SEATS DO NOT COME FREE, AND THE SENTENCE THAT SAID THEY DID COST THE OWNER A WHOLE
+   *  ROUND OF A WRONG «committed» FIGURE. It read: «a fourth salaried seat added to the snapshot
+   *  joins THIS array and both surfaces grow the row, because neither of them names a person». The
+   *  surfaces do not name a person – that half was true and is why neither of them had to change –
+   *  but the BUILDER below is a hand-written push per seat, so the hitting partner shipped in F2 and
+   *  joined nothing. See its own note. The rule that replaces the promise: adding a salaried seat to
+   *  the snapshot means adding its clause here, and the guard that catches a forgotten one is §5 of
+   *  `tests/component/round42-team-budget.test.ts`.
    *
    *  ⚠ EVERY FIGURE IS THE ENGINE'S. The coach's is the roster row's own `weeklyCents` – the same
-   *  one `coachWeeklyCents` above reads, so the tile cannot print two coaches – and the other two are
-   *  `masseurSalaryCents` / `psychologistSalaryCents`, which the snapshot's own docs call FLAT
-   *  contracts at the chosen rung, so «the card's quote IS the ledger's row».
+   *  one `coachWeeklyCents` above reads, so the tile cannot print two coaches – and the other three
+   *  are `masseurSalaryCents` / `psychologistSalaryCents` / `sparringSalaryCents`, which the
+   *  snapshot's own docs call FLAT contracts at the chosen rung, so «the card's quote IS the ledger's
+   *  row».
    *  ⭐⭐ ROUND 42 #42 – AND `committedCents` IS NOW THIS LIST, SUMMED. The header says why; the one
    *  thing to keep true here is that the tile's rows and its meter read the same array, so they can
    *  never add up to two different payrolls. */
@@ -161,6 +167,26 @@ export function useCoachingBudget(): CoachingBudget {
     if (snap.masseurHired) out.push({ key: 'masseur', label: 'Masseur', weeklyCents: snap.masseurSalaryCents })
     if (snap.psychologistHired) {
       out.push({ key: 'psychologist', label: 'Psychologist', weeklyCents: snap.psychologistSalaryCents })
+    }
+    // ⭐⭐⭐ 17.09 – THE FOURTH SEAT, AND ITS ABSENCE WAS NOT COSMETIC. The owner, off his own play:
+    // «спарринг не учитывается в недельных расходах на верхней плашке на вкладке тренеров, его там
+    // просто нет». The wire has been complete since F2 shipped the seat (`sparringSalaryCents`
+    // crosses in snapshot.ts beside the other two); only this list was never extended – and because
+    // `committedCents` above is SUMMED off this array, a family with a hitting partner was not
+    // merely missing a row. The bar, the «committed» figure and the «/week free» figure were all
+    // short by his salary, and the tile under-reported what the family had promised, which is the
+    // one thing it exists to get right. It disagreed with the ENGINE too:
+    // `supportPayrollWeeklyCents` has counted all three salaried seats since v80, so the
+    // denominator the over-budget flags are cut from already knew about him.
+    // ⚠⚠ AND THE COMMENT ON `seats` BELOW PROMISED THIS COULD NOT HAPPEN – «a fourth salaried seat
+    // added to the snapshot joins THIS array». It was aspirational: this is a hand-written push per
+    // seat, so nothing joins on its own, and that promise is probably why nobody checked. The
+    // promise is corrected where it stands; the guard that replaces it is
+    // `tests/component/round42-team-budget.test.ts`'s §5, which counts these rows against the
+    // snapshot's own hired flags rather than against a list typed in a test, so a FIFTH seat
+    // reddens it by existing instead of repeating this.
+    if (snap.sparringHired) {
+      out.push({ key: 'sparring', label: 'Hitting partner', weeklyCents: snap.sparringSalaryCents })
     }
     return out
   })

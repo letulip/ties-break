@@ -613,7 +613,21 @@ describe('save migrations', () => {
     // ⚠ v80's step is ONE `??=` on one world key, so it adds exactly one rung to the walk. Its
     // reader IS reachable in a frozen career, as v79's is, which is why that file re-stamped again –
     // and this line is not about that either.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 80 – past the colliding 64, through 65').toBe(80)
+    // ⚠ v81's step writes NOTHING – round 44's `LifeBeatRecord.frame` is optional and never
+    // back-filled, so the walk gains a rung that changes no byte. The version still moves, because a
+    // frame that is read back rather than re-derived cannot survive the pool growing without one.
+    // ⚠ RE-AIMED AT v82 (17.09, round 42 #51 – `coachDeal`, the coach's fee fixed at hire), NOT
+    // WEAKENED, for the SIXTEENTH time and with the claim unchanged once more. What moved is the
+    // LADDER'S HEAD and nothing else: 82 was taken by that item's own full move (bump, append-only
+    // v81 -> v82 step, golden fixture v82 and its README row, e2e fixtures regenerated, the
+    // doc-facts sentence and the frozen-career peel rung), the walk below is the same walk, and the
+    // claim this line makes – that the chain runs PAST the colliding 64 and through 65 – now has one
+    // more rung to cross before it arrives.
+    // ⚠ v82's step is ONE `??=` on one world key, writing the literal `null`, so it adds exactly one
+    // rung to the walk. Its READER is reachable in a frozen career – every frozen career hires a
+    // coach and the till settles a deal on week one – which is why that file re-stamped again, and
+    // this line is not about that either.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 82 – past the colliding 64, through 65').toBe(82)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

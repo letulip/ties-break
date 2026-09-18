@@ -498,6 +498,70 @@ export const ECONOMY = {
       { atOrBetter: 100, factor: 2.0 },
     ] as { atOrBetter: number; factor: number }[],
 
+    // =============================================================================================
+    // ⭐⭐⭐ ROUND 42 #51 / ROUND 44 – THE ANNUAL ASK. docs/specs/the-coachs-raise-2026-09.md.
+    // =============================================================================================
+    //
+    // THE OWNER NAMED THE CORRIDOR AND THE CEILING HIMSELF (16.09, #51): «Коридор 5-15%, ceiling =
+    // the rank band». What he did NOT want is the trigger the first draft gave it: «может такое
+    // быть, что всего с 1 титулом в сезон (например w250/w500) тренер будет требовать 15%? Кажется,
+    // что самого факта такого единственного титула маловато, нужна какая-то общая оценка прогресса».
+    // So the position INSIDE the corridor is a weighted progress score and a title is one of its
+    // four components rather than its trigger.
+    //
+    // ⭐⭐ AND THE BAND ABOVE BECOMES THE CEILING, WHICH IS THE SCENE ITS OWN COMMENT DEFERRED. Round
+    // 42 #19 shipped `retainerBandByRank` as an arithmetic re-price and said so in as many words:
+    // «3.1 asks for "renegotiation as a scene, not a slider" - a step is the thing a scene can be
+    // hung on later. What ships here is the arithmetic; the scene is its own item.» This is that
+    // item. The band no longer moves a fee that is already agreed - it says how far an AGREED fee may
+    // be asked upward, and a man already on the payroll can never be priced above what the market
+    // would quote for him at her standing today.
+    //
+    // ⚠ WHICH IS ALSO THE SAFETY PROPERTY, and it is worth stating as one because it is what makes a
+    // live-save migration harmless: the stored fee is `min(agreed x (1 + ask)^n, today's market
+    // labour)`, so it can NEVER exceed what this same till was charging before the change. The fix
+    // can lower a family's payroll and cannot raise it.
+    //
+    // ⚠ THE WEIGHTS ARE THE ONLY FITTED NUMBERS HERE, and every REFERENCE the four components divide
+    // by is a figure the game already states out loud (the rank halving, the coach's own quoted
+    // season band, the tier ladder's own length, `ECONOMY.form.max`). That is deliberate: a component
+    // with a private normaliser is a dial nobody can argue with, and four of those would have made
+    // the score untunable. The measured corridor against his 5-15% is in the spec's §4.
+    raise: {
+      /** A FLAT YEAR IS STILL 5%, NEVER NOTHING AND NEVER LESS. His floor, and the one place «he
+       *  never asks for less» is enforced - the downward half of the old silent re-price is deleted
+       *  rather than lettered. ⚠ It also sits exactly where the masseur's ceiling was argued to:
+       *  `ECONOMY.masseur.raisePerYear` is 4% precisely so the second seat stays «не так интенсивно
+       *  как тренер», and the two numbers must not be retuned past each other. */
+      askFloor: 0.05,
+      /** His ceiling on ONE ask. Reached only by a score of 1 - every component at full marks in the
+       *  same year, which the bench measures as rare rather than assumes to be. */
+      askCeiling: 0.15,
+      /** ⭐ THE RANK COMPONENT'S REFERENCE: HALVING HER RANKING NUMBER IN A YEAR IS FULL MARKS.
+       *  #400 -> #200 and #20 -> #10 score the same, which is the honest shape - a ranking ladder is
+       *  multiplicative and a linear reading would hand a junior climbing out of the four hundreds
+       *  the same credit as a top-tenner defending a title. Argued rather than fitted: there is no
+       *  free parameter in «twice as good». */
+      rankHalving: 2,
+      /** The weights, summing to 1. ⭐ THE RESIDUAL IS THE HEAVIEST AND #51 SAYS WHY: «a coach who got
+       *  more out of her than the odds said is exactly the one who should ask» - it is the only
+       *  component that measures HER AGAINST EXPECTATION rather than against zero, so it cannot be
+       *  earned by a big season that was always going to happen. ⚠ TITLES ARE THE LIGHTEST, which is
+       *  his correction to the first draft made arithmetic: at 0.15 a single title cannot on its own
+       *  take the ask past 6.5% of the corridor, so «одного титула маловато» is true of the shipped
+       *  model and not merely of its prose. */
+      weights: {
+        /** her place in the professional table, against where it was when the fee was agreed */
+        rank: 0.25,
+        /** the share of her REMAINING HEADROOM she actually took - literally the coach's job */
+        development: 0.25,
+        /** what she won, weighted by the rung it was won on */
+        titles: 0.15,
+        /** ⭐ what she did against the odds ring's own expectation (wave F1's results channel) */
+        residual: 0.35,
+      } as Record<'rank' | 'development' | 'titles' | 'residual', number>,
+    },
+
     // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).
     //
     // ⚠ UNTIL 08.08 THE COURT TOOK NO RUNG ARGUMENT AT ALL, so an Elite coach worked on the same
@@ -971,6 +1035,33 @@ export const ECONOMY = {
      *  the game cannot grow closer to her, which reads wrong. A token step up – and the FULL
      *  symmetric fall downward, because `high` is a real rung beneath it. */
     eliteUpStep: 0.04,
+
+    // --- WHEN IT MAY BE SHOWN (spec §8b, ruling C7) ----------------------------------------------
+
+    /** ⭐⭐ C7, RULED 16.09 – «once clear», and this is the bar «clear» means. The question C7 asks
+     *  is whether chemistry surfaces «from season one, or once a band is clear», and his reason for
+     *  the second is quoted rather than paraphrased: «a sentence in week 3 about a relationship is
+     *  noise». Below this the card carries the question mark; at or beyond it, the gauge.
+     *
+     *  ⚠⚠ IT IS `ceilingAtNone` AND THAT IS THE DERIVATION, NOT A COINCIDENCE. Five points is, by
+     *  HIS own anchor in this same block, the WHOLE of what an ordinary pair's year can gain – so a
+     *  reading under five is inside one ordinary year's own noise and names no band at all, while a
+     *  reading past it is a year of relationship expressed in the units he set. A separate constant
+     *  would be an agent choosing a number where the owner had already provided one; this reads his.
+     *
+     *  ⚠ AND THE LEVEL IS THE CLOCK, WHICH IS WHY NO SECOND KEY IS OWED. `accrueCoachPair` runs only
+     *  on a week he is actually PAID for, so `chem` is literally the integral over weeks worked
+     *  together – three weeks in it cannot be large, however the dice fell. Gating on a stopwatch
+     *  instead would need a per-pair week count persisted, and `coachPairs` carries none.
+     *
+     *  MEASURED, predicted against measured (spec §8b): 240 pairs over 416 weeks each, on the
+     *  bench's own measured record (50%, roughly a match a week, a title every ~180 weeks). At this
+     *  bar the median pair first shows a gauge in week 62 – one season and a little, which is what
+     *  «not from season one» asks for – p90 in week 201, 5 of 240 never inside eight years, and the
+     *  marker returns to the question mark 0.25 times per career, because the relationship really
+     *  did go back to nothing. ⚠ NO PAIR OF THE 240 CROSSED IT INSIDE THREE WEEKS, which is C7's own
+     *  case: the median |chem| at week 13 is 1.05 and the largest of the 240 is 3.93. */
+    readableAt: 5,
   },
 
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout
@@ -3451,6 +3542,156 @@ export const ECONOMY = {
       // `tests/r38-age-weights.test.ts` asserts every key here is in `SKILL_KEYS`, so a typo
       // reddens rather than reading 1 in silence.
     } as Record<string, number>,
+    /** ⭐⭐⭐ ROUND 44 – WHAT THE PAYROLL TAKES OFF THE DECLINE, AND NOTHING MORE THAN THAT.
+     *
+     *  THE OWNER, 17.09: «все эти специалисты должны его если не тормозить, то хотя бы сглаживать,
+     *  а может у кого-то и тормозить даже немного.» `docs/specs/the-decline-and-the-seats-2026-09.md`
+     *  §4 turns that shape into one rule: NO SEAT STOPS THE DECLINE; each softens the ONE attribute
+     *  it has a real-world claim on, and the coach maintains all four a little.
+     *
+     *  ⚠⚠ THESE ARE SHARES OF THE ORDINARY WEEKLY LOSS, NOT NEW RATES, and the difference is the
+     *  whole safety of the feature. `growWeek` charges `declineRate x ageWeightOf(k) x SHIELD x
+     *  skills[k]`, where the shield is `Π(1 - share)` over the seats that apply – a product of
+     *  factors each strictly inside [0, 1), so it is STRICTLY POSITIVE BY CONSTRUCTION and a fully
+     *  staffed veteran still ages. That is the spec's own first pass/fail question answered in the
+     *  shape of the arithmetic rather than in a measurement that could drift: there is no set of
+     *  numbers anybody can write here that buys immortality, only one that makes the shield small.
+     *
+     *  ⚠⚠ AND NOTHING HERE MOVES `declineStart`, `declineRate` OR `declineAccel`. Round 38 #3d
+     *  measured those and its own note warns the next reader off them; the spec's §5 rules them out
+     *  by name. What this block changes is how much of the SAME curve a paid team absorbs.
+     *
+     *  ⚠ COMPOSURE IS ABSENT AND WOULD BE INERT, exactly as in `ageWeight` above: `isPhysicalSkill`
+     *  keeps it out of the decline branch and it gains `veteranPoise` instead. So the psychologist
+     *  has NO row here – the spec's §4 table says «no change» for that seat, because he is already
+     *  aligned – and «all four» in the coach's row means the four PHYSICAL attributes.
+     *
+     *  Measured predicted-against-measured in docs/specs/the-decline-and-the-seats-2026-09.md §6. */
+    declineCare: {
+      /** ⭐ THE MASSEUR PROTECTS HER LEGS. Weekly body work is exactly what a veteran's endurance
+       *  runs on, and stamina is the fastest-ageing attribute in the table above (weight 1.6), so
+       *  it is both the honest claim and the one the player can feel.
+       *
+       *  ⚠ THE SHARE IS THE TOP RUNG'S. The rungs below it deliver a PROPORTION of it, derived from
+       *  the seat's own `conditionBonusPerWeek` ladder (1/2/3) rather than written down again –
+       *  see `declineCareShieldOf` in engine/development.ts. Without that, the cheapest rung would
+       *  buy the whole shield and a veteran's correct play would be to drop to it, which is the
+       *  farming hole the knock's rest branch already documents one module over.
+       *
+       *  ⭐⭐⭐ 0.25 IS DERIVED FROM THE `ageWeight` LADDER ABOVE AND IS NOT A FITTED NUMBER:
+       *  `1 - ageWeight.ret / ageWeight.stamina` = `1 - 1.2/1.6` EXACTLY. The sentence it spells is
+       *  «weekly body work makes her legs age like her RETURN, and never slower than that» – the
+       *  seat moves its attribute exactly ONE RUNG down the tuned ladder and stops.
+       *
+       *  ⚠⚠ THAT SHAPE IS SELF-LIMITING BY CONSTRUCTION, WHICH IS WHY IT BEAT A ROUND NUMBER: no
+       *  seat can ever make its attribute the SLOWEST-ageing one. The serve is the last thing to go
+       *  with or without a payroll – `ageWeight.serve`'s own row says «a serve is a career extender»
+       *  – and no amount of money reverses the order the tuned table puts the four in.
+       *  `tests/round44-decline-care.test.ts` asserts this equals the ladder step, so a wave that
+       *  retunes `ageWeight` reddens here and has to decide rather than drift. */
+      masseur: { skill: 'stamina', topRungShare: 0.25 },
+      /** ⭐ THE HITTING PARTNER PROTECTS HER RETURN. The return is reaction before it is technique
+       *  (the `ageWeight` row above says so in its own words) and reaction is what match-style
+       *  practice drills. Same top-rung doctrine, off this seat's own `driftCut` ladder.
+       *
+       *  ⭐⭐ AND THE SAME DERIVATION, ONE RUNG ALONG: `1 - ageWeight.groundstrokes / ageWeight.ret`
+       *  = `1 - 1.0/1.2` = 0.1667. «Match-style practice makes her return age like her RALLY, and
+       *  never slower than that.»
+       *
+       *  ⚠ SO THIS SEAT'S SHIELD IS SMALLER THAN THE MASSEUR'S WHILE ITS BILL IS LARGER, and that is
+       *  said out loud rather than smoothed over: the LADDER'S OWN STEPS ARE UNEVEN (1.6→1.2 is a
+       *  quarter, 1.2→1.0 is a sixth), the two seats are priced on their OTHER channels – the rust
+       *  cut and the recovery table – and re-pricing a seat is not this spec's to do. Round 42 #48
+       *  is where the hitting partner's money was measured; nothing here revisits it. */
+      sparring: { skill: 'ret', topRungShare: 0.1667 },
+      /** ⭐⭐ AND THE COACH MAINTAINS ALL FOUR, SLIGHTLY – the row that fixes something close to a
+       *  defect. Past `declineStart` `ageFactor` returns 0, so `growWeek`'s whole GAIN term is zero
+       *  and an elite coach multiplies nothing: a family paying elite money for a twenty-eight-year-
+       *  old is buying literally nothing, and no screen says so. An elite coach's job past the peak
+       *  is maintenance rather than growth, and this is the first term in the engine that says it.
+       *
+       *  ⚠ SCALED BY TIER AND FIT, AND THE SCALE IS DERIVED. `declineCareShieldOf` reads the week's
+       *  own `coachFactor(tier, fit, chemistry)` – the number `growWeek` already computed – and
+       *  places it between the self-coached rate and `coachFactor('elite', 'great')`. So the parent
+       *  on the court buys exactly 0, a badly-matched budget coach also buys 0 (his rate is BELOW
+       *  the parent's), and the ladder in between moves with `developmentFactor`, `fitFactor` and
+       *  the chemistry term by construction rather than by a second table kept in step by hand.
+       *
+       *  ⭐⭐⭐ 0.08 IS THE ONE FITTED NUMBER IN THIS BLOCK, AND IT WAS SWEPT RATHER THAN CHOSEN.
+       *  `npm run bench:decline` §2s moves it against four criteria written down BEFORE the run
+       *  (invariant 5's own shape – «written down so the run can embarrass them»):
+       *
+       *      C1  the whole team absorbs <= 1/3 of the decline to 33
+       *      C2  the staffed-vs-unstaffed gap is >= ONE season of ageing
+       *      C3  ...and <= TWO
+       *      C4  the coach ALONE is worth >= half a season, because §4's own ⭐ says a family paying
+       *          elite money for a twenty-eight-year-old is «buying nothing at all», and a row that
+       *          fixes that has to be visible on its own rather than only inside a full team
+       *
+       *  MEASURED, at the derived seat shares above (one season = 1.68 points, the whole decline to
+       *  33 = 51.1 points over the four):
+       *
+       *      coach   absorbed   gap      seasons   coach alone   win prob.   verdict
+       *      0.00       11.5%   +1.47      0.87          0.00       +0.90 pp  C2, C4 fail
+       *      0.04       14.7%   +1.87      1.11          0.27       +1.54 pp  C4 fails
+       *      0.06       16.3%   +2.08      1.24          0.40       +1.86 pp  C4 fails
+       *      **0.08**   17.9%   +2.29      1.36          0.54       +2.19 pp  ⭐ meets all four
+       *      0.10       19.5%   +2.49      1.48          0.68       +2.53 pp  meets all four
+       *      0.14       22.8%   +2.91      1.73          0.95       +3.22 pp  meets all four
+       *      0.20       27.7%   +3.54      2.11          1.37       +4.30 pp  C3 fails
+       *
+       *  ⭐ THE SELECTION RULE IS «THE SMALLEST THAT MEETS ALL FOUR», and «smallest» is the SPEC'S
+       *  own word for this row – «a small maintenance term», «all four, slightly». So the criteria
+       *  set the floor and the spec sets the direction; there is no step left for taste to take.
+       *
+       *  ⚠⚠⚠ IT WAS HELD AT **ZERO** FOR A DAY, AND THE REASON IS WORTH KEEPING BECAUSE THE FIXTURE
+       *  IS WHAT SETTLED IT. At 0.08 this row turned the suite red in nine places across three
+       *  files, every one of them pinning that `physicalMean / peakPhysical` is a function of AGE
+       *  ALONE, and `tests/peak-physical.test.ts` said why in its own words – «a share threshold must
+       *  not be a different rule for a rich girl than for a poor one». The previous builder held the
+       *  row and escalated rather than loosening a tolerance, which was right.
+       *
+       *  ⚠⚠ THE MEASUREMENT THAT LOOKED LIKE CLASS – on that test's own three careers walked to 38
+       *  (working/self · middle/middle · wealthy/elite):
+       *
+       *      coach term   working/self   middle/middle   wealthy/elite   spread    ≈ career
+       *      0.00               71.47%          71.64%          71.49%   0.178pp    2 weeks
+       *      0.08               71.47%          72.90%          73.35%   1.880pp   24 weeks
+       *
+       *  ⭐⭐ ...AND IT WAS A **STAFFING** DIFFERENCE WEARING A CLASS LABEL. The owner, 17.09: «на про
+       *  уровне они все имеют условно одинаковый доход». `bornAt(seed, background, coachTier)` puts
+       *  the tier in the PROFILE at creation and the fixture's walk ticks growth weeks only –
+       *  NOTHING IN IT EVER HIRES ANYBODY – so the poorest arm read 71.47% because it was
+       *  self-coached, not because a working family cannot afford a coach on the pro tour. The case's
+       *  own comment says what it is for and it is not money: «three careers with deliberately
+       *  different CEILINGS … must read the same share at 38». The claim is PROPORTIONALITY.
+       *
+       *  ⭐ SO THE PIN WAS SPLIT INTO THE TWO CLAIMS IT HAD BEEN CARRYING AT ONCE, and both are
+       *  STRONGER than the one they replace – proportionality is now measured at identical staffing
+       *  and holds to 0.0011pp across bodies 22 points apart (it was 0.20pp across 3.4), and «a paid
+       *  seat changes the share» has a case of its own for the first time. See
+       *  docs/specs/the-decline-and-the-seats-2026-09.md §7 and §8.
+       *
+       *  ⚠ WHAT THE ROW IS WORTH, RE-MEASURED WITH IT LIVE (`npm run bench:decline`, 17.09): the
+       *  fully-staffed veteran at 33 holds serve 88.9% · ret 82.1% · stamina 79.0% · groundstrokes
+       *  82.1% – still falling on every one of the four, so Q1 passes structurally – and the payroll
+       *  hands back **+2.29 points = 1.36 SEASONS** of ageing and **+2.19 pp** of match-win
+       *  probability (13.6% -> 15.8%). ⭐ That clears C2's «at least one season» floor, which the two
+       *  seat rows alone MISSED at 0.87 – the coach row was the term the sweep said was missing and
+       *  the re-run says so from the other side.
+       *
+       *  ⚠ AND IT CLOSES §4's «close to a defect»: past `declineStart` `ageFactor` returns 0, so an
+       *  elite coach multiplied zero and a family paying elite money for a twenty-eight-year-old
+       *  bought her tennis nothing at all. `tests/round44-decline-care.test.ts` section F is the
+       *  other half of that – the coach MARKET quoted the same veteran «+0.0-0.0% a season», which
+       *  was true at 0 and would have been a lie the day this shipped. */
+      coachMaintenanceTop: 0.08,
+      // ⚠ `skill` IS TYPED `string` FOR `ageWeight`'s OWN REASON, one concern up: `SkillKey` is
+      // declared in `engine/development.ts`, which imports THIS file. The membership check a plain
+      // string gives up is made mechanically instead – `tests/round44-decline-care.test.ts` asserts
+      // both names are in `SKILL_KEYS` and are PHYSICAL, so a typo reddens rather than shielding an
+      // attribute that does not exist in silence.
+    } as { masseur: { skill: string; topRungShare: number }; sparring: { skill: string; topRungShare: number }; coachMaintenanceTop: number },
     /** ⭐⭐⭐ ROUND 31 #10 – THE FORK SHAPES THE CURVE, and until now it only priced it.
      *
      *  The owner supplied real WTA reference data and the round-31 ledger checked the engine against

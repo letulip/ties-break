@@ -47,6 +47,11 @@ import HouseholdStrip from '../HouseholdStrip.vue'
 import SupportStaffTab from '../SupportStaffTab.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
+// ⭐⭐⭐ ROUND 42 #52 / ROUND 44 – THE CHEMISTRY MARKER. The gauge is the SHIPPED ring at the size the
+// owner himself named in round 41 #28, and the mark above it is the icon he handed over, served
+// through the app's one file-icon door so it takes `--accent` from the caller and nothing else.
+import AppIcon from '../ui/AppIcon.vue'
+import ProgressRing from '../ui/ProgressRing.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
 // ⭐ ROUND-23 #5 / #1 – TWO PURE LOOKUPS, in the same register as `COACH_TIER_LABEL` above and for the
@@ -570,7 +575,69 @@ function rowLabel(r: Row): string {
       : r.lockedPoints !== null
         ? `locked, ${r.lockedPoints} ranking points short`
         : 'hire'
-  return `${r.name}, ${COACH_TIER_LABEL[r.tier]} tier, ${FIT_LABEL[r.fitNow]}, ${formatCents(r.weeklyCents)} a week – ${state}`
+  // ⭐⭐ ROUND 44 – AND THE READING IS IN THE NAME WHEN THERE IS ONE, which is C12 read literally.
+  // The owner kept the figure on the gauge «как раз для тех, кто плохо считывает цвета или
+  // расположение шкалы» (his words are in docs/specs/the-chemistry-2026-09.md §8a), and a listener is
+  // exactly that reader: this row is a `<button>` with an explicit `aria-label`, so the ring's own
+  // label inside it is never announced. Leaving the figure only on the gauge would give the one
+  // channel built for a reader who cannot see hue or fill to the readers who can - the same shape of
+  // defect the round 42 #42 note above records.
+  // ⚠ ONLY WHEN THERE IS A READING. A stranger's card says nothing rather than «chemistry unknown»,
+  // because a name should not grow a clause that is true of most of the list.
+  const chem = r.chemistry === null ? '' : `, chemistry ${chemFigure(r.chemistry)}%`
+  return `${r.name}, ${COACH_TIER_LABEL[r.tier]} tier, ${FIT_LABEL[r.fitNow]}, ${formatCents(r.weeklyCents)} a week${chem} – ${state}`
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #52 – THE CHEMISTRY MARKER, AND EVERY LINE OF IT IS HIS RULING
+// =================================================================================================
+//
+// «наш уменьшенный гаудж (как на строящихся объектах), в правый нижний угол карточки, а над ним
+// жёлтую иконку химии» and, on the sign, «в положительном направлении заполнение было от
+// светло-зелёного до ярко-зелёного в градиенте, а для отрицательного от оранжевого до красного»
+// (16.09; quoted on the script side because a template may carry no Cyrillic -
+// tests/template-copy-rules.test.ts).
+//
+// ⚠⚠ THE SCREEN DERIVES NOTHING ABOUT THE RELATIONSHIP. `r.chemistry` is the engine's own
+// `chemistryReading`, level and gate together, so there is no threshold, no band table and no second
+// arithmetic on this side - the three functions below are a SIGN, a FRACTION and a FIGURE read off
+// one number. That is what keeps the gauge and `growWeek` describing the same pair.
+//
+// ⚠ THREE CHANNELS AND NOT ONE, WHICH IS ACCESSIBILITY RATHER THAN POLISH (§8a). Red/green is the
+// commonest colour-vision confusion, so the hue is the least of the three: the FILL sweeps the other
+// way when the pairing is negative, so the ring's SHAPE differs at the same strength, and the FIGURE
+// says it outright with its own sign. Any one of the three alone answers «which way is this going».
+
+/** UP: light green into bright green. DOWN: orange into red. Both are two stops of one gradient, so
+ *  the direction is the family and the STRENGTH is how far into it the arc has got - a pair at -15
+ *  is orange and a pair at -90 is red, with no second glyph and no legend. */
+const CHEM_UP: [string, string] = ['var(--chem-up-from)', 'var(--chem-up-to)']
+const CHEM_DOWN: [string, string] = ['var(--chem-down-from)', 'var(--chem-down-to)']
+function chemGradient(level: number): [string, string] {
+  return level < 0 ? CHEM_DOWN : CHEM_UP
+}
+
+/** How much of the ring is painted. `-100 .. +100` is the engine's range, so the fraction is the
+ *  magnitude over a hundred and the SIGN is spent on the sweep direction instead. */
+function chemFill(level: number): number {
+  return Math.min(1, Math.abs(level) / 100)
+}
+
+/** The figure, with its sign - C12, which the owner ruled himself against this spec's own «no
+ *  percentage anywhere». Rounded to a whole number because the gauge is an instrument and not a
+ *  decimal readout, and because a tenth of a chemistry point is below anything a season can move. */
+function chemFigure(level: number): string {
+  return `${level < 0 ? '-' : '+'}${Math.round(Math.abs(level))}`
+}
+
+/** ⚠⚠ DRAFT COPY FOR THE OWNER (invariant 4). This item adds exactly THREE player-facing strings and
+ *  they are all here or in `rowLabel` above: these two, and the «, chemistry -33%» clause the row's
+ *  own accessible name grows. Nothing VISIBLE on the card is new words at all - the gauge is a ring,
+ *  a figure and a question mark - and these two are said out loud rather than drawn, because a ring
+ *  is a picture and the component requires it to say what it is. He rules all three; an agent may not
+ *  take a fourth. */
+function chemLabel(level: number | null): string {
+  return level === null ? 'Chemistry with her: not known yet' : `Chemistry with her: ${chemFigure(level)}%`
 }
 
 // --- the budget meter ---------------------------------------------------------------------------
@@ -1188,13 +1255,56 @@ function scrollToTier(tier: CoachTier): void {
              like an affordable one: his price, and "Hire". The two states that remain are the two
              that are TRUE about the row - the coach she already has, and a rung she has not
              earned. -->
+        <!-- ⭐⭐⭐ ROUND 42 #52 – AND THE COLUMN IS NOW TWO CORNERS RATHER THAN ONE CENTRED STACK.
+             His ruling of 16.09: the price and the call to action go to the card's TOP-right, which
+             frees the bottom on every row for the chemistry marker. The two corners then read as two
+             different kinds of fact - what he COSTS at the top, what she HAS at the bottom.
+
+             ⚠ PLACEMENT AND NOT BEHAVIOUR. The row is still one `<button>`, «Hire ›» still means
+             what it meant, the whole row still takes the press, and round 42 #42's ruling (the cost
+             shows, the hire is never refused) is untouched. Nothing about the price's TREATMENT
+             moves either - round 43 #3 ruled its size, weight and tabular figures, and `.cm-price`
+             is the same declaration it was; only the box it sits in has changed.
+
+             ⚠ NOTHING HERE IS WIDER THAN THE PRICE ALREADY WAS, which is the whole of the 375px
+             measurement: a 36px ring and a 13px mark under a price line that is wider than both mean
+             `.cm-right` does not grow, so `.cm-body` is not narrowed and no line in the card wraps
+             where it did not wrap before. `tests/component/round44-chemistry-card.test.ts` measures
+             it rather than asserting it. -->
         <span class="cm-right">
-          <span class="cm-price">{{ formatCents(r.weeklyCents) }}<i>/wk</i></span>
-          <span v-if="r.current" class="cm-action is-current">Current</span>
-          <span v-else-if="r.lockedPoints !== null" class="cm-action is-locked"
-            >{{ r.lockedPoints }} pts short</span
-          >
-          <span v-else class="cm-action is-hire">Hire &rsaquo;</span>
+          <span class="cm-money">
+            <span class="cm-price">{{ formatCents(r.weeklyCents) }}<i>/wk</i></span>
+            <span v-if="r.current" class="cm-action is-current">Current</span>
+            <span v-else-if="r.lockedPoints !== null" class="cm-action is-locked"
+              >{{ r.lockedPoints }} pts short</span
+            >
+            <span v-else class="cm-action is-hire">Hire &rsaquo;</span>
+          </span>
+          <!-- THE MARKER. The mark above the gauge keeps the wave's accent yellow and the gauge's
+               gradient belongs to the ring alone, so the two never compete for the eye - his round
+               42 #52 instruction, carried as a rule rather than as a colour typed twice.
+
+               ⚠ THE QUESTION MARK IS THE HONEST GLYPH AND IT IS ALSO THE NEUTRAL. A coach she has
+               never worked with has no relationship to draw, and a forecast would leak a seeded
+               draw and turn the market into a shopping list. It is also what a pair below C7's bar
+               carries - «a sentence in week 3 about a relationship is noise» - so the resting state
+               of this corner reads «nobody knows yet» and never «bad», which is the constraint he
+               set on the neutral. The ring is the same component either way, at zero, so the corner
+               never changes shape or size when a reading arrives. -->
+          <span class="cm-chem">
+            <AppIcon name="chemistry" :size="13" class="cm-chem-mark" />
+            <ProgressRing
+              :size="36"
+              :value="r.chemistry === null ? 0 : chemFill(r.chemistry)"
+              :gradient="r.chemistry === null ? null : chemGradient(r.chemistry)"
+              :mirrored="r.chemistry !== null && r.chemistry < 0"
+              :label="chemLabel(r.chemistry)"
+              ><b v-if="r.chemistry === null">?</b
+              ><template v-else
+                ><b>{{ chemFigure(r.chemistry) }}</b><i>%</i></template
+              ></ProgressRing
+            >
+          </span>
         </span>
       </button>
     </section>

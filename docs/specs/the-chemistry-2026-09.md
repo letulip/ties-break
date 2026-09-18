@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-09-16
+last-reviewed: 2026-09-17
 ---
 
 # Chemistry – the coach relationship as a trajectory (round 42 #50, #51, #52)
@@ -500,6 +500,127 @@ inside a `<slot>`, so the sign is a caller's override and not a prop.
 
 ⚠ And the unworked-with card still carries the QUESTION MARK rather than a forecast – a gradient
 that predicted a seeded draw would leak it.
+
+### 8b. ⭐⭐ BUILT, 17.09 – THE WIRE FIRST, AND WHAT «ONCE A BAND IS CLEAR» TURNED OUT TO MEAN
+
+**The finding this answers** (round 44 §11): the mechanic ran and the number never crossed the wire.
+`coachPairs` was read in seven engine files and `src/shared/protocol/` did not carry it, so the UI was
+structurally unable to render a gauge for it – «я не увидел её в игре нигде», and he was right.
+
+**The wire is one signed number per coach card.** `CoachMarketRow.chemistry: number | null`, built by
+`chemistryReading` in `engine/chemistry.ts` and read by nothing else. Three reasons for that shape,
+in the order they decided it:
+
+* **Not the raw pair.** `phase` is the pair's weather and putting a draw on screen is how a seeded
+  relationship becomes a forecast – §8's own anti-shopping argument, aimed at this wave's field.
+  `standing` is C2's and has no reader.
+* **Not a level plus a band.** The gauge needs a hue family, a fill fraction and a figure, and all
+  three fall out of one signed number. A band NAME beside it would be a second spelling of one fact
+  for the card and the engine to disagree about, which is the defect this repo catches most often.
+* **Per ROW and not per career**, which is §7 made visible: the map keeps a paused row for every coach
+  she has ever worked with, so going back to her first coach is a card that still remembers.
+
+⚠ **No schema move was owed.** `coachPairs` has been persisted since v79; this is derived at snapshot
+time like `coachMarket` itself.
+
+#### C7's bar is `ceilingAtNone`, and it is HIS number rather than an agent's
+
+C7 ruled chemistry visible «once a band is clear». The bar is `ECONOMY.chemistry.readableAt = 5`, and
+it is not a new constant: **five points is the whole of what an ordinary pair's year can GAIN**
+(`ceilingAtNone`, his own anchor from §3.2). A reading under five is inside one ordinary year's own
+noise and names no band; a reading past it is a year of relationship in the units he set.
+
+⚠ **The LEVEL is the clock, which is why no per-pair week count is owed.** `accrueCoachPair` runs only
+on a week the coach is actually paid for, so `chem` is literally the integral over weeks worked
+together.
+
+**Predicted against measured** (invariant 5). Predicted: the bar puts the first sighting «around a
+season», keeps week 3 unreachable, and turns the marker back off rarely. Measured over **240 pairs ×
+416 weeks**, walked through the real `accrueChemistry` – ⚠ **the ACCRUAL is the engine's own and the
+WEEK STREAM is modelled**, on the bench's measured record (50%, roughly a match a week, a title about
+every 180 weeks), so these are 240 real pairs and not 240 played careers:
+
+| bar | never shown in 8 yrs | median first week | p90 first week | shown by week 3 | marker turned back off, per career |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 | 0 | 24 | 82 | 0 | 0.46 |
+| 3 | 0 | 38 | 134 | 0 | 0.37 |
+| **5** | **5 / 240** | **62** | **201** | **0** | **0.25** |
+| 8 | 19 | 91 | 238 | 0 | 0.20 |
+| 12 | 33 | 128 | 306 | 0 | 0.13 |
+
+…and the level itself: |chem| median **1.05** at week 13, **2.19** at 26, **4.14** at 52, **7.79** at
+104 (p90 18.84).
+
+⭐ **So «not from season one» is what the measurement says it is**: the median pair first shows a
+gauge in **week 62**, one season and a little. ⚠ **And C7's own case is not close** – the largest of
+the 240 at week 13 is 3.93, and a walk of the three best weeks the game can produce at the most
+extreme affinity on the roster cannot reach 5 in three weeks (pinned in
+`tests/component/round44-chemistry-card.test.ts` §1).
+
+⚠ **The turn-off is real and it is not a bug.** A pair whose reading falls back under the bar returns
+to the question mark 0.25 times per career, because the relationship genuinely went back to nothing.
+The alternative – a latch – needs a persisted display flag, which is a schema key spent on a
+presentation state.
+
+#### ⚠⚠ ONE MEASUREMENT THE OWNER SHOULD SEE BEFORE HE RULES THE COLOURS: MOST CARDS WILL READ ORANGE
+
+Making the number visible also makes visible which way it usually points, and over the same 240 pairs
+it is **not** the direction the gauge's design reads as neutral:
+
+| | green (up) | orange/red (down) | question mark |
+| --- | ---: | ---: | ---: |
+| **first sighting** | 74 | **161** | 5 never |
+| **at week 416** | 71 | **152** | 17 |
+
+⭐ **This is the engine's own arithmetic and not the gauge's**, and §3's corridor says so already: at
+affinity 0 the ceiling is +5/yr and the floor is −20/yr with a drift of exactly 0, so the weather
+spends more of its range losing than gaining and the expected weekly rate is about **−0.045** – the
+spec's own «wears very slowly rather than not at all» (`chemistryDriftPerYear`). Two thirds of pairs
+therefore drift gently downward, and until now nothing on screen said so.
+
+⚠ **Nothing here was changed to flatter the reading.** The corridor is his, fitted by B7; the bar is
+his `ceilingAtNone`; and an agent moving either to make the marker greener would be tuning a model to
+suit a colour. **But he set a constraint that this measurement rubs against** – «the neutral must read
+*nothing has happened yet* rather than *bad*» – and the honest report is that the neutral is fine
+(it is the question mark) while the COMMON case, one ordinary season or two in, is a small orange
+arc. Three things he could rule, none of them built:
+
+1. **leave it** – the wear is true and the gauge is right to show it;
+2. **raise the bar on the DOWN side only**, so an ordinary drift stays a question mark for longer;
+3. **re-open §3's floor at affinity 0** (`floorAtNone: -20`), which is the half he himself said he was
+   unsure of – «вниз не уверен» – and the only one of the three that changes the MODEL rather than
+   its picture.
+
+#### What the build did with the three accessibility constraints
+
+* **Hue** – `ProgressRing` gained an optional `gradient`, a two-stop `<linearGradient>` running down
+  the ring in user space. A short arc lives at the top of the circle and shows only the light end; a
+  long one reaches the bright end. That is his «в градиенте» literally, and the STRENGTH reads as
+  position inside the family.
+* **Fill** – an optional `mirrored` sweeps the arc anticlockwise from twelve o'clock, so a negative
+  pairing fills from the other end and the ring's SHAPE differs at the same strength.
+* **Figure** – the caller's slot override, `+64%` / `-13%`, and it is in the ROW's `aria-label` too:
+  the row is one `<button>` with an explicit name, so a figure left only on the gauge would have been
+  given to exactly the readers C12 was not written for.
+* **The neutral** – the question mark IS the resting state, and the ring paints no arc at zero: a
+  zero-length dash under a round cap is the trick that draws dotted lines, so the cap is `butt` at
+  zero and the corner is the unfilled track.
+* **`--accent`** – the mark's, and only the mark's. The gauge's four stops are two new tokens and two
+  aliases of `--orange` / `--danger`; none of them is the accent.
+
+#### The card (#52)
+
+Price and «Hire ›» moved to the card's top-right, the marker to the bottom-right – `.cm-right` is
+`align-self: stretch` with `justify-content: space-between`, and the price group kept round 43 #3's
+typography to the value. **Measured at 375×667 on the whole shipped board:** the marker is 36px and
+the narrowest price group on any of the sixteen rows models at 47.7px, so the right column does not
+widen, the text column keeps every pixel it had, and nothing re-wraps. Down the card, the two groups
+stack well inside the row's own floor (168 ordinary, 196 hired).
+
+⚠ **Two player-facing strings are DRAFTS for the owner** and nothing else new is words: the gauge's
+own `aria-label`, «Chemistry with her: +64%» / «Chemistry with her: not known yet», and the clause
+the row's name grows, «, chemistry -33%». The four colour tokens are drafts of the same kind – he
+named the colours in words and these are the hexes.
 
 ---
 

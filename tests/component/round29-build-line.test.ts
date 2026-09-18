@@ -156,7 +156,14 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // the spec's own measured section), never by this line's item. The claim above – «the BUILD-LINE
     // wave moved no schema» – is untouched, and the pin still follows the ladder's head so the
     // sentence over it stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(80)
+    // ⚠ AND AGAIN AT v82 (17.09, round 42 #51 – `coachDeal`, the coach's fee fixed at hire and his
+    // annual ask), NOT WEAKENED, for the SIXTEENTH time and for the reason verbatim: 82 was moved by
+    // that item with its full move (bump, append-only migration, golden fixture v82 and its README
+    // row, e2e fixtures regenerated, the doc-facts sentence, the frozen-career peel rung and the
+    // spec's own measured section), never by this line's item. The claim above – «the BUILD-LINE
+    // wave moved no schema» – is untouched, and the pin still follows the ladder's head so the
+    // sentence over it stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(82)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

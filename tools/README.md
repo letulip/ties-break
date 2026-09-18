@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-245 TypeScript files: **44 live**, **201 archival**.
+250 TypeScript files: **49 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -38,6 +38,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
+| `coach-raise-bench.ts` | `npm run bench:coachraise` |
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
 | `demo-save.ts` | writes the demo career used for screenshots and manual playtests |
 | `dual-universe-bench.ts` | `npm run bench:dual` |
@@ -63,6 +64,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `prologue-handover-bench.ts` | `npm run bench:handover` |
 | `psy-grid.ts` | `npm run bench:psy` |
 | `r31-age-curve.ts` | `npm run bench:agecurve` |
+| `r44-decline-seats.ts` | `npm run bench:decline` |
 | `radar-bench.ts` | `npm run bench:radar` |
 | `retired-college-rule.ts` | imported by a live tool |
 | `retirement-rate.ts` | `npm run bench:retire` |
@@ -70,10 +72,13 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `shop-probe.ts` | `npm run probe:shop` |
 | `skill-ceiling.ts` | `npm run bench:skill` |
 | `small-talk-corpus-bench.ts` | `npm run bench:smalltalk` |
+| `small-talk-corpus-emit.ts` | writes src/engine/world/smallTalkCorpus.ts out of docs/specs/small-talk-corpus-2026-09.md – the ONLY legitimate way to change the 43, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec |
+| `small-talk-corpus-parse.ts` | imported by the test suite |
 | `snapshot-bench.ts` | `npm run bench:snapshot` |
 | `spirit-bench.ts` | `npm run bench:spirit` |
 | `sponsor-window-bench.ts` | `npm run bench:sponsor` |
 | `spotlight-bench.ts` | `npm run bench:spotlight` |
+| `two-doors-bench.ts` | `npm run bench:doors` |
 | `world-turnover.ts` | `npm run bench:world` |
 
 ## Archival

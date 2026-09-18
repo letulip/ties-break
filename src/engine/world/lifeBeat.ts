@@ -159,6 +159,11 @@ import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from './spotlig
 import { awayVoice } from '../diary/words'
 import { diaryLifeStageFor } from '../diary/facts'
 import { schoolIsOver } from '../kidLife'
+// ⚠⚠ GENERATED DATA, AND THE IMPORT RUNS ONE WAY ONLY. `smallTalkCorpus.ts` is 43 situations emitted
+// from `docs/specs/small-talk-corpus-2026-09.md` by `tools/small-talk-corpus-emit.ts`; it imports
+// `SmallTalkSituation` back from here as a TYPE, which is erased at compile time, so there is no
+// runtime cycle – the `import type { WorldState }` idiom the decomposition already runs on.
+import { SMALL_TALK_CORPUS } from './smallTalkCorpus'
 import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
 // ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
 // resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
@@ -1572,10 +1577,36 @@ export interface SmallTalkBranch {
   said: string
 }
 
-/** ⭐⭐⭐ ONE SITUATION, IN ONE VOICE. The unit of the catalogue, and it is per-VOICE deliberately:
- *  a `Partial<Record<Temperament, …>>` would have been a silent fallback between voices, which is the
- *  one thing this file's completeness law forbids. A voice that has not been written a situation
- *  simply does not reach it, and the legacy opener pool serves that cell instead.
+/** ⭐⭐⭐ ROUND 44 – ONE SITUATION **IN ONE VOICE**, and the unit is now a column of a row rather
+ *  than a row of its own. The corpus's §2 is the whole of the change: a situation carries the event,
+ *  the stages and the fact; the OPENER and the three branches are written PER VOICE, so the same
+ *  evening can be told four ways instead of being locked to one girl in four.
+ *
+ *  ⚠⚠ `opener` IS ONE SPOKEN PAYLOAD AND CARRIES NO FRAME. Until this round it held the frame and
+ *  the quotation glued into one string per presence («She put the kettle on. "Practice finally felt
+ *  easy today."»), which is why a transcription from the corpus document was impossible: the document
+ *  holds ONLY the quotation, because round 43 lifted the frame into its own layer. A frame now comes
+ *  from `SMALL_TALK_FRAMES` and `smallTalkOpener` joins the two.
+ *
+ *  ⭐ AND THE LAW ROUND 43 PINNED BECOMES TRUE BY CONSTRUCTION. «The quoted span is IDENTICAL at both
+ *  distances» (`tests/wave3-presence.test.ts` §D) was a convention two strings had to keep; with one
+ *  payload behind both presences there is no second string that could differ. The pin stays – it is
+ *  now asserting a property rather than policing a habit. */
+export interface SmallTalkVoiceEntry {
+  /** Her spoken line, quotation marks and all, with NO lead-in. The scene is the pool's. */
+  opener: string
+  /** ⭐ §8d.2 – `story` ONLY: the incident itself, heard by every route before its own branch.
+   *  ⚠ PER VOICE, because the incident is told in her words: `court-four`'s four columns each carry
+   *  their own. The 43 corpus rows carry none – their openers hold the whole story. */
+  shared?: string
+  branches: Record<SmallTalkStance, SmallTalkBranch>
+}
+
+/** ⭐⭐⭐ ONE SITUATION, IN UP TO FOUR VOICES. `voices` is `Partial` and the gap is the design rather
+ *  than a hole: a voice nobody has written for this row simply cannot reach it, and the row is not in
+ *  that girl's pool at all – which is the same completeness law the per-row `voice` field carried,
+ *  said one level up. `reachableSituations` asks «does this row have HER column» where it used to ask
+ *  «is this row hers».
  *
  *  ⚠ `id` IS PERSISTED (it is half of the row's `detail`), so the ids here are APPEND-ONLY: renaming
  *  one makes a live soft row in a shipped save unrenderable. Adding a voice column to an existing id
@@ -1583,378 +1614,223 @@ export interface SmallTalkBranch {
 export interface SmallTalkSituation {
   id: string
   subject: SmallTalkSubject
-  voice: Temperament
   /** ⭐ §5 – THE LIFE STAGE IS PART OF THE COPY KEY, and here it is a GATE rather than a variant
    *  table: an eleven-year-old, a college student and a thirty-year-old professional do not share a
    *  line, and the cleanest form of that is that they do not share a SITUATION. «I don't think I
    *  like the new place much» is not a thing a girl living at home says. The other half of the key
-   *  is the delivery frame below, which `presenceOf(stage)` reads off the same stage. */
+   *  is the delivery frame, which `presenceOf(stage)` reads off the same stage. */
   stages: readonly DiaryLifeStage[]
   /** §8d.5 – `null` is invented DOMESTIC detail, hers to make up and hers to keep consistent. A
    *  named fact is a COMPETITIVE claim and is checked against the career before this can be drawn. */
   fact: SmallTalkFact | null
-  /** ⚠ BOTH FRAMES OPTIONAL AND NEITHER DEFAULTED. `presenceLine`'s `away ?? roof` is legal for the
-   *  legacy pool because the owner named the one cell it applies to; here a missing frame is a cell
-   *  nobody wrote, and falling back would put her at a kitchen table from a dormitory. `stages` is
-   *  what guarantees the frame exists, and the sweep in §A of the round-42 pin proves it. */
-  opener: { roof?: string; away?: string }
-  /** ⭐ §8d.2 – `story` ONLY: the incident itself, heard by every route before its own branch. */
-  shared?: string
-  branches: Record<SmallTalkStance, SmallTalkBranch>
+  voices: Partial<Record<Temperament, SmallTalkVoiceEntry>>
 }
 
-/** ⭐⭐⭐ THE CATALOGUE. Spec §8a–§8c, his 15.09 revision, verbatim – plus three drafted voice columns
- *  of `court-four` that his own voice test (§8d.3) cannot be built without.
+/** ⭐⭐⭐ THE CATALOGUE, AS THE ENGINE SEES IT – **ALL FIFTY-ONE SITUATIONS, OUT OF ONE DOCUMENT.**
  *
- *  ⚠⚠ WHAT IS HIS AND WHAT IS NOT, stated per entry rather than in one sweeping sentence, because
- *  the difference decides whether a line may be edited: entries marked **HIS** are the spec's own
- *  copy and are invariant 4 material; entries marked **DRAFT** were written for the build and are in
- *  the handoff verbatim for his pass.
+ *  ⚠⚠ THIS FILE NO LONGER HOLDS A CATALOGUE OF ITS OWN, AND THAT IS ROUND 44's ARCHITECTURAL MOVE.
+ *  `SMALL_TALK_SHIPPED` – the eight situations hand-written here since wave 2 – is DELETED, and those
+ *  eight are rows `R45`–`R52` of `docs/specs/small-talk-corpus-2026-09.md`, brought up to four voices
+ *  each. The reason is not tidiness. With a hand-written half and a generated half the catalogue had
+ *  TWO SOURCES OF TRUTH IN TWO FORMATS, «fixed in the code, the document drifted» was one careless
+ *  edit away permanently, and the round-trip pin could only cover the half it could parse. It covers
+ *  all 51 now.
  *
- *  ⚠ THE CORPUS SHAPE RULES HOLD HERE TOO (one quoted span per opener, third person outside it, the
- *  short dash, no number, no price) – with ONE named exception, `new-place`'s «A pause on the line,
- *  longer than the others.», which does not contain `she` or `her`. It is HIS sentence and his own
- *  verdict on the set was «the best scene»; it is recorded as the exception rather than edited, the
- *  way the two `Her …` away frames were in the вычитка fold.
+ *  ⚠⚠ GENERATED AND NEVER HAND-EDITED. `world/smallTalkCorpus.ts` is written by
+ *  `tools/small-talk-corpus-emit.ts` out of the document, and `tests/round44-corpus-roundtrip.test.ts`
+ *  re-parses the document on every run and compares the committed module to it STRING FOR STRING.
+ *  Authored strings retyped by an agent produce typos no test can catch, because the test compares
+ *  against what was typed; generated, the document is the source of truth and a divergence is
+ *  impossible rather than merely unlikely.
  *
- *  ⚠⚠ THE CATALOGUE IS THIN ON PURPOSE. Spec §10's delivery order is his and is adopted: «Expand the
- *  situation catalogue only after the small set works.» The cells it does NOT cover fall back to the
- *  legacy opener pool and are named in the handoff. */
-export const SMALL_TALK_SITUATIONS: readonly SmallTalkSituation[] = [
-  // ---------------------------------------------------------------------------------------------
-  // §8a – A PRACTICE THAT FINALLY CLICKED. **HIS**, and the one entry the spec gives both frames for.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'practice-clicked',
-    subject: 'good-news',
-    voice: 'deep',
-    stages: ['school', 'after-school', 'college', 'independent'],
-    // ⚠ DOMESTIC. §6's own ruling: «a practice that felt easy is a mood, never a training gain».
-    fact: null,
-    opener: {
-      roof: 'She put the kettle on. "Practice finally felt easy today."',
-      away: 'She mentioned it halfway through the call. "Practice finally felt easy today."',
-    },
-    branches: {
-      invite: {
-        label: 'Ask what made it good',
-        said: '"Nothing I can name. I just stopped fighting it. I wanted to tell someone who\'d know that\'s rare."',
-      },
-      respond: {
-        label: 'Tell her we\'re glad',
-        said: '"Maybe it doesn\'t sound like much. It felt like a lot."',
-      },
-      space: {
-        label: 'Let her enjoy it',
-        said: '"I will. I only wanted to say it out loud once."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8b – A LINE-CALL SHE CAN'T LET GO. **HIS** (14.09 pass).
-  // ⚠⚠ AND THE ONE ENTRY WHOSE `respond` LABEL IS THE GENERIC FORM §8d.1 FORBIDS. «Tell her what
-  // worries us» promises a view and her reply answers it – «I hear you» – without the player having
-  // heard what the worry was. §8d.1 names this exact string as one of the three defective labels,
-  // but his 15.09 revision rewrote the other two situations and not this one, so the sentence
-  // standing here is his most recent word on it. NOT EDITED: the copy is his (invariant 4), the fix
-  // is a wording change nobody asked for, and the collision is reported in the handoff with a draft
-  // beside it for his call.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'line-call',
-    subject: 'worry',
-    voice: 'fiery',
-    // ⚠ ROOF STAGES ONLY: the spec gives this scene at home and writes no call frame for it.
-    stages: ['school', 'after-school'],
-    fact: 'played-recently',
-    opener: {
-      roof: 'She was straight into it before her bag was down. "There was a call today that was just wrong."',
-    },
-    branches: {
-      invite: {
-        label: 'Let her keep going',
-        said: '"And I know I\'m supposed to move on. I replayed it the whole way home instead."',
-      },
-      respond: {
-        label: 'Tell her what worries us',
-        said: '"I hear you. I don\'t want it in my head for the next one either."',
-      },
-      space: {
-        label: 'Say she needn\'t solve it tonight',
-        said: '"Yeah. Okay. Tomorrow."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – THE MARCH TOURNAMENT. **HIS** 15.09 revision, including the `respond` label §8d.1 asked
-  // for («Say the travelling matters too» names the parent's actual position).
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'march-entry',
-    subject: 'decision',
-    voice: 'quiet',
-    stages: ['school', 'after-school'],
-    fact: 'march-entry-open',
-    opener: {
-      roof: 'She waited until the plates were cleared. "I\'m not sure about the March tournament."',
-    },
-    branches: {
-      invite: {
-        label: 'Ask what she\'s weighing',
-        said: '"It\'s a long trip. I\'d miss Tuesday training. I\'m not sure it\'s worth it."',
-      },
-      respond: {
-        label: 'Say the travelling matters too',
-        said: '"That\'s the bit I keep coming back to."',
-      },
-      // ⚠ «only when the deadline actually permits it» is enforced by `march-entry-open` above, not
-      // by hiding this row – see that predicate's note.
-      space: {
-        label: 'Say there\'s time to decide',
-        said: '"I\'ll look at it again on Sunday."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – A REAL COACH OR JUST A NICE ONE. **HIS** 15.09 revision.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'coach-real',
-    subject: 'curiosity',
-    voice: 'sunny',
-    stages: ['school', 'after-school'],
-    fact: 'coach-employed',
-    opener: {
-      roof: 'She came in still in her kit. "How do you know when you\'ve got a real coach and not just a nice one?"',
-    },
-    branches: {
-      invite: {
-        label: 'Ask what made her wonder',
-        said: '"Mine\'s lovely. Everyone\'s lovely. I can\'t tell if that\'s the same as good."',
-      },
-      respond: {
-        label: 'Say a good coach explains what they\'re changing',
-        said: '"Okay. I\'ll ask why next time, not just what."',
-      },
-      space: {
-        label: 'Say she doesn\'t have to work it out now',
-        said: '"Fine. But I\'m coming back to this one."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – THE PLAYERS SHE HAS BEEN WATCHING. **HIS** 15.09 revision, including his ruling that the
-  // hedge stays: «an adult capable of questioning her interpretation feels more human than one who
-  // always speaks in certainties». ⚠ A CALL, so away stages only.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'watching-players',
-    subject: 'observation',
-    voice: 'deep',
-    stages: ['college', 'independent'],
-    fact: null,
-    opener: {
-      away: 'Halfway through the call, she said, "The players I\'ve been watching barely talk about winning."',
-    },
-    branches: {
-      invite: {
-        label: 'Ask her to go on',
-        said: '"They talk about Tuesday. What they\'re working on next. I\'ve started noticing that."',
-      },
-      respond: {
-        label: 'Say we\'ve noticed it too',
-        said: '"You have? I thought I might be reading too much into it."',
-      },
-      space: {
-        label: 'Let the thought settle',
-        said: '"Mm. I\'ll keep watching."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – COURT FOUR. **HIS**, and the entry whose SHAPE changed: a `story` is two beats. The
-  // incident is shared by every route (`shared`), and the branch is the aftermath.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'court-four',
-    subject: 'story',
-    voice: 'fiery',
-    stages: ['school', 'after-school'],
-    fact: null,
-    opener: {
-      roof: 'Her bag was still on her shoulder. "You won\'t believe what happened on court four."',
-    },
-    shared:
-      '"She serves, the ball catches the net cord – and lands in a dad\'s coffee. Full cup. He just looked at it."',
-    branches: {
-      invite: {
-        label: 'Ask what he did',
-        said: '"Took the ball out. Put the lid on. Like that would stop the next one."',
-      },
-      respond: {
-        label: 'Laugh with her',
-        said: '"Exactly! And then I had to serve. I couldn\'t look at him."',
-      },
-      space: {
-        label: 'Let her finish',
-        said: '"Anyway, nobody wanted the ball back. That\'s the important part."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // ⚠⚠ COURT FOUR IN THE OTHER THREE VOICES – **DRAFT**, and the reason they exist is his own test.
-  //
-  // §8d.3: «Same event, same facts, same age, same parental choice – four different ways of noticing,
-  // disclosing and responding.» That test cannot be built out of the spec's eight, because no two of
-  // them share an event. So one event is written across all four voices, and it is the DOMESTIC one
-  // (no career fact behind it) so the test can pose a bare world.
-  //
-  // THE FACTS ARE DELIBERATELY IDENTICAL IN ALL FOUR – the net cord, the coffee, the full cup, the
-  // dad putting the lid back on, her having to serve next, nobody fetching the ball. §8d.5's stable
-  // invented detail, and the only axis left free is the voice. ⭐ And «not one shared phrase» is NOT
-  // the target: his own note says real people all say «Okay».
-  //
-  // The bibles each column is written to: `sunny` volunteers it and names the ordinary feeling;
-  // `quiet` says it around a household action and leaves herself out of it; `deep` gives the
-  // conclusion with nothing round it – and NOT by waiting for a room to go quiet, which §9 flags as
-  // a visible authorial tic.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'court-four',
-    subject: 'story',
-    voice: 'sunny',
-    stages: ['school', 'after-school'],
-    fact: null,
-    opener: {
-      roof: 'She was halfway out of her shoes and already telling it. "You have to hear what happened on court four."',
-    },
-    shared:
-      '"Someone\'s serve clipped the net cord and went straight into a dad\'s coffee. A full one. He just sat there holding it."',
-    branches: {
-      invite: {
-        label: 'Ask what he did',
-        said: '"Put the lid back on. Very carefully. Like the lid was the problem."',
-      },
-      respond: {
-        label: 'Laugh with her',
-        said: '"I know! And I had to serve after that. I was still going."',
-      },
-      space: {
-        label: 'Let her finish',
-        said: '"Anyway. Nobody asked for the ball back. That\'s my favourite part."',
-      },
-    },
-  },
-  {
-    id: 'court-four',
-    subject: 'story',
-    voice: 'quiet',
-    stages: ['school', 'after-school'],
-    fact: null,
-    opener: {
-      roof: 'She said it to the cupboard door, putting things away. "Something happened on court four today."',
-    },
-    shared: '"A serve caught the net cord and landed in someone\'s dad\'s coffee. A whole cup of it."',
-    branches: {
-      invite: {
-        label: 'Ask what he did',
-        said: '"He put the lid back on. Then he moved his chair. That was all."',
-      },
-      respond: {
-        label: 'Laugh with her',
-        said: '"It was quite funny. I didn\'t laugh at the time. I had to serve."',
-      },
-      space: {
-        label: 'Let her finish',
-        said: '"That\'s it, really. Nobody went to get the ball."',
-      },
-    },
-  },
-  {
-    id: 'court-four',
-    subject: 'story',
-    voice: 'deep',
-    stages: ['school', 'after-school'],
-    fact: null,
-    opener: {
-      roof: 'She started it in the doorway and finished it sitting down. "The best thing today had nothing to do with tennis."',
-    },
-    shared: '"A serve clipped the net cord and went into a dad\'s coffee. Full cup. He looked at it for a long time."',
-    branches: {
-      invite: {
-        label: 'Ask what he did',
-        said: '"Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."',
-      },
-      respond: {
-        label: 'Laugh with her',
-        said: '"I didn\'t laugh then. I had to serve next. I have been laughing about it since."',
-      },
-      space: {
-        label: 'Let her finish',
-        said: '"That\'s the whole of it. The ball is probably still there."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – THE NEW PLACE. **HIS**, and his own verdict: the best scene in the set. The `respond`
-  // branch ASKS something real instead of gesturing at an unheard opinion – §8d.1's fix, his words.
-  // ⚠ A CALL, and the STAGE is the fact: a girl who has not moved out has no new place.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'new-place',
-    subject: 'worry',
-    voice: 'quiet',
-    stages: ['college', 'independent'],
-    fact: null,
-    opener: {
-      away: 'A pause on the line, longer than the others. "I don\'t think I like the new place much."',
-    },
-    branches: {
-      invite: {
-        label: 'Let her keep going',
-        said: '"It\'s fine. It\'s clean. I\'ve been eating standing up for a week. I only noticed tonight."',
-      },
-      respond: {
-        label: 'Ask whether she\'s been eating properly',
-        said: '"I have. Just not sitting down, apparently."',
-      },
-      space: {
-        label: 'Say she needn\'t solve it tonight',
-        said: '"Good. Tomorrow, then. Not tonight."',
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – SHE BEAT SOMEONE SHE HAD NEVER BEATEN. **HIS**, and the strictest gate in the catalogue:
-  // both halves of her claim are checked against the feed (see `beat-her-conqueror`).
-  // ⭐ His note on temperament rides on this one: the single «Four!» does not make her fiery –
-  // «temperament shapes the pattern, not the punctuation».
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'beat-her-conqueror',
-    subject: 'good-news',
-    voice: 'sunny',
-    stages: ['school', 'after-school'],
-    fact: 'beat-her-conqueror',
-    opener: {
-      roof: 'She was smiling before the door had closed. "I beat someone I\'ve never beaten."',
-    },
-    branches: {
-      invite: {
-        label: 'Ask what made it good',
-        said: '"She\'s beaten me four times. Four! Today I got nervous – and kept playing."',
-      },
-      respond: {
-        label: 'Tell her we\'re glad',
-        said: '"I can tell. You\'re doing the face."',
-      },
-      space: {
-        label: 'Let her enjoy it',
-        said: '"Oh, I\'m going to. All evening."',
-      },
-    },
-  },
-]
+ *  ⚠ THE EIGHT COME FIRST IN THE DOCUMENT AND IT IS NOT COSMETIC. `drawSmallTalkSubject` walks
+ *  `SMALL_TALK_SUBJECTS`' own order rather than this array's, so the SUBJECT is stable under a
+ *  re-ordering – but the situation draw is `pickInt` over the filtered pool, and that one reads
+ *  POSITION. Leaving the eight where they already were leaves every existing career's situation draw
+ *  where it already was, for the rows that were already there ahead of the corpus. Their document
+ *  refs run last (`R45`–`R52`) precisely because renumbering `R1`–`R44` to make refs and position
+ *  agree would move his own review's references to buy nothing.
+ *
+ *  ⚠ IDS ARE APPEND-ONLY and are asserted unique – the id is persisted as half of a `lifeLog` row's
+ *  `detail`, so a renamed key orphans an old career's record of a conversation that really happened.
+ *  The eight kept theirs verbatim through the move: `practice-clicked`, `line-call`, `march-entry`,
+ *  `coach-real`, `watching-players`, `court-four`, `new-place`, `beat-her-conqueror`.
+ *
+ *  ⚠⚠ AND THE RULINGS THEIR BANNER COMMENTS CARRIED WENT WITH THEM, into each row's own prose in the
+ *  document rather than into a changelog: `court-four`'s four-voice test and its named masculine
+ *  exception, `practice-clicked`'s «a practice that felt easy is a MOOD, never a training gain»,
+ *  `line-call`'s UNREPAIRED §8d.1 label collision («Tell her what worries us» is his most recent word
+ *  and is not an agent's to edit), `new-place`'s lead-in that round 44 dropped with every other
+ *  per-row lead-in, and `beat-her-conqueror`'s «temperament shapes the pattern, not the punctuation».
+ *  A ruling deleted in a refactor is a ruling nobody can obey.
+ *
+ *  ⚠ SPEC §10's DELIVERY ORDER WAS HIS AND IS NOW SPENT: «Expand the situation catalogue only after
+ *  the small set works.» The small set worked for two waves, so this is the expansion it licensed –
+ *  recorded rather than dropped, because the sentence explains why the catalogue was thin and the
+ *  answer to «why is it not thin any more» is that its own condition was met. */
+export const SMALL_TALK_SITUATIONS: readonly SmallTalkSituation[] = SMALL_TALK_CORPUS
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 44 – THE FRAME POOL: THE SCENE SHE SAYS IT IN, WHICH IS NOT THE THING SHE SAYS
+// =================================================================================================
+//
+// `docs/specs/the-frame-pool-2026-09.md`. The eighteen lines are the owner's, delivered 17.09
+// against the brief in that file; four of them are marked DRAFT there and are his to rule on.
+//
+// ⚠⚠ WHY A POOL AND NOT A FRAME PER ROW. A situation owes ONE spoken line per voice, because
+// presence changes «the scene the parent is standing in – never the sentence she says inside the
+// quotation marks» (`PresenceCell`'s own note, and §D of the wave-3 presence pin asserts it). A
+// frame written per row would be 43 × 2 frames nobody needs and would re-open the very law the pin
+// holds; drawn from a pool keyed on PRESENCE ALONE, the quoted span is identical at both distances
+// by construction.
+//
+// ⚠⚠ AND THE POOL IS KEYED ON PRESENCE ALONE – NEVER ON THE VOICE AND NEVER ON THE SUBJECT. His own
+// ruling closed `bag-down`'s urgency question on exactly that condition: «these frames may never be
+// bound to a voice», so the human variation stays variation instead of re-encoding `sunny` and
+// `quiet` a second time. Subject-keying was tested and refused in the spec – he posed the most
+// dangerous frame (`whole-message`) against a piece of good news, a worry and an observation and it
+// carried all three – so a subject matrix would be premature complication.
+//
+// ⚠ AN `away` FRAME MAY NOT MENTION A ROOM, A FLATMATE, A LECTURE, A HOTEL OR A TOURNAMENT, because
+// `away` is a LIFE STAGE and not a travel week: the same line has to work for a nineteen-year-old in
+// a dorm and a twenty-eight-year-old in her own flat. What it may name is the channel and the
+// distance. A `roof` frame may assume no time of day or meal that fails in some weeks.
+
+/** One frame: the id that is persisted and compared, and the sentence that is rendered.
+ *  ⚠⚠ THE ID IS THE THING THE EXCLUSION COMPARES AND THE THING THE SAVE HOLDS – never the rendered
+ *  text. His ruling 1: «stable ids, and the exclusion compares IDS rather than rendered text». A
+ *  comparison on the sentence would silently start repeating the moment a line was re-worded, and a
+ *  re-worded line is exactly the kind of change this project ships. */
+export interface SmallTalkFrame {
+  id: string
+  line: string
+}
+
+/** ⭐⭐⭐ NINE PER PRESENCE, HIS, 17.09 («бери обе» – he took both ninths).
+ *
+ *  ⚠⚠ THE IDS ARE PERSISTED AND THEREFORE APPEND-ONLY, and the two pools' ids must stay DISJOINT –
+ *  which is not decoration. `recentFrames` reads the pool a stored id belongs to in order to honour
+ *  «roof remembers roof, away remembers away» off a `lifeLog` that stores no presence; an id in both
+ *  pools would make one row count as two different memories. The completeness pin asserts it.
+ *
+ *  ⭐ INDEX 0 OF EACH POOL IS THE FALLBACK FOR A ROW WRITTEN BEFORE v81, and the two were chosen
+ *  rather than defaulted: `kettle` and `call-middle` are exactly the two frames `practice-clicked`
+ *  shipped with, so a small-talk row already in a save renders BYTE-IDENTICALLY to what the owner
+ *  saw. See `smallTalkFrameOf`.
+ *
+ *  ⚠ THE FIRST FIVE `roof` LINES AND THE FIRST `away` LINE ARE THE ONES THAT WERE INLINE IN
+ *  `SMALL_TALK_SITUATIONS` UNTIL THIS ROUND – his words, moved and not edited – with ONE correction
+ *  that is his own: `shoes` read «She was halfway out of her shoes and **already telling it**», and
+ *  his note was «по-английски рассказывают `a story` или `someone something`, но не универсальное
+ *  `it`». That correction is the reason this round carries a frozen-career re-stamp with it. */
+export const SMALL_TALK_FRAMES: Record<BeatPresence, readonly SmallTalkFrame[]> = {
+  roof: [
+    { id: 'kettle', line: 'She put the kettle on.' },
+    { id: 'bag-down', line: 'She was straight into it before her bag was down.' },
+    { id: 'shoes', line: 'She was halfway out of her shoes when she started.' },
+    { id: 'cupboard', line: 'She said it to the cupboard door, putting things away.' },
+    { id: 'doorway', line: 'She started it in the doorway and finished it sitting down.' },
+    { id: 'table', line: 'She stopped beside the kitchen table and said it.' },
+    { id: 'sofa', line: 'She sat on the arm of the sofa and began.' },
+    { id: 'phone-counter', line: 'She set her phone on the counter and started talking.' },
+    // ⚠ THE ARCHITECT'S, AND A **DRAFT** – admissible only because he asked for a ninth («ну может
+    // что-то добавишь? я за шутку =)») and then took both. Funny because it is TRUE – the ordinary
+    // chaos of a kitchen – and never a verdict on what she is saying, which is the line a frame may
+    // not cross: it wraps all 51 situations, worries included.
+    { id: 'fridge', line: 'She talked at the open fridge for a while.' },
+  ],
+  away: [
+    { id: 'call-middle', line: 'She mentioned it halfway through the call.' },
+    { id: 'call-open', line: 'She opened the call with it.' },
+    { id: 'call-late', line: 'She said it near the end of the call.' },
+    { id: 'voice-note', line: 'She sent it in a voice note.' },
+    { id: 'whole-message', line: 'She sent it as the whole message.' },
+    { id: 'other-message', line: 'She added it to a message about something else.' },
+    // ⚠ THE ARCHITECT'S, AND A **DRAFT** – written on his explicit instruction («бери свою замену»)
+    // after `family-chat` was struck. It places the utterance in her ATTENTION rather than in a
+    // channel, which is the axis the away pool was missing: `roof` has a sideways frame (`cupboard`)
+    // and `away` had none. Distinct from `other-message` – that one is about the MESSAGE being about
+    // something else, this is about HER being in the middle of something else.
+    { id: 'mid-something', line: 'She said it in the middle of something else.' },
+    { id: 'visit', line: 'She brought it up when she came by.' },
+    // ⚠ THE ARCHITECT'S, AND A **DRAFT** – the second ninth, same ruling as `fridge`.
+    { id: 'ceiling', line: 'She said it with the camera pointing at the ceiling.' },
+  ],
+}
+
+/** ⭐⭐ HIS RULING 2 – **EACH PRESENCE POOL REMEMBERS ITS OWN LAST TWO**: «roof remembers roof, away
+ *  remembers away», so two evenings at home separated by one call cannot repeat a frame from where
+ *  he is sitting.
+ *
+ *  ⚠ TWO AND NOT ONE, which is `SMALL_TALK_EXCLUDE_LAST`'s own number one layer over – and the same
+ *  reasoning: one stops the back-to-back repeat his complaint was about, two also stops a repeat
+ *  inside the last three. Against nine frames it costs nothing; the pool is never emptied. */
+export const SMALL_TALK_FRAME_EXCLUDE_LAST = 2
+
+/** ⭐⭐⭐ THE FRAMES SHE HAS JUST BEEN GIVEN, IN **THIS** PRESENCE, newest first.
+ *
+ *  ⚠⚠ THE PRESENCE IS READ OFF THE FRAME ID AND NOT OFF THE ROW, because a `lifeLog` row stores no
+ *  stage and no presence – only the week, the kind, the detail and (since v81) the frame. The two
+ *  pools' ids are DISJOINT, so «which pool did this row draw from» is a property of the id itself.
+ *  That is the whole reason the ids are asserted disjoint: an id in both pools would make one stored
+ *  row count as a memory of both distances.
+ *
+ *  ⚠ A ROW WITH NO `frame` IS NOT A MEMORY. It predates the pool, so nothing was drawn and there is
+ *  nothing to avoid repeating – it is skipped rather than counted, exactly as a legacy small-talk row
+ *  is skipped by `withoutRecentSituations`.
+ *
+ *  ⚠ PURE AND ZERO-DRAW. */
+function recentFrames(world: WorldState, presence: BeatPresence): string[] {
+  const pool = new Set(SMALL_TALK_FRAMES[presence].map((f) => f.id))
+  const out: string[] = []
+  const log = lifeLogOf(world)
+  for (let i = log.length - 1; i >= 0 && out.length < SMALL_TALK_FRAME_EXCLUDE_LAST; i--) {
+    const frame = log[i].frame
+    if (log[i].kind !== 'small-talk' || frame === undefined || !pool.has(frame)) continue
+    out.push(frame)
+  }
+  return out
+}
+
+/** ⭐⭐⭐ WHICH FRAME, THIS WEEK, AT THIS DISTANCE – drawn ONCE, at the raise, and then PERSISTED.
+ *
+ *  ⚠⚠ THE STREAM IS PURPOSE-SCOPED AND IS NEVER MAIN (invariant 2). `rngFromSeed` is re-derived at
+ *  this call site and persists nothing, so the frozen MAIN capture (41550 draws / `e6b0c709`,
+ *  tests/condition.test.ts) cannot see this function and does not move.
+ *
+ *  ⚠⚠ AND THE RESULT IS STORED RATHER THAN RE-DERIVED, WHICH IS THE WHOLE OF THE SCHEMA MOVE. His
+ *  ruling: a frame may not change after a save, a reload, **or the pool growing**. A derived frame
+ *  survives the first two perfectly – the key carries the week – and fails the third: a pool that
+ *  grows from nine to ten re-derives a different member for a beat already on screen. So `v81` puts
+ *  the chosen id on the row. ⚠ The same reasoning applies to the EXCLUSION: it is read at the draw
+ *  and never afterwards, so a later row cannot re-word an earlier card.
+ *
+ *  ⚠ THE POOL IS NEVER EMPTIED. Nine frames against an exclusion of two leaves seven, so the filter
+ *  cannot starve – but the `length === 0` guard is kept anyway, because a pool shrunk by a future
+ *  edit must degrade to «repeat a frame» rather than to `undefined`. */
+function drawSmallTalkFrame(world: WorldState, presence: BeatPresence): string {
+  const banned = new Set(recentFrames(world, presence))
+  const pool = SMALL_TALK_FRAMES[presence].filter((f) => !banned.has(f.id))
+  const live = pool.length > 0 ? pool : SMALL_TALK_FRAMES[presence]
+  const at = pickInt(rngFromSeed(`${world.seed}:smalltalk:frame:${world.week}`), 0, live.length - 1)
+  return live[at].id
+}
+
+/** ⭐⭐ THE FRAME A ROW WAS GIVEN, FOR RENDERING. `null` is a row written before v81, and the answer
+ *  for one is the FIRST line of the presence's pool – which is a chosen fallback and not a neutral
+ *  stand-in: `kettle` and `call-middle` are exactly the two frames the shipped catalogue wrapped
+ *  `practice-clicked` in, so every small-talk row already sitting in a save renders byte-identically
+ *  to what the owner read on the week it was raised.
+ *
+ *  ⚠ A FRAME ID THAT NAMES NOTHING THROWS, like every other unreadable detail in this file – the ids
+ *  are append-only for the same reason the situation ids are. */
+function smallTalkFrameOf(frame: string | undefined, presence: BeatPresence): string {
+  const pool = SMALL_TALK_FRAMES[presence]
+  if (frame === undefined) return pool[0].line
+  const found = pool.find((f) => f.id === frame)
+  if (found === undefined) throw new Error(`A small-talk row names no ${presence} frame: ${frame}`)
+  return found.line
+}
 
 /** ⭐⭐ THE MOOD WEIGHTS (spec §2), AND THEY ARE WEIGHTS RATHER THAN A MAPPING – which is the whole
  *  mechanical change of that section. «A heavy week leans toward `worry` but can still produce a
@@ -1991,8 +1867,13 @@ export const SMALL_TALK_SUBJECT_WEIGHT: Record<MoodRegister, Record<SmallTalkSub
  *
  *  ⚠ PURE AND ZERO-DRAW. Nothing here takes an `Rng`, so the frozen MAIN capture cannot see it. */
 export function reachableSituations(world: WorldState, voice: Temperament, stage: DiaryLifeStage): SmallTalkSituation[] {
+  // ⚠ ROUND 44 – «DOES THIS ROW HAVE **HER** COLUMN», where it used to ask «is this row hers». The
+  // gate is unchanged in strength: a voice nobody wrote for a situation still cannot reach it. What
+  // changed is that a situation can now be written for more than one, which is the corpus's §2 and
+  // the whole reason a `fiery` girl no longer has one conversation in her life.
   return SMALL_TALK_SITUATIONS.filter(
-    (s) => s.voice === voice && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world)),
+    (s) =>
+      s.voices[voice] !== undefined && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world)),
   )
 }
 
@@ -2069,24 +1950,30 @@ function smallTalkDetailFor(subject: SmallTalkSubject, id: string): string {
  *
  *  ⚠ A ROW NAMING A SITUATION THAT NO LONGER EXISTS THROWS, like every other unreadable detail in
  *  this file. That is why the ids are append-only: see `SmallTalkSituation.id`. */
-function smallTalkSituationOf(detail: string, voice: Temperament): SmallTalkSituation | null {
+function smallTalkVoiceOf(detail: string, voice: Temperament): SmallTalkVoiceEntry | null {
   const cut = detail.indexOf(':')
   if (cut < 0) return null
   const subject = detail.slice(0, cut)
   const id = detail.slice(cut + 1)
-  const found = SMALL_TALK_SITUATIONS.find((s) => s.voice === voice && s.subject === subject && s.id === id)
-  if (found === undefined) throw new Error(`A small-talk row names no situation: ${detail} (${voice})`)
-  return found
+  const found = SMALL_TALK_SITUATIONS.find((s) => s.subject === subject && s.id === id)
+  const column = found?.voices[voice]
+  if (column === undefined) throw new Error(`A small-talk row names no situation: ${detail} (${voice})`)
+  return column
 }
 
-/** HER OPENER FOR A SITUATION, in the frame the stage puts her in. ⚠ IT THROWS rather than falling
- *  back on the other frame – see `SmallTalkSituation.opener`. */
-function smallTalkOpener(situation: SmallTalkSituation, presence: BeatPresence): string {
-  const line = presence === 'away' ? situation.opener.away : situation.opener.roof
-  if (line === undefined) {
-    throw new Error(`small-talk situation ${situation.subject}:${situation.id} has no ${presence} frame`)
-  }
-  return line
+/** ⭐⭐⭐ ROUND 44 – HER OPENER, WHICH IS A **POOL FRAME JOINED TO ONE SPOKEN PAYLOAD**.
+ *
+ *  ⚠⚠ IT NO LONGER THROWS FOR A MISSING FRAME, AND THAT IS THE SHAPE CHANGE RATHER THAN A LOOSENING.
+ *  Until this round a situation carried the frame and the quotation glued into one string per
+ *  presence, so a cell nobody had written was a hole the renderer had to refuse; now the payload is
+ *  one string that serves both distances and the scene comes from a pool that is total over
+ *  presence. There is no cell left to be missing. `stages` still gates which situations she can
+ *  reach at all – that clause did not move.
+ *
+ *  ⭐ AND THE LAW IS NOW A PROPERTY: the quoted span is identical at `roof` and at `away` because
+ *  there is only one of it (`tests/wave3-presence.test.ts` §D). */
+function smallTalkOpener(column: SmallTalkVoiceEntry, presence: BeatPresence, frame: string | undefined): string {
+  return `${smallTalkFrameOf(frame, presence)} ${column.opener}`
 }
 
 // =================================================================================================
@@ -2982,7 +2869,14 @@ function speaksInHerOwnVoice(band: BondBand): boolean {
  *
  *  ⚠ IT TAKES THE STAGE AND NOT A `BeatPresence`, so the ONE place the roof/away cut is made is
  *  `presenceOf` above (which asks `awayVoice`, which is the single copy of the rule). A caller that
- *  could hand in a presence directly would be a second reading of «is she under this roof». */
+ *  could hand in a presence directly would be a second reading of «is she under this roof».
+ *
+ *  ⭐ ROUND 44 – `frame` IS THE TENTH AND IT IS THREADED EXACTLY AS `wants`, `stage`, `driver` AND
+ *  `endsRegister` WERE: a parameter with a safe default, so every pin waves 2 to 6 wrote keeps
+ *  calling this with five to nine arguments and keeps asserting the lines it was written against.
+ *  ⚠ THE DEFAULT IS `undefined` AND IT IS THE PRE-v81 READING RATHER THAN A NEUTRAL STAND-IN: the
+ *  first line of the presence's pool is exactly what the shipped catalogue wrapped `practice-clicked`
+ *  in, so an un-stamped call renders the sentence the owner already read. See `smallTalkFrameOf`. */
 export function lifeBeatSaid(
   kind: LifeBeatKind,
   detail: string,
@@ -2993,6 +2887,7 @@ export function lifeBeatSaid(
   stage: DiaryLifeStage = 'school',
   driver: ForkStopDriver = 'own',
   endsRegister: EndsRegister = 'told-now',
+  frame: string | undefined = undefined,
 ): string {
   const presence = presenceOf(stage)
   // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
@@ -3028,8 +2923,8 @@ export function lifeBeatSaid(
     // raises a legacy row on any week no situation is reachable for this girl at this stage, which
     // is the catalogue being thin on purpose (spec §10).
     case 'small-talk': {
-      const situation = smallTalkSituationOf(detail, voice)
-      if (situation !== null) return smallTalkOpener(situation, presence)
+      const column = smallTalkVoiceOf(detail, voice)
+      if (column !== null) return smallTalkOpener(column, presence, frame)
       const subject = LEGACY_SMALL_TALK_SUBJECTS.find((s) => s === detail)
       if (subject === undefined) throw new Error(`A small-talk row carries no subject: ${detail}`)
       return presenceLine(SMALL_TALK_LINE[voice][subject], presence)
@@ -3233,16 +3128,16 @@ export function lifeBeatFollowUps(
   bond: BondBand,
 ): LifeBeatFollowUp[] {
   if (kind === 'small-talk') {
-    const situation = smallTalkSituationOf(detail, voice)
+    const column = smallTalkVoiceOf(detail, voice)
     // A LEGACY row has no situation and therefore no second line of hers – which is the shipped card,
     // unchanged. It is named here rather than left to fall through, because «this cell is still the
     // old beat» is a fact the handoff reports and a reader has to be able to find.
-    if (situation === null) return []
+    if (column === null) return []
     return SMALL_TALK_STANCES.map((stance) => ({
       optionId: SMALL_TALK_STANCE_ID[stance],
-      said: situation.shared === undefined
-        ? [situation.branches[stance].said]
-        : [situation.shared, situation.branches[stance].said],
+      said: column.shared === undefined
+        ? [column.branches[stance].said]
+        : [column.shared, column.branches[stance].said],
       done: stance === 'invite' ? LISTEN_DONE_LABEL : CONFIRM_LABEL,
     }))
   }
@@ -3254,10 +3149,10 @@ export function lifeBeatFollowUps(
  *  `lifeBeatOptionsFor` takes. `undefined` for a legacy row, which is the base table – the three
  *  generic labels that shipped. */
 function smallTalkLabels(detail: string, voice: Temperament): Record<string, string> | undefined {
-  const situation = smallTalkSituationOf(detail, voice)
-  if (situation === null) return undefined
+  const column = smallTalkVoiceOf(detail, voice)
+  if (column === null) return undefined
   const out: Record<string, string> = {}
-  for (const stance of SMALL_TALK_STANCES) out[SMALL_TALK_STANCE_ID[stance]] = situation.branches[stance].label
+  for (const stance of SMALL_TALK_STANCES) out[SMALL_TALK_STANCE_ID[stance]] = column.branches[stance].label
   return out
 }
 
@@ -3515,6 +3410,13 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       // asserting the lines it was written against. ⚠ THE READ IS NOT HANDED IN, because her line
       // does not carry it – the §3e banner is where that decision lives.
       endsRegister,
+      // ⭐⭐⭐ ROUND 44 – THE TENTH IS **READ OFF THE ROW**, never re-derived here, and it is the
+      // `heard` stamp's own ruling one field over: this function runs on EVERY `toSnapshot`, and a
+      // re-derived frame would be re-decided after every command. His own rule is stronger than
+      // that – a frame may not change after a save, a reload, OR THE POOL GROWING – and only a
+      // stored id survives the third. `undefined` on a pre-v81 row, which renders the first line of
+      // the presence's pool: the sentence that row has already shown him.
+      row.frame,
     ),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
@@ -3565,7 +3467,7 @@ export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
  *
  *  ⚠ IT TAKES THE DETAIL RATHER THAN COMPUTING IT, so every beat kind's own trigger owns its own
  *  draw and this stays the plumbing. `raiseForkOpinion` (world/endings.ts's caller) is the first. */
-export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: string, heard?: boolean): void {
+export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: string, heard?: boolean, frame?: string): void {
   world.lifeLog ??= []
   const row: LifeBeatRecord = { week: world.week, kind, detail, answer: null }
   // ⭐⭐⭐ v76 T6 – THE STAMP, AND THE KEY IS WRITTEN ONLY WHEN SOMEBODY WAS ACTUALLY TEACHING HIM TO
@@ -3577,6 +3479,15 @@ export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: str
   // (read back by every later prompt). A second draw for the second consumer would be one fact with
   // two sources of truth, and they would part the first week a rung changed.
   if (heard !== undefined) row.heard = heard
+  // ⭐⭐⭐ ROUND 44 / v81 – THE FRAME, STAMPED ONCE AND NEVER RE-DERIVED. `undefined` leaves the row
+  // the exact object every row before this commit was, which is what makes the migration trivial: a
+  // beat of any other kind takes no frame at all, and an old small-talk row falls back to the first
+  // line of its presence's pool – the sentence it has already shown him.
+  // ⚠⚠ AND IT IS PERSISTED RATHER THAN DERIVED FOR ONE REASON ONLY, HIS: «the frame must not change
+  // after a save, a reload, OR THE ARRAY GROWING». The first two a purpose-scoped stream keyed on the
+  // week survives perfectly; the third it cannot, because a pool of ten re-derives a different member
+  // for a beat already on screen.
+  if (frame !== undefined) row.frame = frame
   world.lifeLog.push(row)
 }
 
@@ -4532,7 +4443,16 @@ export function rollSmallTalk(world: WorldState): void {
   // three weeks and is re-assembled on every `toSnapshot`, so a re-derivation could hand the parent a
   // different small thing from the one she came with – and could hand him one whose competitive fact
   // has since gone false.
-  raiseLifeBeat(world, 'small-talk', smallTalkDetailFor(pool[at].subject, pool[at].id))
+  // ⭐⭐⭐ ROUND 44 – AND THE SCENE SHE SAYS IT IN IS DRAWN HERE AND STAMPED WITH IT. The frame is the
+  // third key of this step and it is the only one that is NOT keyed `:life:` – the frame pool spec
+  // names it in full («`rngFromSeed(\`${seed}:smalltalk:frame:${week}\`)` – never MAIN, invariant
+  // 2») and the spelling is his document's, carried rather than tidied.
+  // ⚠ IT IS DRAWN AFTER THE SITUATION AND THE ORDER IS NOT LOAD-BEARING – each key carries its own
+  // week, so neither draw can move the other. What IS load-bearing is that it happens on the RAISE:
+  // the exclusion reads the log as it stands now, and a frame derived later would be re-decided on
+  // every snapshot.
+  const frame = drawSmallTalkFrame(world, presenceOf(lifeStageOf(world)))
+  raiseLifeBeat(world, 'small-talk', smallTalkDetailFor(pool[at].subject, pool[at].id), undefined, frame)
 }
 
 /** ⭐⭐ WHICH SMALL THING, WEIGHTED BY THE WEEK'S REGISTER AND NARROWED TO WHAT SHE COULD HONESTLY

@@ -32,6 +32,7 @@ import {
   growWeek,
   physicalMean,
   COOLHEAD_RECEIPT,
+  type DeclineCare,
 } from '../development'
 import { addEvent } from './ledger'
 // ⭐⭐ v76 T5 – THE SEAT, ASKED DIRECTLY, WHICH IS THE HALF OF RULING J THAT APPLIES HERE. The
@@ -47,6 +48,17 @@ import { addEvent } from './ledger'
 // So the fact is computed at the caller that already holds every piece, and `growWeek` gains one
 // optional field: no arity change, no pin re-aim, no new arrow into a module that cannot take one.
 import { psychologistWorkingRung } from './psychologist'
+// ⭐⭐⭐ ROUND 44 – THE TWO SEATS THE DECLINE READS (the spec's §4). The SAME half of ruling J the
+// psychologist's import above runs under, and MEASURED the same way rather than asserted – over the
+// tree's own value-import graph with `import type` excluded and `export … from` counted as an edge:
+//   · `world/masseur.ts` reaches THIS file by **ZERO** paths;
+//   · `world/sparring.ts` reaches THIS file by **ZERO** paths.
+// So both arrows below close nothing. Both seats are leaves over `economy`, `condition`, `ledger`,
+// `constants`, `ladder`, `college` and `bookings`, and this file already imports `./college` itself.
+// They are asked here for the same reason the psychologist's rung is: the fact travels the last step
+// into `engine/development.ts` as a `growWeek` ARGUMENT, because that module cannot import a seat.
+import { masseurRungOf, masseurWorksThisWeek } from './masseur'
+import { sparringRungOf, sparringWorksThisWeek } from './sparring'
 // ⚠ THE ONE ANSWER TO "HOW MANY WEEKS HAS THIS BODY LOST", and not a second one taken off
 // `careerTotals` directly: `weeksLostSoFar` is the max of the monotone v40 total and what the pruned
 // `injuryHistory` still holds, which is the reading the career-ending injury already judges her by.
@@ -76,8 +88,20 @@ import { summerLoadFactor } from './summer'
 /** ⭐ PHASE 4 OF THE WEEKLY TICK – the ladder moves, she develops, and her life happens.
  *
  *  Called from `tickWeek` after her competition has resolved and before the canonical AI brackets
- *  run. `rng` is the MAIN stream and reaches exactly one line, `driftCohort`; see the header. */
-export function growAndLive(world: WorldState, rng: Rng): void {
+ *  run. `rng` is the MAIN stream and reaches exactly one line, `driftCohort`; see the header.
+ *
+ *  ⭐⭐⭐ `away` IS ROUND 44'S ONE NEW ARGUMENT and it is `playHerWeek`'s own shape, threaded rather
+ *  than re-asked. It is phase 3a's `playedThisWeek` – «is she at an event this week» – which is the
+ *  single fact a not-travelling hitting partner stands down on (`sparringWorksThisWeek`), and it is
+ *  the identical local the BILL was taken against at step 5. A second `isCompetitionWeek` here would
+ *  answer differently on exactly the weeks it matters: the medical arm of phase 3a removes her entry,
+ *  which is the reason `tickWeek` threads this value in the first place (see its step 3 comment).
+ *
+ *  ⚠ IT DEFAULTS TO `false` – SHE IS AT HOME – WHICH IS WHAT A PHASE-4-ONLY WALK MEANS. Eight test
+ *  files and no production code call this function outside `tickWeek`, every one of them stepping the
+ *  growth phase over a world with no tournament in it, so the default is those callers' own answer
+ *  rather than a convenience. ZERO DRAW IMPLICATIONS: a boolean, read twice. */
+export function growAndLive(world: WorldState, rng: Rng, away = false): void {
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
   //
   // ⚠ THE SEED JOINED THE SIGNATURE IN ROUND 31 #13 AND IT SPENDS NOTHING ON THIS STREAM. The cohort
@@ -174,6 +198,24 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   //     The predicate is unchanged: he only coaches the weeks he is PAID for.
   const coach = coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null
   const chemistry = coach ? accrueCoachPair(world, coach) : 0
+  // ⭐⭐⭐ ROUND 44 – WHO IS ON THE PAYROLL, AS THE DECLINE READS THEM
+  //     (`docs/specs/the-decline-and-the-seats-2026-09.md` §4). Null for a seat that is not WORKING
+  //     this week, which is the predicate the BILL reads and never the bare hire – so a college
+  //     freeze, a booked family week, and an away week for a partner without a fare all absorb
+  //     exactly nothing, because exactly nothing was charged for them.
+  //
+  // ⚠ `coachRate` IS A PLACEHOLDER HERE AND `growWeek` OVERWRITES IT with the term its own rate
+  //     spends. It is in the type rather than optional so the decline can never be handed a coach
+  //     the growth did not have; see the field's note in engine/development.ts.
+  //
+  // ⚠ ZERO DRAWS ON ANY STREAM – four predicates and two lookups, and every one of them is pure
+  //     state. The frozen MAIN capture (41550 / e6b0c709) cannot see this block, and a frozen
+  //     career never reaches the decline branch at all: 156 weeks from fourteen is age seventeen.
+  const care: DeclineCare = {
+    masseurConditionBonus: masseurWorksThisWeek(world) ? masseurRungOf(world).conditionBonusPerWeek : null,
+    sparringDriftCut: sparringWorksThisWeek(world, away) ? sparringRungOf(world).driftCut : null,
+    coachRate: 1,
+  }
   world.skills = growWeek({
     skills: world.skills,
     potential: world.potential,
@@ -255,6 +297,10 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     // she has no coach, and 0 is `coachFactor`'s identity to the bit – so a self-coached career, a
     // college freeze and a booked family week grow exactly as they always have.
     chemistry,
+    // ⭐⭐⭐ ROUND 44 – AND THE PAYROLL'S SHARE OF THE DECLINE, built above. Inert on every week
+    // before `declineStart` (the whole loss term is zero there, so the shield multiplies nothing)
+    // and on every career with no seat working and no coach above the parent's own rate.
+    care,
   })
 
   // 3b-bis. ⭐⭐⭐ ...AND THE BEST HER BODY HAS EVER BEEN IS REMEMBERED (v62, the long goodbye step 1 –
