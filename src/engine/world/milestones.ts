@@ -134,6 +134,15 @@ export function captureBreakEven(world: WorldState): void {
       // ⭐ ROUND 46 #9 – A PURCHASE IS NOT A COST OF THE WEEK'S TENNIS. `isHoldingCategory` is the
       // one name for that distinction (world/ledger.ts) and the career arm below reads it too: a
       // family that bought a house on a title week did not fail to cover the week's tennis.
+      //
+      // ⚠⚠ AND IT EXCUSES THE SHELF'S UPKEEP ALONG WITH THE PURCHASE, WHICH IS STATED RATHER THAN
+      // HIDDEN. `resolveAssetUpkeep` books a yacht's crew under `'shop'` too, and a week's
+      // `byCategory` row is one netted figure – so the two genuinely cannot be told apart HERE, and
+      // the career arm below, which subtracts `paidCents` rather than a category, keeps the upkeep
+      // in. Two imperfect options and the smaller error taken on purpose: a deposit is six figures
+      // and a week's upkeep is three, so counting the deposit destroyed the question while excusing
+      // the upkeep only nudges it. The reading it leaves is defensible in its own right – this arm
+      // asks whether the TENNIS paid for the tennis, and a boat's crew is not the tennis.
       if (cat !== 'prize' && !isHoldingCategory(cat) && amt < 0) costs += -amt
     }
     if (prize > 0 && prize > costs) {

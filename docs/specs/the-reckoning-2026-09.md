@@ -149,6 +149,16 @@ Two design choices worth stating:
 were walked before the shelf existed and bought nothing, so their `heldCents` is 0 and their reading
 does not move by a cent. What changed is only the career that OWNS something.
 
+### 2b. ⚠ One imperfection, taken knowingly
+
+`captureBreakEven`'s **week** arm excludes the whole `'shop'` category, which excuses the shelf's
+weekly **upkeep** as well as the purchase – `resolveAssetUpkeep` books a yacht's crew under `'shop'`
+too and a week's `byCategory` row is one netted figure, so the two cannot be told apart there. The
+**career** arm does not have this problem, because it subtracts `assets[].paidCents` rather than a
+category, and upkeep never touches `paidCents`. Two imperfect options and the smaller error taken on
+purpose: a deposit is six figures and a week's upkeep is three. The reading it leaves also stands on
+its own – that arm asks whether the TENNIS paid for the tennis, and a boat's crew is not the tennis.
+
 ## 3. Item 10 – the diagnosis
 
 `buildEndingView` folded `min(seasonHistory[].endRank)`. That field is documented on

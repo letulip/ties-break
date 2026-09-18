@@ -247,7 +247,9 @@ export function slotFirstCheque(world: WorldState): AlbumPage {
   )
 }
 
-/** SLOT 4 – THE BEST WEEK. The highest-rung `title`; falls back to the best `season-rank`. */
+/** SLOT 4 – THE BEST WEEK. The highest-rung `title`; falls back to the best season she ever CLOSED
+ *  on her own table (round 46 #10 – it used to be the best `season-rank` milestone, which is the
+ *  junior rank on every row; see `bestSeasonClose`). */
 export function slotBestWeek(world: WorldState): AlbumPage {
   let best: Milestone | null = null
   for (const m of world.milestones) {
