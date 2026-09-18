@@ -627,7 +627,13 @@ describe('save migrations', () => {
     // rung to the walk. Its READER is reachable in a frozen career – every frozen career hires a
     // coach and the till settles a deal on week one – which is why that file re-stamped again, and
     // this line is not about that either.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 82 – past the colliding 64, through 65').toBe(82)
+    // ⚠ RE-AIMED AT v83 (18.09, the wedding – wave 7 T1: `LoveEpisode.latchedWeek`/`partnerName`),
+    // NOT WEAKENED, for the SEVENTEENTH time and with the claim unchanged once more. 83 was taken by
+    // that wave's own full move (bump, append-only v82 -> v83 per-row step, golden fixture v83 –
+    // the corpus's first with a real episode row – and its README row, e2e fixtures regenerated,
+    // the doc-facts sentence and the frozen-career peel rung), and the walk below gains a rung that
+    // writes two nulls per episode row – of which a v63 save has none, so it changes no byte here.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 83 – past the colliding 64, through 65').toBe(83)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

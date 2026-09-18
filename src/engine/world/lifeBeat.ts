@@ -3866,6 +3866,12 @@ export function rollArrival(world: WorldState): void {
   // (`publicWrong: false`), and the booth has voiced neither fact (`airedMetWeek` / `airedEndedWeek`
   // null). The LEAK that can set `publicWeek` is T6 and the booth stamp is T7; nothing on this tree
   // moves any of the four off these values.
+  // ⭐⭐ v83 (the wedding, wave 7 – T1) APPENDS THE LAST TWO AT THEIR BIRTH VALUES, on the v77
+  // paragraph's own argument above: this push is the one place a row is born, and the two values are
+  // the same two the v82 -> v83 migration back-fills on every historical row. A new attachment is
+  // not married (`latchedWeek: null` – the latch is T3's write, weeks after an engagement that
+  // cannot fire before 23) and nobody has been named (`partnerName: null` – the name is written ONCE
+  // at the engagement beat by `partnerNameFor`, never here and never re-derived).
   world.loveEpisodes.push({
     id,
     sinceWeek,
@@ -3877,6 +3883,8 @@ export function rollArrival(world: WorldState): void {
     publicWrong: false,
     airedMetWeek: null,
     airedEndedWeek: null,
+    latchedWeek: null,
+    partnerName: null,
   })
 }
 

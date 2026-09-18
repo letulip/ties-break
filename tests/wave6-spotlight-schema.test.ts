@@ -194,8 +194,16 @@ describe('wave 6 T1 A – v77, the three-part move', () => {
     // note asked for, is to compare against the fixture the head owes instead of deleting the claim.
     // The v77 half is kept and sharpened: migrating `v76.json` and then reading `v77.json` and
     // migrating THAT must land on the same world, which says the ladder has no shortcut through 77.
-    const head = JSON.parse(readFileSync(`${SAVES}/v${SAVE_SCHEMA_VERSION}.json`, 'utf8'))
-    expect(head, 'the fixture the ladder head owes IS the migration\'s own output').toEqual(migrated)
+    // ⚠⚠ RE-AIMED A SECOND TIME BY WAVE 7's v83 (18.09), AND THIS TIME THE HEAD LEFT THE LINEAGE
+    // RATHER THAN MERELY MOVING: v83.json is deliberately NOT the migration's output on v82.json –
+    // it is a PROBE career that HOLDS a love episode, the corpus's first, so the per-row walks
+    // finally execute on a golden save (its README row records the departure, and
+    // tests/wave7-wedding-schema.test.ts asserts the row is really there). A head-equality against a
+    // different career cannot hold and is not owed; what this rung still owes – and keeps – is the
+    // no-shortcut claim along ITS OWN lineage: migrating `v76.json`, `v77.json` and `v82.json` (the
+    // last fixture the v25 recipe produced) must all land on the same world.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v82.json`, 'utf8'))), 'the lineage converges at the head')
+      .toEqual(migrated)
     expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v77.json`, 'utf8'))), 'and v77 is on the path')
       .toEqual(migrated)
   })
@@ -224,7 +232,13 @@ describe('wave 6 T1 A – v77, the three-part move', () => {
     const lived = { ...v76(), schemaVersion: 76, ...JSON.parse(JSON.stringify(kept)) }
     const out = migrateSave(lived) as unknown as Record<string, unknown>
     expect(out.spotlightHabituation, 'a habituation already on the record is kept whole').toBe(0)
-    expect(out.loveEpisodes, 'and so is every field of every row').toEqual(kept.loveEpisodes)
+    // ⚠ RE-AIMED BY WAVE 7's v83 (18.09): the ladder now holds a SECOND per-row step, so a v76 row
+    // walked to the head also gains `latchedWeek`/`partnerName`, both null. The claim of THIS case
+    // is untouched – every v77 sentinel survives whole – and the v83 step's own `??=` sentinels are
+    // asserted where they belong, in tests/wave7-wedding-schema.test.ts.
+    expect(out.loveEpisodes, 'and so is every field of every row').toEqual(
+      kept.loveEpisodes.map((row) => ({ ...row, latchedWeek: null, partnerName: null })),
+    )
   })
 
   it('⚠ takes NOTHING from any stream – the persisted MAIN position is byte-identical', () => {
@@ -272,7 +286,13 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
       const rows = JSON.parse(readFileSync(`${SAVES}/${f}`, 'utf8')).loveEpisodes
       return Array.isArray(rows) && rows.length > 0
     })
-    expect(carrying, 'not one golden save has ever held an attachment').toEqual([])
+    // ⚠ RE-AIMED 18.09 BY WAVE 7's v83, AND IT IS THE WELCOME RED THE NOTE ABOVE PREDICTED, answered
+    // exactly as it asked: the count re-aimed, the sentence kept, §B's crafted cases kept. v83.json
+    // is the corpus's FIRST fixture holding a real attachment – a probe career, so the per-row walks
+    // finally execute on a golden save – and it is still the ONLY one, which is what this now pins:
+    // every fixture BELOW v83 runs the v77 and v83 walks zero times, so the crafted payloads here
+    // and in tests/wave7-wedding-schema.test.ts remain the only witnesses with two rows in one save.
+    expect(carrying, 'exactly the wave-7 fixture holds an attachment, and no older golden ever has').toEqual(['v83.json'])
   })
 
   it('⭐⭐⭐ back-fills all four fields on EVERY row – a live one and an ended one, in one payload', () => {
@@ -333,8 +353,13 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     const lived = { ...v76(), schemaVersion: 76, loveEpisodes: [JSON.parse(JSON.stringify(row))] }
     const out = migrateSave(lived) as unknown as { loveEpisodes: Record<string, unknown>[] }
     const after = out.loveEpisodes[0]
-    expect(Object.keys(after).filter((k) => !(k in row)).sort(), 'exactly four fields arrive, and they are these four')
-      .toEqual([...V77_ROW_FIELDS].sort())
+    // ⚠ RE-AIMED AT v83 (18.09, the wedding – wave 7 T1), NOT WEAKENED. This case walks a v76
+    // payload to the CURRENT schema, and the ladder now holds a SECOND per-row step: v83 appends
+    // `latchedWeek` and `partnerName` (both null) after v77's four. «Exactly its own fields and
+    // nothing else» is still the claim – the list is just two versions long now, and a seventh
+    // field arriving is still a red line here.
+    expect(Object.keys(after).filter((k) => !(k in row)).sort(), 'exactly six fields arrive, and they are these six')
+      .toEqual([...V77_ROW_FIELDS, 'latchedWeek', 'partnerName'].sort())
     for (const key of Object.keys(row)) {
       expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(row[key]))
     }
@@ -343,8 +368,11 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // relative order of what it keeps – so a back-fill that inserted a field in the middle would
     // still peel correctly, but a row written by `rollArrival` and a row written by this migration
     // would serialise differently and two careers with the same history would hash apart.
-    expect(Object.keys(after), 'the six v74 fields first, then v77\'s four')
-      .toEqual(['id', 'sinceWeek', 'endedWeek', 'knownWeek', 'wants', 'partnerId', ...V77_ROW_FIELDS])
+    // ⚠ RE-AIMED AT v83 FOR THE SAME SERIALISATION-PARITY REASON: the v82 -> v83 walk `??=`s
+    // `latchedWeek` then `partnerName`, in `rollArrival`'s own literal order, so a migrated row and
+    // a born row still serialise identically – which is what the order pin below now also proves.
+    expect(Object.keys(after), 'the six v74 fields first, then v77\'s four, then v83\'s two')
+      .toEqual(['id', 'sinceWeek', 'endedWeek', 'knownWeek', 'wants', 'partnerId', ...V77_ROW_FIELDS, 'latchedWeek', 'partnerName'])
   })
 
   it('⚠ an empty list and an absent list are both handled, and neither throws', () => {

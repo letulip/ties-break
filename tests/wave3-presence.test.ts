@@ -250,7 +250,7 @@ function careerInStage(seed: string, stage: DiaryLifeStage): WorldState {
 /** The `'met'` beat delivered on this career's own tick, and the prompt it raises. */
 function promptAfterDelivery(world: WorldState, wants: LoveEpisode['wants'] = 'open'): string {
   const known = world.week
-  world.loveEpisodes = [{ id: 'p:1', sinceWeek: known - 10, endedWeek: null, knownWeek: known, wants, partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+  world.loveEpisodes = [{ id: 'p:1', sinceWeek: known - 10, endedWeek: null, knownWeek: known, wants, partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
   deliverKnownPartner(world)
   const prompt = buildLifeBeatPrompt(world)
   if (prompt === null) throw new Error('the delivery raised no beat')
@@ -492,7 +492,7 @@ describe('the вычитка fold G – the parent\'s narration, four rows, four
     // surfaces, two sentences – reached through the engine rather than by quoting either of them.
     const world = careerAt('presence-dry-vs-feed', 900)
     world.bond = bondFor('strained')
-    world.loveEpisodes = [{ id: 'p:1', sinceWeek: 890, endedWeek: null, knownWeek: 900, wants: 'private', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    world.loveEpisodes = [{ id: 'p:1', sinceWeek: 890, endedWeek: null, knownWeek: 900, wants: 'private', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     deliverKnownPartner(world)
     const feed = world.events.filter((e: WorldEvent) => e.type === 'life')
     expect(feed.length, 'the delivery wrote its kept row').toBe(1)

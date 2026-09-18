@@ -140,6 +140,21 @@ describe('golden saves corpus', () => {
         expect(Array.isArray(owned.entries), `${file}: ${owned.id} carries no purchase list`).toBe(true)
       }
 
+      // ⭐⭐⭐ v83 (the wedding, wave 7): EVERY EPISODE ROW CARRIES THE LATCH AND THE NAME SEAT, on
+      // every fixture however old. The corpus half of that version's per-row back-fill – and the
+      // v77 note in migrations.ts («the golden corpus cannot witness a per-row back-fill») is
+      // re-measured rather than inherited, exactly as v78's loop above re-measured it for `assets`:
+      // it stopped being true at v83, whose own fixture is the FIRST golden save that HOLDS an
+      // episode row, generated from a probe career rather than crafted. Every older fixture carries
+      // `loveEpisodes: []` and runs this loop zero times; the crafted witness with the mutation arm
+      // is tests/wave7-wedding-schema.test.ts. ⚠ `'key' in row` and not a truthiness test: null is
+      // the back-fill, and a weaker check would pass on a row the walk skipped.
+      expect(Array.isArray(migrated.loveEpisodes), `${file}: the episode list is a list`).toBe(true)
+      for (const episode of migrated.loveEpisodes) {
+        expect('latchedWeek' in episode, `${file}: ${episode.id} carries no latch seat`).toBe(true)
+        expect('partnerName' in episode, `${file}: ${episode.id} carries no name seat`).toBe(true)
+      }
+
       // v14 season history (R10-9): an array, season-ascending, and every row is the tiny numeric
       // record – no strings, so a long career can't bloat the save.
       // v16: the ordering key is the SEASON INDEX, and it must be strictly increasing – the whole

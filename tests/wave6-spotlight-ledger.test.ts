@@ -233,6 +233,8 @@ function episode(over: Partial<LoveEpisode> = {}): LoveEpisode {
     publicWrong: false,
     airedMetWeek: null,
     airedEndedWeek: null,
+    latchedWeek: null,
+    partnerName: null,
     ...over,
   }
 }

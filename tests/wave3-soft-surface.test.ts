@@ -170,6 +170,8 @@ const episode = (sinceWeek: number, knownWeek: number): LoveEpisode => ({
   publicWrong: false,
   airedMetWeek: null,
   airedEndedWeek: null,
+  latchedWeek: null,
+  partnerName: null,
 })
 
 // =================================================================================================

@@ -550,7 +550,7 @@ describe('wave 3 T8 C – a tier-1 reply moves nothing', () => {
     expect(lifeLogOf(world)[0].answer, 'and the row really was answered').toBe(OPTIONS[0].id)
 
     const control = careerAt('v2-no-feed-control', 200, 'close')
-    control.loveEpisodes = [{ id: 'p:1', sinceWeek: 190, endedWeek: null, knownWeek: 195, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    control.loveEpisodes = [{ id: 'p:1', sinceWeek: 190, endedWeek: null, knownWeek: 195, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     raiseLifeBeat(control, 'met', 'p:1')
     const controlBefore = control.events.length
     answerLifeBeat(control, 'wary')
@@ -1031,7 +1031,7 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     const world = createWorld('dormant-1')
     world.week = 200
     world.loveEpisodes = [
-      { id: 'p:190', sinceWeek: 190, endedWeek: null, knownWeek: 200, wants: 'open', partnerId: 'p:190', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null },
+      { id: 'p:190', sinceWeek: 190, endedWeek: null, knownWeek: 200, wants: 'open', partnerId: 'p:190', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null },
     ]
     raiseLifeBeat(world, 'met', 'p:190')
     expect(pendingLifeBeat(world), 'the blocking row really is waiting').not.toBeNull()

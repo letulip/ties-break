@@ -675,7 +675,43 @@ import type { AcademySupport } from '../academy'
 // its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
 // mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
 // tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 82
+// ⭐⭐⭐ v83 – THE WEDDING, WAVE 7 (life/wave-7 T1; `docs/plans/life-wave-7-builder-2026-09.md` §2,
+// the design `docs/plans/the-wedding-and-the-children.md` §1). NOTHING ON THE WORLD, AND TWO FIELDS
+// ON EVERY `LoveEpisode` ROW – v77's shape, one wave on:
+//
+//   · `latchedWeek: number | null`  – the week the wedding happened on THIS episode. The latch
+//     lives ON THE ROW and never as a global boolean (the 11.09 re-shape, on the owner's own
+//     «а свадьба может быть у нас не одна, кстати?»): a marriage is a property of one episode, a
+//     divorce (if ever built) is an ending on a latched episode, and a second wedding is the same
+//     machinery on a later row – zero migrations later. Back-fill null: no career has ever reached
+//     a wedding, because until this version there was no wedding to reach.
+//   · `partnerName: string | null`  – written ONCE at the engagement beat by `partnerNameFor`
+//     (drawn on `seed:life:partner-name:<episodeId>`, persisted, never re-derived at read – a later
+//     pool edit must never rename a husband an old career already has). Back-fill null: nobody was
+//     ever named, and readers fall back to the unnamed phrasing they use today.
+//
+// ⚠⚠ THE MIGRATION WALKS `loveEpisodes` AND `??=`s EACH ROW – v77's nested peel is the precedent,
+// and its standing note in migrations.ts binds here too: the golden corpus could not witness a
+// per-row back-fill until THIS version, whose own fixture (v83.json) is the first golden save that
+// HOLDS episode rows. The crafted witness is tests/wave7-wedding-schema.test.ts.
+//
+// ⚠ THE `'wedding'` MILESTONE MEMBER RIDES THIS SAME BUMP (T3's album entry) – a new persisted
+// union member is a schema change by invariant 3 (the v44 'facility' / v66 'business' precedent),
+// and it ships inside this version rather than costing a second one.
+//
+// ⚠ ZERO MAIN DRAWS ANYWHERE IN THE WAVE. The hazard is `seed:life:wedding:<week>`, the name is
+// `seed:life:partner-name:<episodeId>` – purpose-scoped sub-streams, re-derived at the call site,
+// persisting nothing – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+// The frozen careers are predicted IDENTITY in behaviour: 156 weeks never reaches 23, so no wedding
+// hazard, no beat, no name and no cost can fire there – the per-key diff moves on `schemaVersion`
+// everywhere and on `loveEpisodes` only where a row exists to gain the two null fields
+// (`eliteGrinder`, v77's own witness cell).
+//
+// Full move: this constant, the v82 -> v83 step in migrations.ts, tests/fixtures/saves/v83.json,
+// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
+// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 83
 
 
 

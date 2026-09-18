@@ -180,7 +180,7 @@ describe('wave 3 T3 A – eligibility', () => {
     const world = careerAt('arrival-occupied', 0)
     world.week = weekAtAge(world, 18)
     expect(arrivalEligible(world)).toBe(true)
-    world.loveEpisodes = [{ id: 'p:400', sinceWeek: 400, endedWeek: null, knownWeek: 402, wants: 'open', partnerId: 'p:400', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    world.loveEpisodes = [{ id: 'p:400', sinceWeek: 400, endedWeek: null, knownWeek: 402, wants: 'open', partnerId: 'p:400', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     expect(activeEpisode(world), 'the fixture really is an open row').not.toBeNull()
     expect(arrivalEligible(world), 'an occupied slot refuses').toBe(false)
   })
@@ -192,7 +192,7 @@ describe('wave 3 T3 A – eligibility', () => {
       const wait = LIFE.cooldownWeeks[temperament]
       const world = careerAt(`cooldown-${temperament}`, 0, temperament)
       const ended = weekAtAge(world, 18)
-      world.loveEpisodes = [{ id: 'p:1', sinceWeek: ended - 40, endedWeek: ended, knownWeek: ended - 38, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+      world.loveEpisodes = [{ id: 'p:1', sinceWeek: ended - 40, endedWeek: ended, knownWeek: ended - 38, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
       expect(activeEpisode(world), 'the row has ENDED, so the slot itself is free').toBeNull()
       world.week = ended + wait - 1
       expect(arrivalEligible(world), `${temperament}: one week short of ${wait} still refuses`).toBe(false)
@@ -249,7 +249,7 @@ describe('wave 3 T3 B – an ineligible week takes ZERO draws', () => {
   it('⭐⭐ an OCCUPIED slot derives no stream at all', () => {
     const world = careerAt('zero-draw-slot', 0)
     world.week = weekAtAge(world, 18)
-    world.loveEpisodes = [{ id: 'p:9', sinceWeek: 9, endedWeek: null, knownWeek: 9, wants: 'open', partnerId: 'p:9', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    world.loveEpisodes = [{ id: 'p:9', sinceWeek: 9, endedWeek: null, knownWeek: 9, wants: 'open', partnerId: 'p:9', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     rngKeys.length = 0
     rollArrival(world)
     expect(lifeKeys()).toEqual([])
@@ -258,7 +258,7 @@ describe('wave 3 T3 B – an ineligible week takes ZERO draws', () => {
   it('⭐⭐ a week inside a COOLDOWN derives no stream at all', () => {
     const world = careerAt('zero-draw-cooldown', 0, 'deep')
     const ended = weekAtAge(world, 18)
-    world.loveEpisodes = [{ id: 'p:1', sinceWeek: ended - 10, endedWeek: ended, knownWeek: ended - 8, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    world.loveEpisodes = [{ id: 'p:1', sinceWeek: ended - 10, endedWeek: ended, knownWeek: ended - 8, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     world.week = ended + LIFE.cooldownWeeks.deep - 1
     rngKeys.length = 0
     rollArrival(world)
@@ -313,7 +313,7 @@ describe('wave 3 T3 B – an ineligible week takes ZERO draws', () => {
     const lived = careerAt('alignment', 0, 'sunny')
     const start = weekAtAge(virgin, 18)
     // `lived` spent its adult years ineligible – an attachment that was there the whole time.
-    const history: LoveEpisode[] = [{ id: 'p:0', sinceWeek: start - 60, endedWeek: start - 1, knownWeek: start - 58, wants: 'open', partnerId: 'p:0', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    const history: LoveEpisode[] = [{ id: 'p:0', sinceWeek: start - 60, endedWeek: start - 1, knownWeek: start - 58, wants: 'open', partnerId: 'p:0', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     const a: number[] = []
     const b: number[] = []
     for (let w = start + LIFE.cooldownWeeks.sunny; w < start + 400; w++) {
@@ -442,6 +442,8 @@ describe('wave 3 T3 C – the weekly hazard', () => {
       publicWrong: false,
       airedMetWeek: null,
       airedEndedWeek: null,
+      latchedWeek: null,
+      partnerName: null,
     })
     // ⚠ WAVE 3 NEVER WRITES AN ENDING, and the row carries no name and no gender – the schema must
     // not hardwire boyfriend->husband (T1's own note on the type).
@@ -454,13 +456,22 @@ describe('wave 3 T3 C – the weekly hazard', () => {
     // four the v76 -> v77 migration back-fills on every historical row and the same four the ONE
     // writer (`rollArrival`, world/lifeBeat.ts) states at birth; the leak that sets `publicWeek` is
     // T6 and the booth's stamps are T7, so on this tree they can only be these values.
+    // ⚠ RE-AIMED AT THE v83 SHAPE (18.09, the wedding – wave 7 T1), NOT WEAKENED, AND FOR THE THIRD
+    // TIME THE PIN DID ITS ONE JOB: v83 appends `latchedWeek` and `partnerName` to the row, both
+    // null at birth – the latch is T3's write and cannot exist before an engagement at 23+, the name
+    // is written ONCE at that beat by `partnerNameFor` and never here. The two are the same two the
+    // v82 -> v83 migration back-fills on every historical row, so a fresh row and a migrated one
+    // stay the same shape – and «no name at birth» keeps the sentence two comments up true: a row is
+    // born nameless, and only an engagement names him.
     expect(Object.keys(row).sort()).toEqual([
       'airedEndedWeek',
       'airedMetWeek',
       'endedWeek',
       'id',
       'knownWeek',
+      'latchedWeek',
       'partnerId',
+      'partnerName',
       'publicWeek',
       'publicWrong',
       'sinceWeek',

@@ -217,6 +217,8 @@ function episode(world: WorldState, sinceWeek: number, knownWeek: number | null,
     publicWrong: false,
     airedMetWeek: null,
     airedEndedWeek: null,
+    latchedWeek: null,
+    partnerName: null,
   }
   world.loveEpisodes = [row]
   return row

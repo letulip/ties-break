@@ -473,6 +473,35 @@ export interface LoveEpisode {
    *  (the wave's own §8). */
   airedMetWeek: number | null
   airedEndedWeek: number | null
+  /** ⭐⭐⭐ v83 – THE WEEK THE WEDDING HAPPENED ON THIS EPISODE, or null while (and if) it never does
+   *  (the wedding, wave 7; `docs/plans/life-wave-7-builder-2026-09.md` §2 T1, re-shaped 11.09 on the
+   *  owner's own «а свадьба может быть у нас не одна, кстати?»).
+   *
+   *  ⚠⚠ THE LATCH LIVES ON THE EPISODE ROW AND NEVER AS A GLOBAL BOOLEAN, and that one placement is
+   *  the whole design: a marriage is a property of ONE episode, a divorce (if ever built) is an
+   *  ending on a latched episode, and a SECOND wedding is the same machinery re-entered on a later
+   *  row – zero migrations later. An `attachment.latched` flag would have to be migrated the day any
+   *  of those three arrived.
+   *
+   *  ⚠ NULL EVERYWHERE THE WAVE DOES NOT WRITE IT: on every migrated row (the v82 -> v83 walk), on
+   *  every row at birth (`rollArrival`), and on every episode whose engagement never lands. T3 is
+   *  the one writer, `ECONOMY.wedding.weeksAfterEngagement` weeks after the `'engaged'` beat is
+   *  answered – any answer, opposing does not stop it (SHE decided). */
+  latchedWeek: number | null
+  /** ⭐⭐⭐ v83 – HIS NAME, written ONCE at the engagement beat by the ONE derivation function
+   *  (`partnerNameFor`), or null before it and on every migrated row. Readers fall back to the
+   *  unnamed phrasing they use today – «them» stays the honest word until she says his name.
+   *
+   *  ⚠⚠ PERSISTED, NEVER RE-DERIVED AT READ, for the same reason `temperamentFor` is called once
+   *  and `LifeBeatRecord.frame` is stored: a later pool edit must never rename a husband an old
+   *  career already has. The draw is uniform on `seed:life:partner-name:<episodeId>` – a
+   *  purpose-scoped sub-stream, never MAIN – and the result written here is the fact.
+   *
+   *  ⚠ A FIRST NAME ONLY, BY CONSTRUCTION (house trademark law): the pool holds fictional first
+   *  names and no surname exists anywhere in the wave, so no real person's name is constructible.
+   *  This field is also the moment `partnerId` has been waiting for since v74: the identity of the
+   *  ROW (`id`) and the identity of the PERSON stop being the same thing here. */
+  partnerName: string | null
 }
 
 /** ⭐⭐⭐ v77 – WHAT THE BOOTH TOUCHED, AS THE UI IS EVER ALLOWED TO SEE IT (the spotlight, wave 6's
