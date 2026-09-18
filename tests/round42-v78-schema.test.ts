@@ -210,7 +210,19 @@ describe('round 42 v78 A – the three-part move', () => {
     // out byte-identical to the head's own golden fixture, so a rung anywhere above 78 that back-fills
     // differently from its fixture is red here as well as in `goldenSaves`. ⚠ The v78 rung stays ON
     // the path – the three lines above it still assert v78's own three literals by name.
-    expect(JSON.parse(readFileSync(`${SAVES}/v${SAVE_SCHEMA_VERSION}.json`, 'utf8'))).toEqual(migrated)
+    //
+    // ⚠⚠ RE-AIMED A SECOND TIME BY WAVE 7's v83 (18.09), AND THIS TIME THE HEAD LEFT THE LINEAGE
+    // RATHER THAN MERELY MOVING – wave6-spotlight-schema's head pin took the same re-aim in the same
+    // commit family, and this is its wording applied here: v83.json is deliberately NOT the
+    // migration's output on v82.json – it is a PROBE career that HOLDS love-episode rows, the
+    // corpus's first, so the per-row walks finally execute on a golden save (its README row records
+    // the departure). A head-equality against a different career cannot hold and is not owed; what
+    // this rung still owes – and keeps – is the no-shortcut claim along ITS OWN lineage: a v77
+    // payload walked all the way up must land byte-identical to `v82.json` (the last fixture the
+    // v25 recipe produced) walked all the way up, so a rung anywhere above 78 that back-fills
+    // differently along the lineage is red here exactly as before.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v82.json`, 'utf8'))), 'the lineage converges above 78')
+      .toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a bonus, a seat or a purchase list a save already has', () => {

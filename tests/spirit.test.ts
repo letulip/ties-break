@@ -1157,12 +1157,26 @@ describe('the fence this step is judged by', () => {
     // tick is 0 weeks deep against a 52-week threshold – and beside its own hazard family), before
     // the leak so the household hears her before the papers do. Still an exact list, still no
     // wildcard, and a SEVENTH call or a reordering is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s six weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED AGAIN 18.09, SAME WAVE, AND THE SEVENTH, EIGHTH AND NINTH CALLS ARE HERE – T2's
+    // re-aim above pinned its own call and the wave's LATER tasks then landed three more, each with
+    // a slot argued on both sides at its own call site (phaseHerWeek.ts, the 1c block): T3's
+    // `landWedding` directly after the roll, so the week the clock comes due is the week it lands,
+    // and before the leak for the reading's sake alone (nothing between them shares state with it);
+    // T10's `deliverOwnKey` before the spouse and tier 1, because the three share ONE soft surface
+    // and the once-a-career story outranks both; T5's `rollSpouseView` after the delivery (a week
+    // that is both news and a word from the spouse stops for the news) and before small talk (the
+    // rarer, bigger voice takes the shared surface). The shipped order is the brief's own – checked
+    // against docs/plans/life-wave-7-builder-2026-09.md before this list moved. Still an exact
+    // list, still no wildcard, and a TENTH call or a reordering is red here.
+    expect(code.slice(i + 1, j), 'only the private life\'s nine weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
+      'landWedding(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
+      'deliverOwnKey(world)',
+      'rollSpouseView(world)',
       'rollSmallTalk(world)',
     ])
   })

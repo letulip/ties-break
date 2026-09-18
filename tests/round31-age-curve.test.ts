@@ -317,6 +317,26 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     const migrated = migrateSave(JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8')))
     expect(migrated.schemaVersion, file).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.ageCurve, `${file}: the pin is present`).toBeDefined()
+    // ⚠ RE-AIMED 18.09 FOR v83.json, THE PROBE FIXTURE, AND THE SWEEP'S OWN SENTENCE FINALLY HAS A
+    // SECOND WITNESS. Every fixture below v83 is a migrated lineage: the v68 step wrote the shipped
+    // pair onto it, so «the curve it went to sleep on» IS {23, 29, weeks-already-lost}, asserted
+    // below unchanged. v83.json deliberately left that recipe (its README row records the departure)
+    // – a probe career walked past the fork, whose `answerFork('continue')` RESOLVED its own curve:
+    // the direct route's pair with the seed's own spread, and `injuryFrom: 0` («a career that
+    // resolves its own curve pays for every week it has ever lost» – the write-site's rule). The
+    // shipped pair CANNOT be asserted of it, because `resolveAgeCurve` adds a continuous per-seed
+    // spread to `declineStart` and no honest engine output lands on 29.0 exactly. What this arm
+    // asserts instead is STRICTLY the sweep's title: the save went to sleep on the engine's own
+    // resolution for this seed and route, and the ladder walked it to the head without moving a
+    // byte of it – which is the «nothing re-derives a stored one» half the lineage arm could never
+    // witness, because a lineage save's pin and the migration's write are indistinguishable.
+    if (file === 'v83.json') {
+      expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
+        ...resolveAgeCurve(migrated.seed, 'direct'),
+        injuryFrom: 0,
+      })
+      return
+    }
     expect(migrated.ageCurve!.plateauStart, file).toBe(23)
     expect(migrated.ageCurve!.declineStart, file).toBe(29)
     // ...and the resolved reading is 29 EXACTLY, however many weeks that career has already lost –
