@@ -199,3 +199,40 @@ unreachable through any interface and follow the standing precedent of every pri
 which carried none of their kind; the `'engaged'`/`'spouse-view'`/`'own-key'` rows in `DRAIN_ANSWER`
 and the tests' transcribed literals are harness material, not player copy; and the wave-7 doc
 comments themselves flag rules, not strings.
+
+---
+
+## 7. Round 46 items 9/10 – the epilogue's reckoning (⚠ OUTSIDE the wedding wave's count)
+
+⚠ **These rows are NOT part of §0's 65.** They arrived on the same branch from a different intake –
+the owner's 18.09 report on his finished career («наша математика затрат и заработков… Эта
+математика критична») – and they are carried here because this is where the wave's copy is read, not
+because they belong to T7. §0's count, its per-task split and §6's reconciliation are all about the
+wedding and are unchanged by this section.
+
+**Two additions, both draft. Not one shipped string moved.** The five labels the owner wrote on that
+page – `Won`, `Spent`, `Seasons`, `Best rank`, `Titles` – are untouched, and
+`tests/component/round46-the-reckoning.test.ts` asserts them present, unmoved and in his order. What
+changed under two of them is the FIGURE, which is the fix: «Spent» now prints the money that left
+the family for good rather than every cent that ever left the wallet (see
+[the-reckoning-2026-09.md](../specs/the-reckoning-2026-09.md)).
+
+| # | home (`file` · what) | when the player sees it | the string, verbatim | |
+| ---: | --- | --- | --- | --- |
+| R46-1 | `EndingScreen.vue` · the epilogue totals `<dl>` | on the album's last page, only when her own account ever received a cheque | Her account | `DRAFT – awaiting his pass` |
+| R46-2 | `EndingScreen.vue` · the same `<dl>` | on the album's last page, only when the family still owns something | Still owned | `DRAFT – awaiting his pass` |
+
+### 7a. The wording MISMATCH carried for him rather than fixed
+
+The epilogue's **«Won»** is `careerTotals.prizeCents` – *the family's half* of every prize cheque.
+It reads as «what the tennis paid», and on a measured career it was $17,164,973 beside $28,749,334
+sitting in HER account, which is why he could not place the figure. **The gross cannot be derived**:
+her share leaves before the wallet sees it, and reconstructing it by dividing a rounded net by the
+ramp rate is the arithmetic `accrueKidShare` forbids in capitals.
+
+So the number stays what it honestly is, R46-1 states the other half beside it, and the label is his
+to rule on. A draft, if he wants the row renamed rather than explained:
+
+| # | home | today | the draft | |
+| ---: | --- | --- | --- | --- |
+| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `The family's share` | `DRAFT – his call; today's label is unchanged in the tree` |

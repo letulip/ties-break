@@ -13,7 +13,7 @@ import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { PsyFocus } from '../../engine/world/state'
 import type { CollegeOffer, CollegeState, EndingView, RetirementOffer } from './career'
 import type { ArrivalPreview, EntryCapUsage, LossStreak, PendingView, SeasonHistoryEntry, SeasonSummary, SeasonSupply, TierOpenMap, TierRefusal, TierTrophies, UpcomingEvent } from './competition'
-import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReason, WorldEvent } from './events'
+import type { CareerMoney, CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReason, WorldEvent } from './events'
 import type { InjuryReport, InjuryView, Knock, KnockPrompt } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, LifeBeatPrompt, Milestone, RadarAxis, SoftBeatInvite, TrainingRead } from './narrative'
@@ -948,6 +948,11 @@ export interface Snapshot {
   /** career-total money (v39). On the snapshot always, not only at the end: the Money screen's
    *  "since week one" row reads it, and it is what makes the reckoning cheap. */
   careerTotals: CareerTotals
+  /** ⭐ ROUND 46 #9 – the same three counters read honestly: what left the family FOR GOOD, what
+   *  turned into something it still owns, and what the tennis paid HER. A fold at snapshot time over
+   *  facts every save already carries – nothing new is persisted and `SAVE_SCHEMA_VERSION` does not
+   *  move, on `oneMoreYearCount`'s own standing four fields up. See `CareerMoney`. */
+  careerMoney: CareerMoney
 }
 
 // =================================================================================================

@@ -7,7 +7,7 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { AvatarEmotion, PortraitStage } from '../avatarEmotion'
-import type { CareerTotals, WorldMatch } from './events'
+import type { CareerMoney, CareerTotals, WorldMatch } from './events'
 
 // --- HOW A CAREER ENDS (schema v39, career-contract-v1.md §4) ----------------------------------
 
@@ -526,6 +526,10 @@ export interface EndingView {
   handoff: HandoffView
   /** the career's money, whole – not a score, just the two numbers the ledger kept */
   totals: CareerTotals
+  /** ⭐ ROUND 46 #9 – the same money, told apart: what left for good, what turned into something the
+   *  family still owns, and what she was paid into her own account. The epilogue prints THESE; the
+   *  raw accumulators above stay for anything that wants the gross. See `CareerMoney`. */
+  money: CareerMoney
   seasonsPlayed: number
   /** best (smallest) season-end rank she ever held, or null if she never closed a season */
   bestRank: number | null

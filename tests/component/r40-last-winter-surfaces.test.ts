@@ -41,6 +41,7 @@ import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import type { RetirementOffer, SeasonHistoryEntry, SeasonSummary, SeasonTrackRow, Snapshot } from '../../src/shared/protocol'
 import type { LadderTrack } from '../../src/engine/season/types'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
+import { moneyOf } from '../helpers/careerMoney'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND HomeScreen READS IT – the same shim r38-decline-voice,
 // r39-decline-surfaces and round24-coach-card carry, for the reason quoted there in full.
@@ -111,7 +112,7 @@ function showOffer(offer: RetirementOffer, over: Record<string, unknown> = {}): 
       kidRank: 88,
       fundsCents: 1234_00,
       oneMoreYearCount: 0,
-      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
       seed: 'r40-lw-card',
       physicalShare: 0.6,
       coachMarket: [],

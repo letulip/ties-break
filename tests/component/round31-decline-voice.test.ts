@@ -53,6 +53,7 @@ import {
 import { mountSeason } from '../helpers/mountSeason'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
 import type { RetirementOffer, SeasonSummary, Snapshot } from '../../src/shared/protocol'
+import { moneyOf } from '../helpers/careerMoney'
 
 /** Rendered text with the template's own wrapping collapsed – what a reader sees. */
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
@@ -129,7 +130,7 @@ function showOffer(offer: RetirementOffer, over: Record<string, unknown> = {}): 
       kidRank: 88,
       fundsCents: 1234_00,
       oneMoreYearCount: 0,
-      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
       seed: 'r31f-retire',
       physicalShare: 1,
       retirementOffer: offer,

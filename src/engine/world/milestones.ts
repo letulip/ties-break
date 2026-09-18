@@ -25,7 +25,7 @@ import {
   type TierTrophies,
   type WorldEventCategory,
 } from '../../shared/protocol'
-import { addEvent, financeWindow, seasonIndexOf, seasonStartWeek } from './ledger'
+import { addEvent, careerMoney, financeWindow, isHoldingCategory, seasonIndexOf, seasonStartWeek } from './ledger'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
 import { activeLadderOf, entryCouldNotMove, kidPoints, rankIn } from './ladder'
@@ -131,15 +131,28 @@ export function captureBreakEven(world: WorldState): void {
     const prize = thisWeek.byCategory.prize ?? 0
     let costs = 0
     for (const [cat, amt] of Object.entries(thisWeek.byCategory) as [WorldEventCategory, number][]) {
-      if (cat !== 'prize' && amt < 0) costs += -amt
+      // ⭐ ROUND 46 #9 – A PURCHASE IS NOT A COST OF THE WEEK'S TENNIS. `isHoldingCategory` is the
+      // one name for that distinction (world/ledger.ts) and the career arm below reads it too: a
+      // family that bought a house on a title week did not fail to cover the week's tennis.
+      if (cat !== 'prize' && !isHoldingCategory(cat) && amt < 0) costs += -amt
     }
     if (prize > 0 && prize > costs) {
       captureMilestone(world, { type: 'break-even', week: world.week, kind: 'week' })
     }
   }
   // (b) THE CAREER. The one §9.2 asks slot 6 for, and the rare one.
-  const t = world.careerTotals
-  if (!t || t.prizeCents <= t.spentCents) return
+  //
+  // ⭐⭐⭐ ROUND 46 #9 – AGAINST `outlayCents`, NOT THE RAW ACCUMULATOR, AND THE PAGE READS THE SAME
+  // FIGURE. Until this, a family that put its prize money into a fund or an academy could never
+  // cross: the deposit went into `spentCents` and raised the bar by exactly the amount it had just
+  // banked, so the harder the tennis paid the further away the turn moved. `careerMoney` carries the
+  // measurement and the owner's report.
+  //
+  // ⚠ A CAREER THAT BUYS NOTHING IS BYTE-IDENTICAL – `assets` empty means `heldCents` 0 means
+  // `outlayCents === spentCents` – which is every frozen career, every bench in `tools/` and every
+  // career walked before the shelf opened. The rarity §9.2 measured (0 in 216) is untouched by this.
+  const t = careerMoney(world)
+  if (t.prizeCents <= t.outlayCents) return
   captureMilestone(world, { type: 'break-even', week: world.week, kind: 'career' })
 }
 

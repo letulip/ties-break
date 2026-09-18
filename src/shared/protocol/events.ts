@@ -863,6 +863,41 @@ export interface CareerTotals {
   weeksLostToInjury: number
 }
 
+/** ⭐⭐⭐ ROUND 46 #9 – THE SAME CAREER'S MONEY, READ HONESTLY. A DERIVED VIEW AND NOT A NEW FACT:
+ *  every term is folded at snapshot time out of `careerTotals` (v39), `assets[].paidCents` (v63) and
+ *  `kidFundsCents` (v54), all three of which every save already carries. Nothing here is persisted,
+ *  no migration is owed and `SAVE_SCHEMA_VERSION` does not move – the same standing this type's
+ *  neighbours `FinanceWindow` and `FinanceWeekPoint` have.
+ *
+ *  ⚠ WHY IT EXISTS rather than the two surfaces each doing the subtraction: the album's slot 6, the
+ *  epilogue's totals, the fork card and the break-even milestone that GATES slot 6 all ask the same
+ *  question, and four copies of an answer is how a page comes to print figures its own milestone
+ *  disagrees with. `careerMoney` (engine/world/ledger.ts) is the one fold and carries the reasoning. */
+export interface CareerMoney {
+  /** every cent that ever came INTO the family wallet – `careerTotals.earnedCents`, untouched. */
+  earnedCents: number
+  /** the family's own half of every prize cheque – `careerTotals.prizeCents`, untouched. ⚠ NOT the
+   *  gross: her share left before the wallet saw it, and it cannot be re-derived from a rounded net
+   *  (`accrueKidShare`'s forbidden division). `herAccountCents` is where the rest of it went. */
+  prizeCents: number
+  /** every cent the tennis ever paid HER – `kidFundsCents`, which is monotone (three writers, all
+   *  `+=`, no debit anywhere in the engine) and is therefore a lifetime total as well as a balance. */
+  herAccountCents: number
+  /** `earnedCents + herAccountCents` – everything the household actually received. */
+  cameInCents: number
+  /** every cent that ever LEFT the family wallet – `careerTotals.spentCents`, untouched, holdings
+   *  and all. Kept beside `outlayCents` because the two are different questions and a surface that
+   *  wants the gross should not have to add them back up. */
+  spentCents: number
+  /** the part of `spentCents` that bought something the family STILL OWNS, at what it cost. */
+  heldCents: number
+  /** `spentCents − heldCents`, floored at zero: money that left the family for good. THE number the
+   *  word «spent» means – coaching, courts, fares, entries, kit, physio, salaries, the weeks away. */
+  outlayCents: number
+  /** what those holdings are worth NOW, which is not what they cost. */
+  holdingsCents: number
+}
+
 /** THE DEBT SPELL, surfaced while she is under water – the WARNING PHASE bankruptcy wants before
  *  the fact (adult spec B4). One bad week is never death: the spell resets the week funds recover. */
 export interface DebtView {

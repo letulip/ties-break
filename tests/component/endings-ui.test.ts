@@ -11,6 +11,7 @@ import EndingScreen from '../../src/components/EndingScreen.vue'
 import ForkDialog from '../../src/components/ForkDialog.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import { useGameStore } from '../../src/stores/game'
+import { moneyOf } from '../helpers/careerMoney'
 // ⭐ THE LONG GOODBYE STEP 4 – her last word is the ENGINE's sentence, and the card renders it. The
 // pin goes through the symbol so a re-wording moves the assertion with the copy.
 import { ENDING_TITLE, lastWordLine } from '../../src/engine/ending'
@@ -42,6 +43,8 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     ],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },
+    // ⭐ ROUND 46 #9 – derived from the totals above, never stated twice (see `moneyOf`).
+    money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
     seasonsPlayed: 5,
     bestRank: 88,
     titles: 2,
@@ -61,7 +64,7 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
 
 function patchSnapshot(fields: Record<string, unknown>): void {
   const game = useGameStore()
-  game.$patch({ snapshot: { ageYears: 19, week: 265, kidRank: 88, fundsCents: 1234_00, careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, ...fields } as unknown as Snapshot })
+  game.$patch({ snapshot: { ageYears: 19, week: 265, kidRank: 88, fundsCents: 1234_00, careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }), ...fields } as unknown as Snapshot })
 }
 
 describe('the album', () => {

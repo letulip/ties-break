@@ -30,7 +30,7 @@ import type {
 } from '../../shared/protocol'
 import { ENDING_TITLE } from '../ending'
 import { kidAgeAt } from './age'
-import { seasonIndexOf } from './ledger'
+import { careerMoney, seasonIndexOf } from './ledger'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
 
@@ -158,9 +158,11 @@ const seasonLabel = weekLabel
  *  months later. Same page for every career, her own number on it. */
 export function slotBeginning(world: WorldState): AlbumPage {
   const first = earliest(world.milestones, 'international')
+  // ⭐ ROUND 46 #9 – «went out» IS `outlayCents`, not the raw accumulator. Money that turned into a
+  // house is still the family's; only what left for good ever «went out». See `careerMoney`.
   const fact = first
     ? `Her first trip abroad came in ${seasonLabel(first.week)}, at the ${tierLabel(first)}`
-    : `${formatCents(world.careerTotals.spentCents)} went out before anybody knew the answer`
+    : `${formatCents(careerMoney(world).outlayCents)} went out before anybody knew the answer`
   return page(
     world,
     1,
@@ -339,6 +341,13 @@ export function slotWorstWeek(world: WorldState): AlbumPage {
  *  behind the answer has been pruned out of the save – so it is captured the week it happens, in
  *  `tickWeek`, and this page just reads the row. */
 export function slotTheTurn(world: WorldState): AlbumPage {
+  // ⭐⭐⭐ ROUND 46 #9 – THE DENOMINATOR IS `outlayCents` ON ALL FOUR FACES OF THIS PAGE, AND THE
+  // MILESTONE THAT GATES IT MOVED WITH THEM (`captureBreakEven`). The owner read «$13M won against
+  // $83M spent» off a career that ended holding a fund, houses and an academy, and most of that
+  // «spent» was the money those things are made of – see `careerMoney` for the decomposition. A page
+  // whose figures said one thing while the milestone in front of it said another would be the same
+  // defect one layer up, so the test and the sentence read the SAME number.
+  const money = careerMoney(world)
   const career = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'career')
   if (career) {
     return page(
@@ -346,15 +355,15 @@ export function slotTheTurn(world: WorldState): AlbumPage {
       6,
       'The week the money turned – prize money past everything the family had ever spent',
       'It paid for itself',
-      `${seasonLabel(career.week)} – ${formatCents(world.careerTotals.prizeCents)} won against ${formatCents(world.careerTotals.spentCents)} spent`,
+      `${seasonLabel(career.week)} – ${formatCents(money.prizeCents)} won against ${formatCents(money.outlayCents)} spent`,
       career.week,
       'happy',
     )
   }
   // THE EMPTY FACE. Measured, not assumed – see SLOT6_EMPTY_WHY for the two rates.
   const week = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'week')
-  const won = world.careerTotals.prizeCents
-  const spent = world.careerTotals.spentCents
+  const won = money.prizeCents
+  const spent = money.outlayCents
   if (week) {
     // ⚠ THE HONEST MIDDLE, and it is the commonest true story the game has: one week where the
     // tennis paid for itself, and never the whole of it. Naming the week is not consolation – it is

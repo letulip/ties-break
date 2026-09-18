@@ -208,9 +208,26 @@ async function resumeCollege(): Promise<void> {
 
       <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. Only on the last page. -->
       <footer v-if="isLast" class="ending-foot">
+        <!-- ⭐⭐⭐ ROUND 46 #9 – THE SAME FIVE LABELS, TWO OF THE FIGURES REPAIRED, AND TWO NEW ROWS
+             THAT ONLY APPEAR WHEN THERE IS SOMETHING TO SAY. The owner read «$13M won against $83M
+             spent» off a career that ended holding a fund, houses and an academy (his words are on
+             `careerMoney` in engine/world/ledger.ts – no Cyrillic may appear in a template).
+             `money.outlayCents` is what left the family FOR GOOD; the money that turned into
+             something it still owns is `heldCents`, and it never belonged in a figure called
+             «Spent». ⚠ THE WORDS ARE UNTOUCHED (invariant 4): «Won», «Spent», «Seasons», «Best
+             rank» and «Titles» are his, and nothing here rewrites one.
+             ⚠ THE TWO NEW ROWS ARE DRAFTS – docs/plans/life-wave-7-strings-2026-09.md, ids R46-1 and
+             R46-2 – and they render only when the figure is non-zero, so every career that neither
+             owned anything nor banked a cheque of her own sees exactly the page it saw before. -->
         <dl class="ending-totals">
-          <div><dt>Won</dt><dd>{{ formatCents(view.totals.prizeCents) }}</dd></div>
-          <div><dt>Spent</dt><dd>{{ formatCents(view.totals.spentCents) }}</dd></div>
+          <div><dt>Won</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
+          <div><dt>Spent</dt><dd>{{ formatCents(view.money.outlayCents) }}</dd></div>
+          <div v-if="view.money.herAccountCents > 0">
+            <dt>Her account</dt><dd>{{ formatCents(view.money.herAccountCents) }}</dd>
+          </div>
+          <div v-if="view.money.holdingsCents > 0">
+            <dt>Still owned</dt><dd>{{ formatCents(view.money.holdingsCents) }}</dd>
+          </div>
           <div><dt>Seasons</dt><dd>{{ view.seasonsPlayed }}</dd></div>
           <div><dt>Best rank</dt><dd>{{ view.bestRank === null ? '–' : `#${view.bestRank}` }}</dd></div>
           <div><dt>Titles</dt><dd>{{ view.titles }}</dd></div>

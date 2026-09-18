@@ -38,6 +38,7 @@ import { rngFromSeed } from '../../src/engine/rng'
 import { TIERS, TIER_SHORT } from '../../src/engine/season/calendar'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
 import type { Snapshot } from '../../src/shared/protocol'
+import { moneyOf } from '../helpers/careerMoney'
 
 /** ⚠ IT TOOK A `collegeOpen` ARGUMENT UNTIL 16.08. The flag is off the wire – the fork carries two
  *  facts now – so there is one fork state and every case below builds it. */
@@ -47,7 +48,7 @@ function forkSnapshot(): Snapshot {
     week: 265,
     kidRank: 88,
     fundsCents: 1234_00,
-    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
     fork: { askedWeek: 265, ageYears: 19 },
   } as unknown as Snapshot
 }

@@ -41,7 +41,7 @@ import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView
 import { deliveredAssets, shopCatalogue } from './assets'
 import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
-import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
+import { addEvent, careerMoney, seasonIndexOf, seasonStartWeek } from './ledger'
 import { activeLadderOf } from './ladder'
 import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer } from './college'
 // ⭐⭐ v73 – THE PRIVATE LIFE'S WAVE 2. The fork's opening tick raises her opinion of it, and
@@ -951,6 +951,8 @@ export function buildEndingView(world: WorldState): EndingView | null {
         ending.resumesWeek === null ? null : kidAgeYears(ending.resumesWeek, world.profile.birthMonth, world.profile.birthDay),
     },
     totals: world.careerTotals,
+    // ⭐ ROUND 46 #9 – the honest reading of the same three counters, folded once (world/ledger.ts).
+    money: careerMoney(world),
     seasonsPlayed: world.seasonHistory.length,
     bestRank,
     titles,

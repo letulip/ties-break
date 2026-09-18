@@ -47,6 +47,7 @@ import type { RetirementOffer, SeasonHistoryEntry, SeasonTrackRow, Snapshot } fr
 // has to as well.
 import type { LadderTrack } from '../../src/engine/season/types'
 import type { WorldState } from '../../src/engine/world'
+import { moneyOf } from '../helpers/careerMoney'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND `HomeScreen` READS IT. The same shim `round24-coach-card`,
 // `home-strip-and-mail` and `round20-ui` carry, and for the reason quoted there in full: happy-dom is
@@ -358,7 +359,7 @@ function retireCard(over: Record<string, unknown> = {}): {
       fundsCents: 1234_00,
       oneMoreYearCount: 0,
       physicalShare: 0.8,
-      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
       retirementOffer: AGE_OFFER,
       seasonHistory: [],
       coachMarket: [],

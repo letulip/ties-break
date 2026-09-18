@@ -85,7 +85,7 @@ import {
   SNAPSHOT_FINANCIAL_EVENTS,
   UPCOMING_WEEKS,
 } from './constants'
-import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
+import { careerMoney, financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
 // ⚠ `START_AGE_YEARS` left this list with D-01: the diary was its last reader here, and the
 // band clock it opened is exactly what the finding removed.
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
@@ -2292,6 +2292,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     oneMoreYearCount: world.oneMoreYearCount,
     college: world.college,
     careerTotals: world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },
+    // ⭐⭐⭐ ROUND 46 #9 – THE SAME THREE COUNTERS, READ HONESTLY, AND THE ONE FOLD THAT DOES IT.
+    // `careerTotals` above is the raw pair of accumulators and stays exactly what it has always been;
+    // this is what the word «spent» actually means once the money that turned into a house, an
+    // academy and a fund is taken back out of it, plus the streams «won» never contained. Every
+    // surface that used to subtract for itself now reads this – see `careerMoney` for the owner's
+    // report, the measured decomposition and why nothing is persisted.
+    careerMoney: careerMoney(world),
     ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),
     ...(pending ? { pending } : {}),
   }

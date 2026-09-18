@@ -20,6 +20,7 @@ import type { RetirementOffer, Snapshot } from '../../src/shared/protocol'
 // src/style.css, and `fits.ts` measures through the REAL cascade rather than a model of it. Without
 // this import the overlay computes `position: ''` and `measureDialog` refuses to guess.
 import '../../src/style.css'
+import { moneyOf } from '../helpers/careerMoney'
 
 const PLATEAU: RetirementOffer = { askedWeek: 700, seasonIndex: 12, reason: 'plateau', final: false }
 const AGE: RetirementOffer = { askedWeek: 1453, seasonIndex: 27, reason: 'age', final: false }
@@ -41,7 +42,7 @@ function showOffer(offer: RetirementOffer, over: Record<string, unknown> = {}): 
       fundsCents: 1234_00,
       oneMoreYearCount: 0,
       physicalShare: 1,
-      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
       retirementOffer: offer,
       ...ON_TOUR,
       ...over,

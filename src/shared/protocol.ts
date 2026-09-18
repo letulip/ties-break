@@ -76,6 +76,7 @@ export type {
   FinanceWeekPoint,
   StopReason,
   CareerTotals,
+  CareerMoney,
   DebtView,
 } from './protocol/events'
 export {

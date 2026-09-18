@@ -356,13 +356,18 @@ useDialogFocus(card)
           <dt>{{ rankHead }}</dt>
           <dd>{{ rankValue }}</dd>
         </div>
+        <!-- ⭐ ROUND 46 #9 – «SPENT» IS WHAT LEFT THE FAMILY FOR GOOD, not what ever left the wallet.
+             A family that put its money into a house or a fund still HAS it, and a fork card that
+             counted the deposit as spending was pricing the decision off a number the family could
+             read off its own shelf as untrue. Same figure the epilogue prints, same one fold
+             (`careerMoney`, engine/world/ledger.ts). The two labels are untouched. -->
         <div>
           <dt>Spent so far</dt>
-          <dd>{{ formatCents(snap?.careerTotals.spentCents ?? 0) }}</dd>
+          <dd>{{ formatCents(snap?.careerMoney.outlayCents ?? 0) }}</dd>
         </div>
         <div>
           <dt>The tennis has paid</dt>
-          <dd>{{ formatCents(snap?.careerTotals.prizeCents ?? 0) }}</dd>
+          <dd>{{ formatCents(snap?.careerMoney.prizeCents ?? 0) }}</dd>
         </div>
         <!-- ⭐⭐ P4's result arm – a fifth figure, not a fifth opinion. It sits beside her rank on
              purpose: the two numbers next to each other are the whole of what this card is allowed

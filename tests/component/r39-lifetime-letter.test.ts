@@ -16,6 +16,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import OfferLetter from '../../src/components/OfferLetter.vue'
 import EndingScreen from '../../src/components/EndingScreen.vue'
 import { useGameStore } from '../../src/stores/game'
+import { moneyOf } from '../helpers/careerMoney'
 import { ECONOMY } from '../../src/engine/economy'
 import { adLifetimeTerms } from '../../src/engine/offers'
 import type { AlbumPage, CareerEndingType, EndingView, Offer, Snapshot } from '../../src/shared/protocol'
@@ -124,6 +125,7 @@ function endingView(type: CareerEndingType = 'natural', over: Partial<EndingView
     scroll: [{ seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] }],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },
+    money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
     seasonsPlayed: 15,
     bestRank: 2,
     titles: 12,
@@ -137,7 +139,7 @@ function endingView(type: CareerEndingType = 'natural', over: Partial<EndingView
 
 function patchSnapshot(fields: Record<string, unknown>): void {
   const game = useGameStore()
-  game.$patch({ snapshot: { ageYears: 31, week: 900, kidRank: 2, fundsCents: 1234_00, careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, ...fields } as unknown as Snapshot })
+  game.$patch({ snapshot: { ageYears: 31, week: 900, kidRank: 2, fundsCents: 1234_00, careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }), ...fields } as unknown as Snapshot })
 }
 
 describe('EndingScreen – the lifetime deal survives into the epilogue', () => {
