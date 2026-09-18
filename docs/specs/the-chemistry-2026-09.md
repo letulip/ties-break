@@ -644,6 +644,30 @@ gauge's own label inside it is never announced – and that listener is exactly 
 written for. Cutting the sign there would take the one channel built for him away from him. **This is
 an open question for the owner**: he may want the spoken plus cut too, and that is his to rule.
 
+#### 8c-bis. ⭐⭐⭐ He ruled it, later the same day – the spoken plus goes too
+
+The paragraph above is left exactly as written, because it is the record of what was true when the
+question was asked. The answer:
+
+> «да, потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+> дополнительно.»
+
+**C12's reader is not being short-changed, and that is worth saying plainly, because the paragraph
+above is a good argument and it is not being overruled so much as answered.** The case for keeping
+the spoken plus was that a listener has no gradient and no sweep, so the sign is the only channel
+left carrying direction. He agrees the direction has to be carried – and points out that it already
+is, by the default. A bare number is a positive number; a listener hearing «chemistry 33%» learns
+«upward» exactly as surely as one hearing «+33%», and the minus keeps doing all the work it was ever
+doing, because a negative reading is the one that gets said out loud. Nothing is taken away from the
+reader C12 was written for. One redundant character is.
+
+So `chemSpoken` now delegates to `chemDrawn` rather than repeating its three lines: the two SURFACES
+are still two questions, which is why both names survive, but a second copy of one arithmetic is
+precisely how a drawn figure and a spoken one come to disagree the next time one of them is ruled
+on. `tests/component/round45-ring-centring.test.ts`' ARM 7 was re-aimed with a dated note and now
+measures the merged behaviour; `tests/component/round44-chemistry-card.test.ts` asserts the negative
+name and did not move, because the minus did not.
+
 **The mark and the gauge were re-sized and re-aligned** (round 45 #2 and #3, same day): the chemistry
 mark takes the bottom navigation's own icon size and its own icon-to-label gap, and `ProgressRing`
 stopped inheriting the line box its optical nudge was fitted against – inside a `<button>` host the

@@ -658,9 +658,28 @@ function chemDrawn(level: number): string {
   return `${level < 0 ? '-' : ''}${chemAmount(level)}`
 }
 
-/** WHAT THE ROW SAYS OUT LOUD. Keeps its sign, both ways: see the amendment note above. */
+/** WHAT THE ROW SAYS OUT LOUD.
+ *
+ *  ⭐⭐⭐ AMENDED 18.09 – HE RULED ON THE QUESTION THE SPLIT LEFT OPEN, AND HE RULED IT CLOSED. The
+ *  block above put the spoken plus to him as an open question; his answer:
+ *
+ *  > «да, потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+ *  > дополнительно.»
+ *
+ *  ⚠⚠ THE C12 ARGUMENT WAS NOT REFUTED, IT WAS ANSWERED WITH A BETTER RULE, and that is why the
+ *  note above is left standing rather than corrected. The case for the spoken plus was that a
+ *  listener has neither the gradient nor the sweep, so the sign is the only channel left carrying
+ *  direction. He agrees the direction has to be carried – and points out that it already IS, by the
+ *  DEFAULT: a bare number is positive, so an unsigned reading says «upward» to a listener exactly as
+ *  surely as a signed one, and the minus keeps doing all the work it was ever doing. Nothing is
+ *  taken away from C12's reader; one redundant character is.
+ *
+ *  ⚠ SO THE TWO ANSWERS ARE ONE AGAIN AND THIS DELEGATES RATHER THAN REPEATING. The two SURFACES are
+ *  still two questions – that is why both names survive – but a second copy of the same three-line
+ *  arithmetic is precisely how a drawn figure and a spoken one come to disagree the next time one of
+ *  them is ruled on. One writer. */
 function chemSpoken(level: number): string {
-  return `${level < 0 ? '-' : '+'}${chemAmount(level)}`
+  return chemDrawn(level)
 }
 
 /** ⚠⚠ DRAFT COPY FOR THE OWNER (invariant 4). This item adds exactly THREE player-facing strings and

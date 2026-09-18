@@ -188,11 +188,22 @@ describe('round 45 #3 – the ring owns the type its optical nudge was fitted ag
 // for. So the one function became two, the ruling was applied to the drawn one, and whether the
 // spoken one should follow is HIS call and is in the round's report as a question.
 //
-// ⚠⚠ MUTATION ARMS – applied to the real component and run, each red MEASURED:
-//   ARM 5  `chemDrawn` given the plus back (i.e. made identical to `chemSpoken`)  -> RED [2] – the
-//          positive case, and the spoken case with it, whose whole point is that the two DIFFER
-//   ARM 6  `chemDrawn`'s minus dropped as well                                    -> RED [1]
-//   ARM 7  `chemSpoken` pointed at `chemDrawn` (the spoken sign cut too)          -> RED [1]
+// ⭐⭐⭐ AMENDED 18.09 – HE ANSWERED THE QUESTION AND THE ANSWER WAS «CUT IT THERE TOO» (ruling 7):
+// «да, потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+// дополнительно.» The paragraph above stands as the record of the split; ARM 7 below now measures
+// the merged behaviour, and the two surfaces give one answer again.
+//
+// ⚠⚠ MUTATION ARMS – applied to the real component and run against this file AND round44's,
+// re-measured 18.09 after the ruling closed the split. Each red is a COUNT OF TESTS:
+//   ARM 5  `chemDrawn` given the plus back                                        -> RED [4] – the
+//          positive case here, the spoken case with it, and two of round44's
+//   ARM 6  `chemDrawn`'s minus dropped as well                                    -> RED [5] – the
+//          drawn negative case, the spoken one behind it, and three of round44's
+//   ARM 7  `chemSpoken` given its plus back (i.e. the pre-ruling behaviour)       -> RED [1]
+// ⚠ ARMS 5 AND 6 GOT BIGGER BECAUSE THE SPLIT CLOSED, which is the honest reading of the count: a
+// mutation to `chemDrawn` now reaches the spoken surface too, so one defect is caught twice. That is
+// what «one writer» buys, and it is also why arm 7 stayed at one – the spoken side is the only
+// place a separate answer could still be written.
 describe('round 45 #3b – the drawn figure loses its plus and keeps its minus', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -250,20 +261,33 @@ describe('round 45 #3b – the drawn figure loses its plus and keeps its minus',
     }
   })
 
-  it('⚠⚠ THE SPOKEN NAME KEEPS BOTH SIGNS – the ruling was about the gauge (ARM 7)', async () => {
-    // C12's own reader. The row is a `<button>` with an explicit `aria-label`, so the gauge's own
-    // label inside it is never announced: if the sign goes from the name too, a listener is left with
-    // a bare number and no direction at all. That is a question for the owner and not an agent's to
-    // answer, so until he rules it the name says which way.
+  // ⭐⭐⭐ RE-AIMED 18.09 BY RULING 7 OF THAT DAY, AND THE RE-AIM IS THE ANSWER TO THIS TEST'S OWN
+  // QUESTION. The version below asserted `chemistry +33%` and said in as many words that whether the
+  // spoken plus should go was HIS call. He called it:
+  //
+  //   «да, потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+  //   дополнительно.»
+  //
+  // ⚠ SO C12'S READER IS NOT BEING SHORT-CHANGED, WHICH IS WHAT THE OLD ARM WAS PROTECTING. The
+  // listener still learns the direction – from the absence of a sign, which is what «по умолчанию
+  // положительные» means – and still learns it explicitly when it is downward, because the minus
+  // stays. The two functions now give one answer, so the arm below tests the NEW invariant: drawn
+  // and spoken agree, and neither carries a plus.
+  it('⭐⭐ THE SPOKEN NAME DROPS ITS PLUS AND KEEPS ITS MINUS – his ruling of 18.09 (ARM 7)', async () => {
     document.body.innerHTML = ''
     const up = await markerAt(33.2)
-    expect(up.spoken, 'the name still says which way, upward').toContain('chemistry +33%')
-    expect(up.drawn, 'while the gauge beside it does not').toBe('33%')
+    expect(up.spoken, 'no plus is announced – a bare number IS the positive one').toContain('chemistry 33%')
+    expect(up.spoken, 'and there is no plus anywhere in the name').not.toContain('+')
+    expect(up.drawn, 'the gauge beside it says the same thing, which is now the point').toBe('33%')
     up.wrapper.unmount()
 
     document.body.innerHTML = ''
     const down = await markerAt(-33.2)
-    expect(down.spoken, '...and downward').toContain('chemistry -33%')
+    // ⚠ THE MINUS IS THE HALF HE KEPT, on both surfaces – «отрицательные как раз озвучиваются
+    // дополнительно». Cutting it here would take the listener's one explicit channel away, which is
+    // the reading of C12 that survives his ruling intact.
+    expect(down.spoken, '...and downward the sign is still said out loud').toContain('chemistry -33%')
+    expect(down.drawn, 'exactly as it is still drawn').toBe('-33%')
     down.wrapper.unmount()
   })
 })
