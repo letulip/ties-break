@@ -319,8 +319,35 @@ export interface SoftBeatInvite {
  *  no overlay exists for this kind, so `DRAIN_ANSWER['engaged']` = `distance` charges −1 under every
  *  reading and the harnesses can state their skew exactly. ⚠ It carries no `heard` stamp and no
  *  listen detour – there is no read to be plain about and no second half being withheld: the fact is
- *  the fact, and the three answers are the whole of what a parent can do with it. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged'
+ *  the fact, and the three answers are the whole of what a parent can do with it.
+ *
+ *  ⭐⭐⭐ v83 (the wedding, wave 7 – T5) ADDS `'spouse-view'`: THE MARRIAGE'S STANDING SURFACE at
+ *  W1–W2 – no `spouseBond`, no second tracked number (the 18.09 adoption): what the spouse thinks
+ *  IS these beats and the diary's texture. Its `detail` is the OCCASION (`SpouseViewOccasion`
+ *  below) – machine-readable, never a rendered sentence, `'small-talk'`'s own shape – and every
+ *  occasion is READ off facts the world already holds, never derived anew: the upcoming entered
+ *  event's abroad fact, the travel weeks the finance ledger paid, spirit.ts's own zero-vacation
+ *  season predicate, and her-account-vs-the-wallet (round 23 #18's split).
+ *
+ *  ⚠⚠ NON-BLOCKING, tier 1's own price: it is answered from the Home card inside the standing
+ *  three-week window and the week never waits for it. Raised only while a LATCHED episode lives
+ *  (`latchedWeek !== null`, `endedWeek === null`), at most once per
+ *  `ECONOMY.wedding.spouseViewCooldownWeeks`, and the cooldown is the log itself – the row is the
+ *  counter, no new state. The parent's three answers are priced small on `bond` (drafted
+ *  ±0.5..±1.5 in `ECONOMY.wedding`), read-independent by construction – no overlay names this kind.
+ *
+ *  ⚠ It carries no `heard` stamp and no listen detour: the spouse is not her, and a professional's
+ *  own rule applies one house over – a view has been given whole, and a panel promising more of it
+ *  would promise words nobody wrote. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view'
+
+/** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
+ *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
+ *  note above); the union lives on the wire beside `LifeBeatKind` so the diary's view can carry the
+ *  week's occasion without importing the engine (the same placement argument every type in this
+ *  file makes). ⚠ APPEND-ONLY once shipped – the draw indexes the reachable subset, so removing or
+ *  reordering a member re-maps future draws on old seeds. */
+export type SpouseViewOccasion = 'distant-swing' | 'road-stretch' | 'no-vacation' | 'money'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
@@ -753,6 +780,19 @@ export interface DiaryFacts {
    *  neither `endedWeek` nor the read – so a line reaching for a cause would be inventing the one
    *  consequential fact the whole mechanic refuses to model. */
   freshBreakup: boolean
+  /** ⭐ v83 (the wedding, wave 7 – T5) – THE OCCASION THE SPOUSE RAISED **THIS WEEK**, or null on
+   *  every other week of the career: `spouseViewOccasionThisWeek(world)`, asked at snapshot time and
+   *  carried – `partnerKnown`'s own shape and reason, because the beat and the week note under the
+   *  painting must not be able to disagree about what was said in the house this week.
+   *
+   *  ⚠ THE RAISE WEEK AND NOT THE ROW'S THREE-WEEK WINDOW: the scene happened once, and a diary
+   *  that repeated it while the card waited would stutter. ⚠ WHAT A LINE LICENSED ON THIS MAY SAY:
+   *  that a word was said at home, and WHICH of the four family facts it was about – both are on
+   *  the row. It may NOT say the parent's answer (the row may still be unanswered when the note is
+   *  written), may not name or gender the spouse (the standing law – the persisted name's surfaces
+   *  are the owner's call), and may not carry a figure (the money law). Required rather than
+   *  optional, `vacationPackageId`'s standing argument: it selects COPY. */
+  spouseOccasion: SpouseViewOccasion | null
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

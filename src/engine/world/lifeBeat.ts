@@ -71,7 +71,11 @@ import { ECONOMY } from '../economy'
 // temperament reads are MECHANICS and move to expression; two are RE-DERIVATIONS of a persisted
 // price and must stay on BIRTH. Each of the five carries its own ⚠ comment naming the ruling, and
 // `temperamentOf`'s own body is untouched precisely so the split is visible per CALL SITE.
-import { applyBondDelta, bondBandOf, expressedTemperamentOf, moodRegisterOf, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
+// ⭐ v83 T5 – `seasonWrapsWithNoVacation` JOINS A LINE THAT ALREADY EXISTS AT RUNTIME, so no arrow
+// moves: it is the season-boundary zero-vacations predicate ITSELF (the −3/−3 block's one spelling),
+// read by the `'no-vacation'` occasion rather than re-derived – the brief's own instruction («the
+// same fact spirit.ts's season-boundary block reads»).
+import { applyBondDelta, bondBandOf, expressedTemperamentOf, moodRegisterOf, seasonWrapsWithNoVacation, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
 import { kidAgeExact } from './age'
 // ⭐ `seasonIndexOf` JOINS `addEvent` HERE IN v74 T8 – the engine's ONE definition of «this season»,
 // and the season the tier-1 cap is counted within (`smallTalkThisSeason`, §7). `ledger.ts` is a leaf
@@ -165,13 +169,27 @@ import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from './spotlig
 // world state, no RNG, no import back into `world/`), so neither closes a cycle.
 import { awayVoice } from '../diary/words'
 import { diaryLifeStageFor } from '../diary/facts'
-import { schoolIsOver } from '../kidLife'
+// ⭐ v83 T5 – THE TWO TRAVEL BANDS JOIN `schoolIsOver` ON AN ARROW THAT ALREADY EXISTS. They are the
+// friends tile's own thresholds («a season lived out of a suitcase»: `weeksAway >= AWAY_OFTEN` of
+// the trailing `FRIENDS_WINDOW`), and the `'road-stretch'` occasion reads the SAME fact the tile
+// reads – a week the family paid to travel, off `financeWeeks` (snapshot.ts's own sentence: «a week
+// in which a travel bill was actually paid is a week the family was somewhere else»). Reusing the
+// constants is what keeps «the family has been on the road» ONE claim on two surfaces.
+import { AWAY_OFTEN, FRIENDS_WINDOW, schoolIsOver } from '../kidLife'
+// ⭐ v83 T5 – THE TIER TABLE, for ONE field of it: the tier's `track` is the engine's single
+// spelling of «the trip crosses a border» (`diary/travelHome.ts:521` reads `abroad` off exactly
+// this field), and the `'distant-swing'` occasion asks it of the next ENTERED event – see the gate
+// for why the reading is `!== 'domestic'` where that file's is `=== 'itf'`. ⚠ NO CYCLE, measured
+// the house way: `season/calendar.ts` imports rng, match/types, shared/protocol, shared/dates,
+// economy and `season/types` – nothing under `world/`, so the arrow runs one way. This file already
+// held the type-only `../season/types` edge; this is its value sibling on the same package.
+import { TIERS } from '../season/calendar'
 // ⚠⚠ GENERATED DATA, AND THE IMPORT RUNS ONE WAY ONLY. `smallTalkCorpus.ts` is 43 situations emitted
 // from `docs/specs/small-talk-corpus-2026-09.md` by `tools/small-talk-corpus-emit.ts`; it imports
 // `SmallTalkSituation` back from here as a TYPE, which is erased at compile time, so there is no
 // runtime cycle – the `import type { WorldState }` idiom the decomposition already runs on.
 import { SMALL_TALK_CORPUS } from './smallTalkCorpus'
-import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
+import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite, SpouseViewOccasion } from '../../shared/protocol/narrative'
 // ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
 // resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
 import type { TierId } from '../season/types'
@@ -236,6 +254,12 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // NOT BLOCKING THE WEDDING: any answer releases time, and the wedding lands `weeksAfterEngagement`
   // later whatever was said (T3) – SHE decided, and the fork machinery is the shape, not the power.
   engaged: true,
+  // ⭐⭐ v83 (wave 7 – T5) – FALSE, AND IT IS TIER 1's OWN WORD REPEATED FOR THE MARRIAGE'S STANDING
+  // SURFACE. The spouse's view is texture the way small talk is – answered from the Home card inside
+  // the standing three-week window, never lost as a ROW, and the week rolls on whether the parent
+  // listens or not. A week the career STOPPED for the spouse's opinion would price the marriage as a
+  // tax on time, which is the opposite of what the latch means (T4: marriage steadies).
+  'spouse-view': false,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -2507,6 +2531,44 @@ const ENGAGED_DRY = 'She is getting married. The news reached this house second-
  *  to say about it is his. */
 const ENGAGED_HEADING = 'A wedding is coming, and she has made up her mind'
 
+// =================================================================================================
+// 3h. `'spouse-view'` – THE WEEK THE ONE SHE MARRIED HAS SOMETHING TO SAY (the wedding, wave 7: T5).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// =================================================================================================
+//
+// THE FIRST POOL IN THIS FILE WHOSE SPEAKER IS NEITHER HER NOR STAFF. The shape is the counsel's
+// (`COACH_COUNSEL`): third-person narration outside the quotation, the speaker's own words inside
+// it, keyed on the row's `detail` and on NOTHING else – no voice (he is not her, §3d's argument),
+// no bond (he is not the relationship), no register (the week is hers), no presence axis.
+//
+// ⚠⚠ NO NAME AND NO GENDER ANYWHERE IN THE POOL – the standing law (`ENGAGED_HER_LINE`'s own note):
+// the episode holds a persisted NAME since T3, but WHICH surfaces speak it – and whether any may say
+// «husband» – is the owner's wording call, carried as a question in T7's table. Until he rules, the
+// spouse is «the one she married», which is a fact the world does hold.
+//
+// ⚠ NO FIGURE AND NO PRICE in any line (rule 4) – the `'money'` occasion says «a large bill» and
+// stops there, which is the brief's own fence: beats about money, never accounting.
+
+/** ⚠ ⚠ DRAFT – WHAT THE SPOUSE SAYS, one line per occasion, each spoken about a fact the gate has
+ *  just verified the world holds (`SPOUSE_VIEW_OCCASION_AT`, §12) – so no line can describe a season
+ *  the career is not having. First person inside the quotation is the counsel pool's own licence:
+ *  the narration law binds the frame, not the speech. */
+const SPOUSE_VIEW_SAID: Record<SpouseViewOccasion, string> = {
+  'distant-swing': 'The one she married stayed back after the plates were cleared. "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."',
+  'road-stretch': 'The one she married said it plainly, on a quiet evening. "The family has been on the road for weeks now. The house does not really get lived in between the trips."',
+  'no-vacation': 'The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."',
+  money: 'The one she married asked it without an edge. "That was a large bill, and the season sits in her account now. I am not counting anybody\'s money. I am asking how this house plans."',
+}
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `COUNSEL_HEADING`'s
+ *  shape and its reason: this card is a word from a third person, and neither the week's weather nor
+ *  the parent-daughter distance is a fact about it. ⚠ It recommends none of the three answers. */
+const SPOUSE_VIEW_HEADING = 'The one she married has something to say about this season'
+
+/** ⚠ ⚠ DRAFT – the Home card's invitation, `SMALL_TALK_CARD`'s twin for this kind: one short line
+ *  saying a word is waiting, never what the word is (the card is only the invitation). */
+const SPOUSE_VIEW_CARD = 'The one she married wants a word.'
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -2678,6 +2740,33 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'distance', label: 'Say it is her decision, and step back', bond: ECONOMY.wedding.distanceBond },
     // ⚠ DRAFT
     { id: 'oppose', label: 'Tell her we think it is a mistake', bond: ECONOMY.wedding.opposeBond },
+  ],
+  /** ⭐⭐ v83 (wave 7 – T5) – THE THREE THE SPOUSE'S WORD OFFERS, and they are ONE set for all four
+   *  occasions, which is tier 1's own precedent quoted at its table above: «three parent moves that
+   *  fit a worry, a joy or a question alike, because the answer set is keyed on the KIND and her
+   *  subject is a fact on the row». The occasion is the row's `detail`; the parent's three moves –
+   *  hear it out, hold the season's line, wave it off – fit each of the four. ⚠ Per-occasion WORDS,
+   *  if the owner wants them, are one label overlay away (round 42 #15's own machinery, the fourth
+   *  parameter of `lifeBeatOptionsFor`) and are flagged as a question in T7's table, not taken.
+   *
+   *  ⚠ ⚠ DRAFT – every label below is the builder's draft for the owner's pass (invariant 4).
+   *
+   *  ⚠⚠ THE THIRD KIND WITH NO FREE ANSWER, priced SMALL by design (the brief's ±0.5..±1.5): a word
+   *  about her marriage is never free, and never large – the marriage's standing is texture, not
+   *  economy. Read-independent BY CONSTRUCTION (`'engaged'`'s own shape): no overlay names this
+   *  kind, so the priced set is the same object under every reading and
+   *  `DRAIN_ANSWER['spouse-view']` = `level` drains at the one −0.5 a harness can state.
+   *
+   *  ⚠ THE LABELS NAME NO GENDER (the §3h banner's law), NO NUMBER, NO PRICE AND NO METER (the
+   *  fence). And none of them promises an outcome – what the family DOES about a season is the
+   *  planner's, and a button reading «skip the trip» would be a second, unpriced planner. */
+  'spouse-view': [
+    // ⚠ DRAFT
+    { id: 'hear', label: 'Say the point is fair, and talk it through', bond: ECONOMY.wedding.spouseViewHearBond },
+    // ⚠ DRAFT
+    { id: 'level', label: 'Say the season is what it is', bond: ECONOMY.wedding.spouseViewLevelBond },
+    // ⚠ DRAFT
+    { id: 'brush', label: 'Say there is nothing to worry about', bond: ECONOMY.wedding.spouseViewBrushBond },
   ],
 }
 
@@ -2896,6 +2985,13 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     // ⚠ DRAFT
     oppose: 'She said she is getting married. We told her we think it is a mistake.',
   },
+  // ⭐⭐ v83 (wave 7 – T5) – NO ROW, AND THE `null` IS TIER 1's OWN STATEMENT AT TIER 1's OWN
+  // FREQUENCY: up to ~5 of these a season while the marriage stands, and a feed row per answer would
+  // bury the private-life thread under the parent's replies to it – the exact argument
+  // `'small-talk'`'s null makes above. The `lifeLog` row is the record and the counter (the cooldown
+  // reads it), and the TEXTURE the brief promises goes through the diary (the week note's
+  // `spouseSpoke` band), which is the surface the brief names.
+  'spouse-view': null,
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -3106,6 +3202,18 @@ export function lifeBeatSaid(
       return speaksInHerOwnVoice(bond)
         ? presenceLine(ENGAGED_HER_LINE[voice], presence)
         : ENGAGED_DRY
+    // ⭐⭐ v83 (wave 7 – T5) – THE EIGHTH KIND, AND THE FIRST WHOSE SPEAKER IS NEITHER HER NOR STAFF.
+    // It reads its own `detail` like tier 1 does – the OCCASION is stamped at the raise, so a row
+    // live for three weeks is re-worded from the fact it was raised about, never from a season that
+    // has since moved on. ⚠ It reads NO `voice`, NO `bond` and NO `register` – the counsel's three
+    // reasons, one house over: the spouse is not her, is not the parent-daughter relationship, and
+    // the week is hers. ⚠ And NO presence axis: the scene is the spouse's own house, whatever
+    // address the girl writes from this week.
+    case 'spouse-view': {
+      const occasion = SPOUSE_VIEW_OCCASIONS.find((o) => o === detail)
+      if (occasion === undefined) throw new Error(`A spouse-view row carries no occasion: ${detail}`)
+      return SPOUSE_VIEW_SAID[occasion]
+    }
   }
 }
 
@@ -3175,6 +3283,11 @@ export function lifeBeatHeading(
     // reaches the card through her line, and a frame that also moved would say the distance twice.
     case 'engaged':
       return ENGAGED_HEADING
+    // ⭐ v83 (wave 7 – T5) – ONE FRAME, KEYED ON NOTHING, the counsel's own call a third time: a word
+    // from a third person, and neither the week's weather nor the parent-daughter distance is a fact
+    // about it. The occasion reaches the player through the SAID line, never the frame.
+    case 'spouse-view':
+      return SPOUSE_VIEW_HEADING
   }
 }
 
@@ -3218,7 +3331,10 @@ export function lifeBeatListenFollowUp(
   // announcement is news, its three answers are REACTIONS, and none of them is `listen` – a panel
   // promising more of her would promise words nobody wrote, about a decision she has already
   // finished making.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged') return null
+  // ⚠ AND `'spouse-view'` HAS NONE (v83, wave 7 T5), for the coach's reason in another mouth: the
+  // detour is «say nothing, and let HER talk», and its reward is more of her. The spouse has said
+  // the piece whole, and a panel offering a second half would promise words nobody wrote.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged' || kind === 'spouse-view') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -3583,9 +3699,31 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
  *
  *  ⚠ ZERO DRAWS, like every other prompt in this file – it is a `find` over a handful of rows and a
  *  re-assembly from facts the world already holds. */
+/** ⭐ v83 (wave 7 – T5) – THE INVITATION LINE, PER KIND, and the record is TOTAL for
+ *  `LIFE_BEAT_BLOCKING`'s own reason: a list would let the next soft kind ship wearing tier 1's
+ *  sentence by FORGETTING, and «what does the Home card say for this kind» must be a line somebody
+ *  typed. ⚠ `null` on every BLOCKING kind – those rows stop the week and never reach the soft
+ *  surface, so a card line for them would be dead copy pretending to be reachable.
+ *  ⚠ THE `'small-talk'` CELL IS THE SHIPPED CONSTANT, REFERENCED AND NOT RE-TYPED (invariant 4):
+ *  tier 1's card is byte-identical to what it has always been. */
+const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
+  'fork-opinion': null,
+  met: null,
+  'fork-counsel': null,
+  ended: null,
+  'fork-psy': null,
+  engaged: null,
+  'small-talk': SMALL_TALK_CARD,
+  'spouse-view': SPOUSE_VIEW_CARD,
+}
+
 export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
   const row = liveSoftBeat(world)
-  return row === null ? null : { card: SMALL_TALK_CARD, prompt: lifeBeatPromptFor(world, row) }
+  if (row === null) return null
+  // ⚠ THE `??` ARM IS FOR A HAND-BUILT WORLD ONLY: `liveSoftBeat` returns non-blocking rows, every
+  // non-blocking cell above is a string, and a blocking row reaching this line would already be two
+  // bugs deep – it falls onto tier 1's shipped card rather than onto a crash inside `toSnapshot`.
+  return { card: SOFT_BEAT_CARD[row.kind] ?? SMALL_TALK_CARD, prompt: lifeBeatPromptFor(world, row) }
 }
 
 // =================================================================================================
@@ -5471,4 +5609,172 @@ export function landWedding(world: WorldState): void {
       amountCents: -ECONOMY.wedding.costCents,
     })
   }
+}
+
+// =================================================================================================
+// 12. THE SPOUSE'S OPINION SURFACE – ⚠⚠ THE WEEK THE ONE SHE MARRIED HAS SOMETHING TO SAY
+//     (the wedding, wave 7: T5)
+// =================================================================================================
+//
+// `docs/plans/life-wave-7-builder-2026-09.md` §2 T5, constants in `ECONOMY.wedding`. §11 decides
+// whether the episode becomes a marriage; this is what the marriage IS at W1–W2 – no `spouseBond`,
+// no second tracked number (the 18.09 adoption): the spouse's standing is these beats and the
+// diary's texture, and the surface goes quiet the day the latch does.
+//
+// ⚠⚠ THE WAVE'S THIRD AND LAST STREAM, RESERVED BY THE BRIEF'S §0 AND CREATED HERE:
+//
+//     seed:life:spouse-view:<week>          which occasion, this week
+//
+// (seed, calendar)-keyed like every sibling, so a player cannot conjure or dodge the spouse's word
+// by playing the week differently. ONE key, ONE value (the 09.09 stream law): the occasion pick is
+// the only randomness this section owns – whether the beat fires at all is FACTS (the gate and the
+// occasions below), never a hazard, which is the brief's own reading: «triggers READ existing world
+// facts», and the draw is only ever asked to choose among the true ones.
+//
+// ⚠⚠ ZERO DRAWS ON MAIN (structural – nothing here takes an `Rng`), ZERO draws on an ineligible
+// week AND on an eligible week with no true occasion – the gate and the filter both return before
+// the stream exists, never draw-and-discard. The test is a KEY COUNT with a positive control
+// (wave 3's finding, §5's standing law), in tests/wave7-spouse-view.test.ts §B. A frozen career
+// (156 weeks, age 16.6) can never hold a latch, so this section is unreachable there by
+// construction and the frozen identity stands.
+//
+// ⚠⚠ EVERY OCCASION IS A READ OF A SEAM THAT ALREADY ANSWERS IT – the brief's own boundary («no
+// household ledger, no second wallet, no arithmetic»), and each gate below names its donor at the
+// cell. Nothing here derives a new fact about the world; it asks four old ones.
+
+/** ⭐ THE FOUR OCCASIONS, DERIVED FROM A TOTAL RECORD rather than written out – `WANTS_TOTAL`'s own
+ *  guarantee: a fifth member of the union makes this record a compile error before it can make a
+ *  silent gap in the gates below. ⚠ ROSTER ORDER IS DRAW ORDER and is append-only once shipped (the
+ *  union's own note in `shared/protocol/narrative.ts`). */
+const SPOUSE_VIEW_OCCASION_TOTAL: Record<SpouseViewOccasion, true> = {
+  'distant-swing': true,
+  'road-stretch': true,
+  'no-vacation': true,
+  money: true,
+}
+export const SPOUSE_VIEW_OCCASIONS = Object.keys(SPOUSE_VIEW_OCCASION_TOTAL) as readonly SpouseViewOccasion[]
+
+/** THE LIVE LATCH – the one episode that is married and not over, or null. Inline in `rollEnds`' own
+ *  spelling (`latchedWeek !== null` is T4's seam); named here because three readers ask it – the
+ *  gate, the `'money'` occasion's window and the diary's assembly – and three spellings of «is she
+ *  married» is the two-readings defect rule 3 exists to prevent. ⚠ At most one can exist on any
+ *  state the sim produces: `activeEpisode` is the tail and `arrivalEligible` refuses to append
+ *  behind an open row, so a second latched-and-open row would need two open episodes first. */
+export function latchedEpisode(world: WorldState): LoveEpisode | null {
+  return loveEpisodesOf(world).find((e) => e.latchedWeek !== null && e.endedWeek === null) ?? null
+}
+
+/** ⭐⭐⭐ THE FOUR GATES, ONE PER OCCASION, EACH A PURE ZERO-DRAW READ OF AN EXISTING SEAM – the
+ *  `SMALL_TALK_FACT` table's own shape, asked BEFORE the draw so a false fact removes the occasion
+ *  from the pool instead of being papered over in the copy (its own rule, inherited whole).
+ *
+ *  · `'distant-swing'` – the NEXT entered event crosses a border. The entry fields are
+ *    `nextWeekIsClear`'s own two (`world.season` + `world.entries`, spelled inline for its stated
+ *    cycle reason), and «crosses a border» is the tier's own `track` – `diary/travelHome.ts:521`
+ *    reads `abroad` off exactly this field (`=== 'itf'`, the junior ladder that file is about);
+ *    here it is `!== 'domestic'`, the same fact at the ages a marriage exists: her internationals
+ *    are the W/WTA rungs by 23, and a gate spelled `'itf'` would have called a Slam a home week.
+ *  · `'road-stretch'` – the family has been on the road: travel-billed weeks in the trailing
+ *    `FRIENDS_WINDOW` at or past `AWAY_OFTEN`, which is the friends tile's own band («Mostly by
+ *    phone») off the same `financeWeeks` read `world/snapshot.ts` assembles for it – «a week in
+ *    which a travel bill was actually paid is a week the family was somewhere else».
+ *  · `'no-vacation'` – `seasonWrapsWithNoVacation`, spirit.ts's season-boundary block ITSELF: true
+ *    on the ONE week a season wraps with no family week in it, false everywhere else – so this
+ *    occasion exists exactly where the fact is readable, and the spouse and the −3/−3 block can
+ *    never disagree about whether the family had a holiday.
+ *  · `'money'` – round 23 #18's split, read and never re-derived: a `financeWeeks` category at or
+ *    under −`spouseViewSpendCents` inside the marriage's own trailing window (after the latch, so
+ *    the wedding's own bill – paid ON `latchedWeek` – can never be the complaint), while her
+ *    account holds more than the family wallet (`kidFundsCents` vs `fundsCents`, two persisted
+ *    balances compared and nothing summed – beats about money, never accounting). */
+const SPOUSE_VIEW_OCCASION_AT: Record<SpouseViewOccasion, (world: WorldState) => boolean> = {
+  'distant-swing': (world) => {
+    let next: { week: number; tier: TierId } | null = null
+    for (const e of world.season) {
+      if (e.week <= world.week || !world.entries.includes(e.id)) continue
+      if (next === null || e.week < next.week) next = e
+    }
+    return next !== null && TIERS[next.tier].track !== 'domestic'
+  },
+  'road-stretch': (world) =>
+    world.financeWeeks.filter(
+      (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
+    ).length >= AWAY_OFTEN,
+  'no-vacation': (world) => seasonWrapsWithNoVacation(world),
+  money: (world) => {
+    const latch = latchedEpisode(world)
+    if (latch === null) return false
+    if (world.kidFundsCents <= world.fundsCents) return false
+    const from = Math.max(world.week - ECONOMY.wedding.spouseViewCooldownWeeks, latch.latchedWeek! + 1)
+    return world.financeWeeks.some(
+      (w) =>
+        w.week >= from &&
+        w.week <= world.week &&
+        Object.values(w.byCategory).some((v) => v !== undefined && v <= -ECONOMY.wedding.spouseViewSpendCents),
+    )
+  },
+}
+
+/** The occasions the spouse could honestly raise THIS week, in roster order – pure, zero draws,
+ *  exported so the bench and the tests can ask the same question the roll asks. */
+export function spouseViewOccasionsAt(world: WorldState): SpouseViewOccasion[] {
+  return SPOUSE_VIEW_OCCASIONS.filter((occasion) => SPOUSE_VIEW_OCCASION_AT[occasion](world))
+}
+
+/** ⭐⭐ THE GATE – ALL FOUR, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
+ *  of its own for `arrivalEligible`'s stated reason. Pure, zero draws, no writes.
+ *
+ *  1. A LIVE LATCH – the surface belongs to the marriage and to nothing before or after it: no
+ *     latch, no spouse; an ended latch is an ended surface (the divorce door's other half, free).
+ *  2. NOTHING BLOCKING IS WAITING – `smallTalkEligible`'s clause 1, same words: the week she has
+ *     been asked the biggest question of her life is not the week the spouse queues behind it.
+ *  3. NOT WHILE A SOFT ROW IS LIVE – «one at a time», clause 2's own argument: a second live card
+ *     would queue invisibly or replace the first, and replacing is how «never lost» stops being
+ *     true.
+ *  4. THE COOLDOWN, OFF THE LOG ITSELF – the row is the counter (`smallTalkThisSeason`'s doctrine,
+ *     no new state): no `'spouse-view'` row inside the trailing `spouseViewCooldownWeeks`. ⚠ It
+ *     counts RAISED rows, answered or not – a card the parent ignored still spent the marriage's
+ *     turn to speak. */
+export function spouseViewEligible(world: WorldState): boolean {
+  if (latchedEpisode(world) === null) return false
+  if (pendingLifeBeat(world) !== null) return false
+  if (liveSoftBeat(world) !== null) return false
+  return !lifeLogOf(world).some(
+    (row) => row.kind === 'spouse-view' && world.week - row.week < ECONOMY.wedding.spouseViewCooldownWeeks,
+  )
+}
+
+/** ⭐⭐⭐ THE WEEKLY CALL, and the ONE raise site of a `'spouse-view'` row.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST, THE OCCASIONS SECOND, AND THE STREAM IS DERIVED ONLY WHEN BOTH HAVE
+ *  PASSED – an ineligible week takes ZERO draws, and so does an eligible week with nothing true to
+ *  say (the small-talk reachable-empty discipline, inherited whole; there is no legacy fallback
+ *  here because a spouse with no occasion simply says nothing this week).
+ *
+ *  ⚠ NO HAZARD AND NO CHANCE CONSTANT, WHICH IS THE BRIEF READ LITERALLY: «triggers READ existing
+ *  world facts» – the facts fire the beat, the cooldown bounds it, and the one draw picks WHICH
+ *  true occasion is spoken (uniform over the true set, `drawPartnerWants`' own pickInt shape). A
+ *  per-week chance would be a design decision wearing a constant nobody drafted.
+ *
+ *  ⚠ THE DETAIL IS THE OCCASION – machine-readable, never a rendered sentence, stamped and never
+ *  re-derived (tier 1's own argument: the row is live for three weeks and re-assembled on every
+ *  `toSnapshot`, and a re-derivation could hand the parent a complaint about a season that has
+ *  since moved on – or one whose fact has gone false). */
+export function rollSpouseView(world: WorldState): void {
+  if (!spouseViewEligible(world)) return
+  const occasions = spouseViewOccasionsAt(world)
+  if (occasions.length === 0) return
+  const at = pickInt(rngFromSeed(`${world.seed}:life:spouse-view:${world.week}`), 0, occasions.length - 1)
+  raiseLifeBeat(world, 'spouse-view', occasions[at])
+}
+
+/** ⭐ THE WEEK'S OWN OCCASION, FOR THE DIARY ALONE – the `'spouse-view'` row raised THIS week, or
+ *  null. `DiaryFacts.spouseOccasion`'s one derivation, asked at snapshot time and carried
+ *  (`partnerKnown`'s own shape and reason: the beat and the week note must not be able to disagree
+ *  about what was said this week). ⚠ THE RAISE WEEK AND NOT THE WINDOW: the scene happened on the
+ *  row's own week, and a note that repeated it for three weeks would be the diary stuttering. */
+export function spouseViewOccasionThisWeek(world: WorldState): SpouseViewOccasion | null {
+  const row = lifeLogOf(world).find((r) => r.kind === 'spouse-view' && r.week === world.week)
+  if (row === undefined) return null
+  return SPOUSE_VIEW_OCCASIONS.find((o) => o === row.detail) ?? null
 }

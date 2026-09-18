@@ -117,6 +117,8 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // ⭐ v75 T6 – and nothing of hers has recently ended (see `DiaryFacts.freshBreakup`). The
     // `sweepStages` calendars below are the only place the axis is turned on, for R2-18's reason.
     freshBreakup: false,
+    // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
+    spouseOccasion: null,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -261,6 +263,15 @@ function* sweepStages(): Generator<DiaryFacts> {
     // `low` while licensed at `level` fails `HOLDS.register` there – so the two rows arm opposite
     // halves of one guard and neither replaces the other.
     { freshBreakup: true, moodRegister: 'low' as const },
+    // ⭐ v83 (wave 7 – T5) – THE SPOUSE'S WORD, ONE SHAPE PER OCCASION, for the same R2-18 reason as
+    // every armed shape above: `sweepWeeks` and `sweepVoices` hold `spouseOccasion` at null on every
+    // fixture, and the band's four lines license on four DIFFERENT occasion values – so any shape
+    // left out would leave its line licensed in no fixture of any sweep, and the per-line reached
+    // arm below (its own case) would fail by name.
+    { spouseOccasion: 'distant-swing' as const },
+    { spouseOccasion: 'road-stretch' as const },
+    { spouseOccasion: 'no-vacation' as const },
+    { spouseOccasion: 'money' as const },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -483,6 +494,11 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // task – R2-18's law. The two `{ freshBreakup: … }` shapes in `sweepStages` are what keep the axis
   // from being the R2-18 failure itself, and the case below counts the visits.
   freshBreakup: (f) => f.freshBreakup,
+  // ⭐ v83 (wave 7 – T5) – THE SPOUSE SAID SOMETHING THIS WEEK: the second spelling of the claim,
+  // re-derived off the fact and never off the licence (the table's whole method). The four
+  // `{ spouseOccasion: … }` shapes in `sweepStages` arm it, and the reached case below counts the
+  // visits PER LINE, because the band licenses on four different occasion values.
+  spouseSpoke: (f) => f.spouseOccasion !== null,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -566,6 +582,30 @@ describe('W2 — the ordinary week note is HONEST', () => {
       }
     }
     expect(licensed, 'no line claims the fact – then HOLDS.freshBreakup proves nothing').toBeGreaterThan(0)
+    expect(seen.size, 'every line of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐ v83 (wave 7 T5) – and `HOLDS.spouseSpoke` is REACHED, per line, not decoration', () => {
+    // The freshBreakup case above, one wave on and stricter by construction: the band's four lines
+    // license on four DIFFERENT occasion values, so a total above zero would be satisfied by one
+    // reachable occasion while three lines rot unreachable. The four `{ spouseOccasion: … }` shapes
+    // in `sweepStages` are what this counts – remove any one and this goes red BY LINE.
+    let licensed = 0
+    const seen = new Set<string>()
+    const band = WEEK_NOTES.filter((n) => n.claims.spouseSpoke !== undefined)
+    expect(band.length, 'one line per occasion family – the brief\'s own count').toBe(4)
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.spouseSpoke === undefined) continue
+        licensed++
+        seen.add(render(note, f))
+        expect(
+          HOLDS.spouseSpoke(f, true),
+          `"${render(note, f)}" claims spouseSpoke on a week the spouse said nothing`,
+        ).toBe(true)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.spouseSpoke proves nothing').toBeGreaterThan(0)
     expect(seen.size, 'every line of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
   })
 

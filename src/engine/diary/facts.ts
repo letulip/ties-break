@@ -15,6 +15,7 @@ import type {
   MilestoneType,
   KnockChoice,
   LossStreak,
+  SpouseViewOccasion,
   WorldEvent,
 } from '../../shared/protocol'
 import { TIERS, tierFromLabel } from '../season/calendar'
@@ -249,6 +250,13 @@ export interface DiaryWorldView {
    *  episode ends; this one is about HER, and is true for weeks on end after an ending the parent may
    *  never have heard of. See the field's note in `shared/protocol/narrative.ts`. */
   freshBreakup: boolean
+  /** ⭐ v83 (the wedding, wave 7 – T5) – THE OCCASION THE SPOUSE RAISED THIS WEEK, or null. The ONE
+   *  derivation is `spouseViewOccasionThisWeek(world)` (world/lifeBeat.ts §12), asked at snapshot
+   *  time and carried – `partnerKnown`'s own shape, and REQUIRED for its reason: it selects COPY
+   *  (the week note's `spouseSpoke` band), and a view that forgot it would build, pass, and quietly
+   *  say nothing was said at home. See the field's full licence note in
+   *  `shared/protocol/narrative.ts` (`DiaryFacts.spouseOccasion`). */
+  spouseOccasion: SpouseViewOccasion | null
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training

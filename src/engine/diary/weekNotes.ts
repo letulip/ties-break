@@ -203,6 +203,18 @@ export interface WeekClaims {
    *  unlicensed consequential fact under the honesty law's first tier, and the claim does not license
    *  it however true it sounds. */
   freshBreakup?: true
+  /** ⭐ v83 (the wedding, wave 7 – T5) – ASSERTS THE ONE SHE MARRIED SAID SOMETHING AT HOME THIS
+   *  WEEK, and asserts nothing further. Unselectable unless `f.spouseOccasion !== null`, and the
+   *  honesty pin re-derives that off the fact (`HOLDS.spouseSpoke`, landed with the fact – R2-18's
+   *  law).
+   *
+   *  ⚠⚠ WHAT A LINE MAY SAY, AND WHY IT IS SO LITTLE (`partnerKnown`'s discipline, one house over):
+   *  that a word was said, and WHICH family fact it was about – the occasion is on the row. It may
+   *  NOT say the parent's ANSWER (the card may still be waiting when the note is written), may not
+   *  name or gender the spouse (the persisted name's surfaces are the owner's ruling to make, T7),
+   *  and may not carry a figure (the money law – «a large bill» is the whole of what the `'money'`
+   *  occasion licenses). */
+  spouseSpoke?: true
 }
 
 export interface WeekNote {
@@ -1546,6 +1558,47 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'She was flat all week, and the training does not explain it.',
     claims: { notTravellingWeek: true, freshBreakup: true, register: 'low' },
     license: (f) => plainTraining(f) && lowWeek(f) && f.freshBreakup,
+  },
+  // ===============================================================================================
+  // ⭐ v83 (THE WEDDING, WAVE 7 – T5) – THE WEEK THE ONE SHE MARRIED SAID SOMETHING
+  // ===============================================================================================
+  //
+  // ⚠⚠ THIS BAND IS `spouseSpoke`'s CONSUMING LICENCE and it ships in the same task as the fact and
+  // as `HOLDS.spouseSpoke` – R2-18's law, the two bands above's own precedent. ONE line per occasion
+  // family (the brief's own count), licensed on the occasion the row actually carries, so a note
+  // about a trip cannot land on the week the word was about a bill.
+  //
+  // ⚠ WHAT THE LINES MAY SAY: a word was said, and which family fact it was about. NOT the parent's
+  // answer (the card may still be waiting), NOT a name or a gender for the spouse (the owner's T7
+  // ruling to make – «the one she married» is the fact the world holds), NOT a figure (the money
+  // law). The parent stays fallible: he reports what was said and what he could watch, never her
+  // inside or the spouse's.
+  //
+  // ⚠ LICENSED ON `plainTraining` LIKE THE TWO BANDS ABOVE, so a layoff, a knock and a holiday keep
+  // their own words and the coin in `weekNoteFor` rations these exactly as it rations the rest.
+  // ⚠ NO `domestic` CLAIM: the marriage runs from `independent` on, and the word reaches the parent
+  // down a phone as honestly as across a table.
+  //
+  // ⚠ EVERY LINE HERE IS A DRAFT until the owner's вычитка (CLAUDE.md invariant 4; T7's table).
+  {
+    text: 'The one she married would like the season nearer home. We heard it.',
+    claims: { notTravellingWeek: true, spouseSpoke: true },
+    license: (f) => plainTraining(f) && f.spouseOccasion === 'distant-swing',
+  },
+  {
+    text: 'A word at home about the weeks on the road. It was not unfair.',
+    claims: { notTravellingWeek: true, spouseSpoke: true },
+    license: (f) => plainTraining(f) && f.spouseOccasion === 'road-stretch',
+  },
+  {
+    text: 'The one she married asked for one week of the year. That was all.',
+    claims: { notTravellingWeek: true, spouseSpoke: true },
+    license: (f) => plainTraining(f) && f.spouseOccasion === 'no-vacation',
+  },
+  {
+    text: 'A careful question at home about a large bill. Nobody raised a voice.',
+    claims: { notTravellingWeek: true, spouseSpoke: true },
+    license: (f) => plainTraining(f) && f.spouseOccasion === 'money',
   },
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //

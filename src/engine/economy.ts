@@ -4858,6 +4858,30 @@ export const ECONOMY = {
      *  episode ending through the OLD hazard stays possible and rare, the divorce door the schema
      *  pre-paid, and T8's bench REPORTS its frequency rather than hiding it. */
     latchEndFactor: 0.15,
+    /** ⭐ THE SPOUSE'S OPINION SURFACE (T5) – at most one `'spouse-view'` beat per this many weeks,
+     *  counted off the `lifeLog` itself (the row is the counter, `smallTalkThisSeason`'s doctrine –
+     *  no new state). Drafted 10 (the brief's own figure): up to ~5 a season while the marriage
+     *  stands, and in play fewer, because the beat also needs a TRUE occasion and a free soft
+     *  surface. T8's bench measures the realised rate. */
+    spouseViewCooldownWeeks: 10,
+    /** ⭐ THE `'money'` OCCASION'S «LARGE» LINE, in cents – the ONE money fact the surface reads
+     *  (brief T5's own boundary: «beats about money, never accounting»). A financeWeeks category
+     *  at or under −this inside the marriage's own trailing window counts as a spend the spouse
+     *  would mention. Drafted $2,500 – above a season's routine weekly bills, under the wedding's
+     *  own $12,000 – and it is the BUILDER'S OWN DRAFT (the brief drafted no figure), flagged so
+     *  nobody mistakes it for the architect's. Benched in T8 with the rest of the block. */
+    spouseViewSpendCents: 250000,
+    /** ⭐ THE PARENT'S THREE ANSWERS AT A `'spouse-view'` BEAT, priced SMALL on `bond` through the
+     *  existing `answerLifeBeat` seam – the brief's ±0.5..±1.5 corridor, the exact figures the
+     *  BUILDER'S OWN DRAFT within it, flagged. Hearing the spouse out reaches her as care (+1);
+     *  «the season is what it is» is a small honest friction (−0.5); waving the concern off is a
+     *  dismissal of the person she chose (−1.5). ⚠ NO ZERO among them – a word about her marriage
+     *  is not free – and read-INDEPENDENT by construction: no overlay in `lifeBeatOptionsFor`
+     *  names this kind, so `DRAIN_ANSWER['spouse-view']` (= `level`, −0.5, the mildest) drains at
+     *  one statable number. Corridors benched in T8, his word after the numbers. */
+    spouseViewHearBond: 1,
+    spouseViewLevelBond: -0.5,
+    spouseViewBrushBond: -1.5,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

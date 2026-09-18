@@ -91,7 +91,7 @@ import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, spouseViewOccasionThisWeek } from './lifeBeat'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -1593,6 +1593,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // grows at steps 7-8 (`state.ts`), and a `!== null` test here would silently hand a divorce's or a
     // bereavement's mark to a band written about a break-up the day the second kind lands.
     freshBreakup: world.spiritShock?.kind === 'breakup',
+    // ⭐ v83 (the wedding, wave 7 – T5): the occasion the spouse raised THIS week, or null. The ONE
+    // derivation (`world/lifeBeat.ts` §12), asked here and carried, the two lines above's own shape –
+    // so the beat, the Home card and the week note cannot disagree about what was said at home.
+    spouseOccasion: spouseViewOccasionThisWeek(world),
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must

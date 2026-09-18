@@ -111,6 +111,13 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   // same object under every `wants` x every ends-read and returns −1 from a one-element spread.
   // A walk that drains one states its skew exactly: −1 x count, `drainSkewLine`'s own arithmetic.
   engaged: 'distance',
+  // ⭐ v83 (wave 7 – T5) – `level`, AT −0.5, THE MILDEST OF A KIND WITH NO ZERO, `'engaged'`'s own
+  // choice repeated one row down. ⚠ DECLARED AND UNREACHABLE, `'small-talk'`'s own situation and its
+  // note's argument verbatim: the kind is NON-blocking, `pendingLifeBeat` never hands one to the
+  // loop below, and no drain ever spends this id – the entry exists because TOTALITY is the point.
+  // Read-independent by construction: no overlay names the kind, so `drainCostOf` returns −0.5 from
+  // a one-element spread whenever anybody does ask.
+  'spouse-view': 'level',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

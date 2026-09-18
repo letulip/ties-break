@@ -975,6 +975,10 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // ⚠ RE-AIMED A FOURTH TIME BY v83, WAVE 7 T2 (18.09), NOT WEAKENED: `'engaged'` is the seventh
     // kind and declares TRUE (the announcement stops the week; the wedding it announces stops for
     // nobody – T3). Tier 1 is STILL the only `false` in the table, which is this line's own claim.
+    // ⚠ RE-AIMED A FIFTH TIME BY v83, WAVE 7 T5 (18.09), AND THE OLD CLAIM RETIRES HONESTLY: tier 1
+    // is no longer the ONLY `false` – `'spouse-view'` is the eighth kind and declares false too,
+    // the spouse's word riding the same soft surface tier 1 built. What stands is the narrower
+    // sentence that was always the point: every kind DECLARES, and nothing blocks by accident.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
@@ -983,6 +987,7 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       ended: true,
       'fork-psy': true,
       engaged: true,
+      'spouse-view': false,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

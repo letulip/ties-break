@@ -584,6 +584,13 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // read off `ECONOMY.wedding`, this file's own ARM 2 story. Read-independent by construction:
   // `lifeBeatOptionsFor` carries no overlay for this kind, `'fork-psy'`'s own strongest form.
   engaged: { id: 'distance', bond: -1 },
+  // ⚠ RE-AIMED 18.09 BY v83 (wave 7 – T5), THE RECORD'S FOURTH GROWTH: one row, at **−0.5** – the
+  // mildest of a kind with no zero, `'engaged'`'s own choice repeated. ⚠ THE NUMBER IS THE BUILDER'S
+  // DRAFTED LITERAL from the wave-7 brief's T5 corridor (±0.5..±1.5), transcribed – never read off
+  // `ECONOMY.wedding`, ARM 2's law. Read-independent by construction: no overlay names the kind.
+  // ⚠ The kind is NON-blocking, so the drain LOOP can never meet one (`'small-talk'`'s situation) –
+  // this row prices `drainCostOf` directly, which §D's sweep asks of every kind regardless.
+  'spouse-view': { id: 'level', bond: -0.5 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -627,6 +634,9 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // `'met'`'s and `'ended'`'s are – the same id `raised` above already builds for those two kinds,
   // so the fixture stays the engine's own shape.
   engaged: 'p:892',
+  // ⚠ RE-AIMED BY v83 (wave 7 T5): the spouse's `detail` is the OCCASION – tier 1's own shape, a
+  // machine value the wording pool keys on. `'distant-swing'` is the roster's first member.
+  'spouse-view': 'distant-swing',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.
