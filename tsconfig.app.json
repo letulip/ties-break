@@ -63,6 +63,7 @@
     "tools/radar-bench.ts",
     "tools/retired-college-rule.ts",
     "tools/retirement-rate.ts",
+    "tools/season-equation.ts",
     "tools/season-mirror.ts",
     "tools/shop-probe.ts",
     "tools/skill-ceiling.ts",
