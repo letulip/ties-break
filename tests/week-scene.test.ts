@@ -121,6 +121,7 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   freshBreakup: false,
   // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
   spouseOccasion: null,
+  ownKeyWeek: false,
   trainPct: 75,
   knockChoice: null,
   birthdayAge: null,

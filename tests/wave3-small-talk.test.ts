@@ -988,6 +988,9 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       'fork-psy': true,
       engaged: true,
       'spouse-view': false,
+      // ⚠ RE-AIMED A SIXTH TIME BY v83, WAVE 7 T10 (18.09): `'own-key'` is the ninth kind – the
+      // one-time independent-life story beat – and declares FALSE, narrative-only by design.
+      'own-key': false,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, landWedding, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landWedding, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -415,6 +415,16 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        called and not duplicated. `STOP_PRECEDENCE` already puts the birthday's card in front of
   //        it on a week that is both.
   deliverKnownPartner(world)
+  // ⭐ 1c-key (v83, wave 7 – T10, backlog §8): AND THE WEEK SHE LIVES BEHIND HER OWN DOOR. One-time,
+  //        NON-blocking, narrative-only – a kept `'life'` row and a soft card, no mechanic, no cost,
+  //        no bond move. ⚠ ZERO DRAWS ON EVERY PATH (the section's own argument: nothing to decide,
+  //        so no coin), and the gate reads the `independent` STAGE rather than a raw age, so a
+  //        college week can never say «her own front door» over a diary that says dorm.
+  //        ⚠ BEFORE the spouse and tier 1 – the three share ONE soft surface, and the once-a-career
+  //        story outranks both when several could speak; the surface clauses DEFER it (never cancel)
+  //        on a week something else already holds the card. A frozen career (age 16.6) never reads
+  //        `independent`, so the frozen identity is untouched by construction.
+  deliverOwnKey(world)
   // ⭐⭐ 1c-spouse (v83, the wedding – wave 7 T5): AND THE WEEK THE ONE SHE MARRIED HAS SOMETHING TO
   //        SAY. Raised only while a latched episode lives, at most once per
   //        `ECONOMY.wedding.spouseViewCooldownWeeks`, NON-blocking – the row rides the same soft

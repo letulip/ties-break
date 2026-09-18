@@ -105,6 +105,7 @@ function week(over: Partial<DiaryFacts>): DiaryFacts {
     freshBreakup: false,
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
+    ownKeyWeek: false,
     injured: null,
     travelled: false,
     playedTournament: false,

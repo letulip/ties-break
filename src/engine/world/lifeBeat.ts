@@ -260,6 +260,11 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // listens or not. A week the career STOPPED for the spouse's opinion would price the marriage as a
   // tax on time, which is the opposite of what the latch means (T4: marriage steadies).
   'spouse-view': false,
+  // ⭐ v83 (wave 7 – T10) – FALSE, AND «NARRATIVE-ONLY» IS THE WHOLE ARGUMENT: the beat is a story
+  // the week tells, not a question the week asks, and a career stopped for a housewarming would be
+  // pricing a moment backlog §8 explicitly priced at nothing. The kept feed row is the record that
+  // survives; the soft card is a three-week courtesy, and losing IT loses nothing.
+  'own-key': false,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -2569,6 +2574,33 @@ const SPOUSE_VIEW_HEADING = 'The one she married has something to say about this
  *  saying a word is waiting, never what the word is (the card is only the invitation). */
 const SPOUSE_VIEW_CARD = 'The one she married wants a word.'
 
+// =================================================================================================
+// 3i. `'own-key'` – THE WEEK SHE LIVES BEHIND HER OWN DOOR (wave 7: T10, backlog §8).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// =================================================================================================
+//
+// ONE SCENE, TOLD ONCE, IN THE PARENT'S OWN NARRATION – deliberately NO quoted line of hers, and
+// that absence is what keeps this a one-cell pool without breaking the voice law: the completeness
+// rule («a `quiet` girl can never silently receive a `fiery` girl's line») binds pools that QUOTE
+// her, and this card quotes nobody. Giving the scene a voiced line of hers – four cells, two
+// presences – is a wording decision the owner may take at T7's table; a draft that jumped ahead of
+// it would be choosing for him.
+
+/** ⚠ ⚠ DRAFT – the card's one line: what the week holds, seen from the family's side. */
+const OWN_KEY_SAID = 'She has a place of her own now. A spare key went onto the hook by our door, and Sunday dinner is a standing thing.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – the scene is the
+ *  same scene at every distance and in every weather. */
+const OWN_KEY_HEADING = 'She lives behind her own door now'
+
+/** ⚠ ⚠ DRAFT – the Home card's invitation, one short concrete line. */
+const OWN_KEY_CARD = 'She came by with a spare key.'
+
+/** ⚠ ⚠ DRAFT – the kept feed row, written at the raise (`deliverKnownPartner`'s `keep: true`
+ *  doctrine: the week she moved out is not a line the album may be missing). ⚠ NO cents, no
+ *  mechanic, no address – backlog §8's own boundary. */
+const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, and Sunday dinner stands.'
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -2767,6 +2799,17 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'level', label: 'Say the season is what it is', bond: ECONOMY.wedding.spouseViewLevelBond },
     // ⚠ DRAFT
     { id: 'brush', label: 'Say there is nothing to worry about', bond: ECONOMY.wedding.spouseViewBrushBond },
+  ],
+  /** ⭐ v83 (wave 7 – T10) – ONE ACKNOWLEDGMENT, PRICED ZERO, AND BOTH HALVES ARE THE DESIGN. One,
+   *  because the beat is narrative-only and offers nothing to decide – the dialog's confirm needs a
+   *  control that records, and this is it. Zero, because «NO bond move» is backlog §8's own price:
+   *  a housewarming is not a card a parent can answer wrongly. ⚠ THE ZERO IS WRITTEN OUT and not
+   *  sourced to a delta table, tier 1's own argument: there is no economy here to name a constant
+   *  for, and the day somebody priced it the one-time story would start paying.
+   *  ⚠ ⚠ DRAFT – the label is the builder's draft for the owner's pass (invariant 4). */
+  'own-key': [
+    // ⚠ DRAFT
+    { id: 'keep', label: 'Put the key on the hook', bond: 0 },
   ],
 }
 
@@ -2992,6 +3035,10 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
   // reads it), and the TEXTURE the brief promises goes through the diary (the week note's
   // `spouseSpoke` band), which is the surface the brief names.
   'spouse-view': null,
+  // ⭐ v83 (wave 7 – T10) – NO ANSWER ROW, because the RAISE already wrote the kept one
+  // (`OWN_KEY_ROW`, `deliverOwnKey`): the feed records what HAPPENED, and «we put the key on the
+  // hook» is not a second event – a reply row here would print the same week twice in two voices.
+  'own-key': null,
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -3214,6 +3261,10 @@ export function lifeBeatSaid(
       if (occasion === undefined) throw new Error(`A spouse-view row carries no occasion: ${detail}`)
       return SPOUSE_VIEW_SAID[occasion]
     }
+    // ⭐ v83 (wave 7 – T10) – THE NINTH KIND, AND THE ONE-CELL POOL IS ARGUED AT ITS BANNER (§3i):
+    // the card quotes nobody, so no voice, no bond, no register, no presence and no detail reach it.
+    case 'own-key':
+      return OWN_KEY_SAID
   }
 }
 
@@ -3288,6 +3339,10 @@ export function lifeBeatHeading(
     // about it. The occasion reaches the player through the SAID line, never the frame.
     case 'spouse-view':
       return SPOUSE_VIEW_HEADING
+    // ⭐ v83 (wave 7 – T10) – ONE FRAME, KEYED ON NOTHING: the scene is the same scene at every
+    // distance and in every weather, and there is nothing here for an axis to select.
+    case 'own-key':
+      return OWN_KEY_HEADING
   }
 }
 
@@ -3334,7 +3389,9 @@ export function lifeBeatListenFollowUp(
   // ⚠ AND `'spouse-view'` HAS NONE (v83, wave 7 T5), for the coach's reason in another mouth: the
   // detour is «say nothing, and let HER talk», and its reward is more of her. The spouse has said
   // the piece whole, and a panel offering a second half would promise words nobody wrote.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged' || kind === 'spouse-view') return null
+  // ⚠ AND `'own-key'` HAS NONE (v83, wave 7 T10), for the plainest reason in this list: the card
+  // quotes nobody, so there is nobody a silence could buy more of.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged' || kind === 'spouse-view' || kind === 'own-key') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -3715,6 +3772,7 @@ const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
   engaged: null,
   'small-talk': SMALL_TALK_CARD,
   'spouse-view': SPOUSE_VIEW_CARD,
+  'own-key': OWN_KEY_CARD,
 }
 
 export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
@@ -5777,4 +5835,68 @@ export function spouseViewOccasionThisWeek(world: WorldState): SpouseViewOccasio
   const row = lifeLogOf(world).find((r) => r.kind === 'spouse-view' && r.week === world.week)
   if (row === undefined) return null
   return SPOUSE_VIEW_OCCASIONS.find((o) => o === row.detail) ?? null
+}
+
+// =================================================================================================
+// 13. THE INDEPENDENT LIFE – ⚠ THE WEEK SHE LIVES BEHIND HER OWN DOOR (wave 7: T10, backlog §8)
+// =================================================================================================
+//
+// One-time, NON-blocking, narrative-only (the brief's own three words): a kept feed row, a soft
+// card for three weeks, one diary line – and NO mechanic, NO cost, NO bond move, because a
+// residence mechanic is explicitly gated on the owner's word (backlog §8's own sentence).
+//
+// ⚠⚠ ZERO DRAWS, ON EVERY PATH, AND THE DETERMINISM IS ARGUED RATHER THAN ASSUMED (the brief asks).
+// The house draws when the world has something to DECIDE – which week among many (a hazard), which
+// member of a pool (a name, a frame). This moment has neither: the week is the stage's own first
+// week, and the scene is one scene. A purpose-scoped coin here would be randomness with no question
+// under it. So nothing in this section takes or derives an `Rng`, MAIN is structurally out of
+// reach, and the frozen capture (41550 / e6b0c709) cannot see it – nor can the frozen per-key
+// identity move: a 156-week career stands at 16.6 and never reads `independent`.
+
+/** ⭐ THE GATE – and the AGE CONSTANT IS DELIBERATELY NOT NEW: «her own door» already has one
+ *  spelling in this engine, the `independent` life stage (`diaryLifeStageFor`: 22+, school over,
+ *  not at college – read through `lifeStageOf`, this file's one reading of it). Backlog §8's «near
+ *  the first week at 22+» is that cut, and reading it keeps the two surfaces honest at once: a
+ *  college girl at 22 lives in a dorm, her diary says so, and a spare-key card over that diary
+ *  would be the two surfaces contradicting each other on one screen. Her beat waits for the week
+ *  the stage itself turns – which for a college career is the week the campus is behind her.
+ *
+ *  ⚠ THE RECEIPT IS THE LOG (`'met'`'s doctrine): one `'own-key'` row per career, ever. ⚠ THE TWO
+ *  SURFACE CLAUSES DEFER, NEVER CANCEL – `deliverKnownPartner`'s `<=` courtesy: a week the soft
+ *  surface is busy leaves the receipt unwritten, and the next tick asks again. «Near the first
+ *  week», the brief's own word. */
+export function ownKeyDue(world: WorldState): boolean {
+  if (lifeStageOf(world) !== 'independent') return false
+  if (lifeLogOf(world).some((row) => row.kind === 'own-key')) return false
+  if (pendingLifeBeat(world) !== null) return false
+  return liveSoftBeat(world) === null
+}
+
+/** ⭐⭐ THE DELIVERY, and the ONE writer of an `'own-key'` row – zero draws, `deliverKnownPartner`'s
+ *  own two-surface order: the kept feed row is what HAPPENED, the soft row is the family's moment
+ *  with it, so the news is on the record before the card can be answered.
+ *
+ *  ⚠ THE ROW IS `keep: true` AND STAMPED `lifeKind: 'own-key'` – the private-life thread's glyph
+ *  column reads the stamp (`lifeRowGlyphs.ts`), and an unpicked kind wears the owner's standing
+ *  white heart by that file's own fallback; the glyph itself stays his to pick (§5a).
+ *  ⚠ NO `amountCents` (rule 4) – the week she moved out is not a purchase the game recorded. */
+export function deliverOwnKey(world: WorldState): void {
+  if (!ownKeyDue(world)) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    keep: true,
+    // ⚠ DRAFT (§3i)
+    text: OWN_KEY_ROW,
+    lifeKind: 'own-key',
+  })
+  // ⚠ THE DETAIL IS THE LITERAL KIND – machine-readable and empty of variation, because the row
+  // records nothing per-instance: there is exactly one of these in a life.
+  raiseLifeBeat(world, 'own-key', 'own-key')
+}
+
+/** ⭐ THE WEEK'S OWN FLAG, FOR THE DIARY ALONE – `spouseViewOccasionThisWeek`'s twin: true exactly
+ *  on the raise week, so the one diary line lands once and the note cannot stutter. */
+export function ownKeyThisWeek(world: WorldState): boolean {
+  return lifeLogOf(world).some((row) => row.kind === 'own-key' && row.week === world.week)
 }

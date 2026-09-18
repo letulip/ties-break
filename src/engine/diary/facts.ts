@@ -257,6 +257,11 @@ export interface DiaryWorldView {
    *  say nothing was said at home. See the field's full licence note in
    *  `shared/protocol/narrative.ts` (`DiaryFacts.spouseOccasion`). */
   spouseOccasion: SpouseViewOccasion | null
+  /** ⭐ v83 (wave 7 – T10) – THIS IS THE WEEK SHE GOT HER OWN PLACE. The ONE derivation is
+   *  `ownKeyThisWeek(world)` (world/lifeBeat.ts §13), asked at snapshot time and carried, and
+   *  REQUIRED for the field above's reason: it selects COPY (the week note's `ownKey` line). See
+   *  `shared/protocol/narrative.ts` (`DiaryFacts.ownKeyWeek`) for the licence. */
+  ownKeyWeek: boolean
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training

@@ -338,8 +338,20 @@ export interface SoftBeatInvite {
  *
  *  ⚠ It carries no `heard` stamp and no listen detour: the spouse is not her, and a professional's
  *  own rule applies one house over – a view has been given whole, and a panel promising more of it
- *  would promise words nobody wrote. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view'
+ *  would promise words nobody wrote.
+ *
+ *  ⭐ v83 (wave 7 – T10, backlog §8, adopted by the 18.09 go) ADDS `'own-key'`: THE INDEPENDENT-LIFE
+ *  STORY BEAT – one-time, NON-blocking, narrative-only. The spare key, the Sunday dinner: raised
+ *  near the first week she reads the `independent` life stage (`diaryLifeStageFor`'s own 22+ cut,
+ *  which is also what keeps a college girl's beat honest – a dorm is not her own front door),
+ *  regardless of romance state. One kept `'life'` feed row, one diary line, NO mechanic, NO cost,
+ *  NO bond move – a residence mechanic stays gated on the owner's word (backlog §8's own sentence).
+ *
+ *  ⚠ Its `detail` is the literal `'own-key'` – there is nothing per-row to record – and the receipt
+ *  is the row itself: the log answers «has this happened», once per career, `'met'`'s own doctrine.
+ *  Its one answer is a zero-priced acknowledgment, because the soft surface offers every live row a
+ *  dialog and a dialog needs a control that records; nothing about the answer moves anything. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
@@ -793,6 +805,13 @@ export interface DiaryFacts {
    *  are the owner's call), and may not carry a figure (the money law). Required rather than
    *  optional, `vacationPackageId`'s standing argument: it selects COPY. */
   spouseOccasion: SpouseViewOccasion | null
+  /** ⭐ v83 (wave 7 – T10) – THIS IS THE WEEK SHE GOT HER OWN PLACE: `ownKeyThisWeek(world)`, true
+   *  exactly once per career, on the `'own-key'` row's raise week. Asked at snapshot time and
+   *  carried, the field above's own shape. ⚠ WHAT A LINE LICENSED ON THIS MAY SAY: that she lives
+   *  behind her own door now, the spare key, the standing Sunday – the beat's own three facts. NO
+   *  address, NO rent, NO mechanic of any kind (backlog §8's boundary), and required rather than
+   *  optional for the standing reason: it selects COPY. */
+  ownKeyWeek: boolean
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

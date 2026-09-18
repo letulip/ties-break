@@ -287,6 +287,7 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     freshBreakup: false,
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
+    ownKeyWeek: false,
     trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -705,6 +706,7 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       freshBreakup: false,
       // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
       spouseOccasion: null,
+      ownKeyWeek: false,
       trainPct: 75, knockChoice: null, knockPart: null, birthdayAge: null, birthdayGift: null, birthdayWanted: false, birthdayRepeatAge: null, ...over,   // ⚠ W2/W4: unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
@@ -1071,6 +1073,7 @@ describe('ui/travel-set — on a real career', () => {
       freshBreakup: false,
       // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
       spouseOccasion: null,
+      ownKeyWeek: false,
       trainPct: 75,   // ⚠ W2: the plan, unread here
       knockChoice: null,
       birthdayAge: null,

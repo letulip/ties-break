@@ -216,6 +216,9 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // week note's `spouseSpoke` lines) lands in this same task, and the occasion is the WHOLE of
     // what travels – no answer, no name, no gender, no figure, because no line may assert one.
     spouseOccasion: view.spouseOccasion,
+    // ⭐ v83 (wave 7 – T10). Carried, not re-derived, on the line above's rule exactly: the log is
+    // the engine's, and the week she moved out is one fact with one spelling.
+    ownKeyWeek: view.ownKeyWeek,
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

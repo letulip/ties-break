@@ -591,6 +591,10 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // ⚠ The kind is NON-blocking, so the drain LOOP can never meet one (`'small-talk'`'s situation) –
   // this row prices `drainCostOf` directly, which §D's sweep asks of every kind regardless.
   'spouse-view': { id: 'level', bond: -0.5 },
+  // ⚠ RE-AIMED 18.09 BY v83 (wave 7 – T10): `keep`, at 0 – the one-answer narrative beat, ruled
+  // zero («NO bond move» is backlog §8's own price). Non-blocking, so the loop never meets one;
+  // the row prices `drainCostOf` directly, §D's sweep.
+  'own-key': { id: 'keep', bond: 0 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -637,6 +641,8 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // ⚠ RE-AIMED BY v83 (wave 7 T5): the spouse's `detail` is the OCCASION – tier 1's own shape, a
   // machine value the wording pool keys on. `'distant-swing'` is the roster's first member.
   'spouse-view': 'distant-swing',
+  // ⚠ RE-AIMED BY v83 (wave 7 T10): the literal kind – there is nothing per-row to record.
+  'own-key': 'own-key',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.

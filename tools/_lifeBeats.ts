@@ -118,6 +118,10 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   // Read-independent by construction: no overlay names the kind, so `drainCostOf` returns −0.5 from
   // a one-element spread whenever anybody does ask.
   'spouse-view': 'level',
+  // ⭐ v83 (wave 7 – T10) – `keep`, THE KIND'S ONLY ANSWER AND A RULED ZERO (narrative-only, no bond
+  // move). Declared and unreachable like its two soft siblings: NON-blocking, so the loop never
+  // meets one, and the row exists because totality is the point.
+  'own-key': 'keep',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

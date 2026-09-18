@@ -119,6 +119,7 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     freshBreakup: false,
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
+    ownKeyWeek: false,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -272,6 +273,8 @@ function* sweepStages(): Generator<DiaryFacts> {
     { spouseOccasion: 'road-stretch' as const },
     { spouseOccasion: 'no-vacation' as const },
     { spouseOccasion: 'money' as const },
+    // ⭐ v83 (wave 7 – T10) – the week she got her own place, armed for the same R2-18 reason.
+    { ownKeyWeek: true },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -499,6 +502,9 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // `{ spouseOccasion: … }` shapes in `sweepStages` arm it, and the reached case below counts the
   // visits PER LINE, because the band licenses on four different occasion values.
   spouseSpoke: (f) => f.spouseOccasion !== null,
+  // ⭐ v83 (wave 7 – T10) – SHE GOT HER OWN PLACE THIS WEEK: the second spelling, off the fact.
+  // The `{ ownKeyWeek: true }` shape in `sweepStages` arms it; the reached case below counts.
+  ownKey: (f) => f.ownKeyWeek,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -607,6 +613,24 @@ describe('W2 — the ordinary week note is HONEST', () => {
     }
     expect(licensed, 'no line claims the fact – then HOLDS.spouseSpoke proves nothing').toBeGreaterThan(0)
     expect(seen.size, 'every line of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐ v83 (wave 7 T10) – and `HOLDS.ownKey` is REACHED, not decoration', () => {
+    // T10's own one-line band, counted the way its three elder siblings are: the sweep would pass
+    // identically with the line deleted, so the visits are counted and the `{ ownKeyWeek: true }`
+    // shape in `sweepStages` is what this holds in place.
+    let licensed = 0
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.ownKey === undefined) continue
+        licensed++
+        expect(
+          HOLDS.ownKey(f, true),
+          `"${render(note, f)}" claims ownKey on a week she moved nowhere`,
+        ).toBe(true)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.ownKey proves nothing').toBeGreaterThan(0)
   })
 
   it('⭐⭐⭐ v75 T6 – THE BAND IS SELECTABLE WHILE THE PARENT KNOWS NOTHING, which is the whole finding', () => {

@@ -215,6 +215,12 @@ export interface WeekClaims {
    *  and may not carry a figure (the money law – «a large bill» is the whole of what the `'money'`
    *  occasion licenses). */
   spouseSpoke?: true
+  /** ⭐ v83 (wave 7 – T10) – ASSERTS SHE GOT HER OWN PLACE THIS WEEK, once per career.
+   *  Unselectable unless `f.ownKeyWeek`, and the honesty pin re-derives that off the fact
+   *  (`HOLDS.ownKey`). What a line may say is the beat's own three facts – her own door, the spare
+   *  key, the standing Sunday – and nothing further: no address, no rent, no mechanic (backlog
+   *  §8's boundary). */
+  ownKey?: true
 }
 
 export interface WeekNote {
@@ -1599,6 +1605,14 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'A careful question at home about a large bill. Nobody raised a voice.',
     claims: { notTravellingWeek: true, spouseSpoke: true },
     license: (f) => plainTraining(f) && f.spouseOccasion === 'money',
+  },
+  // ⭐ v83 (WAVE 7 – T10) – THE WEEK SHE GOT HER OWN PLACE: one line, once per career
+  // (`ownKeyWeek` is true on the raise week alone), `ownKey`'s consuming licence in the same task
+  // as the fact and `HOLDS.ownKey` – R2-18's law, third time in this file. ⚠ DRAFT (invariant 4).
+  {
+    text: 'She has her own front door now. The spare key went onto our hook.',
+    claims: { notTravellingWeek: true, ownKey: true },
+    license: (f) => plainTraining(f) && f.ownKeyWeek,
   },
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //
