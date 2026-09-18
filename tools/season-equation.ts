@@ -82,6 +82,8 @@ const ACTUATE = args.includes('--actuate')
 const GRID = args.includes('--grid')
 const STAFFING = args.includes('--staffing')
 const TRAJ = args.includes('--traj') || (!ACTUATE && !GRID && !STAFFING)
+/** skip §2b's ablation arms – they are four more full walks, and §1/§2 alone answer most questions */
+const NO_ABLATION = args.includes('--noabl')
 
 /** The season's last ordinary week – the off-season door (offset 49). */
 const SEASON_WRAP_OFFSET = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
@@ -584,6 +586,19 @@ interface Shape {
   eventsC: number
   matchesB: number
   matchesC: number
+  /** ⭐ THE PROMOTION COLUMNS. A season that ends inside the top 20 opens the biggest draws in the
+   *  game for the season after it – so «she won fewer matches» and «she was worse» are two different
+   *  claims, and the rung she was playing on is what tells them apart. `rungB/rungC` is the mean
+   *  position on TIER_LADDER of the events she entered; `bigB/bigC` is the share of them that were
+   *  1000s or Slams. */
+  playedB: number
+  playedC: number
+  winRateB: number
+  winRateC: number
+  rungB: number
+  rungC: number
+  bigB: number
+  bigC: number
   pointsB: number
   pointsC: number
   /** points per professional event – the DEPTH half of the points decomposition */
@@ -600,6 +615,30 @@ interface Shape {
   vacationsB: number
   vacationsC: number
   doorB: number
+}
+
+/** The mean position on `TIER_LADDER` of the professional events she entered that season – 0 is the
+ *  bottom of the whole ladder and the top is a Slam. A season that moves up the ladder meets stronger
+ *  fields in bigger draws for the same entry. */
+function meanRungOf(s: SeasonRow): number {
+  const rungs: number[] = []
+  for (const [t, n] of Object.entries(s.entriesByTier)) {
+    if (TIERS[t as TierId].track !== 'wta') continue
+    for (let i = 0; i < (n as number); i++) rungs.push(TIER_LADDER.indexOf(t as TierId))
+  }
+  return mean(rungs)
+}
+
+/** …and the share of them that were the two biggest draws in the game. */
+function bigShareOf(s: SeasonRow): number {
+  let big = 0
+  let all = 0
+  for (const [t, n] of Object.entries(s.entriesByTier)) {
+    if (TIERS[t as TierId].track !== 'wta') continue
+    all += n as number
+    if (t === 'wta1000' || t === 'slam') big += n as number
+  }
+  return all === 0 ? 0 : big / all
 }
 
 function shapesOf(careers: CareerRow[]): Shape[] {
@@ -628,6 +667,14 @@ function shapesOf(careers: CareerRow[]): Shape[] {
         eventsC: d.proEvents,
         matchesB: b.matchesWon,
         matchesC: d.matchesWon,
+        playedB: b.matchesPlayed,
+        playedC: d.matchesPlayed,
+        winRateB: b.matchesPlayed > 0 ? b.matchesWon / b.matchesPlayed : 0,
+        winRateC: d.matchesPlayed > 0 ? d.matchesWon / d.matchesPlayed : 0,
+        rungB: meanRungOf(b),
+        rungC: meanRungOf(d),
+        bigB: bigShareOf(b),
+        bigC: bigShareOf(d),
         pointsB: b.pointsEarnedWta,
         pointsC: d.pointsEarnedWta,
         ppeB: b.pointsEarnedWta / Math.max(1, b.proEvents),
@@ -849,7 +896,7 @@ function attribution(base: CareerRow[]): void {
   )
   console.log(
     `  ${collapses.length} of those ${breakouts.length} then COLLAPSE (>= ${COLLAPSE_MIN} places lost) = ` +
-      `${f0((100 * collapses.length) / breakouts.length)}% — his shape's own frequency`,
+      `${f0((100 * collapses.length) / breakouts.length)}% – his shape's own frequency`,
   )
   console.log('')
   console.log('  HIS SHAPE, CAREER BY CAREER (the breakout seasons, and what happened next)')
@@ -909,9 +956,22 @@ function attribution(base: CareerRow[]): void {
     p((s) => s.onsetsB, (s) => s.onsetsC, '(d) injury onsets', 2)
     p((s) => s.weeksOutB, (s) => s.weeksOutC, '(d) weeks out injured')
     p((s) => s.matchesB, (s) => s.matchesC, '    matches won')
+    p((s) => s.playedB, (s) => s.playedC, '    matches played')
+    p((s) => s.winRateB, (s) => s.winRateC, '    win rate', 3)
+    p((s) => s.rungB, (s) => s.rungC, '    mean rung entered (TIER_LADDER)', 2)
+    p((s) => s.bigB, (s) => s.bigC, '    share of entries at a 1000 or a Slam', 2)
   }
   split(breakouts, 'THE SPLIT over every breakout season')
   split(collapses, 'THE SPLIT over the ones that actually collapsed – his case')
+  // ⭐ AND THE SAME QUESTION ASKED OF A BIGGER SAMPLE. A collapse after a BREAKOUT is his exact
+  // sequence and it is rare, so the three-case row above cannot carry an attribution on its own.
+  // Every fall of the same size out of a top-60 season is the same phenomenon with the breakout
+  // condition dropped – ten times the cases, and if the two rows say the same thing, the small one
+  // is not a fluke.
+  split(
+    shapes.filter((s) => s.collapse && s.rankB <= BREAKOUT_MAX_RANK),
+    `EVERY fall of >= ${COLLAPSE_MIN} places out of a top-${BREAKOUT_MAX_RANK} season, breakout or not`,
+  )
   split(
     shapes.filter((s) => !s.breakout),
     'THE SAME SPLIT over ordinary (non-breakout) season pairs, for contrast',
@@ -1108,7 +1168,7 @@ if (TRAJ) {
   const base = runArm(SHIPPED, walkOpts, DEFAULT_PRESETS)
   trajectory(base)
   attribution(base)
-  ablations(base, walkOpts, DEFAULT_PRESETS)
+  if (!NO_ABLATION) ablations(base, walkOpts, DEFAULT_PRESETS)
 }
 if (GRID) grid(walkOpts, DEFAULT_PRESETS)
 if (STAFFING) staffing(DEFAULT_PRESETS)
