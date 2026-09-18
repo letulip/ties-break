@@ -58,6 +58,12 @@
 // noise: with C7's gate gone the resting card draws «0%» instead of «?», which IS what §3's neutral
 // case is about; and a figure without its sign is the same defect on the card and in the row's name,
 // which is why C12 is asserted in two places.
+//
+// ⚠ ONE LEDGER ENTRY ABOVE IS DATED RATHER THAN DELETED. Round 45 #3b (18.09) split `chemFigure` into
+// the DRAWN figure and the SPOKEN one on the owner's ruling that the plus goes from the gauge, so the
+// «`chemFigure` without its sign» arm no longer names a function that exists. It is left standing as
+// the record of what was measured on 17.09; the sign's own contract is measured today in
+// `tests/component/round45-ring-centring.test.ts`, and §2 and §3 below carry their own re-aim notes.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -230,11 +236,16 @@ describe('round 44 §2 - C7, once a band is clear', () => {
     // trap that makes two live boards in one test measure the same career twice.
     const name = currentName(hired())
 
+    // ⚠ RE-AIMED 18.09 BY ROUND 45 #3b: the drawn figure lost its PLUS on the owner's ruling («знак
+    // плюс убрать. Минус короткий пусть останется при этом»), so the two readable rows below read
+    // without a sign upward and with the short minus downward. The claim this case makes – the
+    // question mark under the bar, the gauge at it – is untouched; only the spelling of «the gauge»
+    // moved, and `round45-ring-centring.test.ts` owns the sign itself.
     for (const [level, reads] of [
       [0, '?'],
       [BAR - 0.01, '?'],
       [-(BAR - 0.01), '?'],
-      [BAR, `+${BAR}%`],
+      [BAR, `${BAR}%`],
       [-BAR, `-${BAR}%`],
     ] as const) {
       const wrapper = await mountCoaches(withChemistry(hired(), level))
@@ -320,11 +331,15 @@ describe('round 44 §3 - the sign, on three channels', () => {
     expect(down.transform, 'the negative one sweeps the other way').toContain('scale(-1 1)')
   })
 
-  it('CHANNEL THREE, the figure: it stays, and it carries its own sign (C12)', async () => {
+  it('CHANNEL THREE, the figure: it stays, and downward it carries its own sign (C12)', async () => {
+    // ⚠ RE-AIMED 18.09 BY ROUND 45 #3b. C12 is «the figure stays», and it does; what the owner
+    // amended is the UPWARD sign, which the gradient and the sweep were already saying twice. The
+    // SPOKEN name still carries both signs – §1's own case above, which is the reader C12 was written
+    // for – and `round45-ring-centring.test.ts` is where the whole ruling is measured.
     for (const [level, reads] of [
-      [64.4, '+64%'],
+      [64.4, '64%'],
       [-12.5, '-13%'],
-      [100, '+100%'],
+      [100, '100%'],
     ] as const) {
       const { wrapper, row } = await ringOf(level)
       expect(row.find('.cm-chem .tb-ring-value').text(), `the figure at ${level}`).toBe(reads)

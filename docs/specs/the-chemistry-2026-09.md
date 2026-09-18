@@ -622,6 +622,33 @@ own `aria-label`, «Chemistry with her: +64%» / «Chemistry with her: not known
 the row's name grows, «, chemistry -33%». The four colour tokens are drafts of the same kind – he
 named the colours in words and these are the hexes.
 
+### 8c. ⭐ AMENDED 18.09 – the plus leaves the gauge, and the short minus stays
+
+Everything above §8c is the record of what was built on 17.09 and is left as written. Two things the
+owner ruled on 18.09, after playing the shipped card, change the corner without changing the design.
+
+**The drawn figure loses its plus.**
+
+> «и по гауджу на тренерской карточке еще один момент, кроме вертикального выравнивания: знак плюс
+> убрать. Минус короткий пусть останется при этом.»
+
+He is right, and §8a's own three-channel argument says why: upward, the direction is already carried
+by the gradient family and by the clockwise sweep before the figure gets to it, so the plus was a
+third spelling of a fact the picture had already made. Downward it is not – the minus is one of the
+three and it stays, as the short hyphen-minus he named.
+
+⚠ **The SPOKEN name still carries both signs, and that is a split rather than an inconsistency.** The
+one function became two (`chemDrawn` and `chemSpoken` in `CoachMarketScreen.vue`). A listener has
+neither the gradient nor the sweep – the row is a `<button>` with an explicit `aria-label`, so the
+gauge's own label inside it is never announced – and that listener is exactly the reader C12 was
+written for. Cutting the sign there would take the one channel built for him away from him. **This is
+an open question for the owner**: he may want the spoken plus cut too, and that is his to rule.
+
+**The mark and the gauge were re-sized and re-aligned** (round 45 #2 and #3, same day): the chemistry
+mark takes the bottom navigation's own icon size and its own icon-to-label gap, and `ProgressRing`
+stopped inheriting the line box its optical nudge was fitted against – inside a `<button>` host the
+figure sat 1.98px high, which is what he was seeing. Both are measured at their own code.
+
 ---
 
 ## 9. The raise basket (#51), and how a budget coach out-earns everyone

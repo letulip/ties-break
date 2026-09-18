@@ -1,4 +1,7 @@
-// ⭐⭐⭐ ROUND 45 #3 – THE FIGURE INSIDE THE GAUGE IS CENTRED IN EVERY HOST. MOUNTED.
+// ⭐⭐⭐ ROUND 45 #3 AND #3b – THE FIGURE INSIDE THE GAUGE: WHERE IT SITS, AND WHAT IT SAYS. MOUNTED.
+//
+// Two rulings of the owner's, on the same corner of the same card, on the same day. #3 is the
+// alignment and it is the first half of this file; #3b is the sign and it is the last describe.
 //
 // The owner, on the deployed wave-7 build: «проверить выравнивание шрифта внутри гауджа – я вижу знак
 // вопроса и он стоит выше середины». His words and the whole diagnosis live on `.tb-ring-value` in
@@ -165,5 +168,102 @@ describe('round 45 #3 – the ring owns the type its optical nudge was fitted ag
     expect(type(marker.element), 'and the marker ignores it, exactly as the four other rings do').toEqual(body)
     expect(type(marker.find('b').element), 'right down to the glyph the owner was looking at').toEqual(body)
     wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 45 #3b – THE PLUS LEAVES THE GAUGE, AND THE SHORT MINUS STAYS
+// =================================================================================================
+//
+// The owner, 18.09, in the same message as the alignment: «и по гауджу на тренерской карточке еще
+// один момент, кроме вертикального выравнивания: знак плюс убрать. Минус короткий пусть останется при
+// этом.»
+//
+// ⚠⚠ IT IS THE DRAWN FIGURE AND NOT THE SPOKEN ONE, and the split is the whole subject of this
+// block. On the CARD the direction is carried twice before the figure gets to it – the gradient
+// family (C11: green up, orange into red down) and the sweep – so the drawn plus is a third spelling
+// of a fact the picture has already made. A LISTENER has neither the gradient nor the sweep: for that
+// reader the sign in the row's accessible name is the only thing left carrying direction, and it is
+// exactly the reader C12 («для тех, кто плохо считывает цвета или расположение шкалы») was written
+// for. So the one function became two, the ruling was applied to the drawn one, and whether the
+// spoken one should follow is HIS call and is in the round's report as a question.
+//
+// ⚠⚠ MUTATION ARMS – applied to the real component and run, each red MEASURED:
+//   ARM 5  `chemDrawn` given the plus back (i.e. made identical to `chemSpoken`)  -> RED [2] – the
+//          positive case, and the spoken case with it, whose whole point is that the two DIFFER
+//   ARM 6  `chemDrawn`'s minus dropped as well                                    -> RED [1]
+//   ARM 7  `chemSpoken` pointed at `chemDrawn` (the spoken sign cut too)          -> RED [1]
+describe('round 45 #3b – the drawn figure loses its plus and keeps its minus', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  /** The coach she has, at a level, with the board up. One mount at a time – the screen reads its
+   *  snapshot off the shared store, so two live boards in one case measure the same career twice
+   *  (round44-chemistry-card.test.ts paid for that lesson and records it). */
+  async function markerAt(chem: number) {
+    const world: WorldState = createWorld('r45-sign', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    if (!world.coachId) throw new Error('this profile is supposed to start with a coach on the payroll')
+    world.coachPairs[world.coachId] = { chem, phase: 0, standing: 0 }
+    const snapshot = toSnapshot(world)
+    const mine = snapshot.coachMarket.find((r) => r.current)
+    expect(mine?.chemistry, `the wire carries a reading at ${chem} – otherwise this case is vacuous`).not.toBeNull()
+    useGameStore().snapshot = snapshot
+    const wrapper = mount(CoachMarketScreen, { attachTo: document.body })
+    const pill = wrapper.findAll('.tb-seg .tab-pill').find((b) => b.text() === 'Coaches')
+    await pill!.trigger('click')
+    await nextTick()
+    const row = wrapper.findAll('.cm-row').find((r) => r.classes('current'))!
+    return { wrapper, drawn: row.find('.cm-chem .tb-ring-value').text(), spoken: row.attributes('aria-label') ?? '' }
+  }
+
+  it('⭐⭐ A POSITIVE READING IS DRAWN WITH NO SIGN AT ALL (ARM 5)', async () => {
+    for (const [chem, reads] of [
+      [8.2, '8%'],
+      [64.4, '64%'],
+      [100, '100%'],
+    ] as const) {
+      document.body.innerHTML = ''
+      const { wrapper, drawn } = await markerAt(chem)
+      expect(drawn, `the gauge at ${chem}`).toBe(reads)
+      expect(drawn, 'and there is no plus anywhere on it').not.toContain('+')
+      wrapper.unmount()
+    }
+  })
+
+  it('⭐ ...and a negative one keeps the SHORT minus, exactly the character it already carried (ARM 6)', async () => {
+    for (const [chem, reads] of [
+      [-8.2, '-8%'],
+      [-12.5, '-13%'],
+      [-100, '-100%'],
+    ] as const) {
+      document.body.innerHTML = ''
+      const { wrapper, drawn } = await markerAt(chem)
+      expect(drawn, `the gauge at ${chem}`).toBe(reads)
+      // ⚠ THE SHORT ONE. He named it, so it is the ASCII hyphen-minus it has always been and not a
+      // typographic minus or an en dash – a character swap here would be a wording change nobody
+      // asked for, in the one place a test can still catch it.
+      expect(drawn.codePointAt(0), 'U+002D, the short minus he named').toBe(0x2d)
+      wrapper.unmount()
+    }
+  })
+
+  it('⚠⚠ THE SPOKEN NAME KEEPS BOTH SIGNS – the ruling was about the gauge (ARM 7)', async () => {
+    // C12's own reader. The row is a `<button>` with an explicit `aria-label`, so the gauge's own
+    // label inside it is never announced: if the sign goes from the name too, a listener is left with
+    // a bare number and no direction at all. That is a question for the owner and not an agent's to
+    // answer, so until he rules it the name says which way.
+    document.body.innerHTML = ''
+    const up = await markerAt(33.2)
+    expect(up.spoken, 'the name still says which way, upward').toContain('chemistry +33%')
+    expect(up.drawn, 'while the gauge beside it does not').toBe('33%')
+    up.wrapper.unmount()
+
+    document.body.innerHTML = ''
+    const down = await markerAt(-33.2)
+    expect(down.spoken, '...and downward').toContain('chemistry -33%')
+    down.wrapper.unmount()
   })
 })
