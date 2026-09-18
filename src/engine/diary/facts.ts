@@ -95,6 +95,12 @@ export function milestoneKey(m: Milestone): string {
     // happen only once, so the kind IS the identity.
     case 'break-even':
       return `${m.type}:${m.kind ?? 'career'}`
+    // ⭐ v83 (the wedding, wave 7 T3): PER EPISODE, NEVER PER CAREER – `kind` carries the
+    // `LoveEpisode.id`, because a second marriage on a later row is first-class (the 11.09 re-shape)
+    // and a `'wedding'` identity with no episode in it would silently swallow it. The `?` fallback
+    // is for a hand-built row only; the one writer (`landWedding`) always stamps the id.
+    case 'wedding':
+      return `${m.type}:${m.kind ?? '?'}`
   }
 }
 
@@ -122,6 +128,12 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   // W2-ENDINGS: the week the tennis stopped being only a bill FOR GOOD, which is a bigger version of
   // the same moment `prize` earns the smile for.
   'break-even': 'happy',
+  // ⚠ v83 (the wedding, wave 7 T3) – `happy`, THE BUILDER'S PICK AND A DRAFT LIKE THE WAVE'S WORDS:
+  // her wedding is the one family moment in this table that is unambiguously hers to smile at, and
+  // the bride art the 11.09 ruling gated the whole branch on is painted smiling. If a voice-true
+  // face is ever wanted (the peak's own 17.09 lesson – `serious` as the shared safe one), that is a
+  // one-word change and his to make.
+  wedding: 'happy',
 }
 
 // --- the facts ------------------------------------------------------------------------------

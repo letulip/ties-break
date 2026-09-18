@@ -112,6 +112,13 @@ import { guardNotEndedForGood, KID_ID } from './constants'
 // would have supplied are field reads (`world.entries.includes`, `world.coachId !== null`) and are
 // spelled inline for that reason and no other.
 import { entryStatus } from './medical'
+// ⭐ v83 (the wedding, wave 7 – T3) – THE MILESTONE CHANNEL, `markSchoolEnd`'s own two surfaces:
+// the kept feed line and the scroll's row, both idempotent by key. ⚠ ONE-WAY ARROW, MEASURED THE
+// HOUSE WAY before it was believed: `world/milestones.ts` imports the calendar, dates, money, the
+// diary barrel, kidLife, ledger, constants, labels, ladder and a TYPE-ONLY `WorldState` – and this
+// module is imported only by world.ts, endings.ts, multiWeek.ts, phaseHerWeek.ts, snapshot.ts and
+// the corpus's type-only edge, none of which sits in that closure. No runtime loop.
+import { captureMilestone, fireMilestone } from './milestones'
 import { weekMonth } from '../../shared/dates'
 // ⭐⭐⭐ v76 T6 – THE SEAT, ASKED DIRECTLY, WHICH IS THE MASSEUR'S OWN WAY (`world/medical.ts:62`
 // spends `masseurWorksThisWeek` inside `accrueCondition` exactly like this). `psychologistWorkingRung`
@@ -5352,5 +5359,98 @@ export function rollWedding(world: WorldState): void {
   // non-null, and `rollEnds` runs before this at the call site, so the episode the beat is about is
   // the episode still standing this week.
   const episode = activeEpisode(world)!
+  // ⭐⭐⭐ v83 T3 – HE GETS A NAME, AT THE ENGAGEMENT AND NOWHERE ELSE (the design's own moment: «a
+  // latched partner finally needs one»). ONE call per episode ever – the raise below writes the
+  // receipt that makes this line unreachable a second time – and the RESULT IS PERSISTED, never
+  // re-derived at read (T1's law on the field): a later pool edit must never rename a husband an
+  // old career already has. ⚠ The `??=` is belt on braces for hand-carried worlds: an episode that
+  // somehow already holds a name keeps it, exactly as the migration's `??=` would keep it.
+  episode.partnerName ??= partnerNameFor(world.seed, episode.id)
   raiseLifeBeat(world, 'engaged', episode.id)
+}
+
+/** ⚠ ⚠ DRAFT – THE POOL, ≥ 24 FICTIONAL FIRST NAMES AND NOT ONE SURNAME ANYWHERE IN THE WAVE, so no
+ *  real person's name is CONSTRUCTIBLE (house trademark law satisfied by construction – the same
+ *  guarantee `season/names.ts` engineers with curated pools, achieved here by never holding the
+ *  second half at all). Every name is a draft for the owner's pass (invariant 4; T7's table).
+ *
+ *  ⚠ SINGLE TOKENS ONLY – no spaces, no initials – which is what keeps «no surname» a property a
+ *  test can assert rather than a habit. ⚠ APPEND-ONLY once shipped, `SURNAMES`' own law and for the
+ *  weaker of its two reasons only: the draw indexes by pool LENGTH, so a reorder or removal re-maps
+ *  future draws – and though every DRAWN name is persisted (nobody is renamed), a grown pool changes
+ *  which husband a NEW career on an old seed meets, which is the price of any pool change and the
+ *  reason to append rather than edit. */
+export const PARTNER_NAME_POOL: readonly string[] = [
+  'Anton', 'Bruno', 'Casper', 'Daniel', 'Elias', 'Felix', 'Gabriel', 'Henrik',
+  'Ivo', 'Jonas', 'Karel', 'Lukas', 'Matteo', 'Niko', 'Oskar', 'Pavel',
+  'Rafael', 'Samuel', 'Tomas', 'Viktor', 'Willem', 'Xavier', 'Yann', 'Zeno',
+  'Andrei', 'Marco', 'Ruben', 'Stefan',
+]
+
+/** ⭐⭐⭐ v83 T6's ONE DERIVATION FUNCTION, landed with T3 because the engagement is its one call
+ *  site: WHO SHE IS MARRYING, drawn uniformly on `seed:life:partner-name:<episodeId>` – the wave's
+ *  second and last new stream, (seed, episode)-keyed so no week's play and no other draw can shift
+ *  it, and MAIN is never reached.
+ *
+ *  ⚠⚠ CALLED EXACTLY ONCE PER EPISODE, AT THE ENGAGEMENT, AND THE RESULT IS PERSISTED
+ *  (`LoveEpisode.partnerName`) – `temperamentFor`'s own arrangement: the function is pure and
+ *  re-derivable for the LIFE OF THE POOL, and it is precisely the pool's freedom to grow that makes
+ *  the persisted copy the fact and this function only the pen it was written with. A reader that
+ *  called this instead of reading the row would rename a husband the day a name is appended.
+ *
+ *  ⚠ `pickInt` over the whole pool – uniform, one draw, `drawPartnerWants`' own shape. */
+export function partnerNameFor(seed: string, episodeId: string): string {
+  const r = rngFromSeed(`${seed}:life:partner-name:${episodeId}`)
+  return PARTNER_NAME_POOL[pickInt(r, 0, PARTNER_NAME_POOL.length - 1)]
+}
+
+/** ⭐⭐⭐ v83 T3 – THE WEDDING LANDS, and the ONE writer of `latchedWeek`.
+ *
+ *  ⚠⚠ `weeksAfterEngagement` WEEKS AFTER THE BEAT WAS ANSWERED, ON **ANY** ANSWER – opposing does
+ *  not stop it, SHE decided; what opposing bought is the bond price already paid and the diary's
+ *  memory of it. The beat is BLOCKING, so the answer landed on the raise week (`row.week` – time
+ *  could not move between them) and the arithmetic below reads the row's own week.
+ *
+ *  ⚠⚠ FOUR GATES, EACH ONE LOAD-BEARING AND NONE A DRAW (zero draws in this function, on any path):
+ *    · an `'engaged'` row, ANSWERED – an unanswered row cannot start the clock (unreachable in play,
+ *      the block contract holds time; real on a crafted world);
+ *    · its episode still ACTIVE – §8's ordinary hazard keeps running between the answer and the
+ *      day, and an episode that ends inside those weeks is a wedding that never happens: the row
+ *      keeps its receipt (no second ask of a dead episode) and the latch is never written. The
+ *      bench REPORTS this frequency (T8) rather than hiding it;
+ *    · not yet LATCHED – the latch is the receipt and the once-ness, `lifeLog.answer`'s own shape:
+ *      one nullable field says both «has it happened» and «when», so a later week walks past;
+ *    · the day has COME – `>=` rather than `===`, so a crafted world that jumped the calendar still
+ *      lands exactly once (the latch refuses the second pass) and play, which ticks by one, lands
+ *      ON the day.
+ *
+ *  WHAT LANDING WRITES, in one place: the latch (`latchedWeek = world.week`), ONE kept feed row and
+ *  ONE album entry through the milestone channel (`markSchoolEnd`'s own two-surface idiom:
+ *  `fireMilestone` keeps the line past every prune, `captureMilestone` gives the scroll its row,
+ *  both idempotent per `wedding:<episodeId>` – so the SECOND wedding of a later episode captures
+ *  its own line), and the COST – `ECONOMY.wedding.costCents` as ONE ledger event through the family
+ *  wallet, the standing expense idiom (`resolvePhysio`'s shape). ⚠ The category is the absent-one
+ *  (`'other'`): naming a bucket for a once-a-career cost is a breakdown decision that rides Q-1
+ *  (the price and WHO PAYS are the owner's, with T8's numbers in front of him). ⚠ NO name in any
+ *  line – whether a surface speaks the husband's name is T7's wording question, not a default. */
+export function landWedding(world: WorldState): void {
+  for (const row of lifeLogOf(world)) {
+    if (row.kind !== 'engaged' || row.answer === null) continue
+    if (world.week - row.week < ECONOMY.wedding.weeksAfterEngagement) continue
+    const episode = loveEpisodesOf(world).find((e) => e.id === row.detail)
+    if (episode === undefined || episode.endedWeek !== null) continue
+    if (episode.latchedWeek !== null) continue
+    episode.latchedWeek = world.week
+    // ⚠ DRAFT – the kept line and the ledger line are both the builder's drafts (invariant 4).
+    fireMilestone(world, `wedding:${episode.id}`, 'Her wedding day. The family was there, whatever had been said about it.')
+    captureMilestone(world, { type: 'wedding', week: world.week, kind: episode.id })
+    world.fundsCents -= ECONOMY.wedding.costCents
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      // ⚠ DRAFT
+      text: 'The wedding – the family\'s side of the day',
+      amountCents: -ECONOMY.wedding.costCents,
+    })
+  }
 }

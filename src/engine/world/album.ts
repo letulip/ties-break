@@ -419,6 +419,8 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   'season-rank': 'Season close',
   'break-even': 'The money turned',
   school: 'School behind her',
+  // ⚠ DRAFT (v83, the wedding – wave 7 T3; invariant 4: the owner's word lands in the T7 table).
+  wedding: 'Her wedding',
 }
 
 function scrollDetail(m: Milestone): string | null {
@@ -437,6 +439,12 @@ function scrollDetail(m: Milestone): string | null {
       return m.kind === 'week' ? 'one week of it' : 'the whole of it'
     case 'school':
       return 'the last school year is over'
+    // ⚠ v83 (wave 7 T3): NO DETAIL, DELIBERATELY. The milestone's `kind` is the EPISODE ID – a
+    // machine value the scroll must never print – and whether any surface speaks the husband's NAME
+    // is a wording question that belongs to the owner's pass (T7), not to a detail cell that would
+    // settle it by default. The label row alone is the record.
+    case 'wedding':
+      return null
   }
 }
 

@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, landWedding, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -341,10 +341,20 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        clause. ⚠ ITS OWN CALL, for `accrueSpirit`'s own reason below – `accrueCondition`'s
   //        arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts.
   //
-  //        ⚠ IT RAISES THE BLOCKING `'engaged'` BEAT AND WRITES NOTHING ELSE on this tree – the
-  //        latch, the name, the feed row and the cost are all T3's, `weeksAfterEngagement` weeks
-  //        after the answer.
+  //        ⚠ IT RAISES THE BLOCKING `'engaged'` BEAT AND WRITES THE NAME (T3's `partnerNameFor`,
+  //        persisted at the moment she says it) – the latch, the feed row and the cost are
+  //        `landWedding`'s, one line down, `weeksAfterEngagement` weeks after the answer.
   rollWedding(world)
+  // ⭐⭐⭐ 1c-land (v83, the wedding – wave 7 T3): AND THE DAY ITSELF. Zero draws on ANY path – four
+  //        gates and four writes, so MAIN cannot move and the frozen capture cannot see it. It runs
+  //        directly after the roll so the week the clock comes due is the week it lands, and BEFORE
+  //        `rollLeak`/`deliverKnownPartner` for the reading's sake alone (nothing between them
+  //        shares state with it: the latch is this call's own, and §9 reads `publicWeek`, not the
+  //        latch). ⚠ THE MONEY IS REAL AND VISIBLE – `ECONOMY.wedding.costCents` through the family
+  //        wallet as one ledger event, the masseur's own precedent for a bill in this phase – and
+  //        the two kept surfaces (feed line, album row) go through the milestone channel, idempotent
+  //        per episode. An ineligible week writes nothing at all.
+  landWedding(world)
   // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
   //
   //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a

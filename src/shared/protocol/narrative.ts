@@ -48,6 +48,13 @@ export type MilestoneType =
    *  закончиться». Captured the week it happens, back-filled by the v43 migration for every career
    *  already past it - his own is twenty-two - so the scroll never has a hole where a life changed. */
   | 'school'
+  /** ⭐ v83 – THE WEDDING (wave 7 T3): the week she married, kept where a life's turns are kept. A
+   *  new persisted union member is a schema change by invariant 3 (the v44 'facility' precedent),
+   *  and this one rides the v83 bump rather than costing its own. ⚠ NOT once per career – `kind`
+   *  carries the `LoveEpisode.id`, so the identity is per EPISODE and a second marriage on a later
+   *  row captures its own line (the 11.09 re-shape's whole point). No back-fill exists or could:
+   *  no save below v83 can hold one, because there was no wedding to reach. */
+  | 'wedding'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
