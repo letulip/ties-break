@@ -189,7 +189,7 @@ export function captureBreakEven(world: WorldState): void {
   // is the one-sided reading he did not ask for, and it is not a small error: measured on
   // `tools/album-money-probe.ts --arm 1`, the enterprise cost $12,250,000 against the $34,087,161 of
   // `'business'` income it produced, and charging the cost with no credit for the income takes
-  // «spent» from $9,997,903 to $22,247,903 and stops this page crossing AT ALL – for exactly the
+  // «spent» from $9,997,902 to $22,247,902 and stops this page crossing AT ALL – for exactly the
   // family he was describing. Closing it is a persisted accumulator, which is a schema move and
   // therefore his call: docs/specs/the-reckoning-2026-09.md §6.5.
   const t = careerMoney(world)

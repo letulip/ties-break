@@ -29,8 +29,13 @@ import type { WorldState } from '../world'
  *
  *    * «SPENT» was `careerTotals.spentCents`, every cent that ever left the wallet – and on the
  *      probe career **59.7% of it was the `'shop'` category**: $15,490,000 of a $25,935,355 total,
- *      being a house, the brand, the academy and the fund deposits. That money did not get SPENT, it
- *      got MOVED, and it was sitting in the same save under `assets` worth $39,327,362.
+ *      being a house, the brand and the fund deposits. That money did not get SPENT, it got MOVED,
+ *      and it was sitting in the same save under `assets` worth $39,327,362.
+ *      ⚠ CORRECTED 18.09: this sentence used to say «and the academy», which the probe's own
+ *      readout does not support – arm 0 walks to exactly three rows, and the academy is never
+ *      reached because its own fund deposits keep the wallet under the $4,000,000 that rung needs.
+ *      The spec's §1b code block was right; only the prose here had drifted. A career that really
+ *      does build the academy is what `--arm 1` exists to walk (§6.1).
  *    * «WON» was `careerTotals.prizeCents`, which is documented as prize money THE FAMILY KEPT – so
  *      it excludes her own half of every cheque (`kidFundsCents`, $28,749,334 on the same career:
  *      MORE than the family's $17,164,973), and it excludes the parent's wages, the sponsors, the

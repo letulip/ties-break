@@ -8,7 +8,7 @@
 //
 // ⚠ THE DIAGNOSIS IS MEASURED AND LIVES IN `tools/album-money-probe.ts`: on a walked career that
 // buys the way he does, 59.7% of «spent» ($15,490,000 of $25,935,355) was the `'shop'` category –
-// a house, the brand, the academy and the fund – money MOVED and not consumed, sitting in the same
+// a house, the brand and the fund – money MOVED and not consumed, sitting in the same
 // save under `assets` at $39,327,362. And «won» is `careerTotals.prizeCents`, the family's half of
 // the prize cheques, which on that career was $17,164,973 against the $28,749,334 in HER account
 // and $10,862,617 of wages, sponsors, grants and businesses that no epilogue figure ever named.
