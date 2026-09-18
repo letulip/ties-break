@@ -235,4 +235,27 @@ to rule on. A draft, if he wants the row renamed rather than explained:
 
 | # | home | today | the draft | |
 | ---: | --- | --- | --- | --- |
-| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `The family's share` | `DRAFT – his call; today's label is unchanged in the tree` |
+| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `The family's share` | ⭐ **RULED 18.09 – «да, пойдет». SHIPPED.** The figure is unchanged; only the label moved |
+
+⚠ **The rename is the epilogue's label and nothing else, which is invariant 4 read strictly.** Two
+other surfaces print the same `prizeCents` and neither is the string he ruled on, so neither moved:
+`ForkDialog.vue`'s label is **«The tennis has paid»**, and the album's slot 6 says «$X won against
+$Y spent» in PROSE. Widening a ruling about one label to every surface that happens to share its
+figure is the agent-initiated wording change invariant 4 exists to forbid. If he wants either of
+those to follow, that is a separate ask and a separate row.
+
+### 7b. ⭐ RULED 18.09 – the spoken plus goes (round 45 #3b, the question §8c left open)
+
+The chemistry gauge lost its drawn plus on 18.09 and the row's spoken name kept both signs, with the
+reason recorded in `docs/specs/the-chemistry-2026-09.md` §8c and the question put to him. His answer:
+
+> «да, потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+> дополнительно.»
+
+| # | home (`file` · what) | today | ruled | |
+| ---: | --- | --- | --- | --- |
+| R45-3c | `CoachMarketScreen.vue` · the coach row's `aria-label`, the chemistry clause | `, chemistry +33%` | `, chemistry 33%` | ⭐ **RULED 18.09. SHIPPED.** The minus is untouched – a negative reading still says `, chemistry -33%` |
+
+⚠ Nothing else about the clause moved: it is the same sentence, the same figure and the same percent
+sign, one character shorter upward. `chemSpoken` now delegates to `chemDrawn`, so the two surfaces
+cannot drift apart again.

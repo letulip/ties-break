@@ -11,6 +11,12 @@
 // (docs/plans/life-wave-7-strings-2026-09.md, R46-1 / R46-2) and are asserted to be ABSENT on a
 // career that has nothing for them to say – which is what keeps every existing career's page the
 // page it already was.
+//
+// ⭐⭐⭐ RE-AIMED 18.09 BY RULING 2 OF THAT DAY, AND BY HIM RATHER THAN BY THIS FILE. R46-3 put the
+// first label to him as a draft – «Won» prints `prizeCents`, which is only the family's HALF of the
+// prize cheques – and he answered «да, пойдет». So the first label is now «The family's share»; the
+// FIGURE under it did not move and neither did the other four. The paragraph above is left as
+// written because it is the record of what was true before he ruled.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -127,12 +133,18 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     w.unmount()
   })
 
-  it('⚠ the five labels the owner wrote are all still on the page, in his order', async () => {
+  it('⚠ the five labels are all still on the page, in his order, and the first is the one HE renamed', async () => {
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)
     await lastPage(w)
     const labels = w.findAll('.ending-totals dt').map((d) => d.text())
-    expect(labels[0]).toBe('Won')
+    // ⭐⭐⭐ RULING 2, 18.09 («да, пойдет» on draft R46-3) – and this is the assertion that moved with
+    // it. ⚠ THE PIN ASSERTS WHAT THE STRING IS, so a pin moving is exactly what a ruled rename looks
+    // like and is the ONE diff no test can catch on its own: it is the dated note beside it that
+    // makes the move accountable, not the green run. ⚠⚠ THE ARM, for what the pin CAN do – put
+    // `Won` back in the template and this goes red: measured 18.09, RED [1 test].
+    expect(labels[0], 'his own rename – the figure is the family\'s half, so the label says so').toBe("The family's share")
+    expect(labels, 'and nothing else acquired the old word').not.toContain('Won')
     expect(labels[1]).toBe('Spent')
     expect(labels.slice(-3)).toEqual(['Seasons', 'Best rank', 'Titles'])
     w.unmount()

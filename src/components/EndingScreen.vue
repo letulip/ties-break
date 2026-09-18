@@ -218,9 +218,20 @@ async function resumeCollege(): Promise<void> {
              rank» and «Titles» are his, and nothing here rewrites one.
              ⚠ THE TWO NEW ROWS ARE DRAFTS – docs/plans/life-wave-7-strings-2026-09.md, ids R46-1 and
              R46-2 – and they render only when the figure is non-zero, so every career that neither
-             owned anything nor banked a cheque of her own sees exactly the page it saw before. -->
+             owned anything nor banked a cheque of her own sees exactly the page it saw before.
+
+             ⭐⭐⭐ RULING, 18.09 – AND ONE OF THE FIVE HAS NOW MOVED, BECAUSE HE MOVED IT. R46-3 was
+             put to him as a draft – «Won» names a figure that is only the family's HALF of the prize
+             cheques, and on a measured career that was $17,164,973 printed beside the $28,749,334
+             sitting in HER account, which is why he could not place it. His answer: «да, пойдет». So
+             «Won» becomes «The family's share», the FIGURE is untouched (`prizeCents`, exactly as
+             before), and the other four labels stay his.
+             ⚠ HERE AND NOWHERE ELSE, which is invariant 4 read strictly. The only other labelled
+             surface on this figure is `ForkDialog.vue`, whose label is «The tennis has paid» and was
+             never the string he ruled on; the album's slot 6 says «$X won against $Y spent» in
+             PROSE. Neither is «Won», so neither moves on this ruling. -->
         <dl class="ending-totals">
-          <div><dt>Won</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
+          <div><dt>The family's share</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
           <div><dt>Spent</dt><dd>{{ formatCents(view.money.outlayCents) }}</dd></div>
           <div v-if="view.money.herAccountCents > 0">
             <dt>Her account</dt><dd>{{ formatCents(view.money.herAccountCents) }}</dd>
