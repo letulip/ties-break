@@ -25,6 +25,9 @@
 //          `w35` entry to raise the beat, which is most of the file
 //   ARM 6  the `'money'` after-the-latch clamp removed             → 1 RED: §E.4's wedding-bill
 //          arm – the spouse complaining about the wedding's own cost
+//          ⚠ RE-RUN 18.09, after the wedding's cost was ruled out («я думаю как с подарками, никто
+//          и нисколько») and the fixture's bill became a plain latch-week spend: still 1 RED – the
+//          boundary is the gate's own and outlives the bill
 
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's §B apparatus, verbatim and for its reason. Every
 // draw is the engine's own; the mock exists only so §B can COUNT the keys the gate reached.
@@ -345,10 +348,13 @@ describe('wave 7 T5 E – every occasion is a read of an existing seam', () => {
     // ⚠ a spend under the line is not «large»
     world.financeWeeks = [{ week: world.week - 2, byCategory: { gear: -(WEDDING.spouseViewSpendCents - 100) } }]
     expect(spouseViewOccasionsAt(world)).toEqual([])
-    // ⚠⚠ the wedding's own bill can never be the complaint: paid ON `latchedWeek`, and the window
-    // opens strictly after it (ARM 6's red).
-    world.financeWeeks = [{ week: world.loveEpisodes[0].latchedWeek!, byCategory: { other: -WEDDING.costCents } }]
-    expect(spouseViewOccasionsAt(world), 'the spouse does not grumble about the wedding').toEqual([])
+    // ⚠⚠ a spend ON `latchedWeek` can never be the complaint: the window opens strictly after it
+    // (ARM 6's red). ⚠ RE-AIMED 18.09 – the fixture billed the wedding's own drafted charge here until
+    // the cost was RULED OUT («я думаю как с подарками, никто и нисколько» – no money mechanics;
+    // spec §3c keeps its record). The boundary is the GATE's and outlives the bill, so the fixture
+    // now plants a plain at-the-line spend on the latch week – large by the same test as above.
+    world.financeWeeks = [{ week: world.loveEpisodes[0].latchedWeek!, byCategory: { other: -WEDDING.spouseViewSpendCents } }]
+    expect(spouseViewOccasionsAt(world), 'a latch-week spend sits outside the marriage\'s window').toEqual([])
   })
 
   it('⭐ several true occasions: the pick is uniform on the one purpose key, and the roster order is the draw order', () => {

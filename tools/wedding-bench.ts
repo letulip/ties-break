@@ -16,7 +16,9 @@
 //        IS A REVERSE EDIT, NOT A FLAG: run once shipped, then set `latchEndFactor` to 1 in
 //        economy.ts, run again, restore (the frozen-career protocol's control discipline). The
 //        header prints the live value so each log self-describes which arm it is.
-//   (c)  the cost against the wallet, per wealth preset.
+//   (c)  RETIRED BY RULING 18.09 – the cost left the engine («я думаю как с подарками, никто и
+//        нисколько»); its measurement stands in the spec's §3c record. The letter is kept so old
+//        logs stay readable.
 //   (d)  the bond trajectory – the answer mix under the drain is degenerate by construction
 //        (every `'engaged'` drains at `distance`), so the medians show the SCALE the ±corridors
 //        live on rather than testing a corridor.
@@ -100,8 +102,7 @@ interface EngagedMark {
 interface LatchMark {
   week: number
   age: number
-  /** the wallet as the bill landed: the post-charge balance plus the charge, same tick. */
-  fundsBeforeCents: number
+  // ⚠ `fundsBeforeCents` (the wallet as the bill landed) left with section (c) – the 18.09 ruling.
   bondAtWedding: number
   /** bond 52 weeks after the latch, or null when the walk ended first. */
   bondSeasonAfter: number | null
@@ -180,7 +181,6 @@ function runCareer(preset: Preset, index: number, policy: Policy): WeddingOutcom
       out.latches.push({
         week: e.latchedWeek,
         age: kidAgeExact(e.latchedWeek, world.profile.birthMonth, world.profile.birthDay),
-        fundsBeforeCents: world.fundsCents + ECONOMY.wedding.costCents,
         bondAtWedding: world.bond ?? ECONOMY.bond.start,
         bondSeasonAfter: null,
       })
@@ -325,7 +325,7 @@ function main(): void {
   )
   console.log(
     `  constants under measurement: perWeek ${wed.perWeek} · minEpisodeWeeks ${wed.minEpisodeWeeks} · ` +
-      `ageGate ${wed.ageGate} (RULED) · weeksAfterEngagement ${wed.weeksAfterEngagement} · cost ${money(wed.costCents)}`,
+      `ageGate ${wed.ageGate} (RULED) · weeksAfterEngagement ${wed.weeksAfterEngagement} · cost RULED OUT 18.09`,
   )
   console.log(
     // ⚠ the `as number` is two-doors' own idiom: the constant's literal type and the control value
@@ -441,22 +441,12 @@ function main(): void {
   console.log('  ⚠ the 1.0 arm is the SAME command on the SAME tree with the constant reverse-edited, then restored (spec §3b).')
   console.log('')
 
-  // --- (c) THE COST ---
-  console.log(`  ── (c) THE COST: ${money(wed.costCents)} against the family wallet at the wedding week ──`)
-  console.log('')
-  console.log(`  ${pad('preset', 12)}${padL('weddings', 10)}${padL('median share', 14)}${padL('>20% of funds', 15)}${padL('wallet <= 0', 13)}`)
-  for (const preset of presets) {
-    const marks = census.filter((o) => o.background === preset.background).flatMap((o) => o.latches)
-    const solvent = marks.filter((l) => l.fundsBeforeCents > 0)
-    const shares = solvent.map((l) => wed.costCents / l.fundsBeforeCents).sort((a, b) => a - b)
-    const over = solvent.filter((l) => wed.costCents > 0.2 * l.fundsBeforeCents).length
-    console.log(
-      `  ${pad(preset.background, 12)}${padL(String(marks.length), 10)}` +
-        `${padL(shares.length ? `${(100 * median(shares)).toFixed(1)}%` : '–', 14)}` +
-        `${padL(marks.length ? `${over}/${solvent.length}` : '–', 15)}${padL(String(marks.length - solvent.length), 13)}`,
-    )
-  }
-  console.log('')
+  // --- (c) THE COST – RETIRED BY RULING 18.09 ---
+  // The section measured the drafted $12,000 against the wallet at the wedding week, per wealth
+  // preset, until his word closed Q-1 while the spec was being read: «я думаю как с подарками,
+  // никто и нисколько» – like the gifts, nobody pays and nothing. The charge left the engine the
+  // same day; the measurement it produced stands in docs/specs/the-wedding-2026-09.md §3c. The
+  // LETTER stays retired – (d)–(f) keep their names so old logs read against new ones.
 
   // --- (d) THE BOND TRAJECTORY ---
   console.log('  ── (d) THE BOND TRAJECTORY under the drain (answer mix degenerate: every engagement = distance) ──')

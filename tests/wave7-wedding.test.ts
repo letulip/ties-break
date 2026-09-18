@@ -22,10 +22,18 @@
 //          a wedding landed on a partner already gone
 //   ARM 5  `landWedding`'s latch gate removed                    → 1 RED: §F's idempotency case –
 //          the second pass re-billed the family
+//          ⚠ RE-RUN 18.09, after the cost was ruled out («я думаю как с подарками, никто и
+//          нисколько» – the re-bill no longer exists to red on): still 1 RED, now §F's DATE
+//          assertion – the second pass re-stamped the wedding onto the later week (582 vs 577).
+//          Without that added assertion this arm measured GREEN, which is why it was added.
 //   ARM 6  the name's `??=` flattened to `=`                     → 1 RED: §E's persistence case –
 //          a husband renamed on a re-walk, T1's law broken
 //   ARM 7  the latch seam removed from `rollEnds`                → 1 RED: §G's discriminating week –
 //          the marriage ended at the unlatched hazard
+//   ARM 8  the charge smuggled back into `landWedding` (18.09,   → 1 RED: §F's day-comes guard –
+//          run red-first for the ruling's flip: a `fundsCents`      the kept row is no longer the
+//          write plus an expense row re-added, then removed)        only event (4 vs 3); the
+//          funds-untouched assertion sits one line behind it in the same case
 
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's §B apparatus, verbatim and for its reason. Every
 // draw is the engine's own; the mock exists only so §B can COUNT the keys the gate reached.
@@ -226,8 +234,10 @@ describe('wave 7 T2 C – the `engaged` beat', () => {
   it('⚠ a raise writes the NAME and nothing else – no latch, no feed row, no cents', () => {
     // ⚠ RE-AIMED BY T3 IN ITS OWN WAVE, exactly as the case's first title («on this tree») was
     // written to be: the engagement now writes `partnerName` – the one T3 write that belongs to the
-    // BEAT rather than to the day – and the latch, the rows and the money stay `landWedding`'s,
+    // BEAT rather than to the day – and the latch and the rows stay `landWedding`'s,
     // `weeksAfterEngagement` weeks after the answer. §E owns the name's own assertions.
+    // (⚠ 18.09: the money since left `landWedding` too – ruled out, «как с подарками» – so the
+    // funds check below is now the raise's own no-money guard, same as the landing's in §F.)
     const world = onHitWeek('w7-silent')
     const events = world.events.length
     const funds = world.fundsCents
@@ -382,21 +392,26 @@ describe('wave 7 T3 F – `landWedding`', () => {
     return world
   }
 
-  it('⭐⭐ the day comes: the latch, ONE kept feed row, ONE album entry, ONE ledger event', () => {
+  it('⭐⭐ the day comes: the latch, ONE kept feed row, ONE album entry – and funds UNTOUCHED', () => {
+    // ⚠ RE-AIMED 18.09 – THE COST WAS RULED OUT while T8's bench was being read, in his own words:
+    // «я думаю как с подарками, никто и нисколько» – the wedding follows the gifts' law, nobody pays
+    // and nothing (docs/specs/the-wedding-2026-09.md §3c keeps the drafted charge's measured
+    // record). The old assertion (funds down by the drafted charge, one expense row) FLIPS into the guard: funds
+    // untouched and the kept row the ONLY event – a smuggled charge must redden here (ARM 8's red).
     const world = answered('w7-land', 'bless', WEDDING.weeksAfterEngagement)
     const funds = world.fundsCents
+    const eventsBefore = world.events.length
     landWedding(world)
     const episodeRow = world.loveEpisodes[0]
     expect(episodeRow.latchedWeek, 'the latch is the wedding week, on the row').toBe(world.week)
     const kept = world.events.filter((e) => e.milestoneKey === `wedding:${episodeRow.id}`)
     expect(kept, 'one feed row, kept past every prune').toHaveLength(1)
     expect(kept[0].keep).toBe(true)
+    expect(world.events.length, '…and that kept row is the ONLY event the landing writes').toBe(eventsBefore + 1)
     expect(world.milestones.filter((m) => m.type === 'wedding'), 'one album entry').toEqual([
       { type: 'wedding', week: world.week, kind: episodeRow.id },
     ])
-    expect(world.fundsCents - funds, 'the cost, once, through the family wallet').toBe(-WEDDING.costCents)
-    const bill = world.events.filter((e) => e.type === 'expense' && e.amountCents === -WEDDING.costCents)
-    expect(bill, 'as ONE ledger event').toHaveLength(1)
+    expect(world.fundsCents, '⚠ funds are UNTOUCHED by the landing – nobody pays and nothing (18.09)').toBe(funds)
   })
 
   it('⭐ ANY answer lands it – opposing bought the bond price, never the calendar', () => {
@@ -420,11 +435,16 @@ describe('wave 7 T3 F – `landWedding`', () => {
     landWedding(world)
     const funds = world.fundsCents
     const events = world.events.length
+    const day = world.loveEpisodes[0].latchedWeek
     world.week += 5
     landWedding(world)
-    expect(world.fundsCents, 'no second bill').toBe(funds)
+    expect(world.fundsCents, 'no money on the second pass either (18.09: none on the first)').toBe(funds)
     expect(world.events.length, 'no second row').toBe(events)
     expect(world.milestones.filter((m) => m.type === 'wedding'), 'no second entry').toHaveLength(1)
+    // ⚠ RE-AIMED 18.09: with the charge ruled out («как с подарками») the re-bill that was this
+    // case's red is gone, and the milestone channel is idempotent by key on its own – so the DATE is
+    // what now keeps ARM 5 honest: a latch gate removed re-stamps the wedding onto the later week.
+    expect(world.loveEpisodes[0].latchedWeek, '…and the DATE stands – the second pass re-writes nothing').toBe(day)
   })
 
   it('⚠ an episode that ENDED inside the eight weeks is a wedding that never happens', () => {
@@ -452,7 +472,7 @@ describe('wave 7 T3 F – `landWedding`', () => {
     const world = answered('w7-nodraw', 'distance', WEDDING.weeksAfterEngagement)
     rngKeys.length = 0
     landWedding(world)
-    expect(rngKeys, 'four gates and four writes, not one stream').toEqual([])
+    expect(rngKeys, 'four gates and three writes, not one stream').toEqual([])
   })
 })
 

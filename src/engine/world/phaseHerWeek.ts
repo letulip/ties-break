@@ -342,16 +342,17 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts.
   //
   //        ⚠ IT RAISES THE BLOCKING `'engaged'` BEAT AND WRITES THE NAME (T3's `partnerNameFor`,
-  //        persisted at the moment she says it) – the latch, the feed row and the cost are
-  //        `landWedding`'s, one line down, `weeksAfterEngagement` weeks after the answer.
+  //        persisted at the moment she says it) – the latch and the feed row are `landWedding`'s,
+  //        one line down, `weeksAfterEngagement` weeks after the answer.
   rollWedding(world)
   // ⭐⭐⭐ 1c-land (v83, the wedding – wave 7 T3): AND THE DAY ITSELF. Zero draws on ANY path – four
-  //        gates and four writes, so MAIN cannot move and the frozen capture cannot see it. It runs
+  //        gates and three writes, so MAIN cannot move and the frozen capture cannot see it. It runs
   //        directly after the roll so the week the clock comes due is the week it lands, and BEFORE
   //        `rollLeak`/`deliverKnownPartner` for the reading's sake alone (nothing between them
   //        shares state with it: the latch is this call's own, and §9 reads `publicWeek`, not the
-  //        latch). ⚠ THE MONEY IS REAL AND VISIBLE – `ECONOMY.wedding.costCents` through the family
-  //        wallet as one ledger event, the masseur's own precedent for a bill in this phase – and
+  //        latch). ⚠ NO MONEY SINCE 18.09 – the drafted `costCents` charge was RULED OUT in his own
+  //        words («я думаю как с подарками, никто и нисколько» – the gifts' law; the spec's §3c
+  //        keeps its measured record) – and
   //        the two kept surfaces (feed line, album row) go through the milestone channel, idempotent
   //        per episode. An ineligible week writes nothing at all.
   landWedding(world)

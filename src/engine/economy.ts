@@ -4810,8 +4810,10 @@ export const ECONOMY = {
    *  the cost against the wealth corridors; the bond deltas' spread) and HIS word lands on numbers,
    *  not on a blank. ⚠ THE ONE EXCEPTION IS `ageGate`, WHICH IS RULED AND NOT A DRAFT.
    *
-   *  ⚠ NO CENTS ANYWHERE EXCEPT `costCents` – the bond deltas are BOND POINTS on `applyBondDelta`'s
-   *  own scale (`ECONOMY.bond.delta`'s family), and the cents rules do not apply to them. */
+   *  ⚠ NO CENTS ANYWHERE EXCEPT `spouseViewSpendCents` (a READ line, never a charge – `costCents`
+   *  was the block's one charge until the 18.09 ruling below) – the bond deltas are BOND POINTS on
+   *  `applyBondDelta`'s own scale (`ECONOMY.bond.delta`'s family), and the cents rules do not apply
+   *  to them. */
   wedding: {
     /** ⭐ THE AGE GATE – RULED 11.09, art-driven and his own word («свадьба на 23+ – мне вполне
      *  ок»), superseding 23.08's 22+: the `adult` portrait set is where the bride art lives. The
@@ -4847,11 +4849,9 @@ export const ECONOMY = {
      *  not stop it: SHE decided, and what opposing bought is the bond price and the diary's memory.
      *  Drafted 8. T3 is the reader (`landWedding`). */
     weeksAfterEngagement: 8,
-    /** ⭐ THE COST, IN CENTS – one ledger event through the family wallet, drafted $12,000. A real,
-     *  visible, ONE-TIME sum (recurring texture belongs to the children's wave), benched against
-     *  the wealth corridors in T8. ⚠ Q-1 FOR THE OWNER RIDES THE BENCH: the price and WHO PAYS are
-     *  his to rule with the numbers in front of him – this figure buys the measurement. */
-    costCents: 1200000,
+    // ⚠ `costCents` (drafted $12,000) RULED OUT 18.09 – Q-1 answered in his own words: «я думаю как
+    // с подарками, никто и нисколько» – like the gifts, nobody pays and nothing. What the drafted
+    // charge weighed while the tree carried it: docs/specs/the-wedding-2026-09.md §3c.
     /** ⭐ WHAT MARRIAGE DOES TO THE ENDING HAZARD – wave-4's multiplier × this, on a latched
      *  episode only, applied at `rollEnds`' one seam (T4). Drafted 0.15: marriage steadies the
      *  slot, which is its whole mechanical meaning at W1. ⚠ NOT ZERO, deliberately – a latched

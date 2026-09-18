@@ -5642,10 +5642,10 @@ export function partnerNameFor(seed: string, episodeId: string): string {
  *  ONE album entry through the milestone channel (`markSchoolEnd`'s own two-surface idiom:
  *  `fireMilestone` keeps the line past every prune, `captureMilestone` gives the scroll its row,
  *  both idempotent per `wedding:<episodeId>` – so the SECOND wedding of a later episode captures
- *  its own line), and the COST – `ECONOMY.wedding.costCents` as ONE ledger event through the family
- *  wallet, the standing expense idiom (`resolvePhysio`'s shape). ⚠ The category is the absent-one
- *  (`'other'`): naming a bucket for a once-a-career cost is a breakdown decision that rides Q-1
- *  (the price and WHO PAYS are the owner's, with T8's numbers in front of him). ⚠ NO name in any
+ *  its own line). ⚠ NO MONEY – the drafted `costCents` charge and its ledger event stood here until
+ *  the 18.09 ruling closed Q-1 in his own words: «я думаю как с подарками, никто и нисколько» – the
+ *  wedding follows the gifts' law, nobody pays and nothing; what the drafted $12,000 weighed is
+ *  recorded in docs/specs/the-wedding-2026-09.md §3c. ⚠ NO name in any
  *  line – whether a surface speaks the husband's name is T7's wording question, not a default. */
 export function landWedding(world: WorldState): void {
   for (const row of lifeLogOf(world)) {
@@ -5655,17 +5655,12 @@ export function landWedding(world: WorldState): void {
     if (episode === undefined || episode.endedWeek !== null) continue
     if (episode.latchedWeek !== null) continue
     episode.latchedWeek = world.week
-    // ⚠ DRAFT – the kept line and the ledger line are both the builder's drafts (invariant 4).
+    // ⚠ DRAFT – the kept line is the builder's draft (invariant 4).
     fireMilestone(world, `wedding:${episode.id}`, 'Her wedding day. The family was there, whatever had been said about it.')
     captureMilestone(world, { type: 'wedding', week: world.week, kind: episode.id })
-    world.fundsCents -= ECONOMY.wedding.costCents
-    addEvent(world, {
-      week: world.week,
-      type: 'expense',
-      // ⚠ DRAFT
-      text: 'The wedding – the family\'s side of the day',
-      amountCents: -ECONOMY.wedding.costCents,
-    })
+    // ⚠ The ledger charge (the `fundsCents` write and its expense row) stood here and was RULED OUT
+    // 18.09 («я думаю как с подарками, никто и нисколько») – the wedding follows the gifts' law:
+    // no money mechanics. The spec's §3c keeps the record of what the drafted charge weighed.
   }
 }
 

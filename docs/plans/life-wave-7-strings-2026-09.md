@@ -15,9 +15,10 @@ documents, which are this file's template.
 
 **Not one shipped string moved in this wave.** Every row below is an ADDITION, quoted **verbatim
 from the tree**, and every one is a **DRAFT – awaiting his pass** (invariant 4): nothing here ships
-as approved until his word, and the PR says so. The engagement's answer prices, the wedding's cost,
-the hazard and the spouse deltas are NUMBERS, not strings – they ride T8's bench and are out of this
-table's scope on purpose (the brief's §4 contract names them).
+as approved until his word, and the PR says so. The engagement's answer prices, the wedding's cost
+(since RULED OUT, 18.09 – §2's note), the hazard and the spouse deltas are NUMBERS, not strings –
+they ride T8's bench and are out of this table's scope on purpose (the brief's §4 contract names
+them).
 
 **Provenance.** The rows were transcribed from the working tree and reconciled against the wave's
 own draft flags: `git diff 1b9eb2b1..HEAD -- src/ | grep '⚠ DRAFT'` at the close of T10 shows every
@@ -29,11 +30,12 @@ constants) are carried in §5 rather than silently dropped.
 
 | | |
 | --- | ---: |
-| player-facing **strings** the wave ADDED to the tree | **66** |
+| player-facing **strings** the wave ADDED to the tree | **65** |
 | of them **ruled** | **0** |
-| of them **draft – awaiting his pass** | **66** |
+| of them **draft – awaiting his pass** | **65** |
+| removed by his ruling after transcription (18.09 – W2, §2's note) | **1** |
 | shipped strings that **MOVED** | **0** |
-| per task | T2 **16** · T3 **3** + the 28-name pool · T5 **13** · T10 **6** |
+| per task | T2 **16** · T3 **2** + the 28-name pool · T5 **13** · T10 **6** |
 | flagged **non-string** drafts carried in §5 | the memory-face pick · the drafted numbers |
 
 ---
@@ -69,13 +71,20 @@ deliberately (the `'ended'` pool's own T6 note records the same call and the sam
 
 ## 2. T3 – the wedding lands
 
-`src/engine/world/lifeBeat.ts` (`landWedding`), `src/engine/world/album.ts` – **3 strings**.
+`src/engine/world/lifeBeat.ts` (`landWedding`), `src/engine/world/album.ts` – **2 strings** (a
+third, W2, was removed by ruling – the note under the table).
 
 | # | home (`file` · constant) | when the player sees it | the string, verbatim | |
 | ---: | --- | --- | --- | --- |
 | W1 | `lifeBeat.ts` · `landWedding`'s `fireMilestone` text | the KEPT feed line on the wedding week – survives every prune, once per episode | Her wedding day. The family was there, whatever had been said about it. | `DRAFT – awaiting his pass` |
-| W2 | `lifeBeat.ts` · `landWedding`'s ledger `text` | the Money ledger's expense row for `ECONOMY.wedding.costCents` (the drafted $12,000 – Q-1 rides T8's bench) | The wedding – the family's side of the day | `DRAFT – awaiting his pass` |
 | W3 | `album.ts` · `SCROLL_LABEL.wedding` | the album scroll's label for the `'wedding'` milestone; the detail cell is deliberately empty (the milestone's `kind` is the episode id, a machine value) | Her wedding | `DRAFT – awaiting his pass` |
+
+⚠ **W2 – removed by his ruling, 18.09.** The row carried the Money ledger's expense line for the
+drafted `ECONOMY.wedding.costCents` – «The wedding – the family's side of the day» – until his word
+closed the spec's Q-1 while T8's numbers were in front of him: «я думаю как с подарками, никто и
+нисколько» – like the gifts, nobody pays and nothing. The charge and its ledger event left the
+engine; [the wedding spec](../specs/the-wedding-2026-09.md) §3c keeps the measurement of what the
+drafted $12,000 weighed. W1 and W3 keep their numbers so earlier reads of this table stay legible.
 
 ### 2a. The partner name pool – 28 names, every one a draft
 
@@ -172,7 +181,7 @@ its flag in code.**
 | `lifeBeat.ts` §3g banner + `ENGAGED_HER_LINE` / `ENGAGED_DRY` / `ENGAGED_HEADING` | E1–E10 |
 | `lifeBeat.ts` `LIFE_BEAT_OPTIONS.engaged` (three `⚠ DRAFT` rows) | E11–E13 |
 | `lifeBeat.ts` `ANSWER_EVENT.engaged` (three `⚠ DRAFT` rows) | E14–E16 |
-| `lifeBeat.ts` `landWedding` (the kept line + the ledger line) | W1–W2 |
+| `lifeBeat.ts` `landWedding` (the kept line; the ledger line left with the 18.09 ruling – §2's note) | W1 |
 | `album.ts` `SCROLL_LABEL.wedding` | W3 |
 | `lifeBeat.ts` `PARTNER_NAME_POOL` | N1–N28 |
 | `lifeBeat.ts` §3h banner + `SPOUSE_VIEW_SAID` / `_HEADING` / `_CARD` | S1–S6 |
