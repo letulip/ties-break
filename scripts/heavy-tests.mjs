@@ -410,9 +410,39 @@ export const HEAVY_UNIT_FILES = [
   // full names are a BYTE-IDENTICAL MULTISET to the one file's, because both files keep the ORIGINAL
   // describe name. The eighteen constants are untouched in tests/coachTravelEdgeFixtures.ts, which
   // all three frozen files import rather than copy.
+  //
+  // ⚠⚠ AND ON 18.09 THE LADDER WENT OVER A FOURTH TIME – the deploy run after round 44's merge,
+  // on `-recent-schemas` itself: stalled at 68 s with every test green, retried, STALLED TWICE at
+  // 69 s. Twice at the same second is the wall, not an unlucky runner. The cause is the growth law
+  // the 12.09 block names: round 44 shipped TWO schema moves (v81, v82), each adding a rung at the
+  // top, taking the file from ten cases to twelve – 29.82 s solo on ten cores, ON the ~31 s bar.
+  //
+  // ⚠ THE SEAM IS THE LADDER AGAIN. Per-case cost is FLAT – every rung 2.42–2.64 s, the first case
+  // +JIT (3.75 s) – so the split is arithmetic, six and six. Solo, same invocation, after:
+  //
+  //     coach-travel-edge-recent-schemas   15.93 s    6 cases · 18 walks   v82 down to v77
+  //     coach-travel-edge-prior-schemas    15.91 s    6 cases · 18 walks   v76 down to v71
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED: tests-time 15.05 + 15.04 =
+  // 30.09 s against 28.94 s for the file they replaced – 36 career walks before, 36 after, and the
+  // +1.15 s is the JIT warm-up the first case of a file pays, now paid twice (2.73 s vs 2.48 s on
+  // -prior's opener). The wall clock costs a further ~1 s, one vitest start.
+  //
+  // -recent keeps the top and is where every future schema move adds its rung (~2.5 s each: it
+  // crosses again near twelve rungs, six moves from now); -prior's range never grows. The twelve
+  // full names are a byte-identical multiset to the one file's – both keep the ORIGINAL describe
+  // name, the constants stay in the fixtures module.
+  //
+  // ⚠ AND THE SAME RED RUN READ `-mid-schemas` AT 47 s, so it was re-measured the same day:
+  // 20.38 s solo, 8 cases – up from 12.09's 15.71 s with NO case gained. That is the walks getting
+  // dearer again (rounds 43-44 added game to every frozen week), and it closes the runner question
+  // too: 20.4 x 2.3 = 47 and 29.8 x 2.3 = 68.6, so 18.09's runner ran a uniform 2.3x. At 20.4 s mid
+  // is under the ~31 s bar with real margin – no cut yet, but its growth is walk-price growth,
+  // which every wave adds to: re-measure it at each wave's PR, not after the red run.
   'tests/coach-travel-edge.test.ts',
   'tests/coach-travel-edge-mid-schemas.test.ts',
   'tests/coach-travel-edge-recent-schemas.test.ts',
+  'tests/coach-travel-edge-prior-schemas.test.ts',
   'tests/coach-travel-edge-older-schemas.test.ts',
   'tests/coach-travel-edge-deepest-schemas.test.ts',
   // ⚠⚠ AN ORPHANED COMMENT LIVED HERE AND IT WAS MINE (corrected 27.08). It read «THE FROZEN MAIN

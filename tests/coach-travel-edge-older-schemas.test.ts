@@ -1,11 +1,12 @@
-// THE FROZEN CAREERS, THE RUNGS BELOW – v61 down to P5/v49.
+// THE FROZEN CAREERS, THE RUNGS BELOW – v61 down to v57 (the title, corrected 18.09: P5/v49's rungs left for -deepest-schemas at the third cut).
 //
-// ⚠ THE BOTTOM OF ONE LADDER, NOT A SECOND ONE. tests/coach-travel-edge.test.ts holds the live
-// hashes and v71 – v74, tests/coach-travel-edge-mid-schemas.test.ts holds v69 – v62, and this file
-// holds every rung beneath those. All three read the same `careerHashAtSchema` out of
+// ⚠ THE BOTTOM OF ONE LADDER, NOT A SECOND ONE (the file list, corrected 18.09 at the fourth
+// cut). tests/coach-travel-edge.test.ts holds the live hashes; -recent-schemas holds v82 – v77,
+// -prior-schemas v76 – v71, -mid-schemas v69 – v62, this file v61 – v57, and -deepest-schemas
+// v56 down to P5/v49. All of them read the same `careerHashAtSchema` out of
 // tests/coachTravelEdgeFixtures.ts, where the eighteen constants, the walk and the per-key protocol
-// live, and all three carry the ORIGINAL describe name deliberately unchanged – a chain is only
-// append-only if every rung below the top still reproduces, and these ten are those rungs.
+// live, and all of them carry the ORIGINAL describe name deliberately unchanged – a chain is only
+// append-only if every rung below the top still reproduces, and these five are five of those rungs.
 //
 // ⚠ WHY THERE IS MORE THAN ONE FILE – the 62,889 ms CI stall with all 43 tests green, the
 // measurement that put 98.5 % of the cost in ONE describe, and why cutting the behaviour off it
@@ -13,7 +14,9 @@
 // third file is in tests/coach-travel-edge-mid-schemas.test.ts's. Nothing was trimmed on the way
 // across either one: same walk, same 156 weeks, same constants, same test names.
 //
-// ⚠ AND THIS FILE IS THE NEXT ONE TO CROSS, measured so nobody has to re-derive it under pressure.
+// ⚠ AND THIS FILE WAS THE NEXT ONE TO CROSS – FULFILLED at the third cut (16.09):
+// -deepest-schemas is the file this paragraph priced, five rungs each, ~10 s a file, exactly as
+// computed below. Kept as the record of a prediction that held.
 // It was not cut on 12.09 because it did not need to be – 19.47 / 19.48 / 19.80 s solo across three
 // runs, which is 43.6 s at this ladder's 2.24x, 73 % of birpc's window and a 1.38x stretch from it.
 // It has ten cases at ~1.95 s each and no describe left to move, so the cut, when it comes, is the
