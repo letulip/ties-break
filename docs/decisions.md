@@ -4768,3 +4768,28 @@ four entries sharing an id, as `court-four` already does), so it is transcriptio
 redesign – but the eight live situations cannot simply be retired: `lifeLog` is append-only and its
 `detail` re-renders from the pools, so a retired id leaves an old career's album unrenderable.
 `LEGACY_SMALL_TALK_SUBJECTS` is the precedent for how they stay readable.
+
+---
+
+## 18.09.2026 – WAVE 7 OPENED ON HIS GO, AND THE FOUR WEDDING QUESTIONS ANSWERED IN ONE PASS
+
+Round 44 merged and deployed in the morning (the deploy's own red – the birpc wall on
+`coach-travel-edge-recent-schemas` – was cut a fourth time and merged as its own fix, PR #148);
+his go for the layer: «отлично, всё смержилось и собралось. Забирай правки и поехали в новую
+волну дальше». Wave 7 – the wedding, W1+W2 of
+[the-wedding-and-the-children.md](plans/the-wedding-and-the-children.md), brief at
+[life-wave-7-builder-2026-09.md](plans/life-wave-7-builder-2026-09.md). Later the same day he
+answered the brief's §3 in one pass:
+
+1. **The wedding's price and who pays – RULED OUT**: «я думаю как с подарками, никто и
+   нисколько». The ruling landed while the bench was measuring the drafted $12,000 (0.2–0.3% of a
+   mid-20s WTA wallet, 0/89 weddings over 20% – the numbers were on the table and closed the
+   question rather than tuning it). The mechanic was removed the same day; the measured record
+   stays in [the-wedding-2026-09.md](specs/the-wedding-2026-09.md) §3c. The wedding follows the
+   gifts' law: no money mechanics, the day is bond and memory.
+2. **A second tracked number for the spouse** – «Рекомендация: нет – согласен». His standing
+   lives in the beats and the diary bands; `spouseBond` stays an append-only candidate.
+3. **W1+W2 in one wave** – «Рекомендация: одной – согласен».
+4. **The independent-life beat** (the spare key, 22+, narrative only) – «берем». Shipped as
+   `'own-key'`, gated on the `independent` life stage rather than a raw 22 so a college diary
+   never says dorm and front door in one week.
