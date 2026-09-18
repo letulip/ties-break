@@ -1208,9 +1208,56 @@ the hole, and this document is the hole's repair.**
 reachable pool is 3 or more on **1.4%** of draws in a posed career and never in a bare one. That row
 is a measurement of the corpus, not of the exclusion.
 
----
+### Addendum 18.09 – the K5 instrument healed (wave 7 T9; round 44 §13's backlog item)
 
-# PASS 3 – tranche 2, and the shape is his
+Everything above this line is the record of the runs that happened and is not rewritten. What
+follows is the repair of the INSTRUMENT, not of the corpus.
+
+⚠⚠ **What was wrong, named exactly.** Round 44's K5 run reported the college/independent gated rows
+– R8 `alone-or-with-them`, R17 `the-week-with-nothing-in-it`, R20
+`the-money-she-did-not-ask-about`, then R44 `the-two-quiet-days` – as never drawn: **16 voice
+columns written, shipped and never seen.** §13 named the likely cause so this pass would not
+re-derive it, and it was right twice over: the bench's `walkCareer` does not even stall on pending
+decisions – it never ticks AT ALL. It moves `world.week` by hand, so `world.college` stays null for
+the career's whole life (**no walk can reach the `college` stage**, structurally) and the season
+calendar stays the one `createWorld` built (**no March entry ever opens again**, so
+`march-entry-open` dies with season 0). The rows were fine; the walk could not visit the world they
+live in.
+
+**The repair** (`tools/small-talk-corpus-bench.ts`, K5b): a real-career arm on the house recipe –
+`openCareer` + `stepCareerWeek` + the `tools/_lifeBeats` drain, the same walk
+`tools/wedding-bench.ts` uses, with the college years spent through `resumeFromCollege` presses in
+`tests/college-birthday.test.ts`'s own shape (the named donor). 24 careers, half through college,
+25 years each; K5 now reads the posed sweep ∪ the real draws. K1–K4 are untouched and still
+measured on the posed walk. The posed arms plus the real arm run in ~6 minutes
+(`npx vite-node tools/small-talk-corpus-bench.ts`, 18.09).
+
+**The healed numbers** (that command, 18.09 – 240 posed seeds, 24 real careers, 12 through
+college; 2,241 college weeks lived, 73 college-stage small-talk rows raised):
+
+| row | gate | drawn (college / independent) | reachable, college pause-weeks (n 130) | reachable, independent weeks (n 17,017) |
+| --- | --- | --- | ---: | ---: |
+| R8 `alone-or-with-them` | `march-entry-open` | 0 / 3 | 24.6% | 66.5% |
+| R17 `the-week-with-nothing-in-it` | `clear-next-week` | 1 / 5 | 98.5% | 45.9% |
+| R20 `the-money-she-did-not-ask-about` | `march-entry-open` | 0 / 7 | 24.6% | 66.5% |
+| R44 `the-two-quiet-days` | `clear-next-week` | 1 / 7 | 98.5% | 45.9% |
+
+**Verdict: the instrument was the fault.** All four rows are drawn by walked careers – 16 flagged
+columns before, **4 after**, and the residual four (`alone-or-with-them` sunny/quiet,
+`the-week-with-nothing-in-it` sunny, `the-money-she-did-not-ask-about` quiet) are per-voice
+sampling luck in a 24-career arm, each row being drawn in its other voices in the same run – not a
+gate any career cannot pass.
+
+⚠ **Against the live «91% of college weeks» measurement** (round 44 §13's own figure, whose
+instrument was not recorded): the college freeze runs a year per press, so inside it this arm can
+ask only on PAUSE weeks – birthdays, championships, call-ups, life beats – a real sample of college
+weeks and a **biased** one, said so. On that sample the `clear-next-week` rows read **98.5%**,
+which AGREES with «the rows are live» and sits beside the 91% comfortably. The `march-entry-open`
+rows read **24.6%**, which is NOT 91% and is reported as a disagreement, not averaged: either the
+91% was measured on the `clear-next-week` gate alone (24.6% is mechanically what a March deadline's
+seasonal window gives – open roughly a quarter of the calendar), or the two instruments disagree
+about the march gate at college and the next pass must say which. Both candidate readings are left
+standing for the architect; neither number was adjusted toward the other.
 
 ⭐ **He ruled the form on tranche 1, 17.09: «форма строк верна, дописывай остальные 30 и присылай на
 ревью».** So PASS 3 drafted **thirty** on the same architecture and the same six gates. ⚠ **Twenty-nine
