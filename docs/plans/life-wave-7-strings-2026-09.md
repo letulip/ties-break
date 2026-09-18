@@ -164,9 +164,15 @@ law; a voiced line of hers here is §5 Q-4.
 4. **A voiced line of hers on the own-key card** – §4's note: today the card is the parent's
    narration by design (one cell, no voice axis). Her own sentence there means four voices x two
    presences, the standing completeness law.
-5. **Two flagged NON-strings ride other gates, named so nothing hides.** The wedding memory's
-   portrait face (`MEMORY_EMOTION.wedding = 'happy'`, `diary/facts.ts`) is a drafted PICK with its
-   argument in place – one word, his. Every drafted NUMBER of the wave (`ECONOMY.wedding` whole,
+5. **Two flagged NON-strings ride other gates, named so nothing hides.** ⭐ **The first is CLOSED,
+   18.09, and the draft flag is what closed it.** The wedding memory's portrait face was
+   `MEMORY_EMOTION.wedding = 'happy'`, flagged as a drafted PICK whose argument read «the bride art
+   the 11.09 ruling gated the whole branch on is painted smiling» – right about the painting and
+   wrong about which painting was being drawn, because `'happy'` is her ordinary adult face. It is
+   now `'bride'`: `fem-euro-brunnet-adult-bride.webp`, which had been on disk since the art set
+   shipped and referenced by nothing in `src/`. ⚠ **No string moved and none was added** – it is a
+   picture, not a word – and a band the bride is not painted for falls back to that band's own
+   neutral portrait rather than 404ing. Every drafted NUMBER of the wave (`ECONOMY.wedding` whole,
    including T5's `spouseViewCooldownWeeks` 10, `spouseViewSpendCents` $2,500 and the three deltas
    +1/−0.5/−1.5) rides T8's bench per the brief's §4 contract – measured first, ruled after.
 
@@ -190,7 +196,7 @@ its flag in code.**
 | `lifeBeat.ts` §3i banner + `OWN_KEY_SAID` / `_HEADING` / `_CARD` / `_ROW` (+ the `deliverOwnKey` `⚠ DRAFT (§3i)` reference) | K1–K4 |
 | `lifeBeat.ts` `LIFE_BEAT_OPTIONS['own-key']` | K5 |
 | `weekNotes.ts` the `ownKey` line | K6 |
-| `diary/facts.ts` `MEMORY_EMOTION.wedding` – a PICK, not a string | §5.5 |
+| `diary/facts.ts` `MEMORY_EMOTION.wedding` – a PICK, not a string (⭐ CLOSED 18.09 – it is `'bride'` now; §5.5) | §5.5 |
 | `economy.ts` `ECONOMY.wedding` – NUMBERS, «draft for the bench» | §5.5 |
 
 Three additions the sweep shows that are deliberately NOT rows, with the reason: the engine's
@@ -409,10 +415,14 @@ which today only renders for a career that never won anything. Promoting it to a
 adds an adult-era picture with nothing to proof-read, at the price of two pages of some albums
 carrying the same sentence.
 
-⚠ **A6's art is the one that needs a ruling as well as a word.** `adult-bride` is painted, is on
-disk, and is referenced by NOTHING in `src/` – the wedding's own 23+ minimum was ruled because of
-it. An album page cannot draw it today: `AlbumPage.emotion` is `AvatarEmotion`, which has no
-`bride`. Every other page above draws art that already ships.
+⚠ **A6's art – AMENDED 18.09, and half the obstacle is gone.** `adult-bride` is painted, is on disk,
+and is no longer referenced by nothing: the wedding's **memory** draws it now, through `MemoryFace`
+(a third union beside `AvatarEmotion` and `PortraitEmotion` – `shared/avatarEmotion.ts` carries why
+it could join neither), with an explicit, tested band fallback for a wedding outside 23-30.
+
+⚠ **The ALBUM still cannot draw it, and that is deliberate rather than pending.** `AlbumPage.emotion`
+is still `AvatarEmotion`, so A6 is unchanged and still needs his ruling. What the wiring removed is
+the hard part – the fallback – not the decision.
 
 ⚠ **A6 also raises the question the whole item rests on**, and it is his reserved design rather
 than a wording call: at 19% coverage on an ordinary career, a FIXED wedding slot would be an empty

@@ -6,7 +6,7 @@
 // week notes, memory - reads these and not the other way round.
 //
 // ⚠ RNG: nothing here draws. These are pure reads over the events ledger and two numeric bands.
-import { resultShowsOnHerFace, type AvatarEmotion, type LastKidResult, type LastKidTitle } from '../../shared/avatarEmotion'
+import { resultShowsOnHerFace, type LastKidResult, type LastKidTitle, type MemoryFace } from '../../shared/avatarEmotion'
 import type {
   ConditionBand,
   DiaryLifeStage,
@@ -111,9 +111,18 @@ export function milestoneKey(m: Milestone): string {
  *  R14-1: `injury` STAYS here and is one of the two surfaces that can still request that painting.
  *  A Memory is a picture of a week that happened – "ankle strain – her first injury" is the week
  *  she went down, not the nine that followed it – so the moment face is the right one and the
- *  layoff's `rehab` would be wrong. Typed on the NARROW union for that reason: nothing a milestone
- *  maps to is painting-only, so the Memory polaroid keeps a crop it could fall back on. */
-export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
+ *  layoff's `rehab` would be wrong.
+ *
+ *  ⚠⚠ THE TYPE WIDENED ON 18.09 AND THE OLD SENTENCE IS WORTH KEEPING TO SAY WHY. It read «typed on
+ *  the NARROW union … nothing a milestone maps to is painting-only, so the Memory polaroid keeps a
+ *  crop it could fall back on», which was true until a milestone had a painting of its own. The
+ *  wedding does: `fem-euro-brunnet-adult-bride.webp`, on disk since the art set shipped and the
+ *  reason the 23+ gate was ruled on 11.09. `MemoryFace` is the widest of the three unions – see
+ *  `shared/avatarEmotion.ts` for why the bride is a member of that one and of neither of the others
+ *  – and the fallback the polaroid actually needs is a BAND fallback, not a crop one: `portraitUrl`
+ *  resolves it, explicitly and tested. No crop is ever requested here; nothing in the app renders an
+ *  emotion crop at all. */
+export const MEMORY_EMOTION: Record<MilestoneType, MemoryFace> = {
   title: 'happy',
   final: 'serious',
   // R15-5: the first cheque is the other moment that earned the smile - it is the week the tennis
@@ -129,12 +138,21 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   // W2-ENDINGS: the week the tennis stopped being only a bill FOR GOOD, which is a bigger version of
   // the same moment `prize` earns the smile for.
   'break-even': 'happy',
-  // ⚠ v83 (the wedding, wave 7 T3) – `happy`, THE BUILDER'S PICK AND A DRAFT LIKE THE WAVE'S WORDS:
-  // her wedding is the one family moment in this table that is unambiguously hers to smile at, and
-  // the bride art the 11.09 ruling gated the whole branch on is painted smiling. If a voice-true
-  // face is ever wanted (the peak's own 17.09 lesson – `serious` as the shared safe one), that is a
-  // one-word change and his to make.
-  wedding: 'happy',
+  // ⭐⭐⭐ v83 (the wedding, wave 7 T3), REPAIRED 18.09 – AND THE DRAFT NOTE IS WHAT FOUND IT.
+  //
+  // This shipped as `'happy'`, flagged as «THE BUILDER'S PICK AND A DRAFT LIKE THE WAVE'S WORDS»,
+  // with the argument «the bride art the 11.09 ruling gated the whole branch on is painted smiling».
+  // The argument was right about the painting and wrong about which painting was being drawn:
+  // `'happy'` is her ordinary adult face, so the polaroid of her WEDDING DAY showed a girl with a
+  // trophy. `fem-euro-brunnet-adult-bride.webp` has been on disk since the art set shipped, is the
+  // reason the 23+ minimum was ruled at all (the comments in `economy.ts` and `world/lifeBeat.ts`
+  // both say so), and was referenced by NOTHING in `src/`.
+  //
+  // ⚠ IT IS NOT A NEW PICK AND NOT A NEW STRING – it is the picture the ruling was about, finally
+  // wired to the beat that ruling created. The face for a wedding in a band the bride is not painted
+  // for falls back honestly (`paintedFaceFor`), which is a first-class answer rather than a 404: the
+  // gate is 23+, so `adult` is the common case and `lateCareer` is an ordinary one.
+  wedding: 'bride',
 }
 
 // --- the facts ------------------------------------------------------------------------------

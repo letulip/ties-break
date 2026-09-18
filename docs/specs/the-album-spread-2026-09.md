@@ -140,6 +140,17 @@ What exists, per band (`public/images/fem-euro-brunnet/`):
 ⚠ **Every page proposed in §4 can be drawn today**, because `AlbumPage.emotion` is `AvatarEmotion`
 (`norm happy sad serious tired injury angry`) and all seven exist in all five bands.
 
+> ⭐⭐⭐ **AMENDED 18.09 – `bride` IS WIRED NOW, and the paragraph below is superseded for that one
+> face only.** The wedding's MEMORY draws it (`MEMORY_EMOTION.wedding = 'bride'`), through a third
+> union – `MemoryFace = PortraitEmotion | 'bride'` – rather than through `AvatarEmotion`, which
+> `avatarCropPath` is total over and may never be made to name a file that is not on disk. The
+> paragraph's own caution was checked and answered: **nothing persisted was touched**, because
+> `MemoryCard` is built by `toSnapshot` and saved nowhere, and `SAVE_SCHEMA_VERSION` did not move.
+> **The ALBUM still cannot draw her:** `AlbumPage.emotion` is still `AvatarEmotion`, deliberately, so
+> A6 below is unchanged and still a proposal. What the wiring adds is the ONE thing a page would
+> need next – an explicit band fallback (`paintedFaceFor`), so `lateCareer` shows a woman of
+> thirty-one rather than a 404. See `shared/avatarEmotion.ts`.
+
 ⚠ **The special faces are NOT reachable from an album page.** `bride`, `graduated`, `funeral`,
 `farewell`, `retired`, `training` and the two `pregnant` paintings are outside `AvatarEmotion`, so
 drawing one on a polaroid means widening that union – and `adult-bride` in particular is painted,

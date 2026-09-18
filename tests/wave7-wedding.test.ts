@@ -73,6 +73,8 @@ import { ECONOMY } from '../src/engine/economy'
 import { expressedTemperamentOf } from '../src/engine/spirit'
 import { drainLifeBeats, DRAIN_ANSWER, drainCostOf } from '../tools/_lifeBeats'
 import type { LoveEpisode } from '../src/shared/protocol'
+import { MEMORY_EMOTION } from '../src/engine/diary'
+import { paintedFaceFor, portraitStage } from '../src/shared/avatarEmotion'
 
 const WEDDING = ECONOMY.wedding
 
@@ -420,6 +422,41 @@ describe('wave 7 T3 F – `landWedding`', () => {
       landWedding(world)
       expect(world.loveEpisodes[0].latchedWeek, `${answer}: she married anyway`).toBe(world.week)
     }
+  })
+
+  it('⭐⭐⭐ THE PAINTED BRIDE IS DRAWN – the picture the 23+ ruling was about, finally wired', () => {
+    // ⚠⚠ WHAT WAS WRONG, AND THE DRAFT NOTE IN THE CODE IS WHAT FOUND IT. The wedding shipped with
+    // `MEMORY_EMOTION.wedding = 'happy'` and an argument that read «the bride art the 11.09 ruling
+    // gated the whole branch on is painted smiling» – right about the painting, wrong about which
+    // painting was being DRAWN. `'happy'` is her ordinary adult face, so the polaroid of her wedding
+    // day showed a girl with a trophy, while `fem-euro-brunnet-adult-bride.webp` sat on disk
+    // referenced by nothing in `src/`.
+    //
+    // ⚠⚠ THE ARM. Put `'happy'` back and this goes red on its first line – measured 18.09, RED
+    // [1 test, 1 assertion]. ⚠ NOTE WHAT THE ARM DOES NOT COVER, said out loud: the BAND fallback is
+    // the other half of this wiring and it lives in tests/portrait-bands.test.ts, where the files on
+    // disk are. A milestone pointing at a picture proves nothing about the picture existing.
+    expect(MEMORY_EMOTION.wedding, 'her wedding day wears the wedding painting').toBe('bride')
+
+    // ...and the milestone this type is keyed on really is the one `landWedding` writes, so the two
+    // halves are joined rather than adjacent.
+    const world = answered('w7-bride', 'bless', WEDDING.weeksAfterEngagement)
+    landWedding(world)
+    const row = world.milestones.find((m) => m.type === 'wedding')
+    expect(row, 'the landing wrote it').toBeDefined()
+    expect(MEMORY_EMOTION[row!.type], 'and the memory of it draws the bride').toBe('bride')
+
+    // ⚠⚠ THE GATE IS 23+ AND THAT IS TWO BANDS, NOT ONE – which is the whole reason the fallback had
+    // to be built rather than argued away. `adult` is 23-30 and HAS the art; `lateCareer` is 31+ and
+    // does not, and a first marriage in the thirties is an ordinary career, not an edge case. The
+    // band a walked fixture lands in is the hazard's business, so it is READ rather than asserted:
+    // what this arm states is that whichever of the two she reaches, the face resolves and the file
+    // it names is one that ships.
+    const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+    expect(age, 'the 23+ gate held on the walked career').toBeGreaterThanOrEqual(WEDDING.ageGate)
+    expect(['adult', 'lateCareer'], 'a 23+ bride is in one of these two bands').toContain(portraitStage(age))
+    expect(paintedFaceFor('adult', MEMORY_EMOTION.wedding)).toBe('bride')
+    expect(paintedFaceFor('lateCareer', MEMORY_EMOTION.wedding), 'a first marriage at 31 is a woman of 31').toBe('norm')
   })
 
   it('not a week early', () => {

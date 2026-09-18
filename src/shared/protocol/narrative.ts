@@ -11,7 +11,7 @@ import type { TierId } from '../../engine/season/types'
 // ⭐ v72: WHO SHE IS, type-only – the four ids live beside the physics that reads them
 // (engine/spirit.ts) and are erased here at compile time, exactly like `TierId` above.
 import type { SpiritBand, Temperament } from '../../engine/spirit'
-import type { AvatarEmotion, PortraitEmotion, PortraitStage } from '../avatarEmotion'
+import type { MemoryFace, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
 
 // --- Diary-1 + Memory (docs/specs/family-diary.md, D1/D2/D3 + D10) -------------
@@ -957,11 +957,20 @@ export interface MemoryCard {
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage
-  /** the painting emotion the memory shows (title → happy, injury → injury, …).
-   *  Stays the NARROW union on purpose: a memory is a picture of a WEEK THAT HAPPENED, so every
-   *  value here is a moment face – `injury` is the week she went down, never the layoff after it
-   *  (R14-1). Nothing a milestone can map to is painting-only. */
-  emotion: AvatarEmotion
+  /** the painting emotion the memory shows (title → happy, injury → injury, wedding → bride, …).
+   *  A memory is a picture of a WEEK THAT HAPPENED, so every value here is a MOMENT face – `injury`
+   *  is the week she went down, never the layoff after it (R14-1).
+   *
+   *  ⚠⚠ `MemoryFace`, WIDENED 18.09, AND IT IS THE WIDEST OF THE THREE UNIONS ON PURPOSE. This used
+   *  to say «stays the NARROW union … nothing a milestone can map to is painting-only», which held
+   *  until a milestone had a painting of its own: the wedding's `adult-bride`. The bride is a member
+   *  of `MemoryFace` and of NEITHER `AvatarEmotion` (which `avatarCropPath` is total over, and there
+   *  is no bride crop) NOR `PortraitEmotion` (which is the five-band matrix, and the bride is painted
+   *  for one band) – `shared/avatarEmotion.ts` carries the whole argument.
+   *
+   *  ⚠ WIDENING IT COSTS NO SCHEMA, on `milestone`'s own standing two fields up: `MemoryCard` is
+   *  derived at snapshot time and never saved. */
+  emotion: MemoryFace
   line: string
 }
 

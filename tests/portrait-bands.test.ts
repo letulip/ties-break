@@ -49,6 +49,8 @@ import {
   avatarEmotion,
   hasCrop,
   idleEmotion,
+  paintedFaceFor,
+  paintedStemFor,
   portraitStage,
   type AvatarEmotion,
   type PortraitEmotion,
@@ -57,7 +59,7 @@ import {
 import { cropUrl, portraitUrl } from '../src/art/preload'
 // ⚠ R2-18: the band's TYPE name and its FILE stem are two different strings now - see the alias.
 import { portraitAssetStem } from '../src/shared/avatarEmotion'
-import { PAINTING_ONLY_FACES } from '../src/art/faceRects'
+import { CROPS as CROPS_TABLE, PAINTING_ONLY_FACES } from '../src/art/faceRects'
 import type { TierId } from '../src/engine/season/types'
 import { after, region } from './helpers/source'
 
@@ -185,7 +187,100 @@ describe('the art matrix is complete on disk', () => {
     for (const e of PAINTED.filter((f) => !(EMOTIONS as PortraitEmotion[]).includes(f))) {
       expect(PAINTING_ONLY_FACES, `${e} is painting-only in the union and must be on the cutter's skip list`).toContain(e)
     }
-    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['graduated', 'rehab'])
+    // ⚠ RE-AIMED 18.09 BY THE BRIDE, in the SAME direction T14 re-aimed it and for the same reason
+    // one step further out. `graduated` was the first painting that is not a band×face; `bride` is
+    // the second, and it differs from `graduated` in exactly one way that does not matter to THIS
+    // list – it rides the memory's emotion channel (`MemoryFace`) instead of its own builder, so the
+    // engine can point a milestone at it. It is painting-only in the sense the CUTTER cares about,
+    // which is the only sense this list has. The containment claim above is untouched; the literal
+    // grows by one, so a fourth arrival is still a deliberate edit rather than a silent one.
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['bride', 'graduated', 'rehab'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ⭐⭐⭐ THE BRIDE – one painting, one band, and the fallback that keeps it honest (18.09)
+//
+// `fem-euro-brunnet-adult-bride.webp` shipped with the art set, is the reason the wedding's 23+
+// minimum was ruled on 11.09, and was referenced by NOTHING in `src/` until the wedding wave wired
+// it. It is the same SHAPE as `graduated` – one file, `adult` alone – and the opposite of `rehab`,
+// which is one face in all five bands.
+//
+// ⚠⚠ THE WHOLE POINT OF THIS BLOCK IS THE FOUR BANDS THAT HAVE NO BRIDE. A matrix face implies the
+// files the matrix promises, which is why `bride` is NOT in `PORTRAIT_EMOTIONS` and why the sweeps
+// above are untouched by it; what it needs instead is an explicit band fallback, and a fallback
+// nobody measured is a 404 waiting for a career that marries at thirty-one.
+// ---------------------------------------------------------------------------
+describe('the bride is painted for ONE band, and the other four fall back rather than 404', () => {
+  const strip = (u: string) => u.slice(import.meta.env.BASE_URL.length)
+
+  it('⭐⭐⭐ `adult` draws the bride herself – the file the 11.09 ruling was about', () => {
+    expect(paintedFaceFor('adult', 'bride'), 'the band that has the art keeps it').toBe('bride')
+    const url = strip(portraitUrl('adult', 'bride'))
+    expect(url).toBe('images/fem-euro-brunnet/fem-euro-brunnet-adult-bride.webp')
+    expect(existsSync(asset(url)), 'the painting really is on disk').toBe(true)
+  })
+
+  it('⭐⭐⭐ every OTHER band falls back to its own `norm`, and every one of those files exists', () => {
+    for (const stage of STAGES) {
+      if (stage === 'adult') continue
+      // ⚠⚠ THE ARM. Delete the `FACE_BANDS` lookup from `paintedFaceFor` (return `emotion`) and this
+      // goes red on all four bands – measured 18.09, RED [2 tests, 5 assertions]: the url builder
+      // would name `fem-euro-brunnet-jun-bride.webp` and three of its siblings, none of which exist.
+      expect(paintedFaceFor(stage, 'bride'), `${stage} has no bride painting`).toBe('norm')
+      const url = strip(portraitUrl(stage, 'bride'))
+      expect(url, `${stage} must fall back to its OWN band`).toContain(`${portraitAssetStem(stage)}-norm`)
+      expect(existsSync(asset(url)), `the fallback file must exist: ${url}`).toBe(true)
+    }
+    // ...and the files it refuses to name really are absent, so the arm above is not satisfiable by
+    // painting four more brides one day without anybody noticing this rule went quiet.
+    for (const stage of STAGES) {
+      if (stage === 'adult') continue
+      const rel = `images/fem-euro-brunnet/fem-euro-brunnet-${portraitAssetStem(stage)}-bride.webp`
+      expect(existsSync(asset(rel)), `${rel} should NOT exist`).toBe(false)
+    }
+  })
+
+  it('⭐⭐ the URL and the FRAMING name the same painting – one stem, two consumers', () => {
+    // ⚠⚠ THE BUG THIS DESCRIBES, and `art/faceRects.ts`' own header predicted it: Home's memory hero
+    // shows the painting landscape-cropped and steers `object-position` off `facePoint`, which is
+    // keyed on the stem. If only the URL resolved the band, a wedding at thirty-one would DRAW
+    // `lateCareer-norm` and FRAME it by `lateCareer-bride` – a stem `facePoint` does not know, so it
+    // answers 50/50, which on a cover window is her shoulder.
+    //
+    // ⚠⚠ AND THIS ARM DOES NOT CATCH THAT – MEASURED, NOT ASSUMED. Spell the stem out by hand in
+    // HomeScreen and this file stays GREEN: it asserts on `paintedStemFor` itself, so it states that
+    // the helper is coherent and says nothing about who calls it. The real net is the MOUNTED one,
+    // `tests/component/wave7-bride-portrait.test.ts`, which reads the `object-position` off the DOM
+    // and reddens on exactly that mutation. What THIS arm is for is the helper's own contract – that
+    // the url is built from the stem rather than beside it, which is what makes one call site
+    // sufficient at all.
+    for (const stage of STAGES) {
+      const stem = paintedStemFor(stage, 'bride')
+      expect(strip(portraitUrl(stage, 'bride')), `${stage}: the url is built from the stem`).toBe(
+        `images/fem-euro-brunnet/fem-euro-brunnet-${stem}.webp`,
+      )
+      expect(stem in CROPS_TABLE, `${stage}: the framing knows this stem`).toBe(true)
+    }
+    expect(paintedStemFor('adult', 'bride')).toBe('adult-bride')
+    expect(paintedStemFor('lateCareer', 'bride')).toBe('lateCareer-norm')
+  })
+
+  it('⚠ it is NOT in the band matrix, and that is what keeps the sweeps above true', () => {
+    // A member of `PORTRAIT_EMOTIONS` is warmed in every band by `preloadStage` and swept against
+    // disk by the matrix tests up the file. The bride exists in one band, so it joins neither.
+    expect(PAINTED as readonly string[], 'the matrix is the eight band faces').not.toContain('bride')
+    // ...and there is no crop of her anywhere, which is why `AvatarEmotion` does not carry her
+    // either – `avatarCropPath` is total over that union and may never name a file that is not there.
+    for (const stage of STAGES) {
+      expect(
+        existsSync(asset(`avatars/${portraitAssetStem(stage)}-bride.webp`)),
+        `${stage}-bride crop should NOT exist`,
+      ).toBe(false)
+    }
+    // ...so the cutter skips her, exactly as it skips the other two painting-only faces, and the
+    // number of stems it DOES cut is unchanged by her arrival.
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['bride', 'graduated', 'rehab'])
   })
 })
 
