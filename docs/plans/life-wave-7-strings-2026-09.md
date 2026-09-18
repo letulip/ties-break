@@ -367,6 +367,13 @@ ruling, keyed on a device flag the new route deliberately does not touch.
 | R47-2 | `EndingScreen.vue` · the hand-off's lead | `Nothing carries over. A new daughter, and one question: what the family starts with.` | It promises ONE question and a generated daughter. The beginning asks the family's size on its first card and her name, her birthday and her country beside it, so the sentence is false the moment the press lands there | `REMOVED – his sentence is the authority; flagged for his pass` |
 | R47-3 | the three capital cards | `Wealthy` / `Top academies are within reach.` · `Middle class` / `Smart choices, steady progress.` · `Working class` / `Big dreams, hard mode.` | The prologue's first card has asked exactly this question (its three origins) since it shipped. Kept here it would be the same question asked twice, and the player's answer to the first would be overwritten by the second | `REMOVED – same authority; flagged for his pass` |
 
+> ⭐⭐⭐ **RULED 18.09 – R47-2 and R47-3 are ANSWERED, and the answer is in §10.** The removal stands
+> («окей, есть пролог, кто захочет – пропустит») and the three capital sentences are KEPT for reuse
+> («а вот эти фразы можно использовать у нас где-то…»). ⚠ **They were never lost** – they are the
+> onboarding wizard's own blurbs and always have been, and the wizard is the very «экран мимо
+> пролога» he named. §10 carries all three verbatim, where they live, and why the prologue's own
+> notes were not overwritten with them.
+
 ⚠ **If he wants either back**, the cheapest shape is not a re-instatement: it is carrying the band he
 picks into the childhood as a preselected origin (a prop on `ChildhoodPrologue`, one line at the
 call site). That was considered and NOT built, because the lead sentence still could not say «one
