@@ -259,3 +259,33 @@ reason recorded in `docs/specs/the-chemistry-2026-09.md` §8c and the question p
 ⚠ Nothing else about the clause moved: it is the same sentence, the same figure and the same percent
 sign, one character shorter upward. `chemSpoken` now delegates to `chemDrawn`, so the two surfaces
 cannot drift apart again.
+
+### 7c. ⚠ DRAFTS, NOT BUILT – the per-table best ranks his ruling 1 opens
+
+His refusal of the persisted running minimum came with a second sentence that is a NEW ask:
+
+> «достаточно лучшего ранга по итогам сезона, они у нас все есть, **можно даже все ранги перечислить
+> из каждого уровня чемпионатов отдельно**.»
+
+**The engine needs nothing built.** `bestSeasonClose(world, track)` already takes the table as an
+argument, `SeasonHistoryEntry.byTrack` (v46) carries an `endRank` for each of the three, and every
+table already has a shipped player-facing name in `LADDER_LABEL` (`National`, `International`,
+`Professional`). What it needs is **one row on the epilogue becoming three**, which is a layout
+decision, and **labels that say these are BESTS** – because `Best rank` cannot survive being split
+three ways, and three rows named after the tables alone read as her CURRENT standings.
+
+Both are his. Measured on the probe career, the three rows would read #10 / #14 / #12 – against the
+single #12 the page prints today, which says nothing about the child who was third in the country at
+fourteen.
+
+| # | home (`file` · what) | the draft label | |
+| ---: | --- | --- | --- |
+| R46-4 | `EndingScreen.vue` · the totals `<dl>`, replacing the single `Best rank` row | `Best at home` | `DRAFT – not built` |
+| R46-5 | the same `<dl>` | `Best in the world` | `DRAFT – not built` |
+| R46-6 | the same `<dl>` | `Best as a professional` | `DRAFT – not built` |
+
+⚠ An alternative costing one row instead of three, if he prefers it: keep `Best rank` exactly as it
+is and let its VALUE carry the list – `#3 National · #8 International · #11 Professional`. Fewer
+rows, a longer line at 375px, and the separator is itself new copy. See
+[the-reckoning-2026-09.md](../specs/the-reckoning-2026-09.md) §4b for the measured table and the
+one content caveat (a save migrated from before v46 can answer for the International table only).

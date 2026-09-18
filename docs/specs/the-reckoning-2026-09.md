@@ -116,6 +116,11 @@ album, the epilogue, the fork card and the break-even milestone.
 | **`outlayCents`** | **`spentCents − heldCents`, floored at 0 – the money that left for good** | – |
 | `holdingsCents` | what those things are worth now | `Σ assets[].valueCents` |
 
+> ⭐ **AMENDED 18.09 by ruling 5 (§6.2): a third term, `upkeepCents`, joins the table** – what the
+> cars, the boats and the planes have cost to KEEP, replayed rather than read – and `outlayCents`
+> becomes `spentCents − heldCents − upkeepCents`, floored at 0. The identity below grows the same
+> term. Nothing else in this section moved and no schema moved with it.
+
 **Nothing is persisted and `SAVE_SCHEMA_VERSION` does not move.** Every term is already on every
 save: `careerTotals` (v39), `assets[].paidCents` (v63), `kidFundsCents` (v54).
 
@@ -150,6 +155,10 @@ were walked before the shelf existed and bought nothing, so their `heldCents` is
 does not move by a cent. What changed is only the career that OWNS something.
 
 ### 2b. ⚠ One imperfection, taken knowingly
+
+> ⭐ **RULED 18.09 – he read this note and ruled the imperfection CORRECT.** See §6.2. What the week
+> arm excuses along with the purchase turns out to be exactly what he wanted excused, and the career
+> arm now subtracts the same cents explicitly. The paragraph below is left as written.
 
 `captureBreakEven`'s **week** arm excludes the whole `'shop'` category, which excuses the shelf's
 weekly **upkeep** as well as the purchase – `resolveAssetUpkeep` books a yacht's crew under `'shop'`
@@ -209,18 +218,68 @@ actually stood at **#1**.
   week it derives is the wrap week, so the page's date does not move for any career the old scan
   could see.
 
-### 4a. ⚠ WHAT IS STILL NOT FIXED, AND IS THE OWNER'S CALL
+### 4a. ⭐⭐⭐ RULED 18.09 – the schema move is REFUSED, and season closes are enough
 
-**Nothing on any save retains the rank she held in an ordinary week.** There is no rank history;
-`prevKidRank*` keeps one week. So a peak that rose and fell inside one season is beyond ANY reader,
-and the residual miss measured above (mean 2.6 places, worst 6) is exactly that gap.
+The version of this section that shipped on 18.09 proposed closing the last gap with **a persisted
+running minimum per table**, written in `recomputeKidRank` beside `peakDomesticPoints`, and put it to
+the owner as a schema move that was his call rather than an agent's. **He refused it**, and the
+refusal is kept here rather than deleted, because a decision not to build something is a decision:
 
-Closing it is **a persisted running minimum per table** – one `{domestic, itf, wta}` record of
-minimums, written in `recomputeKidRank` beside `peakDomesticPoints`, which is the existing precedent
-for a never-decaying high-water mark. That is a **schema move: the seven-part rite** (bump +
-append-only migration + golden fixture + regenerated e2e fixtures + doc-facts sentence +
-frozen-career peel rung + the golden-saves README row), and it cannot be back-filled – a migrated
-career's minimum can only start from what `seasonHistory` still holds. **It is not built.**
+> «достаточно лучшего ранга по итогам сезона, они у нас все есть, можно даже все ранги перечислить из
+> каждого уровня чемпионатов отдельно.»
+
+So the reader that shipped **stands as it is**: every recorded close on her table, plus the rank she
+is standing on now. The residual miss it leaves (mean 2.6 places, worst 6 – §3a) is the gap he has
+chosen to live with, and **it is not to be re-proposed.** The fact behind it is unchanged and worth
+restating so nobody rediscovers it as a bug: nothing on any save retains the rank she held in an
+ordinary week, `prevKidRank*` keeps one, and a peak that rose and fell inside one season is therefore
+beyond any reader. No schema bump, no migration, no golden fixture. **Closed.**
+
+### 4b. ⚠ His second sentence is a NEW ask, and it stops at a proposal
+
+> «…можно даже все ранги перечислить из каждого уровня чемпионатов отдельно.»
+
+**What the world actually records.** Three tables, and all three really are there:
+`SeasonHistoryEntry.byTrack` (v46) carries an `endRank` per `LadderTrack`, `bestSeasonClose(world,
+track)` already takes the table as an argument, and every table already has a **shipped** player-
+facing name in `LADDER_LABEL` – `National`, `International`, `Professional`. So the engine needs
+**nothing built**: the reader is written and it is already per-table.
+
+Measured on the probe career (`--arm 0`), which is what the three rows would say:
+
+| table | best season CLOSE | best she ever HELD |
+| --- | --- | --- |
+| National | #10 | #3 (w56) |
+| International | #14 | #8 (w120) |
+| Professional | #12 | #11 (w416) |
+
+and that is the argument for the ask in one table: the single number the page prints today (#12) says
+nothing about the child who was third in the country at fourteen.
+
+⚠ **Two things make this HIS call rather than a build, which is why it stops here.**
+
+1. **It is a layout decision.** The epilogue's `<dl>` has ONE `Best rank` row; this makes it three,
+   on a page that already grew two rows this wave and has to hold at 375px.
+2. **It needs new copy, because `Best rank` cannot survive the change.** Three rows labelled
+   `National` / `International` / `Professional` with the grouping word gone read as her CURRENT
+   standings, not her bests. Every way out of that is words he has not written.
+
+**Drafts, for his pass** – one row per table, replacing the single `Best rank` row, and each rendered
+only when that table has a close to show (a career that never left the national ladder keeps one row,
+which is the page it already has):
+
+| # | home | the draft label | value |
+| ---: | --- | --- | --- |
+| R46-4 | `EndingScreen.vue` · the totals `<dl>` | `Best at home` | `#10` |
+| R46-5 | the same `<dl>` | `Best in the world` | `#14` |
+| R46-6 | the same `<dl>` | `Best as a professional` | `#12` |
+
+⚠ These are **DRAFTS and nothing is built against them.** An alternative he may prefer, and which
+costs one row instead of three: keep `Best rank` exactly as it is and let its value carry the list
+(`#3 National · #8 International · #11 Professional`) – fewer rows, but a longer line and a
+separator character that is also new copy. ⚠ One content caveat either way: `byTrack` is v46 and
+optional, so a career migrated from before it can only answer for the International table; those rows
+would show one line, correctly, rather than a wrong number.
 
 ## 5. Strings
 
@@ -233,3 +292,159 @@ One wording MISMATCH is carried for him rather than fixed: the epilogue's «Won�
 family's half of the prize cheques, because the gross cannot be derived (her share left before the
 wallet saw it and `accrueKidShare`'s own note forbids reconstructing money by dividing a rounded net
 by a rate). A draft is proposed in the strings table.
+
+### 5a. ⭐⭐⭐ RULED 18.09 – «Won» becomes «The family's share»
+
+He took the draft (R46-3) rather than the explanation:
+
+> «да, пойдет»
+
+So the epilogue's first totals label is now **`The family's share`**, and the FIGURE under it did not
+move – it is the same `prizeCents`, folded the same way. The mismatch above is therefore closed by
+naming the number honestly rather than by inventing a gross that cannot be derived.
+
+⚠ **The rename is that label and nothing else.** Two other surfaces print the same figure and neither
+is the string he ruled on: `ForkDialog.vue`'s label is «The tennis has paid», and the album's slot 6
+says «$X won against $Y spent» in prose. Widening a ruling about one label to every surface that
+happens to share its figure is the agent-initiated wording change invariant 4 forbids. The other four
+labels on the page – `Spent`, `Seasons`, `Best rank`, `Titles` – are untouched, and R46-1 / R46-2 are
+still DRAFTS awaiting his pass.
+
+---
+
+## 6. ⭐⭐⭐ The owner's rulings of 18.09, on everything above
+
+He read the spec the day it shipped and ruled on six questions in it. What follows is the record;
+the sections above are left exactly as written, because they are what was true when he was asked.
+
+### 6.1 The shelf, classified – the fact all of it turns on
+
+The question §2b left open («which `'shop'` cents are which») could not be answered until the shelf
+was actually read. It has **22 rungs in seven families**, and the families are a closed union
+(`ShopItem.family`), so every rung present and future lands in one of them:
+
+| family | rungs | charges upkeep? | earns? | what it is |
+| --- | --- | --- | --- | --- |
+| `car` | 4 | **yes** – 500–900 bps, growing 600 bps a year | no | personal property |
+| `house` | 4 | no | no | personal property |
+| `boat` | 4 | **yes** – 600–1000 bps | no | personal property |
+| `plane` | 3 | **yes** – 800 bps | no | personal property |
+| `business` | 1 (`merch-brand`) | no | **yes** (`'business'`) | the brand |
+| `academy` | 4 stages | no | **yes** (`'business'`) | the academy |
+| `investment` | 2 (`deposit`, `index-fund`) | no | value only | not spending at all |
+
+⚠ **Two facts fall out of that table and both are load-bearing.** First, **every rung that charges
+upkeep is personal property** – there is no academy wage bill and no brand upkeep – so the
+«a yacht's crew cannot be told from an academy's wage bill» problem §2b worried about **does not
+exist**: nothing to tell apart. Second, the upkeep is not small. On the walked shelf of his own
+sentence it is **$6,360,802**, 15.3% of that career's whole «spent».
+
+### 6.2 ⭐ RULING 5 – personal property's upkeep leaves «spent» too
+
+> «вообще не про теннис, мимо (машины, дома, яхты, самолеты). Мне кажется это уже не теннис, честно
+> говоря. За уши можно притянуть, но лучше нет.»
+
+His four words are the four families. §2b's «one imperfection, taken knowingly» is therefore **ruled
+correct in the week arm** – what that arm excuses along with the purchase is exactly what he asked to
+have excused – and the **career** arm now subtracts the same cents explicitly.
+
+`CareerMoney` gains a **third** term, `upkeepCents`, rather than a wider `heldCents`, because upkeep
+is not held: the money is gone, and what the ruling says about it is not «the family still has it»
+but «it is not the tennis». The identity keeps its books with the extra term:
+
+```
+cameInCents − outlayCents === (fundsCents − opening reserve) + heldCents + herAccountCents + upkeepCents
+```
+
+**It is replayed, not read, and no schema moves.** Nothing on any save is a career total of upkeep –
+`resolveAssetUpkeep` books it as an ordinary `'shop'` expense, and `financeWeeks` prunes at sixty
+weeks – so `careerAssetUpkeepCents` runs the till's own `assetUpkeepCents` again over the weeks the
+thing has been here. That is exact for a thing still held, because `paidCents` on an upkeep-bearing
+rung cannot move (all are `stake: 'fixed'`), the clock is the same `assetHeldWeeks`, and the
+rounding is once a week in both places.
+
+⚠ **The first billed week differs by kind of rung, and it was measured rather than reasoned.** A
+commissioned boat ARRIVES inside a tick (`deliverAssets` runs before `resolveAssetUpkeep`, and
+`basisWeek = readyWeek`), so its first billed week is held-week **0**; a car bought off the shelf
+arrives through a player command between ticks, on a week already billed, so its first is **1**.
+Walked worlds bill a `boat-launch` and a `plane-small` 21 times over 20 held weeks and a
+`car-sensible` 40 times over 40. The first fold missed this and over-counted the probe career by
+**$693** – three cars' first week, to the cent.
+
+⚠ **The residual, named:** the upkeep of a thing already **SOLD** leaves no row to replay from, so
+those cents stay inside «spent». Same shape and same direction as the sold asset's purchase already
+takes – this can only ever excuse too little, never too much.
+
+### 6.3 ⭐ RULING 3 – vacations STAY inside «spent»
+
+> «да, восстановление же»
+
+The `vacation` category ($315,812 on the probe career, §1b) is **not** touched and is not to be
+re-litigated. A holiday is recovery; recovery is part of what the tennis costs.
+
+### 6.4 ⭐ RULING 4 – tuition STAYS inside «spent»
+
+> «капля в море, ни на что не влияет, пусть останется»
+
+The `tuition` category (`world/college.ts`) is **not** touched. His own reason is the whole of it and
+is recorded here so nobody spends a wave on it: it is a drop in the ocean and changes nothing.
+
+### 6.5 ⭐ RULING 6 – the brand and the academy count on BOTH sides
+
+> «А вот бренд и академия вполне могут быть и расходами и доходами, здесь не вижу противоречий.»
+
+So they are deliberately **absent** from `PERSONAL_FAMILIES` and get no concession anywhere. What
+this changed, and what it could not:
+
+* **The reckoning's income side already obeyed him.** `careerTotals.earnedCents` – and therefore
+  `cameInCents` – counts every positive ledger row including `'business'`, so the brand's and the
+  academy's income has been inside «earned» all along.
+* **The break-even WEEK arm now counts both sides.** It reads a `FinanceWeek` row, and that row
+  carries `'business'` income beside everything else, so the numerator is now `prize + business`.
+  Its costs gained the other half: an enterprise stage bought **that week**, read off
+  `assets[].boughtWeek` because the week's `'shop'` row is one netted figure and cannot tell a
+  clubhouse from a yacht.
+* **The break-even CAREER arm is HELD, and the reason is measured.** ⚠ It can see the enterprise's
+  cost and **not** its income: `careerTotals` keeps earned, spent and prize and nothing per category,
+  and `financeWeeks` – the only place a category survives – prunes at sixty weeks, so a fifteen-season
+  total of what the brand and the academy earned is **on no save and cannot be derived from one**.
+
+  Charging the cost with no credit for the income is the one-sided reading he did not ask for, and
+  it is not a small error. Measured on `tools/album-money-probe.ts --arm 1`:
+
+  | | figure |
+  | --- | --- |
+  | enterprise cost (brand + four academy stages) | $12,250,000 |
+  | `'business'` income those same things produced | **$34,087,161** |
+  | «spent» as it now reads | $9,997,902 |
+  | «spent» if the cost alone were charged | $22,247,902 |
+  | the album's central page, against $17,158,081 of prize money | **stops crossing at all** |
+
+  So the page would tell a family whose academy and brand earned $34M that the tennis never paid for
+  itself. **Closing it is a persisted career total of `'business'` income** – a new `careerTotals`
+  field, i.e. the seven-part schema rite – and that is the owner's call, not an agent's. Until then
+  the enterprise is NEUTRAL in the career gate, which is the only way to keep his «both sides» true
+  when only one side can be seen.
+
+### 6.6 Measured, before and after (invariant 5)
+
+Two walked arms of the probe. **Arm 0 is the one §1b was written from and it is unchanged to the
+cent** – it owns a house, the brand and $15,000,000 of index fund, and nothing on it has upkeep,
+which is exactly why arm 1 had to be built.
+
+| | arm 0 (the §1b career) | arm 1 (the shelf of his own sentence) |
+| --- | --- | --- |
+| rungs owned | 3 | 14 – all four houses' worth, three cars, two boats, a plane, the brand, the whole academy |
+| `careerTotals.spentCents` | $25,935,355 | $41,608,705 |
+| `'shop'` out, gross | $15,490,000 | $31,610,802 |
+| – of it, held at cost | $15,490,000 | $25,250,000 |
+| – of it, upkeep (ledger's own figure) | $0 | $6,360,802 |
+| – of it, upkeep (`careerAssetUpkeepCents`) | $0 | **$6,360,802 – exact** |
+| «spent» BEFORE these rulings | $10,445,355 | $16,358,705 |
+| «spent» AFTER | **$10,445,355** (unchanged) | **$9,997,902** |
+| album slot 6 | unchanged | `W5 '36 – $17,158,081 won against $9,997,902 spent` |
+| the identity | holds | holds, with the third term |
+| frozen MAIN capture | unmoved | unmoved |
+
+⚠ The replay reproducing the ledger's own $6,360,802 **to the cent** over 1,349 weeks and fourteen
+rungs is the measurement that makes ruling 5 a decomposition rather than an estimate.

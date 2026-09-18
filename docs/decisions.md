@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 116 dated entries, newest 2026-09-18. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 117 dated entries, newest 2026-09-18. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -43,7 +43,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 8 | [WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE](#12092026--wave-3-the-nine-point-fold-the-ladders-own-number-corrected-the-cure) | 2026-09-12 |
-| saves-and-schema | 2 | [WAVE 4, «IT ENDS»: THE SCHEMA MOVED, THE DICE DID NOT](#12092026--wave-4-it-ends-the-schema-moved-the-dice-did-not) | 2026-09-12 |
+| saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
 | simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
@@ -4793,3 +4793,47 @@ answered the brief's §3 in one pass:
 4. **The independent-life beat** (the spare key, 22+, narrative only) – «берем». Shipped as
    `'own-key'`, gated on the `independent` life stage rather than a raw 22 so a college diary
    never says dorm and front door in one week.
+
+---
+
+## 18.09.2026 – THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED
+
+Six rulings on [the-reckoning-2026-09.md](specs/the-reckoning-2026-09.md), which shipped that
+morning off his «$13M won against $83M spent» report and put five open questions back to him.
+
+1. **Best rank – the persisted running minimum is REFUSED**: «достаточно лучшего ранга по итогам
+   сезона, они у нас все есть». The reader that shipped stands; the residual miss it leaves (mean
+   2.6 places, worst 6) is the gap he has chosen to live with, and it is not to be re-proposed. §4a
+   keeps the refusal rather than deleting the proposal.
+2. **«Won» is renamed** – «да, пойдет» on draft R46-3. The epilogue's first totals label becomes
+   **«The family's share»**, because the figure is only the family's half of the prize cheques and
+   the gross cannot be derived. The figure did not move. The rename is that label and nothing else:
+   `ForkDialog`'s «The tennis has paid» and the album's prose are not the string he ruled on.
+3. **Vacations STAY inside «spent»** – «да, восстановление же». Recovery is part of what the tennis
+   costs.
+4. **Tuition STAYS** – «капля в море, ни на что не влияет, пусть останется».
+5. **Personal property's UPKEEP leaves «spent», and this reverses what shipped** – «вообще не про
+   теннис, мимо (машины, дома, яхты, самолеты). Мне кажется это уже не теннис, честно говоря. За уши
+   можно притянуть, но лучше нет.» §2b's «one imperfection, taken knowingly» is ruled CORRECT.
+   Measured on the shelf of his own sentence: $6,360,802 of upkeep, 15.3% of that career's whole
+   «spent», leaves it. No save retains a career total of upkeep, so it is replayed from the till's
+   own arithmetic – exact to the cent over 1,349 weeks, with the one residual (a thing already sold)
+   named rather than hidden.
+6. **The brand and the academy count on BOTH sides** – «А вот бренд и академия вполне могут быть и
+   расходами и доходами, здесь не вижу противоречий.» Applied wherever both sides can be seen: their
+   income was always inside «earned», and the break-even WEEK arm now counts it in the numerator and
+   an enterprise stage bought that week in the costs. ⚠ The CAREER arm is HELD at a proposal: it can
+   see their cost and not their income (no save keeps a per-category career total), and charging one
+   side alone stops the album's central page crossing at all for a family whose businesses earned
+   $34,087,161 against $12,250,000 of cost. Closing it is a persisted accumulator – a schema move,
+   and his call. §6.5.
+
+And, from earlier the same day, on round 45 #3b's open question: **the spoken plus goes too** – «да,
+потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+дополнительно.» The coach row's accessible name now says «chemistry 33%» upward and keeps
+«chemistry -33%» downward. [the-chemistry-2026-09.md](specs/the-chemistry-2026-09.md) §8c-bis.
+
+⚠ Two asks are left as WRITTEN PROPOSALS with draft labels rather than built, both because they need
+copy or layout he has not ruled on: the per-table best ranks his §4a sentence opens («можно даже все
+ранги перечислить из каждого уровня чемпионатов отдельно» – R46-4/5/6), and the career break-even's
+missing income term.
