@@ -44,9 +44,39 @@ import {
   PRE_V80,
   PRE_V81,
   PRE_V82,
+  PRE_V83,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v83: rolling the schema back to 82 – dropping the latch and the name seats – returns the v82 CAREER on all three', () => {
+    // ⭐⭐ AN IDENTITY, v81's OWN KIND, AND THE CASE NAME SAYS SO because the wave predicted it in §0
+    // and the per-key diff proved it before a constant was touched. v83 appends `latchedWeek` and
+    // `partnerName` to every `LoveEpisode` row (the wedding, wave 7 – T1), both null at birth, and
+    // it appends NO WRITER for either on the T1 tree: the hazard is T2's, the latch write and the
+    // naming are T3's, and every one of them is gated on `ageYears >= 23`.
+    //
+    // ⚠⚠ THE CALENDAR IS THE WHOLE ARGUMENT, exactly as it was for v81's corpus: **a frozen career
+    // is 156 weeks from its own start, so the girl in it is 16.6 and never reaches 23** – no wedding
+    // hazard can fire, no `'engaged'` beat can be raised, no name can be drawn and no cost can be
+    // charged, however many waves land on top of T1. The peel drops two null fields and rolls the
+    // number, and the exact v82 serialisation comes back: `PRE_V83` holds the VERBATIM v82 `FROZEN`
+    // constants, measured rather than promised.
+    //
+    // ⚠ SO IF THIS GOES RED BESIDE A GREEN FREEZE, THE FIRST QUESTION IS NOT «WHAT BROKE» BUT «DID
+    // THE WALK GET LONGER» – the day `FREEZE_WEEKS` reaches past 23 x 52 from age 14, this rung
+    // stops being an identity and re-anchors with everything under it, and that is correct rather
+    // than a regression. A red HERE with the walk unchanged means something below 23 reached a
+    // wedding seat, which §0 calls a leak and the wave must stop for.
+    //
+    // ⚠ THE PER-KEY CONTROL is in the v83 block over `PRE_V83` in tests/coachTravelEdgeFixtures.ts –
+    // `schemaVersion` alone on four of five cells, `schemaVersion` + `loveEpisodes` on
+    // `eliteGrinder` (its one row, `p:137`, gaining the two null fields – the key append itself),
+    // `rngMain` byte-identical on all five, and the frozen MAIN capture unmoved.
+    expect(careerHashAtSchema(5, 0, 82), '25k · middle coach · grinder – the verbatim v82 value').toBe(PRE_V83.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 82), '120k · elite coach · grinder – the verbatim v82 value').toBe(PRE_V83.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 82), '8k · self-coached · player – the verbatim v82 value').toBe(PRE_V83.selfTravelling)
+  })
+
   it('⭐⭐⭐ v82: rolling the schema back to 81 – dropping `coachDeal` – returns the v81 SHAPE, and on no coached career the v81 CAREER', () => {
     // ⚠⚠ A RE-ANCHORING AND NOT AN IDENTITY, AND THE CASE NAME SAYS SO because v82 changes what a
     // hired coach COSTS (round 42 #51, ruled 17.09). Until this version the man's hourly figure was
