@@ -335,3 +335,50 @@ call.
 ⚠ **Nothing else on the epilogue moved.** The five reckoning labels, «The whole record», the academy
 and lifetime-deal notes, `Another year –` on the college branch and every album page are byte
 identical – `tests/component/endings-ui.test.ts` still mounts and asserts them.
+
+---
+
+## 9. Round 47 item 11 – the album's spread (⚠ DRAFTS, NOT BUILT, outside §0's count)
+
+⚠ **Not one of these strings is in the tree.** They are the concrete shape of a PROPOSAL, carried
+here so his вычитка can read them beside the wave's real copy; the measurement behind them and the
+reason nothing was built are in
+[the-album-spread-2026-09.md](../specs/the-album-spread-2026-09.md). His sentence:
+
+> «странный набор фотографий на 7 шагов: 6 детских и юношеских и 1 взрослая в конце. Предлагаю
+> как-то более гладко сделать и можно чуть больше фоточек из разных периодов. Можно например добавить
+> стройку академии (если была) или еще какие-то значимые даты.»
+
+**Measured and confirmed** (27 careers, ordinary arm): median **6 of 7** faces are jun/young/teen and
+1 is adult, and 13 albums in 27 are exactly his six-and-one. **The page COUNT is his**, so the pages
+below are candidates rather than a set, and every one is `⚠ DRAFT – not built`.
+
+Each page has the three parts every shipped page has: `why` (the selection rule, printed on the
+page – never optional, §9.1's law), `caption` (the handwriting on the polaroid's lip) and `fact`
+(the line underneath). `<angle brackets>` are values the engine already holds.
+
+| # | the page · when it fires · coverage | `why` | `caption` | `fact` | |
+| ---: | --- | --- | --- | --- | --- |
+| A1 | the last day of school · the `school` milestone · 96%, age 18 | The last year of school – it ends once, and it ended here | We put the uniform away | The last school year is over, `<season>` | `DRAFT – not built` |
+| A2 | the first house · `house-first.boughtWeek` · 93%, age 18 | The first thing the tennis bought that was not tennis | A door of our own | `<season>` – `<price>` | `DRAFT – not built` |
+| A3 | the brand · `merch-brand.boughtWeek` · 93%, age 19 | The week her name went on something | Somebody printed her name | `<season>` – the first of it | `DRAFT – not built` |
+| A4 | the academy begun · `academy-land.boughtWeek` · 78%, age 20 | The week the academy was only a field | We bought the ground | `<season>` – `<price>` | `DRAFT – not built` |
+| A5 | the academy finished · `academy-staff.boughtWeek` · 37% / 59% long, age 23.5 | The week the academy was finished | It opened | `<season>` – `<n>` of `<n>` stages standing | `DRAFT – not built` |
+| A6 | her wedding · the `wedding` milestone · 19% / 74% long, age 25 / 33 | Her wedding day | The whole family was there | `<season>`, aged `<age>` | `DRAFT – not built` |
+| A7 | the first trip abroad · the `international` milestone · 100%, age 14 | The first time she left the country to play | The passport we had just got her | `<tier>`, `<season>` | `DRAFT – not built` |
+| A8 | the best season close · promoted from slot 4's fallback · 100% | *his own approved copy, unchanged* | *unchanged* | *unchanged* | **NO NEW STRING** |
+
+⚠ **A8 costs no copy at all.** It is `slotBestWeek`'s existing fallback – «She never won a title –
+this is the highest she ever stood» / «Number `<rank>`» / «#`<rank>` at the close of `<year>`» –
+which today only renders for a career that never won anything. Promoting it to a page of its own
+adds an adult-era picture with nothing to proof-read, at the price of two pages of some albums
+carrying the same sentence.
+
+⚠ **A6's art is the one that needs a ruling as well as a word.** `adult-bride` is painted, is on
+disk, and is referenced by NOTHING in `src/` – the wedding's own 23+ minimum was ruled because of
+it. An album page cannot draw it today: `AlbumPage.emotion` is `AvatarEmotion`, which has no
+`bride`. Every other page above draws art that already ships.
+
+⚠ **A6 also raises the question the whole item rests on**, and it is his reserved design rather
+than a wording call: at 19% coverage on an ordinary career, a FIXED wedding slot would be an empty
+face in seven albums out of eight. Fixed slots or a selected set – see the spec's §4 and §6.
