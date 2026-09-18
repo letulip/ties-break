@@ -252,7 +252,14 @@ to rule on. A draft, if he wants the row renamed rather than explained:
 
 | # | home | today | the draft | |
 | ---: | --- | --- | --- | --- |
-| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `The family's share` | ⭐ **RULED 18.09 – «да, пойдет». SHIPPED.** The figure is unchanged; only the label moved |
+| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `Family's share` | ⭐ **RULED 18.09 – twice. «да, пойдет» took the draft; «давай Family's share напишем?» is the SPELLING, and it is what ships.** The figure has never moved |
+
+⚠ **R46-3 was ruled twice in one day and the second ruling is the one in the tree.** The draft put to
+him read `The family's share`; his own sentence later that day dropped the article, and a spelling he
+writes himself is the end of the question. Both moves are his, neither figure moved, and the pin in
+`tests/component/round46-the-reckoning.test.ts` carries the dated note beside the assertion – which
+is the only thing that makes a wording diff accountable, since a pin asserts what the string IS and
+therefore moves with it and stays green.
 
 ⚠ **The rename is the epilogue's label and nothing else, which is invariant 4 read strictly.** Two
 other surfaces print the same `prizeCents` and neither is the string he ruled on, so neither moved:

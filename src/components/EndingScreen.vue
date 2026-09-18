@@ -185,14 +185,18 @@ async function resumeCollege(): Promise<void> {
              cheques, and on a measured career that was $17,164,973 printed beside the $28,749,334
              sitting in HER account, which is why he could not place it. He took the draft; his words
              are in docs/decisions.md under 18.09.2026 and in the strings table, because no Cyrillic
-             may appear in a template. So «Won» becomes «The family's share», the FIGURE is untouched
+             may appear in a template. So «Won» becomes the family's share, the FIGURE is untouched
              (`prizeCents`, exactly as before), and the other four labels stay his.
+             ⭐ RULING B, LATER THE SAME DAY – AND HE SPELLED IT HIMSELF, WITHOUT THE ARTICLE. The row
+             shipped as «The family's share» and he wrote it back one word shorter. One character
+             class of change, his own, at the one surface that carries it: the strings table's R46-3
+             now records the ruled spelling and the date. The figure still has not moved.
              ⚠ HERE AND NOWHERE ELSE, which is invariant 4 read strictly. The only other labelled
              surface on this figure is `ForkDialog.vue`, whose label is «The tennis has paid» and was
              never the string he ruled on; the album's slot 6 says «$X won against $Y spent» in
-             PROSE. Neither is «Won», so neither moves on this ruling. -->
+             PROSE. Neither is «Won», so neither moves on either ruling. -->
         <dl class="ending-totals">
-          <div><dt>The family's share</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
+          <div><dt>Family's share</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
           <div><dt>Spent</dt><dd>{{ formatCents(view.money.outlayCents) }}</dd></div>
           <div v-if="view.money.herAccountCents > 0">
             <dt>Her account</dt><dd>{{ formatCents(view.money.herAccountCents) }}</dd>

@@ -174,7 +174,13 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // like and is the ONE diff no test can catch on its own: it is the dated note beside it that
     // makes the move accountable, not the green run. ⚠⚠ THE ARM, for what the pin CAN do – put
     // `Won` back in the template and this goes red: measured 18.09, RED [1 test].
-    expect(labels[0], 'his own rename – the figure is the family\'s half, so the label says so').toBe("The family's share")
+    //
+    // ⭐ RE-AIMED LATER THE SAME DAY BY RULING B, AND AGAIN BY HIM RATHER THAN BY THIS FILE:
+    // «давай Family's share напишем?» – the article goes. The paragraph above is left as written
+    // because it is the record of the first spelling; this is the second, and the figure under the
+    // label has still never moved. ⚠⚠ THE ARM. Put the article back and this goes red: measured
+    // 18.09, RED [1 test, 1 assertion].
+    expect(labels[0], 'his own spelling, one word shorter than the one he ruled this morning').toBe("Family's share")
     expect(labels, 'and nothing else acquired the old word').not.toContain('Won')
     expect(labels[1]).toBe('Spent')
     expect(labels.slice(-3)).toEqual(['Seasons', 'Best rank', 'Titles'])

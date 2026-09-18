@@ -293,11 +293,15 @@ family's half of the prize cheques, because the gross cannot be derived (her sha
 wallet saw it and `accrueKidShare`'s own note forbids reconstructing money by dividing a rounded net
 by a rate). A draft is proposed in the strings table.
 
-### 5a. ⭐⭐⭐ RULED 18.09 – «Won» becomes «The family's share»
+### 5a. ⭐⭐⭐ RULED 18.09 – «Won» becomes the family's share
 
 He took the draft (R46-3) rather than the explanation:
 
 > «да, пойдет»
+
+> ⭐ **AND HE SPELLED IT HIMSELF LATER THE SAME DAY (ruling B, §5b): `Family's share`, without the
+> article.** The paragraph below is left exactly as written, because it is the record of the first
+> spelling; what is in the tree is the second.
 
 So the epilogue's first totals label is now **`The family's share`**, and the FIGURE under it did not
 move – it is the same `prizeCents`, folded the same way. The mismatch above is therefore closed by
@@ -309,6 +313,19 @@ says «$X won against $Y spent» in prose. Widening a ruling about one label to 
 happens to share its figure is the agent-initiated wording change invariant 4 forbids. The other four
 labels on the page – `Spent`, `Seasons`, `Best rank`, `Titles` – are untouched, and R46-1 / R46-2 are
 still DRAFTS awaiting his pass.
+
+### 5b. ⭐ RULING B, 18.09 – the article goes, and he wrote it himself
+
+> «давай Family's share напишем?»
+
+So the shipped label is **`Family's share`**. One word, his own, at the one surface that carries it;
+`docs/plans/life-wave-7-strings-2026-09.md` R46-3 records the ruled spelling and the date, and the
+mounted pin moved with it under a dated note.
+
+⚠ **Nothing else moved on this ruling either.** The figure is still `prizeCents`, folded the same
+way; `ForkDialog.vue` still says «The tennis has paid» and the album's slot 6 still says «$X won
+against $Y spent» in prose. §5a above is kept as the record of the FIRST spelling rather than
+rewritten – the same discipline §4a keeps for the refusal.
 
 ---
 
