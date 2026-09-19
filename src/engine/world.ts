@@ -1866,8 +1866,30 @@ export function createWorld(
     // of the three can be the one somebody forgets. A save exported before the first tick carries
     // `null`, which is honest: the family has a coach and has not yet been billed for him.
     //
-    // ⚠ NOW THE LAST KEY OF THE LITERAL. Same peel order, same line in `careerHashAtSchema`.
+    // ⚠ AND IT HAS STOPPED BEING LAST IN ITS TURN – the same handover `form` made to it one version
+    // ago. Same peel order, same line in `careerHashAtSchema`.
     coachDeal: null,
+    // ⭐⭐⭐ v84 (the album's one schema move – docs/specs/the-album-2026-09.md §3, ruled path (а)
+    // 19.09): THE CHILDHOOD'S OWN RECORD, OR HONESTLY NOTHING. This is the ONE writer – the compact
+    // slice of the finished run rides the handover (`PrologueHandover.trace`, built by `traceOf` in
+    // src/prologue/run.ts) and is copied onto the world here, once, at the career's birth. A wizard
+    // career hands over no prologue and a bench probe hands over none either, so both persist the
+    // literal `null` the v83 -> v84 migration also back-fills: «no record» is the complete statement
+    // about a childhood that was never walked (his «это не страшно»).
+    //
+    // ⚠ A FRESH COPY, NEVER THE WIRE'S OWN OBJECT: the message that carried it is outside the
+    // engine's ownership, and a persisted field must not alias it (the same hygiene `profile` gets
+    // through its spread above). `traceOf` already copies on the way out; this copies on the way in,
+    // so neither side can reach the other's state.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL. Same peel order, same line in `careerHashAtSchema`.
+    prologueTrace: prologue?.trace
+      ? {
+          picks: { ...prologue.trace.picks },
+          entries: { ...prologue.trace.entries },
+          opens: prologue.trace.opens.map((o) => ({ ...o })),
+        }
+      : null,
   }
   addEvent(world, {
     week: 0,

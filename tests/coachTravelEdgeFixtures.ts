@@ -2823,6 +2823,30 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
  *  this file has already lost that cell once to a positional pass. Sixty-six cells, and every value
  *  was RUN through the exported helpers into a capture file – never transcribed from a failure
  *  message, which elides a hash with an ellipsis. */
+/** ⭐⭐⭐ RE-STAMPED 19.09.2026 – v84, THE ALBUM's ONE SCHEMA MOVE (`world.prologueTrace`,
+ *  docs/specs/the-album-2026-09.md §3). ELEVEN LIVE CELLS MOVED AND EVERY ROLLBACK RUNG HELD, which
+ *  is the narrowest shape a bump can take: the key is written once at `createWorld` FROM THE
+ *  HANDOVER's optional `trace`, `walkFrozenCareer` hands over no prologue, so every career here
+ *  carries the literal `null` and the live serialisation gains exactly one key.
+ *
+ *  ⭐⭐ MEASURED BEFORE THE CONSTANTS WERE TOUCHED, as the protocol demands and never after the
+ *  fact: `careerHashAtSchema(·, ·, 83)` on 5/0, 8/0 and 0/1 with the bump in the tree reproduced
+ *  the three shipped v83 `FROZEN` values CHARACTER FOR CHARACTER – `bea1a88f…`, `d394d0f1…`,
+ *  `559cea50…` – which is the identity `PRE_V84` now pins: peel `prologueTrace`, roll the number
+ *  back, and the exact v83 serialisation returns. A pure key append, v83's own kind (that rung's
+ *  block carries the calendar argument; this one's is stronger – the ONE writer takes its value
+ *  from an argument no career in this file is ever given).
+ *
+ *  ⚠ THE ELEVEN RE-STAMPED CELLS are this trio, `PRE_R28B`'s five (its grinder trio shares these
+ *  cells – the shared-cell rule: `windowRuleWitness`'s rewrite touches only letters that landed
+ *  mid-window, and the grinders' all landed on the opening week) and `PRE_NAME_VERA`'s three.
+ *  Applied BY NAME, each value copied out of the capture log (`/tmp/v84-measure.log`, the throwaway
+ *  measurement suite run through the exported helpers) – never transcribed from a failure message.
+ *
+ *  ⚠ `rngMain` CANNOT HAVE MOVED, BY CONSTRUCTION RATHER THAN BY FINGERPRINT THIS TIME: the step
+ *  writes one literal, the writer copies a wire value that is absent here, and the album's own
+ *  draws (`seed:album:flavour:<sheet>`) happen at assembly time, which no walk in this file ever
+ *  reaches. The frozen MAIN capture (41550 / e6b0c709, tests/condition.test.ts) is untouched. */
 export const FROZEN = {
   /** ⭐⭐⭐ RE-STAMPED 14.09.2026 – THE ELEVEN LIVE CONSTANTS, FOR THE SEVENTH v76 KEY (the owner's
    *  elite-gate ruling; state.ts's amendment note carries why the unshipped step could take it).
@@ -3284,7 +3308,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: 'bea1a88f041db5bdcc28b83fa6f066922e1e439c52bb227ea9b49244575d1a2e',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '176e3b5a5cefb425bf3ff543164308d31ca143aa055c887874f29a0d063b8b1c',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -3413,7 +3437,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: 'd394d0f19c48b92a284307d5b1b2f1b6807cc8102d8d7bff0742e29941fe3c3b',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '89224cccdaf9122d56b169b7478a8c29ca5af7cb0403a57a081858f7eebc37af',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -3653,7 +3677,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: '559cea50fc7cbb817cb9b8481cdb9df29f9d0b62e10c7c352bff05480f2cf700',}
+  selfTravelling: 'a043d4250f771d1177ce5a26c31e4c42264c933acea2f59b223f50b9abaaa90f',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -3983,6 +4007,29 @@ export const PRE_V83 = {
   middleGrinder: '2e51267e06dd930d033b73ab0f9197e506df1c6d1c1e1b324acc194c3779af35',
   eliteGrinder: '4d83fd8634077f7050d506e15752d6aebf11000fc15f34b3143ea64d14357aa7',
   selfTravelling: '4972007161bfc0609f2038ce7aa6438e3306bfa6eb8de1f1bfe9468c5c3d5e75',
+}
+
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v83 – AND AN IDENTITY, v83's OWN KIND (the
+ *  album's one schema move – `world.prologueTrace`, docs/specs/the-album-2026-09.md §3). **Its three
+ *  cells ARE the verbatim v83 `FROZEN` constants**, measured rather than promised (the 19.09
+ *  capture over the exported helpers, values copied from the log), and every `PRE_V*` rung beneath
+ *  it HELD – the peel drops the one new world key ahead of all its older peels, so not one older
+ *  constant moved by a character.
+ *
+ *  ⚠⚠ WHY AN IDENTITY, IN ONE SENTENCE: the trace is written ONCE, at `createWorld`, FROM THE
+ *  HANDOVER's optional `trace` – and `walkFrozenCareer` hands over no prologue, so every career in
+ *  this file carries the literal `null` and no tick, however long, can ever write another value
+ *  there (the one reader, the album assembly, is on demand and never inside a walk). Dropping one
+ *  null key and rolling the number returns the exact v83 serialisation.
+ *
+ *  ⭐ `rngMain` CANNOT HAVE MOVED, BY CONSTRUCTION: the migration writes a literal, the writer
+ *  copies a wire value, and the album's own draws live on the purpose-scoped
+ *  `seed:album:flavour:<sheet>` sub-stream at assembly time – so the frozen MAIN capture
+ *  (41550 / e6b0c709) is untouched, and the three canonical fingerprints stand un-re-pinned. */
+export const PRE_V84 = {
+  middleGrinder: 'bea1a88f041db5bdcc28b83fa6f066922e1e439c52bb227ea9b49244575d1a2e',
+  eliteGrinder: 'd394d0f19c48b92a284307d5b1b2f1b6807cc8102d8d7bff0742e29941fe3c3b',
+  selfTravelling: '559cea50fc7cbb817cb9b8481cdb9df29f9d0b62e10c7c352bff05480f2cf700',
 }
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v78 – AND THE FIRST RUNG IN THIS LADDER THAT IS
@@ -4333,9 +4380,9 @@ export const PRE_V69 = {
  *  birth and the old-name career still comes back exactly, on the new world as on the old. The
  *  02.09 identity is about a name, and no part of v79 touches one. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'd96b8c3cea3ae75e72e079d1feef4c4c1797570386c59d142ddeb527f5a530cf',
-  eliteGrinder: '4497fcf4e8214eed2d0e49996e6299a3127bfe025c52d2d586ab34b522ef616c',
-  selfTravelling: 'f576a1134fbd6e6230c5cf895494d31f6f1d41db328d57238816f8e4c2193151',}
+  middleGrinder: '4a87b97dee48336c82135e89607f1eadc4d0820f817be38cd5a4ddfea1f95713',
+  eliteGrinder: '4c936cf4539a965c01a7bdc63b0fea885ec4e5ad164535b31127dfbeac4e6a60',
+  selfTravelling: '78358af2dc9948339f04c63031ca47c5bce926d3a8b09b09a13f6fcc7e0582c6',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -4678,9 +4725,9 @@ export const PRE_V66 = {
  *  differs from `live` on 6/1. The rule this constant exists for is untouched by the wave; only the
  *  careers under it moved. */
 export const PRE_R28B = {
-  middleGrinder: 'bea1a88f041db5bdcc28b83fa6f066922e1e439c52bb227ea9b49244575d1a2e',
-  eliteGrinder: 'd394d0f19c48b92a284307d5b1b2f1b6807cc8102d8d7bff0742e29941fe3c3b',
-  selfTravelling: '559cea50fc7cbb817cb9b8481cdb9df29f9d0b62e10c7c352bff05480f2cf700',
+  middleGrinder: '176e3b5a5cefb425bf3ff543164308d31ca143aa055c887874f29a0d063b8b1c',
+  eliteGrinder: '89224cccdaf9122d56b169b7478a8c29ca5af7cb0403a57a081858f7eebc37af',
+  selfTravelling: 'a043d4250f771d1177ce5a26c31e4c42264c933acea2f59b223f50b9abaaa90f',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to
    *  `bea3d58e` and bisects it). The one career in this file whose inbox the window rule actually
@@ -4688,7 +4735,7 @@ export const PRE_R28B = {
    *  155 by the window, and it is still `open` at the 156-week horizon instead of expired. MEASURED on
    *  a tree that ran the old rule (offers.ts:965 and :1059 reverted in a copy of this mid-merge tree),
    *  not produced by the helper it is asserted against. */
-  highPlayer: '853ebbfa5982f0d58daa569c64532fddcabc60c3566553da233bd891f31e117c',
+  highPlayer: '028a0333775ff46fb25ecef93682d82d799cc7586b6749ddfb60d31d08b4472c',
   /** ⭐ PRESETS[5] · 25k middle · middle coach · PLAYER policy – THE EXPIRED-LETTER WITNESS, and the
    *  only career here that exercises the `decidedWeek` rewind. `kit-100` lands on window week 49 and
    *  has ALREADY lapsed by the horizon, on 105 under the letter rule and on 104 under the window rule;
@@ -4696,7 +4743,7 @@ export const PRE_R28B = {
    *  code. ⚠ ITS LETTER DID NOT MOVE IN THE UNION MERGE – week, slot and both deadlines are character
    *  for character what T1b measured; only the hash moved, with the rest of the tree. Same provenance:
    *  the engine-toggled copy, not the helper. */
-  middlePlayer: '9ebf1bd3eb8a72271de1b0b5ffaf0c54f5f562e66ce1294a985f50fa9b42ebd3',}
+  middlePlayer: 'e086f0a54c5f31b70c1ec2cd3b0f1bf9b345f8fd85a97418b580a596f0476bee',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -5507,9 +5554,28 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // `results`, `events`, `nextEventId`, `spirit`, `bond`, `lifeLog`, `fundsCents` and the wallet
   // among them. ⚠ Every hex string in this block was COPIED OUT OF THE CAPTURE FILES, never typed
   // from memory – the v75 block below records the one time that rule was broken.
+  // ⭐⭐⭐ v84 (THE ALBUM's ONE SCHEMA MOVE – docs/specs/the-album-2026-09.md §3) – `prologueTrace`
+  // PEELS FIRST, because it is the newest key and the peel order is reverse order of arrival. A
+  // plain world key and the LAST of `createWorld`'s literal (placed there for exactly this), so the
+  // one-line destructure below restores the v83 SHAPE exactly.
+  //
+  // ⭐⭐ AND IT IS AN IDENTITY IN BEHAVIOUR, v83's OWN KIND, for a reason stated in the key's own
+  // block in state.ts: the trace is written ONCE, at `createWorld`, FROM THE HANDOVER's optional
+  // `trace` – and `walkFrozenCareer` builds its worlds with no prologue at all, so every career in
+  // this file carries the literal `null` and nothing on any tick can ever write another value
+  // there. The album that reads it assembles ON DEMAND and draws only on the purpose-scoped
+  // `seed:album:flavour:<sheet>` sub-stream, so no walk here can reach it. The peel removes one
+  // null key and never a value, and `PRE_V84` asserts the verbatim v83 constants come back.
+  //
+  // ⚠ MEASURED BEFORE THIS LINE WAS WRITTEN, as the protocol demands and never after the fact:
+  // `careerHashAtSchema(·, ·, 83)` on all five careers against the constants shipped at v83, on
+  // this branch with the bump in the tree. All five reproduce character for character – see
+  // `PRE_V84`'s own block – and `rngMain` is byte-identical everywhere, because neither the writer
+  // nor the migration draws.
+  const { prologueTrace: _prologueTrace, ...preTrace } = world
   const preLatch = {
-    ...world,
-    loveEpisodes: world.loveEpisodes.map((episode) => {
+    ...preTrace,
+    loveEpisodes: preTrace.loveEpisodes.map((episode) => {
       const { latchedWeek: _latchedWeek, partnerName: _partnerName, ...preWedding } = episode
       return preWedding
     }),
@@ -5621,7 +5687,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
                                         ? preDeal
                                         : schemaVersion < 83
                                           ? preLatch
-                                          : world
+                                          : schemaVersion < 84
+                                            ? preTrace
+                                            : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 

@@ -382,6 +382,11 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         'composureBonus',
         // ⭐ v80, wave F1 – the third time this roster is paid for.
         'form',
+        // ⭐ v84, the album's one schema move – the FIFTH time this roster is paid for, exactly as
+        // the note above predicted for «every future wave». `prologueTrace` is the childhood's own
+        // record, written once at the handover (docs/specs/the-album-2026-09.md §3); the migration
+        // back-fills `null`, which is what this fixture walks up with.
+        'prologueTrace',
         'sparringHired',
         'sparringRung',
         'sparringTravels',

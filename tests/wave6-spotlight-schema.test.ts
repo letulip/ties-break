@@ -292,7 +292,11 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // finally execute on a golden save – and it is still the ONLY one, which is what this now pins:
     // every fixture BELOW v83 runs the v77 and v83 walks zero times, so the crafted payloads here
     // and in tests/wave7-wedding-schema.test.ts remain the only witnesses with two rows in one save.
-    expect(carrying, 'exactly the wave-7 fixture holds an attachment, and no older golden ever has').toEqual(['v83.json'])
+    // ⚠ RE-AIMED 19.09 BY v84 (the album's `prologueTrace`), the same welcome red one version on:
+    // v84.json is the SAME probe career walked up by the v25 recipe (`migrateSave(v83.json)` – its
+    // README row records the choice), so it carries the same two episode rows. The claim is
+    // unchanged – every fixture BELOW v83 still runs the per-row walks zero times.
+    expect(carrying, 'exactly the wave-7 probe and its migrated head hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json'])
   })
 
   it('⭐⭐⭐ back-fills all four fields on EVERY row – a live one and an ended one, in one payload', () => {

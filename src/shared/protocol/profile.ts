@@ -258,6 +258,45 @@ export interface PrologueYear {
   focus: SessionKind
 }
 
+/** ⭐ v84 – ONE WEEKEND SHE PLAYED, as the persisted trace keeps it (the album spec,
+ *  docs/specs/the-album-2026-09.md §3, ruled path (а) 19.09). The same five numbers and the derived
+ *  outcome `src/prologue/run.ts`'s `PlayedOpen` carries – `tests/album-trace-schema.test.ts` asserts
+ *  the two shapes are assignable, the `PrologueYear`/`ChildhoodYear` discipline one type up. */
+export interface PrologueTraceOpen {
+  readonly age: number
+  readonly index: number
+  /** 0 is the title, `rounds` is a first-round exit – `LocalOpen.finish`'s own index */
+  readonly finish: number
+  readonly rounds: number
+  readonly wins: number
+  /** derived from `finish` in the prologue (`outcomeOf`), carried so a reader reads one thing –
+   *  `PlayedOpen`'s own argument, kept because the trace is that row persisted */
+  readonly outcome: 'won' | 'final' | 'lost'
+}
+
+/** ⭐⭐ v84 – WHAT THE CHILDHOOD LEFT BEHIND: the compact slice of `PrologueRun` the album's first
+ *  chapter reads (the album spec §3, his ruling 19.09: «хорошо бы, чтобы в финальный альбом что-то
+ *  оттуда попадало тоже вообще. Первый раз на корте, первый турнир и/или победа»).
+ *
+ *  ⚠ IT IS PERSISTED (`WorldState.prologueTrace`) AND THIS IS THE WHOLE OF IT. `origin` is NOT here
+ *  – the family's background already lives on the profile, and a second copy would be two sources
+ *  of truth for one fact. `picks` and `entries` are the run's own age-keyed answer ids; `opens` is
+ *  the weekends in the order she played them. Everything the chapter derives (first court, first
+ *  tournament, first win, first cup) is READ off these at assembly time, never stored beside them.
+ *
+ *  ⚠ WRITTEN ONCE, AT THE HANDOVER, BY `createWorld` AND BY NOTHING ELSE – `null` for every wizard
+ *  career and every save that predates it (his word on the missing back-fill: «это не страшно»).
+ *  A childhood that was never walked leaves no record, and the album's first chapter honestly does
+ *  not exist for it. */
+export interface PrologueTrace {
+  /** age -> the id of the option taken that year (`PrologueRun.picks`) */
+  readonly picks: Readonly<Record<number, string>>
+  /** age -> the answer to that year's tournament question (`PrologueRun.entries`) */
+  readonly entries: Readonly<Record<number, string>>
+  /** the weekends she played, in the order she played them (`PrologueRun.opens`) */
+  readonly opens: readonly PrologueTraceOpen[]
+}
+
 /** WHAT THE NINE CARDS CAME TO – the whole of what a prologue hands `createWorld`.
  *
  *  ⚠ TWO FIELDS AND NOT FIVE. The build she arrives with, the rung she arrives on and the style she
@@ -269,6 +308,14 @@ export interface PrologueHandover {
   readonly years: readonly PrologueYear[]
   /** what the nine years cost, in cents (house law: money is in cents everywhere) */
   readonly spentCents: number
+  /** ⭐ v84 – the childhood's own record, for the album's first chapter (`traceOf` in
+   *  src/prologue/run.ts builds it off the finished run; `createWorld` persists it once).
+   *
+   *  ⚠ OPTIONAL BECAUSE IT WIDENS A SHIPPED WIRE SHAPE (`AdOfferTerms.category?`'s own precedent):
+   *  every handover the walk sends carries one, and a caller built before the field – a bench, a
+   *  probe – honestly hands over a childhood with no record, which persists as `null` and reads as
+   *  a wizard career's album. Absence invents nothing. */
+  readonly trace?: PrologueTrace
 }
 
 /** Weekly time split in percent; train + rest === 100. */

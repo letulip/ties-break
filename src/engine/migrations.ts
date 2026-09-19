@@ -3022,6 +3022,35 @@ export function migrateSave(raw: unknown): WorldState {
     v = 83
   }
 
+  // ⭐⭐⭐ v84 – THE ALBUM's ONE SCHEMA MOVE (docs/specs/the-album-2026-09.md §3, his ruling of 19.09,
+  // path (а)): `prologueTrace`, the childhood's own record – the compact slice of the finished
+  // `PrologueRun` (picks, entries, opens) that the handover used to throw away, written once at
+  // `createWorld` from the handover's `trace` and read by nothing weekly (the album assembles on
+  // demand).
+  //
+  // ⚠⚠ `null` IS THE BACK-FILL AND IT IS EXACTLY TRUE RATHER THAN A BARGAIN – his own word on the
+  // missing history: «это не страшно». No save written before this version kept a childhood's
+  // record past the handover, and a wizard career never walked one at all; for both, «no record» is
+  // the complete statement, and the album's first chapter honestly does not exist for them. The
+  // tempting reconstruction – re-deriving a run off the career's seed – is refused for v80's own
+  // reason one step up: the run is the PLAYER's walk through the nine cards, not a function of the
+  // seed, so there is no value this step could write that would be true.
+  //
+  // ⚠ `??=` AND NEVER `||=`, the standing rule of every step above – and here the difference is a
+  // record: a live trace is an object, which `||=` would keep too, but the rule is kept as a rule
+  // rather than re-derived per step (tests/album-trace-schema.test.ts carries the mutation arm).
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: one `??=` on one world key, gated on `v === 83`, writing a literal.
+  // No sub-stream is reached on this path, so MAIN cannot move and the frozen capture (41550 /
+  // e6b0c709) is untouched by construction. Full move: `SAVE_SCHEMA_VERSION` in world/state.ts,
+  // this step, tests/fixtures/saves/v84.json, its row in tests/fixtures/saves/README.md, the e2e
+  // fixtures, the peel rung in tests/coachTravelEdgeFixtures.ts, and the mechanically-checked
+  // schema sentence in docs/context/saves-and-worker.md.
+  if (v === 83) {
+    save.prologueTrace ??= null
+    v = 84
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

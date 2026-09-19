@@ -48,6 +48,8 @@ export type {
   SessionKind,
   PrologueYear,
   PrologueHandover,
+  PrologueTrace,
+  PrologueTraceOpen,
   WeekPlan,
   VacationBooking,
   PracticeBooking,
