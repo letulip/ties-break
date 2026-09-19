@@ -100,7 +100,8 @@ const ACTUATE = args.includes('--actuate')
 const GRID = args.includes('--grid')
 const STAFFING = args.includes('--staffing')
 const LEVERS = args.includes('--levers')
-const TRAJ = args.includes('--traj') || (!ACTUATE && !GRID && !STAFFING && !LEVERS)
+const CONFIRM = args.includes('--confirm')
+const TRAJ = args.includes('--traj') || (!ACTUATE && !GRID && !STAFFING && !LEVERS && !CONFIRM)
 /** skip §2b's ablation arms – they are four more full walks, and §1/§2 alone answer most questions */
 const NO_ABLATION = args.includes('--noabl')
 
@@ -412,6 +413,12 @@ interface WalkOpts {
   toAge: number
   /** hire the masseur at his top rung the week the gate opens ('daily'), or never ('none') */
   masseur: 'daily' | 'none'
+  /** ⭐⭐ §5b – THE PROMPT ITSELF. `POLICIES[1].rescueBelow` IS `ECONOMY.practice.rescueCondition`
+   *  (80), the condition at or below which the GAME surfaces the holiday («the game SURFACES the
+   *  lever to whoever is low», SeasonScreen.vue). Under the 19.09 bar – FREQUENCY – it is the only
+   *  constant in the model whose whole job is the question being asked, so it is MEASURED here even
+   *  though §8d reserves the RULING on it to the owner. Measuring is not shipping. null = shipped. */
+  rescueBelow?: number | null
   /** ⭐ THE PARENT WHO NEVER TAKES THE RESCUE. `POLICIES[1]` books a family week whenever she falls
    *  below `ECONOMY.practice.rescueCondition` (80) – which is the week the GAME ITSELF offers the
    *  rescue card, so the arm is «a parent who does what the game suggests». `'never'` is the same
@@ -580,7 +587,12 @@ function walkCareer(preset: Preset, index: number, policy: Policy, opts: WalkOpt
 
 /** One arm: the same seeds, the same presets, the same policy, under one set of dials. */
 function runArm(dials: Dials, opts: WalkOpts, presets: Preset[], seeds = SEEDS): CareerRow[] {
-  const policy: Policy = opts.rescue === 'never' ? { ...POLICIES[1], rescueBelow: null } : POLICIES[1]
+  const policy: Policy =
+    opts.rescue === 'never'
+      ? { ...POLICIES[1], rescueBelow: null }
+      : opts.rescueBelow != null
+        ? { ...POLICIES[1], rescueBelow: opts.rescueBelow }
+        : POLICIES[1]
   return withDials(dials, () => {
     const out: CareerRow[] = []
     for (const preset of presets) {
@@ -1236,23 +1248,38 @@ const shapeA = (k: number): Dials => ({
 
 const SIMPLE_SCORE = '6-3 6-4'
 
-/** ⚠⚠ THE PROOF THAT A DEEP RUN NEVER COSTS LESS IN TOTAL THAN A SHALLOW ONE. Walks the whole-run
- *  cost by depth on the family's cheapest rung and its dearest, under the dials in force, and returns
- *  the smallest MARGINAL match anywhere in it. A cell whose witness is <= 0 is not a softer tail, it
- *  is an inverted one, and it must not be read as a result. */
-function monotoneWitness(): { worst: number; lines: string[] } {
+/** ⚠⚠ TWO PROPERTIES, PROVED PER CELL RATHER THAN PROMISED IN PROSE, and they are different claims.
+ *
+ *  `worst` – THE SMALLEST MARGINAL MATCH anywhere in the family. Above zero means the whole-run TOTAL
+ *  is strictly increasing in depth: winning one more match never makes the week cheaper outright. A
+ *  cell that fails this is not a softer tail, it is an inverted one, and it must not be read at all.
+ *
+ *  `vsOpener` – THE SMALLEST ROUND MINUS THAT RUN'S OWN FIRST ROUND, and it exists because THE OWNER
+ *  HAS ALREADY REJECTED A CONCAVE TAIL ONCE. `runFatigueLadderDeep`'s comment carries it: a cap of
+ *  mine «made the deep rounds cost 2 where the shallow ones cost 8 – a cliff, not a plateau», and he
+ *  replaced it with a curve that is monotone NON-DECREASING (min 5 6 7 7 7 7 7). The 19.09 ruling
+ *  supersedes that property – he asked for the deep tail to come down – but he asked for «НЕМНОГО
+ *  уменьшить», and the shape he threw out is the one where a late round costs a fraction of an early
+ *  one. So the reading this sweep takes, stated so he can overrule it: THE TAIL MAY EASE BACK, BUT NO
+ *  ROUND OF A RUN MAY COST LESS THAN THAT RUN'S FIRST ROUND. `vsOpener >= 0` is that, arithmetically. */
+function monotoneWitness(): { worst: number; vsOpener: number; lines: string[] } {
   let worst = Infinity
+  let vsOpener = Infinity
   const lines: string[] = []
   for (const deep of [false, true]) {
     const rungs = famRungs(deep)
     for (const t of [rungs[0], rungs[rungs.length - 1]]) {
       const depths = Array.from({ length: Math.log2(TIERS[t].drawSize) }, (_, i) => i + 1)
       const totals = depths.map((n) => tournamentRunStrain(t, new Array(n).fill({ score: SIMPLE_SCORE })))
-      for (let i = 0; i < totals.length; i++) worst = Math.min(worst, totals[i] - (i === 0 ? 0 : totals[i - 1]))
-      lines.push(`${padR(t, 8)} ${totals.map((x) => padL(x, 4)).join('')}`)
+      const perMatch = totals.map((x, i) => x - (i === 0 ? 0 : totals[i - 1]))
+      for (const m of perMatch) {
+        worst = Math.min(worst, m)
+        vsOpener = Math.min(vsOpener, m - perMatch[0])
+      }
+      lines.push(`${padR(t, 8)} ${totals.map((x) => padL(x, 4)).join('')}   per match ${perMatch.join(' ')}`)
     }
   }
-  return { worst, lines }
+  return { worst, vsOpener, lines }
 }
 
 function levers(opts: WalkOpts, presets: Preset[]): void {
@@ -1291,8 +1318,10 @@ function levers(opts: WalkOpts, presets: Preset[]): void {
       )
       for (const line of w.lines.slice(1)) console.log(`  ${padR('', 6)}  ${padR('', 30)}  ${padR('', 34)}  ${line}`)
       console.log(
-        `  ${padR('', 6)}  ⤷ smallest MARGINAL match anywhere in the family: ${w.worst}` +
-          `${w.worst > 0 ? '  – the total is strictly increasing in depth ✔' : '  ⚠⚠ NOT MONOTONE – DO NOT READ THIS CELL'}`,
+        `  ${padR('', 6)}  ⤷ smallest MARGINAL match: ${w.worst}` +
+          `${w.worst > 0 ? ' (total strictly increasing in depth ✔)' : ' ⚠⚠ NOT MONOTONE – DO NOT READ THIS CELL'}` +
+          `  ·  smallest round MINUS its own opener: ${w.vsOpener >= 0 ? '+' : ''}${w.vsOpener}` +
+          `${w.vsOpener >= 0 ? ' (eases back, never below the opener ✔ – SHIPPABLE)' : ' ⚠⚠ a late round costs LESS than the first – the 14.08 cliff he rejected'}`,
       )
     })
   }
@@ -1376,6 +1405,94 @@ function levers(opts: WalkOpts, presets: Preset[]): void {
   console.log('   · `door49` is REPORTED AND UNCONSTRAINED (the 19.09 release). It is not a pass/fail column.')
 }
 
+/** ⚠⚠ THE PRE-CHANGE ARM, AND IT IS A DIAL RATHER THAN A COMMIT ON PURPOSE. Since 19.09 the SHIPPED
+ *  value of `tourRecoveryPerRound` IS 3, so `SHIPPED` is no longer the baseline this pass was
+ *  measured against – patching the dial back to 2 in this same process is the control CLAUDE.md
+ *  demands (this tree with the change reverted in place, never a different commit), and running both
+ *  arms in ONE process rules out the two null-arm traps at once: neither arm can be a tree without
+ *  its reader, and neither can be the same tree compared with itself.
+ *
+ *  The cell that shipped is the masseur's tour relief ALONE – §5's B1 measures it and §5b re-measures
+ *  it here as the difference between these two arms. The depth ladder (arm A) was built, benched at
+ *  three strengths and NOT shipped: the only strength that respects the owner's 14.08 shape rule buys
+ *  0.2 holidays a season while re-pricing all 199 rivals through the shared `tournamentRunStrain` –
+ *  measured with `tools/frozen-key-diff.ts`, the ladder alone moves ~40 keys of every frozen career
+ *  and THIS DIAL MOVES ZERO of 95/95/96. The spec's §10f carries the trade. */
+const PRE_CHANGE: Dials = { surchargeDelta: 0, proRecovery: null, tourRelief: 2 }
+
+/** ⚠⚠ THE THIRD PROPERTY, AND IT IS THE ONE `monotoneWitness` CANNOT SEE: what a run costs AFTER the
+ *  masseur's tour relief. `monotoneWitness` reads `tournamentRunStrain`, which is the GROSS charge;
+ *  the kid is charged `strain − masseurTourRelief(matches, strain, travelling)` at
+ *  `world.ts finalizeTournament`, and that subtraction grows with depth too. So a cell can pass both
+ *  earlier properties and still make a TITLE cost what a first-round exit costs, which is the depth
+ *  curve deleted rather than softened. Printed as the net cost of the deepest run against the net
+ *  cost of a one-match run, per rung, with the ratio. */
+function netDepthWitness(): string[] {
+  const out: string[] = []
+  for (const t of ['w15', 'wta500', 'wta1000', 'slam'] as TierId[]) {
+    const rounds = Math.log2(TIERS[t].drawSize)
+    const net = (n: number) => {
+      const gross = tournamentRunStrain(t, new Array(n).fill({ score: SIMPLE_SCORE }))
+      return gross - Math.min(Math.max(0, gross), MASSEUR.tourRecoveryPerRound * Math.max(0, n - 1))
+    }
+    const exit = net(1)
+    const title = net(rounds)
+    out.push(
+      `${padR(t, 8)} exit ${padL(exit, 3)}  title ${padL(title, 3)}  ratio ${(title / Math.max(1, exit)).toFixed(1)}x`,
+    )
+  }
+  return out
+}
+
+/** §5b – THE SHIPPED CHANGE AS AN IN-PROCESS A/B, plus the prompt itself.
+ *
+ *  Two jobs, and they are different. (1) The 19.09 change is re-measured as `PRE_CHANGE` against
+ *  `SHIPPED` in ONE process on ONE set of seeds, which is the control discipline and the null-arm
+ *  check in a single run. (2) The holiday PROMPT (`ECONOMY.practice.rescueCondition`, 80) is swept,
+ *  because the 19.09 bar is FREQUENCY and that constant is the only one in the model whose whole job
+ *  is frequency – every lever in §5 changes how often she FALLS to 80; this one changes what 80
+ *  means. ⚠⚠ MEASURING IT IS NOT PROPOSING IT: §8d reserves the ruling on it to the owner, it is a
+ *  screen's behaviour rather than an engine constant, and this pass does not move it. */
+function confirm(opts: WalkOpts, presets: Preset[]): void {
+  console.log(rule(140))
+  console.log('§5b THE 19.09 CHANGE AS AN IN-PROCESS A/B, AND THE PROMPT ITSELF SWEPT')
+  console.log(rule(140))
+  console.log('')
+  const cells: { label: string; dials: Dials; opts: WalkOpts }[] = [
+    { label: 'A: pre-change (tour relief 2)', dials: PRE_CHANGE, opts },
+    { label: 'B: ⭐ SHIPPED 19.09 (tour relief 3)', dials: SHIPPED, opts },
+    // ⚠ NOT PROPOSALS. His own constant, swept so the direct lever's price is known and not guessed.
+    { label: 'the prompt 80->70 (shipped drains)', dials: SHIPPED, opts: { ...opts, rescueBelow: 70 } },
+    { label: 'the prompt 80->60 (shipped drains)', dials: SHIPPED, opts: { ...opts, rescueBelow: 60 } },
+  ]
+  console.log(
+    '  cell                                 HOLIDAYS/SEASON      the DISTRIBUTION of them      door49  wk<50  cond med  min' +
+      '  inj prev  onsets  knocks  events  depth  spend  restFree  best',
+  )
+  console.log('                                       mean  median   vs 8    <=2    3-4    5+   never')
+  for (const c of cells) {
+    const h = headlineOf(runArm(c.dials, c.opts, presets))
+    console.log(
+      `  ${padR(c.label, 35)}  ${padL(f1(h.vacations), 4)}  ${padL(f1(h.vacMedian), 6)}  ${padL(
+        `${h.vacations - 8 >= 0 ? '+' : ''}${f1(h.vacations - 8)}`,
+        5,
+      )}  ${padL(f0(h.vacLo) + '%', 5)}  ${padL(f0(h.vacMid) + '%', 5)}  ${padL(f0(h.vacHi) + '%', 5)}` +
+        `  ${padL(f0(h.vacNever) + '%', 5)}  ${padL(f0(h.door), 6)}  ${padL(f1(h.weeksUnder50), 5)}` +
+        `  ${padL(f0(h.condMedian), 8)}  ${padL(f0(h.condMin), 3)}  ${padL(f0(h.injuryPrevalence) + '%', 8)}` +
+        `  ${padL(f2(h.onsets), 6)}  ${padL(f1(h.knocks), 6)}  ${padL(f1(h.events), 6)}  ${padL(f2(h.depth), 5)}` +
+        `  ${padL(f1(h.eventSpend), 5)}  ${padL(f1(h.restGainFree), 8)}  ${padL(f0(h.rankBest), 4)}`,
+    )
+    withDials(c.dials, () => {
+      console.log(`      ⤷ what a run costs NET of the masseur's relief, straight sets, he travels:`)
+      for (const line of netDepthWitness()) console.log(`         ${line}`)
+    })
+  }
+  console.log('')
+  console.log('  ⚠ THE RATIO COLUMN IS THE THIRD FAILURE MODE. A title must stay materially dearer than a')
+  console.log('    first-round exit, or the depth curve has been deleted rather than softened – and the relief')
+  console.log('    is subtracted AFTER the strain, so it erases the gradient the ladder beside it is shaping.')
+}
+
 // =================================================================================================
 // §0 THE ACTUATION ARM
 // =================================================================================================
@@ -1441,5 +1558,6 @@ if (TRAJ) {
 if (GRID) grid(walkOpts, DEFAULT_PRESETS)
 if (STAFFING) staffing(DEFAULT_PRESETS)
 if (LEVERS) levers(walkOpts, DEFAULT_PRESETS)
+if (CONFIRM) confirm(walkOpts, DEFAULT_PRESETS)
 console.log('')
 console.log(`  (${f1((Date.now() - started) / 1000)}s)`)
