@@ -120,3 +120,25 @@ export interface AlbumBook {
 export const SHEET_PX = 470
 export const SHEET_GAP_PX = 16
 export const SHEET_STEP_PX = SHEET_PX + SHEET_GAP_PX
+
+/**
+ * ⭐⭐ THE OTHER TWO WIDTHS (spec §6, README: «AW / AX: квадратный лист виден целиком (556px /
+ * 540px)»). Past 768 the screen is WIDER than the page, so the page stops panning and the window
+ * becomes exactly one sheet across.
+ *
+ * ⚠⚠ THESE ARE THE SPEC'S NUMBERS AND NOT THE MECHANISM'S. What actually sizes the page is
+ * `--album-sheet` on `:root` in `src/style.css`, because the box and the window are two scoped
+ * stylesheets in two SFCs and only a :root token reaches both. These three constants are what
+ * `tests/component/album-wide.test.ts` holds that ladder to – the README on one side, the cascade on
+ * the other – so a step that is edited in the stylesheet alone goes red instead of silently becoming
+ * the new design. ⚠ Nothing in the app reads them to draw with; the one runtime reader is the
+ * scroller's fallback below.
+ */
+export const SHEET_TABLET_PX = 540
+export const SHEET_DESKTOP_PX = 556
+export const SHEET_TABLET_STEP_PX = SHEET_TABLET_PX + SHEET_GAP_PX
+export const SHEET_DESKTOP_STEP_PX = SHEET_DESKTOP_PX + SHEET_GAP_PX
+
+/** The 470-pixel space the three collages are drawn in, and it never steps – see `--album-leaf` in
+ *  `src/style.css`. A page grows by SCALING this frame, not by re-laying the furniture out. */
+export const LEAF_PX = SHEET_PX

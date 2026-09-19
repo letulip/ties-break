@@ -1,7 +1,25 @@
 <script setup lang="ts">
-// ⭐⭐⭐ THE ALBUM, AT 390 – the mobile window onto the sheets (spec §6, mockup AY).
+// ⭐⭐⭐ THE ALBUM – ONE BOOK, THREE WINDOWS (spec §6, mockups AY / AX / AW).
 //
-// ⚠⚠ THE ONE RULE THAT SHAPES EVERYTHING ELSE: THE SHEET IS NOT SCALED. 470px square, on a screen
+// ⚠⚠ THE CONTENT MODEL DOES NOT CHANGE ACROSS THE THREE WIDTHS, and that is the README's contract in
+// its own words: «Адаптив меняет только окно просмотра, но не порядок, размер и количество страниц.»
+// Same sheets, same order, same count, same pager, same chapters. What changes is how much of a page
+// the screen can hold at once:
+//
+//   390   the screen is NARROWER than the page, so the page pans – everything below.
+//   768   the page fits whole at 540px. The film's window narrows to exactly one sheet, the pan
+//         affordance goes (there is nothing left to pan to), and the chapters come out from behind
+//         their button as a strip that scrolls sideways.
+//   1024  the same, at 556px, with the chapters as a grid.
+//
+// ⚠ AND THE WIDTHS ARE CSS's, NOT THIS FILE'S. The breakpoints are the app's own ladder in
+// src/style.css (768 / 1024, the owner's 03.09 ruling), the three page sizes are `--album-sheet` on
+// :root, and every rule that draws the wide layout is inside a `min-width` query at the bottom of
+// this file – so a phone computes exactly what it computed before they existed. The one thing the
+// SCRIPT needs from all that is the film's pitch, and it reads it rather than deciding it: see
+// `readStep`.
+//
+// ⚠⚠ THE ONE RULE THAT SHAPES THE PHONE: THE SHEET IS NOT SQUEEZED. 470px square, on a screen
 // whose content column is about 358px wide. Squeezing it to fit is the obvious move and it is the
 // wrong one, for a reason the owner's README measured rather than felt: at 342px the handwriting
 // falls to 9–10px and stops being readable. So the screen is narrower than the page, and the page
@@ -14,13 +32,21 @@
 // one sheet does not stop, it carries on into the next. So the pan and the pager are the SAME state
 // – `scrollLeft` – and there is no second source of truth to fall out of step with it.
 //
-// ⚠ THE ARITHMETIC IS DONE IN CONSTANTS AND NEVER IN MEASUREMENTS. `current = round(scrollLeft /
-// step)`, where `step` is `SHEET_PX + SHEET_GAP_PX` and the scroller is laid out at exactly those
-// two numbers. Reading `getBoundingClientRect()` instead would buy nothing – the layout cannot
-// disagree with the stylesheet – and would cost the whole thing its testability, because happy-dom
-// runs no layout engine at all (`tests/component/fits.ts`'s header is this repo's standing note on
-// that wall). The one place a measurement IS read is the right-edge gradient, which is decoration,
-// and it fails SAFE when there is nothing to measure: no width means "assume the page continues".
+// ⚠ THE ARITHMETIC IS DONE IN DECLARED NUMBERS AND NEVER IN MEASUREMENTS. `current = round(scrollLeft
+// / step)`, where `step` is the pitch the stylesheet laid the film out at. Reading
+// `getBoundingClientRect()` instead would buy nothing – the layout cannot disagree with the
+// stylesheet – and would cost the whole thing its testability, because happy-dom runs no layout
+// engine at all (`tests/component/fits.ts`'s header is this repo's standing note on that wall). The
+// one place a measurement IS read is the right-edge gradient, which is decoration, and it fails SAFE
+// when there is nothing to measure: no width means "assume the page continues".
+//
+// ⚠⚠ THE PITCH IS A TOKEN NOW, BECAUSE THE PAGE HAS THREE SIZES AND THE FILM HAS TO HAVE THE SAME
+// THREE. It was a bundled constant while the page was only ever 470 wide; at 768 the sheets are laid
+// out 556 apart and scrolling to `N × 486` would land every page two thirds of a gutter out of
+// register – visible as the previous sheet's edge peeking in beside the arrow, at every width but
+// one. `readStep` reads `--album-step` off `:root`, where the stylesheet that laid the film out
+// declared it, so the number that moves the scroller and the number the scroller was built at are
+// the same number. `SHEET_STEP_PX` stays as the floor if the token is unreadable.
 //
 // ⭐ «LEFT HALF» / «RIGHT HALF» IS ABOUT THE SPREAD, NOT ABOUT THE WINDOW. The README's content
 // model: «Единица – половина листа (sheet), не разворот» – the unit of paging is one HALF of a
@@ -41,10 +67,14 @@
 // Trophies · Statistics). Spec §8b makes the FINALE a shell of four sections, two of which are
 // existing screens; that shell is a different piece of work from this one, and building half of it
 // here would put a tab row on a screen reached from Home mid-career, where three of the four tabs
-// are somewhere else entirely.
-import { computed, ref } from 'vue'
+// are somewhere else entirely. ⚠ IT IS NOT A MOBILE-ONLY OMISSION – AW and AX draw the same four
+// sections and the same product lockup and tagline, and they are deferred at all three widths for the
+// one reason: of the four, `Career Summary` does not exist as a screen at all, so three quarters of a
+// shell is not a smaller version of it. The album keeps its own header until that section is built.
+import { computed, onMounted, ref } from 'vue'
 import IconButton from '../ui/IconButton.vue'
 import AlbumSheet from '../album/AlbumSheet.vue'
+import AlbumChapterRail from '../album/AlbumChapterRail.vue'
 import AlbumChaptersSheet from '../album/AlbumChaptersSheet.vue'
 import { SHEET_GAP_PX, SHEET_STEP_PX } from '../album/albumWire'
 import type { AlbumBook } from '../album/albumWire'
@@ -64,9 +94,31 @@ const atFilmEnd = ref(false)
 const sheets = computed(() => props.book?.sheets ?? [])
 const chapters = computed(() => props.book?.chapters ?? [])
 
+/** The film's pitch – one page plus the gutter between two of them – as the STYLESHEET laid it out.
+ *
+ *  ⚠ A REF AND NOT A CALL INSIDE `current`, so the pager is reactive to the answer rather than to
+ *  whoever happened to ask last: a window dragged across 768 changes the pitch, and a computed that
+ *  read a non-reactive source would keep naming the sheet the old pitch pointed at until something
+ *  else moved. */
+const step = ref(SHEET_STEP_PX)
+
+/** ⚠ `:root` AND NOT THE SCROLLER, and that is happy-dom's constraint rather than a preference: a
+ *  custom property declared on an ancestor does NOT resolve on a descendant there (measured 19.09),
+ *  while the document element's own properties do – so the one element whose declaration can be read
+ *  in both a browser and the mounted layer is the root. Falls back to the phone's own pitch rather
+ *  than to zero: a step of nothing would divide the pager by it. */
+function readStep(): void {
+  const declared = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--album-step'),
+  )
+  step.value = Number.isFinite(declared) && declared > 0 ? declared : SHEET_STEP_PX
+}
+
+onMounted(readStep)
+
 const current = computed(() => {
   if (sheets.value.length === 0) return 0
-  const i = Math.round(scrolled.value / SHEET_STEP_PX)
+  const i = Math.round(scrolled.value / step.value)
   return Math.min(Math.max(i, 0), sheets.value.length - 1)
 })
 
@@ -76,11 +128,14 @@ const onRightHalf = computed(() => current.value % 2 === 1)
 
 function goTo(index: number): void {
   const i = Math.min(Math.max(index, 0), Math.max(sheets.value.length - 1, 0))
+  // ⚠ RE-READ ON EVERY PRESS, which is what makes a window resized across 768 correct itself at the
+  // next arrow rather than at the next reload. It costs one read of an already-computed style.
+  readStep()
   const el = pan.value
-  if (el) el.scrollLeft = i * SHEET_STEP_PX
+  if (el) el.scrollLeft = i * step.value
   // ⚠ WRITTEN HERE AS WELL AS BY THE SCROLL HANDLER, because a programmatic `scrollLeft` does not
   // always fire `scroll` synchronously and the pager must never lag a press it just answered.
-  scrolled.value = i * SHEET_STEP_PX
+  scrolled.value = i * step.value
   onScroll()
 }
 
@@ -154,6 +209,16 @@ function pickChapter(firstSheet: number): void {
         </IconButton>
       </div>
     </div>
+
+    <!-- THE CHAPTERS, OPEN ON THE PAGE. ⚠ In the tree at every width and drawn only past 768 – the
+         component's own first rule, and the reason is beside it. Below 768 the same list is behind
+         the «Chapters» button at the foot of the screen. -->
+    <AlbumChapterRail
+      v-if="chapters.length"
+      :chapters="chapters"
+      :current-chapter="sheet?.chapterIndex ?? 0"
+      @pick="pickChapter"
+    />
 
     <footer v-if="sheets.length" class="album-foot">
       <div class="album-pager">
@@ -407,5 +472,132 @@ function pickChapter(firstSheet: number): void {
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+}
+
+/* =================================================================================================
+   ⭐⭐⭐ 768 AND UP – THE PAGE FITS, SO THE WINDOW STOPS BEING A KEYHOLE (mockups AX and AW)
+   =================================================================================================
+
+   Everything below is inside a `min-width` query and nothing above it was touched, which is the only
+   spelling under which «390 unchanged» is a fact rather than a hope.
+
+   ⚠⚠ THE TEMPLATE DOES NOT FORK, AND THAT IS THE POINT OF THE GRID. The mockups move two controls
+   the phone puts in a row under the sheet – `‹` and `›` – to the sheet's own sides, and a second copy
+   of them rendered for wide screens would be two controls with one name in the tree, half of them
+   dead at any width. So `.album-foot` and `.album-pager` become `display: contents`: their boxes go,
+   their children become items of THIS grid, and the DOM a screen reader walks is the same DOM at
+   every width. The pager's two arrows are still `.album-pager .album-step` for anything that looks
+   for them.
+
+   The frame, then, is:
+
+       head   head   head        the chapter's name, and Back
+       prev  sheet   next        the page, with an arrow standing in the table on each side
+       rail   rail   rail        the chapters
+       dots   dots   dots        the pager
+       foot   foot   foot        «Sheet N of M» */
+@media (min-width: 768px) {
+  .album {
+    display: grid;
+    /* ⚠ THE PAGE TAKES WHAT IT NEEDS AND THE TWO STRIPS OF TABLE SPLIT THE REST, which is not the
+       obvious `auto 1fr auto` – that one gives the whole surplus to the middle and parks the arrows
+       against the edges of the screen. Measured against AW at 1024: the page starts 228px in and the
+       `‹` sits at 120, i.e. in the MIDDLE of the 228px strip beside it, not at its far end. Equal
+       side tracks plus `justify-self: center` below is that placement, and it holds at any width
+       because it is expressed as the strip rather than as a number. */
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas:
+      'head head head'
+      'prev sheet next'
+      'rail rail rail'
+      'dots dots dots'
+      'foot foot foot';
+    /* ⚠ THE ARROWS ARE CENTRED ON THE PAGE BY THE ROW, not by an offset anybody has to maintain:
+       they share a grid row with the sheet, so «vertically centred on the page» is what the default
+       alignment of that row already means. */
+    align-items: center;
+    row-gap: 18px;
+    column-gap: 12px;
+  }
+
+  .album-head {
+    grid-area: head;
+  }
+
+  .album-stage {
+    grid-area: sheet;
+    justify-self: center;
+    /* The phone cancels the frame's gutter because its page is wider than the screen; here the page
+       is narrower than the column and the gutter is simply the inset it sits in. */
+    margin-inline: 0;
+  }
+
+  /* ⭐⭐ THE WINDOW IS EXACTLY ONE PAGE WIDE, AND THAT IS WHAT REPLACES THE PAN. A film whose window
+     is wider than its page would show the next sheet standing behind the arrow – 196px of it at 768 –
+     which is neither what AX draws nor what «одна половина листа» means. Clipping it is what makes
+     the pager the only way to turn a page at this width.
+     ⚠ `overflow-x: hidden` STILL SCROLLS PROGRAMMATICALLY. It refuses a finger, not `scrollLeft`, so
+     the mechanism under the arrows is the same one the phone pans by – one film, one `scrollLeft`,
+     one source of truth about which page is in the window. */
+  .album-pan {
+    width: var(--album-sheet);
+    overflow-x: hidden;
+    padding-inline: 0;
+    /* ⚠ AND THE SCROLL PADDING GOES WITH THE PADDING IT COMPENSATED. On the phone the scroller pays
+       the app's gutter and the snap point is `gutter + N × step` without it; here there is no gutter
+       to pay, so the snap point IS `N × step` – which is what `goTo` scrolls to. */
+    scroll-padding-inline: 0;
+  }
+
+  /* ⚠⚠ THE PAN AFFORDANCE IS NOT HIDDEN, IT IS GONE. `display: none` takes the box AND the
+     accessibility node (src/style.css says exactly this beside `.rail-dash`), which is the honest
+     state for two objects that describe a mechanism this width does not have: there is no half of a
+     page off-screen to promise, and no edge for a gradient to fade into. A dimmed gradient or an
+     `opacity: 0` pill would be the same lie drawn faintly. */
+  .album-edge,
+  .album-half {
+    display: none;
+  }
+
+  .album-rail {
+    grid-area: rail;
+  }
+
+  /* The two rows of chrome the phone stacks under the sheet are grid items now – see the header. */
+  .album-foot,
+  .album-pager {
+    display: contents;
+  }
+
+  /* ⚠ `:first-of-type` / `:last-of-type` COUNT BUTTONS AMONG THEIR SIBLINGS, and `display: contents`
+     changes boxes rather than the tree – so these still mean "the first and last button inside
+     `.album-pager`", which is the prev and the next arrow with the dots between them. */
+  .album-step:first-of-type {
+    grid-area: prev;
+    justify-self: center;
+  }
+
+  .album-step:last-of-type {
+    grid-area: next;
+    justify-self: center;
+  }
+
+  .album-dots {
+    grid-area: dots;
+  }
+
+  .album-foot-row {
+    grid-area: foot;
+    /* The Chapters door is gone at this width (below), so the counter is the only thing left in the
+       row and `space-between` would park it against the left edge of a 1024px page. */
+    justify-content: center;
+  }
+
+  /* ⚠ THE DOOR CLOSES BECAUSE THE ROOM IS ALREADY OPEN. The chapters are on the page from 768 up, so
+     a button that opens the same list over the top of them is a second way to the same place – and
+     the one the README gives a reason for is the phone's: «рейл занял бы полэкрана». */
+  .album-chapters-btn {
+    display: none;
+  }
 }
 </style>

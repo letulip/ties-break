@@ -704,6 +704,39 @@ body {
      375px viewport that is nowhere in the expression, and the grids want the measured card, not an
      arithmetic identity. Both consumers are inside `min-width: 1024px`, so nothing below moves. */
   --card-min: 343px;
+  /* ⭐⭐⭐ THE ALBUM'S SHEET, AND IT IS ON :root FOR THE REASON `--hero-aspect` IS – TWO FILES NEED
+     THE SAME NUMBER. `AlbumPaper.vue` is the BOX (the square page a collage is drawn on) and
+     `AlbumScreen.vue` is the WINDOW onto it (past 768 the scroller is exactly one sheet wide, so the
+     neighbouring pages are clipped out instead of peeking past the arrows). Those are two scoped
+     stylesheets in two SFCs; a custom property declared in one of them does not reach the other, and
+     a number spelled in both is the `--app-pad-x` lesson waiting to happen.
+
+     THE THREE WIDTHS ARE THE OWNER'S README (`album_responsive/README.md`, spec §6), not a ladder we
+     chose: 470 on a phone, 540 at 768, 556 at 1024. ⚠ 470 IS THE ONE THAT NEEDS ITS REASON WRITTEN
+     DOWN – it is what the sheet does NOT do, which is shrink to the screen: «при сжатии до 342px
+     рукописные подписи упали бы до 9–10px». So below 768 the phone is narrower than the page and the
+     page pans; at 768 and 1024 the page fits whole and there is nothing to pan.
+
+     ⚠⚠ `--album-leaf` IS A REFERENCE FRAME AND NOT A WIDTH – IT NEVER STEPS. The three collages
+     (`AlbumLayoutA/B/C.vue`) are absolute-positioned in pixels measured against a 470px page, which
+     is what a collage IS: things overlap, lean and hang off the edge, and none of that survives being
+     re-expressed as percentages. So the page grows by SCALING that 470-space leaf rather than by
+     giving the same furniture more room, and the mockups agree that this is the design: the pasted
+     note starts at 62.5% of the sheet's width in AY (390) and at 62.2% in AW (1024) – the same
+     collage photographed at two sizes.
+
+     ⚠ `--album-scale` AND `--album-step` ARE DERIVED NUMBERS THAT CSS CANNOT DERIVE. `calc()` cannot
+     divide a length by a length here and happy-dom evaluates no `calc()` at all, so both are spelled
+     out and JOINED BY A MOUNTED TEST instead (`tests/component/album-wide.test.ts`): scale × leaf
+     must equal the sheet, and step − sheet must equal the film's gutter, at each of the three widths.
+     A drift goes red rather than showing up as a page half a gutter out of register. */
+  --album-leaf: 470px;
+  --album-sheet: 470px;
+  --album-scale: 1;
+  /* The film's pitch: one page plus the gutter between two of them (`SHEET_GAP_PX`, 16). It is what
+     `AlbumScreen.vue` scrolls by, read off :root rather than compiled into the bundle, because the
+     number that moves the scroller has to be the number the stylesheet laid the scroller out at. */
+  --album-step: 486px;
 }
 
 /* ⭐⭐⭐ HIS BREAKPOINT LADDER (docs/specs/responsive-2026-09.md, owner 03.09):
@@ -744,6 +777,12 @@ body {
     /* ⭐ ROUND 41 #11 – THE CARD'S PADDING, STEP ONE. His words in full are beside the base 14px
        above and beside the 1024 step below. */
     --tb-card-pad: 16px;
+    /* ⭐ THE ALBUM'S PAGE AT 768 – the README's own 540px, whole on the screen for the first time.
+       540 / 470 = 1.148936…, so the collage is 1.1489 of the size it is drawn at, and the handwriting
+       goes UP rather than down – which is the whole argument the 470 was defended with. */
+    --album-sheet: 540px;
+    --album-scale: 1.1489;
+    --album-step: 556px;
   }
 }
 
@@ -790,6 +829,14 @@ body {
        14px (`:root` above), 16px past 768, 18px past 1024 – a step at each of the two widths he
        named, read by every card that takes the default (`Card.vue`'s `var(--tb-card-pad, 14px)`). */
     --tb-card-pad: 18px;
+    /* ⭐ THE ALBUM'S PAGE AT 1024 – 556px, mockup AW's own number. 556 / 470 = 1.182978…
+       ⚠ IT FITS INSIDE THE RAIL'S COLUMN WITH ROOM FOR THE TWO ARROWS, measured rather than hoped:
+       past 1024 the reading column is 772px at the bottom of the band (the note on `#app`'s grid
+       below records that measurement), so 556 of page leaves 108px of table on each side and the
+       `‹ ›` stand in it exactly as AW draws them. */
+    --album-sheet: 556px;
+    --album-scale: 1.183;
+    --album-step: 572px;
   }
 }
 

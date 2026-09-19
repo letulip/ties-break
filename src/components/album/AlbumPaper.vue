@@ -20,14 +20,40 @@
 // RULING LINES ARE NOT HERE. «Линовка осталась только на приклеенных записках» – the ruling belongs
 // to the notes pasted ON the paper (`PaperNote`'s `ruled`), never to the page under them.
 //
-// ⚠ THE SIZE IS THE OTHER HALF OF THE OBJECT and it is not negotiable at this width: 470px square,
-// NOT scaled down to the viewport. See `SHEET_PX` in `albumWire.ts` for the measured reason.
-import { SHEET_PX } from './albumWire'
+// ⚠ THE SIZE IS THE OTHER HALF OF THE OBJECT and it is not negotiable on a phone: 470px square, NOT
+// scaled down to the viewport. See `SHEET_PX` in `albumWire.ts` for the measured reason.
+//
+// ⭐⭐⭐ AND AT 768 / 1024 IT GROWS, TO 540 AND 556 – the README's own numbers – WITHOUT THE COLLAGE
+// INSIDE IT MOVING. That second clause is the whole of `.album-leaf` below, and it is worth the
+// paragraph because the obvious implementation is the wrong one.
+//
+// The three layouts (`AlbumLayoutA/B/C.vue`) are absolute-positioned IN PIXELS against a 470px page:
+// `left: 294px` for the pasted note, `top: 422px` for the loose line. A page that simply became 556px
+// wide would leave that furniture huddled in the top-left corner under 86px of empty stock. Rewriting
+// all three as percentages is the other obvious move, and it loses the thing the collage is made of –
+// type sizes and photo heights are not percentages, so the handwriting would stay at 21px on a page
+// half again as big.
+//
+// ⚠ SO THE PAGE SCALES ITS LEAF. `.album-leaf` is the 470-space the collages are drawn in; the paper
+// is the sized box; `transform: scale()` between them means one number moves the whole page, type and
+// photographs included. THE MOCKUPS SAY THIS IS THE DESIGN RATHER THAN A SHORTCUT: the pasted note
+// begins at 62.5% of the sheet's width in AY (390) and at 62.2% in AW (1024) – the same collage
+// photographed at two sizes. `transform` is rastered after layout, so the handwriting is not a
+// stretched bitmap; it is set at 21 × 1.183 = 24.8px and hinted there.
+//
+// ⚠ THE FOUR NUMBERS LIVE ON `:root` (src/style.css), NOT HERE, and the reason is one file over:
+// `AlbumScreen.vue`'s scroller has to be exactly one page wide past 768, and a custom property
+// declared in this scoped stylesheet does not reach that one. `tests/component/album-wide.test.ts`
+// holds the ladder to the README's three widths and to `albumWire.ts`'s constants.
 </script>
 
 <template>
-  <div class="album-paper" :style="{ width: `${SHEET_PX}px` }">
-    <slot />
+  <div class="album-paper">
+    <!-- The reference frame. Everything a layout positions is positioned against THIS box, at every
+         width, which is why a collage never has to know how big the page it is on has become. -->
+    <div class="album-leaf">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -47,6 +73,9 @@ import { SHEET_PX } from './albumWire'
      with a width still shrinks by default – which is exactly how a 470px sheet becomes a 342px one
      on a phone without a single line of the layout admitting it. */
   flex: none;
+  /* ⚠ THE LADDER IS READ, NOT DECLARED – see the header. Below 768 this token IS 470px, so not one
+     pixel of the phone's page moves. */
+  width: var(--album-sheet);
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 2px;
@@ -64,5 +93,21 @@ import { SHEET_PX } from './albumWire'
   color: var(--paper-ink);
   font-family: var(--font-hand);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+}
+
+/* THE 470-SPACE. Square, positioned (so a layout's `inset: 0` means THIS box and not the page), and
+   scaled from its top-left corner so that the scaled edge lands exactly on the page's edge:
+   470 × 1.1489 = 540, 470 × 1.183 = 556. Below 768 the scale is 1 and this element is the page.
+   ⚠ `transform-origin` IS LOAD-BEARING. The default is the centre, which would grow the leaf
+   outwards in both directions and hang 35px of collage off the left edge of the page under the
+   `overflow: hidden` above – a page that looks right on the right and is cropped on the left. */
+.album-leaf {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--album-leaf);
+  height: var(--album-leaf);
+  transform: scale(var(--album-scale));
+  transform-origin: left top;
 }
 </style>
