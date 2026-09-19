@@ -171,6 +171,28 @@ const BUILD = letter({
   terms: { itemId: 'yacht', label: 'The yacht', orderedWeek: 144 },
 })
 
+// ⭐⭐⭐ ROUND 44 #7 – the four salaried seats' year-end post. ALL FOUR OF THEM ARE HERE AND THAT IS
+// THE POINT OF ADDING THEM: they share a week AND a season, so they are the first family of letters
+// in the game that could plausibly have been given ONE subject line – which is round-29 #16's own
+// defect («two letters wearing one title») manufactured rather than inherited. The whole-post case
+// below is what holds the four apart.
+const STAFF_COACH = letter({
+  id: 'staff-coach-5', kind: 'staff',
+  terms: { seat: 'coach', seasonIndex: 5, weeksServed: 49, wins: 31, losses: 14 },
+})
+const STAFF_MASSEUR = letter({
+  id: 'staff-masseur-5', kind: 'staff',
+  terms: { seat: 'masseur', seasonIndex: 5, weeksServed: 49, layoffs: 2, weeksSaved: 5 },
+})
+const STAFF_PSY = letter({
+  id: 'staff-psychologist-5', kind: 'staff',
+  terms: { seat: 'psychologist', seasonIndex: 5, weeksServed: 49, focus: 'coolhead', composureBonus: 2 },
+})
+const STAFF_SPARRING = letter({
+  id: 'staff-sparring-5', kind: 'staff',
+  terms: { seat: 'sparring', seasonIndex: 5, weeksServed: 49 },
+})
+
 /** Every subject line the sheet renders, in one array, off a career's real snapshot. */
 function subjects(offers: Offer[]): string[] {
   const base: Snapshot = careerSnapshot(8, 'r29-16-inbox')
@@ -281,17 +303,18 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     expect(ECONOMY.advertising.categories.watches.feeCentsByBand[1]).toBe(200_000_00)
   })
 
-  it('⚠ THE WHOLE POST AT ONCE – fourteen letters, fourteen distinct subjects, none of them borrowed', () => {
-    // ⭐ ROUND 43 #11 made it fourteen. The count in this case's name is the point of it: a new kind
+  it('⚠ THE WHOLE POST AT ONCE – eighteen letters, eighteen distinct subjects, none of them borrowed', () => {
+    // ⭐ ROUND 43 #11 made it fourteen; round 44 #7's four seats make it eighteen. The count in this case's name is the point of it: a new kind
     // that quietly fell through to somebody else's title would leave the pile one subject short.
     const all = subjects([
       ENTRY_IN, ENTRY_OUT_PARENT, ENTRY_OUT_DESK,
       dueLetter(), penaltyLetter(), seasonLetter(), suspensionLetter(),
       ACADEMY_IN, ACADEMY_REVIEW, ACADEMY_END,
       CALL_UP, AD, KIT_NEW, BUILD,
+      STAFF_COACH, STAFF_MASSEUR, STAFF_PSY, STAFF_SPARRING,
     ])
     // The career's own snapshot may carry letters of its own, so this is a floor and not an equality.
-    expect(all.length).toBeGreaterThanOrEqual(14)
+    expect(all.length).toBeGreaterThanOrEqual(18)
     // ...and NOTHING in the pile shares a subject with anything else in it. A fall-through shows up
     // here as a duplicate, which is the mechanical form of "the next one cannot be silent".
     const seen = new Map<string, number>()

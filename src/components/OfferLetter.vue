@@ -49,8 +49,11 @@ import type {
   EntryLetterTerms,
   KitOfferTerms,
   Offer,
+  StaffLetterTerms,
   TourLetterTerms,
 } from '../shared/protocol'
+import { LADDER_LABEL } from '../shared/protocol'
+import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
 import { WEEKS_IN_SEASON, weekLabel, weekRange } from '../shared/dates'
 import { adCampaignCutShort, apparelBondCost, dealUntilWeek, sponsorTierOfBrand } from '../engine/offers'
@@ -155,6 +158,82 @@ const academyEndBody = computed(() => {
     return 'What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.'
   }
   return 'We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.'
+})
+
+// ⭐⭐⭐ THE STAFF'S YEAR-END POST (round 44 #7). The owner, 18.09: «письмо от тренера по итогу года
+// мне так и не пришло, да и ни от одного специалиста не пришло.» Four seats, one sheet each, no
+// buttons – a report on the year is not a decision the parent takes.
+//
+// ⚠⚠ ALL COPY BELOW IS `⚠ DRAFT – awaiting his pass` (invariant 4) and is tabled in
+// docs/plans/life-wave-7-strings-2026-09.md §7 with each sentence's seat and firing condition. NOT
+// ONE EXISTING STRING IS TOUCHED by this feature.
+//
+// ⚠ NO LETTERHEAD – the academy's own rule applied. The sponsor marks are keyed by KIT RUNG and a
+// masseur is on no rung of that ladder; there is no art for these seats and none may be invented, so
+// each sheet signs itself with what the seat IS, the way the two desks and the academy do.
+//
+// ⚠⚠ THE VOICE IS FIRST PERSON, AND THAT IS A CONSTRAINT RATHER THAN A FLOURISH. `buildCoachRoster`
+// draws from `COACH_FIRST_M` **or** `COACH_FIRST_F`, so a woman sits on every roster – «he» is
+// unsayable about the coach, and tests/coach-voice.test.ts enforces it on every engine literal a
+// player can read. A letter written as «I» needs no pronoun for its author at all, which makes the
+// rule free to obey here instead of expensive.
+//
+// ⚠ AND NO PRAISE OR BLAME VOCABULARY in the coach's sheet – `good`, `better`, `value`, `bargain`
+// are the words world/coachMarket.ts bans, on the same ruling the tour's letters keep («мы ни за что
+// не наказываем»). These letters state what happened; they do not grade it.
+const isStaff = computed(() => props.offer.kind === 'staff')
+const staffTerms = computed(() => props.offer.terms as StaffLetterTerms)
+/** What the seat signs itself. `StaffSeat` is a closed union, so a fifth seat cannot inherit a
+ *  signature in silence – the `never` narrowing `InboxSheet`'s tour arm uses, for its reason. */
+const staffSignOff = computed(() => {
+  const seat = staffTerms.value.seat
+  if (seat === 'coach') return '– Her coach'
+  if (seat === 'masseur') return '– Her masseur'
+  if (seat === 'psychologist') return '– Her psychologist'
+  if (seat === 'sparring') return '– Her hitting partner'
+  const unhandled: never = seat
+  return unhandled
+})
+/** Matches played that season – the two figures the banked row carries, added. Absent together when
+ *  the row was not there to read, which is what `v-if="staffTerms.wins !== undefined"` guards. */
+const staffMatches = computed(() => (staffTerms.value.wins ?? 0) + (staffTerms.value.losses ?? 0))
+/** WHERE SHE FINISHED, NAMED WITH ITS TABLE. `LADDER_LABEL` so the letter and every rank surface use
+ *  one word for one table – «Professional», never «her WTA ranking». */
+const staffRankLine = computed(() => {
+  const t = staffTerms.value
+  if (t.endRank === undefined || !t.rankTrack) return ''
+  return `${LADDER_LABEL[t.rankTrack]} #${t.endRank}`
+})
+/** ⚠⚠ THE PAIR, AND THE SHEET PRINTS NO NUMBER FOR IT. The sign is the whole of what is said: the
+ *  letter is reached only when `chemistryReading` has already decided the gauge may show this pair
+ *  at all (engine/world/staffLetters.ts), so it can never reveal a reading the ring is hiding – and
+ *  by rendering the SIGN alone it cannot disagree with the ring's figure either, which is the trap
+ *  «a band NAME beside the level would be a second spelling of one fact» warns about. */
+const staffChemLine = computed(() => {
+  const chem = staffTerms.value.chem
+  if (chem === undefined) return ''
+  return chem >= 0
+    ? 'Working with her has got easier as the year went on, and I say that as somebody who has been wrong about it before.'
+    : 'I will say the other part too: she and I have not found an easy way of working yet, and a year is long enough that I notice it.'
+})
+/** WHAT THE YEAR WAS FOR, in the seat's own words – one sentence per focus, and the `Record` is
+ *  type-forced over `PsyFocus` so a sixth focus cannot ship without its sentence. */
+const PSY_FOCUS_LINE: Record<NonNullable<StaffLetterTerms['focus']>, string> = {
+  coolhead: 'What we worked on this year was her head in the tight games – the point after a break back, the second serve at 4-5.',
+  recovery: 'What we worked on this year was the walk back from the weeks that knocked her over, so that they stayed weeks and did not become a season.',
+  listen: 'What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.',
+  // ⚠ «TEMPERAMENT» IS UNSAYABLE ON A SURFACE and TWO draft lines reached for it – this one and
+  // the composure sentence below.
+  // `WorldState.temperament` is drawn once and NEVER shown as a label; tests/spirit.test.ts keeps a
+  // source fence over every component («`temperament` reaches the facts and no surface at all») and
+  // that fence caught this word in prose rather than in a label. The sentence loses nothing by
+  // saying «what she was born with», and the fence is worth more than the noun.
+  herself: 'What we worked on this year was the part of her that is hers rather than her nature’s – the deliberate work underneath what she was born with.',
+  publicLife: 'What we worked on this year was being looked at – the weight of the cameras and the strangers, and how to put it down between matches.',
+}
+const staffFocusLine = computed(() => {
+  const focus = staffTerms.value.focus
+  return focus ? PSY_FOCUS_LINE[focus] : ''
 })
 
 // ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 steps 1-2). The other
@@ -759,6 +838,112 @@ const settled = computed(() => {
         </ul>
       </template>
       <p class="offer-sign-off">– The academy</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- ⭐⭐⭐ THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats on the season just
+       finished. A NOTICE: no mark, no buttons, a foot that only says when it was filed. Every figure
+       comes off `terms`, frozen the week it was written – see StaffLetterTerms for what each seat may
+       state and, the longer half, for what the world does not retain and so no seat may claim.
+       ⚠ ALL COPY HERE IS DRAFT, awaiting the owner's pass (invariant 4). -->
+  <article v-else-if="isStaff" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <!-- THE COACH. The year's record first, because it is the thing he was hired to move, then the
+           runs, then the table she ends on – and the pair LAST, because it is the only line that is
+           about the two of them rather than about her. -->
+      <template v-if="staffTerms.seat === 'coach'">
+        <p class="offer-body">
+          That is the season done. I have been with her {{ staffTerms.weeksServed }} of its weeks, and this is
+          what I have to say about them before we start the next one.
+        </p>
+        <ul class="offer-terms">
+          <li v-if="staffTerms.wins !== undefined">
+            {{ staffMatches }} matches, {{ staffTerms.wins }} of them won and {{ staffTerms.losses }} lost.
+          </li>
+          <li v-if="staffTerms.bestFinish !== undefined">
+            Her deepest run of the year finished at {{ finishLabel(staffTerms.bestFinish) }}<template
+              v-if="staffTerms.titles"
+            >, and she took {{ staffTerms.titles }} {{ staffTerms.titles === 1 ? 'title' : 'titles' }} home</template
+            >.
+          </li>
+          <li v-else-if="staffTerms.wins !== undefined">
+            No run this year finished deep enough to score, which is a sentence about the draws as much as about her.
+          </li>
+          <li v-if="staffRankLine">She ends the year at {{ staffRankLine }}.</li>
+          <li v-if="staffChemLine">{{ staffChemLine }}</li>
+        </ul>
+      </template>
+
+      <!-- THE MASSEUR. His letter is about layoffs and nothing else, because weeks bought back off a
+           layoff is the only work of his this world keeps a record of. The no-layoff arm is not an
+           apology: a year his hands were on her and nothing tore is the year he would pick. -->
+      <template v-else-if="staffTerms.seat === 'masseur'">
+        <p class="offer-body">
+          A note on the year from the table. I have had her {{ staffTerms.weeksServed }} weeks of this season.
+        </p>
+        <ul class="offer-terms">
+          <li v-if="staffTerms.layoffs">
+            She came to me hurt {{ staffTerms.layoffs }} {{ staffTerms.layoffs === 1 ? 'time' : 'times' }} this
+            year, and between us we took {{ staffTerms.weeksSaved }}
+            {{ staffTerms.weeksSaved === 1 ? 'week' : 'weeks' }} off the time she was going to be out.
+          </li>
+          <li v-else>
+            She did not lose a week to anything I had to work back this year. That is the year I would pick,
+            and it is not the same thing as a year with nothing in it.
+          </li>
+          <li>Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.</li>
+        </ul>
+      </template>
+
+      <!-- THE PSYCHOLOGIST. The year's subject, and then – for the one focus the world actually keeps
+           a counter for – where she STANDS. ⚠ Never what the year added: `composureBonus` decays on
+           every week the nerve focus is not worked, so a gain is a figure it cannot support. -->
+      <template v-else-if="staffTerms.seat === 'psychologist'">
+        <p class="offer-body">
+          The year is over, so here is what I think we did with it. We have had {{ staffTerms.weeksServed }}
+          weeks of this season together.
+        </p>
+        <ul class="offer-terms">
+          <li v-if="staffFocusLine">{{ staffFocusLine }}</li>
+          <li v-else>
+            We have worked the season through without settling on one thing to carry, which happens and is
+            worth naming rather than tidying away.
+          </li>
+          <li v-if="staffTerms.composureBonus">
+            She now stands a little above where her own nature would have left her under pressure. It is
+            slow to build and it goes back down when we stop, which is the honest shape of it.
+          </li>
+          <li>Whatever we take on next year, it wants to be one thing. It is a year, not a list.</li>
+        </ul>
+      </template>
+
+      <!-- THE HITTING PARTNER. ⚠⚠ THE SHORTEST OF THE FOUR AND DELIBERATELY SO. This seat retains
+           NOTHING beyond its own employment – no count of the matchless weeks it covered, no record
+           of what was drilled, and a contribution that is not separable from `world.form` even in
+           principle (which may not be surfaced anyway – the owner's ruling O2). So the letter says
+           what the job IS and reports no outcome, rather than borrowing a figure from a neighbour. -->
+      <template v-else>
+        <p class="offer-body">
+          End of the year, so I will say my piece – it is shorter than the others'. I have hit with her
+          {{ staffTerms.weeksServed }} weeks of this season.
+        </p>
+        <ul class="offer-terms">
+          <!-- ⚠ «SOMEBODY ACROSS THE NET» IS UNSAYABLE HERE, and that is his own ruling rather than
+               taste: the 17.09 copy review singled that image out as used often enough that it
+               «begins to feel generated», and struck it from this very seat's feed rows. The job is
+               described in his terminology instead – MATCH-STYLE PRACTICE, the words world/sparring.ts
+               already puts in the ledger. -->
+          <li>
+            The job is the weeks with no tournament in them: match-style practice, so that the quiet stretches
+            do not arrive in her hands the next time she plays for something.
+          </li>
+          <li>Nobody keeps a score of that, and I am not going to invent one for a letter. She knows. I know.</li>
+        </ul>
+      </template>
+      <p class="offer-sign-off">{{ staffSignOff }}</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
