@@ -492,6 +492,55 @@
           "n": 280468
         }
       }
+    },
+    {
+      "name": "engaged",
+      "file": "engaged.tsave",
+      "purpose": "One press from the engagement, with the eight weeks to the wedding clear behind it – the only career in the corpus that can be married in a browser.",
+      "seed": "e2e-engaged-41",
+      "careerId": "c-e2e-engaged",
+      "slot": "auto:c-e2e-engaged:a",
+      "targetWeek": 681,
+      "schemaVersion": 83,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Oksana",
+        "kidLastName": "Dolezal",
+        "country": "US"
+      },
+      "bytes": 79830,
+      "payloadBytes": 79786,
+      "sha256": "225da461e622fa2b93b529c31d5af71d631da3ea817872db8287b72014cec8bf",
+      "seedsTried": 42,
+      "facts": {
+        "week": 681,
+        "seasonIndex": 13,
+        "ageYears": 26,
+        "fundsCents": 222458262,
+        "kidRank": 78,
+        "rankedDomestic": false,
+        "rankedItf": false,
+        "rankedWta": true,
+        "domesticPoints": 0,
+        "itfPoints": 0,
+        "wtaPoints": 2864,
+        "seasonsPlayed": 13,
+        "resultRows": 2209,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": -1548338296,
+          "n": 544163
+        }
+      }
     }
   ]
 }

@@ -79,7 +79,19 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // ⚠ MEASURED BEFORE EITHER RECIPE WAS WRITTEN, not assumed: no committed fixture holds a live known
 // episode at all (`pro` is the only one with a love life past its arrival, and its tail row `p:400`
 // is known but never ends inside the walk), so neither state had anywhere to start.
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated'] as const
+// ⚠⚠ `engaged` IS THE ONLY CAREER IN THE CORPUS OLD ENOUGH TO MARRY, AND THAT IS WHY IT IS AN
+// ELEVENTH FIXTURE RATHER THAN A CLAUSE ON ONE OF THE TEN (v83 T11, 19.09). The wedding's gate is
+// **23** – the owner's own 11.09 ruling, and it lives in the hazard – and the oldest career in this
+// list is `pro` at **21** (week 412). Not one of the ten can reach the beat at all, on any number of
+// presses, so the case had nowhere to start: this is the same argument `breakup` and `belated` make
+// one wave down about a live attachment, made about an age.
+// ⚠ AND IT IS ONE FIXTURE FOR BOTH HALVES OF THE MECHANIC, WHICH IS A PROPERTY THE RECIPE HAD TO
+// BUY. The engagement is a CARD the player answers and the wedding is a WEEK the player reaches,
+// `ECONOMY.wedding.weeksAfterEngagement` later – so a fixture parked ON the wedding would have had
+// its engagement answered by the generator, which is exactly the half T11 asks a browser to do. The
+// recipe therefore parks one press BEFORE the announcement and proves, on the browser's own chain of
+// raw ticks, that the nine weeks behind it are ordinary. See the recipe in tools/e2e-fixtures.ts.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated', 'engaged'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.
