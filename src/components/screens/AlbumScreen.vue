@@ -278,7 +278,11 @@ function pickChapter(firstSheet: number): void {
   bottom: 0;
   width: 34px;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(10, 14, 19, 0), var(--bg));
+  /* ⚠ `transparent` AND NOT `rgba(10, 14, 19, 0)`, which is what this said first and is a hand-copy
+     of `--bg`'s value – the two-sources-of-truth problem `tests/design-tokens.test.ts` exists for,
+     one layer below where that gate can see it. Gradient interpolation is premultiplied, so
+     `transparent` fades to the page colour rather than through grey. */
+  background: linear-gradient(90deg, transparent, var(--bg));
 }
 
 /* THE INDICATOR, BOTTOM RIGHT, exactly where the mockup puts it: over the page's own bottom-right
@@ -292,7 +296,8 @@ function pickChapter(firstSheet: number): void {
   gap: 8px;
   padding: 6px 8px 6px 12px;
   border-radius: var(--radius-pill);
-  background: rgba(10, 14, 19, 0.82);
+  /* The page's own colour at 82%, mixed rather than re-typed – same reason as the edge above. */
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
   color: var(--text);
 }
 
