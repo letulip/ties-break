@@ -32,7 +32,15 @@ defineProps<{ name: string }>()
 
   width: 96px;
   padding: 16px 10px 14px;
-  border: 2px solid var(--album-patch-thread);
+  /* ⚠ 1.5px AND NOT 2px, and the rule is the owner's of 30.07 rather than a preference here: nothing
+     in the app is OUTLINED with more than a hairline, and this crest shipped at 2 and went red on
+     `tests/ui-control-system.test.ts`. The pin's own carve-out is what 1.5 sits in – a drawn stroke
+     on the design's 24x24 / 1.5-1.9 grid is ARTWORK rather than an edge – and it is the weight the
+     crossed racquets inside this patch were already drawn at (1.2px), so the stitching now reads as
+     one hand instead of two. ⭐ NOT added to the pin's `KNOWN` list: that list is for a width that is
+     a MECHANISM (the runner-up's gradient border, invisible at 1px), and an embroidered edge that
+     looks the same a half-pixel thinner is not one. */
+  border: 1.5px solid var(--album-patch-thread);
   border-radius: 8px 8px 50% 50% / 8px 8px 38% 38%;
   background: linear-gradient(160deg, #24447a, var(--album-patch-cloth));
   color: var(--album-patch-thread);

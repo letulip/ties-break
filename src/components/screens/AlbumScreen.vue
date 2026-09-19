@@ -337,6 +337,27 @@ function pickChapter(firstSheet: number): void {
      where the mockup has it. */
   scroll-padding-inline: var(--app-pad-x);
   -webkit-overflow-scrolling: touch;
+  /* ⚠⚠ THE THREE DECLARATIONS A FINGER-DRAGGED STRIP NEEDS, and they are not this file's taste –
+     they are the house rule `tests/touch-and-scroll.test.ts` exists for, learned from a shipped
+     regression the owner felt within a day of the merge (04.09): «скролл заедает либо в одну, либо в
+     другую сторону, а некоторые клики… сначала не срабатывают, а потом становятся выделением
+     текста». This screen shipped without all three and the pin went red on it, which is the pin
+     working. Each answers one half of that sentence:
+       · `touch-action: pan-x pan-y` – BOTH axes, named. The album's pan is the reader's finger and
+         not our code (unlike `weekPager`, which drives `scrollLeft` itself and so gives the browser
+         `pan-y` alone), so the browser keeps the horizontal axis – but a VERTICAL gesture that
+         begins on a sheet must still scroll the page behind it, and `pan-x` alone freezes it. That
+         half-fix is the one 04.09 got wrong, and it is written down in the pin.
+       · `overscroll-behavior-x: contain` – without it, reaching the last sheet CHAINS and drags the
+         page. `SeasonHistoryTable` has carried this line since it shipped.
+       · `user-select: none` – a press-and-hold on a photograph otherwise resolves as a text
+         selection and swallows the gesture. ⚠ It is scoped to the FILM, not to the album: the
+         chapters sheet, the header and everything outside this box stay selectable, which is the
+         narrow form of the rule the same file's second half insists on. */
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .album-edge {

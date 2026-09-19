@@ -151,7 +151,7 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
 
   const SITES = VUE.filter((p) => p !== PAPER && callers(read(p)).length > 0)
 
-  it('the six call sites are still six – a seventh has to read this file', () => {
+  it('the seven call sites are still seven – an eighth has to read this file', () => {
     // Vacuous-truth insurance, and a doorbell: PaperNote is shared and the wrapper changed what a
     // class on it means, so a new caller should arrive having read why. The calendar's fridge note
     // is the fifth, and it arrived that way: it puts its margin on the wrapper and its inset on the
@@ -164,10 +164,21 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
     // which is the whole point of the spec's §3: a letter is what a PaperNote already is when you
     // stop asking it for things. It reaches the sheet through `:deep` like the other five, so the
     // sweep below covers it with no exception.
+    //
+    // ⚠ RE-AIMED FROM SIX TO SEVEN, 19.09 (the album wave) - AND THIS ONE IS A NEW SITE, NOT A
+    // BREAKAGE. `components/album/AlbumNoteCard.vue` is the scrap pasted on an album sheet, and it is
+    // the doorbell answered rather than a component to fix: its wrapper class `.album-note` declares
+    // NO rule of its own, and everything it changes about the paper - the padding, and a line-height
+    // matched to the stock's 26px ruling so the handwriting sits ON the lines instead of drifting off
+    // them - it changes through `:deep(.tb-paper)`. That is precisely the split this file exists to
+    // keep, so the two sweeps below already covered it with no exception and only the COUNT moved.
+    // ⭐ The count is the doorbell and nothing else: it is why the album's author had to arrive here
+    // and say which kind of change this was.
     expect(SITES.map(rel)).toEqual([
       'components/OfferLetter.vue',
       'components/SeasonSummaryDialog.vue',
       'components/WeekRecapCard.vue',
+      'components/album/AlbumNoteCard.vue',
       'components/screens/CalendarScreen.vue',
       'components/screens/KidScreen.vue',
       'components/screens/MoneyScreen.vue',

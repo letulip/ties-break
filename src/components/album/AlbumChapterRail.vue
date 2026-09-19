@@ -76,6 +76,16 @@ const emit = defineEmits<{ pick: [number] }>()
     /* The row settles on a plate rather than halfway across one; `proximity` and not `mandatory` for
        the same reason the sheet's own pan gives – a reader who wants to stop between two may. */
     scroll-snap-type: x proximity;
+    /* ⚠ THE SAME THREE `AlbumScreen.vue`'s film carries, for the same measured reason – the house
+       rule in `tests/touch-and-scroll.test.ts`, which this rail shipped without and went red on.
+       `pan-x pan-y` names the axis the rail takes AND the one it passes back to the page,
+       `overscroll-behavior-x: contain` stops the row's end dragging the page behind it, and
+       `user-select: none` keeps a press-and-hold on a plate a TAP – which matters more here than on
+       the film, because every plate in this row is a button that jumps to a chapter. */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+    user-select: none;
+    -webkit-user-select: none;
     padding-bottom: 4px;
   }
 

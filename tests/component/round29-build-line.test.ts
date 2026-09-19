@@ -171,7 +171,18 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // builder, not by T1: the component project is where this cell lives and T1's rung ran the unit
     // set – found red on the wave's first full `test:component` pass and moved to the ladder's
     // head, which is this pin's own standing instruction.
-    expect(SAVE_SCHEMA_VERSION).toBe(83)
+    // ⚠ AND AGAIN AT v84 (19.09, the album – `world.prologueTrace`, the compact slice of the finished
+    // prologue run so the album's first chapter has something to be written out of), NOT WEAKENED,
+    // for the EIGHTEENTH time and for the reason verbatim: 84 was moved by that wave with its full
+    // move (bump, append-only migration step, golden fixture v84 and its README row, e2e fixtures
+    // regenerated at `schemaVersion: 84`, the frozen-career peel rung and the spec's own §3), never
+    // by this line's item. The claim above – «the BUILD-LINE wave moved no schema» – is untouched,
+    // and the pin still follows the ladder's head so the sentence over it stays checkable. ⚠ Stamped
+    // by the SEAM builder rather than by the schema's own: the album's three builders ran in
+    // parallel and the component project is not where a v84 engine commit is gated, so this sat red
+    // from `3d611cc3` until the wave's first full `test:component` pass – the same one-project blind
+    // spot v83 was caught by, one wave later.
+    expect(SAVE_SCHEMA_VERSION).toBe(84)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {
