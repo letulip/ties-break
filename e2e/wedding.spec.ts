@@ -181,11 +181,12 @@ async function reload(page: Page): Promise<void> {
  * is – and the thing it guards against is a REGENERATION rather than today's fixture. The seed in
  * the manifest as this was written parks at an in-season week whose ten quiet weeks stay inside one
  * season, so every call below is a no-op. But a nine-week stretch with no tournament in it is a rare
- * shape in a 26-year-old's calendar and the OFF-SEASON is where such stretches cluster – three of
- * the seven engagements the first census found sat on one – so the next search can easily land this
- * walk across a season boundary. A season turning over is weather this journey passes through, not
- * anything it is about: what a wrap-up SAYS is e2e/week-advance.spec.ts's claim and
- * tests/component/season-wrapup-mirror.test.ts's, and re-making it here would be a second copy.
+ * shape in a 26-year-old's calendar and the OFF-SEASON is where such stretches cluster: of the seven
+ * engagements the first census found, the two whose following weeks were clearest were the two that
+ * ran into it. So the next search can easily land this walk across a season boundary, and a season
+ * turning over is weather this journey passes through rather than anything it is about – what a
+ * wrap-up SAYS is e2e/week-advance.spec.ts's claim and tests/component/season-wrapup-mirror.test.ts's,
+ * and re-making it here would be a second copy of both.
  * ⚠ THE RECIPE DOES NOT REJECT THE CROSSING, deliberately – it would be rejecting the state's most
  * likely shape to save this six-line helper.
  *
