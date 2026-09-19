@@ -69,3 +69,32 @@ REMOVED price.
    the throttle is one drafted hazard constant.
 4. The march-entry-open 24.6% vs live 91% disagreement (K5 addendum) – which instrument reads the
    design's truth.
+
+---
+
+## Two hazards this wave measured, and why they are not in CLAUDE.md yet
+
+Both are house-law material and both are parked here, because `CLAUDE.md` sits **24 characters**
+under its own 22,000-character budget and the budget's comment says exactly what that means: the
+ceiling «turns the next large addition into a decision rather than a drift». What leaves is the
+owner's call, so nothing was removed to make room.
+
+**1. `git commit --amend` defeats the pathspec rule from the other side.** CLAUDE.md already warns
+that `git commit` takes the whole index and prescribes the pathspec form. An amend breaks it the
+other way: a builder amended their own commit, with a pathspec, while a colleague's commit had
+landed on top – and the amend swallowed the colleague's commit under the builder's message. It was
+repaired (`git reset --soft <their sha>`, re-commit, both messages verbatim) and nothing was lost,
+but only because the builder noticed and said so. **The rule: in a shared checkout never amend, add
+a second commit.** A wrong number in a message is cheaper than a commit that ate somebody's work.
+
+**2. A missing exit sentinel is not a verdict.** CLAUDE.md's (a)/(b)/(c) all point at the same
+technique – append `echo "…_EXIT=$?"` inside the command and read the verdict out of the file.
+Twice this wave a backgrounded run was reported as «failed with exit code 144» while the command
+itself ran to completion: the wrapper died before the `echo` could execute, so the file never got
+its sentinel and the technique silently could not fire. **No sentinel line means no measurement** –
+not a failure and not a pass. Re-run, or wait on the PID.
+
+⚠ And a third thing the budget itself taught: `CLAUDE.md`'s own barrel count had drifted from 280
+(19.08) to 698, in the very paragraph whose lesson is «count it, do not quote it». Corrected in
+place with both dates rather than deleted, because deleting the stale number would delete the
+lesson it is evidence for.
