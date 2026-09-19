@@ -99,6 +99,25 @@ parent»). He guesses at her, guesses wrong, and says so – `A30`'s «we were a
 think you knew», `A32`'s «you will find the one week I have got wrong». He never states her
 interior as fact and never asserts a world-fact the sim can contradict.
 
+### ⚠⚠ The measured risk in this corpus, stated rather than left to be noticed
+
+**A note tends to open on a label and then say what he saw** – «First day on court. You were so
+excited.» That shape is HIS, from the one worked example the mockups gave, and on a page of
+handwriting it is right: the parent writes what the sheet is about, then what happened. **But four
+notes that all open on the SAME label is a formula, and a formula is what generated copy reads
+like.**
+
+So it was measured on the first draft rather than argued about: **25 of the 32 occasions had all
+four notes sharing an opening clause**, the worst of them 52 characters long (`A23`, where the
+label swallowed most of the sentence). Nineteen notes across the ten worst rows were rewritten to
+move the label, drop it or put it at the end. **The corpus now stands at 15 of 32, longest shared
+clause 26 characters** – the length of his own, and at that size it reads as the album's habit
+rather than as a template.
+
+⚠ **This is the number to look at first in a review.** It is the one property of the corpus that
+degrades quietly as rows are added, it is not pinned (a threshold here would be a guess dressed as
+a rule), and it is re-derivable from this document in one pass whenever somebody wants to know.
+
 ## 3. ⚠⚠ What the handwriting may not contain
 
 **3.1 No number the world owns.** The corpus cannot know how old she was, how many titles she has,
@@ -300,8 +319,8 @@ character. They are the anchor the rest of this corpus was written against, and 
 | voice | note |
 | --- | --- |
 | `sunny` | `Your first tournament. You told everybody in the queue that it was your first tournament.` |
-| `fiery` | `Your first tournament. You wanted to know who decides the order of play.` |
-| `deep` | `Your first tournament. You didn't eat breakfast and you didn't say why until the drive home.` |
+| `fiery` | `Your first tournament, and you wanted to know who decides the order of play.` |
+| `deep` | `You didn't eat breakfast and you didn't say why until the drive home. Your first tournament.` |
 | `quiet` | `Your first tournament. You put your shoes by the door the night before.` |
 
 | voice | caption |
@@ -432,8 +451,8 @@ the handwriting says «everything» and «it».
 | voice | note |
 | --- | --- |
 | `sunny` | `The first one back. You said you had forgotten how much of it is just standing about waiting.` |
-| `fiery` | `The first one back. You said nobody asks about the months off when you win.` |
-| `deep` | `The first one back. You said you had been afraid of the first serve, and then you weren't.` |
+| `fiery` | `The first one back, and you said nobody asks about the months off when you win.` |
+| `deep` | `You had been afraid of the first serve, you told me, and then you weren't. The first one back.` |
 | `quiet` | `The first one back. You said everything was fine. You said it twice.` |
 
 | voice | caption |
@@ -541,9 +560,9 @@ twenty-one-season album is not four sentences repeated.
 | voice | note |
 | --- | --- |
 | `sunny` | `Your first season, closed. You wanted to know whether the number was good and I didn't know either.` |
-| `fiery` | `Your first season, closed. You said the number was wrong and that you would fix it.` |
+| `fiery` | `Your first season closed on a number you said was wrong and would fix.` |
 | `deep` | `Your first season, closed. You looked at the number for a while and then put the phone down.` |
-| `quiet` | `Your first season, closed. You wrote the number on the calendar in pencil.` |
+| `quiet` | `You wrote the number on the calendar in pencil. That was your first season, closed.` |
 
 | voice | caption |
 | --- | --- |
@@ -616,9 +635,9 @@ twenty-one-season album is not four sentences repeated.
 | voice | note |
 | --- | --- |
 | `sunny` | `A year that went the wrong way. You said so out loud, which is more than most people manage.` |
-| `fiery` | `A year that went the wrong way. You had a reason for every week of it and you meant every one.` |
+| `fiery` | `The year went the wrong way and you had a reason for every week of it, and you meant every one.` |
 | `deep` | `A year that went the wrong way. You waited until January to tell me what you thought had happened.` |
-| `quiet` | `A year that went the wrong way. You told me about the flights and the hotels and not about the year.` |
+| `quiet` | `You told me about the flights and the hotels all year, and never once about the year.` |
 
 | voice | caption |
 | --- | --- |
@@ -702,8 +721,8 @@ does not use it.
 | voice | note |
 | --- | --- |
 | `sunny` | `The first time it paid. You wanted to spend it on all of us and we had to talk you out of it.` |
-| `fiery` | `The first time it paid. You said it wasn't very much, and then you kept saying the number.` |
-| `deep` | `The first time it paid. You said it made the whole thing real in a way the results hadn't.` |
+| `fiery` | `The first time it paid you said it wasn't very much, and then you kept saying the number.` |
+| `deep` | `You said the money made the whole thing real in a way the results hadn't. The first time it paid.` |
 | `quiet` | `The first time it paid. You asked what the tax on it was.` |
 
 | voice | caption |
@@ -729,7 +748,7 @@ career, so a named one here would contradict the ticket on the same sheet.
 | voice | note |
 | --- | --- |
 | `sunny` | `Your first one abroad. You sent a photograph of the airport ceiling, of all things.` |
-| `fiery` | `Your first one abroad. You had a full opinion on the country before the bags came off.` |
+| `fiery` | `You had a full opinion on the country before the bags came off. Your first one abroad.` |
 | `deep` | `Your first one abroad. You said everything sounded different and that you liked it, and that was the message.` |
 | `quiet` | `Your first one abroad. You sent the arrival time.` |
 
@@ -755,9 +774,9 @@ reconstructed afterwards.
 | voice | note |
 | --- | --- |
 | `sunny` | `The week it paid for itself. You said we could stop doing sums at the kitchen table and I said we would see.` |
-| `fiery` | `The week it paid for itself. You said you had told us it would, and you had, more than once.` |
+| `fiery` | `It paid for itself, and you said you had told us it would, and you had, more than once.` |
 | `deep` | `The week it paid for itself. You knew what it had cost. You had always known.` |
-| `quiet` | `The week it paid for itself. You asked, in a roundabout way, whether we were all right now.` |
+| `quiet` | `You asked, in a roundabout way, whether we were all right now. That was the week it paid for itself.` |
 
 | voice | caption |
 | --- | --- |
@@ -865,9 +884,9 @@ Each happens once in a career, so each is written once.
 | voice | note |
 | --- | --- |
 | `sunny` | `Your name on something that isn't a draw sheet. You thought it was funny. It was also enormous.` |
-| `fiery` | `Your name on something that isn't a draw sheet. You wanted the colour changed and you got it changed.` |
+| `fiery` | `They put your name on it and you had the colour changed, because of course you did.` |
 | `deep` | `Your name on something that isn't a draw sheet. You said it didn't feel like yours yet.` |
-| `quiet` | `Your name on something that isn't a draw sheet. You told us after it had been signed.` |
+| `quiet` | `We found out it existed after you had signed for it. Your name, on a thing.` |
 
 | voice | caption |
 | --- | --- |
@@ -973,9 +992,9 @@ threshold for `A29` is the engine's to pick at a reachable number, not a pretty 
 | voice | note |
 | --- | --- |
 | `sunny` | `The one that doesn't run out. You said you would finally stop being nervous every winter, and then you were nervous anyway.` |
-| `fiery` | `The one that doesn't run out. You said it should have come years ago, and signed it the same day.` |
+| `fiery` | `They offered you the one that doesn't run out. You said it should have come years ago, and signed it the same day.` |
 | `deep` | `The one that doesn't run out. You said it was strange to be planned for that far ahead.` |
-| `quiet` | `The one that doesn't run out. You read the whole thing before you told anybody.` |
+| `quiet` | `You read the whole thing before you told anybody. The one that doesn't run out.` |
 
 | voice | caption |
 | --- | --- |
@@ -1108,9 +1127,9 @@ the closing sheet says, and it is not a consolation line – it is the parent ha
 | voice | note |
 | --- | --- |
 | `sunny` | `That is the album. You will tell it better than I have written it, and louder.` |
-| `fiery` | `That is the album. You will disagree with some of it, and I have left room.` |
+| `fiery` | `You will disagree with some of this, and I have left room. That is the album.` |
 | `deep` | `That is the album. You will find the one week I have got wrong, and you will be right.` |
-| `quiet` | `That is the album. You will read it all the way through and say very little, and I will know.` |
+| `quiet` | `You will read it all the way through and say very little, and I will know. That is the album.` |
 
 | voice | caption |
 | --- | --- |

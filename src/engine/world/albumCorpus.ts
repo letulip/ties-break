@@ -124,12 +124,12 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'A whole weekend, and she never sat down.',
       },
       fiery: {
-        note: 'Your first tournament. You wanted to know who decides the order of play.',
+        note: 'Your first tournament, and you wanted to know who decides the order of play.',
         caption: 'She read the draw sheet twice.',
         line: 'Somebody had to explain the draw.',
       },
       deep: {
-        note: 'Your first tournament. You didn\'t eat breakfast and you didn\'t say why until the drive home.',
+        note: 'You didn\'t eat breakfast and you didn\'t say why until the drive home. Your first tournament.',
         caption: 'She was quiet all morning.',
         line: 'She held it in until the car.',
       },
@@ -269,12 +269,12 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'All that standing about.',
       },
       fiery: {
-        note: 'The first one back. You said nobody asks about the months off when you win.',
+        note: 'The first one back, and you said nobody asks about the months off when you win.',
         caption: 'Nobody asks now, she said.',
         line: 'They only ask when she loses.',
       },
       deep: {
-        note: 'The first one back. You said you had been afraid of the first serve, and then you weren\'t.',
+        note: 'You had been afraid of the first serve, you told me, and then you weren\'t. The first one back.',
         caption: 'Afraid of the first serve, then not.',
         line: 'She named the fear once it was over.',
       },
@@ -385,7 +385,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'A number with nothing to compare it to.',
       },
       fiery: {
-        note: 'Your first season, closed. You said the number was wrong and that you would fix it.',
+        note: 'Your first season closed on a number you said was wrong and would fix.',
         caption: 'She intends to fix it.',
         line: 'Wrong, apparently.',
       },
@@ -395,7 +395,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She read it more than once.',
       },
       quiet: {
-        note: 'Your first season, closed. You wrote the number on the calendar in pencil.',
+        note: 'You wrote the number on the calendar in pencil. That was your first season, closed.',
         caption: 'On the calendar, in pencil.',
         line: 'In pencil, so it could move.',
       },
@@ -472,7 +472,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Naming it is most of it.',
       },
       fiery: {
-        note: 'A year that went the wrong way. You had a reason for every week of it and you meant every one.',
+        note: 'The year went the wrong way and you had a reason for every week of it, and you meant every one.',
         caption: 'A reason for every week.',
         line: 'All of them true, probably.',
       },
@@ -482,7 +482,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She needed the distance first.',
       },
       quiet: {
-        note: 'A year that went the wrong way. You told me about the flights and the hotels and not about the year.',
+        note: 'You told me about the flights and the hotels all year, and never once about the year.',
         caption: 'Flights, hotels, not the year.',
         line: 'Everything except the year.',
       },
@@ -559,12 +559,12 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'We talked her out of it.',
       },
       fiery: {
-        note: 'The first time it paid. You said it wasn\'t very much, and then you kept saying the number.',
+        note: 'The first time it paid you said it wasn\'t very much, and then you kept saying the number.',
         caption: 'Not very much, she said. Repeatedly.',
         line: 'She said the number a lot.',
       },
       deep: {
-        note: 'The first time it paid. You said it made the whole thing real in a way the results hadn\'t.',
+        note: 'You said the money made the whole thing real in a way the results hadn\'t. The first time it paid.',
         caption: 'Realer than the results, she said.',
         line: 'Money made it real. Not the winning.',
       },
@@ -588,7 +588,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'The ceiling. Not the court.',
       },
       fiery: {
-        note: 'Your first one abroad. You had a full opinion on the country before the bags came off.',
+        note: 'You had a full opinion on the country before the bags came off. Your first one abroad.',
         caption: 'An opinion before the bags.',
         line: 'She had decided by baggage reclaim.',
       },
@@ -617,7 +617,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'We would see, I said.',
       },
       fiery: {
-        note: 'The week it paid for itself. You said you had told us it would, and you had, more than once.',
+        note: 'It paid for itself, and you said you had told us it would, and you had, more than once.',
         caption: 'She had told us. She reminded us.',
         line: 'She had told us. Twice.',
       },
@@ -627,7 +627,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She had been carrying that quietly.',
       },
       quiet: {
-        note: 'The week it paid for itself. You asked, in a roundabout way, whether we were all right now.',
+        note: 'You asked, in a roundabout way, whether we were all right now. That was the week it paid for itself.',
         caption: 'She asked, in her way, if we were all right.',
         line: 'It took her a while to ask.',
       },
@@ -733,7 +733,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Funny, and enormous.',
       },
       fiery: {
-        note: 'Your name on something that isn\'t a draw sheet. You wanted the colour changed and you got it changed.',
+        note: 'They put your name on it and you had the colour changed, because of course you did.',
         caption: 'She had the colour changed.',
         line: 'They changed the colour.',
       },
@@ -743,7 +743,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Not hers yet, she said.',
       },
       quiet: {
-        note: 'Your name on something that isn\'t a draw sheet. You told us after it had been signed.',
+        note: 'We found out it existed after you had signed for it. Your name, on a thing.',
         caption: 'We were told after the signing.',
         line: 'Afterwards, as usual.',
       },
@@ -849,7 +849,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'The worry has a habit.',
       },
       fiery: {
-        note: 'The one that doesn\'t run out. You said it should have come years ago, and signed it the same day.',
+        note: 'They offered you the one that doesn\'t run out. You said it should have come years ago, and signed it the same day.',
         caption: 'Years late, signed the same day.',
         line: 'Late, and signed anyway.',
       },
@@ -859,7 +859,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Somebody planned that far ahead.',
       },
       quiet: {
-        note: 'The one that doesn\'t run out. You read the whole thing before you told anybody.',
+        note: 'You read the whole thing before you told anybody. The one that doesn\'t run out.',
         caption: 'She read all of it first.',
         line: 'All of it, before a word.',
       },
@@ -994,7 +994,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Her version is better.',
       },
       fiery: {
-        note: 'That is the album. You will disagree with some of it, and I have left room.',
+        note: 'You will disagree with some of this, and I have left room. That is the album.',
         caption: 'She will disagree with some of it.',
         line: 'I left room for the argument.',
       },
@@ -1004,7 +1004,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She will be right, too.',
       },
       quiet: {
-        note: 'That is the album. You will read it all the way through and say very little, and I will know.',
+        note: 'You will read it all the way through and say very little, and I will know. That is the album.',
         caption: 'She will read it all and say little.',
         line: 'I will know what it meant.',
       },
