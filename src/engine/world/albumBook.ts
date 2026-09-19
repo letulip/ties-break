@@ -5,8 +5,10 @@
 // to a picture by the §4 ladder, the corpus's handwriting in her parent's voice, tickets and tags
 // from real facts, and the arc on the closing sheet. The screens that render the book landed on this
 // same branch first, against `src/components/album/albumWire.ts` – a declared stand-in for THIS
-// module – so the shapes here are that contract satisfied, not a second design
-// (`shared/protocol/album.ts` carries them; the stand-in's importers re-point there and it deletes).
+// module – so the shapes here are that contract satisfied, not a second design.
+// `shared/protocol/album.ts` carries them, and since 19.09 it is the only declaration: the stand-in's
+// importers are re-pointed at the protocol barrel and the file is deleted. It went home unchanged –
+// the two shapes were identical to the field on the day they were joined.
 //
 // ⚠⚠ ON DEMAND, NEVER IN THE WEEKLY SNAPSHOT – his §8b ruling: «Сборка альбома – по требованию, не
 // в недельном снимке». `assembleAlbum` is served by the worker's `album` query when the section

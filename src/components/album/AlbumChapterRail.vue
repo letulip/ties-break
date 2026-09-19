@@ -20,7 +20,7 @@
 // ⚠ NOT ONE SENTENCE HERE IS THIS FILE'S. Every string on a row arrives on the chapter (invariant 4);
 // the only word this template contributes is the landmark's name, and it is the word the phone's card
 // already answers to.
-import type { AlbumChapter } from './albumWire'
+import type { AlbumChapter } from '../../shared/protocol'
 
 defineProps<{ chapters: readonly AlbumChapter[]; currentChapter: number }>()
 const emit = defineEmits<{ pick: [number] }>()

@@ -12,7 +12,7 @@
 // formatted from the engine, off the frame's own week, and this component only places them – above
 // the writing, the way the mockup has them.
 import PaperNote from '../ui/PaperNote.vue'
-import type { AlbumNote } from './albumWire'
+import type { AlbumNote } from '../../shared/protocol'
 
 withDefaults(
   defineProps<{

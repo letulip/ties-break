@@ -20,7 +20,7 @@ import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumPatch from './AlbumPatch.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import AlbumSheetTitle from './AlbumSheetTitle.vue'
-import type { AlbumSheetModel } from './albumWire'
+import type { AlbumSheetModel } from '../../shared/protocol'
 
 defineProps<{ sheet: AlbumSheetModel }>()
 </script>

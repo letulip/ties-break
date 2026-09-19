@@ -13,7 +13,7 @@
 // ⚠ NO GLYPH FONT AND NO EMOJI, which is the other road and the wrong one: an emoji is somebody
 // else's colour drawing, renders differently on every platform, and would be the only full-colour
 // object on a sheet of paper.
-import type { AlbumDoodle } from './albumWire'
+import type { AlbumDoodle } from '../../shared/protocol'
 
 defineProps<{ mark: AlbumDoodle; size?: number }>()
 

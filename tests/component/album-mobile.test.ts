@@ -28,7 +28,7 @@ import '../../src/style.css'
 
 import AlbumScreen from '../../src/components/screens/AlbumScreen.vue'
 import AlbumSheet from '../../src/components/album/AlbumSheet.vue'
-import { SHEET_PX, SHEET_STEP_PX } from '../../src/components/album/albumWire'
+import { SHEET_PX, SHEET_STEP_PX } from '../../src/shared/protocol'
 import { ALBUM_CORPUS } from '../../src/engine/world/albumCorpus'
 import { region } from '../helpers/source'
 import { PHONE, assertDismissReachable, setViewport } from './fits'
@@ -93,7 +93,7 @@ const MOBILE = { width: 390, height: 844 }
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 
 /** happy-dom runs no layout, so `scrollLeft` is a plain property here – which is exactly what makes
- *  the pan testable: the component's own arithmetic is done in constants (see `albumWire.ts`), so
+ *  the pan testable: the component's own arithmetic is done in constants (see `shared/protocol/album.ts`), so
  *  moving the property is moving the pan. */
 async function panTo(w: ReturnType<typeof mount>, px: number): Promise<void> {
   const pan = w.find('.album-pan')
@@ -388,6 +388,46 @@ describe('the three layouts draw what the mockups have on them', () => {
         w.findAll('.tb-polaroid').length,
       )
       w.unmount()
+    }
+  })
+
+  // ===============================================================================================
+  // ⚠⚠ THE BASE, AND IT IS THE ONE DEFECT ON THIS SCREEN THAT ONLY EXISTS ON THE DEPLOYED BUILD
+  // ===============================================================================================
+  //
+  // `shared/protocol/album.ts` states the contract on the `art` field: the ENGINE emits a path
+  // relative to the app's base (`images/fem-euro-brunnet/…`, no leading slash) because engine code
+  // may not read `import.meta.env`, and the RENDERING side prefixes `import.meta.env.BASE_URL` –
+  // `useKidEmotion`, `art/trophies.ts`, `AppIcon.vue` and `art/preload.ts`'s `base()` all do exactly
+  // this. `AlbumPhoto` did not, and nothing local could notice: `deploy.yml` builds with
+  // `BASE_PATH=/ties-break/`, so a bare `images/…` resolves against the PAGE's directory there and
+  // every painting in the album 404s – while a dev server, whose base is `/`, serves the same string
+  // correctly by accident.
+  //
+  // ⭐⭐ MUTATION-VERIFIED, AND THE SECOND ARM IS WHY THE FIXTURE'S OWN SPELLING IS ASSERTED HERE
+  // RATHER THAN ASSUMED. Two arms were run 19.09:
+  //   ARM A  `:src="frame.art"` restored in `AlbumPhoto.vue`      → RED («expected 'images/…' to be
+  //          (the prefix deleted – the actual defect)                '/images/…'»)
+  //   ARM B  the fixture's old `/images/…` paths put back         → GREEN, at first, AND THAT WAS THE
+  //          (the leading slash the protocol forbids)               REAL FINDING: `toBe(base + art)`
+  //          reads the fixture on BOTH sides, so a fixture that leads with a slash satisfies it with
+  //          `//images/…` and the pin cannot see the one shape the app can never receive. A round
+  //          trip through the thing under test is not a measurement of it. The `startsWith('/')`
+  //          assertion below is what closes that, and ARM B is red against it.
+  it('⚠ every painting is asked for under the app\'s BASE_URL, not as a bare engine path', () => {
+    const base = import.meta.env.BASE_URL
+    const sheet = sheetOf({ layout: 'B' })
+    setViewport(MOBILE)
+    const w = mount(AlbumSheet, { props: { sheet }, attachTo: document.body })
+    const srcs = w.findAll('img').map((i) => i.attributes('src') ?? '')
+    expect(srcs.length, 'B draws three photographs').toBe(3)
+    for (const [i, src] of srcs.entries()) {
+      // ⚠ THE FIXTURE IS HELD TO THE ENGINE'S CONTRACT FIRST. `shared/protocol/album.ts`: the path is
+      // relative to the base, so a leading slash is the one spelling that is always wrong – it would
+      // ignore `/ties-break/` on the deployed build whatever this component does with it.
+      expect(sheet.frames[i].art.startsWith('/'), `frame ${i}'s path is rooted, which the wire forbids`).toBe(false)
+      expect(src, `frame ${i} is not resolved against the app's base`).toBe(`${base}${sheet.frames[i].art}`)
+      expect(src.endsWith(sheet.frames[i].art), `frame ${i} lost the engine's own path`).toBe(true)
     }
   })
 })

@@ -22,11 +22,6 @@ import { assembleAlbum, ALBUM_MOOD, createWorld, kidAgeAt, type WorldState } fro
 import type { TierId } from '../src/engine/season/types'
 import { ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
 import type { AlbumBook, AlbumSheetModel, Milestone } from '../src/shared/protocol'
-import type {
-  AlbumBook as StandInBook,
-  AlbumSheetModel as StandInSheet,
-  AlbumChapter as StandInChapter,
-} from '../src/components/album/albumWire'
 
 const PUBLIC = fileURLToPath(new URL('../public', import.meta.url))
 
@@ -79,20 +74,14 @@ function sweepNoEmpties(book: AlbumBook): void {
   }
 }
 
-describe('the wire is the stand-in\'s, to the field', () => {
-  it('the protocol book and the album UI\'s stand-in are assignable BOTH ways', () => {
-    // ⚠ THE STAND-IN (`src/components/album/albumWire.ts`) IS THE SHAPE THE MOUNTED, MEASURED album
-    // screens render; its own header hands the type home to the protocol when this module lands.
-    // Until its importers are re-pointed and it deletes, this pin is what stops the two declarations
-    // drifting – a field added or renamed on either side goes red here at compile time.
-    const book: AlbumBook = { chapters: [], sheets: [] }
-    const asStandIn: StandInBook = book
-    const back: AlbumBook = asStandIn
-    expect(back).toEqual(book)
-    const sheet = (): AlbumSheetModel | StandInSheet | StandInChapter | null => null
-    expect(sheet()).toBeNull()
-  })
-})
+// ⚠⚠ THE §WIRE PIN RETIRED WITH ITS SUBJECT, 19.09 (the seam wave). It held
+// `src/components/album/albumWire.ts` and `src/shared/protocol/album.ts` assignable in BOTH
+// directions while the two declarations existed side by side, so neither could drift while the UI
+// and the engine were built in parallel on this branch. The stand-in's importers are re-pointed at
+// the protocol barrel and the file is DELETED – there is no second declaration left to compare, and
+// a pin comparing a type with itself asserts nothing. ⭐ The verdict it was holding: the two shapes
+// were still identical to the field when they were joined, so the join was a rename and not a
+// redesign. The shapes themselves are asserted against the running engine by every case below.
 
 describe('chapters exist exactly where something was lived AND earned', () => {
   it('a wizard career with an empty ledger has NO chapters – and no prologue chapter ever', () => {

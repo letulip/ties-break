@@ -18,7 +18,7 @@ import type {
   AlbumChapter,
   AlbumLayout,
   AlbumSheetModel,
-} from '../../src/components/album/albumWire'
+} from '../../src/shared/protocol'
 
 /** One occasion's three registers, in one voice – the shape the engine hands a sheet. */
 export function hand(id: string, voice: Temperament = 'sunny') {
@@ -54,10 +54,24 @@ export function sheetOf(over: SheetOver = {}): AlbumSheetModel {
     chapterIndex: over.chapterIndex ?? 1,
     chapterTitle: over.chapterTitle ?? 'The Beginning',
     ageLabel: over.ageLabel ?? 'Age 5 – 8',
+    // ⚠⚠ THE PATHS ARE THE ENGINE'S OWN SPELLING, AND BOTH HALVES OF THAT MATTER (19.09, the seam
+    // wave). They were invented here – `/images/kid/…`, `/images/travel/…` – while this fixture stood
+    // in for an assembly that did not exist yet, and they were wrong in two ways at once: neither
+    // directory is on disk, and the LEADING SLASH is the exact spelling `shared/protocol/album.ts`
+    // forbids on this field, because a rooted URL ignores the app's base and breaks a `BASE_PATH`
+    // deploy. `albumBook.ts` emits `images/fem-euro-brunnet/fem-euro-brunnet-<stem>.webp`, base
+    // RELATIVE, and `AlbumPhoto` prefixes `import.meta.env.BASE_URL` – so a fixture that led with a
+    // slash was quietly measuring the one shape the app can never receive, and the mounted assertion
+    // on the prefix would have been asserting nonsense. These three name real files
+    // (`tests/albumBook.test.ts` sweeps the engine's own against `public/`).
     frames: [
-      { art: '/images/kid/young-happy.webp', alt: 'On court', caption: words.caption },
-      { art: '/images/kid/young-norm.webp', alt: 'Walking on', caption: second.caption },
-      { art: '/images/travel/travel-sleepy-airport.webp', alt: 'Airport', caption: hand('first-international', voice).caption },
+      { art: 'images/fem-euro-brunnet/fem-euro-brunnet-young-happy.webp', alt: 'On court', caption: words.caption },
+      { art: 'images/fem-euro-brunnet/fem-euro-brunnet-young-norm.webp', alt: 'Walking on', caption: second.caption },
+      {
+        art: 'images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-airport.webp',
+        alt: 'Airport',
+        caption: hand('first-international', voice).caption,
+      },
     ],
     note: {
       text: words.note,
@@ -81,7 +95,10 @@ export function sheetOf(over: SheetOver = {}): AlbumSheetModel {
         : null,
     tag:
       layout === 'C'
-        ? { stage: 'Singles final', tier: 'W15', place: 'Rivermouth Open', ageLabel: 'Age 16' }
+        // ⚠ `World Tour 15` AND NOT `W15`, 19.09. The tier on a ticket or a tag is a TIERS label –
+        // `albumBook.ts` reads `TIERS[c.tier].label` and can emit nothing else – and this fixture had
+        // hand-typed the real ITF designation the protocol field names as forbidden in as many words.
+        ? { stage: 'Singles final', tier: 'World Tour 15', place: 'Rivermouth Open', ageLabel: 'Age 16' }
         : null,
     patch: layout === 'A' ? 'Rivermouth Tennis' : null,
     doodles: layout === 'A' ? ['smile'] : layout === 'B' ? ['heart'] : ['globe'],

@@ -17,7 +17,7 @@
 // тем насыщеннее» – and §9 lists the palette as HIS, still open. Inventing a five-step ramp here
 // would be exactly the wording-and-colour decision invariant 4 keeps out of an agent's hands, so
 // the pass ships in one ink until he rules; nothing else about it changes when he does.
-import type { AlbumTicket } from './albumWire'
+import type { AlbumTicket } from '../../shared/protocol'
 
 defineProps<{ ticket: AlbumTicket }>()
 </script>

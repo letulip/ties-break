@@ -76,12 +76,15 @@ import IconButton from '../ui/IconButton.vue'
 import AlbumSheet from '../album/AlbumSheet.vue'
 import AlbumChapterRail from '../album/AlbumChapterRail.vue'
 import AlbumChaptersSheet from '../album/AlbumChaptersSheet.vue'
-import { SHEET_GAP_PX, SHEET_STEP_PX } from '../album/albumWire'
-import type { AlbumBook } from '../album/albumWire'
+import { SHEET_GAP_PX, SHEET_STEP_PX } from '../../shared/protocol'
+import type { AlbumBook } from '../../shared/protocol'
 
-// ⚠⚠ TEMPORARY SHAPE – `AlbumBook` is `src/components/album/albumWire.ts`'s stand-in until the
-// engine's `src/engine/world/albumBook.ts` lands and the protocol re-exports it. See that file's
-// header. Nothing in this component derives a fact from the book; it pages through it.
+// ⭐ THE SHAPE IS THE ENGINE'S NOW (19.09, the seam wave). `AlbumBook` was built here against a
+// declared stand-in (`components/album/albumWire.ts`) while the engine half was in flight on the
+// same branch; that file is deleted and this reads `shared/protocol`, the app's own public path for
+// every wire type. Not one field moved in the join – the two declarations were identical to the
+// field – so nothing in this component changed with it. It derives no fact from the book; it pages
+// through it, and `App.vue` fetches it on entering the section (`game.loadAlbum()`).
 const props = defineProps<{ book: AlbumBook | null }>()
 const emit = defineEmits<{ back: [] }>()
 

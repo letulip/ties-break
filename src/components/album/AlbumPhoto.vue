@@ -12,10 +12,11 @@
 // them out of the build in as many words (§2.1): the frames are OUR paintings, chosen by week and
 // occasion, and the player uploads nothing. A dashed rectangle and an upload hint are the
 // prototype's scaffolding, not the design.
+import { computed } from 'vue'
 import Polaroid from '../ui/Polaroid.vue'
-import type { AlbumFrame } from './albumWire'
+import type { AlbumFrame } from '../../shared/protocol'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     frame: AlbumFrame
     /** A strip of tape across the top edge – a photograph that is STUCK rather than dropped. */
@@ -28,12 +29,27 @@ withDefaults(
   }>(),
   { tape: false, clip: false, tilt: 0, photoHeight: 150 },
 )
+
+/**
+ * ⚠⚠ THE ENGINE'S PATH IS BASE-RELATIVE AND THE BASE IS ADDED HERE – the app's own rule for every
+ * painting it owns, and `shared/protocol/album.ts` states it on the `art` field: «the engine may not
+ * read `import.meta.env` and a leading slash breaks a `BASE_PATH` deploy. The rendering side
+ * prefixes `import.meta.env.BASE_URL`, exactly as `useKidEmotion` does for every other painting.»
+ *
+ * ⚠ AND THE FAILURE IT PREVENTS ONLY EXISTS ON THE DEPLOYED BUILD, which is why it has to be a rule
+ * rather than something anybody notices. `deploy.yml` builds with `BASE_PATH=/ties-break/`, so the
+ * engine's `images/…` resolves against the PAGE's directory there and every frame in the album 404s;
+ * locally the base is `/` and the bare path works by accident. Same reasoning as `art/preload.ts`'s
+ * `base()`, `art/trophies.ts` and `AppIcon.vue` – nothing here is a new idea, it is the one the app
+ * already has.
+ */
+const src = computed(() => `${import.meta.env.BASE_URL}${props.frame.art}`)
 </script>
 
 <template>
   <div class="album-photo">
     <Polaroid
-      :src="frame.art"
+      :src="src"
       :alt="frame.alt"
       :caption="frame.caption"
       :tape="tape"

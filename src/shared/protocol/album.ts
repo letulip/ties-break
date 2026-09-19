@@ -9,13 +9,16 @@
 // fact the album added is `WorldState.prologueTrace` (v84), declared with the world.
 //
 // ⚠⚠ THESE SHAPES ARE `src/components/album/albumWire.ts`'s, MOVED HOME – that file's own header
-// says so: «THE ALBUM'S WIRE TYPE BELONGS TO THE ENGINE … re-exported through `src/shared/protocol/*`
+// said so: «THE ALBUM'S WIRE TYPE BELONGS TO THE ENGINE … re-exported through `src/shared/protocol/*`
 // … WHEN `world/albumBook.ts` LANDS: delete this file and re-point the four `import type` lines».
 // The mobile sheet, the three layouts and their mounted tests were built and MEASURED against these
 // exact fields, so the engine conforms to them rather than re-cutting a shape the screens already
-// render. Until the stand-in's importers are re-pointed (the album UI is in flight on this same
-// branch), `tests/albumBook.test.ts` §wire holds the two declarations assignable in BOTH
-// directions, so they cannot drift apart while both exist.
+// render.
+//
+// ⭐ THAT MOVE IS DONE (19.09). Every importer reads `shared/protocol` – the app's public path for a
+// wire type – and the stand-in is deleted, so this is the only declaration in the tree. It cost
+// nothing to join: the two shapes were IDENTICAL to the field, which is what `tests/albumBook.test.ts`
+// §wire was there to guarantee while both existed, and that pin retired with its subject.
 //
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
@@ -118,9 +121,10 @@ export interface AlbumBook {
 }
 
 // =================================================================================================
-// THE PAGE'S THREE SIZES – the constants the pager and the mounted tests share. Moved with the
-// wire from the stand-in, comments and all; see `src/components/album/albumWire.ts` for the full
-// arguments while it still exists.
+// THE PAGE'S THREE SIZES – the constants the pager and the mounted tests share. Moved with the wire
+// from the stand-in; the long-form arguments for each number went with the components that render
+// them (`AlbumScreen.vue`'s `readStep`, `AlbumPaper.vue`'s header) and the ladder holding all three
+// spellings together is `tests/component/album-wide.test.ts`.
 // =================================================================================================
 
 /** The sheet is 470 CSS pixels and is NEVER scaled to the screen – squeezed to a phone's 342px the

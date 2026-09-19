@@ -21,7 +21,7 @@
 // to the notes pasted ON the paper (`PaperNote`'s `ruled`), never to the page under them.
 //
 // ⚠ THE SIZE IS THE OTHER HALF OF THE OBJECT and it is not negotiable on a phone: 470px square, NOT
-// scaled down to the viewport. See `SHEET_PX` in `albumWire.ts` for the measured reason.
+// scaled down to the viewport. See `SHEET_PX` in `shared/protocol/album.ts` for the measured reason.
 //
 // ⭐⭐⭐ AND AT 768 / 1024 IT GROWS, TO 540 AND 556 – the README's own numbers – WITHOUT THE COLLAGE
 // INSIDE IT MOVING. That second clause is the whole of `.album-leaf` below, and it is worth the
@@ -44,7 +44,7 @@
 // ⚠ THE FOUR NUMBERS LIVE ON `:root` (src/style.css), NOT HERE, and the reason is one file over:
 // `AlbumScreen.vue`'s scroller has to be exactly one page wide past 768, and a custom property
 // declared in this scoped stylesheet does not reach that one. `tests/component/album-wide.test.ts`
-// holds the ladder to the README's three widths and to `albumWire.ts`'s constants.
+// holds the ladder to the README's three widths and to `shared/protocol/album.ts`'s constants.
 </script>
 
 <template>

@@ -14,7 +14,7 @@
 //
 // ⚠ ONE TONE, PENDING HIS PALETTE – the same open question as the pass (spec §9). Rank is meant to
 // deepen the colour; the ramp is his to give.
-import type { AlbumTag } from './albumWire'
+import type { AlbumTag } from '../../shared/protocol'
 
 defineProps<{ tag: AlbumTag }>()
 </script>

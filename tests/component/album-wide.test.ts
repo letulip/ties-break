@@ -12,7 +12,7 @@
 //                      `Back` present and `Career summary` absent, at all three widths.
 //
 // ⚠ AND ONE MECHANICAL CLAIM UNDERNEATH BOTH: the ladder in `src/style.css` and the constants in
-// `albumWire.ts` are two spellings of the README's three numbers, and the film's pitch is a third.
+// `shared/protocol/album.ts` are two spellings of the README's three numbers, and the film's pitch is a third.
 // Nothing in the app can notice them drifting apart – a page half a gutter out of register still
 // renders, still pages and still reads as an album – so they are JOINED here: scale × leaf = sheet,
 // step − sheet = gutter, and an arrow press moves the film by exactly that step, at each width.
@@ -45,7 +45,7 @@ import {
   SHEET_STEP_PX,
   SHEET_TABLET_PX,
   SHEET_TABLET_STEP_PX,
-} from '../../src/components/album/albumWire'
+} from '../../src/shared/protocol'
 import { DESKTOP, TABLET, setViewport, type Viewport } from './fits'
 import { bookOf, chapterOf } from './albumFixture'
 

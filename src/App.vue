@@ -99,7 +99,7 @@ import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
 import TrophiesScreen from './components/screens/TrophiesScreen.vue'
 import AlbumScreen from './components/screens/AlbumScreen.vue'
-import type { AlbumBook } from './components/album/albumWire'
+import type { AlbumBook } from './shared/protocol'
 // ⭐⭐⭐ ROUND 36 PHASE 6 – THE RAIL'S MINI-DASHBOARD, and it is the owner's ruling of 04.09: «надо
 // создать новые компоненты и показывать их только на десктоп», «карточки сквозные, одинаковые, как
 // мини-дашборд живут всегда в вертикальной полоске, т.е. на всех страницах». It is mounted HERE,
@@ -184,16 +184,34 @@ function onRecoveryImportPicked(e: Event): void {
 type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market' | 'trophies' | 'album'
 const tab = ref<TabId>('home')
 
-// ⚠⚠ TEMPORARY SEAM – THE ALBUM HAS NO SOURCE YET, AND THIS IS THE ONE LINE THAT CHANGES WHEN IT DOES.
+// ⭐⭐ THE ALBUM IS FETCHED WHEN THE SECTION OPENS AND DROPPED WHEN IT CLOSES (spec §8b: «Сборка
+// альбома – по требованию, не в недельном снимке»). Fifteen sheets of facts in every weekly
+// `Snapshot` would be paid for by every tick of every career, so the book is a QUERY – the worker's
+// `album` arm over the committed world, `game.loadAlbum()` – and the store holds none of it.
 //
-// Spec §8b: the album is assembled ON DEMAND when the section opens, like the market views, and NOT
-// in the weekly snapshot – fifteen sheets of facts in every tick would be paid for by every week of
-// every career. The assembly (`src/engine/world/albumBook.ts`) and its RPC were still being built on
-// this branch when the mobile layer landed, so the screen is handed `null` and draws its chrome.
-// When the call exists this becomes `await game.loadAlbum()` on entering the state, and nothing else
-// here or in `AlbumScreen.vue` moves – the screen already takes the book as a prop and derives
-// nothing from it.
+// ⚠ SO THIS REF IS THE BOOK'S ONLY HOME, AND CLEARING IT ON THE WAY OUT IS HALF THE MECHANISM. A ref
+// that kept its value would show career A's childhood to career B: the player leaves the album, loads
+// another save from More, opens the album again, and the first frame he sees is the previous girl's
+// while the fetch is still in flight. Null on leave means the screen draws its own empty chrome for
+// that moment instead – which is exactly what it draws before the first fetch of every career.
+//
+// ⚠ THE TICKET IS FOR THE LATE ANSWER, and it is the same failure one step further out: `loadAlbum`
+// is a round trip to the worker, so a fast leave-and-return can have TWO in flight, and the slower
+// one would land last and paint a book the player has already navigated away from. Only the newest
+// request may write, and only while the section is still open. `run()` has no re-entry latch of its
+// own (`advance` carries its own, for its own reason), so this is the honest place for it.
 const albumBook = ref<AlbumBook | null>(null)
+let albumRequest = 0
+watch(tab, async (now) => {
+  if (now !== 'album') {
+    albumRequest += 1
+    albumBook.value = null
+    return
+  }
+  const ticket = ++albumRequest
+  const book = await game.loadAlbum()
+  if (ticket === albumRequest) albumBook.value = book
+})
 
 // A SCREEN OPENS AT ITS TOP (owner, 31.07: «after a transition between screens, always land at the
 // top of the new screen - today a screen can open already scrolled»).

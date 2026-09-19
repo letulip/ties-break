@@ -14,7 +14,7 @@ import AlbumPaper from './AlbumPaper.vue'
 import AlbumLayoutA from './AlbumLayoutA.vue'
 import AlbumLayoutB from './AlbumLayoutB.vue'
 import AlbumLayoutC from './AlbumLayoutC.vue'
-import type { AlbumSheetModel } from './albumWire'
+import type { AlbumSheetModel } from '../../shared/protocol'
 
 defineProps<{ sheet: AlbumSheetModel }>()
 </script>

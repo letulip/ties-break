@@ -15,7 +15,7 @@
 // `tests/component/album-mobile.test.ts` measures it at 375x667 through the real cascade.
 import { ref } from 'vue'
 import { useDialogFocus } from '../../composables/dialogFocus'
-import type { AlbumChapter } from './albumWire'
+import type { AlbumChapter } from '../../shared/protocol'
 
 defineProps<{ chapters: readonly AlbumChapter[]; currentChapter: number }>()
 const emit = defineEmits<{ pick: [number]; close: [] }>()
