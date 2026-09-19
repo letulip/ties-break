@@ -3963,6 +3963,23 @@ export const ECONOMY = {
     // around 45-50, so twenty play+rest PAIRS cost ~55, so each pair costs ~2.75, so a rest week
     // must return within ~2.75 of what an average event drains. At the repriced surcharge an average
     // professional event costs ~12.5, so the rest week owes ~10 = base 8 + the 60/40 slider's 2.
+    //
+    // ⚠⚠⚠ THE OWNER RELEASED «ARRIVE AT THE OFF-SEASON DOOR AROUND 45-50» ON 19.09, AND THIS NUMBER
+    // IS NOT RE-DERIVED. He said it in as many words: «давай изменим эту цель, если она нам мешает.
+    // Цель – отпуска реже, а не после каждого турнира ездить всё-таки»
+    // (docs/specs/the-season-equation-2026-09.md §10b). The 45-50 was DERIVED from his holiday
+    // sentence above, never given: he has kept the sentence and released the arithmetic reading of
+    // it, because the reading turned out to be self-defeating - arriving at 45 means living near
+    // empty all year, and living near empty is what crosses `practice.rescueCondition` (80) eight
+    // times a season, which is the very complaint the new target is about.
+    //
+    // WHAT THIS MEANS FOR THE CHAIN ABOVE: it is now the HISTORY of how 8 was chosen, and not a live
+    // criterion anybody may re-derive a value from. The bar is holiday FREQUENCY. ⚠ The 8 itself did
+    // NOT move with the release - nothing measured asked it to, and the 19.09 pass refused to raise
+    // the professional base beside it (§10e: the natural-recovery arms buy ~0.15 holidays a point,
+    // because the ceiling discards most of what they pay, and raising it would also undo his own
+    // 22.08 ruling below). ONE dial moved instead, and it is the only recovery in the game the
+    // ceiling cannot reach because it lands on a week she PLAYS: `masseur.tourRecoveryPerRound`.
     // The vacation table below is denominated in exactly this unit (18/22/26/32/40/48 = 2.2 … 6.0
     // rest weeks at base 8), which is why the two tables have to move in one pass.
     //
@@ -4171,6 +4188,15 @@ export const ECONOMY = {
     // became "how many matches fit in a week". See `runFatigueLadderDeep` below and
     // `condition.ts ladderFor`. This array is therefore back to the exact five entries R15-6
     // measured, and every rung that reads it is a 32-draw, so its fifth entry is its last.
+    //
+    // ⚠⚠ MEASURED ON 19.09 AND DELIBERATELY NOT MOVED – docs/specs/the-season-equation-2026-09.md
+    // §10f. The owner named this lever FIRST («слив на глубине хода»), and a concave tail was built,
+    // benched at three strengths and works. It is held for his ruling rather than shipped, for one
+    // measured reason: the only strength that respects the shape rule he set on 14.08 (see
+    // `runFatigueLadderDeep` below – no round of a run may cost less than that run's first round)
+    // buys 0.2 holidays a season, while re-pricing all 199 rivals and moving ~40 keys of every
+    // frozen career. The strengths that would justify that cost are the ones that break his rule.
+    // The arms live in `tools/season-equation.ts` §5 (`--levers`); the grid is the spec's §10e.
     runFatigueLadderWta: [0, 1, 1, 1, 1] as number[],
     /** ⚠⚠ THE OWNER'S OWN CURVE FOR THE DEEP DRAWS, 14.08, given as the two bounds of a match at a
      *  Slam and a WTA 1000 round by round: min 5 6 7 7 7 7 7, max 7 8 9 9 9 9 9.
@@ -4186,7 +4212,15 @@ export const ECONOMY = {
      *
      *  ⚠ IT REPLACES A CAP OF MINE THAT MADE A CLIFF. I had stopped charging the surcharge after the
      *  fifth match, which priced the deep rounds at 2 against the shallow ones' 8 – «а сейчас немного
-     *  некорректно получается». A plateau is the right shape; a collapse was not. */
+     *  некорректно получается». A plateau is the right shape; a collapse was not.
+     *
+     *  ⚠⚠ AND THAT REJECTION IS A STANDING SHAPE RULE, WHICH THE 19.09 PASS READ OFF IT AND OBEYED.
+     *  The curve he wrote is monotone NON-DECREASING; the 19.09 ruling («немного уменьшить усталость
+     *  на глубоких турнирах») asks for the tail to come down, which supersedes that – but «НЕМНОГО»
+     *  is the qualifier, and the shape he threw out is the one where a late round costs a fraction of
+     *  an early one. The rule that survives both: THE TAIL MAY EASE BACK, BUT NO ROUND OF A RUN MAY
+     *  COST LESS THAN THAT RUN'S FIRST ROUND. Benched at three strengths and NOT shipped – see
+     *  `runFatigueLadderWta` above for the price, and the spec's §10d/§10f for the ruling it awaits. */
     runFatigueLadderDeep: [-2, -1, 0] as number[],
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
@@ -5652,7 +5686,39 @@ export const ECONOMY = {
     // the tour condition channel survives at half size but the deep-run WINS channel drops under
     // 2 SEM everywhere (8k +8.2±2.3 -> +4.7±2.6) and the 8k prize delta goes to noise – the fare
     // would buy a number the player cannot feel, the decorative-staff failure again.
-    tourRecoveryPerRound: 2,
+    //
+    // ⭐⭐ RAISED 2 -> 3 ON 19.09, AND IT ANSWERS THAT QUESTION FROM THE OTHER SIDE. The note above is
+    // KEPT because it is the record: he once asked whether +2 a round was already too much, and the
+    // measurement kept 2 rather than dropping to 1. On 19.09 he named this dial himself as one of
+    // four to RAISE – «слив на глубине хода и ТУРНИРНАЯ РАБОТА МАССАЖИСТА, а также обычная работа
+    // массажиста и естественное восстановление» – so the direction is his, and the later ruling
+    // governs the earlier worry.
+    //
+    // WHY IT IS THE RECOVERY WITH THE MOST ROOM, in one line: the season equation's §3 found that
+    // the CEILING, not the dial, is what a rest week runs into – she banks 4.7 of a 10.1 week,
+    // because a holiday has just put her at 100 – and this is the only recovery in the game that
+    // lands on a week she PLAYS, where the ceiling cannot eat it.
+    //
+    // ⚠⚠ AND +1 IS THE WHOLE STEP, FOR A MEASURED REASON, not for timidity. The relief is subtracted
+    // from the run's strain AFTER the fact and scales with (matches − 1), so raising it flattens
+    // what DEPTH is worth: at +2 a straight-sets W15 title nets EIGHT against a first-round exit's
+    // four, and the title week has stopped being twice the exit – the depth curve flattened rather
+    // than softened. At +1 it nets twelve against four, so a title is still three times an exit at
+    // the cheapest rung and five times at a Slam. `tools/season-equation.ts`'s `netDepthWitness`
+    // measures exactly that ratio per cell, because the relief is subtracted AFTER
+    // `tournamentRunStrain` has returned and no witness that reads the ladder can see it.
+    //
+    // MEASURED (20 careers x the wealthy·elite and middle·high presets walked to 28,
+    // `npm run bench:season-eq -- --levers --seeds 10 --toAge 28`): holidays a season 8.0 -> 7.2,
+    // the mean professional event 15.3 -> 13.7, weeks under 50 2.7 -> 2.0, injury prevalence and the
+    // ranking ceiling unmoved (49% and #12 -> #11). +2 was measured too – 6.3 holidays – and is in
+    // the spec's §10e if he wants the bigger step.
+    //
+    // ⚠ IT REACHES NO FROZEN CAREER AND NO RIVAL, PROVED RATHER THAN ARGUED. `masseurTourRelief` is
+    // applied in ONE place, `world.ts finalizeTournament`, for the kid alone, and the gate is a
+    // counting W-series result no 156-week career reaches. `tools/frozen-key-diff.ts` on 5/0, 8/0
+    // and 0/1 with this change alone: 0 of 95 / 95 / 96 keys moved, `rngMain` byte-identical.
+    tourRecoveryPerRound: 3,
     // ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
     // массажа по возвращении»): when he was NOT flown to a tournament, the first non-played week
     // after it pays one extra session's worth of recovery on top of the ordinary week – the home
