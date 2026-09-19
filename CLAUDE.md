@@ -123,7 +123,7 @@ docs/review/     2026-08 full review + P1–P9 proposals
 - `world.ts` imports the values back and **re-exports them under their historical names**: **hundreds of
   files** import from `engine/world` and that public API must not change. ⚠ Count it, do not quote it –
   three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
-  right" under different scopes, which is how a stale number survives, as **280 (19.08)** did here:
+  right" under different scopes, which is how a stale number survives, as **280 (19.08 – 698 on 19.09, so run it)** did here:
   ```bash
   git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
   ```
@@ -166,12 +166,6 @@ docs/review/     2026-08 full review + P1–P9 proposals
   error. Believing the notice would have pushed a red branch and reported it green. **Append
   `echo "CHECK_EXIT=$?"` to the log inside the command and read the verdict out of the FILE.** The
   notification tells you the run finished; it does not tell you it passed.
-  (d) ⚠⚠ AND THE SENTINEL CAN BE ABSENT WHILE THE WORK SUCCEEDS (19.09). Twice in wave 7 a
-  backgrounded run was reported "failed with exit code 144" while the command itself ran to
-  completion: the WRAPPER died before the `echo "…_EXIT=$?"` line could execute, so the file-reading
-  technique above silently cannot fire. **A missing sentinel is not a failure and not a pass – it is
-  no measurement at all.** Re-run, or wait on the PID; never report a verdict from a log whose
-  sentinel line is not there.
 - **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
   older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
   Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was
@@ -217,13 +211,6 @@ docs/review/     2026-08 full review + P1–P9 proposals
   and nothing objects until it is taller than a phone. **So any dialog you add or lengthen gets a
   mounted assertion that its dismiss control's box is inside a 375x667 viewport**, and prove it by
   mutating: a test that cannot fail on the too-tall version is not this test.
-- **⚠⚠ AND `git commit --amend` IS NOT SAFE EITHER, PATHSPEC OR NOT (19.09).** The note below says
-  to use the pathspec form; an amend defeats it from the other side. Measured in wave 7: a builder
-  amended their own commit with a pathspec while a colleague's commit had landed on top, and the
-  amend **swallowed the colleague's commit under the builder's message**. It was repaired
-  (`git reset --soft <their sha>`, re-commit) and nothing was lost – but only because the builder
-  noticed. **In a shared checkout, never amend: add a second commit.** A message with a wrong number
-  in it is cheaper than a commit that ate somebody else's work.
 - **With concurrent agents in ONE checkout, `git commit` takes the whole INDEX, not your files.**
   `git add a.ts b.ts && git commit -m …` looks like it commits two files; it commits everything
   anybody has staged. Measured here on 13.08: a two-file ledger commit swallowed another agent's
