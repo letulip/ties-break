@@ -173,6 +173,11 @@ import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
 import { fireMilestone, captureMilestone, captureBreakEven, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, seasonWrapDue } from './world/milestones'
 export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven, maybeFireSeasonWrapUp, seasonWrapDue }
+// ⭐⭐⭐ ROUND 44 #7 – the four salaried seats' year-end post, raised one line under the wrap-up in
+// `world/phaseAiWeek.ts`. Re-exported under its own name on the barrel's standing rule: the import
+// list and the re-export list carry the SAME names, so a caller never learns which module owns one.
+import { seatWeeksServedIn, settleStaffLetters } from './world/staffLetters'
+export { seatWeeksServedIn, settleStaffLetters }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
 // extracted module here keeps.

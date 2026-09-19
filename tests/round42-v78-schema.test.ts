@@ -600,6 +600,12 @@ describe('round 42 v78 G – the sparring seat is two keys and no behaviour', ()
       'engine/world/snapshot.ts',
       'engine/world/sparring.ts',
       'engine/world/sponsors.ts',
+      // ⭐⭐ ROUND 44 #7 – the staff's year-end post reads `sparringHired` as the seat's EMPLOYMENT
+      // GATE and nothing else: it decides whether the hitting partner writes a letter at all. It
+      // reads neither the rung nor the travel stance, which is the census working rather than the
+      // seat sprawling – a letter that reported a rung would be claiming a fact the world keeps only
+      // for TODAY (see StaffLetterTerms on why this seat's letter is the shortest of the four).
+      'engine/world/staffLetters.ts',
       'shared/protocol/snapshot.ts',
     ])
   })

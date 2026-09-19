@@ -204,6 +204,8 @@ export type {
   ShootClashPrompt,
   CallUpLetterTerms,
   BuildLetterTerms,
+  StaffSeat,
+  StaffLetterTerms,
   OfferTerms,
   Offer,
   CoachMarketRow,

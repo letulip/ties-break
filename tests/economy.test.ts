@@ -351,7 +351,13 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     // two balances are identical to the cent until somebody signs something.
     expect(sponsored.fundsCents).toBe(plain.fundsCents)
     expect(sponsored.offers.filter((o) => o.state === 'open')).toHaveLength(1)
-    expect(plain.offers).toHaveLength(0)
+    // ⚠ SCOPED TO THE KIT POST (round 44 #7). This case is about whether THE SHOP writes, and the
+    // inbox is no longer the shop's alone: the four salaried seats now post a year-end letter of
+    // their own on the wrap week (engine/world/staffLetters.ts), so an unsponsored career reaches
+    // week 52 holding a coach's letter. The claim is unchanged and so is its strength – the sentence
+    // above it («the two balances are identical to the cent») is the slice, and the staff post moves
+    // no money at all.
+    expect(plain.offers.filter((o) => o.kind === 'kit')).toHaveLength(0)
     // ...and the week the window closes on takes the letter back without touching either stream.
     tickWeek(plain, rngA)
     tickWeek(sponsored, rngB)

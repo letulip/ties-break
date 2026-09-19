@@ -6,7 +6,8 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
-import type { TierId } from '../../engine/season/types'
+import type { LadderTrack, TierId } from '../../engine/season/types'
+import type { PsyFocus } from '../../engine/world/state'
 import type { CoachTier, PlayStyle } from './profile'
 
 // --- THE INBOX (schema v32) --------------------------------------------------------------------
@@ -43,13 +44,21 @@ import type { CoachTier, PlayStyle } from './profile'
  *  so a fund bought and held the same week writes nothing, because the letter exists for the WAIT.
  *  See `BuildLetterTerms`, and `deliverAssets` for why it is raised where it is.
  *
+ *  ⭐⭐⭐ `staff` IS THE YEAR-END LETTER FROM THE PEOPLE THE FAMILY PAYS. The owner, 18.09, having
+ *  finished a career: «письмо от тренера по итогу года мне так и не пришло, да и ни от одного
+ *  специалиста не пришло.» It was never a defect – no such letter had ever been built. The academy
+ *  writes at the year's end, the brands write, the shop writes; the four salaried seats said
+ *  nothing. One letter per HIRED seat per season, raised on the wrap week off the season row the
+ *  wrap-up has just banked. See `StaffLetterTerms` for what each seat may state and – the harder
+ *  half – for what the world does not retain and so no seat may claim.
+ *
  *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
  *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
  *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
  *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
  *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
  *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
-export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up' | 'build'
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up' | 'build' | 'staff'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -1206,6 +1215,112 @@ export interface BuildLetterTerms {
   orderedWeek: number
 }
 
+/** WHICH OF THE FOUR SALARIED SEATS WROTE. A closed union, and every member has a producer – the
+ *  `PenaltyReason` rule above, quoted rather than re-argued: a seat reserved here for a wave that
+ *  has not shipped is a value every reader has to consider and no career can ever contain. */
+export type StaffSeat = 'coach' | 'masseur' | 'psychologist' | 'sparring'
+
+/** WHAT A STAFF LETTER STATES – one seat's report on one season, written on the wrap week off the
+ *  facts the world had banked that morning.
+ *
+ *  ⚠⚠ THE HARD PART OF THIS SHAPE IS WHAT IS **NOT** IN IT, and every absence below was measured
+ *  against the tree rather than assumed. The four seats are wildly unequal in what they retain, and
+ *  the design decision this whole item turned on was to let the poorer seats write SHORTER letters
+ *  rather than to invent a figure or to add persisted state for one:
+ *
+ *    · the MASSEUR cannot say a word about KNOCKS. `KnockRecord` (protocol/health.ts) carries no
+ *      masseur field of any kind and `retireKnock` writes none – his cadence lives entirely inside
+ *      the `world.injury !== null` arm of `rollInjury`, and a knock rest week never meets it. «The
+ *      knocks that passed through him» is not a fact this world holds, so no letter states it.
+ *    · the PSYCHOLOGIST can name the year's FOCUS but can report what it GAVE for exactly one of
+ *      the five. `composureBonus` is the only cumulative counter any focus has, and it belongs to
+ *      `'coolhead'`; `'recovery'`, `'listen'`, `'herself'` and `'publicLife'` retain nothing at all.
+ *      ⚠ And even that one is a DECAYING STOCK rather than a ledger, so the letter may say where she
+ *      stands and may NOT say what this year added – see `composureBonus` below.
+ *    · the HITTING PARTNER retains nothing whatever beyond his own employment. His one channel is
+ *      `FormWeek.rustCut`, `FormWeek` is built, consumed and discarded inside a single week, and his
+ *      contribution is not separable from `world.form` even in principle. His letter is therefore
+ *      the shortest of the four BY CONSTRUCTION, which is honest rather than thin.
+ *    · NO SEAT reports FORM. `world.form` does not cross the wire at all – no snapshot field, no
+ *      number, no Mood word and no diary line (the owner's ruling O2, 16.09; see `WorldState.form`).
+ *      A letter is a surface, and this surface obeys that ruling like every other.
+ *    · NO SEAT reports what it was PAID that season. `financeWeeks.byCategory['staff']` is one
+ *      undifferentiated bucket holding all four seats, so per-seat money for a past season is not
+ *      recoverable – and the ledger prunes at 60 weeks besides.
+ *
+ *  ⚠ NUMBERS, NEVER ASSEMBLED PROSE – `AcademyLetterTerms`' own rule, and it binds here for the
+ *  identical reason: `world.offers` is persisted, so a sentence frozen into a save would go on
+ *  stating a reading that a later tune has moved. `OfferLetter.vue` rebuilds every sentence from
+ *  these fields on each read. */
+export interface StaffLetterTerms {
+  /** who wrote – also half the letter's IDENTITY (`staffLetterId` keys on the seat and the season
+   *  and on nothing else, so one seat writes once about one year). */
+  seat: StaffSeat
+  /** the season being reported – the one that has just finished, and the other half of the id. */
+  seasonIndex: number
+  /** HOW MANY WEEKS OF THAT SEASON THE SEAT WAS ACTUALLY ON THE PAYROLL, derived from the kept,
+   *  tagged `*-since-` ledger rows every hire/release writes (`pruneEvents` never touches a kept
+   *  row, so the whole employment history is in every save that ever had the seat).
+   *
+   *  ⚠ IT IS THE SUM OF THE HIRED SPANS INSIDE THE SEASON, never «weeks since the first hire» –
+   *  `masseurWeeksServedAt`'s own rule, and for its reason: weeks he was not employed are weeks he
+   *  did not work. It is also the gate: see `settleStaffLetters` for the half-a-season rule and the
+   *  precedent it is taken from. */
+  weeksServed: number
+  /** COACH ONLY – her record that season, off the banked `SeasonHistoryEntry` rather than re-folded
+   *  here, so the letter and the Stats table can never disagree. */
+  wins?: number
+  losses?: number
+  /** COACH ONLY – best tournament finish index that season (0 = champion). ⚠ ABSENT MEANS «no
+   *  finish that scored», never zero – `SeasonHistoryEntry.bestFinish`'s own contract. */
+  bestFinish?: number
+  /** COACH ONLY – titles won inside that season, counted off `trophiesByTier`, which stores absolute
+   *  WEEKS and is never pruned. 0 is a real answer here and is stated. */
+  titles?: number
+  /** COACH ONLY – where she finished the year, and the table it is a rank ON. ⚠ Both are absent
+   *  together on a row banked before v46, which carries no `byTrack` and whose figures cannot be
+   *  invented: absent is «not recorded», which is the season mirror's own distinction. */
+  endRank?: number
+  rankTrack?: LadderTrack
+  /** COACH ONLY – the pair's chemistry, and it is present **only when the gauge is already showing
+   *  it**.
+   *
+   *  ⚠⚠ THIS IS THE ONE FIELD ON THE WHOLE SHAPE THAT COULD LEAK A HIDDEN READING, and the guard is
+   *  not a threshold written here – it is `chemistryReading(pair, seed, coachId)` itself, the same
+   *  function the coach card's ring calls. That function compares `Math.abs(pair.chem)` against a
+   *  bar DRAWN PER PAIR off `seed:chemistry:readable:<coachId>`, so the bar differs by career and by
+   *  coach; comparing against `ECONOMY.chemistry.readableFloor` instead is a named RED arm in
+   *  `tests/round45-chemistry-readable.test.ts`. Absent here therefore means exactly what an empty
+   *  ring means, and the letter says nothing at all about the pair when it is absent.
+   *
+   *  ⚠ AND `CoachPair.phase` IS NEVER CARRIED. The weather may not be shown – printing a draw turns
+   *  a seeded relationship into a forecast (engine/chemistry.ts). */
+  chem?: number
+  /** MASSEUR ONLY – how many of that season's layoffs he demonstrably worked, and how many weeks of
+   *  them he bought back. Counted off `injuryHistory` rows whose CLEAR week falls in the season and
+   *  which carry `weeksSaved` – that key is written only when he actually shortened the layoff, so
+   *  a row carrying it is proof of his work rather than an inference from «he was on the payroll».
+   *
+   *  ⚠ `injuryHistory` PRUNES TO THE LAST 20 ROWS, so a career with more than twenty layoffs behind
+   *  it can under-count an old season. It cannot over-count, which is the direction that matters for
+   *  a letter, and no counter exists anywhere to do better – see the shape's header. */
+  layoffs?: number
+  weeksSaved?: number
+  /** PSYCHOLOGIST ONLY – what the seat worked on that year, and present ONLY when
+   *  `psychologistFocusSeason` still stamps the season being reported. The field holds ONE pick and
+   *  is overwritten by the next one, so a letter that named it unguarded would print next year's
+   *  focus over last year's season the moment the parent re-picked. */
+  focus?: PsyFocus
+  /** PSYCHOLOGIST ONLY, and `'coolhead'` only – where her composure ceiling STANDS above her own
+   *  nature, in the tenths `WorldState.composureBonus` is kept in.
+   *
+   *  ⚠⚠ IT IS A STANDING LEVEL AND NEVER A SEASON'S GAIN, and the copy must not blur the two: the
+   *  counter moves up on every week the nerve focus is worked and DECAYS on every week it is not, so
+   *  «this year bought you N» is a claim the number cannot support. «She stands N above» is what it
+   *  says, and is all it says. */
+  composureBonus?: number
+}
+
 export type OfferTerms =
   | KitOfferTerms
   | EntryLetterTerms
@@ -1214,6 +1329,7 @@ export type OfferTerms =
   | AdOfferTerms
   | CallUpLetterTerms
   | BuildLetterTerms
+  | StaffLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

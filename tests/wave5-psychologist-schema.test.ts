@@ -890,6 +890,12 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       'engine/spirit.ts',
       'engine/world/psychologist.ts',
       'engine/world/snapshot.ts',
+      // ⭐⭐ ROUND 44 #7 – the staff's year-end post reads `psychologistFocus` together with
+      // `psychologistFocusSeason`, and it reads the pair PRECISELY BECAUSE the field is one slot that
+      // the next pick overwrites: the letter may name the year's subject only while the stamp still
+      // points at the season it is reporting. That guard is the reader, and it is T3's own rule used
+      // rather than restated.
+      'engine/world/staffLetters.ts',
       'engine/world/state.ts',
       'engine/world.ts',
       'shared/protocol/snapshot.ts',
