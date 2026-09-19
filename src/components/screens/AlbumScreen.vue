@@ -179,9 +179,21 @@ function pickChapter(firstSheet: number): void {
 
     <!-- THE WINDOW. Narrower than the page on purpose; see the header. -->
     <div class="album-stage">
+      <!-- ⚠⚠ `tabindex="0"` IS AN ACCESSIBILITY FIX AND NOT DECORATION (19.09, found by the e2e axe
+           pass the moment this screen got a station). WCAG's `scrollable-region-focusable`, impact
+           SERIOUS: a box that scrolls must be reachable from a keyboard, either because something
+           inside it can take focus or because it can itself. THIS FILM IS THE ONE SCROLLER IN THE APP
+           WHERE NEITHER WAS TRUE – every other horizontal scroller here holds buttons or links, so
+           the rule has never fired before; a sheet of this album holds photographs and handwriting
+           and not one focusable thing, so without this the whole page was pannable by finger and by
+           mouse and by nothing else. One attribute makes the film a tab stop whose arrow keys scroll
+           it, which is the browser's own behaviour and needs no handler from us.
+           ⚠ NO `aria-label` WITH IT, DELIBERATELY: that would be a new sentence in the product, and
+           the copy is the owner's (invariant 4). The rule asks for reachability, not for a name. -->
       <div
         ref="pan"
         class="album-pan"
+        tabindex="0"
         :style="{ '--album-step': `${SHEET_STEP_PX}px`, '--album-gap': `${SHEET_GAP_PX}px` }"
         @scroll.passive="onScroll"
       >
