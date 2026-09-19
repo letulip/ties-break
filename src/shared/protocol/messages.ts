@@ -15,6 +15,7 @@ import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, ShootClashChoice } from './offers'
 import type { PlayerProfile, PrologueHandover, WeekPlan } from './profile'
+import type { AlbumBook } from './album'
 import type { Snapshot } from './snapshot'
 
 export interface SlotMeta {
@@ -267,6 +268,11 @@ export type ToWorker =
   | { id: number; type: 'restoreSlot'; slot: string }
   // W1-INTEGRITY-A: read-only snapshot of the committed world – the stale-revision refresh path.
   | { id: number; type: 'getSnapshot' }
+  // ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по требованию,
+  // не в недельном снимке» – fifteen sheets of facts in every weekly Snapshot would bloat every
+  // tick). A QUERY in the strict sense, `getSnapshot`'s own shape: read-only against the committed
+  // world, no `baseRevision`, assembled fresh on every ask and persisted nowhere.
+  | { id: number; type: 'album' }
   | { id: number; type: 'listSlots'; careerId?: string }
   | { id: number; type: 'deleteSlot'; slot: string }
   | { id: number; type: 'listCareers' }
@@ -296,6 +302,7 @@ export type ToUI =
   | { id: number; ok: true; type: 'careers'; careers: CareerMeta[]; revision: number }
   | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string; revision: number }
   | { id: number; ok: true; type: 'peek'; peek: SavePeek; revision: number }
+  | { id: number; ok: true; type: 'album'; album: AlbumBook; revision: number }
   | {
       id: number
       ok: false
@@ -342,6 +349,7 @@ export type SlotsReply = Extract<OkReply, { type: 'slots' }>
 export type CareersReply = Extract<OkReply, { type: 'careers' }>
 export type ExportedReply = Extract<OkReply, { type: 'exported' }>
 export type PeekReply = Extract<OkReply, { type: 'peek' }>
+export type AlbumReply = Extract<OkReply, { type: 'album' }>
 
 /**
  * The reply each command answers with, on success. Grouped in the worker's own dispatch order so
@@ -405,6 +413,7 @@ export const REPLY_BY_COMMAND = {
   deleteCareer: 'careers',
   // queries
   getSnapshot: 'snapshot',
+  album: 'album',
   listSlots: 'slots',
   listCareers: 'careers',
   exportSave: 'exported',

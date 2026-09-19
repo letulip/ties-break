@@ -95,6 +95,9 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     return {
       // -- queries and persistence, against the imported career -----------------------------
       getSnapshot: { type: 'getSnapshot' },
+      // ⭐ the album, on demand (docs/specs/the-album-2026-09.md §8b) – a query against the imported
+      // career, `getSnapshot`'s own shape: read-only, no baseRevision, answered with its own arm.
+      album: { type: 'album' },
       listSlots: { type: 'listSlots' },
       listCareers: { type: 'listCareers' },
       exportSave: { type: 'exportSave' },
@@ -219,13 +222,15 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     }
 
     // ⚠ THE VACUITY GUARD. "error or the right arm" is satisfied by a worker that refuses
-    // everything, so the run has to prove it actually exercised each SHAPE. All five arms of
+    // everything, so the run has to prove it actually exercised each SHAPE. All six arms of
     // ToUI's ok half must have been produced by a real command in the loop above.
+    // ⭐ `album` joined the set with its own arm (docs/specs/the-album-2026-09.md §8b) – the sixth,
+    // and the welcome red this guard exists for: a new ok arm may not ship unexercised.
     const seen = new Set([...arms.values()].filter((a) => a !== 'refused'))
-    expect([...seen].sort()).toEqual(['careers', 'exported', 'peek', 'slots', 'snapshot'])
-    // ...and these seven in particular must have COMMITTED, one per arm plus the two mutation
+    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'peek', 'slots', 'snapshot'])
+    // ...and these eight in particular must have COMMITTED, one per arm plus the two mutation
     // paths, so a future refusal creeping into a load-bearing command cannot hide inside the set.
-    for (const command of ['getSnapshot', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
+    for (const command of ['getSnapshot', 'album', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
       expect(arms.get(command), `'${command}' must succeed on a quiet career`).toBe(REPLY_BY_COMMAND[command])
     }
   }, 60_000)

@@ -290,6 +290,7 @@ export type {
   CareersReply,
   ExportedReply,
   PeekReply,
+  AlbumReply,
   OkReplyFor,
   ReplyFor,
 } from './protocol/messages'

@@ -1,4 +1,5 @@
 import {
+  assembleAlbum,
   createWorld,
   tickWeek,
   advanceWeeks,
@@ -726,6 +727,16 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // committed world instead of guessing. Read-only by construction.
       if (!world) throw new Error('No active career')
       return snapshotMsg(msg.id, world)
+    }
+    case 'album': {
+      // ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b) – a query in the strict sense,
+      // `getSnapshot`'s own shape: read-only against the COMMITTED world (never a candidate – no
+      // mutation is in flight on this path), assembled fresh on every ask and persisted nowhere.
+      // `assembleAlbum` is a pure read whose only randomness is the purpose-scoped
+      // `seed:album:flavour:*` sub-stream, so it cannot move `world.rngMain` and cannot commit
+      // anything: `committedRevision` is reported unchanged, which is what a query means here.
+      if (!world) throw new Error('No active career')
+      return { id: msg.id, ok: true, type: 'album', album: assembleAlbum(world), revision: committedRevision }
     }
     case 'listSlots': {
       const careerId = msg.careerId ?? world?.careerId

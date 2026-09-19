@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { request, WorkerRestartError } from '../worker/client'
 import {
   DEFAULT_PROFILE,
+  type AlbumBook,
   type CareerMeta,
   type CareersReply,
   type CollegeTier,
@@ -308,6 +309,20 @@ export const useGameStore = defineStore('game', {
         await this.refreshCareers()
         await this.refreshSlots()
       })
+    },
+    /** ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по
+     *  требованию, не в недельном снимке»). A read-only query against the committed world –
+     *  `getSnapshot`'s own shape – returning the assembled book, or null on a refusal (no active
+     *  career, a restarted worker), which the album screen already draws as its empty chrome. The
+     *  store HOLDS no book: the section owns its copy for exactly as long as it is open, so a
+     *  career switch cannot leave a stale album cached behind a live one. */
+    async loadAlbum(): Promise<AlbumBook | null> {
+      return (
+        (await this.run(async () => {
+          const res = this.takeOk(await request({ type: 'album' }))
+          return expectArm(res, 'album').album
+        })) ?? null
+      )
     },
     async tick(weeks: number) {
       await this.run(async () => {
