@@ -313,6 +313,9 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
+// ⭐ THE ALBUM BOOK (docs/specs/the-album-2026-09.md) – the on-demand assembly the worker's `album`
+// query serves, plus the mood table and the draft chapter headings for the tests and the owner's pass.
+export { assembleAlbum, ALBUM_MOOD, ALBUM_CHAPTER_TITLES } from './world/albumBook'
 import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.

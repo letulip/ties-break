@@ -814,7 +814,21 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       // and the leaning having none was a statement about the WAVE's order, not about the design –
       // §2a's rule is «no reader and no line ever SEES the leaning», and a pass that maintains it is
       // not a surface.
-      expect(named, `${key}`).toEqual([WRITERS[0], 'engine/spirit.ts', WRITERS[1], WRITERS[2]])
+      //
+      // ⚠⚠ RE-AIMED 19.09 BY THE ALBUM's ARC, AND THE LEANING's SECOND READER IS A RULING, NOT A
+      // LEAK. The album spec's §2.8 lifts the fog law for the album («в финале прятать больше
+      // нечего»), and the corpus document keys the arc on «where `wallsLean` went» in as many words
+      // (docs/specs/album-corpus-2026-09.md §5: «The sign is the engine's»). So `wallsLean` is named
+      // in `engine/world/albumBook.ts` – the arc's direction read, engine-side, on the closing sheet
+      // of a FINISHED career – and the two per-key lists diverge again. ⚠ STILL NOT WEAKENED: both
+      // lists stay EXACT and ordered, a further module naming either key is red, `wallsFlipped`
+      // gains nothing (the arc reads the LEAN, the corpus's own word), and the no-surface sweep
+      // below still holds – what reaches the UI is the corpus's SENTENCE, never a number or an axis.
+      const expected =
+        key === 'wallsLean'
+          ? [WRITERS[0], 'engine/spirit.ts', 'engine/world/albumBook.ts', WRITERS[1], WRITERS[2]]
+          : [WRITERS[0], 'engine/spirit.ts', WRITERS[1], WRITERS[2]]
+      expect(named, `${key}`).toEqual(expected)
     }
     // ...and neither wall is on the wire, which is the other half of the same claim: no component,
     // store or composable can be reading a field the snapshot does not carry. §2a is explicit that
