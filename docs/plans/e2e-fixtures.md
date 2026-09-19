@@ -124,19 +124,19 @@ the manifest at runtime and none of it is read from here.
 
 | fixture | seed | week | age | funds | rank | size | what it is for |
 |---|---|---|---|---|---|---|---|
-| `fresh` | `e2e-fresh-0` | 0 | 13 | $25,000 | 120 | 23.4 KiB | the boot path, onboarding, the empty screens |
-| `junior` | `e2e-junior-0` | 120 | 15 | $9,464 | 60 | 60.2 KiB | first ranking earned – ladder, standings, a feed with something in it |
-| `pro` | `e2e-pro-0` | 412 | 21 | $38,851 | 83 | 76.6 KiB | eight seasons in, **inside the sponsor window with two unopened letters**, ledgers full |
-| `sinking` | `e2e-sinking-0` | 67 | 14 | **-$506** | 89 | 53.1 KiB | **six weeks under water of twelve** – a warning a career can still be ticked out of |
-| `broke` | `e2e-broke-0` | 73 | 14 | **-$2,502** | 67 | 52.0 KiB | eleven weeks under water – one week short of the bankruptcy latch |
-| `ending` | `e2e-ending-0` | 282 | 19 | $6,822 | 41 | 77.0 KiB | past the fork at nineteen, racket down, career read-only |
-| `unheard` | `e2e-unheard-0` | 242 | 18 | $6,450 | 5 | 79.8 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
-| `soft` | `e2e-soft-1` | 9 | 13 | $25,324 | 127 | 34.1 KiB | the week she came by with something **small** – a tier-1 row live inside its three-week window, unanswered, on a week the engine never stopped |
-| `breakup` | `e2e-breakup-0` | 157 | 16 | $1,211 | 31 | 61.4 KiB | the week **before it ends** – a live attachment the parent was told about (`p:146`, met at 147), one press from the told-NOW card, her Mood two rungs lower behind it |
-| `belated` | `e2e-belated-472` | 363 | 20 | $494,092 | 79 | 78.2 KiB | the week before he **hears of it** – an attachment that was over before its `knownWeek` came round, one press from the told-LATE card, and no `'met'` beat is ever raised for it |
-| `engaged` | `e2e-engaged-41` | 681 | 26 | $2,224,583 | 78 | 78.0 KiB | one press from the **engagement** – twenty-six, a year-deep attachment, and NINE ordinary weeks behind it, so the wedding at `weeksAfterEngagement` can be walked to in a browser. The oldest career in the corpus by five years, because the gate is 23 and nothing else came close |
+| `fresh` | `e2e-fresh-0` | 0 | 13 | $25,000 | 120 | 23.7 KiB | the boot path, onboarding, the empty screens |
+| `junior` | `e2e-junior-19` | 120 | 15 | $9,464 | 60 | 58.2 KiB | first ranking earned – ladder, standings, a feed with something in it |
+| `pro` | `e2e-pro-18` | 412 | 21 | $38,851 | 83 | 80.6 KiB | eight seasons in, **inside the sponsor window with two unopened letters**, ledgers full |
+| `sinking` | `e2e-sinking-2` | 86 | 14 | **-$506** | 89 | 58.4 KiB | **six weeks under water of twelve** – a warning a career can still be ticked out of |
+| `broke` | `e2e-broke-0` | 86 | 14 | **-$2,502** | 67 | 59.4 KiB | eleven weeks under water – one week short of the bankruptcy latch |
+| `ending` | `e2e-ending-0` | 242 | 19 | $6,822 | 41 | 80.4 KiB | past the fork at nineteen, racket down, career read-only |
+| `unheard` | `e2e-unheard-13` | 242 | 18 | $6,450 | 5 | 81.3 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
+| `soft` | `e2e-soft-1` | 9 | 13 | $25,324 | 127 | 34.6 KiB | the week she came by with something **small** – a tier-1 row live inside its three-week window, unanswered, on a week the engine never stopped |
+| `breakup` | `e2e-breakup-52` | 261 | 16 | $1,211 | 31 | 79.9 KiB | the week **before it ends** – a live attachment the parent was told about (`p:146`, met at 147), one press from the told-NOW card, her Mood two rungs lower behind it |
+| `belated` | `e2e-belated-37` | 351 | 20 | $494,092 | 79 | 79.3 KiB | the week before he **hears of it** – an attachment that was over before its `knownWeek` came round, one press from the told-LATE card, and no `'met'` beat is ever raised for it |
+| `engaged` | `e2e-engaged-41` | 681 | 26 | $2,224,583 | 78 | 78.3 KiB | one press from the **engagement** – twenty-six, a year-deep attachment, and NINE ordinary weeks behind it, so the wedding at `weeksAfterEngagement` can be walked to in a browser. The oldest career in the corpus by five years, because the gate is 23 and nothing else came close |
 
-**713 KiB of saves**, the largest single file 84 KiB. That is not a nuisance and there is no
+**714 KiB of saves**, the largest single file 81 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of
 uncompressed JSON, and one version's JSON alone is ~372 KB – nearly five times the week-412 fixture,
 because these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
