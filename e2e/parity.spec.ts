@@ -192,8 +192,8 @@
 //      there is nothing to pan to and the pill has nothing to say.
 //
 //      ⚠ HE HAS NOT BEEN ASKED, AND THE READING MAY BE WRONG. So it is built to be undone in one
-//      move: DELETE the `describe` block at the bottom of this file and the two constants it names
-//      from `EXEMPT_REGIONS` / `ariaFingerprint`, and `AlbumScreen.vue`'s station goes red again with
+//      move: DELETE the `describe` block at the bottom of this file and drop `ALBUM_EXEMPT` from
+//      `EXEMPT_REGIONS` and `albumTokens` from `ariaFingerprint`, and the station goes red again with
 //      exactly the two tokens it was red with on 19.09 – `button "Chapters"` and `button "Next
 //      half"`. Nothing else in this file depends on it. If he disagrees, the red is the answer.
 //
@@ -359,7 +359,8 @@ const IDENTITY_BLOCK = `${RAIL_IDENTITY}, ${HOME_IDENTITY}`
  * ⚠⚠ READ THE FOURTH BLOCK OF THIS FILE'S HEADER BEFORE THIS LINE. Unlike the three above, this
  * exemption is an ARCHITECT'S READING of the owner's design archive and not a sentence he wrote in
  * answer to this check; the header says so, says what deleting it restores, and is where the quote
- * lives. These two constants are only the place.
+ * lives. The constants below are only the PLACE - two exempt regions, spelled as three selectors
+ * because the chapter slot is drawn in two shapes.
  *
  * THE CHAPTER SLOT IS WHEREVER THE APP DRAWS THE CHAPTER NAVIGATION, and the README gives that one
  * list three shapes: a grid at 1024, the same strip panned sideways at 768, and a BUTTON at 390
@@ -1759,7 +1760,7 @@ test.describe("the week pager's arrows are exempt – and the exemption is bound
 // ⚠⚠ THE PROVENANCE IS IN THIS FILE'S HEADER AND IS DELIBERATELY NOT REPEATED HERE, because it is
 // the part a reader must not skim: the quote is the owner's own design README of 19.09.2026, the
 // READING of it is an architect's, he has not been asked, and deleting this `describe` block plus the
-// two constants restores the red. What follows is only the machinery.
+// two lines the header names restores the red. What follows is only the machinery.
 //
 // Phase 6's shape, applied to a screen that hides a control at BOTH ends of the ladder: the door is
 // on the phone and not on the desktop, the rail is on the desktop and not on the phone, and they are
@@ -1769,8 +1770,15 @@ test.describe("the week pager's arrows are exempt – and the exemption is bound
 //
 // ⚠ THEY WALK THE STATION MAP'S OWN ROUTE rather than a second copy of it, for the reason
 // `e2e/stations.ts` gives for existing at all: two walks to one screen drift, and the day they
-// disagreed nobody would know which one was the app. `pro` earns six sheets and five chapters
-// (measured 19.09), which is what makes every floor below a real one rather than a hopeful `>= 0`.
+// disagreed nobody would know which one was the app.
+//
+// ⚠⚠ AND `pro` IS A THIN CAREER FOR THIS ONE SCREEN, WHICH IS MEASURED AND WRITTEN DOWN RATHER THAN
+// ASSUMED AWAY. Six sheets, but only TWO chapters – «Growing up · Age 13 – 15» and «The breakthrough
+// · Age 17 – 21» (measured 19.09, by deleting one and reading the diff). Two is over the floor and
+// the mutation proves the arm still bites at two, so the check is real; it is also the SMALLEST list
+// that can distinguish «the same chapters» from «any chapters», so a career with more of them would
+// make `the chapters are not lost` a stronger arm than it is today. That is a fixture gap, not a
+// defect, and it belongs in the ledger rather than in a comment that claims a number it never had.
 
 /** The album's route and its arrival anchor, taken from the one map – never re-written here. */
 const ALBUM_STATION = STATIONS['AlbumScreen.vue']
@@ -1804,7 +1812,7 @@ test.describe("the album's chapter door and pan pill are exempt – and the exem
     // ⭐ EXACTLY ONE OF EACH IN THE DOCUMENT, AND EACH IS THE ONE INSIDE ITS DECLARED PLACE. A second
     // `.album-rail` or a second `.album-half` – on this screen or anywhere else in the app – would be
     // a second hole, so the counts are asserted rather than the presence. This is `#app` and the
-    // child combinators earning their place in the two constants.
+    // child combinators earning their place in the selectors.
     for (const [loose, placed, what] of [
       ['.album-chapters-btn', ALBUM_CHAPTER_DOOR, 'the chapter door'],
       ['.album-rail', ALBUM_CHAPTER_RAIL, 'the chapter rail'],
