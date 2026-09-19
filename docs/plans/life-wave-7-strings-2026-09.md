@@ -8,7 +8,8 @@ last-reviewed: 2026-09-18
 
 # Wave 7 – every player-facing string the wave adds (the вычитка table)
 
-The wedding wave's whole copy set, in one place, for the architect's read and the owner's playtest.
+The wedding wave's whole copy set, in one place, for the architect's read and the owner's playtest –
+plus §7, the staff's year-end letters, which he ruled into the same wave on 18.09.
 T7 of [the wave-7 builder brief](life-wave-7-builder-2026-09.md); the shape and the rigour are
 [wave 5's](life-wave-5-strings-2026-09.md) and [wave 6's](life-wave-6-strings-2026-09.md) strings
 documents, which are this file's template.
@@ -30,13 +31,18 @@ constants) are carried in §5 rather than silently dropped.
 
 | | |
 | --- | ---: |
-| player-facing **strings** the wave ADDED to the tree | **65** |
+| player-facing **strings** the wave ADDED to the tree | **96** |
 | of them **ruled** | **0** |
-| of them **draft – awaiting his pass** | **65** |
+| of them **draft – awaiting his pass** | **96** |
 | removed by his ruling after transcription (18.09 – W2, §2's note) | **1** |
 | shipped strings that **MOVED** | **0** |
-| per task | T2 **16** · T3 **2** + the 28-name pool · T5 **13** · T10 **6** |
+| per task | T2 **16** · T3 **2** + the 28-name pool · T5 **13** · T10 **6** · **§7 31** |
 | flagged **non-string** drafts carried in §5 | the memory-face pick · the drafted numbers |
+
+⚠ **§7 IS NOT A WEDDING TASK AND IS COUNTED SEPARATELY ABOVE.** Round 44 #7 – the staff's year-end
+letters – was ruled into this wave on 18.09 («всё, что мы сейчас обсуждаем идет в эту волну») after
+the brief above was written, so it has no T-number. Its 31 strings are transcribed in §7 under the
+same rules as the rest of this table; §§1-6 are untouched by it.
 
 ---
 
@@ -506,3 +512,131 @@ the prologue shows no starting capital while the wizard shows `$120,000 / $25,00
 
 ⚠ **Nothing in 10d was built.** §10b is the whole of the ruling's practical content: the sentences
 survive, on the surface he named, untouched.
+
+---
+
+# 7. Round 44 #7 – the staff's year-end post (`kind: 'staff'`)
+
+**The ask, his words, 18.09**, after finishing a career: «письмо от тренера по итогу года мне так и
+не пришло, да и ни от одного специалиста не пришло.» Measured before a line was written: **no such
+letter existed anywhere in the engine** – not a defect, a feature nobody had built. Ruled into this
+wave by «всё, что мы сейчас обсуждаем идет в эту волну».
+
+**Every row below is an ADDITION and every one is `DRAFT – awaiting his pass`.** Not one shipped
+string moved. The four seats write on the **wrap week** (the first off-season week, the same week the
+season summary is banked), one letter per hired seat per season, into the inbox the academy already
+writes to.
+
+⚠ **Two of his standing rulings shaped this copy rather than being checked afterwards:**
+
+* **«somebody across the net» is struck.** His 17.09 copy review named that image as used often
+  enough that it «begins to feel generated» and removed it from the hitting partner's own feed rows.
+  The first draft of S-24 below reached for it again; it now says **match-style practice**, which is
+  his own terminology for this seat. A mounted case asserts the struck image stays struck.
+* **No pronoun names the coach.** A woman sits on every roster (`COACH_FIRST_M` *or* `COACH_FIRST_F`),
+  so «he» is unsayable. All four letters are written in the **first person**, which needs no pronoun
+  for its author at all.
+
+Also observed: no praise/blame vocabulary in the coach's sheet (`good`, `better`, `value`, `bargain`
+are banned by `world/coachMarket.ts`), short dash `–` only, and no real surname is constructible.
+
+## 7a. The sender and subject lines (`InboxSheet.vue`)
+
+⚠ The four seats share a week **and** a season, so they are the first letter family in the game that
+could plausibly have taken one subject – which would be round-29 #16's «two letters wearing one
+title» manufactured rather than inherited. Each line restates its own sheet's opening instead.
+
+| # | seat | sender | subject | |
+| ---: | --- | --- | --- | --- |
+| S-1 | coach | Her coach | The season on court – *year* | `DRAFT` |
+| S-2 | masseur | Her masseur | The season on the table – *year* | `DRAFT` |
+| S-3 | psychologist | Her psychologist | The season's work in the room – *year* | `DRAFT` |
+| S-4 | sparring | Her hitting partner | The season's practice – *year* | `DRAFT` |
+
+## 7b. The coach's sheet (`OfferLetter.vue`)
+
+Fires when `coachId !== null` and he served at least half the season's 49 played weeks.
+
+| # | when the player sees it | the string, verbatim | |
+| ---: | --- | --- | --- |
+| S-5 | always – the lead | That is the season done. I have been with her *N* of its weeks, and this is what I have to say about them before we start the next one. | `DRAFT` |
+| S-6 | when the wrap-up banked a record | *N* matches, *N* of them won and *N* lost. | `DRAFT` |
+| S-7 | when the season had a scoring finish | Her deepest run of the year finished at *finish*, and she took *N* titles home. | `DRAFT` |
+| S-8 | a season with no scoring finish | No run this year finished deep enough to score, which is a sentence about the draws as much as about her. | `DRAFT` |
+| S-9 | when the row carries a per-table rank | She ends the year at *Table* #*N*. | `DRAFT` |
+| S-10 | ⚠ **only when `chemistryReading` already admits the pair**, and `chem >= 0` | Working with her has got easier as the year went on, and I say that as somebody who has been wrong about it before. | `DRAFT` |
+| S-11 | same gate, `chem < 0` | I will say the other part too: she and I have not found an easy way of working yet, and a year is long enough that I notice it. | `DRAFT` |
+| S-12 | the signature | – Her coach | `DRAFT` |
+
+⚠⚠ **S-10/S-11 are the first place chemistry has ever spoken in words rather than as a ring**, and
+they print **no number** – the sign is the whole of what is said. Two guards, both mutation-verified:
+the engine only puts `chem` on the paper when `chemistryReading(pair, seed, coachId)` – the *same*
+function the coach card's ring calls, whose bar is **drawn per pair** – already admits it; and the
+sheet renders the sign alone, so it cannot disagree with the ring's figure either.
+
+## 7c. The masseur's sheet
+
+| # | when the player sees it | the string, verbatim | |
+| ---: | --- | --- | --- |
+| S-13 | always – the lead | A note on the year from the table. I have had her *N* weeks of this season. | `DRAFT` |
+| S-14 | layoffs he demonstrably shortened | She came to me hurt *N* times this year, and between us we took *N* weeks off the time she was going to be out. | `DRAFT` |
+| S-15 | a year with no layoff he worked | She did not lose a week to anything I had to work back this year. That is the year I would pick, and it is not the same thing as a year with nothing in it. | `DRAFT` |
+| S-16 | always | Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine. | `DRAFT` |
+| S-17 | the signature | – Her masseur | `DRAFT` |
+
+⚠ **He says nothing about KNOCKS**, and that is a fact about the world rather than a gap in the copy:
+`KnockRecord` carries no masseur field and `retireKnock` writes none, so «the knocks that passed
+through him» is not something this world holds.
+
+## 7d. The psychologist's sheet
+
+| # | when the player sees it | the string, verbatim | |
+| ---: | --- | --- | --- |
+| S-18 | always – the lead | The year is over, so here is what I think we did with it. We have had *N* weeks of this season together. | `DRAFT` |
+| S-19 | focus `coolhead` | What we worked on this year was her head in the tight games – the point after a break back, the second serve at 4-5. | `DRAFT` |
+| S-20 | focus `recovery` | What we worked on this year was the walk back from the weeks that knocked her over, so that they stayed weeks and did not become a season. | `DRAFT` |
+| S-21 | focus `listen` | What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it. | `DRAFT` |
+| S-22 | focus `herself` | What we worked on this year was the part of her that is hers rather than her nature's – the deliberate work underneath what she was born with. | `DRAFT` |
+| S-23 | focus `publicLife` | What we worked on this year was being looked at – the weight of the cameras and the strangers, and how to put it down between matches. | `DRAFT` |
+| S-24 | no focus is attributable to this season | We have worked the season through without settling on one thing to carry, which happens and is worth naming rather than tidying away. | `DRAFT` |
+| S-25 | `coolhead` only, and `composureBonus > 0` | She now stands a little above where her own nature would have left her under pressure. It is slow to build and it goes back down when we stop, which is the honest shape of it. | `DRAFT` |
+| S-26 | always | Whatever we take on next year, it wants to be one thing. It is a year, not a list. | `DRAFT` |
+| S-27 | the signature | – Her psychologist | `DRAFT` |
+
+⚠ **S-25 says where she STANDS and never what the year GAVE**, because `composureBonus` decays on
+every week the nerve focus is not worked – a gain is a figure the counter cannot support. It is also
+the **only** focus with a retained counter; the other four report the year's subject and no outcome,
+because nothing about them is retained at all.
+
+## 7e. The hitting partner's sheet – deliberately the shortest of the four
+
+| # | when the player sees it | the string, verbatim | |
+| ---: | --- | --- | --- |
+| S-28 | always – the lead | End of the year, so I will say my piece – it is shorter than the others'. I have hit with her *N* weeks of this season. | `DRAFT` |
+| S-29 | always | The job is the weeks with no tournament in them: match-style practice, so that the quiet stretches do not arrive in her hands the next time she plays for something. | `DRAFT` |
+| S-30 | always | Nobody keeps a score of that, and I am not going to invent one for a letter. She knows. I know. | `DRAFT` |
+| S-31 | the signature | – Her hitting partner | `DRAFT` |
+
+⚠⚠ **S-30 is the design stated on the paper.** This seat retains nothing beyond its own employment:
+its one channel is `FormWeek.rustCut`, a `FormWeek` is built and discarded inside a single week, and
+its contribution is not separable from `world.form` even in principle – which may not be surfaced
+anyway (his ruling O2, 16.09: no number, no Mood word, no diary line). Rather than borrow a figure
+from a neighbouring seat or add a counter this item does not own, the letter says so.
+
+## 7f. The count
+
+| | |
+| --- | ---: |
+| player-facing **strings** §7 adds | **31** |
+| of them **ruled** | **0** |
+| of them **draft – awaiting his pass** | **31** |
+| shipped strings that **MOVED** | **0** |
+| per surface | `InboxSheet.vue` **4** · `OfferLetter.vue` **27** |
+
+⚠ **Two questions for him**, both copy and neither blocking:
+
+* **Q-7a** – the sign-offs are roles (`– Her coach`), not names. A coach *has* a drawn name and the
+  other three do not, so naming him would make one of the four letters read differently from the
+  rest. Roles were chosen for consistency; his call.
+* **Q-7b** – the coach's sheet is the only one carrying figures. If he would rather it read as prose
+  with the numbers folded into sentences, that is a rewrite of S-6/S-7/S-9 and nothing else.
