@@ -36,6 +36,22 @@
  *                   precisely so the masseur would have something to add; this arm reports the same
  *                   headline figures with him daily and with him absent, so the 22.08 premise can be
  *                   checked against today's game rather than against August's.
+ *   §5 --levers     ⭐⭐ THE 19.09 RULING, PRICED. The owner REJECTED §8a's «move nothing» and named
+ *                   the direction himself: «нет, не подходит, надо либо немного уменьшить усталость
+ *                   на глубоких турнирах, либо приподнять недельное восстановление, может быть за
+ *                   счет массажиста, а может быть и массажист, и естественное. посмотри в эту
+ *                   сторону и продолжай работу» – and then named the levers as FOUR rather than two:
+ *                   «слив на глубине хода и турнирная работа массажиста, а также обычная работа
+ *                   массажиста и естественное восстановление». So: (A) the CONCAVE depth curve,
+ *                   (B) the masseur's TOURNAMENT relief, (C) the masseur's ORDINARY weekly bonus,
+ *                   (D) NATURAL weekly recovery, (E) combinations drawing from all four.
+ *
+ *                   ⚠⚠ AND THE TARGET IS NOT THE ONE §1-§9 WERE SCORED AGAINST. On 19.09 he RELEASED
+ *                   his own «arrive at the off-season door around 45-50» sentence: «давай изменим эту
+ *                   цель, если она нам мешает. Цель – отпуска реже, а не после каждого турнира
+ *                   ездить всё-таки». The bar is now HOLIDAY FREQUENCY and nothing else; the door
+ *                   figure is REPORTED and left to float, because it is the very thing that forces
+ *                   the holidays – a year spent near empty is the only way to arrive at 45.
  *
  * ⚠ THE WALK IS `stepCareerWeek` (tools/econ-bench.ts) PLUS THE STANDING DRAIN RECIPE
  * (`_lifeBeats`, `_birthday`, the fork, the retirement offer). A career does not advance on
@@ -46,8 +62,10 @@
  *      npm run bench:season-eq -- --actuate
  *      npm run bench:season-eq -- --grid --seeds 6
  *      npm run bench:season-eq -- --staffing
+ *      npm run bench:season-eq -- --levers --seeds 10 --toAge 28
  */
 import { ECONOMY } from '../src/engine/economy'
+import { tournamentRunStrain } from '../src/engine/condition'
 import {
   KID_ID,
   answerFork,
@@ -81,7 +99,8 @@ const TO_AGE = numOf('toAge', 27)
 const ACTUATE = args.includes('--actuate')
 const GRID = args.includes('--grid')
 const STAFFING = args.includes('--staffing')
-const TRAJ = args.includes('--traj') || (!ACTUATE && !GRID && !STAFFING)
+const LEVERS = args.includes('--levers')
+const TRAJ = args.includes('--traj') || (!ACTUATE && !GRID && !STAFFING && !LEVERS)
 /** skip §2b's ablation arms – they are four more full walks, and §1/§2 alone answer most questions */
 const NO_ABLATION = args.includes('--noabl')
 
@@ -126,6 +145,14 @@ interface Dials {
   noDrain?: boolean
   /** kill the weekly injury roll – the injury-off ablation arm */
   noInjury?: boolean
+  /** ⭐ §5 A – replace `runFatigueLadderWta` (the twelve 32-draw professional rungs). null = shipped */
+  ladderWta?: number[] | null
+  /** ⭐ §5 A – replace `runFatigueLadderDeep` (wta1000 and slam, the two draws over 32). null = shipped */
+  ladderDeep?: number[] | null
+  /** ⭐ §5 B – added to EVERY masseur rung's `conditionBonusPerWeek` (0 = shipped 1/2/3) */
+  masseurBonusDelta?: number
+  /** ⭐ §5 B – `ECONOMY.masseur.tourRecoveryPerRound` (null = shipped 2) */
+  tourRelief?: number | null
 }
 const SHIPPED: Dials = { surchargeDelta: 0, proRecovery: null }
 
@@ -142,6 +169,15 @@ const AVAILABILITY = ECONOMY.availability as unknown as {
   injuryFatigueSlope: number
   injuryPlayingMultiplier: number
 }
+/** ⭐ §5 B's two dials. `conditionBonusPerWeek` is the AT-HOME table (world/medical.ts accrueCondition,
+ *  paid only on weeks she does NOT play) and `tourRecoveryPerRound` is the one that reaches a
+ *  TOURNAMENT week (world/masseur.ts masseurTourRelief, per night between rounds at finalize) – which
+ *  is the whole reason he is in this measurement at all: §3 found the ceiling, not the dial, is what
+ *  a rest week runs into. */
+const MASSEUR = ECONOMY.masseur as unknown as {
+  rungs: { sessions: number; conditionBonusPerWeek: number }[]
+  tourRecoveryPerRound: number
+}
 
 /** Run `body` with the dials applied, and put every one of them back afterwards. The restore is in a
  *  `finally`, so a throw inside one arm cannot leak a patched constant into the next – which is the
@@ -155,12 +191,22 @@ function withDials<T>(d: Dials, body: () => T): T {
     ladderW: [...CONDITION.runFatigueLadderWta],
     ladderD: [...CONDITION.runFatigueLadderDeep],
     inj: { ...AVAILABILITY },
+    // ⚠ THE RUNG OBJECTS ARE SHARED, so the bonus is saved VALUE BY VALUE rather than by spreading
+    // the array: `[...rungs]` copies the references and would restore nothing at all.
+    masseurBonus: MASSEUR.rungs.map((r) => r.conditionBonusPerWeek),
+    tourRelief: MASSEUR.tourRecoveryPerRound,
   }
   try {
     if (d.proRecovery !== null) CONDITION.proPhaseRecoveryBase = d.proRecovery
     if (d.surchargeDelta !== 0) {
       for (const t of PRO_RUNGS) CONDITION.tierMatchFatigue[t] = Math.max(0, saved.tier[t] + d.surchargeDelta)
     }
+    if (d.ladderWta != null) CONDITION.runFatigueLadderWta = [...d.ladderWta]
+    if (d.ladderDeep != null) CONDITION.runFatigueLadderDeep = [...d.ladderDeep]
+    if (d.masseurBonusDelta !== undefined && d.masseurBonusDelta !== 0) {
+      MASSEUR.rungs.forEach((r, i) => (r.conditionBonusPerWeek = Math.max(0, saved.masseurBonus[i] + d.masseurBonusDelta!)))
+    }
+    if (d.tourRelief != null) MASSEUR.tourRecoveryPerRound = d.tourRelief
     if (d.noDrain === true) {
       for (const t of TIER_LADDER) CONDITION.tierMatchFatigue[t] = 0
       CONDITION.matchFatigue.straightSets = 0
@@ -188,6 +234,8 @@ function withDials<T>(d: Dials, body: () => T): T {
     AVAILABILITY.injuryBaseChance = saved.inj.injuryBaseChance
     AVAILABILITY.injuryFatigueSlope = saved.inj.injuryFatigueSlope
     AVAILABILITY.injuryPlayingMultiplier = saved.inj.injuryPlayingMultiplier
+    MASSEUR.rungs.forEach((r, i) => (r.conditionBonusPerWeek = saved.masseurBonus[i]))
+    MASSEUR.tourRecoveryPerRound = saved.tourRelief
   }
 }
 
@@ -705,12 +753,29 @@ interface Headline {
   n: number
   door: number
   vacations: number
+  /** ⭐⭐ THE NEW BAR IS FREQUENCY, SO THE MEAN IS THE WRONG INSTRUMENT ON ITS OWN. «Отпуска реже»
+   *  is about how often the decision is FORCED, and a mean of 4 can be every season at 4 or half the
+   *  seasons at 8. `vacMedian` and the three shares below are the distribution he is actually asking
+   *  about; `vacNever` is the OTHER EDGE – the share of seasons whose only family week is the
+   *  off-season one the policy books unconditionally, i.e. seasons in which the holiday stopped
+   *  being a decision at all. His complaint is that it is compulsory, not that it should be free. */
+  vacMedian: number
+  vacLo: number
+  vacMid: number
+  vacHi: number
+  vacNever: number
   injuryPrevalence: number
   onsets: number
   knocks: number
   condMedian: number
+  /** the mean over seasons of each season's WORST week – the column that catches a cell buying
+   *  holidays by letting her bottom out instead */
+  condMin: number
   weeksUnder50: number
   events: number
+  /** matches per professional event – §5's «mean depth», the axis arm A is bending */
+  depth: number
+  matchesPlayed: number
   matchesWon: number
   eventSpend: number
   restGain: number
@@ -732,12 +797,20 @@ function headlineOf(careers: CareerRow[]): Headline {
     n: pro.length,
     door: mean(pro.map((s) => s.atOffSeasonDoor)),
     vacations: mean(pro.map((s) => s.vacations)),
+    vacMedian: median(pro.map((s) => s.vacations)),
+    vacLo: (100 * pro.filter((s) => s.vacations <= 2).length) / Math.max(1, pro.length),
+    vacMid: (100 * pro.filter((s) => s.vacations >= 3 && s.vacations <= 4).length) / Math.max(1, pro.length),
+    vacHi: (100 * pro.filter((s) => s.vacations >= 5).length) / Math.max(1, pro.length),
+    vacNever: (100 * pro.filter((s) => s.vacations <= 1).length) / Math.max(1, pro.length),
     injuryPrevalence: (100 * pro.filter((s) => s.injuryOnsets > 0).length) / Math.max(1, pro.length),
     onsets: mean(pro.map((s) => s.injuryOnsets)),
     knocks: mean(pro.map((s) => s.knocks)),
     condMedian: mean(pro.map((s) => s.condMedian)),
+    condMin: mean(pro.map((s) => s.condMin)),
     weeksUnder50: mean(pro.map((s) => s.weeksUnder50)),
     events: mean(pro.map((s) => s.proEvents)),
+    depth: mean(pro.filter((s) => s.events > 0).map((s) => s.matchesPlayed / s.events)),
+    matchesPlayed: mean(pro.map((s) => s.matchesPlayed)),
     matchesWon: mean(pro.map((s) => s.matchesWon)),
     eventSpend: mean(pro.flatMap((s) => s.weekSpend)),
     restGain: mean(pro.flatMap((s) => s.restGain)),
@@ -1109,6 +1182,201 @@ function staffing(presets: Preset[]): void {
 }
 
 // =================================================================================================
+// §5 THE 19.09 RULING, PRICED – the four families of lever the owner named, against his own target
+// =================================================================================================
+
+/** The professional rungs of ONE ladder family: the twelve 32-draws run on `runFatigueLadderWta`,
+ *  the two bigger draws on `runFatigueLadderDeep` (engine/condition.ts `ladderFor`). Derived from
+ *  the catalogue rather than listed, so a new rung joins the right family by construction. */
+const famRungs = (deep: boolean): TierId[] =>
+  TIER_LADDER.filter((t) => TIERS[t].track === 'wta' && TIERS[t].drawSize > 32 === deep)
+/** How many matches the family's biggest draw holds – log2(drawSize): 5 for a 32, 7 for a Slam. */
+const famLongest = (deep: boolean): number => Math.max(...famRungs(deep).map((t) => Math.log2(TIERS[t].drawSize)))
+/** The family's CHEAPEST per-match surcharge, which is how far a discount may go (see below). */
+const famFloor = (deep: boolean): number => Math.min(...famRungs(deep).map((t) => ECONOMY.condition.tierMatchFatigue[t]))
+
+/** ⭐⭐ ARM A – THE CONCAVE DEPTH CURVE, AND IT IS ONE LINE OF ARITHMETIC:
+ *
+ *      ladder[i] = shipped[i] − floor(k · max(0, i − plateau)),   floored at −(the family's
+ *                                                                 cheapest per-match surcharge)
+ *
+ *  `plateau` is the index at which the SHIPPED ladder first reaches its final value (1 for the W
+ *  family's [0,1,1,1,1], 2 for the deep draws' [-2,-1,0]), so EVERY ARM LEAVES THE OWNER'S OWN
+ *  RAMP-IN EXACTLY WHERE HE PUT IT on 14.08 – «min 5 6 7 7 7 7 7» – and bends only the tail after
+ *  it. What changes is that the plateau stops being a plateau and starts coming down: the fifth and
+ *  sixth match of one event cost less than the third.
+ *
+ *  ⚠⚠ THE FLOOR IS WHAT MAKES THE TOTAL MONOTONE, AND THE TOTAL BEING MONOTONE IS NON-NEGOTIABLE:
+ *  winning one more match may never make the WEEK cheaper outright. Floored at the family's cheapest
+ *  surcharge, the discount can at most give back the tier's own travel tax and never touches the
+ *  scoreline – so the marginal match still costs at least `matchFatigue.straightSets` (2) and the
+ *  running total is strictly increasing in depth. `monotoneWitness` below PROVES it per cell rather
+ *  than trusting this paragraph.
+ *
+ *  ⚠ INTEGER BY CONSTRUCTION (`Math.floor` on the decay): the condition accumulator is integer
+ *  arithmetic end to end – the `tierMatchFatigue` block note's own rule – so k = 0.5 means «one
+ *  point every second match», not a fractional charge. */
+function concaveLadder(shipped: number[], k: number, deep: boolean): number[] {
+  const plateau = shipped.indexOf(shipped[shipped.length - 1])
+  const floor = famFloor(deep)
+  const out: number[] = []
+  for (let i = 0; i < famLongest(deep); i++) {
+    const base = shipped[Math.min(i, shipped.length - 1)]
+    out.push(Math.max(-floor, base - Math.floor(k * Math.max(0, i - plateau))))
+  }
+  return out
+}
+
+const shapeA = (k: number): Dials => ({
+  surchargeDelta: 0,
+  proRecovery: null,
+  ladderWta: concaveLadder(ECONOMY.condition.runFatigueLadderWta, k, false),
+  ladderDeep: concaveLadder(ECONOMY.condition.runFatigueLadderDeep, k, true),
+})
+
+const SIMPLE_SCORE = '6-3 6-4'
+
+/** ⚠⚠ THE PROOF THAT A DEEP RUN NEVER COSTS LESS IN TOTAL THAN A SHALLOW ONE. Walks the whole-run
+ *  cost by depth on the family's cheapest rung and its dearest, under the dials in force, and returns
+ *  the smallest MARGINAL match anywhere in it. A cell whose witness is <= 0 is not a softer tail, it
+ *  is an inverted one, and it must not be read as a result. */
+function monotoneWitness(): { worst: number; lines: string[] } {
+  let worst = Infinity
+  const lines: string[] = []
+  for (const deep of [false, true]) {
+    const rungs = famRungs(deep)
+    for (const t of [rungs[0], rungs[rungs.length - 1]]) {
+      const depths = Array.from({ length: Math.log2(TIERS[t].drawSize) }, (_, i) => i + 1)
+      const totals = depths.map((n) => tournamentRunStrain(t, new Array(n).fill({ score: SIMPLE_SCORE })))
+      for (let i = 0; i < totals.length; i++) worst = Math.min(worst, totals[i] - (i === 0 ? 0 : totals[i - 1]))
+      lines.push(`${padR(t, 8)} ${totals.map((x) => padL(x, 4)).join('')}`)
+    }
+  }
+  return { worst, lines }
+}
+
+function levers(opts: WalkOpts, presets: Preset[]): void {
+  console.log(rule(140))
+  console.log('§5 THE 19.09 RULING, PRICED – FOUR LEVERS, IN HIS OWN LIST: «слив на глубине хода и турнирная работа')
+  console.log('   массажиста, а также обычная работа массажиста и естественное восстановление»')
+  console.log(rule(140))
+  console.log('')
+  console.log('  ⚠⚠ THE BAR CHANGED ON 19.09 AND IT IS NOT THE ONE §1-§9 WERE SCORED AGAINST.')
+  console.log('     He RELEASED his own «arrive at the off-season door around 45-50» sentence – the design clause')
+  console.log('     ECONOMY.condition quotes as its authority – in as many words: «давай изменим эту цель, если она')
+  console.log('     нам мешает. Цель – отпуска реже, а не после каждого турнира ездить всё-таки.»')
+  console.log('')
+  console.log('     So the bar is HOLIDAY FREQUENCY and nothing else, and `door49` below is REPORTED, NOT CONSTRAINED:')
+  console.log('     a low arrival is the very thing that forces the holidays, and a cell that arrives at 70 having taken')
+  console.log('     two of them is a BETTER answer under the new bar, not a worse one. §3 measured 8 a season.')
+  console.log('')
+  console.log('  ⚠ AND THE OTHER EDGE IS A FAILURE TOO. `never` is the share of seasons whose ONLY family week is the')
+  console.log('     off-season one the policy books unconditionally – seasons where the holiday stopped being a decision.')
+  console.log('     His complaint is that it is COMPULSORY, not that it should be free.')
+  console.log('')
+
+  // --- THE SHAPES, WRITTEN OUT AND PROVED MONOTONE BEFORE A SINGLE CAREER IS WALKED ---------------
+  console.log('  ARM A – THE CONCAVE DEPTH CURVE. ladder[i] = shipped[i] − floor(k·max(0, i − plateau)), floored at')
+  console.log('  −(the family\'s cheapest surcharge). The ramp-IN is the owner\'s own 14.08 curve, untouched; the TAIL bends.')
+  console.log('')
+  console.log('  k       W family (32 draws, 5 matches)   deep draws (1000 / Slam, up to 7)   whole-run cost by depth, simple sets')
+  for (const k of [0, 0.5, 1, 2, 4]) {
+    const d = k === 0 ? SHIPPED : shapeA(k)
+    withDials(d, () => {
+      const w = monotoneWitness()
+      console.log(
+        `  ${padR(k === 0 ? 'shipped' : `k=${k}`, 6)}  ${padR(`[${(d.ladderWta ?? ECONOMY.condition.runFatigueLadderWta).join(',')}]`, 30)}` +
+          `  ${padR(`[${(d.ladderDeep ?? ECONOMY.condition.runFatigueLadderDeep).join(',')}]`, 34)}` +
+          `  ${w.lines[0]}`,
+      )
+      for (const line of w.lines.slice(1)) console.log(`  ${padR('', 6)}  ${padR('', 30)}  ${padR('', 34)}  ${line}`)
+      console.log(
+        `  ${padR('', 6)}  ⤷ smallest MARGINAL match anywhere in the family: ${w.worst}` +
+          `${w.worst > 0 ? '  – the total is strictly increasing in depth ✔' : '  ⚠⚠ NOT MONOTONE – DO NOT READ THIS CELL'}`,
+      )
+    })
+  }
+  console.log('')
+
+  // --- THE CELLS – FOUR SINGLE-LEVER FAMILIES, THEN COMBINATIONS DRAWING FROM ALL FOUR -----------
+  // ⚠ EVERY LEVER IS MEASURED ALONE BEFORE IT IS MEASURED IN COMPANY, including the one §8c already
+  // refused (D, the natural base): he named it on 19.09, and a measured refusal on today's tree is
+  // worth more than an inherited one from a document written against a different target.
+  const cells: { group: string; label: string; dials: Dials }[] = [
+    { group: '–', label: 'SHIPPED (control)', dials: SHIPPED },
+    // (A) «слив на глубине хода» – the drain at depth
+    ...([0.5, 1, 2] as const).map((k, i) => ({ group: 'A', label: `A${i + 1} concave depth k=${k}`, dials: shapeA(k) })),
+    // (B) «турнирная работа массажиста» – the half of him that reaches a TOURNAMENT week
+    { group: 'B', label: 'B1 tour relief 2->3', dials: { ...SHIPPED, tourRelief: 3 } },
+    { group: 'B', label: 'B2 tour relief 2->4', dials: { ...SHIPPED, tourRelief: 4 } },
+    { group: 'B', label: 'B3 tour relief 2->6', dials: { ...SHIPPED, tourRelief: 6 } },
+    // (C) «обычная работа массажиста» – the at-home table, on the weeks she does not play
+    { group: 'C', label: 'C1 home rungs +1 (2/3/4)', dials: { ...SHIPPED, masseurBonusDelta: 1 } },
+    { group: 'C', label: 'C2 home rungs +2 (3/4/5)', dials: { ...SHIPPED, masseurBonusDelta: 2 } },
+    { group: 'C', label: 'C3 home rungs +3 (4/5/6)', dials: { ...SHIPPED, masseurBonusDelta: 3 } },
+    // (D) «естественное восстановление» – the phase's own base
+    { group: 'D', label: 'D1 proRecoveryBase 5->6', dials: { surchargeDelta: 0, proRecovery: 6 } },
+    { group: 'D', label: 'D2 proRecoveryBase 5->7', dials: { surchargeDelta: 0, proRecovery: 7 } },
+    { group: 'D', label: 'D3 proRecoveryBase 5->9', dials: { surchargeDelta: 0, proRecovery: 9 } },
+    // (E) combinations, named BEFORE the single-lever numbers are read, so the mix is a design and
+    // not a search over the grid that produced it.
+    { group: 'E', label: 'E1 A2 + B1', dials: { ...shapeA(1), tourRelief: 3 } },
+    { group: 'E', label: 'E2 A3 + B2', dials: { ...shapeA(2), tourRelief: 4 } },
+    { group: 'E', label: 'E3 A3 + B2 + C1', dials: { ...shapeA(2), tourRelief: 4, masseurBonusDelta: 1 } },
+    { group: 'E', label: 'E4 A3 + B2 + C1 + D1', dials: { ...shapeA(2), tourRelief: 4, masseurBonusDelta: 1, proRecovery: 6 } },
+    // ⚠⚠ NOT A CANDIDATE – A BOUND. All four levers, all driven hard. If «реже» is not reachable
+    // HERE it is not reachable through the levers he named at all, and the honest answer is a
+    // measured refusal rather than a cell that pretends.
+    {
+      group: 'E',
+      label: 'E-MAX (a bound, not a cell)',
+      dials: { ...shapeA(4), tourRelief: 8, masseurBonusDelta: 3, proRecovery: 9 },
+    },
+  ]
+
+  // ⚠⚠ `spend` AND `restFree` ARE THE ACTUATION COLUMNS, and they are in this table rather than in a
+  // separate arm because two of the four levers can only be told from a NULL ARM by them. A and B
+  // land in what a TOURNAMENT WEEK costs (`spend`); C and D land in the SAME accumulator as each
+  // other (`accrueCondition`'s `base + masseurRungOf(world).conditionBonusPerWeek`), and both are
+  // read on the weeks the ceiling has room – which is what `restFree` measures. A C row that is flat
+  // on holidays while `restFree` moves is a real null RESULT (the ceiling eating it, §3's finding);
+  // a C row flat on BOTH would be a null ARM, and CLAUDE.md's rule is that the two must never be
+  // confused. Read them before reading anything else in the row.
+  console.log(
+    '  cell                       HOLIDAYS/SEASON      the DISTRIBUTION of them      door49  wk<50  cond med  min' +
+      '  inj prev  onsets  knocks  events  depth  spend  restFree  best',
+  )
+  console.log(
+    '                             mean  median   vs 8    <=2    3-4    5+   never' +
+      '                                                        (A,B actuate)(C,D)     ',
+  )
+  let control: Headline | null = null
+  for (const c of cells) {
+    const h = headlineOf(runArm(c.dials, opts, presets))
+    if (control === null) control = h
+    const vs = h.vacations - control.vacations
+    console.log(
+      `  ${padR(c.label, 25)}  ${padL(f1(h.vacations), 4)}  ${padL(f1(h.vacMedian), 6)}  ${padL(
+        `${vs >= 0 ? '+' : ''}${f1(vs)}`,
+        5,
+      )}  ${padL(f0(h.vacLo) + '%', 5)}  ${padL(f0(h.vacMid) + '%', 5)}  ${padL(f0(h.vacHi) + '%', 5)}` +
+        `  ${padL(f0(h.vacNever) + '%', 5)}  ${padL(f0(h.door), 6)}  ${padL(f1(h.weeksUnder50), 5)}` +
+        `  ${padL(f0(h.condMedian), 8)}  ${padL(f0(h.condMin), 3)}  ${padL(f0(h.injuryPrevalence) + '%', 8)}` +
+        `  ${padL(f2(h.onsets), 6)}  ${padL(f1(h.knocks), 6)}  ${padL(f1(h.events), 6)}  ${padL(f2(h.depth), 5)}` +
+        `  ${padL(f1(h.eventSpend), 5)}  ${padL(f1(h.restGainFree), 8)}  ${padL(f0(h.rankBest), 4)}`,
+    )
+  }
+  console.log('')
+  console.log('  HOW TO READ A CELL, all three ways it can be wrong:')
+  console.log('   · `best` (median of each career\'s best professional place) and `depth` – a cell that buys rarity by')
+  console.log('     making her WORSE shows it there.')
+  console.log('   · `cond min` and `wk<50` – a cell that buys rarity by letting her BOTTOM OUT shows it there.')
+  console.log('   · `never` – a cell that buys rarity by making the holiday POINTLESS shows it there, and that is a')
+  console.log('     failure of its own: he asked for it to stop being compulsory, not for it to stop existing.')
+  console.log('   · `door49` is REPORTED AND UNCONSTRAINED (the 19.09 release). It is not a pass/fail column.')
+}
+
+// =================================================================================================
 // §0 THE ACTUATION ARM
 // =================================================================================================
 
@@ -1172,5 +1440,6 @@ if (TRAJ) {
 }
 if (GRID) grid(walkOpts, DEFAULT_PRESETS)
 if (STAFFING) staffing(DEFAULT_PRESETS)
+if (LEVERS) levers(walkOpts, DEFAULT_PRESETS)
 console.log('')
 console.log(`  (${f1((Date.now() - started) / 1000)}s)`)
