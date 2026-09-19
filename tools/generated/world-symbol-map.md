@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,696 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,701 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-593 exported names across 54 owning modules.
+595 exported names across 55 owning modules.
 
 ## Areas
 
@@ -64,6 +64,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/brandStrength.ts` | ⭐⭐⭐ BRAND STRENGTH – round 32 #4, docs/specs/brand-inertia-2026-08.md | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
+| `src/engine/world/staffLetters.ts` | THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished | 2 |
 | `src/engine/world/bookkeeping.ts` | ⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar | 1 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
 | `src/engine/world/phaseFinance.ts` | ⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out | 1 |
@@ -909,6 +910,13 @@ MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the
 
 - `computeLossStreak` – `src/engine/world/matchNews.ts`
 - `flipScore` – `src/engine/world/matchNews.ts`
+
+### `src/engine/world/staffLetters.ts`
+
+THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished.
+
+- `seatWeeksServedIn` – `src/engine/world/staffLetters.ts`
+- `settleStaffLetters` – `src/engine/world/staffLetters.ts`
 
 ### `src/engine/world/bookkeeping.ts`
 
