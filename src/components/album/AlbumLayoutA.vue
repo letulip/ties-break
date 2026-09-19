@@ -96,11 +96,18 @@ defineProps<{ sheet: AlbumSheetModel }>()
    inch of the note; the rest is what the pan gives back. The sheet clips it (`overflow: hidden` on
    the paper), so nothing escapes the page – it is tucked under the edge, like a note stuck on
    slightly too far over. */
+/* ⚠⚠ 484 WAS 14px PAST THE PAGE AND THE PAGE CLIPS (measured 19.09, real Chromium, border-box).
+ * The first reading of this was «deliberate at 390 – the rest is what the pan gives back», and it
+ * is wrong in a way worth writing down: the pan moves the WINDOW over the page, but the note is cut
+ * by `AlbumPaper`'s own `overflow: hidden` at 470, so the last 14px of his sentence were gone at
+ * EVERY width and no amount of panning brought them back. Same failure family as the B/C notes
+ * anchored to the top: the sheet silently eating the owner's words. 294 + 176 = 470 exactly, which
+ * is also the mockup's own proportion (AW puts the note's left edge at 63.3% of the page). */
 .album-a-note {
   position: absolute;
   left: 294px;
   top: 92px;
-  width: 190px;
+  width: 176px;
 }
 
 .album-a-second {
