@@ -622,6 +622,18 @@ career, $24–35k at 25k – a third of the coach's, as ruled.
 
 ### ⭐ The relief question decided – «+2 за каждый круг не многовато?» – THE ANSWER IS NO, KEEP 2
 
+> ⚠⚠⚠ **SUPERSEDED ON 19.09.2026 – `tourRecoveryPerRound` IS 3.** The section below is KEPT
+> because it is the record of the question and its answer, and because the answer it gave («1 is
+> too little») is still true. What changed is the direction: on 19.09 the owner named this dial
+> himself as one of four to RAISE – «слив на глубине хода и **турнирная работа массажиста**, а
+> также обычная работа массажиста и естественное восстановление» – so the later ruling governs the
+> earlier «многовато» worry.
+> **Every relief arm in §11 was measured at 1-vs-2 and is therefore priced at a value that is no
+> longer shipped**; the comparison's verdict stands, its levels do not. The 19.09 measurement is in
+> [the-season-equation-2026-09.md](the-season-equation-2026-09.md) §10e, and §7 of that document –
+> «the masseur is worth 0.9 family weeks a season» – is likewise measured at relief 2 and is now
+> an understatement.
+
 The owner asked whether 2 per round is too much; the step-1 grid's +9.6..10.5 match wins at 8k
 looked strong. Decision rule agreed with the architect before the run: **ship 1 if the tour
 channel keeps ≥2 SEM on its headline metrics at 1/round; otherwise keep 2.** The same 32 seeds,

@@ -3,7 +3,7 @@ type: spec
 status: reference
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-09-18
+last-reviewed: 2026-09-19
 ---
 
 # The season equation (18.09.2026) – a breakout year, the fall after it, and what the two fatigue dials are worth
@@ -548,3 +548,387 @@ count the scoreless exits – which are exactly the weeks a tired player has.
 breakouts, 7 collapses, 24 falls of 20+ places out of a top-60 season; each ablation arm is the same
 64 careers re-walked. §6: 20 careers per cell, nine cells. §7: 20 careers per arm, four arms. The
 runs took 10, 24, 14 and 6 minutes respectively.
+---
+
+## 10. The ruling, the target he released, and what shipped (19.09.2026)
+
+⚠ **§§1–9 are the record of the investigation that PRECEDED this ruling, and they are left exactly as
+they were written.** They were scored against a target that no longer stands (§10b). The arithmetic
+in them is still true; the bar it was measured against is not.
+
+### 10a. He rejected «move nothing», and he named the levers
+
+§8a recommended moving nothing. He did not take it:
+
+> «нет, не подходит, надо либо немного уменьшить усталость на глубоких турнирах, либо приподнять
+> недельное восстановление, может быть за счет массажиста, а может быть и массажист, и естественное.
+> посмотри в эту сторону и продолжай работу»
+
+And then he named them as FOUR rather than two:
+
+> «слив на глубине хода и турнирная работа массажиста, а также обычная работа массажиста и
+> естественное восстановление»
+
+So: **(A)** the drain at depth, **(B)** the masseur's TOURNAMENT work, **(C)** the masseur's ORDINARY
+weekly work, **(D)** natural weekly recovery. B and C are one seat and two different dials –
+`tourRecoveryPerRound` reaches a week she plays, `conditionBonusPerWeek` only a week she does not –
+and §3's finding is why that distinction decides the whole question. Each was measured alone before
+any of them was measured in company.
+
+### 10b. ⚠⚠ And he released the target §§1–9 were scored against
+
+> «давай изменим эту цель, если она нам мешает. Цель – отпуска реже, а не после каждого турнира
+> ездить всё-таки.»
+
+**What was released: «arrive at the off-season door around 45–50».** It is quoted as authority in two
+places – `ECONOMY.condition.recoveryBase`'s comment, whose whole arithmetic chain hangs off it, and
+`docs/specs/fatigue-reprice-2026-08.md` §6.2.
+
+**It was DERIVED, never given.** §1 of this document derives 45–50 from his «1 большим или парой
+небольших отпусков» sentence. He has kept the holiday sentence and released the arithmetic reading of
+it – the narrower move, and the right one, because the reading is what turned out to be
+self-defeating: **arriving at 45 requires living near empty all year, and living near empty is what
+crosses `rescueCondition` (80) eight times a season.** The old target was manufacturing the complaint
+the new one is about.
+
+**What replaced it: holiday FREQUENCY, and nothing else.** So the off-season door is now a REPORTED
+figure that floats. A cell arriving at 99 having taken three holidays beats one arriving at 45 having
+taken eight – and §6's grid, where all nine cells arrived at 99 and the column looked inert, was
+reading a column that had stopped being a criterion.
+
+⚠ **The other edge is a failure too, and it is measured.** `never` below is the share of professional
+seasons whose only family week is the off-season one the policy books unconditionally. His complaint
+is that the holiday is COMPULSORY, not that it should stop existing.
+
+### 10c. What was predicted, before the grid ran
+
+⚠ **Written after the run's CONTROL row had printed and before any arm had** – so the baseline is a
+fact and every arm below is a forecast. Derived from two numbers already in this document: §3's depth
+histogram (1m 2992 · 2m 2040 · 3m 1654 · 4m 1247 · 5m 2256 · 6m 267 · 7m 47 = 10503 competition
+weeks) and §6's exchange rate of about 2.3 condition-per-event to one holiday a season. Each arm's
+forecast is `Σ(histogram × the cost it removes at that depth) / 10503`, converted at that rate – so
+these are arithmetic rather than taste, and they can be wrong in a way taste cannot.
+
+**P6 – A is the strongest of the four, because it both lands where the ceiling does not bind and
+scales with the depth she plays.** PREDICTED A1 7.7 · A2 7.1 · A3 6.7.
+**MEASURED 7.8 · 7.6 · 7.0 – the LEVELS held to a tenth at both ends and A2 came in half a holiday
+weak. But the COMPARATIVE half is REFUTED: A is not the strongest, B is**, and by a distance. That
+matters more than the levels did, because it is what chose the cell that shipped.
+
+**P7 – B is the same size as A, not smaller.** Its cap is `(matches − 1)` and her mean event is 2.86
+matches, so each +1 of relief is worth ~1.9 per event. PREDICTED B1 7.2 · B2 6.4 · B3 4.8.
+**MEASURED 7.2 · 6.3 · 4.1 – held to a tenth at the bottom and STRONGER than forecast at the top.**
+Read against P6: one notch of B (2 → 3, −0.8) outbuys two notches of A (k=1, −0.4) and nearly matches
+the strongest tail benched (k=2, −1.0). **The reason both predictions missed in the same direction is
+that A's saving is concentrated in the deep weeks she rarely has, while B's is spread over every
+committed event she plays** – 2.86 matches on average, so 1.86 nights of relief, every week.
+
+**P8 – C and D are both weak, for the ceiling's reason and not a wiring reason.** PREDICTED ≤ 0.5
+holidays across their whole range, **with `restFree` moving in every cell** – a flat holiday column
+beside a moving `restFree` is a null RESULT, flat on both would be a null ARM.
+
+**MEASURED, and it is the cleanest cell in the grid.** C1 gives the masseur's at-home table one more
+point a week and the holiday column does not move AT ALL – 8.0 against the control's 8.0 – while
+`restFree` moves 10.1 → 11.1, which is that point, arriving, in full, on the weeks the bar has room
+for it. **The arm is wired to the digit and buys nothing.** That is §3's ceiling finding stated as an
+experiment rather than an argument: the point is paid, and then discarded at 100 by the holiday she
+has just taken.
+
+**And it holds across both arms' whole range.** C runs 8.0 · 7.9 · 7.9 while `restFree` climbs
+10.1 → 11.1 → 12.0 → 12.9; D runs 7.8 · 7.7 · 7.6 on the same climb – `proPhaseRecoveryBase` driven from 5 to NINE buys four
+tenths of a holiday while adding 3.5 to what a free rest week returns (10.1 → 13.6). **Three extra points a week on
+the masseur's table buy one tenth of a holiday a season.** The two arms together span about a third
+of a holiday while paying almost three points a week more into the bar – which is §8c's refusal of
+`proPhaseRecoveryBase`, re-derived on today's tree and now extended to the masseur's at-home rungs
+that §8c never tested. **P8 held, and C came in weaker than predicted rather than stronger.**
+
+⚠ This is why neither C nor D shipped, and the refusal is measured rather than inherited. Raising
+either would also undo an owner ruling for that tenth of a holiday: the 22.08 drop of
+`proPhaseRecoveryBase` to 5 was his own variant C, and the 1/2/3 at-home ladder was set in the same
+session.
+
+**P9 – no single lever reaches «реже» alone.** PREDICTED every single-lever cell stays ≥ 4.8.
+
+**MEASURED: REFUTED IN THE LETTER AND HELD IN THE SUBSTANCE, and the distinction is the finding.**
+One single lever did reach it – B3, the tour relief at 6 – landing at **4.1 holidays** with the 5+
+bucket down from 95% of seasons to 36%. It is also the only cell in the sweep that **inverts the
+depth curve**: at 6 a night, a straight-sets W15 title is relieved by its whole strain and costs
+**nothing**, against a first-round exit's four. Winning five matches becomes cheaper than losing one.
+So «реже» IS reachable on one of his four levers, and the price of getting there on that lever alone
+is deleting the thing the lever was supposed to shape. That is why `netDepthWitness` exists, and it
+is the reason the shipped step is +1.
+
+**P10 – the combinations do, and the bound overshoots into the other failure.** PREDICTED E-MAX near
+1.5–2 with `never` > 0.
+
+**MEASURED 2.1, with `never` at 74%. Held, and the second half of it is the most useful number in the
+grid.** E-MAX is every lever he named, all four at once, all driven hard – and it lands on **2.1
+holidays a season, median 1.0**, which is his ORIGINAL «1 большой или пара небольших» target reached
+exactly. It is also a broken game: **in three professional seasons out of four the only family week
+is the off-season one the policy books anyway.** She finishes at a median condition of 100, her worst
+week of the year is 72, and a tournament costs 4.9. The holiday is not rarer there; it is
+unnecessary, and a decision nobody ever has to make is not a decision.
+
+⚠ **So the released target and the new one point in opposite directions at the extreme**, and that is
+the clearest vindication of the 19.09 release there could be: the cell that best satisfies «2–3
+holidays» is the cell that most thoroughly destroys «отпуска реже», because it gets there by removing
+the reason to go rather than by spacing the goings out.
+
+**The combination cells in between are close to additive and confirm the single-lever readings.**
+E1 (k=1 + relief 3) buys 1.4 against its parts' 1.2; E2 (k=2 + relief 4) buys 3.2 against 2.7; and
+adding C then D on top of E2 – E3 and E4 – moves 4.8 → 4.7 → 4.7, i.e. **nothing at all**, which is
+P8 restated in company.
+
+### 10d. ⚠⚠ The constraint the 14.08 history puts on arm A – found while reading it, not after
+
+`ECONOMY.condition.runFatigueLadderDeep`'s own comment records that the owner threw out a concave
+tail once already, and wrote his curve by hand to replace it:
+
+> «а сейчас немного некорректно получается» – a cap of mine «made the deep rounds cost 2 where the
+> shallow ones cost 8 – a cliff, not a plateau. His curve is monotone non-decreasing and settles;
+> mine collapsed.»
+
+The property he chose on 14.08 is therefore **the per-match cost never DECREASES with depth** (min
+5 6 7 7 7 7 7). A concave tail violates it by construction – which is exactly what the 19.09 ruling
+asks for, and a later ruling supersedes an earlier one. But he asked for «**НЕМНОГО** уменьшить», and
+the shape he threw out is the one where a late round costs a fraction of an early one.
+
+**The reading this pass took, stated so he can overrule it:** the tail may EASE BACK, but no round of
+a run may cost less than that run's FIRST round. Arithmetically `ladder[i] >= ladder[0]`.
+
+| k | deep per-match, round by round | Slam title | «never below the opener»? |
+| --- | --- | --- | --- |
+| shipped | 5 6 7 7 7 7 7 | 46 | – |
+| **0.5** | **5 6 7 7 6 6 5** | **42** | ✔ eases back exactly to the opener |
+| 1 | 5 6 7 6 5 4 3 | 36 | ✘ the final costs 60% of the R128 match |
+| 2 | 5 6 7 5 3 2 2 | 30 | ✘ the cliff he named in as many words |
+
+The shape is one line of arithmetic, and it leaves his ramp-in untouched:
+
+> `ladder[i] = shipped[i] − floor(k · max(0, i − plateau))`, floored at −(the family's cheapest
+> per-match surcharge), where `plateau` is where the shipped ladder first reaches its final value.
+
+The floor is what keeps the whole-run TOTAL monotone – a discount may give back the tier's travel tax
+and never touches the scoreline – and `tools/season-equation.ts`'s `monotoneWitness` proves both
+properties per cell instead of asserting them here.
+
+### 10e. The grid
+
+`npm run bench:season-eq -- --levers --seeds 10 --toAge 28` – 20 careers a cell, 18 cells, the
+shipped values one of them. Every cell is THIS tree with the dials patched on the live `ECONOMY`
+object and restored in a `finally`.
+
+| cell | holidays | median | ≤2 | 3–4 | 5+ | never | door | wk<50 | cond med | min | inj prev | onsets | knocks | events | depth | spend | restFree | best |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SHIPPED (control) | 8.0 | 8.0 | 0% | 5% | 95% | 0% | 99 | 2.7 | 92 | 39 | 49% | 0.70 | 1.1 | 21.8 | 2.86 | 15.3 | 10.1 | 12 |
+| A1 concave depth k=0.5 | 7.8 | 8.0 | 0% | 8% | 92% | 0% | 99 | 2.7 | 92 | 40 | 49% | 0.64 | 1.2 | 21.8 | 2.84 | 14.7 | 10.1 | 10 |
+| A2 concave depth k=1 | 7.6 | 8.0 | 1% | 7% | 92% | 0% | 99 | 2.1 | 92 | 42 | 47% | 0.66 | 1.2 | 21.8 | 2.85 | 13.7 | 10.1 | 12 |
+| A3 concave depth k=2 | 7.0 | 7.0 | 1% | 12% | 87% | 0% | 100 | 1.6 | 92 | 45 | 48% | 0.64 | 1.3 | 21.8 | 2.86 | 13.0 | 10.1 | 12 |
+| B1 tour relief 2->3 | 7.2 | 7.0 | 0% | 8% | 92% | 0% | 99 | 2.0 | 92 | 43 | 49% | 0.67 | 1.2 | 21.9 | 2.86 | 13.7 | 10.1 | 11 |
+| B2 tour relief 2->4 | 6.3 | 6.0 | 2% | 17% | 80% | 0% | 99 | 1.4 | 93 | 48 | 48% | 0.65 | 1.3 | 21.9 | 2.85 | 12.0 | 10.0 | 12 |
+| B3 tour relief 2->6 | 4.1 | 4.0 | 21% | 44% | 36% | 6% | 99 | 1.0 | 94 | 61 | 46% | 0.61 | 1.5 | 22.0 | 2.85 | 8.8 | 10.0 | 11 |
+| C1 home rungs +1 (2/3/4) | 8.0 | 8.0 | 0% | 5% | 94% | 0% | 99 | 2.7 | 92 | 39 | 45% | 0.65 | 1.1 | 21.7 | 2.85 | 15.3 | 11.1 | 11 |
+| C2 home rungs +2 (3/4/5) | 7.9 | 8.0 | 0% | 6% | 94% | 0% | 99 | 2.7 | 93 | 39 | 48% | 0.67 | 1.1 | 21.7 | 2.85 | 15.4 | 12.0 | 11 |
+| C3 home rungs +3 (4/5/6) | 7.9 | 8.0 | 0% | 6% | 94% | 0% | 99 | 2.8 | 93 | 39 | 47% | 0.65 | 1.1 | 21.7 | 2.85 | 15.3 | 12.9 | 12 |
+| D1 proRecoveryBase 5->6 | 7.8 | 8.0 | 0% | 5% | 94% | 0% | 99 | 2.6 | 93 | 38 | 45% | 0.66 | 1.2 | 21.8 | 2.84 | 15.3 | 11.1 | 12 |
+| D2 proRecoveryBase 5->7 | 7.7 | 8.0 | 0% | 6% | 94% | 0% | 99 | 2.6 | 93 | 38 | 45% | 0.61 | 1.1 | 21.9 | 2.85 | 15.3 | 12.0 | 12 |
+| D3 proRecoveryBase 5->9 | 7.6 | 8.0 | 0% | 6% | 94% | 0% | 100 | 2.6 | 95 | 39 | 46% | 0.60 | 1.1 | 22.1 | 2.84 | 15.4 | 13.6 | 12 |
+| E1 A2 + B1 | 6.6 | 7.0 | 4% | 10% | 86% | 1% | 99 | 1.5 | 92 | 47 | 46% | 0.58 | 1.3 | 21.8 | 2.88 | 12.2 | 10.1 | 11 |
+| E2 A3 + B2 | 4.8 | 5.0 | 11% | 34% | 55% | 4% | 100 | 0.9 | 94 | 57 | 49% | 0.64 | 1.5 | 22.0 | 2.91 | 9.8 | 10.1 | 11 |
+| E3 A3 + B2 + C1 | 4.7 | 5.0 | 13% | 32% | 55% | 3% | 100 | 1.0 | 94 | 57 | 46% | 0.60 | 1.5 | 22.0 | 2.92 | 9.8 | 11.0 | 11 |
+| E4 A3 + B2 + C1 + D1 | 4.7 | 5.0 | 13% | 36% | 51% | 4% | 100 | 0.9 | 95 | 58 | 46% | 0.60 | 1.5 | 22.0 | 2.92 | 9.9 | 12.0 | 11 |
+| E-MAX (a bound, not a cell) | 2.1 | 1.0 | 76% | 10% | 14% | 74% | 100 | 1.0 | 100 | 72 | 42% | 0.52 | 1.6 | 22.0 | 2.87 | 4.9 | 14.4 | 11 |
+
+⚠ `spend` and `restFree` are the actuation columns, and they are in the table for the null-arm rule
+rather than for the reader: A and B land in what a tournament week costs, C and D land in the same
+accumulator as each other and are read on the weeks the ceiling has room.
+
+### 10f. What shipped, and what did not
+
+> **SHIPPED: `ECONOMY.masseur.tourRecoveryPerRound` 2 → 3.**
+> **HELD FOR HIS RULING: the concave depth curve, benched at three strengths, not moved.**
+
+**Why the masseur's tournament dial is the one worth its price.** §3's finding is that the CEILING,
+not the dial, is what a rest week runs into – she is worth 10.1 a week and banks 4.7, because the
+holiday she has just taken put her at 100. Every recovery lever in the game pays into that clamp
+except this one: `masseurTourRelief` is subtracted from a run's strain at `finalizeTournament`, on a
+week she PLAYS, where there is no clamp to eat it. And because it is `× (matches − 1)`, **it is
+itself a reduction of fatigue at depth** – a first-round exit buys nothing from it, a title buys the
+most – so his first ask is answered by his second lever.
+
+**Why the depth ladder is not shipped, in one line of cost-benefit.** It works: the shape is built,
+the arms are in the bench, and §10e prices all three. But the only strength that respects the shape
+rule of §10d buys **0.2 holidays a season**, and it re-prices all 199 rivals – `tournamentRunStrain`
+is shared with the cohort by construction (`engine/condition.ts`: «the ladder must apply to BOTH
+sides or a deep run would grind only the player»). Measured separately with `tools/frozen-key-diff.ts`:
+
+| change, measured alone | keys moved on 5/0 · 8/0 · 0/1 · 6/1 · 5/1 | holidays bought |
+| --- | --- | --- |
+| the concave ladder at k=0.5 | **42 · 38 · 38 · 38 · 44** of 94 · 94 · 95 · 93 · 94 | −0.2 |
+| `tourRecoveryPerRound` 2 → 3 | **0 · 0 · 0 · 0 · 0** of the same | −0.8 |
+
+The strengths that would justify that guard cost (k=1, k=2) are exactly the ones that break the rule
+he set on 14.08. **So the bend of the tail is his ruling to make, and the cost is paid once after it
+– not the weak version now and the real one again later.** The arms are shipped in the bench so the
+question costs him one sentence and nobody a re-measure.
+
+**And +1 rather than +2 on the relief, for a measured reason.** The relief is subtracted AFTER the
+strain and grows with depth, so raising it flattens what depth is WORTH. Net cost of a straight-sets
+run, he travels:
+
+| `tourRecoveryPerRound` | W15 exit → title | ratio | Slam exit → title | ratio |
+| --- | --- | --- | --- | --- |
+| 2 (was) | 4 → 16 | 4.0x | 5 → 34 | 6.8x |
+| **3 (shipped)** | **4 → 12** | **3.0x** | **5 → 28** | **5.6x** |
+| 4 | 4 → 8 | 2.0x | 5 → 22 | 4.4x |
+| 6 | 4 → **0** | **INVERTED** | 5 → 10 | 2.0x |
+
+At 6 a W15 title costs LESS than a first-round exit – winning five matches is cheaper than losing
+one. `tools/season-equation.ts`'s `netDepthWitness` measures that ratio per cell, because it is
+invisible to any witness that reads the ladder: the subtraction happens after `tournamentRunStrain`
+has returned.
+
+### 10g. What it costs elsewhere – the honest list
+
+- **It does not reach «отпуска реже», and no cell of the four levers does at a value that is not
+  degenerate.** 8.0 → 7.2 is four fewer holidays every five seasons, and the 5+ bucket only falls
+  from 95% of seasons to 92%. That is a real improvement and it is not his sentence, and §10j names
+  the constant that is.
+- **Depth is worth less than it was**, by the table above: a W15 title is 3.0x an exit rather than
+  4.0x. That is the intended direction – he asked for deep weeks to cost less – but it is a cost and
+  not a free win, and it is the reason the step is +1.
+- **The masseur is worth nearly twice what he was, which widens the staffed/unstaffed gap.** The
+  relief reaches only a player who has hired him AND pays his fare. §7 measured him at **0.9 family
+  weeks** a season at relief 2; re-measured at relief 3 on the same 20 careers an arm
+  (`--staffing --seeds 10 --toAge 28`), the gap is **1.7** – daily 7.2 against absent 8.9 – with
+  weeks under 50 at 2.0 against 4.4, match wins 49.8 against 46.9, and the career ceiling #11 against
+  #13. ⚠ The ceiling column is one §7 never printed, so it is a new reading rather than a comparison –
+  what can be said against §7 is the family-week gap, and it has roughly doubled. He was always an
+  investment rather than a luxury (the masseur spec's §7); he is more of one now, and a career that
+  cannot afford him is further behind than it was.
+- **It re-prices a dial the owner had already worried was generous** («+2 за каждый круг не
+  многовато?»). The 22.08 note is kept beside the constant, and the 19.09 naming is what governs it.
+- **Nothing else moved.** Injury prevalence 49% → 49%, onsets 0.70 → 0.67, knocks 1.1 → 1.2, events
+  21.8 → 21.9, mean depth 2.86 → 2.86, the ranking ceiling #12 → #11. A cell that bought holidays by
+  making her worse would show in `best` and `depth`; a cell that bought them by letting her bottom out
+  would show in `cond min` (39 → 43, i.e. her worst week got BETTER); a cell that bought them by
+  making the holiday pointless would show in `never` (0% → 0%).
+
+### 10h. The guards, the frozen careers and the capture
+
+**Nothing needed re-aiming. 397 tests green across the thirteen guard files that read these numbers**
+(`fatigueReference`, `condition`, `masseur`, `round9`, `round10`, `rivals`, `rival-fatigue`,
+`injuries`, `ladder` and the four `coach-travel-edge*` frozen suites), which is a consequence of
+shipping the dial that reaches no frozen career rather than the one that reaches every rival.
+
+- **The frozen careers: 0 keys moved on ALL FIVE CELLS.** `tools/frozen-key-diff.ts` on 5/0, 8/0,
+  0/1, 6/1 and 5/1 – five explicit invocations, never `set -- $cell`, each header read back against
+  what was asked for (the zsh word-split trap `tests/coachTravelEdgeFixtures.ts` has now watched fire
+  three times did not fire here). Control = this tree with the change reverted IN PLACE, never a
+  different commit and never a different worktree: **0 of 94 · 94 · 95 · 93 · 94.** `rngMain` reproduces the three canonical fingerprints unchanged –
+  `1dbff28caca2` · `aebc8101d6df` · `d84bcbf0c481`. The reason is structural and provable rather than
+  lucky: `masseurTourRelief` is applied in ONE place (`world.ts finalizeTournament`), for the kid
+  alone, and its gate is a counting W-series result no 156-week career reaches.
+- **The MAIN capture is untouched.** No draw is added, removed or reordered – the change is
+  post-strain integer arithmetic. `count` 41550 and `hash` e6b0c709 reproduce byte for byte.
+- **The mounted UI gate is green too**: the `component` project's 2213 tests pass. ⚠ One file
+  (`wave3-graduated-portrait`) came back red on the first run with a `beforeAll` **timeout** and zero
+  assertion failures, at a moment this machine was carrying three agents' benches at load 23. Re-run
+  alone it passes in 4.4s against a 10s hook budget – CLAUDE.md's contention signature exactly, and
+  it is recorded here because the house rule is that a red under contention is disproved by a control
+  run rather than argued away.
+- **⚠ And the measurement that made this the shipped cell is on the record.** The per-key diff was run
+  FIRST on the ladder change as well, before it was set aside: it moved 42 · 38 · 38 · 38 · 44 keys of
+  94 · 94 · 95 · 93 · 94 on the five cells
+  (`cohort`, `fieldSeasonPoints`, `results`, `kidRank` and everything downstream of them) and turned
+  the capture's derived `kidRank` 90 → 89 – rivals arriving at draws with different legs, exactly the
+  documented mechanism of the rival-life re-pin. Its `rngMain` was byte-identical too: the ladder
+  changes the arithmetic of the week, never the shape of it. That is why it is a RULING to take and
+  not a defect to avoid.
+
+### 10i. The corridors this change invalidates
+
+**Recorded numbers that are now stale.** None of them is a test; all of them are measurements written
+down in a document, and each needs re-reading rather than re-aiming.
+
+| where | the recorded number | why |
+| --- | --- | --- |
+| `the-masseur-2026-08.md` §11 | the whole 1-vs-2 relief comparison («8k wins +8.2±2.3 → +4.7±2.6») | measured at a value no longer shipped. Its VERDICT («1 is too little») still stands; its levels do not. A dated banner now says so at the section head. |
+| this document, §7 | «the masseur is worth 0.9 family weeks a season» and «all four arms arrive at the door at 99 and take eight family weeks» | measured at relief 2. **RE-MEASURED at relief 3 in this pass**: the seat is worth **1.7** family weeks (daily 7.2 · absent 8.9), and putting the pro base back to the junior 8 is worth 0.4 with him and 0.4 without – so §7's ruling («the seat he was traded against is worth several times the dial he was traded for») holds and is now stronger. |
+| this document, §3 · §4 · §6 | the depth table (1m 5.5 … 7m 37.2), the per-season −379 / +80 / +291, and the 3×3 grid | all measured at relief 2, so every professional week in them is ~1.9 dearer than the shipped game now charges a travelling, staffed player. |
+| `fatigue-reprice-2026-08.md` §6.2 | «she arrives at the off-season at 45–50» | RELEASED by ruling, not by arithmetic (§10b). A dated banner now says so. |
+| `tools/masseur-bench.ts` | its `--relief` default is read from `ECONOMY`, so it follows | nothing to change; any LOGGED run under `bench-combined/` is at the old value. |
+
+**Sim-project corridors that read these numbers – ALL SIX RUN, ALL SIX GREEN.** `test:sim` as a whole
+is not this pass's to run (the standing 22.08 regime), but the six files whose corridors touch
+condition were each run on their own, serialised, on the shipped tree:
+
+| file | what its corridor claims | result |
+| --- | --- | --- |
+| `fatigue-bench.test.ts` | the strain re-derivation and the grid's own invariants | 24 tests, 39.7s |
+| `fatigue-bench-planner.test.ts` | `balanced.meanCondition > grinder`, vacations >= 1 | 9 tests, 44.6s |
+| `fatigue-bench-policy.test.ts` | the injury ratio band `> 1` and `< 3.6` | 1 test, 34.7s |
+| `fatigue-bench-policy-104w.test.ts` | `ratio > 1.5` per match | 1 test, 24.5s |
+| `fatigue-bench-policy-condition-working.test.ts` | grinder < balanced < careful | 1 test |
+| `fatigue-bench-policy-condition-middle.test.ts` | the same ordering | 1 test (52.3s for the pair) |
+
+⚠ **That is the result the structure predicted rather than a lucky one.** All six walk 104-WEEK
+JUNIOR careers, and the masseur's gate is a counting W-series result no 104-week career reaches – the
+same argument the frozen careers prove with 0 of 94 keys. **The corridor most at risk was the injury
+ratio band, and it is the one with the most room.** ⚠ They are reported here as INFORMATION for the
+architect and not as a gate cleared: a Monte-Carlo ordering claim run once on a loaded machine is
+evidence, not a verdict, and the weekly cron is what settles them.
+
+**Not affected, checked rather than assumed.** Every domestic, junior and professional cell of
+`tests/fatigueReference.test.ts` (no drain constant moved at all); `tests/masseur.test.ts`, which
+reads `tourRecoveryPerRound` through a local `const per` and so follows the new value, including the
+cap case `masseurTourRelief(5, 3, true) === 3`.
+
+**And no player-facing string moves, which the repo had already guaranteed in writing.** `grep` over
+`src/**/*.vue` finds `tourRecoveryPerRound` exactly twice, both in COMMENTS in `SupportStaffTab.vue`,
+and the first of them is the rule itself: «⚠ NO NUMBER IN IT, BY ROUND 42 #46's OWN RULE.
+`tourRecoveryPerRound` is a tuning constant» and the card must not print it. The screen says what the
+fare BUYS, never how much – so the value could move without a word on any surface changing, and no
+draft copy was needed. `conditionBonusPerWeek` has no `.vue` hit at all.
+
+### 10j. The lever that is not one of the four, and is the direct answer to the new bar
+
+`ECONOMY.practice.rescueCondition` (80) is the condition at or below which the GAME ITSELF surfaces
+the holiday – `SeasonScreen.vue`'s own comment: «the game SURFACES the lever to whoever is low». The
+measured eight holidays a season is precisely the count of times she crosses it.
+
+The bar changed on 19.09 from «how empty is she in December» to «how often is the holiday forced»,
+and **that constant is the only one in the model whose whole job is the second question.** Every
+lever measured in §10e changes how often she FALLS to 80; that one changes what 80 means. §5b of the
+bench sweeps it so the number is known rather than guessed:
+
+`npm run bench:season-eq -- --confirm --seeds 10 --toAge 28` – the same 20 careers, the shipped
+drains, only the prompt moved. ⚠ The first two rows are ALSO the 19.09 change measured as an
+in-process A/B, which is the control discipline in one run: arm A is this tree with the change
+reverted in place, arm B is the tree as shipped, same seeds, same process. They reproduce §10e's
+control and B1 to the digit.
+
+| cell | holidays | median | ≤2 | 3–4 | 5+ | never | door | wk<50 | cond med | min | inj prev | onsets | knocks | events | depth | spend | restFree | best |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A: pre-change (tour relief 2) | 8.0 | 8.0 | 0% | 5% | 95% | 0% | 99 | 2.7 | 92 | 39 | 49% | 0.70 | 1.1 | 21.8 | 2.86 | 15.3 | 10.1 | 12 |
+| B: ⭐ SHIPPED 19.09 (tour relief 3) | 7.2 | 7.0 | 0% | 8% | 92% | 0% | 99 | 2.0 | 92 | 43 | 49% | 0.67 | 1.2 | 21.9 | 2.86 | 13.7 | 10.1 | 11 |
+| the prompt 80->70 (shipped drains) | 5.3 | 5.0 | 6% | 26% | 68% | 2% | 99 | 2.4 | 89 | 40 | 52% | 0.69 | 1.5 | 22.1 | 2.84 | 13.5 | 10.0 | 10 |
+| the prompt 80->60 (shipped drains) | 4.1 | 4.0 | 20% | 38% | 42% | 9% | 98 | 2.9 | 86 | 39 | 53% | 0.76 | 1.7 | 21.9 | 2.81 | 13.3 | 10.1 | 12 |
+
+**It is three times the lever any of the four is, and it is the only thing measured here that reaches
+his sentence.** 80 → 70 takes holidays to 5.3 and the 5+ bucket from 92% of seasons to 68%; 80 → 60
+takes them to 4.1 and 42%.
+
+**And it is the only cell in this whole document that makes her measurably worse.** Injury prevalence
+49% → 52% → 53%, knocks 1.2 → 1.5 → 1.7, onsets 0.67 → 0.69 → 0.76, median condition 92 → 89 → 86,
+and `never` – the holiday ceasing to be a decision – 0% → 2% → 9%. That is not an argument against it:
+**it is the trade stated honestly.** A parent who is not offered the holiday plays more of the season
+nearer the strength knee, which is where condition starts costing her matches, and that is precisely
+what «отпуска реже» buys. Every other lever in §10e moves the holidays by moving her BODY; this one
+moves them by moving the ADVICE.
+
+⚠ **It is not moved here and this is not a proposal.** §8d reserved it to him, it changes a screen's
+behaviour rather than an engine constant, and the trade is real: a lower prompt means more weeks spent
+nearer the strength knee (70), which is the one place condition starts costing her matches. Measuring
+it is not proposing it. But under the new bar it is the honest answer to «отпуска реже», and he should
+see the number before he decides the four levers were not enough.
