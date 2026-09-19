@@ -50,6 +50,96 @@ export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'in
  *  to interpolate (see `graduatedUrl` in art/preload.ts, and the decision below). */
 export type PortraitEmotion = AvatarEmotion | 'rehab'
 
+// =================================================================================================
+// ⭐⭐⭐ THE BRIDE – a painting of ONE MOMENT, on the one channel that can carry a moment
+// =================================================================================================
+//
+// `fem-euro-brunnet-adult-bride.webp` shipped with the art set, is the reason the wedding's 23+
+// minimum was ruled on 11.09 (the comments in `economy.ts` and `world/lifeBeat.ts` both say so), and
+// until now was referenced by NOTHING in `src/`. The wedding this wave shipped wrote its album and
+// milestone memory with `'happy'`, so the polaroid drew her ordinary adult face.
+//
+// ⚠⚠ IT IS NOT A MEMBER OF `AvatarEmotion` AND IT IS NOT A MEMBER OF `PortraitEmotion`, AND THAT IS
+// A MEASUREMENT RATHER THAN TIMIDITY. Two facts decide it, and both are already written down above:
+//
+//   * `avatarCropPath` is TOTAL over `AvatarEmotion` – «every string this can return names a file
+//     that exists; there is no branch through which it can produce a 404». There is no
+//     `avatars/adult-bride.webp` and there is no reason to cut one, because no surface in the app
+//     renders an emotion crop at all. A member there would break that guarantee outright.
+//   * `PORTRAIT_EMOTIONS` is the BAND matrix – eight faces × five bands, swept against the files on
+//     disk by `tests/portrait-bands.test.ts`. The bride exists in ONE band. That is exactly the
+//     shape `graduated` has, and `graduated`'s own note above says what joining the matrix would
+//     mean: «`portraitUrl(stage, emotion)` able to build four filenames that are not on disk».
+//
+// ⚠ SO WHY NOT `graduated`'s ROAD (its own builder, no union at all)? Because a graduation is a
+// POPUP the UI decides to show, and a memory is a CARD the ENGINE fills: `MemoryCard` carries
+// `(stage, emotion)` and the UI calls `portraitUrl` with them. The engine cannot say «draw the
+// bride» through a builder it is not allowed to know about (it may not import the UI). The emotion
+// channel is the only seam there is, so the bride joins THAT union and nothing wider.
+//
+// ⚠ WHAT THIS BUYS, stated because it is the whole argument: every per-emotion map in the app –
+// `MOOD_WORD` (WeekRecapCard), `MOOD_LABEL` (KidScreen), `MOOD_FACE`, `MOOD_DEVIATION` – is keyed on
+// `PortraitEmotion` and stays TOTAL, untouched, and without a single invented word. Those maps are
+// keyed on `DiaryFacts.emotion`, the WEEKLY MOOD face, which no wedding can ever be; inventing a
+// «bride» entry for each of them would have been new player-facing copy nobody asked for, which is
+// invariant 4 arriving through a type.
+//
+// ⚠ NO SCHEMA MOVES. `MemoryCard` is a SNAPSHOT type – built fresh by `toSnapshot`, persisted
+// nowhere – so widening its `emotion` costs no `SAVE_SCHEMA_VERSION` bump and no migration. Checked
+// before it was assumed: there is no `'bride'` and no memory-card shape anywhere under `src/db`.
+
+/** ⭐ THE FACES A MEMORY POLAROID CAN WEAR: the painted eight, plus a painting that belongs to one
+ *  MOMENT rather than to a mood. See the note above for why this is a union of its own. */
+export type MemoryFace = PortraitEmotion | 'bride'
+
+/** ⭐ WHICH BANDS EACH FACE IS ACTUALLY PAINTED FOR. Absent from this table ⇒ all five, which is
+ *  every face of `PORTRAIT_EMOTIONS` and is what makes the matrix a matrix.
+ *
+ *  ⚠ IT IS A TABLE AND NOT AN `=== 'bride'`, for `STAGE_ASSET`'s reason one paragraph down: the next
+ *  one-band painting that arrives needs exactly this seam, and a branch would have to be found and
+ *  edited instead of a row being added. */
+export const FACE_BANDS: Partial<Record<MemoryFace, readonly PortraitStage[]>> = {
+  bride: ['adult'],
+}
+
+/** ⭐⭐ THE HONEST FALLBACK, AND IT IS EXPLICIT BECAUSE THE ALTERNATIVE IS A 404.
+ *
+ *  A face painted for only some bands has to answer for the others, and there are only two honest
+ *  answers: refuse (which would make the engine's memory card fail to render) or fall back to a
+ *  picture of the same girl in the right band. `norm` is that picture – the neutral stage portrait,
+ *  which every band has – so a wedding at thirty-one shows a woman of thirty-one rather than a
+ *  broken frame or, worse, a twenty-five-year-old's face on her.
+ *
+ *  ⚠ IT IS REACHABLE, which is why it is built rather than asserted away. The wedding's own gate is
+ *  23+, so `adult` (23-30) is the common case – but `lateCareer` starts at 31 and a first marriage
+ *  in the thirties is an ordinary career. The other three bands are unreachable through the wedding
+ *  today and are answered anyway, because a total function cannot be made wrong by a future caller.
+ *
+ *  Pinned in `tests/portrait-bands.test.ts` against the files on disk, both arms: the band that HAS
+ *  the art resolves to it, and the four that do not resolve to a file that exists. */
+export function paintedFaceFor(stage: PortraitStage, emotion: MemoryFace): MemoryFace {
+  const bands = FACE_BANDS[emotion]
+  return bands === undefined || bands.includes(stage) ? emotion : 'norm'
+}
+
+/** ⭐⭐ THE ONE SPELLING OF «WHICH PAINTING IS THIS», band fallback and asset alias in one place.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE THE TABLE'S OWN HEADER PREDICTED THIS BUG. `art/faceRects.ts` warns that a
+ *  builder which interpolates the stage or the emotion by hand «is harmless TODAY and would break
+ *  again the moment a stem stops being identity» – and a one-band face is exactly that moment. The
+ *  Memory polaroid has TWO consumers of the same answer: the URL (`portraitUrl`) and Home's
+ *  `object-position` (`facePoint`, keyed on the stem). If only the URL resolved the band, a wedding
+ *  at thirty-one would DRAW `lateCareer-norm` and FRAME it by a rectangle filed under
+ *  `lateCareer-bride`, which does not exist – `facePoint` answers 50/50 for a stem it does not know,
+ *  and on a landscape cover window 50/50 is her shoulder. One value, so the two cannot disagree.
+ *
+ *  ⚠ THE ALIAS IS STILL HERE TOO (`portraitAssetStem`) – R2-18's seam, which this wraps rather than
+ *  replaces, so there is still exactly one place that knows a band's type name may not be its file
+ *  name. */
+export function paintedStemFor(stage: PortraitStage, emotion: MemoryFace): string {
+  return `${portraitAssetStem(stage)}-${paintedFaceFor(stage, emotion)}`
+}
+
 /** The seven croppable faces, as a value (the type's own members – a test pins that they agree). */
 export const CROPPABLE_EMOTIONS: readonly AvatarEmotion[] = [
   'norm',

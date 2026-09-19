@@ -203,7 +203,7 @@ function careerAt(seed: string, week: number): WorldState {
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED: T2's hazard decides WHEN it ends and T5's
  *  draws decide when he hears, and neither is under test in this file. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, ...over }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null, ...over }
 }
 
 /** The lowest `bond` that still reads as this band – ASKED OF THE LADDER rather than re-derived from

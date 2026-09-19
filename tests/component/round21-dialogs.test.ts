@@ -24,6 +24,7 @@ import { weekLabel } from '../../src/shared/dates'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
 import type { CareerMeta, SavePeek, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+import { moneyOf } from '../helpers/careerMoney'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND MoreScreen READS IT ON MOUNT (the sound, motion and match
 // defaults). The same shim round20-ui.test.ts and round19-wrapup.test.ts install, for the reason
@@ -233,7 +234,7 @@ function forkSnapshot(): Snapshot {
     week: 265,
     kidRank: 88,
     fundsCents: 1234_00,
-    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
     fork: {
       askedWeek: 265,
       ageYears: 19,

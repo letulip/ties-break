@@ -1,3 +1,11 @@
+---
+type: spec
+status: reference
+area: simulation-and-balance
+canonical: false
+last-reviewed: 2026-09-19
+---
+
 # Re-pricing the week: fatigue, recovery, vacations — and the injury curve under them
 
 Written 03.08.2026 on the owner's instruction («по усталости нам надо комплексно что-то сделать, я
@@ -187,6 +195,16 @@ note in act2-pro-tour.md warns about for best-16.
    criterion; the baseline is 11 on the owner's W230 career).
 2. **The season's shape**: she arrives at the off-season at **45–50**, and after the blackout weeks
    plus one big (or two small) vacations she opens the next season at **≥90**.
+   ⚠⚠⚠ **THE OWNER RELEASED THE 45–50 CLAUSE ON 19.09.2026, AND IT IS NO LONGER A CRITERION AT ALL** –
+   «давай изменим эту цель, если она нам мешает. Цель – отпуска реже, а не после каждого турнира
+   ездить всё-таки»
+   ([the-season-equation-2026-09.md](the-season-equation-2026-09.md) §10b). The number was DERIVED
+   from his own «1 большим или парой небольших отпусков» sentence, never given, and the derivation
+   was self-defeating: arriving at 45 means spending the year near empty, and near empty is what
+   crosses `practice.rescueCondition` (80) eight times a season – the very complaint that replaced
+   it. **The bar is now holiday FREQUENCY, and the off-season door is a reported figure that floats.**
+   Read the rest of this clause as history. The paragraph below it is the earlier, narrower objection
+   and is kept because it is the record of how the number stopped describing the game.
    ⚠ **THE 45–50 HALF NO LONGER DESCRIBES THIS GAME'S LADDER** (audit §2, 04.08): it is derived from
    §3's average event of 2.35 matches, and since W3-ACT2 opened ten professional rungs the measured
    figure is **1.6** – she loses in the first round of most of what she now enters, and a first-round

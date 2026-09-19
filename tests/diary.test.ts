@@ -178,6 +178,9 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       partnerKnown: false,
       // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryWorldView.freshBreakup`.
       freshBreakup: false,
+      // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
+      spouseOccasion: null,
+      ownKeyWeek: false,
       trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -293,6 +296,9 @@ function makeFacts(input: {
     partnerKnown: false,
     // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryWorldView.freshBreakup`.
     freshBreakup: false,
+    // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
+    spouseOccasion: null,
+    ownKeyWeek: false,
     injured,
     travelled: s === 'tournament' || s === 'travelOnly',
     playedTournament: s === 'tournament',

@@ -110,8 +110,14 @@ export const LIFE_ROW_EMOJI: Partial<Record<LifeRowKind, string>> = PICKS
 /** The life-beat kinds that can reach a `'life'` feed row, and therefore the kinds a glyph can be
  *  picked for. ⚠ `satisfies` KEEPS IT HONEST BOTH WAYS, exactly as the roster above: a kind renamed
  *  or dropped from `LifeBeatKind` fails the build on this line instead of rotting into a lookup that
- *  never hits, and a new kind that starts writing rows has to be added here to be markable. */
-export const LIFE_BEAT_ROW_KINDS = ['met', 'ended'] as const satisfies readonly LifeBeatKind[]
+ *  never hits, and a new kind that starts writing rows has to be added here to be markable.
+ *  ⭐ v83 (wave 7 – T10) ADDS `'own-key'`: `deliverOwnKey` writes one kept `'life'` row per career,
+ *  stamped with the kind. ⚠ NO GLYPH IS PICKED FOR IT (§5a: «no agent adds or swaps one unasked») –
+ *  the row wears the standing white-heart fallback until the owner rules, and picking one is one
+ *  line inside `KIND_PICKS` below. `'engaged'` and `'spouse-view'` are deliberately NOT here: the
+ *  announcement's answer rows are `'info'` (wave-2 machinery, `ANSWER_EVENT`'s own note) and the
+ *  spouse's kind writes no feed row at all, so neither can reach a `'life'` row to be marked on. */
+export const LIFE_BEAT_ROW_KINDS = ['met', 'ended', 'own-key'] as const satisfies readonly LifeBeatKind[]
 
 export type LifeBeatRowKind = (typeof LIFE_BEAT_ROW_KINDS)[number]
 

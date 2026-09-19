@@ -16,7 +16,8 @@ import { createPinia, setActivePinia } from 'pinia'
 // ⚠ THE APP'S OWN STYLESHEET, IMPORTED FOR ITS `:root` – see the legibility block at the bottom of
 // this file. Without it `var(--text)` resolves to nothing and every colour assertion is vacuous.
 import '../../src/style.css'
-import { assertLegible } from './contrast'
+import { assertLegible, contrastRatio, effectiveBackground, parseColor } from './contrast'
+import { assertDismissReachable, NARROW_PHONE, PHONE, setViewport } from './fits'
 import BirthdayDialog from '../../src/components/BirthdayDialog.vue'
 import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -224,6 +225,9 @@ describe('BirthdayDialog – the four presents', () => {
   })
 
   it('a choice sends the id and nothing else, and the row disables while it is in flight', async () => {
+    // ⚠ RE-AIMED BY ROUND 45 #1: the tap that used to send is a SELECTION now, so the send is read
+    // off the Proceed. The claim is unchanged – the id that reaches `chooseGift` is the engine's own
+    // option id and nothing else crosses – which is why this case kept its name.
     const { snap } = birthdaySnapshot()
     const store = useGameStore()
     store.snapshot = snap
@@ -235,7 +239,251 @@ describe('BirthdayDialog – the four presents', () => {
     }
     const w = mount(BirthdayDialog, { global: { stubs: { teleport: true } } })
     await w.findAll('button.birthday-choice')[2].trigger('click')
+    await w.find('.birthday-proceed').trigger('click')
     expect(sent).toEqual([snap.birthdayPrompt!.options[2].id])
+    w.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 45 #1 – THE PRESENTS SELECT, AND A PROCEED GIVES. MOUNTED.
+// =================================================================================================
+//
+// The owner, on the deployed build: «в попапе дня рождения надо такой же паттерн использовать, как и
+// в других местах – выбрали ответ – подтвердили кнопкой, чтобы не было случайных нажатий», and he
+// named the donor himself when the psychologist's confirm was offered instead: «скорее попап смол
+// тока здесь больше подойдет». So this is `LifeBeatDialog`'s round-42 #8 shape – the one
+// `KnockDialog` already wears – arriving on the last single-tap card in the app.
+//
+// ⚠⚠ MUTATION ARMS – each APPLIED to the real component and RUN against this block, each red
+// recorded as MEASURED rather than predicted; the restored tree is green.
+//   ARM 1  `select()` wired back to the single tap (a `chooseGift` call beside the mark)
+//          -> RED [3]: the select case, the re-aimed send case and the double-Proceed case all count
+//          a present given before the Proceed. Round 45 #1's headline claim, falsified and caught.
+//   ARM 2  the `sending` half dropped from `confirm()`'s guard -> RED [1]: two presents for one
+//          birthday on a double-tap.
+//   ARM 3  the Proceed rendered unconditionally (`v-if="chosen !== null"` removed) -> RED [2]: the
+//          arrival census counts five buttons where the question offers four, and the no-way-out
+//          case above counts a fifth button that is not a present.
+//   ARM 4  `.birthday-mark` dropped from the row -> RED [2]: the ball census and the 3:1 case.
+//   ARM 5  `.dialog-card`'s height cap stripped -> RED [1]: the selected-state phone fit.
+//   ARM 6  the `watch` that clears the selection when the prompt goes away, removed -> RED [1]: the
+//          card re-opens a year later with last year's present still marked.
+describe('ROUND 45 #1 – the birthday selects, and only the Proceed gives', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('⭐⭐⭐ the first tap SELECTS and gives NOTHING; only the Proceed calls chooseGift', async () => {
+    const { snap } = birthdaySnapshot()
+    const store = useGameStore()
+    store.snapshot = snap
+    const given: string[] = []
+    store.chooseGift = async (giftId: string) => {
+      given.push(giftId)
+    }
+    const w = mount(BirthdayDialog, { global: { stubs: { teleport: true } } })
+
+    const rows = w.findAll('button.birthday-choice')
+    expect(rows).toHaveLength(4)
+    await rows[3].trigger('click')
+    expect(given, 'the tap that used to hand her a present hands her nothing now').toEqual([])
+    expect(rows[3].attributes('aria-checked'), 'it is a selection, and it says so').toBe('true')
+    for (const other of [0, 1, 2]) expect(rows[other].attributes('aria-checked')).toBe('false')
+
+    // Re-choosing is free – a selection is not a present.
+    await rows[1].trigger('click')
+    expect(given).toEqual([])
+    expect(rows[1].attributes('aria-checked')).toBe('true')
+    expect(rows[3].attributes('aria-checked')).toBe('false')
+
+    const proceed = w.find('.birthday-proceed')
+    expect(proceed.exists(), 'the way on appeared under the answered question').toBe(true)
+    expect(proceed.text(), 'the prologue\'s shipped confirm word, reused and not coined').toBe('Proceed')
+    await proceed.trigger('click')
+    expect(given, 'the Proceed gives the SELECTED present – the last one marked').toEqual([
+      snap.birthdayPrompt!.options[1].id,
+    ])
+    w.unmount()
+  })
+
+  it('⭐ nothing is selected on arrival, and the Proceed is not offered before a selection (ARM 3)', () => {
+    const { snap } = birthdaySnapshot()
+    const w = mountDialog(snap)
+    const rows = w.findAll('button.birthday-choice')
+    for (const row of rows) {
+      expect(row.attributes('role'), 'a control that selects says so').toBe('radio')
+      expect(row.attributes('aria-checked'), 'nothing marked before he marks it').toBe('false')
+      // ...and the ball is drawn, decorative, on all four (ARM 4).
+      const mark = row.find('.birthday-mark')
+      expect(mark.exists(), 'a selection is drawn as a selection').toBe(true)
+      expect(mark.attributes('aria-hidden')).toBe('true')
+    }
+    // The census: four presents and NOTHING else on arrival.
+    expect(w.findAll('button')).toHaveLength(4)
+    expect(w.find('.birthday-proceed').exists()).toBe(false)
+    // The group is named by the ask, which is the sentence these four answer.
+    expect(w.find('[role="radiogroup"]').attributes('aria-labelledby')).toBe('birthday-ask')
+    expect(w.find('#birthday-ask').text()).toBe(snap.birthdayPrompt!.ask)
+    w.unmount()
+  })
+
+  it('⭐ AND THE FOUR ROWS ARE STILL ONE SHAPE – selecting did not give the card a way to mark an answer', () => {
+    // «не помечай, пусть игрок читает» survives the conversion, and this is the strongest form of it:
+    // with a selection idiom on the row there are now TWO attributes a later hand could single a row
+    // out with, so the shape census is re-taken over both.
+    const { snap, askedId } = birthdaySnapshot()
+    const w = mountDialog(snap)
+    const rows = w.findAll('button.birthday-choice')
+    const shapes = new Set(
+      rows.map((r) =>
+        JSON.stringify({
+          class: (r.attributes('class') ?? '').split(/\s+/).sort(),
+          attrs: Object.entries(r.attributes())
+            .filter(([k]) => k !== 'id')
+            .map(([k, v]) => `${k}=${v}`)
+            .sort(),
+          childClasses: [...r.element.children].map((c) => c.className),
+        }),
+      ),
+    )
+    expect(shapes.size, 'one shape for all four rows, marks included').toBe(1)
+    expect(snap.birthdayPrompt!.options.some((o) => o.id === askedId), 'and the answer is among them').toBe(true)
+    w.unmount()
+  })
+
+  it('⚠ THE SELECTION DIES WITH THE CARD – next year opens with nothing marked (ARM 6)', async () => {
+    // `App.vue` mounts this dialog under a `v-if`, so in the shipped app the instance is destroyed
+    // between birthdays and the reset can never fire. It is guarded anyway because the guarantee
+    // belongs to the CARD: a mount that outlived its prompt – which is exactly how every case in this
+    // file mounts it – would open next year with last year's present already marked and a Proceed
+    // standing under an unanswered question. That is «случайные нажатия» arriving by another door.
+    const { snap } = birthdaySnapshot()
+    const store = useGameStore()
+    store.snapshot = snap
+    const w = mount(BirthdayDialog, { global: { stubs: { teleport: true } } })
+    await w.findAll('button.birthday-choice')[0].trigger('click')
+    expect(w.find('.birthday-proceed').exists(), 'a present is marked').toBe(true)
+
+    // the birthday is answered and the week moves on...
+    store.snapshot = { ...snap, birthdayPrompt: null }
+    await nextTick()
+    expect(w.find('[role="dialog"]').exists(), 'the card is gone').toBe(false)
+
+    // ...and a year later the same card comes back, asking.
+    store.snapshot = snap
+    await nextTick()
+    expect(w.find('.birthday-proceed').exists(), 'no way on under a question nobody has answered').toBe(false)
+    for (const row of w.findAll('button.birthday-choice')) {
+      expect(row.attributes('aria-checked'), 'and last year\'s present is not marked').toBe('false')
+    }
+    w.unmount()
+  })
+
+  it('⚠ a double-tap on the Proceed gives ONCE (ARM 2), and a held flight disables the card', async () => {
+    const { snap } = birthdaySnapshot()
+    const store = useGameStore()
+    store.snapshot = snap
+    const given: string[] = []
+    let release: () => void = () => {}
+    store.chooseGift = async (giftId: string) => {
+      given.push(giftId)
+      await new Promise<void>((resolve) => {
+        release = resolve
+      })
+    }
+    const w = mount(BirthdayDialog, { global: { stubs: { teleport: true } } })
+    await w.findAll('button.birthday-choice')[0].trigger('click')
+    const proceed = w.find('.birthday-proceed')
+    // Both clicks in ONE tick – the DOM has not patched `disabled` yet, so the guard in `confirm()`
+    // is the only thing standing.
+    proceed.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    proceed.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    expect(given, 'one present, not two').toEqual([snap.birthdayPrompt!.options[0].id])
+    for (const b of w.findAll('button')) {
+      expect(b.attributes('disabled'), 'in flight, every control stands down').toBeDefined()
+    }
+    release()
+    w.unmount()
+  })
+
+  it('⭐ the arrows walk the presents and do not select – the group convention, on this card too', async () => {
+    const { snap } = birthdaySnapshot()
+    useGameStore().snapshot = snap
+    const w = mount(BirthdayDialog, { attachTo: document.body })
+    const rows = [...document.querySelectorAll<HTMLButtonElement>('button.birthday-choice')]
+    rows[0].focus()
+    document
+      .querySelector('.birthday-choices')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    await nextTick()
+    expect(document.activeElement, 'the arrow moves the focus').toBe(rows[1])
+    for (const row of rows) expect(row.getAttribute('aria-checked'), 'and marks nothing').toBe('false')
+    w.unmount()
+  })
+
+  it('⭐ the empty ball is visible on every row (WCAG 1.4.11, ARM 4)', () => {
+    // The ring is what makes the control findable at all before anything is selected, and these rows
+    // sit on the accent wash rather than on the life beat's `--card-top`, so the 3:1 verdict is
+    // re-taken against the ground THIS card really paints.
+    setViewport(PHONE)
+    const { snap } = birthdaySnapshot()
+    useGameStore().snapshot = snap
+    const w = mount(BirthdayDialog, { attachTo: document.body })
+    const rows = document.querySelectorAll('button.birthday-choice')
+    expect(rows.length, 'not vacuous – there are rows to measure').toBe(4)
+    for (const row of rows) {
+      const mark = row.querySelector('.birthday-mark')!
+      const ring = parseColor(getComputedStyle(mark).borderTopColor)
+      const ratio = contrastRatio([ring[0], ring[1], ring[2]], effectiveBackground(row))
+      expect(ratio, 'the empty ball against the present it marks').toBeGreaterThanOrEqual(3)
+    }
+    w.unmount()
+  })
+
+  it('⚠⚠ ROUND-20 – the SELECTED state fits the phone: the Proceed is the way out and it is reachable', async () => {
+    // The fit net in `r2-07-dialog-shell.test.ts` measures this card on ARRIVAL, where the four rows
+    // are the last thing in the flow. The selected state is one control taller, and the way out of it
+    // is the Proceed – so the round-20 verdict is re-taken on the state the player actually leaves by.
+    for (const vp of [PHONE, NARROW_PHONE]) {
+      document.body.innerHTML = ''
+      setViewport(vp)
+      const { snap } = birthdaySnapshot()
+      useGameStore().snapshot = snap
+      const w = mount(BirthdayDialog, { attachTo: document.body })
+      const card = document.querySelector('.birthday-dialog')!
+      document.querySelectorAll<HTMLButtonElement>('button.birthday-choice')[0].click()
+      await nextTick()
+      const proceed = card.querySelector('.birthday-proceed')!
+      expect(proceed, 'the selected state is up – nothing below is vacuous').toBeTruthy()
+      expect(card.lastElementChild, 'the Proceed is the card\'s last element while rendered').toBe(proceed)
+      assertDismissReachable(card, proceed, vp, `BirthdayDialog (selected, ${vp.width}x${vp.height})`)
+      w.unmount()
+    }
+  })
+
+  it('⚠⚠ MUTATION PROOF (ARM 5) – strip the height cap and the SAME selected-state assertion goes red', async () => {
+    // The round-20 law's own demand: «prove it by mutating – a test that cannot fail on the too-tall
+    // version is not this test». The cap is the shared `.dialog-card`'s, so this is the arm that says
+    // the selected state is safe from the next honest sentence rather than by luck.
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+    const { snap } = birthdaySnapshot()
+    useGameStore().snapshot = snap
+    const w = mount(BirthdayDialog, { attachTo: document.body })
+    const card = document.querySelector('.birthday-dialog')! as HTMLElement
+    document.querySelectorAll<HTMLButtonElement>('button.birthday-choice')[0].click()
+    await nextTick()
+    const proceed = card.querySelector('.birthday-proceed')!
+    assertDismissReachable(card, proceed, PHONE, 'BirthdayDialog (selected, bounded)')
+    card.style.maxHeight = 'none'
+    card.style.overflowY = 'visible'
+    expect(() => assertDismissReachable(card, proceed, PHONE, 'BirthdayDialog (selected, unbounded)')).toThrow(
+      /declares no height bound|taller than the screen|outside the viewport/,
+    )
+    // ...and putting it back is green again, which is what says the CAP is what holds.
+    card.style.maxHeight = ''
+    card.style.overflowY = ''
+    assertDismissReachable(card, proceed, PHONE, 'BirthdayDialog (selected, cap restored)')
     w.unmount()
   })
 })

@@ -863,6 +863,67 @@ export interface CareerTotals {
   weeksLostToInjury: number
 }
 
+/** ⭐⭐⭐ ROUND 46 #9 – THE SAME CAREER'S MONEY, READ HONESTLY. A DERIVED VIEW AND NOT A NEW FACT:
+ *  every term is folded at snapshot time out of `careerTotals` (v39), `assets[].paidCents` (v63) and
+ *  `kidFundsCents` (v54), all three of which every save already carries. Nothing here is persisted,
+ *  no migration is owed and `SAVE_SCHEMA_VERSION` does not move – the same standing this type's
+ *  neighbours `FinanceWindow` and `FinanceWeekPoint` have.
+ *
+ *  ⚠ WHY IT EXISTS rather than the two surfaces each doing the subtraction: the album's slot 6, the
+ *  epilogue's totals, the fork card and the break-even milestone that GATES slot 6 all ask the same
+ *  question, and four copies of an answer is how a page comes to print figures its own milestone
+ *  disagrees with. `careerMoney` (engine/world/ledger.ts) is the one fold and carries the reasoning. */
+export interface CareerMoney {
+  /** every cent that ever came INTO the family wallet – `careerTotals.earnedCents`, untouched. */
+  earnedCents: number
+  /** the family's own half of every prize cheque – `careerTotals.prizeCents`, untouched. ⚠ NOT the
+   *  gross: her share left before the wallet saw it, and it cannot be re-derived from a rounded net
+   *  (`accrueKidShare`'s forbidden division). `herAccountCents` is where the rest of it went. */
+  prizeCents: number
+  /** every cent the tennis ever paid HER – `kidFundsCents`, which is monotone (three writers, all
+   *  `+=`, no debit anywhere in the engine) and is therefore a lifetime total as well as a balance. */
+  herAccountCents: number
+  /** `earnedCents + herAccountCents` – everything the household actually received. */
+  cameInCents: number
+  /** every cent that ever LEFT the family wallet – `careerTotals.spentCents`, untouched, holdings
+   *  and all. Kept beside `outlayCents` because the two are different questions and a surface that
+   *  wants the gross should not have to add them back up. */
+  spentCents: number
+  /** the part of `spentCents` that bought something the family STILL OWNS, at what it cost. */
+  heldCents: number
+  /** ⭐ RULING 5, 18.09 – what the family's own things have cost to KEEP over the whole career: the
+   *  crews, the berths, the insurance and the services of the cars, the boats and the planes.
+   *
+   *  ⚠ IT IS NOT HELD AND IT IS NOT «SPENT» EITHER, which is why it is a third figure rather than a
+   *  wider `heldCents`. The money is gone; the owner's ruling is that it is not the TENNIS – «вообще
+   *  не про теннис, мимо (машины, дома, яхты, самолеты)». Replayed rather than read, because no save
+   *  retains a career total of upkeep: see `careerAssetUpkeepCents` (engine/world/assets.ts) for the
+   *  replay's exactness and for the one residual it names (a thing already sold). */
+  upkeepCents: number
+  /** `spentCents − heldCents − upkeepCents`, floored at zero: money that left the family for good
+   *  AND was part of this life. THE number the word «spent» means – coaching, courts, fares,
+   *  entries, kit, physio, salaries, the weeks away, the vacations and the tuition.
+   *
+   *  ⚠ RULING A, 18.09 – IT IS THE TENNIS AND NOTHING ELSE, and this sentence used to end «and the
+   *  businesses the family built». It never did contain them: `heldCents` folds every `assets` row
+   *  with no family filter, so an enterprise's purchase has been excused by the same line that
+   *  excuses a house since the fix shipped. The prose is corrected to the arithmetic, which is what
+   *  his «оставим только расходы на теннис» asks for and what the figure already was. */
+  outlayCents: number
+  /** what those holdings are worth NOW, which is not what they cost. */
+  holdingsCents: number
+  /** ⭐ RULING A, 18.09 – THE FAMILY'S PORTFOLIO, AS ONE LINE: «целиковый срез портфеля семьи по
+   *  деньгам в кошельке и всем магазине на круг». The wallet plus every shelf row at this week's
+   *  worth – `fundsCents + holdingsCents`, the fund and the deposit included, because an
+   *  `investment` rung is an ordinary holding.
+   *
+   *  ⚠ A POINT-IN-TIME READ AND NOT A LIFETIME ACCUMULATION, which is exactly why it costs no
+   *  schema: both terms are on the save today. ⚠ HER OWN ACCOUNT IS NOT IN IT – he asked for the
+   *  FAMILY's portfolio and named two things; `herAccountCents` is the third and has its own row.
+   *  ⚠ NOT FLOORED: a family under water reads negative, honestly. */
+  portfolioCents: number
+}
+
 /** THE DEBT SPELL, surfaced while she is under water – the WARNING PHASE bankruptcy wants before
  *  the fact (adult spec B4). One bad week is never death: the spell resets the week funds recover. */
 export interface DebtView {

@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, statSync } from 'node:fs'
-import { decodeExportFile, decompressWorld, sha256 } from '../src/engine/saveCodec'
+import { decodeExportFile, decompressWorld, encodeExportFile, sha256 } from '../src/engine/saveCodec'
 import {
   SAVE_SCHEMA_VERSION,
   STARTING_FUNDS_CENTS,
   activeEpisode,
   advanceRefusal,
   answerFork,
+  answerLifeBeat,
+  kidAgeYears,
   lifeLogOf,
   liveSoftBeat,
   loveEpisodesOf,
@@ -107,7 +109,7 @@ function trademarkOffenders(json: string): string[] {
 }
 
 describe('e2e fixtures: the manifest and the files agree', () => {
-  it('carries exactly the ten fixtures the plan asks for, in the registry\'s order', () => {
+  it('carries exactly the eleven fixtures the plan asks for, in the registry\'s order', () => {
     expect(manifest.fixtures.map((f) => f.name)).toEqual([...FIXTURE_NAMES])
   })
 
@@ -392,11 +394,13 @@ describe('e2e fixtures: each is the state its name promises', () => {
     // window is DERIVED (`ECONOMY.life.smallTalkTtlWeeks`, 3 = the raise week and the two after it)
     // and never stored, and this is the one fact that separates `soft` from the rest of the corpus.
     //
-    // ⚠ COUNTED OVER THE TEN, NOT QUOTED FROM THE SEVEN (CLAUDE.md: «count it, do not quote it»).
+    // ⚠ COUNTED OVER THE ELEVEN, NOT QUOTED FROM THE SEVEN (CLAUDE.md: «count it, do not quote it»).
     // e2e/soft-beat.spec.ts's header records «six carry `'small-talk'` rows – 40 of them» and that
     // census is STALE – it predates `breakup` and `belated`, which carry 7 and 14 of their own.
-    // Re-measured over the current corpus: NINE of the ten carry `'small-talk'` rows, 62 in all,
-    // every one of them unanswered, and `soft` is the ONLY fixture of the ten holding a LIVE one –
+    // ⚠ AND THE «NINE OF THE TEN, 62 IN ALL» THAT REPLACED IT WENT STALE THE SAME WAY, ON THE SAME
+    // DAY IT WAS PREDICTED TO: v83 T11's `engaged` is a THIRTEEN-SEASON career and carries 24 rows of
+    // its own. Re-measured over the current corpus: TEN of the eleven carry `'small-talk'` rows, 89
+    // in all, every one of them unanswered, and `soft` is STILL the only fixture holding a LIVE one –
     // every other row is expired, the closest miss being `junior`'s youngest at 4 weeks against a
     // window of 3. So a regeneration that parked on any other career would sail straight through the
     // existence check above and fail HERE, which is the discrimination the fixture exists to make.
@@ -598,5 +602,146 @@ describe('e2e fixtures: each is the state its name promises', () => {
     const rows = world.events.filter((e) => e.week === world.week && e.type === 'life')
     expect(rows.map((e) => e.lifeKind), 'ONE feed row and never two, and it is the ending\'s').toEqual(['ended'])
     expect(rows[0].amountCents, 'a life beat is never a purchase').toBeUndefined()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ v83 T11 – `engaged`, THE ONLY CAREER IN THE CORPUS OLD ENOUGH TO MARRY.
+  //
+  // `breakup` and `belated` above hold a state that is ONE TICK away; this one holds a state that is
+  // one tick away AND a chain of nine ordinary weeks behind it, because the wedding is not a card
+  // but a DISTANCE – `ECONOMY.wedding.weeksAfterEngagement` weeks between her deciding and the day.
+  // So this block walks what e2e/wedding.spec.ts walks, through the same door: `resumeMain` from the
+  // save's own position, then the product's own `tickWeek`, which is what the worker runs behind the
+  // week button (the serializer rule in tools/e2e-fixtures.ts' header).
+  //
+  // ⚠ AND IT OWNS THE ONE ASSERTION THE BROWSER CANNOT MAKE. `partnerName` is written once, at the
+  // engagement, and NO SURFACE SPEAKS IT at W1–W2 – «whether a surface speaks the husband's name is
+  // T7's wording question, not a default» (world/lifeBeat.ts). A spec can only see what is drawn, so
+  // the second half of the v83 schema move is asserted here, on the decoded world, or nowhere.
+  // ===============================================================================================
+  it('engaged is one press from her announcement, and eight ordinary weeks from the wedding', async () => {
+    const world = await decodeExportFile(readFixtureBytes('engaged.tsave'))
+    expect(world.ending, 'the engaged fixture is meant to be a career still being played').toBeNull()
+
+    // ⭐ THE WEEK IT BOOTS ON IS ORDINARY – the half e2e/wedding.spec.ts presses, asked of the
+    // engine's own gates rather than of a list of things that might be standing there. ⚠ `liveSoftBeat`
+    // is asked TOO, and it is NOT redundant beside `advanceRefusal`: a tier-1 row is non-blocking, so
+    // it stops nothing and is still ON SCREEN, under her photograph. That is the clause `breakup`'s
+    // recipe was missing, and it cost a red e2e on the v82 regeneration.
+    expect(pendingLifeBeat(world), 'it is meant to boot with nothing to answer').toBeNull()
+    expect(advanceRefusal(world), 'and with nothing stopping the week').toBeNull()
+    expect(liveSoftBeat(world), 'and with no soft card already on the hub').toBeNull()
+
+    // ⭐⭐⭐ THE THREE FACTS `weddingEligible` ASKS, ON THE WEEK THE BROWSER PRESSES INTO. Read off the
+    // constants rather than written out: 23 is the owner's RULED gate (11.09) and 52 the drafted
+    // depth, and a wave that moves either must move this fixture with it rather than pass quietly.
+    const live = activeEpisode(world)
+    expect(live, 'the engaged fixture is meant to hold a LIVE attachment').not.toBeNull()
+    expect(
+      kidAgeYears(world.week + 1, world.profile.birthMonth, world.profile.birthDay),
+      'she is meant to be past the ruled age gate on the week she says it',
+    ).toBeGreaterThanOrEqual(ECONOMY.wedding.ageGate)
+    expect(
+      world.week + 1 - live!.sinceWeek,
+      'and the attachment she marries into is meant to be DEEP – the depth is derived from the ' +
+        "row's own age in weeks, never from new state",
+    ).toBeGreaterThanOrEqual(ECONOMY.wedding.minEpisodeWeeks)
+    expect(live!.latchedWeek, 'and nobody is married yet').toBeNull()
+    expect(live!.partnerName, 'nor named – the name is written AT the engagement, never before it').toBeNull()
+
+    // ⭐⭐⭐ ONE TICK – the browser's first press – AND SHE SAYS IT.
+    tickWeek(world, resumeMain(world.rngMain))
+    const raised = pendingLifeBeat(world)
+    expect(
+      raised,
+      'the tick after this fixture is meant to raise her announcement. If this is the only red test ' +
+        'after a regeneration, the recipe stopped finding such a week: the hazard needs 23, a ' +
+        "year-deep episode and a draw on `seed:life:wedding:<week>`, and the generator prints every " +
+        'rejection it made on the way.',
+    ).not.toBeNull()
+    expect(raised!.kind).toBe('engaged')
+    expect(raised!.detail, "and about THIS attachment – the row's detail is the episode id").toBe(live!.id)
+
+    // ...AND THE NAME IS WRITTEN, ONCE, AT THE RAISE. `partnerNameFor` is called at this one site and
+    // the result is PERSISTED rather than re-derived at read, so a later pool edit can never rename a
+    // husband an old career already has (T1's own law). This is the browser's blind spot, covered.
+    const named = loveEpisodesOf(world).find((e) => e.id === live!.id)!
+    expect(named.partnerName, 'the engagement wrote no name onto the episode').not.toBeNull()
+    expect(named.latchedWeek, 'and the latch is still eight weeks away').toBeNull()
+
+    // ⭐⭐⭐ AND EIGHT ORDINARY PRESSES LATER, THE WEDDING. The answer is the one the recipe pressed
+    // and the one the spec presses (`ENGAGED_ANSWER_ID` / `HIS_ANSWER`): `answerLifeBeat` moves bond,
+    // bond is read by the hazards that run in these eight weeks, so a different answer would walk a
+    // different chain of weeks.
+    const engagedWeek = world.week
+    answerLifeBeat(world, 'bless')
+    expect(advanceRefusal(world), 'answering her is meant to leave an ordinary week').toBeNull()
+    for (let i = 0; i < ECONOMY.wedding.weeksAfterEngagement; i++) {
+      tickWeek(world, resumeMain(world.rngMain))
+      expect(world.ending, `the career ended ${i + 1} week(s) after the answer`).toBeNull()
+      // ⚠ EVERY ONE OF THEM PLAIN, which is what lets the spec's loop be nine identical presses with
+      // no branch in it. A wave that puts a decision into this window makes the browser walk grow a
+      // conditional, and this is where that is found.
+      expect(
+        pendingLifeBeat(world),
+        `a blocking beat lands ${i + 1} week(s) after the answer – e2e/wedding.spec.ts walks these ` +
+          'eight weeks with no branch in the loop',
+      ).toBeNull()
+    }
+
+    const married = loveEpisodesOf(world).find((e) => e.id === live!.id)!
+    // ⚠ THE EQUALITY AND NOT «IS SET». `landWedding`'s gate is `>=`, so a career held up for a season
+    // would still latch on the week it was released – a different fixture from this one, and one
+    // whose spec would be counting presses that no longer mean anything.
+    expect(
+      married.latchedWeek,
+      `the wedding did not land on the ${ECONOMY.wedding.weeksAfterEngagement}th tick after the ` +
+        'answer. Either her attachment ended inside those weeks (the ordinary hazard keeps running, ' +
+        'scaled by `latchEndFactor` only once the latch exists) or the distance moved.',
+    ).toBe(engagedWeek + ECONOMY.wedding.weeksAfterEngagement)
+    expect(married.partnerName, 'and the name the engagement wrote is still the one it wrote').toBe(named.partnerName)
+
+    // ...AND BOTH SURFACES. `fireMilestone` keeps the feed line past every prune and `captureMilestone`
+    // gives the album's scroll its row – `markSchoolEnd`'s own two-surface idiom, both idempotent per
+    // `wedding:<episodeId>`. ⚠ THE ALBUM HALF IS ASSERTED **HERE AND NOWHERE ELSE**: `buildScroll` is
+    // assembled by `buildEndingView`, so the scroll exists only once a career is over, and a career
+    // that has ended cannot also be one that married this week. The browser can see the feed row only.
+    const kept = world.events.filter((e) => e.week === world.week && e.type === 'milestone')
+    expect(kept.map((e) => e.milestoneKey), 'ONE kept row, keyed on the episode').toEqual([`wedding:${live!.id}`])
+    expect(kept[0].keep, 'and it is kept, so the 400-row prune can never lose it').toBe(true)
+    expect(
+      kept[0].amountCents,
+      'the wedding charged the family. The drafted $12,000 was RULED OUT on 18.09 – «я думаю как с ' +
+        'подарками, никто и нисколько» – so no line of this mechanic may carry cents.',
+    ).toBeUndefined()
+    expect(
+      world.milestones.filter((m) => m.type === 'wedding').map((m) => ({ week: m.week, kind: m.kind })),
+      'ONE album row, dated on the wedding week and keyed on the episode',
+    ).toEqual([{ week: married.latchedWeek, kind: live!.id }])
+
+    // ⭐⭐⭐ AND THE TWO v83 FIELDS SURVIVE THE FILE DOOR, WHICH IS THE HALF NO BROWSER CAN ASSERT.
+    // e2e/wedding.spec.ts carries this same married career out of the app and back in, and what it
+    // can see on the other side is the kept FEED ROW – a `WorldEvent`, which round-trips whatever
+    // the episode holds. `latchedWeek` is drawn nowhere and `partnerName` is deliberately spoken by
+    // no surface at all (T7's wording question), so the only place the schema move itself can be
+    // read back is a world that has been opened.
+    //
+    // ⚠ THE SAME PAIR OF FUNCTIONS THE APP USES, in the order it uses them: `encodeExportFile` writes
+    // the envelope and `decodeExportFile` is the untrusted door – size cap, magic, declared version,
+    // SHA-256, bounded inflate, bounds walk, spine check, migration ladder. A field the guard chain
+    // did not know about would not arrive on the other side of it.
+    const reread = await decodeExportFile(await encodeExportFile(world))
+    const rereadEpisode = loveEpisodesOf(reread).find((e) => e.id === live!.id)
+    expect(rereadEpisode, 'the married episode is not on the re-read world at all').not.toBeUndefined()
+    expect(rereadEpisode!.latchedWeek, '`latchedWeek` did not survive the export/import round trip').toBe(
+      married.latchedWeek,
+    )
+    expect(rereadEpisode!.partnerName, '`partnerName` did not survive the export/import round trip').toBe(
+      married.partnerName,
+    )
+    expect(
+      reread.milestones.filter((m) => m.type === 'wedding').length,
+      'and the album row went with it',
+    ).toBe(1)
   })
 })

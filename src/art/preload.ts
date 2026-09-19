@@ -42,8 +42,10 @@
 import {
   CROPPABLE_EMOTIONS,
   PORTRAIT_EMOTIONS,
+  paintedStemFor,
   portraitStage,
   type AvatarEmotion,
+  type MemoryFace,
   type PortraitEmotion,
   portraitAssetStem,
   type PortraitStage,
@@ -85,11 +87,23 @@ function base(): string {
   return import.meta.env.BASE_URL
 }
 
-/** Full-size painting URL – the Kid screen / Home portrait. Takes the WIDE union: every painted
- *  face has a file, `rehab` included. */
-export function portraitUrl(stage: PortraitStage, emotion: PortraitEmotion): string {
-  // ⚠ R2-18: `portraitAssetStem`, not `stage` - the 31+ band was renamed and its files were not.
-  return `${base()}${ART_DIR}${NAME}-${portraitAssetStem(stage)}-${emotion}.webp`
+/** Full-size painting URL – the Kid screen / Home portrait / the Memory polaroid. Takes the WIDEST
+ *  union: every painted face has a file, `rehab` included, and since the wedding wave the one-band
+ *  `bride` as well.
+ *
+ *  ⚠⚠ IT RESOLVES THE BAND BEFORE IT BUILDS THE NAME, and that one call is the difference between a
+ *  fallback and a 404. `PORTRAIT_EMOTIONS` is a full matrix – eight faces in all five bands – so for
+ *  every one of them `paintedFaceFor` is the identity and this function is byte-identical to what it
+ *  has always been. `bride` is painted for `adult` alone, so a wedding at thirty-one asks for a file
+ *  that is not on disk and gets that band's `norm` instead: a woman of thirty-one, which is the
+ *  honest picture, rather than a broken frame or a twenty-five-year-old's face on her.
+ *  `shared/avatarEmotion.ts` carries the table and the reasoning; both arms are pinned against the
+ *  files in `tests/portrait-bands.test.ts`. */
+export function portraitUrl(stage: PortraitStage, emotion: MemoryFace): string {
+  // ⚠ R2-18: the STEM, not `stage` - the 31+ band was renamed and its files were not. `paintedStemFor`
+  // is that alias AND the band fallback in one value, shared with Home's `facePoint` lookup so the
+  // picture and its framing can never name two different paintings.
+  return `${base()}${ART_DIR}${NAME}-${paintedStemFor(stage, emotion)}.webp`
 }
 
 /**

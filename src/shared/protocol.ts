@@ -76,6 +76,7 @@ export type {
   FinanceWeekPoint,
   StopReason,
   CareerTotals,
+  CareerMoney,
   DebtView,
 } from './protocol/events'
 export {
@@ -141,6 +142,7 @@ export type {
   BirthdayPrompt,
   BirthdayRecord,
   LifeBeatKind,
+  SpouseViewOccasion,
   LifeBeatFollowUp,
   LifeBeatOption,
   LifeBeatPrompt,
@@ -202,6 +204,8 @@ export type {
   ShootClashPrompt,
   CallUpLetterTerms,
   BuildLetterTerms,
+  StaffSeat,
+  StaffLetterTerms,
   OfferTerms,
   Offer,
   CoachMarketRow,

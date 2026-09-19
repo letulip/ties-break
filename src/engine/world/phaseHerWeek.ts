@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, rollArrival, rollEnds, rollLeak, rollSmallTalk } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landWedding, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -320,6 +320,42 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        – `accrueSpirit`, five lines down, stays the one writer of it in the engine.
   rollEnds(world)
   rollArrival(world)
+  // ⭐⭐⭐ 1c-wed (v83, the wedding – wave 7 T2): AND THE WEEK SHE DECIDES TO MARRY.
+  //
+  //        ⚠ THE SLOT IS ARGUED ON BOTH SIDES, its siblings' own way:
+  //          · **AFTER `rollEnds`**, so an episode that ended THIS tick cannot be proposed into –
+  //            `endEpisode` has already written the date, `activeEpisode` answers null, and the gate
+  //            refuses before any stream is derived. Nobody announces a wedding on the afternoon of
+  //            a break-up.
+  //          · **AFTER `rollArrival`**, and the order is free there rather than load-bearing: a row
+  //            appended this very tick is 0 weeks deep against a 52-week threshold, so the gate
+  //            refuses it either way. It sits beside the arrival because the two are one hazard
+  //            family (§5 / §8 / §11), and before the leak so the beat a week raises precedes the
+  //            press finding out – the household hears her before the papers do.
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:wedding:<week>` sub-stream, and an INELIGIBLE week – every week before 23,
+  //        every empty slot, every episode under `minEpisodeWeeks` deep – derives nothing at all
+  //        (world/lifeBeat.ts §11). The frozen capture (41550 / e6b0c709) is untouched by
+  //        construction, and a frozen career (156 weeks, age 16.6) can never reach the gate's first
+  //        clause. ⚠ ITS OWN CALL, for `accrueSpirit`'s own reason below – `accrueCondition`'s
+  //        arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts.
+  //
+  //        ⚠ IT RAISES THE BLOCKING `'engaged'` BEAT AND WRITES THE NAME (T3's `partnerNameFor`,
+  //        persisted at the moment she says it) – the latch and the feed row are `landWedding`'s,
+  //        one line down, `weeksAfterEngagement` weeks after the answer.
+  rollWedding(world)
+  // ⭐⭐⭐ 1c-land (v83, the wedding – wave 7 T3): AND THE DAY ITSELF. Zero draws on ANY path – four
+  //        gates and three writes, so MAIN cannot move and the frozen capture cannot see it. It runs
+  //        directly after the roll so the week the clock comes due is the week it lands, and BEFORE
+  //        `rollLeak`/`deliverKnownPartner` for the reading's sake alone (nothing between them
+  //        shares state with it: the latch is this call's own, and §9 reads `publicWeek`, not the
+  //        latch). ⚠ NO MONEY SINCE 18.09 – the drafted `costCents` charge was RULED OUT in his own
+  //        words («я думаю как с подарками, никто и нисколько» – the gifts' law; the spec's §3c
+  //        keeps its measured record) – and
+  //        the two kept surfaces (feed line, album row) go through the milestone channel, idempotent
+  //        per episode. An ineligible week writes nothing at all.
+  landWedding(world)
   // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
   //
   //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a
@@ -380,6 +416,36 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        called and not duplicated. `STOP_PRECEDENCE` already puts the birthday's card in front of
   //        it on a week that is both.
   deliverKnownPartner(world)
+  // ⭐ 1c-key (v83, wave 7 – T10, backlog §8): AND THE WEEK SHE LIVES BEHIND HER OWN DOOR. One-time,
+  //        NON-blocking, narrative-only – a kept `'life'` row and a soft card, no mechanic, no cost,
+  //        no bond move. ⚠ ZERO DRAWS ON EVERY PATH (the section's own argument: nothing to decide,
+  //        so no coin), and the gate reads the `independent` STAGE rather than a raw age, so a
+  //        college week can never say «her own front door» over a diary that says dorm.
+  //        ⚠ BEFORE the spouse and tier 1 – the three share ONE soft surface, and the once-a-career
+  //        story outranks both when several could speak; the surface clauses DEFER it (never cancel)
+  //        on a week something else already holds the card. A frozen career (age 16.6) never reads
+  //        `independent`, so the frozen identity is untouched by construction.
+  deliverOwnKey(world)
+  // ⭐⭐ 1c-spouse (v83, the wedding – wave 7 T5): AND THE WEEK THE ONE SHE MARRIED HAS SOMETHING TO
+  //        SAY. Raised only while a latched episode lives, at most once per
+  //        `ECONOMY.wedding.spouseViewCooldownWeeks`, NON-blocking – the row rides the same soft
+  //        surface as tier 1 (Home card, three-week window) and the tick rolls on regardless.
+  //
+  //        ⚠ THE SLOT IS ARGUED ON BOTH SIDES, its siblings' way:
+  //          · AFTER `deliverKnownPartner`, so a week that is both news and a word from the spouse
+  //            stops for the news – the blocking row wins the week, and this gate refuses behind it.
+  //          · BEFORE `rollSmallTalk`, because the two share ONE soft surface («one at a time») and
+  //            the rarer, bigger voice takes the week when both could speak: the spouse has at most
+  //            one word in ten weeks, tier 1 has four a season. Small talk's own gate then refuses
+  //            on the live row exactly as it refuses on its own, and neither draws a key that week.
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:spouse-view:<week>` sub-stream – and ONLY on a week that raises: an ineligible
+  //        week AND an eligible week with no true occasion derive nothing at all
+  //        (world/lifeBeat.ts §12). No latch can exist on a frozen career (156 weeks, age 16.6), so
+  //        the frozen capture (41550 / e6b0c709) and the frozen per-key identity are untouched by
+  //        construction. ⚠ ITS OWN CALL, for `accrueSpirit`'s own reason below.
+  rollSpouseView(world)
   // ⭐⭐⭐ 1c-smalltalk (v74, the private life wave 3 – T8's roll, T15's surface): AND THE WEEK SHE
   //        COMES WITH SOMETHING SMALL. who-she-is §5b's tier 1, on the position T8 chose and the
   //        deferral's note reserved – after the delivery, because a week that is both «there is

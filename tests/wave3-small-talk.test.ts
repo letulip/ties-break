@@ -550,7 +550,7 @@ describe('wave 3 T8 C – a tier-1 reply moves nothing', () => {
     expect(lifeLogOf(world)[0].answer, 'and the row really was answered').toBe(OPTIONS[0].id)
 
     const control = careerAt('v2-no-feed-control', 200, 'close')
-    control.loveEpisodes = [{ id: 'p:1', sinceWeek: 190, endedWeek: null, knownWeek: 195, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    control.loveEpisodes = [{ id: 'p:1', sinceWeek: 190, endedWeek: null, knownWeek: 195, wants: 'open', partnerId: 'p:1', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     raiseLifeBeat(control, 'met', 'p:1')
     const controlBefore = control.events.length
     answerLifeBeat(control, 'wary')
@@ -972,6 +972,13 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // `'fork-psy'` is the sixth kind (the psychologist's read on the same `stop`) and it declares
     // TRUE, which is the whole mechanism by which the fork waits for him. Tier 1 is still the only
     // `false` in the table, which is the claim this line has always made.
+    // ⚠ RE-AIMED A FOURTH TIME BY v83, WAVE 7 T2 (18.09), NOT WEAKENED: `'engaged'` is the seventh
+    // kind and declares TRUE (the announcement stops the week; the wedding it announces stops for
+    // nobody – T3). Tier 1 is STILL the only `false` in the table, which is this line's own claim.
+    // ⚠ RE-AIMED A FIFTH TIME BY v83, WAVE 7 T5 (18.09), AND THE OLD CLAIM RETIRES HONESTLY: tier 1
+    // is no longer the ONLY `false` – `'spouse-view'` is the eighth kind and declares false too,
+    // the spouse's word riding the same soft surface tier 1 built. What stands is the narrower
+    // sentence that was always the point: every kind DECLARES, and nothing blocks by accident.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
@@ -979,6 +986,11 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       'fork-counsel': true,
       ended: true,
       'fork-psy': true,
+      engaged: true,
+      'spouse-view': false,
+      // ⚠ RE-AIMED A SIXTH TIME BY v83, WAVE 7 T10 (18.09): `'own-key'` is the ninth kind – the
+      // one-time independent-life story beat – and declares FALSE, narrative-only by design.
+      'own-key': false,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')
@@ -1031,7 +1043,7 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     const world = createWorld('dormant-1')
     world.week = 200
     world.loveEpisodes = [
-      { id: 'p:190', sinceWeek: 190, endedWeek: null, knownWeek: 200, wants: 'open', partnerId: 'p:190', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null },
+      { id: 'p:190', sinceWeek: 190, endedWeek: null, knownWeek: 200, wants: 'open', partnerId: 'p:190', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null },
     ]
     raiseLifeBeat(world, 'met', 'p:190')
     expect(pendingLifeBeat(world), 'the blocking row really is waiting').not.toBeNull()

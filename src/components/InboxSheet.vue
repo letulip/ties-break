@@ -43,6 +43,7 @@ import type {
   EntryLetterTerms,
   KitOfferTerms,
   Offer,
+  StaffLetterTerms,
   TourLetterTerms,
 } from '../shared/protocol'
 // ⭐⭐ ROUND 42 #39a – `activeKitDeal` joins the same import, for the reason the four beside it are
@@ -51,7 +52,7 @@ import type {
 // no world in it and no draw behind it.
 import { SPONSOR_TIERS, activeKitDeal, apparelBondCost, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
-import { weekLabel } from '../shared/dates'
+import { seasonYear, weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
 import OfferLetter from './OfferLetter.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
@@ -132,6 +133,21 @@ function senderOf(o: Offer): string {
   // letterhead here would be inventing a fact the engine does not hold. (It is also the one place
   // this letter does not fit the kit shape – no `tier`, no mark, no `SPONSOR_TIERS` rung.)
   if (o.kind === 'academy') return 'The academy'
+  // ⭐⭐⭐ ROUND 44 #7 – and each salaried seat signs with what it IS, the desks' and the academy's own
+  // rule. It is not a missing name: a coach HAS one (`buildCoachRoster` draws him, or her, per
+  // career) but this union has ONE sender per kind and the four seats are four different people, so
+  // a letterhead naming any of them would be wrong on the other three. What is true of all four is
+  // which chair they sit in. ⚠ DRAFT copy.
+  if (o.kind === 'staff') {
+    const seat = (o.terms as StaffLetterTerms).seat
+    if (seat === 'coach') return 'Her coach'
+    if (seat === 'masseur') return 'Her masseur'
+    if (seat === 'psychologist') return 'Her psychologist'
+    if (seat === 'sparring') return 'Her hitting partner'
+    // A fifth seat cannot inherit a sender in silence – the tour notice's own `never` guard.
+    const unhandled: never = seat
+    return unhandled
+  }
   // ⭐⭐⭐ ROUND 27 #6 – and her federation signs like the desks and the academy do, with what it IS.
   // It cannot sign with a country's name: `profile.country` is an ISO-2 code, and
   // `engine/nationalTeam.ts` forbids naming nations outright («NAMES ARE FICTIONAL»).
@@ -219,6 +235,28 @@ function subjectOf(o: Offer): string {
   // the week it was written, never today's catalogue – see `BuildLetterTerms.label`.
   // ⭐ KEPT VERBATIM BY HIS 17.09 REVIEW, which rewrote the sheet under it and left this line alone.
   if (o.kind === 'build') return `${(o.terms as BuildLetterTerms).label} is ready`
+  // ⭐⭐⭐ ROUND 44 #7 – the staff's subject restates its own sheet's first sentence, this function's
+  // rule, and it carries the YEAR because four seats write in ONE post and a career keeps every
+  // year of them: an inbox holding six seasons is unreadable unless each line says which year it is
+  // about. `seasonYear` and never the season index – the index is the identity, the year is what a
+  // parent reads (the Stats table draws the same distinction).
+  //
+  // ⚠⚠ AND IT IS PER SEAT RATHER THAN ONE LINE FOR ALL FOUR, which the first draft got wrong. The
+  // four letters of one season share a week AND a year, so a single subject would have printed the
+  // same title four times in one post – the round-29 #16 defect («two letters wearing one title»)
+  // manufactured rather than inherited, and a pile the parent cannot read without opening every
+  // sheet. Each line restates its OWN sheet's opening, which is what this function has always asked
+  // for. ⚠ DRAFT copy.
+  if (o.kind === 'staff') {
+    const t = o.terms as StaffLetterTerms
+    const year = seasonYear(t.seasonIndex)
+    if (t.seat === 'coach') return `The season on court – ${year}`
+    if (t.seat === 'masseur') return `The season on the table – ${year}`
+    if (t.seat === 'psychologist') return `The season's work in the room – ${year}`
+    if (t.seat === 'sparring') return `The season's practice – ${year}`
+    const unhandled: never = t.seat
+    return unhandled
+  }
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'
   // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE APPAREL BOND'S LETTER IS A RENEWAL NOTICE (his ruling of

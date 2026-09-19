@@ -17,6 +17,10 @@
  *   K3  the repeat-within-last-three rate, same two arms.
  *   K4  the per-subject × stage floor, as a pass/fail table.
  *   K5  the UNREACHABLE SET – any situation no career can ever draw, which is how a gate typo hides.
+ *       ⭐ Since wave 7 T9 it reads the posed sweep PLUS K5b's real-career arm – walked, ticking
+ *       careers (half through college) on the house drain recipe – because the posed walk can reach
+ *       neither the `college` stage nor a second season's calendar, and was reporting that blindness
+ *       as the corpus's own (round 44 §13's backlog item).
  *
  * ⚠⚠ THE TWO ARMS ARE THE SAME ENGINE, AND THE DIFFERENCE IS ONE LINE OF BOOKKEEPING RATHER THAN A
  * RE-IMPLEMENTED DRAW. Both arms call the shipped `rollSmallTalk` on a real `createWorld` career.
@@ -39,10 +43,21 @@
  * three purpose-scoped sub-streams off (seed, week). The frozen capture cannot see this bench.
  */
 import {
+  answerFork,
+  answerLifeBeat,
+  answerRetirement,
+  callUpRevealOpen,
+  closeTournament,
+  collegeLeagueRevealOpen,
   createWorld,
   lifeLogOf,
+  liveSoftBeat,
+  pendingBirthday,
+  pendingLifeBeat,
   reachableSituations,
+  resumeFromCollege,
   rollSmallTalk,
+  skipTournament,
   withoutRecentSituations,
   kidAgeExact,
   KID_ID,
@@ -53,9 +68,13 @@ import {
   type Temperament,
   type WorldState,
 } from '../src/engine/world'
+import { PRESETS, POLICIES, openCareer, stepCareerWeek } from './econ-bench'
+import { drainLifeBeats, DRAIN_ANSWER } from './_lifeBeats'
+import { answerBirthdayNeutral } from './_birthday'
+import { resumeMain } from '../src/engine/rng'
 import { SMALL_TALK_SUBJECT_WEIGHT } from '../src/engine/world/lifeBeat'
 import { ECONOMY } from '../src/engine/economy'
-import { bondBandOf, moodRegisterOf, spiritBandOf } from '../src/engine/spirit'
+import { bondBandOf, moodRegisterOf, spiritBandOf, temperamentFor } from '../src/engine/spirit'
 import { diaryLifeStageFor } from '../src/engine/diary/facts'
 import { schoolIsOver } from '../src/engine/kidLife'
 import type { BondBand, DiaryLifeStage, MoodRegister } from '../src/shared/protocol'
@@ -67,6 +86,8 @@ const argOf = (name: string, fallback: number): number => {
 }
 const SEEDS = argOf('seeds', 240)
 const CONVERSATIONS = argOf('conversations', 40)
+/** K5b's walked careers (wave 7 T9). 24 = 8 per background, every second one through college. */
+const REAL_CAREERS = argOf('real', 24)
 
 const REGISTERS: readonly MoodRegister[] = ['bright', 'level', 'low']
 const STAGES: readonly DiaryLifeStage[] = ['school', 'after-school', 'college', 'independent']
@@ -177,7 +198,10 @@ interface Walk {
  *  reads the live season calendar («a March event, still enterable, whose deadline has not passed»),
  *  and the walk advances the WEEK without ticking, so the calendar it would have to read is a single
  *  frozen season. Posing one would mean hand-building an entry list, which is a second copy of the
- *  season's own rules. K5 names the entry and the reason instead of scoring it. */
+ *  season's own rules. K5 names the entry and the reason instead of scoring it.
+ *  ⭐ WAVE 7 T9 CLOSED THE HOLE FROM THE OTHER SIDE: the real-career arm (K5b below) walks TICKING
+ *  careers whose calendars regenerate every season, so the gate is measured there rather than posed
+ *  here – this walk stays exactly what it was, the A/B instrument for K2/K3. */
 function poseCareerFacts(world: WorldState, weeks: number): void {
   world.coachId = 'coach-1'
   let id = 1_000
@@ -408,6 +432,234 @@ function k4(): number {
 }
 
 // =================================================================================================
+// K5b – THE REAL-CAREER ARM (round 44 §13's backlog item, built in wave 7 T9)
+// =================================================================================================
+//
+// ⚠⚠ WHY IT EXISTS: builder 1's K5 run reported the college/independent gated rows (R8, R17, R20,
+// then R44) unreachable, and round 44 §13 named the suspect before this pass so it would not be
+// re-derived – «tickWeek alone does not advance a career, it stalls at every pending decision».
+// The POSED walk above is even further from a career than that: it moves `world.week` BY HAND and
+// never ticks, so `world.college` stays null for ever (no career can reach the `college` stage),
+// and the season calendar is frozen at birth (no March entry ever opens again, so
+// `march-entry-open` dies with season 0). The rows themselves were measured LIVE at 91% of college
+// weeks – it was the instrument that could not see them.
+//
+// ⚠ THE FIX IS THE WORKING RECIPE, NOT A NEW WALK: `openCareer` + `stepCareerWeek` + the drain
+// (`tools/_lifeBeats`), the same one `tools/wedding-bench.ts` walks on – and for the college years
+// `resumeFromCollege` presses in `tests/college-birthday.test.ts`'s own shape (the named donor),
+// because `stepCareerWeek` on a latched world would tick PAST the freeze instead of through it.
+//
+// ⚠ WHAT THIS ARM MAY CLAIM: which columns a REAL career can draw, and how often the four named
+// rows are REACHABLE on the weeks the instrument can ask. Ticked weeks are asked weekly; the
+// college freeze runs a year per press, so inside it the ask happens only on PAUSE weeks
+// (birthday / championship / call-up / life beat) – a real sample, and a BIASED one, said so.
+// The posed arm keeps K1–K4 exactly as measured; this arm feeds K5 and nothing else.
+
+/** The four rows round 44 §10 names, id -> its own catalogue row (subject and gate read off it). */
+const K5_TARGET_IDS = [
+  'alone-or-with-them',
+  'the-week-with-nothing-in-it',
+  'the-money-she-did-not-ask-about',
+  'the-two-quiet-days',
+] as const
+
+/** The engine's own stage read, mirrored WITH the `fromWeek` clause (`lifeStageAt`,
+ *  world/lifeBeat.ts – not exported): a week before the freeze began must not read `college`. */
+function realStageAt(world: WorldState, week: number): DiaryLifeStage {
+  return diaryLifeStageFor(
+    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay),
+    schoolIsOver(week, world.profile.birthMonth),
+    world.college !== null && week >= world.college.fromWeek && week < world.college.untilWeek,
+  )
+}
+
+interface TargetCount {
+  weeks: number
+  reachable: Record<string, number>
+}
+const emptyTargetCount = (): TargetCount => ({
+  weeks: 0,
+  reachable: Object.fromEntries(K5_TARGET_IDS.map((t) => [t, 0])),
+})
+
+interface RealWalk {
+  seed: string
+  voice: Temperament
+  askedCollege: boolean
+  reachedCollege: boolean
+  endedType: string | null
+  walkEnd: number
+  /** every small-talk row the ENGINE raised, as `'subject:id'` details with their weeks */
+  rows: { detail: string; week: number; stage: DiaryLifeStage }[]
+  /** weekly asks on TICKED weeks, by stage (college weeks cannot be asked weekly – see below) */
+  ticked: Partial<Record<DiaryLifeStage, TargetCount>>
+  /** asks on college PAUSE weeks – the biased sample the freeze allows */
+  collegePauses: TargetCount
+  collegeWeeks: number
+}
+
+/** Answer the live soft row so the surface stays free – the file's own header law («the parent in
+ *  this bench always answers»), with the registry's statable answer. */
+function answerSoftRow(world: WorldState): void {
+  const soft = liveSoftBeat(world)
+  if (soft !== null && pendingLifeBeat(world) === null) answerLifeBeat(world, DRAIN_ANSWER[soft.kind])
+}
+
+function sampleTargets(world: WorldState, voice: Temperament, stage: DiaryLifeStage, into: TargetCount): void {
+  into.weeks++
+  const pool = reachableSituations(world, voice, stage)
+  for (const t of K5_TARGET_IDS) if (pool.some((s) => s.id === t)) into.reachable[t]++
+}
+
+const K5_REAL_WEEKS = WALK_WEEKS // the posed arm's own 25 years, so the two sweeps are comparable
+
+function walkRealCareer(presetIndex: number, index: number, askedCollege: boolean): RealWalk {
+  const preset = PRESETS.filter((p, i) => PRESETS.findIndex((q) => q.background === p.background) === i)[presetIndex]
+  const policy = POLICIES[1]
+  const { world } = openCareer(preset, index, policy)
+  const rng = resumeMain(world.rngMain)
+  const voice = world.temperament ?? temperamentFor(world.seed)
+  const out: RealWalk = {
+    seed: world.seed,
+    voice,
+    askedCollege,
+    reachedCollege: false,
+    endedType: null,
+    walkEnd: 0,
+    rows: [],
+    ticked: {},
+    collegePauses: emptyTargetCount(),
+    collegeWeeks: 0,
+  }
+  let lastPauseSampled = -1
+  let stale = 0
+  let prevWeek = -1
+  for (let guard = 0; guard < K5_REAL_WEEKS + 400 && world.week < K5_REAL_WEEKS; guard++) {
+    // ⚠ THE INSTRUMENT MUST NOT SPIN SILENTLY – a walk that stops moving is the round-44 defect
+    // wearing a guard counter, so three stationary iterations are a throw, not a shrug.
+    if (world.week === prevWeek && ++stale > 3) throw new Error(`${world.seed}: the walk stalled at week ${world.week}`)
+    if (world.week !== prevWeek) stale = 0
+    prevWeek = world.week
+
+    if (world.ending?.type === 'college') {
+      out.reachedCollege = true
+      resumeFromCollege(world, rng)
+      if (collegeLeagueRevealOpen(world) || callUpRevealOpen(world)) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
+      answerSoftRow(world)
+      // the pause week is a real college week the instrument can ask on – sampled once
+      if (world.ending?.type === 'college' && world.week !== lastPauseSampled) {
+        lastPauseSampled = world.week
+        sampleTargets(world, voice, 'college', out.collegePauses)
+      }
+      continue
+    }
+
+    stepCareerWeek(world, rng, policy)
+    if (world.ending === null) {
+      if (world.fork !== null && world.fork.answer === null) {
+        drainLifeBeats(world)
+        answerFork(world, askedCollege ? 'college' : 'continue')
+      }
+      drainLifeBeats(world)
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
+      answerSoftRow(world)
+    }
+    const stage = realStageAt(world, world.week)
+    const cell = (out.ticked[stage] ??= emptyTargetCount())
+    sampleTargets(world, voice, stage, cell)
+    // ⚠ widened: the tick can LATCH college inside `stepCareerWeek`, which the narrowing above
+    // cannot see – a college latch loops back to the press branch, anything else ends the walk.
+    const endType: string | null = world.ending?.type ?? null
+    if (endType !== null && endType !== 'college') break
+  }
+  out.endedType = world.ending?.type ?? null
+  out.walkEnd = world.week
+  if (world.college !== null) {
+    out.collegeWeeks = Math.max(0, Math.min(world.college.untilWeek, world.week) - world.college.fromWeek)
+  }
+  for (const row of lifeLogOf(world)) {
+    if (row.kind !== 'small-talk') continue
+    out.rows.push({ detail: row.detail, week: row.week, stage: realStageAt(world, row.week) })
+  }
+  return out
+}
+
+function k5RealArm(careers: number): { drawn: Set<string>; walks: RealWalk[] } {
+  const drawn = new Set<string>()
+  const walks: RealWalk[] = []
+  for (let i = 0; i < careers; i++) {
+    // rotate the three backgrounds; every second career asks for college at the fork
+    const walk = walkRealCareer(i % 3, Math.floor(i / 3), i % 2 === 0)
+    walks.push(walk)
+    for (const r of walk.rows) if (r.detail.includes(':')) drawn.add(`${r.detail}/${walk.voice}`)
+  }
+  console.log('\n=== K5b · THE REAL-CAREER ARM (round 44 §13 – the instrument healed) ===')
+  const reached = walks.filter((w) => w.reachedCollege)
+  console.log(
+    `   ${walks.length} careers on the working recipe (stepCareerWeek + the drain; the freeze via ` +
+      `resumeFromCollege presses) · ${reached.length} reached college · voices {${TEMPERAMENTS.map(
+        (t) => `${t} ${walks.filter((w) => w.voice === t).length}`,
+      ).join(', ')}}`,
+  )
+  const stageWeeks = new Map<string, number>()
+  for (const w of walks) {
+    for (const [stage, cell] of Object.entries(w.ticked)) {
+      stageWeeks.set(stage, (stageWeeks.get(stage) ?? 0) + cell.weeks)
+    }
+  }
+  console.log(
+    `   ticked weeks by stage: ${[...stageWeeks.entries()].map(([s, n]) => `${s} ${n}`).join(' · ')} · ` +
+      `college weeks lived ${walks.reduce((s, w) => s + w.collegeWeeks, 0)} (askable only at ${walks.reduce(
+        (s, w) => s + w.collegePauses.weeks,
+        0,
+      )} pause weeks – a biased sample, said so)`,
+  )
+  const stageRows = new Map<string, number>()
+  for (const w of walks) for (const r of w.rows) stageRows.set(r.stage, (stageRows.get(r.stage) ?? 0) + 1)
+  console.log(
+    `   small-talk rows the engine raised, by stage: ${[...stageRows.entries()].map(([s, n]) => `${s} ${n}`).join(' · ')} · ` +
+      `${drawn.size} distinct situation/voice keys drawn`,
+  )
+  console.log('   the four rows round 44 §10 named, in this arm:')
+  for (const id of K5_TARGET_IDS) {
+    const s = SMALL_TALK_SITUATIONS.find((x) => x.id === id)
+    const drawnCollege = walks.reduce((n, w) => n + w.rows.filter((r) => r.detail.endsWith(`:${id}`) && r.stage === 'college').length, 0)
+    const drawnIndep = walks.reduce((n, w) => n + w.rows.filter((r) => r.detail.endsWith(`:${id}`) && r.stage === 'independent').length, 0)
+    const indep = walks.reduce(
+      (acc, w) => {
+        const cell = w.ticked.independent
+        if (cell) {
+          acc.weeks += cell.weeks
+          acc.hit += cell.reachable[id]
+        }
+        return acc
+      },
+      { weeks: 0, hit: 0 },
+    )
+    const pauses = walks.reduce(
+      (acc, w) => {
+        acc.weeks += w.collegePauses.weeks
+        acc.hit += w.collegePauses.reachable[id]
+        return acc
+      },
+      { weeks: 0, hit: 0 },
+    )
+    console.log(
+      `     ${pad(id, 34)} gate ${pad(String(s?.fact), 18)} drawn: college ${drawnCollege}, independent ${drawnIndep} · ` +
+        `reachable: ${pauses.weeks ? pct(pauses.hit / pauses.weeks) : '–'} of ${pauses.weeks} college pause-weeks, ` +
+        `${indep.weeks ? pct(indep.hit / indep.weeks) : '–'} of ${indep.weeks} independent weeks`,
+    )
+  }
+  return { drawn, walks }
+}
+
+// =================================================================================================
 // K5 – THE UNREACHABLE SET
 // =================================================================================================
 //
@@ -417,11 +669,13 @@ function k4(): number {
 // every stage it declares» – because there is no per-row frame left to be missing: the payload is
 // one string for both distances and the scene comes from `SMALL_TALK_FRAMES`, which is total over
 // presence. What replaced it is the EMPTY-PAYLOAD read below, which is the same question about the
-// thing that can still be absent. (2) OBSERVED: did the K2 sweep, across every voice, every
-// register and every stage a real calendar walks through, ever actually draw it.
+// thing that can still be absent. (2) OBSERVED: did the sweep ever actually draw it – since wave 7
+// T9 the observed half is the POSED sweep **plus the real-career arm** (K5b), because the posed
+// walk structurally cannot reach `college` or a second season's calendar and was reporting its own
+// blindness as the corpus's.
 
-function k5(drawn: Set<string>): number {
-  console.log('\n=== K5 · THE UNREACHABLE SET ===')
+function k5(drawn: Set<string>, drawnReal: Set<string>): number {
+  console.log('\n=== K5 · THE UNREACHABLE SET (posed sweep ∪ real careers) ===')
   let bad = 0
   let columns = 0
   for (const s of SMALL_TALK_SITUATIONS) {
@@ -433,16 +687,20 @@ function k5(drawn: Set<string>): number {
       const notes: string[] = []
       if (s.stages.length === 0) notes.push('declares no stage')
       if (column.opener.trim().length === 0) notes.push('empty payload')
-      if (!drawn.has(key)) notes.push(s.fact === null ? 'NEVER DRAWN in the sweep' : `never drawn (gated on ${s.fact})`)
+      if (!drawn.has(key) && !drawnReal.has(key)) {
+        notes.push(s.fact === null ? 'NEVER DRAWN in either arm' : `never drawn (gated on ${s.fact})`)
+      }
       if (notes.length > 0) {
         bad++
-        console.log(`   ⚠ ${pad(key, 42)}${notes.join(' · ')}`)
+        console.log(`   ⚠ ${pad(key, 48)}${notes.join(' · ')}`)
       }
     }
   }
   if (bad === 0) console.log('   ✅ every situation in the catalogue was drawn by some career in the sweep')
+  const onlyReal = [...drawnReal].filter((k) => !drawn.has(k)).length
   console.log(
-    `   ${SMALL_TALK_SITUATIONS.length} situations · ${columns} voice columns in the catalogue · ${drawn.size} drawn in the sweep`,
+    `   ${SMALL_TALK_SITUATIONS.length} situations · ${columns} voice columns in the catalogue · ` +
+      `${drawn.size} drawn posed · ${drawnReal.size} drawn in real careers (${onlyReal} of them invisible to the posed walk)`,
   )
   return bad
 }
@@ -498,7 +756,10 @@ function main(): void {
   const posed = armTable('POSED CAREER – a coach, a match every other week, the conqueror pattern', true)
   const bare = armTable('BARE CAREER – no coach, no matches: only the ungated half of the catalogue', false)
   const k4fails = k4()
-  const k5bad = k5(posed.drawn)
+  // ⚠ `--real 0` skips the walked arm (minutes, not seconds) and K5 then reads exactly as it did
+  // before wave 7 T9 – posed sweep only, blindness included.
+  const real = REAL_CAREERS > 0 ? k5RealArm(REAL_CAREERS) : { drawn: new Set<string>(), walks: [] }
+  const k5bad = k5(posed.drawn, real.drawn)
   const k2pass = posed.b.pairsBad === 0 && bare.b.pairsBad === 0
   const k3den = posed.b.triples + bare.b.triples
   console.log(

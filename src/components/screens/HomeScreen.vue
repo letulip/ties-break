@@ -53,7 +53,7 @@ import { readingColor } from '../../composables/readingColor'
 import { facePoint } from '../../art/faceRects'
 // ⚠ R2-18: `CROPS` is keyed on the PAINTING's stem, and the 31+ band's type name moved while its
 // paintings did not - so every key built from a stage goes through the asset alias.
-import { portraitAssetStem } from '../../shared/avatarEmotion'
+import { paintedStemFor } from '../../shared/avatarEmotion'
 import { coachPortraitUrl, coachUrlFor, portraitUrl as portraitArtUrl } from '../../art/preload'
 import { venueArtUrl } from '../../art/venues'
 import { TIER_SHORT } from '../../composables/weekAhead'
@@ -236,7 +236,14 @@ const memoryStyle = computed(() => {
   if (!memory.value) return undefined
   // ⚠ R2-18: `CROPS` is keyed on the PAINTING's stem, so the lookup goes through the asset alias
   // like every URL builder does - the 31+ band's type name moved and the paintings did not.
-  const p = facePoint(`${portraitAssetStem(memory.value.stage)}-${memory.value.emotion}`)
+  // ⚠⚠ AND SINCE THE BRIDE (18.09) IT GOES THROUGH `paintedStemFor`, WHICH IS THE ALIAS PLUS THE
+  // BAND FALLBACK. Spelling the stem out by hand here was harmless while every face existed in all
+  // five bands; `bride` is painted for `adult` alone, so a wedding at thirty-one would have DRAWN
+  // `lateCareer-norm` (the url builder resolves) and FRAMED it by `lateCareer-bride` (this lookup
+  // would not), and `facePoint` answers 50/50 for a stem it does not know - her shoulder, on a
+  // landscape cover window. One value for both, which is the divergence art/faceRects.ts' own header
+  // predicted in as many words.
+  const p = facePoint(paintedStemFor(memory.value.stage, memory.value.emotion))
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 

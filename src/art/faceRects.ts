@@ -111,6 +111,20 @@ export const CROPS: Record<string, [number, number, number]> = {
   // the rectangle cut and looked at: her head spans y~62-172, so (250, 128) with the set's usual
   // ~1.5x head height.
   'adult-graduated': [250, 128, 165],
+  // ⭐ THE BRIDE (the wedding wave, 18.09) – the SECOND entry that is not a band×face, and the same
+  // shape as the one above it: ONE file, `adult` alone, where every band row belongs to a set of
+  // five. It differs from `graduated` in one way that matters here and nowhere else – it rides the
+  // MEMORY's emotion channel (`MemoryFace` in shared/avatarEmotion.ts) rather than its own builder,
+  // because the ENGINE fills a memory card and may not know about a UI builder. So it has a rectangle
+  // for the same reason `rehab` does: Home's hero shows the polaroid's painting landscape-cropped and
+  // steers `object-position` off this centre, and without a row it would frame at 50/50, which on a
+  // cover window is her shoulder.
+  // Centre read the way the header describes – a labelled grid over the 512px painting, then the
+  // rectangle cut and looked at: her head spans y~10-113 (she is looking up, so the chin is high),
+  // giving (258, 78) with the set's usual ~1.5x head height. ⚠ 78 is also the FLOOR the table's own
+  // «fits inside the painting» check allows at side 155: any higher centre would clamp at the canvas
+  // edge and silently re-frame her.
+  'adult-bride': [258, 78, 155],
 }
 
 /** The faces that have a PAINTING but no 256px crop – the set the cutter must skip.
@@ -127,8 +141,14 @@ export const CROPS: Record<string, [number, number, number]> = {
  *  on that type says why at length). It is painting-only in exactly the sense the CUTTER cares
  *  about – there is no crop and no url builder that could ask for one – so it belongs here, and
  *  the pin states containment plus the literal list rather than an equality that is no longer the
- *  fact. */
-export const PAINTING_ONLY_FACES: readonly string[] = ['rehab', 'graduated']
+ *  fact.
+ *
+ *  ⚠ AND `bride` JOINED IT ON 18.09 for the same reason `graduated` did and one extra one. It is
+ *  one file in one band, so it is not a `PortraitEmotion` and the containment claim above does not
+ *  reach it – but it IS painting-only in the sense the CUTTER cares about (no crop, no builder that
+ *  could ask for one), and `avatarCropPath`'s totality over `AvatarEmotion` is exactly what keeps
+ *  that true. It rides `MemoryFace` instead; `shared/avatarEmotion.ts` carries the argument. */
+export const PAINTING_ONLY_FACES: readonly string[] = ['rehab', 'graduated', 'bride']
 
 /** The stems the 256px cutter should cut – every entry except the painting-only faces. */
 export function croppableStems(): string[] {

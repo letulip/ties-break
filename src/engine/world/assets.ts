@@ -945,6 +945,130 @@ export function weeklyAssetUpkeepCents(world: WorldState): number {
   return total
 }
 
+/** ⭐⭐⭐ ROUND 46 #9, THE OWNER'S RULING OF 18.09 – THE THINGS THAT ARE NOT TENNIS.
+ *
+ *  > «вообще не про теннис, мимо (машины, дома, яхты, самолеты). Мне кажется это уже не теннис,
+ *  > честно говоря. За уши можно притянуть, но лучше нет.»
+ *
+ *  His four words ARE the four families, which is why this is a list and not a predicate over some
+ *  property of a rung: `car`, `house`, `boat`, `plane`. The other three are his too, in the same
+ *  breath and the opposite direction – the brand and the academy «вполне могут быть и расходами и
+ *  доходами» (ruling 6), and an `investment` was never spending at all because the money is still
+ *  the family's, which is what `careerMoney`'s `heldCents` has said since the fix shipped.
+ *
+ *  ⚠ A LIST OF FAMILIES, LIKE `NAMEABLE_FAMILIES` BELOW IT, and for the same reason: the union is
+ *  closed (`ShopItem.family`), so a rung added to the catalogue tomorrow has to land in one of the
+ *  seven and is classified by what it IS rather than by what somebody remembered to write here. */
+export const PERSONAL_FAMILIES: readonly ShopItem['family'][] = ['car', 'house', 'boat', 'plane']
+
+/** Is this rung the family's own life rather than the tennis or the businesses it built? */
+export function isPersonalProperty(item: ShopItem): boolean {
+  return PERSONAL_FAMILIES.includes(item.family)
+}
+
+/** ⭐⭐⭐ RULING 6, 18.09 – THE OTHER TWO, AND THEY GO THE OTHER WAY.
+ *
+ *  > «А вот бренд и академия вполне могут быть и расходами и доходами, здесь не вижу противоречий.»
+ *
+ *  These are the two families that EARN – `merch-brand` through `merchWeeklyIncomeCents` and the
+ *  four academy stages through `academyWeeklyIncomeCents`, both booked as `'business'` income – and
+ *  he has ruled that what they cost is a cost. So they are excluded from `PERSONAL_FAMILIES` above
+ *  and they get no concession anywhere: their purchase stays inside «spent» and their income stays
+ *  inside «earned».
+ *
+ *  ⚠ IT IS THE SAME PAIR AS `NAMEABLE_FAMILIES` AND IT IS NOT THAT PAIR. Both lists happen to be
+ *  `['business', 'academy']` today, for related but different reasons – a thing you BUILD is a thing
+ *  you name, and a thing you build is a thing that can earn – and one list standing for both would
+ *  be a coincidence doing load-bearing work. The day a fifth family earns without being named, or is
+ *  named without earning, the two lists part company and neither call site notices. */
+export const ENTERPRISE_FAMILIES: readonly ShopItem['family'][] = ['business', 'academy']
+
+/** Is this rung one of the businesses the family built off her name? */
+export function isEnterprise(item: ShopItem): boolean {
+  return ENTERPRISE_FAMILIES.includes(item.family)
+}
+
+/** ⭐ RULING 6 – WHAT THE FAMILY PUT INTO ITS BUSINESSES IN ONE NAMED WEEK, as a positive magnitude.
+ *
+ *  ⚠ WHY IT IS READ OFF `assets` AND NOT OFF THE LEDGER ROW: `FinanceWeek.byCategory.shop` is ONE
+ *  netted figure for the whole shelf, so a clubhouse and a yacht that landed in the same week are
+ *  indistinguishable there – that is the fact `captureBreakEven`'s week arm has always had to work
+ *  around. `OwnedAsset.boughtWeek` is the week the money left, every enterprise rung is
+ *  `stake: 'fixed'` (so its `paidCents` can never be topped up or part-sold away from the price it
+ *  was bought at), and the classification is the rung's own family. Exact, for the one week asked.
+ *
+ *  ⚠ THE RESIDUAL, NAMED: a business bought AND SOLD inside one week leaves no row to read, so its
+ *  cost is invisible here. Nothing in the game makes that reachable today – a sale is the player's
+ *  own second decision – and the miss is in the generous direction, which is the safe one. */
+export function enterprisePaidInWeekCents(world: WorldState, week: number): number {
+  let total = 0
+  for (const owned of world.assets ?? []) {
+    if (owned.boughtWeek !== week) continue
+    const item = shopItem(owned.id)
+    if (item && isEnterprise(item)) total += owned.paidCents
+  }
+  return total
+}
+
+/** ⭐⭐⭐ ROUND 46 #9 AMENDED 18.09 – WHAT THE TOYS HAVE COST TO KEEP, OVER THE WHOLE CAREER.
+ *
+ *  ⚠⚠ WHY IT IS REPLAYED AND NOT READ. Nothing on any save is a career total of upkeep.
+ *  `resolveAssetUpkeep` books a yacht's crew as an ordinary `'shop'` expense, so it lands inside
+ *  `careerTotals.spentCents` with no category of its own, and `financeWeeks` – the only place a
+ *  category survives at all – prunes to sixty weeks. A career total therefore has to be either a
+ *  new persisted accumulator (a schema move, and not an agent's to make) or this: the same
+ *  arithmetic the till used, run again over the weeks the thing has been here.
+ *
+ *  ⚠ IT IS EXACT FOR A THING STILL HELD, and that is not luck – it is the three properties the
+ *  replay needs, each of which the shelf already has. `paidCents` on a rung that charges upkeep
+ *  cannot move (every one of them is `stake: 'fixed'`, so there is no top-up and no part sale);
+ *  `assetHeldWeeks` is the same clock the till read, `basisWeek` and all; and `assetUpkeepCents` is
+ *  the very function that charged it, rounded once per week here exactly as it was rounded once per
+ *  week there. MEASURED on `tools/album-money-probe.ts --arm 1` – fourteen rungs, 1,349 weeks, three
+ *  cars, two boats and a plane – where it reproduces the ledger's own $6,360,802 to the cent.
+ *
+ *  ⚠⚠ AND THE RESIDUAL IS NAMED RATHER THAN HIDDEN: **the upkeep of a thing that has since been
+ *  SOLD is beyond this**, because the row it would be replayed from is gone from `world.assets`.
+ *  Those cents stay inside «spent». It is the same shape of honest loss `careerMoney` already takes
+ *  on a sold asset's PURCHASE – and in the same direction, which is what makes it safe: this can
+ *  only ever excuse too little, never too much.
+ *
+ *  ⚠ THE FLAT BRANCH IS A MULTIPLICATION AND NOT A SHORTCUT. With no `upkeepGrowthBps` the weekly
+ *  figure is `Math.round(weekly)` at every age, so the sum IS that figure times the weeks – the
+ *  loop would produce the identical integer and only the boats and the planes (which is most of the
+ *  money) would pay for it. Cars are the one family that grows, and they are the one that loops.
+ *
+ *  Pure read: no draw, no clock, no mutation. */
+export function careerAssetUpkeepCents(world: WorldState): number {
+  let total = 0
+  for (const { owned, item } of deliveredAssets(world)) {
+    // ⚠ THE FAMILY FILTER IS LOAD-BEARING AND IS NOT DECORATION TODAY. Every rung that charges
+    // upkeep happens to be personal property right now (only `car`, `boat` and `plane` declare
+    // `upkeepBps`), so an unfiltered fold would return the same number – and would silently excuse
+    // the academy's bill the day somebody gives the academy a wage bill, which is the opposite of
+    // ruling 6. Classified by what it is, checked by `tests/round46-career-money.test.ts`.
+    if (!item.upkeepBps || !isPersonalProperty(item)) continue
+    const weeksHeld = assetHeldWeeks(world, owned)
+    if (weeksHeld < 0) continue
+    // ⚠⚠ THE FIRST WEEK CHARGED IS NOT THE SAME WEEK FOR BOTH KINDS OF RUNG, AND THE ASYMMETRY IS
+    // REAL RATHER THAN AN OFF-BY-ONE. A COMMISSIONED thing ARRIVES inside a tick – `deliverAssets`
+    // runs before `resolveAssetUpkeep` in the same week, and `buyAsset` set `basisWeek = readyWeek`
+    // – so its very first billed week is the one where `assetHeldWeeks` is still 0. A rung bought
+    // OFF THE SHELF arrives through a player command, between ticks, on a week whose bill has
+    // already been paid; its first charge is the next tick, at 1. MEASURED, not reasoned backwards
+    // from: walked worlds charge a `boat-launch` and a `plane-small` 21 times over 20 held weeks and
+    // a `car-sensible` 40 times over 40, and `tests/round46-career-money.test.ts` pins both against
+    // the rows the till actually wrote.
+    const firstWeek = item.buildWeeks ? 0 : 1
+    if (!item.upkeepGrowthBps) {
+      total += assetUpkeepCents(item, owned.paidCents, 0) * Math.max(0, weeksHeld - firstWeek + 1)
+      continue
+    }
+    for (let w = firstWeek; w <= weeksHeld; w++) total += assetUpkeepCents(item, owned.paidCents, w)
+  }
+  return total
+}
+
 // =================================================================================================
 // ⭐⭐⭐ ROUND 30 #8 AND #10 – THE FAMILY NAMES THE THINGS IT BUILDS.
 //

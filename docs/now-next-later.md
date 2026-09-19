@@ -209,6 +209,12 @@ gains, morale-layer adjacency.
   объемной и насыщенной карьеры, я хочу концептуально другое». The seven-polaroid pager was sized for
   a 14→18 career; the game now runs thirteen-plus seasons and is adding property he is drawing art
   for. **He has reserved the design.** ([screens-and-cards.md](backlog/screens-and-cards.md).)
+  ⭐ **MEASURED 18.09 (round 47 #11), so the reserved design now has numbers under it**: his «6
+  childhood pictures and 1 adult» is the MODE – 13 albums in 27 are exactly that, and two of the five
+  painted age bands are never drawn at all. Every one of the seven slots is a superlative or a first
+  and cannot be moved without new copy, so the spread cannot be improved without changing the COUNT,
+  which is his. The instrument, the candidate inventory by era and eight numbered draft pages are in
+  [the-album-spread-2026-09.md](specs/the-album-spread-2026-09.md).
 - **Two-week tournaments** – considered and deferred by him («подожди с этим»); round 30's edge-travel
   design (a Slam departs the previous Sunday and comes home on its own) removes the need for now.
   ([round-29.md](rounds/round-29.md) P16.)

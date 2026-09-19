@@ -11,13 +11,15 @@ last-reviewed: 2026-08-08
 
 ## Current truth
 
-- **Ten committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
+- **Eleven committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
   sponsor window) · **`sinking` (halfway through a debt spell)** · `broke` (one week short of the
   bankruptcy latch) · `ending` (past the fork at nineteen) · **`unheard` (the same week as `ending`,
   stopped one answer earlier – her life beat is raised and nobody has answered her)** · `soft` (a
   live tier-1 row on a week the engine never stopped) · **`breakup` and `belated` (v75 T8 – the two
-  registers of an ending, each parked one press away from its own card)**. Written by the shipped
-  `saveCodec` so a fixture can never disagree with what the product reads.
+  registers of an ending, each parked one press away from its own card)** · **`engaged` (v83 T11 –
+  the only career old enough to marry, one press from the announcement and nine ordinary weeks from
+  the wedding)**. Written by the shipped `saveCodec` so a fixture can never disagree with what the
+  product reads.
 - ⚠⚠ **THE `.tsave` CORPUS IS THE ONE GENERATED ARTIFACT IN THIS REPO WITH NO GATE OF ITS OWN, and
   that is how it goes stale** (measured twice now: `ending.tsave` in wave 3, `pro.tsave` in wave 4).
   Every other generated file is checked by `npm run check` – `world-symbol-map.md` by
@@ -76,8 +78,8 @@ here needs a browser, and none of it depends on the harness; it is a node tool, 
 manifest and a test.
 
 ```bash
-npm run e2e:fixtures                 # regenerate all ten (byte-identical every time)
-npm run e2e:fixtures -- --only pro   # one of them; the other nine keep their manifest rows
+npm run e2e:fixtures                 # regenerate all eleven (byte-identical every time)
+npm run e2e:fixtures -- --only pro   # one of them; the other ten keep their manifest rows
 npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it gives up
 ```
 
@@ -88,12 +90,13 @@ npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it
 | `e2e/fixtures/manifest.json` | seed, week, schema version and the facts a spec may assert on |
 | `tests/e2e-fixtures.test.ts` | the rot alarm, in the `unit` project, on the PR gate |
 
-## The ten
+## The eleven
 
 Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added; `unheard` joined
-them on 09.09, `soft` on 11.09, and `breakup` and `belated` on 12.09. All but `junior`, `unheard`,
-`soft` and `belated` were found on the FIRST or second seed tried – these are ordinary careers, not
-lottery tickets, and `junior` is the one carrying three requirements at once.
+them on 09.09, `soft` on 11.09, `breakup` and `belated` on 12.09, and `engaged` on 19.09. All but
+`junior`, `unheard`, `soft`, `belated` and `engaged` were found on the FIRST or second seed tried –
+these are ordinary careers, not lottery tickets, and `junior` is the one carrying three requirements
+at once.
 
 ⚠⚠ **`belated` IS THE EXCEPTION AND IT IS A DIFFERENT KIND OF ONE, which is why `DEFAULT_BUDGET`
 moved from 200 to 900 with it.** `junior` is rare by CONJUNCTION – three requirements on one week,
@@ -121,18 +124,19 @@ the manifest at runtime and none of it is read from here.
 
 | fixture | seed | week | age | funds | rank | size | what it is for |
 |---|---|---|---|---|---|---|---|
-| `fresh` | `e2e-fresh-0` | 0 | 13 | $25,000 | 120 | 23.4 KiB | the boot path, onboarding, the empty screens |
-| `junior` | `e2e-junior-0` | 120 | 15 | $9,464 | 60 | 60.2 KiB | first ranking earned – ladder, standings, a feed with something in it |
-| `pro` | `e2e-pro-0` | 412 | 21 | $38,851 | 83 | 76.6 KiB | eight seasons in, **inside the sponsor window with two unopened letters**, ledgers full |
-| `sinking` | `e2e-sinking-0` | 67 | 14 | **-$506** | 89 | 53.1 KiB | **six weeks under water of twelve** – a warning a career can still be ticked out of |
-| `broke` | `e2e-broke-0` | 73 | 14 | **-$2,502** | 67 | 52.0 KiB | eleven weeks under water – one week short of the bankruptcy latch |
-| `ending` | `e2e-ending-0` | 282 | 19 | $6,822 | 41 | 77.0 KiB | past the fork at nineteen, racket down, career read-only |
-| `unheard` | `e2e-unheard-0` | 242 | 18 | $6,450 | 5 | 79.8 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
-| `soft` | `e2e-soft-1` | 9 | 13 | $25,324 | 127 | 34.1 KiB | the week she came by with something **small** – a tier-1 row live inside its three-week window, unanswered, on a week the engine never stopped |
-| `breakup` | `e2e-breakup-0` | 157 | 16 | $1,211 | 31 | 61.4 KiB | the week **before it ends** – a live attachment the parent was told about (`p:146`, met at 147), one press from the told-NOW card, her Mood two rungs lower behind it |
-| `belated` | `e2e-belated-472` | 363 | 20 | $494,092 | 79 | 78.2 KiB | the week before he **hears of it** – an attachment that was over before its `knownWeek` came round, one press from the told-LATE card, and no `'met'` beat is ever raised for it |
+| `fresh` | `e2e-fresh-0` | 0 | 13 | $25,000 | 120 | 23.7 KiB | the boot path, onboarding, the empty screens |
+| `junior` | `e2e-junior-19` | 120 | 15 | $9,464 | 60 | 58.2 KiB | first ranking earned – ladder, standings, a feed with something in it |
+| `pro` | `e2e-pro-18` | 412 | 21 | $38,851 | 83 | 80.6 KiB | eight seasons in, **inside the sponsor window with two unopened letters**, ledgers full |
+| `sinking` | `e2e-sinking-2` | 86 | 14 | **-$506** | 89 | 58.4 KiB | **six weeks under water of twelve** – a warning a career can still be ticked out of |
+| `broke` | `e2e-broke-0` | 86 | 14 | **-$2,502** | 67 | 59.4 KiB | eleven weeks under water – one week short of the bankruptcy latch |
+| `ending` | `e2e-ending-0` | 242 | 19 | $6,822 | 41 | 80.4 KiB | past the fork at nineteen, racket down, career read-only |
+| `unheard` | `e2e-unheard-13` | 242 | 18 | $6,450 | 5 | 81.3 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
+| `soft` | `e2e-soft-1` | 9 | 13 | $25,324 | 127 | 34.6 KiB | the week she came by with something **small** – a tier-1 row live inside its three-week window, unanswered, on a week the engine never stopped |
+| `breakup` | `e2e-breakup-52` | 261 | 16 | $1,211 | 31 | 79.9 KiB | the week **before it ends** – a live attachment the parent was told about (`p:146`, met at 147), one press from the told-NOW card, her Mood two rungs lower behind it |
+| `belated` | `e2e-belated-37` | 351 | 20 | $494,092 | 79 | 79.3 KiB | the week before he **hears of it** – an attachment that was over before its `knownWeek` came round, one press from the told-LATE card, and no `'met'` beat is ever raised for it |
+| `engaged` | `e2e-engaged-41` | 681 | 26 | $2,224,583 | 78 | 78.3 KiB | one press from the **engagement** – twenty-six, a year-deep attachment, and NINE ordinary weeks behind it, so the wedding at `weeksAfterEngagement` can be walked to in a browser. The oldest career in the corpus by five years, because the gate is 23 and nothing else came close |
 
-**438 KiB of saves**, the largest single file 80 KiB. That is not a nuisance and there is no
+**714 KiB of saves**, the largest single file 81 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of
 uncompressed JSON, and one version's JSON alone is ~372 KB – nearly five times the week-412 fixture,
 because these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
@@ -209,6 +213,29 @@ rewritten at all – which matters because other specs pin them. (2) Its state a
 that section that has to DECODE the save: what makes it the fixture it is – a `lifeLog` row with no
 answer on it – is not in `FixtureFacts`, and widening that shared sheet to describe one fixture would
 have rewritten six rows to say nothing.
+
+⭐ **`engaged` (19.09) ADDED A SIXTH FILE TO THAT PARAGRAPH, and the omission was latent rather than
+new**: `e2e/coverage-map.spec.ts` parses `docs/specs/e2e-coverage.md` and asserts that the set of
+`e2e/*.spec.ts` on disk EQUALS the set named in its journeys table, both directions. A fixture is
+added because a spec needs it, and that spec needs a row there or the e2e suite goes red on a
+document. The five above are still the five a fixture costs; the sixth is what the spec beside it
+costs. (`seeded-careers.spec.ts` is the one of the five that is now conditional: `soft`, `breakup`,
+`belated` and `engaged` have no row in it, because each exists for a state that walk has no way to
+name, and its journey row says so in as many words.)
+
+⚠⚠ **AND A FIXTURE IS GENERATED AGAINST THE ENGINE THAT IS ON DISK, WHICH IN A SHARED CHECKOUT IS NOT
+THE SAME THING AS THE ENGINE THAT IS COMMITTED.** Measured on 19.09 and worth the paragraph: `engaged`
+was hunted twice, three minutes apart, and the two runs walked DIFFERENT careers – seed 0 finished at
+$3,587,322 and then at $3,134,830 – because another builder was editing `src/engine/economy.ts` in the
+same checkout while the first search ran. Nothing about the first fixture was wrong; it simply could
+not be reproduced from anything in git, which is the one property a committed generated artifact has
+to have. **So a fixture generated while anyone else is working goes in a worktree at HEAD** (`git
+worktree add`, `node_modules` symlinked, the recipe copied in), and the accepted seed is then a fact
+about a commit. ⚠ The suspect constant was NOT the cause and was proved innocent rather than assumed
+guilty: `ECONOMY.masseur.tourRecoveryPerRound` 2 -> 3 was patched in process against the same seed
+(`tools/masseur-bench.ts`' own idiom) and produced a byte-identical career, because no walked fixture
+ever hires a masseur. What the first run saw was some other transient edit, and that is exactly why the
+rule is about PROVENANCE rather than about which constant to watch.
 
 The one thing the generator does choose is `careerId` – and only because the engine does not own it
 either: the worker mints one from `Date.now()` outside the deterministic engine, so the fixtures pin

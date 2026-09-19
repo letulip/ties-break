@@ -90,7 +90,7 @@ import type {
   // ⚠ `AdTier` left this list with `AD_TIERS` (E-08) – the type is still live and still exported by
   // shared/protocol; this module simply has nothing left that names it.
   AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, BuildLetterTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
-  KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
+  KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, StaffLetterTerms, StaffSeat, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -1679,6 +1679,76 @@ export function raiseAcademyLetter(offers: Offer[], week: number, terms: Academy
   const notice: Offer = {
     id,
     kind: 'academy',
+    week,
+    // Informational letters never expire on their own; see `raiseKitEndLetter`.
+    deadlineWeek: week,
+    terms: { ...terms },
+    state: 'info',
+  }
+  offers.push(notice)
+  return notice
+}
+
+// --- the staff's year-end post (round 44 #7) ----------------------------------------------------
+//
+// THE OWNER, 18.09, having just finished a career: «письмо от тренера по итогу года мне так и не
+// пришло, да и ни от одного специалиста не пришло.»
+//
+// ⚠ IT WAS NEVER A DEFECT. Measured before a line was written: no such letter existed anywhere in
+// the engine. The academy writes at the year's end, the brands write in the window, the shop writes
+// when a build lands – and the four people the family pays every single week said nothing at all.
+// This is a feature that was never built, which is why there is no fix here and no migration: there
+// is a new letter, and it is the academy's shape with a different signature.
+//
+// ⚠⚠ AND THE FOUR SEATS ARE NOT EQUAL IN WHAT THEY CAN HONESTLY SAY, which is the whole design
+// problem and is resolved in `StaffLetterTerms` rather than here. The rule that governed every
+// choice: a seat whose facts the world does not retain writes a SHORTER letter. Nothing is
+// inferred, nothing is invented, and no persisted field was added for any of them.
+
+/** ONE SEAT, ONE SEASON, ONE LETTER – the idempotency key for the staff's paper.
+ *
+ *  ⚠ THE SEAT AND THE SEASON ARE THE WHOLE KEY, on `academyLetterId`'s own argument: the wrap week
+ *  is visited once by `tickWeek`, but a career can be closed and resumed across it and a migration
+ *  can re-run a week, so «write once» has to be a property of the raise rather than of its caller.
+ *  The week the letter arrives is deliberately NOT in the key – it is derivable from the season and
+ *  a key carrying it could write twice about one year, which is `buildLetterId`'s point one letter
+ *  family over. */
+export function staffLetterId(seat: StaffSeat, seasonIndex: number): string {
+  return `staff-${seat}-${seasonIndex}`
+}
+
+/** Every staff letter, oldest season first and – inside a season – in the seats' own fixed order, so
+ *  a year's post reads the same way every time it is opened. `world.offers` is push-ordered and the
+ *  settler already walks the seats in this order, but the sort is what makes that a PROPERTY rather
+ *  than an accident of the call site – `academyLetters`' own reasoning. */
+export function staffLetters(offers: Offer[]): Offer[] {
+  const order: StaffSeat[] = ['coach', 'masseur', 'psychologist', 'sparring']
+  return offers
+    .filter((o) => o.kind === 'staff')
+    .sort((a, b) => {
+      const ta = a.terms as StaffLetterTerms
+      const tb = b.terms as StaffLetterTerms
+      return ta.seasonIndex - tb.seasonIndex || order.indexOf(ta.seat) - order.indexOf(tb.seat)
+    })
+}
+
+/** A SEAT WRITES. A NOTICE, the academy's shape exactly: `state: 'info'`, so there is nothing to
+ *  sign, nothing to refuse and `expireOffers` has nothing to lapse, and `deadlineWeek` is the
+ *  arrival week because an informational letter has no window (see `raiseAcademyLetter`).
+ *
+ *  ⚠ IT IS NEVER PRUNED, which is the half the feed could not do and the half the owner actually
+ *  asked for – he went looking at the END of a career. `pruneEntryLetters` touches only `entry` and
+ *  `tour` letters, so a coach's report on season 2 is still in the inbox in season 12.
+ *
+ *  ⚠ IDEMPOTENT ON ITS ID, like every other `raise*` in this file. Nothing here draws, and no cash
+ *  moves – nobody is paid for writing a letter. */
+export function raiseStaffLetter(offers: Offer[], week: number, terms: StaffLetterTerms): Offer {
+  const id = staffLetterId(terms.seat, terms.seasonIndex)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const notice: Offer = {
+    id,
+    kind: 'staff',
     week,
     // Informational letters never expire on their own; see `raiseKitEndLetter`.
     deadlineWeek: week,

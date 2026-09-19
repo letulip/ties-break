@@ -32,11 +32,12 @@
 //   4. THE PHASE       the relationship's own weather – a slow, bounded, mean-reverting walk that
 //                      makes flat stretches and long good runs instead of white noise.
 //
-// ⚠ RNG DISCIPLINE (CLAUDE.md invariant 2, spec §6 fence 4). TWO purpose-scoped sub-streams and ZERO
-// draws on MAIN:
+// ⚠ RNG DISCIPLINE (CLAUDE.md invariant 2, spec §6 fence 4). THREE purpose-scoped sub-streams and
+// ZERO draws on MAIN:
 //
 //   `${seed}:chemistry:${coachId}`          the affinity, once, re-derived at every call site
 //   `${seed}:chemistry:${coachId}:${week}`  the week's weather shock, re-derived at the call site
+//   `${seed}:chemistry:readable:${coachId}` the pair's own readable threshold (§8d, 18.09), likewise
 //
 // Both are `rngFromSeed` generators built from a string and thrown away; neither persists a position
 // and neither can reach the weekly MAIN stream, so the frozen capture (41550 / e6b0c709) cannot see
@@ -338,8 +339,36 @@ export function accrueChemistry(
 // 5. THE READING – the one number that crosses the wire, and the one place that decides it
 // =================================================================================================
 
+/** ⭐⭐⭐ WHEN THIS PAIR BECOMES READABLE – drawn once per pair, re-derived at every read, persisting
+ *  nothing (spec §8d, ruled 18.09).
+ *
+ *  The owner, having played the shipped single bar: «мне кажется медленно, какие-то цифры, пусть и
+ *  небольшие 1-2% мы всяко может раньше видеть. Но здесь тоже можно включить вариативность.» So the
+ *  threshold is no longer one number for the whole game; it is a number for this pair, inside the
+ *  corridor `ECONOMY.chemistry.readableFloor .. readableCeiling`, where the whole argument for those
+ *  two anchors lives.
+ *
+ *  ⚠ UNIFORM, AND NOT THE TRIANGULAR DRAW THE OTHER TWO USE. `affinityFor` and `nextChemistryPhase`
+ *  are triangular because a middling DISPOSITION and a middling WEEK ought to be likelier than an
+ *  extreme one – that is a claim about the thing being drawn. A threshold is not a thing that
+ *  happens; it is the position of a line, and clustering the lines would cluster the first sightings,
+ *  which is the opposite of the variability he asked for. One draw, spread flat across the corridor.
+ *
+ *  ⚠⚠ KEYED ON THE COACH'S IDENTITY AND NOTHING ELSE – `affinityFor`'s own rule for the same reason.
+ *  The threshold is the same number whether the player hired him in week one, shopped for a decade
+ *  first or never opened the market, so a choice cannot move it. ONE DRAW, ON A PURPOSE-SCOPED
+ *  SUB-STREAM, ZERO MAIN: the frozen capture cannot see this function at all.
+ *
+ *  ⚠ THE ONE SPELLING. `chemistryReading` below is the only caller, and `coachMarket` calls that –
+ *  so a second copy of this arithmetic cannot appear without deleting this sentence first. */
+export function chemistryReadableAt(seed: string, coachId: string): number {
+  const c = ECONOMY.chemistry
+  const r = rngFromSeed(`${seed}:chemistry:readable:${coachId}`)
+  return c.readableFloor + (c.readableCeiling - c.readableFloor) * r()
+}
+
 /** ⭐⭐⭐ WHAT THE CARD IS ALLOWED TO SHOW ABOUT THIS PAIR: the level, signed, or `null` while there
- *  is nothing to read (spec §8b, ruling C7).
+ *  is nothing to read (spec §8b, ruling C7; §8d for the corridor).
  *
  *  ⚠⚠ THIS FUNCTION IS THE WHOLE OF WHY THE MECHANIC WAS INVISIBLE FOR A ROUND. `coachPairs` was
  *  read in seven engine files and never crossed into `shared/protocol`, so the UI was structurally
@@ -359,10 +388,17 @@ export function accrueChemistry(
  *
  *  ⚠ `null` COVERS BOTH SILENCES AND THE CARD DRAWS ONE GLYPH FOR THEM, because they are the same
  *  sentence: «nobody knows until you work together». She has never worked with him (no row at all),
- *  or they have worked together and nothing has come of it yet (`ECONOMY.chemistry.readableAt`). */
-export function chemistryReading(pair: CoachPair | undefined): number | null {
+ *  or they have worked together and nothing has come of it yet (`chemistryReadableAt`).
+ *
+ *  ⚠⚠ THE SIGNATURE GREW ON 18.09 AND THAT IS THE HONEST FORM OF IT. The gate is PER PAIR now, so
+ *  this function needs what identifies the pair – and the pair is (career, coach), which is exactly
+ *  `seed` and `coachId`. The alternatives were both worse: caching the threshold in module state
+ *  would make a pure derivation stateful and order-dependent, and persisting it would be a save key
+ *  spent on something re-derivable to the bit. Every caller has both values already; `coachMarket` is
+ *  the only one in `src/`. */
+export function chemistryReading(pair: CoachPair | undefined, seed: string, coachId: string): number | null {
   if (!pair) return null
-  return Math.abs(pair.chem) >= ECONOMY.chemistry.readableAt ? pair.chem : null
+  return Math.abs(pair.chem) >= chemistryReadableAt(seed, coachId) ? pair.chem : null
 }
 
 // --- the two helpers, once ----------------------------------------------------------------------

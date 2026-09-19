@@ -240,7 +240,7 @@ function posed(seed: string, week: number, seat: Seat, voice: (typeof TEMPERAMEN
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED – wave 4's own fixture doctrine: the arrival
  *  hazard and the disclosure lag are not under test in this file. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, ...over }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null, ...over }
 }
 
 /** The lowest `bond` that still reads as this band – ASKED OF THE LADDER rather than re-derived from

@@ -31,6 +31,10 @@ import type {
 import { ENDING_TITLE } from '../ending'
 import { kidAgeAt } from './age'
 import { seasonIndexOf } from './ledger'
+import { careerMoney } from './reckoning'
+// ⚠ `highestLadderReached`, NOT `activeLadderOf` – ruling C, 18.09. The import moved with the call
+// (see `slotBestWeek`): the two answer different questions and the album asks the historical one.
+import { bestSeasonClose, highestLadderReached } from './ladder'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
 
@@ -158,9 +162,11 @@ const seasonLabel = weekLabel
  *  months later. Same page for every career, her own number on it. */
 export function slotBeginning(world: WorldState): AlbumPage {
   const first = earliest(world.milestones, 'international')
+  // ⭐ ROUND 46 #9 – «went out» IS `outlayCents`, not the raw accumulator. Money that turned into a
+  // house is still the family's; only what left for good ever «went out». See `careerMoney`.
   const fact = first
     ? `Her first trip abroad came in ${seasonLabel(first.week)}, at the ${tierLabel(first)}`
-    : `${formatCents(world.careerTotals.spentCents)} went out before anybody knew the answer`
+    : `${formatCents(careerMoney(world).outlayCents)} went out before anybody knew the answer`
   return page(
     world,
     1,
@@ -244,7 +250,9 @@ export function slotFirstCheque(world: WorldState): AlbumPage {
   )
 }
 
-/** SLOT 4 – THE BEST WEEK. The highest-rung `title`; falls back to the best `season-rank`. */
+/** SLOT 4 – THE BEST WEEK. The highest-rung `title`; falls back to the best season she ever CLOSED
+ *  on her own table (round 46 #10 – it used to be the best `season-rank` milestone, which is the
+ *  junior rank on every row; see `bestSeasonClose`). */
 export function slotBestWeek(world: WorldState): AlbumPage {
   let best: Milestone | null = null
   for (const m of world.milestones) {
@@ -262,19 +270,35 @@ export function slotBestWeek(world: WorldState): AlbumPage {
       'happy',
     )
   }
-  let bestRank: Milestone | null = null
-  for (const m of world.milestones) {
-    if (m.type !== 'season-rank' || m.rank === undefined) continue
-    if (bestRank === null || m.rank < bestRank.rank!) bestRank = m
-  }
-  if (bestRank) {
+  // ⭐⭐⭐ ROUND 46 #10 – OFF THE ONE READER, AND WHAT STOOD HERE WAS THE EPILOGUE'S OWN BUG IN A
+  // SECOND COPY. It scanned the `season-rank` milestones, whose `rank` is written from
+  // `world.kidRank` – the ITF one, always – so this page handed a career that had spent its life on
+  // the professional table its best JUNIOR year-end. `bestSeasonClose` is asked which table is hers,
+  // exactly as `bestRankEver` asks for the epilogue.
+  //
+  // ⭐⭐⭐ RE-AIMED 18.09 BY RULING C, AND IT HAD TO MOVE WITH THE EPILOGUE OR THE TWO WOULD HAVE
+  // DIVERGED AGAIN – which is the whole defect this page was repaired for one ruling earlier. The
+  // table is `highestLadderReached` now, not `activeLadderOf`: «делаем на высшей ступени из тех, на
+  // которых она была, если ушла после J – значит это высшая». The two functions agree on every
+  // career that ended on its own peak and differ on exactly the one his sentence names – a girl who
+  // left after the junior rungs, whose ITF book has since decayed out of the 52-week window.
+  //
+  // ⚠ IT IS THE CLOSES AND NOT THE LIVE RANK, WHICH IS A DIFFERENCE FROM THE EPILOGUE AND IS THE
+  // COPY'S DOING: this fact says «at the close of», so a mid-season standing folded in would make
+  // the sentence false. The narrower question is why the reader is split in two rather than shared
+  // whole – see `bestSeasonClose`.
+  //
+  // ⚠ AND THE DATE DOES NOT MOVE FOR ANY CAREER THE OLD SCAN COULD SEE: the week it derives is the
+  // wrap week, which is the very week the matching `season-rank` milestone carries.
+  const closed = bestSeasonClose(world, highestLadderReached(world))
+  if (closed) {
     return page(
       world,
       4,
       'She never won a title – this is the highest she ever stood',
-      'Number ' + bestRank.rank,
-      `#${bestRank.rank} at the close of ${seasonYear(bestRank.seasonIndex ?? 0)}`,
-      bestRank.week,
+      'Number ' + closed.rank,
+      `#${closed.rank} at the close of ${seasonYear(closed.seasonIndex)}`,
+      closed.week,
       'serious',
     )
   }
@@ -339,6 +363,13 @@ export function slotWorstWeek(world: WorldState): AlbumPage {
  *  behind the answer has been pruned out of the save – so it is captured the week it happens, in
  *  `tickWeek`, and this page just reads the row. */
 export function slotTheTurn(world: WorldState): AlbumPage {
+  // ⭐⭐⭐ ROUND 46 #9 – THE DENOMINATOR IS `outlayCents` ON ALL FOUR FACES OF THIS PAGE, AND THE
+  // MILESTONE THAT GATES IT MOVED WITH THEM (`captureBreakEven`). The owner read «$13M won against
+  // $83M spent» off a career that ended holding a fund, houses and an academy, and most of that
+  // «spent» was the money those things are made of – see `careerMoney` for the decomposition. A page
+  // whose figures said one thing while the milestone in front of it said another would be the same
+  // defect one layer up, so the test and the sentence read the SAME number.
+  const money = careerMoney(world)
   const career = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'career')
   if (career) {
     return page(
@@ -346,15 +377,15 @@ export function slotTheTurn(world: WorldState): AlbumPage {
       6,
       'The week the money turned – prize money past everything the family had ever spent',
       'It paid for itself',
-      `${seasonLabel(career.week)} – ${formatCents(world.careerTotals.prizeCents)} won against ${formatCents(world.careerTotals.spentCents)} spent`,
+      `${seasonLabel(career.week)} – ${formatCents(money.prizeCents)} won against ${formatCents(money.outlayCents)} spent`,
       career.week,
       'happy',
     )
   }
   // THE EMPTY FACE. Measured, not assumed – see SLOT6_EMPTY_WHY for the two rates.
   const week = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'week')
-  const won = world.careerTotals.prizeCents
-  const spent = world.careerTotals.spentCents
+  const won = money.prizeCents
+  const spent = money.outlayCents
   if (week) {
     // ⚠ THE HONEST MIDDLE, and it is the commonest true story the game has: one week where the
     // tennis paid for itself, and never the whole of it. Naming the week is not consolation – it is
@@ -419,6 +450,8 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   'season-rank': 'Season close',
   'break-even': 'The money turned',
   school: 'School behind her',
+  // ⚠ DRAFT (v83, the wedding – wave 7 T3; invariant 4: the owner's word lands in the T7 table).
+  wedding: 'Her wedding',
 }
 
 function scrollDetail(m: Milestone): string | null {
@@ -437,6 +470,12 @@ function scrollDetail(m: Milestone): string | null {
       return m.kind === 'week' ? 'one week of it' : 'the whole of it'
     case 'school':
       return 'the last school year is over'
+    // ⚠ v83 (wave 7 T3): NO DETAIL, DELIBERATELY. The milestone's `kind` is the EPISODE ID – a
+    // machine value the scroll must never print – and whether any surface speaks the husband's NAME
+    // is a wording question that belongs to the owner's pass (T7), not to a detail cell that would
+    // settle it by default. The label row alone is the record.
+    case 'wedding':
+      return null
   }
 }
 

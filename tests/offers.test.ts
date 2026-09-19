@@ -187,8 +187,14 @@ describe('⚠ the inbox adds NO main-stream draws (blocks merge)', () => {
       },
     })
     expect(plain.draws).toEqual(courted.draws)
-    expect(plain.world.offers).toHaveLength(0)
-    expect(courted.world.offers.length).toBeGreaterThan(0)
+    // ⚠ SCOPED TO THE KIT POST (round 44 #7). This case is about whether THE SHOP writes, and the
+    // inbox is no longer the shop's alone: the four salaried seats now post a year-end letter of
+    // their own on the wrap week (engine/world/staffLetters.ts), so an unsponsored career reaches
+    // here holding a coach's letter. Narrowing the filter keeps the claim EXACTLY as strong as it
+    // was – the stream comparison above is untouched and is the half that blocks the merge, and it
+    // still passes, which is the staff post proving it adds no draw on any arm.
+    expect(plain.world.offers.filter((o) => o.kind === 'kit')).toHaveLength(0)
+    expect(courted.world.offers.filter((o) => o.kind === 'kit').length).toBeGreaterThan(0)
   })
 })
 
@@ -688,7 +694,10 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     const raisedAtVerdict = world.offers.filter((o) => o.week === verdictWeek)
     expect(raisedAtVerdict.every((o) => o.state === 'info')).toBe(true)
     expect(raisedAtVerdict.filter((o) => (o.terms as KitOfferTerms).ended === 'events')).toHaveLength(1)
-    expect(world.offers).toHaveLength(2)
+    // ⚠ SCOPED TO THE KIT POST (round 44 #7): the two letters this case counts are the signed deal
+    // and its goodbye, and the career has now walked far enough to collect the staff's year-end post
+    // as well. The claim is about the BRAND's paper and is unchanged.
+    expect(world.offers.filter((o) => o.kind === 'kit')).toHaveLength(2)
     // 3. ⚠ AND NOTHING WAS CLAWED BACK. The kit the shop bought stays bought: the covered total is
     //    still on the record, and the review that ended the deal took no money at all.
     const covered = world.offers[0].coveredCents ?? 0
@@ -2603,8 +2612,13 @@ describe('the letter arrives in the OFF-SEASON, once', () => {
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
     for (let i = 0; i < 3 * WEEKS_PER_YEAR; i++) tickWeek(world, rng)
-    for (const o of world.offers) expect(o.week % WEEKS_PER_YEAR).toBe(LETTER_WEEK)
-    expect(new Set(world.offers.map((o) => o.week)).size).toBe(world.offers.length)
+    // ⚠ SCOPED TO THE KIT POST (round 44 #7). `LETTER_WEEK` is the SPONSOR review's week (47); the
+    // staff write on the wrap week (49), which is a different letter family on a different clock, so
+    // an unscoped sweep would now be asserting the brands' schedule over somebody else's post.
+    const kit = world.offers.filter((o) => o.kind === 'kit')
+    expect(kit.length, 'the sweep is not vacuous').toBeGreaterThan(0)
+    for (const o of kit) expect(o.week % WEEKS_PER_YEAR).toBe(LETTER_WEEK)
+    expect(new Set(kit.map((o) => o.week)).size).toBe(kit.length)
   })
 
   it('⚠ REVERSED TWICE (05.08, then 28.08): the window is when brands WRITE, not when letters die', () => {

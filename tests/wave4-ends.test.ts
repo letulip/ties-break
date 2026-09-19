@@ -183,7 +183,7 @@ function weekAtAge(world: WorldState, years: number): number {
 
 /** A row of the v74 shape. `endedWeek: null` is «still going». */
 function episode(sinceWeek: number, knownWeek: number | null = null, endedWeek: number | null = null): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }
 }
 
 /** A career, parked at `week`, with whatever love life the case needs. ⚠ A REAL `createWorld` rather
@@ -495,6 +495,12 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
     // still goes red here. ⚠ The `{ ...before, endedWeek: 420 }` line above needed nothing: `before` is
     // a deep copy of the live row, so it carries the four new fields already and asserts they are
     // PRESERVED across an ending, which is a claim this case did not previously get to make.
+    // ⚠ RE-AIMED AT THE v83 SHAPE (18.09, the wedding – wave 7 T1), NOT WEAKENED, in step with the
+    // arrival twin again and for its reason again: v83 appends `latchedWeek` and `partnerName`, so
+    // the total key set is two longer. The claim is still «`endEpisode` writes ONE date and invents
+    // nothing» – and the deep-copied `before` now also asserts the latch and the name are PRESERVED
+    // across an ending, which matters from T3 on: a latched episode that ends must keep its wedding
+    // and its husband's name in the biography.
     expect(Object.keys(world.loveEpisodes[0]).sort(), 'and no field was invented')
       .toEqual([
         'airedEndedWeek',
@@ -502,7 +508,9 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
         'endedWeek',
         'id',
         'knownWeek',
+        'latchedWeek',
         'partnerId',
+        'partnerName',
         'publicWeek',
         'publicWrong',
         'sinceWeek',

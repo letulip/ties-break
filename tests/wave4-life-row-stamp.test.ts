@@ -129,7 +129,7 @@ function careerAt(seed: string, week: number): WorldState {
 
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED where the roll is not what is under test. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, ...over }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null, ...over }
 }
 
 /** ⭐⭐ A SEED WHOSE ENDS HAZARD REALLY FIRES ON `week` – asked of the engine's own stream and its own

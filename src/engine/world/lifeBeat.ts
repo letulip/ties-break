@@ -71,7 +71,11 @@ import { ECONOMY } from '../economy'
 // temperament reads are MECHANICS and move to expression; two are RE-DERIVATIONS of a persisted
 // price and must stay on BIRTH. Each of the five carries its own ⚠ comment naming the ruling, and
 // `temperamentOf`'s own body is untouched precisely so the split is visible per CALL SITE.
-import { applyBondDelta, bondBandOf, expressedTemperamentOf, moodRegisterOf, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
+// ⭐ v83 T5 – `seasonWrapsWithNoVacation` JOINS A LINE THAT ALREADY EXISTS AT RUNTIME, so no arrow
+// moves: it is the season-boundary zero-vacations predicate ITSELF (the −3/−3 block's one spelling),
+// read by the `'no-vacation'` occasion rather than re-derived – the brief's own instruction («the
+// same fact spirit.ts's season-boundary block reads»).
+import { applyBondDelta, bondBandOf, expressedTemperamentOf, moodRegisterOf, seasonWrapsWithNoVacation, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
 import { kidAgeExact } from './age'
 // ⭐ `seasonIndexOf` JOINS `addEvent` HERE IN v74 T8 – the engine's ONE definition of «this season»,
 // and the season the tier-1 cap is counted within (`smallTalkThisSeason`, §7). `ledger.ts` is a leaf
@@ -112,6 +116,13 @@ import { guardNotEndedForGood, KID_ID } from './constants'
 // would have supplied are field reads (`world.entries.includes`, `world.coachId !== null`) and are
 // spelled inline for that reason and no other.
 import { entryStatus } from './medical'
+// ⭐ v83 (the wedding, wave 7 – T3) – THE MILESTONE CHANNEL, `markSchoolEnd`'s own two surfaces:
+// the kept feed line and the scroll's row, both idempotent by key. ⚠ ONE-WAY ARROW, MEASURED THE
+// HOUSE WAY before it was believed: `world/milestones.ts` imports the calendar, dates, money, the
+// diary barrel, kidLife, ledger, constants, labels, ladder and a TYPE-ONLY `WorldState` – and this
+// module is imported only by world.ts, endings.ts, multiWeek.ts, phaseHerWeek.ts, snapshot.ts and
+// the corpus's type-only edge, none of which sits in that closure. No runtime loop.
+import { captureMilestone, fireMilestone } from './milestones'
 import { weekMonth } from '../../shared/dates'
 // ⭐⭐⭐ v76 T6 – THE SEAT, ASKED DIRECTLY, WHICH IS THE MASSEUR'S OWN WAY (`world/medical.ts:62`
 // spends `masseurWorksThisWeek` inside `accrueCondition` exactly like this). `psychologistWorkingRung`
@@ -158,13 +169,27 @@ import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from './spotlig
 // world state, no RNG, no import back into `world/`), so neither closes a cycle.
 import { awayVoice } from '../diary/words'
 import { diaryLifeStageFor } from '../diary/facts'
-import { schoolIsOver } from '../kidLife'
+// ⭐ v83 T5 – THE TWO TRAVEL BANDS JOIN `schoolIsOver` ON AN ARROW THAT ALREADY EXISTS. They are the
+// friends tile's own thresholds («a season lived out of a suitcase»: `weeksAway >= AWAY_OFTEN` of
+// the trailing `FRIENDS_WINDOW`), and the `'road-stretch'` occasion reads the SAME fact the tile
+// reads – a week the family paid to travel, off `financeWeeks` (snapshot.ts's own sentence: «a week
+// in which a travel bill was actually paid is a week the family was somewhere else»). Reusing the
+// constants is what keeps «the family has been on the road» ONE claim on two surfaces.
+import { AWAY_OFTEN, FRIENDS_WINDOW, schoolIsOver } from '../kidLife'
+// ⭐ v83 T5 – THE TIER TABLE, for ONE field of it: the tier's `track` is the engine's single
+// spelling of «the trip crosses a border» (`diary/travelHome.ts:521` reads `abroad` off exactly
+// this field), and the `'distant-swing'` occasion asks it of the next ENTERED event – see the gate
+// for why the reading is `!== 'domestic'` where that file's is `=== 'itf'`. ⚠ NO CYCLE, measured
+// the house way: `season/calendar.ts` imports rng, match/types, shared/protocol, shared/dates,
+// economy and `season/types` – nothing under `world/`, so the arrow runs one way. This file already
+// held the type-only `../season/types` edge; this is its value sibling on the same package.
+import { TIERS } from '../season/calendar'
 // ⚠⚠ GENERATED DATA, AND THE IMPORT RUNS ONE WAY ONLY. `smallTalkCorpus.ts` is 43 situations emitted
 // from `docs/specs/small-talk-corpus-2026-09.md` by `tools/small-talk-corpus-emit.ts`; it imports
 // `SmallTalkSituation` back from here as a TYPE, which is erased at compile time, so there is no
 // runtime cycle – the `import type { WorldState }` idiom the decomposition already runs on.
 import { SMALL_TALK_CORPUS } from './smallTalkCorpus'
-import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
+import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite, SpouseViewOccasion } from '../../shared/protocol/narrative'
 // ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
 // resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
 import type { TierId } from '../season/types'
@@ -222,6 +247,24 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // have been heard, in the order they called. No new guard, no new ordering rule and no plumbing –
   // the reserved comment's own promise, kept by typing one word.
   'fork-psy': true,
+  // ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – TRUE, AND IT IS TIER 2's OWN PRICE AT THE LAYER'S BIGGEST
+  // ASK SO FAR. «She is getting married» is a week the parent must answer before time may move –
+  // `'met'`'s and `'ended'`'s one argument, at the moment the whole branch has been building toward –
+  // and a career that could tick past it would answer her by walking away. ⚠ BLOCKING THE WEEK IS
+  // NOT BLOCKING THE WEDDING: any answer releases time, and the wedding lands `weeksAfterEngagement`
+  // later whatever was said (T3) – SHE decided, and the fork machinery is the shape, not the power.
+  engaged: true,
+  // ⭐⭐ v83 (wave 7 – T5) – FALSE, AND IT IS TIER 1's OWN WORD REPEATED FOR THE MARRIAGE'S STANDING
+  // SURFACE. The spouse's view is texture the way small talk is – answered from the Home card inside
+  // the standing three-week window, never lost as a ROW, and the week rolls on whether the parent
+  // listens or not. A week the career STOPPED for the spouse's opinion would price the marriage as a
+  // tax on time, which is the opposite of what the latch means (T4: marriage steadies).
+  'spouse-view': false,
+  // ⭐ v83 (wave 7 – T10) – FALSE, AND «NARRATIVE-ONLY» IS THE WHOLE ARGUMENT: the beat is a story
+  // the week tells, not a question the week asks, and a career stopped for a housewarming would be
+  // pricing a moment backlog §8 explicitly priced at nothing. The kept feed row is the record that
+  // survives; the soft card is a three-week courtesy, and losing IT loses nothing.
+  'own-key': false,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -2438,6 +2481,126 @@ function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: Hear
     : ENDED_HEADING_HEARD[heard.voice][endsRegister][read]
 }
 
+// =================================================================================================
+// 3g. `'engaged'` – THE WEEK SHE SAYS SHE IS GETTING MARRIED (the wedding, wave 7: T2).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// =================================================================================================
+//
+// SHE ANNOUNCES – §4a's law at the layer's biggest ask so far: no parent menu opened her decision,
+// and what the parent holds is a reaction. The pool is `ENDED_HER_LINE`'s shape one register
+// smaller: one cell per voice (no register axis – the announcement is one scene, and unlike an
+// ending it carries no told-now/told-late split, because `rollWedding` raises it the week she
+// decides and there is nothing to hear about late), in both presences, plus the dry card for a
+// `strained`/`cold` home and one heading.
+//
+// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule): what presence
+// changes is the FRAME the parent is standing in, never the sentence she says inside the quotation
+// marks. ⚠ NO NAME AND NO GENDER in any line – the name is WRITTEN at this beat (T3's
+// `partnerNameFor`) but which surfaces SPEAK it is a later task's question, and a pool that jumped
+// ahead of that ruling would be taking a wording decision that is his.
+
+/** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, in both presences. The voice bibles govern: `sunny` says
+ *  it evenly and names the feeling; `fiery` gives the verdict first, at speed, in absolutes;
+ *  `quiet` says the practical surface and leaves herself out; `deep` says one true thing, late,
+ *  stripped of its size, in full stops. */
+const ENGAGED_HER_LINE: Record<Temperament, PresenceCell> = {
+  sunny: {
+    roof: 'She sat us down at the table and could not keep it in past the kettle. "We are getting married. I wanted you to hear it from me first."',
+    away: 'She called before we had even asked about the week. "We are getting married. I wanted you to hear it from me first."',
+  },
+  fiery: {
+    roof: 'She came in already talking. "We are getting married. Yes, we are sure. No, we are not waiting."',
+    away: 'She rang, and led with it. "We are getting married. Yes, we are sure. No, we are not waiting."',
+  },
+  quiet: {
+    roof: 'She said it while she was clearing the table, as if it were about the schedule. "We are getting married. In a couple of months, probably."',
+    away: 'She sent the season\'s dates through, and this was at the top of the message. "We are getting married. In a couple of months, probably."',
+  },
+  deep: {
+    roof: 'She waited until the room had gone quiet and said it once. "We are getting married. I have thought about it. It is right."',
+    away: 'She let the call run almost to the end and said it before goodbye. "We are getting married. I have thought about it. It is right."',
+  },
+}
+
+/** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `ENDED_DRY`'s shape
+ *  and doctrine: it states what the week HOLDS, and the distance is the whole content – by this
+ *  rung the parent was never the person it was told to. */
+const ENGAGED_DRY = 'She is getting married. The news reached this house second-hand.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `COUNSEL_HEADING`'s
+ *  shape rather than `MET_HEADING`'s ladder, because the one fact of this card is the same fact at
+ *  every distance and in every weather: she has decided, and the deciding is hers. The bond band
+ *  reaches the card through HER line (own voice against the dry card), never through the frame; a
+ *  heading that read the band would say the distance twice. ⚠ It recommends none of the three
+ *  answers – «she has made up her mind» is what the parent can see, and which of the three things
+ *  to say about it is his. */
+const ENGAGED_HEADING = 'A wedding is coming, and she has made up her mind'
+
+// =================================================================================================
+// 3h. `'spouse-view'` – THE WEEK THE ONE SHE MARRIED HAS SOMETHING TO SAY (the wedding, wave 7: T5).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// =================================================================================================
+//
+// THE FIRST POOL IN THIS FILE WHOSE SPEAKER IS NEITHER HER NOR STAFF. The shape is the counsel's
+// (`COACH_COUNSEL`): third-person narration outside the quotation, the speaker's own words inside
+// it, keyed on the row's `detail` and on NOTHING else – no voice (he is not her, §3d's argument),
+// no bond (he is not the relationship), no register (the week is hers), no presence axis.
+//
+// ⚠⚠ NO NAME AND NO GENDER ANYWHERE IN THE POOL – the standing law (`ENGAGED_HER_LINE`'s own note):
+// the episode holds a persisted NAME since T3, but WHICH surfaces speak it – and whether any may say
+// «husband» – is the owner's wording call, carried as a question in T7's table. Until he rules, the
+// spouse is «the one she married», which is a fact the world does hold.
+//
+// ⚠ NO FIGURE AND NO PRICE in any line (rule 4) – the `'money'` occasion says «a large bill» and
+// stops there, which is the brief's own fence: beats about money, never accounting.
+
+/** ⚠ ⚠ DRAFT – WHAT THE SPOUSE SAYS, one line per occasion, each spoken about a fact the gate has
+ *  just verified the world holds (`SPOUSE_VIEW_OCCASION_AT`, §12) – so no line can describe a season
+ *  the career is not having. First person inside the quotation is the counsel pool's own licence:
+ *  the narration law binds the frame, not the speech. */
+const SPOUSE_VIEW_SAID: Record<SpouseViewOccasion, string> = {
+  'distant-swing': 'The one she married stayed back after the plates were cleared. "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."',
+  'road-stretch': 'The one she married said it plainly, on a quiet evening. "The family has been on the road for weeks now. The house does not really get lived in between the trips."',
+  'no-vacation': 'The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."',
+  money: 'The one she married asked it without an edge. "That was a large bill, and the season sits in her account now. I am not counting anybody\'s money. I am asking how this house plans."',
+}
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `COUNSEL_HEADING`'s
+ *  shape and its reason: this card is a word from a third person, and neither the week's weather nor
+ *  the parent-daughter distance is a fact about it. ⚠ It recommends none of the three answers. */
+const SPOUSE_VIEW_HEADING = 'The one she married has something to say about this season'
+
+/** ⚠ ⚠ DRAFT – the Home card's invitation, `SMALL_TALK_CARD`'s twin for this kind: one short line
+ *  saying a word is waiting, never what the word is (the card is only the invitation). */
+const SPOUSE_VIEW_CARD = 'The one she married wants a word.'
+
+// =================================================================================================
+// 3i. `'own-key'` – THE WEEK SHE LIVES BEHIND HER OWN DOOR (wave 7: T10, backlog §8).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// =================================================================================================
+//
+// ONE SCENE, TOLD ONCE, IN THE PARENT'S OWN NARRATION – deliberately NO quoted line of hers, and
+// that absence is what keeps this a one-cell pool without breaking the voice law: the completeness
+// rule («a `quiet` girl can never silently receive a `fiery` girl's line») binds pools that QUOTE
+// her, and this card quotes nobody. Giving the scene a voiced line of hers – four cells, two
+// presences – is a wording decision the owner may take at T7's table; a draft that jumped ahead of
+// it would be choosing for him.
+
+/** ⚠ ⚠ DRAFT – the card's one line: what the week holds, seen from the family's side. */
+const OWN_KEY_SAID = 'She has a place of her own now. A spare key went onto the hook by our door, and Sunday dinner is a standing thing.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – the scene is the
+ *  same scene at every distance and in every weather. */
+const OWN_KEY_HEADING = 'She lives behind her own door now'
+
+/** ⚠ ⚠ DRAFT – the Home card's invitation, one short concrete line. */
+const OWN_KEY_CARD = 'She came by with a spare key.'
+
+/** ⚠ ⚠ DRAFT – the kept feed row, written at the raise (`deliverKnownPartner`'s `keep: true`
+ *  doctrine: the week she moved out is not a line the album may be missing). ⚠ NO cents, no
+ *  mechanic, no address – backlog §8's own boundary. */
+const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, and Sunday dinner stands.'
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -2585,6 +2748,68 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.bond.delta.endedMismatched },
     { id: 'fix-it', label: 'Offer to help put it right', bond: ECONOMY.bond.delta.endedFixIt },
     { id: 'blame', label: 'Say they were never worth it', bond: ECONOMY.bond.delta.endedBlame },
+  ],
+  /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – THE THREE THE ANNOUNCEMENT OFFERS: the research digest's
+   *  own triple, bless / keep distance / oppose, priced in `ECONOMY.wedding` (drafted +2.5 / −1 /
+   *  −4, benched in T8, his word after the numbers).
+   *
+   *  ⚠ ⚠ DRAFT – every label below is the builder's draft for the owner's pass (invariant 4; the
+   *  wave's T7 strings table is where he reads them).
+   *
+   *  ⚠⚠ THE SECOND KIND WITH NO FREE ANSWER, and unlike `'ended'` it is read-independent BY
+   *  CONSTRUCTION rather than by two absences: no overlay in `lifeBeatOptionsFor` names this kind,
+   *  so the priced set is the same object under every `wants` and every ends-read, and
+   *  `DRAIN_ANSWER['engaged']` = `distance` drains at the one −1 a harness can state.
+   *
+   *  ⚠ THE LABELS NAME NO GENDER (them, it – the schema persists a NAME from this beat on, never a
+   *  gender), NO NUMBER, NO PRICE AND NO METER (the fence). And none of them promises to stop
+   *  anything: the wedding lands whatever is said (T3), so a button reading «forbid it» would be a
+   *  power the game does not hold – opposing is a thing said to her, not a veto. */
+  engaged: [
+    // ⚠ DRAFT
+    { id: 'bless', label: 'Give them our blessing', bond: ECONOMY.wedding.blessBond },
+    // ⚠ DRAFT
+    { id: 'distance', label: 'Say it is her decision, and step back', bond: ECONOMY.wedding.distanceBond },
+    // ⚠ DRAFT
+    { id: 'oppose', label: 'Tell her we think it is a mistake', bond: ECONOMY.wedding.opposeBond },
+  ],
+  /** ⭐⭐ v83 (wave 7 – T5) – THE THREE THE SPOUSE'S WORD OFFERS, and they are ONE set for all four
+   *  occasions, which is tier 1's own precedent quoted at its table above: «three parent moves that
+   *  fit a worry, a joy or a question alike, because the answer set is keyed on the KIND and her
+   *  subject is a fact on the row». The occasion is the row's `detail`; the parent's three moves –
+   *  hear it out, hold the season's line, wave it off – fit each of the four. ⚠ Per-occasion WORDS,
+   *  if the owner wants them, are one label overlay away (round 42 #15's own machinery, the fourth
+   *  parameter of `lifeBeatOptionsFor`) and are flagged as a question in T7's table, not taken.
+   *
+   *  ⚠ ⚠ DRAFT – every label below is the builder's draft for the owner's pass (invariant 4).
+   *
+   *  ⚠⚠ THE THIRD KIND WITH NO FREE ANSWER, priced SMALL by design (the brief's ±0.5..±1.5): a word
+   *  about her marriage is never free, and never large – the marriage's standing is texture, not
+   *  economy. Read-independent BY CONSTRUCTION (`'engaged'`'s own shape): no overlay names this
+   *  kind, so the priced set is the same object under every reading and
+   *  `DRAIN_ANSWER['spouse-view']` = `level` drains at the one −0.5 a harness can state.
+   *
+   *  ⚠ THE LABELS NAME NO GENDER (the §3h banner's law), NO NUMBER, NO PRICE AND NO METER (the
+   *  fence). And none of them promises an outcome – what the family DOES about a season is the
+   *  planner's, and a button reading «skip the trip» would be a second, unpriced planner. */
+  'spouse-view': [
+    // ⚠ DRAFT
+    { id: 'hear', label: 'Say the point is fair, and talk it through', bond: ECONOMY.wedding.spouseViewHearBond },
+    // ⚠ DRAFT
+    { id: 'level', label: 'Say the season is what it is', bond: ECONOMY.wedding.spouseViewLevelBond },
+    // ⚠ DRAFT
+    { id: 'brush', label: 'Say there is nothing to worry about', bond: ECONOMY.wedding.spouseViewBrushBond },
+  ],
+  /** ⭐ v83 (wave 7 – T10) – ONE ACKNOWLEDGMENT, PRICED ZERO, AND BOTH HALVES ARE THE DESIGN. One,
+   *  because the beat is narrative-only and offers nothing to decide – the dialog's confirm needs a
+   *  control that records, and this is it. Zero, because «NO bond move» is backlog §8's own price:
+   *  a housewarming is not a card a parent can answer wrongly. ⚠ THE ZERO IS WRITTEN OUT and not
+   *  sourced to a delta table, tier 1's own argument: there is no economy here to name a constant
+   *  for, and the day somebody priced it the one-time story would start paying.
+   *  ⚠ ⚠ DRAFT – the label is the builder's draft for the owner's pass (invariant 4). */
+  'own-key': [
+    // ⚠ DRAFT
+    { id: 'keep', label: 'Put the key on the hook', bond: 0 },
   ],
 }
 
@@ -2786,6 +3011,34 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     'fix-it': 'Her relationship ended. We offered to help put it right.',
     blame: 'Her relationship ended. We said they were never worth it.',
   },
+  /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – AND THE ANNOUNCEMENT WRITES ONE, for `'ended'`'s reason
+   *  exactly: an engagement the parent blessed and one he opposed are two different biographies, and
+   *  only the row can tell them apart seasons later. Three lines, one per answer, opening on the
+   *  same clause – the `met`/`ended` pools' established parallel shape, kept deliberately.
+   *  ⚠ ⚠ DRAFT – every line below is the builder's draft for the owner's pass (invariant 4, T7's
+   *  table). ⚠ NO `amountCents` AND NO PRICE IN ANY WORD (rule 4) – the wedding's COST is T3's own
+   *  ledger event on the wedding week, never this row's; no name and no gender either, because at
+   *  the ANSWER the name is on the episode but which surfaces speak it is T5+/T7's question, and a
+   *  feed row that jumped ahead of that ruling would be a wording decision taken for him. */
+  engaged: {
+    // ⚠ DRAFT
+    bless: 'She said she is getting married. We gave them our blessing.',
+    // ⚠ DRAFT
+    distance: 'She said she is getting married. We said it is her decision, and stepped back.',
+    // ⚠ DRAFT
+    oppose: 'She said she is getting married. We told her we think it is a mistake.',
+  },
+  // ⭐⭐ v83 (wave 7 – T5) – NO ROW, AND THE `null` IS TIER 1's OWN STATEMENT AT TIER 1's OWN
+  // FREQUENCY: up to ~5 of these a season while the marriage stands, and a feed row per answer would
+  // bury the private-life thread under the parent's replies to it – the exact argument
+  // `'small-talk'`'s null makes above. The `lifeLog` row is the record and the counter (the cooldown
+  // reads it), and the TEXTURE the brief promises goes through the diary (the week note's
+  // `spouseSpoke` band), which is the surface the brief names.
+  'spouse-view': null,
+  // ⭐ v83 (wave 7 – T10) – NO ANSWER ROW, because the RAISE already wrote the kept one
+  // (`OWN_KEY_ROW`, `deliverOwnKey`): the feed records what HAPPENED, and «we put the key on the
+  // hook» is not a second event – a reply row here would print the same week twice in two voices.
+  'own-key': null,
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -2985,6 +3238,33 @@ export function lifeBeatSaid(
       return speaksInHerOwnVoice(bond)
         ? presenceLine(ENDED_HER_LINE[voice][endsRegister], presence)
         : ENDED_DRY[endsRegister]
+    // ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – THE SEVENTH KIND. ⚠ IT READS NO `detail` AND NO
+    // `register`, for `'met'`'s own two reasons: its detail is an episode id (a machine value, never
+    // a rendered word) and the Mood ladder is not this card's axis – the announcement is her week's
+    // biggest fact whatever the weather. ⚠ AND NO REGISTER AXIS OF ITS OWN, unlike `'ended'`: there
+    // is no told-late wedding, because `rollWedding` raises the card on the week she decides and
+    // nothing about it can be learned late. What it reads is the bond's two-rung channel – her own
+    // voice against the dry card – which is `'ended'`'s shape one axis smaller.
+    case 'engaged':
+      return speaksInHerOwnVoice(bond)
+        ? presenceLine(ENGAGED_HER_LINE[voice], presence)
+        : ENGAGED_DRY
+    // ⭐⭐ v83 (wave 7 – T5) – THE EIGHTH KIND, AND THE FIRST WHOSE SPEAKER IS NEITHER HER NOR STAFF.
+    // It reads its own `detail` like tier 1 does – the OCCASION is stamped at the raise, so a row
+    // live for three weeks is re-worded from the fact it was raised about, never from a season that
+    // has since moved on. ⚠ It reads NO `voice`, NO `bond` and NO `register` – the counsel's three
+    // reasons, one house over: the spouse is not her, is not the parent-daughter relationship, and
+    // the week is hers. ⚠ And NO presence axis: the scene is the spouse's own house, whatever
+    // address the girl writes from this week.
+    case 'spouse-view': {
+      const occasion = SPOUSE_VIEW_OCCASIONS.find((o) => o === detail)
+      if (occasion === undefined) throw new Error(`A spouse-view row carries no occasion: ${detail}`)
+      return SPOUSE_VIEW_SAID[occasion]
+    }
+    // ⭐ v83 (wave 7 – T10) – THE NINTH KIND, AND THE ONE-CELL POOL IS ARGUED AT ITS BANNER (§3i):
+    // the card quotes nobody, so no voice, no bond, no register, no presence and no detail reach it.
+    case 'own-key':
+      return OWN_KEY_SAID
   }
 }
 
@@ -3049,6 +3329,20 @@ export function lifeBeatHeading(
     // card. ⚠ THIS IS THE ONE SURFACE THE READ REACHES AT EVERY BOND BAND – see the §3e banner.
     case 'ended':
       return endedHeadingFor(endsRegister, read, heard)
+    // ⭐ v83 (the wedding, wave 7 – T2) – ONE FRAME, KEYED ON NOTHING, `COUNSEL_HEADING`'s shape and
+    // `ENGAGED_HEADING`'s own note for why: the fact is the same fact at every distance, the bond
+    // reaches the card through her line, and a frame that also moved would say the distance twice.
+    case 'engaged':
+      return ENGAGED_HEADING
+    // ⭐ v83 (wave 7 – T5) – ONE FRAME, KEYED ON NOTHING, the counsel's own call a third time: a word
+    // from a third person, and neither the week's weather nor the parent-daughter distance is a fact
+    // about it. The occasion reaches the player through the SAID line, never the frame.
+    case 'spouse-view':
+      return SPOUSE_VIEW_HEADING
+    // ⭐ v83 (wave 7 – T10) – ONE FRAME, KEYED ON NOTHING: the scene is the same scene at every
+    // distance and in every weather, and there is nothing here for an axis to select.
+    case 'own-key':
+      return OWN_KEY_HEADING
   }
 }
 
@@ -3088,7 +3382,16 @@ export function lifeBeatListenFollowUp(
   // detour is «say nothing, and let HER talk», and what it buys is more of her. A professional has
   // given a read and has no second half of it being withheld, so a panel offering one would promise
   // words nobody wrote. His two acknowledgments are the whole of the beat.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy') return null
+  // ⚠ AND `'engaged'` HAS NONE (v83, wave 7 T2), for `'met'`'s reason at a bigger moment: the
+  // announcement is news, its three answers are REACTIONS, and none of them is `listen` – a panel
+  // promising more of her would promise words nobody wrote, about a decision she has already
+  // finished making.
+  // ⚠ AND `'spouse-view'` HAS NONE (v83, wave 7 T5), for the coach's reason in another mouth: the
+  // detour is «say nothing, and let HER talk», and its reward is more of her. The spouse has said
+  // the piece whole, and a panel offering a second half would promise words nobody wrote.
+  // ⚠ AND `'own-key'` HAS NONE (v83, wave 7 T10), for the plainest reason in this list: the card
+  // quotes nobody, so there is nobody a silence could buy more of.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged' || kind === 'spouse-view' || kind === 'own-key') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -3453,9 +3756,32 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
  *
  *  ⚠ ZERO DRAWS, like every other prompt in this file – it is a `find` over a handful of rows and a
  *  re-assembly from facts the world already holds. */
+/** ⭐ v83 (wave 7 – T5) – THE INVITATION LINE, PER KIND, and the record is TOTAL for
+ *  `LIFE_BEAT_BLOCKING`'s own reason: a list would let the next soft kind ship wearing tier 1's
+ *  sentence by FORGETTING, and «what does the Home card say for this kind» must be a line somebody
+ *  typed. ⚠ `null` on every BLOCKING kind – those rows stop the week and never reach the soft
+ *  surface, so a card line for them would be dead copy pretending to be reachable.
+ *  ⚠ THE `'small-talk'` CELL IS THE SHIPPED CONSTANT, REFERENCED AND NOT RE-TYPED (invariant 4):
+ *  tier 1's card is byte-identical to what it has always been. */
+const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
+  'fork-opinion': null,
+  met: null,
+  'fork-counsel': null,
+  ended: null,
+  'fork-psy': null,
+  engaged: null,
+  'small-talk': SMALL_TALK_CARD,
+  'spouse-view': SPOUSE_VIEW_CARD,
+  'own-key': OWN_KEY_CARD,
+}
+
 export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
   const row = liveSoftBeat(world)
-  return row === null ? null : { card: SMALL_TALK_CARD, prompt: lifeBeatPromptFor(world, row) }
+  if (row === null) return null
+  // ⚠ THE `??` ARM IS FOR A HAND-BUILT WORLD ONLY: `liveSoftBeat` returns non-blocking rows, every
+  // non-blocking cell above is a string, and a blocking row reaching this line would already be two
+  // bugs deep – it falls onto tier 1's shipped card rather than onto a crash inside `toSnapshot`.
+  return { card: SOFT_BEAT_CARD[row.kind] ?? SMALL_TALK_CARD, prompt: lifeBeatPromptFor(world, row) }
 }
 
 // =================================================================================================
@@ -3866,6 +4192,12 @@ export function rollArrival(world: WorldState): void {
   // (`publicWrong: false`), and the booth has voiced neither fact (`airedMetWeek` / `airedEndedWeek`
   // null). The LEAK that can set `publicWeek` is T6 and the booth stamp is T7; nothing on this tree
   // moves any of the four off these values.
+  // ⭐⭐ v83 (the wedding, wave 7 – T1) APPENDS THE LAST TWO AT THEIR BIRTH VALUES, on the v77
+  // paragraph's own argument above: this push is the one place a row is born, and the two values are
+  // the same two the v82 -> v83 migration back-fills on every historical row. A new attachment is
+  // not married (`latchedWeek: null` – the latch is T3's write, weeks after an engagement that
+  // cannot fire before 23) and nobody has been named (`partnerName: null` – the name is written ONCE
+  // at the engagement beat by `partnerNameFor`, never here and never re-derived).
   world.loveEpisodes.push({
     id,
     sinceWeek,
@@ -3877,6 +4209,8 @@ export function rollArrival(world: WorldState): void {
     publicWrong: false,
     airedMetWeek: null,
     airedEndedWeek: null,
+    latchedWeek: null,
+    partnerName: null,
   })
 }
 
@@ -4644,19 +4978,37 @@ export function endsHazardFor(temperament: Temperament): number {
  *  but it cannot be reached in that state from here – the gate above has already found the row. */
 export function rollEnds(world: WorldState): void {
   if (!endsEligible(world)) return
+  // ⭐ v75 T4 – THE ROW IS TAKEN **BEFORE** IT IS DATED, because after `endEpisode` runs
+  // `activeEpisode` is null by construction and there would be no id left to raise the beat about.
+  // ⭐ RE-AIMED BY v83 (the wedding, wave 7 – T4), NOT WEAKENED: the fetch moved ABOVE the draw,
+  // because the row now prices its own hazard – the latch below reads it – and the reason it was
+  // taken early at all (dated rows have no id left) holds one line further up unchanged.
+  const over = activeEpisode(world)!
   // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A. The hazard is EVALUATED NOW and
   // nothing about it is stored: what `endEpisode` writes is a DATE. So the multiplier is the one
   // belonging to the girl she is this week. ⚠ AND IT IS THE INTENSITY AXIS THAT OWNS THIS ONE
   // (who-she-is §1: «INTENSITY owns how hard things land and how long feelings hold – … an
   // attachment's end-hazard»), which is why a `reg` flip is the axis that moves it.
-  const hazard = endsHazardFor(expressedTemperamentOf(world))
+  //
+  // ⭐⭐⭐ v83 (the wedding, wave 7 – T4) – AND THE LATCH IS THE ONE SEAM THAT SCALES IT. A latched
+  // episode's ending hazard is wave-4's whole product × `ECONOMY.wedding.latchEndFactor` (drafted
+  // 0.15, measured in T8): marriage steadies the slot, which is its whole mechanical meaning at W1.
+  // ⚠ THE FACTOR LIVES HERE AND NOT IN `endsHazardFor`, DELIBERATELY – that function takes the
+  // TEMPERAMENT alone so the corridor tests and the census sweep the table directly (its own
+  // primitives doctrine), and the latch is a fact about the ROW, not about the girl. One seam, at
+  // the one caller, exactly where the brief pointed. ⚠ NOT ZERO AND NOT A GATE: a latched episode
+  // ending through this same hazard stays possible and rare – the divorce door the schema pre-paid
+  // – and everything downstream of the draw (the shock, the card, the kept row) is wave-4's
+  // machinery UNTOUCHED, no new shock kind anywhere in the wave. ⚠ ZERO RNG CHANGE: same one
+  // uniform, same key, same draw count on every week – only the THRESHOLD moves, so no stream
+  // shifts and input-independence cannot be touched.
+  const hazard =
+    endsHazardFor(expressedTemperamentOf(world)) *
+    (over.latchedWeek !== null ? ECONOMY.wedding.latchEndFactor : 1)
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament, so the four girls read
   // the SAME uniform against four different hazards. That is what makes the multiplier a pure scale
   // rather than four unrelated dice, and it is the property the nesting pin holds them to.
   if (rngFromSeed(`${world.seed}:life:ends:${world.week}`)() >= hazard) return
-  // ⭐ v75 T4 – THE ROW IS TAKEN **BEFORE** IT IS DATED, because after `endEpisode` runs
-  // `activeEpisode` is null by construction and there would be no id left to raise the beat about.
-  const over = activeEpisode(world)!
   endEpisode(world, world.week)
   // ⭐⭐⭐ v75 T3 – AND THE MARK IT LEAVES ON HER. A fact, never a number: what it costs is
   // `ECONOMY.spirit.shock.breakup` and `accrueSpirit` is the one place that reads it (see the note
@@ -5132,4 +5484,414 @@ export function airBoothMention(world: WorldState, tier: TierId): void {
   // is T3's (`EXPOSURE_ROW`, raised inside the spirit pass on the tick that prices this event), and
   // §3c's legibility law is «one row per week, not per event – the feed is not a ledger». A second
   // row here would print the same week twice, in two voices, one tick apart.
+}
+
+// =================================================================================================
+// 11. THE WEDDING – ⚠⚠ THE WEEK SHE DECIDES TO MARRY (the wedding, wave 7: T2)
+// =================================================================================================
+//
+// `docs/plans/life-wave-7-builder-2026-09.md` §2 T2, constants in `ECONOMY.wedding`. §5 decides
+// whether someone appears and §8 whether they are still there; this decides whether the episode
+// becomes a MARRIAGE, and it is the step the whole branch has been building toward since the slot
+// learned to latch. ⚠ It is §11 for §8's own stated reason: appended rather than renumbered.
+//
+// ⚠⚠ THE WAVE'S FIRST STREAM, RESERVED BY THE BRIEF'S §0 AND CREATED HERE:
+//
+//     seed:life:wedding:<week>              does she decide, this week
+//
+// (seed, calendar)-keyed like every sibling, so a player cannot conjure or dodge a wedding by
+// playing the week differently – input-independence is permanent law, and nothing here takes an
+// `Rng`, so MAIN is structurally out of reach and the frozen capture (41550 / e6b0c709) cannot see
+// this section. `seed:life:partner-name:<episodeId>` is T3's and `seed:life:spouse-view:<week>` is
+// T5's – neither exists on this tree and neither may be created early (§5's own reservation rule,
+// third use).
+//
+// ⚠⚠ ZERO DRAWS ON AN INELIGIBLE WEEK – the gate returns BEFORE the stream is derived, never
+// draw-and-discard, §5's load-bearing rule inherited whole. And the test for it is a KEY COUNT, not
+// an alignment comparison (wave 3's finding, the wave-4 brief's §0.1 law): every key carries its own
+// week, so tests/wave7-wedding.test.ts counts the keys the gate reaches, with a positive control.
+//
+// ⚠ SHE DECIDES; THE HAZARD IS THE DECIDING. No parent action opens or closes this – the gate reads
+// her age (RULED 23+, 11.09, art-driven), the slot (an active episode) and the episode's own DEPTH
+// (its age in weeks – derived, no new state). The parent's part arrives one screen later, as three
+// answers priced on `bond`, and none of them stops the wedding (T3).
+
+/** ⭐⭐ THE GATE – ALL FOUR, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
+ *  of its own for `arrivalEligible`'s stated reason: a reader must see, in one place, that the whole
+ *  of eligibility is decided before any stream exists. Pure, zero draws, no writes.
+ *
+ *  1. ⭐ TWENTY-THREE – RULED 11.09 («свадьба на 23+ – мне вполне ок»), art-driven: the bride lives
+ *     in the `adult` portrait set. Fractional (`kidAgeExact`), `life.ageGate`'s own reading, so she
+ *     turns eligible the week she turns 23 and not in the January of that year.
+ *  2. AN ACTIVE EPISODE – `activeEpisode`'s answer, never a second spelling of it. Nobody marries
+ *     out of an empty slot, and an episode that ended this very tick (`rollEnds` runs FIRST at the
+ *     call site) refuses here by construction.
+ *  3. THE DEPTH – the episode is at least `ECONOMY.wedding.minEpisodeWeeks` old, DERIVED from
+ *     `sinceWeek` (no new state; the brief's own «depth is derived» clause). ⚠ From `sinceWeek` and
+ *     never `knownWeek` – how long THEY have been together, not how long the parent has known; §8's
+ *     own clause-1 argument, pointed the other way. ⚠ And the threshold is what makes an `'engaged'`
+ *     beat on an UNDELIVERED episode unreachable on engine-born rows: the raw lag tops out at 12
+ *     weeks, far under 52, so by the time a row is deep enough to marry, `deliverKnownPartner` has
+ *     long since raised its `'met'` – she is not announcing a fiancé nobody has heard of.
+ *  4. THE RECEIPT – no `'engaged'` row exists for this episode yet (`hasBeatFor`, `'met'`'s own
+ *     once-per-episode doctrine: the record is the queue AND the receipt). This is also what makes a
+ *     SECOND wedding the same machinery on a LATER row: a latched episode necessarily carries the
+ *     receipt, so it can never be asked again, while a new episode's own row starts clean. */
+export function weddingEligible(world: WorldState): boolean {
+  const wedding = ECONOMY.wedding
+  if (kidAgeNow(world) < wedding.ageGate) return false
+  const episode = activeEpisode(world)
+  if (episode === null) return false
+  if (world.week - episode.sinceWeek < wedding.minEpisodeWeeks) return false
+  if (hasBeatFor(world, episode.id, ['engaged'])) return false
+  return true
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE raise site of an `'engaged'` row.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED – an ineligible week takes ZERO
+ *  draws, never draw-and-discard. The line order below IS the rule (§5's own note, third time).
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollArrival`'s own note: `rngFromSeed` can return exactly 0, and a hazard
+ *  of 0 must be impossible rather than merely unlikely.
+ *
+ *  ⚠ NO TEMPERAMENT TERM, AND THAT IS THE DRAFTED SHAPE RATHER THAN AN OVERSIGHT: `ECONOMY.wedding`
+ *  drafts one flat `perWeek` and no multiplier table – who she is already shaped WHICH episodes
+ *  exist and how long they last (the arrival and ends tables), so the decision-to-marry hazard
+ *  starts uniform and T8's census measures whether the two trajectories both reach it. A per-voice
+ *  column here would be a design decision wearing a constant (the `endsPerWeek` note's own law).
+ *
+ *  ⚠ IT RAISES THE BEAT AND WRITES NOTHING ELSE – no latch, no name, no feed row, no cents. The
+ *  latch and the cost are T3's, `weeksAfterEngagement` weeks after the answer; the name is written
+ *  at THIS beat but by T3's `partnerNameFor`, and until that task lands the row's `partnerName`
+ *  stays null and every reader keeps its unnamed phrasing. The raise stops the week by
+ *  `LIFE_BEAT_BLOCKING` alone – no new guard anywhere. */
+export function rollWedding(world: WorldState): void {
+  if (!weddingEligible(world)) return
+  if (rngFromSeed(`${world.seed}:life:wedding:${world.week}`)() >= ECONOMY.wedding.perWeek) return
+  // ⚠ THE ROW IS TAKEN AFTER THE DRAW AND IS THE GATE'S OWN – `weddingEligible` just proved it
+  // non-null, and `rollEnds` runs before this at the call site, so the episode the beat is about is
+  // the episode still standing this week.
+  const episode = activeEpisode(world)!
+  // ⭐⭐⭐ v83 T3 – HE GETS A NAME, AT THE ENGAGEMENT AND NOWHERE ELSE (the design's own moment: «a
+  // latched partner finally needs one»). ONE call per episode ever – the raise below writes the
+  // receipt that makes this line unreachable a second time – and the RESULT IS PERSISTED, never
+  // re-derived at read (T1's law on the field): a later pool edit must never rename a husband an
+  // old career already has. ⚠ The `??=` is belt on braces for hand-carried worlds: an episode that
+  // somehow already holds a name keeps it, exactly as the migration's `??=` would keep it.
+  episode.partnerName ??= partnerNameFor(world.seed, episode.id)
+  raiseLifeBeat(world, 'engaged', episode.id)
+}
+
+/** ⚠ ⚠ DRAFT – THE POOL, ≥ 24 FICTIONAL FIRST NAMES AND NOT ONE SURNAME ANYWHERE IN THE WAVE, so no
+ *  real person's name is CONSTRUCTIBLE (house trademark law satisfied by construction – the same
+ *  guarantee `season/names.ts` engineers with curated pools, achieved here by never holding the
+ *  second half at all). Every name is a draft for the owner's pass (invariant 4; T7's table).
+ *
+ *  ⚠ SINGLE TOKENS ONLY – no spaces, no initials – which is what keeps «no surname» a property a
+ *  test can assert rather than a habit. ⚠ APPEND-ONLY once shipped, `SURNAMES`' own law and for the
+ *  weaker of its two reasons only: the draw indexes by pool LENGTH, so a reorder or removal re-maps
+ *  future draws – and though every DRAWN name is persisted (nobody is renamed), a grown pool changes
+ *  which husband a NEW career on an old seed meets, which is the price of any pool change and the
+ *  reason to append rather than edit. */
+export const PARTNER_NAME_POOL: readonly string[] = [
+  'Anton', 'Bruno', 'Casper', 'Daniel', 'Elias', 'Felix', 'Gabriel', 'Henrik',
+  'Ivo', 'Jonas', 'Karel', 'Lukas', 'Matteo', 'Niko', 'Oskar', 'Pavel',
+  'Rafael', 'Samuel', 'Tomas', 'Viktor', 'Willem', 'Xavier', 'Yann', 'Zeno',
+  'Andrei', 'Marco', 'Ruben', 'Stefan',
+]
+
+/** ⭐⭐⭐ v83 T6's ONE DERIVATION FUNCTION, landed with T3 because the engagement is its one call
+ *  site: WHO SHE IS MARRYING, drawn uniformly on `seed:life:partner-name:<episodeId>` – the wave's
+ *  second and last new stream, (seed, episode)-keyed so no week's play and no other draw can shift
+ *  it, and MAIN is never reached.
+ *
+ *  ⚠⚠ CALLED EXACTLY ONCE PER EPISODE, AT THE ENGAGEMENT, AND THE RESULT IS PERSISTED
+ *  (`LoveEpisode.partnerName`) – `temperamentFor`'s own arrangement: the function is pure and
+ *  re-derivable for the LIFE OF THE POOL, and it is precisely the pool's freedom to grow that makes
+ *  the persisted copy the fact and this function only the pen it was written with. A reader that
+ *  called this instead of reading the row would rename a husband the day a name is appended.
+ *
+ *  ⚠ `pickInt` over the whole pool – uniform, one draw, `drawPartnerWants`' own shape. */
+export function partnerNameFor(seed: string, episodeId: string): string {
+  const r = rngFromSeed(`${seed}:life:partner-name:${episodeId}`)
+  return PARTNER_NAME_POOL[pickInt(r, 0, PARTNER_NAME_POOL.length - 1)]
+}
+
+/** ⭐⭐⭐ v83 T3 – THE WEDDING LANDS, and the ONE writer of `latchedWeek`.
+ *
+ *  ⚠⚠ `weeksAfterEngagement` WEEKS AFTER THE BEAT WAS ANSWERED, ON **ANY** ANSWER – opposing does
+ *  not stop it, SHE decided; what opposing bought is the bond price already paid and the diary's
+ *  memory of it. The beat is BLOCKING, so the answer landed on the raise week (`row.week` – time
+ *  could not move between them) and the arithmetic below reads the row's own week.
+ *
+ *  ⚠⚠ FOUR GATES, EACH ONE LOAD-BEARING AND NONE A DRAW (zero draws in this function, on any path):
+ *    · an `'engaged'` row, ANSWERED – an unanswered row cannot start the clock (unreachable in play,
+ *      the block contract holds time; real on a crafted world);
+ *    · its episode still ACTIVE – §8's ordinary hazard keeps running between the answer and the
+ *      day, and an episode that ends inside those weeks is a wedding that never happens: the row
+ *      keeps its receipt (no second ask of a dead episode) and the latch is never written. The
+ *      bench REPORTS this frequency (T8) rather than hiding it;
+ *    · not yet LATCHED – the latch is the receipt and the once-ness, `lifeLog.answer`'s own shape:
+ *      one nullable field says both «has it happened» and «when», so a later week walks past;
+ *    · the day has COME – `>=` rather than `===`, so a crafted world that jumped the calendar still
+ *      lands exactly once (the latch refuses the second pass) and play, which ticks by one, lands
+ *      ON the day.
+ *
+ *  WHAT LANDING WRITES, in one place: the latch (`latchedWeek = world.week`), ONE kept feed row and
+ *  ONE album entry through the milestone channel (`markSchoolEnd`'s own two-surface idiom:
+ *  `fireMilestone` keeps the line past every prune, `captureMilestone` gives the scroll its row,
+ *  both idempotent per `wedding:<episodeId>` – so the SECOND wedding of a later episode captures
+ *  its own line). ⚠ NO MONEY – the drafted `costCents` charge and its ledger event stood here until
+ *  the 18.09 ruling closed Q-1 in his own words: «я думаю как с подарками, никто и нисколько» – the
+ *  wedding follows the gifts' law, nobody pays and nothing; what the drafted $12,000 weighed is
+ *  recorded in docs/specs/the-wedding-2026-09.md §3c. ⚠ NO name in any
+ *  line – whether a surface speaks the husband's name is T7's wording question, not a default. */
+export function landWedding(world: WorldState): void {
+  for (const row of lifeLogOf(world)) {
+    if (row.kind !== 'engaged' || row.answer === null) continue
+    if (world.week - row.week < ECONOMY.wedding.weeksAfterEngagement) continue
+    const episode = loveEpisodesOf(world).find((e) => e.id === row.detail)
+    if (episode === undefined || episode.endedWeek !== null) continue
+    if (episode.latchedWeek !== null) continue
+    episode.latchedWeek = world.week
+    // ⚠ DRAFT – the kept line is the builder's draft (invariant 4).
+    fireMilestone(world, `wedding:${episode.id}`, 'Her wedding day. The family was there, whatever had been said about it.')
+    captureMilestone(world, { type: 'wedding', week: world.week, kind: episode.id })
+    // ⚠ The ledger charge (the `fundsCents` write and its expense row) stood here and was RULED OUT
+    // 18.09 («я думаю как с подарками, никто и нисколько») – the wedding follows the gifts' law:
+    // no money mechanics. The spec's §3c keeps the record of what the drafted charge weighed.
+  }
+}
+
+// =================================================================================================
+// 12. THE SPOUSE'S OPINION SURFACE – ⚠⚠ THE WEEK THE ONE SHE MARRIED HAS SOMETHING TO SAY
+//     (the wedding, wave 7: T5)
+// =================================================================================================
+//
+// `docs/plans/life-wave-7-builder-2026-09.md` §2 T5, constants in `ECONOMY.wedding`. §11 decides
+// whether the episode becomes a marriage; this is what the marriage IS at W1–W2 – no `spouseBond`,
+// no second tracked number (the 18.09 adoption): the spouse's standing is these beats and the
+// diary's texture, and the surface goes quiet the day the latch does.
+//
+// ⚠⚠ THE WAVE'S THIRD AND LAST STREAM, RESERVED BY THE BRIEF'S §0 AND CREATED HERE:
+//
+//     seed:life:spouse-view:<week>          which occasion, this week
+//
+// (seed, calendar)-keyed like every sibling, so a player cannot conjure or dodge the spouse's word
+// by playing the week differently. ONE key, ONE value (the 09.09 stream law): the occasion pick is
+// the only randomness this section owns – whether the beat fires at all is FACTS (the gate and the
+// occasions below), never a hazard, which is the brief's own reading: «triggers READ existing world
+// facts», and the draw is only ever asked to choose among the true ones.
+//
+// ⚠⚠ ZERO DRAWS ON MAIN (structural – nothing here takes an `Rng`), ZERO draws on an ineligible
+// week AND on an eligible week with no true occasion – the gate and the filter both return before
+// the stream exists, never draw-and-discard. The test is a KEY COUNT with a positive control
+// (wave 3's finding, §5's standing law), in tests/wave7-spouse-view.test.ts §B. A frozen career
+// (156 weeks, age 16.6) can never hold a latch, so this section is unreachable there by
+// construction and the frozen identity stands.
+//
+// ⚠⚠ EVERY OCCASION IS A READ OF A SEAM THAT ALREADY ANSWERS IT – the brief's own boundary («no
+// household ledger, no second wallet, no arithmetic»), and each gate below names its donor at the
+// cell. Nothing here derives a new fact about the world; it asks four old ones.
+
+/** ⭐ THE FOUR OCCASIONS, DERIVED FROM A TOTAL RECORD rather than written out – `WANTS_TOTAL`'s own
+ *  guarantee: a fifth member of the union makes this record a compile error before it can make a
+ *  silent gap in the gates below. ⚠ ROSTER ORDER IS DRAW ORDER and is append-only once shipped (the
+ *  union's own note in `shared/protocol/narrative.ts`). */
+const SPOUSE_VIEW_OCCASION_TOTAL: Record<SpouseViewOccasion, true> = {
+  'distant-swing': true,
+  'road-stretch': true,
+  'no-vacation': true,
+  money: true,
+}
+export const SPOUSE_VIEW_OCCASIONS = Object.keys(SPOUSE_VIEW_OCCASION_TOTAL) as readonly SpouseViewOccasion[]
+
+/** THE LIVE LATCH – the one episode that is married and not over, or null. Inline in `rollEnds`' own
+ *  spelling (`latchedWeek !== null` is T4's seam); named here because three readers ask it – the
+ *  gate, the `'money'` occasion's window and the diary's assembly – and three spellings of «is she
+ *  married» is the two-readings defect rule 3 exists to prevent. ⚠ At most one can exist on any
+ *  state the sim produces: `activeEpisode` is the tail and `arrivalEligible` refuses to append
+ *  behind an open row, so a second latched-and-open row would need two open episodes first. */
+export function latchedEpisode(world: WorldState): LoveEpisode | null {
+  return loveEpisodesOf(world).find((e) => e.latchedWeek !== null && e.endedWeek === null) ?? null
+}
+
+/** ⭐⭐⭐ THE FOUR GATES, ONE PER OCCASION, EACH A PURE ZERO-DRAW READ OF AN EXISTING SEAM – the
+ *  `SMALL_TALK_FACT` table's own shape, asked BEFORE the draw so a false fact removes the occasion
+ *  from the pool instead of being papered over in the copy (its own rule, inherited whole).
+ *
+ *  · `'distant-swing'` – the NEXT entered event crosses a border. The entry fields are
+ *    `nextWeekIsClear`'s own two (`world.season` + `world.entries`, spelled inline for its stated
+ *    cycle reason), and «crosses a border» is the tier's own `track` – `diary/travelHome.ts:521`
+ *    reads `abroad` off exactly this field (`=== 'itf'`, the junior ladder that file is about);
+ *    here it is `!== 'domestic'`, the same fact at the ages a marriage exists: her internationals
+ *    are the W/WTA rungs by 23, and a gate spelled `'itf'` would have called a Slam a home week.
+ *  · `'road-stretch'` – the family has been on the road: travel-billed weeks in the trailing
+ *    `FRIENDS_WINDOW` at or past `AWAY_OFTEN`, which is the friends tile's own band («Mostly by
+ *    phone») off the same `financeWeeks` read `world/snapshot.ts` assembles for it – «a week in
+ *    which a travel bill was actually paid is a week the family was somewhere else».
+ *  · `'no-vacation'` – `seasonWrapsWithNoVacation`, spirit.ts's season-boundary block ITSELF: true
+ *    on the ONE week a season wraps with no family week in it, false everywhere else – so this
+ *    occasion exists exactly where the fact is readable, and the spouse and the −3/−3 block can
+ *    never disagree about whether the family had a holiday.
+ *  · `'money'` – round 23 #18's split, read and never re-derived: a `financeWeeks` category at or
+ *    under −`spouseViewSpendCents` inside the marriage's own trailing window (after the latch, so
+ *    the wedding's own bill – paid ON `latchedWeek` – can never be the complaint), while her
+ *    account holds more than the family wallet (`kidFundsCents` vs `fundsCents`, two persisted
+ *    balances compared and nothing summed – beats about money, never accounting). */
+const SPOUSE_VIEW_OCCASION_AT: Record<SpouseViewOccasion, (world: WorldState) => boolean> = {
+  'distant-swing': (world) => {
+    let next: { week: number; tier: TierId } | null = null
+    for (const e of world.season) {
+      if (e.week <= world.week || !world.entries.includes(e.id)) continue
+      if (next === null || e.week < next.week) next = e
+    }
+    return next !== null && TIERS[next.tier].track !== 'domestic'
+  },
+  'road-stretch': (world) =>
+    world.financeWeeks.filter(
+      (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
+    ).length >= AWAY_OFTEN,
+  'no-vacation': (world) => seasonWrapsWithNoVacation(world),
+  money: (world) => {
+    const latch = latchedEpisode(world)
+    if (latch === null) return false
+    if (world.kidFundsCents <= world.fundsCents) return false
+    const from = Math.max(world.week - ECONOMY.wedding.spouseViewCooldownWeeks, latch.latchedWeek! + 1)
+    return world.financeWeeks.some(
+      (w) =>
+        w.week >= from &&
+        w.week <= world.week &&
+        Object.values(w.byCategory).some((v) => v !== undefined && v <= -ECONOMY.wedding.spouseViewSpendCents),
+    )
+  },
+}
+
+/** The occasions the spouse could honestly raise THIS week, in roster order – pure, zero draws,
+ *  exported so the bench and the tests can ask the same question the roll asks. */
+export function spouseViewOccasionsAt(world: WorldState): SpouseViewOccasion[] {
+  return SPOUSE_VIEW_OCCASIONS.filter((occasion) => SPOUSE_VIEW_OCCASION_AT[occasion](world))
+}
+
+/** ⭐⭐ THE GATE – ALL FOUR, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
+ *  of its own for `arrivalEligible`'s stated reason. Pure, zero draws, no writes.
+ *
+ *  1. A LIVE LATCH – the surface belongs to the marriage and to nothing before or after it: no
+ *     latch, no spouse; an ended latch is an ended surface (the divorce door's other half, free).
+ *  2. NOTHING BLOCKING IS WAITING – `smallTalkEligible`'s clause 1, same words: the week she has
+ *     been asked the biggest question of her life is not the week the spouse queues behind it.
+ *  3. NOT WHILE A SOFT ROW IS LIVE – «one at a time», clause 2's own argument: a second live card
+ *     would queue invisibly or replace the first, and replacing is how «never lost» stops being
+ *     true.
+ *  4. THE COOLDOWN, OFF THE LOG ITSELF – the row is the counter (`smallTalkThisSeason`'s doctrine,
+ *     no new state): no `'spouse-view'` row inside the trailing `spouseViewCooldownWeeks`. ⚠ It
+ *     counts RAISED rows, answered or not – a card the parent ignored still spent the marriage's
+ *     turn to speak. */
+export function spouseViewEligible(world: WorldState): boolean {
+  if (latchedEpisode(world) === null) return false
+  if (pendingLifeBeat(world) !== null) return false
+  if (liveSoftBeat(world) !== null) return false
+  return !lifeLogOf(world).some(
+    (row) => row.kind === 'spouse-view' && world.week - row.week < ECONOMY.wedding.spouseViewCooldownWeeks,
+  )
+}
+
+/** ⭐⭐⭐ THE WEEKLY CALL, and the ONE raise site of a `'spouse-view'` row.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST, THE OCCASIONS SECOND, AND THE STREAM IS DERIVED ONLY WHEN BOTH HAVE
+ *  PASSED – an ineligible week takes ZERO draws, and so does an eligible week with nothing true to
+ *  say (the small-talk reachable-empty discipline, inherited whole; there is no legacy fallback
+ *  here because a spouse with no occasion simply says nothing this week).
+ *
+ *  ⚠ NO HAZARD AND NO CHANCE CONSTANT, WHICH IS THE BRIEF READ LITERALLY: «triggers READ existing
+ *  world facts» – the facts fire the beat, the cooldown bounds it, and the one draw picks WHICH
+ *  true occasion is spoken (uniform over the true set, `drawPartnerWants`' own pickInt shape). A
+ *  per-week chance would be a design decision wearing a constant nobody drafted.
+ *
+ *  ⚠ THE DETAIL IS THE OCCASION – machine-readable, never a rendered sentence, stamped and never
+ *  re-derived (tier 1's own argument: the row is live for three weeks and re-assembled on every
+ *  `toSnapshot`, and a re-derivation could hand the parent a complaint about a season that has
+ *  since moved on – or one whose fact has gone false). */
+export function rollSpouseView(world: WorldState): void {
+  if (!spouseViewEligible(world)) return
+  const occasions = spouseViewOccasionsAt(world)
+  if (occasions.length === 0) return
+  const at = pickInt(rngFromSeed(`${world.seed}:life:spouse-view:${world.week}`), 0, occasions.length - 1)
+  raiseLifeBeat(world, 'spouse-view', occasions[at])
+}
+
+/** ⭐ THE WEEK'S OWN OCCASION, FOR THE DIARY ALONE – the `'spouse-view'` row raised THIS week, or
+ *  null. `DiaryFacts.spouseOccasion`'s one derivation, asked at snapshot time and carried
+ *  (`partnerKnown`'s own shape and reason: the beat and the week note must not be able to disagree
+ *  about what was said this week). ⚠ THE RAISE WEEK AND NOT THE WINDOW: the scene happened on the
+ *  row's own week, and a note that repeated it for three weeks would be the diary stuttering. */
+export function spouseViewOccasionThisWeek(world: WorldState): SpouseViewOccasion | null {
+  const row = lifeLogOf(world).find((r) => r.kind === 'spouse-view' && r.week === world.week)
+  if (row === undefined) return null
+  return SPOUSE_VIEW_OCCASIONS.find((o) => o === row.detail) ?? null
+}
+
+// =================================================================================================
+// 13. THE INDEPENDENT LIFE – ⚠ THE WEEK SHE LIVES BEHIND HER OWN DOOR (wave 7: T10, backlog §8)
+// =================================================================================================
+//
+// One-time, NON-blocking, narrative-only (the brief's own three words): a kept feed row, a soft
+// card for three weeks, one diary line – and NO mechanic, NO cost, NO bond move, because a
+// residence mechanic is explicitly gated on the owner's word (backlog §8's own sentence).
+//
+// ⚠⚠ ZERO DRAWS, ON EVERY PATH, AND THE DETERMINISM IS ARGUED RATHER THAN ASSUMED (the brief asks).
+// The house draws when the world has something to DECIDE – which week among many (a hazard), which
+// member of a pool (a name, a frame). This moment has neither: the week is the stage's own first
+// week, and the scene is one scene. A purpose-scoped coin here would be randomness with no question
+// under it. So nothing in this section takes or derives an `Rng`, MAIN is structurally out of
+// reach, and the frozen capture (41550 / e6b0c709) cannot see it – nor can the frozen per-key
+// identity move: a 156-week career stands at 16.6 and never reads `independent`.
+
+/** ⭐ THE GATE – and the AGE CONSTANT IS DELIBERATELY NOT NEW: «her own door» already has one
+ *  spelling in this engine, the `independent` life stage (`diaryLifeStageFor`: 22+, school over,
+ *  not at college – read through `lifeStageOf`, this file's one reading of it). Backlog §8's «near
+ *  the first week at 22+» is that cut, and reading it keeps the two surfaces honest at once: a
+ *  college girl at 22 lives in a dorm, her diary says so, and a spare-key card over that diary
+ *  would be the two surfaces contradicting each other on one screen. Her beat waits for the week
+ *  the stage itself turns – which for a college career is the week the campus is behind her.
+ *
+ *  ⚠ THE RECEIPT IS THE LOG (`'met'`'s doctrine): one `'own-key'` row per career, ever. ⚠ THE TWO
+ *  SURFACE CLAUSES DEFER, NEVER CANCEL – `deliverKnownPartner`'s `<=` courtesy: a week the soft
+ *  surface is busy leaves the receipt unwritten, and the next tick asks again. «Near the first
+ *  week», the brief's own word. */
+export function ownKeyDue(world: WorldState): boolean {
+  if (lifeStageOf(world) !== 'independent') return false
+  if (lifeLogOf(world).some((row) => row.kind === 'own-key')) return false
+  if (pendingLifeBeat(world) !== null) return false
+  return liveSoftBeat(world) === null
+}
+
+/** ⭐⭐ THE DELIVERY, and the ONE writer of an `'own-key'` row – zero draws, `deliverKnownPartner`'s
+ *  own two-surface order: the kept feed row is what HAPPENED, the soft row is the family's moment
+ *  with it, so the news is on the record before the card can be answered.
+ *
+ *  ⚠ THE ROW IS `keep: true` AND STAMPED `lifeKind: 'own-key'` – the private-life thread's glyph
+ *  column reads the stamp (`lifeRowGlyphs.ts`), and an unpicked kind wears the owner's standing
+ *  white heart by that file's own fallback; the glyph itself stays his to pick (§5a).
+ *  ⚠ NO `amountCents` (rule 4) – the week she moved out is not a purchase the game recorded. */
+export function deliverOwnKey(world: WorldState): void {
+  if (!ownKeyDue(world)) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    keep: true,
+    // ⚠ DRAFT (§3i)
+    text: OWN_KEY_ROW,
+    lifeKind: 'own-key',
+  })
+  // ⚠ THE DETAIL IS THE LITERAL KIND – machine-readable and empty of variation, because the row
+  // records nothing per-instance: there is exactly one of these in a life.
+  raiseLifeBeat(world, 'own-key', 'own-key')
+}
+
+/** ⭐ THE WEEK'S OWN FLAG, FOR THE DIARY ALONE – `spouseViewOccasionThisWeek`'s twin: true exactly
+ *  on the raise week, so the one diary line lands once and the note cannot stutter. */
+export function ownKeyThisWeek(world: WorldState): boolean {
+  return lifeLogOf(world).some((row) => row.kind === 'own-key' && row.week === world.week)
 }

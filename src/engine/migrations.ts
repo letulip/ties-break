@@ -2977,6 +2977,51 @@ export function migrateSave(raw: unknown): WorldState {
     v = 82
   }
 
+  // ⭐⭐⭐ v83 – THE WEDDING, WAVE 7 (life/wave-7 T1; `docs/plans/life-wave-7-builder-2026-09.md` §2).
+  // NOTHING ON THE WORLD, AND TWO FIELDS ON EVERY `LoveEpisode` ROW – the second per-row walk over
+  // `loveEpisodes` this ladder has taken, and v77's step above is the precedent it imitates down to
+  // the guard and the cast.
+  //
+  //   `latchedWeek = null`  – no wedding ever happened on this row, and that is EXACTLY TRUE rather
+  //                           than a bargain: until this version there was no wedding to reach, so
+  //                           null is the complete statement about every episode ever persisted.
+  //                           ⚠ NOT «week 0»: a latch is a date, and 0 is a real week.
+  //   `partnerName = null`  – nobody was ever named. The naming pass arrives WITH this version
+  //                           (`partnerNameFor`, at the engagement beat), so no historical row can
+  //                           hold a name and readers fall back to the unnamed phrasing they use
+  //                           today («them» – the schema persisted no name before this on purpose,
+  //                           see the v74 note on the type).
+  //
+  // ⚠⚠ THE CORPUS FINALLY WITNESSES A PER-ROW WALK, WHICH THE STANDING NOTE ABOVE v78 SAID IT COULD
+  // NOT – re-measured rather than inherited, as that note demands. All 83 fixtures below v83 still
+  // carry `loveEpisodes: []` (the loop runs zero times on every one of them), and v83.json is the
+  // FIRST golden save generated from a probe career that HOLDS episode rows – so the corpus loop in
+  // tests/goldenSaves.test.ts now reads the two fields off real rows, and the crafted witness (a
+  // v82 payload carrying a live row and an ended one, with the mutation arm) is
+  // tests/wave7-wedding-schema.test.ts §A. «A step that writes into a row writes its own witness.»
+  //
+  // ⚠ `??=` AND NEVER `||=`, v76's / v77's rule for the identical reason, and `latchedWeek` is the
+  // sharp case: a live week-0-shaped latch is a value `||=` would clobber and `??=` keeps. ⚠ THE
+  // GUARD AND THE CAST ARE v77's OWN (v33's `terms` loop, third time): `Array.isArray` because a
+  // hand-built probe world may carry nothing here, `Partial<LoveEpisode>` because both fields are
+  // REQUIRED on the shipped type and `??=` on a required field is a compile error – the cast says
+  // «this row predates these fields», which is precisely what a migration is looking at.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: two `??=` per row, gated on `v === 82`, writing literals. No
+  // sub-stream is reached on this path, so MAIN cannot move and the frozen capture (41550 /
+  // e6b0c709) is untouched by construction. Full move: `SAVE_SCHEMA_VERSION` in world/state.ts,
+  // this step, tests/fixtures/saves/v83.json, its row in tests/fixtures/saves/README.md, the e2e
+  // fixtures, the peel rung in tests/coachTravelEdgeFixtures.ts, and the mechanically-checked
+  // schema sentence in docs/context/saves-and-worker.md.
+  if (v === 82) {
+    for (const episode of Array.isArray(save.loveEpisodes) ? (save.loveEpisodes as Partial<LoveEpisode>[]) : []) {
+      if (!episode || typeof episode !== 'object') continue
+      episode.latchedWeek ??= null
+      episode.partnerName ??= null
+    }
+    v = 83
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

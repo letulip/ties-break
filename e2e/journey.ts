@@ -174,3 +174,64 @@ export async function openMore(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await expect(page.getByRole('group', { name: 'Which settings' })).toBeVisible()
 }
+
+// =================================================================================================
+// THE TWO SAVE DOORS. ⚠⚠ A MOVE, NOT A NEW IDEA (v83 T11, 19.09) – e2e/stations.ts' own precedent,
+// stated in its header: every line below was written for `e2e/save-file.spec.ts` and lived inside it
+// until a SECOND spec needed the same walk. `e2e/wedding.spec.ts` carries a career through both save
+// doors after the wedding lands, and a COPIED pair of helpers is the failure stations.ts argues
+// against – two walks that drift apart, with nobody able to say which one is the app.
+//
+// ⚠ NOTHING WAS RE-WORDED ON THE WAY OUT (CLAUDE.md: preserve the reasoning verbatim when moving
+// code). Where a comment below says «this file» it means the spec that walks these doors, which is
+// now either of two.
+// =================================================================================================
+
+/** More > Saves - where both doors live.
+ *
+ *  ⚠ THE ONE ASSERTION ON THE WAY THROUGH IS NOT NAVIGATION SCAFFOLDING, and it is here rather than
+ *  inside a test because this is the only journey in the suite that opens More at all. The screen
+ *  lands on its Play tab first, which holds five `role="switch"` controls that until this wave were
+ *  ALL called `ON` or `OFF`: their visible labels were unassociated siblings, so five controls
+ *  shared two names between them and `getByRole('switch', { name: 'Sound effects' })` could not
+ *  work (defect D2, docs/specs/e2e-coverage.md §12). One named switch is enough to say the
+ *  association reaches a real browser; which five, and what each is called, is
+ *  tests/component/a11y-sweep.test.ts's claim.
+ *
+ *  ⚠ MUTATION-VERIFIED: `aria-labelledby` off the sound switch -> both tests in this file go red on
+ *  this line, which is what a helper on the shared path is supposed to do. */
+export async function openSaves(page: Page): Promise<void> {
+  await openMore(page)
+  await expect(page.getByRole('switch', { name: 'Sound effects' })).toBeVisible()
+  await page.getByRole('group', { name: 'Which settings' }).getByRole('button', { name: 'Saves' }).click()
+  await expect(page.getByRole('button', { name: 'Export to file' })).toBeVisible()
+}
+
+/**
+ * Hand the app a file, through the control a player presses.
+ *
+ * ⚠ THE FILE CHOOSER, NOT THE INPUT. `MoreScreen.vue` keeps a `hidden` `<input type="file">` and
+ * clicks it from a visible button - a normal, correct pattern, and it means the input itself has no
+ * role and no accessible name, so `getByRole` cannot reach it. The tempting workaround is
+ * `page.locator('input[type="file"]')`, which is a CSS selector and against this suite's policy for
+ * good reason: it would test a DOM detail instead of the door. Driving `filechooser` off the real
+ * button keeps the whole path honest - the button, its handler, the input, and the change event.
+ */
+export async function importFile(page: Page, name: string, bytes: Buffer): Promise<void> {
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Import from file' }).click()
+  await (await chooser).setFiles({ name, mimeType: 'application/octet-stream', buffer: bytes })
+  // ⚠ AND THE FILE IS NOT ADOPTED UNTIL THE PLAYER SAYS SO (round-21 #1). Picking a file now opens a
+  // ConfirmDialog whose copy is chosen from what `peekSave` found INSIDE it – so the affirmative
+  // button is 'Overwrite' when this device already holds that career and 'Import' when it does not,
+  // and an unreadable file takes the cautious wording with 'Import'. Matching both, anchored, is the
+  // honest way to say "confirm whichever this is": `^Import$` cannot collide with the 'Import from
+  // file' button that opened the picker, and asserting one specific word here would make this helper
+  // a hostage to which fixture each test hands it.
+  await page.getByRole('button', { name: /^(Import|Overwrite)$/ }).click()
+}
+
+/** Back to the hub through the tab bar – the one navigation every save-door walk ends on. */
+export async function goHome(page: Page): Promise<void> {
+  await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
+}

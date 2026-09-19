@@ -23,6 +23,7 @@ import { useGameStore } from '../../src/stores/game'
 import { LAST_WORD_OPENING, lastWordLine } from '../../src/engine/ending'
 import { LAST_OFFER_NOT_A_QUESTION, answerRetirement, createWorld } from '../../src/engine/world'
 import type { RetirementOffer, Snapshot } from '../../src/shared/protocol'
+import { moneyOf } from '../helpers/careerMoney'
 
 function showOffer(offer: RetirementOffer, over: Record<string, unknown> = {}): void {
   const game = useGameStore()
@@ -33,7 +34,7 @@ function showOffer(offer: RetirementOffer, over: Record<string, unknown> = {}): 
       kidRank: 88,
       fundsCents: 1234_00,
       oneMoreYearCount: 0,
-      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
       retirementOffer: offer,
       ...over,
     } as unknown as Snapshot,

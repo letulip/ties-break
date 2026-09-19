@@ -186,7 +186,7 @@ produced a *defect list* instead of a workaround list.
 |---|---|---|
 | `smoke.spec.ts` | the app boots, a new career starts, week 1 renders | 1 |
 | `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, «go on» starts the career – and no tour follows it | 1, 5 |
-| `seeded-careers.spec.ts` | seven of the ten fixtures boot into the state their manifest describes – the other three (`soft`, `breakup`, `belated`) are booted and asserted by the specs of the waves that added them, because each exists for a state this walk has no way to name | 1, 2 |
+| `seeded-careers.spec.ts` | seven of the eleven fixtures boot into the state their manifest describes – the other four (`soft`, `breakup`, `belated`, `engaged`) are booted and asserted by the specs of the waves that added them, because each exists for a state this walk has no way to name | 1, 2 |
 | `week-advance.spec.ts` | a decision on the table stops the week; answering it starts it, and the answer comes back as news | 1 |
 | `week-advance.spec.ts` | a week that ends a season: the wrap-up card, then Home and the money screen move together | 1, 5 |
 | `week-advance.spec.ts` | a week that stops **without** ending: the reason, the engine's own count, and which notice it is | 1 |
@@ -224,6 +224,7 @@ produced a *defect list* instead of a workaround list.
 | `a11y.spec.ts` | the blocking overlays hold the keyboard: focus lands inside, Tab and Shift+Tab stay inside, Escape follows each card's documented policy, and a confirm returns focus to its opener | 4, 5 |
 | `r37-frame.spec.ts` | the frame at real sizes: the match takes the width it is given from 880 fluid to 1024 and the room goes to the commentary, the tournament flow's lone control stops at 500 and is centred, and the rail's insets match | 4 |
 | `r37-frame.spec.ts` | and no negative offset buys any of it – the rail carries none at 1024 or 1280, it still meets the frame's edge, and the frame's bottom gutter is below its reach rather than a band under it | 4 |
+| `wedding.spec.ts` | she says she is getting married on the week he presses, he answers through the card, eight ordinary presses later the wedding is a kept row under its own week's News – and the latch it wrote comes back through BOTH save doors: a cold boot that rebuilds the world out of IndexedDB, and the app's own exported file re-read through the whole untrusted chain and the migration ladder | 1, 5, 2, 6 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->
@@ -340,6 +341,7 @@ what kind of coverage each row has rather than only whether it has any.
 | Academy and equipment | [academy-support.md](academy-support.md) | no | **unit** – priced by the engine, surfaced as read-only rows |
 | Her private life – arrivals, endings and the cards they raise | [who-she-is-2026-09.md](who-she-is-2026-09.md) | yes – `life-beat`, `soft-beat`, `breakup` | **e2e** – all three claims are ORDERS ACROSS THE WIRE rather than pictures: a beat outranking the fork, a tier-1 row that does NOT stop the week, and an ending that fires, spends the shock and raises its card inside one press. A mounted screen is handed a snapshot and can stage any of them in any order |
 | The first-run tour of the interface | [onboarding-tour.md](onboarding-tour.md) | yes – `onboarding-tour` | **e2e** – the whole defect was about what survives a reload, so a mounted test cannot hold it; the marks' copy, the walk and the card's box on a phone stay in `tests/component/onboarding-tour.test.ts` |
+| The wedding – the engagement, the latch and the day | [the-wedding-2026-09.md](the-wedding-2026-09.md) | yes – `wedding` | **e2e** – the one mechanic in the private life that is a DISTANCE rather than a card: eight ordinary presses between her deciding and the day, which no mounted test can walk because there is no engine on the other side to keep the count. It is also the v83 schema move's only end-to-end witness – `latchedWeek` is written in one browser week and read back in another, through both codecs. The hazard, the four gates and the bond deltas stay unit-owned (`tests/wave7-wedding.test.ts`), and `partnerName` has no surface at all, so `tests/e2e-fixtures.test.ts` carries it |
 <!-- /COVERAGE-MAP:MECHANICS -->
 
 ## 8. Residual product risk, accepted (CTFL §5.2)

@@ -263,6 +263,8 @@ function withEndings(world: WorldState, endedWeeks: readonly number[]): WorldSta
     publicWrong: false,
     airedMetWeek: null,
     airedEndedWeek: null,
+    latchedWeek: null,
+    partnerName: null,
   }))
   return world
 }

@@ -103,6 +103,25 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   'fork-counsel': 'heard',
   ended: 'fix-it',
   'fork-psy': 'straight',
+  // ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – `distance`, AT −1, THE SECOND COSTED ROW AND `'ended'`'s
+  // OWN CHOICE REPEATED: the kind has no zero (bless +2.5 / distance −1 / oppose −4, all in
+  // `ECONOMY.wedding` – a wedding announcement is not a card a parent can answer for free), so the
+  // registry names the mildest one, and it is read-independent BY CONSTRUCTION rather than by two
+  // absences – `lifeBeatOptionsFor` has no overlay for this kind at all, so `drainCostOf` prices the
+  // same object under every `wants` x every ends-read and returns −1 from a one-element spread.
+  // A walk that drains one states its skew exactly: −1 x count, `drainSkewLine`'s own arithmetic.
+  engaged: 'distance',
+  // ⭐ v83 (wave 7 – T5) – `level`, AT −0.5, THE MILDEST OF A KIND WITH NO ZERO, `'engaged'`'s own
+  // choice repeated one row down. ⚠ DECLARED AND UNREACHABLE, `'small-talk'`'s own situation and its
+  // note's argument verbatim: the kind is NON-blocking, `pendingLifeBeat` never hands one to the
+  // loop below, and no drain ever spends this id – the entry exists because TOTALITY is the point.
+  // Read-independent by construction: no overlay names the kind, so `drainCostOf` returns −0.5 from
+  // a one-element spread whenever anybody does ask.
+  'spouse-view': 'level',
+  // ⭐ v83 (wave 7 – T10) – `keep`, THE KIND'S ONLY ANSWER AND A RULED ZERO (narrative-only, no bond
+  // move). Declared and unreachable like its two soft siblings: NON-blocking, so the loop never
+  // meets one, and the row exists because totality is the point.
+  'own-key': 'keep',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

@@ -45,6 +45,31 @@ export function accrueFinance(world: WorldState, week: number, category: WorldEv
   entry.byCategory[category] = (entry.byCategory[category] ?? 0) + amountCents
 }
 
+/** ⭐⭐⭐ ROUND 46 #9 – THE CATEGORY THAT IS NOT A COST. Money that goes out under `'shop'` did not
+ *  leave the family: it turned into a house, an academy stage or a slice of a fund that is still on
+ *  `world.assets`. Every other outgoing category is consumption – a coach was paid, a fare was
+ *  bought, a court was hired – and that is the whole distinction `careerMoney` is built on
+ *  (world/reckoning.ts – see the note below this function for why it is not in this file).
+ *
+ *  ⚠ ONE NAME FOR IT, IN THE ONE PLACE THAT ALREADY OWNS THE LEDGER'S SHAPE, because the question is
+ *  asked twice (`careerMoney` and `captureBreakEven`'s week arm) and two copies of the answer is how
+ *  the album and the milestone that gates it come to disagree. */
+export function isHoldingCategory(category: WorldEventCategory): boolean {
+  return category === 'shop'
+}
+
+/** ⚠⚠ `careerMoney` MOVED TO world/reckoning.ts ON 18.09 AND IS NOT RE-EXPORTED FROM HERE, which is
+ *  the one departure from this repo's usual courtesy for a moved symbol – and the departure IS the
+ *  point. Ruling 5 made the fold need `careerAssetUpkeepCents`, which lives in `world/assets.ts`;
+ *  a value import of that file from THIS one closes a twelve-module runtime cycle (ledger -> assets
+ *  -> brand -> season/preview -> season/tournament -> season/cohort -> season/rival -> kidLife ->
+ *  world/age -> ledger), and `tests/import-cycles.test.ts` caught it with `NATION_POOL is not
+ *  iterable` – the cycle biting for real rather than in theory. A re-export here would restore the
+ *  edge, so the four callers name the new module instead.
+ *
+ *  Nothing about the fold changed in the move. `isHoldingCategory` above stays here, because it is
+ *  about a LEDGER CATEGORY and `captureBreakEven`'s week arm reads it beside `financeWindow`. */
+
 /** Find-or-create this week's ledger row, keeping the array week-ascending (the common case is
  *  appending the current, newest week). Shared by the two writers below it so "which row is this
  *  week's" is spelled once – the same reason `seasonStartWeek` exists further down. */

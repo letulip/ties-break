@@ -27,6 +27,7 @@ import TakeoverShell from '../../src/components/ui/TakeoverShell.vue'
 import MatchViewer from '../../src/components/MatchViewer.vue'
 import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
 import EndingScreen from '../../src/components/EndingScreen.vue'
+import { moneyOf } from '../helpers/careerMoney'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
@@ -309,8 +310,10 @@ describe('round 36 phase 4 – the epilogue gets a column', () => {
       ],
       handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
       totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },
+      money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
       seasonsPlayed: 5,
       bestRank: 88,
+      bestRankTrack: 'wta',
       titles: 2,
       oneMoreYearCount: 0,
       academy: null,
@@ -326,7 +329,7 @@ describe('round 36 phase 4 – the epilogue gets a column', () => {
         week: 265,
         kidRank: 88,
         fundsCents: 1234_00,
-        careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+        careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
         ending: endingView(),
       } as unknown as Snapshot,
     })

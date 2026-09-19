@@ -210,6 +210,15 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // checker's re-derivation; the week it ended, the read and any reason are deliberately absent
     // rather than forgotten, because no line may assert one.
     freshBreakup: view.freshBreakup,
+    // ⭐ v83 (the wedding, wave 7 – T5). Carried, not re-derived, on `partnerKnown`'s own rule: the
+    // diary owns no reading of the `lifeLog`, and `spouseViewOccasionThisWeek` is the engine's one
+    // spelling of «what was said at home this week». R2-18's law again: the consuming band (the
+    // week note's `spouseSpoke` lines) lands in this same task, and the occasion is the WHOLE of
+    // what travels – no answer, no name, no gender, no figure, because no line may assert one.
+    spouseOccasion: view.spouseOccasion,
+    // ⭐ v83 (wave 7 – T10). Carried, not re-derived, on the line above's rule exactly: the log is
+    // the engine's, and the week she moved out is one fact with one spelling.
+    ownKeyWeek: view.ownKeyWeek,
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

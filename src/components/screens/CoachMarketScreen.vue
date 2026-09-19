@@ -584,7 +584,7 @@ function rowLabel(r: Row): string {
   // defect the round 42 #42 note above records.
   // ⚠ ONLY WHEN THERE IS A READING. A stranger's card says nothing rather than «chemistry unknown»,
   // because a name should not grow a clause that is true of most of the list.
-  const chem = r.chemistry === null ? '' : `, chemistry ${chemFigure(r.chemistry)}%`
+  const chem = r.chemistry === null ? '' : `, chemistry ${chemSpoken(r.chemistry)}%`
   return `${r.name}, ${COACH_TIER_LABEL[r.tier]} tier, ${FIT_LABEL[r.fitNow]}, ${formatCents(r.weeklyCents)} a week${chem} – ${state}`
 }
 
@@ -607,6 +607,14 @@ function rowLabel(r: Row): string {
 // commonest colour-vision confusion, so the hue is the least of the three: the FILL sweeps the other
 // way when the pairing is negative, so the ring's SHAPE differs at the same strength, and the FIGURE
 // says it outright with its own sign. Any one of the three alone answers «which way is this going».
+//
+// ⭐ AMENDED 18.09 (round 45 #3b), AND THE COUNT IS UNCHANGED DOWNWARD. The owner cut the drawn PLUS
+// («знак плюс убрать. Минус короткий пусть останется при этом»), so upward the card now answers on
+// two channels rather than three - the green family and the clockwise sweep - and downward it still
+// answers on all three, because the short minus stays. The asymmetry is his and it is coherent: a
+// reading is a departure from «nothing has happened yet», and the direction that needs naming is the
+// one going wrong. The SPOKEN name keeps both signs; see `chemSpoken` for why that is a different
+// question with a different answer.
 
 /** UP: light green into bright green. DOWN: orange into red. Both are two stops of one gradient, so
  *  the direction is the family and the STRENGTH is how far into it the arc has got - a pair at -15
@@ -623,11 +631,55 @@ function chemFill(level: number): number {
   return Math.min(1, Math.abs(level) / 100)
 }
 
-/** The figure, with its sign - C12, which the owner ruled himself against this spec's own «no
- *  percentage anywhere». Rounded to a whole number because the gauge is an instrument and not a
- *  decimal readout, and because a tenth of a chemistry point is below anything a season can move. */
-function chemFigure(level: number): string {
-  return `${level < 0 ? '-' : '+'}${Math.round(Math.abs(level))}`
+/** ⭐⭐ THE FIGURE IS TWO READINGS NOW, AND THE SPLIT IS ROUND 45 #3b. It was one function feeding two
+ *  surfaces - the figure DRAWN in the ring and the figure SPOKEN in the row's accessible name - and
+ *  the owner ruled on one of them: «и по гауджу на тренерской карточке еще один момент, кроме
+ *  вертикального выравнивания: знак плюс убрать. Минус короткий пусть останется при этом» (18.09).
+ *
+ *  ⚠ C12 IS AMENDED IN ONE HALF AND STANDS IN THE OTHER, which is the whole reason these are two
+ *  functions rather than a flag. C12 is his own ruling that the figure stays «как раз для тех, кто
+ *  плохо считывает цвета или расположение шкалы», and the sign was part of it. On the CARD the
+ *  direction is already carried twice over - the gradient family (C11) and the sweep - so the drawn
+ *  plus is a third spelling of a fact the picture has already made, and he is right to cut it. A
+ *  listener has neither the gradient nor the sweep, so in the SPOKEN name the sign is the only thing
+ *  left carrying direction, and cutting it there would take the one channel C12 exists for away from
+ *  the one reader it was written for. He may want it cut there too; that is his call and it is in the
+ *  round's report as a question, not an agent's to take.
+ *
+ *  Both are rounded to a whole number, as they always were: the gauge is an instrument and not a
+ *  decimal readout, and a tenth of a chemistry point is below anything a season can move. */
+function chemAmount(level: number): number {
+  return Math.round(Math.abs(level))
+}
+
+/** WHAT THE RING DRAWS. No sign upward - his 18.09 ruling - and the SHORT minus downward, which he
+ *  named and which is therefore exactly the character it already was. */
+function chemDrawn(level: number): string {
+  return `${level < 0 ? '-' : ''}${chemAmount(level)}`
+}
+
+/** WHAT THE ROW SAYS OUT LOUD.
+ *
+ *  ⭐⭐⭐ AMENDED 18.09 – HE RULED ON THE QUESTION THE SPLIT LEFT OPEN, AND HE RULED IT CLOSED. The
+ *  block above put the spoken plus to him as an open question; his answer:
+ *
+ *  > «да, потому что все числа по умолчанию положительные, а отрицательные как раз озвучиваются
+ *  > дополнительно.»
+ *
+ *  ⚠⚠ THE C12 ARGUMENT WAS NOT REFUTED, IT WAS ANSWERED WITH A BETTER RULE, and that is why the
+ *  note above is left standing rather than corrected. The case for the spoken plus was that a
+ *  listener has neither the gradient nor the sweep, so the sign is the only channel left carrying
+ *  direction. He agrees the direction has to be carried – and points out that it already IS, by the
+ *  DEFAULT: a bare number is positive, so an unsigned reading says «upward» to a listener exactly as
+ *  surely as a signed one, and the minus keeps doing all the work it was ever doing. Nothing is
+ *  taken away from C12's reader; one redundant character is.
+ *
+ *  ⚠ SO THE TWO ANSWERS ARE ONE AGAIN AND THIS DELEGATES RATHER THAN REPEATING. The two SURFACES are
+ *  still two questions – that is why both names survive – but a second copy of the same three-line
+ *  arithmetic is precisely how a drawn figure and a spoken one come to disagree the next time one of
+ *  them is ruled on. One writer. */
+function chemSpoken(level: number): string {
+  return chemDrawn(level)
 }
 
 /** ⚠⚠ DRAFT COPY FOR THE OWNER (invariant 4). This item adds exactly THREE player-facing strings and
@@ -637,7 +689,7 @@ function chemFigure(level: number): string {
  *  is a picture and the component requires it to say what it is. He rules all three; an agent may not
  *  take a fourth. */
 function chemLabel(level: number | null): string {
-  return level === null ? 'Chemistry with her: not known yet' : `Chemistry with her: ${chemFigure(level)}%`
+  return level === null ? 'Chemistry with her: not known yet' : `Chemistry with her: ${chemSpoken(level)}%`
 }
 
 // --- the budget meter ---------------------------------------------------------------------------
@@ -1291,8 +1343,13 @@ function scrollToTier(tier: CoachTier): void {
                of this corner reads «nobody knows yet» and never «bad», which is the constraint he
                set on the neutral. The ring is the same component either way, at zero, so the corner
                never changes shape or size when a reading arrives. -->
+          <!-- ⭐⭐ ROUND 45 #2 – THE MARK IS THE TAB BAR'S SIZE NOW, and it is the DEFAULT rather than
+               a second number: `AppIcon`'s own `size` defaults to 20 «because it is the app's
+               commonest size», and that default IS `.tab-icon`'s 20px in the bottom navigation. His
+               ruling asked for exactly that size by name, so the honest edit is to stop overriding
+               it – a 20 typed here would be the tab bar's number copied into a third place. -->
           <span class="cm-chem">
-            <AppIcon name="chemistry" :size="13" class="cm-chem-mark" />
+            <AppIcon name="chemistry" class="cm-chem-mark" />
             <ProgressRing
               :size="36"
               :value="r.chemistry === null ? 0 : chemFill(r.chemistry)"
@@ -1301,7 +1358,7 @@ function scrollToTier(tier: CoachTier): void {
               :label="chemLabel(r.chemistry)"
               ><b v-if="r.chemistry === null">?</b
               ><template v-else
-                ><b>{{ chemFigure(r.chemistry) }}</b><i>%</i></template
+                ><b>{{ chemDrawn(r.chemistry) }}</b><i>%</i></template
               ></ProgressRing
             >
           </span>

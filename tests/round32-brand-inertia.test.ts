@@ -502,8 +502,18 @@ describe('round 32 #4 §5 – ⭐⭐ THE SAVE, which is his binding constraint',
   })
 
   it('⚠ the fixture for this version exists and carries the key the version is about', () => {
-    const fixture = JSON.parse(readFileSync(`${SAVES_DIR}/v${SAVE_SCHEMA_VERSION}.json`, 'utf8'))
-    expect(fixture.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    // ⚠ RE-AIMED 18.09 AT v69.json, THE VERSION THIS ROUND IS ABOUT, AND NOT WEAKENED. When this
+    // case was written the ladder's head WAS 69, so `v${SAVE_SCHEMA_VERSION}.json` and «the fixture
+    // for this version» were one file; every later head inherited the key only because each fixture
+    // was the previous one migrated. Wave 7's v83.json deliberately left that recipe (its README row
+    // records the departure): it is a PROBE career, and `WorldState.brandStrengthSeed`'s own doctrine
+    // says the key is written ONCE, by the v68 -> v69 migration, «and by nothing else – not
+    // `createWorld`, not any phase of the tick» – so an honest post-v69 career CANNOT carry it, and
+    // the head fixture now honestly does not. The claim this case makes is kept whole where it is
+    // true: the fixture of the version that froze the shape still freezes it, and the corpus arm
+    // above already proves every older save comes out pinned through the CURRENT ladder.
+    const fixture = JSON.parse(readFileSync(`${SAVES_DIR}/v69.json`, 'utf8'))
+    expect(fixture.schemaVersion).toBe(69)
     expect(fixture.brandStrengthSeed, 'the shape the version froze').toBeDefined()
   })
 })

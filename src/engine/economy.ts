@@ -1036,32 +1036,53 @@ export const ECONOMY = {
      *  symmetric fall downward, because `high` is a real rung beneath it. */
     eliteUpStep: 0.04,
 
-    // --- WHEN IT MAY BE SHOWN (spec §8b, ruling C7) ----------------------------------------------
+    // --- WHEN IT MAY BE SHOWN (spec §8b, ruling C7; the corridor is §8d, ruled 18.09) ------------
 
-    /** ⭐⭐ C7, RULED 16.09 – «once clear», and this is the bar «clear» means. The question C7 asks
-     *  is whether chemistry surfaces «from season one, or once a band is clear», and his reason for
-     *  the second is quoted rather than paraphrased: «a sentence in week 3 about a relationship is
-     *  noise». Below this the card carries the question mark; at or beyond it, the gauge.
-     *
-     *  ⚠⚠ IT IS `ceilingAtNone` AND THAT IS THE DERIVATION, NOT A COINCIDENCE. Five points is, by
-     *  HIS own anchor in this same block, the WHOLE of what an ordinary pair's year can gain – so a
-     *  reading under five is inside one ordinary year's own noise and names no band at all, while a
-     *  reading past it is a year of relationship expressed in the units he set. A separate constant
-     *  would be an agent choosing a number where the owner had already provided one; this reads his.
-     *
-     *  ⚠ AND THE LEVEL IS THE CLOCK, WHICH IS WHY NO SECOND KEY IS OWED. `accrueCoachPair` runs only
-     *  on a week he is actually PAID for, so `chem` is literally the integral over weeks worked
-     *  together – three weeks in it cannot be large, however the dice fell. Gating on a stopwatch
-     *  instead would need a per-pair week count persisted, and `coachPairs` carries none.
-     *
-     *  MEASURED, predicted against measured (spec §8b): 240 pairs over 416 weeks each, on the
-     *  bench's own measured record (50%, roughly a match a week, a title every ~180 weeks). At this
-     *  bar the median pair first shows a gauge in week 62 – one season and a little, which is what
-     *  «not from season one» asks for – p90 in week 201, 5 of 240 never inside eight years, and the
-     *  marker returns to the question mark 0.25 times per career, because the relationship really
-     *  did go back to nothing. ⚠ NO PAIR OF THE 240 CROSSED IT INSIDE THREE WEEKS, which is C7's own
-     *  case: the median |chem| at week 13 is 1.05 and the largest of the 240 is 3.93. */
-    readableAt: 5,
+    // ⭐⭐ C7, RULED 16.09 – «once clear», and a single bar was what «clear» meant for one round. The
+    // question C7 asks is whether chemistry surfaces «from season one, or once a band is clear», and
+    // his reason for the second was quoted rather than paraphrased: «a sentence in week 3 about a
+    // relationship is noise». The bar was `readableAt: 5`, and it was `ceilingAtNone` by derivation:
+    // five points is, by his own anchor in this same block, the WHOLE of what an ordinary pair's year
+    // can gain, so a reading under five sat inside one ordinary year's own noise.
+    //
+    // MEASURED AT THAT BAR (spec §8b, kept here because it is the record the new corridor is measured
+    // against): 240 pairs x 416 weeks on the bench's own record – median first sighting week 62, p90
+    // week 201, 5 of 240 never inside eight years, the marker turning back off 0.25 times a career,
+    // and NO pair of the 240 crossing inside three weeks (median |chem| 1.05 at week 13, largest of
+    // the 240 3.93).
+    //
+    // ⭐⭐⭐ AND THAT IS WHAT HE THEN PLAYED AND RULED ON, 18.09: «мне кажется медленно, какие-то цифры,
+    // пусть и небольшие 1-2% мы всяко может раньше видеть. Но здесь тоже можно включить
+    // вариативность.» Two instructions in one sentence, and the second is the standing design law of
+    // this wave («вариативность… но при этом математика и стабильность – мы можем воспроизвести все
+    // вариации»). So the bar is not lowered – it is DRAWN, per pair, from the corridor below.
+    //
+    // ⚠⚠ THE CORRIDOR IS STILL HIS `ceilingAtNone` AND NOT AN AGENT'S TASTE, which is the same
+    // argument the single bar was built on, read at two more points. The floor is a FIFTH of what an
+    // ordinary pair's year can gain and the ceiling is a HALF of it; the old bar was the whole of it.
+    // So the three numbers are one anchor read at 1/5, 1/2 and 1/1, and «1-2%» – which is what he
+    // asked to be able to see – is exactly the band the floor opens.
+    //
+    // ⚠ NO SCHEMA KEY IS OWED AND NONE IS TAKEN. The threshold is RE-DERIVED at read from
+    // `${seed}:chemistry:readable:${coachId}` – a purpose-scoped sub-stream, one draw, persisting
+    // nothing and never touching MAIN – exactly as the pair's affinity is (`affinityFor`). Same seed,
+    // same career, same coach, same threshold, to the bit, for ever. `chemistryReadableAt` in
+    // engine/chemistry.ts is the ONE place it is spelled.
+    //
+    // ⚠⚠ AND C7'S WEEK-3 GUARANTEE IS DELIBERATELY SUPERSEDED AT THE LOW END, said out loud rather
+    // than discovered. At a threshold near the floor the fastest pairs on the roster can show a small
+    // figure inside the first weeks – which is not a regression against «a sentence in week 3 is
+    // noise», it is the owner overruling his own earlier ruling with a later one, and the figure he
+    // named («1-2%») is precisely the size that appears there. What the corridor protects is that
+    // this is a MINORITY of pairs rather than all of them; the measured share is in the spec's
+    // 18.09 addendum.
+
+    /** the lowest a pair's own readable threshold can be drawn – `ceilingAtNone / 5` */
+    readableFloor: 1,
+    /** ...and the highest – `ceilingAtNone / 2`. Small on purpose: the whole span is inside one
+     *  ordinary year's gain, so the SLOWEST pair still reads inside a season and the spread is felt
+     *  as «this pair took longer to show» rather than as two different games. */
+    readableCeiling: 2.5,
   },
 
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout
@@ -3942,6 +3963,23 @@ export const ECONOMY = {
     // around 45-50, so twenty play+rest PAIRS cost ~55, so each pair costs ~2.75, so a rest week
     // must return within ~2.75 of what an average event drains. At the repriced surcharge an average
     // professional event costs ~12.5, so the rest week owes ~10 = base 8 + the 60/40 slider's 2.
+    //
+    // ⚠⚠⚠ THE OWNER RELEASED «ARRIVE AT THE OFF-SEASON DOOR AROUND 45-50» ON 19.09, AND THIS NUMBER
+    // IS NOT RE-DERIVED. He said it in as many words: «давай изменим эту цель, если она нам мешает.
+    // Цель – отпуска реже, а не после каждого турнира ездить всё-таки»
+    // (docs/specs/the-season-equation-2026-09.md §10b). The 45-50 was DERIVED from his holiday
+    // sentence above, never given: he has kept the sentence and released the arithmetic reading of
+    // it, because the reading turned out to be self-defeating - arriving at 45 means living near
+    // empty all year, and living near empty is what crosses `practice.rescueCondition` (80) eight
+    // times a season, which is the very complaint the new target is about.
+    //
+    // WHAT THIS MEANS FOR THE CHAIN ABOVE: it is now the HISTORY of how 8 was chosen, and not a live
+    // criterion anybody may re-derive a value from. The bar is holiday FREQUENCY. ⚠ The 8 itself did
+    // NOT move with the release - nothing measured asked it to, and the 19.09 pass refused to raise
+    // the professional base beside it (§10e: the natural-recovery arms buy ~0.15 holidays a point,
+    // because the ceiling discards most of what they pay, and raising it would also undo his own
+    // 22.08 ruling below). ONE dial moved instead, and it is the only recovery in the game the
+    // ceiling cannot reach because it lands on a week she PLAYS: `masseur.tourRecoveryPerRound`.
     // The vacation table below is denominated in exactly this unit (18/22/26/32/40/48 = 2.2 … 6.0
     // rest weeks at base 8), which is why the two tables have to move in one pass.
     //
@@ -4150,6 +4188,15 @@ export const ECONOMY = {
     // became "how many matches fit in a week". See `runFatigueLadderDeep` below and
     // `condition.ts ladderFor`. This array is therefore back to the exact five entries R15-6
     // measured, and every rung that reads it is a 32-draw, so its fifth entry is its last.
+    //
+    // ⚠⚠ MEASURED ON 19.09 AND DELIBERATELY NOT MOVED – docs/specs/the-season-equation-2026-09.md
+    // §10f. The owner named this lever FIRST («слив на глубине хода»), and a concave tail was built,
+    // benched at three strengths and works. It is held for his ruling rather than shipped, for one
+    // measured reason: the only strength that respects the shape rule he set on 14.08 (see
+    // `runFatigueLadderDeep` below – no round of a run may cost less than that run's first round)
+    // buys 0.2 holidays a season, while re-pricing all 199 rivals and moving ~40 keys of every
+    // frozen career. The strengths that would justify that cost are the ones that break his rule.
+    // The arms live in `tools/season-equation.ts` §5 (`--levers`); the grid is the spec's §10e.
     runFatigueLadderWta: [0, 1, 1, 1, 1] as number[],
     /** ⚠⚠ THE OWNER'S OWN CURVE FOR THE DEEP DRAWS, 14.08, given as the two bounds of a match at a
      *  Slam and a WTA 1000 round by round: min 5 6 7 7 7 7 7, max 7 8 9 9 9 9 9.
@@ -4165,7 +4212,15 @@ export const ECONOMY = {
      *
      *  ⚠ IT REPLACES A CAP OF MINE THAT MADE A CLIFF. I had stopped charging the surcharge after the
      *  fifth match, which priced the deep rounds at 2 against the shallow ones' 8 – «а сейчас немного
-     *  некорректно получается». A plateau is the right shape; a collapse was not. */
+     *  некорректно получается». A plateau is the right shape; a collapse was not.
+     *
+     *  ⚠⚠ AND THAT REJECTION IS A STANDING SHAPE RULE, WHICH THE 19.09 PASS READ OFF IT AND OBEYED.
+     *  The curve he wrote is monotone NON-DECREASING; the 19.09 ruling («немного уменьшить усталость
+     *  на глубоких турнирах») asks for the tail to come down, which supersedes that – but «НЕМНОГО»
+     *  is the qualifier, and the shape he threw out is the one where a late round costs a fraction of
+     *  an early one. The rule that survives both: THE TAIL MAY EASE BACK, BUT NO ROUND OF A RUN MAY
+     *  COST LESS THAN THAT RUN'S FIRST ROUND. Benched at three strengths and NOT shipped – see
+     *  `runFatigueLadderWta` above for the price, and the spec's §10d/§10f for the ruling it awaits. */
     runFatigueLadderDeep: [-2, -1, 0] as number[],
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
@@ -4798,6 +4853,90 @@ export const ECONOMY = {
        *  drift into a serialised number nobody bounded. A PROPOSAL like the six above; T10 prices it. */
       leanMax: 100,
     },
+  },
+
+  /** ⭐⭐⭐ v83 – THE WEDDING (wave 7; `docs/plans/life-wave-7-builder-2026-09.md` §2 T2–T4, the
+   *  design `docs/plans/the-wedding-and-the-children.md` §1). One block, every number the wave
+   *  spends, each row naming the task that reads it.
+   *
+   *  ⚠⚠ EVERY NUMBER BELOW IS A DRAFT FOR THE BENCH AND NONE IS RULED (the brief's §4 contract:
+   *  «every §2 number ships at its drafted value, unruled, which is the contract and not an
+   *  omission»). T8 benches them against the proposed corridors (45–70% of careers latched by 30;
+   *  the cost against the wealth corridors; the bond deltas' spread) and HIS word lands on numbers,
+   *  not on a blank. ⚠ THE ONE EXCEPTION IS `ageGate`, WHICH IS RULED AND NOT A DRAFT.
+   *
+   *  ⚠ NO CENTS ANYWHERE EXCEPT `spouseViewSpendCents` (a READ line, never a charge – `costCents`
+   *  was the block's one charge until the 18.09 ruling below) – the bond deltas are BOND POINTS on
+   *  `applyBondDelta`'s own scale (`ECONOMY.bond.delta`'s family), and the cents rules do not apply
+   *  to them. */
+  wedding: {
+    /** ⭐ THE AGE GATE – RULED 11.09, art-driven and his own word («свадьба на 23+ – мне вполне
+     *  ок»), superseding 23.08's 22+: the `adult` portrait set is where the bride art lives. The
+     *  gate sits IN THE HAZARD, never the UI, and it reads `kidAgeExact` – the fractional age, the
+     *  `life.ageGate` reading – so a girl turns eligible the week she turns 23. */
+    ageGate: 23,
+    /** ⭐ THE DEPTH THRESHOLD, in weeks since `sinceWeek` – the episode must be DEEP before she
+     *  would marry into it, and depth is DERIVED from the row's own age (no new state). Drafted 52
+     *  (the brief's own figure): a year together. ⚠ Both trajectories must reach it honestly – the
+     *  one-long girl latches her old episode, the several-short girl a late one – and T8's census
+     *  proves BOTH populations exist; a trajectory that cannot marry is a finding, not a shrug. */
+    minEpisodeWeeks: 52,
+    /** ⚠⚠ THE WEEKLY HAZARD ON AN ELIGIBLE WEEK, and it is the BUILDER'S OWN DRAFT – the one number
+     *  in this block the brief did not draft, flagged here so nobody mistakes it for the
+     *  architect's. Sized against the proposed census corridor by arithmetic, not measurement:
+     *  45–70% latched by 30 over the ~150–250 eligible weeks a typical 23+ career holds wants
+     *  p ≈ 0.004–0.008, and 0.006 sits in the middle. One uniform on `seed:life:wedding:<week>`
+     *  (never MAIN), an ineligible week takes ZERO draws, and T8 measures what this figure actually
+     *  produces before anybody believes it. */
+    perWeek: 0.006,
+    /** ⭐ THE PARENT'S THREE ANSWERS AT THE `'engaged'` BEAT – the research digest's own triple
+     *  (bless / keep distance / oppose), priced on `bond` through the existing `answerLifeBeat`
+     *  seam exactly as every other beat's answers are. Drafted +2.5 / −1 / −4 (the brief's own
+     *  figures), corridors benched in T8, his word after the numbers.
+     *  ⚠ NO ZERO AMONG THEM, deliberately – the layer's second no-free-answer kind after
+     *  `'ended'`: a wedding announcement is not a card a parent can answer without it meaning
+     *  something. `DRAIN_ANSWER['engaged']` is `distance`, whose −1 is the same −1 under every
+     *  reading (no overlay exists for this kind), so the harnesses can state their skew exactly. */
+    blessBond: 2.5,
+    distanceBond: -1,
+    opposeBond: -4,
+    /** ⭐ THE WEDDING LANDS THIS MANY WEEKS AFTER THE BEAT IS ANSWERED – any answer, opposing does
+     *  not stop it: SHE decided, and what opposing bought is the bond price and the diary's memory.
+     *  Drafted 8. T3 is the reader (`landWedding`). */
+    weeksAfterEngagement: 8,
+    // ⚠ `costCents` (drafted $12,000) RULED OUT 18.09 – Q-1 answered in his own words: «я думаю как
+    // с подарками, никто и нисколько» – like the gifts, nobody pays and nothing. What the drafted
+    // charge weighed while the tree carried it: docs/specs/the-wedding-2026-09.md §3c.
+    /** ⭐ WHAT MARRIAGE DOES TO THE ENDING HAZARD – wave-4's multiplier × this, on a latched
+     *  episode only, applied at `rollEnds`' one seam (T4). Drafted 0.15: marriage steadies the
+     *  slot, which is its whole mechanical meaning at W1. ⚠ NOT ZERO, deliberately – a latched
+     *  episode ending through the OLD hazard stays possible and rare, the divorce door the schema
+     *  pre-paid, and T8's bench REPORTS its frequency rather than hiding it. */
+    latchEndFactor: 0.15,
+    /** ⭐ THE SPOUSE'S OPINION SURFACE (T5) – at most one `'spouse-view'` beat per this many weeks,
+     *  counted off the `lifeLog` itself (the row is the counter, `smallTalkThisSeason`'s doctrine –
+     *  no new state). Drafted 10 (the brief's own figure): up to ~5 a season while the marriage
+     *  stands, and in play fewer, because the beat also needs a TRUE occasion and a free soft
+     *  surface. T8's bench measures the realised rate. */
+    spouseViewCooldownWeeks: 10,
+    /** ⭐ THE `'money'` OCCASION'S «LARGE» LINE, in cents – the ONE money fact the surface reads
+     *  (brief T5's own boundary: «beats about money, never accounting»). A financeWeeks category
+     *  at or under −this inside the marriage's own trailing window counts as a spend the spouse
+     *  would mention. Drafted $2,500 – above a season's routine weekly bills, under the wedding's
+     *  own $12,000 – and it is the BUILDER'S OWN DRAFT (the brief drafted no figure), flagged so
+     *  nobody mistakes it for the architect's. Benched in T8 with the rest of the block. */
+    spouseViewSpendCents: 250000,
+    /** ⭐ THE PARENT'S THREE ANSWERS AT A `'spouse-view'` BEAT, priced SMALL on `bond` through the
+     *  existing `answerLifeBeat` seam – the brief's ±0.5..±1.5 corridor, the exact figures the
+     *  BUILDER'S OWN DRAFT within it, flagged. Hearing the spouse out reaches her as care (+1);
+     *  «the season is what it is» is a small honest friction (−0.5); waving the concern off is a
+     *  dismissal of the person she chose (−1.5). ⚠ NO ZERO among them – a word about her marriage
+     *  is not free – and read-INDEPENDENT by construction: no overlay in `lifeBeatOptionsFor`
+     *  names this kind, so `DRAIN_ANSWER['spouse-view']` (= `level`, −0.5, the mildest) drains at
+     *  one statable number. Corridors benched in T8, his word after the numbers. */
+    spouseViewHearBond: 1,
+    spouseViewLevelBond: -0.5,
+    spouseViewBrushBond: -1.5,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
@@ -5547,7 +5686,39 @@ export const ECONOMY = {
     // the tour condition channel survives at half size but the deep-run WINS channel drops under
     // 2 SEM everywhere (8k +8.2±2.3 -> +4.7±2.6) and the 8k prize delta goes to noise – the fare
     // would buy a number the player cannot feel, the decorative-staff failure again.
-    tourRecoveryPerRound: 2,
+    //
+    // ⭐⭐ RAISED 2 -> 3 ON 19.09, AND IT ANSWERS THAT QUESTION FROM THE OTHER SIDE. The note above is
+    // KEPT because it is the record: he once asked whether +2 a round was already too much, and the
+    // measurement kept 2 rather than dropping to 1. On 19.09 he named this dial himself as one of
+    // four to RAISE – «слив на глубине хода и ТУРНИРНАЯ РАБОТА МАССАЖИСТА, а также обычная работа
+    // массажиста и естественное восстановление» – so the direction is his, and the later ruling
+    // governs the earlier worry.
+    //
+    // WHY IT IS THE RECOVERY WITH THE MOST ROOM, in one line: the season equation's §3 found that
+    // the CEILING, not the dial, is what a rest week runs into – she banks 4.7 of a 10.1 week,
+    // because a holiday has just put her at 100 – and this is the only recovery in the game that
+    // lands on a week she PLAYS, where the ceiling cannot eat it.
+    //
+    // ⚠⚠ AND +1 IS THE WHOLE STEP, FOR A MEASURED REASON, not for timidity. The relief is subtracted
+    // from the run's strain AFTER the fact and scales with (matches − 1), so raising it flattens
+    // what DEPTH is worth: at +2 a straight-sets W15 title nets EIGHT against a first-round exit's
+    // four, and the title week has stopped being twice the exit – the depth curve flattened rather
+    // than softened. At +1 it nets twelve against four, so a title is still three times an exit at
+    // the cheapest rung and five times at a Slam. `tools/season-equation.ts`'s `netDepthWitness`
+    // measures exactly that ratio per cell, because the relief is subtracted AFTER
+    // `tournamentRunStrain` has returned and no witness that reads the ladder can see it.
+    //
+    // MEASURED (20 careers x the wealthy·elite and middle·high presets walked to 28,
+    // `npm run bench:season-eq -- --levers --seeds 10 --toAge 28`): holidays a season 8.0 -> 7.2,
+    // the mean professional event 15.3 -> 13.7, weeks under 50 2.7 -> 2.0, injury prevalence and the
+    // ranking ceiling unmoved (49% and #12 -> #11). +2 was measured too – 6.3 holidays – and is in
+    // the spec's §10e if he wants the bigger step.
+    //
+    // ⚠ IT REACHES NO FROZEN CAREER AND NO RIVAL, PROVED RATHER THAN ARGUED. `masseurTourRelief` is
+    // applied in ONE place, `world.ts finalizeTournament`, for the kid alone, and the gate is a
+    // counting W-series result no 156-week career reaches. `tools/frozen-key-diff.ts` on 5/0, 8/0
+    // and 0/1 with this change alone: 0 of 95 / 95 / 96 keys moved, `rngMain` byte-identical.
+    tourRecoveryPerRound: 3,
     // ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
     // массажа по возвращении»): when he was NOT flown to a tournament, the first non-played week
     // after it pays one extra session's worth of recovery on top of the ordinary week – the home

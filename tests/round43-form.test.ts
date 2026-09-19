@@ -338,8 +338,11 @@ describe('§6 the schema move – v80', () => {
   // ⚠ RE-AIMED AT v82 (17.09, round 42 #51 – `coachDeal`, the coach's fee fixed at hire), NOT
   // WEAKENED: 82 was taken by that item's own full move, `form` still arrives at v80, and this line
   // still asserts what a fresh career is stamped with rather than when this wave landed.
+  // ⚠ RE-AIMED AT v83 (18.09, wave 7 T1 – the wedding: `LoveEpisode.latchedWeek`/`partnerName`),
+  // NOT WEAKENED, the same sentence again: 83 was taken by that wave's own full move, `form` still
+  // arrives at v80, and this line still asserts what a fresh career is stamped with.
   it('the version is the ladder\'s head and a fresh career opens at neutral', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(82)
+    expect(SAVE_SCHEMA_VERSION).toBe(83)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,695 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,701 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-578 exported names across 54 owning modules.
+595 exported names across 55 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 78 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 92 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
@@ -23,7 +23,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
-| `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 18 |
+| `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 19 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 18 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 17 |
@@ -64,6 +64,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/brandStrength.ts` | ⭐⭐⭐ BRAND STRENGTH – round 32 #4, docs/specs/brand-inertia-2026-08.md | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
+| `src/engine/world/staffLetters.ts` | THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished | 2 |
 | `src/engine/world/bookkeeping.ts` | ⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar | 1 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
 | `src/engine/world/phaseFinance.ts` | ⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out | 1 |
@@ -108,6 +109,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
+- `deliverOwnKey` – `src/engine/world/lifeBeat.ts`
 - `drawEndsRead` – `src/engine/world/lifeBeat.ts`
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
 - `drawListenHeard` – `src/engine/world/lifeBeat.ts`
@@ -131,6 +133,8 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `forkWantOf` – `src/engine/world/lifeBeat.ts`
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
 - `HeardRead` *(type)* – `src/engine/world/lifeBeat.ts`
+- `landWedding` – `src/engine/world/lifeBeat.ts`
+- `latchedEpisode` – `src/engine/world/lifeBeat.ts`
 - `leakEligible` – `src/engine/world/lifeBeat.ts`
 - `leakHazardFor` – `src/engine/world/lifeBeat.ts`
 - `leakWrongShareFor` – `src/engine/world/lifeBeat.ts`
@@ -148,7 +152,11 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `liveSoftBeat` – `src/engine/world/lifeBeat.ts`
 - `metKeptRow` – `src/engine/world/lifeBeat.ts`
 - `nextWeekIsClear` – `src/engine/world/lifeBeat.ts`
+- `ownKeyDue` – `src/engine/world/lifeBeat.ts`
+- `ownKeyThisWeek` – `src/engine/world/lifeBeat.ts`
+- `PARTNER_NAME_POOL` – `src/engine/world/lifeBeat.ts`
 - `PARTNER_WANTS` – `src/engine/world/lifeBeat.ts`
+- `partnerNameFor` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
@@ -157,6 +165,8 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `rollEnds` – `src/engine/world/lifeBeat.ts`
 - `rollLeak` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
+- `rollSpouseView` – `src/engine/world/lifeBeat.ts`
+- `rollWedding` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_EXCLUDE_LAST` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_FACTS` – `src/engine/world/lifeBeat.ts`
@@ -177,6 +187,11 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `smallTalkSubjectFor` – `src/engine/world/lifeBeat.ts`
 - `smallTalkThisSeason` – `src/engine/world/lifeBeat.ts`
 - `SmallTalkVoiceEntry` *(type)* – `src/engine/world/lifeBeat.ts`
+- `SPOUSE_VIEW_OCCASIONS` – `src/engine/world/lifeBeat.ts`
+- `spouseViewEligible` – `src/engine/world/lifeBeat.ts`
+- `spouseViewOccasionsAt` – `src/engine/world/lifeBeat.ts`
+- `spouseViewOccasionThisWeek` – `src/engine/world/lifeBeat.ts`
+- `weddingEligible` – `src/engine/world/lifeBeat.ts`
 - `withoutRecentSituations` – `src/engine/world/lifeBeat.ts`
 
 ### `src/engine/world/college.ts`
@@ -403,6 +418,7 @@ CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2
 - `chemistryDriftPerYear` – `src/engine/chemistry.ts`
 - `chemistryEventNudge` – `src/engine/chemistry.ts`
 - `chemistryFloorPerYear` – `src/engine/chemistry.ts`
+- `chemistryReadableAt` – `src/engine/chemistry.ts`
 - `ChemistryWeek` *(type)* – `src/engine/chemistry.ts`
 - `chemistryWeeklyRate` – `src/engine/chemistry.ts`
 - `COACH_MANNERS` – `src/engine/chemistry.ts`
@@ -894,6 +910,13 @@ MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the
 
 - `computeLossStreak` – `src/engine/world/matchNews.ts`
 - `flipScore` – `src/engine/world/matchNews.ts`
+
+### `src/engine/world/staffLetters.ts`
+
+THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished.
+
+- `seatWeeksServedIn` – `src/engine/world/staffLetters.ts`
+- `settleStaffLetters` – `src/engine/world/staffLetters.ts`
 
 ### `src/engine/world/bookkeeping.ts`
 

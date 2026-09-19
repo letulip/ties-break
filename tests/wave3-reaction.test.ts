@@ -232,7 +232,7 @@ function careerAt(seed: string, week: number): WorldState {
 
 /** An attachment, hand-built – T5's draws decide `wants` in a career and are not under test here. */
 function episode(sinceWeek: number, knownWeek: number, wants: LoveEpisode['wants']): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }
 }
 
 /** A career on the week it was told, with the beat already raised and waiting. */
@@ -576,6 +576,25 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // reads `spiritShock` for the WORDING COLUMN of his card; `lifeBeatOptionsFor` carries no overlay
   // for this kind, so the priced list is the same object under every `wants` and every ends-read.
   'fork-psy': { id: 'straight', bond: 0 },
+  // ⚠ RE-AIMED 18.09 BY v83 (the wedding, wave 7 – T2), AND IT IS THE TOTAL RECORD DOING ITS JOB A
+  // THIRD TIME: the union grew by `'engaged'` and somebody had to type a number. WHAT MOVED: one
+  // row, at **−1** – the second costed drain answer after `'ended'`'s. WHAT DID NOT: the law, still
+  // «the SAME price under every reading». ⚠ THE NUMBER IS THE BRIEF'S DRAFTED LITERAL, transcribed
+  // from the wave-7 brief's T2 triple («bless / keep distance / oppose … +2.5 / −1 / −4») – never
+  // read off `ECONOMY.wedding`, this file's own ARM 2 story. Read-independent by construction:
+  // `lifeBeatOptionsFor` carries no overlay for this kind, `'fork-psy'`'s own strongest form.
+  engaged: { id: 'distance', bond: -1 },
+  // ⚠ RE-AIMED 18.09 BY v83 (wave 7 – T5), THE RECORD'S FOURTH GROWTH: one row, at **−0.5** – the
+  // mildest of a kind with no zero, `'engaged'`'s own choice repeated. ⚠ THE NUMBER IS THE BUILDER'S
+  // DRAFTED LITERAL from the wave-7 brief's T5 corridor (±0.5..±1.5), transcribed – never read off
+  // `ECONOMY.wedding`, ARM 2's law. Read-independent by construction: no overlay names the kind.
+  // ⚠ The kind is NON-blocking, so the drain LOOP can never meet one (`'small-talk'`'s situation) –
+  // this row prices `drainCostOf` directly, which §D's sweep asks of every kind regardless.
+  'spouse-view': { id: 'level', bond: -0.5 },
+  // ⚠ RE-AIMED 18.09 BY v83 (wave 7 – T10): `keep`, at 0 – the one-answer narrative beat, ruled
+  // zero («NO bond move» is backlog §8's own price). Non-blocking, so the loop never meets one;
+  // the row prices `drainCostOf` directly, §D's sweep.
+  'own-key': { id: 'keep', bond: 0 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -592,6 +611,11 @@ function raised(seed: string, kind: LifeBeatKind, detail: string, wants: LoveEpi
   // sweep would then be pricing a row the engine can never produce – the fixture defect this
   // helper's own note warns about, one field further in.
   if (kind === 'ended') world.loveEpisodes = [{ ...episode(892, 896, wants), endedWeek: 899 }]
+  // ⚠ RE-AIMED BY v83 (wave 7 T2) – an `'engaged'` row is ABOUT an episode exactly as `'met'`'s is,
+  // so the fixture carries the row its detail names. Depth is not posed: the raise here is direct
+  // (the gate is §11's own concern, tested in wave7-wedding.test.ts), and neither the wording nor
+  // the price reads the episode's age.
+  if (kind === 'engaged') world.loveEpisodes = [episode(892, 900, wants)]
   raiseLifeBeat(world, kind, detail)
   return world
 }
@@ -610,6 +634,15 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // register a career with no live `spiritShock` raises. ⚠ A row carrying a detail its kind cannot
   // read is a fixture defect dressed as a finding, which is this helper's own note one block up.
   'fork-psy': 'plain:own',
+  // ⚠ RE-AIMED BY v83 (wave 7 T2): the announcement's `detail` is the EPISODE ID, exactly as
+  // `'met'`'s and `'ended'`'s are – the same id `raised` above already builds for those two kinds,
+  // so the fixture stays the engine's own shape.
+  engaged: 'p:892',
+  // ⚠ RE-AIMED BY v83 (wave 7 T5): the spouse's `detail` is the OCCASION – tier 1's own shape, a
+  // machine value the wording pool keys on. `'distant-swing'` is the roster's first member.
+  'spouse-view': 'distant-swing',
+  // ⚠ RE-AIMED BY v83 (wave 7 T10): the literal kind – there is nothing per-row to record.
+  'own-key': 'own-key',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.

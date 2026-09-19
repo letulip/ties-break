@@ -163,7 +163,15 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // spec's own measured section), never by this line's item. The claim above – «the BUILD-LINE
     // wave moved no schema» – is untouched, and the pin still follows the ladder's head so the
     // sentence over it stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(82)
+    // ⚠ AND AGAIN AT v83 (18.09, wave 7 T1 – `latchedWeek` and `partnerName` on every LoveEpisode
+    // row), NOT WEAKENED, for the SEVENTEENTH time and for the reason verbatim: 83 was moved by
+    // that wave with its full seven-part move (bump, append-only migration, golden fixture v83 and
+    // its README row, e2e fixtures regenerated, the doc-facts sentence, the frozen-career peel
+    // rung and the spec to come with T8's bench), never by this line's item. ⚠ Re-stamped by T5's
+    // builder, not by T1: the component project is where this cell lives and T1's rung ran the unit
+    // set – found red on the wave's first full `test:component` pass and moved to the ladder's
+    // head, which is this pin's own standing instruction.
+    expect(SAVE_SCHEMA_VERSION).toBe(83)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

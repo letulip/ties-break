@@ -6,8 +6,9 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+import type { LadderTrack } from '../../engine/season/types'
 import type { AvatarEmotion, PortraitStage } from '../avatarEmotion'
-import type { CareerTotals, WorldMatch } from './events'
+import type { CareerMoney, CareerTotals, WorldMatch } from './events'
 
 // --- HOW A CAREER ENDS (schema v39, career-contract-v1.md §4) ----------------------------------
 
@@ -526,9 +527,22 @@ export interface EndingView {
   handoff: HandoffView
   /** the career's money, whole – not a score, just the two numbers the ledger kept */
   totals: CareerTotals
+  /** ⭐ ROUND 46 #9 – the same money, told apart: what left for good, what turned into something the
+   *  family still owns, and what she was paid into her own account. The epilogue prints THESE; the
+   *  raw accumulators above stay for anything that wants the gross. See `CareerMoney`. */
+  money: CareerMoney
   seasonsPlayed: number
-  /** best (smallest) season-end rank she ever held, or null if she never closed a season */
+  /** ⭐⭐ ROUND 46 #10 – THE BEST RANK SHE EVER HELD, on her own table, or null if she never held one.
+   *
+   *  ⚠ IT USED TO BE «the best SEASON-END rank», folded over `seasonHistory[].endRank` – which is
+   *  the ITF/junior rank on EVERY row (`SeasonHistoryEntry.endRank`'s own note), so a woman who had
+   *  spent twenty seasons on the professional table was handed her best junior year-end instead. The
+   *  owner, 18.09: «некорректный BEST RANK на финале (лучший 27)» over a career that touched #17.
+   *  `bestRankEver` (engine/world/ladder.ts) is the one reader now and carries the measurement. */
   bestRank: number | null
+  /** ⭐ ROUND 46 #10 – WHICH TABLE `bestRank` IS IN, so nothing downstream has to guess and no
+   *  surface can subtract one table's number from another's. Null exactly when `bestRank` is. */
+  bestRankTrack: LadderTrack | null
   titles: number
   /** how many times she answered "one more year" (§5.3's decade of decisions) */
   oneMoreYearCount: number

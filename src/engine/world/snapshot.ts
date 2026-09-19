@@ -86,12 +86,13 @@ import {
   UPCOMING_WEEKS,
 } from './constants'
 import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
+import { careerMoney } from './reckoning'
 // ⚠ `START_AGE_YEARS` left this list with D-01: the diary was its last reader here, and the
 // band clock it opened is exactly what the finding removed.
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, ownKeyThisWeek, spouseViewOccasionThisWeek } from './lifeBeat'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -1593,6 +1594,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // grows at steps 7-8 (`state.ts`), and a `!== null` test here would silently hand a divorce's or a
     // bereavement's mark to a band written about a break-up the day the second kind lands.
     freshBreakup: world.spiritShock?.kind === 'breakup',
+    // ⭐ v83 (the wedding, wave 7 – T5): the occasion the spouse raised THIS week, or null. The ONE
+    // derivation (`world/lifeBeat.ts` §12), asked here and carried, the two lines above's own shape –
+    // so the beat, the Home card and the week note cannot disagree about what was said at home.
+    spouseOccasion: spouseViewOccasionThisWeek(world),
+    // ⭐ v83 (wave 7 – T10): the week she got her own place – true once per career, on the raise
+    // week, the line above's own shape.
+    ownKeyWeek: ownKeyThisWeek(world),
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must
@@ -2285,6 +2293,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     oneMoreYearCount: world.oneMoreYearCount,
     college: world.college,
     careerTotals: world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },
+    // ⭐⭐⭐ ROUND 46 #9 – THE SAME THREE COUNTERS, READ HONESTLY, AND THE ONE FOLD THAT DOES IT.
+    // `careerTotals` above is the raw pair of accumulators and stays exactly what it has always been;
+    // this is what the word «spent» actually means once the money that turned into a house, an
+    // academy and a fund is taken back out of it, plus the streams «won» never contained. Every
+    // surface that used to subtract for itself now reads this – see `careerMoney` for the owner's
+    // report, the measured decomposition and why nothing is persisted.
+    careerMoney: careerMoney(world),
     ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),
     ...(pending ? { pending } : {}),
   }

@@ -38,6 +38,12 @@
 //                                owner asked for is gone. ⚠ This bench can veto the table's shape.
 //   B11 · the balance check      structural: every temperament has >=1 warm manner and >=1 cold one,
 //                                and no manner is best for all four. A failure is a broken game.
+//   B12 · when the gauge lights  ROUND 45 #4, predicted BEFORE the run: the per-pair corridor moves
+//                                the median first sighting from week 62 into the 20s, puts a small
+//                                figure on a MINORITY of cards inside the first month rather than on
+//                                none or on all of them, and leaves nobody unread inside eight years.
+//                                ⚠ The figure on that first week should be 1% or 2% – his own words –
+//                                and if it is not, the corridor is wrong rather than the report.
 //
 // ⚠ WHAT THIS BENCH CANNOT MEASURE, said out loud rather than quietly skipped. §1a is explicit that
 // the table's PRINCIPLE cannot be validated – «two intense people burn out» is a claim about human
@@ -52,8 +58,10 @@
 
 import { ECONOMY } from '../src/engine/economy'
 import {
+  accrueChemistry,
   affinityCentre,
   affinityFor,
+  chemistryReadableAt,
   chemistryWeeklyRate,
   COACH_MANNERS,
   createWorld,
@@ -249,6 +257,140 @@ function b10(): { ratio: number; within: number; between: number; click: number 
   const within = mean(cells.map(variance))
   const click = all.filter((a) => a >= CLICK).length / all.length
   return { ratio: within / between, within, between, click }
+}
+
+// =================================================================================================
+// B12 · WHEN THE GAUGE FIRST LIGHTS – round 45 #4, the owner's 18.09 ruling, measured both ways
+// =================================================================================================
+//
+// «мне кажется медленно, какие-то цифры, пусть и небольшие 1-2% мы всяко может раньше видеть. Но
+// здесь тоже можно включить вариативность.»
+//
+// The shipped gate was ONE number for the whole game, `readableAt = 5`. It is now a per-pair draw out
+// of `readableFloor .. readableCeiling`, and this arm is what says whether that did what he asked.
+//
+// ⚠⚠ ONE WALK, TWO RULERS, AND THAT IS WHY THIS ARM CANNOT BE A NULL RESULT WEARING A HARNESS. The
+// two arms are NOT two simulations: each pair is walked ONCE through the real `accrueChemistry`, the
+// series of |chem| is kept, and the two gates are then read off the SAME series. So nothing about the
+// comparison depends on a constant being swapped, a tree being checked out, or a reader being present
+// in an arm - the CLAUDE.md hazards that produced two false nulls in one hour on 17.08 have no
+// surface here. The only thing that differs between the columns is where the line is drawn.
+//
+// ⚠ THE ACCRUAL IS THE ENGINE'S AND THE WEEK STREAM IS MODELLED, which is the same honesty §8b's
+// original table carried: these are real pairs, not played careers. The stream below is stated rather
+// than described - roughly a match a week at an even record, a title about every 180 weeks, a steady
+// head - because a bench that cannot be re-run against its own words is not a measurement.
+const READ_WEEKS = 416
+const readWeek = (w: number): ChemistryWeek => ({
+  wins: w % 2 === 0 ? 1 : 0,
+  losses: w % 2 === 1 ? 1 : 0,
+  titles: w % 180 === 0 ? 1 : 0,
+  band: 'steady',
+})
+
+function quantile(sorted: number[], q: number): number {
+  if (!sorted.length) return NaN
+  return sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))]
+}
+
+/** The week a series of |chem| first reaches `bar`, or -1 if it never does inside the walk. */
+function firstAt(levels: number[], bar: number): number {
+  for (let i = 0; i < levels.length; i++) if (levels[i] >= bar) return i + 1
+  return -1
+}
+
+/** ...and how many times it drops back under the bar AFTER that, which is the marker returning to the
+ *  question mark – a real state and not a bug (§8b). */
+function turnOffs(levels: number[], bar: number): number {
+  let on = false
+  let off = 0
+  for (const lv of levels) {
+    const now = lv >= bar
+    if (on && !now) off += 1
+    on = now
+  }
+  return off
+}
+
+function b12(): void {
+  const pairs = flag('readpairs', 240)
+  console.log(`\nB12 · WHEN THE GAUGE FIRST LIGHTS – ${pairs} pairs x ${READ_WEEKS} weeks, one walk read by two gates`)
+
+  const OLD_BAR = CHEM.ceilingAtNone // the shipped single bar, which WAS `ceilingAtNone` by derivation
+  const series: number[][] = []
+  const bars: number[] = []
+  for (let i = 0; i < pairs; i++) {
+    const seed = `chem-read-${i}`
+    // ⚠ THE TEMPERAMENT IS THE WORLD'S, not a loop variable: the affinity is drawn around the
+    // (temperament x manner) cell, so a bench that invented one would be measuring a different table
+    // from the one the game runs. `census()` above builds its careers the same way.
+    const world = createWorld(seed, {
+      ...DEFAULT_PROFILE,
+      background: BACKGROUNDS[i % BACKGROUNDS.length],
+      playStyle: STYLES[i % STYLES.length],
+    })
+    const roster = buildCoachRoster(seed, 14)
+    const coach = roster[i % roster.length]
+    const a = affinityFor(seed, coach.id, world.temperament, coach.manner)
+    let pair = freshCoachPair()
+    const levels: number[] = []
+    for (let w = 1; w <= READ_WEEKS; w++) {
+      pair = accrueChemistry(pair, a, seed, coach.id, w, readWeek(w))
+      levels.push(Math.abs(pair.chem))
+    }
+    series.push(levels)
+    bars.push(chemistryReadableAt(seed, coach.id))
+  }
+
+  // ⚠ THE ACTUATION CHECK FOR THIS ARM, and it is two lines because it only has to answer one
+  // question: is the threshold really DRAWN? A corridor that produced one number for every pair would
+  // be the old gate wearing a new name, and every column below would then be a fact about nothing.
+  const bsorted = [...bars].sort((x, y) => x - y)
+  console.log(
+    `  the drawn thresholds: min ${f2(bsorted[0])} · median ${f2(quantile(bsorted, 0.5))} · max ${f2(bsorted[bsorted.length - 1])}` +
+      `  (corridor ${f2(CHEM.readableFloor)}..${f2(CHEM.readableCeiling)})`,
+  )
+  if (bsorted[bsorted.length - 1] - bsorted[0] < 1e-9) {
+    console.log('  ⚠⚠ EVERY PAIR DREW THE SAME THRESHOLD – the draw is not wired and nothing below is a measurement.')
+    return
+  }
+
+  const MARKS = [4, 8, 13, 26]
+  console.log(
+    `${pad('gate', 30)}${padL('first', 7)}${padL('p10', 6)}${padL('median', 8)}${padL('p90', 6)}` +
+      MARKS.map((m) => padL(`by wk ${m}`, 10)).join('') +
+      `${padL('never', 9)}${padL('turn-offs', 11)}`,
+  )
+  for (const [label, barOf] of [
+    [`BEFORE – one bar at ${f1(OLD_BAR)}`, () => OLD_BAR],
+    [`AFTER – drawn per pair`, (i: number) => bars[i]],
+  ] as [string, (i: number) => number][]) {
+    const firsts = series.map((lv, i) => firstAt(lv, barOf(i)))
+    const seen = firsts.filter((w) => w > 0).sort((x, y) => x - y)
+    const never = firsts.filter((w) => w < 0).length
+    const off = mean(series.map((lv, i) => turnOffs(lv, barOf(i))))
+    console.log(
+      `${pad(label, 30)}${padL(String(seen[0]), 7)}${padL(String(quantile(seen, 0.1)), 6)}` +
+        `${padL(String(quantile(seen, 0.5)), 8)}${padL(String(quantile(seen, 0.9)), 6)}` +
+        MARKS.map((m) => padL(pct(firsts.filter((w) => w > 0 && w <= m).length / firsts.length), 10)).join('') +
+        `${padL(`${never}/${firsts.length}`, 9)}${padL(f2(off), 11)}`,
+    )
+  }
+  // ⚠ THE SENTENCE HE ASKED FOR, MEASURED RATHER THAN CLAIMED: what the figure actually SAYS on the
+  // week it first appears. «1-2%» is the size he named, so the arm reports the printed number and not
+  // only the week.
+  const firstFigures = series
+    .map((lv, i) => {
+      const w = firstAt(lv, bars[i])
+      return w < 0 ? null : Math.round(lv[w - 1])
+    })
+    .filter((x): x is number => x !== null)
+  const hist = new Map<number, number>()
+  for (const f of firstFigures) hist.set(f, (hist.get(f) ?? 0) + 1)
+  console.log(
+    `  the figure on the week it first appears: ` +
+      [...hist.entries()].sort((x, y) => x[0] - y[0]).map(([k, v]) => `${k}% x${v}`).join('  '),
+  )
 }
 
 /** B11 – the structural balance check. Not a truth claim: a broken-game check. */
@@ -595,6 +737,7 @@ function run(): void {
   )
   b9()
   b7()
+  b12()
   b0()
   careerArm()
 }

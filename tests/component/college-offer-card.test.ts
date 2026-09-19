@@ -34,6 +34,7 @@ import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE
 // one of them and a card asserted against a literal would have gone green on the wrong caption.
 import { COLLEGE_TIER_NAME } from '../../src/engine/collegeOffer'
 import type { CollegeOffer, CollegeQuote, CollegeTier, Snapshot } from '../../src/shared/protocol'
+import { moneyOf } from '../helpers/careerMoney'
 
 const PRICES: Record<CollegeTier, number> = { state: 30_990_00, national: 50_920_00, private: 65_470_00 }
 
@@ -87,7 +88,7 @@ function snapshotWith(offer: CollegeOffer | null, country = 'US'): Snapshot {
     week: 265,
     kidRank: 210,
     fundsCents: 41_200_00,
-    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
     profile: { kidName: 'Vera', country },
     fork: { askedWeek: 265, ageYears: 19, offer },
   } as unknown as Snapshot

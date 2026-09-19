@@ -564,7 +564,11 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // `KIND_PICKS` fails `vue-tsc` (COMPILE ARM C in the ledger above).
     expect(LIFE_BEAT_ROW_KINDS as readonly string[], '⚠ he writes no `life` row, so he is not markable')
       .not.toContain('fork-psy')
-    expect([...LIFE_BEAT_ROW_KINDS], 'and the roster is exactly the two it was').toEqual(['met', 'ended'])
+    // ⭐ RE-AIMED 18.09 BY v83 (wave 7 – T10): the roster grew by `'own-key'` – `deliverOwnKey`
+    // writes one kept, STAMPED `'life'` row per career – and the claim this case makes about the
+    // psychologist is untouched: he still writes none and is still not markable. No pick was made
+    // for the new kind either (§5a), so the 🤍 fallback case below covers it the same way.
+    expect([...LIFE_BEAT_ROW_KINDS], 'and the roster is the row-writing kinds, exactly').toEqual(['met', 'ended', 'own-key'])
     expect(lifeRowGlyph('fork-psy'), '⭐ and an unpicked kind is not unmarked – it wears the owner\'s own heart')
       .toBe(LIFE_ROW_EMOJI.life)
     // ⚠ THE GLYPH PICK IS A QUESTION FOR THE OWNER EITHER WAY (who-she-is §5a: «no agent adds or
@@ -583,13 +587,18 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // So the property flipped from «exactly one licensed-unstamped row» to the STRONGER «every
     // `type:'life'` site now stamps a kind» – the guard tightened, not loosened.
     // ⚠ A NEW unstamped site still reddens here (the length stays pinned), which is the ratchet.
+    // ⭐ RE-AIMED 18.09 BY v83 (wave 7 – T10), THE RATCHET DOING ITS JOB: the count moved 4 → 5
+    // because `deliverOwnKey` writes the wave's ONE new `type: 'life'` row – kept, stamped
+    // `lifeKind: 'own-key'` – and both halves of the pin move together, so «every site stamps a
+    // kind» stays the total claim it became at D3. An UNSTAMPED site still reddens the second
+    // assertion alone, which is the ratchet's whole point.
     const code = codeOf(worldSource())
     const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(4)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(5)
     const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
     expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
     expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
-      .toHaveLength(4)
+      .toHaveLength(5)
   })
 })
 
@@ -694,7 +703,7 @@ describe('wave 5 T8 G – the listen coin is for read-bearing beats, and this is
     const control = withSeat(createWorld('t8-listen-control', DEFAULT_PROFILE), 'listen')
     control.season = []
     control.week = 900
-    control.loveEpisodes = [{ id: 'p:880', sinceWeek: 880, endedWeek: null, knownWeek: 890, wants: 'open', partnerId: 'p:880', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
+    control.loveEpisodes = [{ id: 'p:880', sinceWeek: 880, endedWeek: null, knownWeek: 890, wants: 'open', partnerId: 'p:880', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }]
     rngKeys.length = 0
     deliverKnownPartner(control)
     expect(rngKeys.filter((k) => k.includes(':psy:listen:')).length, '⚠⚠ the recorder really sees a listen key').toBe(1)

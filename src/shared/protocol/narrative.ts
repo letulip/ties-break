@@ -11,7 +11,7 @@ import type { TierId } from '../../engine/season/types'
 // ⭐ v72: WHO SHE IS, type-only – the four ids live beside the physics that reads them
 // (engine/spirit.ts) and are erased here at compile time, exactly like `TierId` above.
 import type { SpiritBand, Temperament } from '../../engine/spirit'
-import type { AvatarEmotion, PortraitEmotion, PortraitStage } from '../avatarEmotion'
+import type { MemoryFace, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
 
 // --- Diary-1 + Memory (docs/specs/family-diary.md, D1/D2/D3 + D10) -------------
@@ -48,6 +48,13 @@ export type MilestoneType =
    *  закончиться». Captured the week it happens, back-filled by the v43 migration for every career
    *  already past it - his own is twenty-two - so the scroll never has a hole where a life changed. */
   | 'school'
+  /** ⭐ v83 – THE WEDDING (wave 7 T3): the week she married, kept where a life's turns are kept. A
+   *  new persisted union member is a schema change by invariant 3 (the v44 'facility' precedent),
+   *  and this one rides the v83 bump rather than costing its own. ⚠ NOT once per career – `kind`
+   *  carries the `LoveEpisode.id`, so the identity is per EPISODE and a second marriage on a later
+   *  row captures its own line (the 11.09 re-shape's whole point). No back-fill exists or could:
+   *  no save below v83 can hold one, because there was no wedding to reach. */
+  | 'wedding'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -289,8 +296,70 @@ export interface SoftBeatInvite {
  *  (+3 or −3 by her read) / fix-it (−1) / blame (−4 always), so no option costs zero under any
  *  reading – which is why `tools/_lifeBeats.ts` stopped hunting a zero one commit before this kind
  *  existed and reads a registry instead. `DRAIN_ANSWER['ended']` is `fix-it`, whose −1 is the same −1
- *  under every read: read-INDEPENDENT, which is what the drain law actually needed. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy'
+ *  under every read: read-INDEPENDENT, which is what the drain law actually needed.
+ *
+ *  ⭐⭐⭐ v83 (the wedding, wave 7 – T2) ADDS `'engaged'`: THE WEEK SHE SAYS SHE IS GETTING MARRIED.
+ *  Its `detail` is the `LoveEpisode.id`, exactly as `'met'`'s and `'ended'`'s are – machine-readable,
+ *  never a rendered sentence – and that id is what makes the beat fire exactly once per episode: the
+ *  record is the queue AND the receipt, `'met'`'s own doctrine, so a latched row can never be asked
+ *  again and a SECOND wedding is the same machinery on a LATER episode's own row.
+ *
+ *  ⚠⚠ SHE ANNOUNCES; THE PARENT REACTS (§4a's law at the layer's biggest ask so far). No parent menu
+ *  opens her decision – the hazard (`rollWedding`, gated 23+ and on the episode's own depth) decides
+ *  WHETHER, and the parent's three answers are the research digest's own triple – bless / keep
+ *  distance / oppose – priced on `bond` through the existing `answerLifeBeat` seam
+ *  (`ECONOMY.wedding.blessBond` / `distanceBond` / `opposeBond`).
+ *
+ *  ⚠⚠ IT BLOCKS, tier 2's own price: a wedding announcement is a week the parent must answer before
+ *  time may move, and a career that could tick past it would answer her by walking away. ⚠ AND NO
+ *  ANSWER STOPS THE WEDDING – opposing prices the bond and colours the diary, and the wedding lands
+ *  `ECONOMY.wedding.weeksAfterEngagement` weeks later regardless (T3's `landWedding`): SHE decided.
+ *
+ *  ⚠ THE SECOND KIND WITH NO FREE ANSWER (after `'ended'`), and read-INDEPENDENT by construction:
+ *  no overlay exists for this kind, so `DRAIN_ANSWER['engaged']` = `distance` charges −1 under every
+ *  reading and the harnesses can state their skew exactly. ⚠ It carries no `heard` stamp and no
+ *  listen detour – there is no read to be plain about and no second half being withheld: the fact is
+ *  the fact, and the three answers are the whole of what a parent can do with it.
+ *
+ *  ⭐⭐⭐ v83 (the wedding, wave 7 – T5) ADDS `'spouse-view'`: THE MARRIAGE'S STANDING SURFACE at
+ *  W1–W2 – no `spouseBond`, no second tracked number (the 18.09 adoption): what the spouse thinks
+ *  IS these beats and the diary's texture. Its `detail` is the OCCASION (`SpouseViewOccasion`
+ *  below) – machine-readable, never a rendered sentence, `'small-talk'`'s own shape – and every
+ *  occasion is READ off facts the world already holds, never derived anew: the upcoming entered
+ *  event's abroad fact, the travel weeks the finance ledger paid, spirit.ts's own zero-vacation
+ *  season predicate, and her-account-vs-the-wallet (round 23 #18's split).
+ *
+ *  ⚠⚠ NON-BLOCKING, tier 1's own price: it is answered from the Home card inside the standing
+ *  three-week window and the week never waits for it. Raised only while a LATCHED episode lives
+ *  (`latchedWeek !== null`, `endedWeek === null`), at most once per
+ *  `ECONOMY.wedding.spouseViewCooldownWeeks`, and the cooldown is the log itself – the row is the
+ *  counter, no new state. The parent's three answers are priced small on `bond` (drafted
+ *  ±0.5..±1.5 in `ECONOMY.wedding`), read-independent by construction – no overlay names this kind.
+ *
+ *  ⚠ It carries no `heard` stamp and no listen detour: the spouse is not her, and a professional's
+ *  own rule applies one house over – a view has been given whole, and a panel promising more of it
+ *  would promise words nobody wrote.
+ *
+ *  ⭐ v83 (wave 7 – T10, backlog §8, adopted by the 18.09 go) ADDS `'own-key'`: THE INDEPENDENT-LIFE
+ *  STORY BEAT – one-time, NON-blocking, narrative-only. The spare key, the Sunday dinner: raised
+ *  near the first week she reads the `independent` life stage (`diaryLifeStageFor`'s own 22+ cut,
+ *  which is also what keeps a college girl's beat honest – a dorm is not her own front door),
+ *  regardless of romance state. One kept `'life'` feed row, one diary line, NO mechanic, NO cost,
+ *  NO bond move – a residence mechanic stays gated on the owner's word (backlog §8's own sentence).
+ *
+ *  ⚠ Its `detail` is the literal `'own-key'` – there is nothing per-row to record – and the receipt
+ *  is the row itself: the log answers «has this happened», once per career, `'met'`'s own doctrine.
+ *  Its one answer is a zero-priced acknowledgment, because the soft surface offers every live row a
+ *  dialog and a dialog needs a control that records; nothing about the answer moves anything. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key'
+
+/** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
+ *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
+ *  note above); the union lives on the wire beside `LifeBeatKind` so the diary's view can carry the
+ *  week's occasion without importing the engine (the same placement argument every type in this
+ *  file makes). ⚠ APPEND-ONLY once shipped – the draw indexes the reachable subset, so removing or
+ *  reordering a member re-maps future draws on old seeds. */
+export type SpouseViewOccasion = 'distant-swing' | 'road-stretch' | 'no-vacation' | 'money'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
@@ -473,6 +542,35 @@ export interface LoveEpisode {
    *  (the wave's own §8). */
   airedMetWeek: number | null
   airedEndedWeek: number | null
+  /** ⭐⭐⭐ v83 – THE WEEK THE WEDDING HAPPENED ON THIS EPISODE, or null while (and if) it never does
+   *  (the wedding, wave 7; `docs/plans/life-wave-7-builder-2026-09.md` §2 T1, re-shaped 11.09 on the
+   *  owner's own «а свадьба может быть у нас не одна, кстати?»).
+   *
+   *  ⚠⚠ THE LATCH LIVES ON THE EPISODE ROW AND NEVER AS A GLOBAL BOOLEAN, and that one placement is
+   *  the whole design: a marriage is a property of ONE episode, a divorce (if ever built) is an
+   *  ending on a latched episode, and a SECOND wedding is the same machinery re-entered on a later
+   *  row – zero migrations later. An `attachment.latched` flag would have to be migrated the day any
+   *  of those three arrived.
+   *
+   *  ⚠ NULL EVERYWHERE THE WAVE DOES NOT WRITE IT: on every migrated row (the v82 -> v83 walk), on
+   *  every row at birth (`rollArrival`), and on every episode whose engagement never lands. T3 is
+   *  the one writer, `ECONOMY.wedding.weeksAfterEngagement` weeks after the `'engaged'` beat is
+   *  answered – any answer, opposing does not stop it (SHE decided). */
+  latchedWeek: number | null
+  /** ⭐⭐⭐ v83 – HIS NAME, written ONCE at the engagement beat by the ONE derivation function
+   *  (`partnerNameFor`), or null before it and on every migrated row. Readers fall back to the
+   *  unnamed phrasing they use today – «them» stays the honest word until she says his name.
+   *
+   *  ⚠⚠ PERSISTED, NEVER RE-DERIVED AT READ, for the same reason `temperamentFor` is called once
+   *  and `LifeBeatRecord.frame` is stored: a later pool edit must never rename a husband an old
+   *  career already has. The draw is uniform on `seed:life:partner-name:<episodeId>` – a
+   *  purpose-scoped sub-stream, never MAIN – and the result written here is the fact.
+   *
+   *  ⚠ A FIRST NAME ONLY, BY CONSTRUCTION (house trademark law): the pool holds fictional first
+   *  names and no surname exists anywhere in the wave, so no real person's name is constructible.
+   *  This field is also the moment `partnerId` has been waiting for since v74: the identity of the
+   *  ROW (`id`) and the identity of the PERSON stop being the same thing here. */
+  partnerName: string | null
 }
 
 /** ⭐⭐⭐ v77 – WHAT THE BOOTH TOUCHED, AS THE UI IS EVER ALLOWED TO SEE IT (the spotlight, wave 6's
@@ -694,6 +792,26 @@ export interface DiaryFacts {
    *  neither `endedWeek` nor the read – so a line reaching for a cause would be inventing the one
    *  consequential fact the whole mechanic refuses to model. */
   freshBreakup: boolean
+  /** ⭐ v83 (the wedding, wave 7 – T5) – THE OCCASION THE SPOUSE RAISED **THIS WEEK**, or null on
+   *  every other week of the career: `spouseViewOccasionThisWeek(world)`, asked at snapshot time and
+   *  carried – `partnerKnown`'s own shape and reason, because the beat and the week note under the
+   *  painting must not be able to disagree about what was said in the house this week.
+   *
+   *  ⚠ THE RAISE WEEK AND NOT THE ROW'S THREE-WEEK WINDOW: the scene happened once, and a diary
+   *  that repeated it while the card waited would stutter. ⚠ WHAT A LINE LICENSED ON THIS MAY SAY:
+   *  that a word was said at home, and WHICH of the four family facts it was about – both are on
+   *  the row. It may NOT say the parent's answer (the row may still be unanswered when the note is
+   *  written), may not name or gender the spouse (the standing law – the persisted name's surfaces
+   *  are the owner's call), and may not carry a figure (the money law). Required rather than
+   *  optional, `vacationPackageId`'s standing argument: it selects COPY. */
+  spouseOccasion: SpouseViewOccasion | null
+  /** ⭐ v83 (wave 7 – T10) – THIS IS THE WEEK SHE GOT HER OWN PLACE: `ownKeyThisWeek(world)`, true
+   *  exactly once per career, on the `'own-key'` row's raise week. Asked at snapshot time and
+   *  carried, the field above's own shape. ⚠ WHAT A LINE LICENSED ON THIS MAY SAY: that she lives
+   *  behind her own door now, the spare key, the standing Sunday – the beat's own three facts. NO
+   *  address, NO rent, NO mechanic of any kind (backlog §8's boundary), and required rather than
+   *  optional for the standing reason: it selects COPY. */
+  ownKeyWeek: boolean
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */
@@ -839,11 +957,20 @@ export interface MemoryCard {
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage
-  /** the painting emotion the memory shows (title → happy, injury → injury, …).
-   *  Stays the NARROW union on purpose: a memory is a picture of a WEEK THAT HAPPENED, so every
-   *  value here is a moment face – `injury` is the week she went down, never the layoff after it
-   *  (R14-1). Nothing a milestone can map to is painting-only. */
-  emotion: AvatarEmotion
+  /** the painting emotion the memory shows (title → happy, injury → injury, wedding → bride, …).
+   *  A memory is a picture of a WEEK THAT HAPPENED, so every value here is a MOMENT face – `injury`
+   *  is the week she went down, never the layoff after it (R14-1).
+   *
+   *  ⚠⚠ `MemoryFace`, WIDENED 18.09, AND IT IS THE WIDEST OF THE THREE UNIONS ON PURPOSE. This used
+   *  to say «stays the NARROW union … nothing a milestone can map to is painting-only», which held
+   *  until a milestone had a painting of its own: the wedding's `adult-bride`. The bride is a member
+   *  of `MemoryFace` and of NEITHER `AvatarEmotion` (which `avatarCropPath` is total over, and there
+   *  is no bride crop) NOR `PortraitEmotion` (which is the five-band matrix, and the bride is painted
+   *  for one band) – `shared/avatarEmotion.ts` carries the whole argument.
+   *
+   *  ⚠ WIDENING IT COSTS NO SCHEMA, on `milestone`'s own standing two fields up: `MemoryCard` is
+   *  derived at snapshot time and never saved. */
+  emotion: MemoryFace
   line: string
 }
 

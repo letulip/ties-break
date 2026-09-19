@@ -45,6 +45,7 @@ import { withinAnnualEntryLimit } from './entryCaps'
 import { tierMakesWorldNews } from './matchNews'
 import { playerShortName } from './snapshot'
 import { maybeFireSeasonWrapUp } from './milestones'
+import { settleStaffLetters } from './staffLetters'
 import { settleMandatoryQuota } from './mandatory'
 import { resolveEndings } from './endings'
 import { housekeep, recomputeRankAndMilestones } from './bookkeeping'
@@ -510,6 +511,26 @@ export function closeTheWeek(world: WorldState, field: WeekField): void {
     // is deliberate: the tour and the brands both settle up in the first quiet week.
     if (isSponsorReviewWeek(world.week)) settleMandatoryQuota(world, world.week)
     maybeFireSeasonWrapUp(world)
+    // ⭐⭐⭐ ROUND 44 #7 – ...AND THE PEOPLE THE FAMILY PAYS WRITE ABOUT THE YEAR (the owner, 18.09:
+    //    «письмо от тренера по итогу года мне так и не пришло, да и ни от одного специалиста не
+    //    пришло»). One letter per hired seat per season, into the inbox the academy already writes
+    //    to.
+    //
+    //    ⚠⚠ DIRECTLY UNDER `maybeFireSeasonWrapUp` AND THAT ORDER IS THE WHOLE DESIGN, not a
+    //    convenience. The coach's letter reports her season off the row the wrap-up has just banked
+    //    (`world.seasonHistory`), which is the ONLY honest source for it at this point in the tick:
+    //    the line above has already RESET `seasonWins` / `seasonLosses`, and `world.results` prunes
+    //    to a rolling 52 weeks, so a letter that folded the season itself would be re-answering a
+    //    question the Stats table has just answered – and would start disagreeing with it three
+    //    weeks later. Reading the banked row is what makes the paper and the table one fact.
+    //
+    //    ⚠ ABOVE `resolveEndings` for the reason the wrap-up itself is: a career that ends this week
+    //    should carry its last year's post, not be closed a line before it is written.
+    //
+    //    ⚠ ZERO DRAWS ON MAIN – it is a report, and a report does not roll dice. The frozen capture
+    //    (41550 / e6b0c709) cannot see this line. See world/staffLetters.ts for the one pure
+    //    sub-stream `chemistryReading` re-derives, and for why it is the same one the ring uses.
+    settleStaffLetters(world)
     // 7. W2-ENDINGS – WHERE THE CAREER ENDS. Last, and AFTER the wrap-up, because the natural end's
     //    offer is a reading of the season that has just closed: `seasonHistory` has to have that
     //    row in it before the plateau can be measured against it. Pure state, ZERO draws on any

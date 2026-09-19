@@ -15,20 +15,10 @@ import { useGameStore } from '../stores/game'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
-import { STARTING_FUNDS_CENTS } from '../engine/world'
-import { SURNAMES, FIRST_NAMES } from '../engine/season/cohort'
-import {
-  DEFAULT_PROFILE,
-  type CoachTier,
-  type FamilyBackground,
-  type PlayerProfile,
-  type PlayStyle,
-} from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
    `NATIONAL_TEAM`, `KID_ID`, `formatShortName`, `WorldMatch` and `MatchReplay` were all the year
    card's, and they are `CollegeYearCard.vue`'s now. The epilogue watches no matches. */
-import { daysInBirthMonth } from '../shared/dates'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -38,68 +28,38 @@ const emit = defineEmits<{ (e: 'newCareer'): void }>()
 
 // --- THE HAND-OFF (career-contract-v1.md §5.6) --------------------------------------------------
 //
-// The owner's ruling, quoted verbatim in `docs/specs/career-contract-v1.md` §5.6 and not here – a
-// `.vue` file carries no Cyrillic at all, comments included (CLAUDE.md style). In English: at the end
-// offer a choice that auto-generates a new random daughter, asking only for the band of starting
-// capital and nothing else.
+// ⭐⭐⭐ ROUND 47 #12 – IT SENDS THE PLAYER TO THE BEGINNING NOW, AND IT USED TO MAKE A
+// THIRTEEN-YEAR-OLD ON THE SPOT. The owner, 18.09, off his finished career (his words are in
+// `docs/plans/life-wave-7-strings-2026-09.md` §8 – a `.vue` file carries no Cyrillic at all,
+// comments included, CLAUDE.md style): «Raise another» starts her at 13 straight away, and it should
+// simply send you to the start like everything else does.
 //
-// ⚠ ONE QUESTION, AND IT IS THE ONE ONBOARDING ALREADY ASKS. Not the six-step wizard: the whole
-// point of the seam is that a player who has just watched a career end is ONE TAP from the next one.
-// So the three capital cards live here, the daughter is generated, and `newCareer` is called
-// directly - the wizard is for a player who wants to name her.
+// ⚠ WHAT IT ACTUALLY DID, MEASURED RATHER THAN READ OFF THE COMMENT THAT USED TO STAND HERE. The old
+// `raiseAnother(background)` called `game.newCareer(...)` FIRST and emitted afterwards. Creating the
+// career published a snapshot with no `ending`, so App.vue's `showEnding` went false and this whole
+// takeover was unmounted BEFORE the emit ran – the shell was already drawing HomeScreen on a week-0,
+// thirteen-year-old career, and the parent's `@new-career` handler never heard a thing. The route
+// was not «the wizard», which is what App.vue's own comment claimed: it was straight into the game.
+// `tests/component/r47-raise-another-route.test.ts` pins both halves of that.
 //
-// ⚠ AND NOTHING CARRIES OVER. A FRESH fork, never the mother's final balance (§5.6's own open
-// question, the architect's recommendation taken): carrying her money is exactly the meta-currency
-// §5.6 rules out, and a family that ended rich would open the next story with its central tension
-// already resolved. The generated daughter is otherwise random, so the mother's career buys
-// narrative and not advantage - the same line the equipment and coach ladders already hold.
-const BACKGROUNDS: { id: FamilyBackground; label: string; blurb: string }[] = [
-  { id: 'wealthy', label: 'Wealthy', blurb: 'Top academies are within reach.' },
-  { id: 'middle', label: 'Middle class', blurb: 'Smart choices, steady progress.' },
-  { id: 'working', label: 'Working class', blurb: 'Big dreams, hard mode.' },
-]
+// ⚠ SO NOTHING IS CREATED HERE ANY MORE. This screen emits and stops; the shell drops the finished
+// career and routes to the CHILDHOOD, which is the same beginning a first-ever launch gets and is
+// where `newCareer` is called from now (the ninth card). One tap, and the nine years are hers again.
+//
+// ⚠ AND §5.6'S «ONE QUESTION» IS ANSWERED BY THE BEGINNING INSTEAD, WHICH IS WHY THE CAPITAL FORK
+// LEFT THIS FILE. The three band cards and their lead sentence existed because there was no
+// beginning to send a player to – the epilogue had to ask the family's size itself. The prologue's
+// first card has asked exactly that question (its three origins) since it shipped, and it asks her
+// name, her birthday and her country beside it, so the lead's promise of «one question» could not
+// survive the route either way. ⚠ The removal is recorded as a removal, with his sentence as the
+// authority, in the strings table's §8 – invariant 4 is why it is written down rather than assumed.
+//
+// ⚠ NOTHING CARRIES OVER, unchanged and now by construction: this file no longer builds a profile at
+// all, so there is nothing here that could carry the mother's balance, her country or her name into
+// the next story. That was §5.6's own open question and its answer has not moved.
 
-/** ⚠ THE COACH RUNG IS DERIVED, NOT ASKED, because §5.6 says exactly ONE question. These are the
- *  three combinations `tools/econ-bench.ts` treats as each background's mainstream preset - the
- *  rung a family of that size would actually walk into an academy and buy. The Coach Market is open
- *  from week one, so it is a starting point rather than a decision taken away. */
-const COACH_BY_BACKGROUND: Record<FamilyBackground, CoachTier> = {
-  working: 'budget',
-  middle: 'middle',
-  wealthy: 'high',
-}
-
-/** Every style the match engine models, so the next daughter is a real roll of the dice rather than
- *  a copy of her mother. */
-const PLAY_STYLES: readonly PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
-
-function pick<T>(list: readonly T[]): T {
-  return list[Math.floor(Math.random() * list.length)]
-}
-
-function nextDaughter(background: FamilyBackground): PlayerProfile {
-  const birthMonth = 1 + Math.floor(Math.random() * 12)
-  return {
-    ...DEFAULT_PROFILE,
-    kidName: pick(FIRST_NAMES),
-    kidLastName: pick(SURNAMES),
-    // The only thing that crosses the seam, and it is not a mechanic: the family lives where it
-    // lived. Country is display and flavour - it prices nothing, unlocks nothing and is not on any
-    // curve - so this is the fiction being consistent rather than progress carrying over.
-    country: game.snapshot?.profile?.country ?? DEFAULT_PROFILE.country,
-    background,
-    coachTier: COACH_BY_BACKGROUND[background],
-    playStyle: pick(PLAY_STYLES),
-    birthMonth,
-    birthDay: 1 + Math.floor(Math.random() * daysInBirthMonth(birthMonth)),
-  }
-}
-
-/** false until the player taps the offer – the one question is asked on the last page, not before. */
-const asking = ref(false)
-
-async function raiseAnother(background: FamilyBackground): Promise<void> {
-  await game.newCareer('', nextDaughter(background))
+/** The one tap. The shell owns what happens next – see App.vue's `raiseAnother`. */
+function raiseAnother(): void {
   emit('newCareer')
 }
 
@@ -208,9 +168,55 @@ async function resumeCollege(): Promise<void> {
 
       <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. Only on the last page. -->
       <footer v-if="isLast" class="ending-foot">
+        <!-- ⭐⭐⭐ ROUND 46 #9 – THE SAME FIVE LABELS, TWO OF THE FIGURES REPAIRED, AND TWO NEW ROWS
+             THAT ONLY APPEAR WHEN THERE IS SOMETHING TO SAY. The owner read «$13M won against $83M
+             spent» off a career that ended holding a fund, houses and an academy (his words are on
+             `careerMoney` in engine/world/ledger.ts – no Cyrillic may appear in a template).
+             `money.outlayCents` is what left the family FOR GOOD; the money that turned into
+             something it still owns is `heldCents`, and it never belonged in a figure called
+             «Spent». ⚠ THE WORDS ARE UNTOUCHED (invariant 4): «Won», «Spent», «Seasons», «Best
+             rank» and «Titles» are his, and nothing here rewrites one.
+             ⚠ THE TWO NEW ROWS ARE DRAFTS – docs/plans/life-wave-7-strings-2026-09.md, ids R46-1 and
+             R46-2 – and they render only when the figure is non-zero, so every career that neither
+             owned anything nor banked a cheque of her own sees exactly the page it saw before.
+
+             ⭐⭐⭐ RULING, 18.09 – AND ONE OF THE FIVE HAS NOW MOVED, BECAUSE HE MOVED IT. R46-3 was
+             put to him as a draft – «Won» names a figure that is only the family's HALF of the prize
+             cheques, and on a measured career that was $17,164,973 printed beside the $28,749,334
+             sitting in HER account, which is why he could not place it. He took the draft; his words
+             are in docs/decisions.md under 18.09.2026 and in the strings table, because no Cyrillic
+             may appear in a template. So «Won» becomes the family's share, the FIGURE is untouched
+             (`prizeCents`, exactly as before), and the other four labels stay his.
+             ⭐ RULING B, LATER THE SAME DAY – AND HE SPELLED IT HIMSELF, WITHOUT THE ARTICLE. The row
+             shipped as «The family's share» and he wrote it back one word shorter. One character
+             class of change, his own, at the one surface that carries it: the strings table's R46-3
+             now records the ruled spelling and the date. The figure still has not moved.
+             ⚠ HERE AND NOWHERE ELSE, which is invariant 4 read strictly. The only other labelled
+             surface on this figure is `ForkDialog.vue`, whose label is «The tennis has paid» and was
+             never the string he ruled on; the album's slot 6 says «$X won against $Y spent» in
+             PROSE. Neither is «Won», so neither moves on either ruling. -->
         <dl class="ending-totals">
-          <div><dt>Won</dt><dd>{{ formatCents(view.totals.prizeCents) }}</dd></div>
-          <div><dt>Spent</dt><dd>{{ formatCents(view.totals.spentCents) }}</dd></div>
+          <div><dt>Family's share</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
+          <div><dt>Spent</dt><dd>{{ formatCents(view.money.outlayCents) }}</dd></div>
+          <div v-if="view.money.herAccountCents > 0">
+            <dt>Her account</dt><dd>{{ formatCents(view.money.herAccountCents) }}</dd>
+          </div>
+          <div v-if="view.money.holdingsCents > 0">
+            <dt>Still owned</dt><dd>{{ formatCents(view.money.holdingsCents) }}</dd>
+          </div>
+          <!-- ⭐⭐⭐ RULING A, 18.09 – THE ONE LINE THE TWO FIGURES ABOVE IT CANNOT SAY. His ask is on
+               `careerMoney` in engine/world/reckoning.ts (no Cyrillic may appear in a template): the
+               reckoning stays TENNIS ONLY, and the family's whole portfolio – the wallet plus every
+               shelf row at what it is worth – gets a separate line of its own. A point-in-time read,
+               not a lifetime total, which is why it costs no schema.
+               ⚠ THE LABEL IS A DRAFT – docs/plans/life-wave-7-strings-2026-09.md, id R46-7. The
+               article is dropped to match the row he renamed four lines up, and both spellings are
+               his to move.
+               ⚠ IT RENDERS ALWAYS, unlike the two draft rows above it, because a family that owns
+               nothing and holds nothing still HAS a portfolio and the honest figure for it is the
+               wallet. A row that vanished on a poor career would answer his question for rich
+               careers only. -->
+          <div><dt>Family's portfolio</dt><dd>{{ formatCents(view.money.portfolioCents) }}</dd></div>
           <div><dt>Seasons</dt><dd>{{ view.seasonsPlayed }}</dd></div>
           <div><dt>Best rank</dt><dd>{{ view.bestRank === null ? '–' : `#${view.bestRank}` }}</dd></div>
           <div><dt>Titles</dt><dd>{{ view.titles }}</dd></div>
@@ -277,26 +283,14 @@ async function resumeCollege(): Promise<void> {
           Another year –
         </PrimaryPill>
 
-        <template v-else>
-          <p class="ending-offer">
-            Nothing carries over. A new daughter, and one question: what the family starts with.
-          </p>
-          <PrimaryPill v-if="!asking" variant="cta" @click="asking = true">Raise another</PrimaryPill>
-          <div v-else class="ending-fork">
-            <button
-              v-for="b in BACKGROUNDS"
-              :key="b.id"
-              class="ending-fork-option"
-              type="button"
-              :disabled="game.busy"
-              @click="raiseAnother(b.id)"
-            >
-              <strong>{{ b.label }}</strong>
-              <em>{{ formatCents(STARTING_FUNDS_CENTS[b.id]) }}</em>
-              <span>{{ b.blurb }}</span>
-            </button>
-          </div>
-        </template>
+        <!-- ⭐⭐⭐ ROUND 47 #12 – ONE TAP, AND IT GOES TO THE BEGINNING. The lead sentence and the
+             three capital cards that used to stand here left with the career this file no longer
+             creates; the script block above says why the route retired the question rather than an
+             agent retiring the words, and the strings table's §8 carries the removal for his pass.
+             `Raise another` is his label and is untouched. -->
+        <PrimaryPill v-else variant="cta" :disabled="game.busy" @click="raiseAnother">
+          Raise another
+        </PrimaryPill>
       </footer>
     </section>
 
@@ -486,8 +480,7 @@ async function resumeCollege(): Promise<void> {
   font-variant-numeric: tabular-nums;
 }
 
-.ending-note,
-.ending-offer {
+.ending-note {
   margin: 0;
   max-width: 34ch;
   font-size: 14px;
@@ -507,58 +500,15 @@ async function resumeCollege(): Promise<void> {
   cursor: pointer;
 }
 
-/* THE ONE QUESTION. Three cards, one weight, no recommendation – the same discipline the fork at
-   nineteen keeps, and for the same reason: the game does not have an opinion about how much money a
-   family should have. */
-.ending-fork {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  max-width: 360px;
-}
-
-.ending-fork-option {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  text-align: left;
-  padding: 11px 14px;
-  border: var(--stroke-hair) solid var(--ink-dim);
-  border-radius: var(--radius-control);
-  background: transparent;
-  font: inherit;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.ending-fork-option:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.ending-fork-option strong {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.ending-fork-option em {
-  font-style: normal;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
-}
-
-.ending-fork-option span {
-  grid-column: 1 / -1;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--ink-soft);
-}
-
 /* ⚠ AND THE COLLEGE YEAR BLOCK'S RULES WENT WITH ITS MARKUP (round 24 #2b) – `.college-year`,
    `.college-lead`, `.college-call`, `.college-facts`, `.college-rubbers`, `.college-rubber` and the
-   three `.rubber-*` spans are `CollegeYearCard.vue`'s scoped sheet now. `.ending-fork` above STAYS:
-   the hand-off's three capital cards are the same object and are the only caller left. */
+   three `.rubber-*` spans are `CollegeYearCard.vue`'s scoped sheet now.
+
+   ⚠ AND `.ending-fork` / `.ending-fork-option` / `.ending-offer` LEFT WITH ROUND 47 #12's ROUTE.
+   The hand-off's three capital cards were their only caller and the hand-off asks nothing now – the
+   childhood does. The `min-width: 768px` note above still names `.ending-fork` at 360 as one of the
+   widths that argued for the 480 column; that reading is kept as the RECORD of how the number was
+   chosen, and the cap is unmoved because `.ending-totals` at 460 is the widest thing left. */
 
 /* --- the record underneath --- */
 .ending-scroll-body {

@@ -11,6 +11,7 @@ import EndingScreen from '../../src/components/EndingScreen.vue'
 import ForkDialog from '../../src/components/ForkDialog.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import { useGameStore } from '../../src/stores/game'
+import { moneyOf } from '../helpers/careerMoney'
 // ⭐ THE LONG GOODBYE STEP 4 – her last word is the ENGINE's sentence, and the card renders it. The
 // pin goes through the symbol so a re-wording moves the assertion with the copy.
 import { ENDING_TITLE, lastWordLine } from '../../src/engine/ending'
@@ -42,8 +43,11 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     ],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },
+    // ⭐ ROUND 46 #9 – derived from the totals above, never stated twice (see `moneyOf`).
+    money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
     seasonsPlayed: 5,
     bestRank: 88,
+    bestRankTrack: 'wta',
     titles: 2,
     oneMoreYearCount: 0,
     // ⭐ round 29 part two #10: null unless the fixture built academy stages – the default career
@@ -61,7 +65,7 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
 
 function patchSnapshot(fields: Record<string, unknown>): void {
   const game = useGameStore()
-  game.$patch({ snapshot: { ageYears: 19, week: 265, kidRank: 88, fundsCents: 1234_00, careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, ...fields } as unknown as Snapshot })
+  game.$patch({ snapshot: { ageYears: 19, week: 265, kidRank: 88, fundsCents: 1234_00, careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 }, careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }), ...fields } as unknown as Snapshot })
 }
 
 describe('the album', () => {
@@ -161,20 +165,27 @@ describe('the album', () => {
     bare.unmount()
   })
 
-  it('⚠ the hand-off asks EXACTLY ONE question, and it is the capital fork', async () => {
+  // ⭐⭐⭐ RE-AIMED BY ROUND 47 #12, AND THE OLD CLAIM WAS THE DEFECT WRITTEN DOWN AS A GUARD. It
+  // read «the hand-off asks EXACTLY ONE question, and it is the capital fork»: it pressed the offer,
+  // counted the three capital cards, picked one and asserted `game.newCareer` had been called with
+  // that background. Every one of those assertions passed while the owner watched the press drop him
+  // into the game at thirteen – because creating the career here IS what took him there.
+  //
+  // The hand-off asks nothing now: it hands the player to the childhood, which asks the same
+  // question on its first card along with her name, her birthday and her country. So what is left to
+  // claim HERE is the epilogue's own half – one control, one event, and no career created by this
+  // screen. Where the press LANDS is a route and is pinned where routes can be seen, on the mounted
+  // shell in tests/component/r47-raise-another-route.test.ts.
+  it('⚠ the hand-off asks NOTHING – one control, one event, and no career made here', async () => {
     patchSnapshot({ ending: endingView() })
     const game = useGameStore()
     const spy = vi.spyOn(game, 'newCareer').mockResolvedValue(undefined)
     const w = mount(EndingScreen)
     for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     await w.findAll('.tb-pill')[0].trigger('click')
-    const options = w.findAll('.ending-fork-option')
-    expect(options).toHaveLength(3)
-    // ...and NOTHING else is asked: three cards, then a career.
-    await options[2].trigger('click')
-    expect(spy).toHaveBeenCalledTimes(1)
-    const profile = spy.mock.calls[0][1] as { background: string }
-    expect(profile.background).toBe('working')
+    expect(w.findAll('.ending-fork-option'), 'the capital fork is back').toHaveLength(0)
+    expect(w.emitted('newCareer')?.length, 'one press, one event').toBe(1)
+    expect(spy, 'the epilogue created a career of its own').not.toHaveBeenCalled()
     w.unmount()
   })
 

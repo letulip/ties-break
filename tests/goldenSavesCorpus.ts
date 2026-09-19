@@ -71,6 +71,8 @@ export function load(file: string): unknown {
 }
 
 /** The first fixture whose save carries a college quote through the ladder. Measured 05.09: every
- *  fixture from here on carries exactly one, twenty of them. It is the anti-vacuity floor for the
- *  v61 sweep – see the note there. */
+ *  fixture from here on carries exactly one, twenty of them. (18.09: v83.json, the probe fixture
+ *  walked to its own fork, carries THREE – a real offer's full card rather than the lineage's
+ *  single pinned quote. The sweep's floor is ≥ 1 and is untouched.) It is the anti-vacuity floor
+ *  for the v61 sweep – see the note there. */
 export const FIRST_QUOTE_FIXTURE = 51

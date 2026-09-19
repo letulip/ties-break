@@ -313,6 +313,33 @@ const ENDS_CAP_WEEK = 8 * WEEKS_PER_YEAR
  *  nor the spec looks at the price, so the flip cannot make either of them wrong. */
 const ENDS_ANSWER_ID = 'space'
 
+/** ⭐ HOW LONG THE WEDDING RECIPE WAITS, AND THE NUMBER IS `ECONOMY.wedding`'s OWN ARITHMETIC RATHER
+ *  THAN A ROUND ONE (v83 T11). Three terms, in the order the gate asks them (`weddingEligible`):
+ *  nobody may marry before **23** – the ruled `ageGate`, week ~494 of a career that opens at 13.5 –
+ *  the episode she marries into must be `minEpisodeWeeks` (52) old, and the hazard then waits
+ *  `1 / perWeek` = ~167 weeks on average. That is ~660, which is the wave's own census read from the
+ *  other end (median wedding age **26.3**, docs/specs/the-wedding-2026-09.md §3).
+ *
+ *  ⚠ 17 SEASONS RATHER THAN THE 13 THE MEDIAN WOULD BUY, and the extra four are the measurement's:
+ *  a throw-away census over 12 careers on this recipe's settings put the seven engagements it found
+ *  at weeks 534 / 566 / 588 / 611 / 660 / 672 / 700 – so a cap at the median would have thrown away
+ *  the back half of a distribution whose whole point is that it is wide. A career walked this far is
+ *  a SLOWER SEED and not a longer walk (`ENDS_CAP_WEEK`'s own note): the search costs one career per
+ *  try and every try costs the same. */
+const WEDDING_CAP_WEEK = 17 * WEEKS_PER_YEAR
+
+/** ⭐ THE ANSWER THE LOOK-AHEAD PRESSES, AND IT IS THE ONE e2e/wedding.spec.ts PRESSES TOO –
+ *  `ENDS_ANSWER_ID`'s own rule, one constant up: a look-ahead has to press what the SPEC presses,
+ *  because its whole claim is that the week the browser reaches is the week that was measured.
+ *
+ *  ⚠ IT IS **NOT** `DRAIN_ANSWER['engaged']` (`distance`), for that constant's stated reason: the
+ *  drain's answer is chosen for being statable by a harness, which is a property a bench needs and a
+ *  player does not. `'bless'` is the first of the three on the card. ⚠ AND THE CHOICE IS NOT FREE
+ *  HERE THE WAY IT IS THERE – `answerLifeBeat` moves `bond`, and bond is read by the hazards that
+ *  run in the eight weeks this recipe then walks, so a spec that pressed a DIFFERENT answer would be
+ *  walking a different chain of weeks from the one that was accepted. One id, both files. */
+const ENGAGED_ANSWER_ID = 'bless'
+
 /** ⭐⭐⭐ HAS THIS EPISODE ALREADY PRODUCED A BEAT, AND OF WHICH KINDS – RULING A's OWN DISCRIMINATOR,
  *  asked from outside the engine.
  *
@@ -1206,6 +1233,120 @@ const RECIPES: Recipe[] = [
       return world.ending !== null
         ? `career ended (${world.ending.type}) before anything of hers did`
         : `nothing ended behind his back in ${ENDS_CAP_WEEK} weeks`
+    },
+  },
+  {
+    name: 'engaged',
+    // ⭐⭐⭐ v83 T11 – THE WEEK BEFORE SHE SAYS IT, AND THE NINE ORDINARY WEEKS BEHIND IT. See
+    // FIXTURE_NAMES in tools/e2e-fixtures-read.ts for why the wedding needed a fixture of its own.
+    purpose:
+      'One press from the engagement, with the eight weeks to the wedding clear behind it – the only career in the corpus that can be married in a browser.',
+    background: 'middle',
+    coachTier: 'middle',
+    policy: PLAYER,
+    // ⚠ ANSWERED YEARS BEFORE ANY OF THIS, by `answerOpenQuestions` on the way past nineteen, and
+    // `'continue'` is the one of the three that leaves a career still being played – `breakup`'s own
+    // reason, for a walk that goes twice as far.
+    fork: 'continue',
+    drive: (world, rng, recipe) => {
+      while (world.week < WEDDING_CAP_WEEK && world.ending === null) {
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
+        // The bond-neutral drain answers every OTHER beat on the way past, `breakup`'s own note. It
+        // would answer an `'engaged'` row too, which is exactly why the gate below asks about the
+        // week AHEAD: the row this fixture is for must never be raised on this walk at all.
+        answerOpenQuestions(world, recipe.fork)
+
+        // ⭐ THE CHEAP GATE FIRST, AND IT IS `weddingEligible`'s OWN THREE CLAUSES ASKED OF THE WEEK
+        // THE BROWSER WILL PRESS INTO (`world.week + 1`). Most weeks of most careers fail it – a
+        // girl under 23 fails the first – so the clone below is only paid for on the weeks that
+        // could possibly be the one. ⚠ `kidAgeYears` IS `floor(kidAgeExact)` and the gate reads the
+        // fractional age against a whole number, so the two tests are the same test (world/age.ts).
+        const live = activeEpisode(world)
+        if (live === null) continue
+        if (kidAgeYears(world.week + 1, world.profile.birthMonth, world.profile.birthDay) < ECONOMY.wedding.ageGate) continue
+        if (world.week + 1 - live.sinceWeek < ECONOMY.wedding.minEpisodeWeeks) continue
+        if (hasBeatFor(world, live.id, ['engaged'])) continue
+
+        // ⭐⭐⭐ THE LOOK-AHEAD, EXACT AND NOT AN ESTIMATE – `sinking`'s, `unheard`'s, `soft`'s and
+        // `breakup`'s own precedent. The clone carries `rngMain`, so resuming MAIN from it walks the
+        // sequence the browser will walk and `tickWeek` is what the worker runs behind the week
+        // button. Nothing about the fixture's own world is touched.
+        //
+        // ⚠ AND THE ENTRY POLICY IS DELIBERATELY NOT REPLAYED INTO IT, which is the one thing about
+        // this recipe a reader could get wrong. `stepCareerWeek` enters tournaments and then ticks;
+        // the browser's week button only ticks. So the chain below is the BROWSER's chain, not this
+        // walk's, and every clause under it is asking about weeks this career will only ever live
+        // through if a player presses the button nine times. That the ENGAGEMENT itself is the same
+        // on both chains is a property of the hazard rather than luck: `rollWedding` draws on
+        // `seed:life:wedding:<week>` and its gate reads age, the episode's age and the receipt –
+        // not one of which an entry can move.
+        const probe = structuredClone(world)
+        tickWeek(probe, resumeMain(probe.rngMain))
+        const raised = pendingLifeBeat(probe)
+        if (raised === null || raised.kind !== 'engaged' || raised.detail !== live.id) continue
+
+        // ⚠⚠ NOTHING MAY BE STANDING IN FRONT OF THE WEEK BUTTON ON THE WEEK THIS BOOTS AT –
+        // `breakup`'s clause set verbatim, for its stated reason: the spec's first act is to press
+        // it, so a career booting into somebody else's blocking card is a career whose press never
+        // happens. ⚠ `liveSoftBeat` IS IN THE SET because a tier-1 invitation is NOT pending and is
+        // ON SCREEN, under her photograph – the clause `breakup` was missing and which cost a red
+        // e2e on the v82 regeneration.
+        if (pendingKnock(world)) return 'boots holding a knock, and the spec presses the week button first'
+        if (pendingBirthday(world) !== null) return 'boots holding a birthday, and the spec presses the week button first'
+        if (world.pendingTournament) return 'boots into a tournament reveal, which holds the week back'
+        if (pendingLifeBeat(world) !== null) return 'boots holding a blocking beat, whose card covers the week button'
+        if (liveSoftBeat(world) !== null) return 'boots with a soft beat already on the hub, which the spec would be pressing past'
+        const refusal = advanceRefusal(world)
+        if (refusal !== null) return `the week is stopped by '${refusal}' before she can say anything`
+        // ⚠ THE TOUR BRIEFING IS THE ONE DOORWAY THIS RECIPE ACCEPTS, and `belated`'s is the
+        // precedent: it is a blocking card, but dismissing it writes localStorage and no world
+        // (`dismissTourBriefing`, e2e/journey.ts), so the week the browser reaches is still exactly
+        // the week measured here and no replay is owed. ⚠ MEASURED RATHER THAN ASSUMED: five of the
+        // seven engagements the census found booted with the briefing owed – she is deep inside the
+        // top 50 by 23 – so rejecting it would be rejecting the state itself.
+
+        // ⭐⭐⭐ AND NOW THE NINE PRESSES, WALKED. This is what makes it ONE fixture rather than two:
+        // the engagement is a card the player answers and the wedding is a week the player reaches,
+        // and nothing but a chain of ordinary weeks may stand between them.
+        answerLifeBeat(probe, ENGAGED_ANSWER_ID)
+        const afterAnswer = advanceRefusal(probe)
+        if (afterAnswer !== null) return `answering her leaves a '${afterAnswer}' standing in the week's way`
+        // ⚠ ONE MORE THAN `weeksAfterEngagement`, AND THE EXTRA WEEK IS THE SPEC'S IMPORT ARM. The
+        // wedding lands on the eighth press; the ninth takes the career PAST it, so that the file
+        // the spec exported at the wedding week can only be what put that week back on screen. A
+        // week the fixture never reaches is a week the recipe must still prove is ordinary.
+        for (let i = 1; i <= ECONOMY.wedding.weeksAfterEngagement + 1; i++) {
+          tickWeek(probe, resumeMain(probe.rngMain))
+          if (probe.ending !== null) return `the career ends ${i} week(s) after the answer (${probe.ending.type})`
+          if (probe.pendingTournament) return `a tournament reveal opens ${i} week(s) after the answer`
+          if (pendingKnock(probe)) return `a knock lands ${i} week(s) after the answer`
+          if (pendingBirthday(probe) !== null) return `a birthday lands ${i} week(s) after the answer`
+          if (pendingLifeBeat(probe) !== null) return `a blocking beat lands ${i} week(s) after the answer`
+          if (liveSoftBeat(probe) !== null) return `a soft beat lands on the hub ${i} week(s) after the answer`
+        }
+
+        // ⭐⭐⭐ AND IT REALLY HAPPENED, ON THE WEEK THE ARITHMETIC NAMES. `landWedding`'s gate is
+        // `>=`, so a career that had been blocked for a season would still latch on the week it was
+        // unblocked – which is a different fixture from this one. The equality is what says the
+        // spec's eighth press is the wedding and not merely a week after it.
+        // ⚠ THE EPISODE MUST ALSO STILL BE HERS: §8's ordinary hazard runs between the answer and
+        // the day, and an episode that ends inside those weeks is a wedding that never happens.
+        const married = loveEpisodesOf(probe).find((e) => e.id === live.id)
+        if (married === undefined) return 'the episode she was to marry into is not on the probe world at all'
+        if (married.latchedWeek === null) return 'the wedding never landed – her attachment ended inside the eight weeks'
+        if (married.latchedWeek !== probe.week - 1) {
+          return `the wedding landed on week ${married.latchedWeek}, not on the ${ECONOMY.wedding.weeksAfterEngagement}th press (${probe.week - 1})`
+        }
+        // ⚠ AND SHE HAS A NAME, written ONCE at the engagement by `partnerNameFor` (T1's law). It is
+        // asserted here rather than in the spec because NO SURFACE SPEAKS IT at W1–W2 – whether one
+        // ever does is the owner's wording question (T7) – so the browser cannot see it and this is
+        // the layer that can.
+        if (married.partnerName === null) return 'the engagement wrote no partner name onto the episode'
+        return null
+      }
+      return world.ending !== null
+        ? `career ended (${world.ending.type}) before she ever said it`
+        : `no engagement in ${WEDDING_CAP_WEEK} weeks`
     },
   },
 ]
