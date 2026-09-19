@@ -123,7 +123,7 @@ docs/review/     2026-08 full review + P1–P9 proposals
 - `world.ts` imports the values back and **re-exports them under their historical names**: **hundreds of
   files** import from `engine/world` and that public API must not change. ⚠ Count it, do not quote it –
   three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
-  right" under different scopes, which is how a stale number survives, as **280 (19.08 – 698 on 19.09, so run it)** did here:
+  right" under different scopes, which is how a stale number survives, as **280 (19.08; 698 on 19.09)** did here:
   ```bash
   git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
   ```
