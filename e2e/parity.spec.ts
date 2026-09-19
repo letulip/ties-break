@@ -65,16 +65,16 @@
 // entire point.
 //
 // -------------------------------------------------------------------------------------------------
-// ⭐⭐⭐ ROUND 36 PHASES 6 AND 7 AND THE SECOND PASS – THE CLAIM CARRIES THREE EXCEPTIONS, IN WORDS
+// ⭐⭐⭐ ROUND 36 PHASES 6 AND 7, THE SECOND PASS, AND THE ALBUM – THE CLAIM CARRIES FOUR EXCEPTIONS
 // -------------------------------------------------------------------------------------------------
-// What this file asserts, from the second pass on, is:
+// What this file asserts, from the album wave on, is:
 //
 //     THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, **OUTSIDE THE DESKTOP RAIL'S DASHBOARD, THE
-//     WEEK PAGER'S ARROWS, AND HER IDENTITY BLOCK**.
+//     WEEK PAGER'S ARROWS, HER IDENTITY BLOCK, AND THE ALBUM'S CHAPTER DOOR AND PAN PILL**.
 //
-// ⚠⚠ A CLAIM WITH THREE EXCEPTIONS HAS TO STATE ALL THREE, which is why the sentence above names
-// them and why none is only a decisions row. All three are the owner's own, each after playing a
-// shipped build:
+// ⚠⚠ A CLAIM WITH FOUR EXCEPTIONS HAS TO STATE ALL FOUR, which is why the sentence above names
+// them and why none is only a decisions row. All four rest on the owner's own words, each written
+// down before the exemption was:
 //
 //   1. THE RAIL'S DASHBOARD (phase 6): «можно вынести эту часть поля навигации из этой проверки? у
 //      меня вообще планы небольшие на этот дашборд есть дальше и это исключительно десктопная фича.»
@@ -85,6 +85,9 @@
 //      (так же, как и все остальные плашки) на десктоп в боковом меню живут на всех страницах
 //      неизменно.» – the ruling `D75` asked for, whose price was named as exactly this exemption
 //      before he took it.
+//   4. THE ALBUM'S CHAPTER DOOR AND ITS PAN PILL (the album wave, 19.09.2026) – below, at length,
+//      because this one is READ OFF A DOCUMENT rather than quoted out of a chat, and that difference
+//      is the whole of what a reader needs to know about it.
 //
 // ⚠⚠ AND THE SECOND ONE COSTS SOMETHING THIS FILE ARGUED AGAINST, SAID PLAINLY RATHER THAN BURIED.
 // Which weeks overflow DEPENDS ON THE WIDTH – a two-card week overflows by 273px at 375 and fits
@@ -150,6 +153,49 @@
 //      `the honest half…` measures `scrollWidth - clientWidth` per week per width in the real browser
 //      and asserts the biconditional – overflow ⟺ arrows – at all four widths.
 //   4. …and the claim is restated in words, above.
+//
+// EXEMPTION 4 – THE ALBUM'S CHAPTER DOOR AND ITS PAN PILL, built to that same four-part shape:
+//   1. ONLY THOSE TWO ARE EXEMPT. `Back to Home`, the two sheet arrows and every dot of the pager
+//      stay in the check at all four widths: `only the CHAPTER DOOR and the PAN PILL are exempt`
+//      holds exactly that, by name, on the subtracted list the walk really compares.
+//   2. THE BOUNDARY IS TWO CONTAINERS, NEVER A LIST OF NAMES. `ALBUM_CHAPTERS` and `ALBUM_PAN_HINT`
+//      below are places – the chapter-navigation slot in both of the shapes the app draws it in, and
+//      the pill over the page's bottom-right corner – so a later phase cannot dodge the check by
+//      naming a control it wants ignored, and `the boundary is the CHAPTER SLOT and the PAN SLOT`
+//      fixes what may live in each.
+//   3. ⭐⭐ THE HONEST HALF, AND IT IS A DIFFERENT SENTENCE FOR EACH CONTROL, because the two are
+//      exempt for different reasons:
+//        · the door's FUNCTION has to survive the subtraction – `the chapters are not lost, they
+//          are OPEN` opens the phone's sheet, reads its chapters, and asserts the wide rail carries
+//          the same ones, name for name, each with a box. A chapter a wide width cannot reach is a
+//          fact the phone has and the desktop has not, and reddens.
+//        · the pill's absence is conditional on there being nothing to pan – `a page that does NOT
+//          fit whole keeps its pill` measures the sheet against the window in the real browser at
+//          all four widths and asserts the biconditional. «Hidden when idle» is the ruling; «hidden
+//          whenever» is what that arm reddens on. It is exemption 2's own honest half, re-aimed.
+//   4. …and the claim is restated in words, above – and in words, HERE, because the provenance of
+//      this one is not the provenance of the other three:
+//
+//      ⚠⚠⚠ THIS EXEMPTION IS AN ARCHITECT'S READING OF AN OWNER DOCUMENT, NOT A RULING HE TYPED IN
+//      ANSWER TO IT, AND IT IS FLAGGED TO HIM FOR REVERSAL. The other three are sentences he wrote
+//      about this check after playing a build. This one is read off the design archive he sent on
+//      19.09.2026 (`album_responsive`, its `README.md`, his own hand), under «Навигация по главам»:
+//
+//          «1024: все 6 глав сеткой под листом.
+//           768: та же лента, скроллится горизонтально.
+//           390: кнопка «Chapters» — рейл занял бы полэкрана.»
+//
+//      That is him specifying, for THIS screen, that the chapter navigation is a BUTTON at 390 and a
+//      RAIL at 768 and up – which is the door being a phone-only control by his own design. The
+//      second control is covered by the week pager's ruling already quoted above, «Спрятать – да,
+//      показываем только если есть что листать»: from 768 up the sheet fits the window whole, so
+//      there is nothing to pan to and the pill has nothing to say.
+//
+//      ⚠ HE HAS NOT BEEN ASKED, AND THE READING MAY BE WRONG. So it is built to be undone in one
+//      move: DELETE the `describe` block at the bottom of this file and the two constants it names
+//      from `EXEMPT_REGIONS` / `ariaFingerprint`, and `AlbumScreen.vue`'s station goes red again with
+//      exactly the two tokens it was red with on 19.09 – `button "Chapters"` and `button "Next
+//      half"`. Nothing else in this file depends on it. If he disagrees, the red is the answer.
 //
 // ⚠ BOTH EXEMPTIONS ARE LOAD-BEARING TODAY AND NEITHER IS A GUARD FITTED TO NOTHING – which is the
 // objection phase 4 refused to ship past. The three rail card titles are `heading` nodes, so without
@@ -306,8 +352,41 @@ const HOME_IDENTITY =
   '#app .diary-head > .diary-avatar-btn, #app .diary-hero > .diary-kid-hint, #app .diary-id > .diary-rank'
 const IDENTITY_BLOCK = `${RAIL_IDENTITY}, ${HOME_IDENTITY}`
 
-/** All three exempt regions, as one selector list – the form `Element.closest` takes. */
-const EXEMPT_REGIONS = `${RAIL_DASHBOARD}, ${WEEK_PAGER}, ${IDENTITY_BLOCK}`
+/**
+ * ⭐⭐⭐ THE ALBUM WAVE, 19.09.2026 – THE FOURTH EXEMPT REGION, AND IT IS TWO PLACES FOR THE SAME
+ * REASON HER IDENTITY BLOCK IS.
+ *
+ * ⚠⚠ READ THE FOURTH BLOCK OF THIS FILE'S HEADER BEFORE THIS LINE. Unlike the three above, this
+ * exemption is an ARCHITECT'S READING of the owner's design archive and not a sentence he wrote in
+ * answer to this check; the header says so, says what deleting it restores, and is where the quote
+ * lives. These two constants are only the place.
+ *
+ * THE CHAPTER SLOT IS WHEREVER THE APP DRAWS THE CHAPTER NAVIGATION, and the README gives that one
+ * list three shapes: a grid at 1024, the same strip panned sideways at 768, and a BUTTON at 390
+ * because «рейл занял бы полэкрана». So the door at the foot of the phone's screen and the rail
+ * under the wide page are the SAME control wearing the width's own shape – exempting only the door
+ * would leave the walk failing from the other side, naming every plate of the rail as a control that
+ * appeared on a desktop. That is the identity block's argument exactly (`IDENTITY_BLOCK` above), and
+ * `the chapters are not lost, they are OPEN` asserts the two places carry the same chapters.
+ *
+ * ⚠ STILL STRUCTURAL, AND STILL AS NARROW AS THE OTHER THREE. One button in the foot row, one `nav`
+ * under the album, one pill on the stage – places, never accessible names – so a later phase cannot
+ * widen this by calling a control something. It would have to move an element INTO the foot row's
+ * door, into the chapter rail or into the pan pill, and `the boundary is the CHAPTER SLOT and the
+ * PAN SLOT` fails the moment anything that is not a chapter plate lands in there.
+ *
+ * ⚠ `#app` AND THE CHILD COMBINATORS ARE LOAD-BEARING, exactly as they are for the week pager: an
+ * `.album-rail` or an `.album-half` drawn anywhere else in the app is NOT exempt and is named by the
+ * ordinary walk instead. The arms below assert the document holds exactly one of each.
+ */
+const ALBUM_CHAPTER_DOOR = '#app .album-foot-row > .album-chapters-btn'
+const ALBUM_CHAPTER_RAIL = '#app .album > nav.album-rail'
+const ALBUM_CHAPTERS = `${ALBUM_CHAPTER_DOOR}, ${ALBUM_CHAPTER_RAIL}`
+const ALBUM_PAN_HINT = '#app .album-stage > .album-half'
+const ALBUM_EXEMPT = `${ALBUM_CHAPTERS}, ${ALBUM_PAN_HINT}`
+
+/** All four exempt regions, as one selector list – the form `Element.closest` takes. */
+const EXEMPT_REGIONS = `${RAIL_DASHBOARD}, ${WEEK_PAGER}, ${IDENTITY_BLOCK}, ${ALBUM_EXEMPT}`
 
 /** `a` minus `b` as MULTISETS, raw – the same counting `missingFrom` does, without its rendering.
  *  Removing exactly as many copies as `b` holds is what makes the subtraction exact rather than
@@ -343,19 +422,22 @@ async function ariaTokensOf(target: Locator): Promise<string[]> {
   return tokens
 }
 
-/** The page, MINUS the two exempt regions – part 2 of each exemption, applied.
+/** The page, MINUS the four exempt regions – part 2 of each exemption, applied.
  *
  *  The rail's dashboard is `display: none` at 375 / 768 / 900, so it is absent from the accessibility
  *  tree and subtracts nothing there; at 1280 it takes out exactly what the three cards contribute.
  *  The pager's arrows run the other way round – present at 375, where a two-card week overflows by
- *  273px, and gone from 768 up where it fits whole – so between them the two subtractions leave the
- *  screen's own set, which is what the walk compares. */
+ *  273px, and gone from 768 up where it fits whole. The album's slot is the only one that subtracts
+ *  something at EVERY width and a different thing at each: the chapter door at 375, the rail's plates
+ *  from 768 up. Between them the subtractions leave the screen's own set, which is what the walk
+ *  compares. */
 async function ariaFingerprint(page: Page): Promise<string[]> {
   const whole = await ariaTokensOf(page.locator('body'))
   const exempt = [
     ...(await railDashboardTokens(page)),
     ...(await weekPagerTokens(page)),
     ...(await identityTokens(page)),
+    ...(await albumTokens(page)),
   ]
   return exempt.length === 0 ? whole : subtractOnce(whole, exempt)
 }
@@ -405,6 +487,25 @@ async function weekPagerTokens(page: Page): Promise<string[]> {
 async function identityTokens(page: Page): Promise<string[]> {
   const tokens: string[] = []
   for (const el of await page.locator(IDENTITY_BLOCK).all()) tokens.push(...(await ariaTokensOf(el)))
+  return tokens
+}
+
+/**
+ * The album's chapter slot, in BOTH of the shapes the app draws it, and its pan pill.
+ *
+ * ⚠ THE THREE POSITIONS ARE NEVER ALL IN THE TREE AT ONCE, which is what makes this one subtraction
+ * rather than three competing ones: below 768 the door and the pill are on the screen and the rail is
+ * `display: none`; from 768 up the rail is on the screen and the other two are gone. So this takes
+ * `button "Chapters"` and `button "Next half"` at 375, and the rail's chapter plates at 768, 900 and
+ * 1280 – which is the difference the exemption exists to allow, in both directions.
+ *
+ * ⚠ EACH MATCH IS SNAPSHOTTED SEPARATELY, like her identity block and the week pagers: this is a
+ * selector LIST over three positions rather than one container, so a single locator would be
+ * strict-mode ambiguous. It costs nothing on a screen that is not the album, where it matches none.
+ */
+async function albumTokens(page: Page): Promise<string[]> {
+  const tokens: string[] = []
+  for (const el of await page.locator(ALBUM_EXEMPT).all()) tokens.push(...(await ariaTokensOf(el)))
   return tokens
 }
 
@@ -1650,6 +1751,477 @@ test.describe("the week pager's arrows are exempt – and the exemption is bound
     ).toEqual([])
   })
 })
+
+// =================================================================================================
+// ⭐⭐⭐ THE ALBUM WAVE, 19.09.2026 – THE CHAPTER DOOR AND THE PAN PILL, AND THEIR OWN FOUR GUARDS
+// =================================================================================================
+//
+// ⚠⚠ THE PROVENANCE IS IN THIS FILE'S HEADER AND IS DELIBERATELY NOT REPEATED HERE, because it is
+// the part a reader must not skim: the quote is the owner's own design README of 19.09.2026, the
+// READING of it is an architect's, he has not been asked, and deleting this `describe` block plus the
+// two constants restores the red. What follows is only the machinery.
+//
+// Phase 6's shape, applied to a screen that hides a control at BOTH ends of the ladder: the door is
+// on the phone and not on the desktop, the rail is on the desktop and not on the phone, and they are
+// the same list of chapters wearing the width's own shape. So this exemption has to be honest in two
+// directions where the other three are honest in one, and `the chapters are not lost, they are OPEN`
+// is the arm that carries it.
+//
+// ⚠ THEY WALK THE STATION MAP'S OWN ROUTE rather than a second copy of it, for the reason
+// `e2e/stations.ts` gives for existing at all: two walks to one screen drift, and the day they
+// disagreed nobody would know which one was the app. `pro` earns six sheets and five chapters
+// (measured 19.09), which is what makes every floor below a real one rather than a hopeful `>= 0`.
+
+/** The album's route and its arrival anchor, taken from the one map – never re-written here. */
+const ALBUM_STATION = STATIONS['AlbumScreen.vue']
+
+/** Everything in the app that may be focused or carry a role – the wider of the two nets the rail
+ *  dashboard's own guard uses, and the one that catches a focus stop with no role at all. */
+const FOCUSABLE_QUERY =
+  'a[href],area[href],button,input,select,textarea,summary,iframe,object,embed,' +
+  '[tabindex],[contenteditable],[onclick],[role]'
+
+/** The album at one width, settled – the state every arm below measures from. */
+async function albumAt(page: Page, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: VIEWPORT_HEIGHT })
+  await park(page)
+  await ALBUM_STATION.visit(page)
+  await expect(
+    ALBUM_STATION.arrived(page),
+    `the walk did not arrive on the album at ${width}px, so nothing measured below is the album`,
+  ).toBeVisible()
+  await settleScreen(page)
+}
+
+test.describe("the album's chapter door and pan pill are exempt – and the exemption is bounded", () => {
+  test('the boundary is the CHAPTER SLOT and the PAN SLOT, and each holds only what it is', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+    await albumAt(page, BASE_WIDTH)
+
+    // ⭐ EXACTLY ONE OF EACH IN THE DOCUMENT, AND EACH IS THE ONE INSIDE ITS DECLARED PLACE. A second
+    // `.album-rail` or a second `.album-half` – on this screen or anywhere else in the app – would be
+    // a second hole, so the counts are asserted rather than the presence. This is `#app` and the
+    // child combinators earning their place in the two constants.
+    for (const [loose, placed, what] of [
+      ['.album-chapters-btn', ALBUM_CHAPTER_DOOR, 'the chapter door'],
+      ['.album-rail', ALBUM_CHAPTER_RAIL, 'the chapter rail'],
+      ['.album-half', ALBUM_PAN_HINT, 'the pan pill'],
+    ] as const) {
+      expect(await page.locator(loose).count(), `one ${what} in the document`).toBe(1)
+      expect(await page.locator(placed).count(), `and ${what} is the one in its declared place`).toBe(1)
+    }
+
+    // ⚠ WHICH OF THE THREE HAS A BOX IS THE WHOLE OF THE EXEMPTION, so it is measured at both ends.
+    // The rail is in the tree at 375 and `display: none` – the house idiom, stated in src/style.css
+    // beside `.rail-dash` – so «phone-only» and «desktop-only» are both measured as «has a box».
+    await expect(page.locator(ALBUM_CHAPTER_DOOR), 'the chapter door is on the phone').toBeVisible()
+    await expect(page.locator(ALBUM_PAN_HINT), 'the pan pill is on the phone').toBeVisible()
+    await expect(
+      page.locator(ALBUM_CHAPTER_RAIL),
+      'the chapter rail has a box at 375, where the README says a rail «занял бы полэкрана»',
+    ).toBeHidden()
+
+    // ⭐⭐ GUARD ONE, PHONE HALF. The door is a leaf: one button, no element inside it, and it hangs
+    // off the foot row. A later phase that parked a control «next to Chapters» inside this boundary
+    // would be moving it OUT of the parity check, which is what a boundary-by-place is for.
+    const door = await page.evaluate((selector) => {
+      const el = document.querySelector(selector)
+      if (!el) return null
+      return {
+        tag: el.tagName.toLowerCase(),
+        children: Array.from(el.children).map((c) => c.tagName.toLowerCase()),
+        parent: el.parentElement?.className ?? '<detached>',
+      }
+    }, ALBUM_CHAPTER_DOOR)
+    expect(door, 'the chapter door was not on the page, so this measured nothing').not.toBeNull()
+    expect(door!.tag, 'the chapter door is not a button any more').toBe('button')
+    expect(
+      door!.children,
+      'the chapter door grew something inside it, and anything in there has left the parity check',
+    ).toEqual([])
+    expect(door!.parent, 'the chapter door is not a child of the foot row').toContain('album-foot-row')
+
+    // ⭐⭐ GUARD ONE, PILL HALF. The pill may hold the half label, the two-position track and ONE
+    // control, and nothing else: not a second button, not a wrapper, not a stray word. ⚠ TEXT AS WELL
+    // AS ELEMENTS, for the week pager's reason – a word drawn in an exempt region is a word the
+    // parity walk stops comparing, and a bare text node has no tag to enumerate.
+    const pill = await page.evaluate(
+      ({ selector, query }) => {
+        const root = document.querySelector(selector)
+        if (!root) return null
+        const text = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+        return {
+          controls: Array.from(root.querySelectorAll(query)).map(
+            (el) => el.getAttribute('aria-label') ?? text(el),
+          ),
+          // Every leaf that carries a word must be one of the two declared ones. ⚠ THE WORDS
+          // THEMSELVES ARE NOT PINNED HERE – they are the owner's copy (invariant 4) and this is a
+          // structure check – so what is asserted is that there are no OTHERS, and that neither of
+          // the two is empty, which is what would make «no others» vacuous.
+          declared: ['.album-half-label', '.album-half-next'].map((s) => {
+            const el = root.querySelector(s)
+            return el === null ? '' : text(el)
+          }),
+          strays: Array.from(root.querySelectorAll('*'))
+            .filter((el) => el.children.length === 0 && text(el) !== '')
+            .filter((el) => !el.closest('.album-half-label, .album-half-next'))
+            .map((el) => `${el.tagName.toLowerCase()}: ${text(el)}`),
+          parent: root.parentElement?.className ?? '<detached>',
+        }
+      },
+      { selector: ALBUM_PAN_HINT, query: FOCUSABLE_QUERY },
+    )
+    expect(pill, 'the pan pill was not on the page, so this measured nothing').not.toBeNull()
+    expect(
+      pill!.controls,
+      'the pan pill holds a control that is not its one chevron. This region is one of the two ' +
+        'places on the album parity does not check, so anything parked in here is a control that ' +
+        'has left the check.',
+    ).toEqual(['Next half'])
+    expect(
+      pill!.strays,
+      'a word in the pan pill is neither the half label nor the chevron, so the parity walk has ' +
+        'quietly stopped comparing it',
+    ).toEqual([])
+    for (const word of pill!.declared) {
+      expect(word.length, 'a declared part of the pan pill draws nothing, so this guards an empty set').toBeGreaterThan(0)
+    }
+    expect(pill!.parent, 'the pan pill is not a child of the album stage').toContain('album-stage')
+
+    // ⭐⭐ GUARD ONE, RAIL HALF – and it is the one that had to be written differently. The other
+    // three exempt regions in this file hold NO control by their own rule; this one is MADE of
+    // controls, because a chapter rail is a list of chapters you press. So «it cannot grow» cannot
+    // mean «no controls here»; it means EVERY control in here is a chapter plate, every row holds one
+    // of them, and no word in the region lives outside a plate.
+    await albumAt(page, 1280)
+    await expect(page.locator(ALBUM_CHAPTER_RAIL), 'the chapter rail is on screen at 1280').toBeVisible()
+    await expect(page.locator(ALBUM_CHAPTER_DOOR), 'the door kept a second way in at 1280').toBeHidden()
+    await expect(page.locator(ALBUM_PAN_HINT), 'the pill promises a pan the window does not have').toBeHidden()
+
+    const rail = await page.evaluate(
+      ({ selector, query }) => {
+        const root = document.querySelector(selector)
+        if (!root) return null
+        const text = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+        const describe = (el: Element): string =>
+          `${el.tagName.toLowerCase()}${el.className ? `.${String(el.className).trim().split(/\s+/).join('.')}` : ''}`
+        return {
+          children: Array.from(root.children).map(describe),
+          strayControls: Array.from(root.querySelectorAll(query))
+            .filter((el) => !el.classList.contains('album-rail-plate'))
+            .map(describe),
+          plates: root.querySelectorAll('.album-rail-plate').length,
+          rows: root.querySelectorAll('.album-rail-list > li').length,
+          strays: Array.from(root.querySelectorAll('*'))
+            .filter((el) => el.children.length === 0 && text(el) !== '')
+            .filter((el) => !el.closest('.album-rail-plate'))
+            .map((el) => `${el.tagName.toLowerCase()}: ${text(el)}`),
+          parent: root.parentElement?.className ?? '<detached>',
+        }
+      },
+      { selector: ALBUM_CHAPTER_RAIL, query: FOCUSABLE_QUERY },
+    )
+    expect(rail, 'the chapter rail was not on the page, so this measured nothing').not.toBeNull()
+    expect(rail!.children, 'the chapter rail holds something beside its own list').toEqual([
+      'ol.album-rail-list',
+    ])
+    expect(
+      rail!.strayControls,
+      'a control that is not a chapter plate is inside the chapter rail. The rail is exempt ' +
+        'because it IS the «Chapters» button in another shape - anything else in there is a ' +
+        'control that has left the parity check under cover of that argument.',
+    ).toEqual([])
+    // Anti-vacuity, in the same shape as every other floor in this file: an empty rail satisfies
+    // all three assertions above for ever.
+    expect(rail!.plates, 'the chapter rail draws no plate, so this guards an empty set').toBeGreaterThan(1)
+    expect(rail!.rows, 'a row of the chapter rail is not a plate, or a plate is not in a row').toBe(
+      rail!.plates,
+    )
+    expect(
+      rail!.strays,
+      'a word in the chapter rail lives outside a chapter plate, so the parity walk has quietly ' +
+        'stopped comparing it',
+    ).toEqual([])
+    expect(rail!.parent, 'the chapter rail is not a child of the album').toContain('album')
+  })
+
+  test('only the CHAPTER DOOR and the PAN PILL are exempt – Back, the arrows and the dots stay in', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+    await albumAt(page, BASE_WIDTH)
+
+    // ⭐ PART 1 – THE EXEMPTION TAKES THOSE TWO AND NOTHING ELSE ON THE PHONE. A set equality over
+    // the distinct tokens, so a third kind of token appearing in either region fails BY NAME rather
+    // than being absorbed.
+    const exempt = await albumTokens(page)
+    expect(exempt.length, 'the album exempts nothing at 375, so this guards an empty set').toBeGreaterThan(0)
+    expect(
+      [...new Set(exempt)].sort(),
+      'the exemption is taking something that is not the chapter door or the pan pill out of the check',
+    ).toEqual(['button "Chapters"', 'button "Next half"'])
+
+    // ⭐ …AND EVERY OTHER CONTROL ON THE SCREEN IS STILL IN THE CHECK, by name, on the subtracted
+    // list the walk really compares. This is the album's version of «the rail's NAVIGATION is not
+    // exempt»: `Back`, the two sheet arrows and every dot of the pager still fail by name if one goes.
+    const dots = await page.locator('.album-dot').count()
+    expect(dots, 'the album drew no dot pager, so «the dots stay in» is a claim about nothing').toBeGreaterThan(1)
+    const mustStay = [
+      'button "Back to Home"',
+      'button "Previous sheet"',
+      'button "Next sheet"',
+      ...Array.from({ length: dots }, (_, i) => `button "Sheet ${i + 1}"`),
+    ]
+    const kept = await ariaFingerprint(page)
+    for (const token of mustStay) {
+      expect(kept, `${token} is an album control and the exemption swallowed it at 375`).toContain(token)
+    }
+
+    // …and the same at 1280, where the exempt set is a different set of tokens entirely. The two the
+    // phone exempts are GONE from the screen here rather than quietly still exempt, and the ones that
+    // must stay are still being compared.
+    await albumAt(page, 1280)
+    const wide = await albumTokens(page)
+    expect(wide.length, 'the album exempts nothing at 1280, so the rail is not in this region').toBeGreaterThan(1)
+    expect(
+      wide.length,
+      'the exempt set at 1280 is not the rail’s plates, so the region holds something else',
+    ).toBe(await page.locator(`${ALBUM_CHAPTER_RAIL} .album-rail-plate`).count())
+    for (const token of ['button "Chapters"', 'button "Next half"', ...mustStay]) {
+      expect(wide, `${token} is exempt at 1280, and it is not one of the rail’s chapter plates`).not.toContain(
+        token,
+      )
+    }
+    const keptWide = await ariaFingerprint(page)
+    for (const token of mustStay) {
+      expect(keptWide, `${token} is an album control and the exemption swallowed it at 1280`).toContain(
+        token,
+      )
+    }
+  })
+
+  test('⭐⭐ the HONEST HALF – the chapters are not lost, they are OPEN: every one, at every width', async ({
+    page,
+    careerAt,
+  }) => {
+    // ⭐⭐⭐ THIS IS THE ARM THAT STOPS THE DOOR'S EXEMPTION MEANING «THE CHAPTERS MAY BE MISSING».
+    // The README's argument is that the door and the rail are the SAME list – «кнопка "Chapters"»
+    // at 390 because a rail «занял бы полэкрана», and the rail itself from 768 up. That argument
+    // only holds while both really carry the same chapters, so the phone's list is opened, read, and
+    // held against the wide one at all three wider widths. A chapter a wide width cannot reach is a
+    // fact the phone has and the desktop has not, and it reddens here.
+    await boot(page, careerAt)
+    await albumAt(page, BASE_WIDTH)
+
+    await page.locator(ALBUM_CHAPTER_DOOR).click()
+    await expect(
+      page.getByRole('dialog', { name: 'Chapters' }),
+      'the chapter door did not open the phone’s list, so there is nothing to compare',
+    ).toBeVisible()
+    const phone = await chapterLines(page, '.album-chapters-row', '.album-chapters-title', '.album-chapters-age')
+    expect(
+      phone.length,
+      'the phone’s chapter list is empty or holds one row, so four equal lists would prove nothing',
+    ).toBeGreaterThan(1)
+
+    // ⚠ AND THE CARD IS DISMISSED BEFORE THE WALK MOVES, which is not tidying – it is round-20 #3's
+    // lesson arriving from the test side. `AlbumChaptersSheet.vue` is a BLOCKING overlay, so the tab
+    // bar `park()` uses at the next width is in the accessibility tree, has a box, and cannot receive
+    // a click: left open, this arm does not fail on a chapter, it hangs on a tab. (Measured – the
+    // first run of it timed out here at 60s while its four siblings were green in under two.) It is
+    // also what a player does, which is why it is a press on the card's own control and not an Escape.
+    await page
+      .getByRole('dialog', { name: 'Chapters' })
+      .getByRole('button', { name: 'Close' })
+      .click()
+    await expect(
+      page.getByRole('dialog', { name: 'Chapters' }),
+      'the phone’s chapter card would not close, and it covers the navigation the walk needs next',
+    ).toBeHidden()
+
+    for (const width of WIDER_WIDTHS) {
+      await albumAt(page, width)
+      // ⭐ THE FUNCTION EXISTS AT THIS WIDTH, which is the first half of the claim: the door is gone
+      // BECAUSE the rail is there, not instead of anything being there.
+      await expect(
+        page.locator(ALBUM_CHAPTER_DOOR),
+        `the chapter door still has a box at ${width}px, so this width has two ways to the same list`,
+      ).toBeHidden()
+      await expect(
+        page.locator(ALBUM_CHAPTER_RAIL),
+        `the chapter door is gone at ${width}px and NOTHING took its place - the chapters are ` +
+          'unreachable at this width, which is a control lost rather than a control moved',
+      ).toBeVisible()
+
+      const wide = await chapterLines(page, '.album-rail-plate', '.album-rail-title', '.album-rail-age')
+      expect(
+        wide,
+        `the chapter list behind the phone’s «Chapters» button and the rail at ${width}px are not ` +
+          'the same chapters. The exemption is «the door became a rail»; a chapter on one side and ' +
+          'not the other is a chapter lost, and that is what «1 к 1» forbids.',
+      ).toEqual(phone)
+
+      // ⚠ AND EACH PLATE IS A BOX ON THE SCREEN, NOT A DECLARATION. Measured the way the week
+      // pager's arrows are: a plate with no client rects is not reachable whatever the markup says.
+      // At 768 the strip pans sideways, which does not cost a plate its box.
+      const boxed = await page
+        .locator(`${ALBUM_CHAPTER_RAIL} .album-rail-plate`)
+        .evaluateAll((els) => els.filter((el) => el.getClientRects().length > 0).length)
+      expect(
+        boxed,
+        `a chapter plate at ${width}px has no box, so the chapter behind it cannot be pressed`,
+      ).toBe(phone.length)
+    }
+  })
+
+  test('⭐⭐ the HONEST HALF – a page that does NOT fit whole keeps its pill, at every width', async ({
+    page,
+    careerAt,
+  }) => {
+    // ⭐⭐⭐ AND THIS IS THE ARM THAT STOPS THE PILL'S EXEMPTION MEANING «HIDDEN WHENEVER». His ruling
+    // for the week pager is «показываем только если есть что листать» – a biconditional, not a
+    // licence – and it is the pill's case almost verbatim: the pill exists to promise that the page
+    // continues sideways, and from 768 up the page fits the window whole so there is nothing to
+    // promise. So «fits whole» is MEASURED in the real browser rather than read off the breakpoint:
+    // the sheet's own box against the window's, width by width, and the pill must follow it in BOTH
+    // directions.
+    //
+    // ⚠ MEASURED AND NEVER RE-DERIVED, for `weekRowsAt`'s reason. `--album-sheet` is 470 / 540 / 556
+    // down the ladder and the window is the film's own width; re-computing either here would be this
+    // arm asserting the stylesheet against a copy of itself.
+    await boot(page, careerAt)
+
+    let panning = 0
+    let whole = 0
+    for (const width of WIDTHS) {
+      await albumAt(page, width)
+      const measured = await page.evaluate(() => {
+        const film = document.querySelector('.album-pan')
+        const first = document.querySelector('.album-pan > .album-sheet')
+        if (!film || !first) return null
+        const boxed = (selector: string): boolean => {
+          const el = document.querySelector(selector)
+          return el !== null && el.getClientRects().length > 0
+        }
+        return {
+          window: film.clientWidth,
+          sheet: first.getBoundingClientRect().width,
+          pill: boxed('.album-half'),
+          chevron: boxed('.album-half-next'),
+        }
+      })
+      expect(measured, `the album drew no film at ${width}px, so this width measured nothing`).not.toBeNull()
+      expect(measured!.sheet, `the page has no width at ${width}px`).toBeGreaterThan(0)
+
+      // The 1px band is the same fractional-pixel slack the week pager's own arm reads back rather
+      // than re-deriving: a sub-pixel of overhang is nothing a reader could pan to.
+      if (measured!.sheet - measured!.window > 1) {
+        panning++
+        expect(
+          measured!.pill,
+          `at ${width}px the page is ${Math.round(measured!.sheet)}px inside a ${Math.round(measured!.window)}px ` +
+            'window - it pans, and the affordance that says so is NOT on the screen. The exemption ' +
+            'is for a pill with nothing to promise, not for a missing one: «показываем только если ' +
+            'есть что листать» is a biconditional and this is the half of it that keeps the ' +
+            'exemption honest.',
+        ).toBe(true)
+        expect(measured!.chevron, `and its chevron is on the screen at ${width}px too`).toBe(true)
+      } else {
+        whole++
+        expect(
+          measured!.pill,
+          `at ${width}px the page fits the window whole and the pill still promises a pan - which ` +
+            'is the thing at the bottom-right corner of AX and AW that is deliberately not there',
+        ).toBe(false)
+      }
+    }
+
+    // ⚠⚠ ANTI-VACUITY, BOTH WAYS, exactly as the arrows' arm does it. A run in which the page never
+    // fitted would pass the whole loop while proving only that a present pill stays present, and a
+    // run in which it always fitted would never exercise the ruling at all.
+    expect(
+      panning,
+      'the page fitted the window at every one of the four widths, so the honest half was never tested',
+    ).toBeGreaterThan(0)
+    expect(
+      whole,
+      'the page overflowed at every one of the four widths, so the exemption was never exercised',
+    ).toBeGreaterThan(0)
+  })
+
+  test("the album's exemption is doing real work, and it is the ONLY difference the slot makes", async ({
+    page,
+    careerAt,
+  }) => {
+    // ⭐⭐ THE ANTI-VACUITY ARM PHASE 4 ASKED FOR, AS AN EQUALITY – and this screen is the first that
+    // needs it in BOTH directions at once. The rail dashboard adds tokens at 1280 that 375 has not;
+    // the week pager adds tokens at 375 that 1280 has not; the album does both, because its one list
+    // of chapters is a button on the phone and a rail on the desktop. So the two diffs are asserted
+    // against the two exempt sets, and between them they say three things: the exemption is
+    // load-bearing TODAY (the day either side stops contributing, this reddens), it hides nothing
+    // else, and the rest of the album really is 1:1 on its own.
+    await boot(page, careerAt)
+
+    // ⚠ THE OTHER THREE REGIONS COME OFF BOTH SIDES FIRST, AND THAT IS NOT A CONVENIENCE. At 1280
+    // the album also carries the rail's dashboard and her identity block, so a raw 375-vs-1280 diff
+    // would name their controls too and this arm would be measuring three regions at once.
+    const others = async (): Promise<string[]> => [
+      ...(await railDashboardTokens(page)),
+      ...(await weekPagerTokens(page)),
+      ...(await identityTokens(page)),
+    ]
+    await albumAt(page, BASE_WIDTH)
+    const phoneRaw = subtractOnce(await ariaTokensOf(page.locator('body')), await others())
+    const phoneExempt = await albumTokens(page)
+
+    await albumAt(page, 1280)
+    const deskRaw = subtractOnce(await ariaTokensOf(page.locator('body')), await others())
+    const deskExempt = await albumTokens(page)
+
+    expect(
+      phoneExempt.length,
+      'the album exempts nothing at 375, so half of this exemption guards an empty set',
+    ).toBeGreaterThan(0)
+    expect(
+      deskExempt.length,
+      'the album exempts nothing at 1280, so the other half guards an empty set',
+    ).toBeGreaterThan(0)
+    expect(
+      missingFrom(phoneRaw, deskRaw),
+      'the ONLY things on the phone that are not at 1280 must be the chapter door and the pan pill',
+    ).toEqual(missingFrom(phoneExempt, deskExempt))
+    expect(
+      missingFrom(deskRaw, phoneRaw),
+      'the ONLY things at 1280 that are not on the phone must be the chapter rail’s own plates',
+    ).toEqual(missingFrom(deskExempt, phoneExempt))
+  })
+})
+
+/** One chapter per row as `title · age`, read from the DECLARED leaf spans of whichever shape the
+ *  width draws – the phone's sheet rows or the wide rail's plates.
+ *
+ *  ⚠ THE TWO PARTS SEPARATELY AND NEVER THE ROW'S WHOLE TEXT, which is the lesson round 42 #23 wrote
+ *  into the rail dashboard's own arm: the phone's row draws the chapter NUMBER and its SHEET COUNT
+ *  beside the title and the rail's plate does not, so comparing accessible names would fail on the
+ *  rendering rather than on a chapter being unreachable. What is compared is the chapter itself. */
+async function chapterLines(
+  page: Page,
+  row: string,
+  title: string,
+  age: string,
+): Promise<string[]> {
+  const titles = await page.locator(`${row} ${title}`).allInnerTexts()
+  const ages = await page.locator(`${row} ${age}`).allInnerTexts()
+  expect(
+    ages.length,
+    `a chapter row drawn by \`${row}\` shows a title with no age beside it`,
+  ).toBe(titles.length)
+  return titles.map((t, i) => `${t.replace(/\s+/g, ' ').trim()} · ${ages[i].replace(/\s+/g, ' ').trim()}`)
+}
 
 /**
  * ONE WALK, USED BY BOTH MAPS – extracted in phase 4 rather than copied, because a second copy of

@@ -161,29 +161,30 @@ export const STATIONS: Record<string, Station> = {
    * it anchors on is `v-if="sheets.length"`. That is deliberate and is stated so a reader who meets
    * it red looks at the query before the walk. `pro` earns six sheets (measured 19.09).
    *
-   * ⚠⚠⚠ AND THIS STATION LEAVES ONE PARITY TEST RED TODAY, ON PURPOSE, BECAUSE THE ANSWER IS THE
-   * OWNER'S AND NOT A BUILDER'S. Measured the moment the album joined the walk (19.09):
+   * ⚠⚠⚠ AND THIS STATION WAS RED ON ARRIVAL, ON PURPOSE, BECAUSE THE ANSWER WAS THE OWNER'S AND NOT
+   * A BUILDER'S. Measured the moment the album joined the walk (19.09):
    *
    *     AlbumScreen.vue: these are on the phone at 375px and NOT at 768px
    *       button "Chapters"   button "Next half"
    *
    * Both are deliberate in `AlbumScreen.vue` and both have a written reason – past 768 the chapters
    * come out from behind their button as a rail, and the pan affordance «is not hidden, it is gone»
-   * because there is nothing left to pan to. Neither reason is the point. The point is that every
-   * one of the three exemptions in `parity.spec.ts` is a QUOTED OWNER RULING obtained BEFORE the
+   * because there is nothing left to pan to. Neither reason was the point. The point was that every
+   * one of the three exemptions in `parity.spec.ts` was a QUOTED OWNER RULING obtained BEFORE the
    * exemption was written – that file's own history: «D35 put the price to him in those words before
    * he ruled. He ruled.» – and D35 is «всё, что есть на мобиле, должно быть 1 к 1 на других
-   * форматах». A fourth exemption written by whoever happened to add the station would be the hole
-   * those four-part guards exist to prevent.
+   * форматах». A fourth exemption written by whoever happened to add the station would have been the
+   * hole those four-part guards exist to prevent.
    *
-   * ⭐ THE PRECEDENT THAT MAKES THIS WORTH ASKING RATHER THAN JUST FIXING: the week pager's arrows
-   * were exempted on his own words «Спрятать – да, показываем только если есть что листать», which
-   * is the album pill's case almost verbatim. That exemption is scoped to a container
-   * (`#app .week-row > .week-pager`) and does not reach here. So the question to put to him is narrow:
-   * does that ruling extend to the album's pan pill, and is the rail an acceptable replacement for
-   * the `Chapters` button? ⚠ Until it is answered, the red is the honest state – and removing this
-   * station to quiet it would put the album back outside every browser-level gate, which is how the
-   * `scrollable-region-focusable` defect fixed in the same wave survived to ship in the first place.
+   * ⭐ IT IS GREEN NOW, UNDER `parity.spec.ts`'s FOURTH EXEMPTION (19.09, same day), AND THAT
+   * EXEMPTION IS FLAGGED TO HIM FOR REVERSAL – its provenance is the owner's own design README
+   * («390: кнопка «Chapters» — рейл занял бы полэкрана») READ by an architect rather than a sentence
+   * he typed in answer to this check, which is a weaker warrant than the other three have and says so
+   * in its own header. ⚠ SO THIS PARAGRAPH IS NOT HISTORY YET: delete that exemption and this station
+   * is red again with exactly the two tokens above, which is the state to come back to if he
+   * disagrees. Removing the station instead would put the album back outside every browser-level
+   * gate, which is how the `scrollable-region-focusable` defect fixed in the same wave survived to
+   * ship in the first place.
    */
   'AlbumScreen.vue': {
     visit: (page) => page.getByRole('button', { name: /^Recent memory/ }).click(),
