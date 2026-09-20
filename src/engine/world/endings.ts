@@ -756,6 +756,33 @@ export function resolveLeaving(world: WorldState): void {
   if (world.ending !== null) return
   if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return
   if (inCollege(world)) return
+  // ⭐⭐⭐ v85 T6 – **AND NOT WHILE A PREGNANCY STANDS** (the architect's RULING B, 20.09, carried to
+  // the owner as a ruling to confirm and shipped in a commit of its own so it can be reverted alone).
+  //
+  // ⚠⚠ THIS IS THE EXISTING RULE MEETING A NEW CASE RATHER THAN NEW DESIGN, and the clause one line
+  // ABOVE is the whole argument: the college absence is ALREADY excluded, explicitly, because a
+  // freeze is not a career she can leave from. The maternity pause is the game's SECOND kind of
+  // absence and the same refusal extends to it. `leavingViewOf`'s own note says it in the sentence
+  // this clause is written from: «a season she spent at college … is not a season she fell FROM – it
+  // is a gap».
+  //
+  // ⚠⚠ WITHOUT IT THE FALL DOOR CAN LATCH «She stopped after the fall» ABOUT A SEASON SHE SPENT OFF
+  // TOUR HAVING A CHILD, and the three terms of `fallLeavingDue` are exactly what a year of not
+  // playing produces: points at most halved, rank at least doubled, thirty places gone. `WINDOW_BY_TRACK`
+  // and `windowedBestSum` age her book out BY CONSTRUCTION through the 51 weeks the pause runs, so
+  // the instrument reads «her results collapsed» while the truth is «she did not play» – which is his
+  // 20.09 blocker's defect class exactly, and it is the one the whole §Ready-to-read design refuses.
+  //
+  // ⚠ AND IT DELIBERATELY DOES **NOT** COVER THE COMEBACK RAMP, which is the boundary worth writing
+  // down. A fall latched in the year AFTER she comes back stays possible and is legitimate: she came
+  // back and could not regain it is exactly the research's «~40% return successfully» read from the
+  // other side, and suppressing it would hide the wave's own honest outcome. `world.pregnancy` is
+  // null from the return week on (`resolveReturnDecision` clears it on both arms), so this clause
+  // stops of its own accord on the day the ramp begins – no second date, no window to keep in step.
+  //
+  // ⚠ THE PLACEMENT IS THE COLLEGE CLAUSE'S: below the wrap-week test, so a career carrying a
+  // pregnancy through an ordinary week pays nothing for this line at all.
+  if (world.pregnancy !== null) return
   const view = leavingViewOf(world)
   const door = leavingDoorDue(view)
   if (door === null) return
