@@ -48,6 +48,8 @@ export type {
   SessionKind,
   PrologueYear,
   PrologueHandover,
+  PrologueTrace,
+  PrologueTraceOpen,
   WeekPlan,
   VacationBooking,
   PracticeBooking,
@@ -57,6 +59,7 @@ export type {
 } from './protocol/profile'
 export {
   DEFAULT_PROFILE,
+  FIRST_COURT_AGE,
   SESSION_KINDS,
   WEEK_PLAN_PRESETS,
   PROFILE_NAME_MAX_CHARS,
@@ -168,6 +171,30 @@ export type {
   TrainingRead,
 } from './protocol/narrative'
 
+// --- the album (a view, never persisted – docs/specs/the-album-2026-09.md) ------------------------
+export type {
+  AlbumLayout,
+  AlbumDoodle,
+  AlbumFrame,
+  AlbumNote,
+  AlbumTierStep,
+  AlbumTicket,
+  AlbumTag,
+  AlbumSheetModel,
+  AlbumChapter,
+  AlbumBook,
+} from './protocol/album'
+export {
+  SHEET_PX,
+  SHEET_GAP_PX,
+  SHEET_STEP_PX,
+  SHEET_TABLET_PX,
+  SHEET_DESKTOP_PX,
+  SHEET_TABLET_STEP_PX,
+  SHEET_DESKTOP_STEP_PX,
+  LEAF_PX,
+} from './protocol/album'
+
 // --- offers --------------------------------------------------------------------------------------
 export type {
   OfferKind,
@@ -265,6 +292,7 @@ export type {
   CareersReply,
   ExportedReply,
   PeekReply,
+  AlbumReply,
   OkReplyFor,
   ReplyFor,
 } from './protocol/messages'

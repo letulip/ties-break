@@ -330,7 +330,10 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // resolution for this seed and route, and the ladder walked it to the head without moving a
     // byte of it – which is the «nothing re-derives a stored one» half the lineage arm could never
     // witness, because a lineage save's pin and the migration's write are indistinguishable.
-    if (file === 'v83.json') {
+    // ⚠ v84.json IS THE SAME PROBE CAREER ONE VERSION UP – the v25 recipe resumed on v83.json (its
+    // README row records the choice) – so its curve is the same fork-resolved pair and it reads by
+    // this arm for the same reason, not by the migration's 23/29.
+    if (file === 'v83.json' || file === 'v84.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

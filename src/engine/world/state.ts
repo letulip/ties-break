@@ -47,6 +47,7 @@ import type {
   Offer,
   PenaltyRow,
   PlayerProfile,
+  PrologueTrace,
   OwnedAsset,
   PracticeBooking,
   RecoveryBuff,
@@ -711,7 +712,39 @@ import type { AcademySupport } from '../academy'
 // its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
 // mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
 // tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 83
+// ⭐⭐⭐ v84 – THE ALBUM's ONE SCHEMA MOVE (docs/specs/the-album-2026-09.md §3, his ruling of 19.09 –
+// path (а): «хорошо бы, чтобы в финальный альбом что-то оттуда попадало тоже вообще. Первый раз на
+// корте, первый турнир и/или победа»). ONE key on the world:
+//
+//   · `prologueTrace: PrologueTrace | null` – the compact slice of the childhood's own `PrologueRun`
+//     (`picks`, `entries`, `opens`; the origin stays on the profile, where it already lives),
+//     written ONCE at the handover by `createWorld` from the handover's optional `trace` and by
+//     nothing else – not a migration, not any phase of the tick. The prologue threw this away at the
+//     handover until now (the spec's own grep: no narrative trace anywhere), and the album's first
+//     chapter cannot be written out of nothing.
+//
+// ⚠⚠ THE BACK-FILL IS `null` AND IT IS EXACTLY TRUE RATHER THAN A BARGAIN – his own word on the
+// missing history: «это не страшно». No save written before this version walked a childhood whose
+// record survived the handover, and a wizard career never walks one at all; for both, «no record»
+// is the complete statement, and the album's first chapter honestly does not exist for them. The
+// tempting reconstruction (re-deriving a run off the career's seed) is refused for `form`'s own v80
+// reason: the run is the PLAYER's walk, not a function of the seed, and no function of today's
+// world returns the cards he answered.
+//
+// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE. The migration writes one literal; the writer copies a wire
+// value; the album that reads it draws only on the purpose-scoped `seed:album:flavour:<sheet>`
+// sub-stream at assembly time, re-derived at the call site and persisting nothing – so the frozen
+// MAIN capture (41550 / e6b0c709) is untouched by construction. The frozen careers move on
+// `schemaVersion` and the new key alone: `walkFrozenCareer` builds its worlds with no prologue, so
+// every cell carries `null` – a pure key append, `PRE_V84` in tests/coachTravelEdgeFixtures.ts
+// asserts the verbatim v83 constants come back off the peel.
+//
+// Full move: this constant, the v83 -> v84 step in migrations.ts, tests/fixtures/saves/v84.json,
+// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
+// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts. The non-null shape's witness (the corpus cannot hold one – a
+// walked probe skips the prologue) is tests/album-trace-schema.test.ts, through the real writer.
+export const SAVE_SCHEMA_VERSION = 84
 
 
 
@@ -1798,6 +1831,19 @@ export interface WorldState {
    *  of every save written before v70 and of an event whose week arrives before a card could exist.
    *  Every reader normalises, and an unrecorded event draws live exactly as it always did. */
   drawnFirstRounds?: Record<string, string>
+  /** ⭐⭐⭐ v84 – WHAT THE CHILDHOOD LEFT BEHIND (the album spec §3, ruled path (а) 19.09): the
+   *  compact slice of the finished `PrologueRun` – `picks`, `entries`, `opens` – written ONCE at the
+   *  handover by `createWorld` and by nothing else. The prologue used to throw all of it away, and
+   *  «She asked if she could try» had nothing to be written out of.
+   *
+   *  ⚠ `null` FOR EVERY WIZARD CAREER AND EVERY SAVE THAT PREDATES IT (his «это не страшно»): a
+   *  childhood that was never walked leaves no record, and the album's first chapter honestly does
+   *  not exist for it. The one reader is the album assembly (`world/albumBook.ts`), on demand –
+   *  nothing weekly reads it, so it costs every tick nothing.
+   *
+   *  ⚠ THE ORIGIN IS DELIBERATELY NOT IN IT – `profile.background` already holds it, and a second
+   *  copy would be two sources of truth for one fact (the `LifeBeatRecord` missing-boolean rule). */
+  prologueTrace: PrologueTrace | null
 }
 
 /** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the

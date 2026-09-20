@@ -15,7 +15,7 @@
 // are joined, because phase 1's importer-set pin is empty until phase 4 moves it.
 import { ECONOMY } from '../engine/economy'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
-import type { FamilyBackground } from '../shared/protocol'
+import type { FamilyBackground, PrologueTrace } from '../shared/protocol'
 import {
   APPETITE_AT,
   PROLOGUE_CARDS,
@@ -86,6 +86,27 @@ export function withEntry(run: PrologueRun, age: number, answerId: string): Prol
  *  this list ever gets shorter. */
 export function withOpen(run: PrologueRun, open: PlayedOpen): PrologueRun {
   return { ...run, opens: [...run.opens, open] }
+}
+
+/** ⭐⭐ v84 – THE TRACE THE HANDOVER CARRIES (the album spec §3, his ruling 19.09: the childhood
+ *  finally leaves a record). A compact copy of the run's three lists – picks, entries, opens – and
+ *  deliberately NOT the origin, which already crosses on the profile and would otherwise be two
+ *  sources of truth for one fact.
+ *
+ *  ⚠ A COPY, NEVER THE RUN'S OWN OBJECTS: the value crosses the wire and is persisted for the life
+ *  of the career, so it must not alias state the walk keeps mutating. Fresh records and fresh rows,
+ *  every call.
+ *
+ *  ⚠ IT DERIVES NOTHING AND JUDGES NOTHING. «First time on court», «first win», «first cup» are the
+ *  ALBUM's readings, taken at assembly time off these lists – a trace that pre-computed them would
+ *  be a second copy of a derivation, stale the day the album's rule moves. This is the run's own
+ *  arithmetic-free discipline (see the file header) carried into the save. */
+export function traceOf(run: PrologueRun): PrologueTrace {
+  return {
+    picks: { ...run.picks },
+    entries: { ...run.entries },
+    opens: run.opens.map((o) => ({ ...o })),
+  }
 }
 
 // =================================================================================================

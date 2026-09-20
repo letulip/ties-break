@@ -105,11 +105,18 @@ describe('a horizontal scroller carries the three declarations a finger needs', 
     // ⚠⚠ RE-AIMED BY ROUND 36 PHASE 5, AND THE SUBJECT LEFT THE APP RATHER THAN THE RULE BEING
     // RELAXED. This read `>= 1`, because when it was written the season strip was a CSS
     // `scroll-snap-type: x mandatory` box. The pager replaced that: `composables/weekPager.ts`
-    // drives `scrollLeft` itself, so there is no CSS snap left anywhere and the two arms above have
-    // nothing to sweep. ⭐ THEY ARE KEPT, NOT DELETED – the day someone adds a snapping strip back,
+    // drives `scrollLeft` itself, so there was no CSS snap left anywhere and the two arms above had
+    // nothing to sweep. ⭐ THEY WERE KEPT, NOT DELETED – the day someone adds a snapping strip back,
     // they bite from the first line, which is the whole point of a rule that outlives its example.
-    expect(snappers, 'x-snapping strips found – zero is correct since the pager replaced the CSS one')
-      .toBeGreaterThanOrEqual(0)
+    //
+    // ⭐⭐ AND THAT DAY CAME, 19.09 (the album wave). The album's film and its chapter rail are both
+    // `scroll-snap-type: x proximity`, and both arrived WITHOUT the three declarations – so the two
+    // arms bit on the first run, exactly as promised, and the components were fixed rather than the
+    // rule. The floor goes back to `>= 1`: with snapping strips in the app again, `>= 0` is the
+    // vacuous reading this whole case exists to prevent. ⚠ Not pinned to TWO – a count is passed by
+    // adding a scroller and the sweep is insurance, not an inventory.
+    expect(snappers, 'x-snapping strips found – the album brought CSS snap back to the app')
+      .toBeGreaterThanOrEqual(1)
   })
 })
 

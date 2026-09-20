@@ -55,6 +55,7 @@
 // (`PrologueYear` must be assignable to `ChildhoodYear` or the gate goes red) and runs, so the two
 // shapes cannot drift apart without a red gate. Same for `APPETITE_AT` below.
 import type { SessionKind } from '../shared/protocol'
+import { FIRST_COURT_AGE } from '../shared/protocol'
 
 /** ONE YEAR AS THE MODEL SEES IT – the structural twin of `engine/childhood.ts`'s `ChildhoodYear`.
  *
@@ -324,7 +325,11 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
   },
 
   {
-    age: 6,
+    // ⭐ THE FIRST DAY ON A COURT, and the album dates its own first sheet off this same constant
+    // (`FIRST_COURT_AGE`, shared/protocol/profile.ts). The card carries no options, so every walked
+    // childhood passes through this scene at this age – which is what makes one constant honest for
+    // both readers.
+    age: FIRST_COURT_AGE,
     kicker: 'She is six',
     // ⚠ THE OWNER, 02.09: «She asks to go back – куда обратно?… Я бы интерпретировал из заголовка,
     // что она хочет домой.» Read cold, under a kicker that says her age and above a scene about a

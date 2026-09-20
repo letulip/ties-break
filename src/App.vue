@@ -98,6 +98,8 @@ import StatsScreen from './components/screens/StatsScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
 import TrophiesScreen from './components/screens/TrophiesScreen.vue'
+import AlbumScreen from './components/screens/AlbumScreen.vue'
+import type { AlbumBook } from './shared/protocol'
 // ⭐⭐⭐ ROUND 36 PHASE 6 – THE RAIL'S MINI-DASHBOARD, and it is the owner's ruling of 04.09: «надо
 // создать новые компоненты и показывать их только на десктоп», «карточки сквозные, одинаковые, как
 // мини-дашборд живут всегда в вертикальной полоске, т.е. на всех страницах». It is mounted HERE,
@@ -174,8 +176,42 @@ function onRecoveryImportPicked(e: Event): void {
 // is the FOURTH member of this group and the only one to arrive by being replaced rather than by
 // being reached from somewhere better; the gear that already reached it is now its only door. See
 // the TABS note below for the owner's ruling. 'trophies' is the button that took the seat.
-type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market' | 'trophies'
+// ⚠ 'album' IS THE FIFTH TABLESS CONTENT STATE, and it arrives the same way 'money' and 'kid' did –
+// by being reached from somewhere better than a button in the bar. The owner's ruling, 19.09 (the
+// album spec §8b): «можно сделать вход в альбом как раз с плашки home где у нас recent memory, она
+// ровно этого и ждала. И тогда как раз кнопка Back пригодится, как в макетах.» The recent-memory
+// card on Home is the door; `Back` on the screen returns to it.
+type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market' | 'trophies' | 'album'
 const tab = ref<TabId>('home')
+
+// ⭐⭐ THE ALBUM IS FETCHED WHEN THE SECTION OPENS AND DROPPED WHEN IT CLOSES (spec §8b: «Сборка
+// альбома – по требованию, не в недельном снимке»). Fifteen sheets of facts in every weekly
+// `Snapshot` would be paid for by every tick of every career, so the book is a QUERY – the worker's
+// `album` arm over the committed world, `game.loadAlbum()` – and the store holds none of it.
+//
+// ⚠ SO THIS REF IS THE BOOK'S ONLY HOME, AND CLEARING IT ON THE WAY OUT IS HALF THE MECHANISM. A ref
+// that kept its value would show career A's childhood to career B: the player leaves the album, loads
+// another save from More, opens the album again, and the first frame he sees is the previous girl's
+// while the fetch is still in flight. Null on leave means the screen draws its own empty chrome for
+// that moment instead – which is exactly what it draws before the first fetch of every career.
+//
+// ⚠ THE TICKET IS FOR THE LATE ANSWER, and it is the same failure one step further out: `loadAlbum`
+// is a round trip to the worker, so a fast leave-and-return can have TWO in flight, and the slower
+// one would land last and paint a book the player has already navigated away from. Only the newest
+// request may write, and only while the section is still open. `run()` has no re-entry latch of its
+// own (`advance` carries its own, for its own reason), so this is the honest place for it.
+const albumBook = ref<AlbumBook | null>(null)
+let albumRequest = 0
+watch(tab, async (now) => {
+  if (now !== 'album') {
+    albumRequest += 1
+    albumBook.value = null
+    return
+  }
+  const ticket = ++albumRequest
+  const book = await game.loadAlbum()
+  if (ticket === albumRequest) albumBook.value = book
+})
 
 // A SCREEN OPENS AT ITS TOP (owner, 31.07: «after a transition between screens, always land at the
 // top of the new screen - today a screen can open already scrolled»).
@@ -245,7 +281,7 @@ function openWeek(entry: WeekEntry): void {
  *  shell has to act on – so this is a function rather than the inline ternary it used to be.
  *  ⚠ P2-6: the rail's own avatar uses the `'kid'` arm too, because past 1024 that button IS the door
  *  Home's photograph carries below it – same destination, same function, no second writer. */
-function openFromHome(target: 'money' | 'week:tournament' | 'more' | 'kid' | 'market'): void {
+function openFromHome(target: 'money' | 'week:tournament' | 'more' | 'kid' | 'market' | 'album'): void {
   if (target === 'market') openMarket('home')
   else if (target === 'week:tournament') openWeek('tournament')
   else tab.value = target
@@ -1622,6 +1658,9 @@ function reopenTour(): void {
            the same one-event idiom Home's cards use. -->
       <MoreScreen v-else-if="tab === 'more'" @show-tour="reopenTour" />
       <TrophiesScreen v-else-if="tab === 'trophies'" />
+      <!-- The album, reached from Home's recent-memory card. `Back` returns there, which is the
+           only place it can be reached from today (spec §8b). -->
+      <AlbumScreen v-else-if="tab === 'album'" :book="albumBook" @back="tab = 'home'" />
     </main>
 
     <!-- Package N: the sticky week button, floating above the tab bar. R13-12: GLOBAL – it renders

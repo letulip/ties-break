@@ -71,6 +71,7 @@ import {
   moodAt,
   readTwelfth,
   spentCents,
+  traceOf,
   warmthAt,
   withEntry,
   withOpen,
@@ -611,7 +612,10 @@ async function begin(): Promise<void> {
         ...settleIdentity(identity.value),
         background: run.value.origin ?? DEFAULT_PROFILE.background,
       },
-      { years: chosenYears(run.value), spentCents: spentCents(run.value) },
+      // ⭐ v84 – AND THE CHILDHOOD'S OWN RECORD RIDES THE SAME HANDOVER (the album spec §3, ruled
+      // path (а) 19.09). `traceOf` copies the run's three lists; `createWorld` persists them once
+      // as `world.prologueTrace`, and the album's first chapter is read off that record for ever.
+      { years: chosenYears(run.value), spentCents: spentCents(run.value), trace: traceOf(run.value) },
     )
   } finally {
     // ⚠ IN A `finally`, so a refused career does not strand the player on an empty ground with no

@@ -137,6 +137,60 @@ export const STATIONS: Record<string, Station> = {
     arrived: (page) => page.getByRole('heading', { name: 'Important moments', level: 3 }),
   },
 
+  /**
+   * ⭐ THE ALBUM (19.09, the seam wave), reached the one way a player reaches it: Home's recent-memory
+   * card (spec §8b, his ruling – «можно сделать вход в альбом как раз с плашки home где у нас recent
+   * memory»). It is a `button` only when there is a memory behind it, so the click is already half the
+   * proof the walk arrived somewhere real.
+   *
+   * ⚠⚠ AN ANCHOR HERE HAS TO SURVIVE ALL FOUR WIDTHS, AND TWO CANDIDATES FAILED THAT BEFORE THIS ONE
+   * – both measured, both worth writing down, because this map is walked by three harnesses at four
+   * widths and a station is the one place that mistake is invisible until it is expensive:
+   *   · `Back to Home` – present at every width, but FOUR screens carry that label (Money, This week,
+   *     Kid and this one). An arrival anchor that matches four screens proves arrival at none.
+   *   · `Chapters` – unique to this screen, and `display: none` from 768 up: past that width the
+   *     chapters come out from behind their button as a rail, so the button is a phone-only door.
+   *     It cost three red parity tests, all reporting «the walk did not arrive» at 768 and 1280 –
+   *     including two that are about the desktop RAIL and have nothing to do with the album, because
+   *     they walk every station in this map.
+   * `Next sheet` is the pager's own control: unique in the app (the only `label="Next sheet"`), and
+   * the footer is restyled but never hidden at any width.
+   *
+   * ⚠⚠ IT IS ALSO THE ONLY STATION IN THIS MAP WHOSE SCREEN FETCHES ITS OWN DATA, so unlike every
+   * other arrival here, this one goes red if the worker's `album` query stops answering – the footer
+   * it anchors on is `v-if="sheets.length"`. That is deliberate and is stated so a reader who meets
+   * it red looks at the query before the walk. `pro` earns six sheets (measured 19.09).
+   *
+   * ⚠⚠⚠ AND THIS STATION WAS RED ON ARRIVAL, ON PURPOSE, BECAUSE THE ANSWER WAS THE OWNER'S AND NOT
+   * A BUILDER'S. Measured the moment the album joined the walk (19.09):
+   *
+   *     AlbumScreen.vue: these are on the phone at 375px and NOT at 768px
+   *       button "Chapters"   button "Next half"
+   *
+   * Both are deliberate in `AlbumScreen.vue` and both have a written reason – past 768 the chapters
+   * come out from behind their button as a rail, and the pan affordance «is not hidden, it is gone»
+   * because there is nothing left to pan to. Neither reason was the point. The point was that every
+   * one of the three exemptions in `parity.spec.ts` was a QUOTED OWNER RULING obtained BEFORE the
+   * exemption was written – that file's own history: «D35 put the price to him in those words before
+   * he ruled. He ruled.» – and D35 is «всё, что есть на мобиле, должно быть 1 к 1 на других
+   * форматах». A fourth exemption written by whoever happened to add the station would have been the
+   * hole those four-part guards exist to prevent.
+   *
+   * ⭐ IT IS GREEN NOW, UNDER `parity.spec.ts`'s FOURTH EXEMPTION (19.09, same day), AND THAT
+   * EXEMPTION IS FLAGGED TO HIM FOR REVERSAL – its provenance is the owner's own design README
+   * («390: кнопка «Chapters» — рейл занял бы полэкрана») READ by an architect rather than a sentence
+   * he typed in answer to this check, which is a weaker warrant than the other three have and says so
+   * in its own header. ⚠ SO THIS PARAGRAPH IS NOT HISTORY YET: delete that exemption and this station
+   * is red again with exactly the two tokens above, which is the state to come back to if he
+   * disagrees. Removing the station instead would put the album back outside every browser-level
+   * gate, which is how the `scrollable-region-focusable` defect fixed in the same wave survived to
+   * ship in the first place.
+   */
+  'AlbumScreen.vue': {
+    visit: (page) => page.getByRole('button', { name: /^Recent memory/ }).click(),
+    arrived: (page) => page.getByRole('button', { name: 'Next sheet' }),
+  },
+
   'CoachMarketScreen.vue': {
     visit: (page) => page.getByRole('button', { name: 'Coach note – open the Coach Market' }).click(),
     arrived: (page) => page.getByRole('heading', { name: 'Coach Market', level: 2 }),

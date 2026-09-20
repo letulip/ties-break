@@ -633,7 +633,13 @@ describe('save migrations', () => {
     // the corpus's first with a real episode row – and its README row, e2e fixtures regenerated,
     // the doc-facts sentence and the frozen-career peel rung), and the walk below gains a rung that
     // writes two nulls per episode row – of which a v63 save has none, so it changes no byte here.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 83 – past the colliding 64, through 65').toBe(83)
+    // ⚠ RE-AIMED AT v84 (19.09, the album's one schema move: `world.prologueTrace`), NOT WEAKENED,
+    // for the EIGHTEENTH time and with the claim unchanged once more. 84 was taken by that spec's
+    // own full move (bump, append-only v83 -> v84 step, golden fixture v84 – the v25 recipe resumed
+    // on the v83 probe – and its README row, e2e fixtures regenerated, the doc-facts sentence and
+    // the frozen-career peel rung), and the walk below gains a rung that writes one `null` on one
+    // world key – which a v63 save never carried, so it changes no byte here either.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 84 – past the colliding 64, through 65').toBe(84)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

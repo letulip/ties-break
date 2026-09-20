@@ -18,49 +18,15 @@ Use `test:quiet` unless you need to read individual test names — same signal, 
 
 Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:load`, `bench:radar`). Always `vue-tsc -b --force`: the incremental cache has hidden real type errors before.
 
-## Graphify (code graph) — what it is and is not for
+## Graphify (code graph)
 
-```bash
-npm run graph        # rebuild – ~10 s, 0 tokens; it PRINTS its size (11,013/28,620, 18.08)
-npm run graph:check  # is it stale? exits 1 if source moved since the build
-```
+`npm run graph` rebuilds the code graph (~10 s, 0 tokens); `npm run graph:check` exits 1 if it is
+stale. **A stale graph is worse than no graph**, and ⚠ **CODE ONLY – never point it at `docs/`**,
+where indexing costs model tokens rather than machine time. Use it for orientation (`god-nodes`,
+`path`, `explain`), not for impact analysis, and when it disagrees with a grep check the grep first.
+Setup, the benchmarks behind each of those rules, and the measured failure modes:
+[docs/context/graphify.md](docs/context/graphify.md).
 
-**Setup (once per machine, not a project dependency):** `pip install graphifyy && graphify install
---platform claude`. The installer makes its own ~161 MB venv under `~/.claude/skills/graphify` and
-symlinks the binary onto PATH — far too large to vendor, so nothing is added to `package.json`.
-`npm run graph` prints these instructions if it cannot find the binary; `GRAPHIFY_BIN` overrides.
-`graphify-out/` is gitignored — a local artifact, rebuilt in seconds, never committed.
-
-**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it —
-though the rebuild is now automatic: `.githooks/post-merge` and `post-checkout` fire it in the
-background after every pull, merge and branch switch, and `npm install` points git at them through
-the `prepare` script. Both hooks exit silently when the graphify binary is absent, so a machine
-that never installed it sees nothing.
-
-**⚠ CODE ONLY. Never point it at `docs/`.** `npm run graph` indexes `src`/`tests`/`tools`/`scripts`
-through tree-sitter — pure AST, genuinely zero model tokens. **Documents and images take a different
-path**: they go through semantic extraction, and with no external key configured the skill's own text
-says *"the host agent itself is the LLM"* — meaning the agent session pays in tokens. This repo's
-docs corpus is large (onsight-poc measured 174 docs ≈ 285k input tokens for a comparable set), so an
-accidental `/graphify` over `docs/` is an expensive mistake, not a free one. If document indexing is
-ever wanted, wire a local Ollama backend first and the cost returns to machine time.
-
-**Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
-P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
-Neither is expressible as a grep.
-
-**Do NOT use `affected` as a pre-split impact check.** Benchmarked against the 14 real breakages of
-the `world.ts` split it scored **26% precision and missed one**, because it sees imports — and the
-imports are exactly what survives a re-exported move. Use the grep below instead: **100% recall.**
-
-**Do NOT trust `graphify query` in natural language.** Measured on this corpus it is lexically noisy:
-"where is the injury risk calculated" returned eight nodes from a funding-roadmap doc (matched on
-"risk") and none of `rollInjury` / `injuryTau`. Look symbols up by name instead — that is precise.
-
-**⚠ When the graph and grep disagree, check the grep first.** In both recorded disputes — one here,
-one in onsight-poc — the graph was right and the search was broken (a `grep` scoped to `src/` that
-skipped `tests/`; a `sed` range that collapsed on its start line). Same failure family as the `indexOf`
-slice returning −1. Verify scope, range arithmetic and anchoring before filing a graph bug.
 
 ## Non-negotiable invariants
 
@@ -166,6 +132,11 @@ docs/review/     2026-08 full review + P1–P9 proposals
   error. Believing the notice would have pushed a red branch and reported it green. **Append
   `echo "CHECK_EXIT=$?"` to the log inside the command and read the verdict out of the FILE.** The
   notification tells you the run finished; it does not tell you it passed.
+  (d) ⚠⚠ AND A MISSING SENTINEL IS NOT A VERDICT EITHER (19.09). Twice in one wave a backgrounded
+  run was reported "failed with exit code 144" while the command itself ran to completion: the
+  WRAPPER died before the `echo "…_EXIT=$?"` line could execute, so the file never got its sentinel
+  and the technique above silently could not fire. **No sentinel line means no measurement** – not a
+  failure and not a pass. Re-run it, or wait on the PID, and never report a verdict from that log.
 - **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
   older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
   Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was
@@ -219,6 +190,12 @@ docs/review/     2026-08 full review + P1–P9 proposals
   **Use the pathspec form: `git commit -m … -- a.ts b.ts`.** It commits exactly those paths and
   leaves everyone else's staging alone. Telling agents "stage only your own hunks" does not help –
   the hazard runs the other way, from whoever commits next.
+- **⚠⚠ AND `git commit --amend` DEFEATS THAT PATHSPEC FROM THE OTHER SIDE (19.09).** A builder
+  amended their own commit, with a pathspec, while a colleague's commit had landed on top – and the
+  amend **swallowed the colleague's commit under the builder's message**. Repaired with
+  `git reset --soft <their sha>` and nothing was lost, but only because the builder noticed and said
+  so. **In a shared checkout never amend: add a second commit.** A wrong number in a message is
+  cheaper than a commit that ate somebody else's work.
 - **Background runs leave chips, and the chips accumulate.** Every `run_in_background` command
   registers a task that stays listed in the owner's panel after it exits – he has raised the count
   twice ("почему их уже 20?", "их снова 18 штук"). Backgrounding is still mandatory for anything

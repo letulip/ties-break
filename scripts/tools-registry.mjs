@@ -53,6 +53,8 @@ const INSTRUMENTS = {
   'e2e-fixtures.ts': 'generates the deterministic saves the Playwright suite loads',
   'small-talk-corpus-emit.ts':
     'writes src/engine/world/smallTalkCorpus.ts out of docs/specs/small-talk-corpus-2026-09.md – the ONLY legitimate way to change the 43, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec',
+  'album-corpus-emit.ts':
+    'writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album\'s 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec',
 }
 
 function relative(file) {

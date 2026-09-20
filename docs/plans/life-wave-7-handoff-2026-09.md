@@ -72,9 +72,11 @@ REMOVED price.
 
 ---
 
-## Two hazards this wave measured, and why they are not in CLAUDE.md yet
+## Two hazards this wave measured – RULED INTO CLAUDE.md on 19.09
 
-Both are house-law material and both are parked here, because `CLAUDE.md` sits **24 characters**
+⭐ He ruled the room free rather than the rules out: «давай вынеси graphify в отдельный документ и
+впиши обе опасности» – the graphify block moved to  and both hazards are
+now house law. The full stories stay here. They were parked because `CLAUDE.md` sits **24 characters**
 under its own 22,000-character budget and the budget's comment says exactly what that means: the
 ceiling «turns the next large addition into a decision rather than a drift». What leaves is the
 owner's call, so nothing was removed to make room.

@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-254 TypeScript files: **51 live**, **203 archival**.
+256 TypeScript files: **53 live**, **203 archival**.
 
 ## Why the split exists
 
@@ -36,6 +36,8 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `_lifeBeats.ts` | imported by the test suite |
 | `_spotlight.ts` | imported by a live tool |
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
+| `album-corpus-emit.ts` | writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album's 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec |
+| `album-corpus-parse.ts` | imported by the test suite |
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
 | `coach-raise-bench.ts` | `npm run bench:coachraise` |

@@ -45,9 +45,33 @@ import {
   PRE_V81,
   PRE_V82,
   PRE_V83,
+  PRE_V84,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v84: rolling the schema back to 83 – dropping `prologueTrace` – returns the v83 CAREER on all three', () => {
+    // ⭐⭐ AN IDENTITY, v83's OWN KIND, AND THE CASE NAME SAYS SO because the measurement proved it
+    // before a constant was touched. v84 appends ONE world key – `prologueTrace`, the childhood's
+    // own record (the album spec §3, ruled path (а) 19.09) – written ONCE at `createWorld` FROM THE
+    // HANDOVER's optional `trace`, and `walkFrozenCareer` hands over no prologue, so every career
+    // in this file carries the literal `null` for the whole of its life.
+    //
+    // ⚠⚠ THE WRITER'S OWN SIGNATURE IS THE WHOLE ARGUMENT, a stronger one than v83's calendar: no
+    // tick, however long, writes this key – its one writer takes its value from an argument no
+    // career in this file is ever given, and its one reader (the album assembly) is on demand and
+    // never inside a walk. So unlike the v83 rung, no future lengthening of `FREEZE_WEEKS` can
+    // re-anchor this one; a red HERE beside a green freeze means something started writing the
+    // trace after birth, which the state.ts block above the key forbids in as many words.
+    //
+    // ⚠ THE MEASUREMENT is in the v84 block over `PRE_V84` in tests/coachTravelEdgeFixtures.ts –
+    // `careerHashAtSchema(·, ·, 83)` reproduced the three shipped v83 `FROZEN` constants character
+    // for character with the bump in the tree, and `rngMain` cannot have moved by construction
+    // (the step and the writer draw nothing; the album's flavour sub-stream is assembly-time).
+    expect(careerHashAtSchema(5, 0, 83), '25k · middle coach · grinder – the verbatim v83 value').toBe(PRE_V84.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 83), '120k · elite coach · grinder – the verbatim v83 value').toBe(PRE_V84.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 83), '8k · self-coached · player – the verbatim v83 value').toBe(PRE_V84.selfTravelling)
+  })
+
   it('⭐⭐⭐ v83: rolling the schema back to 82 – dropping the latch and the name seats – returns the v82 CAREER on all three', () => {
     // ⭐⭐ AN IDENTITY, v81's OWN KIND, AND THE CASE NAME SAYS SO because the wave predicted it in §0
     // and the per-key diff proved it before a constant was touched. v83 appends `latchedWeek` and

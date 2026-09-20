@@ -115,7 +115,10 @@ defineProps<{ recapFresh: boolean }>()
  *  shell answers – one mount of `LifeBeatDialog`, on the same prompt contract, over the same scrim,
  *  outside any transformed ancestor that could contain a `position: fixed` card. */
 const emit = defineEmits<{
-  navigate: ['money' | 'week:tournament' | 'more' | 'kid' | 'market']
+  // ⭐ `'album'` JOINED 19.09 – his ruling on where the album lives (the album spec §8b): «можно
+  // сделать вход в альбом как раз с плашки home где у нас recent memory, она ровно этого и ждала.
+  // И тогда как раз кнопка Back пригодится, как в макетах.»
+  navigate: ['money' | 'week:tournament' | 'more' | 'kid' | 'market' | 'album']
   softBeat: []
 }>()
 
@@ -1706,7 +1709,21 @@ async function leaveCollege(): Promise<void> {
              U0: the cream frame, its lip, its shadow and its tilt are the Polaroid component; what
              stays here is WHERE it is dropped and how wide it is, which only the card it lands on
              can know. -->
-        <Card as="article" class="note-card card-short">
+        <!-- ⭐⭐ AND IT IS THE ALBUM'S DOOR SINCE 19.09 – the owner's own ruling, quoted in full in
+             the script header above; in English: the album is entered from exactly this card,
+             because this card had been waiting for it, and `Back` on that screen returns here.
+             ⚠ A DOOR ONLY WHEN THERE IS A MEMORY. With none, the card says so and opens nothing –
+             a control that goes nowhere is worse than no control, and `memory` is the same signal
+             the album's first earned sheet is built on.
+             ⚠⚠ NOT ONE WORD ON THIS CARD CHANGED. Invariant 4: the eyebrow, the line, the date and
+             the empty-state sentence are his and were not part of the ask. What changed is the
+             ELEMENT – `article` to `button` – which is this screen's own idiom for a card that is a
+             door (see Next tournament and Family budget above). -->
+        <Card
+          :as="memory ? 'button' : 'article'"
+          class="note-card card-short"
+          @click="memory && emit('navigate', 'album')"
+        >
           <Eyebrow>Recent memory</Eyebrow>
           <template v-if="memory">
             <Polaroid
