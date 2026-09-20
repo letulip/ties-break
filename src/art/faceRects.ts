@@ -125,6 +125,24 @@ export const CROPS: Record<string, [number, number, number]> = {
   // «fits inside the painting» check allows at side 155: any higher centre would clamp at the canvas
   // edge and silently re-frame her.
   'adult-bride': [258, 78, 155],
+  // ⭐ THE TWO PREGNANCY PAINTINGS (v85 T10, wave 8) – the THIRD and FOURTH entries that are not a
+  // band×face, and the same shape as the two above them: files that exist in `adult` alone, where
+  // every band row belongs to a set of five. They sit with `graduated` rather than with `bride` –
+  // their own builder (`pregnantUrl`), no union at all – and `shared/avatarEmotion.ts` carries that
+  // argument in full. They are filed HERE for `rehab`'s reason, which is this table's second
+  // consumer: Home's hero shows the painting landscape-cropped and steers `object-position` off
+  // these centres, and without a row `facePoint` answers 50/50, which on a cover window is her
+  // shoulder – and on THESE two paintings, whose subject is deliberately lower in the frame than a
+  // portrait's, it would be her hands.
+  // Centres read the way the header describes – a labelled grid over each 512px painting, then the
+  // rectangle cut and looked at:
+  //   `pregnant-early` – she is standing, head tilted down; the head spans y~80-163, giving
+  //     (258, 120) and the set's usual ~1.5x head height = 128, which is `adult-norm`'s own side and
+  //     the floor of the measured 124-182 spread;
+  //   `pregnant-last`  – she is seated and the whole frame sits higher; the head spans y~65-153,
+  //     giving (255, 108) and 1.5x the ~88px head = 132.
+  'adult-pregnant-early': [258, 120, 128],
+  'adult-pregnant-last': [255, 108, 132],
 }
 
 /** The faces that have a PAINTING but no 256px crop – the set the cutter must skip.
@@ -147,8 +165,22 @@ export const CROPS: Record<string, [number, number, number]> = {
  *  one file in one band, so it is not a `PortraitEmotion` and the containment claim above does not
  *  reach it – but it IS painting-only in the sense the CUTTER cares about (no crop, no builder that
  *  could ask for one), and `avatarCropPath`'s totality over `AvatarEmotion` is exactly what keeps
- *  that true. It rides `MemoryFace` instead; `shared/avatarEmotion.ts` carries the argument. */
-export const PAINTING_ONLY_FACES: readonly string[] = ['rehab', 'graduated', 'bride']
+ *  that true. It rides `MemoryFace` instead; `shared/avatarEmotion.ts` carries the argument.
+ *
+ *  ⚠ AND THE PREGNANCY PAIR JOINED ON 20.09 (v85 T10) for `graduated`'s reason exactly: two files,
+ *  one band, no crop and no builder that could ask for one. ⚠⚠ THE ENTRY IS MECHANICALLY REQUIRED
+ *  AND NOT A PREFERENCE – `croppableStems()` below cuts every key of `CROPS` that does not end in
+ *  one of these suffixes, so a rectangle added without a line here would put
+ *  `avatars/adult-pregnant-early.webp` on the cutter's list, which is a file nothing can request and
+ *  nobody painted. The suffix form is what makes that work: the stems end `-pregnant-early` and
+ *  `-pregnant-last`, so the two names here are the two faces and not the two stems. */
+export const PAINTING_ONLY_FACES: readonly string[] = [
+  'rehab',
+  'graduated',
+  'bride',
+  'pregnant-early',
+  'pregnant-last',
+]
 
 /** The stems the 256px cutter should cut – every entry except the painting-only faces. */
 export function croppableStems(): string[] {

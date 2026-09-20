@@ -44,6 +44,10 @@ import {
   collegePausedShareYears,
 } from './college'
 import { rngFromSeed } from '../rng'
+// ⭐ v85 T10 – the pregnancy portrait's window, shared so the engine and the UI cannot disagree about
+// which week wears which painting. Pure, no Vue, no DOM: `shared/` is engine-legal by invariant 1,
+// and `world/album.ts` and `world/albumBook.ts` already import from this very module.
+import { pregnancyFaceAt } from '../../shared/avatarEmotion'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING, callUpOpponent, nationFinishLabel } from '../nationalTeam'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
@@ -1943,6 +1947,20 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // FOR OPPOSITE REASONS: `lifeBeatPrompt` is non-null exactly when the week is refused, this one
     // on a week that ticks on regardless – so `blockingOverlay` reads the first and never this.
     softBeat: buildSoftBeatInvite(world),
+    // ⭐⭐⭐ v85 T10 – WHICH PREGNANCY PAINTING THE WEEK WEARS, and the ONE fact of `world.pregnancy`
+    // that crosses to the UI. The record itself stays engine-side (T1's own ruling); the window is
+    // `pregnancyFaceAt`'s, shared with the tests so «which week wears which» has one spelling.
+    // ⚠ THE `?? null` IS THE NO-PREGNANCY ARM AND NOT A COURTESY: on the 51 weeks between the birth
+    // and her decision the record is still standing, and the predicate – not this line – is what
+    // returns null through them.
+    pregnancyFace:
+      world.pregnancy === null
+        ? null
+        : pregnancyFaceAt({
+            week: world.week,
+            announcedWeek: world.pregnancy.announcedWeek,
+            dueWeek: world.pregnancy.dueWeek,
+          }),
     // ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK. Same contract as the two prompts above and
     // for the same reason: non-null on exactly the weeks `shootClashOpen` is true, which is the
     // predicate `advanceRefusal` blocks on, so the card cannot be missing on a week the engine has

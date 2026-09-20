@@ -724,3 +724,100 @@ export function heroFaceOf(read: { emotion: PortraitEmotion; channel: EmotionCha
   if (read.channel === 'injury') return read.emotion
   return 'norm'
 }
+
+// =================================================================================================
+// ⭐⭐⭐ v85 T10 – THE TWO PREGNANCY PAINTINGS, AND THE UNION THEY JOIN IS **NONE**
+// =================================================================================================
+//
+// `fem-euro-brunnet-adult-pregnant-early.webp` and `-pregnant-last.webp` shipped with the art set
+// and were referenced by nothing in `src/` until this task. §2 T10 wires them: `pregnant-early` from
+// `announcedWeek`, `pregnant-last` through the final stretch before `dueWeek`, and after the birth
+// «the standing stage rules resume untouched».
+//
+// ⚠⚠ WHICH UNION THEY JOIN IS A REAL DECISION AND THE ANSWER IS «NONE», WHICH IS `graduated`'s ROAD
+// AND NOT `bride`'s. All three of the existing unions were considered against their own written
+// arguments, and each refuses this pair for a reason already on this page:
+//
+//   * `AvatarEmotion` – `avatarCropPath` is TOTAL over it: «every string this can return names a
+//     file that exists; there is no branch through which it can produce a 404». There is no
+//     `avatars/adult-pregnant-early.webp` and no reason to cut one, because no surface in the app
+//     renders an emotion crop at all. A member here would break that guarantee outright.
+//   * `PortraitEmotion` – `PORTRAIT_EMOTIONS` is the BAND MATRIX, eight faces × five bands, swept
+//     against the files on disk by `tests/portrait-bands.test.ts`. This pair exists in ONE band,
+//     which is exactly `graduated`'s shape, and `graduated`'s own note says what joining would mean:
+//     «`portraitUrl(stage, emotion)` able to build four filenames that are not on disk».
+//   * `MemoryFace` – and THIS is the one that had to be argued rather than quoted, because `bride`
+//     IS a one-band painting and it DID join a union. The bride's own note says precisely why, and
+//     the reason does not transfer: «a memory is a CARD the ENGINE fills: `MemoryCard` carries
+//     `(stage, emotion)` and the UI calls `portraitUrl` with them. The engine cannot say «draw the
+//     bride» through a builder it is not allowed to know about». There is no memory card for a
+//     pregnancy – T4's birth polaroid already took `MEMORY_EMOTION.birth = 'norm'`, a picked and
+//     recorded answer – so no engine-filled card ever has to NAME this face. What the pair is, is a
+//     picture the WEEK's hero wears, which is `graduated` exactly.
+//
+// ⭐ AND THE `lateCareer` RULING IS WHAT MAKES THE BAND-LESS ROAD THE HONEST ONE RATHER THAN MERELY
+// THE SAFE ONE (11.09, «не страшно в этом случае, можно использовать повторно существующее»): a
+// pregnancy at thirty-two REUSES the adult scenes. So the picture genuinely has no band to
+// interpolate – `pregnantUrl` in art/preload.ts takes no stage at all, and there is no fallback to
+// arrange, because there is nothing to fall back FROM. `paintedFaceFor`'s band table would have been
+// answering a question this art does not ask.
+//
+// ⚠ IT IS PRESENTATION READING A FACT THE WORLD ALREADY HOLDS – `announcedWeek`, `dueWeek` and the
+// current week, all persisted by T1/T2, none of them derived here and none of them drawn. No RNG, no
+// schema, no engine change: `graduated`'s own standing, one section up.
+
+/** ⭐ THE TWO PREGNANCY PAINTINGS, as the one union that names them. A union of its own – see the
+ *  block above for why it joins neither the croppable seven, the painted eight, nor the polaroid's
+ *  nine. The strings ARE the second half of each file's stem (`adult-pregnant-early`), and
+ *  `PREGNANT_ART_STEM` in art/preload.ts is the one place that joining happens. */
+export type PregnancyFace = 'pregnant-early' | 'pregnant-last'
+
+/** ⚠⚠ **DRAFT – THE BUILDER'S, NOT THE BRIEF'S** (invariant 5: the arithmetic ships beside the
+ *  constant). §2 T10 says `pregnant-last` runs «inside the final drafted stretch before `dueWeek`»
+ *  and leaves the stretch to this task, so this number is T10's own and is flagged as such in the
+ *  wave's strings table §7.1.
+ *
+ *  THE ARITHMETIC. The model's term is `ECONOMY.motherhood.playsOnWeeks + termWeeks` = 8 + 31 = **39
+ *  weeks** from the announcement to the birth, with the announcement read as its week 0 (the
+ *  economy's own reading, written at `termWeeks`). A human third trimester opens at week 28 of 40 –
+ *  the last **12** – and 39 − 12 = 27, which lands the change of painting at model week 27, inside a
+ *  week of the real boundary and without a second constant to carry the offset. So: `pregnant-early`
+ *  for 27 weeks, `pregnant-last` for the final 12.
+ *
+ *  ⚠ IT IS A PICTURE AND NOT A MECHANIC, which is why it is here and not in `ECONOMY`. Nothing reads
+ *  it but the portrait – no entry, no hazard, no price and no draw – so T9 does not bench it and
+ *  moving it changes the start date of one painting and nothing else in the world.
+ *  ⚠ AND THE PAIR IS ALWAYS BOTH-SIDED at the shipped constants: 12 < 39, so every pregnancy that
+ *  reaches its due week wears both paintings and neither is unreachable copy. A value ≥ 39 would
+ *  retire `pregnant-early` silently, which is what `tests/wave8-pregnancy-portrait.test.ts` pins. */
+export const PREGNANT_LAST_WEEKS = 12
+
+export interface PregnancyPortraitInput {
+  /** the snapshot's current week */
+  week: number
+  /** the week the `'expecting'` beat was raised – she told him */
+  announcedWeek: number
+  /** the week the birth is due (persisted, never re-derived – `PregnancyState`'s own law) */
+  dueWeek: number
+}
+
+/** ⭐⭐ WHICH PREGNANCY PAINTING THIS WEEK WEARS, or `null` for a week that wears none.
+ *
+ *  ⚠⚠ THE WINDOW **CLOSES AT THE BIRTH AND NOT AT THE RECORD**, and that one comparison is the whole
+ *  of §2 T10's «after the birth, the standing stage rules resume untouched». `world.pregnancy`
+ *  outlives the birth by up to `decisionWeeksAfterBirth` weeks – T5 clears it, `landBirth`
+ *  deliberately does not (its own note says why: clearing it would re-open the entry gate the week
+ *  after a child is born) – so a portrait hung on «is there a record» would put a pregnant woman on
+ *  the hero for twenty weeks after her daughter was born. `week < dueWeek` is what stops that, and it
+ *  needs no second field to say so.
+ *
+ *  ⚠ CLOSED-OPEN ON PURPOSE: she wears `pregnant-early` on the announcement week itself (the card is
+ *  blocking, so that week is one the player really sits on), and she wears nothing on `dueWeek`,
+ *  which is the week the feed says her daughter was born.
+ *
+ *  ⚠ TOTAL AND NEVER A 404 – the return is one of two strings that both name a file on disk, or
+ *  `null`. `portraitStage`'s own guarantee, kept by a union of exactly the paintings that exist. */
+export function pregnancyFaceAt({ week, announcedWeek, dueWeek }: PregnancyPortraitInput): PregnancyFace | null {
+  if (week < announcedWeek || week >= dueWeek) return null
+  return week >= dueWeek - PREGNANT_LAST_WEEKS ? 'pregnant-last' : 'pregnant-early'
+}

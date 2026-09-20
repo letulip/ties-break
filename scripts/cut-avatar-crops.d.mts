@@ -7,8 +7,12 @@
  *  Whether a crop is CUT from one is a separate question – see `croppableStems`. */
 export declare const CROPS: Record<string, [number, number, number]>
 
-/** The emotions with a painting but no 256px crop (`rehab`). The art-side spelling of
- *  `PortraitEmotion \ AvatarEmotion`; tests/portrait-bands.test.ts pins the two equal. */
+/** The faces with a painting but no 256px crop. It STARTED as the art-side spelling of
+ *  `PortraitEmotion \ AvatarEmotion` – i.e. `rehab` alone, with tests/portrait-bands.test.ts pinning
+ *  the two EQUAL – and that stopped being the fact the moment one-band paintings arrived that are in
+ *  no union at all: `graduated` (T14), `bride` (the wedding) and the pregnancy pair (v85 T10). The
+ *  pin now states CONTAINMENT plus the literal list, and the note in `src/art/faceRects.ts` carries
+ *  the argument. ⚠ Entries are FACES and not stems – `croppableStems` matches them as suffixes. */
 export declare const PAINTING_ONLY_FACES: readonly string[]
 
 /** The stems the cutter actually cuts – `CROPS` minus the painting-only faces. */

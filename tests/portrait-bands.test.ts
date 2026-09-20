@@ -194,7 +194,17 @@ describe('the art matrix is complete on disk', () => {
     // engine can point a milestone at it. It is painting-only in the sense the CUTTER cares about,
     // which is the only sense this list has. The containment claim above is untouched; the literal
     // grows by one, so a fourth arrival is still a deliberate edit rather than a silent one.
-    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['bride', 'graduated', 'rehab'])
+    // ⚠ RE-AIMED 20.09 BY THE PREGNANCY PAIR (v85 T10), in the same direction again and by two: two
+    // files in one band, `graduated`'s road exactly (their own builder, no union at all – the
+    // argument is in `shared/avatarEmotion.ts`). The containment claim above is still untouched,
+    // because neither is a `PortraitEmotion`; the literal grows to five.
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual([
+      'bride',
+      'graduated',
+      'pregnant-early',
+      'pregnant-last',
+      'rehab',
+    ])
   })
 })
 
@@ -278,9 +288,16 @@ describe('the bride is painted for ONE band, and the other four fall back rather
         `${stage}-bride crop should NOT exist`,
       ).toBe(false)
     }
-    // ...so the cutter skips her, exactly as it skips the other two painting-only faces, and the
+    // ...so the cutter skips her, exactly as it skips the other painting-only faces, and the
     // number of stems it DOES cut is unchanged by her arrival.
-    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['bride', 'graduated', 'rehab'])
+    // ⚠ RE-AIMED 20.09 BY THE PREGNANCY PAIR (v85 T10) – see the twin pin up the file.
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual([
+      'bride',
+      'graduated',
+      'pregnant-early',
+      'pregnant-last',
+      'rehab',
+    ])
   })
 })
 

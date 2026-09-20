@@ -49,6 +49,7 @@ import {
   type PortraitEmotion,
   portraitAssetStem,
   type PortraitStage,
+  type PregnancyFace,
 } from '../shared/avatarEmotion'
 import type { FamilyBackground, TravelHomeScene, TravelHomeMood } from '../shared/protocol'
 
@@ -173,6 +174,39 @@ export const GRADUATED_ART_STEM = 'adult-graduated'
 /** Painting URL for the graduation portrait. No stage, no emotion: there is one file. */
 export function graduatedUrl(): string {
   return `${base()}${ART_DIR}${NAME}-${GRADUATED_ART_STEM}.webp`
+}
+
+// --- the two pregnancy paintings (v85 T10) -----------------------------------------------------
+//
+// `fem-euro-brunnet-adult-pregnant-early.webp` and `-pregnant-last.webp`. They shipped with the art
+// set, were referenced by nothing until wave 8, and take the road directly above this one:
+// `graduatedUrl`'s, not `portraitUrl`'s.
+//
+// ⚠⚠ THEIR STEMS CARRY THE WORD `adult` AND THEY ARE STILL NOT BAND FACES, which is the one thing
+// worth saying twice because the filename argues the other way. `adult-graduated` has the same shape
+// and the same answer: what makes a face a BAND face is that five files exist, not that one file's
+// name happens to contain a band. Two files exist here, and the owner RULED on 11.09 that a
+// `lateCareer` pregnancy reuses them – «не страшно в этом случае, можно использовать повторно
+// существующее» – so there is no stage to thread and a signature that took one would be inviting a
+// caller to ask for `lateCareer-pregnant-last`, which is not on disk and never will be.
+//
+// ⚠ NOT WARMED, DELIBERATELY – `graduatedUrl`'s own paragraph: every file under `public/images/**`
+// has been in the PWA install since round 29 part two #7, so both paintings are on the device before
+// the week that shows them exists. A `preloadPregnancyArt` would warm what the precache already
+// holds.
+
+/** The two paintings' stems – ALSO the keys their face centres are filed under in art/faceRects.
+ *  One spelling, because the URL and the framing must name the same picture (`GRADUATED_ART_STEM`'s
+ *  own rule, and `paintedStemFor`'s at greater length). */
+export const PREGNANT_ART_STEM: Record<PregnancyFace, string> = {
+  'pregnant-early': 'adult-pregnant-early',
+  'pregnant-last': 'adult-pregnant-last',
+}
+
+/** Painting URL for a pregnancy portrait. No stage: the ruling above says there is one pair for
+ *  every band that can reach this arc, and the type is what keeps a caller from asking for more. */
+export function pregnantUrl(face: PregnancyFace): string {
+  return `${base()}${ART_DIR}${NAME}-${PREGNANT_ART_STEM[face]}.webp`
 }
 
 /** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
