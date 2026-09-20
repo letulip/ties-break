@@ -1287,6 +1287,33 @@ function main(): void {
         `${2 * RAMP_WEEKS}w ${regainedLong[label]}/${withFreeze} = ${pct(regainedLong[label], withFreeze)}`,
     )
   }
+  console.log('')
+  // ⭐⭐⭐ AND THE SAME QUESTION AT SOFTER BARS, because «back to at least her rank at the pause» is the
+  // HARDEST reading of «regained her band» and a 0/16 at that bar tells a reader nothing about how
+  // close she came. The research's sentence is «~40% of mothers return SUCCESSFULLY», which names no
+  // rank at all – so the honest thing is to print the DISTRIBUTION and let his word land on a bar,
+  // rather than to pick one here and report a single share as if the bar were ruled.
+  console.log(`  where she actually stands ${2 * RAMP_WEEKS} weeks after the return – the distribution, not one bar:`)
+  console.log(
+    `  ${pad('arm', 24)}${padL('med rank', 10)}${padL('top 100', 10)}${padL('top 200', 10)}${padL('top 500', 10)}${padL('unranked', 10)}`,
+  )
+  const inBand = (xs: number[], bar: number): string => `${xs.filter((r) => r > 0 && r <= bar).length}/${xs.length}`
+  for (const label of ARM_LABELS) {
+    const st = armStats(label)
+    const rl = st.ranksLong
+    console.log(
+      `  ${pad(label, 24)}${padL(rl.length ? median(rl).toFixed(0) : '–', 10)}${padL(inBand(rl, 100), 10)}` +
+        `${padL(inBand(rl, 200), 10)}${padL(inBand(rl, 500), 10)}${padL(`${rl.filter((r) => r > 1000).length}/${rl.length}`, 10)}`,
+    )
+  }
+  const pauseBar = ramped.map((c) => c.rankAtPause).filter((r): r is number => r !== null)
+  console.log(
+    `  for scale: her rank AT THE PAUSE was median ${pauseBar.length ? median(pauseBar).toFixed(0) : '–'}, ` +
+      `and at the RETURN the live table had her at median ${(() => {
+        const rr = ramped.map((c) => c.rankAtReturn).filter((r): r is number => r !== null)
+        return rr.length ? median(rr).toFixed(0) : '–'
+      })()}`,
+  )
   // ⚠ AND THE BASE WALK'S OWN THREE-YEAR READ, which is longer than any arm above and is the freeze's
   // own horizon. It is the DRAINED (`small-first`) arm and says so.
   const longRows = census.filter((c) => c.returnedWeek !== null && c.rankAtPause !== null)
