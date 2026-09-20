@@ -425,7 +425,7 @@ nothing else (§4a.2's law)». **In wave 8 it does not hold.** The `'expecting'`
 folded comparison would therefore report the wave's own design as a violation of the law. The channels
 are separated so the verdict stays where invariant 2 puts it: **on MAIN.**
 
-### §4.2 Measured – the shipped tree, `f35acf98`
+### §4.2 Measured – the shipped tree
 
 | channel | first parts at | the two values there |
 | --- | --- | --- |
@@ -504,7 +504,7 @@ measurement, not a blindness.
 
 | what the law asks | where it is answered |
 | --- | --- |
-| the commit each arm was built at | `f35acf98` for both arms of §4.2 and §4.5; §4.4's arms differ from it by one reverse-edited constant, restored |
+| the commit each arm was built at | ⚠ **three builds, named exactly.** §4.2's shipped arm: the bench as of **`ba03cd54`** (the commit that added the `bond` and `spirit` channels) – and **reproduced line for line** by the 240-career runs at `e86eed27` and `1a28578e`. §4.4's control arms: the same bench source, with `perWeekByAge`'s live rungs reverse-edited to 0 in `src/engine/economy.ts` and **restored immediately** (`git status` clean, `git diff` empty, printed by the run's own script). §4.5's absurd arm: **`f35acf98`**, the commit that added `--indepAbsurd` |
 | the reader is present on that tree | the walk reaches **both** of the wave's blocking cards (printed in the header line), and three channels really do move – an arm that could detect nothing could not have produced §4.3 |
 | the absurd-value check moves the output | §4.5 – MAIN parts at week 0 and the exit code turns |
 
