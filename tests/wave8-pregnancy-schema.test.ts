@@ -1,5 +1,5 @@
 // =================================================================================================
-// WAVE 8, T1 – THE PREGNANCY AND THE RETURN: THE v85 SCHEMA MOVE, ITS TWO SEATS, AND THE WIDENED KIND
+// WAVE 8, T1 – THE PREGNANCY AND THE RETURN: THE v85 SCHEMA MOVE, ITS SEATS, AND THE WIDENED KIND
 // =================================================================================================
 //
 // `docs/plans/life-wave-8-builder-2026-09.md` §2 T1; the design
@@ -8,6 +8,13 @@
 // birth and the `'postpartum'` shock T4's, `returnPlan` T6's. Nothing on this tree can set
 // `world.pregnancy` non-null or push a child except a test poking the world, which is what «the
 // schema move is inert» means and what the frozen careers measure.
+//
+// ⭐⭐⭐ RE-AIMED 20.09 – v85 TOOK A THIRD SEAT AFTER GATE 2: `world.comeback` (the week she came back
+// and the freeze she came back with; the architect's ruling – task T2½ piece 1). It grew v85 rather
+// than taking an 86, and the licence is one fact: NOTHING HAS SHIPPED – v85 exists only on
+// `life/wave-8` and no save in the world holds it. ⚠ T2 HAS SINCE LANDED, so «no writer» is now true
+// of `children` and `comeback` and NOT of `pregnancy` (`rollPregnancy` writes it): where a case below
+// still makes the no-writer claim, it makes it about the keys that can still carry it, and says so.
 //
 // ⚠⚠ THIS FILE EXISTS BECAUSE THE GOLDEN CORPUS CANNOT WITNESS THE `??=` ARM, and that is the same
 // hole wave 6 §B and wave 7 dug their crafted payloads for. Every fixture in the corpus back-fills –
@@ -69,6 +76,49 @@
 // `createWorld`'s LITERAL and of the live freeze that hashes it – not of the peel, whose own comment
 // therefore credits the literal rather than itself.
 //
+// ⭐⭐⭐ AND THREE MORE ARMS FOR v85's THIRD KEY, `comeback` (20.09, after gate 2 – task T2½ piece 1),
+// measured the same way on the same protocol: control GREEN first over a 17-file / 561-test scope
+// (this file, the seven coach-travel-edge files, the three goldenSaves files, migrations, wave5's
+// elite gate and psychologist roster, wave6's spotlight roster, round43-form and round31-age-curve),
+// every arm applied by a scripted string edit with an `APPLIED=yes/NO` receipt, and every revert
+// confirmed by an md5 back to pristine – never `git checkout`. No arm came in at 0 RED.
+//
+//   ARM 6  `save.comeback ??= null` -> `save.comeback = null`      1 RED  §B's keep-a-comeback case,
+//          (the `??=` arm for the third key)                              and §A stayed ENTIRELY
+//                                                                         GREEN – the same
+//                                                                         measurement ARMs 1 and 2
+//                                                                         made, for the key where it
+//                                                                         costs the most: a plain
+//                                                                         `=` hands a woman three
+//                                                                         years into her comeback
+//                                                                         all twelve protected
+//                                                                         entries back, silently, on
+//                                                                         a load. ⚠ §B's
+//                                                                         already-migrated case does
+//                                                                         NOT red here and should
+//                                                                         not: its payload is
+//                                                                         `schemaVersion: 85`, so
+//                                                                         the `v === 84` step never
+//                                                                         runs at all
+//   ARM 7  `createWorld`'s `comeback: null` -> a non-null record    6 RED  the 4 LIVE-hash cases in
+//                                                                         coach-travel-edge, plus
+//                                                                         §C's same-shape case and
+//                                                                         §D's no-writer case here –
+//                                                                         ARM 4's count and ARM 4's
+//                                                                         files, one key over
+//   ARM 8  `comeback` MOVED AHEAD of `children` in the literal      5 RED  the 4 LIVE-hash cases,
+//                                                                         plus §C's order case. ⭐
+//                                                                         EVERY ROLLBACK RUNG STAYED
+//                                                                         GREEN, `PRE_V85` INCLUDED
+//                                                                         – ARM 5's finding
+//                                                                         REPRODUCED with a third
+//                                                                         key in the destructure,
+//                                                                         which is the strongest
+//                                                                         available statement that
+//                                                                         the peel really is
+//                                                                         order-insensitive and the
+//                                                                         LITERAL really is not
+//
 // ⚠ AND THE ARMS' OWN NEAR-MISS IS RECORDED, because it is the family this repo keeps catching.
 // ARM 1 and ARM 2 were first applied by a `perl -0pi` whose `\Q…\E` block had the `??` escaped INSIDE
 // the quotemeta – so the substitution matched nothing, the file was never edited, and both arms came
@@ -86,10 +136,15 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 
-/** The two world keys this version adds, in the order `createWorld`'s literal appends them – which is
+/** The world keys this version adds, in the order `createWorld`'s literal appends them – which is
  *  the order the peel in tests/coachTravelEdgeFixtures.ts reverses, and the reason it is a list and
- *  not a set. */
-const V85_WORLD_KEYS = ['pregnancy', 'children'] as const
+ *  not a set.
+ *
+ *  ⭐⭐⭐ THREE, NOT TWO, SINCE 20.09 – v85 GREW `comeback` AFTER GATE 2 (the architect's ruling,
+ *  task T2½ piece 1): the week she came back and the freeze she came back with, which T6 writes and
+ *  nothing else ever will. The list is the one place this file names the version's keys, so adding
+ *  the third here is what re-aims every case below at once – which is why it is a list. */
+const V85_WORLD_KEYS = ['pregnancy', 'children', 'comeback'] as const
 
 const v84 = (): Record<string, unknown> => JSON.parse(readFileSync(`${SAVES}/v84.json`, 'utf8'))
 const rec = (w: unknown): Record<string, unknown> => w as unknown as Record<string, unknown>
@@ -107,6 +162,19 @@ function craftedPregnancy(): Record<string, unknown> {
     dueWeek: 872,
     support: 'warm',
     returnPlan: null,
+  }
+}
+
+/** A comeback as T6 will eventually write one, built by hand for the same reason the pregnancy above
+ *  is: on this tree nothing can produce one. The values are chosen to be the ones a careless step
+ *  would destroy – `returnedWeek` is a real week that is NOT `dueWeek` (the two really are different
+ *  numbers, which is half of why this key exists), and `entriesLeft` is PARTLY SPENT, because the
+ *  whole reason the freeze is state rather than a derivation is that it counts down. A step that
+ *  clobbered this would silently hand a career back its twelve entries. */
+function craftedComeback(): Record<string, unknown> {
+  return {
+    returnedWeek: 886,
+    protectedRank: { rank: 41, entriesLeft: 7, validUntilWeek: 1042 },
   }
 }
 
@@ -132,12 +200,13 @@ describe('wave 8 T1 A – v85, the three-part move', () => {
     }
     expect(v85.pregnancy, '⭐ she is not expecting, which is every career in the corpus').toBe(null)
     expect(v85.children, '⭐ and has had no children, for the plainest possible reason').toEqual([])
-    // ⚠⚠ AND THE TWO KEYS ARE LAST, IN THIS ORDER, WHICH IS AN ASSERTION AND NOT A COINCIDENCE. The
+    expect(v85.comeback, '⭐ and never paused, so there is no return to have come back from').toBe(null)
+    // ⚠⚠ AND THE THREE KEYS ARE LAST, IN THIS ORDER, WHICH IS AN ASSERTION AND NOT A COINCIDENCE. The
     // frozen-career identities reproduce each older schema by dropping exactly the keys appended
     // since, so the peel in tests/coachTravelEdgeFixtures.ts depends on this serialisation order. If
     // a later step ever writes these keys earlier, this line goes red before the hashes do and names
     // the reason, where a red hash names nothing.
-    expect(Object.keys(v85).slice(-2), 'the two new keys are LAST and in append order').toEqual([...V85_WORLD_KEYS])
+    expect(Object.keys(v85).slice(-V85_WORLD_KEYS.length), 'the new keys are LAST and in append order').toEqual([...V85_WORLD_KEYS])
   })
 
   it('⭐⭐ back-fills two literals, both exactly true rather than bargains with a pruned log', () => {
@@ -156,6 +225,10 @@ describe('wave 8 T1 A – v85, the three-part move', () => {
     // written down for the first time.
     expect(migrated.pregnancy).toBe(null)
     expect(migrated.children).toEqual([])
+    // ⭐ AND THE THIRD IS THE SAME SENTENCE A THIRD TIME AND IF ANYTHING PLAINER: «she never paused
+    // and never came back» is exactly true of a career that could not have paused, because there was
+    // no pause to take before this version existed.
+    expect(migrated.comeback).toBe(null)
     // ⚠ AND THE FIXTURE IS THE REAL MIGRATION'S OWN OUTPUT, not a hand-written file beside it – the
     // recipe every fixture since v25 uses. Asserted, so a hand edit to either one goes red here.
     // ⚠ This is also the line the NEXT wave will have to re-aim, exactly as v84 re-aimed v83's:
@@ -202,6 +275,7 @@ describe('wave 8 T1 A – v85, the three-part move', () => {
       for (const key of V85_WORLD_KEYS) expect(key in migrated, `v${v}.json / ${key}`).toBe(true)
       expect(migrated.pregnancy, `v${v}.json`).toBe(null)
       expect(migrated.children, `v${v}.json`).toEqual([])
+      expect(migrated.comeback, `v${v}.json`).toBe(null)
     }
   }, 60_000)
 
@@ -219,7 +293,7 @@ describe('wave 8 T1 A – v85, the three-part move', () => {
     expect(files.length, 'the corpus is the whole ladder, v0 to the head').toBe(SAVE_SCHEMA_VERSION + 1)
     const carrying = files.filter((f) => {
       const save = JSON.parse(readFileSync(`${SAVES}/${f}`, 'utf8'))
-      return save.pregnancy != null || (Array.isArray(save.children) && save.children.length > 0)
+      return save.pregnancy != null || (Array.isArray(save.children) && save.children.length > 0) || save.comeback != null
     })
     expect(carrying, 'no golden save holds one, because on this tree nothing can write one').toEqual([])
   }, 60_000)
@@ -258,6 +332,25 @@ describe('wave 8 T1 B – the keep-branch, on a payload built for it', () => {
     expect(out.pregnancy, 'and the key it does not hold still back-fills').toBe(null)
   })
 
+  it('⭐⭐⭐ a save that already holds a comeback keeps it WHOLE – the freeze included, part-spent', () => {
+    // ⚠⚠ THE KEEP-BRANCH THAT PROTECTS THE MOST AND IS THE HARDEST TO SEE FAIL. `entriesLeft` is the
+    // one number in this version that a career SPENDS: a step written with `=` would hand a woman
+    // three years into her comeback all twelve entries back, on a load, silently, and every fixture
+    // in the corpus would still be green. It is crafted here because on this tree T6 does not exist
+    // and no engine run can produce one.
+    const kept = craftedComeback()
+    const lived = { ...v84(), schemaVersion: 84, comeback: JSON.parse(JSON.stringify(kept)) }
+    const out = rec(migrateSave(lived))
+    expect(out.comeback, 'a comeback already on the record is kept whole, freeze and all').toEqual(kept)
+    // ⚠ AND THE OTHER TWO STILL BACK-FILL on the same payload, which is what makes the three `??=`
+    // lines independent rather than one gate. This particular combination is also the REAL shape of a
+    // returned career one wave on: the pregnancy CLEARED at the return (which is what makes W5's
+    // repeat possible at all), the comeback standing, and – here – a `children` list the crafted
+    // payload deliberately does not carry, so the back-fill arm is exercised beside the keep arm.
+    expect(out.pregnancy, 'and the pregnancy key it does not hold still back-fills').toBe(null)
+    expect(out.children, 'and so does the children key').toEqual([])
+  })
+
   it('⚠ and a save holding BOTH keeps both, which is the shape T4 leaves behind', () => {
     // The week after a birth: the pregnancy cleared, one child on the record. Carried as one payload
     // because the two `??=` lines run in sequence on the same object and a step that reordered or
@@ -279,11 +372,18 @@ describe('wave 8 T1 B – the keep-branch, on a payload built for it', () => {
     // The two claims are the same claim seen from two sides, which is worth stating once: idempotency
     // over a back-filled save (§A) exercises `null ?? null`, and idempotency over a LIVED save
     // exercises the branch that actually protects data. Only the second can fail under `=`.
-    const lived = { ...v84(), schemaVersion: 85, pregnancy: craftedPregnancy(), children: [{ bornWeek: 872, sex: 'girl' }] }
+    const lived = {
+      ...v84(),
+      schemaVersion: 85,
+      pregnancy: craftedPregnancy(),
+      children: [{ bornWeek: 872, sex: 'girl' }],
+      comeback: craftedComeback(),
+    }
     const once = migrateSave(JSON.parse(JSON.stringify(lived)))
     const twice = migrateSave(JSON.parse(JSON.stringify(once)))
     expect(JSON.stringify(twice)).toBe(JSON.stringify(once))
     expect(rec(once).pregnancy, 'and it is still hers').toEqual(craftedPregnancy())
+    expect(rec(once).comeback, 'and so is the comeback, entries and all').toEqual(craftedComeback())
   })
 })
 
@@ -301,10 +401,12 @@ describe('wave 8 T1 C – `createWorld` and the migration agree', () => {
     const fresh = rec(createWorld('wave8-schema', DEFAULT_PROFILE))
     expect(fresh.pregnancy, 'she is eight – `null` is the identity here, not a placeholder for one').toBe(null)
     expect(fresh.children, 'and `[]` is the identity in the same plainest sense').toEqual([])
+    expect(fresh.comeback, 'and she has not paused, so there is nothing she came back from').toBe(null)
 
     const migrated = rec(migrateSave(v84()))
     expect(fresh.pregnancy).toEqual(migrated.pregnancy)
     expect(fresh.children).toEqual(migrated.children)
+    expect(fresh.comeback).toEqual(migrated.comeback)
   })
 
   it('⚠⚠ ...and appends them LAST, in the order the peel reverses', () => {
@@ -327,14 +429,14 @@ describe('wave 8 T1 C – `createWorld` and the migration agree', () => {
     const fresh = Object.keys(rec(createWorld('wave8-order', DEFAULT_PROFILE)))
     const at = fresh.indexOf('prologueTrace')
     expect(at, 'v84 key is there to hand the seat over').toBeGreaterThan(-1)
-    expect(fresh.slice(at, at + 3), 'v84 handed the last literal seat to v85 – `pregnancy` then `children`')
+    expect(fresh.slice(at, at + 1 + V85_WORLD_KEYS.length), 'v84 handed the last literal seat to v85 – `pregnancy`, `children`, then `comeback`')
       .toEqual(['prologueTrace', ...V85_WORLD_KEYS])
     // ⚠ AND THE GOLDEN FIXTURE IS THE OTHER HALF: a MIGRATED save really does carry them last, because
     // the step appends to a serialisation that already ends at `prologueTrace` (§A asserts it). The
     // two shapes differ in their tails and agree on everything the peel touches, which is exactly what
     // object rest guarantees and why the rollback identity holds for both.
     const v85 = Object.keys(JSON.parse(readFileSync(`${SAVES}/v85.json`, 'utf8')))
-    expect(v85.slice(-3), 'and a migrated save carries the same three, at its very end')
+    expect(v85.slice(-(1 + V85_WORLD_KEYS.length)), 'and a migrated save carries the same run, at its very end')
       .toEqual(['prologueTrace', ...V85_WORLD_KEYS])
   })
 })
@@ -356,6 +458,11 @@ describe('wave 8 T1 D – T1 ships the seats and no writer at all', () => {
     const world = createWorld('wave8-no-writer', DEFAULT_PROFILE) as WorldState
     expect(world.pregnancy).toBe(null)
     expect(world.children).toEqual([])
+    // ⭐ AND THE THIRD KEY STILL HAS NO WRITER AT ALL, which the two above can no longer say: T2
+    // landed and `rollPregnancy` writes `world.pregnancy`. `comeback` is T6's and T6's only, so a red
+    // on THIS line means a writer arrived early – which is exactly what the architect's gate is
+    // looking for, and it is the claim this case is worth keeping for.
+    expect(world.comeback).toBe(null)
   })
 
   it('⚠ the `spiritShock` kind widened and NOTHING can produce the new member', () => {

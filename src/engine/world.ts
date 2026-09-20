@@ -1908,17 +1908,33 @@ export function createWorld(
     // here or in any phase of the tick can put another value in either, however long a career runs,
     // which is what the frozen careers measure.
     //
-    // ⚠⚠ NOW THE LAST TWO KEYS OF THE LITERAL, IN THIS ORDER – `pregnancy` first, `children` second –
-    // and `prologueTrace` above has stopped being the last, the same handover it took from
-    // `coachDeal` and `coachDeal` took from `form`. Two keys in ONE append, peeled in one destructure
-    // for the reason the wave-1 three are: they arrived together, in this order, and object rest
-    // preserves the relative order of everything it keeps. ⚠ THE ORDER IS LOAD-BEARING: the
-    // frozen-career identities reproduce each older schema's hashes by dropping exactly the keys
+    // ⚠⚠ NOW THE LAST THREE KEYS OF THE LITERAL, IN THIS ORDER – `pregnancy`, `children`, `comeback`
+    // – and `prologueTrace` above has stopped being the last, the same handover it took from
+    // `coachDeal` and `coachDeal` took from `form`. Three keys in ONE append, peeled in one
+    // destructure for the reason the wave-1 three are: they arrived together, in this order, and
+    // object rest preserves the relative order of everything it keeps. ⚠ THE ORDER IS LOAD-BEARING:
+    // the frozen-career identities reproduce each older schema's hashes by dropping exactly the keys
     // appended since, so every key must stay in the order it was appended in (`careerHashAtSchema` in
-    // tests/coachTravelEdgeFixtures.ts peels in reverse, newest first – `children` before
-    // `pregnancy`).
+    // tests/coachTravelEdgeFixtures.ts peels in reverse, newest first – `comeback`, then `children`,
+    // then `pregnancy`). ⚠ AND LOAD-BEARING FOR THE LITERAL AND THE LIVE FREEZE, NOT FOR THE PEEL –
+    // T1's own correction, measured by its ARM 5 and kept true here: the peel names every one of
+    // these keys in ONE destructure, so it removes them whichever order they were written in and the
+    // rollback identity is genuinely order-insensitive. What the order decides is
+    // `JSON.stringify`'s output for the LIVE world, which is what the live hashes are taken over.
     pregnancy: null,
     children: [],
+    // ⭐⭐⭐ v85's THIRD KEY, added after gate 2 (20.09 – task T2½ piece 1): SHE HAS NOT PAUSED AND HAS
+    // NOT COME BACK, which on week 0 is the only thing it can mean. `null` is the IDENTITY here in
+    // the same plainest sense the two literals above it are, and it is the same literal the v84 ->
+    // v85 step back-fills with – so a migrated career and a fresh one stay the same shape at the
+    // moment they load, which is the claim `tests/wave8-pregnancy-schema.test.ts` §C makes.
+    //
+    // ⚠ AND THIS LINE IS THE WHOLE WRITER SET FOR THIS KEY ON THIS TREE – a claim the two keys above
+    // it can no longer make, because T2 landed and `rollPregnancy` writes `pregnancy`. T6 – the
+    // return – is the ONE writer `comeback` will ever have; nothing here or in any phase of the tick
+    // can put another value in it, however long a career runs, which is what the frozen careers
+    // measure.
+    comeback: null,
   }
   addEvent(world, {
     week: 0,

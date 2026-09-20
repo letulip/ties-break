@@ -387,6 +387,15 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         'children',
         'coachDeal',
         'coachPairs',
+        // ⭐ v85 AGAIN, after gate 2 – the SEVENTH time this roster is paid for, and the first time
+        // it is paid TWICE FOR ONE VERSION. `comeback` is the week she came back and the freeze she
+        // came back with (T6's seat; the architect's ruling of 20.09 – task T2½ piece 1), added to
+        // v85's own step rather than taking an 86 of its own, because nothing has shipped. The
+        // migration back-fills `null`, which is what this fixture walks up with. ⚠ That the roster
+        // goes red for a key added to an EXISTING rung is the assertion working exactly as its note
+        // predicts: it is a claim about what the ladder has added above v76 to date, not about which
+        // rung added it.
+        'comeback',
         'composureBonus',
         // ⭐ v80, wave F1 – the third time this roster is paid for.
         'form',

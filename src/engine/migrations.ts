@@ -3057,13 +3057,26 @@ export function migrateSave(raw: unknown): WorldState {
   // one per birth, on the WORLD rather than on the pregnancy because the pregnancy is cleared at the
   // birth and a child recorded only there is a child recorded nowhere (§0's own delta).
   //
+  // ⭐⭐⭐ AND A THIRD KEY, ADDED TO THIS SHIPPED-ON-THIS-BRANCH STEP AFTER GATE 2 (20.09, the
+  // architect's ruling – task T2½ piece 1): `comeback`, the week she came back and the freeze she
+  // came back with, which T6 writes and nothing else ever will. It is a third key on THIS step and
+  // not a v85 -> v86 rung of its own, and the licence is a single fact: NOTHING HAS SHIPPED. v85
+  // exists only on `life/wave-8`, no save in the world holds it, and §0's «this wave takes 85» – the
+  // sentence the owner read – stays true. ⚠⚠ THAT IS A LICENCE FOR THIS STEP AND FOR NOTHING ELSE,
+  // and it is written here so nobody reads it as a general permission: every step ABOVE this line is
+  // shipped, is in the hands of real saves, and invariant 3's «never edit a shipped one» binds it
+  // absolutely. The test of whether a step may be edited is not «is it recent» – it is «can a save
+  // in the world have walked it», and for every rung but this one the answer is yes.
+  //
   // ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT BARGAINS, AND THIS IS `loveEpisodes`'s v72 ARGUMENT
   // RATHER THAN `prologueTrace`'s v84 ONE ONE STEP UP. There, a real childhood had been walked and
   // thrown away, and the note had to explain why reconstructing it was refused. Here there is
   // nothing a reconstruction could even be tempted by: no save written before this version could
   // hold a pregnancy or a child, because there were none to hold – the mechanic arrives WITH this
   // version. «Not expecting» and «no children» are therefore the complete and exact statement about
-  // every career in the corpus, and no evidence anywhere in a save could say otherwise.
+  // every career in the corpus, and no evidence anywhere in a save could say otherwise. The third
+  // back-fill is the same sentence a third time and if anything plainer: «she never paused and never
+  // came back» is exactly true of a career that could not have paused.
   //
   // ⚠ `??=` AND NEVER `||=`, the standing rule of every step above – and the v84 step's own honesty
   // is owed here too rather than an invented bite. On THIS step's data the two are INDISTINGUISHABLE:
@@ -3071,6 +3084,7 @@ export function migrateSave(raw: unknown): WorldState {
   // would keep them as well, and the only falsy value either key can legitimately hold (`pregnancy:
   // null`) is exactly what the back-fill writes anyway. The rule is kept as a RULE rather than
   // re-derived per step, because the step that finally needs it should not be the one discovering it.
+  // `comeback` is a third object-or-null and changes none of that arithmetic.
   //
   // ⚠⚠ THE ARM THAT IS REAL HERE IS `=`, NOT `||=`, and it is the one the mutation ledger measures:
   // a plain assignment CLOBBERS a pregnancy a save is carrying, and **the golden corpus cannot see
@@ -3079,7 +3093,7 @@ export function migrateSave(raw: unknown): WorldState {
   // does see it (2 RED per key, measured), and it has to craft one because on this tree no engine run
   // produces a world with a pregnancy in it.
   //
-  // ⚠ IDEMPOTENT AND DRAW-FREE: two `??=` on two world keys, gated on `v === 84`, writing two
+  // ⚠ IDEMPOTENT AND DRAW-FREE: three `??=` on three world keys, gated on `v === 84`, writing three
   // literals. No sub-stream is reached on this path, so MAIN cannot move and the frozen capture
   // (41550 / e6b0c709) is untouched by construction. `spiritShock.kind`'s widening to
   // `'breakup' | 'postpartum'` rides this same version and needs NO step at all – adding a union
@@ -3092,6 +3106,7 @@ export function migrateSave(raw: unknown): WorldState {
   if (v === 84) {
     save.pregnancy ??= null
     save.children ??= []
+    save.comeback ??= null
     v = 85
   }
 

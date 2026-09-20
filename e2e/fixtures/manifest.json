@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 24268,
-      "payloadBytes": 24224,
-      "sha256": "8e762f9da8435846d152a9e7b12bb1ae29a4a27b30c6667a1a4784fdc3d186a4",
+      "bytes": 24274,
+      "payloadBytes": 24230,
+      "sha256": "6b818d02425d9a824280d77b5178b3c5d5e3484999ee73e3452e5250cfe5451f",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -69,9 +69,9 @@
         "kidLastName": "Kaminski",
         "country": "US"
       },
-      "bytes": 59657,
-      "payloadBytes": 59613,
-      "sha256": "e136360402df9d9518b83ff8a71ef086c5c96b60d85d1f92e86408175cdb3a2a",
+      "bytes": 59667,
+      "payloadBytes": 59623,
+      "sha256": "7822a581a6ff7667727b3e0f806352c230b547a8128cf3ea2792022418462af5",
       "seedsTried": 20,
       "facts": {
         "week": 120,
@@ -118,9 +118,9 @@
         "kidLastName": "Sedlak",
         "country": "US"
       },
-      "bytes": 82525,
-      "payloadBytes": 82481,
-      "sha256": "3e82cb3dae70a8eeef73507bf34cc5503faf3e48c1c93f40375f169f737f3a5f",
+      "bytes": 82532,
+      "payloadBytes": 82488,
+      "sha256": "cb97cf0fd55c91e51b77a5b0a95990103c535d697d04c65436a9427ea7d5509b",
       "seedsTried": 19,
       "facts": {
         "week": 412,
@@ -167,9 +167,9 @@
         "kidLastName": "Dumont",
         "country": "US"
       },
-      "bytes": 59849,
-      "payloadBytes": 59805,
-      "sha256": "92c6511fd0c2ae939b26884e570cf2a5199d16fb76cc0759afdb0fac66194c4f",
+      "bytes": 59858,
+      "payloadBytes": 59814,
+      "sha256": "4784361d5b50104d5d794ee9fff1023072fa10adc56c853ff2d6ff3b4677f86d",
       "seedsTried": 3,
       "facts": {
         "week": 86,
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60803,
-      "payloadBytes": 60759,
-      "sha256": "7f7bffa00adc0aed532e688bc3cf983cb107ee26882fbd5394560741782fd392",
+      "bytes": 60813,
+      "payloadBytes": 60769,
+      "sha256": "26cce4349cb621934baf91a1233fbce77d9a3aea974bad8d8ca2bc99dd615f2c",
       "seedsTried": 1,
       "facts": {
         "week": 86,
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 82368,
-      "payloadBytes": 82324,
-      "sha256": "5bb8e9dd59d61c3fae8aeabf78a1e8414e20276cc6a1db6ec61f12e272773344",
+      "bytes": 82378,
+      "payloadBytes": 82334,
+      "sha256": "0b4158a7f4a341a411f59c67b80ac4149ad4b10b70dfbda6a70111b38d808cfb",
       "seedsTried": 1,
       "facts": {
         "week": 242,
@@ -314,9 +314,9 @@
         "kidLastName": "Nikolaidis",
         "country": "US"
       },
-      "bytes": 83325,
-      "payloadBytes": 83281,
-      "sha256": "e5a411648d25f82c605e9a73eefcfdd62939e9352a28ee88b69b262c43fcc23c",
+      "bytes": 83334,
+      "payloadBytes": 83290,
+      "sha256": "4c04349e341dda19dded291f817f7cd3e88f972f642971f1c66366ed0a82afd4",
       "seedsTried": 14,
       "facts": {
         "week": 242,
@@ -363,9 +363,9 @@
         "kidLastName": "Lombardi",
         "country": "US"
       },
-      "bytes": 35444,
-      "payloadBytes": 35400,
-      "sha256": "46cf0ed00419e6a985ceab5c41be9f40d2d32f4810cab2c95ab467144f4e23d8",
+      "bytes": 35451,
+      "payloadBytes": 35407,
+      "sha256": "724a6087e5dd07785fb9ca5d22f8ab431c9c682bb72260f007da90760b97994f",
       "seedsTried": 2,
       "facts": {
         "week": 9,
@@ -412,9 +412,9 @@
         "kidLastName": "Ikeda",
         "country": "US"
       },
-      "bytes": 81865,
-      "payloadBytes": 81821,
-      "sha256": "609f3cd38242a46a1e2f02031cd465481f9097c7758492cbc224ef1d7bca9be8",
+      "bytes": 81873,
+      "payloadBytes": 81829,
+      "sha256": "bbd7124da84594924f43779bab0e5b42a519224cdd244247f8ae7cf903603406",
       "seedsTried": 53,
       "facts": {
         "week": 261,
@@ -461,9 +461,9 @@
         "kidLastName": "Aydin",
         "country": "US"
       },
-      "bytes": 81222,
-      "payloadBytes": 81178,
-      "sha256": "e72bb9b067add49d4f8a5238685d848d561adcbb1b8f23287a4a0a8c39be3415",
+      "bytes": 81231,
+      "payloadBytes": 81187,
+      "sha256": "bcd4f85d00c70564bb1454652ce99acb9a2d31f82381394a91ce2f2b51c5604e",
       "seedsTried": 38,
       "facts": {
         "week": 351,
@@ -510,9 +510,9 @@
         "kidLastName": "Dolezal",
         "country": "US"
       },
-      "bytes": 80188,
-      "payloadBytes": 80144,
-      "sha256": "5aa1fabec8f0b5ac7c66cabc435e7d687ee31a0abec9dee710575fc68d2aaa1a",
+      "bytes": 80195,
+      "payloadBytes": 80151,
+      "sha256": "c8ac39d98765781888cdcb5d7bedb64f27d907d393a64f1ead9f01d04d33111f",
       "seedsTried": 42,
       "facts": {
         "week": 681,

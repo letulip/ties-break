@@ -50,24 +50,27 @@ import {
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
-  it('⭐⭐⭐ v85: rolling the schema back to 84 – dropping `pregnancy` and `children` – returns the v84 CAREER on all three', () => {
+  it('⭐⭐⭐ v85: rolling the schema back to 84 – dropping `pregnancy`, `children` and `comeback` – returns the v84 CAREER on all three', () => {
     // ⭐⭐ AN IDENTITY, v84's OWN KIND, AND THE CASE NAME SAYS SO because the per-key diff proved it
-    // before a constant was touched. v85 appends TWO world keys – `pregnancy` and `children`, the
-    // pregnancy and the return (wave 8 T1) – and `createWorld` writes them `null` and `[]`.
+    // before a constant was touched. v85 appends THREE world keys – `pregnancy` and `children`, the
+    // pregnancy and the return (wave 8 T1), and `comeback`, the week she came back and the freeze she
+    // came back with (added to this same version after gate 2) – and `createWorld` writes them `null`,
+    // `[]` and `null`.
     //
-    // ⚠⚠ THE WRITER SET IS THE WHOLE ARGUMENT, and on this rung it is EMPTY: T1 ships the seats and
-    // NO WRITER AT ALL – the hazard is T2's, the pause T3's, the birth T4's – so nothing on this tree
-    // can put another value in either key however long a career runs. That is the same sentence v75's
-    // `spiritShock` rung made, and it is the stronger half of the argument while it lasts. The half
-    // that OUTLIVES it, and the one a later reader should lean on: the walk stops at 156 weeks, age
-    // 16.6, the hazard's window opens at 24 and marriage is the door – so this rung stays an identity
-    // after the writers land, unless `FREEZE_WEEKS` grows past the latch. A red HERE beside a green
-    // freeze means a pregnancy reached a sixteen-year-old, which the age window forbids.
+    // ⚠⚠ THE WRITER SET IS THE WHOLE ARGUMENT, and on this rung it is still EMPTY FOR THESE CELLS,
+    // although it is no longer empty on the tree: T2 has landed and `rollPregnancy` writes
+    // `world.pregnancy`. That makes the SECOND half of the argument the load-bearing one, and it is
+    // the half a later reader should lean on anyway – the walk stops at 156 weeks, age 16.6, the
+    // hazard's window opens at 24 and marriage is the door, so a frozen career can never reach a
+    // latch, let alone a pregnancy, a birth or a return. A red HERE beside a green freeze means a
+    // pregnancy reached a sixteen-year-old, which the age window forbids. ⚠ `comeback` keeps the
+    // stronger half too, for as long as T6 is unwritten: nothing on this tree can set it at all.
     //
-    // ⚠ THE MEASUREMENT is in the v85 block over `PRE_V85` in tests/coachTravelEdgeFixtures.ts –
-    // three keys moved per cell and nothing else, `rngMain` byte-identical everywhere, and
-    // `careerHashAtSchema(·, ·, 84)` reproduced the three shipped v84 `FROZEN` constants character
-    // for character with the bump in the tree.
+    // ⚠ THE MEASUREMENT is in the two blocks over `PRE_V85` in tests/coachTravelEdgeFixtures.ts –
+    // three keys moved per cell at T1 and ONE more at T2½, nothing else on either pass, `rngMain`
+    // byte-identical everywhere, and `careerHashAtSchema(·, ·, 84)` reproduced the three shipped v84
+    // `FROZEN` constants character for character BOTH TIMES: once with the bump in the tree, and
+    // again with the third key in it.
     expect(careerHashAtSchema(5, 0, 84), '25k · middle coach · grinder – the verbatim v84 value').toBe(PRE_V85.middleGrinder)
     expect(careerHashAtSchema(8, 0, 84), '120k · elite coach · grinder – the verbatim v84 value').toBe(PRE_V85.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 84), '8k · self-coached · player – the verbatim v84 value').toBe(PRE_V85.selfTravelling)
