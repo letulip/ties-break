@@ -83,6 +83,15 @@ const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   // making it per voice is a small engine change nobody has asked for yet (spec §6.6 item 4).
   peak: 'serious',
   fall: 'serious',
+  // ⚠ WAVE 8 T5 – A DRAFT (invariant 4), and `norm` was the real alternative rather than a straw one.
+  // The case for it: `college` is the one other row here where she leaves the tour for another life
+  // instead of being stopped by one, and `norm` is the face it takes. What decides against it is that
+  // `college` is also the one ending in the union that RESUMES – `resumesWeek` points a year out and
+  // she comes back – so its `norm` reads as «nothing has ended», which is exactly what `'family'` is
+  // not. ⚠ AND `happy` IS REFUSED FOR THE PEAK'S OWN REASON, repaired 17.09: all four voices reach
+  // this ending, so a face that fits `sunny` is wrong three times in four. `serious` is the one that
+  // is true of all of them, and it grades nothing – which is the whole rule this record keeps.
+  family: 'serious',
 }
 
 /** ⚠ THE GIRL, AND IT USED TO BE THE BAND – the defect this comment used to describe is now fixed

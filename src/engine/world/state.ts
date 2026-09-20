@@ -2046,7 +2046,17 @@ export interface PregnancyState {
   /** The parent's persisted answer grade, `null` while the blocking beat is still up. W4's return
    *  reads it; T2 writes it once, on the answer. */
   support: 'warm' | 'measured' | 'cold' | null
-  /** How she means to come back, `null` until the T6 beat asks. */
+  /** How she means to come back, `null` until the T6 beat asks.
+   *
+   *  ⚠⚠ AND SINCE T5 THIS FIELD IS **UNREACHABLE AS WRITTEN**, which is reported here rather than
+   *  quietly re-shaped, because the decision belongs to T6's builder and to the architect.
+   *  `resolveReturnDecision` clears the whole record on both of its arms – it must, or a career that
+   *  comes back has its entries shut for ever (`pauseCovering` has no upper bound of its own) – so by
+   *  the week T6's blocking `'return-plan'` beat is answered there is no `PregnancyState` to write a
+   *  plan onto. `ComebackState` below is the seat that outlives the pregnancy and already holds the
+   *  two other facts the return needs; a field there costs no migration, because no save in the world
+   *  holds a `comeback`. Left standing rather than deleted: it is T1's shipped shape, T6 has not run,
+   *  and a field removed by the wrong task is harder to put back than one that was left alone. */
   returnPlan: 'small-first' | 'straight-back' | null
 }
 

@@ -488,12 +488,18 @@ export function layoffBlock(input: {
  *  the entries that predate the announcement, which is the only honest thing it can be about.
  *
  *  ⚠ NO UPPER BOUND, AND THE ABSENCE IS THE DESIGN RATHER THAN AN OMISSION. A layoff names a return
- *  week because a body heals on a schedule; this does not, because in this wave nothing knows whether
- *  there IS one – T5 draws her decision and T6 clears the record on the return, so THE RECORD'S OWN
- *  LIFETIME IS THE WINDOW. A career that does not come back ends instead (`'family'`, T5) and
- *  `guardNotEnded` refuses the command before this is ever asked. So the day the window closes is the
- *  day `world.pregnancy` goes back to null, in exactly one place, and there is no second date for the
- *  two halves of the rule to disagree about.
+ *  week because a body heals on a schedule; this does not, because nothing in the world knows whether
+ *  there IS one until her decision is drawn – so THE RECORD'S OWN LIFETIME IS THE WINDOW. The day it
+ *  closes is the day `world.pregnancy` goes back to null, in exactly one place, and there is no second
+ *  date for the two halves of the rule to disagree about.
+ *
+ *  ⚠⚠ AND SINCE v85's T5 THAT ONE PLACE EXISTS AND IS NAMED: `resolveReturnDecision`
+ *  (`world/endings.ts`), which clears the record on **BOTH** of its arms – she tries, or the career
+ *  ends as `'family'`. The sentence this paragraph used to carry was «T5 draws her decision and T6
+ *  clears the record on the return»; T5's builder moved the clear onto its own two exits instead, for
+ *  a reason this comment is the whole of: a window with no upper bound that is closed by a LATER task
+ *  is a career whose entries are shut for ever if that task is not reached. The bound now lives on the
+ *  same function as the draw.
  *
  *  ⚠⚠ IT READS `world.pregnancy` AND NOTHING ELSE – THE DECOUPLING LAW (RULED 20.09, «развелись и
  *  развелись, жизнь продолжается»; the banner is `world/lifeBeat.ts` §14, addressed to this task by
@@ -527,12 +533,13 @@ export function pauseCovering(world: WorldState, week: number): WorldState['preg
  *  ⚠⚠ AND SINCE v85's T4 THE WINDOW **OUTLIVES THE WORD «expecting»**, which is reported here rather
  *  than quietly reworded (invariant 4 – the sentence is the owner's). `pauseCovering` above has no
  *  upper bound of its own: it returns the record for every week from `pausesWeek` on, and the record
- *  is cleared by T5/T6 and NOT by the birth – `landBirth` deliberately writes nothing to it, because
- *  clearing it would re-open the entry gate the week after a birth on a career that has not yet
- *  decided whether it is coming back (`world/lifeBeat.ts` §14 carries the whole argument). So from
- *  the birth until her decision – T5's window, which its own task drafts at 20 weeks and which does
- *  not exist on this tree yet – this card says «She is expecting» about a woman who is not. The
- *  REFUSAL is right and the WORD is stale; it lands in T8's table with the rest of the wave's
+ *  is cleared by `resolveReturnDecision` and NOT by the birth – `landBirth` deliberately writes
+ *  nothing to it, because clearing it would re-open the entry gate the week after a birth on a career
+ *  that has not yet decided whether it is coming back (`world/lifeBeat.ts` §14 carries the whole
+ *  argument). ⚠ T5 SHIPPED AND THE WINDOW IS NOW A MEASURED NUMBER RATHER THAN A DRAFT IN ANOTHER
+ *  TASK'S FILE: `ECONOMY.motherhood.decisionWeeksAfterBirth` is 20, so this card says «She is
+ *  expecting» about a woman who is not for exactly twenty weeks of every career that reaches a birth.
+ *  The REFUSAL is right and the WORD is stale; it lands in T8's table with the rest of the wave's
  *  drafts. */
 export const PREGNANCY_PAUSE_DETAIL = 'She is expecting – no new entries. The ones she already holds still stand.'
 

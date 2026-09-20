@@ -511,21 +511,23 @@ function rareCandidates(world: WorldState): AlbumCandidate[] {
 //
 // ⚠⚠ HIS 20.09 BLOCKER 1, AND IT IS THIS WAVE's WHOLE DEFECT CLASS IN ONE PLACE: «хорошие строки
 // могут описывать событие, которого в карьере не было». Both closing cards used to fire on ANY
-// `world.ending`, and the union has eight members – so a BANKRUPTCY, a forced stop or a departure
-// for college was given a farewell speech with thanks, an empty court and a handing over of the
-// book. The contract below is the ruling, in three parts.
+// `world.ending`, and the union has nine members since v85 (eight when this was written) – so a
+// BANKRUPTCY, a forced stop or a departure for college was given a farewell speech with thanks, an
+// empty court and a handing over of the book. The contract below is the ruling, in three parts.
 
 /** ⭐⭐ THE THREE FAMILIES A CAREER CAN END IN (his 20.09 ruling), and the closing is extended
  *  through this table rather than through a chain of `if`s.
  *
- *    `decision`      she chose to stop – `stopped`
+ *    `decision`      she chose to stop – `stopped`, and since v85 `family`
  *    `forced`        it was taken out of her hands – `bankruptcy`, `injury`
  *    `left-the-tour` she left the professional career – `natural`, `plateau`, `peak`, `fall`
  *
  *  ⚠⚠ A TOTAL `Record` OVER THE UNION, and that totality is the point of writing it as a table: a
- *  ninth ending goes RED here until somebody decides which of the three it is, which is exactly the
+ *  TENTH ending goes RED here until somebody decides which of the three it is, which is exactly the
  *  standing `ENDING_BLURB` / `ENDING_TITLE` / `EMOTION_BY_ENDING` already have (protocol/career.ts's
- *  own note: «a new ending cannot ship without its copy, enforced by the compiler»).
+ *  own note: «a new ending cannot ship without its copy, enforced by the compiler»). ⚠ The count in
+ *  that sentence said «ninth» and wave 8's `'family'` is the ninth, so it is advanced rather than
+ *  softened – the same repair `CareerEndingType`'s own «three TOTAL records» needed, one file over.
  *
  *  ⚠ `college` SITS IN THE TABLE AND IS ALMOST NEVER READ THROUGH IT. `closingEndingOf` below
  *  refuses a college latch while it resumes – his sentence: «college is not a final page at all
@@ -543,6 +545,15 @@ export const ALBUM_CLOSING_FAMILY: Record<CareerEndingType, AlbumClosingFamily> 
   peak: 'left-the-tour',
   fall: 'left-the-tour',
   college: 'left-the-tour',
+  // ⭐⭐ WAVE 8 T5 – THE NINTH ENDING, AND THE TABLE'S OWN PROMISE PAID: it «goes RED here until
+  // somebody decides which of the three it is», and it did. `decision` is the brief's drafted mapping
+  // and the design's own sentence is the argument – «a life completed rather than a career failed» –
+  // so it lands beside `stopped`, which is the same shape of story: she was never stopped, she
+  // decided. ⚠ `left-the-tour` IS THE ONE THAT LOOKS RIGHT AND IS NOT: that family is for a career
+  // that ran its course and closed, and the whole point of this ending is that the closing is a choice
+  // taken about something else. ⚠ ALL THREE FAMILIES STILL TAKE `A32` (his ruling below), so this row
+  // adds no occasion and no string – which is the extension point working exactly as its note says.
+  family: 'decision',
 }
 
 /** WHICH OCCASION EACH FAMILY's LAST PAGE SPEAKS IN. All three take `A32` today and that is HIS

@@ -9,7 +9,8 @@
 // imports these values with no runtime cycle. `resumeFromCollege` is the one piece that stayed in
 // world.ts, because spending four years means calling `tickWeek` and that would be a real cycle.
 //
-// ⚠ RNG: SIX OF THE EIGHT ENDINGS DRAW NOTHING. Bankruptcy, the injury, the fork's two answers and
+// ⚠ RNG: SIX OF THE NINE ENDINGS DRAW NOTHING (it was six of eight until v85 added `'family'`, and
+// the count is advanced rather than softened). Bankruptcy, the injury, the fork's two answers and
 // the natural end are deterministic – a counter, a post-draw predicate over an injury the
 // `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
 //
@@ -18,12 +19,19 @@
 // `seed:ending:fall:<season>`), persisting nothing, MAIN untouched (CLAUDE.md invariant 2). The
 // frozen MAIN capture (41550 / e6b0c709) cannot see them, and a player who plays the season
 // differently cannot re-roll the winter she is offered. See `resolveLeaving`.
+//
+// ⚠⚠ AND v85's `'family'` IS THE THIRD, ON THE SAME FORM AND WITH ONE PROPERTY MORE: `seed:life:return
+// :<decisionWeek>` is keyed on a week the RECORD names rather than on `world.week`, so the coin does
+// not move because a player left a reveal unopened. ⭐ IT IS ALSO THE ONLY DRAW IN THIS FILE WHOSE
+// OTHER OUTCOME IS NOT AN ENDING AT ALL – the same coin either stops the career or re-opens it, which
+// is why `resolveReturnDecision` owes two terminal shapes and says so at length.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
 import type { AutoEndingView, LeavingView, PlateauView } from '../ending'
 import {
   ENDINGS,
   ENDING_TITLE,
   detectEnding,
+  endingForFamily,
   endingForForkAnswer,
   endingForLeaving,
   endingForRetirement,
@@ -49,7 +57,11 @@ import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer
 // `answerFork` will not run until it has been answered. `world/lifeBeat.ts` imports nothing from
 // here (it takes `guardNotEndedForGood` from `./constants` for exactly this reason), so this edge
 // runs one way only.
-import { drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, FORK_WANT_ANSWER } from './lifeBeat'
+// ⚠ AND WAVE 8's T5 TAKES TWO MORE VALUES ACROSS THE SAME ONE-WAY EDGE (`decisionWeekOf`,
+// `returnChanceFor`): the pregnancy's arithmetic lives in §14 of that file with the rest of the arc,
+// and the LATCH can only live here, so the decision is split exactly the way `resolveLeaving` is –
+// the rule in a leaf, the coin and the latch at the one call site.
+import { decisionWeekOf, drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, returnChanceFor, FORK_WANT_ANSWER } from './lifeBeat'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE. `engine/collegeOffer.ts` imports only `shared/protocol`
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
@@ -409,6 +421,39 @@ export function resolveEndings(world: WorldState): void {
     return
   }
 
+  // 7b′. ⭐⭐⭐ v85 T5 – AND THE ONE SHE DECIDES AFTER A CHILD. Inert on every week but the one the
+  //      record names; see `resolveReturnDecision` for the draw, the two outcomes and the totality
+  //      obligation T3 handed it.
+  //
+  //      ⚠⚠ THE SLOT IS ARGUED AGAINST THE RANKING THIS FUNCTION ALREADY STATES, both ends.
+  //
+  //        · **BELOW 7b**, and that half is not free. 7b is «the two that happen to her» – facts that
+  //          had already happened by the time `ending.ts` read them – and both of them outrank a
+  //          decision that is still being taken: a family whose money ran out has no comeback to
+  //          decide about, and the career-ending injury names a body that cannot come back at all.
+  //          The file's own ordering said so before this task and this task had no reason to falsify
+  //          it. ⚠ The consequence is real and is stated rather than hidden: a career that goes under
+  //          inside the pause ends as `'bankruptcy'`, with `world.pregnancy` still non-null. That is
+  //          not the leak T3 warned about – `guardNotEnded` refuses every command on an ended world,
+  //          so there is no entry gate left to be shut.
+  //        · **ABOVE 7c″ (`resolveLeaving`), AND THIS HALF IS LOAD-BEARING.** Those two doors fire on
+  //          the off-season wrap week and `decisionWeek` can BE that week – the only real collision
+  //          this step has. When both are due, the family decision is the one the player has been
+  //          waiting twenty weeks for, and the fall door's own sentence («She stopped after the
+  //          fall») would be told about a season she spent off tour, which is his 20.09 blocker's
+  //          defect class exactly. Running first settles it through machinery that already exists:
+  //          `resolveLeaving` returns on `world.ending !== null`, so round 45 is not touched.
+  //        · ABOVE 7c / 7c′ / 7d IS FREE AND SAYING SO IS THE ARGUMENT: the fork and the departure
+  //          are asked at 18–19 and refuse once `world.fork` is set, the marriage door needs 23+, and
+  //          7d raises an OFFER rather than a latch. None of them can collide with this.
+  //
+  //      ⚠ A CAREER AT COLLEGE NEVER REACHES THIS LINE AND NEEDS NO CLAUSE FOR IT – the freeze IS a
+  //      latch, so 7a's `if (world.ending) return` above has already returned. Checked rather than
+  //      assumed, because it is the one state in the game where a career is alive AND `world.ending`
+  //      is non-null.
+  resolveReturnDecision(world)
+  if (world.ending) return
+
   // 7c. THE FORK, ASKED WHEN SCHOOL ENDS. Raised once, and it BLOCKS until answered.
   //
   // ⭐⭐⭐ ROUND 24 #5 – IT MOVED OFF HER BIRTHDAY («пункт 5 запускай как обсудили»,
@@ -492,6 +537,150 @@ export function resolveEndings(world: WorldState): void {
       })
     }
   }
+}
+
+/** ⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY** (invariant 4). The one kept row of the arm that does
+ *  NOT end the career – the week she says she is going back.
+ *
+ *  ⚠⚠ IT SAYS SHE IS TRYING AND NEVER THAT SHE IS BACK, and that is the honest split made into a
+ *  sentence rather than only into an arithmetic. Whether the comeback WORKS is emergent from T6's
+ *  pricing and measured by T9; a row that said «she is back» would be the model announcing an outcome
+ *  it has not computed, on the one screen the player reads as a record of what happened.
+ *
+ *  ⚠ THE SECOND HALF IS THE MECHANICAL FACT AND IS THE REASON THE ROW EXISTS AT ALL. On this week
+ *  `world.pregnancy` goes null and 51 weeks of refusals stop – every card on the Season screen quietly
+ *  changes its answer – and `landPregnancyPause`'s own argument applies in the mirror: «what is left
+ *  is the part a player would otherwise never be told». T6's `'return-plan'` beat asks how; nothing
+ *  before this line says THAT.
+ *  ⚠ HUSBAND-AGNOSTIC (§0's decoupling ruling) and it names no date beyond this week: which events she
+ *  actually plays is the return plan's, and the plan is T6's.
+ *  ⚠ NO NEW `LifeBeatKind` AND THEREFORE NO `lifeKind` STAMP – this is a `'milestone'` row through
+ *  `addEvent`, which is this file's own idiom for a fact about the career (the fork's «School is
+ *  over», the offer's lines, `latchEnding`'s title row) and is outside `wave4-life-row-stamp`'s law by
+ *  the same route `landBirth`'s row is. See `resolveReturnDecision` for why the beat is not built. */
+const RETURN_EVENT = 'She has decided to go back. From this week she can enter tournaments again.'
+
+/** ⭐⭐⭐ v85 T5 – HER DECISION, AND THE END OF THE ONLY WINDOW IN THE GAME WITH NO UPPER BOUND OF ITS
+ *  OWN (`docs/plans/life-wave-8-builder-2026-09.md` §2 T5). T2 wrote `world.pregnancy`, T3 shut the
+ *  calendar on it, T4 brought the child; this is the week the record resolves and the ONE place in the
+ *  engine `world.pregnancy` goes back to null.
+ *
+ *  ⚠⚠⚠ **THE TOTALITY OBLIGATION, AND IT IS WHY THIS FUNCTION HAS EXACTLY TWO EXITS.** T3 closed her
+ *  entries by reading the record LIVE – `pauseCovering` returns it for every event week at or after
+ *  `pausesWeek` – and wrote down that the refusal has no upper bound of its own: «THE RECORD'S OWN
+ *  LIFETIME IS THE WINDOW». So a live career left holding a non-null pregnancy, with no ending and no
+ *  return, has its entries shut FOR EVER, and nothing in the suite would say so. The paths out are
+ *  enumerated rather than trusted, and every one of them lands in one of TWO terminal shapes:
+ *
+ *      she tries            the record is cleared, `world.ending` stays null – the gate re-opens and
+ *                           the career ticks on. T6 hangs its machinery off the seam below.
+ *      she does not         the record is cleared AND `latchEnding(… 'family' …)` – `guardNotEnded`
+ *                           refuses every mutating command from that week on.
+ *      the window «passes»  ⚠⚠ IS NOT A THIRD CASE AND CANNOT BECOME ONE. The guard is `>=` and this
+ *                           function is called from `resolveEndings`, which runs on EVERY week (from
+ *                           `closeTheWeek`, or deferred to `finalizeTournament` on a reveal week), so
+ *                           the first week at or after the date resolves it. There is no branch here
+ *                           that reads the date and declines.
+ *
+ *  ⭐⭐ SO THE WHOLE OBLIGATION IS ONE SENTENCE AND ONE ASSERTION: **THE RECORD NEVER SURVIVES THIS
+ *  FUNCTION.** Both arms clear it, which also makes the function idempotent standalone – a second
+ *  call, in the same week or twenty years later, returns on the first clause – rather than idempotent
+ *  only because `resolveEndings` happens to check `world.ending` three lines above the call. That
+ *  distinction is not academic: T4's `landBirth` needed an explicit receipt precisely because its
+ *  write did not close its own gate, and a step whose safety lives in its CALLER is a step the next
+ *  wave moves and breaks in silence.
+ *  ⚠ CLEARING IT ON THE **ENDING** ARM TOO IS THE ONE PLACE THIS PARTS FROM T4's REASONING, and the
+ *  difference is worth naming. `landBirth` left the record whole because every field on it was still
+ *  true and T5/T6 were its readers; after this function there is no reader left – `world.children`
+ *  holds the birth, the milestone holds the album entry, and nothing in `buildEndingView`,
+ *  `buildAlbum` or the scroll reads `world.pregnancy` at all (grepped, not assumed). What is left is
+ *  state that only a gate could trip over, so it goes.
+ *
+ *  ⚠⚠ **ONE DRAW, ON THE WINDOW'S OWN WEEK, NOT ONE PER WEEK OF IT.** The brief is explicit («ONE
+ *  draw on `seed:life:return:<week>`») and the difference is not cosmetic: a per-week hazard at the
+ *  same constant would compound to 1 − 0.35^20, which is certainty, and T9 would bench a model nobody
+ *  wrote. `decisionWeekOf` (`world/lifeBeat.ts` §14) is the ONE spelling of which week that is and
+ *  carries the three reasons it is the END of the window; the KEY is that week and not `world.week`,
+ *  so the coin cannot move because a player took a reveal late – input-independence is permanent law
+ *  (invariant 2), and `resolveLeaving`'s own key carries the SEASON for exactly this reason.
+ *
+ *  ⭐⭐ **THE HONEST SPLIT, AND NOTHING HERE MAY BECOME A SUCCESS RATE.** This draw answers «does she
+ *  TRY» – base ~65%, `support`-weighted. Whether the comeback WORKS is EMERGENT from T6's pricing and
+ *  is MEASURED, never drawn; 0.65 × ~0.6 ≈ 0.4 is the digest's own «~40% of mothers return
+ *  successfully» read as the PRODUCT it is, and T9 checks the product rather than forcing either
+ *  factor. `returnChanceFor` is where the weights and their arithmetic live.
+ *
+ *  ⚠⚠ **IT IS HERS AND NOBODY IS ASKED** (§4a, at the layer's second-biggest moment). No menu opens,
+ *  no answer is taken, and the parent's part is already spent: the `support` grade he bought at the
+ *  `'expecting'` beat eleven months ago is the biggest single term in the chance.
+ *  ⚠ AND NO NEW `LifeBeatKind` IS ADDED FOR IT, which is a decision and not an omission. The brief's
+ *  «the parent hears it as a beat» is read as «he is told, not asked» – round 45's two doors are the
+ *  precedent, and they tell him through `latchEnding`'s own row. Building a card here would also
+ *  collide head-on with T6, whose §2 gives the RETURN WEEK a blocking `'return-plan'` beat: two cards
+ *  on one week, one of which asks nothing. The ending arm is carried by the latch's row, the return
+ *  arm by `RETURN_EVENT` above, and T8's table gets both.
+ *
+ *  ⭐⭐⭐ **THE DECOUPLING LAW, SECOND HALF** (RULED 20.09, «развелись и развелись, жизнь
+ *  продолжается»). T4 proved the birth needs no `if` about the episode; this proves the decision does
+ *  not either. There is not one clause below that mentions `latchedEpisode`, `endedWeek`,
+ *  `loveEpisodes` or `episodeId` – a career whose marriage ended mid-term reaches this week, draws the
+ *  same coin and reaches the same ending, and §E of the suite walks it and pins the absence
+ *  structurally on this function's own text, because a behavioural arm cannot see a clause that
+ *  happens not to matter yet.
+ *
+ *  ⚠ THE SEAM FOR T6 IS MARKED AT THE LINE IT BELONGS ON and is deliberately not built here: the
+ *  protected rank and `returnedWeek` are written from the record, BEFORE the clear, into
+ *  `world.comeback` (T2½ piece 1's seat, which has no writer on this tree). §2 T6 owns the rank, the
+ *  staged factor and the ramp; T5 owns getting the world to a shape T6 can start from. */
+export function resolveReturnDecision(world: WorldState): void {
+  const pregnancy = world.pregnancy
+  if (pregnancy === null) return
+  const decisionWeek = decisionWeekOf(pregnancy)
+  if (world.week < decisionWeek) return
+  // ⚠ ONE READING OF HER AGE, USED BY BOTH THE CHANCE AND THE RECORD – `resolveLeaving`'s own rule
+  // («the age the view already read, not a second call»), so the number that weighted the decision and
+  // the number the epilogue prints cannot be a birthday apart. ⚠ `??` on the two meters is the
+  // defensive read every hand-built probe world in this repo gets (`raiseForkOpinion`, two functions
+  // down); every real world, created or migrated, carries both.
+  const ageYears = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const chance = returnChanceFor(
+    pregnancy.support,
+    world.spirit ?? ECONOMY.spirit.baseline,
+    world.bond ?? ECONOMY.bond.start,
+    ageYears,
+  )
+  if (rngFromSeed(`${world.seed}:life:return:${decisionWeek}`)() < chance) {
+    // ⭐⭐⭐ SHE TRIES. **THIS IS T6's SEAM AND IT IS THE LINE ABOVE THE CLEAR**: the freeze
+    // (`pausesWeek` → her rank that week, 12 entries, 156 weeks) and `returnedWeek` are read off
+    // `pregnancy` and written to `world.comeback` HERE, while the record is still standing. T6 adds
+    // that one call and the `'return-plan'` beat; nothing else about this function moves.
+    // ⚠ AND THE CLEAR IS NOT OPTIONAL AND NOT DEFERRABLE TO T6, which is the one thing a later reader
+    // might undo believing it tidier. `pregnancyEligible`'s clause 2 refuses while a record stands and
+    // `pauseCovering` refuses every ENTRY while it stands, so a return that left the record in place
+    // would be a comeback that can never enter a tournament – T3's finding, and the whole reason this
+    // function owes two terminal shapes rather than one.
+    // ⚠⚠ ONE CONSEQUENCE IS T6's TO RULE ON AND IS FLAGGED RATHER THAN DECIDED HERE: `PregnancyState
+    // .returnPlan` dies with the record, so the blocking `'return-plan'` beat has nowhere to put its
+    // answer. `world.comeback` is the seat that outlives the pregnancy, it already carries the return's
+    // other two facts, and no save in the world holds one – so a field there costs no migration. The
+    // field is left standing in `world/state.ts` with the same note beside it.
+    world.pregnancy = null
+    // ⚠ NO `captureMilestone` – the album's milestone channel is what the family KEEPS, and T4's birth
+    // is this arc's entry there. A decision to try is news about a season (T3's own distinction).
+    addEvent(world, { week: world.week, type: 'milestone', keep: true, text: RETURN_EVENT })
+    return
+  }
+  // ⭐⭐ SHE DOES NOT, AND THE CAREER STOPS – through `latchEnding`, the ONE seam every other ending
+  // uses, so the epilogue, the album and the scroll assemble with no new branch anywhere. That is
+  // wave 7½'s totality claim being spent rather than tested for the first time: the four records keyed
+  // on `CareerEndingType` carry `'family'` and nothing in `buildEndingView` asks which ending it is.
+  // ⚠ THE ABSENCE IS COUNTED FROM `pausesWeek` AND NOT FROM THE ANNOUNCEMENT – the weeks the entries
+  // were actually shut, which is what the detail line claims and the only span this ending can name
+  // without overstating (she played on for `playsOnWeeks` after she told him). Read off the local
+  // binding, so the clear one line below cannot take the number out from under it.
+  const ending = endingForFamily(world.week, ageYears, world.week - pregnancy.pausesWeek)
+  world.pregnancy = null
+  latchEnding(world, ending)
 }
 
 /** ⭐⭐⭐ ROUND 45 – SHE DECIDES, AND NOBODY IS ASKED (`docs/specs/the-two-more-doors-2026-09.md`).

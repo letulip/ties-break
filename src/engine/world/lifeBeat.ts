@@ -6337,7 +6337,8 @@ export function pregnancyChanceAt(world: WorldState): number {
  *     does NOT say a woman has one child: repeat pregnancy is CONFIRMED WANTED in the owner's own
  *     words («после беременности может быть и повторная», 11.09), and **W5 is the task that lifts
  *     this line** – by name, here, so nobody later reads a scope boundary as a design ruling.
- *     ⚠ WITHOUT IT §4 IS FALSE THE MOMENT T6 CLEARS THE RECORD, and falsely in the quietest possible
+ *     ⚠ WITHOUT IT §4 IS FALSE THE MOMENT THE RECORD IS CLEARED – T5's `resolveReturnDecision` as
+ *     shipped, T6 in T2½'s own reading – and falsely in the quietest possible
  *     way: `world.pregnancy` goes back to `null` at the return, the same marriage re-enters the
  *     standing hazard, and repeat pregnancies happen at the FIRST pregnancy's rates – unbenched, and
  *     under a census whose corridor was derived for a different quantity. ⚠ IT NEEDS NO NEW FIELD:
@@ -6586,17 +6587,24 @@ const BIRTH_EVENT = 'Her daughter was born this week. The family has somebody ne
  *
  *  ⚠⚠ AND WHAT IT DOES **NOT** DO TO `world.pregnancy` IS A DECISION WITH A REASON, not an omission.
  *  The record survives the birth WHOLE, and nothing here writes or clears one field of it:
- *    · T5 reads `support` out of it (her decision) and T6 reads `returnPlan` INTO it, so it has to
- *      outlive the day by construction;
+ *    · T5 reads `support` out of it (her decision), so it has to outlive the day by construction.
+ *      ⚠ T4 WROTE «and T6 reads `returnPlan` INTO it» AND T5 FALSIFIED THAT HALF, which is corrected
+ *      here rather than left: `resolveReturnDecision` clears the record on BOTH arms, so by the week
+ *      T6's `'return-plan'` beat is answered there is no `PregnancyState` left to write a plan onto.
+ *      `world.comeback` (T2½ piece 1) is the seat that outlives the pregnancy and is where T6's
+ *      builder will want that field; the question is flagged at the clear itself and in T5's
+ *      hand-back rather than decided here;
  *    · every field on it is still TRUE afterwards – `pausesWeek` is the week entries closed,
  *      `dueWeek` is the week the child came, `support` is the answer that was given, `episodeId` is
  *      still whose;
  *    · and the pause is the one that matters: `pauseCovering` (`world/medical.ts`) shuts the calendar
  *      for every `week >= pausesWeek` while the record stands, and T3 wrote down that this window has
- *      NO UPPER BOUND OF ITS OWN – «the RECORD'S OWN LIFETIME is the window. T5/T6 clear
- *      `world.pregnancy`». Clearing it here would re-open the entry gate the week after a birth, on a
- *      career that has not yet decided whether it is coming back, which is the one thing the brief's
- *      two outcomes both say is false. THE BIRTH IS NOT THE BOUND.
+ *      NO UPPER BOUND OF ITS OWN – «the RECORD'S OWN LIFETIME is the window». Clearing it here would
+ *      re-open the entry gate the week after a birth, on a career that has not yet decided whether it
+ *      is coming back, which is the one thing the brief's two outcomes both say is false. THE BIRTH
+ *      IS NOT THE BOUND. ⚠ THE BOUND IS `resolveReturnDecision` (`world/endings.ts`, T5) and it is
+ *      TOTAL over its own two exits, so the window this function deliberately leaves open really does
+ *      shut twenty weeks later on every path.
  *  ⚠ THE ONE COST OF THAT, REPORTED RATHER THAN PAPERED OVER: the refusal sentence the gate prints is
  *  `PREGNANCY_PAUSE_DETAIL` – «She is expecting …» – and from this week on she is not. It stands for
  *  up to `decisionWeeksAfterBirth` weeks, which is real and is a WORDING question (invariant 4): the
@@ -6628,4 +6636,81 @@ export function landBirth(world: WorldState): void {
   // write (`??=`, or a «keep the bigger one» test) is the shape a later reader would add believing it
   // was a fix.
   world.spiritShock = { week: world.week, kind: 'postpartum' }
+}
+
+/** ⭐⭐⭐ THE WEEK SHE SAYS – the ONE week of the decision window that carries the draw, derived off
+ *  the record in ONE place so the gate and the RNG key cannot ever name two different weeks
+ *  (`activeEpisode`'s own law: two spellings of one fact are a defect waiting for a week to
+ *  disagree). Pure, zero draws, no writes. `resolveReturnDecision` (`world/endings.ts`) is the reader.
+ *
+ *  ⚠⚠ **ONE DRAW, AND IT IS THE END OF THE WINDOW RATHER THAN ITS START** – the brief's sentence is
+ *  «ONE draw on `seed:life:return:<week>`», and a hazard rolled once a week for twenty weeks is a
+ *  different model wearing the same constant: it would turn a drafted 65% into 1 − 0.35^20, which is
+ *  certainty, and T9 would be benching a number nobody wrote. So the window is a DATE and not a
+ *  span of chances. Which end it is has three reasons, and the first is mechanical:
+ *
+ *  1. ⭐⭐ HER `spirit` HAS FINISHED MOVING BY THEN, AND AT THE BIRTH IT HAS NOT EVEN STARTED.
+ *     `landBirth` stamps the postpartum mark on the due week and `accrueSpirit` prices it in that
+ *     same tick; T4 MEASURED the mark clearing in 3 / 4 / 5 weeks steady and 8 / 11 / 13 intense by
+ *     grade. Every one of those is inside 20, so at the decision week the `spirit` term reads her
+ *     RECOVERED spirit – which is what «weighted by spirit» is supposed to mean – while a draw on the
+ *     due week would read the number the shock is about to take away and would double-count support,
+ *     which already has its own term.
+ *  2. THE WINDOW WOULD OTHERWISE PRICE NOTHING. `decisionWeeksAfterBirth` is a real constant T9
+ *     benches; drawn at the start it would be a 20-week delay on an answer already known, and the
+ *     entry gate would re-open (or the career end) on the very week the child arrived.
+ *  3. IT IS THE HONEST SHAPE OF THE THING. The months after a birth are when this is decided, not the
+ *     day of it – and `PREGNANCY_PAUSE_DETAIL`'s own stale-word note (`world/medical.ts`) is the
+ *     measure of how long that is: 51 weeks with no new entry, `termWeeks` + this.
+ *
+ *  ⚠ IT IS DERIVED AND NOT PERSISTED, WHICH IS THE ONE PLACE THIS WAVE'S RECORDS PART FROM
+ *  `dueWeek`'s LAW, and the reason is named rather than hidden: `PregnancyState` gained its last
+ *  field at T1 and v85 took its last key at T2½ («This is the LAST key v85 takes»), so a `decidesWeek`
+ *  field would be a schema move that §2 T5 is not. The consequence is real and small – a retune of
+ *  `decisionWeeksAfterBirth` moves the decision date of a pregnancy a live career is already carrying
+ *  – and it is bounded by the fact that no save in the world holds a v85 pregnancy at all. If the
+ *  constant is still moving when one does, the honest fix is the field and its migration. */
+export function decisionWeekOf(pregnancy: PregnancyState): number {
+  return pregnancy.dueWeek + ECONOMY.motherhood.decisionWeeksAfterBirth
+}
+
+/** ⭐⭐⭐ HER CHANCE OF **TRYING** – pure over the four inputs the brief names, in its own order of
+ *  size: `support` (the biggest, the digest's own claim), then `spirit`, `bond` and age. Zero draws,
+ *  no writes, no world – `arrivalHazardFor`'s and `endsHazardFor`'s own shape (§5), which is what
+ *  lets every grade be pinned without building a career.
+ *
+ *  ⚠⚠ IT ANSWERS «DOES SHE TRY» AND NOTHING ELSE, AND THAT FENCE IS THE POINT OF THE WHOLE MODEL.
+ *  The research's «~40%» is «of mothers, return SUCCESSFULLY» and the brief splits it: this factor is
+ *  DRAWN, and whether the comeback works is EMERGENT from T6's pricing and is MEASURED, never drawn.
+ *  0.65 × ~0.6 ≈ 0.4 is the sanity line T9 checks as a PRODUCT, so that neither factor has to be
+ *  forced to a target. ⚠ NOTHING HERE MAY EVER BECOME A SUCCESS RATE – see `returnBase`'s own note in
+ *  `ECONOMY.motherhood`, where every size below is drafted with its arithmetic.
+ *
+ *  ⚠ SHE DECIDES AND NOBODY IS ASKED (§4a, at the layer's second-biggest moment). There is no parent
+ *  input in this signature and there is no menu anywhere that opens it – exactly as the announcement
+ *  was. What the parent did is in here ONCE, as the `support` grade he bought eleven months ago with
+ *  an answer he has already given, and as the `bond` that answer moved.
+ *
+ *  ⚠ A `null` GRADE READS THE `measured` CELL – `postpartumSupportScale`'s `??` courtesy, for its
+ *  reason: the `'expecting'` beat blocks the week, so no career can tick the 51 weeks from the
+ *  announcement to here without answering it, and the null belongs to a hand-built probe world.
+ *
+ *  ⚠ THE AGE TERM IS ONE-SIDED AND THE YEARS ARE WHOLE – `Math.floor` on the excess, so a birthday
+ *  and not a fortnight is what moves it, which is `kidAgeYears`' own grain everywhere else this layer
+ *  reads an age into a decision. */
+export function returnChanceFor(
+  support: PregnancyState['support'],
+  spirit: number,
+  bond: number,
+  ageYears: number,
+): number {
+  const m = ECONOMY.motherhood
+  const yearsOver = Math.max(0, Math.floor(ageYears - m.returnAgePivotYears))
+  const chance =
+    m.returnBase +
+    m.returnSupportShift[support ?? 'measured'] +
+    (spirit - ECONOMY.spirit.baseline) * m.returnSpiritPerPoint +
+    (bond - ECONOMY.bond.start) * m.returnBondPerPoint -
+    yearsOver * m.returnAgePerYearOver
+  return Math.min(m.returnChanceMax, Math.max(m.returnChanceMin, chance))
 }

@@ -5192,6 +5192,93 @@ export const ECONOMY = {
     joyBond: 2.5,
     worryBond: -0.5,
     careerFirstBond: -4,
+    /** ⭐⭐ HOW LONG THE MONTHS AFTER THE BIRTH RUN BEFORE SHE SAYS – drafted 20 (the BRIEF's figure,
+     *  §2 T5). ⚠ THE DRAW LANDS AT THE **END** OF THIS WINDOW AND NOT AT ITS START, which is what
+     *  makes the number price anything at all; `decisionWeekOf` (`world/lifeBeat.ts` §14) is where
+     *  that is argued, and its strongest reason is mechanical rather than narrative – T4 MEASURED the
+     *  postpartum mark clearing in 3–13 weeks by grade and intensity, so at +20 her `spirit` is her
+     *  recovered spirit and the term below reads a number that has finished moving.
+     *  ⚠ THE PAUSE OUTLIVES THE BIRTH BY EXACTLY THIS MANY WEEKS. `pauseCovering` has no upper bound
+     *  of its own (T3's finding): entries stay shut from `pausesWeek` until the record goes null, and
+     *  `termWeeks + decisionWeeksAfterBirth` = 31 + 20 = **51 weeks with no new entry**, a year almost
+     *  to the week. (Not «off tour»: already-booked events inside the window still play out, which is
+     *  the distinction the `'family'` ending's own detail line is written to respect.) T9 measures what
+     *  that costs her ranking; nothing here decides it. */
+    decisionWeeksAfterBirth: 20,
+    /** ⭐⭐⭐ HER CHANCE OF **TRYING** – the base, before the four terms below move it. Drafted 0.65
+     *  (the BRIEF's figure, «~65% to TRY»).
+     *
+     *  ⚠⚠ THIS IS HALF OF A TWO-FACTOR MODEL AND THE OTHER HALF IS NOT IN THIS BLOCK. The research's
+     *  headline is «~40% of mothers return SUCCESSFULLY», and the brief splits it honestly rather than
+     *  shipping one number that pretends to be both:
+     *
+     *      her decision to TRY        DRAWN, here, ~65% and `support`-weighted
+     *      whether the comeback WORKS EMERGENT from T6's pricing – MEASURED, never drawn
+     *
+     *  and the product is the sanity line: 0.65 × ~0.6 ≈ 0.4. ⚠⚠ SO NO CONSTANT IN THIS BLOCK MAY EVER
+     *  DECIDE WHETHER THE COMEBACK WORKED. A success rate written here would collapse the two factors
+     *  into one and make T9's check circular – it checks the PRODUCT against the digest's sentence
+     *  precisely so that neither factor has to be forced to a target. A builder who finds themselves
+     *  reaching for such a number stops and brings it; it belongs to T6's pricing and to nobody's draw.
+     *
+     *  ⚠ THE BASE IS THE **`measured`** RATE EXACTLY, because `returnSupportShift.measured` is exactly
+     *  0 – `ECONOMY.spirit.postpartumSupportScale`'s own arrangement one wave-task down, and for its
+     *  reason: the band a reader sees written down should be the band one real grade actually takes. */
+    returnBase: 0.65,
+    /** ⭐⭐⭐ THE BIGGEST TERM, AND IT IS THE DIGEST'S OWN CLAIM – «support only – reaction sets
+     *  recovery trajectory» (`docs/research/life-events-motherhood.md:31`). ⚠ THE SHAPE IS THE
+     *  **BUILDER'S DRAFT** and is flagged here exactly as `perWeekByAge` above is; the BRIEF drafts
+     *  the base and the ordering of the terms, not the sizes.
+     *
+     *  ⚠ THE ARITHMETIC, IN FULL:
+     *    · grades land at **0.80 / 0.65 / 0.45** – a 35 pp spread, which is more than twice what the
+     *      other three terms can move between them at realistic inputs (±0.04 spirit + ±0.03 bond +
+     *      0…−0.04 age ≈ 0.11 of span). «The biggest term» is arithmetic here, not an adjective;
+     *    · `measured` is EXACTLY 0, so `returnBase` above IS the measured-grade rate;
+     *    · THE ASYMMETRY IS THE ANSWERS' OWN. The three answers are already priced on `bond` at
+     *      +2.5 / −0.5 / −4 (the brief's ruled figures, three fields up), so the cold answer is the
+     *      heaviest of the three – ratio 4 / 2.5 = 1.60. This table keeps the direction and is
+     *      deliberately GENTLER: 0.20 / 0.15 = 1.33. One cold sentence eleven months earlier should
+     *      TILT a woman's decision about her own career; it may not decide it.
+     *  ⚠ A `null` GRADE TAKES THE `measured` CELL and is not a fourth column – `postpartumSupportScale`'s
+     *  own `??` courtesy: the `'expecting'` beat BLOCKS, so no career can tick the 51 weeks from the
+     *  announcement to the decision without answering it, and the null is a probe world's answer. */
+    returnSupportShift: { warm: 0.15, measured: 0, cold: -0.2 },
+    /** ⭐ HER OWN STATE, PER POINT OF `spirit` OFF `ECONOMY.spirit.baseline` (70). Builder's draft.
+     *  ±0.04 over the ±10 band a recovered girl really sits in at the decision week; −0.28 / +0.12 at
+     *  the ends of the 0–100 scale, which the clamp below then catches. ⚠ IT IS SECOND AND NOT FIRST
+     *  ON PURPOSE: the digest's row says SUPPORT sets the trajectory, so her mood may move the
+     *  decision and may not dominate it. */
+    returnSpiritPerPoint: 0.004,
+    /** ⭐ AND THE PARENT'S STANDING, PER POINT OF `bond` OFF `ECONOMY.bond.start` (70). Builder's
+     *  draft, and deliberately HALF the spirit term per point: §4a's law is that her life moves
+     *  `spirit` and his words move `bond`, so the number that is about HIM sits behind the number that
+     *  is about HER in a decision that is hers. ±0.03 over a realistic 55–85, ±0.06 over the whole
+     *  scale. */
+    returnBondPerPoint: 0.002,
+    /** ⭐ THE AGE TERM, AND IT IS ONE-SIDED. Builder's draft: nothing at or below `returnAgePivot`,
+     *  and `returnAgePerYearOver` off the chance for each whole year past it.
+     *
+     *  ⚠ ONE-SIDED RATHER THAN SYMMETRIC, and the reason is the drafted base. A symmetric term would
+     *  pay a 25-year-old a bonus and push her above 0.65, and then the BRIEF's own «~65% to TRY» would
+     *  no longer be the base of anything – it would be the rate of a girl nobody is. So youth is the
+     *  default and age is the cost, which is also the shape the digest describes: the window it names
+     *  is 24–35 and the comeback stories in it thin out at the top of that range.
+     *  ⚠ THE PIVOT IS 30 – the middle of the research's own 24–35 window rounded to a year, and the
+     *  age a career that conceived at the hazard's own likeliest rungs actually reaches the decision
+     *  at. The reachable span is −0 at 27 to −0.09 at 36 (the oldest decision this wave can produce:
+     *  conception at 35, +39 weeks to the birth, +20 more to here, WHOLE years), so the whole term is
+     *  worth just under two thirds of the warm grade and never more. */
+    returnAgePivotYears: 30,
+    returnAgePerYearOver: 0.015,
+    /** ⚠⚠ AND THE BAND THE CHANCE IS HELD INSIDE – builder's draft, and NECESSARY rather than tidy:
+     *  the terms above really do run off the end (cold + spirit 0 + bond 0 + 36 is
+     *  0.65 − 0.20 − 0.28 − 0.14 − 0.09 = **−0.06**, and warm + spirit 100 + bond 100 is 0.98). A
+     *  negative number would compare harmlessly and would still be a model claiming CERTAINTY about a
+     *  woman's decision, which is the one thing this layer's §4a forbids in both directions.
+     *  `ECONOMY.spirit.floor`'s own shape: a bound written down beats a value allowed to run off. */
+    returnChanceMin: 0.1,
+    returnChanceMax: 0.9,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

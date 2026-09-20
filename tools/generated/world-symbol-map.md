@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,768 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,772 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-606 exported names across 56 owning modules.
+609 exported names across 56 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 97 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 99 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
@@ -24,7 +24,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
 | `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 19 |
-| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 18 |
+| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 19 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 17 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
@@ -109,6 +109,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `boothMentionDue` – `src/engine/world/lifeBeat.ts`
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
+- `decisionWeekOf` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
 - `deliverOwnKey` – `src/engine/world/lifeBeat.ts`
 - `drawEndsRead` – `src/engine/world/lifeBeat.ts`
@@ -166,6 +167,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `pregnancyEligible` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `reachableSituations` – `src/engine/world/lifeBeat.ts`
+- `returnChanceFor` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
 - `rollEnds` – `src/engine/world/lifeBeat.ts`
 - `rollLeak` – `src/engine/world/lifeBeat.ts`
@@ -459,6 +461,7 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveCollegeDeparture` – `src/engine/world/endings.ts`
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `resolveLeaving` – `src/engine/world/endings.ts`
+- `resolveReturnDecision` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
 - `wonTopTitleInSeason` – `src/engine/world/endings.ts`
 
