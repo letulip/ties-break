@@ -150,7 +150,12 @@ export interface AlbumOccasion {
 
 /** ⭐ THE ARC – «сначала она была такой-то, а потом стала такой-то» (his addition, 19.09). The voice
  *  key is what she was BORN (\`temperament\`, drawn at birth and never changed); the direction is where
- *  \`wallsLean\` went. ⚠ There is no third direction: spec §4b measured the lean moving on 1 career of
+ *  \`wallsLean\` went. ⚠⚠ AND READ HIS SENTENCE AS EXPRESSION, NOT AS REPLACEMENT (corpus doc §5,
+ *  re-framed 20.09 on his own reading): the temperament is drawn once and never written again, so
+ *  nothing in a save can support a girl who turned into another girl. What the lean moves is how
+ *  reachable she is and how much of her reaches the parent – the same nature, further out or further
+ *  in. \`deep\`/\`open\` is the model: «Same sentence. Sooner.»
+ *  ⚠ There is no third direction: spec §4b measured the lean moving on 1 career of
  *  9, and the ruling is that the other eight take the ordinary closing sheet rather than being told
  *  they stayed themselves. ⚠ Two registers, not three – the arc's sentence needs both points in it and
  *  a caption cannot hold two points. */

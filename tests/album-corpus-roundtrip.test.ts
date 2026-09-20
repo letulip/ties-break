@@ -41,8 +41,11 @@
 //          no such occasion – the discipline this file and the parser share: a row that cannot be
 //          matched is REPORTED, never skipped.
 //   ARM E  ⭐⭐⭐ **THE DOCUMENT EDITED AND THE CATALOGUE NOT RE-EMITTED** – one word of `A15`/`deep`'s
-//          note changed in `docs/specs/album-corpus-2026-09.md` alone («nothing for a day» →
-//          «nothing all day»).
+//          note changed in `docs/specs/album-corpus-2026-09.md` alone («nothing for a while» →
+//          «nothing all week»). ⚠ RE-RUN 20.09 AGAINST THE RE-WORDED LINE rather than left quoting a
+//          string the document no longer holds: the prose pass replaced «for a day» (an unlicensed
+//          span, §3.1) with «for a while», and a ledger whose mutation cannot be reproduced from the
+//          current file is a measurement nobody can check. Same verdict, same named row.
 //          **1 RED** · «⭐⭐⭐ every one of the 128 notes is the document's», naming `A15/deep`.
 //          ⭐ THIS IS THE ARM THAT MATTERS MOST and it is the only one that runs in the direction the
 //          task is about: the document is the source of truth, so an edit there that never reached the
@@ -72,6 +75,19 @@
 //          here that reddens on a divergence the round-trip CANNOT see, because both sides agree. And
 //          it is not hypothetical – that sentence is what the first draft actually shipped, and this
 //          pin is what found it.
+//
+// ⚠⚠ A SECOND CANDIDATE PIN WAS NOT BUILT, 20.09, AND THE REASON IS HIS. The prose pass re-framed the
+// arc on his reading – a cell says EXPRESSION («the temperament stays her nature; what changes is how
+// reachable she is»), never BECOMING someone else – and the obvious next move is a pin that says so.
+// There is no honest way to write one. The property is semantic: «She stopped telling me the
+// timetable» and «The timetable still came first» differ by what they claim about a habit, not by any
+// token a regex can reach. The only mechanical shape available is a word list, and **he refused one by
+// name**: «автоматический blacklist слов вроде `day`, `year` или `flight` не рекомендую: будет много
+// ложных тревог. Лучше проверять смысловые источники на уровне сценариев.» A list of approved
+// continuity words would also be a list every future cell gets written TO, which is the formula
+// failure of §2 rebuilt as a test. So the frame lives in §5 of the document, where a writer reads it,
+// and the four scenario cases in `tests/albumBook.test.ts` remain the mechanical half – they assert
+// that a sentence is only PRINTED where its own fact is, which is the claim a machine can carry.
 //
 // ⚠ ONE CANDIDATE ARM WAS NOT BUILT AND IS RECORDED RATHER THAN QUIETLY DROPPED. «A line longer than
 // its own note» looks like the natural size pin and it would be RED ON HIS OWN COPY: `A1`'s line

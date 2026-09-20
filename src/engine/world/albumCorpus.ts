@@ -70,7 +70,12 @@ export interface AlbumOccasion {
 
 /** ⭐ THE ARC – «сначала она была такой-то, а потом стала такой-то» (his addition, 19.09). The voice
  *  key is what she was BORN (`temperament`, drawn at birth and never changed); the direction is where
- *  `wallsLean` went. ⚠ There is no third direction: spec §4b measured the lean moving on 1 career of
+ *  `wallsLean` went. ⚠⚠ AND READ HIS SENTENCE AS EXPRESSION, NOT AS REPLACEMENT (corpus doc §5,
+ *  re-framed 20.09 on his own reading): the temperament is drawn once and never written again, so
+ *  nothing in a save can support a girl who turned into another girl. What the lean moves is how
+ *  reachable she is and how much of her reaches the parent – the same nature, further out or further
+ *  in. `deep`/`open` is the model: «Same sentence. Sooner.»
+ *  ⚠ There is no third direction: spec §4b measured the lean moving on 1 career of
  *  9, and the ruling is that the other eight take the ordinary closing sheet rather than being told
  *  they stayed themselves. ⚠ Two registers, not three – the arc's sentence needs both points in it and
  *  a caption cannot hold two points. */
@@ -153,9 +158,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She led with the point.',
       },
       fiery: {
-        note: 'You won one, and you were furious about the game you dropped.',
-        caption: 'She was still cross about one game.',
-        line: 'One game. One.',
+        note: 'You won one, and you were furious about how you had played it.',
+        caption: 'Furious about how she had played it.',
+        line: 'First win, first complaint.',
       },
       deep: {
         note: 'You won one. You said one sentence about it and then wanted to go home.',
@@ -189,7 +194,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       deep: {
         note: 'You won the whole thing. You looked at it for a long time before you picked it up.',
         caption: 'She looked at it a long time.',
-        line: 'She was checking it was real.',
+        line: 'She kept turning it over in her hands.',
       },
       quiet: {
         note: 'You won the whole thing. You put it in the boot yourself.',
@@ -211,8 +216,8 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'I heard the crowd before I heard her.',
       },
       fiery: {
-        note: 'Your first. You said you should have had it a year ago.',
-        caption: 'A year late, she said.',
+        note: 'Your first. You said you were owed this one already.',
+        caption: 'She said she was owed it.',
         line: 'Nothing is ever on time for her.',
       },
       deep: {
@@ -221,9 +226,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Late, and exact, as usual.',
       },
       quiet: {
-        note: 'Your first. You told me the flight time, and then at the end you told me.',
+        note: 'Your first. You told me when you would be home, and then at the end you told me.',
         caption: 'She mentioned it last.',
-        line: 'The flight time came first.',
+        line: 'The plan first, the news last.',
       },
     },
   },
@@ -269,7 +274,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'All that standing about.',
       },
       fiery: {
-        note: 'The first one back, and you said nobody asks about the months off when you win.',
+        note: 'The first one back, and you said nobody asks about the time off when you win.',
         caption: 'Nobody asks now, she said.',
         line: 'They only ask when she loses.',
       },
@@ -351,7 +356,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     gate: 'final-with-no-title-that-week',
     voices: {
       sunny: {
-        note: 'You lost it and you still wanted to talk. That is not nothing, and I hope you know it.',
+        note: 'You lost it and you still wanted to talk.',
         caption: 'She wanted to talk anyway.',
         line: 'She rang. That is the part.',
       },
@@ -361,9 +366,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'The verdict arrived first.',
       },
       deep: {
-        note: 'You lost it, and two days later you told me the one point it had turned on.',
-        caption: 'Two days, then one point.',
-        line: 'She had been holding that point for two days.',
+        note: 'You lost it, and later you told me the one point it had turned on.',
+        caption: 'A while, then one point.',
+        line: 'She had been holding that point for a while.',
       },
       quiet: {
         note: 'You lost it. You asked about the garden.',
@@ -409,14 +414,14 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     gate: 'rank-better-than-every-previous-close',
     voices: {
       sunny: {
-        note: 'The best year so far. You listed every week of it and then said you were tired, which was the true part.',
+        note: 'The best year so far. You listed every week of it and then said you were tired.',
         caption: 'Tired, and pleased, in that order.',
         line: 'The tired bit was the true bit.',
       },
       fiery: {
-        note: 'The best year so far, and you spent the whole call on the two weeks that went wrong.',
+        note: 'The best year so far, and you spent the whole call on the weeks that went wrong.',
         caption: 'She only talked about the bad weeks.',
-        line: 'Two bad weeks, and that was the call.',
+        line: 'The bad weeks, and that was the call.',
       },
       deep: {
         note: 'The best year so far. You said it had felt like one long week, and I think that was the whole report.',
@@ -472,7 +477,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'A year she can\'t quite remember.',
       },
       fiery: {
-        note: 'A year of holding on. You wanted it to be a jump, it wasn\'t, and you said so all winter.',
+        note: 'A year of holding on. You wanted it to be a jump, it wasn\'t, and you said so for a while.',
         caption: 'She wanted a jump.',
         line: 'Holding on was not the plan.',
       },
@@ -482,8 +487,8 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She is right about that.',
       },
       quiet: {
-        note: 'A year of holding on. You sent next season\'s schedule two days later.',
-        caption: 'Next season\'s schedule, two days later.',
+        note: 'A year of holding on. You sent next season\'s schedule not long after.',
+        caption: 'Next season\'s schedule, not long after.',
         line: 'Straight on to the next one.',
       },
     },
@@ -496,7 +501,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     gate: 'rank-worse-than-the-previous-close',
     voices: {
       sunny: {
-        note: 'A year that went the wrong way. You said so out loud, which is more than most people manage.',
+        note: 'A year that went the wrong way. You said so out loud.',
         caption: 'She said it out loud.',
         line: 'Naming it is most of it.',
       },
@@ -511,8 +516,8 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She needed the distance first.',
       },
       quiet: {
-        note: 'You told me about the flights and the hotels all year, and never once about the year.',
-        caption: 'Flights, hotels, not the year.',
+        note: 'You told me about the schedules and the hotels all year, and never once about the year.',
+        caption: 'Schedules, hotels, not the year.',
         line: 'Everything except the year.',
       },
     },
@@ -535,9 +540,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'The shoes got it worst.',
       },
       deep: {
-        note: 'The week it stopped. You asked how long, and when I said I didn\'t know, you said nothing for a day.',
+        note: 'The week it stopped. You asked how long, and when I said I didn\'t know, you said nothing for a while.',
         caption: 'She asked how long.',
-        line: 'A day of nothing, then a question.',
+        line: 'She asked once, then stopped asking.',
       },
       quiet: {
         note: 'The week it stopped. You asked for a pen and wrote the dates on the calendar.',
@@ -569,9 +574,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'She waited to say the true thing.',
       },
       quiet: {
-        note: 'First week back. You told me what time the session was, which is how you tell me things.',
+        note: 'First week back. You sent the session time before anything else.',
         caption: 'She told me the time of the session.',
-        line: 'That is how she tells me things.',
+        line: 'The time came first.',
       },
     },
   },
@@ -612,14 +617,14 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     gate: 'first-of-kind',
     voices: {
       sunny: {
-        note: 'Your first one abroad. You sent a photograph of the airport ceiling, of all things.',
-        caption: 'A photograph of the airport ceiling.',
+        note: 'Your first one abroad. You sent a photograph of the ceiling where you were waiting, of all things.',
+        caption: 'A photograph of the ceiling she waited under.',
         line: 'The ceiling. Not the court.',
       },
       fiery: {
-        note: 'You had a full opinion on the country before the bags came off. Your first one abroad.',
+        note: 'You had a full opinion on the place before you had unpacked. Your first one abroad.',
         caption: 'An opinion before the bags.',
-        line: 'She had decided by baggage reclaim.',
+        line: 'Decided before the bag was open.',
       },
       deep: {
         note: 'Your first one abroad. You said everything sounded different and that you liked it, and that was the message.',
@@ -629,7 +634,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       quiet: {
         note: 'Your first one abroad. You sent the arrival time.',
         caption: 'Just the arrival time.',
-        line: 'Landed. That was the message.',
+        line: 'Arrived. That was the message.',
       },
     },
   },
@@ -652,7 +657,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       },
       deep: {
         note: 'The week it paid for itself. You knew what it had cost. You had always known.',
-        caption: 'She always knew what it cost.',
+        caption: 'She never once asked what it had cost.',
         line: 'She had been carrying that quietly.',
       },
       quiet: {
@@ -704,7 +709,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'The right day for it.',
       },
       fiery: {
-        note: 'You cried at the wrong moment and were cross about it for a week afterwards.',
+        note: 'You cried at the wrong moment and were cross about it afterwards.',
         caption: 'Cross about the crying, later.',
         line: 'The wrong moment, she says.',
       },
@@ -757,24 +762,24 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     gate: 'brand-founded',
     voices: {
       sunny: {
-        note: 'Your name on something that isn\'t a draw sheet. You thought it was funny. It was also enormous.',
+        note: 'The first sample arrived with your name on the label. You laughed at the size of the box it came in.',
         caption: 'She thought it was funny.',
         line: 'Funny, and enormous.',
       },
       fiery: {
-        note: 'They put your name on it and you had the colour changed, because of course you did.',
+        note: 'They sent the first sample with your name on the label, and you had the colour changed, because of course you did.',
         caption: 'She had the colour changed.',
         line: 'They changed the colour.',
       },
       deep: {
-        note: 'Your name on something that isn\'t a draw sheet. You said it didn\'t feel like yours yet.',
+        note: 'Your own name, printed on the label of the first sample. You said it didn\'t feel like yours yet.',
         caption: 'It didn\'t feel like hers yet.',
         line: 'Not hers yet, she said.',
       },
       quiet: {
-        note: 'We found out it existed after you had signed for it. Your name, on a thing.',
-        caption: 'We were told after the signing.',
-        line: 'Afterwards, as usual.',
+        note: 'The first sample came. You sent one photograph, of the label, and said nothing else about it.',
+        caption: 'Just the label, in focus.',
+        line: 'The label, and not the thing.',
       },
     },
   },
@@ -798,7 +803,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       deep: {
         note: 'A field. You stood at one end of it for a while and didn\'t say what you were seeing.',
         caption: 'She stood at one end of it.',
-        line: 'She was seeing something.',
+        line: 'Long enough that we stopped asking.',
       },
       quiet: {
         note: 'A field. You had measured it before you told us about it.',
@@ -878,8 +883,8 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'The worry has a habit.',
       },
       fiery: {
-        note: 'They offered you the one that doesn\'t run out. You said it should have come years ago, and signed it the same day.',
-        caption: 'Years late, signed the same day.',
+        note: 'They offered you the one that doesn\'t run out. You said it should have come long before, and signed it without hesitating.',
+        caption: 'Long overdue, and signed without hesitating.',
         line: 'Late, and signed anyway.',
       },
       deep: {
@@ -914,7 +919,7 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       deep: {
         note: 'The big one. You said the last game had felt like it belonged to somebody else.',
         caption: 'The last game belonged to somebody else.',
-        line: 'She watched herself do it.',
+        line: 'That was the only part she mentioned.',
       },
       quiet: {
         note: 'The big one. You asked whether we had seen it. We had seen it.',
@@ -946,9 +951,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         line: 'Then she noticed that.',
       },
       quiet: {
-        note: 'Years of it now. You still send the flight times.',
-        caption: 'Still the flight times.',
-        line: 'Every time. Flight times.',
+        note: 'Years of it now. You still send next week before you mention this one.',
+        caption: 'Next week first, this week later.',
+        line: 'I hear about the next one first. Always have.',
       },
     },
   },
@@ -1045,11 +1050,11 @@ export const ALBUM_ARC: Record<AlbumArcDirection, Record<Temperament, AlbumArcHa
   // the lean moved towards open
   open: {
     sunny: {
-      note: 'You were always easy to talk to. It took me years to learn that easy to talk to and easy to know are not the same thing, and now I know you.',
-      line: 'The bright part was never the whole of it.',
+      note: 'You were always easy to talk to. I know better now than to mistake the easy part for the whole of you.',
+      line: 'The bright part was never all of her.',
     },
     fiery: {
-      note: 'You always told us what you thought. Somewhere in here you started telling us what you felt, which is a different thing and took longer.',
+      note: 'You always told us what you thought. Somewhere in here you started telling us what you felt as well.',
       line: 'The verdicts were never the hard part.',
     },
     deep: {
@@ -1058,7 +1063,7 @@ export const ALBUM_ARC: Record<AlbumArcDirection, Record<Temperament, AlbumArcHa
     },
     quiet: {
       note: 'For years I got the schedule when I asked how you were. This year I got the answer.',
-      line: 'She stopped telling me the timetable.',
+      line: 'The timetable still came first. Eventually, the answer came with it.',
     },
   },
   // the lean moved towards reserved

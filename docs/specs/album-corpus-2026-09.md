@@ -81,15 +81,19 @@ therefore what there was to notice. The four are the engine's own 2×2 (`kidLife
 
 | voice | she is | so the parent's page records… |
 | --- | --- | --- |
-| `sunny` | open + steady | **what she said, in the week she said it** – she volunteered it, so the note is full of her words and often of the wrong detail first (the airport ceiling, the food, the crowd) |
+| `sunny` | open + steady | **what she said, in the week she said it** – she volunteered it, so the note is full of her words and often of the wrong detail first (the ceiling she waited under, the food, the crowd) |
 | `fiery` | open + intense | **the verdict, and his amusement at it** – she arrived with the judgement already made, so the page carries the complaint, the demand, the reversal a week later |
-| `deep` | private + intense | **the delay and then the precision** – she said nothing for a day and then one exact sentence, so the page records the wait as much as the sentence |
+| `deep` | private + intense | **the delay and then the precision** – she said nothing for a while and then one exact sentence, so the page records the wait as much as the sentence |
 | `quiet` | private + steady | **what she did instead of saying it** – the schedule, the calendar, the packed bag, the single photograph; the parent reads the act, not a statement |
 
 ⚠ **The test is the small-talk corpus's, and it is not «no shared phrases»**: same occasion, same
 facts, four different things noticed. Where a phrase repeats down a column – `quiet`'s pencil in
-`A11` and her pen in `A15`, her flight times in `A5`, `A14` and `A29` – it repeats because it is
-the same girl doing the same thing years apart, which is the point of an album. ⚠ **No two of the
+`A11` and her pen in `A15`, her single photograph in `A22`, `A23` and `A25` – it repeats because it
+is the same girl doing the same thing years apart, which is the point of an album. ⚠ **But the
+HABIT is what may repeat, never its object**: `quiet` sent flight times in `A5`, `A14` and `A29`
+until 20.09, and three careers' worth of one noun reads as a template, not as a person. The motif
+now lands on what she would really have had to hand – when she would be home, the schedules and the
+hotels, next week before this one. ⚠ **No two of the
 412 are the same STRING**, which is a different claim and the one the pin makes: a first draft had
 `A4` and `A11` sharing a `deep` caption verbatim, and two identical sheets in one book read as a
 copy-paste rather than as a habit.
@@ -98,6 +102,14 @@ copy-paste rather than as a habit.
 parent»). He guesses at her, guesses wrong, and says so – `A30`'s «we were among them», `A8`'s «I
 think you knew», `A32`'s «you will find the one week I have got wrong». He never states her
 interior as fact and never asserts a world-fact the sim can contradict.
+
+⚠⚠ **AND THE CAPTION AND THE LINE ARE WHERE THAT RULE BREAKS, because they are narration.** A note
+is the parent talking TO her and may tell her what she knew; a caption and a loose line are him
+writing ABOUT her, where «She was checking it was real» (`A4`), «She always knew what it cost»
+(`A19`), «She was seeing something» (`A24`) and «She watched herself do it» (`A28`) are omniscience
+in the parent's hand. All four were rewritten on 20.09 to what he could actually have seen – she
+turned it over, she never asked, she stood there long enough that we stopped asking, she mentioned
+only the last game. **A parent can write what she did; the reader supplies what she thought.**
 
 ### ⚠⚠ The measured risk in this corpus, stated rather than left to be noticed
 
@@ -123,17 +135,58 @@ longest 21 characters**, and counting a shared CLAUSE (the common prefix, cut at
 the pre-20.09 file – 13 of 32 and 20 of 32 – so the two rows this wave touched added no formula. The
 longest is `A13`'s «A year of holding on.», which nobody has edited.
 
+⚠ **Re-derived again after the prose pass of 20.09, and it still has not moved: 13 of 33 longest 21,
+20 of 33 longest 25, the same `A13`.** That run is the one worth naming, because `A23` – the 52
+characters this paragraph names as the worst case the corpus ever had – was rebuilt in that pass onto
+a single shared OBJECT, and the four notes reach it by four different sentences on purpose. **One
+visible thing in four columns is the fix; one sentence in four columns is the formula this section is
+about**, and the second is what a rebuild slips into if nobody measures it afterwards.
+
 ⚠ **This is the number to look at first in a review.** It is the one property of the corpus that
 degrades quietly as rows are added, it is not pinned (a threshold here would be a guess dressed as
 a rule), and it is re-derivable from this document in one pass whenever somebody wants to know.
+
+### ⚠⚠ The second measured risk, and it is the one that reads as generated
+
+His 20.09 reading names it more exactly than «the vocabulary is off» ever did: **«не из-за словаря, а
+потому что строка объясняет собственный смысл».** The failure is not a word. It is a sentence that
+performs an action and then tells the reader what the action meant – «That is not nothing, and I hope
+you know it» (`A10`), «which was the true part» (`A12`), «which is more than most people manage»
+(`A14`), «which is how you tell me things» (`A16`). **Six strings across five cells were cut on
+20.09** – the four he named, `A16`'s loose line «That is how she tells me things» (the same tail a
+register down), and the arc's `fiery`/`open`, whose «which is a different thing and took longer» is
+the identical shape and is his rule applied where he asked it to be applied. His own cut for `A16` is
+the model for all of them:
+
+> `First week back. You told me what time the session was, which is how you tell me things.`
+> → `First week back. You sent the session time before anything else.`
+
+«Действие уже показывает характер. Пояснение после него ослабляет сцену.» ⭐ **And the interpretation
+is not banned, it is RELOCATED**: the note shows, and the loose line in the margin is where the parent
+is allowed to say what he made of it. `A12` keeps «The tired bit was the true bit» and `A14` keeps
+«Naming it is most of it» – the same thought, in the register whose whole job is the parent thinking.
+The note that carried both was doing the line's work twice.
 
 ## 3. ⚠⚠ What the handwriting may not contain
 
 **3.1 No number the world owns.** The corpus cannot know how old she was, how many titles she has,
 how long a season ran or what a cheque was worth. So no line writes one. `A17` says «you kept
-saying the number» and never the number; `A12`'s line says «two bad weeks» and not «two weeks out
-of fifty», because the fifty is the calendar's. The one exception is a count the GATE licenses,
-and no occasion in this corpus needs one.
+saying the number» and never the number; `A12`'s line says «the bad weeks» and never counts them,
+because the count is the season's. The one exception is a count the GATE licenses, and no occasion
+in this corpus needs one.
+
+⚠⚠ **AND THE RULE COVERS ELAPSED TIME, WHICH IS WHERE IT BROKE.** A span is a number with the digit
+spelled out, and the save carries either a different span or none at all: a layoff may be one week,
+a hesitation is not two days, and a career that ended in March never had the winter the line put in
+it. **Nine spans, sixteen strings, rewritten on 20.09 on his reading** – «a year ago», «months off»,
+«two days later», «two bad weeks», «all winter», «for a day», «for a week», «years ago» and «the same
+day». ⚠ Nine and sixteen are two different counts and both are needed: a span he named once was
+carried by a whole cell, so «two days later» in `A13`/`quiet` had to move in the note AND the caption,
+and `A10`/`deep` held one span in all three registers. The replacements are the forms every career
+licenses: **«later» · «afterwards» · «for a while» · «not long after» · «the weeks that went
+wrong»**. ⚠ The example in the paragraph above was one of
+the nine – **this rule had been quoting a line that breaks it as proof that it holds**, which is how
+a rule stops being read. When one is rewritten again, the example moves with it.
 
 ⭐ **The date and her age are the SHEET's, not the corpus's.** His ruling – «Даты с неделями можно
 писать вполне и возраст тоже можно использовать» – is a ruling about the album, and the mockup
@@ -149,8 +202,14 @@ the catalogue is 412 finished sentences, not 412 templates. A pin asserts it.
 results, counts, durations, dates, money, places, other people, her body's specifics all need a
 licence. So: no body part is ever named (`A7` says «you said everything was fine», never which
 joint); no coach, rival or partner is named or characterised; no tournament, city or country is
-named – the road occasions say «abroad» and «the country», because the calendar's names are
+named – the road occasions say «abroad» and «the place», because the calendar's names are
 fictional and generated per career.
+
+⚠ **Nor is the way she got there.** `A5`, `A14`, `A18` and `A29` were written on flight times, an
+airport ceiling, baggage reclaim and a landing, and **an international tournament can be reached by
+car or by train** – the calendar says she played abroad and nothing else. `quiet`'s recurring motif
+is the practical fact offered in place of the admission and it STAYS; what was rewritten is the
+object it lands on, because the same object four times reads as a template rather than as a habit.
 
 **3.4 Non-consequential texture is allowed and is most of the warmth.** The kitchen table, the
 garden, the hall, the hat, the boot of the car, the calendar. Same tier as the small-talk corpus's
@@ -217,18 +276,32 @@ lean never moved – it does not write «she stayed herself» to eight careers o
 **Therefore this document writes nothing for the never-drifted case.** That is not an omission; it
 is the ruling. The closing sheet's ordinary line is `A32`.
 
-The arc is keyed on **`temperament` × direction**, not on an occasion, because its whole sentence is
-«she was born this and became that» – two points, and the first is the temperament. Eight cells:
+The arc is keyed on **`temperament` × direction**, not on an occasion, because it needs two points:
+the temperament, and what happened to the way she shows it.
 
-- **`open`** – the lean moved towards open. She came further out than she was born.
-- **`reserved`** – the lean moved the other way. She drew in.
+⚠⚠ **AND THE TWO POINTS ARE NOT «she was born this and became that».** That reading was in this
+document's own prose until 20.09 and it is wrong twice over. It contradicts the engine – `temperament`
+is drawn at birth and never written again, so nothing in a save can support a girl who turned into
+another girl. And it contradicts the voice bible, whose whole account of a twenty-year career is that
+the four voices DEEPEN rather than swap: «one girl must read as one person growing up down her
+column». **What the lean moves is how reachable she is and how much of her reaches the parent** – the
+same nature, further out or further in, shown differently. So a cell writes what stayed and what
+changed about the showing of it, and the two best cells in the eight are the ones that say so out
+loud: `deep`/`open`'s «Same sentence. Sooner.» and `fiery`/`reserved`'s «She kept the fire. She
+learned where to put it.» A cell that retires her temperament is a cell written against the save.
+
+Eight cells:
+
+- **`open`** – the lean moved towards open. More of her reaches him than used to.
+- **`reserved`** – the lean moved the other way. She keeps more of it to herself.
 
 ⚠ **The sign is the engine's.** `wallsLean`'s own convention decides which direction a given move
 is; this document writes both and names neither number.
 
 ⚠ **Two registers, not three, and the reason is the register's own size.** The arc's sentence needs
-both points in it – what she was and what she became – and a caption is a handful of words on the
-lip of a photograph. It cannot hold two points without becoming a note in the wrong place. So the
+both points in it – what she has always been, and what changed about the way it reaches him – and a
+caption is a handful of words on the lip of a photograph. It cannot hold two points without
+becoming a note in the wrong place. So the
 arc carries a **note** and a **line**, the closing sheet's polaroid keeps `A31`/`A32`'s caption, and
 the completeness pin knows the arc has its own shape rather than a hole.
 
@@ -355,21 +428,21 @@ character. They are the anchor the rest of this corpus was written against, and 
 | voice | note |
 | --- | --- |
 | `sunny` | `You won one. You told me about the point, not the score.` |
-| `fiery` | `You won one, and you were furious about the game you dropped.` |
+| `fiery` | `You won one, and you were furious about how you had played it.` |
 | `deep` | `You won one. You said one sentence about it and then wanted to go home.` |
 | `quiet` | `You won one. You asked what time we were leaving.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She wanted to tell somebody.` |
-| `fiery` | `She was still cross about one game.` |
+| `fiery` | `Furious about how she had played it.` |
 | `deep` | `She said it once, quietly.` |
 | `quiet` | `She asked about the drive home.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `She led with the point.` |
-| `fiery` | `One game. One.` |
+| `fiery` | `First win, first complaint.` |
 | `deep` | `She keeps the good ones somewhere I can't see.` |
 | `quiet` | `She never once said the word.` |
 
@@ -395,7 +468,7 @@ character. They are the anchor the rest of this corpus was written against, and 
 | --- | --- |
 | `sunny` | `She wouldn't let go of it.` |
 | `fiery` | `The handshake was still going.` |
-| `deep` | `She was checking it was real.` |
+| `deep` | `She kept turning it over in her hands.` |
 | `quiet` | `Nobody else was allowed to carry it.` |
 
 ## The titles – four, because a dense career has thirteen
@@ -410,14 +483,14 @@ character. They are the anchor the rest of this corpus was written against, and 
 | voice | note |
 | --- | --- |
 | `sunny` | `Your first. You rang before you had left the court and I couldn't hear a word of it.` |
-| `fiery` | `Your first. You said you should have had it a year ago.` |
+| `fiery` | `Your first. You said you were owed this one already.` |
 | `deep` | `Your first. You called late, and the first thing you said was about the second set.` |
-| `quiet` | `Your first. You told me the flight time, and then at the end you told me.` |
+| `quiet` | `Your first. You told me when you would be home, and then at the end you told me.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She rang from the court.` |
-| `fiery` | `A year late, she said.` |
+| `fiery` | `She said she was owed it.` |
 | `deep` | `She called after midnight.` |
 | `quiet` | `She mentioned it last.` |
 
@@ -426,7 +499,7 @@ character. They are the anchor the rest of this corpus was written against, and 
 | `sunny` | `I heard the crowd before I heard her.` |
 | `fiery` | `Nothing is ever on time for her.` |
 | `deep` | `Late, and exact, as usual.` |
-| `quiet` | `The flight time came first.` |
+| `quiet` | `The plan first, the news last.` |
 
 ### A6 · `title-step-up` · title · young, teen, adult, lateCareer · **gate: `tier-above-every-previous-title`**
 **The occasion:** a title at a higher rung than any she had won before.
@@ -462,7 +535,7 @@ the handwriting says «everything» and «it».
 | voice | note |
 | --- | --- |
 | `sunny` | `The first one back. You said you had forgotten how much of it is just standing about waiting.` |
-| `fiery` | `The first one back, and you said nobody asks about the months off when you win.` |
+| `fiery` | `The first one back, and you said nobody asks about the time off when you win.` |
 | `deep` | `You had been afraid of the first serve, you told me, and then you weren't. The first one back.` |
 | `quiet` | `The first one back. You said everything was fine. You said it twice.` |
 
@@ -540,23 +613,23 @@ it too, so this occasion cannot assume she lost – or won.
 
 | voice | note |
 | --- | --- |
-| `sunny` | `You lost it and you still wanted to talk. That is not nothing, and I hope you know it.` |
+| `sunny` | `You lost it and you still wanted to talk.` |
 | `fiery` | `You lost it and you had already decided why by the time you rang.` |
-| `deep` | `You lost it, and two days later you told me the one point it had turned on.` |
+| `deep` | `You lost it, and later you told me the one point it had turned on.` |
 | `quiet` | `You lost it. You asked about the garden.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She wanted to talk anyway.` |
 | `fiery` | `She had the reason ready.` |
-| `deep` | `Two days, then one point.` |
+| `deep` | `A while, then one point.` |
 | `quiet` | `She asked about the garden.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `She rang. That is the part.` |
 | `fiery` | `The verdict arrived first.` |
-| `deep` | `She had been holding that point for two days.` |
+| `deep` | `She had been holding that point for a while.` |
 | `quiet` | `We talked about the garden.` |
 
 ## The seasons – five, because they are the largest kind in the pool
@@ -596,8 +669,8 @@ CONTRACT fix rather than more writing – see `A33`.
 
 | voice | note |
 | --- | --- |
-| `sunny` | `The best year so far. You listed every week of it and then said you were tired, which was the true part.` |
-| `fiery` | `The best year so far, and you spent the whole call on the two weeks that went wrong.` |
+| `sunny` | `The best year so far. You listed every week of it and then said you were tired.` |
+| `fiery` | `The best year so far, and you spent the whole call on the weeks that went wrong.` |
 | `deep` | `The best year so far. You said it had felt like one long week, and I think that was the whole report.` |
 | `quiet` | `The best year so far. You asked whether we were coming at Christmas.` |
 
@@ -611,7 +684,7 @@ CONTRACT fix rather than more writing – see `A33`.
 | voice | line |
 | --- | --- |
 | `sunny` | `The tired bit was the true bit.` |
-| `fiery` | `Two bad weeks, and that was the call.` |
+| `fiery` | `The bad weeks, and that was the call.` |
 | `deep` | `One long week. That was the report.` |
 | `quiet` | `Christmas mattered more.` |
 
@@ -661,16 +734,16 @@ where nothing moved and that is now the only year that reaches them.
 | voice | note |
 | --- | --- |
 | `sunny` | `A year of holding on. You said the middle of it had blurred and I know exactly what you mean.` |
-| `fiery` | `A year of holding on. You wanted it to be a jump, it wasn't, and you said so all winter.` |
+| `fiery` | `A year of holding on. You wanted it to be a jump, it wasn't, and you said so for a while.` |
 | `deep` | `A year of holding on. You said staying still takes more than it looks like it does.` |
-| `quiet` | `A year of holding on. You sent next season's schedule two days later.` |
+| `quiet` | `A year of holding on. You sent next season's schedule not long after.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `The middle of it blurred.` |
 | `fiery` | `She wanted a jump.` |
 | `deep` | `Staying still costs, she said.` |
-| `quiet` | `Next season's schedule, two days later.` |
+| `quiet` | `Next season's schedule, not long after.` |
 
 | voice | line |
 | --- | --- |
@@ -685,17 +758,17 @@ where nothing moved and that is now the only year that reaches them.
 
 | voice | note |
 | --- | --- |
-| `sunny` | `A year that went the wrong way. You said so out loud, which is more than most people manage.` |
+| `sunny` | `A year that went the wrong way. You said so out loud.` |
 | `fiery` | `The year went the wrong way and you had a reason for every week of it, and you meant every one.` |
 | `deep` | `A year that went the wrong way. You waited until January to tell me what you thought had happened.` |
-| `quiet` | `You told me about the flights and the hotels all year, and never once about the year.` |
+| `quiet` | `You told me about the schedules and the hotels all year, and never once about the year.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She said it out loud.` |
 | `fiery` | `A reason for every week.` |
 | `deep` | `She waited until January.` |
-| `quiet` | `Flights, hotels, not the year.` |
+| `quiet` | `Schedules, hotels, not the year.` |
 
 | voice | line |
 | --- | --- |
@@ -720,7 +793,7 @@ does not use it.
 | --- | --- |
 | `sunny` | `The week it stopped. You went straight on to what you could still do, which frightened me more than crying would have.` |
 | `fiery` | `The week it stopped. You were angry at the floor, the shoes, the schedule and me, in that order.` |
-| `deep` | `The week it stopped. You asked how long, and when I said I didn't know, you said nothing for a day.` |
+| `deep` | `The week it stopped. You asked how long, and when I said I didn't know, you said nothing for a while.` |
 | `quiet` | `The week it stopped. You asked for a pen and wrote the dates on the calendar.` |
 
 | voice | caption |
@@ -734,7 +807,7 @@ does not use it.
 | --- | --- |
 | `sunny` | `I would have preferred the crying.` |
 | `fiery` | `The shoes got it worst.` |
-| `deep` | `A day of nothing, then a question.` |
+| `deep` | `She asked once, then stopped asking.` |
 | `quiet` | `In pen this time.` |
 
 ### A16 · `injury-return` · injury · young, teen, adult, lateCareer · **gate: `first-week-back-after-a-layoff`**
@@ -746,7 +819,7 @@ does not use it.
 | `sunny` | `First week back. You said the ball came at you faster than you had remembered, and you laughed about it.` |
 | `fiery` | `First week back. You wanted all of it back at once, were told no, and I heard about that.` |
 | `deep` | `First week back. You said you had been more afraid of this week than of the injury.` |
-| `quiet` | `First week back. You told me what time the session was, which is how you tell me things.` |
+| `quiet` | `First week back. You sent the session time before anything else.` |
 
 | voice | caption |
 | --- | --- |
@@ -760,7 +833,7 @@ does not use it.
 | `sunny` | `She laughed at it, which helped.` |
 | `fiery` | `They said no. I heard.` |
 | `deep` | `She waited to say the true thing.` |
-| `quiet` | `That is how she tells me things.` |
+| `quiet` | `The time came first.` |
 
 ## Money and the road – three, one apiece
 
@@ -798,14 +871,14 @@ career, so a named one here would contradict the ticket on the same sheet.
 
 | voice | note |
 | --- | --- |
-| `sunny` | `Your first one abroad. You sent a photograph of the airport ceiling, of all things.` |
-| `fiery` | `You had a full opinion on the country before the bags came off. Your first one abroad.` |
+| `sunny` | `Your first one abroad. You sent a photograph of the ceiling where you were waiting, of all things.` |
+| `fiery` | `You had a full opinion on the place before you had unpacked. Your first one abroad.` |
 | `deep` | `Your first one abroad. You said everything sounded different and that you liked it, and that was the message.` |
 | `quiet` | `Your first one abroad. You sent the arrival time.` |
 
 | voice | caption |
 | --- | --- |
-| `sunny` | `A photograph of the airport ceiling.` |
+| `sunny` | `A photograph of the ceiling she waited under.` |
 | `fiery` | `An opinion before the bags.` |
 | `deep` | `Everything sounded different.` |
 | `quiet` | `Just the arrival time.` |
@@ -813,9 +886,9 @@ career, so a named one here would contradict the ticket on the same sheet.
 | voice | line |
 | --- | --- |
 | `sunny` | `The ceiling. Not the court.` |
-| `fiery` | `She had decided by baggage reclaim.` |
+| `fiery` | `Decided before the bag was open.` |
 | `deep` | `She liked the sound of it.` |
-| `quiet` | `Landed. That was the message.` |
+| `quiet` | `Arrived. That was the message.` |
 
 ### A19 · `break-even` · break-even · teen, adult, lateCareer · `any`
 **The occasion:** the week it started paying for itself.
@@ -833,7 +906,7 @@ reconstructed afterwards.
 | --- | --- |
 | `sunny` | `No more sums at the kitchen table.` |
 | `fiery` | `She had told us. She reminded us.` |
-| `deep` | `She always knew what it cost.` |
+| `deep` | `She never once asked what it had cost.` |
 | `quiet` | `She asked, in her way, if we were all right.` |
 
 | voice | line |
@@ -879,7 +952,7 @@ reaches this occasion again, and the handwriting does not need to know which tim
 | voice | note |
 | --- | --- |
 | `sunny` | `You talked to everybody. You have always talked to everybody, and it was the right day for it.` |
-| `fiery` | `You cried at the wrong moment and were cross about it for a week afterwards.` |
+| `fiery` | `You cried at the wrong moment and were cross about it afterwards.` |
 | `deep` | `You said one sentence to me before it started and I have not repeated it to anybody.` |
 | `quiet` | `You checked the time of everything, and then you let the day happen without running it.` |
 
@@ -934,24 +1007,24 @@ Each happens once in a career, so each is written once.
 
 | voice | note |
 | --- | --- |
-| `sunny` | `Your name on something that isn't a draw sheet. You thought it was funny. It was also enormous.` |
-| `fiery` | `They put your name on it and you had the colour changed, because of course you did.` |
-| `deep` | `Your name on something that isn't a draw sheet. You said it didn't feel like yours yet.` |
-| `quiet` | `We found out it existed after you had signed for it. Your name, on a thing.` |
+| `sunny` | `The first sample arrived with your name on the label. You laughed at the size of the box it came in.` |
+| `fiery` | `They sent the first sample with your name on the label, and you had the colour changed, because of course you did.` |
+| `deep` | `Your own name, printed on the label of the first sample. You said it didn't feel like yours yet.` |
+| `quiet` | `The first sample came. You sent one photograph, of the label, and said nothing else about it.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She thought it was funny.` |
 | `fiery` | `She had the colour changed.` |
 | `deep` | `It didn't feel like hers yet.` |
-| `quiet` | `We were told after the signing.` |
+| `quiet` | `Just the label, in focus.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `Funny, and enormous.` |
 | `fiery` | `They changed the colour.` |
 | `deep` | `Not hers yet, she said.` |
-| `quiet` | `Afterwards, as usual.` |
+| `quiet` | `The label, and not the thing.` |
 
 ### A24 · `academy-land` · asset · teen, adult, lateCareer · **gate: `academy-land-bought`**
 **The occasion:** the field.
@@ -975,7 +1048,7 @@ Each happens once in a career, so each is written once.
 | --- | --- |
 | `sunny` | `All of it, twice round.` |
 | `fiery` | `Nothing moves fast enough.` |
-| `deep` | `She was seeing something.` |
+| `deep` | `Long enough that we stopped asking.` |
 | `quiet` | `Measured, then mentioned.` |
 
 ### A25 · `academy-courts` · asset · adult, lateCareer · **gate: `academy-courts-built`**
@@ -1043,14 +1116,14 @@ threshold for `A29` is the engine's to pick at a reachable number, not a pretty 
 | voice | note |
 | --- | --- |
 | `sunny` | `The one that doesn't run out. You said you would finally stop being nervous every winter, and then you were nervous anyway.` |
-| `fiery` | `They offered you the one that doesn't run out. You said it should have come years ago, and signed it the same day.` |
+| `fiery` | `They offered you the one that doesn't run out. You said it should have come long before, and signed it without hesitating.` |
 | `deep` | `The one that doesn't run out. You said it was strange to be planned for that far ahead.` |
 | `quiet` | `You read the whole thing before you told anybody. The one that doesn't run out.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `Nervous anyway, every winter.` |
-| `fiery` | `Years late, signed the same day.` |
+| `fiery` | `Long overdue, and signed without hesitating.` |
 | `deep` | `Strange, being planned for.` |
 | `quiet` | `She read all of it first.` |
 
@@ -1084,7 +1157,7 @@ threshold for `A29` is the engine's to pick at a reachable number, not a pretty 
 | --- | --- |
 | `sunny` | `No sentences, at either end.` |
 | `fiery` | `Nobody listened. They do now.` |
-| `deep` | `She watched herself do it.` |
+| `deep` | `That was the only part she mentioned.` |
 | `quiet` | `We had seen it.` |
 
 ### A29 · `years-at-the-top` · rare · adult, lateCareer · **gate: `a-run-of-seasons-inside-the-threshold`**
@@ -1098,21 +1171,21 @@ is the engine's.
 | `sunny` | `Years of it now. You still ring about the food and the courts and the crowd, exactly as you did the first time.` |
 | `fiery` | `Years of it now. You said staying there is harder than getting there and dared anybody to argue.` |
 | `deep` | `Years of it now. You said you had stopped noticing it, and then you noticed that.` |
-| `quiet` | `Years of it now. You still send the flight times.` |
+| `quiet` | `Years of it now. You still send next week before you mention this one.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `The same phone calls as the first year.` |
 | `fiery` | `Harder to stay, she says.` |
 | `deep` | `She had stopped noticing.` |
-| `quiet` | `Still the flight times.` |
+| `quiet` | `Next week first, this week later.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `She hasn't changed the call.` |
 | `fiery` | `Nobody argued.` |
 | `deep` | `Then she noticed that.` |
-| `quiet` | `Every time. Flight times.` |
+| `quiet` | `I hear about the next one first. Always have.` |
 
 ## The closing three
 
@@ -1233,21 +1306,28 @@ The direction is **where the lean went**. Both points are already stored; nothin
 for this. ⚠ §5 above: nothing is written for the never-drifted case, and the eight careers of nine
 that never hired a psychologist take `A32` instead.
 
+⚠⚠ **EVERY CELL BELOW IS ABOUT EXPRESSION, NOT ABOUT BECOMING SOMEBODY ELSE** (§5, re-framed 20.09
+on his reading). She is the same girl in both directions; what moved is how much of her comes out and
+how she lets it. Two cells were rewritten for this: `sunny`/`open` closed on «and now I know you»,
+which he read as taking final possession of a person, and `quiet`/`open` said «She stopped telling me
+the timetable», which retires the habit instead of describing what now arrives with it. The timetable
+still comes first. That is the shape of every cell here.
+
 ### ARC · `open` – the lean moved towards open
 
 | voice | note |
 | --- | --- |
-| `sunny` | `You were always easy to talk to. It took me years to learn that easy to talk to and easy to know are not the same thing, and now I know you.` |
-| `fiery` | `You always told us what you thought. Somewhere in here you started telling us what you felt, which is a different thing and took longer.` |
+| `sunny` | `You were always easy to talk to. I know better now than to mistake the easy part for the whole of you.` |
+| `fiery` | `You always told us what you thought. Somewhere in here you started telling us what you felt as well.` |
 | `deep` | `You used to take a week to tell me one true sentence. Lately you say it the same day. It is still one sentence and it is still true.` |
 | `quiet` | `For years I got the schedule when I asked how you were. This year I got the answer.` |
 
 | voice | line |
 | --- | --- |
-| `sunny` | `The bright part was never the whole of it.` |
+| `sunny` | `The bright part was never all of her.` |
 | `fiery` | `The verdicts were never the hard part.` |
 | `deep` | `Same sentence. Sooner.` |
-| `quiet` | `She stopped telling me the timetable.` |
+| `quiet` | `The timetable still came first. Eventually, the answer came with it.` |
 
 ### ARC · `reserved` – the lean moved towards reserved
 
