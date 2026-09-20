@@ -55,6 +55,7 @@ import {
   answerLifeBeat,
   answerRetirement,
   chooseGift,
+  decisionWeekOf,
   entryStatus,
   hirePsychologist,
   kidAgeExact,
@@ -66,7 +67,9 @@ import {
   pendingBirthday,
   pendingLifeBeat,
   pendingLifeBeatOptions,
+  pregnancyChanceAt,
   pregnancyEligible,
+  returnChanceFor,
   setPsychologistFocus,
   toSnapshot,
   LIFE_BEAT_OPTIONS,
@@ -133,7 +136,10 @@ const GRADES: readonly Grade[] = ['warm', 'measured', 'cold']
  *  middle of a two-hour run). */
 const GRADE_ANSWER: Record<Grade, string> = { warm: 'joy', measured: 'worry', cold: 'career-first' }
 type Plan = 'small-first' | 'straight-back'
-const PLANS: readonly Plan[] = ['small-first', 'straight-back']
+// ⚠ THERE IS NO `PLANS` LIST HERE ANY MORE and the absence is deliberate: section 6 runs THREE arms
+// over TWO plans (the third is `small-first` again, under a different booking policy – see
+// `BRAKES_OFF`), so a list of plans would have been a list the arm loop could not be driven from.
+// `ARM_LABELS` at the section is the one enumeration, and the type above is what keeps it honest.
 
 // =================================================================================================
 // THE RECORD ONE CAREER LEAVES
@@ -159,9 +165,16 @@ interface PlayOnWeek {
 }
 
 interface RampArm {
+  /** ⚠ THE ARM'S OWN NAME AND NOT ITS PLAN, because the third arm shares the first one's plan. */
+  label: string
   plan: Plan
   points: number
   rank: number
+  /** ...and the same two, a second year on – T6's horizon is 52 weeks and the freeze's is 156, so the
+   *  arms are walked to 104 and SAMPLED at 52, which keeps the head-to-head comparable with §D while
+   *  answering «did she get her band back» over a window a year can not reach. */
+  pointsLong: number
+  rankLong: number
   entered: number
   /** of `protectedRankEntries`, how many were spent inside the ramp window */
   spent: number
@@ -169,6 +182,11 @@ interface RampArm {
 
 interface GradeArm {
   grade: Grade
+  /** ⭐ THE CHANCE HER OWN STATE IMPLIES UNDER THIS GRADE, read the week BEFORE the coin – see
+   *  `forkAtExpecting`. Without it the section compares a measured share against `returnBase +
+   *  returnSupportShift`, which is only two of `returnChanceFor`'s four terms and is the wrong
+   *  measurement wearing the right number. */
+  chance: number | null
   returned: boolean
   /** weeks from the birth until `spiritShock` cleared, psychologist standing down */
   recoveryOff: number | null
@@ -186,9 +204,13 @@ interface MotherCareer {
   /** the week she turns 24 – the hazard's own first rung, so «eligible weeks» has a denominator */
   week24: number
   everLatched: boolean
-  /** weeks `pregnancyEligible` would have answered true, counted post-tick – asked of the same four
-   *  facts the engine asks, and re-derived here because the predicate is not on the barrel. */
   eligibleWeeks: number
+  /** ⭐⭐⭐ Σ `pregnancyChanceAt` OVER THOSE WEEKS – the career's EXPECTED number of pregnancies under
+   *  the shipped hazard, and the only honest denominator for the fairness question. A raw share of
+   *  married careers confounds the hazard with who MARRIES and for how long (wave 7's mechanic), and
+   *  those differ by a factor of 18 between the voices on this grid. Observed against expected is
+   *  exposure-adjusted and tests exactly the claim the corridor is about. */
+  expectedPregnancies: number
   announcedWeek: number | null
   announceAge: number | null
   pausesWeek: number | null
@@ -207,6 +229,10 @@ interface MotherCareer {
   ptsAtReturn: number | null
   rankAtAnnounce: number | null
   rankAtReturn: number | null
+  /** ⚠ THE BASE WALK'S OWN LONG HORIZON – her live rank one, two and three years after the return,
+   *  sampled on the drained (`small-first`) arm. T6's window is 52 weeks and the freeze's is 156, and
+   *  «did she get her band back» is a question the shorter one cannot answer. */
+  rankAfterReturn: (number | null)[]
   /** section 7, over the WHOLE freeze horizon on the drained (small-first) base walk */
   freezeEntries: number | null
   freezeSpentByExpiry: number | null
@@ -307,10 +333,33 @@ function forkAtExpecting(base: WorldState, policy: Policy): GradeArm[] {
     answerLifeBeat(world, GRADE_ANSWER[grade])
     const carried = world.pregnancy
     if (carried === null || carried.support !== grade) throw new Error(`«${GRADE_ANSWER[grade]}» did not persist ${grade}`)
-    const arm: GradeArm = { grade, returned: false, recoveryOff: null, recoveryOn: null }
+    const arm: GradeArm = { grade, chance: null, returned: false, recoveryOff: null, recoveryOn: null }
     const dueWeek = carried.dueWeek
+    const coinWeek = decisionWeekOf(carried)
     let recoveryForked = false
     for (let i = 0; i < 200; i++) {
+      // ⭐⭐ THE CHANCE THE ENGINE IS ABOUT TO COMPARE AGAINST, READ THE WEEK BEFORE THE COIN.
+      // `returnChanceFor` takes four terms and the grade is only one of them: her `spirit`, the `bond`
+      // the answer itself left and her age move it too, and after a year off tour her spirit is not
+      // 70. Read here – at the top of the decision week, before the tick that spends the coin – so
+      // the section can compare the measured share against the chance that was actually drawn
+      // against, instead of against `returnBase + returnSupportShift`, which is two terms of four.
+      // ⚠ IT IS AN APPROXIMATION BY AT MOST ONE TICK and says so rather than pretending: the value
+      // kept is the LAST one written while the record still stood, and `accrueSpirit` runs inside the
+      // week, so the engine's own read is a few tenths of spirit later. The shape of this section does
+      // not turn on those tenths; the twenty points between the baseline and her real spirit do.
+      // ⚠ WRITTEN EVERY WEEK AND OVERWRITTEN rather than latched on an equality with `coinWeek`: the
+      // first draft compared `world.week === coinWeek` BEFORE the tick and never matched once, because
+      // the week the loop holds is the week just completed. The column printed «–» on every row, which
+      // is a null cell that looks like a measurement – found on a 6-career smoke and fixed here.
+      if (world.pregnancy !== null && world.week <= coinWeek) {
+        arm.chance = returnChanceFor(
+          grade,
+          world.spirit,
+          world.bond,
+          kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
+        )
+      }
       stepClone(world, rng, policy)
       // ⭐ THE RECOVERY FORK, TAKEN THE WEEK THE MARK LANDS. `landBirth` stamps
       // `spiritShock = { week, kind: 'postpartum' }` on `dueWeek`, and the magnitude has already been
@@ -381,25 +430,62 @@ function offPlanVeto(world: WorldState, event: SeasonEvent): boolean {
   return entryStatus(world, event).offReturnPlan === true
 }
 
+/** ⭐⭐⭐ THE THIRD ARM, AND IT IS A **DIAGNOSTIC** RATHER THAN A RAMP – the same `small-first` plan
+ *  played by a parent whose policy has had two brakes released. Run 1 measured the small-first arm
+ *  entering **1.7 events in a year and banking 0 points**, which is not «small events first», it is
+ *  «nothing at all», and a head-to-head whose losing arm did not play is measuring the arm and not the
+ *  ramp – CLAUDE.md's own «the fixture, not the mechanic».
+ *
+ *  ⚠⚠ THE TWO BRAKES ARE THE **BENCH POLICY'S** AND NOT THE ENGINE'S, which is the whole point of
+ *  isolating them here rather than asserting them in the spec:
+ *    · `skipOutgrown` – «a rung she has passed» (`hasOutgrown`). A career that reached the top fifty
+ *      has outgrown the W15s for ever; the pause does not give them back, because the read is of her
+ *      BEST FINISH history and a year of not playing does not erase a result.
+ *    · `onlyHerTable` – «never pay into a table below the one she is climbing». Once she is a wta
+ *      player the domestic and junior rungs are refused, and after the pause her live wta standing
+ *      opens nothing on her own table.
+ *  ⭐ AND THE ENGINE REFUSES NEITHER: `hasOutgrown` rides out as a LABEL on `EntryStatus` and
+ *  `tierOpenFor` does not consult it (the 06.08 ruling – «NEITHER refuses»), so a real player may
+ *  enter an outgrown rung and this parent simply does not. Releasing them says whether small-first's
+ *  zero is the PLAN or the POLICY, and nothing in `ECONOMY` is touched either way. */
+const BRAKES_OFF: Policy = { ...POLICIES[1], skipOutgrown: false, onlyHerTable: false }
+
 function forkAtReturnPlan(base: WorldState, policy: Policy): RampArm[] {
   const arms: RampArm[] = []
-  for (const plan of PLANS) {
+  const recipe: { label: string; plan: Plan; policy: Policy }[] = [
+    { label: 'small-first', plan: 'small-first', policy },
+    { label: 'straight-back', plan: 'straight-back', policy },
+    { label: 'small-first brakes off', plan: 'small-first', policy: BRAKES_OFF },
+  ]
+  for (const arm of recipe) {
     const world = structuredClone(base)
     const rng = resumeMain(world.rngMain)
-    answerLifeBeat(world, plan)
-    if (world.comeback?.returnPlan !== plan) throw new Error('the arm is not the arm')
+    answerLifeBeat(world, arm.plan)
+    if (world.comeback?.returnPlan !== arm.plan) throw new Error('the arm is not the arm')
     const before = world.comeback.protectedRank?.entriesLeft ?? 0
     let entered = 0
-    for (let i = 0; i < RAMP_WEEKS; i++) {
-      const got = stepCareerWeek(world, rng, policy, plan === 'small-first' ? offPlanVeto : undefined)
+    let points = 0
+    let rank = 0
+    for (let i = 0; i < 2 * RAMP_WEEKS; i++) {
+      const got = stepCareerWeek(world, rng, arm.policy, arm.plan === 'small-first' ? offPlanVeto : undefined)
       if (Object.values(got).some((n) => n > 0)) entered++
       if (world.ending === null) answerWhateverIsOpen(world, emptyDrainCounts())
+      // ⚠ SAMPLED AT `RAMP_WEEKS` AND WALKED TO TWICE IT: T6 §D's horizon is 52 weeks, so the
+      // head-to-head has to be cut there or it is not the same measurement; «did she get her band
+      // back» needs longer than a year and gets the second sample.
+      if (i === RAMP_WEEKS - 1) {
+        points = kidPoints(world, 'wta')
+        rank = rankIn(world, 'wta')
+      }
       if (world.ending !== null) break
     }
     arms.push({
-      plan,
-      points: kidPoints(world, 'wta'),
-      rank: rankIn(world, 'wta'),
+      label: arm.label,
+      plan: arm.plan,
+      points,
+      rank,
+      pointsLong: kidPoints(world, 'wta'),
+      rankLong: rankIn(world, 'wta'),
       entered,
       spent: before - (world.comeback?.protectedRank?.entriesLeft ?? 0),
     })
@@ -424,6 +510,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): MotherCareer 
     week24: 0,
     everLatched: false,
     eligibleWeeks: 0,
+    expectedPregnancies: 0,
     announcedWeek: null,
     announceAge: null,
     pausesWeek: null,
@@ -440,6 +527,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): MotherCareer 
     ptsAtReturn: null,
     rankAtAnnounce: null,
     rankAtReturn: null,
+    rankAfterReturn: [null, null, null],
     freezeEntries: null,
     freezeSpentByExpiry: null,
     freezeExpiredUnused: null,
@@ -507,7 +595,13 @@ function runCareer(preset: Preset, index: number, policy: Policy): MotherCareer 
     // re-derived «latched, no pregnancy, no child, no knock» would be the two-spellings defect the
     // engine's own note argues against one layer down, and it would go stale on the week W5 lifts the
     // children clause.
-    if (pregnancyEligible(world)) out.eligibleWeeks++
+    if (pregnancyEligible(world)) {
+      out.eligibleWeeks++
+      // ⚠ ASKED OF THE ENGINE'S OWN FUNCTION, week by week, and never re-derived from the rung table:
+      // `pregnancyChanceAt` IS the hazard, so this sum is the expectation the shipped code produces
+      // for this exact career and cannot drift from it.
+      out.expectedPregnancies += pregnancyChanceAt(world)
+    }
     if (latchedEpisode(world) !== null) out.everLatched = true
     const p = world.pregnancy
     if (p !== null && out.announcedWeek === null) {
@@ -539,6 +633,12 @@ function runCareer(preset: Preset, index: number, policy: Policy): MotherCareer 
     if (c?.protectedRank != null && world.week >= c.protectedRank.validUntilWeek && out.freezeSpentByExpiry === null) {
       out.freezeSpentByExpiry = ECONOMY.motherhood.protectedRankEntries - c.protectedRank.entriesLeft
       out.freezeExpiredUnused = c.protectedRank.entriesLeft > 0
+    }
+    if (out.returnedWeek !== null) {
+      for (let h = 0; h < 3; h++) {
+        const at = out.returnedWeek + (h + 1) * WEEKS_PER_YEAR
+        if (out.rankAfterReturn[h] === null && world.week >= at) out.rankAfterReturn[h] = rankIn(world, 'wta')
+      }
     }
     if (world.ending !== null) break
   }
@@ -995,15 +1095,58 @@ function main(): void {
   if (shares.length > 1) {
     const spread = Math.max(...shares) - Math.min(...shares)
     console.log(
-      `  spread across the ${shares.length} voices with ${MIN_VOICE}+ marriages: ${fix(spread)} pp ` +
+      `  raw spread across the ${shares.length} voices with ${MIN_VOICE}+ marriages: ${fix(spread)} pp ` +
         `${spread <= 1.5 ? '– INSIDE the ±1.5 pp corridor' : '– ⚠ OUTSIDE the ±1.5 pp corridor'}`,
     )
   } else {
-    console.log(`  ⚠ fewer than two voices reach ${MIN_VOICE} marriages – the corridor is NOT measurable on this grid.`)
+    console.log(`  ⚠ fewer than two voices reach ${MIN_VOICE} marriages – a raw share is NOT measurable on this grid.`)
   }
   if (thin.length > 0) console.log(`  excluded as too thin to carry a 1.5 pp corridor: ${thin.join(' · ')}`)
-  console.log('  ⚠ the hazard reads AGE ALONE (no temperament term – `rollPregnancy`\'s own decision), so a spread here is')
-  console.log('    a spread in who MARRIES and how long the marriage lives, which is wave 7\'s mechanic and not this one\'s.')
+  console.log('')
+  // ⭐⭐⭐ AND THE RAW SHARE IS THE WRONG DENOMINATOR FOR THE CORRIDOR, which the table above is printed
+  // to SHOW rather than to claim: the median eligible-week column varies by more than an order of
+  // magnitude across the four voices, and that is wave 7's mechanic (who marries, and how long the
+  // marriage lives) standing in front of this wave's. The hazard reads AGE ALONE – `rollPregnancy`
+  // has no temperament term of any kind – so the fair question is «did each voice get the
+  // pregnancies its EXPOSURE bought», and the exposure is Σ `pregnancyChanceAt` over the weeks the
+  // gate was open. Observed against expected is that question, and it is the engine's own function
+  // summed week by week rather than a rung table re-derived here.
+  console.log('  ⚠⚠ EXPOSURE-ADJUSTED – Σ `pregnancyChanceAt` over the weeks the gate was open, which is the hazard\'s own')
+  console.log('     expectation for these careers. This is the corridor\'s real question; the raw share above is not.')
+  console.log(`  ${pad('voice', 10)}${padL('eligible wks', 14)}${padL('expected', 10)}${padL('observed', 10)}${padL('obs/exp', 9)}${padL('±1 Poisson', 12)}`)
+  for (const t of ['sunny', 'fiery', 'quiet', 'deep'] as const) {
+    const rows = census.filter((c) => c.temperament === t)
+    const wks = rows.reduce((n, c) => n + c.eligibleWeeks, 0)
+    const exp = rows.reduce((n, c) => n + c.expectedPregnancies, 0)
+    const obs = rows.filter((c) => c.announcedWeek !== null).length
+    // ⚠ THE BAND IS √expected / expected – a Poisson count's own one-sigma, printed so a reader can
+    // see at a glance whether a ratio away from 1.00 is a finding or a sample. It is NOT a p-value
+    // and is not dressed as one.
+    const band = exp > 0 ? Math.sqrt(exp) / exp : NaN
+    console.log(
+      `  ${pad(t, 10)}${padL(String(wks), 14)}${padL(fix(exp, 2), 10)}${padL(String(obs), 10)}` +
+        `${padL(exp > 0 ? fix(obs / exp, 2) : '–', 9)}${padL(exp > 0 ? `±${fix(band, 2)}` : '–', 12)}`,
+    )
+  }
+  const totExp = census.reduce((n, c) => n + c.expectedPregnancies, 0)
+  const totObs = census.filter((c) => c.announcedWeek !== null).length
+  console.log(
+    `  ${pad('ALL', 10)}${padL(String(census.reduce((n, c) => n + c.eligibleWeeks, 0)), 14)}${padL(fix(totExp, 2), 10)}` +
+      `${padL(String(totObs), 10)}${padL(totExp > 0 ? fix(totObs / totExp, 2) : '–', 9)}${padL(totExp > 0 ? `±${fix(Math.sqrt(totExp) / totExp, 2)}` : '–', 12)}`,
+  )
+  // ⚠⚠ WHAT THE CORRIDOR WOULD ACTUALLY COST TO MEASURE, stated rather than implied, because a
+  // «⚠ OUTSIDE» printed off seventeen events would be a sampling artifact wearing a verdict. A ±1.5 pp
+  // corridor on a share of about 15% needs a standard error near 0.5 pp, i.e. p(1−p)/0.005² ≈ 5,000
+  // MARRIED careers PER VOICE. This grid has tens.
+  const marriedAll = census.filter((c) => c.everLatched).length
+  const pHat = marriedAll === 0 ? 0 : totObs / marriedAll
+  const needed = Math.round((pHat * (1 - pHat)) / 0.005 ** 2)
+  console.log(
+    `  ⚠ A ±1.5 pp CORRIDOR NEEDS ~${needed.toLocaleString('en-US')} MARRIED CAREERS PER VOICE (SE 0.5 pp at p=${fix(100 * pHat)}%). ` +
+      `This grid has ${marriedAll} in TOTAL.`,
+  )
+  console.log('    So the corridor is not measurable by this instrument at any feasible grid, and the fairness claim rests')
+  console.log('    on CONSTRUCTION instead: `pregnancyChanceAt` takes `kidAgeNow` and the rung table, and nothing else.')
   console.log('')
 
   // --- (4) THE MID-TERM ENDING SHARE ---
@@ -1032,46 +1175,71 @@ function main(): void {
   console.log('')
   const forked = census.filter((c) => c.grades.length === GRADES.length)
   console.log(`  ${forked.length} pregnancies forked three ways at the \`'expecting'\` card (same seed, same week, same draw)`)
-  console.log(`  ${pad('grade', 10)}${padL('answer', 14)}${padL('bond', 7)}${padL('returned', 11)}${padL('share', 9)}${padL('drafted', 10)}`)
+  console.log(
+    `  ${pad('grade', 10)}${padL('answer', 14)}${padL('bond', 7)}${padL('returned', 11)}${padL('share', 9)}` +
+      `${padL('drafted', 10)}${padL('LIVE chance', 13)}${padL('at clamp', 10)}`,
+  )
   for (const g of GRADES) {
     const arms = forked.map((c) => c.grades.find((a) => a.grade === g)!).filter((a) => a !== undefined)
     const ret = arms.filter((a) => a.returned).length
     const drafted = m.returnBase + m.returnSupportShift[g]
     const bond = g === 'warm' ? m.joyBond : g === 'measured' ? m.worryBond : m.careerFirstBond
+    const chances = arms.map((a) => a.chance).filter((x): x is number => x !== null)
+    const capped = chances.filter((x) => x >= m.returnChanceMax - 1e-9).length
     console.log(
       `  ${pad(g, 10)}${padL(GRADE_ANSWER[g], 14)}${padL(`${bond >= 0 ? '+' : ''}${bond}`, 7)}${padL(`${ret}/${arms.length}`, 11)}` +
-        `${padL(pct(ret, arms.length), 9)}${padL(drafted.toFixed(2), 10)}`,
+        `${padL(pct(ret, arms.length), 9)}${padL(drafted.toFixed(2), 10)}` +
+        `${padL(chances.length ? median(chances).toFixed(2) : '–', 13)}${padL(`${capped}/${chances.length}`, 10)}`,
     )
   }
-  console.log('  ⚠ THE «drafted» COLUMN IS THE BASE PLUS THE GRADE SHIFT ONLY – her `spirit`, the `bond` the answer itself')
-  console.log('    left, and her age all move the live chance, so the measured share is the answer\'s TOTAL effect.')
+  console.log('  ⚠⚠ READ THE «LIVE chance» COLUMN AND NOT THE «drafted» ONE. `returnChanceFor` has FOUR terms and the')
+  console.log('     grade is one: her `spirit`, the `bond` the answer itself left and her age move it too, and after a')
+  console.log('     year off tour her spirit is not the baseline. «drafted» is `returnBase + returnSupportShift`, which')
+  console.log('     is two terms of four – comparing the measured share against it is the wrong measurement wearing the')
+  console.log('     right number. The LIVE column is the median chance the engine was about to compare a uniform against,')
+  console.log('     read at the top of the decision week, and «at clamp» counts how many hit `returnChanceMax`.')
   console.log(`  drafted base ${m.returnBase} = the \`measured\` rate exactly (returnSupportShift.measured is 0).`)
   console.log('')
 
   // --- (6) THE COMEBACK ---
   console.log(`  ── (6) THE COMEBACK: rank at the pause vs rank +${RAMP_WEEKS} weeks, small-first vs straight-back ──`)
   console.log('')
-  const ramped = census.filter((c) => c.ramps.length === PLANS.length)
-  console.log(`  ${ramped.length} returns forked two ways at the \`'return-plan'\` card (T6 §D's own apparatus, at bench scale)`)
-  console.log(`  ${pad('arm', 16)}${padL('mean pts', 11)}${padL('med pts', 10)}${padL('mean rank', 11)}${padL('med rank', 10)}${padL('entered', 9)}${padL('freeze spent', 14)}`)
-  const armStats = (plan: Plan): { pts: number[]; ranks: number[]; entered: number[]; spent: number[] } => {
-    const arms = ramped.map((c) => c.ramps.find((a) => a.plan === plan)!)
+  const ARM_LABELS = ['small-first', 'straight-back', 'small-first brakes off'] as const
+  const ramped = census.filter((c) => c.ramps.length === ARM_LABELS.length)
+  console.log(`  ${ramped.length} returns forked at the \`'return-plan'\` card (T6 §D's own apparatus, at bench scale)`)
+  console.log(
+    `  ${pad('arm', 24)}${padL('mean pts', 10)}${padL('med pts', 9)}${padL('mean rank', 10)}${padL('entered/yr', 11)}` +
+      `${padL('freeze spent', 13)}${padL(`pts @${2 * RAMP_WEEKS}w`, 12)}${padL(`rank @${2 * RAMP_WEEKS}w`, 13)}`,
+  )
+  const armStats = (
+    label: string,
+  ): { pts: number[]; ranks: number[]; entered: number[]; spent: number[]; ptsLong: number[]; ranksLong: number[] } => {
+    const arms = ramped.map((c) => c.ramps.find((a) => a.label === label)!)
     return {
       pts: arms.map((a) => a.points),
       ranks: arms.map((a) => a.rank),
       entered: arms.map((a) => a.entered),
       spent: arms.map((a) => a.spent),
+      ptsLong: arms.map((a) => a.pointsLong),
+      ranksLong: arms.map((a) => a.rankLong),
     }
   }
   const mean = (xs: number[]): number => (xs.length === 0 ? NaN : xs.reduce((s, x) => s + x, 0) / xs.length)
-  for (const plan of PLANS) {
-    const s = armStats(plan)
+  for (const label of ARM_LABELS) {
+    const s = armStats(label)
     console.log(
-      `  ${pad(plan, 16)}${padL(fix(mean(s.pts), 0), 11)}${padL(s.pts.length ? median(s.pts).toFixed(0) : '–', 10)}` +
-        `${padL(fix(mean(s.ranks), 0), 11)}${padL(s.ranks.length ? median(s.ranks).toFixed(0) : '–', 10)}` +
-        `${padL(fix(mean(s.entered), 1), 9)}${padL(fix(mean(s.spent), 1), 14)}`,
+      `  ${pad(label, 24)}${padL(fix(mean(s.pts), 0), 10)}${padL(s.pts.length ? median(s.pts).toFixed(0) : '–', 9)}` +
+        `${padL(fix(mean(s.ranks), 0), 10)}${padL(fix(mean(s.entered) / 2, 1), 11)}` +
+        `${padL(fix(mean(s.spent), 1), 13)}${padL(fix(mean(s.ptsLong), 0), 12)}${padL(fix(mean(s.ranksLong), 0), 13)}`,
     )
   }
+  console.log('  ⚠⚠ THE THIRD ARM IS A DIAGNOSTIC AND NOT A RAMP – the SAME `small-first` plan, played by a parent whose')
+  console.log('     policy has had `skipOutgrown` and `onlyHerTable` released. It answers whether small-first\'s result is')
+  console.log('     the PLAN or the POLICY: a career that reached the top fifty has OUTGROWN the small draws for ever,')
+  console.log('     and once she is a wta player her own table admits nothing while her live standing is gone.')
+  console.log('     ⭐ The ENGINE refuses neither – `hasOutgrown` rides out as a LABEL and `tierOpenFor` does not consult')
+  console.log('     it (the 06.08 ruling) – so this arm is a parent who would drop down, not a rule that was changed.')
+  console.log('')
   const small = armStats('small-first')
   const straight = armStats('straight-back')
   let straightAhead = 0
@@ -1092,26 +1260,46 @@ function main(): void {
   console.log('     against 0.0). This row either CONFIRMS or CONTRADICTS that at bench scale; it does not tune it.')
   console.log('')
   console.log('  ...and what the year did to the RANK she paused with:')
-  const regained = { 'small-first': 0, 'straight-back': 0 } as Record<Plan, number>
+  const regained: Record<string, number> = {}
+  const regainedLong: Record<string, number> = {}
+  for (const label of ARM_LABELS) {
+    regained[label] = 0
+    regainedLong[label] = 0
+  }
   let withFreeze = 0
   for (const c of ramped) {
     if (c.rankAtPause === null) continue
     withFreeze++
-    for (const plan of PLANS) {
-      const a = c.ramps.find((x) => x.plan === plan)!
-      if (a.rank <= c.rankAtPause) regained[plan]++
+    for (const label of ARM_LABELS) {
+      const a = c.ramps.find((x) => x.label === label)!
+      if (a.rank <= c.rankAtPause) regained[label]++
+      if (a.rankLong <= c.rankAtPause) regainedLong[label]++
     }
   }
   const pauseRanks = ramped.map((c) => c.rankAtPause).filter((r): r is number => r !== null)
   console.log(
     `  rank at the pause: median ${pauseRanks.length ? median(pauseRanks).toFixed(0) : '–'} over ${withFreeze} careers that paused holding one`,
   )
-  for (const plan of PLANS) {
+  for (const label of ARM_LABELS) {
     console.log(
-      `  ${pad(plan, 16)}back to at least her rank at the pause within ${RAMP_WEEKS} wks: ` +
-        `${regained[plan]}/${withFreeze} = ${pct(regained[plan], withFreeze)}`,
+      `  ${pad(label, 24)}back to at least her rank at the pause: ` +
+        `${RAMP_WEEKS}w ${regained[label]}/${withFreeze} = ${pct(regained[label], withFreeze)} · ` +
+        `${2 * RAMP_WEEKS}w ${regainedLong[label]}/${withFreeze} = ${pct(regainedLong[label], withFreeze)}`,
     )
   }
+  // ⚠ AND THE BASE WALK'S OWN THREE-YEAR READ, which is longer than any arm above and is the freeze's
+  // own horizon. It is the DRAINED (`small-first`) arm and says so.
+  const longRows = census.filter((c) => c.returnedWeek !== null && c.rankAtPause !== null)
+  console.log(
+    `  base walk (drained small-first), back to her rank at the pause: ` +
+      [0, 1, 2]
+        .map((h) => {
+          const seen = longRows.filter((c) => c.rankAfterReturn[h] !== null)
+          const hit = seen.filter((c) => (c.rankAfterReturn[h] ?? 1e9) <= (c.rankAtPause ?? 0)).length
+          return `+${h + 1}yr ${hit}/${seen.length}`
+        })
+        .join(' · '),
+  )
   console.log('')
   // ⚠⚠ THE PRODUCT, AND IT IS **CHECKED AND NEVER FORCED ON EITHER FACTOR** (§2 T5's split, and the
   // brief's third law). The research's ~40% is «of mothers, return SUCCESSFULLY»; the model splits it
@@ -1119,14 +1307,12 @@ function main(): void {
   // product of the two measured shares against that sentence.
   const tried = preg.filter((c) => c.returnedWeek !== null).length
   const triedShare = preg.length === 0 ? 0 : tried / preg.length
-  const bestRegain = Math.max(
-    withFreeze === 0 ? 0 : regained['small-first'] / withFreeze,
-    withFreeze === 0 ? 0 : regained['straight-back'] / withFreeze,
-  )
+  const bestRegain =
+    withFreeze === 0 ? 0 : Math.max(...ARM_LABELS.map((label) => regainedLong[label] / withFreeze))
   console.log('  THE PRODUCT SANITY LINE (⚠ checked, never forced on either factor – §2 T5\'s split):')
   console.log(
     `    tried (base walk, drained \`measured\` grade) ${tried}/${preg.length} = ${pct(tried, preg.length)} · ` +
-      `regained the band (best arm) ${fix(100 * bestRegain)}% · PRODUCT ${fix(100 * triedShare * bestRegain)}%`,
+      `regained the band (best arm, at ${2 * RAMP_WEEKS} wks) ${fix(100 * bestRegain)}% · PRODUCT ${fix(100 * triedShare * bestRegain)}%`,
   )
   console.log('    against the research\'s ~40% «of mothers, return successfully» – and 0.65 x ~0.6 ≈ 0.4 on paper.')
   console.log('')
@@ -1155,12 +1341,12 @@ function main(): void {
   }
   console.log('  ⚠⚠ THE BASE WALK IS THE **small-first** ARM (the registry\'s own `return-plan` answer), so the figures above')
   console.log('     are the careful ramp\'s. The two-arm spend is section 6\'s «freeze spent» column.')
-  for (const plan of PLANS) {
-    const s = armStats(plan)
-    const none = s.spent.filter((x) => x === 0).length
+  for (const label of ARM_LABELS) {
+    const st = armStats(label)
+    const none = st.spent.filter((x) => x === 0).length
     console.log(
-      `  ${pad(plan, 16)}spent in the first ${RAMP_WEEKS} wks: mean ${fix(mean(s.spent))} of ${m.protectedRankEntries} · ` +
-        `careers that spent NONE ${none}/${s.spent.length}`,
+      `  ${pad(label, 24)}spent over ${2 * RAMP_WEEKS} wks: mean ${fix(mean(st.spent))} of ${m.protectedRankEntries} · ` +
+        `careers that spent NONE ${none}/${st.spent.length}`,
     )
   }
   console.log('')
