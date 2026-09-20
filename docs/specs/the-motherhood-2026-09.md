@@ -170,12 +170,25 @@ return-plan 19 x 0 = bond skew -1346.5` over 240 careers (arm A).
 
 | reading | arm A |
 | --- | ---: |
-| ever married | 106/240 |
-| **reached a pregnancy** | **25 = 23.6% of married**, 10.4% of all careers |
+| ⚠ **still married when the walk stopped** (see the correction below) | 106/240 |
+| **reached a pregnancy** | **25 = 23.6% of THAT denominator**, 10.4% of all careers |
 | announcement age | median **30.3** (min 25.5, max 34.6) |
 | came back / ended `'family'` | **19 / 6** |
 | support grade | `measured` x 25 – the drain's own answer, not a distribution |
 | return plan | `small-first` x 19 – likewise |
+
+⚠⚠ **CORRECTED BY THE ARCHITECT AT GATE 10 – THE DENOMINATOR WAS MISLABELLED.** This row said
+«ever married». It is not: `tools/pause-brand-probe.ts` calls `latchedEpisode(world)` at the END of
+the walk, and `latchedEpisode` is `latchedWeek !== null && endedWeek === null` – so 106 is the number
+**still married when the walk stopped**, which excludes every marriage that ended along the way. The
+23.6% is therefore a share of a smaller, differently-shaped population than the wave brief's corridor
+is about, and it is **not** comparable to T9's 15.1% as written.
+
+⭐ Found by T9, which flagged it rather than editing another task's section – the right call – and
+confirmed by the architect by reading the probe and the predicate. ⚠ **The two instruments do not
+actually disagree**: on the figure with no definitional choice in it – pregnancies as a share of ALL
+careers – they agree to **0.4 pp** (10.4% here, 10.0% in T9's grid). The disagreement was a label,
+not a measurement. §13's table carries both readings side by side.
 
 ⚠ The census is **T9's to measure properly** and is quoted here only because it is this arm's
 denominator. It happens to land inside the brief's predicted 15–30% corridor, and the grade and plan
