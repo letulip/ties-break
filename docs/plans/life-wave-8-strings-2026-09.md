@@ -163,6 +163,24 @@ sentence about the ending and not a sentence the epilogue is allowed to say to t
 saying it would be the game deciding for him how the last year felt. And it may not CONGRATULATE
 either, which is the mirror the peak's own row states.
 
+⚠⚠ **P22 SHARES SIXTY CHARACTERS WITH THE `peak` BLURB, VERBATIM, AND THAT IS FLAGGED RATHER THAN
+FIXED.** Measured, not eyeballed – the longest common substring of the two is
+«`. Nobody put the question to her and nobody had to – it was `», which is the whole middle clause of
+each. The source calls it «`peak`'s own idiom» and the reason is sound (§4a's law at this layer's
+second-biggest moment: nobody put the question to her), but *idiom* understates what is on the page:
+
+> **peak** – She was at the top of the sport the season she stopped. **Nobody put the question to her
+> and nobody had to** – it was decided before anybody else heard about it.
+>
+> **family** – She had a child, and the months after it went by without an entry in them. **Nobody put
+> the question to her and nobody had to** – it was hers to answer and she answered it.
+
+Two of the nine epilogue blurbs now open their second sentence identically, and a player who reaches
+both across two careers reads the same eight words twice on the same screen. **Nothing was changed** –
+a builder harmonising two of his blurbs to taste is the move invariant 4 forbids, and the sentence is
+right about both endings. It is §8 Q-8 and it is his: keep the echo as a deliberate rhyme between the
+two endings that are HERS, or reword the newer one.
+
 ⚠ **P23 is deliberately about the TENNIS rather than about the child.** «She stayed with the family»
 is the warmer alternative and was refused: it tells the player what she chose INSTEAD, which is a
 larger claim than the record is entitled to make. It also has to survive the concatenation in P24.
@@ -370,6 +388,10 @@ None of these blocks the wave; they are collected here per his own instruction.
 7. **What the spouse is CALLED on screen** – wave 7 §5 Q-1, still open. ⚠ Wave 8 does not widen it:
    **not one row in this table refers to him at all**, which is §0's decoupling ruling read strictly.
    A mid-pregnancy divorce is ordinary life, so every line above is true of a career that had one.
+
+8. **The echo between the `peak` and `family` blurbs** (§4). Sixty characters verbatim, measured, on
+   two of the nine epilogues. A deliberate rhyme between the two endings that are HERS is a defensible
+   reading and may be what he wants; so is rewording the newer one. Not touched either way.
 
 ⚠ **One observation offered as a question rather than as a fix, per invariant 4.** The wave makes an
 existing RULED string reachable in a context it was not written for: `RECOVERY_RECEIPT` – «She came
