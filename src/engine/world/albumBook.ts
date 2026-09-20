@@ -64,6 +64,7 @@ import { KID_ID } from './constants'
 import { temperamentFor, type Temperament } from '../spirit'
 import { pickInt, rngFromSeed } from '../rng'
 import { kidAgeAt } from './age'
+import { isCappedProTier, isCappedTier } from './entryCaps'
 import { finishLabel } from './labels'
 import {
   ALBUM_ARC,
@@ -837,11 +838,82 @@ function closerRank(c: AlbumCandidate): number {
 // §5 FRAMES – week + occasion, resolved by the §4 ladder: event painting, travel, portrait
 // =================================================================================================
 
-/** Was `week` an away week? The two entry ledgers are persisted for the life of the career and
- *  never pruned (v15 / v36) – `events` and `results` both forget, these do not. Domestic rungs are
- *  home soil and never appear in either. */
+/** A rung she has to TRAVEL to – the exact complement of the domestic ladder, and asked through the
+ *  SAME two predicates that write the entry ledgers. `enterEvent` (world/entries.ts) pushes onto
+ *  `internationalEntryWeeks` iff `isCappedTier` and onto `proEntryWeeks` iff `isCappedProTier`, so
+ *  reusing them is what keeps the derived half of the away test below from drifting away from the
+ *  recorded half the day a rung changes family. */
+function awayTier(tier: TierId): boolean {
+  return isCappedTier(tier) || isCappedProTier(tier)
+}
+
+/** WHICH MILESTONE TYPES DATE A WEEK SHE PLAYED, and it is a short list ON PURPOSE – every row here
+ *  is written by `finalizeTournament` (world.ts) at the award, carrying THAT event's own tier, so
+ *  the milestone's week is the week she was there.
+ *
+ *  ⚠⚠ `international` IS DELIBERATELY ABSENT AND THE REASON IS A ONE-LINE TRAP. `enterEvent` captures
+ *  it at `world.week` – the week the FORM went in – while the entry ledger beside it records
+ *  `event.week`. Entries run up to `ENTRY_LOOKAHEAD` weeks ahead, so that milestone dates the
+ *  kitchen table and not the airport, and reading it here would paint a journey home on a week she
+ *  spent at home.
+ *
+ *  ⭐ `prize` IS PRESENT AND IT IS THE CHEAPEST REACH IN THE LIST: `prizeCents` is declared on the W
+ *  rungs and above ONLY (calendar.ts – «NO junior level pays prize money», and the domestic ladder
+ *  declares none either), so a first cheque is proof of a pro-rung week by construction. It is also
+ *  why the home arm of the ladder case in `tests/albumBook.test.ts` had to move off `w15`: a w15
+ *  prize week is an away week, always, and a case that called one «at home» was posing a world no
+ *  engine path can reach. */
+const AWAY_PROVING_MILESTONES = new Set<Milestone['type']>(['title', 'final', 'prize'])
+
+/** ⭐⭐ WAS `week` AN AWAY WEEK? – the §4 ladder's rung 2, and it takes TWO kinds of evidence,
+ *  because neither one of them reaches the whole career on its own.
+ *
+ *  ⚠⚠ THIS DOCBLOCK USED TO SAY THE TWO ENTRY LEDGERS ARE «persisted for the life of the career and
+ *  never pruned (v15 / v36)». THAT SENTENCE WAS FALSE, and the rung was the smaller half of the
+ *  damage. `pruneInternationalEntries` (world/planner.ts) filters BOTH to
+ *  `w >= min(seasonStartWeek, ageWindowStartWeek)` and runs EVERY week out of `housekeep`
+ *  (world/bookkeeping.ts); `state.ts`'s own field docs say it in a line each («pruned to the current
+ *  season onward at housekeeping»); `world/brand.ts` reached the same floor independently. So a
+ *  ledger-only test answers for the current season block and for nothing before it.
+ *
+ *  ⭐ AND IT WAS MEASURED BEFORE IT WAS FIXED, on five walked careers of ~1350 weeks each
+ *  (docs/specs/the-album-2026-09.md §4): 119 frames assembled, 11 of them resolved at rung 1 and never
+ *  asking the question at all, 42 of the remaining 108 sitting on a week that was away IN TRUTH – and
+ *  the ledgers as the prune leaves them answered «away» for **0 of them**. Not one. The travel rung was
+ *  not under-firing, it was not firing, on any of the five: the album's representatives are spread over
+ *  a whole career and the ledger only ever holds the tail of it. Twelve painted journey scenes were
+ *  unreachable art.
+ *
+ *  THE TWO SOURCES, and what each one can and cannot say:
+ *    · THE ENTRY LEDGERS are COMPLETE for the weeks they still hold – every entry at any non-domestic
+ *      rung, including a first-round exit that left no other trace anywhere – and they hold only the
+ *      current season block / age window.
+ *    · THE TROPHY CABINET (v31) and the award milestones are NEVER pruned, are dated, and
+ *      carry their tier, so they reach the whole career. ⚠⚠ AND THEY ONLY KNOW FINALS AND FIRST
+ *      CHEQUES – `AWAY_PROVING_MILESTONES` above is the whole list and it is three rows. That is the
+ *      limit the owner named in the same breath as the source, it is stated rather than papered over,
+ *      and it is what the numbers above measure: of the 42 truly-away frames the two sources together
+ *      reach 24, and 23 of those actually draw a journey (the twenty-fourth is an injury frame, which
+ *      refuses one by ruling). A first-round exit abroad four years ago is a trip the save cannot prove, and
+ *      its frame takes the band portrait. A missing true journey costs one picture; an invented one
+ *      would cost the book its credibility – the same trade `lastProvenCourtWeek` makes one page up.
+ *
+ *  ⚠ NO NEW PERSISTED STATE, deliberately: a per-week away flag would answer completely and is a
+ *  schema move, which is the owner's to authorise and not an agent's to assume. */
 function awayWeek(world: WorldState, week: number): boolean {
-  return world.internationalEntryWeeks.includes(week) || world.proEntryWeeks.includes(week)
+  if (world.internationalEntryWeeks.includes(week)) return true
+  if (world.proEntryWeeks.includes(week)) return true
+  for (const tier of TIER_LADDER) {
+    if (!awayTier(tier)) continue
+    const cabinet = world.trophiesByTier?.[tier]
+    if (!cabinet) continue
+    if (cabinet.titles.includes(week) || cabinet.finals.includes(week)) return true
+  }
+  for (const m of world.milestones) {
+    if (!AWAY_PROVING_MILESTONES.has(m.type)) continue
+    if (m.week === week && m.tier !== undefined && awayTier(m.tier)) return true
+  }
+  return false
 }
 
 function frameArtFor(world: WorldState, c: AlbumCandidate): { art: string; alt: string } {

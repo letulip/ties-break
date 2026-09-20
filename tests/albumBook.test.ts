@@ -34,10 +34,21 @@
 //          latch that resumes is handed the last page of the album)
 //   ARM Q  the layouts back to opener-B-B                            → 2 red (the rotation case and
 //          the density sweep: a chapter of three sheets shows two of them the same)
+// The travel rung's re-sourcing added three more (20.09), each applied to `albumBook.ts`, run,
+// restored. ⚠ THE FIRST IS THE ONE THIS FILE COULD NOT PRODUCE BEFORE: under the old posed cases
+// ARM R was green, which is the whole finding.
+//   ARM R  `awayWeek` back to the two pruned ledgers alone            → 2 red of 29 (the prune case
+//          and the first-cheque case); the other 27 are honestly indifferent to the away source
+//   ARM C'' the travel rung hoisted above rung 1 of `frameArtFor`     → 3 red, one of them the
+//          REPAIRED wedding case – the proof that moving it off a posed ledger onto the trophy
+//          cabinet cost it none of its power (the other two are the closer sheets, collateral)
+//   ARM D' `ALBUM_MOOD.injury` back to the fall (`'sad'`)             → 2 red, one of them the
+//          REPAIRED away-injury case, for the same reason
 import { describe, it, expect } from 'vitest'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { assembleAlbum, ALBUM_MOOD, createWorld, deliverAssets, kidAgeAt, TEMPERAMENTS, type WorldState } from '../src/engine/world'
+import { housekeep } from '../src/engine/world/bookkeeping'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import { ECONOMY } from '../src/engine/economy'
@@ -62,6 +73,19 @@ function weekAtAge(world: WorldState, age: number): number {
 
 function probe(seed: string): WorldState {
   return createWorld(seed)
+}
+
+/** ⚠⚠ THE CAREER RUNS ON, AND THE LEDGERS GET PRUNED – the step every travel case in this file used
+ *  to skip. `housekeep` (engine/world/bookkeeping.ts) is step 6 of every resolved week and it calls
+ *  `pruneInternationalEntries`, which filters BOTH entry ledgers to
+ *  `w >= min(seasonStartWeek, ageWindowStartWeek)`. This walks the REAL function one week at a time
+ *  rather than posing its result, which is the whole difference between a case that would have
+ *  caught the 20.09 defect and the three that did not. */
+function housekeepThrough(world: WorldState, to: number): void {
+  while (world.week < to) {
+    world.week += 1
+    housekeep(world)
+  }
 }
 
 /** A seed that draws the girl we need – SEARCHED, never a magic string, because `createWorld` draws
@@ -281,28 +305,57 @@ describe('the ladder: event painting beats travel beats portrait', () => {
   it('a wedding on an away week still resolves to the bride painting, band-resolved', () => {
     const world = probe('album-ladder-event')
     const w = weekAtAge(world, 24)
-    world.week = w + 10
+    world.week = w
     world.milestones.push({ type: 'wedding', week: w, kind: 'p:1' })
-    world.proEntryWeeks.push(w)
+    // ⚠ THE AWAY WEEK IS PROVED, NOT POSED (20.09). This pushed `proEntryWeeks` and never ticked, so
+    // after the prune the week was not away at all and «the event painting beats the journey» was
+    // being asserted about a world where there was no journey to beat. The cabinet keeps a w50 final
+    // for the life of the career, and it raises no candidate of its own, so the frame under test is
+    // still the wedding's and the week under it is still demonstrably abroad.
+    world.trophiesByTier.w50.finals.push(w)
+    housekeepThrough(world, w + 80)
     const art = frames(assembleAlbum(world))[0].art
     expect(art).toBe('images/fem-euro-brunnet/fem-euro-brunnet-adult-bride.webp')
     expect(existsSync(`${PUBLIC}/${art}`)).toBe(true)
   })
 
-  it('a title at an away event is the journey home, happy; at home it is the band portrait', () => {
+  it('a title at an away event is the journey home, happy; a week at home is the band portrait', () => {
     const world = probe('album-ladder-travel')
     const away = weekAtAge(world, 18)
     const home = away + 8
-    world.week = home + 10
-    world.milestones.push(title(away, 'j60'), { type: 'prize', week: home, tier: 'w15' })
+    world.week = away
+    // ⚠⚠ THE HOME ARM USED TO BE A `w15` PRIZE AND THAT WAS A POSED WORLD (20.09). `prizeCents` is
+    // declared on the W rungs and above ONLY (calendar.ts: «NO junior level pays prize money», and
+    // the domestic ladder declares none either), so a first cheque at w15 is proof she was at a
+    // pro-rung event – an AWAY week by construction. The case asserted the band portrait on it and
+    // was green only because `awayWeek` could not see the week either. School finishing is a thing
+    // that happens at home, which is what this arm was always trying to say.
+    world.milestones.push(title(away, 'j60'), { type: 'school', week: home })
     world.internationalEntryWeeks.push(away)
+    // ⚠ AND THE LEDGER ARM IS WALKED TO RATHER THAN POSED. This is the case for SOURCE 1 – the entry
+    // ledgers, which answer completely for the weeks they still hold – so it has to run the prune
+    // and show the row surviving it, or it is not about source 1 at all.
+    housekeepThrough(world, home + 10)
+    expect(world.internationalEntryWeeks, 'the same season block: the prune keeps it, honestly').toContain(away)
     const book = assembleAlbum(world)
     const occasions = occasionsOf(book, world.temperament!)
     const all = frames(book)
     const travelled = all[occasions.indexOf('first-title')]
     expect(travelled.art).toMatch(/travel-happy-(airport|plane|bus|car)\.webp$/)
-    const stayed = all[occasions.indexOf('first-prize')]
-    expect(stayed.art).toBe('images/fem-euro-brunnet/fem-euro-brunnet-teen-happy.webp')
+    const stayed = all[occasions.indexOf('school-done')]
+    expect(stayed.art).toBe('images/fem-euro-brunnet/fem-euro-brunnet-teen-norm.webp')
+  })
+
+  it('⭐ the first cheque is an away week by construction – only the W rungs and above pay one', () => {
+    const world = probe('album-ladder-cheque')
+    const w = weekAtAge(world, 18)
+    world.week = w + 10
+    // no entry ledger, no trophy: the milestone's own tier is the whole proof, and it is enough
+    world.milestones.push({ type: 'prize', week: w, tier: 'w15' })
+    expect(world.internationalEntryWeeks, 'nothing posed in the ledgers').toHaveLength(0)
+    expect(world.proEntryWeeks, 'nothing posed in the ledgers').toHaveLength(0)
+    const art = frames(assembleAlbum(world))[0].art
+    expect(art, 'a w15 cheque means she was at a w15').toMatch(/travel-happy-(airport|plane|bus|car)\.webp$/)
   })
 
   it('⚠ the ruled exception: an injury on an away week never becomes a sad journey – the album shows the comeback', () => {
@@ -310,10 +363,69 @@ describe('the ladder: event painting beats travel beats portrait', () => {
     const w = weekAtAge(world, 18)
     world.week = w + 10
     world.milestones.push({ type: 'injury', week: w, kind: 'ankle soreness' })
-    world.internationalEntryWeeks.push(w)
+    // ⚠ THE AWAY WEEK IS PROVED THROUGH THE CABINET, NOT POSED IN THE LEDGER (20.09): a j60 final
+    // that week is a fact the save keeps for the life of the career, so this case still asks the
+    // ruled question – «is an away injury a sad journey?» – on a world that has walked its own
+    // housekeeping rather than on one holding a ledger row the prune would have eaten.
+    world.trophiesByTier.j60.finals.push(w)
+    housekeepThrough(world, w + 80)
     const art = frames(assembleAlbum(world))[0].art
     expect(art, '«альбом помнит, как она вставала, а не как падала»').toBe(
       'images/fem-euro-brunnet/fem-euro-brunnet-teen-rehab.webp',
+    )
+  })
+})
+
+// =================================================================================================
+// THE TRAVEL RUNG AND THE PRUNE – his 20.09 defect, and the case whose ABSENCE let it through
+// =================================================================================================
+//
+// ⚠⚠ EVERY TRAVEL CASE IN THIS FILE USED TO PUSH ITS ENTRY WEEKS STRAIGHT ONTO A PROBE WORLD AND
+// THEREFORE NEVER MET THE PRUNE. `awayWeek`'s docblock claimed the two entry ledgers were «persisted
+// for the life of the career and never pruned»; `pruneInternationalEntries` (world/planner.ts)
+// filters both to `w >= min(seasonStartWeek, ageWindowStartWeek)` and runs EVERY week out of
+// `housekeep`. So on a real career the rung answered for the current season block and nothing else,
+// and the suite could not see it: the three ladder cases above all posed the state they should have
+// walked to, and a fourth prop sat inside one of them (a `w15` prize week called «at home», which
+// `prizeCents` makes impossible). This is the `picks: { 6: … }` shape exactly – a test propping up
+// the code it is supposed to check. All four are repaired in place; the two cases below are new.
+//
+// MEASURED (five walked wealthy careers, ~1350 weeks each, the 20.09 probe): 119 frames, 11 of them
+// resolved at rung 1, 42 of the remaining 108 on a week that was away IN TRUTH – and the pruned
+// ledgers called ZERO of them away. Not one journey painting was drawn on any of the five.
+describe('the travel rung survives the engine’s own housekeeping – the prune the suite used to pose past', () => {
+  it('⚠⚠ an away week two seasons back is still the journey home, after the prune has eaten the entry', () => {
+    const world = probe('album-ladder-prune')
+    const away = weekAtAge(world, 18)
+    world.week = away
+    // the entry, written exactly where `enterEvent` writes it...
+    world.internationalEntryWeeks.push(away)
+    world.milestones.push(title(away, 'j60'))
+    world.trophiesByTier.j60.titles.push(away)
+    // ...and then the career simply RUNS ON, through the engine's own weekly housekeeping.
+    housekeepThrough(world, away + 80)
+    expect(world.internationalEntryWeeks, 'the prune ate the entry – the defect, reproduced').not.toContain(away)
+    const book = assembleAlbum(world)
+    const occasions = occasionsOf(book, world.temperament!)
+    const art = frames(book)[occasions.indexOf('first-title')].art
+    expect(art, 'the journey home, off the trophy cabinet the save never prunes').toMatch(
+      /travel-happy-(airport|plane|bus|car)\.webp$/,
+    )
+  })
+
+  it('⚠ AND THE LIMIT, STATED RATHER THAN PAPERED OVER: a pruned trip she reached no final at is a trip the save cannot prove', () => {
+    const world = probe('album-ladder-limit')
+    const away = weekAtAge(world, 18)
+    world.week = away
+    // a first-round exit abroad: the entry ledger is the ONLY record of it anywhere in the save
+    world.internationalEntryWeeks.push(away)
+    world.milestones.push({ type: 'season-rank', week: away, rank: 300 })
+    expect(frames(assembleAlbum(world))[0].art, 'while the ledger holds it, the trip is known').toMatch(
+      /travel-(sleepy|happy)-(airport|plane|bus|car)\.webp$/,
+    )
+    housekeepThrough(world, away + 80)
+    expect(frames(assembleAlbum(world))[0].art, 'once pruned, the band portrait – no invented trip').toBe(
+      'images/fem-euro-brunnet/fem-euro-brunnet-teen-norm.webp',
     )
   })
 })
