@@ -202,10 +202,12 @@ staged factor loses them. How many entries a protected ranking buys is a rule th
 into a guarantee, and what either ramp is WORTH is emergent and measured (T9), so a row reading «the
 safe way back» would be the game grading a decision it has not simulated yet.
 
-⚠ **P25's «The desk» is the wave's one new register word and is flagged as such.** It is the entries
-desk – the surface the player books through – and the alternative («The tour wants to know», «They
-want to know») was not taken because the first names a body the game does not model and the second
-names nobody. It is a draft like every row here.
+⚠ **P25's «The desk» is NOT a new word and that is checked rather than assumed** – the entry letter's
+own sender in the inbox is the shipped string `Tournament desk` (`InboxSheet.vue`), so the card names
+the surface the player already books through. (The word also appears four times in shipped copy as a
+piece of FURNITURE – the college room's desk, the cleared desk – which is a different sense and is
+why this was worth checking.) The alternatives were «The tour wants to know», which names a body the
+game does not model, and «They want to know», which names nobody. It is a draft like every row here.
 
 ⚠ **The card quotes nobody, by the same argument `'own-key'` shipped under one wave down**: the
 completeness rule («a `quiet` girl can never silently receive a `fiery` girl's line») binds pools that
@@ -310,10 +312,11 @@ measured, not guessed) and are named here so nobody has to wonder whether the в
 
 ⭐ **AND T7 SHIPPED NO CONSTANT AT ALL, WHICH BELONGS ON THIS LIST RATHER THAN IN A FOOTNOTE.**
 `ECONOMY.motherhood.pauseBrandFactor` was drafted in the brief and **does not enter**. T7 measured
-first, as §2 T7 instructed: 240 paired careers from one commit, each paused career compared against
-its own twin, and a career that pauses already keeps only **70.0% of the brand income** its twin earns
-over the 155 weeks from the pause – **$3,865,406 less**, with 15 kit deals dead against none in the
-control. The world already charges the research's «sponsors partially lost during the pause» through
+first, as §2 T7 instructed: two arms of 240 careers from one commit, differing only by the hazard, so
+each of the **25 that paused** is compared against itself without the pregnancy. A career that pauses
+already keeps only **70.0% of the brand income** its own twin earns over the 155 weeks from the pause
+– **$3,865,406 less each** – and holds **24.3%** of the control's kit-deal weeks in the year after
+coming back, with fifteen kit deals dead on the events clause against **none** in the control. The world already charges the research's «sponsors partially lost during the pause» through
 machinery no part of this wave wrote. **So the absence is a measurement, not an oversight, and the
 wave declined to charge her twice.** The record is
 [the motherhood spec §1](../specs/the-motherhood-2026-09.md); the branch not taken (a flat 0.6) would
