@@ -3578,20 +3578,60 @@ export function lifeBeatHeading(
   }
 }
 
-/** ⭐ HER CONTINUATION when the parent only listens – null exactly where the flat pool speaks,
- *  because a girl who answered in one word has nothing more to give a silence (the 10.09 ruling's
- *  own boundary). Exported beside `lifeBeatSaid` so the completeness pin walks this pool the same
- *  way: kind x temperament x want, no silent fallback between voices. */
-export function lifeBeatListenFollowUp(
-  kind: LifeBeatKind,
-  detail: string,
-  voice: Temperament,
-  bond: BondBand,
-): string | null {
+/** ⭐⭐⭐ v85 T2½ (piece 2) – WHICH KINDS OFFER A LISTENING DETOUR, DECLARED PER KIND AND **TOTAL BY
+ *  TYPE**. `LIFE_BEAT_BLOCKING`'s own shape and its own argument, applied at the one place in this
+ *  file that was not following it: «A `Record<LifeBeatKind, …>` AND NEVER A LIST … a list makes
+ *  silence the default, and the next kind ships soft by FORGETTING. The total record makes a missing
+ *  kind a COMPILE error, so «does this stop the week» is a sentence somebody had to type.»
+ *
+ *  ⚠⚠⚠ AND THE STAKE HERE IS HIGHER THAN THERE, WHICH IS WHY THE CHAIN THIS REPLACED WAS THE ONE
+ *  PLACE A NEW KIND WENT WRONG IN **SILENCE**. Kept verbatim from the chain's own note, because it is
+ *  the record of why this record exists: «The eight records this union keys are TOTAL and a tenth
+ *  member reddens them on sight; this predicate is an `if`-chain with a `'fork-opinion'` TAIL, so a
+ *  kind left out of it does not fail to compile – it falls through to `FORK_WANTS.find(...)`, finds
+ *  no want on a detail that is an episode id, and THROWS from inside `lifeBeatPromptFor`, which is
+ *  inside `toSnapshot`, which is what the whole app renders from. Round 42 #15 is the recorded
+ *  instance of exactly this shape bricking a save, and its note two functions up says so.» Forgetting
+ *  at `LIFE_BEAT_BLOCKING` ships a beat soft; forgetting HERE bricks a career.
+ *
+ *  ⚠⚠ THE CHAIN'S LAST SENTENCE IS SUPERSEDED AND IS QUOTED RATHER THAN DELETED, so the decision can
+ *  be read in the order it was made. T2 wrote: «A total record here would be the structural fix and
+ *  is NOT taken in this task – it would re-shape a wave-2 function eight kinds wide for a reason no
+ *  brief asked for – but it is carried as a finding in T2's hand-back so the next union member is not
+ *  left to luck.» The architect gated T2, read the finding, and took it as T2½ piece 2 – on the
+ *  deciding argument that THIS WAVE ADDS ANOTHER KIND (T6's `'return-plan'`), so the wave's own last
+ *  engine task was one forgotten clause away from the defect.
+ *
+ *  ⚠ `null` MEANS «NO DETOUR, AND HERE IS WHY» AND NEVER «NOT DECIDED YET» – `PSY_COUNSEL`'s cell
+ *  shape with the opposite meaning, which is worth saying out loud one function apart: there a `null`
+ *  is a column somebody still OWES, here it is the answer itself. Every cell below carries the reason
+ *  its kind was given, in the words the kind was given it in, and a new kind cannot be added without
+ *  writing one.
+ *
+ *  ⚠ BEHAVIOUR DID NOT MOVE BY ONE BYTE, and that is measured rather than asserted:
+ *  tests/wave8-listen-follow-up.test.ts hashes this function's answer over all ten kinds x six
+ *  details x four voices x four bond bands, and the digest was taken on the `if`-chain FIRST. */
+const LISTEN_FOLLOW_UP: Record<
+  LifeBeatKind,
+  ((detail: string, voice: Temperament, bond: BondBand) => string | null) | null
+> = {
+  // ⭐⭐ THE ONE KIND WITH A DETOUR, AND THE ONLY CELL THAT IS A FUNCTION. It is the tail of the old
+  // chain moved whole, line for line and in the same order: the want is resolved off the detail, a
+  // malformed detail THROWS BY NAME (which is right and is kept – `lifeBeatSaid`'s own courtesy), the
+  // bond bar is asked second, and her continuation is read off the pool last. ⚠ THE THROW IS NOW
+  // UNREACHABLE FROM ANY OTHER KIND BY TYPE rather than by enumeration, which is the whole purchase
+  // of this record: a kind that forgets its cell cannot compile, so it can no longer fall in here.
+  'fork-opinion': (detail, voice, bond) => {
+    const want = FORK_WANTS.find((w) => w === detail)
+    if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
+    if (!speaksInHerOwnVoice(bond)) return null
+    return HER_CONTINUATION[voice][want]
+  },
   // ⚠⚠ `'met'` HAS NO LISTEN DETOUR, AND THE NULL IS THE RULE RATHER THAN A GAP (brief §2 T6). At the
   // fork «say nothing and let her talk» buys more of her, because she came to say something and has
   // more of it. `'met'` is news: its four answers are REACTIONS, one of which is saying nothing, and
   // a second panel promising more of her would be the fictional dishonesty the 10.09 ruling removed.
+  met: null,
   // ⚠⚠ `'small-talk'` RETURNS NULL HERE AND THAT IS NO LONGER THE WHOLE STORY – RE-AIMED BY ROUND 42
   // #15, and the note is kept rather than deleted because a reader has to be able to tell which half
   // expired. WHAT THIS FUNCTION SAYS IS STILL TRUE: tier 1 has no `listen` DETOUR, because it has no
@@ -3602,46 +3642,58 @@ export function lifeBeatListenFollowUp(
   // other side – «выбрал пункт, чтобы она сказала больше, а попап закрылся» – so tier 1 now answers
   // EVERY stance with a second line of hers. It is assembled in `lifeBeatFollowUps` below, off the
   // situation, and this function is not on that path at all.
+  'small-talk': null,
   // ⚠ AND `'fork-counsel'` HAS NONE, for a third reason of its own (v74 T17): the listening detour is
   // «say nothing, and let HER talk», and the reward of it is more of her. The coach has given a
   // professional read and has no second half of it being withheld; a panel offering one would promise
   // words nobody wrote. The card's two acknowledgments are the whole of the beat.
+  'fork-counsel': null,
   // ⚠ AND `'ended'` HAS NONE (v75 T4), for a fourth reason of its own. «Say nothing, and let her
   // talk» buys more of her because at the fork she came with something she has more of; here she has
   // said the one fact there is, and GIVING HER ROOM IS ALREADY ONE OF THE FOUR ANSWERS – a detour
   // promising more of her would be a second, unpriced way of doing the thing the card already offers.
+  ended: null,
   // ⚠ AND `'fork-psy'` HAS NONE (v76 T8), for the coach's third reason word for word: the listening
   // detour is «say nothing, and let HER talk», and what it buys is more of her. A professional has
   // given a read and has no second half of it being withheld, so a panel offering one would promise
   // words nobody wrote. His two acknowledgments are the whole of the beat.
+  'fork-psy': null,
   // ⚠ AND `'engaged'` HAS NONE (v83, wave 7 T2), for `'met'`'s reason at a bigger moment: the
   // announcement is news, its three answers are REACTIONS, and none of them is `listen` – a panel
   // promising more of her would promise words nobody wrote, about a decision she has already
   // finished making.
+  engaged: null,
   // ⚠ AND `'spouse-view'` HAS NONE (v83, wave 7 T5), for the coach's reason in another mouth: the
   // detour is «say nothing, and let HER talk», and its reward is more of her. The spouse has said
   // the piece whole, and a panel offering a second half would promise words nobody wrote.
+  'spouse-view': null,
   // ⚠ AND `'own-key'` HAS NONE (v83, wave 7 T10), for the plainest reason in this list: the card
   // quotes nobody, so there is nobody a silence could buy more of.
+  'own-key': null,
   // ⚠⚠ AND `'expecting'` HAS NONE (v85, wave 8 T2), for `'engaged'`'s reason at a bigger moment: the
   // announcement is news, its three answers are REACTIONS, and none of them is `listen` – a panel
   // promising more of her would promise words nobody wrote, about a thing she has already finished
   // deciding.
-  // ⚠⚠⚠ AND THIS LINE IS THE ONE PLACE A NEW KIND GOES WRONG IN **SILENCE**, which is why the entry
-  // above is not optional and why it is written down here. The eight records this union keys are
-  // TOTAL and a tenth member reddens them on sight; this predicate is an `if`-chain with a
-  // `'fork-opinion'` TAIL, so a kind left out of it does not fail to compile – it falls through to
-  // `FORK_WANTS.find(...)`, finds no want on a detail that is an episode id, and THROWS from inside
-  // `lifeBeatPromptFor`, which is inside `toSnapshot`, which is what the whole app renders from.
-  // Round 42 #15 is the recorded instance of exactly this shape bricking a save, and its note two
-  // functions up says so. A total record here would be the structural fix and is NOT taken in this
-  // task – it would re-shape a wave-2 function eight kinds wide for a reason no brief asked for –
-  // but it is carried as a finding in T2's hand-back so the next union member is not left to luck.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged' || kind === 'spouse-view' || kind === 'own-key' || kind === 'expecting') return null
-  const want = FORK_WANTS.find((w) => w === detail)
-  if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
-  if (!speaksInHerOwnVoice(bond)) return null
-  return HER_CONTINUATION[voice][want]
+  expecting: null,
+}
+
+/** ⭐ HER CONTINUATION when the parent only listens – null exactly where the flat pool speaks,
+ *  because a girl who answered in one word has nothing more to give a silence (the 10.09 ruling's
+ *  own boundary). Exported beside `lifeBeatSaid` so the completeness pin walks this pool the same
+ *  way: kind x temperament x want, no silent fallback between voices.
+ *
+ *  ⚠ THE DECISION PER KIND LIVES IN `LISTEN_FOLLOW_UP` ABOVE, TOTAL BY TYPE (v85 T2½ piece 2) – this
+ *  function is now the lookup and nothing else, which is what makes «a forgotten kind» a compile
+ *  error instead of a save-bricking throw. Its ANSWER is unchanged: the digest in
+ *  tests/wave8-listen-follow-up.test.ts was taken on the `if`-chain this replaced. */
+export function lifeBeatListenFollowUp(
+  kind: LifeBeatKind,
+  detail: string,
+  voice: Temperament,
+  bond: BondBand,
+): string | null {
+  const followUp = LISTEN_FOLLOW_UP[kind]
+  return followUp === null ? null : followUp(detail, voice, bond)
 }
 
 /** ⭐⭐⭐ ROUND 42 #15 – WHAT SHE SAYS BACK TO EACH ANSWER, AS ONE LIST. The owner: «выбрал пункт,
