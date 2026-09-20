@@ -21,6 +21,11 @@ import { spiritMatchFactor } from '../spirit'
 import { formComposureDelta } from '../form'
 import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
 import { coachEdgePp } from '../coach'
+// ⭐ v85 T6 – THE STAGED FACTOR'S OWN STAIRCASE. `engine/economy.ts` is the constants module and
+// imports nothing from `world/`, exactly as `../coach` and `../condition` above do, so this leaf
+// stays a leaf. What lives HERE is the last step: turning the research's months into the one number
+// the composition can consume.
+import { ECONOMY } from '../economy'
 import type { MatchPlayer, Surface } from '../match/types'
 import type { KitState, Offer, PlayerProfile } from '../../shared/protocol'
 import { KID_ID } from './constants'
@@ -159,6 +164,35 @@ export function coachMatchEdge(world: {
   return coachEdgePp(world.seed, world.coachId ?? null, world.coachOnEventWeeks ?? false) * COACH_EDGE_POINTS_PER_PP
 }
 
+/** ⭐⭐⭐ v85 T6 – **THE COMEBACK RAMP, AS A MULTIPLIER ON HER FIVE WINGS.** −40% → −20% → −10% →
+ *  full over 0–3 / 3–6 / 6–12 / 12+ months after the week she came back – the research's own
+ *  staircase (`docs/research/life-events-motherhood.md:35`), transcribed into
+ *  `ECONOMY.motherhood.comebackStages` where the conversion from its months to our weeks is written
+ *  out. This function is the last step and nothing else: the table is there, the reading is here,
+ *  exactly as `COACH_EDGE_POINTS_PER_PP` above turns the coach's corridor into tennis.
+ *
+ *  ⚠⚠ **IT IS A FUNCTION OF TWO WEEK NUMBERS AND OF NOTHING ELSE, AND THE SIGNATURE IS THE FENCE.**
+ *  `docs/specs/form-and-slump.md` (results-driven form) is OWNER-PARKED and the wave brief's §0 says
+ *  this must not become it by the back door. A factor that took a world could read a result; this one
+ *  cannot be handed a result to read. That is the parked-spec boundary expressed as a type rather
+ *  than as a promise, and `tests/wave8-comeback-factor.test.ts` §D pins it from the other side by
+ *  mutating a career's whole match history and watching the number not move.
+ *
+ *  ⚠ THE LAST RUNG SHE HAS REACHED WINS, `pregnancyChanceAt`'s own loop (`world/lifeBeat.ts` §14) and
+ *  its own reason: the table is read in order so that «ascending» is what the code actually depends
+ *  on, which is what a test can then pin.
+ *
+ *  ⭐ A WEEK **BEFORE** THE RETURN TAKES NO RUNG AND COMES BACK 1.0. `back` is negative, no
+ *  `fromWeeksBack` is reached, and the identity element falls out of the loop – so a stored
+ *  `WorldMatch` from before the pause replays byte-identically even if something one day hands this
+ *  its week. Pure arithmetic, ZERO RNG, no world. */
+export function comebackMatchFactor(returnedWeek: number, week: number): number {
+  const back = week - returnedWeek
+  let factor = 1
+  for (const stage of ECONOMY.motherhood.comebackStages) if (back >= stage.fromWeeksBack) factor = stage.factor
+  return factor
+}
+
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
  *  CONDITION factor (R9-19) and – since v72 – by her SPIRIT (docs/specs/who-she-is-2026-09.md §4;
  *  absent or at/above the knee ⇒ 1.0), then by the surface x play-style table
@@ -238,6 +272,29 @@ export function kidMatchPlayerFor(
      *  of 199 cohort rows plus the 1,600-strong professional scalar is measured at F3 and ruled
      *  then, which is the parked spec's own caution kept. */
     form?: number
+    /** ⭐⭐⭐ v85 T6 – **HER COMEBACK'S CLOCK**, and it is the **TENTH** optional field rather than the
+     *  ninth the brief predicted: `form` (v80, wave F1) took the ninth seat before this wave opened.
+     *  Reported rather than quietly renumbered – the SYMBOL the brief names is right and the ORDINAL
+     *  is one behind.
+     *
+     *  Optional for exactly the reason `spirit` and `form` above are, and it is the strongest form of
+     *  that argument this file has: ABSENT (or `null`) ⇒ `comebackMatchFactor` is not called at all,
+     *  the factor is a literal 1, and `x * 1` is exact in IEEE-754 – so every pure caller AND every
+     *  stored `WorldMatch` replay composes BYTE-IDENTICALLY to what it did before this shipped. A
+     *  career that never paused carries `comeback: null` and is on the same code path it has always
+     *  been on.
+     *
+     *  ⚠⚠ **AND THE TYPE IS THE PARKED-SPEC FENCE, NOT ONLY A NARROWING.**
+     *  `docs/specs/form-and-slump.md` (results-driven form) is OWNER-PARKED, and §0 of the wave brief
+     *  says the staged factor «is NOT that spec and must not become it by the back door». What is
+     *  declared here is `returnedWeek` AND NOTHING ELSE – not `ComebackState`, which would have
+     *  carried the freeze in with it, and emphatically not the world. A factor that cannot be HANDED a
+     *  result cannot read one, which is the boundary expressed as a type rather than as a promise.
+     *  `world.comeback` satisfies it structurally, so no caller had to change.
+     *
+     *  ⚠ THE KID ONLY, `spirit`'s own fence one field up: rivals have no private life, and their side
+     *  of the question is form-and-slump §4.4's, deferred with it. */
+    comeback?: { returnedWeek: number } | null
   },
   surface: Surface,
   /** ⭐⭐ IS HE ON **THIS** TRIP – the owner's ruling, 15.08: «поездки С тренером открываются на w
@@ -272,6 +329,22 @@ export function kidMatchPlayerFor(
   // different knees and floors (60/0.90 against 70/0.55 – spirit's worst is gentler than fatigue's
   // at every point, which is the design's own bound).
   const spiritF = world.spirit === undefined ? 1 : spiritMatchFactor(world.spirit)
+  // ⭐⭐⭐ v85 T6 – AND THE MONTHS SHE WAS AWAY, ON THE IDENTICAL SEAM AND BESIDE THE OTHER TWO: a
+  // THIRD multiplicative factor on the same five wings, pure arithmetic, zero RNG, applied exactly
+  // once per match because every path that puts her on court builds her here (this file's contract).
+  // The staircase is the research's own (−40% → −20% → −10% → full over 0–3 / 3–6 / 6–12 / 12+
+  // months) and lives in `ECONOMY.motherhood.comebackStages`; `comebackMatchFactor` above is the
+  // reading.
+  //
+  // ⚠ ABSENT ⇒ 1.0, AND IT IS A PRESENCE CHECK RATHER THAN A DEFAULT WEEK, `spirit`'s own line one
+  // above: the literal 1 is the identity element for a product, so a career that never paused gets
+  // the same object it always got – not «a girl who came back a long time ago», which would be a
+  // claim about her.
+  //
+  // ⚠⚠ IT MULTIPLIES THE WINGS AND NOT THE OUTCOME. Whether the comeback WORKS is emergent and is
+  // MEASURED (T9's arm, and T5's own «nothing here may ever become a success rate» read one task on):
+  // this makes her a weaker player for a year, and the tour does the rest.
+  const comebackF = world.comeback ? comebackMatchFactor(world.comeback.returnedWeek, world.week) : 1
   const composed = applyKit(
     applySurfaceStyle(
       {
@@ -290,11 +363,11 @@ export function kidMatchPlayerFor(
         // player through, so it survives the composition unchanged - which is the whole reason it can
         // be written at the top of it.
         condition: world.condition,
-        serve: raw.serve * factor * spiritF,
-        ret: raw.ret * factor * spiritF,
-        composure: raw.composure * factor * spiritF,
-        stamina: raw.stamina * factor * spiritF,
-        groundstrokes: raw.groundstrokes * factor * spiritF,
+        serve: raw.serve * factor * spiritF * comebackF,
+        ret: raw.ret * factor * spiritF * comebackF,
+        composure: raw.composure * factor * spiritF * comebackF,
+        stamina: raw.stamina * factor * spiritF * comebackF,
+        groundstrokes: raw.groundstrokes * factor * spiritF * comebackF,
       },
       world.profile.playStyle,
       surface,

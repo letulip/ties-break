@@ -5308,6 +5308,48 @@ export const ECONOMY = {
      *  RATE: it is an entitlement, so it is state on the record rather than a knob read per week, and
      *  T9 measures «entries it actually buys, and how often it expires unused» rather than tuning it. */
     protectedRankEntries: 12,
+    /** ⭐⭐⭐ THE STAGED FACTOR'S OWN STAIRCASE – **−40% → −20% → −10% → full over 0–3 / 3–6 / 6–12 /
+     *  12+ months post-return**, which is the RESEARCH'S OWN SENTENCE and not a shape anybody here
+     *  chose: `docs/research/life-events-motherhood.md:35`, «staged penalties ≈ −40% (0–3 mo) → −20%
+     *  (3–6) → −10% (6–12) → full recovery 12+ mo». The brief's §2 T6 transcribes it and this is the
+     *  transcription, so the four factors ship at their drafted values and T9 benches them.
+     *
+     *  ⚠⚠ **IT IS A TIME-SHAPED MULTIPLIER ON THE ABSENCE AND IT READS NOTHING FROM RESULTS.** §0 of
+     *  the wave brief names the fence and names the document it is a fence around:
+     *  `docs/specs/form-and-slump.md` (results-driven form) is OWNER-PARKED – «форму и спад тоже давай
+     *  распишем спеком, но уже на потом» – and this factor «is NOT that spec and must not become it by
+     *  the back door». Three properties, all of them mechanical rather than promised:
+     *    · it is a function of `world.comeback.returnedWeek` and the current week, and of nothing else;
+     *    · it is dead at 1.0 for every career that never paused – `comebackMatchFactor`'s reader takes
+     *      the same early return `spirit` and `form` take, so the composition is byte-identical;
+     *    · the ARGUMENT TYPE it is read through carries `returnedWeek` and no other field, so a
+     *      result is not merely unread here, it is out of scope at the call site.
+     *  ⚠ ANY BUILDER WHO FINDS THEMSELVES READING MATCH OUTCOMES INTO IT STOPS AND BRINGS IT. That is
+     *  §0's instruction verbatim and it is the one line of T6 that is not negotiable.
+     *
+     *  ⚠ THE WINDOWS ARE MONTHS IN THE RESEARCH AND WEEKS IN THE ENGINE, and the conversion is
+     *  written as arithmetic rather than as three transcribed integers, on `perWeekByAge`'s own rule
+     *  one screen up: `52 / 4` is three months, `52 / 2` is six, `52` is twelve. A reader sees the
+     *  digest's own staircase; nobody has to trust `13` / `26` / `52`.
+     *
+     *  ⚠ READ AS RUNGS, `perWeekByAge`'s own shape and its own hazard: the LAST rung whose
+     *  `fromWeeksBack` she has reached wins, so the table must stay ASCENDING – a rung inserted out of
+     *  sequence silently re-shapes the ramp. ⭐ AND A WEEK BEFORE THE RETURN TAKES **NO RUNG AND
+     *  THEREFORE 1.0**: a match played before she came back is not a comeback match, and the stored
+     *  `WorldMatch` of one must replay exactly as it was. */
+    comebackStages: [
+      // 0–3 months – the research's −40%. The deepest rung, and the one the wrong ramp spends its
+      // protected entries inside.
+      { fromWeeksBack: 0, factor: 0.6 },
+      // 3–6 months – −20%.
+      { fromWeeksBack: 52 / 4, factor: 0.8 },
+      // 6–12 months – −10%.
+      { fromWeeksBack: 52 / 2, factor: 0.9 },
+      // 12+ months – full. ⭐ A RUNG AND NOT AN ABSENCE, `perWeekByAge`'s own 0 at 35: «the ramp ends»
+      // is a sentence somebody had to type, and a table that simply stopped would leave −10% running
+      // for the rest of her career.
+      { fromWeeksBack: 52, factor: 1 },
+    ],
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

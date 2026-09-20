@@ -139,8 +139,8 @@ export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kit
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
-import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
-export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
+import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor, comebackMatchFactor } from './world/player'
+export { startingSkills, kidMatchPlayer, kidMatchPlayerFor, comebackMatchFactor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
 // ⭐⭐⭐ v80, WAVE F1 + F2 – her form and the third seat. Both modules import `WorldState` as a

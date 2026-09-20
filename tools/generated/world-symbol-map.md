@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-611 exported names across 56 owning modules.
+612 exported names across 56 owning modules.
 
 ## Areas
 
@@ -54,11 +54,11 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 4 |
+| `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/albumBook.ts` | THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-album-2026-09.md) | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
-| `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
 | `src/engine/world/album.ts` | THE ALBUM: seven polaroids, and the rule printed on every one of them | 2 |
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 2 |
@@ -850,6 +850,15 @@ THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's e
 - `knownPartner` – `src/engine/world/loveEpisodes.ts`
 - `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
 
+### `src/engine/world/player.ts`
+
+THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes.
+
+- `comebackMatchFactor` – `src/engine/world/player.ts`
+- `kidMatchPlayer` – `src/engine/world/player.ts`
+- `kidMatchPlayerFor` – `src/engine/world/player.ts`
+- `startingSkills` – `src/engine/world/player.ts`
+
 ### `src/engine/kidLife.ts`
 
 HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results.
@@ -881,14 +890,6 @@ THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-al
 - `ACADEMY_NOTICE` – `src/engine/world/phaseObligations.ts`
 - `academySpokeThisWeek` – `src/engine/world/phaseObligations.ts`
 - `reviewAcademy` – `src/engine/world/phaseObligations.ts`
-
-### `src/engine/world/player.ts`
-
-THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes.
-
-- `kidMatchPlayer` – `src/engine/world/player.ts`
-- `kidMatchPlayerFor` – `src/engine/world/player.ts`
-- `startingSkills` – `src/engine/world/player.ts`
 
 ### `src/engine/world/summer.ts`
 

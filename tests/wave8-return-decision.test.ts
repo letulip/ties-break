@@ -460,6 +460,11 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         // property T5 wrote it for and it is unchanged.
         'protectedRankEntries',
         'protectedRankWeeks',
+        // ⚠ AND THE STAGED FACTOR'S STAIRCASE, T6's half 2 – four factors over four windows, a
+        // function of `world.comeback.returnedWeek` and NOTHING ELSE. It prices MATCHES, not
+        // outcomes: it is the mechanism whose RESULT T9 measures, which is the opposite of a constant
+        // that decides the result. §0's parked-spec fence is written at its definition.
+        'comebackStages',
       ].sort(),
     )
     // and the sanity line itself, as the PRODUCT it is – stated here so nobody has to reconstruct it
