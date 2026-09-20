@@ -153,7 +153,9 @@ const rec = (w: unknown): Record<string, unknown> => w as unknown as Record<stri
  *  produce one. The values are chosen to be the ones a careless step would clobber: `announcedWeek`
  *  is a real week, `support` is set (so an overwrite to `null` is visible) and `returnPlan` is still
  *  `null`, which is the legitimate «she has not been asked yet» state and reads FALSY – the exact
- *  value `||=` would destroy if the rule above the step were ever relaxed. */
+ *  value `||=` would destroy if the rule above the step were ever relaxed.
+ *  ⚠ `rankAtPause` IS SET AND IS T6's SIXTH FIELD (the capture the ruled freeze is made of): a real
+ *  rank, so an overwrite to `null` is visible, on the same argument `support` is set for. */
 function craftedPregnancy(): Record<string, unknown> {
   return {
     episodeId: 'p:812',
@@ -162,6 +164,7 @@ function craftedPregnancy(): Record<string, unknown> {
     dueWeek: 872,
     support: 'warm',
     returnPlan: null,
+    rankAtPause: 41,
   }
 }
 

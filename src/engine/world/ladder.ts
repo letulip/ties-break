@@ -1106,6 +1106,63 @@ function meetsAcceptanceCut(world: WorldState, tier: TierId): boolean {
   return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
 }
 
+/** ⭐⭐⭐ v85 T6 – **THE FOURTH DOOR: HER FROZEN ENTRY STANDING.** The ruled protected rank
+ *  (20.09: her rank at `pausesWeek`, 12 entries, 156 weeks) asked as the only question an acceptance
+ *  list can use – does the standing she paused on clear this rung's cut, and is the entitlement still
+ *  live.
+ *
+ *  ⚠⚠ IT LIVES **HERE**, BESIDE `meetsAcceptanceCut`, `juniorReservedPlace`, `homeWildCardPlace` AND
+ *  `alternateListPlace`, AND THAT IS R10-5 RATHER THAN TIDINESS. `tierFloorOpen` below says it in as
+ *  many words about the door that taught it: «a door the calendar does not know about shows her a
+ *  SHUT rung and admits her anyway». A freeze written only into `entryVerdict` would be exactly that
+ *  – the season feed hiding the very cards a returning mother can enter, while the turnstile let her
+ *  through – which is the disagreement `tests/rankingGate.test.ts` exists for. One function, both
+ *  gates, and neither can drift.
+ *
+ *  ⚠ IT IS A **DOOR** AND NOT A SECOND RANK. Nothing here touches `world.kidRankWta`; her chip, her
+ *  stats tab and the AI field all go on saying what they said. She really is where the table says she
+ *  is, and the freeze is a list admitting her anyway – which is the real rule, and is also what makes
+ *  §2 T6's trap mechanical: she gets INTO the big draws and the staged factor is what loses them.
+ *
+ *  ⭐⭐ AND HER LIVE RANKING NEEDS NO NEW CODE TO FALL WHILE SHE IS AWAY. `WINDOW_BY_TRACK` and
+ *  `windowedBestSum` count only results inside the window, so 51 weeks with no new entry age her
+ *  points out BY CONSTRUCTION. There is no decay to write here and writing one would be a second,
+ *  disagreeing spelling of a rule that already ran; T9 MEASURES it.
+ *
+ *  ⚠ FOUR CLAUSES, EACH ITS OWN LINE:
+ *    · SOMETHING WAS FROZEN – `protectedRank` is null for a career that paused holding no counting W
+ *      result («unranked is not rank one», this file's own sentence), and a comeback with no freeze is
+ *      a real state rather than a gap (`ComebackState`'s own argument: a comeback is a FACT and a
+ *      freeze is an ENTITLEMENT);
+ *    · SHE HAS ENTRIES LEFT – the twelfth is the last, and at 0 this is false for ever after;
+ *    · IT HAS NOT EXPIRED – `week >= validUntilWeek` closes it, asked of the **EVENT's** week and never
+ *      today's on R10-17's rule (`layoffCovering` and `pauseCovering`'s own discipline): a December
+ *      horizon must not book her into a March draw on a protection that runs out in January;
+ *    · AND THE **W TRACK ONLY**, which is a narrowing with an argument. A frozen RANK can only act
+ *      where a rung reads a rank cut in the same currency, and `acceptanceRank` is an ABSOLUTE rank
+ *      only on the W rungs – the ITF and domestic tables keep a SHARE, the domestic band is
+ *      denominated in POINTS, the junior rungs are shut on AGE for every woman this arc can reach
+ *      (24–35 against under-19), and both on-ramps LATCH and never un-latch. There is no second table
+ *      where this number would mean anything, and `rankAtPause` is captured in that currency for it.
+ *
+ *  ⚠ ONE CONSEQUENCE IS REPORTED RATHER THAN DISCOVERED: `tierOutgrown` is `tierFloorOpen(world,
+ *  above)`, so a live freeze that opens a rung three up also makes the rungs below read `outgrown`.
+ *  That is a LABEL and never a refusal (the 06.08 ruling), and it is arguably true of a woman whose
+ *  ENTRY standing is top-50 – but it is a real interaction with the sliding window and it is carried
+ *  to the owner as a question rather than special-cased here.
+ *
+ *  Pure read, ZERO RNG draws, and identically false for every career that never paused – which is
+ *  every career in the frozen corpus. */
+export function protectedRankPlace(world: WorldState, tier: TierId, week: number): boolean {
+  const freeze = world.comeback?.protectedRank ?? null
+  if (freeze === null) return false
+  if (freeze.entriesLeft <= 0) return false
+  if (week >= freeze.validUntilWeek) return false
+  if (TIERS[tier].track !== 'wta') return false
+  const accepts = acceptanceRank(world, tier)
+  return accepts !== undefined && freeze.rank <= accepts
+}
+
 /** THE FLOOR half – "has she reached this rung", which is the whole of what `tierOpenFor` used to
  *  ask. Kept as its own exported name because the ceiling above has to ask it about a DIFFERENT rung
  *  than the one being judged, and because "reached" and "still hers" are two questions. */
@@ -1151,11 +1208,20 @@ export function tierFloorOpen(world: WorldState, tier: TierId, eventId?: string)
     // the field withdrew. Asked here as well as at the turnstile on the lesson the wild card taught
     // the same day: a door the calendar does not know about shows her a SHUT rung and admits her
     // anyway. See `alternateQueuePosition` - her place in the queue is arithmetic, never a roll.
+    // ⭐⭐⭐ AND A FIFTH SINCE v85 T6 – THE FREEZE (`protectedRankPlace` above). It is asked HERE as
+    // well as at the turnstile on the lesson the wild card taught on 18.08, quoted one line up: a
+    // door the calendar does not know about shows her a SHUT rung and admits her anyway. For a woman
+    // whose W book has aged out across a 51-week pause that is not an edge case – it is every card of
+    // her comeback. ⚠ `world.week`, exactly as the junior reserved place above reads it: this
+    // function answers «where does she stand with this rung TODAY», and `entryVerdict` asks the same
+    // predicate of the EVENT's week where an event is named. Inert for every career with no
+    // `world.comeback`, which is every career in the corpus.
     return (
       meetsAcceptanceCut(world, tier) ||
       juniorReservedPlace(world, world.week, tier) ||
       homeWildCardPlace(world, tier, eventId) ||
-      alternateListPlace(world, tier, eventId)
+      alternateListPlace(world, tier, eventId) ||
+      protectedRankPlace(world, tier, world.week)
     )
   }
   // ⚠⚠ THE FLOOR HALF ONLY, AND THIS LINE IS WHERE THE 06.08 RULING NEARLY LEAKED PAST. It read

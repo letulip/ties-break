@@ -146,6 +146,8 @@ function expecting(world: WorldState, announcedWeek: number, support: PregnancyS
     dueWeek: pausesWeek + BRIEF.termWeeks,
     support,
     returnPlan: null,
+    // ⚠ v85 T6 – no pause week is walked on this hand-built world, so nothing is frozen.
+    rankAtPause: null,
   }
   return world
 }

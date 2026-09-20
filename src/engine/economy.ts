@@ -5279,6 +5279,35 @@ export const ECONOMY = {
      *  `ECONOMY.spirit.floor`'s own shape: a bound written down beats a value allowed to run off. */
     returnChanceMin: 0.1,
     returnChanceMax: 0.9,
+    /** ⭐⭐⭐ THE FREEZE, AND THESE TWO NUMBERS ARE **RULED** (20.09, «наверное да, у нас тоже были
+     *  исследования») – so they are NOT drafts and NOT this builder's, which is why they sit apart
+     *  from every other row in this block under a heading that says so. The source is his own digest,
+     *  `docs/research/life-events-motherhood.md:9`: «**ranking freeze for 3 years post-birth** (since
+     *  2019, used by 50+ players)», and the real rule's own shape is a frozen ENTRY standing usable
+     *  for a bounded number of tournaments inside that span.
+     *
+     *  ⚠ THREE FACTS AND TWO CONSTANTS. The third – **her rank at `pausesWeek`** – is ruled with these
+     *  two and is not a number that could live here: it is a fact about one career, captured on the
+     *  one week it is true (`landPregnancyPause`, `world/lifeBeat.ts` §14) and carried on the record.
+     *
+     *  ⚠ 156 WEEKS IS THREE YEARS AT THIS ENGINE'S OWN CALENDAR (3 × 52), written as the product
+     *  rather than as `156` for `perWeekByAge`'s reason one screen up: what a reader sees is the
+     *  digest's own «3 years», not a transcription with its provenance thrown away.
+     *  ⚠ AND IT RUNS FROM THE **RETURN**, NOT FROM THE PAUSE – `resolveReturnDecision` writes
+     *  `validUntilWeek = returnedWeek + this`, and the argument is at that line: the entitlement is
+     *  what the comeback buys, `returnedWeek` is the record's own clock (the staged factor is a
+     *  function of exactly that number), and anchoring both halves of `world.comeback` on one week is
+     *  what stops the freeze and the ramp from being two different dates about one comeback. Anchored
+     *  at `pausesWeek` instead it would be 156 − 51 = 105 usable weeks, which is a different rule and
+     *  is flagged in the hand-back as the one place his «3 years» could honestly be read the other
+     *  way. */
+    protectedRankWeeks: 3 * 52,
+    /** ⭐⭐⭐ ...AND HOW MANY ENTRIES IT BUYS – **RULED 20.09** with the span above. Twelve, counted
+     *  down on `world.comeback.protectedRank.entriesLeft` and spent only where the freeze was
+     *  DECISIVE (`entryVerdict`, `world/medical.ts`, where that word is argued). ⚠ A COUNT AND NOT A
+     *  RATE: it is an entitlement, so it is state on the record rather than a knob read per week, and
+     *  T9 measures «entries it actually buys, and how often it expires unused» rather than tuning it. */
+    protectedRankEntries: 12,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

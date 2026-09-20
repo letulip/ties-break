@@ -51,6 +51,10 @@ import {
   juniorReservedPlace,
   homeWildCardPlace,
   kidPoints,
+  // ⭐ v85 T6 – THE FREEZE, AS A DOOR. It lives in `world/ladder.ts` beside the other four and NOT
+  // here, which is R10-5: `tierFloorOpen` asks the same function, so the calendar and this turnstile
+  // cannot disagree about a rung a protected ranking opens. See its own note for the whole rule.
+  protectedRankPlace,
   onRampOpen,
   playDownBars,
   playDownRefusalDetail,
@@ -918,6 +922,19 @@ export interface EntryStatus {
    *  `availabilityStatus`' own returns: it is a LADDER fact, and `entryStatus` is where the ladder
    *  and the body are combined. */
   outgrown?: boolean
+  /** ⭐⭐⭐ v85 T6 – **THIS ENTRY WOULD RIDE THE FREEZE, AND SPENDING IT IS WHAT COMMITTING COSTS.**
+   *  Present (and `true`) exactly when the protected rank was DECISIVE: her live standing would have
+   *  refused her, no other door was open, and the frozen rank cleared the cut. `enterEvent` reads it
+   *  in the branch that commits and counts one off `world.comeback.protectedRank.entriesLeft`.
+   *
+   *  ⚠ IT IS A LABEL AND NEVER A REFUSAL – `outgrown`'s own shape one field up, and the reason is the
+   *  same: this says something TRUE about the entry the player is about to make, and the verdict's
+   *  `level` is untouched by it. A surface may say «this uses one of her twelve»; nothing may use it
+   *  to shut a card.
+   *  ⚠ ABSENT RATHER THAN `false` ON EVERY OTHER PATH, which is the `rankToEnter` / `entryCap`
+   *  convention in this same interface: a field present only where it means something cannot be read
+   *  as a claim about a rung that has no freeze in front of it at all. */
+  onProtectedRank?: boolean
 }
 /** ⚠ ONE READ, BOTH CEILINGS, AND IT RIDES ON EVERY RETURN OF THE VERDICT BELOW – which is why the
  *  verdict is a separate function and this is a two-line wrapper rather than a flag threaded through
@@ -1124,7 +1141,38 @@ function entryVerdict(
     // enough of the field withdrew. `tierFloorOpen` asks the same function, so the calendar and this
     // turnstile cannot disagree - the mistake the wild card made earlier the same day.
     const alternate = event.id !== null && alternateListPlace(world, event.tier, event.id)
-    if ((!ranked || rank > accepts) && !reserved && !wildCard && !alternate) {
+    // ⭐⭐⭐ v85 T6 – **AND THE FREEZE, THE FOURTH DOOR, CHECKED IN THE SAME BREATH AS THE OTHER THREE
+    // AND FOR THE IDENTICAL REASON.** A protected ranking is an ENTRY STANDING: it does not change
+    // what she is worth, it changes which list will take her. So it belongs exactly where the three
+    // doors above already are – in the negative position of the one condition below – and nowhere
+    // else. ⚠ THE ONE GATE (R10-5): `enterEvent`'s own comment («shared with the snapshot and the
+    // advance stop – so no surface can decide differently about the same event») is why this is not a
+    // second turnstile in `entries.ts`, which is where the consumption lives and where a reader would
+    // first look for the rule. The rule is here; only the SPENDING is there.
+    //
+    // ⚠ `protectedRankPlace` (`world/ladder.ts`) IS THE WHOLE PREDICATE, and it lives there rather
+    // than here so that `tierFloorOpen` can ask the SAME function – see its own note for the liveness
+    // clauses (entries left, `validUntilWeek` against the EVENT's week on R10-17's rule), for why the
+    // W track is the only place a frozen rank can act, and for the R10-5 argument that put it there.
+    const freeze = protectedRankPlace(world, event.tier, event.week)
+    // ⚠⚠ **DECISIVE, AND THAT WORD IS THE DESIGN DECISION THIS TASK OWES AN ARGUMENT FOR.** An entry
+    // spends one of her twelve only when the protection was the thing that got her in: her live
+    // standing refused her AND no other door was open AND the frozen rank cleared the cut. Two
+    // reasons, and the second is the deciding one.
+    //   (a) IT IS WHAT MAKES THE WAVE'S OWN SENTENCE TRUE. §2 T6: «the protected rank ENTERS the big
+    //       draws either way – that is what makes the trap real», while «small-first books the lower
+    //       tiers and rebuilds the live ranking the honest way». Under a consume-on-every-entry rule
+    //       the careful ramp would burn twelve entries on rungs it never needed a freeze for, and the
+    //       trap would run BACKWARDS – the cautious answer punished and the reckless one subsidised.
+    //   (b) THE GAME HAS NO ELECTION UI AND MAY NOT GROW ONE HERE. The real tour makes the special
+    //       ranking a thing a player ELECTS to use per tournament; we have no surface for that and
+    //       adding one is a decision no brief authorises. «Decisive» is the same rule with the
+    //       election DERIVED – she uses it exactly when she needs it, which is what a player who was
+    //       asked would answer every time, and it can never cost her an entry she did not need.
+    // ⚠ THE COST OF THAT IS NAMED: a career that could have entered on her live rank cannot CHOOSE to
+    // burn a protected entry instead, which is a choice nobody can make today and nobody loses by.
+    const decisive = freeze && (!ranked || rank > accepts) && !reserved && !wildCard && !alternate
+    if ((!ranked || rank > accepts) && !reserved && !wildCard && !alternate && !freeze) {
       const cut = ranked
         ? `${tier.label} takes the top ${accepts} – she is #${rank}`
         : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`
@@ -1163,7 +1211,18 @@ function entryVerdict(
         detail: acceleratorRefusalDetail(event.tier, yearEnd, acceleratorUsage(world, event.week, event.tier, yearEnd)),
       }
     }
-    return availability ? availabilityStatus(world, event) : { level: 'ok' }
+    // ⭐ v85 T6 – AND THE FREEZE'S FLAG RIDES OUT ON THE **ONE** RETURN IT CAN BE TRUE ON, which is
+    // this one: every branch above is a REFUSAL, and a refused card commits nothing and spends
+    // nothing. Spread rather than a second return so the availability tail (a layoff, an exam week,
+    // her condition) still answers exactly what it always answered – the flag is a fact about the
+    // LADDER half, and it is true of this entry whether or not her body is.
+    // ⚠ `undefined` RATHER THAN `false` WHEN IT IS NOT DECISIVE – the field's own convention on
+    // `EntryStatus`, and it keeps every verdict this file has ever returned byte-identical for every
+    // career with no freeze standing.
+    return {
+      ...(availability ? availabilityStatus(world, event) : { level: 'ok' as const }),
+      ...(decisive ? { onProtectedRank: true } : {}),
+    }
   }
   // ⭐⭐ THE PLAY DOWN RULES ON THE DOMESTIC LADDER, ASKED FIRST (round 28 #12 Part 0, docs/specs/
   // the-calendar-she-can-reach-2026-08.md). Same position and same reason as the W arm's copy

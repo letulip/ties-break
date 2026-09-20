@@ -61,7 +61,10 @@ import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer
 // `returnChanceFor`): the pregnancy's arithmetic lives in §14 of that file with the rest of the arc,
 // and the LATCH can only live here, so the decision is split exactly the way `resolveLeaving` is –
 // the rule in a leaf, the coin and the latch at the one call site.
-import { decisionWeekOf, drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, returnChanceFor, FORK_WANT_ANSWER } from './lifeBeat'
+// ⚠ T6 TAKES A THIRD (`comebackAtReturn`) ON THE SAME SPLIT AND FOR THE SAME REASON: the freeze's
+// arithmetic – the ruled rank / 12 / 156 – is a pure function of the pregnancy and belongs with the
+// arc, while the WRITE has to happen here, in the one-line window between the draw and the clear.
+import { comebackAtReturn, decisionWeekOf, drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, returnChanceFor, FORK_WANT_ANSWER } from './lifeBeat'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE. `engine/collegeOffer.ts` imports only `shared/protocol`
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
@@ -664,6 +667,15 @@ export function resolveReturnDecision(world: WorldState): void {
     // answer. `world.comeback` is the seat that outlives the pregnancy, it already carries the return's
     // other two facts, and no save in the world holds one – so a field there costs no migration. The
     // field is left standing in `world/state.ts` with the same note beside it.
+    //
+    // ⭐⭐⭐ v85 T6 – **AND THIS IS THE SEAM, FILLED.** `world.comeback` had no writer on the whole
+    // tree until this line; it has exactly one now and always will (T2½ piece 1's own sentence). Both
+    // of its facts are read off `pregnancy` while the record is still standing, one line above the
+    // clear, because `rankAtPause` dies with it – `comebackAtReturn` (`world/lifeBeat.ts` §14) is the
+    // ONE spelling of the arithmetic and carries the ruled 12 / 156 and the anchor argument.
+    // ⚠ ON THIS ARM ONLY. The other exit latches `'family'`: there is no comeback, so there is no
+    // record of one, and `guardNotEnded` refuses every entry from that week anyway.
+    world.comeback = comebackAtReturn(pregnancy, world.week)
     world.pregnancy = null
     // ⚠ NO `captureMilestone` – the album's milestone channel is what the family KEEPS, and T4's birth
     // is this arc's entry there. A decision to try is news about a season (T3's own distinction).

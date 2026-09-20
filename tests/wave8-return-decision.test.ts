@@ -185,6 +185,8 @@ function expecting(world: WorldState, announcedWeek: number, support: PregnancyS
     dueWeek: pausesWeek + BRIEF.termWeeks,
     support,
     returnPlan: null,
+    // ⚠ v85 T6 – no pause week is walked on this hand-built world, so nothing is frozen.
+    rankAtPause: null,
   }
   return world
 }
@@ -447,6 +449,17 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'returnSupportShift',
         'termWeeks',
         'worryBond',
+        // ⚠⚠ RE-AIMED 20.09 BY v85 T6, AND THE RE-AIM IS THIS GUARD DOING EXACTLY WHAT IT WAS BUILT
+        // FOR rather than an inconvenience: two keys joined the block and somebody had to look at
+        // them and say whether either is a success rate. NEITHER IS, and the reason is the same for
+        // both – they are the RULED freeze (20.09: 12 entries / 156 weeks), an ENTITLEMENT about which
+        // entry lists will take her, and nothing anywhere reads them to decide whether a comeback
+        // WORKED. What decides that is still emergent: the staged factor loses her the matches, the
+        // ranking window ages her points out, and T9 MEASURES the share. A
+        // `comebackSuccessChance` added here would still go RED on this line, which is the whole
+        // property T5 wrote it for and it is unchanged.
+        'protectedRankEntries',
+        'protectedRankWeeks',
       ].sort(),
     )
     // and the sanity line itself, as the PRODUCT it is – stated here so nobody has to reconstruct it
@@ -530,10 +543,24 @@ describe('wave 8 T5 C – the try arm leaves an ordinary career and an open cale
     expect(world.week, 'and the weeks went on').toBeGreaterThan(decisionWeek + 6)
   })
 
-  it('⚠ `world.comeback` is UNTOUCHED – T6\'s seat, and T5 leaves a seam rather than filling it', () => {
+  it('⚠⚠ `world.comeback` IS FILLED AT THE SEAM – T6 landed, and it is the ONE writer that key has', () => {
+    // ⚠ RE-AIMED 20.09 BY v85 T6, AND THE RE-AIM IS THE POINT RATHER THAN A REPAIR. T5 asserted the
+    // seat was UNTOUCHED because T5 was the task that left the seam; asserting that again would be
+    // asserting that the next task never ran. What survives, and is what the line was really about,
+    // is «T6 is the only writer this key will ever have» – so the case now reads the same claim from
+    // the other side: the record appears on the TRY arm, on the week the decision resolves, and it
+    // appears nowhere else in this file's walks.
     const world = decided('w8-ret-seam', 'tries', 'warm')
+    expect(world.comeback, 'nothing before the decision writes it').toBeNull()
+    const week = world.week
     resolveReturnDecision(world)
-    expect(world.comeback, 'T6 is the only writer this key will ever have').toBeNull()
+    expect(world.comeback, 'the try arm fills the seat').not.toBeNull()
+    expect(world.comeback!.returnedWeek, 'stamped with the week she came back').toBe(week)
+    // ⚠ AND NOTHING WAS FROZEN, which is right and is the reason this case can stay in T5's file:
+    // `decided` builds its record by hand and never walks a pause week, so `rankAtPause` is null and
+    // a comeback with no entitlement is exactly what that career earned. The freeze's own cases live
+    // in tests/wave8-protected-rank.test.ts.
+    expect(world.comeback!.protectedRank, 'she paused with nothing this fixture ever captured').toBeNull()
   })
 })
 

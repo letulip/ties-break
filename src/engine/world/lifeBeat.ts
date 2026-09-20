@@ -194,6 +194,13 @@ import { TIERS } from '../season/calendar'
 // `SmallTalkSituation` back from here as a TYPE, which is erased at compile time, so there is no
 // runtime cycle – the `import type { WorldState }` idiom the decomposition already runs on.
 import { SMALL_TALK_CORPUS } from './smallTalkCorpus'
+// ⭐ v85 T6 – THE LADDER, FOR TWO PURE READS AND NO WRITES: §14's pause week captures «her rank at
+// `pausesWeek`» (the ruled freeze) and asks `kidPoints` the «unranked is not rank one» question with
+// it. ⚠ NO CYCLE, measured the house way rather than assumed: `world/ladder.ts` imports the calendar,
+// the tournament, the ranking, `world/ledger`, `world/age`, `world/entryCaps`, `world/constants` and
+// `world/derivedCache` – and nothing from this file – so the arrow runs one way, exactly as the
+// `season/calendar` edge one import up does.
+import { kidPoints, rankIn } from './ladder'
 import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite, SpouseViewOccasion } from '../../shared/protocol/narrative'
 // ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
 // resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
@@ -201,7 +208,7 @@ import type { TierId } from '../season/types'
 // ⚠ TYPE-ONLY, erased at compile time, so no runtime arrow is added: §14 needs the pregnancy's own
 // shape to WRITE one, and `EXPECTING_SUPPORT` needs its `support` union so the grades have exactly
 // one spelling in the engine rather than a second copy of `'warm' | 'measured' | 'cold'` here.
-import type { PregnancyState } from './state'
+import type { ComebackState, PregnancyState } from './state'
 import type { WorldState } from '../world'
 
 // =================================================================================================
@@ -6416,6 +6423,11 @@ export function rollPregnancy(world: WorldState): void {
     support: null,
     // ⚠ NULL UNTIL THE T6 BEAT ASKS how she means to come back.
     returnPlan: null,
+    // ⚠⚠ NULL UNTIL THE PAUSE WEEK, AND IT IS **NOT** CAPTURED HERE (v85 T6). The ruled freeze is «her
+    // rank at `pausesWeek`», which is eight weeks after this line – she plays on through them, so the
+    // standing this week is not the standing the rule names. `landPregnancyPause` takes it on the week
+    // it is true; the field's own note in `world/state.ts` carries why it is a capture at all.
+    rankAtPause: null,
   }
   // ⚠ THE DETAIL IS THE EPISODE ID, `'met'` / `'ended'` / `'engaged'`'s own shape – machine-readable,
   // never a rendered sentence. ⚠ AND IT IS NOT THE RECEIPT HERE, which is the one way this kind
@@ -6493,6 +6505,23 @@ const PAUSE_EVENT = 'She is entering no more tournaments before the birth. What 
 export function landPregnancyPause(world: WorldState): void {
   const pregnancy = world.pregnancy
   if (pregnancy === null || world.week !== pregnancy.pausesWeek) return
+  // ⭐⭐⭐ v85 T6 – AND THE ONE NUMBER THE FREEZE IS MADE OF, TAKEN ON THE ONE WEEK IT IS TRUE. The
+  // ruled protected rank is «her rank at `pausesWeek`» and this line is the only place in the engine
+  // that week is standing under a live pregnancy. It is a CAPTURE on `captureEntryRow`'s own law –
+  // the WTA ranking window is 52 weeks and the return lands 51 weeks from here, so every result this
+  // rank is computed from has aged out of her book by the time `world.comeback` is written.
+  //
+  // ⚠ ABOVE THE FEED ROW'S ONCE-NESS CHECK, DELIBERATELY, and it is the `EXPECTING_SUPPORT` write's
+  // own rule read one file over: a step that must happen may not sit below an early return that is
+  // about a SENTENCE. If T8 ever gives this week a second row, or a probe writes the row by hand, the
+  // freeze must still be taken. Its own `=== null` guard is what makes it idempotent instead.
+  //
+  // ⚠ «UNRANKED IS NOT RANK ONE» – `entryVerdict`'s own sentence and the same `kidPoints(...) > 0`
+  // guard it uses, because `rankIn` hands back the TABLE SIZE for a girl with no counting W result
+  // and freezing that sentinel would hand a comeback a protected place at #564, which is not a place.
+  // A career that paused with nothing protected comes back with `protectedRank: null`, which is the
+  // state `ComebackState` is nullable-inside for.
+  pregnancy.rankAtPause ??= kidPoints(world, 'wta') > 0 ? rankIn(world, 'wta') : null
   if (world.events.some((e) => e.week === world.week && e.type === 'life' && e.lifeKind === 'expecting')) return
   // ⚠ NO AMOUNT – a life row is never a purchase (rule 4 at the top of this file), and the absence of
   // the field is what keeps `accrueFinance` from ever seeing it. There is no price on this week:
@@ -6664,9 +6693,13 @@ export function landBirth(world: WorldState): void {
  *     measure of how long that is: 51 weeks with no new entry, `termWeeks` + this.
  *
  *  ⚠ IT IS DERIVED AND NOT PERSISTED, WHICH IS THE ONE PLACE THIS WAVE'S RECORDS PART FROM
- *  `dueWeek`'s LAW, and the reason is named rather than hidden: `PregnancyState` gained its last
- *  field at T1 and v85 took its last key at T2½ («This is the LAST key v85 takes»), so a `decidesWeek`
- *  field would be a schema move that §2 T5 is not. The consequence is real and small – a retune of
+ *  `dueWeek`'s LAW, and the reason is named rather than hidden: v85 took its last KEY at T2½ («This is
+ *  the LAST key v85 takes»), so a `decidesWeek` field would be a schema move that §2 T5 is not.
+ *  ⚠ T5 WROTE «`PregnancyState` gained its last field at T1» AND T6 FALSIFIED THAT HALF – corrected
+ *  here rather than left standing: T6 moved `returnPlan` OFF this record (the architect's ruling A)
+ *  and added `rankAtPause` TO it, because the ruled freeze is «her rank at `pausesWeek`» and the
+ *  ranking window has deleted the evidence for it by the return. The sentence that still holds is the
+ *  one about KEYS, and it is the one this paragraph needs. The consequence is real and small – a retune of
  *  `decisionWeeksAfterBirth` moves the decision date of a pregnancy a live career is already carrying
  *  – and it is bounded by the fact that no save in the world holds a v85 pregnancy at all. If the
  *  constant is still moving when one does, the honest fix is the field and its migration. */
@@ -6713,4 +6746,50 @@ export function returnChanceFor(
     (bond - ECONOMY.bond.start) * m.returnBondPerPoint -
     yearsOver * m.returnAgePerYearOver
   return Math.min(m.returnChanceMax, Math.max(m.returnChanceMin, chance))
+}
+
+/** ⭐⭐⭐ v85 T6 – **WHAT THE RETURN LEAVES BEHIND**: the pregnancy's last two facts turned into the
+ *  record that outlives it. Pure, zero draws, no writes and no world – `returnChanceFor`'s own shape
+ *  one function up, and for its reason: every cell of the freeze can then be pinned without building
+ *  a career. `resolveReturnDecision` (`world/endings.ts`) is the ONE caller and it calls this on the
+ *  line ABOVE the clear, which is the seam T5 marked and left.
+ *
+ *  ⚠⚠ IT IS WRITTEN **BEFORE** `world.pregnancy` GOES NULL AND THAT ORDER IS THE WHOLE FUNCTION.
+ *  `rankAtPause` is on the record and `resolveReturnDecision` clears the record on both arms (T5's
+ *  totality obligation – it must, or a career that comes back has its entries shut for ever), so a
+ *  freeze read after the clear is a freeze read off nothing. This is `endingForFamily`'s own
+ *  arrangement six lines down in that file, for the same reason stated there: «read off the local
+ *  binding, so the clear one line below cannot take the number out from under it».
+ *
+ *  ⭐ **THE THREE NUMBERS ARE RULED AND NONE OF THEM IS THIS BUILDER'S** (20.09, «наверное да, у нас
+ *  тоже были исследования»): her rank at `pausesWeek`, 12 entries, 156 weeks. The rank arrives on the
+ *  record (captured at the pause – `landPregnancyPause` above, and the field's note in
+ *  `world/state.ts` for why it could not be derived here); the other two are
+ *  `ECONOMY.motherhood.protectedRankEntries` / `protectedRankWeeks`, where the digest row they come
+ *  from is quoted.
+ *
+ *  ⚠ `validUntilWeek` IS ANCHORED ON THE **RETURN**, and the alternative is named rather than hidden.
+ *  156 weeks from `returnedWeek` makes the entitlement «three years of comeback», which is the span
+ *  the digest describes being USED («used by 50+ players»), keeps both halves of `world.comeback` on
+ *  ONE clock – the staged factor is a function of `returnedWeek` and nothing else – and is the only
+ *  anchor under which the ruled 12 entries and the ruled 156 weeks are both about the same period.
+ *  Anchored at `pausesWeek` it would be 105 usable weeks and the two ruled numbers would be about two
+ *  different spans. Carried to the owner as a reading of his ruling rather than settled by a build.
+ *
+ *  ⚠ A `null` RANK MAKES A `null` FREEZE AND STILL MAKES A COMEBACK – `ComebackState`'s own shape
+ *  argument (T2½): «a comeback is a FACT and a freeze is an ENTITLEMENT», and collapsing the two would
+ *  make «she returned» unrepresentable for exactly the players who most need the game to say it. */
+export function comebackAtReturn(pregnancy: PregnancyState, week: number): ComebackState {
+  const m = ECONOMY.motherhood
+  return {
+    returnedWeek: week,
+    protectedRank:
+      pregnancy.rankAtPause === null
+        ? null
+        : {
+            rank: pregnancy.rankAtPause,
+            entriesLeft: m.protectedRankEntries,
+            validUntilWeek: week + m.protectedRankWeeks,
+          },
+  }
 }

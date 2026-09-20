@@ -2030,7 +2030,14 @@ export interface WorldState {
  *  `LifeBeatRecord.frame` are the same instrument for the same reason: what is READ BACK is state.
  *
  *  ⚠ `returnPlan` is `null` until the T6 beat asks, which is the same gap `support` names one field
- *  up: she has given birth and has not yet said how she is coming back. */
+ *  up: she has given birth and has not yet said how she is coming back.
+ *
+ *  ⚠⚠ AND T6 ADDED A SIXTH FIELD, `rankAtPause`, WHICH FALSIFIES T5's «T1 shipped `PregnancyState`'s
+ *  last field» (`decisionWeekOf`, `world/lifeBeat.ts` §14 – corrected where it stands). It is a
+ *  CAPTURE and not a parameter: the ruled freeze is «her rank at `pausesWeek`», the ranking window
+ *  deletes the evidence for it 52 weeks later, and the return is 51 weeks after the pause – so the
+ *  number has to be taken on its own week or it cannot be taken at all. It costs no migration for the
+ *  same reason `returnPlan`'s move costs none: no save in the world holds a v85 pregnancy. */
 export interface PregnancyState {
   /** The latched episode carrying it – the marriage is the door (RULED 20.09), so this always points
    *  at a row whose `latchedWeek !== null`. A pointer and never a copy: the partner's name, the
@@ -2046,6 +2053,39 @@ export interface PregnancyState {
   /** The parent's persisted answer grade, `null` while the blocking beat is still up. W4's return
    *  reads it; T2 writes it once, on the answer. */
   support: 'warm' | 'measured' | 'cold' | null
+  /** ⭐⭐⭐ v85 T6 – **HER PROFESSIONAL STANDING ON THE WEEK THE ENTRIES CLOSED**, or `null` for a
+   *  career that paused holding no WTA ranking worth freezing. The protected rank is «her rank at
+   *  `pausesWeek`» (RULED 20.09 with the 12 entries and the 156 weeks), and this is the only place
+   *  that number can honestly come from.
+   *
+   *  ⚠⚠ IT IS A **CAPTURE**, AND THE LAW IS `captureEntryRow`'s, WORD FOR WORD (`world/ladder.ts`):
+   *  «the two facts about her BOOK that an entry has to carry out of the week it was made in, because
+   *  `pruneResults` deletes the evidence for both 52 weeks later». Here the span is longer than there:
+   *  `termWeeks + decisionWeeksAfterBirth` is 51 weeks from the pause to the return, and the WTA
+   *  window (`WINDOW_BY_TRACK`) is 52 – so by the week the freeze is written, every result that
+   *  produced the rank it is supposed to freeze has just aged out of the book. Derived at the return
+   *  this question has no honest answer; captured on its own week it has exactly one. (The on-ramp
+   *  latch `crossedOnRamps` is the same argument one field over, and it is the precedent this wave
+   *  inherits rather than a new claim.)
+   *
+   *  ⚠ IT IS THE **WTA** TABLE AND NOT «her table», which is a narrowing with a reason rather than a
+   *  simplification. A frozen RANK can only ever act where a rung reads a rank cut in the same
+   *  currency, and `entryVerdict` reads one exactly at the W acceptance list (`acceptanceRank` is an
+   *  ABSOLUTE rank on the W rungs). The junior rungs are shut on AGE for every woman this arc can
+   *  reach (24–35 against under-19), the domestic band is denominated in POINTS and no rank could
+   *  open it, and both on-ramps LATCH and never un-latch, so there is no second table where this
+   *  number would mean anything.
+   *
+   *  ⚠ `null` IS A REAL STATE AND NOT A PLACEHOLDER, `support`'s own argument above: «unranked is not
+   *  rank one» (`entryVerdict`'s own sentence), so a girl who paused with no counting W result freezes
+   *  nothing – and `ComebackState.protectedRank` is nullable for exactly this case, because a comeback
+   *  is a FACT and a freeze is an ENTITLEMENT.
+   *
+   *  ⚠ AND IT IS WRITTEN AT `pausesWeek` AND NOWHERE ELSE, on `landPregnancyPause`'s own `===` week
+   *  equality: a crafted world that JUMPS the pause week misses the capture and comes back with
+   *  nothing protected, which is the right failure direction – a rank read a season later is not the
+   *  rank the rule names, and a wrong freeze is worse than no freeze. */
+  rankAtPause: number | null
   /** How she means to come back, `null` until the T6 beat asks.
    *
    *  ⚠⚠ AND SINCE T5 THIS FIELD IS **UNREACHABLE AS WRITTEN**, which is reported here rather than
