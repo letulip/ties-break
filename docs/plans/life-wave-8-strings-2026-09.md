@@ -27,9 +27,9 @@ draft flags: `git diff c322301c..HEAD -- src/` read at the close of T7 (`c322301
 docs-only first commit, so the diff is the whole wave). §9 walks that flag list against this table in
 both directions – **a draft in code missing here is a defect of T8**, and none is missing. ⚠ §9 also
 records a **defect in the sweep command itself**, found while walking it: the prescribed
-`grep '⚠ DRAFT'` misses every site flagged `⚠⚠ **DRAFT – T8's TABLE**`, which is six of this wave's
-flags including the pause row, the birth row, the entry refusal and the return row. The walk was
-redone against `grep DRAFT` and §9 is the complete list.
+`grep '⚠ DRAFT'` returns **22 of the wave's 38 flagged lines**, and the sixteen it drops carry seven
+string sites covering **eight of this table's thirty rows**. The walk was redone against `grep DRAFT`
+and §9 is the complete list.
 
 ## 0. The count
 
@@ -387,10 +387,17 @@ lacks its flag in code.**
 
 ⚠⚠ **AND THE PRESCRIBED SWEEP COMMAND IS DEFECTIVE, WHICH IS REPORTED HERE BECAUSE THE NEXT WAVE WILL
 RUN IT.** `grep '⚠ DRAFT'` matches `⚠ ⚠ DRAFT` and `// ⚠ DRAFT` but **NOT** `⚠⚠ **DRAFT – T8's
-TABLE**`, the spelling six of this wave's flags use – among them the pause row, the birth row, the
-entry refusal, the return row and the ending's kept row, i.e. five of this table's thirty strings and
-three of its five tasks. Run `grep DRAFT` instead, or `grep -E '⚠+ ?\*{0,2}DRAFT'`. The table below is
-the complete list under the wider sweep.
+TABLE**` and **NOT** `⚠ WAVE 8 T5 – A DRAFT`, which are the two spellings the later tasks reached
+for. Measured on this wave: the narrow sweep returns **22 added lines**, the wide one **38**, and the
+sixteen dropped lines carry **seven string sites covering eight of this table's thirty rows** –
+
+> P17 the pause row · P18 the entry refusal · P19 the birth row · P21 the return row ·
+> P22 the ending's blurb · P23 its title · P29 and P30 the return-plan answer rows
+
+– plus the `EMOTION_BY_ENDING.family` pick and every flagged number in `economy.ts`. **That is four of
+this wave's five tasks invisible to the command that is supposed to prove the table complete.** Run
+`grep DRAFT` instead, or `grep -E '⚠+ ?\*{0,2}DRAFT'`. The table below is the complete list under the
+wider sweep, and a builder who runs only the narrow one will believe a short table is a finished one.
 
 | flagged site (file · what) | rows here |
 | --- | --- |
