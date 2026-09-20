@@ -348,7 +348,7 @@ one cell of each table and reporting it as the table. So the walk **clones the w
 | --- | --- | --- |
 | the `'expecting'` card | warm / measured / cold | the decision draws **one** number on `seed:life:return:<week>`, and `support` moves neither the key nor the date – so all three arms compare the **same u** against three thresholds, and the difference between two grades is exactly the mass of u between them |
 | ...each arm again, at the birth | psychologist off / on | the grade's own blow has already landed (`postpartumSupportScale` scales the magnitude on the one week the mark is stamped), so the two sub-arms differ only in the **return rate** |
-| the `'return-plan'` card | small-first / straight-back | T6 §D's own apparatus – one career, `structuredClone`d, differing in exactly one field – at bench scale and on **grown** careers instead of posed ones |
+| the `'return-plan'` card | small-first / straight-back / **small-first with the bench policy's brakes off** | T6 §D's own apparatus – one career, `structuredClone`d, differing in exactly one field – at bench scale and on **grown** careers instead of posed ones. The third is a DIAGNOSTIC and not a ramp (§8.2). Walked **104 weeks**, sampled at 52 so the head-to-head is cut on T6's own horizon |
 
 ⚠ **The small-first arm's booking policy is one line and invents no tier boundary.** `stepCareerWeek`
 takes an `EntryVeto`, and the veto refuses exactly what the engine already labels `offReturnPlan` –
@@ -511,7 +511,11 @@ measurement, not a blindness.
 ## §5 The census, the ages, and the fairness corridor
 
 **The run.** 240 careers (3 backgrounds × 80 seeds, every one a distinct seed), 1300 weeks, policy
-`player`, built at `e86eed27`. The walk's drain skew is stated arithmetic, not noise:
+`player`, `MAIN_RUN_EXIT=0`. ⚠ **Two builds, and the difference between them is nothing but reads.**
+§5–§13's figures come from the run at **`e86eed27`**; §8.5's rank distribution needed two extra
+columns and comes from the run at **`1a28578e`**, which adds pure reads of state the arms already
+carried – checked rather than assumed: `diff` over the two 240-career logs, with only the new rows
+filtered out, returns a single blank line. The walk's drain skew is stated arithmetic, not noise:
 `drained 2944: fork-opinion 235 × 0 · met 1309 × 0 · fork-counsel 17 × 0 · ended 1152 × −1 ·
 engaged 189 × −1 · expecting 24 × −0.5 · return-plan 18 × 0 = bond skew −1353`.
 
@@ -737,21 +741,46 @@ crossing, not as a law: the 104-week means are 450 against 499, which is inside 
 | share who **REGAIN THEIR BAND** – back to at least her rank at the pause, best arm at 104 weeks | **0 / 16 = 0.0%** | ~60% |
 | **the PRODUCT** | **0.0%** | the research's **~40%** |
 
-⚠⚠ **The bar is stated so the number can be read**: «regained her band» is taken here as *her live WTA
-rank being at least as good as `rankAtPause`*, whose median was **#43**. On that bar **nobody** – on
-any of the three arms, at 52 weeks, at 104 weeks, or on the base walk at +1, +2 and +3 years from the
-return – gets back. The base walk reads 0/16, 0/16, 0/15.
+⚠⚠ **The bar is stated so the number can be read**: «regained her band» is taken above as *her live
+WTA rank being at least as good as `rankAtPause`*, whose median was **#43**. On that bar **nobody** –
+on any of the three arms, at 52 weeks, at 104 weeks, or on the base walk at +1, +2 and +3 years from
+the return – gets back. The base walk reads 0/16, 0/16, 0/15.
 
-⚠ **This is carried as a disagreement, not as a tuning.** §2 T5's split is deliberate: her decision to
-try is DRAWN and the comeback's success is EMERGENT, and the brief's own instruction is that the ~40%
-is «the PRODUCT sanity line, **checked, never forced on either factor**». The try factor measured
-**above** its draft (75% against ~65%, which is §7's single shared draw coming in high); the success
-factor measured **at zero**. §13 carries it and §14 puts it to the owner.
+### §8.5 ⭐⭐⭐ And that is the HARDEST bar, so the distribution is printed instead of one share
 
-⭐ **What she does do is climb a long way without getting home**, which is the part a single share
-hides: her live table has her at a median **#1620** the week she comes back (§10), and two years later
-the straight-back arm's mean is **#341**. That is a real recovery – it is simply not a recovery *to
-the rank she paused with*, and 52 weeks was never going to be enough for one.
+A 0 of 16 at the strictest reading tells a reader nothing about how close she came, and the research's
+own sentence («~40% of mothers return successfully») names **no rank at all**. So the section prints
+where she actually stands 104 weeks after the return and leaves the bar to his word:
+
+| arm | median rank | top 100 | top 200 | top 500 | unranked |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `small-first` | #1621 | 0 / 18 | 0 / 18 | 0 / 18 | **18 / 18** |
+| `straight-back` | **#189** | 2 / 18 | **10 / 18** | 16 / 18 | 2 / 18 |
+| `small-first` brakes off | **#157** | 3 / 18 | **13 / 18** | 15 / 18 | 2 / 18 |
+
+*For scale: her rank at the pause was median **#43**, and the week she came back the live table had
+her at median **#1620**.*
+
+**The product, read at each bar** – try 75.0% × the best arm's share:
+
+| the bar | best arm | product | against the research's ~40% |
+| --- | ---: | ---: | --- |
+| back to her rank at the pause (median #43) | 0 / 16 = 0.0% | **0.0%** | far below |
+| top 100 | 3 / 18 = 16.7% | **12.5%** | below |
+| **top 200** | **13 / 18 = 72.2%** | **54.2%** | above |
+| top 500 | 16 / 18 = 88.9% | 66.7% | far above |
+
+⭐ **The research's ~40% is reached at a bar somewhere around the top 150**, and the median returning
+career lands at **#157–#189** two years on – which straddles it. So the honest verdict is not «the
+comeback never works»; it is that **«works» has to be defined, and the model's answer moves from 0% to
+67% across four reasonable definitions of it.**
+
+⚠ **This is carried as a disagreement and never as a tuning.** §2 T5's split is deliberate: her
+decision to try is DRAWN and the comeback's success is EMERGENT, and the brief's own instruction is
+that the ~40% is «the PRODUCT sanity line, **checked, never forced on either factor**». The try factor
+measured **above** its draft (75% against ~65%, which is §7's single shared draw coming in high). ⚠ And
+T9 did **not** pick a softer bar on its own judgement, because picking the bar decides the answer;
+§14.3 puts the choice to the owner.
 
 ## §9 The protected rank – what 12 entries / 156 weeks actually buys
 
@@ -974,7 +1003,7 @@ costs nobody a booking week: `enterEvent` has no life-beat guard in any of its 9
 | 4 · the mid-term ending | ~4.7% before the birth | **0 / 24** before the birth (P = 0.31 under the prediction), **1 / 24 = 4.2%** before the decision | ✅ §6 |
 | 5 · the decision | warm 0.80 / measured 0.65 / cold 0.45 | **live chances 0.81 / 0.66 / 0.46**; shares 79.2 / 75.0 / 62.5% | ✅ on the chance · ⚠ the measured SPREAD is 16.7 pp against 35, one shared draw at −1.9 σ (§7) |
 | 6 · the ramp arms | the wrong ramp fails more often, **or it is a finding** – and T6 measured the finding | **T6 CONFIRMED**: straight-back ahead on **16 of 18** grown careers, 0 against | ⚠ §8.1 – a finding, carried, not tuned |
-| 6 · the product | ≈ 40% | **0.0%** = 75.0% who try × 0.0% who regain their rank at the pause | ⚠⚠ §8.4 – **the largest disagreement in this document** |
+| 6 · the product | ≈ 40% | **0.0%** at «back to her rank at the pause»; **12.5% / 54.2% / 66.7%** at top 100 / 200 / 500 | ⚠⚠ §8.4–§8.5 – **the bar decides it, and the bar is the owner's** |
 | 7 · the protected rank | no prediction | **12.0 of 12 spent by expiry, 0 of 15 expired unused** – and only by `straight-back` | ✅ §9 |
 | 8 · the ranking decay | near-total, by construction | **1.9% of points kept**; #31 → #1620 | ✅ §10 |
 | 9 · sponsors | T7's, re-stated | **70.0% of a twin's brand income over 155 weeks**; no constant ships | ✅ **§1** (T7's, untouched) |
@@ -990,9 +1019,12 @@ costs nobody a booking week: `enterEvent` has no life-beat guard in any of its 9
    drafts to 0.01, so the model is not weak; the three arms share 24 draws and 4 of them fell in the
    35-pp band against an expectation of 8.4, which is −1.9 σ. A bigger grid moves this and nothing
    else does. §7.
-3. **The product, 0.0% against ~40%.** ⚠⚠ Real, large, and not a sampling artifact: **no career on
-   any arm at any horizon up to three years** gets back to the rank it paused with (median #43). The
-   try factor is fine – 75% against a drafted ~65%. §8.4 and §14.3.
+3. **The product, 0.0% against ~40% – at the hardest bar, and the bar is not ruled.** ⚠⚠ Real and
+   not a sampling artifact at that bar: **no career on any arm at any horizon up to three years** gets
+   back to the rank it paused with (median #43). ⭐ But at top 200 the same measurement reads **54.2%**
+   and the research's ~40% falls at a bar near the top 150, where the median returning career actually
+   lands (#157–#189). The try factor is fine either way – 75% against a drafted ~65%. §8.4, §8.5,
+   §14.3.
 
 ## §14 The questions for the owner
 
@@ -1047,11 +1079,20 @@ half – whether the comeback WORKS – measures **0 of 16** at every horizon th
 three years from the return, on all three arms. The bar used is «back to at least her live rank at the
 pause», median **#43**.
 
-⭐ She does climb: from a median **#1620** the week she returns to a mean **#341** two years later.
-That is a long way and it is not home. **The bar is the question**: if «returned successfully» means
-top 100, or «playing a full main-tour calendar again», rather than «back to her old rank», the answer
-may already be yes and this document simply measured the strictest reading. ⚠ T9 did not pick a softer
-bar on its own judgement, because picking the bar decides the answer.
+⭐ **She does climb, and the bar is the whole question** (§8.5). From a median **#1620** the week she
+returns to a median **#189** (straight-back) or **#157** (the diagnostic arm) two years later. Read
+against four reasonable definitions of «returned successfully» the product goes:
+
+| the bar | product = 75% who try × the share who reach it |
+| --- | ---: |
+| back to her rank at the pause (median #43) | **0.0%** |
+| top 100 | 12.5% |
+| **top 200** | **54.2%** |
+| top 500 | 66.7% |
+
+**The research's ~40% is reached at a bar near the top 150, and the median returning career lands at
+#157–#189.** So the model may already be right and this document simply measured the strictest reading
+first. ⚠ **T9 did not choose the bar**, because choosing it decides the answer – that is his.
 
 ### §14.4 The ramp trap runs backwards at bench scale too – and flips again at two years
 
