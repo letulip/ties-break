@@ -186,7 +186,7 @@ produced a *defect list* instead of a workaround list.
 |---|---|---|
 | `smoke.spec.ts` | the app boots, a new career starts, week 1 renders | 1 |
 | `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, «go on» starts the career – and no tour follows it | 1, 5 |
-| `seeded-careers.spec.ts` | seven of the eleven fixtures boot into the state their manifest describes – the other four (`soft`, `breakup`, `belated`, `engaged`) are booted and asserted by the specs of the waves that added them, because each exists for a state this walk has no way to name | 1, 2 |
+| `seeded-careers.spec.ts` | seven of the twelve fixtures boot into the state their manifest describes – the other five (`soft`, `breakup`, `belated`, `engaged`, `expecting`) are booted and asserted by the specs of the waves that added them, because each exists for a state this walk has no way to name | 1, 2 |
 | `week-advance.spec.ts` | a decision on the table stops the week; answering it starts it, and the answer comes back as news | 1 |
 | `week-advance.spec.ts` | a week that ends a season: the wrap-up card, then Home and the money screen move together | 1, 5 |
 | `week-advance.spec.ts` | a week that stops **without** ending: the reason, the engine's own count, and which notice it is | 1 |
@@ -226,6 +226,7 @@ produced a *defect list* instead of a workaround list.
 | `r37-frame.spec.ts` | and no negative offset buys any of it – the rail carries none at 1024 or 1280, it still meets the frame's edge, and the frame's bottom gutter is below its reach rather than a band under it | 4 |
 | `wedding.spec.ts` | she says she is getting married on the week he presses, he answers through the card, eight ordinary presses later the wedding is a kept row under its own week's News – and the latch it wrote comes back through BOTH save doors: a cold boot that rebuilds the world out of IndexedDB, and the app's own exported file re-read through the whole untrusted chain and the migration ladder | 1, 5, 2, 6 |
 | `album.spec.ts` | eight seasons of a career are a book she can open: Home's recent-memory card is the door, the album that comes back is assembled ON DEMAND by the worker rather than carried in the weekly snapshot, its paintings are files the browser really decodes, the chevron pages it, `Back` gives the screen back – and a second visit shows the same sheet again, which is the only way a browser can see that the book was dropped on the way out and fetched afresh on the way in | 1, 5 |
+| `expecting.spec.ts` | a career months into the maternity pause comes back out of IndexedDB still carrying: her hero wears the pregnancy painting the wire named and the browser really decodes it, the Season cards are shut with the engine's own sentence under a lock, and one press still moves the week – she is off tour, the household is not. The only fixture parked INSIDE its beat, because the beat is not what is under test: the pause is | 1, 2, 5 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->

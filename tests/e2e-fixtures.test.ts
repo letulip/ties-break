@@ -33,6 +33,10 @@ import { TIER_SHORT } from '../src/engine/season/calendar'
 import {
   careerIdFor,
   factsOf,
+  // ⚠ v85 T11b – THE GENERATOR'S OWN «is the pause's refusal DRAWN on this week» PREDICATE, imported
+  // rather than re-spelled: the recipe's acceptance clause and this alarm have to answer the same
+  // question, on the screen's own feed filter, or a regeneration can satisfy one and not the other.
+  pauseRefusedCards,
   FIXTURE_DIR,
   FIXTURE_NAMES,
   loadManifest,
@@ -743,5 +747,97 @@ describe('e2e fixtures: each is the state its name promises', () => {
       reread.milestones.filter((m) => m.type === 'wedding').length,
       'and the album row went with it',
     ).toBe(1)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ v85 T11b – `expecting`, THE ONE FIXTURE PARKED **INSIDE** ITS OWN BEAT.
+  //
+  // Every other beat fixture above holds a state that is ONE TICK AWAY, because the thing under test
+  // is the card and «answered through the real UI» is the half a browser is asked for. Here the card
+  // is NOT under test – `tests/component/life-beat-dialog.test.ts` and the wave's engine tests own
+  // the `'expecting'` answer – and what only a browser can say is that a PREGNANCY SURVIVES A SAVE
+  // AND A LOAD and that the refusal it causes is drawn. So the recipe parks after `pausesWeek` and
+  // this block asserts the three preconditions e2e/expecting.spec.ts stands on, against the engine's
+  // own constants rather than against the week the search happened to find.
+  //
+  // ⚠ AND THE THIRD OF THEM IS A SCREEN FACT, ASSERTED HERE ON PURPOSE. The pause is a WORLD-level
+  // refusal answered inside `availabilityStatus`, so it reaches a player only as a lock pill on a
+  // Season card – and a regeneration landing this fixture on an off-season week would carry the whole
+  // state and draw none of it. `pauseRefusedCards` is the generator's own predicate, imported rather
+  // than re-spelled, so the recipe's clause and this alarm cannot answer differently.
+  // ===============================================================================================
+  it('expecting is parked inside the pause, with the entries shut on screen and an ordinary week ahead', async () => {
+    const world = await decodeExportFile(readFixtureBytes('expecting.tsave'))
+    expect(world.ending, 'the expecting fixture is meant to be a career still being played').toBeNull()
+
+    const pregnancy = world.pregnancy
+    expect(pregnancy, 'the expecting fixture is meant to be CARRYING one').not.toBeNull()
+
+    // ⭐ THE TWO DISTANCES, READ OFF `ECONOMY.motherhood` AND NEVER OFF THE FIXTURE. `rollPregnancy`
+    // wrote both at the announcement and `PregnancyState`'s own law is that no second site re-derives
+    // them – so this is the fixture agreeing with the constants, which is what makes a balance change
+    // that moves the window fail here rather than in a browser.
+    expect(
+      pregnancy!.pausesWeek - pregnancy!.announcedWeek,
+      'the entries are meant to close `playsOnWeeks` after she says it',
+    ).toBe(ECONOMY.motherhood.playsOnWeeks)
+    expect(
+      pregnancy!.dueWeek - pregnancy!.pausesWeek,
+      'and the birth is meant to be `termWeeks` after the pause',
+    ).toBe(ECONOMY.motherhood.termWeeks)
+
+    // ⭐⭐ INSIDE THE PAUSE AND BEFORE THE BIRTH – the window `pauseCovering` names, with the BIRTH as
+    // its upper bound and not the record's lifetime. `world.pregnancy` deliberately outlives `dueWeek`
+    // by `decisionWeeksAfterBirth` weeks (the entry gate must not re-open the week after a birth), so
+    // a career parked in THAT stretch is a career with a daughter – a different state, and one whose
+    // portrait is `null`. The empty `children` array is the same boundary said from the other side.
+    expect(world.week, 'it is meant to boot at or after the week the entries closed').toBeGreaterThanOrEqual(pregnancy!.pausesWeek)
+    expect(world.week, 'and before the birth').toBeLessThan(pregnancy!.dueWeek)
+    expect(world.children, 'so no child has been born yet').toEqual([])
+    // ...and the wire carries the months, which is the ONE thing the browser can see about the state
+    // itself: `pregnancyFace` is what `useKidEmotion` turns into the painting on her hero.
+    expect(
+      toSnapshot(world).pregnancyFace,
+      'the snapshot draws no pregnancy portrait on this week – e2e/expecting.spec.ts reads it off the Kid screen',
+    ).not.toBeNull()
+
+    // ⭐ THE WEEK IT BOOTS ON IS ORDINARY, `engaged`'s own three gates verbatim and for its stated
+    // reason: the spec's last act is to press the week button, so anything standing in front of it is
+    // a press that never happens. `liveSoftBeat` is asked too and is not redundant – a tier-1 row
+    // stops nothing and is still on screen, which is the clause `breakup`'s recipe was missing.
+    expect(pendingLifeBeat(world), 'it is meant to boot with nothing to answer').toBeNull()
+    expect(advanceRefusal(world), 'and with nothing stopping the week').toBeNull()
+    expect(liveSoftBeat(world), 'and with no soft card already on the hub').toBeNull()
+
+    // ⭐⭐⭐ AND THE REFUSAL IS ON A CARD THE BROWSER CAN READ. The generator's own predicate, so the
+    // recipe's acceptance clause and this alarm are one function.
+    expect(
+      pauseRefusedCards(world).length,
+      'no Season card on this week wears the pause\'s refusal. The state is still there, but the ' +
+        'only surface that speaks it is not – an off-season week, or every visible card already ' +
+        'entered. e2e/expecting.spec.ts reads that sentence and would go red in a browser instead.',
+    ).toBeGreaterThan(0)
+
+    // ⭐⭐ AND THE WEEKS STILL TICK, which is the pause's whole design – «weeks TICK, no latch, no
+    // fast-forward machinery» (§2 T3). She is off tour; the household is not. One press, the browser's
+    // own chain: raw `tickWeek` from the save's own MAIN position, no entry policy.
+    const before = world.week
+    tickWeek(world, resumeMain(world.rngMain))
+    expect(world.week, 'one press did not move the week').toBe(before + 1)
+    expect(world.ending, 'and the press is meant to leave a career still being played').toBeNull()
+    expect(
+      pendingLifeBeat(world),
+      'a blocking beat lands on the week the spec presses into – e2e/expecting.spec.ts presses once ' +
+        'and reads the week line, with no branch in it',
+    ).toBeNull()
+    // ...and the press stayed INSIDE the pause rather than ticking into the birth, which is what
+    // makes it an ordinary household week. The recipe's window is `world.week + 1 < dueWeek` for
+    // exactly this, and the assertion is on the PORTRAIT because that is the half the browser reads:
+    // `pregnancyFaceAt` goes null on `dueWeek`, while the RECORD deliberately outlives it.
+    expect(
+      toSnapshot(world).pregnancyFace,
+      'the one press ticked into the birth week – the loudest week of the arc, and not the ordinary ' +
+        'household week the case is about',
+    ).not.toBeNull()
   })
 })

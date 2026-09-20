@@ -26,7 +26,7 @@
  * whole point of the fixture set: a fixture cannot disagree with what the app reads. The generator
  * imports these definitions back and re-exports them, so there is still exactly one of each.
  *
- * See docs/plans/e2e-fixtures.md for what the ten fixtures are and how they are made.
+ * See docs/plans/e2e-fixtures.md for what the twelve fixtures are and how they are made.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -91,7 +91,29 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // its engagement answered by the generator, which is exactly the half T11 asks a browser to do. The
 // recipe therefore parks one press BEFORE the announcement and proves, on the browser's own chain of
 // raw ticks, that the nine weeks behind it are ordinary. See the recipe in tools/e2e-fixtures.ts.
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated', 'engaged'] as const
+// ⚠⚠ `expecting` IS PARKED **INSIDE** THE PAUSE, WHICH IS THE ONE THING ABOUT IT A READER COULD
+// MISTAKE FOR LAZINESS (v85 T11b, 20.09). Every other beat fixture in this list parks ONE PRESS
+// BEFORE its card, because `engaged`'s own note states the rule: «its engagement would then have been
+// answered by the GENERATOR, and "answered through the real UI" is precisely the half the brief asks a
+// browser for». That rule is about THE BEAT UNDER TEST, and here the beat is not what is under test.
+// This fixture's case asserts that a PREGNANCY SURVIVES A SAVE AND A LOAD and that the entry refusal
+// it causes is on screen – the half no engine test can see – and the `'expecting'` card's own
+// answering is pinned through the real cascade by tests/component/life-beat-dialog.test.ts and by the
+// wave's engine tests. Parking from `pausesWeek` on is therefore the honest shape and not a shortcut.
+// ⚠⚠ AND THE CLEAN RUN-IN WAS MEASURED BEFORE IT WAS GIVEN UP, not assumed impossible. T11 walked 48
+// seeds: 6 reached a pregnancy (12.5%, inside T9's predicted 8–15% of all careers) and ALL SIX were
+// blocked within two presses of the announcement by a knock, a tournament reveal or a retirement
+// offer. That is structural rather than unlucky – `ECONOMY.motherhood.playsOnWeeks` is BY DESIGN the
+// weeks she keeps playing, and the hazard's own window (24–35, announcements clustering at 30.2 by
+// T9's census) is the deep-tour years, so the eight weeks between the announcement and the pause are
+// guaranteed to be her busiest. A nine-press browser walk to the pause is a state the MODEL makes
+// rare; the pause itself is not rare at all, and is where the assertions live.
+// ⚠ THE WINDOW IS WIDE, WHICH IS WHY THIS COSTS ONE SEED-SEARCH RATHER THAN `belated`'s 473. A career
+// that reaches a pregnancy offers `ECONOMY.motherhood.termWeeks` − `playsOnWeeks` ≈ 23 candidate weeks
+// before the birth, and she enters nothing on any of them – so a tournament reveal, the clause that
+// killed eight of `belated`'s nine candidates, cannot happen at all inside the window. The scarce part
+// is reaching a pregnancy; picking a clean week inside one is nearly free.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated', 'engaged', 'expecting'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.

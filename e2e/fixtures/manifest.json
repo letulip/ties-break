@@ -541,6 +541,55 @@
           "n": 544163
         }
       }
+    },
+    {
+      "name": "expecting",
+      "file": "expecting.tsave",
+      "purpose": "Inside the maternity pause – the entries are shut with the engine's own sentence on the cards, and the household weeks still tick.",
+      "seed": "e2e-expecting-20",
+      "careerId": "c-e2e-expecting",
+      "slot": "auto:c-e2e-expecting:a",
+      "targetWeek": 892,
+      "schemaVersion": 85,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Jana",
+        "kidLastName": "Rutledge",
+        "country": "US"
+      },
+      "bytes": 82367,
+      "payloadBytes": 82323,
+      "sha256": "8d4533b5aa7e533e9559f0c31e7e2087e206f54aa18f437eb7c605e34f568ebc",
+      "seedsTried": 21,
+      "facts": {
+        "week": 892,
+        "seasonIndex": 17,
+        "ageYears": 30,
+        "fundsCents": 1524901949,
+        "kidRank": 74,
+        "rankedDomestic": false,
+        "rankedItf": false,
+        "rankedWta": true,
+        "domesticPoints": 0,
+        "itfPoints": 0,
+        "wtaPoints": 2862,
+        "seasonsPlayed": 17,
+        "resultRows": 2257,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": -1766561977,
+          "n": 712761
+        }
+      }
     }
   ]
 }
