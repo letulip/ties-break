@@ -6307,10 +6307,11 @@ export function pregnancyChanceAt(world: WorldState): number {
   return perWeek
 }
 
-/** ⭐⭐ THE GATE – ALL THREE, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
+/** ⭐⭐ THE GATE – ALL FOUR, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
  *  of its own for `weddingEligible`'s and `arrivalEligible`'s stated reason: a reader must see, in
  *  one place, that the whole of eligibility is decided before any stream exists. Pure, zero draws,
- *  no writes.
+ *  no writes. ⚠ THREE AT T2 AND FOUR SINCE T2½ PIECE 3 – clause 3 is the wave's SCOPE BRAKE and is
+ *  the one clause here that is meant to be lifted (by W5, by name, at its own bullet below).
  *
  *  1. ⭐ THE DOOR IS MARRIAGE – RULED 20.09 («это ок» on the architect's firm yes), so the episode
  *     must be ACTIVE **and** LATCHED. Asked through `latchedEpisode` (§12) and NEVER spelled a second
@@ -6320,13 +6321,29 @@ export function pregnancyChanceAt(world: WorldState): number {
  *     wedding needs 23+ (wave 7, RULED 11.09) plus a 52-week-deep episode, so the junior years are
  *     out by construction and no age clause is needed here to keep them out.
  *  2. NO PREGNANCY ALREADY – `world.pregnancy === null`. One at a time, which is the seat's own shape
- *     (T1: «one live pregnancy at a time, hung off the world»). ⚠ ON THIS TREE NOTHING EVER CLEARS
- *     IT, so this clause is also the once-per-career receipt by accident rather than by design – T4
- *     clears it at the birth and W5 is what decides whether a SECOND one may start. The brief's §4
- *     («no repeat pregnancy enabled») and §0 («this wave builds the machinery so re-entry is free»)
- *     are both satisfied by that ordering and neither is satisfied by a clause here, so none is
- *     written: a receipt invented now would be the thing W5 has to delete.
- *  3. ⚠ NO KNOCK RUNNING – `knockRunning` (`world/constants.ts`, re-exported beside `pendingKnock` in
+ *     (T1: «one live pregnancy at a time, hung off the world»). ⚠ ON THE T2 TREE NOTHING EVER CLEARED
+ *     IT, so this clause was ALSO the once-per-career receipt, by accident rather than by design.
+ *     T2's own note stopped there and concluded that no clause 3 was needed. ⚠⚠ THAT CONCLUSION WAS
+ *     WRONG AND IS CORRECTED BELOW rather than quietly rewritten, because the reasoning is worth
+ *     keeping: T2 wrote «a receipt invented now would be the thing W5 has to delete», and the answer
+ *     is that W5 does not DELETE the clause below, it REPLACES it – with the count-aware hazard the
+ *     design already asks for (§3: «the repeat hazard reads the age window AND the count of children,
+ *     so a third stays rare rather than routine»). The line W5 edits is the line that already reads
+ *     the count.
+ *  3. ⭐⭐⭐ AND NONE BORN – `world.children.length === 0`. ⚠⚠ THIS IS A **SCOPE BRAKE** AND NOT A
+ *     CLAIM ABOUT HER LIFE. It says «this WAVE ships at most one pregnancy per career», which is
+ *     exactly what §4 promises («no repeat pregnancy enabled – W5 re-enters the same machinery») and
+ *     exactly what T9's census measures («share of latched careers reaching a pregnancy by 35»). It
+ *     does NOT say a woman has one child: repeat pregnancy is CONFIRMED WANTED in the owner's own
+ *     words («после беременности может быть и повторная», 11.09), and **W5 is the task that lifts
+ *     this line** – by name, here, so nobody later reads a scope boundary as a design ruling.
+ *     ⚠ WITHOUT IT §4 IS FALSE THE MOMENT T6 CLEARS THE RECORD, and falsely in the quietest possible
+ *     way: `world.pregnancy` goes back to `null` at the return, the same marriage re-enters the
+ *     standing hazard, and repeat pregnancies happen at the FIRST pregnancy's rates – unbenched, and
+ *     under a census whose corridor was derived for a different quantity. ⚠ IT NEEDS NO NEW FIELD:
+ *     `children` already exists and T4 is its writer, so the receipt is a READ of state the wave is
+ *     already keeping rather than a second place for the same fact to live.
+ *  4. ⚠ NO KNOCK RUNNING – `knockRunning` (`world/constants.ts`, re-exported beside `pendingKnock` in
  *     `world/knock.ts`), which is the brief's «no fire while a knock layoff is live» asked through
  *     ONE spelling. The three-field read and the reasons both live at that definition; the short of
  *     it is that a knock is the family already rearranging this calendar around this body, and the
@@ -6337,6 +6354,7 @@ export function pregnancyChanceAt(world: WorldState): number {
 export function pregnancyEligible(world: WorldState): boolean {
   if (latchedEpisode(world) === null) return false
   if (world.pregnancy !== null) return false
+  if (world.children.length > 0) return false
   if (knockRunning(world)) return false
   return true
 }

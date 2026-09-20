@@ -2,6 +2,13 @@
 // docs/plans/life-wave-8-builder-2026-09.md §2 T2, constants in `ECONOMY.motherhood`, the research
 // docs/research/life-events-motherhood.md).
 //
+// ⭐ AMENDED 20.09 BY T2½ PIECE 3 – THE GATE IS FOUR CLAUSES, NOT THREE. `pregnancyEligible` gained
+// «and none born» (`world.children.length > 0`), a SCOPE BRAKE that makes §4's «no repeat pregnancy
+// enabled» true instead of merely true-by-accident: T2's third clause was the once-per-career receipt
+// only because nothing on that tree ever cleared `world.pregnancy`, and T6 clears it. W5 LIFTS the
+// line – replacing it with the count-aware hazard the design already asks for – and it is not a claim
+// about a woman having one child. §A.3 is its case and ARM 10 is its warrant.
+//
 // The shapes are tests/wave7-wedding.test.ts's, one wave on, and each section names its donor: §A is
 // the gate as that file's §A tests `weddingEligible`; §B is the count-keys net (wave 3's finding, the
 // wave-4 brief's §0.1 LAW for every zero-draw claim – a two-worlds alignment stays green under
@@ -40,6 +47,12 @@
 //          THE DECOUPLING LAW'S OWN ARM, and the one this file exists for
 //   ARM 9  `LIFE_BEAT_BLOCKING.expecting` flipped to false      → 6 RED: §C.3's own pin plus every
 //          case that answers through `pendingLifeBeat` – the block contract is load-bearing
+//   ARM 10 the once-per-career clause DELETED from              → 2 RED: §A.3's own case (a career
+//          `pregnancyEligible` (`world.children.length > 0`)       that has given birth re-enters the
+//          ⚠ ADDED BY T2½ PIECE 3 (20.09) AND THE ARM IS THE        hazard) and §B.1's new
+//          CLAUSE'S WHOLE WARRANT – measured, applied by a           born-child arm, which derived
+//          scripted edit with an `APPLIED=yes` receipt and           `w8-b7:life:pregnancy:855` for a
+//          reverted by md5 to `a6e98606…`, never `git checkout`      week that must take no draw
 
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's §B apparatus, verbatim and for its reason. Every
 // draw is the engine's own; the mock exists only so §B can COUNT the keys the gate reached.
@@ -166,7 +179,8 @@ function withKnock(world: WorldState, choice: 'rest' | 'push' | null, weeksLeft:
 }
 
 // =================================================================================================
-// A. THE GATE – three clauses, each one alone refuses; and the age curve, which is NOT one of them
+// A. THE GATE – FOUR clauses, each one alone refuses; and the age curve, which is NOT one of them
+// (three at T2; the fourth – «and none born» – is T2½ piece 3's scope brake, which W5 lifts)
 // =================================================================================================
 describe('wave 8 T2 A – `pregnancyEligible`, and the curve that is deliberately outside it', () => {
   it('⭐⭐⭐ THE DOOR IS MARRIAGE (RULED 20.09): an active but UNLATCHED episode never fires', () => {
@@ -193,6 +207,39 @@ describe('wave 8 T2 A – `pregnancyEligible`, and the curve that is deliberatel
       pausesWeek: world.week + 4, dueWeek: world.week + 35, support: 'warm', returnPlan: null,
     }
     expect(pregnancyEligible(world), 'she is already carrying one').toBe(false)
+  })
+
+  it('⭐⭐⭐ A CAREER THAT HAS GIVEN BIRTH AND COME BACK DOES NOT RE-ENTER THE HAZARD (v85 T2½ piece 3)', () => {
+    // ⚠⚠ THE SCOPE BRAKE, AND THIS CASE IS THE WHOLE OF ITS PROOF. T2 left the once-per-career
+    // property to the clause above – true only because nothing on THAT tree ever cleared
+    // `world.pregnancy`. The moment T6 resolves the record into `world.comeback`, the same marriage
+    // re-enters the standing hazard, and §4's «no repeat pregnancy enabled» becomes false in the
+    // quietest way there is: repeat pregnancies at the FIRST pregnancy's rates, unbenched, under a
+    // census corridor derived for a different quantity.
+    //
+    // ⚠ SO THE FIXTURE IS THE SHAPE T6 LEAVES BEHIND rather than a convenient one – the pregnancy
+    // CLEARED (which is what makes W5's repeat possible at all), one child on the record, the
+    // marriage still standing and her age still inside the window. Every other clause of the gate
+    // clears here; only the count refuses.
+    //
+    // ⚠⚠ IT IS A SCOPE BRAKE AND NOT A RULE ABOUT HER LIFE. Repeat pregnancy is CONFIRMED WANTED
+    // («после беременности может быть и повторная», 11.09) and W5 LIFTS this line – replacing it with
+    // the count-aware hazard the design asks for, not deleting a receipt.
+    const world = wedded('w8-once-per-career', 30)
+    expect(pregnancyEligible(world), 'the control: married, in the window, no child – she clears').toBe(true)
+    world.children.push({ bornWeek: world.week - 60, sex: 'girl' })
+    expect(world.pregnancy, 'the pregnancy was cleared at the return, as T6 leaves it').toBeNull()
+    expect(latchedEpisode(world), 'and the marriage is still standing – the door is open').not.toBeNull()
+    expect(pregnancyChanceAt(world), 'and her age is still inside the research window').toBeGreaterThan(0)
+    expect(pregnancyEligible(world), '⭐ and the wave still ships at most ONE pregnancy per career').toBe(false)
+    // ⚠ AND THE REFUSAL IS A GATE REFUSAL, so it takes ZERO DRAWS like every other one – never a
+    // draw-and-discard (invariant 2). §B counts the keys; this asserts the write.
+    rollPregnancy(world)
+    expect(world.pregnancy, 'nothing was written, and nothing was rolled to decide it').toBeNull()
+    // ⚠ TWO CHILDREN REFUSE FOR THE SAME REASON, which is worth one line: the clause reads a COUNT
+    // and not a boolean, so W5 edits the comparison rather than replacing the read.
+    world.children.push({ bornWeek: world.week - 8, sex: 'girl' })
+    expect(pregnancyEligible(world), 'and a second child refuses on the same read').toBe(false)
   })
 
   it('⭐ a RUNNING knock refuses, and an UNANSWERED one is a different question', () => {
@@ -258,13 +305,21 @@ describe('wave 8 T2 A – `pregnancyEligible`, and the curve that is deliberatel
 describe('wave 8 T2 B – the gate AND the chance both return before any stream exists', () => {
   const pregnancyKeys = () => rngKeys.filter((k) => k.includes(':life:pregnancy:'))
 
-  it('⚠⚠ an ineligible week derives NO pregnancy key – all four refusals, counted', () => {
+  it('⚠⚠ an ineligible week derives NO pregnancy key – all FIVE refusals, counted', () => {
+    // ⚠ RE-AIMED FROM FOUR TO FIVE BY T2½ PIECE 3 (the once-per-career scope brake), NOT WEAKENED:
+    // the claim is «every shape of refusal takes zero draws», so a new clause owes an arm here or the
+    // net has a hole exactly where the newest code is.
     for (const [name, world] of [
       ['unlatched', (() => { const w = wedded('w8-b1', 28); w.loveEpisodes[0].latchedWeek = null; return w })()],
       ['ended', (() => { const w = wedded('w8-b2', 28); endEpisode(w, w.week - 1); return w })()],
       ['already carrying', (() => {
         const w = wedded('w8-b3', 28)
         w.pregnancy = { episodeId: w.loveEpisodes[0].id, announcedWeek: w.week - 4, pausesWeek: w.week + 4, dueWeek: w.week + 35, support: null, returnPlan: null }
+        return w
+      })()],
+      ['a child already born', (() => {
+        const w = wedded('w8-b7', 30)
+        w.children.push({ bornWeek: w.week - 60, sex: 'girl' })
         return w
       })()],
       ['a knock running', withKnock(wedded('w8-b4', 28), 'rest', 2)],
