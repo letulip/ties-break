@@ -297,6 +297,24 @@ export interface PrologueTrace {
   readonly opens: readonly PrologueTraceOpen[]
 }
 
+/** ⭐⭐ THE AGE OF THE FIRST DAY ON A COURT, and it is a FIXED SCENE rather than a choice (owner,
+ *  20.09). The prologue's age-6 card – «She asks to go back to the court», continue label «Sign her
+ *  up» – is the scene, it carries no options, and every walked childhood passes through it. So the
+ *  first court day happened at six on every career that has a trace, and nothing in the trace has to
+ *  record it.
+ *
+ *  ⚠⚠ IT IS ONE CONSTANT IN ONE PLACE BECAUSE THE TWO READERS HAD DRIFTED. `src/prologue/cards.ts`
+ *  spells the card's own `age`; `engine/world/albumBook.ts` dates the album's `first-court` frame.
+ *  The album used to take the age of the FIRST `trace.picks` entry, and the first pick a walked
+ *  childhood writes is at **eight** (ages 6 and 7 are continue-only cards) – so the sunniest sheet
+ *  in the book printed «Age 8» over «First day on court», and the unit test hid it behind a
+ *  hand-built `picks: { 6: … }` that no engine path can produce. The two readers now cannot disagree.
+ *
+ *  ⚠ IT LIVES IN THE PROTOCOL, not in either reader, for `PrologueYear`'s own reason one type up:
+ *  the prologue is UI-side and the album is engine-side, and `shared/` is the only roof both are
+ *  allowed under (invariant 1). */
+export const FIRST_COURT_AGE = 6
+
 /** WHAT THE NINE CARDS CAME TO – the whole of what a prologue hands `createWorld`.
  *
  *  ⚠ TWO FIELDS AND NOT FIVE. The build she arrives with, the rung she arrives on and the style she

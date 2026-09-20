@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
-// RETYPED.** 32 occasions × 4 voices × 3 registers = 384 strings, plus the arc's 16 across
-// 8 cells: **400 authored strings in total.**
+// RETYPED.** 33 occasions × 4 voices × 3 registers = 396 strings, plus the arc's 16 across
+// 8 cells: **412 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 400 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 412 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -430,12 +430,41 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       },
     },
   },
+  // A33 · season-recovery
+  {
+    id: 'season-recovery',
+    kind: 'season-rank',
+    bands: ['teen', 'adult', 'lateCareer'],
+    gate: 'rank-better-than-the-previous-close-but-not-a-best',
+    voices: {
+      sunny: {
+        note: 'You came back up the table this year and you talked about the two weeks in the middle where it turned, not about the end of it.',
+        caption: 'She talked about the middle of the year.',
+        line: 'The turn was in the middle somewhere.',
+      },
+      fiery: {
+        note: 'Better than last year, and you said that was the least it could have been. You were pleased anyway and would not say so.',
+        caption: 'The least it could have been, she said.',
+        line: 'Pleased, and not admitting it.',
+      },
+      deep: {
+        note: 'You waited until the year was finished before you would call it a climb back, and then you said it in one sentence.',
+        caption: 'One sentence, once the year was finished.',
+        line: 'She waited for the year to end first.',
+      },
+      quiet: {
+        note: 'A year that went back up. You did not mention it at all, and next season\'s schedule arrived in the same week.',
+        caption: 'Nothing said. A new schedule.',
+        line: 'Straight back to the planning.',
+      },
+    },
+  },
   // A13 · season-held
   {
     id: 'season-held',
     kind: 'season-rank',
     bands: ['teen', 'adult', 'lateCareer'],
-    gate: null,
+    gate: 'rank-inside-a-narrow-band-of-the-previous-close',
     voices: {
       sunny: {
         note: 'A year of holding on. You said the middle of it had blurred and I know exactly what you mean.',
@@ -960,14 +989,14 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     gate: 'the-last-match',
     voices: {
       sunny: {
-        note: 'The last one. You thanked everybody by name and got through it, which I could not have done.',
-        caption: 'She thanked everybody by name.',
-        line: 'I could not have done it.',
+        note: 'The last one. You came off talking about the heat and the food and the long ride back, and not about the tennis at all.',
+        caption: 'She talked about everything except the tennis.',
+        line: 'She saved that part for later, I think.',
       },
       fiery: {
-        note: 'The last one. You said you weren\'t going to make a speech, and then made one.',
-        caption: 'No speech, she said.',
-        line: 'It was a good speech.',
+        note: 'The last one. You had a view on it before the bags were packed, and I got all of it on the phone that night.',
+        caption: 'A view on it before the bags were packed.',
+        line: 'She always did have the last word.',
       },
       deep: {
         note: 'The last one. You stayed on the court after everybody had gone, and I let you.',
@@ -981,9 +1010,9 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
       },
     },
   },
-  // A32 · retired
+  // A32 · career-ended
   {
-    id: 'retired',
+    id: 'career-ended',
     kind: 'closing',
     bands: ['adult', 'lateCareer'],
     gate: 'the-career-ended',

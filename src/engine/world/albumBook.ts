@@ -50,12 +50,17 @@ import type {
   AlbumTag,
   AlbumTicket,
   AlbumTierStep,
+  BuildLetterTerms,
+  CareerEnding,
+  CareerEndingType,
   Milestone,
   PrologueTrace,
   TravelHomeMood,
   TravelHomeScene,
 } from '../../shared/protocol'
+import { FIRST_COURT_AGE } from '../../shared/protocol'
 import { ENDINGS } from '../ending'
+import { KID_ID } from './constants'
 import { temperamentFor, type Temperament } from '../spirit'
 import { pickInt, rngFromSeed } from '../rng'
 import { kidAgeAt } from './age'
@@ -98,6 +103,11 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   'final-lost': 'serious',
   'season-first': 'norm',
   'season-best': 'happy',
+  /** ⭐ the climb back – a year better than the last one that is still short of her own best. It is
+   *  `happy` and not `norm` for the reason the gate exists at all (his 20.09 blocker): a recovery
+   *  is a thing that HAPPENED, and the face that reads «nothing moved» is the one the old
+   *  `season-held` routing put on it. */
+  'season-recovery': 'happy',
   'season-held': 'norm',
   'season-down': 'sad',
   /** RULED: the comeback, never the fall – «альбом помнит, как она вставала, а не как падала» */
@@ -118,7 +128,7 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   'years-at-the-top': 'happy',
   graduated: 'happy',
   farewell: 'serious',
-  retired: 'happy',
+  'career-ended': 'happy',
 }
 
 /** WHICH ONE-MOMENT PAINTING AN OCCASION HAS – the §4 ladder's TOP rung, as painting STEMS under
@@ -130,7 +140,10 @@ const EVENT_STEM: Partial<Record<string, string>> = {
   'first-court': 'jun-training',
   graduated: 'adult-graduated',
   farewell: 'lateCareer-farewell',
-  retired: 'lateCareer-retired',
+  /** ⚠ THE OCCASION WAS RENAMED AND THE PAINTING WAS NOT (20.09). `career-ended` is the corpus id;
+   *  `fem-euro-brunnet-lateCareer-retired.webp` is a file on disk and renaming art to match a word
+   *  would be a change to a thing his own eyes have passed. */
+  'career-ended': 'lateCareer-retired',
 }
 
 /** The paintings' home – ONE spelling in this module, swept against the files on disk by
@@ -175,8 +188,8 @@ export const ALBUM_CHAPTER_TITLES: Record<AlbumBand, string> = {
 }
 
 /** ⚠ DRAFT – the image alts, one per KIND of picture rather than per occasion: an alt describes
- *  what is DRAWN, and thirty-two rewordings of «her portrait» would be thirty-two more strings for
- *  his pass with nothing in them. */
+ *  what is DRAWN, and one rewording of «her portrait» per occasion would be thirty-three more
+ *  strings for his pass with nothing in them. */
 const ALT_DRAFT = {
   portrait: 'Her, that week',
   travel: 'The journey home',
@@ -209,7 +222,7 @@ const PATCH_POOL: readonly string[] = [
 ] as const
 
 // =================================================================================================
-// §3 CANDIDATES – the corpus's 32 occasions, resolved against ledgers the save never prunes
+// §3 CANDIDATES – the corpus's 33 occasions, resolved against ledgers the save never prunes
 // =================================================================================================
 //
 // The registry is `ALBUM_CORPUS` (generated from the owner's document): each occasion declares its
@@ -301,6 +314,39 @@ function finalCandidates(world: WorldState): AlbumCandidate[] {
   return out
 }
 
+/** ⚠⚠ THE BAND OF STABILITY, AND IT IS RELATIVE BECAUSE A RANKING IS – his 20.09 blocker 4. The
+ *  gate that routes a season to `season-held` decides whether a page says «A year of holding on»,
+ *  so the band is the width of «nothing really moved» and nothing wider. It is a RATIO of the
+ *  previous close, not a count of places: twenty places at #400 is noise and two places at #10 is a
+ *  season – a fixed number would call the first a recovery and the second a flat year, which is the
+ *  same defect in both directions.
+ *
+ *  ⚠ A FLOOR OF ONE PLACE keeps the top of the ladder honest: at #10 the ratio is half a place, and
+ *  #10 → #11 is a year of holding on by anybody's reading.
+ *
+ *  ⚠ THE WIDTH ITSELF IS A DRAFT AND IS FLAGGED AS ONE. It is the one number in this wave that was
+ *  chosen rather than measured (invariant 5), because the thing it tunes is a SENTENCE and not a
+ *  balance curve – there is no bench whose output would settle it. A twentieth reads as «the same
+ *  year» on every rung of the ladder and it is one edit to move. */
+const SEASON_HELD_BAND = 0.05
+
+function heldBandOf(previousRank: number): number {
+  return Math.max(1, Math.round(previousRank * SEASON_HELD_BAND))
+}
+
+/** ⭐⭐ FOUR SEASONS, NOT THREE – his 20.09 blocker 4, and the defect it repairs is the routing and
+ *  not the writing: «season-held does not mean she held on». Anything that set no career best and
+ *  was no worse than last year used to land on `A13`, so a real climb – #80 to #40 under an old
+ *  best of #20 – printed as a year of standing still.
+ *
+ *    `season-first`     the first close there was
+ *    `season-best`      a new career best, whatever last year did
+ *    `season-recovery`  better than last year, short of her own best
+ *    `season-held`      the same rank, or inside the band above
+ *    `season-down`      worse than last year, past the band
+ *
+ *  ⚠ THE ORDER OF THE ARMS IS THE CONTRACT. A new best is a new best even when it is one place: the
+ *  best arm is asked first, so a career best inside the band prints `A12` rather than `A13`. */
 function seasonCandidates(world: WorldState): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
   const closes = world.milestones
@@ -310,14 +356,16 @@ function seasonCandidates(world: WorldState): AlbumCandidate[] {
   let prevRank: number | null = null
   for (const [i, m] of closes.entries()) {
     const rank = m.rank!
-    if (i === 0) {
+    if (i === 0 || prevRank === null) {
       out.push(candidate(world, 'season-first', m.week, 44))
     } else if (rank < bestRank) {
       out.push(candidate(world, 'season-best', m.week, 40))
-    } else if (prevRank !== null && rank > prevRank) {
-      out.push(candidate(world, 'season-down', m.week, 20))
-    } else {
+    } else if (Math.abs(rank - prevRank) <= heldBandOf(prevRank)) {
       out.push(candidate(world, 'season-held', m.week, 12))
+    } else if (rank < prevRank) {
+      out.push(candidate(world, 'season-recovery', m.week, 36))
+    } else {
+      out.push(candidate(world, 'season-down', m.week, 20))
     }
     bestRank = Math.min(bestRank, rank)
     prevRank = rank
@@ -363,19 +411,57 @@ function onceCandidates(world: WorldState): AlbumCandidate[] {
   return out
 }
 
+/** ⭐⭐ THE WEEK A BUILD WAS DELIVERED – the `build` LETTER's own week, and his own reason for
+ *  reading it there (20.09): «Это наиболее DRY-решение: письмо и альбом будут ссылаться на один
+ *  факт доставки.»
+ *
+ *  `deliverAssets` (engine/world/shop.ts) raises one `build` letter per delivery and `raiseBuildLetter`
+ *  (engine/offers.ts, round 43 #11) dates it at the week the thing ARRIVED, keyed on the rung and the
+ *  week the order was placed. It is never pruned – `pruneEntryLetters` touches `entry` and `tour`
+ *  letters only – so it is the one dated, durable record that a build finished.
+ *
+ *  ⚠ THE EARLIEST LETTER FOR THE RUNG, because the album writes each asset's FIRST (the corpus's
+ *  «five firsts») and a re-bought rung raises a second letter under its own order week.
+ *
+ *  ⚠ NULL IS A REAL ANSWER AND IS THE OTHER HALF OF THE FIX: a career that ORDERED the courts and
+ *  never saw them finished has no letter, and gets no page. «The courts went in» is a sentence about
+ *  a delivery, and the delivery is the only thing that licenses it. */
+function deliveredWeek(world: WorldState, itemId: string): number | null {
+  let earliest: number | null = null
+  for (const offer of world.offers ?? []) {
+    if (offer.kind !== 'build') continue
+    if ((offer.terms as BuildLetterTerms).itemId !== itemId) continue
+    if (earliest === null || offer.week < earliest) earliest = offer.week
+  }
+  return earliest
+}
+
 function assetCandidates(world: WorldState): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
   const houses = world.assets.filter((a) => a.id.startsWith('house-')).sort((a, b) => a.boughtWeek - b.boughtWeek)
   if (houses[0]) out.push(candidate(world, 'first-house', houses[0].boughtWeek, 58))
-  const byId: Array<[string, string, number]> = [
+  // ⚠ THE TWO LISTS ARE THE CATALOGUE'S OWN SPLIT AND NOT A PREFERENCE. `buyAsset` writes
+  // `readyWeek` in exactly one branch – `item.buildWeeks` – so a rung with no build time is owned
+  // the week it is paid for and `boughtWeek` IS the week it happened. The house, the brand and the
+  // field carry no build time (economy.ts's shelf); the courts and the clubhouse do.
+  const bought: Array<[string, string, number]> = [
     ['merch-brand', 'brand', 57],
     ['academy-land', 'academy-land', 56],
+  ]
+  for (const [assetId, id, priority] of bought) {
+    const row = world.assets.find((a) => a.id === assetId)
+    if (row) out.push(candidate(world, id, row.boughtWeek, priority))
+  }
+  // ⚠⚠ HIS 20.09 BLOCKER 2: «built» WAS PRINTED ON THE WEEK IT WAS ORDERED. `A25` says «The courts
+  // went in» and `A26` says «The building is up», and both were dated off `boughtWeek` – the week
+  // the money left, with the build still years away. They are dated off the delivery now.
+  const built: Array<[string, string, number]> = [
     ['academy-courts', 'academy-courts', 55],
     ['academy-building', 'academy-built', 54],
   ]
-  for (const [assetId, id, priority] of byId) {
-    const row = world.assets.find((a) => a.id === assetId)
-    if (row) out.push(candidate(world, id, row.boughtWeek, priority))
+  for (const [assetId, id, priority] of built) {
+    const week = deliveredWeek(world, assetId)
+    if (week !== null) out.push(candidate(world, id, week, priority))
   }
   return out
 }
@@ -418,21 +504,135 @@ function rareCandidates(world: WorldState): AlbumCandidate[] {
   return out
 }
 
-/** THE CLOSERS – ruled 19.09 and checked by his own eyes on the paintings: `graduated` where a
- *  college happened (the FULL course – `finishedTheCourse` is the shared predicate, so a leaver
- *  gets no graduation frame on any surface); the final chapter's last-match frame is `farewell`;
- *  the book's very last frame is `retired`. The farewell pair exists only once the career has
- *  ENDED – a live album (the Home memory card's door) simply ends at the current chapter. */
+// -------------------------------------------------------------------------------------------------
+// §3b THE CLOSING – three families, one last page, and a farewell only where a last match was played
+// -------------------------------------------------------------------------------------------------
+//
+// ⚠⚠ HIS 20.09 BLOCKER 1, AND IT IS THIS WAVE's WHOLE DEFECT CLASS IN ONE PLACE: «хорошие строки
+// могут описывать событие, которого в карьере не было». Both closing cards used to fire on ANY
+// `world.ending`, and the union has eight members – so a BANKRUPTCY, a forced stop or a departure
+// for college was given a farewell speech with thanks, an empty court and a handing over of the
+// book. The contract below is the ruling, in three parts.
+
+/** ⭐⭐ THE THREE FAMILIES A CAREER CAN END IN (his 20.09 ruling), and the closing is extended
+ *  through this table rather than through a chain of `if`s.
+ *
+ *    `decision`      she chose to stop – `stopped`
+ *    `forced`        it was taken out of her hands – `bankruptcy`, `injury`
+ *    `left-the-tour` she left the professional career – `natural`, `plateau`, `peak`, `fall`
+ *
+ *  ⚠⚠ A TOTAL `Record` OVER THE UNION, and that totality is the point of writing it as a table: a
+ *  ninth ending goes RED here until somebody decides which of the three it is, which is exactly the
+ *  standing `ENDING_BLURB` / `ENDING_TITLE` / `EMOTION_BY_ENDING` already have (protocol/career.ts's
+ *  own note: «a new ending cannot ship without its copy, enforced by the compiler»).
+ *
+ *  ⚠ `college` SITS IN THE TABLE AND IS ALMOST NEVER READ THROUGH IT. `closingEndingOf` below
+ *  refuses a college latch while it resumes – his sentence: «college is not a final page at all
+ *  while `resumesWeek` exists – she is coming back». Only a college ending that never resumes
+ *  (`resumesWeek === null`, which no engine path writes today) reaches this row, and a girl who
+ *  left for a degree and did not come back left the professional career. */
+export type AlbumClosingFamily = 'decision' | 'forced' | 'left-the-tour'
+
+export const ALBUM_CLOSING_FAMILY: Record<CareerEndingType, AlbumClosingFamily> = {
+  stopped: 'decision',
+  bankruptcy: 'forced',
+  injury: 'forced',
+  natural: 'left-the-tour',
+  plateau: 'left-the-tour',
+  peak: 'left-the-tour',
+  fall: 'left-the-tour',
+  college: 'left-the-tour',
+}
+
+/** WHICH OCCASION EACH FAMILY's LAST PAGE SPEAKS IN. All three take `A32` today and that is HIS
+ *  ruling, not a shortcut: «сами строки A32 для этого уже прекрасно подходят» – the last page is
+ *  the parent handing the book over, which is true of a career that stopped, one that was stopped
+ *  and one that ran its course. The id was renamed `retired` → `career-ended` in the same breath,
+ *  because `retired` is one of the three stories and the page is all of them.
+ *
+ *  ⚠ THIS IS THE EXTENSION POINT. When he writes a family its own sentences, the corpus gains an
+ *  occasion and this table gains one edit – no new branch anywhere in the selector. */
+const CLOSING_OCCASION: Record<AlbumClosingFamily, string> = {
+  decision: 'career-ended',
+  forced: 'career-ended',
+  'left-the-tour': 'career-ended',
+}
+
+/** The ending the album may CLOSE on, or null while the story still has a next week.
+ *
+ *  ⚠ A COLLEGE LATCH IS NOT AN ENDING FOR THIS PURPOSE. `resumesWeek` points one year out
+ *  (protocol/career.ts: «`college` is the only one that resumes»); the album is shown, every
+ *  mutating command refuses, and then she comes back. A last page there would close a book that is
+ *  still being written. */
+function closingEndingOf(world: WorldState): CareerEnding | null {
+  const ending = world.ending
+  if (!ending) return null
+  if (ending.type === 'college' && ending.resumesWeek !== null) return null
+  return ending
+}
+
+/** ⭐⭐ THE LAST WEEK THE SAVE CAN PROVE SHE WAS ON A COURT – the honest source for `A31`, asked for
+ *  and answered rather than assumed (his 20.09 instruction).
+ *
+ *  ⚠⚠ AND THE SHORT ANSWER IS THAT THE SAVE STILL CANNOT DATE THE LAST MATCH EXACTLY. The previous
+ *  builder's sentence stands and was re-checked against the tree: `world.results` prunes at 52 weeks
+ *  AND is award-only (`world.ts` writes a kid row only when `points > 0`, so a scoreless first-round
+ *  exit leaves none), the news feed caps at 400 rows, `seasonEntries` / `internationalEntryWeeks` /
+ *  `proEntryWeeks` are pruned to the current season, and `seasonHistory` keeps wins and losses per
+ *  SEASON with no week on them. `world/brand.ts` reached the same floor for the same reason and
+ *  wrote it down: «`trophiesByTier[tier].titles/finals` is the only dated, per-tier, never-pruned
+ *  appearance ledger in the game».
+ *
+ *  ⭐ SO THIS GATES ON WHAT IT CAN PROVE, which is the instruction's own fallback. Every week below
+ *  is a week she demonstrably played a match:
+ *    · `trophiesByTier[t].titles/finals` – never pruned, dated, one per appearance in a final;
+ *    · `world.results` rows for the kid with points on them – the last 52 weeks, and a mandatory
+ *      MISS is excluded by the same test (its row is a deliberate scoreless one);
+ *    · `title` / `final` milestones – dated firsts, and the ledger hand-built probe worlds carry.
+ *  The latest of them, never later than the ending. A career the save can prove nothing about gets
+ *  no farewell page at all, which is the failure this function is allowed to have: a missing true
+ *  page costs a sheet, an invented one costs the book its credibility. */
+function lastProvenCourtWeek(world: WorldState, by: number): number | null {
+  let last: number | null = null
+  const see = (week: number): void => {
+    if (week <= by && (last === null || week > last)) last = week
+  }
+  for (const tier of TIER_LADDER) {
+    const cabinet = world.trophiesByTier?.[tier]
+    if (!cabinet) continue
+    for (const week of cabinet.titles) see(week)
+    for (const week of cabinet.finals) see(week)
+  }
+  for (const row of world.results) {
+    if (row.playerId === KID_ID && row.points > 0) see(row.week)
+  }
+  for (const m of world.milestones) {
+    if (m.type === 'title' || m.type === 'final') see(m.week)
+  }
+  return last
+}
+
+/** THE CLOSERS – ruled 19.09, re-ruled 20.09, and checked by his own eyes on the paintings:
+ *  `graduated` where a college happened (the FULL course – `finishedTheCourse` is the shared
+ *  predicate, so a leaver gets no graduation frame on any surface); `farewell` where a last match
+ *  can be proved, ON ITS OWN WEEK and not on the ending's; and the book's last frame, `career-ended`,
+ *  in whichever family the ending falls.
+ *
+ *  ⚠ THE TWO CLOSERS NO LONGER SHARE A WEEK, which is the visible half of blocker 1: the farewell
+ *  is the week she last played and the last page is the week the story stopped. They are the same
+ *  week only where she played to the very end. */
 function closerCandidates(world: WorldState): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
   const college = world.college
   if (college?.doneWeek != null && finishedTheCourse(college.years.length, ENDINGS.collegeYears)) {
     out.push(candidate(world, 'graduated', college.doneWeek, 1000, { closer: true }))
   }
-  if (world.ending) {
-    out.push(candidate(world, 'farewell', world.ending.week, 1000, { closer: true }))
-    out.push(candidate(world, 'retired', world.ending.week, 1000, { closer: true }))
-  }
+  const ending = closingEndingOf(world)
+  if (!ending) return out
+  const lastMatch = lastProvenCourtWeek(world, ending.week)
+  if (lastMatch !== null) out.push(candidate(world, 'farewell', lastMatch, 1000, { closer: true }))
+  const family = ALBUM_CLOSING_FAMILY[ending.type]
+  out.push(candidate(world, CLOSING_OCCASION[family], ending.week, 1000, { closer: true }))
   return out
 }
 
@@ -441,11 +641,22 @@ function closerCandidates(world: WorldState): AlbumCandidate[] {
  *  the most specific occasion winning: the cup outranks the win outranks the plain first weekend. */
 function prologueCandidates(trace: PrologueTrace): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
-  const pickAges = Object.keys(trace.picks)
-    .map(Number)
-    .sort((a, b) => a - b)
-  if (pickAges.length > 0) {
-    out.push({ week: null, ageYears: pickAges[0], occasion: occasionOf('first-court'), priority: 80 })
+  // ⚠⚠ HIS 20.09 BLOCKER 3 – THE FIRST DAY ON COURT IS A FIXED SCENE AND CARRIES A FIXED AGE.
+  // This used to take the age of the first `trace.picks` entry, and a walked childhood's first pick
+  // is at EIGHT: ages 6 and 7 are continue-only cards and write no pick at all. So the three sunny
+  // strings his mockups anchored the whole corpus on printed «Age 8» over «First day on court», and
+  // `tests/albumBook.test.ts` hid it behind a hand-built `picks: { 6: … }` that no engine path can
+  // produce. `FIRST_COURT_AGE` (shared/protocol/profile.ts) is the one constant the prologue's own
+  // card table and this line now share.
+  //
+  // ⚠ THE GATE IS THE WALK, NOT A PICK. The age-6 card has no options, so every childhood that was
+  // walked went through it – the trace holding ANY of the three things a walk writes is the proof
+  // that it was walked. An entirely empty trace (a crafted edge; no engine path writes one) proves
+  // nothing and earns no page, which is the rule this chapter already had.
+  const walked =
+    Object.keys(trace.picks).length > 0 || Object.keys(trace.entries).length > 0 || trace.opens.length > 0
+  if (walked) {
+    out.push({ week: null, ageYears: FIRST_COURT_AGE, occasion: occasionOf('first-court'), priority: 80 })
   }
   const firstOpen = trace.opens[0]
   const firstWin = trace.opens.find((o) => o.wins > 0)
@@ -468,22 +679,91 @@ function prologueCandidates(trace: PrologueTrace): AlbumCandidate[] {
 // §4 SELECTION – representatives per chapter: 1–3 sheets by density, no kind over a third
 // =================================================================================================
 
-/** A chapter's frame budget: three sheets of the splits below – the ruled «1-3 страницы на каждую
- *  главу», so the whole book tops out around fifteen sheets. */
-const MAX_CHAPTER_FRAMES = 8
+/** ⭐⭐ THE ROTATION – his 20.09 re-ruling, and it supersedes BOTH earlier readings («дальше B» and
+ *  the openers' own alternation): «я бы хотел, чтобы в главах были все листы, а порядок уже значения
+ *  не имеет. Хочется, чтобы одинаковых подряд просто не было и всё… Или сразу как-то задать набор
+ *  непересекающихся и недублирующихся подряд страниц, а потом его по факту заполнять, пропуская
+ *  невостребованные.»
+ *
+ *  So the book runs one cursor over these three and takes the next layout for every sheet it
+ *  actually builds. Two sheets in a row can never share a layout (the cursor always advances, and
+ *  three is the period), a three-sheet chapter shows all three, and nothing is reserved for a page
+ *  the career did not earn – the rotation is filled by fact, which is his second sentence exactly. */
+const LAYOUT_ROTATION: readonly AlbumLayout[] = ['A', 'B', 'C']
 
-/** How a chapter's n frames sit on its 1–3 sheets. The opener (layout A or C) draws two frames at
- *  most; the ordinary `B` sheet draws up to three. No sheet is ever empty by construction – his
- *  «пустых листов не бывает». */
-const SHEET_SPLITS: Record<number, readonly number[]> = {
-  1: [1],
-  2: [2],
-  3: [1, 2],
-  4: [2, 2],
-  5: [2, 3],
-  6: [2, 2, 2],
-  7: [2, 2, 3],
-  8: [2, 3, 3],
+/** How many frames each layout can hold – the mockups' own arrangements (spec §3): A is a big
+ *  polaroid plus a second one overlapping it, B is two across the top and one down the right edge,
+ *  C is a hero on two thirds of the sheet plus a smaller frame under the note. */
+const FRAME_CAPACITY: Record<AlbumLayout, number> = { A: 2, B: 3, C: 2 }
+
+/** ⚠ ONLY A AND C CARRY THE CHAPTER's NAME. `AlbumLayoutA.vue` and `AlbumLayoutC.vue` draw
+ *  `AlbumSheetTitle`; `AlbumLayoutB.vue` does not – a sheet of three frames and a boarding pass has
+ *  no room for a heading. So the cursor SKIPS B at a chapter's first sheet: a chapter opening on B
+ *  would be a chapter with no name on it, and the chapter rail's door would land the reader on a
+ *  page that does not say where they are. Every other sheet takes whatever the rotation offers. */
+function opensAChapter(layout: AlbumLayout): boolean {
+  return layout !== 'B'
+}
+
+/** The ruled «1-3 страницы на каждую главу». */
+const MAX_CHAPTER_SHEETS = 3
+
+/** A chapter's frame budget – DERIVED from the rotation rather than typed, because it is now a
+ *  consequence of it: any three consecutive layouts are a permutation of A, B and C, so three
+ *  sheets hold 2 + 3 + 2 wherever the cursor happens to stand.
+ *
+ *  ⚠ IT WAS 8 UNTIL 20.09 and the ceiling fell by one with the rotation: a chapter used to be
+ *  opener-B-B (2 + 3 + 3) and can no longer hold two B sheets, because two B sheets in one chapter
+ *  of three means two of them adjacent. Reported to him as a consequence of the ruling. */
+const MAX_CHAPTER_FRAMES = LAYOUT_ROTATION.reduce((n, layout) => n + FRAME_CAPACITY[layout], 0)
+
+/** How a chapter's n frames sit on the sheets it earned: one each first – his «пустых листов не
+ *  бывает», guaranteed by construction and not by a table – then levelled up, the emptiest sheet
+ *  first and the later of two equals winning, until they are all placed or every sheet is full.
+ *
+ *  ⚠ THE CAPS ARE THE LAYOUTS', WHICH IS WHY THIS IS AN ALGORITHM AND NOT THE OLD `SHEET_SPLITS`
+ *  TABLE. The old table was keyed on the sheet's POSITION (the opener draws two, the rest three),
+ *  which was only true while position decided layout. Under the rotation it does not. */
+function spreadFrames(frames: number, caps: readonly number[]): number[] {
+  const take = caps.map(() => 0)
+  let left = frames
+  for (let i = 0; i < take.length && left > 0; i++) {
+    take[i] = 1
+    left -= 1
+  }
+  while (left > 0) {
+    let at = -1
+    for (let i = 0; i < take.length; i++) {
+      if (take[i] >= caps[i]) continue
+      if (at === -1 || take[i] <= take[at]) at = i
+    }
+    if (at === -1) break
+    take[at] += 1
+    left -= 1
+  }
+  return take
+}
+
+/** The sheets one chapter earns: the FEWEST of the rotation's next layouts that can hold its
+ *  frames, and how many frames sit on each. Returns the cursor the next chapter starts from. */
+function chapterSheetPlan(
+  cursor: number,
+  frames: number,
+): { layouts: AlbumLayout[]; takes: number[]; next: number } {
+  let at = cursor
+  if (!opensAChapter(LAYOUT_ROTATION[at % LAYOUT_ROTATION.length])) at += 1
+  const offered: AlbumLayout[] = []
+  for (let i = 0; i < MAX_CHAPTER_SHEETS; i++) offered.push(LAYOUT_ROTATION[(at + i) % LAYOUT_ROTATION.length])
+  let count = MAX_CHAPTER_SHEETS
+  for (let k = 1; k <= MAX_CHAPTER_SHEETS; k++) {
+    const room = offered.slice(0, k).reduce((n, layout) => n + FRAME_CAPACITY[layout], 0)
+    if (room >= frames) {
+      count = k
+      break
+    }
+  }
+  const layouts = offered.slice(0, count)
+  return { layouts, takes: spreadFrames(frames, layouts.map((l) => FRAME_CAPACITY[l])), next: at + count }
 }
 
 /** The §5 thirds rule over the chapter's selection: with n frames picked, no corpus KIND may hold
@@ -498,8 +778,9 @@ function groupCapOf(n: number): number {
 
 function selectRepresentatives(candidates: AlbumCandidate[], budget: number): AlbumCandidate[] {
   // one frame per week: a title and its cheque in one week are one moment, and the higher priority
-  // names it. Closers keep their own weeks even where they collide – farewell and retired share the
-  // ending week BY DESIGN (two scenes, two places), and a prologue moment has no week to collide on.
+  // names it. Closers keep their own weeks even where they collide – the farewell and the last page
+  // are two scenes in two places and may fall in one week on a career that played to the very end –
+  // and a prologue moment has no week to collide on.
   const byWeek = new Map<number, AlbumCandidate>()
   const keep: AlbumCandidate[] = []
   for (const c of candidates) {
@@ -542,10 +823,12 @@ function selectRepresentatives(candidates: AlbumCandidate[], budget: number): Al
   return picked.sort((a, b) => (a.week ?? -1) - (b.week ?? -1) || a.ageYears - b.ageYears || closerRank(a) - closerRank(b))
 }
 
-/** farewell is the last match and retired is the book's very last frame – ruled – so the two
- *  closers that share the ending week order themselves; everything else ties at zero. */
+/** farewell is the last match and `career-ended` is the book's very last frame – ruled – so two
+ *  closers that land on the SAME week (a career that played to the very end) order themselves;
+ *  everything else ties at zero. Since 20.09 they usually carry different weeks and the
+ *  chronological sort does the work on its own. */
 function closerRank(c: AlbumCandidate): number {
-  if (c.occasion.id === 'retired') return 2
+  if (c.occasion.id === 'career-ended') return 2
   if (c.occasion.id === 'farewell') return 1
   return 0
 }
@@ -704,16 +987,6 @@ function tagOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): Album
 // §7 SHEETS AND CHAPTERS
 // =================================================================================================
 
-/** ⚠ THE ALTERNATION, AS BUILT, AND THE READING DOCUMENTED BECAUSE THE SPEC's TWO CLAUSES CANNOT
- *  BOTH BIND THE SAME SEQUENCE. §3 says the opener is A or C and «последующие – обычные (раскладка
- *  B)»; it also says «Раскладки чередуются, повторение подряд запрещено». A three-sheet chapter is
- *  opener-B-B under the first clause, which the second read over ALL sheets would forbid – so the
- *  no-repeat rule is enforced where it can bind: over the OPENERS. Consecutive chapters alternate
- *  A and C, and the B run inside a chapter is what «обычные» means. Flagged in the build report. */
-function openerLayoutOf(chapterPosition: number): AlbumLayout {
-  return chapterPosition % 2 === 0 ? 'A' : 'C'
-}
-
 function noteOf(c: AlbumCandidate, hand: AlbumHand): AlbumNote {
   return {
     text: hand.note,
@@ -728,9 +1001,14 @@ interface BuiltChapter {
   candidates: AlbumCandidate[]
 }
 
-function sheetsOf(world: WorldState, chapter: BuiltChapter, chapterIndex: number, voice: Temperament): AlbumSheetModel[] {
+function sheetsOf(
+  world: WorldState,
+  chapter: BuiltChapter,
+  chapterIndex: number,
+  voice: Temperament,
+  plan: { layouts: AlbumLayout[]; takes: number[] },
+): AlbumSheetModel[] {
   const { band, candidates } = chapter
-  const split = SHEET_SPLITS[Math.min(candidates.length, MAX_CHAPTER_FRAMES)]
   const title = ALBUM_CHAPTER_TITLES[band]
   const ages = candidates.map((c) => c.ageYears)
   const ageFrom = Math.min(...ages)
@@ -740,17 +1018,17 @@ function sheetsOf(world: WorldState, chapter: BuiltChapter, chapterIndex: number
   const patch = patchFor(world.seed)
   const sheets: AlbumSheetModel[] = []
   let at = 0
-  for (const [index, take] of split.entries()) {
+  for (const [index, take] of plan.takes.entries()) {
     const own = candidates.slice(at, at + take)
     at += take
-    const layout: AlbumLayout = index === 0 ? openerLayoutOf(chapterIndex - 1) : 'B'
+    const layout = plan.layouts[index]
     const id = `${band}-${index + 1}`
     const flavour = flavourFor(world.seed, id)
     const lead = own[0]
     // the sheet speaks for its lead frame – EXCEPT the closing sheet, whose words are A32's own
     // (the corpus's §5: «this is what the closing sheet says»): farewell may lead it chronologically,
     // and the book's last word is still the handing over, not the last match.
-    const speaker = own.find((c) => c.occasion.id === 'retired') ?? lead
+    const speaker = own.find((c) => c.occasion.id === 'career-ended') ?? lead
     const hand = speaker.occasion.voices[voice]
     // the sheet's own tournament fact, if it holds one – an honest sheet carries no invented trip.
     // A fact WITH a finish (a title, a final) makes the better pass than a cheque or an entry.
@@ -831,8 +1109,14 @@ export function assembleAlbum(world: WorldState): AlbumBook {
 
   const sheets: AlbumSheetModel[] = []
   const chapterRows: AlbumChapter[] = []
+  // the rotation's cursor runs over the WHOLE book, not over a chapter: that is what keeps two
+  // sheets either side of a chapter break from sharing a layout (his «одинаковых подряд просто не
+  // было»), and it is the one piece of state the assembly carries between chapters.
+  let cursor = 0
   for (const [i, chapter] of chapters.entries()) {
-    const own = sheetsOf(world, chapter, i + 1, voice)
+    const plan = chapterSheetPlan(cursor, chapter.candidates.length)
+    cursor = plan.next
+    const own = sheetsOf(world, chapter, i + 1, voice, plan)
     chapterRows.push({
       index: i + 1,
       title: ALBUM_CHAPTER_TITLES[chapter.band],
@@ -843,7 +1127,7 @@ export function assembleAlbum(world: WorldState): AlbumBook {
     sheets.push(...own)
   }
 
-  // ⭐ THE ARC – on the closing sheet, DISPLACING the retired sheet's note and line when the lean
+  // ⭐ THE ARC – on the closing sheet, DISPLACING the `career-ended` sheet's note and line when the lean
   // moved (the corpus's §5: «this document writes nothing for the never-drifted case. That is not
   // an omission; it is the ruling» – the other eight careers keep A32's own words). The direction
   // is the OPEN axis's lean, the engine's own sign: positive is the armable direction – toward the
@@ -877,9 +1161,17 @@ export function assembleAlbum(world: WorldState): AlbumBook {
   // regulation axis – «была резкой, стала ровной» and its opposite – and corpus sentences are the
   // owner's, never an agent's (invariant 4). Until he writes them the honest behaviour is the one
   // below: say nothing rather than tell a fiery girl's parent she opened up. Carried to spec §9.
+  //
+  // ⚠⚠ AND IT NEEDS THE CLOSING SHEET TO EXIST, NOT MERELY `world.ending` (his 20.09 blocker 1, the
+  // same defect one page along). The condition used to be `world.ending`, which is set on a COLLEGE
+  // latch too – so a girl who had gone away for a year and was coming back had the last page of her
+  // parent's album written over an ordinary sheet in the middle of her career. The arc displaces
+  // `A32`'s words, so it fires only where `A32` was actually placed: the `career-ended` frame sorts
+  // last in the last chapter, which is what makes the final sheet the one to displace.
+  const closedOn = chapters.some((ch) => ch.candidates.some((c) => c.occasion.id === 'career-ended'))
   const lean = world.wallsLean ?? { open: 0, reg: 0 }
   const direction: AlbumArcDirection | null = lean.open === 0 ? null : lean.open > 0 ? 'open' : 'reserved'
-  if (world.ending && direction && sheets.length > 0) {
+  if (closedOn && direction && sheets.length > 0) {
     const closing = sheets[sheets.length - 1]
     const arc = ALBUM_ARC[direction][voice]
     sheets[sheets.length - 1] = {

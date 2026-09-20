@@ -59,6 +59,7 @@ export type {
 } from './protocol/profile'
 export {
   DEFAULT_PROFILE,
+  FIRST_COURT_AGE,
   SESSION_KINDS,
   WEEK_PLAN_PRESETS,
   PROFILE_NAME_MAX_CHARS,

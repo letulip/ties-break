@@ -57,8 +57,8 @@ and it is his).
 **Two of these rules are mechanical, so the pin asserts them rather than a reviewer noticing:**
 
 1. ⭐⭐ **Every note addresses her and no caption or loose line does.** That is the register
-   boundary in one sentence, and it is the only one a machine can check: 136 notes carry «you» or
-   «your», and the other 264 strings carry neither. It caught a real slip in the first draft –
+   boundary in one sentence, and it is the only one a machine can check: 140 notes carry «you» or
+   «your», and the other 272 strings carry neither. It caught a real slip in the first draft –
    `A7`'s `fiery` line read «They ask when you lose», an impersonal «you» that on a margin scrap
    reads as the parent talking to her.
 2. **A caption is short, and shorter than its own note** – at most 60 characters, and it is the
@@ -90,7 +90,7 @@ therefore what there was to notice. The four are the engine's own 2×2 (`kidLife
 facts, four different things noticed. Where a phrase repeats down a column – `quiet`'s pencil in
 `A11` and her pen in `A15`, her flight times in `A5`, `A14` and `A29` – it repeats because it is
 the same girl doing the same thing years apart, which is the point of an album. ⚠ **No two of the
-400 are the same STRING**, which is a different claim and the one the pin makes: a first draft had
+412 are the same STRING**, which is a different claim and the one the pin makes: a first draft had
 `A4` and `A11` sharing a `deep` caption verbatim, and two identical sheets in one book read as a
 copy-paste rather than as a habit.
 
@@ -114,6 +114,15 @@ move the label, drop it or put it at the end. **The corpus now stands at 15 of 3
 clause 26 characters** – the length of his own, and at that size it reads as the album's habit
 rather than as a template.
 
+⚠ **Re-derived 20.09, when `A33` and the `A31` rewrite landed, and the property did not move.** Two
+definitions were run over the document rather than one, because the 15 above could not be reproduced
+from the file and a number nobody can re-derive is the stale-number family this repo keeps paying
+for: counting a shared LABEL (the whole leading sentence common to all four notes) gives **13 of 33,
+longest 21 characters**, and counting a shared CLAUSE (the common prefix, cut at the last word) gives
+**20 of 33, longest 25**. Both are unchanged in absolute terms from the same measurement run against
+the pre-20.09 file – 13 of 32 and 20 of 32 – so the two rows this wave touched added no formula. The
+longest is `A13`'s «A year of holding on.», which nobody has edited.
+
 ⚠ **This is the number to look at first in a review.** It is the one property of the corpus that
 degrades quietly as rows are added, it is not pinned (a threshold here would be a guess dressed as
 a rule), and it is re-derivable from this document in one pass whenever somebody wants to know.
@@ -134,7 +143,7 @@ would be a lie on every career whose first pick came at a different age.
 
 **3.2 No name, ever.** Her name is the player's. The note says «you», the caption says «she», and
 neither ever needs a name. There is no placeholder, no token, no interpolation in any string here –
-the catalogue is 400 finished sentences, not 400 templates. A pin asserts it.
+the catalogue is 412 finished sentences, not 412 templates. A pin asserts it.
 
 **3.3 No claim a career can contradict.** The honesty law's consequential tier (voice bible):
 results, counts, durations, dates, money, places, other people, her body's specifics all need a
@@ -159,7 +168,9 @@ rather than decorating it:
 
 - **`season-rank`, `title` and `final` are 89% of a dense career's pool** (21 + 13 + 13 of 53). One
   occasion each would mean every season sheet in a twenty-one-season album says the same sentence.
-  **So those three carry ten occasions between them** – the deep half of this corpus.
+  **So those three carry eleven occasions between them** – the deep half of this corpus. (Ten until
+  20.09: `A33` is his blocker 4, and it is a fifth season occasion because four of them could not
+  tell a recovery from a flat year.)
 - **The `jun` band is empty on every career measured, 0 of 9.** No occasion carries it. Chapter 1
   is the prologue, per spec §3.
 - **`lateCareer` exists for almost nobody** – 5 milestones on one career of nine, 1 on another, 0 on
@@ -176,14 +187,14 @@ rather than decorating it:
 | prologue (chapter 1) | 4 | his ruling (а): first court, first tournament, first win, first cup |
 | `title` | 4 | 13 per dense career; the spec's own «the fourteenth only if it is about something» |
 | `final` | 2 | 13 per dense career, and a final is either her first or one she lost |
-| `season-rank` | 4 | 21 per dense career – the largest single kind in the pool |
+| `season-rank` | 5 | 21 per dense career – the largest single kind in the pool, and the only family whose four could route a career to a sentence about a year it did not have |
 | `injury` | 2 | mass material; the second is the getting up, which is what §7 rules the mood on |
 | money and the road | 3 | `prize`, `international`, `break-even` – one apiece, once per career |
 | life | 2 | `school`, `wedding` |
 | assets | 5 | first house, brand, academy land / courts / building |
 | super-rare | 3 | his 19.09 addition; each fires seldom by design |
-| closing | 3 | `graduated`, `farewell`, `retired` – the spec's three written frames |
-| **total** | **32** | **× 4 voices × 3 registers = 384 strings** |
+| closing | 3 | `graduated`, `farewell`, `career-ended` – the spec's three written frames, each on its own gate since 20.09 |
+| **total** | **33** | **× 4 voices × 3 registers = 396 strings** |
 
 ⚠ **What is deliberately NOT written, and why.** Academy STAFF (37% coverage, spec §5) has no
 occasion: it lands in the same year as the building on almost every career that reaches it, and
@@ -260,17 +271,17 @@ the commit»), and the anti-vacuity half, because a comparison of two empty list
 
 | written | count |
 | --- | ---: |
-| occasions | **32** |
-| notes (32 × 4 voices) | **128** |
-| captions (32 × 4 voices) | **128** |
-| lines (32 × 4 voices) | **128** |
+| occasions | **33** |
+| notes (33 × 4 voices) | **132** |
+| captions (33 × 4 voices) | **132** |
+| lines (33 × 4 voices) | **132** |
 | arc cells (2 directions × 4 voices) | **8** |
 | arc strings (8 × note + line) | **16** |
-| ⭐ authored strings in total | **400** |
+| ⭐ authored strings in total | **412** |
 
-**Completeness**: every one of the 32 occasions carries all four voices in all three registers.
+**Completeness**: every one of the 33 occasions carries all four voices in all three registers.
 There is no partial row and no «voice to be written later» – the parser refuses a short table, and
-the pin asserts 128/128/128 rather than «some of each». The arc's two-register shape is the only
+the pin asserts 132/132/132 rather than «some of each». The arc's two-register shape is the only
 declared exception in the document and §5 gives its reason.
 
 ---
@@ -548,10 +559,11 @@ it too, so this occasion cannot assume she lost – or won.
 | `deep` | `She had been holding that point for two days.` |
 | `quiet` | `We talked about the garden.` |
 
-## The seasons – four, because they are the largest kind in the pool
+## The seasons – five, because they are the largest kind in the pool
 
-⚠ Twenty-one `season-rank` rows on his densest career. Four occasions is the floor at which a
-twenty-one-season album is not four sentences repeated.
+⚠ Twenty-one `season-rank` rows on his densest career. Four occasions was the floor at which a
+twenty-one-season album is not four sentences repeated; the fifth is his 20.09 blocker, and it is a
+CONTRACT fix rather than more writing – see `A33`.
 
 ### A11 · `season-first` · season-rank · young, teen · **gate: `first-season-closed`**
 **The occasion:** the first season that closed with a ranking at all.
@@ -603,9 +615,48 @@ twenty-one-season album is not four sentences repeated.
 | `deep` | `One long week. That was the report.` |
 | `quiet` | `Christmas mattered more.` |
 
-### A13 · `season-held` · season-rank · teen, adult, lateCareer · `any`
+### A33 · `season-recovery` · season-rank · teen, adult, lateCareer · **gate: `rank-better-than-the-previous-close-but-not-a-best`**
+**The occasion:** the climb back – a year better than the one before it and still short of her own best.
+**Where it comes from:** the `rank` on the row against the previous close, with the career best beside it.
+⚠⚠ **DRAFT, 20.09 – twelve strings written for his blocker 4.** The routing used to send this year
+to `A13`, so a real recovery – from far down the table to halfway back, under an older and better
+best – printed «A year of holding on». His own ruling: «добавить season-recovery», four occasions
+where there were three.
+⚠ **The number is out of sequence on purpose.** `A14`…`A32` are referenced by ref in the spec, in
+`src/engine/world/albumBook.ts` and in the tests, so a new season occasion is APPENDED to the
+numbering and placed where it reads – renumbering nineteen rows to gain a tidy sequence is a diff
+nobody could review.
+⚠ Neither the climb's size nor the best it is short of is written (§3.1): both are the world's.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `You came back up the table this year and you talked about the two weeks in the middle where it turned, not about the end of it.` |
+| `fiery` | `Better than last year, and you said that was the least it could have been. You were pleased anyway and would not say so.` |
+| `deep` | `You waited until the year was finished before you would call it a climb back, and then you said it in one sentence.` |
+| `quiet` | `A year that went back up. You did not mention it at all, and next season's schedule arrived in the same week.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `She talked about the middle of the year.` |
+| `fiery` | `The least it could have been, she said.` |
+| `deep` | `One sentence, once the year was finished.` |
+| `quiet` | `Nothing said. A new schedule.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `The turn was in the middle somewhere.` |
+| `fiery` | `Pleased, and not admitting it.` |
+| `deep` | `She waited for the year to end first.` |
+| `quiet` | `Straight back to the planning.` |
+
+### A13 · `season-held` · season-rank · teen, adult, lateCareer · **gate: `rank-inside-a-narrow-band-of-the-previous-close`**
 **The occasion:** a year that neither climbed nor fell – the ordinary one, and the commonest.
-**Where it comes from:** any `season-rank` row the other three do not claim.
+**Where it comes from:** the `rank` on the row against the previous close, inside a band of it.
+⚠⚠ **The gate was `any` and that was the defect** (his 20.09 blocker 4): «season-held does not mean
+she held on». Every row the other three did not claim landed here, a real recovery included. The
+gate is now the narrow band – the same rank, or inside a twentieth of the previous close, floored at
+one place – and the four sentences below are UNCHANGED, because every one of them is about a year
+where nothing moved and that is now the only year that reaches them.
 
 | voice | note |
 | --- | --- |
@@ -1066,7 +1117,13 @@ is the engine's.
 ## The closing three
 
 ⭐ Spec §5: `adult-graduated` if there was a college, then the pair `lateCareer-farewell` (the last
-match, evening) and `lateCareer-retired` (the last frame of the album, daylight).
+match, evening) and `lateCareer-retired` (the last frame of the album, daylight – the painting keeps
+its filename through the 20.09 rename of the occasion it serves).
+
+⚠⚠ **THE THREE CLOSING PAGES ARE NOT THREE THINGS THAT ALWAYS HAPPEN TOGETHER, and until 20.09 the
+selector treated the last two as if they were.** Each is gated on its own fact now: the degree
+(`A30`) on a finished course, the farewell (`A31`) on a last match the save can prove, the last page
+(`A32`) on an ending that is really an ending. A career can reach any one of them without the others.
 
 ### A30 · `graduated` · closing · teen, adult · **gate: `college-finished`**
 **The occasion:** she finished the degree.
@@ -1094,35 +1151,53 @@ match, evening) and `lateCareer-retired` (the last frame of the album, daylight)
 | `quiet` | `The news came third.` |
 
 ### A31 · `farewell` · closing · adult, lateCareer · **gate: `the-last-match`**
-**The occasion:** the last match – the evening one.
-**Where it comes from:** the ending.
+**The occasion:** the last match she played – the evening one.
+**Where it comes from:** the last week the save can PROVE she was on a court, never later than the
+ending week: the weeks in `trophiesByTier[tier].titles/finals` (never pruned), the kid's own scoring
+rows in `world.results` (the last 52 weeks), and the dated `title` / `final` milestones. A career the
+save can prove nothing about gets no farewell sheet at all.
+⚠⚠ **DRAFT, 20.09 – six of the twelve rewritten for his blocker 1, and the reason is a CONTRACT and
+not a style pass.** `sunny` thanked everybody by name, `fiery` made a speech: both described a
+CEREMONY, and the card fired on any ending at all – so a bankruptcy, a forced stop or a departure
+for college was given a farewell speech it never had. A last match guarantees no speech, no thanks
+and no goodbye, and on a forced end nobody in the building knew it was the last one. **The eight
+strings the sheet now shows may be read by a parent whose daughter stopped without warning.**
+⚠ `deep` and `quiet` are unchanged in all three registers: staying on court after everybody has gone
+and folding the bag the usual way are true of any last match, ceremony or not.
 
 | voice | note |
 | --- | --- |
-| `sunny` | `The last one. You thanked everybody by name and got through it, which I could not have done.` |
-| `fiery` | `The last one. You said you weren't going to make a speech, and then made one.` |
+| `sunny` | `The last one. You came off talking about the heat and the food and the long ride back, and not about the tennis at all.` |
+| `fiery` | `The last one. You had a view on it before the bags were packed, and I got all of it on the phone that night.` |
 | `deep` | `The last one. You stayed on the court after everybody had gone, and I let you.` |
 | `quiet` | `The last one. You folded everything into the bag the same way you always have.` |
 
 | voice | caption |
 | --- | --- |
-| `sunny` | `She thanked everybody by name.` |
-| `fiery` | `No speech, she said.` |
+| `sunny` | `She talked about everything except the tennis.` |
+| `fiery` | `A view on it before the bags were packed.` |
 | `deep` | `She stayed after everybody had gone.` |
 | `quiet` | `The bag, packed the usual way.` |
 
 | voice | line |
 | --- | --- |
-| `sunny` | `I could not have done it.` |
-| `fiery` | `It was a good speech.` |
+| `sunny` | `She saved that part for later, I think.` |
+| `fiery` | `She always did have the last word.` |
 | `deep` | `I let her have the court.` |
 | `quiet` | `Same folding. Last time.` |
 
-### A32 · `retired` · closing · adult, lateCareer · **gate: `the-career-ended`**
+### A32 · `career-ended` · closing · adult, lateCareer · **gate: `the-career-ended`**
 **The occasion:** the last frame of the album.
-**Where it comes from:** the ending.
+**Where it comes from:** the ending – any of the eight, except a college latch that still has a
+`resumesWeek` on it, because she is coming back and the book is not finished.
 ⭐ **This is the sheet the arc displaces when the lean moved** (§5). When it did not, this is what
 the closing sheet says, and it is not a consolation line – it is the parent handing the book over.
+⭐⭐ **RENAMED `retired` → `career-ended`, 20.09, and the four sentences did not move.** His ruling:
+«сами строки A32 для этого уже прекрасно подходят». `retired` is one of the three stories a career
+can end in and this page is all of them – a career that STOPPED (she decided), one that was STOPPED
+(the money, the body) and one that LEFT the professional game (the natural end, the plateau, the
+peak, the fall). The engine carries that split as `ALBUM_CLOSING_FAMILY`; all three families speak
+in these four sentences today, and a family that earns its own will be added beside this row.
 
 | voice | note |
 | --- | --- |
