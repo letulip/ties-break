@@ -667,13 +667,22 @@ function independenceArm(preset: Preset, index: number, policy: Policy, weeks: n
   /** ⚠ FOUR CHANNELS, RECORDED SEPARATELY. `main` is the law; `season` is the world's own output on a
    *  wrap week; `funds` and `cond` are the two scalars wave 7's single printed line folded in with
    *  them, and folding them is what would have made this wave's own feature look like a violation. */
-  const walk = (eager: boolean): { main: string[]; funds: string[]; cond: string[]; season: string[]; states: string[] } => {
+  const walk = (
+    eager: boolean,
+  ): { main: string[]; funds: string[]; cond: string[]; season: string[]; bond: string[]; spirit: string[]; states: string[] } => {
     const { world } = openCareer(preset, index, policy)
     const rng = resumeMain(world.rngMain)
     const main: string[] = []
     const funds: string[] = []
     const cond: string[] = []
     const season: string[] = []
+    // ⚠ `bond` AND `spirit` ARE CARRIED AS CHANNELS OF THEIR OWN so that a drift in `condition` can be
+    // ATTRIBUTED rather than described. Wave 7's law was «everything either arm may differ on moves
+    // `bond` and nothing else», and the honest way to check whether that still holds is to watch the
+    // chain in order: if `bond` parts, then `spirit`, then `condition`, the coupling is named; if
+    // `condition` parts first, it is not this chain and the note says so.
+    const bond: string[] = []
+    const spirit: string[] = []
     const states: string[] = []
     const byKind = emptyDrainCounts()
     for (let i = 0; i < weeks; i++) {
@@ -699,6 +708,8 @@ function independenceArm(preset: Preset, index: number, policy: Policy, weeks: n
           `season ${v.seasonIndex} pts ${v.points} rank ${v.endRank ?? '–'} prev ${v.prevPoints}/${v.prevEndRank ?? '–'} pro ${v.professional}`,
         )
       } else season.push('–')
+      bond.push(String(world.bond))
+      spirit.push(String(world.spirit))
       states.push(
         `preg ${world.pregnancy === null ? '–' : `${world.pregnancy.support ?? '?'}@${world.pregnancy.announcedWeek}`}` +
           ` kids ${world.children.length} comeback ${world.comeback === null ? '–' : world.comeback.returnPlan ?? '?'}` +
@@ -706,7 +717,7 @@ function independenceArm(preset: Preset, index: number, policy: Policy, weeks: n
       )
       if (world.ending !== null) break
     }
-    return { main, funds, cond, season, states }
+    return { main, funds, cond, season, bond, spirit, states }
   }
   const a = walk(false)
   // ⚠ THE SEARCH PAYS FOR ONE WALK AND NOT TWO. A seed whose neutral arm never raises an
@@ -739,6 +750,8 @@ function independenceArm(preset: Preset, index: number, policy: Policy, weeks: n
     channelOf('MAIN position', a.main, b.main),
     channelOf('season wrap', a.season, b.season),
     channelOf('funds', a.funds, b.funds),
+    channelOf('bond', a.bond, b.bond),
+    channelOf('spirit', a.spirit, b.spirit),
     channelOf('condition', a.cond, b.cond),
   ]
   const earliest = channels
