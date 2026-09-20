@@ -204,7 +204,7 @@ describe('wave 8 T2 A – `pregnancyEligible`, and the curve that is deliberatel
     const world = wedded('w8-once', 28)
     world.pregnancy = {
       episodeId: world.loveEpisodes[0].id, announcedWeek: world.week - 4,
-      pausesWeek: world.week + 4, dueWeek: world.week + 35, support: 'warm', returnPlan: null, rankAtPause: null,
+      pausesWeek: world.week + 4, dueWeek: world.week + 35, support: 'warm', rankAtPause: null,
     }
     expect(pregnancyEligible(world), 'she is already carrying one').toBe(false)
   })
@@ -314,7 +314,7 @@ describe('wave 8 T2 B – the gate AND the chance both return before any stream 
       ['ended', (() => { const w = wedded('w8-b2', 28); endEpisode(w, w.week - 1); return w })()],
       ['already carrying', (() => {
         const w = wedded('w8-b3', 28)
-        w.pregnancy = { episodeId: w.loveEpisodes[0].id, announcedWeek: w.week - 4, pausesWeek: w.week + 4, dueWeek: w.week + 35, support: null, returnPlan: null, rankAtPause: null }
+        w.pregnancy = { episodeId: w.loveEpisodes[0].id, announcedWeek: w.week - 4, pausesWeek: w.week + 4, dueWeek: w.week + 35, support: null, rankAtPause: null }
         return w
       })()],
       ['a child already born', (() => {
@@ -385,7 +385,6 @@ describe('wave 8 T2 C – the `expecting` beat and the one place `world.pregnanc
       pausesWeek: at + BRIEF.playsOnWeeks,
       dueWeek: at + BRIEF.playsOnWeeks + BRIEF.termWeeks,
       support: null,
-      returnPlan: null,
       // ⚠ RE-AIMED 20.09 BY v85 T6, NOT WEAKENED: `rankAtPause` is the sixth field – the capture the
       // ruled freeze is made of – and it is `null` HERE because the pause is eight weeks away and she
       // is still playing. `landPregnancyPause` takes it on the week it is true; the record written at

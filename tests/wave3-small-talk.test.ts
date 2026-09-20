@@ -999,6 +999,12 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       // pin, and a tenth member makes it fail on a count rather than on a name. Both are meant
       // (`tests/wave3-soft-surface.test.ts` §A carries the other copy), and both had to be typed.
       expecting: true,
+      // ⚠ RE-AIMED AN EIGHTH TIME BY v85, WAVE 8 T6 (20.09), NOT WEAKENED: `'return-plan'` is the
+      // eleventh kind and declares TRUE – the week the calendar re-opens after 51 weeks of refusals,
+      // and the desk needs an answer before an entry can be booked. What stands is the narrower
+      // sentence this line has made since the spouse's view arrived: every kind DECLARES, and nothing
+      // blocks by accident.
+      'return-plan': true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

@@ -398,7 +398,7 @@ export interface SoftBeatInvite {
  *  construction: no overlay exists for this kind, so `DRAIN_ANSWER['expecting']` = `worry` charges
  *  −0.5 under every reading. ⚠ It carries no `heard` stamp and no listen detour – the fact is the
  *  fact, and the three answers are the whole of what a parent can do with it. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting'
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own

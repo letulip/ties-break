@@ -607,6 +607,18 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // read the grade). It is invisible to the sweep below because the fixture holds no pregnancy, and
   // that is the honest shape: `tools/_lifeBeats.ts`' own registry note is where a bench reads it.
   expecting: { id: 'worry', bond: -0.5 },
+  // ⚠ RE-AIMED 20.09 BY v85 (the return, wave 8 – T6), THE RECORD'S SIXTH GROWTH: the union grew by
+  // `'return-plan'` and somebody had to type a number. WHAT MOVED: one row, at **0** – and the zero is
+  // a RULING rather than a default. Both of the kind's answers are priced zero because §4a.2's law is
+  // that his WORDS move `bond` and this answer is a CALENDAR, and because the price of the wrong ramp
+  // is paid in tennis (the staged factor loses her the big draws): a bond delta on top would make one
+  // arm of the wave's own trap «the nice one». WHAT DID NOT MOVE: the law this section asserts, still
+  // «the SAME price under every reading». ⚠ THE ID IS THE REGISTRY'S TIE RULE (`'fork-psy'`'s own:
+  // «the first option the card offers»), transcribed and not read off `LIFE_BEAT_OPTIONS`.
+  // ⚠⚠ AND IT IS THE SECOND ROW WHOSE DRAIN HAS A SIDE EFFECT – it writes `returnPlan` onto
+  // `world.comeback`, invisible to the sweep below because the fixture holds no comeback, and stated
+  // at `tools/_lifeBeats.ts`' own registry entry where a bench reads it.
+  'return-plan': { id: 'small-first', bond: 0 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -665,6 +677,11 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // is carrying it – exactly as `'met'`'s, `'ended'`'s and `'engaged'`'s are, and the same id
   // `raised` above builds for those kinds.
   expecting: 'p:892',
+  // ⚠ RE-AIMED BY v85 (wave 8 T6): the ramp's `detail` is the LITERAL KIND – `'own-key'`'s own shape
+  // and its reason, which is that there is nothing PER-ROW to record. The comeback it is about lives
+  // on `world.comeback`, one record for one career, and the card reads neither the detail nor the
+  // episode: a marriage may have ended months before the return (§0's decoupling ruling).
+  'return-plan': 'return-plan',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.

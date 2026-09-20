@@ -137,6 +137,20 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   // move). Declared and unreachable like its two soft siblings: NON-blocking, so the loop never
   // meets one, and the row exists because totality is the point.
   'own-key': 'keep',
+  // ⭐⭐⭐ v85 (the return, wave 8 – T6) – `small-first`, AT **0**, AND THE PICK IS `'fork-psy'`'s RULE
+  // RATHER THAN A JUDGEMENT ABOUT THE RAMP. Both of this kind's answers are ruled zero (§3k: §4a.2's
+  // law is that his WORDS move `bond`, and this answer is a calendar – and the price of it is paid in
+  // TENNIS, so a delta would make one ramp «the nice one»), so the registry had to pick one, and the
+  // rule for a tie is «the FIRST option the card offers». A harness that drained the other would be
+  // quietly benching one arm of the wave's own trap.
+  // ⚠⚠ AND DRAINING THIS ONE HAS A SECOND EFFECT, LIKE `'expecting'`'s AND FOR A LARGER REASON: it
+  // writes `returnPlan: 'small-first'` onto `world.comeback`, which the entries seam then reads as a
+  // booking preference. A bench that drains beats and then measures a comeback is measuring the
+  // SMALL-FIRST arm unless it says otherwise. `drainSkewLine` states the bond skew exactly (0 x
+  // count); the PLAN skew is not a number and is stated here instead.
+  // Read-independent by construction: `lifeBeatOptionsFor` has no overlay for this kind, so
+  // `drainCostOf` prices the same object under every `wants` x every ends-read.
+  'return-plan': 'small-first',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

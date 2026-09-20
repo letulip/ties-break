@@ -152,8 +152,8 @@ const rec = (w: unknown): Record<string, unknown> => w as unknown as Record<stri
 /** A pregnancy as T2..T6 will eventually write one, built by hand because on this tree nothing can
  *  produce one. The values are chosen to be the ones a careless step would clobber: `announcedWeek`
  *  is a real week, `support` is set (so an overwrite to `null` is visible) and `returnPlan` is still
- *  `null`, which is the legitimate «she has not been asked yet» state and reads FALSY – the exact
- *  value `||=` would destroy if the rule above the step were ever relaxed.
+ *  ⚠ RE-AIMED BY v85 T6's RULING A: the FALSY-null field this fixture was built around
+ *  (`returnPlan`) MOVED to `craftedComeback` below, and it is still `null` there for the same reason.
  *  ⚠ `rankAtPause` IS SET AND IS T6's SIXTH FIELD (the capture the ruled freeze is made of): a real
  *  rank, so an overwrite to `null` is visible, on the same argument `support` is set for. */
 function craftedPregnancy(): Record<string, unknown> {
@@ -163,7 +163,6 @@ function craftedPregnancy(): Record<string, unknown> {
     pausesWeek: 842,
     dueWeek: 872,
     support: 'warm',
-    returnPlan: null,
     rankAtPause: 41,
   }
 }
@@ -178,6 +177,10 @@ function craftedComeback(): Record<string, unknown> {
   return {
     returnedWeek: 886,
     protectedRank: { rank: 41, entriesLeft: 7, validUntilWeek: 1042 },
+    // ⚠ v85 T6, RULING A – `returnPlan` moved here off `PregnancyState`, and `null` is exactly the
+    // value a careless `||=` would destroy: the legitimate «she is back and nobody has said how»
+    // state, which reads FALSY. The fixture's falsy-field property moved with the field.
+    returnPlan: null,
   }
 }
 

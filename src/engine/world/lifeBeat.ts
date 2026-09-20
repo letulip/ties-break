@@ -289,6 +289,16 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // carrying it while the card stands, and every answer does the same two things – prices `bond` and
   // grades `support`. There is no answer that unmakes it, because there is no such answer to write.
   expecting: true,
+  // ⭐⭐⭐ v85 (the return, wave 8 – T6) – TRUE, AND IT IS THE ONE WORD THE WHOLE RAMP RUNS ON. The
+  // week she comes back is the week the calendar re-opens after 51 weeks of refusals, and the desk
+  // needs an answer before a single entry can be booked – so a career that could tick past this card
+  // would spend its first weeks back with no plan at all and the beat would price nothing. ⚠ IT IS
+  // ALSO THE ONLY BEAT IN THIS TABLE THAT IS NOT ABOUT HER LIFE: §4a's law is that SHE decides and the
+  // parent REACTS, and it holds – she has already decided, and T5's coin is where. What blocks here is
+  // the SCHEDULING, which is the parent's job (the college fork's mechanical questions are the
+  // precedent), so blocking is tier 2's price asked for the one question this layer really does put to
+  // him.
+  'return-plan': true,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -2731,6 +2741,61 @@ const EXPECTING_DRY = 'She is expecting a child. Nobody in this house was told f
  *  things to say about it is his. */
 const EXPECTING_HEADING = 'A child is coming, and she has already decided'
 
+// =================================================================================================
+// 3k. `'return-plan'` – THE WEEK SHE IS BACK, AND THE QUESTION IS HOW (the return, wave 8: T6).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T8's table).
+// =================================================================================================
+//
+// ⭐⭐⭐ THIS ONE IS THE PARENT'S, AND THAT IS §4a READ EXACTLY RATHER THAN BENT. «SHE decides, the
+// parent REACTS» is a law about HER LIFE – whether there is someone, whether she marries, whether
+// she has a child, whether she goes back – and every one of those is drawn or hers. This is the
+// SCHEDULING, which is what the parent has always decided: the college fork's mechanical questions
+// are the precedent, and `answerFork` is a command rather than a beat for the same reason. She has
+// already said she is going back (T5's coin); what a season is built out of is the job.
+//
+// ONE CARD, TOLD ONCE, IN THE PARENT'S OWN NARRATION – `'own-key'`'s one-cell pool and its whole
+// argument, which transfers word for word: the completeness rule («a `quiet` girl can never silently
+// receive a `fiery` girl's line») binds pools that QUOTE her, and this card quotes nobody. Giving the
+// scene a voiced line of hers is a wording decision the owner may take at T8's table; a draft that
+// jumped ahead of it would be choosing for him.
+//
+// ⚠ BOTH ANSWERS ARE PRICED AT **0 BOND**, AND THE ZERO IS THE DESIGN RATHER THAN A DEFAULT. Two
+// reasons, and the second is the one that matters. (a) §4a.2's law is that HIS WORDS move `bond`;
+// this answer is not a word to her, it is a calendar. `'own-key'`'s ruled zero and the counsel's
+// («counsel is information, not a test») are the same shape. (b) ⚠⚠ THE PRICE OF THIS ANSWER IS PAID
+// IN TENNIS AND MUST NOT ALSO BE PAID IN BOND: the wrong ramp spends her twelve protected entries
+// inside the deepest rung of the staged factor and loses them, and a bond delta on top would make one
+// answer «the nice one» on a card whose whole purpose is that the cost is mechanical and emergent.
+// It is the one beat in this file whose cost is not in this file.
+//
+// ⚠ NO DATE AND NO NUMBER IN EITHER LABEL (rule 4), and neither of them names the freeze: how many
+// entries a protected ranking buys is a rule the card may not turn into a promise, and T9 is what
+// measures whether either answer was right.
+
+/** ⚠ ⚠ DRAFT – the card's one line: what the week holds, seen from the family's side. */
+const RETURN_PLAN_SAID =
+  'She is entered again from this week. The desk wants to know what the first months look like – the small draws she can win, or the big ones she can still get into.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `OWN_KEY_HEADING`'s
+ *  shape and its reason: the question is the same question at every distance and in every weather. */
+const RETURN_PLAN_HEADING = 'She is back, and the first months have to be built'
+
+/** ⭐⭐⭐ THE ANSWER'S OTHER CONSEQUENCE: which booking preference each id records, `EXPECTING_SUPPORT`'s
+ *  own shape one section up and its own law – «one answer, two consequences, zero new meters».
+ *
+ *  ⚠ THE PLAN IS THE ANSWER'S OWN NAME AND THERE IS NOTHING TUNABLE HERE. Both ids are priced at 0
+ *  bond (§3k's banner), so unlike the pregnancy's grades this table cannot drift away from a retune –
+ *  there is no number to retune. It exists so the ID the card carries and the STATE the seam reads
+ *  have exactly one spelling in the engine.
+ *
+ *  ⚠ TOTAL OVER THE KIND'S OPTION IDS, and `tests/wave8-return-ramp.test.ts` is what says so – the
+ *  ids are strings rather than a union, so the type cannot carry that claim and a test has to.
+ *  `answerLifeBeat` throws BY NAME on a miss rather than writing `undefined` onto the field. */
+const RETURN_PLAN_CHOICE: Readonly<Record<string, NonNullable<ComebackState['returnPlan']>>> = {
+  'small-first': 'small-first',
+  'straight-back': 'straight-back',
+}
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -2971,6 +3036,23 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'worry', label: 'Say we are glad, and that we will worry', bond: ECONOMY.motherhood.worryBond },
     // ⚠ DRAFT
     { id: 'career-first', label: 'Ask her what this does to the tennis', bond: ECONOMY.motherhood.careerFirstBond },
+  ],
+  /** ⭐⭐⭐ v85 (the return, wave 8 – T6) – THE RAMP'S TWO, AND THE ONLY CARD IN THIS TABLE THAT IS A
+   *  SCHEDULING DECISION RATHER THAN A REACTION (§3k's banner carries the §4a argument in full: she has
+   *  already decided to go back; what a season is built out of is the parent's job, on the college
+   *  fork's own precedent).
+   *
+   *  ⚠⚠ BOTH AT **0 BOND**, AND THE ZERO IS THE DESIGN RATHER THAN A DEFAULT – see §3k. In one line:
+   *  §4a.2's law is that HIS WORDS move `bond`, and this answer is a calendar rather than a word to her;
+   *  and the price of it is paid IN TENNIS, so a delta on top would make one answer «the nice one» on
+   *  the one card whose whole purpose is that its cost is mechanical and emergent.
+   *  ⚠ NO NUMBER, NO DATE AND NO PROMISE IN EITHER LABEL (rule 4), and neither names the freeze: how
+   *  many entries a protected ranking buys is a rule the card may not turn into a guarantee. */
+  'return-plan': [
+    // ⚠ DRAFT
+    { id: 'small-first', label: 'Start with the small draws she can win', bond: 0 },
+    // ⚠ DRAFT
+    { id: 'straight-back', label: 'Put her straight back in the big ones', bond: 0 },
   ],
 }
 
@@ -3246,6 +3328,16 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     // ⚠ DRAFT
     'career-first': 'She is expecting a child. We asked what it does to the tennis.',
   },
+  /** ⚠⚠ **DRAFT – T8's TABLE** (invariant 4). Two lines, one per answer, opening on the same clause
+   *  – the established parallel of every pool above. ⚠ THEY REPORT A BOOKING AND PROMISE NOTHING: what
+   *  either ramp is WORTH is emergent and measured (T9), so a row that said «the safe way back» would be
+   *  the game grading a decision it has not simulated yet. ⚠ NO NUMBER, NO DATE, NO PRICE (rule 4). */
+  'return-plan': {
+    // ⚠ DRAFT
+    'small-first': 'She is entering again. We start with the small draws and build from there.',
+    // ⚠ DRAFT
+    'straight-back': 'She is entering again. We put her straight back in the big ones.',
+  },
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -3499,6 +3591,15 @@ export function lifeBeatSaid(
       return speaksInHerOwnVoice(bond)
         ? presenceLine(EXPECTING_HER_LINE[voice], presence)
         : EXPECTING_DRY
+    // ⭐⭐⭐ v85 (the return, wave 8 – T6) – THE ELEVENTH KIND, AND THE ONE-CELL POOL IS `'own-key'`'s
+    // AND IS ARGUED AT ITS BANNER (§3k): THE CARD QUOTES NOBODY. The completeness rule – «a `quiet` girl
+    // can never silently receive a `fiery` girl's line» – binds pools that quote HER, and this one is a
+    // question put to the parent about a calendar. So no voice, no bond, no register, no presence and
+    // no detail reach it, exactly as they do not reach the independent-life scene. Giving it a voiced
+    // line of hers is a wording decision the owner may take at T8's table; a draft that jumped ahead
+    // of it would be choosing for him.
+    case 'return-plan':
+      return RETURN_PLAN_SAID
   }
 }
 
@@ -3582,6 +3683,11 @@ export function lifeBeatHeading(
     // through her line, and a frame that also moved with it would say the distance twice.
     case 'expecting':
       return EXPECTING_HEADING
+    // ⭐ v85 (wave 8 – T6) – ONE FRAME, KEYED ON NOTHING, `OWN_KEY_HEADING`'s shape and its reason: the
+    // question is the same question at every distance and in every weather, and there is nothing here
+    // for an axis to select. The bond band cannot reach it either, because the card quotes nobody.
+    case 'return-plan':
+      return RETURN_PLAN_HEADING
   }
 }
 
@@ -3682,6 +3788,16 @@ const LISTEN_FOLLOW_UP: Record<
   // promising more of her would promise words nobody wrote, about a thing she has already finished
   // deciding.
   expecting: null,
+  // ⭐⭐⭐ AND `'return-plan'` HAS NONE (v85, wave 8 T6) – AND THIS CELL IS THE ONE T2½ PIECE 2 WAS
+  // BOUGHT FOR. On the `if`-chain this record replaced, a kind left out did not fail to compile: it
+  // fell through to `FORK_WANTS.find(...)`, found no want on a detail that is not one, and THREW from
+  // inside `toSnapshot` – round 42 #15's recorded save-bricking shape. The cell below is a compile
+  // error when it is missing, which is why this wave's last engine task could be written at all.
+  // ⚠ THE REASON IT IS `null` IS THE PLAINEST IN THIS RECORD, `'own-key'`'s word for word: THE CARD
+  // QUOTES NOBODY, so there is nobody a silence could buy more of. It is also not a beat that could
+  // have a `listen` answer – its two are a scheduling fork, and «say nothing, and let her talk» is not
+  // a way of answering a question about which tournaments to enter.
+  'return-plan': null,
 }
 
 /** ⭐ HER CONTINUATION when the parent only listens – null exactly where the flat pool speaks,
@@ -4079,6 +4195,10 @@ const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
   // BLOCKING, so the row stops the week and never reaches the soft surface. A card line for it would
   // be dead copy pretending to be reachable, which is what the `null` on every blocking kind says.
   expecting: null,
+  // ⚠ v85 (wave 8 – T6) – `null`, ON THE RECORD'S OWN RULE AND NOT AS A CHOICE: `'return-plan'` is
+  // BLOCKING, so the row stops the week and never reaches the soft surface. A card line for it would
+  // be dead copy pretending to be reachable.
+  'return-plan': null,
   'small-talk': SMALL_TALK_CARD,
   'spouse-view': SPOUSE_VIEW_CARD,
   'own-key': OWN_KEY_CARD,
@@ -4225,6 +4345,28 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
     const grade = EXPECTING_SUPPORT[chosen.id]
     if (grade === undefined) throw new Error(`An expecting answer has no support grade: ${chosen.id}`)
     world.pregnancy.support = grade
+  }
+  // ⭐⭐⭐ v85 (the return, wave 8 – T6) – ...AND THE RAMP'S ANSWER IS THE SECOND BEAT IN THIS FILE
+  // WHOSE WORD OUTLIVES THE CARD, on the identical shape one branch up and for the same reason: what
+  // a season is BUILT out of is a claim about the months ahead, so it cannot live on a card that
+  // closes this week. It is written to `world.comeback`, which is where RULING A (20.09) moved
+  // `returnPlan` precisely because `world.pregnancy` is cleared on the week this beat is raised.
+  //
+  // ⚠ ABOVE THE `ANSWER_EVENT` EARLY RETURN, on the counsel raise's own argument: a kind that stopped
+  // writing a feed row must not silently stop writing the plan.
+  //
+  // ⚠⚠ GUARDED ON THE RECORD AND NOT ON THE KIND ALONE, and the `null` arm is REAL rather than
+  // defensive dressing – `'expecting'`'s own argument verbatim: §D of tests/wave3-reaction.test.ts
+  // raises a beat of every BLOCKING kind on a hand-built world and drains it, and forty benches do the
+  // same shape. Those worlds have no comeback, and a throw here would make the drain helper the thing
+  // that breaks. The plan is simply not written when there is nothing to write it on.
+  //
+  // ⚠ THE OPTION ID IS ALREADY RE-VALIDATED, so the lookup can only miss if the two tables part – and
+  // then it THROWS BY NAME rather than writing `undefined` onto a field typed three ways.
+  if (rows[target].kind === 'return-plan' && world.comeback !== null) {
+    const plan = RETURN_PLAN_CHOICE[chosen.id]
+    if (plan === undefined) throw new Error(`A return-plan answer has no plan: ${chosen.id}`)
+    world.comeback.returnPlan = plan
   }
   // ⭐⭐⭐ v74 T17 – ...AND THE COACH CALLS. One raise, and the whole of layer 2's machinery is this
   // line plus a `true` in `LIFE_BEAT_BLOCKING`: the new row is blocking, `answerFork` already refuses
@@ -6391,7 +6533,8 @@ export function pregnancyEligible(world: WorldState): boolean {
  *  the parent has answered the card – and `support: null` is the TRUE reading of the gap while the
  *  blocking beat stands, which is the argument T1 already wrote onto the field. The alternative
  *  leaves a world that can be SAVED and LOADED with a pregnancy in the feed and nothing in the
- *  state, because the beat blocks the week but not the save. ⚠ `returnPlan` stays null until T6 asks.
+ *  state, because the beat blocks the week but not the save. ⚠ `returnPlan` IS NOT ON THIS RECORD ANY
+ *  MORE – ruling A moved it to `world.comeback`, where the beat that asks it can actually reach it.
  *
  *  ⚠ `dueWeek` IS COMPUTED HERE AND PERSISTED, never re-derived at read – `PregnancyState`'s own law
  *  (T1, and `partnerName`'s one wave down): a later retune of `termWeeks` must never move the due
@@ -6421,8 +6564,6 @@ export function rollPregnancy(world: WorldState): void {
     // ⚠ NULL IS A REAL STATE AND NOT A PLACEHOLDER: she has told him and he has not answered yet.
     // `answerLifeBeat` writes the grade, once, on the answer (T1's own note on the field).
     support: null,
-    // ⚠ NULL UNTIL THE T6 BEAT ASKS how she means to come back.
-    returnPlan: null,
     // ⚠⚠ NULL UNTIL THE PAUSE WEEK, AND IT IS **NOT** CAPTURED HERE (v85 T6). The ruled freeze is «her
     // rank at `pausesWeek`», which is eight weeks after this line – she plays on through them, so the
     // standing this week is not the standing the rule names. `landPregnancyPause` takes it on the week
@@ -6617,12 +6758,15 @@ const BIRTH_EVENT = 'Her daughter was born this week. The family has somebody ne
  *  ⚠⚠ AND WHAT IT DOES **NOT** DO TO `world.pregnancy` IS A DECISION WITH A REASON, not an omission.
  *  The record survives the birth WHOLE, and nothing here writes or clears one field of it:
  *    · T5 reads `support` out of it (her decision), so it has to outlive the day by construction.
- *      ⚠ T4 WROTE «and T6 reads `returnPlan` INTO it» AND T5 FALSIFIED THAT HALF, which is corrected
- *      here rather than left: `resolveReturnDecision` clears the record on BOTH arms, so by the week
- *      T6's `'return-plan'` beat is answered there is no `PregnancyState` left to write a plan onto.
- *      `world.comeback` (T2½ piece 1) is the seat that outlives the pregnancy and is where T6's
- *      builder will want that field; the question is flagged at the clear itself and in T5's
- *      hand-back rather than decided here;
+ *      ⚠ T4 WROTE «and T6 reads `returnPlan` INTO it», T5 FALSIFIED THAT HALF AND T6 SETTLED IT, which
+ *      is corrected here rather than left: `resolveReturnDecision` clears the record on BOTH arms, so
+ *      by the week the `'return-plan'` beat is answered there is no `PregnancyState` left to write a
+ *      plan onto. The architect's RULING A (20.09) moved the field to `world.comeback`, the seat that
+ *      outlives the pregnancy – so what T4 predicted is true of a different record;
+ *      ⚠ AND T6 ADDED ONE THAT **IS** READ OFF THIS RECORD AFTER THE BIRTH: `rankAtPause`, the capture
+ *      the ruled freeze is made of, taken at `pausesWeek` and read at the return. The sentence below
+ *      («every field on it is still TRUE afterwards») covers it – it is the standing she paused on,
+ *      and that does not stop being true because the child arrived;
  *    · every field on it is still TRUE afterwards – `pausesWeek` is the week entries closed,
  *      `dueWeek` is the week the child came, `support` is the answer that was given, `episodeId` is
  *      still whose;
@@ -6791,5 +6935,10 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
             entriesLeft: m.protectedRankEntries,
             validUntilWeek: week + m.protectedRankWeeks,
           },
+    // ⚠ NULL, AND THE BEAT RAISED ON THIS SAME WEEK IS WHAT FILLS IT (ruling A, 20.09 – the field
+    // moved here off `PregnancyState`, which the clear one line below destroys). `support`'s own
+    // argument: the beat BLOCKS, so «she is back and nobody has said how» is the true reading of the
+    // gap, and every available default would be a plan nobody chose.
+    returnPlan: null,
   }
 }

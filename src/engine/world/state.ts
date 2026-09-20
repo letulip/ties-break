@@ -2029,10 +2029,18 @@ export interface WorldState {
  *  find the date had moved under them on the update that retuned it. `temperamentFor` and
  *  `LifeBeatRecord.frame` are the same instrument for the same reason: what is READ BACK is state.
  *
- *  ⚠ `returnPlan` is `null` until the T6 beat asks, which is the same gap `support` names one field
- *  up: she has given birth and has not yet said how she is coming back.
+ *  ⚠⚠ **`returnPlan` LEFT THIS RECORD AT T6 – THE ARCHITECT'S RULING A, 20.09.** T1 shipped it here
+ *  and T5 found it UNREACHABLE AS WRITTEN: `resolveReturnDecision` clears the whole record on BOTH of
+ *  its arms – it must, or a career that comes back has its entries shut for ever (`pauseCovering` has
+ *  no upper bound of its own) – so by the week the blocking `'return-plan'` beat is answered there is
+ *  no `PregnancyState` left to write a plan onto. It now lives on `ComebackState`, which is the seat
+ *  that outlives the pregnancy and already carries the return's other two facts. ⭐ MOVED RATHER THAN
+ *  DUPLICATED, and the ruling's own second reason is why: «a dead field left behind is worse than a
+ *  moved one, because the next reader cannot tell it is dead». ⚠ IT COSTS NO MIGRATION AND TAKES NO
+ *  KEY – v85 stays three keys, and no save in the world holds a v85 pregnancy OR a comeback, so the
+ *  field moves between two records nothing has ever serialised.
  *
- *  ⚠⚠ AND T6 ADDED A SIXTH FIELD, `rankAtPause`, WHICH FALSIFIES T5's «T1 shipped `PregnancyState`'s
+ *  ⚠⚠ AND T6 ADDED A FIELD IN ITS PLACE, `rankAtPause`, WHICH FALSIFIES T5's «T1 shipped `PregnancyState`'s
  *  last field» (`decisionWeekOf`, `world/lifeBeat.ts` §14 – corrected where it stands). It is a
  *  CAPTURE and not a parameter: the ruled freeze is «her rank at `pausesWeek`», the ranking window
  *  deletes the evidence for it 52 weeks later, and the return is 51 weeks after the pause – so the
@@ -2086,18 +2094,6 @@ export interface PregnancyState {
    *  nothing protected, which is the right failure direction – a rank read a season later is not the
    *  rank the rule names, and a wrong freeze is worse than no freeze. */
   rankAtPause: number | null
-  /** How she means to come back, `null` until the T6 beat asks.
-   *
-   *  ⚠⚠ AND SINCE T5 THIS FIELD IS **UNREACHABLE AS WRITTEN**, which is reported here rather than
-   *  quietly re-shaped, because the decision belongs to T6's builder and to the architect.
-   *  `resolveReturnDecision` clears the whole record on both of its arms – it must, or a career that
-   *  comes back has its entries shut for ever (`pauseCovering` has no upper bound of its own) – so by
-   *  the week T6's blocking `'return-plan'` beat is answered there is no `PregnancyState` to write a
-   *  plan onto. `ComebackState` below is the seat that outlives the pregnancy and already holds the
-   *  two other facts the return needs; a field there costs no migration, because no save in the world
-   *  holds a `comeback`. Left standing rather than deleted: it is T1's shipped shape, T6 has not run,
-   *  and a field removed by the wrong task is harder to put back than one that was left alone. */
-  returnPlan: 'small-first' | 'straight-back' | null
 }
 
 /** ⭐⭐⭐ ONE BIRTH'S ROW (v85, wave 8 T1) – see `WorldState.children`. Two facts and no history.
@@ -2149,6 +2145,23 @@ export interface ComebackState {
    *  156-week horizon (RULED 20.09 – the real rule's own shape: since 2019, frozen entry standing,
    *  3 years). */
   protectedRank: { rank: number; entriesLeft: number; validUntilWeek: number } | null
+  /** ⭐⭐⭐ v85 T6 – **HOW SHE MEANS TO COME BACK**, `null` until the blocking `'return-plan'` beat is
+   *  answered. **MOVED HERE FROM `PregnancyState` BY THE ARCHITECT'S RULING A (20.09)** – T1 shipped
+   *  it there, T5 proved it unreachable (the record is cleared on both arms of the decision, so by the
+   *  week the beat is answered there is no pregnancy left to write onto), and this is the seat that
+   *  outlives it. The full argument is on `PregnancyState` above, where the field used to be.
+   *
+   *  ⚠ IT IS A **BOOKING PREFERENCE AND NOT A LOCK** (§2 T6, in those words). `entryVerdict` reads it
+   *  to LABEL an entry that parts from the stated ramp (`EntryStatus.offReturnPlan`) and never to
+   *  refuse one – the player can override week to week, and the beat prices the default rather than
+   *  taking the choice away. A field that refused would be the game answering a scheduling question it
+   *  just asked the parent.
+   *
+   *  ⚠ `null` IS A REAL STATE, `support`'s own argument one record up: the beat BLOCKS, so a career
+   *  sits between the return and the answer for exactly as long as the player leaves the card up, and
+   *  «she is back and nobody has said how» is the true reading of that gap. No default is invented,
+   *  because both available ones would be a plan nobody chose. */
+  returnPlan: 'small-first' | 'straight-back' | null
 }
 
 /** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the

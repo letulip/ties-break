@@ -935,6 +935,24 @@ export interface EntryStatus {
    *  convention in this same interface: a field present only where it means something cannot be read
    *  as a claim about a rung that has no freeze in front of it at all. */
   onProtectedRank?: boolean
+  /** ⭐⭐⭐ v85 T6 – **THIS ENTRY PARTS FROM THE RAMP SHE SAID SHE WOULD TAKE.** Present (and `true`)
+   *  exactly when her `'return-plan'` answer was **small events first** and this entry would ride the
+   *  freeze instead – which is the same reading `onProtectedRank` one field up already computes, asked
+   *  against the plan.
+   *
+   *  ⚠⚠ **A PREFERENCE AND NOT A LOCK**, which is §2 T6's own phrase and is the whole of this field:
+   *  it never touches `level`, `enterEvent` never reads it, and a player who enters anyway is entered.
+   *  «The player can still override week to week; the beat prices the default.» `outgrown`'s shape and
+   *  the 06.08 ruling behind it are the precedent – a LABEL, never a refusal – and this is the second
+   *  field in this interface to take it.
+   *
+   *  ⚠ IT IS ASYMMETRIC AND THAT IS HONEST RATHER THAN LOPSIDED. `'straight-back'` is «put her
+   *  straight back in the big ones», which excludes no rung at all, so nothing is ever off ITS plan;
+   *  `'small-first'` is the answer that names a boundary, and the boundary it names is «what your live
+   *  standing already takes», not a tier list somebody invented. ⚠ AND IT IS ABSENT while the plan is
+   *  `null`, which is every week between the return and the answer – there is no preference yet, so
+   *  there is nothing to part from. */
+  offReturnPlan?: boolean
 }
 /** ⚠ ONE READ, BOTH CEILINGS, AND IT RIDES ON EVERY RETURN OF THE VERDICT BELOW – which is why the
  *  verdict is a separate function and this is a two-line wrapper rather than a flag threaded through
@@ -1219,9 +1237,20 @@ function entryVerdict(
     // ⚠ `undefined` RATHER THAN `false` WHEN IT IS NOT DECISIVE – the field's own convention on
     // `EntryStatus`, and it keeps every verdict this file has ever returned byte-identical for every
     // career with no freeze standing.
+    // ⭐⭐⭐ v85 T6 – AND THE RAMP SHE SAID SHE WOULD TAKE, READ AS A **PREFERENCE**. The plan lives on
+    // `world.comeback` (ruling A) and the seam asks it exactly one question: is this the entry that
+    // parts from it. ⚠ IT IS THE SAME `decisive` READING AND NOT A SECOND RULE – «small events first»
+    // means «play where your live standing already gets you in», so the entries it excludes are
+    // precisely the ones the freeze had to open, which is the number half 1 already computed. No tier
+    // boundary is invented, and there is none to re-tune.
+    // ⚠⚠ IT CHANGES NO `level` AND NO `reason`. `enterEvent` refuses on `blocked` and nothing else, so
+    // an off-plan entry commits exactly as any other does and spends one of her twelve – which is what
+    // «the player can still override week to week» means mechanically.
+    const offPlan = decisive && world.comeback?.returnPlan === 'small-first'
     return {
       ...(availability ? availabilityStatus(world, event) : { level: 'ok' as const }),
       ...(decisive ? { onProtectedRank: true } : {}),
+      ...(offPlan ? { offReturnPlan: true } : {}),
     }
   }
   // ⭐⭐ THE PLAY DOWN RULES ON THE DOMESTIC LADDER, ASKED FIRST (round 28 #12 Part 0, docs/specs/

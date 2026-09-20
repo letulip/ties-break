@@ -171,7 +171,6 @@ function expecting(world: WorldState, announcedWeek: number, support: PregnancyS
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,
     support,
-    returnPlan: null,
     rankAtPause: null,
   }
   return world
@@ -364,7 +363,7 @@ describe('wave 8 T6 C – the freeze at the entry band', () => {
     const refused = entryStatus(world, event)
     expect(refused.level, 'control: her live standing refuses her').toBe('blocked')
     expect(refused.reason, 'control: and it is the acceptance list that does it').toBe('locked')
-    world.comeback = { returnedWeek: week - 3, protectedRank: freeze }
+    world.comeback = { returnedWeek: week - 3, protectedRank: freeze, returnPlan: null }
     const admitted = entryStatus(world, event)
     expect(admitted.level, 'the frozen standing takes her').not.toBe('blocked')
     expect(admitted.onProtectedRank, 'and the verdict says the entry rides it').toBe(true)

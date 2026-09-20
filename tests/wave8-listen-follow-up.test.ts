@@ -48,6 +48,14 @@ import type { BondBand, LifeBeatKind } from '../src/shared/protocol/narrative'
  *  eleven and report green. */
 const KINDS = Object.keys(LIFE_BEAT_BLOCKING) as LifeBeatKind[]
 
+/** ⚠ THE TEN KINDS THAT EXISTED WHEN §B.1's DIGEST WAS TAKEN (on the `if`-chain at `5b025575`),
+ *  written out ONCE so that digest keeps meaning what it meant. Every kind added after it is asserted
+ *  on its own terms; this list never grows. */
+const TEN_AT_THE_REFACTOR: readonly LifeBeatKind[] = [
+  'fork-opinion', 'met', 'small-talk', 'fork-counsel', 'ended', 'fork-psy', 'engaged', 'spouse-view',
+  'own-key', 'expecting',
+]
+
 const BANDS: readonly BondBand[] = ['close', 'steady', 'strained', 'cold']
 
 /** ⚠ SIX DETAILS AND NOT ONE, CHOSEN SO THE GRID CROSSES THE HAZARD RATHER THAN AVOIDING IT. Three
@@ -68,11 +76,18 @@ function answerOf(kind: LifeBeatKind, detail: string, voice: (typeof TEMPERAMENT
   }
 }
 
-/** The whole answer table, in a fixed order, as one string per row. 10 kinds x 6 details x 4 voices
- *  x 4 bands = 960 rows. */
-function answerTable(): string[] {
+/** The whole answer table, in a fixed order, as one string per row. 11 kinds x 6 details x 4 voices
+ *  x 4 bands = 1056 rows.
+ *
+ *  ⚠⚠ `only` IS HOW THE REFACTOR'S ORIGINAL DIGEST SURVIVES A NEW UNION MEMBER – re-aimed by v85 T6
+ *  (20.09) rather than re-taken. §B.1's 48 characters were measured on the `if`-chain at `5b025575`
+ *  and their whole value is the order they were measured in; re-hashing the table with an eleventh
+ *  kind in it would have thrown that away and replaced a MEASUREMENT with a transcription of whatever
+ *  the code does now. So the ten kinds that existed then are hashed as they were, and the eleventh is
+ *  asserted separately. */
+function answerTable(only?: readonly LifeBeatKind[]): string[] {
   const rows: string[] = []
-  for (const kind of KINDS) {
+  for (const kind of only ?? KINDS) {
     for (const detail of DETAILS) {
       for (const voice of TEMPERAMENTS) {
         for (const bond of BANDS) rows.push(`${kind}|${detail}|${voice}|${bond} -> ${answerOf(kind, detail, voice, bond)}`)
@@ -89,7 +104,7 @@ describe('wave 8 T2½ A – the pin knows how many kinds there are', () => {
     // if it were derived from the same place it is compared against. `KINDS` comes off
     // `LIFE_BEAT_BLOCKING` and the ten names are written out HERE, so a new member reds this line and
     // names itself.
-    expect(KINDS.length, 'ten kinds as of v85 T2 – a new one reds here and in LIFE_BEAT_BLOCKING').toBe(10)
+    expect(KINDS.length, 'eleven kinds as of v85 T6 – a new one reds here and in LIFE_BEAT_BLOCKING').toBe(11)
     expect([...KINDS].sort()).toEqual([
       'ended',
       'engaged',
@@ -99,6 +114,12 @@ describe('wave 8 T2½ A – the pin knows how many kinds there are', () => {
       'fork-psy',
       'met',
       'own-key',
+      // ⭐ RE-AIMED 20.09 BY v85 T6 – AND THIS LINE IS THE WHOLE PIECE PAYING FOR ITSELF. T2½'s own
+      // header predicted it: «this wave adds another kind – T6's `'return-plan'` – so the wave's own
+      // last engine task was one forgotten clause away from the defect». It arrived, the total record
+      // named it at compile time, and its cell was written with a reason instead of inherited from a
+      // tail.
+      'return-plan',
       'small-talk',
       'spouse-view',
     ])
@@ -115,14 +136,19 @@ describe('wave 8 T2½ B – the answer table, before and after the shape change'
     // ⚠ A DIGEST AND NOT A 960-ENTRY LITERAL, with the named anchors below carrying the readability:
     // an inline table of that size is a file nobody re-reads, and the three cases after this one say
     // in words what each family of rows means, so a red here is diagnosed rather than stared at.
-    const table = answerTable()
+    // ⚠⚠ RE-AIMED 20.09 BY v85 T6 BY **NARROWING THE SCOPE AND KEEPING THE VALUE**, which is the only
+    // honest way to carry a before-and-after digest past a new union member: the ten kinds that
+    // existed when it was taken are hashed exactly as they were, and the eleventh is asserted in the
+    // case below. Re-hashing all eleven would have replaced the measurement with a transcription.
+    const table = answerTable(TEN_AT_THE_REFACTOR)
     expect(table.length, '10 kinds x 6 details x 4 voices x 4 bands').toBe(960)
     const digest = createHash('sha256').update(table.join('\n')).digest('hex')
     expect(digest, 'the function`s answer for every kind – byte-identical across the refactor')
       .toBe('0cad2b52be557a6a9434d6f5576a8c4d22822b4448c9bbbe833d5f27862c140a')
+    expect(answerTable().length, '...and the live table is eleven kinds wide now').toBe(1056)
   })
 
-  it('⭐⭐ NINE kinds answer `null` to everything, whatever detail they carry', () => {
+  it('⭐⭐ TEN kinds answer `null` to everything, whatever detail they carry', () => {
     // ⚠⚠ THIS IS THE DEFECT'S OWN SHAPE ASSERTED FROM THE SAFE SIDE. Under the `if`-chain a kind was
     // null-answering because it was NAMED in the chain; a kind left out fell to the tail and THREW on
     // its own detail. So the claim worth pinning is not «these nine return null» but «these nine

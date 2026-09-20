@@ -183,7 +183,6 @@ function expectingFrom(world: WorldState, pausesWeek: number): WorldState {
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,
     support: null,
-    returnPlan: null,
     // ⚠ v85 T6 – null here on purpose: §A walks the REAL pause week and reads the capture back.
     rankAtPause: null,
   }

@@ -662,11 +662,12 @@ export function resolveReturnDecision(world: WorldState): void {
     // `pauseCovering` refuses every ENTRY while it stands, so a return that left the record in place
     // would be a comeback that can never enter a tournament – T3's finding, and the whole reason this
     // function owes two terminal shapes rather than one.
-    // ⚠⚠ ONE CONSEQUENCE IS T6's TO RULE ON AND IS FLAGGED RATHER THAN DECIDED HERE: `PregnancyState
-    // .returnPlan` dies with the record, so the blocking `'return-plan'` beat has nowhere to put its
-    // answer. `world.comeback` is the seat that outlives the pregnancy, it already carries the return's
-    // other two facts, and no save in the world holds one – so a field there costs no migration. The
-    // field is left standing in `world/state.ts` with the same note beside it.
+    // ⚠⚠ THE CONSEQUENCE T5 FLAGGED IS RULED AND BUILT: `PregnancyState.returnPlan` died with the
+    // record, so the blocking `'return-plan'` beat had nowhere to put its answer. The architect's
+    // RULING A (20.09) MOVED the field onto `ComebackState` – the seat that outlives the pregnancy,
+    // which already carries the return's other two facts – and took it OFF `PregnancyState`, because
+    // «a dead field left behind is worse than a moved one, the next reader cannot tell it is dead». No
+    // migration and no key: v85 stays three keys, and no save in the world holds either record.
     //
     // ⭐⭐⭐ v85 T6 – **AND THIS IS THE SEAM, FILLED.** `world.comeback` had no writer on the whole
     // tree until this line; it has exactly one now and always will (T2½ piece 1's own sentence). Both
@@ -680,6 +681,25 @@ export function resolveReturnDecision(world: WorldState): void {
     // ⚠ NO `captureMilestone` – the album's milestone channel is what the family KEEPS, and T4's birth
     // is this arc's entry there. A decision to try is news about a season (T3's own distinction).
     addEvent(world, { week: world.week, type: 'milestone', keep: true, text: RETURN_EVENT })
+    // ⭐⭐⭐ v85 T6 – **AND THE ONE QUESTION THIS ARC PUTS TO THE PARENT**: the blocking `'return-plan'`
+    // beat, raised on the week the calendar re-opens and answered before a single entry can be
+    // booked. §4a is UNTOUCHED and this is the reading rather than an exception to it: «SHE decides,
+    // the parent REACTS» is a law about HER LIFE, and she has already decided – the coin four lines up
+    // is where. What is left is the SCHEDULING, which is what the parent has always decided (the
+    // college fork's mechanical questions are the precedent, and §2 T6 says so in as many words).
+    //
+    // ⚠ AFTER THE ROW AND NOT BEFORE IT, `resolveLeaving`'s own ordering rule («her sentence first,
+    // then the record»): the fact that she is back is the news, and the question about how is what
+    // the player answers once he has read it.
+    //
+    // ⚠ THE DETAIL IS THE LITERAL KIND, `'own-key'`'s own shape: there is nothing PER-ROW to record.
+    // The comeback it is about is `world.comeback` – one record for one career – and it is deliberately
+    // NOT the episode id, because a marriage may have ended months before the return (§0's decoupling
+    // ruling) and a detail naming a dead row would invite a reader to gate on it.
+    //
+    // ⚠ ONCE BY CONSTRUCTION AND WITH NO RECEIPT OF ITS OWN: this function returns on
+    // `world.pregnancy === null`, and the line above cleared it, so the raise cannot run twice.
+    raiseLifeBeat(world, 'return-plan', 'return-plan')
     return
   }
   // ⭐⭐ SHE DOES NOT, AND THE CAREER STOPS – through `latchEnding`, the ONE seam every other ending

@@ -130,7 +130,7 @@ function career(seed: string, week = 600): WorldState {
 function withComeback(world: WorldState, back: number): WorldState {
   return {
     ...world,
-    comeback: { returnedWeek: world.week - back, protectedRank: null },
+    comeback: { returnedWeek: world.week - back, protectedRank: null, returnPlan: null },
   }
 }
 
