@@ -294,6 +294,39 @@ table's own arc, and the nameless unmarried father), which are sufficient.
 
 The wave started on his go of 20.09 – see the header – and questions found in flight are collected and brought at the end of the work, on his own instruction.
 
+### 3a. T7's question – sponsors, and the constant that did NOT ship
+
+⭐ **MEASURED FIRST, and the measurement decided it.** §2 T7's whole instruction was to price what a
+twelve-month absence already costs in brand income before adding anything, and
+[docs/specs/the-motherhood-2026-09.md §1](../specs/the-motherhood-2026-09.md) is the record. Two arms
+walked from the same commit (`82b23137`), 240 careers each, differing only by
+`ECONOMY.motherhood.perWeekByAge` reverse-edited to 0 in the control – so each paused career is
+compared against **itself without the pregnancy**, identical to the cent for every week before she
+says it ($139,814,780 of brand money on both sides of the pairing witness).
+
+**THE FIGURE.** A career that pauses keeps **70.0% of the brand income** its own twin earns over the
+155 weeks from the pause – **$3,865,406 less per paused career** – and holds **24.3% of the control's
+kit-deal weeks in the year after coming back**. Fifteen kit deals died on the events clause against
+**none** in the control.
+
+**THE DECISION.** The drafted `ECONOMY.motherhood.pauseBrandFactor` **does not enter**. The world
+already charges the research's «sponsors partially lost during the pause», through machinery no part
+of this wave wrote: `reviewSponsors` fails a deal that played fewer than `minEventsPerSeason`, a
+let-down winter also bars the post that would have replaced it, and merch follows a fame that nothing
+is topping up.
+
+**WHAT THE OTHER BRANCH WOULD HAVE COST.** A factor at the obvious `0.6` – the research's own −40%,
+matching `comebackStages`' first rung – takes her from 70% to **~58%**, which is a second charge very
+nearly the size of the first. ⚠ And it would land in the wrong window: the measurement shows the
+contract still paying **82.1%** THROUGH the absence (the events count reads a rolling year that still
+holds the season she played) and the bill landing the year AFTER. A flat multiplier on the absence
+would charge her where the game currently does not and bury the deferral.
+
+⚠ **One finding in flight, not T7's to fix**: across the 8 «she plays on» weeks between the
+announcement and the closing of entries, the paused arm enters **46** event-weeks against its own
+twin's **88**. Half. No brand mechanism causes it – it is the announcement's own live effects – and
+it belongs to T9's arm.
+
 ## 4. What this wave does NOT do
 
 No child-as-state texture (W5: travel calculus, standing cost line, weekly presence), no
