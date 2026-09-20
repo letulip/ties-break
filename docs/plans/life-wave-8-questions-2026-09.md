@@ -3,7 +3,7 @@ type: plan
 status: current
 area: life
 canonical: false
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-21
 ---
 
 # Wave 8 – the questions, collected as he asked
@@ -210,3 +210,107 @@ Stated in the handoff; not fixed, because it is wave 7's instrument.
 
 **F3.** Should `seeded-careers.spec.ts` ever grow a pregnancy row, or is the twelfth fixture's
 exemption permanent? It now covers five of twelve fixtures.
+
+---
+
+## The architect's pass – 21.09, on his delegation «вопросы сам разбери, если что – приноси мне»
+
+Two verdicts exist: **CLOSED** – the architect's own call, made here and final unless he objects;
+**CARRIED** – on his desk, travelling with the recommendation written beside it. Thirteen closed,
+thirteen carried (two of those as FYI needing no answer). ⚠ No closed verdict edited any code: a
+ruling that costs an edit waits for his wording batch, so the wave's gate stays a measurement of
+one head.
+
+### A – both carried; they are design
+
+* **A1 – CARRIED, with one instrument arm to run before any candidate is chosen.** The finding
+  compares our economy against itself; the missing comparison is against the REAL points tables:
+  what does a first-round exit at the top tiers pay relative to a small-tier TITLE there, and what
+  is our ratio? If ours is inflated at the big draws' bottom rungs, the fix is TUNING with a bench
+  and invariant 5, not new design – and only if the ratio is honest does his choice among the
+  three candidates (points floor / body cost / accept-and-say-so) actually open. **E5 rides with
+  A1**: if small-first is to be the honest path, the `outgrown` label must stop sorting it down –
+  one sort key, same decision.
+* **A2 – STANDS as measured, carried as FYI.** Ship nothing is right, and the deferral finding
+  (82.1% through the absence, the bill the year after) is exactly why a flat factor would have
+  been wrong. The one lever if he reads «partially lost» sharper – `minEvents` and the sponsor
+  window's verdict – is a whole-ladder decision and waits for him to want it.
+
+### B – verified one by one against the diff; all five stand
+
+* **B1 CLOSED** – read at the clause: one line beside the identical college exclusion, the
+  comeback ramp deliberately uncovered, self-terminating because `resolveReturnDecision` nulls
+  the state on both arms. The existing rule meeting a new case, as claimed.
+* **B2 CLOSED** – `pendingLifeBeat` joins `decisionOpen`, one predicate, the hole measured by
+  mutation and older than the wave. Right on both counts.
+* **B3 CLOSED** – the licence («nothing has shipped») is written at the fence, the peel rung held
+  through the growth, one golden covers all three keys. House precedent recorded: an UNSHIPPED
+  version may grow; a shipped one never.
+* **B4 CLOSED** – the SCOPE BRAKE with W5 named in the comment is exactly how §4's «no repeat
+  pregnancy enabled» stays true. W5 lifts it by design, not by surprise.
+* **B5 CARRIED** – CLAUDE.md is his file; the 180-character correction makes a sentence true and
+  the architect recommends keeping it, but the questions file's own framing is right: revert if
+  he would rather write it himself.
+
+### C – his by invariant 4; drafts prepared where a draft helps
+
+* **C1 CARRIED, recommendation LEAVE.** «She came back sooner than last time» stays true at a
+  postpartum clear – she did come back. Narrowing a ruled string's trigger needs his word; the
+  architect's read is that no narrowing is needed.
+* **C2 CARRIED with a draft.** The refusal is right, the word is stale for the 20 post-birth
+  weeks. Draft variant row for that window: «She is home with the baby – no new entries yet.»
+* **C3 CARRIED with a draft.** P12 reads a shade warmer than `measured` is. Draft: «Say we are
+  glad – and start counting the weeks.»
+* **C4 CARRIED with a draft.** P22's second sentence should stop sharing sixty characters with
+  `peak`. Draft: «She had a child, and the months after it went by without an entry in them. No
+  one asked her to choose – by spring the choice had long been made.»
+* **C5 CARRIED, recommendation EXEMPT.** A lint shaping copy is the tail wagging: one exemption
+  row for P17, and the natural draft returns for his pass.
+* **C6 CLOSED → W5.** The diary band needs a `DiaryFacts` field and claims plumbing – wave-2
+  machinery T3 was right not to reshape. The W5 brief carries it as a named task.
+* **C7 CARRIED** – the `'expecting'` glyph is one emoji pick under §5a; the white heart stands
+  until then.
+* **C8 CARRIED as FYI.** Nine authored epilogues wait for a surface; `'family'`'s is the ninth.
+  The surface is the finale shell the album wave listed as not-built – the two backlog rows are
+  one row.
+
+### D – numbers and shapes
+
+* **D1 CLOSED.** `playsOnWeeks` is a door-closing date and stays one; the drafted intent («she
+  plays into the early months») is what ships, and the player-facing side is C2's fix, not a
+  constant's.
+* **D2 CLOSED.** The cliff at 35 is the digest's own oldest observation; a taper is one number
+  on the day he wants one.
+* **D3 CLOSED.** The anchor stands as built (from the return). The digest's letter is post-birth
+  – ~26 weeks less generous – and the measured consumption (12/12 spent inside year one, or 0)
+  makes the difference immaterial. One sentence in the spec names the deviation in his batch.
+* **D4 CLOSED.** A withdrawal hands the entry back, capped at twelve – generous but bounded;
+  revisit only if a bench ever shows the cap farmed.
+* **D5 CARRIED, recommendation: the postpartum window is never shorter than a break-up at the
+  same grade.** A birth is physically the larger event; support should shorten it, not below
+  the break-up's floor. The base moves, the scale stays, the bench re-runs – on his word.
+* **D6 CLOSED.** One in 1700 weddings conceiving the same tick is named and harmless; a depth
+  threshold would be an undrafted constant solving a non-problem.
+* **D7 CLOSED.** The builder's reason is accepted as written – it is a true reason. If the owner
+  had a different one, the comment gains a second sentence; the clause is the same either way.
+* **D8 CLOSED.** The spec already reports the full ladder (12.5 / 54.2 / 66.7) and names the
+  top-150 calibration without electing a bar – that treatment is the ruling: report the curve,
+  never pick the answer.
+
+### E, F – art, album, instruments
+
+* **E1 CARRIED** – does he want a birth painting? The `'norm'` face stands meanwhile, for the
+  stated reason (the week's arithmetic contradicts a smile).
+* **E2 CARRIED, recommendation YES for W5.** A birth is the largest life event the album could
+  hold and the corpus is his document – an occasion row plus his lines, landing with the child's
+  own wave.
+* **E3 CLOSED** – yielding to a fresh result is right; the belly-hand over a title week would be
+  the exact defect class his corpus review named.
+* **E4 CLOSED** – twelve of thirty-nine stands; it is a picture.
+* **E5 → folded into A1.**
+* **F1 CLOSED → W5.** The wedding bench's §(g) heal is a named T-instrument task in the W5 brief
+  – K5's own precedent from wave 7.
+* **F2 CLOSED.** Plain `grep DRAFT` is the documented remedy from here on; the strings table's
+  header says so in his batch, one line.
+* **F3 CLOSED.** The exemption stands while the twelfth fixture covers the pregnancy path in a
+  real browser; it is revisited the day pregnancy UI grows beyond the pause texture.
