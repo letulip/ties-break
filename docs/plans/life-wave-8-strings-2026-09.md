@@ -316,7 +316,8 @@ first, as §2 T7 instructed: two arms of 240 careers from one commit, differing 
 each of the **25 that paused** is compared against itself without the pregnancy. A career that pauses
 already keeps only **70.0% of the brand income** its own twin earns over the 155 weeks from the pause
 – **$3,865,406 less each** – and holds **24.3%** of the control's kit-deal weeks in the year after
-coming back, with fifteen kit deals dead on the events clause against **none** in the control. The world already charges the research's «sponsors partially lost during the pause» through
+coming back, with fifteen kit deals dead on the events clause against **none** in the control.
+The world already charges the research's «sponsors partially lost during the pause» through
 machinery no part of this wave wrote. **So the absence is a measurement, not an oversight, and the
 wave declined to charge her twice.** The record is
 [the motherhood spec §1](../specs/the-motherhood-2026-09.md); the branch not taken (a flat 0.6) would
@@ -344,7 +345,7 @@ None of these blocks the wave; they are collected here per his own instruction.
 1. **⚠⚠ Which answer is which GRADE** (P11–P13). The three labels are a rewording away from anything
    he prefers, but the MAPPING – joy→`warm`, worry→`measured`, career-first→`cold` – is mechanical:
    it scales the postpartum shock and weights her decision to come back. If he wants «Say we are glad,
-   and that we will worry» to read as warm support rather than as the measured middle, that is a
+   and that we will worry» to read as warm support rather than as the measured middle, that is an
    engine change and a re-bench, not a copy edit. Flagged because the three labels read closer
    together than the three grades are.
 2. **⚠⚠ P18 says «She is expecting» for twenty weeks after she is not.** §2 carries the full
@@ -362,9 +363,10 @@ None of these blocks the wave; they are collected here per his own instruction.
    a reading of his ruling rather than a number he gave: anchored at the pause it would be 105 usable
    weeks and the ruled 12 entries and ruled 156 weeks would be about two different spans. Carried as a
    reading to confirm.
-6. **Does any surface speak the persisted `partnerName`?** Still open from wave 7 §5 Q-2, and this
-   wave added five more surfaces that could have and did not (P1–P10, P17, P19, P22). Unchanged, and
-   listed so the answer covers this wave too.
+6. **Does any surface speak the persisted `partnerName`?** Still open from wave 7 §5 Q-2. This wave
+   added **five more surfaces that could have spoken it and do not** – the announcement card
+   (P1–P10), the pause row (P17), the birth row (P19), the return row (P21) and the epilogue's blurb
+   (P22). Unchanged, and listed so that whatever he rules covers this wave too.
 7. **What the spouse is CALLED on screen** – wave 7 §5 Q-1, still open. ⚠ Wave 8 does not widen it:
    **not one row in this table refers to him at all**, which is §0's decoupling ruling read strictly.
    A mid-pregnancy divorce is ordinary life, so every line above is true of a career that had one.
