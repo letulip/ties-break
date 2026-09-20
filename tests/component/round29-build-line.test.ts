@@ -182,7 +182,20 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // parallel and the component project is not where a v84 engine commit is gated, so this sat red
     // from `3d611cc3` until the wave's first full `test:component` pass – the same one-project blind
     // spot v83 was caught by, one wave later.
-    expect(SAVE_SCHEMA_VERSION).toBe(84)
+    // ⚠ AND AGAIN AT v85 (20.09, wave 8 T1 – `world.pregnancy`, `world.children` and
+    // `world.comeback`, the seats the pregnancy and the return need), NOT WEAKENED, for the
+    // NINETEENTH time and for the reason verbatim: 85 was moved by that wave with its full move
+    // (bump, append-only migration step, golden fixture v85 and its README row, e2e fixtures, the
+    // doc-facts sentence and the frozen-career peel rung), never by this line's item. The claim
+    // above – «the BUILD-LINE wave moved no schema» – is untouched, and the pin still follows the
+    // ladder's head so the sentence over it stays checkable.
+    // ⚠⚠ AND THE ONE-PROJECT BLIND SPOT HAS NOW CAUGHT THE SAME THING THREE WAVES RUNNING, which is
+    // worth stating as a pattern rather than as a third accident: T1's rung is gated on the UNIT
+    // project (its own commit says so), this cell lives in the COMPONENT project, and the wave's
+    // first full `test:component` run is therefore where the stale number surfaces – here that was
+    // T3's gate, so it was red from `97bf1850` to this line. Re-stamped by the T3 builder, not by
+    // the schema's own, exactly as v83 and v84 were.
+    expect(SAVE_SCHEMA_VERSION).toBe(85)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

@@ -8,21 +8,21 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-602 exported names across 56 owning modules.
+605 exported names across 56 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 95 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 96 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
+| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 23 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
-| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 19 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 18 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
@@ -134,6 +134,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `forkWantOf` – `src/engine/world/lifeBeat.ts`
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
 - `HeardRead` *(type)* – `src/engine/world/lifeBeat.ts`
+- `landPregnancyPause` – `src/engine/world/lifeBeat.ts`
 - `landWedding` – `src/engine/world/lifeBeat.ts`
 - `latchedEpisode` – `src/engine/world/lifeBeat.ts`
 - `leakEligible` – `src/engine/world/lifeBeat.ts`
@@ -303,6 +304,34 @@ THE COACH MARKET: who is available at her age and rung, what they cost, and what
 - `settleCoachDeal` – `src/engine/world/coachMarket.ts`
 - `supportPayrollWeeklyCents` – `src/engine/world/coachMarket.ts`
 
+### `src/engine/world/medical.ts`
+
+THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
+
+- `accrueCondition` – `src/engine/world/medical.ts`
+- `adShootHolds` – `src/engine/world/medical.ts`
+- `arrivalStatus` – `src/engine/world/medical.ts`
+- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
+- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
+- `availabilityStatus` – `src/engine/world/medical.ts`
+- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts`
+- `entryStatus` – `src/engine/world/medical.ts`
+- `EntryStatus` *(type)* – `src/engine/world/medical.ts`
+- `layoffBlock` – `src/engine/world/medical.ts`
+- `LayoffBlock` *(type)* – `src/engine/world/medical.ts`
+- `layoffCovering` – `src/engine/world/medical.ts`
+- `layoffCoversWeek` – `src/engine/world/medical.ts`
+- `medicalBlock` – `src/engine/world/medical.ts`
+- `MedicalBlock` *(type)* – `src/engine/world/medical.ts`
+- `medicalClearance` – `src/engine/world/medical.ts`
+- `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
+- `pauseCovering` – `src/engine/world/medical.ts`
+- `PREGNANCY_PAUSE_DETAIL` – `src/engine/world/medical.ts`
+- `recoveryAgeFade` – `src/engine/world/medical.ts`
+- `recoveryBaseFor` – `src/engine/world/medical.ts`
+- `restRecoveryBonus` – `src/engine/world/medical.ts`
+- `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
+
 ### `src/engine/world/psychologist.ts`
 
 THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2).
@@ -384,32 +413,6 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `resolveMasseurReturn` – `src/engine/world/masseur.ts`
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
-
-### `src/engine/world/medical.ts`
-
-THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
-
-- `accrueCondition` – `src/engine/world/medical.ts`
-- `adShootHolds` – `src/engine/world/medical.ts`
-- `arrivalStatus` – `src/engine/world/medical.ts`
-- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
-- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
-- `availabilityStatus` – `src/engine/world/medical.ts`
-- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts`
-- `entryStatus` – `src/engine/world/medical.ts`
-- `EntryStatus` *(type)* – `src/engine/world/medical.ts`
-- `layoffBlock` – `src/engine/world/medical.ts`
-- `LayoffBlock` *(type)* – `src/engine/world/medical.ts`
-- `layoffCovering` – `src/engine/world/medical.ts`
-- `layoffCoversWeek` – `src/engine/world/medical.ts`
-- `medicalBlock` – `src/engine/world/medical.ts`
-- `MedicalBlock` *(type)* – `src/engine/world/medical.ts`
-- `medicalClearance` – `src/engine/world/medical.ts`
-- `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
-- `recoveryAgeFade` – `src/engine/world/medical.ts`
-- `recoveryBaseFor` – `src/engine/world/medical.ts`
-- `restRecoveryBonus` – `src/engine/world/medical.ts`
-- `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
 
 ### `src/engine/chemistry.ts`
 

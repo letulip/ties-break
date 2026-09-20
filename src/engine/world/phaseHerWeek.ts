@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landPregnancyPause, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -392,6 +392,28 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        fires on `dueWeek` (T4); neither exists on this tree, so on this commit a pregnancy is a
   //        record, a card and a feed line about the answer, and nothing about the season moves.
   rollPregnancy(world)
+  // ⭐⭐ 1c-pause (v85, the pregnancy – wave 8 T3): AND THE WEEK THE ENTRIES CLOSE.
+  //
+  //        ⚠⚠ THIS IS NOT THE PAUSE. The pause is the entry gate reading
+  //        `world.pregnancy.pausesWeek` at the EVENT's week (`pauseCovering`, `world/medical.ts`),
+  //        which needs no tick step and has none: the calendar shuts on its own date from the moment
+  //        `rollPregnancy` writes it, eight weeks before this line ever runs. What this writes is the
+  //        ONE feed row that tells the parent which week it was – texture, and thin on purpose.
+  //
+  //        ⚠ THE SLOT IS FREE AND IS SAID SO RATHER THAN ARGUED AT LENGTH: `playsOnWeeks` is 8, so
+  //        the pause can never land on the week of its own announcement and the two calls cannot
+  //        collide on one tick. It sits HERE, immediately under its raise, so §14's two weekly steps
+  //        read as the one section they belong to.
+  //
+  //        ⚠ ZERO MAIN DRAWS AND ZERO DRAWS OF ANY KIND: it takes no `rng`, derives no stream, and a
+  //        week that is not `pausesWeek` – which is every week of every career that never paused –
+  //        returns on an integer comparison. The frozen capture (41550 / e6b0c709) cannot see it.
+  //
+  //        ⚠ AND IT RELEASES NOTHING. The injury layoff auto-withdraws her from the entries it covers
+  //        and refunds them; the pause refuses NEW entries and leaves `world.entries` alone, because
+  //        «already-booked events inside the window play out through the standing machinery» (§2 T3).
+  //        Nothing in this phase, or any other, takes a tournament off her for being pregnant.
+  landPregnancyPause(world)
   // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
   //
   //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a

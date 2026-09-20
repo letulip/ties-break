@@ -464,6 +464,67 @@ export function layoffBlock(input: {
   return { level: 'blocked', reason: 'injured', detail: injuredDetail(weeksRemaining!) }
 }
 
+/** ⭐⭐⭐ v85 (wave 8 – T3) – IS THE MATERNITY PAUSE OVER `week`? The record itself when it is, null
+ *  when it is not – `layoffCovering`'s shape and `layoffCovering`'s position in this file, three
+ *  functions up, because they are the same KIND of question about two different absences.
+ *
+ *  ⚠⚠ AND THE SAMENESS STOPS THERE, WHICH IS THE ONE THING A READER MUST TAKE FROM THIS BLOCK. THE
+ *  PAUSE RELEASES NOTHING. A layoff auto-withdraws her from the entries it covers and refunds them
+ *  (`releaseEntry(world, id, 'injury')`, `world/injury.ts`); this refuses NEW entries and touches
+ *  `world.entries` never. The brief is explicit – «already-booked events inside the window play out
+ *  through the standing machinery» – so there is no `EntryReleaseReason` member here, no refund path
+ *  and no auto-withdraw, and `arrivalStatus` at the bottom of this file is deliberately NOT given
+ *  this question: a week she committed to before the announcement is a week she plays. A release
+ *  written here would be the injury built a second time under another name.
+ *
+ *  ⚠⚠ IT IS READ AT THE **EVENT'S** WEEK AND NEVER AT TODAY'S – R10-17's own rule (see
+ *  `layoffCovering`), and here it is load-bearing in a way it is not even for the injury. Read at
+ *  `world.week` the pause would say «entries close on the week the pause begins», which sounds like
+ *  the brief's sentence and is a TRAP: between the announcement and `pausesWeek` she could commit to
+ *  a tournament eight months out, the gate would shut behind her, and nothing in this wave would take
+ *  her back off that list – she would arrive to play it at full term. Read at the event's week the
+ *  same sentence means «the weeks from `pausesWeek` on are not weeks she enters», which is what «pros
+ *  play into the early months» actually describes, and the already-booked clause above is then about
+ *  the entries that predate the announcement, which is the only honest thing it can be about.
+ *
+ *  ⚠ NO UPPER BOUND, AND THE ABSENCE IS THE DESIGN RATHER THAN AN OMISSION. A layoff names a return
+ *  week because a body heals on a schedule; this does not, because in this wave nothing knows whether
+ *  there IS one – T5 draws her decision and T6 clears the record on the return, so THE RECORD'S OWN
+ *  LIFETIME IS THE WINDOW. A career that does not come back ends instead (`'family'`, T5) and
+ *  `guardNotEnded` refuses the command before this is ever asked. So the day the window closes is the
+ *  day `world.pregnancy` goes back to null, in exactly one place, and there is no second date for the
+ *  two halves of the rule to disagree about.
+ *
+ *  ⚠⚠ IT READS `world.pregnancy` AND NOTHING ELSE – THE DECOUPLING LAW (RULED 20.09, «развелись и
+ *  развелись, жизнь продолжается»; the banner is `world/lifeBeat.ts` §14, addressed to this task by
+ *  name). `episodeId` is a reference and never a liveness check: a marriage that ends mid-term is
+ *  ordinary life, and a gate that asked whether it was still standing would re-open the entries under
+ *  a woman who is seven months pregnant, which is the one reading of that ruling that is wrong.
+ *
+ *  Pure state, ZERO RNG draws, and `pausesWeek` is READ rather than re-derived – `rollPregnancy`
+ *  wrote it at the announcement off `ECONOMY.motherhood.playsOnWeeks`, and a second site that knew
+ *  the arithmetic is how the two halves of a rule drift apart (`PregnancyState`'s own law, T1). */
+export function pauseCovering(world: WorldState, week: number): WorldState['pregnancy'] {
+  const pregnancy = world.pregnancy
+  return pregnancy !== null && week >= pregnancy.pausesWeek ? pregnancy : null
+}
+
+/** ⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY** (invariant 4: a player-facing sentence is the owner's).
+ *  The pause's refusal, written once here for `injuredDetail`'s own reason one function up: the gate
+ *  is the only writer today, and a sentence spelled at its call site is a sentence the next surface
+ *  copies instead of imports.
+ *
+ *  ⚠ IT NAMES NO DATE, deliberately, and that is the same discipline the cap's own note states as
+ *  «a refusal that names the wrong date is worse than one that names none»: this wave knows the DUE
+ *  week and does not know the RETURN week, and «back after the birth» would be a promise T5 is
+ *  allowed to break. ⚠ AND IT NAMES THE ALREADY-BOOKED RULE, because that is the one thing a parent
+ *  cannot work out from the card in front of him – every refused card is a card she is not entering,
+ *  and the entries she already holds are somewhere else entirely.
+ *
+ *  ⚠ HUSBAND-AGNOSTIC, per §0's decoupling ruling: a mid-pregnancy divorce is ordinary life, so no
+ *  line of this wave may need to know whether he is still there. Nothing here does. */
+export const PREGNANCY_PAUSE_DETAIL = 'She is expecting – no new entries. The ones she already holds still stand.'
+
 /** ⭐⭐⭐ ROUND 34 #9 – WHAT THE BOOKED HOLIDAYS BETWEEN NOW AND `week` WILL PUT BACK.
  *
  *  The owner: «Если отпуск назначен, то на карточке турнира в сезоне надо убрать Exhausted … Или
@@ -559,6 +620,79 @@ export function availabilityStatus(
         `Tour suspension – ${ECONOMY.mandatory.suspensionAt} penalty points inside 52 weeks. ` +
         `${left} ${left === 1 ? 'week' : 'weeks'} left; entries reopen after that.`,
     }
+  }
+  // ⭐⭐⭐ v85 (wave 8 – T3) – AND SHE HAS STOPPED ENTERING: THE MATERNITY PAUSE. From
+  // `world.pregnancy.pausesWeek` on, no rung is enterable on any week of the window (see
+  // `pauseCovering` above for the window, for why it is read at the EVENT's week, and for the fact
+  // that it RELEASES NOTHING – the entries she already holds are hers to play).
+  //
+  // ⭐⭐ IT RIDES THE ONE GATE AND IS NOT A SECOND TURNSTILE, which is the whole of where it lives.
+  // `enterEvent`'s own comment names the doctrine – «THE ONE GATE … shared with the snapshot and the
+  // advance stop – so no surface can decide differently about the same event» – and every surface
+  // that asks about a tournament arrives here through `entryVerdict`. So the pause is a branch of
+  // this function and nothing anywhere else asks the question: the season feed's filter, the
+  // shortfall check, the deadline stop in `advanceWeeks` and the turnstile all go quiet together, on
+  // one read, without a line of their own.
+  //
+  // ⚠⚠ AND IT IS IN **`availabilityStatus`** RATHER THAN IN `entryVerdict`'s LADDER HALF, which is the
+  // second half of the same choice and was measured before it was made. The pause is a WORLD-level
+  // condition – it is true of every rung on every week of the window – and `entryVerdict`'s own
+  // `availability = false` note records what happens when one of those is asked as a fact about a
+  // RUNG: «27 disagreements, every one of them 'unavailable' and every one of them ALL rungs of one
+  // world at once - which is the signature of a world-level condition wearing a rung's clothes». A
+  // rung's card (`tierVerdict`) therefore keeps saying what that rung costs, exactly as it does
+  // through a layoff, and the pause is answered where a WEEK is answered.
+  //
+  // ⚠⚠ THE SLOT IN THE RANKING IS ARGUED AGAINST THE FILE'S OWN SENTENCE rather than picked. The
+  // header's order is «injury > too-young > capped > unavailable > medical > fatigued», and the
+  // sentence that puts things BELOW injury is written twice above: «a layoff is the fresher, more
+  // urgent news and it names a return week, and this will still be here». BOTH halves of it send the
+  // pause down:
+  //   · FRESHER – a layoff is this week's news; the pause is eight weeks of warning and then months
+  //     of the same fact, and «this will still be here» is not merely true of it but its definition;
+  //   · NAMES A RETURN – a layoff does, the suspension above does («entries reopen after that»), the
+  //     two allowances below do («a fresh allowance on her next birthday»), and THE PAUSE IS THE ONE
+  //     REFUSAL IN THIS FUNCTION THAT NAMES NONE, because in this wave nothing knows whether there is
+  //     one to name (T5 draws the decision). A refusal that cannot name a date cannot out-rank the
+  //     ones that can on the criterion this file uses to rank them.
+  // So it sits below `injured` and below the suspension – whose own comment claims it «OUTRANKS EVERY
+  // OTHER REFUSAL BUT INJURY», a sentence this task has no reason to falsify – and ABOVE everything
+  // that follows, on the caps' own criterion one branch down: «an exam week tells her nothing she can
+  // act on, while "the allowance is gone until the season turns" is the fact that should reshape the
+  // rest of her year». The pause reshapes more than a year of it, and every refusal below is a
+  // smaller truth about a rung or a week that would otherwise be printed in front of a larger one.
+  //   ⚠ THE ONE SLOT BOUNDARY THAT IS UNOBSERVABLE THROUGH THE GATE, said so rather than claimed:
+  //   the tier age gate immediately below can only answer 'old' at 24–35 (the junior rungs), and
+  //   `entryVerdict` returns that BEFORE availability is consulted at all – so this pair's order
+  //   shows only to a direct `availabilityStatus` caller, where the pause is the fact that matters.
+  //
+  // ⚠ IT REUSES `'unavailable'` AND DOES NOT TAKE A `reason` MEMBER OF ITS OWN, and that is the other
+  // decision this wave owes an argument for. FOUR grounds, in order of weight:
+  //   1. THE NEAREST NEIGHBOUR IS ALREADY THIS CODE. The suspension directly above is the same shape
+  //      – a long block of weeks in which nothing is enterable, refused with the rule and, where
+  //      there is one, the date – and it is `'unavailable'`. So are the vacation and the blackout.
+  //   2. THE SENTENCE IS THE CHANNEL, BY DESIGN. Round-17 #19 built `ineligibleDetail` precisely
+  //      because «'unavailable' is FIVE refusals wearing one code» and a client holding only the code
+  //      has to guess: the engine writes the true sentence for every arm and the wire carries it. A
+  //      sixth arm with its own sentence is what that fix is FOR, not a strain on it.
+  //   3. ⚠⚠ A NEW MEMBER WOULD LIE ON THE WIRE IN SILENCE. `snapshot.ts` narrows this union with a
+  //      CAST – `ineligibleReason: gate.reason as 'locked' | 'injured' | 'unavailable' | 'medical' |
+  //      'capped'` – so a sixth member compiles there, ships a code `EventCard.ineligibleReason` does
+  //      not contain, and lands in `SeasonScreen`'s `lockLabel` switch on the `default:` arm written
+  //      for 'locked' (it would then print `ineligibleDetail`, correctly, by accident). Grepped
+  //      rather than assumed: there is no total `Record` over this union anywhere in `src/`, so the
+  //      compiler cannot find the readers and a human has to – which is the argument for not adding
+  //      one in a task whose gate is the entry rule.
+  //   4. AND `'capped'`'s OWN COUNTER-ARGUMENT IS NAMED AND DOES NOT CARRY. Its wire comment says it
+  //      is «its own reason and not folded into 'unavailable'» because it lifts by itself – but what
+  //      a surface actually needs from it is the STRUCTURED `entryCap`, which it renders as «Year
+  //      limit – 12 of 14». A code earns itself when a surface must read a FIELD off it. The pause
+  //      carries no field: it needs a sentence, and it has one.
+  // ⚠ If T10 finds it needs the pause told apart from an exam week on a screen, the member is a
+  // contained change and this note is the place it gets re-argued.
+  const pause = pauseCovering(world, event.week)
+  if (pause !== null) {
+    return { level: 'blocked', reason: 'unavailable', detail: PREGNANCY_PAUSE_DETAIL }
   }
   // THE TIER'S AGE GATE, BOTH ENDS OF IT (§4.1). The junior tour runs 13-18, the adult rungs open at
   // 16/16/17, the domestic ladder is open at every age for ever (owner's call 2 – it is ours, not

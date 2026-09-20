@@ -116,8 +116,16 @@ export const LIFE_ROW_EMOJI: Partial<Record<LifeRowKind, string>> = PICKS
  *  the row wears the standing white-heart fallback until the owner rules, and picking one is one
  *  line inside `KIND_PICKS` below. `'engaged'` and `'spouse-view'` are deliberately NOT here: the
  *  announcement's answer rows are `'info'` (wave-2 machinery, `ANSWER_EVENT`'s own note) and the
- *  spouse's kind writes no feed row at all, so neither can reach a `'life'` row to be marked on. */
-export const LIFE_BEAT_ROW_KINDS = ['met', 'ended', 'own-key'] as const satisfies readonly LifeBeatKind[]
+ *  spouse's kind writes no feed row at all, so neither can reach a `'life'` row to be marked on.
+ *  ⭐ v85 (wave 8 – T3) ADDS `'expecting'`: `landPregnancyPause` writes one kept `'life'` row on the
+ *  week the entries close, stamped with the kind. ⚠ THE ENTRY HERE IS A MECHANICAL CONSEQUENCE AND
+ *  NOT A DESIGN CHOICE – `tests/wave4-life-row-stamp.test.ts` requires every engine `'life'` write
+ *  site to stamp a kind AND that kind to be on this roster, so a stamped row with no line here fails
+ *  the build's own reader. ⚠ NO GLYPH IS PICKED FOR IT, exactly as for `'own-key'` (§5a: «no agent
+ *  adds or swaps one unasked») – the row wears the standing white-heart fallback until the owner
+ *  rules, and picking one is one line inside `KIND_PICKS` below. ⚠ T4's birth row, if it is a `'life'`
+ *  row, will need the same two lines; this note is where that is said. */
+export const LIFE_BEAT_ROW_KINDS = ['met', 'ended', 'own-key', 'expecting'] as const satisfies readonly LifeBeatKind[]
 
 export type LifeBeatRowKind = (typeof LIFE_BEAT_ROW_KINDS)[number]
 

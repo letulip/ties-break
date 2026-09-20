@@ -1180,12 +1180,23 @@ describe('the fence this step is judged by', () => {
     // order is the brief's own – checked against docs/plans/life-wave-8-builder-2026-09.md before
     // this list moved. Still an exact list, still no wildcard, and an ELEVENTH call or a reordering
     // is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s ten weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 20.09 BY WAVE 8's T3, AND THE ELEVENTH CALL IS HERE – the pin fired on the very
+    // next call to land, for the third wave running, which is the pin working rather than the pin
+    // rotting. `landPregnancyPause` is the pause week's ONE feed row, slotted SIXTH, immediately
+    // under the raise it belongs to. ⚠ ITS SLOT IS FREE AND SAYING SO IS THE ARGUMENT, not a gap in
+    // one: `ECONOMY.motherhood.playsOnWeeks` is 8, so the pause can never land on the week of its own
+    // announcement and these two calls cannot meet on one tick; nothing else in the list reads or
+    // writes `world.pregnancy`, and the entry gate – which is what the pause actually IS – is not in
+    // this pipeline at all (`pauseCovering`, `world/medical.ts`, read per event by every surface).
+    // The shipped order is the brief's own – docs/plans/life-wave-8-builder-2026-09.md §2 T3. Still
+    // an exact list, still no wildcard, and a TWELFTH call or a reordering is red here.
+    expect(code.slice(i + 1, j), 'only the private life\'s eleven weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
       'landWedding(world)',
       'rollPregnancy(world)',
+      'landPregnancyPause(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
       'deliverOwnKey(world)',

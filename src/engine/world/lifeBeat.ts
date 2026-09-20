@@ -6423,3 +6423,78 @@ export function rollPregnancy(world: WorldState): void {
   // (W5) gets a second row about the same marriage without any of this changing.
   raiseLifeBeat(world, 'expecting', episode.id)
 }
+
+/** ⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY** (invariant 4). The pause week's one feed row.
+ *
+ *  ⚠ IT MUST NOT SAY THE SEASON IS OVER, and that is the whole difficulty of writing it: already
+ *  booked events inside the window PLAY OUT (the brief's own clause, `pauseCovering`'s note in
+ *  `world/medical.ts`), so «no more tennis this year» would be a sentence the very next week could
+ *  contradict on screen. The second half says what the first half leaves open.
+ *  ⚠ HUSBAND-AGNOSTIC (§0's decoupling ruling): it reads correctly for a career whose marriage ended
+ *  the week before, because it does not mention him.
+ *  ⚠ AND IT NAMES NO RETURN. «until she is back» is a promise T5 is allowed to break; the birth is
+ *  the one date this wave knows, so it is the only one the line uses.
+ *  ⚠ THE FIRST DRAFT READ «entering nothing more» AND THE TAIL-LINT CAUGHT IT – `'nothing more'` is
+ *  on the bibles' banned-narrator-tail list (`tests/helpers/bannedTails.ts`, swept over this file by
+ *  `tests/wave3-tail-lint.test.ts`). Reported rather than quietly reworded: the guard works, and the
+ *  sentence it rejected is the one a reader would otherwise wonder about. */
+const PAUSE_EVENT = 'She is entering no more tournaments before the birth. What she is already in, she will play.'
+
+/** ⭐⭐ THE WEEK THE ENTRIES CLOSE – the pause's ONLY tick step, and it writes ONE feed row.
+ *
+ *  ⚠⚠ THE PAUSE ITSELF NEEDS NO TICK STEP AT ALL, which is worth saying first because it is what
+ *  makes this function small. `pausesWeek` was written at the announcement and the entry gate reads
+ *  it live (`pauseCovering`, `world/medical.ts`), so the calendar shuts on its own date whether or
+ *  not anything runs on that date – there is no latch to set, no flag to flip, no state to advance.
+ *  What is left is the part a player would otherwise never be told: that this week is the one.
+ *
+ *  ⚠ AND NOTHING ELSE IS ADDED TO THE WEEK. No latch, no fast-forward machinery, no new kind of week
+ *  – the college precedent the brief names: absence weeks TICK, with a thinner surface, and `▶▶`
+ *  already exists for a player who wants the months to pass. The parent's week is untouched
+ *  underneath – the bills, the court, the diary and the feed all run exactly as they did – and
+ *  `advanceWeeks` does not even stop for a deadline any more, because its own stop reads
+ *  `entryStatus(...).level !== 'blocked'` and the gate is now shut. That is the whole of «she is off
+ *  tour, the household is not», and none of it is code this task wrote.
+ *
+ *  ⚠ ONCE-NESS IS TWO CLAUSES, AND THE SECOND ONE IS A RECEIPT RATHER THAN A DATE. The equality
+ *  carries it in play – weeks tick by one, so `world.week === pausesWeek` comes round exactly once,
+ *  and a crafted world that JUMPS the calendar misses the row rather than doubling it, which is the
+ *  right failure direction for a line of texture (`landWedding` needs `>=` plus its latch because a
+ *  wedding must never be missed – there the latch IS the marriage). The receipt covers the other
+ *  direction: this function called twice inside one week writes one row, because the row it already
+ *  wrote is on the feed and it looks. ⚠ IT IS A STRUCTURAL LOOK-UP AND NOT A TEXT MATCH – the week
+ *  plus the kind, never `PAUSE_EVENT`'s characters, so T8's rewording cannot break the once-ness
+ *  (`RELEASE_LINE_PREFIX`'s own lesson from the other side: a rename that breaks a player's report in
+ *  silence). ⚠ AND IT COSTS ONE SCAN ON ONE WEEK OF ONE CAREER: the equality short-circuits first, so
+ *  every other week of every other career never reaches it.
+ *  ⚠ The alternative was `fireMilestone`'s key-idempotency, and the row is deliberately NOT a
+ *  milestone: the milestone channel is what the family KEEPS – T4's birth is this arc's – while this
+ *  is news about a season.
+ *
+ *  ⚠ `keep: true`, for the ended row's own reason one section up: `pruneEvents` drops ordinary rows
+ *  at sixty weeks, and this arc is longer than that window – 31 weeks to the birth and up to 20 more
+ *  to her decision – so an unkept row would be gone from the feed before the story it opens closes.
+ *
+ *  ⚠⚠ `lifeKind: 'expecting'` IS THE HOUSE LAW AND NOT A GLYPH PICK, and this builder learned it the
+ *  way the law is meant to teach it: the row shipped unstamped and `tests/wave4-life-row-stamp.test.ts`
+ *  went red – «every `type: 'life'` write site in the engine stamps a `lifeKind` beside it», with two
+ *  named exceptions that are named precisely because a kind did not exist for them. One does here:
+ *  T2 put `'expecting'` on `LifeBeatKind` and this is the beat's own row. So the stamp is the kind
+ *  the row is about; the same pin's second half then requires that kind to be on the feed column's
+ *  roster (`LIFE_BEAT_ROW_KINDS`, `components/screens/lifeRowGlyphs.ts`), which it now is.
+ *  ⚠ NO GLYPH IS PICKED FOR IT – who-she-is §5a («no agent adds or swaps one unasked»), `'own-key'`'s
+ *  own precedent one wave down: the roster says a mark COULD be picked, the owner's record decides
+ *  whether one is, and until he rules the row wears the standing white-heart fallback.
+ *
+ *  ⚠ ZERO DRAWS on any stream – two integers compared and one row appended. It takes no `Rng`, so
+ *  MAIN is structurally out of reach and the frozen capture (41550 / e6b0c709) cannot see it.
+ *  ⚠ IT READS `world.pregnancy` AND NEVER THE EPISODE – the decoupling law, §14's banner above. */
+export function landPregnancyPause(world: WorldState): void {
+  const pregnancy = world.pregnancy
+  if (pregnancy === null || world.week !== pregnancy.pausesWeek) return
+  if (world.events.some((e) => e.week === world.week && e.type === 'life' && e.lifeKind === 'expecting')) return
+  // ⚠ NO AMOUNT – a life row is never a purchase (rule 4 at the top of this file), and the absence of
+  // the field is what keeps `accrueFinance` from ever seeing it. There is no price on this week:
+  // §2 T4's «NO COST EVENT» read one task early, and the pause charges nothing either.
+  addEvent(world, { week: world.week, type: 'life', keep: true, lifeKind: 'expecting', text: PAUSE_EVENT })
+}
