@@ -661,7 +661,14 @@ interface IndepResult {
  *  hazard reverse-edited to 0, where NO seed can raise that card and the law must still hold. So the
  *  control run pins the shipped run's own seed (`--indepBg` / `--indepIndex`) and forces both walks.
  *  `reachedExpecting: false` is then the TRUE and expected reading of the control, not a failure. */
-function independenceArm(preset: Preset, index: number, policy: Policy, weeks: number, force = false): IndepResult {
+function independenceArm(
+  preset: Preset,
+  index: number,
+  policy: Policy,
+  weeks: number,
+  force = false,
+  eagerIndex: number | null = null,
+): IndepResult {
   const zeroDraw = { ok: true, at: null as number | null }
   const seen = { expecting: false, returnPlan: false }
   /** ⚠ FOUR CHANNELS, RECORDED SEPARATELY. `main` is the law; `season` is the world's own output on a
@@ -670,7 +677,14 @@ function independenceArm(preset: Preset, index: number, policy: Policy, weeks: n
   const walk = (
     eager: boolean,
   ): { main: string[]; funds: string[]; cond: string[]; season: string[]; bond: string[]; spirit: string[]; states: string[] } => {
-    const { world } = openCareer(preset, index, policy)
+    // ⚠⚠ `eagerIndex` IS THE **ABSURD-VALUE ARM** AND IT IS THE PROVENANCE A NULL RESULT OWES
+    // (CLAUDE.md, 17.08: «the cheapest sanity check is to set the constant to an absurd value and
+    // watch the output move; if it does not, the arm is wrong before the hypothesis is»). «The MAIN
+    // stream is identical» is a NULL RESULT, and the one thing it cannot prove about itself is that
+    // this comparator could have seen a difference. Run with `--indepAbsurd`, the eager walk opens a
+    // DIFFERENT SEED – nothing else changes – and the MAIN channel must part at once. An arm that
+    // still reports «never» is a broken comparator and the whole section is void.
+    const { world } = openCareer(preset, eager && eagerIndex !== null ? eagerIndex : index, policy)
     const rng = resumeMain(world.rngMain)
     const main: string[] = []
     const funds: string[] = []
@@ -828,8 +842,13 @@ function main(): void {
       const preset = presets.find((p) => p.background === pinBg)
       if (preset === undefined) throw new Error(`no preset with background "${pinBg}"`)
       searched = 1
-      found = independenceArm(preset, Number(pinIx), policy, WALK_WEEKS, true)
+      const absurd = process.argv.includes('--indepAbsurd')
+      found = independenceArm(preset, Number(pinIx), policy, WALK_WEEKS, true, absurd ? Number(pinIx) + 1 : null)
       console.log(`  ⚠ SEED PINNED by --indepBg/--indepIndex – this is the CONTROL-TREE form (see the function's note).`)
+      if (absurd) {
+        console.log(`  ⚠⚠ --indepAbsurd: THE EAGER ARM OPENS SEED INDEX ${Number(pinIx) + 1} INSTEAD. The MAIN channel MUST part.`)
+        console.log('     This is the absurd-value check the null result «MAIN identical» owes – see the arm\'s own note.')
+      }
     } else {
       for (let i = 0; i < INDEP_SEARCH && found === null; i++) {
         for (const preset of presets) {
