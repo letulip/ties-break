@@ -1190,13 +1190,29 @@ describe('the fence this step is judged by', () => {
     // this pipeline at all (`pauseCovering`, `world/medical.ts`, read per event by every surface).
     // The shipped order is the brief's own – docs/plans/life-wave-8-builder-2026-09.md §2 T3. Still
     // an exact list, still no wildcard, and a TWELFTH call or a reordering is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s eleven weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 20.09 BY WAVE 8's T4, AND THE TWELFTH CALL IS HERE – the pin fired on the very next
+    // call to land, for the FOURTH wave running, which is the pin working rather than the pin rotting.
+    // `landBirth` is the due week's five writes, slotted SEVENTH, immediately under the pause it
+    // closes. ⚠ ITS SLOT IS **LOAD-BEARING IN BOTH DIRECTIONS**, which is the first time that is true
+    // of a call on this list, and both halves are argued at the call site (phaseHerWeek.ts, the 1c
+    // block): (a) it must run BEFORE `accrueSpirit`, because it is the SECOND writer of
+    // `world.spiritShock` and the pass that PRICES a shock reads `shock.week === world.week` – landing
+    // after it would apply the postpartum band a week late for ever, which is `rollEnds`' own
+    // arrangement six calls up; (b) it must run AFTER `rollEnds`, so that on the one week a
+    // marriage ends AND a child is born the birth's mark REPLACES the break-up's – the single slot's
+    // «the later, larger window wins» (§2 T4), which reversed would let the divorce outrank the birth.
+    // Nothing between it and `accrueSpirit` reads `world.pregnancy`, `world.children` or
+    // `world.spiritShock`. The shipped order is the brief's own –
+    // docs/plans/life-wave-8-builder-2026-09.md §2 T4. Still an exact list, still no wildcard, and a
+    // THIRTEENTH call or a reordering is red here.
+    expect(code.slice(i + 1, j), 'only the private life\'s twelve weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
       'landWedding(world)',
       'rollPregnancy(world)',
       'landPregnancyPause(world)',
+      'landBirth(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
       'deliverOwnKey(world)',

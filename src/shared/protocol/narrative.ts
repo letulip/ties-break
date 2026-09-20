@@ -55,6 +55,24 @@ export type MilestoneType =
    *  row captures its own line (the 11.09 re-shape's whole point). No back-fill exists or could:
    *  no save below v83 can hold one, because there was no wedding to reach. */
   | 'wedding'
+  /** ⭐ v85 – THE BIRTH (wave 8 T4): the week her daughter was born, kept where a life's turns are
+   *  kept. `'wedding'`'s move one wave on, for its reason: a new persisted union member is a schema
+   *  change by invariant 3 (the v44 `'facility'` precedent), and this one RIDES THE v85 BUMP T1
+   *  already took rather than costing its own. No back-fill exists or could – no save below v85 can
+   *  hold a pregnancy, so there is no birth to find in one.
+   *
+   *  ⚠ THE IDENTITY IS THE **WEEK** AND NOT THE EPISODE, which is the one place this parts from the
+   *  wedding and is the difference between a marriage and a pregnancy. A marriage happens once per
+   *  episode, so `wedding:<episodeId>` is exact; a second child of the SAME marriage is confirmed
+   *  wanted (11.09, «после беременности может быть и повторная», W5's), so an episode-keyed birth
+   *  would silently swallow it. Two children cannot be born in one week in this model, so the week
+   *  is the identity – see `milestoneKey`.
+   *
+   *  ⚠ IT CARRIES NO `kind`, DELIBERATELY. The candidates were the episode id (a machine value the
+   *  scroll must never print, and the wedding's own reason for a `null` detail) and the child's sex –
+   *  and the sex is `'girl'` for every row v85 can write (RULED 20.09), so a field holding one
+   *  constant is a second home for a fact `world.children` already keeps. W5 reads the array. */
+  | 'birth'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */

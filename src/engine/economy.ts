@@ -68,7 +68,11 @@ import type { ExposureKind } from './world/spotlight'
 // below is `Record<SpiritShockKind, … | null>` and therefore TOTAL, so the day step 8's kind joins the
 // union `vue-tsc` names the missing band instead of letting a shock ship priced at `undefined` – which
 // would poison `accrueSpirit`'s weekly sum with `NaN` exactly as an unpriced exposure would.
-import type { SpiritShockKind } from './world/state'
+// ⚠ `PregnancyState` JOINS IT IN v85 T4 FOR THE IDENTICAL REASON, one mechanic further on:
+// `postpartumSupportScale` below is `Record<NonNullable<PregnancyState['support']>, number>` and
+// therefore TOTAL, so the day a fourth answer grade joins that union `vue-tsc` names the missing
+// factor instead of letting a grade ship multiplying the postpartum band by `undefined`.
+import type { PregnancyState, SpiritShockKind } from './world/state'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
 // nothing, so this direction can never close a cycle.
@@ -4351,25 +4355,110 @@ export const ECONOMY = {
      *  else. §4's own prediction for a lifted 75 is the whole of the shape: ~1–2 weeks under the knee
      *  for a steady girl, ~6–7 for an intense one. A second return rate here would be a second
      *  mechanic wearing a constant. */
-    /** ⭐⭐⭐ v85 T1 – `postpartum` IS `null` BECAUSE ITS BAND IS NOT DRAFTED YET, AND `null` IS THE
-     *  ONLY HONEST CELL A SCHEMA TASK CAN PUT HERE. Wave 8's T1 widened `spiritShock.kind` to
-     *  `'breakup' | 'postpartum'` (the build plan's step-7 row reserved it), and the widening made
-     *  this table's read non-total – which is the union doing exactly the job `spiritShock.kind`'s own
-     *  note says it is for: «every exhaustive read goes red at the site that has to decide».
+    /** ⭐⭐⭐ v85 T4 – AND WHAT A BIRTH COSTS HER, THE SECOND BAND, **THE BUILDER'S OWN DRAFT**. T1
+     *  parked this cell as `null` with the whole of why in its place («these are two TUNING NUMBERS,
+     *  and invariant 5 says tuning is measured and not guessed – T9 benches the wave's constants and
+     *  T4 is the kind's only writer»), and T4 is that writer: `landBirth` (`world/lifeBeat.ts` §14)
+     *  stamps `kind: 'postpartum'` on the week the child is born. The `null` is replaced, the key is
+     *  not moved, and the brief's §4 contract holds – it ships at its drafted value, unruled, and T9
+     *  benches recovery weeks by grade with the psychologist on and off.
      *
-     *  ⚠⚠ THE SITE THAT HAS TO DECIDE IS NOT T1. These are two TUNING NUMBERS, and invariant 5 says
-     *  tuning is measured and not guessed – T9 benches the wave's constants and T4 is the kind's only
-     *  writer. A schema task inventing a magnitude here would be a number nobody sized, shipped inside
-     *  a commit about key order, and the −22/−34 above are the standing proof that these numbers get
-     *  argued over (§4's own two, kept against a derived −34.375 on the single-source rule).
+     *  ⚠⚠ THE SHAPE IS `breakup`'s, ONE BASE SEEN THROUGH `perturbationScale`, and the arithmetic is
+     *  written out because a later reader cannot recover it from the values: ONE base of **−30**,
+     *  −30 × 0.8 = **−24.0** and −30 × 1.25 = **−37.5**. ⚠ BOTH PRODUCTS SHIP EXACTLY, which is where
+     *  this parts from `breakup` above rather than contradicting it: §4's own table named −22/−34 in
+     *  words and the single-source rule kept them against the derived −34.375. No table names these
+     *  two, so there is nothing for an exact product to disagree with, and `world.spirit` is carried
+     *  in TENTHS (`roundTenth` at the end of `accrueSpirit`'s sum), so −37.5 is a value the meter can
+     *  actually hold.
      *
-     *  ⚠ IT IS UNREACHABLE UNTIL T4, so `null` costs a live career nothing: nothing on this tree can
-     *  write a `'postpartum'` shock, and `accrueSpirit`'s read below returns an exact 0 for a kind
-     *  with no band – byte-identical to the arithmetic it ran before this member existed. T4 replaces
-     *  the `null` with its row and the read stops taking that branch. */
-    shock: { breakup: { steady: -22, intense: -34 }, postpartum: null } satisfies Record<
+     *  ⚠⚠ WHY −30 AND NOT −27.5, i.e. why a birth is drafted 9% above a break-up on the same axis –
+     *  and note that the FIRST reason is arithmetic rather than sentiment:
+     *    · **THE ATTACHMENT LIFT DOES NOT LEAVE.** A break-up takes its −22/−34 *and* empties the
+     *      slot on the same tick, so the effective baseline falls 75 → 70 and she is climbing toward
+     *      the lower number. A birth does neither: the marriage usually still stands, `activeEpisode`
+     *      is unchanged, and she climbs toward 75. At an equal base the birth would therefore CLEAR
+     *      SOONER than the break-up, and the brief's own sentence about this slot is that the
+     *      postpartum window is the LARGER one – «the later, larger window wins». The +9% is what
+     *      buys that back: measured below, it puts the middle grade LEVEL with the break-up for a
+     *      steady girl and a week past it for an intense one, which is as close to «larger, and not
+     *      by much» as a rate of 5 points a week can be made to land.
+     *    · the research's row is about the RECOVERY and not about the blow – «support speeds
+     *      recovery; pressure → depression risk ↑» (`docs/research/life-events-motherhood.md`) – so
+     *      there is no digest number to transcribe here and the base is sized on the recovery it
+     *      PRODUCES, which is the quantity T9 can measure and his word can land on.
+     *
+     *  ⭐ WHAT IT PREDICTS, MEASURED ON THE ENGINE'S OWN WALK (tests/wave8-birth.test.ts §E, a married
+     *  career at the lifted 75, psychologist off) rather than computed on paper – weeks from the birth
+     *  until `accrueSpirit`'s tail clears the mark:
+     *
+     *        grade        steady      intense
+     *        warm            3            8
+     *        measured        4           11
+     *        cold            5           13
+     *
+     *  against the BREAK-UP's own **4 / 10** – measured on the same instrument and on the break-up's
+     *  own shape (the episode ends the same tick, so the lift leaves with it). Every cell moves with
+     *  the grade; the middle row matches the break-up for a steady girl and sits a week past it for
+     *  an intense one, which is the «larger window» the slot's ruling asks for at the grade that
+     *  claims nothing; and `warm` is deliberately UNDER it – a supported birth is an easier week than
+     *  being left. That is the one place the ordering is allowed to cross, and it is said out loud
+     *  here rather than discovered by T9.
+     *
+     *  ⚠ NO SECOND CURVE AND NO RECOVERY TERM – `spirit.ts`'s own «THERE IS NO RECOVERY CURVE,
+     *  ANYWHERE, BY DESIGN» is untouched by this row and by `postpartumSupportScale` below, which is
+     *  the reason support enters through the MAGNITUDE. See that constant's note for the whole of the
+     *  argument, including the mechanical one. */
+    shock: { breakup: { steady: -22, intense: -34 }, postpartum: { steady: -24, intense: -37.5 } } satisfies Record<
       SpiritShockKind,
       { steady: number; intense: number } | null
+    >,
+    /** ⭐⭐⭐ v85 T4 – **WHERE `support` ENTERS THE RECOVERY**, and it is the whole of the wave's
+     *  «support speeds recovery; pressure → depression risk ↑» (the digest's own row for the return).
+     *  A pure multiplier on the postpartum band above, applied ONCE, on the one week the shock lands.
+     *  **THE THREE FIGURES ARE THE BUILDER'S DRAFT** – the brief drafts the DIRECTION («`warm`
+     *  shortens, `cold` lengthens», §0) and not the size – flagged exactly as `motherhood.perWeekByAge`
+     *  and `wedding.perWeek` are, and benched by T9.
+     *
+     *  ⚠⚠ THE MAGNITUDE AND NOT THE SLOPE, AND THE FILE THAT OWNS THE RECOVERY IS WHAT DECIDES IT.
+     *  `engine/spirit.ts` says of the shock, in capitals: «AND THERE IS NO RECOVERY CURVE, ANYWHERE,
+     *  BY DESIGN … A second return rate, a «recovering» flag or a taper read off `spiritShock` would
+     *  all be the same mistake». A support term on `returnPerWeek` IS a second return rate, by that
+     *  sentence's own definition. A support term on the MAGNITUDE is the week's own weather, and the
+     *  weeks she then takes to climb out of it fall out of the standing weekly rule – so «support
+     *  speeds recovery» is a MEASUREMENT of arithmetic that already existed rather than a second
+     *  mechanic wearing a constant.
+     *
+     *  ⚠⚠ AND THE MECHANICAL ARGUMENT IS THE DECIDING ONE, because it is not a matter of taste:
+     *  `support` lives on `world.pregnancy`, and **T5 and T6 CLEAR that record** – the return has to
+     *  clear it or W5's repeat pregnancy can never re-enter the gate (`state.ts`'s own note on
+     *  `comeback`). A RATE that read `support` would therefore change silently, mid-recovery, on the
+     *  week she came back, and a magnitude cannot: it is read on the birth week, when the record is
+     *  provably non-null (T4 writes nothing to it, and T5's window opens
+     *  `decisionWeeksAfterBirth` weeks later).
+     *
+     *  ⚠ AND NOT THE CLEAR THRESHOLD, THE THIRD CANDIDATE, which is refused on ruling D's own ground:
+     *  `shockClearWithin` is read against the PLAIN baseline because the mark is «a question about HER
+     *  recovery, not about who is in her life now». Bending the bar per grade would make «back on her
+     *  feet» mean a different number for two girls who feel the same, which is the exact reading
+     *  ruling D refused for the attachment lift.
+     *
+     *  ⭐ THE TWO FACTORS ARE EXACT RECIPROCALS – 0.8 = 1 / 1.25 – so «warm shortens and cold
+     *  lengthens by the same factor» is true of the arithmetic and not only of the sentence, and
+     *  `measured` is exactly **1**, so the band above IS the measured-grade magnitude and a career
+     *  whose parent answered `worry` takes the two numbers as written. ⚠ THE COLLISION WITH
+     *  `perturbationScale`'s 0.8 / 1.25 IS THE RECIPROCAL PAIR TURNING UP TWICE AND NOT A SHARED ROW:
+     *  that one is keyed by INTENSITY (who she is), this one by the parent's ANSWER, they multiply the
+     *  same summand on different axes, and folding them would be a category error. Named here so
+     *  nobody folds them.
+     *
+     *  ⚠ A `null` GRADE READS 1.0 AND THAT IS A PROBE-WORLD COURTESY, not a fourth cell: the
+     *  `'expecting'` beat BLOCKS (`LIFE_BEAT_BLOCKING`), so a career cannot tick the ~39 weeks from
+     *  the announcement to the birth with the card still up, and `support === null` at a birth is
+     *  unreachable in play. `accrueSpirit`'s `??` courtesies are the same instrument. */
+    postpartumSupportScale: { warm: 0.8, measured: 1, cold: 1.25 } satisfies Record<
+      NonNullable<PregnancyState['support']>,
+      number
     >,
     /** ⭐⭐ HOW CLOSE TO HER OWN BASELINE COUNTS AS BACK – the gap `accrueSpirit`'s tail clears
      *  `world.spiritShock` at (the build plan §5 step 4: «clears when spirit ≥ baseline − 2», i.e.
@@ -4967,6 +5056,14 @@ export const ECONOMY = {
    *  §2 T2–T6, the design `docs/plans/the-wedding-and-the-children.md` §5 W3+W4). `ECONOMY.wedding`'s
    *  block one wave on and in its voice: one block, every number the wave spends, each row naming the
    *  task that reads it.
+   *
+   *  ⚠ WITH **TWO** EXCEPTIONS, NAMED HERE SO THE SENTENCE ABOVE STAYS HONEST: T4's postpartum shock
+   *  band and the `support` factor that scales it live in `ECONOMY.spirit` (`shock.postpartum` and
+   *  `postpartumSupportScale`), because their one reader is `accrueSpirit` and `ECONOMY.spirit`'s own
+   *  law is that its rows are the weekly pass's – `attachmentLift`'s note states it («it is read by
+   *  `accrueSpirit` and by nothing else»). Put here they would have made `engine/spirit.ts`'s header
+   *  false («Every constant lives in `ECONOMY.spirit` / `ECONOMY.bond`»), which is a worse trade than
+   *  this cross-reference.
    *
    *  ⚠⚠ EVERY NUMBER BELOW IS A DRAFT FOR THE BENCH AND NONE IS RULED – the brief's §4 contract, the
    *  wedding block's own sentence inherited whole: «every §2 number ships at its drafted value,

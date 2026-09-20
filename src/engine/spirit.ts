@@ -21,10 +21,22 @@
 //                     (pure arithmetic, ZERO draws on any stream), read ONLY by `spiritMatchFactor`
 //                     at the match seam (`world/player.ts`). No meter, no tile, no bar, no arrow.
 //
-//   `spiritShock`   – THE MARK AN ENDING LEFT (v75, wave 4's T3), `{week, kind, weeks?}` or null. SET
-//                     by `rollEnds` (world/lifeBeat.ts §8) on the week an attachment ends, and CLEARED
-//                     here, in `accrueSpirit`'s tail, once she is back within `shockClearWithin` of
-//                     her plain baseline. ⚠ This file owns the second half only: the points it is
+//   `spiritShock`   – THE MARK A WEEK LEFT ON HER (v75, wave 4's T3), `{week, kind, weeks?}` or null.
+//                     ⭐⭐⭐ WRITTEN IN **TWO** PLACES IN THE ENGINE SINCE v85's T4, AND THE OLD
+//                     SENTENCE («the mark an ENDING left», set by `rollEnds` alone) IS CORRECTED HERE
+//                     RATHER THAN LEFT TO ROT – a comment that says «one place» while two places write
+//                     it is the defect this file's comment discipline exists to prevent. The two:
+//                       · `rollEnds`   (world/lifeBeat.ts §8)  `kind: 'breakup'`   – an attachment ends
+//                       · `landBirth`  (world/lifeBeat.ts §14) `kind: 'postpartum'` – a child is born
+//                     ⚠⚠ IT IS ONE SLOT AND THE SECOND WRITER **OVERWRITES** THE FIRST, DELIBERATELY:
+//                     a postpartum shock landing while a mid-term break-up shock is still recovering
+//                     replaces it, because the later, larger window is the one she is actually living
+//                     (the brief's own sentence, §2 T4). That is pinned in tests/wave8-birth.test.ts §D
+//                     rather than left to field order – it is exactly the kind of behaviour that is
+//                     correct by accident until somebody reorders two lines.
+//                     EITHER MARK IS CLEARED in the one place it always was – `accrueSpirit`'s tail,
+//                     once she is back within `shockClearWithin` of her plain baseline.
+//                     ⚠ This file owns the second half only: the points it is
 //                     worth are the weekly rule's, the fact itself is the hazard's. It exists so that
 //                     wave 5's psychologist can tell a girl who is under her line from a girl who is
 //                     under her line BECAUSE somebody left – 48 looks the same either way.
@@ -566,6 +578,34 @@ function recoverySlopeFor(world: WorldState): number {
   return p.recoverySlope[world.psychologistRung ?? p.defaultRung] ?? p.recoverySlope[p.defaultRung]
 }
 
+/** ⭐⭐⭐ v85 T4 – HOW HARD THE BIRTH LANDED, GIVEN WHAT THE PARENT SAID WHEN SHE TOLD HIM. The one
+ *  place `support` reaches the spirit layer, and the whole of the wave's «support speeds recovery;
+ *  pressure → depression risk ↑». The size lives at `ECONOMY.spirit.postpartumSupportScale` and so
+ *  does the argument for entering through the MAGNITUDE rather than through the slope or the clear
+ *  bar; this function is only the read, and it is written down here for the three properties that
+ *  make it safe:
+ *
+ *  1. ⚠⚠ IT IS EXACTLY `1` FOR A `'breakup'`, so every career wave 4 ever priced takes BYTE-IDENTICAL
+ *     arithmetic – `composureBonus`'s own v78 identity rule, which this module applies to summands.
+ *     The kind test is not a special case creeping into a per-kind table: `postpartumSupportScale` is
+ *     a fact about ONE kind (it is in its name), and a second kind that ever wants a scale gets its
+ *     own row and its own clause rather than inheriting this one by accident.
+ *  2. ⚠⚠ IT IS READ ON EXACTLY ONE WEEK – the caller's guard is `shock.week === world.week` – and on
+ *     that week `world.pregnancy` is provably non-null: `landBirth` writes the mark and does NOT
+ *     clear the record (§14's own note on why), and T5's decision window opens
+ *     `decisionWeeksAfterBirth` weeks later. This is why the magnitude can read a record a RATE could
+ *     not: a rate would still be reading it on the week T6 cleared it.
+ *  3. ⚠ A `null` GRADE IS `1`, the same `??` courtesy the three fields in `accrueSpirit` get. It is a
+ *     probe-world answer and not a fourth cell – the `'expecting'` beat blocks the week, so no career
+ *     can tick from the announcement to the birth without answering it.
+ *
+ *  Pure read, ZERO draws. */
+function postpartumSupportScale(world: WorldState, shock: NonNullable<WorldState['spiritShock']>): number {
+  if (shock.kind !== 'postpartum') return 1
+  const support = (world.pregnancy ?? null)?.support ?? null
+  return support === null ? 1 : ECONOMY.spirit.postpartumSupportScale[support]
+}
+
 /** ⭐⭐⭐ WAS THERE A LAST TIME – the ARCHITECT'S ВЫЧИТКА, 13.09, and the half of the receipt's
  *  condition that is about HER HISTORY rather than about this shock's weeks.
  *
@@ -576,10 +616,24 @@ function recoverySlopeFor(world: WorldState): number {
  *
  *  ⚠⚠ DERIVED FROM DATES THE WORLD ALREADY PERSISTS, AND NOT FROM A NEW COUNTER (the architect's own
  *  fence: «no new field, no schema move»). The chain that makes it exact:
- *    · `world.spiritShock` is written in ONE place in the engine – `rollEnds` (`world/lifeBeat.ts`),
- *      `kind: 'breakup'`, on the SAME LINE-RUN as `endEpisode(world, world.week)` and never
- *      conditionally (that function's own ⚠). So this mark's episode has `endedWeek === shock.week`,
- *      and «an ending» and «a shock» are the same event seen from two fields.
+ *    · a `'breakup'` mark is written in ONE place in the engine – `rollEnds` (`world/lifeBeat.ts`),
+ *      on the SAME LINE-RUN as `endEpisode(world, world.week)` and never conditionally (that
+ *      function's own ⚠). So this mark's episode has `endedWeek === shock.week`, and «an ending» and
+ *      «a breakup shock» are the same event seen from two fields.
+ *      ⚠⚠ THE CLAUSE THAT USED TO OPEN THIS LINE – «`world.spiritShock` is written in ONE place in
+ *      the engine» – WAS TRUE UNTIL v85's T4 AND IS NARROWED HERE RATHER THAN DELETED, because the
+ *      derivation leans on exactly the `'breakup'` half of it. `landBirth` (§14) is the second
+ *      writer, with `kind: 'postpartum'`, and for THAT kind the equality above does not hold: a birth
+ *      is not an ending and the mark's week is nobody's `endedWeek`.
+ *    · ⚠ SO WHAT DOES THIS PREDICATE ANSWER FOR A POSTPARTUM MARK? Exactly what it says and nothing
+ *      more – «some attachment of hers ended before this week» – which is the sentence's own claim
+ *      («sooner than LAST TIME» needs a last time, any last time) and not a claim about the kinds
+ *      matching. Read forward: a career whose first marriage carried her child and never ended
+ *      answers FALSE and prints no receipt; one whose marriage ended mid-term – the decoupling law's
+ *      own case – answers TRUE, and the row may print at the postpartum clear. That is REACHABLE
+ *      rather than theoretical and is carried to the owner as a wording question (T8) instead of
+ *      being silently gated here: the WORDS are his, and a builder narrowing a ruled sentence's
+ *      trigger to suit a new kind is the move `RECOVERY_RECEIPT`'s own history warns about.
  *    · Rows are appended in calendar order, only the tail is ever open (`arrivalEligible` clause 2)
  *      and `endEpisode` dates the ACTIVE row alone – so at most one episode ends in any one week.
  *  Therefore «there was an earlier shock» IS «some episode carries a non-null `endedWeek` STRICTLY
@@ -1065,9 +1119,11 @@ export function growHabituation(world: WorldState, isNews: boolean, psychologist
  * this is the site that obeys it. Same weekly arithmetic, one extra summand, no second curve and no
  * second multiplication.
  *
- * ⚠⚠ IT READS A FACT `rollEnds` WROTE AND OWNS THE NUMBER ITSELF, which is what keeps this function
- * the ONE writer of `world.spirit` in the engine. The ending (world/lifeBeat.ts §8, four calls
- * earlier in the same tick) stamps `world.spiritShock = {week, kind}`; this pass applies the kind's
+ * ⚠⚠ IT READS A FACT THE LIFE BLOCK WROTE AND OWNS THE NUMBER ITSELF, which is what keeps this
+ * function the ONE writer of `world.spirit` in the engine. ⭐ SINCE v85's T4 THERE ARE **TWO** SUCH
+ * WRITERS AND THE SENTENCE IS CORRECTED RATHER THAN LEFT («a fact `rollEnds` wrote»): `rollEnds`
+ * (world/lifeBeat.ts §8) stamps `'breakup'` and `landBirth` (§14) stamps `'postpartum'`, both earlier
+ * in this same tick and both on the far side of the same one slot. This pass applies the kind's
  * delta on exactly the week that matches, and clears the stamp in its tail once she is back within
  * `shockClearWithin` of her PLAIN baseline (68 – ruling D). The stamp is a mark and never the
  * physics: a spirit of 48 looks identical whichever way it got there, and what it buys is wave 5's
@@ -1172,18 +1228,32 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //     `?? null` is the same courtesy the three fields above get, for hand-built probe worlds.
   const shock = world.spiritShock ?? null
   // ⭐⭐⭐ v85 T1 – THE BAND IS LOOKED UP AND MAY BE `null`, because `spiritShock.kind` widened to
-  // `'breakup' | 'postpartum'` and only `'breakup'` has a drafted magnitude. ⚠ THE `0` IS THE IDENTITY
-  // AND NOT A PLACEHOLDER FOR A NUMBER: a kind with no band contributes nothing to this week's sum, so
-  // the arithmetic here is BYTE-IDENTICAL to what it ran before the member existed – `composureBonus`'s
-  // own v78 rule, applied to a summand instead of to a seat.
+  // `'breakup' | 'postpartum'`. ⚠ THE `0` IS THE IDENTITY AND NOT A PLACEHOLDER FOR A NUMBER: a kind
+  // with no band contributes nothing to this week's sum, so the arithmetic is BYTE-IDENTICAL to what
+  // it ran before the member existed – `composureBonus`'s own v78 rule, applied to a summand instead
+  // of to a seat.
   //
-  // ⚠⚠ AND IT IS UNREACHABLE ON THIS TREE RATHER THAN MERELY UNLIKELY: T1 ships the widened kind and
-  // NO WRITER for it (T4, the birth, is the only one there will ever be), so `s.shock[shock.kind]` can
-  // only be the breakup band here. The branch exists so that the day T4 lands WITHOUT its benched
-  // magnitude (invariant 5 – T9 sizes it), a live career takes a 0 rather than an `undefined` that
-  // would make `NaN` of her spirit for the rest of the save.
+  // ⭐⭐⭐ v85 T4 – AND THE `null` BRANCH IS NOW **UNREACHED BY EVERY SHIPPED KIND**, which is T1's own
+  // sentence coming true rather than being falsified. It read «unreachable on this tree: T1 ships the
+  // widened kind and NO WRITER for it (T4, the birth, is the only one there will ever be)». T4 landed:
+  // `landBirth` writes `'postpartum'` and `ECONOMY.spirit.shock.postpartum` is no longer `null`, so
+  // BOTH members of the union now have a band and this line stopped taking the exact-0 branch – the
+  // first careers whose spirit the postpartum band has ever moved are the ones walked in
+  // tests/wave8-birth.test.ts. The branch STAYS, and its job is now the one T1 wrote for it: a kind
+  // added by a later wave takes a 0 rather than an `undefined` that would make `NaN` of her spirit for
+  // the rest of the save.
+  //
+  // ⭐⭐⭐ v85 T4 – AND THE SECOND FACTOR IS **WHERE `support` ENTERS THE RECOVERY** (the digest's own
+  // «support speeds recovery; pressure → depression risk ↑»). It is exactly `1` for a `'breakup'` and
+  // for a hand-built world, so nothing wave 4 priced moves; for a birth it scales THE WEEK'S OWN TERM,
+  // which is the only place support can enter without becoming the second return rate this function's
+  // own ⚠⚠ note forbids by name. `postpartumSupportScale` above carries the three properties, the
+  // constant carries the argument and the figures.
   const shockBand = shock === null ? null : s.shock[shock.kind]
-  const shocked = shock !== null && shock.week === world.week && shockBand !== null ? shockBand[intensity] : 0
+  const shocked =
+    shock !== null && shock.week === world.week && shockBand !== null
+      ? shockBand[intensity] * postpartumSupportScale(world, shock)
+      : 0
   // 2c. ⭐⭐⭐ AND WHAT BEING LOOKED AT DID TO HER (v77 T3) – §3c above, as a **FOURTH SUMMAND** and
   //     for the shock's own reason, which is the architect's RULING L part 1: `pressureBase` is
   //     drafted «before scaling», `exposurePressure` applies `perturbationScale` exactly once inside

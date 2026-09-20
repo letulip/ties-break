@@ -1539,9 +1539,14 @@ export interface WorldState {
    *  a migration), so the v84 -> v85 step says nothing about this field and the golden corpus owes it
    *  no rung. That is what «the seat lands before the writers» buys: the shape moves for free.
    *
-   *  ⚠ T1 SHIPS THE MEMBER AND NO WRITER. T4, the birth, is the only thing that will ever set it –
-   *  `rollEnds` writes `'breakup'` and nothing else does – so nothing on this tree can produce a
-   *  `'postpartum'` shock however long a career runs. */
+   *  ⚠ T1 SHIPPED THE MEMBER AND NO WRITER, AND **T4 IS THAT WRITER** – `landBirth`
+   *  (`world/lifeBeat.ts` §14) stamps `'postpartum'` on the week the child is born, `rollEnds` (§8)
+   *  stamps `'breakup'`, and those two are the whole list. The old sentence («nothing on this tree can
+   *  produce a `'postpartum'` shock however long a career runs») was true of the T1 tree and is
+   *  corrected here rather than left, because the field is ONE SLOT and the pair of writers is the
+   *  fact a reader most needs from it: the second write REPLACES the first, deliberately, so a
+   *  mid-term break-up still recovering when the child arrives is overwritten by the larger window
+   *  (the brief's §2 T4; pinned in tests/wave8-birth.test.ts §D). */
   spiritShock: { week: number; kind: SpiritShockKind; weeks?: number } | null
   /** ⭐⭐⭐ v76 – THE PSYCHOLOGIST IS ON THE PAYROLL (the psychologist's year, wave 5;
    *  `docs/plans/life-wave-5-builder-2026-09.md` §2 T2, the seat's ruled shape from
@@ -1964,10 +1969,14 @@ export interface WorldState {
    *  child recorded nowhere, and W5 would have to open by re-deriving children out of episode
    *  history – a reconstruction, in a layer whose whole discipline is refusing them.
    *
-   *  ⚠ `[]` IS EVERY CAREER ON THIS TREE AND EVERY CAREER IN THE CORPUS, for the plainest possible
-   *  reason: there were no children to have. T4 is the one writer (`children.push`), and W5 READS the
-   *  array and appends fields to the row if it needs them – its own append-only move, which an array
-   *  of rows accepts for free and a scalar would not.
+   *  ⚠ `[]` IS EVERY CAREER IN THE CORPUS, for the plainest possible reason: there were no children
+   *  to have. ⭐ T4 LANDED AND IS THE ONE WRITER – `landBirth`'s single `children.push`
+   *  (`world/lifeBeat.ts` §14) – and W5 READS the array and appends fields to the row if it needs
+   *  them, its own append-only move, which an array of rows accepts for free and a scalar would not.
+   *  ⚠⚠ THAT ONE PUSH IS ALSO THE WAVE'S SCOPE BRAKE, one file over: `pregnancyEligible` refuses while
+   *  `children.length > 0` (T2½ piece 3), which is what makes §4's «no repeat pregnancy enabled» true
+   *  and is the line W5 replaces with the count-aware hazard. One piece of state, two readers – and
+   *  `landBirth`'s own once-ness is a THIRD read of it rather than a second receipt.
    *
    *  ⚠ THE ROW IS NOT THE PREGNANCY AND MUST NOT GROW INTO IT. What a birth leaves behind is `bornWeek`
    *  and `sex`; the months, the support grade and the return plan belong to the pregnancy that

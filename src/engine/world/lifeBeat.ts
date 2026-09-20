@@ -6498,3 +6498,134 @@ export function landPregnancyPause(world: WorldState): void {
   // §2 T4's «NO COST EVENT» read one task early, and the pause charges nothing either.
   addEvent(world, { week: world.week, type: 'life', keep: true, lifeKind: 'expecting', text: PAUSE_EVENT })
 }
+
+/** ⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY** (invariant 4). The birth week's one kept feed row,
+ *  written to `landWedding`'s line and to its budget: one quiet sentence about the day, then one
+ *  about what the family is now.
+ *
+ *  ⚠ HUSBAND-AGNOSTIC (§0's decoupling ruling, and here it is load-bearing rather than polite): the
+ *  marriage may have ended months ago and the birth fires anyway, so a line that mentioned him would
+ *  be false on exactly the careers §14's banner exists to protect. «The family» is the reader's own
+ *  household, which is the one thing every arm of this wave has in common.
+ *  ⚠ IT MAY SAY «daughter» – the sex is RULED (20.09, «пол нужен … пока будут только девочки») and
+ *  written as a literal on the row, so the sentence is stating a fact the save holds rather than
+ *  guessing at one.
+ *  ⚠ AND IT NAMES NO RETURN AND NO DATE, `PAUSE_EVENT`'s own discipline one function up: this wave
+ *  does not know whether she comes back (T5 draws it), so a line that hinted would be a promise T5
+ *  is allowed to break.
+ *  ⚠ NO FIGURE AND NO PRICE, because there is none – see `landBirth`'s ⚠⚠ NO COST EVENT. */
+const BIRTH_EVENT = 'Her daughter was born this week. The family has somebody new in it.'
+
+/** ⭐⭐⭐ THE BIRTH – the week the child arrives, and the ONE writer of `world.children` in the engine.
+ *
+ *  ⚠⚠ IT IS **NEWS AND NOT A DECISION**, which is the brief's own sentence (§2 T4: «no blocking
+ *  beat; the week's weight is carried by the feed, the diary and the shock») and is the shape of
+ *  everything below. No `LifeBeatKind` member, no card, no answer, no option table, nothing that
+ *  stops the week. The layer's law is §4a – SHE decides, the parent REACTS – and there is nothing
+ *  here for a parent to decide: the deciding already happened at the `'expecting'` beat thirty-nine
+ *  weeks ago, and what that answer bought is read below as `support`.
+ *
+ *  ⚠⚠ **NO COST EVENT.** Not a birth fee, not a ledger row, not a cent. The wedding's own ruling is
+ *  the precedent and is quoted rather than re-argued – «я думаю как с подарками, никто и нисколько»
+ *  (18.09, Q-1) – and wave 7 made the guard the byte-EQUALITY of `fundsCents` across the day rather
+ *  than the mere absence of a charge, which is what tests/wave8-birth.test.ts §C asserts (red-first
+ *  against a version that charges). The child's STANDING cost line is a real question and it is
+ *  W5's, not a fee on this week: §4 of the brief forbids it in this wave by name.
+ *
+ *  ⭐⭐⭐ **THE DECOUPLING LAW IS TESTED HERE, NOT MERELY HONOURED** (RULED 20.09, «развелись и
+ *  развелись, жизнь продолжается»). This function reads `world.pregnancy` and NEVER the episode's
+ *  aliveness – there is not one clause below that mentions `latchedEpisode`, `endedWeek` or
+ *  `episodeId`, and adding one would delete a child the week a marriage ended, which is the one
+ *  reading of that ruling that is wrong. §14's banner is where the law is written out; §F of the
+ *  suite walks a career through a mid-term ending to the birth and asserts the SAME birth, and it
+ *  passes with zero special-case code because there is no special case to write.
+ *
+ *  ⚠ FIVE WRITES AND THE MIDDLE THREE ARE `landWedding`'s, LINE FOR LINE (`markSchoolEnd`'s
+ *  two-surface idiom two waves down): the row on `world.children`, ONE kept feed line through
+ *  `fireMilestone`, ONE album entry through `captureMilestone`, the shock, and then deliberately
+ *  NOTHING on `world.pregnancy` – see the ⚠⚠ at the tail for why that absence is the decision rather
+ *  than an omission.
+ *
+ *  ⚠ `>=` AND A RECEIPT, WHICH IS `landWedding`'s ARRANGEMENT AND NOT `landPregnancyPause`'s. The
+ *  pause's row is TEXTURE and uses `===`, because a crafted world that JUMPS the calendar should
+ *  miss a line rather than double it. A birth is the opposite: missing it would leave a career with
+ *  a pregnancy that never resolves and an entry gate that never re-opens (`pauseCovering` has no
+ *  upper bound of its own – T3's own finding), so the day must never be missed and the guard against
+ *  a second one is a receipt.
+ *  ⚠⚠ AND THE RECEIPT IS THE PUSH ITSELF, READ BACK – there is no second one and there must not be.
+ *  `world.children` is already the once-ness of this wave: T2½ piece 3 put
+ *  `if (world.children.length > 0) return false` into `pregnancyEligible` as the SCOPE BRAKE that
+ *  makes §4's «no repeat pregnancy enabled» true, so the line below has a consequence one function
+ *  over – the moment it runs, no further pregnancy can start in this career until W5 lifts that
+ *  clause. Two receipts for one fact would have to be deleted together, and one of them would be
+ *  missed.
+ *  ⚠ `bornWeek >= dueWeek` IS EXACT AND IS **W5-SAFE**, which is why it is not `children.length > 0`:
+ *  every child of an EARLIER pregnancy was born before this record was even written (its
+ *  `announcedWeek` is later than that birth), so the only row this can match is this pregnancy's own.
+ *  A count would have refused the second child the day W5 opens the gate.
+ *
+ *  ⭐⭐ `sex: 'girl'` IS A **LITERAL AND NO STREAM IS DRAWN FOR IT** – RULED 20.09, his words: «пол
+ *  нужен, но мальчиков у нас пока нет, можно сделать заготовку, но пока будут только девочки». A
+ *  draw whose outcome is fixed is not a draw, it is a draw-and-discard, which invariant 2 forbids by
+ *  name. `seed:life:birth:<episodeId>` is RESERVED IN WRITING for the day boys exist (`ChildRecord`'s
+ *  own note in `world/state.ts`) and is deliberately NOT created here – §5's reservation rule, and
+ *  the reason the key is scoped to the episode rather than to the week is that persisted rows must
+ *  keep old careers' daughters stable when it comes.
+ *
+ *  ⚠ THE FEED ROW IS A `'milestone'` AND NOT A `'life'` ROW, so `wave4-life-row-stamp`'s house law –
+ *  «every `type: 'life'` write site in the engine stamps a `lifeKind`» – does not reach it. CHECKED
+ *  AND NOT ASSUMED: `fireMilestone` writes `type: 'milestone'` (`world/milestones.ts`), which is the
+ *  channel for what the family KEEPS and is exactly the distinction T3 drew when it made the pause's
+ *  row an ordinary life row instead («this is news about a season; T4's birth is this arc's
+ *  milestone»). No `LIFE_BEAT_ROW_KINDS` entry is owed and no glyph is picked.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM – two integers compared, one array scan, and four writes. It takes no
+ *  `Rng`, so MAIN is structurally out of reach and the frozen capture (41550 / e6b0c709) cannot see
+ *  it; and a career that never conceived returns on `world.pregnancy === null`, which is every week
+ *  of every frozen career (156 weeks, age 16.6 – no latch, so no pregnancy, so no birth).
+ *
+ *  ⚠⚠ AND WHAT IT DOES **NOT** DO TO `world.pregnancy` IS A DECISION WITH A REASON, not an omission.
+ *  The record survives the birth WHOLE, and nothing here writes or clears one field of it:
+ *    · T5 reads `support` out of it (her decision) and T6 reads `returnPlan` INTO it, so it has to
+ *      outlive the day by construction;
+ *    · every field on it is still TRUE afterwards – `pausesWeek` is the week entries closed,
+ *      `dueWeek` is the week the child came, `support` is the answer that was given, `episodeId` is
+ *      still whose;
+ *    · and the pause is the one that matters: `pauseCovering` (`world/medical.ts`) shuts the calendar
+ *      for every `week >= pausesWeek` while the record stands, and T3 wrote down that this window has
+ *      NO UPPER BOUND OF ITS OWN – «the RECORD'S OWN LIFETIME is the window. T5/T6 clear
+ *      `world.pregnancy`». Clearing it here would re-open the entry gate the week after a birth, on a
+ *      career that has not yet decided whether it is coming back, which is the one thing the brief's
+ *      two outcomes both say is false. THE BIRTH IS NOT THE BOUND.
+ *  ⚠ THE ONE COST OF THAT, REPORTED RATHER THAN PAPERED OVER: the refusal sentence the gate prints is
+ *  `PREGNANCY_PAUSE_DETAIL` – «She is expecting …» – and from this week on she is not. It stands for
+ *  up to `decisionWeeksAfterBirth` weeks, which is real and is a WORDING question (invariant 4): the
+ *  sentence is the owner's and lands in T8's table. A note sits at that constant too. */
+export function landBirth(world: WorldState): void {
+  const pregnancy = world.pregnancy
+  if (pregnancy === null || world.week < pregnancy.dueWeek) return
+  if (world.children.some((child) => child.bornWeek >= pregnancy.dueWeek)) return
+  world.children.push({ bornWeek: world.week, sex: 'girl' })
+  // ⚠ DRAFT – the kept line is the builder's draft (invariant 4), `landWedding`'s own marking.
+  // ⚠ THE KEY IS THE WEEK, `milestoneKey`'s own identity for this type and for its reason: a birth is
+  // once per PREGNANCY, not once per marriage, so an episode-keyed receipt would swallow W5's second
+  // child of the same marriage.
+  fireMilestone(world, `birth:${world.week}`, BIRTH_EVENT)
+  captureMilestone(world, { type: 'birth', week: world.week })
+  // ⭐⭐⭐ AND THE MARK THE MONTHS AFTER LEAVE ON HER – the SECOND writer of `world.spiritShock` in the
+  // engine (`rollEnds` is the first, `engine/spirit.ts`'s own banner carries the corrected sentence).
+  // A fact, never a number: what it costs is `ECONOMY.spirit.shock.postpartum`, scaled by the parent's
+  // persisted `support` grade, and `accrueSpirit` – SIX calls later in this same tick, counted rather
+  // than guessed – is the one place that reads either.
+  //
+  // ⚠⚠ IT IS **ONE SLOT AND THIS WRITE OVERWRITES**, DELIBERATELY AND WITH THE PRICE NAMED. A
+  // mid-term ending stamps `'breakup'` (§8) and that mark may still be recovering on this week; the
+  // assignment below replaces it, week and kind together, because the later and larger window is the
+  // one she is living. What is LOST is the break-up's remaining recovery and its `weeks` counter –
+  // the psychologist's receipt for that shock can no longer be earned – and that is the honest
+  // reading of one meter: a girl does not carry two separate recoveries at two rates, she carries
+  // where she is. ⚠ PINNED IN §D OF THE SUITE RATHER THAN LEFT TO FIELD ORDER, because a conditional
+  // write (`??=`, or a «keep the bigger one» test) is the shape a later reader would add believing it
+  // was a fix.
+  world.spiritShock = { week: world.week, kind: 'postpartum' }
+}

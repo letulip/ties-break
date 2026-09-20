@@ -522,7 +522,18 @@ export function pauseCovering(world: WorldState, week: number): WorldState['preg
  *  and the entries she already holds are somewhere else entirely.
  *
  *  ⚠ HUSBAND-AGNOSTIC, per §0's decoupling ruling: a mid-pregnancy divorce is ordinary life, so no
- *  line of this wave may need to know whether he is still there. Nothing here does. */
+ *  line of this wave may need to know whether he is still there. Nothing here does.
+ *
+ *  ⚠⚠ AND SINCE v85's T4 THE WINDOW **OUTLIVES THE WORD «expecting»**, which is reported here rather
+ *  than quietly reworded (invariant 4 – the sentence is the owner's). `pauseCovering` above has no
+ *  upper bound of its own: it returns the record for every week from `pausesWeek` on, and the record
+ *  is cleared by T5/T6 and NOT by the birth – `landBirth` deliberately writes nothing to it, because
+ *  clearing it would re-open the entry gate the week after a birth on a career that has not yet
+ *  decided whether it is coming back (`world/lifeBeat.ts` §14 carries the whole argument). So from
+ *  the birth until her decision – T5's window, which its own task drafts at 20 weeks and which does
+ *  not exist on this tree yet – this card says «She is expecting» about a woman who is not. The
+ *  REFUSAL is right and the WORD is stale; it lands in T8's table with the rest of the wave's
+ *  drafts. */
 export const PREGNANCY_PAUSE_DETAIL = 'She is expecting – no new entries. The ones she already holds still stand.'
 
 /** ⭐⭐⭐ ROUND 34 #9 – WHAT THE BOOKED HOLIDAYS BETWEEN NOW AND `week` WILL PUT BACK.

@@ -102,6 +102,13 @@ export function milestoneKey(m: Milestone): string {
     // is for a hand-built row only; the one writer (`landWedding`) always stamps the id.
     case 'wedding':
       return `${m.type}:${m.kind ?? '?'}`
+    // ⭐ v85 (the birth, wave 8 T4): PER WEEK, AND THAT IS THE ONE PLACE IT PARTS FROM THE WEDDING
+    // ABOVE. A wedding is once per EPISODE and its id says which marriage; a birth is once per
+    // PREGNANCY, and a second child of the same marriage is confirmed wanted (11.09, W5's) – so an
+    // episode-keyed identity would silently swallow the second one. Two children cannot be born in
+    // one week here, so the week IS the identity, and no `kind` rides the row at all.
+    case 'birth':
+      return `${m.type}:${m.week}`
   }
 }
 
@@ -153,6 +160,24 @@ export const MEMORY_EMOTION: Record<MilestoneType, MemoryFace> = {
   // for falls back honestly (`paintedFaceFor`), which is a first-class answer rather than a 404: the
   // gate is 23+, so `adult` is the common case and `lateCareer` is an ordinary one.
   wedding: 'bride',
+  // ⭐⭐ v85 (the birth, wave 8 T4) – `'norm'`, AND IT IS **THE BUILDER'S DRAFT** exactly as the
+  // wedding's was, flagged here so the next reader finds it the way the wedding's draft note found
+  // its own mistake eighteen days later.
+  //
+  // ⚠⚠ THE WEDDING'S REPAIR IS THE WHOLE ARGUMENT, READ FORWARD. `'happy'` is her ordinary adult
+  // face – that is what the 18.09 repair above established – so a `'happy'` polaroid of the week her
+  // daughter was born would show a girl with a trophy, which is the same defect one moment over.
+  // THERE IS NO BIRTH PAINTING: `FACE_BANDS` holds exactly one moment-face (`bride`), cut for the
+  // wedding the 11.09 ruling gated the branch on, and nothing on disk answers a birth. So the honest
+  // pick is the app's own honest answer where a moment has no picture – `norm`, the neutral stage
+  // portrait, which is literally what `paintedFaceFor` falls back to.
+  // ⚠ `school`'s ROW IS THE PRECEDENT AND ITS SENTENCE IS THE REASON: «a grin on the polaroid would
+  // be the game telling her how to feel». A birth week is also the week the postpartum shock lands
+  // (`landBirth`, world/lifeBeat.ts §14) – −24/−37.5 of spirit – so a smile is the one face the
+  // arithmetic of the same week actively contradicts.
+  // ⚠ IF A BIRTH PAINTING IS EVER CUT, this is a one-word change plus a `FACE_BANDS` row – T10 owns
+  // the portraits and it is HIS call, not a builder's (who-she-is §5a).
+  birth: 'norm',
 }
 
 // --- the facts ------------------------------------------------------------------------------

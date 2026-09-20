@@ -452,6 +452,11 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   school: 'School behind her',
   // ⚠ DRAFT (v83, the wedding – wave 7 T3; invariant 4: the owner's word lands in the T7 table).
   wedding: 'Her wedding',
+  // ⚠ DRAFT (v85, the birth – wave 8 T4; invariant 4: the owner's word lands in the T8 table).
+  // ⚠ HUSBAND-AGNOSTIC, per §0's decoupling ruling – a mid-pregnancy divorce is ordinary life, so no
+  // line of this wave may need to know whether he is still there. The sex is RULED (20.09, girls
+  // only at v1), so the label may say it.
+  birth: 'Her daughter',
 }
 
 function scrollDetail(m: Milestone): string | null {
@@ -475,6 +480,13 @@ function scrollDetail(m: Milestone): string | null {
     // is a wording question that belongs to the owner's pass (T7), not to a detail cell that would
     // settle it by default. The label row alone is the record.
     case 'wedding':
+      return null
+    // ⚠ v85 (wave 8 T4): NO DETAIL EITHER, and for a shorter version of the same reason. The row
+    // carries no `kind` at all (see `MilestoneType`'s own note): the sex is a ruled constant that
+    // the label already speaks, and the marriage the child belongs to is on `world.pregnancy`, whose
+    // id is a machine value and whose liveness is nobody's business here – the decoupling law
+    // (RULED 20.09, world/lifeBeat.ts §14's banner). The label row alone is the record.
+    case 'birth':
       return null
   }
 }
