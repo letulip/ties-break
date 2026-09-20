@@ -744,7 +744,48 @@ import type { AcademySupport } from '../academy'
 // mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
 // tests/coachTravelEdgeFixtures.ts. The non-null shape's witness (the corpus cannot hold one – a
 // walked probe skips the prologue) is tests/album-trace-schema.test.ts, through the real writer.
-export const SAVE_SCHEMA_VERSION = 84
+// ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN, WAVE 8 T1 (`docs/plans/life-wave-8-builder-2026-09.md`
+// §2 T1; the design `docs/plans/the-wedding-and-the-children.md` §5, steps W3+W4). TWO keys on the
+// world and ONE union widened:
+//
+//   · `pregnancy: PregnancyState | null` – the one she is carrying, or nothing. `null` is the state
+//     of every career that is not expecting, which on this tree is every career there is: T1 ships
+//     the seat and NO WRITER AT ALL (the hazard is T2's, the pause T3's, the birth T4's).
+//   · `children: ChildRecord[]` – the born, append-only, one row per birth. Empty is the state of
+//     every career that has had none. It is on the world rather than on the pregnancy because a
+//     birth must land somewhere the week it happens and the pregnancy that produced it is cleared
+//     the same week (§0's own delta): W5 then READS the array and appends fields to the row if it
+//     needs them, its own append-only move, where a birth recorded only on `pregnancy` would make
+//     W5's migration re-derive children from episode history.
+//   · `spiritShock.kind` widens `'breakup'` -> `'breakup' | 'postpartum'`. The build plan's step-7
+//     row reserved exactly this widening and the field's own note predicted it in as many words
+//     («a union with one member today, on purpose, and the roster is the place the second one gets
+//     noticed»). TYPE-LEVEL ONLY, WITH NO DATA TO MIGRATE: no save can hold `'postpartum'`, because
+//     nothing has ever written it – T4 is the only writer the kind will ever get.
+//
+// ⚠⚠ THE BACK-FILL IS `null` AND `[]`, AND BOTH ARE EXACTLY TRUE RATHER THAN BARGAINS. This is
+// `loveEpisodes`'s v72 argument and emphatically NOT `prologueTrace`'s v84 one a paragraph up: there
+// is nothing here that a reconstruction is even TEMPTED by. No save written before this version
+// could hold a pregnancy or a child, because there were none to hold – the mechanic arrives with
+// this version – so «not expecting» and «no children» are the complete statement about every career
+// in the corpus, and no evidence anywhere in a save could say otherwise.
+//
+// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE. The migration writes two literals and reaches no stream at all;
+// the wave's own draws, when its later tasks land, live on `seed:life:pregnancy:<week>` and
+// `seed:life:return:<week>` – purpose-scoped sub-streams re-derived at the call site, persisting
+// nothing – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. The frozen
+// careers are predicted and MEASURED IDENTITY: `walkFrozenCareer` runs 156 weeks from the start, the
+// girl never reaches 23, and in any case no writer exists on this tree, so every cell carries `null`
+// and `[]` – a pure key append, and `PRE_V85` in tests/coachTravelEdgeFixtures.ts holds the verbatim
+// v84 constants off the peel.
+//
+// Full move: this constant, the v84 -> v85 step in migrations.ts, tests/fixtures/saves/v85.json,
+// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
+// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts. The non-null shape's witness is tests/wave8-pregnancy-schema.test.ts,
+// which crafts one – the corpus CANNOT hold one and will not until T11 regenerates the e2e fixtures
+// over a tree that has writers.
+export const SAVE_SCHEMA_VERSION = 85
 
 
 
@@ -800,6 +841,19 @@ export interface PendingTournament {
  *  `shared/protocol/narrative.ts` already imports `Temperament` type-only from `engine/spirit` for
  *  exactly that shape. The arrow stays engine -> shared, never the other way. */
 export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself' | 'publicLife'
+
+/** ⭐⭐⭐ WHAT PUT THE SHOCK ON HER (v85 T1) – see `WorldState.spiritShock`, whose `kind` this names.
+ *
+ *  ⚠ IT IS A NAME FOR A UNION THAT WAS ALREADY BEING READ THROUGH
+ *  `NonNullable<WorldState['spiritShock']>['kind']` IN TWO FILES, and it exists so a THIRD reader does
+ *  not have to spell that again. The derivation stays valid – this type and that expression are the
+ *  same union – so `PsyRegister` in world/lifeBeat.ts is untouched by the naming.
+ *
+ *  ⚠⚠ THE POINT OF NAMING IT IS TOTALITY ACROSS THE MODULE BOUNDARY, which is `ExposureKind`'s own
+ *  argument in engine/economy.ts quoted rather than re-made: a `Record<SpiritShockKind, …>` in the
+ *  constants file goes red the day a kind joins, instead of letting one ship priced at `undefined`.
+ *  The build plan's step 8 (a death in the family) is the next member this is waiting for. */
+export type SpiritShockKind = 'breakup' | 'postpartum'
 
 export interface WorldState {
   schemaVersion: number
@@ -1447,8 +1501,26 @@ export interface WorldState {
    *  shock was ever worked», which is what a shock predating the counter is. `injury.weeksSaved` is
    *  the same instrument one seat over, for the same seat's neighbour's claim. No migration step, no
    *  fixture rung, nothing for the frozen corpus to peel: a career that never hires never grows the
-   *  key. */
-  spiritShock: { week: number; kind: 'breakup'; weeks?: number } | null
+   *  key.
+   *
+   *  ⭐⭐⭐ v85 T1 – THE SECOND MEMBER ARRIVES, AND THE ROSTER IS WHERE IT GOT NOTICED, exactly as the
+   *  `kind` note above said it would (wave 8, the pregnancy and the return; the build plan's step-7
+   *  row reserved this widening by name). `'postpartum'` is the mark the months after a birth leave
+   *  on her line – the same field, the same applier (`accrueSpirit`), the same clear, and a DIFFERENT
+   *  CAUSE, which is the whole reason `kind` is a union and not a boolean: a spirit of 48 looks
+   *  identical whichever way it got there, and a reader that inferred the cause from the number would
+   *  be re-deriving a fact instead of reading one.
+   *
+   *  ⚠⚠ TYPE-LEVEL ONLY, AND THERE IS NO DATA TO MIGRATE – which is an arithmetic fact and not a
+   *  bargain: no save in existence can hold `'postpartum'`, because no code has ever written it.
+   *  WIDENING a union can never invalidate a stored value (NARROWING one is the direction that costs
+   *  a migration), so the v84 -> v85 step says nothing about this field and the golden corpus owes it
+   *  no rung. That is what «the seat lands before the writers» buys: the shape moves for free.
+   *
+   *  ⚠ T1 SHIPS THE MEMBER AND NO WRITER. T4, the birth, is the only thing that will ever set it –
+   *  `rollEnds` writes `'breakup'` and nothing else does – so nothing on this tree can produce a
+   *  `'postpartum'` shock however long a career runs. */
+  spiritShock: { week: number; kind: SpiritShockKind; weeks?: number } | null
   /** ⭐⭐⭐ v76 – THE PSYCHOLOGIST IS ON THE PAYROLL (the psychologist's year, wave 5;
    *  `docs/plans/life-wave-5-builder-2026-09.md` §2 T2, the seat's ruled shape from
    *  `docs/plans/the-travelling-team-2026-08.md` §2 ruling Б). `masseurHired`'s twin one seat over,
@@ -1844,6 +1916,100 @@ export interface WorldState {
    *  ⚠ THE ORIGIN IS DELIBERATELY NOT IN IT – `profile.background` already holds it, and a second
    *  copy would be two sources of truth for one fact (the `LifeBeatRecord` missing-boolean rule). */
   prologueTrace: PrologueTrace | null
+  /** ⭐⭐⭐ v85 – THE ONE SHE IS CARRYING, OR NOTHING (wave 8, the pregnancy and the return;
+   *  `docs/plans/life-wave-8-builder-2026-09.md` §2 T1, the design
+   *  `docs/plans/the-wedding-and-the-children.md` §5 W3+W4). One live pregnancy at a time, hung off
+   *  the world rather than off the episode row that carries it – `episodeId` points BACK at the
+   *  latched episode, which is the direction that survives the thing the wedding's own re-shape was
+   *  built for: a second marriage is the same machinery re-entered on a later row, and a second
+   *  pregnancy (W5's, confirmed wanted 11.09) is this same seat re-entered after it clears.
+   *
+   *  ⚠ `null` IS EVERY CAREER ON THIS TREE. T1 SHIPS THE SEAT AND NO WRITER AT ALL – the hazard is
+   *  T2's, the pause T3's, the birth T4's – which is what «the schema move is inert» means and what
+   *  the frozen careers measure (`psychologistHired`'s own v76 sentence, one seat over, kept as a
+   *  rule rather than re-derived). Nothing here can set it except a test poking the world.
+   *
+   *  ⚠⚠ AND IT IS DELIBERATELY NOT ON THE WIRE, which is `spiritShock`'s argument verbatim and not a
+   *  new one: `Snapshot` is assembled field by field (invariant 1 – the UI never sees a
+   *  `WorldState`), so a wire field is a decision that belongs to the task that has the READER. T10
+   *  wires the portraits and decides its own field then. `LoveEpisode` is the opposite case and needs
+   *  no such decision – it lives in `shared/protocol/narrative.ts` because the DIARY shows partners –
+   *  and nothing of T1 is shown to anybody. */
+  pregnancy: PregnancyState | null
+  /** ⭐⭐⭐ v85 – THE BORN, APPEND-ONLY, ONE ROW PER BIRTH (wave 8; §0's own delta against the design
+   *  sketch, which had this landing in W5). It ships THIS wave because a birth must land somewhere
+   *  the week it happens: `pregnancy` is CLEARED at the birth, so a child recorded only there is a
+   *  child recorded nowhere, and W5 would have to open by re-deriving children out of episode
+   *  history – a reconstruction, in a layer whose whole discipline is refusing them.
+   *
+   *  ⚠ `[]` IS EVERY CAREER ON THIS TREE AND EVERY CAREER IN THE CORPUS, for the plainest possible
+   *  reason: there were no children to have. T4 is the one writer (`children.push`), and W5 READS the
+   *  array and appends fields to the row if it needs them – its own append-only move, which an array
+   *  of rows accepts for free and a scalar would not.
+   *
+   *  ⚠ THE ROW IS NOT THE PREGNANCY AND MUST NOT GROW INTO IT. What a birth leaves behind is `bornWeek`
+   *  and `sex`; the months, the support grade and the return plan belong to the pregnancy that
+   *  produced it and die with it. A row that carried them would be a second road to facts the album
+   *  already reads off `lifeLog`. */
+  children: ChildRecord[]
+}
+
+/** ⭐⭐⭐ THE PREGNANCY'S SHAPE (v85, wave 8 T1) – see `WorldState.pregnancy`. Engine-only and
+ *  deliberately not on the wire, for the reason the field's own block gives.
+ *
+ *  ⚠⚠ `support` IS NULLABLE AND THE NULL IS A REAL STATE, NOT A PLACEHOLDER – the one field here
+ *  that looks wrong at a glance, so the argument is written down rather than left to be re-derived.
+ *  The `'expecting'` beat is BLOCKING, so a world can sit between the announcement and the parent's
+ *  answer for exactly as long as the player leaves the card up – a week, or thirty – and `null` is
+ *  the TRUE reading of that gap: «she has told him and he has not answered yet». T2 writes the grade
+ *  on the answer. A non-nullable field would need a default, and every default available here is a
+ *  lie about a week that really happened: `'measured'` claims an answer nobody gave, and `'cold'`
+ *  claims a worse one.
+ *
+ *  ⚠⚠ `dueWeek` IS PERSISTED ALTHOUGH IT IS DERIVABLE (`pausesWeek + ECONOMY.motherhood.termWeeks`),
+ *  and that is `partnerName`'s law one wave down, quoted rather than re-argued: a later constant edit
+ *  must never move the due date of a pregnancy a live career is already carrying. Derived-at-read
+ *  would do exactly that – T9 benches the term, and a family three months into a pregnancy would
+ *  find the date had moved under them on the update that retuned it. `temperamentFor` and
+ *  `LifeBeatRecord.frame` are the same instrument for the same reason: what is READ BACK is state.
+ *
+ *  ⚠ `returnPlan` is `null` until the T6 beat asks, which is the same gap `support` names one field
+ *  up: she has given birth and has not yet said how she is coming back. */
+export interface PregnancyState {
+  /** The latched episode carrying it – the marriage is the door (RULED 20.09), so this always points
+   *  at a row whose `latchedWeek !== null`. A pointer and never a copy: the partner's name, the
+   *  latch week and the ending all live on the row, and a mid-pregnancy divorce is ORDINARY LIFE
+   *  (RULED 20.09) rather than a content branch, so the row may end while this survives it. */
+  episodeId: string
+  /** The week the `'expecting'` beat was raised – she told him. Not the week he answered. */
+  announcedWeek: number
+  /** The week entries close and the pause begins. */
+  pausesWeek: number
+  /** The week the birth is due. Persisted, never re-derived – see the block above. */
+  dueWeek: number
+  /** The parent's persisted answer grade, `null` while the blocking beat is still up. W4's return
+   *  reads it; T2 writes it once, on the answer. */
+  support: 'warm' | 'measured' | 'cold' | null
+  /** How she means to come back, `null` until the T6 beat asks. */
+  returnPlan: 'small-first' | 'straight-back' | null
+}
+
+/** ⭐⭐⭐ ONE BIRTH'S ROW (v85, wave 8 T1) – see `WorldState.children`. Two facts and no history.
+ *
+ *  ⭐ `sex` IS RULED AND THE ROSTER IS A SCAFFOLD (20.09, his words): «пол нужен, но мальчиков у нас
+ *  пока нет, можно сделать заготовку, но пока будут только девочки». So T4 writes the LITERAL
+ *  `'girl'` and NO STREAM IS DRAWN FOR A CONSTANT – a draw whose outcome is fixed is not a draw, it
+ *  is a draw-and-discard, which invariant 2 forbids by name.
+ *
+ *  ⚠⚠ THE KEY `seed:life:birth:<episodeId>` IS RESERVED IN WRITING FOR THE DAY BOYS EXIST, and it is
+ *  written here rather than left to be re-derived so that nobody has to work out which key was meant
+ *  – it is scoped to the EPISODE and not to the week, which is what keeps the persisted rows of old
+ *  careers stable when it comes: a career that already has a daughter keeps her, because the row is
+ *  read back rather than re-drawn, and a career that has not yet given birth draws once, on a key
+ *  that does not move if the calendar does. */
+export interface ChildRecord {
+  bornWeek: number
+  sex: 'girl' | 'boy'
 }
 
 /** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the

@@ -889,7 +889,14 @@ const COUNSEL_HEADING = 'She wants to stop, and her coach has asked for a word b
  *  taken from a field instead of from a local type. */
 type PsyRegister = 'plain' | NonNullable<WorldState['spiritShock']>['kind']
 
-const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = { plain: true, breakup: true }
+// ⭐⭐⭐ v85 T1 – `postpartum` JOINED THE UNION AND THIS RECORD WENT RED, WHICH IS THE DESIGN ABOVE
+// WORKING EXACTLY AS IT SAYS IT WILL («the day one lands this record is a compile error until somebody
+// writes the column»). It is listed here – the register EXISTS – and its COLUMN is `null` in
+// `PSY_COUNSEL` below, because the column is six sentences of player-facing copy and **wording is not
+// an agent's to write** (invariant 4): T8 drafts it and the owner passes it. Listing the register
+// while owing the column is the only split that keeps both halves honest – the roster stays total, so
+// step 8's kind still reds here, and no line of copy is invented by a schema task.
+const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = { plain: true, breakup: true, postpartum: true }
 const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
 
 /** ⭐⭐ WHAT THE PSYCHOLOGIST SAYS – 6 drafts, his register x the coach's driver.
@@ -922,7 +929,7 @@ const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
  *      unchanged – the month is doing some of the wanting – and only the phrasing moved.
  *  ⚠ The other four cells did not move, and the shared openings are the point of the family (above),
  *  not a thing to harmonise away. */
-const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string>> = {
+const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string> | null> = {
   plain: {
     worn: 'Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. She is tired the way a long season makes a person tired, and tired has an end to it."',
     strained:
@@ -935,6 +942,27 @@ const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string>> = {
       'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has nowhere easy to set it down, and a weight with nowhere to go starts to feel permanent when it is not."',
     own: 'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a month like this one does some of the wanting."',
   },
+  /** ⭐⭐⭐ v85 T1 – THE COLUMN IS OWED, AND `null` IS THE ONLY HONEST CELL A SCHEMA TASK CAN PUT HERE.
+   *  Wave 8's T1 widened `spiritShock.kind` with `'postpartum'` (the build plan's step-7 row reserved
+   *  it) and this table went red, which is the totality above doing its job. What the red asks for is
+   *  THREE MORE SENTENCES IN HIS VOICE, under the honesty law two blocks up – and ⚠⚠ USER-FACING
+   *  WORDING IS NOT AN AGENT'S TO WRITE (invariant 4, the owner's ruling of 30.08). T8 drafts this
+   *  column and the owner passes it; §0 of the wave brief makes the same call for the new
+   *  `CareerEndingType` member in as many words: «the ending cannot ship without its copy, and the
+   *  copy is HIS».
+   *
+   *  ⚠ THE TEMPTING SHORTCUT IS REFUSED AND NAMED, so nobody re-discovers it as a good idea: aliasing
+   *  this column to `plain`'s would compile, keep every test green, and make the psychologist tell a
+   *  woman eight weeks after a birth that «nothing is sitting on top of this one» – a sentence that is
+   *  false about the one week it would be shown in. A missing column is a bug that announces itself;
+   *  a wrong column is a bug that reads well.
+   *
+   *  ⚠ IT IS UNREACHABLE UNTIL T4 WRITES THE KIND, so the `null` costs a live career nothing today –
+   *  the raise at the bottom of this file stamps `world.spiritShock?.kind ?? 'plain'`, and on this
+   *  tree that can only be `'plain'` or `'breakup'`. The render below throws BY NAME rather than
+   *  reading `undefined[driver]`, so the day the kind ships without its copy the failure says which
+   *  column is missing instead of crashing on a card. */
+  postpartum: null,
 }
 
 /** The parent's frame over his card. ONE line and not a register table, `COUNSEL_HEADING`'s own call:
@@ -3224,7 +3252,16 @@ export function lifeBeatSaid(
       if (psyRegister === undefined || psyRoot === undefined) {
         throw new Error(`A fork-psy row carries no register and driver: ${detail}`)
       }
-      return PSY_COUNSEL[psyRegister][psyRoot]
+      // ⭐ v85 T1 – A REGISTER MAY EXIST WITHOUT ITS COLUMN (see `PSY_COUNSEL`'s `postpartum` cell:
+      // the kind widened before its copy was drafted, and copy is T8's). ⚠ IT THROWS BY NAME rather
+      // than indexing `null`, so the day a kind ships ahead of its column the message says which
+      // column is owed – the same courtesy the line above pays a malformed detail. Unreachable on
+      // this tree: nothing can write a `'postpartum'` shock, so nothing can stamp that register.
+      const psyColumn = PSY_COUNSEL[psyRegister]
+      if (psyColumn === null) {
+        throw new Error(`A fork-psy register has no counsel column yet: ${psyRegister}`)
+      }
+      return psyColumn[psyRoot]
     }
     // ⭐⭐⭐ v75 T4 – THE FIFTH KIND. ⚠ IT READS NO `detail` AND NO `register`, for `'met'`'s own two
     // reasons: its detail is an episode id (a machine value, never a rendered word) and the Mood

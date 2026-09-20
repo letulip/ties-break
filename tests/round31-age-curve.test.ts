@@ -333,7 +333,9 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // ⚠ v84.json IS THE SAME PROBE CAREER ONE VERSION UP – the v25 recipe resumed on v83.json (its
     // README row records the choice) – so its curve is the same fork-resolved pair and it reads by
     // this arm for the same reason, not by the migration's 23/29.
-    if (file === 'v83.json' || file === 'v84.json') {
+    // ⚠ AND v85.json IS THAT SAME PROBE ONE VERSION FURTHER UP – the v25 recipe resumed on v84.json
+    // (wave 8 T1's own README row) – so it reads by this arm for the same reason again.
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

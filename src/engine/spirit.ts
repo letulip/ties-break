@@ -1171,7 +1171,19 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //     ⚠⚠ note above the function argues it in full; the arithmetic is the one line below. The
   //     `?? null` is the same courtesy the three fields above get, for hand-built probe worlds.
   const shock = world.spiritShock ?? null
-  const shocked = shock !== null && shock.week === world.week ? s.shock[shock.kind][intensity] : 0
+  // ⭐⭐⭐ v85 T1 – THE BAND IS LOOKED UP AND MAY BE `null`, because `spiritShock.kind` widened to
+  // `'breakup' | 'postpartum'` and only `'breakup'` has a drafted magnitude. ⚠ THE `0` IS THE IDENTITY
+  // AND NOT A PLACEHOLDER FOR A NUMBER: a kind with no band contributes nothing to this week's sum, so
+  // the arithmetic here is BYTE-IDENTICAL to what it ran before the member existed – `composureBonus`'s
+  // own v78 rule, applied to a summand instead of to a seat.
+  //
+  // ⚠⚠ AND IT IS UNREACHABLE ON THIS TREE RATHER THAN MERELY UNLIKELY: T1 ships the widened kind and
+  // NO WRITER for it (T4, the birth, is the only one there will ever be), so `s.shock[shock.kind]` can
+  // only be the breakup band here. The branch exists so that the day T4 lands WITHOUT its benched
+  // magnitude (invariant 5 – T9 sizes it), a live career takes a 0 rather than an `undefined` that
+  // would make `NaN` of her spirit for the rest of the save.
+  const shockBand = shock === null ? null : s.shock[shock.kind]
+  const shocked = shock !== null && shock.week === world.week && shockBand !== null ? shockBand[intensity] : 0
   // 2c. ⭐⭐⭐ AND WHAT BEING LOOKED AT DID TO HER (v77 T3) – §3c above, as a **FOURTH SUMMAND** and
   //     for the shock's own reason, which is the architect's RULING L part 1: `pressureBase` is
   //     drafted «before scaling», `exposurePressure` applies `perturbationScale` exactly once inside

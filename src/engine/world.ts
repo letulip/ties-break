@@ -1885,7 +1885,8 @@ export function createWorld(
     // through its spread above). `traceOf` already copies on the way out; this copies on the way in,
     // so neither side can reach the other's state.
     //
-    // ⚠ NOW THE LAST KEY OF THE LITERAL. Same peel order, same line in `careerHashAtSchema`.
+    // ⚠ AND IT HAS STOPPED BEING LAST IN ITS TURN – the same handover `coachDeal` made to it one
+    // version ago. Same peel order, same line in `careerHashAtSchema`.
     prologueTrace: prologue?.trace
       ? {
           picks: { ...prologue.trace.picks },
@@ -1893,6 +1894,31 @@ export function createWorld(
           opens: prologue.trace.opens.map((o) => ({ ...o })),
         }
       : null,
+    // ⭐⭐⭐ v85 (the pregnancy and the return, wave 8 T1 –
+    // docs/plans/life-wave-8-builder-2026-09.md §2 T1): SHE IS NOT EXPECTING AND HAS NO CHILDREN,
+    // which on week 0 is the only thing these two can mean – she is eight. `null` and `[]` are the
+    // IDENTITY here in the plainest sense and not placeholders for one (`composureBonus`'s own v78
+    // rule, and `spotlightHabituation`'s v77 sentence this inherits word for word): they are the same
+    // two literals the v84 -> v85 migration back-fills with, and for the same reason rather than by
+    // coincidence – a career that predates the mechanic carried neither because there was neither to
+    // carry – so a migrated career and a fresh one are the same shape at the moment they load.
+    //
+    // ⚠ AND THIS LINE IS THE WHOLE WRITER SET ON THIS TREE. T1 ships the seats and NO WRITER AT ALL:
+    // the hazard that sets `pregnancy` is T2's, the pause T3's, the `children.push` T4's. Nothing
+    // here or in any phase of the tick can put another value in either, however long a career runs,
+    // which is what the frozen careers measure.
+    //
+    // ⚠⚠ NOW THE LAST TWO KEYS OF THE LITERAL, IN THIS ORDER – `pregnancy` first, `children` second –
+    // and `prologueTrace` above has stopped being the last, the same handover it took from
+    // `coachDeal` and `coachDeal` took from `form`. Two keys in ONE append, peeled in one destructure
+    // for the reason the wave-1 three are: they arrived together, in this order, and object rest
+    // preserves the relative order of everything it keeps. ⚠ THE ORDER IS LOAD-BEARING: the
+    // frozen-career identities reproduce each older schema's hashes by dropping exactly the keys
+    // appended since, so every key must stay in the order it was appended in (`careerHashAtSchema` in
+    // tests/coachTravelEdgeFixtures.ts peels in reverse, newest first – `children` before
+    // `pregnancy`).
+    pregnancy: null,
+    children: [],
   }
   addEvent(world, {
     week: 0,

@@ -3051,6 +3051,50 @@ export function migrateSave(raw: unknown): WorldState {
     v = 84
   }
 
+  // ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN, WAVE 8 T1 (`docs/plans/life-wave-8-builder-2026-09.md`
+  // §2 T1; the design `docs/plans/the-wedding-and-the-children.md` §5, steps W3+W4). TWO keys:
+  // `pregnancy`, the one she is carrying or nothing, and `children`, the born – append-only rows,
+  // one per birth, on the WORLD rather than on the pregnancy because the pregnancy is cleared at the
+  // birth and a child recorded only there is a child recorded nowhere (§0's own delta).
+  //
+  // ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT BARGAINS, AND THIS IS `loveEpisodes`'s v72 ARGUMENT
+  // RATHER THAN `prologueTrace`'s v84 ONE ONE STEP UP. There, a real childhood had been walked and
+  // thrown away, and the note had to explain why reconstructing it was refused. Here there is
+  // nothing a reconstruction could even be tempted by: no save written before this version could
+  // hold a pregnancy or a child, because there were none to hold – the mechanic arrives WITH this
+  // version. «Not expecting» and «no children» are therefore the complete and exact statement about
+  // every career in the corpus, and no evidence anywhere in a save could say otherwise.
+  //
+  // ⚠ `??=` AND NEVER `||=`, the standing rule of every step above – and the v84 step's own honesty
+  // is owed here too rather than an invented bite. On THIS step's data the two are INDISTINGUISHABLE:
+  // a live pregnancy is an object and an existing `children` list is an array, both truthy, so `||=`
+  // would keep them as well, and the only falsy value either key can legitimately hold (`pregnancy:
+  // null`) is exactly what the back-fill writes anyway. The rule is kept as a RULE rather than
+  // re-derived per step, because the step that finally needs it should not be the one discovering it.
+  //
+  // ⚠⚠ THE ARM THAT IS REAL HERE IS `=`, NOT `||=`, and it is the one the mutation ledger measures:
+  // a plain assignment CLOBBERS a pregnancy a save is carrying, and **the golden corpus cannot see
+  // it** – every one of the 86 fixtures back-fills, so the keep-branch never executes and all of §A
+  // stays green under the mutation. tests/wave8-pregnancy-schema.test.ts §B crafts the payload that
+  // does see it (2 RED per key, measured), and it has to craft one because on this tree no engine run
+  // produces a world with a pregnancy in it.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: two `??=` on two world keys, gated on `v === 84`, writing two
+  // literals. No sub-stream is reached on this path, so MAIN cannot move and the frozen capture
+  // (41550 / e6b0c709) is untouched by construction. `spiritShock.kind`'s widening to
+  // `'breakup' | 'postpartum'` rides this same version and needs NO step at all – adding a union
+  // member cannot invalidate a stored value, and nothing has ever written the new one.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v85.json,
+  // its row in tests/fixtures/saves/README.md, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 84) {
+    save.pregnancy ??= null
+    save.children ??= []
+    v = 85
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

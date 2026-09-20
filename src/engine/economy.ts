@@ -64,6 +64,11 @@ import type { TierId } from './season/types'
 // the day a sixth exposure kind joins the union, `vue-tsc` names the missing base instead of letting
 // a kind ship priced at `undefined`, which would poison the whole weekly sum with `NaN`.
 import type { ExposureKind } from './world/spotlight'
+// ⚠⚠ TYPE-ONLY FOR THE IDENTICAL REASON, and it buys the identical thing one mechanic over: `shock`
+// below is `Record<SpiritShockKind, … | null>` and therefore TOTAL, so the day step 8's kind joins the
+// union `vue-tsc` names the missing band instead of letting a shock ship priced at `undefined` – which
+// would poison `accrueSpirit`'s weekly sum with `NaN` exactly as an unpriced exposure would.
+import type { SpiritShockKind } from './world/state'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
 // nothing, so this direction can never close a cycle.
@@ -4346,7 +4351,26 @@ export const ECONOMY = {
      *  else. §4's own prediction for a lifted 75 is the whole of the shape: ~1–2 weeks under the knee
      *  for a steady girl, ~6–7 for an intense one. A second return rate here would be a second
      *  mechanic wearing a constant. */
-    shock: { breakup: { steady: -22, intense: -34 } },
+    /** ⭐⭐⭐ v85 T1 – `postpartum` IS `null` BECAUSE ITS BAND IS NOT DRAFTED YET, AND `null` IS THE
+     *  ONLY HONEST CELL A SCHEMA TASK CAN PUT HERE. Wave 8's T1 widened `spiritShock.kind` to
+     *  `'breakup' | 'postpartum'` (the build plan's step-7 row reserved it), and the widening made
+     *  this table's read non-total – which is the union doing exactly the job `spiritShock.kind`'s own
+     *  note says it is for: «every exhaustive read goes red at the site that has to decide».
+     *
+     *  ⚠⚠ THE SITE THAT HAS TO DECIDE IS NOT T1. These are two TUNING NUMBERS, and invariant 5 says
+     *  tuning is measured and not guessed – T9 benches the wave's constants and T4 is the kind's only
+     *  writer. A schema task inventing a magnitude here would be a number nobody sized, shipped inside
+     *  a commit about key order, and the −22/−34 above are the standing proof that these numbers get
+     *  argued over (§4's own two, kept against a derived −34.375 on the single-source rule).
+     *
+     *  ⚠ IT IS UNREACHABLE UNTIL T4, so `null` costs a live career nothing: nothing on this tree can
+     *  write a `'postpartum'` shock, and `accrueSpirit`'s read below returns an exact 0 for a kind
+     *  with no band – byte-identical to the arithmetic it ran before this member existed. T4 replaces
+     *  the `null` with its row and the read stops taking that branch. */
+    shock: { breakup: { steady: -22, intense: -34 }, postpartum: null } satisfies Record<
+      SpiritShockKind,
+      { steady: number; intense: number } | null
+    >,
     /** ⭐⭐ HOW CLOSE TO HER OWN BASELINE COUNTS AS BACK – the gap `accrueSpirit`'s tail clears
      *  `world.spiritShock` at (the build plan §5 step 4: «clears when spirit ≥ baseline − 2», i.e.
      *  **68**).
