@@ -9,13 +9,48 @@ last-reviewed: 2026-09-20
 # The motherhood – what the drafted constants produce (wave 8, v85)
 
 Invariant 5's record for `ECONOMY.motherhood` and the arc around it (wave-8 brief
-[§2 T9](../plans/life-wave-8-builder-2026-09.md)). ⚠ **THIS DOCUMENT IS OPENED BY T7 AND OWNED BY
-T9.** T7's task is one question – «what does a twelve-month absence cost in brand income under
-EXISTING rules?» – and its answer decides whether a constant ships at all, so it is written down the
-day it is measured rather than held for the task that will surround it. Everything T9 measures (the
-census, the decision, the comeback, the protected rank, the postpartum shock, input-independence)
-lands beside it under its own headings; **§1 and §7 are T7's and complete, and the rest is T9's to
-fill.**
+[§2 T9](../plans/life-wave-8-builder-2026-09.md)). ⚠ **THIS DOCUMENT WAS OPENED BY T7 AND IS OWNED BY
+T9.** T7's task was one question – «what does a twelve-month absence cost in brand income under
+EXISTING rules?» – and its answer decided whether a constant shipped at all, so it was written down
+the day it was measured rather than held for the task that would surround it. **§1 is T7's and is
+untouched**; everything from §2 on is T9's.
+
+⚠ **HOW THIS DOCUMENT IS NUMBERED.** §1 keeps its number because the wave brief links to it by name
+([§3a](../plans/life-wave-8-builder-2026-09.md)). T7's closing question to the owner, which it wrote
+as «§7», is carried **verbatim** into [§14](#14-the-questions-for-the-owner) so that every question in
+this wave's arc sits in one place; not a word of it is changed, and nothing of T7's measurement moved.
+
+⚠ **T9 TOUCHED NO ENGINE CODE.** Every number below is a MEASUREMENT of the values §2 of the brief
+drafted, at those values. Where a measurement disagrees with its prediction, §13 names the
+disagreement and both readings – **a disagreement is reported, never averaged** – and nothing is
+retuned: constants move only on the owner's word, which is the whole reason the wave shipped them
+undrafted-by-him.
+
+## §0 The constants under measurement, and whose draft each one is
+
+⚠ The column that decides how a reading is read. The brief drafted some of these, the builders drafted
+the rest inside the brief's shape, and **two are RULED and are not drafts at all** – a measurement of
+a ruled number is a description of the game, not a proposal about it.
+
+| constant | ships at | whose draft |
+| --- | ---: | --- |
+| `perWeekByAge` | 2 / 3 / 4 / 3 / 0 %/yr at 24 / 27 / 30 / 34 / 35 | the annual figures are **his own digest's**; the five-rung SHAPE is T2's draft |
+| `playsOnWeeks` | 8 | the brief's |
+| `termWeeks` | 31 | the brief's (8 + 31 = a 39-week term from the announcement) |
+| `joyBond / worryBond / careerFirstBond` | +2.5 / −0.5 / −4 | the brief's |
+| `decisionWeeksAfterBirth` | 20 | the brief's |
+| `returnBase` | 0.65 | the brief's («~65% to TRY») |
+| `returnSupportShift` | warm +0.15 / measured 0 / cold −0.20 | **T5's own draft** – the brief drafts the ordering, not the sizes |
+| `returnSpiritPerPoint` | 0.004 | T5's own draft |
+| `returnBondPerPoint` | 0.002 | T5's own draft |
+| `returnAgePivotYears / returnAgePerYearOver` | 30 / 0.015 | T5's own draft |
+| `returnChanceMin / Max` | 0.1 / 0.9 | T5's own draft |
+| `protectedRankEntries` | 12 | ⚠⚠ **RULED 20.09** – not a draft, not movable here |
+| `protectedRankWeeks` | 3 × 52 = 156 | ⚠⚠ **RULED 20.09** – not a draft, not movable here |
+| `comebackStages` | 0.6 / 0.8 / 0.9 / 1.0 over 0 / 13 / 26 / 52 weeks back | **the research's own staircase**, transcribed by the brief |
+| `spirit.shock.postpartum` | −24 steady / −37.5 intense | T4's own draft |
+| `spirit.postpartumSupportScale` | warm 0.8 / measured 1 / cold 1.25 | T4's own draft |
+| `pauseBrandFactor` | ⚠ **DOES NOT EXIST** | drafted by the brief, **refused by §1's measurement** |
 
 ## §1 T7 – sponsors: what the absence already costs, before any factor
 
@@ -283,26 +318,81 @@ reads when it prices «the wrong ramp must measurably fail more often». The ram
 is already in here, because the protected rank enters the big draws either way and the contract book
 does not.
 
-## §7 T7's question for the owner
+## §2 T9 – the instrument, the walk, and the two forks
 
-**The figure.** A career that pauses for the child keeps **70% of the brand income** the same career
-without the pregnancy earns over the three years around it – $3.9M less each, on our money scale –
-and loses **three quarters of its contract weeks** in the year after coming back. That is the game
-as it stands today, with nothing added.
+`tools/motherhood-bench.ts`, archival like T7's probe and not wired to a `bench:*` command. **168
+careers** – three backgrounds × 56 seeds, every one a distinct seed – walked **1300 weeks** past the
+wedding and into the window, on the proven recipe (`openCareer` + `stepCareerWeek`, the fork
+continued, the birthday answered neutrally, retirement refused until final, every blocking life beat
+drained through `tools/_lifeBeats`' registry). Policy `player`, the arm that reaches professional
+winters.
 
-**The decision taken.** T7 ships **no constant**. The research's «sponsors partially lost during the
-pause» is already true of the engine, and the drafted `pauseBrandFactor` would have charged the price
-a second time.
+⚠ **1300 and not the wedding bench's 912, and the arithmetic is the window's** – T7's sizing, kept so
+the two instruments cut the same careers. The hazard's last live rung is 34–35, the pause opens 8
+weeks after the announcement and runs 51, and the comeback arm then wants a full season: a pregnancy
+announced at 34.9 needs (34.9 − 13.56) × 52 + 8 + 51 + 52 = 1221 weeks before its year closes.
 
-**What the other branch would have cost.** Shipping the obvious `0.6` would have taken her from 70%
-to ~58% of a comparable career's brand income, and would have taken it during the absence – where
-the measurement shows the contract still paying – rather than in the year after, where the game
-already takes it. ⚠ The reverse risk is stated too: if the owner reads «partially lost» as meaning
-something SHARPER than a 30% three-year haircut, the honest lever is not a new factor on top but a
-re-tune of the existing ones (`minEvents`, the sponsor window's own verdict), and that is a decision
-about the whole brand ladder rather than about motherhood.
+### §2.1 ⚠⚠ Why the bench FORKS, and why a drained walk could not have answered three of these sections
 
-**The one thing found in flight that is not T7's.** Across the 8 weeks between the announcement and
-the closing of entries – the stretch the brief calls «she plays on» – arm A enters **46** event-weeks
-against the identical career's **88**. Half. Nothing in the brand machinery causes it; it is the
-announcement's own live effects. Flagged for T9, untouched here.
+`tools/_lifeBeats.ts` states it at the rows themselves, and this is the file that has to act on it:
+
+* `DRAIN_ANSWER['expecting']` is **`worry`**, which persists `support: 'measured'`. A drained walk
+  therefore carries **one grade and no others**.
+* `DRAIN_ANSWER['return-plan']` is **`small-first`**. A drained walk is therefore **one ramp and no
+  others** – and the wave's whole trap is the comparison between two.
+
+A bench that measured «the decision by grade» or «the two ramps» off a drained walk would be measuring
+one cell of each table and reporting it as the table. So the walk **clones the world at both cards**:
+
+| fork | arms | why the pairing is exact |
+| --- | --- | --- |
+| the `'expecting'` card | warm / measured / cold | the decision draws **one** number on `seed:life:return:<week>`, and `support` moves neither the key nor the date – so all three arms compare the **same u** against three thresholds, and the difference between two grades is exactly the mass of u between them |
+| ...each arm again, at the birth | psychologist off / on | the grade's own blow has already landed (`postpartumSupportScale` scales the magnitude on the one week the mark is stamped), so the two sub-arms differ only in the **return rate** |
+| the `'return-plan'` card | small-first / straight-back | T6 §D's own apparatus – one career, `structuredClone`d, differing in exactly one field – at bench scale and on **grown** careers instead of posed ones |
+
+⚠ **The small-first arm's booking policy is one line and invents no tier boundary.** `stepCareerWeek`
+takes an `EntryVeto`, and the veto refuses exactly what the engine already labels `offReturnPlan` –
+which `entryVerdict` computes from `onProtectedRank`, «the entries the freeze had to open». A veto in
+the BENCH and a label in the ENGINE: the seam is a preference and not a lock, and this arm is simply
+the player who does not override it. `straight-back` gets no veto at all, which is the asymmetry the
+field itself carries.
+
+⚠ **Sections 5, 6 and 10 are the forks; sections 2, 3, 4, 7, 8 and 11 are the DRAINED base walk** – so
+every figure taken off the base walk is a `measured`-grade, `small-first` figure and says so where it
+is printed. Those two facts are not neutral and are never left implicit.
+
+### §2.2 What the walk does NOT do
+
+It does not answer the post and does not buy the merch brand. **That is T7's probe's job and not
+this one's**, and the omission is stated rather than left to be noticed: `tools/econ-bench.ts`
+contains no `acceptOffer` at all, so no career here signs a kit deal, and none of T9's sections reads
+brand money. §1 is the brand measurement and this file adds nothing to it.
+
+## §3 Predicted, before the runs – the arithmetic stated
+
+⚠ Written from the constants and from the brief's own corridors **before the 168-career grid existed**
+(the git history carries the two commits in that order). These are readings of the mechanism, not
+descriptions of output.
+
+| § | what | predicted | where the prediction comes from |
+| --- | --- | --- | --- |
+| 4 | **input-independence** | the MAIN stream **identical** on the shipped tree and on a control tree | invariant 2 – «player choices may never re-roll the world's dice» |
+| 5 | the census | **15–30% of latched** careers reach a pregnancy by 35; ~8–15% of ALL careers | RULED 20.09 («и это ок»), derived from his digest's 2–4%/yr over ~8.5 married window-years: 1 − 0.98^8.5 ≈ 15.8%, 1 − 0.96^8.5 ≈ 29.3%; and wave 7's measured 51.2% latch rate |
+| 5 | the ages | every announcement **inside 24–35** and **zero outside it**, median near 30 | the rungs read 0 below 24 and at 35, and `rollPregnancy` returns on a chance of 0 before deriving a stream |
+| 5 | the fairness corridor | the four voices within **±1.5 pp** of one another on the share of married | §2 T2's own corridor – the hazard carries no temperament term at all |
+| 6 | the mid-term ending | **~5%** of pregnancies lose the carrying marriage before the birth | wave 7 measured 6.2 endings / 100 latched episode-years; the term is 39 weeks = 0.75 yr, so 0.062 × 0.75 ≈ **4.7%** |
+| 7 | the decision | warm ≈ **0.80**, measured ≈ **0.65**, cold ≈ **0.45**, each moved a few points by her `spirit`, the `bond` the answer itself left, and her age | `returnBase` + `returnSupportShift`, and `returnChanceFor`'s four terms |
+| 8 | the comeback | ⚠ «the wrong ramp fails more often, **or it is a finding**» – and **T6 already measured the finding**: the arms REVERSE, straight-back ahead on 8 of 8, 12 of 12 protected entries spent against 0. This bench predicts **T6's reversal reproduces at bench scale** | §2 T6, and `tests/wave8-return-ramp.test.ts` §D |
+| 8 | the product | share who TRY × share who regain their band ≈ the research's **~40%** – ⚠ **checked, never forced on either factor** | §2 T5's deliberate split: the try is drawn, the success is emergent |
+| 9 | the protected rank | **no prediction.** A measurement of a ruled rule (12 / 156) | the brief, in those words |
+| 10 | the ranking decay | **near-total**: the WTA window is `rolling52` and the pause is **51 weeks**, so almost every result that made her rank has aged out by the week she is back | ⭐ it happens BY CONSTRUCTION – `WINDOW_BY_TRACK` / `windowedBestSum`. MEASURE it; do not build it |
+| 11 | the postpartum shock | psychologist OFF: T4 measured **3 / 4 / 5** weeks steady and **8 / 11 / 13** intense by grade on a posed career. Psychologist ON: **shorter**, by `recoverySlope[rung]` added to the weekly return | `ECONOMY.spirit.shock.postpartum`'s own note; `engine/spirit.ts` §3b |
+| 12 | the play-on anomaly | ⚠⚠ **a prediction with a mechanism attached, written before the table ran** – see §12.1. The last **three** of the eight «plays on» weeks should book **nothing at all**, and the window should deliver ≈**58%** of a control's entry-weeks at T7's own observed booking rate | `pauseCovering(world, event.week)` + `deadlineWeek = week − 2` + `ENTRY_LOOKAHEAD = 3` |
+
+⚠ **And one prediction about the instrument rather than about the game**, recorded because it is the
+kind of thing that is only honest before the run: the fairness corridor is **±1.5 pp on a share of
+married**, and a voice with a handful of marriages moves 25 pp when one of them conceives. The bench
+therefore excludes any voice with fewer than 20 marriages from the spread and names it. If the grid
+cannot supply four voices at that depth, the corridor is **not measurable on this grid** and that is
+the honest verdict rather than a number.
+
