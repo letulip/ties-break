@@ -1168,11 +1168,24 @@ describe('the fence this step is judged by', () => {
     // rarer, bigger voice takes the shared surface). The shipped order is the brief's own – checked
     // against docs/plans/life-wave-7-builder-2026-09.md before this list moved. Still an exact
     // list, still no wildcard, and a TENTH call or a reordering is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s nine weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 20.09 BY WAVE 8's T2, AND THE TENTH CALL IS HERE – the pin fired exactly as the
+    // sentence above promised, on the very next call to land, which is the pin working and not the
+    // pin rotting. `rollPregnancy` is a life call among its siblings (the pregnancy hazard, §14 of
+    // the same module), slotted FIFTH: after `rollEnds`, so a marriage that ended this tick cannot
+    // be conceived into (the date is written, `latchedEpisode` answers null, and the gate refuses
+    // before any stream exists); after `landWedding`, and THAT one is load-bearing rather than free,
+    // because the door IS the latch and `landWedding` is what writes it – running first would give
+    // every career a systematic blind week after its own wedding; and before the leak, on
+    // `rollWedding`'s own precedent, so the household hears her before the papers do. The shipped
+    // order is the brief's own – checked against docs/plans/life-wave-8-builder-2026-09.md before
+    // this list moved. Still an exact list, still no wildcard, and an ELEVENTH call or a reordering
+    // is red here.
+    expect(code.slice(i + 1, j), 'only the private life\'s ten weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
       'landWedding(world)',
+      'rollPregnancy(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
       'deliverOwnKey(world)',

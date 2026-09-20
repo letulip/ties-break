@@ -27,7 +27,7 @@ import { schoolIsOver } from '../kidLife'
 import type { KnockChoice } from '../../shared/protocol'
 import { axisConfidence, axisEvidence, shownSkill, type RadarWorldView } from '../radar'
 import { addEvent } from './ledger'
-import { KID_ID } from './constants'
+import { KID_ID, knockRunning } from './constants'
 import { ageAtWeek } from './age'
 import { playedWeeksInTrailing4 } from './injury'
 import { retireKnock } from './knockHistory'
@@ -56,6 +56,29 @@ import { guardNotEnded } from './endings'
 export function pendingKnock(world: WorldState): boolean {
   return world.knock !== null && world.knock.choice === null
 }
+
+/** ⭐⭐ v85 (wave 8 – T2) – IS AN ANSWERED KNOCK STILL RUNNING? The OTHER question about the same
+ *  field, and `pendingKnock` one line up is why it has a name at all: «what is `world.knock` doing»
+ *  gets exactly one spelling per question, and these are two questions – that one asks whether the
+ *  career is waiting for an ANSWER, this one whether an answered knock's weeks are still running.
+ *  Disjoint by construction (`choice === null` against `choice !== null`), neither a re-reading of
+ *  the other.
+ *
+ *  ⚠⚠ IT IS DEFINED IN `world/constants.ts` AND RE-EXPORTED HERE, WHICH IS `guardNotEnded`'s OWN
+ *  ARRANGEMENT AND ITS OWN REASON – see that predicate's note in the leaf, where the rule is written
+ *  out: «`src/engine/world/*` had NO value-import cycles before this wave and still has none». The
+ *  wave-8 brief asked for the predicate «beside `pendingKnock` in `world/knock.ts`», and that is
+ *  where a reader finds it – but its one caller is `pregnancyEligible` in `world/lifeBeat.ts`, and
+ *  `lifeBeat.ts` importing THIS module would close a three-module loop. MEASURED on the value-import
+ *  graph rather than assumed: `world/knock.ts -> world/endings.ts -> world/lifeBeat.ts` is live
+ *  today, and cutting the direct edge would not have helped – `world/injury.ts` and
+ *  `world/coachMarket.ts` are two more of this file's own imports that reach `endings.ts` in turn.
+ *  So the choice was the same two the leaf's note records, a second copy or the leaf, and it is the
+ *  leaf.
+ *
+ *  ⚠ THE RE-EXPORT IS NOT DECORATION. «Beside `pendingKnock`» is where somebody asking about the
+ *  knock will look, and a predicate they cannot find there is a predicate they will write again. */
+export { knockRunning }
 
 /** A week she spent training at home and nothing else – the only kind of week a knock arrives on.
  *

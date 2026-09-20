@@ -228,6 +228,14 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
       // ⚠ RE-AIMED A SIXTH TIME BY v83, WAVE 7 T10 (18.09): `'own-key'` is the ninth kind – the
       // one-time independent-life story beat – and declares FALSE, narrative-only by design.
       'own-key': false,
+      // ⚠ RE-AIMED A SEVENTH TIME BY v85, WAVE 8 T2 (20.09), NOT WEAKENED, AND FOR THE IDENTICAL
+      // REASON ONE UNION-MEMBER LATER: `'expecting'` is the tenth kind – the week she says she is
+      // having a child – and it is TRUE, because §5b prices it as tier 2 exactly as it prices «there
+      // is someone» and «she is getting married». A career that could tick past the announcement
+      // would answer her by walking away. ⚠ What blocking does NOT do here is even less than at the
+      // wedding: the pregnancy record is written at the RAISE, so the world is already carrying it
+      // while the card stands, and no answer exists that would unmake it.
+      expecting: true,
     })
   })
 

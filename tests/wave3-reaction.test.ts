@@ -595,6 +595,18 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // zero («NO bond move» is backlog §8's own price). Non-blocking, so the loop never meets one;
   // the row prices `drainCostOf` directly, §D's sweep.
   'own-key': { id: 'keep', bond: 0 },
+  // ⚠ RE-AIMED 20.09 BY v85 (the pregnancy, wave 8 – T2), THE RECORD'S FIFTH GROWTH AND THE TOTAL
+  // RECORD DOING ITS JOB A FIFTH TIME: the union grew by `'expecting'` and somebody had to type a
+  // number. WHAT MOVED: one row, at **−0.5** – the third costed drain answer, the mildest of a kind
+  // with no zero (joy +2.5 / worry −0.5 / the career first −4). WHAT DID NOT: the law, still «the
+  // SAME price under every reading» and not «zero». ⚠ THE NUMBER IS THE BRIEF'S DRAFTED LITERAL,
+  // transcribed from the wave-8 brief's T2 triple – never read off `ECONOMY.motherhood`, this file's
+  // own ARM 2 story. Read-independent by construction: no overlay names the kind.
+  // ⚠⚠ AND THIS IS THE FIRST ROW IN THE RECORD WHOSE DRAIN HAS A SECOND EFFECT – answering it also
+  // writes `support: 'measured'` onto `world.pregnancy`, which is the beat's whole point (T5 and T4
+  // read the grade). It is invisible to the sweep below because the fixture holds no pregnancy, and
+  // that is the honest shape: `tools/_lifeBeats.ts`' own registry note is where a bench reads it.
+  expecting: { id: 'worry', bond: -0.5 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -616,6 +628,12 @@ function raised(seed: string, kind: LifeBeatKind, detail: string, wants: LoveEpi
   // (the gate is §11's own concern, tested in wave7-wedding.test.ts), and neither the wording nor
   // the price reads the episode's age.
   if (kind === 'engaged') world.loveEpisodes = [episode(892, 900, wants)]
+  // ⚠ RE-AIMED BY v85 (wave 8 T2) – an `'expecting'` row is ABOUT an episode exactly as `'engaged'`'s
+  // is, so the fixture carries the row its detail names. The MARRIAGE is not posed and the PREGNANCY
+  // is not posed: the gate is §14's own concern (tested in wave8-pregnancy.test.ts), the wording
+  // reads neither, and the drain's `support` write is guarded on `world.pregnancy` being non-null –
+  // so this world exercises exactly the half §D is about, which is the price.
+  if (kind === 'expecting') world.loveEpisodes = [episode(892, 900, wants)]
   raiseLifeBeat(world, kind, detail)
   return world
 }
@@ -643,6 +661,10 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   'spouse-view': 'distant-swing',
   // ⚠ RE-AIMED BY v83 (wave 7 T10): the literal kind – there is nothing per-row to record.
   'own-key': 'own-key',
+  // ⚠ RE-AIMED BY v85 (wave 8 T2): the announcement's `detail` is the EPISODE ID – the marriage that
+  // is carrying it – exactly as `'met'`'s, `'ended'`'s and `'engaged'`'s are, and the same id
+  // `raised` above builds for those kinds.
+  expecting: 'p:892',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.

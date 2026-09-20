@@ -8,14 +8,14 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-598 exported names across 56 owning modules.
+602 exported names across 56 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 92 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 95 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
@@ -38,12 +38,12 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
 | `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 7 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
+| `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
 | `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 7 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
-| `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/form.ts` | HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts` | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
@@ -160,11 +160,14 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `partnerNameFor` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
+- `pregnancyChanceAt` – `src/engine/world/lifeBeat.ts`
+- `pregnancyEligible` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `reachableSituations` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
 - `rollEnds` – `src/engine/world/lifeBeat.ts`
 - `rollLeak` – `src/engine/world/lifeBeat.ts`
+- `rollPregnancy` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `rollSpouseView` – `src/engine/world/lifeBeat.ts`
 - `rollWedding` – `src/engine/world/lifeBeat.ts`
@@ -667,6 +670,18 @@ THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no
 - `brandSignalsOf` – `src/engine/world/brand.ts`
 - `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
+### `src/engine/world/constants.ts`
+
+THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
+
+- `CAREER_ENDED_REFUSAL` – `src/engine/world/constants.ts`
+- `COLLEGE_FREEZE_REFUSAL` – `src/engine/world/constants.ts`
+- `guardNotEnded` – `src/engine/world/constants.ts`
+- `guardNotEndedForGood` – `src/engine/world/constants.ts`
+- `KID_ID` – `src/engine/world/constants.ts`
+- `knockRunning` – `src/engine/world/constants.ts`
+- `SLAM_DEBUT_KEY` – `src/engine/world/constants.ts`
+
 ### `src/engine/world/injury.ts`
 
 INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates.
@@ -725,17 +740,6 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `merchFamilyWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
-
-### `src/engine/world/constants.ts`
-
-THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
-
-- `CAREER_ENDED_REFUSAL` – `src/engine/world/constants.ts`
-- `COLLEGE_FREEZE_REFUSAL` – `src/engine/world/constants.ts`
-- `guardNotEnded` – `src/engine/world/constants.ts`
-- `guardNotEndedForGood` – `src/engine/world/constants.ts`
-- `KID_ID` – `src/engine/world/constants.ts`
-- `SLAM_DEBUT_KEY` – `src/engine/world/constants.ts`
 
 ### `src/engine/world/entries.ts`
 

@@ -4963,6 +4963,140 @@ export const ECONOMY = {
     spouseViewBrushBond: -1.5,
   },
 
+  /** ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN (wave 8; `docs/plans/life-wave-8-builder-2026-09.md`
+   *  §2 T2–T6, the design `docs/plans/the-wedding-and-the-children.md` §5 W3+W4). `ECONOMY.wedding`'s
+   *  block one wave on and in its voice: one block, every number the wave spends, each row naming the
+   *  task that reads it.
+   *
+   *  ⚠⚠ EVERY NUMBER BELOW IS A DRAFT FOR THE BENCH AND NONE IS RULED – the brief's §4 contract, the
+   *  wedding block's own sentence inherited whole: «every §2 number ships at its drafted value,
+   *  unruled, which is the contract and not an omission». T9 benches them and HIS word lands on
+   *  numbers, not on a blank. ⚠ NO CENTS ANYWHERE IN THIS BLOCK – there is no birth fee (§2 T4's own
+   *  «NO COST EVENT», the wedding-price ruling of 18.09 read one wave on) and the three deltas below
+   *  are BOND POINTS on `applyBondDelta`'s scale, to which the cents rules do not apply.
+   *
+   *  ⭐⭐⭐ AND THE RATE IS **DERIVED**, WHICH IS THE ONE THING THIS BLOCK EXISTS TO MAKE READABLE AT
+   *  THE CONSTANT. His 20.09 push-back is why this paragraph is here and not in a plan file: «а на
+   *  чем основана цифра? не великовато получится?» – and the first draft's 35–60% census died of it,
+   *  because it was sized by VISIBILITY («the player should get to see this») rather than by
+   *  anything. The source is HIS OWN RESEARCH DIGEST, `docs/research/life-events-motherhood.md:31`,
+   *  the personal-life arc's own table row:
+   *
+   *      | First pregnancy | 24–35 | 2–4% | support only – reaction sets recovery trajectory |
+   *
+   *  So the whole of the rate is that row: the WINDOW is 24–35, the ANNUAL band is 2–4%, and the
+   *  weekly hazard is `annual / 52` on an eligible week. The division is written out in the rungs
+   *  below rather than pre-computed, so what a reader sees IS the digest's own number: nobody has to
+   *  trust a transcription of `0.000577`, and nobody can re-tune the annual figure by editing a
+   *  sixth decimal place that no longer says where it came from.
+   *
+   *  ⭐ WHAT THE CURVE PREDICTS, AS A NUMBER, BECAUSE A DERIVATION WITH NO PREDICTION IS A STORY:
+   *  **15–30% of latched careers reach a pregnancy by 35** – RULED 20.09 («и это ок»), straight from
+   *  the research over the ~8.5 married window-years the corridor is stated on (1 − 0.98^8.5 ≈ 16%,
+   *  1 − 0.96^8.5 ≈ 29%). ⚠ THE CORRIDOR IS HIS AND IS NOT THE CURVE'S TO BEND: T9 measures the
+   *  realised share against it, and a curve that misses is the curve's finding, never the corridor's.
+   *
+   *  ⚠⚠ THE SHAPE OF THE CURVE IS THE **BUILDER'S OWN DRAFT** – the brief drafts the window and the
+   *  annual band and NOT the shape, so it is flagged here exactly as `wedding.perWeek` and
+   *  `wedding.spouseViewSpendCents` are, and nobody may mistake it for the architect's. Its
+   *  arithmetic, in full:
+   *
+   *    · the four rungs weight the window as 3y at 2%, 3y at 3%, 4y at 4%, 1y at 3% – mean annual
+   *      (3·2 + 3·3 + 4·4 + 1·3) / 11 = 34/11 ≈ **3.09%**, the middle of the digest's own 2–4%;
+   *    · at the corridor's stated ~8.5 married window-years that mean gives
+   *      1 − (1 − 0.0309)^8.5 ≈ **23.4%** – the middle of his corridor, which is where a derived
+   *      figure ought to land when it is derived from the band the corridor was derived from;
+   *    · a career married across the WHOLE window is the ceiling: 1 − 0.98³·0.97³·0.96⁴·0.97 ≈
+   *      **29.2%** by the annual arithmetic, **28.8%** by the week-by-week walk the engine actually
+   *      performs (weekly compounding is marginally gentler). Under the corridor's 30% either way;
+   *    · the likely middle, given wave 7: a 0.006/week wedding hazard from 23 waits ~167 weeks on
+   *      average, so the typical marriage latches around 26–27 → **25.2%**;
+   *    · a career latched LATE – say at 31, which that hazard makes uncommon but real – carries
+   *      **13.9%**, and that is the floor of the SPREAD and not of the corridor, which is a claim
+   *      about the POPULATION share rather than about one career. ⚠ THE REALISED FIGURE WILL SIT
+   *      UNDER EVERY NUMBER ABOVE, and the reasons are all real: careers retire, marriages end
+   *      (wave 7 measured 6.2 endings per 100 latched episode-years), and the knock clause skips
+   *      weeks. T9 measures; these are the predictions it measures against.
+   *
+   *  ⚠ WHY IT RISES AND THEN TAPERS rather than sitting flat at 3%: the digest's own two sentences
+   *  about the same population. «First-child ages among pros: 26 / 28 / 31 / 35 – wide spread over
+   *  the 24–35 window» puts the mass ABOVE the early twenties, and «the child-vs-career-peak dilemma
+   *  (peak 23–28) is the emotional core» says why – the years the hazard competes hardest with are
+   *  the peak years, and a flat curve would have said the peak costs nothing. */
+  motherhood: {
+    /** ⚠⚠ THE WEEKLY HAZARD ON AN ELIGIBLE WEEK, BY AGE – the block's own note above carries the
+     *  derivation, the census it predicts and the flag that the SHAPE is the builder's draft.
+     *
+     *  ⚠ THE ANNUAL FIGURE IS QUOTED AS THE NUMERATOR AND NOT IN A COMMENT BESIDE THE ANSWER. `0.03 /
+     *  52` is the digest's 3%/yr spread over its 52 weeks, evaluated at build time and costing a
+     *  reader nothing; `0.000577` would be a transcription with its provenance thrown away, which is
+     *  the exact failure the 20.09 push-back was about.
+     *
+     *  ⚠ READ AS RUNGS: the LAST rung whose `fromAge` the girl has reached wins, and an age under the
+     *  first rung takes 0 (`pregnancyChanceAt`, `world/lifeBeat.ts` §14). ⚠ ASCENDING AND
+     *  APPEND-ONLY-IN-SPIRIT: the read depends on the order, so a rung inserted out of sequence
+     *  silently re-shapes the curve – `tests/wave8-pregnancy.test.ts` §A pins that it is sorted.
+     *
+     *  ⭐ THE 0 AT 35 IS A RUNG AND NOT AN ABSENCE, deliberately: «the window closes» is a sentence
+     *  somebody had to type, and a table that simply stopped would leave the last real rung running
+     *  for ever. ⚠⚠ AND NEITHER ZERO IS A GATE. §0's adopted recommendation is «the age window is the
+     *  research's 24–35, hazard-shaped, NEVER a hard gate» – `pregnancyEligible` holds no age clause
+     *  at all, the marriage door (23+, wave 7) keeps the junior years out by construction, and a 0
+     *  here takes ZERO DRAWS exactly as an ineligible week does (the roll returns on the chance
+     *  before it derives the stream). The difference is not cosmetic: a gate would have to be
+     *  re-argued to move, and a rung is re-tuned by T9 with one number. */
+    perWeekByAge: [
+      // 24–27 – the window opens on the digest's own lower bound, at its LOWEST annual rate: these
+      // are the peak years (23–28), the ones a pregnancy competes hardest with, and the digest's
+      // youngest observed first child among pros is 26.
+      { fromAge: 24, perWeek: 0.02 / 52 },
+      // 27–30 – the middle of the band, and the two commonest observed ages (26 / 28) sit across
+      // this rung and the one below it.
+      { fromAge: 27, perWeek: 0.03 / 52 },
+      // 30–34 – the digest's TOP annual rate, after the peak has passed: the observed 31 sits here,
+      // and this is the stretch where a pause costs a career the least of what it was going to have.
+      { fromAge: 30, perWeek: 0.04 / 52 },
+      // 34–35 – the tail. The digest's oldest observed first child is 35, so the window is real this
+      // late and thin: back to 3%/yr for its last year.
+      { fromAge: 34, perWeek: 0.03 / 52 },
+      // 35+ – the window closes. See the ⭐ note above: a rung, not an absence, and not a gate.
+      { fromAge: 35, perWeek: 0 },
+    ],
+    /** ⭐ SHE PLAYS ON THIS MANY WEEKS AFTER THE ANNOUNCEMENT, and then the entries close – the
+     *  research's own «pros play into the early months». Drafted 8 (the brief's figure). T2 writes
+     *  `pausesWeek` off it at the announcement; T3 is what makes the week actually close.
+     *  ⚠ PERSISTED ON THE RECORD AND NOT RE-DERIVED AT READ – `PregnancyState`'s own law (T1, and
+     *  `partnerName`'s one wave down): a later retune of this number must never move the pause date
+     *  of a pregnancy a live career is already carrying. */
+    playsOnWeeks: 8,
+    /** ⭐ AND THE BIRTH IS THIS MANY WEEKS AFTER THE PAUSE – `dueWeek = pausesWeek + termWeeks`, the
+     *  brief's own formula, drafted 31 (the brief's figure). ⚠ THE TWO TOGETHER ARE THE TERM: 8 + 31
+     *  = **39 weeks from the announcement to the birth**, which is a full human term with the
+     *  announcement read as its week 0 and the pause landing at week 8 – early enough that the
+     *  research's «plays into the early months» is what the calendar actually does.
+     *  ⚠ THE BRIEF'S OWN PARENTHETICAL («announcement lands around pregnancy week 8, term at 39») is
+     *  the rationale for the 31 and reads one word loose – the arithmetic it describes only closes if
+     *  it is the PAUSE that lands around pregnancy week 8, which is what the formula beside it says
+     *  and what is built. Reported rather than papered over; both numbers ship at their drafted
+     *  values. T4 fires the birth on `dueWeek`. */
+    termWeeks: 31,
+    /** ⭐ THE PARENT'S THREE ANSWERS AT THE `'expecting'` BEAT – the research's own finding made
+     *  mechanical («support only – reaction sets recovery trajectory», the digest's row): joy /
+     *  worry / the career first, priced on `bond` through the existing `answerLifeBeat` seam exactly
+     *  as every other beat's answers are, AND persisted as `support` on the pregnancy record, which
+     *  T5's decision and T4's postpartum recovery both read. One answer, two consequences, zero new
+     *  meters. Drafted +2.5 / −0.5 / −4 (the BRIEF's own figures, not the builder's), corridors
+     *  benched in T9, his word after the numbers.
+     *  ⚠ NO ZERO AMONG THEM, deliberately – the THIRD no-free-answer kind after `'ended'` and
+     *  `'engaged'`: an announcement like this is not a card a parent can answer without it meaning
+     *  something. `DRAIN_ANSWER['expecting']` is `worry`, whose −0.5 is the same −0.5 under every
+     *  reading (no overlay exists for this kind), so the harnesses can state their skew exactly –
+     *  `'spouse-view'`'s own precedent: the registry names the MILDEST of a kind with no zero. */
+    joyBond: 2.5,
+    worryBond: -0.5,
+    careerFirstBond: -4,
+  },
+
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).

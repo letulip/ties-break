@@ -991,6 +991,14 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       // ⚠ RE-AIMED A SIXTH TIME BY v83, WAVE 7 T10 (18.09): `'own-key'` is the ninth kind – the
       // one-time independent-life story beat – and declares FALSE, narrative-only by design.
       'own-key': false,
+      // ⚠ RE-AIMED A SEVENTH TIME BY v85, WAVE 8 T2 (20.09), NOT WEAKENED: `'expecting'` is the
+      // tenth kind – the week she says she is having a child – and declares TRUE, tier 2's price at
+      // the biggest news the layer holds. ⚠⚠ AND THIS COPY OF THE TABLE IS WHY THE RE-AIM IS A
+      // MANUAL STEP RATHER THAN A COMPILE ERROR: `LIFE_BEAT_BLOCKING` is total by TYPE, so the
+      // ENGINE red-flags a missing kind – but a `toEqual` against an object literal is a RUNTIME
+      // pin, and a tenth member makes it fail on a count rather than on a name. Both are meant
+      // (`tests/wave3-soft-surface.test.ts` §A carries the other copy), and both had to be typed.
+      expecting: true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

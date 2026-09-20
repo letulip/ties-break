@@ -350,8 +350,37 @@ export interface SoftBeatInvite {
  *  ⚠ Its `detail` is the literal `'own-key'` – there is nothing per-row to record – and the receipt
  *  is the row itself: the log answers «has this happened», once per career, `'met'`'s own doctrine.
  *  Its one answer is a zero-priced acknowledgment, because the soft surface offers every live row a
- *  dialog and a dialog needs a control that records; nothing about the answer moves anything. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key'
+ *  dialog and a dialog needs a control that records; nothing about the answer moves anything.
+ *
+ *  ⭐⭐⭐ v85 (the pregnancy, wave 8 – T2) ADDS `'expecting'`: THE WEEK SHE SAYS SHE IS HAVING A CHILD.
+ *  Its `detail` is the `LoveEpisode.id`, exactly as `'met'`'s, `'ended'`'s and `'engaged'`'s are –
+ *  machine-readable, never a rendered sentence.
+ *
+ *  ⚠⚠ AND THE RECEIPT IS NOT THE ROW HERE, WHICH IS THE ONE PLACE THIS KIND PARTS FROM `'engaged'`.
+ *  The hazard's once-ness lives on `world.pregnancy` (the gate refuses while one stands), not in the
+ *  log – so a career that one day reaches a SECOND pregnancy on the same marriage (W5, confirmed
+ *  wanted 11.09) gets a second row about the same episode id and nothing has to change for it.
+ *
+ *  ⚠⚠ SHE ANNOUNCES; THE PARENT REACTS (§4a's law at the layer's biggest moment). No parent menu
+ *  opens her decision – the hazard (`rollPregnancy`, gated on the MARRIAGE and shaped by the
+ *  research's 24–35 curve) decides WHETHER – and the parent's three answers are the research's own
+ *  finding made mechanical («support only – reaction sets recovery trajectory»): joy / worry / the
+ *  career first, priced on `bond` (`ECONOMY.motherhood.joyBond` / `worryBond` / `careerFirstBond`).
+ *
+ *  ⚠⚠ IT IS THE FIRST KIND WHOSE ANSWER OUTLIVES THE CARD. Every other kind's reply moves `bond` and
+ *  is then only history; this one is ALSO persisted as a GRADE – `PregnancyState.support`, one of
+ *  `warm` / `measured` / `cold` – because T5's return decision and T4's postpartum recovery both read
+ *  it months later. One answer, two consequences, and no new meter anywhere.
+ *
+ *  ⚠⚠ IT BLOCKS, tier 2's own price at the biggest news the layer holds. ⚠ AND NO ANSWER UNMAKES IT:
+ *  the record is written at the RAISE, so the world is already carrying the pregnancy while the card
+ *  stands, and there is no reply to write that would stop it.
+ *
+ *  ⚠ THE THIRD KIND WITH NO FREE ANSWER (after `'ended'` and `'engaged'`), and read-INDEPENDENT by
+ *  construction: no overlay exists for this kind, so `DRAIN_ANSWER['expecting']` = `worry` charges
+ *  −0.5 under every reading. ⚠ It carries no `heard` stamp and no listen detour – the fact is the
+ *  fact, and the three answers are the whole of what a parent can do with it. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
