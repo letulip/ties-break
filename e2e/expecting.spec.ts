@@ -63,7 +63,8 @@
 //      -> RED at step 2 – her portrait is the ordinary `{stage}-{emotion}` painting.
 //   B. `src/engine/world/medical.ts`: the pause branch deleted from `availabilityStatus`, so the
 //      entries never shut.
-//      -> RED at step 3 – no card wears the refusal, and several wear an Enter pill instead.
+//      -> RED at step 3 – «no Season card carries the pause's refusal», the locator finding nothing
+//      at all rather than a card wearing different words.
 //   C. `src/engine/world/medical.ts`: `pauseCovering`'s `week >= pregnancy.pausesWeek` turned into
 //      `>`, the classic off-by-one.
 //      -> GREEN, and it is recorded rather than corrected because the REASON is a fact about the
