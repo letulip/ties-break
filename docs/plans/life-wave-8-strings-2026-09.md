@@ -31,6 +31,16 @@ records a **defect in the sweep command itself**, found while walking it: the pr
 string sites covering **eight of this table's thirty rows**. The walk was redone against `grep DRAFT`
 and §9 is the complete list.
 
+⭐ **RE-WALKED AT THE CLOSE OF T10 (20.09), BY THE TASK THAT COULD HAVE MADE THIS TABLE STALE**, on
+the standing rule that a builder who adds a string amends the вычитка in their own commit. The sweep
+was re-run against the working tree in both forms – `git diff c322301c -- src/ | grep '^+' | grep -c
+DRAFT` – and the numbers are **39 wide against 22 narrow**, i.e. the narrow form's count did not move
+at all while the wide one moved by one. **T10 ADDED EXACTLY ONE FLAGGED LINE AND IT IS NOT A STRING**:
+`PREGNANT_LAST_WEEKS` (§7.1's last row). ⚠ So **§0's thirty does not move**, and that is stated here
+rather than left to be inferred – the task wired two paintings and one snapshot field, measured the
+`'family'` ending's screens and the two blocking cards against a phone, and put **not one new word on
+any screen**. ⚠ T10 also found and corrected a claim this table made about where P22 shows; see §4.
+
 ## 0. The count
 
 | | |
@@ -39,8 +49,8 @@ and §9 is the complete list.
 | of them **ruled** | **0** |
 | of them **draft – awaiting his pass** | **30** |
 | shipped strings that **MOVED** | **0** |
-| per task | T2 **16** · T3 **2** · T4 **2** · T5 **4** · T6 **6** |
-| flagged **non-string** drafts carried in §7 | the drafted numbers · three picks (two faces, one glyph) |
+| per task | T2 **16** · T3 **2** · T4 **2** · T5 **4** · T6 **6** · T7 **0** · **T10 0** |
+| flagged **non-string** drafts carried in §7 | the drafted numbers · four picks (two faces, one glyph, one precedence) |
 | explicit **NON-rows**, with the reason (§6) | `PSY_COUNSEL.postpartum` · `ALBUM_CLOSING_FAMILY.family` · `SOFT_BEAT_CARD` × 2 · the invariant throws · the harness literals |
 
 ⚠ **THIRTY, AGAINST THE BRIEF'S ESTIMATE OF ~70, AND THE GAP IS REAL RATHER THAN A MISSED SURFACE.**
@@ -153,9 +163,21 @@ these rows.
 | # | home (`file` · constant) | when the player sees it | the string, verbatim | |
 | ---: | --- | --- | --- | --- |
 | P21 | `endings.ts` · `RETURN_EVENT` | the KEPT `milestone` feed row on the arm that does NOT end the career – the week she says she is going back | She has decided to go back. From this week she can enter tournaments again. | `DRAFT – awaiting his pass` |
-| P22 | `ending.ts` · `ENDING_BLURB.family` | the epilogue's headline paragraph when the career ends `'family'` | She had a child, and the months after it went by without an entry in them. Nobody put the question to her and nobody had to – it was hers to answer and she answered it. | `DRAFT – awaiting his pass` |
+| P22 | `ending.ts` · `ENDING_BLURB.family` | ⚠ **NO SURFACE PRINTS IT** – see the correction below | She had a child, and the months after it went by without an entry in them. Nobody put the question to her and nobody had to – it was hers to answer and she answered it. | `DRAFT – awaiting his pass` |
 | P23 | `ending.ts` · `ENDING_TITLE.family` | the epilogue's title, the album's last page, AND the latch's feed row | She did not go back | `DRAFT – awaiting his pass` |
 | P24 | `ending.ts` · `endingForFamily`'s `detail` | the specifics line beside P23 – `latchEnding` prints «`<title>` – `<detail>`.» so the feed row reads «She did not go back – 51 weeks without a new entry.» | *N* weeks without a new entry | `DRAFT – awaiting his pass` |
+
+⚠⚠ **CORRECTED AT T10 – P22's «WHERE IT SHOWS» WAS WRONG, AND IT WAS WRONG ABOUT ALL NINE BLURBS.**
+This row shipped reading «the epilogue's headline paragraph», and `ENDING_BLURB` is rendered by
+**nothing in `src/`** – checked with `git grep -n ENDING_BLURB -- src/`, whose only hits are the
+declaration and three comments. `engine/ending.ts` carries the reason at the record itself, in the
+owner's own words: the constant was deleted for a day in August for having no consumer and **he put
+it back** – «может быть мы просто не добрались еще до концовок и рано что-то удалять» – so it is
+authored epilogue prose waiting for an ending screen that has not been built out. What the epilogue
+DOES print is P23, on the album's seventh page. ⚠ The correction is to the CLAIM and not to the
+sentence: not a character of the draft moved, and `tests/component/wave8-family-ending.test.ts` pins
+both halves (the title is on the last page, the blurb is on no page) so the table and the tree cannot
+part again in silence. ⭐ It is worth his pass anyway – the copy is real and the screen will be.
 
 ⚠⚠ **P22 KEEPS BOTH HALVES OF THIS RECORD'S STANDING RULE AND BOTH ARE HARDER HERE THAN ANYWHERE
 ABOVE IT.** It may not CONSOLE – «a life completed rather than a career failed» is the DESIGN's
@@ -327,6 +349,7 @@ measured, not guessed) and are named here so nobody has to wonder whether the в
 | the return decision's five terms | `returnBase` **0.65** · `returnSupportShift` **+0.15 / 0 / −0.2** · `returnSpiritPerPoint` **0.004** · `returnBondPerPoint` **0.002** · `returnAgePivotYears` **30** / `returnAgePerYearOver` **0.015**, held inside **0.1–0.9** | base is the brief's; the four weights and the band are the **builder's** | argued per constant; T9 benches the PRODUCT 0.65 × ~0.6 ≈ 0.4 |
 | the staged factor, `comebackStages` | **0.6 / 0.8 / 0.9 / 1.0** at 0 / 3 / 6 / 12 months back | the research's own staircase, transcribed | §2 T6 |
 | the freeze | **12 entries / 156 weeks** | ⭐ **RULED 20.09** – «наверное да, у нас тоже были исследования». NOT a draft | the anchor (`returnedWeek`, not `pausesWeek`) IS a builder's reading and is §8 Q-5 |
+| the portrait's late stretch, `PREGNANT_LAST_WEEKS` (`shared/avatarEmotion.ts`) | **12** weeks | the **T10 builder's** – §2 T10 says «the final drafted stretch» and leaves the stretch to the task | argued at the constant: the model term is 8 + 31 = **39** weeks from the announcement, a human third trimester opens at week 28 of 40 (the last **12**), and 39 − 12 = 27 puts the change of painting inside a week of the real boundary without a second constant. ⚠ **IT IS A PICTURE AND NOT A MECHANIC** – nothing reads it but the portrait, so **T9 does not bench it** and moving it changes one painting's start date and nothing else in the world |
 
 ⭐ **AND T7 SHIPPED NO CONSTANT AT ALL, WHICH BELONGS ON THIS LIST RATHER THAN IN A FOOTNOTE.**
 `ECONOMY.motherhood.pauseBrandFactor` was drafted in the brief and **does not enter**. T7 measured
@@ -341,13 +364,14 @@ wave declined to charge her twice.** The record is
 [the motherhood spec §1](../specs/the-motherhood-2026-09.md); the branch not taken (a flat 0.6) would
 have taken her to ~58% and would have billed her in the wrong year.
 
-### 7.2. The three picks – not words, and each one the owner's to move
+### 7.2. The four picks – not words, and each one the owner's to move
 
 | what | picked | why it is not a string, and what it cost |
 | --- | --- | --- |
 | `EMOTION_BY_ENDING.family` (`world/album.ts`) | `'serious'` | her face on the `'family'` epilogue. `norm` was the real alternative (`college` takes it) and lost because `college` is the one ending that RESUMES, so its `norm` reads «nothing has ended». `happy` is refused for the peak's own repaired reason: all four voices reach this ending |
 | `MEMORY_EMOTION.birth` (`diary/facts.ts`) | `'norm'` | the album polaroid's face for the birth week. **There is no birth painting** – `FACE_BANDS` holds exactly one moment-face (`bride`) – so the honest pick is the app's own fallback. A smile is the one face the same week's arithmetic (−24 / −37.5 of spirit) actively contradicts |
 | `LIFE_BEAT_ROW_KINDS` gains `'expecting'` (`screens/lifeRowGlyphs.ts`) | **no glyph picked** | mechanically required by `tests/wave4-life-row-stamp.test.ts`, not a design choice. P17's row wears the standing white-heart fallback until he rules – «no agent adds or swaps one unasked» |
+| ⭐ **T10: what the pregnancy portrait YIELDS TO** (`composables/kidEmotion.ts`) | **a fresh result wins; the painting takes every other week of the window** | which picture the hero and the Kid screen wear through the 39 weeks. It is round 42 #29(a) read as it is written – «только про победы и поражения», with the layoff painting kept by his own «это ок» because «an injury is a fact of the body, not a mood» – so the pregnancy sits at `rehab`'s rung rather than above the result layer. Entries shut after 8 weeks, so what it yields is at most the handful of weeks she still plays. ⚠ The alternative (an unconditional override for 39 weeks) would paint a woman resting a hand on her belly over the week she won a tournament, which is round 42 #2 read backwards. **His to move, and it is one condition in one computed** |
 
 ### 7.3. And one measurement with no artefact at all
 
@@ -423,6 +447,12 @@ this wave's five tasks invisible to the command that is supposed to prove the ta
 `grep DRAFT` instead, or `grep -E '⚠+ ?\*{0,2}DRAFT'`. The table below is the complete list under the
 wider sweep, and a builder who runs only the narrow one will believe a short table is a finished one.
 
+⭐ **AND T10 IS THE RECEIPT FOR THAT WARNING, MEASURED RATHER THAN FEARED.** Re-walked at T10's close
+the two forms read **39 wide against 22 narrow**: the wide count moved by one and **the narrow one did
+not move at all**, because T10's flag is spelled `⚠⚠ **DRAFT – …`, which is precisely the spelling the
+narrow command drops. A builder who had run only the prescribed sweep would have concluded that T10
+added nothing to this document and closed it unamended.
+
 | flagged site (file · what) | rows here |
 | --- | --- |
 | `lifeBeat.ts` §3j banner + `EXPECTING_HER_LINE` / `EXPECTING_DRY` / `EXPECTING_HEADING` | P1–P10 |
@@ -445,6 +475,7 @@ wider sweep, and a builder who runs only the narrow one will believe a short tab
 | `lifeRowGlyphs.ts` `LIFE_BEAT_ROW_KINDS` – a roster row, no glyph picked | §7.2 |
 | `albumBook.ts` `ALBUM_CLOSING_FAMILY.family` – a MAPPING, «the brief's drafted mapping» | **§6.2 – adds no string** |
 | `economy.ts` `ECONOMY.motherhood` whole + `ECONOMY.spirit.shock.postpartum` + `postpartumSupportScale` – NUMBERS, «draft for the bench» | §7.1 |
+| ⭐ **T10 (20.09)**: `avatarEmotion.ts` `PREGNANT_LAST_WEEKS` (`⚠⚠ **DRAFT – THE BUILDER'S, NOT THE BRIEF'S**`) – a NUMBER, and the ONE line T10 added to this sweep | §7.1 |
 
 **The walk backwards**: every one of P1–P30 was transcribed from a flagged site in the column above,
 and no row in this table was written from a plan document, a test fixture or a commit message. Three
