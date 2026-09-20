@@ -9,6 +9,7 @@ import {
   pendingBirthday,
   chooseGift,
   answerLifeBeat,
+  pendingLifeBeat,
   replayMainState,
   enterEvent,
   withdrawEvent,
@@ -346,6 +347,24 @@ async function handle(msg: ToWorker): Promise<ToUI> {
           // would tick a year past the one popup the owner asked to fire ALWAYS, with nobody
           // answering it – which is exactly the hole the knock and the fork are on this list to close.
           pendingBirthday(w) !== null ||
+          // ⭐⭐⭐ v85 T11b: ...AND A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, which is the birthday's
+          // own argument in its strongest form. The birthday is on this list because a `▶▶ 52` that
+          // outran it would tick a year past the one popup the owner asked to fire ALWAYS; a blocking
+          // beat is HER SPEAKING, so a loop that outran one would answer her by walking away – and
+          // that is an answer nobody chose and nobody would ever be told about. `advanceRefusal`
+          // (world/multiWeek.ts) carries that sentence for the supervised path and the `'life'` stop
+          // in `advanceWeeks` (world.ts) is its other half; this is the third caller finally saying
+          // the same thing, and it is placed here rather than lower so the ORDER matches
+          // `advanceRefusal`'s own – birthday, then her card, then the fork.
+          //
+          // ⚠⚠ THE HOLE PREDATES THIS WAVE AND IS SAID OUT LOUD RATHER THAN FIXED QUIETLY: `'met'`,
+          // `'ended'`, `'engaged'` and `'fork-opinion'` have all been blocking since v73–v83, and the
+          // button could tick a year past every one of them. What makes it THIS wave's line is that
+          // wave 8 adds two more blocking kinds – `'expecting'`, the layer's biggest news, and
+          // `'return-plan'`, the beat the entries seam reads – and shipping them beside a button that
+          // can skip them is shipping a hole in the thing the wave is about. Nothing here is new
+          // design: it is a known-shape omission from a list that exists for exactly this.
+          pendingLifeBeat(w) !== null ||
           w.ending !== null ||
           (w.fork !== null && w.fork.answer === null) ||
           w.retirementOffer !== null ||
