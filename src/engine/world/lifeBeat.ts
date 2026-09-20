@@ -957,11 +957,25 @@ const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string> | null> = 
    *  false about the one week it would be shown in. A missing column is a bug that announces itself;
    *  a wrong column is a bug that reads well.
    *
-   *  ⚠ IT IS UNREACHABLE UNTIL T4 WRITES THE KIND, so the `null` costs a live career nothing today –
-   *  the raise at the bottom of this file stamps `world.spiritShock?.kind ?? 'plain'`, and on this
-   *  tree that can only be `'plain'` or `'breakup'`. The render below throws BY NAME rather than
-   *  reading `undefined[driver]`, so the day the kind ships without its copy the failure says which
-   *  column is missing instead of crashing on a card. */
+   *  ⚠⚠ AND IT IS UNREACHABLE FOR A STRUCTURAL REASON, NOT MERELY «UNTIL T4» – the architect's
+   *  gate-1 finding, written here because the weaker sentence would have gone stale the week T4
+   *  landed and left a reader believing this cell was one task from being needed. Three facts, each
+   *  one grep-checkable:
+   *
+   *    1. the register is stamped at EXACTLY ONE site – the single `raiseLifeBeat(…, 'fork-psy', …)`
+   *       in `src/`, at the bottom of this file, which reads `world.spiritShock?.kind ?? 'plain'`;
+   *    2. that site fires only off a `'fork-opinion'` row answered `stop`, and `'fork-opinion'` is
+   *       raised in exactly one place (`raiseForkOpinion`, called once, from `resolveEndings` under
+   *       `world.fork === null && forkDue(…)`) – the fork at nineteen, asked on `schoolEndWeek`;
+   *    3. it BLOCKS (`LIFE_BEAT_BLOCKING`), and the advance refuses while a blocking row is
+   *       unanswered, so the career cannot tick past it. She answers it at 18.0–18.9 or not at all.
+   *
+   *  ⭐ A `'postpartum'` shock needs a marriage (`ECONOMY.wedding.ageGate` 23), a pregnancy and a
+   *  birth, so it cannot exist before ~24 – and THE TWO WINDOWS CANNOT OVERLAP. This column is owed
+   *  only if a later wave raises `'fork-psy'` from somewhere other than the fork, and T8 is
+   *  therefore NOT asked to draft three sentences for a card that cannot be shown. ⚠ The throw
+   *  below is what makes that safe to rely on: the day a second raise site appears it names this
+   *  cell by register instead of reading `undefined[driver]`. */
   postpartum: null,
 }
 
@@ -3255,8 +3269,12 @@ export function lifeBeatSaid(
       // ⭐ v85 T1 – A REGISTER MAY EXIST WITHOUT ITS COLUMN (see `PSY_COUNSEL`'s `postpartum` cell:
       // the kind widened before its copy was drafted, and copy is T8's). ⚠ IT THROWS BY NAME rather
       // than indexing `null`, so the day a kind ships ahead of its column the message says which
-      // column is owed – the same courtesy the line above pays a malformed detail. Unreachable on
-      // this tree: nothing can write a `'postpartum'` shock, so nothing can stamp that register.
+      // column is owed – the same courtesy the line above pays a malformed detail.
+      // ⚠⚠ AND THIS IS A GUARD FOR A FUTURE WAVE, NOT FOR T4. `PSY_COUNSEL`'s own `postpartum` block
+      // proves the two windows cannot overlap – the fork is answered at 18.0–18.9 and BLOCKS until it
+      // is, and a postpartum shock cannot exist before ~24 – so nothing T4 ships can reach this line.
+      // It fires the day somebody raises `'fork-psy'` from outside the fork, which is exactly when a
+      // silent `undefined[driver]` would be hardest to trace.
       const psyColumn = PSY_COUNSEL[psyRegister]
       if (psyColumn === null) {
         throw new Error(`A fork-psy register has no counsel column yet: ${psyRegister}`)
