@@ -176,6 +176,7 @@ export type {
   AlbumDoodle,
   AlbumFrame,
   AlbumNote,
+  AlbumTierStep,
   AlbumTicket,
   AlbumTag,
   AlbumSheetModel,

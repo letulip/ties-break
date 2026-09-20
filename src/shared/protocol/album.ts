@@ -60,12 +60,31 @@ export interface AlbumNote {
   lines: readonly string[]
 }
 
+/** ⭐ WHICH STEP OF THE DESIGN SYSTEM'S TIER RAMP THIS RANK SITS ON – spec §4's «Цвет билета и бирки
+ *  несёт ранг: чем выше ступень, тем насыщеннее», carried as a STEP and never as a colour.
+ *
+ *  The four names are the app's own, not the album's: `--tier-budget` / `--tier-middle` /
+ *  `--tier-high` / `--tier-elite` are declared in `src/style.css` straight off `docs/design/tokens.css`
+ *  and already paint the Coach Market's four tiers. `CoachTier`'s paid four are spelled with the same
+ *  words for the same reason – one ramp, one set of names.
+ *
+ *  ⚠⚠ AND IT TRAVELS ON THE WIRE RATHER THAN BEING DERIVED IN THE COMPONENT, which is a decision and
+ *  not a convenience. The sixteen rungs are `TierId`s, and this wire deliberately carries the tier's
+ *  LABEL – a display string («World Tour 1000»). A component asked to colour itself from that label
+ *  would have to go back through `tierFromLabel`, a prefix match over user-visible text: rename a
+ *  rung and the album silently loses its ramp, with nothing red. The engine holds the `TierId` at the
+ *  moment it builds the pass, so the step is decided where the fact is (`ALBUM_TIER_STEP` in
+ *  `src/engine/world/albumBook.ts` – the one mapping, total over `TierId` by its own type). */
+export type AlbumTierStep = 'budget' | 'middle' | 'high' | 'elite'
+
 /** The boarding pass that anchors layout B. Rank, stage, date and place are the world's; the
  *  seat, gate, row and barcode are flavour the engine derives from the seed so a re-read of the
  *  album does not reshuffle them (spec §4). ⚠ Its `tier` is one of OUR fictional ranks – never
  *  `WTA 1000`, never `ITF W15`. */
 export interface AlbumTicket {
   tier: string
+  /** The ramp step `tier` sits on – the pass's ink, spec §4. */
+  step: AlbumTierStep
   stage: string
   venue: string
   dateLabel: string
@@ -80,6 +99,8 @@ export interface AlbumTicket {
 export interface AlbumTag {
   stage: string
   tier: string
+  /** The ramp step `tier` sits on – the tag's paper, spec §4. */
+  step: AlbumTierStep
   place: string
   ageLabel: string
 }

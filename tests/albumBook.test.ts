@@ -15,13 +15,25 @@
 //   ARM E  empty chapters emitted (the guards removed)             → red (the lived-but-empty case)
 //   ARM F  the flavour re-keyed per CALL (a counter in the key)    → red (the determinism case)
 //   ARM G  a fourth sheet at eight frames (`8: [2,2,2,2]`)         → red (the density case)
+// The rank-ramp and second-axis work added five more (20.09), each applied, run and restored:
+//   ARM H  `wallsGrowable`'s reg arm asks for 'steady'              → 1 red (the fiery case: her
+//          regulation stops moving, so the state the arc gap lives in stops being reachable)
+//   ARM I  the arc fires on EITHER axis (`open || reg`)             → 1 red (the fiery case: the
+//          closing sheet takes an OPENNESS sentence for a girl whose openness never moved)
+//   ARM J  the kick branch doubled on `reg` alone                   → 1 red (the both-axes case)
+//   ARM K  `ALBUM_TIER_STEP.slam` -> 'budget'                       → 1 red (the ramp order)
+//   ARM L  `ticketOf` hard-codes `step: 'elite'`                    → 1 red (the printed case)
 import { describe, it, expect } from 'vitest'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { assembleAlbum, ALBUM_MOOD, createWorld, kidAgeAt, type WorldState } from '../src/engine/world'
+import { assembleAlbum, ALBUM_MOOD, createWorld, kidAgeAt, TEMPERAMENTS, type WorldState } from '../src/engine/world'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
+import { ECONOMY } from '../src/engine/economy'
+import { driftWalls, type Temperament } from '../src/engine/spirit'
 import { ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
-import type { AlbumBook, AlbumSheetModel, Milestone } from '../src/shared/protocol'
+import { ALBUM_TIER_STEP } from '../src/engine/world/albumBook'
+import type { AlbumBook, AlbumSheetModel, AlbumTierStep, Milestone } from '../src/shared/protocol'
 
 const PUBLIC = fileURLToPath(new URL('../public', import.meta.url))
 
@@ -34,6 +46,19 @@ function weekAtAge(world: WorldState, age: number): number {
 
 function probe(seed: string): WorldState {
   return createWorld(seed)
+}
+
+/** A seed that draws the girl we need – SEARCHED, never a magic string, because `createWorld` draws
+ *  her off `seed:temperament` and a hand-picked seed would silently repoint at a different girl the
+ *  day that draw is re-ordered (`tests/wave5-psychologist-walls.test.ts` keeps the same helper for
+ *  the same reason). Throws rather than falling back: a case that quietly ran on the wrong
+ *  temperament is a case that proves nothing. */
+function seedBorn(born: Temperament): string {
+  for (let i = 0; i < 2000; i++) {
+    const seed = `album-born-${i}`
+    if (createWorld(seed).temperament === born) return seed
+  }
+  throw new Error(`no seed in 2000 draws a ${born} girl`)
 }
 
 function title(week: number, tier: TierId = 'j30'): Milestone {
@@ -334,6 +359,110 @@ describe('the arc – displacing the closing sheet\'s words when the lean moved,
     world.ending = null
     const live = assembleAlbum(world).sheets.at(-1)!
     expect(live.line, 'no closing sheet mid-career, no arc mid-career').not.toBe(closing.line)
+  })
+
+  // ⚠⚠ THE SECOND AXIS, REACHED THROUGH THE REAL WRITER AND NOT POSED (20.09).
+  //
+  // `assembleAlbum` writes the arc iff `wallsLean.open !== 0`, and spec §4b measured the two axes
+  // moving together and equally on the only two drifted saves he had – which is exactly the evidence
+  // that makes a reg-only career look impossible. It is not. `driftWalls` moves ONE axis alone in
+  // exactly one branch (growth beyond her baseline, which needs `wallsGrowable`), and that predicate
+  // splits the two mixed temperaments: `fiery` is open+intense, so her `reg` grows while her `open`
+  // is clamped at her nature. This case earns that state by RUNNING the pass, so it fails if the
+  // engine ever closes the door – which is the whole point of proving reachability rather than
+  // asserting it. The album's behaviour is then pinned as it stands: the ordinary closing sheet,
+  // because the corpus has no regulation-axis sentences and those are the owner's to write.
+  it('⚠ a fiery girl\'s reg-only drift is REACHABLE – and takes the ordinary closing sheet', () => {
+    const seed = seedBorn('fiery')
+    const world = probe(seed)
+    expect(world.temperament, 'the seed search found her').toBe('fiery')
+
+    // a caring bond, the seat hired and the focus she chose for herself – §2a's three conditions
+    world.bond = ECONOMY.bond.band.close + 5
+    world.psychologistHired = true
+    world.psychologistFocus = 'herself'
+    world.psychologistRung = 1
+    for (let i = 0; i < 20; i++) {
+      world.week += 1
+      driftWalls(world, true)
+    }
+
+    expect(world.wallsLean.reg, 'her regulation moved – twenty weeks of her own work').toBeGreaterThan(0)
+    expect(world.wallsLean.open, 'and her openness did not: clamped at her nature, nothing to grow').toBe(0)
+
+    const w = weekAtAge(world, 31)
+    world.week = w + 2
+    world.milestones.push(title(w - 10, 'wta250'))
+    world.ending = { type: 'natural', week: w, ageYears: 31, detail: 'probe', resumesWeek: null }
+    const closing = assembleAlbum(world).sheets.at(-1)!
+    const retired = ALBUM_CORPUS.find((o) => o.id === 'retired')!.voices.fiery
+    expect(closing.note!.text, 'no arc: the corpus has no words for the regulation axis').toBe(retired.note)
+    expect(closing.line).toBe(retired.line)
+
+    // ...and the same career WOULD have taken the arc had the openness axis been the one that moved,
+    // so the case above is a statement about the axis and not about this world being arc-proof
+    world.wallsLean = { open: world.wallsLean.reg, reg: 0 }
+    const moved = assembleAlbum(world).sheets.at(-1)!
+    expect(moved.line, 'the same world on the open axis does take the arc').not.toBe(retired.line)
+  })
+
+  // ⚠ THE OTHER HALF OF THE SAME TRACE: a career that was only ever kicked (or only ever healed)
+  // carries `open === reg` at every week, because every branch except growth treats the two axes
+  // identically. This is what makes §4b's `{43, 43}` and `{66, 66}` the expected reading rather than
+  // a coincidence – and it is why the open axis alone is a sufficient test for every career EXCEPT
+  // the two mixed births.
+  it('kicks move both axes equally – the arc condition is complete for every career but fiery\'s', () => {
+    for (const born of TEMPERAMENTS) {
+      const world = probe(seedBorn(born))
+      world.bond = ECONOMY.bond.band.strained - 5 // cold: the kick branch, on both axes
+      for (let i = 0; i < 12; i++) {
+        world.week += 1
+        driftWalls(world, false)
+      }
+      expect(world.wallsLean.open, `${born}: kicked, and both axes moved the same`).toBeLessThan(0)
+      expect(world.wallsLean.open, `${born}: neither axis outran the other`).toBe(world.wallsLean.reg)
+    }
+  })
+})
+
+describe('the rank\'s step on the app\'s four-step ramp (spec §4)', () => {
+  it('every rung the calendar ships has a step, and the ladder never steps DOWN the ramp', () => {
+    const order: AlbumTierStep[] = ['budget', 'middle', 'high', 'elite']
+    expect(TIER_LADDER.length, 'the whole ladder is walked').toBeGreaterThan(0)
+    for (const [i, rung] of TIER_LADDER.entries()) {
+      const step = ALBUM_TIER_STEP[rung]
+      expect(order, `${rung} has no step on the ramp`).toContain(step)
+      if (i > 0) {
+        expect(
+          order.indexOf(step),
+          `${rung} sits above ${TIER_LADDER[i - 1]} on the ladder – «чем выше ступень, тем насыщеннее»`,
+        ).toBeGreaterThanOrEqual(order.indexOf(ALBUM_TIER_STEP[TIER_LADDER[i - 1]]))
+      }
+    }
+    expect(new Set(TIER_LADDER.map((t) => ALBUM_TIER_STEP[t])).size, 'all four steps are used').toBe(4)
+  })
+
+  it('a pass and a tag carry the step their own tier maps to', () => {
+    const world = probe('album-ticket-step')
+    const base = weekAtAge(world, 18)
+    world.week = base + 60
+    world.milestones.push({ type: 'school', week: base })
+    world.milestones.push({ type: 'prize', week: base + 4, tier: 'w15' })
+    world.milestones.push(title(base + 8, 'j30'))
+    world.milestones.push({ type: 'international', week: base + 12, tier: 'j30' })
+    world.milestones.push(title(base + 16, 'w15'))
+    world.milestones.push({ type: 'injury', week: base + 20, kind: 'ankle soreness' })
+    const printed = assembleAlbum(world)
+      .sheets.flatMap((s) => [s.ticket, s.tag])
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+    expect(printed.length, 'the dense chapter printed at least one pass or tag').toBeGreaterThan(0)
+    for (const item of printed) {
+      // the label is the only handle the wire gives back to the rung, which is the argument for
+      // shipping the step at all – done here in a TEST, where a wrong answer is a red line
+      const rung = TIER_LADDER.find((t) => TIERS[t].label === item.tier)
+      expect(rung, `«${item.tier}» is not a rung of our own calendar`).toBeDefined()
+      expect(item.step, `«${item.tier}» must print on its own step`).toBe(ALBUM_TIER_STEP[rung!])
+    }
   })
 })
 

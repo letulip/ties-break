@@ -84,6 +84,11 @@ export function sheetOf(over: SheetOver = {}): AlbumSheetModel {
       layout === 'B'
         ? {
             tier: 'World Tour 1000',
+            // ⚠ THE STEP AGREES WITH THE TIER, and it is `ALBUM_TIER_STEP`'s answer for `wta1000`
+            // rather than a taste: a fixture that painted a domestic pass in the elite ink would let
+            // the ramp's own mounted test go green against a disagreement the engine cannot produce.
+            // `tests/albumBook.test.ts` holds the engine to the same table from the other side.
+            step: 'elite',
             stage: 'Final',
             venue: 'Centre Court',
             dateLabel: 'Oct 14, 2051',
@@ -98,7 +103,7 @@ export function sheetOf(over: SheetOver = {}): AlbumSheetModel {
         // ⚠ `World Tour 15` AND NOT `W15`, 19.09. The tier on a ticket or a tag is a TIERS label –
         // `albumBook.ts` reads `TIERS[c.tier].label` and can emit nothing else – and this fixture had
         // hand-typed the real ITF designation the protocol field names as forbidden in as many words.
-        ? { stage: 'Singles final', tier: 'World Tour 15', place: 'Rivermouth Open', ageLabel: 'Age 16' }
+        ? { stage: 'Singles final', tier: 'World Tour 15', step: 'high', place: 'Rivermouth Open', ageLabel: 'Age 16' }
         : null,
     patch: layout === 'A' ? 'Rivermouth Tennis' : null,
     doodles: layout === 'A' ? ['smile'] : layout === 'B' ? ['heart'] : ['globe'],

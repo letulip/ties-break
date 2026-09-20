@@ -12,15 +12,20 @@
 // of string. The README's constraint is about the PAPER's texture, where a filter comes out empty on
 // raster export; a two-point path with no filter on it has neither problem.
 //
-// ⚠ ONE TONE, PENDING HIS PALETTE – the same open question as the pass (spec §9). Rank is meant to
-// deepen the colour; the ramp is his to give.
+// ⭐⭐ THE PAPER CARRIES THE RANK – spec §4, the same move as the pass and the simpler half of it.
+// `tag.step` is the design system's tier step (`ALBUM_TIER_STEP`, engine-side), and here the tag's
+// PAPER is the token itself, unscaled: a baggage tag is a light card, and his own mockup AZ-C draws
+// the bottom-rank tag light blue – which is `--tier-budget` (#8fb2d6) to the eye. Only the ink is
+// derived, at ×0.18 of the same token, so each tag is printed in a near-black of its own hue rather
+// than in four unrelated darks. Contrast is measured per step in
+// `tests/component/album-rank-ink.test.ts`, which also re-derives the four inks from `--tier-*`.
 import type { AlbumTag } from '../../shared/protocol'
 
 defineProps<{ tag: AlbumTag }>()
 </script>
 
 <template>
-  <div class="album-tag">
+  <div class="album-tag" :class="`album-tag-${tag.step}`">
     <svg class="album-tag-string" viewBox="0 0 60 34" aria-hidden="true">
       <path d="M4 33 C 12 8, 26 2, 30 2 C 34 2, 48 8, 56 33" />
     </svg>
@@ -39,13 +44,31 @@ defineProps<{ tag: AlbumTag }>()
 
 <style scoped>
 .album-tag {
-  --album-tag-paper: #bcd4ea;
-  --album-tag-ink: #1d3552;
-  --album-tag-rule: rgba(29, 53, 82, 0.55);
+  /* the budget step, so a tag that somehow arrived without a class is still a legible one */
+  --album-tag-paper: #8fb2d6;
+  --album-tag-ink: #1a2027;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* THE FOUR STEPS – paper is `--tier-<step>` itself, ink is the same token ×0.18. In ladder order. */
+.album-tag.album-tag-budget {
+  --album-tag-paper: #8fb2d6;
+  --album-tag-ink: #1a2027;
+}
+.album-tag.album-tag-middle {
+  --album-tag-paper: #cfe152;
+  --album-tag-ink: #25290f;
+}
+.album-tag.album-tag-high {
+  --album-tag-paper: #e2822f;
+  --album-tag-ink: #291708;
+}
+.album-tag.album-tag-elite {
+  --album-tag-paper: #9b7fd4;
+  --album-tag-ink: #1c1726;
 }
 
 /* The cord hangs from a point ABOVE the tag, so the string is drawn first and the card beneath it
@@ -83,7 +106,9 @@ defineProps<{ tag: AlbumTag }>()
   height: 10px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: #14202e;
+  /* the tag's own ink and no longer a fixed near-black: with four papers a single dark disc read as
+     a hole punched in somebody ELSE's tag on the lime and orange steps. */
+  background: var(--album-tag-ink);
 }
 
 .album-tag-stage {
@@ -109,7 +134,10 @@ defineProps<{ tag: AlbumTag }>()
   gap: 2px;
   margin: 0;
   padding-top: 8px;
-  border-top: 1px dashed var(--album-tag-rule);
+  /* ⚠ THE INK ITSELF, where this was `rgba(29, 53, 82, 0.55)` – a fourth colour hard-wired to the one
+     paper that is gone. A per-step alpha would be four more literals for a 1px dashed line whose
+     softening is done by the DASH; the ink is the honest colour and it costs nothing to keep true. */
+  border-top: 1px dashed var(--album-tag-ink);
   font-family: var(--font-body);
   font-size: 9px;
   font-weight: 700;

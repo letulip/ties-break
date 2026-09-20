@@ -49,6 +49,7 @@ import type {
   AlbumSheetModel,
   AlbumTag,
   AlbumTicket,
+  AlbumTierStep,
   Milestone,
   PrologueTrace,
   TravelHomeMood,
@@ -59,7 +60,14 @@ import { temperamentFor, type Temperament } from '../spirit'
 import { pickInt, rngFromSeed } from '../rng'
 import { kidAgeAt } from './age'
 import { finishLabel } from './labels'
-import { ALBUM_ARC, ALBUM_CORPUS, type AlbumBand, type AlbumHand, type AlbumOccasion } from './albumCorpus'
+import {
+  ALBUM_ARC,
+  ALBUM_CORPUS,
+  type AlbumArcDirection,
+  type AlbumBand,
+  type AlbumHand,
+  type AlbumOccasion,
+} from './albumCorpus'
 import type { WorldState } from '../world'
 
 // =================================================================================================
@@ -625,9 +633,53 @@ function ageLabelOf(age: number): string {
   return `${TICKET_WORDS.age} ${age}`
 }
 
+/** ⭐⭐ THE RANK'S STEP ON THE APP'S OWN FOUR-STEP RAMP – spec §4's «Цвет билета и бирки несёт ранг:
+ *  чем выше ступень, тем насыщеннее», and the ONE place that decision is made.
+ *
+ *  ⚠⚠ A `Record<TierId, …>` AND NOT A PREDICATE CHAIN, which is the whole reason it is a table: the
+ *  ladder has grown twice already (W2-LADDER's six W rungs, W3-ACT2's top four) and a
+ *  `track === 'itf' ? … : …` would have absorbed each new rung silently into whatever branch it
+ *  happened to fall through. This shape makes a seventeenth rung a COMPILE error, which is the only
+ *  kind of totality worth having. `tests/albumBook.test.ts` walks `TIER_LADDER` and proves two things
+ *  about it: every rung has a step, and the steps never go DOWN as the ladder goes up – which is §4's
+ *  sentence, restated as something a machine can fail.
+ *
+ *  ⚠ THE GROUPING IS THE LADDER'S OWN FAMILIES, not four equal slices of sixteen. Each step is a
+ *  thing a career can be IN for years, and the boundaries are the ladder's own handovers:
+ *
+ *    budget  local · regional · national    – the domestic ladder (`track: 'domestic'`), where she
+ *                                             starts and where an adult who is not good enough stays
+ *    middle  j30 · j60 · j300               – the junior international tour (`track: 'itf'`), no
+ *                                             prize money: the «invest without knowing the return» years
+ *    high    w15 … w100                     – `W_SERIES`, the adult ITF rungs, where the cheque is an
+ *                                             insult but it is a cheque
+ *    elite   wta125 … slam                  – the tour proper, the mandatory regime's home
+ *
+ *  ⚠ AND THE COLOURS ARE NOT HERE, WHICH IS THE POINT OF SHIPPING A STEP. `AlbumTierStep`'s note
+ *  names the four `--tier-*` tokens; the engine may not know a hex. */
+export const ALBUM_TIER_STEP: Record<TierId, AlbumTierStep> = {
+  local: 'budget',
+  regional: 'budget',
+  national: 'budget',
+  j30: 'middle',
+  j60: 'middle',
+  j300: 'middle',
+  w15: 'high',
+  w35: 'high',
+  w50: 'high',
+  w75: 'high',
+  w100: 'high',
+  wta125: 'elite',
+  wta250: 'elite',
+  wta500: 'elite',
+  wta1000: 'elite',
+  slam: 'elite',
+}
+
 function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): AlbumTicket {
   return {
     tier: TIERS[c.tier!].label,
+    step: ALBUM_TIER_STEP[c.tier!],
     stage: c.finish === undefined ? '' : finishLabel(c.finish),
     venue: flavour.venue,
     dateLabel: c.week === null ? '' : weekSpan(c.week),
@@ -642,6 +694,7 @@ function tagOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): Album
   return {
     stage: c.finish === undefined ? '' : finishLabel(c.finish),
     tier: TIERS[c.tier!].label,
+    step: ALBUM_TIER_STEP[c.tier!],
     place: flavour.venue,
     ageLabel: ageLabelOf(c.ageYears),
   }
@@ -795,13 +848,40 @@ export function assembleAlbum(world: WorldState): AlbumBook {
   // an omission; it is the ruling» – the other eight careers keep A32's own words). The direction
   // is the OPEN axis's lean, the engine's own sign: positive is the armable direction – toward the
   // pole she was not born on – which for the walls machinery means she came OUT (`wallsGrowable`'s
-  // note in engine/spirit.ts); negative means she drew in. The reg axis has no arc words in the
-  // document, so a reg-only lean takes the ordinary closing sheet rather than implying a sentence
-  // nobody wrote.
+  // note in engine/spirit.ts); negative means she drew in.
+  //
+  // ⚠⚠ AND THE REG-ONLY CAREER IS REACHABLE, WHICH THE SILENT CONDITION USED TO HIDE. Traced through
+  // the only writer (`driftWalls`, engine/spirit.ts) on 20.09, because a branch that looks reachable
+  // and is not – or the reverse – is this repo's oldest defect family. The pass visits both axes with
+  // ONE set of inputs (`kicked`, `retained`, `herself`, and the same three per-week steps); the ONLY
+  // thing that differs between them is `wallsGrowable(birth, axis)`, and it enters in exactly one
+  // branch – «beyond her baseline», `value += w.growthPerWeek`. So:
+  //
+  //   * KICKS move both axes by the same `risePerWeek` and REPAIR walks both back by the same
+  //     `repairPerWeek`, from the same start – a career that only ever suffered or healed carries
+  //     `open === reg` at every week, which is precisely what his own nine saves showed
+  //     (§4b: `{open: 43, reg: 43}`, then `{open: 66, reg: 66}`, and `{0, 0}` on the other eight);
+  //   * the growth branch is the one that can move ONE axis, and it needs the axis to be growable.
+  //     `wallsGrowable` is `openness === 'private'` for `open` and `intensity === 'intense'` for
+  //     `reg`, so the two disagree for exactly the two mixed girls: `fiery` (open + intense) grows on
+  //     `reg` alone, `quiet` (private + steady) on `open` alone.
+  //
+  // `quiet` therefore lands in the condition below and is written for. **`fiery` does not**: a fiery
+  // girl on a caring bond whose parent bought the psychologist and held the `'herself'` focus becomes
+  // measurably steadier – `{open: 0, reg: +x}` – and takes the ordinary closing sheet. That is a
+  // quarter of all births, and it is not a rounding case: she is the girl the whole walls model was
+  // built for. `tests/albumBook.test.ts` reaches the state through the REAL `driftWalls` rather than
+  // by posing a lean, so this paragraph cannot rot into a story about an impossible branch.
+  //
+  // ⚠ IT IS DOCUMENTED AND NOT FIXED HERE, ON PURPOSE. The fix is two sentences per voice on the
+  // regulation axis – «была резкой, стала ровной» and its opposite – and corpus sentences are the
+  // owner's, never an agent's (invariant 4). Until he writes them the honest behaviour is the one
+  // below: say nothing rather than tell a fiery girl's parent she opened up. Carried to spec §9.
   const lean = world.wallsLean ?? { open: 0, reg: 0 }
-  if (world.ending && lean.open !== 0 && sheets.length > 0) {
+  const direction: AlbumArcDirection | null = lean.open === 0 ? null : lean.open > 0 ? 'open' : 'reserved'
+  if (world.ending && direction && sheets.length > 0) {
     const closing = sheets[sheets.length - 1]
-    const arc = ALBUM_ARC[lean.open > 0 ? 'open' : 'reserved'][voice]
+    const arc = ALBUM_ARC[direction][voice]
     sheets[sheets.length - 1] = {
       ...closing,
       note: closing.note ? { ...closing.note, text: arc.note } : { text: arc.note, dateLabel: null, ageLabel: null, lines: [] },
