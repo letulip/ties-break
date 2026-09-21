@@ -28,16 +28,21 @@ function weekAtAge(world: WorldState, years: number): number {
 }
 
 function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
+  // ⚠ THE WHOLE ROW, and `vue-tsc` is why: vitest does not typecheck, so a half-built fixture runs
+  // green under the runner and fails the gate. Caught on this file, 21.09.
   return {
-    id: `ep-${sinceWeek}`,
+    id: `p:${sinceWeek}`,
     sinceWeek,
     endedWeek: null,
+    knownWeek: sinceWeek + 2,
+    wants: 'open',
     latchedWeek,
     partnerName: 'Nadia',
     partnerId: `p:${sinceWeek}`,
     publicWeek: null,
     publicWrong: false,
     airedMetWeek: null,
+    airedEndedWeek: null,
   }
 }
 
