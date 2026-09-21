@@ -215,9 +215,12 @@ function runCareer(preset: Preset, index: number, policy: Policy): WeddingOutcom
 // Two walks of ONE seed under the SAME policy. The NEUTRAL arm answers only what blocks, with the
 // drain registry's answers, and never touches a soft row. The EAGER arm answers every blocking beat
 // with a DIFFERENT priced option, answers every live soft row, and picks a different birthday gift.
-// Everything either arm may differ on moves `bond` and nothing else (§4a.2's law), so the MAIN
-// stream's position and the season's results must be IDENTICAL week by week. A divergence is a P0
-// finding: the exit code goes non-zero and the first differing weeks are printed.
+// ⚠⚠ THE COMPARISON IS THE MAIN STREAM'S POSITION AND NOTHING ELSE (healed by wave 9's T6 – see
+// `independenceArm` for the full story). The law is «a no-action run and an action-laden run under
+// the same code must tap identical MAIN sequences»; funds, condition and the season wrap used to be
+// folded into the same equality as a proxy for it, and wave 8 made that proxy false – `support`
+// reaches `spirit` and `returnPlan` changes which events she books. They are now REPORTED. A
+// divergence of the LAW is a P0 finding: the exit code goes non-zero and the first weeks are printed.
 
 function isWrapWeek(week: number): boolean {
   return week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS
@@ -256,35 +259,90 @@ function eagerDrain(world: WorldState): void {
   throw new Error('the eager arm could not drain the queue')
 }
 
-function independenceArm(preset: Preset, index: number, policy: Policy): { diverged: string[]; weeks: number } {
-  const walk = (eager: boolean): string[] => {
+/** ⭐⭐⭐ HEALED BY WAVE 9's T6, and the defect was this instrument's own fold.
+ *
+ *  ⚠⚠ WHAT IT USED TO DO AND WHY THAT STOPPED BEING TRUE. One line per week held the MAIN stream's
+ *  position AND funds AND condition AND the season wrap, and the whole thing was compared for
+ *  equality – justified in its own header by «everything either arm may differ on moves `bond` and
+ *  nothing else». Wave 8 made that false in two places at once: `support` reaches `spirit`, and
+ *  `returnPlan` changes which events she books. So on any world with wave 8 in it the two arms
+ *  legitimately differ in funds and in results, and a FOLDED comparison would have reported this
+ *  wave's own DESIGN as a P0 – the instrument calling the engine wrong.
+ *
+ *  ⚠⚠ THE HEAL IS TO SEPARATE THE LAW FROM THE PROXY rather than to loosen the test. The law is
+ *  exactly one sentence (CLAUDE.md invariant 2): «a no-action run and an action-laden run under the
+ *  same code must tap identical MAIN sequences». That is `rngMain` and nothing else, so `rngMain` is
+ *  what the P0 arm compares now. Funds, condition and the season wrap were a PROXY for it, useful
+ *  while nothing but `bond` could move, and they are now REPORTED instead of asserted: a count of
+ *  the weeks they differ on, which is information rather than a verdict.
+ *
+ *  ⭐ Wave 7's K5 heal is the precedent for the shape of this fix – repair the instrument, re-run the
+ *  arm, and record the healed numbers rather than averaging a disagreement away.
+ *
+ *  ⚠⚠ AND THE HEAL MEASURED ONE MORE THING, WHICH CORRECTS THE PREDICTION THAT ASKED FOR IT. The
+ *  wave-8 handoff said §(g) «WILL mis-report on wave 8». Run after the repair, this arm's own career
+ *  reports **no latch** – it never marries inside its 912 weeks, so it never reached `support` or
+ *  `returnPlan` at all and the fold would not in fact have fired here. The fold was still WRONG, and
+ *  would mis-report the day this preset's career married; what was overstated is that it already did.
+ *
+ *  ⚠ SO THE LAW IS VERIFIED HERE ON A CAREER WITHOUT A MARRIAGE, and that limit is stated rather
+ *  than left to be found. The career that DOES reach both new blocking cards is `motherhood-bench`'s
+ *  own §1, which searches a seed until it does – so the two instruments cover the law between them
+ *  and neither needs to grow the other's walk. */
+function independenceArm(
+  preset: Preset,
+  index: number,
+  policy: Policy,
+): { diverged: string[]; weeks: number; proxyWeeks: number; reached: string } {
+  // ⚠ WHAT THE WALK ACTUALLY REACHED, because a proxy difference of ZERO is only meaningful beside
+  // it: if this career never married and never conceived, the eager arm had no `support` and no
+  // `returnPlan` to answer differently, and the zero says nothing about wave 8 at all.
+  let reached = 'no latch'
+  const walk = (eager: boolean): { law: string[]; proxy: string[] } => {
     const { world } = openCareer(preset, index, policy)
     const rng = resumeMain(world.rngMain)
-    const prints: string[] = []
+    const law: string[] = []
+    const proxy: string[] = []
     for (let i = 0; i < WALK_WEEKS; i++) {
       stepCareerWeek(world, rng, policy)
       if (world.ending === null) {
         if (eager) eagerAnswers(world)
         else answerWhateverIsOpen(world, emptyDrainCounts())
       }
-      let line = `w${world.week} rng ${world.rngMain.s}/${world.rngMain.n} funds ${world.fundsCents} cond ${world.condition}`
+      // THE LAW: the MAIN stream's position, and nothing that a player's answer is allowed to move.
+      law.push(`w${world.week} rng ${world.rngMain.s}/${world.rngMain.n}`)
+      // THE PROXY, kept and reported: what the two arms may now legitimately differ on.
+      let line = `w${world.week} funds ${world.fundsCents} cond ${world.condition}`
       if (isWrapWeek(world.week)) {
         const v = leavingViewOf(world)
         line += ` | season ${v.seasonIndex} pts ${v.points} rank ${v.endRank ?? '–'} prev ${v.prevPoints}/${v.prevEndRank ?? '–'} pro ${v.professional}`
       }
-      prints.push(line)
+      proxy.push(line)
+      if (eager) {
+        if (world.children.length > 0) reached = 'a birth'
+        else if (world.pregnancy !== null && reached !== 'a birth') reached = 'a pregnancy'
+        else if (world.loveEpisodes.some((e) => e.latchedWeek !== null) && reached === 'no latch') {
+          reached = 'a marriage'
+        }
+      }
       if (world.ending !== null) break
     }
-    return prints
+    return { law, proxy }
   }
   const a = walk(false)
   const b = walk(true)
   const diverged: string[] = []
-  const len = Math.max(a.length, b.length)
+  const len = Math.max(a.law.length, b.law.length)
   for (let i = 0; i < len && diverged.length < 6; i++) {
-    if (a[i] !== b[i]) diverged.push(`  neutral: ${a[i] ?? '(walk over)'}\n  eager:   ${b[i] ?? '(walk over)'}`)
+    if (a.law[i] !== b.law[i]) {
+      diverged.push(`  neutral: ${a.law[i] ?? '(walk over)'}\n  eager:   ${b.law[i] ?? '(walk over)'}`)
+    }
   }
-  return { diverged, weeks: len }
+  let proxyWeeks = 0
+  for (let i = 0; i < Math.max(a.proxy.length, b.proxy.length); i++) {
+    if (a.proxy[i] !== b.proxy[i]) proxyWeeks++
+  }
+  return { diverged, weeks: len, proxyWeeks, reached }
 }
 
 // =================================================================================================
@@ -344,7 +402,18 @@ function main(): void {
   console.log('  ── (g) INPUT-INDEPENDENCE: neutral-drain walk vs eager-different-answers walk, one seed ──')
   const indep = independenceArm(presets[1] ?? presets[0], 0, policy)
   if (indep.diverged.length === 0) {
-    console.log(`  ✅ IDENTICAL over ${indep.weeks} weeks: MAIN position, funds, condition and every season wrap agree byte for byte.`)
+    console.log(
+      `  ✅ THE LAW HOLDS over ${indep.weeks} weeks: the MAIN stream's position is identical week for week.`,
+    )
+    // ⚠ AND THE PROXY IS REPORTED RATHER THAN ASSERTED (wave 9 T6). Before wave 8 these agreed too
+    // and the fold was harmless; now `support` reaches `spirit` and `returnPlan` changes her
+    // bookings, so funds and results SHOULD differ between a neutral and an eager walk. A zero here
+    // on a world that reaches a pregnancy would mean the eager arm never actually answered
+    // differently – which is worth seeing, and is not a verdict either way.
+    console.log(
+      `     funds / condition / season differ on ${indep.proxyWeeks} of those weeks – expected since wave 8, ` +
+        `and no longer part of the P0 comparison. This walk reached: ${indep.reached}.`,
+    )
   } else {
     console.log('  ❌ P0 – THE TWO ARMS DIVERGED. Player choices re-rolled the world. First differing weeks:')
     for (const d of indep.diverged) console.log(d)
