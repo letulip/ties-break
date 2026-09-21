@@ -165,9 +165,22 @@ describe('wave 8 T10 §B – the pair is in no union, and each refusal is measur
   it('⚠⚠ NOT ON THE MEMORY CHANNEL EITHER – and THIS is the one `bride` answers differently', () => {
     // `bride` IS a one-band painting and it DID join a union, because a memory card is filled by the
     // ENGINE and the engine may not know about a UI builder. There is no memory card for a
-    // pregnancy – T4's birth polaroid took `MEMORY_EMOTION.birth = 'norm'` – so the reason does not
-    // transfer and the band table stays a table of exactly one moment-face.
-    expect(Object.keys(FACE_BANDS).sort(), 'the band table holds the bride and nobody else').toEqual(['bride'])
+    // PREGNANCY, so the reason does not transfer and the two `pregnant-*` paintings stay off the
+    // band table – which is this case's whole claim and is untouched by everything below.
+    //
+    // ⚠⚠ RE-AIMED AT WAVE 8b T5 (E1), AND THE SENTENCE IT USED TO CARRY IS WHY. It read «T4's birth
+    // polaroid took `MEMORY_EMOTION.birth = 'norm'` – so the band table stays a table of exactly ONE
+    // moment-face», and the `toEqual(['bride'])` was that clause made mechanical. Both halves were
+    // TRUE OF A TREE WITH NO BIRTH PAINTING: E1 asked him whether he wanted one, he commissioned it,
+    // and `MEMORY_EMOTION.birth` is now `'birth'` – the one-word change wave 8 wrote into that pick
+    // as its own repair. So the table holds TWO moment-faces, and the claim this case exists for is
+    // unchanged: the pregnancy pair is not among them.
+    //
+    // ⚠ THE LITERAL IS KEPT RATHER THAN RELAXED TO A `toContain`. «Exactly these» is what stops a
+    // third moment-face arriving unnoticed; widening it to «the bride is in there somewhere» would
+    // trade a red for a shrug, which is the opposite of what re-aiming a pin means.
+    expect(Object.keys(FACE_BANDS).sort(), 'the band table holds exactly the two moment-faces')
+      .toEqual(['birth', 'bride'])
     for (const face of FACES) expect(Object.keys(FACE_BANDS), face).not.toContain(face)
   })
 
