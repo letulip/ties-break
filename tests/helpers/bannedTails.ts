@@ -27,6 +27,35 @@ export const BANNED_TAILS = [
   'left it there',
 ] as const
 
+// ⚠⚠ PER-ROW EXEMPTIONS – ONE ROW EACH, NAMED IN FULL, WITH THE RULING THAT PUT IT THERE.
+//
+// ⭐ WHY THIS EXISTS AT ALL (wave 8b, C5, his ruling of 21.09 in session). Wave 8's P17 – the
+// pregnancy pause's feed row – was written stiff BECAUSE the lint rejected the natural draft:
+// «entering nothing more» trips `'nothing more'`. The wave brought that to him rather than quietly
+// rewording, and the answer was to exempt the row. A guard shaping the owner's copy is the tail
+// wagging the dog; a guard that stops running is worse. This is the narrow way through.
+//
+// ⚠⚠ IT IS AN EXACT, WHOLE-STRING MATCH AND NOT A PATTERN, AND THAT IS THE WHOLE SAFETY PROPERTY.
+// A pattern – or an exempted TAIL – would switch the ban off for every line that reached for the
+// same phrase, which is an exemption that disables the guard rather than one that carves out a row.
+// Because the match is the whole sentence, EDITING the exempted row re-arms the lint against it:
+// the copy and its exemption can never drift apart in silence.
+//
+// ⚠ A NEW ROW JOINS THIS LIST ONLY WITH THE OWNER'S WORD ON THAT ROW, quoted here beside it, and
+// `tests/wave3-tail-lint.test.ts` proves a SECOND row carrying the same banned tail still trips.
+export const TAIL_EXEMPT_LINES: readonly string[] = [
+  // wave 8 P17 (`PAUSE_EVENT`, src/engine/world/lifeBeat.ts) – his 21.09 ruling on C5, «the natural
+  // draft returns». Trips `'nothing more'`.
+  'She is entering nothing more before the birth. What she is already in, she will play.',
+] as const
+
+/** Is this exact line one the owner has ruled out of the ban? ⚠ WHOLE-STRING, never a prefix and
+ *  never a pattern – see the block above for why that is the safety property rather than a
+ *  convenience. */
+export function tailExempt(text: string): boolean {
+  return TAIL_EXEMPT_LINES.includes(text)
+}
+
 /** The NARRATION of a line – what the parent's journal says in its own voice, with her quoted
  *  speech removed. ⚠ The ban is on the narrator interpreting her, NEVER on words she might say
  *  herself: «left it there» inside her quotation marks is her sentence and is not the lint's

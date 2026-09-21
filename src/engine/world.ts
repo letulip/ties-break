@@ -331,8 +331,8 @@ export { bankSponsorCheque }
 // `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
 export { sponsorCameoWilling, sponsorCameoCents }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus }
+import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, POSTPARTUM_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, POSTPARTUM_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.

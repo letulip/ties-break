@@ -13,9 +13,19 @@ owner's playtest. T8 of [the wave-8 builder brief](life-wave-8-builder-2026-09.m
 rigour are [wave 7's](life-wave-7-strings-2026-09.md) strings document, whose own antecedents are
 [wave 5's](life-wave-5-strings-2026-09.md) and [wave 6's](life-wave-6-strings-2026-09.md).
 
-**Not one shipped string moved in this wave.** Every row below is an ADDITION, quoted **verbatim from
-the tree**, and every one is a **DRAFT – awaiting his pass** (invariant 4): nothing here ships as
-approved until his word, and the PR says so. The wave's NUMBERS – the hazard curve's four rungs, the
+⚠⚠ **THE PROVENANCE CHECK FOR THIS TABLE IS PLAIN `grep DRAFT`, AND NOTHING NARROWER** (wave 8b F2,
+his ruling of 21.09 closing the questions pass' F2). Not `grep '⚠ DRAFT'`, which finds 22 of this
+wave's 39 flagged lines, and not the regex remedy `⚠+ ?\*{0,2}DRAFT`, which finds 28 and drops every
+`**THE BUILDER'S DRAFT**` spelling. Both were measured on this wave and both are recorded in §9. A
+sweep that is narrower than the flag it looks for reports a short table as a finished one:
+
+```bash
+git diff c322301c..HEAD -- src/ | grep '^+' | grep DRAFT
+```
+
+**No shipped string moved in the wave itself.** Every row below is an ADDITION, quoted **verbatim
+from the tree**. Wave 8's thirty all landed as drafts; **four of them are now HIS, passed 21.09 in
+session** (the review batch's C2–C5, «ок» given per item) and the rest still await his word. The wave's NUMBERS – the hazard curve's four rungs, the
 three answer deltas, `playsOnWeeks`, `termWeeks`, `decisionWeeksAfterBirth`, the postpartum band and
 its support scale, the four return-decision weights, the staged factor's staircase and the freeze's
 12 / 156 – are not strings; they ride T9's bench and are **out of this table's scope on purpose**
@@ -45,11 +55,12 @@ any screen**. ⚠ T10 also found and corrected a claim this table made about whe
 
 | | |
 | --- | ---: |
-| player-facing **strings** the wave ADDED to the tree | **30** |
-| of them **ruled** | **0** |
-| of them **draft – awaiting his pass** | **30** |
+| player-facing **strings** the wave ADDED to the tree | **31** (30 + wave 8b's C2 variant) |
+| of them **his – passed 21.09 in session** | **4** (P12, P17, P22, P18b) |
+| of them **draft – awaiting his pass** | **27** |
 | shipped strings that **MOVED** | **0** |
-| per task | T2 **16** · T3 **2** · T4 **2** · T5 **4** · T6 **6** · T7 **0** · **T10 0** |
+| **drafts of this wave** re-worded on his 21.09 word | **3** (P12, P17, P22) |
+| per task | T2 **16** · T3 **2** · T4 **2** · T5 **4** · T6 **6** · T7 **0** · **T10 0** · **8b T1 1** |
 | flagged **non-string** drafts carried in §7 | the drafted numbers · four picks (two faces, one glyph, one precedence) |
 | explicit **NON-rows**, with the reason (§6) | `PSY_COUNSEL.postpartum` · `ALBUM_CLOSING_FAMILY.family` · `SOFT_BEAT_CARD` × 2 · the invariant throws · the harness literals |
 
@@ -89,7 +100,7 @@ yet on the week she says this. The birth may say «daughter» (§3); this beat m
 | P9 | `EXPECTING_DRY` | the same card at `strained`/`cold` – the dry rung, not one word of hers | She is expecting a child. Nobody in this house was told first. | `DRAFT – awaiting his pass` |
 | P10 | `EXPECTING_HEADING` | the parent's frame over the card, every bond band, every week | A child is coming, and she has already decided | `DRAFT – awaiting his pass` |
 | P11 | `LIFE_BEAT_OPTIONS.expecting[0]` (`joy`) | the card's first answer button (+2.5 on `bond`, and it persists `support: 'warm'`) | Tell her it is the best news in the house | `DRAFT – awaiting his pass` |
-| P12 | `LIFE_BEAT_OPTIONS.expecting[1]` (`worry`) | the second button (−0.5, `support: 'measured'`) | Say we are glad, and that we will worry | `DRAFT – awaiting his pass` |
+| P12 | `LIFE_BEAT_OPTIONS.expecting[1]` (`worry`) | the second button (−0.5, `support: 'measured'`) | Say we are glad – and start counting the weeks. | ⭐ `PASSED 21.09 (session)` – wave 8b C3 |
 | P13 | `LIFE_BEAT_OPTIONS.expecting[2]` (`career-first`) | the third button (−4, `support: 'cold'`) | Ask her what this does to the tennis | `DRAFT – awaiting his pass` |
 | P14 | `ANSWER_EVENT.expecting.joy` | the feed's `info` row after answering `joy` | She is expecting a child. We told her it was the best news in the house. | `DRAFT – awaiting his pass` |
 | P15 | `ANSWER_EVENT.expecting.worry` | the same row after `worry` | She is expecting a child. We said we were glad, and that we would worry. | `DRAFT – awaiting his pass` |
@@ -110,8 +121,17 @@ and the weeks go on; the parent's week is untouched underneath.
 
 | # | home (`file` · constant) | when the player sees it | the string, verbatim | |
 | ---: | --- | --- | --- | --- |
-| P17 | `lifeBeat.ts` · `PAUSE_EVENT` | the KEPT `life` feed row on the week entries close (`playsOnWeeks` after the announcement), white-heart marked until he picks a glyph | She is entering no more tournaments before the birth. What she is already in, she will play. | `DRAFT – awaiting his pass` |
-| P18 | `medical.ts` · `PREGNANCY_PAUSE_DETAIL` | the `detail` under every refused tournament entry on the Season screen, from `pausesWeek` until she decides (`entryStatus` → `blocked` / `unavailable`) | She is expecting – no new entries. The ones she already holds still stand. | `DRAFT – awaiting his pass` |
+| P17 | `lifeBeat.ts` · `PAUSE_EVENT` | the KEPT `life` feed row on the week entries close (`playsOnWeeks` after the announcement), white-heart marked until he picks a glyph | She is entering nothing more before the birth. What she is already in, she will play. | ⭐ `PASSED 21.09 (session)` – wave 8b C5 |
+| P18 | `medical.ts` · `PREGNANCY_PAUSE_DETAIL` | the `detail` under every refused tournament entry on the Season screen, from `pausesWeek` **until the birth** (`entryStatus` → `blocked` / `unavailable`) | She is expecting – no new entries. The ones she already holds still stand. | `DRAFT – awaiting his pass` |
+| **P18b** | `medical.ts` · `POSTPARTUM_PAUSE_DETAIL` | ⭐ **the same cell, from the BIRTH WEEK until her decision resolves** – wave 8b's C2 variant, one condition on the same gate and no new machinery | She is home with the baby – no new entries yet. | ⭐ `PASSED 21.09 (session)` – wave 8b C2, the one string wave 8b ADDS |
+
+⭐⭐⭐ **AND HIS ANSWER TO THAT CAME ON 21.09: THE THIRD SHAPE – SPLIT IT IN TWO.** §8 Q-2 offered
+him three (leave it · reword it across both halves · split it, «which costs one branch in
+`entryStatus` and a second drafted line»). **P18b is that second line and the branch is that one
+branch**: the window did not move a week, the refusal did not change level or reason, the union
+gained no member, and no state was added – `entryStatus` asks whether this pregnancy's child is on
+`world.children` and picks the sentence. The record of the problem is kept below, unedited, because
+the note is what the ruling answers.
 
 ⚠⚠ **P18 GOES STALE BY TWENTY WEEKS AND THE SOURCE SAYS SO RATHER THAN QUIETLY REWORDING IT.** The
 refusal window has no upper bound of its own – `pauseCovering` returns the record for every week from
@@ -130,6 +150,14 @@ the one date this wave knows, so it is the only one the line uses. ⚠ Its first
 nothing more» and the tail-lint caught it (`tests/helpers/bannedTails.ts`) – recorded here rather than
 quietly reworded, because the guard worked and the rejected phrasing is the one a reader would
 otherwise wonder about.
+
+⭐⭐⭐ **AND ON 21.09 HE PUT THE REJECTED PHRASING BACK** (wave 8b C5). A lint shaping the owner's copy
+is the tail wagging the dog, so the row is EXEMPT and its sentence is the natural draft again.
+⚠ **The exemption is per ROW, whole-string, and lives beside the ban** (`TAIL_EXEMPT_LINES`,
+`tests/helpers/bannedTails.ts`): the lint stays live for every other line in both swept pools, its
+own test proves that a second row carrying `'nothing more'` still trips, and because the match is the
+whole sentence, EDITING this row re-arms the guard against it. An exemption that switched the TAIL
+off would have been the defect rather than the fix.
 
 ## 3. T4 – the birth
 
@@ -163,7 +191,7 @@ these rows.
 | # | home (`file` · constant) | when the player sees it | the string, verbatim | |
 | ---: | --- | --- | --- | --- |
 | P21 | `endings.ts` · `RETURN_EVENT` | the KEPT `milestone` feed row on the arm that does NOT end the career – the week she says she is going back | She has decided to go back. From this week she can enter tournaments again. | `DRAFT – awaiting his pass` |
-| P22 | `ending.ts` · `ENDING_BLURB.family` | ⚠ **NO SURFACE PRINTS IT** – see the correction below | She had a child, and the months after it went by without an entry in them. Nobody put the question to her and nobody had to – it was hers to answer and she answered it. | `DRAFT – awaiting his pass` |
+| P22 | `ending.ts` · `ENDING_BLURB.family` | ⚠ **NO SURFACE PRINTS IT** – see the correction below | She had a child, and the months after it went by without an entry in them. No one asked her to choose – by spring the choice had long been made. | ⭐ `PASSED 21.09 (session)` – wave 8b C4 |
 | P23 | `ending.ts` · `ENDING_TITLE.family` | the epilogue's title, the album's last page, AND the latch's feed row | She did not go back | `DRAFT – awaiting his pass` |
 | P24 | `ending.ts` · `endingForFamily`'s `detail` | the specifics line beside P23 – `latchEnding` prints «`<title>` – `<detail>`.» so the feed row reads «She did not go back – 51 weeks without a new entry.» | *N* weeks without a new entry | `DRAFT – awaiting his pass` |
 
@@ -202,6 +230,14 @@ both across two careers reads the same eight words twice on the same screen. **N
 a builder harmonising two of his blurbs to taste is the move invariant 4 forbids, and the sentence is
 right about both endings. It is §8 Q-8 and it is his: keep the echo as a deliberate rhyme between the
 two endings that are HERS, or reword the newer one.
+
+⭐⭐⭐ **HE REWORDED THE NEWER ONE, 21.09** (wave 8b C4), and the row above is now his. The overlap is
+gone, **measured on the same instrument that found it**: the longest common substring of `peak` and
+the new `family` is `« the »` – **five characters**, down from sixty, and not a clause at all.
+`peak` is untouched to the character; the echo was resolved by moving the string that was BORROWING,
+which is the only direction available without a second ruling. ⚠ The two standing halves survive the
+change: the new second sentence still names who decided («no one asked her to choose»), and it
+neither consoles nor congratulates.
 
 ⚠ **P23 is deliberately about the TENNIS rather than about the child.** «She stayed with the family»
 is the warmer alternative and was refused: it tells the player what she chose INSTEAD, which is a
@@ -370,7 +406,7 @@ have taken her to ~58% and would have billed her in the wrong year.
 | --- | --- | --- |
 | `EMOTION_BY_ENDING.family` (`world/album.ts`) | `'serious'` | her face on the `'family'` epilogue. `norm` was the real alternative (`college` takes it) and lost because `college` is the one ending that RESUMES, so its `norm` reads «nothing has ended». `happy` is refused for the peak's own repaired reason: all four voices reach this ending |
 | `MEMORY_EMOTION.birth` (`diary/facts.ts`) | `'norm'` | the album polaroid's face for the birth week. **There is no birth painting** – `FACE_BANDS` holds exactly one moment-face (`bride`) – so the honest pick is the app's own fallback. A smile is the one face the same week's arithmetic (−24 / −37.5 of spirit) actively contradicts |
-| `LIFE_BEAT_ROW_KINDS` gains `'expecting'` (`screens/lifeRowGlyphs.ts`) | **no glyph picked** | mechanically required by `tests/wave4-life-row-stamp.test.ts`, not a design choice. P17's row wears the standing white-heart fallback until he rules – «no agent adds or swaps one unasked» |
+| `LIFE_BEAT_ROW_KINDS` gains `'expecting'` (`screens/lifeRowGlyphs.ts`) | ⭐ **RULED 21.09: no glyph, the white heart STANDS until his own pick** (wave 8b C7) | mechanically required by `tests/wave4-life-row-stamp.test.ts`, not a design choice. P17's row wears the standing white-heart fallback, and wave 8b deliberately did not pick one – glyphs are his under §5a, «no agent adds or swaps one unasked». The row stays open rather than closed |
 | ⭐ **T10: what the pregnancy portrait YIELDS TO** (`composables/kidEmotion.ts`) | **a fresh result wins; the painting takes every other week of the window** | which picture the hero and the Kid screen wear through the 39 weeks. It is round 42 #29(a) read as it is written – «только про победы и поражения», with the layoff painting kept by his own «это ок» because «an injury is a fact of the body, not a mood» – so the pregnancy sits at `rehab`'s rung rather than above the result layer. Entries shut after 8 weeks, so what it yields is at most the handful of weeks she still plays. ⚠ The alternative (an unconditional override for 39 weeks) would paint a woman resting a hand on her belly over the week she won a tournament, which is round 42 #2 read backwards. **His to move, and it is one condition in one computed** |
 
 ### 7.3. And one measurement with no artefact at all
@@ -384,17 +420,21 @@ comparing the brief's task list against this table does not find T7 missing and 
 
 None of these blocks the wave; they are collected here per his own instruction.
 
-1. **⚠⚠ Which answer is which GRADE** (P11–P13). The three labels are a rewording away from anything
-   he prefers, but the MAPPING – joy→`warm`, worry→`measured`, career-first→`cold` – is mechanical:
-   it scales the postpartum shock and weights her decision to come back. If he wants «Say we are glad,
-   and that we will worry» to read as warm support rather than as the measured middle, that is an
-   engine change and a re-bench, not a copy edit. Flagged because the three labels read closer
-   together than the three grades are.
+1. **⚠⚠ Which answer is which GRADE** (P11–P13). ⭐ **HALF-ANSWERED 21.09 – the LABEL moved, the
+   MAPPING did not** (wave 8b C3). The middle row now reads «Say we are glad – and start counting the
+   weeks.», which is his, and joy→`warm` / worry→`measured` / career-first→`cold` is unchanged. The
+   original note stands as written: a re-GRADING is an engine change and a re-bench, not a copy edit,
+   and it remains open should he ever want one. ⚠ **One question this raised and did NOT decide**: his
+   passed string carries a full stop and its two siblings do not (P11 «…in the house», P13 «…the
+   tennis»). It shipped exactly as he passed it, punctuation included, rather than being tidied to
+   match – carried to him as a one-character question.
 2. **⚠⚠ P18 says «She is expecting» for twenty weeks after she is not.** §2 carries the full
    mechanism. Three shapes, all his: leave it (the refusal is right, the word is loose); reword it to
    something true across both halves (e.g. a sentence about entries rather than about her state); or
-   split it in two, which costs one branch in `entryStatus` and a second drafted line. **Nothing was
-   done**, because the sentence is his.
+   split it in two, which costs one branch in `entryStatus` and a second drafted line.
+   ⭐⭐⭐ **CLOSED 21.09 – HE TOOK THE THIRD SHAPE** (wave 8b C2). P18b is that second line and the
+   split cost exactly the one branch this row predicted: no new state, no new union member, no move
+   of the window.
 3. **A voiced line of hers on the return card** (P25). Today the card is the parent's narration by
    design – one cell, no voice axis, `'own-key'`'s precedent. Her own sentence there means four voices
    × two presences, the standing completeness law, and eight more drafted rows the day he wants them.
@@ -416,6 +456,8 @@ None of these blocks the wave; they are collected here per his own instruction.
 8. **The echo between the `peak` and `family` blurbs** (§4). Sixty characters verbatim, measured, on
    two of the nine epilogues. A deliberate rhyme between the two endings that are HERS is a defensible
    reading and may be what he wants; so is rewording the newer one. Not touched either way.
+   ⭐⭐⭐ **CLOSED 21.09 – he reworded the newer one** (wave 8b C4). The longest common substring is now
+   `« the »`, five characters, re-measured on the same instrument; `peak` did not move.
 
 ⚠ **One observation offered as a question rather than as a fix, per invariant 4.** The wave makes an
 existing RULED string reachable in a context it was not written for: `RECOVERY_RECEIPT` – «She came
@@ -424,6 +466,10 @@ before the birth (the predicate it guards on is «some attachment of hers ended 
 attachment, any time). The sentence is one of wave 5's nine ruled rows and **nothing was changed**; a
 builder narrowing a ruled sentence's trigger to suit a new kind is the move its own history warns
 about. Reachable, rare, and his.
+
+⭐⭐⭐ **RULED 21.09 (wave 8b C1): IT STAYS AS SHIPPED.** No narrowing – the sentence is true at a
+postpartum clear, because she did come back sooner than last time. Wave 8b touched neither the string
+nor its trigger, and this paragraph is now the record of a closed question rather than an open one.
 
 ---
 
@@ -456,14 +502,15 @@ added nothing to this document and closed it unamended.
 | flagged site (file · what) | rows here |
 | --- | --- |
 | `lifeBeat.ts` §3j banner + `EXPECTING_HER_LINE` / `EXPECTING_DRY` / `EXPECTING_HEADING` | P1–P10 |
-| `lifeBeat.ts` `LIFE_BEAT_OPTIONS.expecting` (banner + three `⚠ DRAFT` rows) | P11–P13 |
+| `lifeBeat.ts` `LIFE_BEAT_OPTIONS.expecting` (banner + **two** `⚠ DRAFT` rows – ⭐ P12's flag came off on 21.09, wave 8b C3) | P11–P13 |
 | `lifeBeat.ts` `ANSWER_EVENT.expecting` (banner + three `⚠ DRAFT` rows) | P14–P16 |
-| `lifeBeat.ts` `PAUSE_EVENT` (`⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY**`) | P17 |
+| ~~`lifeBeat.ts` `PAUSE_EVENT`~~ – ⭐ **no longer flagged: PASSED 21.09** (wave 8b C5) | P17 |
 | `medical.ts` `PREGNANCY_PAUSE_DETAIL` (same spelling) | P18 |
+| ⭐ `medical.ts` `POSTPARTUM_PAUSE_DETAIL` – **never flagged, it was born passed** (wave 8b C2) | P18b |
 | `lifeBeat.ts` `BIRTH_EVENT` (same spelling) + `landBirth`'s `// ⚠ DRAFT – the kept line` | P19 |
 | `album.ts` `SCROLL_LABEL.birth` (`⚠ DRAFT (v85, the birth – wave 8 T4)`) | P20 |
 | `endings.ts` `RETURN_EVENT` (`⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY**`) | P21 |
-| `ending.ts` `ENDING_BLURB.family` (`⚠ WAVE 8 T5 – A DRAFT`) | P22 |
+| ~~`ending.ts` `ENDING_BLURB.family`~~ – ⭐ **no longer flagged: PASSED 21.09** (wave 8b C4) | P22 |
 | `ending.ts` `ENDING_TITLE.family` (`⚠ WAVE 8 T5 – A DRAFT`) | P23 |
 | `ending.ts` `endingForFamily`'s detail (`⚠ DRAFT (invariant 4) – T8's table`) | P24 |
 | `lifeBeat.ts` §3k banner + `RETURN_PLAN_SAID` / `RETURN_PLAN_HEADING` | P25–P26 |

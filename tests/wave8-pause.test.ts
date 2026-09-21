@@ -74,6 +74,7 @@ import {
   enterEvent,
   entryStatus,
   kidAgeExact,
+  landBirth,
   landPregnancyPause,
   pauseCovering,
   pregnancyChanceAt,
@@ -82,6 +83,7 @@ import {
   tickWeek,
   toSnapshot,
   PREGNANCY_PAUSE_DETAIL,
+  POSTPARTUM_PAUSE_DETAIL,
   type WorldState,
 } from '../src/engine/world'
 // ⚠ `tierVerdict` IS NOT ON THE `engine/world` BARREL – it is `world/medical.ts`'s own export and
@@ -281,6 +283,63 @@ describe('wave 8 T3 A – the pause is a branch of `availabilityStatus`, read at
     world.pregnancy = null
     const after = injectEvent(world, { week: due + 12, id: 'reopened' })
     expect(entryStatus(world, after).level, 'the window closes with the record').not.toBe('blocked')
+  })
+
+  // ===============================================================================================
+  // ⚠⚠ WAVE 8b C2 – THE REFUSAL'S SECOND WORD, AND THE WEEK IT TAKES OVER
+  // ===============================================================================================
+  //
+  // The window above is unchanged; what moved on 21.09 is what the card SAYS inside it. His ruling:
+  // the refusal is right and the word is stale for the weeks after the birth, so the row gains a
+  // post-birth VARIANT and keeps its own sentence until then. Two things have to hold for that to be
+  // one condition rather than a second gate: the boundary is the BIRTH and nothing else, and the
+  // refusal itself – level, reason, turnstile, money – does not move a byte across it.
+  it('⭐⭐⭐ «expecting» before the child and «home with the baby» after – one gate, one condition', () => {
+    const world = wedded('w8b-c2-postbirth')
+    const pausesWeek = openPairFrom(world, world.week + 6)
+    expectingFrom(world, pausesWeek)
+    const due = world.pregnancy!.dueWeek
+    const event = injectEvent(world, { week: due + 4, id: 'after-birth' })
+
+    // ⚠ THE CONTROL IS THE SAME EVENT ON THE SAME WORLD, one field apart. Before the child exists
+    // this card carries the wave's own sentence – so what the case measures below is the BIRTH and
+    // not the week number, the fixture or the tier.
+    expect(world.children, 'control: nobody has been born yet').toEqual([])
+    expect(entryStatus(world, event).detail, 'control: the pregnancy\'s own sentence stands')
+      .toBe(PREGNANCY_PAUSE_DETAIL)
+
+    // ⚠⚠ THE ROW IS **WRITTEN BY THE ENGINE**, NEVER POSED. `landBirth` is the one writer of
+    // `world.children` in the game and it carries its own guards (the due week, the once-ness); a
+    // hand-made row would prove this gate agrees with a test's idea of a birth rather than with the
+    // engine's. Posed state was wave 8's recurring defect class and this file does not add to it.
+    world.week = due
+    landBirth(world)
+    expect(world.children.length, 'the engine really wrote the row').toBe(1)
+    expect(world.children[0].bornWeek, 'and it is this pregnancy\'s child').toBe(due)
+
+    expect(entryStatus(world, event), 'the same card, after the child').toMatchObject({
+      level: 'blocked',
+      reason: 'unavailable',
+      detail: POSTPARTUM_PAUSE_DETAIL,
+    })
+    // ⚠ AND THE REFUSAL IS THE SAME REFUSAL. A variant that also changed the LEVEL or the REASON
+    // would be a second gate wearing the first one's clothes – the union gained no member and the
+    // turnstile still quotes whatever the gate said.
+    expect(() => enterEvent(world, event.id)).toThrow(POSTPARTUM_PAUSE_DETAIL)
+
+    // ...and the BOUND is still `resolveReturnDecision`'s, not the birth's: clearing the record is
+    // what re-opens her calendar, exactly as it was before this variant existed.
+    world.pregnancy = null
+    expect(entryStatus(world, event).level, 'the window still closes with the record').not.toBe('blocked')
+  })
+
+  it('⚠ the two sentences are different sentences, and only one of them names the pregnancy', () => {
+    // A variant that was a copy of its sibling would pass every case above. This is the receipt that
+    // the batch really replaced the stale word, and it is the one assertion in the file that reads
+    // the characters.
+    expect(POSTPARTUM_PAUSE_DETAIL).not.toBe(PREGNANCY_PAUSE_DETAIL)
+    expect(PREGNANCY_PAUSE_DETAIL.includes('expecting'), 'the pregnancy\'s own sentence says so').toBe(true)
+    expect(POSTPARTUM_PAUSE_DETAIL.includes('expecting'), '⚠ and the post-birth one may not').toBe(false)
   })
 
   it('⭐⭐ THE ONE GATE: `enterEvent` refuses with the gate\'s own sentence, and takes no money', () => {

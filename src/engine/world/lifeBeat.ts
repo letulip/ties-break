@@ -3032,8 +3032,12 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
   expecting: [
     // ⚠ DRAFT
     { id: 'joy', label: 'Tell her it is the best news in the house', bond: ECONOMY.motherhood.joyBond },
-    // ⚠ DRAFT
-    { id: 'worry', label: 'Say we are glad, and that we will worry', bond: ECONOMY.motherhood.worryBond },
+    // ⭐ WAVE 8b C3 – **HIS STRING, PASSED 21.09 IN SESSION**, and no longer a draft. The row it
+    // replaces read a shade warmer than its grade is: this answer persists `support: 'measured'`,
+    // which scales the postpartum shock and weights her return, and «we will worry» sounded like the
+    // warm rung's cousin. ⚠ THE GRADE DID NOT MOVE – only the label. A re-grading of which answer is
+    // which is a mechanical change and is not this batch's (the strings table's §8 Q-1).
+    { id: 'worry', label: 'Say we are glad – and start counting the weeks.', bond: ECONOMY.motherhood.worryBond },
     // ⚠ DRAFT
     { id: 'career-first', label: 'Ask her what this does to the tennis', bond: ECONOMY.motherhood.careerFirstBond },
   ],
@@ -6578,7 +6582,8 @@ export function rollPregnancy(world: WorldState): void {
   raiseLifeBeat(world, 'expecting', episode.id)
 }
 
-/** ⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY** (invariant 4). The pause week's one feed row.
+/** ⭐⭐⭐ **HIS STRING, PASSED 21.09 IN SESSION** (wave 8b, C5) – the pause week's one feed row, and
+ *  no longer a draft. Invariant 4 now binds the other way: nobody re-words it unasked.
  *
  *  ⚠ IT MUST NOT SAY THE SEASON IS OVER, and that is the whole difficulty of writing it: already
  *  booked events inside the window PLAY OUT (the brief's own clause, `pauseCovering`'s note in
@@ -6588,11 +6593,16 @@ export function rollPregnancy(world: WorldState): void {
  *  the week before, because it does not mention him.
  *  ⚠ AND IT NAMES NO RETURN. «until she is back» is a promise T5 is allowed to break; the birth is
  *  the one date this wave knows, so it is the only one the line uses.
- *  ⚠ THE FIRST DRAFT READ «entering nothing more» AND THE TAIL-LINT CAUGHT IT – `'nothing more'` is
- *  on the bibles' banned-narrator-tail list (`tests/helpers/bannedTails.ts`, swept over this file by
- *  `tests/wave3-tail-lint.test.ts`). Reported rather than quietly reworded: the guard works, and the
- *  sentence it rejected is the one a reader would otherwise wonder about. */
-const PAUSE_EVENT = 'She is entering no more tournaments before the birth. What she is already in, she will play.'
+ *  ⚠⚠ THE FIRST DRAFT READ «entering nothing more», THE TAIL-LINT CAUGHT IT – `'nothing more'` is on
+ *  the bibles' banned-narrator-tail list (`tests/helpers/bannedTails.ts`, swept over this file by
+ *  `tests/wave3-tail-lint.test.ts`) – AND **HE RULED THE LINT OUT OF THIS ONE ROW ON 21.09**. The
+ *  stiff English was the guard shaping copy, which is the tail wagging: the ban is on the NARRATOR
+ *  interpreting her, and «entering nothing more» here is a plain statement of what she is doing.
+ *  ⚠ THE EXEMPTION IS PER-ROW AND LIVES BESIDE THE BAN (`TAIL_EXEMPT_LINES`,
+ *  `tests/helpers/bannedTails.ts`), naming this exact sentence and that ruling. The lint stays LIVE
+ *  for everything else, and its own test proves a second row carrying the same tail still trips it –
+ *  an exemption that disables the guard would be the defect, not the fix. */
+const PAUSE_EVENT = 'She is entering nothing more before the birth. What she is already in, she will play.'
 
 /** ⭐⭐ THE WEEK THE ENTRIES CLOSE – the pause's ONLY tick step, and it writes ONE feed row.
  *

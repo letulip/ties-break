@@ -1154,10 +1154,15 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
   // ⚠ IT IS WRITTEN HUSBAND-AGNOSTIC AND CHILD-SEX-AGNOSTIC (§0's decoupling ruling and the girls-only
   // scaffold): the marriage may have ended mid-term and the ending fires anyway, so a line that named
   // him would be false on exactly the careers §14's banner exists to protect.
-  // ⚠ AND IT SAYS WHO DECIDED, in `peak`'s own idiom, because that is §4a's law at this layer's
-  // second-biggest moment: nobody put the question to her.
+  // ⚠⚠ THE SECOND SENTENCE MOVED ON 21.09 – **HIS STRING, PASSED IN SESSION** (wave 8b, C4), and
+  // the first is unchanged to the character. What it kills is measured rather than felt: the draft
+  // shared SIXTY characters verbatim with `peak` above – «. Nobody put the question to her and
+  // nobody had to – it was » was the longest common substring of the two, the whole middle clause of
+  // each, so two of the nine epilogues opened their second sentence identically. It still says WHO
+  // DECIDED (§4a's law at this layer's second-biggest moment) and it still neither consoles nor
+  // congratulates; what it no longer does is borrow `peak`'s sentence to do it.
   family:
-    'She had a child, and the months after it went by without an entry in them. Nobody put the question to her and nobody had to – it was hers to answer and she answered it.',
+    'She had a child, and the months after it went by without an entry in them. No one asked her to choose – by spring the choice had long been made.',
 }
 
 export const ENDING_TITLE: Record<CareerEndingType, string> = {

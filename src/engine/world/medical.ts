@@ -544,8 +544,30 @@ export function pauseCovering(world: WorldState, week: number): WorldState['preg
  *  TASK'S FILE: `ECONOMY.motherhood.decisionWeeksAfterBirth` is 20, so this card says «She is
  *  expecting» about a woman who is not for exactly twenty weeks of every career that reaches a birth.
  *  The REFUSAL is right and the WORD is stale; it lands in T8's table with the rest of the wave's
- *  drafts. */
+ *  drafts.
+ *
+ *  ⚠⚠ **AND HIS ANSWER TO THAT IS THE ROW BELOW, PASSED 21.09 IN SESSION** (wave 8b, C2): the
+ *  refusal stands and the WORD splits in two. This constant keeps every week BEFORE the child
+ *  arrives, unchanged to the character – the note above is history now rather than an open
+ *  question. */
 export const PREGNANCY_PAUSE_DETAIL = 'She is expecting – no new entries. The ones she already holds still stand.'
+
+/** ⭐⭐⭐ THE SAME REFUSAL, AFTER THE CHILD – wave 8b C2, **HIS STRING, PASSED 21.09 IN SESSION**
+ *  («ок» per item on the review batch). NOT A DRAFT: `docs/plans/life-wave-8-strings-2026-09.md`
+ *  carries it as passed, and invariant 4 binds the other way now – nobody re-words it unasked.
+ *
+ *  ⚠ THE WINDOW IS THE ONE `PREGNANCY_PAUSE_DETAIL` ABOVE NAMES AS STALE, AND NOTHING ELSE MOVED.
+ *  `pauseCovering` still has no upper bound of its own, `landBirth` still writes nothing to the
+ *  record, and `resolveReturnDecision` is still the only bound – so this sentence stands from the
+ *  birth week until her decision resolves, which is `ECONOMY.motherhood.decisionWeeksAfterBirth`
+ *  weeks at the shipped constant. ONE CONDITION ON THE EXISTING GATE (`availabilityStatus` below),
+ *  no new machinery, no new state and no new `ineligibleReason` member.
+ *
+ *  ⚠ «yet» IS THE WHOLE OF WHAT IT PROMISES – no date, `PREGNANCY_PAUSE_DETAIL`'s own discipline:
+ *  this wave knows the birth week and does not know the return week, and T5 is allowed to end the
+ *  career instead. ⚠ HUSBAND-AGNOSTIC (§0's decoupling ruling) and CHILD-SEX-AGNOSTIC – «the baby»
+ *  rather than «her daughter», so the day boys exist this line does not bend with the two that do. */
+export const POSTPARTUM_PAUSE_DETAIL = 'She is home with the baby – no new entries yet.'
 
 /** ⭐⭐⭐ ROUND 34 #9 – WHAT THE BOOKED HOLIDAYS BETWEEN NOW AND `week` WILL PUT BACK.
  *
@@ -714,7 +736,14 @@ export function availabilityStatus(
   // contained change and this note is the place it gets re-argued.
   const pause = pauseCovering(world, event.week)
   if (pause !== null) {
-    return { level: 'blocked', reason: 'unavailable', detail: PREGNANCY_PAUSE_DETAIL }
+    // ⭐⭐ WAVE 8b C2 – THE ONE CONDITION, AND IT IS THE ONLY THING THAT MOVED. The refusal window is
+    // unchanged (`pauseCovering` above); what the card SAYS now follows whether the child is here.
+    // ⚠ IT ASKS THE ROSTER AND NOT THE CALENDAR, on `landBirth`'s own once-ness test verbatim
+    // (`world/lifeBeat.ts` §14): a row born at or after this pregnancy's due week is THIS
+    // pregnancy's child. A `world.week >= pause.dueWeek` read would agree today and would start
+    // lying the day W5 lets a second pregnancy stand beside an older sibling's row.
+    const born = world.children.some((child) => child.bornWeek >= pause.dueWeek)
+    return { level: 'blocked', reason: 'unavailable', detail: born ? POSTPARTUM_PAUSE_DETAIL : PREGNANCY_PAUSE_DETAIL }
   }
   // THE TIER'S AGE GATE, BOTH ENDS OF IT (§4.1). The junior tour runs 13-18, the adult rungs open at
   // 16/16/17, the domestic ladder is open at every age for ever (owner's call 2 – it is ours, not
