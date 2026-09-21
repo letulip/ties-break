@@ -42,7 +42,7 @@ carries it. A builder can find each one by grepping `W5`.
 | a | the one-pregnancy scope brake is lifted here | `world/lifeBeat.ts` (`pregnancyEligible`) |
 | b | the repeat pregnancy re-enters the same seat once `world.pregnancy` is cleared | `world/state.ts` |
 | c | the child's standing cost line – deliberately not a birth fee | `world/lifeBeat.ts` |
-| d | the four-voice diary band (≈32 more lines) | `diary/weekNotes.ts` |
+| d | the four-voice diary band (**28** lines – the deferral's own «32» counted the warm postpartum scene as a band; there are seven) | `diary/weekNotes.ts` |
 | e | the album reads «once per pregnancy», so a second child lands correctly with no edit | `world/albumBook.ts` |
 | f | `wedding-bench.ts` §(g) mis-reports on a world that has wave 8 in it | wave-7 instrument, wave-8 handoff |
 | g | the resilience bonus after the return – the branch's one skill-adjacent number | the sketch §3 |
@@ -90,7 +90,9 @@ bench reports it rather than the model forcing it.
 
 ### T4 – the diary's four voices
 
-The 32 lines the pregnancy band deferred: the same occasions, per temperament, so a `fiery` mother
+The 28 lines the pregnancy band deferred (⚠ 32 was the deferral's own estimate and the
+correction is his review's finding 4: `MotherhoodBand` has SEVEN members, not eight – the warm
+postpartum scene is a second gate on `postpartum` rather than a band): the same occasions, per temperament, so a `fiery` mother
 and a `quiet` one do not read identically for a year. All drafts for his pass, in a strings table.
 
 ### T5 – the resilience bonus, benched (ruled 21.09 – in scope)

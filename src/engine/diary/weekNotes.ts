@@ -812,42 +812,42 @@ function flatLayoff(): Pick<WeekNote, 'claims' | 'license'> {
 // ⚠ THE CROSS IS TOTAL BY TYPE (`Record<Temperament, Record<MotherhoodBand, string>>`), the spoken
 // moments' own protection: a voice missing a band is a COMPILE error and not a girl who falls silent
 // for three months.
-const MOTHERHOOD_WORDS: Record<Temperament, Record<MotherhoodBand, string>> = {
+export const MOTHERHOOD_WORDS: Record<Temperament, Record<MotherhoodBand, string>> = {
   sunny: {
-    announced: 'She told us at the door, still in her coat. "It is the good kind of news."',
-    early: 'She rang while cooking. "No entries for a while. I plan them anyway."',
-    mid: 'She sent a photo of the kit bag. "Not yet. I like looking at it."',
-    last: 'She called after her walk. "Heavy, slow, and oddly happy about it."',
-    birth: 'She rang in the morning, laughing. "We are all here. Come when you can."',
-    postpartum: 'She sent a voice note at an odd hour. "Tired, and I do not mind."',
+    announced: 'She came by still in her coat. "It\'s the good kind of news."',
+    early: 'She rang while cooking. "No entries for a while. I still check the calendar."',
+    mid: 'She sent a photo of the kit bag. "Not yet. I just wanted to look at it."',
+    last: 'She called after her walk. "Slow today. Very slow. Still happy, though."',
+    birth: 'She rang in the morning. "We\'re all here. Come when you can."',
+    postpartum: 'She sent a late voice note. "I\'m tired. She isn\'t, apparently."',
     returned: 'She rang from the car park. "My legs remember more than I did."',
   },
   fiery: {
-    announced: 'She said it before her coat was off. "Everything changes. Good."',
-    early: 'She left a voice note at dawn. "No entries. I will go quietly mad."',
-    mid: 'She called mid-pace, walking. "I am not sitting still for this."',
-    last: 'She rang late. "Everyone says rest. I have never rested in my life."',
-    birth: 'She called, hoarse. "Hardest thing I have ever done, and I won."',
-    postpartum: 'She messaged at three in the morning. "Awake again. I chose this."',
-    returned: 'She rang from the courts. "Everything hurts. I have missed it."',
+    announced: 'She came through the door already saying it. "Everything changes. Good."',
+    early: 'She left a voice note at dawn. "No entries. I\'ll go quietly mad."',
+    mid: 'She called from halfway round the block. "I can walk. I\'m walking."',
+    last: 'She rang late. "Rest, rest, rest. Apparently that\'s my whole job now."',
+    birth: 'She called, hoarse. "Well. That was something else. She\'s here."',
+    postpartum: 'She messaged before dawn. "Awake again. She has no respect for schedules."',
+    returned: 'She rang from the courts. "I\'ve missed this. Annoyingly."',
   },
   quiet: {
-    announced: 'She said it plainly, at the table, and then asked about our week.',
-    early: 'She called briefly. "Nothing in the calendar. Strange, but fine."',
+    announced: 'On a visit, she said it plainly, then asked about everyone else.',
+    early: 'She called briefly. "Nothing on the calendar. Strange. Fine."',
     mid: 'She rang on her way home. "Walked the long way. All quiet."',
-    last: 'She called, unhurried. "Not long. I stopped counting out loud."',
-    birth: 'She rang once, early. "She is here. I will call properly tomorrow."',
+    last: 'She called. "Not long. I stopped counting out loud."',
+    birth: 'She rang once, early. "She\'s here. I\'ll call properly when I can."',
     postpartum: 'She called while the house was still. "Mostly sleeping. Mostly her."',
-    returned: 'She rang after practice. "Hit for an hour. Nearly like it used to be."',
+    returned: 'She rang after practice. "Hit today. Strange to be saying that again."',
   },
   deep: {
-    announced: 'She told us in her own time, late on. "I wanted to be sure first."',
-    early: 'She called, late. "The season carries on. That bothers me less than I thought."',
-    mid: 'She rang, thoughtful. "I think about what I will tell her about this."',
-    last: 'She called after dark. "It is close now. I have been sitting with that."',
-    birth: 'She rang, steady. "She is here. I do not know what I feel yet."',
-    postpartum: 'She called before the house woke. "Some mornings I just sit."',
-    returned: 'She rang from the road. "I am a different player. I want to meet her."',
+    announced: 'She rang, late. "I wanted to be sure first."',
+    early: 'She called late. "The season carries on. That bothers me less than I thought."',
+    mid: 'She rang. "One day she\'ll ask. I don\'t know what I\'ll say."',
+    last: 'She called after dark. "Soon, then. I haven\'t found the words for that."',
+    birth: 'She called. "She\'s here. I don\'t know what I feel yet."',
+    postpartum: 'She called before the house woke. "Some mornings I just sit with her."',
+    returned: 'She rang from the road. "I don\'t know this player yet. I want to."',
   },
 }
 
@@ -859,8 +859,16 @@ const MOTHERHOOD_VOICES: readonly WeekNote[] = (
 ).flatMap((t) =>
   (Object.keys(MOTHERHOOD_WORDS[t]) as MotherhoodBand[]).map((band) => ({
     text: MOTHERHOOD_WORDS[t][band],
-    claims: { notTravellingWeek: true, motherhood: band } as WeekClaims,
-    license: (f: DiaryFacts) => plainTraining(f) && f.motherhoodBand === band && voiceOf(t)(f),
+    // ⭐⭐⭐ HIS REVIEW OF 21.09, FINDING 1 – THE MOOD GATE, and it is the composition law being
+    // obeyed rather than a new rule: «temperament определяет форму, Spirit — регистр, Bond — канал».
+    // These 28 are written in a voice that is not LOW – «oddly happy about it», «I've missed this»,
+    // «I want to» – so a heavy week must not be able to select one, and a bright week must not be
+    // able to put «some mornings I just sit» in a `deep` girl's mouth. `levelWeek` is the pool's own
+    // spelling for «not low», and it costs no second corpus: on a low week HIS EIGHT carry the band,
+    // exactly as the flat pool carries every other band at `strained`.
+    claims: { notTravellingWeek: true, motherhood: band, register: 'level' } as WeekClaims,
+    license: (f: DiaryFacts) =>
+      plainTraining(f) && levelWeek(f) && f.motherhoodBand === band && voiceOf(t)(f),
   })),
 )
 
