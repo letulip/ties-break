@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 120 dated entries, newest 2026-09-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 121 dated entries, newest 2026-09-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 9 | [WAVE 8 OPENED ON HIS GO, AND EIGHT DESIGN QUESTIONS RULED IN TWO PASSES](#20092026--wave-8-opened-on-his-go-and-eight-design-questions-ruled-in-two-passes) | 2026-09-20 |
+| general | 10 | [WAVE 9 OPENS AND SHIPS: THE CHILD, AND THREE THINGS THAT TURNED OUT SMALLER THAN THE BRIEF](#21092026--wave-9-opens-and-ships-the-child-and-three-things-that-turned-out-smaller-than-the-brief) | 2026-09-21 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -4990,3 +4990,33 @@ Reading the wave's questions file he ruled the review batch in one sentence – 
    cuts of 16.08 – and it is the one place that rule runs against the real tour, where the 1000s are
    mandatory for the top ten. Nothing moved. Arm 7 closed the last lever: a coached career reaches
    **96–98% of her own headroom by about twenty-two**, so the ceiling ROLL binds, not the growth.
+
+## 21.09.2026 – WAVE 9 OPENS AND SHIPS: THE CHILD, AND THREE THINGS THAT TURNED OUT SMALLER THAN THE BRIEF
+
+His go was one sentence – «коммить спеку в ветку и запускай пошагово всё без спешки и без
+остановок» – on the wave-9 brief he had just ruled five items of. What shipped, and where the
+shipped shape differs from the drafted one:
+
+1. **The family wallet never feels the child** – «думаю, что нет, это её ребенок». The drafted
+   weekly cost line (T1) was WITHDRAWN, not shrunk. With the wedding's price removed and the birth
+   shipped without a fee, this branch now moves the parent's money exactly zero times, which sits on
+   the seam round 23 #18 already built: her prize share is hers from eighteen, and the child is on
+   the same side of that line.
+2. **The travel calculus is `spirit` and not money** – his ruling, and the road is read from the
+   seam that already answers it (the friends tile's band, which spouse-view's `road-stretch` also
+   reads). ⚠ Measured at a MEDIAN 96 of the 156 «small» weeks paid – the wave's largest drafted
+   number by effect, and his to rule with that figure in front of him.
+3. **The repeat pregnancy replaced the scope brake rather than deleting it** – wave 8's own clause
+   said W5 would, in those words. The second child has his digest's own later window and lower rate
+   (28–38, 1–2%/yr) and a count factor so a third stays rare; there is NO CAP, by his ruling
+   («пусть решает арифметика»).
+4. **⭐ The resilience bonus is ROOM, not a gift, and it cost no schema move.** It raises her
+   composure CEILING – round 42 #35's shape, re-used – so ordinary development climbs into it, and
+   it is DERIVED from `world.children`, which cannot be applied twice. The brief had drafted an
+   appended field and a v86; neither was needed. ⚠ The ceiling shape was chosen on arm 7's
+   measurement (a coached career reaches 96–98% of her headroom by twenty-two, and the first child
+   arrives at 24+), not on taste.
+5. **The wedding bench's independence arm was healed, and the prediction that asked for it was
+   corrected**: the fold was genuinely wrong, but its own career reaches «no latch» in 912 weeks, so
+   it would not have mis-reported yet. The law now compares `rngMain` alone; funds and condition are
+   reported beside it.
