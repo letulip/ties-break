@@ -5470,6 +5470,29 @@ export const ECONOMY = {
      *  shape (refuse only while the freeze has entries left) is written up there rather than chosen
      *  here. */
     repeatCooldownWeeks: 52,
+    /** ⭐⭐⭐ W5/T5 – «PRIORITIES SHIFT», AS ROOM RATHER THAN AS A GIFT. The research digest's one
+     *  PERMANENT effect («possible permanent mental-resilience bonus after the return») and the only
+     *  skill-adjacent number this whole branch is allowed to touch – which is why it ships with a
+     *  bench and a spec row (invariant 5) and at a drafted value.
+     *
+     *  ⚠⚠ IT RAISES HER COMPOSURE **CEILING** AND NEVER HER COMPOSURE, and that shape is round 42
+     *  #35's, re-used rather than re-invented: the psychologist's years already buy room above a
+     *  rolled ceiling and ordinary development climbs into it. Three things follow that a raw bump
+     *  could not give – she EARNS it week by week rather than receiving it, it cannot overshoot, and
+     *  it composes with the seat's own bonus without either one needing to know about the other.
+     *
+     *  ⚠⚠ AND THE CEILING IS THE ONLY SHAPE THAT WORKS AT ALL, which is a measurement and not a
+     *  preference: wave 8b's arm 7 walked careers and found a coached one reaching **96–98% of her
+     *  own headroom by about twenty-two** (`docs/research/the-unclosable-head-2026-09.md` §7), and
+     *  the first child arrives at 24+. A bonus clamped to her rolled ceiling would therefore be worth
+     *  almost nothing to almost everybody; room ABOVE it is worth exactly what she then trains into.
+     *
+     *  ⚠ PER CHILD AND DERIVED FROM `world.children`, so nothing is persisted, nothing can be applied
+     *  twice, and a second child adds its own room – with `returnPoiseMax` as the cap so a large
+     *  family cannot become a composure strategy. */
+    returnPoiseCeiling: 1.5,
+    /** The cap on the above, whatever the family's size. Drafted at two children's worth. */
+    returnPoiseMax: 3,
     smallFirstHoldWeeks: 26,
     comebackStages: [
       // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries

@@ -460,6 +460,15 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'repeatCooldownWeeks',
         'repeatCountFactor',
         'repeatPerWeekByAge',
+        // ⚠ RE-AIMED 21.09 BY WAVE 9's T5, and this pair is the closest the guard has come to a real
+        // catch: `returnPoiseCeiling` and `returnPoiseMax` are the only skill-adjacent numbers this
+        // branch has. They are still not success rates – they raise her composure CEILING
+        // (`motherhoodPoiseOf`, `engine/development.ts`), which ordinary development then climbs
+        // into, and nothing reads them to decide whether a comeback worked. ⚠ What they DO need, and
+        // have, is a bench and a spec row: invariant 5, because a skill number is exactly the kind of
+        // thing this guard cannot check.
+        'returnPoiseCeiling',
+        'returnPoiseMax',
         'returnSupportShift',
         // ⚠⚠ RE-AIMED 21.09 BY HIS HOLD RULING, and once again the guard did its job: a key joined
         // the block and somebody had to look at it and say whether it is a success rate. IT IS NOT.
