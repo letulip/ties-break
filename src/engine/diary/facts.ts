@@ -168,17 +168,22 @@ export const MEMORY_EMOTION: Record<MilestoneType, MemoryFace> = {
   // ⚠⚠ THE WEDDING'S REPAIR IS THE WHOLE ARGUMENT, READ FORWARD. `'happy'` is her ordinary adult
   // face – that is what the 18.09 repair above established – so a `'happy'` polaroid of the week her
   // daughter was born would show a girl with a trophy, which is the same defect one moment over.
-  // THERE IS NO BIRTH PAINTING: `FACE_BANDS` holds exactly one moment-face (`bride`), cut for the
-  // wedding the 11.09 ruling gated the branch on, and nothing on disk answers a birth. So the honest
-  // pick is the app's own honest answer where a moment has no picture – `norm`, the neutral stage
-  // portrait, which is literally what `paintedFaceFor` falls back to.
-  // ⚠ `school`'s ROW IS THE PRECEDENT AND ITS SENTENCE IS THE REASON: «a grin on the polaroid would
-  // be the game telling her how to feel». A birth week is also the week the postpartum shock lands
-  // (`landBirth`, world/lifeBeat.ts §14) – −24/−37.5 of spirit – so a smile is the one face the
-  // arithmetic of the same week actively contradicts.
-  // ⚠ IF A BIRTH PAINTING IS EVER CUT, this is a one-word change plus a `FACE_BANDS` row – T10 owns
-  // the portraits and it is HIS call, not a builder's (who-she-is §5a).
-  birth: 'norm',
+  // ⭐⭐⭐ WAVE 8b T5 (E1) – **THE BIRTH PAINTING EXISTS NOW AND THIS ROW IS ITS ONE-WORD CHANGE.**
+  // Wave 8 shipped `'norm'` here and the paragraph below is its reason, kept verbatim because it is
+  // the record of a question that got an answer: «THERE IS NO BIRTH PAINTING: `FACE_BANDS` holds
+  // exactly one moment-face (`bride`), cut for the wedding the 11.09 ruling gated the branch on, and
+  // nothing on disk answers a birth. So the honest pick is the app's own honest answer where a moment
+  // has no picture – `norm`, the neutral stage portrait, which is literally what `paintedFaceFor`
+  // falls back to. ⚠ IF A BIRTH PAINTING IS EVER CUT, this is a one-word change plus a `FACE_BANDS`
+  // row – T10 owns the portraits and it is HIS call, not a builder's (who-she-is §5a).»
+  // He commissioned it; `fem-euro-brunnet-adult-birth.webp` is on disk; the change is the one word
+  // and the one row that sentence predicted, and nothing else moved.
+  // ⚠ `school`'s ROW IS THE PRECEDENT AND ITS SENTENCE IS STILL THE REASON THIS IS NOT `'happy'`:
+  // «a grin on the polaroid would be the game telling her how to feel». A birth week is also the week
+  // the postpartum shock lands (`landBirth`, world/lifeBeat.ts §14), so a smile is the one face the
+  // arithmetic of the same week actively contradicts. ⭐ THE PAINTING ITSELF IS NOT A GRIN – she is
+  // looking down at the child – which is why it can be the honest face where `happy` could not.
+  birth: 'birth',
 }
 
 // --- the facts ------------------------------------------------------------------------------

@@ -141,6 +141,13 @@ export const CROPS: Record<string, [number, number, number]> = {
   //     the floor of the measured 124-182 spread;
   //   `pregnant-last`  – she is seated and the whole frame sits higher; the head spans y~65-153,
   //     giving (255, 108) and 1.5x the ~88px head = 132.
+  // ⭐ THE BIRTH PAINTING (wave 8b T5, E1) – the FIFTH entry that is not a band x face, and the
+  // bride's shape exactly: one file, `adult` alone, painting-only for the cutter. ⚠ THE RECTANGLE IS
+  // THE BUILDER'S and was read off a labelled 64px grid over the painting, which is this table's own
+  // documented method, then verified by cutting it and looking: her face centres at (292, 172) and
+  // her head measures ~110px hairline to chin, so the side is 1.5 x that = 164 - inside the set's
+  // measured 124-182 spread and beside the bride's own 155.
+  'adult-birth': [292, 172, 164],
   'adult-pregnant-early': [258, 120, 128],
   'adult-pregnant-last': [255, 108, 132],
 }
@@ -173,11 +180,16 @@ export const CROPS: Record<string, [number, number, number]> = {
  *  one of these suffixes, so a rectangle added without a line here would put
  *  `avatars/adult-pregnant-early.webp` on the cutter's list, which is a file nothing can request and
  *  nobody painted. The suffix form is what makes that work: the stems end `-pregnant-early` and
- *  `-pregnant-last`, so the two names here are the two faces and not the two stems. */
+ *  `-pregnant-last`, so the two names here are the two faces and not the two stems.
+ *
+ *  ⚠ AND `birth` JOINED ON 21.09 (wave 8b T5) for `bride`'s reason exactly, one wave on: one file in
+ *  one band, riding `MemoryFace` so the engine can point a milestone at it, with no crop and no
+ *  builder that could ask for one. The literal grows to six. */
 export const PAINTING_ONLY_FACES: readonly string[] = [
   'rehab',
   'graduated',
   'bride',
+  'birth',
   'pregnant-early',
   'pregnant-last',
 ]

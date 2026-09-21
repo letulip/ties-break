@@ -88,9 +88,17 @@ export type PortraitEmotion = AvatarEmotion | 'rehab'
 // nowhere – so widening its `emotion` costs no `SAVE_SCHEMA_VERSION` bump and no migration. Checked
 // before it was assumed: there is no `'bride'` and no memory-card shape anywhere under `src/db`.
 
-/** ⭐ THE FACES A MEMORY POLAROID CAN WEAR: the painted eight, plus a painting that belongs to one
- *  MOMENT rather than to a mood. See the note above for why this is a union of its own. */
-export type MemoryFace = PortraitEmotion | 'bride'
+/** ⭐ THE FACES A MEMORY POLAROID CAN WEAR: the painted eight, plus the paintings that belong to one
+ *  MOMENT rather than to a mood. See the note above for why this is a union of its own.
+ *
+ *  ⭐⭐⭐ `'birth'` JOINED AT WAVE 8b T5 (E1), AND IT IS THE BRIDE'S SHAPE WITH NOTHING ADDED. Wave 8
+ *  shipped `MEMORY_EMOTION.birth` as `'norm'` with the reason written at the pick – «there is no
+ *  birth painting, `FACE_BANDS` holds exactly one moment-face» – and E1 asked him whether he wanted
+ *  one. He commissioned it. So the seam the bride's own note predicted («the next one-band painting
+ *  that arrives needs exactly this seam, and a branch would have to be found and edited instead of a
+ *  row being added») is used for the first time, and NOT ONE BRANCH was edited: a union member, a
+ *  `FACE_BANDS` row, a `CROPS` rectangle and a cutter skip-list entry. */
+export type MemoryFace = PortraitEmotion | 'bride' | 'birth'
 
 /** ⭐ WHICH BANDS EACH FACE IS ACTUALLY PAINTED FOR. Absent from this table ⇒ all five, which is
  *  every face of `PORTRAIT_EMOTIONS` and is what makes the matrix a matrix.
@@ -100,6 +108,11 @@ export type MemoryFace = PortraitEmotion | 'bride'
  *  edited instead of a row being added. */
 export const FACE_BANDS: Partial<Record<MemoryFace, readonly PortraitStage[]>> = {
   bride: ['adult'],
+  // ⭐ wave 8b T5 (E1) – the second one-band moment-face, and the row this table's own header said
+  // the next arrival would need. `fem-euro-brunnet-adult-birth.webp`; every other band falls back to
+  // its own `norm` through `paintedFaceFor`, exactly as the bride does, and the four absences are
+  // swept against disk in `tests/portrait-bands.test.ts`.
+  birth: ['adult'],
 }
 
 /** ⭐⭐ THE HONEST FALLBACK, AND IT IS EXPLICIT BECAUSE THE ALTERNATIVE IS A 404.

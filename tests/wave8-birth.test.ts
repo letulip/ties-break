@@ -85,6 +85,7 @@ import {
 } from '../src/engine/world'
 import { accrueSpirit } from '../src/engine/spirit'
 import { MEMORY_EMOTION } from '../src/engine/diary'
+import { paintedStemFor } from '../src/shared/avatarEmotion'
 import { rngFromSeed } from '../src/engine/rng'
 import type { LoveEpisode } from '../src/shared/protocol'
 import type { PregnancyState } from '../src/engine/world/state'
@@ -287,12 +288,20 @@ describe('wave 8 T4 B – ONE kept feed row and ONE album entry, through the mil
     expect(world.milestones.length, 'nor the album entry').toBe(milestones)
   })
 
-  it('⚠ the album entry wears a face, and it is the composed one – `norm`, the builder\'s draft', () => {
-    // A total record forced it (`MEMORY_EMOTION` is `Record<MilestoneType, MemoryFace>`), so the pick
-    // is pinned where the argument for it lives. `school`'s own sentence is the ground: a grin on the
+  it('⭐⭐⭐ WAVE 8b T5 – the album entry wears the BIRTH PAINTING, which is the change wave 8 predicted', () => {
+    // This case pinned `'norm'` and carried its own repair: «If a birth painting is ever cut, this is
+    // T10's one-word change and HIS call.» E1 put that question to him, he commissioned the painting,
+    // and `fem-euro-brunnet-adult-birth.webp` is on disk – so the one word moved and nothing else did.
+    // ⚠ IT IS STILL NOT `'happy'`, and `school`'s own sentence is still the ground: a grin on the
     // polaroid would be the game telling her how to feel, and this is also the week the postpartum
-    // mark lands. If a birth painting is ever cut, this is T10's one-word change and HIS call.
-    expect(MEMORY_EMOTION.birth).toBe('norm')
+    // mark lands. The painting is not a grin – she is looking down at the child – which is precisely
+    // what lets it be the honest face where `'happy'` could not be.
+    expect(MEMORY_EMOTION.birth).toBe('birth')
+    // ...and the seam really answers for it: `adult` draws the painting, every other band falls back
+    // to its own `norm` rather than naming a file that is not there. The full sweep and the four
+    // absences are `tests/portrait-bands.test.ts`' own block; this is the receipt at the pick.
+    expect(paintedStemFor('adult', MEMORY_EMOTION.birth), 'the adult band draws it').toBe('adult-birth')
+    expect(paintedStemFor('lateCareer', MEMORY_EMOTION.birth), 'and a birth at 31 falls back').toBe('lateCareer-norm')
   })
 })
 
