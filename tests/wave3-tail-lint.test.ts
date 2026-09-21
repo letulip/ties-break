@@ -17,7 +17,7 @@
 // is that this file knows a path; the ARM below is what keeps that honest.
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { BANNED_TAILS, narrationOf } from './helpers/bannedTails'
+import { BANNED_TAILS, TAIL_EXEMPT_LINES, narrationOf, tailExempt } from './helpers/bannedTails'
 
 // ⚠⚠ TWO FILES SINCE ROUND 44, AND THE SECOND ONE IS WHY THIS IS A LIST. The ban is about the LIFE
 // LAYER's player-facing strings, and round 44 moved 817 of them into a generated module one file
@@ -76,6 +76,10 @@ describe('the narrator-tail ban reaches every life pool, not just the week notes
 
     const found: string[] = []
     for (const text of literals) {
+      // ⚠ THE OWNER'S OWN EXEMPTIONS COME OUT HERE AND NOWHERE ELSE (wave 8b C5). Filtered at the
+      // COLLECTION point rather than at the assertion, so the count below still says «exactly the
+      // known violations» about the rows the lint is actually responsible for.
+      if (tailExempt(text)) continue
       const narration = narrationOf(text)
       for (const tail of BANNED_TAILS) {
         if (narration.includes(tail)) found.push(text)
@@ -85,6 +89,53 @@ describe('the narrator-tail ban reaches every life pool, not just the week notes
     expect(unexpected, 'a banned narrator tail reached a life string').toEqual([])
     // ...and the baseline may not grow by accident.
     expect(new Set(found).size, 'exactly the known violations, no more').toBe(KNOWN_VIOLATIONS.length)
+  })
+
+  // ===============================================================================================
+  // ⚠⚠ THE EXEMPTION'S OWN NET (wave 8b C5) – an exemption that disables the guard is the defect
+  // ===============================================================================================
+  //
+  // His ruling of 21.09 carved P17 out of the ban. Three things have to stay true for that carve-out
+  // to be a carve-out rather than a hole, and each one is a case below:
+  //   1. the exempted row REALLY trips – otherwise the exemption is dead code that proves nothing
+  //      and the day the copy changes nobody learns the guard stopped mattering;
+  //   2. a SECOND row carrying the SAME banned tail still trips – the exemption is per ROW, never
+  //      per TAIL;
+  //   3. the exempted sentence is really the one in the tree – so the copy and its exemption cannot
+  //      drift apart in silence.
+  it('⭐⭐⭐ the exempted row really trips the lint – so the exemption is doing work', () => {
+    // ⚠ WITHOUT THIS THE WHOLE CARVE-OUT IS UNFALSIFIABLE. A row that was never a violation would
+    // sit on the list for ever, and a later edit that made it innocent would look identical.
+    const exempt = TAIL_EXEMPT_LINES[0]
+    const narration = narrationOf(exempt)
+    expect(BANNED_TAILS.filter((t) => narration.includes(t)), 'P17 carries the tail the ruling is about')
+      .toEqual(['nothing more'])
+    expect(tailExempt(exempt), '...and it is the row he exempted').toBe(true)
+  })
+
+  it('⭐⭐⭐ A SECOND ROW WITH THE SAME TAIL STILL TRIPS – the exemption is per ROW, not per TAIL', () => {
+    // ⚠ THE SWEEP'S OWN PREDICATE, RE-RUN OVER A TWO-ROW SYNTHETIC POOL, so this measures the thing
+    // the file does rather than a paraphrase of it. One row is the exempted sentence; the other is a
+    // sibling carrying the identical banned tail. Exactly one may come back.
+    const sibling = 'She said nothing more about the week after that.'
+    const pool = [TAIL_EXEMPT_LINES[0], sibling]
+    const found: string[] = []
+    for (const text of pool) {
+      if (tailExempt(text)) continue
+      const narration = narrationOf(text)
+      for (const tail of BANNED_TAILS) if (narration.includes(tail)) found.push(text)
+    }
+    expect(found, 'the guard is live for every row but the one he named').toEqual([sibling])
+  })
+
+  it('⚠ the exempted sentence is the one actually in the tree – copy and exemption cannot drift', () => {
+    // A whole-string exemption re-arms itself the moment the copy is edited, and that property is
+    // only worth having if somebody checks the two still match. This is that check.
+    const literals = SOURCES.flatMap((path) => literalsOf(readFileSync(path, 'utf8')))
+    for (const exempt of TAIL_EXEMPT_LINES) {
+      expect(literals, `the exempted row «${exempt}» is no longer in the pool – re-read the ruling`)
+        .toContain(exempt)
+    }
   })
 
   it('⚠ the ban is on the NARRATOR, never on her own words inside quotation marks', () => {

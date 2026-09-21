@@ -51,13 +51,31 @@ import type { CareerMoney, CareerTotals, WorldMatch } from './events'
  *              is FALLING APART – which is a different story and one the natural end should not be
  *              telling.» This is that story.
  *
+ *  ⭐⭐⭐ WAVE 8 – THE NINTH, AND IT IS THE FIRST ONE THE PRIVATE-LIFE LAYER HAS EVER ADDED
+ *  (`docs/plans/life-wave-8-builder-2026-09.md` §2 T5; the name is RULED 20.09 – «мне здесь не
+ *  принципиально» – so `'family'` is the draft standing, not a builder's pick).
+ *
+ *    `'family'`  she had a child and did not go back. The pregnancy's own decision window runs
+ *                `ECONOMY.motherhood.decisionWeeksAfterBirth` weeks past the birth and ONE draw
+ *                decides whether she tries (`resolveReturnDecision`, `world/endings.ts`); this is
+ *                the other arm of it. ⚠ IT IS HERS AND NOBODY IS ASKED – round 45's two doors are
+ *                the precedent and the shape: the parent is told, not offered a question.
+ *                `resumesWeek: null` – there is nothing on the other side of it to come back to.
+ *
  *  ⚠⚠ WIDENING THIS UNION IS FREE FOR SAVES AND DELIBERATELY NOT FREE FOR CODE, and the second half
  *  is the point. `engine/saveGuard.ts` does not mention `ending` and no migration touches
  *  `ending.type`, so nothing validates the field on load and no old save can hold a new value – no
- *  schema move. But three TOTAL records are keyed on this union – `ENDING_BLURB` and `ENDING_TITLE`
- *  (`engine/ending.ts`) and `EMOTION_BY_ENDING` (`world/album.ts`) – so a seventh or eighth ending
- *  goes RED until its blurb, its title and her face are written. ⭐ A new ending cannot ship
- *  without its copy, enforced by the compiler rather than by anybody remembering. */
+ *  schema move. But FOUR TOTAL records are keyed on this union – `ENDING_BLURB` and `ENDING_TITLE`
+ *  (`engine/ending.ts`), `EMOTION_BY_ENDING` (`world/album.ts`) and `ALBUM_CLOSING_FAMILY`
+ *  (`world/albumBook.ts`) – so a ninth or tenth ending goes RED until its blurb, its title, her face
+ *  and the family its last page speaks in are all written. ⭐ A new ending cannot ship without its
+ *  copy, enforced by the compiler rather than by anybody remembering.
+ *
+ *  ⚠ THE COUNT SAID **THREE** UNTIL WAVE 8 AND HAD BEEN WRONG SINCE THE ALBUM WAVE, which added the
+ *  fourth record and did not come back to this sentence. Corrected in place with the number rather
+ *  than softened to a vague word – CLAUDE.md's own «count it, do not quote it», whose corollary is
+ *  that a stale number is repaired rather than deleted. The check that it is still four is one line:
+ *  `grep -rn "Record<CareerEndingType" src/`. */
 export type CareerEndingType =
   | 'stopped'
   | 'college'
@@ -67,6 +85,7 @@ export type CareerEndingType =
   | 'plateau'
   | 'peak'
   | 'fall'
+  | 'family'
 
 export interface CareerEnding {
   type: CareerEndingType
@@ -76,7 +95,13 @@ export interface CareerEnding {
   ageYears: number
   /** one short line of specifics: the layoff, the debt spell, the seasons flat. Never a verdict. */
   detail: string
-  /** COLLEGE ONLY: the week she comes back. Null on the five that do not resume. */
+  /** COLLEGE ONLY: the week she comes back. Null on the **eight** that do not resume.
+   *
+   *  ⚠ THE COUNT WAS «five» UNTIL WAVE 8 AND WAS ALREADY WRONG AT SEVEN – `'peak'` and `'fall'`
+   *  arrived in round 45 after this sentence was written, and `'family'` is the ninth member. Fixed
+   *  in place with the number, for the reason `CareerEndingType`'s own block states one type up: a
+   *  stale count is corrected rather than softened into «the others», because the number is the only
+   *  part of the sentence a reader can check. Nine members, one resumes, eight are null. */
   resumesWeek: number | null
 }
 

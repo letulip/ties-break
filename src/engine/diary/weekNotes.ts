@@ -12,7 +12,7 @@ import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
 // ⭐ R2-09: the noun moved to an engine leaf; the FACTS shape is still the wire's (see the cycle
 // note in world/birthdayGift.ts – this module is inside world/birthday.ts's own import closure).
 import { BIRTHDAY_DAY_NOUN } from '../world/birthdayGift'
-import type { DiaryFacts, DiaryLifeStage, MoodRegister } from '../../shared/protocol'
+import type { DiaryFacts, DiaryLifeStage, MoodRegister, MotherhoodBand } from '../../shared/protocol'
 // ⭐ v72: who she is, type-only – the four ids and their physics live in engine/spirit.ts.
 import type { Temperament } from '../spirit'
 import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof } from './words'
@@ -221,6 +221,24 @@ export interface WeekClaims {
    *  key, the standing Sunday – and nothing further: no address, no rent, no mechanic (backlog
    *  §8's boundary). */
   ownKey?: true
+  /** ⭐⭐⭐ wave 8b T2 (C6) – ASSERTS WHICH BAND OF THE MOTHERHOOD ARC THIS WEEK IS IN, by naming it.
+   *  A VALUED claim (`bodyGroup` and `rail` are the precedent), because seven bands and one boolean
+   *  would make every line's claim the same sentence: unselectable unless
+   *  `f.motherhoodBand === <value>`, and `HOLDS.motherhood` re-derives that off the fact.
+   *
+   *  ⚠⚠ WHAT A LINE CARRYING IT MAY SAY, AND WHY IT IS SO LITTLE. Where in the arc the week is, and
+   *  what the parent could WATCH. It may NOT name or gender the one she married – §0's decoupling
+   *  ruling, and here that is load-bearing rather than polite: a marriage may end mid-term and every
+   *  band still fires, so a line that mentioned him would be false on exactly the careers the ruling
+   *  exists to protect. `tests/week-notes.test.ts` walks the band and refuses any line that does.
+   *  It may not carry a figure, a meter or a due date, and it may not state her interior as fact –
+   *  the fallible-parent law, unchanged since wave 4's break-up band. */
+  motherhood?: MotherhoodBand
+  /** ⭐⭐ wave 8b T2 (C6) – ASSERTS THE PARENT ANSWERED THE ANNOUNCEMENT WARMLY, and asserts nothing
+   *  else. Unselectable unless `f.motherhoodSupport === 'warm'`; `HOLDS.warmSupport` re-derives it
+   *  off the fact. ⚠ IT RIDES WITH A `motherhood` CLAIM AND NEVER ALONE: the grade is persisted for
+   *  the whole pregnancy, so on its own it would license a warm line on any week of the arc. */
+  warmSupport?: true
 }
 
 export interface WeekNote {
@@ -1613,6 +1631,77 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'She has her own front door now. The spare key went onto our hook.',
     claims: { notTravellingWeek: true, ownKey: true },
     license: (f) => plainTraining(f) && f.ownKeyWeek,
+  },
+  // ===============================================================================================
+  // ⭐⭐⭐ WAVE 8b T2 (C6) – THE MONTHS SHE IS AWAY, AND THE ONES AFTER
+  // ===============================================================================================
+  //
+  // THE BAND THE WAVE-8 HAND-BACK SAID WAS NOT BUILT. «The diary half of T3's pregnancy texture» was
+  // one of two things the brief asked for and did not ship, stated rather than quietly dropped, and
+  // his word of 21.09 is what makes it this batch's. EIGHT LINES, ALL PASSED BY HIM IN SESSION –
+  // they are not drafts, and invariant 4 now binds the other way: nobody re-words them unasked.
+  //
+  // ⚠⚠ THIS BAND IS `motherhoodBand`'s CONSUMING LICENCE and it ships in the same task as the fact
+  // and as `HOLDS.motherhood` – R2-18's law, which the four bands above kept before it.
+  //
+  // ⚠⚠ **HUSBAND-AGNOSTIC BY TEST AND NOT BY HABIT** (§0's decoupling ruling, «развелись и развелись,
+  // жизнь продолжается»). A mid-pregnancy divorce is ordinary life: the record reads `world.pregnancy`
+  // and nothing else, every band still fires, and the birth fires anyway – so a line naming him would
+  // be false on exactly the careers that ruling exists to protect. `tests/week-notes.test.ts` walks
+  // this band and refuses any line that names a partner, which is the acceptance criterion rather
+  // than a note.
+  //
+  // ⚠ NO PER-TEMPERAMENT VARIANTS IN THIS BATCH. The spoken-moment cross is 44 entries wide and a
+  // four-voice pregnancy band would be 32 more; W5's, on the record, not dropped.
+  //
+  // ⚠ NO FIGURE, NO METER, NO DUE DATE. The band may say where in the arc the week is and what the
+  // parent could watch – the pause's own «names no date» discipline, one surface over.
+  //
+  // ⚠ LICENSED ON `plainTraining` LIKE THE FOUR BANDS ABOVE, so a layoff, a knock and a holiday keep
+  // their own words and `weekNoteFor`'s coin rations these exactly as it rations the rest.
+  {
+    text: 'She said it plainly, over breakfast, and the kitchen went quiet in the good way.',
+    claims: { notTravellingWeek: true, motherhood: 'announced' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'announced',
+  },
+  {
+    text: 'The rackets are still by the door. Nobody has moved them, and nobody says why.',
+    claims: { notTravellingWeek: true, motherhood: 'early' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'early',
+  },
+  {
+    text: 'She walks the long way to the market now and counts the weeks out loud.',
+    claims: { notTravellingWeek: true, motherhood: 'mid' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'mid',
+  },
+  {
+    text: 'She stopped at the court by the school today and watched a whole set through the fence.',
+    claims: { notTravellingWeek: true, motherhood: 'last' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'last',
+  },
+  {
+    text: 'The house is louder and quieter at once. I have not slept and I do not mind.',
+    claims: { notTravellingWeek: true, motherhood: 'birth' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'birth',
+  },
+  {
+    text: 'Some mornings she is at the window before the baby wakes, looking at nothing we can see.',
+    claims: { notTravellingWeek: true, motherhood: 'postpartum' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'postpartum',
+  },
+  // ⚠⚠ THE ONE LINE IN THE BAND WITH A SECOND GATE, and it is the gate this task mutation-verified.
+  // `warm` is the grade he bought with the `joy` answer eleven months earlier; the line is a scene
+  // only a warm house produces, so it may not be selectable at `measured` or `cold`. Drop the
+  // `warmSupport` half of the licence and `HOLDS.warmSupport` goes red by name.
+  {
+    text: 'She asked me to hold the little one while she stretched. Ten minutes, an old routine, and she was humming.',
+    claims: { notTravellingWeek: true, motherhood: 'postpartum', warmSupport: true },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'postpartum' && f.motherhoodSupport === 'warm',
+  },
+  {
+    text: 'The bag is packed again. Smaller than it used to be, and there are two of everything now.',
+    claims: { notTravellingWeek: true, motherhood: 'returned' },
+    license: (f) => plainTraining(f) && f.motherhoodBand === 'returned',
   },
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //

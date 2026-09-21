@@ -813,9 +813,15 @@ describe('⭐⭐ the four scenarios: a sentence is only printed where its own fa
     expect(sheet!.note!.dateLabel, 'never to the week the money left').not.toBe(weekSpan(ordered))
   })
 
-  it('4 · all eight endings yield admissible closing sheets – and a college latch closes nothing', () => {
+  // ⚠ RE-AIMED 8 → 9 BY v85's T5 (`'family'`), AND THE PIN IS A COUNT ON PURPOSE. It is derived from
+  // `ENDING_BLURB`'s keys, so a new ending joins the SWEEP by existing; the number beside it is the
+  // second half – it says «somebody looked» when the union grew, which is the whole reason a derived
+  // sweep still carries a literal. Re-aimed with the argument rather than deleted, and the walk below
+  // really did run for `'family'`: it takes `ALBUM_CLOSING_FAMILY`'s `decision` row and closes on
+  // `career-ended` exactly as `stopped` does, with no new branch in the assembly.
+  it('4 · all nine endings yield admissible closing sheets – and a college latch closes nothing', () => {
     const types = Object.keys(ENDING_BLURB) as CareerEndingType[]
-    expect(types.length, 'the union the album must answer for').toBe(8)
+    expect(types.length, 'the union the album must answer for').toBe(9)
     for (const type of types) {
       expect(ALBUM_CLOSING_FAMILY[type], `${type}: every ending belongs to a family`).toBeDefined()
 

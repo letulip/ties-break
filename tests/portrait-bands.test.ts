@@ -194,7 +194,22 @@ describe('the art matrix is complete on disk', () => {
     // engine can point a milestone at it. It is painting-only in the sense the CUTTER cares about,
     // which is the only sense this list has. The containment claim above is untouched; the literal
     // grows by one, so a fourth arrival is still a deliberate edit rather than a silent one.
-    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['bride', 'graduated', 'rehab'])
+    // ⚠ RE-AIMED 20.09 BY THE PREGNANCY PAIR (v85 T10), in the same direction again and by two: two
+    // files in one band, `graduated`'s road exactly (their own builder, no union at all – the
+    // argument is in `shared/avatarEmotion.ts`). The containment claim above is still untouched,
+    // because neither is a `PortraitEmotion`; the literal grows to five.
+    // ⚠ RE-AIMED 21.09 BY THE BIRTH PAINTING (wave 8b T5, E1), in the same direction once more and
+    // by one: one file in one band, riding `MemoryFace` exactly as the bride does, so the engine can
+    // point the `'birth'` milestone at it. The containment claim is untouched - it is not a
+    // `PortraitEmotion` - and the literal grows to six.
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual([
+      'birth',
+      'bride',
+      'graduated',
+      'pregnant-early',
+      'pregnant-last',
+      'rehab',
+    ])
   })
 })
 
@@ -266,6 +281,63 @@ describe('the bride is painted for ONE band, and the other four fall back rather
     expect(paintedStemFor('lateCareer', 'bride')).toBe('lateCareer-norm')
   })
 
+  // ---------------------------------------------------------------------------
+  // ⭐⭐⭐ THE BIRTH – the SECOND one-band moment-face, and the seam's first re-use (wave 8b T5, E1)
+  //
+  // `fem-euro-brunnet-adult-birth.webp` is the painting he commissioned after E1 asked whether he
+  // wanted one. Wave 8 had shipped `MEMORY_EMOTION.birth = 'norm'` with the reason at the pick –
+  // «there is no birth painting» – and predicted its own repair: «IF A BIRTH PAINTING IS EVER CUT,
+  // this is a one-word change plus a `FACE_BANDS` row».
+  //
+  // ⚠⚠ THIS BLOCK IS THE BRIDE'S, RE-AIMED, AND THAT IS THE CLAIM. If the seam is real, a second
+  // one-band painting needs exactly the same four assertions and no new shape: the band that has the
+  // art keeps it, the other four fall back to their OWN `norm`, the files they refuse to name really
+  // are absent, and the url and the framing name one stem. A copy that needed a fifth kind of
+  // assertion would be evidence the seam was a branch in disguise.
+  // ---------------------------------------------------------------------------
+  it('⭐⭐⭐ `adult` draws the birth painting herself, and the other four fall back rather than 404', () => {
+    expect(paintedFaceFor('adult', 'birth'), 'the band that has the art keeps it').toBe('birth')
+    const url = strip(portraitUrl('adult', 'birth'))
+    expect(url).toBe('images/fem-euro-brunnet/fem-euro-brunnet-adult-birth.webp')
+    expect(existsSync(asset(url)), 'the painting really is on disk').toBe(true)
+    for (const stage of STAGES) {
+      if (stage === 'adult') continue
+      expect(paintedFaceFor(stage, 'birth'), `${stage} has no birth painting`).toBe('norm')
+      const u = strip(portraitUrl(stage, 'birth'))
+      expect(u, `${stage} must fall back to its OWN band`).toContain(`${portraitAssetStem(stage)}-norm`)
+      expect(existsSync(asset(u)), `the fallback file must exist: ${u}`).toBe(true)
+      // ...and the file it refuses to name really is absent, so the fallback cannot go quiet the day
+      // somebody paints four more without noticing this rule.
+      const rel = `images/fem-euro-brunnet/fem-euro-brunnet-${portraitAssetStem(stage)}-birth.webp`
+      expect(existsSync(asset(rel)), `${rel} should NOT exist`).toBe(false)
+    }
+  })
+
+  it('⭐⭐ the birth\'s URL and FRAMING name the same painting, and the framing knows the stem', () => {
+    // The bride's own arm one block up, and the reason is hers: Home's memory hero steers
+    // `object-position` off `facePoint`, which is keyed on the STEM, so a birth at thirty-one must
+    // not DRAW `lateCareer-norm` and FRAME it by a rectangle filed under `lateCareer-birth`.
+    for (const stage of STAGES) {
+      const stem = paintedStemFor(stage, 'birth')
+      expect(strip(portraitUrl(stage, 'birth')), `${stage}: the url is built from the stem`).toBe(
+        `images/fem-euro-brunnet/fem-euro-brunnet-${stem}.webp`,
+      )
+      expect(stem in CROPS_TABLE, `${stage}: the framing knows this stem`).toBe(true)
+    }
+    expect(paintedStemFor('adult', 'birth')).toBe('adult-birth')
+    expect(paintedStemFor('lateCareer', 'birth')).toBe('lateCareer-norm')
+  })
+
+  it('⚠ the birth is NOT in the band matrix and has no crop, exactly as the bride is not', () => {
+    expect(PAINTED as readonly string[], 'the matrix is the eight band faces').not.toContain('birth')
+    for (const stage of STAGES) {
+      expect(
+        existsSync(asset(`avatars/${portraitAssetStem(stage)}-birth.webp`)),
+        `${stage}-birth crop should NOT exist`,
+      ).toBe(false)
+    }
+  })
+
   it('⚠ it is NOT in the band matrix, and that is what keeps the sweeps above true', () => {
     // A member of `PORTRAIT_EMOTIONS` is warmed in every band by `preloadStage` and swept against
     // disk by the matrix tests up the file. The bride exists in one band, so it joins neither.
@@ -278,9 +350,21 @@ describe('the bride is painted for ONE band, and the other four fall back rather
         `${stage}-bride crop should NOT exist`,
       ).toBe(false)
     }
-    // ...so the cutter skips her, exactly as it skips the other two painting-only faces, and the
+    // ...so the cutter skips her, exactly as it skips the other painting-only faces, and the
     // number of stems it DOES cut is unchanged by her arrival.
-    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['bride', 'graduated', 'rehab'])
+    // ⚠ RE-AIMED 20.09 BY THE PREGNANCY PAIR (v85 T10) – see the twin pin up the file.
+    // ⚠ RE-AIMED 21.09 BY THE BIRTH PAINTING (wave 8b T5, E1), in the same direction once more and
+    // by one: one file in one band, riding `MemoryFace` exactly as the bride does, so the engine can
+    // point the `'birth'` milestone at it. The containment claim is untouched - it is not a
+    // `PortraitEmotion` - and the literal grows to six.
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual([
+      'birth',
+      'bride',
+      'graduated',
+      'pregnant-early',
+      'pregnant-last',
+      'rehab',
+    ])
   })
 })
 

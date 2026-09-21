@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 118 dated entries, newest 2026-09-18. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 120 dated entries, newest 2026-09-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,12 +35,12 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 8 | [WAVE 7 OPENED ON HIS GO, AND THE FOUR WEDDING QUESTIONS ANSWERED IN ONE PASS](#18092026--wave-7-opened-on-his-go-and-the-four-wedding-questions-answered-in-one-pass) | 2026-09-18 |
+| general | 9 | [WAVE 8 OPENED ON HIS GO, AND EIGHT DESIGN QUESTIONS RULED IN TWO PASSES](#20092026--wave-8-opened-on-his-go-and-eight-design-questions-ruled-in-two-passes) | 2026-09-20 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
+| process-and-git | 19 | [THE REVIEW PASS: THE STAIRCASE DENOMINATED, THE POSTPARTUM FLOOR, AND THE ALICE ARM](#21092026--the-review-pass-the-staircase-denominated-the-postpartum-floor-and-the-alice-arm) | 2026-09-21 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
@@ -4908,3 +4908,81 @@ wedding's memory now draws it. ⚠ It joins a third union (`MemoryFace`), not `A
 `PortraitEmotion`, the five-band matrix, because the bride is painted for one band. The band
 fallback is explicit and tested. No schema moved, no map lost its totality, and no new string was
 written.
+
+## 20.09.2026 – WAVE 8 OPENED ON HIS GO, AND EIGHT DESIGN QUESTIONS RULED IN TWO PASSES
+
+He opened the pregnancy-and-return wave with «ветка `life/wave-8` режется от свежего main …
+билдеры пойдут по T1→T11 с твоими гейтами между задачами», and closed every design question the
+brief had raised across two sittings, so the wave started with §3 at NONE.
+
+1. **The scope cut is W3+W4 now, W5 next** – «верно». The pregnancy fork and the return ship
+   together, because a return with no price is the one thing invariant 5 forbids pretending; the
+   child's ongoing texture is separately shippable.
+2. **BOTH outcomes ship** – «да, обе»: the return, and «she does not come back» as an ending in its
+   own right.
+3. **The child has a sex and it is a girl** – «пол нужен, но мальчиков у нас пока нет, можно сделать
+   заготовку, но пока будут только девочки». So the row carries `sex`, written LITERALLY `'girl'`,
+   with **zero draws** – a constant is not a draw – and `seed:life:birth:<episodeId>` reserved in
+   writing for the day boys exist.
+4. **The protected rank is 12 entries / 156 weeks** – «наверное да, у нас тоже были исследования»,
+   matching the real freeze his own digest records (3 years, since 2019, used by 50+ players).
+5. **The ending is named `'family'`** – «мне здесь не принципиально», so the drafted name stands.
+6. **Marriage is the door** – «это ок» on the architect's firm yes – and the census corridor
+   15–30% of latched careers stands – «и это ок».
+7. **⭐ The dynasty door NEVER closes on a childless career**: «я бы не стал закрывать эту дверь на
+   совсем. Может игрок хотел династию, но за время его игры ребенка просто не случилось … Просто
+   "роды случились после" – это тоже вариант». The census therefore prices the LIVED lineage, not
+   step 9's availability.
+8. **⭐ A mid-pregnancy divorce is ORDINARY LIFE, not a content branch**: «развелись и развелись,
+   жизнь продолжается, да, будут эмоциональные последствия, но в целом, ничего необычного». The
+   architect's drafted ×0 suppression died on this sentence, and the DECOUPLING law replaced it –
+   the birth and the decision read `world.pregnancy` and never the episode's aliveness, proven by a
+   structural pin that forbids the episode's own symbols inside those functions.
+
+The wave shipped as v85 with two new keys and a third added mid-wave; the record is
+[the handoff](plans/life-wave-8-handoff-2026-09.md), the questions
+[their own file](plans/life-wave-8-questions-2026-09.md).
+
+## 21.09.2026 – THE REVIEW PASS: THE STAIRCASE DENOMINATED, THE POSTPARTUM FLOOR, AND THE ALICE ARM
+
+Reading the wave's questions file he ruled the review batch in one sentence – «да, деноминируем, и
+Алисину руку тоже давай. Делай спеку на все эти обсужденные по результатам ревью задачи, я билдера
+отправлю доделывать, потом финальный гейт» – plus the per-item passes below.
+
+1. **⭐⭐ The comeback staircase is re-denominated in Elo** – «да, деноминируем». `comebackStages`
+   became `−200 / −100 / −50 / 0` dElo, read as
+   `factor = max(0.5, (C − dElo / SKILL_LAW.eloPerCore) / C)` off her overall(4), with the rate taken
+   **BY IMPORT** and never as a copied `20.2`. ⚠ **It falsified the research's own second
+   prediction, in the opposite direction** – small-first did not catch straight-back at 52 weeks;
+   the gap WIDENED from 2.6× to 3.5×. The success ladder moved as predicted
+   (12.5/54.2/66.7 → 33.3/86.7/93.3, bracketing the digest's ~40% at top-150), and the favourite
+   curve did not move a byte. Measured on paired arms, no constant tuned to hide it.
+2. **D5 – the postpartum window is never shorter than a break-up's** – «давай рекомендацию сделаем».
+   The base moved −30 → −36; the per-grade scale stayed.
+3. **E1/E2 – the birth painting ships and the album gets its page** – «да, получает, картинка теперь
+   есть». The 2.0 MB jpg is a local, gitignored source; only the webp ships, and the bride was
+   recompressed to pay for it.
+4. **T7 is measurement ONLY** – the Alice arm came back as
+   [research](research/the-unclosable-head-2026-09.md) with its levers **named and unmoved**:
+   the median career ceiling is 63.3 against a `tourElite` floor of 67, and 0.0% of careers clear 77.
+5. **Four strings passed per item in session** (C2–C5) and the diary band's eight lines passed
+   21.09; they are the first strings of this layer that are not drafts.
+6. **⭐⭐ «Small events first» has an END, and «only smalls» stops being offered** – his three yeses
+   on the hybrid table, after his own reading of the ramp re-framed the whole A1 question: «если
+   сольет все турниры в первый год, то в следующем автоматически будет играть более низкие, разве
+   нет?» It does – the freeze is twelve entries spent ONCE, so the only lever the card ever had is
+   WHEN. Measured on five arms over the same fifteen paired returns (spec §15.5): a hold of 26
+   weeks takes rank (#117 vs #173), points at two years, top-100 (7/15) and the ONLY returns to her
+   pause rank, conceding year-one points to straight-back. `ECONOMY.motherhood.smallFirstHoldWeeks
+   = 26` moves a LABEL (`offReturnPlan`) and refuses nothing. Both card labels are his (P27/P28).
+7. **⭐⭐⭐ The Alice arms resolved his question and found something else** – «и три руки по пункту 2
+   тоже запускай». The court adds no core points (effective 64.9 against a raw 65.1), so the model,
+   not the career, was wrong: it drew opponents from the top storey's band instead of the tier's own
+   PERCENTILE band. Priced correctly, a 1000's strongest possible opponent is core **64.3 – weaker
+   than the specimen** (she banks one in six; predicted ~8 in six seasons, measured 11), while a
+   Slam's is **76.4** over seven rounds (predicted 0.24, measured 1). Nothing happened to her after
+   nineteen; she over-performed both. ⚠ **The mechanism is a ruled constant and stays his**:
+   `TIERS.wta1000.entrantPctBand[0] = 0.006` keeps the top ~11 out of every 1000 draw – his own hard
+   cuts of 16.08 – and it is the one place that rule runs against the real tour, where the 1000s are
+   mandatory for the top ten. Nothing moved. Arm 7 closed the last lever: a coached career reaches
+   **96–98% of her own headroom by about twenty-two**, so the ceiling ROLL binds, not the growth.

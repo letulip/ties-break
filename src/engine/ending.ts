@@ -22,6 +22,12 @@
 // «could she» and nothing else; the draw that answers «does she» lives at the one call site, in
 // `world/endings.ts`'s `resolveLeaving`, on a purpose-scoped sub-stream. That is what keeps this
 // file testable without a world AND keeps the frozen capture blind to it.
+//
+// ⚠⚠ AND WAVE 8's `'family'` IS THE THIRD, ON THE SAME ARRANGEMENT (v85 T5). `endingForFamily` below
+// builds the record and knows nothing about a draw; the one coin – `seed:life:return:<week>` – is in
+// `world/endings.ts`'s `resolveReturnDecision`, and the CHANCE it is compared against is
+// `returnChanceFor` in `world/lifeBeat.ts` §14, where the pregnancy's own arithmetic already lives.
+// So this leaf still draws nothing at all, and the sentence above is extended rather than weakened.
 import { schoolIsOver } from './kidLife'
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
 // ⚠ A TYPE-ONLY IMPORT, ERASED AT COMPILE TIME, so the leaf stays a leaf at runtime – the same
@@ -1051,6 +1057,41 @@ export function endingForLeaving(
   }
 }
 
+/** ⭐⭐⭐ WAVE 8 T5 – #9, SHE HAD A CHILD AND DID NOT GO BACK (`life/wave-8`, §2 T5; the type name is
+ *  RULED 20.09, «мне здесь не принципиально»). The other arm of `resolveReturnDecision`'s one draw:
+ *  the record's decision week comes round, the coin says she does not try, and the career stops.
+ *
+ *  ⚠ IT IS THE THIRD ENDING THAT IS **HERS** rather than an answer or an accident – round 45's two
+ *  doors are the precedent and this keeps their arrangement exactly: the predicate and the record are
+ *  here in the leaf, the COIN is at the one call site in `world/endings.ts`, and the parent is TOLD.
+ *
+ *  ⚠ `resumesWeek: null`, and here that is a statement rather than a default: `'college'` is the only
+ *  latch in the game with something on the other side of it (`CareerEnding.resumesWeek`'s own note,
+ *  now correct at eight nulls of nine). A career that does not come back has no return week to name,
+ *  which is the whole difference between this ending and T6.
+ *
+ *  ⚠ THE DETAIL IS **THE WEEKS AND NOTHING ELSE** – `ENDING_BLURB`'s own contract for this field
+ *  («one short line of specifics… never a verdict»), and the specific this ending has is the length
+ *  of the absence: `decisionWeek − pausesWeek`, which at the drafted constants is 31 + 20 = 51 weeks.
+ *  ⚠ «WITHOUT A NEW ENTRY» IS THE GATE'S OWN WORD AND IS EXACT, where «off tour» would have been a
+ *  shade false: the pause refuses NEW entries and the ones she already holds still play out
+ *  (`PREGNANCY_PAUSE_DETAIL`, `world/medical.ts`), so she may well have been on a court inside those
+ *  51 weeks. A record that overstates by one word is the defect class round 45's own blurbs were cut
+ *  for. ⚠ IT NAMES NO CHILD AND NO PARTNER, deliberately: the sex is a literal on the row and the
+ *  marriage may have ended months before the birth (§0's decoupling ruling), so the one fact this line
+ *  can make about every career that reaches it is the calendar. ⚠ DRAFT (invariant 4) – T8's table.
+ *
+ *  ZERO DRAWS, as everything else in this leaf. */
+export function endingForFamily(week: number, ageYears: number, weeksAway: number): CareerEnding {
+  return {
+    type: 'family',
+    week,
+    ageYears,
+    detail: `${weeksAway} weeks without a new entry`,
+    resumesWeek: null,
+  }
+}
+
 // --- the copy -----------------------------------------------------------------------------------
 
 /** The headline of the epilogue. Six lines, and not one of them is a grade.
@@ -1104,6 +1145,24 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
   // career latches on the wrap week, before next season is playable, so nobody can ever see it.
   fall:
     'One season took most of what the season before it had built. Nobody asked her to stop and nobody talked her out of it.',
+  // ⚠ WAVE 8 T5 – A DRAFT (invariant 4), and it lands in T8's table with the rest of the wave's
+  // strings; HIS word is what ships. It keeps both halves of this record's standing rule, and both
+  // are harder here than anywhere above. It MAY NOT CONSOLE – «a life completed rather than a career
+  // failed» is the DESIGN's sentence about the ending and not a sentence the epilogue is allowed to
+  // say to the player, because saying it would be the game deciding for him how the last year felt.
+  // And it MAY NOT CONGRATULATE either, the mirror the peak's own note states.
+  // ⚠ IT IS WRITTEN HUSBAND-AGNOSTIC AND CHILD-SEX-AGNOSTIC (§0's decoupling ruling and the girls-only
+  // scaffold): the marriage may have ended mid-term and the ending fires anyway, so a line that named
+  // him would be false on exactly the careers §14's banner exists to protect.
+  // ⚠⚠ THE SECOND SENTENCE MOVED ON 21.09 – **HIS STRING, PASSED IN SESSION** (wave 8b, C4), and
+  // the first is unchanged to the character. What it kills is measured rather than felt: the draft
+  // shared SIXTY characters verbatim with `peak` above – «. Nobody put the question to her and
+  // nobody had to – it was » was the longest common substring of the two, the whole middle clause of
+  // each, so two of the nine epilogues opened their second sentence identically. It still says WHO
+  // DECIDED (§4a's law at this layer's second-biggest moment) and it still neither consoles nor
+  // congratulates; what it no longer does is borrow `peak`'s sentence to do it.
+  family:
+    'She had a child, and the months after it went by without an entry in them. No one asked her to choose – by spring the choice had long been made.',
 }
 
 export const ENDING_TITLE: Record<CareerEndingType, string> = {
@@ -1117,4 +1176,11 @@ export const ENDING_TITLE: Record<CareerEndingType, string> = {
   // the six above already keep: no adjective, no verdict, no consolation.
   peak: 'She left at the top',
   fall: 'She stopped after the fall',
+  // ⚠ WAVE 8 T5 – A DRAFT (invariant 4), in the flat idiom the eight above keep: no adjective, no
+  // verdict, no consolation. It is the plainest true sentence there is about this ending and it is
+  // deliberately about the TENNIS rather than about the child – «She stayed with the family» would be
+  // the game telling the player what she chose instead, which is a warmer claim than the record is
+  // entitled to make. ⚠ IT ALSO HAS TO SURVIVE `latchEnding`'s FEED ROW, which concatenates this with
+  // the detail: «She did not go back – 51 weeks without a new entry.»
+  family: 'She did not go back',
 }

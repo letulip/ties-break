@@ -344,8 +344,12 @@ describe('§6 the schema move – v80', () => {
   // ⚠ RE-AIMED AT v84 (19.09, the album's one schema move – `world.prologueTrace`), NOT WEAKENED,
   // the same sentence again: 84 was taken by that spec's own full move, `form` still arrives at
   // v80, and this line still asserts what a fresh career is stamped with.
+  // ⚠ RE-AIMED AT v85 (20.09, wave 8 T1 – the pregnancy and the return: `world.pregnancy` +
+  // `world.children`), NOT WEAKENED, the same sentence again: 85 was taken by that wave's own full
+  // move, `form` still arrives at v80, and this line still asserts what a fresh career is stamped
+  // with.
   it('the version is the ladder\'s head and a fresh career opens at neutral', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(84)
+    expect(SAVE_SCHEMA_VERSION).toBe(85)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

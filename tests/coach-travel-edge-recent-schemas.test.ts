@@ -46,9 +46,36 @@ import {
   PRE_V82,
   PRE_V83,
   PRE_V84,
+  PRE_V85,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v85: rolling the schema back to 84 – dropping `pregnancy`, `children` and `comeback` – returns the v84 CAREER on all three', () => {
+    // ⭐⭐ AN IDENTITY, v84's OWN KIND, AND THE CASE NAME SAYS SO because the per-key diff proved it
+    // before a constant was touched. v85 appends THREE world keys – `pregnancy` and `children`, the
+    // pregnancy and the return (wave 8 T1), and `comeback`, the week she came back and the freeze she
+    // came back with (added to this same version after gate 2) – and `createWorld` writes them `null`,
+    // `[]` and `null`.
+    //
+    // ⚠⚠ THE WRITER SET IS THE WHOLE ARGUMENT, and on this rung it is still EMPTY FOR THESE CELLS,
+    // although it is no longer empty on the tree: T2 has landed and `rollPregnancy` writes
+    // `world.pregnancy`. That makes the SECOND half of the argument the load-bearing one, and it is
+    // the half a later reader should lean on anyway – the walk stops at 156 weeks, age 16.6, the
+    // hazard's window opens at 24 and marriage is the door, so a frozen career can never reach a
+    // latch, let alone a pregnancy, a birth or a return. A red HERE beside a green freeze means a
+    // pregnancy reached a sixteen-year-old, which the age window forbids. ⚠ `comeback` keeps the
+    // stronger half too, for as long as T6 is unwritten: nothing on this tree can set it at all.
+    //
+    // ⚠ THE MEASUREMENT is in the two blocks over `PRE_V85` in tests/coachTravelEdgeFixtures.ts –
+    // three keys moved per cell at T1 and ONE more at T2½, nothing else on either pass, `rngMain`
+    // byte-identical everywhere, and `careerHashAtSchema(·, ·, 84)` reproduced the three shipped v84
+    // `FROZEN` constants character for character BOTH TIMES: once with the bump in the tree, and
+    // again with the third key in it.
+    expect(careerHashAtSchema(5, 0, 84), '25k · middle coach · grinder – the verbatim v84 value').toBe(PRE_V85.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 84), '120k · elite coach · grinder – the verbatim v84 value').toBe(PRE_V85.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 84), '8k · self-coached · player – the verbatim v84 value').toBe(PRE_V85.selfTravelling)
+  })
+
   it('⭐⭐⭐ v84: rolling the schema back to 83 – dropping `prologueTrace` – returns the v83 CAREER on all three', () => {
     // ⭐⭐ AN IDENTITY, v83's OWN KIND, AND THE CASE NAME SAYS SO because the measurement proved it
     // before a constant was touched. v84 appends ONE world key – `prologueTrace`, the childhood's

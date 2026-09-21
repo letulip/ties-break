@@ -66,6 +66,17 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (collidingPractice) refundPractice(world, collidingPractice, 'Cancelled')
   world.fundsCents -= fee
   world.entries.push(eventId)
+  // ⭐⭐⭐ v85 T6 – AND ONE OF HER TWELVE GOES, IN THE BRANCH THAT COMMITS (§2 T6: «Consumed per ENTRY
+  // through `world/entries.ts`»). The RULE is not here and must not be: `entryVerdict` is THE ONE
+  // GATE and it already worked out, in the same breath as the other three doors, whether the freeze
+  // was DECISIVE – her live standing refused her, nothing else opened, the frozen rank cleared the
+  // cut. That word is argued at the line that computes it. This is the SPENDING and nothing else.
+  // ⚠ BELOW THE PUSH, so the thing that is spent and the thing that is bought land together, and
+  // below the `blocked` throw, so a refused card can never take an entry off her.
+  // ⚠ `?.` ON BOTH RECORDS AND NOT A GUARD CLAUSE: `onProtectedRank` can only be true when both are
+  // non-null (the gate reads them to set it), so the optional chain is the defensive read this repo
+  // gives every hand-built probe world, not a second copy of the rule.
+  if (gate.onProtectedRank && world.comeback?.protectedRank) world.comeback.protectedRank.entriesLeft -= 1
   // v45 – THE SEASON MIRROR, CAPTURED HERE BECAUSE HERE IS THE ONLY PLACE IT IS TRUE.
   //
   // `captureEntryRow` reads her live best-N book – twice, in that rung's own currency – and her book is
@@ -218,6 +229,28 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
   if (isCappedTier(event.tier)) {
     const at = world.internationalEntryWeeks.indexOf(event.week)
     if (at >= 0) world.internationalEntryWeeks.splice(at, 1)
+  }
+  // ⭐⭐⭐ v85 T6 – AND A PROTECTED ENTRY FOLLOWS THE FEE BY THE VERY SAME RULE, which is why it is
+  // written here and not left as an asymmetry. This is the ONLY path that hands the money back and it
+  // is already the only one that hands the year's ITF slot back, on the sentence three lines up: «a
+  // name taken off an open list never participated». One of her twelve is the same kind of thing –
+  // an entitlement spent on being ON a list – and «мы ни за что не наказываем» is the house law that
+  // decides it: a freeze burned by a withdrawal she was allowed to make for free, or by the INJURY
+  // auto-withdraw that comes through this same function, would be a punishment for something nobody
+  // chose. Every FORFEITING exit (a late cancel, a skip on the week, the medical forfeit) keeps it,
+  // exactly as it keeps the fee and the slot: the list closed with her on it, so she used the place.
+  //
+  // ⚠⚠ THE GATE IS RE-ASKED RATHER THAN RECORDED, AND THE BOUND IS NAMED RATHER THAN HIDDEN.
+  // `world.entries` is a `string[]` – there is nowhere to write «this one rode the freeze» without a
+  // schema move this task is not – so the question is put to the ONE gate again. It can disagree with
+  // the answer given at entry only if her standing MOVED in between, and both directions are bounded:
+  // if it improved, she keeps having spent one (rare, and only ever on a career that is climbing); if
+  // it got worse, the refund is capped at the ruled twelve one line below and so can never inflate the
+  // entitlement. Recorded per entry it would be exact; the cap is what makes the approximation safe.
+  // ⚠ THE CHEAP CLAUSE IS FIRST so every career without a live freeze pays nothing for this line.
+  if (world.comeback?.protectedRank && entryStatus(world, event).onProtectedRank) {
+    const freeze = world.comeback.protectedRank
+    freeze.entriesLeft = Math.min(ECONOMY.motherhood.protectedRankEntries, freeze.entriesLeft + 1)
   }
   // v45: AND THE SEASON MIRROR FOLLOWS THE FEE BY THE SAME RULE, which is why it is written here rather
   // than beside the other two exits. A withdrawal inside the deadline is money back and a week back, so

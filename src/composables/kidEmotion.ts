@@ -23,7 +23,7 @@ import {
   type PortraitEmotion,
   type PortraitStage,
 } from '../shared/avatarEmotion'
-import { GRADUATED_ART_STEM, graduatedUrl } from '../art/preload'
+import { GRADUATED_ART_STEM, graduatedUrl, PREGNANT_ART_STEM, pregnantUrl } from '../art/preload'
 import { ENDINGS } from '../engine/ending'
 
 /**
@@ -114,22 +114,77 @@ export function useKidEmotion() {
     }),
   )
 
+  // ⭐⭐⭐ v85 T10 – THE MONTHS SHE IS CARRYING, ON THE SAME TWO SURFACES (the pregnancy, wave 8).
+  //
+  // ⚠⚠ IT SITS AT `rehab`'s RUNG AND NOT AT THE GRADUATION'S, and that placement is the whole of the
+  // decision rather than an implementation detail. Round 42 #29(a) is the owner's standing law for
+  // this picture – «картинки вернутся к изначальной логике только про победы и поражения» – and the
+  // file that records it reads that sentence as «results and the BIG FACTS», with the layoff
+  // painting kept by his own «это ок» because «an injury is a fact of the body, not a mood». A
+  // pregnancy is that same kind of fact and the largest one this layer has, so it belongs in the
+  // ruling; and `rehab`'s standing inside the ruling is that a FRESH RESULT still wins, because the
+  // result layer is the half round 42 #29(a) protects.
+  //
+  // ⚠ SO: her tennis face on a week she competed, the pregnancy painting on every other week of the
+  // window. That is not a softening of §2 T10 – it is what the window actually looks like. Entries
+  // shut eight weeks after the announcement and stay shut for the rest of it, so the yield costs the
+  // pregnancy at most the handful of weeks she is still playing on, and those are precisely the weeks
+  // a picture of a title is the true thing to show. The alternative – an unconditional override for
+  // thirty-nine weeks – would paint a woman resting a hand on her belly over the week she won a
+  // tournament, which is round 42 #2's own defect read backwards.
+  //
+  // ⚠ `resultFresh` IS THE ENGINE'S OWN FLAG AND NOT A DERIVATION FROM THE FACE. It is set in
+  // `assembleDiaryFacts` off the very condition `avatarEmotionRead` enters its result branch on –
+  // her latest played match falling in this week – so «a result spoke this week» has ONE reading and
+  // this line reads it rather than inferring it from `heroEmotion === 'norm'`. The composable's own
+  // header warns against exactly that inference for `emotion`, and the warning generalises.
+  // ⚠⚠ AND THE WALK STAYS ENGINE-SIDE, which is this file's standing law and is pinned NEGATIVELY
+  // (`tests/diary.test.ts`: the composable «must not have kept a copy»). Reading a boolean the
+  // engine already computed is the opposite of re-making the walk, and this comment names no field
+  // of that walk on purpose – the pin reads the file's raw text, comments included, and it caught
+  // this note in its first draft.
+  const pregnancyFace = computed(() => game.snapshot?.pregnancyFace ?? null)
+  const pregnancyWeek = computed(
+    () => pregnancyFace.value !== null && game.snapshot?.diary.facts.resultFresh !== true,
+  )
+
   // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
   // (every stage×emotion exists, adult and the painting-only `rehab` included) – or, for one week,
-  // the single graduation painting, which has no band and no emotion in its name.
+  // the single graduation painting, which has no band and no emotion in its name; or, through a
+  // pregnancy, one of the two paintings that have no band either.
   // ⭐ ROUND 42 #29(a): `heroEmotion`, not `emotion` – the results-and-big-facts read. See above.
+  //
+  // ⚠ THE GRADUATION IS ASKED FIRST AND THAT ORDER IS ARGUED RATHER THAN ALPHABETICAL. Its window is
+  // ONE week and it never comes back (`doneWeek` does not move again), where the pregnancy's runs
+  // twenty-seven plus twelve; a rule that let the long window win would delete the graduation picture
+  // from the only week it can ever be shown, and the pregnancy would not miss the one it lost.
+  // ⚠ AND THE COLLISION IS NOT REACHABLE ON THIS TREE, which is why the order is a total function's
+  // courtesy and not a live tie-break: the fork is asked at nineteen and the course is four years, so
+  // `doneWeek` lands by twenty-three, while the marriage door is 23+ and the hazard's first rung is
+  // 24. Answered anyway – `portraitStage`'s own rule, «a total function cannot be made wrong by a
+  // future caller».
   const portraitUrl = computed(() =>
     graduationWeek.value
       ? graduatedUrl()
-      : `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${heroEmotion.value}.webp`,
+      : pregnancyWeek.value
+        ? pregnantUrl(pregnancyFace.value!)
+        : `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${heroEmotion.value}.webp`,
   )
 
   /** WHICH PAINTING THE HERO IS FRAMING, as the key art/faceRects files it under. It exists because
    *  `portraitUrl` can now point at a picture whose stem is not `{stage}-{emotion}`: a caller that
    *  rebuilt that stem by hand would steer the graduation week's crop by the face position of a
-   *  painting that is not on screen. One value, so the URL and the framing cannot disagree. */
+   *  painting that is not on screen. One value, so the URL and the framing cannot disagree.
+   *  ⚠ v85 T10 – AND THE PREGNANCY PAIR IS THE SECOND SUCH PICTURE, which is why the branch here is
+   *  the same branch as above rather than a second reading of the same question. Both paintings have
+   *  a row in `art/faceRects`, so Home's hero frames them on her face; without one `facePoint` would
+   *  answer 50/50, and on these two canvases that is her hands. */
   const portraitStem = computed(() =>
-    graduationWeek.value ? GRADUATED_ART_STEM : `${portraitAssetStem(stage.value)}-${heroEmotion.value}`,
+    graduationWeek.value
+      ? GRADUATED_ART_STEM
+      : pregnancyWeek.value
+        ? PREGNANT_ART_STEM[pregnancyFace.value!]
+        : `${portraitAssetStem(stage.value)}-${heroEmotion.value}`,
   )
 
   return { emotion, heroEmotion, stage, cropUrl, moodCropUrl, portraitUrl, portraitStem }

@@ -180,6 +180,14 @@ the next career) instead of texture.
 The shape, sized for a later step 9 (after step 7 – it needs children to exist; independent of
 step 8):
 
+* ⭐ **RULED 20.09 – THE DOOR NEVER CLOSES ON A CHILDLESS CAREER.** His words, against the
+  architect's own note that the pregnancy census would price the dynasty's availability: «я бы
+  не стал закрывать эту дверь на совсем. Может игрок хотел династию, но за время его игры
+  ребенка просто не случилось, т.е. ему не повезло. Но это не значит, что он не может продолжить
+  династию. Просто "роды случились после" – это тоже вариант». So the census frequency prices
+  the LIVED variant only – a career that raised the child on the tour gets the album's lineage
+  and the heirloom texture; a childless ended career is offered the same door with the epilogue
+  writing the birth after the farewell. Step 9's spec inherits this as law.
 * **A NEW SAVE, never a continued world** – at an ending where `world.children` holds a child,
   the album screen offers the next career. `createWorld` gains an INHERITANCE BLOCK, small on
   purpose: the seed lineage (`seed:dynasty:<n>` – deterministic ancestry), the household wealth

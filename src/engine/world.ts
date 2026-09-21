@@ -100,8 +100,8 @@ import {
   rivalRetirementNews,
 } from './world/matchNews'
 export { flipScore, computeLossStreak }
-import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
-export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
+import { pendingKnock, knockRunning, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
+export { pendingKnock, knockRunning, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
 // ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
 // import without pulling the integration core in. Re-exported under `engine/world` like every other
 // extraction, so the 280-file public API is unchanged.
@@ -139,8 +139,8 @@ export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kit
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
-import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
-export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
+import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor, comebackMatchFactor } from './world/player'
+export { startingSkills, kidMatchPlayer, kidMatchPlayerFor, comebackMatchFactor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
 // ⭐⭐⭐ v80, WAVE F1 + F2 – her form and the third seat. Both modules import `WorldState` as a
@@ -210,6 +210,9 @@ import {
   wonTopTitleInSeason,
   resolveCollegeDeparture,
   resolveEndings,
+  // ⭐⭐ v85 T5 – her decision after a child, and the ninth ending. On the barrel for `resolveLeaving`'s
+  // own reason: T9's bench and the suites must read the SHIPPED step, never a second copy of it.
+  resolveReturnDecision,
   wasThereAChild,
 } from './world/endings'
 // ⭐ P5 – WHAT IS BEHIND THE DOOR (docs/specs/college-as-a-second-act-2026-08.md). `inCollege` moved
@@ -310,6 +313,7 @@ export {
   wonTopTitleInSeason,
   resolveCollegeDeparture,
   resolveEndings,
+  resolveReturnDecision,
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
@@ -327,8 +331,8 @@ export { bankSponsorCheque }
 // `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
 export { sponsorCameoWilling, sponsorCameoCents }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
+import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, POSTPARTUM_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, POSTPARTUM_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
@@ -367,8 +371,8 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { inTrack, fieldProsOf, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
+import { inTrack, fieldProsOf, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, protectedRankPlace, PLAY_DOWN, playDownBars } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, protectedRankPlace, PLAY_DOWN, playDownBars }
 import { KID_ID, SLAM_DEBUT_KEY } from './world/constants'
 export { KID_ID, SLAM_DEBUT_KEY }
 // ⭐⭐ ROUND 24, E2 – THE TWO SENTENCES THE COMMAND GUARD CAN SAY, and the guard that lets the college
@@ -487,8 +491,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch } from './world/lifeBeat'
-export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -1885,7 +1889,8 @@ export function createWorld(
     // through its spread above). `traceOf` already copies on the way out; this copies on the way in,
     // so neither side can reach the other's state.
     //
-    // ⚠ NOW THE LAST KEY OF THE LITERAL. Same peel order, same line in `careerHashAtSchema`.
+    // ⚠ AND IT HAS STOPPED BEING LAST IN ITS TURN – the same handover `coachDeal` made to it one
+    // version ago. Same peel order, same line in `careerHashAtSchema`.
     prologueTrace: prologue?.trace
       ? {
           picks: { ...prologue.trace.picks },
@@ -1893,6 +1898,47 @@ export function createWorld(
           opens: prologue.trace.opens.map((o) => ({ ...o })),
         }
       : null,
+    // ⭐⭐⭐ v85 (the pregnancy and the return, wave 8 T1 –
+    // docs/plans/life-wave-8-builder-2026-09.md §2 T1): SHE IS NOT EXPECTING AND HAS NO CHILDREN,
+    // which on week 0 is the only thing these two can mean – she is eight. `null` and `[]` are the
+    // IDENTITY here in the plainest sense and not placeholders for one (`composureBonus`'s own v78
+    // rule, and `spotlightHabituation`'s v77 sentence this inherits word for word): they are the same
+    // two literals the v84 -> v85 migration back-fills with, and for the same reason rather than by
+    // coincidence – a career that predates the mechanic carried neither because there was neither to
+    // carry – so a migrated career and a fresh one are the same shape at the moment they load.
+    //
+    // ⚠ AND THIS LINE IS THE WHOLE WRITER SET ON THIS TREE. T1 ships the seats and NO WRITER AT ALL:
+    // the hazard that sets `pregnancy` is T2's, the pause T3's, the `children.push` T4's. Nothing
+    // here or in any phase of the tick can put another value in either, however long a career runs,
+    // which is what the frozen careers measure.
+    //
+    // ⚠⚠ NOW THE LAST THREE KEYS OF THE LITERAL, IN THIS ORDER – `pregnancy`, `children`, `comeback`
+    // – and `prologueTrace` above has stopped being the last, the same handover it took from
+    // `coachDeal` and `coachDeal` took from `form`. Three keys in ONE append, peeled in one
+    // destructure for the reason the wave-1 three are: they arrived together, in this order, and
+    // object rest preserves the relative order of everything it keeps. ⚠ THE ORDER IS LOAD-BEARING:
+    // the frozen-career identities reproduce each older schema's hashes by dropping exactly the keys
+    // appended since, so every key must stay in the order it was appended in (`careerHashAtSchema` in
+    // tests/coachTravelEdgeFixtures.ts peels in reverse, newest first – `comeback`, then `children`,
+    // then `pregnancy`). ⚠ AND LOAD-BEARING FOR THE LITERAL AND THE LIVE FREEZE, NOT FOR THE PEEL –
+    // T1's own correction, measured by its ARM 5 and kept true here: the peel names every one of
+    // these keys in ONE destructure, so it removes them whichever order they were written in and the
+    // rollback identity is genuinely order-insensitive. What the order decides is
+    // `JSON.stringify`'s output for the LIVE world, which is what the live hashes are taken over.
+    pregnancy: null,
+    children: [],
+    // ⭐⭐⭐ v85's THIRD KEY, added after gate 2 (20.09 – task T2½ piece 1): SHE HAS NOT PAUSED AND HAS
+    // NOT COME BACK, which on week 0 is the only thing it can mean. `null` is the IDENTITY here in
+    // the same plainest sense the two literals above it are, and it is the same literal the v84 ->
+    // v85 step back-fills with – so a migrated career and a fresh one stay the same shape at the
+    // moment they load, which is the claim `tests/wave8-pregnancy-schema.test.ts` §C makes.
+    //
+    // ⚠ AND THIS LINE IS THE WHOLE WRITER SET FOR THIS KEY ON THIS TREE – a claim the two keys above
+    // it can no longer make, because T2 landed and `rollPregnancy` writes `pregnancy`. T6 – the
+    // return – is the ONE writer `comeback` will ever have; nothing here or in any phase of the tick
+    // can put another value in it, however long a career runs, which is what the frozen careers
+    // measure.
+    comeback: null,
   }
   addEvent(world, {
     week: 0,

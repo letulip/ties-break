@@ -568,7 +568,12 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // writes one kept, STAMPED `'life'` row per career – and the claim this case makes about the
     // psychologist is untouched: he still writes none and is still not markable. No pick was made
     // for the new kind either (§5a), so the 🤍 fallback case below covers it the same way.
-    expect([...LIFE_BEAT_ROW_KINDS], 'and the roster is the row-writing kinds, exactly').toEqual(['met', 'ended', 'own-key'])
+    // ⭐ RE-AIMED 20.09 BY v85 (wave 8 – T3), the same ratchet one wave on: the roster grew by
+    // `'expecting'` – `landPregnancyPause` writes the pause week's ONE kept, STAMPED `'life'` row –
+    // and this case's claim about the psychologist is untouched again: he still writes none and is
+    // still not markable. No pick was made for the new kind either (§5a), so the 🤍 fallback below
+    // carries it exactly as it carries `'own-key'`.
+    expect([...LIFE_BEAT_ROW_KINDS], 'and the roster is the row-writing kinds, exactly').toEqual(['met', 'ended', 'own-key', 'expecting'])
     expect(lifeRowGlyph('fork-psy'), '⭐ and an unpicked kind is not unmarked – it wears the owner\'s own heart')
       .toBe(LIFE_ROW_EMOJI.life)
     // ⚠ THE GLYPH PICK IS A QUESTION FOR THE OWNER EITHER WAY (who-she-is §5a: «no agent adds or
@@ -593,12 +598,18 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // kind» stays the total claim it became at D3. An UNSTAMPED site still reddens the second
     // assertion alone, which is the ratchet's whole point.
     const code = codeOf(worldSource())
+    // ⭐ RE-AIMED 20.09 BY v85 (wave 8 – T3), THE RATCHET DOING ITS JOB A SECOND TIME: the count
+    // moved 5 → 6 because `landPregnancyPause` writes the wave's ONE new `type: 'life'` row – kept,
+    // stamped `lifeKind: 'expecting'` – on the week the entries close. Both halves move together, so
+    // «every site stamps a kind» stays the total claim it became at D3, and an UNSTAMPED site still
+    // reddens the second assertion alone. ⚠ It fired on the unstamped first draft of exactly that
+    // row, which is the ratchet catching the thing it is for rather than a number going stale.
     const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(5)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(6)
     const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
     expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
     expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
-      .toHaveLength(5)
+      .toHaveLength(6)
   })
 })
 

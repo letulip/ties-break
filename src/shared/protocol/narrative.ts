@@ -55,6 +55,24 @@ export type MilestoneType =
    *  row captures its own line (the 11.09 re-shape's whole point). No back-fill exists or could:
    *  no save below v83 can hold one, because there was no wedding to reach. */
   | 'wedding'
+  /** ⭐ v85 – THE BIRTH (wave 8 T4): the week her daughter was born, kept where a life's turns are
+   *  kept. `'wedding'`'s move one wave on, for its reason: a new persisted union member is a schema
+   *  change by invariant 3 (the v44 `'facility'` precedent), and this one RIDES THE v85 BUMP T1
+   *  already took rather than costing its own. No back-fill exists or could – no save below v85 can
+   *  hold a pregnancy, so there is no birth to find in one.
+   *
+   *  ⚠ THE IDENTITY IS THE **WEEK** AND NOT THE EPISODE, which is the one place this parts from the
+   *  wedding and is the difference between a marriage and a pregnancy. A marriage happens once per
+   *  episode, so `wedding:<episodeId>` is exact; a second child of the SAME marriage is confirmed
+   *  wanted (11.09, «после беременности может быть и повторная», W5's), so an episode-keyed birth
+   *  would silently swallow it. Two children cannot be born in one week in this model, so the week
+   *  is the identity – see `milestoneKey`.
+   *
+   *  ⚠ IT CARRIES NO `kind`, DELIBERATELY. The candidates were the episode id (a machine value the
+   *  scroll must never print, and the wedding's own reason for a `null` detail) and the child's sex –
+   *  and the sex is `'girl'` for every row v85 can write (RULED 20.09), so a field holding one
+   *  constant is a second home for a fact `world.children` already keeps. W5 reads the array. */
+  | 'birth'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -350,8 +368,37 @@ export interface SoftBeatInvite {
  *  ⚠ Its `detail` is the literal `'own-key'` – there is nothing per-row to record – and the receipt
  *  is the row itself: the log answers «has this happened», once per career, `'met'`'s own doctrine.
  *  Its one answer is a zero-priced acknowledgment, because the soft surface offers every live row a
- *  dialog and a dialog needs a control that records; nothing about the answer moves anything. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key'
+ *  dialog and a dialog needs a control that records; nothing about the answer moves anything.
+ *
+ *  ⭐⭐⭐ v85 (the pregnancy, wave 8 – T2) ADDS `'expecting'`: THE WEEK SHE SAYS SHE IS HAVING A CHILD.
+ *  Its `detail` is the `LoveEpisode.id`, exactly as `'met'`'s, `'ended'`'s and `'engaged'`'s are –
+ *  machine-readable, never a rendered sentence.
+ *
+ *  ⚠⚠ AND THE RECEIPT IS NOT THE ROW HERE, WHICH IS THE ONE PLACE THIS KIND PARTS FROM `'engaged'`.
+ *  The hazard's once-ness lives on `world.pregnancy` (the gate refuses while one stands), not in the
+ *  log – so a career that one day reaches a SECOND pregnancy on the same marriage (W5, confirmed
+ *  wanted 11.09) gets a second row about the same episode id and nothing has to change for it.
+ *
+ *  ⚠⚠ SHE ANNOUNCES; THE PARENT REACTS (§4a's law at the layer's biggest moment). No parent menu
+ *  opens her decision – the hazard (`rollPregnancy`, gated on the MARRIAGE and shaped by the
+ *  research's 24–35 curve) decides WHETHER – and the parent's three answers are the research's own
+ *  finding made mechanical («support only – reaction sets recovery trajectory»): joy / worry / the
+ *  career first, priced on `bond` (`ECONOMY.motherhood.joyBond` / `worryBond` / `careerFirstBond`).
+ *
+ *  ⚠⚠ IT IS THE FIRST KIND WHOSE ANSWER OUTLIVES THE CARD. Every other kind's reply moves `bond` and
+ *  is then only history; this one is ALSO persisted as a GRADE – `PregnancyState.support`, one of
+ *  `warm` / `measured` / `cold` – because T5's return decision and T4's postpartum recovery both read
+ *  it months later. One answer, two consequences, and no new meter anywhere.
+ *
+ *  ⚠⚠ IT BLOCKS, tier 2's own price at the biggest news the layer holds. ⚠ AND NO ANSWER UNMAKES IT:
+ *  the record is written at the RAISE, so the world is already carrying the pregnancy while the card
+ *  stands, and there is no reply to write that would stop it.
+ *
+ *  ⚠ THE THIRD KIND WITH NO FREE ANSWER (after `'ended'` and `'engaged'`), and read-INDEPENDENT by
+ *  construction: no overlay exists for this kind, so `DRAIN_ANSWER['expecting']` = `worry` charges
+ *  −0.5 under every reading. ⚠ It carries no `heard` stamp and no listen detour – the fact is the
+ *  fact, and the three answers are the whole of what a parent can do with it. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
@@ -360,6 +407,44 @@ export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel
  *  file makes). ⚠ APPEND-ONLY once shipped – the draw indexes the reachable subset, so removing or
  *  reordering a member re-maps future draws on old seeds. */
 export type SpouseViewOccasion = 'distant-swing' | 'road-stretch' | 'no-vacation' | 'money'
+
+/** ⭐⭐⭐ WAVE 8b T2 (C6) – **WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS**, and nothing else. The
+ *  diary band the wave-8 hand-back listed as not built («the diary half of T3's pregnancy texture»);
+ *  his word of 21.09 is what makes it this batch's.
+ *
+ *  ⚠⚠ **IT IS DERIVED AT RENDER AND PERSISTS NOTHING.** `motherhoodBandAt` (`world/lifeBeat.ts` §14)
+ *  reads `world.pregnancy`, `world.children` and `world.comeback` – all three already on the world
+ *  since v85 – and hands back one of these words. No save key, no migration, no golden fixture: this
+ *  is wave-2's claims machinery being asked a question the world can already answer, which is what
+ *  «no schema move» means for a diary band.
+ *
+ *  The seven bands, in the order a career meets them:
+ *    `announced`  – the week she told him. ONE week, and the card is blocking, so it is a week the
+ *                   player really sits on.
+ *    `early`      – the first half of the pause, before the picture changes.
+ *    `mid`        – the second half of it.
+ *    `last`       – **the portrait's own `pregnant-last` window** (`PREGNANT_LAST_WEEKS`), so the
+ *                   words and the painting change on the same week rather than on two dates.
+ *    `birth`      – the week the row lands on `world.children`.
+ *    `postpartum` – after it, while the record still stands – i.e. until her decision resolves.
+ *    `returned`   – the first rung of the comeback ramp, after a decision that went back.
+ *
+ *  ⚠ NULL IS EVERY WEEK OF EVERY CAREER THAT NEVER PAUSED, and also the eight weeks between the
+ *  announcement and the close of entries: she is still playing then, and the band has nothing to say
+ *  about a week that looks like any other. A null band licenses NOTHING.
+ *
+ *  ⚠ WHAT A LINE LICENSED ON THIS MAY SAY: where in the arc the week is, and what the parent could
+ *  watch. It may NOT name or gender the one she married (§0's decoupling ruling – a mid-pregnancy
+ *  divorce is ordinary life, so a line that mentioned him would be false on exactly the careers that
+ *  ruling protects), and the band's own test walks the pool and refuses any line that does. */
+export type MotherhoodBand =
+  | 'announced'
+  | 'early'
+  | 'mid'
+  | 'last'
+  | 'birth'
+  | 'postpartum'
+  | 'returned'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
@@ -812,6 +897,23 @@ export interface DiaryFacts {
    *  address, NO rent, NO mechanic of any kind (backlog §8's boundary), and required rather than
    *  optional for the standing reason: it selects COPY. */
   ownKeyWeek: boolean
+  /** ⭐⭐⭐ wave 8b T2 (C6) – WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS, or null on every week of
+   *  every career that never paused. The ONE derivation is `motherhoodBandAt(world)`
+   *  (`world/lifeBeat.ts` §14), asked at snapshot time and carried – `spouseOccasion`'s own shape,
+   *  and required for its reason: it selects COPY, and a view that forgot it would build, pass, and
+   *  quietly sweep the ordinary week instead of the band. See `MotherhoodBand` for what each word
+   *  means and for what a line resting on it may say. */
+  motherhoodBand: MotherhoodBand | null
+  /** ⭐⭐ wave 8b T2 (C6) – THE ANSWER HE GAVE THE ANNOUNCEMENT, as the persisted grade, or null.
+   *  Read straight off `world.pregnancy.support`, so it is null before he answers the blocking card
+   *  AND on every week after the record is cleared.
+   *
+   *  ⚠⚠ IT IS A SECOND AXIS AND NOT A SECOND BAND, which is why it is its own field: exactly one
+   *  line of the band – the warm postpartum one – is licensed on it, and the other seven are true at
+   *  every grade. A band that encoded the grade would have needed three copies of each of them.
+   *  ⚠ AND IT IS THE GRADE, NEVER THE NUMBER: `joyBond` / `worryBond` / `careerFirstBond` stay on the
+   *  engine side of the fog law exactly as `spirit` and `bond` do. */
+  motherhoodSupport: 'warm' | 'measured' | 'cold' | null
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

@@ -11,15 +11,16 @@ last-reviewed: 2026-08-08
 
 ## Current truth
 
-- **Eleven committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
+- **Twelve committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
   sponsor window) · **`sinking` (halfway through a debt spell)** · `broke` (one week short of the
   bankruptcy latch) · `ending` (past the fork at nineteen) · **`unheard` (the same week as `ending`,
   stopped one answer earlier – her life beat is raised and nobody has answered her)** · `soft` (a
   live tier-1 row on a week the engine never stopped) · **`breakup` and `belated` (v75 T8 – the two
   registers of an ending, each parked one press away from its own card)** · **`engaged` (v83 T11 –
   the only career old enough to marry, one press from the announcement and nine ordinary weeks from
-  the wedding)**. Written by the shipped `saveCodec` so a fixture can never disagree with what the
-  product reads.
+  the wedding)** · **`expecting` (v85 T11b – inside the maternity pause, the only one parked INSIDE
+  its beat rather than one press before it)**. Written by the shipped `saveCodec` so a
+  fixture can never disagree with what the product reads.
 - ⚠⚠ **THE `.tsave` CORPUS IS THE ONE GENERATED ARTIFACT IN THIS REPO WITH NO GATE OF ITS OWN, and
   that is how it goes stale** (measured twice now: `ending.tsave` in wave 3, `pro.tsave` in wave 4).
   Every other generated file is checked by `npm run check` – `world-symbol-map.md` by
@@ -35,7 +36,7 @@ last-reviewed: 2026-08-08
   stopping when the engine says so – `broke` is `bankruptcyGraceWeeks - 1`, not "week 88". A fixture
   that could not have happened in play would test nothing.
 - ⚠⚠ **A KNOWN CROSSING, 23 WEEKS AHEAD OF `pro` – RECORDED SO IT IS NOT DISCOVERED** (v77 T6's
-  measurement, entered here by T10). Of the ten fixtures only `pro` is NEWS – fame **59.57** against
+  measurement, entered here by T10). Of the twelve fixtures only `pro` is NEWS – fame **59.57** against
   wave 6's `ECONOMY.spotlight.newsFameMin` of 30 – and it is the only one carrying a live episode the
   world has not learned of. Its leak hazard is drawn per episode-week on
   `seed:life:leak:<episodeId>:<week>`, and **its first leak week is 435**. The fixture sits at
@@ -61,7 +62,10 @@ last-reviewed: 2026-08-08
   and only the manifest changed. A generator that quietly re-rolled its neighbours would make every
   addition a five-fixture change. ⚠ Verified a third time on 09.09 when `unheard` was added, this
   time through `--only unheard`: the six existing binaries and their six manifest rows were not
-  written at all, so their SHA-256s are the ones other specs already pin.
+  written at all, so their SHA-256s are the ones other specs already pin. ⚠ Verified a FOURTH time on
+  20.09 when `expecting` was added, and this time the check was mechanical rather than a reading:
+  `git diff --stat e2e/fixtures/manifest.json` came back **49 insertions and zero deletions** – a pure
+  append – and the other eleven `.tsave` files show as unmodified in `git status`.
 - **The browser harness reaches them through `careerAt`** (`e2e/careerAt.ts`, built 08.08): a save
   written into IndexedDB inside the database-creation transaction, before the app's first script, so
   the store's single `listCareers` finds a career instead of an empty install. **Measured at
@@ -70,33 +74,33 @@ last-reviewed: 2026-08-08
   is what a spec may import; `tools/e2e-fixtures.ts` imports the engine, self-executes as a CLI, and
   re-exports the reader so every existing import path still resolves.
 - **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
-  ever, proving *migrations work*. This is ten states at the current version, regenerated rather than
+  ever, proving *migrations work*. This is twelve states at the current version, regenerated rather than
   migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
 **This is the build of §3 of `docs/plans/playwright.md`** – the load-bearing idea of the whole
 Playwright integration: *a test starts at week 412 instead of clicking through 412 weeks.* Nothing
-here needs a browser, and none of it depends on the harness; it is a node tool, ten binaries, a
+here needs a browser, and none of it depends on the harness; it is a node tool, twelve binaries, a
 manifest and a test.
 
 ```bash
-npm run e2e:fixtures                 # regenerate all eleven (byte-identical every time)
-npm run e2e:fixtures -- --only pro   # one of them; the other ten keep their manifest rows
+npm run e2e:fixtures                 # regenerate all twelve (byte-identical every time)
+npm run e2e:fixtures -- --only pro   # one of them; the other eleven keep their manifest rows
 npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it gives up
 ```
 
 | file | what it is |
 |---|---|
 | `tools/e2e-fixtures.ts` | the generator, and the reader the harness and the test both come through |
-| `e2e/fixtures/*.tsave` | ten career saves in the app's own export format |
+| `e2e/fixtures/*.tsave` | twelve career saves in the app's own export format |
 | `e2e/fixtures/manifest.json` | seed, week, schema version and the facts a spec may assert on |
 | `tests/e2e-fixtures.test.ts` | the rot alarm, in the `unit` project, on the PR gate |
 
-## The eleven
+## The twelve
 
 Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added; `unheard` joined
-them on 09.09, `soft` on 11.09, `breakup` and `belated` on 12.09, and `engaged` on 19.09. All but
-`junior`, `unheard`, `soft`, `belated` and `engaged` were found on the FIRST or second seed tried –
-these are ordinary careers, not lottery tickets, and `junior` is the one carrying three requirements
-at once.
+them on 09.09, `soft` on 11.09, `breakup` and `belated` on 12.09, `engaged` on 19.09 and `expecting`
+on 20.09. All but `junior`, `unheard`, `soft`, `belated`, `engaged` and `expecting` were found on the
+FIRST or second seed tried – these are ordinary careers, not lottery tickets, and `junior` is the one
+carrying three requirements at once.
 
 ⚠⚠ **`belated` IS THE EXCEPTION AND IT IS A DIFFERENT KIND OF ONE, which is why `DEFAULT_BUDGET`
 moved from 200 to 900 with it.** `junior` is rare by CONJUNCTION – three requirements on one week,
@@ -135,8 +139,9 @@ the manifest at runtime and none of it is read from here.
 | `breakup` | `e2e-breakup-52` | 261 | 16 | $1,211 | 31 | 79.9 KiB | the week **before it ends** – a live attachment the parent was told about (`p:146`, met at 147), one press from the told-NOW card, her Mood two rungs lower behind it |
 | `belated` | `e2e-belated-37` | 351 | 20 | $494,092 | 79 | 79.3 KiB | the week before he **hears of it** – an attachment that was over before its `knownWeek` came round, one press from the told-LATE card, and no `'met'` beat is ever raised for it |
 | `engaged` | `e2e-engaged-41` | 681 | 26 | $2,224,583 | 78 | 78.3 KiB | one press from the **engagement** – twenty-six, a year-deep attachment, and NINE ordinary weeks behind it, so the wedding at `weeksAfterEngagement` can be walked to in a browser. The oldest career in the corpus by five years, because the gate is 23 and nothing else came close |
+| `expecting` | `e2e-expecting-20` | 892 | 30 | $15,249,019 | 74 | 80.4 KiB | **inside the maternity pause** – announced at w884, entries shut at w892, birth due w923 – and parked on `pausesWeek` ITSELF, which is the first week of the window the walk reaches. Four Season cards wear the pause's refusal, her hero wears `adult-pregnant-early`, and the week after it is ordinary. `support` is `measured` (the drain's answer) and `rankAtPause` is **16**, so the career boots with the tour briefing owed. The only fixture parked INSIDE its beat |
 
-**714 KiB of saves**, the largest single file 81 KiB. That is not a nuisance and there is no
+**795 KiB of saves**, the largest single file 81 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of
 uncompressed JSON, and one version's JSON alone is ~372 KB – nearly five times the week-412 fixture,
 because these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
@@ -220,8 +225,40 @@ new**: `e2e/coverage-map.spec.ts` parses `docs/specs/e2e-coverage.md` and assert
 added because a spec needs it, and that spec needs a row there or the e2e suite goes red on a
 document. The five above are still the five a fixture costs; the sixth is what the spec beside it
 costs. (`seeded-careers.spec.ts` is the one of the five that is now conditional: `soft`, `breakup`,
-`belated` and `engaged` have no row in it, because each exists for a state that walk has no way to
-name, and its journey row says so in as many words.)
+`belated`, `engaged` and `expecting` have no row in it, because each exists for a state that walk has
+no way to name, and its journey row says so in as many words.)
+
+⭐⭐ **`expecting` (20.09) IS THE FIRST ONE PARKED *INSIDE* ITS BEAT, and the rule it looks like it
+breaks is the rule it keeps.** Every fixture above parks ONE PRESS BEFORE its card, on the sentence
+`engaged` wrote: «its engagement would then have been answered by the GENERATOR, and "answered
+through the real UI" is precisely the half the brief asks a browser for». That sentence is about
+**the beat under test**. `e2e/expecting.spec.ts` does not test the `'expecting'` card – that is
+`tests/component/life-beat-dialog.test.ts`' and the wave's engine tests' – it tests **the pause**,
+which is not a card at all: that a pregnancy survives a save and a load, that the entry refusal is
+drawn, and that the weeks still tick. So the announcement is behind the fixture by construction and
+the drain answers it, which is a fact about that career rather than about the mechanic.
+
+⚠⚠ **AND THE OTHER SHAPE WAS MEASURED BEFORE IT WAS GIVEN UP, which is why this is a finding rather
+than a shortcut.** T11 walked 48 seeds looking for a clean nine-press run-in from the announcement:
+**six reached a pregnancy (12.5%) and ALL SIX** were blocked within two presses by a knock, a reveal
+or a retirement offer. Structural, not unlucky – `ECONOMY.motherhood.playsOnWeeks` is *by design* the
+weeks she keeps playing and the hazard's window is the deep-tour years, so those eight weeks are
+guaranteed to be her busiest. The pause itself is not rare at all: a career that reaches a pregnancy
+offers ~23 candidate weeks and enters nothing on any of them, so the tournament reveal that killed
+eight of `belated`'s nine candidates **cannot happen inside the window**. Measured end to end at this
+shape: see the table row's seed count, minutes rather than `belated`'s 951 s.
+
+⚠ **ONE RECIPE LESSON, MEASURED IN FLIGHT – AND THE MEASUREMENT DID NOT GO THE WAY THE FIX
+PREDICTED.** `expecting`'s first draft copied `engaged`'s clause set verbatim, including its `return`
+on «boots holding a knock» – a shape that is right for a state living on ONE week and wrong for one
+living on twenty-three, and it threw away `e2e-expecting-19`, a career that genuinely held the state.
+The clauses now **skip a week** instead. ⚠ Re-run, **seed 19 is still rejected**: the knock is sticky
+(it waits for `decideKnock`, and this walk carries `drainKnocks: false` like every other recipe), so
+it stood on every remaining week of that window. What the rewrite bought is the LOG – «a pregnancy
+arrived and no week inside its pause was one a browser could start on; the last was turned down
+because a knock is standing» against a bare «boots holding a knock» – and the ability to recover a
+seed whose blocker EXPIRES (a birthday, a reveal, a soft row) rather than one that waits for a
+command. The accepted seed was 20 before and after, so nothing about this fixture turns on it.
 
 ⚠⚠ **AND A FIXTURE IS GENERATED AGAINST THE ENGINE THAT IS ON DISK, WHICH IN A SHARED CHECKOUT IS NOT
 THE SAME THING AS THE ENGINE THAT IS COMMITTED.** Measured on 19.09 and worth the paragraph: `engaged`

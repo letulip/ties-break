@@ -639,7 +639,14 @@ describe('save migrations', () => {
     // on the v83 probe – and its README row, e2e fixtures regenerated, the doc-facts sentence and
     // the frozen-career peel rung), and the walk below gains a rung that writes one `null` on one
     // world key – which a v63 save never carried, so it changes no byte here either.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 84 – past the colliding 64, through 65').toBe(84)
+    // ⚠ RE-AIMED AT v85 (20.09, wave 8 T1 – the pregnancy and the return: `world.pregnancy` +
+    // `world.children`), NOT WEAKENED, for the NINETEENTH time and with the claim unchanged once
+    // more. 85 was taken by that wave's own full move (bump, append-only v84 -> v85 step, golden
+    // fixture v85 – the v25 recipe resumed on the v84 probe – and its README row, e2e fixtures
+    // regenerated, the doc-facts sentence and the frozen-career peel rung), and the walk below gains
+    // a rung that writes two literals on two world keys – neither of which a v63 save ever carried,
+    // so it changes no byte here either.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 85 – past the colliding 64, through 65').toBe(85)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

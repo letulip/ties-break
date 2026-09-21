@@ -118,10 +118,39 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   // Read-independent by construction: no overlay names the kind, so `drainCostOf` returns −0.5 from
   // a one-element spread whenever anybody does ask.
   'spouse-view': 'level',
+  // ⭐⭐⭐ v85 (the pregnancy, wave 8 – T2) – `worry`, AT −0.5, THE THIRD COSTED ROW AND THE MILDEST
+  // OF A KIND WITH NO ZERO: `'engaged'`'s and `'spouse-view'`'s own choice repeated, and the rule
+  // this registry is for rather than a new one. The kind's three are joy +2.5 / worry −0.5 / the
+  // career first −4 (all in `ECONOMY.motherhood` – an announcement like this is not a card a parent
+  // can answer for free), so the registry names the mildest and a walk that drains one states its
+  // skew exactly: −0.5 x count, `drainSkewLine`'s own arithmetic. Read-independent BY CONSTRUCTION
+  // rather than by absences – `lifeBeatOptionsFor` has no overlay for this kind at all, so
+  // `drainCostOf` prices the same object under every `wants` x every ends-read.
+  // ⚠⚠ AND DRAINING IT IS NOT FREE OF SIDE EFFECTS, WHICH IS NEW IN THIS REGISTRY AND IS SAID OUT
+  // LOUD. Every other row moves `bond` and nothing else; this one ALSO writes `support: 'measured'`
+  // onto `world.pregnancy`, because the grade is the answer (`answerLifeBeat`, world/lifeBeat.ts).
+  // A harness that walks a career past this card therefore hands T5's decision and T4's recovery a
+  // MEASURED grade rather than no grade – which is the honest consequence of answering, and is what
+  // a bench measuring those two has to declare about its own arm.
+  expecting: 'worry',
   // ⭐ v83 (wave 7 – T10) – `keep`, THE KIND'S ONLY ANSWER AND A RULED ZERO (narrative-only, no bond
   // move). Declared and unreachable like its two soft siblings: NON-blocking, so the loop never
   // meets one, and the row exists because totality is the point.
   'own-key': 'keep',
+  // ⭐⭐⭐ v85 (the return, wave 8 – T6) – `small-first`, AT **0**, AND THE PICK IS `'fork-psy'`'s RULE
+  // RATHER THAN A JUDGEMENT ABOUT THE RAMP. Both of this kind's answers are ruled zero (§3k: §4a.2's
+  // law is that his WORDS move `bond`, and this answer is a calendar – and the price of it is paid in
+  // TENNIS, so a delta would make one ramp «the nice one»), so the registry had to pick one, and the
+  // rule for a tie is «the FIRST option the card offers». A harness that drained the other would be
+  // quietly benching one arm of the wave's own trap.
+  // ⚠⚠ AND DRAINING THIS ONE HAS A SECOND EFFECT, LIKE `'expecting'`'s AND FOR A LARGER REASON: it
+  // writes `returnPlan: 'small-first'` onto `world.comeback`, which the entries seam then reads as a
+  // booking preference. A bench that drains beats and then measures a comeback is measuring the
+  // SMALL-FIRST arm unless it says otherwise. `drainSkewLine` states the bond skew exactly (0 x
+  // count); the PLAN skew is not a number and is stated here instead.
+  // Read-independent by construction: `lifeBeatOptionsFor` has no overlay for this kind, so
+  // `drainCostOf` prices the same object under every `wants` x every ends-read.
+  'return-plan': 'small-first',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

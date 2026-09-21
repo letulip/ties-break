@@ -228,6 +228,22 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
       // ⚠ RE-AIMED A SIXTH TIME BY v83, WAVE 7 T10 (18.09): `'own-key'` is the ninth kind – the
       // one-time independent-life story beat – and declares FALSE, narrative-only by design.
       'own-key': false,
+      // ⚠ RE-AIMED A SEVENTH TIME BY v85, WAVE 8 T2 (20.09), NOT WEAKENED, AND FOR THE IDENTICAL
+      // REASON ONE UNION-MEMBER LATER: `'expecting'` is the tenth kind – the week she says she is
+      // having a child – and it is TRUE, because §5b prices it as tier 2 exactly as it prices «there
+      // is someone» and «she is getting married». A career that could tick past the announcement
+      // would answer her by walking away. ⚠ What blocking does NOT do here is even less than at the
+      // wedding: the pregnancy record is written at the RAISE, so the world is already carrying it
+      // while the card stands, and no answer exists that would unmake it.
+      expecting: true,
+      // ⚠ RE-AIMED AN EIGHTH TIME BY v85, WAVE 8 T6 (20.09), NOT WEAKENED: `'return-plan'` is the
+      // eleventh kind – the week she is back and the desk wants to know what the first months look
+      // like – and it is TRUE. ⚠⚠ IT IS ALSO THE FIRST BLOCKING KIND IN THIS TABLE THAT IS NOT ABOUT
+      // HER LIFE: §4a's «SHE decides» is untouched (T5's coin already decided whether she goes back),
+      // and what this card asks is the SCHEDULING, which has always been the parent's. Blocking is
+      // tier 2's price asked for the one question the layer really does put to him, and a career that
+      // could tick past it would spend its first weeks back with no plan at all.
+      'return-plan': true,
     })
   })
 

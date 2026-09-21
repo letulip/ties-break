@@ -127,6 +127,47 @@ export function guardNotEndedForGood(world: WorldState): void {
  *  `world/fame.ts` reads it – and `milestones.ts` imports `engine/diary`, so pointing the fame leaf
  *  at it would drag the diary (and `rngFromSeed`) into the runtime graph of a file whose whole claim
  *  is that it draws nothing. `CAREER_ENDED_REFUSAL` above was moved here for exactly this reason. */
+/** ⭐⭐ v85 (wave 8 – T2) – IS AN ANSWERED KNOCK STILL RUNNING? True from the week the parent answers
+ *  until `untilWeek` has passed; false while nobody has answered yet (that is `pendingKnock`'s
+ *  question, `world/knock.ts`) and false once the weeks are up.
+ *
+ *  ⚠⚠ IT IS HERE FOR `guardNotEnded`'s REASON, WORD FOR WORD, AND THE PATH WAS MEASURED RATHER THAN
+ *  ASSUMED. Its home by rights is `world/knock.ts`, beside `pendingKnock`, which is where the wave-8
+ *  brief put it and where that file re-exports it from. Its one caller is `pregnancyEligible`
+ *  (`world/lifeBeat.ts` §14), and a value import `lifeBeat.ts -> knock.ts` closes a loop: the
+ *  value-import graph carries `world/knock.ts -> world/endings.ts -> world/lifeBeat.ts` today, and
+ *  re-pointing that one edge would not have opened it either, because `world/injury.ts` and
+ *  `world/coachMarket.ts` are two more of knock.ts's own imports that reach `endings.ts` in turn.
+ *  Two ways out, the same two as above: a second copy of the three-field read inside `lifeBeat.ts`,
+ *  or the predicate in the leaf it can be reached from. The leaf, so «is the knock running» has ONE
+ *  spelling in the engine – the brief's own «do not leave the question with two spellings».
+ *
+ *  ⚠ ALL THREE FIELDS AND NOT TWO. `untilWeek` EQUALS `sinceWeek` while a knock is undecided (the
+ *  `Knock` type's own note), so `choice !== null` is what makes the week comparison mean anything at
+ *  all – without it every fresh, unanswered knock would read as «running» on its own arrival week.
+ *  And `expireKnock` retires a knock at the TOP of a tick, so `world.week <= untilWeek` is the honest
+ *  reading for anything running later in the same tick, and for the probe worlds hand-built in tests
+ *  and benches, which `expireKnock` has never visited.
+ *
+ *  ⚠ BOTH ANSWERS COUNT, and «layoff» – the brief's word – is the short name for it rather than a
+ *  narrowing: `knockUntilWeek` writes the rest week for `rest` and `KNOCK_PUSH_WEEKS` out for
+ *  `push`, so under either answer the weeks from `sinceWeek` to `untilWeek` are weeks her body is
+ *  the thing being managed. A predicate that asked only about `rest` would answer «no» for a girl
+ *  being sent back out on a sore shoulder, which is the louder half of the two.
+ *
+ *  ⚠ WHY THE PREGNANCY GATE ASKS IT AT ALL is the brief's clause (§2 T2: «no fire while a knock
+ *  layoff is live»); the READING is the builder's, written down so the clause is not a bare fact.
+ *  The announcement's own mechanical consequence is a rearrangement of the tour calendar eight weeks
+ *  out (`pausesWeek` closes the entries, T3), and a knock is the family already rearranging the same
+ *  calendar around the same body. Two absences negotiated in one tick would also put the parent's
+ *  answer about her body and his answer about her family in the same week, which is a lot of week.
+ *  ⚠ AND DEFERRING COSTS NOTHING, which is what makes the clause cheap rather than a lost chance:
+ *  the hazard is WEEKLY and a knock is a handful of weeks, so the announcement arrives on the far
+ *  side of it. */
+export function knockRunning(world: WorldState): boolean {
+  return world.knock !== null && world.knock.choice !== null && world.week <= world.knock.untilWeek
+}
+
 export const SLAM_DEBUT_KEY = 'first-slam-main-draw'
 
 export const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled

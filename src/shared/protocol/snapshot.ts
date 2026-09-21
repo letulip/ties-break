@@ -7,6 +7,9 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { LadderTrack, TierId } from '../../engine/season/types'
+// ⭐ v85 T10: which pregnancy painting the week wears. Declared beside the two paintings it names,
+// in the module that already owns every «which picture is this» union the wire carries.
+import type { PregnancyFace } from '../avatarEmotion'
 // ⭐ v76 T3: the year-focus union, `Temperament`'s own precedent in `./narrative` – an ENGINE fact
 // the wire happens to carry, imported TYPE-ONLY so the arrow stays engine -> shared and is erased at
 // compile time. Declared beside the world field it types (`engine/world/state.ts`).
@@ -378,6 +381,34 @@ export interface Snapshot {
    *  the window this goes null and the ROW stays – answered, or the honest record that she came and
    *  it went unasked. */
   softBeat: SoftBeatInvite | null
+  /** ⭐⭐⭐ v85 T10 – **WHICH PREGNANCY PAINTING HER PORTRAIT WEARS THIS WEEK**, or null on every
+   *  week of every career that is not inside one. The two portrait surfaces (`useKidEmotion`) read
+   *  it; nothing else does.
+   *
+   *  ⚠⚠ IT IS THE **ANSWER** AND NOT THE RECORD, AND THAT IS THE SHAPE DECISION T10 WAS ASKED TO
+   *  MAKE. `PregnancyState` was kept OFF the wire on purpose (T1, quoting `spiritShock`'s own
+   *  argument: «a wire field belongs to the task that has the READER»), and this is that task. The
+   *  record has six fields – the carrying episode, the announcement, the pause, the due date, the
+   *  parent's support grade and the frozen rank – and the UI has ONE question: which picture. So the
+   *  wire carries a three-state answer and not two dates:
+   *
+   *    * it is the SMALLEST thing that answers it. Two numbers (`announcedWeek`, `dueWeek`) would
+   *      also work, and would additionally hand every surface in the app a COUNTDOWN TO THE BIRTH –
+   *      a date this wave deliberately tells the player nowhere (`PAUSE_EVENT` «names no return»,
+   *      `BIRTH_EVENT` «names no date», and rule 4 forbids a figure on a life card). A field that
+   *      cannot be arithmetic cannot become a due-date ticker by accident;
+   *    * it says nothing the FOG LAW would mind: no `support` grade, no rank, no episode id, no
+   *      marriage. A mid-pregnancy divorce is ordinary life (§0's decoupling ruling) and this field
+   *      reads identically on both sides of one, because it never knew about him;
+   *    * and it is `heroEmotion`'s own precedent one type over – the ENGINE names a painting, the UI
+   *      builds the URL. `pregnancyFaceAt` (shared/avatarEmotion.ts) is the one spelling of the
+   *      window, so the engine and a test cannot come apart about which week wears which.
+   *
+   *  ⚠ NULL AGAIN FROM THE BIRTH WEEK ON, not from the record being cleared: `world.pregnancy`
+   *  outlives `dueWeek` by up to `decisionWeeksAfterBirth` weeks, and the predicate closes the window
+   *  at the birth. §2 T10's «after the birth, the standing stage rules resume untouched», as one
+   *  comparison. */
+  pregnancyFace: PregnancyFace | null
   /** ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT. Non-null on
    *  exactly the weeks `shootClashOpen` is true, which is the predicate `advanceWeeks` blocks on –
    *  so the dialog cannot be missing on a week the engine has refused to tick. Same contract as

@@ -86,6 +86,9 @@ import {
   deliverKnownPartner,
   lifeBeatFollowUps,
   lifeBeatHeading,
+  lifeBeatOptionsFor,
+  lifeBeatSaid,
+  raiseLifeBeat,
   toSnapshot,
   SMALL_TALK_FRAMES,
   SMALL_TALK_SITUATIONS,
@@ -1164,4 +1167,230 @@ describe('⭐ round 42 – the beat\'s card at 375 / 768 / 900 / 1280, in every 
       w.unmount()
     })
   }
+})
+
+
+// =================================================================================================
+// ⚠⚠⚠ v85 T10 – THE ROUND-20 POPUP LAW ON THE WAVE'S **TWO BLOCKING BEATS**, AND ON THE CONTROL
+//      THAT ACTUALLY CLOSES THEM
+// =================================================================================================
+//
+// CLAUDE.md's gotcha binds a dialog that is EXTENDED as hard as one that is new, and wave 8 extends
+// this card twice: `'expecting'` (the layer's biggest news – four voices × two presences, and the
+// longest single line the layer has shipped) and `'return-plan'` (one cell, two answers, a said that
+// runs to two sentences). Both BLOCK. «The owner's career stopped there and could not be resumed» is
+// what the law is for, and it is the same card and the same scrim as `TourBriefingDialog`'s.
+//
+// ⚠⚠ AND THIS BLOCK MEASURES A STATE NOTHING ABOVE IT DOES, WHICH IS A FINDING RATHER THAN A FLOURISH.
+// Every fit case in this file measures the card BEFORE a selection, where `card.lastElementChild` is
+// the last answer. Under round 42 #8 the last answer is no longer the way out: it SELECTS, and the
+// control that records the answer and closes the beat is the `.life-beat-proceed` that appears under
+// the group one tap later – and it is appended AFTER the choices, so it makes the card taller than
+// anything measured above. The component's own template says as much («once one is made the Proceed
+// below it is, so the measured control is the real way out in both states») and no test had taken
+// the second measurement. These cases take it for the two kinds this wave adds.
+//
+// ⚠ THE PROMPTS ARE THE **ENGINE'S**, like the v75 T4 block above and for its reason: the claim is
+// about the copy's SIZE, and a fixture's invented sentences would measure a card nobody ships. The
+// engine RAISES each beat on a real world, and the worst cell of the announcement's eight is chosen
+// BY MEASUREMENT over `lifeBeatSaid` rather than by somebody picking the one they think is longest.
+//
+// ⚠⚠ THE ARM LEDGER FOR THIS BLOCK – measured, not predicted, each one applied to the tree and
+// reverted by md5:
+//
+//   ARM 8  ⭐⭐⭐ THE REAL CAP TAKEN OFF THE REAL STYLESHEET – `max-height: 100%; overflow-y: auto`
+//          deleted from `.dialog-card` in `src/style.css`, i.e. the exact declaration
+//          `TourBriefingDialog` shipped without
+//          → 33 RED in this file, NINE of them in this block: both kinds' ASKING and RECORDING
+//          cases, both narrow-screen cases, both grown-copy mutation cases, and the eight-cell
+//          sweep. ⚠ The two «MUTATION PROOF, THE OTHER HALF» cases stayed GREEN, correctly – they
+//          assert that `assertDismissReachable` THROWS, and with the cap already gone it still
+//          does. That is the shape an inverted assertion is supposed to have, and it is written
+//          down so a future reader does not read it as a hole.
+//   ARM 9  the per-case inline mutation, run inside the four MUTATION PROOF cases themselves and
+//          asserted there rather than in this ledger: the cap and the scroller removed on a card
+//          proved taller than the phone, then restored and re-measured green.
+describe('⚠⚠⚠ v85 T10 – `expecting` and `return-plan` fit a phone, asking AND recording', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  /** A married career carrying a raised beat, and the card the ENGINE assembles for it. The bond is
+   *  high on purpose: `speaksInHerOwnVoice` is what puts HER line on the announcement instead of the
+   *  one-sentence dry card, and her line is the taller of the two – so this is the conservative
+   *  direction, exactly as `endedPrompt()` above chooses `close` over `cold`. */
+  function raised(kind: 'expecting' | 'return-plan'): LifeBeatPrompt {
+    const world = createWorld(`t10-${kind}`, DEFAULT_PROFILE)
+    world.season = []
+    world.week = 1000
+    world.bond = 90
+    world.loveEpisodes = [
+      { id: 'p:900', sinceWeek: 900, endedWeek: null, knownWeek: 902, wants: 'open', partnerId: 'p:900', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: 940, partnerName: 'Anton' },
+    ]
+    raiseLifeBeat(world, kind, kind === 'expecting' ? 'p:900' : 'return-plan')
+    const prompt = buildLifeBeatPrompt(world)
+    expect(prompt?.kind, `the engine really raised a ${kind} beat – nothing below is vacuous`).toBe(kind)
+    return prompt!
+  }
+
+  const EXPECTING = raised('expecting')
+  const RETURN_PLAN = raised('return-plan')
+
+  /** ⭐ THE WORST CELL OF THE ANNOUNCEMENT'S POOL, FOUND BY MEASUREMENT. `EXPECTING_HER_LINE` is four
+   *  voices × two presences and the pool is module-private, so the cells are asked for through the
+   *  engine's own assembler – the same road `lifeBeatPromptFor` takes – rather than transcribed.
+   *  `'school'` is under the roof and `'independent'` is away (`awayVoice`, diary/words.ts). */
+  const EXPECTING_CELLS = TEMPERAMENTS.flatMap((voice) =>
+    (['school', 'independent'] as const).map((stage) => ({
+      voice,
+      stage,
+      said: lifeBeatSaid('expecting', 'p:900', voice, 'level', 'close', 'open', stage),
+    })),
+  )
+  const WORST_EXPECTING = [...EXPECTING_CELLS].sort((a, b) => b.said.length - a.said.length)[0]
+
+  /** The engine's own card with one cell's line in it – heading, options and confirm untouched,
+   *  because none of the three varies by voice or presence on this kind. */
+  const expectingCard = (said: string): LifeBeatPrompt => ({ ...EXPECTING, said })
+
+  /** The structural precondition, before any measurement: the control being read must be the LAST
+   *  thing in the card's flow, or `measureDialog` reads its box off the wrong edge and every number
+   *  below is quietly wrong while every assertion stays green. */
+  function lastIs(card: Element, el: Element): Element {
+    expect(card.lastElementChild, 'the control measured is the card\'s last element').toBe(el)
+    return el
+  }
+
+  /** Phase 2: press an answer, and hand back the Proceed – the one control that records. */
+  async function proceedOf(w: ReturnType<typeof mountAttached>['w'], card: Element): Promise<Element> {
+    ;(card.querySelectorAll('button.life-beat-choice')[0] as HTMLButtonElement).click()
+    await w.vm.$nextTick()
+    const proceed = card.querySelector('.life-beat-proceed')
+    expect(proceed, 'the way on appeared under the answered group – phase 2 is up').toBeTruthy()
+    return proceed!
+  }
+
+  it('the pools really are what is being measured (a fixture nobody wrote passes everything)', () => {
+    expect(EXPECTING_CELLS, 'four voices × two presences').toHaveLength(8)
+    expect(new Set(EXPECTING_CELLS.map((c) => c.said)).size, 'and eight distinct lines, not one repeated').toBe(8)
+    // ...and both PRESENCES are really reached, or the sweep is four cells wearing eight names.
+    const roof = EXPECTING_CELLS.filter((c) => c.stage === 'school').map((c) => c.said)
+    const away = EXPECTING_CELLS.filter((c) => c.stage === 'independent').map((c) => c.said)
+    for (const line of roof) expect(away, 'the away frames differ from the roof ones').not.toContain(line)
+    expect(EXPECTING.options, 'the parent\'s three answers').toHaveLength(3)
+    expect(RETURN_PLAN.options, 'and the return\'s two').toHaveLength(2)
+    expect(lifeBeatOptionsFor('expecting', 'open'), 'the option set is the engine\'s own').toHaveLength(3)
+    expect(EXPECTING.confirm, 'and the Proceed wears the engine\'s word').toBeTruthy()
+  })
+
+  for (const [name, card] of [
+    ['expecting', () => expectingCard(WORST_EXPECTING.said)],
+    ['return-plan', () => RETURN_PLAN],
+  ] as [string, () => LifeBeatPrompt][]) {
+    it(`⭐⭐ ${name}: ASKING – the last answer is inside a 375x667 phone, bounded and scrolling`, () => {
+      const prompt = card()
+      const { w, card: el } = mountAttached(prompt)
+      // ⚠ THE CARD REALLY CARRIES THE ENGINE'S WORDS, so what is measured is the shipped copy.
+      expect(flat(el.textContent), 'her line is on the card').toContain(prompt.said)
+      for (const option of prompt.options) {
+        expect(flat(el.textContent), `the «${option.id}» answer is drawn`).toContain(option.label)
+      }
+      const choices = el.querySelector('.life-beat-choices')!
+      const fit = assertDismissReachable(el, lastIs(el, choices).lastElementChild!, PHONE, `${name} (asking)`)
+      expect(fit.cap, 'bounded by the room the scrim leaves').toBe(635)
+      expect(fit.scrollable, 'and what is past the fold can be reached').toBe(true)
+      w.unmount()
+    })
+
+    it(`⭐⭐⭐ ${name}: RECORDING – the PROCEED is inside the phone, which nothing above measures`, async () => {
+      // The control that actually closes a blocking beat since round 42 #8, and the tallest state
+      // this card has: her line, every answer, AND the way on underneath them.
+      const { w, card: el } = mountAttached(card())
+      const proceed = await proceedOf(w, el)
+      const fit = assertDismissReachable(el, lastIs(el, proceed), PHONE, `${name} (recording)`)
+      expect(fit.cap, 'bounded by the room the scrim leaves').toBe(635)
+      expect(fit.scrollable).toBe(true)
+      w.unmount()
+    })
+
+    it(`...and ${name} on the narrowest screen the app supports, in both phases`, async () => {
+      const asking = mountAttached(card(), NARROW_PHONE)
+      const choices = asking.card.querySelector('.life-beat-choices')!
+      assertDismissReachable(asking.card, choices.lastElementChild!, NARROW_PHONE, `${name} (asking, 320x568)`)
+      asking.w.unmount()
+
+      const recording = mountAttached(card(), NARROW_PHONE)
+      const proceed = await proceedOf(recording.w, recording.card)
+      assertDismissReachable(recording.card, proceed, NARROW_PHONE, `${name} (recording, 320x568)`)
+      recording.w.unmount()
+    })
+
+    it(`⚠⚠ ${name}: MUTATION PROOF – round-20 #3 put back on a card whose copy GREW, goes RED`, async () => {
+      // The arm the law asks for, and it is taken in the RECORDING phase because that is the tallest
+      // state and the one the other blocks never reach. The line is padded until the card is
+      // genuinely taller than the screen – PROVED, not assumed – and then the cap and the scroller
+      // are removed, which is exactly the shape `TourBriefingDialog` shipped in. «A test that cannot
+      // fail on the too-tall version is not this test.»
+      const base = card()
+      const grown: LifeBeatPrompt = { ...base, said: `${base.said} ${LONG_SENTENCE.repeat(16).trim()}` }
+      const { w, card: el } = mountAttached(grown)
+      const proceed = await proceedOf(w, el)
+      const before = measureDialog(el, proceed, PHONE)
+      expect(before.contentFloor, `the grown ${name} really is taller than the phone`).toBeGreaterThan(
+        before.available.height,
+      )
+      // ...and while the cap is on, the Proceed is still reachable.
+      assertDismissReachable(el, proceed, PHONE, `${name} (grown, capped)`)
+      ;(el as HTMLElement).style.maxHeight = 'none'
+      ;(el as HTMLElement).style.overflowY = 'visible'
+      expect(() => assertDismissReachable(el, proceed, PHONE, `${name} (cap removed)`)).toThrow(
+        /taller than the screen|outside the viewport/,
+      )
+      // ...and putting it back makes it green again, which is what says the CAP is the thing that
+      // holds and not an accident of the fixture.
+      ;(el as HTMLElement).style.maxHeight = ''
+      ;(el as HTMLElement).style.overflowY = ''
+      assertDismissReachable(el, proceed, PHONE, `${name} (cap restored)`)
+      w.unmount()
+    })
+
+    it(`⚠⚠ ${name}: MUTATION PROOF, THE OTHER HALF – the cap is asserted on TODAY's copy too`, async () => {
+      // The content-independent arm, and the one that still holds after the next honest sentence is
+      // added. Today's card FITS unaided, so the too-tall mutation cannot run on it and this one
+      // can; between them both branches of `assertDismissReachable` are exercised on this kind.
+      const { w, card: el } = mountAttached(card())
+      const proceed = await proceedOf(w, el)
+      expect(
+        measureDialog(el, proceed, PHONE).contentFloor,
+        `the shipped ${name} fits unaided, which is why this arm is separate`,
+      ).toBeLessThan(635)
+      ;(el as HTMLElement).style.maxHeight = 'none'
+      expect(() => assertDismissReachable(el, proceed, PHONE, `${name} (unbounded)`)).toThrow(
+        /declares no height bound that fits/,
+      )
+      w.unmount()
+    })
+  }
+
+  it('⚠ EVERY CELL OF THE ANNOUNCEMENT POOL FITS, not only the longest one', () => {
+    // The worst case decides the cases above; this one refuses to let a shorter cell hide a defect
+    // of its own – a frame that wraps differently, an option label that is only long beside THAT
+    // line. Eight mounts, eight measurements, and the dry card at `strained` as the ninth.
+    for (const cell of EXPECTING_CELLS) {
+      const { w, card } = mountAttached(expectingCard(cell.said))
+      const choices = card.querySelector('.life-beat-choices')!
+      assertDismissReachable(card, choices.lastElementChild!, PHONE, `expecting (${cell.voice}/${cell.stage})`)
+      w.unmount()
+      document.body.innerHTML = ''
+    }
+    const dry = lifeBeatSaid('expecting', 'p:900', 'sunny', 'level', 'cold', 'open', 'school')
+    expect(dry, 'the dry card really is a different line').not.toBe(EXPECTING_CELLS[0].said)
+    const { w, card } = mountAttached(expectingCard(dry))
+    assertDismissReachable(card, card.querySelector('.life-beat-choices')!.lastElementChild!, PHONE, 'expecting (dry)')
+    w.unmount()
+  })
 })

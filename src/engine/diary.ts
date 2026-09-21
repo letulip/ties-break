@@ -219,6 +219,14 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // ⭐ v83 (wave 7 – T10). Carried, not re-derived, on the line above's rule exactly: the log is
     // the engine's, and the week she moved out is one fact with one spelling.
     ownKeyWeek: view.ownKeyWeek,
+    // ⭐⭐⭐ wave 8b T2 (C6). Carried, not re-derived, on `partnerKnown`'s own rule and on the
+    // strongest form of it in this list: the arc's boundaries are the ENGINE's arithmetic
+    // (`motherhoodBandAt`, `world/lifeBeat.ts` §14, which reads the portrait's own late window so the
+    // words and the painting change together), and a diary that recomputed them would be a second
+    // spelling of a seam the whole system exists to keep single. R2-18's law as usual: the consuming
+    // band (the week note's eight motherhood lines) lands in this same task with its checker.
+    motherhoodBand: view.motherhoodBand,
+    motherhoodSupport: view.motherhoodSupport,
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

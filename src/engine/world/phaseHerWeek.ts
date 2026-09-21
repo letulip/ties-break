@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landWedding, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyPause, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -356,6 +356,95 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        the two kept surfaces (feed line, album row) go through the milestone channel, idempotent
   //        per episode. An ineligible week writes nothing at all.
   landWedding(world)
+  // ⭐⭐⭐ 1c-preg (v85, the pregnancy – wave 8 T2): AND THE WEEK SHE SAYS SHE IS HAVING A CHILD.
+  //
+  //        ⚠ THE SLOT IS ARGUED ON BOTH SIDES, `rollWedding`'s own way four lines up:
+  //          · **AFTER `rollEnds`**, so a marriage that ended THIS tick cannot be conceived into –
+  //            `endEpisode` has already written the date, `latchedEpisode` answers null, and the gate
+  //            refuses before any stream is derived. Nobody announces a pregnancy on the afternoon
+  //            of a divorce. ⚠ THIS IS THE ONLY PLACE ALIVENESS IS READ AT ALL, and it is read about
+  //            whether a NEW pregnancy may START – the decoupling law (RULED 20.09) binds T4's birth
+  //            and T5's decision, which read `world.pregnancy` and never the episode. See §14's own
+  //            banner, where the law is written out for the next builder.
+  //          · **AFTER `landWedding`**, and this one is load-bearing rather than free: the door IS
+  //            the latch and `landWedding` is what writes it, so running before it would give every
+  //            career a systematic blind week after its own wedding for no reason a player could be
+  //            told (`rollLeak`'s own argument about blind weeks, one call down). ⚠ THE PRICE IS
+  //            NAMED RATHER THAN SPECIAL-CASED: a wedding landing this tick CAN be conceived into on
+  //            the same week, at ~0.0006 – about one career in seventeen hundred weddings – and the
+  //            alternative is a depth threshold on the marriage that no brief drafted and that T9
+  //            could not tell from noise.
+  //          · **BEFORE `rollLeak`**, for the reading's sake alone and on `rollWedding`'s precedent:
+  //            the household hears her before the papers do.
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:pregnancy:<week>` sub-stream, and an INELIGIBLE week – every unmarried career,
+  //        every week a pregnancy already stands, every week a knock is running – derives nothing at
+  //        all, AS DOES a week whose age-shaped hazard is 0, which is every week under 24 and every
+  //        week from 35 (world/lifeBeat.ts §14). The frozen capture (41550 / e6b0c709) is untouched
+  //        by construction, and a frozen career (156 weeks, age 16.6) can never hold a latch, so the
+  //        gate's first clause refuses it before anything else is asked. ⚠ ITS OWN CALL, for
+  //        `accrueSpirit`'s own reason below – `accrueCondition`'s arity-2, zero-RNG contract is
+  //        pinned by B1 in tests/condition.test.ts.
+  //
+  //        ⚠ IT RAISES THE BLOCKING `'expecting'` BEAT AND WRITES `world.pregnancy` – the ONE place
+  //        in the engine that field goes non-null. The entries close at `pausesWeek` (T3), the birth
+  //        fires on `dueWeek` (T4); neither exists on this tree, so on this commit a pregnancy is a
+  //        record, a card and a feed line about the answer, and nothing about the season moves.
+  rollPregnancy(world)
+  // ⭐⭐ 1c-pause (v85, the pregnancy – wave 8 T3): AND THE WEEK THE ENTRIES CLOSE.
+  //
+  //        ⚠⚠ THIS IS NOT THE PAUSE. The pause is the entry gate reading
+  //        `world.pregnancy.pausesWeek` at the EVENT's week (`pauseCovering`, `world/medical.ts`),
+  //        which needs no tick step and has none: the calendar shuts on its own date from the moment
+  //        `rollPregnancy` writes it, eight weeks before this line ever runs. What this writes is the
+  //        ONE feed row that tells the parent which week it was – texture, and thin on purpose.
+  //
+  //        ⚠ THE SLOT IS FREE AND IS SAID SO RATHER THAN ARGUED AT LENGTH: `playsOnWeeks` is 8, so
+  //        the pause can never land on the week of its own announcement and the two calls cannot
+  //        collide on one tick. It sits HERE, immediately under its raise, so §14's two weekly steps
+  //        read as the one section they belong to.
+  //
+  //        ⚠ ZERO MAIN DRAWS AND ZERO DRAWS OF ANY KIND: it takes no `rng`, derives no stream, and a
+  //        week that is not `pausesWeek` – which is every week of every career that never paused –
+  //        returns on an integer comparison. The frozen capture (41550 / e6b0c709) cannot see it.
+  //
+  //        ⚠ AND IT RELEASES NOTHING. The injury layoff auto-withdraws her from the entries it covers
+  //        and refunds them; the pause refuses NEW entries and leaves `world.entries` alone, because
+  //        «already-booked events inside the window play out through the standing machinery» (§2 T3).
+  //        Nothing in this phase, or any other, takes a tournament off her for being pregnant.
+  landPregnancyPause(world)
+  // ⭐⭐⭐ 1c-birth (v85, the pregnancy – wave 8 T4): AND THE WEEK THE CHILD ARRIVES.
+  //
+  //        ⚠⚠ THE ONE SLOT CONSTRAINT IS **BEFORE `accrueSpirit`**, AND IT IS THE SAME ONE `rollEnds`
+  //        has six calls up: this is the second writer of `world.spiritShock`, and the pass that
+  //        PAYS for a shock is `accrueSpirit`, which reads `shock.week === world.week`. Landing after
+  //        it would post the mark on a week that had already been priced, so the postpartum band
+  //        would apply a week late for ever – `rollEnds`' own arrangement («four calls earlier in the
+  //        same tick»), inherited rather than re-derived.
+  //
+  //        ⚠ THE REST OF THE SLOT IS FREE AND SAYING SO IS THE ARGUMENT, `landPregnancyPause`'s own
+  //        note one line up: it sits immediately under the pause so §14's three weekly steps read as
+  //        the one section they belong to, and nothing between here and `accrueSpirit` reads
+  //        `world.pregnancy`, `world.children` or `world.spiritShock`. ⚠ AND IT CANNOT COLLIDE WITH
+  //        ITS OWN NEIGHBOURS: `termWeeks` is 31, so the birth can never land on the pause's week or
+  //        the announcement's.
+  //
+  //        ⚠⚠ THE ORDER AGAINST `rollEnds` IS LOAD-BEARING IN THE OTHER DIRECTION AND IS PART OF THE
+  //        RULING. `rollEnds` runs FIRST, so a marriage that ends on the very week of the birth
+  //        stamps `'breakup'` and this call then REPLACES it with `'postpartum'` – the later, larger
+  //        window winning, which is the brief's own sentence about the single slot. Reversed, the
+  //        divorce would outrank the birth on the one week both happen.
+  //
+  //        ⚠ ZERO DRAWS OF ANY KIND: it takes no `rng` and derives no stream – two integers compared
+  //        and four writes – and a week with no pregnancy returns on the first clause, which is every
+  //        week of every career that never conceived. The frozen capture (41550 / e6b0c709) cannot
+  //        see it, and a frozen career (156 weeks, age 16.6) can hold no latch and therefore no
+  //        pregnancy at all.
+  //
+  //        ⚠ IT READS `world.pregnancy` AND NEVER THE EPISODE – the decoupling law (RULED 20.09),
+  //        §14's banner, and the reason there is no `if` here about a marriage that ended.
+  landBirth(world)
   // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
   //
   //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a

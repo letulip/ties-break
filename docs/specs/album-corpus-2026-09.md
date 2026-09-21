@@ -249,11 +249,11 @@ rather than decorating it:
 | `season-rank` | 5 | 21 per dense career – the largest single kind in the pool, and the only family whose four could route a career to a sentence about a year it did not have |
 | `injury` | 2 | mass material; the second is the getting up, which is what §7 rules the mood on |
 | money and the road | 3 | `prize`, `international`, `break-even` – one apiece, once per career |
-| life | 2 | `school`, `wedding` |
+| life | 3 | `school`, `wedding`, ⭐ `birth` (wave 8b T6, RULED 21.09 – «да, получает, картинка теперь есть») |
 | assets | 5 | first house, brand, academy land / courts / building |
 | super-rare | 3 | his 19.09 addition; each fires seldom by design |
 | closing | 3 | `graduated`, `farewell`, `career-ended` – the spec's three written frames, each on its own gate since 20.09 |
-| **total** | **33** | **× 4 voices × 3 registers = 396 strings** |
+| **total** | **34** | **× 4 voices × 3 registers = 408 strings** |
 
 ⚠ **What is deliberately NOT written, and why.** Academy STAFF (37% coverage, spec §5) has no
 occasion: it lands in the same year as the building on almost every career that reaches it, and
@@ -344,15 +344,19 @@ the commit»), and the anti-vacuity half, because a comparison of two empty list
 
 | written | count |
 | --- | ---: |
-| occasions | **33** |
-| notes (33 × 4 voices) | **132** |
-| captions (33 × 4 voices) | **132** |
-| lines (33 × 4 voices) | **132** |
+| occasions | **34** |
+| notes (34 × 4 voices) | **136** |
+| captions (34 × 4 voices) | **136** |
+| lines (34 × 4 voices) | **136** |
 | arc cells (2 directions × 4 voices) | **8** |
 | arc strings (8 × note + line) | **16** |
-| ⭐ authored strings in total | **412** |
+| ⭐ authored strings in total | **424** |
 
-**Completeness**: every one of the 33 occasions carries all four voices in all three registers.
+⚠ **THE COUNTS MOVED AT WAVE 8b T6 AND THE TWELVE NEW STRINGS ARE THE ONLY ONES ON THE PAGE THAT ARE
+NOT WAVE 7's.** A34 (`birth`) is the thirty-fourth occasion, ruled 21.09; every string of it is a
+DRAFT awaiting his pass, exactly as the other 396 were when they landed.
+
+**Completeness**: every one of the 34 occasions carries all four voices in all three registers.
 There is no partial row and no «voice to be written later» – the parser refuses a short table, and
 the pin asserts 132/132/132 rather than «some of each». The arc's two-register shape is the only
 declared exception in the document and §5 gives its reason.
@@ -969,6 +973,45 @@ reaches this occasion again, and the handwriting does not need to know which tim
 | `fiery` | `The wrong moment, she says.` |
 | `deep` | `I am keeping that one.` |
 | `quiet` | `She stopped checking the time.` |
+
+### A34 · `birth` · birth · adult, lateCareer · `any`
+**The occasion:** the week her daughter was born.
+**Where it comes from:** the `birth` milestone, captured by `landBirth` (`world/lifeBeat.ts` §14).
+Its identity is per WEEK rather than per episode – a second child of the same marriage is W5's and
+would reach this occasion again on its own week, and the handwriting does not need to know which
+time it is (§4, the wedding's own rule one occasion up).
+⚠⚠ **WAVE 8b T6, AND EVERY STRING BELOW IS A DRAFT AWAITING HIS PASS** (invariant 4). The occasion
+itself is RULED – «да, получает, картинка теперь есть», 21.09 – and E2's own recommendation is what
+it answers: «a birth is the largest life event the album could hold».
+⚠ **The other person is never named, characterised or given a sex** (§3.3) – the wedding's law, and
+here it is load-bearing rather than polite: the marriage may have ended months before the birth and
+the milestone fires anyway (§0's decoupling ruling), so a line that named him would be false on
+exactly the careers that ruling exists to protect.
+⭐ **The CHILD may be called a daughter**, and that is a different law: the sex is ruled and written
+as a literal `'girl'` on the row (20.09, «пол нужен, но мальчиков у нас пока нет»), so a sentence
+that says «daughter» states a fact the save holds rather than guessing at one.
+⚠ **No figure and no meter**, §3's money law – there is no birth fee and no number to quote.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `You were talking before we were through the door, and none of it was about tennis.` |
+| `fiery` | `You had a list. By the second day the list was somewhere under the pram.` |
+| `deep` | `You said almost nothing for a week and I have never seen you so certain.` |
+| `quiet` | `You let the house fill up with people and did not once look at the clock.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `Talking before she was through the door.` |
+| `fiery` | `The list did not last two days.` |
+| `deep` | `Almost nothing, all week.` |
+| `quiet` | `She did not look at the clock once.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `None of it was about tennis.` |
+| `fiery` | `Somewhere under the pram.` |
+| `deep` | `I have never seen her so certain.` |
+| `quiet` | `The clock could wait.` |
 
 ## The assets – five firsts
 

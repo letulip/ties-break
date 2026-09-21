@@ -64,6 +64,15 @@ import type { TierId } from './season/types'
 // the day a sixth exposure kind joins the union, `vue-tsc` names the missing base instead of letting
 // a kind ship priced at `undefined`, which would poison the whole weekly sum with `NaN`.
 import type { ExposureKind } from './world/spotlight'
+// ⚠⚠ TYPE-ONLY FOR THE IDENTICAL REASON, and it buys the identical thing one mechanic over: `shock`
+// below is `Record<SpiritShockKind, … | null>` and therefore TOTAL, so the day step 8's kind joins the
+// union `vue-tsc` names the missing band instead of letting a shock ship priced at `undefined` – which
+// would poison `accrueSpirit`'s weekly sum with `NaN` exactly as an unpriced exposure would.
+// ⚠ `PregnancyState` JOINS IT IN v85 T4 FOR THE IDENTICAL REASON, one mechanic further on:
+// `postpartumSupportScale` below is `Record<NonNullable<PregnancyState['support']>, number>` and
+// therefore TOTAL, so the day a fourth answer grade joins that union `vue-tsc` names the missing
+// factor instead of letting a grade ship multiplying the postpartum band by `undefined`.
+import type { PregnancyState, SpiritShockKind } from './world/state'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
 // nothing, so this direction can never close a cycle.
@@ -4346,7 +4355,142 @@ export const ECONOMY = {
      *  else. §4's own prediction for a lifted 75 is the whole of the shape: ~1–2 weeks under the knee
      *  for a steady girl, ~6–7 for an intense one. A second return rate here would be a second
      *  mechanic wearing a constant. */
-    shock: { breakup: { steady: -22, intense: -34 } },
+    /** ⭐⭐⭐ v85 T4 – AND WHAT A BIRTH COSTS HER, THE SECOND BAND, **THE BUILDER'S OWN DRAFT**. T1
+     *  parked this cell as `null` with the whole of why in its place («these are two TUNING NUMBERS,
+     *  and invariant 5 says tuning is measured and not guessed – T9 benches the wave's constants and
+     *  T4 is the kind's only writer»), and T4 is that writer: `landBirth` (`world/lifeBeat.ts` §14)
+     *  stamps `kind: 'postpartum'` on the week the child is born. The `null` is replaced, the key is
+     *  not moved, and the brief's §4 contract holds – it ships at its drafted value, unruled, and T9
+     *  benches recovery weeks by grade with the psychologist on and off.
+     *
+     *  ⭐⭐⭐ **THE BASE MOVED AT WAVE 8b T4 AND THE SCALE DID NOT – HIS RULING ON D5, 21.09.** The
+     *  questions pass put it to him as «the postpartum window is never shorter than a break-up at the
+     *  same grade», and he ruled it in. What was wrong is the `warm` column, which this note's own
+     *  last paragraph used to defend out loud: wave 8 shipped a supported birth clearing in **3**
+     *  weeks against the break-up's **4** for a steady girl, and **8** against **10** for an intense
+     *  one. A birth is physically the larger event; support should SHORTEN the window, not take it
+     *  under the break-up's floor. So the BASE moves from −30 to **−36** and
+     *  `postpartumSupportScale`'s 0.8 / 1 / 1.25 is untouched, which is exactly the shape D5's own
+     *  sentence prescribes («the base moves and not the scale»).
+     *
+     *  ⚠⚠ **WHY −36 AND NOT −35, WHICH IS THE ARITHMETIC MINIMUM.** The floor needs `warm` to reach
+     *  the break-up's 4 and 10: she lands at 75 + delta, climbs at 5 (steady) / 3 (intense) a week and
+     *  clears at `baseline − shockClearWithin` = 68, so the binding conditions are
+     *  `ceil((base × 0.64 − 7) / 5) ≥ 4` → base > 34.375 and `ceil((base − 7) / 3) ≥ 10` → base > 34.
+     *  **−35 satisfies both and is not available**: −35 × 1.25 = −43.75, which is HUNDREDTHS, and
+     *  `world.spirit` is carried in tenths (`roundTenth` at the end of `accrueSpirit`'s sum) – the
+     *  same constraint this note already applied to −37.5. Keeping both products on the meter's own
+     *  grid needs a base that is a multiple of 2, and **36 is the first one above 34.375**. ⭐ SO THE
+     *  MOVE IS THE SMALLEST THE RULING ALLOWS: at `warm` the two windows come out LEVEL rather than
+     *  the birth dwarfing the break-up, which would have been a second, undrafted decision about how
+     *  much worse a birth is.
+     *
+     *  ⚠⚠ THE SHAPE IS `breakup`'s, ONE BASE SEEN THROUGH `perturbationScale`, and the arithmetic is
+     *  written out because a later reader cannot recover it from the values: ONE base of **−36**,
+     *  −36 × 0.8 = **−28.8** and −36 × 1.25 = **−45.0**. ⚠ BOTH PRODUCTS SHIP EXACTLY, which is where
+     *  this parts from `breakup` above rather than contradicting it: §4's own table named −22/−34 in
+     *  words and the single-source rule kept them against the derived −34.375. No table names these
+     *  two, so there is nothing for an exact product to disagree with, and `world.spirit` is carried
+     *  in TENTHS (`roundTenth` at the end of `accrueSpirit`'s sum), so −37.5 is a value the meter can
+     *  actually hold.
+     *
+     *  ⚠⚠ WHY A BIRTH SITS ABOVE A BREAK-UP ON THE SAME AXIS AT ALL – the two reasons the −30 draft
+     *  was argued on, both still standing and both now carried further by his D5 ruling. ⚠ The
+     *  paragraph is kept in its original terms («why −30 and not −27.5», a 9% gap) because it is the
+     *  REASONING that survives, not the number: at −36 the gap is 31%, and it is his ruling that
+     *  widened it rather than any of the arithmetic below. Note that the FIRST reason is arithmetic
+     *  rather than sentiment:
+     *    · **THE ATTACHMENT LIFT DOES NOT LEAVE.** A break-up takes its −22/−34 *and* empties the
+     *      slot on the same tick, so the effective baseline falls 75 → 70 and she is climbing toward
+     *      the lower number. A birth does neither: the marriage usually still stands, `activeEpisode`
+     *      is unchanged, and she climbs toward 75. At an equal base the birth would therefore CLEAR
+     *      SOONER than the break-up, and the brief's own sentence about this slot is that the
+     *      postpartum window is the LARGER one – «the later, larger window wins». The +9% is what
+     *      buys that back: measured below, it puts the middle grade LEVEL with the break-up for a
+     *      steady girl and a week past it for an intense one, which is as close to «larger, and not
+     *      by much» as a rate of 5 points a week can be made to land.
+     *    · the research's row is about the RECOVERY and not about the blow – «support speeds
+     *      recovery; pressure → depression risk ↑» (`docs/research/life-events-motherhood.md`) – so
+     *      there is no digest number to transcribe here and the base is sized on the recovery it
+     *      PRODUCES, which is the quantity T9 can measure and his word can land on.
+     *
+     *  ⭐ WHAT IT PREDICTS, MEASURED ON THE ENGINE'S OWN WALK (tests/wave8-birth.test.ts §E, a married
+     *  career at the lifted 75, psychologist off) rather than computed on paper – weeks from the birth
+     *  until `accrueSpirit`'s tail clears the mark:
+     *
+     *        grade        steady      intense        (wave 8's own, at the −30 base: 3/8, 4/11, 5/13)
+     *        warm            4           10
+     *        measured        5           13
+     *        cold            6           16
+     *
+     *  against the BREAK-UP's own **4 / 10**, measured on the SAME instrument and on the break-up's
+     *  own shape (the episode ends the same tick, so the lift leaves with it) rather than transcribed
+     *  – `breakupWeeks` in that file is the arm, added by T4 for exactly this comparison, so the
+     *  floor cannot go stale the day the break-up's own band moves.
+     *
+     *  ⭐⭐⭐ **EVERY CELL IS NOW AT OR ABOVE THE BREAK-UP'S, WHICH IS THE WHOLE OF D5.** `warm` is
+     *  LEVEL on both axes (4 and 10), `measured` and `cold` sit above it, and the ordering
+     *  `warm < measured < cold` is unchanged on all four voices. ⚠ THE OLD PARAGRAPH'S LAST SENTENCE
+     *  IS GONE AND IS NAMED HERE SO THE CHANGE IS NOT SILENT: it read «`warm` is deliberately UNDER it
+     *  – a supported birth is an easier week than being left. That is the one place the ordering is
+     *  allowed to cross.» It was true of the draft, it was said out loud rather than hidden, and he
+     *  ruled the other way.
+     *
+     *  ⚠ NO SECOND CURVE AND NO RECOVERY TERM – `spirit.ts`'s own «THERE IS NO RECOVERY CURVE,
+     *  ANYWHERE, BY DESIGN» is untouched by this row and by `postpartumSupportScale` below, which is
+     *  the reason support enters through the MAGNITUDE. See that constant's note for the whole of the
+     *  argument, including the mechanical one. */
+    shock: { breakup: { steady: -22, intense: -34 }, postpartum: { steady: -28.8, intense: -45 } } satisfies Record<
+      SpiritShockKind,
+      { steady: number; intense: number } | null
+    >,
+    /** ⭐⭐⭐ v85 T4 – **WHERE `support` ENTERS THE RECOVERY**, and it is the whole of the wave's
+     *  «support speeds recovery; pressure → depression risk ↑» (the digest's own row for the return).
+     *  A pure multiplier on the postpartum band above, applied ONCE, on the one week the shock lands.
+     *  **THE THREE FIGURES ARE THE BUILDER'S DRAFT** – the brief drafts the DIRECTION («`warm`
+     *  shortens, `cold` lengthens», §0) and not the size – flagged exactly as `motherhood.perWeekByAge`
+     *  and `wedding.perWeek` are, and benched by T9.
+     *
+     *  ⚠⚠ THE MAGNITUDE AND NOT THE SLOPE, AND THE FILE THAT OWNS THE RECOVERY IS WHAT DECIDES IT.
+     *  `engine/spirit.ts` says of the shock, in capitals: «AND THERE IS NO RECOVERY CURVE, ANYWHERE,
+     *  BY DESIGN … A second return rate, a «recovering» flag or a taper read off `spiritShock` would
+     *  all be the same mistake». A support term on `returnPerWeek` IS a second return rate, by that
+     *  sentence's own definition. A support term on the MAGNITUDE is the week's own weather, and the
+     *  weeks she then takes to climb out of it fall out of the standing weekly rule – so «support
+     *  speeds recovery» is a MEASUREMENT of arithmetic that already existed rather than a second
+     *  mechanic wearing a constant.
+     *
+     *  ⚠⚠ AND THE MECHANICAL ARGUMENT IS THE DECIDING ONE, because it is not a matter of taste:
+     *  `support` lives on `world.pregnancy`, and **T5 and T6 CLEAR that record** – the return has to
+     *  clear it or W5's repeat pregnancy can never re-enter the gate (`state.ts`'s own note on
+     *  `comeback`). A RATE that read `support` would therefore change silently, mid-recovery, on the
+     *  week she came back, and a magnitude cannot: it is read on the birth week, when the record is
+     *  provably non-null (T4 writes nothing to it, and T5's window opens
+     *  `decisionWeeksAfterBirth` weeks later).
+     *
+     *  ⚠ AND NOT THE CLEAR THRESHOLD, THE THIRD CANDIDATE, which is refused on ruling D's own ground:
+     *  `shockClearWithin` is read against the PLAIN baseline because the mark is «a question about HER
+     *  recovery, not about who is in her life now». Bending the bar per grade would make «back on her
+     *  feet» mean a different number for two girls who feel the same, which is the exact reading
+     *  ruling D refused for the attachment lift.
+     *
+     *  ⭐ THE TWO FACTORS ARE EXACT RECIPROCALS – 0.8 = 1 / 1.25 – so «warm shortens and cold
+     *  lengthens by the same factor» is true of the arithmetic and not only of the sentence, and
+     *  `measured` is exactly **1**, so the band above IS the measured-grade magnitude and a career
+     *  whose parent answered `worry` takes the two numbers as written. ⚠ THE COLLISION WITH
+     *  `perturbationScale`'s 0.8 / 1.25 IS THE RECIPROCAL PAIR TURNING UP TWICE AND NOT A SHARED ROW:
+     *  that one is keyed by INTENSITY (who she is), this one by the parent's ANSWER, they multiply the
+     *  same summand on different axes, and folding them would be a category error. Named here so
+     *  nobody folds them.
+     *
+     *  ⚠ A `null` GRADE READS 1.0 AND THAT IS A PROBE-WORLD COURTESY, not a fourth cell: the
+     *  `'expecting'` beat BLOCKS (`LIFE_BEAT_BLOCKING`), so a career cannot tick the ~39 weeks from
+     *  the announcement to the birth with the card still up, and `support === null` at a birth is
+     *  unreachable in play. `accrueSpirit`'s `??` courtesies are the same instrument. */
+    postpartumSupportScale: { warm: 0.8, measured: 1, cold: 1.25 } satisfies Record<
+      NonNullable<PregnancyState['support']>,
+      number
+    >,
     /** ⭐⭐ HOW CLOSE TO HER OWN BASELINE COUNTS AS BACK – the gap `accrueSpirit`'s tail clears
      *  `world.spiritShock` at (the build plan §5 step 4: «clears when spirit ≥ baseline − 2», i.e.
      *  **68**).
@@ -4937,6 +5081,362 @@ export const ECONOMY = {
     spouseViewHearBond: 1,
     spouseViewLevelBond: -0.5,
     spouseViewBrushBond: -1.5,
+  },
+
+  /** ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN (wave 8; `docs/plans/life-wave-8-builder-2026-09.md`
+   *  §2 T2–T6, the design `docs/plans/the-wedding-and-the-children.md` §5 W3+W4). `ECONOMY.wedding`'s
+   *  block one wave on and in its voice: one block, every number the wave spends, each row naming the
+   *  task that reads it.
+   *
+   *  ⚠ WITH **TWO** EXCEPTIONS, NAMED HERE SO THE SENTENCE ABOVE STAYS HONEST: T4's postpartum shock
+   *  band and the `support` factor that scales it live in `ECONOMY.spirit` (`shock.postpartum` and
+   *  `postpartumSupportScale`), because their one reader is `accrueSpirit` and `ECONOMY.spirit`'s own
+   *  law is that its rows are the weekly pass's – `attachmentLift`'s note states it («it is read by
+   *  `accrueSpirit` and by nothing else»). Put here they would have made `engine/spirit.ts`'s header
+   *  false («Every constant lives in `ECONOMY.spirit` / `ECONOMY.bond`»), which is a worse trade than
+   *  this cross-reference.
+   *
+   *  ⚠⚠ EVERY NUMBER BELOW IS A DRAFT FOR THE BENCH AND NONE IS RULED – the brief's §4 contract, the
+   *  wedding block's own sentence inherited whole: «every §2 number ships at its drafted value,
+   *  unruled, which is the contract and not an omission». T9 benches them and HIS word lands on
+   *  numbers, not on a blank. ⚠ NO CENTS ANYWHERE IN THIS BLOCK – there is no birth fee (§2 T4's own
+   *  «NO COST EVENT», the wedding-price ruling of 18.09 read one wave on) and the three deltas below
+   *  are BOND POINTS on `applyBondDelta`'s scale, to which the cents rules do not apply.
+   *
+   *  ⭐⭐⭐ AND THE RATE IS **DERIVED**, WHICH IS THE ONE THING THIS BLOCK EXISTS TO MAKE READABLE AT
+   *  THE CONSTANT. His 20.09 push-back is why this paragraph is here and not in a plan file: «а на
+   *  чем основана цифра? не великовато получится?» – and the first draft's 35–60% census died of it,
+   *  because it was sized by VISIBILITY («the player should get to see this») rather than by
+   *  anything. The source is HIS OWN RESEARCH DIGEST, `docs/research/life-events-motherhood.md:31`,
+   *  the personal-life arc's own table row:
+   *
+   *      | First pregnancy | 24–35 | 2–4% | support only – reaction sets recovery trajectory |
+   *
+   *  So the whole of the rate is that row: the WINDOW is 24–35, the ANNUAL band is 2–4%, and the
+   *  weekly hazard is `annual / 52` on an eligible week. The division is written out in the rungs
+   *  below rather than pre-computed, so what a reader sees IS the digest's own number: nobody has to
+   *  trust a transcription of `0.000577`, and nobody can re-tune the annual figure by editing a
+   *  sixth decimal place that no longer says where it came from.
+   *
+   *  ⭐ WHAT THE CURVE PREDICTS, AS A NUMBER, BECAUSE A DERIVATION WITH NO PREDICTION IS A STORY:
+   *  **15–30% of latched careers reach a pregnancy by 35** – RULED 20.09 («и это ок»), straight from
+   *  the research over the ~8.5 married window-years the corridor is stated on (1 − 0.98^8.5 ≈ 16%,
+   *  1 − 0.96^8.5 ≈ 29%). ⚠ THE CORRIDOR IS HIS AND IS NOT THE CURVE'S TO BEND: T9 measures the
+   *  realised share against it, and a curve that misses is the curve's finding, never the corridor's.
+   *
+   *  ⚠⚠ THE SHAPE OF THE CURVE IS THE **BUILDER'S OWN DRAFT** – the brief drafts the window and the
+   *  annual band and NOT the shape, so it is flagged here exactly as `wedding.perWeek` and
+   *  `wedding.spouseViewSpendCents` are, and nobody may mistake it for the architect's. Its
+   *  arithmetic, in full:
+   *
+   *    · the four rungs weight the window as 3y at 2%, 3y at 3%, 4y at 4%, 1y at 3% – mean annual
+   *      (3·2 + 3·3 + 4·4 + 1·3) / 11 = 34/11 ≈ **3.09%**, the middle of the digest's own 2–4%;
+   *    · at the corridor's stated ~8.5 married window-years that mean gives
+   *      1 − (1 − 0.0309)^8.5 ≈ **23.4%** – the middle of his corridor, which is where a derived
+   *      figure ought to land when it is derived from the band the corridor was derived from;
+   *    · a career married across the WHOLE window is the ceiling: 1 − 0.98³·0.97³·0.96⁴·0.97 ≈
+   *      **29.2%** by the annual arithmetic, **28.8%** by the week-by-week walk the engine actually
+   *      performs (weekly compounding is marginally gentler). Under the corridor's 30% either way;
+   *    · the likely middle, given wave 7: a 0.006/week wedding hazard from 23 waits ~167 weeks on
+   *      average, so the typical marriage latches around 26–27 → **25.2%**;
+   *    · a career latched LATE – say at 31, which that hazard makes uncommon but real – carries
+   *      **13.9%**, and that is the floor of the SPREAD and not of the corridor, which is a claim
+   *      about the POPULATION share rather than about one career. ⚠ THE REALISED FIGURE WILL SIT
+   *      UNDER EVERY NUMBER ABOVE, and the reasons are all real: careers retire, marriages end
+   *      (wave 7 measured 6.2 endings per 100 latched episode-years), and the knock clause skips
+   *      weeks. T9 measures; these are the predictions it measures against.
+   *
+   *  ⚠ WHY IT RISES AND THEN TAPERS rather than sitting flat at 3%: the digest's own two sentences
+   *  about the same population. «First-child ages among pros: 26 / 28 / 31 / 35 – wide spread over
+   *  the 24–35 window» puts the mass ABOVE the early twenties, and «the child-vs-career-peak dilemma
+   *  (peak 23–28) is the emotional core» says why – the years the hazard competes hardest with are
+   *  the peak years, and a flat curve would have said the peak costs nothing. */
+  motherhood: {
+    /** ⚠⚠ THE WEEKLY HAZARD ON AN ELIGIBLE WEEK, BY AGE – the block's own note above carries the
+     *  derivation, the census it predicts and the flag that the SHAPE is the builder's draft.
+     *
+     *  ⚠ THE ANNUAL FIGURE IS QUOTED AS THE NUMERATOR AND NOT IN A COMMENT BESIDE THE ANSWER. `0.03 /
+     *  52` is the digest's 3%/yr spread over its 52 weeks, evaluated at build time and costing a
+     *  reader nothing; `0.000577` would be a transcription with its provenance thrown away, which is
+     *  the exact failure the 20.09 push-back was about.
+     *
+     *  ⚠ READ AS RUNGS: the LAST rung whose `fromAge` the girl has reached wins, and an age under the
+     *  first rung takes 0 (`pregnancyChanceAt`, `world/lifeBeat.ts` §14). ⚠ ASCENDING AND
+     *  APPEND-ONLY-IN-SPIRIT: the read depends on the order, so a rung inserted out of sequence
+     *  silently re-shapes the curve – `tests/wave8-pregnancy.test.ts` §A pins that it is sorted.
+     *
+     *  ⭐ THE 0 AT 35 IS A RUNG AND NOT AN ABSENCE, deliberately: «the window closes» is a sentence
+     *  somebody had to type, and a table that simply stopped would leave the last real rung running
+     *  for ever. ⚠⚠ AND NEITHER ZERO IS A GATE. §0's adopted recommendation is «the age window is the
+     *  research's 24–35, hazard-shaped, NEVER a hard gate» – `pregnancyEligible` holds no age clause
+     *  at all, the marriage door (23+, wave 7) keeps the junior years out by construction, and a 0
+     *  here takes ZERO DRAWS exactly as an ineligible week does (the roll returns on the chance
+     *  before it derives the stream). The difference is not cosmetic: a gate would have to be
+     *  re-argued to move, and a rung is re-tuned by T9 with one number. */
+    perWeekByAge: [
+      // 24–27 – the window opens on the digest's own lower bound, at its LOWEST annual rate: these
+      // are the peak years (23–28), the ones a pregnancy competes hardest with, and the digest's
+      // youngest observed first child among pros is 26.
+      { fromAge: 24, perWeek: 0.02 / 52 },
+      // 27–30 – the middle of the band, and the two commonest observed ages (26 / 28) sit across
+      // this rung and the one below it.
+      { fromAge: 27, perWeek: 0.03 / 52 },
+      // 30–34 – the digest's TOP annual rate, after the peak has passed: the observed 31 sits here,
+      // and this is the stretch where a pause costs a career the least of what it was going to have.
+      { fromAge: 30, perWeek: 0.04 / 52 },
+      // 34–35 – the tail. The digest's oldest observed first child is 35, so the window is real this
+      // late and thin: back to 3%/yr for its last year.
+      { fromAge: 34, perWeek: 0.03 / 52 },
+      // 35+ – the window closes. See the ⭐ note above: a rung, not an absence, and not a gate.
+      { fromAge: 35, perWeek: 0 },
+    ],
+    /** ⭐ SHE PLAYS ON THIS MANY WEEKS AFTER THE ANNOUNCEMENT, and then the entries close – the
+     *  research's own «pros play into the early months». Drafted 8 (the brief's figure). T2 writes
+     *  `pausesWeek` off it at the announcement; T3 is what makes the week actually close.
+     *  ⚠ PERSISTED ON THE RECORD AND NOT RE-DERIVED AT READ – `PregnancyState`'s own law (T1, and
+     *  `partnerName`'s one wave down): a later retune of this number must never move the pause date
+     *  of a pregnancy a live career is already carrying. */
+    playsOnWeeks: 8,
+    /** ⭐ AND THE BIRTH IS THIS MANY WEEKS AFTER THE PAUSE – `dueWeek = pausesWeek + termWeeks`, the
+     *  brief's own formula, drafted 31 (the brief's figure). ⚠ THE TWO TOGETHER ARE THE TERM: 8 + 31
+     *  = **39 weeks from the announcement to the birth**, which is a full human term with the
+     *  announcement read as its week 0 and the pause landing at week 8 – early enough that the
+     *  research's «plays into the early months» is what the calendar actually does.
+     *  ⚠ THE BRIEF'S OWN PARENTHETICAL («announcement lands around pregnancy week 8, term at 39») is
+     *  the rationale for the 31 and reads one word loose – the arithmetic it describes only closes if
+     *  it is the PAUSE that lands around pregnancy week 8, which is what the formula beside it says
+     *  and what is built. Reported rather than papered over; both numbers ship at their drafted
+     *  values. T4 fires the birth on `dueWeek`. */
+    termWeeks: 31,
+    /** ⭐ THE PARENT'S THREE ANSWERS AT THE `'expecting'` BEAT – the research's own finding made
+     *  mechanical («support only – reaction sets recovery trajectory», the digest's row): joy /
+     *  worry / the career first, priced on `bond` through the existing `answerLifeBeat` seam exactly
+     *  as every other beat's answers are, AND persisted as `support` on the pregnancy record, which
+     *  T5's decision and T4's postpartum recovery both read. One answer, two consequences, zero new
+     *  meters. Drafted +2.5 / −0.5 / −4 (the BRIEF's own figures, not the builder's), corridors
+     *  benched in T9, his word after the numbers.
+     *  ⚠ NO ZERO AMONG THEM, deliberately – the THIRD no-free-answer kind after `'ended'` and
+     *  `'engaged'`: an announcement like this is not a card a parent can answer without it meaning
+     *  something. `DRAIN_ANSWER['expecting']` is `worry`, whose −0.5 is the same −0.5 under every
+     *  reading (no overlay exists for this kind), so the harnesses can state their skew exactly –
+     *  `'spouse-view'`'s own precedent: the registry names the MILDEST of a kind with no zero. */
+    joyBond: 2.5,
+    worryBond: -0.5,
+    careerFirstBond: -4,
+    /** ⭐⭐ HOW LONG THE MONTHS AFTER THE BIRTH RUN BEFORE SHE SAYS – drafted 20 (the BRIEF's figure,
+     *  §2 T5). ⚠ THE DRAW LANDS AT THE **END** OF THIS WINDOW AND NOT AT ITS START, which is what
+     *  makes the number price anything at all; `decisionWeekOf` (`world/lifeBeat.ts` §14) is where
+     *  that is argued, and its strongest reason is mechanical rather than narrative – T4 MEASURED the
+     *  postpartum mark clearing in 3–13 weeks by grade and intensity, so at +20 her `spirit` is her
+     *  recovered spirit and the term below reads a number that has finished moving.
+     *  ⚠ THE PAUSE OUTLIVES THE BIRTH BY EXACTLY THIS MANY WEEKS. `pauseCovering` has no upper bound
+     *  of its own (T3's finding): entries stay shut from `pausesWeek` until the record goes null, and
+     *  `termWeeks + decisionWeeksAfterBirth` = 31 + 20 = **51 weeks with no new entry**, a year almost
+     *  to the week. (Not «off tour»: already-booked events inside the window still play out, which is
+     *  the distinction the `'family'` ending's own detail line is written to respect.) T9 measures what
+     *  that costs her ranking; nothing here decides it. */
+    decisionWeeksAfterBirth: 20,
+    /** ⭐⭐⭐ HER CHANCE OF **TRYING** – the base, before the four terms below move it. Drafted 0.65
+     *  (the BRIEF's figure, «~65% to TRY»).
+     *
+     *  ⚠⚠ THIS IS HALF OF A TWO-FACTOR MODEL AND THE OTHER HALF IS NOT IN THIS BLOCK. The research's
+     *  headline is «~40% of mothers return SUCCESSFULLY», and the brief splits it honestly rather than
+     *  shipping one number that pretends to be both:
+     *
+     *      her decision to TRY        DRAWN, here, ~65% and `support`-weighted
+     *      whether the comeback WORKS EMERGENT from T6's pricing – MEASURED, never drawn
+     *
+     *  and the product is the sanity line: 0.65 × ~0.6 ≈ 0.4. ⚠⚠ SO NO CONSTANT IN THIS BLOCK MAY EVER
+     *  DECIDE WHETHER THE COMEBACK WORKED. A success rate written here would collapse the two factors
+     *  into one and make T9's check circular – it checks the PRODUCT against the digest's sentence
+     *  precisely so that neither factor has to be forced to a target. A builder who finds themselves
+     *  reaching for such a number stops and brings it; it belongs to T6's pricing and to nobody's draw.
+     *
+     *  ⚠ THE BASE IS THE **`measured`** RATE EXACTLY, because `returnSupportShift.measured` is exactly
+     *  0 – `ECONOMY.spirit.postpartumSupportScale`'s own arrangement one wave-task down, and for its
+     *  reason: the band a reader sees written down should be the band one real grade actually takes. */
+    returnBase: 0.65,
+    /** ⭐⭐⭐ THE BIGGEST TERM, AND IT IS THE DIGEST'S OWN CLAIM – «support only – reaction sets
+     *  recovery trajectory» (`docs/research/life-events-motherhood.md:31`). ⚠ THE SHAPE IS THE
+     *  **BUILDER'S DRAFT** and is flagged here exactly as `perWeekByAge` above is; the BRIEF drafts
+     *  the base and the ordering of the terms, not the sizes.
+     *
+     *  ⚠ THE ARITHMETIC, IN FULL:
+     *    · grades land at **0.80 / 0.65 / 0.45** – a 35 pp spread, which is more than twice what the
+     *      other three terms can move between them at realistic inputs (±0.04 spirit + ±0.03 bond +
+     *      0…−0.04 age ≈ 0.11 of span). «The biggest term» is arithmetic here, not an adjective;
+     *    · `measured` is EXACTLY 0, so `returnBase` above IS the measured-grade rate;
+     *    · THE ASYMMETRY IS THE ANSWERS' OWN. The three answers are already priced on `bond` at
+     *      +2.5 / −0.5 / −4 (the brief's ruled figures, three fields up), so the cold answer is the
+     *      heaviest of the three – ratio 4 / 2.5 = 1.60. This table keeps the direction and is
+     *      deliberately GENTLER: 0.20 / 0.15 = 1.33. One cold sentence eleven months earlier should
+     *      TILT a woman's decision about her own career; it may not decide it.
+     *  ⚠ A `null` GRADE TAKES THE `measured` CELL and is not a fourth column – `postpartumSupportScale`'s
+     *  own `??` courtesy: the `'expecting'` beat BLOCKS, so no career can tick the 51 weeks from the
+     *  announcement to the decision without answering it, and the null is a probe world's answer. */
+    returnSupportShift: { warm: 0.15, measured: 0, cold: -0.2 },
+    /** ⭐ HER OWN STATE, PER POINT OF `spirit` OFF `ECONOMY.spirit.baseline` (70). Builder's draft.
+     *  ±0.04 over the ±10 band a recovered girl really sits in at the decision week; −0.28 / +0.12 at
+     *  the ends of the 0–100 scale, which the clamp below then catches. ⚠ IT IS SECOND AND NOT FIRST
+     *  ON PURPOSE: the digest's row says SUPPORT sets the trajectory, so her mood may move the
+     *  decision and may not dominate it. */
+    returnSpiritPerPoint: 0.004,
+    /** ⭐ AND THE PARENT'S STANDING, PER POINT OF `bond` OFF `ECONOMY.bond.start` (70). Builder's
+     *  draft, and deliberately HALF the spirit term per point: §4a's law is that her life moves
+     *  `spirit` and his words move `bond`, so the number that is about HIM sits behind the number that
+     *  is about HER in a decision that is hers. ±0.03 over a realistic 55–85, ±0.06 over the whole
+     *  scale. */
+    returnBondPerPoint: 0.002,
+    /** ⭐ THE AGE TERM, AND IT IS ONE-SIDED. Builder's draft: nothing at or below `returnAgePivot`,
+     *  and `returnAgePerYearOver` off the chance for each whole year past it.
+     *
+     *  ⚠ ONE-SIDED RATHER THAN SYMMETRIC, and the reason is the drafted base. A symmetric term would
+     *  pay a 25-year-old a bonus and push her above 0.65, and then the BRIEF's own «~65% to TRY» would
+     *  no longer be the base of anything – it would be the rate of a girl nobody is. So youth is the
+     *  default and age is the cost, which is also the shape the digest describes: the window it names
+     *  is 24–35 and the comeback stories in it thin out at the top of that range.
+     *  ⚠ THE PIVOT IS 30 – the middle of the research's own 24–35 window rounded to a year, and the
+     *  age a career that conceived at the hazard's own likeliest rungs actually reaches the decision
+     *  at. The reachable span is −0 at 27 to −0.09 at 36 (the oldest decision this wave can produce:
+     *  conception at 35, +39 weeks to the birth, +20 more to here, WHOLE years), so the whole term is
+     *  worth just under two thirds of the warm grade and never more. */
+    returnAgePivotYears: 30,
+    returnAgePerYearOver: 0.015,
+    /** ⚠⚠ AND THE BAND THE CHANCE IS HELD INSIDE – builder's draft, and NECESSARY rather than tidy:
+     *  the terms above really do run off the end (cold + spirit 0 + bond 0 + 36 is
+     *  0.65 − 0.20 − 0.28 − 0.14 − 0.09 = **−0.06**, and warm + spirit 100 + bond 100 is 0.98). A
+     *  negative number would compare harmlessly and would still be a model claiming CERTAINTY about a
+     *  woman's decision, which is the one thing this layer's §4a forbids in both directions.
+     *  `ECONOMY.spirit.floor`'s own shape: a bound written down beats a value allowed to run off. */
+    returnChanceMin: 0.1,
+    returnChanceMax: 0.9,
+    /** ⭐⭐⭐ THE FREEZE, AND THESE TWO NUMBERS ARE **RULED** (20.09, «наверное да, у нас тоже были
+     *  исследования») – so they are NOT drafts and NOT this builder's, which is why they sit apart
+     *  from every other row in this block under a heading that says so. The source is his own digest,
+     *  `docs/research/life-events-motherhood.md:9`: «**ranking freeze for 3 years post-birth** (since
+     *  2019, used by 50+ players)», and the real rule's own shape is a frozen ENTRY standing usable
+     *  for a bounded number of tournaments inside that span.
+     *
+     *  ⚠ THREE FACTS AND TWO CONSTANTS. The third – **her rank at `pausesWeek`** – is ruled with these
+     *  two and is not a number that could live here: it is a fact about one career, captured on the
+     *  one week it is true (`landPregnancyPause`, `world/lifeBeat.ts` §14) and carried on the record.
+     *
+     *  ⚠ 156 WEEKS IS THREE YEARS AT THIS ENGINE'S OWN CALENDAR (3 × 52), written as the product
+     *  rather than as `156` for `perWeekByAge`'s reason one screen up: what a reader sees is the
+     *  digest's own «3 years», not a transcription with its provenance thrown away.
+     *  ⚠ AND IT RUNS FROM THE **RETURN**, NOT FROM THE PAUSE – `resolveReturnDecision` writes
+     *  `validUntilWeek = returnedWeek + this`, and the argument is at that line: the entitlement is
+     *  what the comeback buys, `returnedWeek` is the record's own clock (the staged factor is a
+     *  function of exactly that number), and anchoring both halves of `world.comeback` on one week is
+     *  what stops the freeze and the ramp from being two different dates about one comeback. Anchored
+     *  at `pausesWeek` instead it would be 156 − 51 = 105 usable weeks, which is a different rule and
+     *  is flagged in the hand-back as the one place his «3 years» could honestly be read the other
+     *  way. */
+    protectedRankWeeks: 3 * 52,
+    /** ⭐⭐⭐ ...AND HOW MANY ENTRIES IT BUYS – **RULED 20.09** with the span above. Twelve, counted
+     *  down on `world.comeback.protectedRank.entriesLeft` and spent only where the freeze was
+     *  DECISIVE (`entryVerdict`, `world/medical.ts`, where that word is argued). ⚠ A COUNT AND NOT A
+     *  RATE: it is an entitlement, so it is state on the record rather than a knob read per week, and
+     *  T9 measures «entries it actually buys, and how often it expires unused» rather than tuning it. */
+    protectedRankEntries: 12,
+    /** ⭐⭐⭐ THE STAGED FACTOR'S OWN STAIRCASE – **RE-DENOMINATED IN ELO ON HIS WORD OF 21.09, «да,
+     *  деноминируем»** (wave 8b T3). −200 / −100 / −50 / 0 Elo over 0–3 / 3–6 / 6–12 / 12+ months
+     *  post-return, replacing the ×0.6 / ×0.8 / ×0.9 / ×1.0 MULTIPLIERS this table shipped with.
+     *
+     *  ⚠⚠ **WHAT WAS WRONG WAS THE UNITS AND NOT THE SHAPE**, and it was measured rather than felt:
+     *  [the-comeback-staircase-2026-09.md](../../../docs/research/the-comeback-staircase-2026-09.md)
+     *  prices the old first rung through `coreForStanding`/`eloForStanding` and finds that **×0.6 on a
+     *  #31's wings is −477 Elo at this engine's own measured rate** – she played the first three
+     *  months like **#380**, level with the W15 field and a ten-point donor at every big draw. The
+     *  research's own «−40%» reads as −150…−250 Elo in the same currency, so the shipped first rung
+     *  was about **twice too deep**. The digest's sentence is unchanged and still governs; what
+     *  changes is that «−40% of form» is now spelled in the currency `fieldPros.ts` keeps its whole
+     *  table in, instead of as a fraction of her wings.
+     *
+     *  ⭐ AND THE A1 INVERSION IS WHAT IT WAS ALWAYS ABOUT. Wave 8's ramp trap ran BACKWARDS – straight
+     *  back to the big draws beat a careful small-first programme 8/8 and 16/18 – and §3 of the
+     *  research isolates this table as the cause: a returner even with the W15 fields she was sent to
+     *  farm harvests 55 points a year, while twelve first-round exits at the big draws bank 120. No
+     *  design change, no points floor, no body cost: the units.
+     *
+     *  ⚠ THE SHAPE IS STILL THE RESEARCH'S OWN SENTENCE – `docs/research/life-events-motherhood.md:35`,
+     *  «staged penalties ≈ −40% (0–3 mo) → −20% (3–6) → −10% (6–12) → full recovery 12+ mo» – and the
+     *  windows below are untouched. Four rungs, halving, ending at zero.
+     *
+     *  ⚠ THE SIZES CARRY ±10%, NAMED BY THE RESEARCH ITSELF: `eloPerCore` was measured on FLAT builds
+     *  and a ×-factor build is not flat. It changes nothing in the conclusion – −477 against −250 is
+     *  not inside any error bar.
+     *
+     *  ⚠⚠ **IT IS A TIME-SHAPED MULTIPLIER ON THE ABSENCE AND IT READS NOTHING FROM RESULTS.** §0 of
+     *  the wave brief names the fence and names the document it is a fence around:
+     *  `docs/specs/form-and-slump.md` (results-driven form) is OWNER-PARKED – «форму и спад тоже давай
+     *  распишем спеком, но уже на потом» – and this factor «is NOT that spec and must not become it by
+     *  the back door». Three properties, all of them mechanical rather than promised:
+     *    · it is a function of `world.comeback.returnedWeek` and the current week, and of nothing else;
+     *    · it is dead at 1.0 for every career that never paused – `comebackMatchFactor`'s reader takes
+     *      the same early return `spirit` and `form` take, so the composition is byte-identical;
+     *    · the ARGUMENT TYPE it is read through carries `returnedWeek` and no other field, so a
+     *      result is not merely unread here, it is out of scope at the call site.
+     *  ⚠ ANY BUILDER WHO FINDS THEMSELVES READING MATCH OUTCOMES INTO IT STOPS AND BRINGS IT. That is
+     *  §0's instruction verbatim and it is the one line of T6 that is not negotiable.
+     *
+     *  ⚠ THE WINDOWS ARE MONTHS IN THE RESEARCH AND WEEKS IN THE ENGINE, and the conversion is
+     *  written as arithmetic rather than as three transcribed integers, on `perWeekByAge`'s own rule
+     *  one screen up: `52 / 4` is three months, `52 / 2` is six, `52` is twelve. A reader sees the
+     *  digest's own staircase; nobody has to trust `13` / `26` / `52`.
+     *
+     *  ⚠ READ AS RUNGS, `perWeekByAge`'s own shape and its own hazard: the LAST rung whose
+     *  `fromWeeksBack` she has reached wins, so the table must stay ASCENDING – a rung inserted out of
+     *  sequence silently re-shapes the ramp. ⭐ AND A WEEK BEFORE THE RETURN TAKES **NO RUNG AND
+     *  THEREFORE 1.0**: a match played before she came back is not a comeback match, and the stored
+     *  `WorldMatch` of one must replay exactly as it was. */
+    /** ⭐⭐⭐ HOW LONG «SMALL EVENTS FIRST» ACTUALLY MEANS «ONLY SMALL EVENTS» – the owner's ruling of
+     *  21.09, and it started as his own reading of the ramp rather than as a tuning: «если сольет все
+     *  турниры в первый год, то в следующем автоматически будет играть более низкие, разве нет?» Yes –
+     *  the freeze is twelve entries and it is spent ONCE, so the only lever the card ever had is WHEN.
+     *
+     *  MEASURED before it was ruled (`docs/specs/the-motherhood-2026-09.md` §15.5, n=15 paired
+     *  returns off one card, five arms on the same clones):
+     *
+     *      arm                     pts@52w  rank@52w  freeze  pts@104w  rank@104w  top-100  back to #39
+     *      only smalls (policy)          0      1621     0.0         0       1620     0/15        0/14
+     *      straight back               703       267    11.2       914        173     5/15        0/14
+     *      hybrid, hold 13             464       295    11.2       711        143     4/15        1/14
+     *      hybrid, hold 26 (THIS)      460       268     9.9       945        117     7/15        2/14
+     *
+     *  ⭐ Hold-26 takes every LONG metric and matches straight-back's 52-week rank, conceding only the
+     *  first year's points – six months of small draws rebuild a live standing, and the freeze then
+     *  opens big draws at −50/0 instead of −200, which converts into runs rather than first-round
+     *  exits. ⚠⚠ AND «ONLY SMALLS» IS NO LONGER OFFERED AS AN ANSWER, by his ruling, because it is
+     *  DOMINATED by the hybrid at both horizons and at both hold points – a card may not offer a
+     *  measured trap as one of its two answers.
+     *
+     *  ⚠ WHAT IT MOVES IS A **LABEL**, NEVER A REFUSAL. `EntryStatus.offReturnPlan` is a preference
+     *  the player can override week to week (T6 §C); past this many weeks from `returnedWeek` the
+     *  label simply stops being raised, so the same plan stops calling a big draw off-plan. Nothing
+     *  becomes newly legal and no entry cap moves.
+     *
+     *  ⚠ 13 WAS MEASURED TOO and is the retune if the six months read long; the curve between them is
+     *  not measured, which is the honest limit on this number (n=15, two hold points). */
+    smallFirstHoldWeeks: 26,
+    comebackStages: [
+      // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries
+      // inside. ⭐ 200 Elo is the top of the research's own −150…−250 corridor (§3 of the staircase
+      // document), which is where «−40% of form» lands once it is priced: on a #31 it is ×0.832, a
+      // returner playing like #151 rather than like #380.
+      { fromWeeksBack: 0, dElo: 200 },
+      // 3–6 months – half of it, exactly as the digest's −20% is half of its −40%.
+      { fromWeeksBack: 52 / 4, dElo: 100 },
+      // 6–12 months – half again.
+      { fromWeeksBack: 52 / 2, dElo: 50 },
+      // 12+ months – full. ⭐ A RUNG AND NOT AN ABSENCE, `perWeekByAge`'s own 0 at 35: «the ramp ends»
+      // is a sentence somebody had to type, and a table that simply stopped would leave the last rung
+      // running for the rest of her career. ⚠ AND IT IS **EXACTLY** ZERO, which is load-bearing
+      // arithmetic rather than tidiness: `(core − 0) / core` is exactly 1.0 in IEEE-754, so a career
+      // twelve months back composes BYTE-IDENTICALLY to one that never paused – the property
+      // `tests/wave8-comeback-factor.test.ts` §B pins with `toEqual` on the whole player.
+      { fromWeeksBack: 52, dElo: 0 },
+    ],
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

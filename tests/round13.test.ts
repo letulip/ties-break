@@ -70,6 +70,9 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
     ownKeyWeek: false,
+    // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
+    motherhoodBand: null,
+    motherhoodSupport: null,
     week: 10,
     ageYears: 14,
     lifeStage: 'school',
@@ -374,6 +377,9 @@ describe('R13-10 — the ordinary-week pool', () => {
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
     ownKeyWeek: false,
+    // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
+    motherhoodBand: null,
+    motherhoodSupport: null,
     week: 10,
     ageYears: 14,
     lifeStage: 'school',

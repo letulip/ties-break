@@ -67,6 +67,11 @@ import {
   loveEpisodesOf,
   lifeLogOf,
   toSnapshot,
+  // ⚠ THE PAUSE'S REFUSAL IS READ OFF THE ENGINE'S OWN EXPORT, never transcribed – `EXPOSURE_ROW`'s
+  // rule one import down, and it matters more here: the sentence is a DRAFT for the owner's pass
+  // (invariant 4), so a вычитка that re-words it must move this recipe's clause with it rather than
+  // leaving a predicate nothing can satisfy.
+  PREGNANCY_PAUSE_DETAIL,
 } from '../src/engine/world'
 // ⚠ THE MOOD LADDER IS READ OFF THE ENGINE'S OWN TABLE AND NEVER TRANSCRIBED HERE. `MOOD_WORD` is
 // the owner's five approved words (invariant 4) and `SPIRIT_BANDS` is the ladder top-down, so the
@@ -88,7 +93,12 @@ import { decodeExportFile, encodeExportFile, sha256 } from '../src/engine/saveCo
 import { debtWeeks, ENDINGS } from '../src/engine/ending'
 import { activeKitDeal, isSponsorWindowWeek } from '../src/engine/offers'
 import { FIRST_NAMES, pickSurname } from '../src/engine/season/cohort'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+// ⚠ `OFF_SEASON_WEEKS` IS HERE FOR ONE CLAUSE AND IS READ RATHER THAN TRANSCRIBED: `advanceWeeks`
+// spells the season wrap-up as `world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS`,
+// and the `expecting` recipe rejects a press that would land on it. See that recipe's own note for
+// why the alternative – a conditional step-through in the spec – was the wrong trade HERE and the
+// right one in e2e/wedding.spec.ts.
+import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import { POLICIES, stepCareerWeek, type Policy } from './econ-bench'
 import {
@@ -340,6 +350,21 @@ const WEDDING_CAP_WEEK = 17 * WEEKS_PER_YEAR
  *  walking a different chain of weeks from the one that was accepted. One id, both files. */
 const ENGAGED_ANSWER_ID = 'bless'
 
+/** ⭐ HOW LONG THE PREGNANCY RECIPE WAITS, AND THE NUMBER IS T9's OWN WALK RATHER THAN A ROUND ONE
+ *  (v85 T11b). `tools/motherhood-bench.ts` walks **1300 weeks** and its census
+ *  (docs/specs/the-motherhood-2026-09.md §5.3) is what that walk sees: announcement age median
+ *  **30.2**, min 25.5, max 34.5, and **zero** announcements at 35 or over, because the hazard's rung
+ *  table reads 0 there and `rollPregnancy` returns before it derives a stream. A career opens at 13.5,
+ *  so 34.5 is week ~1092 and the pause and the term run ~39 weeks past it – 25 seasons covers the
+ *  whole distribution the engine can produce, with the search budget left to do nothing but count
+ *  seeds.
+ *
+ *  ⚠ IT IS EIGHT SEASONS LONGER THAN `WEDDING_CAP_WEEK` AND HAS TO BE, which is the same sentence
+ *  that constant makes about `ENDS_CAP_WEEK`: the marriage is this arc's DOOR (RULED 20.09), so every
+ *  week the wedding recipe waits is a week this one must wait first. A cap at the wedding's 884 would
+ *  have cut the distribution at age 30.5 – below its own median. */
+const PREGNANCY_CAP_WEEK = 25 * WEEKS_PER_YEAR
+
 /** ⭐⭐⭐ HAS THIS EPISODE ALREADY PRODUCED A BEAT, AND OF WHICH KINDS – RULING A's OWN DISCRIMINATOR,
  *  asked from outside the engine.
  *
@@ -391,6 +416,53 @@ function moodRung(world: WorldState): number {
  *  the UI; this is a generator, and its whole job is to predict what a screen will draw. Reading the
  *  screen's own predicate is the accurate way to do that, and `composables/tierState.ts` is a pure
  *  module – the one `vue` import on it is `computed` for its other export, which nothing here calls. */
+/** ⭐⭐⭐ THE REFUSED CARDS THE PAUSE PUTS ON THE SEASON FEED – the ones a browser will really see,
+ *  wearing the engine's own sentence.
+ *
+ *  ⚠⚠ IT IS THE SCREEN'S FOUR-BRANCH LADDER ASKED IN ORDER, NOT «is this event ineligible». The pill
+ *  a card draws is decided by `SeasonScreen.vue`'s own `v-if` chain – **entered and uncancellable** ->
+ *  Withdraw, **entered** -> Cancel entry, **`entriesClosed`** -> «Entries closed W…», and only then
+ *  the lock pill that speaks `ineligibleDetail`. So an event that is refused for the pause and whose
+ *  deadline has passed shows the CLOSED pill and says nothing about the pregnancy, and one she is
+ *  already entered in (the already-booked clause – those entries are hers to play) shows a BUTTON.
+ *  A recipe that filtered on `!eligible` alone would accept a career whose spec then cannot find its
+ *  sentence anywhere on screen.
+ *
+ *  ⚠ AND THE VACATION BRANCH IS EXCLUDED FOR THE SAME REASON, one level in: `lockLabel`'s
+ *  `'unavailable'` arm prints the PACKAGE NAME when the player booked a holiday on that week and the
+ *  engine's sentence otherwise – «the only one of the five that names something the PLAYER booked».
+ *  The refusal is still the pause's; the words on the card are not.
+ *
+ *  ⚠ `feedShows` IS `feedStacksOf`'s OWN IMPORT AND ITS NOTE HOLDS VERBATIM: a week's raw calendar is
+ *  not what the player sees, so the filter is the screen's rather than a second spelling of it.
+ *
+ *  ⚠ EXPORTED, WHICH `feedStacksOf` BESIDE IT IS NOT, and the reason is the rot alarm rather than
+ *  tidiness. This predicate is a PRECONDITION OF A BROWSER CASE – e2e/expecting.spec.ts reads the
+ *  sentence off exactly these cards – so a regeneration that lands the fixture on a week with none of
+ *  them must fail on the PR gate and not in the slowest layer of the stack. `tests/e2e-fixtures.test.ts`
+ *  calls it, on the same «one implementation, three callers» rule that file already keeps for
+ *  `drainKnock`. */
+export function pauseRefusedCards(world: WorldState): string[] {
+  const snap = toSnapshot(world)
+  const ctx = feedContext({
+    ageYears: snap.ageYears,
+    tierOpen: snap.tierOpen,
+    activeLadder: snap.activeLadder,
+    upcoming: snap.upcoming,
+  })
+  return snap.upcoming
+    .filter(
+      (e) =>
+        feedShows(e, ctx) &&
+        !e.entered &&
+        snap.week <= e.deadlineWeek &&
+        !e.eligible &&
+        e.ineligibleDetail === PREGNANCY_PAUSE_DETAIL &&
+        !snap.vacations.some((v) => v.week === e.week),
+    )
+    .map((e) => e.id)
+}
+
 function feedStacksOf(world: WorldState): Map<number, number> {
   const snap = toSnapshot(world)
   const ctx = feedContext({
@@ -1347,6 +1419,130 @@ const RECIPES: Recipe[] = [
       return world.ending !== null
         ? `career ended (${world.ending.type}) before she ever said it`
         : `no engagement in ${WEDDING_CAP_WEEK} weeks`
+    },
+  },
+  {
+    name: 'expecting',
+    // ⭐⭐⭐ v85 T11b – A WEEK INSIDE THE PAUSE, WITH THE REFUSAL ON THE FEED AND AN ORDINARY WEEK
+    // AHEAD. See FIXTURE_NAMES in tools/e2e-fixtures-read.ts for why this one parks INSIDE its beat
+    // rather than one press before it, and for the measurement that ruled the clean run-in out.
+    purpose:
+      'Inside the maternity pause – the entries are shut with the engine\'s own sentence on the cards, and the household weeks still tick.',
+    background: 'middle',
+    coachTier: 'middle',
+    policy: PLAYER,
+    // ⚠ `'continue'` FOR `breakup`'s AND `engaged`'s STATED REASON, and this walk needs it most: the
+    // fork is answered at nineteen and the pregnancy hazard's first rung is 24, so any other answer
+    // ends the career five years before the state can exist.
+    fork: 'continue',
+    drive: (world, rng, recipe) => {
+      // Whether this seed reached a pregnancy AT ALL, kept so the refusal line below can tell the two
+      // failures apart – «the model never brought her one» is a SEED being ordinary, and «it brought
+      // one and no week inside it was clean» is a recipe clause doing work. `belated`'s search log is
+      // the precedent: a search that cannot be debugged from its own output gets loosened blindly.
+      let carried = false
+      // ⚠⚠ AND WHY THE CLAUSES BELOW **SKIP A WEEK** RATHER THAN THE SEED, WHICH IS THE ONE PLACE
+      // THIS RECIPE DEPARTS FROM `engaged`'s CLAUSE SET AND IT WAS MEASURED BEFORE IT WAS CHANGED.
+      // `engaged` returns on them, correctly: an engagement is ONE week per episode, so a card
+      // standing in front of that week is a card standing in front of the state itself. The pause is
+      // ~23 weeks wide and every one of them is the state, so a `return` here answers «is this career
+      // a fixture?» with a fact about whichever week the walk happened to reach first.
+      //
+      // ⚠⚠ AND THE MEASUREMENT DID **NOT** GO THE WAY THE CHANGE PREDICTED, which is why it is
+      // written down rather than summarised as a win. The clause was rewritten because the first run
+      // threw `e2e-expecting-19` away – a career that genuinely HELD the state – on a knock standing
+      // on its first candidate week. Re-run with the skip, seed 19 is STILL rejected: the knock is
+      // sticky (it waits for `decideKnock`, and this walk carries `drainKnocks: false` like every
+      // other recipe here), so it stood on every remaining week of that window. What the rewrite
+      // actually bought is the LOG – «a pregnancy arrived and no week inside its pause was one a
+      // browser could start on; the last was turned down because a knock is standing» against a bare
+      // «boots holding a knock» – which is `belated`'s own reason for printing rejections at all.
+      // ⚠ SO A SKIPPED WEEK IS RECOVERABLE ONLY WHERE THE BLOCKER EXPIRES: a birthday, a reveal and a
+      // soft row pass on their own, a knock and a blocking beat wait for a command that never comes.
+      // The skip is still the right shape – it is the one that can recover anything at all – and the
+      // accepted seed was 20 both before and after, so nothing about this fixture turns on it.
+      let turnedDown: string | null = null
+      while (world.week < PREGNANCY_CAP_WEEK && world.ending === null) {
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
+        // ⚠ THE DRAIN ANSWERS THE `'expecting'` CARD, AND THAT IS THE POINT RATHER THAN A LEAK. This
+        // fixture is parked INSIDE the pause, so the announcement is behind it by construction and
+        // `DRAIN_ANSWER['expecting']` (`worry`) is what grades `support` – which is a fact about this
+        // career, not about the mechanic, and no assertion in e2e/expecting.spec.ts reads it.
+        answerOpenQuestions(world, recipe.fork)
+
+        // ⭐ THE CHEAP GATE FIRST, `engaged`'s own arrangement: most weeks of most careers hold no
+        // pregnancy at all, so the clone at the foot is only paid for on the weeks that could be the
+        // one. The window is `pauseCovering`'s own (`world/medical.ts`) read at the world's week, and
+        // the upper bound is the BIRTH rather than the record's lifetime: `world.pregnancy` outlives
+        // `dueWeek` by `decisionWeeksAfterBirth` weeks on purpose, and a career parked in THAT stretch
+        // is a career with a daughter and no pregnancy – a different fixture, and not this one's
+        // claim. `pregnancyFaceAt` draws the same boundary for the portrait.
+        const pregnancy = world.pregnancy
+        if (pregnancy === null) continue
+        carried = true
+        // ⚠ `world.week + 1` ON THE UPPER BOUND, AND THE EXTRA WEEK IS THE SPEC'S PRESS. The case
+        // asserts that «the weeks still tick» – she is off tour, the household is not – and a press
+        // that landed on `dueWeek` would tick into the BIRTH: a milestone row, an album entry and a
+        // `'postpartum'` shock, which is the loudest week of the arc and the opposite of the claim.
+        // `engaged`'s recipe buys its ninth press the same way and for the same reason.
+        if (world.week < pregnancy.pausesWeek || world.week + 1 >= pregnancy.dueWeek) continue
+
+        // ⚠⚠ NOTHING MAY BE STANDING IN FRONT OF THE WEEK BUTTON ON THE WEEK THIS BOOTS AT –
+        // `engaged`'s clause set verbatim and for its stated reason: the spec's last act is to press
+        // it, so a career booting behind somebody else's card is a career whose press never happens.
+        // ⚠ THE SET IS UNCHANGED EVEN THOUGH THE PAUSE MAKES TWO OF ITS MEMBERS UNREACHABLE. She
+        // enters nothing from `pausesWeek` on, so a tournament reveal cannot open and a knock has
+        // nothing to come off – but a clause that is true by construction costs a comparison, and a
+        // recipe that dropped it would go quiet on the day W5 gives her a reason to play again.
+        if (pendingKnock(world)) { turnedDown = 'a knock is standing, and the spec presses the week button'; continue }
+        if (pendingBirthday(world) !== null) { turnedDown = 'a birthday is standing, and the spec presses the week button'; continue }
+        if (world.pendingTournament) { turnedDown = 'a tournament reveal is open, which holds the week back'; continue }
+        if (pendingLifeBeat(world) !== null) { turnedDown = 'a blocking beat is standing, whose card covers the week button'; continue }
+        if (liveSoftBeat(world) !== null) { turnedDown = 'a soft beat is on the hub, which the spec would be pressing past'; continue }
+        const refusal = advanceRefusal(world)
+        if (refusal !== null) { turnedDown = `the week is stopped by '${refusal}'`; continue }
+
+        // ⭐⭐⭐ AND THE REFUSAL IS ON A CARD THE BROWSER CAN READ. This is the assertion the whole
+        // fixture exists for and it is the one clause no other recipe here has an analogue of: the
+        // pause is a WORLD-level condition answered inside `availabilityStatus`, so it reaches a
+        // player only as a lock pill on a Season card, and an off-season week or a week whose every
+        // visible card is already entered would carry the state and show none of it.
+        if (pauseRefusedCards(world).length === 0) {
+          turnedDown = 'no refused card is visible on the Season feed – an off-season week, or every visible card already entered'
+          continue
+        }
+
+        // ⭐⭐⭐ THE LOOK-AHEAD, EXACT AND NOT AN ESTIMATE – `sinking`'s, `unheard`'s, `soft`'s,
+        // `breakup`'s and `engaged`'s own precedent, and `engaged`'s note on the entry policy holds
+        // word for word: the clone carries `rngMain`, so resuming MAIN from it walks the sequence the
+        // browser will walk, and `tickWeek` with no entry policy is what the week button runs.
+        const probe = structuredClone(world)
+        tickWeek(probe, resumeMain(probe.rngMain))
+        if (probe.ending !== null) { turnedDown = `the one press ends the career (${probe.ending.type})`; continue }
+        if (probe.pendingTournament) { turnedDown = 'a tournament reveal opens on the week after'; continue }
+        if (pendingKnock(probe)) { turnedDown = 'a knock lands on the week after'; continue }
+        if (pendingBirthday(probe) !== null) { turnedDown = 'a birthday lands on the week after'; continue }
+        if (pendingLifeBeat(probe) !== null) { turnedDown = 'a blocking beat lands on the week after'; continue }
+        // ⚠⚠ AND THE SEASON MUST NOT TURN OVER ON THAT PRESS, WHICH IS A CLAUSE `engaged` DELIBERATELY
+        // DOES NOT CARRY. e2e/wedding.spec.ts steps through the wrap-up with an argued conditional
+        // because it presses NINE times and «a nine-week stretch with no tournament in it clusters in
+        // the off-season» – rejecting the crossing would have been rejecting that state's most likely
+        // shape. This spec presses ONCE, and the window it presses inside is ~23 weeks wide, so the
+        // trade runs the other way: one clause here buys a browser case with no conditional in it at
+        // all, which is what e2e/README.md asks for. The predicate is `advanceWeeks`' own spelling of
+        // `'season-end'`.
+        if (probe.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) {
+          turnedDown = 'the one press turns the season over, and the wrap-up would stand between the press and the week'
+          continue
+        }
+        return null
+      }
+      if (world.ending !== null) {
+        return `career ended (${world.ending.type}) ${carried ? `during the pause; last week turned down because ${turnedDown}` : 'before she ever carried a child'}`
+      }
+      return carried
+        ? `a pregnancy arrived and no week inside its pause was one a browser could start on; the last was turned down because ${turnedDown}`
+        : `no pregnancy in ${PREGNANCY_CAP_WEEK} weeks`
     },
   },
 ]

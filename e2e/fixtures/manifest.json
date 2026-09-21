@@ -1,7 +1,7 @@
 {
   "generatedBy": "tools/e2e-fixtures.ts",
   "command": "npm run e2e:fixtures",
-  "schemaVersion": 84,
+  "schemaVersion": 85,
   "fixtures": [
     {
       "name": "fresh",
@@ -11,7 +11,7 @@
       "careerId": "c-e2e-fresh",
       "slot": "auto:c-e2e-fresh:a",
       "targetWeek": 0,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 24251,
-      "payloadBytes": 24207,
-      "sha256": "a0ab6c4f777788d2afa96f68ba757b0b3d595b1aadb9dbf5375b7defff0b814f",
+      "bytes": 24274,
+      "payloadBytes": 24230,
+      "sha256": "6b818d02425d9a824280d77b5178b3c5d5e3484999ee73e3452e5250cfe5451f",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -60,7 +60,7 @@
       "careerId": "c-e2e-junior",
       "slot": "auto:c-e2e-junior:a",
       "targetWeek": 120,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -69,9 +69,9 @@
         "kidLastName": "Kaminski",
         "country": "US"
       },
-      "bytes": 59640,
-      "payloadBytes": 59596,
-      "sha256": "b3b71557fa60040fcfa139239459e521d3ebb99681ea5c11b7d7df22d8b66a94",
+      "bytes": 59667,
+      "payloadBytes": 59623,
+      "sha256": "7822a581a6ff7667727b3e0f806352c230b547a8128cf3ea2792022418462af5",
       "seedsTried": 20,
       "facts": {
         "week": 120,
@@ -109,7 +109,7 @@
       "careerId": "c-e2e-pro",
       "slot": "auto:c-e2e-pro:a",
       "targetWeek": 412,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -118,9 +118,9 @@
         "kidLastName": "Sedlak",
         "country": "US"
       },
-      "bytes": 82507,
-      "payloadBytes": 82463,
-      "sha256": "f269f06b1aa7b60f0b1ab040b7735fa60239540ae4258b866386ae4b30965db1",
+      "bytes": 82532,
+      "payloadBytes": 82488,
+      "sha256": "cb97cf0fd55c91e51b77a5b0a95990103c535d697d04c65436a9427ea7d5509b",
       "seedsTried": 19,
       "facts": {
         "week": 412,
@@ -158,7 +158,7 @@
       "careerId": "c-e2e-sinking",
       "slot": "auto:c-e2e-sinking:a",
       "targetWeek": 86,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -167,9 +167,9 @@
         "kidLastName": "Dumont",
         "country": "US"
       },
-      "bytes": 59834,
-      "payloadBytes": 59790,
-      "sha256": "80d5d970876516be9c7408c1e400d98e6aa3e4afa0a20fee21eb927f20f2dffe",
+      "bytes": 59858,
+      "payloadBytes": 59814,
+      "sha256": "4784361d5b50104d5d794ee9fff1023072fa10adc56c853ff2d6ff3b4677f86d",
       "seedsTried": 3,
       "facts": {
         "week": 86,
@@ -207,7 +207,7 @@
       "careerId": "c-e2e-broke",
       "slot": "auto:c-e2e-broke:a",
       "targetWeek": 86,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60787,
-      "payloadBytes": 60743,
-      "sha256": "6b2a3b1a9309cea117c1a2db4a294522b0b70a4ad698078fb821a8edcd71b48c",
+      "bytes": 60813,
+      "payloadBytes": 60769,
+      "sha256": "26cce4349cb621934baf91a1233fbce77d9a3aea974bad8d8ca2bc99dd615f2c",
       "seedsTried": 1,
       "facts": {
         "week": 86,
@@ -256,7 +256,7 @@
       "careerId": "c-e2e-ending",
       "slot": "auto:c-e2e-ending:a",
       "targetWeek": 242,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 82348,
-      "payloadBytes": 82304,
-      "sha256": "c7d972495eb5a4e1724e091459dcffff3121a9323a770efd4ecde91463c41db6",
+      "bytes": 82378,
+      "payloadBytes": 82334,
+      "sha256": "0b4158a7f4a341a411f59c67b80ac4149ad4b10b70dfbda6a70111b38d808cfb",
       "seedsTried": 1,
       "facts": {
         "week": 242,
@@ -305,7 +305,7 @@
       "careerId": "c-e2e-unheard",
       "slot": "auto:c-e2e-unheard:a",
       "targetWeek": 242,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -314,9 +314,9 @@
         "kidLastName": "Nikolaidis",
         "country": "US"
       },
-      "bytes": 83307,
-      "payloadBytes": 83263,
-      "sha256": "9f23e9bd0aa438fe591b8d87f987a8d8f9275c14c7479f765714e8c0b62dea6e",
+      "bytes": 83334,
+      "payloadBytes": 83290,
+      "sha256": "4c04349e341dda19dded291f817f7cd3e88f972f642971f1c66366ed0a82afd4",
       "seedsTried": 14,
       "facts": {
         "week": 242,
@@ -354,7 +354,7 @@
       "careerId": "c-e2e-soft",
       "slot": "auto:c-e2e-soft:a",
       "targetWeek": 9,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -363,9 +363,9 @@
         "kidLastName": "Lombardi",
         "country": "US"
       },
-      "bytes": 35428,
-      "payloadBytes": 35384,
-      "sha256": "9e6b316853a03ff7f5643eee2a9e64dd60be67c156dc415942e42d23cbe2aedd",
+      "bytes": 35451,
+      "payloadBytes": 35407,
+      "sha256": "724a6087e5dd07785fb9ca5d22f8ab431c9c682bb72260f007da90760b97994f",
       "seedsTried": 2,
       "facts": {
         "week": 9,
@@ -403,7 +403,7 @@
       "careerId": "c-e2e-breakup",
       "slot": "auto:c-e2e-breakup:a",
       "targetWeek": 261,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -412,9 +412,9 @@
         "kidLastName": "Ikeda",
         "country": "US"
       },
-      "bytes": 81850,
-      "payloadBytes": 81806,
-      "sha256": "337702b434c33dd9617a8a6ba575816475e29e1a1cc39010dd63056e15be3026",
+      "bytes": 81873,
+      "payloadBytes": 81829,
+      "sha256": "bbd7124da84594924f43779bab0e5b42a519224cdd244247f8ae7cf903603406",
       "seedsTried": 53,
       "facts": {
         "week": 261,
@@ -452,7 +452,7 @@
       "careerId": "c-e2e-belated",
       "slot": "auto:c-e2e-belated:a",
       "targetWeek": 351,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -461,9 +461,9 @@
         "kidLastName": "Aydin",
         "country": "US"
       },
-      "bytes": 81203,
-      "payloadBytes": 81159,
-      "sha256": "e5d5e3e6302f7799b1f2ca9a3d6267b5db74126e2db5eea42cd03cb99e7e9075",
+      "bytes": 81231,
+      "payloadBytes": 81187,
+      "sha256": "bcd4f85d00c70564bb1454652ce99acb9a2d31f82381394a91ce2f2b51c5604e",
       "seedsTried": 38,
       "facts": {
         "week": 351,
@@ -501,7 +501,7 @@
       "careerId": "c-e2e-engaged",
       "slot": "auto:c-e2e-engaged:a",
       "targetWeek": 681,
-      "schemaVersion": 84,
+      "schemaVersion": 85,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -510,9 +510,9 @@
         "kidLastName": "Dolezal",
         "country": "US"
       },
-      "bytes": 80169,
-      "payloadBytes": 80125,
-      "sha256": "5ecbc960f13ad3eea39e962d0ce7576dd03784ceca9ea227a4d11bf806326feb",
+      "bytes": 80195,
+      "payloadBytes": 80151,
+      "sha256": "c8ac39d98765781888cdcb5d7bedb64f27d907d393a64f1ead9f01d04d33111f",
       "seedsTried": 42,
       "facts": {
         "week": 681,
@@ -539,6 +539,55 @@
         "rngMain": {
           "s": -1548338296,
           "n": 544163
+        }
+      }
+    },
+    {
+      "name": "expecting",
+      "file": "expecting.tsave",
+      "purpose": "Inside the maternity pause – the entries are shut with the engine's own sentence on the cards, and the household weeks still tick.",
+      "seed": "e2e-expecting-20",
+      "careerId": "c-e2e-expecting",
+      "slot": "auto:c-e2e-expecting:a",
+      "targetWeek": 892,
+      "schemaVersion": 85,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Jana",
+        "kidLastName": "Rutledge",
+        "country": "US"
+      },
+      "bytes": 82367,
+      "payloadBytes": 82323,
+      "sha256": "8d4533b5aa7e533e9559f0c31e7e2087e206f54aa18f437eb7c605e34f568ebc",
+      "seedsTried": 21,
+      "facts": {
+        "week": 892,
+        "seasonIndex": 17,
+        "ageYears": 30,
+        "fundsCents": 1524901949,
+        "kidRank": 74,
+        "rankedDomestic": false,
+        "rankedItf": false,
+        "rankedWta": true,
+        "domesticPoints": 0,
+        "itfPoints": 0,
+        "wtaPoints": 2862,
+        "seasonsPlayed": 17,
+        "resultRows": 2257,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": -1766561977,
+          "n": 712761
         }
       }
     }

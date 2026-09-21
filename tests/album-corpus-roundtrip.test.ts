@@ -3,7 +3,7 @@
 // (`tests/round44-corpus-roundtrip.test.ts`) pointed at the album spec's §8 step 2.
 //
 // ⚠⚠ THE FAILURE IT EXISTS TO STOP IS NOT A BUG, IT IS A TYPO NOBODY CAN SEE. The corpus document
-// holds **412 authored strings** – 132 notes, 132 captions, 132 loose lines and 16 arc strings. An
+// holds **424 authored strings** – 136 notes, 136 captions, 136 loose lines and 16 arc strings. An
 // agent retyping them produces typos, and **no test written by that agent can catch them, because the
 // test compares against what was typed.** So `tools/album-corpus-emit.ts` wrote
 // `src/engine/world/albumCorpus.ts` out of `docs/specs/album-corpus-2026-09.md` once; the output is
@@ -14,7 +14,7 @@
 // reaches a string.
 //
 // ⚠⚠ AND THE COPY IS HIS. Invariant 4: «USER-FACING WORDING IS NOT AN AGENT'S TO CHANGE». Every one of
-// the 412 is a DRAFT until he has read it, and when he edits one he edits the DOCUMENT and the
+// the 424 is a DRAFT until he has read it, and when he edits one he edits the DOCUMENT and the
 // emitter is re-run. This pin is the thing that makes «the document is the source of truth» a fact
 // about the repository rather than a habit.
 //
@@ -135,16 +135,20 @@ describe('the committed album corpus IS the document', () => {
     // parsed document; a parser that returned an empty list – or, as ARM H showed, a list one row
     // short – would make all of them pass in silence on whatever survived.
     const counts = albumCounts(DOC)
-    expect(counts, 'the document parses completely – 33 occasions, 132 notes, 132 captions, 132 lines, 8 arc cells, 16 arc strings').toEqual({
-      occasions: 33,
-      notes: 132,
-      captions: 132,
-      lines: 132,
+    // ⚠ RE-AIMED AT WAVE 8b T6 (E2, RULED 21.09): A34 `birth` is the thirty-fourth occasion, so the
+    // document's own arithmetic moved by one occasion and twelve strings. The numbers are the
+    // DOCUMENT's, re-derived by the parser on every run – this line is the receipt that the
+    // committed module was re-emitted rather than hand-edited.
+    expect(counts, 'the document parses completely – 34 occasions, 136 notes, 136 captions, 136 lines, 8 arc cells, 16 arc strings').toEqual({
+      occasions: 34,
+      notes: 136,
+      captions: 136,
+      lines: 136,
       arcCells: 8,
       arcStrings: 16,
     })
-    expect(counts.notes + counts.captions + counts.lines + counts.arcStrings, '412 authored strings').toBe(412)
-    expect(ALBUM_CORPUS.length, 'and the committed catalogue holds the same 33').toBe(33)
+    expect(counts.notes + counts.captions + counts.lines + counts.arcStrings, '424 authored strings').toBe(424)
+    expect(ALBUM_CORPUS.length, 'and the committed catalogue holds the same 34').toBe(34)
     expect(DOC.arc.length, 'the arc has two directions and no third').toBe(2)
     expect(Object.keys(ALBUM_ARC).sort(), 'and the committed arc has the same two').toEqual([...ALBUM_ARC_DIRECTIONS].sort())
     expect(ALBUM_VOICES.length, 'four voices').toBe(4)
@@ -170,7 +174,7 @@ describe('the committed album corpus IS the document', () => {
     }
   })
 
-  it('⭐⭐⭐ every one of the 132 notes is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 136 notes is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC.occasions) {
       const o = builtFor(row)
@@ -180,10 +184,10 @@ describe('the committed album corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 132 notes were compared, not a subset').toBe(132)
+    expect(compared, 'all 136 notes were compared, not a subset').toBe(136)
   })
 
-  it('⭐⭐⭐ every one of the 132 captions is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 136 captions is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC.occasions) {
       const o = builtFor(row)
@@ -192,10 +196,10 @@ describe('the committed album corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 132 captions were compared, not a subset').toBe(132)
+    expect(compared, 'all 136 captions were compared, not a subset').toBe(136)
   })
 
-  it('⭐⭐⭐ every one of the 132 loose lines is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 136 loose lines is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC.occasions) {
       const o = builtFor(row)
@@ -204,7 +208,7 @@ describe('the committed album corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 132 loose lines were compared, not a subset').toBe(132)
+    expect(compared, 'all 136 loose lines were compared, not a subset').toBe(136)
   })
 
   it('⭐⭐ the arc is the document\'s too, in both directions and all four voices', () => {
@@ -271,7 +275,7 @@ describe('the committed album corpus IS the document', () => {
   })
 
   // ===============================================================================================
-  // THE RULES OF §1 AND §3, WHICH A REVIEWER CANNOT HOLD 412 STRINGS IN THEIR HEAD FOR
+  // THE RULES OF §1 AND §3, WHICH A REVIEWER CANNOT HOLD 424 STRINGS IN THEIR HEAD FOR
   // ===============================================================================================
 
   it('⭐⭐ the note addresses her and the caption and the line do not – the register boundary, checked', () => {
@@ -298,8 +302,8 @@ describe('the committed album corpus IS the document', () => {
         others++
       }
     }
-    expect(notes, 'all 140 notes were checked').toBe(140)
-    expect(others, 'and all 272 captions and lines').toBe(272)
+    expect(notes, 'all 144 notes were checked').toBe(144)
+    expect(others, 'and all 280 captions and lines').toBe(280)
   })
 
   it('⭐ a caption is the photograph\'s lip: short, and shorter than its own note', () => {
@@ -314,7 +318,7 @@ describe('the committed album corpus IS the document', () => {
   })
 
   it('⚠ no string carries a name, a placeholder, an em-dash or a Cyrillic character', () => {
-    // §3.2 – her name is the PLAYER's, so the catalogue is 412 finished sentences and not 412
+    // §3.2 – her name is the PLAYER's, so the catalogue is 424 finished sentences and not 424
     // templates: no interpolation, no token, nothing for a renderer to fill in.
     // §3.5 – the house's two copy rules, and the second one is the one an agent breaks by habit.
     let swept = 0
@@ -331,8 +335,8 @@ describe('the committed album corpus IS the document', () => {
       expect(written, `Cyrillic on a screen: ${written}`).not.toMatch(/[Ѐ-ӿ]/)
       swept++
     }
-    expect(swept, 'all 412 strings were swept, not a subset').toBe(412)
-    expect(new Set(every).size, 'no two of the 412 are the same string – an album that repeats itself reads as a copy-paste').toBe(412)
+    expect(swept, 'all 424 strings were swept, not a subset').toBe(424)
+    expect(new Set(every).size, 'no two of the 424 are the same string – an album that repeats itself reads as a copy-paste').toBe(424)
   })
 
   it('⚠ no occasion names the `jun` band – chapter 1 is the prologue, measured at 0 of 9', () => {

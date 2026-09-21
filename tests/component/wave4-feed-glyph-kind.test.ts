@@ -251,7 +251,13 @@ describe('T5 §C – the roster, and the gate that cannot be half-filled', () =>
     // fallback case below already proves for every unpicked kind. ⚠ The wedding itself is still NOT
     // here: `landWedding`'s kept line goes through the milestone channel (`fireMilestone`, a
     // `'milestone'` row), not through a `'life'` row, so there is nothing of its kind to mark.
-    expect([...LIFE_BEAT_ROW_KINDS]).toEqual(['met', 'ended', 'own-key'])
+    // ⭐ RE-AIMED BY v85 (wave 8 – T3), THE SAME NOTE DOING THE SAME JOB: `'expecting'` is the fourth
+    // row kind – `landPregnancyPause` writes the pause week's one kept, stamped `'life'` row. No pick
+    // was made for it either (§5a – the mark is the owner's), so it wears the white-heart fallback
+    // the case below proves for every unpicked kind. ⚠ The wedding is STILL not here for the reason
+    // above, and the BIRTH (T4) will be here or not depending on which channel it writes through –
+    // the roster is where that gets noticed, which is the whole of its job.
+    expect([...LIFE_BEAT_ROW_KINDS]).toEqual(['met', 'ended', 'own-key', 'expecting'])
     // ⚠⚠ AND THE DEFAULT MUST BE IN IT. `lifeRowGlyph` resolves an absent kind to `'met'`; if `'met'`
     // ever left the roster, every historical row would resolve to a cell no pick can be made for and
     // the `?? 'met'` promise would be quietly unkeepable.

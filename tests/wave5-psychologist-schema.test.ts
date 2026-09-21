@@ -377,11 +377,29 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         // at hire (`docs/specs/the-coachs-raise-2026-09.md`). NOT WEAKENED: the assertion is still an
         // exact `toEqual` over the whole set, so a rung that arrives without anybody noticing still
         // goes red here.
+        // ⭐ v85, wave 8 T1 – the SIXTH time this roster is paid for, exactly as the note above
+        // predicted for «every future wave». `children` is the born, append-only rows, and
+        // `pregnancy` three entries down is the one she is carrying (the pregnancy and the return,
+        // docs/plans/life-wave-8-builder-2026-09.md §2 T1); the migration back-fills `[]` and `null`,
+        // which is what this fixture walks up with. They sort apart, which is why this one rides at
+        // the head of the list and its twin sits between `form` and `prologueTrace` – the roster is
+        // sorted, not chronological.
+        'children',
         'coachDeal',
         'coachPairs',
+        // ⭐ v85 AGAIN, after gate 2 – the SEVENTH time this roster is paid for, and the first time
+        // it is paid TWICE FOR ONE VERSION. `comeback` is the week she came back and the freeze she
+        // came back with (T6's seat; the architect's ruling of 20.09 – task T2½ piece 1), added to
+        // v85's own step rather than taking an 86 of its own, because nothing has shipped. The
+        // migration back-fills `null`, which is what this fixture walks up with. ⚠ That the roster
+        // goes red for a key added to an EXISTING rung is the assertion working exactly as its note
+        // predicts: it is a claim about what the ladder has added above v76 to date, not about which
+        // rung added it.
+        'comeback',
         'composureBonus',
         // ⭐ v80, wave F1 – the third time this roster is paid for.
         'form',
+        'pregnancy',
         // ⭐ v84, the album's one schema move – the FIFTH time this roster is paid for, exactly as
         // the note above predicted for «every future wave». `prologueTrace` is the childhood's own
         // record, written once at the handover (docs/specs/the-album-2026-09.md §3); the migration

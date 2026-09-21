@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
-// RETYPED.** 33 occasions × 4 voices × 3 registers = 396 strings, plus the arc's 16 across
-// 8 cells: **412 authored strings in total.**
+// RETYPED.** 34 occasions × 4 voices × 3 registers = 408 strings, plus the arc's 16 across
+// 8 cells: **424 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 412 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 424 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -44,7 +44,7 @@ export type AlbumBand = 'prologue' | 'young' | 'teen' | 'adult' | 'lateCareer'
 /** The family the selector draws an occasion from – the nine `MilestoneType`s plus `prologue`
  *  (the trace persisted at handover), `asset` (`world.assets` and its `boughtWeek`), `rare` (his
  *  super-rare three) and `closing` (the three written frames). */
-export type AlbumOccasionKind = 'prologue' | 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank' | 'break-even' | 'school' | 'wedding' | 'asset' | 'rare' | 'closing'
+export type AlbumOccasionKind = 'prologue' | 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank' | 'break-even' | 'school' | 'wedding' | 'birth' | 'asset' | 'rare' | 'closing'
 
 /** ⭐ ONE OCCASION IN ONE VOICE: the three registers, finished. **No placeholders and no
  *  interpolation** – her name is the player's, so the note says «you» and the caption says «she», and
@@ -722,6 +722,35 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'You checked the time of everything, and then you let the day happen without running it.',
         caption: 'She let somebody else run it.',
         line: 'She stopped checking the time.',
+      },
+    },
+  },
+  // A34 · birth
+  {
+    id: 'birth',
+    kind: 'birth',
+    bands: ['adult', 'lateCareer'],
+    gate: null,
+    voices: {
+      sunny: {
+        note: 'You were talking before we were through the door, and none of it was about tennis.',
+        caption: 'Talking before she was through the door.',
+        line: 'None of it was about tennis.',
+      },
+      fiery: {
+        note: 'You had a list. By the second day the list was somewhere under the pram.',
+        caption: 'The list did not last two days.',
+        line: 'Somewhere under the pram.',
+      },
+      deep: {
+        note: 'You said almost nothing for a week and I have never seen you so certain.',
+        caption: 'Almost nothing, all week.',
+        line: 'I have never seen her so certain.',
+      },
+      quiet: {
+        note: 'You let the house fill up with people and did not once look at the clock.',
+        caption: 'She did not look at the clock once.',
+        line: 'The clock could wait.',
       },
     },
   },

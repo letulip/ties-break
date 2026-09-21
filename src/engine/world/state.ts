@@ -744,7 +744,70 @@ import type { AcademySupport } from '../academy'
 // mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
 // tests/coachTravelEdgeFixtures.ts. The non-null shape's witness (the corpus cannot hold one – a
 // walked probe skips the prologue) is tests/album-trace-schema.test.ts, through the real writer.
-export const SAVE_SCHEMA_VERSION = 84
+// ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN, WAVE 8 T1 (`docs/plans/life-wave-8-builder-2026-09.md`
+// §2 T1; the design `docs/plans/the-wedding-and-the-children.md` §5, steps W3+W4). TWO keys on the
+// world and ONE union widened – and, after gate 2, a THIRD key, whose own block sits below these:
+//
+//   · `pregnancy: PregnancyState | null` – the one she is carrying, or nothing. `null` is the state
+//     of every career that is not expecting, which on this tree is every career there is: T1 ships
+//     the seat and NO WRITER AT ALL (the hazard is T2's, the pause T3's, the birth T4's).
+//   · `children: ChildRecord[]` – the born, append-only, one row per birth. Empty is the state of
+//     every career that has had none. It is on the world rather than on the pregnancy because a
+//     birth must land somewhere the week it happens and the pregnancy that produced it is cleared
+//     the same week (§0's own delta): W5 then READS the array and appends fields to the row if it
+//     needs them, its own append-only move, where a birth recorded only on `pregnancy` would make
+//     W5's migration re-derive children from episode history.
+//   · `spiritShock.kind` widens `'breakup'` -> `'breakup' | 'postpartum'`. The build plan's step-7
+//     row reserved exactly this widening and the field's own note predicted it in as many words
+//     («a union with one member today, on purpose, and the roster is the place the second one gets
+//     noticed»). TYPE-LEVEL ONLY, WITH NO DATA TO MIGRATE: no save can hold `'postpartum'`, because
+//     nothing has ever written it – T4 is the only writer the kind will ever get.
+//
+// ⭐⭐⭐ AND A THIRD KEY, ADDED TO THIS SAME VERSION AFTER GATE 2 (20.09, the architect's ruling –
+// task T2½ piece 1). `comeback: ComebackState | null` – the week she came back and the freeze she
+// came back with:
+//
+//   · T6 needs BOTH facts persisted and NEITHER is derivable. `protectedRank.entriesLeft` counts
+//     down as she spends her twelve entries, so it is mutable state; `returnedWeek` is the staged
+//     factor's only argument and nothing in the world records it (`dueWeek` is the BIRTH, and the
+//     decision lands anywhere inside a 20-week window after it).
+//   · IT CANNOT LIVE ON `pregnancy`, for a reason §0 states as a REQUIREMENT: «this wave builds the
+//     machinery so re-entry is free», and T2's gate refuses while a pregnancy exists – so the record
+//     must be CLEARED at the return for W5's repeat pregnancy to be possible at all. State that
+//     outlives the pregnancy cannot live on the pregnancy.
+//
+// ⚠⚠ WHY v85 GREW RATHER THAN v86 ARRIVING, and it is the one argument that licenses this: NOTHING
+// HAS SHIPPED. v85 exists only on `life/wave-8`, no save in the world holds it, and §0's «this wave
+// takes 85» – the sentence the owner read – stays true. ⚠ AND THIS IS THE LAST KEY v85 TAKES: the
+// architect walked T3–T11 against T1's shape and this was the only gap, so a second one is a STOP
+// and a question rather than a fourth key. A version that grows twice is a version nobody can reason
+// about.
+//
+// ⚠⚠ THE BACK-FILL IS `null` AND `[]`, AND BOTH ARE EXACTLY TRUE RATHER THAN BARGAINS. This is
+// `loveEpisodes`'s v72 argument and emphatically NOT `prologueTrace`'s v84 one a paragraph up: there
+// is nothing here that a reconstruction is even TEMPTED by. No save written before this version
+// could hold a pregnancy or a child, because there were none to hold – the mechanic arrives with
+// this version – so «not expecting» and «no children» are the complete statement about every career
+// in the corpus, and no evidence anywhere in a save could say otherwise.
+//
+// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE. The migration writes three literals and reaches no stream at
+// all; the wave's own draws, when its later tasks land, live on `seed:life:pregnancy:<week>` and
+// `seed:life:return:<week>` – purpose-scoped sub-streams re-derived at the call site, persisting
+// nothing – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. The frozen
+// careers are predicted and MEASURED IDENTITY: `walkFrozenCareer` runs 156 weeks from the start, the
+// girl never reaches 23, and in any case no writer exists on this tree for any of the three, so
+// every cell carries `null`, `[]` and `null` – a pure key append, and `PRE_V85` in
+// tests/coachTravelEdgeFixtures.ts holds the verbatim v84 constants off the peel. RE-MEASURED for
+// the third key, never assumed: the per-key diff was taken again on the untouched tree before
+// `comeback` was written.
+//
+// Full move: this constant, the v84 -> v85 step in migrations.ts, tests/fixtures/saves/v85.json,
+// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
+// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts. The non-null shape's witness is tests/wave8-pregnancy-schema.test.ts,
+// which crafts one – the corpus CANNOT hold one and will not until T11 regenerates the e2e fixtures
+// over a tree that has writers.
+export const SAVE_SCHEMA_VERSION = 85
 
 
 
@@ -800,6 +863,19 @@ export interface PendingTournament {
  *  `shared/protocol/narrative.ts` already imports `Temperament` type-only from `engine/spirit` for
  *  exactly that shape. The arrow stays engine -> shared, never the other way. */
 export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself' | 'publicLife'
+
+/** ⭐⭐⭐ WHAT PUT THE SHOCK ON HER (v85 T1) – see `WorldState.spiritShock`, whose `kind` this names.
+ *
+ *  ⚠ IT IS A NAME FOR A UNION THAT WAS ALREADY BEING READ THROUGH
+ *  `NonNullable<WorldState['spiritShock']>['kind']` IN TWO FILES, and it exists so a THIRD reader does
+ *  not have to spell that again. The derivation stays valid – this type and that expression are the
+ *  same union – so `PsyRegister` in world/lifeBeat.ts is untouched by the naming.
+ *
+ *  ⚠⚠ THE POINT OF NAMING IT IS TOTALITY ACROSS THE MODULE BOUNDARY, which is `ExposureKind`'s own
+ *  argument in engine/economy.ts quoted rather than re-made: a `Record<SpiritShockKind, …>` in the
+ *  constants file goes red the day a kind joins, instead of letting one ship priced at `undefined`.
+ *  The build plan's step 8 (a death in the family) is the next member this is waiting for. */
+export type SpiritShockKind = 'breakup' | 'postpartum'
 
 export interface WorldState {
   schemaVersion: number
@@ -1447,8 +1523,31 @@ export interface WorldState {
    *  shock was ever worked», which is what a shock predating the counter is. `injury.weeksSaved` is
    *  the same instrument one seat over, for the same seat's neighbour's claim. No migration step, no
    *  fixture rung, nothing for the frozen corpus to peel: a career that never hires never grows the
-   *  key. */
-  spiritShock: { week: number; kind: 'breakup'; weeks?: number } | null
+   *  key.
+   *
+   *  ⭐⭐⭐ v85 T1 – THE SECOND MEMBER ARRIVES, AND THE ROSTER IS WHERE IT GOT NOTICED, exactly as the
+   *  `kind` note above said it would (wave 8, the pregnancy and the return; the build plan's step-7
+   *  row reserved this widening by name). `'postpartum'` is the mark the months after a birth leave
+   *  on her line – the same field, the same applier (`accrueSpirit`), the same clear, and a DIFFERENT
+   *  CAUSE, which is the whole reason `kind` is a union and not a boolean: a spirit of 48 looks
+   *  identical whichever way it got there, and a reader that inferred the cause from the number would
+   *  be re-deriving a fact instead of reading one.
+   *
+   *  ⚠⚠ TYPE-LEVEL ONLY, AND THERE IS NO DATA TO MIGRATE – which is an arithmetic fact and not a
+   *  bargain: no save in existence can hold `'postpartum'`, because no code has ever written it.
+   *  WIDENING a union can never invalidate a stored value (NARROWING one is the direction that costs
+   *  a migration), so the v84 -> v85 step says nothing about this field and the golden corpus owes it
+   *  no rung. That is what «the seat lands before the writers» buys: the shape moves for free.
+   *
+   *  ⚠ T1 SHIPPED THE MEMBER AND NO WRITER, AND **T4 IS THAT WRITER** – `landBirth`
+   *  (`world/lifeBeat.ts` §14) stamps `'postpartum'` on the week the child is born, `rollEnds` (§8)
+   *  stamps `'breakup'`, and those two are the whole list. The old sentence («nothing on this tree can
+   *  produce a `'postpartum'` shock however long a career runs») was true of the T1 tree and is
+   *  corrected here rather than left, because the field is ONE SLOT and the pair of writers is the
+   *  fact a reader most needs from it: the second write REPLACES the first, deliberately, so a
+   *  mid-term break-up still recovering when the child arrives is overwritten by the larger window
+   *  (the brief's §2 T4; pinned in tests/wave8-birth.test.ts §D). */
+  spiritShock: { week: number; kind: SpiritShockKind; weeks?: number } | null
   /** ⭐⭐⭐ v76 – THE PSYCHOLOGIST IS ON THE PAYROLL (the psychologist's year, wave 5;
    *  `docs/plans/life-wave-5-builder-2026-09.md` §2 T2, the seat's ruled shape from
    *  `docs/plans/the-travelling-team-2026-08.md` §2 ruling Б). `masseurHired`'s twin one seat over,
@@ -1844,6 +1943,225 @@ export interface WorldState {
    *  ⚠ THE ORIGIN IS DELIBERATELY NOT IN IT – `profile.background` already holds it, and a second
    *  copy would be two sources of truth for one fact (the `LifeBeatRecord` missing-boolean rule). */
   prologueTrace: PrologueTrace | null
+  /** ⭐⭐⭐ v85 – THE ONE SHE IS CARRYING, OR NOTHING (wave 8, the pregnancy and the return;
+   *  `docs/plans/life-wave-8-builder-2026-09.md` §2 T1, the design
+   *  `docs/plans/the-wedding-and-the-children.md` §5 W3+W4). One live pregnancy at a time, hung off
+   *  the world rather than off the episode row that carries it – `episodeId` points BACK at the
+   *  latched episode, which is the direction that survives the thing the wedding's own re-shape was
+   *  built for: a second marriage is the same machinery re-entered on a later row, and a second
+   *  pregnancy (W5's, confirmed wanted 11.09) is this same seat re-entered after it clears.
+   *
+   *  ⚠ `null` IS EVERY CAREER ON THIS TREE. T1 SHIPS THE SEAT AND NO WRITER AT ALL – the hazard is
+   *  T2's, the pause T3's, the birth T4's – which is what «the schema move is inert» means and what
+   *  the frozen careers measure (`psychologistHired`'s own v76 sentence, one seat over, kept as a
+   *  rule rather than re-derived). Nothing here can set it except a test poking the world.
+   *
+   *  ⚠⚠ AND IT IS DELIBERATELY NOT ON THE WIRE, which is `spiritShock`'s argument verbatim and not a
+   *  new one: `Snapshot` is assembled field by field (invariant 1 – the UI never sees a
+   *  `WorldState`), so a wire field is a decision that belongs to the task that has the READER. T10
+   *  wires the portraits and decides its own field then. `LoveEpisode` is the opposite case and needs
+   *  no such decision – it lives in `shared/protocol/narrative.ts` because the DIARY shows partners –
+   *  and nothing of T1 is shown to anybody. */
+  pregnancy: PregnancyState | null
+  /** ⭐⭐⭐ v85 – THE BORN, APPEND-ONLY, ONE ROW PER BIRTH (wave 8; §0's own delta against the design
+   *  sketch, which had this landing in W5). It ships THIS wave because a birth must land somewhere
+   *  the week it happens: `pregnancy` is CLEARED at the birth, so a child recorded only there is a
+   *  child recorded nowhere, and W5 would have to open by re-deriving children out of episode
+   *  history – a reconstruction, in a layer whose whole discipline is refusing them.
+   *
+   *  ⚠ `[]` IS EVERY CAREER IN THE CORPUS, for the plainest possible reason: there were no children
+   *  to have. ⭐ T4 LANDED AND IS THE ONE WRITER – `landBirth`'s single `children.push`
+   *  (`world/lifeBeat.ts` §14) – and W5 READS the array and appends fields to the row if it needs
+   *  them, its own append-only move, which an array of rows accepts for free and a scalar would not.
+   *  ⚠⚠ THAT ONE PUSH IS ALSO THE WAVE'S SCOPE BRAKE, one file over: `pregnancyEligible` refuses while
+   *  `children.length > 0` (T2½ piece 3), which is what makes §4's «no repeat pregnancy enabled» true
+   *  and is the line W5 replaces with the count-aware hazard. One piece of state, two readers – and
+   *  `landBirth`'s own once-ness is a THIRD read of it rather than a second receipt.
+   *
+   *  ⚠ THE ROW IS NOT THE PREGNANCY AND MUST NOT GROW INTO IT. What a birth leaves behind is `bornWeek`
+   *  and `sex`; the months, the support grade and the return plan belong to the pregnancy that
+   *  produced it and die with it. A row that carried them would be a second road to facts the album
+   *  already reads off `lifeLog`. */
+  children: ChildRecord[]
+  /** ⭐⭐⭐ v85 – WHAT THE RETURN LEFT BEHIND, OR NOTHING (wave 8, the pregnancy and the return; §2 T6,
+   *  the architect's ruling of 20.09 after gate 2). The THIRD and LAST key v85 takes, appended after
+   *  `children` and for a gap the brief's own §2 T1 did not list: T6 needs state that outlives the
+   *  pregnancy, and there is nowhere else honest to put it.
+   *
+   *  ⚠⚠ IT CANNOT LIVE ON `pregnancy`, AND THAT IS A REQUIREMENT RATHER THAN A PREFERENCE. §0: «this
+   *  wave builds the machinery so re-entry is free» – and `pregnancyEligible`'s gate refuses while a
+   *  pregnancy exists, so the record must be CLEARED at the return for W5's repeat pregnancy to be
+   *  possible at all. State that outlives the pregnancy cannot live on the pregnancy.
+   *
+   *  ⚠ ONE KEY AND NOT TWO, which is the shape decision worth writing down. `returnedWeek` and
+   *  `protectedRank` are written in the same instant by the same event and read by the same task, and
+   *  a career either had a comeback or did not. Two nullable keys would make
+   *  `returnedWeek !== null && protectedRank === null` a state somebody has to think about; one record
+   *  makes it a FIELD of a thing that exists.
+   *
+   *  ⚠ `null` IS EVERY CAREER ON THIS TREE AND EVERY CAREER IN THE CORPUS. T6 is the only writer there
+   *  will ever be – the same law T1 shipped `pregnancy` and `children` under, and the frozen careers
+   *  are what measure it. Nothing here, in any phase of the tick, can set it except a test poking the
+   *  world.
+   *
+   *  ⚠⚠ AND IT IS DELIBERATELY NOT ON THE WIRE, `pregnancy`'s argument two fields up rather than a new
+   *  one: `Snapshot` is assembled field by field (invariant 1), so a wire field belongs to the task
+   *  that has the READER. T10 wires the surfaces and decides its own field then. */
+  comeback: ComebackState | null
+}
+
+/** ⭐⭐⭐ THE PREGNANCY'S SHAPE (v85, wave 8 T1) – see `WorldState.pregnancy`. Engine-only and
+ *  deliberately not on the wire, for the reason the field's own block gives.
+ *
+ *  ⚠⚠ `support` IS NULLABLE AND THE NULL IS A REAL STATE, NOT A PLACEHOLDER – the one field here
+ *  that looks wrong at a glance, so the argument is written down rather than left to be re-derived.
+ *  The `'expecting'` beat is BLOCKING, so a world can sit between the announcement and the parent's
+ *  answer for exactly as long as the player leaves the card up – a week, or thirty – and `null` is
+ *  the TRUE reading of that gap: «she has told him and he has not answered yet». T2 writes the grade
+ *  on the answer. A non-nullable field would need a default, and every default available here is a
+ *  lie about a week that really happened: `'measured'` claims an answer nobody gave, and `'cold'`
+ *  claims a worse one.
+ *
+ *  ⚠⚠ `dueWeek` IS PERSISTED ALTHOUGH IT IS DERIVABLE (`pausesWeek + ECONOMY.motherhood.termWeeks`),
+ *  and that is `partnerName`'s law one wave down, quoted rather than re-argued: a later constant edit
+ *  must never move the due date of a pregnancy a live career is already carrying. Derived-at-read
+ *  would do exactly that – T9 benches the term, and a family three months into a pregnancy would
+ *  find the date had moved under them on the update that retuned it. `temperamentFor` and
+ *  `LifeBeatRecord.frame` are the same instrument for the same reason: what is READ BACK is state.
+ *
+ *  ⚠⚠ **`returnPlan` LEFT THIS RECORD AT T6 – THE ARCHITECT'S RULING A, 20.09.** T1 shipped it here
+ *  and T5 found it UNREACHABLE AS WRITTEN: `resolveReturnDecision` clears the whole record on BOTH of
+ *  its arms – it must, or a career that comes back has its entries shut for ever (`pauseCovering` has
+ *  no upper bound of its own) – so by the week the blocking `'return-plan'` beat is answered there is
+ *  no `PregnancyState` left to write a plan onto. It now lives on `ComebackState`, which is the seat
+ *  that outlives the pregnancy and already carries the return's other two facts. ⭐ MOVED RATHER THAN
+ *  DUPLICATED, and the ruling's own second reason is why: «a dead field left behind is worse than a
+ *  moved one, because the next reader cannot tell it is dead». ⚠ IT COSTS NO MIGRATION AND TAKES NO
+ *  KEY – v85 stays three keys, and no save in the world holds a v85 pregnancy OR a comeback, so the
+ *  field moves between two records nothing has ever serialised.
+ *
+ *  ⚠⚠ AND T6 ADDED A FIELD IN ITS PLACE, `rankAtPause`, WHICH FALSIFIES T5's «T1 shipped `PregnancyState`'s
+ *  last field» (`decisionWeekOf`, `world/lifeBeat.ts` §14 – corrected where it stands). It is a
+ *  CAPTURE and not a parameter: the ruled freeze is «her rank at `pausesWeek`», the ranking window
+ *  deletes the evidence for it 52 weeks later, and the return is 51 weeks after the pause – so the
+ *  number has to be taken on its own week or it cannot be taken at all. It costs no migration for the
+ *  same reason `returnPlan`'s move costs none: no save in the world holds a v85 pregnancy. */
+export interface PregnancyState {
+  /** The latched episode carrying it – the marriage is the door (RULED 20.09), so this always points
+   *  at a row whose `latchedWeek !== null`. A pointer and never a copy: the partner's name, the
+   *  latch week and the ending all live on the row, and a mid-pregnancy divorce is ORDINARY LIFE
+   *  (RULED 20.09) rather than a content branch, so the row may end while this survives it. */
+  episodeId: string
+  /** The week the `'expecting'` beat was raised – she told him. Not the week he answered. */
+  announcedWeek: number
+  /** The week entries close and the pause begins. */
+  pausesWeek: number
+  /** The week the birth is due. Persisted, never re-derived – see the block above. */
+  dueWeek: number
+  /** The parent's persisted answer grade, `null` while the blocking beat is still up. W4's return
+   *  reads it; T2 writes it once, on the answer. */
+  support: 'warm' | 'measured' | 'cold' | null
+  /** ⭐⭐⭐ v85 T6 – **HER PROFESSIONAL STANDING ON THE WEEK THE ENTRIES CLOSED**, or `null` for a
+   *  career that paused holding no WTA ranking worth freezing. The protected rank is «her rank at
+   *  `pausesWeek`» (RULED 20.09 with the 12 entries and the 156 weeks), and this is the only place
+   *  that number can honestly come from.
+   *
+   *  ⚠⚠ IT IS A **CAPTURE**, AND THE LAW IS `captureEntryRow`'s, WORD FOR WORD (`world/ladder.ts`):
+   *  «the two facts about her BOOK that an entry has to carry out of the week it was made in, because
+   *  `pruneResults` deletes the evidence for both 52 weeks later». Here the span is longer than there:
+   *  `termWeeks + decisionWeeksAfterBirth` is 51 weeks from the pause to the return, and the WTA
+   *  window (`WINDOW_BY_TRACK`) is 52 – so by the week the freeze is written, every result that
+   *  produced the rank it is supposed to freeze has just aged out of the book. Derived at the return
+   *  this question has no honest answer; captured on its own week it has exactly one. (The on-ramp
+   *  latch `crossedOnRamps` is the same argument one field over, and it is the precedent this wave
+   *  inherits rather than a new claim.)
+   *
+   *  ⚠ IT IS THE **WTA** TABLE AND NOT «her table», which is a narrowing with a reason rather than a
+   *  simplification. A frozen RANK can only ever act where a rung reads a rank cut in the same
+   *  currency, and `entryVerdict` reads one exactly at the W acceptance list (`acceptanceRank` is an
+   *  ABSOLUTE rank on the W rungs). The junior rungs are shut on AGE for every woman this arc can
+   *  reach (24–35 against under-19), the domestic band is denominated in POINTS and no rank could
+   *  open it, and both on-ramps LATCH and never un-latch, so there is no second table where this
+   *  number would mean anything.
+   *
+   *  ⚠ `null` IS A REAL STATE AND NOT A PLACEHOLDER, `support`'s own argument above: «unranked is not
+   *  rank one» (`entryVerdict`'s own sentence), so a girl who paused with no counting W result freezes
+   *  nothing – and `ComebackState.protectedRank` is nullable for exactly this case, because a comeback
+   *  is a FACT and a freeze is an ENTITLEMENT.
+   *
+   *  ⚠ AND IT IS WRITTEN AT `pausesWeek` AND NOWHERE ELSE, on `landPregnancyPause`'s own `===` week
+   *  equality: a crafted world that JUMPS the pause week misses the capture and comes back with
+   *  nothing protected, which is the right failure direction – a rank read a season later is not the
+   *  rank the rule names, and a wrong freeze is worse than no freeze. */
+  rankAtPause: number | null
+}
+
+/** ⭐⭐⭐ ONE BIRTH'S ROW (v85, wave 8 T1) – see `WorldState.children`. Two facts and no history.
+ *
+ *  ⭐ `sex` IS RULED AND THE ROSTER IS A SCAFFOLD (20.09, his words): «пол нужен, но мальчиков у нас
+ *  пока нет, можно сделать заготовку, но пока будут только девочки». So T4 writes the LITERAL
+ *  `'girl'` and NO STREAM IS DRAWN FOR A CONSTANT – a draw whose outcome is fixed is not a draw, it
+ *  is a draw-and-discard, which invariant 2 forbids by name.
+ *
+ *  ⚠⚠ THE KEY `seed:life:birth:<episodeId>` IS RESERVED IN WRITING FOR THE DAY BOYS EXIST, and it is
+ *  written here rather than left to be re-derived so that nobody has to work out which key was meant
+ *  – it is scoped to the EPISODE and not to the week, which is what keeps the persisted rows of old
+ *  careers stable when it comes: a career that already has a daughter keeps her, because the row is
+ *  read back rather than re-drawn, and a career that has not yet given birth draws once, on a key
+ *  that does not move if the calendar does. */
+export interface ChildRecord {
+  bornWeek: number
+  sex: 'girl' | 'boy'
+}
+
+/** ⭐⭐⭐ THE COMEBACK'S SHAPE (v85, wave 8 – the architect's ruling of 20.09, after gate 2) – see
+ *  `WorldState.comeback`. Engine-only and deliberately not on the wire, for the reason the field's
+ *  own block gives. TWO FACTS, both of them state that cannot be derived from anything else the world
+ *  keeps.
+ *
+ *  ⚠⚠ `returnedWeek` IS THE STAGED FACTOR'S CLOCK AND NOTHING IN THE WORLD RECORDS IT TODAY. T6's
+ *  factor is «−40% → −20% → −10% → full over 0–3 / 3–6 / 6–12 / 12+ months POST-RETURN», so it is a
+ *  function of exactly one number, and that number is not `dueWeek`: `dueWeek` is the BIRTH, the
+ *  decision lands anywhere inside a 20-week window after it, and one cannot be recovered from the
+ *  other. Persisted for `dueWeek`'s own law one field over – what is READ BACK is state, and a later
+ *  constant edit must never move the clock of a comeback a live career is already inside.
+ *
+ *  ⚠⚠ `protectedRank` IS NULLABLE INSIDE A RECORD THAT IS ITSELF NULLABLE, and the nesting is the
+ *  point rather than an accident: A COMEBACK IS A FACT, A FREEZE IS AN ENTITLEMENT. The two come
+ *  apart – a career that paused with no ranking worth protecting still came back – and collapsing
+ *  them into one null would make «she returned» unrepresentable for exactly the players who most need
+ *  the game to say it. `support`'s own v85 argument one type up, applied to a record instead of to a
+ *  grade: the null is a REAL state and not a placeholder.
+ *
+ *  ⚠ `entriesLeft` IS MUTABLE STATE AND THAT IS WHY THIS IS A SEAT AND NOT A DERIVATION. It counts
+ *  down as she spends her twelve entries (T6: «Consumed per ENTRY through `world/entries.ts`»), so it
+ *  must survive a save; nothing in the world could reconstruct how many she has used. */
+export interface ComebackState {
+  /** The week she played her first week back – the staged factor's clock, and the ONE fact the factor
+   *  is a function of. */
+  returnedWeek: number
+  /** The freeze, or `null` for a career that came back with nothing protected. `rank` is her ranking
+   *  at `pausesWeek`, `entriesLeft` the twelve it buys counting down per entry, `validUntilWeek` the
+   *  156-week horizon (RULED 20.09 – the real rule's own shape: since 2019, frozen entry standing,
+   *  3 years). */
+  protectedRank: { rank: number; entriesLeft: number; validUntilWeek: number } | null
+  /** ⭐⭐⭐ v85 T6 – **HOW SHE MEANS TO COME BACK**, `null` until the blocking `'return-plan'` beat is
+   *  answered. **MOVED HERE FROM `PregnancyState` BY THE ARCHITECT'S RULING A (20.09)** – T1 shipped
+   *  it there, T5 proved it unreachable (the record is cleared on both arms of the decision, so by the
+   *  week the beat is answered there is no pregnancy left to write onto), and this is the seat that
+   *  outlives it. The full argument is on `PregnancyState` above, where the field used to be.
+   *
+   *  ⚠ IT IS A **BOOKING PREFERENCE AND NOT A LOCK** (§2 T6, in those words). `entryVerdict` reads it
+   *  to LABEL an entry that parts from the stated ramp (`EntryStatus.offReturnPlan`) and never to
+   *  refuse one – the player can override week to week, and the beat prices the default rather than
+   *  taking the choice away. A field that refused would be the game answering a scheduling question it
+   *  just asked the parent.
+   *
+   *  ⚠ `null` IS A REAL STATE, `support`'s own argument one record up: the beat BLOCKS, so a career
+   *  sits between the return and the answer for exactly as long as the player leaves the card up, and
+   *  «she is back and nobody has said how» is the true reading of that gap. No default is invented,
+   *  because both available ones would be a plan nobody chose. */
+  returnPlan: 'small-first' | 'straight-back' | null
 }
 
 /** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the

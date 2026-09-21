@@ -7,6 +7,11 @@ import {
   enterEvent,
   entryStatus,
   pendingKnock,
+  pendingBirthday,
+  pendingLifeBeat,
+  pendingLifeBeatOptions,
+  shootClashOpen,
+  decideKnock,
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
@@ -59,14 +64,21 @@ describe('layer 1 — the source carries the ruling and the guard', () => {
   it("the worker's tick case refuses at entry and stops mid-loop, on every predicate advanceWeeks blocks on", () => {
     expect(worker).toMatch(/import \{[\s\S]*?pendingKnock,[\s\S]*?\} from '\.\.\/engine\/world'/)
     const tickCase = region(worker, "case 'tick':", "case 'advance':")
-    // the predicate names all SIX, so nothing the engine blocks on can be missing from the loop
+    // the predicate names every one, so nothing the engine blocks on can be missing from the loop
     // ⚠ WIDENED AT v48, NOT WEAKENED: the birthday is the sixth thing `advanceWeeks` refuses to tick
     // past, and the dev fast-forward ships in every build – so a `▶▶ 52` that outran it would carry a
     // year of her life past the one popup the owner asked to fire ALWAYS, with nobody answering it.
     // That is the exact hole this list exists to close, one member wider.
+    // ⚠ WIDENED AGAIN AT v85 (T11b), AND THAT ONE WAS A REAL HOLE RATHER THAN A NEW MEMBER: a
+    // BLOCKING LIFE BEAT has stopped both supervised paths since v73 (`advanceRefusal` returns
+    // `'life'`, `advanceWeeks` adds the `'life'` stop) and was missing from this list the whole time,
+    // so `▶▶ 52 (dev)` could tick a year past her card with nobody answering her. The layer-2 case
+    // below is what MEASURES it – a source pin would have been green on the day the hole existed,
+    // because there was nothing to read.
     expect(tickCase).toContain('w.pendingTournament !== null')
     expect(tickCase).toContain('pendingKnock(w)')
     expect(tickCase).toContain('pendingBirthday(w) !== null')
+    expect(tickCase).toContain('pendingLifeBeat(w) !== null')
     expect(tickCase).toContain('w.ending !== null')
     expect(tickCase).toContain('w.fork !== null && w.fork.answer === null')
     expect(tickCase).toContain('w.retirementOffer !== null')
@@ -145,6 +157,49 @@ function pendingKnockWorld(): WorldState {
   return world
 }
 
+/**
+ * ⭐⭐⭐ v85 T11b – A WORLD STOPPED ON A BLOCKING LIFE BEAT AND ON **NOTHING ELSE**, which is the
+ * whole of what makes the case below a measurement rather than a formality.
+ *
+ * ⚠⚠ THE SEVEN NEGATIVE ASSERTIONS ARE THE NET, NOT SCAFFOLDING. `decisionOpen` is one OR over seven
+ * predicates, so a fixture holding a knock or a birthday alongside her card would refuse the tick
+ * with the life-beat clause DELETED and the case would pass against the hole it exists to close. The
+ * walk therefore parks on a week where her row is the only true member – and the assertions say so,
+ * so a future engine change that starts raising something else on this seed fails HERE, naming the
+ * member, instead of quietly hollowing out the case one file down.
+ *
+ * ⚠ IT IS A `'met'` ARRIVAL AND DELIBERATELY NOT THE FORK'S OWN ROW. `'fork-opinion'` is raised BY
+ * the tick that opens the fork at nineteen (world/multiWeek.ts' own note: «both are live on the same
+ * week by construction»), so a career walked to it holds `world.fork` unanswered too – which is the
+ * fifth member of the predicate and would arm the case the wrong way. An arrival is blocking, sticky
+ * (`answer: null` forever) and lands years before the fork.
+ *
+ * ⚠ THE KNOCK IS ANSWERED ON THE WAY RATHER THAN WALKED AROUND, through the engine's own command: a
+ * knock is sticky too, so a walk that met one before her card would never reach a clean week. `'rest'`
+ * is the answer e2e/journey.ts and tools/_knocks.ts both press – one branch, everywhere.
+ *
+ * The seed is the second of a deterministic enumeration (`devff-life-0…`); 0 and 1 were rejected by
+ * the predicate above, and this one parks on week 144. Same arrangement as `pendingKnockWorld`.
+ */
+function pendingLifeBeatWorld(): WorldState {
+  const world = createWorld('devff-life-2', { ...DEFAULT_PROFILE })
+  world.plan = { ...WEEK_PLAN_PRESETS.balanced }
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < 208 && pendingLifeBeat(world) === null; i++) {
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    tickWeek(world, rng)
+  }
+  expect(pendingLifeBeat(world), 'the walk must end on an unanswered blocking beat').not.toBeNull()
+  expect(pendingKnock(world), 'and on NO knock – see the note above').toBe(false)
+  expect(world.pendingTournament, 'and on no tournament reveal').toBeNull()
+  expect(pendingBirthday(world), 'and on no unanswered birthday').toBeNull()
+  expect(world.fork, 'and on no open fork').toBeNull()
+  expect(world.retirementOffer, 'and on no retirement offer').toBeNull()
+  expect(world.ending, 'and on no ending').toBeNull()
+  expect(shootClashOpen(world), 'and on no shoot/tournament collision').toBe(false)
+  return world
+}
+
 async function loadIntoWorker(world: WorldState): Promise<number> {
   const bytes = (await encodeExportFile(world)).slice()
   const res = await send({ type: 'importSave', bytes: bytes.buffer as ArrayBuffer })
@@ -190,6 +245,44 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
     // the same tick goes through. This is what keeps the guard from being read as "tick is broken".
     const decided = await send({ type: 'decideKnock', choice: 'rest', baseRevision: lastRevision })
     expect(decided.ok).toBe(true)
+    const ticked = await send({ type: 'tick', weeks: 1, baseRevision: lastRevision })
+    expect(ticked.ok, ticked.error).toBe(true)
+    expect(ticked.snapshot!.week).toBe(week + 1)
+  }, 60_000)
+
+  // ⭐⭐⭐ v85 T11b – AND A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, which is the member this list was
+  // MISSING rather than the one it grew. The layer-1 pin above could not have caught it: a source pin
+  // reads what is written, and until this commit there was nothing to read.
+  //
+  // ⚠ 52 WEEKS ASKED FOR AND ZERO TAKEN, WHICH IS THE POINT AND NOT A ROUND NUMBER. `▶▶ 52 (dev)`
+  // sends exactly this message, and what the hole meant for a player is that one press ticked a year
+  // of her life past her own card – answering her by walking away, in a build that ships to the owner
+  // as his playtest device (his 01.08 ruling, in this file's header).
+  it('an unanswered life beat refuses the tick and holds the week', async () => {
+    const world = pendingLifeBeatWorld()
+    // Read off the ENGINE before the world leaves for the worker: `answerLifeBeat` refuses an option
+    // that was never on this row's card (`pendingLifeBeatOptions` is the one road to the priced set),
+    // so the id has to be the row's own rather than a transcribed word.
+    const herAnswer = pendingLifeBeatOptions(world)![0].id
+    const week = await loadIntoWorker(world)
+
+    const refusal = await send({ type: 'tick', weeks: 52, baseRevision: lastRevision })
+    expect(refusal.ok).toBe(false)
+    expect(refusal.error).toContain('resolve the tournament or knock')
+
+    // ...and the world behind the refusal did not move: the next advance re-reports the SAME stop at
+    // the SAME week. `'life'` is `advanceWeeks`' own name for it, so this line is also the assertion
+    // that the raw loop and the supervised path are now refusing on the same state.
+    const after = await send({ type: 'advance', weeks: 1, baseRevision: lastRevision })
+    expect(after.ok).toBe(true)
+    expect(after.snapshot!.week).toBe(week)
+    expect(after.snapshot!.stopReasons).toContain('life')
+
+    // ...and the refusal is HER card's, not the command's – the knock case's own closing half, and it
+    // is what keeps this guard from being read as «tick is broken». The moment she is answered, the
+    // same 52-week press is allowed in and really does move time.
+    const answered = await send({ type: 'answerLifeBeat', optionId: herAnswer, baseRevision: lastRevision })
+    expect(answered.ok, answered.error).toBe(true)
     const ticked = await send({ type: 'tick', weeks: 1, baseRevision: lastRevision })
     expect(ticked.ok, ticked.error).toBe(true)
     expect(ticked.snapshot!.week).toBe(week + 1)
