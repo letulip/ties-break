@@ -54,7 +54,8 @@ IT**, and none was needed.
 | T5 the birth portrait | `8704608e` | the painting ships at **40,166 B**, the bride pays **26,094 B**, and both were read at 375-width DEVICE pixels |
 | T6 the album page | `f0481383` | A34 in his corpus document (12 DRAFT strings), the branch turned into a table, and a test that WALKS to a birth |
 | T7 the Alice arm | `edaa0f03` | measurement only – [the unclosable head](../research/the-unclosable-head-2026-09.md), four levers named and **unmoved** |
-| T8 docs | *(this commit)* | the questions' statuses with his words, this table, and the spec addendum |
+| T8 docs | `de0fab3f` `1ce72f53` | the questions' statuses with his words, this table, the spec addendum, and the sweep counts DATED |
+| *the bench* | `7cb78263` | 168 careers × 1300 weeks on BOTH new constants – the D8 ladder and the recovery corridors, spec §15.1a and §15.2 |
 
 ### ⚠⚠ THREE THINGS THE BATCH FOUND THAT THE WAVE'S OWN GATE COULD NOT HAVE SEEN
 
@@ -74,6 +75,20 @@ IT**, and none was needed.
    household «we» for a year. Not one character was reworded and neither law was loosened: the six
    sentences are BASELINED WITH CUSTODY in `tests/week-notes.test.ts`, named, dated, counted, and
    re-arming on any edit. It is the strings table's §8 Q-9 and it is his.
+
+⭐ **AND THE BENCH RE-RAN ON BOTH NEW CONSTANTS** (`BENCH_EXIT=0`, 168 careers, 17 reaching a
+pregnancy – **14.5% of married against wave 8's own 15.1%**, so neither constant disturbed the hazard
+the wave measured):
+
+* **T3's prediction 3 CONFIRMED** – the D8 ladder at 104 weeks moved **12.5 / 54.2 / 66.7 → 33.3 /
+  86.7 / 93.3%** at top 100 / 200 / 500, which brackets the research's «~40% near top-150» exactly.
+  ⚠ The hardest bar is unmoved: back to her rank at the pause is **0/14 at 104 weeks**, so §14.3's
+  «nobody gets their ranking back» stands.
+* **T4's corridors** moved **3.5 / 4.5 / 5.5 → 5.0 / 6.0 / 7.0** weeks, ordering untouched, and the
+  psychologist still takes two weeks off every grade.
+* ⚠⚠ **A1 CONFIRMED A THIRD TIME** – straight-back ahead **14 of 15**, mean points **703 against 0**.
+  The posed 8/8, the paired A/B and now the grid all say the same thing about a constant that was
+  predicted to flip it.
 
 ## The measured numbers (240 careers × 1300 weeks, the spec's own sections)
 
