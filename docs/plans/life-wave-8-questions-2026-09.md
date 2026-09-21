@@ -216,8 +216,9 @@ exemption permanent? It now covers five of twelve fixtures.
 ## The architect's pass – 21.09, on his delegation «вопросы сам разбери, если что – приноси мне»
 
 Two verdicts exist: **CLOSED** – the architect's own call, made here and final unless he objects;
-**CARRIED** – on his desk, travelling with the recommendation written beside it. Thirteen closed,
-thirteen carried (two of those as FYI needing no answer). ⚠ No closed verdict edited any code: a
+**CARRIED** – on his desk, travelling with the recommendation written beside it. Seventeen closed,
+thirteen carried (two of those as FYI needing no answer), E5 folded into A1 – thirty-one in all.
+(⚠ An earlier line here said «thirteen closed» – a miscount, corrected in its own commit.) ⚠ No closed verdict edited any code: a
 ruling that costs an edit waits for his wording batch, so the wave's gate stays a measurement of
 one head.
 
