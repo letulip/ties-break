@@ -3058,10 +3058,12 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    *  ⚠ NO NUMBER, NO DATE AND NO PROMISE IN EITHER LABEL (rule 4), and neither names the freeze: how
    *  many entries a protected ranking buys is a rule the card may not turn into a guarantee. */
   'return-plan': [
-    // ⚠ DRAFT
-    { id: 'small-first', label: 'Start with the small draws she can win', bond: 0 },
-    // ⚠ DRAFT
-    { id: 'straight-back', label: 'Put her straight back in the big ones', bond: 0 },
+    // ⭐ HIS, 21.09 – the label had to change when the answer's MEANING did: «small events first»
+    // now holds for `smallFirstHoldWeeks` and then lets the freeze open the big draws, so a label
+    // reading «start with the small draws» described only the first half of what the answer does.
+    { id: 'small-first', label: 'Small events first – the big draws when she is ready', bond: 0 },
+    // ⭐ HIS, 21.09 – the pair re-read together once the first one moved.
+    { id: 'straight-back', label: 'Straight into the big draws', bond: 0 },
   ],
 }
 

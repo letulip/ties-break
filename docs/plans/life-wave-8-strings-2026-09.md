@@ -277,8 +277,8 @@ has always decided (the college fork's mechanical questions are the precedent).
 | ---: | --- | --- | --- | --- |
 | P25 | `lifeBeat.ts` · `RETURN_PLAN_SAID` | the card's one line on the return week – one cell, no voice axis, the card quotes nobody | She is entered again from this week. The desk wants to know what the first months look like – the small draws she can win, or the big ones she can still get into. | `DRAFT – awaiting his pass` |
 | P26 | `RETURN_PLAN_HEADING` | the parent's frame over it, every distance and every weather | She is back, and the first months have to be built | `DRAFT – awaiting his pass` |
-| P27 | `LIFE_BEAT_OPTIONS['return-plan'][0]` (`small-first`) | the first answer button (**0 bond** – the price of this answer is paid in tennis) | Start with the small draws she can win | `DRAFT – awaiting his pass` |
-| P28 | `LIFE_BEAT_OPTIONS['return-plan'][1]` (`straight-back`) | the second button (**0 bond**) | Put her straight back in the big ones | `DRAFT – awaiting his pass` |
+| P27 | `LIFE_BEAT_OPTIONS['return-plan'][0]` (`small-first`) | the first answer button (**0 bond** – the price of this answer is paid in tennis) | Small events first – the big draws when she is ready | ⭐ `HIS, 21.09` (was «Start with the small draws she can win» – the ANSWER's meaning changed with `smallFirstHoldWeeks`, so the label had to) |
+| P28 | `LIFE_BEAT_OPTIONS['return-plan'][1]` (`straight-back`) | the second button (**0 bond**) | Straight into the big draws | ⭐ `HIS, 21.09` (was «Put her straight back in the big ones» – the pair re-read together) |
 | P29 | `ANSWER_EVENT['return-plan']['small-first']` | the feed's `info` row after answering `small-first` | She is entering again. We start with the small draws and build from there. | `DRAFT – awaiting his pass` |
 | P30 | `ANSWER_EVENT['return-plan']['straight-back']` | the same row after `straight-back` | She is entering again. We put her straight back in the big ones. | `DRAFT – awaiting his pass` |
 

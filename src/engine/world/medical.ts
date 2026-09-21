@@ -1275,7 +1275,16 @@ function entryVerdict(
     // ⚠⚠ IT CHANGES NO `level` AND NO `reason`. `enterEvent` refuses on `blocked` and nothing else, so
     // an off-plan entry commits exactly as any other does and spends one of her twelve – which is what
     // «the player can still override week to week» means mechanically.
-    const offPlan = decisive && world.comeback?.returnPlan === 'small-first'
+    // ⭐⭐⭐ AND «FIRST» HAS AN END (his ruling of 21.09, `ECONOMY.motherhood.smallFirstHoldWeeks`).
+    // «Small events FIRST» always meant «сначала», never «только»: past the hold the same plan stops
+    // calling a big draw off-plan, which is the hybrid §15.5 measured as the better career at two
+    // years. ⚠ THE LABEL STOPS, NOTHING OPENS – this line has never refused an entry and still does
+    // not; `enterEvent` reads `level`, and `level` is untouched here.
+    // ⚠ `?? world.week` KEEPS EVERY PRE-RETURN VERDICT BYTE-IDENTICAL: with no return week recorded
+    // the comparison is `world.week < world.week + hold`, which is the `true` this line used to be.
+    const withinHold =
+      world.week < (world.comeback?.returnedWeek ?? world.week) + ECONOMY.motherhood.smallFirstHoldWeeks
+    const offPlan = decisive && world.comeback?.returnPlan === 'small-first' && withinHold
     return {
       ...(availability ? availabilityStatus(world, event) : { level: 'ok' as const }),
       ...(decisive ? { onProtectedRank: true } : {}),

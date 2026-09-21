@@ -400,6 +400,70 @@ describe('wave 8 T6 C – the entries seam reads the plan, and an override still
       .toBe(BRIEF.protectedEntries - 1)
   })
 
+  it('⭐⭐⭐ «FIRST» ENDS: the off-plan label stops at `smallFirstHoldWeeks`, walked week by week', () => {
+    // HIS RULING, 21.09, and it came out of his own reading of the ramp: «если сольет все турниры в
+    // первый год, то в следующем автоматически будет играть более низкие, разве нет?» – so «small
+    // events FIRST» holds for the hold and then lets the freeze open the big draws (the hybrid the
+    // spec's §15.5 measured as the better career at two years).
+    //
+    // ⚠⚠ THE WEEK IS WALKED AND NEVER POSED. Writing `world.week = returnedWeek + hold` would test
+    // the arithmetic of the line I just wrote against itself; this walks the career and reads the
+    // verdict the engine actually produces on each week that HAS a freeze-riding event, which is the
+    // defect class this wave has already caught four times.
+    // ⚠ AND IT SAMPLES `onProtectedRank` TOO: without it a week could go quiet because the entry
+    // stopped needing the freeze, and the case would pass for the wrong reason.
+    const world = returned('w8-hold-walk')
+    answerLifeBeat(world, 'small-first')
+    const hold = ECONOMY.motherhood.smallFirstHoldWeeks
+    const returnedWeek = world.comeback!.returnedWeek!
+    const rng = rngFromSeed(`${world.seed}:hold-probe`)
+    const seen: { since: number; off: boolean }[] = []
+    while (world.week < returnedWeek + hold + 6 && world.ending === null) {
+      for (const event of world.season) {
+        if (event.week <= world.week || world.week > event.deadlineWeek) continue
+        const gate = entryStatus(world, event)
+        if (gate.level === 'blocked' || gate.onProtectedRank !== true) continue
+        seen.push({ since: world.week - returnedWeek, off: gate.offReturnPlan === true })
+        break
+      }
+      tickThrough(world, rng)
+    }
+    const before = seen.filter((r) => r.since < hold)
+    const after = seen.filter((r) => r.since >= hold)
+    expect(before.length, 'the walk saw freeze-riding entries INSIDE the hold').toBeGreaterThan(0)
+    expect(after.length, '...and after it – otherwise this case proves nothing').toBeGreaterThan(0)
+    expect(
+      before.every((r) => r.off),
+      `⚠ inside the hold every freeze entry parts from the plan (${before.length} weeks)`,
+    ).toBe(true)
+    expect(
+      after.every((r) => !r.off),
+      `⚠⚠ past the hold NONE of them does – «first» has ended (${after.length} weeks)`,
+    ).toBe(true)
+  })
+
+  it('⚠ and the hold moves the LABEL only – nothing is refused on either side of it', () => {
+    // The half that must never drift: this seam has never refused an entry and the ruling did not
+    // make it start. A `level` moving here would turn a preference into a lock, which is T6 §C's own
+    // law and the reason the card can be overridden week to week at all.
+    const world = returned('w8-hold-level')
+    answerLifeBeat(world, 'small-first')
+    const rng = rngFromSeed(`${world.seed}:hold-level`)
+    const returnedWeek = world.comeback!.returnedWeek!
+    let checked = 0
+    while (world.week < returnedWeek + ECONOMY.motherhood.smallFirstHoldWeeks + 4 && world.ending === null) {
+      for (const event of world.season) {
+        if (event.week <= world.week || world.week > event.deadlineWeek) continue
+        const gate = entryStatus(world, event)
+        if (gate.onProtectedRank !== true) continue
+        expect(gate.level, 'a freeze entry is never blocked BY THE PLAN').not.toBe('blocked')
+        checked++
+      }
+      tickThrough(world, rng)
+    }
+    expect(checked, 'the walk actually saw freeze entries').toBeGreaterThan(0)
+  })
+
   it('⚠ under straight-back NOTHING is off-plan – the answer that names no boundary', () => {
     const world = returned('w8-t6-straight')
     answerLifeBeat(world, 'straight-back')

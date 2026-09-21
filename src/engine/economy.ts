@@ -5390,6 +5390,35 @@ export const ECONOMY = {
      *  sequence silently re-shapes the ramp. ⭐ AND A WEEK BEFORE THE RETURN TAKES **NO RUNG AND
      *  THEREFORE 1.0**: a match played before she came back is not a comeback match, and the stored
      *  `WorldMatch` of one must replay exactly as it was. */
+    /** ⭐⭐⭐ HOW LONG «SMALL EVENTS FIRST» ACTUALLY MEANS «ONLY SMALL EVENTS» – the owner's ruling of
+     *  21.09, and it started as his own reading of the ramp rather than as a tuning: «если сольет все
+     *  турниры в первый год, то в следующем автоматически будет играть более низкие, разве нет?» Yes –
+     *  the freeze is twelve entries and it is spent ONCE, so the only lever the card ever had is WHEN.
+     *
+     *  MEASURED before it was ruled (`docs/specs/the-motherhood-2026-09.md` §15.5, n=15 paired
+     *  returns off one card, five arms on the same clones):
+     *
+     *      arm                     pts@52w  rank@52w  freeze  pts@104w  rank@104w  top-100  back to #39
+     *      only smalls (policy)          0      1621     0.0         0       1620     0/15        0/14
+     *      straight back               703       267    11.2       914        173     5/15        0/14
+     *      hybrid, hold 13             464       295    11.2       711        143     4/15        1/14
+     *      hybrid, hold 26 (THIS)      460       268     9.9       945        117     7/15        2/14
+     *
+     *  ⭐ Hold-26 takes every LONG metric and matches straight-back's 52-week rank, conceding only the
+     *  first year's points – six months of small draws rebuild a live standing, and the freeze then
+     *  opens big draws at −50/0 instead of −200, which converts into runs rather than first-round
+     *  exits. ⚠⚠ AND «ONLY SMALLS» IS NO LONGER OFFERED AS AN ANSWER, by his ruling, because it is
+     *  DOMINATED by the hybrid at both horizons and at both hold points – a card may not offer a
+     *  measured trap as one of its two answers.
+     *
+     *  ⚠ WHAT IT MOVES IS A **LABEL**, NEVER A REFUSAL. `EntryStatus.offReturnPlan` is a preference
+     *  the player can override week to week (T6 §C); past this many weeks from `returnedWeek` the
+     *  label simply stops being raised, so the same plan stops calling a big draw off-plan. Nothing
+     *  becomes newly legal and no entry cap moves.
+     *
+     *  ⚠ 13 WAS MEASURED TOO and is the retune if the six months read long; the curve between them is
+     *  not measured, which is the honest limit on this number (n=15, two hold points). */
+    smallFirstHoldWeeks: 26,
     comebackStages: [
       // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries
       // inside. ⭐ 200 Elo is the top of the research's own −150…−250 corridor (§3 of the staircase
