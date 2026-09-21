@@ -1286,6 +1286,42 @@ still takes 2 weeks off every grade** – so D5's floor was bought without distu
 findings §11 was written to record. ⚠ The medians fold both intensities and whatever spirit the pause
 left her on, which is why they sit between §15.2's steady and intense columns rather than on either.
 
+## §15.5 The hybrid arms – the owner's own reading of the ramp, measured (21.09)
+
+His sentence opened it: «если сольет все турниры в первый год, то в следующем автоматически будет
+играть более низкие, разве нет?» – yes, and it reframed the whole A1 question: the freeze is spent
+ONCE, so the only real lever is WHEN. Two hybrid arms joined section (6): the small-first plan whose
+parent lifts the off-plan veto after 13 / 26 weeks and spends the freeze at the shallow rungs.
+⚠ Nothing new in the engine – the seam is a preference and a player can already do this by hand;
+the arms measure whether the hand deserves an answer of its own. n=15 paired returns, same clones:
+
+| arm | pts @52w (mean) | rank @52w | freeze spent | pts @104w | med rank @104w | top-100 @104w | back to pause rank @104w |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| small-first (policy) | 0 | 1621 | 0.0 | 0 | 1620 | 0/15 | 0/14 |
+| straight-back | **703** | 267 | 11.2 | 914 | 173 | 5/15 | 0/14 |
+| brakes off, never spends | 291 | 339 | 0.0 | 574 | 157 | 3/15 | 0/14 |
+| hybrid hold 13 | 464 | 295 | 11.2 | 711 | 143 | 4/15 | 1/14 |
+| **hybrid hold 26** | 460 | 268 | **9.9** | **945** | **117** | **7/15** | **2/14 = 14.3%** |
+
+⭐ **Hold-26 takes every long metric** – rank, points, top-100, and it is the ONLY arm that returns
+anybody to her pause rank (median #39) – while matching straight-back's 52-week rank and conceding
+only the first year's points (460 vs 703). The mechanism is the owner's sentence run forward: six
+months of smalls rebuild a live standing, and ten freeze entries then enter big draws at −50/0
+instead of −200, converting into runs instead of R1 exits. Pure small-first is DOMINATED by the
+hybrid at both horizons and at both hold points.
+
+⚠ Honest limits: n=15 (every direction agrees across four independent metrics, but the bars are
+short); the hold values measured are two, 13 and 26, not a curve; and «back to at least #39» stays
+brutal at 14.3% best – the research's own truth.
+
+**The architect's recommendation on this table** (constants untouched here; his word lands on it):
+the card keeps TWO answers, and the second one's MEANING becomes the hybrid – «малые сначала»
+always meant «сначала», not «только»: the small-first preference stops labelling big draws
+off-plan after a drafted `smallFirstHoldWeeks: 26` (benched against 13 above; one constant, his
+number). Pure «only smalls» stops being offered because it is a measured trap either way. The two
+answers then read: fast points now against the better career at two years – a real choice, said in
+his words (two strings, drafted at T8's table when he rules).
+
 ## §15.3 ⚠ What wave 8b did NOT measure, named rather than left to be inferred
 
 * ⭐ **T3's prediction 3 and §11's medians are MEASURED after all** – the bench run landed before the

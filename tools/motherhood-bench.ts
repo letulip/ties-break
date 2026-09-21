@@ -450,12 +450,31 @@ function offPlanVeto(world: WorldState, event: SeasonEvent): boolean {
  *  zero is the PLAN or the POLICY, and nothing in `ECONOMY` is touched either way. */
 const BRAKES_OFF: Policy = { ...POLICIES[1], skipOutgrown: false, onlyHerTable: false }
 
+/** ⭐⭐⭐ THE HYBRID ARMS (21.09, his «ну сделай и принеси рекомендации») – the owner's own reading of
+ *  the ramp made mechanical: «если сольет все турниры в первый год, то в следующем автоматически
+ *  будет играть более низкие» – so the only real lever is WHEN the twelve frozen entries are spent.
+ *  A hybrid is the small-first PLAN (the engine's answer and its `offReturnPlan` labels stay), played
+ *  by a parent who lifts the veto after `hold` weeks and lets the freeze open big draws at the
+ *  shallow rungs (−100/−50/0 after 13; −50/0 after 26) instead of at −200. ⚠ NOTHING NEW IN THE
+ *  ENGINE: the seam is a preference, the player can already do this by hand week to week; these arms
+ *  measure whether that hand is worth a third ANSWER on the card. Brakes off, for the same reason the
+ *  diagnostic arm runs that way – a hybrid whose small phase does not play is not a hybrid. */
+function holdVeto(holdWeeks: number) {
+  return (world: WorldState, event: SeasonEvent): boolean => {
+    const returned = world.comeback?.returnedWeek ?? null
+    if (returned === null) return offPlanVeto(world, event)
+    return world.week < returned + holdWeeks ? offPlanVeto(world, event) : false
+  }
+}
+
 function forkAtReturnPlan(base: WorldState, policy: Policy): RampArm[] {
   const arms: RampArm[] = []
-  const recipe: { label: string; plan: Plan; policy: Policy }[] = [
-    { label: 'small-first', plan: 'small-first', policy },
+  const recipe: { label: string; plan: Plan; policy: Policy; veto?: (w: WorldState, e: SeasonEvent) => boolean }[] = [
+    { label: 'small-first', plan: 'small-first', policy, veto: offPlanVeto },
     { label: 'straight-back', plan: 'straight-back', policy },
-    { label: 'small-first brakes off', plan: 'small-first', policy: BRAKES_OFF },
+    { label: 'small-first brakes off', plan: 'small-first', policy: BRAKES_OFF, veto: offPlanVeto },
+    { label: 'hybrid hold 13', plan: 'small-first', policy: BRAKES_OFF, veto: holdVeto(13) },
+    { label: 'hybrid hold 26', plan: 'small-first', policy: BRAKES_OFF, veto: holdVeto(26) },
   ]
   for (const arm of recipe) {
     const world = structuredClone(base)
@@ -467,7 +486,7 @@ function forkAtReturnPlan(base: WorldState, policy: Policy): RampArm[] {
     let points = 0
     let rank = 0
     for (let i = 0; i < 2 * RAMP_WEEKS; i++) {
-      const got = stepCareerWeek(world, rng, arm.policy, arm.plan === 'small-first' ? offPlanVeto : undefined)
+      const got = stepCareerWeek(world, rng, arm.policy, arm.veto)
       if (Object.values(got).some((n) => n > 0)) entered++
       if (world.ending === null) answerWhateverIsOpen(world, emptyDrainCounts())
       // ⚠ SAMPLED AT `RAMP_WEEKS` AND WALKED TO TWICE IT: T6 §D's horizon is 52 weeks, so the
@@ -1204,8 +1223,17 @@ function main(): void {
   // --- (6) THE COMEBACK ---
   console.log(`  ── (6) THE COMEBACK: rank at the pause vs rank +${RAMP_WEEKS} weeks, small-first vs straight-back ──`)
   console.log('')
-  const ARM_LABELS = ['small-first', 'straight-back', 'small-first brakes off'] as const
-  const ramped = census.filter((c) => c.ramps.length === ARM_LABELS.length)
+  const ARM_LABELS = [
+    'small-first',
+    'straight-back',
+    'small-first brakes off',
+    'hybrid hold 13',
+    'hybrid hold 26',
+  ] as const
+  // ⚠ `> 0`, not `=== length` – the 21.09 printer defect: the recipe grew two hybrid arms and the
+  // strict equality silently filtered every forked career out, printing «0 returns» over a census
+  // that HELD them. A printer may not veto the apparatus it prints.
+  const ramped = census.filter((c) => c.ramps.length > 0)
   console.log(`  ${ramped.length} returns forked at the \`'return-plan'\` card (T6 §D's own apparatus, at bench scale)`)
   console.log(
     `  ${pad('arm', 24)}${padL('mean pts', 10)}${padL('med pts', 9)}${padL('mean rank', 10)}${padL('entered/yr', 11)}` +
