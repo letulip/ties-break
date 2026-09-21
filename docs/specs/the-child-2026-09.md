@@ -24,6 +24,30 @@ seam round 23 #18 already built. It is the third money question in this branch a
 ⚠ **And it owes NO schema move.** The brief drafted one appended field for T5; the shipped shape is
 derived, so there is no migration, no golden fixture and no peel rung in this wave.
 
+## Current truth
+
+- **A child is state, not a beat.** `world.children` holds one row per birth
+  (`{ bornWeek, sex }`); nothing else in the engine records a child, and nothing removes a row.
+- **The parent's money never feels her.** No birth fee, no standing line, no household ledger – the
+  third money question in this branch and the third «no» (his, 21.09: «это её ребенок»). The seam
+  behind it is round 23 #18: her prize share is her own from eighteen.
+- **A week away costs her spirit while a child is small.** `awayFromSmallChild` fires when a child
+  is under `childSmallWeeks` old AND the family paid travel bills in at least `AWAY_OFTEN` of the
+  trailing `FRIENDS_WINDOW` weeks – the friends tile's own band, which spouse-view's `road-stretch`
+  occasion reads too. It is a perturbation, so temperament scales it and the psychologist does NOT
+  offset it.
+- **A second child is possible, later and rarer.** The wave-8 scope brake is gone; a repeat reads
+  `repeatPerWeekByAge` (28–38, 1–2%/yr against the first pregnancy's 24–35 and 2–4%), thinned by
+  `repeatCountFactor` per child already born, and refused for `repeatCooldownWeeks` after a birth.
+  There is no cap on the number of children.
+- **Motherhood leaves ROOM above her rolled composure ceiling**, `returnPoiseCeiling` per child up
+  to `returnPoiseMax`, and ordinary development climbs into it. Derived from `world.children`, so
+  nothing is persisted and it cannot be applied twice.
+- **The diary has a motherhood band in four voices** – his eight lines plus 28 drafts, seven bands
+  crossed with four temperaments, husband-agnostic by test.
+- **No child-raising loop exists and none is planned.** The child is texture, claim and consequence,
+  and – his framing – the handle step 9's dynasty turns.
+
 ## 1. The constants
 
 | constant | drafted | why that number |
