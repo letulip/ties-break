@@ -80,6 +80,9 @@ import {
 // is where `tests/wave8-return-ramp.test.ts` already takes its ladder reads from.
 import { rankIn } from '../src/engine/world/ladder'
 import { ECONOMY } from '../src/engine/economy'
+// ⚠ WAVE 9 T2 – the friends tile's own band, imported rather than re-typed: the bench must ask the
+// same question `awayFromSmallChild` asks or its column is about a different road.
+import { AWAY_OFTEN, FRIENDS_WINDOW } from '../src/engine/kidLife'
 import { resumeMain } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { WINDOW_BY_TRACK } from '../src/engine/season/ranking'
@@ -216,6 +219,19 @@ interface MotherCareer {
   pausesWeek: number | null
   dueWeek: number | null
   bornWeek: number | null
+  /** ⭐ WAVE 9 – every child this career ever had, not only the first. `bornWeek` above is T4's
+   *  first-birth field and stays what it was; a second pregnancy is what makes a LIST necessary. */
+  births: number[]
+  /** WAVE 9 T2 – weeks the road cost her spirit (a small child at home and the family billed away) */
+  awayWithChildWeeks: number
+  /** ⭐ WAVE 9 T3 – weeks this career was ELIGIBLE for a second pregnancy, which is the only way to
+   *  read a census of zero: a hazard that never had a week to fire on is a frequency of the WALK,
+   *  and a hazard with hundreds of weeks and no fire is a frequency of the RATE. Different findings,
+   *  and the number is what tells them apart. */
+  repeatEligibleWeeks: number
+  /** WAVE 9 T5 – her composure at the walk's end, and the ceiling she was rolled */
+  composureEnd: number | null
+  rolledComposure: number | null
   episodeId: string | null
   /** the week the carrying marriage ended, if it did – section 4's own number */
   episodeEndedWeek: number | null
@@ -535,6 +551,11 @@ function runCareer(preset: Preset, index: number, policy: Policy): MotherCareer 
     pausesWeek: null,
     dueWeek: null,
     bornWeek: null,
+    births: [],
+    awayWithChildWeeks: 0,
+    repeatEligibleWeeks: 0,
+    composureEnd: null,
+    rolledComposure: null,
     episodeId: null,
     episodeEndedWeek: null,
     rankAtPause: null,
@@ -639,6 +660,22 @@ function runCareer(preset: Preset, index: number, policy: Policy): MotherCareer 
     if (out.dueWeek !== null && out.ptsAtBirth === null && world.week >= out.dueWeek) out.ptsAtBirth = kidPoints(world, 'wta')
     const child = world.children[0]
     if (child !== undefined && out.bornWeek === null) out.bornWeek = child.bornWeek
+    // ⭐ WAVE 9 – the whole list, and the road weeks a small child made expensive. Both read off the
+    // world the walk is already holding; nothing is posed and no second walk is taken.
+    if (world.children.length > out.births.length) {
+      out.births = world.children.map((c) => c.bornWeek)
+    }
+    if (
+      world.children.some((c) => world.week - c.bornWeek <= ECONOMY.motherhood.childSmallWeeks) &&
+      world.financeWeeks.filter(
+        (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
+      ).length >= AWAY_OFTEN
+    ) {
+      out.awayWithChildWeeks++
+    }
+    if (world.children.length > 0 && pregnancyEligible(world)) out.repeatEligibleWeeks++
+    out.composureEnd = world.skills.composure
+    out.rolledComposure = world.potential.composure
     const c = world.comeback
     if (c !== null && out.returnedWeek === null) {
       out.returnedWeek = c.returnedWeek
@@ -1558,6 +1595,66 @@ function main(): void {
   console.log('     and with a per-event-week booking rate q, the window delivers 3 + (1−(1−q)^3) + (1−(1−q)^2) + q')
   console.log('     entry-weeks against the control\'s 8 x (1−(1−q)^4). At T7\'s own 88/200 = 0.44 that is 51.5 against')
   console.log('     88, i.e. 58% – and T7 measured 46/88 = 52%.')
+  console.log('')
+
+  // --- (12) WAVE 9: THE CHILD AS STATE ---
+  console.log('  ── (12) WAVE 9 – the second child, the road with a small child, and the room it left ──')
+  console.log('')
+  const mothers = census.filter((c) => c.births.length > 0)
+  const repeat = census.filter((c) => c.births.length > 1)
+  console.log(
+    `  careers reaching a birth: ${mothers.length}/${census.length}   ` +
+      `a SECOND birth: ${repeat.length}/${mothers.length || 1} of them` +
+      `${mothers.length ? ` = ${pct(repeat.length, mothers.length)}` : ''}`,
+  )
+  if (repeat.length > 0) {
+    const gaps = repeat.map((c) => c.births[1] - c.births[0]).sort((a, b) => a - b)
+    console.log(
+      `  weeks between the two births: median ${median(gaps).toFixed(0)}, min ${gaps[0]} ` +
+        `(the drafted cooldown is ${m.repeatCooldownWeeks})`,
+    )
+  } else {
+    console.log('  ⚠ NO SECOND BIRTH IN THE GRID – and the eligible-weeks column below is what says why.')
+  }
+  const elig9 = mothers.map((c) => c.repeatEligibleWeeks).sort((a, b) => a - b)
+  const everElig = mothers.filter((c) => c.repeatEligibleWeeks > 0).length
+  console.log(
+    `  weeks ELIGIBLE for a second pregnancy, per mother: median ${elig9.length ? median(elig9).toFixed(0) : '–'}, ` +
+      `max ${elig9.length ? elig9[elig9.length - 1] : '–'}   (mothers who were ever eligible: ${everElig}/${mothers.length})`,
+  )
+  const expected = elig9.reduce((n, w) => n + w, 0) * (0.02 / 52)
+  console.log(
+    `  ⚠ EXPECTED SECOND BIRTHS AT THE DRAFTED RATE over those weeks: ≈ ${expected.toFixed(2)} – so a census of ` +
+      `${repeat.length} is the arithmetic of the window and not a wall.`,
+  )
+  console.log('')
+  const road = mothers.map((c) => c.awayWithChildWeeks).sort((a, b) => a - b)
+  console.log(
+    `  T2 – weeks the road cost her spirit (small child at home, family billed away): ` +
+      `${road.length ? `median ${median(road).toFixed(0)}, p90 ${road[Math.floor(road.length * 0.9)]}, max ${road[road.length - 1]}` : '–'}`,
+  )
+  console.log(
+    `     the constant is ${ECONOMY.spirit.perturb.awayFromSmallChild} a week, before the temperament scale, ` +
+      `and «small» lasts ${m.childSmallWeeks} weeks.`,
+  )
+  console.log('')
+  const poise = mothers
+    .filter((c) => c.composureEnd !== null && c.rolledComposure !== null)
+    .map((c) => (c.composureEnd as number) - (c.rolledComposure as number))
+    .sort((a, b) => a - b)
+  const twins = census
+    .filter((c) => c.births.length === 0 && c.composureEnd !== null && c.rolledComposure !== null)
+    .map((c) => (c.composureEnd as number) - (c.rolledComposure as number))
+    .sort((a, b) => a - b)
+  console.log(
+    `  T5 – composure at the walk's end MINUS the ceiling she was rolled:  ` +
+      `mothers ${poise.length ? median(poise).toFixed(3) : '–'} (n ${poise.length})   ` +
+      `childless ${twins.length ? median(twins).toFixed(3) : '–'} (n ${twins.length})`,
+  )
+  console.log(
+    `     ⚠ A CHILDLESS CAREER CANNOT EXCEED HER ROLLED CEILING unless the psychologist bought room, so a ` +
+      'positive median in that column is the seat and not a leak.',
+  )
   console.log('')
 
   // --- the endings mix, so the census's denominator is legible ---
