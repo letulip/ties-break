@@ -213,6 +213,82 @@ exemption permanent? It now covers five of twelve fixtures.
 
 ---
 
+### ⚠⚠ ONE NEW QUESTION THE BATCH RAISED, AND IT IS HIS
+
+**Q-9 (the strings table's §8).** Four of his eight diary lines break this pool's pinned
+80-character scrap budget – **87, 88, 106, 89** – and two put the journal in the SINGULAR first
+person, where its voice has been a household «we» for a year and his own 09.09 ruling put `I` / `me`
+inside HER quotation marks only. **Nothing was reworded and neither law was loosened**: the six
+sentences are baselined with custody in `tests/week-notes.test.ts`, named, dated, counted and
+re-arming on any edit. ⚠ It is NOT a layout defect – checked, the scrap card has no max-height, clamp
+or overflow – so it is an editorial call. **The one edit that closes each**: four shorter sentences,
+or a ruling that the motherhood band keeps its own budget; and either his «I» stands as the band's
+voice or the two lines move to «we».
+
+⚠ **And one punctuation question, offered rather than fixed.** C3's passed label carries a full stop
+(«Say we are glad – and start counting the weeks.») and its two siblings do not («…in the house»,
+«…the tennis»). It shipped **exactly as he passed it**, punctuation included, rather than being tidied
+to match.
+
+---
+
+## ⭐⭐⭐ HIS OWN PASS – 21.09, in session, and what wave 8b built on it
+
+His rulings opening the batch, verbatim: **«да, деноминируем, и Алисину руку тоже давай. Делай спеку
+на все эти обсужденные по результатам ревью задачи, я билдера отправлю доделывать, потом финальный
+гейт»** – plus an «ок» given per item on the four strings. Thirteen rows moved; the SHA is the
+receipt, and every row not listed here is untouched.
+
+| row | his word | what shipped | where |
+| --- | --- | --- | --- |
+| **A1** | *(still his)* | ⚠⚠ **NOT CLOSED, AND THE RE-DENOMINATION DID NOT CLOSE IT** – see the new measurement below | `1c45efc9` |
+| **C1** | **ruled: stays as shipped** | nothing touched – neither the string nor its trigger. «She came back sooner than last time» is true at a postpartum clear | – |
+| **C2** | «ок» | `POSTPARTUM_PAUSE_DETAIL`, the post-birth variant, ONE condition on the existing gate | `d3cd523e` |
+| **C3** | «ок» | P12's label; the GRADE did not move | `d3cd523e` |
+| **C4** | «ок» | `ENDING_BLURB.family`'s second sentence – the sixty-character overlap with `peak` is now **five** | `d3cd523e` |
+| **C5** | «ок» | P17's natural draft back, with a PER-ROW tail-lint exemption that its own test proves is per row | `d3cd523e` |
+| **C6** | asked for, with the eight lines | the diary band – and it cost **no schema move**, which is the half the wave-8 handoff got wrong | `ff4adbd2` |
+| **C7** | **ruled: no glyph, the white heart stands** | nothing picked – glyphs are his under §5a | – |
+| **D3** | *(closed by the architect)* | the one-line deviation note lands in the motherhood spec | `T8` |
+| **D5** | **«давай рекомендацию сделаем»** | the postpartum base −30 → **−36**; the scale untouched; `warm` now LEVEL with the break-up at both intensities | `ef19cb0e` |
+| **E1** | commissioned the painting | `fem-euro-brunnet-adult-birth.webp` ships; `MEMORY_EMOTION.birth` is the one-word change wave 8 predicted | `8704608e` |
+| **E2** | **«да, получает, картинка теперь есть»** | A34 in his corpus document, twelve DRAFT strings, and a test that WALKS to a birth | `f0481383` |
+| **F2** | *(closed by the architect)* | plain `grep DRAFT` named in the strings table's header, with both defective forms and their counts | `d3cd523e` |
+| **T3** | **«да, деноминируем»** | `comebackStages` in Elo, `eloPerCore` BY IMPORT | `1c45efc9` |
+| **T7** | **«Алисину руку тоже давай»** | [the-unclosable-head-2026-09.md](../research/the-unclosable-head-2026-09.md) – measurement only, four levers named and unmoved | `edaa0f03` |
+
+### ⚠⚠⚠ A1 IS STILL OPEN, AND THE RE-DENOMINATION MADE IT WIDER
+
+The staircase research's §5 predicted that re-denominating the comeback ramp in Elo would flip the
+inversion: «small-first ≥ straight-back on points at 52 weeks – the trap points the right way». **It
+did not.** A paired A/B on the same eight seeds – arm A a detached worktree at `5de1b2a1`, arm B the
+tree that ships – measures:
+
+| | arm A (×0.6 staircase) | arm B (−200 Elo staircase) |
+| --- | --- | --- |
+| straight-back ahead | 8 of 8 | **8 of 8** |
+| mean WTA points | 141 straight / 55 small | **191 straight / 54 small** |
+| mean live rank | #352 / #597 | **#308 / #605** |
+| protected entries spent | 12.0 / 0.0 | 12.0 / 0.0 |
+
+⭐ Arm A reproduces the shipped transcription to the digit, which is the receipt that the control is
+the right tree. **The gap WIDENED, 2.6× to 3.5×**, and the mechanism is arithmetic: a shallower
+handicap makes her a STRONGER returner, a stronger returner earns more from a big draw than from a
+W15 because the big ladder is an order of magnitude steeper, so the change helps both arms and helps
+straight-back more. Small-first's harvest barely moves because a W15 title is worth 15 points however
+strong she is.
+
+**So T9's own sentence stands and is now measured twice**: «no drafted number could close it – the
+gap is an order of magnitude». The three candidates are unchanged and all three are design – a points
+floor on a draw she is not competitive in, a body cost on big weeks, or accepting that our economy
+makes the freeze a good bet and saying so in the copy. ⚠ **No constant was moved to hide it**, and
+`tests/wave8-return-ramp.test.ts` §D still carries the pin built to go red the day somebody fixes it.
+
+⚠ AND THE BRIEF EXPECTED THAT PIN TO GO RED ON THIS CHANGE. It did not, correctly: its shape is «the
+wrong ramp WINS in this build», which fails on a FIX and not on a re-denomination.
+
+---
+
 ## The architect's pass – 21.09, on his delegation «вопросы сам разбери, если что – приноси мне»
 
 Two verdicts exist: **CLOSED** – the architect's own call, made here and final unless he objects;
@@ -224,7 +300,14 @@ one head.
 
 ### A – both carried; they are design
 
-* **A1 – CARRIED, with one instrument arm to run before any candidate is chosen.** The finding
+* **A1 – ⚠⚠ STILL CARRIED AFTER 21.09, AND THE RE-DENOMINATION MADE IT WIDER** (the paired A/B is
+  in the section above: 141/55 → 191/54, the gap 2.6× → 3.5×, straight-back ahead 8 of 8 on both
+  trees). ⭐ The instrument arm this row asked for – «what does a first-round exit at the top tiers
+  pay relative to a small-tier TITLE there, and what is our ratio» – was ANSWERED by the staircase
+  research's §1 before the batch opened: **our points tables ARE the real tables**, digit for digit,
+  and reality also pays twelve big-draw R1 exits ≈ 120 points ≈ eight W15 titles. So the ratio is
+  HONEST and the fix is NOT tuning: his choice among the three candidates is open, and it is the
+  same three. Originally: The finding
   compares our economy against itself; the missing comparison is against the REAL points tables:
   what does a first-round exit at the top tiers pay relative to a small-tier TITLE there, and what
   is our ratio? If ours is inflated at the big draws' bottom rungs, the fix is TUNING with a bench
@@ -255,21 +338,21 @@ one head.
 
 ### C – his by invariant 4; drafts prepared where a draft helps
 
-* **C1 CARRIED, recommendation LEAVE.** «She came back sooner than last time» stays true at a
+* **C1 ⭐ RULED 21.09 – STAYS AS SHIPPED** (the recommendation taken). Originally: «She came back sooner than last time» stays true at a
   postpartum clear – she did come back. Narrowing a ruled string's trigger needs his word; the
   architect's read is that no narrowing is needed.
-* **C2 CARRIED with a draft.** The refusal is right, the word is stale for the 20 post-birth
+* **C2 ⭐ CLOSED 21.09 – «ок», and it shipped** (`d3cd523e`). Originally: The refusal is right, the word is stale for the 20 post-birth
   weeks. Draft variant row for that window: «She is home with the baby – no new entries yet.»
-* **C3 CARRIED with a draft.** P12 reads a shade warmer than `measured` is. Draft: «Say we are
+* **C3 ⭐ CLOSED 21.09 – «ок», the LABEL moved and the grade did not** (`d3cd523e`). Originally: P12 reads a shade warmer than `measured` is. Draft: «Say we are
   glad – and start counting the weeks.»
-* **C4 CARRIED with a draft.** P22's second sentence should stop sharing sixty characters with
+* **C4 ⭐ CLOSED 21.09 – «ок»; the overlap is now five characters, re-measured** (`d3cd523e`). Originally: P22's second sentence should stop sharing sixty characters with
   `peak`. Draft: «She had a child, and the months after it went by without an entry in them. No
   one asked her to choose – by spring the choice had long been made.»
-* **C5 CARRIED, recommendation EXEMPT.** A lint shaping copy is the tail wagging: one exemption
+* **C5 ⭐ CLOSED 21.09 – «ок», exempt PER ROW and its own test proves it** (`d3cd523e`). Originally: A lint shaping copy is the tail wagging: one exemption
   row for P17, and the natural draft returns for his pass.
-* **C6 CLOSED → W5.** The diary band needs a `DiaryFacts` field and claims plumbing – wave-2
+* **C6 ⭐ RE-OPENED AND BUILT 21.09 – he asked for it and gave eight lines** (`ff4adbd2`); ⚠ the W5 deferral below was right about the FIELD and wrong about the STATE – it cost no schema move. Originally: The diary band needs a `DiaryFacts` field and claims plumbing – wave-2
   machinery T3 was right not to reshape. The W5 brief carries it as a named task.
-* **C7 CARRIED** – the `'expecting'` glyph is one emoji pick under §5a; the white heart stands
+* **C7 ⭐ RULED 21.09 – NO GLYPH, the white heart stands until his own pick.** Originally: the `'expecting'` glyph is one emoji pick under §5a; the white heart stands
   until then.
 * **C8 CARRIED as FYI.** Nine authored epilogues wait for a surface; `'family'`'s is the ninth.
   The surface is the finale shell the album wave listed as not-built – the two backlog rows are
@@ -287,7 +370,7 @@ one head.
   makes the difference immaterial. One sentence in the spec names the deviation in his batch.
 * **D4 CLOSED.** A withdrawal hands the entry back, capped at twelve – generous but bounded;
   revisit only if a bench ever shows the cap farmed.
-* **D5 CARRIED, recommendation: the postpartum window is never shorter than a break-up at the
+* **D5 ⭐ RULED 21.09 – «давай рекомендацию сделаем»** (`ef19cb0e`: base −30 → −36, the scale untouched). Originally: the postpartum window is never shorter than a break-up at the
   same grade.** A birth is physically the larger event; support should shorten it, not below
   the break-up's floor. The base moves, the scale stays, the bench re-runs – on his word.
 * **D6 CLOSED.** One in 1700 weddings conceiving the same tick is named and harmless; a depth
@@ -300,9 +383,9 @@ one head.
 
 ### E, F – art, album, instruments
 
-* **E1 CARRIED** – does he want a birth painting? The `'norm'` face stands meanwhile, for the
+* **E1 ⭐ RULED 21.09 – HE COMMISSIONED THE PAINTING** (`8704608e`). Originally: does he want a birth painting? The `'norm'` face stands meanwhile, for the
   stated reason (the week's arithmetic contradicts a smile).
-* **E2 CARRIED, recommendation YES for W5.** A birth is the largest life event the album could
+* **E2 ⭐ RULED 21.09 – «да, получает, картинка теперь есть», and it landed THIS batch rather than W5** (`f0481383`). Originally: A birth is the largest life event the album could
   hold and the corpus is his document – an occasion row plus his lines, landing with the child's
   own wave.
 * **E3 CLOSED** – yielding to a fresh result is right; the belly-hand over a title week would be
@@ -311,7 +394,7 @@ one head.
 * **E5 → folded into A1.**
 * **F1 CLOSED → W5.** The wedding bench's §(g) heal is a named T-instrument task in the W5 brief
   – K5's own precedent from wave 7.
-* **F2 CLOSED.** Plain `grep DRAFT` is the documented remedy from here on; the strings table's
+* **F2 ⭐ WRITTEN INTO THE TABLE'S HEADER 21.09** (`d3cd523e`). Originally: Plain `grep DRAFT` is the documented remedy from here on; the strings table's
   header says so in his batch, one line.
 * **F3 CLOSED.** The exemption stands while the twelfth fixture covers the pregnancy path in a
   real browser; it is revisited the day pregnancy UI grows beyond the pause texture.

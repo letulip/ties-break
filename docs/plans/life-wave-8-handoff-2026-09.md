@@ -36,6 +36,45 @@ spec](../specs/the-motherhood-2026-09.md) (predicted before measured).
 | T11 the gate | *(no commit)* | the gate in a clean worktree, the wave's frozen identity on five cells, and the e2e case measured as unreachable |
 | T11b the last two | `827efe6f` `b9fd70c0` `c6963f8a` | `▶▶` can no longer outrun her card; a twelfth fixture parked inside the pause |
 
+## ⭐⭐⭐ WAVE 8b – THE REVIEW BATCH, one builder, `42b5ebd2`..`edaa0f03` (+ the docs commit)
+
+Opened by his rulings of 21.09 – «да, деноминируем, и Алисину руку тоже давай. Делай спеку на все эти
+обсужденные по результатам ревью задачи» – plus an «ок» per item on four strings. The brief is
+[life-wave-8b-builder-2026-09.md](life-wave-8b-builder-2026-09.md); ⚠ **NO SCHEMA MOVE ANYWHERE IN
+IT**, and none was needed.
+
+| task | commit | one line |
+| --- | --- | --- |
+| *pre-existing* | `42b5ebd2` | ⚠ the staircase research had no governance frontmatter – `context:audit` was RED at the batch's starting point |
+| T1 the strings | `d3cd523e` | C2's post-birth variant on ONE condition, C3, C4 (the sixty-character overlap is now **five**), C5's natural draft with a PER-ROW lint exemption, F2's `grep DRAFT` |
+| T2 the diary band | `ff4adbd2` | C6's eight lines, DERIVED at render off three v85 keys – ⭐ the gap this handoff called «wave-2 machinery» cost **no schema move** |
+| *pre-existing* | `5de1b2a1` | ⚠ `fade-read.ts` printed «0 knocks» for every save ever handed to it – a cast hid the wrong field name, and `check:tools` was RED at the starting point |
+| T3 the staircase | `1c45efc9` | `comebackStages` re-denominated in **Elo** (−200/−100/−50/0), `eloPerCore` **by import**, the copied `20.2` removed from the probe too |
+| T4 the postpartum floor | `ef19cb0e` | D5: the base −30 → **−36**, the scale untouched, `warm` now LEVEL with the break-up at both intensities |
+| T5 the birth portrait | `8704608e` | the painting ships at **40,166 B**, the bride pays **26,094 B**, and both were read at 375-width DEVICE pixels |
+| T6 the album page | `f0481383` | A34 in his corpus document (12 DRAFT strings), the branch turned into a table, and a test that WALKS to a birth |
+| T7 the Alice arm | `edaa0f03` | measurement only – [the unclosable head](../research/the-unclosable-head-2026-09.md), four levers named and **unmoved** |
+| T8 docs | *(this commit)* | the questions' statuses with his words, this table, and the spec addendum |
+
+### ⚠⚠ THREE THINGS THE BATCH FOUND THAT THE WAVE'S OWN GATE COULD NOT HAVE SEEN
+
+1. **`npm run check` was RED at `76348e6f`, in three places, and all three predate the batch.**
+   `context:audit` (the staircase research's missing frontmatter), `check:tools` (`fade-read.ts`'
+   cast), and `tools:registry:check` (`tools/README.md` lists neither of the two instruments that
+   landed with the brief). ⭐ The wave's own `CHECK_EXIT=0` is still true – it ran at `c6963f8a`,
+   before those three commits.
+2. ⚠⚠⚠ **THE RE-DENOMINATION DID NOT FIX A1 – IT WIDENED IT.** Paired A/B on the same eight seeds,
+   arm A a worktree at `5de1b2a1`: straight-back ahead **8 of 8 on BOTH trees**, mean points
+   141/55 → **191/54**, the gap 2.6× → **3.5×**. Arm A reproduces the shipped transcription to the
+   digit. The mechanism is arithmetic – a shallower handicap makes her a stronger returner, and a
+   stronger returner earns more from a big draw than from a W15. **T9's «no drafted number could
+   close it» now stands measured twice**, and the three candidates are unchanged and all design.
+3. ⚠⚠ **FOUR OF HIS EIGHT DIARY LINES BREAK THIS POOL'S PINNED 80-CHARACTER SCRAP BUDGET** (87, 88,
+   106, 89) **and two put the journal in the singular first person**, where its voice has been a
+   household «we» for a year. Not one character was reworded and neither law was loosened: the six
+   sentences are BASELINED WITH CUSTODY in `tests/week-notes.test.ts`, named, dated, counted, and
+   re-arming on any edit. It is the strings table's §8 Q-9 and it is his.
+
 ## The measured numbers (240 careers × 1300 weeks, the spec's own sections)
 
 * **Input-independence: the law HOLDS**, shipped tree and control tree, on a seed searched until it

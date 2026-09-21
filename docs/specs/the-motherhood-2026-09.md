@@ -1121,9 +1121,159 @@ direction**, and the staged factor could not have closed the one-year gap anyway
 
 ### §14.5 The freeze's three years are counted from the RETURN
 
+⭐ **D3 CLOSED, and this is the one sentence it was closed with** (the architect's pass, 21.09; wave
+8b T8 lands it here): **the anchor stands as built, from the RETURN, and the deviation from the
+digest is named rather than hidden.** The research digest's own letter dates the freeze from the
+BIRTH – about twenty-six weeks less generous than ours – and the difference is IMMATERIAL AT MEASURED
+CONSUMPTION: every career that reaches the expiry has spent all twelve entries inside year one, or
+none at all (§9), so there is no career in the corpus for which the extra twenty-six weeks decided
+anything. ⚠ It becomes material the day an opportunity cost lands on the freeze (A1's candidates), and
+that is the day to re-read this paragraph.
+
 See §9. `resolveReturnDecision` writes `validUntilWeek = returnedWeek + protectedRankWeeks`, so the
 entitlement runs 156 weeks from the week she comes back. Anchored at `pausesWeek` instead it would be
 156 − 51 = **105** usable weeks. T6 flagged this as the one place his «3 years» could honestly be read
 the other way, and the measurement says what the choice is worth: **all twelve entries are spent, and
 none of the fifteen freezes that reached expiry had one left over** – so the longer anchor is not
 currently being *wasted*, and shortening it to 105 weeks would bite.
+
+---
+
+# §15 ⭐⭐⭐ WAVE 8b – THE TWO CONSTANTS HIS 21.09 RULINGS MOVED, PREDICTED AGAINST MEASURED
+
+Everything above was measured with the wave's own drafted constants. Two of them moved on his word of
+21.09 – the comeback staircase (T3, «да, деноминируем») and the postpartum base (T4, D5's
+recommendation taken) – so this section carries what each was predicted to do and what it did.
+⚠ **NO OTHER CONSTANT MOVED**, and T7's four candidate levers are named and standing in
+[the-unclosable-head-2026-09.md](../research/the-unclosable-head-2026-09.md).
+
+## §15.1 T3 – the staircase re-denominated in Elo
+
+`ECONOMY.motherhood.comebackStages` goes from MULTIPLIERS on her wings (×0.6 / ×0.8 / ×0.9 / ×1) to
+**ELO** (−200 / −100 / −50 / 0) over the same 0–3 / 3–6 / 6–12 / 12+ month windows, read per player as
+`factor = max(0.5, (C − dElo / eloPerCore) / C)` with `C` her overall(4) that week. ⚠ `eloPerCore`
+comes **by import** from `season/fieldPros`; a copied `20.2` is the drift CLAUDE.md's barrel lesson
+exists for, and the same copy was removed from `tools/probe-favorite-curve.ts` at the same time.
+
+**The research's four predictions** ([§5 of the staircase document](../research/the-comeback-staircase-2026-09.md)),
+each against what was measured:
+
+| # | predicted | measured | verdict |
+| --- | --- | --- | --- |
+| 1 | `tests/wave8-return-ramp.test.ts` §D goes red, then re-pins with small-first ahead | ⚠⚠ **IT DID NOT GO RED.** Its shape is «the wrong ramp WINS in this build», which fails on a FIX; a re-denomination is not one | ⚠ correctly green – the pin is doing its job |
+| 2 | small-first ≥ straight-back on points at 52 weeks | ⚠⚠⚠ **FALSIFIED, IN THE OPPOSITE DIRECTION.** Paired A/B, same eight seeds: straight-back ahead **8 of 8 on BOTH trees**; mean points 141/55 → **191/54**; the gap **2.6× → 3.5×**; mean rank #352/#597 → **#308/#605** | ❌ **the finding of this batch** |
+| 2b | straight-back still spends the freeze 12/12 | **12.0 / 0.0 on 8 of 8**, unchanged on both arms | ✅ the half that was always right |
+| 3 | the «returned successfully» ladder moves toward ~40% at top-150 | ⚠ **NOT MEASURED IN THIS BATCH** – see §15.3 | ⚠ named, not inferred |
+| 4 | the favourite curve does not move a byte | ✅ **byte-identical**, md5 `beefedb9f7618d794b14c79ed39333a3` on both arms, with the null-result provenance below | ✅ |
+
+### ⚠⚠ Prediction 2 is the finding, and the mechanism is arithmetic rather than mysterious
+
+A shallower handicap makes her a **stronger returner**. A stronger returner earns more from a big draw
+than from a W15, because the big ladder is an order of magnitude steeper – a Slam R1 pays 10 and a W15
+TITLE pays 15. So the re-denomination helps BOTH arms and helps straight-back more; small-first's
+harvest barely moves (55 → 54) because a W15 title is worth 15 points however strong she is and she
+was already winning them.
+
+⭐ **So §14.4 and A1 stand, now measured twice.** T9's own sentence – «no drafted number could close
+it, the gap is an order of magnitude» – survives a change that was predicted to close it. The three
+candidates are unchanged and all three are design: a points floor on a draw she is not competitive in,
+a body cost on big weeks, or accepting that our economy makes the freeze a good bet and saying so.
+⚠ **No constant was moved to hide any of this.** The staircase moved on HIS word, before the run.
+
+### ⚠ The provenance of prediction 4, because a null result is a claim
+
+CLAUDE.md: «BEFORE YOU BELIEVE A NULL RESULT, PROVE THE ARM CONTAINS BOTH THE CHANGE AND ITS READER.»
+
+* **arm A `5de1b2a1`** (a detached worktree, the commit before the constant moved) and **arm B** the
+  working tree – named, not assumed;
+* **the reader is present on BOTH**: `git grep -c comebackStages -- src/` returns the same three files
+  on each tree (`economy.ts` 1, `world/lifeBeat.ts` 1, `world/player.ts` 3);
+* **ABSURD 1** – `dElo` 200 → 20000 on the B tree: the curve's md5 is **UNCHANGED**, so the staircase
+  genuinely cannot reach that instrument;
+* **ABSURD 2** – `SKILL_K` 0.0016 → 0.0001 on the B tree: md5 `8020e5a0d282344c8ddcce6bda9e7653`, and
+  every bucket moved (gap 10 p(win) **0.732 → 0.659**). ⭐ The instrument is ALIVE and would have
+  reported a change. Both edits reverted from copies and verified by grep.
+* ⭐ And arm A reproduces the shipped §D transcription to the digit (141 / 55, #352 / #597, 12.0 / 0.0),
+  which is the receipt that the control is the right TREE rather than one that merely compiles.
+
+### ⚠ The replay contract, checked before the constant landed
+
+The brief's stop condition: «if any replay is byte-pinned across constant changes, STOP». Five checks,
+all clear. `comebackMatchFactor` has exactly ONE runtime caller in `src/` (`kidMatchPlayerFor`, at
+COMPOSE time); every stored-replay reader re-runs `simulateMatch` on the **frozen** `a`/`b`
+`MatchPlayer` objects, so the factor is baked into the stored attributes and a constant change cannot
+reach a stored match; no golden fixture holds a non-null `comeback` (v85.json is the only file with
+the key and it is null); the e2e `expecting` fixture parks inside the pause and before the birth; and
+no test byte-pins a replay across constant changes. ⭐ The identities are EXACT rather than rounded –
+the last rung's `dElo` is exactly 0 and a week before the return reaches no rung, so `(C − 0) / C` is
+exactly 1.0 in IEEE-754 and §B's whole-player `toEqual` still holds byte for byte.
+
+## §15.2 T4 – the postpartum floor (D5)
+
+`ECONOMY.spirit.shock.postpartum`'s base moves **−30 → −36** (−24 / −37.5 → **−28.8 / −45.0** through
+`perturbationScale`). `postpartumSupportScale`'s 0.8 / 1 / 1.25 is **untouched**, which is D5's own
+prescription: «the base moves and not the scale».
+
+⚠ **Why −36 and not −35, which is the arithmetic minimum.** She lands at 75 + delta, climbs at 5
+(steady) / 3 (intense) a week and clears at 68, so the binding cells are `warm` on each axis:
+`ceil((base × 0.64 − 7) / 5) ≥ 4` → base > 34.375, and `ceil((base − 7) / 3) ≥ 10` → base > 34.
+**−35 satisfies both and is not available**: −35 × 1.25 = −43.75 is hundredths and `world.spirit` is
+carried in tenths. Keeping both products on the meter's grid needs a multiple of 2, and **36 is the
+first above 34.375** – so the move is the smallest the ruling allows.
+
+**Measured on the engine's own weekly pass** (`tests/wave8-birth.test.ts` §E), weeks from the birth
+until `accrueSpirit`'s tail clears the mark:
+
+| grade | steady | intense | wave 8's own, at −30 | the break-up's own |
+| --- | ---: | ---: | --- | --- |
+| `warm` | **4** | **10** | 3 / 8 | 4 / 10 |
+| `measured` | **5** | **13** | 4 / 11 | 4 / 10 |
+| `cold` | **6** | **16** | 5 / 13 | 4 / 10 |
+
+✅ **Every cell is now at or above the break-up's, which is the whole of D5**, and `warm` is LEVEL
+rather than larger – the floor is TIGHT, which is what «the base moves, the scale stays» buys.
+⚠ **Both sides are measured on the SAME instrument**: §E gained `breakupWeeks`, carrying the
+break-up's own shape (the episode ends on the tick, so the lift leaves and she climbs toward 70 rather
+than 75). A transcribed «4 / 10» would have been a number that file could not defend the day the
+break-up's own band moved.
+
+✅ Unchanged and checked rather than assumed: the ordering `warm < measured < cold` on all four
+voices; the psychologist still shortens every one of the six cells with **zero new code**; and a
+`breakup` mark is byte-identical to what wave 4 priced, whatever grade stands on a pregnancy record.
+
+⚠ **§11's own medians are now stale by construction** – they were measured at the −30 base. The table
+above is the authority for the six cells; §11's psychologist finding (1.5–2 weeks off every grade,
+and the two refusals reported as missing cells) is about the CHANNEL and is unaffected.
+
+## §15.3 ⚠ What wave 8b did NOT measure, named rather than left to be inferred
+
+* **T3's prediction 3 – the D8 ladder.** The «returned successfully» shares at top 100 / 200 / 500 come
+  from the motherhood bench's comeback section, which walks 168 careers × 1300 weeks. The run was
+  started and had not finished by the hand-back. ⚠ It is therefore **not measured**, and §8.5's
+  12.5 / 54.2 / 66.7 remain the last measured numbers – **taken at the ×0.6 staircase**. The
+  re-denomination makes every returner stronger, so the shares can only move UP; how far is the open
+  number, and it is one bench run away.
+* **§11's medians at the new base**, for the same reason. §15.2's table is measured and is the six
+  cells' authority; the bench's grown-career medians are not re-taken.
+* **The middle-of-the-table arm** the staircase research designed and parked (§4 of that document):
+  her measured round depth by Elo gap against the logistic curve the field is built on. It was
+  designed to run AFTER the staircase landed; the staircase landed in this batch, so the arm is clean
+  to run now and has not been.
+
+## §15.4 ⚠⚠ The one thing this batch changed that is NOT a constant: his eight diary lines
+
+C6's band shipped with all eight of his sentences and **four of them break this repo's pinned
+80-character scrap budget** (87, 88, 106, 89 against a «MUST, pinned» 80 in
+[voice-bibles-2026-09.md](voice-bibles-2026-09.md)) while **two put the journal in the singular first
+person**, where its voice has been a household «we» for a year and his own 09.09 ruling put `I` / `me`
+inside HER quotation marks only.
+
+**Not one character was reworded and neither law was loosened.** The six sentences are BASELINED WITH
+CUSTODY in `tests/week-notes.test.ts` – named in full, dated, pointed at him, counted so a seventh
+cannot arrive quietly, and re-arming the guard the moment a baselined line is edited. That is the
+handling `tests/wave3-tail-lint.test.ts` prescribes for exactly this shape, and an exemption would
+have been the defect. ⚠ Checked rather than assumed that it is **not a layout defect**:
+`.recap-note-text` is a `<p>` with no max-height, clamp or overflow, on a scrollable card and not a
+blocking overlay, so a 106-character note wraps to a third line. The budget's stated reason is visual
+mass – «the scrap has to stay a scrap» – which is an editorial call and therefore his. It is the
+strings table's **§8 Q-9**.
