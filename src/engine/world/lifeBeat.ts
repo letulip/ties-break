@@ -6915,8 +6915,16 @@ export function motherhoodBandAt(world: WorldState): MotherhoodBand | null {
   }
   const comeback = world.comeback
   if (comeback === null) return null
+  const back = week - comeback.returnedWeek
+  // ⚠ A WEEK **BEFORE** THE RETURN TAKES NO BAND, which is `comebackMatchFactor`'s own discipline one
+  // module over («a week before the return takes no rung and comes back 1.0»). It is unreachable
+  // through the app – `world.comeback` is written AT the return, so the engine never asks about an
+  // earlier week – and it is answered anyway, because a total function cannot be made wrong by a
+  // future caller (`portraitStage`'s own rule). Without it a negative `back` is also «less than the
+  // first rung» and the band would say «the bag is packed again» about a week she was still carrying.
+  if (back < 0) return null
   const stages = ECONOMY.motherhood.comebackStages
-  return week - comeback.returnedWeek < stages[1].fromWeeksBack ? 'returned' : null
+  return back < stages[1].fromWeeksBack ? 'returned' : null
 }
 
 /** ⭐⭐⭐ HER CHANCE OF **TRYING** – pure over the four inputs the brief names, in its own order of

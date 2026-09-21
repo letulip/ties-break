@@ -210,6 +210,12 @@ describe('wave 8b T2 A – the arc, walked at its own boundaries', () => {
     expect(bandAt(world, back + BRIEF.firstRungWeeks - 1), 'the last week of the first rung').toBe('returned')
     expect(bandAt(world, back + BRIEF.firstRungWeeks), 'and the rung ends').toBeNull()
     expect(bandAt(world, back + 400), '...and stays ended, for the rest of the career').toBeNull()
+    // ⚠ AND A WEEK **BEFORE** THE RETURN TAKES NO BAND EITHER – `comebackMatchFactor`'s own
+    // discipline. Unreachable through the app (`world.comeback` is written AT the return), and
+    // answered anyway: without the guard a negative `back` is also «less than the first rung», and
+    // the band would say «the bag is packed again» about a week she was still carrying.
+    expect(bandAt(world, back - 1), 'the week before she came back').toBeNull()
+    expect(bandAt(world, back - 30), 'and a season before that').toBeNull()
   })
 
   it('the first rung really is the research\'s three months – 13 weeks of a 52-week year', () => {
