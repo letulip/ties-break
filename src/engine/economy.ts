@@ -4363,17 +4363,43 @@ export const ECONOMY = {
      *  not moved, and the brief's §4 contract holds – it ships at its drafted value, unruled, and T9
      *  benches recovery weeks by grade with the psychologist on and off.
      *
+     *  ⭐⭐⭐ **THE BASE MOVED AT WAVE 8b T4 AND THE SCALE DID NOT – HIS RULING ON D5, 21.09.** The
+     *  questions pass put it to him as «the postpartum window is never shorter than a break-up at the
+     *  same grade», and he ruled it in. What was wrong is the `warm` column, which this note's own
+     *  last paragraph used to defend out loud: wave 8 shipped a supported birth clearing in **3**
+     *  weeks against the break-up's **4** for a steady girl, and **8** against **10** for an intense
+     *  one. A birth is physically the larger event; support should SHORTEN the window, not take it
+     *  under the break-up's floor. So the BASE moves from −30 to **−36** and
+     *  `postpartumSupportScale`'s 0.8 / 1 / 1.25 is untouched, which is exactly the shape D5's own
+     *  sentence prescribes («the base moves and not the scale»).
+     *
+     *  ⚠⚠ **WHY −36 AND NOT −35, WHICH IS THE ARITHMETIC MINIMUM.** The floor needs `warm` to reach
+     *  the break-up's 4 and 10: she lands at 75 + delta, climbs at 5 (steady) / 3 (intense) a week and
+     *  clears at `baseline − shockClearWithin` = 68, so the binding conditions are
+     *  `ceil((base × 0.64 − 7) / 5) ≥ 4` → base > 34.375 and `ceil((base − 7) / 3) ≥ 10` → base > 34.
+     *  **−35 satisfies both and is not available**: −35 × 1.25 = −43.75, which is HUNDREDTHS, and
+     *  `world.spirit` is carried in tenths (`roundTenth` at the end of `accrueSpirit`'s sum) – the
+     *  same constraint this note already applied to −37.5. Keeping both products on the meter's own
+     *  grid needs a base that is a multiple of 2, and **36 is the first one above 34.375**. ⭐ SO THE
+     *  MOVE IS THE SMALLEST THE RULING ALLOWS: at `warm` the two windows come out LEVEL rather than
+     *  the birth dwarfing the break-up, which would have been a second, undrafted decision about how
+     *  much worse a birth is.
+     *
      *  ⚠⚠ THE SHAPE IS `breakup`'s, ONE BASE SEEN THROUGH `perturbationScale`, and the arithmetic is
-     *  written out because a later reader cannot recover it from the values: ONE base of **−30**,
-     *  −30 × 0.8 = **−24.0** and −30 × 1.25 = **−37.5**. ⚠ BOTH PRODUCTS SHIP EXACTLY, which is where
+     *  written out because a later reader cannot recover it from the values: ONE base of **−36**,
+     *  −36 × 0.8 = **−28.8** and −36 × 1.25 = **−45.0**. ⚠ BOTH PRODUCTS SHIP EXACTLY, which is where
      *  this parts from `breakup` above rather than contradicting it: §4's own table named −22/−34 in
      *  words and the single-source rule kept them against the derived −34.375. No table names these
      *  two, so there is nothing for an exact product to disagree with, and `world.spirit` is carried
      *  in TENTHS (`roundTenth` at the end of `accrueSpirit`'s sum), so −37.5 is a value the meter can
      *  actually hold.
      *
-     *  ⚠⚠ WHY −30 AND NOT −27.5, i.e. why a birth is drafted 9% above a break-up on the same axis –
-     *  and note that the FIRST reason is arithmetic rather than sentiment:
+     *  ⚠⚠ WHY A BIRTH SITS ABOVE A BREAK-UP ON THE SAME AXIS AT ALL – the two reasons the −30 draft
+     *  was argued on, both still standing and both now carried further by his D5 ruling. ⚠ The
+     *  paragraph is kept in its original terms («why −30 and not −27.5», a 9% gap) because it is the
+     *  REASONING that survives, not the number: at −36 the gap is 31%, and it is his ruling that
+     *  widened it rather than any of the arithmetic below. Note that the FIRST reason is arithmetic
+     *  rather than sentiment:
      *    · **THE ATTACHMENT LIFT DOES NOT LEAVE.** A break-up takes its −22/−34 *and* empties the
      *      slot on the same tick, so the effective baseline falls 75 → 70 and she is climbing toward
      *      the lower number. A birth does neither: the marriage usually still stands, `activeEpisode`
@@ -4392,24 +4418,29 @@ export const ECONOMY = {
      *  career at the lifted 75, psychologist off) rather than computed on paper – weeks from the birth
      *  until `accrueSpirit`'s tail clears the mark:
      *
-     *        grade        steady      intense
-     *        warm            3            8
-     *        measured        4           11
-     *        cold            5           13
+     *        grade        steady      intense        (wave 8's own, at the −30 base: 3/8, 4/11, 5/13)
+     *        warm            4           10
+     *        measured        5           13
+     *        cold            6           16
      *
-     *  against the BREAK-UP's own **4 / 10** – measured on the same instrument and on the break-up's
-     *  own shape (the episode ends the same tick, so the lift leaves with it). Every cell moves with
-     *  the grade; the middle row matches the break-up for a steady girl and sits a week past it for
-     *  an intense one, which is the «larger window» the slot's ruling asks for at the grade that
-     *  claims nothing; and `warm` is deliberately UNDER it – a supported birth is an easier week than
-     *  being left. That is the one place the ordering is allowed to cross, and it is said out loud
-     *  here rather than discovered by T9.
+     *  against the BREAK-UP's own **4 / 10**, measured on the SAME instrument and on the break-up's
+     *  own shape (the episode ends the same tick, so the lift leaves with it) rather than transcribed
+     *  – `breakupWeeks` in that file is the arm, added by T4 for exactly this comparison, so the
+     *  floor cannot go stale the day the break-up's own band moves.
+     *
+     *  ⭐⭐⭐ **EVERY CELL IS NOW AT OR ABOVE THE BREAK-UP'S, WHICH IS THE WHOLE OF D5.** `warm` is
+     *  LEVEL on both axes (4 and 10), `measured` and `cold` sit above it, and the ordering
+     *  `warm < measured < cold` is unchanged on all four voices. ⚠ THE OLD PARAGRAPH'S LAST SENTENCE
+     *  IS GONE AND IS NAMED HERE SO THE CHANGE IS NOT SILENT: it read «`warm` is deliberately UNDER it
+     *  – a supported birth is an easier week than being left. That is the one place the ordering is
+     *  allowed to cross.» It was true of the draft, it was said out loud rather than hidden, and he
+     *  ruled the other way.
      *
      *  ⚠ NO SECOND CURVE AND NO RECOVERY TERM – `spirit.ts`'s own «THERE IS NO RECOVERY CURVE,
      *  ANYWHERE, BY DESIGN» is untouched by this row and by `postpartumSupportScale` below, which is
      *  the reason support enters through the MAGNITUDE. See that constant's note for the whole of the
      *  argument, including the mechanical one. */
-    shock: { breakup: { steady: -22, intense: -34 }, postpartum: { steady: -24, intense: -37.5 } } satisfies Record<
+    shock: { breakup: { steady: -22, intense: -34 }, postpartum: { steady: -28.8, intense: -45 } } satisfies Record<
       SpiritShockKind,
       { steady: number; intense: number } | null
     >,

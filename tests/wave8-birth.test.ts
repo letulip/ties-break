@@ -399,16 +399,52 @@ function dueAfterABreakup(base: string): { world: WorldState; ended: number } {
 // word lands on is how long she is under, so that is what is asserted. The instrument is the engine's
 // own weekly pass (`accrueSpirit`) driven week by week, and the answer is the week the mark clears.
 describe('wave 8 T4 E – how long the months take, and what the parent\'s answer bought', () => {
-  it('⭐⭐ the drafted band, measured: a steady girl 4 weeks, an intense one 11, at `measured`', () => {
-    expect(recoveryWeeks('sunny', 'measured', false), 'steady, measured').toBe(4)
-    expect(recoveryWeeks('deep', 'measured', false), 'intense, measured').toBe(11)
+  // ⚠⚠ THE SIX CELLS BELOW MOVED AT WAVE 8b T4 ON HIS RULING OF D5, «давай рекомендацию сделаем» –
+  // «the postpartum window is never shorter than a break-up at the same grade». THE BASE MOVED AND THE
+  // SCALE DID NOT: `ECONOMY.spirit.shock.postpartum` from a base of −30 (−24 / −37.5) to a base of
+  // −36 (−28.8 / −45); `postpartumSupportScale`'s 0.8 / 1 / 1.25 is untouched. The whole arithmetic,
+  // including why −36 and not −35, is at the constant.
+  it('⭐⭐ the band, measured: a steady girl 5 weeks, an intense one 13, at `measured`', () => {
+    expect(recoveryWeeks('sunny', 'measured', false), 'steady, measured').toBe(5)
+    expect(recoveryWeeks('deep', 'measured', false), 'intense, measured').toBe(13)
   })
 
   it('⭐⭐⭐ `warm` shortens it and `cold` lengthens it – on both axes, and by the same factor', () => {
-    expect(recoveryWeeks('sunny', 'warm', false), 'steady, warm').toBe(3)
-    expect(recoveryWeeks('sunny', 'cold', false), 'steady, cold').toBe(5)
-    expect(recoveryWeeks('deep', 'warm', false), 'intense, warm').toBe(8)
-    expect(recoveryWeeks('deep', 'cold', false), 'intense, cold').toBe(13)
+    expect(recoveryWeeks('sunny', 'warm', false), 'steady, warm').toBe(4)
+    expect(recoveryWeeks('sunny', 'cold', false), 'steady, cold').toBe(6)
+    expect(recoveryWeeks('deep', 'warm', false), 'intense, warm').toBe(10)
+    expect(recoveryWeeks('deep', 'cold', false), 'intense, cold').toBe(16)
+  })
+
+  it('⭐⭐⭐ WAVE 8b T4 – THE FLOOR HE RULED: the postpartum window is NEVER shorter than a break-up\'s', () => {
+    // ⚠⚠ D5, measured rather than asserted. Wave 8 shipped `warm` UNDER the break-up at both
+    // intensities – 3 against 4 for a steady girl, 8 against 10 for an intense one – and said so out
+    // loud at the constant («that is the one place the ordering is allowed to cross»). He ruled it
+    // away on 21.09: a birth is physically the larger event, support should SHORTEN the window and not
+    // take it below the break-up's floor.
+    //
+    // ⚠ BOTH SIDES ARE MEASURED ON THE SAME INSTRUMENT, and the break-up arm carries its own shape –
+    // the episode ends on the tick, so the lift leaves and she climbs toward 70 rather than 75. A
+    // transcribed «4 / 10» would have been a number this file could not defend the day the break-up's
+    // own band moved.
+    for (const [voice, axis] of [['sunny', 'steady'], ['quiet', 'steady'], ['fiery', 'intense'], ['deep', 'intense']] as const) {
+      const breakup = breakupWeeks(voice, false)
+      for (const grade of ['warm', 'measured', 'cold'] as const) {
+        expect(
+          recoveryWeeks(voice, grade, false),
+          `⚠ ${voice} (${axis}) at ${grade}: a birth may not clear sooner than a break-up (${breakup} weeks)`,
+        ).toBeGreaterThanOrEqual(breakup)
+      }
+    }
+  })
+
+  it('⚠ ...and the floor is TIGHT at `warm`, which is what «the base moves, the scale stays» buys', () => {
+    // ⚠ THE OTHER HALF OF D5, and the reason the base is −36 and not −50. «Never shorter» is a FLOOR
+    // and not an instruction to make the birth dwarf the break-up: at the warm grade the two windows
+    // are now LEVEL on both axes, which is the smallest move that satisfies his ruling. A larger base
+    // would have been a second, undrafted decision about how much worse a birth is.
+    expect(recoveryWeeks('sunny', 'warm', false), 'steady: level with the break-up').toBe(breakupWeeks('sunny', false))
+    expect(recoveryWeeks('deep', 'warm', false), 'intense: level with the break-up').toBe(breakupWeeks('deep', false))
   })
 
   it('⚠ the ordering holds for every voice – `warm < measured < cold`, all four', () => {
@@ -477,6 +513,38 @@ function recoveryWeeks(voice: 'sunny' | 'fiery' | 'quiet' | 'deep', support: Pre
     if (world.spiritShock === null) return weeks
   }
   throw new Error(`the mark never cleared for ${voice}/${support}`)
+}
+
+/** ⭐⭐⭐ WAVE 8b T4 – **THE BREAK-UP'S OWN WEEKS, ON THE SAME INSTRUMENT**, which is what D5's floor
+ *  has to be measured against. `recoveryWeeks` above and this differ in exactly two ways, and both of
+ *  them are the break-up's own SHAPE rather than a choice made here:
+ *    · the mark is `'breakup'`, so `postpartumSupportScale` is 1 whatever grade stands (§E's last
+ *      case is the receipt for that);
+ *    · THE EPISODE ENDS ON THE SAME TICK, so the attachment lift LEAVES with it and she climbs
+ *      toward the plain 70 instead of the lifted 75. A break-up arm that left the marriage standing
+ *      would be measuring a career the engine cannot produce, and it would flatter the break-up by
+ *      giving it a five-point head start it never has.
+ *  ⚠ No pregnancy record at all – a break-up is not a grade-carrying event, and the floor is a
+ *  comparison of two WINDOWS rather than of two grades. */
+function breakupWeeks(voice: 'sunny' | 'fiery' | 'quiet' | 'deep', psy: boolean): number {
+  const world = wedded(`w8b-breakup-${voice}-${psy}`)
+  world.temperament = voice
+  world.psychologistHired = psy
+  world.psychologistFocus = psy ? 'recovery' : null
+  for (let i = 0; i < 40; i++) {
+    accrueSpirit(world, false, [])
+    world.week += 1
+  }
+  // the episode ends this tick – the lift goes with it, which is the break-up's own shape
+  world.loveEpisodes[0].endedWeek = world.week
+  world.spiritShock = { week: world.week, kind: 'breakup' }
+  accrueSpirit(world, psy, [])
+  for (let weeks = 1; weeks <= 200; weeks++) {
+    world.week += 1
+    accrueSpirit(world, psy, [])
+    if (world.spiritShock === null) return weeks
+  }
+  throw new Error(`the break-up mark never cleared for ${voice}`)
 }
 
 /** Her spirit on the week a mark of `kind` lands, with `support` on a standing pregnancy record (or
