@@ -256,3 +256,136 @@ console.log(
     '    The stronger player wins WITH PROBABILITY p and never by construction, so the head of the\n' +
     '    table is decided by the same curve her own matches are.',
 )
+
+// =================================================================================================
+// ⭐⭐⭐ ARM 5 – THE EFFECTIVE PLAYER AGAINST THE RAW SHEET (21.09, his «три руки по пункту 2»)
+// =================================================================================================
+//
+// WHY. ARM 4 priced titles off her RAW overall(4) and the retraction at the top of
+// docs/research/the-unclosable-head-2026-09.md says what that cost: the specimen banks ~26% of the
+// 1000s she enters while her raw sheet prices a title at 0.0008 a draw. Something between the sheet
+// and the court is worth a lot of core points, and this arm measures HOW MANY.
+//
+// ⚠ IT IS A TRANSFER CURVE AND NOT A CAREER. The skills are handed in rather than walked to, because
+// the question is what `kidMatchPlayerFor` DOES to a build – condition, spirit, surface x style, kit.
+// A walked career would answer a different question (arm 7's) and would hide this one inside it.
+import { kidMatchPlayerFor } from '../src/engine/world/player'
+// ⚠ FROM ITS OWN MODULE, NOT THE `engine/world` BARREL – the barrel re-exports it through a cycle
+// that leaves it `undefined` at module-eval time in a vite-node script, which is a null arm wearing a
+// crash rather than a number.
+import { DEFAULT_PROFILE } from '../src/shared/protocol/profile'
+
+const RAW = { serve: 69.2, ret: 70.3, composure: 55.3, stamina: 65.7, groundstrokes: 74.2 }
+const rawOverall = (RAW.serve + RAW.ret + RAW.composure + RAW.stamina) / 4
+const effOverall = (p: { serve: number; ret: number; composure: number; stamina: number }) =>
+  (p.serve + p.ret + p.composure + p.stamina) / 4
+
+console.log('\n== ARM 5 – what the COURT does to the SHEET (the specimen build, raw overall ' + rawOverall.toFixed(1) + ') ==')
+console.log(`  ${'condition'.padStart(11)}${'spirit'.padStart(9)}${'effective'.padStart(11)}${'delta core'.padStart(12)}${'= Elo'.padStart(9)}${'p(title,64)'.padStart(13)}`)
+for (const [condition, spirit] of [[100, 85], [90, 75], [90, 50], [75, 75], [60, 60]] as const) {
+  const p = kidMatchPlayerFor(
+    { seed: 'arm5', profile: DEFAULT_PROFILE, condition, week: 520, skills: RAW, spirit },
+    'hard',
+  )
+  const eff = effOverall(p)
+  const cores = drawCores(6)
+  const pTitle = cores.reduce((acc, c) => acc * pAtGap(eff - c), 1)
+  console.log(
+    `  ${String(condition).padStart(11)}${String(spirit).padStart(9)}${eff.toFixed(1).padStart(11)}` +
+      `${(eff - rawOverall >= 0 ? '+' : '') + (eff - rawOverall).toFixed(1).padStart(11)}` +
+      `${((eff - rawOverall) * SKILL_LAW.eloPerCore).toFixed(0).padStart(9)}${pTitle.toFixed(4).padStart(13)}`,
+  )
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ARM 6 – THE SLAM AGAINST THE 1000: WHO IS ACTUALLY IN THE DRAW (21.09)
+// =================================================================================================
+//
+// HIS QUESTION: one Slam at 19 and none in the five years after, against FOURTEEN WTA1000 titles over
+// the same stretch. Two candidate causes were named – the extra round, and the field. This arm reads
+// the field, because the tier table answers it without a single walked career.
+import { TIERS } from '../src/engine/season/calendar'
+import { isEntrantBand } from '../src/engine/season/tournament'
+
+console.log('\n== ARM 6 – the two draws, from the tier table itself ==')
+for (const id of ['slam', 'wta1000'] as const) {
+  const t = TIERS[id]
+  console.log(
+    `  ${id.padEnd(9)} draw ${String(t.drawSize).padStart(3)} (${Math.log2(t.drawSize)} rounds) · ` +
+      `${t.anchorWeeks?.length ?? 0} a season · accepts to #${t.acceptsRank} · AI band [${t.entrantPctBand[0]}, ${t.entrantPctBand[1]}]`,
+  )
+}
+// how many of the table's very best are CANDIDATES for each draw, at a merged table of ~1800 rows
+for (const tableRows of [1600, 1800, 2000]) {
+  const topsIn = (id: 'slam' | 'wta1000') => {
+    let n = 0
+    for (let rank = 1; rank <= 30; rank++) if (isEntrantBand(id, (rank - 1) / tableRows)) n++
+    return n
+  }
+  console.log(
+    `  table ${tableRows} rows: of the world's top 30, the SLAM field may contain ${topsIn('slam')}, ` +
+      `the 1000 field ${topsIn('wta1000')} (the 1000's band opens at ${TIERS.wta1000.entrantPctBand[0]})`,
+  )
+}
+console.log('  ⚠ the lower edge is DELIBERATE – the owner\'s hard cuts of 16.08 («пусть остануться жесткие')
+console.log('    отсечки», docs/specs/the-acceptance-tail-2026-08.md): a top-20 skips the smaller rungs.')
+console.log(`  ${'her overall'.padStart(13)}${'p(title, 1000: 6 rds)'.padStart(23)}${'p(title, slam: 7 rds)'.padStart(23)}${'ratio'.padStart(9)}`)
+for (const her of [65.1, 68, 70, 73]) {
+  const p1000 = drawCores(6).reduce((acc, c) => acc * pAtGap(her - c), 1)
+  const pSlam = drawCores(7).reduce((acc, c) => acc * pAtGap(her - c), 1)
+  console.log(
+    `  ${her.toFixed(1).padStart(13)}${p1000.toFixed(4).padStart(23)}${pSlam.toFixed(4).padStart(23)}` +
+      `${(p1000 / pSlam).toFixed(2).padStart(9)}x`,
+  )
+}
+console.log('  ⚠ THIS IS THE ROUND-COUNT HALF ONLY, on one shared band. The FIELD half is the table above:')
+console.log('    a 1000 draw may not contain the players the slam draw must.')
+
+// =================================================================================================
+// ⭐⭐⭐ ARM 6b – THE DRAW SHE ACTUALLY MEETS, AND WHY ARM 4's TABLE WAS THE WRONG FIELD
+// =================================================================================================
+//
+// ARM 5 found the court does NOT add core points: at condition 100 and a high spirit the effective
+// build is 64.9 against a raw 65.1. So the factor-of-350 between arm 4's model (0.0007 a draw) and
+// the specimen's measured cabinet (~26% of entered 1000s) is NOT in the player. It is in the FIELD
+// arm 4 assumed: it drew every opponent from `FIELD.tiers.tourElite` (core 67–77, the top 64 chairs).
+// A 1000's draw is not that. It is a PERCENTILE BAND of the merged table – [0.006, 0.2] – and the
+// cores across that band come from `coreForStanding`, which is the same law the table is built on.
+//
+// ⚠ THIS SECTION REPLACES ARM 4's NUMBERS FOR ANY QUESTION ABOUT A REAL EVENT. Arm 4 remains a true
+// statement about a hypothetical all-elite draw, and nothing else.
+const TABLE_ROWS = 1800 // the merged universe's own order of magnitude (calendar.ts's wta250 note)
+
+/** The cores of a seeded bracket drawn from a tier's OWN entrant band: round 1 is the weakest
+ *  quarter of the band, the final the strongest player it may contain. */
+function bandDrawCores(id: 'slam' | 'wta1000', rounds: number): number[] {
+  const [lo, hi] = TIERS[id].entrantPctBand
+  const bestRank = Math.max(1, Math.round(lo * TABLE_ROWS) + 1)
+  const worstRank = Math.max(bestRank + 1, Math.round(hi * TABLE_ROWS))
+  const out: number[] = []
+  for (let r = 0; r < rounds; r++) {
+    // the seeding's direction: the field she meets narrows toward the band's best, log-spaced in
+    // rank exactly as `eloForStanding` interpolates
+    const t = r / Math.max(1, rounds - 1)
+    const rank = Math.round(Math.exp(Math.log(worstRank) + t * (Math.log(bestRank) - Math.log(worstRank))))
+    out.push(coreForStanding(rank))
+  }
+  return out
+}
+
+console.log('\n== ARM 6b – the field she ACTUALLY meets, from each tier\'s own entrant band ==')
+for (const id of ['slam', 'wta1000'] as const) {
+  const rounds = Math.log2(TIERS[id].drawSize)
+  const cores = bandDrawCores(id, rounds)
+  console.log(`  ${id.padEnd(9)} rounds ${rounds}: opponent cores ${cores.map((c) => c.toFixed(1)).join(' → ')}`)
+}
+console.log(`  ${'her overall'.padStart(13)}${'p(title, 1000)'.padStart(16)}${'p(title, slam)'.padStart(16)}${'per season (8 + 4)'.padStart(20)}`)
+for (const her of [63, 65.1, 67, 70]) {
+  const p1000 = bandDrawCores('wta1000', 6).reduce((acc, c) => acc * pAtGap(her - c), 1)
+  const pSlam = bandDrawCores('slam', 7).reduce((acc, c) => acc * pAtGap(her - c), 1)
+  console.log(
+    `  ${her.toFixed(1).padStart(13)}${p1000.toFixed(3).padStart(16)}${pSlam.toFixed(3).padStart(16)}` +
+      `${(8 * p1000).toFixed(2)} × 1000 + ${(4 * pSlam).toFixed(2)} × slam`.padStart(20),
+  )
+}
+console.log('  ⚠ the ratio to check against the specimen: she banked 14 x 1000 and 1 slam over six seasons.')

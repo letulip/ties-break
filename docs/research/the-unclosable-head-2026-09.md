@@ -42,6 +42,52 @@ levers and leaves every one of them standing.
    really is **0.0000** (nothing had decayed), and the head was never inside her reach. **What looks
    like a fade is a ceiling.**
 
+## 0b. ⭐⭐⭐ RESOLVED 21.09 BY ARMS 5 AND 6 – the head was never the problem; the MODEL's field was
+
+His three arms ran (`tools/probe-favorite-curve.ts` arms 5, 6, 6b) and between them they answer both
+his question about the specimen and §0.2's retraction. In order, because each one kills the next
+hypothesis:
+
+1. **The court does not add core points.** Arm 5 put the specimen's own build through
+   `kidMatchPlayerFor` – the composition point every match in the game is built at – and the
+   effective player is **64.9 against a raw 65.1** at condition 100 and a high spirit; condition 60
+   costs 4.4. So the factor of ~350 between §3's model (0.0008 a draw) and her measured cabinet
+   (≈26% of entered 1000s) is **not in the player**.
+2. **It is in the FIELD §3 assumed.** §3 drew every opponent from `FIELD.tiers.tourElite` – core
+   67–77, the top 64 chairs. A real draw is not that: it is a **percentile band of the merged
+   table**, `TierDef.entrantPctBand`, and the cores across it come from `coreForStanding`.
+3. **Priced on the real bands (arm 6b), the specimen's career is ordinary arithmetic:**
+
+| tier | rounds | the opponents a seeded bracket walks her through | p(title) at 65.1 | per season |
+| --- | ---: | --- | ---: | --- |
+| WTA1000 | 6 | 36.1 → 44.8 → 52.8 → 56.6 → 61.4 → **64.3** | **0.164** | 8 events → **1.3** |
+| Grand Slam | 7 | 37.1 → 49.3 → 56.6 → 62.7 → 67.4 → 71.2 → **76.4** | **0.010** | 4 events → **0.04** |
+
+⭐⭐ **The whole answer is in the two last columns.** The best player a 1000 draw MAY contain is core
+**64.3 – weaker than the specimen herself** – so she is the strongest player in the room and banks
+one in six of them: predicted **≈8 titles in six seasons, measured 11**. A Slam's last opponent is
+**76.4, the world #1's own core**, and seven rounds of it price a title at one per ~25 seasons:
+predicted **0.24 in six seasons, measured 1**. ⚠ She OVER-performed both, which is the opposite of
+the complaint either reading of this document started from. **Nothing happened to her after the Slam
+at 19; a Slam is simply a ~1-in-100 entry for a 65-core build, and she had already cashed hers.**
+
+⚠⚠ **AND THE MECHANISM BEHIND IT IS A RULED CONSTANT, WHICH IS WHY THIS IS HIS DECISION AND NOT A
+FIX.** The 1000's field tops out at 64.3 because its entrant band OPENS at 0.006 – the top ~11 of the
+table are **not candidates for a 1000 draw at all**, while the Slam's band opens at 0. That lower
+edge is his own hard-cut ruling of 16.08 («пусть остануться жесткие отсечки»,
+[the-acceptance-tail-2026-08.md](../specs/the-acceptance-tail-2026-08.md)) applied to every rung
+below the majors. ⚠ **It is the one place where that rule runs against the real tour**: WTA 1000s are
+MANDATORY events for the top ten, the most contested tournaments in the sport after the majors, and
+in our world they are the one class of event the very top never enters. The consequence is exactly
+the shape he felt in his save – **a career that wins 1000s at will and cannot win a major** – and it
+is one number (`TIERS.wta1000.entrantPctBand[0]`) whose change would be a whole-table decision with
+its own bench.
+
+⭐ What this does to §2's «four careers in five cannot reach the top storey»: it stands as a
+statement about `rollPotential` and **stops being a statement about titles**. A 65-core career is
+demonstrably a multi-1000 champion. The storey's floor gates the world #1's chair, not the trophy
+cabinet.
+
 ## 1. The owner's specimen, quoted and not re-derived
 
 Read once through `tools/fade-read.ts` (`decodeExportFile`, nothing of the save copied anywhere).
