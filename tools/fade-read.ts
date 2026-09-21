@@ -59,8 +59,14 @@ async function main() {
   const thisSeason = Math.floor(w.week / 52)
   console.log(`current season S${thisSeason}: titles so far ${titlesBySeason.get(thisSeason) ?? 0}`)
 
-  const knocks = w.knockHistory as { week: number }[]
-  const recent = knocks.filter(k => k.week > w.week - 104).length
+  // ⚠⚠ `sinceWeek`, NOT `week` – and the cast that used to sit here is why this mattered. The file
+  // shipped `w.knockHistory as { week: number }[]`, and `KnockRecord` (shared/protocol/health.ts) has
+  // no `week` at all: it carries `part` / `sinceWeek` / `untilWeek` / `choice`. So `k.week` was
+  // `undefined` on every row, `undefined > n` is false, and the tool printed «0 in the last two
+  // years» for every save ever handed to it. The CAST is what hid it – `vue-tsc` rejects the
+  // conversion outright, which is how `npm run check:tools` found it.
+  const knocks = w.knockHistory
+  const recent = knocks.filter((k) => k.sinceWeek > w.week - 104).length
   console.log(`knocks: ${knocks.length} career, ${recent} in the last two years`)
   console.log(`loveEpisodes ${(anyW.loveEpisodes as unknown[])?.length ?? 0} · pregnancy ${JSON.stringify(anyW.pregnancy ?? null) !== 'null' ? 'yes' : 'no'} · children ${((anyW.children as unknown[]) ?? []).length}`)
 }
