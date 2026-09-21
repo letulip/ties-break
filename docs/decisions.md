@@ -4967,3 +4967,22 @@ Reading the wave's questions file he ruled the review batch in one sentence – 
    the median career ceiling is 63.3 against a `tourElite` floor of 67, and 0.0% of careers clear 77.
 5. **Four strings passed per item in session** (C2–C5) and the diary band's eight lines passed
    21.09; they are the first strings of this layer that are not drafts.
+6. **⭐⭐ «Small events first» has an END, and «only smalls» stops being offered** – his three yeses
+   on the hybrid table, after his own reading of the ramp re-framed the whole A1 question: «если
+   сольет все турниры в первый год, то в следующем автоматически будет играть более низкие, разве
+   нет?» It does – the freeze is twelve entries spent ONCE, so the only lever the card ever had is
+   WHEN. Measured on five arms over the same fifteen paired returns (spec §15.5): a hold of 26
+   weeks takes rank (#117 vs #173), points at two years, top-100 (7/15) and the ONLY returns to her
+   pause rank, conceding year-one points to straight-back. `ECONOMY.motherhood.smallFirstHoldWeeks
+   = 26` moves a LABEL (`offReturnPlan`) and refuses nothing. Both card labels are his (P27/P28).
+7. **⭐⭐⭐ The Alice arms resolved his question and found something else** – «и три руки по пункту 2
+   тоже запускай». The court adds no core points (effective 64.9 against a raw 65.1), so the model,
+   not the career, was wrong: it drew opponents from the top storey's band instead of the tier's own
+   PERCENTILE band. Priced correctly, a 1000's strongest possible opponent is core **64.3 – weaker
+   than the specimen** (she banks one in six; predicted ~8 in six seasons, measured 11), while a
+   Slam's is **76.4** over seven rounds (predicted 0.24, measured 1). Nothing happened to her after
+   nineteen; she over-performed both. ⚠ **The mechanism is a ruled constant and stays his**:
+   `TIERS.wta1000.entrantPctBand[0] = 0.006` keeps the top ~11 out of every 1000 draw – his own hard
+   cuts of 16.08 – and it is the one place that rule runs against the real tour, where the 1000s are
+   mandatory for the top ten. Nothing moved. Arm 7 closed the last lever: a coached career reaches
+   **96–98% of her own headroom by about twenty-two**, so the ceiling ROLL binds, not the growth.
