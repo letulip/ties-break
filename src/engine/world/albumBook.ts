@@ -119,6 +119,14 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   'break-even': 'happy',
   'school-done': 'norm',
   wedding: 'happy',
+  // ⭐ wave 8b T6 (E2) – the row every non-closing occasion must have. ⚠ IT IS `'norm'` AND NOT
+  // `'happy'`, and the reason is `MEMORY_EMOTION.birth`'s own: a birth week is the week the
+  // postpartum mark lands, so a grin is the one face the same week's arithmetic contradicts.
+  // ⚠ IT IS ALSO UNREACHED IN PRACTICE, and that is worth saying rather than leaving to be found:
+  // the frame resolves through `MOMENT_FACE` at rung 1, so the birth's own painting wins before this
+  // table is consulted. The row exists because the mood is ALSO the journey rung's input and because
+  // the table's own law – a row for every non-closing occasion – is what stops a silent `'norm'`.
+  birth: 'norm',
   'first-house': 'happy',
   brand: 'happy',
   'academy-land': 'serious',
@@ -145,6 +153,31 @@ const EVENT_STEM: Partial<Record<string, string>> = {
    *  `fem-euro-brunnet-lateCareer-retired.webp` is a file on disk and renaming art to match a word
    *  would be a change to a thing his own eyes have passed. */
   'career-ended': 'lateCareer-retired',
+}
+
+/** ⭐⭐⭐ WHICH OCCASIONS RESOLVE THROUGH THE **MOMENT-FACE** SEAM rather than through `EVENT_STEM`
+ *  above – the paintings that exist in ONE band and therefore need a band FALLBACK, never a raw stem.
+ *
+ *  ⚠⚠ IT IS A TABLE AND IT USED TO BE AN `if (c.occasion.id === 'wedding')`, which is the shape
+ *  `shared/avatarEmotion.ts`' own `FACE_BANDS` note predicted would have to be found and edited:
+ *  «the next one-band painting that arrives needs exactly this seam, and a branch would have to be
+ *  found and edited instead of a row being added». Wave 8b T6 is that arrival, so the branch became
+ *  the table it should have been and the birth is a ROW.
+ *
+ *  ⚠ WHY NOT `EVENT_STEM`: that table names a STEM outright, and a stem cannot fall back. A wedding
+ *  at thirty-one and a birth at thirty-one must both draw the band's own `norm` rather than a file
+ *  that is not on disk – `paintedFaceFor` is the one place that decision lives, and this is the table
+ *  that routes to it. Both halves are swept against disk by `tests/portrait-bands.test.ts`.
+ *
+ *  ⚠ BASE_PATH-SAFE BY CONSTRUCTION, which is the album wave's own deployed-only 404 lesson: every
+ *  value here goes through `paintingPath`, which returns a path RELATIVE to the app root, and
+ *  `AlbumPhoto.vue` is the one place that prefixes `import.meta.env.BASE_URL`. A stem that built an
+ *  absolute `/images/...` here would work on localhost and 404 on the deployed sub-path. */
+type MomentFace = 'bride' | 'birth'
+const MOMENT_FACE: Partial<Record<string, MomentFace>> = {
+  wedding: 'bride',
+  // ⭐ wave 8b T6 (E2) – `fem-euro-brunnet-adult-birth.webp`, on disk since T5.
+  birth: 'birth',
 }
 
 /** The paintings' home – ONE spelling in this module, swept against the files on disk by
@@ -196,6 +229,9 @@ const ALT_DRAFT = {
   travel: 'The journey home',
   'jun-training': 'Her first days on a court',
   bride: 'Her wedding day',
+  // ⚠ DRAFT (wave 8b T6) – husband-agnostic and child-sex-agnostic, so it reads correctly on a
+  // career whose marriage ended before the birth and on the day boys exist.
+  birth: 'The week the baby came home',
   'adult-graduated': 'Graduation day',
   'lateCareer-farewell': 'Her farewell match',
   'lateCareer-retired': 'The day after the last match',
@@ -221,6 +257,14 @@ const PATCH_POOL: readonly string[] = [
   'Cedar Park Tennis',
   'Whitegate Club',
 ] as const
+
+/** ⚠ DRAFT – the alt each moment-face wears when its OWN painting is the one drawn; the band
+ *  fallback takes `ALT_DRAFT.portrait` instead. A total `Record` over `MomentFace`, so a third
+ *  one-band painting cannot join `MOMENT_FACE` without a sentence for it. */
+const MOMENT_ALT: Record<MomentFace, string> = {
+  bride: ALT_DRAFT.bride,
+  birth: ALT_DRAFT.birth,
+}
 
 // =================================================================================================
 // §3 CANDIDATES – the corpus's 33 occasions, resolved against ledgers the save never prunes
@@ -408,6 +452,21 @@ function onceCandidates(world: WorldState): AlbumCandidate[] {
   // A21 the wedding – per EPISODE, so a second marriage reaches the occasion again
   for (const m of world.milestones.filter((row) => row.type === 'wedding')) {
     out.push(candidate(world, 'wedding', m.week, 90))
+  }
+  // ⭐⭐⭐ A34 THE BIRTH (wave 8b T6, E2 – RULED 21.09, «да, получает, картинка теперь есть»). Per
+  // WEEK rather than per episode, which is `milestoneKey`'s own identity for this type and its own
+  // reason: a birth is once per PREGNANCY, so W5's second child of the same marriage reaches this
+  // occasion again on its own week. The wedding one line up is the shape; the loop is the same loop.
+  //
+  // ⚠ PRIORITY 92, ONE ABOVE THE WEDDING'S 90, AND THE NUMBER IS THE BUILDER'S. E2's own sentence is
+  // the argument – «a birth is the largest life event the album could hold» – and the ladder around
+  // it is the calibration: the closers sit at 1000, the wedding at 90, break-even at 75, the first
+  // prize at 70. One step above the wedding says «larger than the marriage that produced it» without
+  // reaching past the career's own closing frames, which is as much as an ordering can honestly say.
+  // ⚠ IT DOES NOT MAKE THE PAGE CERTAIN: the selector's own representatives rule still caps one kind
+  // at a third of a chapter's sheets, and priority decides ORDER inside a band rather than admission.
+  for (const m of world.milestones.filter((row) => row.type === 'birth')) {
+    out.push(candidate(world, 'birth', m.week, 92))
   }
   return out
 }
@@ -931,9 +990,14 @@ function frameArtFor(world: WorldState, c: AlbumCandidate): { art: string; alt: 
   const stage = portraitStage(c.ageYears)
   // rung 1 – the event painting, where the occasion has one. The bride resolves through
   // `paintedStemFor` (the wave-7 wiring): band fallback, never a 404.
-  if (c.occasion.id === 'wedding') {
-    const stem = paintedStemFor(stage, 'bride')
-    return { art: paintingPath(stem), alt: stem.endsWith('bride') ? ALT_DRAFT.bride : ALT_DRAFT.portrait }
+  const moment = MOMENT_FACE[c.occasion.id]
+  if (moment) {
+    const stem = paintedStemFor(stage, moment)
+    // ⚠ THE BAND FALLBACK DECIDES THE ALT TOO, and `stem.endsWith` is how: a birth at thirty-one
+    // DRAWS `lateCareer-norm`, so calling it «the week the baby came home» would describe a picture
+    // that is not on screen. One reading, two consumers – the wave-7 wiring, generalised.
+    const own = MOMENT_ALT[moment]
+    return { art: paintingPath(stem), alt: stem.endsWith(moment) ? own : ALT_DRAFT.portrait }
   }
   const eventStem = EVENT_STEM[c.occasion.id]
   if (eventStem) {
@@ -992,6 +1056,9 @@ const DOODLE_BY_KIND: Partial<Record<string, AlbumDoodle>> = {
   rare: 'trophy',
   international: 'plane',
   wedding: 'heart',
+  // ⭐ wave 8b T6 – the same heart the wedding wears. A doodle is антураж, not a fact, and the two
+  // occasions of the life family are the two the pool's heart was drawn for.
+  birth: 'heart',
   prologue: 'smile',
 }
 
