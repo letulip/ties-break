@@ -446,6 +446,14 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'returnChanceMin',
         'returnSpiritPerPoint',
         'returnSupportShift',
+        // ⚠⚠ RE-AIMED 21.09 BY HIS HOLD RULING, and once again the guard did its job: a key joined
+        // the block and somebody had to look at it and say whether it is a success rate. IT IS NOT.
+        // `smallFirstHoldWeeks` is how long the `small-first` ANSWER keeps calling a big draw
+        // off-plan (`EntryStatus.offReturnPlan`, `world/medical.ts`) – a LABEL on a preference the
+        // player overrides week to week, never a refusal and never a probability. Nothing reads it
+        // to decide whether a comeback worked; what it moves is which of her own entries the card
+        // calls off-plan, and the comeback's success stays EMERGENT and measured (§15.5's five arms).
+        'smallFirstHoldWeeks',
         'termWeeks',
         'worryBond',
         // ⚠⚠ RE-AIMED 20.09 BY v85 T6, AND THE RE-AIM IS THIS GUARD DOING EXACTLY WHAT IT WAS BUILT
