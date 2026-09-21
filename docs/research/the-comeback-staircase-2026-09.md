@@ -1,3 +1,11 @@
+---
+type: research
+status: current
+area: life
+canonical: false
+last-reviewed: 2026-09-21
+---
+
 # The comeback staircase, measured in the game's own Elo – and the A1 inversion's cause
 
 Compiled 21.09.2026, on the owner's ask at the wave-8 hand-back: «сверить наши очки за вылет R1
