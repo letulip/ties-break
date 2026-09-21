@@ -225,9 +225,35 @@ before the number. They are listed so his word has somewhere to land.
    one this document does NOT run. ⚠ If careers land far below their own ceilings, none of the three
    levers above is the right one and the answer is in `development.ts`.
 
+## 7. ⭐ ARM 7 – does a career reach its OWN ceiling? Yes, and that closes §5's fourth lever
+
+§5's fourth lever was the one thing neither §2 nor §3 could see: «nothing here measures how close a
+career gets to its own ceiling – if careers land far below theirs, none of the three levers above is
+the right one». Measured 21.09 by RE-RUNNING the instrument that already owns the question
+(`tools/r34-reachable-ceiling.ts --seeds 40`, real engine, real ticks, 780 weeks from fourteen to
+twenty-nine) rather than writing a fifth one:
+
+| rung | peak share of her own headroom | band reached | when |
+| --- | ---: | --- | --- |
+| self-coached | **0.893** | Close to her ceiling | never reaches the top band |
+| budget | 0.959 | At her ceiling | 40/40, weeks 464–539 |
+| middle | 0.970 | At her ceiling | 40/40, weeks 418–475 |
+| high | 0.976 | At her ceiling | 40/40, weeks 389–438 |
+| elite | **0.980** | At her ceiling | 40/40, **weeks 373–401** (age ≈ 21.2–21.7) |
+
+⭐⭐ **A coached career arrives at 96–98% of everything she was ever going to have, and it arrives by
+about twenty-two.** So the growth curve is NOT what stands between a career and the top storey – the
+ceiling ROLL is, which is §5's lever 1, and lever 4 is closed as a candidate.
+
+⚠ And it is the last piece of the specimen's picture: at twenty-four she was **at her ceiling, not
+past it** – `declineFactor` 0.0000, `physicalMean` equal to `peakPhysical` to the hundredth. Her
+career after nineteen is a player who had finished growing, playing at her limit, in a world whose
+1000s she outranked and whose majors she could not. Not one of those three facts is a fade.
+
 ## 6. ⚠ What this document does NOT answer
 
-* **How close a career gets to its own ceiling.** §5's fourth lever, and it needs walked careers.
+* ~~How close a career gets to its own ceiling~~ – ANSWERED 21.09 by §7: 96–98% with a coach, by
+  about twenty-two. §5's lever 4 is closed.
 * **The middle of the table**, which the staircase research's §4 designed and parked: does her
   measured round depth by Elo gap track the logistic curve the field is built on? That arm was
   designed to run AFTER the staircase landed, and the staircase landed in this same batch (T3) – so
