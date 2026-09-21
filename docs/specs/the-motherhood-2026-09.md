@@ -1163,8 +1163,38 @@ each against what was measured:
 | 1 | `tests/wave8-return-ramp.test.ts` §D goes red, then re-pins with small-first ahead | ⚠⚠ **IT DID NOT GO RED.** Its shape is «the wrong ramp WINS in this build», which fails on a FIX; a re-denomination is not one | ⚠ correctly green – the pin is doing its job |
 | 2 | small-first ≥ straight-back on points at 52 weeks | ⚠⚠⚠ **FALSIFIED, IN THE OPPOSITE DIRECTION.** Paired A/B, same eight seeds: straight-back ahead **8 of 8 on BOTH trees**; mean points 141/55 → **191/54**; the gap **2.6× → 3.5×**; mean rank #352/#597 → **#308/#605** | ❌ **the finding of this batch** |
 | 2b | straight-back still spends the freeze 12/12 | **12.0 / 0.0 on 8 of 8**, unchanged on both arms | ✅ the half that was always right |
-| 3 | the «returned successfully» ladder moves toward ~40% at top-150 | ⚠ **NOT MEASURED IN THIS BATCH** – see §15.3 | ⚠ named, not inferred |
+| 3 | the «returned successfully» ladder moves toward ~40% at top-150 | ✅ **CONFIRMED, and it brackets the research's bar exactly**: top-100 **12.5% → 33.3%**, top-200 **54.2% → 86.7%**, top-500 **66.7% → 93.3%** (best arm, 104 weeks after the return) | ✅ §15.1a |
 | 4 | the favourite curve does not move a byte | ✅ **byte-identical**, md5 `beefedb9f7618d794b14c79ed39333a3` on both arms, with the null-result provenance below | ✅ |
+
+### §15.1a Prediction 3, measured – the ladder moved, and it moved a long way
+
+Re-run of `tools/motherhood-bench.ts` on the tree that ships (168 careers × 1300 weeks, **17 reaching
+a pregnancy** – 14.5% of married, against wave 8's own 15.1%, so the hazard is undisturbed by either
+constant). ⚠ **The run carries BOTH of this batch's constants**, T3's staircase and T4's base, and is
+therefore the authority for §15.2's bench column as well.
+
+**Where she stands 104 weeks after the return** – the distribution, never one bar (§8.5's own rule):
+
+| arm | median rank | top 100 | top 200 | top 500 | unranked |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `small-first` | 1620 | 0/15 | 0/15 | 0/15 | 15/15 |
+| **`straight-back`** | **173** | **5/15 = 33.3%** | **13/15 = 86.7%** | **14/15 = 93.3%** | 1/15 |
+| `small-first` brakes off | 157 | 3/15 = 20.0% | 13/15 = 86.7% | 14/15 = 93.3% | 1/15 |
+
+against **§8.5's 12.5% / 54.2% / 66.7%**, measured at the ×0.6 staircase. ⭐ **The research's «~40% at
+a bar near the top 150» now falls exactly between two measured columns** – 33.3% at top-100 and 86.7%
+at top-200 – which is the prediction landing rather than being reached for.
+
+⚠ **Two honest caveats, both of which cut the same way.** The n moved (15 returns here against §8.5's
+24) and the ARM that carries the best column is `straight-back`, which is the arm A1 calls the trap –
+so «the ladder moved» and «the trap still pays» are the same measurement read twice. And the hardest
+bar is unmoved: **back to at least her rank at the pause** is still 1/14 at 52 weeks and **0/14 at
+104**, against a median pause rank of #39. §14.3's sentence stands – nobody gets their ranking back.
+
+⭐ **And A1 is confirmed a third time, at bench scale, on the NEW staircase**: straight-back ahead on
+**14 of 15**, small-first ahead on **0**, one tied; mean points **703 against 0**. ⚠ Small-first's
+literal zero is the bench-POLICY artefact T9 named and not the plan – the brakes-off arm of the same
+plan books 23.9 events a year and banks 291.
 
 ### ⚠⚠ Prediction 2 is the finding, and the mechanism is arithmetic rather than mysterious
 
@@ -1241,20 +1271,26 @@ break-up's own band moved.
 voices; the psychologist still shortens every one of the six cells with **zero new code**; and a
 `breakup` mark is byte-identical to what wave 4 priced, whatever grade stands on a pregnancy record.
 
-⚠ **§11's own medians are now stale by construction** – they were measured at the −30 base. The table
-above is the authority for the six cells; §11's psychologist finding (1.5–2 weeks off every grade,
-and the two refusals reported as missing cells) is about the CHANNEL and is unaffected.
+⚠ **§11's own medians were measured at the −30 base and are superseded by the bench re-run below.**
+
+**Grown careers at the new base** (the same run as §15.1a, 17 careers reaching a pregnancy):
+
+| grade | × magnitude | psy OFF (median wks) | n | **psy ON** | n | §11's own, at −30 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `warm` | 0.8 | **5.0** | 17 | **3.0** | 16 | 3.5 / 2.0 |
+| `measured` | 1 | **6.0** | 17 | **4.0** | 16 | 4.5 / 3.0 |
+| `cold` | 1.25 | **7.0** | 17 | **5.0** | 16 | 5.5 / 3.5 |
+
+✅ **Every cell moved up by about a week and a half, the ordering is untouched, and the psychologist
+still takes 2 weeks off every grade** – so D5's floor was bought without disturbing either of the two
+findings §11 was written to record. ⚠ The medians fold both intensities and whatever spirit the pause
+left her on, which is why they sit between §15.2's steady and intense columns rather than on either.
 
 ## §15.3 ⚠ What wave 8b did NOT measure, named rather than left to be inferred
 
-* **T3's prediction 3 – the D8 ladder.** The «returned successfully» shares at top 100 / 200 / 500 come
-  from the motherhood bench's comeback section, which walks 168 careers × 1300 weeks. The run was
-  started and had not finished by the hand-back. ⚠ It is therefore **not measured**, and §8.5's
-  12.5 / 54.2 / 66.7 remain the last measured numbers – **taken at the ×0.6 staircase**. The
-  re-denomination makes every returner stronger, so the shares can only move UP; how far is the open
-  number, and it is one bench run away.
-* **§11's medians at the new base**, for the same reason. §15.2's table is measured and is the six
-  cells' authority; the bench's grown-career medians are not re-taken.
+* ⭐ **T3's prediction 3 and §11's medians are MEASURED after all** – the bench run landed before the
+  hand-back and both are in §15.1a and §15.2. This bullet is kept so the reading order is honest:
+  they were written as open, and they closed.
 * **The middle-of-the-table arm** the staircase research designed and parked (§4 of that document):
   her measured round depth by Elo gap against the logistic curve the field is built on. It was
   designed to run AFTER the staircase landed; the staircase landed in this batch, so the arm is clean
