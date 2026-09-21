@@ -4786,7 +4786,11 @@ answered the brief's §3 in one pass:
    mid-20s WTA wallet, 0/89 weddings over 20% – the numbers were on the table and closed the
    question rather than tuning it). The mechanic was removed the same day; the measured record
    stays in [the-wedding-2026-09.md](specs/the-wedding-2026-09.md) §3c. The wedding follows the
-   gifts' law: no money mechanics, the day is bond and memory.
+   gifts' law: no money mechanics, the day is bond and memory. ⭐ **And he corrected the record of
+   this one on 21.09**, when the architect described it as his solo ruling: «нет, мы сняли вместе с
+   твоими аргументами». It was a joint decision – the measurement and the argument were the
+   architect's, the call was his – and the same shape as items 2 and 3 below, where the recommendation
+   is visible in the quote and here it was not.
 2. **A second tracked number for the spouse** – «Рекомендация: нет – согласен». His standing
    lives in the beats and the diary bands; `spouseBond` stays an append-only candidate.
 3. **W1+W2 in one wave** – «Рекомендация: одной – согласен».
