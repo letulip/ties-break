@@ -38,10 +38,16 @@ async function main() {
 
   console.log(`condition ${w.condition} · spirit ${w.spirit.toFixed(1)} · bond ${w.bond.toFixed(1)} · masseur ${w.masseurHired} · psychologist ${(anyW.psychologistHired as boolean) ?? '?'} · academy ${w.academy ? 'yes' : 'no'}`)
 
+  // ⚠⚠ TITLES COME FROM THE CABINET, NEVER FROM MILESTONES – the second defect this file has
+  // carried (21.09, found by the owner's own question about a save this line had slandered).
+  // `milestones` keeps FIRSTS – one 'title' row per TIER, ever – so a season of seven trophies
+  // read as zero and the research doc quoted it. `trophiesByTier` is the full record: every
+  // title's week, per tier. The knocks cast above was defect one; both hid behind this file's
+  // own casts, and both were caught by a reader, not by its author.
   const titlesBySeason = new Map<number, number>()
-  for (const m of w.milestones as { type: string; week: number }[]) {
-    if (m.type === 'title') {
-      const s = Math.floor(m.week / 52)
+  for (const tier of Object.values(w.trophiesByTier)) {
+    for (const week of tier.titles) {
+      const s = Math.floor(week / 52)
       titlesBySeason.set(s, (titlesBySeason.get(s) ?? 0) + 1)
     }
   }

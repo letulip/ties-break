@@ -23,10 +23,17 @@ levers and leaves every one of them standing.
    `rollPotential` is the ceiling and it is rolled once off `seed:potential`; its median overall(4)
    is **63.3**, and the `tourElite` floor is **67**. **19.1%** of careers can EVER clear 67.
    **5.8%** can clear 70. **0.0%** clear 77.
-2. **Zero titles in an 82-12 season at #7 is the arithmetic, not a defect.** At his specimen's
-   overall(4) of 65.1 the closed form gives a title chance of **0.0008 per 64-draw** – about **0.02
-   titles in a twenty-event season**. His measured one-title-in-six-seasons is ABOVE that line, not
-   below it.
+2. ⚠⚠ **RETRACTED 21.09, THE SAME DAY – the anchor was an instrument defect, the model half now
+   points the other way.** This item read «zero titles in an 82-12 season is the arithmetic»: the
+   specimen's titles were counted from `milestones`, which keeps FIRSTS – one `'title'` row per
+   tier, ever. The cabinet (`trophiesByTier`) is the full record and it says the opposite career:
+   **66 titles, 14 of them WTA1000** (11 of those AFTER her Slam), 9 titles in the 82-12 season
+   this line called empty. What survives is the MODEL half: the closed form at her RAW overall
+   (65.1, condition and every edge stripped) still prices a 64-draw title at 0.0008 – so a career
+   that actually banks ~26% of the 1000s it enters is playing FAR above its raw sheet, and §3's
+   model must be re-run with the EFFECTIVE player (condition, coach edge, form) before any
+   sentence about title arithmetic is written again. The gap between raw and effective is now the
+   measurement §3 owes, not a conclusion either way.
 3. **The four voices are treated identically**, measured at 20,000 seeds: every bar sits inside the
    ±1.5 pp corridor, and the mechanism says why before the number does.
 4. **The AI-vs-AI bracket resolves by a PROBABILISTIC draw, not argmax** – read and cited in §4, so
@@ -44,8 +51,9 @@ Carried here as the anchor every number below is answered against:
 | --- | --- |
 | overall(4) | **65.1** at WTA **#7** |
 | what the table expects at that chair | `coreForStanding(#7)` = **67.4** |
-| her best season | S9, **82-12**, **9,064 points**, ⚠ **0 titles** |
-| titles, nineteen to twenty-four | **1 in six seasons** |
+| her best season | S9, **82-12**, **9,064 points**, **9 titles** (⚠ first written as «0 titles» off the firsts-only milestone list – corrected 21.09) |
+| titles, nineteen to twenty-four | **35 across six seasons, 14 WTA1000 career** (⚠ first written as «1 in six» – same defect, same correction) |
+| Slams over the same span | **1 title (age 19.0) + 1 final (17.5)** in ~24 main draws – the one row where the head really is unclosed |
 | `declineFactor` at her age | **0.0000** – nothing had decayed |
 | staff | masseur **and** psychologist, both hired |
 
@@ -113,7 +121,13 @@ is the product over the six rounds:
 | 73.0 | 0.386 | 0.0195 | 0.39 |
 | 76.4 (`SKILL_LAW.top`) | 0.483 | 0.0535 | **1.07** |
 
-⭐⭐⭐ **SO 0 TITLES IN AN 82-12 SEASON IS NOT A DEFECT – IT IS WHAT THE TABLE PREDICTS, BY A FACTOR OF
+⚠⚠ **THE PARAGRAPH BELOW IS RETRACTED 21.09 WITH §0.2 – its measured side was the firsts-only
+count.** The model side stays as a RAW-sheet reading, and the corrected cabinet (≈26% of entered
+1000s banked) turns this section's question around: not «why does she win nothing» but «what makes
+the EFFECTIVE player so much stronger than the raw sheet, and is the Slam's shortfall against the
+1000s (1 vs 14, ≈2.5x under the one-extra-round ratio) composition, condition timing, or variance
+on n≈24». That re-run is owed before this table is cited again.
+~~SO 0 TITLES IN AN 82-12 SEASON IS NOT A DEFECT – IT IS WHAT THE TABLE PREDICTS, BY A FACTOR OF
 FIFTY.** At 65.1 the expectation is one title every **forty-odd seasons**. His measured **1 title in
 six seasons** (≈0.17 a year) is ABOVE the closed form for her build; she over-performed it, which is
 the opposite of the complaint the arm was asked to check.
