@@ -434,6 +434,12 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
     expect(Object.keys(ECONOMY.motherhood).sort()).toEqual(
       [
         'careerFirstBond',
+        // ⚠ RE-AIMED 21.09 BY WAVE 9's T2, third time this guard has asked its question and third
+        // time the answer is no. `childSmallWeeks` is the AGE WINDOW a spirit perturbation reads off
+        // the child's own `bornWeek` (`awayFromSmallChild`, `engine/spirit.ts`) – how long «small»
+        // lasts, nothing more. It decides no probability, it is read by no decision, and the
+        // comeback's success stays emergent and measured.
+        'childSmallWeeks',
         'decisionWeeksAfterBirth',
         'joyBond',
         'perWeekByAge',

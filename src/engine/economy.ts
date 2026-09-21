@@ -4308,6 +4308,18 @@ export const ECONOMY = {
       hardExamWeek: -2,
       seasonWithNoVacation: -3,
       blackoutWeek: 1,
+      /** ⭐⭐⭐ W5/T2 – THE WEEK THE FAMILY IS ON THE ROAD AND A SMALL CHILD IS AT HOME. His ruling of
+       *  21.09 chose the SPIRIT shape over the money one: a fare is something she already pays and
+       *  would have read as a tax, while a week away belongs to the layer that prices weeks.
+       *
+       *  ⚠ DRAFTED, NOT RULED. −2 puts it between the knock she played through (−2) and the season
+       *  that ended with no family week (−3), which is the company it keeps: a real weekly cost
+       *  that no single week decides a career over. Benched in T7.
+       *
+       *  ⚠ IT IS SCALED BY TEMPERAMENT FOR FREE (`perturbationScale` above, this block's own law),
+       *  so an `intense` mother feels the road more than a `quiet` one without a second constant –
+       *  the property that made this the right home rather than a new weekly pass. */
+      awayFromSmallChild: -2,
     },
     /** The exam row's own gate: an exam week only costs her when the plan is still grinding through
      *  it (`plan.train >= 85`, which is the `grind` preset). A light exam fortnight costs nothing. */
@@ -5418,6 +5430,14 @@ export const ECONOMY = {
      *
      *  ⚠ 13 WAS MEASURED TOO and is the retune if the six months read long; the curve between them is
      *  not measured, which is the honest limit on this number (n=15, two hold points). */
+    /** ⭐⭐ W5/T2 – HOW LONG «SMALL» LASTS, the window `awayFromSmallChild` reads off the child's own
+     *  `bornWeek`. Drafted at three years (156 weeks): the span the digest's protected ranking runs
+     *  for, and the age by which a child stops being carried everywhere. The wave-9 brief names this
+     *  as one of the two things T2 was to BRING rather than decide, so it is his with the bench's
+     *  numbers beside it (T7).
+     *  ⚠ A window and not a flag: nothing is persisted and no save gains a key – the child's row
+     *  already holds the only fact this needs. */
+    childSmallWeeks: 156,
     smallFirstHoldWeeks: 26,
     comebackStages: [
       // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries

@@ -102,7 +102,7 @@ import { ECONOMY } from './economy'
 import { clamp } from './condition'
 import { pickInt, rngFromSeed } from './rng'
 import { knockGoverns } from './knock'
-import { schoolIsOver } from './kidLife'
+import { AWAY_OFTEN, FRIENDS_WINDOW, schoolIsOver } from './kidLife'
 import { isBlackoutWeek, isExamWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
 import { birthdayTurning } from './world/age'
 import { vacationForWeek } from './world/bookings'
@@ -480,7 +480,44 @@ function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): numbe
   }
   if (isBlackoutWeek(world.week, schoolOver)) d += p.blackoutWeek
   if (wrapWithNoVacation) d += p.seasonWithNoVacation
+  // ⭐⭐⭐ W5/T2 – AND THE WEEK THE ROAD COSTS HER SOMETHING AT HOME.
+  //
+  // ⚠⚠ THE ROAD IS READ FROM THE SEAM THAT ALREADY ANSWERS IT, never from a third spelling.
+  // `awayFromSmallChild` below is the friends tile's own band and spouse-view's `'road-stretch'`
+  // occasion – «a week in which a travel bill was actually paid is a week the family was somewhere
+  // else» – so the diary tile, the spouse's complaint and this cost can never disagree about
+  // whether the family was away.
+  //
+  // ⚠ IT IS A PERTURBATION AND NOT A SHOCK, deliberately. A shock is an event with a recovery curve
+  // the psychologist's seat can work (`shockBeingWorked`); being away from a small child is a
+  // CONDITION of the weeks it happens in, it stops the week the travelling stops, and it must not
+  // hand the seat something to cure. ⚠ THE CONSEQUENCE IS WORTH SAYING OUT LOUD, because it answers
+  // the wave-9 brief's own open question with a mechanism rather than a guess: the psychologist
+  // does NOT offset this – his slope rides the return RATE and only while a shock is live – so a
+  // family that travels with a small child pays it whoever is on the payroll. If that should
+  // change it is a design decision with a number attached, not an oversight.
+  if (awayFromSmallChild(world)) d += p.awayFromSmallChild
   return d
+}
+
+/** ⭐ W5/T2 – TRUE WHEN THE FAMILY HAS BEEN ON THE ROAD AND A CHILD AT HOME IS STILL SMALL.
+ *
+ *  Both halves read facts that already exist: the road is `financeWeeks`' own travel bills over the
+ *  friends tile's window (`FRIENDS_WINDOW` / `AWAY_OFTEN`, `engine/kidLife.ts`), and «small» is the
+ *  child's own `bornWeek` against `ECONOMY.motherhood.childSmallWeeks`. Pure, no RNG, no state.
+ *
+ *  ⚠ `world.children` IS THE ONLY SOURCE AND THERE IS NO SECOND ONE: a career with no child answers
+ *  false at the first test, which keeps every career that never had one byte-identical – including
+ *  all three frozen ones, which never reach 23. */
+function awayFromSmallChild(world: WorldState): boolean {
+  const small = world.children.some(
+    (child) => world.week - child.bornWeek <= ECONOMY.motherhood.childSmallWeeks,
+  )
+  if (!small) return false
+  const weeksAway = world.financeWeeks.filter(
+    (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
+  ).length
+  return weeksAway >= AWAY_OFTEN
 }
 
 // =================================================================================================
