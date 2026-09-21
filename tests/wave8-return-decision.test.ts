@@ -451,6 +451,15 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'returnChanceMax',
         'returnChanceMin',
         'returnSpiritPerPoint',
+        // ⚠ RE-AIMED 21.09 BY WAVE 9's T3 – three keys at once, and the guard's question gets the
+        // same answer for all three. `repeatPerWeekByAge` and `repeatCountFactor` are the SECOND
+        // child's hazard (his digest's «28–38 | 1–2%» and the design's «a third stays rare»), and
+        // `repeatCooldownWeeks` is how soon after a birth the next may start. All three decide
+        // whether a pregnancy BEGINS; not one of them reads, writes or scales whether a comeback
+        // worked, which stays emergent and measured.
+        'repeatCooldownWeeks',
+        'repeatCountFactor',
+        'repeatPerWeekByAge',
         'returnSupportShift',
         // ⚠⚠ RE-AIMED 21.09 BY HIS HOLD RULING, and once again the guard did its job: a key joined
         // the block and somebody had to look at it and say whether it is a success rate. IT IS NOT.

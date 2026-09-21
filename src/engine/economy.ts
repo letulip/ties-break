@@ -5438,6 +5438,38 @@ export const ECONOMY = {
      *  ⚠ A window and not a flag: nothing is persisted and no save gains a key – the child's row
      *  already holds the only fact this needs. */
     childSmallWeeks: 156,
+    /** ⭐⭐⭐ W5/T3 – THE SECOND CHILD'S OWN CURVE, and it is a different curve rather than the first
+     *  one re-used. His digest's row is explicit and is the whole source: «Second child | 28–38 |
+     *  1–2% | even less influence» – a LATER window than the first pregnancy's 24–35, a LOWER annual
+     *  rate than its 2–4%, and the design's own sentence about the third («the repeat hazard reads
+     *  the age window AND the count of children, so a third stays rare rather than routine»).
+     *  ⚠ The rungs are read exactly as `perWeekByAge`'s are – last rung at or below her age wins –
+     *  so the two curves cannot drift apart in how they are consumed, only in what they say. */
+    repeatPerWeekByAge: [
+      // 28–34 – the digest's window opens here, at its TOP annual rate: she is past the peak years,
+      // the first child is old enough to have stopped being an infant, and this is where the two
+      // documented multi-return careers sit.
+      { fromAge: 28, perWeek: 0.02 / 52 },
+      // 34–38 – the tail, at the digest's LOW rate. Real and thin, exactly as the first curve's
+      // last rung is.
+      { fromAge: 34, perWeek: 0.01 / 52 },
+      // 38+ – the window closes. A rung and not an absence, `perWeekByAge`'s own law.
+      { fromAge: 38, perWeek: 0 },
+    ],
+    /** ⭐⭐ AND EVERY CHILD AFTER THE SECOND MULTIPLIES THE HAZARD BY THIS – the «count of children»
+     *  half of the design's sentence, as one number rather than a third curve. At 0.5 a third child
+     *  runs at half the second's rate and a fourth at a quarter: rare, never impossible, and the
+     *  bench reports what it produces instead of the constant promising it.
+     *  ⚠ RULED BY HIM 21.09 that there is NO CAP – «пусть решает арифметика» – so this factor is the
+     *  only thing making a large family rare, which is exactly the job it was given. */
+    repeatCountFactor: 0.5,
+    /** ⭐ HOW LONG AFTER A BIRTH THE NEXT PREGNANCY CANNOT START. Drafted at a year, and it is the
+     *  ONE number in T3 the digest does not supply: what it protects is the comeback itself, because
+     *  a pregnancy inside the return ramp would overwrite `world.comeback` and take back the freeze
+     *  she is in the middle of spending. ⚠ DRAFTED, NOT RULED – benched in T7, and the alternative
+     *  shape (refuse only while the freeze has entries left) is written up there rather than chosen
+     *  here. */
+    repeatCooldownWeeks: 52,
     smallFirstHoldWeeks: 26,
     comebackStages: [
       // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries
