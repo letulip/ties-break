@@ -181,6 +181,9 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
       spouseOccasion: null,
       ownKeyWeek: false,
+      // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
+      motherhoodBand: null,
+      motherhoodSupport: null,
       trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -299,6 +302,9 @@ function makeFacts(input: {
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
     ownKeyWeek: false,
+    // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
+    motherhoodBand: null,
+    motherhoodSupport: null,
     injured,
     travelled: s === 'tournament' || s === 'travelOnly',
     playedTournament: s === 'tournament',

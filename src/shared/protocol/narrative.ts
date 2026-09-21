@@ -408,6 +408,44 @@ export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel
  *  reordering a member re-maps future draws on old seeds. */
 export type SpouseViewOccasion = 'distant-swing' | 'road-stretch' | 'no-vacation' | 'money'
 
+/** ⭐⭐⭐ WAVE 8b T2 (C6) – **WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS**, and nothing else. The
+ *  diary band the wave-8 hand-back listed as not built («the diary half of T3's pregnancy texture»);
+ *  his word of 21.09 is what makes it this batch's.
+ *
+ *  ⚠⚠ **IT IS DERIVED AT RENDER AND PERSISTS NOTHING.** `motherhoodBandAt` (`world/lifeBeat.ts` §14)
+ *  reads `world.pregnancy`, `world.children` and `world.comeback` – all three already on the world
+ *  since v85 – and hands back one of these words. No save key, no migration, no golden fixture: this
+ *  is wave-2's claims machinery being asked a question the world can already answer, which is what
+ *  «no schema move» means for a diary band.
+ *
+ *  The seven bands, in the order a career meets them:
+ *    `announced`  – the week she told him. ONE week, and the card is blocking, so it is a week the
+ *                   player really sits on.
+ *    `early`      – the first half of the pause, before the picture changes.
+ *    `mid`        – the second half of it.
+ *    `last`       – **the portrait's own `pregnant-last` window** (`PREGNANT_LAST_WEEKS`), so the
+ *                   words and the painting change on the same week rather than on two dates.
+ *    `birth`      – the week the row lands on `world.children`.
+ *    `postpartum` – after it, while the record still stands – i.e. until her decision resolves.
+ *    `returned`   – the first rung of the comeback ramp, after a decision that went back.
+ *
+ *  ⚠ NULL IS EVERY WEEK OF EVERY CAREER THAT NEVER PAUSED, and also the eight weeks between the
+ *  announcement and the close of entries: she is still playing then, and the band has nothing to say
+ *  about a week that looks like any other. A null band licenses NOTHING.
+ *
+ *  ⚠ WHAT A LINE LICENSED ON THIS MAY SAY: where in the arc the week is, and what the parent could
+ *  watch. It may NOT name or gender the one she married (§0's decoupling ruling – a mid-pregnancy
+ *  divorce is ordinary life, so a line that mentioned him would be false on exactly the careers that
+ *  ruling protects), and the band's own test walks the pool and refuses any line that does. */
+export type MotherhoodBand =
+  | 'announced'
+  | 'early'
+  | 'mid'
+  | 'last'
+  | 'birth'
+  | 'postpartum'
+  | 'returned'
+
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
  *
@@ -859,6 +897,23 @@ export interface DiaryFacts {
    *  address, NO rent, NO mechanic of any kind (backlog §8's boundary), and required rather than
    *  optional for the standing reason: it selects COPY. */
   ownKeyWeek: boolean
+  /** ⭐⭐⭐ wave 8b T2 (C6) – WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS, or null on every week of
+   *  every career that never paused. The ONE derivation is `motherhoodBandAt(world)`
+   *  (`world/lifeBeat.ts` §14), asked at snapshot time and carried – `spouseOccasion`'s own shape,
+   *  and required for its reason: it selects COPY, and a view that forgot it would build, pass, and
+   *  quietly sweep the ordinary week instead of the band. See `MotherhoodBand` for what each word
+   *  means and for what a line resting on it may say. */
+  motherhoodBand: MotherhoodBand | null
+  /** ⭐⭐ wave 8b T2 (C6) – THE ANSWER HE GAVE THE ANNOUNCEMENT, as the persisted grade, or null.
+   *  Read straight off `world.pregnancy.support`, so it is null before he answers the blocking card
+   *  AND on every week after the record is cleared.
+   *
+   *  ⚠⚠ IT IS A SECOND AXIS AND NOT A SECOND BAND, which is why it is its own field: exactly one
+   *  line of the band – the warm postpartum one – is licensed on it, and the other seven are true at
+   *  every grade. A band that encoded the grade would have needed three copies of each of them.
+   *  ⚠ AND IT IS THE GRADE, NEVER THE NUMBER: `joyBond` / `worryBond` / `careerFirstBond` stay on the
+   *  engine side of the fog law exactly as `spirit` and `bond` do. */
+  motherhoodSupport: 'warm' | 'measured' | 'cold' | null
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

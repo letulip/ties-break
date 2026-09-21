@@ -82,6 +82,9 @@ function baseFacts(stage: DiaryLifeStage, age: number): DiaryFacts {
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
     ownKeyWeek: false,
+    // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
+    motherhoodBand: null,
+    motherhoodSupport: null,
     injured: null,
     travelled: false,
     playedTournament: false,

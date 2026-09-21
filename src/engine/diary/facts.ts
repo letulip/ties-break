@@ -15,6 +15,7 @@ import type {
   MilestoneType,
   KnockChoice,
   LossStreak,
+  MotherhoodBand,
   SpouseViewOccasion,
   WorldEvent,
 } from '../../shared/protocol'
@@ -305,6 +306,17 @@ export interface DiaryWorldView {
    *  REQUIRED for the field above's reason: it selects COPY (the week note's `ownKey` line). See
    *  `shared/protocol/narrative.ts` (`DiaryFacts.ownKeyWeek`) for the licence. */
   ownKeyWeek: boolean
+  /** ⭐⭐⭐ wave 8b T2 (C6) – WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS, or null. The ONE derivation
+   *  is `motherhoodBandAt(world)` (`world/lifeBeat.ts` §14), asked at snapshot time and carried –
+   *  `spouseOccasion`'s own shape, and REQUIRED for its reason: it selects COPY (the week note's
+   *  motherhood band), and a view that forgot it would build, pass, and quietly sweep the ordinary
+   *  week through the biggest stretch of her life. See `shared/protocol/narrative.ts`
+   *  (`MotherhoodBand`) for the seven words and for what a line resting on one may say. */
+  motherhoodBand: MotherhoodBand | null
+  /** ⭐⭐ wave 8b T2 (C6) – THE GRADE HE ANSWERED THE ANNOUNCEMENT WITH, or null. Read straight off
+   *  `world.pregnancy.support`; null before he answers and on every week after the record clears.
+   *  Required for the field above's reason – exactly one line of the band licenses on it. */
+  motherhoodSupport: 'warm' | 'measured' | 'cold' | null
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training

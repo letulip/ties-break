@@ -24,8 +24,10 @@ git diff c322301c..HEAD -- src/ | grep '^+' | grep DRAFT
 ```
 
 **No shipped string moved in the wave itself.** Every row below is an ADDITION, quoted **verbatim
-from the tree**. Wave 8's thirty all landed as drafts; **four of them are now HIS, passed 21.09 in
-session** (the review batch's C2–C5, «ок» given per item) and the rest still await his word. The wave's NUMBERS – the hazard curve's four rungs, the
+from the tree**. Wave 8's thirty all landed as drafts; **three of them are now HIS, re-worded on his
+21.09 word** (the review batch's C3, C4, C5, «ок» given per item), **nine more were added by wave 8b
+already passed** (C2's P18b and C6's eight-line diary band, P31–P38), and the remaining twenty-seven
+still await his word. The wave's NUMBERS – the hazard curve's four rungs, the
 three answer deltas, `playsOnWeeks`, `termWeeks`, `decisionWeeksAfterBirth`, the postpartum band and
 its support scale, the four return-decision weights, the staged factor's staircase and the freeze's
 12 / 156 – are not strings; they ride T9's bench and are **out of this table's scope on purpose**
@@ -55,16 +57,19 @@ any screen**. ⚠ T10 also found and corrected a claim this table made about whe
 
 | | |
 | --- | ---: |
-| player-facing **strings** the wave ADDED to the tree | **31** (30 + wave 8b's C2 variant) |
-| of them **his – passed 21.09 in session** | **4** (P12, P17, P22, P18b) |
+| player-facing **strings** the wave ADDED to the tree | **39** (30 + wave 8b's 9) |
+| of them **his – passed 21.09 in session** | **12** (P12, P17, P18b, P22, P31-P38) |
 | of them **draft – awaiting his pass** | **27** |
 | shipped strings that **MOVED** | **0** |
 | **drafts of this wave** re-worded on his 21.09 word | **3** (P12, P17, P22) |
-| per task | T2 **16** · T3 **2** · T4 **2** · T5 **4** · T6 **6** · T7 **0** · **T10 0** · **8b T1 1** |
+| per task | T2 **16** · T3 **2** · T4 **2** · T5 **4** · T6 **6** · T7 **0** · **T10 0** · **8b T1 1** · **8b T2 8** |
 | flagged **non-string** drafts carried in §7 | the drafted numbers · four picks (two faces, one glyph, one precedence) |
 | explicit **NON-rows**, with the reason (§6) | `PSY_COUNSEL.postpartum` · `ALBUM_CLOSING_FAMILY.family` · `SOFT_BEAT_CARD` × 2 · the invariant throws · the harness literals |
 
-⚠ **THIRTY, AGAINST THE BRIEF'S ESTIMATE OF ~70, AND THE GAP IS REAL RATHER THAN A MISSED SURFACE.**
+⚠ **WAVE 8 ITSELF SHIPPED THIRTY, AGAINST THE BRIEF'S ESTIMATE OF ~70, AND THE GAP IS REAL RATHER
+THAN A MISSED SURFACE.** (The nine of wave 8b are counted above and are not part of this paragraph's
+arithmetic; ⭐ **eight of them close the diary band this paragraph's last sentence names as producing
+no string at all**, which is the one line of it that is no longer true.)
 The estimate was written before the tasks were built and it priced this wave like wave 7, which
 carried three quoting pools, a 28-name pool and the staff's 31 letters. Wave 8 is machinery: a schema
 move, a derived hazard, an entries seam, a protected-rank freeze, a staged match factor and a ninth
@@ -357,6 +362,37 @@ what a diary band looks like, and nothing equivalent exists for the months she i
 §8 Q-4 rather than invented: a band is four-to-eight new lines and a trigger, which is a build and not
 a transcription.
 
+⭐⭐⭐ **BUILT IN WAVE 8b (T2 / C6), ON HIS WORD OF 21.09 – EIGHT LINES, ALL PASSED IN SESSION.** The
+gap this section names is closed and the section is kept as the record of it. ⚠ And the sentence it
+is closed WITHOUT is the interesting one: «a diary band needs a new `DiaryFacts` field and claims
+plumbing» was right about the FIELD and wrong about the STATE – `world.pregnancy`, `world.children`
+and `world.comeback` have all been on the world since v85, so `motherhoodBandAt` is a pure read and
+C6 cost **no schema move, no migration and no golden fixture**.
+
+| # | home (`file` · what) | when the player sees it | the string, verbatim | |
+| ---: | --- | --- | --- | --- |
+| P31 | `weekNotes.ts` · `motherhood: 'announced'` | the scrap under the week's photograph, on the week she tells him | She said it plainly, over breakfast, and the kitchen went quiet in the good way. | ⭐ `PASSED 21.09 (session)` |
+| P32 | `weekNotes.ts` · `motherhood: 'early'` | the first half of the pause | The rackets are still by the door. Nobody has moved them, and nobody says why. | ⭐ `PASSED 21.09 (session)` |
+| P33 | `weekNotes.ts` · `motherhood: 'mid'` | the second half of it | She walks the long way to the market now and counts the weeks out loud. | ⭐ `PASSED 21.09 (session)` |
+| P34 | `weekNotes.ts` · `motherhood: 'last'` | the portrait's own `pregnant-last` window – the words and the painting change on the same week | She stopped at the court by the school today and watched a whole set through the fence. | ⭐ `PASSED 21.09 (session)` |
+| P35 | `weekNotes.ts` · `motherhood: 'birth'` | the week the row lands on `world.children` | The house is louder and quieter at once. I have not slept and I do not mind. | ⭐ `PASSED 21.09 (session)` |
+| P36 | `weekNotes.ts` · `motherhood: 'postpartum'` | after the birth, until her decision resolves | Some mornings she is at the window before the baby wakes, looking at nothing we can see. | ⭐ `PASSED 21.09 (session)` |
+| P37 | `weekNotes.ts` · `motherhood: 'postpartum'` + `warmSupport` | the same window, and ONLY on a career whose parent answered `joy` – the grade persisted eleven months earlier | She asked me to hold the little one while she stretched. Ten minutes, an old routine, and she was humming. | ⭐ `PASSED 21.09 (session)` |
+| P38 | `weekNotes.ts` · `motherhood: 'returned'` | the first rung of the comeback ramp, after a decision that went back | The bag is packed again. Smaller than it used to be, and there are two of everything now. | ⭐ `PASSED 21.09 (session)` |
+
+⚠ **HUSBAND-AGNOSTIC BY TEST, which is the acceptance criterion rather than a note.** §0's decoupling
+ruling read strictly: the record reads `world.pregnancy` and nothing about whether the marriage still
+stands, so every band fires on a career whose marriage ended mid-term and the birth fires anyway.
+`tests/week-notes.test.ts` walks the band and refuses any line naming a partner, with a control
+proving the ban can fire.
+
+⚠ **NO PER-TEMPERAMENT VARIANTS.** The spoken-moment cross is 44 entries wide and a four-voice
+pregnancy band would be 32 more. W5's, on the record.
+
+⚠⚠ **TWO COLLISIONS WITH THIS POOL'S STANDING LAWS, MEASURED AND CARRIED TO HIM – see §8 Q-9.** Not
+one character of his copy was changed and neither law was loosened; the four long lines and the two
+first-person ones are BASELINED with custody in `tests/week-notes.test.ts`, named and counted.
+
 ### 6.6. The harness literals are not rows
 
 `tools/_lifeBeats.ts`' `DRAIN_ANSWER` gained `expecting: 'worry'` and `'return-plan': 'small-first'`,
@@ -440,7 +476,8 @@ None of these blocks the wave; they are collected here per his own instruction.
    × two presences, the standing completeness law, and eight more drafted rows the day he wants them.
 4. **The pause's diary band** (§6.5). The months she is away currently produce one feed row and no
    diary scrap at all. Wave 7's `spouseSpoke` band is the shape. Not built, because a band is new copy
-   and new copy is his to ask for.
+   and new copy is his to ask for. ⭐⭐⭐ **CLOSED 21.09 – he asked for it and gave the eight lines**
+   (wave 8b T2 / C6, §6.5's table, P31–P38).
 5. **The freeze's anchor** – `validUntilWeek` is 156 weeks from the RETURN, not from the pause. That is
    a reading of his ruling rather than a number he gave: anchored at the pause it would be 105 usable
    weeks and the ruled 12 entries and ruled 156 weeks would be about two different spans. Carried as a
@@ -458,6 +495,32 @@ None of these blocks the wave; they are collected here per his own instruction.
    reading and may be what he wants; so is rewording the newer one. Not touched either way.
    ⭐⭐⭐ **CLOSED 21.09 – he reworded the newer one** (wave 8b C4). The longest common substring is now
    `« the »`, five characters, re-measured on the same instrument; `peak` did not move.
+
+9. ⚠⚠⚠ **HIS EIGHT DIARY LINES COLLIDE WITH TWO STANDING LAWS OF THAT POOL, AND NEITHER COLLISION
+   WAS A BUILDER'S TO RESOLVE** (wave 8b T2). Measured while landing them, reported rather than
+   papered over:
+
+   * **The scrap – 80 characters, «MUST, pinned»** (`docs/specs/voice-bibles-2026-09.md`, and the
+     budget the journey note and the tier-0 lines keep). **Four of the eight are over it**: P34 at
+     **87** (+7), P36 at **88** (+8), P37 at **106** (+26) and P38 at **89** (+9). The other four fit
+     – 80 / 78 / 71 / 76 – the first of them exactly.
+   * **The narrator's person.** P35 and P37 put the journal in the SINGULAR first person outside any
+     quotation («**I** have not slept…», «She asked **me** to hold…»), where the diary's own voice
+     has been a household «we» for a year and his 09.09 ruling put `I` / `me` inside HER quotation
+     marks only.
+
+   **Nothing was reworded and neither law was loosened.** The six sentences are baselined with
+   custody in `tests/week-notes.test.ts` – named in full, dated 21.09, pointed at him, counted so a
+   seventh cannot arrive quietly, and re-arming the guard the moment a baselined line is edited. That
+   is the handling `tests/wave3-tail-lint.test.ts` prescribes for exactly this shape.
+
+   ⚠ **It is not a layout defect, checked rather than assumed**: `.recap-note-text` is a `<p>` with no
+   max-height, no clamp and no overflow, on a scrollable card rather than a blocking overlay, so a
+   106-character note wraps to a third line and the scrap grows. The budget's own stated reason is
+   visual mass – «the scrap has to stay a scrap» – which is an editorial call and therefore his.
+
+   **The one edit that closes each**: four shorter sentences, or a ruling that the motherhood band
+   keeps its own budget; and either his «I» stands as this band's voice or the two lines move to «we».
 
 ⚠ **One observation offered as a question rather than as a fix, per invariant 4.** The wave makes an
 existing RULED string reachable in a context it was not written for: `RECOVERY_RECEIPT` – «She came

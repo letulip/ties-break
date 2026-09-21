@@ -201,7 +201,12 @@ import { SMALL_TALK_CORPUS } from './smallTalkCorpus'
 // `world/derivedCache` – and nothing from this file – so the arrow runs one way, exactly as the
 // `season/calendar` edge one import up does.
 import { kidPoints, rankIn } from './ladder'
-import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite, SpouseViewOccasion } from '../../shared/protocol/narrative'
+import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, MotherhoodBand, SoftBeatInvite, SpouseViewOccasion } from '../../shared/protocol/narrative'
+// ⚠ A VALUE IMPORT FROM `shared/` AND THE ONLY ONE THIS FILE MAKES: §14's diary band reads the
+// PORTRAIT's own late-stretch window so the words and the painting change on the same week.
+// `shared/` is not the UI - engine purity forbids vue/pinia and the component directories, and
+// `avatarEmotion.ts` is pure arithmetic over three week numbers.
+import { PREGNANT_LAST_WEEKS } from '../../shared/avatarEmotion'
 // ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
 // resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
 import type { TierId } from '../season/types'
@@ -6859,6 +6864,59 @@ export function landBirth(world: WorldState): void {
  *  constant is still moving when one does, the honest fix is the field and its migration. */
 export function decisionWeekOf(pregnancy: PregnancyState): number {
   return pregnancy.dueWeek + ECONOMY.motherhood.decisionWeeksAfterBirth
+}
+
+/** ⭐⭐⭐ WAVE 8b T2 (C6) – **WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS**, for the diary band. The
+ *  wave-8 hand-back listed the diary half of T3's texture as one of two things the brief asked for
+ *  and did not ship; his 21.09 word is what makes it this batch's, and this is the whole of the
+ *  plumbing it needed.
+ *
+ *  ⚠⚠ **PURE READ, ZERO DRAWS, AND IT PERSISTS NOTHING.** Three fields the world has carried since
+ *  v85 – `pregnancy`, `children`, `comeback` – answer every band, so C6 costs NO schema move. That
+ *  was the open question the hand-back left («a diary band needs a new `DiaryFacts` field and claims
+ *  plumbing»): the FACT is new, the STATE is not.
+ *
+ *  ⚠ THE ORDER OF THE TESTS IS THE ARC'S OWN and the two early returns are why it reads oddly: the
+ *  record OUTLIVES the birth by up to `decisionWeeksAfterBirth` weeks (`landBirth` deliberately
+ *  clears nothing – `pauseCovering`'s window has no upper bound of its own), so «is there a
+ *  pregnancy» is NOT «is she carrying». The roster is what tells the two apart, on `landBirth`'s own
+ *  once-ness test.
+ *
+ *  ⚠ `last` IS **THE PORTRAIT'S OWN WINDOW** (`PREGNANT_LAST_WEEKS`, `shared/avatarEmotion.ts`) and
+ *  not a second boundary drafted here. The picture and the words change on the same week, which is
+ *  the property the whole diary system is built to keep; a band with its own late-stretch constant
+ *  would be two dates for one moment.
+ *
+ *  ⚠ THE `early`/`mid` SEAM IS THE MIDPOINT OF WHAT IS LEFT, derived rather than drafted: the pause
+ *  runs `pausesWeek`..`dueWeek`, `last` takes the final `PREGNANT_LAST_WEEKS` of it, and the two
+ *  halves of the remainder are `early` and `mid`. At the shipped constants that is 19 weeks split
+ *  10 / 9. ⭐ NO NEW CONSTANT ENTERS THE GAME FOR IT – a retune of `termWeeks` or of the portrait's
+ *  window moves this seam with them, which is the behaviour a second number could not have.
+ *
+ *  ⚠ `returned` IS THE **FIRST RUNG** OF THE COMEBACK RAMP and stops there. `world.comeback` never
+ *  clears, so a band hung on «is there a comeback» would say «the bag is packed again» for the rest
+ *  of her career; the staircase's second rung is where the ramp's own first step ends, and reading
+ *  it here means the band cannot drift from the table it is about. */
+export function motherhoodBandAt(world: WorldState): MotherhoodBand | null {
+  const week = world.week
+  const pregnancy = world.pregnancy
+  if (pregnancy !== null) {
+    // ⚠ THE ROSTER AND NOT THE CALENDAR – `landBirth`'s own once-ness test verbatim, so a second
+    // pregnancy standing beside an older sibling's row (W5) reads this correctly without an edit.
+    const born = world.children.filter((child) => child.bornWeek >= pregnancy.dueWeek)
+    if (born.length > 0) return born.some((child) => child.bornWeek === week) ? 'birth' : 'postpartum'
+    if (week === pregnancy.announcedWeek) return 'announced'
+    // The eight weeks she plays on carry no band: they look like any other week, and a band that
+    // spoke about them would be saying something the player cannot yet see.
+    if (week < pregnancy.pausesWeek) return null
+    const lastOpens = pregnancy.dueWeek - PREGNANT_LAST_WEEKS
+    if (week >= lastOpens) return 'last'
+    return week < pregnancy.pausesWeek + Math.ceil((lastOpens - pregnancy.pausesWeek) / 2) ? 'early' : 'mid'
+  }
+  const comeback = world.comeback
+  if (comeback === null) return null
+  const stages = ECONOMY.motherhood.comebackStages
+  return week - comeback.returnedWeek < stages[1].fromWeeksBack ? 'returned' : null
 }
 
 /** ⭐⭐⭐ HER CHANCE OF **TRYING** – pure over the four inputs the brief names, in its own order of

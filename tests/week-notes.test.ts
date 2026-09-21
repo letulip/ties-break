@@ -63,7 +63,7 @@ import { MOOD_WORD, TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
 // W6c: the anatomy the pin re-derives from, so a claim about her body is checked against her body.
 import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/engine/body'
 // v48: the birthday catalogue, so the scrap budget is measured on the longest noun it can produce.
-import { BIRTHDAY_BANDS, giftNoun } from '../src/engine/world'
+import { BIRTHDAY_BANDS, giftNoun, PARTNER_NAME_POOL } from '../src/engine/world'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -120,6 +120,11 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // ⭐ v83 (wave 7 – T5) – and the one she married said nothing this week (see `DiaryFacts.spouseOccasion`).
     spouseOccasion: null,
     ownKeyWeek: false,
+    // ⭐ wave 8b T2 (C6) – and she is not carrying, has not given birth and has not come back (see
+    // `DiaryFacts.motherhoodBand`). The `sweepStages` calendars below are the only place this axis
+    // is turned on, for R2-18's reason – exactly as `freshBreakup` and `spouseOccasion` are.
+    motherhoodBand: null,
+    motherhoodSupport: null,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -275,6 +280,25 @@ function* sweepStages(): Generator<DiaryFacts> {
     { spouseOccasion: 'money' as const },
     // ⭐ v83 (wave 7 – T10) – the week she got her own place, armed for the same R2-18 reason.
     { ownKeyWeek: true },
+    // ⭐⭐⭐ wave 8b T2 (C6) – ONE SHAPE PER BAND OF THE MOTHERHOOD ARC, for the same R2-18 reason as
+    // every armed shape above: `sweepWeeks` and `sweepVoices` hold `motherhoodBand` at null on every
+    // fixture, and the band's eight lines license on SEVEN DIFFERENT values – so any band left out
+    // would leave its line licensed in no fixture of any sweep, and the per-line reached arm below
+    // (its own case) fails by name.
+    { motherhoodBand: 'announced' as const },
+    { motherhoodBand: 'early' as const },
+    { motherhoodBand: 'mid' as const },
+    { motherhoodBand: 'last' as const },
+    { motherhoodBand: 'birth' as const },
+    // ⚠⚠ POSTPARTUM IS ARMED TWICE AND THE PAIR IS THE POINT – it is the `freshBreakup`/`low` pair's
+    // shape, one wave on. The band's SEVENTH line carries a second gate (`warmSupport`), so without
+    // the warm row that line would be licensed in no fixture of any sweep; and without the plain row
+    // – the grade at its commonest reading – a licence that FORGOT the warm gate would be licensed
+    // nowhere it could be caught. The two rows arm opposite halves of one guard and neither replaces
+    // the other.
+    { motherhoodBand: 'postpartum' as const },
+    { motherhoodBand: 'postpartum' as const, motherhoodSupport: 'warm' as const },
+    { motherhoodBand: 'returned' as const },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -505,6 +529,20 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // ⭐ v83 (wave 7 – T10) – SHE GOT HER OWN PLACE THIS WEEK: the second spelling, off the fact.
   // The `{ ownKeyWeek: true }` shape in `sweepStages` arms it; the reached case below counts.
   ownKey: (f) => f.ownKeyWeek,
+  // ⭐⭐⭐ wave 8b T2 (C6) – WHICH BAND OF THE MOTHERHOOD ARC THIS WEEK IS IN: a VALUED claim, so the
+  // second spelling has something real to re-derive (`bodyGroup` and `rail` are the precedent, and
+  // the reason a boolean would not do – seven bands and one flag would make «she is somewhere in the
+  // arc» the whole of every claim, and an announcement line would be licensed on a birth week).
+  //
+  // ⚠⚠ WHAT IT DOES NOT LICENSE. Nothing about the one she married – §0's decoupling ruling, and the
+  // band's own case below walks the pool and refuses any line that names a partner. Nothing about a
+  // figure or a date. And nothing about her INTERIOR as fact: the parent sees a week and reports it,
+  // which is the fallible-parent law the break-up band was built under.
+  motherhood: (f, value) => f.motherhoodBand === value,
+  // ⭐⭐ wave 8b T2 (C6) – AND THE GRADE HE ANSWERED WITH, off the fact. It is the second gate on
+  // exactly one line of the band, and the `{ motherhoodBand: 'postpartum', motherhoodSupport: 'warm' }`
+  // shape in `sweepStages` is what arms it.
+  warmSupport: (f) => f.motherhoodSupport === 'warm',
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -631,6 +669,72 @@ describe('W2 — the ordinary week note is HONEST', () => {
       }
     }
     expect(licensed, 'no line claims the fact – then HOLDS.ownKey proves nothing').toBeGreaterThan(0)
+  })
+
+  it('⭐⭐⭐ wave 8b T2 – `HOLDS.motherhood` is REACHED, PER LINE, and the warm gate with it', () => {
+    // The `spouseSpoke` case above, one wave on and wider: the band's eight lines license on SEVEN
+    // different band values plus one support grade, so a total above zero would be satisfied by a
+    // single reachable band while seven lines rot unreachable. The eight `{ motherhoodBand: … }`
+    // shapes in `sweepStages` are what this counts – remove any one and this goes red BY LINE.
+    let licensed = 0
+    const seen = new Set<string>()
+    const band = WEEK_NOTES.filter((n) => n.claims.motherhood !== undefined)
+    expect(band.length, 'the eight lines he passed on 21.09').toBe(8)
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.motherhood === undefined) continue
+        licensed++
+        seen.add(render(note, f))
+        expect(
+          HOLDS.motherhood(f, note.claims.motherhood),
+          `"${render(note, f)}" claims ${note.claims.motherhood} on a week that is not in that band`,
+        ).toBe(true)
+        // ⚠ AND THE SECOND GATE, CHECKED WHERE IT IS CLAIMED. This is the half the task
+        // mutation-verified: drop `&& f.motherhoodSupport === 'warm'` from line seven's licence and
+        // this assertion goes red on the `measured`/null postpartum fixtures.
+        if (note.claims.warmSupport !== undefined) {
+          expect(
+            HOLDS.warmSupport(f, true),
+            `"${render(note, f)}" claims a warm answer on a career that did not get one`,
+          ).toBe(true)
+        }
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.motherhood proves nothing').toBeGreaterThan(0)
+    expect(seen.size, 'every line of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐⭐⭐ wave 8b T2 – THE BAND IS HUSBAND-AGNOSTIC, and that is the acceptance criterion', () => {
+    // ⚠⚠ §0's DECOUPLING RULING MADE MECHANICAL («развелись и развелись, жизнь продолжается»). The
+    // pregnancy record reads `world.pregnancy` and NOTHING about whether the marriage still stands –
+    // `pauseCovering`'s own note says a liveness check there would re-open the entries under a woman
+    // seven months pregnant – so every band of this arc fires on a career whose marriage ended
+    // mid-term, and the birth fires anyway. A line naming him would therefore be FALSE on exactly
+    // the careers that ruling exists to protect.
+    //
+    // ⚠ THE POSITIVE CONTROL COMES FIRST AND IS NOT THE SAME ASSERTION: proving «no line does X» over
+    // an empty band passes forever, so the band's existence is established before anything about it
+    // is denied. And the ban is checked against the RENDERED text, which is what a player reads.
+    const band = WEEK_NOTES.filter((n) => n.claims.motherhood !== undefined)
+    expect(band.length, 'the band has to exist before anything is claimed about it').toBe(8)
+    // ⚠ WORD BOUNDARIES, NOT SUBSTRINGS. «the» contains «he» and «brother» contains «other»; a
+    // substring ban would either pass by accident or fail every line in the pool.
+    const PARTNER_WORDS = /\b(he|him|his|husband|wife|spouse|partner|married|marriage|father|dad)\b/i
+    for (const n of band) {
+      const text = typeof n.text === 'string' ? n.text : n.text(homeWeek({}))
+      expect(
+        PARTNER_WORDS.test(text),
+        `⚠ "${text}" names a partner – the band must read correctly on a career whose marriage ended`,
+      ).toBe(false)
+      // ...and no persisted partner NAME either. The episode has carried one since wave 7 and no
+      // surface speaks it; this band does not become the first by accident.
+      for (const name of PARTNER_NAME_POOL) {
+        expect(text.includes(name), `⚠ "${text}" speaks the persisted partner name «${name}»`).toBe(false)
+      }
+    }
+    // ⚠ AND THE BAN IS REAL RATHER THAN VACUOUS: the pattern must actually fire on a sentence that
+    // names him. Without this the regex could rot to /$^/ and every line above would pass.
+    expect(PARTNER_WORDS.test('The one she married said nothing.'), 'control: the ban can fire').toBe(true)
   })
 
   it('⭐⭐⭐ v75 T6 – THE BAND IS SELECTABLE WHILE THE PARENT KNOWS NOTHING, which is the whole finding', () => {
@@ -998,8 +1102,86 @@ describe('W2 — the note is the PARENT, and it fits on a scrap of paper', () =>
   // measured on the string the player reads - which for a template is the longer of the two.
   const texts = renderAll()
 
+  // =================================================================================================
+  // ⚠⚠⚠ WAVE 8b T2 – A **BASELINE WITH CUSTODY**, AND IT IS ON HIS DESK RATHER THAN CLOSED
+  // =================================================================================================
+  //
+  // THE FINDING, measured while landing the eight motherhood lines he passed on 21.09: **his band
+  // collides with two standing laws of this pool, and neither collision is a builder's to resolve.**
+  //
+  //   1. THE SCRAP (80 characters – «MUST, pinned» in `docs/specs/voice-bibles-2026-09.md`, the two
+  //      other pools' own budget). FOUR of the eight are over it, measured on the rendered string:
+  //        · «She stopped at the court by the school…»   **87** (+7)
+  //        · «Some mornings she is at the window…»       **88** (+8)
+  //        · «She asked me to hold the little one…»     **106** (+26)
+  //        · «The bag is packed again…»                  **89** (+9)
+  //      The other four fit (80 / 78 / 71 / 76), the first of them exactly.
+  //   2. THE NARRATOR'S PERSON. Two of them put the diary in the SINGULAR first person outside any
+  //      quotation – «**I** have not slept and **I** do not mind», «She asked **me** to hold the
+  //      little one» – where the journal's own voice has been a household «we» for a year («We said
+  //      no», «We watched her serve more closely than usual») and the 09.09 ruling put `I` / `me`
+  //      inside HER quotation marks only.
+  //
+  // ⚠⚠ WHY THIS IS A BASELINE AND NOT AN EXEMPTION, AND THE DISTINCTION IS THIS FILE'S NEIGHBOUR'S.
+  // `tests/wave3-tail-lint.test.ts` met exactly this shape and the repo's answer is written there:
+  // «It was baselined rather than fixed because rewriting it is a WORDING change, which invariant 4
+  // makes the owner's… ⚠ If a future violation is ever legitimately baselined here, it needs the same
+  // custody – named, dated, and pointed at whoever owns the wording.» So: NAMED (each whole sentence,
+  // never a pattern), DATED (21.09), and POINTED (his, both of them). An EXEMPTION would say the law
+  // does not apply to this band; a BASELINE says these four sentences are outstanding and counts them
+  // so a fifth cannot arrive quietly.
+  //
+  // ⚠ WHAT WAS **NOT** DONE, and both refusals are deliberate. Not one character of his copy was
+  // changed – that is the move invariant 4 forbids outright. And neither law was loosened for the
+  // pool: every other line in `WEEK_NOTES` is still held to 80 and to the third person, the count
+  // assertions below stop the lists growing, and EDITING a baselined line re-arms both guards against
+  // it, because the match is the whole sentence.
+  //
+  // ⚠ IT IS NOT A LAYOUT DEFECT, CHECKED RATHER THAN ASSUMED. `.recap-note-text` (WeekRecapCard.vue)
+  // is a `<p>` with a font size and a line height and NO max-height, no clamp and no overflow, on a
+  // scrollable card rather than a blocking overlay – so a 106-character note wraps to a third line
+  // and the scrap grows. The budget's own stated reason is visual mass («the scrap has to stay a
+  // scrap»), which is an editorial call and therefore his.
+  //
+  // THE ONE EDIT THAT CLOSES EACH, if he wants it: four shorter sentences, or one ruling that the
+  // motherhood band keeps its own budget; and either his «I» stands as the band's voice or the two
+  // lines move to «we».
+  const HIS_2109_OVER_THE_SCRAP: readonly string[] = [
+    'She stopped at the court by the school today and watched a whole set through the fence.',
+    'Some mornings she is at the window before the baby wakes, looking at nothing we can see.',
+    'She asked me to hold the little one while she stretched. Ten minutes, an old routine, and she was humming.',
+    'The bag is packed again. Smaller than it used to be, and there are two of everything now.',
+  ]
+  const HIS_2109_FIRST_PERSON: readonly string[] = [
+    'The house is louder and quieter at once. I have not slept and I do not mind.',
+    'She asked me to hold the little one while she stretched. Ten minutes, an old routine, and she was humming.',
+  ]
+
   it('fits on a scrap: 80 characters, the same budget the journey note keeps', () => {
-    for (const t of texts) expect(t.length, t).toBeLessThanOrEqual(80)
+    const over: string[] = []
+    for (const t of texts) {
+      if (t.length <= 80) continue
+      over.push(t)
+      // ⚠ THE BASELINE IS CHECKED HERE, LINE BY LINE, so a NEW long line fails by name and by
+      // number rather than being absorbed into a count.
+      expect(
+        HIS_2109_OVER_THE_SCRAP.includes(t),
+        `"${t}" is ${t.length} characters, over the pinned 80 and not on his 21.09 baseline`,
+      ).toBe(true)
+    }
+    // ...and the baseline may not grow by accident, nor rot once he rules: both directions.
+    expect(new Set(over).size, 'exactly the four he passed on 21.09, no more').toBe(HIS_2109_OVER_THE_SCRAP.length)
+  })
+
+  it('⚠⚠ the scrap baseline is REAL – every line on it is really over, and the law still bites', () => {
+    // Without this the list could name four innocent sentences for ever and the guard above would
+    // pass while proving nothing. Each entry is measured, and the control shows the law can fire.
+    for (const t of HIS_2109_OVER_THE_SCRAP) {
+      expect(t.length, `"${t}" is on the baseline and is not over budget – re-read the ruling`).toBeGreaterThan(80)
+      expect(texts, `"${t}" is baselined and is no longer in the pool`).toContain(t)
+    }
+    const sibling = `${'x'.repeat(90)}`
+    expect(HIS_2109_OVER_THE_SCRAP.includes(sibling), 'control: a NEW long line is not baselined').toBe(false)
   })
 
   // ===============================================================================================
@@ -1082,6 +1264,11 @@ describe('W2 — the note is the PARENT, and it fits on a scrap of paper', () =>
       // The game rolls her name; a note that used it would read like a certificate.
       // ⚠ RE-AIMED at the narration (see the block above), and armed with `me` / `mine` / `we`.
       const narration = narrationOf(t)
+      // ⚠⚠ HIS 21.09 BASELINE, line by line – see the block above the scrap guard for the whole
+      // finding and for why it is a baseline with custody rather than an exemption. TWO lines of the
+      // motherhood band put the journal in the singular first person; every OTHER line in the pool is
+      // still held to the household voice, and a new one fails here by name.
+      if (HIS_2109_FIRST_PERSON.includes(t)) continue
       expect(narration, t).not.toMatch(/\bI\b/)
       expect(narration, t).not.toMatch(/\bme\b/i)
       expect(narration, t).not.toMatch(/\bmine\b/i)
@@ -1092,6 +1279,23 @@ describe('W2 — the note is the PARENT, and it fits on a scrap of paper', () =>
       expect(t.toLowerCase(), t).not.toContain('we need')
       expect(t.toLowerCase(), t).not.toContain('the job is')
     }
+    // ⚠ AND THE BASELINE MAY NOT GROW BY ACCIDENT. The `continue` above is a hole exactly two
+    // sentences wide; this counts them, so a third first-person line has to walk past this number.
+    const firstPerson = texts.filter((t) => /\b(I|me|mine)\b/i.test(narrationOf(t)))
+    expect(new Set(firstPerson).size, 'exactly the two he passed on 21.09, no more')
+      .toBe(HIS_2109_FIRST_PERSON.length)
+  })
+
+  it('⚠⚠ the first-person baseline is REAL – both lines really break the household voice', () => {
+    // The scrap baseline's own net, one law over: without this the list could name two innocent
+    // sentences for ever and the `continue` above would be waving through nothing.
+    for (const t of HIS_2109_FIRST_PERSON) {
+      expect(/\b(I|me|mine)\b/i.test(narrationOf(t)), `"${t}" is baselined and is not first-person`).toBe(true)
+      expect(texts, `"${t}" is baselined and is no longer in the pool`).toContain(t)
+    }
+    // ...and a sibling carrying the same defect is NOT covered – per LINE, never per law.
+    expect(HIS_2109_FIRST_PERSON.includes('I watched her train all week.'), 'control: a new one is not baselined')
+      .toBe(false)
   })
 
   it('⚠ ...AND THE STRIP IS LOAD-BEARING – her quoted lines really do speak in the first person', () => {

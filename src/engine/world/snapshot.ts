@@ -96,7 +96,7 @@ import { careerMoney } from './reckoning'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite, ownKeyThisWeek, spouseViewOccasionThisWeek } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, motherhoodBandAt, ownKeyThisWeek, spouseViewOccasionThisWeek } from './lifeBeat'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -1605,6 +1605,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // ⭐ v83 (wave 7 – T10): the week she got her own place – true once per career, on the raise
     // week, the line above's own shape.
     ownKeyWeek: ownKeyThisWeek(world),
+    // ⭐⭐⭐ wave 8b T2 (C6): where in the motherhood arc this week falls, and the grade he answered
+    // the announcement with. The ONE derivation (`motherhoodBandAt`, `world/lifeBeat.ts` §14), asked
+    // here and carried – the four lines above's own shape. ⚠ BOTH ARE DERIVED AT RENDER: the band
+    // reads `pregnancy`/`children`/`comeback`, all three on the world since v85, and the grade is a
+    // field of the record. No save key, no migration, no golden fixture.
+    motherhoodBand: motherhoodBandAt(world),
+    motherhoodSupport: world.pregnancy?.support ?? null,
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must
