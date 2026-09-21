@@ -77,7 +77,8 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
 })
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { comebackMatchFactor, createWorld, kidMatchPlayerFor, type WorldState } from '../src/engine/world'
+import { comebackMatchFactor, createWorld, kidMatchPlayer, kidMatchPlayerFor, type WorldState } from '../src/engine/world'
+import { SKILL_LAW } from '../src/engine/season/fieldPros'
 import { engineModuleSource } from './worldSource'
 import { region, scriptCodeOf } from './helpers/source'
 import type { MatchPlayer, Surface } from '../src/engine/match/types'
@@ -89,14 +90,36 @@ import type { MatchPlayer, Surface } from '../src/engine/match/types'
 // months are converted here exactly as the constant converts them, so the two conversions are
 // checked against each other rather than one being read out of the other.
 const BRIEF = {
-  early: 0.6,
-  mid: 0.8,
-  late: 0.9,
-  full: 1,
+  // ⭐⭐⭐ RE-DENOMINATED AT WAVE 8b T3 ON HIS WORD OF 21.09, «да, деноминируем». These were
+  // `0.6 / 0.8 / 0.9 / 1` – MULTIPLIERS on her wings – and the research measured what that meant:
+  // x0.6 on a #31 is -477 Elo at this engine's own rate, a returner playing like #380 for three
+  // months. The rungs are now the handicap itself, in the currency `fieldPros.ts` keeps its whole
+  // table in, and the four are the staircase document's §5 proposal.
+  earlyElo: 200,
+  midElo: 100,
+  lateElo: 50,
+  fullElo: 0,
   threeMonths: 13,
   sixMonths: 26,
   twelveMonths: 52,
+  // ⚠⚠ TRANSCRIBED HERE AND **IMPORTED IN THE ENGINE**, AND THE ASYMMETRY IS THE POINT OF BOTH
+  // RULES. The engine may hold exactly ONE spelling of this rate (`SKILL_LAW.eloPerCore`, by import
+  // - a copied 20.2 there is the drift CLAUDE.md's barrel lesson exists for); a TEST must hold its
+  // own, or the expectation moves with the thing under test. The receipt case below is what keeps
+  // the two honest: they are checked AGAINST each other, never read out of one another.
+  eloPerCore: 20.2,
 } as const
+
+/** The factor the re-denominated staircase owes a player of this build at this rung – the same
+ *  arithmetic the constant's own note states, written out once here rather than at six call sites. */
+const factorFor = (core: number, dElo: number): number => Math.max(0.5, (core - dElo / BRIEF.eloPerCore) / core)
+
+/** Her overall(4) as `kidMatchPlayerFor` computes it – the BUILD, before condition, spirit, the
+ *  surface and the kit, which is the scale `eloPerCore` was measured on. */
+function coreOf(world: WorldState): number {
+  const raw = kidMatchPlayer(world)
+  return (raw.serve + raw.ret + raw.composure + raw.stamina) / 4
+}
 
 /** ⚠⚠ **THE REALISED RATIO IS NOT EXACTLY THE DRAFTED FACTOR, AND THE RESIDUE IS MEASURED RATHER
  *  THAN TOLERATED.** The factor multiplies at the same point `condition` and `spirit` do – BEFORE
@@ -144,26 +167,57 @@ function wings(world: WorldState): number[] {
 // A. THE STAIRCASE – every boundary week, and the week before the return
 // =================================================================================================
 describe('wave 8 T6 A – the research\'s own staircase, at its boundaries', () => {
-  it('⭐⭐⭐ −40% → −20% → −10% → full, pinned at the first and last week of every window', () => {
+  it('⭐⭐⭐ −200 → −100 → −50 → 0 Elo, pinned at the first and last week of every window', () => {
     const r = 1000
     // ⚠ THE BOUNDARY IS THE POINT. A rung's window opens ON its own week, so `r + 13` is the first
-    // week of the −20% band and `r + 12` is the last of the −40% one. Every pair below is a
+    // week of the −100 band and `r + 12` is the last of the −200 one. Every pair below is a
     // both-sides pin rather than a spot check, which is what catches an off-by-one (ARM 3).
-    expect(comebackMatchFactor(r, r), 'the week she came back').toBe(BRIEF.early)
-    expect(comebackMatchFactor(r, r + BRIEF.threeMonths - 1), 'the last week under −40%').toBe(BRIEF.early)
-    expect(comebackMatchFactor(r, r + BRIEF.threeMonths), 'three months, and the ramp steps').toBe(BRIEF.mid)
-    expect(comebackMatchFactor(r, r + BRIEF.sixMonths - 1), 'the last week under −20%').toBe(BRIEF.mid)
-    expect(comebackMatchFactor(r, r + BRIEF.sixMonths), 'six months').toBe(BRIEF.late)
-    expect(comebackMatchFactor(r, r + BRIEF.twelveMonths - 1), 'the last week under −10%').toBe(BRIEF.late)
-    expect(comebackMatchFactor(r, r + BRIEF.twelveMonths), 'twelve months, and it is over').toBe(BRIEF.full)
-    expect(comebackMatchFactor(r, r + 400), '...and stays over, for the rest of the career').toBe(BRIEF.full)
+    // ⚠ A REAL BUILD RATHER THAN A ROUND NUMBER: the factor is per PLAYER since the re-denomination,
+    // so the case has to hand it one. 60 is squarely inside the professional band (`SKILL_LAW.top`
+    // is 76.4, the tourElite floor 67, elite 56–66), which is where a returner actually lives.
+    const C = 60
+    const at = (w: number) => comebackMatchFactor(r, w, C)
+    expect(at(r), 'the week she came back').toBe(factorFor(C, BRIEF.earlyElo))
+    expect(at(r + BRIEF.threeMonths - 1), 'the last week under −200 Elo').toBe(factorFor(C, BRIEF.earlyElo))
+    expect(at(r + BRIEF.threeMonths), 'three months, and the ramp steps').toBe(factorFor(C, BRIEF.midElo))
+    expect(at(r + BRIEF.sixMonths - 1), 'the last week under −100 Elo').toBe(factorFor(C, BRIEF.midElo))
+    expect(at(r + BRIEF.sixMonths), 'six months').toBe(factorFor(C, BRIEF.lateElo))
+    expect(at(r + BRIEF.twelveMonths - 1), 'the last week under −50 Elo').toBe(factorFor(C, BRIEF.lateElo))
+    expect(at(r + BRIEF.twelveMonths), 'twelve months, and it is over').toBe(1)
+    expect(at(r + 400), '...and stays over, for the rest of the career').toBe(1)
   })
 
-  it('⚠ a week BEFORE the return takes no rung at all and reads 1.0', () => {
+  it('⭐⭐⭐ THE SAME HANDICAP IS A DIFFERENT FRACTION OF A DIFFERENT PLAYER – the whole re-denomination', () => {
+    // ⚠⚠ THIS IS THE CASE THE OLD FILE COULD NOT HAVE HAD, and it is what «denominated in Elo»
+    // MEANS: a rating handicap costs every player the same number of RATING points and therefore a
+    // different share of her wings. Under the shipped multipliers a #15 and a #200 both lost 40% of
+    // themselves, which is how the first rung came to be worth −477 Elo on a #31.
+    const r = 1000
+    const strong = comebackMatchFactor(r, r, 70)
+    const weak = comebackMatchFactor(r, r, 50)
+    expect(strong, 'the stronger build keeps more of herself').toBeGreaterThan(weak)
+    // ...and the ELO cost is the same for both, which is the property the factor exists to express.
+    expect((1 - strong) * 70 * BRIEF.eloPerCore, 'the handicap in Elo').toBeCloseTo(BRIEF.earlyElo, 6)
+    expect((1 - weak) * 50 * BRIEF.eloPerCore, '...and it is the same handicap').toBeCloseTo(BRIEF.earlyElo, 6)
+  })
+
+  it('⚠ a week BEFORE the return takes no rung at all and reads EXACTLY 1.0', () => {
     // She was not back yet, so it is not a comeback match – and a stored `WorldMatch` from before the
-    // pause must replay byte-identically even if something one day hands this its week.
-    expect(comebackMatchFactor(1000, 999), 'the week before she came back').toBe(BRIEF.full)
-    expect(comebackMatchFactor(1000, 500), 'and a season before that').toBe(BRIEF.full)
+    // pause must replay byte-identically even if something one day hands this its week. ⚠ `toBe(1)`
+    // and not `toBeCloseTo`: `(C − 0) / C` is exact in IEEE-754, and the exactness is what the
+    // byte-identity in §B rests on.
+    expect(comebackMatchFactor(1000, 999, 60), 'the week before she came back').toBe(1)
+    expect(comebackMatchFactor(1000, 500, 60), 'and a season before that').toBe(1)
+  })
+
+  it('⚠⚠ the rate is ONE number in the engine, and this file\'s copy is checked AGAINST it', () => {
+    // ⚠ THE DRIFT THE BRIEF NAMES, MADE MECHANICAL. `SKILL_LAW.eloPerCore` is measured off this
+    // engine's own closed form and its note says it moves only if `SKILL_K`/`RALLY_K` move, «in which
+    // case every anchor must be re-derived, not rescaled by eye». Two spellings of it is exactly the
+    // barrel lesson – so the ENGINE imports, this FILE transcribes, and this line is the receipt.
+    // The day the rate is re-measured, this goes red and somebody re-derives the rungs on purpose.
+    expect(BRIEF.eloPerCore, 'the transcription still matches the engine\'s one spelling')
+      .toBe(SKILL_LAW.eloPerCore)
   })
 
   it('the windows are the research\'s MONTHS, converted once – 13 / 26 / 52 weeks', () => {
@@ -191,16 +245,20 @@ describe('wave 8 T6 B – a career that never paused composes exactly as it did'
   it('⭐⭐⭐ AND THE FACTOR IS REALLY 1.0 – not «1.0 because the ramp happens to be over»', () => {
     // ⚠⚠ THE ARM THIS CASE IS FOR IS THE ONE THE WHOLE HALF TURNS ON (ARM 1): a version that applied
     // the factor unconditionally – reading an absent comeback as «she came back this week» – would
-    // make every career in the game a −40% player. The ratio is what says so: with no comeback her
-    // wings are exactly 1/0.6 of the same girl's inside the first window, and under the arm the two
-    // are equal.
+    // make every career in the game a −200 Elo player. The ratio is what says so: with no comeback
+    // her wings are the same girl's inside the first window divided by the rung's own factor, and
+    // under the arm the two are equal.
     const world = career('w8-t6-ratio')
     const none = wings(world)
     const fresh = wings(withComeback(world, 0))
+    const expected = factorFor(coreOf(world), BRIEF.earlyElo)
     expect(none.every((v) => v > 0), 'the fixture really produces a player').toBe(true)
+    // ⚠ AND THE EXPECTATION IS NOT 1: a case whose target happened to be the identity would pass
+    // under ARM 1 and prove nothing at all.
+    expect(expected, 'the first rung really costs her something').toBeLessThan(0.95)
     for (let i = 0; i < none.length; i++) {
-      expect(fresh[i] / none[i], `${WINGS[i]}: the first window is the research's −40%`)
-        .toBeCloseTo(BRIEF.early, RATIO_PLACES)
+      expect(fresh[i] / none[i], `${WINGS[i]}: the first window is −${BRIEF.earlyElo} Elo of her build`)
+        .toBeCloseTo(expected, RATIO_PLACES)
     }
   })
 
@@ -220,18 +278,19 @@ describe('wave 8 T6 C – the ramp reaches the court', () => {
   it('⭐⭐ the same girl on the same week is a weaker player inside the ramp', () => {
     const world = career('w8-t6-applied')
     const none = wings(world)
-    for (const [back, factor] of [[0, BRIEF.early], [BRIEF.threeMonths, BRIEF.mid], [BRIEF.sixMonths, BRIEF.late]] as const) {
+    const C = coreOf(world)
+    for (const [back, dElo] of [[0, BRIEF.earlyElo], [BRIEF.threeMonths, BRIEF.midElo], [BRIEF.sixMonths, BRIEF.lateElo]] as const) {
       const on = wings(withComeback(world, back))
       for (let i = 0; i < none.length; i++) {
-        expect(on[i] / none[i], `${WINGS[i]} at ${back} weeks back`).toBeCloseTo(factor, RATIO_PLACES)
+        expect(on[i] / none[i], `${WINGS[i]} at ${back} weeks back`).toBeCloseTo(factorFor(C, dElo), RATIO_PLACES)
         expect(on[i], `${WINGS[i]}: and it really is lower`).toBeLessThan(none[i])
       }
     }
   })
 
   it('⚠ THE RAMP CLIMBS – each window is strictly stronger than the one before', () => {
-    // ARM 2 (the table read first-rung-wins) is what this catches: it would hand every week the −40%
-    // cell and the four bands would flatten into one.
+    // ARM 2 (the table read first-rung-wins) is what this catches: it would hand every week the
+    // −200 Elo cell and the four bands would flatten into one.
     const world = career('w8-t6-climb')
     const at = (back: number) => wings(withComeback(world, back))[0]
     expect(at(0)).toBeLessThan(at(BRIEF.threeMonths))
@@ -260,7 +319,8 @@ describe('wave 8 T6 D – the factor is a function of time and of nothing else',
     // two ends nothing monotonic in the history can sit still across.
     const world = withComeback(career('w8-t6-parked'), 4)
     const before = wings(world)
-    const factorBefore = comebackMatchFactor(world.comeback!.returnedWeek, world.week)
+    const C = coreOf(world)
+    const factorBefore = comebackMatchFactor(world.comeback!.returnedWeek, world.week, C)
     expect(world.results.length, 'the fixture really starts with a book').toBeGreaterThan(100)
 
     const title = (i: number) => ({
@@ -278,7 +338,7 @@ describe('wave 8 T6 D – the factor is a function of time and of nothing else',
       world.events = [] as never
       world.trophiesByTier = { slam: { titles: [world.week - 3], finals: [] } } as never
       expect(
-        comebackMatchFactor(world.comeback!.returnedWeek, world.week),
+        comebackMatchFactor(world.comeback!.returnedWeek, world.week, C),
         `⚠ ${name}: the factor is blind to every one of them`,
       ).toBe(factorBefore)
       expect(wings(world), `⚠⚠ ${name}: and so is the girl who steps on court`).toEqual(before)
@@ -305,6 +365,13 @@ describe('wave 8 T6 D – the factor is a function of time and of nothing else',
     // function, and it really does read the two weeks.
     expect(body.includes('returnedWeek'), 'it reads the week she came back').toBe(true)
     expect(body.includes('comebackStages'), 'and the research\'s own staircase').toBe(true)
+    // ⭐⭐⭐ WAVE 8b T3 – AND THE RATE IS THE ENGINE'S ONE SPELLING, STRUCTURALLY. The brief's own
+    // sentence: «IMPORT `SKILL_LAW.eloPerCore` – NEVER a copied `20.2`: two spellings of one rate is
+    // exactly the drift CLAUDE.md's barrel lesson exists for.» A behavioural arm cannot see this –
+    // a pasted literal produces the identical number today and drifts silently the day the rate is
+    // re-measured – so it is pinned where it can be seen at all.
+    expect(body.includes('eloPerCore'), '⚠ the factor no longer names the exchange rate').toBe(true)
+    expect(body.includes('20.2'), '⚠⚠ the rate is COPIED here – import it from season/fieldPros').toBe(false)
   })
 
   it('⚠ the ARGUMENT TYPE carries `returnedWeek` and nothing else – the fence as a type', () => {
@@ -326,7 +393,7 @@ describe('wave 8 T6 E – half 2 takes no draw at all', () => {
   it('the factor and the composition are draw-free on every stream', () => {
     const world = withComeback(career('w8-t6-draws'), 8)
     rngKeys.length = 0
-    comebackMatchFactor(world.comeback!.returnedWeek, world.week)
+    comebackMatchFactor(world.comeback!.returnedWeek, world.week, coreOf(world))
     kidMatchPlayerFor(world, SURFACE)
     // ⚠ THE POSITIVE CONTROL IS THE COMPOSITION ITSELF: `kidMatchPlayerFor` DOES reach
     // purpose-scoped streams (the birth build and the kit's wear), so a recorder that saw nothing

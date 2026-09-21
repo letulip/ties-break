@@ -29,11 +29,37 @@
 //     small-first     the highest rung her LIVE standing admits – the highest whose verdict does NOT
 //                     carry `onProtectedRank`
 //
-// MEASURED (transcribed from the run that shipped; the case prints the rows):
+// MEASURED (the case prints the rows). ⚠⚠ **RE-PINNED AT WAVE 8b T3, AND THE RE-RUN IS A PAIRED
+// A/B RATHER THAN A RE-TRANSCRIPTION** – his ruling of 21.09, «да, деноминируем», moved
+// `ECONOMY.motherhood.comebackStages` from MULTIPLIERS (x0.6 / x0.8 / x0.9 / x1) to ELO
+// (-200 / -100 / -50 / 0). Both arms below were run by the SAME command on the SAME eight seeds; arm
+// A is a detached worktree at `5de1b2a1`, the commit before the constant moved, and arm B is the tree
+// this file ships on:
 //
-//     WTA points at +12 months     straight-back ahead on **8 of 8** careers (mean 141 against 55)
-//     live rank at +12 months      straight-back better on 8 of 8 (mean #352 against #597)
-//     protected entries spent      straight-back 12.0 of 12, small-first 0.0 of 12
+//                                   ARM A (x0.6 staircase)      ARM B (-200 Elo staircase)
+//     straight-back ahead           8 of 8                      8 of 8
+//     mean WTA points               141 straight / 55 small     **191 straight / 54 small**
+//     mean live rank                #352 / #597                 **#308 / #605**
+//     protected entries spent       12.0 / 0.0                  12.0 / 0.0
+//
+// ⭐ ARM A REPRODUCES THE SHIPPED TRANSCRIPTION TO THE DIGIT (141 / 55, #352 / #597, 12.0 / 0.0),
+// which is the receipt that the control is the right tree rather than a tree that merely compiles.
+//
+// ⚠⚠⚠ **AND THE RESEARCH'S SECOND PREDICTION IS FALSIFIED, IN THE OPPOSITE DIRECTION.** The
+// staircase document's §5 predicted «small-first >= straight-back on points at 52 weeks – the trap
+// points the right way». It does not. The gap WIDENED, from 2.6x to 3.5x, and the mechanism is
+// arithmetic rather than mysterious: a shallower handicap makes her a STRONGER returner, a stronger
+// returner earns more from a big draw than from a W15 because the big ladder is an order of magnitude
+// steeper, so the re-denomination helps BOTH arms and helps straight-back more. Small-first's harvest
+// barely moves (55 -> 54) because a W15 title is worth 15 points however strong she is and she was
+// already winning them.
+//
+// ⚠ SO THE PIN BELOW DID **NOT** GO RED, although the wave-8b brief expected it to. Its shape is «the
+// wrong ramp WINS in this build» and that is still true – it is built to fail the day somebody FIXES
+// the inversion, and re-denominating the staircase was not that fix. The half T9 always said was the
+// real cause stands: «no drafted number could close it – the gap is an order of magnitude», and the
+// candidates remain design (a points floor, a body cost on big weeks, or accepting it and saying so).
+// ⚠ NO CONSTANT WAS MOVED TO MAKE ANY OF THIS PASS. The staircase moved on HIS word, before this ran.
 //
 // ⚠⚠ AND THE CAUSE IS ISOLATED RATHER THAN GUESSED, because «straight-back also plays the small
 // events on its free weeks» would have been the obvious explanation and IS NOT THE ONE. A third,
@@ -449,8 +475,8 @@ describe('wave 8 T6 D – the trap, measured', () => {
       )
     }
     const n = seeds.length
-    // ⚠ PRINTED, BECAUSE A MEASUREMENT NOBODY CAN READ IS A NUMBER. The file's header transcribes
-    // what these lines said on the run that shipped.
+    // ⚠ PRINTED, BECAUSE A MEASUREMENT NOBODY CAN READ IS A NUMBER. The file's header carries BOTH
+    // arms of wave 8b T3's paired re-run – the x0.6 staircase at `5de1b2a1` and the Elo one here.
     console.log(rows.join('\n'))
     console.log(
       `straight-back ahead on points in ${straightAhead} of ${n}; mean points ` +
@@ -490,6 +516,20 @@ describe('wave 8 T6 D – the trap, measured', () => {
       straightAhead,
       '⚠⚠ FINDING: the wrong ramp WINS in this build – see the header, and do not tune to hide it',
     ).toBeGreaterThan(n / 2)
+
+    // ⭐⭐⭐ WAVE 8b T3 – AND THE SECOND HALF OF THE RE-PIN, WHICH IS NEW AND IS THE MEASUREMENT THE
+    // RE-DENOMINATION ACTUALLY PRODUCED. His ruling of 21.09 («да, деноминируем») was expected by the
+    // staircase document's §5 to flip this case; it did not, and the honest pin is the DIRECTION it
+    // moved instead: a shallower handicap makes her a stronger returner, and a stronger returner earns
+    // more from a big draw than from a W15, so straight-back gained (141 -> 191 mean points) while
+    // small-first stood still (55 -> 54). ⚠ THE LINE BELOW IS A FLOOR AND NOT A TARGET – it says the
+    // re-denomination really reached this measurement, so a later edit that quietly reverted the
+    // staircase to multipliers cannot leave this file green. A FIX to the inversion trips the case
+    // above, which is still the one that matters.
+    expect(
+      straightPts / n,
+      '⚠ the Elo staircase really reached the court – a x0.6 tree measures ~141 here',
+    ).toBeGreaterThan(160)
   })
 })
 

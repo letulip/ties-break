@@ -5308,11 +5308,33 @@ export const ECONOMY = {
      *  RATE: it is an entitlement, so it is state on the record rather than a knob read per week, and
      *  T9 measures «entries it actually buys, and how often it expires unused» rather than tuning it. */
     protectedRankEntries: 12,
-    /** ⭐⭐⭐ THE STAGED FACTOR'S OWN STAIRCASE – **−40% → −20% → −10% → full over 0–3 / 3–6 / 6–12 /
-     *  12+ months post-return**, which is the RESEARCH'S OWN SENTENCE and not a shape anybody here
-     *  chose: `docs/research/life-events-motherhood.md:35`, «staged penalties ≈ −40% (0–3 mo) → −20%
-     *  (3–6) → −10% (6–12) → full recovery 12+ mo». The brief's §2 T6 transcribes it and this is the
-     *  transcription, so the four factors ship at their drafted values and T9 benches them.
+    /** ⭐⭐⭐ THE STAGED FACTOR'S OWN STAIRCASE – **RE-DENOMINATED IN ELO ON HIS WORD OF 21.09, «да,
+     *  деноминируем»** (wave 8b T3). −200 / −100 / −50 / 0 Elo over 0–3 / 3–6 / 6–12 / 12+ months
+     *  post-return, replacing the ×0.6 / ×0.8 / ×0.9 / ×1.0 MULTIPLIERS this table shipped with.
+     *
+     *  ⚠⚠ **WHAT WAS WRONG WAS THE UNITS AND NOT THE SHAPE**, and it was measured rather than felt:
+     *  [the-comeback-staircase-2026-09.md](../../../docs/research/the-comeback-staircase-2026-09.md)
+     *  prices the old first rung through `coreForStanding`/`eloForStanding` and finds that **×0.6 on a
+     *  #31's wings is −477 Elo at this engine's own measured rate** – she played the first three
+     *  months like **#380**, level with the W15 field and a ten-point donor at every big draw. The
+     *  research's own «−40%» reads as −150…−250 Elo in the same currency, so the shipped first rung
+     *  was about **twice too deep**. The digest's sentence is unchanged and still governs; what
+     *  changes is that «−40% of form» is now spelled in the currency `fieldPros.ts` keeps its whole
+     *  table in, instead of as a fraction of her wings.
+     *
+     *  ⭐ AND THE A1 INVERSION IS WHAT IT WAS ALWAYS ABOUT. Wave 8's ramp trap ran BACKWARDS – straight
+     *  back to the big draws beat a careful small-first programme 8/8 and 16/18 – and §3 of the
+     *  research isolates this table as the cause: a returner even with the W15 fields she was sent to
+     *  farm harvests 55 points a year, while twelve first-round exits at the big draws bank 120. No
+     *  design change, no points floor, no body cost: the units.
+     *
+     *  ⚠ THE SHAPE IS STILL THE RESEARCH'S OWN SENTENCE – `docs/research/life-events-motherhood.md:35`,
+     *  «staged penalties ≈ −40% (0–3 mo) → −20% (3–6) → −10% (6–12) → full recovery 12+ mo» – and the
+     *  windows below are untouched. Four rungs, halving, ending at zero.
+     *
+     *  ⚠ THE SIZES CARRY ±10%, NAMED BY THE RESEARCH ITSELF: `eloPerCore` was measured on FLAT builds
+     *  and a ×-factor build is not flat. It changes nothing in the conclusion – −477 against −250 is
+     *  not inside any error bar.
      *
      *  ⚠⚠ **IT IS A TIME-SHAPED MULTIPLIER ON THE ABSENCE AND IT READS NOTHING FROM RESULTS.** §0 of
      *  the wave brief names the fence and names the document it is a fence around:
@@ -5338,17 +5360,22 @@ export const ECONOMY = {
      *  THEREFORE 1.0**: a match played before she came back is not a comeback match, and the stored
      *  `WorldMatch` of one must replay exactly as it was. */
     comebackStages: [
-      // 0–3 months – the research's −40%. The deepest rung, and the one the wrong ramp spends its
-      // protected entries inside.
-      { fromWeeksBack: 0, factor: 0.6 },
-      // 3–6 months – −20%.
-      { fromWeeksBack: 52 / 4, factor: 0.8 },
-      // 6–12 months – −10%.
-      { fromWeeksBack: 52 / 2, factor: 0.9 },
+      // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries
+      // inside. ⭐ 200 Elo is the top of the research's own −150…−250 corridor (§3 of the staircase
+      // document), which is where «−40% of form» lands once it is priced: on a #31 it is ×0.832, a
+      // returner playing like #151 rather than like #380.
+      { fromWeeksBack: 0, dElo: 200 },
+      // 3–6 months – half of it, exactly as the digest's −20% is half of its −40%.
+      { fromWeeksBack: 52 / 4, dElo: 100 },
+      // 6–12 months – half again.
+      { fromWeeksBack: 52 / 2, dElo: 50 },
       // 12+ months – full. ⭐ A RUNG AND NOT AN ABSENCE, `perWeekByAge`'s own 0 at 35: «the ramp ends»
-      // is a sentence somebody had to type, and a table that simply stopped would leave −10% running
-      // for the rest of her career.
-      { fromWeeksBack: 52, factor: 1 },
+      // is a sentence somebody had to type, and a table that simply stopped would leave the last rung
+      // running for the rest of her career. ⚠ AND IT IS **EXACTLY** ZERO, which is load-bearing
+      // arithmetic rather than tidiness: `(core − 0) / core` is exactly 1.0 in IEEE-754, so a career
+      // twelve months back composes BYTE-IDENTICALLY to one that never paused – the property
+      // `tests/wave8-comeback-factor.test.ts` §B pins with `toEqual` on the whole player.
+      { fromWeeksBack: 52, dElo: 0 },
     ],
   },
 

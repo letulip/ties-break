@@ -918,7 +918,7 @@ function main(): void {
   )
   console.log(
     `  the return: freeze ${m.protectedRankEntries} entries / ${m.protectedRankWeeks} wks (RULED) · ` +
-      `ramp ${m.comebackStages.map((s) => `${s.fromWeeksBack}w:${s.factor}`).join(' ')} · wta window ${WINDOW_BY_TRACK.wta}`,
+      `ramp ${m.comebackStages.map((s) => `${s.fromWeeksBack}w:-${s.dElo}Elo`).join(' ')} · wta window ${WINDOW_BY_TRACK.wta}`,
   )
   console.log(
     `  the shock: postpartum ${ECONOMY.spirit.shock.postpartum?.steady}/${ECONOMY.spirit.shock.postpartum?.intense} ` +

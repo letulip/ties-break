@@ -21,6 +21,12 @@ import { spiritMatchFactor } from '../spirit'
 import { formComposureDelta } from '../form'
 import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
 import { coachEdgePp } from '../coach'
+// ⚠⚠ THE EXCHANGE RATE, BY IMPORT AND NEVER BY COPY (wave 8b T3). `SKILL_LAW.eloPerCore` is the one
+// spelling of «Elo per core point» in this engine, measured off its own closed form, and the comeback
+// ramp is denominated in Elo since 21.09 – a `20.2` written here would be the second spelling that
+// CLAUDE.md's barrel lesson is about. ⚠ ENGINE-INTERNAL and cycle-free: `season/fieldPros` imports
+// `season/*` and `rng` only, and nothing in `season/` imports this file.
+import { SKILL_LAW } from '../season/fieldPros'
 // ⭐ v85 T6 – THE STAGED FACTOR'S OWN STAIRCASE. `engine/economy.ts` is the constants module and
 // imports nothing from `world/`, exactly as `../coach` and `../condition` above do, so this leaf
 // stays a leaf. What lives HERE is the last step: turning the research's months into the one number
@@ -164,33 +170,55 @@ export function coachMatchEdge(world: {
   return coachEdgePp(world.seed, world.coachId ?? null, world.coachOnEventWeeks ?? false) * COACH_EDGE_POINTS_PER_PP
 }
 
-/** ⭐⭐⭐ v85 T6 – **THE COMEBACK RAMP, AS A MULTIPLIER ON HER FIVE WINGS.** −40% → −20% → −10% →
- *  full over 0–3 / 3–6 / 6–12 / 12+ months after the week she came back – the research's own
- *  staircase (`docs/research/life-events-motherhood.md:35`), transcribed into
- *  `ECONOMY.motherhood.comebackStages` where the conversion from its months to our weeks is written
- *  out. This function is the last step and nothing else: the table is there, the reading is here,
- *  exactly as `COACH_EDGE_POINTS_PER_PP` above turns the coach's corridor into tennis.
+/** ⭐⭐⭐ v85 T6, **RE-DENOMINATED IN ELO AT WAVE 8b T3 ON HIS WORD OF 21.09 («да, деноминируем»)** –
+ *  THE COMEBACK RAMP, AS A MULTIPLIER ON HER FIVE WINGS. −200 / −100 / −50 / 0 **Elo** over 0–3 /
+ *  3–6 / 6–12 / 12+ months after the week she came back, converted to a factor PER PLAYER here:
  *
- *  ⚠⚠ **IT IS A FUNCTION OF TWO WEEK NUMBERS AND OF NOTHING ELSE, AND THE SIGNATURE IS THE FENCE.**
+ *      C = her overall(4) that week · factor = max(0.5, (C − dElo / eloPerCore) / C)
+ *
+ *  The staircase lives in `ECONOMY.motherhood.comebackStages`, where the re-denomination and the
+ *  research behind it are argued; this function is the last step and nothing else, exactly as
+ *  `COACH_EDGE_POINTS_PER_PP` above turns the coach's corridor into tennis.
+ *
+ *  ⚠⚠ **`eloPerCore` COMES BY IMPORT FROM `season/fieldPros` AND IS NEVER A COPIED `20.2`.** Two
+ *  spellings of one exchange rate is precisely the drift CLAUDE.md's barrel lesson exists for: the
+ *  rate is «measured off this engine's own closed form» and its own note says it moves only if
+ *  `SKILL_K`/`RALLY_K` move, «in which case every anchor must be re-derived, not rescaled by eye» –
+ *  a second copy here would be the anchor nobody re-derived. ⚠ It is an ENGINE-INTERNAL import and
+ *  purity is untouched (`season/fieldPros` reaches `season/*` and `rng` only, so no cycle).
+ *
+ *  ⚠⚠ **IT IS A FUNCTION OF TWO WEEK NUMBERS AND A BUILD, AND THE SIGNATURE IS STILL THE FENCE.**
  *  `docs/specs/form-and-slump.md` (results-driven form) is OWNER-PARKED and the wave brief's §0 says
- *  this must not become it by the back door. A factor that took a world could read a result; this one
- *  cannot be handed a result to read. That is the parked-spec boundary expressed as a type rather
- *  than as a promise, and `tests/wave8-comeback-factor.test.ts` §D pins it from the other side by
- *  mutating a career's whole match history and watching the number not move.
+ *  this must not become it by the back door. The third argument is her CORE – the mean of four
+ *  attributes, which is what she IS – and emphatically not a result, a rank or a world. A factor that
+ *  cannot be HANDED a result cannot read one, and `tests/wave8-comeback-factor.test.ts` §D pins that
+ *  from both sides: behaviourally, by replacing a career's whole match history and watching the
+ *  number sit still, and structurally, by reading this function's own text.
+ *
+ *  ⚠ WHY THE CORE AT ALL: an Elo handicap is not a fixed fraction of anybody. The same −200 costs a
+ *  #15 and a #200 the same number of RATING points, which is what the currency means, and therefore a
+ *  different fraction of each one's wings – which is the whole content of the re-denomination.
+ *
+ *  ⚠ THE FLOOR IS 0.5 AND IT IS A SAFETY RAIL RATHER THAN A TUNING KNOB: at the shipped rungs it is
+ *  never reached (−200 Elo is ~9.9 core, and a returner at the bottom of the professional table is
+ *  far above twice that), so it changes no shipped number. What it forbids is the arithmetic going
+ *  negative on a hand-built probe with a tiny build, which would flip her wings' sign.
  *
  *  ⚠ THE LAST RUNG SHE HAS REACHED WINS, `pregnancyChanceAt`'s own loop (`world/lifeBeat.ts` §14) and
  *  its own reason: the table is read in order so that «ascending» is what the code actually depends
  *  on, which is what a test can then pin.
  *
- *  ⭐ A WEEK **BEFORE** THE RETURN TAKES NO RUNG AND COMES BACK 1.0. `back` is negative, no
- *  `fromWeeksBack` is reached, and the identity element falls out of the loop – so a stored
- *  `WorldMatch` from before the pause replays byte-identically even if something one day hands this
- *  its week. Pure arithmetic, ZERO RNG, no world. */
-export function comebackMatchFactor(returnedWeek: number, week: number): number {
+ *  ⭐ A WEEK **BEFORE** THE RETURN TAKES NO RUNG AND COMES BACK EXACTLY 1.0 – `back` is negative, no
+ *  `fromWeeksBack` is reached, `dElo` stays 0 and `(C − 0) / C` is exactly 1 in IEEE-754. So is the
+ *  last rung, whose `dElo` is exactly 0. Both identities are EXACT rather than rounded, which is what
+ *  keeps a stored `WorldMatch` from before the pause – and a career twelve months back – composing
+ *  byte-identically. Pure arithmetic, ZERO RNG, no world. */
+export function comebackMatchFactor(returnedWeek: number, week: number, core: number): number {
   const back = week - returnedWeek
-  let factor = 1
-  for (const stage of ECONOMY.motherhood.comebackStages) if (back >= stage.fromWeeksBack) factor = stage.factor
-  return factor
+  let dElo = 0
+  for (const stage of ECONOMY.motherhood.comebackStages) if (back >= stage.fromWeeksBack) dElo = stage.dElo
+  if (core <= 0) return 1
+  return Math.max(0.5, (core - dElo / SKILL_LAW.eloPerCore) / core)
 }
 
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
@@ -332,9 +360,17 @@ export function kidMatchPlayerFor(
   // ⭐⭐⭐ v85 T6 – AND THE MONTHS SHE WAS AWAY, ON THE IDENTICAL SEAM AND BESIDE THE OTHER TWO: a
   // THIRD multiplicative factor on the same five wings, pure arithmetic, zero RNG, applied exactly
   // once per match because every path that puts her on court builds her here (this file's contract).
-  // The staircase is the research's own (−40% → −20% → −10% → full over 0–3 / 3–6 / 6–12 / 12+
-  // months) and lives in `ECONOMY.motherhood.comebackStages`; `comebackMatchFactor` above is the
-  // reading.
+  // The staircase is the research's own shape (−40% → −20% → −10% → full over 0–3 / 3–6 / 6–12 / 12+
+  // months) DENOMINATED IN ELO since wave 8b T3, and lives in `ECONOMY.motherhood.comebackStages`;
+  // `comebackMatchFactor` above is the reading.
+  //
+  // ⚠ THE CORE IS TAKEN OFF `raw` – her BUILD, before condition, spirit and the surface touch it –
+  // which is the scale `eloPerCore` was measured on («two flat builds ten core apart»). Reading it
+  // after the other two factors would price the handicap against a tired girl's wings and make the
+  // ramp deeper on exactly the weeks she is already worst, which is a second mechanic nobody drafted.
+  // ⚠ FOUR ATTRIBUTES AND NOT FIVE: overall(4) is serve/ret/composure/stamina, `coreForStanding`'s own
+  // measure and the one the whole professional table is built on. `groundstrokes` is derived from the
+  // style and is not part of it.
   //
   // ⚠ ABSENT ⇒ 1.0, AND IT IS A PRESENCE CHECK RATHER THAN A DEFAULT WEEK, `spirit`'s own line one
   // above: the literal 1 is the identity element for a product, so a career that never paused gets
@@ -344,7 +380,13 @@ export function kidMatchPlayerFor(
   // ⚠⚠ IT MULTIPLIES THE WINGS AND NOT THE OUTCOME. Whether the comeback WORKS is emergent and is
   // MEASURED (T9's arm, and T5's own «nothing here may ever become a success rate» read one task on):
   // this makes her a weaker player for a year, and the tour does the rest.
-  const comebackF = world.comeback ? comebackMatchFactor(world.comeback.returnedWeek, world.week) : 1
+  const comebackF = world.comeback
+    ? comebackMatchFactor(
+        world.comeback.returnedWeek,
+        world.week,
+        (raw.serve + raw.ret + raw.composure + raw.stamina) / 4,
+      )
+    : 1
   const composed = applyKit(
     applySurfaceStyle(
       {

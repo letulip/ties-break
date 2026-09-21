@@ -63,9 +63,15 @@ for (const k of [...buckets.keys()].sort((x, y) => x - y)) {
 console.log(`pairs total: ${pairs.length}`)
 
 // == ARM 2 – the comeback staircase, denominated in the game's own Elo ==
-import { coreForStanding, eloForStanding } from '../src/engine/season/fieldPros'
+import { SKILL_LAW, coreForStanding, eloForStanding } from '../src/engine/season/fieldPros'
 
-const ELO_PER_CORE = 20.2 // SKILL_LAW.eloPerCore – the module's own measured rate
+// ⚠⚠ BY IMPORT SINCE WAVE 8b T3, AND IT USED TO BE A COPY. This line read `const ELO_PER_CORE = 20.2`
+// with the comment «SKILL_LAW.eloPerCore – the module's own measured rate», which is a second
+// spelling of the rate the staircase is now denominated in: the day `SKILL_K`/`RALLY_K` move and the
+// rate is re-measured, an instrument holding its own copy reports the OLD exchange rate about the NEW
+// engine and nothing goes red. That is the drift CLAUDE.md's barrel lesson exists for, and the engine
+// half of the same fix is `comebackMatchFactor` (src/engine/world/player.ts).
+const ELO_PER_CORE = SKILL_LAW.eloPerCore
 function standingForElo(elo: number): number {
   // invert eloForStanding numerically over 1..1600
   let lo = 1, hi = 1600
