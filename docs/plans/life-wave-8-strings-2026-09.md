@@ -14,14 +14,19 @@ rigour are [wave 7's](life-wave-7-strings-2026-09.md) strings document, whose ow
 [wave 5's](life-wave-5-strings-2026-09.md) and [wave 6's](life-wave-6-strings-2026-09.md).
 
 ⚠⚠ **THE PROVENANCE CHECK FOR THIS TABLE IS PLAIN `grep DRAFT`, AND NOTHING NARROWER** (wave 8b F2,
-his ruling of 21.09 closing the questions pass' F2). Not `grep '⚠ DRAFT'`, which finds 22 of this
-wave's 39 flagged lines, and not the regex remedy `⚠+ ?\*{0,2}DRAFT`, which finds 28 and drops every
-`**THE BUILDER'S DRAFT**` spelling. Both were measured on this wave and both are recorded in §9. A
-sweep that is narrower than the flag it looks for reports a short table as a finished one:
+his ruling of 21.09 closing the questions pass' F2). Not `grep '⚠ DRAFT'` and not the regex remedy
+`⚠+ ?\*{0,2}DRAFT`, which drops every `**THE BUILDER'S DRAFT**` spelling. A sweep that is narrower
+than the flag it looks for reports a short table as a finished one:
 
 ```bash
 git diff c322301c..HEAD -- src/ | grep '^+' | grep DRAFT
 ```
+
+⚠ **The counts move with the branch, so they are dated rather than quoted as a constant.** Measured on
+**wave 8's own close (20.09)**: **39** wide, **22** narrow, **28** under the regex. Re-measured at the
+close of **wave 8b (21.09)**: **44** wide, **23** narrow, **28** under the regex – ⭐ and the regex
+form **did not move at all** across a batch that added five flagged lines, which is the third
+independent demonstration of the defect §9 records.
 
 **No shipped string moved in the wave itself.** Every row below is an ADDITION, quoted **verbatim
 from the tree**. Wave 8's thirty all landed as drafts; **three of them are now HIS, re-worded on his
