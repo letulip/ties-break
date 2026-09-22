@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 122 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 123 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 11 | [WAVE 10 RULED OPEN: THE DYNASTY, AND THE OFF SWITCH RULED AHEAD OF ITS STEP](#22092026--wave-10-ruled-open-the-dynasty-and-the-off-switch-ruled-ahead-of-its-step) | 2026-09-22 |
+| general | 12 | [THE THREE OPEN ITEMS OF WAVE 10, RULED IN ONE EXCHANGE](#22092026--the-three-open-items-of-wave-10-ruled-in-one-exchange) | 2026-09-22 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5044,3 +5044,25 @@ PR #152 (wave 9) merged; his rulings on the next slice, from one exchange:
    the result lands in the-child spec's ledger.
 6. **The four recompressed staff portraits await his eye** (found uncommitted in the checkout,
    −36 KiB against a 3 KiB install headroom; pairs sent to him 22.09) – swap only on his word.
+
+## 22.09.2026 – THE THREE OPEN ITEMS OF WAVE 10, RULED IN ONE EXCHANGE
+
+The morning entry left three marks; all three closed the same day:
+
+1. **The mother's four strokes are IN** («звучит интересно, давай попробуем реализовать») – after
+   the architect's explanation of §5c-applied-to-the-mother: in the dynasty the parent is a person
+   the game KNOWS, and four strokes of her – a habit, a professional eye, a friction from her own
+   scars, a trace in speech – licensed off the inheritance block's facts, keep the new career a
+   continuation of the story rather than a new game plus a wallet. T6b of the wave, all strings
+   DRAFT for his review.
+2. **⭐ The news floor is IN, by his word on the recommendation** («давай по твоей рекомендации») –
+   a recorded amendment to his own D1 (14.09, standing-not-fame): a dynasty daughter whose mother
+   was herself `known` starts at a `noticed` floor from week 0. Fame from birth is priced as a
+   COST – the press arrives years before the ranking does – and `known` stays earned by her own
+   rank alone. T5b of the wave.
+3. **The four support portraits landed** («а, тогда да, давай оптимизируем, кинь в эту же ветку
+   волны») – the architect's own commit on `life/wave-10`: 448×624 → 368×512, −36 KiB, the floor
+   arithmetic re-derived and green, install headroom ≈39 KiB for the wave.
+
+With these, nothing in `docs/plans/life-wave-10-builder-2026-09.md` is conditional – he dispatches
+the builder («я готов билдера отправить»).

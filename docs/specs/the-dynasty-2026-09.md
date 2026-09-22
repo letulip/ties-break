@@ -24,6 +24,10 @@ column of §8 is filled from the bench, never predicted twice.
   nothing carries over – `EndingScreen.vue`'s own comment records «NOTHING CARRIES OVER … §5.6's
   own open question and its answer has not moved». This wave is that answer moving.
 - `wasThereAChild` (`world/endings.ts`) returns literal `false` – the pre-built hook, waiting.
+- His three rulings of 22.09 (second exchange) closed every open item: the mother's four strokes
+  are IN («звучит интересно, давай попробуем реализовать»), the news floor is IN by his word on
+  the recommendation, and the four support portraits landed downscaled the same day – the
+  architect's own commit, −36 KiB, install headroom ≈39 KiB for the wave.
 - `world.children` is `ChildRecord[]` (`{ bornWeek, sex }`), sex is `'girl'` by his 20.09 ruling
   («пол нужен, но мальчиков у нас пока нет»), and the child is deliberately unnamed: «не даем
   намеренно, если пользователь пойдет в династию даст сам: имя выбирает родитель».
@@ -110,12 +114,13 @@ spotlight, whatever she wins». The dynasty touches this carefully:
 - **Booth lineage** – on big stages (the shipped `atOrAboveStageBar` licence), the booth may name
   the line. Licensed ONLY when `motherCareer.titles > 0` or her `bestRank` cleared the news bar –
   the college mother's daughter hears nothing, because there is nothing true to say.
-- **The news floor** – ⚠ AWAITING HIS RULING (question 2 of the wave): whether a dynasty career
-  whose mother was herself `known` starts at a `noticed` floor from week 0 (press finds the famous
-  name before the ranking exists – fame from birth as a COST, pressure arriving years early), or
-  the lineage only colours surfaces her own standing has already licensed. The architect
-  recommends the floor; it is one clause in `newsStandingOf` reading `world.dynasty`, and it is a
-  recorded amendment to D1 either way, so it ships only with his word in `docs/decisions.md`.
+- **The news floor** – ⭐ RULED 22.09 («давай по твоей рекомендации»), a recorded amendment to his
+  own D1: a dynasty career whose mother was herself `known` (her `bestRank` cleared
+  `ECONOMY.spotlight.newsRankKnown`; `null` never qualifies) starts at a `noticed` floor from
+  week 0 – press finds the famous name before the ranking exists, and fame from birth is a COST,
+  pressure arriving years early. `known` is still earned by her own rank only. `noticed`'s shipped
+  law does the rest for free: kinds fire on her occasions, habituation does not grow. One
+  predicate spells «the mother was known» for both this clause and the booth licence – never two.
 - Habituation, the leak, the pressure machinery – untouched. No new exposure kinds.
 
 ## 6. The route – the same beginning, three cards answered differently
@@ -163,6 +168,7 @@ His ruling 22.09: «наследственность темперамента �
 | 4 | determinism: same ancestor, same rulings → same child world | hash-identical twice | – |
 | 5 | frozen MAIN capture | unmoved – 41550 / `e6b0c709` (no new MAIN draw anywhere in the wave) | – |
 | 6 | the poise room at match grain (wave 9's unmeasured arm, his «не возражаю») | +0.5 composure ≈ +0.1 pp on pressure points (from `point.ts`'s own +20 ≈ +4 pp law) – texture, below career-grain noise at N=168 | – |
+| 7 | the news floor's reach – share of corpus mothers retiring `known` | most titled careers qualify; college-fork and early-leaving mothers do not | – |
 
 ## 9. What the wave does not do
 

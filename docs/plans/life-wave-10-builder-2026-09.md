@@ -13,9 +13,10 @@ pathspec commits (`git commit -m … -- <files>`), never amend, gates from files
 CLAUDE.md binds all of it; nothing here repeats it.
 
 His go, 22.09: «Пиши полную пошаговую спеку, а я билдера запущу и все замеры, всё отражай в
-спеке». Three items inside the wave wait on his word and are marked ⚠ RULING; build everything
-else first, and if the ruling has not arrived by the time you reach them, skip and say so in the
-report – the architect carries questions to him, tasks never guess.
+спеке». The three items that waited on his word were all ruled the same day (docs/decisions.md,
+22.09 second entry): the mother's strokes are in, the news floor is in, and the portrait swap
+already landed as the architect's own commit – nothing in this plan is conditional any more.
+Questions that appear DURING the build still go to the end of the report, never guessed at.
 
 Every player-facing string in this wave is a DRAFT for his review (invariant 4). Write them once,
 in code, and list every new string verbatim in your report.
@@ -93,20 +94,35 @@ The protocol wire lands first (the house pattern), then the two UI halves.
   big-stage licence (`atOrAboveStageBar` + the booth's own seams in `world/spotlight.ts` /
   `lifeBeat.ts` §10), licensed ONLY off real facts: `motherCareer.titles > 0` or her `bestRank`
   cleared `ECONOMY.spotlight.newsRankKnown`. A college mother licenses nothing – assert it.
-- **T5b ⚠ RULING (question 2)**: the `noticed` news floor from week 0 when the mother was herself
-  `known`. One clause in `newsStandingOf` reading `world.dynasty`, one recorded D1 amendment in
-  `docs/decisions.md` with his words – without his words this task does not exist.
+- **T5b, ruled in 22.09 («давай по твоей рекомендации»)** – the `noticed` news floor:
+  1. One predicate beside the record type – «the mother was known»: `bestRank !== null` and
+     `bestRank <= ECONOMY.spotlight.newsRankKnown`. It is the ONE spelling both T5a's booth
+     licence and this clause read – two sites, one question, never two derivations.
+  2. `newsStandingOf`: when the normal read says `quiet` and `world.dynasty` passes that
+     predicate, return `'noticed'`. Never `'known'` – that stays earned by her own rank alone.
+     Comment cites the D1 amendment: `docs/decisions.md` 22.09, second entry.
+  3. Tests in `tests/wave10-fame.test.ts`: a dynasty week-0 world with a known mother reads
+     `noticed` on zero points; a college-fork mother reads `quiet`; a non-dynasty world is
+     byte-identical to today (pin, mutation-verified by flipping the predicate); and habituation
+     stays 0 at the floor – `noticed`'s own shipped law, asserted so it cannot drift.
 
 ## T6 – the mother in the new career
 
 - **T6a, build now**: the heirloom – ONE album page early in the new career's book
   (`world/albumBook.ts`), content licensed off the block: her name, the cabinet's honest numbers,
   the line's generation. Zero mechanics. DRAFT strings.
-- **T6b ⚠ RULING (question 1)**: the four strokes – one habit, one thing she notices with a
-  professional eye, one friction from her own career's scars, one way her presence changes
-  speech – landing as feed/diary texture licensed off `motherTemperament` + career facts. Diary
-  scraps obey the 80-character budget and the voice licences (`voiceOf`, wave 9's machinery).
-  Await his «да» after the architect's explanation; skip silently on no word.
+- **T6b, ruled in 22.09 («звучит интересно, давай попробуем реализовать»)** – the four strokes,
+  §5c's discipline applied to the mother: one habit, one thing she notices with a professional
+  eye, one friction from her own career's scars, one way her presence changes speech. The shape:
+  1. A small pool of feed/diary texture lines in the NEW career (8–12 total, not a system), each
+     licensed off the block: cabinet lines require `motherCareer.titles > 0`, scar lines require
+     the facts they lean on, and the mother's OPENNESS prices whether she is quoted in public
+     surfaces or felt privately. The daughter's diary stays in the DAUGHTER's voice (`voiceOf` on
+     her temperament) – the mother is content inside it, never a fifth voice.
+  2. Diary scraps obey the 80-character budget and the licence machinery wave 9 built.
+  3. Licence tests: a college-fork mother licenses no cabinet line (flip a fact, watch it fail);
+     every line reachable in a walked career, the wave-9 sweep's lesson – no posed fixtures.
+  4. Every line is a DRAFT, listed verbatim in the report for his review.
 
 ## T7 – the bench, `tools/dynasty-bench.ts`
 
@@ -129,14 +145,12 @@ Extend `tools/composure-bench.ts` (or a sibling arm beside it): the measured mot
 record the measurement in [the-child-2026-09.md](../specs/the-child-2026-09.md) §8's ledger
 either way. This closes the wave-9 report's «unmeasured arm» line honestly.
 
-## T9 ⚠ RULING (question 3) – the four webp portraits
+## T9 – LANDED 22.09, not yours
 
-If his eye approves the recompressed pair set (368×512, −36 KiB): swap the four files under
-`public/images/support-stuff/` from the architect's stash, update `.staff-art`'s derivation
-comment in `SupportStaffTab.vue` (the master is 368×512 then: (136−2) × 368/512 = 96.31 ≥ 96 –
-the guarantee holds, re-derive it in the comment's own arithmetic), and re-run
-`tests/component/round43-staff-portrait.test.ts`. The install-size line in the PR carries the
-saving. Without his word the stash stays where it is.
+His eye approved the pairs and the architect committed the swap the same day (`1ced3964`): the
+four files, the `.staff-art` derivation re-written for 368×512, `preload.ts`'s dimension note,
+and `round43-staff-portrait.test.ts`'s master pair – 5/5 green. Nothing here is left to build;
+the PR's install-size line carries the −36 KiB.
 
 ## The gate, per task and at the end
 
@@ -144,7 +158,7 @@ saving. Without his word the stash stays where it is.
   before any commit that touches `shared/protocol` (the wire breaks quietly otherwise).
 - Wave end (the architect runs the final gate, but leave it green): `npm run check`,
   `npm run test:sim` (predicted: every corridor unmoved – the dynasty exists only past endings),
-  `npm run test:e2e`, `npm run test:component`, frozen capture unmoved, install size (headroom
-  3 KiB today; T9, if ruled in, turns it into ≈39 KiB).
+  `npm run test:e2e`, `npm run test:component`, frozen capture unmoved, install size (T9 landed:
+  headroom ≈39 KiB at the wave's start; do not spend it without a word to the architect).
 - Report: every DRAFT string verbatim, every predicted-vs-measured row filled, every ⚠ RULING
   task's status stated plainly, questions accumulated at the end – never resolved by guessing.
