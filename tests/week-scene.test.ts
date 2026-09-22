@@ -125,6 +125,12 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
   motherhoodBand: null,
   motherhoodSupport: null,
+  // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
+  // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
+  // generation out of the diary in silence.
+  lineageTitles: null,
+  lineageOpen: null,
+    lineageEndedHurt: null,
   trainPct: 75,
   knockChoice: null,
   birthdayAge: null,

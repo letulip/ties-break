@@ -227,6 +227,11 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // band (the week note's eight motherhood lines) lands in this same task with its checker.
     motherhoodBand: view.motherhoodBand,
     motherhoodSupport: view.motherhoodSupport,
+    // ⭐ v86 (wave 10 T6b): the line's two facts, carried straight through – this module derives
+    // nothing and the view is the one reader of `world.dynasty`.
+    lineageTitles: view.lineageTitles,
+    lineageOpen: view.lineageOpen,
+    lineageEndedHurt: view.lineageEndedHurt,
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

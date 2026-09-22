@@ -92,6 +92,10 @@ import type { WorldState } from '../world'
 // same ones. Rows with no precedent – the prologue's four, the buys, the super-rares, the season
 // variants – are the builder's picks, cheap to move, and none of them is a word on a screen.
 export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
+  // ⭐ v86 – the heirloom (T6a). `norm` because the page is a box on a table and a girl going
+  // through it: nothing has happened to HER yet, and a mood here would be the book telling her how to
+  // feel about a career that is not hers.
+  'the-line': 'norm',
   'first-court': 'happy',
   'first-tournament': 'serious',
   'first-win': 'happy',
@@ -289,6 +293,10 @@ interface AlbumCandidate {
   priority: number
   /** a closer is guaranteed its frame and exempt from the caps – the ruled closing frames */
   closer?: boolean
+  /** ⭐ v86 – THE NOTE'S RULED CHECKLIST, built engine-side (`AlbumNote.lines`, the form mockups AZ-B
+   *  and AZ-C already drew). Absent on every candidate the book has ever built, and present on the
+   *  heirloom alone: the corpus may carry no number, so the facts that ARE numbers ride here. */
+  lines?: readonly string[]
 }
 
 const TOP_RANK = 10
@@ -746,6 +754,38 @@ function prologueCandidates(trace: PrologueTrace): AlbumCandidate[] {
   return out.sort((a, b) => a.ageYears - b.ageYears)
 }
 
+/** ⭐⭐⭐ THE HEIRLOOM – ONE PAGE, ON A CAREER THAT CONTINUES A LINE (v86, wave 10 T6a;
+ *  docs/specs/the-dynasty-2026-09.md §1). Zero mechanics: it reads `world.dynasty` and changes
+ *  nothing.
+ *
+ *  ⚠⚠ EVERY LINE IS LICENSED OFF A FACT AND AN ABSENT FACT PRINTS NOTHING, which is §5's rule
+ *  applied to a page instead of to a sentence. A mother who won nothing gets no titles row – not a
+ *  «Titles: 0», which would be the book telling a girl her mother lost. A mother who never held a
+ *  professional ranking gets no ranking row for the same reason. What every line HAS is her name and
+ *  the generation, because those are true of every line there is.
+ *
+ *  ⚠ IT RIDES THE PROLOGUE CHAPTER, which is what «early in the book» means here: a dynasty career
+ *  walks a childhood like any other, so the chapter exists, and the box was in the house before she
+ *  ever held a racquet – hence the age.
+ *
+ *  ⚠ THE LABELS ARE DRAFTS, listed verbatim in the wave's report for his pass (invariant 4). */
+function dynastyCandidates(world: WorldState): AlbumCandidate[] {
+  const record = world.dynasty
+  if (record === null) return []
+  const career = record.motherCareer
+  const lines = [
+    `${record.motherName.first} ${record.motherName.last}`,
+    career.bestRank === null ? null : `Best ranking: #${career.bestRank}`,
+    career.titles > 0 ? `Titles: ${career.titles}` : null,
+    career.slams > 0 ? `Slams: ${career.slams}` : null,
+    `Generation ${record.generation}`,
+  ].filter((line): line is string => line !== null)
+  // ⚠ THE AGE IS **BEFORE** THE FIRST COURT DAY and the priority is above it, so the book opens on
+  // where she came from and then on where she started. Both are deliberate and both are visible here
+  // rather than in a sort nobody can find.
+  return [{ week: null, ageYears: FIRST_COURT_AGE - 1, occasion: occasionOf('the-line'), priority: 82, lines }]
+}
+
 // =================================================================================================
 // §4 SELECTION – representatives per chapter: 1–3 sheets by density, no kind over a third
 // =================================================================================================
@@ -1142,7 +1182,10 @@ function noteOf(c: AlbumCandidate, hand: AlbumHand): AlbumNote {
     text: hand.note,
     dateLabel: c.week === null ? null : weekSpan(c.week),
     ageLabel: ageLabelOf(c.ageYears),
-    lines: [],
+    // ⭐ v86 – `[]` on every candidate but the heirloom, which is what it has always been: the ruled
+    // form exists in the shape and had no writer until the dynasty needed to print numbers a corpus
+    // string is forbidden to carry.
+    lines: c.lines ?? [],
   }
 }
 
@@ -1240,9 +1283,16 @@ export function assembleAlbum(world: WorldState): AlbumBook {
   ]
 
   const chapters: BuiltChapter[] = []
-  if (world.prologueTrace) {
-    const moments = prologueCandidates(world.prologueTrace)
-    if (moments.length > 0) chapters.push({ band: 'prologue', candidates: moments.slice(0, MAX_CHAPTER_FRAMES) })
+  // ⭐ v86 – the heirloom leads the prologue chapter when there is a line behind her, and is absent
+  // on every other career. ⚠ IT DOES NOT NEED A WALKED CHILDHOOD OF ITS OWN: the chapter is built
+  // when either has something to show, so a dynasty career opened by a bench (no trace) still gets
+  // its one page, and a wizard career with no line still gets exactly the chapter it always got.
+  const prologueMoments = [
+    ...dynastyCandidates(world),
+    ...(world.prologueTrace ? prologueCandidates(world.prologueTrace) : []),
+  ]
+  if (prologueMoments.length > 0) {
+    chapters.push({ band: 'prologue', candidates: prologueMoments.slice(0, MAX_CHAPTER_FRAMES) })
   }
   for (const band of ['young', 'teen', 'adult', 'lateCareer'] as const) {
     const own = pool.filter((c) => {

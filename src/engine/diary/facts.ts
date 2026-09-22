@@ -322,6 +322,29 @@ export interface DiaryWorldView {
    *  `world.pregnancy.support`; null before he answers and on every week after the record clears.
    *  Required for the field above's reason – exactly one line of the band licenses on it. */
   motherhoodSupport: 'warm' | 'measured' | 'cold' | null
+  /** ⭐⭐⭐ v86 (wave 10 T6b) – HER MOTHER'S CABINET, or null on every career that continues no line.
+   *  Read straight off `world.dynasty.motherCareer.titles`; `null` and `0` are DIFFERENT and the
+   *  difference is the whole licence: null is «there is no mother to be in this house», 0 is «she is
+   *  here and she won nothing», and a line about a cabinet may fire on neither.
+   *
+   *  ⚠ REQUIRED, for `motherhoodBand`'s own reason: it selects COPY, and a view that forgot it would
+   *  build, pass, and quietly sweep a whole generation out of the diary. */
+  lineageTitles: number | null
+  /** ⭐⭐ v86 (wave 10 T6b) – IS HER MOTHER AN OPEN WOMAN? §7's axis, read off the record's stored
+   *  temperament through `temperamentOpenness` – the ONE projection of it (engine/spirit.ts), never a
+   *  second spelling. Null exactly when `lineageTitles` is.
+   *
+   *  ⚠ IT PRICES WHERE SHE IS FELT AND NOT WHETHER. An open mother is QUOTED – she says things, in
+   *  front of people; a private one is FELT – the parent notices what she did, not what she said.
+   *  Same presence, two registers, which is the axis doing exactly what §7 chose it for. */
+  lineageOpen: boolean | null
+  /** ⭐⭐ v86 (wave 10 T6b) – DID HER MOTHER'S CAREER END ON HER BODY? Read off the record's
+   *  `endingKind`, and it is the ONE fact the scar lines lean on: «a friction from her own career's
+   *  scars» may only be said where a scar is recorded. Null exactly when `lineageTitles` is.
+   *
+   *  ⚠ IT IS A FACT AND NOT A JUDGEMENT. The ending id says the career stopped on an injury; nothing
+   *  here says which part, how bad, or how she feels about it, and no line may. */
+  lineageEndedHurt: boolean | null
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training

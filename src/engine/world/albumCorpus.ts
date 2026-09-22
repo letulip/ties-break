@@ -44,7 +44,7 @@ export type AlbumBand = 'prologue' | 'young' | 'teen' | 'adult' | 'lateCareer'
 /** The family the selector draws an occasion from – the nine `MilestoneType`s plus `prologue`
  *  (the trace persisted at handover), `asset` (`world.assets` and its `boughtWeek`), `rare` (his
  *  super-rare three) and `closing` (the three written frames). */
-export type AlbumOccasionKind = 'prologue' | 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank' | 'break-even' | 'school' | 'wedding' | 'birth' | 'asset' | 'rare' | 'closing'
+export type AlbumOccasionKind = 'prologue' | 'lineage' | 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank' | 'break-even' | 'school' | 'wedding' | 'birth' | 'asset' | 'rare' | 'closing'
 
 /** ⭐ ONE OCCASION IN ONE VOICE: the three registers, finished. **No placeholders and no
  *  interpolation** – her name is the player's, so the note says «you» and the caption says «she», and
@@ -87,6 +87,53 @@ export interface AlbumArcHand {
 }
 
 export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
+  // ⭐⭐⭐ A-L1 · the-line – THE HEIRLOOM (v86, the dynasty, wave 10 T6a;
+  // docs/specs/the-dynasty-2026-09.md §1). ONE page, early in the new career's book, on a career that
+  // continues a line and on no other.
+  //
+  // ⚠⚠ THE HAND IS THE MOTHER'S NOW, AND THAT IS THE WHOLE OF WHY THESE FOUR NOTES READ AS THEY DO.
+  // §1: at the end of a career the retired star becomes the next PARENT, so the second person these
+  // notes speak in is hers – a woman writing to her daughter about her own career. Every other note
+  // in this corpus is a parent writing about a girl's tennis; this one is a player writing about her
+  // own, which is a register the book has never had and could not have had before.
+  //
+  // ⚠⚠ AND THE FACTS ARE NOT HERE, DELIBERATELY. The corpus's own law two types up is «no
+  // placeholders and no interpolation», so her name, her cabinet and the line's generation ride the
+  // note's CHECKLIST (`AlbumNote.lines`, the ruled form mockups AZ-B/AZ-C already drew), built
+  // engine-side off `world.dynasty` – exactly as the date and the age already are. A corpus cannot
+  // know a number, and this one does not pretend to.
+  //
+  // ⚠ ZERO MECHANICS (T6a's own word). The page reads a record and changes nothing.
+  // ⚠ FOUR DRAFT VOICES for his pass, and the voice key is the DAUGHTER's birth temperament, which is
+  // the corpus's standing rule: the girl the book is about is the girl whose syntax it is written in.
+  {
+    id: 'the-line',
+    kind: 'lineage',
+    bands: ['prologue'],
+    gate: 'dynasty-record',
+    voices: {
+      sunny: {
+        note: 'I kept a box of it. You found it before I could show you, and you wanted to wear all of it at once.',
+        caption: 'She tried everything on.',
+        line: 'She found the box first.',
+      },
+      fiery: {
+        note: 'I kept a box of it. You went through the whole thing and then asked me which ones I lost.',
+        caption: 'She asked about the losses.',
+        line: 'She wanted the whole record.',
+      },
+      quiet: {
+        note: 'I kept a box of it. You looked at every single thing and put it all back exactly as it was.',
+        caption: 'She put it all back.',
+        line: 'She looked at all of it.',
+      },
+      deep: {
+        note: 'I kept a box of it. You sat with it a long time, and then you asked what the last one had felt like.',
+        caption: 'She asked how it felt.',
+        line: 'She asked about the last one.',
+      },
+    },
+  },
   // A1 · first-court
   {
     id: 'first-court',

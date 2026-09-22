@@ -135,6 +135,9 @@ import { fameAt } from './fame'
 // out of `world/spotlight.ts` (zero draws, zero writes), so the view assembles a fact rather than
 // deciding one – see `PendingView.boothPrivateLife`.
 import { boothLineageAt, boothPrivateLifeAt } from './spotlight'
+// ⭐ v86 (T6b): the ONE projection of §7's openness axis – see the `lineageOpen` line below for why
+// it is asked rather than re-spelled.
+import { temperamentOpenness } from '../spirit'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -1617,6 +1620,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // field of the record. No save key, no migration, no golden fixture.
     motherhoodBand: motherhoodBandAt(world),
     motherhoodSupport: world.pregnancy?.support ?? null,
+    // ⭐⭐⭐ v86 (wave 10 T6b): the line, as the two facts a texture line may rest on. Derived at
+    // render off `world.dynasty` – no save key, no migration, no golden fixture, exactly as the two
+    // lines above it are derived off `pregnancy`.
+    // ⚠ `temperamentOpenness` IS THE ONE PROJECTION OF THE AXIS (engine/spirit.ts) and is asked here
+    // rather than re-spelled: a second `=== 'sunny' || === 'fiery'` anywhere is the drift that
+    // function's own note refuses by name.
+    lineageTitles: world.dynasty?.motherCareer.titles ?? null,
+    lineageOpen: world.dynasty ? temperamentOpenness(world.dynasty.motherTemperament) === 'open' : null,
+    lineageEndedHurt: world.dynasty ? world.dynasty.motherCareer.endingKind === 'injury' : null,
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must

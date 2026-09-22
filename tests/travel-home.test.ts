@@ -291,6 +291,12 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
     motherhoodBand: null,
     motherhoodSupport: null,
+    // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
+    // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
+    // generation out of the diary in silence.
+    lineageTitles: null,
+    lineageOpen: null,
+    lineageEndedHurt: null,
     trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -713,6 +719,12 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
       motherhoodBand: null,
       motherhoodSupport: null,
+      // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
+      // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
+      // generation out of the diary in silence.
+      lineageTitles: null,
+      lineageOpen: null,
+    lineageEndedHurt: null,
       trainPct: 75, knockChoice: null, knockPart: null, birthdayAge: null, birthdayGift: null, birthdayWanted: false, birthdayRepeatAge: null, ...over,   // ⚠ W2/W4: unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
@@ -1083,6 +1095,12 @@ describe('ui/travel-set — on a real career', () => {
       // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
       motherhoodBand: null,
       motherhoodSupport: null,
+      // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
+      // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
+      // generation out of the diary in silence.
+      lineageTitles: null,
+      lineageOpen: null,
+    lineageEndedHurt: null,
       trainPct: 75,   // ⚠ W2: the plan, unread here
       knockChoice: null,
       birthdayAge: null,

@@ -56,6 +56,10 @@ export type AlbumBand = (typeof ALBUM_BANDS)[number]
  *  a ledger the save never prunes exactly as the wedding's does. */
 export const ALBUM_KINDS = [
   'prologue',
+  // ⭐ `lineage` JOINED AT WAVE 10 T6a, and it is the FIFTH corpus-only family rather than a
+  // `MilestoneType`: the occasion is a RECORD the new world was born carrying (`world.dynasty`), not
+  // a thing that happened to her, so no ledger entry exists or could.
+  'lineage',
   'title',
   'final',
   'prize',
@@ -203,7 +207,7 @@ function parseOccasion(lines: string[], head: number, end: number): AlbumRow {
   if (m === null) fail(head, `unreadable occasion heading: ${lines[head]}`)
   const [, ref, id, kind, bandList, provenance] = m
   if (!ID.test(id)) fail(head, `${ref}'s id is not a machine key: ${id}`)
-  if (!(ALBUM_KINDS as readonly string[]).includes(kind)) fail(head, `${ref}'s kind is not one of the fourteen: ${kind}`)
+  if (!(ALBUM_KINDS as readonly string[]).includes(kind)) fail(head, `${ref}'s kind is not one of the fifteen: ${kind}`)
   const bands = bandList.split(',').map((b) => b.trim())
   if (bands.length === 0 || bands.some((b) => b.length === 0)) fail(head, `${ref} has an unreadable band list: ${bandList}`)
   for (const band of bands) {

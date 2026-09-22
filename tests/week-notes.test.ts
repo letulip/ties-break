@@ -125,6 +125,12 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // is turned on, for R2-18's reason – exactly as `freshBreakup` and `spouseOccasion` are.
     motherhoodBand: null,
     motherhoodSupport: null,
+    // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
+    // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
+    // generation out of the diary in silence.
+    lineageTitles: null,
+    lineageOpen: null,
+    lineageEndedHurt: null,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -454,6 +460,10 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   offSeason: (f) => f.offSeasonWeek,
   practice: (f) => f.playedPractice,
   fundsTight: (f) => f.fundsPressure === 'tight',
+  // ⭐ v86 (wave 10 T6b) – the line's claim, re-derived off the FACT and not off the licence that made
+  // it: a career that continues no line carries `null`, and `0` is a mother who won nothing, which is
+  // a real state this claim deliberately DOES admit (the cabinet lines carry their own second gate).
+  lineage: (f) => f.lineageTitles !== null,
   notTravellingWeek: (f) => !f.playedTournament && !f.travelled && f.travelHomeScene === null,
   // ⚠⚠ R2-18 – THE KNOWLEDGE LICENCE, RE-DERIVED FROM THE STAGE AND NOT FROM `underOneRoof`. The
   // whole method of this table is a SECOND spelling of every claim, so a licence and its claim
@@ -1540,5 +1550,71 @@ describe('ROUND-18 #9 — no week note names school after her last school year',
     const now = homeWeek({ schoolOver: false })
     const named = WEEK_NOTES.filter((n) => n.license(now) && saysSchool(render(n, now)))
     expect(named.length).toBeGreaterThan(0)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ v86 (wave 10 T6b) – THE LINE: THE FOUR STROKES, AND WHAT EACH OF THEM RESTS ON
+// =================================================================================================
+//
+// docs/specs/the-dynasty-2026-09.md §1, his 22.09 ruling: «звучит интересно, давай попробуем
+// реализовать». Eight lines, two per stroke, and every one of them rests on a fact the
+// inheritance block really carries.
+//
+// ⚠ THEY LIVE HERE AND NOT IN tests/wave10-lineage.test.ts BECAUSE `homeWeek` LIVES HERE. A licence
+// is a question about a whole week, and the fixture that builds one honestly is sixty fields long; a
+// second copy in another file would be free to drift from this one and to go on passing while it did.
+// The album half of T6 – which needs a WORLD rather than a week – is in that file.
+describe('the line – the four strokes', () => {
+  const lineage = WEEK_NOTES.filter((n) => n.claims.lineage === true)
+  const selected = (f: DiaryFacts): number => lineage.filter((n) => n.license(f)).length
+
+  it('⭐⭐ eight lines, inside the 8–12 the plan asked for', () => {
+    expect(lineage.length).toBe(8)
+  })
+
+  it('⭐⭐⭐ a career that continues NO line reaches none of them, on any ordinary week', () => {
+    for (const trainPct of PLANS) {
+      expect(selected(homeWeek({ trainPct })), `train ${trainPct}`).toBe(0)
+    }
+  })
+
+  it('⭐⭐⭐ A COLLEGE MOTHER LICENSES NO CABINET LINE, and no scar line either', () => {
+    // She is in the house – the habit and the professional eye are hers whatever she won – but she
+    // won nothing and her career did not end on her body, so four of the eight are unreachable.
+    // ⚠ `lineageTitles: 0` IS A REAL STATE AND NOT AN ABSENCE, which is the whole reason the cabinet
+    // lines ask `> 0` rather than `!== null`.
+    const college = homeWeek({ lineageTitles: 0, lineageOpen: true, lineageEndedHurt: false })
+    expect(selected(college), 'the habit and the eye, and nothing needing a fact she has not got').toBe(2)
+  })
+
+  it('⭐⭐ the cabinet is what opens the speech lines...', () => {
+    const before = selected(homeWeek({ lineageTitles: 0, lineageOpen: true, lineageEndedHurt: false }))
+    const after = selected(homeWeek({ lineageTitles: 6, lineageOpen: true, lineageEndedHurt: false }))
+    expect(after - before, 'one speech line per pole, and this arm is one pole').toBe(1)
+  })
+
+  it('⭐⭐ ...and the ending on her body is what opens the scar lines', () => {
+    const before = selected(homeWeek({ lineageTitles: 0, lineageOpen: false, lineageEndedHurt: false }))
+    const after = selected(homeWeek({ lineageTitles: 0, lineageOpen: false, lineageEndedHurt: true }))
+    expect(after - before).toBe(1)
+  })
+
+  it('⭐⭐⭐ the openness axis prices WHERE she is felt, and every line in the pool is reachable', () => {
+    // ⚠ THE SHAPE THAT SAYS THE AXIS IS A FORK AND NOT A GATE: the fullest mother reaches exactly half
+    // the pool on each pole, so nothing is unreachable and nothing fires on both.
+    const open = homeWeek({ lineageTitles: 9, lineageOpen: true, lineageEndedHurt: true })
+    const priv = homeWeek({ lineageTitles: 9, lineageOpen: false, lineageEndedHurt: true })
+    expect(selected(open), 'an open mother is quoted').toBe(4)
+    expect(selected(priv), 'a private one is noticed').toBe(4)
+    expect(selected(open) + selected(priv)).toBe(lineage.length)
+  })
+
+  it('⚠ not one line names her, dates her, or carries a figure', () => {
+    for (const note of lineage) {
+      const text = render(note, homeWeek({ lineageTitles: 1, lineageOpen: true, lineageEndedHurt: true }))
+      expect(text, `a figure reached the scrap: ${text}`).not.toMatch(/\d/)
+      expect(text, text).not.toMatch(/\bVera\b|\bKowalski\b/)
+    }
   })
 })
