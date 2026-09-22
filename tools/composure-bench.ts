@@ -32,6 +32,8 @@ import { ratingOf } from '../src/engine/match/rating'
 import { fieldProsFor, mergedWtaRanking } from '../src/engine/season/fieldPros'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { ECONOMY } from '../src/engine/economy'
+// ⭐ WAVE 10 T8: wave 9's own term, asked rather than re-typed – the ceiling a mother climbs into.
+import { motherhoodPoiseOf } from '../src/engine/development'
 import type { MatchOptions, MatchPlayer, Tour } from '../src/engine/match/types'
 
 const argv = process.argv.slice(2)
@@ -264,6 +266,78 @@ function priceList(): void {
   }
 }
 
+// =================================================================================================
+// ⭐⭐⭐ WAVE 10 T8 – THE POISE ROOM AT MATCH GRAIN (wave 9's unmeasured arm, his «не возражаю»)
+// =================================================================================================
+//
+// docs/plans/life-wave-10-builder-2026-09.md §2 T8, and the spec's §8 row 6. Wave 9's T5 gave a
+// mother ROOM rather than a bonus – `motherhoodPoiseOf` raises her composure CEILING by
+// `returnPoiseCeiling` per child, capped at `returnPoiseMax` – and its twins measured the margin she
+// actually climbs into at **+0.495 of composure**. What wave 9 could NOT say is what that margin is
+// worth in a match, and its own report carried the line as an unmeasured arm.
+//
+// ⚠⚠ THE PREDICTION IS `point.ts`'s OWN LAW, SCALED, AND IT IS WRITTEN HERE BEFORE THE RUN: the price
+// list above prices +20 of composure, so +0.495 is 1/40th of that step and the plan's forecast is
+// ≈ +0.1 pp on pressure points – texture, below career-grain noise at N=168. A bench that printed
+// only what it found would let the ledger be filled in from whatever came out.
+//
+// ⚠ IT IS THE SAME PAIRED DESIGN AS EVERY OTHER ARM IN THIS FILE: the same seeds, the same opponent,
+// one number different between two rows. So the difference between them is the margin and nothing
+// else.
+//
+// ⚠ AND IT ASKS THE LOOP, NOT THE CURVE. `ratingOf` rounds, so a margin this small can round to zero
+// in the closed form while still being spent on break points – which is exactly the gap
+// `nerveAndLegs`' own note says the loop exists to see.
+function motherhoodArm(): void {
+  const margin = motherhoodPoiseOf(1)
+  console.log('\n=== WAVE 10 T8 – WHAT A MOTHER\'S ROOM IS WORTH IN A MATCH ===')
+  console.log(
+    `  wave 9's twins measured the margin she climbs into at +0.495 composure; one child's CEILING is\n` +
+      `  +${margin} (\`motherhoodPoiseOf(1)\`), and the ceiling is room rather than a gift.\n` +
+      `  predicted: ≈ +0.1 pp on pressure points – texture, below career-grain noise at N=168.`,
+  )
+  console.log('  build      composure       rating    loop    +loop     BP saved   BP won   deciders')
+  const builds: [string, MatchPlayer][] = [
+    ['big-shot', build('alice', 0, { serve: 68, ret: 70, composure: 52, stamina: 65, groundstrokes: 73 })],
+    ['nerve', build('zoe', 0, { serve: 65, ret: 58, composure: 78, stamina: 60, groundstrokes: 63 })],
+  ]
+  const pros = fieldProsFor('composure-bench', 0)
+  const table = mergedWtaRanking([], pros)
+  const byId = new Map(pros.map((pro) => [pro.id, pro]))
+  const at = (rank: number): MatchPlayer => {
+    const row = table[Math.min(table.length - 1, Math.max(0, rank - 1))]
+    const pro = byId.get(row.playerId)
+    if (!pro) throw new Error(`no pro behind rank ${rank}`)
+    return rivalMatchPlayer(pro, 'hard', ECONOMY.condition.max)
+  }
+  for (const [rank, opp] of [[20, at(20)], [80, at(80)]] as [number, MatchPlayer][]) {
+    console.log(`  — vs #${rank} —`)
+    for (const [label, base] of builds) {
+      const ref = play(base, opp, `t8:${label}:${rank}`)
+      // ⚠ THE MEASURED MARGIN AND THE WHOLE CEILING, both: the first is what wave 9's twins really
+      // reached, the second is what the room allows if she spends all of it. Two rows, because
+      // «what she got» and «what she could get» are different questions and the ledger wants both.
+      for (const [name, delta] of [['+0.495 (measured)', 0.495], [`+${margin} (the ceiling)`, margin]] as [string, number][]) {
+        const cell = play({ ...base, composure: base.composure + delta }, opp, `t8:${label}:${rank}`)
+        console.log(
+          `  ${label.padEnd(10)} ${name.padEnd(15)} ${String(cell.rating).padStart(5)}   ` +
+            `${pct(cell.wins / SIMS)}%  ${pp(cell.wins / SIMS - ref.wins / SIMS).padStart(7)}     ` +
+            `${pct(cell.bpSaved / Math.max(1, cell.bpFaced))}%   ` +
+            `${pct(cell.bpConverted / Math.max(1, cell.bpEarned))}%   ` +
+            `${pct(cell.decidersWon / Math.max(1, cell.deciders))}%`,
+        )
+      }
+      console.log(
+        `  ${''.padEnd(10)} ${'(as dealt)'.padEnd(15)} ${String(ref.rating).padStart(5)}   ` +
+          `${pct(ref.wins / SIMS)}%        -     ` +
+          `${pct(ref.bpSaved / Math.max(1, ref.bpFaced))}%   ` +
+          `${pct(ref.bpConverted / Math.max(1, ref.bpEarned))}%   ` +
+          `${pct(ref.decidersWon / Math.max(1, ref.deciders))}%`,
+      )
+    }
+  }
+}
+
 console.log(
   `composure-bench – ${SIMS} simulated matches per cell, hard court, both girls at full condition.\n` +
     'closed = fastMatchProbability (the curve the rating quotes) · loop = simulateMatch (the point\n' +
@@ -274,6 +348,8 @@ sectionZero()
 // opponents, so the five numbers can be read against each other in one place. The per-wing sections
 // follow for the mechanism (break points, deciding sets, tiebreaks).
 if (WING === 'all') priceList()
+// ⭐ WAVE 10 T8 – beside the price list, because the margin is only readable against what +20 buys.
+if (WING === 'all' || WING === 'composure') motherhoodArm()
 for (const wing of (WING === 'all' ? WINGS : [WING as Wing])) {
   sectionA(wing)
   sectionB(wing)
