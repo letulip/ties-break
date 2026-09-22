@@ -148,7 +148,12 @@ export function motherWasKnown(dynasty: DynastyRecord | null): boolean {
 export function lineageLicensed(world: WorldState): boolean {
   const dynasty = world.dynasty
   if (dynasty === null) return false
-  return dynasty.motherCareer.titles > 0 || motherWasKnown(dynasty)
+  // ⚠⚠ `proTitles`, NEVER the whole cabinet (the architect's review, 22.09): the booth's pool says
+  // «her mother won here», and «here» is a professional stage – a junior-cabinet mother satisfied
+  // `titles > 0` without one professional trophy, which is the same track conflation the handover's
+  // `bestRank` carried. The junior shelves still reach the album and the diary's club-level lines;
+  // the BOOTH speaks only of the tour it commentates.
+  return dynasty.motherCareer.proTitles > 0 || motherWasKnown(dynasty)
 }
 
 /** ⭐⭐⭐ WHAT THE BOOTH MAY SAY ABOUT THE LINE THIS WEEK, OR NOTHING – the same THREE gates the
@@ -163,17 +168,20 @@ export function lineageLicensed(world: WorldState): boolean {
  *  ⚠ IT RETURNS THE FACTS AND NOT A SENTENCE. Every word the booth speaks lives in
  *  `src/viz/commentary.ts` – «the booth's copy lives where all booth copy lives» is that file's own
  *  law and `ECONOMY.spotlight`'s note repeats it – so this decides WHETHER and the viz decides HOW.
- *  `titles` rides along because the copy forks on it: a mother with a cabinet and a mother the press
- *  merely knew are two different true things, and a pool that blurred them would put a title in the
- *  booth's mouth that nobody won.
+ *  `proTitles` rides along because the copy forks on it: a mother with a PRO cabinet and a mother
+ *  the press merely knew are two different true things, and a pool that blurred them would put a
+ *  title in the booth's mouth that nobody won.
  *
  *  ⚠ ZERO DRAWS AND ZERO WRITES, this file's own standing law: three reads and a record. */
-export function boothLineageAt(world: WorldState, tier: TierId): { titles: number; slams: number } | null {
+export function boothLineageAt(world: WorldState, tier: TierId): { proTitles: number; slams: number } | null {
   if (!atOrAboveStageBar(tier)) return null
   if (newsStandingOf(world) === 'quiet') return null
   if (!lineageLicensed(world)) return null
   const career = world.dynasty!.motherCareer
-  return { titles: career.titles, slams: career.slams }
+  // ⚠ THE PRO CABINET, matching the licence one function up: the packet is what the booth may CLAIM,
+  // and the booth commentates the tour – a junior shelf in this packet would put a title in its
+  // mouth that nobody won on one (the architect's review, 22.09).
+  return { proTitles: career.proTitles, slams: career.slams }
 }
 /** Is this tier at or above the big-stage bar? `TIER_LADDER`'s index and nothing else – ruling F.
  *

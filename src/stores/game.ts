@@ -114,6 +114,7 @@ function plainDynasty(block: DynastyHandover | undefined): DynastyHandover | und
     motherTemperament: block.motherTemperament,
     motherCareer: {
       titles: block.motherCareer.titles,
+      proTitles: block.motherCareer.proTitles,
       bestRank: block.motherCareer.bestRank,
       slams: block.motherCareer.slams,
       endedWeek: block.motherCareer.endedWeek,

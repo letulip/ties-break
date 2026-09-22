@@ -380,8 +380,9 @@ export interface PendingView {
    */
   boothPrivateLife: BoothPrivateLife | null
   /** ⭐⭐⭐ v86 – THE BOOTH MAY NAME THE LINE SHE COMES FROM, or null (the dynasty spec §5). Her
-   *  mother's cabinet, carried as two counts because the booth's copy forks on them – a mother with
-   *  titles and a mother the tour merely knew are two different true things.
+   *  mother's PRO cabinet (`proTitles` – the junior and domestic shelves never reach the booth; the
+   *  architect's review, 22.09), carried as two counts because the booth's copy forks on them – a
+   *  mother with tour titles and a mother the tour merely knew are two different true things.
    *
    *  ⚠ IT IS THE SAME KIND OF FIELD AS `boothPrivateLife` DIRECTLY ABOVE AND OBEYS THE SAME THREE
    *  RULES: the ENGINE decides (`boothLineageAt`), the viz decides how it is said, and the three
@@ -392,7 +393,7 @@ export interface PendingView {
    *  A private-life fact is SPENT once and for ever, so a re-watch that repeated it would make «once»
    *  visibly false; a lineage is true for ever and repeating it on a re-watch of the same match is
    *  the booth saying a permanent thing twice, which is what a booth does. */
-  boothLineage: { titles: number; slams: number } | null
+  boothLineage: { proTitles: number; slams: number } | null
   /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
    *
    *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам

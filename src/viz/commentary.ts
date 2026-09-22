@@ -857,9 +857,12 @@ const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
  *  title in the booth's mouth that nobody won – which is this file's honesty rule, not a nicety. */
 export interface CommentaryLineage {
   side: Side
-  /** her mother's titles, summed over the cabinet – 0 for a mother licensed by her RANKING alone */
-  titles: number
-  /** the slam shelf alone, out of `titles` */
+  /** her mother's PROFESSIONAL titles alone (`TIERS[tier].track === 'wta'`), never the junior or
+   *  domestic shelves – 0 for a mother licensed by her RANKING alone. ⚠ Renamed from `titles` at
+   *  the architect's review (22.09): the full cabinet in this packet let the TITLED pool say «her
+   *  mother won here» over a junior shelf, and the name now says what the booth may claim. */
+  proTitles: number
+  /** the slam shelf alone, out of the cabinet */
   slams: number
 }
 
@@ -881,7 +884,7 @@ const BOOTH_LINEAGE_KNOWN: readonly ((who: string) => string)[] = [
 
 /** Which of the two the facts license – the fork the packet exists for. */
 export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: string) => string)[] {
-  return ctx.titles > 0 ? BOOTH_LINEAGE_TITLED : BOOTH_LINEAGE_KNOWN
+  return ctx.proTitles > 0 ? BOOTH_LINEAGE_TITLED : BOOTH_LINEAGE_KNOWN
 }
 
 function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => string)[] {

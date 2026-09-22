@@ -13,8 +13,10 @@
 //     the shape that says `null <= 100` really is the hazard the guard is written for.
 //   · the floor returning `'known'` instead of `'noticed'`: **4 red**, including §B's habituation case
 //     and §D's sweep – the set that says fame from birth is a COST and not a promotion.
-//   · `lineageLicensed`'s `titles > 0 ||` dropped: **1 red** – §C's titled-but-unranked mother, the
-//     only arm in the file where the cabinet is the whole licence.
+//   · `lineageLicensed`'s `proTitles > 0 ||` dropped: **1 red** – §C's titled-but-unranked mother,
+//     the only arm in the file where the cabinet is the whole licence. (⚠ The licence read
+//     `titles > 0` until the architect's review of 22.09 moved it to the PRO shelves – the junior
+//     cabinet licensed a booth that says «her mother won here».)
 //   · `boothLineageAt`'s `atOrAboveStageBar` gate dropped: **1 red** – §C's small-stage case.
 
 import { describe, expect, it } from 'vitest'
@@ -41,7 +43,7 @@ function block(over: Partial<DynastyHandover['motherCareer']> = {}): DynastyHand
     motherName: { first: 'Alice', last: 'Martin' },
     motherCountry: 'US',
     motherTemperament: 'sunny',
-    motherCareer: { titles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'college', ...over },
+    motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'college', ...over },
   }
 }
 
@@ -60,7 +62,11 @@ describe('wave 10 T5 A – the predicate both clauses read', () => {
     // §5 says `null` never qualifies in as many words, and the reason it is written down is that
     // `null <= 100` is `true` in a language with looser rules than this one.
     expect(motherWasKnown(dynastyWorld({ bestRank: null }).dynasty)).toBe(false)
-    expect(motherWasKnown(dynastyWorld({ bestRank: null, titles: 9 }).dynasty), 'even with a cabinet')
+    // ⚠ ADVERSARIAL ON PURPOSE: a pro cabinet beside a null rank is a block no engine path produces
+    // (a pro title pays WTA points, and points are a rank). It is posed anyway because this case
+    // pins the predicate's READ-SET – rank and nothing else – and `proTitles: 9` is what catches a
+    // rewiring onto the cabinet, which `proTitles: 0` would let through green.
+    expect(motherWasKnown(dynastyWorld({ bestRank: null, titles: 9, proTitles: 9 }).dynasty), 'even with a cabinet')
       .toBe(false)
   })
 
@@ -82,14 +88,14 @@ describe('wave 10 T5 A – the predicate both clauses read', () => {
 
 describe('wave 10 T5 B – the news floor', () => {
   it('⭐⭐⭐ a dynasty week-0 world with a KNOWN mother reads `noticed` on zero points', () => {
-    const world = dynastyWorld({ bestRank: 11, titles: 6 })
+    const world = dynastyWorld({ bestRank: 11, titles: 6, proTitles: 6 })
     expect(world.week, 'week 0 – she is eight and has no ranking at all').toBe(0)
     expect(newsStandingOf(world), 'the press finds the famous name before the ranking exists').toBe('noticed')
   })
 
   it('⭐⭐⭐ ...and NEVER `known`, which stays earned by her own rank alone', () => {
     // The strongest form the mother can take: a slam champion who never fell out of the top ten.
-    const world = dynastyWorld({ bestRank: 1, titles: 40, slams: 8 })
+    const world = dynastyWorld({ bestRank: 1, titles: 40, proTitles: 40, slams: 8 })
     expect(newsStandingOf(world), 'being born to one is not the same as having done it').toBe('noticed')
   })
 
@@ -112,7 +118,7 @@ describe('wave 10 T5 B – the news floor', () => {
     // `phaseHerWeek` grows habituation on `newsStandingOf(world) === 'known'` and on nothing else, so
     // a floor that returned `'known'` would hand a girl with no ranking the one band that gets USED to
     // the light. That is the difference between fame from birth being a cost and being a gift.
-    const world = dynastyWorld({ bestRank: 3, titles: 12 })
+    const world = dynastyWorld({ bestRank: 3, titles: 12, proTitles: 12 })
     expect(newsStandingOf(world) === 'known', 'the floor may not reach the growing band').toBe(false)
     expect(world.spotlightHabituation, 'and a week-0 career has learned nothing yet').toBe(0)
   })
@@ -140,27 +146,41 @@ describe('wave 10 T5 C – what there is to say about the line', () => {
     // ⚠ THAT IS THE RIGHT ORDER AND NOT A GAP: the lineage rides the booth's licence rather than
     // replacing it, so a dynasty can never buy a mention that a girl's own standing has not opened.
     // What the block buys is something TRUE TO SAY once the light is already on her.
-    const world = dynastyWorld({ titles: 4, bestRank: null })
+    //
+    // ⚠ RE-POSED AT THE ARCHITECT'S REVIEW (22.09): this block used to be `titles: 4, bestRank:
+    // null` – a pro cabinet beside no rank, which no engine path produces (a pro title pays WTA
+    // points). The honest form of the same mother is a real rank OUTSIDE the bar: cabinet, never
+    // known. The claim of the case is unchanged.
+    const world = dynastyWorld({ titles: 4, proTitles: 4, bestRank: ECONOMY.spotlight.newsRankNoticed + 40 })
     expect(lineageLicensed(world), 'there is something true to say about her mother').toBe(true)
     expect(newsStandingOf(world), '...and the floor does not fire, because the press did not know her').toBe('quiet')
     expect(boothLineageAt(world, 'slam'), 'so the booth stays silent until the girl is noticed herself').toBe(null)
   })
 
+  it('⚠⚠ a JUNIOR cabinet licenses NOTHING – the 22.09 review\'s other half', () => {
+    // Thirty junior trophies, no professional rank: a college-fork mother with a childhood full of
+    // silverware. Until the review the licence read the whole cabinet and this block bought a booth
+    // saying «her mother won here» at a slam. `proTitles` is what the booth may claim, and hers is 0.
+    const world = dynastyWorld({ titles: 30, proTitles: 0, bestRank: null, endingKind: 'college' })
+    expect(lineageLicensed(world), 'a junior shelf is not a tour cabinet').toBe(false)
+    expect(boothLineageAt(world, 'slam'), 'silent on the biggest stage there is').toBe(null)
+  })
+
   it('⭐⭐ ...and a ranking licenses it whatever she won', () => {
     const world = dynastyWorld({ titles: 0, bestRank: 12 })
     expect(lineageLicensed(world)).toBe(true)
-    // ⚠ `titles: 0` IS WHAT THE COPY FORKS ON: a mother the tour merely knew must not be given a
+    // ⚠ `proTitles: 0` IS WHAT THE COPY FORKS ON: a mother the tour merely knew must not be given a
     // cabinet by the booth. The packet carries the count so the viz can tell them apart.
-    expect(boothLineageAt(world, 'slam')).toEqual({ titles: 0, slams: 0 })
+    expect(boothLineageAt(world, 'slam')).toEqual({ proTitles: 0, slams: 0 })
   })
 
   it('⚠⚠ the big stage is the rarity – a small rung says nothing, however famous the mother', () => {
     // A KNOWN mother, so the floor has already made the girl `noticed` and the standing gate is open:
     // what is left to fail is the stage, which is the one this case is about.
-    const world = dynastyWorld({ titles: 40, bestRank: 1, slams: 8 })
+    const world = dynastyWorld({ titles: 40, proTitles: 40, bestRank: 1, slams: 8 })
     expect(boothLineageAt(world, 'local'), 'the shipped licence, unchanged').toBe(null)
     expect(boothLineageAt(world, 'j30')).toBe(null)
-    expect(boothLineageAt(world, 'slam')).toEqual({ titles: 40, slams: 8 })
+    expect(boothLineageAt(world, 'slam')).toEqual({ proTitles: 40, slams: 8 })
   })
 
   it('⚠ a career that continues no line is silent, on every rung', () => {
@@ -199,8 +219,8 @@ describe('wave 10 T5 E – what the booth may say', () => {
   it('⭐⭐⭐ a mother the tour merely KNEW is never given a cabinet by the booth', () => {
     // ⚠ THE HONESTY RULE OF `src/viz/commentary.ts`, applied to this fact: two different TRUE things
     // need two pools, and a single pool would put a title in the booth's mouth that nobody won.
-    const known = boothLineageLines({ side: 0, titles: 0, slams: 0 })
-    const titled = boothLineageLines({ side: 0, titles: 6, slams: 1 })
+    const known = boothLineageLines({ side: 0, proTitles: 0, slams: 0 })
+    const titled = boothLineageLines({ side: 0, proTitles: 6, slams: 1 })
     expect(known).not.toBe(titled)
     for (const line of known.map((f) => f('Nadia'))) {
       expect(line, `a titleless mother's line claims a cabinet: ${line}`).not.toMatch(/won|title|troph/i)
@@ -211,8 +231,8 @@ describe('wave 10 T5 E – what the booth may say', () => {
   })
 
   it('⚠⚠ not one line names the mother – the packet carries no name and none is invented', () => {
-    for (const titles of [0, 6]) {
-      for (const line of boothLineageLines({ side: 0, titles, slams: 0 }).map((f) => f('Nadia'))) {
+    for (const proTitles of [0, 6]) {
+      for (const line of boothLineageLines({ side: 0, proTitles, slams: 0 }).map((f) => f('Nadia'))) {
         expect(line, line).not.toMatch(/Alice|Martin/)
         // ...and no number either: the booth is not reading a stat sheet.
         expect(line, line).not.toMatch(/\d/)
@@ -222,13 +242,13 @@ describe('wave 10 T5 E – what the booth may say', () => {
 
   it('⚠ three to five drafts in total, which is what the plan asked for', () => {
     const all = [
-      ...boothLineageLines({ side: 0, titles: 0, slams: 0 }),
-      ...boothLineageLines({ side: 0, titles: 1, slams: 0 }),
+      ...boothLineageLines({ side: 0, proTitles: 0, slams: 0 }),
+      ...boothLineageLines({ side: 0, proTitles: 1, slams: 0 }),
     ]
     expect(all.length).toBeGreaterThanOrEqual(3)
     expect(all.length).toBeLessThanOrEqual(5)
     // A pool of one is a line that repeats; every pool has at least two so `variant` can cycle.
-    expect(boothLineageLines({ side: 0, titles: 0, slams: 0 }).length).toBeGreaterThan(1)
-    expect(boothLineageLines({ side: 0, titles: 1, slams: 0 }).length).toBeGreaterThan(1)
+    expect(boothLineageLines({ side: 0, proTitles: 0, slams: 0 }).length).toBeGreaterThan(1)
+    expect(boothLineageLines({ side: 0, proTitles: 1, slams: 0 }).length).toBeGreaterThan(1)
   })
 })

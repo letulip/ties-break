@@ -51,7 +51,7 @@ import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
-import { activeLadderOf, bestRankEver } from './ladder'
+import { activeLadderOf, bestRankEver, bestRankOn } from './ladder'
 import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer } from './college'
 // ⭐⭐ v73 – THE PRIVATE LIFE'S WAVE 2. The fork's opening tick raises her opinion of it, and
 // `answerFork` will not run until it has been answered. `world/lifeBeat.ts` imports nothing from
@@ -1340,10 +1340,21 @@ export function dynastyBackgroundOf(kidFundsCents: number): FamilyBackground {
 export function dynastyHandoverOf(world: WorldState): DynastyHandover {
   const generation = (world.dynasty?.generation ?? 0) + 1
   const ancestorRoot = world.dynasty?.ancestorSeed ?? world.seed
-  const best = bestRankEver(world)
+  // ⚠⚠ THE PRO TABLE, NEVER `bestRankEver` (the architect's review, 22.09). `bestRankEver` answers
+  // for the highest ladder REACHED, so a junior-only career hands over a junior rank as a bare
+  // number – and a junior #3 walked straight through `motherWasKnown`, whose bar is a WTA-table
+  // number (D1: standing, never fame). «Unranked is not rank one» has a sibling: a junior rank is
+  // not a WTA rank. The probe row that caught it read «bestRank 3» on an 89-week-old career.
+  const best = bestRankOn(world, 'wta')
   let titles = 0
+  let proTitles = 0
   for (const tier of Object.keys(world.trophiesByTier) as TierId[]) {
-    titles += world.trophiesByTier[tier].titles.length
+    const n = world.trophiesByTier[tier].titles.length
+    titles += n
+    // The catalogue's own track field, never a hand list of rungs – the same one-table rule that
+    // keeps `atOrAboveStageBar` honest. Junior and domestic shelves stay in `titles` (the album's
+    // whole-cabinet count); only the shelves that were PLAYED ON THE TOUR reach `proTitles`.
+    if (TIERS[tier]?.track === 'wta') proTitles += n
   }
   // ⚠ WIDENED ON PURPOSE – see the note over `slams` below. The declared type is a total record and
   // a migrated save is not one; writing the widening down is what stops the next reader "tidying"
@@ -1361,7 +1372,8 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
     motherTemperament: world.temperament ?? temperamentFor(world.seed),
     motherCareer: {
       titles,
-      bestRank: best?.rank ?? null,
+      proTitles,
+      bestRank: best,
       // ⚠⚠ THE OPTIONAL READ IS NOT DEFENSIVENESS – IT IS THE MEASURED TRUTH ABOUT A MIGRATED SAVE,
       // AND WITHOUT IT THIS LINE **THREW**. The type says `Record<TierId, TierTrophies>` and a fresh
       // career really does carry all sixteen rungs (`emptyTrophyLedger`), but **42 of the 87 golden

@@ -45,6 +45,8 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { bestRankOn } from '../src/engine/world/ladder'
+import { lineageLicensed, motherWasKnown, newsStandingOf } from '../src/engine/world/spotlight'
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type DynastyHandover } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
@@ -119,7 +121,16 @@ describe('wave 10 T1 A – the inheritance block', () => {
     // `titles` and the block counts its own; they are four lines apart in one file and nothing but
     // this line stops them drifting. The comment over `dynastyHandoverOf` promises exactly this case.
     expect(block.motherCareer.titles, 'the block and the epilogue count one cabinet').toBe(view!.titles)
-    expect(block.motherCareer.bestRank, 'and one best rank – `bestRankEver`, the one reader').toBe(view!.bestRank)
+    // ⚠ RE-AIMED AT THE ARCHITECT'S REVIEW (22.09), NOT WEAKENED – the claim it used to make became
+    // false BY DESIGN. It asserted the block equals the view's `bestRank`, «`bestRankEver`, the one
+    // reader» – and `bestRankEver` answers for the highest ladder REACHED, so a junior-only career
+    // handed a junior number to `motherWasKnown`, whose bar is a WTA rank. The two are now two
+    // different true things on purpose: the EPILOGUE shows her best on the ladder she reached (a
+    // junior story honestly says «junior #74»); the BLOCK carries only what the professional press
+    // could have known (`bestRankOn(world, 'wta')`). This cell's career never touched the WTA
+    // table, so the block says null while the view still shows her real junior best.
+    expect(block.motherCareer.bestRank, 'the block reads the PRO table alone').toBe(bestRankOn(world, 'wta'))
+    expect(view!.bestRank, 'while the epilogue still shows the ladder she reached').not.toBe(null)
     expect(block.motherCareer.slams, 'the slam shelf alone').toBe(world.trophiesByTier.slam.titles.length)
     expect(block.motherCareer.slams, '...which cannot exceed the whole cabinet').toBeLessThanOrEqual(block.motherCareer.titles)
 
@@ -257,6 +268,25 @@ describe('wave 10 T1 B – the band a career really hands over', () => {
     // that T7's bench answers over the corpus.
     expect(dynastyBackgroundOf(Math.floor((bands.middle + bands.wealthy) / 2))).toBe('middle')
   })
+
+  it('⚠⚠ a JUNIOR-ONLY career hands over no professional rank and no pro cabinet – the 22.09 review\'s defect, pinned on a lived career', () => {
+    // The probe that caught it read «bestRank 3» off an 89-week-old career: `bestRankEver` answers
+    // for the highest ladder REACHED, and on a career that never touched the WTA table that is the
+    // junior one – so a junior number walked into `motherWasKnown`, whose bar is a WTA rank (D1).
+    // This cell ends in its second season, junior shelves only, and is the defect's own shape.
+    const { world, weeks } = walkToEnding(2, 0, 0)
+    expect(world.ending, `the walk has to reach an ending (${weeks} weeks)`).not.toBe(null)
+    expect(weeks, 'ended while the story was still a junior one').toBeLessThan(200)
+    const block = dynastyHandoverOf(world)
+    expect(block.motherCareer.titles, 'the junior cabinet is real and stays on the block').toBeGreaterThan(0)
+    expect(block.motherCareer.proTitles, 'but not one title of it was won on the tour').toBe(0)
+    expect(block.motherCareer.bestRank, 'and a junior rank is not a WTA rank – null, not a number').toBe(null)
+    // ...and the two consumers stay silent about her, which is what the fix buys:
+    const child = createWorld(block.childSeed, DEFAULT_PROFILE, 'c-w10-junior-line', undefined, block)
+    expect(motherWasKnown(child.dynasty), 'the press never knew a junior').toBe(false)
+    expect(newsStandingOf(child), 'no floor for the daughter').toBe('quiet')
+    expect(lineageLicensed(child), 'and no booth line – nothing tour-true to say').toBe(false)
+  })
 })
 
 // =================================================================================================
@@ -285,7 +315,7 @@ describe('wave 10 T2 C – absent means the career the game has always created',
       motherName: { first: 'Alice', last: 'Martin' },
       motherCountry: 'US',
       motherTemperament: 'sunny',
-      motherCareer: { titles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
+      motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
     }
     const plain = rec(createWorld('w10-same', DEFAULT_PROFILE, 'c-w10-same'))
     const withLine = rec(createWorld('w10-same', DEFAULT_PROFILE, 'c-w10-same', undefined, block))
@@ -306,7 +336,7 @@ describe('wave 10 T2 C – absent means the career the game has always created',
       motherName: { first: 'Alice', last: 'Martin' },
       motherCountry: 'US',
       motherTemperament: 'deep',
-      motherCareer: { titles: 12, bestRank: 3, slams: 2, endedWeek: 1000, endingKind: 'natural' },
+      motherCareer: { titles: 12, proTitles: 12, bestRank: 3, slams: 2, endedWeek: 1000, endingKind: 'natural' },
     }
     const world = createWorld('w10-rich', { ...DEFAULT_PROFILE, background: 'working' }, 'c-w10-rich', undefined, wealthy)
     expect(world.profile.background, 'the origins card is not asked – the block answers it').toBe('wealthy')

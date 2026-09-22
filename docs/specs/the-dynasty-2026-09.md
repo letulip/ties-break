@@ -39,6 +39,15 @@ column of §8 is filled from the bench, never predicted twice.
   are IN («звучит интересно, давай попробуем реализовать»), the news floor is IN by his word on
   the recommendation, and the four support portraits landed downscaled the same day – the
   architect's own commit, −36 KiB, install headroom ≈39 KiB for the wave.
+- ⚠⚠ **THE REVIEW'S TRACK FINDING (22.09, fixed the same day)**: the block's `bestRank` was
+  `bestRankEver`, which answers for the highest ladder REACHED – so a junior-only career handed a
+  junior number to `motherWasKnown`, whose bar is a WTA rank (D1: standing, never fame), and the
+  news floor lit for a mother the professional press never saw; the booth's licence read the whole
+  cabinet the same way, so a junior shelf bought «her mother won here». Caught by a probe row
+  reading «bestRank 3» on an 89-week-old career. Now: `bestRank` is `bestRankOn(world, 'wta')`,
+  the licence and the booth packet read a new `proTitles` (the `track === 'wta'` shelves), the
+  album's whole-cabinet count and the diary's club-level lines keep `titles`, and both halves are
+  pinned on a LIVED junior-only career plus mutation runs (2 red / 1 red, reverted green).
 - `world.children` is `ChildRecord[]` (`{ bornWeek, sex }`), sex is `'girl'` by his 20.09 ruling
   («пол нужен, но мальчиков у нас пока нет»), and the child is deliberately unnamed: «не даем
   намеренно, если пользователь пойдет в династию даст сам: имя выбирает родитель».
@@ -109,8 +118,9 @@ interface DynastyHandover {
   motherName: { first: string; last: string }
   motherTemperament: Temperament
   motherCareer: {
-    titles: number              // sum over trophiesByTier
-    bestRank: number | null     // bestRankEver
+    titles: number              // the WHOLE cabinet, junior and domestic shelves included
+    proTitles: number           // the pro shelves alone (TIERS[tier].track === 'wta') – stage claims read THIS
+    bestRank: number | null     // bestRankOn(world, 'wta') – the PRO table alone, never bestRankEver
     slams: number
     endedWeek: number
     endingKind: string          // the ending id, texture licence only
@@ -146,8 +156,10 @@ The spotlight's gate is his own D1 (14.09): standing, never fame – «an unknow
 spotlight, whatever she wins». The dynasty touches this carefully:
 
 - **Booth lineage** – on big stages (the shipped `atOrAboveStageBar` licence), the booth may name
-  the line. Licensed ONLY when `motherCareer.titles > 0` or her `bestRank` cleared the news bar –
-  the college mother's daughter hears nothing, because there is nothing true to say.
+  the line. Licensed ONLY when `motherCareer.proTitles > 0` or her `bestRank` cleared the news bar –
+  the college mother's daughter hears nothing, because there is nothing true to say. ⚠ `proTitles`,
+  never the whole cabinet: the pool says «her mother won here», and a junior shelf must not put a
+  tour title in the booth's mouth (the review's second finding, 22.09).
 - **The news floor** – ⭐ RULED 22.09 («давай по твоей рекомендации»), a recorded amendment to his
   own D1: a dynasty career whose mother was herself `known` (her `bestRank` cleared
   `ECONOMY.spotlight.newsRankKnown`; `null` never qualifies) starts at a `noticed` floor from

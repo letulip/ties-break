@@ -402,10 +402,23 @@ export interface DynastyHandover {
    *  the new career is licensed to say about her (§5, §6) reads one of these five, so a mother who
    *  won nothing licenses nothing: «the mother's own story prices the texture, not the availability». */
   readonly motherCareer: {
-    /** summed over `trophiesByTier`, the same fold `buildEndingView` already does for its own count */
+    /** summed over `trophiesByTier`, the same fold `buildEndingView` already does for its own count –
+     *  the WHOLE cabinet, junior and domestic shelves included. The album's «Titles: N» and the
+     *  diary's club-level speech lines read this one honestly; anything that claims a PRO stage
+     *  reads `proTitles` below. */
     readonly titles: number
-    /** `bestRankEver`'s rank, or null for a career that never held one. `null` never qualifies for
-     *  anything – §5's news floor says so in as many words. */
+    /** ⚠⚠ THE PRO SHELVES ALONE (`TIERS[tier].track === 'wta'`), and the field exists because the
+     *  full count above OVERCLAIMED (caught at the architect's review, 22.09): the booth's cabinet
+     *  pool («her mother won here») licensed off `titles > 0`, which a junior-cabinet mother
+     *  satisfies without ever winning a professional event. Stage claims read THIS. */
+    readonly proTitles: number
+    /** ⚠⚠ THE PRO TABLE ALONE – `bestRankOn(world, 'wta')`, or null for a career that never held a
+     *  WTA rank. NOT `bestRankEver`, which returns the highest ladder REACHED: on a junior-only
+     *  career that is the junior table, and a junior #3 fed to `motherWasKnown` – whose bar,
+     *  `newsRankKnown`, is a WTA-table number by D1's own ruling – lit the news floor for a mother
+     *  the professional press never saw. Caught at the architect's review, 22.09, off a probe row
+     *  reading «bestRank 3» on an 89-week-old career. `null` never qualifies for anything – §5's
+     *  news floor says so in as many words. */
     readonly bestRank: number | null
     /** the slam shelf alone, out of the `titles` above */
     readonly slams: number
