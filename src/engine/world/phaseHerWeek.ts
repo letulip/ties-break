@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyPause, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -392,6 +392,23 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        fires on `dueWeek` (T4); neither exists on this tree, so on this commit a pregnancy is a
   //        record, a card and a feed line about the answer, and nothing about the season moves.
   rollPregnancy(world)
+  // ⭐⭐⭐ 1c-say (v87, the weight – wave 11 T2): AND THE WEEK SHE SAYS SO, WHICH IS NO LONGER THE
+  //        WEEK SHE CONCEIVED.
+  //
+  //        ⚠⚠ IT IS A SEPARATE CALL BECAUSE THE TWO FACTS ARE NOW SEPARATE WEEKS – the hidden
+  //        window (docs/specs/the-weight-2026-09.md §2, the design's §3). `rollPregnancy` writes the
+  //        record and draws the window; this raises the blocking card `windowWeeks` later, and a
+  //        zero window – which the shipped `ECONOMY.life.lag` draws 70% of the time for an open girl
+  //        – makes the pair behave exactly as the single call did before this wave.
+  //
+  //        ⚠ IMMEDIATELY UNDER ITS OWN ROLL, so the zero-window case lands on the same tick and in
+  //        the same order the wave-8 tree did: the record, then the card. Anything between them
+  //        would be a week the world holds a pregnancy nobody has been told about – which is
+  //        exactly what the window IS, and it must be `windowWeeks` long and not one tick longer.
+  //
+  //        ⚠ ZERO DRAWS OF ANY KIND: two integers compared and one scan of `lifeLog`. It takes no
+  //        `rng`, so the frozen capture (41550 / e6b0c709) cannot see it.
+  landPregnancyAnnouncement(world)
   // ⭐⭐ 1c-pause (v85, the pregnancy – wave 8 T3): AND THE WEEK THE ENTRIES CLOSE.
   //
   //        ⚠⚠ THIS IS NOT THE PAUSE. The pause is the entry gate reading

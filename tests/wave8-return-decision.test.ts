@@ -474,6 +474,12 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'returnPoiseCeiling',
         'returnPoiseMax',
         'returnSupportShift',
+        // ⚠⚠ RE-AIMED 22.09 BY WAVE 11's T2 (the hidden window), and the guard asked its question a
+        // seventh time and got the same answer. `termTotalWeeks` is the WHOLE TERM measured from the
+        // conception – the one-number law (docs/specs/the-weight-2026-09.md §2), written as the sum
+        // `playsOnWeeks + termWeeks` it is. It decides a DATE and not a probability: the birth's week.
+        // Nothing reads it to decide whether a comeback worked, which stays emergent and measured.
+        'termTotalWeeks',
         // ⚠⚠ RE-AIMED 21.09 BY HIS HOLD RULING, and once again the guard did its job: a key joined
         // the block and somebody had to look at it and say whether it is a success rate. IT IS NOT.
         // `smallFirstHoldWeeks` is how long the `small-first` ANSWER keeps calling a big draw

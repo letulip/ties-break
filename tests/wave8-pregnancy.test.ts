@@ -76,6 +76,7 @@ import {
   endEpisode,
   kidAgeExact,
   knockRunning,
+  landPregnancyAnnouncement,
   latchedEpisode,
   lifeLogOf,
   pendingLifeBeat,
@@ -174,6 +175,26 @@ function onHitWeek(base: string): WorldState {
     }
   }
   throw new Error(`no pregnancy hit inside the window for any seed from ${base}`)
+}
+
+/** ⭐⭐⭐ v87 T2 – **ROLL, AND THEN LET HER SAY IT.** Before the hidden window `rollPregnancy` did
+ *  both jobs; since it, the hazard writes the record and draws the window, and the CARD is raised
+ *  `windowWeeks` later by `landPregnancyAnnouncement` (docs/specs/the-weight-2026-09.md §2).
+ *
+ *  ⚠ EVERY CASE BELOW THAT IS ABOUT THE **CARD** WALKS THE WINDOW FIRST, and that is a re-aim
+ *  rather than a weakening: not one claim moved, only the week it is asserted on, which is now the
+ *  week the card is really up. The cases about the RECORD are untouched and still call
+ *  `rollPregnancy` alone – which is the sharper half, because the record really is written at the
+ *  conception and nothing about the window may move it.
+ *
+ *  ⚠ IT MOVES `world.week` BY HAND RATHER THAN TICKING, exactly as every fixture in this file
+ *  already does: these are hand-built worlds with no season and no calendar, and a tick would run
+ *  the whole engine over them for a card. */
+function rollAndSay(world: WorldState): void {
+  rollPregnancy(world)
+  if (world.pregnancy === null) return
+  world.week = world.pregnancy.announcedWeek
+  landPregnancyAnnouncement(world)
 }
 
 /** A knock that has been ANSWERED and still has weeks to run – the third gate clause's fixture. */
@@ -383,28 +404,56 @@ describe('wave 8 T2 C – the `expecting` beat and the one place `world.pregnanc
   it('⭐ a hit raises one row: her week, the kind, the EPISODE ID as detail, unanswered', () => {
     const world = onHitWeek('w8-raise')
     const episodeId = world.loveEpisodes[0].id
-    rollPregnancy(world)
+    // ⚠ RE-AIMED 22.09 BY v87 T2 (the hidden window), NOT WEAKENED: the row's week is the week she
+    // SAYS it, which is `announcedWeek` rather than the week the hazard fired. `world.week` is moved
+    // to that week by the helper, so the assertion below is the same sentence about the same row.
+    rollAndSay(world)
     const rows = lifeLogOf(world).filter((r) => r.kind === 'expecting')
     expect(rows, 'exactly one row').toHaveLength(1)
     expect(rows[0], 'the record is the queue').toEqual({ week: world.week, kind: 'expecting', detail: episodeId, answer: null })
+    expect(world.week, 'and that week is the announcement, not the conception').toBe(world.pregnancy!.announcedWeek)
   })
 
-  it('⭐⭐⭐ the RECORD is written at the RAISE, and its four dates are the BRIEF\'S literals', () => {
+  it('⭐⭐⭐ v87 – the row is raised ONCE and only on or after the announcement week', () => {
+    // ⚠⚠ THE WINDOW IS SILENT, ASSERTED AS A PROPERTY OF THE LOG RATHER THAN OF ONE WEEK: every
+    // week from the conception to the week before she says it raises nothing, however many times the
+    // step runs. `landPregnancyAnnouncement`'s receipt is what makes the second half true.
+    const world = onHitWeek('w8-window-silence')
+    rollPregnancy(world)
+    const pregnancy = world.pregnancy!
+    for (let w = pregnancy.conceivedWeek; w < pregnancy.announcedWeek; w++) {
+      world.week = w
+      landPregnancyAnnouncement(world)
+      expect(lifeLogOf(world).filter((r) => r.kind === 'expecting'), `week ${w} is inside the window`).toHaveLength(0)
+    }
+    world.week = pregnancy.announcedWeek
+    landPregnancyAnnouncement(world)
+    landPregnancyAnnouncement(world)
+    world.week = pregnancy.announcedWeek + 3
+    landPregnancyAnnouncement(world)
+    expect(lifeLogOf(world).filter((r) => r.kind === 'expecting'), 'one row, however often the step runs').toHaveLength(1)
+  })
+
+  it('⭐⭐⭐ the RECORD is written at the CONCEPTION, and its dates are the BRIEF\'S literals', () => {
     const world = onHitWeek('w8-record')
     const at = world.week
     rollPregnancy(world)
     // ⚠ TRANSCRIBED FROM THE WAVE-8 BRIEF (§2 T2's `playsOnWeeks` 8, §2 T3's `termWeeks` 31), never
-    // read off `ECONOMY.motherhood` – ARM 2's law. `dueWeek = pausesWeek + termWeeks` is the brief's
-    // own formula, so the birth lands 39 weeks after the announcement: a full term.
-    expect(world.pregnancy, 'the announcement is a fact about the world the moment she says it').toEqual({
+    // read off `ECONOMY.motherhood` – ARM 2's law.
+    // ⭐⭐⭐ RE-AIMED 22.09 BY v87 T2 (the hidden window), NOT WEAKENED, AND THE CASE'S TITLE MOVED
+    // WITH IT because the claim really did change: the record is written at the CONCEPTION now, and
+    // the announcement is `windowWeeks` later. What is unchanged is the discipline – every date below
+    // is the brief's own literal plus the drawn window, and none of it is read off `ECONOMY`.
+    // ⚠⚠ AND `dueWeek` IS THE **ONE-NUMBER LAW** ASSERTED AGAINST THE WAVE-8 LITERALS: the birth is
+    // `playsOnWeeks + termWeeks` after the CONCEPTION, which is the same 39 weeks wave 8 wrote from
+    // the announcement. A term that had grown by the window would read `at + window + 39` here.
+    const windowWeeks = world.pregnancy!.announcedWeek - at
+    expect(windowWeeks, 'the window is a real number of weeks and never negative').toBeGreaterThanOrEqual(0)
+    expect(world.pregnancy, 'she is pregnant the week the hazard lands, whether or not she has said so').toEqual({
       episodeId: world.loveEpisodes[0].id,
-      // ⚠ RE-AIMED 22.09 BY v87 T1 (the weight – the hidden window), NOT WEAKENED: the record gained
-      // a seventh field, `conceivedWeek`, and on THIS tree it is the announcement week, because T1
-      // ships the field and T2 ships the window that separates the two. The case's claim is
-      // unchanged – the record is written at the raise and its dates are the BRIEF's literals.
       conceivedWeek: at,
-      announcedWeek: at,
-      pausesWeek: at + BRIEF.playsOnWeeks,
+      announcedWeek: at + windowWeeks,
+      pausesWeek: at + windowWeeks + BRIEF.playsOnWeeks,
       dueWeek: at + BRIEF.playsOnWeeks + BRIEF.termWeeks,
       support: null,
       // ⚠ RE-AIMED 20.09 BY v85 T6, NOT WEAKENED: `rankAtPause` is the sixth field – the capture the
@@ -415,16 +464,28 @@ describe('wave 8 T2 C – the `expecting` beat and the one place `world.pregnanc
       rankAtPause: null,
     })
     expect(world.pregnancy!.dueWeek - at, 'eight weeks playing on and thirty-one more – a term').toBe(39)
-    // ⚠⚠ AND `support` IS NULL WHILE THE BLOCKING CARD STANDS, which is the TRUE reading of the gap
-    // (T1's own note on the field) and not a placeholder: she has told him, and he has not answered.
-    expect(pendingLifeBeat(world)?.kind, 'the card is still up').toBe('expecting')
+    // ⚠⚠ AND `support` IS NULL, which is the TRUE reading of the gap (T1's own note on the field)
+    // and not a placeholder – and since v87 it is null for a LONGER and better reason: for the
+    // window's weeks nobody has been asked anything, because nobody has been told.
     expect(world.pregnancy!.support, 'and no default is invented for a week that really happened').toBeNull()
+    // ⭐⭐⭐ RE-AIMED 22.09 BY v87 T2, NOT WEAKENED, AND IT IS TWO ASSERTIONS WHERE THERE WAS ONE.
+    // ⚠⚠ THE RAISE LEFT THIS FUNCTION ENTIRELY, which is a stronger statement than «the card comes
+    // later» and is the one this line now makes: `rollPregnancy` writes the record and nothing else,
+    // so NO card is up after it whatever the window drew – even a zero window, where the tick raises
+    // it one call later (`landPregnancyAnnouncement`, `world/phaseHerWeek.ts` 1c-say). A case that
+    // asserted the card off `rollPregnancy` at a zero window would go green for the wrong reason.
+    expect(pendingLifeBeat(world), 'the hazard raises nothing – the card is the announcement\'s').toBe(null)
+    world.week = world.pregnancy!.announcedWeek
+    landPregnancyAnnouncement(world)
+    expect(pendingLifeBeat(world)?.kind, 'and the card is up on the week she says it').toBe('expecting')
   })
 
   it('⚠⚠ it BLOCKS – the layer\'s biggest news stops the week until it is answered', () => {
     expect(LIFE_BEAT_BLOCKING.expecting, 'declared blocking, per kind and by type').toBe(true)
     const world = onHitWeek('w8-block')
-    rollPregnancy(world)
+    // ⚠ RE-AIMED 22.09 BY v87 T2 (the hidden window), NOT WEAKENED – `rollAndSay`'s own block: the
+    // claim is about the CARD, so the fixture walks the window and asserts it on the week it is up.
+    rollAndSay(world)
     expect(pendingLifeBeat(world)?.kind, 'and the queue reports it as the pending beat').toBe('expecting')
   })
 
@@ -462,7 +523,9 @@ describe('wave 8 T2 D – joy / worry / the career first, on `answerLifeBeat`', 
   function asked(seed: string): WorldState {
     const world = onHitWeek(seed)
     world.bond = 70
-    rollPregnancy(world)
+    // ⚠ RE-AIMED 22.09 BY v87 T2, NOT WEAKENED – every case in §D answers the CARD, so the fixture
+    // has to walk the window to the week the card is actually up. Not one price, grade or id moved.
+    rollAndSay(world)
     return world
   }
 
@@ -560,7 +623,7 @@ describe('wave 8 T2 D – joy / worry / the career first, on `answerLifeBeat`', 
     // written when there is nothing to write it on – the honest reading of that world, and the
     // reason the write is guarded on the RECORD and not on the kind alone.
     const world = onHitWeek('w8-orphan')
-    rollPregnancy(world)
+    rollAndSay(world)
     world.pregnancy = null
     const before = world.bond
     answerLifeBeat(world, 'joy')
@@ -581,7 +644,7 @@ describe('wave 8 T2 D – joy / worry / the career first, on `answerLifeBeat`', 
 describe('wave 8 T2 E – the marriage ends mid-term and the pregnancy is untouched', () => {
   it('⭐⭐⭐ ending the carrying episode changes NOT ONE FIELD of the record', () => {
     const world = onHitWeek('w8-decouple')
-    rollPregnancy(world)
+    rollAndSay(world)
     answerLifeBeat(world, 'joy')
     const carried = { ...world.pregnancy! }
     expect(carried.support, 'the fixture really answered').toBe('warm')
@@ -599,7 +662,7 @@ describe('wave 8 T2 E – the marriage ends mid-term and the pregnancy is untouc
 
   it('⚠ and it stays untouched all the way to the due week, tick after tick', () => {
     const world = onHitWeek('w8-decouple-walk')
-    rollPregnancy(world)
+    rollAndSay(world)
     answerLifeBeat(world, 'career-first')
     const carried = { ...world.pregnancy! }
     world.week = carried.announcedWeek + 5
@@ -621,7 +684,7 @@ describe('wave 8 T2 E – the marriage ends mid-term and the pregnancy is untouc
     // absence: ending the episode raises no pregnancy-shaped anything, and the gate's refusal
     // afterwards is clause 2 (a pregnancy stands) rather than a divorce rule.
     const world = onHitWeek('w8-decouple-quiet')
-    rollPregnancy(world)
+    rollAndSay(world)
     answerLifeBeat(world, 'worry')
     const rows = lifeLogOf(world).length
     endEpisode(world, world.week + 3)

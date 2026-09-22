@@ -5254,6 +5254,36 @@ export const ECONOMY = {
      *  it is the PAUSE that lands around pregnancy week 8, which is what the formula beside it says
      *  and what is built. Reported rather than papered over; both numbers ship at their drafted
      *  values. T4 fires the birth on `dueWeek`. */
+    /** ⭐⭐⭐ v87 (the weight, wave 11 T2 – docs/specs/the-weight-2026-09.md §2) – **AND THE WHOLE
+     *  TERM, FROM CONCEPTION, WHICH IS THE NUMBER THE BIRTH NOW RIDES ON.** `termWeeks` above has no
+     *  reader in `src/` any more: `dueWeek = conceivedWeek + termTotalWeeks`, and the announcement
+     *  sits INSIDE the term rather than ahead of it.
+     *
+     *  ⚠⚠ THE ONE-NUMBER LAW, AND IT IS THE RESEARCH'S OWN FINDING RATHER THAN A TIDY-UP.
+     *  `docs/research/pregnancy-in-sport-2026-09.md` §6: «`termWeeks: 31` places conception AT the
+     *  announcement, so a hidden window added without shrinking `termWeeks` by the same amount would
+     *  make her pregnancy 43–47 weeks long. The two are one number and must move together.» So they
+     *  did: this constant is `playsOnWeeks + termWeeks` written out as the sum it is, which is the
+     *  `0.03 / 52` precedent one field up – «the annual figure is quoted as the numerator and not in
+     *  a comment beside the answer» – and costs a reader nothing at run time.
+     *
+     *  ⚠ A LITERAL SUM CANNOT FOLLOW A RETUNE, AND A **PIN** IS WHAT CLOSES THAT, not this comment:
+     *  an object literal cannot reference its own siblings, so `8 + 31` would go stale in silence if
+     *  somebody moved `playsOnWeeks` to 9. `tests/wave11-window.test.ts` §A asserts
+     *  `termTotalWeeks === playsOnWeeks + termWeeks` against the LIVE constants, so that retune goes
+     *  red at the moment it is made instead of shipping a 40-week pregnancy. The same file pins the
+     *  zero-window identity against the wave-8 BRIEF's own literals rather than against this
+     *  expression, so the two claims cannot prove each other.
+     *
+     *  ⚠ 39 AND NOT 40, and the gap is the model's own rather than an error: a human term is ~40
+     *  weeks from the last period and ~38 from conception, so 39 sits between the two conventions and
+     *  is what the shipped numbers already added up to. Nothing was re-derived to reach it.
+     *
+     *  ⚠ `termWeeks` IS KEPT AND NOT DELETED, deliberately. It is the ANNOUNCEMENT-relative half of
+     *  the sum and the number every wave-8 document, test and comment quotes; deleting it would make
+     *  this constant a bare 39 with its provenance thrown away – the exact failure the 20.09 push-back
+     *  was about one field up («the annual figure is quoted as the numerator and not in a comment»). */
+    termTotalWeeks: 8 + 31,
     termWeeks: 31,
     /** ⭐ THE PARENT'S THREE ANSWERS AT THE `'expecting'` BEAT – the research's own finding made
      *  mechanical («support only – reaction sets recovery trajectory», the digest's row): joy /

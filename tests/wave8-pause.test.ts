@@ -233,13 +233,22 @@ describe('wave 8 T3 A – the pause is a branch of `availabilityStatus`, read at
     // The whole chain, once: T2's hazard fires on a real hit week, writes the record, and the two
     // dates on it are the brief's own arithmetic. Every case below poses a record on this shape.
     const world = onHitWeek('w8-t3-chain')
-    const announced = world.week
+    const conceived = world.week
     rollPregnancy(world)
     const p = world.pregnancy
     expect(p, 'the hazard fired on the week the fixture found').not.toBeNull()
-    expect(p!.announcedWeek, 'she told him this week').toBe(announced)
-    expect(p!.pausesWeek, 'and she plays on for the drafted eight').toBe(announced + BRIEF.playsOnWeeks)
-    expect(p!.dueWeek, 'the birth is the term past the pause').toBe(p!.pausesWeek + BRIEF.termWeeks)
+    // ⭐⭐⭐ RE-AIMED 22.09 BY v87 T2 (the hidden window), NOT WEAKENED. The hazard's week is the
+    // CONCEPTION now and she says it `windowWeeks` later, so «this week» split into two weeks. The
+    // claim this case makes is unchanged and is the one that matters for the PAUSE: `playsOnWeeks`
+    // still reads from the ANNOUNCEMENT (§2: «the window moves knowledge, not the calendar of play»),
+    // so the pause is eight weeks after she tells him wherever the window put that.
+    expect(p!.conceivedWeek, 'the hazard fired this week').toBe(conceived)
+    expect(p!.announcedWeek, 'and she told him on or after it').toBeGreaterThanOrEqual(conceived)
+    expect(p!.pausesWeek, 'and she plays on for the drafted eight, from the TELLING').toBe(p!.announcedWeek + BRIEF.playsOnWeeks)
+    // ⚠⚠ AND THE BIRTH IS NO LONGER «THE TERM PAST THE PAUSE» – the one-number law (§2). It is the
+    // term past the CONCEPTION, and the two agree exactly when the window drew 0, which is what makes
+    // this the same sentence wave 8 wrote rather than a looser one.
+    expect(p!.dueWeek, 'the birth is the term past the CONCEPTION').toBe(conceived + BRIEF.playsOnWeeks + BRIEF.termWeeks)
     // ⚠ AND THE GATE READS THAT FIELD RATHER THAN RE-COMPUTING IT: move the record's own date and
     // the close moves with it. This is what «you read it; you do not recompute it» means mechanically
     // – a second site that knew `playsOnWeeks` would ignore this edit.
