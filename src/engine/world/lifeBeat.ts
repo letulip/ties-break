@@ -6627,6 +6627,20 @@ export function pregnancyEligible(world: WorldState): boolean {
   if (world.children.length > 0 && world.week - lastBirth < ECONOMY.motherhood.repeatCooldownWeeks) {
     return false
   }
+  // ⭐⭐⭐ v87 T4 – AND A LOSS RE-ARMS THE HAZARD BEHIND A GENTLER COOLDOWN, through this same
+  // machinery rather than through a clause of its own (the spec's §3: «reading the same eligibility
+  // machinery wave 9 built»). `ECONOMY.weight.lossCooldownWeeks` is drafted 26 against the birth's
+  // 52, and the constant carries why the two differ: the birth's number protects the COMEBACK, and
+  // a loss creates none.
+  //
+  // ⚠⚠ IT READS `pregnancyLossWeeks` AND NEVER A DERIVED GUESS, which is the whole reason that list
+  // is persisted: the pregnancy record is CLEARED on a loss, so there is nothing left on the world
+  // that remembers one. `spiritShock` is not a second source either – it holds ONE mark and clears
+  // itself when she recovers.
+  const lastLoss = world.pregnancyLossWeeks.reduce((w, at) => Math.max(w, at), -Infinity)
+  if (world.pregnancyLossWeeks.length > 0 && world.week - lastLoss < ECONOMY.weight.lossCooldownWeeks) {
+    return false
+  }
   if (knockRunning(world)) return false
   return true
 }
@@ -7270,4 +7284,163 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
  *  frozen capture (41550 / e6b0c709) cannot see it. */
 export function setWeightEnabled(world: WorldState, on: boolean): void {
   world.weightEnabled = on
+}
+
+/** ⭐⭐⭐ v87 (the weight, wave 11 T4) – **HER WEEKLY CHANCE OF LOSING IT, GIVEN HER AGE AND NOTHING
+ *  ELSE.** Pure, zero draws, no writes, and **it takes no `WorldState` at all** – which is the
+ *  boundary law written into the signature rather than into a comment.
+ *
+ *  ⚠⚠ THE READ-SET IS THE WHOLE POINT OF THIS FUNCTION'S SHAPE. The design's §2 and the research's
+ *  §6.3: nothing in the evidence supports training as a cause of loss, the concern in the sources is
+ *  contact and falls, and age dominates the variance. So a game that let the training plan, the
+ *  travel, the answers, `spirit` or `bond` reach this number would be asserting something untrue –
+ *  and it would be telling every player the sentence women already hear too often, *you did this by
+ *  not resting*. A function that cannot SEE the world cannot read it, and a later refactor that
+ *  wanted to would have to widen this signature in front of a reviewer. `tests/wave11-loss.test.ts`
+ *  §B sweeps plan, travel, spirit, bond and support across arms on shared seeds and asserts the
+ *  realised hazard is identical, so the pin holds the property even if somebody re-plumbs the call.
+ *
+ *  ⚠ THE LAST RUNG WHOSE `fromAge` SHE HAS REACHED WINS, and an age under the first rung takes 0 –
+ *  `pregnancyChanceAt`'s own law, read the same way so the two curves cannot be consumed differently.
+ *  A 0 here takes ZERO DRAWS exactly as an ineligible week does, because `rollPregnancyLoss` returns
+ *  on the chance before it derives the stream. */
+export function pregnancyLossChanceAt(ageYears: number): number {
+  let perWeek = 0
+  for (const rung of ECONOMY.weight.lossPerWeekByAge) if (ageYears >= rung.fromAge) perWeek = rung.perWeek
+  return perWeek
+}
+
+/** ⭐⭐⭐ v87 T4 – **IS THIS A WEEK THE LOSS HAZARD RUNS AT ALL.** Pure, zero draws, no writes, and a
+ *  `false` here means ZERO DRAWS rather than a discarded one – `pregnancyEligible`'s own law, and
+ *  the reason this is a predicate of its own: a reader must see, in ONE place, that the whole of
+ *  eligibility is decided before any stream exists.
+ *
+ *  1. ⭐⭐⭐ **THE SWITCH.** `world.weightEnabled`, RULED 22.09. Off means no draw at all – not a draw
+ *     whose outcome is discarded, which is invariant 2's named offence – so a career with the weight
+ *     off taps the same sub-streams in the same order the same number of times as a pre-wave career.
+ *     §8 row 6 measures it.
+ *  2. A PREGNANCY IS LIVE. `world.pregnancy !== null`, and nothing else about it is read.
+ *  3. ⚠⚠ **THE WEEK IS INSIDE THE RESEARCH'S OWN WINDOW** – `[conceivedWeek + lossFromWeek,
+ *     conceivedWeek + lossUntilWeek)`. The constant's block carries the derivation; the short of it
+ *     is that the 9.8/10.8/16.7% figures count recognised pregnancies between 6 and 20 GESTATIONAL
+ *     weeks, which is conception weeks 4 to 18, and spreading them over the whole 39-week term would
+ *     ship a different and much heavier event.
+ *
+ *  ⚠ AND NOTHING ABOUT HER PLAN, HER TRAVEL, HER SPIRIT, HER BOND OR HIS ANSWER IS IN HERE, which is
+ *  worth saying because every one of them was available. That is the boundary law, and this gate is
+ *  the other half of the fence `pregnancyLossChanceAt`'s signature builds. */
+export function pregnancyLossEligible(world: WorldState): boolean {
+  if (!world.weightEnabled) return false
+  const pregnancy = world.pregnancy
+  if (pregnancy === null) return false
+  const since = world.week - pregnancy.conceivedWeek
+  return since >= ECONOMY.weight.lossFromWeek && since < ECONOMY.weight.lossUntilWeek
+}
+
+/** ⭐⭐⭐ v87 T4 – **THE WEEKLY ROLL, AND THE ONE PLACE A PREGNANCY ENDS WITHOUT A BIRTH.**
+ *
+ *  ⚠⚠ THE LINE ORDER IS THE RULE, `rollPregnancy`'s own four steps inherited whole: the gate returns
+ *  first, the CHANCE is computed second and returns if it is 0, and only then is the stream derived.
+ *  A week with the switch off, a week with no pregnancy, a week outside the research's window and a
+ *  week whose age curve reads 0 all take ZERO draws – never draw-and-discard.
+ *
+ *  ⚠ THE KEY IS THE PREGNANCY'S OWN IDENTITY PLUS THE WEEK – `seed:life:pregnancy-loss:<conceivedWeek>:<week>`.
+ *  The conception week is what makes it the PREGNANCY's stream (the spec's «a purpose key derived
+ *  from the pregnancy's own identity»), and the week is what makes it one uniform per week rather
+ *  than one per pregnancy. ⚠⚠ IT IS DELIBERATELY NOT `seed:life:loss:<week>`, which is the
+ *  BEREAVEMENT's key, named in writing on 11.09 and created by T5: two different facts may never
+ *  share a key, and these two are in the same section of the same file.
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollPregnancy`'s own note: `rngFromSeed` can return exactly 0, and a hazard
+ *  of 0 must be impossible rather than merely unlikely.
+ *
+ *  WHAT A LOSS DOES, and the list is the spec's §3 in order:
+ *    · the record CLEARS – no birth, no comeback machinery, no `children.push`;
+ *    · the week joins `pregnancyLossWeeks`, because the thing that ends cannot be the thing that
+ *      remembers, and the cooldown below reads that list;
+ *    · `spiritShock` lands as `'loss'` – the depth is `ECONOMY.spirit.shock.loss`, and there is no
+ *      second recovery rate anywhere behind it (§5's one-rate law);
+ *    · the words, if she is OPEN. A private girl says nothing at all, and the absence is the telling.
+ *
+ *  ⚠⚠ IT WRITES THE SHOCK AND `accrueSpirit` PRICES IT THE SAME WEEK, which is why the call site is
+ *  inside the 1c block and above `accrueSpirit` – `landBirth`'s own arrangement, for the same
+ *  mechanical reason: the pass that pays for a shock reads `shock.week === world.week`. */
+export function rollPregnancyLoss(world: WorldState): void {
+  if (!pregnancyLossEligible(world)) return
+  const chance = pregnancyLossChanceAt(kidAgeNow(world))
+  if (chance === 0) return
+  const pregnancy = world.pregnancy!
+  if (rngFromSeed(`${world.seed}:life:pregnancy-loss:${pregnancy.conceivedWeek}:${world.week}`)() >= chance) return
+  const told = world.week >= pregnancy.announcedWeek
+  world.pregnancy = null
+  world.pregnancyLossWeeks.push(world.week)
+  // ⚠ THE MARK IS WRITTEN AFTER THE RECORD IS CLEARED AND THE ORDER IS FREE: nothing between these
+  // lines reads either. Written this way round so the clear reads as the event and the rest as its
+  // consequences.
+  world.spiritShock = { week: world.week, kind: 'loss' }
+  const line = lossLineFor(world, told)
+  if (line === null) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    keep: true,
+    lifeKind: 'expecting',
+    // ⚠ NO AMOUNT AND NO PRICE IN THE WORDS (§3j's rule 4). ⚠ `keep: true` for the pause row's own
+    // reason: `pruneEvents` drops ordinary rows at sixty weeks and this arc is longer than that.
+    text: line,
+  })
+}
+
+/** ⭐⭐⭐ v87 T4 – **WHAT SHE SAYS, OR THE SILENCE THAT IS THE TELLING.** ⚠ ⚠ DRAFT – every word is
+ *  the builder's draft for the owner (invariant 4), listed verbatim in the wave's report.
+ *
+ *  ⚠⚠ `null` IS A FIRST-CLASS ANSWER AND IS THE DESIGN'S STRONGEST SCENE, not a gap in the pool.
+ *  RULED 22.09 (question 2): «both branches build – open tells, private is silence», and the
+ *  design's §4 table is where the two branches come from: `sunny` «tells him, and wants him there»,
+ *  `fiery` «tells him fast and loud, then does not want to discuss it», `quiet` «he may learn from
+ *  the absence of entries, not from her», `deep` «⚠ the one who may not tell him at all». So a
+ *  private girl's loss writes NO ROW: the diary band goes quiet, the portrait stops being pregnant,
+ *  the entries re-open, and the parent works it out. «The parent learns from a silence, which is a
+ *  thing this game can do and almost no other kind of game can» – the design's own sentence.
+ *
+ *  ⚠ TWO CELLS PER OPEN VOICE, AND THE SECOND IS WHAT THE HIDDEN WINDOW MADE REACHABLE. A loss can
+ *  land before she has ever announced it (the research's window opens at conception week 4 and a
+ *  private window runs to 12), so there is a real case where the parent is told about a pregnancy
+ *  and its end in one sentence. A single cell would have had to presume he already knew, and would
+ *  have been false on exactly the careers the window exists to create.
+ *
+ *  ⚠ NO NAME AND NO GENDER FOR THE ONE SHE MARRIED (§3g/§3h), NO SEX FOR THE CHILD (§3j's law – the
+ *  row was never written), NO DATE AND NO NUMBER (rule 4), and no line states her interior as fact
+ *  (the fallible-parent law). What each line says is what the PARENT was told and what he could see.
+ *
+ *  ⚠ AND NO LINE LINKS IT TO ANYTHING HE SAID. RULED 22.09 (question 5): if the loss follows a cold
+ *  «too early», the game does NOT link them – the boundary law holds mechanically and the player
+ *  draws his own line. A sentence here that so much as gestured at the answer he gave would be the
+ *  game settling it for him. */
+function lossLineFor(world: WorldState, told: boolean): string | null {
+  const voice = temperamentFor(world.seed, world.dynasty?.motherTemperament)
+  const cell = LOSS_HER_LINE[voice]
+  if (cell === null) return null
+  return told ? cell.told : cell.untold
+}
+
+/** ⚠ ⚠ DRAFT – see `lossLineFor`. `null` is the private branch and is the design's ruling, not an
+ *  unwritten cell. */
+const LOSS_HER_LINE: Record<Temperament, { told: string; untold: string } | null> = {
+  sunny:
+    {
+      told: 'She rang the same evening and did not soften it. "We lost it. I did not want you to hear it from anyone else, and I would like you here."',
+      untold:
+        'She rang the same evening and said two things in one breath. "There was a child coming and there is not any more. I had not told you yet. I would like you here."',
+    },
+  fiery:
+    {
+      told: 'She called once, said it flat out, and was off the phone inside a minute. "We lost it. I am not talking about it. I will ring you when I am ready to."',
+      untold:
+        'She called once, said it flat out, and was off the phone inside a minute. "I was pregnant. I am not any more. I am not talking about it. I will ring you when I am ready to."',
+    },
+  // ⚠⚠ THE SILENCE, AND IT IS RULED RATHER THAN UNWRITTEN. `quiet` and `deep` tell nobody: the arc
+  // simply stops, and what the parent has to read is the absence. See `lossLineFor`'s block.
+  quiet: null,
+  deep: null,
 }

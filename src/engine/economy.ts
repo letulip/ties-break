@@ -5602,6 +5602,83 @@ export const ECONOMY = {
     opennessLean: 0.65,
   },
 
+  /** ⭐⭐⭐ v87 – **THE WEIGHT** (wave 11; docs/specs/the-weight-2026-09.md, the design
+   *  docs/design/the-months-before-she-says-2026-09.md, the research
+   *  docs/research/pregnancy-in-sport-2026-09.md). The layer's last step: the pregnancy that ends,
+   *  and the death in the family. Both behind ONE switch, `world.weightEnabled`, RULED 22.09.
+   *
+   *  ⚠⚠ **THE ONE THING THIS BLOCK MUST NEVER MODEL IS THE PARENT AS THE CAUSE, AND IT IS A FINDING
+   *  RATHER THAN A SCRUPLE.** The design's §2, the research's §6.3: nothing in the evidence supports
+   *  training as a cause of a pregnancy loss, the IOC summary's concern is contact and falls, and AGE
+   *  DOMINATES THE VARIANCE. A game where a hard training block CAUSES a loss is asserting something
+   *  untrue and is telling every player the sentence women already hear too often. So the hazard
+   *  below takes AGE and the dice, and its signature is written so the read-set is visible from the
+   *  outside – `pregnancyLossChanceAt(ageYears)` takes no world at all, which is a fence a refactor
+   *  cannot quietly move. ⚠ The same law binds the bereavement: temperament-free, world's dice. */
+  weight: {
+    /** ⭐⭐⭐ **THE WEEKLY LOSS HAZARD, BY AGE** – per-week rates that integrate to the research's
+     *  J-curve over the window the research itself defines. DRAFTED; T6's bench confirms the
+     *  integral, and his word finalises.
+     *
+     *  ⚠⚠ THE TOTALS ARE THE PRIMARY SOURCE'S, QUOTED AS THE NUMERATORS THEY ARE rather than
+     *  transcribed into decimals with their provenance thrown away (`motherhood.perWeekByAge`'s own
+     *  20.09 lesson): Magnus MC et al., BMJ 2019, **421,201 Norwegian pregnancies** – **9.8%** at
+     *  25–29, **10.8%** at 30–34, **16.7%** at 35–39. Our window is 24–38, so it sits across the
+     *  FLOOR and the CLIMB, and a flat rate would be wrong at both ends.
+     *
+     *  ⚠⚠ **THE INTEGRAL RUNS OVER 14 WEEKS AND NOT OVER THE 39-WEEK TERM, AND THAT IS THE
+     *  RESEARCH'S OWN DENOMINATOR RATHER THAN THIS BUILDER'S CHOICE.** The study counts RECOGNISED
+     *  pregnancies, «fetal death before 20 gestational weeks … identified between 6 and 20 weeks»;
+     *  gestational weeks are counted from the last period, about two ahead of conception, so the
+     *  study's own window is conception weeks 4 to 18. `lossFromWeek` and `lossUntilWeek` below are
+     *  that window, and these rates are `1 - (1 - total)^(1/14)`.
+     *  ⚠ SPREADING THE SAME TOTAL OVER ALL 39 WEEKS WOULD SHIP A DIFFERENT EVENT, which is the
+     *  reason this is a deviation worth the paragraph: a loss drawn at week 36 is two weeks from the
+     *  due date, is clinically a stillbirth rather than a miscarriage, and is far heavier content
+     *  than the design asked for. The plan drafts «integrating to the J-curve over the term» and
+     *  leaves the term's meaning to the builder; this is the reading that ships the modelled event.
+     *
+     *  ⚠ READ AS RUNGS, `motherhood.perWeekByAge`'s own law: the LAST rung whose `fromAge` she has
+     *  reached wins, and an age under the first rung takes 0. ASCENDING AND APPEND-ONLY-IN-SPIRIT –
+     *  the read depends on the order, and `tests/wave11-loss.test.ts` §A pins that it is sorted.
+     *  ⚠ 24 TAKES THE 25–29 RATE because the study's floor band is the lowest it publishes inside
+     *  our window, and a 24-year-old is not a lower-risk animal than a 25-year-old – the band below
+     *  it (20–24, 11.3%) is HIGHER, so borrowing the floor is the conservative read rather than a
+     *  flattering one. ⚠ NO RUNG ABOVE 35: the game's window closes at 38 and the study's 35–39 band
+     *  covers all of it; 40–44's 32.2% is a cliff no career here can reach. */
+    lossPerWeekByAge: [
+      // 24–29 – the J-curve's floor, and the lowest single year in the study is 27 at 9.5%.
+      { fromAge: 24, perWeek: 1 - Math.pow(1 - 0.098, 1 / 14) },
+      // 30–34 – barely above the floor, which is the finding rather than the middle of a slope.
+      { fromAge: 30, perWeek: 1 - Math.pow(1 - 0.108, 1 / 14) },
+      // 35+ – the climb. Half again on the floor, and the reason a flat rate would be wrong.
+      { fromAge: 35, perWeek: 1 - Math.pow(1 - 0.167, 1 / 14) },
+    ],
+    /** ⭐⭐ THE FIRST WEEK AFTER THE CONCEPTION THE HAZARD CAN FIRE ON, and the last (EXCLUSIVE) –
+     *  the research's own recognised-pregnancy window, mapped onto the conception clock. See
+     *  `lossPerWeekByAge`'s block for the mapping and for why the integral runs over these fourteen
+     *  weeks rather than over the whole term.
+     *
+     *  ⚠ THE WINDOW OFTEN CLOSES BEFORE SHE HAS EVEN TOLD HIM, and that is the arithmetic rather
+     *  than a design decision: a private girl's hidden window runs up to 12 weeks, so a loss can land
+     *  on a pregnancy the parent never knew existed. The design's §4 row for `deep` – «the one who
+     *  may not tell him at all» – is exactly this case, and T4's words are written for both sides of
+     *  it. */
+    lossFromWeek: 4,
+    lossUntilWeek: 18,
+    /** ⭐⭐ HOW SOON AFTER A LOSS THE PREGNANCY HAZARD MAY FIRE AGAIN – DRAFTED 26, against the
+     *  BIRTH's 52 (`motherhood.repeatCooldownWeeks`). The spec's §3: «a loss re-arms the pregnancy
+     *  hazard behind a gentler cooldown, reading the same eligibility machinery wave 9 built».
+     *
+     *  ⚠ GENTLER FOR A MECHANICAL REASON AND NOT A KIND ONE, which is worth writing down because the
+     *  kind reason would be the wrong kind of reason to put in a constant: the birth's 52 protects
+     *  the COMEBACK – `world.comeback` holds a freeze she is in the middle of spending, and a second
+     *  pregnancy overwrites that record. A loss creates no comeback and no freeze, so there is
+     *  nothing to protect and the only thing the number is for is that the same week should not
+     *  re-arm the hazard it just discharged. */
+    lossCooldownWeeks: 26,
+  },
+
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).

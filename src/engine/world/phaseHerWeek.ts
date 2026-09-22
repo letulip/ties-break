@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, landWedding, rollPregnancyLoss, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -408,6 +408,25 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //
   //        ⚠ ZERO DRAWS OF ANY KIND: two integers compared and one scan of `lifeLog`. It takes no
   //        `rng`, so the frozen capture (41550 / e6b0c709) cannot see it.
+  // ⭐⭐⭐ 1c-loss (v87, the weight – wave 11 T4): AND THE WEEK A PREGNANCY ENDS WITHOUT A BIRTH.
+  //
+  //        ⚠⚠ **BEFORE THE ANNOUNCEMENT AND THE ORDER IS A DESIGN DECISION, NOT A FREE SLOT.** The
+  //        research's loss window is conception weeks 4–18 and a private hidden window runs to 12,
+  //        so the two really can land on ONE week. Running the loss FIRST means the card is never
+  //        raised on a pregnancy that ended the same week – she loses it before she gets to say it,
+  //        and an open girl's line then carries BOTH facts in one sentence (`LOSS_HER_LINE`'s
+  //        `untold` cells, which exist for exactly this case). Reversed, a player would meet a
+  //        blocking announcement and its end in a single tick.
+  //
+  //        ⚠ AND BEFORE `accrueSpirit`, WHICH IS THE ONE HARD CONSTRAINT: this is the THIRD writer
+  //        of `world.spiritShock`, and the pass that PAYS for a shock reads `shock.week ===
+  //        world.week`. `rollEnds`' arrangement, inherited for the third time.
+  //
+  //        ⚠ ZERO DRAWS WITH THE SWITCH OFF, WITH NO PREGNANCY, AND OUTSIDE THE RESEARCH'S OWN
+  //        WINDOW – the gate returns before the stream is derived, which is what makes §8 row 6's
+  //        byte-identity arm true rather than claimed. The frozen capture (41550 / e6b0c709) cannot
+  //        see it: it takes no `rng` and pulls only from `seed:life:pregnancy-loss:<conceived>:<week>`.
+  rollPregnancyLoss(world)
   landPregnancyAnnouncement(world)
   // ⭐⭐ 1c-pause (v85, the pregnancy – wave 8 T3): AND THE WEEK THE ENTRIES CLOSE.
   //
