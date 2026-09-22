@@ -190,10 +190,13 @@ describe('wave 10 T10 D – what «Skip for now» hands the store on a dynasty r
     expect(seed, 'the line\'s own seed, never a fresh draw').toBe(block.childSeed)
     expect(prologue).toBeUndefined()
     expect(dynasty, 'the block rides to createWorld').toEqual(block)
-    expect(profile.kidLastName).toBe('Martin')
-    expect(profile.background).toBe('wealthy')
-    expect(profile.birthMonth).toBe(3)
-    expect(profile.birthDay).toBe(14)
+    // `newCareer`'s profile parameter carries a default, so the tuple types it optional – the
+    // assert narrows it for the four reads below and fails loud if the call ever drops it.
+    expect(profile, 'the wizard always sends an explicit profile').toBeDefined()
+    expect(profile!.kidLastName).toBe('Martin')
+    expect(profile!.background).toBe('wealthy')
+    expect(profile!.birthMonth).toBe(3)
+    expect(profile!.birthDay).toBe(14)
     w.unmount()
   })
 
