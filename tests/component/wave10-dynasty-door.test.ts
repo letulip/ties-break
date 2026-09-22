@@ -10,10 +10,18 @@
 // whenever a dialog is added to or lengthened.
 //
 // MUTATION-VERIFIED 22.09, each applied, RUN and reverted:
-//   · `.ending`'s `overflow-y: auto` -> `visible`: the reach case goes RED on the content-independent
-//     half. That is the mutation the gotcha asks for – «a test that cannot fail on the too-tall
-//     version is not this test» – and it is the half that keeps holding after somebody adds a
-//     sentence, because it is about the BOX and not about today's copy.
+//   · `.ending`'s `overflow-y: auto` -> `visible`: **1 red**, and it fails through the HELPER now –
+//     the takeover stops being a scrolling one, `measureDialog` reads it as the round-20 shape
+//     instead, and the cap rule bites a card that declares no bound: «card 375x979, cap NONE, card
+//     does NOT scroll, overlay does NOT scroll, 667px of room». That is the mutation the gotcha asks
+//     for – «a test that cannot fail on the too-tall version is not this test» – and it is the half
+//     that keeps holding after somebody adds a sentence, because it is about the BOX.
+//   · the helper's tail walk reduced to the control's own `marginBottom` (its behaviour before
+//     22.09): **1 red** – the stacking assertion, because both ways off the screen would then be
+//     reported on the card's bottom edge and the two boxes would land on top of each other.
+//   ⚠ AND THE ROUND-20 GUARANTEE WAS RE-MEASURED AFTER THE HELPER CHANGED, not assumed: stripping
+//     `max-height`/`overflow-y` off the shared `.dialog-card` reddens **41 files / 119 tests** with
+//     «the card declares no height bound that fits». Nothing was loosened for the other shape.
 //   · the two labels swapped in `continueLabel`: **2 red**, one per variant, which is what makes
 //     the pair non-vacuous – a single label would have passed both.
 //   · the `v-if`'s `resumes === null` dropped: **1 red** – the college case; an ending that can
@@ -28,7 +36,7 @@ import EndingScreen from '../../src/components/EndingScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { moneyOf } from '../helpers/careerMoney'
 import { dynastyOf } from '../helpers/dynastyHandover'
-import { availableWidth, demandedWidth, PHONE, NARROW_PHONE, setViewport } from './fits'
+import { assertDismissReachable, availableWidth, demandedWidth, PHONE, NARROW_PHONE, setViewport } from './fits'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import type {
   AlbumPage,
@@ -161,46 +169,53 @@ describe('wave 10 T4 – the door never closes', () => {
   })
 
   it('⭐⭐⭐ ROUND-20 #3: both ways off this screen are reachable on a phone, and stay reachable', async () => {
-    // ⚠⚠ `assertDismissReachable` DOES NOT APPLY TO THIS STRUCTURE, AND FINDING THAT OUT IS HALF OF
-    // WHAT THIS CASE IS WORTH. It was tried first and refused the epilogue with «the content is
-    // taller than the screen and nothing scrolls»: it reads `overflow` off the CARD, because the
-    // shape it was fitted to is round-20's `.dialog-overlay` + `.dialog-card`, where the scrim is
-    // inert and the card is what has to be bounded. The epilogue is the OTHER safe shape – the
-    // TAKEOVER itself is `position: fixed; inset: 0; overflow-y: auto`, so its content may be any
-    // height at all and every control in its flow is reachable by scrolling. A card inside it needs
-    // no cap of its own. So the helper scores a genuinely safe structure as a failure; that is a
-    // defect in the instrument rather than in the screen, and it is reported to the architect
-    // instead of being worked around by loosening a shared guard mid-wave.
+    // ⚠⚠ THIS CASE WAS WRITTEN BY HAND AND IS NOW THE HELPER'S AGAIN, which is worth recording because
+    // the hand-written version was the RIGHT call at the time. `assertDismissReachable` refused the
+    // epilogue outright – «the content is taller than the screen and nothing scrolls» – because it
+    // read `overflow` off the CARD, where this shape does not put it: the round-20 shape is an inert
+    // scrim with a bounded scrolling card, and the epilogue is the other safe shape, a TAKEOVER that
+    // is itself the scroll container. So the wave asserted the law's two halves here rather than
+    // loosen a shared guard in the middle of a wave, and reported the instrument defect.
     //
-    // ⚠ SO THE LAW IS ASSERTED HERE IN ITS OWN TERMS, AND IT IS STILL THE LAW'S TWO HALVES:
-    //   1. CONTENT-INDEPENDENT – the takeover is fixed, full-screen and scrolls, so no amount of
-    //      future copy can put a control past a fold that cannot be reached. This is the half that
-    //      keeps holding after somebody adds a sentence, which is what round-20 #4 actually asked for.
-    //   2. IN THE FLOW – both controls are descendants of that scrolling box rather than pinned
-    //      outside it, so (1) is about them.
-    // And the WIDTH, which is the axis this round really moved: a second control in a footer.
+    // ⭐ THE HELPER KNOWS BOTH SHAPES NOW (`DialogShape` in ./fits), so the hand-written structural
+    // assertions are gone and this case asks the one question through the one instrument every other
+    // dialog in the app is asked through. TWO THINGS IT GAINED THAT THE HAND-WRITTEN VERSION DID NOT
+    // HAVE: the dismiss control's BOX is placed and checked against the viewport (the hand-written
+    // version only proved the control was inside a scrolling box), and «Raise another» is measurable
+    // at all – it is second-to-last in the footer, and the old model could only read a control that
+    // was last.
+    //
+    // ⚠ THE WIDTH HALF STAYS HERE. `assertDismissReachable` answers height and reach; width is the
+    // axis this round really moved by putting a SECOND control in a footer, and `demandedWidth` is
+    // the shared instrument for that one.
     for (const vp of [PHONE, NARROW_PHONE]) {
       setViewport(vp)
       const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour: true }) }))
       await toLastPage(w)
       const takeover = w.find('.ending').element
-      const cs = getComputedStyle(takeover)
-      expect(cs.position, 'the epilogue is a full-screen takeover').toBe('fixed')
-      expect(
-        ['auto', 'scroll'],
-        `the takeover must scroll or a long epilogue strands the player at ${vp.width}x${vp.height}`,
-      ).toContain(cs.overflowY)
-
+      const card = w.find('.ending-album').element
       const room = availableWidth(takeover, vp)
-      for (const sel of ['.ending-foot .tb-pill--cta', '.ending-line']) {
+      const fits = ['.ending-foot .tb-pill--cta', '.ending-line'].map((sel) => {
         const control = w.find(sel)
         expect(control.exists(), `${sel} is on the last page`).toBe(true)
-        expect(takeover.contains(control.element), `${sel} is inside the scrolling box`).toBe(true)
+        const fit = assertDismissReachable(card, control.element, vp, `epilogue ${sel}`)
+        expect(fit.shape, 'the epilogue is a scrolling takeover, not a scrim with a bounded card').toBe(
+          'overlay-scrolls',
+        )
         expect(
           demandedWidth(control.element, room),
           `${sel} at ${vp.width}x${vp.height}: wants more than the ${room.toFixed(0)}px the takeover leaves`,
         ).toBeLessThanOrEqual(room)
-      }
+        return fit
+      })
+      // ⚠⚠ AND THE TWO CONTROLS ARE REALLY STACKED, WHICH IS WHAT GIVES THE HELPER'S NEW TAIL WALK ITS
+      // TEETH. «Raise another» is second-to-last in the footer and the line is last; the old model
+      // could only read a control that was last, so it would have placed BOTH of them on the card's
+      // bottom edge and reported the same box twice. This line is the one that notices.
+      expect(
+        fits[0].dismissBottom,
+        'the two ways off this screen are drawn on top of each other – the tail walk is not seeing the line',
+      ).toBeLessThan(fits[1].dismissTop)
       w.unmount()
     }
   })

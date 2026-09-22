@@ -395,7 +395,40 @@ export function assertRowFits(bar: Element, items: Element[], vp: Viewport, labe
   return room - needed
 }
 
+/** ⭐⭐⭐ THE TWO SHAPES A BLOCKING TAKEOVER CAN BE SAFE IN, and the reason this type exists is that
+ *  this file only knew one of them until 22.09 (wave 10).
+ *
+ *    `card-scrolls`    – round-20 #3's own shape: an INERT full-screen scrim (`.dialog-overlay`:
+ *                        `position: fixed; inset: 0; align-items: center`) with a bounded, scrolling
+ *                        CARD inside it. The card must declare a height bound that fits, or a card
+ *                        taller than the screen is centred and overflows BOTH ends with no scroller
+ *                        anywhere in the chain. This is the shape the whole model was fitted to.
+ *
+ *    `overlay-scrolls` – the OTHER safe shape: the takeover itself is the scroll container
+ *                        (`position: fixed; inset: 0; overflow-y: auto`, laid out in flow), so its
+ *                        content may be ANY height and every control in it is reachable by
+ *                        scrolling. `EndingScreen.vue`'s epilogue is this shape.
+ *
+ *  ⚠⚠ SCORING THE SECOND SHAPE AS A FAILURE IS WHAT THIS TYPE FIXES, and it was a real false
+ *  positive rather than a hypothetical: wave 10 asked this helper about the epilogue and was refused
+ *  with «the content is taller than the screen and nothing scrolls» – which was the helper reading
+ *  `overflow` off the CARD, where this shape does not put it. That wave asserted the law's two halves
+ *  by hand rather than loosen a shared guard mid-wave, and reported the defect; this is the repair.
+ *
+ *  ⚠⚠ THE ROUND-20 GUARANTEE IS UNTOUCHED, AND IT WAS RE-MEASURED RATHER THAN ASSERTED. The shape is
+ *  decided by the OVERLAY's own computed `overflow-y`, and `.dialog-overlay` declares none at all – so
+ *  every one of this file's 110 callers still takes the `card-scrolls` path, cap and all. Measured
+ *  twice on 22.09: the whole component project is green at **213 files / 2320 tests** with the shape
+ *  in place, and stripping `max-height`/`overflow-y` off `.dialog-card` still reddens **41 files /
+ *  119 tests** with «the card declares no height bound that fits». A repair that quietly let the
+ *  round-20 cases pass would have shown up as a much smaller number there. */
+export type DialogShape = 'card-scrolls' | 'overlay-scrolls'
+
 export interface Fit {
+  /** which of the two safe shapes this takeover is – see `DialogShape` */
+  shape: DialogShape
+  /** the OVERLAY is the scroll container, so any content height is reachable */
+  overlayScrolls: boolean
   /** the room `.dialog-overlay` leaves inside its own padding */
   available: { width: number; height: number }
   /** the used width: `min(available, max-width)` */
@@ -416,13 +449,97 @@ export interface Fit {
   dismissBottom: number
 }
 
-/**
- * Measure a blocking dialog against a viewport.
+/** Is this element in the parent's normal FLOW? An absolutely-positioned or fixed child stacks
+ *  nothing and is stacked by nothing, and a `display: none` one is not there at all. */
+function inFlow(el: Element): boolean {
+  const cs = getComputedStyle(el)
+  return cs.display !== 'none' && cs.position !== 'absolute' && cs.position !== 'fixed'
+}
+
+/** How far `node`'s BORDER-box bottom sits above its parent's CONTENT-box bottom – one level.
  *
- * `card` is the `.dialog-card` element; `dismiss` is the control that closes it, and it must be the
- * LAST thing in the card's flow – which is what lets its box be read off the card's own bottom edge
- * once the card is scrolled to its end. Both must be attached to the document (`attachTo:
- * document.body`), or the cascade this reads is not the one the player gets.
+ *  ⚠ A ROW PARENT CONTRIBUTES ONLY THE ELEMENT'S OWN MARGIN: siblings sit beside it, not under it,
+ *  and under-counting is this file's committed direction.
+ *  ⚠ A BLOCK PARENT COLLAPSES ADJACENT MARGINS to the larger – `stackChildren`'s own rule, written
+ *  here in the same shape so the two cannot drift. */
+function tailWithinParent(node: Element, parent: Element, room: number): number {
+  const pcs = getComputedStyle(parent)
+  const isFlex = pcs.display.includes('flex')
+  const own = num(getComputedStyle(node).marginBottom)
+  if (isFlex && pcs.flexDirection !== 'column') return own
+  const kids = [...parent.children].filter(inFlow)
+  // ⚠⚠ THE INDEX IS CHECKED, AND `npm run pins:check` IS WHAT ASKED FOR IT – rightly, and about the
+  // substance rather than about the spelling. A bare `slice(indexOf(...) + 1)` returns EVERY sibling
+  // when the index is −1, which here means a dismiss control that is out of its parent's flow
+  // (`position: absolute`, `fixed`, `display: none`) would have everything ABOVE it counted as its
+  // tail – and an over-counted tail puts the control HIGHER on the screen than it is, which is the
+  // lax direction. So it refuses instead.
+  const at = kids.indexOf(node)
+  if (at < 0) {
+    throw new Error(
+      'the dismiss control is out of its parent\'s flow (absolute, fixed or display:none), so nothing ' +
+        'under it can be measured – read the box a player actually presses',
+    )
+  }
+  const after = kids.slice(at + 1)
+  if (after.length === 0) return own
+  if (isFlex) {
+    const gap = num(pcs.rowGap || pcs.gap)
+    let total = own
+    for (const kid of after) {
+      const box = boxOf(kid, room)
+      total += gap + box.marginTop + box.h + box.marginBottom
+    }
+    return total
+  }
+  let total = 0
+  let prevBottom = own
+  for (const kid of after) {
+    const box = boxOf(kid, room)
+    total += Math.max(prevBottom, box.marginTop) + box.h
+    prevBottom = box.marginBottom
+  }
+  return total + prevBottom
+}
+
+/** ⭐⭐ HOW FAR THE ELEMENT'S BORDER-BOX BOTTOM SITS ABOVE THE CARD'S CONTENT-BOX BOTTOM, walking up
+ *  through every box between the two.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE «THE DISMISS CONTROL IS THE LAST THING IN THE CARD'S FLOW» STOPPED BEING
+ *  TRUE. That was this file's standing precondition and it is what let the old model read the box off
+ *  the card's bottom edge with one subtraction. The epilogue has TWO ways off it – «Raise another»
+ *  and, since v86, the line beside it – so exactly one of them is last and the other could not be
+ *  measured at all.
+ *
+ *  ⚠ WHEN THE CONTROL **IS** LAST THIS RETURNS ITS OWN `marginBottom`, which is precisely the single
+ *  subtraction the old model made – so every caller this file had before is byte-identical. */
+function tailBelow(card: Element, el: Element, room: number): number {
+  let total = 0
+  let node: Element = el
+  for (;;) {
+    const parent = node.parentElement
+    if (parent === null) {
+      throw new Error('the dismiss control is not inside the card it was measured against')
+    }
+    total += tailWithinParent(node, parent, room)
+    if (parent === card) return total
+    total += num(getComputedStyle(parent).paddingBottom) + num(getComputedStyle(parent).borderBottomWidth)
+    node = parent
+  }
+}
+
+/**
+ * Measure a blocking takeover against a viewport, in whichever of the two safe shapes it is built in
+ * (`DialogShape`).
+ *
+ * `card` is the box the content lives in – `.dialog-card` in the round-20 shape, the takeover's own
+ * content section in the scrolling one; `dismiss` is a control that closes it. Both must be attached
+ * to the document (`attachTo: document.body`), or the cascade this reads is not the one the player
+ * gets.
+ *
+ * ⚠ `dismiss` NO LONGER HAS TO BE THE LAST THING IN THE CARD'S FLOW. It did until 22.09, and that
+ * precondition is what made the epilogue's second way off it unmeasurable; `tailBelow` walks whatever
+ * sits under it now, and returns exactly the old single subtraction when it is last.
  */
 export function measureDialog(card: Element, dismiss: Element, vp: Viewport): Fit {
   const overlay = card.parentElement
@@ -442,6 +559,27 @@ export function measureDialog(card: Element, dismiss: Element, vp: Viewport): Fi
     height: vp.height - num(ocs.paddingTop) - num(ocs.paddingBottom),
   }
 
+  // ⭐⭐⭐ WHICH SHAPE IS THIS, AND IT IS READ OFF THE OVERLAY RATHER THAN ASSUMED (see `DialogShape`).
+  // `.dialog-overlay` and every other scrim in the app declare no `overflow` at all, so this is
+  // `visible` for every caller this file had before 22.09 and they all keep the round-20 rules.
+  const overlayScrolls = ocs.overflowY === 'auto' || ocs.overflowY === 'scroll'
+  const shape: DialogShape = overlayScrolls ? 'overlay-scrolls' : 'card-scrolls'
+  if (shape === 'overlay-scrolls') {
+    // ⚠⚠ THE MODEL PLACES ONE BOX IN THE SCROLL FLOW AND WILL NOT GUESS AT A SECOND. A takeover that
+    // stacks two sections would need each one's own offset inside the scroller, and a measurement
+    // that quietly assumed the card was alone would put the dismiss control at the wrong height while
+    // staying green – which is the failure this whole file exists to refuse. Out-of-flow children (a
+    // fixed mute button, an absolute scrim) are not in the stack and are not counted.
+    const others = [...overlay.children].filter((k) => k !== card && inFlow(k))
+    if (others.length > 0) {
+      throw new Error(
+        `the scrolling takeover has ${others.length} in-flow sibling(s) beside the card ` +
+          `(${others.map((k) => k.className || k.tagName).join(', ')}) – this model places one box in the ` +
+          'scroll flow, so measure the section that holds the dismiss control and nothing else',
+      )
+    }
+  }
+
   const ccs = getComputedStyle(card)
   const maxWidth = lengthPx(ccs.maxWidth, available.width)
   const cardWidth = Math.min(available.width, Number.isFinite(maxWidth) ? maxWidth : Infinity)
@@ -459,35 +597,71 @@ export function measureDialog(card: Element, dismiss: Element, vp: Viewport): Fi
   const cardHeight = Math.min(contentFloor, cap)
   const scrollable = ccs.overflowY === 'auto' || ccs.overflowY === 'scroll'
 
-  // `align-items: center`: an item taller than the line box overflows it equally at both ends.
-  const cardTop = num(ocs.paddingTop) + (available.height - cardHeight) / 2
+  // WHERE THE CARD SITS, and the two shapes put it in two different places.
+  //
+  //  · `card-scrolls` – `align-items: center`: an item taller than the line box overflows it equally
+  //    at both ends. Unchanged, character for character.
+  //  · `overlay-scrolls` – the card is laid out in the scroller's FLOW from the top, and «scrolled as
+  //    far as it goes» rests its bottom margin edge on the overlay's content-box bottom. A card that
+  //    does not overflow never scrolls, so it stays where the flow put it.
+  let cardTop: number
+  if (shape === 'card-scrolls') {
+    cardTop = num(ocs.paddingTop) + (available.height - cardHeight) / 2
+  } else {
+    const naturalTop = num(ocs.paddingTop) + num(ccs.marginTop)
+    const floor = vp.height - num(ocs.paddingBottom) - num(ccs.marginBottom)
+    cardTop = naturalTop + cardHeight > floor ? floor - cardHeight : naturalTop
+  }
   const cardBottom = cardTop + cardHeight
 
-  // Scrolled to the end, the last child's bottom margin edge rests on the card's content-box bottom.
-  // When the card cannot scroll, "scrolled to the end" is where it already was – which is the bug.
+  // Scrolled to the end, everything under the dismiss control rests on the card's content-box bottom.
+  // When NOTHING can scroll, \"scrolled to the end\" is where it already was – which is the bug.
   const dismissBox = boxOf(dismiss, contentWidth)
-  const dismissBottom = cardBottom - num(ccs.paddingBottom) - num(ccs.borderBottomWidth) - dismissBox.marginBottom
+  const dismissBottom =
+    cardBottom - num(ccs.paddingBottom) - num(ccs.borderBottomWidth) - tailBelow(card, dismiss, contentWidth)
   const dismissTop = dismissBottom - dismissBox.h
 
-  return { available, cardWidth, cardHeight, contentFloor, cap, scrollable, cardTop, cardBottom, dismissTop, dismissBottom }
+  return {
+    shape,
+    overlayScrolls,
+    available,
+    cardWidth,
+    cardHeight,
+    contentFloor,
+    cap,
+    scrollable,
+    cardTop,
+    cardBottom,
+    dismissTop,
+    dismissBottom,
+  }
 }
 
 /**
  * The whole of round-20 #3, as one assertion: on `vp`, the player can reach the control that closes
- * this dialog.
+ * this takeover.
  *
  * Two things have to hold and they fail differently, so both are named:
- *  1. the control's box lands inside the screen once the card is scrolled as far as it goes, and
- *  2. the card is bounded and scrollable, so (1) keeps holding when somebody adds a paragraph.
+ *  1. the control's box lands inside the screen once the thing that scrolls is scrolled as far as it
+ *     goes, and
+ *  2. SOMETHING is bounded and scrolls, so (1) keeps holding when somebody adds a paragraph.
+ *
+ * ⚠⚠ (2) IS WHERE THE TWO SHAPES PART, and that is the whole of the 22.09 repair. In the round-20
+ * shape the CARD has to carry it – a bounded, scrolling card inside an inert scrim – because nothing
+ * else in the chain can. In the scrolling-takeover shape the OVERLAY carries it, and a card inside it
+ * needs no cap of its own: the content may be any height and every control in it is reachable. See
+ * `DialogShape` for why this file only knew the first one until wave 10 refused to loosen it in a
+ * hurry.
  */
 export function assertDismissReachable(card: Element, dismiss: Element, vp: Viewport, label: string): Fit {
   const fit = measureDialog(card, dismiss, vp)
   const where =
-    `${label} at ${vp.width}x${vp.height}: card ${fit.cardWidth.toFixed(0)}x${fit.cardHeight.toFixed(0)} ` +
+    `${label} at ${vp.width}x${vp.height} [${fit.shape}]: card ${fit.cardWidth.toFixed(0)}x${fit.cardHeight.toFixed(0)} ` +
     `(content wants at least ${fit.contentFloor.toFixed(0)}, cap ${fit.cap === Infinity ? 'NONE' : fit.cap.toFixed(0)}, ` +
-    `${fit.scrollable ? 'scrollable' : 'NOT scrollable'}), ${fit.available.height.toFixed(0)}px of room`
+    `card ${fit.scrollable ? 'scrolls' : 'does NOT scroll'}, overlay ${fit.overlayScrolls ? 'scrolls' : 'does NOT scroll'}), ` +
+    `${fit.available.height.toFixed(0)}px of room`
 
-  if (fit.contentFloor > fit.available.height && !fit.scrollable) {
+  if (!fit.overlayScrolls && fit.contentFloor > fit.available.height && !fit.scrollable) {
     throw new Error(`${where} – the content is taller than the screen and nothing scrolls, so the part past the fold cannot be reached at all`)
   }
   if (fit.dismissTop < 0 || fit.dismissBottom > vp.height) {
@@ -495,9 +669,16 @@ export function assertDismissReachable(card: Element, dismiss: Element, vp: View
   }
   // ⚠ AND THE CONTENT-INDEPENDENT HALF. Everything above is true of TODAY'S copy; this is the one
   // that still holds after the next sentence is added, and it is the actual fix.
-  expect(
-    fit.cap,
-    `${where} – the card declares no height bound that fits, so its height is whatever its content happens to be`,
-  ).toBeLessThanOrEqual(fit.available.height)
+  if (fit.shape === 'card-scrolls') {
+    expect(
+      fit.cap,
+      `${where} – the card declares no height bound that fits, so its height is whatever its content happens to be`,
+    ).toBeLessThanOrEqual(fit.available.height)
+  }
+  // ⚠⚠ A SCROLLING TAKEOVER NEEDS NO CAP, WHICH IS NOT THE SAME AS NEEDING NOTHING – and the guard
+  // has its teeth through the branch ABOVE rather than through an assertion here. Take `overflow-y`
+  // off the takeover and it stops being this shape, so the cap rule applies to a card that declares
+  // none and the case goes red on the sentence one line up. Measured, not reasoned: the mutation is
+  // in the ledger at the head of tests/component/wave10-dynasty-door.test.ts.
   return fit
 }

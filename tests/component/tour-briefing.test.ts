@@ -285,7 +285,7 @@ describe('⭐ round-17 #3 – every line on the card is legible against what it 
 // ⚠ MUTATION-VERIFIED AGAINST THE SHIPPED DEFECT, not against a hand-made one: dropping
 // `max-height: 100%; overflow-y: auto` from `.dialog-card` puts the file back exactly as it shipped
 // eight days ago, and all three viewport tests go red with the measured numbers –
-//   375x667  "content wants at least 1015, cap NONE, NOT scrollable, 635px of room"
+//   375x667  "content wants at least 1015, cap NONE, card does NOT scroll, 635px of room"
 //   320x568  "... at least 1135 ... 536px of room"
 //   1280x800 "... at least 670 ... 768px of room" (the desktop one is the WIDTH cap doing its job:
 //            without `.tour-briefing`'s own max-width the card is 360px wide and 998px tall there).
