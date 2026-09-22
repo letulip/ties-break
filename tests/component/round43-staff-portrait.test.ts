@@ -15,10 +15,10 @@
 // window.
 //
 // ⚠⚠ AND THE RATIO IS THE WHOLE POINT OF THE FILE. The coach masters are 162x264 (w/h 0.614); these
-// are 448x624 (0.718) – a WIDER figure at the same height, so it fills a strip of the same width at
+// are 368x512 (0.719) – a WIDER figure at the same height, so it fills a strip of the same width at
 // a LOWER card height. Reading `.cm-row`'s 168 or `.cm-row.current`'s 196 across would have
 // over-floored this card by 32-60px and guaranteed nothing at all, because neither number is
-// derived from this ratio. 136 is: 96 x 624/448 + 2 = 135.71, and (136-2) x 448/624 = 96.20 >= 96.
+// derived from this ratio. 136 is: 96 x 512/368 + 2 = 135.57, and (136-2) x 368/512 = 96.31 >= 96.
 //
 // ⚠ WHAT THIS FILE DELIBERATELY DOES NOT ASSERT: that the head is inside the window at the card's
 // real height. happy-dom has no layout engine (see `fits.ts`), so a rendered containment cannot be
@@ -62,10 +62,11 @@ Object.defineProperty(globalThis, 'localStorage', {
 })
 
 /** THE MASTERS' OWN DIMENSIONS, and they are the only two numbers in this file that come from
- *  outside the cascade. Every `public/images/support-stuff/*.webp` is 448x624 (verified off the
- *  files' VP8 headers). The floor's whole job is to hold the inequality against THIS pair. */
-const ART_W = 448
-const ART_H = 624
+ *  outside the cascade. Every `public/images/support-stuff/*.webp` is 368x512 (verified off the
+ *  files' headers; 448x624 until 22.09's downscale – wave 10, his «давай оптимизируем», -36 KiB).
+ *  The floor's whole job is to hold the inequality against THIS pair. */
+const ART_W = 368
+const ART_H = 512
 /** …and the coach masters', quoted only so the "not the coach's arithmetic" test can say what it is
  *  refusing. `.cm-row`'s own floor is derived from 162/280 (round 42 #3: 280 is the taller master
  *  and therefore the narrowest picture for a given height, which makes it the honest worst case). */
@@ -216,7 +217,7 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
     wrapper.unmount()
   })
 
-  it('the floor is derived from 448/624 – the picture can never be narrower than its strip', async () => {
+  it('the floor is derived from 368/512 – the picture can never be narrower than its strip', async () => {
     assertSheetPresent()
     const wrapper = await openStaff(hiredSnapshot())
 
@@ -238,7 +239,7 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
       // exactly at the strip's right edge, so the clip is invisible only while the picture is at
       // least as wide as the strip; the picture is height-driven and `.staff-art` is `top: 0;
       // bottom: 0` of the PADDING box, so the narrowest picture this layout can produce is
-      // (floor - 2 borders) x 448/624.
+      // (floor - 2 borders) x 368/512.
       const narrowest = ((floor - 2) * ART_W) / ART_H
       expect(
         narrowest,
@@ -248,13 +249,13 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
       // ⚠⚠ AND IT IS **THIS** RATIO'S FLOOR AND NOT THE COACH ROW'S, which is the half the inequality
       // alone cannot say: 168 and 196 also satisfy it, and either would be a number copied from a
       // different master. A floor derived from 162/280 for this strip would be 96 x 280/162 + 2 =
-      // 167.9 -> 168; ours is 135.7 -> 136, and the gap is the whole of «соотношение сторон будет
+      // 167.9 -> 168; ours is 135.6 -> 136, and the gap is the whole of «соотношение сторон будет
       // немного другое». Asserting the floor is UNDER the coach's is what fails if somebody
       // "harmonises" the two cards by giving this one the market row's number.
       const coachFloorForThisStrip = (strip * COACH_H) / COACH_W + 2
       expect(
         floor,
-        `the ${seat} floor is derived from 448/624 (${floor}), not from the coach masters' 162/280 (${coachFloorForThisStrip.toFixed(1)})`,
+        `the ${seat} floor is derived from 368/512 (${floor}), not from the coach masters' 162/280 (${coachFloorForThisStrip.toFixed(1)})`,
       ).toBeLessThan(coachFloorForThisStrip)
       // ...and it is the SMALLEST integer that holds the inequality, so it is a derivation and not a
       // round number that happens to work: one pixel less and the picture stops filling the strip.
@@ -324,9 +325,9 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
 //      -> the porthole test: L = 0.342 at w = 0.62, far right of the head. The band is [0%, 42.1%]
 //         at that width, so anything past 42% reddens.
 //   4. `min-height: 136px` -> `min-height: 130px`
-//      -> the floor test: (130-2) x 448/624 = 91.90 < 96, the inequality fails by name.
+//      -> the floor test: (130-2) x 368/512 = 92.00 < 96, the inequality fails by name.
 //   5. `min-height: 136px` -> `min-height: 168px` (the coach row's number copied across)
-//      -> the floor test's "derived from 448/624, not from 162/280" arm: 168 is not < 167.9.
+//      -> the floor test's "derived from 368/512, not from 162/280" arm: 168 is not < 167.9.
 //         ⚠ THIS IS THE ARM THAT MATTERS MOST and the plain inequality cannot see it at all – 168
 //         satisfies the inequality comfortably, which is exactly how a number from another master
 //         survives a review.

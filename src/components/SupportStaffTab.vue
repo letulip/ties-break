@@ -728,7 +728,7 @@ async function doSetFocus(): Promise<void> {
     <!-- ⭐⭐ ROUND 43 #2: THE SEAT'S FACE, on the coach strip's principle and by his own ruling - the
          market row's treatment since round 42 #3, at a different aspect ratio. His words are quoted
          in the script block above, where the house fence allows them; the arithmetic that re-derives
-         the floor for 448x624 is in `.staff-art` below. The strip is `position: absolute`, so it is
+         the floor for 368x512 is in `.staff-art` below. The strip is `position: absolute`, so it is
          out of the flex flow and the row's gap never applies to it, exactly as `.cm-art` is.
          ⚠ EMPTY `alt`, the coach row's own rule. The picture is decoration beside a name the card
          already prints - a screen reader that read «Masseur» and then «a masseur» would say the seat
@@ -894,11 +894,16 @@ async function doSetFocus(): Promise<void> {
      round-18 #2's, one ratio over: the picture is height-driven, the mask reaches transparent exactly
      at the strip's right edge, so the clip is invisible only while the picture is at least as wide as
      the strip. `.staff-art` is `top: 0; bottom: 0` of the PADDING box, so the narrowest picture this
-     layout can produce is (floor - 2 borders) x 448/624.
-         (136 - 2) x 448/624 = 134 x 0.717949 = 96.20 >= 96   <- the strip, filled
-     and 136 is the smallest integer that holds it: 96 x 624/448 + 2 = 135.71.
+     layout can produce is (floor - 2 borders) x 368/512.
+         (136 - 2) x 368/512 = 134 x 0.71875 = 96.31 >= 96   <- the strip, filled
+     and 136 is the smallest integer that holds it: 96 x 512/368 + 2 = 135.57.
+     ⚠ THE MASTER MOVED 22.09 (wave 10, his ruling - docs/decisions.md 22.09 #6; a .vue carries no
+     Cyrillic, so the words live there) – the four files shipped 448x624 until then and were
+     downscaled to 368x512 for -36 KiB of install; the ratio moved by half a thousandth
+     (0.7179 -> 0.7188), the floor did not, and the derivation above is written against the
+     SHIPPED files, which is the only pair the inequality is about.
      ⚠ THE COACH ROW'S ARITHMETIC IS THE SAME SENTENCE WITH THE OTHER MASTER – (196-2) x 162/280 =
-     112.24 >= 112 – and 162/280 is 0.579 against this 0.718. A wider figure at the same height fills
+     112.24 >= 112 – and 162/280 is 0.579 against this 0.719. A wider figure at the same height fills
      its window sooner, so the floor is LOWER here on a strip of the same width, and reading 168 or
      196 across would have over-floored this card by 32-60px for no guarantee at all.
      ⚠⚠ AND THE MEASURED CONSEQUENCE IS THAT THIS FLOOR BINDS EVERYWHERE, which is a real difference
@@ -957,8 +962,10 @@ async function doSetFocus(): Promise<void> {
    ⚠⚠ 30% IS MEASURED ON **THESE TWO MASTERS** AND ROUND 42 #3's «8-62%» IS NOT REUSED. That reading
    was taken off the sixteen coach masters - men framed head-on, short hair - and these are two women
    with hair well past the jaw, so it does not transfer. Read here off a percentage grid rendered over
-   each 448x624 master, taking the head box as the hair's outline at HEAD height (the top of the hair
-   through the chin) rather than the hair that falls onto the shoulders:
+   each master at its original 448x624 (the shipped files are the same frame downscaled to 368x512,
+   and picture FRACTIONS are scale-free, so the reading carries), taking the head box as the hair's
+   outline at HEAD height (the top of the hair through the chin) rather than the hair that falls onto
+   the shoulders:
        masseur        [0.16, 0.58]        psychologist  [0.20, 0.74]
    so the union both must fit inside is [0.16, 0.74] - 0.58 of the picture's width, against the coach
    masters' 0.54. ⚠ IT IS A READING OFF A GRID AND NOT A PIXEL TRACE: the edges are quoted to two
