@@ -7,6 +7,7 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { LadderTrack } from '../../engine/season/types'
+import type { DynastyHandover } from './profile'
 import type { AvatarEmotion, PortraitStage } from '../avatarEmotion'
 import type { CareerMoney, CareerTotals, WorldMatch } from './events'
 
@@ -583,6 +584,16 @@ export interface EndingView {
    *  itself once she has left – it is the state of an OPEN question, and there is exactly one screen
    *  allowed to ask it. */
   college: CollegeProgressView | null
+  /** ⭐⭐⭐ v86 – THE INHERITANCE BLOCK, ON EVERY ENDING (the dynasty, wave 10 T1;
+   *  docs/specs/the-dynasty-2026-09.md §2 and §3). His ruling of 20.09: «я бы не стал закрывать эту
+   *  дверь на совсем» – so it is NOT nullable, and the field being non-null is the door's
+   *  availability written into the type rather than into a screen's conditional. What forks is the
+   *  TEXT the door carries (`raisedOnTour`), never whether it is there.
+   *
+   *  ⚠ IT IS A VIEW FIELD AND NOT A SAVE FIELD. The block is re-derived from the ended world every
+   *  time the epilogue is assembled; what gets persisted is its twin, `WorldState.dynasty`, and only
+   *  onto the NEW career `createWorld` builds from it. */
+  dynasty: DynastyHandover
 }
 
 /** ⭐ P5 – WHAT THE EPILOGUE SCREEN NEEDS TO ASK "ANOTHER YEAR?" AND NOTHING ELSE.

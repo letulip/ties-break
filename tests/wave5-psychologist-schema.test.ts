@@ -397,6 +397,11 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         // rung added it.
         'comeback',
         'composureBonus',
+        // ⭐ v86, THE DYNASTY – the EIGHTH time this roster is paid for, exactly as the note above
+        // predicted for «every future wave». `dynasty` is the record of whose daughter she is
+        // (docs/specs/the-dynasty-2026-09.md §3, his go of 22.09); the migration back-fills `null`,
+        // which is what this fixture walks up with.
+        'dynasty',
         // ⭐ v80, wave F1 – the third time this roster is paid for.
         'form',
         'pregnancy',

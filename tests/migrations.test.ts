@@ -646,7 +646,10 @@ describe('save migrations', () => {
     // regenerated, the doc-facts sentence and the frozen-career peel rung), and the walk below gains
     // a rung that writes two literals on two world keys – neither of which a v63 save ever carried,
     // so it changes no byte here either.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 85 – past the colliding 64, through 65').toBe(85)
+    // ⚠ RE-AIMED AT v86 (22.09, wave 10 – `world.dynasty`), NOT WEAKENED: this case is about the v63
+    // -> v65 double step, and its last line simply follows the ladder's head so the sentence over it
+    // stays checkable. v86 was moved with its full move, never by this line's item.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 86 – past the colliding 64, through 65').toBe(86)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

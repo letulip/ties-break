@@ -49,6 +49,7 @@ import {
 import { rngFromSeed } from '../../src/engine/rng'
 import { playLocalOpen, prologueEntrant } from '../../src/prologue/pool'
 import type { MatchOptions, MatchPlayer } from '../../src/engine/match/types'
+import { dynastyOf } from '../helpers/dynastyHandover'
 import type { AlbumPage, CareerEndingType, EndingView, Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
 
@@ -319,6 +320,10 @@ describe('round 36 phase 4 – the epilogue gets a column', () => {
       academy: null,
       lifetimeDeal: null,
       college: null,
+      // ⚠ WAVE 10 T1 – the ending view carries the inheritance block on EVERY ending (his 20.09
+      // ruling: the door never closes), so the type requires it here too. `dynastyOf`'s default is the
+      // humblest block the engine can produce, so this fixture means exactly what it meant before.
+      dynasty: dynastyOf(),
     }
   }
 

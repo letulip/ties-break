@@ -335,7 +335,11 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // this arm for the same reason, not by the migration's 23/29.
     // ⚠ AND v85.json IS THAT SAME PROBE ONE VERSION FURTHER UP – the v25 recipe resumed on v84.json
     // (wave 8 T1's own README row) – so it reads by this arm for the same reason again.
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json') {
+    // ⚠ AND v86.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v85.json)`, wave 10's
+    // own README row – so it reads by this arm for the same reason again, and not by the
+    // migration's 23/29. Measured rather than assumed: its stored curve is `plateauStart: 22`,
+    // which is the fork's own resolution for this seed and route.
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

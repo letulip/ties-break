@@ -47,9 +47,31 @@ import {
   PRE_V83,
   PRE_V84,
   PRE_V85,
+  PRE_V86,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v86: rolling the schema back to 85 – dropping `dynasty` – returns the v85 CAREER on all three', () => {
+    // ⭐⭐ AN IDENTITY, v84's AND v85's OWN KIND, AND THE CASE NAME SAYS SO because the measurement was
+    // taken before a constant was touched. v86 appends ONE world key – `dynasty`, whose daughter she
+    // is (the dynasty spec §3, his go of 22.09) – written ONCE at `createWorld` FROM THE HANDOVER's
+    // optional fifth argument, and `openCareer` hands over no dynasty, so every career in this file
+    // carries the literal `null` for the whole of its life.
+    //
+    // ⚠⚠ THE WRITER'S OWN SIGNATURE IS THE WHOLE ARGUMENT – v84's `prologueTrace` rung, verbatim,
+    // and for once the parallel is exact rather than approximate: no tick, however long, writes this
+    // key, because its ONE writer takes its value from an argument no career in this file is given.
+    // A red HERE beside a green freeze means something started writing `world.dynasty` inside the
+    // tick, which `createWorld`'s own note forbids in as many words.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V86` in tests/coachTravelEdgeFixtures.ts: the three
+    // values below are the three `FROZEN` constants this repo shipped on `main`, reproduced character
+    // for character by the peel. Eleven live cells moved and every rollback rung held.
+    expect(careerHashAtSchema(5, 0, 85), '25k · middle coach · grinder – the verbatim v85 value').toBe(PRE_V86.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 85), '120k · elite coach · grinder – the verbatim v85 value').toBe(PRE_V86.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 85), '8k · self-coached · player – the verbatim v85 value').toBe(PRE_V86.selfTravelling)
+  })
+
   it('⭐⭐⭐ v85: rolling the schema back to 84 – dropping `pregnancy`, `children` and `comeback` – returns the v84 CAREER on all three', () => {
     // ⭐⭐ AN IDENTITY, v84's OWN KIND, AND THE CASE NAME SAYS SO because the per-key diff proved it
     // before a constant was touched. v85 appends THREE world keys – `pregnancy` and `children`, the

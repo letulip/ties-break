@@ -195,7 +195,16 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // first full `test:component` run is therefore where the stale number surfaces – here that was
     // T3's gate, so it was red from `97bf1850` to this line. Re-stamped by the T3 builder, not by
     // the schema's own, exactly as v83 and v84 were.
-    expect(SAVE_SCHEMA_VERSION).toBe(85)
+    // ⚠ AND AGAIN AT v86 (22.09, wave 10 T1/T2 – `world.dynasty`, the record of whose daughter she
+    // is), NOT WEAKENED, for the TWENTIETH time and for the reason verbatim: 86 was moved by that
+    // wave with its full move (bump, append-only migration step, golden fixture v86 and its README
+    // row, e2e fixtures, the doc-facts sentence and the frozen-career peel rung), never by this
+    // line's item. The claim above – «the BUILD-LINE wave moved no schema» – is untouched, and the
+    // pin still follows the ladder's head so the sentence over it stays checkable.
+    // ⭐ AND THE ONE-PROJECT BLIND SPOT DID NOT FIRE THIS TIME, which is the point of the paragraph
+    // above it having been written: this cell was re-stamped IN THE SCHEMA'S OWN COMMIT, by the
+    // builder who moved the constant, because the note three waves running told them where to look.
+    expect(SAVE_SCHEMA_VERSION).toBe(86)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

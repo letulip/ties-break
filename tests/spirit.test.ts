@@ -1324,7 +1324,14 @@ describe('the fence this step is judged by', () => {
       .filter(([path]) => !path.startsWith('engine/'))
       .filter(([, text]) => /\btemperament\b/i.test(codeOnly(text)))
       .map(([path]) => path)
-    expect(named).toEqual(['shared/protocol/narrative.ts'])
+    // ⚠ RE-AIMED 22.09 BY WAVE 10's T1, AND NOT WEAKENED. The FENCE is the assertion above this one
+    // – no component, store or composable may name it – and that half is untouched and still empty.
+    // What moved is the list of FACTS SHAPES allowed to carry the id: `DynastyHandover`
+    // (`shared/protocol/profile.ts`) carries `motherTemperament`, because §7's heredity needs the
+    // mother's birth axis at the daughter's creation and the block is the only thing that crosses.
+    // It is a fact riding the wire exactly as `DiaryFacts.temperament` does one module over, and no
+    // screen reads either – which is what the first assertion goes on proving.
+    expect(named).toEqual(['shared/protocol/narrative.ts', 'shared/protocol/profile.ts'])
   })
 
   it('⚠⚠ attachmentLift is read ONCE – in accrueSpirit’s return TARGET – and nowhere else', () => {

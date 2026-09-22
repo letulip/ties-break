@@ -19,11 +19,22 @@ canonical spec the wave builds against, and the step-by-step instruction for the
 Written before the wave lands; the builder updates this section as tasks ship, and the measured
 column of §8 is filled from the bench, never predicted twice.
 
-- `SAVE_SCHEMA_VERSION` is 85. The wave moves it to 86 (one field, `dynasty`, backfilled `null`).
+- ⭐ **SHIPPED (T1/T2)** – `SAVE_SCHEMA_VERSION` is **86**: one field, `dynasty`, back-filled `null`.
+  The full move landed in one range – the bump, the append-only `v === 85` step, the golden fixture
+  `tests/fixtures/saves/v86.json` and its README row, the regenerated `e2e/fixtures`, the peel rung
+  and `PRE_V86` in `tests/coachTravelEdgeFixtures.ts`, and the mechanically-checked sentence in
+  `docs/context/saves-and-worker.md`. ⚠ The frozen careers are **not** an identity across this
+  version and the difference was measured rather than discovered: `dynasty` joins `createWorld`'s
+  literal, so eleven LIVE cells re-stamped while every rollback rung held – `careerHashAtSchema(·,
+  ·, 85)` on the new tree reproduces the three `FROZEN` constants `main` shipped, character for
+  character, which proves one key moved and no other byte did.
 - The ending screen offers one continuation: «Raise another» routes to the childhood prologue and
   nothing carries over – `EndingScreen.vue`'s own comment records «NOTHING CARRIES OVER … §5.6's
   own open question and its answer has not moved». This wave is that answer moving.
-- `wasThereAChild` (`world/endings.ts`) returns literal `false` – the pre-built hook, waiting.
+- ⭐ **SHIPPED (T1)** – `wasThereAChild` (`world/endings.ts`) reads `world.children.length > 0`. The
+  hook was built in v1 returning a literal `false` and its own comment promised this day; only the
+  comment's tense moved. It is the ONE predicate the door's two texts fork on, and
+  `EndingView.handoff.childBorn` asks it too, so the two cannot disagree.
 - His three rulings of 22.09 (second exchange) closed every open item: the mother's four strokes
   are IN («звучит интересно, давай попробуем реализовать»), the news floor is IN by his word on
   the recommendation, and the four support portraits landed downscaled the same day – the

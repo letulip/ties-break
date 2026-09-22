@@ -48,6 +48,7 @@ export type {
   SessionKind,
   PrologueYear,
   PrologueHandover,
+  DynastyHandover,
   PrologueTrace,
   PrologueTraceOpen,
   WeekPlan,

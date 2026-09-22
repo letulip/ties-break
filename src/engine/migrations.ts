@@ -3110,6 +3110,36 @@ export function migrateSave(raw: unknown): WorldState {
     v = 85
   }
 
+  // ⭐⭐⭐ v85 -> v86 – THE DYNASTY (wave 10, docs/specs/the-dynasty-2026-09.md §3). ONE KEY:
+  // `dynasty`, the record of whose daughter she is, back-filled `null`.
+  //
+  // ⚠⚠ THE BACK-FILL IS EXACTLY TRUE AND NOT A BARGAIN, and it is the PLAINEST case this ladder has:
+  // every save in the world is a generation-zero career, because until this version the game could
+  // not create any other kind. There is no lost fact here for a reconstruction to be tempted by –
+  // `loveEpisodes`'s v72 argument rather than `prologueTrace`'s v84 one – and «this career began no
+  // line» is the complete statement about all of them.
+  //
+  // ⚠ `??=` AND NEVER `||=`, the standing rule of every step above. On this step's data the two are
+  // again indistinguishable (a real record is an object and therefore truthy, and the only falsy
+  // value the key can legitimately hold is the `null` the back-fill writes anyway), and the rule is
+  // kept as a RULE for the same reason v85's block states: the step that finally needs it should not
+  // be the one discovering it. The arm that IS real here is `=`, which would clobber a record a save
+  // is carrying – tests/wave10-handover.test.ts §D crafts the payload that sees it, because no
+  // fixture in the golden corpus can.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: one `??=` on one world key, gated on `v === 85`, writing one literal.
+  // No sub-stream is reached on this path, so MAIN cannot move and the frozen capture
+  // (41550 / e6b0c709) is untouched by construction.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v86.json, its
+  // row in tests/fixtures/saves/README.md, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 85) {
+    save.dynasty ??= null
+    v = 86
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

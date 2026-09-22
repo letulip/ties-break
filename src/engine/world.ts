@@ -7,6 +7,7 @@ import {
   type FamilyBackground,
   type PlayerProfile,
   type PrologueHandover,
+  type DynastyHandover,
   type StopReason,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
@@ -214,6 +215,13 @@ import {
   // own reason: T9's bench and the suites must read the SHIPPED step, never a second copy of it.
   resolveReturnDecision,
   wasThereAChild,
+  // ⭐⭐ v86 – the dynasty's block and the two helpers that own the ancestry format. On the barrel
+  // for `resolveReturnDecision`'s own reason: the bench, the suites and `createWorld` must all read
+  // the SHIPPED builder, never a second copy of it.
+  dynastyHandoverOf,
+  dynastyBackgroundOf,
+  childSeedFor,
+  ancestorSeedOf,
 } from './world/endings'
 // ⭐ P5 – WHAT IS BEHIND THE DOOR (docs/specs/college-as-a-second-act-2026-08.md). `inCollege` moved
 // out of `world/endings.ts` into this module and is re-exported below under its historical name, so
@@ -315,6 +323,10 @@ export {
   resolveEndings,
   resolveReturnDecision,
   wasThereAChild,
+  dynastyHandoverOf,
+  dynastyBackgroundOf,
+  childSeedFor,
+  ancestorSeedOf,
 }
 export { buildAlbum, buildScroll } from './world/album'
 // ⭐ THE ALBUM BOOK (docs/specs/the-album-2026-09.md) – the on-demand assembly the worker's `album`
@@ -1517,6 +1529,13 @@ export function createWorld(
   profile: PlayerProfile = DEFAULT_PROFILE,
   careerId: string = `legacy-${seed}`,
   prologue?: PrologueHandover,
+  /** ⭐⭐⭐ v86 (the dynasty, wave 10 T2) – THE FIFTH ARGUMENT, AND IT IS `prologue`'s PRECEDENT
+   *  VERBATIM: absent means byte-for-byte the career this function has always created, which is the
+   *  property `tests/wave10-handover.test.ts` §C measures rather than asserts. Present, it does
+   *  exactly three things – answers the origins card (§4's band), persists the record, and hands T3
+   *  the mother's temperament. It does NOT open a different code path: there is one literal below and
+   *  there always was. */
+  dynasty?: DynastyHandover,
 ): WorldState {
   // ⭐ THE NINE YEARS, SPENT. Everything below reads `arrival` and `profile`; when there is no
   // prologue both are what they have always been, so there is ONE code path and not two.
@@ -1527,6 +1546,20 @@ export function createWorld(
   // so the set of girls a prologue can hand over is the SAME SET a fresh fourteen-year-old is drawn
   // from). No stream is touched and no schema is owed.
   const arrival = years.length > 0 ? childhoodArrival(born, years) : born
+  // ⭐⭐ §4 AND §6.3 – ON A DYNASTY RUN THE ORIGINS CARD IS NOT ASKED, BECAUSE THE BLOCK ANSWERS IT.
+  // The band was mapped at the mother's ending off HER own account (`dynastyBackgroundOf`), so the
+  // family the daughter is born into is the one her mother's career really left behind.
+  //
+  // ⚠⚠ IT IS APPLIED HERE, AHEAD OF THE PROLOGUE'S OWN SPREAD, AND THE ORDER IS LOAD-BEARING:
+  // `prologueCoachTier(profile.background, years)` reads the background one line down, so a dynasty
+  // childhood has to be priced against the band it was really lived in.
+  //
+  // ⚠ AND IT IS DONE ENGINE-SIDE RATHER THAN TRUSTED FROM THE WIRE (invariant 1: every command is
+  // re-validated where the world lives). The prologue screen does not ask the card, so nothing up
+  // there is even in a position to send the right answer – this line is the answer.
+  if (dynasty) {
+    profile = { ...profile, background: dynasty.background }
+  }
   if (prologue) {
     profile = {
       ...profile,
@@ -1939,6 +1972,36 @@ export function createWorld(
     // can put another value in it, however long a career runs, which is what the frozen careers
     // measure.
     comeback: null,
+    // ⭐⭐⭐ v86 (the dynasty, wave 10 T2): WHOSE DAUGHTER SHE IS, OR NOBODY'S. `null` is every career
+    // the game has ever created and every career a wizard or a bench opens today – the IDENTITY in
+    // the plainest sense, and the same literal the v85 -> v86 step back-fills with.
+    //
+    // ⚠⚠ THIS LINE IS THE WHOLE WRITER SET, FOREVER. Nothing in any phase of the tick may write
+    // `world.dynasty`: the record is what the mother's career WAS, frozen at the hand-over, and a
+    // later writer would make the line's own history editable by the life it is living now.
+    //
+    // ⚠ A FRESH COPY, NEVER THE WIRE'S OWN OBJECT – `prologueTrace`'s hygiene four keys up, for the
+    // same reason: the message that carried the block is outside the engine's ownership, and a
+    // persisted field must not alias it.
+    //
+    // ⚠ `ancestorSeed` IS RECOVERED FROM `childSeed` RATHER THAN CARRIED TWICE. The block's seed is
+    // `${root}:dynasty:${generation}` by construction, and `ancestorSeedOf` is `childSeedFor`'s exact
+    // inverse – one spelling of the format, in world/endings.ts, with its own note.
+    //
+    // ⚠⚠ NOW THE LAST KEY OF THE LITERAL and `comeback` has stopped being it, the same handover
+    // `prologueTrace` made to v85's three. ⚠ THE ORDER IS LOAD-BEARING for `JSON.stringify`'s output
+    // on the LIVE world, which is what the live frozen-career hashes are taken over;
+    // `careerHashAtSchema` peels in reverse, newest first, so `dynasty` comes off ahead of them.
+    dynasty: dynasty
+      ? {
+          generation: dynasty.generation,
+          ancestorSeed: ancestorSeedOf(dynasty.childSeed, dynasty.generation),
+          raisedOnTour: dynasty.raisedOnTour,
+          motherName: { ...dynasty.motherName },
+          motherTemperament: dynasty.motherTemperament,
+          motherCareer: { ...dynasty.motherCareer },
+        }
+      : null,
   }
   addEvent(world, {
     week: 0,

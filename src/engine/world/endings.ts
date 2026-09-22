@@ -42,7 +42,7 @@ import {
   retirementDue,
   debtWeeks,
 } from '../ending'
-import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
+import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView, DynastyHandover, EndingView, FamilyBackground, ForkAnswer, TierTrophies } from '../../shared/protocol'
 // ⭐ ROUND 29 PART TWO #10 – the epilogue's academy line reads the LEAVES, never `world/shop.ts`
 // (shop imports THIS file, so the leaf split in `world/assets.ts`' header is what makes this legal):
 // the delivered stages off `./assets`, the income off `./business` (assets + fame, both leaves).
@@ -1228,6 +1228,13 @@ export function buildEndingView(world: WorldState): EndingView | null {
     // ⭐ P5: null on every ending but the college one, and null on that one the moment she leaves.
     // It is the state of an OPEN question – see `collegeProgressOf`.
     college: collegeProgressOf(world),
+    // ⭐⭐⭐ v86 (the dynasty, wave 10 T1) – THE BLOCK THAT CROSSES, ON EVERY ENDING. His 20.09
+    // ruling is that the door never closes, so this is NOT nullable and there is no ending it is
+    // absent on: what forks is the door's TEXT (`raisedOnTour`), never its availability.
+    // ⚠ Computed here rather than when the door is taken, for `handoff`'s own reason four fields
+    // up: the world is the worker's, the screen only ever sees a `Snapshot`, and a block assembled
+    // at the click would have to reach back into a career the UI does not own.
+    dynasty: dynastyHandoverOf(world),
   }
 }
 
@@ -1244,12 +1251,133 @@ export function lifetimeDealOf(world: WorldState): { brand: string; cashCents: n
   return { brand: t.brand, cashCents: t.cashCents }
 }
 
-/** ⚠ THE HOOK, AND IT IS SUPPOSED TO RETURN FALSE. Pregnancy is post-v1 (§5.4) so nothing on a v1
- *  world can answer yes – but §5.6's second sentence made a lineage part of the contract, and a
- *  hand-off that cannot even ASK the question is a hand-off that has to be rewritten rather than
- *  extended. One function, one call site, and the day the system ships it reads real state. */
-export function wasThereAChild(_world: WorldState): boolean {
-  return false
+/** ⭐⭐⭐ THE HOOK, AND THE DAY IT READS REAL STATE HAS COME (wave 10 T1). It was SUPPOSED to return
+ *  `false`: pregnancy was post-v1 (§5.4) so nothing on a v1 world could answer yes – but §5.6's second
+ *  sentence made a lineage part of the contract, and a hand-off that cannot even ASK the question is
+ *  a hand-off that has to be rewritten rather than extended. One function, one question, and the
+ *  promise this comment made is the line below it. ⭐ THE COMMENT IS KEPT RATHER THAN REPLACED,
+ *  because what it records is that the seat was built before it was needed and that the prediction
+ *  held; only its tense has moved.
+ *
+ *  ⚠⚠ IT IS THE **ONE** PREDICATE THE DOOR'S TWO TEXTS FORK ON (the dynasty spec §2, his 20.09 ruling
+ *  «я бы не стал закрывать эту дверь на совсем»). The door itself is open on EVERY ending
+ *  whatever this returns; what it decides is which of the two texts is true – the lived one, which
+ *  may state the girl's age, or the epilogue one, which may not, because there is no birth week to
+ *  read an age out of. A second spelling of «was there a child» anywhere would be a second answer to
+ *  a question with one true answer. */
+export function wasThereAChild(world: WorldState): boolean {
+  return world.children.length > 0
+}
+
+// --- the dynasty (v86, wave 10 T1 – docs/specs/the-dynasty-2026-09.md) -------------------------
+
+/** ⚠⚠ THE ONE SPELLING OF THE ANCESTRY JOIN, and its exact inverse beside it. The child's seed is
+ *  `${ancestorSeed}${DYNASTY_SEED_TAG}${generation}` (§3's «deterministic ancestry», the sketch's own
+ *  phrase), and `createWorld` has to get the ROOT back out of it, because the handover deliberately
+ *  does not carry the root twice.
+ *
+ *  Written as a pair, here, so the join and the split can never drift into two spellings of one
+ *  format – which is this repo's most-caught defect class and the reason `atOrAboveStageBar` exists
+ *  one module over. */
+export const DYNASTY_SEED_TAG = ':dynasty:'
+
+/** The child's seed for a line rooted at `ancestorSeed`, in her generation. Deterministic and
+ *  draw-free: the same ancestor taken through the same rulings always produces the same string. */
+export function childSeedFor(ancestorSeed: string, generation: number): string {
+  return `${ancestorSeed}${DYNASTY_SEED_TAG}${generation}`
+}
+
+/** `childSeedFor`'s exact inverse – the root of the line a child seed belongs to.
+ *
+ *  ⚠ THE ELSE BRANCH IS REACHABLE ONLY BY A HAND-BUILT HANDOVER (a bench, a probe, a test) whose
+ *  `childSeed` was not produced by the function above. For such a seed the honest root IS the seed,
+ *  which is the same rule generation one already follows: a line whose ancestry cannot be read
+ *  begins here. No engine path can reach it – `dynastyHandoverOf` is the only producer of the
+ *  argument and it always joins through `childSeedFor`. */
+export function ancestorSeedOf(childSeed: string, generation: number): string {
+  const suffix = `${DYNASTY_SEED_TAG}${generation}`
+  return childSeed.endsWith(suffix) ? childSeed.slice(0, -suffix.length) : childSeed
+}
+
+/** ⭐⭐ §4 – THE WEALTH BAND, MAPPED ONTO THE THREE CORRIDORS THAT ALREADY EXIST, and it invents no
+ *  fourth one and no special balance. `ECONOMY.startingFundsCents`'s own comment is the law behind
+ *  this: «the whole economy was tuned against them».
+ *
+ *  ⚠⚠ THE THRESHOLDS **READ** THE SAME CONSTANTS THE BANDS ARE MADE OF, never copies of them. A
+ *  hand-typed 120_000_00 here would be a second spelling of the corridor, and the first time the
+ *  economy re-tuned, a dynasty would open on a balance no background in the game has.
+ *
+ *  ⚠ IT READS HER OWN ACCOUNT (`kidFundsCents`, hers since round 23 #18) and NOT the family's:
+ *  the mother is the one starting the next family, and the family purse she grew up in belongs to
+ *  HER parent. A star with a cabinet retires wealthy; a college-fork mother honestly starts the line
+ *  middle or working, which is §4's own sentence. */
+export function dynastyBackgroundOf(kidFundsCents: number): FamilyBackground {
+  const bands = ECONOMY.startingFundsCents
+  if (kidFundsCents >= bands.wealthy) return 'wealthy'
+  if (kidFundsCents >= bands.middle) return 'middle'
+  return 'working'
+}
+
+/** ⭐⭐⭐ THE INHERITANCE BLOCK – THE ONLY THING THAT CROSSES FROM ONE CAREER TO THE NEXT (§3).
+ *
+ *  Built at the ENDING, carried on the ending view, and consumed by `createWorld` as its fifth
+ *  optional argument – `PrologueHandover`'s precedent, verbatim. Pure read, ZERO DRAWS: every field
+ *  is a question asked of records the world already keeps, so this is safe to call from the snapshot
+ *  assembly, from a bench and from a test in any order, and the frozen MAIN capture cannot see it.
+ *
+ *  ⚠⚠ IT IS BUILT ON EVERY ENDING AND THE DOOR NEVER CLOSES – his 20.09 ruling in one line: «Может
+ *  игрок хотел династию, но за время его игры ребенка просто не случилось». What the mother's own
+ *  story prices is the TEXTURE, never the availability: a college-fork career hands over humbler
+ *  facts and licenses none of the «дочь той самой» lines (§5).
+ *
+ *  ⚠ `titles` IS THE SAME FOLD `buildEndingView` DOES FOR ITS OWN COUNT, deliberately not extracted
+ *  into a helper the two would share: it is four lines over a ledger both of them already hold, and
+ *  the pair is asserted equal in tests/wave10-handover.test.ts §A rather than trusted. ⭐ Extracting
+ *  it would be the right call the moment a THIRD reader appears.
+ *
+ *  ⚠ `motherTemperament` TAKES THE `??` COURTESY this file already uses at `answerFork` – it is the
+ *  one spelling of «her birth temperament» for a world that predates v72, not a second derivation. */
+export function dynastyHandoverOf(world: WorldState): DynastyHandover {
+  const generation = (world.dynasty?.generation ?? 0) + 1
+  const ancestorRoot = world.dynasty?.ancestorSeed ?? world.seed
+  const best = bestRankEver(world)
+  let titles = 0
+  for (const tier of Object.keys(world.trophiesByTier) as TierId[]) {
+    titles += world.trophiesByTier[tier].titles.length
+  }
+  // ⚠ WIDENED ON PURPOSE – see the note over `slams` below. The declared type is a total record and
+  // a migrated save is not one; writing the widening down is what stops the next reader "tidying"
+  // the optional chain away.
+  const slamShelf: TierTrophies | undefined = world.trophiesByTier.slam
+  return {
+    generation,
+    childSeed: childSeedFor(ancestorRoot, generation),
+    background: dynastyBackgroundOf(world.kidFundsCents),
+    raisedOnTour: wasThereAChild(world),
+    motherName: { first: world.profile.kidName, last: world.profile.kidLastName },
+    motherTemperament: world.temperament ?? temperamentFor(world.seed),
+    motherCareer: {
+      titles,
+      bestRank: best?.rank ?? null,
+      // ⚠⚠ THE OPTIONAL READ IS NOT DEFENSIVENESS – IT IS THE MEASURED TRUTH ABOUT A MIGRATED SAVE,
+      // AND WITHOUT IT THIS LINE **THREW**. The type says `Record<TierId, TierTrophies>` and a fresh
+      // career really does carry all sixteen rungs (`emptyTrophyLedger`), but **42 of the 87 golden
+      // fixtures carry nine**: every save from v31 up to the day W3-ACT2 added `wta125`, `wta250`,
+      // `wta500`, `wta1000` and `slam`, and no migration back-fills the new shelves. So
+      // `trophiesByTier.slam` is genuinely `undefined` on a career that predates the ladder, and
+      // reading `.titles.length` off it crashed the ending screen of exactly those careers. Caught by
+      // tests/ending.test.ts's «a career saved before this wave existed … reaches a real ending»,
+      // which is the case that exists for this.
+      // ⭐ THE `titles` FOLD ABOVE NEVER HAD THE PROBLEM because it walks `Object.keys` – it counts the
+      // shelves that are there. This line NAMES one, so it has to ask whether it is there.
+      slams: slamShelf?.titles.length ?? 0,
+      // ⚠ THE WEEK THE STORY STOPPED, off the latched ending rather than off `world.week`: a career
+      // sits on its ending screen for as long as the player leaves it there, and the week she stopped
+      // is not the week he closed the app.
+      endedWeek: world.ending?.week ?? world.week,
+      endingKind: world.ending?.type ?? '',
+    },
+  }
 }
 
 /** ⭐ ROUND 29 PART TWO #10 – the epilogue's academy facts, or null when no stage was ever built.

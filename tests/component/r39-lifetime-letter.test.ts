@@ -19,6 +19,7 @@ import { useGameStore } from '../../src/stores/game'
 import { moneyOf } from '../helpers/careerMoney'
 import { ECONOMY } from '../../src/engine/economy'
 import { adLifetimeTerms } from '../../src/engine/offers'
+import { dynastyOf } from '../helpers/dynastyHandover'
 import type { AlbumPage, CareerEndingType, EndingView, Offer, Snapshot } from '../../src/shared/protocol'
 import '../../src/style.css'
 
@@ -134,6 +135,10 @@ function endingView(type: CareerEndingType = 'natural', over: Partial<EndingView
     academy: null,
     lifetimeDeal: null,
     college: null,
+    // ⚠ WAVE 10 T1 – the ending view carries the inheritance block on EVERY ending (his 20.09
+    // ruling: the door never closes), so the type requires it here too. `dynastyOf`'s default is the
+    // humblest block the engine can produce, so this fixture means exactly what it meant before.
+    dynasty: dynastyOf(),
     ...over,
   }
 }

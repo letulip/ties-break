@@ -349,7 +349,10 @@ describe('§6 the schema move – v80', () => {
   // move, `form` still arrives at v80, and this line still asserts what a fresh career is stamped
   // with.
   it('the version is the ladder\'s head and a fresh career opens at neutral', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(85)
+    // ⚠ RE-AIMED AT v86 (22.09, wave 10 – `world.dynasty`), NOT WEAKENED, for the reason this pin
+    // has always carried: it follows the LADDER'S HEAD so «v80 is not the head any more» stays a
+    // checkable sentence rather than a stale one. The form half below is untouched.
+    expect(SAVE_SCHEMA_VERSION).toBe(86)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 
