@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 124 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 125 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 13 | [WAVE 10 CLOSES ITS TAIL: «по 2-5 всё да, делай как рекомендуешь»](#22092026--wave-10-closes-its-tail-по-2-5-всё-да-делай-как-рекомендуешь) | 2026-09-22 |
+| general | 14 | [WAVE 11 RULED OPEN: THE WEIGHT, HIS FIVE «ДА» IN ONE LINE](#22092026--wave-11-ruled-open-the-weight-his-five-да-in-one-line) | 2026-09-22 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5091,3 +5091,24 @@ the architect's own commits:
 The middle wealth band's emptiness was re-measured on a sound instrument the same day (spec §8
 row 3): structural, not sampling – kept as shipped, his «а я не очень понял в чем проблема» read
 as the answer it is. The one-clause college-mother floor stays offered, unbuilt.
+
+## 22.09.2026 – WAVE 11 RULED OPEN: THE WEIGHT, HIS FIVE «ДА» IN ONE LINE
+
+Wave 10 merged (PR #153); the layer's last step opens on «да по всем пяти, режь ветку и пиши
+спеку, а я билдера запущу». The five, as asked and answered:
+
+1. **The switch back-fills OFF for migrated saves** – nobody asked them at creation; the weight
+   does not arrive uninvited mid-career, and the settings row is the door for a player who wants
+   it. New careers are ASKED at creation (the 22.09 off-switch ruling, now built by this wave).
+2. **The hidden-window loss builds BOTH branches** – open tells; private is silence, and the
+   `deep` girl may not tell him at all: the parent learns from the absence of entries.
+3. **His 11.09 funeral numbers enter as DRAFTS** – 0.08%/week from the adult rung, spacing ≥156,
+   hard cap 2, `seed:life:loss:<week>` – the bench confirms the corridor, his word finalises.
+4. **The deceased is UNNAMED in v1**, mechanics and copy – the fridge-pool grandmother collision
+   stands until named kin are licensed off live-kin facts, which is its own later work.
+5. **«Рано» beside a loss stays mechanically unlinked** – the boundary law holds (nothing the
+   parent does reaches either hazard), the player draws his own line, and the album does not
+   editorialise. Honest drama without a lying mechanic.
+
+Canonical spec `docs/specs/the-weight-2026-09.md`; builder plan
+`docs/plans/life-wave-11-builder-2026-09.md`; he dispatches the builder.
