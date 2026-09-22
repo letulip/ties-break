@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-262 TypeScript files: **54 live**, **208 archival**.
+263 TypeScript files: **55 live**, **208 archival**.
 
 ## Why the split exists
 
@@ -84,6 +84,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `spotlight-bench.ts` | `npm run bench:spotlight` |
 | `two-doors-bench.ts` | `npm run bench:doors` |
 | `wedding-bench.ts` | `npm run bench:wedding` |
+| `weight-bench.ts` | `npm run bench:weight` |
 | `world-turnover.ts` | `npm run bench:world` |
 
 ## Archival

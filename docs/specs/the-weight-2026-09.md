@@ -18,12 +18,24 @@ honesty stance. The step-by-step instruction is
 
 ## Current truth
 
-Written before the wave lands; the builder updates this section as tasks ship and fills §8's
-measured column from the bench, never predicted twice.
+⭐ **UPDATED 22.09 AS THE WAVE SHIPPED.** Written before the wave landed; the builder updates this
+section as tasks ship and fills §8's measured column from the bench, never predicted twice.
 
-- `SAVE_SCHEMA_VERSION` is 86. The wave moves it to 87 in ONE range: `weightEnabled` (the switch),
-  `pregnancy.conceivedWeek` (the hidden window), and two append-only week lists –
-  `pregnancyLossWeeks`, `bereavementWeeks` – nothing else.
+- `SAVE_SCHEMA_VERSION` is **87**, moved in ONE range exactly as this section asked: `weightEnabled`
+  (the switch), `pregnancy.conceivedWeek` (the hidden window), and two append-only week lists –
+  `pregnancyLossWeeks`, `bereavementWeeks` – and nothing else. All seven parts of the rite in one
+  commit.
+- ⚠ **The loss hazard runs over the RESEARCH's own window and not over the whole term**, which is a
+  deviation from the plan's wording with the study's own denominator behind it: Magnus 2019 counts
+  recognised pregnancies between 6 and 20 GESTATIONAL weeks, which is conception weeks 4–18, so
+  `lossFromWeek`/`lossUntilWeek` are those and the per-week rates integrate over fourteen weeks.
+  Spreading the same totals over 39 weeks would put losses at week 36 – clinically a stillbirth,
+  and much heavier content than this document asked for.
+- ⚠ **`termWeeks: 31` is kept and `termTotalWeeks` is the number the birth rides**, written as the
+  sum `playsOnWeeks + termWeeks` so the provenance is visible; a pin asserts the two agree.
+- ⚠ **The bereavement is a blocking beat with ONE answer priced 0.** §4 drafts no answer prices, and
+  inventing three would be a design decision wearing a constant (invariant 5). `'own-key'`'s
+  one-cell pool is the precedent.
 - The shock table (`ECONOMY.spirit.shock`) is already keyed by `spiritShock.kind` with
   breakup −22/−34 and postpartum −28.8/−45; its own comment reserves seats for «the kinds the
   build plan's steps 7–8 add». The two new kinds land as siblings.
@@ -136,14 +148,18 @@ UNMOVED, and a moved capture is a defect to find, not a pin to update.
 
 | # | claim | predicted | measured |
 | --- | --- | --- | --- |
-| 1 | bereavement frequency over the 23→35 tail, switch on | ~40% of careers meet one, ~8% a second; spacing ≥156 and cap 2 never violated | – |
-| 2 | hazard ↔ temperament correlation (the design-law arm) | zero – identical realised hazard across all four temperaments on shared seeds | – |
-| 3 | pregnancy length on the conception clock | 39–40 weeks lived for every window draw; announcement-to-birth shrinks by exactly the window | – |
-| 4 | realised loss rate by age band, switch on | tracks 9.8 / 10.8 / 16.7% within SEM | – |
-| 5 | window length by openness | open medians 1–4 weeks, private up to 12 – the shipped lag shape, re-read | – |
-| 6 | switch OFF arm | zero weight draws, zero events, byte-identical spirit trace to a pre-wave career | – |
-| 7 | response fairness (±1.5 pp, RESPONSE arms only) | within the corridor; depth/duration ordered by intensity, expression by openness | – |
-| 8 | frozen MAIN capture | unmoved – 41550 / `e6b0c709` | – |
+| 1 | bereavement frequency over the 23→35 tail, switch on | ~40% of careers meet one, ~8% a second; spacing ≥156 and cap 2 never violated | **25.0% met one, 10.0% a second** over 60 walked careers (SEM ±5.6 pp) · **0 violations** · ⚠ the closed form over a FULL 624-week tail is 39.3%, and a walked career lives a **mean of 538** of those weeks – whose closed form is 35%. 25 vs 35 is 1.6 SEM, inside the noise at this n and NOT a confirmation either: `--corpus 200` before anybody tunes |
+| 2 | hazard ↔ temperament correlation (the design-law arm) | zero – identical realised hazard across all four temperaments on shared seeds | **0 disagreements** over 40 seeds × 4 voices, with **13 of 40** control arms meeting one (a sweep of survivors would prove nothing). `bereavementChanceAt()` takes no arguments at all |
+| 3 | pregnancy length on the conception clock | 39–40 weeks lived for every window draw; announcement-to-birth shrinks by exactly the window | **39 weeks on every one of 327** real pregnancies, one value and no other · announcement→birth = 39 − window on **327/327** · every window length 0–12 drawn |
+| 4 | realised loss rate by age band, switch on | tracks 9.8 / 10.8 / 16.7% within SEM | **24–29: 7.2% ± 2.1%** (n 152, target 9.8 – 1.2 SEM) · **30–34: 9.2% ± 2.0%** (n 217, target 10.8 – 0.8 SEM) · **35+: 0 of 7** – ⚠⚠ AND THAT RUNG IS ALMOST UNREACHABLE, which is a finding about the PREGNANCY gate rather than about this curve: `motherhood.perWeekByAge` reads 0 from 35, so nobody CONCEIVES at 35+ and the J-curve's climb is reached only by a pregnancy conceived late in her 34th year whose window crosses the birthday |
+| 5 | window length by openness | open medians 1–4 weeks, private up to 12 – the shipped lag shape, re-read | **open: 70.0% at zero, median of the non-zero draws 3, max 4** · **private: 10.1% at zero, median 6, median of the non-zero 7, max 12** · n 12,000 each. The shipped `ECONOMY.life.lag` table, unchanged and re-read |
+| 6 | switch OFF arm | zero weight draws, zero events, byte-identical spirit trace to a pre-wave career | **OFF arm: 0 weight events** (ON arm: 21) over 60 cells each · ⭐⭐⭐ **`rngMain` identical on 60/60** – the sharper half, because neither hazard takes a MAIN draw and that holds even on a career that met a death · spirit identical on 59/60, and on **45/45** cells the weight never touched. The one cell that differs SHOULD: it met an event |
+| 7 | response fairness (±1.5 pp, RESPONSE arms only) | within the corridor; depth/duration ordered by intensity, expression by openness | depth: loss −26/−40, bereavement −30/−46, against break-up −22/−34 and postpartum −28.8/−45 – the ruled order · **duration IS depth under the one-rate law**: loss clears in **5** weeks steady / **13** intense, bereavement in **6** / **15**, computed from `returnPerWeek` and `shockClearWithin` with no second rate anywhere · expression is openness: the two private voices say nothing at all on a loss (`LOSS_HER_LINE` holds `null`) and least on a death |
+| 8 | frozen MAIN capture | unmoved – 41550 / `e6b0c709` | **UNMOVED**, run rather than assumed: `tests/condition.test.ts` 51 passed, exit 0 |
+
+⚠ **The bench is `tools/weight-bench.ts`** (`npm run bench:weight`); the numbers above are one run at
+`--corpus 60 --hazard 12000`. Row 8 is deliberately NOT measured there – the capture has a pin and a
+bench that re-derived it would be a second spelling of one.
 
 Sources: [the-months-before-she-says-2026-09.md](../design/the-months-before-she-says-2026-09.md) ·
 [pregnancy-in-sport-2026-09.md](../research/pregnancy-in-sport-2026-09.md) ·
