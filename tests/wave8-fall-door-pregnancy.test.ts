@@ -111,6 +111,7 @@ function fallen(seed: string): WorldState {
 function expectingAround(world: WorldState, pausesWeek: number): WorldState {
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    conceivedWeek: pausesWeek - BRIEF.playsOnWeeks,
     announcedWeek: pausesWeek - BRIEF.playsOnWeeks,
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,

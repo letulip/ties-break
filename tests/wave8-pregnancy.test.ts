@@ -207,7 +207,7 @@ describe('wave 8 T2 A – `pregnancyEligible`, and the curve that is deliberatel
   it('⚠ a pregnancy already standing refuses – one at a time, the seat\'s own shape', () => {
     const world = wedded('w8-once', 28)
     world.pregnancy = {
-      episodeId: world.loveEpisodes[0].id, announcedWeek: world.week - 4,
+      episodeId: world.loveEpisodes[0].id, conceivedWeek: world.week - 4, announcedWeek: world.week - 4,
       pausesWeek: world.week + 4, dueWeek: world.week + 35, support: 'warm', rankAtPause: null,
     }
     expect(pregnancyEligible(world), 'she is already carrying one').toBe(false)
@@ -327,7 +327,7 @@ describe('wave 8 T2 B – the gate AND the chance both return before any stream 
       ['ended', (() => { const w = wedded('w8-b2', 28); endEpisode(w, w.week - 1); return w })()],
       ['already carrying', (() => {
         const w = wedded('w8-b3', 28)
-        w.pregnancy = { episodeId: w.loveEpisodes[0].id, announcedWeek: w.week - 4, pausesWeek: w.week + 4, dueWeek: w.week + 35, support: null, rankAtPause: null }
+        w.pregnancy = { episodeId: w.loveEpisodes[0].id, conceivedWeek: w.week - 4, announcedWeek: w.week - 4, pausesWeek: w.week + 4, dueWeek: w.week + 35, support: null, rankAtPause: null }
         return w
       })()],
       // ⚠ RE-AIMED 21.09 BY WAVE 9's T3. The row is kept because what it pins is the DRAW property –
@@ -398,6 +398,11 @@ describe('wave 8 T2 C – the `expecting` beat and the one place `world.pregnanc
     // own formula, so the birth lands 39 weeks after the announcement: a full term.
     expect(world.pregnancy, 'the announcement is a fact about the world the moment she says it').toEqual({
       episodeId: world.loveEpisodes[0].id,
+      // ⚠ RE-AIMED 22.09 BY v87 T1 (the weight – the hidden window), NOT WEAKENED: the record gained
+      // a seventh field, `conceivedWeek`, and on THIS tree it is the announcement week, because T1
+      // ships the field and T2 ships the window that separates the two. The case's claim is
+      // unchanged – the record is written at the raise and its dates are the BRIEF's literals.
+      conceivedWeek: at,
       announcedWeek: at,
       pausesWeek: at + BRIEF.playsOnWeeks,
       dueWeek: at + BRIEF.playsOnWeeks + BRIEF.termWeeks,

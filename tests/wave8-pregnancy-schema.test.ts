@@ -317,7 +317,16 @@ describe('wave 8 T1 B – the keep-branch, on a payload built for it', () => {
     const kept = craftedPregnancy()
     const lived = { ...v84(), schemaVersion: 84, pregnancy: JSON.parse(JSON.stringify(kept)) }
     const out = rec(migrateSave(lived))
-    expect(out.pregnancy, 'a pregnancy already on the record is kept whole').toEqual(kept)
+    // ⚠⚠ RE-AIMED 22.09 BY v87 (wave 11 – the weight), NOT WEAKENED, AND THE RE-AIM IS THE CLAIM
+    // ITSELF GETTING SHARPER. `migrateSave` always walks to the ladder's HEAD, and v87's step adds
+    // `conceivedWeek` to a live pregnancy – so a v84 payload arrives with SIX fields where this case
+    // wrote five. The claim was never «the record is unchanged»; it is «v85's step keeps every field
+    // it found», which `toMatchObject` says exactly, and the extra assertion below says what the one
+    // added field is and where it came from. An equality here would have to be re-written by every
+    // later version that touches the record, which is how a guard gets weakened by attrition.
+    expect(out.pregnancy, 'a pregnancy already on the record is kept whole').toMatchObject(kept)
+    expect((out.pregnancy as Record<string, unknown>).conceivedWeek, 'and v87 added exactly one field, as the pre-window truth')
+      .toBe(kept.announcedWeek)
     // ⚠ AND THE OTHER KEY STILL BACK-FILLS on the same payload, which is what makes the two `??=`
     // lines independent rather than one gate: a save can legitimately be mid-pregnancy with no child
     // yet, and that is in fact the ONLY shape T2..T3 can produce.
@@ -370,7 +379,8 @@ describe('wave 8 T1 B – the keep-branch, on a payload built for it', () => {
       children: JSON.parse(JSON.stringify(children)),
     }
     const out = rec(migrateSave(lived))
-    expect(out.pregnancy).toEqual(pregnancy)
+    // ⚠ RE-AIMED 22.09 BY v87, NOT WEAKENED – the argument is on the first case of this section.
+    expect(out.pregnancy).toMatchObject(pregnancy)
     expect(out.children).toEqual(children)
   })
 
@@ -388,7 +398,11 @@ describe('wave 8 T1 B – the keep-branch, on a payload built for it', () => {
     const once = migrateSave(JSON.parse(JSON.stringify(lived)))
     const twice = migrateSave(JSON.parse(JSON.stringify(once)))
     expect(JSON.stringify(twice)).toBe(JSON.stringify(once))
-    expect(rec(once).pregnancy, 'and it is still hers').toEqual(craftedPregnancy())
+    // ⚠ RE-AIMED 22.09 BY v87, NOT WEAKENED – the argument is on the first case of this section.
+    // ⚠ AND THE IDEMPOTENCY LINE ABOVE IS UNTOUCHED AND IS THE STRONGER HALF: it compares the WHOLE
+    // serialisation of two walks, so a v87 step that wrote `conceivedWeek` differently on the second
+    // pass would redden there whatever this line said.
+    expect(rec(once).pregnancy, 'and it is still hers').toMatchObject(craftedPregnancy())
     expect(rec(once).comeback, 'and so is the comeback, entries and all').toEqual(craftedComeback())
   })
 })

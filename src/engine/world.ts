@@ -503,8 +503,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch } from './world/lifeBeat'
-export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, setWeightEnabled, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, setWeightEnabled, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -1536,6 +1536,16 @@ export function createWorld(
    *  the mother's temperament. It does NOT open a different code path: there is one literal below and
    *  there always was. */
   dynasty?: DynastyHandover,
+  /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE SIXTH ARGUMENT, AND IT IS THE CREATION ASK'S ANSWER.
+   *  `dynasty`'s precedent one line up, with one difference that is a RULING rather than a shape:
+   *  absent means **OFF**, never silently on (the plan's own words), so every bench, probe, fixture
+   *  and sim career this function has ever created is byte-identical to what it was – which is what
+   *  makes §8 row 6's byte-identity arm measurable at all.
+   *
+   *  ⚠ IT IS AN ARGUMENT AND NOT A `PlayerProfile` FIELD, deliberately. The profile is PERSISTED as
+   *  `world.profile`, so a field there plus `world.weightEnabled` would be two spellings of one fact
+   *  – this repo's most-caught defect class – and the settings row writes only one of them. */
+  weightEnabled?: boolean,
 ): WorldState {
   // ⭐ THE NINE YEARS, SPENT. Everything below reads `arrival` and `profile`; when there is no
   // prologue both are what they have always been, so there is ONE code path and not two.
@@ -2012,6 +2022,30 @@ export function createWorld(
           motherCareer: { ...dynasty.motherCareer },
         }
       : null,
+    // ⭐⭐⭐ v87 (the weight, wave 11 T1 – docs/specs/the-weight-2026-09.md §1): THE SWITCH, AS THE
+    // CREATION ASK ANSWERED IT, and the two empty lists a career that has lived no week must have.
+    //
+    // ⚠⚠ `?? false` IS THE RULED DEFAULT AND NOT A DEFENSIVE `??`. «Absent means the ask's default,
+    // never silently on» – so every caller that does not ask (the benches, the sims, the e2e
+    // fixtures, `tests/helpers/career.ts`, forty tools) creates the career it has always created,
+    // and the byte-identity arm of §8 row 6 is a property of the code rather than of a policy.
+    // ⚠ IT IS ALSO THE SAME LITERAL THE v86 -> v87 MIGRATION BACK-FILLS, and here that agreement is a
+    // COINCIDENCE rather than a reason – the two lines answer different questions («nobody asked
+    // this save» against «this caller did not ask»), and `SAVE_SCHEMA_VERSION`'s own block says so.
+    //
+    // ⚠ THE TWO LISTS ARE `[]` FOR `children`'s PLAINEST REASON: she is eight, and nothing has
+    // happened to anybody yet. Same literals the migration back-fills with, and this time for the
+    // same reason rather than by coincidence.
+    //
+    // ⚠⚠ NOW THE LAST THREE KEYS OF THE LITERAL, IN THIS ORDER, and `dynasty` has stopped being the
+    // last – the same handover it took from `comeback` and `prologueTrace` took from `coachDeal`.
+    // Three keys in ONE append, peeled in one destructure: they arrived together, in this order, and
+    // object rest preserves the relative order of everything it keeps. `careerHashAtSchema`
+    // (tests/coachTravelEdgeFixtures.ts) peels in reverse, newest first, so these come off ahead of
+    // `dynasty`.
+    weightEnabled: weightEnabled ?? false,
+    pregnancyLossWeeks: [],
+    bereavementWeeks: [],
   }
   addEvent(world, {
     week: 0,

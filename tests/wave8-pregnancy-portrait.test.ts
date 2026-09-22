@@ -276,6 +276,8 @@ describe('wave 8 T10 §D – `toSnapshot` carries the answer, and only the answe
     world.loveEpisodes = [married(announcedWeek - 104, announcedWeek - 52)]
     world.pregnancy = {
       episodeId: world.loveEpisodes[0].id,
+      // ⚠ v87 – the pre-window shape; the portrait band is read off the announcement.
+      conceivedWeek: announcedWeek,
       announcedWeek,
       pausesWeek: announcedWeek + BRIEF.playsOnWeeks,
       dueWeek: announcedWeek + BRIEF.playsOnWeeks + BRIEF.termWeeks,

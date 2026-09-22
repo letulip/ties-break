@@ -117,6 +117,9 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       setPlan: { type: 'setPlan', plan: { train: 60, rest: 40 }, baseRevision: 0 },
       hireCoach: { type: 'hireCoach', coachId: null, baseRevision: 0 },
       setCoachOnEventWeeks: { type: 'setCoachOnEventWeeks', on: false, baseRevision: 0 },
+      // ⭐ v87 – the weight switch (wave 11 T1). The roster is TOTAL over the command union by type,
+      // so this row was a compile error the moment the command existed, which is the roster's job.
+      setWeightEnabled: { type: 'setWeightEnabled', on: false, baseRevision: 0 },
       setCoachOnJuniorEvents: { type: 'setCoachOnJuniorEvents', on: false, baseRevision: 0 },
       hireMasseur: { type: 'hireMasseur', hire: false, baseRevision: 0 },
       setMasseurSessions: { type: 'setMasseurSessions', sessions: 0, baseRevision: 0 },

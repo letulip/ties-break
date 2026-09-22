@@ -258,6 +258,21 @@ export interface PrologueCard {
    *  reads `options` alone – the five-year-old's card still carries none, and the shape the owner
    *  counted («может тогда больше без решений, 3 или 4?») is unchanged. */
   readonly identity?: true
+  /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ASKED ON THE CARD THAT
+   *  ALREADY ASKS WHO SHE IS (his ruling of 22.09: «set at new-career creation – the creation flow
+   *  ASKS»). `identity`'s shape and `identity`'s reasons, one flag down.
+   *
+   *  ⚠ A FLAG AND NOT COPY, for `identity`'s own reason: the words live in
+   *  `composables/identityCopy.ts` (`WEIGHT_COPY`) where all THREE surfaces read them – this card,
+   *  the wizard, and the settings row that changes it later.
+   *
+   *  ⚠⚠ IT IS NOT A DECISION AND IT IS NOT A `prologue-picks` GROUP. `DECISION_AGES` reads `options`
+   *  alone, so the five-year-old's card still carries none; and the control is the app's own SWITCH
+   *  rather than a radio pair, which is a build decision with a measured reason – the e2e walk
+   *  answers «the first radiogroup with nothing checked» (wave 10's own repair), so a third group on
+   *  this card would quietly change which question that walk answers. A switch has a default, which
+   *  is what «absent means the ask's default, never silently on» asks for anyway. */
+  readonly weight?: true
 }
 
 // =================================================================================================
@@ -299,6 +314,10 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     // because a tenth screen for it would be the quiz §3 exists to avoid. See `identity` on
     // `PrologueCard` and src/prologue/identity.ts.
     identity: true,
+    // ⭐⭐⭐ v87 – AND THE SWITCH, ON THE SAME CARD AND FOR THE SAME REASON: this is the screen a
+    // player meets before anything has happened, which is where a decision about what the next nine
+    // years may contain belongs. A tenth screen for it would be the quiz §3 exists to avoid.
+    weight: true,
     // ⚠ THE ORIGIN, NOT A DIFFICULTY MENU (§7: a difficulty menu is NOT IN v1 and §2.4 replaces it).
     // The three ids are the game's own `FamilyBackground` values, so phase 4 hands `createWorld` a
     // string it already understands and no new type is invented for a choice that already exists.

@@ -36,6 +36,14 @@ import {
   startingSkills,
   type WorldState,
 } from './world'
+// ⚠ v87 (the weight, wave 11) – TYPE-ONLY, for the FIRST step in this ladder that back-fills a
+// field inside a NULLABLE RECORD rather than on a list's rows or on the world. The cast it feeds
+// (`Partial<PregnancyState>`) is the same courtesy v77's `Partial<LoveEpisode>[]` and v78's
+// `Partial<OwnedAsset>` take: `??=` on a required field is a compile error rather than a no-op.
+// ⚠ STRAIGHT FROM `./world/state` AND NOT THROUGH THE BARREL, because the barrel does not carry it:
+// `PregnancyState` is engine-internal (it is not on the wire – the field's own v85 note says why),
+// and type-only imports are erased, so no runtime arrow is added either way.
+import type { PregnancyState } from './world/state'
 // v62: the peak-physical back-fill reproduces `growWeek`'s own decline arithmetic – see the v61 -> v62
 // block for why running it backwards is exact rather than an estimate.
 import { declineFactor, physicalMean, rollPotential, type KidSkills } from './development'
@@ -3138,6 +3146,58 @@ export function migrateSave(raw: unknown): WorldState {
   if (v === 85) {
     save.dynasty ??= null
     v = 86
+  }
+
+  // ⭐⭐⭐ v86 -> v87 – THE WEIGHT (wave 11, docs/specs/the-weight-2026-09.md §1/§2). THREE WORLD
+  // KEYS AND ONE FIELD INSIDE A NULLABLE RECORD – the first step in this ladder that has to reach
+  // into `pregnancy`, and the second after v77's `loveEpisodes` rows that reaches inside anything.
+  //
+  // ⚠⚠ `weightEnabled` BACK-FILLS **`false`** AND THAT IS A RULING, NOT A DEFAULT (22.09, question
+  // 1): «nobody asked a migrated save at creation, and the weight does not arrive uninvited in a
+  // career's middle – the settings row is the door for a player who wants it». ⚠ SO THIS STEP IS
+  // THE ONE PLACE IN THE LADDER WHERE THE BACK-FILL AND `createWorld`'s LITERAL ANSWER DIFFERENT
+  // QUESTIONS: the literal carries what the creation ask answered, this carries what nobody was
+  // asked. v85's and v86's blocks both say «the same literal, and for the same reason rather than by
+  // coincidence»; here the agreement IS the coincidence, and the reason is written down instead.
+  //
+  // ⚠ THE TWO LISTS BACK-FILL `[]` AND THAT ONE IS EXACTLY TRUE – `children`'s v85 argument verbatim:
+  // no save written before this version could hold a loss or a bereavement, because the mechanic
+  // arrives with the version and there was nothing to hold.
+  //
+  // ⚠⚠ `conceivedWeek` BACK-FILLS AS `announcedWeek`, AND IT IS THE **PRE-WINDOW TRUTH** RATHER
+  // THAN A RECONSTRUCTION. Before this version the announcement WAS the conception – that is the
+  // research's finding about `termWeeks: 31`, written at the constant – so this line states what
+  // such a save has always meant rather than inventing a window it never had. `loveEpisodes`'s v72
+  // argument and emphatically not `prologueTrace`'s v84 one. ⚠ AND IT MOVES NO DATE: `dueWeek` and
+  // `pausesWeek` are PERSISTED (`PregnancyState`'s own law), so a career already carrying a
+  // pregnancy is born, paused and due on exactly the weeks it was before the migration ran.
+  //
+  // ⚠ `??=` AND NEVER `||=`, the standing rule of every step above. Here the arm is REAL for the
+  // first time in three versions: `weightEnabled` is a BOOLEAN, so `||=` would overwrite a stored
+  // `false` – the commonest value the key can hold – with `false` again today and with whatever a
+  // later author typed tomorrow. `??=` cannot. `pregnancyLossWeeks` has the same hazard through an
+  // empty array's truthiness going the other way.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: four `??=`, gated on `v === 86`, writing literals and one number
+  // already in the save. No sub-stream is reached on this path, so MAIN cannot move and the frozen
+  // capture (41550 / e6b0c709) is untouched by construction. `spiritShock.kind`'s widening to
+  // `'breakup' | 'postpartum' | 'loss' | 'bereavement'` rides this same version and needs NO step –
+  // v85's own sentence about `'postpartum'`, twice over.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v87.json, its
+  // row in tests/fixtures/saves/README.md, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 86) {
+    save.weightEnabled ??= false
+    save.pregnancyLossWeeks ??= []
+    save.bereavementWeeks ??= []
+    // ⚠ THE CAST IS `Partial<PregnancyState>`'s JOB, v77's `Partial<LoveEpisode>[]` courtesy one
+    // shape over: `conceivedWeek` is REQUIRED on the shipped type, and `??=` on a required field is
+    // a compile error rather than a no-op.
+    const pregnancy = save.pregnancy as Partial<PregnancyState> | null | undefined
+    if (pregnancy) pregnancy.conceivedWeek ??= pregnancy.announcedWeek
+    v = 87
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

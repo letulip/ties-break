@@ -180,6 +180,10 @@ function expecting(world: WorldState, announcedWeek: number, support: PregnancyS
   const pausesWeek = announcedWeek + BRIEF.playsOnWeeks
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    // ⚠ v87 – THE HAND-BUILT RECORD KEEPS THE PRE-WINDOW SHAPE, which is what the v86 -> v87
+    // migration back-fills on a real save: conception AT the announcement. The window is T2's, and a
+    // test about a birth, a return or a pause must not be quietly measuring a window as well.
+    conceivedWeek: announcedWeek,
     announcedWeek,
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,

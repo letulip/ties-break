@@ -1939,6 +1939,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // that figure names its seats instead of totalling the week's `category: 'staff'` rows. The ⚠
     // note beside the promise records the correction; the test that the strip moves by exactly the
     // salary is tests/wave5-psychologist-seat.test.ts §D.
+    // ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE SWITCH, STRAIGHT OFF THE WORLD. `?? false` is the
+    // same courtesy every persisted boolean on this file takes: a save loaded before its migration
+    // has run is never rendered, but a snapshot built over a crafted world in a test is, and
+    // «absent means off» is the ruled reading in both directions.
+    weightEnabled: world.weightEnabled ?? false,
     psychologistHired: world.psychologistHired ?? false,
     psychologistUnlocked: psychologistUnlocked(world),
     psychologistSalaryCents: psychologistWeeklyCents(world),

@@ -181,6 +181,7 @@ function openPairFrom(world: WorldState, from: number): number {
 function expectingFrom(world: WorldState, pausesWeek: number): WorldState {
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    conceivedWeek: pausesWeek - BRIEF.playsOnWeeks,
     announcedWeek: pausesWeek - BRIEF.playsOnWeeks,
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,

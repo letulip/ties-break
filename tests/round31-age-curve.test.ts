@@ -339,7 +339,10 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // own README row – so it reads by this arm for the same reason again, and not by the
     // migration's 23/29. Measured rather than assumed: its stored curve is `plateauStart: 22`,
     // which is the fork's own resolution for this seed and route.
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json') {
+    // ⚠ AND v87.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v86.json)`, wave 11's
+    // own README row – so it reads by this arm for the same reason again, and not by the migration's
+    // 23/29. The weight's three keys are world keys and touch no curve.
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

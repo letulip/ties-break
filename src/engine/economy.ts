@@ -4452,7 +4452,42 @@ export const ECONOMY = {
      *  ANYWHERE, BY DESIGN» is untouched by this row and by `postpartumSupportScale` below, which is
      *  the reason support enters through the MAGNITUDE. See that constant's note for the whole of the
      *  argument, including the mechanical one. */
-    shock: { breakup: { steady: -22, intense: -34 }, postpartum: { steady: -28.8, intense: -45 } } satisfies Record<
+    /** ⭐⭐⭐ v87 (the weight, wave 11 – docs/specs/the-weight-2026-09.md §5) – AND THE TWO THE
+     *  LAST STEP OF THE LAYER ADDS, **DRAFTED**: `loss` −26/−40 and `bereavement` −30/−46. The
+     *  reserved seats this record's own header promised («so the kinds the build plan's steps 7–8
+     *  add land as siblings in this record rather than as a second table»), taken.
+     *
+     *  ⚠⚠ THE ORDER IS THE DESIGN AND IT IS STATED IN THE SPEC: both sit deliberately DEEPER than the
+     *  break-up and ASTRIDE the postpartum pair (−28.8/−45), «because that is the order the lived days
+     *  have». A loss is heavier than a break-up and lighter, at the steady end, than a birth she
+     *  keeps; a death in the family is the heaviest thing this layer holds.
+     *
+     *  ⚠⚠ AND NEITHER BRINGS A SECOND RECOVERY RATE – `spirit.ts`'s standing refusal, which the spec
+     *  quotes back at itself: «a second return rate, a «recovering» flag or a taper read off
+     *  `spiritShock` would all be the same mistake». The sketch's «longer, asymmetric curve» is
+     *  delivered by DEPTH under the one-rate law, and depth is the whole of «longer»: at
+     *  `returnPerWeek` 5 (steady) / 3 (intense) and a clear at `baseline − shockClearWithin` = 68, a
+     *  deeper landing IS a longer window, arithmetically, with no second number anywhere.
+     *
+     *  ⚠ THEY ARE ALREADY INTENSITY-SCALED, `breakup`'s own law two paragraphs up: they go in AFTER
+     *  the scale, on `accrueSpirit`'s own line, and `weekPerturbation` has no row for either and must
+     *  never grow one. ⚠ AND `postpartumSupportScale` DOES NOT TOUCH THEM – it reads
+     *  `shock.kind === 'postpartum'` and returns exactly 1 for every other kind, which is what keeps
+     *  the support grade a fact about a BIRTH rather than a general softener.
+     *
+     *  ⚠ BOTH ARE THE BUILDER'S DRAFTS and are flagged here exactly as `perWeekByAge` and
+     *  `postpartumSupportScale` are: the spec drafts the ORDER and the bench prices them; his word
+     *  finalises. ⚠ BOTH PRODUCTS LAND ON THE METER'S GRID – the constraint `postpartum`'s own note
+     *  measured: −26 × 0.8 = −20.8 and −26 × 1.25 = −32.5; −30 × 0.8 = −24 and −30 × 1.25 = −37.5.
+     *  `world.spirit` is carried in TENTHS (`roundTenth`), and all four are tenths. ⚠ The steady/intense
+     *  pair is written out rather than derived from a base for `breakup`'s own single-source reason:
+     *  §5's two numbers win on drift, and a reconstruction is a comment, not a definition. */
+    shock: {
+      breakup: { steady: -22, intense: -34 },
+      postpartum: { steady: -28.8, intense: -45 },
+      loss: { steady: -26, intense: -40 },
+      bereavement: { steady: -30, intense: -46 },
+    } satisfies Record<
       SpiritShockKind,
       { steady: number; intense: number } | null
     >,

@@ -18,6 +18,10 @@ import { AUDIO_COPY } from '../../composables/audioCopy'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
 import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
 import { isWeekStoryAutoOpenOff, setWeekStoryAutoOpenOff } from '../../composables/weekRecap'
+// ⚠ v87 – ONE DECLARATION, THREE SURFACES. The two creation paths ask the weight in these words
+// and this row changes it in the same ones; a settings hint that said something different from the
+// creation card would be two answers to one question.
+import { WEIGHT_COPY } from '../../composables/identityCopy'
 import {
   DAY_CROSS_PACES,
   DAY_CROSS_PACE_LABEL,
@@ -394,6 +398,23 @@ function toggleWeekStory(): void {
   weekStoryOff.value = !weekStoryOff.value
 }
 
+// --- v87: THE WEIGHT (his ruling of 22.09: «только для веса») -----------------------------
+//
+// ⚠⚠ THE ONE SWITCH ON THIS SCREEN THAT IS **NOT** A localStorage FLAG, AND IT HAS TO BE. Every
+// row above is a device preference – sound, music, haptics, the week's story, the sweep – and works
+// before a career is even loaded. This one is a fact about A CAREER: it is `world.weightEnabled`,
+// persisted in the save, answered at creation, and two careers on one device may honestly disagree
+// about it. A localStorage flag would make one player's answer follow him into a different life.
+//
+// ⚠ SO IT IS ITS OWN SECTION, RENDERED ONLY WITH A CAREER LOADED, and it reads the snapshot rather
+// than a local `ref`: the store writes through `setWeightEnabled`, the worker answers with a fresh
+// snapshot, and the row redraws from the world. That is what makes «effective immediately» a
+// property rather than a claim – there is no second copy of the answer to go stale.
+const weightEnabled = computed(() => game.snapshot?.weightEnabled === true)
+function toggleWeight(): void {
+  void game.setWeightEnabled(!weightEnabled.value)
+}
+
 // --- 16.08: THE WAY BACK TO THE COACH-MARK TOUR -----------------------------------------------------
 //
 // The tour is answered once and then never offered again – which is right, and which used to mean a
@@ -749,6 +770,34 @@ const TAB_OPTIONS = [
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
         <span class="sound-switch-label">{{ weekStoryOff ? 'OFF' : 'ON' }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ⭐⭐⭐ v87 - THE WEIGHT, THE ONE DOOR THE 22.09 RULING PUT IN SETTINGS. Its own section for the
+       reason the script side gives: it is a fact about a CAREER, not a device preference, so it is
+       absent when no career is loaded rather than pretending to be settable from nowhere.
+       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read. -->
+  <section v-if="screenTab === 'play' && game.snapshot">
+    <h2>{{ WEIGHT_COPY.title }}</h2>
+    <div class="career-row">
+      <div>
+        <span id="more-weight-label">{{ WEIGHT_COPY.title }}</span>
+        <!-- `display: block` for the Week-story hint's own measured reason: `.hint` is styled for a
+             <p>, and at 375 a <span> runs on from the label and reads as one line of nonsense. -->
+        <span class="hint" style="display: block; margin: 2px 0 0">{{ WEIGHT_COPY.settingsHint }}</span>
+      </div>
+      <button
+        class="sound-switch"
+        :class="{ on: weightEnabled }"
+        role="switch"
+        :aria-checked="weightEnabled"
+        aria-labelledby="more-weight-label"
+        :disabled="game.busy"
+        @click="toggleWeight"
+      >
+        <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+        <span class="sound-switch-label">{{ weightEnabled ? 'ON' : 'OFF' }}</span>
       </button>
     </div>
   </section>

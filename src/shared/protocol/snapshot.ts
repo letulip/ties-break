@@ -984,6 +984,16 @@ export interface Snapshot {
    *  facts every save already carries – nothing new is persisted and `SAVE_SCHEMA_VERSION` does not
    *  move, on `oneMoreYearCount`'s own standing four fields up. See `CareerMoney`. */
   careerMoney: CareerMoney
+  /** ⭐⭐⭐ v87 (the weight, wave 11 T1 – docs/specs/the-weight-2026-09.md §1) – **IS THE WEIGHT ON
+   *  IN THIS CAREER.** Copied straight off the persisted `world.weightEnabled`, which is why this is
+   *  not a derivation and still not a second source of truth: the settings row READS this and WRITES
+   *  through `setWeightEnabled`, so the screen can never hold an answer the world does not.
+   *
+   *  ⚠ IT IS ON THE WIRE AND THE WAVE'S OTHER THREE KEYS ARE NOT, and the line between them is the
+   *  one `pregnancy` and `comeback` drew in v85: a wire field belongs to the task that has a READER.
+   *  The switch has one – a row on the settings screen, which is where the ruling put the door – and
+   *  `pregnancyLossWeeks`, `bereavementWeeks` and `conceivedWeek` have none outside the engine. */
+  weightEnabled: boolean
 }
 
 // =================================================================================================

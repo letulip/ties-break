@@ -166,6 +166,13 @@ const run = ref<PrologueRun>(openingRun())
 /** ⭐ WHO SHE IS, held HERE and not on the card, so walking off the five and back does not forget
  *  what was typed – and so `begin()` reads one source rather than asking a component for it. */
 const identity = ref<PrologueIdentity>(openingIdentity())
+/** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, AS THE OPENING CARD ANSWERED
+ *  IT. `false` is the RULED default (22.09: «absent means the ask's default, never silently on») and
+ *  it is held HERE rather than on the card for `identity`'s own reason: walking off the opening card
+ *  and back must not forget what was answered. It reaches `createWorld` as the sixth argument at the
+ *  end of the walk, and nothing in the prologue itself reads it – there is no weight in a
+ *  childhood. */
+const weight = ref(false)
 const at = ref(0)
 /** set once the career exists and the handover is up. It is NOT `game.snapshot !== null`: the
  *  snapshot arrives the instant the career is created, and this screen has to outlive that. */
@@ -694,6 +701,10 @@ async function begin(): Promise<void> {
       // hands §7's lean the mother's own axis. Undefined on every other career, which is the shape
       // this call has always had.
       props.dynasty,
+      // ⭐⭐⭐ v87 – AND THE SWITCH RIDES THE SAME CALL AS THE SIXTH ARGUMENT (the weight spec §1).
+      // `createWorld` persists it as `world.weightEnabled`, and from that moment the settings row is
+      // the only thing that can move it.
+      weight.value,
     )
   } finally {
     // ⚠ IN A `finally`, so a refused career does not strand the player on an empty ground with no
@@ -787,6 +798,7 @@ async function startAgain(): Promise<void> {
     :picked="picked"
     :entry="entry"
     :identity="identity"
+    :weight="weight"
     :line="line"
     :skip-label="skipLabel"
     :proceed-label="proceedLabel"
@@ -796,6 +808,7 @@ async function startAgain(): Promise<void> {
     @proceed="proceed()"
     @back="goBack()"
     @identity="identity = $event"
+    @weight="weight = $event"
     @skip="emit('skip')"
   />
 </template>

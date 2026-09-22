@@ -66,7 +66,7 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // screen-reader name below is written here: they all come from `composables/identityCopy.ts`, which
 // the wizard reads too, because CLAUDE.md's invariant 4 says a label is the owner's and a string
 // declared twice is a string that can drift in one copy. See that module's header.
-import { DYNASTY_COPY, IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS, WEIGHT_COPY } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
 // ⚠ THE WIZARD'S OWN CAP, ON THE WIZARD'S OWN IDIOM. This card asks for her name too and reaches
 // `newCareer` on exactly the same path, so `profileShapeError`'s name refusal is as reachable from
@@ -135,6 +135,10 @@ const props = defineProps<{
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
    *  container so that walking off the card and back does not forget what was typed. */
   identity?: PrologueIdentity
+  /** ⭐⭐⭐ v87 – THE WEIGHT SWITCH'S CURRENT ANSWER, present only while the card that asks is up
+   *  (`card.weight`). Owned by the container for `identity`'s own reason: walking off the card and
+   *  back must not forget what was answered. */
+  weight?: boolean
   /** ⭐⭐⭐ v86 – THE LINE, ON A DYNASTY RUN ONLY (docs/specs/the-dynasty-2026-09.md §6.2/§6.3), and
    *  absent on every career the game has ever started. Present, it does exactly two things to this
    *  card and nothing anywhere else:
@@ -202,6 +206,9 @@ const emit = defineEmits<{
   (e: 'skip'): void
   /** a field of the identity was edited – the whole of it, so the container stays the owner */
   (e: 'identity', next: PrologueIdentity): void
+  /** ⭐⭐⭐ v87 – the weight switch was flipped. The container stays the owner, `identity`'s own
+   *  shape: this component holds no state and decides nothing. */
+  (e: 'weight', next: boolean): void
 }>()
 
 // =================================================================================================
@@ -692,6 +699,33 @@ useDialogFocus(cardEl)
           </div>
           <p v-if="searching && !matches.length" class="prologue-empty">{{ IDENTITY_COPY.noMatches }}</p>
         </div>
+      </div>
+
+      <!-- ⭐⭐⭐ v87 - THE ONE SWITCH IN THE GAME, ASKED BEFORE ANYTHING HAS HAPPENED (his ruling of
+           22.09). It sits ABOVE the question and its answers, which is the one structural rule this
+           screen has: `.prologue-answers` must stay the card's last element.
+
+           ⚠ A SWITCH AND NOT A THIRD `.prologue-picks` GROUP - see `weight` on `PrologueCard` in
+           cards.ts for the measured reason. It is the app's own switch, the same control the
+           settings row uses, so the question and the place it is changed later look alike.
+           ⚠ EVERY WORD IS `WEIGHT_COPY`'s - this component holds no strings of its own. -->
+      <div v-if="card.weight" class="prologue-weight">
+        <p class="prologue-weight-title" id="prologue-weight-title">{{ WEIGHT_COPY.title }}</p>
+        <p class="prologue-weight-lead">{{ WEIGHT_COPY.lead }}</p>
+        <button
+          class="sound-switch"
+          :class="{ on: weight }"
+          type="button"
+          role="switch"
+          :aria-checked="weight === true"
+          aria-labelledby="prologue-weight-title"
+          :disabled="busy"
+          @click="emit('weight', !weight)"
+        >
+          <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+          <span class="sound-switch-label">{{ weight ? WEIGHT_COPY.on : WEIGHT_COPY.off }}</span>
+        </button>
+        <p class="prologue-weight-note">{{ WEIGHT_COPY.note }}</p>
       </div>
 
       <!-- ⭐⭐ THE QUESTION THE ANSWERS ANSWER - the owner met three buttons on the age-5 card with
@@ -1299,6 +1333,43 @@ useDialogFocus(cardEl)
    the column and it is the only line on the card with a question mark in it. Not a `label` and not
    a heading: the three answers are buttons, not a fieldset, and a heading over two of the nine
    cards would be a section that exists on some screens and not others. */
+/* ══ v87 - THE WEIGHT, ASKED ON THE OPENING CARD ══
+   ⚠ THE TOKENS ARE THE CARD'S OWN and every one of them is DECLARED with no fallback, which is the
+   rule round-17 #3 earned: `var(--ink, #1c1c1e)` once put near-white text on white at 1.09:1 on a
+   dialog the player could not dismiss. The block is a bordered aside rather than a fourth field
+   column, because it is not a fact about her - it is a decision about what the game may tell. */
+.prologue-weight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-top);
+}
+
+.prologue-weight-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prologue-weight-lead,
+.prologue-weight-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* The switch is the app's own control (`.sound-switch`, src/style.css) and keeps its own size; what
+   this rule does is stop the flex column from stretching it across the block. */
+.prologue-weight .sound-switch {
+  align-self: flex-start;
+}
+
 .prologue-question {
   margin: 0 0 10px;
   font-size: 14px;

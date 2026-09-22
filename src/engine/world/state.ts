@@ -835,7 +835,54 @@ import type { AcademySupport } from '../academy'
 // row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
 // schema sentence, the e2e fixtures, and the frozen-career peel rung in
 // tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 86
+// ⭐⭐⭐ v87 (THE WEIGHT, WAVE 11 T1 – docs/specs/the-weight-2026-09.md §1/§2): THREE KEYS ON THE
+// WORLD AND ONE FIELD ON THE PREGNANCY RECORD. The layer's last step, and the first version in this
+// ladder whose headline key is a SWITCH rather than a seat.
+//
+//   · `weightEnabled: boolean` – the off switch, RULED 22.09 ahead of the build: «only for the
+//     weight, set at new-career creation (the creation flow ASKS), changeable both ways in settings
+//     later; turning it off stops NEW weight events and never deletes lived state».
+//   · `pregnancyLossWeeks: number[]` and `bereavementWeeks: number[]` – append-only week lists, the
+//     `children` precedent one version down: a loss clears the pregnancy record and a death writes
+//     no record at all, so a week recorded only on the thing that ends is a week recorded nowhere.
+//     The bereavement's SPACING and CAP read the second list and never a derived guess.
+//   · `PregnancyState.conceivedWeek` – the hidden window's one persisted number (§2), on the record
+//     rather than on the world for `dueWeek`'s own law: it is the clock a live pregnancy is already
+//     being carried on, and a later retune may not move it.
+//
+// ⚠⚠ THE BACK-FILL IS **`false`** FOR THE SWITCH, AND IT IS A RULING RATHER THAN A DEFAULT (22.09,
+// question 1): «nobody asked a migrated save at creation, and the weight does not arrive uninvited
+// in a career's middle. The settings row is the door for a player who wants it.» ⚠ THIS IS THE FIRST
+// BACK-FILL IN THE LADDER THAT IS NOT THE MECHANIC'S OWN IDENTITY – `createWorld` writes what the
+// creation ask answered, which is a different value from what the migration writes, and that
+// asymmetry is the ruling and not a defect. v86's own block is the contrast: there the literal and
+// the back-fill agree «for the same reason rather than by coincidence».
+//
+// ⚠ THE TWO LISTS BACK-FILL `[]` AND THAT ONE **IS** EXACTLY TRUE – `children`'s v85 argument
+// verbatim: no save written before this version could hold a loss or a bereavement, because there
+// were none to hold. `conceivedWeek` back-fills onto any live pregnancy as its `announcedWeek`,
+// which is the PRE-WINDOW TRUTH: before this version the announcement WAS the conception (the
+// research's finding about `termWeeks: 31`), so the back-fill states what that save actually means
+// rather than reconstructing a window it never had.
+//
+// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE: three `??=` on three world keys plus one `??=` inside a
+// nullable record, gated on `v === 86`, writing literals. No sub-stream is reached on this path, so
+// MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched by construction.
+// `spiritShock.kind`'s widening to `'breakup' | 'postpartum' | 'loss' | 'bereavement'` rides this
+// same version and needs NO step at all – v85's own sentence, twice over: adding a union member
+// cannot invalidate a stored value, and nothing has ever written either new one.
+//
+// ⚠⚠ AND THE FROZEN CAREERS ARE **NOT** AN IDENTITY, v86's case and not v85's: all three keys join
+// `createWorld`'s literal, so the LIVE serialisation of every walked career gains them and every
+// live register re-stamps. The ROLLBACK rungs hold – `careerHashAtSchema` peels the three ahead of
+// `dynasty` – and `PRE_V87` therefore holds the verbatim v86 constants, character for character,
+// which is the receipt for «a pure key append» rather than a sentence claiming one.
+//
+// Full move: this constant, the v86 -> v87 step in migrations.ts, tests/fixtures/saves/v87.json, its
+// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
+// schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 87
 
 
 
@@ -902,8 +949,22 @@ export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself' | 'publicL
  *  ⚠⚠ THE POINT OF NAMING IT IS TOTALITY ACROSS THE MODULE BOUNDARY, which is `ExposureKind`'s own
  *  argument in engine/economy.ts quoted rather than re-made: a `Record<SpiritShockKind, …>` in the
  *  constants file goes red the day a kind joins, instead of letting one ship priced at `undefined`.
- *  The build plan's step 8 (a death in the family) is the next member this is waiting for. */
-export type SpiritShockKind = 'breakup' | 'postpartum'
+ *  The build plan's step 8 (a death in the family) is the next member this is waiting for.
+ *
+ *  ⭐⭐⭐ v87 – **AND STEP 8 ARRIVED WITH TWO RATHER THAN ONE** (the weight, wave 11; the spec's
+ *  §5). `'loss'` is the pregnancy that ended without a birth and `'bereavement'` is the death in the
+ *  family, and they are SIBLINGS in this union rather than one kind with a detail because they are
+ *  priced apart (−26/−40 against −30/−46) and because the diary reads the kind to know which of two
+ *  griefs a week is carrying.
+ *
+ *  ⚠ THE TOTALITY THIS TYPE EXISTS FOR IS WHAT FOUND THEIR PRICES: `ECONOMY.spirit.shock` is a
+ *  `Record<SpiritShockKind, …>` and went red the moment the two members joined, which is exactly the
+ *  «instead of letting one ship priced at `undefined`» the paragraph above promises.
+ *
+ *  ⚠⚠ AND NEITHER BRINGS A SECOND RECOVERY RATE. `engine/spirit.ts`'s refusal – «a second return
+ *  rate, a «recovering» flag or a taper read off `spiritShock` would all be the same mistake» – is
+ *  older than both kinds and binds them: DEPTH is the whole of «longer» (§5). */
+export type SpiritShockKind = 'breakup' | 'postpartum' | 'loss' | 'bereavement'
 
 export interface WorldState {
   schemaVersion: number
@@ -2055,6 +2116,43 @@ export interface WorldState {
    *  READER. T5 and T6 read this record ENGINE-side – the news floor, the booth's licence, the album
    *  page and the feed's texture are all composed where the world is. */
   dynasty: DynastyRecord | null
+  /** ⭐⭐⭐ v87 – **IS THE WEIGHT ON IN THIS CAREER** (the weight, wave 11; the spec's §1). The off
+   *  switch his 22.09 ruling put ahead of the build, and the ONE thing in the game that has one:
+   *  «только для веса» – nothing else in the game gains a toggle, which is §6's own line.
+   *
+   *  ⚠⚠ WHAT `false` MEANS IS **NO DRAW**, NOT A DISCARDED ONE, and that is invariant 2 rather than
+   *  an optimisation: both hazards return on this flag before their stream is derived, so a career
+   *  with the weight off taps the same sub-streams a pre-wave career taps, in the same order, the
+   *  same number of times. §8 row 6 measures it as a byte-identical spirit trace.
+   *
+   *  ⚠ AND IT NEVER DELETES LIVED STATE – the ruling's second half. A career that turns the switch
+   *  off keeps its `pregnancyLossWeeks`, its `bereavementWeeks`, its album pages and its diary: what
+   *  stops is NEW events. The two halves are asserted together in a test that toggles mid-career,
+   *  because a switch that quietly erased a life would be the one reading of this ruling that is
+   *  wrong.
+   *
+   *  ⚠ IT IS ANSWERED AT CREATION AND IS THEREFORE THE FIRST FIELD IN THIS LITERAL WHOSE VALUE COMES
+   *  FROM THE PLAYER rather than from the world's own zero. A migrated save back-fills `false`
+   *  (RULED 22.09, question 1) – see `SAVE_SCHEMA_VERSION`'s block for why the two differ on purpose. */
+  weightEnabled: boolean
+  /** ⭐⭐⭐ v87 – THE WEEKS A PREGNANCY ENDED WITHOUT A BIRTH, append-only (the spec's §3).
+   *  `children`'s own v85 argument, pointed at the other outcome: the pregnancy record is CLEARED on
+   *  a loss – no birth, no comeback – so a loss recorded only there is a loss recorded nowhere, and
+   *  the cooldown that re-arms the hazard would have nothing to read.
+   *
+   *  ⚠ `[]` IS EVERY CAREER IN THE CORPUS and is exactly true rather than a bargain: no save written
+   *  before this version could hold one, because the mechanic arrives with the version. */
+  pregnancyLossWeeks: number[]
+  /** ⭐⭐⭐ v87 – THE WEEKS A DEATH IN THE FAMILY LANDED, append-only (the spec's §4). ⚠⚠ THE
+   *  SPACING AND THE CAP READ **THIS LIST** AND NEVER A DERIVED GUESS, which is the whole reason it
+   *  is persisted: «spacing ≥ 156 weeks, hard cap 2 per career» are statements about the career's
+   *  own history, and the only other place that history could be read from is `spiritShock`, which
+   *  holds ONE mark and clears itself when she recovers.
+   *
+   *  ⚠ THE DECEASED IS UNNAMED (RULED 22.09, question 4) AND THE LIST IS WHY THAT COSTS NOTHING: a
+   *  week number is the whole of what the mechanics need, so there is no field here a name would go
+   *  in and no reader that would want one. Licensing named kin is its own later work. */
+  bereavementWeeks: number[]
 }
 
 /** ⭐⭐⭐ THE PREGNANCY'S SHAPE (v85, wave 8 T1) – see `WorldState.pregnancy`. Engine-only and
@@ -2099,7 +2197,25 @@ export interface PregnancyState {
    *  latch week and the ending all live on the row, and a mid-pregnancy divorce is ORDINARY LIFE
    *  (RULED 20.09) rather than a content branch, so the row may end while this survives it. */
   episodeId: string
-  /** The week the `'expecting'` beat was raised – she told him. Not the week he answered. */
+  /** ⭐⭐⭐ v87 – **THE WEEK THE HAZARD FIRED**, which is the week she conceived and is NOT the week
+   *  she said so (the weight, wave 11; the spec's §2). The two used to be one number, and the
+   *  research is what separated them: «in life there are four to eight weeks between conception and
+   *  «I have something to tell you»».
+   *
+   *  ⚠⚠ THE BIRTH ARITHMETIC RIDES **THIS** CLOCK AND NOT `announcedWeek` – the ONE-NUMBER LAW
+   *  (§2, the research's own finding): `termWeeks: 31` assumed conception AT the announcement, so a
+   *  window added on top of it without moving the term would make her pregnancy 43–47 weeks long.
+   *  `dueWeek = conceivedWeek + ECONOMY.motherhood.termTotalWeeks`, and the announcement sits INSIDE
+   *  the term rather than ahead of it.
+   *
+   *  ⚠ A MIGRATED SAVE BACK-FILLS IT AS `announcedWeek`, WHICH IS THE PRE-WINDOW TRUTH RATHER THAN
+   *  A RECONSTRUCTION: before this version the announcement really was the conception, so a save
+   *  carrying a live pregnancy is stating what it always meant. Its `dueWeek` is persisted and is
+   *  not recomputed, so the migration moves no date on a career already carrying one. */
+  conceivedWeek: number
+  /** The week the `'expecting'` beat was raised – she told him. Not the week he answered.
+   *  ⚠ SINCE v87 THIS IS THE WEEK SHE **SAID IT**, `conceivedWeek` + the drawn window, and the pause
+   *  still counts from here: «the window only moves knowledge, not the calendar of play» (§2). */
   announcedWeek: number
   /** The week entries close and the pause begins. */
   pausesWeek: number

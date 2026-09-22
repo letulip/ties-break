@@ -935,7 +935,15 @@ type PsyRegister = 'plain' | NonNullable<WorldState['spiritShock']>['kind']
 // an agent's to write** (invariant 4): T8 drafts it and the owner passes it. Listing the register
 // while owing the column is the only split that keeps both halves honest – the roster stays total, so
 // step 8's kind still reds here, and no line of copy is invented by a schema task.
-const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = { plain: true, breakup: true, postpartum: true }
+// ⭐⭐⭐ v87 – AND STEP 8 LANDED WITH TWO, so this record went red twice more and both registers are
+// listed with their COLUMNS owed for `postpartum`'s own reason, below.
+const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = {
+  plain: true,
+  breakup: true,
+  postpartum: true,
+  loss: true,
+  bereavement: true,
+}
 const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
 
 /** ⭐⭐ WHAT THE PSYCHOLOGIST SAYS – 6 drafts, his register x the coach's driver.
@@ -1016,6 +1024,25 @@ const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string> | null> = 
    *  below is what makes that safe to rely on: the day a second raise site appears it names this
    *  cell by register instead of reading `undefined[driver]`. */
   postpartum: null,
+  /** ⭐⭐⭐ v87 – THE SAME TWO COLUMNS OWED, FOR THE SAME REASON AND WITH THE SAME STRUCTURAL
+   *  UNREACHABILITY, and they are written as `null` rather than aliased to `plain`'s for the
+   *  refusal named one cell up: a man telling a woman the week after a loss that «nothing is
+   *  sitting on top of this one» is a bug that reads well.
+   *
+   *  ⚠⚠ UNREACHABLE BY THE SAME THREE FACTS, and this time the ages make it airtight rather than
+   *  merely true today. The register is stamped at ONE site, off a `'fork-opinion'` row answered
+   *  `stop`, which is the fork at NINETEEN and blocks the calendar until it is answered – and both
+   *  of this wave's kinds are gated far above it: a pregnancy needs a marriage (23+, wave 7) and
+   *  the bereavement needs the ADULT rung (`kidAgeExact ≥ 23`, §4). So no career can hold either
+   *  mark on the one week this table is read, and the cells are owed by TYPE rather than by need.
+   *
+   *  ⚠ WHAT A FUTURE COLUMN WOULD OWE: three sentences per kind in his voice, under the honesty law
+   *  two blocks up, drafted by a content task and passed by the owner – never by a schema task
+   *  (invariant 4). And §4 adds one clause of its own for `bereavement`: **the deceased is UNNAMED
+   *  in mechanics and copy** (RULED 22.09), so a column that named a relative would be unshippable
+   *  whoever wrote it. */
+  loss: null,
+  bereavement: null,
 }
 
 /** The parent's frame over his card. ONE line and not a register table, `COUNSEL_HEADING`'s own call:
@@ -6603,6 +6630,9 @@ export function rollPregnancy(world: WorldState): void {
     announcedWeek: world.week,
     pausesWeek,
     dueWeek: pausesWeek + ECONOMY.motherhood.termWeeks,
+    // ⭐⭐⭐ v87 T1 – THE WEEK THE HAZARD FIRED. T2 is what makes it differ from `announcedWeek`;
+    // on this line they are the same number, which is exactly what every save before v87 means.
+    conceivedWeek: world.week,
     // ⚠ NULL IS A REAL STATE AND NOT A PLACEHOLDER: she has told him and he has not answered yet.
     // `answerLifeBeat` writes the grade, once, on the answer (T1's own note on the field).
     support: null,
@@ -7050,4 +7080,40 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
     // gap, and every available default would be a plan nobody chose.
     returnPlan: null,
   }
+}
+
+// =================================================================================================
+// 15. THE WEIGHT – ⚠⚠ THE SWITCH, THE HIDDEN WINDOW, AND THE TWO GRIEFS (wave 11)
+// =================================================================================================
+//
+// `docs/specs/the-weight-2026-09.md` is the canon, `docs/plans/life-wave-11-builder-2026-09.md` the
+// step-by-step, and `docs/design/the-months-before-she-says-2026-09.md` the design underneath. It is
+// §15 for §14's own stated reason: appended rather than renumbered.
+//
+// ⚠⚠ THE ONE THING THIS SECTION MUST NEVER MODEL IS THE PARENT AS THE CAUSE, and it is a FINDING
+// rather than a scruple (the design's §2, the research's §6.3): nothing in the evidence supports
+// training as a cause of a pregnancy loss, and a game that priced one would be telling every player
+// the sentence women already hear too often. So the boundary below is written into the SIGNATURES –
+// both hazards take their arguments and read nothing else – and both are pinned by a sweep rather
+// than by a comment.
+
+/** ⭐⭐⭐ v87 – THE SWITCH, BOTH WAYS, AND ITS ONE WRITER OUTSIDE `createWorld` (RULED 22.09: «only
+ *  for the weight, set at new-career creation (the creation flow ASKS), changeable both ways in
+ *  settings later»). `setCoachOnEventWeeks`'s shape (`world/coachMarket.ts`) and nothing more.
+ *
+ *  ⚠⚠ IT WRITES ONE FIELD AND DELETES NOTHING, WHICH IS THE **OTHER HALF OF THE RULING** and the
+ *  half a future reader is most likely to get wrong: «turning it off stops NEW weight events and
+ *  never deletes lived state». `pregnancyLossWeeks`, `bereavementWeeks`, the album, the diary and a
+ *  live `spiritShock` all stand – a career that lived a loss has lived it, and a switch that tidied
+ *  its own history away would be rewriting a life rather than stopping one. The test that toggles
+ *  mid-career asserts BOTH halves, because only one of them is visible in this function.
+ *
+ *  ⚠ AND THERE IS NO «EFFECTIVE FROM NEXT WEEK» ANYWHERE. The flag is read at the top of each
+ *  hazard, on the week the hazard runs, so the command's own snapshot is already the answer – which
+ *  is what «changeable both ways, effective immediately» means when it is built rather than claimed.
+ *
+ *  ⚠ ZERO DRAWS: one assignment. It takes no `Rng`, so MAIN is structurally out of reach and the
+ *  frozen capture (41550 / e6b0c709) cannot see it. */
+export function setWeightEnabled(world: WorldState, on: boolean): void {
+  world.weightEnabled = on
 }
