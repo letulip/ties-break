@@ -15,7 +15,7 @@
  *
  * Run:
  *   npm run bench:dynasty                 # every row
- *   npx vite-node tools/dynasty-bench.ts --lean 400 --corpus 24 --cap 1200
+ *   npx vite-node tools/dynasty-bench.ts --lean 400 --corpus 24 --cap 1600
  */
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
@@ -59,9 +59,11 @@ const LEAN_N = numArg(argv, '--lean', 400)
 /** How many (preset × policy × seed) cells the corpus rows walk. 24 is one full sweep of the six
  *  live presets against both policies at two seeds – ~110 s on this machine. */
 const CORPUS_N = numArg(argv, '--corpus', 24)
-/** The belt on a walk. Every career reaches an ending long before it; a career that does not is
- *  REPORTED as unfinished rather than silently counted as one of the endings. */
-const CAP = numArg(argv, '--cap', 1200)
+/** The belt on a walk – 1600 since the walker answers the offer (wave 10's review): the natural
+ *  ending lands at week ~1506, so the old 1200 was cutting exactly the endings the corpus now
+ *  exists to see. A career that still does not finish is REPORTED as unfinished rather than
+ *  silently counted as one of the endings. */
+const CAP = numArg(argv, '--cap', 1600)
 
 const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 
@@ -161,10 +163,16 @@ function corpusCells(n: number): [number, number, number][] {
 function walkCorpus(): Lived[] {
   const out: Lived[] = []
   for (const [preset, policy, seed] of corpusCells(CORPUS_N)) {
-    const { world, rng } = openCareer(PRESETS[preset], seed, POLICIES[policy])
+    // ⭐ WAVE 10 (the review) – THE OFFER IS ANSWERED, so this corpus's careers can END the way the
+    // game ends them. Without the opt-in no bench career ever ends naturally (the walker ignored
+    // the retirement stop, `Policy.answerRetirementOffers`' own note) and rows 3/5 were measured
+    // over injuries, bankruptcies and cap cut-offs only. The historical arms stay untouched –
+    // this is a per-walk opt-in, exactly so their published numbers keep reproducing.
+    const pol = { ...POLICIES[policy], answerRetirementOffers: true }
+    const { world, rng } = openCareer(PRESETS[preset], seed, pol)
     let weeks = 0
     while (world.ending === null && weeks < CAP) {
-      stepCareerWeek(world, rng, POLICIES[policy])
+      stepCareerWeek(world, rng, pol)
       weeks += 1
     }
     out.push({ cell: `p${preset}/pol${policy}/i${seed}`, world, weeks, finished: world.ending !== null })
