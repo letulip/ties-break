@@ -58,6 +58,14 @@ column of §8 is filled from the bench, never predicted twice.
   ⚠⚠ **And the lived door states no AGE**: §2 licenses it «from `bornWeek` arithmetic» and the block
   carries no `bornWeek`. The licence is unexercised rather than faked; his call whether to add one.
 
+- ⭐ **SHIPPED (T5)** – fame from birth. `motherWasKnown` is the ONE spelling both clauses read; the
+  `noticed` floor fires from week 0 on a known mother and never reaches `'known'`; the booth's
+  lineage licence is `titles > 0 || motherWasKnown`, with two DRAFT pools of two lines so a
+  titleless mother is never given a cabinet. ⚠ **One interaction recorded rather than bent**: a
+  mother with a cabinet whose best professional ranking never cleared the bar licenses the texture
+  and does NOT raise the floor, so the booth stays silent until her daughter is noticed in her own
+  right. The lineage rides the booth's licence rather than replacing it.
+
 ## 1. What the dynasty is, in one paragraph
 
 The player plays the parent – never the daughter. So the dynasty is not «play as her»: at the end

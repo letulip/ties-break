@@ -166,6 +166,10 @@ const props = withDefaults(
      *  match, which is almost every match and every existing caller. It keeps their logs
      *  byte-identical, which is what makes this additive. */
     boothPrivateLife?: BoothPrivateLife | null
+    /** ⭐⭐ v86 – her mother's cabinet, when the booth is licensed to name the line
+     *  (`PendingView.boothLineage`). Null on every career that continues none, which is every career
+     *  the game has ever created. */
+    boothLineage?: { titles: number; slams: number } | null
     /** ⭐ ROUND 39 #15a – ONE QUIET LINE UNDER THE RETIREMENT POPUP'S REASON, for the caller that
      *  knows more about the moment than the model does. The prologue's Local Open passes the
      *  parent's reassurance here (`LOCAL_OPEN_COPY.hurtNote` – a prologue weekend stores no injury,
@@ -178,7 +182,7 @@ const props = withDefaults(
      *  existing caller's popup is byte-identical. */
     hurtNote?: string | null
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, boothPrivateLife: null, hurtNote: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, boothPrivateLife: null, boothLineage: null, hurtNote: null },
 )
 // `finish` = "the player is done with this match". ⚠ R17 #10 MOVED WHEN IT FIRES, NOT WHAT IT MEANS:
 // with a `proceedLabel` it waits for the Proceed press, and without one it still fires the instant
@@ -850,7 +854,10 @@ const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, cou
 // rival's replay, where nobody's private life is the family's, so the booth is silent there by
 // construction rather than by a rule anybody has to remember.
 const commentary = computed(() =>
-  buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent, props.coachTravelled && kidSide.value !== null ? { side: kidSide.value } : null, props.boothPrivateLife && kidSide.value !== null ? { ...props.boothPrivateLife, side: kidSide.value } : null),
+  buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent, props.coachTravelled && kidSide.value !== null ? { side: kidSide.value } : null, props.boothPrivateLife && kidSide.value !== null ? { ...props.boothPrivateLife, side: kidSide.value } : null,
+    // ⭐⭐ v86 – the LINE, on the same one-line pattern and with the same `kidSide` guard: a rival's
+    // replay is silent by construction, because nobody's mother is the family's there.
+    props.boothLineage && kidSide.value !== null ? { ...props.boothLineage, side: kidSide.value } : null),
 )
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,

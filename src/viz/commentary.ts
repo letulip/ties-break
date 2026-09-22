@@ -846,6 +846,44 @@ const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
 ]
 
 /** The pool for one packet – the two facts crossed, and nothing else decides it. */
+/** ⭐⭐⭐ v86 – THE LINE, IN THE BOOTH (docs/specs/the-dynasty-2026-09.md §5). Whether it may be said
+ *  is an ENGINE fact – `boothLineageAt` in `engine/world/spotlight.ts` asks the same three gates the
+ *  private-life mention passes, and licenses NOTHING off a mother nobody watched. What arrives here
+ *  is two counts, and this file's whole job is HOW it is said: `CommentaryPrivateLife`'s own split,
+ *  one fact over.
+ *
+ *  ⚠ `titles` AND `slams` ARE HERE BECAUSE THE COPY FORKS ON THEM. A mother with a cabinet and a
+ *  mother the press merely knew are two different TRUE things, and one pool for both would put a
+ *  title in the booth's mouth that nobody won – which is this file's honesty rule, not a nicety. */
+export interface CommentaryLineage {
+  side: Side
+  /** her mother's titles, summed over the cabinet – 0 for a mother licensed by her RANKING alone */
+  titles: number
+  /** the slam shelf alone, out of `titles` */
+  slams: number
+}
+
+/** «Дочь той самой», when the cabinet is real. DRAFTS for his pass – new strings, written once.
+ *
+ *  ⚠ NOT ONE OF THEM NAMES THE MOTHER. The booth is looking at the girl on the court and the family
+ *  name is already on the board in front of it; reaching for a first name would be inventing a fact
+ *  the packet does not carry. */
+const BOOTH_LINEAGE_TITLED: readonly ((who: string) => string)[] = [
+  (who) => `The name on the board has been on it before. ${who} is her mother's daughter, and her mother won here.`,
+  (who) => `${who} grew up in these corridors. The trophies with that name on them are her mother's.`,
+]
+
+/** ...and when there is no cabinet, only a mother the tour knew. Same fact, one claim smaller. */
+const BOOTH_LINEAGE_KNOWN: readonly ((who: string) => string)[] = [
+  (who) => `That surname used to be on the entry lists. ${who} is the second of them to play this stage.`,
+  (who) => `${who} is not the first in her family to walk out here. Her mother did it first.`,
+]
+
+/** Which of the two the facts license – the fork the packet exists for. */
+export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: string) => string)[] {
+  return ctx.titles > 0 ? BOOTH_LINEAGE_TITLED : BOOTH_LINEAGE_KNOWN
+}
+
 function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => string)[] {
   if (ctx.kind === 'met') return ctx.wrong ? BOOTH_MET_WRONG : BOOTH_MET_TRUE
   return ctx.wrong ? BOOTH_ENDED_WRONG : BOOTH_ENDED_TRUE
@@ -1431,6 +1469,11 @@ export function buildCommentary(
    *  engine's function is deliberately not NAMED here: `tests/spirit.test.ts`'s fog rule refuses that
    *  identifier anywhere outside `engine/`, prose included. See THE BOOTH TOUCHES HER PRIVATE LIFE. */
   privateLife: CommentaryPrivateLife | null = null,
+  /** ⭐⭐⭐ v86: the booth may name the LINE she comes from, and which side of the net is hers.
+   *  ⚠ OPTIONAL AND DEFAULTED TO null ON `privateLife`'s OWN PRECEDENT, verbatim: every caller that
+   *  passes nothing gets exactly the log this function returned before it existed, and the ladder only
+   *  ever adds. See THE LINE, IN THE BOOTH. */
+  lineage: CommentaryLineage | null = null,
 ): Beat[] {
   const points = match.points
   if (points.length === 0) return []
@@ -1955,6 +1998,32 @@ export function buildCommentary(
         undefined,
         false,
       )
+      break
+    }
+  }
+
+  // --- ⭐⭐⭐ v86 – THE LINE, IF THE ENGINE LICENSED IT -------------------------------------------
+  //
+  // The same changeover anchor and the same declining-rather-than-losing rule as the private-life
+  // beat directly above, and for the same reason. ⚠ TWO DIFFERENCES, both deliberate:
+  //
+  //   · IT YIELDS TO THE PRIVATE-LIFE BEAT. `taken` is re-read after that block has pushed, so a
+  //     week where the booth is already spending a changeover on «there is somebody» does not spend a
+  //     second one on her mother. Two off-court beats in one match is the noise the channel's own
+  //     «one row per week, not per event» law exists to refuse.
+  //   · NOTHING IS STAMPED. The private-life fact is spent once and for ever; a lineage is TRUE FOR
+  //     EVER, so this beat has no once-ness and no cooldown of its own – the big-stage licence is the
+  //     rarity, exactly as it is for the mention above.
+  if (lineage) {
+    const taken = new Set(cands.map((c) => c.pointIndex))
+    for (const g of s.games) {
+      if (g.setEnd) continue
+      if ((g.gamesAfter[0] + g.gamesAfter[1]) % 2 !== 1) continue
+      const next = g.last + 1
+      if (next > lastIndex) continue
+      if (taken.has(next)) continue
+      const lines = boothLineageLines(lineage)
+      push(next, 'booth', 'Off court.', lines[variant(next, lines.length)](names[lineage.side]), undefined, false)
       break
     }
   }

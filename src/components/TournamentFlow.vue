@@ -1151,6 +1151,9 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
          ⭐ ROUND-21 #2: `coach-travelled` is the broadcast half of the owner's third ask - the same
          engine answer the splash's presence line draws, handed to the running commentary so the two
          surfaces cannot describe one trip differently.
+         ⭐⭐ v86: `booth-lineage` is that same move once more - the engine decided whether the line
+         may be named (`boothLineageAt`), this passes two counts, and `src/viz/commentary.ts` owns
+         every word of it.
          ⭐⭐⭐ v77 T7: `booth-private-life` is the same move for the booth's own channel - the engine
          decided the mention in the weekly tick and stamped it on the episode, and this hands the
          answer through. The view is non-null on the FIRST match of the run only (the snapshot's own
@@ -1169,6 +1172,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       :preview-event="viewerPreviewEvent"
       :coach-travelled="pending?.coachTravelled ?? false"
       :booth-private-life="pending?.boothPrivateLife ?? null"
+      :booth-lineage="pending?.boothLineage ?? null"
       :mode="replayAdvances ? 'live' : 'replay'"
       proceed-label="To the result"
       @finish="endReplay"
