@@ -2754,23 +2754,43 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
 /** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, in both presences. The voice bibles govern, `ENGAGED_HER_
  *  LINE`'s own reading of them: `sunny` says it evenly and names the feeling; `fiery` gives the
  *  verdict first, in absolutes; `quiet` says the practical surface and leaves herself out; `deep`
- *  says one true thing, late, stripped of its size, in full stops. */
+ *  says one true thing, late, stripped of its size, in full stops.
+ *
+ *  ⭐⭐⭐ v87 T3 – **THE QUOTED SPANS GAINED ONE CLAUSE EACH, AND THE NARRATION DID NOT MOVE A BYTE.**
+ *  The design's §4 table crosses HOW LONG THE WINDOW LASTS with THE ANNOUNCEMENT, and T2 built the
+ *  first column mechanically (openness draws the window). This is the second column reading the
+ *  first: `sunny` has barely sat on it, `fiery` did not wait to be sure, `quiet` has known a while,
+ *  `deep` longest of all and needed to know what she felt first.
+ *
+ *  ⚠⚠ IT IS **HER** LINE AND NOT THE NARRATION, AND THE SPLIT IS THE FALLIBLE-PARENT LAW RATHER
+ *  THAN A PREFERENCE. The narration is what the PARENT saw, and he cannot see a window he was never
+ *  inside – a line of his that said «she had known for weeks» would be the game telling him a thing
+ *  nobody told him. She knows, so she may say it; every clause below is inside the quotation marks.
+ *
+ *  ⚠ NO NUMBER AND NO DATE IN ANY OF THEM (§3j's rule 4, which binds this edit as hard as it binds
+ *  the rest of the pool): «a week» and «a month» are numbers, so none of the four says one. The
+ *  window is a drawn constant T6 is going to measure, and a line that named it would be quoting a
+ *  number the bench may move.
+ *
+ *  ⚠ THE OLD SPANS ARE LISTED VERBATIM IN THE WAVE'S REPORT beside these, which is the one thing a
+ *  builder owes when a task asks for copy that already exists (invariant 4's own corollary – the
+ *  owner reads the replacement beside what it replaced, and the strings stay his). */
 const EXPECTING_HER_LINE: Record<Temperament, PresenceCell> = {
   sunny: {
-    roof: 'She waited until we were all sitting down, and then said it straight out. "We are having a baby. I am happy and I am frightened, and I wanted you to know both."',
-    away: 'She called on a Sunday, before anything else had been said. "We are having a baby. I am happy and I am frightened, and I wanted you to know both."',
+    roof: 'She waited until we were all sitting down, and then said it straight out. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
+    away: 'She called on a Sunday, before anything else had been said. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
   },
   fiery: {
-    roof: 'She came in and said it before her coat was off. "We are having a baby. I have thought about the tennis. I am not finished."',
-    away: 'She rang between flights and led with it. "We are having a baby. I have thought about the tennis. I am not finished."',
+    roof: 'She came in and said it before her coat was off. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
+    away: 'She rang between flights and led with it. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
   },
   quiet: {
-    roof: 'She mentioned it while she was looking at the calendar, as if it were a fixture change. "We are having a baby. I will play a while yet, and then I will not."',
-    away: 'She sent the next block of dates through, and this was underneath them. "We are having a baby. I will play a while yet, and then I will not."',
+    roof: 'She mentioned it while she was looking at the calendar, as if it were a fixture change. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
+    away: 'She sent the next block of dates through, and this was underneath them. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
   },
   deep: {
-    roof: 'She sat with it through most of the evening, and then put it in one sentence. "We are having a baby. I know what it costs. I want it."',
-    away: 'She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I know what it costs. I want it."',
+    roof: 'She sat with it through most of the evening, and then put it in one sentence. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
+    away: 'She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
   },
 }
 
@@ -3084,8 +3104,22 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     // warm rung's cousin. ⚠ THE GRADE DID NOT MOVE – only the label. A re-grading of which answer is
     // which is a mechanical change and is not this batch's (the strings table's §8 Q-1).
     { id: 'worry', label: 'Say we are glad – and start counting the weeks.', bond: ECONOMY.motherhood.worryBond },
-    // ⚠ DRAFT
-    { id: 'career-first', label: 'Ask her what this does to the tennis', bond: ECONOMY.motherhood.careerFirstBond },
+    // ⭐⭐⭐ v87 T3 – **THE REASONABLE POSITION, NOT A VILLAIN'S LINE**, and it is the design's own
+    // §5 asking for it: «the third answer's words are today the career-first one, and they should be
+    // allowed to be *reasonable* – «not now, look where you are» is a position, not a villain's line».
+    // The words he gave the case are the ones a real parent uses: «рано, у тебя карьера в апогее».
+    //
+    // ⚠⚠ THE GRADE DID NOT MOVE AND MUST NOT – wave 8b's C3 correction, one row up, read forward.
+    // This answer still persists `support: 'cold'` and still costs −4, because the research's row is
+    // about PRESSURE and a parent who answers a pregnancy by pricing her ranking is the parent that
+    // row means. What changed is that he now says a thing a reader can DISAGREE with rather than a
+    // thing a reader can only dislike: §5's other half is that the game must not settle who was
+    // right, and a villain's line settles it before the album gets the chance not to.
+    //
+    // ⚠ THE OLD LABEL WAS «Ask her what this does to the tennis» and is quoted verbatim in the
+    // wave's report beside this one (invariant 4's corollary: the owner reads the replacement beside
+    // what it replaced). ⚠ DRAFT, like the row above it.
+    { id: 'career-first', label: 'Say it is too early – look where she is', bond: ECONOMY.motherhood.careerFirstBond },
   ],
   /** ⭐⭐⭐ v85 (the return, wave 8 – T6) – THE RAMP'S TWO, AND THE ONLY CARD IN THIS TABLE THAT IS A
    *  SCHEDULING DECISION RATHER THAN A REACTION (§3k's banner carries the §4a argument in full: she has
@@ -3377,8 +3411,12 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     joy: 'She is expecting a child. We told her it was the best news in the house.',
     // ⚠ DRAFT
     worry: 'She is expecting a child. We said we were glad, and that we would worry.',
-    // ⚠ DRAFT
-    'career-first': 'She is expecting a child. We asked what it does to the tennis.',
+    // ⭐⭐⭐ v87 T3 – **MOVED WITH THE BUTTON IT REPORTS**, and moving it is the correction rather
+    // than an extra: this row's whole job is to say what the parent SAID, so a card that now reads
+    // «Say it is too early – look where she is» and a feed row that still read «We asked what it does
+    // to the tennis» would be one press with two accounts of itself on one screen. ⚠ The old line is
+    // quoted verbatim in the wave's report beside this one. ⚠ DRAFT.
+    'career-first': 'She is expecting a child. We said it was too early.',
   },
   /** ⚠⚠ **DRAFT – T8's TABLE** (invariant 4). Two lines, one per answer, opening on the same clause
    *  – the established parallel of every pool above. ⚠ THEY REPORT A BOOKING AND PROMISE NOTHING: what

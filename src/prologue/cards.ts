@@ -314,10 +314,6 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     // because a tenth screen for it would be the quiz §3 exists to avoid. See `identity` on
     // `PrologueCard` and src/prologue/identity.ts.
     identity: true,
-    // ⭐⭐⭐ v87 – AND THE SWITCH, ON THE SAME CARD AND FOR THE SAME REASON: this is the screen a
-    // player meets before anything has happened, which is where a decision about what the next nine
-    // years may contain belongs. A tenth screen for it would be the quiz §3 exists to avoid.
-    weight: true,
     // ⚠ THE ORIGIN, NOT A DIFFICULTY MENU (§7: a difficulty menu is NOT IN v1 and §2.4 replaces it).
     // The three ids are the game's own `FamilyBackground` values, so phase 4 hands `createWorld` a
     // string it already understands and no new type is invented for a choice that already exists.
@@ -660,6 +656,21 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'The coach will tell you what it looks like in the spring.',
     },
     continueLabel: 'Wait for the coach',
+    // ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ON THE LAST CARD OF THE WALK,
+    // WHICH IS THE CARD THAT CREATES THE CAREER. ⚠⚠ THE PLAN SAID «THE PROLOGUE'S OPENING» AND IT IS
+    // HERE INSTEAD, AND THE REASON IS A MEASUREMENT RATHER THAN A PREFERENCE. The age-5 card already
+    // carries the identity fields, the origins question and its three answers, and round 35 #2 cut
+    // it down to a CEILING the owner earned: 2100px of content on a 375x667 phone
+    // (`tests/component/round35-prologue.test.ts`, `prologue-walk.test.ts`). The block measured
+    // **2339px** there – 240 over – so the first screen of the game would have grown back past the
+    // number those two pins exist to hold. Raising the ceiling was the one option not available: it
+    // is his number, measured, and the pins are what stop it drifting.
+    //
+    // ⚠ AND THIS CARD IS THE HONEST SECOND CHOICE rather than merely the emptiest one: it is the
+    // last thing a player reads before `newCareer` runs, which makes it the prologue's twin of the
+    // wizard's own last step – the same question, in the same words, at the same moment on both
+    // paths. A player who SKIPS at card 0 never reaches it and is asked by the wizard instead.
+    weight: true,
     sameAsLastYear: true,
     // ⭐⭐⭐ THE LAST ASKING, AND IT IS HER – the end of the escalation the owner named («или она
     // сама»). Nobody mentions it to you this year; the date is already on the wall in her writing,

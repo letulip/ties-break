@@ -204,7 +204,12 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // ⭐ AND THE ONE-PROJECT BLIND SPOT DID NOT FIRE THIS TIME, which is the point of the paragraph
     // above it having been written: this cell was re-stamped IN THE SCHEMA'S OWN COMMIT, by the
     // builder who moved the constant, because the note three waves running told them where to look.
-    expect(SAVE_SCHEMA_VERSION).toBe(86)
+    // ⚠ AND AGAIN AT v87 (22.09, wave 11 T1 – the weight: `weightEnabled`, `pregnancyLossWeeks`,
+    // `bereavementWeeks` and `pregnancy.conceivedWeek`), NOT WEAKENED, for the reason verbatim: 87
+    // was moved by that wave with its full seven-part move, never by this line's item. ⭐ AND IT IS
+    // RE-STAMPED IN THE SCHEMA'S **OWN** COMMIT AGAIN, which is what the three-waves-running note
+    // below this block asked for.
+    expect(SAVE_SCHEMA_VERSION).toBe(87)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

@@ -116,16 +116,9 @@ function weekAtAge(world: WorldState, years: number): number {
 
 function married(latchedWeek: number, sinceWeek: number): LoveEpisode {
   return {
-    id: `p:${sinceWeek}`,
-    sinceWeek,
-    endedWeek: null,
-    latchedWeek,
-    partnerName: 'Jonas',
-    wants: 'open',
-    publicWeek: null,
-    publicWrong: false,
-    airedMetWeek: null,
-    airedEndedWeek: null,
+    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
+    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
+    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
   }
 }
 
