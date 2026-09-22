@@ -5677,6 +5677,41 @@ export const ECONOMY = {
      *  nothing to protect and the only thing the number is for is that the same week should not
      *  re-arm the hazard it just discharged. */
     lossCooldownWeeks: 26,
+    /** ⭐⭐⭐ **A DEATH IN THE FAMILY** (the spec's §4; his 23.08 «вплести похороны» and the
+     *  numbers he drafted on 11.09). ⭐ RULED 22.09 (question 3): **his 11.09 figures enter as
+     *  DRAFTED CONSTANTS** – the bench confirms the corridor, his word finalises.
+     *
+     *  ⚠⚠ **THE HAZARD IS TEMPERAMENT-FREE AND THAT IS A DESIGN LAW WITH A PIN**: a death is the
+     *  world's dice, never her personality's. Only the RESPONSE is hers – intensity prices depth (and
+     *  therefore duration, under the one-rate law), openness prices expression. `bereavementChanceAt`
+     *  takes no arguments at all, which is the same fence `pregnancyLossChanceAt`'s signature builds
+     *  one field up, pushed as far as it goes.
+     *
+     *  ⚠ THE ARITHMETIC, IN FULL, because his own words on 11.09 are the corridor T6 measures
+     *  against rather than a number to re-derive: 0.08%/week is ≈**4.1%/season** (`1 - 0.9992^52`),
+     *  E ≈ **0.50** over the 23→35 tail (624 weeks), ≈**39%** of careers meet one and ≈**9%** a
+     *  second before the spacing and the cap bite. The spec's §8 row 1 predicts «~40% / ~8%», which
+     *  is what the unconstrained arithmetic says and what the two clauses below then trim. */
+    bereavement: {
+      /** the weekly chance, from the adult rung. ⚠ A **RATE** AND NOT A GATE – the gate is the rung. */
+      perWeek: 0.0008,
+      /** ⭐⭐ THE FLOOR IN WEEKS BETWEEN TWO OF THEM – his 11.09 «spacing ≥ 156». Three years, which
+       *  is `motherhood.protectedRankWeeks`' own span read for a different reason: two deaths inside
+       *  a season would read as a mechanic rather than as a life, and the spacing is what stops the
+       *  dice telling that story. ⚠ IT READS `world.bereavementWeeks` and never a derived guess. */
+      spacingWeeks: 156,
+      /** ⭐⭐ AND THE HARD CAP – his 11.09 «hard cap 2 per career». ⚠ A CAP AND NOT A SHAPED DECAY,
+       *  deliberately: a third is not rarer, it is absent, because past two the arc stops being a
+       *  life and starts being a theme. */
+      capPerCareer: 2,
+      /** ⭐⭐ THE RUNG NOTHING FIRES BELOW – `kidAgeExact >= 23`, his 23.08 «начиная со ступени
+       *  adult». ⚠⚠ **THE ASSET ENFORCES WHAT THE GATE PROMISES**, which is why this number is not
+       *  merely a taste: `fem-euro-brunnet-adult-funeral.webp` exists at the `adult` band and at no
+       *  other, so a bereavement below it would have no picture to wear. The 11.09 log says so in as
+       *  many words – «Funeral exists at `adult` ONLY – the asset enforces his 23.08 by
+       *  construction». */
+      fromAgeYears: 23,
+    },
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, landWedding, rollPregnancyLoss, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, landWedding, rollBereavement, rollPregnancyLoss, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -481,6 +481,23 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        ⚠ IT READS `world.pregnancy` AND NEVER THE EPISODE – the decoupling law (RULED 20.09),
   //        §14's banner, and the reason there is no `if` here about a marriage that ended.
   landBirth(world)
+  // ⭐⭐⭐ 1c-death (v87, the weight – wave 11 T5): AND A DEATH IN THE FAMILY.
+  //
+  //        ⚠⚠ THE ONE SLOT CONSTRAINT IS **BEFORE `accrueSpirit`**, the third writer of
+  //        `world.spiritShock` inheriting `landBirth`'s own arrangement one line up: the pass that
+  //        PAYS for a shock reads `shock.week === world.week`, so landing after it would apply the
+  //        bereavement band a week late for ever.
+  //
+  //        ⚠ AND **AFTER** THE BIRTH, WHICH IS THE ORDER THE SINGLE SLOT ASKS FOR: on the one week a
+  //        child is born AND somebody dies, the later call wins the mark, and the drafted depths say
+  //        which should – `bereavement` is −30/−46 against the postpartum −28.8/−45. The same
+  //        reasoning `rollEnds` and `landBirth` settled between them, applied one kind further on.
+  //
+  //        ⚠ ZERO DRAWS BELOW THE ADULT RUNG, WITH THE SWITCH OFF, PAST THE CAP AND INSIDE THE
+  //        SPACING – the gate returns before the stream is derived. It takes no `rng` and pulls only
+  //        from `seed:life:loss:<week>`, the key he named on 11.09, so the frozen capture
+  //        (41550 / e6b0c709) cannot see it.
+  rollBereavement(world)
   // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
   //
   //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a

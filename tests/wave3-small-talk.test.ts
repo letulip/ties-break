@@ -980,6 +980,12 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // the spouse's word riding the same soft surface tier 1 built. What stands is the narrower
     // sentence that was always the point: every kind DECLARES, and nothing blocks by accident.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
+      // ⚠ RE-AIMED AN EIGHTH TIME BY v87, WAVE 11 T5 (22.09), NOT WEAKENED: `'bereavement'` is the
+      // twelfth kind – a death in the family – and it declares TRUE, tier 2's price at the heaviest
+      // thing this layer holds. A career that could tick past it would answer it by walking away.
+      // ⚠ IT BLOCKS FOR A PRIVATE GIRL TOO, which is not a contradiction of §4's «private grieves
+      // almost silently»: the silence is in the WORDS she says, not in whether the week stops.
+      bereavement: true,
       'fork-opinion': true,
       met: true,
       'small-talk': false,

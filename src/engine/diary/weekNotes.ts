@@ -254,6 +254,23 @@ export interface WeekClaims {
    *  felt – quoted in front of people, or noticed without a word – which is the same fact in two
    *  registers and is exactly what the axis was chosen for. */
   lineage?: true
+  /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – ASSERTS THERE HAS BEEN A DEATH IN THE FAMILY WITHIN
+   *  THE LINE'S OWN WINDOW, and asserts nothing further. Unselectable unless
+   *  `f.bereavedWeeksAgo !== null`; `HOLDS.bereaved` re-derives that off the fact (landed with the
+   *  fact – R2-18's law).
+   *
+   *  ⚠⚠ WHAT A LINE CARRYING IT MAY SAY, AND WHY IT IS SO LITTLE. What the PARENT could see of a
+   *  house in the weeks after. It may NOT name the deceased or their relation – RULED 22.09
+   *  (question 4), and here that is load-bearing rather than polite: the fridge pool already names a
+   *  grandmother in lines nothing licenses, so a diary scrap that named one would be the honesty law
+   *  broken against the game's own corpus. It may not carry a date, a figure or a count, and it may
+   *  not state her interior as fact (the fallible-parent law).
+   *
+   *  ⚠ IT IS A BARE `true` AND NOT A VALUED CLAIM LIKE `motherhood`, and that is the field's own
+   *  decision read forward: there are no named stages of grief in this model, so there is no value
+   *  for a claim to carry. WHICH window a line may speak in is the LICENCE's job, which is where a
+   *  number belongs. */
+  bereaved?: true
 }
 
 export interface WeekNote {
@@ -887,7 +904,46 @@ const MOTHERHOOD_VOICES: readonly WeekNote[] = (
   })),
 )
 
+/** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – **HOW LONG AFTER A DEATH THE DIARY MAY STILL SPEAK OF
+ *  IT.** Drafted, and it is a LICENCE window rather than a shape: nothing about the lines tapers,
+ *  and §5's refusal of a taper is why the number lives here instead of in `ECONOMY`.
+ *
+ *  ⚠ SIX, because the shock's own arithmetic is the neighbour to be consistent with rather than a
+ *  coincidence to match: at `bereavement` −30/−46 and `returnPerWeek` 5 (steady) / 3 (intense),
+ *  clearing at `baseline − shockClearWithin` = 68, a steady girl is back inside ~5 weeks and an
+ *  intense one takes ~13. So six weeks is «the stretch where even the steady one is still in it»,
+ *  and a line in week seven of a `sunny` career would be the diary saying something her own meter no
+ *  longer does. */
+export const BEREAVED_WEEKS = 6
+
+/** ⚠ ⚠ DRAFT – FOUR VOICES OVER THE WEEKS AFTER, and the two private ones say the least, which is
+ *  §4's «openness owns expression» arriving in the diary rather than a second pricing of anything.
+ *  ⚠ EVERY LINE IS THE PARENT REPORTING A WEEK – no interior stated as fact, no relation named, no
+ *  date and no number (the `bereaved` claim's own licence). ⚠ AND THEY FIT THE SCRAP: 80 characters,
+ *  the budget `docs/specs/voice-bibles-2026-09.md` pins and `tests/week-notes.test.ts` sweeps. */
+const BEREAVED_WORDS: Record<Temperament, string> = {
+  sunny: 'She rang more than usual this week, and talked about ordinary things.',
+  fiery: 'She trained through it. Nobody suggested otherwise.',
+  quiet: 'A quiet week at her place. The kettle went on a lot.',
+  deep: 'She did not say much. She stayed later at the court than she needed to.',
+}
+
+/** THE FOUR ROWS, built from the words above so a licence can never be hand-copied wrong –
+ *  `MOTHERHOOD_VOICES`' own law one pool up. */
+const BEREAVED_VOICES: readonly WeekNote[] = (Object.keys(BEREAVED_WORDS) as Temperament[]).map((t) => ({
+  text: BEREAVED_WORDS[t],
+  // ⚠ THE MOOD GATE IS **ABSENT HERE AND THAT IS THE DIFFERENCE FROM THE MOTHERHOOD BAND**, which
+  // is worth the sentence because the two pools sit beside each other. There the 28 are written in a
+  // voice that is not low, so `register: 'level'` keeps a heavy week from selecting one. These four
+  // are written for a heavy week: the shock has just landed, and a line that could only be said on a
+  // bright week would be unreachable on exactly the weeks it is about.
+  claims: { notTravellingWeek: true, bereaved: true } as WeekClaims,
+  license: (f: DiaryFacts) =>
+    plainTraining(f) && f.bereavedWeeksAgo !== null && f.bereavedWeeksAgo <= BEREAVED_WEEKS && voiceOf(t)(f),
+}))
+
 export const WEEK_NOTES: readonly WeekNote[] = [
+  ...BEREAVED_VOICES,
   // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
   {
     text: 'Six days on court. She ate like someone twice her size.',

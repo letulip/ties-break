@@ -67,8 +67,8 @@ import {
 import { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor } from './diary/travelNotes'
 export { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor }
 export type { TravelClaims, TravelNote } from './diary/travelNotes'
-import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, weekNoteFor } from './diary/weekNotes'
-export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, weekNoteFor }
+import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, weekNoteFor } from './diary/weekNotes'
+export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, weekNoteFor }
 export type { WeekClaims, WeekNote } from './diary/weekNotes'
 import { DIARY_POOL, diaryLine } from './diary/pool'
 export { DIARY_POOL, diaryLine }
@@ -227,6 +227,9 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // band (the week note's eight motherhood lines) lands in this same task with its checker.
     motherhoodBand: view.motherhoodBand,
     motherhoodSupport: view.motherhoodSupport,
+    // ⭐ v87 (wave 11 T5) – carried, never re-derived: the diary owns no reading of the world's
+    // week lists any more than it owns a calendar.
+    bereavedWeeksAgo: view.bereavedWeeksAgo,
     // ⭐ v86 (wave 10 T6b): the line's two facts, carried straight through – this module derives
     // nothing and the view is the one reader of `world.dynasty`.
     lineageTitles: view.lineageTitles,

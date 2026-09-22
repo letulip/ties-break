@@ -550,6 +550,13 @@ describe('wave 3 T7 C – a player may notice it over months and may never read 
  *  going red, and the number that has to be typed in here is `-1` – which is the whole of what the
  *  amendment costs a reader. */
 const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
+  // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – `come`, AT **0**, AND THE ZERO IS THE KIND'S OWN DESIGN
+  // RATHER THAN A DRAIN'S CONVENIENCE: the card offers exactly ONE answer and it is priced 0,
+  // because §4a's law is that his WORDS move `bond` and this is an undertaking rather than a word
+  // to her (`LIFE_BEAT_OPTIONS.bereavement` carries the whole argument). So the registry's usual
+  // job – «name the mildest of a kind with no zero» – does not arise: there is one answer and it
+  // is the zero.
+  bereavement: { id: 'come', bond: 0 },
   'fork-opinion': { id: 'listen', bond: 0 },
   met: { id: 'wary', bond: 0 },
   'small-talk': { id: 'more', bond: 0 },
@@ -651,6 +658,9 @@ function raised(seed: string, kind: LifeBeatKind, detail: string, wants: LoveEpi
 }
 
 const DETAIL_FOR: Record<LifeBeatKind, string> = {
+  // ⚠ v87 T5 – the detail is the WEEK the death landed, machine-readable and never a rendered
+  // sentence (§G.2's law). Any week does here: this file measures the PRICE, not the arc.
+  bereavement: '900',
   'fork-opinion': 'college',
   met: 'p:892',
   'small-talk': 'worry',

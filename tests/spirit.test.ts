@@ -1228,7 +1228,16 @@ describe('the fence this step is judged by', () => {
     // arrangement, inherited for the third time. The shipped order is the plan's own –
     // docs/plans/life-wave-11-builder-2026-09.md §T4. Still an exact list, still no wildcard, and a
     // FIFTEENTH call or a reordering is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s fourteen weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 22.09 BY WAVE 11's T5, AND THE FIFTEENTH CALL IS HERE – twice in one wave, which
+    // is the pin working rather than the pin rotting. `rollBereavement` is a death in the family,
+    // slotted EIGHTH, immediately under the birth. ⚠ ITS SLOT IS LOAD-BEARING ON BOTH SIDES and both
+    // halves are argued at the call site: (a) BEFORE `accrueSpirit`, because it is the FOURTH writer
+    // of `world.spiritShock` and the pass that pays for a shock reads `shock.week === world.week`;
+    // (b) AFTER `landBirth`, because the single slot's rule is that the later call wins the mark on
+    // a week that holds both, and the drafted depths say which should – −30/−46 against the
+    // postpartum −28.8/−45. The shipped order is the plan's own –
+    // docs/plans/life-wave-11-builder-2026-09.md §T5. Still an exact list, still no wildcard.
+    expect(code.slice(i + 1, j), 'only the private life\'s fifteen weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
@@ -1238,6 +1247,7 @@ describe('the fence this step is judged by', () => {
       'landPregnancyAnnouncement(world)',
       'landPregnancyPause(world)',
       'landBirth(world)',
+      'rollBereavement(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
       'deliverOwnKey(world)',

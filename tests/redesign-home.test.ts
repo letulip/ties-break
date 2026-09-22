@@ -185,6 +185,9 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     // wave 8b T2 (C6): no pregnancy on this fixture - the band is null and licenses nothing.
     motherhoodBand: null,
     motherhoodSupport: null,
+    // ⚠ v87 (wave 11 T5): nobody in this fixture's family has died – which is every career in
+    // the game until the weight is switched on, and is what `null` means on the field.
+    bereavedWeeksAgo: null,
     // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
     // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
     // generation out of the diary in silence.

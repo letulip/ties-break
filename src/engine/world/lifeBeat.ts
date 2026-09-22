@@ -248,6 +248,12 @@ export function lifeLogOf(world: WorldState): readonly LifeBeatRecord[] {
  *  FALSE – it is texture, it is answered from a Home card inside a three-week window, and the week
  *  never waits for it. */
 export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
+  // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – TRUE, AND IT IS `'ended'`'s ONE WORD REPEATED AT THE
+  // heaviest moment this layer holds. A career that could tick past a death in the family would be
+  // answering it by walking away, which is the sentence tier 2's price was written from. ⚠ IT
+  // BLOCKS FOR A PRIVATE GIRL TOO, and that is not a contradiction of §4's «private grieves almost
+  // silently»: the silence is in the WORDS she says, not in whether the week stops.
+  bereavement: true,
   'fork-opinion': true,
   met: true,
   'small-talk': false,
@@ -2808,6 +2814,64 @@ const EXPECTING_DRY = 'She is expecting a child. Nobody in this house was told f
 const EXPECTING_HEADING = 'A child is coming, and she has already decided'
 
 // =================================================================================================
+// 3l. `'bereavement'` – A DEATH IN THE FAMILY (the weight, wave 11: T5).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4).
+// =================================================================================================
+//
+// ⚠⚠ **THE DECEASED IS UNNAMED, IN MECHANICS AND IN COPY** – RULED 22.09 (question 4), and the
+// reason is a collision this game already has: the fridge pool names a grandmother in lines nothing
+// licenses, so shipping a NAMED death against an unlicensed «Grandma called» scrap is exactly the
+// contradiction the honesty law exists to prevent. «There has been a death in the family» is the
+// whole of what any line here may say, and licensing named kin off live-kin facts is its own later
+// work. ⚠ That also means no relation word: not a grandmother, not an aunt, not a cousin.
+//
+// ⚠⚠ OPENNESS OWNS THE EXPRESSION AND INTENSITY OWNS NOTHING HERE – his 11.09 ruling, read exactly:
+// «INTENSITY owns depth AND duration … OPENNESS owns expression (private grieves quietly – the feed
+// and diary nearly silent, the face and the funeral frame carrying it; open speaks)». So the DEPTH
+// is `ECONOMY.spirit.shock.bereavement` seen through `perturbationScale`, which is the intensity
+// axis and lives in `engine/spirit.ts`; what this pool carries is how much she SAYS, and the private
+// voices say least. Nothing in these words is a second pricing of anything.
+//
+// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule, §3j's inheritance):
+// what presence changes is the FRAME the parent is standing in, never the sentence she says inside
+// the quotation marks.
+//
+// ⚠ NO DATE AND NO NUMBER IN ANY LINE (rule 4). The week is on the world and the calendar is where a
+// date belongs; a line that named one would also be naming a constant T6 is going to measure.
+
+/** ⚠ ⚠ DRAFT – WHAT SHE SAYS, BY VOICE, in both presences. The voice bibles govern: `sunny` says it
+ *  plainly and wants him near; `fiery` says it loudly and then will not sit with it; `quiet` says
+ *  the practical surface and leaves herself out; `deep` says the one fact and nothing else at all. */
+const BEREAVEMENT_HER_LINE: Record<Temperament, PresenceCell> = {
+  sunny: {
+    roof: 'She came round in the evening and said it before she had taken her coat off. "There has been a death in the family. I would rather you heard it from me."',
+    away: 'She rang in the evening, before anything else had been said. "There has been a death in the family. I would rather you heard it from me."',
+  },
+  fiery: {
+    roof: 'She said it in the hall, loudly, and then would not sit down with it. "There has been a death in the family. I am not going to be much use this week."',
+    away: 'She rang and led with it, and was off the phone not long after. "There has been a death in the family. I am not going to be much use this week."',
+  },
+  quiet: {
+    roof: 'She mentioned it while she was putting something away, as if it were an errand. "There has been a death in the family. There are arrangements to make."',
+    away: 'She sent the week\'s dates through, and this was underneath them. "There has been a death in the family. There are arrangements to make."',
+  },
+  deep: {
+    roof: 'She sat in the kitchen a long time before she said anything at all. "There has been a death in the family."',
+    away: 'The call was mostly quiet. She said it once, near the end of it. "There has been a death in the family."',
+  },
+}
+
+/** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `EXPECTING_DRY`'s
+ *  shape and doctrine: it states what the week HOLDS, and the distance is the whole content. */
+const BEREAVEMENT_DRY = 'There has been a death in her family. The house heard it from somebody else.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `EXPECTING_HEADING`'s
+ *  shape and its reason: the one fact of this card is the same fact at every distance and in every
+ *  weather, and the bond band reaches the card through HER line rather than through the frame.
+ *  ⚠ It recommends nothing and asks nothing: what a parent can see is that it has happened. */
+const BEREAVEMENT_HEADING = 'There has been a death in the family'
+
+// =================================================================================================
 // 3k. `'return-plan'` – THE WEEK SHE IS BACK, AND THE QUESTION IS HOW (the return, wave 8: T6).
 //     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T8's table).
 // =================================================================================================
@@ -3132,6 +3196,25 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    *  the one card whose whole purpose is that its cost is mechanical and emergent.
    *  ⚠ NO NUMBER, NO DATE AND NO PROMISE IN EITHER LABEL (rule 4), and neither names the freeze: how
    *  many entries a protected ranking buys is a rule the card may not turn into a guarantee. */
+  /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – **ONE ANSWER, AT 0 BOND, AND BOTH HALVES OF THAT ARE
+   *  DECISIONS.** `'own-key'`'s one-cell pool is the precedent and its argument transfers whole.
+   *
+   *  ⚠⚠ ONE ANSWER, BECAUSE THE SPEC DRAFTS NO PRICES AND INVENTING THREE WOULD BE A DESIGN
+   *  DECISION WEARING A CONSTANT. Every other costed card in this table has its numbers in
+   *  `ECONOMY` with an argument beside them (`wedding`'s +2.5/−1/−4, `motherhood`'s
+   *  +2.5/−0.5/−4); §4 of the weight spec drafts none for this kind, and invariant 5 is why a
+   *  builder does not supply them. What the spec DOES say is that the death «may reach the parent in
+   *  WORDS only», which is exactly a card that tells him and takes one answer.
+   *
+   *  ⚠⚠ AND 0 BECAUSE §4a's LAW SAYS HIS WORDS MOVE `bond` AND THIS IS NOT A WORD TO HER, IT IS AN
+   *  UNDERTAKING. `'return-plan'`'s pair is the nearest shape and its zero is argued the same way. A
+   *  delta here would make going to a funeral a thing the game scores, which is the one reading of
+   *  §4 that is wrong.
+   *  ⚠ IT NAMES NO RELATIVE (RULED 22.09, question 4 – the deceased is UNNAMED in mechanics AND in
+   *  copy), no date, no number and no meter. ⚠ DRAFT. */
+  bereavement: [
+    { id: 'come', label: 'Say you will come', bond: 0 },
+  ],
   'return-plan': [
     // ⭐ HIS, 21.09 – the label had to change when the answer's MEANING did: «small events first»
     // now holds for `smallFirstHoldWeeks` and then lets the freeze open the big draws, so a label
@@ -3406,6 +3489,11 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
    *  pools' established parallel, kept deliberately rather than broken on one kind.
    *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD (rule 4) – there is no birth fee and no wedding bill
    *  here to name (§2 T4's own «NO COST EVENT»). ⚠ NO NAME, NO GENDER AND NO DUE DATE, §3j's laws. */
+  /** ⭐⭐⭐ v87 T5 – ONE LINE FOR ONE ANSWER. ⚠ ⠀DRAFT. ⚠ IT NAMES NOBODY (RULED 22.09, question 4),
+   *  no date and no number, and it says what the parent DID rather than what it meant. */
+  bereavement: {
+    come: 'There has been a death in the family. We said we would come.',
+  },
   expecting: {
     // ⚠ DRAFT
     joy: 'She is expecting a child. We told her it was the best news in the house.',
@@ -3690,6 +3778,16 @@ export function lifeBeatSaid(
     // of it would be choosing for him.
     case 'return-plan':
       return RETURN_PLAN_SAID
+    // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – THE TWELFTH KIND, AND IT IS `'expecting'`'s READING
+    // LINE FOR LINE: her voice against the dry card, on the bond's two-rung channel, and no register
+    // axis of its own. ⚠ IT READS NO `detail` (the detail is the week, a machine value) AND NO
+    // REGISTER: this is her week's biggest fact whatever the weather. ⚠⚠ AND OPENNESS REACHES IT
+    // THROUGH THE VOICE CELLS THEMSELVES rather than through a second axis – §4's «private grieves
+    // almost silently» is `quiet` and `deep` having less to say, which is what the four cells are.
+    case 'bereavement':
+      return speaksInHerOwnVoice(bond)
+        ? presenceLine(BEREAVEMENT_HER_LINE[voice], presence)
+        : BEREAVEMENT_DRY
   }
 }
 
@@ -3778,6 +3876,11 @@ export function lifeBeatHeading(
     // for an axis to select. The bond band cannot reach it either, because the card quotes nobody.
     case 'return-plan':
       return RETURN_PLAN_HEADING
+    // ⭐⭐⭐ v87 (wave 11 – T5) – ONE FRAME, KEYED ON NOTHING, `EXPECTING_HEADING`'s shape and its
+    // argument: the fact is the same fact at every distance, the bond reaches the card through her
+    // line, and a frame that also moved with it would say the distance twice.
+    case 'bereavement':
+      return BEREAVEMENT_HEADING
   }
 }
 
@@ -3818,6 +3921,13 @@ const LISTEN_FOLLOW_UP: Record<
   LifeBeatKind,
   ((detail: string, voice: Temperament, bond: BondBand) => string | null) | null
 > = {
+  // ⭐⭐⭐ v87 T5 – `null`, AND IT IS THE ANSWER RATHER THAN A DEBT (this record's own rule, one
+  // paragraph up). The detour exists where an answer of the parent's buys MORE of her; this card
+  // offers one answer and it is not a question she is waiting on. ⚠ AND THE SILENCE HERE WOULD BE
+  // THE WRONG SILENCE: §4's «private grieves almost silently» is about what SHE says, and a detour
+  // that made the parent's quiet buy something would price a bereavement on his behaviour, which is
+  // the boundary law arriving at the wording.
+  bereavement: null,
   // ⭐⭐ THE ONE KIND WITH A DETOUR, AND THE ONLY CELL THAT IS A FUNCTION. It is the tail of the old
   // chain moved whole, line for line and in the same order: the want is resolved off the detail, a
   // malformed detail THROWS BY NAME (which is right and is kept – `lifeBeatSaid`'s own courtesy), the
@@ -4275,6 +4385,9 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
  *  ⚠ THE `'small-talk'` CELL IS THE SHIPPED CONSTANT, REFERENCED AND NOT RE-TYPED (invariant 4):
  *  tier 1's card is byte-identical to what it has always been. */
 const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
+  // ⭐ v87 T5 – `null`, ON THE RECORD'S OWN RULE: the kind BLOCKS, so it never reaches the soft
+  // surface and a card line for it would be dead copy pretending to be reachable.
+  bereavement: null,
   'fork-opinion': null,
   met: null,
   'fork-counsel': null,
@@ -7443,4 +7556,99 @@ const LOSS_HER_LINE: Record<Temperament, { told: string; untold: string } | null
   // simply stops, and what the parent has to read is the absence. See `lossLineFor`'s block.
   quiet: null,
   deep: null,
+}
+
+// =================================================================================================
+// 16. A DEATH IN THE FAMILY – ⚠⚠ THE WORLD'S DICE, NEVER HER PERSONALITY'S (the weight, wave 11: T5)
+// =================================================================================================
+//
+// `docs/specs/the-weight-2026-09.md` §4, his 23.08 «вплести похороны» and the numbers he drafted on
+// 11.09, RULED as drafted constants on 22.09 (question 3). It is §16 for §14's and §15's own stated
+// reason: appended rather than renumbered.
+//
+// ⚠⚠ THE WAVE'S SECOND STREAM, RESERVED IN WRITING ON 11.09 AND CREATED HERE:
+//
+//     seed:life:loss:<week>                 does somebody die, this week
+//
+// ⚠ IT IS THE KEY HE NAMED THAT DAY and it is deliberately NOT the pregnancy loss's
+// `seed:life:pregnancy-loss:<conceivedWeek>:<week>` (§15). Two different facts may never share a
+// key, and these two live in the same file under nearly the same word.
+//
+// ⚠⚠ THE HAZARD IS TEMPERAMENT-FREE AND THAT IS A DESIGN LAW WITH A PIN. A death is the world's
+// dice; only the RESPONSE is hers – intensity prices depth (and therefore duration, under the
+// one-rate law), openness prices expression. `bereavementChanceAt` takes NO ARGUMENTS AT ALL, which
+// is the read-set fence pushed as far as it goes, and `tests/wave11-bereavement.test.ts` §B sweeps
+// all four temperaments on shared seeds and asserts the realised weeks are identical.
+
+/** ⭐⭐ THE WEEKLY CHANCE, AND IT IS A CONSTANT – his 11.09 0.08%/week, RULED 22.09 as a drafted
+ *  number. Pure, zero draws, no writes, and it takes nothing.
+ *
+ *  ⚠⚠ A FUNCTION AND NOT A BARE CONSTANT READ, for `pregnancyChanceAt`'s own reason: `rollBereavement`
+ *  returns on the CHANCE before it derives the stream, so «zero draws on an ineligible week» needs
+ *  something to return on. It is also where a later retune would put a shape if one is ever ruled,
+ *  and a reader looking for «what can move this number» finds one place rather than a grep. */
+export function bereavementChanceAt(): number {
+  return ECONOMY.weight.bereavement.perWeek
+}
+
+/** ⭐⭐ THE GATE – FOUR CLAUSES, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
+ *
+ *  1. ⭐⭐⭐ **THE SWITCH.** `world.weightEnabled`, RULED 22.09. Off means no draw at all.
+ *  2. ⭐⭐ **THE ADULT RUNG** – `kidAgeExact >= ECONOMY.weight.bereavement.fromAgeYears` (23), his
+ *     23.08 «начиная со ступени adult». ⚠ THE ASSET ENFORCES WHAT THE GATE PROMISES:
+ *     `fem-euro-brunnet-adult-funeral.webp` exists at the `adult` band and nowhere else, so a
+ *     bereavement below the rung would have no picture to wear. The 11.09 log says exactly that.
+ *  3. ⭐⭐ **THE CAP** – `bereavementWeeks.length < capPerCareer` (2). A hard cap and not a shaped
+ *     decay: past two the arc stops being a life and starts being a theme.
+ *  4. ⭐⭐ **THE SPACING** – at least `spacingWeeks` (156) since the last one. Two deaths inside a
+ *     season would read as a mechanic rather than as a life.
+ *
+ *  ⚠⚠ CLAUSES 3 AND 4 READ `world.bereavementWeeks` AND NEVER A DERIVED GUESS, which is the whole
+ *  reason that list is persisted: a death writes no record of its own, and `spiritShock` holds ONE
+ *  mark that clears itself when she recovers.
+ *
+ *  ⚠ AND NOTHING ABOUT HER TEMPERAMENT, HER SPIRIT, HER BOND, HER MARRIAGE OR HER SEASON IS IN HERE.
+ *  That is the design law, and this gate is the half of the fence `bereavementChanceAt`'s empty
+ *  signature cannot build on its own. */
+export function bereavementEligible(world: WorldState): boolean {
+  if (!world.weightEnabled) return false
+  const b = ECONOMY.weight.bereavement
+  if (kidAgeNow(world) < b.fromAgeYears) return false
+  if (world.bereavementWeeks.length >= b.capPerCareer) return false
+  const last = world.bereavementWeeks.reduce((w, at) => Math.max(w, at), -Infinity)
+  if (world.bereavementWeeks.length > 0 && world.week - last < b.spacingWeeks) return false
+  return true
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, AND THE ONE PLACE `spiritShock.kind` BECOMES `'bereavement'`.
+ *
+ *  ⚠⚠ THE LINE ORDER IS THE RULE, `rollPregnancy`'s four steps inherited for the third time: the
+ *  gate returns first, the CHANCE is computed second and returns if it is 0, and only then is the
+ *  stream derived. Never draw-and-discard.
+ *
+ *  WHAT IT DOES, and the list is §4 in order:
+ *    · the week joins `bereavementWeeks`, which the cap and the spacing then read;
+ *    · `spiritShock` lands as `'bereavement'` – the depth is `ECONOMY.spirit.shock.bereavement`,
+ *      intensity-scaled, and there is NO second recovery rate, no taper and no flag behind it
+ *      (§5's one-rate law, refused in writing in `engine/spirit.ts` long before this kind existed);
+ *    · the blocking card is raised, in her voice, with the funeral painting on it.
+ *
+ *  ⚠ THE DETAIL IS THE WEEK, as a string – machine-readable and never a rendered sentence (§G.2's
+ *  law). It is the only fact the beat has, because the deceased is UNNAMED (RULED 22.09), and it is
+ *  what makes two bereavements in one career distinguishable rows in `lifeLog`.
+ *
+ *  ⚠⚠ IT IS **NOT** ON THE ATTACHMENT MACHINERY (the design's §3e): its own shock kind, it can reach
+ *  the parent in words and never in a number, and the psychologist reads the kind for free exactly
+ *  as step 5 built him to. `tests/wave11-bereavement.test.ts` §D is the pin that he needed nothing.
+ *
+ *  ⚠ ZERO MAIN DRAWS: it takes no `Rng` and pulls only from `seed:life:loss:<week>`, so the frozen
+ *  capture (41550 / e6b0c709) cannot see it. */
+export function rollBereavement(world: WorldState): void {
+  if (!bereavementEligible(world)) return
+  const chance = bereavementChanceAt()
+  if (chance === 0) return
+  if (rngFromSeed(`${world.seed}:life:loss:${world.week}`)() >= chance) return
+  world.bereavementWeeks.push(world.week)
+  world.spiritShock = { week: world.week, kind: 'bereavement' }
+  raiseLifeBeat(world, 'bereavement', String(world.week))
 }

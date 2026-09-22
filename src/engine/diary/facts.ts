@@ -322,6 +322,18 @@ export interface DiaryWorldView {
    *  `world.pregnancy.support`; null before he answers and on every week after the record clears.
    *  Required for the field above's reason – exactly one line of the band licenses on it. */
   motherhoodSupport: 'warm' | 'measured' | 'cold' | null
+  /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – **HOW MANY WEEKS SINCE THE MOST RECENT DEATH IN THE
+   *  FAMILY**, or `null` for a career that has met none. Derived at snapshot time off
+   *  `world.bereavementWeeks` and persisted nowhere new.
+   *
+   *  ⚠⚠ WEEKS-SINCE AND NOT A BAND, WHICH IS THE OPPOSITE CALL FROM `motherhoodBand` ONE FIELD UP
+   *  AND IS DELIBERATE. A band is right where the arc has NAMED STAGES the copy is written per stage
+   *  (announced, early, mid, last, birth…). Grief has no stages this game models – §5 refuses a
+   *  taper and a recovering flag in as many words – so the only honest fact is how long ago, and the
+   *  LICENCE below decides which window a line may speak in. A band here would have been a curve
+   *  wearing a vocabulary.
+   *  ⚠ `null` IS EVERY CAREER IN THE GAME TODAY and is a real state: nobody has died. */
+  bereavedWeeksAgo: number | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – HER MOTHER'S CABINET, or null on every career that continues no line.
    *  Read straight off `world.dynasty.motherCareer.titles`; `null` and `0` are DIFFERENT and the
    *  difference is the whole licence: null is «there is no mother to be in this house», 0 is «she is

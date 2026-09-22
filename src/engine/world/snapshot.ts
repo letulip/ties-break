@@ -1620,6 +1620,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // field of the record. No save key, no migration, no golden fixture.
     motherhoodBand: motherhoodBandAt(world),
     motherhoodSupport: world.pregnancy?.support ?? null,
+    // ⭐⭐⭐ v87 (the weight, wave 11 – T5): HOW LONG AGO THE MOST RECENT ONE WAS, or null. The list
+    // is append-only and never pruned, so the LAST entry is the most recent by construction and no
+    // sort is owed. ⚠ DERIVED AT SNAPSHOT TIME AND PERSISTED NOWHERE NEW – `motherhoodBand`'s own
+    // standing one line up.
+    bereavedWeeksAgo:
+      world.bereavementWeeks.length === 0
+        ? null
+        : world.week - world.bereavementWeeks[world.bereavementWeeks.length - 1],
     // ⭐⭐⭐ v86 (wave 10 T6b): the line, as the two facts a texture line may rest on. Derived at
     // render off `world.dynasty` – no save key, no migration, no golden fixture, exactly as the two
     // lines above it are derived off `pregnancy`.

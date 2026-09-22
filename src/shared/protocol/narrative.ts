@@ -398,7 +398,7 @@ export interface SoftBeatInvite {
  *  construction: no overlay exists for this kind, so `DRAIN_ANSWER['expecting']` = `worry` charges
  *  −0.5 under every reading. ⚠ It carries no `heard` stamp and no listen detour – the fact is the
  *  fact, and the three answers are the whole of what a parent can do with it. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan'
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan' | 'bereavement'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
@@ -914,6 +914,22 @@ export interface DiaryFacts {
    *  ⚠ AND IT IS THE GRADE, NEVER THE NUMBER: `joyBond` / `worryBond` / `careerFirstBond` stay on the
    *  engine side of the fog law exactly as `spirit` and `bond` do. */
   motherhoodSupport: 'warm' | 'measured' | 'cold' | null
+  /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – **HOW MANY WEEKS SINCE THE MOST RECENT DEATH IN THE
+   *  FAMILY**, or `null` for a career that has met none. Derived at snapshot time off
+   *  `world.bereavementWeeks`; nothing new is persisted and `SAVE_SCHEMA_VERSION` does not move for
+   *  it (the list itself is v87's, and it is on the world rather than on the wire).
+   *
+   *  ⚠⚠ WEEKS-SINCE AND NOT A BAND, THE OPPOSITE CALL FROM `motherhoodBand` ONE FIELD UP AND
+   *  DELIBERATE. A band is right where the arc has NAMED STAGES that copy is written per stage. Grief
+   *  has none this game models – the weight spec's §5 refuses a taper, a second recovery rate and a
+   *  «recovering» flag in as many words – so the only honest fact is HOW LONG AGO, and the week
+   *  note's own licence decides which window a line may speak in.
+   *
+   *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: what the PARENT could see of a house after a death, and
+   *  how long ago it was in the vaguest terms the language allows. It may NOT name the deceased or
+   *  their relation (RULED 22.09 – the deceased is UNNAMED in mechanics AND copy), may not carry a
+   *  date, a figure or a count, and may not state her interior as fact (the fallible-parent law). */
+  bereavedWeeksAgo: number | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – her mother's cabinet, or null on a career that continues no line.
    *  `null` and `0` are different: null is «there is no mother in this house», 0 is «she is here
    *  and she won nothing», and a line about a cabinet may fire on neither. Derived at render off
