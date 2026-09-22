@@ -43,6 +43,13 @@ column of §8 is filled from the bench, never predicted twice.
   («пол нужен, но мальчиков у нас пока нет»), and the child is deliberately unnamed: «не даем
   намеренно, если пользователь пойдет в династию даст сам: имя выбирает родитель».
 
+- ⭐ **SHIPPED (T3)** – `temperamentFor(seed, mother?)` leans the OPENNESS pole to the mother's with
+  probability `ECONOMY.dynasty.opennessLean` (0.65, drafted; T7's bench confirms). The intensity axis
+  is untouched. ⚠ The lean RE-MAPS a draw and never adds one, measured rather than argued: the
+  intensity sequence over 4000 seeds is byte-identical under every mother, and the no-mother arm
+  hashes to `f5e9f20293cf5a68`, the value the function produced at `2ec96cbe` before the parameter
+  existed. `createWorld` is the one caller that may ever pass a mother.
+
 ## 1. What the dynasty is, in one paragraph
 
 The player plays the parent – never the daughter. So the dynasty is not «play as her»: at the end

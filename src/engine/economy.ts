@@ -5514,6 +5514,29 @@ export const ECONOMY = {
     ],
   },
 
+  /** ⭐⭐⭐ THE DYNASTY (v86, wave 10 T3 – docs/specs/the-dynasty-2026-09.md §7). His ruling, 22.09:
+   *  «наследственность темперамента – можно и забенчить, мне кажется».
+   *
+   *  ⚠ ONE NUMBER AND ONE AXIS, and both halves of that are decisions. `opennessLean` is the chance
+   *  the daughter takes her mother's OPENNESS pole; the intensity axis stays uniform and is not
+   *  listed here, because a constant for «no lean» would be a dial somebody would eventually turn.
+   *  §7's reason, verbatim: openness is the EXPRESSIVE axis – heredity the player can HEAR in the
+   *  diary's voice – while intensity prices costs and depths, where a lean would correlate the
+   *  dynasty with cost profiles for no story gain.
+   *
+   *  ⚠⚠ IT RE-MAPS A DRAW AND NEVER ADDS ONE. `temperamentFor` takes exactly two draws off
+   *  `seed:temperament` with the lean and without it (`engine/spirit.ts`), so a dynasty career and a
+   *  wizard career sit at the same stream position afterwards and the frozen MAIN capture cannot see
+   *  this constant at all.
+   *
+   *  ⚠ DRAFTED AT 0.65 AND THE BENCH CONFIRMS IT (T7 §1, N=400, §8 row 1). 0.5 would be no heredity
+   *  at all and 1.0 would make the line a copy of itself; the number is the one the spec drafted and
+   *  it moves only on a measurement, never on an agent's word (invariant 5). */
+  dynasty: {
+    /** the chance a daughter takes her mother's openness pole; the rest takes the opposite */
+    opennessLean: 0.65,
+  },
+
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).

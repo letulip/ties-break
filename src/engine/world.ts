@@ -1757,7 +1757,17 @@ export function createWorld(
     // purpose-scoped `seed:temperament` sub-stream, nothing of the calendar's and nothing of the
     // player's. MAIN is untouched, so the frozen capture (41550 / e6b0c709) cannot see it. The v71
     // -> v72 migration calls THIS SAME function on the career's own seed – see `temperamentFor`.
-    temperament: temperamentFor(seed),
+    // ⭐⭐⭐ v86 (the dynasty, wave 10 T3 – docs/specs/the-dynasty-2026-09.md §7): AND THE MOTHER'S
+    // OWN AXIS, WHEN THERE IS A MOTHER. This is the ONE site in the codebase that may ever pass a
+    // lean – T3's own sentence, «nothing else may ever pass one» – because it is the one site that
+    // is DRAWING a girl rather than re-deriving one that already exists. The v71 -> v72 migration
+    // and `expressedTemperamentOf`'s `??` courtesy both call the same function on a career's own
+    // seed to recover a girl who was already stored, and a lean there would hand a live save a
+    // different daughter from the one in it.
+    // ⚠ `?.` AND NOT A BRANCH: absent a dynasty the call is `temperamentFor(seed)` exactly, argument
+    // and all, which is what makes the wizard career byte-identical to the one this line always
+    // built. The draw count does not move either way (§7's law, pinned in wave10-heredity §A).
+    temperament: temperamentFor(seed, dynasty?.motherTemperament),
     // ⭐ v73 (the private life, wave 2): EVERY LIFE BEAT THIS CAREER HAS LIVED, and on week 0 that is
     // none. Empty is the identity here in the plainest sense – there is no earlier week to have said
     // anything in – which is also exactly what the v72 -> v73 migration back-fills on every older
