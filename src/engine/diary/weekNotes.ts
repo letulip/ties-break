@@ -799,6 +799,79 @@ function flatLayoff(): Pick<WeekNote, 'claims' | 'license'> {
   }
 }
 
+
+// =================================================================================================
+// ⭐⭐⭐ W5/T4 – THE MOTHERHOOD BAND IN HER FOUR VOICES. 28 DRAFTS, and the words are the only thing
+// this table holds: the licence is built once, below, from the band each row is keyed on.
+// =================================================================================================
+//
+// ⚠ SEVEN BANDS AND NOT EIGHT. `MotherhoodBand` has seven members; his eighth line is the WARM
+// postpartum scene, which is a second gate on `postpartum` rather than a band of its own, and it
+// stays where it is – a scene only a warm house produces has no business being said four ways.
+//
+// ⚠ THE CROSS IS TOTAL BY TYPE (`Record<Temperament, Record<MotherhoodBand, string>>`), the spoken
+// moments' own protection: a voice missing a band is a COMPILE error and not a girl who falls silent
+// for three months.
+export const MOTHERHOOD_WORDS: Record<Temperament, Record<MotherhoodBand, string>> = {
+  sunny: {
+    announced: 'She came by still in her coat. "It\'s the good kind of news."',
+    early: 'She rang while cooking. "No entries for a while. I still check the calendar."',
+    mid: 'She sent a photo of the kit bag. "Not yet. I just wanted to look at it."',
+    last: 'She called after her walk. "Slow today. Very slow. Still happy, though."',
+    birth: 'She rang in the morning. "We\'re all here. Come when you can."',
+    postpartum: 'She sent a late voice note. "I\'m tired. She isn\'t, apparently."',
+    returned: 'She rang from the car park. "My legs remember more than I did."',
+  },
+  fiery: {
+    announced: 'She came through the door already saying it. "Everything changes. Good."',
+    early: 'She left a voice note at dawn. "No entries. I\'ll go quietly mad."',
+    mid: 'She called from halfway round the block. "I can walk. I\'m walking."',
+    last: 'She rang late. "Rest, rest, rest. Apparently that\'s my whole job now."',
+    birth: 'She called, hoarse. "Well. That was something else. She\'s here."',
+    postpartum: 'She messaged before dawn. "Awake again. She has no respect for schedules."',
+    returned: 'She rang from the courts. "I\'ve missed this. Annoyingly."',
+  },
+  quiet: {
+    announced: 'On a visit, she said it plainly, then asked about everyone else.',
+    early: 'She called briefly. "Nothing on the calendar. Strange. Fine."',
+    mid: 'She rang on her way home. "Walked the long way. All quiet."',
+    last: 'She called. "Not long. I stopped counting out loud."',
+    birth: 'She rang once, early. "She\'s here. I\'ll call properly when I can."',
+    postpartum: 'She called while the house was still. "Mostly sleeping. Mostly her."',
+    returned: 'She rang after practice. "Hit today. Strange to be saying that again."',
+  },
+  deep: {
+    announced: 'She rang, late. "I wanted to be sure first."',
+    early: 'She called late. "The season carries on. That bothers me less than I thought."',
+    mid: 'She rang. "One day she\'ll ask. I don\'t know what I\'ll say."',
+    last: 'She called after dark. "Soon, then. I haven\'t found the words for that."',
+    birth: 'She called. "She\'s here. I don\'t know what I feel yet."',
+    postpartum: 'She called before the house woke. "Some mornings I just sit with her."',
+    returned: 'She rang from the road. "I don\'t know this player yet. I want to."',
+  },
+}
+
+/** THE 28 ROWS, built from the words above so a licence can never be hand-copied wrong – the spoken
+ *  moments' own law, one surface over. ⚠ The claims match HIS line for the same band exactly, which
+ *  is what keeps `HOLDS.motherhood` a total record over both pools. */
+const MOTHERHOOD_VOICES: readonly WeekNote[] = (
+  Object.keys(MOTHERHOOD_WORDS) as Temperament[]
+).flatMap((t) =>
+  (Object.keys(MOTHERHOOD_WORDS[t]) as MotherhoodBand[]).map((band) => ({
+    text: MOTHERHOOD_WORDS[t][band],
+    // ⭐⭐⭐ HIS REVIEW OF 21.09, FINDING 1 – THE MOOD GATE, and it is the composition law being
+    // obeyed rather than a new rule: «temperament определяет форму, Spirit — регистр, Bond — канал».
+    // These 28 are written in a voice that is not LOW – «oddly happy about it», «I've missed this»,
+    // «I want to» – so a heavy week must not be able to select one, and a bright week must not be
+    // able to put «some mornings I just sit» in a `deep` girl's mouth. `levelWeek` is the pool's own
+    // spelling for «not low», and it costs no second corpus: on a low week HIS EIGHT carry the band,
+    // exactly as the flat pool carries every other band at `strained`.
+    claims: { notTravellingWeek: true, motherhood: band, register: 'level' } as WeekClaims,
+    license: (f: DiaryFacts) =>
+      plainTraining(f) && levelWeek(f) && f.motherhoodBand === band && voiceOf(t)(f),
+  })),
+)
+
 export const WEEK_NOTES: readonly WeekNote[] = [
   // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
   {
@@ -1703,6 +1776,33 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     claims: { notTravellingWeek: true, motherhood: 'returned' },
     license: (f) => plainTraining(f) && f.motherhoodBand === 'returned',
   },
+  // =================================================================================================
+  // ⭐⭐⭐ W5/T4 – THE MOTHERHOOD BAND IN HER FOUR VOICES (32 lines, ALL DRAFTS)
+  // =================================================================================================
+  //
+  // The eight lines above are HIS, passed in session on 21.09, and not one word of them changes here.
+  // What this task adds is the cross the band was always owed and wave 8b deferred by name – «NO
+  // PER-TEMPERAMENT VARIANTS IN THIS BATCH … a four-voice pregnancy band would be 32 more; W5's, on
+  // the record, not dropped».
+  //
+  // ⚠⚠ THE SHAPE IS THE SPOKEN MOMENTS' OWN AND NOT A NEW ONE: the licence is written once per band
+  // and the words once per voice, so a `quiet` line can never be selectable on a week a `fiery` line
+  // is not. `voiceOf(t)` is the same gate the 44 entries use – her voice AND the channel – so at
+  // `strained` these fall away and HIS eight carry the week, which is exactly how the flat pool below
+  // works for every other band.
+  //
+  // ⚠ THE LIFE STAGE DOES NOT CROSS THIS ONE. Every week of this band is `independent` by
+  // construction – a marriage needs 23+, the pregnancy needs the marriage – so a stage dimension
+  // would be three quarters dead code and a reader would have to prove it was.
+  //
+  // ⚠ HUSBAND-AGNOSTIC, like his eight and for the same ruling («развелись и развелись, жизнь
+  // продолжается»): the walk in `tests/week-notes.test.ts` refuses any line in this band that names
+  // a partner, and these 32 are inside that walk.
+  //
+  // ⚠ ALL THIRTY-TWO ARE **DRAFTS** AWAITING HIS PASS (invariant 4), listed in the wave-9 strings
+  // table. No figure, no meter, no due date – the band's own discipline, one surface over.
+  ...MOTHERHOOD_VOICES,
+
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //
   // ⚠ THIS IS NOT A FIFTH TEMPERAMENT. It is the same girl with her walls up, and the point is that

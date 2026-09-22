@@ -89,7 +89,11 @@ docs/review/     2026-08 full review + P1–P9 proposals
 - `world.ts` imports the values back and **re-exports them under their historical names**: **hundreds of
   files** import from `engine/world` and that public API must not change. ⚠ Count it, do not quote it –
   three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
-  right" under different scopes, which is how a stale number survives, as **280 (19.08; 698 on 19.09)** did here:
+  right" under different scopes, which is how a stale number survives, as **280 (19.08; 698 on 19.09)** did here.
+  ⚠ **And a count written in PROSE survives a full gate**, because no test reads it: wave 9 shipped two
+  documents saying 32 where the corpus held 28, through `check`, `e2e` and the sims. A number a document
+  states about itself needs a pin that compares it with the thing (`tests/wave9-strings-roundtrip.test.ts`).
+  The command for this one:
   ```bash
   git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
   ```

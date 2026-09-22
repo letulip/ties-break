@@ -978,6 +978,27 @@ export function composureCeilingOf(potentialComposure: number, bonus: number): n
   return potentialComposure + bonus
 }
 
+/** ⭐⭐⭐ W5/T5 – WHAT MOTHERHOOD ADDS TO THAT CEILING, and it is a pure read of `world.children`.
+ *
+ *  The digest's one permanent effect, expressed in the shape round 42 #35 already built: ROOM, which
+ *  she then climbs into by her own weeks. `returnPoiseCeiling` per child, capped at `returnPoiseMax`.
+ *
+ *  ⚠⚠ DERIVED AND NEVER PERSISTED, WHICH IS WHY THIS WAVE OWES NO SCHEMA MOVE. The wave-9 brief
+ *  drafted «one appended field so the bonus cannot land twice»; a derivation cannot land twice at
+ *  all, and `children` is already append-only state the wave keeps. A field would have been a second
+ *  home for a fact the array already holds – `ChildRecord`'s own law, one type over.
+ *
+ *  ⚠ IT DOES NOT DECAY. `composureBonusAfterWeek` eases the PSYCHOLOGIST's bonus off
+ *  `world.composureBonus`; this term is added at the ceiling and touches that number nowhere, so a
+ *  mother who never hires the seat keeps her room and a mother who hires and stops keeps hers.
+ *
+ *  ⚠ ZERO at `children.length === 0`, so every career without a child – and every career that
+ *  predates this wave – is byte-identical. Pure, no RNG, no world writes. */
+export function motherhoodPoiseOf(childCount: number): number {
+  const m = ECONOMY.motherhood
+  return Math.min(m.returnPoiseMax, childCount * m.returnPoiseCeiling)
+}
+
 /** WHAT THE BONUS IS WORTH AFTER ONE WEEK – up while the seat works the nerve focus, down while it
  *  does not, bounded at 0 and at the cap.
  *

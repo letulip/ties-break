@@ -27,6 +27,7 @@ import {
   coolheadCrossedAPoint,
   coolheadGain,
   composureBonusAfterWeek,
+  motherhoodPoiseOf,
   composureCeilingOf,
   composureEaseThisWeek,
   growWeek,
@@ -176,7 +177,13 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
   //     (41550 / e6b0c709) cannot see any of it.
   const bonusBefore = world.composureBonus
   world.composureBonus = composureBonusAfterWeek(bonusBefore, coolheadRung !== undefined)
-  const composureCeiling = composureCeilingOf(world.potential.composure, world.composureBonus)
+  // ⭐ W5/T5 – AND WHAT MOTHERHOOD ADDED TO THE ROOM, composed with the seat's bonus rather than
+  //     beside it: one ceiling, one number, and the ease below still reads only the seat's own
+  //     movement (`bonusBefore - world.composureBonus`), so her room cannot decay.
+  const composureCeiling = composureCeilingOf(
+    world.potential.composure,
+    world.composureBonus + motherhoodPoiseOf(world.children.length),
+  )
   const composureEase = composureEaseThisWeek(
     composureBefore,
     composureCeiling,

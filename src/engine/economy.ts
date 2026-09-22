@@ -4308,6 +4308,18 @@ export const ECONOMY = {
       hardExamWeek: -2,
       seasonWithNoVacation: -3,
       blackoutWeek: 1,
+      /** ⭐⭐⭐ W5/T2 – THE WEEK THE FAMILY IS ON THE ROAD AND A SMALL CHILD IS AT HOME. His ruling of
+       *  21.09 chose the SPIRIT shape over the money one: a fare is something she already pays and
+       *  would have read as a tax, while a week away belongs to the layer that prices weeks.
+       *
+       *  ⚠ DRAFTED, NOT RULED. −2 puts it between the knock she played through (−2) and the season
+       *  that ended with no family week (−3), which is the company it keeps: a real weekly cost
+       *  that no single week decides a career over. Benched in T7.
+       *
+       *  ⚠ IT IS SCALED BY TEMPERAMENT FOR FREE (`perturbationScale` above, this block's own law),
+       *  so an `intense` mother feels the road more than a `quiet` one without a second constant –
+       *  the property that made this the right home rather than a new weekly pass. */
+      awayFromSmallChild: -2,
     },
     /** The exam row's own gate: an exam week only costs her when the plan is still grinding through
      *  it (`plan.train >= 85`, which is the `grind` preset). A light exam fortnight costs nothing. */
@@ -5418,6 +5430,69 @@ export const ECONOMY = {
      *
      *  ⚠ 13 WAS MEASURED TOO and is the retune if the six months read long; the curve between them is
      *  not measured, which is the honest limit on this number (n=15, two hold points). */
+    /** ⭐⭐ W5/T2 – HOW LONG «SMALL» LASTS, the window `awayFromSmallChild` reads off the child's own
+     *  `bornWeek`. Drafted at three years (156 weeks): the span the digest's protected ranking runs
+     *  for, and the age by which a child stops being carried everywhere. The wave-9 brief names this
+     *  as one of the two things T2 was to BRING rather than decide, so it is his with the bench's
+     *  numbers beside it (T7).
+     *  ⚠ A window and not a flag: nothing is persisted and no save gains a key – the child's row
+     *  already holds the only fact this needs. */
+    childSmallWeeks: 156,
+    /** ⭐⭐⭐ W5/T3 – THE SECOND CHILD'S OWN CURVE, and it is a different curve rather than the first
+     *  one re-used. His digest's row is explicit and is the whole source: «Second child | 28–38 |
+     *  1–2% | even less influence» – a LATER window than the first pregnancy's 24–35, a LOWER annual
+     *  rate than its 2–4%, and the design's own sentence about the third («the repeat hazard reads
+     *  the age window AND the count of children, so a third stays rare rather than routine»).
+     *  ⚠ The rungs are read exactly as `perWeekByAge`'s are – last rung at or below her age wins –
+     *  so the two curves cannot drift apart in how they are consumed, only in what they say. */
+    repeatPerWeekByAge: [
+      // 28–34 – the digest's window opens here, at its TOP annual rate: she is past the peak years,
+      // the first child is old enough to have stopped being an infant, and this is where the two
+      // documented multi-return careers sit.
+      { fromAge: 28, perWeek: 0.02 / 52 },
+      // 34–38 – the tail, at the digest's LOW rate. Real and thin, exactly as the first curve's
+      // last rung is.
+      { fromAge: 34, perWeek: 0.01 / 52 },
+      // 38+ – the window closes. A rung and not an absence, `perWeekByAge`'s own law.
+      { fromAge: 38, perWeek: 0 },
+    ],
+    /** ⭐⭐ AND EVERY CHILD AFTER THE SECOND MULTIPLIES THE HAZARD BY THIS – the «count of children»
+     *  half of the design's sentence, as one number rather than a third curve. At 0.5 a third child
+     *  runs at half the second's rate and a fourth at a quarter: rare, never impossible, and the
+     *  bench reports what it produces instead of the constant promising it.
+     *  ⚠ RULED BY HIM 21.09 that there is NO CAP – «пусть решает арифметика» – so this factor is the
+     *  only thing making a large family rare, which is exactly the job it was given. */
+    repeatCountFactor: 0.5,
+    /** ⭐ HOW LONG AFTER A BIRTH THE NEXT PREGNANCY CANNOT START. Drafted at a year, and it is the
+     *  ONE number in T3 the digest does not supply: what it protects is the comeback itself, because
+     *  a pregnancy inside the return ramp would overwrite `world.comeback` and take back the freeze
+     *  she is in the middle of spending. ⚠ DRAFTED, NOT RULED – benched in T7, and the alternative
+     *  shape (refuse only while the freeze has entries left) is written up there rather than chosen
+     *  here. */
+    repeatCooldownWeeks: 52,
+    /** ⭐⭐⭐ W5/T5 – «PRIORITIES SHIFT», AS ROOM RATHER THAN AS A GIFT. The research digest's one
+     *  PERMANENT effect («possible permanent mental-resilience bonus after the return») and the only
+     *  skill-adjacent number this whole branch is allowed to touch – which is why it ships with a
+     *  bench and a spec row (invariant 5) and at a drafted value.
+     *
+     *  ⚠⚠ IT RAISES HER COMPOSURE **CEILING** AND NEVER HER COMPOSURE, and that shape is round 42
+     *  #35's, re-used rather than re-invented: the psychologist's years already buy room above a
+     *  rolled ceiling and ordinary development climbs into it. Three things follow that a raw bump
+     *  could not give – she EARNS it week by week rather than receiving it, it cannot overshoot, and
+     *  it composes with the seat's own bonus without either one needing to know about the other.
+     *
+     *  ⚠⚠ AND THE CEILING IS THE ONLY SHAPE THAT WORKS AT ALL, which is a measurement and not a
+     *  preference: wave 8b's arm 7 walked careers and found a coached one reaching **96–98% of her
+     *  own headroom by about twenty-two** (`docs/research/the-unclosable-head-2026-09.md` §7), and
+     *  the first child arrives at 24+. A bonus clamped to her rolled ceiling would therefore be worth
+     *  almost nothing to almost everybody; room ABOVE it is worth exactly what she then trains into.
+     *
+     *  ⚠ PER CHILD AND DERIVED FROM `world.children`, so nothing is persisted, nothing can be applied
+     *  twice, and a second child adds its own room – with `returnPoiseMax` as the cap so a large
+     *  family cannot become a composure strategy. */
+    returnPoiseCeiling: 1.5,
+    /** The cap on the above, whatever the family's size. Drafted at two children's worth. */
+    returnPoiseMax: 3,
     smallFirstHoldWeeks: 26,
     comebackStages: [
       // 0–3 months – the deepest rung, and the one the wrong ramp spends its protected entries

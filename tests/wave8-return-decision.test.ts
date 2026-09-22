@@ -434,6 +434,12 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
     expect(Object.keys(ECONOMY.motherhood).sort()).toEqual(
       [
         'careerFirstBond',
+        // ⚠ RE-AIMED 21.09 BY WAVE 9's T2, third time this guard has asked its question and third
+        // time the answer is no. `childSmallWeeks` is the AGE WINDOW a spirit perturbation reads off
+        // the child's own `bornWeek` (`awayFromSmallChild`, `engine/spirit.ts`) – how long «small»
+        // lasts, nothing more. It decides no probability, it is read by no decision, and the
+        // comeback's success stays emergent and measured.
+        'childSmallWeeks',
         'decisionWeeksAfterBirth',
         'joyBond',
         'perWeekByAge',
@@ -445,6 +451,24 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'returnChanceMax',
         'returnChanceMin',
         'returnSpiritPerPoint',
+        // ⚠ RE-AIMED 21.09 BY WAVE 9's T3 – three keys at once, and the guard's question gets the
+        // same answer for all three. `repeatPerWeekByAge` and `repeatCountFactor` are the SECOND
+        // child's hazard (his digest's «28–38 | 1–2%» and the design's «a third stays rare»), and
+        // `repeatCooldownWeeks` is how soon after a birth the next may start. All three decide
+        // whether a pregnancy BEGINS; not one of them reads, writes or scales whether a comeback
+        // worked, which stays emergent and measured.
+        'repeatCooldownWeeks',
+        'repeatCountFactor',
+        'repeatPerWeekByAge',
+        // ⚠ RE-AIMED 21.09 BY WAVE 9's T5, and this pair is the closest the guard has come to a real
+        // catch: `returnPoiseCeiling` and `returnPoiseMax` are the only skill-adjacent numbers this
+        // branch has. They are still not success rates – they raise her composure CEILING
+        // (`motherhoodPoiseOf`, `engine/development.ts`), which ordinary development then climbs
+        // into, and nothing reads them to decide whether a comeback worked. ⚠ What they DO need, and
+        // have, is a bench and a spec row: invariant 5, because a skill number is exactly the kind of
+        // thing this guard cannot check.
+        'returnPoiseCeiling',
+        'returnPoiseMax',
         'returnSupportShift',
         // ⚠⚠ RE-AIMED 21.09 BY HIS HOLD RULING, and once again the guard did its job: a key joined
         // the block and somebody had to look at it and say whether it is a success rate. IT IS NOT.

@@ -285,11 +285,17 @@ function* sweepStages(): Generator<DiaryFacts> {
     // fixture, and the band's eight lines license on SEVEN DIFFERENT values – so any band left out
     // would leave its line licensed in no fixture of any sweep, and the per-line reached arm below
     // (its own case) fails by name.
-    { motherhoodBand: 'announced' as const },
-    { motherhoodBand: 'early' as const },
-    { motherhoodBand: 'mid' as const },
-    { motherhoodBand: 'last' as const },
-    { motherhoodBand: 'birth' as const },
+    // ⚠⚠⚠ RE-AIMED 21.09 BY WAVE 9's T4, AND THE PER-LINE ARM BELOW IS WHAT FORCED IT. The eight
+    // shapes that used to be written out here armed the BAND and not the VOICE: `sweepStages` holds
+    // `temperament` at one value, so with the four-voice cross in the pool the sweep reached 15 of
+    // 36 lines and the reached-per-line case failed by name. The cross is DERIVED rather than
+    // pasted – twenty-eight rows nobody has to keep in step – so a fifth voice or an eighth band
+    // arms itself here the day it is added, which is the failure mode this list exists to prevent.
+    ...VOICES.flatMap((temperament) =>
+      (['announced', 'early', 'mid', 'last', 'birth', 'postpartum', 'returned'] as const).map(
+        (motherhoodBand) => ({ motherhoodBand, temperament }),
+      ),
+    ),
     // ⚠⚠ POSTPARTUM IS ARMED TWICE AND THE PAIR IS THE POINT – it is the `freshBreakup`/`low` pair's
     // shape, one wave on. The band's SEVENTH line carries a second gate (`warmSupport`), so without
     // the warm row that line would be licensed in no fixture of any sweep; and without the plain row
@@ -679,7 +685,12 @@ describe('W2 — the ordinary week note is HONEST', () => {
     let licensed = 0
     const seen = new Set<string>()
     const band = WEEK_NOTES.filter((n) => n.claims.motherhood !== undefined)
-    expect(band.length, 'the eight lines he passed on 21.09').toBe(8)
+    // ⚠ RE-AIMED 21.09 BY WAVE 9's T4. His eight are untouched; what joined them is the four-voice
+    // cross wave 8b deferred BY NAME («a four-voice pregnancy band would be 32 more; W5's, on the
+    // record, not dropped»). Seven bands x four voices = 28, plus his 8 = 36. ⚠ The number is
+    // spelled as the arithmetic rather than as «36» so a voice or a band going missing reads as the
+    // hole it is instead of as an off-by-one.
+    expect(band.length, 'his eight, plus seven bands in four voices').toBe(8 + 7 * 4)
     for (const f of sweepAll()) {
       for (const note of WEEK_NOTES) {
         if (!note.license(f) || note.claims.motherhood === undefined) continue
@@ -716,7 +727,7 @@ describe('W2 — the ordinary week note is HONEST', () => {
     // an empty band passes forever, so the band's existence is established before anything about it
     // is denied. And the ban is checked against the RENDERED text, which is what a player reads.
     const band = WEEK_NOTES.filter((n) => n.claims.motherhood !== undefined)
-    expect(band.length, 'the band has to exist before anything is claimed about it').toBe(8)
+    expect(band.length, 'the band has to exist before anything is claimed about it').toBe(8 + 7 * 4)
     // ⚠ WORD BOUNDARIES, NOT SUBSTRINGS. «the» contains «he» and «brother» contains «other»; a
     // substring ban would either pass by accident or fail every line in the pool.
     const PARTNER_WORDS = /\b(he|him|his|husband|wife|spouse|partner|married|marriage|father|dad)\b/i

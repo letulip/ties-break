@@ -99,6 +99,10 @@ const MOTHERHOOD = ECONOMY.motherhood
 // out twice. The curve's SHAPE is the builder's draft and is asserted structurally in §A, never
 // transcribed: the arithmetic that sizes it lives at the constant, where the owner reads it.
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31, joy: 2.5, worry: -0.5, careerFirst: -4 } as const
+// ⚠ WAVE 9's drafted repeat cooldown, transcribed here for the same reason every literal above is:
+// this file reads the PLAN and not `ECONOMY`, so that a constant moving in the engine is a visible
+// disagreement rather than a silently agreeing test (line 19's own law).
+const W9 = { repeatCooldownWeeks: 52 } as const
 
 beforeEach(() => {
   rngKeys.length = 0
@@ -225,17 +229,26 @@ describe('wave 8 T2 A – `pregnancyEligible`, and the curve that is deliberatel
     // ⚠⚠ IT IS A SCOPE BRAKE AND NOT A RULE ABOUT HER LIFE. Repeat pregnancy is CONFIRMED WANTED
     // («после беременности может быть и повторная», 11.09) and W5 LIFTS this line – replacing it with
     // the count-aware hazard the design asks for, not deleting a receipt.
+    // ⚠⚠⚠ RE-AIMED 21.09 BY WAVE 9's T3, WHICH IS THE TASK THE NOTE ABOVE NAMES AS THE LIFTER. The
+    // case is kept, its fixture is kept, and what it asserts moves from «she is refused for ever» to
+    // «she is refused for the COOLDOWN and then the repeat curve has her» – which is the replacement
+    // the original note argued for in the same words. A birth 60 weeks back is past wave 9's drafted
+    // year, so the fixture had to say WHICH side of the cooldown it stands on; it now tests both.
     const world = wedded('w8-once-per-career', 30)
     expect(pregnancyEligible(world), 'the control: married, in the window, no child – she clears').toBe(true)
-    world.children.push({ bornWeek: world.week - 60, sex: 'girl' })
+    world.children.push({ bornWeek: world.week - 8, sex: 'girl' })
     expect(world.pregnancy, 'the pregnancy was cleared at the return, as T6 leaves it').toBeNull()
     expect(latchedEpisode(world), 'and the marriage is still standing – the door is open').not.toBeNull()
     expect(pregnancyChanceAt(world), 'and her age is still inside the research window').toBeGreaterThan(0)
-    expect(pregnancyEligible(world), '⭐ and the wave still ships at most ONE pregnancy per career').toBe(false)
+    expect(pregnancyEligible(world), '⭐ eight weeks after a birth the door is still shut').toBe(false)
     // ⚠ AND THE REFUSAL IS A GATE REFUSAL, so it takes ZERO DRAWS like every other one – never a
     // draw-and-discard (invariant 2). §B counts the keys; this asserts the write.
     rollPregnancy(world)
     expect(world.pregnancy, 'nothing was written, and nothing was rolled to decide it').toBeNull()
+    // ⭐ AND THE OTHER SIDE OF THE SAME CLAUSE, which is wave 9's whole T3: past the cooldown the
+    // same career is eligible again, on the SECOND child's own curve and not the first's.
+    world.children[world.children.length - 1].bornWeek = world.week - W9.repeatCooldownWeeks
+    expect(pregnancyEligible(world), '⭐⭐ past the cooldown the door opens again (W5/T3)').toBe(true)
     // ⚠ TWO CHILDREN REFUSE FOR THE SAME REASON, which is worth one line: the clause reads a COUNT
     // and not a boolean, so W5 edits the comparison rather than replacing the read.
     world.children.push({ bornWeek: world.week - 8, sex: 'girl' })
@@ -317,9 +330,13 @@ describe('wave 8 T2 B – the gate AND the chance both return before any stream 
         w.pregnancy = { episodeId: w.loveEpisodes[0].id, announcedWeek: w.week - 4, pausesWeek: w.week + 4, dueWeek: w.week + 35, support: null, rankAtPause: null }
         return w
       })()],
-      ['a child already born', (() => {
+      // ⚠ RE-AIMED 21.09 BY WAVE 9's T3. The row is kept because what it pins is the DRAW property –
+      // «an ineligible week takes zero draws» – and not the reason for the refusal. Wave 9 replaced
+      // «a child born, ever» with «a child born inside the cooldown», so the fixture moves to the
+      // side of the clause that is still a refusal and the property it guards is untouched.
+      ['a child born inside the cooldown', (() => {
         const w = wedded('w8-b7', 30)
-        w.children.push({ bornWeek: w.week - 60, sex: 'girl' })
+        w.children.push({ bornWeek: w.week - 8, sex: 'girl' })
         return w
       })()],
       ['a knock running', withKnock(wedded('w8-b4', 28), 'rest', 2)],

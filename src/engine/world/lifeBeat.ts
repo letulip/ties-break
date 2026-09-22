@@ -6462,9 +6462,21 @@ export function ownKeyThisWeek(world: WorldState): boolean {
  *  as an ineligible week does (`rollPregnancy` returns on the chance before it derives the stream). */
 export function pregnancyChanceAt(world: WorldState): number {
   const age = kidAgeNow(world)
+  const m = ECONOMY.motherhood
+  // ⭐⭐⭐ W5/T3 – WHICH CURVE, and it is the count of children that decides. A career with none on
+  // the board reads `perWeekByAge` and is byte-identical to everything wave 8 measured; a career
+  // that already has one reads `repeatPerWeekByAge`, which is his digest's own later window and
+  // lower rate. ⚠ TWO CURVES AND ONE READING – the rung loop below is shared, so the two can differ
+  // in what they say and never in how they are consumed.
+  const born = world.children.length
+  const rungs = born === 0 ? m.perWeekByAge : m.repeatPerWeekByAge
   let perWeek = 0
-  for (const rung of ECONOMY.motherhood.perWeekByAge) if (age >= rung.fromAge) perWeek = rung.perWeek
-  return perWeek
+  for (const rung of rungs) if (age >= rung.fromAge) perWeek = rung.perWeek
+  if (perWeek <= 0 || born <= 1) return perWeek
+  // ⭐⭐ AND EVERY CHILD AFTER THE FIRST THINS IT – the design's «a third stays rare rather than
+  // routine», as one factor rather than a third curve. `born - 1` so the SECOND child is the plain
+  // repeat rate and the third is the first one thinned.
+  return perWeek * Math.pow(m.repeatCountFactor, born - 1)
 }
 
 /** ⭐⭐ THE GATE – ALL FOUR, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
@@ -6490,7 +6502,12 @@ export function pregnancyChanceAt(world: WorldState): number {
  *     design already asks for (§3: «the repeat hazard reads the age window AND the count of children,
  *     so a third stays rare rather than routine»). The line W5 edits is the line that already reads
  *     the count.
- *  3. ⭐⭐⭐ AND NONE BORN – `world.children.length === 0`. ⚠⚠ THIS IS A **SCOPE BRAKE** AND NOT A
+ *  3. ⭐⭐⭐ ⚠⚠ **LIFTED BY W5/T3 (21.09), AS THIS BULLET ITSELF PREDICTED.** What replaces it is the
+ *     COOLDOWN below plus the count-aware hazard in `pregnancyChanceAt`, which is precisely the
+ *     «W5 does not DELETE the clause, it REPLACES it» this note argued for. The original text is
+ *     kept below because the reasoning is what made the replacement safe, and the census corridor
+ *     it names is now the FIRST pregnancy's alone. Originally: AND NONE BORN –
+ *     `world.children.length === 0`. ⚠⚠ THIS IS A **SCOPE BRAKE** AND NOT A
  *     CLAIM ABOUT HER LIFE. It says «this WAVE ships at most one pregnancy per career», which is
  *     exactly what §4 promises («no repeat pregnancy enabled – W5 re-enters the same machinery») and
  *     exactly what T9's census measures («share of latched careers reaching a pregnancy by 35»). It
@@ -6515,7 +6532,21 @@ export function pregnancyChanceAt(world: WorldState): number {
 export function pregnancyEligible(world: WorldState): boolean {
   if (latchedEpisode(world) === null) return false
   if (world.pregnancy !== null) return false
-  if (world.children.length > 0) return false
+  // ⭐⭐⭐ W5/T3 – AND CLAUSE 3 IS LIFTED, exactly as T2½'s own note said it would be: the SCOPE
+  // BRAKE («this WAVE ships at most one pregnancy per career») is replaced by the count-aware
+  // hazard the design asked for, which lives in `pregnancyChanceAt` above. What stays here is the
+  // one thing a hazard cannot say: how soon after a birth the next pregnancy may start.
+  //
+  // ⚠ AND WHAT THE COOLDOWN PROTECTS IS THE COMEBACK, not decency. `world.comeback` holds the
+  // freeze she is in the middle of spending, and a second pregnancy overwrites that record at its
+  // own return – so without this clause a career could lose twelve protected entries it had already
+  // been granted, silently, to a hazard that fired eight weeks after the birth. ⚠ DRAFTED AT A YEAR
+  // and benched in T7; the alternative shape (refuse only while the freeze still has entries left)
+  // is written at the constant.
+  const lastBirth = world.children.reduce((w, child) => Math.max(w, child.bornWeek), -Infinity)
+  if (world.children.length > 0 && world.week - lastBirth < ECONOMY.motherhood.repeatCooldownWeeks) {
+    return false
+  }
   if (knockRunning(world)) return false
   return true
 }
