@@ -6852,7 +6852,14 @@ export function rollPregnancy(world: WorldState): void {
   const windowWeeks = drawConceptionWindow(world.seed, world.week, openness)
   const conceivedWeek = world.week
   const announcedWeek = conceivedWeek + windowWeeks
-  const pausesWeek = announcedWeek + ECONOMY.motherhood.playsOnWeeks
+  // ⭐⭐ THE FIRST-TRIMESTER CAP (the review of T2 – the constant's own note carries the argument):
+  // «up to 8 after she tells», and never past the trimester competition really stops at. For a short
+  // window the min is the shipped arithmetic unchanged; for a long one she stops entering BEFORE the
+  // announcement – the absence of entries is the telling, the design doc's own scene.
+  const pausesWeek = Math.min(
+    announcedWeek + ECONOMY.motherhood.playsOnWeeks,
+    conceivedWeek + ECONOMY.motherhood.firstTrimesterWeeks,
+  )
   world.pregnancy = {
     // ⭐⭐⭐ A REFERENCE AND NEVER A LIVENESS CHECK – THE DECOUPLING LAW, and the banner above is
     // where it is argued. This id says WHOSE and WHICH MARRIAGE, for the record, the diary and the

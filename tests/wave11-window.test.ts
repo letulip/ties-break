@@ -201,6 +201,32 @@ describe('wave 11 T2 A – the one number', () => {
       expect(p.dueWeek - p.announcedWeek, `seed ${i}`).toBe(39 - windowWeeks)
     }
   })
+
+  it('⭐⭐⭐ THE FIRST-TRIMESTER CAP – she never plays past it, and a long window closes the entries before she tells (the review\'s T2 fix)', () => {
+    // The builder's own question 1 named the falsification: «up to 8 after the announcement» alone
+    // put a 12-week window's last event at pregnancy week 20, and the research is unambiguous that
+    // competition stops after the first trimester. The pause is min(announced + playsOn,
+    // conceived + firstTrimester) now – asserted over REAL draws, both branches, non-vacuously.
+    let capped = 0
+    let uncapped = 0
+    for (let i = 0; i < 30; i++) {
+      const world = onHitWeek(`w11-cap-${i}`)
+      rollPregnancy(world)
+      const p = world.pregnancy!
+      const m = ECONOMY.motherhood
+      expect(p.pausesWeek - p.conceivedWeek, `seed ${i}: never past the trimester`).toBeLessThanOrEqual(m.firstTrimesterWeeks)
+      expect(p.pausesWeek, `seed ${i}: the min, exactly`).toBe(
+        Math.min(p.announcedWeek + m.playsOnWeeks, p.conceivedWeek + m.firstTrimesterWeeks),
+      )
+      if (p.pausesWeek < p.announcedWeek + m.playsOnWeeks) capped += 1
+      else uncapped += 1
+    }
+    // ⚠ NON-VACUOUS BOTH WAYS: the sweep must contain a window long enough to be capped (the
+    // quiet-girl scene – the entries can close before the announcement) AND a short one where the
+    // shipped «8 after she tells» surface is byte-identical to wave 8.
+    expect(capped, 'at least one long window met the cap').toBeGreaterThan(0)
+    expect(uncapped, 'and the shipped surface still exists').toBeGreaterThan(0)
+  })
 })
 
 // =================================================================================================

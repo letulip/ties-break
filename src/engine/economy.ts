@@ -5244,6 +5244,18 @@ export const ECONOMY = {
      *  `partnerName`'s one wave down): a later retune of this number must never move the pause date
      *  of a pregnancy a live career is already carrying. */
     playsOnWeeks: 8,
+    /** ⭐⭐ v87 (the architect's review of T2 – the builder's own question 1 named the falsification):
+     *  **THE FIRST-TRIMESTER CAP ON THE PAUSE, FROM CONCEPTION.** `announcedWeek + playsOnWeeks`
+     *  alone let a private girl's 12-week window put her last event at pregnancy week 20, and the
+     *  research is unambiguous that COMPETITION stops after the first trimester
+     *  (`docs/research/pregnancy-in-sport-2026-09.md` §5 – training continues, competition does not).
+     *  So the pause is `min(announcedWeek + playsOnWeeks, conceivedWeek + firstTrimesterWeeks)`:
+     *  the shipped «up to 8 after she tells» surface holds wherever biology allows it, and the cap
+     *  binds only when the window is long – which is exactly the design doc's quiet-girl scene, «he
+     *  may learn from the absence of entries»: she stops entering before he knows why.
+     *  Drafted 13; a zero-window pregnancy reproduces every wave-8 date exactly (min(8, 13) = 8),
+     *  which is what keeps the shipped identity pin green by arithmetic rather than by luck. */
+    firstTrimesterWeeks: 13,
     /** ⭐ AND THE BIRTH IS THIS MANY WEEKS AFTER THE PAUSE – `dueWeek = pausesWeek + termWeeks`, the
      *  brief's own formula, drafted 31 (the brief's figure). ⚠ THE TWO TOGETHER ARE THE TERM: 8 + 31
      *  = **39 weeks from the announcement to the birth**, which is a full human term with the

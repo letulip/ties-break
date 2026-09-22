@@ -258,9 +258,12 @@ export interface PrologueCard {
    *  reads `options` alone – the five-year-old's card still carries none, and the shape the owner
    *  counted («может тогда больше без решений, 3 или 4?») is unchanged. */
   readonly identity?: true
-  /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ASKED ON THE CARD THAT
-   *  ALREADY ASKS WHO SHE IS (his ruling of 22.09: «set at new-career creation – the creation flow
-   *  ASKS»). `identity`'s shape and `identity`'s reasons, one flag down.
+  /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ASKED ON THE **LAST** CARD OF
+   *  THE WALK – the card that creates the career (his ruling of 22.09: «set at new-career creation –
+   *  the creation flow ASKS»). ⚠ The plan said «the prologue's opening» and the age-5 card measured
+   *  240px OVER its owner-earned ceiling with the ask on it; the card's own note at `weight: true`
+   *  carries the numbers, and the review accepted the placement (23.09). `identity`'s shape and
+   *  `identity`'s reasons, one flag down.
    *
    *  ⚠ A FLAG AND NOT COPY, for `identity`'s own reason: the words live in
    *  `composables/identityCopy.ts` (`WEIGHT_COPY`) where all THREE surfaces read them – this card,

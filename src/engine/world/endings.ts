@@ -708,7 +708,8 @@ export function resolveReturnDecision(world: WorldState): void {
   // on `CareerEndingType` carry `'family'` and nothing in `buildEndingView` asks which ending it is.
   // ⚠ THE ABSENCE IS COUNTED FROM `pausesWeek` AND NOT FROM THE ANNOUNCEMENT – the weeks the entries
   // were actually shut, which is what the detail line claims and the only span this ending can name
-  // without overstating (she played on for `playsOnWeeks` after she told him). Read off the local
+  // without overstating (she played on for UP TO `playsOnWeeks` after she told him – the trimester
+  // cap can close the entries earlier on a long window, the review's T2 fix). Read off the local
   // binding, so the clear one line below cannot take the number out from under it.
   const ending = endingForFamily(world.week, ageYears, world.week - pregnancy.pausesWeek)
   world.pregnancy = null
