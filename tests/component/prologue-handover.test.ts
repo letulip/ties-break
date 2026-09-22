@@ -11,7 +11,7 @@
 // ⚠ MUTATION-VERIFIED. Watched failing before it was believed:
 //   * `max-height: 100%; overflow-y: auto` removed from `.dialog-card` in src/style.css (the
 //     stylesheet as it stood before round-20 #3) -> the fit assertion goes red naming the content
-//     floor and «cap NONE, NOT scrollable».
+//     floor and «cap NONE, card does NOT scroll». ⚠ The message gained a shape tag and a second scroll column on 22.09 (`[card-scrolls] … card does NOT scroll, overlay does NOT scroll`) when `fits.ts` learned the scrolling-takeover shape; the VERDICT is the one quoted here.
 //   * the rose's declared height raised to 3000px -> the aspect pin goes red. ⚠ IT IS NOT CAUGHT BY
 //     THE FIT ASSERTION, and that is the shared rule working as designed rather than a hole: a card
 //     that is bounded and scrolls satisfies round-20 #3 at any content height. What a taller picture

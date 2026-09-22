@@ -100,6 +100,28 @@ measurement is a match-level A/B, and it is named here rather than implied.
    of him.
 2. **The cooldown's shape** – a year is drafted; the alternative is «refuse only while the freeze
    still has entries left», which protects the same thing with no calendar in it.
-3. **What the poise room buys** – the match-level arm named in §2.
+3. ~~**What the poise room buys** – the match-level arm named in §2.~~ ⭐ **MEASURED 22.09 (wave 10
+   T8, his «не возражаю»)** – `npx vite-node tools/composure-bench.ts --wing composure --sims 1200`,
+   the paired design, same seeds, one number different between two rows:
+
+   | build vs | +0.495 (the margin her twins really reached) | +1.5 (the whole ceiling) |
+   | --- | --- | --- |
+   | big-shot vs #20 | **+0.2 pp** (BP saved 55.6 → 55.7) | +1.2 pp (55.6 → 55.8) |
+   | nerve vs #20 | −0.1 pp (57.3 → 57.3) | +0.3 pp (57.3 → 57.4) |
+   | big-shot vs #80 | +0.0 pp (58.8 → 58.8) | +0.0 pp (58.8 → 58.8) |
+   | nerve vs #80 | +0.1 pp (59.3 → 59.4) | −0.1 pp (59.3 → 59.5) |
+
+   **Predicted ≈ +0.1 pp on pressure points, texture, below career-grain noise. Measured: it is below
+   this bench's noise too, and that is the honest reading rather than a point estimate.** At 1,200
+   simulated matches a cell the standard error on a win rate near 60% is ≈1.4 pp, so every win-rate
+   figure above is inside it and the SIGN is not even consistent across the four cells. What IS
+   resolvable is the break-point column, which aggregates thousands of events per cell: **+0.495 moves
+   break points saved by at most +0.1 pp**, and the whole ceiling by at most +0.2 pp. ⚠ The one cell
+   where the ceiling reads large (+1.2 pp) is the low-composure build under the strongest opponent –
+   a readable mechanism rather than a contradiction, and still one cell of four.
+
+   ⭐ **So wave 9's term is texture, as it was drafted to be.** The room is real, she spends it, and
+   what it buys at match grain is smaller than a career-grain bench at N=168 could ever have seen –
+   which is why the arm had to be run at match grain to be answered at all.
 4. **The 28 diary drafts** – [the strings table](../plans/life-wave-9-strings-2026-09.md), all
    awaiting his pass.

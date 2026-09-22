@@ -27,7 +27,7 @@ import { useGameStore } from '../stores/game'
 // there is one number and the screen, the two refusal sentences and this field all take it from
 // the same place. It is NOT the save spine's `MAX_ID_CHARS` any more – see that constant's own note
 // in shared/protocol/profile.ts for why the import gate deliberately stayed at 200.
-import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
+import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type DynastyHandover, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { daysInBirthMonth } from '../shared/dates'
 import { onboardingHeroUrl, portraitUrl } from '../art/preload'
 import ScreenShell from './ui/ScreenShell.vue'
@@ -42,7 +42,7 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // composables/identityCopy.ts. The prologue's age-5 card asks the same three things (her name,
 // her birthday, her country) and invariant 4 says it must ask them in the same words, so there
 // is now ONE declaration and both surfaces read it. Not a string on this screen changed.
-import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 // ⚠ AND NEITHER IS THE NAME POOL, SINCE 14.09 – see the header of composables/identityDice.ts. The
 // two dice below are the owner's «кубики», and the prologue's age-5 card grew a pair of its own
 // after creation moved there; a private `const NAMES` here would have made one label mean two
@@ -210,16 +210,30 @@ function poseUrl(id: PlayStyle): string {
 const STEP_COUNT = 6
 const step = ref(1)
 
+/** ⭐⭐⭐ v86 T10 – THE LINE, THROUGH THE SKIP (his 22.09 ruling on the architect's recommendation:
+ *  the skip stays, and the wizard learns the block). Absent, this file is byte-for-byte the wizard
+ *  it has always been. Present, it carries exactly the deviations the prologue's identity card
+ *  already carries – the surname locked, the origins answered by the block, the recorded birthday –
+ *  so skipping the childhood no longer abandons the line; what it skips is the walk, which is what
+ *  skip has always meant. */
+const props = defineProps<{ dynasty?: DynastyHandover }>()
+
+/** The recorded births, in birth order – empty on the epilogue variant and on every ordinary run. */
+const recordedBirthdays = computed(() => props.dynasty?.childBirthdays ?? [])
+
 const profile = reactive<PlayerProfile>({
   kidName: randomName(),
-  kidLastName: randomSurname(),
+  // T10: her mother's surname on a dynasty run – locked in the template, so the init IS the value.
+  kidLastName: props.dynasty ? props.dynasty.motherName.last : randomSurname(),
   gender: 'girl',
-  country: '',
-  background: 'middle',
+  // T10: her mother's country, editable exactly as the prologue's card leaves it.
+  country: props.dynasty?.motherCountry ?? '',
+  // T10: the band arrived on the block – step 4 states it instead of asking (§6.3).
+  background: props.dynasty?.background ?? 'middle',
   coachTier: DEFAULT_PROFILE.coachTier,
   playStyle: 'all-court',
-  birthMonth: DEFAULT_PROFILE.birthMonth,
-  birthDay: DEFAULT_PROFILE.birthDay,
+  birthMonth: props.dynasty?.childBirthdays[0]?.month ?? DEFAULT_PROFILE.birthMonth,
+  birthDay: props.dynasty?.childBirthdays[0]?.day ?? DEFAULT_PROFILE.birthDay,
 })
 
 // HER BIRTHDAY, and the day is the player's to choose (owner, 30.07). The month is the one that carries
@@ -299,7 +313,24 @@ function pickPlayStyle(id: PlayStyle): void {
   profile.playStyle = id
 }
 function skipToDefaults(): void {
-  game.newCareer('', DEFAULT_PROFILE)
+  // T10 – «defaults» on a dynasty run keeps what the line settled: the surname, the country, the
+  // band and the recorded birthday are the block's answers, not preferences a default may wipe.
+  // Everything a default really decides (name, coach, style) stays the default.
+  game.newCareer(
+    props.dynasty?.childSeed ?? '',
+    props.dynasty
+      ? {
+          ...DEFAULT_PROFILE,
+          kidLastName: props.dynasty.motherName.last,
+          country: props.dynasty.motherCountry || DEFAULT_PROFILE.country,
+          background: props.dynasty.background,
+          birthMonth: props.dynasty.childBirthdays[0]?.month ?? DEFAULT_PROFILE.birthMonth,
+          birthDay: props.dynasty.childBirthdays[0]?.day ?? DEFAULT_PROFILE.birthDay,
+        }
+      : DEFAULT_PROFILE,
+    undefined,
+    props.dynasty,
+  )
 }
 function start(): void {
   const finalProfile: PlayerProfile = {
@@ -308,7 +339,9 @@ function start(): void {
     kidLastName: profile.kidLastName.trim() || randomSurname(),
   }
   // No seed input in the wizard – the store generates a readable one (see game.ts newCareer).
-  game.newCareer('', finalProfile)
+  // T10: except on a dynasty run, where the seed is the line's own `childSeed` – never a fresh
+  // draw – and the block rides to `createWorld` exactly as the prologue's ninth card sends it.
+  game.newCareer(props.dynasty?.childSeed ?? '', finalProfile, undefined, props.dynasty)
 }
 </script>
 
@@ -378,9 +411,12 @@ function start(): void {
 
         <div class="ob-field">
           <label class="ob-label" for="ob-last">{{ IDENTITY_COPY.lastName }}</label>
+          <!-- ⭐⭐ v86 T10 – LOCKED ON A DYNASTY RUN, the prologue card's own dress: `readonly`
+               rather than `disabled` because the value is the point, and the die is not drawn at
+               all beside a field that cannot roll. -->
           <div class="ob-field-row">
-            <input id="ob-last" v-model="profile.kidLastName" class="ob-input" type="text" :maxlength="PROFILE_NAME_MAX_CHARS" :placeholder="IDENTITY_COPY.lastName" autocomplete="off" />
-            <button class="ob-dice" type="button" aria-label="Random last name" @click="rerollLast">
+            <input id="ob-last" v-model="profile.kidLastName" class="ob-input" :class="{ 'is-locked': Boolean(dynasty) }" type="text" :maxlength="PROFILE_NAME_MAX_CHARS" :placeholder="IDENTITY_COPY.lastName" :readonly="Boolean(dynasty)" autocomplete="off" />
+            <button v-if="!dynasty" class="ob-dice" type="button" aria-label="Random last name" @click="rerollLast">
               <!-- A different face on the second die, on purpose (the design draws three pips here). -->
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -391,6 +427,10 @@ function start(): void {
             </button>
           </div>
         </div>
+
+        <!-- ⭐ v86 T10 – the one sentence that explains the lock, the prologue card's own words
+             (`DYNASTY_COPY.lineNote` – one declaration, two surfaces). -->
+        <p v-if="dynasty" class="ob-line-note">{{ DYNASTY_COPY.lineNote }}</p>
 
         <!-- GENDER IS A READING, NOT YET A CHOICE. `PlayerProfile.gender` is the literal type
              'girl' – the boys' tour is post-v1 content – so Boy renders in the design's unselected
@@ -427,9 +467,14 @@ function start(): void {
                  exactly the width the month was short of. The row keeps one icon, on the left, for the
                  pair - which is what a date field looks like anyway.
              Measured in the browser at 375px: no truncation, and both taps stay full-height. -->
+        <!-- ⭐⭐ v86 T10 – THREE STATES OFF THE RECORDED BIRTHS, the prologue card's own rule: no
+             record, the selects as ever; one recorded daughter, the date locked to the real birth
+             (authenticity - his 22.09 ruling, quoted where the house fence allows, in
+             DYNASTY_COPY's script-side note); two or more, a choice over their real dates - the
+             dates are all there is to choose by, because no daughter has a name yet. -->
         <div class="ob-field">
           <label class="ob-label" for="ob-month">{{ IDENTITY_COPY.birthday }}</label>
-          <div class="ob-birthday">
+          <div v-if="recordedBirthdays.length === 0" class="ob-birthday">
             <div class="ob-select-wrap">
               <svg class="ob-select-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
@@ -450,6 +495,28 @@ function start(): void {
               </svg>
             </div>
           </div>
+          <template v-else-if="recordedBirthdays.length === 1">
+            <input id="ob-month" class="ob-input is-locked" type="text" :value="`${MONTHS[recordedBirthdays[0].month - 1]} ${recordedBirthdays[0].day}`" readonly :aria-label="IDENTITY_COPY.birthday" />
+            <p class="ob-line-note">{{ DYNASTY_COPY.birthdayNote }}</p>
+          </template>
+          <template v-else>
+            <p id="ob-birthday-choice" class="ob-line-note">{{ DYNASTY_COPY.birthdayChoice }}</p>
+            <div class="ob-stack" role="radiogroup" aria-labelledby="ob-birthday-choice">
+              <Card
+                v-for="b in recordedBirthdays"
+                :key="`${b.month}-${b.day}`"
+                as="button"
+                class="ob-row"
+                :class="{ 'is-on': profile.birthMonth === b.month && profile.birthDay === b.day }"
+                pad="12px 15px"
+                role="radio"
+                :aria-checked="profile.birthMonth === b.month && profile.birthDay === b.day"
+                @click="profile.birthMonth = b.month; profile.birthDay = b.day"
+              >
+                <span class="ob-row-title">{{ MONTHS[b.month - 1] }} {{ b.day }}</span>
+              </Card>
+            </div>
+          </template>
         </div>
 
         <Card class="ob-note" variant="gradient" pad="13px 14px">
@@ -520,7 +587,19 @@ function start(): void {
       <!-- ══ Q. Family & Coaching ══ -->
       <section v-else-if="step === 4" class="ob-pane bare ob-family">
         <Eyebrow as="h2" class="ob-eyebrow">Family background</Eyebrow>
-        <div class="ob-stack" role="group" aria-label="Family background">
+        <!-- ⭐⭐ v86 T10 – ON A DYNASTY RUN THE THREE BUTTONS ARE ABSENT, NOT DISABLED (§6.3, the
+             prologue's own rule for the origins card): the band arrived on the block, so the card
+             STATES the family she is born into instead of asking. One DRAFT sentence, and the band's
+             own label as the fact. -->
+        <template v-if="dynasty">
+          <p class="ob-line-note">{{ DYNASTY_COPY.familyNote }}</p>
+          <div class="ob-stack">
+            <Card class="ob-row is-on" pad="14px 15px">
+              <span class="ob-row-text"><span class="ob-row-title">{{ backgroundLabel }}</span></span>
+            </Card>
+          </div>
+        </template>
+        <div v-else class="ob-stack" role="group" aria-label="Family background">
           <Card
             v-for="b in BACKGROUNDS"
             :key="b.id"
@@ -1019,6 +1098,20 @@ function start(): void {
   font-size: 15px;
   font-weight: 600;
   color: var(--ink);
+}
+/* ⭐ v86 T10 – the locked field and the line note, PrologueCard's own two rules re-spelled in this
+   file's classes: the lock is one shade deeper on the same card gradient (`--card-bottom`, the
+   token the prologue's lock was corrected onto by tests/design-tokens.test.ts), and the note is the
+   muted 12px sentence under the field it explains. */
+.ob-input.is-locked {
+  color: var(--muted);
+  background: var(--card-bottom);
+}
+.ob-line-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .ob-input::placeholder {

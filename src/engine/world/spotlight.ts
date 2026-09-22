@@ -39,6 +39,7 @@ import { loveEpisodesOf } from './loveEpisodes'
 import type { BoothPrivateLife } from '../../shared/protocol/narrative'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
+import type { DynastyRecord } from './state'
 
 /** The five things that put her in the light, and there are exactly five (§3c's own list plus the
  *  two the leak model adds). ⚠ T3 prices the week by KIND – `pressureBase[kind]` – so a sixth member
@@ -83,6 +84,33 @@ export type NewsStanding = 'quiet' | 'noticed' | 'known'
  *  `tableSize` for a girl who is not on the table, and this read ALSO requires live professional
  *  points, the same guard every rank reader in `world/ladder.ts` carries one at a time. */
 export function newsStandingOf(world: WorldState): NewsStanding {
+  const own = ownNewsStandingOf(world)
+  // ⭐⭐⭐ v86 – THE NEWS FLOOR (the dynasty spec §5, RULED 22.09: «давай по твоей рекомендации»), a
+  // RECORDED AMENDMENT to his own D1 of 14.09 rather than an exception smuggled past it – see
+  // docs/decisions.md, 22.09, the second entry.
+  //
+  // ⚠⚠ IT RAISES A FLOOR AND NEVER A CEILING. `'known'` stays earned by HER OWN RANK alone: the press
+  // finds a famous name before a ranking exists, and being born to one is not the same as having
+  // done it. So the only band this clause can produce is `'noticed'`, and it can only produce it
+  // where the own-read said `'quiet'`.
+  //
+  // ⚠⚠ AND FAME FROM BIRTH IS A **COST**, which is the design and not a consolation: `'noticed'`'s
+  // shipped law does the rest for free – every exposure kind may fire on her occasions, the leak runs
+  // at `noticedLeakScale`, and habituation does NOT grow (`phaseHerWeek` passes `=== 'known'`). A
+  // daughter of a famous mother therefore meets the light years early and never gets used to it.
+  //
+  // ⚠ ONE PREDICATE SPELLS «THE MOTHER WAS KNOWN» FOR THIS CLAUSE AND FOR THE BOOTH'S LICENCE
+  // (`lineageLicensed` below) – never two. Two sides, one question: a second spelling here is exactly
+  // the defect class this repo catches most often.
+  if (own !== 'quiet') return own
+  return motherWasKnown(world.dynasty) ? 'noticed' : 'quiet'
+}
+
+/** ⚠ THE SHIPPED READ, UNTOUCHED AND EXTRACTED RATHER THAN EDITED IN PLACE – which is what makes
+ *  «a non-dynasty world is byte-identical to today» a property of the CODE rather than of a test's
+ *  patience. Every line below is the body `newsStandingOf` had before v86, character for character;
+ *  the floor is the one line above that calls it. */
+function ownNewsStandingOf(world: WorldState): NewsStanding {
   if (kidPoints(world, 'wta') <= 0) return 'quiet'
   const rank = world.kidRankWta
   if (typeof rank !== 'number' || rank <= 0) return 'quiet'
@@ -90,6 +118,70 @@ export function newsStandingOf(world: WorldState): NewsStanding {
   if (rank <= s.newsRankKnown) return 'known'
   if (rank <= s.newsRankNoticed) return 'noticed'
   return 'quiet'
+}
+
+// --- the dynasty's fame, from birth (v86 – docs/specs/the-dynasty-2026-09.md §5) ------------------
+
+/** ⭐⭐⭐ «HER MOTHER WAS KNOWN» – THE ONE SPELLING, READ BY BOTH CLAUSES OF §5.
+ *
+ *  Her `bestRank` cleared the SAME bar her daughter's own standing is read against
+ *  (`ECONOMY.spotlight.newsRankKnown`), which is what makes the floor an amendment to D1 rather than
+ *  a second fame system: one bar, two careers.
+ *
+ *  ⚠⚠ `null` NEVER QUALIFIES, and §5 says so in as many words. A career that never held a
+ *  professional rank is not a career the press remembers, and `null <= 100` is the kind of comparison
+ *  that reads as `true` in a language with looser rules than this one. The check is explicit. */
+export function motherWasKnown(dynasty: DynastyRecord | null): boolean {
+  if (dynasty === null) return false
+  const best = dynasty.motherCareer.bestRank
+  return best !== null && best <= ECONOMY.spotlight.newsRankKnown
+}
+
+/** ⭐⭐ IS THERE ANYTHING TRUE TO SAY ABOUT THE LINE? – §5's booth licence, and its two halves are
+ *  a disjunction rather than the floor's single test: a mother with a cabinet is worth a mention
+ *  whatever her best ranking was, and a mother the press knew is worth one whatever she won.
+ *
+ *  ⚠⚠ A COLLEGE-FORK MOTHER LICENSES NOTHING, AND THAT IS THE POINT RATHER THAN A SIDE EFFECT
+ *  (§2's own sentence: «the mother's own story prices the texture, not the availability»). The door
+ *  opened for her daughter exactly as it opens for everyone; what she does not get is a booth saying
+ *  «дочь той самой» about a woman nobody watched. There is nothing true to say, so nothing is said. */
+export function lineageLicensed(world: WorldState): boolean {
+  const dynasty = world.dynasty
+  if (dynasty === null) return false
+  // ⚠⚠ `proTitles`, NEVER the whole cabinet (the architect's review, 22.09): the booth's pool says
+  // «her mother won here», and «here» is a professional stage – a junior-cabinet mother satisfied
+  // `titles > 0` without one professional trophy, which is the same track conflation the handover's
+  // `bestRank` carried. The junior shelves still reach the album and the diary's club-level lines;
+  // the BOOTH speaks only of the tour it commentates.
+  return dynasty.motherCareer.proTitles > 0 || motherWasKnown(dynasty)
+}
+
+/** ⭐⭐⭐ WHAT THE BOOTH MAY SAY ABOUT THE LINE THIS WEEK, OR NOTHING – the same THREE gates the
+ *  private-life mention passes (`airBoothMention`, world/lifeBeat.ts §10), asked in one place:
+ *
+ *    1. a BIG STAGE (`atOrAboveStageBar`, the shipped licence – ruling F's one predicate);
+ *    2. the world is looking at her at all (`newsStandingOf !== 'quiet'`), which on a dynasty career
+ *       with a known mother is true from week 0 by the floor above – so the two halves of §5 really
+ *       are one mechanism and not two that happen to agree;
+ *    3. there is something TRUE to say (`lineageLicensed`).
+ *
+ *  ⚠ IT RETURNS THE FACTS AND NOT A SENTENCE. Every word the booth speaks lives in
+ *  `src/viz/commentary.ts` – «the booth's copy lives where all booth copy lives» is that file's own
+ *  law and `ECONOMY.spotlight`'s note repeats it – so this decides WHETHER and the viz decides HOW.
+ *  `proTitles` rides along because the copy forks on it: a mother with a PRO cabinet and a mother
+ *  the press merely knew are two different true things, and a pool that blurred them would put a
+ *  title in the booth's mouth that nobody won.
+ *
+ *  ⚠ ZERO DRAWS AND ZERO WRITES, this file's own standing law: three reads and a record. */
+export function boothLineageAt(world: WorldState, tier: TierId): { proTitles: number; slams: number } | null {
+  if (!atOrAboveStageBar(tier)) return null
+  if (newsStandingOf(world) === 'quiet') return null
+  if (!lineageLicensed(world)) return null
+  const career = world.dynasty!.motherCareer
+  // ⚠ THE PRO CABINET, matching the licence one function up: the packet is what the booth may CLAIM,
+  // and the booth commentates the tour – a junior shelf in this packet would put a title in its
+  // mouth that nobody won on one (the architect's review, 22.09).
+  return { proTitles: career.proTitles, slams: career.slams }
 }
 /** Is this tier at or above the big-stage bar? `TIER_LADDER`'s index and nothing else – ruling F.
  *

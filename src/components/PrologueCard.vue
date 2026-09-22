@@ -66,7 +66,7 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // screen-reader name below is written here: they all come from `composables/identityCopy.ts`, which
 // the wizard reads too, because CLAUDE.md's invariant 4 says a label is the owner's and a string
 // declared twice is a string that can drift in one copy. See that module's header.
-import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
 // ⚠ THE WIZARD'S OWN CAP, ON THE WIZARD'S OWN IDIOM. This card asks for her name too and reaches
 // `newCareer` on exactly the same path, so `profileShapeError`'s name refusal is as reachable from
@@ -135,6 +135,27 @@ const props = defineProps<{
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
    *  container so that walking off the card and back does not forget what was typed. */
   identity?: PrologueIdentity
+  /** ⭐⭐⭐ v86 – THE LINE, ON A DYNASTY RUN ONLY (docs/specs/the-dynasty-2026-09.md §6.2/§6.3), and
+   *  absent on every career the game has ever started. Present, it does exactly two things to this
+   *  card and nothing anywhere else:
+   *
+   *    · THE SURNAME IS LOCKED. «The line is the point» – she carries her mother's name, so the field
+   *      shows it and cannot be typed over, and the die beside it is not drawn. The FIRST name stays
+   *      typed and free: «the parent chooses the name» is his 20.09 ruling.
+   *    · THE THREE ORIGINS ARE NOT ASKED. The background arrived answered on the block (§4's band,
+   *      mapped off the mother's own account), so the card that used to ask where the family is from
+   *      has nothing left to ask. It is not disabled and it is not pre-selected – it is absent.
+   *
+   *  ⚠ `note` IS THE CALLER'S COPY, exactly as `skipLabel` and `proceedLabel` are: this component
+   *  holds no strings of its own, so the one sentence that explains the lock is passed in. */
+  line?: {
+    surname: string
+    note: string
+    /** ⭐ T10 (his 22.09 ruling) – the RECORDED birth dates, in birth order. One date locks the
+     *  birthday to the real birth; two or more open the chooser («давать пользователю выбор из этих
+     *  двух-трех дат»); absent or empty – the epilogue variant – leaves the selects free. */
+    birthdays?: readonly { month: number; day: number }[]
+  }
   /** ⭐ PHASE 4 – THE WAY OUT OF THE PROLOGUE ENTIRELY (build spec §6: «skip -> the existing wizard»),
    *  and it is a LABEL rather than a sentence for the reason the whole card is a table: the copy is
    *  the caller's and this component still holds none. Absent on eight of the nine cards – the
@@ -221,6 +242,19 @@ const birthDays = computed(() =>
   Array.from({ length: daysInBirthMonth(props.identity?.birthMonth ?? 1) }, (_, i) => i + 1),
 )
 
+// ⭐⭐ T10 – THE RECORDED BIRTHDAYS, three states off one array (see the `line` prop's note). The
+// date text is presentation over the same MONTHS list the select options use – one calendar, one
+// spelling – and the chooser reuses the card's own radiogroup idiom rather than inventing a fourth
+// control. Picking writes through the ordinary `identity` event, so the container stays the owner.
+const recordedBirthdays = computed(() => props.line?.birthdays ?? [])
+const birthdayText = (b: { month: number; day: number }): string => `${MONTHS[b.month - 1]} ${b.day}`
+const birthdayTaken = (b: { month: number; day: number }): boolean =>
+  props.identity?.birthMonth === b.month && props.identity?.birthDay === b.day
+function pickBirthday(b: { month: number; day: number }): void {
+  if (!props.identity) return
+  emit('identity', { ...props.identity, birthMonth: b.month, birthDay: b.day })
+}
+
 function setMonth(month: number): void {
   if (!props.identity) return
   const max = daysInBirthMonth(month)
@@ -290,6 +324,11 @@ function chooseCountry(code: string): void {
  *  control on a card with nothing to decide and looks like what it is. The split is what the two
  *  treatments in the style block hang off; nothing about which control a card carries moved. */
 const picks = computed<{ id: string; label: string; note: string }[]>(() => {
+  // ⚠ v86 – ON A DYNASTY RUN THE ORIGINS ARE NOT A LIST, they are an answer that already arrived
+  // (§6.3). Emptied here rather than filtered in the template so `choosing` below sees the same
+  // truth: a card with no list is not a card that is choosing, and the way the screen lays itself
+  // out follows from that one predicate.
+  if (props.line && props.card.origins) return []
   const list: readonly PrologueOption[] | undefined = props.card.origins ?? props.card.options
   return (list ?? []).map((o) => ({ id: o.id, label: o.label, note: o.note }))
 })
@@ -350,7 +389,7 @@ function taken(id: string | null): boolean {
 // twelfth's two faces are chosen off the years 5..11, not off the twelfth's own pick - so no answer
 // to the first question can change which question the second one is.
 /** Is the card's own column a SELECTION? Origins and options are; a synthesised way on is not. */
-const choosing = computed(() => Boolean(props.card.origins ?? props.card.options))
+const choosing = computed(() => picks.value.length > 0)
 /** Is this year's tournament question on the screen yet? Immediately on the thirteenth, which has no
  *  decision of its own for it to wait behind. */
 const askOpen = computed(() => Boolean(props.ask) && (!choosing.value || props.picked !== undefined))
@@ -500,17 +539,24 @@ useDialogFocus(cardEl)
           <div class="prologue-field">
             <label class="prologue-label" for="prologue-last">{{ IDENTITY_COPY.lastName }}</label>
             <div class="prologue-field-row">
+              <!-- ⭐⭐ v86 – LOCKED ON A DYNASTY RUN AND FREE ON EVERY OTHER. `readonly` rather than
+                   `disabled` on purpose: the value is the POINT of the card, so it has to stay
+                   readable and selectable, and a disabled field greys out the one fact the screen is
+                   there to state. The die is not drawn at all beside it - a roll on a locked field
+                   would be a control that does nothing. -->
               <input
                 id="prologue-last"
                 class="prologue-input"
+                :class="{ 'is-locked': Boolean(line) }"
                 type="text"
                 :maxlength="PROFILE_NAME_MAX_CHARS"
                 :value="identity.kidLastName"
                 :placeholder="IDENTITY_COPY.lastName"
+                :readonly="Boolean(line)"
                 autocomplete="off"
                 @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
               />
-              <button class="prologue-dice" type="button" aria-label="Random last name" @click="rollLastName">
+              <button v-if="!line" class="prologue-dice" type="button" aria-label="Random last name" @click="rollLastName">
                 <!-- A different face on the second die, on purpose (the design draws three pips here). -->
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -523,11 +569,23 @@ useDialogFocus(cardEl)
           </div>
         </div>
 
+        <!-- ⭐⭐ v86 – THE ONE SENTENCE THAT EXPLAINS THE LOCK, and it is a DRAFT for his pass. It is
+             the caller's string (see the `line` prop) and it renders on a dynasty run only, under the
+             two name fields it is about. -->
+        <p v-if="line" class="prologue-line-note">{{ line.note }}</p>
+
         <!-- ONE LABEL FOR THE PAIR, which is the owner's own call on this field (30.07): it is a
-             date, not two settings. The selects carry their own screen-reader names under it. -->
+             date, not two settings. The selects carry their own screen-reader names under it.
+             ⭐⭐ T10 – THREE STATES OFF THE RECORDED BIRTHS (his 22.09 authenticity ruling, quoted
+             where the house fence allows - DYNASTY_COPY's script-side note): no record, the
+             selects as ever; ONE recorded daughter, the date locked in the same readonly-input
+             dress the surname wears (readable, selectable, not editable - a fact, not a setting);
+             TWO OR MORE, the card's own radiogroup over their real dates, because which daughter
+             steps forward is a genuine question and the dates are all she has - no names exist to
+             choose by (the naming stays the parent's, his 20.09 ruling). -->
         <div class="prologue-field">
           <label class="prologue-label" for="prologue-month">{{ IDENTITY_COPY.birthday }}</label>
-          <div class="prologue-birthday">
+          <div v-if="recordedBirthdays.length === 0" class="prologue-birthday">
             <select
               id="prologue-month"
               class="prologue-select"
@@ -547,6 +605,34 @@ useDialogFocus(cardEl)
               <option v-for="d in birthDays" :key="d" :value="d">{{ d }}</option>
             </select>
           </div>
+          <template v-else-if="recordedBirthdays.length === 1">
+            <input
+              id="prologue-month"
+              class="prologue-input is-locked"
+              type="text"
+              :value="birthdayText(recordedBirthdays[0])"
+              readonly
+              :aria-label="IDENTITY_COPY.birthday"
+            />
+            <p class="prologue-line-note">{{ DYNASTY_COPY.birthdayNote }}</p>
+          </template>
+          <template v-else>
+            <p id="prologue-birthday-choice" class="prologue-line-note">{{ DYNASTY_COPY.birthdayChoice }}</p>
+            <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-birthday-choice">
+              <button
+                v-for="b in recordedBirthdays"
+                :key="`${b.month}-${b.day}`"
+                class="prologue-answer prologue-choice"
+                type="button"
+                role="radio"
+                :aria-checked="birthdayTaken(b)"
+                @click="pickBirthday(b)"
+              >
+                <span class="prologue-mark" aria-hidden="true"></span>
+                <span class="prologue-answer-text">{{ birthdayText(b) }}</span>
+              </button>
+            </div>
+          </template>
         </div>
 
         <!-- HER COUNTRY - the wizard's picker, not a second one: a search over all 24, tiles as the
@@ -1040,6 +1126,28 @@ useDialogFocus(cardEl)
   font-size: 15px;
   font-weight: 600;
   color: var(--ink);
+}
+
+/* ⭐⭐ v86 - THE LINE'S TWO MARKS ON THIS CARD. The locked surname reads as a STATED FACT rather
+   than as a broken field: the same box, the muted ink of a value that is not being asked for, and
+   no focus ring, because there is nothing to focus. `readonly` keeps it selectable, which is what a
+   fact on a screen has to be. */
+.prologue-input.is-locked {
+  color: var(--muted);
+  /* ⚠ `--card-bottom` AND NOT AN INVENTED TOKEN. The first draft reached for `--paper-2` with a
+     fallback and `tests/design-tokens.test.ts` refused it by name – «declared nowhere the app can
+     see it». This is the darker half of the same card gradient the field's own `--card-top`
+     background comes from, so a locked field reads as one shade deeper rather than as a colour
+     nobody chose. */
+  background: var(--card-bottom);
+  cursor: default;
+}
+
+.prologue-line-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .prologue-tiles-label {

@@ -50,8 +50,9 @@
 //
 //   ARM 5  the round-20 height bound taken off the card (`max-height: none`, `overflow-y: visible`)
 //          – the mutation §C runs inline; its message, read out of the throw:
-//          «CollegeDoneDialog (graduate) at 375x667: card 343x524 (content wants at least 524, cap
-//          NONE, NOT scrollable), 635px of room – the card declares no height bound that fits, so
+//          «CollegeDoneDialog (graduate) at 375x667 [card-scrolls]: card 343x524 (content wants at
+//          least 524, cap NONE, card does NOT scroll, overlay does NOT scroll), 635px of room – the
+//          card declares no height bound that fits, so
 //          its height is whatever its content happens to be: expected Infinity to be less than or
 //          equal to 635»
 //

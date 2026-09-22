@@ -13,6 +13,7 @@ import {
   type KnockChoice,
   type OkReply,
   type PlayerProfile,
+  type DynastyHandover,
   type PrologueHandover,
   type SavePeek,
   type ShootClashChoice,
@@ -78,6 +79,49 @@ export interface SaveOpStatus {
   op: SaveOpKind
   status: 'pending' | 'ok' | 'error'
   message?: string
+}
+
+/** ⚠⚠ A PLAIN COPY OF THE INHERITANCE BLOCK, AND IT IS A BUG FIX RATHER THAN HYGIENE (v86, wave 10
+ *  T4). The block starts life on `Snapshot.ending.dynasty`, which Pinia has made REACTIVE, and a Vue
+ *  proxy is not structured-cloneable: `postMessage` refuses it outright with «Failed to execute
+ *  'postMessage' on 'Worker': #<Object> could not be cloned.»
+ *
+ *  ⚠ MEASURED, AND ONLY THE BROWSER COULD SEE IT. The store swallows the rejection into `error`, the
+ *  career is simply never created, and the player is left on the ninth card of a childhood they have
+ *  just walked with nothing said. Every unit and mounted test passed: they call `createWorld`
+ *  directly or stub the store, so none of them crosses a real worker boundary. `e2e/dynasty.spec.ts`
+ *  is what found it, on the first run that reached the handover.
+ *
+ *  ⚠ FIELD BY FIELD RATHER THAN `structuredClone`, for the reason `settleIdentity` builds its object
+ *  the same way: this is provably plain whatever the caller hands in – a ref, a reactive, a raw
+ *  object – and it cannot be defeated by a later `ref()` re-wrapping the value somewhere up the
+ *  chain. It is also the same shape `createWorld` copies on the way IN, so neither side aliases the
+ *  other's state.
+ *
+ *  ⚠ `profile` AND `prologue` DO NOT NEED THIS TODAY and are deliberately left alone: both are built
+ *  fresh at their call sites (`settleIdentity`'s spread, the prologue's own literal), so nothing
+ *  reactive reaches the wire through them. A caller that starts handing one a reactive object will
+ *  meet the same error, and this note is where the next reader finds out why. */
+function plainDynasty(block: DynastyHandover | undefined): DynastyHandover | undefined {
+  if (!block) return undefined
+  return {
+    generation: block.generation,
+    childSeed: block.childSeed,
+    background: block.background,
+    raisedOnTour: block.raisedOnTour,
+    motherName: { first: block.motherName.first, last: block.motherName.last },
+    motherCountry: block.motherCountry,
+    childBirthdays: block.childBirthdays.map((b) => ({ month: b.month, day: b.day })),
+    motherTemperament: block.motherTemperament,
+    motherCareer: {
+      titles: block.motherCareer.titles,
+      proTitles: block.motherCareer.proTitles,
+      bestRank: block.motherCareer.bestRank,
+      slams: block.motherCareer.slams,
+      endedWeek: block.motherCareer.endedWeek,
+      endingKind: block.motherCareer.endingKind,
+    },
+  }
 }
 
 export const useGameStore = defineStore('game', {
@@ -298,12 +342,22 @@ export const useGameStore = defineStore('game', {
      *  two arguments exactly as it always has; the nine cards call it with three. Everything the
      *  prologue earned is applied engine-side by `createWorld` – this store does no arithmetic and
      *  holds no prologue state. */
-    async newCareer(seed: string, profile: PlayerProfile = DEFAULT_PROFILE, prologue?: PrologueHandover) {
+    async newCareer(
+      seed: string,
+      profile: PlayerProfile = DEFAULT_PROFILE,
+      prologue?: PrologueHandover,
+      /** ⭐ v86 – the inheritance block, when this career continues a line (the dynasty spec §6).
+       *  Optional through the whole wire, exactly as `prologue` is, and this store does no arithmetic
+       *  on it either: `createWorld` owns every consequence. */
+      dynasty?: DynastyHandover,
+    ) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
       await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile, prologue }))
+        const res = this.takeOk(
+          await request({ type: 'new', seed: finalSeed, profile, prologue, dynasty: plainDynasty(dynasty) }),
+        )
         this.applySnapshot(res)
         this.recovered = false
         await this.refreshCareers()

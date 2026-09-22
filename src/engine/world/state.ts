@@ -36,6 +36,7 @@ import type {
   CareerEnding,
   CareerTotals,
   CollegeState,
+  DynastyHandover,
   FinanceWeek,
   ForkState,
   Knock,
@@ -807,7 +808,34 @@ import type { AcademySupport } from '../academy'
 // tests/coachTravelEdgeFixtures.ts. The non-null shape's witness is tests/wave8-pregnancy-schema.test.ts,
 // which crafts one – the corpus CANNOT hold one and will not until T11 regenerates the e2e fixtures
 // over a tree that has writers.
-export const SAVE_SCHEMA_VERSION = 85
+//
+// ⭐⭐⭐ v86 (THE DYNASTY, WAVE 10 T1/T2 – docs/specs/the-dynasty-2026-09.md §3): ONE KEY,
+// `dynasty`, back-filled `null`. His ask, 11.09: «в конце карьеры можно сделать хук на новую
+// карьеру через ребенка, например»; his go for the wave, 22.09.
+//
+// ⚠⚠ THE BACK-FILL IS `null` AND IT IS EXACTLY TRUE, which is v85's argument one paragraph up and
+// not v84's: EVERY SAVE IN THE WORLD IS A GENERATION-ZERO CAREER, because there was no way to create
+// any other kind until this version. «This career began no line» is the complete statement about all
+// of them, and nothing in a save could say otherwise.
+//
+// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE, and this version adds NO MAIN DRAW ANYWHERE IN THE WAVE – the
+// frozen capture (41550 / e6b0c709) is predicted UNMOVED for the whole of wave 10 (§8 row 5), and if
+// it moves something is wrong rather than something is new. The one draw the dynasty touches at all
+// is `seed:temperament`, whose COUNT does not move either: §7's lean re-maps two picks it does not
+// add to (`temperamentFor`, T3).
+//
+// ⚠⚠ BUT THE FROZEN CAREERS ARE **NOT** AN IDENTITY THIS TIME, unlike v85's, and the difference is
+// worth naming rather than discovering: `dynasty` joins `createWorld`'s literal, so the LIVE
+// serialisation of every walked career gains a key and every live register re-stamps. The ROLLBACK
+// rungs all hold – `careerHashAtSchema` peels the key ahead of v85's three – and `PRE_V86` therefore
+// holds the verbatim v85 constants, character for character, which is the receipt for «a pure key
+// append» rather than a sentence claiming one.
+//
+// Full move: this constant, the v85 -> v86 step in migrations.ts, tests/fixtures/saves/v86.json, its
+// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
+// schema sentence, the e2e fixtures, and the frozen-career peel rung in
+// tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 86
 
 
 
@@ -2008,6 +2036,25 @@ export interface WorldState {
    *  one: `Snapshot` is assembled field by field (invariant 1), so a wire field belongs to the task
    *  that has the READER. T10 wires the surfaces and decides its own field then. */
   comeback: ComebackState | null
+  /** ⭐⭐⭐ v86 – WHOSE DAUGHTER SHE IS, OR NOBODY'S (the dynasty, wave 10; the spec's §3). The
+   *  persisted twin of `DynastyHandover`, written once by `createWorld` and by nothing else, ever.
+   *
+   *  ⚠⚠ `null` IS EVERY CAREER THAT HAS EVER BEEN PLAYED and it is a REAL STATE rather than a
+   *  placeholder: a generation-zero career began no line, which is the plain truth about every save
+   *  in the world and about every career a wizard or a bench still opens today. It is the same
+   *  literal the v85 -> v86 step back-fills with, and for the same reason rather than by coincidence.
+   *
+   *  ⚠ IT IS THE HANDOVER MINUS TWO FIELDS PLUS ONE, and each of the three is a decision. `childSeed`
+   *  and `background` are CONSUMED AT CREATION – they become `world.seed` and `profile.background`, so
+   *  persisting them would be two spellings of one fact, which is this repo's most-caught defect
+   *  class. `ancestorSeed` is added because it is the only one of the three that the new world cannot
+   *  re-derive: it is the ROOT of the line, and her own seed is only the root in generation one.
+   *
+   *  ⚠⚠ AND IT IS DELIBERATELY NOT ON THE WIRE YET, `comeback`'s own argument one field up: `Snapshot`
+   *  is assembled field by field (invariant 1), so a wire field belongs to the task that has the
+   *  READER. T5 and T6 read this record ENGINE-side – the news floor, the booth's licence, the album
+   *  page and the feed's texture are all composed where the world is. */
+  dynasty: DynastyRecord | null
 }
 
 /** ⭐⭐⭐ THE PREGNANCY'S SHAPE (v85, wave 8 T1) – see `WorldState.pregnancy`. Engine-only and
@@ -2162,6 +2209,42 @@ export interface ComebackState {
    *  «she is back and nobody has said how» is the true reading of that gap. No default is invented,
    *  because both available ones would be a plan nobody chose. */
   returnPlan: 'small-first' | 'straight-back' | null
+}
+
+/** ⭐⭐⭐ WHOSE DAUGHTER SHE IS (v86, wave 10 – docs/specs/the-dynasty-2026-09.md §3) – see
+ *  `WorldState.dynasty`. The persisted twin of `DynastyHandover`: the same facts, minus the two the
+ *  new world consumes at creation, plus the one it could not otherwise re-derive.
+ *
+ *  ⚠⚠ THE TWO COMPOSITE SHAPES ARE `DynastyHandover`'s OWN, INDEXED RATHER THAN RE-TYPED, and that is
+ *  a correctness decision and not a tidiness one. A second spelling of `motherCareer`'s five fields
+ *  is precisely the two-sides-one-question defect this repo catches most often: the wire and the
+ *  save would be free to drift by one field, and the drift would be invisible until a career loaded
+ *  with a fact the screen could not show. Indexing makes them one type with two names.
+ *
+ *  ⚠ `ancestorSeed` IS THE ONE FIELD THAT IS NOT ON THE HANDOVER, because it is the one the handover
+ *  spends: the block carries `childSeed` (already `${ancestorSeed}:dynasty:${generation}`) and the
+ *  new world's own `seed` IS that string, so the root has to be kept separately or generation three
+ *  would have to parse it back out of a seed. One root threads a whole line (§3).
+ *
+ *  ⚠ EVERY FIELD IS A FACT ABOUT THE MOTHER AND NONE OF THEM IS A MECHANIC. `endingKind` is texture
+ *  licence (§5), `motherCareer` prices what the new career is allowed to SAY, and nothing in the
+ *  engine may branch a number on any of it – §9's «she is cast, not a system». */
+export interface DynastyRecord {
+  /** 1 for the first daughter of a generation-zero career, the mother's own + 1 after that */
+  generation: number
+  /** ⚠ THE ROOT OF THE LINE, and in generation one it is the mother's own seed. `childSeed` is
+   *  derived off it (`${ancestorSeed}:dynasty:${generation}`), which is what makes ancestry
+   *  deterministic across any number of generations – §7's determinism law. */
+  ancestorSeed: string
+  /** §2's one predicate, frozen at the ending: the girl was born on tour, or the birth was written
+   *  after the farewell. Kept because the DOOR's fork is not re-derivable from anything the new
+   *  world holds – the mother's `children` array is in a save this one may never see again. */
+  raisedOnTour: boolean
+  motherName: DynastyHandover['motherName']
+  /** §7's one input, kept for the texture that reads her nature and NOT for a second lean: the child
+   *  is drawn once, at creation, and nothing later re-reads this to re-roll her. */
+  motherTemperament: Temperament
+  motherCareer: DynastyHandover['motherCareer']
 }
 
 /** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the

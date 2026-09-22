@@ -239,6 +239,21 @@ export interface WeekClaims {
    *  off the fact. ⚠ IT RIDES WITH A `motherhood` CLAIM AND NEVER ALONE: the grade is persisted for
    *  the whole pregnancy, so on its own it would license a warm line on any week of the arc. */
   warmSupport?: true
+  /** ⭐⭐⭐ v86 (wave 10 T6b) – ASSERTS HER MOTHER IS IN THIS HOUSE AND WAS A PLAYER, and asserts
+   *  nothing further. Unselectable unless `f.lineageTitles !== null`; `HOLDS.lineage` re-derives that
+   *  off the fact (landed with the fact – R2-18's law).
+   *
+   *  ⚠⚠ WHAT A LINE CARRYING IT MAY SAY, AND WHY IT IS SO LITTLE. That the woman in the house used to
+   *  play, and what the PARENT could watch her do about it. It may NOT say a figure, a ranking or a
+   *  date – the money law and the pause's «names no date» discipline, both inherited whole. It may not
+   *  state her interior as fact (the fallible-parent law). And it may not claim a CABINET: a mother
+   *  who won nothing is `lineageTitles: 0`, which is a real state and not an absence, so a line about
+   *  trophies carries its own second gate and says so in its licence.
+   *
+   *  ⚠ IT RIDES §7's OPENNESS AXIS RATHER THAN A SECOND FLAG. `f.lineageOpen` prices WHERE she is
+   *  felt – quoted in front of people, or noticed without a word – which is the same fact in two
+   *  registers and is exactly what the axis was chosen for. */
+  lineage?: true
 }
 
 export interface WeekNote {
@@ -1732,6 +1747,80 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   //
   // ⚠ LICENSED ON `plainTraining` LIKE THE FOUR BANDS ABOVE, so a layoff, a knock and a holiday keep
   // their own words and `weekNoteFor`'s coin rations these exactly as it rations the rest.
+  // =================================================================================================
+  // ⭐⭐⭐ v86 (wave 10 T6b) – THE MOTHER IN THE NEW CAREER: FOUR STROKES, EIGHT LINES
+  // =================================================================================================
+  //
+  // docs/specs/the-dynasty-2026-09.md §1, his 22.09 ruling: «звучит интересно, давай попробуем
+  // реализовать». §5c's discipline, applied to the mother: ONE habit, ONE thing she notices with a
+  // professional eye, ONE friction from her own career's scars, ONE way her presence changes speech.
+  // Two lines each, because a pool of one is a line that repeats.
+  //
+  // ⚠⚠ SHE IS CAST AND NOT A SYSTEM (§9). Every line is TEXTURE: no mechanic reads any of them, no
+  // number moves, and the pool is eight rows rather than a generator. A career with no line behind it
+  // reaches none of them, and the diary it already had is untouched.
+  //
+  // ⚠⚠ AND THE VOICE IS THE DAUGHTER'S. `voiceOf(t)` is the girl's own temperament – the mother is
+  // CONTENT inside her diary and never a fifth voice, which is §1's own sentence and the reason none
+  // of these rows carries a register of the mother's. What her OPENNESS prices is where she is felt:
+  // quoted out loud in front of people, or noticed with nothing said.
+  //
+  // ⚠ LICENSED ON `plainTraining` LIKE THE BANDS BELOW, so a layoff, a knock and a holiday keep their
+  // own words and `weekNoteFor`'s coin rations these exactly as it rations the rest.
+  //
+  // ⚠⚠ THE CABINET LINES CARRY A SECOND GATE AND THE SCAR LINES CARRY THEIR OWN. A mother who won
+  // nothing is `lineageTitles: 0` – a real state, not an absence – so a line about trophies asks
+  // `> 0` and a line about a body that gave out asks the ending that says so. A pool that blurred
+  // either would put a fact in the house that nobody earned.
+
+  // — the HABIT: what she still does, years after she stopped —
+  {
+    text: 'She still strings her own rackets, on the kitchen floor, for an hour.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && f.lineageTitles !== null && f.lineageOpen === false,
+  },
+  {
+    text: 'She was up before the house again, walking her old pre-match loop.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && f.lineageTitles !== null && f.lineageOpen === true,
+  },
+
+  // — the PROFESSIONAL EYE: what she sees that nobody else in the room does —
+  {
+    text: 'She watched one service game and said the ball toss had moved.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && f.lineageTitles !== null && f.lineageOpen === true,
+  },
+  {
+    text: 'She said nothing all session, then re-taped a grip out by the car.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && f.lineageTitles !== null && f.lineageOpen === false,
+  },
+
+  // — the SCAR: the friction her own career left, and it is licensed on the ending that caused it —
+  {
+    text: 'She stood up off the bench too fast and put a hand on the fence.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && f.lineageEndedHurt === true && f.lineageOpen === false,
+  },
+  {
+    text: 'She told the club which season it went, and that she played on anyway.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && f.lineageEndedHurt === true && f.lineageOpen === true,
+  },
+
+  // — the SPEECH: how a room changes when the name in it won things —
+  {
+    text: 'Two parents asked her to sign something. She signed and said nothing.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && (f.lineageTitles ?? 0) > 0 && f.lineageOpen === false,
+  },
+  {
+    text: 'The coach used her whole name, and the court went quiet, then loud.',
+    claims: { notTravellingWeek: true, lineage: true },
+    license: (f) => plainTraining(f) && (f.lineageTitles ?? 0) > 0 && f.lineageOpen === true,
+  },
+
   {
     text: 'She said it plainly, over breakfast, and the kitchen went quiet in the good way.',
     claims: { notTravellingWeek: true, motherhood: 'announced' },

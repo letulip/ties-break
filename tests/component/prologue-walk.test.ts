@@ -15,7 +15,7 @@
 // ⚠ MUTATION-VERIFIED. Watched failing before it was believed:
 //   * `max-height: 100%; overflow-y: auto` removed from `.dialog-card` in src/style.css (i.e. the
 //     stylesheet put back exactly as it shipped before round-20 #3) -> every one of the ten scenes
-//     goes red, naming the content floor and «cap NONE, NOT scrollable».
+//     goes red, naming the content floor and «cap NONE, card does NOT scroll». ⚠ The message gained a shape tag and a second scroll column on 22.09 (`[card-scrolls] … card does NOT scroll, overlay does NOT scroll`) when `fits.ts` learned the scrolling-takeover shape; the VERDICT is the one quoted here.
 //   * one card's `lede` tripled in length -> that scene alone goes red on the height cap.
 //   * `.prologue-answers` moved above `.prologue-read` in the template -> the dismiss box is no
 //     longer readable off the card's bottom edge and the fit assertion goes red.

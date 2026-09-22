@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,772 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,845 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-614 exported names across 56 owning modules.
+618 exported names across 56 owning modules.
 
 ## Areas
 
@@ -20,11 +20,11 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 24 |
+| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 23 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
 | `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 19 |
-| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 19 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 17 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
@@ -338,6 +338,34 @@ THE GATES: condition, the doctor's veto, the layoff, and whether she may enter a
 - `restRecoveryBonus` – `src/engine/world/medical.ts`
 - `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
 
+### `src/engine/world/endings.ts`
+
+THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
+
+- `ancestorSeedOf` – `src/engine/world/endings.ts`
+- `answerFork` – `src/engine/world/endings.ts`
+- `answerRetirement` – `src/engine/world/endings.ts`
+- `autoEndingViewOf` – `src/engine/world/endings.ts`
+- `buildDebtView` – `src/engine/world/endings.ts`
+- `buildEndingView` – `src/engine/world/endings.ts`
+- `cheapestEntryFeeCents` – `src/engine/world/endings.ts`
+- `childSeedFor` – `src/engine/world/endings.ts`
+- `dynastyBackgroundOf` – `src/engine/world/endings.ts`
+- `dynastyHandoverOf` – `src/engine/world/endings.ts`
+- `FORK_UNHEARD_REFUSAL` – `src/engine/world/endings.ts`
+- `LAST_OFFER_NOT_A_QUESTION` – `src/engine/world/endings.ts`
+- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
+- `latchEnding` – `src/engine/world/endings.ts`
+- `leavingViewOf` – `src/engine/world/endings.ts`
+- `plateauViewOf` – `src/engine/world/endings.ts`
+- `raiseForkOpinion` – `src/engine/world/endings.ts`
+- `resolveCollegeDeparture` – `src/engine/world/endings.ts`
+- `resolveEndings` – `src/engine/world/endings.ts`
+- `resolveLeaving` – `src/engine/world/endings.ts`
+- `resolveReturnDecision` – `src/engine/world/endings.ts`
+- `wasThereAChild` – `src/engine/world/endings.ts`
+- `wonTopTitleInSeason` – `src/engine/world/endings.ts`
+
 ### `src/engine/world/ladder.ts`
 
 THE LADDER: where she stands, and what that standing opens.
@@ -444,30 +472,6 @@ CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2
 - `mannerVoice` – `src/engine/chemistry.ts`
 - `nextChemistryPhase` – `src/engine/chemistry.ts`
 - `quietWeek` – `src/engine/chemistry.ts`
-
-### `src/engine/world/endings.ts`
-
-THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
-
-- `answerFork` – `src/engine/world/endings.ts`
-- `answerRetirement` – `src/engine/world/endings.ts`
-- `autoEndingViewOf` – `src/engine/world/endings.ts`
-- `buildDebtView` – `src/engine/world/endings.ts`
-- `buildEndingView` – `src/engine/world/endings.ts`
-- `cheapestEntryFeeCents` – `src/engine/world/endings.ts`
-- `FORK_UNHEARD_REFUSAL` – `src/engine/world/endings.ts`
-- `LAST_OFFER_NOT_A_QUESTION` – `src/engine/world/endings.ts`
-- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
-- `latchEnding` – `src/engine/world/endings.ts`
-- `leavingViewOf` – `src/engine/world/endings.ts`
-- `plateauViewOf` – `src/engine/world/endings.ts`
-- `raiseForkOpinion` – `src/engine/world/endings.ts`
-- `resolveCollegeDeparture` – `src/engine/world/endings.ts`
-- `resolveEndings` – `src/engine/world/endings.ts`
-- `resolveLeaving` – `src/engine/world/endings.ts`
-- `resolveReturnDecision` – `src/engine/world/endings.ts`
-- `wasThereAChild` – `src/engine/world/endings.ts`
-- `wonTopTitleInSeason` – `src/engine/world/endings.ts`
 
 ### `src/engine/world/entryCaps.ts`
 

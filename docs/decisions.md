@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 121 dated entries, newest 2026-09-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 124 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 10 | [WAVE 9 OPENS AND SHIPS: THE CHILD, AND THREE THINGS THAT TURNED OUT SMALLER THAN THE BRIEF](#21092026--wave-9-opens-and-ships-the-child-and-three-things-that-turned-out-smaller-than-the-brief) | 2026-09-21 |
+| general | 13 | [WAVE 10 CLOSES ITS TAIL: «по 2-5 всё да, делай как рекомендуешь»](#22092026--wave-10-closes-its-tail-по-2-5-всё-да-делай-как-рекомендуешь) | 2026-09-22 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5020,3 +5020,74 @@ shipped shape differs from the drafted one:
    corrected**: the fold was genuinely wrong, but its own career reaches «no latch» in 912 weeks, so
    it would not have mis-reported yet. The law now compares `rngMain` alone; funds and condition are
    reported beside it.
+
+## 22.09.2026 – WAVE 10 RULED OPEN: THE DYNASTY, AND THE OFF SWITCH RULED AHEAD OF ITS STEP
+
+PR #152 (wave 9) merged; his rulings on the next slice, from one exchange:
+
+1. **Step 9 – the dynasty – is next**: «Шаг 9 следующим – да». The canonical spec is
+   `docs/specs/the-dynasty-2026-09.md`, the builder plan `docs/plans/life-wave-10-builder-2026-09.md`;
+   he dispatches the builder himself, with every measurement reflected in the spec («Пиши полную
+   пошаговую спеку, а я билдера запущу и все замеры, всё отражай в спеке»).
+2. **Temperament heredity is IN, benched**: «наследственность темперамента – можно и забенчить,
+   мне кажется». One-axis lean (openness), drafted 0.65, distribution and the ±1.5 pp fairness
+   corridor both measured before the number is anything more than a draft.
+3. **⭐ The step-8 off switch is RULED, ahead of its build** – «давай нарулим, раз ты считаешь это
+   хорошей идеей», adopting the architect's standing recommendation: the switch exists ONLY for the
+   weight (step 8 – bereavement, and the pregnancy loss from the-months-before-she-says when built);
+   it is set at new-career creation; everything else ships with no switch; for the weight the
+   creation flow ASKS rather than presets. Changeable later in settings, both directions; turning
+   it off stops NEW weight events and never deletes lived state. The flag itself is step 8's schema
+   move, not wave 10's – this entry is the ruling the build was waiting on.
+4. **The 28 diary lines are CLOSED**: «ревью было, мы внесли правки, этого пока достаточно».
+5. **The match-grain poise measurement is approved**: «не возражаю» – wave 10 carries it as T8 and
+   the result lands in the-child spec's ledger.
+6. **The four recompressed staff portraits await his eye** (found uncommitted in the checkout,
+   −36 KiB against a 3 KiB install headroom; pairs sent to him 22.09) – swap only on his word.
+
+## 22.09.2026 – THE THREE OPEN ITEMS OF WAVE 10, RULED IN ONE EXCHANGE
+
+The morning entry left three marks; all three closed the same day:
+
+1. **The mother's four strokes are IN** («звучит интересно, давай попробуем реализовать») – after
+   the architect's explanation of §5c-applied-to-the-mother: in the dynasty the parent is a person
+   the game KNOWS, and four strokes of her – a habit, a professional eye, a friction from her own
+   scars, a trace in speech – licensed off the inheritance block's facts, keep the new career a
+   continuation of the story rather than a new game plus a wallet. T6b of the wave, all strings
+   DRAFT for his review.
+2. **⭐ The news floor is IN, by his word on the recommendation** («давай по твоей рекомендации») –
+   a recorded amendment to his own D1 (14.09, standing-not-fame): a dynasty daughter whose mother
+   was herself `known` starts at a `noticed` floor from week 0. Fame from birth is priced as a
+   COST – the press arrives years before the ranking does – and `known` stays earned by her own
+   rank alone. T5b of the wave.
+3. **The four support portraits landed** («а, тогда да, давай оптимизируем, кинь в эту же ветку
+   волны») – the architect's own commit on `life/wave-10`: 448×624 → 368×512, −36 KiB, the floor
+   arithmetic re-derived and green, install headroom ≈39 KiB for the wave.
+
+With these, nothing in `docs/plans/life-wave-10-builder-2026-09.md` is conditional – he dispatches
+the builder («я готов билдера отправить»).
+
+## 22.09.2026 – WAVE 10 CLOSES ITS TAIL: «по 2-5 всё да, делай как рекомендуешь»
+
+His one line ruled the four open items of the review exchange, and all four landed the same day,
+the architect's own commits:
+
+1. **The birthday is the record's, not the door's** – no age on the door («нам всё равно сколько
+   лет её ребенку»); the block carries the real birth dates («мы можем где-то у себя сохранять
+   день и месяц рождения для подлинности истории в династии»), derived from the recorded weeks
+   through the one calendar; one recorded daughter locks the identity card's date, two or more open
+   his choice («давать пользователю выбор из этих двух-трех дат»), the epilogue variant stays free.
+2. **The skip stays, and the wizard learned the block** («вот это хороший вопрос … можем ли мы
+   как-то здесь что-то сделать, чтобы скип остался» – the architect's recommendation taken): the
+   skip branch carries the same deviations the prologue's identity card does, so skipping the
+   childhood keeps the line and skips only the walk.
+3. **The ten logo PNGs left `public/`** («да, много, согласен») – they were draft exports nothing
+   references (the app's logos are tracked SVGs; the PWA icons are their own five tracked PNGs, the
+   only raster the platform requires); moved to `design/logos/`, out of every build and precache.
+4. **The birth art re-save reverted** («я вроде ничего не менял») – the on-disk copy was a heavier
+   re-encode of the same 512×512 picture, byte-different and eye-identical; the committed original
+   stands.
+
+The middle wealth band's emptiness was re-measured on a sound instrument the same day (spec §8
+row 3): structural, not sampling – kept as shipped, his «а я не очень понял в чем проблема» read
+as the answer it is. The one-clause college-mother floor stays offered, unbuilt.

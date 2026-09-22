@@ -290,10 +290,47 @@ export function expressedTemperamentOf(world: WorldState): Temperament {
  * Two `pickInt` calls, in this order, off this key – byte for byte what they were. What changed is
  * that the pole-to-bucket table is now written once instead of twice, which is this function's own
  * ⚠⚠ note applied to the half of the mapping it did not already own.
+ *
+ * ⭐⭐⭐ v86 (the dynasty, wave 10 T3 – docs/specs/the-dynasty-2026-09.md §7): THE OPTIONAL MOTHER, AND
+ * IT RE-MAPS AN OUTCOME RATHER THAN ADDING A DRAW. His ruling, 22.09: «наследственность темперамента
+ * – можно и забенчить, мне кажется». With a mother the OPENNESS pole leans to hers with probability
+ * `ECONOMY.dynasty.opennessLean`; the intensity axis is untouched, and the draw COUNT and ORDER are
+ * what they have always been – two, openness first – so no stream moves and the frozen MAIN capture
+ * cannot see this at all.
+ *
+ * ⚠⚠ ABSENT THE ARGUMENT THIS FUNCTION IS BYTE-IDENTICAL TO WHAT IT WAS, and that is PINNED rather
+ * than argued: `tests/wave10-heredity.test.ts` §A hashes 4000 seeds against `f5e9f20293cf5a68`, the
+ * value this function produced on the commit before the argument existed. Every shipped save, every
+ * migrated career and every frozen career therefore stands unmoved – and the pin's own teeth are the
+ * mutation arm beside it: moving `opennessLean` must not move that hash by a bit.
+ *
+ * ⚠⚠ AND `createWorld` IS THE ONLY CALLER THAT MAY EVER PASS ONE (§7, T3's own sentence: «nothing else
+ * may ever pass a lean»). The v71 -> v72 migration calls this on a career's own seed to RE-DERIVE a
+ * girl who already exists, and `expressedTemperamentOf`'s `??` courtesy does the same for a probe
+ * world – passing a mother at either site would hand a live save a different girl from the one that
+ * was stored, which is precisely the two-copies defect the ⚠⚠ note at the top of this block refuses.
+ * Unreachable in play either way: `createWorld` always writes `temperament`, so the courtesy never
+ * fires on a real career.
  */
-export function temperamentFor(seed: string): Temperament {
+export function temperamentFor(seed: string, mother?: Temperament): Temperament {
   const r = rngFromSeed(`${seed}:temperament`)
-  const open = pickInt(r, 0, 1) === 0
+  // ⚠⚠ ONE DRAW FOR THE OPENNESS AXIS, WITH THE LEAN AND WITHOUT IT, and the float is taken here
+  // rather than inside `pickInt` for exactly that reason – see the v86 block above. Without a mother
+  // this is `pickInt(r, 0, 1) === 0` written out: that helper is `min + Math.floor(r() * (max - min +
+  // 1))`, so for `(r, 0, 1)` it is `Math.floor(openRoll * 2)`, and `Math.floor(x * 2) === 0` is
+  // `x < 0.5` exactly for every `x` in [0, 1). Not «equivalent» by argument: `tests/wave10-heredity
+  // .test.ts` §A pins 4000 seeds against the hash this function produced BEFORE the argument existed.
+  const openRoll = r()
+  const open =
+    mother === undefined
+      ? openRoll < 0.5
+      : // ⭐ THE LEAN, AND IT IS A RE-MAPPING OF THE SAME DRAW. She takes her mother's pole with
+        // probability `opennessLean` and the opposite with the rest – so the outcome moves and the
+        // STREAM does not.
+        (openRoll < ECONOMY.dynasty.opennessLean) === (temperamentOpenness(mother) === 'open')
+  // ⚠ THE INTENSITY AXIS IS UNTOUCHED, WHICH IS §7's OWN RULING AND NOT AN OVERSIGHT: a lean here
+  // would correlate a dynasty with cost profiles for no story gain. Second draw, same order, same
+  // helper it has always used.
   const steady = pickInt(r, 0, 1) === 0
   return temperamentFromAxes(open ? 'open' : 'private', steady ? 'steady' : 'intense')
 }

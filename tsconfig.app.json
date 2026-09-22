@@ -42,6 +42,7 @@
     "tools/dual-universe-bench.ts",
     "tools/e2e-fixtures-read.ts",
     "tools/e2e-fixtures.ts",
+    "tools/dynasty-bench.ts",
     "tools/econ-bench.ts",
     "tools/endings-bench.ts",
     "tools/fatigue-bench.ts",

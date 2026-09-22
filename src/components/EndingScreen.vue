@@ -15,6 +15,7 @@ import { useGameStore } from '../stores/game'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
+import type { DynastyHandover } from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
    `NATIONAL_TEAM`, `KID_ID`, `formatShortName`, `WorldMatch` and `MatchReplay` were all the year
@@ -24,7 +25,12 @@ import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 
 const game = useGameStore()
-const emit = defineEmits<{ (e: 'newCareer'): void }>()
+const emit = defineEmits<{
+  (e: 'newCareer'): void
+  /** ⭐⭐ v86 – CONTINUE THE LINE. Carries the block, because the shell has no world to build one
+   *  from: the worker owns the career and this screen only ever sees a `Snapshot`. */
+  (e: 'continueLine', block: DynastyHandover): void
+}>()
 
 // --- THE HAND-OFF (career-contract-v1.md §5.6) --------------------------------------------------
 //
@@ -81,6 +87,44 @@ function prev(): void {
 }
 
 const resumes = computed(() => view.value?.handoff.resumesWeek ?? null)
+
+// --- ⭐⭐⭐ THE DYNASTY (v86 – docs/specs/the-dynasty-2026-09.md §2) --------------------------------
+//
+// HIS RULING, 20.09, AND IT IS THE REASON THERE IS NO CONDITION ON THIS CONTROL: the door never
+// closes. A player may have wanted a dynasty and simply not have had the luck of a child inside the
+// career they played, and a door that only opened for the lucky would punish them for the dice. (His
+// sentence is in docs/decisions.md under 20.09; no Cyrillic may appear in a `.vue` file at all,
+// comments included – CLAUDE.md style.)
+//
+// ⚠ SO WHAT FORKS IS THE TEXT AND NEVER THE AVAILABILITY. `raisedOnTour` is the engine's own
+// `wasThereAChild`, asked once, at the ending: true means the girl was born while her mother was
+// still playing, false means the birth is written after the farewell. `EndingView.dynasty` is not
+// nullable, so there is no ending this block is absent on and no branch here that can be reached
+// with nothing to send.
+//
+// ⚠⚠ AND NEITHER TEXT NAMES HER OR AGES HER. No name exists – «the parent chooses the name» is his
+// 20.09 ruling and the prologue's identity card is where it is chosen. No AGE is stated either, and
+// that is a LIMIT rather than a choice: §2 licenses the lived text to say how old the girl is «from
+// `bornWeek` arithmetic», and the block carries no `bornWeek` – it carries the mother's career and
+// nothing about the child but whether there is one. Reported to the architect rather than worked
+// around by inventing a number.
+//
+// ⚠ BOTH LABELS ARE DRAFTS awaiting his pass (invariant 4): they are new strings, written once, and
+// listed verbatim in the wave's report. Nothing existing is reworded – `Raise another` beside them
+// is his and is untouched.
+const dynasty = computed(() => view.value?.dynasty ?? null)
+
+/** DRAFT · the lived variant: a daughter who was born while her mother was still on tour. */
+const DYNASTY_LIVED = 'Raise her daughter'
+/** DRAFT · the epilogue variant: the birth came after the career did. */
+const DYNASTY_AFTER = 'A daughter came later'
+
+const continueLabel = computed(() => (dynasty.value?.raisedOnTour ? DYNASTY_LIVED : DYNASTY_AFTER))
+
+function continueLine(): void {
+  const block = dynasty.value
+  if (block) emit('continueLine', block)
+}
 
 async function resumeCollege(): Promise<void> {
   await game.resumeFromCollege()
@@ -290,6 +334,24 @@ async function resumeCollege(): Promise<void> {
              `Raise another` is his label and is untouched. -->
         <PrimaryPill v-else variant="cta" :disabled="game.busy" @click="raiseAnother">
           Raise another
+        </PrimaryPill>
+
+        <!-- ⭐⭐⭐ v86 – THE SECOND AFFORDANCE, AND IT IS BESIDE «Raise another» RATHER THAN INSTEAD OF
+             IT. Two different things: one starts an unrelated story, the other continues this one.
+             The script block says why it renders on every ending and why neither label names or
+             ages the girl; both labels are DRAFTS for his pass.
+             ⚠ IT SITS INSIDE THE SAME `v-else` FOOTER BRANCH, so a college ending that can still be
+             resumed shows its own way forward and not this – that footer's exhaustiveness is what
+             keeps a blocking takeover from becoming a dead end, and this control must not be the
+             thing that breaks it. -->
+        <PrimaryPill
+          v-if="resumes === null && dynasty"
+          class="ending-line"
+          variant="ghost"
+          :disabled="game.busy"
+          @click="continueLine"
+        >
+          {{ continueLabel }}
         </PrimaryPill>
       </footer>
     </section>

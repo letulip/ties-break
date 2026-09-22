@@ -48,6 +48,7 @@
  */
 import { writeFileSync } from 'node:fs'
 import {
+  answerRetirement,
   createWorld,
   tickWeek,
   enterEvent,
@@ -518,6 +519,26 @@ export interface Policy {
    *  bankrupt - which `the-wall-2026-08.md` §6 named as the modelling choice that manufactures the
    *  poverty every economy verdict then reported. */
   coachSeasonReview: boolean
+  /** ⭐ WAVE 10 (the architect's review, 22.09) – DOES THE WALKER ANSWER THE RETIREMENT OFFER?
+   *
+   *  The finding this field exists for: from `ENDINGS.askFromAgeYears` (29) the engine raises a
+   *  yearly retirement offer that is a real STOP for a real player – and this walker answered it
+   *  with nothing, so no bench career could ever end naturally. Every ending any corpus in this
+   *  file's history has ever recorded is an injury, a bankruptcy, a college or a leaving; healthy
+   *  careers walked to their caps with an offer pending, and three managed careers sat on JUNIOR
+   *  rungs to age 44 because the one door the engine had been holding open for them (the offer
+   *  fires on AGE, track-free) is one this walker never took. The product is clean; the
+   *  instrument was.
+   *
+   *  `true` = answer the way a patient player does: «one more year» on every ordinary offer, and
+   *  the final offer taken – `answerRetirement(world, offer.final)` – so a career ends on the
+   *  engine's own natural machinery at the age the share runs out.
+   *
+   *  ⚠ ABSENT ON EVERY HISTORICAL ARM, DELIBERATELY: the grinder is this file's reproducibility
+   *  anchor («byte-identical to every number in this file's history») and the player arm's numbers
+   *  are cited in shipped specs. A corpus that wants honest natural endings OPTS IN per walk – the
+   *  dynasty bench does – and every historical figure stays reproducible. */
+  answerRetirementOffers?: boolean
 }
 
 /** THE REST FLOOR FOR ONE RUNG – R4's slide. `local` pays the full `restFloor`; `slam` pays
@@ -646,6 +667,17 @@ export function stepCareerWeek(
   if (world.ending) {
     tickWeek(world, rng)
     return entered
+  }
+  // ⭐ WAVE 10 – THE OFFER IS ANSWERED, WHERE THE POLICY OPTS IN (see the field's own note). At the
+  // top of the step, before any entry decision, exactly where a player meets the stop: «one more
+  // year» while it is a question, taken the year it stops being one. On a final offer
+  // `answerRetirement(world, world.retirementOffer.final)` latches the ending and the guard above ends the walk next step.
+  if (policy.answerRetirementOffers && world.retirementOffer !== null) {
+    answerRetirement(world, world.retirementOffer.final)
+    if (world.ending) {
+      tickWeek(world, rng)
+      return entered
+    }
   }
   // Entry policy v3: enter each RANKING-ELIGIBLE event affordable by entry+travel as its deadline
   // APPROACHES (within ENTRY_LOOKAHEAD weeks) – a parent commits a few weeks out, not a year ahead.

@@ -12,6 +12,7 @@ import ForkDialog from '../../src/components/ForkDialog.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import { moneyOf } from '../helpers/careerMoney'
+import { dynastyOf } from '../helpers/dynastyHandover'
 // ⭐ THE LONG GOODBYE STEP 4 – her last word is the ENGINE's sentence, and the card renders it. The
 // pin goes through the symbol so a re-wording moves the assertion with the copy.
 import { ENDING_TITLE, lastWordLine } from '../../src/engine/ending'
@@ -59,6 +60,10 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     // ⭐ P5: null unless the fixture is a career sitting between two college years. The screen's
     // "another year?" question is drawn from this and from nothing else.
     college: null,
+    // ⚠ WAVE 10 T1 – the ending view carries the inheritance block on EVERY ending (his 20.09
+    // ruling: the door never closes), so the type requires it here too. `dynastyOf`'s default is the
+    // humblest block the engine can produce, so this fixture means exactly what it meant before.
+    dynasty: dynastyOf(),
     ...over,
   }
 }

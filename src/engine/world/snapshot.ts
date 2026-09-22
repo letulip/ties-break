@@ -134,7 +134,10 @@ import { fameAt } from './fame'
 // ⭐⭐⭐ v77 (the spotlight – T7): the booth's packet, READ off the episode's stamps. A pure derivation
 // out of `world/spotlight.ts` (zero draws, zero writes), so the view assembles a fact rather than
 // deciding one – see `PendingView.boothPrivateLife`.
-import { boothPrivateLifeAt } from './spotlight'
+import { boothLineageAt, boothPrivateLifeAt } from './spotlight'
+// ⭐ v86 (T6b): the ONE projection of §7's openness axis – see the `lineageOpen` line below for why
+// it is asked rather than re-spelled.
+import { temperamentOpenness } from '../spirit'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -1189,6 +1192,9 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // the exposure event whatever the player watched, which is the model being honest about a
     // television broadcast nobody in the family had to be sitting in front of.
     boothPrivateLife: revealed === 0 ? boothPrivateLifeAt(world, world.week) : null,
+    // ⭐⭐ v86 – and the LINE, on every watch of a big stage (see the field's own note for why this
+    // one is not narrowed to the first). `boothLineageAt` asks all three gates in one place.
+    boothLineage: boothLineageAt(world, event.tier),
     ladder: track,
     // ⭐⭐⭐ ROUND 27 #6 – NOTHING STANDS WHERE THE TABLE'S NAME IS, BECAUSE THE TABLE HAS A NAME. The
     // pairing this field's docstring pins: `ladder` non-null, note null, in one literal.
@@ -1277,6 +1283,7 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     // no stamp this view could read can name this week. The literal says so rather than leaving a
     // reader to work it out – `ladder: null` two lines down is the same discipline.
     boothPrivateLife: null,
+    boothLineage: null,
     // ⭐⭐⭐ ROUND 27 #4 – NO TABLE AT ALL, AND THE TYPE CAN SAY SO NOW. The owner: «на экране итогов
     // матча the College League написано Professional ranking – как будто нет».
     //
@@ -1399,6 +1406,7 @@ function callUpPendingView(world: WorldState): PendingView | undefined {
     // for the same structural reason. A Nations Cup rubber is not a tour rung, so `airBoothMention`
     // never runs for this week and there is no stamp for this view to read.
     boothPrivateLife: null,
+    boothLineage: null,
     // ⭐⭐⭐ ROUND 27 #4's WIDENING IS WHAT MAKES THIS LINE POSSIBLE. The tie is played in none of the
     // three tables (`engine/nationalTeam.ts`: no points, no cheque), and before §4 the type could not
     // say «neither» – so this fixture would have had to name one, exactly as the College League did
@@ -1612,6 +1620,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // field of the record. No save key, no migration, no golden fixture.
     motherhoodBand: motherhoodBandAt(world),
     motherhoodSupport: world.pregnancy?.support ?? null,
+    // ⭐⭐⭐ v86 (wave 10 T6b): the line, as the two facts a texture line may rest on. Derived at
+    // render off `world.dynasty` – no save key, no migration, no golden fixture, exactly as the two
+    // lines above it are derived off `pregnancy`.
+    // ⚠ `temperamentOpenness` IS THE ONE PROJECTION OF THE AXIS (engine/spirit.ts) and is asked here
+    // rather than re-spelled: a second `=== 'sunny' || === 'fiery'` anywhere is the drift that
+    // function's own note refuses by name.
+    lineageTitles: world.dynasty?.motherCareer.titles ?? null,
+    lineageOpen: world.dynasty ? temperamentOpenness(world.dynasty.motherTemperament) === 'open' : null,
+    lineageEndedHurt: world.dynasty ? world.dynasty.motherCareer.endingKind === 'injury' : null,
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must

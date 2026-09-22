@@ -914,6 +914,17 @@ export interface DiaryFacts {
    *  ⚠ AND IT IS THE GRADE, NEVER THE NUMBER: `joyBond` / `worryBond` / `careerFirstBond` stay on the
    *  engine side of the fog law exactly as `spirit` and `bond` do. */
   motherhoodSupport: 'warm' | 'measured' | 'cold' | null
+  /** ⭐⭐⭐ v86 (wave 10 T6b) – her mother's cabinet, or null on a career that continues no line.
+   *  `null` and `0` are different: null is «there is no mother in this house», 0 is «she is here
+   *  and she won nothing», and a line about a cabinet may fire on neither. Derived at render off
+   *  `world.dynasty` – no save key, no migration, no golden fixture. */
+  lineageTitles: number | null
+  /** ⭐⭐ v86 – §7's openness axis, read off the record's stored temperament. It prices WHERE she is
+   *  felt: an open mother is quoted, a private one is noticed. Null exactly when the field above is. */
+  lineageOpen: boolean | null
+  /** ⭐⭐ v86 – her mother's career ended on her body (`endingKind`), which is the one fact the scar
+   *  lines lean on. Null exactly when the two fields above are. */
+  lineageEndedHurt: boolean | null
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

@@ -317,7 +317,8 @@ export function coachUrlFor(background: FamilyBackground): string {
   return coachPortraitUrl(COACH_BY_BACKGROUND[background])
 }
 
-/** ⭐⭐ ROUND 43 #2 – THE SUPPORT SEATS' OWN PORTRAITS (448x624 webp), and the stem is the seat id.
+/** ⭐⭐ ROUND 43 #2 – THE SUPPORT SEATS' OWN PORTRAITS (368x512 webp since 22.09's downscale; drawn
+ *  at 448x624), and the stem is the seat id.
  *
  *  The owner drew four and shipped them himself (round 42 #53, «я положил в images/support stuff
  *  готовое»); the conversion landed and the PLACEMENT did not, so for one round the files were in

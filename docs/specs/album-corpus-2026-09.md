@@ -372,6 +372,47 @@ declared exception in the document and §5 gives its reason.
 list. Their source is the prologue trace persisted at handover (spec §3); a career created by the
 wizard has none, and its album honestly begins at chapter 2.
 
+### A34 · `the-line` · lineage · prologue · **gate: `dynasty-record`**
+**The occasion:** the box of her mother's career, in the house before she ever held a racquet.
+**Where it comes from:** `world.dynasty` – the inheritance block, persisted at the daughter's birth
+(v86, the dynasty spec §3). One page, on a career that continues a line and on no other.
+
+⭐⭐⭐ **THE HAND IS THE MOTHER'S HERE, AND IT IS THE ONLY PAGE IN THIS CORPUS THAT IS.** The dynasty
+spec's §1: at the end of a career the retired star becomes the next PARENT, so the second person
+these four notes speak in is hers – a woman writing to her daughter about her own career. Every other
+note in this document is a parent writing about a girl's tennis.
+
+⚠⚠ **The facts are NOT in these strings, and cannot be.** This document's own law (§2) is «no
+placeholders and no interpolation», so her name, her cabinet and the line's generation ride the
+note's ruled CHECKLIST (`AlbumNote.lines`, the form mockups AZ-B and AZ-C already drew), built
+engine-side in `dynastyCandidates`. An absent fact prints NOTHING: a mother who won nothing gets no
+titles row, because «Titles: 0» would be the book telling a girl her mother lost.
+
+⚠ **Drafts, awaiting his pass.** Four voices, and the voice key is the DAUGHTER's birth temperament –
+this corpus's standing rule, unchanged: the girl the book is about is the girl whose syntax it is
+written in.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `I kept a box of it. You found it before I could show you, and you wanted to wear all of it at once.` |
+| `fiery` | `I kept a box of it. You went through the whole thing and then asked me which ones I lost.` |
+| `deep` | `I kept a box of it. You sat with it a long time, and then you asked what the last one had felt like.` |
+| `quiet` | `I kept a box of it. You looked at every single thing and put it all back exactly as it was.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `She tried everything on.` |
+| `fiery` | `She asked about the losses.` |
+| `deep` | `She asked how it felt.` |
+| `quiet` | `She put it all back.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `She found the box first.` |
+| `fiery` | `She wanted the whole record.` |
+| `deep` | `She asked about the last one.` |
+| `quiet` | `She looked at all of it.` |
+
 ### A1 · `first-court` · prologue · prologue · **gate: `first-pick-on-court`**
 **The occasion:** the first time she stood on a court.
 **Where it comes from:** the prologue trace's early picks.

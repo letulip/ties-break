@@ -58,3 +58,25 @@ export const IDENTITY_COPY = {
   browseAll: 'Browse all countries',
   noMatches: 'No country matches that.',
 } as const
+
+/** ⭐⭐ v86 (wave 10 T10, his rulings of 22.09) – THE WORDS A DYNASTY RUN ADDS, declared once for
+ *  the same reason everything above is: two surfaces ask (the prologue's age-5 card and the wizard,
+ *  which is the skip branch), and a string declared twice drifts in one copy while the other stays
+ *  green. Every one of these is a DRAFT for his pass (invariant 4), listed verbatim in the wave's
+ *  report.
+ *
+ *  ⚠ `lineNote` IS NOT NEW: it shipped with T4 inside `ChildhoodPrologue.vue` and MOVED here the
+ *  day the wizard became its second reader. The words are byte-identical. */
+export const DYNASTY_COPY = {
+  /** under the two name fields – why the surname is locked and the origins are not asked */
+  lineNote: 'She is born into her mother\'s family and carries her name.',
+  /** under the birthday when it is LOCKED to the one recorded birth – «для подлинности истории»,
+   *  his 22.09 ruling: the date is derived from the real birth week, never asked */
+  birthdayNote: 'Her birthday is a matter of record.',
+  /** over the date choice when the mother raised MORE THAN ONE daughter – his own ruling: «если
+   *  два ребенка было и больше, давать пользователю выбор из этих двух-трех дат» */
+  birthdayChoice: 'More than one daughter grew up here. Whose story is this?',
+  /** the wizard's family-background step on a dynasty run – the three buttons are absent because
+   *  the band arrived on the block, and the card says so instead of asking */
+  familyNote: 'The means she starts with are her mother\'s story, not a choice.',
+} as const

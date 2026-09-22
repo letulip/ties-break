@@ -12,6 +12,10 @@ import { daysInBirthMonth } from '../dates'
 // ⚠ AND `shared/countries.ts` IMPORTS NOTHING EITHER, for the same reason and to the same effect –
 // see the country note above `profileShapeError`.
 import { isPlayableCountry } from '../countries'
+// ⭐ WAVE 10 – the dynasty's one engine type on the wire. TYPE-ONLY, so it is erased at compile
+// time and this module stays a runtime leaf; `./narrative` has imported the same name from the
+// same place since v72, which is the precedent rather than a new edge (see `DynastyHandover`).
+import type { Temperament } from '../../engine/spirit'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
 /** The coach ladder (docs/specs/coach-tiers.md), cheapest rung first. Replaces the old
@@ -334,6 +338,110 @@ export interface PrologueHandover {
    *  probe – honestly hands over a childhood with no record, which persists as `null` and reads as
    *  a wizard career's album. Absence invents nothing. */
   readonly trace?: PrologueTrace
+}
+
+/** ⭐⭐⭐ WHAT CROSSES FROM ONE CAREER TO THE NEXT – the dynasty's whole inheritance, and there is
+ *  nothing else (docs/specs/the-dynasty-2026-09.md §3; wave 10 T1). His ask, 11.09: «в конце карьеры
+ *  можно сделать хук на новую карьеру через ребенка, например».
+ *
+ *  ⚠⚠ IT IS `PrologueHandover`'s PRECEDENT AND NOT A NEW PATTERN, which is why it is declared HERE,
+ *  beside it, rather than beside the ending that builds it: one optional argument to `createWorld`,
+ *  absent on every career the game has ever created, and the absence is the identity rather than a
+ *  hole. The two are also independent – a dynasty career still WALKS a childhood, so `createWorld`
+ *  can be handed both at once and the fifth argument does not replace the fourth.
+ *
+ *  ⚠ THE BLOCK IS SELF-CONTAINED ON PURPOSE (§3). The mother's save may be deleted, exported or lost
+ *  before her daughter's first week, so everything the new career is ever allowed to say about her
+ *  is in these fields – nothing downstream is left with a reason to go and read a career that may
+ *  no longer be there.
+ *
+ *  ⚠ `Temperament` IS AN ENGINE TYPE ON THE WIRE, and that edge already exists: `./narrative` imports
+ *  the same name from the same module (`import type { SpiritBand, Temperament } from
+ *  '../../engine/spirit'`). A type-only import is erased at compile time, so `shared/` stays a leaf
+ *  at runtime and invariant 1 is untouched. */
+export interface DynastyHandover {
+  /** the mother's own generation + 1 – `1` for the first daughter of a career that had no dynasty */
+  readonly generation: number
+  /** ⚠⚠ THE CHILD'S SEED, DERIVED AND NEVER DRAWN: `${ancestorRoot}:dynasty:${generation}`, where the
+   *  root is the mother's own `ancestorSeed` or, in generation one, her seed. One root threads a whole
+   *  line, so the same ancestor taken through the same rulings always produces the same daughter –
+   *  §7's determinism law, and the sketch's own phrase.
+   *
+   *  ⚠ CONSUMED AT CREATION AND DELIBERATELY NOT PERSISTED: the new world's `seed` IS this string, so
+   *  a copy of it on `DynastyRecord` would be a second spelling of one fact. */
+  readonly childSeed: string
+  /** §4 – the wealth BAND the mother's own account maps onto, never a raw balance and never a fourth
+   *  corridor. The prologue's origins card is not asked on a dynasty run because this answers it.
+   *  ⚠ Consumed at creation too (it becomes `profile.background`), and not persisted for the same
+   *  reason `childSeed` is not. */
+  readonly background: FamilyBackground
+  /** ⚠ THE ONE PREDICATE THE DOOR'S TWO TEXTS FORK ON (§2) – `wasThereAChild`, asked once, at the
+   *  ending. True: the girl was born on tour, and the door may say how old she is from `bornWeek`
+   *  arithmetic. False: the birth is written after the farewell («роды случились после», his 20.09
+   *  ruling) and NO age claim may be made anywhere, because none is true. */
+  readonly raisedOnTour: boolean
+  /** ⚠ HER NAME, AND THE DAUGHTER'S IS NOT HERE. «имя выбирает родитель» (20.09) – nothing in this
+   *  wave may invent a first name, in a string or in a fixture. `last` is what the identity card
+   *  pre-fills and locks; `first` is the mother's, for the texture that names HER. */
+  readonly motherName: { readonly first: string; readonly last: string }
+  /** ⚠⚠ THE MOTHER'S COUNTRY, AND IT IS THE ONE FIELD ON THIS BLOCK THAT THE SPEC'S §3 LIST DOES NOT
+   *  SPELL. It is here because the spec's §6.2 REQUIRES it in as many words – «the country pre-fills
+   *  from the mother's and stays editable» – and nothing else that crosses could supply it: the new
+   *  career's profile is built before any save is read, and the mother's may be gone. Added by the
+   *  builder with the reason written here rather than left as a ruled behaviour quietly not built;
+   *  it is one line to revert, and reverting it drops §6.2's pre-fill and nothing else.
+   *
+   *  ⚠ IT COSTS NO SCHEMA MOVE, which is what makes it cheap: like `childSeed` and `background` it is
+   *  CONSUMED AT CREATION (it becomes `profile.country`, which the player may then change) and is not
+   *  persisted on `DynastyRecord`. ISO 3166-1 alpha-2, already validated – it comes off a profile
+   *  `profileShapeError` accepted. */
+  readonly motherCountry: string
+  /** ⭐⭐ v86 T10 (his 22.09 ruling: «мы можем где-то у себя сохранять день и месяц рождения для
+   *  подлинности истории в династии … если два ребенка было и больше, давать пользователю выбор из
+   *  этих двух-трех дат») – THE REAL BIRTH DATES OF THE DAUGHTERS, in birth order. Each is the
+   *  calendar date of the Monday `ChildRecord.bornWeek`'s week starts on (`weekMonth` /
+   *  `weekStartDay` – shared/dates, the ONE calendar both sides already read), so the date is
+   *  derived from the recorded birth and never invented. EMPTY on the epilogue variant – a birth
+   *  written after the farewell has no recorded week, and the identity card stays free there.
+   *
+   *  ⚠ CONSUMED AT CREATION like `childSeed`: the chosen date becomes `profile.birthMonth/birthDay`
+   *  and the rest are not persisted – the sisters live in the mother's save, not in this one. */
+  readonly childBirthdays: readonly { readonly month: number; readonly day: number }[]
+  /** §7 – the lean's one input. Her BIRTH temperament, which is what `world.temperament` holds. */
+  readonly motherTemperament: Temperament
+  /** ⚠ HER CAREER AS FACTS AND NEVER AS ADJECTIVES – `EndingView.academy`'s own rule. Every string
+   *  the new career is licensed to say about her (§5, §6) reads one of these five, so a mother who
+   *  won nothing licenses nothing: «the mother's own story prices the texture, not the availability». */
+  readonly motherCareer: {
+    /** summed over `trophiesByTier`, the same fold `buildEndingView` already does for its own count –
+     *  the WHOLE cabinet, junior and domestic shelves included. The album's «Titles: N» and the
+     *  diary's club-level speech lines read this one honestly; anything that claims a PRO stage
+     *  reads `proTitles` below. */
+    readonly titles: number
+    /** ⚠⚠ THE PRO SHELVES ALONE (`TIERS[tier].track === 'wta'`), and the field exists because the
+     *  full count above OVERCLAIMED (caught at the architect's review, 22.09): the booth's cabinet
+     *  pool («her mother won here») licensed off `titles > 0`, which a junior-cabinet mother
+     *  satisfies without ever winning a professional event. Stage claims read THIS. */
+    readonly proTitles: number
+    /** ⚠⚠ THE PRO TABLE ALONE – `bestRankOn(world, 'wta')`, or null for a career that never held a
+     *  WTA rank. NOT `bestRankEver`, which returns the highest ladder REACHED: on a junior-only
+     *  career that is the junior table, and a junior #3 fed to `motherWasKnown` – whose bar,
+     *  `newsRankKnown`, is a WTA-table number by D1's own ruling – lit the news floor for a mother
+     *  the professional press never saw. Caught at the architect's review, 22.09, off a probe row
+     *  reading «bestRank 3» on an 89-week-old career. `null` never qualifies for anything – §5's
+     *  news floor says so in as many words. */
+    readonly bestRank: number | null
+    /** the slam shelf alone, out of the `titles` above */
+    readonly slams: number
+    /** the absolute career week her story stopped having a next one */
+    readonly endedWeek: number
+    /** ⚠ THE ENDING'S ID, AS A `string` RATHER THAN AS `CareerEndingType`, AND THAT IS THE SPEC'S OWN
+     *  SPELLING. This field is copied onto a PERSISTED record that outlives the union: a save written
+     *  by a build with a tenth ending would carry an id this build's union does not have, and typing
+     *  it narrowly would make the type lie about a value the save really holds. It is texture licence
+     *  and nothing else – no mechanic may branch on it. */
+    readonly endingKind: string
+  }
 }
 
 /** Weekly time split in percent; train + rest === 100. */
