@@ -300,7 +300,11 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       // Candidate-first like every other path: the fresh world only becomes the active one after
       // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
-      const candidate = createWorld(seed, msg.profile, makeCareerId(seed), msg.prologue)
+      // ⭐⭐ v86 – THE FIFTH ARGUMENT RIDES THROUGH UNTOUCHED, and there is still ONE call. The block is
+      // re-validated by the same line that validates everything else about a new career: `createWorld`
+      // reads `dynasty.background` through `profile` (which `profileShapeError` has just accepted) and
+      // copies every other field rather than aliasing the message's object.
+      const candidate = createWorld(seed, msg.profile, makeCareerId(seed), msg.prologue, msg.dynasty)
       // ⭐ E-02: the reply is BUILT before the career is adopted – see `snapshotMsg`. `createWorld`
       // writes every required field itself, so this cannot throw today; it is here because the
       // ordering is the property, and a lifecycle path that commits before it can render is the

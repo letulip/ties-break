@@ -384,6 +384,18 @@ export interface DynastyHandover {
    *  wave may invent a first name, in a string or in a fixture. `last` is what the identity card
    *  pre-fills and locks; `first` is the mother's, for the texture that names HER. */
   readonly motherName: { readonly first: string; readonly last: string }
+  /** ⚠⚠ THE MOTHER'S COUNTRY, AND IT IS THE ONE FIELD ON THIS BLOCK THAT THE SPEC'S §3 LIST DOES NOT
+   *  SPELL. It is here because the spec's §6.2 REQUIRES it in as many words – «the country pre-fills
+   *  from the mother's and stays editable» – and nothing else that crosses could supply it: the new
+   *  career's profile is built before any save is read, and the mother's may be gone. Added by the
+   *  builder with the reason written here rather than left as a ruled behaviour quietly not built;
+   *  it is one line to revert, and reverting it drops §6.2's pre-fill and nothing else.
+   *
+   *  ⚠ IT COSTS NO SCHEMA MOVE, which is what makes it cheap: like `childSeed` and `background` it is
+   *  CONSUMED AT CREATION (it becomes `profile.country`, which the player may then change) and is not
+   *  persisted on `DynastyRecord`. ISO 3166-1 alpha-2, already validated – it comes off a profile
+   *  `profileShapeError` accepted. */
+  readonly motherCountry: string
   /** §7 – the lean's one input. Her BIRTH temperament, which is what `world.temperament` holds. */
   readonly motherTemperament: Temperament
   /** ⚠ HER CAREER AS FACTS AND NEVER AS ADJECTIVES – `EndingView.academy`'s own rule. Every string

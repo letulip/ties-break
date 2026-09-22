@@ -4,7 +4,7 @@
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
 import { activeLadderOfSnapshot } from './shared/protocol'
-import type { StopReason, WorldMatch } from './shared/protocol'
+import type { DynastyHandover, StopReason, WorldMatch } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 // R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
@@ -406,6 +406,10 @@ const showPrologue = computed(() => game.ready && newGameRoute.value === 'prolog
 function finishPrologue(): void {
   markTourSeen()
   newGameRoute.value = 'in-game'
+  // ⭐ v86 – THE BLOCK IS SPENT. `createWorld` has persisted it as `world.dynasty` by the time this
+  // runs (the ninth card is what calls `newCareer`), so holding it any longer would mean a SECOND
+  // career could be born from the same intention.
+  pendingDynasty.value = null
 }
 
 // ⭐⭐⭐ ROUND 47 #12 – «RAISE ANOTHER» GOES TO THE BEGINNING, AND THE BEGINNING IS THE PROLOGUE.
@@ -430,9 +434,35 @@ function finishPrologue(): void {
 // already did. Saying it here is not belt-and-braces: it is the line that makes the DESTINATION
 // readable at the call site, next to the sentence about which of the two onboardings it is.
 function raiseAnother(): void {
+  // ⚠ A FRESH STORY IS NOT A CONTINUATION, so this clears the pending line. Without it, a player who
+  // opened the epilogue, considered the dynasty and then chose «Raise another» would get an unrelated
+  // girl carrying somebody's surname – see `continueTheLine` below for what the field is.
+  pendingDynasty.value = null
   newGameRoute.value = 'prologue'
   // The in-memory career only – nothing is deleted. This is More's own «New career» seam
   // (`confirmNewCareer`), which has landed on the childhood since the prologue shipped.
+  game.$patch({ snapshot: null })
+}
+
+// ⭐⭐⭐ v86 – CONTINUE THE LINE (docs/specs/the-dynasty-2026-09.md §6). The same route as «Raise
+// another», carrying one small block.
+//
+// ⚠⚠ THE BLOCK LIVES HERE, IN MEMORY, FOR THE LENGTH OF THE WALK, AND THAT IS §6.1's own design
+// rather than a shortcut. The finished career is NOT deleted – this patches the in-memory snapshot
+// exactly as `raiseAnother` does – so a player who quits in the middle of the nine years loses the
+// walk and nothing else: the door is still on the old career's ending when they come back. Persisting
+// a half-finished intention would be a second kind of save for a state that lasts nine cards.
+//
+// ⚠ IT IS DROPPED ON `skip`, AND THAT IS A KNOWN EDGE RATHER THAN AN OVERSIGHT: the skip branch is
+// the wizard, and the wizard has no route for a block – it asks the three origins itself, which is
+// exactly the card a dynasty run does not ask. So skipping the childhood abandons the line. Carried
+// to the architect as a question (hide the skip on a dynasty run, or teach the wizard the block);
+// dropping it is the honest reading of the branch as it stands, and it loses no save.
+const pendingDynasty = ref<DynastyHandover | null>(null)
+
+function continueTheLine(block: DynastyHandover): void {
+  pendingDynasty.value = block
+  newGameRoute.value = 'prologue'
   game.$patch({ snapshot: null })
 }
 
@@ -1535,7 +1565,8 @@ function reopenTour(): void {
        `newGameRoute`. -->
   <ChildhoodPrologue
     v-else-if="showPrologue"
-    @skip="newGameRoute = 'wizard'"
+    :dynasty="pendingDynasty ?? undefined"
+    @skip="pendingDynasty = null; newGameRoute = 'wizard'"
     @done="finishPrologue"
   />
 
@@ -1553,7 +1584,7 @@ function reopenTour(): void {
        the enrolled college latch (see the script), so this branch falls through to the tab shell
        below and HomeScreen draws the year. Nothing about the engine moved: the latch is still on and
        `resumeFromCollege` is still the only way forward. -->
-  <EndingScreen v-else-if="showEnding" @new-career="raiseAnother" />
+  <EndingScreen v-else-if="showEnding" @new-career="raiseAnother" @continue-line="continueTheLine" />
 
   <template v-else>
     <!-- epic/redesign-home slice A2 (owner, 28.07): THE APP HEADER IS GONE. It carried three

@@ -14,7 +14,7 @@ import type { PsyFocus } from '../../engine/world/state'
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, ShootClashChoice } from './offers'
-import type { PlayerProfile, PrologueHandover, WeekPlan } from './profile'
+import type { DynastyHandover, PlayerProfile, PrologueHandover, WeekPlan } from './profile'
 import type { AlbumBook } from './album'
 import type { Snapshot } from './snapshot'
 
@@ -136,7 +136,13 @@ export type ToWorker =
   // (default), or skip -> the existing wizard»). Present, `createWorld` spends the nine years on
   // her build, the family's reserve, the style she earned and the rung she arrives on – all of them
   // fields every save already carries, so this widens the COMMAND and not the schema.
-  | { id: number; type: 'new'; seed: string; profile: PlayerProfile; prologue?: PrologueHandover }
+  // ⭐⭐ v86 – AND `dynasty` IS OPTIONAL BESIDE IT, ON THE SAME PRECEDENT AND FOR THE SAME REASON (the
+  // dynasty spec §3/§6). Absent, this is the career the game has always created; present, the new
+  // world is the next generation of a line. The two are INDEPENDENT: a dynasty career still walks a
+  // childhood, so the ninth card sends both.
+  // ⚠ IT WIDENS THE COMMAND AND NOT THE SCHEMA – what `createWorld` persists off it is `world.dynasty`,
+  // whose own move is v86's, taken in T1/T2 before this line existed.
+  | { id: number; type: 'new'; seed: string; profile: PlayerProfile; prologue?: PrologueHandover; dynasty?: DynastyHandover }
   | { id: number; type: 'tick'; weeks: number; baseRevision: number }
   // ⚠ `weeks` WAS `1 | 4` UNTIL ROUND 29 #6. The literal union was the engine's historical step
   // written into the wire, and it is exactly what made the span pill unable to say anything true

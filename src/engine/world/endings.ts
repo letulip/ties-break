@@ -1355,6 +1355,9 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
     background: dynastyBackgroundOf(world.kidFundsCents),
     raisedOnTour: wasThereAChild(world),
     motherName: { first: world.profile.kidName, last: world.profile.kidLastName },
+    // §6.2 – the identity card pre-fills the country from hers and leaves it EDITABLE. See the field's
+    // own note for why it is on the block at all: nothing else that crosses could carry it.
+    motherCountry: world.profile.country,
     motherTemperament: world.temperament ?? temperamentFor(world.seed),
     motherCareer: {
       titles,

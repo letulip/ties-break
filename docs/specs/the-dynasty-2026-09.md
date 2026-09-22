@@ -50,6 +50,14 @@ column of §8 is filled from the bench, never predicted twice.
   hashes to `f5e9f20293cf5a68`, the value the function produced at `2ec96cbe` before the parameter
   existed. `createWorld` is the one caller that may ever pass a mother.
 
+- ⭐ **SHIPPED (T4)** – the route. The ending screen carries a second affordance on EVERY ending, the
+  shell holds the block in memory through the childhood, and the identity card opens on her mother's
+  locked surname and editable country with the origins card not asked. ⚠ **`motherCountry` was added
+  to §3's block**: §6.2 requires the pre-fill and nothing else that crosses could supply it. It costs
+  no schema move – consumed at creation, never persisted – and it is one line to revert.
+  ⚠⚠ **And the lived door states no AGE**: §2 licenses it «from `bornWeek` arithmetic» and the block
+  carries no `bornWeek`. The licence is unexercised rather than faked; his call whether to add one.
+
 ## 1. What the dynasty is, in one paragraph
 
 The player plays the parent – never the daughter. So the dynasty is not «play as her»: at the end

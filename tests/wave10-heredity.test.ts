@@ -135,6 +135,7 @@ describe('wave 10 T3 C – determinism', () => {
       background: DEFAULT_PROFILE.background,
       raisedOnTour: false,
       motherName: { first: 'Alice', last: 'Martin' },
+      motherCountry: 'US',
       motherTemperament: 'quiet',
       motherCareer: { titles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
     }

@@ -135,6 +135,20 @@ const props = defineProps<{
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
    *  container so that walking off the card and back does not forget what was typed. */
   identity?: PrologueIdentity
+  /** ⭐⭐⭐ v86 – THE LINE, ON A DYNASTY RUN ONLY (docs/specs/the-dynasty-2026-09.md §6.2/§6.3), and
+   *  absent on every career the game has ever started. Present, it does exactly two things to this
+   *  card and nothing anywhere else:
+   *
+   *    · THE SURNAME IS LOCKED. «The line is the point» – she carries her mother's name, so the field
+   *      shows it and cannot be typed over, and the die beside it is not drawn. The FIRST name stays
+   *      typed and free: «the parent chooses the name» is his 20.09 ruling.
+   *    · THE THREE ORIGINS ARE NOT ASKED. The background arrived answered on the block (§4's band,
+   *      mapped off the mother's own account), so the card that used to ask where the family is from
+   *      has nothing left to ask. It is not disabled and it is not pre-selected – it is absent.
+   *
+   *  ⚠ `note` IS THE CALLER'S COPY, exactly as `skipLabel` and `proceedLabel` are: this component
+   *  holds no strings of its own, so the one sentence that explains the lock is passed in. */
+  line?: { surname: string; note: string }
   /** ⭐ PHASE 4 – THE WAY OUT OF THE PROLOGUE ENTIRELY (build spec §6: «skip -> the existing wizard»),
    *  and it is a LABEL rather than a sentence for the reason the whole card is a table: the copy is
    *  the caller's and this component still holds none. Absent on eight of the nine cards – the
@@ -290,6 +304,11 @@ function chooseCountry(code: string): void {
  *  control on a card with nothing to decide and looks like what it is. The split is what the two
  *  treatments in the style block hang off; nothing about which control a card carries moved. */
 const picks = computed<{ id: string; label: string; note: string }[]>(() => {
+  // ⚠ v86 – ON A DYNASTY RUN THE ORIGINS ARE NOT A LIST, they are an answer that already arrived
+  // (§6.3). Emptied here rather than filtered in the template so `choosing` below sees the same
+  // truth: a card with no list is not a card that is choosing, and the way the screen lays itself
+  // out follows from that one predicate.
+  if (props.line && props.card.origins) return []
   const list: readonly PrologueOption[] | undefined = props.card.origins ?? props.card.options
   return (list ?? []).map((o) => ({ id: o.id, label: o.label, note: o.note }))
 })
@@ -350,7 +369,7 @@ function taken(id: string | null): boolean {
 // twelfth's two faces are chosen off the years 5..11, not off the twelfth's own pick - so no answer
 // to the first question can change which question the second one is.
 /** Is the card's own column a SELECTION? Origins and options are; a synthesised way on is not. */
-const choosing = computed(() => Boolean(props.card.origins ?? props.card.options))
+const choosing = computed(() => picks.value.length > 0)
 /** Is this year's tournament question on the screen yet? Immediately on the thirteenth, which has no
  *  decision of its own for it to wait behind. */
 const askOpen = computed(() => Boolean(props.ask) && (!choosing.value || props.picked !== undefined))
@@ -500,17 +519,24 @@ useDialogFocus(cardEl)
           <div class="prologue-field">
             <label class="prologue-label" for="prologue-last">{{ IDENTITY_COPY.lastName }}</label>
             <div class="prologue-field-row">
+              <!-- ⭐⭐ v86 – LOCKED ON A DYNASTY RUN AND FREE ON EVERY OTHER. `readonly` rather than
+                   `disabled` on purpose: the value is the POINT of the card, so it has to stay
+                   readable and selectable, and a disabled field greys out the one fact the screen is
+                   there to state. The die is not drawn at all beside it - a roll on a locked field
+                   would be a control that does nothing. -->
               <input
                 id="prologue-last"
                 class="prologue-input"
+                :class="{ 'is-locked': Boolean(line) }"
                 type="text"
                 :maxlength="PROFILE_NAME_MAX_CHARS"
                 :value="identity.kidLastName"
                 :placeholder="IDENTITY_COPY.lastName"
+                :readonly="Boolean(line)"
                 autocomplete="off"
                 @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
               />
-              <button class="prologue-dice" type="button" aria-label="Random last name" @click="rollLastName">
+              <button v-if="!line" class="prologue-dice" type="button" aria-label="Random last name" @click="rollLastName">
                 <!-- A different face on the second die, on purpose (the design draws three pips here). -->
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -522,6 +548,11 @@ useDialogFocus(cardEl)
             </div>
           </div>
         </div>
+
+        <!-- ⭐⭐ v86 – THE ONE SENTENCE THAT EXPLAINS THE LOCK, and it is a DRAFT for his pass. It is
+             the caller's string (see the `line` prop) and it renders on a dynasty run only, under the
+             two name fields it is about. -->
+        <p v-if="line" class="prologue-line-note">{{ line.note }}</p>
 
         <!-- ONE LABEL FOR THE PAIR, which is the owner's own call on this field (30.07): it is a
              date, not two settings. The selects carry their own screen-reader names under it. -->
@@ -1040,6 +1071,28 @@ useDialogFocus(cardEl)
   font-size: 15px;
   font-weight: 600;
   color: var(--ink);
+}
+
+/* ⭐⭐ v86 - THE LINE'S TWO MARKS ON THIS CARD. The locked surname reads as a STATED FACT rather
+   than as a broken field: the same box, the muted ink of a value that is not being asked for, and
+   no focus ring, because there is nothing to focus. `readonly` keeps it selectable, which is what a
+   fact on a screen has to be. */
+.prologue-input.is-locked {
+  color: var(--muted);
+  /* ⚠ `--card-bottom` AND NOT AN INVENTED TOKEN. The first draft reached for `--paper-2` with a
+     fallback and `tests/design-tokens.test.ts` refused it by name – «declared nowhere the app can
+     see it». This is the darker half of the same card gradient the field's own `--card-top`
+     background comes from, so a locked field reads as one shade deeper rather than as a colour
+     nobody chose. */
+  background: var(--card-bottom);
+  cursor: default;
+}
+
+.prologue-line-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .prologue-tiles-label {

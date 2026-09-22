@@ -82,6 +82,7 @@ import {
   type PrologueRun,
 } from '../prologue/run'
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
+import type { DynastyHandover } from '../shared/protocol'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
 
 const props = withDefaults(
@@ -106,6 +107,20 @@ const props = withDefaults(
      *  so `initialSeed()` calls `freshSeed()` – the one `Math.random` draw the walk has always
      *  made, unchanged in position and in formula. A player cannot tell this exists. */
     seed?: string
+    /** ⭐⭐⭐ v86 – THE LINE THIS CHILDHOOD CONTINUES, or nothing (docs/specs/the-dynasty-2026-09.md
+     *  §6). Absent on every career the game has ever started, which is the whole of what «absent» has
+     *  to mean here. Present, it changes THREE things about the walk and nothing else:
+     *
+     *    · the seed is the block's `childSeed` and never a fresh draw – one root threads the line
+     *      (§7's determinism law), so the same ancestor always gives the same daughter;
+     *    · the identity card opens on her mother's surname, LOCKED, and her mother's country,
+     *      editable (§6.2); the first name is typed, because «the parent chooses the name»;
+     *    · the origins card is not asked – the background arrived answered on the block (§6.3).
+     *
+     *  ⚠ THE NINE YEARS THEMSELVES ARE UNTOUCHED. A dynasty childhood is the SAME childhood: the same
+     *  cards, the same costs, the same weekends. What the block changes is what the walk opens on and
+     *  what it hands `createWorld` at the end. */
+    dynasty?: DynastyHandover
   }>(),
   { seed: '' },
 )
@@ -119,10 +134,27 @@ const emit = defineEmits<{
 
 const game = useGameStore()
 
-const run = ref<PrologueRun>(EMPTY_RUN)
+/** ⭐⭐ v86 – WHAT THE WALK OPENS ON, and it is ONE function because `startAgain` has to reproduce it
+ *  exactly. A dynasty run opens with the origin already answered (§6.3); every other run opens on
+ *  `EMPTY_RUN`, byte for byte what it always did. */
+function openingRun(): PrologueRun {
+  return props.dynasty ? withOrigin(EMPTY_RUN, props.dynasty.background) : EMPTY_RUN
+}
+
+/** ⭐⭐ v86 – ...and the same for the identity: her mother's surname and her mother's country, or the
+ *  five defaults the card has always opened on. ⚠ THE FIRST NAME IS NOT TOUCHED. «имя выбирает
+ *  родитель» is his 20.09 ruling, and nothing in this wave may invent one – so a dynasty run opens on
+ *  the same default first name every prologue career opens on, and the parent types over it. */
+function openingIdentity(): PrologueIdentity {
+  return props.dynasty
+    ? { ...OPENING_IDENTITY, kidLastName: props.dynasty.motherName.last, country: props.dynasty.motherCountry }
+    : { ...OPENING_IDENTITY }
+}
+
+const run = ref<PrologueRun>(openingRun())
 /** ⭐ WHO SHE IS, held HERE and not on the card, so walking off the five and back does not forget
  *  what was typed – and so `begin()` reads one source rather than asking a component for it. */
-const identity = ref<PrologueIdentity>({ ...OPENING_IDENTITY })
+const identity = ref<PrologueIdentity>(openingIdentity())
 const at = ref(0)
 /** set once the career exists and the handover is up. It is NOT `game.snapshot !== null`: the
  *  snapshot arrives the instant the career is created, and this screen has to outlive that. */
@@ -171,6 +203,14 @@ function freshSeed(): string {
  *  seed walked down two childhoods – while an unsupplied one keeps drawing fresh, which is what
  *  §2.3's «a different childhood and a different girl» has always meant for a player. */
 function initialSeed(): string {
+  // ⭐⭐ v86 – A DYNASTY CHILDHOOD IS BORN ON THE BLOCK'S OWN SEED, NEVER ON A FRESH DRAW (§6.4). The
+  // block's `childSeed` is `${ancestorRoot}:dynasty:${generation}`, computed at the mother's ending,
+  // so one root threads every generation and the same ancestor taken through the same rulings always
+  // gives the same daughter. A fresh draw here would break §7's determinism law at the one place it
+  // is observable. ⚠ It is checked FIRST, ahead of the explicit `seed` prop, for the same reason the
+  // prop exists at all: that prop is a tool's handle (the promo films pin a childhood with it), and a
+  // line's identity is not a thing a tool may override by accident.
+  if (props.dynasty) return props.dynasty.childSeed
   return props.seed.trim() || freshSeed()
 }
 const seed = ref(initialSeed())
@@ -390,6 +430,22 @@ const cardFinished = computed(() => {
 /** ⚠ A LABEL AND NOT A FLAG, exactly as `skipLabel` is: the card holds no copy and no predicate of
  *  its own, so «is it finished» is answered here and the component draws whatever it is handed. */
 const proceedLabel = computed(() => (cardFinished.value ? WALK_COPY.proceed : undefined))
+
+/** ⭐⭐⭐ v86 – THE ONE SENTENCE A DYNASTY RUN ADDS TO THE IDENTITY CARD, and it is a DRAFT for his
+ *  pass (invariant 4 – a new string, written once, listed verbatim in the wave's report).
+ *
+ *  It has two jobs and says both in one line, which is why there is one string and not two: the
+ *  surname is locked because the line is the point (§6.2), and the origins card is not asked because
+ *  the family she is born into is her mother's (§6.3). A card that silently dropped the question it
+ *  has asked on the first screen of every career would be the harder thing to read.
+ *
+ *  ⚠ IT NAMES NOBODY. The mother's first name is on the block and is deliberately not used here –
+ *  this card is about the daughter, and the one name on it is the one the parent is about to type. */
+const LINE_NOTE_DRAFT = 'She is born into her mother\'s family and carries her name.'
+
+const line = computed(() =>
+  props.dynasty ? { surname: props.dynasty.motherName.last, note: LINE_NOTE_DRAFT } : undefined,
+)
 
 // =================================================================================================
 // ⭐⭐⭐ ROUND 41 #8 – THE WAY BACK TO THE CARD BEFORE THIS ONE
@@ -616,6 +672,11 @@ async function begin(): Promise<void> {
       // path (а) 19.09). `traceOf` copies the run's three lists; `createWorld` persists them once
       // as `world.prologueTrace`, and the album's first chapter is read off that record for ever.
       { years: chosenYears(run.value), spentCents: spentCents(run.value), trace: traceOf(run.value) },
+      // ⭐⭐⭐ v86 – AND THE LINE RIDES BESIDE THE CHILDHOOD, on the same call, as the fifth argument
+      // (the dynasty spec §6.4). `createWorld` persists it as `world.dynasty`, applies §4's band and
+      // hands §7's lean the mother's own axis. Undefined on every other career, which is the shape
+      // this call has always had.
+      props.dynasty,
     )
   } finally {
     // ⚠ IN A `finally`, so a refused career does not strand the player on an empty ground with no
@@ -633,12 +694,16 @@ async function startAgain(): Promise<void> {
   const careerId = game.snapshot?.careerId
   if (careerId) await game.deleteCareer(careerId)
   handoverOpen.value = false
-  run.value = EMPTY_RUN
+  // ⚠ v86 – `openingRun()` AND NOT `EMPTY_RUN`, so a dynasty run that starts its childhood over is
+  // still that line's childhood. The block is the shell's and outlives this component's state.
+  run.value = openingRun()
   // ⚠ AND THE IDENTITY GOES BACK TOO. «Start again» drops the career and starts the childhood over
   // with NOTHING carried (§2.3) – a different childhood and, because the seed is generated fresh, a
   // different girl. Keeping the typed name would make her the same girl with a new childhood, which
   // is the one thing this control does not mean.
-  identity.value = { ...OPENING_IDENTITY }
+  // ⚠ v86 – and the same one function, for the same reason: the surname and the country are the
+  // LINE's, not the player's, so «nothing carried» cannot mean dropping them.
+  identity.value = openingIdentity()
   at.value = 0
   // ⚠ AND SO DO THE WEEKENDS. `EMPTY_RUN` already drops the list of them; these three drop the ones
   // in flight and the seed they were drawn on, so the next childhood plays its own draws rather than
@@ -705,6 +770,7 @@ async function startAgain(): Promise<void> {
     :picked="picked"
     :entry="entry"
     :identity="identity"
+    :line="line"
     :skip-label="skipLabel"
     :proceed-label="proceedLabel"
     :can-go-back="canGoBack"
