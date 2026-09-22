@@ -95,18 +95,27 @@ What the case asks for is **content rather than machinery**:
   lengthens the postpartum window and lowers her chance of returning) – so the case is already
   playable and only the wording is missing.
 
-## 6. What we would need to know before building §2's loss
+## 6. ⭐ The two research debts – PAID, 22.09
 
-Two research asks, both small, both of which should land in
-[life-events-motherhood.md](../research/life-events-motherhood.md) before a line is written:
+Both are answered with primary sources in
+[pregnancy-in-sport-2026-09.md](../research/pregnancy-in-sport-2026-09.md), on his instruction («как
+раз долга не будет»). The short of it:
 
-1. **How far into a pregnancy do professionals actually train and compete?** The game currently
-   stops entries `playsOnWeeks` (8) after the announcement; with a 4–8 week hidden window that puts
-   her last event at roughly three to four months, which matches the handful of well-known cases but
-   is not sourced. If the real answer is «training throughout, competing through the first
-   trimester», our own numbers are close and should say so out loud.
-2. **The real frequency of loss by age**, which is the only honest basis for a hazard. It rises with
-   age and our window is 24–38, so a flat number would be wrong in both directions.
+1. **How far do they train and compete?** Competition stops after the first trimester; TRAINING does
+   not stop at all – elite runners were still doing 300–350 minutes a week in the third trimester,
+   two to four times the general guideline, and were back to 80% of their old volume three months
+   after the birth. ⭐ Our own `playsOnWeeks: 8` puts her last event inside the first trimester,
+   which is exactly where the evidence puts it.
+2. **How often is a pregnancy lost, and at what age?** A J-curve, from 421,201 Norwegian
+   pregnancies: 9.8% at 25–29, 10.8% at 30–34, **16.7% at 35–39**. Our window is 24–38, so it sits
+   across the floor AND the climb – a flat rate would be wrong at both ends.
+3. ⚠⚠ **And §2's refusal is now a FINDING rather than a scruple**: nothing in the evidence supports
+   training as a cause of loss, the IOC summary's concern is contact and falls, and age dominates
+   the variance.
+
+⚠ **The research also found something in our own constants**: `termWeeks: 31` places conception AT
+the announcement, so a hidden window added without shrinking `termWeeks` by the same amount would
+make her pregnancy 43–47 weeks long. The two are one number and must move together.
 
 ## 7. The shape, if he ever says build it
 
