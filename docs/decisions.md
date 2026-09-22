@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 121 dated entries, newest 2026-09-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 122 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 10 | [WAVE 9 OPENS AND SHIPS: THE CHILD, AND THREE THINGS THAT TURNED OUT SMALLER THAN THE BRIEF](#21092026--wave-9-opens-and-ships-the-child-and-three-things-that-turned-out-smaller-than-the-brief) | 2026-09-21 |
+| general | 11 | [WAVE 10 RULED OPEN: THE DYNASTY, AND THE OFF SWITCH RULED AHEAD OF ITS STEP](#22092026--wave-10-ruled-open-the-dynasty-and-the-off-switch-ruled-ahead-of-its-step) | 2026-09-22 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5020,3 +5020,27 @@ shipped shape differs from the drafted one:
    corrected**: the fold was genuinely wrong, but its own career reaches «no latch» in 912 weeks, so
    it would not have mis-reported yet. The law now compares `rngMain` alone; funds and condition are
    reported beside it.
+
+## 22.09.2026 – WAVE 10 RULED OPEN: THE DYNASTY, AND THE OFF SWITCH RULED AHEAD OF ITS STEP
+
+PR #152 (wave 9) merged; his rulings on the next slice, from one exchange:
+
+1. **Step 9 – the dynasty – is next**: «Шаг 9 следующим – да». The canonical spec is
+   `docs/specs/the-dynasty-2026-09.md`, the builder plan `docs/plans/life-wave-10-builder-2026-09.md`;
+   he dispatches the builder himself, with every measurement reflected in the spec («Пиши полную
+   пошаговую спеку, а я билдера запущу и все замеры, всё отражай в спеке»).
+2. **Temperament heredity is IN, benched**: «наследственность темперамента – можно и забенчить,
+   мне кажется». One-axis lean (openness), drafted 0.65, distribution and the ±1.5 pp fairness
+   corridor both measured before the number is anything more than a draft.
+3. **⭐ The step-8 off switch is RULED, ahead of its build** – «давай нарулим, раз ты считаешь это
+   хорошей идеей», adopting the architect's standing recommendation: the switch exists ONLY for the
+   weight (step 8 – bereavement, and the pregnancy loss from the-months-before-she-says when built);
+   it is set at new-career creation; everything else ships with no switch; for the weight the
+   creation flow ASKS rather than presets. Changeable later in settings, both directions; turning
+   it off stops NEW weight events and never deletes lived state. The flag itself is step 8's schema
+   move, not wave 10's – this entry is the ruling the build was waiting on.
+4. **The 28 diary lines are CLOSED**: «ревью было, мы внесли правки, этого пока достаточно».
+5. **The match-grain poise measurement is approved**: «не возражаю» – wave 10 carries it as T8 and
+   the result lands in the-child spec's ledger.
+6. **The four recompressed staff portraits await his eye** (found uncommitted in the checkout,
+   −36 KiB against a 3 KiB install headroom; pairs sent to him 22.09) – swap only on his word.
