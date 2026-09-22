@@ -18,15 +18,19 @@
  *   npx vite-node tools/dynasty-bench.ts --lean 400 --corpus 24 --cap 1200
  */
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import {
   ancestorSeedOf,
   createWorld,
   dynastyBackgroundOf,
   dynastyHandoverOf,
   temperamentFor,
+  toSnapshot,
   wasThereAChild,
   type WorldState,
 } from '../src/engine/world'
+import { rngFromSeed } from '../src/engine/rng'
 import { temperamentOpenness, TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type DynastyHandover, type FamilyBackground } from '../src/shared/protocol'
@@ -234,6 +238,112 @@ function rowDeterminism(corpus: Lived[]): void {
 }
 
 // =================================================================================================
+// §6 (added at the architect's review, 22.09) – THE STROKES, COUNTED IN WALKED CHILDREN
+// =================================================================================================
+//
+// The builder's own report named the gap: T6b's reachability was swept over FACTS, and the plan
+// asked for a WALK. This section closes it the plan's way: real child careers, stepped week by
+// week, the printed scrap read off `toSnapshot` – the whole pipeline the player reads, never a
+// re-derivation. Two arms:
+//   A. the walked corpus's own mothers – whatever blocks the careers really produced;
+//   B. a sweep over PRODUCIBLE blocks (both openness poles × the injury ending × a cabinet), each
+//      walked the same way – arm A alone cannot cover the rare conjunctions (one injury mother in
+//      twelve is the corpus's own rate), and every overridden value is one the corpus produces.
+//
+// ⚠ THE EIGHT STRINGS ARE PINNED AGAINST THE SOURCE BEFORE THEY ARE COUNTED. They are spelled here
+// because nothing exports them, and a census that greps for a rotted string would undercount
+// silently – so the bench THROWS if any of the eight is no longer in `weekNotes.ts`, which turns
+// an edit of his into a loud re-run instead of a quiet zero.
+
+const STROKE_LINES: readonly string[] = [
+  'She still strings her own rackets, on the kitchen floor, for an hour.',
+  'She was up before the house again, walking her old pre-match loop.',
+  'She watched one service game and said the ball toss had moved.',
+  'She said nothing all session, then re-taped a grip out by the car.',
+  'She stood up off the bench too fast and put a hand on the fence.',
+  'She told the club which season it went, and that she played on anyway.',
+  'Two parents asked her to sign something. She signed and said nothing.',
+  'The coach used her whole name, and the court went quiet, then loud.',
+]
+
+function assertStrokesInSource(): void {
+  const src = readFileSync(
+    fileURLToPath(new URL('../src/engine/diary/weekNotes.ts', import.meta.url)),
+    'utf8',
+  )
+  for (const line of STROKE_LINES) {
+    if (!src.includes(line)) throw new Error(`stroke census: not in weekNotes.ts – "${line}"`)
+  }
+}
+
+/** Walk one child world for `weeks`, reading the printed scrap off the full snapshot each week. */
+function countStrokes(block: DynastyHandover, careerId: string, weeks: number): Map<string, number> {
+  const world = createWorld(
+    block.childSeed,
+    { ...DEFAULT_PROFILE, background: block.background },
+    careerId,
+    undefined,
+    block,
+  )
+  const rng = rngFromSeed(world.seed)
+  const counts = new Map<string, number>(STROKE_LINES.map((l) => [l, 0]))
+  for (let w = 0; w < weeks && world.ending === null; w += 1) {
+    stepCareerWeek(world, rng, POLICIES[0])
+    const note = toSnapshot(world).diary.weekNote
+    if (note !== null && counts.has(note)) counts.set(note, (counts.get(note) ?? 0) + 1)
+  }
+  return counts
+}
+
+function rowStrokeCensus(corpus: Lived[]): void {
+  console.log('\n6. THE STROKES over WALKED children – the reachability the plan asked for')
+  console.log('   predicted: every line prints in some walked child; scar lines only under an')
+  console.log('              injury-ended mother, cabinet speech only under a titled one')
+  assertStrokesInSource()
+  const total = new Map<string, number>(STROKE_LINES.map((l) => [l, 0]))
+  const add = (m: Map<string, number>): void => {
+    for (const [k, v] of m) total.set(k, (total.get(k) ?? 0) + v)
+  }
+  // arm A – the corpus's own mothers
+  let armAWeeks = 0
+  for (const row of corpus.slice(0, 6)) {
+    const block = dynastyHandoverOf(row.world)
+    add(countStrokes(block, `census-${row.cell}`, 156))
+    armAWeeks += 156
+  }
+  // arm B – producible blocks, swept: both poles × {injury, natural} × a cabinet
+  const titled = corpus.map((r) => dynastyHandoverOf(r.world)).find((b) => b.motherCareer.titles > 0)
+  const base = titled ?? blockOf('sunny', { titles: 12, bestRank: 40, endedWeek: 900 })
+  if (!titled) console.log('   ⚠ no titled mother in this corpus slice – arm B bases on blockOf, values inside corpus ranges')
+  const armB: Map<string, number>[] = []
+  for (const mother of ['sunny', 'quiet'] as const) {
+    for (const endingKind of ['injury', base.motherCareer.endingKind] as const) {
+      const block: DynastyHandover = {
+        ...base,
+        childSeed: `${ancestorSeedOf(base.childSeed, base.generation)}:dynasty:1`,
+        motherTemperament: mother,
+        motherCareer: { ...base.motherCareer, endingKind },
+      }
+      const m = countStrokes(block, `census-B-${mother}-${endingKind}`, 156)
+      armB.push(m)
+      add(m)
+    }
+  }
+  console.log(`   measured over ${armAWeeks} corpus-child weeks + ${armB.length}×156 swept weeks:`)
+  let unreached = 0
+  for (const line of STROKE_LINES) {
+    const n = total.get(line) ?? 0
+    if (n === 0) unreached += 1
+    console.log(`   ${String(n).padStart(4)}  ${n === 0 ? '⚠⚠ NEVER PRINTED' : '·'} ${line}`)
+  }
+  console.log(
+    unreached === 0
+      ? '   every stroke printed in a walked child – T6b\'s reachability is now the walk\'s, not the sweep\'s'
+      : `   ⚠⚠ ${unreached} of 8 never printed in any walked child – a licence or its weekly gate is the suspect`,
+  )
+}
+
+// =================================================================================================
 
 function main(): void {
   console.log('DYNASTY BENCH – docs/specs/the-dynasty-2026-09.md §8, predicted beside measured')
@@ -244,6 +354,7 @@ function main(): void {
   rowBackground(corpus)
   rowDeterminism(corpus)
   rowDoorCensus(corpus)
+  rowStrokeCensus(corpus)
   // ⚠ ROW 5 OF THE SPEC (the frozen capture) IS NOT A BENCH ROW AND IS NOT PRINTED HERE. It is a
   // TEST verdict – `tests/condition.test.ts`, run standalone – and a bench that printed a number for
   // it would be a second place to read it from. The wave's report carries the run.
