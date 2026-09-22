@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-261 TypeScript files: **53 live**, **208 archival**.
+262 TypeScript files: **54 live**, **208 archival**.
 
 ## Why the split exists
 
@@ -44,6 +44,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
 | `demo-save.ts` | writes the demo career used for screenshots and manual playtests |
 | `dual-universe-bench.ts` | `npm run bench:dual` |
+| `dynasty-bench.ts` | `npm run bench:dynasty` |
 | `e2e-fixtures-read.ts` | imported by the test suite |
 | `e2e-fixtures.ts` | `npm run e2e:fixtures` |
 | `econ-bench.ts` | `npm run bench:econ` |

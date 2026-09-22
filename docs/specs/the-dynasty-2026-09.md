@@ -196,13 +196,14 @@ His ruling 22.09: «наследственность темперамента �
 
 | # | claim | predicted | measured |
 | --- | --- | --- | --- |
-| 1 | the openness lean over N=400 dynasty creations | 0.65 ± SEM | – |
-| 2 | fairness corridor on dynasty worlds (win-pp spread across the four temperaments) | within ±1.5 pp | – |
-| 3 | background mapping over the 168-career corpus's endings | wealthy for every titled career; middle/working only via college-fork and early-leaving mothers | – |
-| 4 | determinism: same ancestor, same rulings → same child world | hash-identical twice | – |
+| 1 | the openness lean over N=400 dynasty creations | 0.65 ± SEM | **60.75% ± 2.38% at N=400** – and the UNLEANED control on the same seeds reads **45.75%** against its own 50%, so both arms sit ~4 pp low and the shortfall is the SAMPLE. Walked out: 63.55 / 48.35 at 2,000 · 64.80 / 49.15 at 10,000 · **64.88 / 49.83 at 50,000**. ⚠ The mechanism is the drafted rate; the row's N is what cannot see it. |
+| 2 | fairness corridor on dynasty worlds (win-pp spread across the four temperaments) | within ±1.5 pp | **the corridor's INPUT is identical on all four arms** – opening build 46.10 whichever mother is passed, widest gap 0.00. ⚠ NOT THE CORRIDOR ITSELF: a win-pp spread needs four walked arms per temperament, which the bench does not run. What this says is that the lean changes WHICH girl is drawn and no number she is drawn with. |
+| 3 | background mapping over the 168-career corpus's endings | wealthy for every titled career; middle/working only via college-fork and early-leaving mothers | ⚠⚠ **FALSIFIED.** Over 12 walked cells: wealthy 6, working 6, **middle 0**, and **6 of 12 TITLED careers did not retire wealthy**. A 24-cell sweep found the same shape – the band is BIMODAL (an empty account or millions) and the middle corridor ($25k–$120k in HER account) is reached by nothing. The mapping reads her own account, and titles won on rungs that pay almost nothing leave it empty. |
+| 4 | determinism: same ancestor, same rulings → same child world | hash-identical twice | **4 of 4 identical**, on four different ancestors, `sha256` over the whole world. |
 | 5 | frozen MAIN capture | unmoved – 41550 / `e6b0c709` (no new MAIN draw anywhere in the wave) | – |
+| – | **the door's two texts** over the walked corpus (T7 §5) | the door is always open; this only prices the two texts | **lived 0 of 12, epilogue 12 of 12.** ⚠ No bench career ever has a child: `POLICIES` never marries inside a walk, so the LIVED text is unreachable by the corpus and is exercised only by `tests/wave10-handover.test.ts`'s crafted arm. 6 of 12 cells did not reach an ending inside 1,200 weeks and are reported rather than counted. |
 | 6 | the poise room at match grain (wave 9's unmeasured arm, his «не возражаю») | +0.5 composure ≈ +0.1 pp on pressure points (from `point.ts`'s own +20 ≈ +4 pp law) – texture, below career-grain noise at N=168 | – |
-| 7 | the news floor's reach – share of corpus mothers retiring `known` | most titled careers qualify; college-fork and early-leaving mothers do not | – |
+| 7 | the news floor's reach – share of corpus mothers retiring `known` | most titled careers qualify; college-fork and early-leaving mothers do not | – (T7's bench does not print this row; the predicate is pinned in `tests/wave10-fame.test.ts` §D over every rank from 1 past the noticed bar) |
 
 ## 9. What the wave does not do
 
