@@ -468,9 +468,10 @@ function start(): void {
                  pair - which is what a date field looks like anyway.
              Measured in the browser at 375px: no truncation, and both taps stay full-height. -->
         <!-- ⭐⭐ v86 T10 – THREE STATES OFF THE RECORDED BIRTHS, the prologue card's own rule: no
-             record, the selects as ever; one recorded daughter, the date locked («для подлинности»,
-             his 22.09 ruling); two or more, a choice over their real dates - the dates are all
-             there is to choose by, because no daughter has a name yet. -->
+             record, the selects as ever; one recorded daughter, the date locked to the real birth
+             (authenticity - his 22.09 ruling, quoted where the house fence allows, in
+             DYNASTY_COPY's script-side note); two or more, a choice over their real dates - the
+             dates are all there is to choose by, because no daughter has a name yet. -->
         <div class="ob-field">
           <label class="ob-label" for="ob-month">{{ IDENTITY_COPY.birthday }}</label>
           <div v-if="recordedBirthdays.length === 0" class="ob-birthday">

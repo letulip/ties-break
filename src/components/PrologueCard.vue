@@ -576,12 +576,13 @@ useDialogFocus(cardEl)
 
         <!-- ONE LABEL FOR THE PAIR, which is the owner's own call on this field (30.07): it is a
              date, not two settings. The selects carry their own screen-reader names under it.
-             ⭐⭐ T10 – THREE STATES OFF THE RECORDED BIRTHS (his 22.09 ruling, «для подлинности»):
-             no record, the selects as ever; ONE recorded daughter, the date locked in the same
-             readonly-input dress the surname wears (readable, selectable, not editable – a fact,
-             not a setting); TWO OR MORE, the card's own radiogroup over their real dates, because
-             which daughter steps forward is a genuine question and the dates are all she has –
-             no names exist to choose by («имя выбирает родитель»). -->
+             ⭐⭐ T10 – THREE STATES OFF THE RECORDED BIRTHS (his 22.09 authenticity ruling, quoted
+             where the house fence allows - DYNASTY_COPY's script-side note): no record, the
+             selects as ever; ONE recorded daughter, the date locked in the same readonly-input
+             dress the surname wears (readable, selectable, not editable - a fact, not a setting);
+             TWO OR MORE, the card's own radiogroup over their real dates, because which daughter
+             steps forward is a genuine question and the dates are all she has - no names exist to
+             choose by (the naming stays the parent's, his 20.09 ruling). -->
         <div class="prologue-field">
           <label class="prologue-label" for="prologue-month">{{ IDENTITY_COPY.birthday }}</label>
           <div v-if="recordedBirthdays.length === 0" class="prologue-birthday">

@@ -15,7 +15,9 @@ import { existsSync, readFileSync } from 'node:fs'
 import { engineModuleSource } from './worldSource'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { onboardingHeroUrl } from '../src/art/preload'
-import { after, at, before, lastAt, lineAt, region, regionToLast } from './helpers/source'
+// ⚠ `at` left this list with the wave-10 re-aim: the chooser sweep walks every occurrence by its
+// own indexOf loop now, so the single-occurrence helper has no caller here any more.
+import { after, before, lastAt, lineAt, region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -75,13 +77,19 @@ describe('the wizard still writes a whole PlayerProfile', () => {
     // Girls only (the boys' tour is post-v1 content), no country until one is chosen, the
     // middle-class family, the STANDARD coach rung rather than the dearest, all-court, and the
     // birth month the protocol picks.
+    //
+    // ⚠ RE-AIMED FOR WAVE 10's T10, NOT WEAKENED. Four of the init lines became ternaries whose
+    // DYNASTY arm reads the inheritance block – and the pin now asserts the whole ternary, so the
+    // fallback arm is still the exact literal this case has always demanded. The claim's other
+    // half moved where a claim about VALUES belongs: wave10-line-through-skip §A2 MOUNTS the
+    // ordinary wizard and reads the rendered defaults, which no source spelling can fake.
     expect(literal).toContain("gender: 'girl'")
-    expect(literal).toContain("country: ''")
-    expect(literal).toContain("background: 'middle'")
+    expect(literal).toContain("country: props.dynasty?.motherCountry ?? ''")
+    expect(literal).toContain("background: props.dynasty?.background ?? 'middle'")
     expect(literal).toContain('coachTier: DEFAULT_PROFILE.coachTier')
     expect(literal).toContain("playStyle: 'all-court'")
-    expect(literal).toContain('birthMonth: DEFAULT_PROFILE.birthMonth')
-    expect(literal).toContain('birthDay: DEFAULT_PROFILE.birthDay')
+    expect(literal).toContain('birthMonth: props.dynasty?.childBirthdays[0]?.month ?? DEFAULT_PROFILE.birthMonth')
+    expect(literal).toContain('birthDay: props.dynasty?.childBirthdays[0]?.day ?? DEFAULT_PROFILE.birthDay')
     expect(DEFAULT_PROFILE.coachTier).toBe('middle')
     expect(DEFAULT_PROFILE.birthMonth).toBe(6)
   })
@@ -93,7 +101,14 @@ describe('the wizard still writes a whole PlayerProfile', () => {
   })
 
   it('Skip hands the engine the DEFAULT profile, not a half-filled one', () => {
-    expect(wizardRegion('function skipToDefaults', 'function start')).toContain('newCareer(\'\', DEFAULT_PROFILE)')
+    // ⚠ RE-AIMED FOR WAVE 10's T10, NOT WEAKENED: the call gained a dynasty arm (the skip keeps
+    // the line now – his 22.09 ruling), and what this pin holds is the ORDINARY arm's two answers,
+    // still exactly what they were: an empty seed for the store to fill, and the untouched
+    // DEFAULT_PROFILE object, never a half-filled copy. The behavioural halves live in
+    // wave10-line-through-skip §D – both arms, through a mounted wizard and a spied store.
+    const region = wizardRegion('function skipToDefaults', 'function start')
+    expect(region).toContain("props.dynasty?.childSeed ?? ''")
+    expect(region).toContain(': DEFAULT_PROFILE,')
   })
 
   it('trims the names and falls back rather than starting a career called ""', () => {
@@ -174,13 +189,31 @@ describe('the wizard is built from the shared components, not from hand-rolled c
   })
 
   it('EVERY choice is a card-BUTTON – a door carries the keyboard, a div does not', () => {
-    // The four choosers on P, Q and R. Each one is `<Card as="button">` with `aria-pressed`, so it
-    // is tabbable, activates on Enter/Space, and says out loud whether it is the chosen one.
+    // The choosers on P, Q and R. Each one is `<Card as="button">` that says out loud whether it
+    // is the chosen one, so it is tabbable, activates on Enter/Space, and reports its state.
+    //
+    // ⚠ RE-AIMED FOR WAVE 10's T10, TWICE, AND NEITHER IS A WEAKENING. (a) The sweep walks EVERY
+    // occurrence of a chooser class now, not the first – T10 put a second `ob-row` chooser (the
+    // recorded-birthday choice) ABOVE the background one, and first-occurrence would have silently
+    // stopped checking the original. (b) «reports its state» accepts the ARIA idiom the control
+    // actually is: a toggle says `:aria-pressed=`, a radio in a radiogroup says `role="radio"` +
+    // `:aria-checked=` – giving the birthday radio aria-pressed as well would be WRONG ARIA, two
+    // states on one control. A Card with neither idiom still fails by name.
     for (const cls of ['ob-tile', 'ob-row', 'ob-cell', 'ob-style']) {
-      const i = at(template, `class="${cls}"`)
-      const card = template.slice(lastAt(before(template, `class="${cls}"`), '<Card'), i + 400)
-      expect(card, `${cls} is not a button`).toContain('as="button"')
-      expect(card, `${cls} does not report its state`).toContain(':aria-pressed=')
+      let from = 0
+      let seen = 0
+      for (;;) {
+        const i = template.indexOf(`class="${cls}"`, from)
+        if (i < 0) break
+        seen += 1
+        const card = template.slice(lastAt(template.slice(0, i), '<Card'), i + 400)
+        expect(card, `${cls} #${seen} is not a button`).toContain('as="button"')
+        const pressed = card.includes(':aria-pressed=')
+        const radio = card.includes('role="radio"') && card.includes(':aria-checked=')
+        expect(pressed || radio, `${cls} #${seen} does not report its state`).toBe(true)
+        from = i + 1
+      }
+      expect(seen, `no ${cls} chooser found at all`).toBeGreaterThan(0)
     }
     // ...and nothing on this screen is a clickable div.
     expect(template).not.toMatch(/<div[^>]*@click/)
