@@ -406,10 +406,8 @@ const showPrologue = computed(() => game.ready && newGameRoute.value === 'prolog
 function finishPrologue(): void {
   markTourSeen()
   newGameRoute.value = 'in-game'
-  // ⭐ v86 – THE BLOCK IS SPENT. `createWorld` has persisted it as `world.dynasty` by the time this
-  // runs (the ninth card is what calls `newCareer`), so holding it any longer would mean a SECOND
-  // career could be born from the same intention.
-  pendingDynasty.value = null
+  // ⭐ v86 – the block's clear moved to the `pendingDynasty` watcher (T10): the wizard became a
+  // second route that spends it, and one clear on the career itself covers both.
 }
 
 // ⭐⭐⭐ ROUND 47 #12 – «RAISE ANOTHER» GOES TO THE BEGINNING, AND THE BEGINNING IS THE PROLOGUE.
@@ -453,12 +451,22 @@ function raiseAnother(): void {
 // walk and nothing else: the door is still on the old career's ending when they come back. Persisting
 // a half-finished intention would be a second kind of save for a state that lasts nine cards.
 //
-// ⚠ IT IS DROPPED ON `skip`, AND THAT IS A KNOWN EDGE RATHER THAN AN OVERSIGHT: the skip branch is
-// the wizard, and the wizard has no route for a block – it asks the three origins itself, which is
-// exactly the card a dynasty run does not ask. So skipping the childhood abandons the line. Carried
-// to the architect as a question (hide the skip on a dynasty run, or teach the wizard the block);
-// dropping it is the honest reading of the branch as it stands, and it loses no save.
+// ⭐⭐ T10 – AND IT SURVIVES `skip` NOW (his 22.09 ruling on the architect's recommendation: «скип
+// остаётся»). The wizard learned the block – the same deviations the prologue's identity card
+// carries, locked surname, answered origins, the recorded birthday – so the skip branch keeps the
+// line and skips only the WALK, which is what skip has always meant. The template hands the ref to
+// both takeovers; the watcher below is the one place it is spent.
 const pendingDynasty = ref<DynastyHandover | null>(null)
+
+// ⚠⚠ SPENT WHEN A CAREER EXISTS, in ONE place for BOTH routes. `createWorld` has persisted the
+// block as `world.dynasty` by the time a snapshot arrives (the ninth card and the wizard's two
+// create calls all pass it), so holding it longer would let a SECOND career be born from the same
+// intention. `finishPrologue` used to clear it for the prologue route; the wizard route made that
+// a second spelling, so the clear moved here and fires on the career itself rather than on the
+// route that made it.
+watch(() => game.snapshot, (s) => {
+  if (s) pendingDynasty.value = null
+})
 
 function continueTheLine(block: DynastyHandover): void {
   pendingDynasty.value = block
@@ -1566,11 +1574,12 @@ function reopenTour(): void {
   <ChildhoodPrologue
     v-else-if="showPrologue"
     :dynasty="pendingDynasty ?? undefined"
-    @skip="pendingDynasty = null; newGameRoute = 'wizard'"
+    @skip="newGameRoute = 'wizard'"
     @done="finishPrologue"
   />
 
-  <OnboardingWizard v-else-if="showOnboarding" />
+  <!-- ⭐ T10 – the skip branch carries the line now: same block, same deviations, no walk. -->
+  <OnboardingWizard v-else-if="showOnboarding" :dynasty="pendingDynasty ?? undefined" />
 
   <!-- W2-ENDINGS: THE EPILOGUE REPLACES THE APP SHELL. Branched here, beside the wizard, and not laid
        over the tab shell like the four overlays below - the story has no next week, so there is

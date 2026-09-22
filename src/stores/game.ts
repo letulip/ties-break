@@ -111,6 +111,7 @@ function plainDynasty(block: DynastyHandover | undefined): DynastyHandover | und
     raisedOnTour: block.raisedOnTour,
     motherName: { first: block.motherName.first, last: block.motherName.last },
     motherCountry: block.motherCountry,
+    childBirthdays: block.childBirthdays.map((b) => ({ month: b.month, day: b.day })),
     motherTemperament: block.motherTemperament,
     motherCareer: {
       titles: block.motherCareer.titles,

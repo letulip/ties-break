@@ -39,6 +39,16 @@ column of §8 is filled from the bench, never predicted twice.
   are IN («звучит интересно, давай попробуем реализовать»), the news floor is IN by his word on
   the recommendation, and the four support portraits landed downscaled the same day – the
   architect's own commit, −36 KiB, install headroom ≈39 KiB for the wave.
+- ⭐ **SHIPPED (T10, the architect – his «по 2-5 всё да» of 22.09)**: the door states no age, and
+  the AUTHENTICITY rides the identity card instead – the block carries `childBirthdays` (each the
+  calendar date of the Monday the recorded birth week started on, `weekMonth`/`weekStartDay` – one
+  calendar, no invention), the card locks the date on one recorded daughter, offers the choice of
+  dates on two or more («давать пользователю выбор из этих двух-трех дат»), and stays free on the
+  epilogue variant. **And the skip no longer abandons the line**: the wizard learned the block –
+  locked surname, stated origins, the same birthday states, `childSeed` never a fresh draw – so the
+  skip branch keeps the line and skips only the walk. The words live in `DYNASTY_COPY`
+  (`composables/identityCopy.ts`, one declaration, two surfaces); four new DRAFT strings await his
+  pass. Mutation-verified five ways in `tests/component/wave10-line-through-skip.test.ts`.
 - ⚠⚠ **THE REVIEW'S TRACK FINDING (22.09, fixed the same day)**: the block's `bestRank` was
   `bestRankEver`, which answers for the highest ladder REACHED – so a junior-only career handed a
   junior number to `motherWasKnown`, whose bar is a WTA rank (D1: standing, never fame), and the
@@ -113,6 +123,7 @@ ending view – the worker owns the world, the UI only ever sees `Snapshot`:
 interface DynastyHandover {
   generation: number            // (mother's generation ?? 0) + 1
   childSeed: string             // `${ancestorRoot}:dynasty:${generation}` – deterministic ancestry
+  childBirthdays: { month: number; day: number }[]  // T10 – the recorded births' real dates, birth order; [] on the epilogue variant
   background: FamilyBackground  // §4 – the wealth band, mapped, never a raw balance
   raisedOnTour: boolean         // children born in-career vs the epilogue variant
   motherName: { first: string; last: string }

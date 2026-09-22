@@ -396,6 +396,17 @@ export interface DynastyHandover {
    *  persisted on `DynastyRecord`. ISO 3166-1 alpha-2, already validated – it comes off a profile
    *  `profileShapeError` accepted. */
   readonly motherCountry: string
+  /** ⭐⭐ v86 T10 (his 22.09 ruling: «мы можем где-то у себя сохранять день и месяц рождения для
+   *  подлинности истории в династии … если два ребенка было и больше, давать пользователю выбор из
+   *  этих двух-трех дат») – THE REAL BIRTH DATES OF THE DAUGHTERS, in birth order. Each is the
+   *  calendar date of the Monday `ChildRecord.bornWeek`'s week starts on (`weekMonth` /
+   *  `weekStartDay` – shared/dates, the ONE calendar both sides already read), so the date is
+   *  derived from the recorded birth and never invented. EMPTY on the epilogue variant – a birth
+   *  written after the farewell has no recorded week, and the identity card stays free there.
+   *
+   *  ⚠ CONSUMED AT CREATION like `childSeed`: the chosen date becomes `profile.birthMonth/birthDay`
+   *  and the rest are not persisted – the sisters live in the mother's save, not in this one. */
+  readonly childBirthdays: readonly { readonly month: number; readonly day: number }[]
   /** §7 – the lean's one input. Her BIRTH temperament, which is what `world.temperament` holds. */
   readonly motherTemperament: Temperament
   /** ⚠ HER CAREER AS FACTS AND NEVER AS ADJECTIVES – `EndingView.academy`'s own rule. Every string

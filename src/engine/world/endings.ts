@@ -79,7 +79,7 @@ import { ECONOMY } from '../economy'
 import { applyBondDelta, temperamentFor } from '../spirit'
 import { rngFromSeed } from '../rng'
 import { nextAcademicYearStart } from '../kidLife'
-import { weekLabel } from '../../shared/dates'
+import { weekLabel, weekMonth, weekStartDay } from '../../shared/dates'
 import { kidAgeYears } from './age'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
@@ -1369,6 +1369,10 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
     // §6.2 – the identity card pre-fills the country from hers and leaves it EDITABLE. See the field's
     // own note for why it is on the block at all: nothing else that crosses could carry it.
     motherCountry: world.profile.country,
+    // T10 (his 22.09 ruling) – the real birth dates, derived from the recorded weeks through the ONE
+    // calendar (`weekMonth`/`weekStartDay`): the date of the Monday her birth week started on. The
+    // epilogue variant maps an empty array, which is the field's own «no recorded birth» state.
+    childBirthdays: world.children.map((c) => ({ month: weekMonth(c.bornWeek), day: weekStartDay(c.bornWeek) })),
     motherTemperament: world.temperament ?? temperamentFor(world.seed),
     motherCareer: {
       titles,

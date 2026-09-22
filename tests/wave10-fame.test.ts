@@ -42,6 +42,7 @@ function block(over: Partial<DynastyHandover['motherCareer']> = {}): DynastyHand
     raisedOnTour: false,
     motherName: { first: 'Alice', last: 'Martin' },
     motherCountry: 'US',
+    childBirthdays: [],
     motherTemperament: 'sunny',
     motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'college', ...over },
   }

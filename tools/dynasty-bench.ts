@@ -73,6 +73,7 @@ function blockOf(mother: Temperament, career: Partial<DynastyHandover['motherCar
     raisedOnTour: false,
     motherName: { first: 'Vera', last: 'Kowalski' },
     motherCountry: 'PL',
+    childBirthdays: [],
     motherTemperament: mother,
     motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural', ...career },
   }

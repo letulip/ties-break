@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 123 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 124 dated entries, newest 2026-09-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 12 | [THE THREE OPEN ITEMS OF WAVE 10, RULED IN ONE EXCHANGE](#22092026--the-three-open-items-of-wave-10-ruled-in-one-exchange) | 2026-09-22 |
+| general | 13 | [WAVE 10 CLOSES ITS TAIL: «по 2-5 всё да, делай как рекомендуешь»](#22092026--wave-10-closes-its-tail-по-2-5-всё-да-делай-как-рекомендуешь) | 2026-09-22 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5066,3 +5066,28 @@ The morning entry left three marks; all three closed the same day:
 
 With these, nothing in `docs/plans/life-wave-10-builder-2026-09.md` is conditional – he dispatches
 the builder («я готов билдера отправить»).
+
+## 22.09.2026 – WAVE 10 CLOSES ITS TAIL: «по 2-5 всё да, делай как рекомендуешь»
+
+His one line ruled the four open items of the review exchange, and all four landed the same day,
+the architect's own commits:
+
+1. **The birthday is the record's, not the door's** – no age on the door («нам всё равно сколько
+   лет её ребенку»); the block carries the real birth dates («мы можем где-то у себя сохранять
+   день и месяц рождения для подлинности истории в династии»), derived from the recorded weeks
+   through the one calendar; one recorded daughter locks the identity card's date, two or more open
+   his choice («давать пользователю выбор из этих двух-трех дат»), the epilogue variant stays free.
+2. **The skip stays, and the wizard learned the block** («вот это хороший вопрос … можем ли мы
+   как-то здесь что-то сделать, чтобы скип остался» – the architect's recommendation taken): the
+   skip branch carries the same deviations the prologue's identity card does, so skipping the
+   childhood keeps the line and skips only the walk.
+3. **The ten logo PNGs left `public/`** («да, много, согласен») – they were draft exports nothing
+   references (the app's logos are tracked SVGs; the PWA icons are their own five tracked PNGs, the
+   only raster the platform requires); moved to `design/logos/`, out of every build and precache.
+4. **The birth art re-save reverted** («я вроде ничего не менял») – the on-disk copy was a heavier
+   re-encode of the same 512×512 picture, byte-different and eye-identical; the committed original
+   stands.
+
+The middle wealth band's emptiness was re-measured on a sound instrument the same day (spec §8
+row 3): structural, not sampling – kept as shipped, his «а я не очень понял в чем проблема» read
+as the answer it is. The one-clause college-mother floor stays offered, unbuilt.

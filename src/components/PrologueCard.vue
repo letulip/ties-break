@@ -66,7 +66,7 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // screen-reader name below is written here: they all come from `composables/identityCopy.ts`, which
 // the wizard reads too, because CLAUDE.md's invariant 4 says a label is the owner's and a string
 // declared twice is a string that can drift in one copy. See that module's header.
-import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
 // ⚠ THE WIZARD'S OWN CAP, ON THE WIZARD'S OWN IDIOM. This card asks for her name too and reaches
 // `newCareer` on exactly the same path, so `profileShapeError`'s name refusal is as reachable from
@@ -148,7 +148,14 @@ const props = defineProps<{
    *
    *  ⚠ `note` IS THE CALLER'S COPY, exactly as `skipLabel` and `proceedLabel` are: this component
    *  holds no strings of its own, so the one sentence that explains the lock is passed in. */
-  line?: { surname: string; note: string }
+  line?: {
+    surname: string
+    note: string
+    /** ⭐ T10 (his 22.09 ruling) – the RECORDED birth dates, in birth order. One date locks the
+     *  birthday to the real birth; two or more open the chooser («давать пользователю выбор из этих
+     *  двух-трех дат»); absent or empty – the epilogue variant – leaves the selects free. */
+    birthdays?: readonly { month: number; day: number }[]
+  }
   /** ⭐ PHASE 4 – THE WAY OUT OF THE PROLOGUE ENTIRELY (build spec §6: «skip -> the existing wizard»),
    *  and it is a LABEL rather than a sentence for the reason the whole card is a table: the copy is
    *  the caller's and this component still holds none. Absent on eight of the nine cards – the
@@ -234,6 +241,19 @@ function rollLastName(): void {
 const birthDays = computed(() =>
   Array.from({ length: daysInBirthMonth(props.identity?.birthMonth ?? 1) }, (_, i) => i + 1),
 )
+
+// ⭐⭐ T10 – THE RECORDED BIRTHDAYS, three states off one array (see the `line` prop's note). The
+// date text is presentation over the same MONTHS list the select options use – one calendar, one
+// spelling – and the chooser reuses the card's own radiogroup idiom rather than inventing a fourth
+// control. Picking writes through the ordinary `identity` event, so the container stays the owner.
+const recordedBirthdays = computed(() => props.line?.birthdays ?? [])
+const birthdayText = (b: { month: number; day: number }): string => `${MONTHS[b.month - 1]} ${b.day}`
+const birthdayTaken = (b: { month: number; day: number }): boolean =>
+  props.identity?.birthMonth === b.month && props.identity?.birthDay === b.day
+function pickBirthday(b: { month: number; day: number }): void {
+  if (!props.identity) return
+  emit('identity', { ...props.identity, birthMonth: b.month, birthDay: b.day })
+}
 
 function setMonth(month: number): void {
   if (!props.identity) return
@@ -555,10 +575,16 @@ useDialogFocus(cardEl)
         <p v-if="line" class="prologue-line-note">{{ line.note }}</p>
 
         <!-- ONE LABEL FOR THE PAIR, which is the owner's own call on this field (30.07): it is a
-             date, not two settings. The selects carry their own screen-reader names under it. -->
+             date, not two settings. The selects carry their own screen-reader names under it.
+             ⭐⭐ T10 – THREE STATES OFF THE RECORDED BIRTHS (his 22.09 ruling, «для подлинности»):
+             no record, the selects as ever; ONE recorded daughter, the date locked in the same
+             readonly-input dress the surname wears (readable, selectable, not editable – a fact,
+             not a setting); TWO OR MORE, the card's own radiogroup over their real dates, because
+             which daughter steps forward is a genuine question and the dates are all she has –
+             no names exist to choose by («имя выбирает родитель»). -->
         <div class="prologue-field">
           <label class="prologue-label" for="prologue-month">{{ IDENTITY_COPY.birthday }}</label>
-          <div class="prologue-birthday">
+          <div v-if="recordedBirthdays.length === 0" class="prologue-birthday">
             <select
               id="prologue-month"
               class="prologue-select"
@@ -578,6 +604,34 @@ useDialogFocus(cardEl)
               <option v-for="d in birthDays" :key="d" :value="d">{{ d }}</option>
             </select>
           </div>
+          <template v-else-if="recordedBirthdays.length === 1">
+            <input
+              id="prologue-month"
+              class="prologue-input is-locked"
+              type="text"
+              :value="birthdayText(recordedBirthdays[0])"
+              readonly
+              :aria-label="IDENTITY_COPY.birthday"
+            />
+            <p class="prologue-line-note">{{ DYNASTY_COPY.birthdayNote }}</p>
+          </template>
+          <template v-else>
+            <p id="prologue-birthday-choice" class="prologue-line-note">{{ DYNASTY_COPY.birthdayChoice }}</p>
+            <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-birthday-choice">
+              <button
+                v-for="b in recordedBirthdays"
+                :key="`${b.month}-${b.day}`"
+                class="prologue-answer prologue-choice"
+                type="button"
+                role="radio"
+                :aria-checked="birthdayTaken(b)"
+                @click="pickBirthday(b)"
+              >
+                <span class="prologue-mark" aria-hidden="true"></span>
+                <span class="prologue-answer-text">{{ birthdayText(b) }}</span>
+              </button>
+            </div>
+          </template>
         </div>
 
         <!-- HER COUNTRY - the wizard's picker, not a second one: a search over all 24, tiles as the

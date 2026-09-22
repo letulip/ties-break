@@ -82,6 +82,7 @@ import {
   type PrologueRun,
 } from '../prologue/run'
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
+import { DYNASTY_COPY } from '../composables/identityCopy'
 import type { DynastyHandover } from '../shared/protocol'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
 
@@ -144,11 +145,21 @@ function openingRun(): PrologueRun {
 /** ⭐⭐ v86 – ...and the same for the identity: her mother's surname and her mother's country, or the
  *  five defaults the card has always opened on. ⚠ THE FIRST NAME IS NOT TOUCHED. «имя выбирает
  *  родитель» is his 20.09 ruling, and nothing in this wave may invent one – so a dynasty run opens on
- *  the same default first name every prologue career opens on, and the parent types over it. */
+ *  the same default first name every prologue career opens on, and the parent types over it.
+ *
+ *  ⚠ T10 – AND THE BIRTHDAY IS THE RECORDED ONE where a record exists (his 22.09 ruling, «для
+ *  подлинности»): the card opens on the FIRST daughter's real date, the chooser (2+ births) swaps it
+ *  through the ordinary `identity` event, and the epilogue variant – no recorded birth – opens free
+ *  exactly as every career always has. */
 function openingIdentity(): PrologueIdentity {
-  return props.dynasty
-    ? { ...OPENING_IDENTITY, kidLastName: props.dynasty.motherName.last, country: props.dynasty.motherCountry }
-    : { ...OPENING_IDENTITY }
+  if (!props.dynasty) return { ...OPENING_IDENTITY }
+  const born = props.dynasty.childBirthdays[0]
+  return {
+    ...OPENING_IDENTITY,
+    kidLastName: props.dynasty.motherName.last,
+    country: props.dynasty.motherCountry,
+    ...(born ? { birthMonth: born.month, birthDay: born.day } : {}),
+  }
 }
 
 const run = ref<PrologueRun>(openingRun())
@@ -431,20 +442,26 @@ const cardFinished = computed(() => {
  *  its own, so «is it finished» is answered here and the component draws whatever it is handed. */
 const proceedLabel = computed(() => (cardFinished.value ? WALK_COPY.proceed : undefined))
 
-/** ⭐⭐⭐ v86 – THE ONE SENTENCE A DYNASTY RUN ADDS TO THE IDENTITY CARD, and it is a DRAFT for his
- *  pass (invariant 4 – a new string, written once, listed verbatim in the wave's report).
+/** ⭐⭐⭐ v86 – WHAT A DYNASTY RUN ADDS TO THE IDENTITY CARD. The sentence has two jobs and says both
+ *  in one line (the surname is locked because the line is the point, §6.2; the origins card is not
+ *  asked because the family she is born into is her mother's, §6.3), and it NAMES NOBODY – this card
+ *  is about the daughter, and the one name on it is the one the parent is about to type.
  *
- *  It has two jobs and says both in one line, which is why there is one string and not two: the
- *  surname is locked because the line is the point (§6.2), and the origins card is not asked because
- *  the family she is born into is her mother's (§6.3). A card that silently dropped the question it
- *  has asked on the first screen of every career would be the harder thing to read.
+ *  ⚠ T10 MOVED THE WORDS TO `identityCopy.ts` (`DYNASTY_COPY`), byte-identical: the wizard became
+ *  the second surface that says them (the skip branch carries the line now), and a string declared
+ *  twice drifts in one copy while the other stays green – that file's own founding rule.
  *
- *  ⚠ IT NAMES NOBODY. The mother's first name is on the block and is deliberately not used here –
- *  this card is about the daughter, and the one name on it is the one the parent is about to type. */
-const LINE_NOTE_DRAFT = 'She is born into her mother\'s family and carries her name.'
-
+ *  ⚠ T10 ALSO PUTS THE RECORDED BIRTHDAYS ON THE CARD (his 22.09 ruling): one date locks the
+ *  birthday selects, two or more open the chooser, none – the epilogue variant – leaves the card
+ *  free. The card renders; this container only hands the facts down. */
 const line = computed(() =>
-  props.dynasty ? { surname: props.dynasty.motherName.last, note: LINE_NOTE_DRAFT } : undefined,
+  props.dynasty
+    ? {
+        surname: props.dynasty.motherName.last,
+        note: DYNASTY_COPY.lineNote,
+        birthdays: props.dynasty.childBirthdays,
+      }
+    : undefined,
 )
 
 // =================================================================================================

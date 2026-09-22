@@ -45,6 +45,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { weekMonth, weekStartDay } from '../src/shared/dates'
 import { bestRankOn } from '../src/engine/world/ladder'
 import { lineageLicensed, motherWasKnown, newsStandingOf } from '../src/engine/world/spotlight'
 import { ECONOMY } from '../src/engine/economy'
@@ -174,6 +175,15 @@ describe('wave 10 T1 A – the inheritance block', () => {
     world.children.push({ bornWeek: 640, sex: 'girl' })
     expect(wasThereAChild(world), 'one row is enough – the door reads a daughter').toBe(true)
     expect(dynastyHandoverOf(world).raisedOnTour, 'and the block forks on it').toBe(true)
+    // ⭐ T10 (his 22.09 ruling, «для подлинности») – the recorded birthday crosses as the calendar
+    // date of the Monday the birth week started on, through the ONE calendar both sides read. The
+    // same total-function justification as above: the derivation's contract IS «map that array».
+    world.children.push({ bornWeek: 700, sex: 'girl' })
+    expect(dynastyHandoverOf(world).childBirthdays, 'one date per daughter, in birth order').toEqual([
+      { month: weekMonth(640), day: weekStartDay(640) },
+      { month: weekMonth(700), day: weekStartDay(700) },
+    ])
+    expect(dynastyHandoverOf(createWorld('w10-none', DEFAULT_PROFILE)).childBirthdays, 'the epilogue variant is empty, not invented').toEqual([])
   })
 
   it('⭐⭐⭐ generation two: one root threads the line, and the seed stays deterministic ancestry', () => {
@@ -314,6 +324,7 @@ describe('wave 10 T2 C – absent means the career the game has always created',
       raisedOnTour: false,
       motherName: { first: 'Alice', last: 'Martin' },
       motherCountry: 'US',
+      childBirthdays: [],
       motherTemperament: 'sunny',
       motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
     }
@@ -335,6 +346,7 @@ describe('wave 10 T2 C – absent means the career the game has always created',
       raisedOnTour: true,
       motherName: { first: 'Alice', last: 'Martin' },
       motherCountry: 'US',
+      childBirthdays: [{ month: 3, day: 14 }],
       motherTemperament: 'deep',
       motherCareer: { titles: 12, proTitles: 12, bestRank: 3, slams: 2, endedWeek: 1000, endingKind: 'natural' },
     }
