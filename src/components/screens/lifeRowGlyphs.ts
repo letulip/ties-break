@@ -124,8 +124,18 @@ export const LIFE_ROW_EMOJI: Partial<Record<LifeRowKind, string>> = PICKS
  *  the build's own reader. ⚠ NO GLYPH IS PICKED FOR IT, exactly as for `'own-key'` (§5a: «no agent
  *  adds or swaps one unasked») – the row wears the standing white-heart fallback until the owner
  *  rules, and picking one is one line inside `KIND_PICKS` below. ⚠ T4's birth row, if it is a `'life'`
- *  row, will need the same two lines; this note is where that is said. */
-export const LIFE_BEAT_ROW_KINDS = ['met', 'ended', 'own-key', 'expecting'] as const satisfies readonly LifeBeatKind[]
+ *  row, will need the same two lines; this note is where that is said.
+ *  ⭐ v88 (the parting, wave 12 – T2) ADDS `'divorced'`: `rollEnds`' latched branch writes one kept
+ *  `'life'` row on the week a marriage ends, stamped with the kind. ⚠ THE ENTRY IS A MECHANICAL
+ *  CONSEQUENCE AND NOT A DESIGN CHOICE, exactly as `'expecting'`'s was –
+ *  `tests/wave4-life-row-stamp.test.ts` requires every engine `'life'` write site to stamp a kind
+ *  AND that kind to be on this roster, so a stamped row with no line here fails the build's own
+ *  reader. ⚠ NO GLYPH IS PICKED FOR IT (§5a: «no agent adds or swaps one unasked», and the wave's
+ *  own §11 says so again) – the row wears the standing white-heart fallback until the owner rules,
+ *  and picking one is one line inside `KIND_PICKS` below. ⚠⚠ AND THE FALLBACK IS THE RIGHT DEFAULT
+ *  HERE RATHER THAN MERELY THE SAFE ONE: `'ended'` carries his ♡ and a divorce row beside it wearing
+ *  🤍 would read as the LOUDER of the two, which is backwards. */
+export const LIFE_BEAT_ROW_KINDS = ['met', 'ended', 'own-key', 'expecting', 'divorced'] as const satisfies readonly LifeBeatKind[]
 
 export type LifeBeatRowKind = (typeof LIFE_BEAT_ROW_KINDS)[number]
 

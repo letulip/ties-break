@@ -556,6 +556,17 @@ describe('wave 7 T4 G – `rollEnds` on a latched episode', () => {
   it('⚠ and the door is NOT closed: a week under the scaled hazard ends a marriage too', () => {
     // The divorce door the schema pre-paid – possible and rare, wave-4's machinery untouched: the
     // date, the breakup shock, everything downstream exactly as an unlatched ending has it.
+    //
+    // ⚠⚠ RE-AIMED BY v88 (the parting, wave 12 – T2), NOT WEAKENED, AND THE OLD SENTENCE IS KEPT
+    // BECAUSE THIS CASE IS THE ONE THAT WAS WAITING FOR IT. What it asserted was «wave-4's own mark,
+    // no new shock kind» – which was true of wave 7 and is the exact thing wave 12 exists to change:
+    // the ending through this door now stamps `'divorce'` (−27/−42) instead of `'breakup'`
+    // (−22/−34), raises a `'divorced'` card and keeps its own feed row. WHAT DID NOT MOVE is
+    // everything this case is REALLY about and is asserted one line at a time below: the door is
+    // still open, the DATE is the same week, the latch stays on the row, and – §B of
+    // tests/wave12-parting.test.ts – the draw is the same one uniform on the same key.
+    // ⚠ The assertion is therefore re-pointed rather than deleted: it still says «the mark is
+    // stamped and it says which ending this was», which is the claim that has to keep holding.
     const probe = careerAt('w7-door', 1300, episode(1100))
     const h = hazardOf(probe)
     let week = -1
@@ -567,7 +578,7 @@ describe('wave 7 T4 G – `rollEnds` on a latched episode', () => {
     rollEnds(latched)
     expect(latched.loveEpisodes[0].endedWeek, 'a latched episode can still end').toBe(week)
     expect(latched.loveEpisodes[0].latchedWeek, 'and the marriage stays in the biography – nothing un-writes a wedding').toBe(week - 100)
-    expect(latched.spiritShock, 'wave-4\'s own mark, no new shock kind').toEqual({ week, kind: 'breakup' })
+    expect(latched.spiritShock, 'the mark, and since v88 it names the marriage').toEqual({ week, kind: 'divorce' })
   })
 
   it('⚠⚠ zero RNG change: the same ONE key on a latched week as on an unlatched one', () => {

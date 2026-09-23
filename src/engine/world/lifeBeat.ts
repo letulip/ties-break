@@ -5935,11 +5935,30 @@ export function rollEnds(world: WorldState): void {
   // the SAME uniform against four different hazards. That is what makes the multiplier a pure scale
   // rather than four unrelated dice, and it is the property the nesting pin holds them to.
   if (rngFromSeed(`${world.seed}:life:ends:${world.week}`)() >= hazard) return
+  // ⭐⭐⭐ v88 (the parting, wave 12 – T2) – **THE WHOLE OF THE WAVE'S ENGINE, AND IT IS A PURE READ.**
+  // Was this a marriage? Everything below splits on this one boolean and nothing else: the shock's
+  // kind, the card's kind, the kept row's sentence and its stamp. ⚠ NOT A SECOND DRAW, NOT A SECOND
+  // GATE AND NOT A SECOND HAZARD – the ending's rate already knows about the latch (it is the
+  // `latchEndFactor` in the hazard eight lines up), so by the time this line runs the dice have
+  // finished and the only question left is what to CALL what they did.
+  //
+  // ⚠⚠ IT IS TAKEN BEFORE `endEpisode` FOR READABILITY AND NOT FOR SAFETY, which is worth saying so
+  // nobody "tidies" it back down. `endEpisode` writes `endedWeek` and never touches `latchedWeek`,
+  // and `over` is a reference to the row rather than a copy, so the read would be correct anywhere
+  // below. It sits here because the four uses underneath should all be reading ONE named fact – the
+  // two-readings defect rule 3 exists to prevent, at the smallest scale it can occur.
+  const married = over.latchedWeek !== null
   endEpisode(world, world.week)
   // ⭐⭐⭐ v75 T3 – AND THE MARK IT LEAVES ON HER. A fact, never a number: what it costs is
   // `ECONOMY.spirit.shock.breakup` and `accrueSpirit` is the one place that reads it (see the note
   // above). The kind is the union's only member today; steps 7–8 add the others.
-  world.spiritShock = { week: world.week, kind: 'breakup' }
+  // ⭐⭐⭐ v88 (wave 12 – T2) – AND STEPS 7–8 CAME AND WENT, so this line finally has the choice the
+  // union was widened for. `'divorce'` costs −27/−42 against the break-up's −22/−34
+  // (`ECONOMY.spirit.shock`, both DRAFT): deeper, because a marriage is more of a life. ⚠ THE SPLIT
+  // IS THE WHOLE OF WHAT THIS LINE DOES – the ARITHMETIC is still `accrueSpirit`'s four calls later,
+  // and this function still stamps a fact and never a number. The note over this function has been
+  // watching for a `world.spirit` write since T3 and still is.
+  world.spiritShock = { week: world.week, kind: married ? 'divorce' : 'breakup' }
   // ⭐⭐⭐ v75 T4, RULING B – AND THE TOLD-NOW CARD, **ONLY IF HE ALREADY KNEW THERE WAS SOMEBODY**.
   //
   // ⚠⚠ THE RECEIPT IS THE WHOLE CONDITION AND IT IS RULING A's DISCRIMINATOR, NOT `knownWeek`. A
@@ -5975,6 +5994,37 @@ export function rollEnds(world: WorldState): void {
   // and on the card's stamp underneath it. ⚠ IT IS DRAWN **AFTER** THE RECEIPT GATE, so an ending
   // that raises nothing here derives nothing either – the told-late path in §6 owns that episode and
   // draws its own coin on the week the parent actually hears of it.
+  // ⭐⭐⭐ v88 (wave 12 – T2) – AND THE MARRIAGE'S ENDING TAKES THE OTHER ROAD, WHICH IS SHORTER BY
+  // EVERYTHING BELOW. One kept row, one raise, no coin and no frame. ⚠ IT RETURNS RATHER THAN
+  // BRANCHING THE REST, because the two paths share nothing after this point: the ending's row and
+  // card are assembled from a coin, a voice, a `wants` and a register, and the divorce's are
+  // assembled from neither.
+  //
+  // ⚠⚠ THE LISTEN COIN IS **NOT DERIVED ON THIS PATH**, AND THAT IS A REAL CONSEQUENCE RATHER THAN
+  // AN OMISSION – said plainly here because it is the one thing this wave takes away. On a week the
+  // family is paying a psychologist whose year is `'listen'`, a break-up's heading can be the
+  // LEGIBLE one (`ENDED_HEADING_HEARD`, 16 cells). A divorce's cannot: `DIVORCED_HEADING` has two
+  // cells and no legible arm, so the focus goes quiet on this one card. Building one would mean
+  // drafting eight more cells of the parent's own reading, which is a surface this wave was not
+  // asked for and copy that is not an agent's to invent (invariant 4). ⚠ IT COSTS NO STREAM EITHER
+  // WAY: `listenHeardNow` returns `null` without drawing unless a listen rung is actually working,
+  // and sub-streams are re-derived at the call site and persist nothing, so skipping the call moves
+  // no other key's value. Carried to the wave's report as a question for the owner.
+  if (married) {
+    addEvent(world, {
+      week: world.week,
+      type: 'life',
+      // ⚠ KEPT, for `MET_EVENT`'s own reason: a career reads its own life back seasons later and the
+      // week a marriage ended is not a line the album may be missing.
+      keep: true,
+      // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and there is no money in this wave
+      // at all (spec §2.4, his wedding ruling extended).
+      text: divorcedKeptRow(),
+      lifeKind: 'divorced',
+    })
+    raiseLifeBeat(world, 'divorced', over.id)
+    return
+  }
   const heardNow = listenHeardNow(world, 'ended')
   const frameNow: HeardRead | null = heardNow === true ? { voice: voiceOf(world), wants: over.wants } : null
   addEvent(world, {

@@ -44,7 +44,19 @@ declarations – strings included, each flagged DRAFT – and T2 carries the beh
 eleven sites the plan's own grep (`git grep "'ended'"`) would have missed: `MEMORY_EMOTION` owes
 every milestone a painted face, and `PSY_REGISTER_TOTAL` owes every shock kind a register.
 
-Still untouched: the latched branch at `rollEnds` (T2), the album's two-surface capture (T3), the
+**T2 has landed.** `rollEnds` reads `over.latchedWeek !== null` once and splits four things on it:
+the shock's kind, the card's kind, the kept row's sentence and its stamp. Measured, not claimed –
+a married and an unmarried ending on the SAME seed and week derive the identical key list, and the
+only stream either spends is `seed:life:ends:<week>`.
+
+⚠ ONE THING THE WAVE TAKES AWAY, and it is carried to the report as a question: the LISTEN focus
+goes quiet on this card. A break-up's heading has a legible arm (`ENDED_HEADING_HEARD`, 16 cells)
+on a week the family is paying a psychologist whose year is `'listen'`; `DIVORCED_HEADING` has two
+cells and no legible arm, so the divorce path does not derive the coin at all. Building one would
+mean drafting eight cells of the parent's own reading – a surface this wave was not asked for, and
+copy that is not an agent's to invent.
+
+Still untouched: the album's two-surface capture (T3), the
 diary (T4), the booth (T5), the bench (T6) and e2e (T7). The builder updates this section as tasks
 ship and fills §10's measured column from the bench, never predicted twice.
 
