@@ -94,20 +94,38 @@ function married(latchedWeek: number, sinceWeek: number): LoveEpisode {
   }
 }
 
-/** A married career with the weight ON, parked on a week the pregnancy hazard really lands on. */
+/** A married career with the weight ON, parked on a week the pregnancy hazard really lands on.
+ *
+ *  ⚠⚠ ONE WORLD PER SEED, NOT ONE PER WEEK – the bench's own repair (`b3da0f89`: «the fixture
+ *  built fifty-two worlds per seed … it now walks ONE world») applied to the fixture that taught
+ *  it, after CI measured the cost: the per-week rebuild was up to 572 `createWorld` calls per seed,
+ *  and the `w11-rearm` hunt blew the runner's 60 s default (green locally, red on 2 cores – the
+ *  four `onTaskUpdate` birpc errors in that log were the same wedge's shadow). The safety argument
+ *  is the bench's, verbatim: `rollPregnancy` mutates only on a hit and the draw is keyed on
+ *  (seed, week) alone – so a miss leaves the world byte-clean for the next week, and the FIRST
+ *  hit week per seed is identical to what the per-week shape found.
+ *
+ *  ⚠ ON A HIT THE WRONG `wants` REJECTS THE WHOLE SEED, not the week. That is not a shortcut: the
+ *  only filter any caller passes is the VOICE, which is a function of the seed alone – every later
+ *  week of the same seed would answer the same – and the hit has already mutated the world, so the
+ *  honest continuation is a fresh seed either way. */
 function expecting(base: string, wants: (world: WorldState) => boolean = () => true): WorldState {
   for (let i = 0; i < 300; i++) {
     const seed = i === 0 ? base : `${base}-${i}`
     const probe = createWorld(seed)
+    const from = weekAtAge(probe, 24)
     const to = weekAtAge(probe, 35)
-    for (let w = weekAtAge(probe, 24); w < to; w++) {
-      const world = createWorld(seed, undefined, `c-${seed}`, undefined, undefined, true)
-      world.season = []
+    const world = createWorld(seed, undefined, `c-${seed}`, undefined, undefined, true)
+    world.season = []
+    for (let w = from; w < to; w++) {
       world.week = w
       world.loveEpisodes = [married(w - 104, w - 52)]
       if (!pregnancyEligible(world)) continue
       rollPregnancy(world)
-      if (world.pregnancy !== null && wants(world)) return world
+      if (world.pregnancy !== null) {
+        if (wants(world)) return world
+        break
+      }
     }
   }
   throw new Error(`no seed from ${base} produced the pregnancy this case needs`)
