@@ -3,7 +3,7 @@ type: plan
 status: current
 area: delivery
 canonical: true
-last-reviewed: 2026-08-31
+last-reviewed: 2026-09-23
 ---
 
 # Now / next / later
@@ -204,6 +204,46 @@ price. Build cost: a persisted shadow (schema move), a worth discount in brandRe
 50.6 while the field's 26-50 band averages 57.7 – and composure does not decline, so work on it
 compounds. Shape: a staff seat like the masseur's, one focus per year chosen by the player, bounded
 gains, morale-layer adjacency.
+
+**The private-life layer's parked list (consolidated 23.09 on his «в беклог надо закинуть, и
+заодно проверь что мы еще откладывали до этого, чтобы не потерялось»; sources are the dated
+entries of 22–23.09 unless named).** The layer itself is DONE – waves 3–12 shipped all nine steps
+plus the parting – and everything below is a door he closed with a date, kept visible so a
+playtest can reopen it:
+
+- **Priced funeral answers** – three instead of one, his words and his prices, «если плейтесты
+  попросят выбора» (23.09, the weight's word-questions).
+- **Named kin off live-kin facts** – «именования пока не будет» (22.09 q4, refreshed 23.09); the
+  fridge-pool grandmother collision stands until licensed, its own later work.
+- **Divorce money as claim-beats** – «beats, never accounting» (the-wedding-and-the-children §6.3;
+  the 23.09 ruling kept v1 at zero cents, the wedding's «никто и нисколько» extended).
+- **The divorce card's legible listen-arm** – eight heading cells of the parent's own reading, his
+  words; today the divorce path deliberately does not derive the listen coin (23.09 #2).
+- **A guaranteed fork-aftermath surface** – today the aftermath is occasional diary texture behind
+  the week-note coin (his review's own framing); a transient feed row on the fork's week is the
+  richer road (23.09).
+- **Per-kind life glyphs** – the standing 🤍-v1 deferral (T9's discriminator) refreshed 23.09 for
+  `'divorced'`: «не уверен, что будет везде корректно отображаться, давай пока так оставим».
+- **The unreachable-roof siblings** – the finding that collapsed the divorce her-line (a roof
+  variant cannot happen at 23+) also holds for the wave-11 expecting/bereavement roof cells, and
+  `ENDED_NOW_EVENT` still carries the «nobody in her life now» tail his review struck from the
+  divorce row – shipped wording, his eye before any churn (23.09 review).
+- **The college-mother middle floor** – one clause, UNDER DISCUSSION, unpacked twice
+  (the-parting §12).
+- **College as played content** – his 23.09 question (a walkable bracket like the prologue's, and
+  college successes registered in the history); the yearly `CollegeLeagueRun` with rounds is
+  persisted since v56, no bracket view and no album page exist – under discussion.
+- **Walker-life policy** – the bench worker does not marry or mother, so lived-door frequencies
+  are unmeasurable at bench grain; build «при первом бенче, которому понадобится» (22.09).
+- **Dynasty fairness walked arms** – the corridor's input measured identical on four temperaments,
+  the four full walked arms never run; close it the day anyone doubts (22.09).
+- **Tuning after play, not before** – «пока не крутим, надо играть» (23.09): `latchEndFactor`, the
+  divorce shock row and answer prices, the parting census at corpus-400 – all wait for the
+  playtest, and he watches the mirrored prices himself.
+- **The install ceiling** – 17 KiB under 16384 after wave 12; the raise is his «по необходимости»,
+  and the first art round hits it.
+- **Boys / an ATP branch** – out of the layer, game-scale (22.09: the birth key is reserved in
+  writing).
 
 - **The album needs a different SHAPE, not a longer one** – «Текущий слайдер из 7 не подходит для
   объемной и насыщенной карьеры, я хочу концептуально другое». The seven-polaroid pager was sized for
