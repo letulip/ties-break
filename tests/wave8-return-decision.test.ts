@@ -445,6 +445,13 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         // comeback's success stays emergent and measured.
         'childSmallWeeks',
         'decisionWeeksAfterBirth',
+        // ⚠ RE-AIMED 23.09 BY WAVE 11's REVIEW – fourth time this guard has asked its question,
+        // fourth time the answer is no. `firstTrimesterWeeks` is the CAP on the pause (the builder's
+        // question 1: a 12-week window put her last event at pregnancy week 20, against the
+        // research), read in exactly one place beside `playsOnWeeks` at the announcement. It prices
+        // a CALENDAR – when the entries close – and no probability anywhere; the comeback's success
+        // stays emergent and measured.
+        'firstTrimesterWeeks',
         'joyBond',
         'perWeekByAge',
         'playsOnWeeks',
