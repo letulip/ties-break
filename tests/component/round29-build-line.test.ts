@@ -209,7 +209,11 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // was moved by that wave with its full seven-part move, never by this line's item. ⭐ AND IT IS
     // RE-STAMPED IN THE SCHEMA'S **OWN** COMMIT AGAIN, which is what the three-waves-running note
     // below this block asked for.
-    expect(SAVE_SCHEMA_VERSION).toBe(87)
+    // ⚠ AND AGAIN AT v88 (23.09, wave 12 T1 – the parting), NOT WEAKENED, and this is the first
+    // re-stamp of this cell for a version that appends NO KEY: v88 is three union widenings and an
+    // empty migration step. 88 was moved by that wave with its full move, never by this line's item,
+    // and the cell was re-stamped in the schema's own gate as the note asks.
+    expect(SAVE_SCHEMA_VERSION).toBe(88)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {
