@@ -73,6 +73,17 @@ the clash suite's fixture (the default paper now carries the real two-shoot WATC
 new cases including the order pin and the stated drift. The ledger line and the dialog are
 untouched: both always quoted `shootCancelCents`, so they follow the arithmetic.
 
-⚠ Found beside it, not repaired here: `tools/ad-shoot-bench.ts` crashes at startup on today's
-engine – pre-existing rot (it typechecks; nobody ran it since the ad system moved underneath),
-its repair spun off as its own task. This spec's sweep lives in its own tool for that reason.
+⚠ Found beside it and – on his word («и карточку с гнилью бенча туда же докинь … иначе потеряем»)
+– REPAIRED IN THIS SAME BRANCH: `tools/ad-shoot-bench.ts` crashed at startup on today's engine.
+Two rots, both older than this fix: the signed paper was read as «the first ad row», which the
+portfolio and the sixteen-year letters made a different, unsigned letter (`shootWeeks` exists only
+on a signed paper – the same field this whole spec is about); and §2's construction counters still
+called round-29-P9's winter window a violation – on the first repaired run they read 20,079
+«off-season» and 7,539 «adjacent» on 20,000 points, every one the winter season working as ruled.
+Re-run green end to end: §1 measures again (the racing arm reads ~-6 condition per shoot week),
+§2 reads ZERO violations on the P9-aware counters – and 100.0% of 40,000 signature landings fall
+in the winter window, which also means a SIGNATURE shoot practically cannot clash with a
+tournament any more (winter holds no entries); the clash machinery now serves moved shoots and
+old papers. An observation for the owner, not a change. This spec's sweep still lives in its own
+`tools/cancel-share-bench.ts`: the legacy harness walks careers, and the arithmetic under test
+here is signature-time paper arithmetic.

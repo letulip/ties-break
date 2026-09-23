@@ -38,7 +38,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
-import { adWritesAt, chooseShootWeeks } from '../src/engine/offers'
+import { adWritesAt, chooseShootWeeks, isWinterShootWeek } from '../src/engine/offers'
 import { ECONOMY } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
@@ -161,7 +161,14 @@ for (const racing of [false, true] as const) {
     const refusedWorld = structuredClone(base)
     acceptOffer(signedWorld, offer.id)
     declineOffer(refusedWorld, offer.id)
-    const shoots = (signedWorld.offers.find((o: Offer) => o.kind === 'ad')!.terms as AdOfferTerms).shootWeeks!
+    // ⚠⚠ REPAIRED 23.09 – BY ID, NEVER «THE FIRST AD ROW». Since the portfolio (round 29 part four
+    // P6) and the sixteen-year letters (round 41 #15) a career at the probe week can already hold
+    // OLDER ad letters, and `shootWeeks` exists only on a SIGNED paper (the signature writes it) –
+    // so the first-row read crashed on an unsigned neighbour: `shoots` came back undefined and
+    // `.map` threw. The paper this bench measures is the one it just accepted, by its id. The rot
+    // sat unnoticed because check:tools TYPECHECKS this file and nothing runs it; found 23.09 by
+    // the cancel-share fix trying to add a section here.
+    const shoots = (signedWorld.offers.find((o: Offer) => o.id === offer.id)!.terms as AdOfferTerms).shootWeeks!
     const rel = shoots.map((w) => w - signedWorld.week)
 
     const signed = walkTerm(signedWorld, racing)
@@ -169,9 +176,14 @@ for (const racing of [false, true] as const) {
     const delta = signed.cond.map((v, i) => v - refused.cond[i])
     // The introduction at a shoot week: the trajectory step across it. The FIRST is read before any
     // divergence exists; the second can carry drift (injury paths differ once condition does).
+    // ⚠ REPAIRED 23.09 with the same rot: today's letter can be a MULTI-YEAR paper (the ladder's
+    // upper bands), whose later shoots fall past the 52 weeks this bench walks – a shoot outside
+    // the walked window is skipped, never indexed off the end of the trajectory.
+    const inWindow = rel.filter((r) => r >= 1 && r < signed.cond.length)
+    if (inWindow.length === 0) continue
     const at = (r: number) => delta[r] - delta[r - 1]
-    const dFirst = at(rel[0])
-    const dSecond = rel.length > 1 ? at(rel[1]) : 0
+    const dFirst = at(inWindow[0])
+    const dSecond = inWindow.length > 1 ? at(inWindow[1]) : 0
     const dEnd = delta[delta.length - 1]
     // WHY a shoot read the way it did, off the REFUSED twin's own week (uncontaminated by the
     // shoot): 'deficit' = the twin recovered that week, so the signed arm forfeited it (the bite);
@@ -182,7 +194,7 @@ for (const racing of [false, true] as const) {
       if (refused.cond[r - 1] >= 100 && gain === 0) return 'ceiling'
       return gain > 0 ? 'deficit' : 'trip'
     }
-    const tags = rel.map((r) => why(r))
+    const tags = inWindow.map((r) => why(r))
     sumFirst += dFirst
     sumSecond += dSecond
     sumEnd += dEnd
@@ -202,11 +214,21 @@ for (const racing of [false, true] as const) {
 }
 
 console.log('\n§2  THE CONSTRUCTION, SWEPT WIDE - 20,000 signature points')
-let offSeason = 0
-let adjacent = 0
+// ⚠⚠ RE-AIMED 23.09 WITH THE RUNTIME REPAIR, NOT WEAKENED: the old counters called P9's own design
+// a violation. Round 29 part four P9 overturned the off-season skip – «the winter IS the shoot
+// season now» – so the signature deliberately books the winter window and STACKS inside it
+// (adjacency allowed there; `shootMoveTarget`'s comment carries the ruling). On the first repaired
+// run the stale counters read 20,079 «off-season» and 7,539 «adjacent» on 20,000 points – every
+// one of them the winter window working as ruled. What remains ILLEGAL, and is counted as such
+// below: an off-season landing OUTSIDE the winter window, an IN-SEASON adjacency, a week before
+// the lead, a week outside the term, a short draw. The winter share is printed as information.
+let winter = 0
+let offSeasonIllegal = 0
+let adjacentInSeason = 0
 let beforeLead = 0
 let outsideTerm = 0
 let short = 0
+let points = 0
 let minGap = Infinity
 const gaps: number[] = []
 for (let s = 0; s < 200; s++) {
@@ -214,13 +236,15 @@ for (let s = 0; s < 200; s++) {
     const w = chooseShootWeeks(`ad-shoot-c-${s}`, sw, TERM, WATCH.shootWeeksPerTerm, AD.shootLeadWeeks)
     if (w.length !== WATCH.shootWeeksPerTerm) short++
     for (const x of w) {
-      if (isOffSeasonWeek(x)) offSeason++
+      points++
+      if (isWinterShootWeek(x)) winter++
+      else if (isOffSeasonWeek(x)) offSeasonIllegal++
       if (x < sw + AD.shootLeadWeeks) beforeLead++
       if (x > sw + TERM - 1) outsideTerm++
     }
     if (w.length === 2) {
       const gap = Math.abs(w[0] - w[1])
-      if (gap <= 1) adjacent++
+      if (gap <= 1 && !isWinterShootWeek(w[0]) && !isWinterShootWeek(w[1])) adjacentInSeason++
       minGap = Math.min(minGap, gap)
       gaps.push(gap)
     }
@@ -228,6 +252,10 @@ for (let s = 0; s < 200; s++) {
 }
 gaps.sort((a, b) => a - b)
 console.log(
-  `   off-season ${offSeason} · adjacent ${adjacent} · before lead ${beforeLead} · outside term ${outsideTerm} · short draws ${short}`,
+  `   VIOLATIONS: off-season outside winter ${offSeasonIllegal} · adjacent in season ${adjacentInSeason}` +
+    ` · before lead ${beforeLead} · outside term ${outsideTerm} · short draws ${short}   (any number but 0 is a defect)`,
+)
+console.log(
+  `   the winter window (P9, designed): ${winter} of ${points} landings (${((100 * winter) / points).toFixed(1)}%) – the shoot season stacks there`,
 )
 console.log(`   spacing: min ${minGap}, median ${gaps[Math.floor(gaps.length / 2)]}, max ${gaps[gaps.length - 1]}`)

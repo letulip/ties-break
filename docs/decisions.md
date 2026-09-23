@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 129 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 130 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -44,7 +44,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
-| simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
+| simulation-and-balance | 6 | [THE BENCH ROT RIDES THE SAME BRANCH: «ИНАЧЕ ПОТЕРЯЕМ»](#23092026--the-bench-rot-rides-the-same-branch-иначе-потеряем) | 2026-09-23 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -5211,3 +5211,16 @@ head; the repeat-cancel drift and the no-list fallback are stated law, pinned in
 crashes at startup – nobody ran it since the ad system moved underneath it across rounds 34–44).
 Spun off as its own task rather than repaired under this fix; the cancel-share sweep lives in its
 own `tools/cancel-share-bench.ts`.
+
+## 23.09.2026 – THE BENCH ROT RIDES THE SAME BRANCH: «ИНАЧЕ ПОТЕРЯЕМ»
+
+On the spun-off card for `tools/ad-shoot-bench.ts` he ruled it back into the fix branch – «и
+карточку с гнилью бенча туда же докинь пожалуйста в эту ветку всё таки, иначе потеряем» – and the
+card was dismissed as superseded. Two rots repaired, both pre-dating the cancel-share fix: the
+signed paper read as «the first ad row» (the portfolio and the sixteen-year letters put unsigned
+letters in front of it), and §2's counters still policing the pre-P9 law (20,079 «off-season» /
+7,539 «adjacent» on the first repaired run – all of it the winter window working as ruled).
+Re-run green: §1's racing arm measures ~-6 condition per shoot week again; §2 reads zero
+violations P9-aware, with 100.0% of signature landings in the winter window – recorded in
+`the-cancel-share-2026-09.md` §4 with the observation that a signature shoot now practically
+cannot clash with a tournament (winter holds no entries), which is his to weigh, not a defect.
