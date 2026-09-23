@@ -84,9 +84,10 @@ licence, the window and the once-ness are untouched, which is §6's whole claim:
 divorce stays hers because openness already decided whether the world knew. `exposureEventsOf` is
 byte-identical across the latch, now proved with a posed standing and a positive control.
 
-Still untouched: the
-diary (T4), the booth (T5), the bench (T6) and e2e (T7). The builder updates this section as tasks
-ship and fills §10's measured column from the bench, never predicted twice.
+**T6 has landed and §10 is filled** – `npm run bench:wedding` sections (h) and (i), both arms run,
+every number measured.
+
+Still untouched: **e2e and the phone law (T7), and the strings table (T8).**
 
 ## 1. One sentence of design
 
@@ -206,17 +207,40 @@ writes every measured number into THIS table – deviations flagged, never smoot
 wedding-bench gains a parting census (its own section, walked corpus, CAP as the bench already
 sets it):
 
+Run: `npm run bench:wedding`, section (h), 3 presets x 56 seeds = 168 careers, 912 weeks, policy
+`player`. 88 of the 168 reach a latch; 353.0 latched years; 22 marriages end inside the walk.
+
 | # | claim | predicted | measured |
 | --- | --- | --- | --- |
-| 1 | latched endings per 100 latched-years | unchanged 4–8 – same dice, words only; a moved number is a defect | |
-| 2 | share of latched careers that meet a divorce before the ending | coarse: 20–40% over the corpus's married tails (confidence low, the measurement is the point) | |
-| 3 | of divorces, share the world had known of (`publicWeek != null` at the end week) | direction only: open above private, known band near-full – the leak's own multipliers | |
-| 4 | of known-of divorces, share the booth AIRS before the career ends | a majority but not all – needs a big-stage week inside the `stillNews` window | |
-| 5 | remarriage: share of divorced careers that latch again | small – the arrival hazard's age term; 0% at corpus size is a finding to read, not a shrug | |
+| 1 | latched endings per 100 latched-years | unchanged 4–8 – same dice, words only; a moved number is a defect | **6.23** (22 over 353.0 latched years) – ✅ inside wave 7's corridor and the same number on both arms |
+| 2 | share of latched careers that meet a divorce before the ending | coarse: 20–40% over the corpus's married tails (confidence low, the measurement is the point) | **23.9%** (21/88) – inside the band, at its lower edge |
+| 3 | of divorces, share the world had known of (`publicWeek != null` at the end week) | direction only: open above private, known band near-full – the leak's own multipliers | **63.6%** (14/22) · **open 90.0%** (9/10) vs **private 41.7%** (5/12) – the direction holds, and the gap is wide |
+| 4 | of known-of divorces, share the booth AIRS before the career ends | a majority but not all – needs a big-stage week inside the `stillNews` window | **85.7%** (12/14) – a majority, and not all |
+| 5 | remarriage: share of divorced careers that latch again | small – the arrival hazard's age term; 0% at corpus size is a finding to read, not a shrug | **4.8%** (1/21) – small, and non-zero at n=21 |
 
-The shock arm: the `divorce` row neutralised to breakup's numbers (reverse edit, the bench prints
-which arm ran – the wave-7 idiom); on shared seeds the trough deepens by the table delta and the
-dice disagree nowhere.
+The shock arm, section (i): the `divorce` row neutralised to breakup's numbers by reverse edit (the
+bench header prints which arm ran – the wave-7 idiom). **Both halves came out as predicted.**
+
+| | shipped (−27/−42) | control (−22/−34) | delta |
+| --- | --- | --- | --- |
+| drop from the week before, median | 38.7 | 30.7 | **8.0** |
+| the trough itself, median | 38.1 | 46.1 | **8.0** |
+| weeks back inside `baseline − 2`, median | 7 | 5 | +2 |
+| dice fingerprint (22 weeks, sha) | `9bde5b5968c53677` | `9bde5b5968c53677` | **identical** |
+
+⭐ **8.0 is the table delta on the INTENSE column exactly** (−42 against −34), on both measures, which
+says the careers that divorce in this corpus are reading that column – the shock is priced after the
+draw, so the same seeds divorce in the same 22 weeks whatever the row says, and rows 1–5 are
+byte-identical on the two arms. ⭐ And the duration moves with the depth and with nothing else: 7
+weeks against 5, out of the standing weekly return, with no second rate anywhere – which is §3's
+«longer is depth» as an arithmetic rather than as a sentence.
+
+⚠ ONE NUMBER IN THIS TABLE IS NOT WHAT THE ROW SAYS AND THAT IS THE ARITHMETIC RATHER THAN A
+DEFECT: the median drop is 38.7 where the row is −27/−42. The shock is one summand of a week that
+also carries the standing perturbation, so the DELTA between the arms is the row's own contribution
+and the absolute is the week's. ⚠ The first draft of the bench measured the trough against her
+spirit ON the ending week, which `accrueSpirit` had already moved – it printed «median 0.0» and
+read as «the row buys nothing». The reference point is the week BEFORE; the note is at the constant.
 
 ## 11. Boundaries and non-goals
 

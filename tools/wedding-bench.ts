@@ -25,6 +25,16 @@
 //   (e)  the engagement-cancel rate (builder 1's deviation #5 – its measured frequency).
 //   (f)  the spouse-view realised rate and the occasion mix (builder 2 shipped deterministic
 //        occasions with no hazard constant; this says whether that is chatty, quiet, or right).
+//   (h)  ⭐ THE PARTING CENSUS (wave 12 T6, docs/specs/the-parting-2026-09.md §10) – the spec's own
+//        five rows, off the SAME walked corpus as (a)–(f) rather than a second one, because the
+//        wave adds no dice and a separate corpus would only add noise to a number it cannot move.
+//        Row 1 is the FALSIFIER: the endings-per-100-latched-years figure must reproduce wave 7's
+//        4–8 corridor, and a moved number there is a defect and not a finding.
+//   (i)  ⭐ THE SHOCK ARM – the trough after a divorce, and the control is a REVERSE EDIT exactly as
+//        (b)'s is: run once shipped, then set `ECONOMY.spirit.shock.divorce` to the breakup row
+//        (−22/−34) in economy.ts, run again, restore. The header prints the live row so each log
+//        self-describes which arm it is. ⚠ ON SHARED SEEDS THE DICE MUST DISAGREE NOWHERE – the weeks
+//        a divorce lands on are the same in both arms, because the shock is priced AFTER the draw.
 //
 // ⚠⚠ THE WALK IS THE PROVEN RECIPE AND NOT A NEW ONE (round 44's own lesson, four probes dead on
 // bare `tickWeek`): `openCareer` + `stepCareerWeek` + two-doors' answer-whatever-is-open shape –
@@ -65,10 +75,11 @@ import {
   SPOUSE_VIEW_OCCASIONS,
   type WorldState,
 } from '../src/engine/world'
+import { createHash } from 'node:crypto'
 import { ECONOMY } from '../src/engine/economy'
 import { resumeMain } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
-import type { Temperament } from '../src/engine/spirit'
+import { temperamentOpenness, type Temperament } from '../src/engine/spirit'
 import type { LifeBeatKind, LoveEpisode } from '../src/shared/protocol'
 
 const argOf = (name: string, fallback: number): number => {
@@ -123,7 +134,31 @@ interface WeddingOutcome {
   eligibleWeeks: number
   spouseRows: { week: number; occasion: string }[]
   byKind: Record<LifeBeatKind, number>
+  /** ⭐ v88 (wave 12 T6) – one mark per marriage that ENDED inside the walk. Every field is a pure
+   *  read of a row the engine already wrote, except the trough, which is sampled week by week
+   *  because `spirit` is not kept per week anywhere. */
+  divorces: DivorceMark[]
 }
+
+interface DivorceMark {
+  week: number
+  age: number
+  /** did the world KNOW of them when it ended (`publicWeek !== null`)? The leak's own outcome. */
+  publicAtEnd: boolean
+  /** did the booth AIR it before the walk ended (`airedEndedWeek !== null`)? */
+  aired: boolean
+  /** her spirit on the week it landed, before `accrueSpirit` runs on the shock. */
+  spiritAt: number
+  /** the LOWEST spirit seen inside `SHOCK_WINDOW` weeks of it – the trough the shock row buys. */
+  trough: number
+  /** the first week at or after the ending on which spirit is back inside `shockClearWithin` of her
+   *  own baseline, or null when the walk ended first. */
+  clearedAfter: number | null
+}
+
+/** How long after a divorce the arm watches her. ⚠ Wider than the recovery the numbers predict
+ *  (~11 weeks at intense), so a trough that arrives late is still seen rather than clipped. */
+const SHOCK_WINDOW = 40
 
 /** The questions a walked career answers on its way past them – two-doors' own list, tallied. */
 function answerWhateverIsOpen(world: WorldState, byKind: Record<LifeBeatKind, number>): void {
@@ -158,8 +193,17 @@ function runCareer(preset: Preset, index: number, policy: Policy): WeddingOutcom
     eligibleWeeks: 0,
     spouseRows: [],
     byKind: emptyDrainCounts(),
+    divorces: [],
   }
   const seenLatch = new Set<string>()
+  const seenDivorce = new Set<string>()
+  // ⚠⚠ HER SPIRIT AS THE WEEK OPENED, AND THE FIRST DRAFT DID NOT HAVE IT – kept as a note because
+  // the number it produced looked perfectly reasonable and was meaningless. The hooks below run
+  // AFTER `stepCareerWeek`, so `world.spirit` on the tick a divorce is first seen has ALREADY had
+  // `accrueSpirit` apply the shock: measured against it the trough was «median 0.0, max 0.3» on 22
+  // divorces, which reads as «the shock row buys nothing» and is in fact «the reference point is on
+  // the wrong side of the arithmetic». What the arm has to compare with is the week BEFORE.
+  let spiritLastWeek = world.spirit ?? ECONOMY.spirit.baseline
   let engagedSeen = 0
 
   for (let i = 0; i < WALK_WEEKS; i++) {
@@ -190,6 +234,33 @@ function runCareer(preset: Preset, index: number, policy: Policy): WeddingOutcom
         l.bondSeasonAfter = world.bond ?? ECONOMY.bond.start
       }
     }
+    // ⭐ v88 (wave 12 T6) – A MARRIAGE ENDED. Captured on the tick it is first seen, so `spiritAt`
+    // is the week's own reading rather than a number reconstructed later.
+    for (const e of loveEpisodesOf(world)) {
+      if (e.latchedWeek === null || e.endedWeek === null || seenDivorce.has(e.id)) continue
+      seenDivorce.add(e.id)
+      out.divorces.push({
+        week: e.endedWeek,
+        age: kidAgeExact(e.endedWeek, world.profile.birthMonth, world.profile.birthDay),
+        publicAtEnd: e.publicWeek !== null,
+        aired: e.airedEndedWeek !== null,
+        // ⚠ THE WEEK BEFORE, never this one – see `spiritLastWeek`'s own note.
+        spiritAt: spiritLastWeek,
+        trough: world.spirit ?? ECONOMY.spirit.baseline,
+        clearedAfter: null,
+      })
+    }
+    // ...and the weeks after it, sampled: the trough is what the shock row actually buys, and
+    // `clearedAfter` is the duration that falls out of the standing weekly return with no curve.
+    for (const d of out.divorces) {
+      if (world.week > d.week + SHOCK_WINDOW) continue
+      const spirit = world.spirit ?? ECONOMY.spirit.baseline
+      if (spirit < d.trough) d.trough = spirit
+      if (d.clearedAfter === null && world.week > d.week && spirit >= ECONOMY.spirit.baseline - ECONOMY.spirit.shockClearWithin) {
+        d.clearedAfter = world.week - d.week
+      }
+    }
+    spiritLastWeek = world.spirit ?? ECONOMY.spirit.baseline
     if (world.ending !== null) break
   }
 
@@ -197,6 +268,13 @@ function runCareer(preset: Preset, index: number, policy: Policy): WeddingOutcom
   out.walkEndWeek = world.week
   out.endAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
   out.episodes = loveEpisodesOf(world).map((e) => ({ ...e }))
+  // ⚠ RE-READ AT THE END, because the booth may air an ending WEEKS after it lands (the news window)
+  // and the capture above is taken on the tick the ending is first seen. `publicAtEnd` is NOT
+  // re-read: it is a question about the week it ended, which is what the spec's row 3 asks.
+  for (const d of out.divorces) {
+    const row = loveEpisodesOf(world).find((e) => e.endedWeek === d.week && e.latchedWeek !== null)
+    if (row !== undefined) d.aired = row.airedEndedWeek !== null
+  }
   out.spouseRows = lifeLogOf(world)
     .filter((r) => r.kind === 'spouse-view')
     .map((r) => ({ week: r.week, occasion: r.detail }))
@@ -391,6 +469,16 @@ function main(): void {
     `  latchEndFactor THIS RUN: ${wed.latchEndFactor}  ` +
       `${(wed.latchEndFactor as number) === 1 ? '<- NEUTRALISED CONTROL ARM (reverse edit)' : '(shipped draft)'}`,
   )
+  // ⭐ v88 (wave 12 T6) – WHICH SHOCK ARM THIS LOG IS, printed the way (b)'s factor is, so a log
+  // read a month later still says which tree produced it. The comparison is with the BREAKUP row,
+  // because that is what the control arm sets this one to.
+  const shock = ECONOMY.spirit.shock
+  console.log(
+    `  divorce shock THIS RUN: ${shock.divorce?.steady}/${shock.divorce?.intense}  ` +
+      `${shock.divorce?.steady === shock.breakup?.steady && shock.divorce?.intense === shock.breakup?.intense
+        ? '<- NEUTRALISED TO THE BREAKUP ROW (reverse edit control arm)'
+        : `(shipped draft; breakup is ${shock.breakup?.steady}/${shock.breakup?.intense})`}`,
+  )
   console.log(
     `  bond deltas: engaged +${wed.blessBond}/${wed.distanceBond}/${wed.opposeBond} · ` +
       `spouse-view +${wed.spouseViewHearBond}/${wed.spouseViewLevelBond}/${wed.spouseViewBrushBond} · ` +
@@ -582,6 +670,99 @@ function main(): void {
   for (const occ of SPOUSE_VIEW_OCCASIONS) {
     const n = spouseRows.filter((r) => r.occasion === occ).length
     console.log(`    ${pad(occ, 16)}${padL(String(n), 6)}${padL(pct(n, spouseRows.length), 9)}`)
+  }
+  console.log('')
+
+  // ===============================================================================================
+  // (h) THE PARTING CENSUS – the spec's §10, five rows, off the SAME corpus
+  // ===============================================================================================
+  console.log('  ── (h) THE PARTING CENSUS (wave 12 T6, the-parting-2026-09.md §10) ──')
+  console.log('')
+
+  const divorces = census.flatMap((o) => o.divorces)
+  const latchedCareers = census.filter((o) => o.episodes.some((e) => e.latchedWeek !== null))
+  const divorcedCareers = census.filter((o) => o.divorces.length > 0)
+
+  // ROW 1 – THE FALSIFIER. Endings per 100 latched-years, which must reproduce wave 7's corridor:
+  // this wave changes ZERO draws, so a moved number here is a defect and not a finding.
+  // ⚠ `latchedWeeksTotal` IS SECTION (f)'s OWN FOLD, reused rather than re-summed: it already counts
+  // `endedWeek ?? walkEndWeek` minus the latch on every married row, which is exactly the
+  // denominator «latched-years» means. A second fold here would be the two-readings defect.
+  const partingYears = latchedWeeksTotal / WEEKS_PER_YEAR
+  const per100 = partingYears === 0 ? 0 : (100 * divorces.length) / partingYears
+  console.log(
+    `  1. latched endings per 100 latched-years: ${per100.toFixed(2)}  ` +
+      `(${divorces.length} endings over ${partingYears.toFixed(1)} latched years)`,
+  )
+  console.log(
+    `     predicted UNCHANGED 4–8 – same dice, words only. ` +
+      `${per100 >= 4 && per100 <= 8 ? '✅ inside the corridor' : '⚠ OUTSIDE – read this as a defect, not a finding'}`,
+  )
+
+  // ROW 2 – the share of latched careers that meet a divorce before the ending.
+  console.log(
+    `  2. latched careers that meet a divorce: ${divorcedCareers.length}/${latchedCareers.length} ` +
+      `${pct(divorcedCareers.length, latchedCareers.length)}   (predicted coarse 20–40%, confidence LOW)`,
+  )
+
+  // ROW 3 – of divorces, the share the world had known of, split by her openness (the leak's axis).
+  const known = divorces.filter((d) => d.publicAtEnd)
+  console.log(`  3. of those divorces, the world had known of them: ${known.length}/${divorces.length} ${pct(known.length, divorces.length)}`)
+  for (const band of ['open', 'private'] as const) {
+    const arm = census.filter((o) => temperamentOpenness(o.temperament) === band).flatMap((o) => o.divorces)
+    const armKnown = arm.filter((d) => d.publicAtEnd)
+    console.log(`     ${pad(band, 9)}${padL(`${armKnown.length}/${arm.length}`, 9)}${padL(pct(armKnown.length, arm.length), 9)}`)
+  }
+  console.log('     predicted DIRECTION ONLY: open above private – the leak\'s own multipliers, inherited.')
+
+  // ROW 4 – of KNOWN-of divorces, the share the booth aired before the career ended.
+  const aired = known.filter((d) => d.aired)
+  console.log(
+    `  4. of the known-of ones, the booth AIRED: ${aired.length}/${known.length} ${pct(aired.length, known.length)}   ` +
+      `(predicted a majority but not all – it needs a big-stage week inside the news window)`,
+  )
+
+  // ROW 5 – remarriage.
+  const remarried = divorcedCareers.filter((o) => o.episodes.filter((e) => e.latchedWeek !== null).length > 1)
+  console.log(
+    `  5. divorced careers that latch AGAIN: ${remarried.length}/${divorcedCareers.length} ` +
+      `${pct(remarried.length, divorcedCareers.length)}   (predicted small; 0% at this corpus size is a finding to READ, not a shrug)`,
+  )
+  console.log('')
+
+  // ===============================================================================================
+  // (i) THE SHOCK ARM – the trough, and the dice that must not move
+  // ===============================================================================================
+  console.log('  ── (i) THE SHOCK ARM: what the `divorce` row buys, and where the dice must agree ──')
+  console.log('')
+  if (divorces.length === 0) {
+    console.log('  no divorce landed in this corpus – nothing to measure. Raise --seeds or --walk.')
+  } else {
+    // ⚠ THE DROP IS «THE WEEK BEFORE MINUS THE TROUGH», which is what the shock row actually buys.
+    const drops = divorces.map((d) => d.spiritAt - d.trough).sort((a, b) => a - b)
+    const troughs = divorces.map((d) => d.trough).sort((a, b) => a - b)
+    const cleared = divorces.filter((d) => d.clearedAfter !== null).map((d) => d.clearedAfter as number).sort((a, b) => a - b)
+    console.log(
+      `  ${divorces.length} divorces · DROP from the week before: median ${median(drops).toFixed(1)} · ` +
+        `max ${drops[drops.length - 1].toFixed(1)}   (the row says ${shock.divorce?.steady}/${shock.divorce?.intense})`,
+    )
+    console.log(
+      `  the trough itself: median ${median(troughs).toFixed(1)} · lowest ${troughs[0].toFixed(1)} ` +
+        `(baseline ${ECONOMY.spirit.baseline})`,
+    )
+    console.log(
+      `  weeks back inside baseline − ${ECONOMY.spirit.shockClearWithin}: ` +
+        `${cleared.length}/${divorces.length} cleared inside ${SHOCK_WINDOW} wks, median ${cleared.length === 0 ? '–' : median(cleared).toFixed(0)}`,
+    )
+    // ⚠⚠ THE WEEKS THEMSELVES ARE THE HALF THAT MUST NOT MOVE between the two arms, and they are
+    // printed rather than asserted because the comparison is across two RUNS of this bench: the
+    // shock is priced AFTER the draw, so the same seeds must divorce in the same weeks whatever the
+    // row says. A moved week here is the wave's zero-draws law broken.
+    const fingerprint = divorces.map((d) => `${d.week}`).join(',')
+    console.log(`  DICE FINGERPRINT (the weeks divorces landed on, in corpus order):`)
+    console.log(`    ${fingerprint.length > 200 ? `${fingerprint.slice(0, 200)}… (${divorces.length} weeks)` : fingerprint}`)
+    console.log(`    sha of the full list: ${createHash('sha256').update(fingerprint).digest('hex').slice(0, 16)}`)
+    console.log('    ⚠ this line must be IDENTICAL on the shipped arm and the neutralised one.')
   }
   console.log('')
 
