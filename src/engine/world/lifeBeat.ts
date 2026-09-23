@@ -6022,6 +6022,26 @@ export function rollEnds(world: WorldState): void {
       text: divorcedKeptRow(),
       lifeKind: 'divorced',
     })
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T3) – AND THE ALBUM KEEPS A LINE, on his «можно» of 23.09.
+    // `landWedding`'s two-surface idiom exactly: `fireMilestone` keeps the line past every prune and
+    // `captureMilestone` gives the scroll its row, both idempotent per `divorce:<episodeId>` – so a
+    // SECOND marriage's divorce on a later row captures its own line, which is the 11.09 re-shape
+    // inherited from the wedding this closes.
+    //
+    // ⚠⚠ THIS IS THE ONE WEEK IN THE GAME THAT WRITES BOTH A `'life'` ROW AND A `'milestone'` ROW,
+    // and it is the spec asking for both rather than a duplicate. The two channels answer different
+    // questions – `landBirth`'s own note draws the line: `'life'` is NEWS about her life, `'milestone'`
+    // is what the family KEEPS – and an ending has always had the first while a wedding has always
+    // had the second. A marriage ending is both at once, which is exactly why it needed a wave. ⚠ SO
+    // THE TWO SENTENCES ARE WRITTEN NOT TO STUTTER: the kept row says what this week did, and the
+    // album line says what the career will read back later. Flagged in the wave's report, because
+    // «two rows on one week» is a thing the owner sees on a screen and may not want.
+    //
+    // ⚠ THE ALBUM LINE SETTLES NOTHING – §5's law and the bereavement precedent: no fault, no
+    // duration, no name, no money. It records that the marriage ended and that the family was
+    // somewhere when it did.
+    fireMilestone(world, `divorce:${over.id}`, 'The marriage ended. Nothing about it was decided in this house, and the phone still rang.')
+    captureMilestone(world, { type: 'divorce', week: world.week, kind: over.id })
     raiseLifeBeat(world, 'divorced', over.id)
     return
   }

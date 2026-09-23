@@ -102,6 +102,7 @@ import {
   kidAgeExact,
   landWedding,
   lifeBeatOptionsFor,
+  buildScroll,
   lifeLogOf,
   pendingLifeBeat,
   rollEnds,
@@ -168,10 +169,15 @@ function careerAt(seed: string, week: number, ...rows: LoveEpisode[]): WorldStat
  *  it would be measuring a threshold the engine does not use. */
 function firstLatchedHit(world: WorldState, from: number): number {
   const hazard = endsHazardFor(expressedTemperamentOf(world)) * WEDDING.latchEndFactor
-  for (let w = from; w < from + 4000; w++) {
+  // ⚠ THE WINDOW IS WIDE BECAUSE THE EVENT IS RARE, and the first draft's 4,000 weeks was measured
+  // too narrow – `w12-album-0` found no hit and threw. At `endsPerWeek x endsMult x latchEndFactor`
+  // the weekly chance is ~0.0004..0.0018, so a four-thousand-week search misses a real seed roughly
+  // one time in five. 40,000 is the wedding suite's own habit (it searches 200,000) and costs
+  // milliseconds, because nothing is being built – this is arithmetic on a key.
+  for (let w = from; w < from + 40000; w++) {
     if (rngFromSeed(`${world.seed}:life:ends:${w}`)() < hazard) return w
   }
-  throw new Error('no latched ending inside 4000 weeks')
+  throw new Error('no latched ending inside 40000 weeks')
 }
 
 /** A married career parked ONE week before its marriage ends, with the `'met'` receipt on record –
@@ -231,7 +237,11 @@ describe('wave 12 T2 A – a latched ending is a divorce', () => {
     const before = world.events.length
     rollEnds(world)
     const rows = world.events.slice(before)
-    expect(rows, 'ONE kept row and no second event').toHaveLength(1)
+    // ⚠ RE-AIMED BY T3, NOT WEAKENED: this said «ONE kept row and no second event», which was true
+    // of T2 and is the thing T3 changes – the album's own milestone row lands on the same week (his
+    // «можно» of 23.09). What this case is about is the `'life'` row, so it now names its position
+    // and §F's own case owns the pair. A THIRD row appearing still reddens here.
+    expect(rows, 'the news row and the album\u2019s – and nothing else').toHaveLength(2)
     expect(rows[0].type).toBe('life')
     expect(rows[0].keep, 'the album keeps it past every prune').toBe(true)
     expect(rows[0].lifeKind).toBe('divorced')
@@ -454,5 +464,86 @@ describe('wave 12 T2 E – the boundaries', () => {
     const latch = world.loveEpisodes[0].latchedWeek
     rollEnds(world)
     expect(world.loveEpisodes[0].latchedWeek, 'a divorce does not unmake the wedding').toBe(latch)
+  })
+})
+
+// =================================================================================================
+// F. THE ALBUM (T3) – one line that settles nothing, and one per marriage
+// =================================================================================================
+
+describe('wave 12 T3 F – the album keeps a line', () => {
+  it('⭐⭐⭐ the two surfaces land together: the kept milestone row and the scroll row', () => {
+    const world = marriedOnTheWeekItEnds('w12-album-0')
+    const id = activeEpisode(world)!.id
+    rollEnds(world)
+    const kept = world.events.filter((e) => e.milestoneKey === `divorce:${id}`)
+    expect(kept, 'one milestone row, kept past every prune').toHaveLength(1)
+    expect(kept[0].type, '⚠ a `milestone` row and NOT a `life` one – the two channels are different questions').toBe('milestone')
+    expect(kept[0].keep).toBe(true)
+    expect(kept[0].text).toBe('The marriage ended. Nothing about it was decided in this house, and the phone still rang.')
+    expect(world.milestones.filter((m) => m.type === 'divorce'), 'one album entry, keyed to the episode').toEqual([
+      { type: 'divorce', week: world.week, kind: id },
+    ])
+  })
+
+  it('⭐⭐ the week writes BOTH a `life` row and a `milestone` row – the one week in the game that does', () => {
+    // ⚠ THE SPEC ASKS FOR BOTH (§4's kept row, §5's album line) and the two answer different
+    // questions – `'life'` is news about her life, `'milestone'` is what the family keeps. Pinned
+    // here because «two rows on one week» is a thing the owner sees on a screen: if he does not want
+    // it, this is the case that says which one to drop.
+    const world = marriedOnTheWeekItEnds('w12-album-1')
+    const before = world.events.length
+    rollEnds(world)
+    const rows = world.events.slice(before)
+    expect(rows.map((r) => r.type)).toEqual(['life', 'milestone'])
+    expect(rows[0].text, 'the news says what this week did').toBe('Her marriage ended this week, and there is nobody in her life now.')
+    expect(rows[1].text, '...and the album says what the career reads back later').not.toBe(rows[0].text)
+  })
+
+  it('⭐⭐⭐ a SECOND marriage\u2019s divorce captures its own line', () => {
+    // The 11.09 re-shape inherited from the wedding this closes: the identity is the EPISODE, so two
+    // marriages in one career leave two rows rather than one silently swallowing the other.
+    const world = marriedOnTheWeekItEnds('w12-album-2')
+    const first = activeEpisode(world)!.id
+    rollEnds(world)
+    // ...years later, she married again and that one ends too.
+    const secondWeek = world.week + 300
+    world.week = secondWeek
+    world.loveEpisodes.push({
+      ...episode(secondWeek - 120, secondWeek - 60),
+      id: 'p:second',
+      partnerId: 'p:second',
+      knownWeek: secondWeek - 118,
+    })
+    lifeLogOf(world).push({ week: secondWeek - 118, kind: 'met', detail: 'p:second', answer: 'wary' })
+    world.spiritShock = null
+    // force the ending rather than hunting a second hit: the branch is what is under test here.
+    const hit = firstLatchedHit(world, secondWeek)
+    world.week = hit
+    rollEnds(world)
+    expect(world.milestones.filter((m) => m.type === 'divorce').map((m) => m.kind), 'two marriages, two lines')
+      .toEqual([first, 'p:second'])
+  })
+
+  it('⭐⭐ idempotent per episode – a replayed tick cannot double the line', () => {
+    const world = marriedOnTheWeekItEnds('w12-album-3')
+    rollEnds(world)
+    const milestones = world.milestones.length
+    const events = world.events.length
+    // `rollEnds` is a no-op now (the slot is empty), but the two capture calls are keyed, so even a
+    // hand-replayed write cannot double: assert through the engine's own idempotency.
+    rollEnds(world)
+    expect(world.milestones.length).toBe(milestones)
+    expect(world.events.length).toBe(events)
+  })
+
+  it('⭐⭐ the scroll carries the row, labelled and with no detail beside it', () => {
+    const world = marriedOnTheWeekItEnds('w12-album-4')
+    rollEnds(world)
+    const rows = buildScroll(world).flatMap((s) => s.rows).filter((r) => r.label === 'The marriage ended')
+    expect(rows, 'the scroll shows it once').toHaveLength(1)
+    // ⚠ NO DETAIL, and the absence is the assertion: the episode id is a machine value the scroll
+    // must never print, and no duration, fault or name exists in the world to put there.
+    expect(rows[0].detail ?? null).toBeNull()
   })
 })

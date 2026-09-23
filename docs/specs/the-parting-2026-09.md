@@ -56,7 +56,14 @@ cells and no legible arm, so the divorce path does not derive the coin at all. B
 mean drafting eight cells of the parent's own reading – a surface this wave was not asked for, and
 copy that is not an agent's to invent.
 
-Still untouched: the album's two-surface capture (T3), the
+**T3 has landed.** `landWedding`'s two-surface idiom at the latched branch, idempotent per
+`divorce:<episodeId>` – so a second marriage's divorce captures its own line. ⚠ THIS IS THE ONE
+WEEK IN THE GAME THAT WRITES BOTH A `'life'` ROW AND A `'milestone'` ROW, which is §4 and §5 each
+asking for one rather than a duplicate: the two channels answer different questions (news about her
+life / what the family keeps). The two sentences are written not to stutter. Carried to the report,
+because two rows on one week is a thing the owner sees on a screen.
+
+Still untouched: the
 diary (T4), the booth (T5), the bench (T6) and e2e (T7). The builder updates this section as tasks
 ship and fills §10's measured column from the bench, never predicted twice.
 
