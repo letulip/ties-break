@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: life
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-09-23
 ---
 
 # The private life – relationships, loss, and what a parent is allowed to know
@@ -20,6 +20,9 @@ bigger than it looks, because that is the part that decides whether it is ever w
 ⚠ **22.08:** the owner paused the fork-opinion surface («где-то её мнение увидеть… да, пока на
 паузе») until this layer's steps 1–2 exist – the exact sequencing §6 argues for. And round 24 built
 two things this layer will inherit; see the last two rows of §1's table.
+⭐ **CLOSED 23.09:** the surface was built by wave 2 and sharpened in v73 – she speaks before the
+fork (`FORK_UNHEARD_REFUSAL`), her want is drawn from standing, spirit and bond, and the deed is
+priced against it. Wave 12 adds the aftermath scrap (the-parting spec §7) and this note's closure.
 
 ---
 

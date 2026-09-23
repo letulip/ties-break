@@ -5129,3 +5129,29 @@ On the wave-11 review's carry («1. новые 2. твоя рекомендац�
    wave-2 `'info'` machinery and carries no mark by design, and anything of this kind that ever
    reaches a `'life'` row wears his standing white-heart fallback. `KIND_PICKS` stays empty for it;
    nothing was built, which is the point.
+
+## 23.09.2026 – WAVE 12 RULED OPEN: THE PARTING, THE LAYER'S CLOSING WAVE
+
+Wave 11 merged (PR #154). On the architect's leftover inventory he ruled the closing wave open,
+one line per question:
+
+1. **The quiet divorce, tied to what already watches her** – «вот это вообще да, но может тоже
+   на темперамент и известость как-то завязать? люди же могут узнать, что развод случился».
+   Answered in the spec: the tie already exists – openness prices the leak, standing prices the
+   booth – and the wave adds words to that machinery, not dials. No cents and no claim-beats; the
+   wedding's «никто и нисколько» extends.
+2. **The album line** – «можно»: one neutral milestone through the two-surface idiom; the album
+   settles nothing.
+3. **Her voice at the fork** – «голос интересно звучит, предложи что-то». The architect's
+   correction on the record: the surface was BUILT by wave 2 (the beat before the fork, the
+   congruence delta on the deed), so the 22.08 pause note closes; the proposal on his invitation
+   is the fork-aftermath scrap (spec §7), flagged and strikeable at dispatch.
+4. **Named kin** – «именования пока не будет»: the 22.09 ruling stands, out of the wave.
+5. **The college shelf** – «вообще не понял, распакуй»: unpacked in spec §12, left OPEN, not in
+   the builder's scope until ruled.
+6. **The pension boundary** – «ок наверное, на пенсии у нас игры вроде и нет»: recorded as the
+   structural boundary it already is (episodes tick only inside a played week).
+
+Canonical spec `docs/specs/the-parting-2026-09.md`; builder plan
+`docs/plans/life-wave-12-builder-2026-09.md`; the waves 10–11 strings tables are the architect's
+own deliverable inside the same wave. He dispatches the builder.
