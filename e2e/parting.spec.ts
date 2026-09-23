@@ -72,8 +72,11 @@ const HIS_ANSWER = 'Give her room, and say we are here'
  *  ⚠⚠ THE FIRST TWO ARE THE PAIR THIS SPEC EXISTS FOR – the news row (`type: 'life'`) and the album's
  *  (`type: 'milestone'`), on ONE week. They are the only such pair in the game, and a feed carrying
  *  one of them is a defect no engine test can see. */
-const NEWS_ROW = /there is nobody in her life now/
-const ALBUM_ROW = /Nothing about it was decided in this house/
+// ⚠ RE-AIMED 23.09 BY HIS STRINGS REVIEW: the news row lost its second clause (must-fix 3) and the
+// milestone line lost «the phone still rang», so both locators follow the shipped words. The
+// answer's own row survived the review untouched.
+const NEWS_ROW = /Her marriage ended this week\./
+const ALBUM_ROW = /We had no say in it, only in what we said next/
 const HIS_ANSWER_ROW = /We gave her room, and said we were there/
 
 test.describe('the parting', () => {
