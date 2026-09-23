@@ -355,7 +355,7 @@ describe('§6 the schema move – v80', () => {
     // ⚠ RE-AIMED AT v87 (22.09, wave 11 – the weight's three world keys), NOT WEAKENED, for the
     // reason this pin has always carried: it follows the LADDER'S HEAD so «v80 is not the head any
     // more» stays a checkable sentence rather than a stale one. The form half below is untouched.
-    expect(SAVE_SCHEMA_VERSION).toBe(87)
+    expect(SAVE_SCHEMA_VERSION).toBe(88)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

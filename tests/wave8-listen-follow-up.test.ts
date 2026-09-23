@@ -107,11 +107,18 @@ describe('wave 8 T2½ A – the pin knows how many kinds there are', () => {
     // ⭐ RE-AIMED 22.09 BY v87 T5 – THE PIN PAYING FOR ITSELF A SECOND TIME, exactly as it did at
     // v85 T6: a new kind (`'bereavement'`, a death in the family) reddens here and names itself,
     // which is what this count-plus-membership pair is for.
-    expect(KINDS.length, 'twelve kinds as of v87 T5 – a new one reds here and in LIFE_BEAT_BLOCKING').toBe(12)
+    // ⭐ RE-AIMED 23.09 BY v88 T1 – THE PIN PAYING FOR ITSELF A THIRD TIME, and the sentence in its
+    // own message is what it did: `'divorced'` reddened here AND in `LIFE_BEAT_BLOCKING`, which is
+    // exactly the pair this count-plus-membership guard exists to produce.
+    expect(KINDS.length, 'thirteen kinds as of v88 T1 – a new one reds here and in LIFE_BEAT_BLOCKING').toBe(13)
     expect([...KINDS].sort()).toEqual([
       // ⭐ v87 T5 – the twelfth, and its `LISTEN_FOLLOW_UP` cell is `null` WITH A REASON rather than
       // a debt: the card offers one answer and it is not a question she is waiting on.
       'bereavement',
+      // ⭐ v88 T1 – the thirteenth, and its cell is `null` for the twelfth's reason read one rung up:
+      // the detour is «say nothing, and let HER talk», and this card's four answers are REACTIONS,
+      // one of which is already giving her the room.
+      'divorced',
       'ended',
       'engaged',
       'expecting',
@@ -154,7 +161,9 @@ describe('wave 8 T2½ B – the answer table, before and after the shape change'
     // ⚠ RE-AIMED 22.09 BY v87 T5 BY MOVING THE **LIVE** COUNT AND NOT THE DIGEST, which is the same
     // honest carry v85 T6 made: the ten kinds the digest was taken over are hashed exactly as they
     // were, and every kind added since is asserted by the case below rather than re-hashed into it.
-    expect(answerTable().length, '...and the live table is twelve kinds wide now').toBe(1152)
+    // ⚠ RE-AIMED 23.09 BY v88 T1 THE SAME WAY – the live count moves, the digest does not: the ten
+    // kinds it was taken over are hashed exactly as they were.
+    expect(answerTable().length, '...and the live table is thirteen kinds wide now').toBe(1248)
   })
 
   it('⭐⭐ TEN kinds answer `null` to everything, whatever detail they carry', () => {

@@ -3236,9 +3236,15 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    *  offered a power the game does not hold. What a parent CAN do is help with the practical wreckage,
    *  which is what the label says and is the same instinct landing somewhere true.
    *
-   *  ⚠ THE FOURTH NAMES NO GENDER AND NO PERSON («whoever he turned out to be» is refused for the
-   *  same reason): the schema persists a partner NAME from the engagement on, but which surfaces
-   *  speak it is the owner's question, and a button that spoke it would settle it by default. ⚠ AND
+   *  ⚠⚠ THE FOURTH SAYS «THEM» AND NOT «HIM», AND THE FIRST DRAFT GOT THAT WRONG. It read «better
+   *  off without him», on the reasoning that a marriage licenses the pronoun – and
+   *  `tests/coach-voice.test.ts`'s R15-7 sweep refused it, correctly: `LoveEpisode` PERSISTS NO
+   *  GENDER, from the arrival through the wedding to this card, so «him» is a fact the world does
+   *  not hold however obvious it feels. The `'ended'` pool's own note says the same thing three
+   *  sections up – «them is the only honest word for whoever is gone» – and this label is that rule
+   *  inherited rather than re-argued. ⚠ The NAME is refused too, for a different reason: the schema
+   *  has carried one since v83, but which surfaces speak it is the owner's question and a button
+   *  that spoke it would settle it by default. ⚠ AND
    *  NO NUMBER, NO PRICE, NO METER in any of them, and the LABELS ARE UNTOUCHED BY THE FLIP – same
    *  four sentences, same order, same ids, both readings. A button that changed its words with its
    *  price would be the meter one step removed. */
@@ -3250,7 +3256,7 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     // ⚠ DRAFT
     { id: 'sort', label: 'Offer to help her sort out the practical side', bond: ECONOMY.divorce.sortItOut },
     // ⚠ DRAFT
-    { id: 'dismiss', label: 'Say she is better off without him', bond: ECONOMY.divorce.dismiss },
+    { id: 'dismiss', label: 'Say she is better off without them', bond: ECONOMY.divorce.dismiss },
   ],
   /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – THE THREE THE ANNOUNCEMENT OFFERS: the research digest's
    *  own triple, bless / keep distance / oppose, priced in `ECONOMY.wedding` (drafted +2.5 / −1 /
@@ -3656,13 +3662,15 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
    *  `amountCents` AND NO PRICE IN ANY WORD (rule 4): there is no money in this wave at all. ⚠ AND
    *  NO NAME – the episode has carried one since v83 and which surfaces speak it is the owner's
    *  question, so a feed row that jumped ahead of that ruling would be a wording decision taken for
-   *  him. «him» is the pronoun the marriage licenses (a husband at v1) and it is the whole of what
-   *  these rows claim about the person. */
+   *  him. ⚠ AND NO GENDER EITHER – «them», not «him», which the R15-7 sweep caught this pool getting
+   *  wrong on its first draft: `LoveEpisode` persists no gender for a partner at any point in the
+   *  arc, so the pronoun is a guess however married the two of them are. The option pool's own note
+   *  carries the full argument. */
   divorced: {
     space: 'Her marriage ended. We gave her room, and said we were there.',
     company: 'Her marriage ended. We kept her company through the week.',
     sort: 'Her marriage ended. We offered to help with the practical side of it.',
-    dismiss: 'Her marriage ended. We said she was better off without him.',
+    dismiss: 'Her marriage ended. We said she was better off without them.',
   },
   /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – AND THE ANNOUNCEMENT WRITES ONE, for `'ended'`'s reason
    *  exactly: an engagement the parent blessed and one he opposed are two different biographies, and

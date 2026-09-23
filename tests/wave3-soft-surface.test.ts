@@ -223,6 +223,12 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
       // ⚠ IT BLOCKS FOR A PRIVATE GIRL TOO, which is not a contradiction of §4's «private grieves
       // almost silently»: the silence is in the WORDS she says, not in whether the week stops.
       bereavement: true,
+      // ⚠ RE-AIMED A NINTH TIME BY v88, WAVE 12 T1 (23.09), NOT WEAKENED: `'divorced'` is the
+      // thirteenth kind – the week a MARRIAGE ends – and it declares TRUE, which is `'ended'`'s one
+      // word inherited rather than a second decision: this is the same beat one rung up, with a
+      // wedding behind it. ⚠ NO REGISTER CLAUSE, unlike `'ended'`'s: a latched row always holds the
+      // `'met'` receipt, so there is no told-late divorce for a second sentence to be about.
+      divorced: true,
       'fork-opinion': true,
       met: true,
       'small-talk': false,

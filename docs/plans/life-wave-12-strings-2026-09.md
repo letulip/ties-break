@@ -52,17 +52,21 @@ break-up card reads, and the only surface that carries it at every bond band.
 that changed its words with its price would be the meter this layer refuses to build, one step
 removed. ⚠ And the third label is the one place this pool parts from the break-up's – «put it
 right» is a power the game does not hold once the marriage is already over.
+⚠⚠ **The fourth says «them» and not «him», and that is the schema rather than a style choice:**
+`LoveEpisode` persists NO GENDER at any point in the arc – arrival, wedding or ending – so the
+pronoun would be a guess however married the two of them are. The first draft said «him» and
+`tests/coach-voice.test.ts`'s R15-7 sweep refused it.
 
 | id | home | text | status |
 | --- | --- | --- | --- |
 | P12 | `src/engine/world/lifeBeat.ts` | Give her room, and say we are here | `DRAFT` |
 | P13 | `src/engine/world/lifeBeat.ts` | Keep her company, and stay close this week | `DRAFT` |
 | P14 | `src/engine/world/lifeBeat.ts` | Offer to help her sort out the practical side | `DRAFT` |
-| P15 | `src/engine/world/lifeBeat.ts` | Say she is better off without him | `DRAFT` |
+| P15 | `src/engine/world/lifeBeat.ts` | Say she is better off without them | `DRAFT` |
 | P16 | `src/engine/world/lifeBeat.ts` | Her marriage ended. We gave her room, and said we were there. | `DRAFT` |
 | P17 | `src/engine/world/lifeBeat.ts` | Her marriage ended. We kept her company through the week. | `DRAFT` |
 | P18 | `src/engine/world/lifeBeat.ts` | Her marriage ended. We offered to help with the practical side of it. | `DRAFT` |
-| P19 | `src/engine/world/lifeBeat.ts` | Her marriage ended. We said she was better off without him. | `DRAFT` |
+| P19 | `src/engine/world/lifeBeat.ts` | Her marriage ended. We said she was better off without them. | `DRAFT` |
 
 ## 3. The two rows the week leaves on the feed
 

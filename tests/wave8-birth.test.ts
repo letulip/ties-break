@@ -363,13 +363,19 @@ describe('wave 8 T4 D – the mark, and the overwrite that is pinned rather than
     expect(world.spiritShock).toEqual({ week: world.week, kind: 'postpartum' })
   })
 
-  it('⭐⭐⭐ a live break-up mark, written by `rollEnds` itself, is REPLACED', () => {
-    // ⚠ THE BREAK-UP MARK IS THE ENGINE'S OWN AND NOT A HAND-STAMPED OBJECT: `rollEnds` is walked on
-    // the real hazard until it fires, so what sits in the slot is exactly what a mid-term divorce
-    // leaves. That is also what makes this the decoupling law's own case seen from the shock side.
+  it('⭐⭐⭐ a live ENDING mark, written by `rollEnds` itself, is REPLACED', () => {
+    // ⚠ THE MARK IS THE ENGINE'S OWN AND NOT A HAND-STAMPED OBJECT: `rollEnds` is walked on the real
+    // hazard until it fires, so what sits in the slot is exactly what a mid-term divorce leaves.
+    // That is also what makes this the decoupling law's own case seen from the shock side.
+    // ⚠⚠ RE-AIMED BY v88 (the parting, wave 12 – T2), NOT WEAKENED, AND THE OLD NAME IS WHY THIS
+    // CASE WAS ALWAYS WAITING FOR IT. The fixture's career is MARRIED – a pregnancy needs a marriage
+    // – so the ending this walk hunts for has always been a divorce, and its own comment said so in
+    // as many words while the assertion read `'breakup'`. Since v88 the mark says what it is. WHAT
+    // DID NOT MOVE is the claim: ONE slot, the later and larger window wins, whatever the earlier
+    // mark was called.
     const { world, ended } = dueAfterABreakup('w8-birth-overwrite')
     const dueWeek = world.pregnancy!.dueWeek
-    expect(world.spiritShock, 'the break-up mark is on her').toEqual({ week: ended, kind: 'breakup' })
+    expect(world.spiritShock, 'the ending\'s mark is on her, and it names the marriage').toEqual({ week: ended, kind: 'divorce' })
     expect(ended, '…and it is still recovering when the child comes').toBeLessThan(dueWeek)
 
     world.week = dueWeek
