@@ -882,7 +882,46 @@ import type { AcademySupport } from '../academy'
 // row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
 // schema sentence, the e2e fixtures, and the frozen-career peel rung in
 // tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 87
+// ⭐⭐⭐ v88 – THE PARTING (docs/specs/the-parting-2026-09.md §8, wave 12 T1). **NOT ONE NEW KEY,
+// ANYWHERE** – three union widenings and nothing else:
+//
+//   · `SpiritShockKind` + `'divorce'`       – the marriage ending's own shock row (§3)
+//   · `MilestoneType` + `'divorce'`         – the album line, on his «можно» of 23.09 (§5)
+//   · `LifeBeatKind` + `'divorced'`         – the card that replaces `'ended'` on a latched row (§4)
+//
+// ⚠⚠ SO THIS IS THE FIRST BUMP IN THE LADDER WHOSE MIGRATION HAS **NOTHING TO WALK**, and the
+// version is taken anyway rather than saved. Invariant 3's rule is that a new persisted union
+// member is a schema change, and all three of these are persisted: the shock kind sits on
+// `world.spiritShock`, the milestone type on a `world.milestones` row, the beat kind on a
+// `world.lifeLog` row. v85's own sentence is the precedent read at full strength – «adding a union
+// member cannot invalidate a stored value, and nothing has ever written the new one» – and the
+// difference is that there v85 ALSO appended keys, so the widening rode a step that existed. Here
+// there is no step to ride, which is exactly why the empty one is written out: a version whose
+// migration is a comment is a claim that has to be reviewable.
+//
+// ⚠⚠ AND NOTHING BELOW v88 CAN HOLD ONE OF THE THREE. `'divorce'` on the shock is written only by
+// the latched branch this wave builds; the milestone is captured only there; the beat kind is
+// raised only there. A v87 save that lived through a marriage ending carries `'breakup'`,
+// `'ended'` and no album line, and that is what it HELD – re-labelling it now would rewrite a
+// career's history to match a wave that was not running when it was lived.
+//
+// ⚠⚠ THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE AND THE LIVE REGISTERS STILL RE-STAMP, which is
+// v85's third-key arithmetic in reverse and is stated as a measurement rather than a hope: the
+// serialised world gains no key, so `careerHashAtSchema(·, ·, 87)` needs NO new peel rung and
+// returns today's `FROZEN` values character for character (that is what `PRE_V88` holds), while
+// the LIVE registers move because `schemaVersion` itself is inside the hash. **Exactly one line
+// moves on the per-key diff, `schemaVersion`** – and on this rung that is the whole claim rather
+// than half of it.
+//
+// ⚠ ZERO NEW RNG STREAMS AND ZERO MOVED DRAWS IN THE WHOLE WAVE (§9) – the ends key, the leak keys
+// and the booth's stamp are existing machinery and the latched branch is a pure read. The frozen
+// MAIN capture (41550 / e6b0c709) is untouched by construction.
+//
+// Full move: this constant, the v87 -> v88 step in migrations.ts, tests/fixtures/saves/v88.json, its
+// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
+// schema sentence, and the e2e fixtures. ⚠ NO PEEL RUNG – see the paragraph above; the rung would
+// have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V88` instead.
+export const SAVE_SCHEMA_VERSION = 88
 
 
 
@@ -963,8 +1002,24 @@ export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself' | 'publicL
  *
  *  ⚠⚠ AND NEITHER BRINGS A SECOND RECOVERY RATE. `engine/spirit.ts`'s refusal – «a second return
  *  rate, a «recovering» flag or a taper read off `spiritShock` would all be the same mistake» – is
- *  older than both kinds and binds them: DEPTH is the whole of «longer» (§5). */
-export type SpiritShockKind = 'breakup' | 'postpartum' | 'loss' | 'bereavement'
+ *  older than both kinds and binds them: DEPTH is the whole of «longer» (§5).
+ *
+ *  ⭐⭐⭐ v88 – **AND THE FIFTH IS THE MARRIAGE ENDING** (the parting, wave 12; the spec's §3). A
+ *  latched episode has been able to end since v83 – `rollEnds` × `ECONOMY.wedding.latchEndFactor`,
+ *  «possible and rare», the door the wedding's schema pre-paid – and until this version every
+ *  surface read that ending as a plain `'breakup'`. `'divorce'` is that ending's own name.
+ *
+ *  ⚠⚠ A SIBLING AND NOT A DETAIL ON `'breakup'`, for the same two reasons `'loss'` and
+ *  `'bereavement'` are siblings of each other: the two are PRICED APART (−22/−34 against −27/−42,
+ *  DRAFT) and the surfaces read the KIND to know which ending a week is carrying. A `breakup` with
+ *  a `married: true` flag beside it would be the same fact in two places, and every reader would
+ *  have to remember to ask the second question.
+ *
+ *  ⚠ DEEPER THAN A BREAK-UP AND NOT AS DEEP AS A DEATH – §3's own ordering, and the ordering is
+ *  the whole of what the wave claims about the weight: a marriage is more of a life than an
+ *  attachment, and less of one than the person who is gone for good. ⚠ NO PER-KIND RECOVERY RATE
+ *  HERE EITHER: the refusal above is older than this member too and binds it unchanged. */
+export type SpiritShockKind = 'breakup' | 'postpartum' | 'loss' | 'bereavement' | 'divorce'
 
 export interface WorldState {
   schemaVersion: number

@@ -4487,6 +4487,28 @@ export const ECONOMY = {
       postpartum: { steady: -28.8, intense: -45 },
       loss: { steady: -26, intense: -40 },
       bereavement: { steady: -30, intense: -46 },
+      /** ⭐⭐⭐ v88 (the parting, wave 12 – T1/T2) – THE MARRIAGE ENDING'S OWN ROW.
+       *  ⚠ ⚠ **DRAFT** – the spec (`docs/specs/the-parting-2026-09.md` §3) drafts these two numbers
+       *  and says in as many words that his word replaces them at review. Flagged exactly as
+       *  `motherhood.perWeekByAge` and `wedding.perWeek` are, and benched in T6.
+       *
+       *  ⚠⚠ THE ORDERING IS THE WHOLE CLAIM AND THE MAGNITUDES ARE THE DRAFT. §3: deeper than a
+       *  break-up (−22/−34), because a marriage is more of a life; not as deep as a death
+       *  (−30/−46), because the person is still in the world. Both comparisons hold for BOTH
+       *  columns, which is what makes the row a rung on a ladder rather than two free numbers – and
+       *  it is the property to preserve if the sizes move.
+       *
+       *  ⚠ AND THE SPACING IS NOT UNIFORM ON PURPOSE. −27 sits 5 above the break-up and 3 under the
+       *  bereavement; −42 sits 8 above and 4 under. The gap to the break-up is the larger one in
+       *  both columns because that is the distance the wave is actually claiming: the ending this
+       *  row prices had a wedding in front of it, and the one under it did not.
+       *
+       *  ⚠ NO PER-KIND RECOVERY RATE, and `engine/spirit.ts`'s refusal is older than this member and
+       *  binds it unchanged: «a second return rate, a «recovering» flag or a taper read off
+       *  `spiritShock` would all be the same mistake». DEPTH is the whole of «longer» – at
+       *  `returnPerWeek` 5 / 3 and a clear bar of `baseline − 2`, −27/−42 simply takes more weeks to
+       *  climb out of than −22/−34 does, and that arithmetic is the design. */
+      divorce: { steady: -27, intense: -42 },
     } satisfies Record<
       SpiritShockKind,
       { steady: number; intense: number } | null
@@ -5128,6 +5150,49 @@ export const ECONOMY = {
     spouseViewHearBond: 1,
     spouseViewLevelBond: -0.5,
     spouseViewBrushBond: -1.5,
+  },
+
+  /** ⭐⭐⭐ v88 – THE PARTING (wave 12; `docs/specs/the-parting-2026-09.md` §4,
+   *  `docs/plans/life-wave-12-builder-2026-09.md` §T2.1). The marriage `ECONOMY.wedding` started is
+   *  the marriage this block ends, and it holds **four bond deltas and nothing else** – which is the
+   *  shortest block in this file and is the wave's own boundary made structural.
+   *
+   *  ⚠⚠ NO MONEY, AND THE ABSENCE IS A RULING RATHER THAN AN OVERSIGHT. His wedding ruling of 18.09
+   *  – «я думаю как с подарками, никто и нисколько» – extends to the parting by the spec's §2.4, so
+   *  there is no `costCents`, no settlement, no claim and no ledger event anywhere in this wave. The
+   *  design sketch's claim-beats stay a playtest-era option, unbuilt. A reader looking for the
+   *  divorce's price will find this paragraph instead, which is the point.
+   *
+   *  ⚠⚠ NO HAZARD EITHER, AND THAT IS THE LOUDER ABSENCE. The ending's rate is
+   *  `ECONOMY.life.endsPerWeek × endsMult[temperament] × ECONOMY.wedding.latchEndFactor` and it has
+   *  been since v83 – SAME key, SAME uniform, SAME threshold. This wave changes zero draws (spec
+   *  §9), so a `divorcePerWeek` row appearing here would be a second, silent hazard beside the one
+   *  that actually fires.
+   *
+   *  ⚠ ⚠ **ALL FOUR NUMBERS ARE DRAFTS, AND THEY ARE DRAFTS OF A PARTICULAR KIND**: the spec's §4
+   *  says «four answers modeled on the `'ended'` pool's shapes … whose drafted values mirror the
+   *  ended deltas», so what is carried here is the SHAPE of `ECONOMY.bond.delta.ended*` (+3 / −3 /
+   *  −1 / −4) under names of this block's own. Mirroring is the honest default for a card that is
+   *  the same scene one rung up: it prices the parent's four moves exactly as the break-up card
+   *  prices them, and leaves the question of whether a divorce should cost MORE to the owner, who
+   *  has the shock row above to read it against. ⚠ THE BUILDER DID NOT INVENT A SPREAD – that would
+   *  be a design decision wearing a constant (invariant 5), and the spec asked for a mirror. */
+  divorce: {
+    /** ⭐⭐ THE PAIR READ TWO WAYS, `ECONOMY.bond.delta.endedMatched`/`endedMismatched`'s own shape
+     *  and its own argument: which of «room» and «company» is the match is HER read, drawn on
+     *  `seed:life:ends:<endedWeek>:react` – the key the ending already derives – and the answer that
+     *  matches costs `matched`, the other `mismatched`, whichever way round the draw came out.
+     *  ⚠ ONE PRICE FOR «you gave her what she wanted» and one for «you did not», never four. */
+    matched: 3,
+    mismatched: -3,
+    /** ⭐⭐ THE TWO READ-INDEPENDENT ROWS, and the independence is LOAD-BEARING beyond the design:
+     *  `sort` is what `tools/_lifeBeats.ts` drains this kind with (`DRAIN_ANSWER['divorced']`), and
+     *  a drain answer whose price moved with a fact the harness is not tracking is refused outright
+     *  by `drainCostOf` rather than averaged. ⚠ AND `dismiss` IS THE ROW WITH NO READING AT ALL, the
+     *  ended pool's ruling inherited word for word: «some things are wrong regardless of what she
+     *  wanted» – speaking against the person she married costs −4 whichever way her read came out. */
+    sortItOut: -1,
+    dismiss: -4,
   },
 
   /** ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN (wave 8; `docs/plans/life-wave-8-builder-2026-09.md`

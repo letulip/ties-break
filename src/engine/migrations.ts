@@ -3200,6 +3200,44 @@ export function migrateSave(raw: unknown): WorldState {
     v = 87
   }
 
+  // ⭐⭐⭐ v87 -> v88 – THE PARTING (wave 12, docs/specs/the-parting-2026-09.md §8). **THE FIRST STEP
+  // IN THIS LADDER THAT WRITES NOTHING AT ALL**, and the emptiness is the statement rather than an
+  // oversight, which is why it is a step and not a silence.
+  //
+  // THREE UNION WIDENINGS, NO NEW FIELD ANYWHERE: `SpiritShockKind` gains `'divorce'`,
+  // `MilestoneType` gains `'divorce'` and `LifeBeatKind` gains `'divorced'`. v85's block states the
+  // rule these three inherit, in its own words: «adding a union member cannot invalidate a stored
+  // value, and nothing has ever written the new one». There it was a sentence about one member
+  // riding a step that had three `??=` to do anyway; here it is the WHOLE step, so it is written
+  // out where a reader looking for the v88 back-fill will look for it.
+  //
+  // ⚠⚠ AND THERE IS NOTHING TO WALK **EVEN THOUGH THE DIVORCE ALREADY HAPPENED** – the one line
+  // that keeps this step from looking like laziness. A latched episode has been able to end since
+  // v83 (`rollEnds` × `ECONOMY.wedding.latchEndFactor`), so a v87 save really can be carrying a
+  // marriage that ended: `latchedWeek !== null` and `endedWeek !== null` on the same row. What it
+  // carries for it is `spiritShock.kind === 'breakup'`, a `'ended'` row in the `lifeLog`, an
+  // `'ended'` feed row and no album line – because that is what the game DID when that week was
+  // played. A back-fill would re-label a career's history to match a wave that was not running
+  // when it was lived, which is `prologueTrace`'s v84 refusal («never invent a fact the save never
+  // held») applied to a fact the save held DIFFERENTLY rather than not at all.
+  //
+  // ⚠ THE NEW KINDS ARE THEREFORE FORWARD-ONLY BY CONSTRUCTION: the latched branch in
+  // `world/lifeBeat.ts` §8 is the one writer of all three, so only an ending played on v88 or later
+  // can produce one. `tests/wave12-parting.test.ts` §A crafts the v87 payload and asserts this step
+  // leaves every byte of it alone except `schemaVersion`.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE TRIVIALLY: no statement, no sub-stream, no world key touched, so
+  // MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched by construction.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v88.json,
+  // its row in tests/fixtures/saves/README.md, the e2e fixtures, and the mechanically-checked
+  // schema sentence in docs/context/saves-and-worker.md. ⚠ NO PEEL RUNG in
+  // tests/coachTravelEdgeFixtures.ts – with no key appended there is nothing for a rung to remove,
+  // and `PRE_V88` records that as a measured identity instead.
+  if (v === 87) {
+    v = 88
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

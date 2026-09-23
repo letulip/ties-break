@@ -110,6 +110,14 @@ export function milestoneKey(m: Milestone): string {
     // one week here, so the week IS the identity, and no `kind` rides the row at all.
     case 'birth':
       return `${m.type}:${m.week}`
+    // ⭐ v88 (the parting, wave 12 T3): PER EPISODE, `'wedding'`'s CALL AND NOT `'birth'`'s – and
+    // the two live three lines apart so the difference is readable. A marriage ends once per
+    // EPISODE, so `divorce:<episodeId>` is exact and a SECOND marriage's divorce on a later row
+    // captures its own line; the birth is per WEEK because a second child of the same marriage would
+    // be swallowed by an episode key. The `?` fallback is for a hand-built row only; the one writer
+    // always stamps the id.
+    case 'divorce':
+      return `${m.type}:${m.kind ?? '?'}`
   }
 }
 
@@ -161,6 +169,15 @@ export const MEMORY_EMOTION: Record<MilestoneType, MemoryFace> = {
   // for falls back honestly (`paintedFaceFor`), which is a first-class answer rather than a 404: the
   // gate is 23+, so `adult` is the common case and `lateCareer` is an ordinary one.
   wedding: 'bride',
+  /** ⭐⭐ v88 (the parting, wave 12 T3) – `serious`, AND THE CHOICE IS A REFUSAL AS MUCH AS A PICK.
+   *  Three faces were candidates and two are refused by the album's own law (§5: it does not settle
+   *  who was right): `funeral` paints a grief this is not – the person is alive and in the world –
+   *  and `norm` paints nothing at all, which on the one page that says a marriage ended reads as the
+   *  album shrugging. `serious` is the composed half of the set, the face `final` already wears: a
+   *  week that mattered and that nobody won. ⚠ NO NEW PAINTING IS COMMISSIONED and none is needed –
+   *  `serious` is a `PortraitEmotion`, painted at every band, so `FACE_BANDS` gains no row and
+   *  `paintedFaceFor` has no fallback to take. */
+  divorce: 'serious',
   // ⭐⭐ v85 (the birth, wave 8 T4) – `'norm'`, AND IT IS **THE BUILDER'S DRAFT** exactly as the
   // wedding's was, flagged here so the next reader finds it the way the wedding's draft note found
   // its own mistake eighteen days later.

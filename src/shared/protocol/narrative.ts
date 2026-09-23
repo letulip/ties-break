@@ -73,6 +73,24 @@ export type MilestoneType =
    *  and the sex is `'girl'` for every row v85 can write (RULED 20.09), so a field holding one
    *  constant is a second home for a fact `world.children` already keeps. W5 reads the array. */
   | 'birth'
+  /** ⭐ v88 – THE DIVORCE (the parting, wave 12 T3): the week a marriage ended, kept where a life's
+   *  turns are kept. His «можно» of 23.09 on the album line, and `'wedding'`'s move one wave on for
+   *  its reason: a new persisted union member is a schema change by invariant 3 (the v44
+   *  `'facility'` precedent), and this one RIDES THE v88 BUMP T1 already took rather than costing
+   *  its own. No back-fill exists or could – a save below v88 can hold a marriage the ENGINE ended
+   *  (the hazard has run since v83) but no milestone was ever captured for it, and a back-fill would
+   *  have to invent a week from a `latchedWeek`/`endedWeek` pair that says nothing about whether the
+   *  album should have kept the line.
+   *
+   *  ⚠ THE IDENTITY IS THE **EPISODE**, `'wedding'`'s call and not `'birth'`'s – `kind` carries the
+   *  `LoveEpisode.id`. A marriage ends once per episode, so `divorce:<episodeId>` is exact, and a
+   *  SECOND marriage's divorce on a later row captures its own line (the 11.09 re-shape's whole
+   *  point, inherited from the wedding it closes). See `milestoneKey`.
+   *
+   *  ⚠⚠ AND THE ALBUM DOES NOT SETTLE WHO WAS RIGHT – the bereavement precedent, and the reason
+   *  this member carries no second field. There is no fault, no whose, no duration and no name: the
+   *  world holds none of them, and a slot for one would be an invitation to invent it. */
+  | 'divorce'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -397,8 +415,32 @@ export interface SoftBeatInvite {
  *  ⚠ THE THIRD KIND WITH NO FREE ANSWER (after `'ended'` and `'engaged'`), and read-INDEPENDENT by
  *  construction: no overlay exists for this kind, so `DRAIN_ANSWER['expecting']` = `worry` charges
  *  −0.5 under every reading. ⚠ It carries no `heard` stamp and no listen detour – the fact is the
- *  fact, and the three answers are the whole of what a parent can do with it. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan' | 'bereavement'
+ *  fact, and the three answers are the whole of what a parent can do with it.
+ *
+ *  ⭐⭐⭐ v88 (the parting, wave 12 – T1) ADDS `'divorced'`: THE WEEK A **MARRIAGE** ENDS. Its
+ *  `detail` is the `LoveEpisode.id`, exactly as `'met'`'s, `'ended'`'s, `'engaged'`'s and
+ *  `'spouse-view'`'s are – machine-readable, never rendered.
+ *
+ *  ⚠⚠ IT IS `'ended'`'s OTHER HALF AND NOT A KIND BESIDE IT, WHICH IS THE WHOLE OF WHAT THE WAVE
+ *  BUILDS. One hazard decides both (`rollEnds`, scaled by `ECONOMY.wedding.latchEndFactor` on a
+ *  latched row – SAME key, SAME uniform, SAME threshold), and the kind that is raised is a PURE
+ *  READ of `latchedWeek` at the one raise site. So the two can never both fire for one episode and
+ *  never both be absent: an ending raises exactly one of them, and which one is a fact about the
+ *  row rather than a second draw.
+ *
+ *  ⚠⚠ AND IT IS ALWAYS TOLD-NOW, BY CONSTRUCTION AND NOT BY A GATE. `'ended'` has a told-late
+ *  register because an episode can end before its `knownWeek` arrives; a LATCHED one cannot – the
+ *  latch needs an ANSWERED `'engaged'` beat, which needs the delivered episode, so a married row
+ *  always holds the `'met'` receipt and the ending never falls through to `deliverKnownPartner`'s
+ *  late path. The spec's §2.2 states it; the plan's T2.4 pins both halves.
+ *
+ *  ⚠ THE FOURTH KIND WITH NO FREE ANSWER (after `'ended'`, `'engaged'` and `'expecting'`), and
+ *  read-INDEPENDENT by construction rather than by two absences: no overlay in `lifeBeatOptionsFor`
+ *  names this kind, so `DRAIN_ANSWER['divorced']` prices the same object under every reading. ⚠ It
+ *  carries no `heard` stamp and no listen detour: the ends-read is `'ended'`'s machinery, drawn on
+ *  `seed:life:ends:<week>:react`, and reaching for it here would put a NEW key on every divorce –
+ *  the wave's zero-draws law forbids it (spec §9). */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan' | 'bereavement' | 'divorced'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own

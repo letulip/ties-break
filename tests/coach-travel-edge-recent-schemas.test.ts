@@ -49,9 +49,34 @@ import {
   PRE_V85,
   PRE_V86,
   PRE_V87,
+  PRE_V88,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v88: rolling the schema back to 87 – with NOTHING to drop – returns the v87 CAREER on all three', () => {
+    // ⭐⭐⭐ AN IDENTITY OF A KIND THIS LADDER HAS NEVER HELD BEFORE, and the case name says so: v88
+    // (the parting, wave 12) appends **no key at all**. It is three UNION widenings –
+    // `SpiritShockKind` + `'divorce'`, `MilestoneType` + `'divorce'`, `LifeBeatKind` + `'divorced'`
+    // – and none of the three is a FIELD, so the serialised world is the same shape it was at v87
+    // and `careerHashAtSchema` gained no rung: its tail answers 87 and 88 alike, and the only thing
+    // that differs is the version number the last line stamps in.
+    //
+    // ⚠⚠ SO THIS CASE PROVES A CLAIM ABOUT THE WAVE RATHER THAN ABOUT THE PEEL, which is what makes
+    // it worth a rung of its own although the peel does nothing. Every case below says «the peel
+    // removed exactly the new keys»; this one says «the wave added none». A single persisted field
+    // slipped in anywhere – a `divorcedWeeks` list, a flag on `LoveEpisode`, a counter – and all
+    // three lines go red at once, which is precisely the thing a green `npm run check` would
+    // otherwise be happy to ship.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V88` in tests/coachTravelEdgeFixtures.ts: the
+    // three values below are the three `FROZEN` constants this repo shipped on `main` at v87,
+    // reproduced character for character. Eleven live cells moved – `schemaVersion` is inside the
+    // hash – and every rollback rung held.
+    expect(careerHashAtSchema(5, 0, 87), '25k · middle coach · grinder – the verbatim v87 value').toBe(PRE_V88.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 87), '120k · elite coach · grinder – the verbatim v87 value').toBe(PRE_V88.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 87), '8k · self-coached · player – the verbatim v87 value').toBe(PRE_V88.selfTravelling)
+  })
+
   it('⭐⭐⭐ v87: rolling the schema back to 86 – dropping the weight\'s three keys – returns the v86 CAREER on all three', () => {
     // ⭐⭐ AN IDENTITY, v86's OWN KIND, AND THE CASE NAME SAYS SO because the measurement was taken
     // before a constant was touched. v87 appends THREE world keys – `weightEnabled`,

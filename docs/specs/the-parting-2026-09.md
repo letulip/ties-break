@@ -29,11 +29,24 @@ His go, 23.09, on the architect's five questions:
 
 ## Current truth
 
-Written before the wave landed – NOTHING of it is built. What ships today: a latched episode can
-end through `rollEnds` x `latchEndFactor` and every surface reads it as a plain break-up
-(`'breakup'` shock, the `'ended'` card, no line of its own anywhere); the leak-and-booth rail and
-the fork-voice machinery of §7 exist exactly as §2 describes. The builder updates this section as
-tasks ship and fills §10's measured column from the bench, never predicted twice.
+**T1 has landed (schema v88).** What ships today: the three unions are widened and every total
+record they key now carries its `'divorce'` / `'divorced'` cell – the shock row, the four answers,
+the four feed lines, her four voices, the dry card, the two headings, the kept-row sentence, the
+album label and face, the drain answer, the owed psychologist column. **None of it is reachable
+yet**: `rollEnds` still raises `'ended'` on a latched row, which is T2's branch. The schema move is
+the four parts plus `PRE_V88` – and it is the first bump in the ladder that appends NO KEY, so the
+migration step's body is empty and the frozen careers are an identity in shape.
+
+⚠ THE SWEEP IS T1's AND THE BRANCH IS T2's, WHICH IS NOT THE SPLIT THE PLAN DRAWS, and the reason
+is the compiler rather than a preference: the moment `LifeBeatKind` gains a member, eleven total
+records go red at once and the tree cannot build until every cell is filled. So T1 carries the
+declarations – strings included, each flagged DRAFT – and T2 carries the behaviour. Two of those
+eleven sites the plan's own grep (`git grep "'ended'"`) would have missed: `MEMORY_EMOTION` owes
+every milestone a painted face, and `PSY_REGISTER_TOTAL` owes every shock kind a register.
+
+Still untouched: the latched branch at `rollEnds` (T2), the album's two-surface capture (T3), the
+diary (T4), the booth (T5), the bench (T6) and e2e (T7). The builder updates this section as tasks
+ship and fills §10's measured column from the bench, never predicted twice.
 
 ## 1. One sentence of design
 

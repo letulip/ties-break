@@ -248,6 +248,15 @@ export function lifeLogOf(world: WorldState): readonly LifeBeatRecord[] {
  *  FALSE – it is texture, it is answered from a Home card inside a three-week window, and the week
  *  never waits for it. */
 export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
+  // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – TRUE, AND IT IS `'ended'`'s ONE WORD INHERITED RATHER
+  // THAN A SECOND DECISION. This is the same beat one rung up: §5b priced «the news that someone
+  // exists» as a week the parent must answer before time may move, the week it is over is that beat
+  // from the other end, and the week a MARRIAGE is over is that one again with a wedding behind it.
+  // A career that could tick past it would answer her by walking away.
+  // ⚠ NO REGISTER CLAUSE HERE, unlike `'ended'`'s: this kind has one register. A latched row always
+  // holds the `'met'` receipt (the latch needs an answered `'engaged'` beat, which needs the
+  // delivered episode), so there is no told-late divorce for a second sentence to be about.
+  divorced: true,
   // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – TRUE, AND IT IS `'ended'`'s ONE WORD REPEATED AT THE
   // heaviest moment this layer holds. A career that could tick past a death in the family would be
   // answering it by walking away, which is the sentence tier 2's price was written from. ⚠ IT
@@ -949,6 +958,9 @@ const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = {
   postpartum: true,
   loss: true,
   bereavement: true,
+  // ⭐⭐⭐ v88 – AND THE PARTING'S KIND REDS IT A FOURTH TIME, listed here with its COLUMN owed for
+  // `postpartum`'s own reason below.
+  divorce: true,
 }
 const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
 
@@ -1049,6 +1061,19 @@ const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string> | null> = 
    *  whoever wrote it. */
   loss: null,
   bereavement: null,
+  /** ⭐⭐⭐ v88 – A FOURTH COLUMN OWED, AND THE UNREACHABILITY ARGUMENT IS THE TIGHTEST OF THE FOUR.
+   *  The register is stamped at ONE site, off a `'fork-opinion'` row answered `stop` – the fork at
+   *  NINETEEN, which blocks the calendar until it is answered. A `'divorce'` shock needs a MARRIAGE
+   *  first (`ECONOMY.wedding.ageGate` 23) and then an ending after it, so the earliest week this
+   *  mark can exist is years past the last week this table is read. Owed by TYPE, never by need.
+   *
+   *  ⚠ `null` RATHER THAN AN ALIAS TO `breakup`'s COLUMN, and that is worth saying because the alias
+   *  is far more tempting here than it was for the three above: a divorce IS «something outside the
+   *  court landed on her and has not lifted», so `breakup`'s three sentences would read perfectly.
+   *  They would also be the wave's whole claim thrown away in one line – the parting exists because
+   *  a marriage ending is not a break-up wearing the same words, and a column that borrowed them
+   *  would say the opposite in the one place a professional is supposed to be precise. */
+  divorce: null,
 }
 
 /** The parent's frame over his card. ONE line and not a register table, `COUNSEL_HEADING`'s own call:
@@ -2872,6 +2897,120 @@ const BEREAVEMENT_DRY = 'There has been a death in her family. The house heard i
 const BEREAVEMENT_HEADING = 'There has been a death in the family'
 
 // =================================================================================================
+// 3m. `'divorced'` – THE WEEK THE MARRIAGE ENDS (the parting, wave 12: T1/T2).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T8's table).
+// =================================================================================================
+//
+// `docs/specs/the-parting-2026-09.md` §4. The ending already happens – `rollEnds` ×
+// `ECONOMY.wedding.latchEndFactor`, since v83 – and what it has never been able to do is say so.
+// Every pool below is §3e's ending read one rung up, with the register axis removed.
+//
+// ⚠⚠ ONE REGISTER, AND IT IS A FACT ABOUT THE MACHINERY RATHER THAN A SIMPLIFICATION. `'ended'`
+// carries told-now / told-late because an episode can end before its `knownWeek` arrives. A LATCHED
+// one cannot: the latch is written by `landWedding`, which needs an ANSWERED `'engaged'` row, which
+// needs the delivered episode – so a married row always holds the `'met'` receipt and the ending
+// never falls through to `deliverKnownPartner`'s late path. The spec's §2.2 states it and T2's tests
+// pin both halves; nothing below has a second cell for a scene that cannot happen.
+//
+// ⚠⚠ AND THE READ IS THE ENDING'S OWN, DRAWN ON THE ENDING'S OWN KEY. `seed:life:ends:<week>:react`
+// is derived once at the raise site and spent on the heading and the price, exactly as it has been
+// since v75 – ZERO new streams, which is the wave's law (§9). A `:divorce:react` key would put a
+// new draw on every marriage ending in every career, the frozen corpus included.
+//
+// ⚠ WHAT NO LINE HERE MAY SAY: whose fault it was, how long it had been coming, what was divided,
+// or a word about money. The world holds none of them (§2.4: «no accounting, ever»), and a sentence
+// that reached for one would be inventing the consequential fact the layer refuses to model. The
+// husband's NAME is on the episode since v83 and is deliberately not spoken here either – which
+// surface speaks it is the owner's question, and a card that answered it by default would settle it
+// for him.
+
+/** ⚠ ⚠ DRAFT – `close` / `steady` – HER OWN VOICE, four temperaments over the presence axis.
+ *  `ENDED_HER_LINE`'s shape with the register taken out, and its law kept whole: this is one of the
+ *  four pools in this file a girl's voice indexes, and the completeness rule binds it – a `quiet`
+ *  girl can never silently receive a `fiery` girl's line.
+ *
+ *  ⚠ EACH VOICE SAYS THE SAME FACT AND KEEPS ITS OWN HABIT, which is the voice bible's rule rather
+ *  than four moods: `sunny` puts the other person's comfort in front of her own news, `fiery` says
+ *  it flat and closes the subject, `quiet` arrives at it through the arrangements, `deep` gives the
+ *  thing its exact size and stops. ⚠ AND NOT ONE OF THEM ASKS THE PARENT FOR ANYTHING – what she
+ *  wants is the READ, which the heading carries; a line that asked would answer the card for him. */
+const DIVORCED_HER_LINE: Record<Temperament, PresenceCell> = {
+  sunny: {
+    roof: 'She said it at the table, and said the kind part first. "We are ending it. It is not a disaster and I am not in pieces. I wanted you to hear it from me."',
+    away: 'She rang in the evening and said the kind part first. "We are ending it. It is not a disaster and I am not in pieces. I wanted you to hear it from me."',
+  },
+  fiery: {
+    roof: 'She said it standing up, in one go, and did not sit down afterwards. "The marriage is over. It has been decided. I am not going through it."',
+    away: 'She rang, said it in one go, and the call was short. "The marriage is over. It has been decided. I am not going through it."',
+  },
+  quiet: {
+    roof: 'She came by about something else and this was underneath it. "We are separating. There is a lot to sort out, so I will be slow for a while."',
+    away: 'She sent the month\'s dates through, and this was under them. "We are separating. There is a lot to sort out, so I will be slow for a while."',
+  },
+  deep: {
+    roof: 'She let the evening get late before she said anything at all. "It is over. We were a long time getting here. I would rather not say more than that."',
+    away: 'The call went quiet twice before she said it. "It is over. We were a long time getting here. I would rather not say more than that."',
+  },
+}
+
+/** ⚠ ⚠ DRAFT – `strained` / `cold` – THE DRY CARD, and not one word of hers in it. `ENDED_DRY`'s
+ *  told-now row one rung up, and its argument verbatim: by this band the parent was never the person
+ *  it was told to, so the line states what the WEEK HOLDS rather than how the news surfaced.
+ *
+ *  ⚠ IT CARRIES NO READ, which is why the read lives in the heading: a dry card that named what she
+ *  needs would be a home at this distance being told it, which is the one thing the rung is defined
+ *  by not having. ⚠ AND IT IS ONE STRING RATHER THAN A RECORD, because there is one register. */
+const DIVORCED_DRY = 'The marriage is over. She is getting on with the week and not talking about it.'
+
+/** ⚠ ⚠ DRAFT – THE PARENT'S FRAME, KEYED ON HER READ. §3e's banner inherited exactly: THE READ IS
+ *  HERE AND NOWHERE ELSE ON THIS CARD, because the heading is the only surface carried at every bond
+ *  band, and a read only half the ladder could see would be a hidden number.
+ *
+ *  ⚠⚠ NEITHER CELL NAMES AN ANSWER. «She wants the room» is what the parent can SEE; which of the
+ *  four things to say about it is his, and a heading that recommended one would be the meter this
+ *  layer refuses to build, spelled in words – `ENDED_HEADING`'s own rule, word for word.
+ *
+ *  ⚠ BOTH CELLS OPEN ON THE SAME CLAUSE, which is `ENDED_HEADING`'s shape too: the fact is not what
+ *  varies between them, the read is. ⚠ AND THE READ HALF IS THE STANDING POOL'S OWN WORDING, kept
+ *  deliberately – «she wants the room to herself» / «she does not want to be on her own with it» is
+ *  one fact with one sentence in this file, and a second way of saying it would put two readings of
+ *  one draw on two screens. */
+const DIVORCED_HEADING: Record<EndsRead, string> = {
+  space: 'Her marriage is over, and she wants the room to herself',
+  company: 'Her marriage is over, and she does not want to be on her own with it',
+}
+
+/** ⚠ ⚠ DRAFT – THE KEPT FEED ROW, and the album keeps it for the life of the career (`keep: true`).
+ *  `ENDED_NOW_EVENT` one rung up, and every clause licensed the same way:
+ *
+ *   · «Her marriage ended this week» – `endEpisode` wrote `endedWeek = world.week` at the raise
+ *     site, and `latchedWeek !== null` is what selected this sentence over the ending's;
+ *   · «there is nobody in her life now» – `activeEpisode` is null by construction once the row is
+ *     dated, and the cooldown forbids a re-arrival on the same tick.
+ *
+ *  Nothing else: no reason, no fault, no name, no duration, no bond band and no money. ⚠ AND IT DOES
+ *  NOT OPEN BY ANNOUNCING THE MARRIAGE, which is `ENDED_NOW_EVENT`'s finding 1 inherited: the
+ *  wedding's own kept row said it already and both rows are `keep: true`, so a closing row that
+ *  introduced the husband would read as the album meeting him for a second first time. */
+const DIVORCED_NOW_EVENT = 'Her marriage ended this week, and there is nobody in her life now.'
+
+/** ⭐ THE KEPT ROW, ONE FUNCTION PER KIND – `endedKeptRow`'s own law («so «which sentence does the
+ *  album keep» has exactly one spelling»), applied to a kind whose answer happens to be a constant.
+ *
+ *  ⚠⚠ IT TAKES NO ARGUMENT AT ALL, AND THE EMPTY SIGNATURE IS THE STATEMENT. `endedKeptRow` takes a
+ *  register, a read and a coached frame; this kind has ONE register (the receipt, §3m's banner), the
+ *  read is refused on this surface by ruling O (the told-now row is read-free in both arms, and a
+ *  row that acquired one would be a surface gaining information – «a focus may change how an existing
+ *  surface reads; it may not create a surface»), and no `'divorced'` raise site derives the listen
+ *  coin. So there is nothing for a parameter to select, and a defaulted one would be an axis nobody
+ *  can reach pretending there is a choice here. ⭐ IT IS A FUNCTION ANYWAY rather than the constant
+ *  inlined at the raise site, because the ONE-OWNER rule is about where the sentence is DECIDED: the
+ *  day this row gains an axis, one call site changes and every reader keeps working. */
+export function divorcedKeptRow(): string {
+  return DIVORCED_NOW_EVENT
+}
+
+// =================================================================================================
 // 3k. `'return-plan'` – THE WEEK SHE IS BACK, AND THE QUESTION IS HOW (the return, wave 8: T6).
 //     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T8's table).
 // =================================================================================================
@@ -3074,6 +3213,45 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'fix-it', label: 'Offer to help put it right', bond: ECONOMY.bond.delta.endedFixIt },
     { id: 'blame', label: 'Say they were never worth it', bond: ECONOMY.bond.delta.endedBlame },
   ],
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T1/T2) – THE FOUR THE MARRIAGE'S ENDING OFFERS (spec §4's
+   *  shape: give her room / stay close / offer to help sort it / dismiss him). ⚠ THIS IS THE LIST AS
+   *  A GIRL WHO WANTS **SPACE** PRICES IT, `'ended'`'s own doctrine at the same axis: the base column
+   *  is `'space'` and `DIVORCED_BOND_COMPANY` is the overlay. `lifeBeatOptionsFor` is the only road
+   *  to the priced set either way.
+   *
+   *  ⚠ ⚠ DRAFT – every label below is the builder's draft for the owner's pass (invariant 4; the
+   *  wave's T8 strings table is where he reads them), and the four PRICES are drafts too: the spec
+   *  asked for the `'ended'` deltas MIRRORED rather than for a spread the builder invented
+   *  (`ECONOMY.divorce`'s own block argues it).
+   *
+   *  ⚠⚠ THE FOURTH KIND WITH NO FREE ANSWER, and unlike `'ended'` it is read-INDEPENDENT BY
+   *  CONSTRUCTION rather than by two absences: the overlay below names `space` and `company` only,
+   *  and `DRAIN_ANSWER['divorced']` = `sort` costs −1 under every reading – an arithmetic a bench can
+   *  print (`tools/_lifeBeats.ts`, `drainSkewLine`).
+   *
+   *  ⚠⚠ AND THE THIRD LABEL IS WHERE THIS POOL PARTS FROM THE ENDING'S, WHICH IS THE ONE WORDING
+   *  DECISION IN IT. The break-up offers «Offer to help put it right» – a parent trying to MEND the
+   *  relationship. That answer is not available here: a marriage this card is raised about is already
+   *  over (`endEpisode` ran four lines above the raise), and a parent offering to fix it would be
+   *  offered a power the game does not hold. What a parent CAN do is help with the practical wreckage,
+   *  which is what the label says and is the same instinct landing somewhere true.
+   *
+   *  ⚠ THE FOURTH NAMES NO GENDER AND NO PERSON («whoever he turned out to be» is refused for the
+   *  same reason): the schema persists a partner NAME from the engagement on, but which surfaces
+   *  speak it is the owner's question, and a button that spoke it would settle it by default. ⚠ AND
+   *  NO NUMBER, NO PRICE, NO METER in any of them, and the LABELS ARE UNTOUCHED BY THE FLIP – same
+   *  four sentences, same order, same ids, both readings. A button that changed its words with its
+   *  price would be the meter one step removed. */
+  divorced: [
+    // ⚠ DRAFT
+    { id: 'space', label: 'Give her room, and say we are here', bond: ECONOMY.divorce.matched },
+    // ⚠ DRAFT
+    { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.divorce.mismatched },
+    // ⚠ DRAFT
+    { id: 'sort', label: 'Offer to help her sort out the practical side', bond: ECONOMY.divorce.sortItOut },
+    // ⚠ DRAFT
+    { id: 'dismiss', label: 'Say she is better off without him', bond: ECONOMY.divorce.dismiss },
+  ],
   /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – THE THREE THE ANNOUNCEMENT OFFERS: the research digest's
    *  own triple, bless / keep distance / oppose, priced in `ECONOMY.wedding` (drafted +2.5 / −1 /
    *  −4, benched in T8, his word after the numbers).
@@ -3265,6 +3443,19 @@ const ENDED_BOND_COMPANY: Readonly<Record<string, number | undefined>> = {
   company: ECONOMY.bond.delta.endedMatched,
 }
 
+/** ⭐⭐ v88 (the parting, wave 12) – THE SAME FLIP ONE RUNG UP, and it is a SECOND RECORD rather than
+ *  a reuse of the one above although the two hold equal numbers today. The reason is the one
+ *  `ENDED_BOND_COMPANY`'s own note gives for not being a copy of the base list: these are
+ *  `ECONOMY.divorce`'s rows and those are `ECONOMY.bond.delta`'s, they are drafted to MIRROR and the
+ *  owner may un-mirror either at review, and a shared record would silently re-price whichever card
+ *  he did not mean to touch. ⚠ `sort` AND `dismiss` ARE ABSENT ON PURPOSE and the absence is
+ *  load-bearing: it is what keeps `DRAIN_ANSWER['divorced']` = `sort` at one statable −1 under every
+ *  reading, with `drainCostOf` refusing outright if the two readings ever disagree. */
+const DIVORCED_BOND_COMPANY: Readonly<Record<string, number | undefined>> = {
+  space: ECONOMY.divorce.mismatched,
+  company: ECONOMY.divorce.matched,
+}
+
 /** ⭐⭐⭐ v85 (the pregnancy, wave 8 – T2) – WHAT EACH ANSWER IS WORTH **MONTHS LATER**: the parent's
  *  word at the `'expecting'` card, graded onto `world.pregnancy.support` by `answerLifeBeat`. The two
  *  overlays above are the same SHAPE and a different job – they re-price an answer, this one records
@@ -3345,11 +3536,18 @@ export function lifeBeatOptionsFor(
         const worded = labels[option.id]
         return worded === undefined ? option : { ...option, label: worded }
       })
+  // ⭐ v88 (the parting, wave 12) – A THIRD ARM, AND IT IS THE SECOND ONE'S SHAPE POINTED AT THE
+  // MARRIAGE'S CARD. The chain stays a chain rather than becoming a record for the reason the two
+  // arms above are written as they are: each overlay applies under a DIFFERENT condition on a
+  // different fact (her `wants`, then the ends-read at one kind, then the ends-read at another), and
+  // a record keyed by kind alone could not carry the condition.
   const overlay = kind === 'met' && wants === 'private'
     ? MET_BOND_PRIVATE
     : kind === 'ended' && read === 'company'
       ? ENDED_BOND_COMPANY
-      : null
+      : kind === 'divorced' && read === 'company'
+        ? DIVORCED_BOND_COMPANY
+        : null
   if (overlay === null) return base
   return base.map((option) => {
     const flipped = overlay[option.id]
@@ -3449,6 +3647,22 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     company: 'Her relationship ended. We kept her company through the week.',
     'fix-it': 'Her relationship ended. We offered to help put it right.',
     blame: 'Her relationship ended. We said they were never worth it.',
+  },
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T1/T2) – AND THE MARRIAGE'S ENDING WRITES ONE, for `'ended'`'s
+   *  reason exactly: a divorce the parent gave room to and one he used to say what he had always
+   *  thought are two different biographies, and only the row can tell them apart seasons later.
+   *  Four lines, one per answer, opening on the same clause – the established parallel shape.
+   *  ⚠ ⚠ DRAFT – every line below is the builder's draft (invariant 4, T8's table). ⚠ NO
+   *  `amountCents` AND NO PRICE IN ANY WORD (rule 4): there is no money in this wave at all. ⚠ AND
+   *  NO NAME – the episode has carried one since v83 and which surfaces speak it is the owner's
+   *  question, so a feed row that jumped ahead of that ruling would be a wording decision taken for
+   *  him. «him» is the pronoun the marriage licenses (a husband at v1) and it is the whole of what
+   *  these rows claim about the person. */
+  divorced: {
+    space: 'Her marriage ended. We gave her room, and said we were there.',
+    company: 'Her marriage ended. We kept her company through the week.',
+    sort: 'Her marriage ended. We offered to help with the practical side of it.',
+    dismiss: 'Her marriage ended. We said she was better off without him.',
   },
   /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – AND THE ANNOUNCEMENT WRITES ONE, for `'ended'`'s reason
    *  exactly: an engagement the parent blessed and one he opposed are two different biographies, and
@@ -3788,6 +4002,18 @@ export function lifeBeatSaid(
       return speaksInHerOwnVoice(bond)
         ? presenceLine(BEREAVEMENT_HER_LINE[voice], presence)
         : BEREAVEMENT_DRY
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – THE THIRTEENTH KIND, AND IT IS `'ended'`'s READING
+    // WITH ONE AXIS TAKEN OUT. Her own voice against the dry card on the bond's two-rung channel,
+    // exactly as the ending has since v75 – and NO `EndsRegister`, because a latched row always
+    // holds the `'met'` receipt and there is no told-late divorce to select. ⚠ IT READS NO `detail`
+    // (an episode id, a machine value) AND NO MOOD `register`: this is her week's biggest fact
+    // whatever the weather, `'expecting'`'s and `'engaged'`'s own call.
+    // ⚠⚠ AND IT READS NO `EndsRead` EITHER, which is `'ended'`'s §3e decision inherited whole: the
+    // read moves the PRICE and the HEADING, never her line.
+    case 'divorced':
+      return speaksInHerOwnVoice(bond)
+        ? presenceLine(DIVORCED_HER_LINE[voice], presence)
+        : DIVORCED_DRY
   }
 }
 
@@ -3881,6 +4107,15 @@ export function lifeBeatHeading(
     // line, and a frame that also moved with it would say the distance twice.
     case 'bereavement':
       return BEREAVEMENT_HEADING
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – TWO AXES AND NOT `'ended'`'s TWO, which is the one
+    // place this card's frame parts from the ending's. `'ended'` keys on register x read; this keys
+    // on the READ ALONE, because the register cannot vary. ⚠ SO THE READ REACHES THIS CARD AT EVERY
+    // BOND BAND, which is §3e's banner inherited verbatim: the heading is the only surface carried
+    // at every band, and a read only half the ladder could see would be a hidden number.
+    // ⚠ AND NOT ONE OF THE TWO NAMES AN ANSWER – `ENDED_HEADING`'s own rule: «what she wants» is
+    // what the parent can see, which of the four things to say about it is his.
+    case 'divorced':
+      return DIVORCED_HEADING[read]
   }
 }
 
@@ -3928,6 +4163,11 @@ const LISTEN_FOLLOW_UP: Record<
   // that made the parent's quiet buy something would price a bereavement on his behaviour, which is
   // the boundary law arriving at the wording.
   bereavement: null,
+  // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – `null`, AND IT IS `'ended'`'s CELL INHERITED RATHER THAN
+  // A NEW CALL. The detour is «say nothing, and let HER talk», and its reward is more of her; this
+  // card's four answers are REACTIONS, one of which is already giving her the room. A second panel
+  // promising more of her would be the fictional dishonesty the 10.09 ruling removed from the fork.
+  divorced: null,
   // ⭐⭐ THE ONE KIND WITH A DETOUR, AND THE ONLY CELL THAT IS A FUNCTION. It is the tail of the old
   // chain moved whole, line for line and in the same order: the want is resolved off the detail, a
   // malformed detail THROWS BY NAME (which is right and is kept – `lifeBeatSaid`'s own courtesy), the
@@ -4388,6 +4628,10 @@ const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
   // ⭐ v87 T5 – `null`, ON THE RECORD'S OWN RULE: the kind BLOCKS, so it never reaches the soft
   // surface and a card line for it would be dead copy pretending to be reachable.
   bereavement: null,
+  // ⚠ v88 (the parting, wave 12 – T1) – `null`, ON THE RECORD'S OWN RULE AND NOT AS A CHOICE: the
+  // kind BLOCKS, so the row stops the week and never reaches the soft surface. A card line for it
+  // would be dead copy pretending to be reachable.
+  divorced: null,
   'fork-opinion': null,
   met: null,
   'fork-counsel': null,

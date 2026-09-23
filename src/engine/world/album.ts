@@ -466,6 +466,12 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   // line of this wave may need to know whether he is still there. The sex is RULED (20.09, girls
   // only at v1), so the label may say it.
   birth: 'Her daughter',
+  // ⚠ DRAFT (v88, the parting – wave 12 T3; invariant 4: the owner's word lands in the T8 table).
+  // ⚠⚠ THE LABEL SETTLES NOTHING, which is §5's law and the one constraint on this cell: the album
+  // does not say who was right, how long it had been coming or what it cost. «The marriage ended» is
+  // the whole of what the world holds. ⚠ AND IT IS NOT «Her divorce», which was the first draft and
+  // reads as a possession she acquired; this names the thing that happened.
+  divorce: 'The marriage ended',
 }
 
 function scrollDetail(m: Milestone): string | null {
@@ -496,6 +502,13 @@ function scrollDetail(m: Milestone): string | null {
     // id is a machine value and whose liveness is nobody's business here – the decoupling law
     // (RULED 20.09, world/lifeBeat.ts §14's banner). The label row alone is the record.
     case 'birth':
+      return null
+    // ⚠ v88 (wave 12 T3): NO DETAIL, `'wedding'`'s OWN CELL AND ITS OWN REASON ONE WAVE ON. The
+    // milestone's `kind` is the EPISODE ID – a machine value the scroll must never print – and the
+    // husband's NAME, which the episode has carried since v83, is the owner's wording question
+    // rather than a detail cell's to settle by default. ⚠ AND THERE IS NOTHING ELSE TO PUT HERE:
+    // no duration, no fault and no money exist in the world to be shown. The label row is the record.
+    case 'divorce':
       return null
   }
 }

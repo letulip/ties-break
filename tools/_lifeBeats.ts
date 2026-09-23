@@ -104,6 +104,14 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   // skew of exactly 0. Read-independent BY CONSTRUCTION: no overlay in `lifeBeatOptionsFor` names
   // this kind, so `drainCostOf` prices the same object under every `wants` and every ends-read.
   bereavement: 'come',
+  // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – `sort`, AT −1, AND IT IS `'ended'`'s OWN CHOICE ONE RUNG
+  // UP. The kind has no free answer (space +3 / company −3 / sort −1 / dismiss −4, all in
+  // `ECONOMY.divorce` – a word about her marriage ending is not free), so the registry names the
+  // mildest, and it is read-independent because `DIVORCED_BOND_COMPANY` names `space` and `company`
+  // and nothing else: `drainCostOf` prices the same −1 under every `wants` x every ends-read and
+  // returns it from a one-element spread. ⚠ NOT `dismiss`, which is also read-independent: −4 is
+  // four times the skew for no gain, and the registry's rule is the MILDEST statable price.
+  divorced: 'sort',
   'fork-opinion': 'listen',
   met: 'wary',
   'small-talk': 'more',
