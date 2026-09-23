@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 128 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 129 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -33,7 +33,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
-| college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
+| college | 15 | [THE COLLEGE SCENE RULED OPEN, AND THE GRADUATE'S SHELF RULED IN](#23092026--the-college-scene-ruled-open-and-the-graduates-shelf-ruled-in) | 2026-09-23 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
 | general | 16 | [WAVE 12 RULED OPEN: THE PARTING, THE LAYER'S CLOSING WAVE](#23092026--wave-12-ruled-open-the-parting-the-layers-closing-wave) | 2026-09-23 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
@@ -5192,3 +5192,23 @@ The builder's report brought eleven questions; his answers, one line each:
    `CollegeLeagueRun` with rounds is persisted since v56; no walkable bracket, no album page).
 10. **No tuning before play** – «пока не крутим, надо играть»: row 2's corpus stays n=88 and
     every drafted number stands until the playtest.
+
+## 23.09.2026 – THE COLLEGE SCENE RULED OPEN, AND THE GRADUATE'S SHELF RULED IN
+
+On the architect's unpacking (the parting's §12 and the college-content answer), three lines:
+
+1. **The floor** – «Предложение в одну строку: концовка-колледж даёт полку не ниже "середины" -
+   ок». The parting's §12 closes RULED: a career whose standing ending is the college one reads
+   no lower than `middle` at the dynasty door. Built as the college scene's T1, with the dated
+   addendum on the dynasty spec's §8 row 3 (the middle band's structural emptiness ends for the
+   college route).
+2. **The wave** – «Вместе — аккуратная волна "колледж-сцена", M. если скажете "да" — распишу
+   спеку тем же порядком. - да, сделай пожалуйста». Canonical spec
+   `docs/specs/the-college-scene-2026-09.md`; builder plan
+   `docs/plans/college-scene-builder-2026-09.md`; branch `college/scene`, stacked on the open
+   wave-12 head. The wave: the bracket block on the year card (the kept match rows get eyes), the
+   album book's college lines, the handover's `collegeTitles` with the booth's college-champion
+   line (v89, the one schema move, strikeable whole at dispatch), and the floor. Zero new RNG,
+   zero new simulation, no money and no points for the league – the standing ruling holds.
+3. **The wave-12 PR is his now** – «Я отправил реквест на проверки»: he opened it and runs the
+   checks; the architect's handed body stands.
