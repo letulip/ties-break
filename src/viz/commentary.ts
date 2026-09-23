@@ -855,16 +855,20 @@ const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
  *  `BOOTH_ENDED_TRUE` rather than a wording of it: «a seat lighter» is a box with somebody missing
  *  from it and reads as a break-up; a marriage ending is a thing the papers have a word for. */
 const BOOTH_DIVORCED_TRUE: readonly ((who: string) => string)[] = [
-  (who) => `The papers have the marriage over this week, and ${who} came out for this one on her own.`,
-  (who) => `It is a divorce, and every front page has run it – and here ${who} is, serving at two in the afternoon.`,
+  // ⚠ HIS REVIEW APPLIED 23.09: «came out for this one on her own» read as a claim about her box,
+  // which the booth does not know, and «serving at two in the afternoon» invented a match time.
+  // Both lines now state only what the packet holds: the papers have it, and she is playing.
+  (who) => `The papers say the marriage is over. ${who} is here to play.`,
+  (who) => `Every front page has the divorce. ${who} still has a match to play.`,
 ]
 /** ...and as the world got it WRONG. ⚠ A VARIANT EXISTS BECAUSE `'ended'` HAS ONE, which is the
  *  spec's own condition (§6: «with the wrong-story variant iff the `'ended'` sentence has one») and
  *  not a choice made here. The booth repeats the story it was given, mistake and all – that sting is
  *  the mechanic working, and nothing here hedges or apologises for it. */
 const BOOTH_DIVORCED_WRONG: readonly ((who: string) => string)[] = [
-  (who) => `The papers have ${who} divorcing this week, and no two of them tell it the same way.`,
-  (who) => `A divorce on every front page beside ${who}, and not one of them has the same story.`,
+  // ⚠ HIS REVIEW APPLIED 23.09 – the same fact, tighter.
+  (who) => `The papers have ${who} getting divorced. No two versions quite agree.`,
+  (who) => `Every front page has the divorce. The story changes from one to the next.`,
 ]
 
 /** The pool for one packet – the two facts crossed, and nothing else decides it. */

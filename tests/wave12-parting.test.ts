@@ -312,7 +312,10 @@ describe('wave 12 T2 A – a latched ending is a divorce', () => {
     expect(rows[0].type).toBe('life')
     expect(rows[0].keep, 'the album keeps it past every prune').toBe(true)
     expect(rows[0].lifeKind).toBe('divorced')
-    expect(rows[0].text).toBe('Her marriage ended this week, and there is nobody in her life now.')
+    // ⚠ RE-AIMED 23.09 BY HIS STRINGS REVIEW (must-fix 3), NOT WEAKENED: the second clause («and
+    // there is nobody in her life now») described the SLOT and read as a claim about her LIFE –
+    // parents, children and friends stand – so the row now states the one fact. Same pin, new words.
+    expect(rows[0].text).toBe('Her marriage ended this week.')
     expect(rows[0].amountCents, 'no money in this wave, anywhere').toBeUndefined()
   })
 
@@ -547,7 +550,9 @@ describe('wave 12 T3 F – the album keeps a line', () => {
     expect(kept, 'one milestone row, kept past every prune').toHaveLength(1)
     expect(kept[0].type, '⚠ a `milestone` row and NOT a `life` one – the two channels are different questions').toBe('milestone')
     expect(kept[0].keep).toBe(true)
-    expect(kept[0].text).toBe('The marriage ended. Nothing about it was decided in this house, and the phone still rang.')
+    // ⚠ RE-AIMED 23.09 BY HIS STRINGS REVIEW: «the phone still rang» asserted a delivery channel
+    // the quiet voice contradicts. Same pin, his line.
+    expect(kept[0].text).toBe('The marriage ended. We had no say in it, only in what we said next.')
     expect(world.milestones.filter((m) => m.type === 'divorce'), 'one album entry, keyed to the episode').toEqual([
       { type: 'divorce', week: world.week, kind: id },
     ])
@@ -563,7 +568,8 @@ describe('wave 12 T3 F – the album keeps a line', () => {
     rollEnds(world)
     const rows = world.events.slice(before)
     expect(rows.map((r) => r.type)).toEqual(['life', 'milestone'])
-    expect(rows[0].text, 'the news says what this week did').toBe('Her marriage ended this week, and there is nobody in her life now.')
+    // ⚠ RE-AIMED 23.09 BY HIS STRINGS REVIEW (must-fix 3) – the one-fact row, see the kept-row case.
+    expect(rows[0].text, 'the news says what this week did').toBe('Her marriage ended this week.')
     expect(rows[1].text, '...and the album says what the career reads back later').not.toBe(rows[0].text)
   })
 

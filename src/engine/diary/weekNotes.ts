@@ -992,18 +992,21 @@ const BEREAVED_VOICES: readonly WeekNote[] = (Object.keys(BEREAVED_WORDS) as Tem
  *  is run so long that a line lands in a season with nothing left of the thing it is about. */
 export const DIVORCED_WEEKS = 8
 
-/** ⚠ ⚠ DRAFT – FOUR VOICES OVER THE WEEKS AFTER. ⚠ EVERY LINE IS THE PARENT REPORTING A WEEK – no
- *  interior stated as fact, no husband named, no fault, no duration, no date and no number (the
- *  `divorced` claim's own licence). ⚠ AND THEY FIT THE SCRAP: 80 characters, the budget
+/** ⚠ HIS REVIEW APPLIED 23.09 (awaiting his final pass) – FOUR VOICES OVER THE WEEKS AFTER, written
+ *  for an adult who lives elsewhere: the first draft invented a flat, moving boxes, counted
+ *  mentions and hours of access the household does not have (his review, finding 4), and every
+ *  line now reports only what reaches a parent down a phone line or a schedule. ⚠ No interior
+ *  stated as fact, no husband named, no fault, no duration, no date and no number (the `divorced`
+ *  claim's own licence). ⚠ AND THEY FIT THE SCRAP: 80 characters, the budget
  *  `docs/specs/voice-bibles-2026-09.md` pins and `tests/week-notes.test.ts` sweeps.
  *
  *  ⚠ THE TWO PRIVATE VOICES SAY THE LEAST, which is §4's «openness owns expression» arriving in the
  *  diary rather than a second pricing of anything – `BEREAVED_WORDS`' own shape one pool up. */
 const DIVORCED_WORDS: Record<Temperament, string> = {
-  sunny: 'She talked about the flat, and about the diary, and not about the rest.',
-  fiery: 'She trained. The subject came up once and went straight back down.',
-  quiet: 'Boxes in her hall this week. She had the week planned to the hour.',
-  deep: 'She was on her own a lot, and did not seem to mind it as much as we did.',
+  sunny: 'She called about the court, the weather, the week ahead. Not the marriage.',
+  fiery: 'She trained. When the subject came up, she put it straight back down.',
+  quiet: 'She sent next week\'s dates. There was nothing else in the message.',
+  deep: 'She called. We spoke about the week, not the ending.',
 }
 
 /** THE FOUR ROWS, built from the words above so a licence can never be hand-copied wrong –
@@ -1022,39 +1025,45 @@ const DIVORCED_VOICES: readonly WeekNote[] = (Object.keys(DIVORCED_WORDS) as Tem
  *  «голос интересно звучит, предложи что-то» (spec §7). Eight lines: four voices × {she was heard,
  *  she was not}, on the ONE week the fork resolves.
  *
- *  ⚠⚠ WHAT IT REPAIRS. The congruence delta lands at `answerFork` – +3 with her want, −4 against it
- *  – and NOTHING ON ANY SCREEN says it happened. A parent who overrode her pays a price he is never
- *  shown, which is the one shape this layer's own fence («no meter, no badge, no label») is not
- *  supposed to produce: the fence is against SHOWING A NUMBER, not against the week being legible.
+ *  ⚠⚠ WHAT IT IS, SAID HONESTLY (his 23.09 review, must-fix 2, the second option taken): OCCASIONAL
+ *  TEXTURE, not guaranteed feedback. The congruence delta lands at `answerFork` – +3 with her want,
+ *  −4 against it – and this scrap is the one surface that can mention the week it happened; but it
+ *  lives behind the week-note coin (`WEEK_NOTE_CHANCE`), the `plainTraining` gate and the pool
+ *  pick, on ONE week, so most careers never see it. A GUARANTEED aftermath surface (a transient
+ *  feed row on the fork's own week) is a backlog item awaiting his ask; building it here would
+ *  have been a second surface this wave was not asked for.
  *
- *  ⚠⚠ AND THE AGAINST-ARM PASSES NO VERDICT, which is the whole of what makes this shippable. Each
- *  of the four states the fact in her own register and stops – no «should», no «wrong», no
- *  consequence foretold, and not one word about what she will feel about it later. The parent is
- *  left to read four sentences about a quiet house; the game does not tell him what they mean.
+ *  ⚠⚠ EVERY LINE IS ANSWER-AGNOSTIC, and that is the review's second repair: the first draft
+ *  implied training and schedules going on, which is false on the arm where «with her want» meant
+ *  agreeing she stops. College, tour and stop are all invisible here – the line is about whether
+ *  she was heard, and the fork's own screen said which of the three it was.
  *
- *  ⚠ NEITHER ARM NAMES THE WANT. College, tour and stop are all invisible here: the line is about
- *  whether she was heard, and the fork's own screen said which of the three it was.
+ *  ⚠⚠ AND THE AGAINST-ARM PASSES NO VERDICT. Each of the four states the fact in her own register
+ *  and stops – no «should», no «wrong», no consequence foretold. `deep`'s against-line is the
+ *  model: it records the disagreement without declaring the parent wrong or claiming future
+ *  resentment.
  *
  *  ⚠ ZERO DRAWS AND NO NEW STATE – `f.forkAftermath` is a pure read of `world.fork.answer` against
  *  the want on the `lifeLog`. A pre-v73 career has no want on record and honestly gets no scrap.
  *
- *  ⚠ ⚠ DRAFT – all eight, and they fit the 80-character scrap budget. */
+ *  ⚠ HIS REVIEW APPLIED 23.09 (awaiting his final pass) – all eight, inside the 80-character
+ *  scrap budget. */
 const FORK_AFTERMATH_WORDS: Record<Temperament, Record<'with' | 'against', string>> = {
   sunny: {
-    with: 'She thanked us twice, and then talked about something else entirely.',
-    against: 'She took it well, out loud. She said less than usual for the rest of it.',
+    with: 'She thanked us, then changed the subject before it could turn solemn.',
+    against: 'She said all right, then asked about something else.',
   },
   fiery: {
-    with: 'She was out the door before the sentence finished. That is a yes from her.',
-    against: 'She heard it, said fine, and trained like the week owed her something.',
+    with: 'She said yes before we had finished.',
+    against: 'She said fine. It landed like a full stop.',
   },
   quiet: {
-    with: 'She wrote the next month out that evening, without being asked to.',
-    against: 'She asked what the dates were now, and wrote them down in the same pen.',
+    with: 'She wrote the answer down and asked what came next.',
+    against: 'She wrote the answer down. Nothing beside it.',
   },
   deep: {
-    with: 'She did not say much. She has not put the racquet down all week either.',
-    against: 'She said she understood. She has said nothing about it since.',
+    with: 'She did not say much. Neither did we.',
+    against: 'She said she understood. She did not say she agreed.',
   },
 }
 
@@ -1065,9 +1074,8 @@ const FORK_AFTERMATH_VOICES: readonly WeekNote[] = (Object.keys(FORK_AFTERMATH_W
     // the record of why it does. The reasoning was «the fork resolves on ONE week and that week may
     // be a travelling one, so a gate could hide the scrap», and `tests/week-notes.test.ts`'s own
     // layoff guard refused it in one run: **a layoff TAKES the note** – every line licensed on an
-    // injured week must claim the injury, or «she wrote the next month out that evening» draws on
-    // the week the ice pack came out. R2-18 wants the same thing for a road week, because three of
-    // these eight are household observation.
+    // injured week must claim the injury, or «she wrote the answer down and asked what came next»
+    // draws on the week the ice pack came out. R2-18 wants the same thing for a road week.
     // ⚠ AND THE OBJECTION IT WAS WRITTEN AGAINST DOES NOT SURVIVE INSPECTION: the scrap was never a
     // notification. A week note is chance-gated (`WEEK_NOTE_CHANCE`) and selected against a pool, so
     // «the parent might not see it» is true of the whole mechanism and not something this licence

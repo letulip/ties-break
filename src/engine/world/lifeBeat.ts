@@ -2898,7 +2898,8 @@ const BEREAVEMENT_HEADING = 'There has been a death in the family'
 
 // =================================================================================================
 // 3m. `'divorced'` – THE WEEK THE MARRIAGE ENDS (the parting, wave 12: T1/T2).
-//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T8's table).
+//     ⚠ HIS REVIEW APPLIED 23.09 (invariant 4; T8's table carries per-row status) – awaiting his
+//     final pass.
 // =================================================================================================
 //
 // `docs/specs/the-parting-2026-09.md` §4. The ending already happens – `rollEnds` ×
@@ -2924,43 +2925,40 @@ const BEREAVEMENT_HEADING = 'There has been a death in the family'
 // surface speaks it is the owner's question, and a card that answered it by default would settle it
 // for him.
 
-/** ⚠ ⚠ DRAFT – `close` / `steady` – HER OWN VOICE, four temperaments over the presence axis.
- *  `ENDED_HER_LINE`'s shape with the register taken out, and its law kept whole: this is one of the
- *  four pools in this file a girl's voice indexes, and the completeness rule binds it – a `quiet`
- *  girl can never silently receive a `fiery` girl's line.
+/** ⚠ HIS REVIEW APPLIED 23.09 (awaiting his final pass) – `close` / `steady` – HER OWN VOICE, four
+ *  temperaments, ONE channel. `ENDED_HER_LINE`'s completeness law kept whole: this is one of the
+ *  pools in this file a girl's voice indexes, and a `quiet` girl can never silently receive a
+ *  `fiery` girl's line.
  *
- *  ⚠ EACH VOICE SAYS THE SAME FACT AND KEEPS ITS OWN HABIT, which is the voice bible's rule rather
- *  than four moods: `sunny` puts the other person's comfort in front of her own news, `fiery` says
- *  it flat and closes the subject, `quiet` arrives at it through the arrangements, `deep` gives the
- *  thing its exact size and stops. ⚠ AND NOT ONE OF THEM ASKS THE PARENT FOR ANYTHING – what she
- *  wants is the READ, which the heading carries; a line that asked would answer the card for him. */
-const DIVORCED_HER_LINE: Record<Temperament, PresenceCell> = {
-  sunny: {
-    roof: 'She said it at the table, and said the kind part first. "We are ending it. It is not a disaster and I am not in pieces. I wanted you to hear it from me."',
-    away: 'She rang in the evening and said the kind part first. "We are ending it. It is not a disaster and I am not in pieces. I wanted you to hear it from me."',
-  },
-  fiery: {
-    roof: 'She said it standing up, in one go, and did not sit down afterwards. "The marriage is over. It has been decided. I am not going through it."',
-    away: 'She rang, said it in one go, and the call was short. "The marriage is over. It has been decided. I am not going through it."',
-  },
-  quiet: {
-    roof: 'She came by about something else and this was underneath it. "We are separating. There is a lot to sort out, so I will be slow for a while."',
-    away: 'She sent the month\'s dates through, and this was under them. "We are separating. There is a lot to sort out, so I will be slow for a while."',
-  },
-  deep: {
-    roof: 'She let the evening get late before she said anything at all. "It is over. We were a long time getting here. I would rather not say more than that."',
-    away: 'The call went quiet twice before she said it. "It is over. We were a long time getting here. I would rather not say more than that."',
-  },
+ *  ⚠⚠ THE PRESENCE AXIS IS GONE, AND ITS ABSENCE IS A MEASURED FACT RATHER THAN A SIMPLIFICATION
+ *  (his 23.09 review, must-fix 1). A `roof` divorce cannot happen: the latch needs 23+,
+ *  `independent` begins at 22 and `college` is an away stage too – so every divorce a real career
+ *  can produce is `away`, and eight cells would be four reachable lines towing four dead ones. The
+ *  `Record<Temperament, string>` says so in the type; the sibling roof cells still standing in the
+ *  wave-11 pools are the same finding one wave back, listed in the backlog rather than churned here.
+ *
+ *  ⚠ EACH VOICE SAYS THE SAME FACT AND KEEPS ITS OWN HABIT: `sunny` reassures before the news has
+ *  landed, `fiery` closes the subject in the same breath, `quiet` arrives at it through the
+ *  arrangements, `deep` gives the thing its size and stops. ⚠ AND NOT ONE OF THEM ASKS THE PARENT
+ *  FOR ANYTHING – what she wants is the READ, which the heading carries; a line that asked would
+ *  answer the card for him. ⚠ The quotes carry contractions – his 11.09 P2 ruling («цитаты уже с
+ *  контракциями по P2»), the spoken register rather than the written one. */
+const DIVORCED_HER_LINE: Record<Temperament, string> = {
+  sunny: 'She called before the news could travel. "We\'re ending it. I\'m all right. I wanted you to hear it from me."',
+  fiery: 'She called and went straight to it. "The marriage is over. It\'s decided. I don\'t want to pick it apart."',
+  quiet: 'She called about the next few weeks. "We\'re separating. There are things to sort out. I may go quiet for a bit."',
+  deep: 'The call went quiet before she said it. "It\'s over. That\'s all I can say about it today."',
 }
 
-/** ⚠ ⚠ DRAFT – `strained` / `cold` – THE DRY CARD, and not one word of hers in it. `ENDED_DRY`'s
- *  told-now row one rung up, and its argument verbatim: by this band the parent was never the person
- *  it was told to, so the line states what the WEEK HOLDS rather than how the news surfaced.
+/** ⚠ HIS REVIEW APPLIED 23.09 (awaiting his final pass) – `strained` / `cold` – THE DRY CARD, and
+ *  not one word of hers in it. `ENDED_DRY`'s told-now row one rung up: by this band the parent was
+ *  never the person it was told to, and the line now says exactly that distance and nothing else –
+ *  the news reached this house around her.
  *
  *  ⚠ IT CARRIES NO READ, which is why the read lives in the heading: a dry card that named what she
  *  needs would be a home at this distance being told it, which is the one thing the rung is defined
  *  by not having. ⚠ AND IT IS ONE STRING RATHER THAN A RECORD, because there is one register. */
-const DIVORCED_DRY = 'The marriage is over. She is getting on with the week and not talking about it.'
+const DIVORCED_DRY = 'The marriage is over. The news did not come from her.'
 
 /** ⚠ ⚠ DRAFT – THE PARENT'S FRAME, KEYED ON HER READ. §3e's banner inherited exactly: THE READ IS
  *  HERE AND NOWHERE ELSE ON THIS CARD, because the heading is the only surface carried at every bond
@@ -2980,19 +2978,23 @@ const DIVORCED_HEADING: Record<EndsRead, string> = {
   company: 'Her marriage is over, and she does not want to be on her own with it',
 }
 
-/** ⚠ ⚠ DRAFT – THE KEPT FEED ROW, and the album keeps it for the life of the career (`keep: true`).
- *  `ENDED_NOW_EVENT` one rung up, and every clause licensed the same way:
+/** ⚠ HIS REVIEW APPLIED 23.09 (awaiting his final pass) – THE KEPT FEED ROW, and the album keeps
+ *  it for the life of the career (`keep: true`). One clause, licensed at the raise site:
+ *  `endEpisode` wrote `endedWeek = world.week`, and `latchedWeek !== null` is what selected this
+ *  sentence over the ending's.
  *
- *   · «Her marriage ended this week» – `endEpisode` wrote `endedWeek = world.week` at the raise
- *     site, and `latchedWeek !== null` is what selected this sentence over the ending's;
- *   · «there is nobody in her life now» – `activeEpisode` is null by construction once the row is
- *     dated, and the cooldown forbids a re-arrival on the same tick.
+ *  ⚠⚠ THE SECOND CLAUSE («and there is nobody in her life now») IS GONE – his review, must-fix 3.
+ *  It was licensed off `activeEpisode === null`, which is true of the SLOT and false of the LIFE:
+ *  an ended marriage does not erase parents, children, friends or a coach, and the wave's own law
+ *  says the children are untouched state. The row states the one fact and needs no second clause.
+ *  ⚠ `ENDED_NOW_EVENT` one rung up still carries the same tail for a break-up – shipped wording,
+ *  not this wave's to change; listed in the backlog for his eye.
  *
  *  Nothing else: no reason, no fault, no name, no duration, no bond band and no money. ⚠ AND IT DOES
  *  NOT OPEN BY ANNOUNCING THE MARRIAGE, which is `ENDED_NOW_EVENT`'s finding 1 inherited: the
  *  wedding's own kept row said it already and both rows are `keep: true`, so a closing row that
  *  introduced the husband would read as the album meeting him for a second first time. */
-const DIVORCED_NOW_EVENT = 'Her marriage ended this week, and there is nobody in her life now.'
+const DIVORCED_NOW_EVENT = 'Her marriage ended this week.'
 
 /** ⭐ THE KEPT ROW, ONE FUNCTION PER KIND – `endedKeptRow`'s own law («so «which sentence does the
  *  album keep» has exactly one spelling»), applied to a kind whose answer happens to be a constant.
@@ -3251,10 +3253,12 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
   divorced: [
     // ⚠ DRAFT
     { id: 'space', label: 'Give her room, and say we are here', bond: ECONOMY.divorce.matched },
-    // ⚠ DRAFT
-    { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.divorce.mismatched },
-    // ⚠ DRAFT
-    { id: 'sort', label: 'Offer to help her sort out the practical side', bond: ECONOMY.divorce.sortItOut },
+    // ⚠ HIS REVIEW APPLIED 23.09 – the tautology («keep her company, and stay close») collapsed to
+    // the half that says something, and the closeness now names its own restraint.
+    { id: 'company', label: 'Stay close, without asking for the whole story', bond: ECONOMY.divorce.mismatched },
+    // ⚠ HIS REVIEW APPLIED 23.09 – «the practical side» read corporate; «whatever needs sorting»
+    // is the same offer in the register a kitchen uses.
+    { id: 'sort', label: 'Offer to help with whatever needs sorting', bond: ECONOMY.divorce.sortItOut },
     // ⚠ DRAFT
     { id: 'dismiss', label: 'Say she is better off without them', bond: ECONOMY.divorce.dismiss },
   ],
@@ -3668,8 +3672,10 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
    *  carries the full argument. */
   divorced: {
     space: 'Her marriage ended. We gave her room, and said we were there.',
-    company: 'Her marriage ended. We kept her company through the week.',
-    sort: 'Her marriage ended. We offered to help with the practical side of it.',
+    // ⚠ HIS REVIEW APPLIED 23.09 on the middle pair – «that week» over «through the week», and the
+    // sorting row drops the corporate «practical side» its label dropped.
+    company: 'Her marriage ended. We kept her company that week.',
+    sort: 'Her marriage ended. We offered to help with what needed sorting.',
     dismiss: 'Her marriage ended. We said she was better off without them.',
   },
   /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – AND THE ANNOUNCEMENT WRITES ONE, for `'ended'`'s reason
@@ -4020,7 +4026,7 @@ export function lifeBeatSaid(
     // read moves the PRICE and the HEADING, never her line.
     case 'divorced':
       return speaksInHerOwnVoice(bond)
-        ? presenceLine(DIVORCED_HER_LINE[voice], presence)
+        ? DIVORCED_HER_LINE[voice]
         : DIVORCED_DRY
   }
 }
@@ -6048,7 +6054,10 @@ export function rollEnds(world: WorldState): void {
     // ⚠ THE ALBUM LINE SETTLES NOTHING – §5's law and the bereavement precedent: no fault, no
     // duration, no name, no money. It records that the marriage ended and that the family was
     // somewhere when it did.
-    fireMilestone(world, `divorce:${over.id}`, 'The marriage ended. Nothing about it was decided in this house, and the phone still rang.')
+    // ⚠ HIS REVIEW APPLIED 23.09: «the phone still rang» asserted a delivery channel the quiet
+    // voice contradicts (her news arrives in messages), so the line now says only what every
+    // divorce shares – the family had no part in the decision, and a part in what came after.
+    fireMilestone(world, `divorce:${over.id}`, 'The marriage ended. We had no say in it, only in what we said next.')
     captureMilestone(world, { type: 'divorce', week: world.week, kind: over.id })
     raiseLifeBeat(world, 'divorced', over.id)
     return

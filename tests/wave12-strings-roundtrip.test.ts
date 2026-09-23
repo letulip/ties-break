@@ -17,12 +17,18 @@
 // where her name lands on screen.
 //
 // ⚠ THE COUNT LIVES HERE AND NOWHERE IN PROSE – wave 9's finding verbatim: a count written in prose
-// survives a full gate because no test reads it. 38 is asserted below; the document deliberately
+// survives a full gate because no test reads it. 34 is asserted below; the document deliberately
 // states no total.
+//
+// ⭐ RE-AIMED 23.09 BY HIS STRINGS REVIEW, NOT WEAKENED: the corpus went 38 -> 34 (the her-line
+// presence axis collapsed – a roof divorce cannot happen in a real career) and every status cell
+// moved `DRAFT` -> the applied-review status, wave 9's own convention. The parser now matches THAT
+// status exactly, so the provenance property is unchanged in shape: a row whose status moves again
+// (his final pass) drops out of the count and this file goes red, which is the tripwire working.
 //
 // MUTATION-VERIFIED: one character changed in a doc row fails by id, and one character changed in
 // the shipped pool fails the same row with the arrow the other way. Both measured – see the wave's
-// report.
+// report; re-measured 23.09 after the re-aim.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -33,12 +39,14 @@ interface Row {
   text: string
 }
 
+const STATUS = 'HIS REVIEW APPLIED 23.09 – awaiting his final pass'
+
 function parseTable(path: string): Row[] {
   const md = readFileSync(path, 'utf8')
   const rows: Row[] = []
   for (const line of md.split('\n')) {
-    // | P1 | `src/...` | the string | `DRAFT` |
-    const m = /^\| (P\d+) \| `(.+?)` \| (.+?) \| `DRAFT` \|$/.exec(line)
+    // | P1 | `src/...` | the string | `HIS REVIEW APPLIED 23.09 – awaiting his final pass` |
+    const m = new RegExp(String.raw`^\| (P\d+) \| \x60(.+?)\x60 \| (.+?) \| \x60${STATUS}\x60 \|$`).exec(line)
     if (m) rows.push({ id: m[1], home: m[2], text: m[3] })
   }
   return rows
@@ -55,7 +63,7 @@ function sourceOf(path: string): string {
 }
 
 const TABLE = 'docs/plans/life-wave-12-strings-2026-09.md'
-const EXPECTED_ROWS = 38
+const EXPECTED_ROWS = 34
 
 describe('wave 12 – the strings table IS the corpus', () => {
   const rows = parseTable(TABLE)
@@ -70,8 +78,8 @@ describe('wave 12 – the strings table IS the corpus', () => {
     for (const row of rows) {
       const src = sourceOf(row.home)
       // ⚠ THE ESCAPED FALLBACK IS LOAD-BEARING: the doc quotes the RUNTIME spelling, and a source
-      // literal in single quotes escapes its apostrophes (`the month\'s dates`). Three rows of this
-      // table need it, which is why it is here rather than trusted to be unnecessary.
+      // literal in single quotes escapes its apostrophes (`next week\'s dates`, every contracted
+      // quote). Several rows of this table need it – the count is the corpus's, not this comment's.
       const escaped = row.text.replaceAll("'", "\\'")
       expect(
         src.includes(row.text) || src.includes(escaped),
@@ -80,12 +88,15 @@ describe('wave 12 – the strings table IS the corpus', () => {
     }
   })
 
-  it('⭐ every row is still flagged DRAFT – nothing has been passed yet', () => {
-    // ⚠ THE PROVENANCE CHECK IS `grep DRAFT` (wave 8's F2 ruling) and this is it, mechanised: the
-    // parser only matches rows whose status cell is exactly `DRAFT`, so a row he has passed simply
-    // stops being counted – and the count above is what says so.
+  it('⭐ every row carries the applied-review status – one truth about where the corpus stands', () => {
+    // ⚠ RE-AIMED 23.09, `grep DRAFT`'s successor (wave 8's F2 ruling, mechanised): the parser only
+    // matches rows whose status cell is exactly the applied-review status, so a row that moves on
+    // (his final pass) or slides back simply stops being counted – and the count above says so.
+    // ⚠ AND NO ROW SAYS `DRAFT` ANY MORE: a new draft appearing in this table without the review
+    // would claim a provenance the corpus no longer has.
     const md = readFileSync(TABLE, 'utf8')
-    expect(md.split('`DRAFT`').length - 1, 'the status column, counted').toBe(EXPECTED_ROWS)
+    expect(md.split(`\`${STATUS}\``).length - 1, 'the status column, counted').toBe(EXPECTED_ROWS)
+    expect(md.includes('| `DRAFT` |'), 'no row still claims the pre-review status').toBe(false)
   })
 
   it('⚠ no row carries the long dash, which this repo bans in player-facing prose', () => {
