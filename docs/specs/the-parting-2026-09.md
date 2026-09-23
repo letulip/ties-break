@@ -93,7 +93,11 @@ the 11th seed in 88s) and `e2e/parting.spec.ts`, plus the phone law in
 fixture's strings. The firing week is found by evaluating the ends key directly against the latched
 hazard – no walk – which is what makes a fixture for a 6-per-100-latched-years event affordable.
 
-Still untouched: **the strings table (T8).**
+**T8 has landed and the wave is built.** `docs/plans/life-wave-12-strings-2026-09.md` carries every
+player-facing string this wave adds, pinned to the source character for character both ways by
+`tests/wave12-strings-roundtrip.test.ts`. ⚠ T8.2 needed nothing: the 22.08 fork-opinion pause note
+in `docs/plans/the-private-life.md` already carries its dated closure – the architect wrote it into
+`dcca657d` when this spec was opened.
 
 ## 1. One sentence of design
 
