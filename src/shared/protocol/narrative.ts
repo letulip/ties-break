@@ -719,9 +719,19 @@ export interface LoveEpisode {
  *  airs a wrong story carries the wrong story; that sting is the mechanic working, and the
  *  correction is explicitly a later wave's beat (the wave's §8). */
 export interface BoothPrivateLife {
-  /** which public fact was voiced: `'met'` = «there is someone», `'ended'` = «it is over». The two
-   *  are separately stamped on the episode and air independently. */
-  kind: 'met' | 'ended'
+  /** which public fact was voiced: `'met'` = «there is someone», `'ended'` = «it is over», and
+   *  since v88 `'divorced'` = «the marriage is over». The first two are separately stamped on the
+   *  episode and air independently.
+   *
+   *  ⭐⭐⭐ v88 (the parting, wave 12 – T5) – `'divorced'` IS A **DERIVED PROTOCOL KIND AND CARRIES
+   *  ZERO SCHEMA WEIGHT**, which is the difference between this member and the three the wave's own
+   *  T1 took. `'ended'` and `'divorced'` share ONE stamp (`airedEndedWeek`), because there is one
+   *  «it is over» fact per episode; what tells them apart is `latchedWeek`, a durable field of the
+   *  same row. So nothing new is persisted, no migration is owed, no golden fixture is added and
+   *  `SAVE_SCHEMA_VERSION` does not move for it – the kind is computed at read time from two fields
+   *  a save has held since v83. ⚠ AND IT CANNOT DRIFT: a marriage cannot become a break-up, so the
+   *  answer is the same on the airing week and on every re-render of it. */
+  kind: 'met' | 'ended' | 'divorced'
   /** the world's version of it is WRONG (`LoveEpisode.publicWrong`, read and never re-judged – the
    *  architect's ruling T). */
   wrong: boolean

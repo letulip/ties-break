@@ -101,6 +101,38 @@
 //                                                                          divorce» case, which is
 //                                                                          exactly what that case was
 //                                                                          written for.
+//
+// T5's own arms, scope EIGHT files – this one, the six wave-6 spotlight suites and commentary –
+// 243 cases, control GREEN before the first arm and GREEN AGAIN after the last revert:
+//
+//   ARM 9  `boothMentionDue`'s kind not split (always `'ended'`)    1 RED   §H's due-fact case.
+//   ARM 10 `boothPrivateLifeAt`'s read-back not split               2 RED   §H's read-back case and
+//                                                                          the wrong-story one.
+//   ARM 11 the booth's LICENCE broken – `publicWeek === null`       1 RED   §H's «a world that never
+//          dropped from the ended clause                                    knew says nothing» case.
+//                                                                           ⭐ THE ARM THAT MATTERS
+//                                                                           MOST, because §6's whole
+//                                                                           claim is that this wave
+//                                                                           adds WORDS to the
+//                                                                           publicity rail and not a
+//                                                                           dial.
+//   ARM 12 `exposureEventsOf` priced differently for a divorce      0 RED   ⚠⚠ **A FINDING ABOUT THE
+//          (`'aired'` -> `'stage'` on a latched row)                        TEST, NOT ABOUT THE
+//                                                                           CODE**, and it is why
+//                                                                           the deep-equal case now
+//                                                                           poses a standing and
+//                                                                           carries a positive
+//                                                                           control. That function
+//                                                                           gates EVERY kind on
+//                                                                           `newsStandingOf !==
+//                                                                           'quiet'`, so the first
+//                                                                           draft's fixture returned
+//                                                                           `[]` on both arms and
+//                                                                           the assertion passed
+//                                                                           without ever reaching
+//                                                                           the line it is about.
+//   ARM 12b the same arm against the REPAIRED case                  1 RED   which is the receipt for
+//                                                                           the repair.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -121,6 +153,7 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
 
 import {
   activeEpisode,
+  airBoothMention,
   answerLifeBeat,
   createWorld,
   deliverKnownPartner,
@@ -128,7 +161,10 @@ import {
   kidAgeExact,
   landWedding,
   lifeBeatOptionsFor,
+  boothMentionDue,
+  boothPrivateLifeAt,
   buildScroll,
+  exposureEventsOf,
   lifeLogOf,
   pendingLifeBeat,
   rollEnds,
@@ -144,6 +180,10 @@ import { expressedTemperamentOf } from '../src/engine/spirit'
 import { ECONOMY } from '../src/engine/economy'
 import type { LoveEpisode } from '../src/shared/protocol'
 import { DRAIN_ANSWER, drainCostOf } from '../tools/_lifeBeats'
+// ⚠ THE FIXTURE HELPER AND NOT A HAND-SET RANK: `newsStandingOf` reads `kidPoints`, which folds the
+// RESULTS ledger, so a posed `kidRankWta` alone leaves the gate shut. `standHerAt` poses both and
+// throws if the fold does not count its own row.
+import { standHerAt } from './helpers/newsStanding'
 
 const WEDDING = ECONOMY.wedding
 
@@ -663,5 +703,101 @@ describe('wave 12 T4 G – `forkAftermath`', () => {
 
   it('⭐ a career that has not reached its fork carries nothing', () => {
     expect(factsOf(careerAt('w12-fork-9', 990)).forkAftermath).toBeNull()
+  })
+})
+
+// =================================================================================================
+// H. THE BOOTH (T5) – the world names it where it already knew
+// =================================================================================================
+
+/** A career the world knows about, whose attachment ended `agoWeeks` ago. `latched` is what the
+ *  booth's kind splits on and is the only difference between the two arms of every case below. */
+function publicEnding(seed: string, latched: boolean, agoWeeks = 1): WorldState {
+  const world = careerAt(seed, 900, {
+    ...episode(600, latched ? 700 : null),
+    endedWeek: 900 - agoWeeks,
+    publicWeek: 750,
+    airedMetWeek: 752,
+  })
+  return world
+}
+
+describe('wave 12 T5 H – the due fact splits on the latch', () => {
+  it('⭐⭐⭐ a married ending is `divorced`, an unmarried one is `ended`', () => {
+    expect(boothMentionDue(publicEnding('w12-booth-0', true), 900)?.kind).toBe('divorced')
+    expect(boothMentionDue(publicEnding('w12-booth-1', false), 900)?.kind).toBe('ended')
+  })
+
+  it('⭐⭐⭐ the LICENCE is untouched – a world that never knew of them says nothing, married or not', () => {
+    // ⚠ THIS IS §6's WHOLE CLAIM: openness decided whether the world ever knew (`publicWeek`) and
+    // this wave adds words to that machinery rather than a dial. A divorce the press never heard of
+    // is not news because the ROMANCE was not, which is the same gate it always was.
+    for (const latched of [true, false]) {
+      const world = publicEnding(`w12-booth-quiet-${latched}`, latched)
+      world.loveEpisodes[0].publicWeek = null
+      expect(boothMentionDue(world, 900), `latched=${latched}: nobody knew, so nobody says`).toBeNull()
+    }
+  })
+
+  it('⭐⭐ and so is the news WINDOW – an old parting is not news either', () => {
+    const world = publicEnding('w12-booth-2', true, ECONOMY.spotlight.newsWindowWeeks + 1)
+    expect(boothMentionDue(world, 900)).toBeNull()
+  })
+
+  it('⭐⭐⭐ airing stamps the SAME field, and the fact can never be voiced twice', () => {
+    const world = publicEnding('w12-booth-3', true)
+    // ⚠ THE BOOTH'S TWO GATES, POSED RATHER THAN GUESSED (both measured against their own readers):
+    // a BIG STAGE (`ECONOMY.spotlight.stageTierMin`) and a standing above `'quiet'`.
+    standHerAt(world, 'known', world.week - 1)
+    airBoothMention(world, ECONOMY.spotlight.stageTierMin)
+    const aired = world.loveEpisodes[0].airedEndedWeek
+    expect(aired, 'one «it is over» stamp, whatever it is called').toBe(900)
+    airBoothMention(world, ECONOMY.spotlight.stageTierMin)
+    expect(world.loveEpisodes[0].airedEndedWeek, 'and the once-ness holds').toBe(aired)
+  })
+
+  it('⭐⭐⭐ the read-back says `divorced` on the airing week and on every re-render of it', () => {
+    const world = publicEnding('w12-booth-4', true)
+    world.loveEpisodes[0].airedEndedWeek = 880
+    expect(boothPrivateLifeAt(world, 880)).toEqual({ kind: 'divorced', wrong: false })
+    // ⚠ AND IT CANNOT DRIFT: the latch is durable, so asking again years later gives the same
+    // answer. A marriage cannot become a break-up.
+    world.week = 1400
+    expect(boothPrivateLifeAt(world, 880)).toEqual({ kind: 'divorced', wrong: false })
+  })
+
+  it('⭐⭐ the world\u2019s mistake is repeated and never re-judged', () => {
+    const world = publicEnding('w12-booth-5', true)
+    world.loveEpisodes[0].airedEndedWeek = 880
+    world.loveEpisodes[0].publicWrong = true
+    expect(boothPrivateLifeAt(world, 880)).toEqual({ kind: 'divorced', wrong: true })
+  })
+
+  it('⭐⭐⭐ `exposureEventsOf` is BYTE-IDENTICAL on the same world, married or not', () => {
+    // ⚠ THE WAVE'S OWN BOUNDARY (§6: «`exposureEventsOf` is untouched»): the `'aired'` kind already
+    // prices the pressure week, and pricing a divorce differently would be a dial this wave has no
+    // ruling for. Deep-equal across the latch is the strongest form that claim can take.
+    // ⚠⚠ THE STANDING IS POSED AND THE LIST IS PROVED NON-EMPTY, AND BOTH LINES ARE HERE BECAUSE
+    // THE FIRST DRAFT HAD NEITHER. `exposureEventsOf` gates EVERY kind on `newsStandingOf !==
+    // 'quiet'`, so a fixture with no rank returns `[]` on both arms and the deep-equal passes
+    // without ever reaching the line it is about. The mutation arm caught it: pricing a divorce's
+    // exposure differently left this case GREEN. It is a measurement of the test, not of the code,
+    // and it is the reason the positive control below is not decoration.
+    for (const week of [875, 880, 885]) {
+      const married = publicEnding(`w12-booth-exp-${week}`, true)
+      married.loveEpisodes[0].airedEndedWeek = 880
+      standHerAt(married, 'known', 870)
+      const single = publicEnding(`w12-booth-exp-${week}`, false)
+      single.loveEpisodes[0].airedEndedWeek = 880
+      standHerAt(single, 'known', 870)
+      expect(exposureEventsOf(married, week), `week ${week}`).toEqual(exposureEventsOf(single, week))
+    }
+    // THE POSITIVE CONTROL: the airing week really does hold an event, so the three deep-equals
+    // above are comparing something.
+    const onTheWeek = publicEnding('w12-booth-exp-control', true)
+    onTheWeek.loveEpisodes[0].airedEndedWeek = 880
+    standHerAt(onTheWeek, 'known', 870)
+    expect(exposureEventsOf(onTheWeek, 880), 'the airing week is an exposure event')
+      .toContainEqual({ kind: 'aired' })
   })
 })

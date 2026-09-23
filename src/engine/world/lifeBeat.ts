@@ -6420,7 +6420,7 @@ export function rollLeak(world: WorldState): void {
 export function boothMentionDue(
   world: WorldState,
   week: number,
-): { episode: LoveEpisode; kind: 'met' | 'ended' } | null {
+): { episode: LoveEpisode; kind: 'met' | 'ended' | 'divorced' } | null {
   const window = ECONOMY.spotlight.newsWindowWeeks
   /** Is a fact stamped at `at` still inside the window at `week`? ⚠ INCLUSIVE at the far edge –
    *  «a fact OLDER than `newsWindowWeeks` is never aired» – and closed at the near one. */
@@ -6431,7 +6431,14 @@ export function boothMentionDue(
   }
   for (const ep of loveEpisodesOf(world)) {
     if (ep.publicWeek === null || ep.endedWeek === null || ep.airedEndedWeek !== null) continue
-    if (stillNews(ep.endedWeek)) return { episode: ep, kind: 'ended' }
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T5) – AND THE WORLD NAMES IT WHERE IT ALREADY KNEW. A PURE
+    // READ of the same row, on the same licence, in the same window: nothing about WHETHER the booth
+    // speaks moves, only WHICH fact it has. ⚠ THE GATE IS UNTOUCHED AND THAT IS THE WHOLE OF §6 –
+    // openness already decided whether the world ever knew of them (`publicWeek`, the leak's own
+    // multipliers) and standing already decides whether it is spoken, so a quiet girl's quiet
+    // divorce stays hers and a star's is news. This wave adds the words to that machinery, not a
+    // dial – which is his ruling 1 answered by inheritance rather than by invention.
+    if (stillNews(ep.endedWeek)) return { episode: ep, kind: ep.latchedWeek !== null ? 'divorced' : 'ended' }
   }
   return null
 }
@@ -6474,6 +6481,10 @@ export function airBoothMention(world: WorldState, tier: TierId): void {
   // is no boolean beside it and no «aired count»: a nullable week says both «has it aired» and
   // «when», so the two can never disagree (`LoveEpisode`'s own note). T2's `'aired'` exposure kind
   // reads exactly this field, so the mention IS the exposure event with nothing in between.
+  // ⚠ v88 (wave 12 – T5): `'divorced'` STAMPS `airedEndedWeek`, THE SAME FIELD, and that is right
+  // rather than a shortcut. There is one «it is over» fact per episode and one stamp for it; what
+  // the latch changes is what the booth CALLS it, never how many times it may be said. A second
+  // field would let one ending air twice.
   if (due.kind === 'met') due.episode.airedMetWeek = world.week
   else due.episode.airedEndedWeek = world.week
   // ⚠ AND NO FEED ROW, WHICH IS DELIBERATE AND NOT AN OMISSION. The exposure week's one legible row

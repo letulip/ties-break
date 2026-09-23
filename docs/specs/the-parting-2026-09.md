@@ -77,6 +77,13 @@ objection the missing gate was written against does not survive inspection and t
 why: a week note is chance-gated already, so «the parent might not see it» is true of the whole
 mechanism.
 
+**T5 has landed.** `BoothPrivateLife` and the commentary packet widen with `'divorced'` – a derived
+kind carrying ZERO schema weight, because `'ended'` and `'divorced'` share one stamp
+(`airedEndedWeek`) and what tells them apart is `latchedWeek`, a durable field of the same row. The
+licence, the window and the once-ness are untouched, which is §6's whole claim: a quiet girl's quiet
+divorce stays hers because openness already decided whether the world knew. `exposureEventsOf` is
+byte-identical across the latch, now proved with a posed standing and a positive control.
+
 Still untouched: the
 diary (T4), the booth (T5), the bench (T6) and e2e (T7). The builder updates this section as tasks
 ship and fills §10's measured column from the bench, never predicted twice.

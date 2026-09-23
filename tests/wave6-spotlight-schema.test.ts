@@ -309,7 +309,12 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // is that SAME probe career walked up by the v25 recipe once more (`migrateSave(v86.json)` – its
     // README row records it), so it carries the same two episode rows. The claim is unchanged – every
     // fixture BELOW v83 still runs the per-row walks zero times.
-    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json'])
+    // ⚠ RE-AIMED 23.09 BY v88 (wave 12 – the parting), the same welcome red one version on, and
+    // this one is the plainest of the five: v88 appends NO KEY AT ALL (three union widenings), so
+    // v88.json is `migrateSave(v87.json)` with `schemaVersion` the only line that moved – the same
+    // probe career, the same two episode rows. The claim is unchanged: every fixture BELOW v83 still
+    // runs the per-row walks zero times.
+    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json'])
   })
 
   it('⭐⭐⭐ back-fills all four fields on EVERY row – a live one and an ended one, in one payload', () => {

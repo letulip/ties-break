@@ -400,7 +400,15 @@ export function exposureEventsOf(world: WorldState, week: number): ExposureEvent
 export function boothPrivateLifeAt(world: WorldState, week: number): BoothPrivateLife | null {
   for (const ep of loveEpisodesOf(world)) {
     if (ep.airedMetWeek === week) return { kind: 'met', wrong: ep.publicWrong }
-    if (ep.airedEndedWeek === week) return { kind: 'ended', wrong: ep.publicWrong }
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T5) – THE LATCH IS READ BACK HERE TOO, off the same row and
+    // with nothing else consulted. ⚠ THE STAMP DOES NOT CARRY THE KIND AND DOES NOT NEED TO: there
+    // is one «it is over» field per episode (`airedEndedWeek`), and `latchedWeek` is a durable fact
+    // of the same row that no later week can change – a divorce cannot become a break-up. So the
+    // answer is the same on the airing week and on every re-render of it, which is what this
+    // function's own «it reads the stamps and decides nothing» promises.
+    if (ep.airedEndedWeek === week) {
+      return { kind: ep.latchedWeek !== null ? 'divorced' : 'ended', wrong: ep.publicWrong }
+    }
   }
   return null
 }
