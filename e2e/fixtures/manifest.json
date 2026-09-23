@@ -590,6 +590,55 @@
           "n": 712761
         }
       }
+    },
+    {
+      "name": "parting",
+      "file": "parting.tsave",
+      "purpose": "One press from the divorce – married, and the week the marriage ends is the next one.",
+      "seed": "e2e-parting-10",
+      "careerId": "c-e2e-parting",
+      "slot": "auto:c-e2e-parting:a",
+      "targetWeek": 1133,
+      "schemaVersion": 88,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Vera",
+        "kidLastName": "Wouters",
+        "country": "US"
+      },
+      "bytes": 85830,
+      "payloadBytes": 85786,
+      "sha256": "b053b961efeb39ce876ec29432db21a786b72ff5a87e2d2e82f8110cba94afce",
+      "seedsTried": 11,
+      "facts": {
+        "week": 1133,
+        "seasonIndex": 21,
+        "ageYears": 35,
+        "fundsCents": 851198487,
+        "kidRank": 85,
+        "rankedDomestic": false,
+        "rankedItf": false,
+        "rankedWta": true,
+        "domesticPoints": 0,
+        "itfPoints": 0,
+        "wtaPoints": 725,
+        "seasonsPlayed": 21,
+        "resultRows": 2312,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": -1452139343,
+          "n": 905342
+        }
+      }
     }
   ]
 }

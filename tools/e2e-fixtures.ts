@@ -72,7 +72,12 @@ import {
   // (invariant 4), so a вычитка that re-words it must move this recipe's clause with it rather than
   // leaving a predicate nothing can satisfy.
   PREGNANCY_PAUSE_DETAIL,
+  // ⭐ v88 T7 – THE LATCHED HAZARD, READ OFF THE ENGINE rather than transcribed, so the `parting`
+  // recipe's key arithmetic and `rollEnds`' own threshold can never drift apart.
+  endsHazardFor,
+  latchedEpisode,
 } from '../src/engine/world'
+import { expressedTemperamentOf } from '../src/engine/spirit'
 // ⚠ THE MOOD LADDER IS READ OFF THE ENGINE'S OWN TABLE AND NEVER TRANSCRIBED HERE. `MOOD_WORD` is
 // the owner's five approved words (invariant 4) and `SPIRIT_BANDS` is the ladder top-down, so the
 // rung arithmetic in `moodRung` below moves with the spec instead of drifting away from it.
@@ -311,6 +316,12 @@ const SOFT_CAP_WEEK = WEEKS_PER_YEAR
  *  ⚠ IT IS THE CAP FOR BOTH, because the told-late scene is the same two hazards with a lag drawn
  *  between them – `belated` cannot be reached any earlier than `breakup` and is rarer, never sooner. */
 const ENDS_CAP_WEEK = 8 * WEEKS_PER_YEAR
+
+/** ⭐ v88 T7 – how far past the wedding the `parting` recipe will look for the ending. ⚠ IT IS THE
+ *  PREGNANCY CAP AND NOT THE WEDDING ONE, and it has to be: the latch lands around 26–27 on the
+ *  bench's own census, and at 6.23 endings per 100 latched-years the wait for one is years rather
+ *  than months. The walk stops at the first hit or at this cap, whichever comes first. */
+const PARTING_CAP_WEEK = 30 * WEEKS_PER_YEAR
 
 /** ⭐ THE ANSWER BOTH LOOK-AHEADS PRESS, AND IT IS THE ONE e2e/breakup.spec.ts PRESSES TOO.
  *
@@ -1543,6 +1554,94 @@ const RECIPES: Recipe[] = [
       return carried
         ? `a pregnancy arrived and no week inside its pause was one a browser could start on; the last was turned down because ${turnedDown}`
         : `no pregnancy in ${PREGNANCY_CAP_WEEK} weeks`
+    },
+  },
+  {
+    name: 'parting',
+    // ⭐⭐⭐ v88 T7 – ONE PRESS FROM THE DIVORCE. See FIXTURE_NAMES in tools/e2e-fixtures-read.ts for
+    // why this state is reachable from no other career in the corpus.
+    purpose:
+      'One press from the divorce – married, and the week the marriage ends is the next one.',
+    background: 'middle',
+    coachTier: 'middle',
+    policy: PLAYER,
+    // ⚠ `'continue'` FOR `engaged`'s AND `expecting`'s STATED REASON, and this walk goes furthest of
+    // all three: the latch needs 23+, and the ending after it is years further still.
+    fork: 'continue',
+    drive: (world, rng, recipe) => {
+      let married = false
+      let turnedDown: string | null = null
+      while (world.week < PARTING_CAP_WEEK && world.ending === null) {
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
+        // The bond-neutral drain answers every beat on the way past – the `'engaged'` card included,
+        // which is what LETS this walk reach a marriage at all. The `'divorced'` card is the one row
+        // it must never answer, which is why the gate below asks about the week AHEAD.
+        answerOpenQuestions(world, recipe.fork)
+
+        // ⭐ THE CHEAP GATE FIRST, this file's standing arrangement: a career that is not married
+        // cannot be one press from a divorce, and most weeks of most careers are not.
+        const latch = latchedEpisode(world)
+        if (latch === null) continue
+        married = true
+
+        // ⭐⭐⭐ THE FIRING WEEK IS ARITHMETIC ON A KEY, NOT A SEARCH – the plan's T7.1 in one line,
+        // and the reason this recipe can afford to exist. `rollEnds` derives ONE uniform per week on
+        // `seed:life:ends:<week>` and compares it with wave 4's product scaled by `latchEndFactor`,
+        // so «does the marriage end on the week after this one» is a pure function of the seed and
+        // the calendar. ⚠ THE HAZARD IS ASKED OF THE ENGINE (`endsHazardFor` × the factor) and never
+        // transcribed: a retune moves both sides together or neither.
+        // ⚠⚠ AND THE TEMPERAMENT IS THE **EXPRESSED** ONE, which is `rollEnds`' own ruling A and the
+        // one place a transcription would silently disagree: the hazard reads the girl she is THIS
+        // week, not the girl she was born.
+        const hazard = endsHazardFor(expressedTemperamentOf(world)) * ECONOMY.wedding.latchEndFactor
+        if (rngFromSeed(`${world.seed}:life:ends:${world.week + 1}`)() >= hazard) continue
+
+        // ⚠⚠ NOTHING MAY BE STANDING IN FRONT OF THE WEEK BUTTON – `engaged`'s clause set verbatim
+        // and for its stated reason: the spec's first act is to press it, so a career booting behind
+        // somebody else's card is a career whose press never happens.
+        if (pendingKnock(world)) { turnedDown = 'a knock is standing, and the spec presses the week button'; continue }
+        if (pendingBirthday(world) !== null) { turnedDown = 'a birthday is standing, and the spec presses the week button'; continue }
+        if (world.pendingTournament) { turnedDown = 'a tournament reveal is open, which holds the week back'; continue }
+        if (pendingLifeBeat(world) !== null) { turnedDown = 'a blocking beat is standing, whose card covers the week button'; continue }
+        if (liveSoftBeat(world) !== null) { turnedDown = 'a soft beat is on the hub, which the spec would be pressing past'; continue }
+        const refusal = advanceRefusal(world)
+        if (refusal !== null) { turnedDown = `the week is stopped by '${refusal}'`; continue }
+
+        // ⭐⭐⭐ THE LOOK-AHEAD, EXACT AND NOT AN ESTIMATE – every sibling's precedent, and here it is
+        // also the PROOF that the key arithmetic above agrees with the engine: the clone carries
+        // `rngMain`, `tickWeek` is what the week button runs, and what it must produce is the
+        // `'divorced'` card itself.
+        const probe = structuredClone(world)
+        tickWeek(probe, resumeMain(probe.rngMain))
+        if (probe.ending !== null) { turnedDown = `the one press ends the career (${probe.ending.type})`; continue }
+        const raised = pendingLifeBeat(probe)
+        if (raised === null || raised.kind !== 'divorced') {
+          // ⚠ A REAL REJECTION AND NOT A SANITY CHECK: `rollEnds` runs behind `endsEligible`, whose
+          // clauses this recipe deliberately does not re-spell, and a week the gate refuses takes no
+          // draw at all. The message names the mismatch so a red regeneration is readable.
+          turnedDown = `the press raised ${raised === null ? 'no card' : `'${raised.kind}'`} rather than the divorce`
+          continue
+        }
+        if (probe.pendingTournament) { turnedDown = 'a tournament reveal opens on the same press'; continue }
+        if (pendingKnock(probe)) { turnedDown = 'a knock lands on the same press'; continue }
+        if (pendingBirthday(probe) !== null) { turnedDown = 'a birthday lands on the same press'; continue }
+        if (buildTourBriefing(probe) !== null) { turnedDown = 'the tour briefing would land on the same press'; continue }
+        return null
+      }
+      if (world.ending !== null) {
+        return `career ended (${world.ending.type}) ${married ? `while married; last week turned down because ${turnedDown}` : 'before she ever married'}`
+      }
+      // ⚠ THE `null` ARM IS A REAL STATE AND NOT A MISSING MESSAGE, and the first regeneration is
+      // what found it: nine of the eleven seeds printed «turned down because null», because for a
+      // married career the COMMON rejection is the key arithmetic itself – no week ahead is a firing
+      // week – and that clause `continue`s before any of the named ones is reached. `belated`'s rule
+      // is that a search which cannot be debugged from its own output gets loosened blindly, so the
+      // two cases say different things.
+      return married
+        ? turnedDown === null
+          ? `she married and the ending never came up inside ${PARTING_CAP_WEEK} weeks – at ~6 endings per 100 latched-years this is the ordinary outcome, not a broken clause`
+          : `she married and no ending week was one a browser could start on; the last was turned down because ${turnedDown}`
+        : `no marriage in ${PARTING_CAP_WEEK} weeks`
     },
   },
 ]

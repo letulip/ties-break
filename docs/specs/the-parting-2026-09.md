@@ -87,7 +87,13 @@ byte-identical across the latch, now proved with a posed standing and a positive
 **T6 has landed and §10 is filled** – `npm run bench:wedding` sections (h) and (i), both arms run,
 every number measured.
 
-Still untouched: **e2e and the phone law (T7), and the strings table (T8).**
+**T7 has landed.** `e2e/fixtures/parting.tsave` (seed `e2e-parting-10`, week 1133, age 35, found on
+the 11th seed in 88s) and `e2e/parting.spec.ts`, plus the phone law in
+`tests/component/wave12-parting-ui.test.ts` measured against the ENGINE's own prompt rather than a
+fixture's strings. The firing week is found by evaluating the ends key directly against the latched
+hazard – no walk – which is what makes a fixture for a 6-per-100-latched-years event affordable.
+
+Still untouched: **the strings table (T8).**
 
 ## 1. One sentence of design
 
