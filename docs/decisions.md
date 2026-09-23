@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 126 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 128 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,12 +35,12 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 15 | [THE WEIGHT'S THREE WORD-QUESTIONS, RULED IN ONE LINE EACH](#23092026--the-weights-three-word-questions-ruled-in-one-line-each) | 2026-09-23 |
+| general | 16 | [WAVE 12 RULED OPEN: THE PARTING, THE LAYER'S CLOSING WAVE](#23092026--wave-12-ruled-open-the-parting-the-layers-closing-wave) | 2026-09-23 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 19 | [THE REVIEW PASS: THE STAIRCASE DENOMINATED, THE POSTPARTUM FLOOR, AND THE ALICE ARM](#21092026--the-review-pass-the-staircase-denominated-the-postpartum-floor-and-the-alice-arm) | 2026-09-21 |
+| process-and-git | 20 | [WAVE 12 REVIEWED: TEN ONE-LINERS, AND THE STRINGS REVIEW APPLIED IN-WAVE](#23092026--wave-12-reviewed-ten-one-liners-and-the-strings-review-applied-in-wave) | 2026-09-23 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
@@ -5129,3 +5129,66 @@ On the wave-11 review's carry («1. новые 2. твоя рекомендац�
    wave-2 `'info'` machinery and carries no mark by design, and anything of this kind that ever
    reaches a `'life'` row wears his standing white-heart fallback. `KIND_PICKS` stays empty for it;
    nothing was built, which is the point.
+
+## 23.09.2026 – WAVE 12 RULED OPEN: THE PARTING, THE LAYER'S CLOSING WAVE
+
+Wave 11 merged (PR #154). On the architect's leftover inventory he ruled the closing wave open,
+one line per question:
+
+1. **The quiet divorce, tied to what already watches her** – «вот это вообще да, но может тоже
+   на темперамент и известость как-то завязать? люди же могут узнать, что развод случился».
+   Answered in the spec: the tie already exists – openness prices the leak, standing prices the
+   booth – and the wave adds words to that machinery, not dials. No cents and no claim-beats; the
+   wedding's «никто и нисколько» extends.
+2. **The album line** – «можно»: one neutral milestone through the two-surface idiom; the album
+   settles nothing.
+3. **Her voice at the fork** – «голос интересно звучит, предложи что-то». The architect's
+   correction on the record: the surface was BUILT by wave 2 (the beat before the fork, the
+   congruence delta on the deed), so the 22.08 pause note closes; the proposal on his invitation
+   is the fork-aftermath scrap (spec §7), flagged and strikeable at dispatch.
+4. **Named kin** – «именования пока не будет»: the 22.09 ruling stands, out of the wave.
+5. **The college shelf** – «вообще не понял, распакуй»: unpacked in spec §12, left OPEN, not in
+   the builder's scope until ruled.
+6. **The pension boundary** – «ок наверное, на пенсии у нас игры вроде и нет»: recorded as the
+   structural boundary it already is (episodes tick only inside a played week).
+
+Canonical spec `docs/specs/the-parting-2026-09.md`; builder plan
+`docs/plans/life-wave-12-builder-2026-09.md`; the waves 10–11 strings tables are the architect's
+own deliverable inside the same wave. He dispatches the builder.
+
+## 23.09.2026 – WAVE 12 REVIEWED: TEN ONE-LINERS, AND THE STRINGS REVIEW APPLIED IN-WAVE
+
+The builder's report brought eleven questions; his answers, one line each:
+
+1. **The strings** – a full review pasted in place of a pass: four structural findings (the
+   unreachable roof variants – the latch needs 23+ and independence begins at 22; the aftermath
+   framed honestly as occasional texture; the news row's second clause claiming an emptied life;
+   lines inventing counts, rooms, boxes and match times) and replacement sets for her voice, the
+   middle answers, the diary, the aftermath and the booth. **Applied the same day** (2ef9d0fb +
+   739797c5): the corpus went 38 -> 34 (the her-line presence axis collapsed to the reachable
+   channel), every row now carries `HIS REVIEW APPLIED 23.09 – awaiting his final pass` (wave 9's
+   convention), and the roundtrip pin was re-aimed and re-mutated both ways.
+2. **The divorce card's listen-arm stays silent** – «давай оставим рекомендацию пока, но в беклог
+   надо закинуть, и заодно проверь что мы еще откладывали до этого, чтобы не потерялось» – the
+   layer's parked list consolidated into now-next-later.md «Later» the same day, every line
+   sourced.
+3. **Two rows on one week stand** – «ок».
+4. **The mirrored answer prices stand** – «давай оставим, я попробую обратить на это внимание».
+5. **The shock row -27/-42 stands** – «наверное да, не знаю пока на что и как это влияет вообще и
+   должен ли он быть вариативным у разных темпераментов» – answered in place: the two columns ARE
+   the temperament variance (steady/intense read through `perturbationScale`, the intensity axis),
+   so the intense voices already take -42 where the steady take -27; no third dial exists to add.
+6. **`DIVORCED_WEEKS = 8` stands** – «ок, по рекомендации».
+7. **The fork aftermath stays** – «ок неверное» [наверное], with the review's answer-agnostic
+   lines and the honest-texture framing.
+8. **No divorce glyph** – «не уверен, что будет везде корректно отображаться, давай пока так
+   оставим»: the standing per-kind-marks deferral (the 🤍 v1 ruling, T9's discriminator)
+   refreshed for `'divorced'`.
+9. **The college shelf** – «давай распакуем?»: unpacked again in chat. AND a new design question
+   opened in the same line: college as PLAYED content – «я в интернете видел видео типа "10
+   любителей против #1 из лиги колледжа", будем ли мы строить как в прологе отдельную сетку на
+   колледж и отдельно как-то там регистрировать в нашей истории все успехи и проходы оттуда?» –
+   under discussion, nothing ruled, the current truth written up for him (the yearly
+   `CollegeLeagueRun` with rounds is persisted since v56; no walkable bracket, no album page).
+10. **No tuning before play** – «пока не крутим, надо играть»: row 2's corpus stays n=88 and
+    every drafted number stands until the playtest.

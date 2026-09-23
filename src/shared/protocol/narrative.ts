@@ -73,6 +73,24 @@ export type MilestoneType =
    *  and the sex is `'girl'` for every row v85 can write (RULED 20.09), so a field holding one
    *  constant is a second home for a fact `world.children` already keeps. W5 reads the array. */
   | 'birth'
+  /** ⭐ v88 – THE DIVORCE (the parting, wave 12 T3): the week a marriage ended, kept where a life's
+   *  turns are kept. His «можно» of 23.09 on the album line, and `'wedding'`'s move one wave on for
+   *  its reason: a new persisted union member is a schema change by invariant 3 (the v44
+   *  `'facility'` precedent), and this one RIDES THE v88 BUMP T1 already took rather than costing
+   *  its own. No back-fill exists or could – a save below v88 can hold a marriage the ENGINE ended
+   *  (the hazard has run since v83) but no milestone was ever captured for it, and a back-fill would
+   *  have to invent a week from a `latchedWeek`/`endedWeek` pair that says nothing about whether the
+   *  album should have kept the line.
+   *
+   *  ⚠ THE IDENTITY IS THE **EPISODE**, `'wedding'`'s call and not `'birth'`'s – `kind` carries the
+   *  `LoveEpisode.id`. A marriage ends once per episode, so `divorce:<episodeId>` is exact, and a
+   *  SECOND marriage's divorce on a later row captures its own line (the 11.09 re-shape's whole
+   *  point, inherited from the wedding it closes). See `milestoneKey`.
+   *
+   *  ⚠⚠ AND THE ALBUM DOES NOT SETTLE WHO WAS RIGHT – the bereavement precedent, and the reason
+   *  this member carries no second field. There is no fault, no whose, no duration and no name: the
+   *  world holds none of them, and a slot for one would be an invitation to invent it. */
+  | 'divorce'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -397,8 +415,32 @@ export interface SoftBeatInvite {
  *  ⚠ THE THIRD KIND WITH NO FREE ANSWER (after `'ended'` and `'engaged'`), and read-INDEPENDENT by
  *  construction: no overlay exists for this kind, so `DRAIN_ANSWER['expecting']` = `worry` charges
  *  −0.5 under every reading. ⚠ It carries no `heard` stamp and no listen detour – the fact is the
- *  fact, and the three answers are the whole of what a parent can do with it. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan' | 'bereavement'
+ *  fact, and the three answers are the whole of what a parent can do with it.
+ *
+ *  ⭐⭐⭐ v88 (the parting, wave 12 – T1) ADDS `'divorced'`: THE WEEK A **MARRIAGE** ENDS. Its
+ *  `detail` is the `LoveEpisode.id`, exactly as `'met'`'s, `'ended'`'s, `'engaged'`'s and
+ *  `'spouse-view'`'s are – machine-readable, never rendered.
+ *
+ *  ⚠⚠ IT IS `'ended'`'s OTHER HALF AND NOT A KIND BESIDE IT, WHICH IS THE WHOLE OF WHAT THE WAVE
+ *  BUILDS. One hazard decides both (`rollEnds`, scaled by `ECONOMY.wedding.latchEndFactor` on a
+ *  latched row – SAME key, SAME uniform, SAME threshold), and the kind that is raised is a PURE
+ *  READ of `latchedWeek` at the one raise site. So the two can never both fire for one episode and
+ *  never both be absent: an ending raises exactly one of them, and which one is a fact about the
+ *  row rather than a second draw.
+ *
+ *  ⚠⚠ AND IT IS ALWAYS TOLD-NOW, BY CONSTRUCTION AND NOT BY A GATE. `'ended'` has a told-late
+ *  register because an episode can end before its `knownWeek` arrives; a LATCHED one cannot – the
+ *  latch needs an ANSWERED `'engaged'` beat, which needs the delivered episode, so a married row
+ *  always holds the `'met'` receipt and the ending never falls through to `deliverKnownPartner`'s
+ *  late path. The spec's §2.2 states it; the plan's T2.4 pins both halves.
+ *
+ *  ⚠ THE FOURTH KIND WITH NO FREE ANSWER (after `'ended'`, `'engaged'` and `'expecting'`), and
+ *  read-INDEPENDENT by construction rather than by two absences: no overlay in `lifeBeatOptionsFor`
+ *  names this kind, so `DRAIN_ANSWER['divorced']` prices the same object under every reading. ⚠ It
+ *  carries no `heard` stamp and no listen detour: the ends-read is `'ended'`'s machinery, drawn on
+ *  `seed:life:ends:<week>:react`, and reaching for it here would put a NEW key on every divorce –
+ *  the wave's zero-draws law forbids it (spec §9). */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged' | 'spouse-view' | 'own-key' | 'expecting' | 'return-plan' | 'bereavement' | 'divorced'
 
 /** ⭐ v83 (wave 7 – T5) – WHAT THE SPOUSE'S WORD IS ABOUT, the `'spouse-view'` row's own `detail`
  *  vocabulary. Four occasions, each one a READ of facts the world already holds (see the kind's own
@@ -677,9 +719,19 @@ export interface LoveEpisode {
  *  airs a wrong story carries the wrong story; that sting is the mechanic working, and the
  *  correction is explicitly a later wave's beat (the wave's §8). */
 export interface BoothPrivateLife {
-  /** which public fact was voiced: `'met'` = «there is someone», `'ended'` = «it is over». The two
-   *  are separately stamped on the episode and air independently. */
-  kind: 'met' | 'ended'
+  /** which public fact was voiced: `'met'` = «there is someone», `'ended'` = «it is over», and
+   *  since v88 `'divorced'` = «the marriage is over». The first two are separately stamped on the
+   *  episode and air independently.
+   *
+   *  ⭐⭐⭐ v88 (the parting, wave 12 – T5) – `'divorced'` IS A **DERIVED PROTOCOL KIND AND CARRIES
+   *  ZERO SCHEMA WEIGHT**, which is the difference between this member and the three the wave's own
+   *  T1 took. `'ended'` and `'divorced'` share ONE stamp (`airedEndedWeek`), because there is one
+   *  «it is over» fact per episode; what tells them apart is `latchedWeek`, a durable field of the
+   *  same row. So nothing new is persisted, no migration is owed, no golden fixture is added and
+   *  `SAVE_SCHEMA_VERSION` does not move for it – the kind is computed at read time from two fields
+   *  a save has held since v83. ⚠ AND IT CANNOT DRIFT: a marriage cannot become a break-up, so the
+   *  answer is the same on the airing week and on every re-render of it. */
+  kind: 'met' | 'ended' | 'divorced'
   /** the world's version of it is WRONG (`LoveEpisode.publicWrong`, read and never re-judged – the
    *  architect's ruling T). */
   wrong: boolean
@@ -930,6 +982,45 @@ export interface DiaryFacts {
    *  their relation (RULED 22.09 – the deceased is UNNAMED in mechanics AND copy), may not carry a
    *  date, a figure or a count, and may not state her interior as fact (the fallible-parent law). */
   bereavedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW MANY WEEKS SINCE HER MARRIAGE ENDED**, or `null`
+   *  for a career that has not had one end. Derived at snapshot time off the `loveEpisodes` rows
+   *  themselves – `latchedWeek !== null && endedWeek !== null` – and persisted nowhere new.
+   *
+   *  ⚠⚠ THERE IS NO LIST BEHIND IT, WHICH IS THE ONE PLACE IT PARTS FROM THE FIELD ABOVE.
+   *  `bereavementWeeks` exists because a death writes no record anywhere else in the world; a
+   *  divorce writes one in the most durable place this layer has, and a second list beside the
+   *  episode would be one fact with two sources of truth.
+   *
+   *  ⚠ WEEKS-SINCE AND NOT A BAND, the field above's call and its argument: a parting has no stages
+   *  this game models, so the only honest fact is how long ago and the licence decides the window.
+   *  ⚠ `null` COVERS TWO DIFFERENT TRUE THINGS – she never married, and she is married still – and
+   *  no line may distinguish them, because neither of them is «a divorce».
+   *
+   *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: what the PARENT could see of a household after it. It may
+   *  NOT name the husband (the episode has carried a name since v83 and which surfaces speak it is
+   *  the owner's question), may not say whose fault it was or how long it had been coming, may not
+   *  carry a date, a figure or a count, and may not state her interior as fact. */
+  divorcedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (wave 12 – T4.2) – **DID THE PARENT DO WHAT SHE ASKED AT THE FORK**, on the week it
+   *  resolved: `'with'`, `'against'`, or `null` on every other week of every career.
+   *
+   *  ⚠⚠ IT EXISTS SO A SILENT CONSEQUENCE CAN BE SEEN. The congruence delta lands at `answerFork`
+   *  (+3 with her want, −4 against it) and nothing on any screen says it happened, so a parent who
+   *  overrode her never learns the game remembered. The spec's §7 is the architect's own proposal on
+   *  the owner's «предложи что-то», and it is ONE scrap on ONE week.
+   *
+   *  ⚠ THE WEEK IS EXACT AND NOT APPROXIMATE: the fork HOLDS THE CALENDAR while it is unanswered, so
+   *  the week it was asked is the week it was answered, and no second date is persisted for it.
+   *
+   *  ⚠ `null` ON A PRE-v73 CAREER IS THE ABSENCE DISCIPLINE: she was never asked, so there is no
+   *  want on record to have gone with or against, and a default would be the diary inventing an
+   *  opinion she never stated.
+   *
+   *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: that the week held a decision and what the house looked
+   *  like afterwards. The against-arm may state the fact IN HER VOICE and may NOT pass a verdict on
+   *  the parent – no «should», no «wrong», no consequence foretold. It may not name a number, and it
+   *  may not claim what she will feel about it later, which is a fact the world does not hold. */
+  forkAftermath: 'with' | 'against' | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – her mother's cabinet, or null on a career that continues no line.
    *  `null` and `0` are different: null is «there is no mother in this house», 0 is «she is here
    *  and she won nothing», and a line about a cabinet may fire on neither. Derived at render off

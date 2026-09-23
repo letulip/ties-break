@@ -342,7 +342,11 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // ⚠ AND v87.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v86.json)`, wave 11's
     // own README row – so it reads by this arm for the same reason again, and not by the migration's
     // 23/29. The weight's three keys are world keys and touch no curve.
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json') {
+    // ⚠ AND v88.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v87.json)`, wave 12's
+    // own README row – and this rung is the plainest of the six, because v88 appends NO KEY AT ALL:
+    // three union widenings, `schemaVersion` the only line that moved on the whole fixture. Nothing
+    // in the parting touches a curve, or could.
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

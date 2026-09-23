@@ -113,7 +113,19 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // before the birth, and she enters nothing on any of them – so a tournament reveal, the clause that
 // killed eight of `belated`'s nine candidates, cannot happen at all inside the window. The scarce part
 // is reaching a pregnancy; picking a clean week inside one is nearly free.
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated', 'engaged', 'expecting'] as const
+// ⭐⭐⭐ v88 T7 – `'parting'`: ONE PRESS FROM A DIVORCE, and it needed a fixture of its own for the
+// reason `'engaged'` did. The state is reachable from no other career here: `'breakup'` parks one
+// press from an UNLATCHED ending and `'engaged'` one press from the wedding, and the card this wave
+// builds needs a marriage BEHIND it and a `rollEnds` hit AHEAD of it – a conjunction no existing
+// fixture holds and none could be walked into without changing what it is for.
+// ⚠⚠ AND THE FIRING WEEK IS FOUND WITHOUT WALKING, WHICH IS THE ONE THING THIS RECIPE DOES THAT ITS
+// SIBLINGS DO NOT. The ends stream is `seed:life:ends:<week>` and the latched threshold is wave 4's
+// product times `ECONOMY.wedding.latchEndFactor`, so once a career is married the week its marriage
+// ends is ARITHMETIC ON A KEY rather than a search: evaluate the uniform for each week ahead, take
+// the first hit, park one week before it. That matters here more than anywhere else in this file,
+// because the event is rare – the bench measures 6.23 endings per 100 latched-years – and a
+// week-by-week walk looking for one would be `belated`'s 473-seed search wearing a different hat.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated', 'engaged', 'expecting', 'parting'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.

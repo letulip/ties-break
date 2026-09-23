@@ -817,8 +817,11 @@ const COACH_AFTER_WIN: readonly ((who: string) => string)[] = [
  *  produced before it could. */
 export interface CommentaryPrivateLife {
   side: Side
-  /** which public fact: `'met'` = there is somebody, `'ended'` = it is over. */
-  kind: 'met' | 'ended'
+  /** which public fact: `'met'` = there is somebody, `'ended'` = it is over, `'divorced'` = the
+   *  marriage is over. ⭐ v88 (the parting, wave 12 – T5): the third is DERIVED engine-side off the
+   *  episode's own latch, so this packet still carries two bits and no new state – see
+   *  `BoothPrivateLife`'s own note. */
+  kind: 'met' | 'ended' | 'divorced'
   /** the world's version is WRONG, and the booth repeats it that way. */
   wrong: boolean
 }
@@ -843,6 +846,31 @@ const BOOTH_ENDED_TRUE: readonly ((who: string) => string)[] = [
 const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
   (who) => `The papers have ended it for ${who} this week, and no two of them tell it the same way.`,
   (who) => `A break-up on every front page beside ${who}, and not one of them has the same story.`,
+]
+/** ⭐⭐⭐ v88 (the parting, wave 12 – T5) – «THE MARRIAGE IS OVER», true. ⚠ ⚠ DRAFT, and it is the
+ *  booth's register rather than the family's: what a commentator can see from their own seat and
+ *  what the front pages in front of them are running, which is this block's standing law. ⚠ IT MAY
+ *  NOT SAY whose fault it was, what it cost, or one word about how she feels – and it may not name
+ *  him, because the schema's name is the owner's to release to a surface. ⚠ AND IT IS SEPARATE FROM
+ *  `BOOTH_ENDED_TRUE` rather than a wording of it: «a seat lighter» is a box with somebody missing
+ *  from it and reads as a break-up; a marriage ending is a thing the papers have a word for. */
+const BOOTH_DIVORCED_TRUE: readonly ((who: string) => string)[] = [
+  // ⚠ HIS REVIEW APPLIED 23.09: «came out for this one on her own» read as a claim about her box,
+  // which the booth does not know, and «serving at two in the afternoon» invented a match time.
+  // Both lines now state only what the packet holds: the papers have it, and she is playing.
+  (who) => `The papers say the marriage is over. ${who} is here to play.`,
+  (who) => `Every front page has the divorce. ${who} still has a match to play.`,
+]
+/** ...and as the world got it WRONG. ⚠ A VARIANT EXISTS BECAUSE `'ended'` HAS ONE, which is the
+ *  spec's own condition (§6: «with the wrong-story variant iff the `'ended'` sentence has one») and
+ *  not a choice made here. The booth repeats the story it was given, mistake and all – that sting is
+ *  the mechanic working, and nothing here hedges or apologises for it. */
+const BOOTH_DIVORCED_WRONG: readonly ((who: string) => string)[] = [
+  // ⚠ HIS REVIEW APPLIED 23.09 – the same fact, tighter.
+  (who) => `The papers have ${who} getting divorced. No two versions quite agree.`,
+  // ⚠ The second variant deliberately names nobody – the story, not the player, is the subject –
+  // so it takes no parameter at all: a `(who) =>` with an unused name is what vue-tsc refused.
+  () => `Every front page has the divorce. The story changes from one to the next.`,
 ]
 
 /** The pool for one packet – the two facts crossed, and nothing else decides it. */
@@ -889,6 +917,9 @@ export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: strin
 
 function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => string)[] {
   if (ctx.kind === 'met') return ctx.wrong ? BOOTH_MET_WRONG : BOOTH_MET_TRUE
+  // ⭐ v88 (wave 12 – T5): the third fact, and the chain stays a chain because the `wrong` axis
+  // crosses every kind – a record keyed by kind alone would have to hold pairs.
+  if (ctx.kind === 'divorced') return ctx.wrong ? BOOTH_DIVORCED_WRONG : BOOTH_DIVORCED_TRUE
   return ctx.wrong ? BOOTH_ENDED_WRONG : BOOTH_ENDED_TRUE
 }
 

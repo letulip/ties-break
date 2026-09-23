@@ -653,7 +653,12 @@ describe('save migrations', () => {
     // `bereavementWeeks`), NOT WEAKENED, and for the same reason every re-aim above it was: this case
     // is about the v63 -> v65 double step, and its last line simply follows the ladder's head so the
     // sentence over it stays checkable. v87 was moved with its full move, never by this line's item.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 87 – past the colliding 64, through 65').toBe(87)
+    // ⚠ RE-AIMED AT v88 (23.09, wave 12 – the parting), NOT WEAKENED, and this re-aim is the first
+    // one on this line that follows a version which appends NO KEY AT ALL: v88 is three union
+    // widenings (`SpiritShockKind` + `'divorce'`, `MilestoneType` + `'divorce'`, `LifeBeatKind` +
+    // `'divorced'`) and its step's body is empty. So the walk below gains a rung that writes
+    // nothing, which changes no byte here for a reason even shorter than v85's and v86's.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 88 – past the colliding 64, through 65').toBe(88)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

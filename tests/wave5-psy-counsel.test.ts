@@ -573,7 +573,14 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // and this case's claim about the psychologist is untouched again: he still writes none and is
     // still not markable. No pick was made for the new kind either (§5a), so the 🤍 fallback below
     // carries it exactly as it carries `'own-key'`.
-    expect([...LIFE_BEAT_ROW_KINDS], 'and the roster is the row-writing kinds, exactly').toEqual(['met', 'ended', 'own-key', 'expecting'])
+    // ⭐ RE-AIMED 23.09 BY v88 (wave 12 – T2), the same ratchet one wave on: the roster grew by
+    // `'divorced'` – `rollEnds`' latched branch writes one kept, STAMPED `'life'` row on the week a
+    // marriage ends – and this case's claim about the psychologist is untouched again: he still
+    // writes none and is still not markable. ⚠ NO PICK WAS MADE FOR IT either (§5a), so the 🤍
+    // fallback below carries it – and here that is the right default rather than merely the safe
+    // one, because `'ended'` wears his ♡ and a divorce row beside it wearing 🤍 would read as the
+    // LOUDER of the two, which is backwards.
+    expect([...LIFE_BEAT_ROW_KINDS], 'and the roster is the row-writing kinds, exactly').toEqual(['met', 'ended', 'own-key', 'expecting', 'divorced'])
     expect(lifeRowGlyph('fork-psy'), '⭐ and an unpicked kind is not unmarked – it wears the owner\'s own heart')
       .toBe(LIFE_ROW_EMOJI.life)
     // ⚠ THE GLYPH PICK IS A QUESTION FOR THE OWNER EITHER WAY (who-she-is §5a: «no agent adds or
@@ -613,12 +620,22 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // the announcement opened, and who-she-is §5a is why a new glyph is not invented for it («no
     // agent adds or swaps one unasked»). A `'loss'` row kind would need a member of `LifeBeatKind`,
     // which wave 6's §8 forbids for a row that is not a beat, and a mark of its own, which is his.
+    // ⭐ RE-AIMED 23.09 BY v88 (wave 12 – T2), THE RATCHET DOING ITS JOB A FOURTH TIME: the count
+    // moved 7 → 8 because `rollEnds`' latched branch writes the wave's ONE new `type: 'life'` row –
+    // kept, stamped `lifeKind: 'divorced'` – on the week a marriage ends. Both halves move
+    // together, so «every site stamps a kind» stays the total claim it became at D3, and an
+    // UNSTAMPED site still reddens the second assertion alone.
+    // ⚠ THE STAMP IS A NEW KIND THIS TIME, unlike the loss row one wave back, and the difference is
+    // the reason rather than an inconsistency: the loss belongs to the arc the announcement opened,
+    // so it borrowed `'expecting'`; a divorce is its own beat with its own card, so the row carries
+    // the beat's own kind. ⚠ STILL NO GLYPH (§5a) – the roster gained a member and `KIND_PICKS` did
+    // not, which is the split the case above pins.
     const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(7)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(8)
     const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
     expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
     expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
-      .toHaveLength(7)
+      .toHaveLength(8)
   })
 })
 

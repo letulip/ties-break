@@ -128,6 +128,11 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   // ⚠ v87 (wave 11 T5): nobody in this fixture's family has died – which is every career in
   // the game until the weight is switched on, and is what `null` means on the field.
   bereavedWeeksAgo: null,
+  // ⚠ v88 (wave 12 T4): this fixture's marriage never ended – which is every career that never
+  // married and every one still married, and is what `null` means on the field. `forkAftermath`
+  // is `null` on every week but the one the fork resolves on, which this is not.
+  divorcedWeeksAgo: null,
+  forkAftermath: null,
   // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
   // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
   // generation out of the diary in silence.

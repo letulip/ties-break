@@ -110,6 +110,14 @@ export function milestoneKey(m: Milestone): string {
     // one week here, so the week IS the identity, and no `kind` rides the row at all.
     case 'birth':
       return `${m.type}:${m.week}`
+    // ⭐ v88 (the parting, wave 12 T3): PER EPISODE, `'wedding'`'s CALL AND NOT `'birth'`'s – and
+    // the two live three lines apart so the difference is readable. A marriage ends once per
+    // EPISODE, so `divorce:<episodeId>` is exact and a SECOND marriage's divorce on a later row
+    // captures its own line; the birth is per WEEK because a second child of the same marriage would
+    // be swallowed by an episode key. The `?` fallback is for a hand-built row only; the one writer
+    // always stamps the id.
+    case 'divorce':
+      return `${m.type}:${m.kind ?? '?'}`
   }
 }
 
@@ -161,6 +169,15 @@ export const MEMORY_EMOTION: Record<MilestoneType, MemoryFace> = {
   // for falls back honestly (`paintedFaceFor`), which is a first-class answer rather than a 404: the
   // gate is 23+, so `adult` is the common case and `lateCareer` is an ordinary one.
   wedding: 'bride',
+  /** ⭐⭐ v88 (the parting, wave 12 T3) – `serious`, AND THE CHOICE IS A REFUSAL AS MUCH AS A PICK.
+   *  Three faces were candidates and two are refused by the album's own law (§5: it does not settle
+   *  who was right): `funeral` paints a grief this is not – the person is alive and in the world –
+   *  and `norm` paints nothing at all, which on the one page that says a marriage ended reads as the
+   *  album shrugging. `serious` is the composed half of the set, the face `final` already wears: a
+   *  week that mattered and that nobody won. ⚠ NO NEW PAINTING IS COMMISSIONED and none is needed –
+   *  `serious` is a `PortraitEmotion`, painted at every band, so `FACE_BANDS` gains no row and
+   *  `paintedFaceFor` has no fallback to take. */
+  divorce: 'serious',
   // ⭐⭐ v85 (the birth, wave 8 T4) – `'norm'`, AND IT IS **THE BUILDER'S DRAFT** exactly as the
   // wedding's was, flagged here so the next reader finds it the way the wedding's draft note found
   // its own mistake eighteen days later.
@@ -334,6 +351,32 @@ export interface DiaryWorldView {
    *  wearing a vocabulary.
    *  ⚠ `null` IS EVERY CAREER IN THE GAME TODAY and is a real state: nobody has died. */
   bereavedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW MANY WEEKS SINCE HER MARRIAGE ENDED**, or `null`
+   *  for a career that has not had one end. Derived at snapshot time off the `loveEpisodes` rows
+   *  themselves (`latchedWeek !== null && endedWeek !== null`) and persisted nowhere new – the wave
+   *  adds no schema at all, so unlike `bereavedWeeksAgo` one field up there is no list to read.
+   *
+   *  ⚠ WEEKS-SINCE AND NOT A BAND, `bereavedWeeksAgo`'s own call and its own argument: a divorce has
+   *  no stages this game models, so the only honest fact is how long ago and the LICENCE decides
+   *  which window a line may speak in. ⚠ `null` IS EVERY CAREER THAT NEVER MARRIED and every one
+   *  whose marriage is still standing, which are two different true things said by one absence –
+   *  and no line in the diary may distinguish them, because neither is «a divorce». */
+  divorcedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (wave 12 – T4.2) – **DID THE PARENT DO WHAT SHE ASKED AT THE FORK**, on the week it
+   *  resolved: `'with'`, `'against'`, or `null` on every other week.
+   *
+   *  ⚠⚠ THIS IS THE ONE FACT IN THIS LIST THAT EXISTS SO A SILENT CONSEQUENCE CAN BE SEEN. The
+   *  congruence delta lands at `answerFork` (`ECONOMY.bond.delta.forkWithHerWant` +3 /
+   *  `forkAgainstHerWant` −4) and nothing on any screen says it happened, so a parent who overrode
+   *  her never learns that the game remembered. The spec's §7 is the architect's proposal on his
+   *  «предложи что-то»; the scrap is ONE line on ONE week and the against-arm states the fact in her
+   *  voice WITHOUT A VERDICT.
+   *
+   *  ⚠ `null` ON A PRE-v73 CAREER IS THE ABSENCE DISCIPLINE AND NOT A GAP: she was never asked, so
+   *  there is no want on record to have gone with or against, and a default would be the diary
+   *  inventing an opinion she never stated. ⚠ AND `null` ON EVERY OTHER WEEK is what keeps this a
+   *  single-week scrap rather than a mood that hangs around – see the licence in `weekNotes.ts`. */
+  forkAftermath: 'with' | 'against' | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – HER MOTHER'S CABINET, or null on every career that continues no line.
    *  Read straight off `world.dynasty.motherCareer.titles`; `null` and `0` are DIFFERENT and the
    *  difference is the whole licence: null is «there is no mother to be in this house», 0 is «she is

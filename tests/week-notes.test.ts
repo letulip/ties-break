@@ -43,6 +43,7 @@ import { worldSource, diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   BEREAVED_WEEKS,
+  DIVORCED_WEEKS,
   WEEK_NOTES,
   WEEK_NOTE_CHANCE,
   WEEK_NOTE_GRIND,
@@ -129,6 +130,11 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // ⚠ v87 (wave 11 T5): nobody in this fixture's family has died – which is every career in
     // the game until the weight is switched on, and is what `null` means on the field.
     bereavedWeeksAgo: null,
+    // ⚠ v88 (wave 12 T4): this fixture's marriage never ended – which is every career that never
+    // married and every one still married, and is what `null` means on the field. `forkAftermath`
+    // is `null` on every week but the one the fork resolves on, which this is not.
+    divorcedWeeksAgo: null,
+    forkAftermath: null,
     // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
     // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
     // generation out of the diary in silence.
@@ -325,6 +331,18 @@ function* sweepStages(): Generator<DiaryFacts> {
     // it. One row arms the claim; the pair arms the window.
     ...VOICES.map((temperament) => ({ bereavedWeeksAgo: 1, temperament })),
     ...VOICES.map((temperament) => ({ bereavedWeeksAgo: 60, temperament })),
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T4) – THE WEEKS AFTER A MARRIAGE ENDS, armed exactly as the
+    // pair above is and for the pair above's reasons: the first row arms the claim (without it the
+    // four new lines would be licensed in NO fixture and every guard in this file would pass over
+    // them without looking), the second arms the WINDOW (a licence that dropped
+    // `<= DIVORCED_WEEKS` would reach these and redden the reached-per-line case).
+    ...VOICES.map((temperament) => ({ divorcedWeeksAgo: 1, temperament })),
+    ...VOICES.map((temperament) => ({ divorcedWeeksAgo: 60, temperament })),
+    // ⭐⭐⭐ v88 (wave 12 – T4.2) – THE WEEK THE FORK RESOLVES, both arms, all four voices. ⚠ TWO
+    // ROWS AND NOT THREE: the `null` arm needs no shape of its own, because every other fixture in
+    // every sweep already carries it – which is what makes «one week only» checkable.
+    ...VOICES.map((temperament) => ({ forkAftermath: 'with' as const, temperament })),
+    ...VOICES.map((temperament) => ({ forkAftermath: 'against' as const, temperament })),
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -579,6 +597,17 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // in is the licence's job. ⚠ It re-derives off `bereavedWeeksAgo` rather than off the licence,
   // which is R2-18's law and the whole reason this record exists.
   bereaved: (f) => f.bereavedWeeksAgo !== null,
+  // ⭐⭐⭐ v88 (the parting, wave 12 – T4) – AND THE MARRIAGE THAT ENDED, off the fact. A bare
+  // membership rather than a value, `bereaved`'s own call: there are no named stages of a parting in
+  // this model, so what the claim asserts is «there has been one» and WHICH WEEKS a line may speak
+  // in is the licence's job. ⚠ It re-derives off `divorcedWeeksAgo` rather than off the licence,
+  // which is R2-18's law and the whole reason this record exists.
+  divorced: (f) => f.divorcedWeeksAgo !== null,
+  // ⭐⭐⭐ v88 (wave 12 – T4.2) – AND THE FORK'S AFTERMATH, off the fact AND ITS VALUE. The first
+  // VALUED claim since `motherhood`, and the value is what makes the check worth having: a line
+  // written for «she was overridden» licensed onto a week she was heard would be the single worst
+  // thing this pool could do, and `f.forkAftermath === value` is the whole of the guard against it.
+  forkAftermath: (f, value) => f.forkAftermath === value,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -694,6 +723,59 @@ describe('W2 — the ordinary week note is HONEST', () => {
     }
     expect(licensed, 'no line claims the fact – then HOLDS.bereaved proves nothing').toBeGreaterThan(0)
     expect(seen.size, 'every voice of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐⭐⭐ v88 (wave 12 T4) – and `HOLDS.divorced` is REACHED, per line, with its window', () => {
+    // The bereavement case one wave on, same shape and same two halves: the claim is proved per
+    // LINE (so a voice that rots unreachable reddens) and the WINDOW is asserted beside it (so a
+    // licence that forgot `<= DIVORCED_WEEKS` reaches the `{ divorcedWeeksAgo: 60 }` shapes and
+    // fails here rather than shipping a scrap about a marriage that ended a year ago).
+    const seen = new Set<string>()
+    const band = WEEK_NOTES.filter((n) => n.claims.divorced !== undefined)
+    expect(band.length, 'four voices over the weeks after').toBe(4)
+    let licensed = 0
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.divorced === undefined) continue
+        licensed++
+        seen.add(render(note, f))
+        expect(
+          HOLDS.divorced(f, true),
+          `"${render(note, f)}" claims a divorce on a career that has not had one`,
+        ).toBe(true)
+        expect(f.divorcedWeeksAgo, `"${render(note, f)}" speaks long after the week it is about`)
+          .toBeLessThanOrEqual(DIVORCED_WEEKS)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.divorced proves nothing').toBeGreaterThan(0)
+    expect(seen.size, 'every voice of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐⭐⭐ v88 (wave 12 T4.2) – the fork\'s aftermath is ONE week, both arms, and never crossed', () => {
+    // ⚠⚠ THE CROSS-ARM CHECK IS THE POINT OF THIS CASE and is what a bare «is it reached» would
+    // miss: eight lines, four of them written for a parent who did as she asked and four for one who
+    // did not, and a licence that read the FACT without its VALUE would license all eight on both
+    // arms. `HOLDS.forkAftermath` takes the value for exactly this.
+    const band = WEEK_NOTES.filter((n) => n.claims.forkAftermath !== undefined)
+    expect(band.length, 'four voices x two arms').toBe(8)
+    const seen = new Set<string>()
+    let licensed = 0
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.forkAftermath === undefined) continue
+        licensed++
+        seen.add(render(note, f))
+        expect(
+          HOLDS.forkAftermath(f, note.claims.forkAftermath),
+          `"${render(note, f)}" claims the ${String(note.claims.forkAftermath)} arm on the other one`,
+        ).toBe(true)
+        // ⚠ AND IT IS ONE WEEK: the fact is null on every week but the one the fork resolves on, so
+        // a licence that widened the window would reach a fixture with no aftermath at all.
+        expect(f.forkAftermath, 'a scrap about the fork on a week the fork did not resolve').not.toBeNull()
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.forkAftermath proves nothing').toBeGreaterThan(0)
+    expect(seen.size, 'every one of the eight is licensed in SOME fixture of SOME sweep').toBe(band.length)
   })
 
   it('⭐ v83 (wave 7 T5) – and `HOLDS.spouseSpoke` is REACHED, per line, not decoration', () => {

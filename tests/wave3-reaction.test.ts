@@ -557,6 +557,11 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // job – «name the mildest of a kind with no zero» – does not arise: there is one answer and it
   // is the zero.
   bereavement: { id: 'come', bond: 0 },
+  // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – `sort`, AT **−1**, and the number typed here is exactly
+  // what this record exists to cost a reader: the marriage's card has no free answer either, so the
+  // registry names the mildest priced one and a walk that drains it carries −1 per beat rather than
+  // nothing. Read-independent – the overlay names `space` and `company` and not this id.
+  divorced: { id: 'sort', bond: -1 },
   'fork-opinion': { id: 'listen', bond: 0 },
   met: { id: 'wary', bond: 0 },
   'small-talk': { id: 'more', bond: 0 },
@@ -661,6 +666,10 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // ⚠ v87 T5 – the detail is the WEEK the death landed, machine-readable and never a rendered
   // sentence (§G.2's law). Any week does here: this file measures the PRICE, not the arc.
   bereavement: '900',
+  // ⚠ v88 T1 – the divorce's `detail` is the EPISODE ID, `'met'`'s and `'ended'`'s own shape (ruling
+  // G.2: machine-readable, never a rendered sentence), and it is the SAME id `raised` builds so the
+  // priced set is asked about an episode that exists.
+  divorced: 'p:892',
   'fork-opinion': 'college',
   met: 'p:892',
   'small-talk': 'worry',

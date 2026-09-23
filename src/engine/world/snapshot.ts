@@ -96,7 +96,7 @@ import { careerMoney } from './reckoning'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite, motherhoodBandAt, ownKeyThisWeek, spouseViewOccasionThisWeek } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, motherhoodBandAt, ownKeyThisWeek, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -1628,6 +1628,44 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       world.bereavementWeeks.length === 0
         ? null
         : world.week - world.bereavementWeeks[world.bereavementWeeks.length - 1],
+    // ⭐⭐⭐ v88 (the parting, wave 12 – T4): HOW LONG AGO HER MARRIAGE ENDED, or null. ⚠⚠ THERE IS
+    // NO LIST TO READ, WHICH IS THE ONE PLACE THIS PARTS FROM THE LINE ABOVE AND IS THE WAVE'S
+    // «no new schema» ARRIVING IN THE DIARY: `bereavementWeeks` exists because a death writes no
+    // record anywhere else, and a divorce writes one in the most durable place the layer has – the
+    // EPISODE, which keeps both `latchedWeek` and `endedWeek` for the life of the career. A second
+    // list beside it would be one fact with two sources of truth.
+    // ⚠ THE MAXIMUM AND NOT THE TAIL'S, `lastEndedWeek`'s own reasoning one file over: rows are
+    // appended in calendar order so the two agree on every state the sim produces, and where they
+    // differ – a poked save – the maximum is «the most recent time a marriage ended», which is what
+    // the licence is about.
+    divorcedWeeksAgo: (() => {
+      let last: number | null = null
+      for (const ep of world.loveEpisodes ?? []) {
+        if (ep.latchedWeek === null || ep.endedWeek === null) continue
+        if (last === null || ep.endedWeek > last) last = ep.endedWeek
+      }
+      return last === null ? null : world.week - last
+    })(),
+    // ⭐⭐⭐ v88 (wave 12 – T4.2, the architect's proposal on his «предложи что-то») – DID THE PARENT
+    // DO WHAT SHE ASKED, ON THE WEEK THE FORK RESOLVED? `'with'`, `'against'`, or null on every
+    // other week of every career.
+    //
+    // ⚠⚠ THE WEEK IS `askedWeek` AND THAT IS EXACT RATHER THAN APPROXIMATE, because the fork HOLDS
+    // THE CALENDAR: `world.fork.answer === null` stops the advance (`engine/world.ts`'s stop set and
+    // `world/multiWeek.ts` both name it), so the week it was asked IS the week it was answered.
+    // A second field recording the answer week would be a new persisted fact for a number the world
+    // already knows.
+    // ⚠ A PRE-v73 CAREER HONESTLY GETS NOTHING – `forkWantOf` returns null when she was never asked,
+    // and null here is «there is no want on record to have gone with or against». The absence
+    // discipline, stated in code rather than in a comment: no `?? 'with'` anywhere on this line.
+    // ⚠ ZERO DRAWS: `forkWantOf` reads the `lifeLog` and `FORK_WANT_ANSWER` is a constant map.
+    forkAftermath: (() => {
+      const fork = world.fork
+      if (fork === null || fork.answer === null || fork.askedWeek !== world.week) return null
+      const want = forkWantOf(world)
+      if (want === null) return null
+      return FORK_WANT_ANSWER[want] === fork.answer ? 'with' : 'against'
+    })(),
     // ⭐⭐⭐ v86 (wave 10 T6b): the line, as the two facts a texture line may rest on. Derived at
     // render off `world.dynasty` – no save key, no migration, no golden fixture, exactly as the two
     // lines above it are derived off `pregnancy`.
