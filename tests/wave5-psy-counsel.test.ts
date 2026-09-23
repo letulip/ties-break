@@ -604,12 +604,21 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // «every site stamps a kind» stays the total claim it became at D3, and an UNSTAMPED site still
     // reddens the second assertion alone. ⚠ It fired on the unstamped first draft of exactly that
     // row, which is the ratchet catching the thing it is for rather than a number going stale.
+    // ⭐ RE-AIMED 22.09 BY v87 (wave 11 – T4), THE RATCHET DOING ITS JOB A THIRD TIME: the count
+    // moved 6 → 7 because `rollPregnancyLoss` writes the wave's ONE new `type: 'life'` row – kept,
+    // stamped `lifeKind: 'expecting'` – on the week a pregnancy ends without a birth. Both halves
+    // move together, so «every site stamps a kind» stays the total claim it became at D3, and an
+    // UNSTAMPED site still reddens the second assertion alone.
+    // ⚠ THE STAMP IS `'expecting'` AND NOT A NEW KIND, deliberately: the row is about the SAME arc
+    // the announcement opened, and who-she-is §5a is why a new glyph is not invented for it («no
+    // agent adds or swaps one unasked»). A `'loss'` row kind would need a member of `LifeBeatKind`,
+    // which wave 6's §8 forbids for a row that is not a beat, and a mark of its own, which is his.
     const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(6)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(7)
     const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
     expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
     expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
-      .toHaveLength(6)
+      .toHaveLength(7)
   })
 })
 

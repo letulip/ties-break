@@ -32,6 +32,7 @@ import {
   setPsychologistFocus,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
+  setWeightEnabled,
   setKitGrade,
   cancelPractice,
   answerShootClash,
@@ -304,7 +305,17 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // re-validated by the same line that validates everything else about a new career: `createWorld`
       // reads `dynasty.background` through `profile` (which `profileShapeError` has just accepted) and
       // copies every other field rather than aliasing the message's object.
-      const candidate = createWorld(seed, msg.profile, makeCareerId(seed), msg.prologue, msg.dynasty)
+      // ⭐⭐⭐ v87 – AND THE SIXTH RIDES THROUGH UNTOUCHED TOO. It is a plain boolean answered by a
+      // card on the creation path, so there is nothing to validate beyond what the wire's type says;
+      // `createWorld` reads `?? false`, which is the ruled meaning of a caller that did not ask.
+      const candidate = createWorld(
+        seed,
+        msg.profile,
+        makeCareerId(seed),
+        msg.prologue,
+        msg.dynasty,
+        msg.weightEnabled,
+      )
       // ⭐ E-02: the reply is BUILT before the career is adopted – see `snapshotMsg`. `createWorld`
       // writes every required field itself, so this cannot throw today; it is here because the
       // ordering is the property, and a lifecycle path that commits before it can render is the
@@ -488,6 +499,12 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'setCoachOnJuniorEvents': {
       return mutate(msg.id, msg.baseRevision, (world) => setCoachOnJuniorEvents(world, msg.on))
+    }
+    // ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE DOOR THE 22.09 RULING PUT IN SETTINGS, both ways.
+    // `mutate` is what makes «effective immediately» true rather than claimed: the flag is written
+    // and the snapshot is rebuilt in the same command, so the next week to tick already reads it.
+    case 'setWeightEnabled': {
+      return mutate(msg.id, msg.baseRevision, (world) => setWeightEnabled(world, msg.on))
     }
     case 'cancelPractice': {
       return mutate(msg.id, msg.baseRevision, (world) => cancelPractice(world, msg.week))

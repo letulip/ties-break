@@ -263,10 +263,16 @@ function mountMore(careers: CareerMeta[] = []) {
 describe('D2 - every settings switch is called what its row says', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('all five switches have their own name, and none of them is a state word', () => {
+  it('all six switches have their own name, and none of them is a state word', () => {
     const wrapper = mountMore()
     const switches = byRole(wrapper, 'switch')
-    expect(switches, 'More opens on the Play tab, which holds all five').toHaveLength(5)
+    // ⚠ RE-AIMED 22.09 BY v87 (wave 11 T1 – the weight's settings row), NOT WEAKENED: the COUNT
+    // moved and the claim did not. Every switch on this screen must still carry its own name rather
+    // than the state word its neighbours used to share, and the sixth is held to it exactly as the
+    // five are. ⚠ THE NEW ROW IS THE ONLY ONE ON THIS SCREEN THAT IS NOT A DEVICE PREFERENCE – it is
+    // `world.weightEnabled`, a fact about a CAREER – which is why it renders only with a career
+    // loaded, and `mountMore` supplies one.
+    expect(switches, 'More opens on the Play tab, which holds all six').toHaveLength(6)
 
     const names = switches.map((s) => accName(wrapper, s))
     // The defect, stated: this list used to be ['ON','ON','ON','ON','ON'] (or OFF), five controls
@@ -276,6 +282,7 @@ describe('D2 - every settings switch is called what its row says', () => {
       'Music',
       'Haptics',
       'Open at the end of a week',
+      'The weight',
       'Cross out the days',
     ])
     // ...and the state is still on the control, where a name cannot carry it.

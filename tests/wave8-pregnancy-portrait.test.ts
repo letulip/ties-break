@@ -179,8 +179,15 @@ describe('wave 8 T10 §B – the pair is in no union, and each refusal is measur
     // ⚠ THE LITERAL IS KEPT RATHER THAN RELAXED TO A `toContain`. «Exactly these» is what stops a
     // third moment-face arriving unnoticed; widening it to «the bride is in there somewhere» would
     // trade a red for a shrug, which is the opposite of what re-aiming a pin means.
-    expect(Object.keys(FACE_BANDS).sort(), 'the band table holds exactly the two moment-faces')
-      .toEqual(['birth', 'bride'])
+    // ⚠ RE-AIMED 22.09 BY v87 (wave 11 T5), NOT WEAKENED, AND FOR THIS CASE'S OWN STATED REASON ONE
+    // FACE LATER: `'funeral'` is the THIRD moment-face – `fem-euro-brunnet-adult-funeral.webp`,
+    // which shipped with the art set on 11.09 and had been referenced by nothing in `src/` until the
+    // weight wave wired it to the bereavement card. The claim this case exists for is untouched: the
+    // PREGNANCY PAIR is still not among them, and the loop below is what says so.
+    // ⚠ THE LITERAL IS STILL A LITERAL for the reason written above it – «exactly these» is what
+    // stops a fourth moment-face arriving unnoticed.
+    expect(Object.keys(FACE_BANDS).sort(), 'the band table holds exactly the three moment-faces')
+      .toEqual(['birth', 'bride', 'funeral'])
     for (const face of FACES) expect(Object.keys(FACE_BANDS), face).not.toContain(face)
   })
 
@@ -276,6 +283,8 @@ describe('wave 8 T10 §D – `toSnapshot` carries the answer, and only the answe
     world.loveEpisodes = [married(announcedWeek - 104, announcedWeek - 52)]
     world.pregnancy = {
       episodeId: world.loveEpisodes[0].id,
+      // ⚠ v87 – the pre-window shape; the portrait band is read off the announcement.
+      conceivedWeek: announcedWeek,
       announcedWeek,
       pausesWeek: announcedWeek + BRIEF.playsOnWeeks,
       dueWeek: announcedWeek + BRIEF.playsOnWeeks + BRIEF.termWeeks,

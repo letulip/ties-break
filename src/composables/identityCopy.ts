@@ -80,3 +80,43 @@ export const DYNASTY_COPY = {
    *  the band arrived on the block, and the card says so instead of asking */
   familyNote: 'The means she starts with are her mother\'s story, not a choice.',
 } as const
+
+/** ⭐⭐⭐ v87 (wave 11 T1, his ruling of 22.09) – THE WORDS THE ONE SWITCH IN THE GAME IS ASKED AND
+ *  SET IN, declared once for the reason everything above is: TWO surfaces ask it (the prologue's
+ *  opening card and the wizard, which is the skip branch) and a THIRD sets it (the settings row), so
+ *  three copies of one sentence would be three chances to drift with the pins staying green.
+ *
+ *  ⚠ ⚠ EVERY STRING BELOW IS A **DRAFT** FOR HIS PASS (invariant 4), listed verbatim in the wave's
+ *  report. ⭐ AND THIS IS THE ONE FILE IN THE APP WHERE A WORDING CHANGE IS CHEAP FOR HIM, which is
+ *  the whole argument for the file: one edit reaches all three surfaces.
+ *
+ *  ⚠⚠ WHAT THE WORDS MAY AND MAY NOT DO, and it is tighter than it looks. They must be honest
+ *  enough that a player can decide – so they NAME the two things (a pregnancy that ends, a death in
+ *  the family) – and they may not preview a scene, price anything, or promise how often. A card that
+ *  said «rare» would be quoting a constant the bench is about to retune, and a card that described
+ *  the scene would be spending it before it happens.
+ *
+ *  ⚠ AND THE OFF SIDE IS WRITTEN AS A REAL CHOICE RATHER THAN A WARNING LABEL. The design's own
+ *  sentence is «the off switch is not optional here»; a line that shamed the player for taking it
+ *  would make the switch decorative. */
+export const WEIGHT_COPY = {
+  /** the question's own heading, on both creation surfaces and over the settings row */
+  title: 'The weight',
+  /** what the switch is about – the two things, named plainly, with no scene and no number */
+  lead:
+    'Some careers meet a pregnancy that ends, or a death in the family. They are written carefully ' +
+    'and they are part of the story this game tells. You can leave them out.',
+  /** the two answers. ⚠ The ON side says what arrives, the OFF side says what does not – neither is
+   *  the «right» one, and neither is phrased as a recommendation. */
+  on: 'Include them',
+  off: 'Leave them out',
+  /** under the pair on the creation surfaces – the ruling's second half, said where the decision is
+   *  made rather than only where it is changed */
+  note: 'You can change this later in More. Turning it off stops what has not happened yet – it never erases what a career has already lived.',
+  /** the screen-reader name for the pair, which is one question and not two controls */
+  groupLabel: 'The weight',
+  /** the settings row's own second line. ⚠ It is the SAME promise as `note` in the shape that row's
+   *  neighbours use (Week story's «Off: …»), because a settings hint that said something different
+   *  from the creation card would be two answers to one question. */
+  settingsHint: 'Off: no new loss or bereavement arrives. What a career has already lived stays.',
+} as const

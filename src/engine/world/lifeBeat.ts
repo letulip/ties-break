@@ -248,6 +248,12 @@ export function lifeLogOf(world: WorldState): readonly LifeBeatRecord[] {
  *  FALSE – it is texture, it is answered from a Home card inside a three-week window, and the week
  *  never waits for it. */
 export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
+  // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – TRUE, AND IT IS `'ended'`'s ONE WORD REPEATED AT THE
+  // heaviest moment this layer holds. A career that could tick past a death in the family would be
+  // answering it by walking away, which is the sentence tier 2's price was written from. ⚠ IT
+  // BLOCKS FOR A PRIVATE GIRL TOO, and that is not a contradiction of §4's «private grieves almost
+  // silently»: the silence is in the WORDS she says, not in whether the week stops.
+  bereavement: true,
   'fork-opinion': true,
   met: true,
   'small-talk': false,
@@ -935,7 +941,15 @@ type PsyRegister = 'plain' | NonNullable<WorldState['spiritShock']>['kind']
 // an agent's to write** (invariant 4): T8 drafts it and the owner passes it. Listing the register
 // while owing the column is the only split that keeps both halves honest – the roster stays total, so
 // step 8's kind still reds here, and no line of copy is invented by a schema task.
-const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = { plain: true, breakup: true, postpartum: true }
+// ⭐⭐⭐ v87 – AND STEP 8 LANDED WITH TWO, so this record went red twice more and both registers are
+// listed with their COLUMNS owed for `postpartum`'s own reason, below.
+const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = {
+  plain: true,
+  breakup: true,
+  postpartum: true,
+  loss: true,
+  bereavement: true,
+}
 const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
 
 /** ⭐⭐ WHAT THE PSYCHOLOGIST SAYS – 6 drafts, his register x the coach's driver.
@@ -1016,6 +1030,25 @@ const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string> | null> = 
    *  below is what makes that safe to rely on: the day a second raise site appears it names this
    *  cell by register instead of reading `undefined[driver]`. */
   postpartum: null,
+  /** ⭐⭐⭐ v87 – THE SAME TWO COLUMNS OWED, FOR THE SAME REASON AND WITH THE SAME STRUCTURAL
+   *  UNREACHABILITY, and they are written as `null` rather than aliased to `plain`'s for the
+   *  refusal named one cell up: a man telling a woman the week after a loss that «nothing is
+   *  sitting on top of this one» is a bug that reads well.
+   *
+   *  ⚠⚠ UNREACHABLE BY THE SAME THREE FACTS, and this time the ages make it airtight rather than
+   *  merely true today. The register is stamped at ONE site, off a `'fork-opinion'` row answered
+   *  `stop`, which is the fork at NINETEEN and blocks the calendar until it is answered – and both
+   *  of this wave's kinds are gated far above it: a pregnancy needs a marriage (23+, wave 7) and
+   *  the bereavement needs the ADULT rung (`kidAgeExact ≥ 23`, §4). So no career can hold either
+   *  mark on the one week this table is read, and the cells are owed by TYPE rather than by need.
+   *
+   *  ⚠ WHAT A FUTURE COLUMN WOULD OWE: three sentences per kind in his voice, under the honesty law
+   *  two blocks up, drafted by a content task and passed by the owner – never by a schema task
+   *  (invariant 4). And §4 adds one clause of its own for `bereavement`: **the deceased is UNNAMED
+   *  in mechanics and copy** (RULED 22.09), so a column that named a relative would be unshippable
+   *  whoever wrote it. */
+  loss: null,
+  bereavement: null,
 }
 
 /** The parent's frame over his card. ONE line and not a register table, `COUNSEL_HEADING`'s own call:
@@ -2690,8 +2723,22 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
 // SHE ANNOUNCES – §4a's law at the layer's biggest moment, and the pool is `ENGAGED_HER_LINE`'s
 // shape rather than a new one: one cell per voice, no register axis, both presences, plus the dry
 // card for a `strained`/`cold` home and one heading. There is no told-now/told-late split for the
-// same reason the wedding has none – `rollPregnancy` raises the card the week the hazard lands, and
-// there is nothing here to be learned late.
+// same reason the wedding has none: there is nothing here to be learned late.
+//
+// ⭐⭐⭐ v87 T2 – **AND THE CLAUSE THAT USED TO CARRY THAT SENTENCE IS NOW FALSE AND IS CORRECTED
+// RATHER THAN QUIETLY DELETED.** It read «`rollPregnancy` raises the card the week the hazard
+// lands», and since the hidden window it does not: the hazard writes the record, the window runs,
+// and `landPregnancyAnnouncement` raises the card `windowWeeks` later. The CONCLUSION is unchanged
+// and is now true for a better reason – there is no told-late variant because the parent cannot
+// learn about the window at all. He is told once, on her week, and the weeks behind him are re-read
+// by HIM rather than by the game (the design's §3).
+//
+// ⚠⚠ SO NO LINE BELOW MAY SAY SHE HAS KNOWN FOR A WHILE, which is a NEW rule this wave adds to the
+// pool and the reason no cell was rewritten for the window. The narration is what the PARENT saw;
+// he cannot see a window he was never inside, and a line that showed it would be the fallible-parent
+// law broken at the layer's biggest moment. What she says inside the quotation marks is hers and
+// could carry it – that is a wording decision, and it is the OWNER's (invariant 4), raised in the
+// wave's report rather than taken here.
 //
 // ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule): what presence
 // changes is the FRAME the parent is standing in, never the sentence she says inside the quotation
@@ -2713,23 +2760,43 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
 /** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, in both presences. The voice bibles govern, `ENGAGED_HER_
  *  LINE`'s own reading of them: `sunny` says it evenly and names the feeling; `fiery` gives the
  *  verdict first, in absolutes; `quiet` says the practical surface and leaves herself out; `deep`
- *  says one true thing, late, stripped of its size, in full stops. */
+ *  says one true thing, late, stripped of its size, in full stops.
+ *
+ *  ⭐⭐⭐ v87 T3 – **THE QUOTED SPANS GAINED ONE CLAUSE EACH, AND THE NARRATION DID NOT MOVE A BYTE.**
+ *  The design's §4 table crosses HOW LONG THE WINDOW LASTS with THE ANNOUNCEMENT, and T2 built the
+ *  first column mechanically (openness draws the window). This is the second column reading the
+ *  first: `sunny` has barely sat on it, `fiery` did not wait to be sure, `quiet` has known a while,
+ *  `deep` longest of all and needed to know what she felt first.
+ *
+ *  ⚠⚠ IT IS **HER** LINE AND NOT THE NARRATION, AND THE SPLIT IS THE FALLIBLE-PARENT LAW RATHER
+ *  THAN A PREFERENCE. The narration is what the PARENT saw, and he cannot see a window he was never
+ *  inside – a line of his that said «she had known for weeks» would be the game telling him a thing
+ *  nobody told him. She knows, so she may say it; every clause below is inside the quotation marks.
+ *
+ *  ⚠ NO NUMBER AND NO DATE IN ANY OF THEM (§3j's rule 4, which binds this edit as hard as it binds
+ *  the rest of the pool): «a week» and «a month» are numbers, so none of the four says one. The
+ *  window is a drawn constant T6 is going to measure, and a line that named it would be quoting a
+ *  number the bench may move.
+ *
+ *  ⚠ THE OLD SPANS ARE LISTED VERBATIM IN THE WAVE'S REPORT beside these, which is the one thing a
+ *  builder owes when a task asks for copy that already exists (invariant 4's own corollary – the
+ *  owner reads the replacement beside what it replaced, and the strings stay his). */
 const EXPECTING_HER_LINE: Record<Temperament, PresenceCell> = {
   sunny: {
-    roof: 'She waited until we were all sitting down, and then said it straight out. "We are having a baby. I am happy and I am frightened, and I wanted you to know both."',
-    away: 'She called on a Sunday, before anything else had been said. "We are having a baby. I am happy and I am frightened, and I wanted you to know both."',
+    roof: 'She waited until we were all sitting down, and then said it straight out. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
+    away: 'She called on a Sunday, before anything else had been said. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
   },
   fiery: {
-    roof: 'She came in and said it before her coat was off. "We are having a baby. I have thought about the tennis. I am not finished."',
-    away: 'She rang between flights and led with it. "We are having a baby. I have thought about the tennis. I am not finished."',
+    roof: 'She came in and said it before her coat was off. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
+    away: 'She rang between flights and led with it. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
   },
   quiet: {
-    roof: 'She mentioned it while she was looking at the calendar, as if it were a fixture change. "We are having a baby. I will play a while yet, and then I will not."',
-    away: 'She sent the next block of dates through, and this was underneath them. "We are having a baby. I will play a while yet, and then I will not."',
+    roof: 'She mentioned it while she was looking at the calendar, as if it were a fixture change. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
+    away: 'She sent the next block of dates through, and this was underneath them. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
   },
   deep: {
-    roof: 'She sat with it through most of the evening, and then put it in one sentence. "We are having a baby. I know what it costs. I want it."',
-    away: 'She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I know what it costs. I want it."',
+    roof: 'She sat with it through most of the evening, and then put it in one sentence. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
+    away: 'She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
   },
 }
 
@@ -2745,6 +2812,64 @@ const EXPECTING_DRY = 'She is expecting a child. Nobody in this house was told f
  *  of the three answers – what a parent can see is that she has decided, and which of the three
  *  things to say about it is his. */
 const EXPECTING_HEADING = 'A child is coming, and she has already decided'
+
+// =================================================================================================
+// 3l. `'bereavement'` – A DEATH IN THE FAMILY (the weight, wave 11: T5).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4).
+// =================================================================================================
+//
+// ⚠⚠ **THE DECEASED IS UNNAMED, IN MECHANICS AND IN COPY** – RULED 22.09 (question 4), and the
+// reason is a collision this game already has: the fridge pool names a grandmother in lines nothing
+// licenses, so shipping a NAMED death against an unlicensed «Grandma called» scrap is exactly the
+// contradiction the honesty law exists to prevent. «There has been a death in the family» is the
+// whole of what any line here may say, and licensing named kin off live-kin facts is its own later
+// work. ⚠ That also means no relation word: not a grandmother, not an aunt, not a cousin.
+//
+// ⚠⚠ OPENNESS OWNS THE EXPRESSION AND INTENSITY OWNS NOTHING HERE – his 11.09 ruling, read exactly:
+// «INTENSITY owns depth AND duration … OPENNESS owns expression (private grieves quietly – the feed
+// and diary nearly silent, the face and the funeral frame carrying it; open speaks)». So the DEPTH
+// is `ECONOMY.spirit.shock.bereavement` seen through `perturbationScale`, which is the intensity
+// axis and lives in `engine/spirit.ts`; what this pool carries is how much she SAYS, and the private
+// voices say least. Nothing in these words is a second pricing of anything.
+//
+// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule, §3j's inheritance):
+// what presence changes is the FRAME the parent is standing in, never the sentence she says inside
+// the quotation marks.
+//
+// ⚠ NO DATE AND NO NUMBER IN ANY LINE (rule 4). The week is on the world and the calendar is where a
+// date belongs; a line that named one would also be naming a constant T6 is going to measure.
+
+/** ⚠ ⚠ DRAFT – WHAT SHE SAYS, BY VOICE, in both presences. The voice bibles govern: `sunny` says it
+ *  plainly and wants him near; `fiery` says it loudly and then will not sit with it; `quiet` says
+ *  the practical surface and leaves herself out; `deep` says the one fact and nothing else at all. */
+const BEREAVEMENT_HER_LINE: Record<Temperament, PresenceCell> = {
+  sunny: {
+    roof: 'She came round in the evening and said it before she had taken her coat off. "There has been a death in the family. I would rather you heard it from me."',
+    away: 'She rang in the evening, before anything else had been said. "There has been a death in the family. I would rather you heard it from me."',
+  },
+  fiery: {
+    roof: 'She said it in the hall, loudly, and then would not sit down with it. "There has been a death in the family. I am not going to be much use this week."',
+    away: 'She rang and led with it, and was off the phone not long after. "There has been a death in the family. I am not going to be much use this week."',
+  },
+  quiet: {
+    roof: 'She mentioned it while she was putting something away, as if it were an errand. "There has been a death in the family. There are arrangements to make."',
+    away: 'She sent the week\'s dates through, and this was underneath them. "There has been a death in the family. There are arrangements to make."',
+  },
+  deep: {
+    roof: 'She sat in the kitchen a long time before she said anything at all. "There has been a death in the family."',
+    away: 'The call was mostly quiet. She said it once, near the end of it. "There has been a death in the family."',
+  },
+}
+
+/** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `EXPECTING_DRY`'s
+ *  shape and doctrine: it states what the week HOLDS, and the distance is the whole content. */
+const BEREAVEMENT_DRY = 'There has been a death in her family. The house heard it from somebody else.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `EXPECTING_HEADING`'s
+ *  shape and its reason: the one fact of this card is the same fact at every distance and in every
+ *  weather, and the bond band reaches the card through HER line rather than through the frame.
+ *  ⚠ It recommends nothing and asks nothing: what a parent can see is that it has happened. */
+const BEREAVEMENT_HEADING = 'There has been a death in the family'
 
 // =================================================================================================
 // 3k. `'return-plan'` – THE WEEK SHE IS BACK, AND THE QUESTION IS HOW (the return, wave 8: T6).
@@ -3043,8 +3168,22 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     // warm rung's cousin. ⚠ THE GRADE DID NOT MOVE – only the label. A re-grading of which answer is
     // which is a mechanical change and is not this batch's (the strings table's §8 Q-1).
     { id: 'worry', label: 'Say we are glad – and start counting the weeks.', bond: ECONOMY.motherhood.worryBond },
-    // ⚠ DRAFT
-    { id: 'career-first', label: 'Ask her what this does to the tennis', bond: ECONOMY.motherhood.careerFirstBond },
+    // ⭐⭐⭐ v87 T3 – **THE REASONABLE POSITION, NOT A VILLAIN'S LINE**, and it is the design's own
+    // §5 asking for it: «the third answer's words are today the career-first one, and they should be
+    // allowed to be *reasonable* – «not now, look where you are» is a position, not a villain's line».
+    // The words he gave the case are the ones a real parent uses: «рано, у тебя карьера в апогее».
+    //
+    // ⚠⚠ THE GRADE DID NOT MOVE AND MUST NOT – wave 8b's C3 correction, one row up, read forward.
+    // This answer still persists `support: 'cold'` and still costs −4, because the research's row is
+    // about PRESSURE and a parent who answers a pregnancy by pricing her ranking is the parent that
+    // row means. What changed is that he now says a thing a reader can DISAGREE with rather than a
+    // thing a reader can only dislike: §5's other half is that the game must not settle who was
+    // right, and a villain's line settles it before the album gets the chance not to.
+    //
+    // ⚠ THE OLD LABEL WAS «Ask her what this does to the tennis» and is quoted verbatim in the
+    // wave's report beside this one (invariant 4's corollary: the owner reads the replacement beside
+    // what it replaced). ⚠ DRAFT, like the row above it.
+    { id: 'career-first', label: 'Say it is too early – look where she is', bond: ECONOMY.motherhood.careerFirstBond },
   ],
   /** ⭐⭐⭐ v85 (the return, wave 8 – T6) – THE RAMP'S TWO, AND THE ONLY CARD IN THIS TABLE THAT IS A
    *  SCHEDULING DECISION RATHER THAN A REACTION (§3k's banner carries the §4a argument in full: she has
@@ -3057,6 +3196,25 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    *  the one card whose whole purpose is that its cost is mechanical and emergent.
    *  ⚠ NO NUMBER, NO DATE AND NO PROMISE IN EITHER LABEL (rule 4), and neither names the freeze: how
    *  many entries a protected ranking buys is a rule the card may not turn into a guarantee. */
+  /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – **ONE ANSWER, AT 0 BOND, AND BOTH HALVES OF THAT ARE
+   *  DECISIONS.** `'own-key'`'s one-cell pool is the precedent and its argument transfers whole.
+   *
+   *  ⚠⚠ ONE ANSWER, BECAUSE THE SPEC DRAFTS NO PRICES AND INVENTING THREE WOULD BE A DESIGN
+   *  DECISION WEARING A CONSTANT. Every other costed card in this table has its numbers in
+   *  `ECONOMY` with an argument beside them (`wedding`'s +2.5/−1/−4, `motherhood`'s
+   *  +2.5/−0.5/−4); §4 of the weight spec drafts none for this kind, and invariant 5 is why a
+   *  builder does not supply them. What the spec DOES say is that the death «may reach the parent in
+   *  WORDS only», which is exactly a card that tells him and takes one answer.
+   *
+   *  ⚠⚠ AND 0 BECAUSE §4a's LAW SAYS HIS WORDS MOVE `bond` AND THIS IS NOT A WORD TO HER, IT IS AN
+   *  UNDERTAKING. `'return-plan'`'s pair is the nearest shape and its zero is argued the same way. A
+   *  delta here would make going to a funeral a thing the game scores, which is the one reading of
+   *  §4 that is wrong.
+   *  ⚠ IT NAMES NO RELATIVE (RULED 22.09, question 4 – the deceased is UNNAMED in mechanics AND in
+   *  copy), no date, no number and no meter. ⚠ DRAFT. */
+  bereavement: [
+    { id: 'come', label: 'Say you will come', bond: 0 },
+  ],
   'return-plan': [
     // ⭐ HIS, 21.09 – the label had to change when the answer's MEANING did: «small events first»
     // now holds for `smallFirstHoldWeeks` and then lets the freeze open the big draws, so a label
@@ -3331,13 +3489,22 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
    *  pools' established parallel, kept deliberately rather than broken on one kind.
    *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD (rule 4) – there is no birth fee and no wedding bill
    *  here to name (§2 T4's own «NO COST EVENT»). ⚠ NO NAME, NO GENDER AND NO DUE DATE, §3j's laws. */
+  /** ⭐⭐⭐ v87 T5 – ONE LINE FOR ONE ANSWER. ⚠ ⠀DRAFT. ⚠ IT NAMES NOBODY (RULED 22.09, question 4),
+   *  no date and no number, and it says what the parent DID rather than what it meant. */
+  bereavement: {
+    come: 'There has been a death in the family. We said we would come.',
+  },
   expecting: {
     // ⚠ DRAFT
     joy: 'She is expecting a child. We told her it was the best news in the house.',
     // ⚠ DRAFT
     worry: 'She is expecting a child. We said we were glad, and that we would worry.',
-    // ⚠ DRAFT
-    'career-first': 'She is expecting a child. We asked what it does to the tennis.',
+    // ⭐⭐⭐ v87 T3 – **MOVED WITH THE BUTTON IT REPORTS**, and moving it is the correction rather
+    // than an extra: this row's whole job is to say what the parent SAID, so a card that now reads
+    // «Say it is too early – look where she is» and a feed row that still read «We asked what it does
+    // to the tennis» would be one press with two accounts of itself on one screen. ⚠ The old line is
+    // quoted verbatim in the wave's report beside this one. ⚠ DRAFT.
+    'career-first': 'She is expecting a child. We said it was too early.',
   },
   /** ⚠⚠ **DRAFT – T8's TABLE** (invariant 4). Two lines, one per answer, opening on the same clause
    *  – the established parallel of every pool above. ⚠ THEY REPORT A BOOKING AND PROMISE NOTHING: what
@@ -3611,6 +3778,16 @@ export function lifeBeatSaid(
     // of it would be choosing for him.
     case 'return-plan':
       return RETURN_PLAN_SAID
+    // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – THE TWELFTH KIND, AND IT IS `'expecting'`'s READING
+    // LINE FOR LINE: her voice against the dry card, on the bond's two-rung channel, and no register
+    // axis of its own. ⚠ IT READS NO `detail` (the detail is the week, a machine value) AND NO
+    // REGISTER: this is her week's biggest fact whatever the weather. ⚠⚠ AND OPENNESS REACHES IT
+    // THROUGH THE VOICE CELLS THEMSELVES rather than through a second axis – §4's «private grieves
+    // almost silently» is `quiet` and `deep` having less to say, which is what the four cells are.
+    case 'bereavement':
+      return speaksInHerOwnVoice(bond)
+        ? presenceLine(BEREAVEMENT_HER_LINE[voice], presence)
+        : BEREAVEMENT_DRY
   }
 }
 
@@ -3699,6 +3876,11 @@ export function lifeBeatHeading(
     // for an axis to select. The bond band cannot reach it either, because the card quotes nobody.
     case 'return-plan':
       return RETURN_PLAN_HEADING
+    // ⭐⭐⭐ v87 (wave 11 – T5) – ONE FRAME, KEYED ON NOTHING, `EXPECTING_HEADING`'s shape and its
+    // argument: the fact is the same fact at every distance, the bond reaches the card through her
+    // line, and a frame that also moved with it would say the distance twice.
+    case 'bereavement':
+      return BEREAVEMENT_HEADING
   }
 }
 
@@ -3739,6 +3921,13 @@ const LISTEN_FOLLOW_UP: Record<
   LifeBeatKind,
   ((detail: string, voice: Temperament, bond: BondBand) => string | null) | null
 > = {
+  // ⭐⭐⭐ v87 T5 – `null`, AND IT IS THE ANSWER RATHER THAN A DEBT (this record's own rule, one
+  // paragraph up). The detour exists where an answer of the parent's buys MORE of her; this card
+  // offers one answer and it is not a question she is waiting on. ⚠ AND THE SILENCE HERE WOULD BE
+  // THE WRONG SILENCE: §4's «private grieves almost silently» is about what SHE says, and a detour
+  // that made the parent's quiet buy something would price a bereavement on his behaviour, which is
+  // the boundary law arriving at the wording.
+  bereavement: null,
   // ⭐⭐ THE ONE KIND WITH A DETOUR, AND THE ONLY CELL THAT IS A FUNCTION. It is the tail of the old
   // chain moved whole, line for line and in the same order: the want is resolved off the detail, a
   // malformed detail THROWS BY NAME (which is right and is kept – `lifeBeatSaid`'s own courtesy), the
@@ -4196,6 +4385,9 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
  *  ⚠ THE `'small-talk'` CELL IS THE SHIPPED CONSTANT, REFERENCED AND NOT RE-TYPED (invariant 4):
  *  tier 1's card is byte-identical to what it has always been. */
 const SOFT_BEAT_CARD: Record<LifeBeatKind, string | null> = {
+  // ⭐ v87 T5 – `null`, ON THE RECORD'S OWN RULE: the kind BLOCKS, so it never reaches the soft
+  // surface and a card line for it would be dead copy pretending to be reachable.
+  bereavement: null,
   'fork-opinion': null,
   met: null,
   'fork-counsel': null,
@@ -6398,6 +6590,7 @@ export function ownKeyThisWeek(world: WorldState): boolean {
 // ⚠⚠ THE WAVE'S FIRST STREAM, RESERVED BY THE BRIEF'S §0 AND CREATED HERE:
 //
 //     seed:life:pregnancy:<week>            does she conceive, this week
+//     seed:life:window:<conceivedWeek>      how long before she says so (v87, the weight – wave 11 T2)
 //
 // (seed, calendar)-keyed like every sibling, so a player cannot conjure or dodge a pregnancy by
 // playing the week differently – input-independence is permanent law, and nothing here takes an
@@ -6547,12 +6740,58 @@ export function pregnancyEligible(world: WorldState): boolean {
   if (world.children.length > 0 && world.week - lastBirth < ECONOMY.motherhood.repeatCooldownWeeks) {
     return false
   }
+  // ⭐⭐⭐ v87 T4 – AND A LOSS RE-ARMS THE HAZARD BEHIND A GENTLER COOLDOWN, through this same
+  // machinery rather than through a clause of its own (the spec's §3: «reading the same eligibility
+  // machinery wave 9 built»). `ECONOMY.weight.lossCooldownWeeks` is drafted 26 against the birth's
+  // 52, and the constant carries why the two differ: the birth's number protects the COMEBACK, and
+  // a loss creates none.
+  //
+  // ⚠⚠ IT READS `pregnancyLossWeeks` AND NEVER A DERIVED GUESS, which is the whole reason that list
+  // is persisted: the pregnancy record is CLEARED on a loss, so there is nothing left on the world
+  // that remembers one. `spiritShock` is not a second source either – it holds ONE mark and clears
+  // itself when she recovers.
+  const lastLoss = world.pregnancyLossWeeks.reduce((w, at) => Math.max(w, at), -Infinity)
+  if (world.pregnancyLossWeeks.length > 0 && world.week - lastLoss < ECONOMY.weight.lossCooldownWeeks) {
+    return false
+  }
   if (knockRunning(world)) return false
   return true
 }
 
-/** ⭐⭐⭐ THE WEEKLY ROLL, the ONE raise site of an `'expecting'` row, and the ONE place in the engine
- *  where `world.pregnancy` goes non-null.
+/** ⭐⭐⭐ v87 (the weight, wave 11 T2) – **HOW LONG SHE CARRIES IT BEFORE SHE SAYS SO**, in weeks, on
+ *  `seed:life:window:<conceivedWeek>`. The hidden window of the design's §3, and the cheapest thing
+ *  in the whole wave: one persisted number and one draw.
+ *
+ *  ⚠⚠ **THE WINDOW IS NOT THE WEIGHT AND IT IS NOT GATED BY THE SWITCH**, which is the one
+ *  sentence a reader of this section most needs, because the two mechanics meet three lines apart.
+ *  Every pregnancy has weeks between conception and «I have something to tell you» – that is life
+ *  rather than grief – so this draw happens on every conception, with the switch on or off. Only the
+ *  LOSS is gated (§3, and `world/lifeBeat.ts` §15). A career with the weight off is byte-identical to
+ *  a pre-wave career in its LOSS hazard and deliberately NOT in its announcement date, and §8 row 6's
+ *  arm is written to measure exactly that distinction rather than to paper over it.
+ *
+ *  ⚠ IT READS `ECONOMY.life.lag`'s SHAPE AND NOT `drawRawLag`'s STREAM, and the split is the
+ *  split-key law rather than an oversight. The TABLE is the same fact seen twice – who-she-is §4's
+ *  openness register, «open tells soon, private takes a while» – and sharing it is the single-source
+ *  rule. The KEY may not be shared: `drawRawLag` answers «how late did the parent hear about an
+ *  ATTACHMENT» on `seed:life:partner:<sinceWeek>:lag`, and two different facts on one key is what
+ *  that law forbids.
+ *
+ *  ⚠ NO BOND SHAVE. `shaveLag` shortens the attachment's lag by the relationship the parent built,
+ *  and that is deliberate there («the one place in this wave where a player choice is allowed to
+ *  show»). Here it would be a mechanic reading the parent INTO the window, and the design's §3 is
+ *  explicit that what he does inside it is his own and innocent. The window is the world's dice.
+ *
+ *  ⚠ KEYED ON THE CONCEPTION WEEK, so it is (seed, calendar)-keyed like every sibling and a player
+ *  cannot shorten it by playing the week differently – input-independence, permanent law. */
+export function drawConceptionWindow(seed: string, conceivedWeek: number, openness: 'open' | 'private'): number {
+  const table = ECONOMY.life.lag[openness]
+  const r = rngFromSeed(`${seed}:life:window:${conceivedWeek}`)
+  if (r() < table.zeroChance) return 0
+  return pickInt(r, table.min, table.max)
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, the ONE place in the engine where `world.pregnancy` goes non-null.
  *
  *  ⚠⚠ THE LINE ORDER IS THE RULE, AND IT IS FOUR STEPS RATHER THAN §11's THREE. The gate returns
  *  first; the CHANCE is computed second and returns if it is 0; only then is the stream derived. An
@@ -6570,21 +6809,33 @@ export function pregnancyEligible(world: WorldState): boolean {
  *  and T9's per-temperament grid measures whether all four voices reach it inside the ±1.5 pp
  *  fairness corridor. A per-voice column here would be a design decision wearing a constant.
  *
- *  ⚠⚠ THE RECORD IS WRITTEN AT THE **RAISE** AND NOT AT THE ANSWER, and the choice is deliberate.
- *  The announcement is a fact about the world the moment she says it – she is pregnant whether or not
- *  the parent has answered the card – and `support: null` is the TRUE reading of the gap while the
- *  blocking beat stands, which is the argument T1 already wrote onto the field. The alternative
- *  leaves a world that can be SAVED and LOADED with a pregnancy in the feed and nothing in the
- *  state, because the beat blocks the week but not the save. ⚠ `returnPlan` IS NOT ON THIS RECORD ANY
- *  MORE – ruling A moved it to `world.comeback`, where the beat that asks it can actually reach it.
+ *  ⚠⚠ THE RECORD IS WRITTEN AT THE **CONCEPTION** AND NOT AT THE ANSWER, and the choice is
+ *  deliberate. She is pregnant whether or not the parent has answered the card – and since v87's
+ *  window, whether or not he has been TOLD – so `support: null` is the TRUE reading of the gap, which
+ *  is the argument T1 already wrote onto the field. The alternative leaves a world that can be SAVED
+ *  and LOADED with a pregnancy nobody can see and nothing in the state.
+ *  ⚠ `returnPlan` IS NOT ON THIS RECORD ANY MORE – ruling A moved it to `world.comeback`, where the
+ *  beat that asks it can actually reach it.
+ *
+ *  ⭐⭐⭐ v87 T2 – **AND IT NO LONGER RAISES THE BEAT.** `landPregnancyAnnouncement` below does, on
+ *  `announcedWeek`, which is this week plus the drawn window. What this function does is write the
+ *  record and draw the window; the card, the block and the parent's answer are `windowWeeks` away
+ *  and may be zero weeks away, which is the case that reproduces every pre-window date exactly.
  *
  *  ⚠ `dueWeek` IS COMPUTED HERE AND PERSISTED, never re-derived at read – `PregnancyState`'s own law
  *  (T1, and `partnerName`'s one wave down): a later retune of `termWeeks` must never move the due
  *  date of a pregnancy a live career is already carrying. The same holds for `pausesWeek`.
  *
- *  ⚠ IT RAISES THE BEAT AND WRITES THE RECORD, AND NOTHING ELSE – no feed row, no diary line, no
- *  cents, no entry closed, no portrait. The pause is T3's, the birth T4's, the texture T8's and the
- *  portraits T10's. The raise stops the week by `LIFE_BEAT_BLOCKING` alone – no new guard anywhere. */
+ *  ⚠ IT WRITES THE RECORD AND NOTHING ELSE – no feed row, no diary line, no cents, no entry closed,
+ *  no portrait, and since v87 no card either. The pause is T3's, the birth T4's, the texture T8's and
+ *  the portraits T10's.
+ *
+ *  ⚠⚠ TWO DRAWS ON TWO KEYS SINCE v87, AND THE SECOND ONE IS **NOT** GATED BY THE WEIGHT SWITCH.
+ *  The window exists for every pregnancy – it is life rather than grief – and only the LOSS is
+ *  gated (§3). `drawConceptionWindow`'s own block argues it at length, at the one place the two
+ *  mechanics meet. ⚠ The window draw happens ONLY on a week the hazard actually landed, so an
+ *  ineligible week and a missed roll still take exactly ONE key, which is what §B of
+ *  tests/wave8-pregnancy.test.ts counts. */
 export function rollPregnancy(world: WorldState): void {
   if (!pregnancyEligible(world)) return
   const chance = pregnancyChanceAt(world)
@@ -6594,15 +6845,38 @@ export function rollPregnancy(world: WorldState): void {
   // non-null, and `rollEnds` runs before this at the call site, so the marriage the record points at
   // is the marriage still standing this week.
   const episode = latchedEpisode(world)!
-  const pausesWeek = world.week + ECONOMY.motherhood.playsOnWeeks
+  // ⭐⭐⭐ v87 T2 – THE HIDDEN WINDOW, DRAWN ON THE WEEK SHE CONCEIVES. Openness is the girl's own
+  // register (`temperamentFor`), not the `wants` she drew for this attachment: `drawRawLag`'s own
+  // reading of who-she-is §4, inherited rather than re-argued.
+  const openness = temperamentOpenness(temperamentFor(world.seed, world.dynasty?.motherTemperament))
+  const windowWeeks = drawConceptionWindow(world.seed, world.week, openness)
+  const conceivedWeek = world.week
+  const announcedWeek = conceivedWeek + windowWeeks
+  // ⭐⭐ THE FIRST-TRIMESTER CAP (the review of T2 – the constant's own note carries the argument):
+  // «up to 8 after she tells», and never past the trimester competition really stops at. For a short
+  // window the min is the shipped arithmetic unchanged; for a long one she stops entering BEFORE the
+  // announcement – the absence of entries is the telling, the design doc's own scene.
+  const pausesWeek = Math.min(
+    announcedWeek + ECONOMY.motherhood.playsOnWeeks,
+    conceivedWeek + ECONOMY.motherhood.firstTrimesterWeeks,
+  )
   world.pregnancy = {
     // ⭐⭐⭐ A REFERENCE AND NEVER A LIVENESS CHECK – THE DECOUPLING LAW, and the banner above is
     // where it is argued. This id says WHOSE and WHICH MARRIAGE, for the record, the diary and the
     // album; it does not say whether the pregnancy is still real. T4 and T5 read `world.pregnancy`.
     episodeId: episode.id,
-    announcedWeek: world.week,
+    // ⭐⭐⭐ v87 T2 – THE WEEK THE HAZARD FIRED, which is the week she conceived and is no longer the
+    // week she says so. Everything below is derived from it.
+    conceivedWeek,
+    announcedWeek,
     pausesWeek,
-    dueWeek: pausesWeek + ECONOMY.motherhood.termWeeks,
+    // ⭐⭐⭐ v87 T2 – **THE ONE-NUMBER LAW** (§2): the birth rides the CONCEPTION clock, so the
+    // announcement sits inside the term instead of ahead of it and a pregnancy is 39 weeks lived
+    // whatever the window drew. `dueWeek = pausesWeek + termWeeks` was the wave-8 formula and it
+    // assumed conception AT the announcement – kept as `termWeeks` and written out as half of
+    // `termTotalWeeks`, so the arithmetic below reproduces every pre-window date exactly when the
+    // window draws 0.
+    dueWeek: conceivedWeek + ECONOMY.motherhood.termTotalWeeks,
     // ⚠ NULL IS A REAL STATE AND NOT A PLACEHOLDER: she has told him and he has not answered yet.
     // `answerLifeBeat` writes the grade, once, on the answer (T1's own note on the field).
     support: null,
@@ -6612,12 +6886,49 @@ export function rollPregnancy(world: WorldState): void {
     // it is true; the field's own note in `world/state.ts` carries why it is a capture at all.
     rankAtPause: null,
   }
+}
+
+/** ⭐⭐⭐ v87 (the weight, wave 11 T2) – **THE WEEK SHE SAYS IT**, which is no longer the week she
+ *  conceived. The ONE raise site of an `'expecting'` row, moved here out of `rollPregnancy` when the
+ *  window separated the two facts.
+ *
+ *  ⚠⚠ NOTHING PRICES THE WEEKS BEFORE THIS ONE, AND THAT IS THE DESIGN'S OWN LAW RATHER THAN A
+ *  CONSEQUENCE OF THE BUILD (the design's §3, and §2 of the spec): «What the parent does inside the
+ *  window is his own, and innocent. He plans a brutal block because he does not know. When she tells
+ *  him, the weeks behind him are re-read – by him, not by the game. No mechanic prices those weeks.»
+ *  So the window costs nothing, closes nothing, says nothing and draws nothing after its one draw:
+ *  `motherhoodBandAt` is silent until this week, the portrait wears no pregnancy painting until this
+ *  week (`pregnancyFaceAt`'s `week < announcedWeek`), the entry gate reads `pausesWeek` which is
+ *  eight weeks AFTER this one, and the fall door reads this week rather than the record's existence.
+ *  `tests/wave11-window.test.ts` §C walks the window and asserts the world is byte-identical to one
+ *  where no hazard fired at all, which is the only form of that claim that cannot rot.
+ *
+ *  ⚠ IT RAISES WITH `pregnancy.episodeId` AND NEVER WITH `latchedEpisode` – THE DECOUPLING LAW
+ *  (RULED 20.09), and here it is load-bearing for the first time: a marriage can END inside the
+ *  window, and `latchedEpisode` would answer `null` on the very week she says she is having a child.
+ *  §14's banner says the id is a reference and never a liveness check; this is the call site that
+ *  would have broken it.
+ *
+ *  ⚠⚠ `>=` PLUS A RECEIPT, NOT `===`, AND THE PAIR IS `landWedding`'s RATHER THAN
+ *  `landPregnancyPause`'s. A missed pause row is a missed line of texture; a missed ANNOUNCEMENT is
+ *  a pregnancy that runs to a birth nobody was ever told about – the blocking card never stands, the
+ *  parent never answers, `support` stays `null` for ever and the return reads a grade nobody gave.
+ *  So the week is a floor and the receipt is the log: an `'expecting'` row at or after this
+ *  pregnancy's own conception week can only be this pregnancy's.
+ *
+ *  ⚠ ZERO DRAWS: the window was drawn at conception and is persisted; this compares two integers
+ *  and scans the log. It takes no `Rng`, so MAIN is structurally out of reach and the frozen capture
+ *  (41550 / e6b0c709) cannot see it. */
+export function landPregnancyAnnouncement(world: WorldState): void {
+  const pregnancy = world.pregnancy
+  if (pregnancy === null || world.week < pregnancy.announcedWeek) return
+  if (world.lifeLog.some((row) => row.kind === 'expecting' && row.week >= pregnancy.conceivedWeek)) return
   // ⚠ THE DETAIL IS THE EPISODE ID, `'met'` / `'ended'` / `'engaged'`'s own shape – machine-readable,
   // never a rendered sentence. ⚠ AND IT IS NOT THE RECEIPT HERE, which is the one way this kind
   // parts from the wedding: `world.pregnancy` is what clause 2 of the gate reads, so the once-ness
   // lives on the record rather than in the log, and a career that reaches a SECOND pregnancy one day
   // (W5) gets a second row about the same marriage without any of this changing.
-  raiseLifeBeat(world, 'expecting', episode.id)
+  raiseLifeBeat(world, 'expecting', pregnancy.episodeId)
 }
 
 /** ⭐⭐⭐ **HIS STRING, PASSED 21.09 IN SESSION** (wave 8b, C5) – the pause week's one feed row, and
@@ -6938,6 +7249,13 @@ export function motherhoodBandAt(world: WorldState): MotherhoodBand | null {
     // pregnancy standing beside an older sibling's row (W5) reads this correctly without an edit.
     const born = world.children.filter((child) => child.bornWeek >= pregnancy.dueWeek)
     if (born.length > 0) return born.some((child) => child.bornWeek === week) ? 'birth' : 'postpartum'
+    // ⭐⭐⭐ v87 T2 – **THE HIDDEN WINDOW IS SILENT, AND IT IS SAID OUT LOUD RATHER THAN LEFT TO THE
+    // CLAUSE BELOW.** Between the conception and the announcement the parent has not been told, so
+    // there is nothing for his diary to be about: a band here would be the game telling him a thing
+    // she has not said. The `week < pausesWeek` clause two lines down already returned `null` for
+    // these weeks by arithmetic – this states it as the law it is (the design's §3, «no mechanic
+    // prices those weeks»), so a later edit to the pause clause cannot silently open the window.
+    if (week < pregnancy.announcedWeek) return null
     if (week === pregnancy.announcedWeek) return 'announced'
     // The eight weeks she plays on carry no band: they look like any other week, and a band that
     // spoke about them would be saying something the player cannot yet see.
@@ -7050,4 +7368,294 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
     // gap, and every available default would be a plan nobody chose.
     returnPlan: null,
   }
+}
+
+// =================================================================================================
+// 15. THE WEIGHT – ⚠⚠ THE SWITCH, THE HIDDEN WINDOW, AND THE TWO GRIEFS (wave 11)
+// =================================================================================================
+//
+// `docs/specs/the-weight-2026-09.md` is the canon, `docs/plans/life-wave-11-builder-2026-09.md` the
+// step-by-step, and `docs/design/the-months-before-she-says-2026-09.md` the design underneath. It is
+// §15 for §14's own stated reason: appended rather than renumbered.
+//
+// ⚠⚠ THE ONE THING THIS SECTION MUST NEVER MODEL IS THE PARENT AS THE CAUSE, and it is a FINDING
+// rather than a scruple (the design's §2, the research's §6.3): nothing in the evidence supports
+// training as a cause of a pregnancy loss, and a game that priced one would be telling every player
+// the sentence women already hear too often. So the boundary below is written into the SIGNATURES –
+// both hazards take their arguments and read nothing else – and both are pinned by a sweep rather
+// than by a comment.
+
+/** ⭐⭐⭐ v87 – THE SWITCH, BOTH WAYS, AND ITS ONE WRITER OUTSIDE `createWorld` (RULED 22.09: «only
+ *  for the weight, set at new-career creation (the creation flow ASKS), changeable both ways in
+ *  settings later»). `setCoachOnEventWeeks`'s shape (`world/coachMarket.ts`) and nothing more.
+ *
+ *  ⚠⚠ IT WRITES ONE FIELD AND DELETES NOTHING, WHICH IS THE **OTHER HALF OF THE RULING** and the
+ *  half a future reader is most likely to get wrong: «turning it off stops NEW weight events and
+ *  never deletes lived state». `pregnancyLossWeeks`, `bereavementWeeks`, the album, the diary and a
+ *  live `spiritShock` all stand – a career that lived a loss has lived it, and a switch that tidied
+ *  its own history away would be rewriting a life rather than stopping one. The test that toggles
+ *  mid-career asserts BOTH halves, because only one of them is visible in this function.
+ *
+ *  ⚠ AND THERE IS NO «EFFECTIVE FROM NEXT WEEK» ANYWHERE. The flag is read at the top of each
+ *  hazard, on the week the hazard runs, so the command's own snapshot is already the answer – which
+ *  is what «changeable both ways, effective immediately» means when it is built rather than claimed.
+ *
+ *  ⚠ ZERO DRAWS: one assignment. It takes no `Rng`, so MAIN is structurally out of reach and the
+ *  frozen capture (41550 / e6b0c709) cannot see it. */
+export function setWeightEnabled(world: WorldState, on: boolean): void {
+  world.weightEnabled = on
+}
+
+/** ⭐⭐⭐ v87 (the weight, wave 11 T4) – **HER WEEKLY CHANCE OF LOSING IT, GIVEN HER AGE AND NOTHING
+ *  ELSE.** Pure, zero draws, no writes, and **it takes no `WorldState` at all** – which is the
+ *  boundary law written into the signature rather than into a comment.
+ *
+ *  ⚠⚠ THE READ-SET IS THE WHOLE POINT OF THIS FUNCTION'S SHAPE. The design's §2 and the research's
+ *  §6.3: nothing in the evidence supports training as a cause of loss, the concern in the sources is
+ *  contact and falls, and age dominates the variance. So a game that let the training plan, the
+ *  travel, the answers, `spirit` or `bond` reach this number would be asserting something untrue –
+ *  and it would be telling every player the sentence women already hear too often, *you did this by
+ *  not resting*. A function that cannot SEE the world cannot read it, and a later refactor that
+ *  wanted to would have to widen this signature in front of a reviewer. `tests/wave11-loss.test.ts`
+ *  §B sweeps plan, travel, spirit, bond and support across arms on shared seeds and asserts the
+ *  realised hazard is identical, so the pin holds the property even if somebody re-plumbs the call.
+ *
+ *  ⚠ THE LAST RUNG WHOSE `fromAge` SHE HAS REACHED WINS, and an age under the first rung takes 0 –
+ *  `pregnancyChanceAt`'s own law, read the same way so the two curves cannot be consumed differently.
+ *  A 0 here takes ZERO DRAWS exactly as an ineligible week does, because `rollPregnancyLoss` returns
+ *  on the chance before it derives the stream. */
+export function pregnancyLossChanceAt(ageYears: number): number {
+  let perWeek = 0
+  for (const rung of ECONOMY.weight.lossPerWeekByAge) if (ageYears >= rung.fromAge) perWeek = rung.perWeek
+  return perWeek
+}
+
+/** ⭐⭐⭐ v87 T4 – **IS THIS A WEEK THE LOSS HAZARD RUNS AT ALL.** Pure, zero draws, no writes, and a
+ *  `false` here means ZERO DRAWS rather than a discarded one – `pregnancyEligible`'s own law, and
+ *  the reason this is a predicate of its own: a reader must see, in ONE place, that the whole of
+ *  eligibility is decided before any stream exists.
+ *
+ *  1. ⭐⭐⭐ **THE SWITCH.** `world.weightEnabled`, RULED 22.09. Off means no draw at all – not a draw
+ *     whose outcome is discarded, which is invariant 2's named offence – so a career with the weight
+ *     off taps the same sub-streams in the same order the same number of times as a pre-wave career.
+ *     §8 row 6 measures it.
+ *  2. A PREGNANCY IS LIVE. `world.pregnancy !== null`, and nothing else about it is read.
+ *  3. ⚠⚠ **THE WEEK IS INSIDE THE RESEARCH'S OWN WINDOW** – `[conceivedWeek + lossFromWeek,
+ *     conceivedWeek + lossUntilWeek)`. The constant's block carries the derivation; the short of it
+ *     is that the 9.8/10.8/16.7% figures count recognised pregnancies between 6 and 20 GESTATIONAL
+ *     weeks, which is conception weeks 4 to 18, and spreading them over the whole 39-week term would
+ *     ship a different and much heavier event.
+ *
+ *  ⚠ AND NOTHING ABOUT HER PLAN, HER TRAVEL, HER SPIRIT, HER BOND OR HIS ANSWER IS IN HERE, which is
+ *  worth saying because every one of them was available. That is the boundary law, and this gate is
+ *  the other half of the fence `pregnancyLossChanceAt`'s signature builds. */
+export function pregnancyLossEligible(world: WorldState): boolean {
+  if (!world.weightEnabled) return false
+  const pregnancy = world.pregnancy
+  if (pregnancy === null) return false
+  const since = world.week - pregnancy.conceivedWeek
+  return since >= ECONOMY.weight.lossFromWeek && since < ECONOMY.weight.lossUntilWeek
+}
+
+/** ⭐⭐⭐ v87 T4 – **THE WEEKLY ROLL, AND THE ONE PLACE A PREGNANCY ENDS WITHOUT A BIRTH.**
+ *
+ *  ⚠⚠ THE LINE ORDER IS THE RULE, `rollPregnancy`'s own four steps inherited whole: the gate returns
+ *  first, the CHANCE is computed second and returns if it is 0, and only then is the stream derived.
+ *  A week with the switch off, a week with no pregnancy, a week outside the research's window and a
+ *  week whose age curve reads 0 all take ZERO draws – never draw-and-discard.
+ *
+ *  ⚠ THE KEY IS THE PREGNANCY'S OWN IDENTITY PLUS THE WEEK – `seed:life:pregnancy-loss:<conceivedWeek>:<week>`.
+ *  The conception week is what makes it the PREGNANCY's stream (the spec's «a purpose key derived
+ *  from the pregnancy's own identity»), and the week is what makes it one uniform per week rather
+ *  than one per pregnancy. ⚠⚠ IT IS DELIBERATELY NOT `seed:life:loss:<week>`, which is the
+ *  BEREAVEMENT's key, named in writing on 11.09 and created by T5: two different facts may never
+ *  share a key, and these two are in the same section of the same file.
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollPregnancy`'s own note: `rngFromSeed` can return exactly 0, and a hazard
+ *  of 0 must be impossible rather than merely unlikely.
+ *
+ *  WHAT A LOSS DOES, and the list is the spec's §3 in order:
+ *    · the record CLEARS – no birth, no comeback machinery, no `children.push`;
+ *    · the week joins `pregnancyLossWeeks`, because the thing that ends cannot be the thing that
+ *      remembers, and the cooldown below reads that list;
+ *    · `spiritShock` lands as `'loss'` – the depth is `ECONOMY.spirit.shock.loss`, and there is no
+ *      second recovery rate anywhere behind it (§5's one-rate law);
+ *    · the words, if she is OPEN. A private girl says nothing at all, and the absence is the telling.
+ *
+ *  ⚠⚠ IT WRITES THE SHOCK AND `accrueSpirit` PRICES IT THE SAME WEEK, which is why the call site is
+ *  inside the 1c block and above `accrueSpirit` – `landBirth`'s own arrangement, for the same
+ *  mechanical reason: the pass that pays for a shock reads `shock.week === world.week`. */
+export function rollPregnancyLoss(world: WorldState): void {
+  if (!pregnancyLossEligible(world)) return
+  const chance = pregnancyLossChanceAt(kidAgeNow(world))
+  if (chance === 0) return
+  const pregnancy = world.pregnancy!
+  if (rngFromSeed(`${world.seed}:life:pregnancy-loss:${pregnancy.conceivedWeek}:${world.week}`)() >= chance) return
+  const told = world.week >= pregnancy.announcedWeek
+  world.pregnancy = null
+  world.pregnancyLossWeeks.push(world.week)
+  // ⚠ THE MARK IS WRITTEN AFTER THE RECORD IS CLEARED AND THE ORDER IS FREE: nothing between these
+  // lines reads either. Written this way round so the clear reads as the event and the rest as its
+  // consequences.
+  world.spiritShock = { week: world.week, kind: 'loss' }
+  const line = lossLineFor(world, told)
+  if (line === null) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    keep: true,
+    lifeKind: 'expecting',
+    // ⚠ NO AMOUNT AND NO PRICE IN THE WORDS (§3j's rule 4). ⚠ `keep: true` for the pause row's own
+    // reason: `pruneEvents` drops ordinary rows at sixty weeks and this arc is longer than that.
+    text: line,
+  })
+}
+
+/** ⭐⭐⭐ v87 T4 – **WHAT SHE SAYS, OR THE SILENCE THAT IS THE TELLING.** ⚠ ⚠ DRAFT – every word is
+ *  the builder's draft for the owner (invariant 4), listed verbatim in the wave's report.
+ *
+ *  ⚠⚠ `null` IS A FIRST-CLASS ANSWER AND IS THE DESIGN'S STRONGEST SCENE, not a gap in the pool.
+ *  RULED 22.09 (question 2): «both branches build – open tells, private is silence», and the
+ *  design's §4 table is where the two branches come from: `sunny` «tells him, and wants him there»,
+ *  `fiery` «tells him fast and loud, then does not want to discuss it», `quiet` «he may learn from
+ *  the absence of entries, not from her», `deep` «⚠ the one who may not tell him at all». So a
+ *  private girl's loss writes NO ROW: the diary band goes quiet, the portrait stops being pregnant,
+ *  the entries re-open, and the parent works it out. «The parent learns from a silence, which is a
+ *  thing this game can do and almost no other kind of game can» – the design's own sentence.
+ *
+ *  ⚠ TWO CELLS PER OPEN VOICE, AND THE SECOND IS WHAT THE HIDDEN WINDOW MADE REACHABLE. A loss can
+ *  land before she has ever announced it (the research's window opens at conception week 4 and a
+ *  private window runs to 12), so there is a real case where the parent is told about a pregnancy
+ *  and its end in one sentence. A single cell would have had to presume he already knew, and would
+ *  have been false on exactly the careers the window exists to create.
+ *
+ *  ⚠ NO NAME AND NO GENDER FOR THE ONE SHE MARRIED (§3g/§3h), NO SEX FOR THE CHILD (§3j's law – the
+ *  row was never written), NO DATE AND NO NUMBER (rule 4), and no line states her interior as fact
+ *  (the fallible-parent law). What each line says is what the PARENT was told and what he could see.
+ *
+ *  ⚠ AND NO LINE LINKS IT TO ANYTHING HE SAID. RULED 22.09 (question 5): if the loss follows a cold
+ *  «too early», the game does NOT link them – the boundary law holds mechanically and the player
+ *  draws his own line. A sentence here that so much as gestured at the answer he gave would be the
+ *  game settling it for him. */
+function lossLineFor(world: WorldState, told: boolean): string | null {
+  const voice = temperamentFor(world.seed, world.dynasty?.motherTemperament)
+  const cell = LOSS_HER_LINE[voice]
+  if (cell === null) return null
+  return told ? cell.told : cell.untold
+}
+
+/** ⚠ ⚠ DRAFT – see `lossLineFor`. `null` is the private branch and is the design's ruling, not an
+ *  unwritten cell. */
+const LOSS_HER_LINE: Record<Temperament, { told: string; untold: string } | null> = {
+  sunny:
+    {
+      told: 'She rang the same evening and did not soften it. "We lost it. I did not want you to hear it from anyone else, and I would like you here."',
+      untold:
+        'She rang the same evening and said two things in one breath. "There was a child coming and there is not any more. I had not told you yet. I would like you here."',
+    },
+  fiery:
+    {
+      told: 'She called once, said it flat out, and was off the phone inside a minute. "We lost it. I am not talking about it. I will ring you when I am ready to."',
+      untold:
+        'She called once, said it flat out, and was off the phone inside a minute. "I was pregnant. I am not any more. I am not talking about it. I will ring you when I am ready to."',
+    },
+  // ⚠⚠ THE SILENCE, AND IT IS RULED RATHER THAN UNWRITTEN. `quiet` and `deep` tell nobody: the arc
+  // simply stops, and what the parent has to read is the absence. See `lossLineFor`'s block.
+  quiet: null,
+  deep: null,
+}
+
+// =================================================================================================
+// 16. A DEATH IN THE FAMILY – ⚠⚠ THE WORLD'S DICE, NEVER HER PERSONALITY'S (the weight, wave 11: T5)
+// =================================================================================================
+//
+// `docs/specs/the-weight-2026-09.md` §4, his 23.08 «вплести похороны» and the numbers he drafted on
+// 11.09, RULED as drafted constants on 22.09 (question 3). It is §16 for §14's and §15's own stated
+// reason: appended rather than renumbered.
+//
+// ⚠⚠ THE WAVE'S SECOND STREAM, RESERVED IN WRITING ON 11.09 AND CREATED HERE:
+//
+//     seed:life:loss:<week>                 does somebody die, this week
+//
+// ⚠ IT IS THE KEY HE NAMED THAT DAY and it is deliberately NOT the pregnancy loss's
+// `seed:life:pregnancy-loss:<conceivedWeek>:<week>` (§15). Two different facts may never share a
+// key, and these two live in the same file under nearly the same word.
+//
+// ⚠⚠ THE HAZARD IS TEMPERAMENT-FREE AND THAT IS A DESIGN LAW WITH A PIN. A death is the world's
+// dice; only the RESPONSE is hers – intensity prices depth (and therefore duration, under the
+// one-rate law), openness prices expression. `bereavementChanceAt` takes NO ARGUMENTS AT ALL, which
+// is the read-set fence pushed as far as it goes, and `tests/wave11-bereavement.test.ts` §B sweeps
+// all four temperaments on shared seeds and asserts the realised weeks are identical.
+
+/** ⭐⭐ THE WEEKLY CHANCE, AND IT IS A CONSTANT – his 11.09 0.08%/week, RULED 22.09 as a drafted
+ *  number. Pure, zero draws, no writes, and it takes nothing.
+ *
+ *  ⚠⚠ A FUNCTION AND NOT A BARE CONSTANT READ, for `pregnancyChanceAt`'s own reason: `rollBereavement`
+ *  returns on the CHANCE before it derives the stream, so «zero draws on an ineligible week» needs
+ *  something to return on. It is also where a later retune would put a shape if one is ever ruled,
+ *  and a reader looking for «what can move this number» finds one place rather than a grep. */
+export function bereavementChanceAt(): number {
+  return ECONOMY.weight.bereavement.perWeek
+}
+
+/** ⭐⭐ THE GATE – FOUR CLAUSES, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
+ *
+ *  1. ⭐⭐⭐ **THE SWITCH.** `world.weightEnabled`, RULED 22.09. Off means no draw at all.
+ *  2. ⭐⭐ **THE ADULT RUNG** – `kidAgeExact >= ECONOMY.weight.bereavement.fromAgeYears` (23), his
+ *     23.08 «начиная со ступени adult». ⚠ THE ASSET ENFORCES WHAT THE GATE PROMISES:
+ *     `fem-euro-brunnet-adult-funeral.webp` exists at the `adult` band and nowhere else, so a
+ *     bereavement below the rung would have no picture to wear. The 11.09 log says exactly that.
+ *  3. ⭐⭐ **THE CAP** – `bereavementWeeks.length < capPerCareer` (2). A hard cap and not a shaped
+ *     decay: past two the arc stops being a life and starts being a theme.
+ *  4. ⭐⭐ **THE SPACING** – at least `spacingWeeks` (156) since the last one. Two deaths inside a
+ *     season would read as a mechanic rather than as a life.
+ *
+ *  ⚠⚠ CLAUSES 3 AND 4 READ `world.bereavementWeeks` AND NEVER A DERIVED GUESS, which is the whole
+ *  reason that list is persisted: a death writes no record of its own, and `spiritShock` holds ONE
+ *  mark that clears itself when she recovers.
+ *
+ *  ⚠ AND NOTHING ABOUT HER TEMPERAMENT, HER SPIRIT, HER BOND, HER MARRIAGE OR HER SEASON IS IN HERE.
+ *  That is the design law, and this gate is the half of the fence `bereavementChanceAt`'s empty
+ *  signature cannot build on its own. */
+export function bereavementEligible(world: WorldState): boolean {
+  if (!world.weightEnabled) return false
+  const b = ECONOMY.weight.bereavement
+  if (kidAgeNow(world) < b.fromAgeYears) return false
+  if (world.bereavementWeeks.length >= b.capPerCareer) return false
+  const last = world.bereavementWeeks.reduce((w, at) => Math.max(w, at), -Infinity)
+  if (world.bereavementWeeks.length > 0 && world.week - last < b.spacingWeeks) return false
+  return true
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, AND THE ONE PLACE `spiritShock.kind` BECOMES `'bereavement'`.
+ *
+ *  ⚠⚠ THE LINE ORDER IS THE RULE, `rollPregnancy`'s four steps inherited for the third time: the
+ *  gate returns first, the CHANCE is computed second and returns if it is 0, and only then is the
+ *  stream derived. Never draw-and-discard.
+ *
+ *  WHAT IT DOES, and the list is §4 in order:
+ *    · the week joins `bereavementWeeks`, which the cap and the spacing then read;
+ *    · `spiritShock` lands as `'bereavement'` – the depth is `ECONOMY.spirit.shock.bereavement`,
+ *      intensity-scaled, and there is NO second recovery rate, no taper and no flag behind it
+ *      (§5's one-rate law, refused in writing in `engine/spirit.ts` long before this kind existed);
+ *    · the blocking card is raised, in her voice, with the funeral painting on it.
+ *
+ *  ⚠ THE DETAIL IS THE WEEK, as a string – machine-readable and never a rendered sentence (§G.2's
+ *  law). It is the only fact the beat has, because the deceased is UNNAMED (RULED 22.09), and it is
+ *  what makes two bereavements in one career distinguishable rows in `lifeLog`.
+ *
+ *  ⚠⚠ IT IS **NOT** ON THE ATTACHMENT MACHINERY (the design's §3e): its own shock kind, it can reach
+ *  the parent in words and never in a number, and the psychologist reads the kind for free exactly
+ *  as step 5 built him to. `tests/wave11-bereavement.test.ts` §D is the pin that he needed nothing.
+ *
+ *  ⚠ ZERO MAIN DRAWS: it takes no `Rng` and pulls only from `seed:life:loss:<week>`, so the frozen
+ *  capture (41550 / e6b0c709) cannot see it. */
+export function rollBereavement(world: WorldState): void {
+  if (!bereavementEligible(world)) return
+  const chance = bereavementChanceAt()
+  if (chance === 0) return
+  if (rngFromSeed(`${world.seed}:life:loss:${world.week}`)() >= chance) return
+  world.bereavementWeeks.push(world.week)
+  world.spiritShock = { week: world.week, kind: 'bereavement' }
+  raiseLifeBeat(world, 'bereavement', String(world.week))
 }

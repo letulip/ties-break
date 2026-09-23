@@ -2959,6 +2959,40 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // ⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND WAS RUN RATHER THAN REASONED ABOUT: 41550 / `e6b0c709`.
 // The wave adds no MAIN draw anywhere (the spec's §8 row 5 predicts it and the run confirms it), so a
 // red freeze beside this re-stamp would mean something other than the dynasty moved.
+// =================================================================================================
+// ⭐⭐⭐ RE-STAMPED 22.09.2026 – v87, THE WEIGHT: A PURE KEY APPEND, ELEVEN LIVE CELLS MOVED AND
+// EVERY ROLLBACK RUNG HELD, `PRE_V86` INCLUDED AND UNCHANGED.
+// =================================================================================================
+//
+// WHAT MOVED THEM. `createWorld` writes three more keys – `weightEnabled`, `pregnancyLossWeeks` and
+// `bereavementWeeks` (docs/specs/the-weight-2026-09.md §1, his ruling of 22.09) – and it writes
+// `false`, `[]` and `[]` on every career in this file, because `openCareer` hands it no sixth
+// argument and never will. A key in the literal is a key in `JSON.stringify`, so every register that
+// hashes the LIVE world re-stamps: `FROZEN`'s three, `PRE_R28B`'s five and `PRE_NAME_VERA`'s three.
+//
+// ⚠⚠ AND THE RECEIPT IS THE ONE v86's BLOCK ESTABLISHED, RUN AGAIN RATHER THAN QUOTED.
+// `careerHashAtSchema(·, ·, 86)` on THIS tree returns `ced28dbd…`, `48922b0f…`, `58701fef…` – the
+// three values `FROZEN` held on `main` before this wave, character for character. The peel drops
+// exactly the three new keys (and `conceivedWeek` inside a pregnancy, which these careers do not
+// have), so reproducing the old serialisation exactly can only happen if NOTHING ELSE IN THE WORLD
+// MOVED A BYTE – `rngMain`, `results`, `events`, the wallet, the body, all of it. A two-arm diff
+// proves «these keys differ»; this proves «these keys and no others», over the whole object, in one
+// run. `PRE_V87` below holds those three values.
+//
+// ⚠ `PRE_V85` WAS RE-VERIFIED RATHER THAN ASSUMED, the discipline that rung's own block asks for:
+// `careerHashAtSchema(·, ·, 85)` on this tree returns `cd5f9e0a…`, `3b9d1bed…`, `af93ff21…`, which
+// are `PRE_V86`'s three shipped constants. Every rung below it holds for the same reason – the peel
+// gained lines at its HEAD and not one line anywhere else.
+//
+// ⚠ `PRE_R28B.selfTravelling` IS THE ONE CELL IN THAT REGISTER THAT IS A **PLAIN** LIVE HASH and it
+// moved with `FROZEN.selfTravelling` rather than with its two neighbours: it is asserted through
+// `careerHash(0, 1)` (coach-travel-edge.test.ts) and not through `careerHashUnderTheWindowRule`,
+// because a self-coached family holds no kit letter for the window rule to rewrite. Named here so
+// the next re-stamp does not copy the window-rule value into it.
+//
+// ⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND WAS RUN RATHER THAN REASONED ABOUT: 41550 / `e6b0c709`.
+// The wave adds no MAIN draw anywhere (the spec's §8 row 8 predicts it), so a red freeze beside this
+// re-stamp would mean something other than the weight moved.
 export const FROZEN = {
   /** ⭐⭐⭐ RE-STAMPED 14.09.2026 – THE ELEVEN LIVE CONSTANTS, FOR THE SEVENTH v76 KEY (the owner's
    *  elite-gate ruling; state.ts's amendment note carries why the unshipped step could take it).
@@ -3420,7 +3454,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: 'ced28dbd72d07c0551351bd513ee2ad6358acbfc53f10a90d0f18f279c2801ff',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: 'a16c424f5286a5b59b75569a5c15e919feb96cd9e0df89c9d5cf658260382e51',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -3549,7 +3583,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: '48922b0fc81845af24923b963ab026f06418b2346613a5d8063a90fc016f6f73',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: 'fb041465f33ca9770b113e527f829e04ba8a839c4bd3a6091e678cc9af5d4810',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -3789,7 +3823,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: '58701fef40a58808fe468dd7522683ddde0f69ba0583d43e9a3a78b16881c8b1',}
+  selfTravelling: '783263b17ea53cf04acdf6c3d8f83be1937688b365400e547d8fd5c5261fed1c',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -4216,6 +4250,29 @@ export const PRE_V85 = {
  *  the WHOLE writer set, forever, and nothing in any phase of the tick may write the key. A frozen
  *  career walks 156 weeks; it could carry a record only if something in the tick wrote one, and the
  *  measurement above is what makes that a fact rather than an intention. */
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v86 – THE VERBATIM v86 CONSTANTS, CHARACTER FOR
+ *  CHARACTER, and they are the receipt for «the weight is a pure key append» rather than a sentence
+ *  claiming one. `FROZEN` held exactly these three values on `main` before this wave; the peel drops
+ *  `weightEnabled`, `pregnancyLossWeeks` and `bereavementWeeks` and nothing else, and the old
+ *  serialisation comes back.
+ *
+ *  ⚠⚠ THE PEEL ALSO REACHES INSIDE `pregnancy` FOR `conceivedWeek`, AND ON THESE CAREERS THAT ARM
+ *  IS A NO-OP – stated rather than left to be discovered. `walkFrozenCareer` runs 156 weeks from the
+ *  start, the girl is 16.6 at the end of it, and a pregnancy needs a marriage (23+, wave 7), so
+ *  `pregnancy` is `null` on all three and the nested branch is never taken. It is written anyway for
+ *  the v68 `ageCurve` rung's own reason: a peel that is exact only for the careers frozen today is a
+ *  peel whose next caller finds out the hard way.
+ *
+ *  ⚠ WHAT THE WAVE ADDS AND WHAT IT CANNOT REACH. Both hazards are gated on `weightEnabled`, which
+ *  `createWorld` writes `false` for every caller that does not ask – and `openCareer` does not ask.
+ *  So these careers take ZERO draws on either of the wave's streams, and the identity above is not
+ *  merely «the keys peel off» but «nothing in the wave ran at all». */
+export const PRE_V87 = {
+  middleGrinder: 'ced28dbd72d07c0551351bd513ee2ad6358acbfc53f10a90d0f18f279c2801ff',
+  eliteGrinder: '48922b0fc81845af24923b963ab026f06418b2346613a5d8063a90fc016f6f73',
+  selfTravelling: '58701fef40a58808fe468dd7522683ddde0f69ba0583d43e9a3a78b16881c8b1',
+}
+
 export const PRE_V86 = {
   middleGrinder: 'cd5f9e0a15101b34cf80b93bfd0be4d7bef0448d089f930c525712523584af3a',
   eliteGrinder: '3b9d1bed7b3254dad727fbaee79c662979d610b25d51404c1011a85fd6d91bcb',
@@ -4570,9 +4627,9 @@ export const PRE_V69 = {
  *  birth and the old-name career still comes back exactly, on the new world as on the old. The
  *  02.09 identity is about a name, and no part of v79 touches one. */
 export const PRE_NAME_VERA = {
-  middleGrinder: '5869cc98a0cea818201714606d2325930235e70d426cbc4e3ba0abcff4c9d0bb',
-  eliteGrinder: 'c0ec7907c46603b4dc5e18975d51f45cb23612f5589481b933a8dac9b1a83b6d',
-  selfTravelling: 'eb789e7682f0b2bd3e914926b86f1a23930456730aca12446b4b8eb944645bf5',}
+  middleGrinder: '657275ea59b12c35d5fa78023a334d74b1e1c6a96972fdf3af66cd39c8a104ce',
+  eliteGrinder: '7fdf6b9f7bd15e7f8a0497972cbab1f53bfd8f3aa3978607107514916ee80434',
+  selfTravelling: 'a934810f2c28018a5d08ca28349efa522046466c8bacc44c50460fa9d47b37e6',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -4915,9 +4972,9 @@ export const PRE_V66 = {
  *  differs from `live` on 6/1. The rule this constant exists for is untouched by the wave; only the
  *  careers under it moved. */
 export const PRE_R28B = {
-  middleGrinder: 'ced28dbd72d07c0551351bd513ee2ad6358acbfc53f10a90d0f18f279c2801ff',
-  eliteGrinder: '48922b0fc81845af24923b963ab026f06418b2346613a5d8063a90fc016f6f73',
-  selfTravelling: '58701fef40a58808fe468dd7522683ddde0f69ba0583d43e9a3a78b16881c8b1',
+  middleGrinder: 'a16c424f5286a5b59b75569a5c15e919feb96cd9e0df89c9d5cf658260382e51',
+  eliteGrinder: 'fb041465f33ca9770b113e527f829e04ba8a839c4bd3a6091e678cc9af5d4810',
+  selfTravelling: '783263b17ea53cf04acdf6c3d8f83be1937688b365400e547d8fd5c5261fed1c',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to
    *  `bea3d58e` and bisects it). The one career in this file whose inbox the window rule actually
@@ -4925,7 +4982,7 @@ export const PRE_R28B = {
    *  155 by the window, and it is still `open` at the 156-week horizon instead of expired. MEASURED on
    *  a tree that ran the old rule (offers.ts:965 and :1059 reverted in a copy of this mid-merge tree),
    *  not produced by the helper it is asserted against. */
-  highPlayer: 'abe8f9c86ccb18cb93f84be36bb3bae8e8b440dba0e021a28c7c9b6eb90e5cb4',
+  highPlayer: '3fff9ec78c03922e9b2000261edf21e2f0da4c6db7e60788f3106ac4523c4b85',
   /** ⭐ PRESETS[5] · 25k middle · middle coach · PLAYER policy – THE EXPIRED-LETTER WITNESS, and the
    *  only career here that exercises the `decidedWeek` rewind. `kit-100` lands on window week 49 and
    *  has ALREADY lapsed by the horizon, on 105 under the letter rule and on 104 under the window rule;
@@ -4933,7 +4990,7 @@ export const PRE_R28B = {
    *  code. ⚠ ITS LETTER DID NOT MOVE IN THE UNION MERGE – week, slot and both deadlines are character
    *  for character what T1b measured; only the hash moved, with the rest of the tree. Same provenance:
    *  the engine-toggled copy, not the helper. */
-  middlePlayer: 'a2fcdb13ba459fb9ca6eb157c94d20d686b3c66b4f266299aad91f47d68332cc',}
+  middlePlayer: '931bfde35beb10d0ac1d97015fa35ff8975820bb0ff6d3076c0e210092deb47c',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -5831,7 +5888,32 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // wave – and the eleven live cells re-stamp because `JSON.stringify` of the live world now
   // contains one more key. The peel removes the key and never a value, so the v85 serialisation
   // comes back exactly.
-  const { dynasty: _dynasty, ...preDynasty } = world
+  // ⚠ RE-AIMED FOR v87 (the weight, wave 11), NOT WEAKENED, AND IT PEELS AHEAD OF EVERY LINE BELOW
+  // because the peel order is reverse order of arrival and these three arrived last. They are a
+  // PURE KEY APPEND on `createWorld`'s literal, so object rest restores the v86 serialisation exactly.
+  // ⚠⚠ AND THE FOURTH FIELD IS INSIDE A **NULLABLE RECORD**, which this ladder has never had to peel
+  // before – v77 reached inside a LIST (`loveEpisodes` rows) and v78 inside another (`assets` rows),
+  // and `pregnancy` is neither. It is a NO-OP on every career in this file (`walkFrozenCareer` runs
+  // 156 weeks from the start and the girl never reaches 23, let alone marries), and it is written
+  // anyway for the v68 `ageCurve` rung's own stated reason: a peel that is exact only for the careers
+  // that happen to be frozen today is a peel whose next caller finds out the hard way.
+  const {
+    weightEnabled: _weightEnabled,
+    pregnancyLossWeeks: _losses,
+    bereavementWeeks: _bereavements,
+    ...preWeightKeys
+  } = world
+  const preWeight = {
+    ...preWeightKeys,
+    // ⚠ THE SPREAD-THEN-OVERRIDE KEEPS `pregnancy` WHERE IT WAS – v77's nested-peel property, and
+    // the only reason a nested peel can be exact at all: a key that already exists in the spread
+    // keeps its original insertion position when it is re-assigned.
+    pregnancy:
+      preWeightKeys.pregnancy === null
+        ? null
+        : (({ conceivedWeek: _conceived, ...preConceived }) => preConceived)(preWeightKeys.pregnancy),
+  }
+  const { dynasty: _dynasty, ...preDynasty } = preWeight
   const { comeback: _comeback, children: _children, pregnancy: _pregnancy, ...prePregnancy } = preDynasty
   const { prologueTrace: _prologueTrace, ...preTrace } = prePregnancy
   const preLatch = {
@@ -5954,7 +6036,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
                                               ? prePregnancy
                                               : schemaVersion < 86
                                                 ? preDynasty
-                                                : world
+                                                : schemaVersion < 87
+                                                  ? preWeight
+                                                  : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 

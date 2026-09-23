@@ -4452,7 +4452,42 @@ export const ECONOMY = {
      *  ANYWHERE, BY DESIGN» is untouched by this row and by `postpartumSupportScale` below, which is
      *  the reason support enters through the MAGNITUDE. See that constant's note for the whole of the
      *  argument, including the mechanical one. */
-    shock: { breakup: { steady: -22, intense: -34 }, postpartum: { steady: -28.8, intense: -45 } } satisfies Record<
+    /** ⭐⭐⭐ v87 (the weight, wave 11 – docs/specs/the-weight-2026-09.md §5) – AND THE TWO THE
+     *  LAST STEP OF THE LAYER ADDS, **DRAFTED**: `loss` −26/−40 and `bereavement` −30/−46. The
+     *  reserved seats this record's own header promised («so the kinds the build plan's steps 7–8
+     *  add land as siblings in this record rather than as a second table»), taken.
+     *
+     *  ⚠⚠ THE ORDER IS THE DESIGN AND IT IS STATED IN THE SPEC: both sit deliberately DEEPER than the
+     *  break-up and ASTRIDE the postpartum pair (−28.8/−45), «because that is the order the lived days
+     *  have». A loss is heavier than a break-up and lighter, at the steady end, than a birth she
+     *  keeps; a death in the family is the heaviest thing this layer holds.
+     *
+     *  ⚠⚠ AND NEITHER BRINGS A SECOND RECOVERY RATE – `spirit.ts`'s standing refusal, which the spec
+     *  quotes back at itself: «a second return rate, a «recovering» flag or a taper read off
+     *  `spiritShock` would all be the same mistake». The sketch's «longer, asymmetric curve» is
+     *  delivered by DEPTH under the one-rate law, and depth is the whole of «longer»: at
+     *  `returnPerWeek` 5 (steady) / 3 (intense) and a clear at `baseline − shockClearWithin` = 68, a
+     *  deeper landing IS a longer window, arithmetically, with no second number anywhere.
+     *
+     *  ⚠ THEY ARE ALREADY INTENSITY-SCALED, `breakup`'s own law two paragraphs up: they go in AFTER
+     *  the scale, on `accrueSpirit`'s own line, and `weekPerturbation` has no row for either and must
+     *  never grow one. ⚠ AND `postpartumSupportScale` DOES NOT TOUCH THEM – it reads
+     *  `shock.kind === 'postpartum'` and returns exactly 1 for every other kind, which is what keeps
+     *  the support grade a fact about a BIRTH rather than a general softener.
+     *
+     *  ⚠ BOTH ARE THE BUILDER'S DRAFTS and are flagged here exactly as `perWeekByAge` and
+     *  `postpartumSupportScale` are: the spec drafts the ORDER and the bench prices them; his word
+     *  finalises. ⚠ BOTH PRODUCTS LAND ON THE METER'S GRID – the constraint `postpartum`'s own note
+     *  measured: −26 × 0.8 = −20.8 and −26 × 1.25 = −32.5; −30 × 0.8 = −24 and −30 × 1.25 = −37.5.
+     *  `world.spirit` is carried in TENTHS (`roundTenth`), and all four are tenths. ⚠ The steady/intense
+     *  pair is written out rather than derived from a base for `breakup`'s own single-source reason:
+     *  §5's two numbers win on drift, and a reconstruction is a comment, not a definition. */
+    shock: {
+      breakup: { steady: -22, intense: -34 },
+      postpartum: { steady: -28.8, intense: -45 },
+      loss: { steady: -26, intense: -40 },
+      bereavement: { steady: -30, intense: -46 },
+    } satisfies Record<
       SpiritShockKind,
       { steady: number; intense: number } | null
     >,
@@ -5209,6 +5244,18 @@ export const ECONOMY = {
      *  `partnerName`'s one wave down): a later retune of this number must never move the pause date
      *  of a pregnancy a live career is already carrying. */
     playsOnWeeks: 8,
+    /** ⭐⭐ v87 (the architect's review of T2 – the builder's own question 1 named the falsification):
+     *  **THE FIRST-TRIMESTER CAP ON THE PAUSE, FROM CONCEPTION.** `announcedWeek + playsOnWeeks`
+     *  alone let a private girl's 12-week window put her last event at pregnancy week 20, and the
+     *  research is unambiguous that COMPETITION stops after the first trimester
+     *  (`docs/research/pregnancy-in-sport-2026-09.md` §5 – training continues, competition does not).
+     *  So the pause is `min(announcedWeek + playsOnWeeks, conceivedWeek + firstTrimesterWeeks)`:
+     *  the shipped «up to 8 after she tells» surface holds wherever biology allows it, and the cap
+     *  binds only when the window is long – which is exactly the design doc's quiet-girl scene, «he
+     *  may learn from the absence of entries»: she stops entering before he knows why.
+     *  Drafted 13; a zero-window pregnancy reproduces every wave-8 date exactly (min(8, 13) = 8),
+     *  which is what keeps the shipped identity pin green by arithmetic rather than by luck. */
+    firstTrimesterWeeks: 13,
     /** ⭐ AND THE BIRTH IS THIS MANY WEEKS AFTER THE PAUSE – `dueWeek = pausesWeek + termWeeks`, the
      *  brief's own formula, drafted 31 (the brief's figure). ⚠ THE TWO TOGETHER ARE THE TERM: 8 + 31
      *  = **39 weeks from the announcement to the birth**, which is a full human term with the
@@ -5219,6 +5266,36 @@ export const ECONOMY = {
      *  it is the PAUSE that lands around pregnancy week 8, which is what the formula beside it says
      *  and what is built. Reported rather than papered over; both numbers ship at their drafted
      *  values. T4 fires the birth on `dueWeek`. */
+    /** ⭐⭐⭐ v87 (the weight, wave 11 T2 – docs/specs/the-weight-2026-09.md §2) – **AND THE WHOLE
+     *  TERM, FROM CONCEPTION, WHICH IS THE NUMBER THE BIRTH NOW RIDES ON.** `termWeeks` above has no
+     *  reader in `src/` any more: `dueWeek = conceivedWeek + termTotalWeeks`, and the announcement
+     *  sits INSIDE the term rather than ahead of it.
+     *
+     *  ⚠⚠ THE ONE-NUMBER LAW, AND IT IS THE RESEARCH'S OWN FINDING RATHER THAN A TIDY-UP.
+     *  `docs/research/pregnancy-in-sport-2026-09.md` §6: «`termWeeks: 31` places conception AT the
+     *  announcement, so a hidden window added without shrinking `termWeeks` by the same amount would
+     *  make her pregnancy 43–47 weeks long. The two are one number and must move together.» So they
+     *  did: this constant is `playsOnWeeks + termWeeks` written out as the sum it is, which is the
+     *  `0.03 / 52` precedent one field up – «the annual figure is quoted as the numerator and not in
+     *  a comment beside the answer» – and costs a reader nothing at run time.
+     *
+     *  ⚠ A LITERAL SUM CANNOT FOLLOW A RETUNE, AND A **PIN** IS WHAT CLOSES THAT, not this comment:
+     *  an object literal cannot reference its own siblings, so `8 + 31` would go stale in silence if
+     *  somebody moved `playsOnWeeks` to 9. `tests/wave11-window.test.ts` §A asserts
+     *  `termTotalWeeks === playsOnWeeks + termWeeks` against the LIVE constants, so that retune goes
+     *  red at the moment it is made instead of shipping a 40-week pregnancy. The same file pins the
+     *  zero-window identity against the wave-8 BRIEF's own literals rather than against this
+     *  expression, so the two claims cannot prove each other.
+     *
+     *  ⚠ 39 AND NOT 40, and the gap is the model's own rather than an error: a human term is ~40
+     *  weeks from the last period and ~38 from conception, so 39 sits between the two conventions and
+     *  is what the shipped numbers already added up to. Nothing was re-derived to reach it.
+     *
+     *  ⚠ `termWeeks` IS KEPT AND NOT DELETED, deliberately. It is the ANNOUNCEMENT-relative half of
+     *  the sum and the number every wave-8 document, test and comment quotes; deleting it would make
+     *  this constant a bare 39 with its provenance thrown away – the exact failure the 20.09 push-back
+     *  was about one field up («the annual figure is quoted as the numerator and not in a comment»). */
+    termTotalWeeks: 8 + 31,
     termWeeks: 31,
     /** ⭐ THE PARENT'S THREE ANSWERS AT THE `'expecting'` BEAT – the research's own finding made
      *  mechanical («support only – reaction sets recovery trajectory», the digest's row): joy /
@@ -5535,6 +5612,118 @@ export const ECONOMY = {
   dynasty: {
     /** the chance a daughter takes her mother's openness pole; the rest takes the opposite */
     opennessLean: 0.65,
+  },
+
+  /** ⭐⭐⭐ v87 – **THE WEIGHT** (wave 11; docs/specs/the-weight-2026-09.md, the design
+   *  docs/design/the-months-before-she-says-2026-09.md, the research
+   *  docs/research/pregnancy-in-sport-2026-09.md). The layer's last step: the pregnancy that ends,
+   *  and the death in the family. Both behind ONE switch, `world.weightEnabled`, RULED 22.09.
+   *
+   *  ⚠⚠ **THE ONE THING THIS BLOCK MUST NEVER MODEL IS THE PARENT AS THE CAUSE, AND IT IS A FINDING
+   *  RATHER THAN A SCRUPLE.** The design's §2, the research's §6.3: nothing in the evidence supports
+   *  training as a cause of a pregnancy loss, the IOC summary's concern is contact and falls, and AGE
+   *  DOMINATES THE VARIANCE. A game where a hard training block CAUSES a loss is asserting something
+   *  untrue and is telling every player the sentence women already hear too often. So the hazard
+   *  below takes AGE and the dice, and its signature is written so the read-set is visible from the
+   *  outside – `pregnancyLossChanceAt(ageYears)` takes no world at all, which is a fence a refactor
+   *  cannot quietly move. ⚠ The same law binds the bereavement: temperament-free, world's dice. */
+  weight: {
+    /** ⭐⭐⭐ **THE WEEKLY LOSS HAZARD, BY AGE** – per-week rates that integrate to the research's
+     *  J-curve over the window the research itself defines. DRAFTED; T6's bench confirms the
+     *  integral, and his word finalises.
+     *
+     *  ⚠⚠ THE TOTALS ARE THE PRIMARY SOURCE'S, QUOTED AS THE NUMERATORS THEY ARE rather than
+     *  transcribed into decimals with their provenance thrown away (`motherhood.perWeekByAge`'s own
+     *  20.09 lesson): Magnus MC et al., BMJ 2019, **421,201 Norwegian pregnancies** – **9.8%** at
+     *  25–29, **10.8%** at 30–34, **16.7%** at 35–39. Our window is 24–38, so it sits across the
+     *  FLOOR and the CLIMB, and a flat rate would be wrong at both ends.
+     *
+     *  ⚠⚠ **THE INTEGRAL RUNS OVER 14 WEEKS AND NOT OVER THE 39-WEEK TERM, AND THAT IS THE
+     *  RESEARCH'S OWN DENOMINATOR RATHER THAN THIS BUILDER'S CHOICE.** The study counts RECOGNISED
+     *  pregnancies, «fetal death before 20 gestational weeks … identified between 6 and 20 weeks»;
+     *  gestational weeks are counted from the last period, about two ahead of conception, so the
+     *  study's own window is conception weeks 4 to 18. `lossFromWeek` and `lossUntilWeek` below are
+     *  that window, and these rates are `1 - (1 - total)^(1/14)`.
+     *  ⚠ SPREADING THE SAME TOTAL OVER ALL 39 WEEKS WOULD SHIP A DIFFERENT EVENT, which is the
+     *  reason this is a deviation worth the paragraph: a loss drawn at week 36 is two weeks from the
+     *  due date, is clinically a stillbirth rather than a miscarriage, and is far heavier content
+     *  than the design asked for. The plan drafts «integrating to the J-curve over the term» and
+     *  leaves the term's meaning to the builder; this is the reading that ships the modelled event.
+     *
+     *  ⚠ READ AS RUNGS, `motherhood.perWeekByAge`'s own law: the LAST rung whose `fromAge` she has
+     *  reached wins, and an age under the first rung takes 0. ASCENDING AND APPEND-ONLY-IN-SPIRIT –
+     *  the read depends on the order, and `tests/wave11-loss.test.ts` §A pins that it is sorted.
+     *  ⚠ 24 TAKES THE 25–29 RATE because the study's floor band is the lowest it publishes inside
+     *  our window, and a 24-year-old is not a lower-risk animal than a 25-year-old – the band below
+     *  it (20–24, 11.3%) is HIGHER, so borrowing the floor is the conservative read rather than a
+     *  flattering one. ⚠ NO RUNG ABOVE 35: the game's window closes at 38 and the study's 35–39 band
+     *  covers all of it; 40–44's 32.2% is a cliff no career here can reach. */
+    lossPerWeekByAge: [
+      // 24–29 – the J-curve's floor, and the lowest single year in the study is 27 at 9.5%.
+      { fromAge: 24, perWeek: 1 - Math.pow(1 - 0.098, 1 / 14) },
+      // 30–34 – barely above the floor, which is the finding rather than the middle of a slope.
+      { fromAge: 30, perWeek: 1 - Math.pow(1 - 0.108, 1 / 14) },
+      // 35+ – the climb. Half again on the floor, and the reason a flat rate would be wrong.
+      { fromAge: 35, perWeek: 1 - Math.pow(1 - 0.167, 1 / 14) },
+    ],
+    /** ⭐⭐ THE FIRST WEEK AFTER THE CONCEPTION THE HAZARD CAN FIRE ON, and the last (EXCLUSIVE) –
+     *  the research's own recognised-pregnancy window, mapped onto the conception clock. See
+     *  `lossPerWeekByAge`'s block for the mapping and for why the integral runs over these fourteen
+     *  weeks rather than over the whole term.
+     *
+     *  ⚠ THE WINDOW OFTEN CLOSES BEFORE SHE HAS EVEN TOLD HIM, and that is the arithmetic rather
+     *  than a design decision: a private girl's hidden window runs up to 12 weeks, so a loss can land
+     *  on a pregnancy the parent never knew existed. The design's §4 row for `deep` – «the one who
+     *  may not tell him at all» – is exactly this case, and T4's words are written for both sides of
+     *  it. */
+    lossFromWeek: 4,
+    lossUntilWeek: 18,
+    /** ⭐⭐ HOW SOON AFTER A LOSS THE PREGNANCY HAZARD MAY FIRE AGAIN – DRAFTED 26, against the
+     *  BIRTH's 52 (`motherhood.repeatCooldownWeeks`). The spec's §3: «a loss re-arms the pregnancy
+     *  hazard behind a gentler cooldown, reading the same eligibility machinery wave 9 built».
+     *
+     *  ⚠ GENTLER FOR A MECHANICAL REASON AND NOT A KIND ONE, which is worth writing down because the
+     *  kind reason would be the wrong kind of reason to put in a constant: the birth's 52 protects
+     *  the COMEBACK – `world.comeback` holds a freeze she is in the middle of spending, and a second
+     *  pregnancy overwrites that record. A loss creates no comeback and no freeze, so there is
+     *  nothing to protect and the only thing the number is for is that the same week should not
+     *  re-arm the hazard it just discharged. */
+    lossCooldownWeeks: 26,
+    /** ⭐⭐⭐ **A DEATH IN THE FAMILY** (the spec's §4; his 23.08 «вплести похороны» and the
+     *  numbers he drafted on 11.09). ⭐ RULED 22.09 (question 3): **his 11.09 figures enter as
+     *  DRAFTED CONSTANTS** – the bench confirms the corridor, his word finalises.
+     *
+     *  ⚠⚠ **THE HAZARD IS TEMPERAMENT-FREE AND THAT IS A DESIGN LAW WITH A PIN**: a death is the
+     *  world's dice, never her personality's. Only the RESPONSE is hers – intensity prices depth (and
+     *  therefore duration, under the one-rate law), openness prices expression. `bereavementChanceAt`
+     *  takes no arguments at all, which is the same fence `pregnancyLossChanceAt`'s signature builds
+     *  one field up, pushed as far as it goes.
+     *
+     *  ⚠ THE ARITHMETIC, IN FULL, because his own words on 11.09 are the corridor T6 measures
+     *  against rather than a number to re-derive: 0.08%/week is ≈**4.1%/season** (`1 - 0.9992^52`),
+     *  E ≈ **0.50** over the 23→35 tail (624 weeks), ≈**39%** of careers meet one and ≈**9%** a
+     *  second before the spacing and the cap bite. The spec's §8 row 1 predicts «~40% / ~8%», which
+     *  is what the unconstrained arithmetic says and what the two clauses below then trim. */
+    bereavement: {
+      /** the weekly chance, from the adult rung. ⚠ A **RATE** AND NOT A GATE – the gate is the rung. */
+      perWeek: 0.0008,
+      /** ⭐⭐ THE FLOOR IN WEEKS BETWEEN TWO OF THEM – his 11.09 «spacing ≥ 156». Three years, which
+       *  is `motherhood.protectedRankWeeks`' own span read for a different reason: two deaths inside
+       *  a season would read as a mechanic rather than as a life, and the spacing is what stops the
+       *  dice telling that story. ⚠ IT READS `world.bereavementWeeks` and never a derived guess. */
+      spacingWeeks: 156,
+      /** ⭐⭐ AND THE HARD CAP – his 11.09 «hard cap 2 per career». ⚠ A CAP AND NOT A SHAPED DECAY,
+       *  deliberately: a third is not rarer, it is absent, because past two the arc stops being a
+       *  life and starts being a theme. */
+      capPerCareer: 2,
+      /** ⭐⭐ THE RUNG NOTHING FIRES BELOW – `kidAgeExact >= 23`, his 23.08 «начиная со ступени
+       *  adult». ⚠⚠ **THE ASSET ENFORCES WHAT THE GATE PROMISES**, which is why this number is not
+       *  merely a taste: `fem-euro-brunnet-adult-funeral.webp` exists at the `adult` band and at no
+       *  other, so a bereavement below it would have no picture to wear. The 11.09 log says so in as
+       *  many words – «Funeral exists at `adult` ONLY – the asset enforces his 23.08 by
+       *  construction». */
+      fromAgeYears: 23,
+    },
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

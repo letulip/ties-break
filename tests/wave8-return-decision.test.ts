@@ -180,6 +180,10 @@ function expecting(world: WorldState, announcedWeek: number, support: PregnancyS
   const pausesWeek = announcedWeek + BRIEF.playsOnWeeks
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    // ⚠ v87 – THE HAND-BUILT RECORD KEEPS THE PRE-WINDOW SHAPE, which is what the v86 -> v87
+    // migration back-fills on a real save: conception AT the announcement. The window is T2's, and a
+    // test about a birth, a return or a pause must not be quietly measuring a window as well.
+    conceivedWeek: announcedWeek,
     announcedWeek,
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,
@@ -441,6 +445,13 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         // comeback's success stays emergent and measured.
         'childSmallWeeks',
         'decisionWeeksAfterBirth',
+        // ⚠ RE-AIMED 23.09 BY WAVE 11's REVIEW – fourth time this guard has asked its question,
+        // fourth time the answer is no. `firstTrimesterWeeks` is the CAP on the pause (the builder's
+        // question 1: a 12-week window put her last event at pregnancy week 20, against the
+        // research), read in exactly one place beside `playsOnWeeks` at the announcement. It prices
+        // a CALENDAR – when the entries close – and no probability anywhere; the comeback's success
+        // stays emergent and measured.
+        'firstTrimesterWeeks',
         'joyBond',
         'perWeekByAge',
         'playsOnWeeks',
@@ -470,6 +481,12 @@ describe('wave 8 T5 B – `support` is the biggest term, and nothing here is a s
         'returnPoiseCeiling',
         'returnPoiseMax',
         'returnSupportShift',
+        // ⚠⚠ RE-AIMED 22.09 BY WAVE 11's T2 (the hidden window), and the guard asked its question a
+        // seventh time and got the same answer. `termTotalWeeks` is the WHOLE TERM measured from the
+        // conception – the one-number law (docs/specs/the-weight-2026-09.md §2), written as the sum
+        // `playsOnWeeks + termWeeks` it is. It decides a DATE and not a probability: the birth's week.
+        // Nothing reads it to decide whether a comeback worked, which stays emergent and measured.
+        'termTotalWeeks',
         // ⚠⚠ RE-AIMED 21.09 BY HIS HOLD RULING, and once again the guard did its job: a key joined
         // the block and somebody had to look at it and say whether it is a success rate. IT IS NOT.
         // `smallFirstHoldWeeks` is how long the `small-first` ANSWER keeps calling a big draw

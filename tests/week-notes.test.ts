@@ -42,6 +42,7 @@ import { BANNED_TAILS } from './helpers/bannedTails'
 import { worldSource, diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
+  BEREAVED_WEEKS,
   WEEK_NOTES,
   WEEK_NOTE_CHANCE,
   WEEK_NOTE_GRIND,
@@ -125,6 +126,9 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // is turned on, for R2-18's reason – exactly as `freshBreakup` and `spouseOccasion` are.
     motherhoodBand: null,
     motherhoodSupport: null,
+    // ⚠ v87 (wave 11 T5): nobody in this fixture's family has died – which is every career in
+    // the game until the weight is switched on, and is what `null` means on the field.
+    bereavedWeeksAgo: null,
     // ⚠ v86 (wave 10 T6b): a probe career continues no line. Both are REQUIRED for
     // `motherhoodBand`'s own reason – a fixture that forgot them would sweep a whole
     // generation out of the diary in silence.
@@ -311,6 +315,16 @@ function* sweepStages(): Generator<DiaryFacts> {
     { motherhoodBand: 'postpartum' as const },
     { motherhoodBand: 'postpartum' as const, motherhoodSupport: 'warm' as const },
     { motherhoodBand: 'returned' as const },
+    // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – THE WEEKS AFTER A DEATH IN THE FAMILY, ARMED ACROSS
+    // ALL FOUR VOICES AND ON BOTH SIDES OF THE LICENCE'S OWN WINDOW. Without the first row the four
+    // new lines would be licensed in NO fixture of any sweep and every guard in this file – the
+    // honesty pin, the 80-character scrap budget, the third person, the short dash – would pass over
+    // them without looking, which is the «unable to fail» family wearing a corpus's clothes.
+    // ⚠ THE SECOND ROW IS THE OTHER HALF AND IS WHY THERE ARE TWO: a licence that FORGOT its window
+    // (`<= BEREAVED_WEEKS`) would be licensed here too, and the reached-per-line case is what catches
+    // it. One row arms the claim; the pair arms the window.
+    ...VOICES.map((temperament) => ({ bereavedWeeksAgo: 1, temperament })),
+    ...VOICES.map((temperament) => ({ bereavedWeeksAgo: 60, temperament })),
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -559,6 +573,12 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // exactly one line of the band, and the `{ motherhoodBand: 'postpartum', motherhoodSupport: 'warm' }`
   // shape in `sweepStages` is what arms it.
   warmSupport: (f) => f.motherhoodSupport === 'warm',
+  // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – AND THE DEATH IN THE FAMILY, off the fact. A bare
+  // membership rather than a value, because the claim is bare: there are no named stages of grief in
+  // this model, so what the claim asserts is «there has been one», and WHICH WEEKS a line may speak
+  // in is the licence's job. ⚠ It re-derives off `bereavedWeeksAgo` rather than off the licence,
+  // which is R2-18's law and the whole reason this record exists.
+  bereaved: (f) => f.bereavedWeeksAgo !== null,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -643,6 +663,37 @@ describe('W2 — the ordinary week note is HONEST', () => {
     }
     expect(licensed, 'no line claims the fact – then HOLDS.freshBreakup proves nothing').toBeGreaterThan(0)
     expect(seen.size, 'every line of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐⭐⭐ v87 T5 – the bereaved band is REACHED, every voice, and the window is what bounds it', () => {
+    // THE SAME CASE ONE WAVE ON, AND FOR THE SAME REASON: a checker for a claim nothing makes is
+    // green exactly as an empty pool is. ⚠ IT COUNTS PER LINE, so a voice whose line is licensed in
+    // no fixture goes red BY LINE rather than hiding behind its three neighbours – the R2-18 failure
+    // this family of cases is named after.
+    const seen = new Set<string>()
+    const band = WEEK_NOTES.filter((n) => n.claims.bereaved !== undefined)
+    expect(band.length, 'four voices over the weeks after').toBe(4)
+    let licensed = 0
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.bereaved === undefined) continue
+        licensed++
+        seen.add(render(note, f))
+        expect(
+          HOLDS.bereaved(f, true),
+          `"${render(note, f)}" claims a death in the family on a career that has met none`,
+        ).toBe(true)
+        // ⚠⚠ AND THE WINDOW IS ASSERTED HERE RATHER THAN TRUSTED, which is the half the `bereaved`
+        // claim cannot carry: the claim says «there has been one», and the LICENCE is what says the
+        // diary may still speak of it. The `{ bereavedWeeksAgo: 60 }` shapes in `sweepStages` are a
+        // real corpus of weeks outside the window, so a licence that dropped `<= BEREAVED_WEEKS`
+        // would reach them and redden this line.
+        expect(f.bereavedWeeksAgo, `"${render(note, f)}" speaks long after the week it is about`)
+          .toBeLessThanOrEqual(BEREAVED_WEEKS)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.bereaved proves nothing').toBeGreaterThan(0)
+    expect(seen.size, 'every voice of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
   })
 
   it('⭐ v83 (wave 7 T5) – and `HOLDS.spouseSpoke` is REACHED, per line, not decoration', () => {

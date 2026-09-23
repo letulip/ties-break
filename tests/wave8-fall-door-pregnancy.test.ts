@@ -111,6 +111,7 @@ function fallen(seed: string): WorldState {
 function expectingAround(world: WorldState, pausesWeek: number): WorldState {
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    conceivedWeek: pausesWeek - BRIEF.playsOnWeeks,
     announcedWeek: pausesWeek - BRIEF.playsOnWeeks,
     pausesWeek,
     dueWeek: pausesWeek + BRIEF.termWeeks,
@@ -196,7 +197,18 @@ describe('ruling B C – one clause, beside an identical one', () => {
     // refusal: two absences, two `return`s, no new machinery and no new date anywhere.
     const src = readLeaving()
     expect(src.includes('if (inCollege(world)) return'), 'the precedent is still there').toBe(true)
-    expect(src.includes('if (world.pregnancy !== null) return'), 'and the new clause is its twin').toBe(true)
+    // ⭐⭐⭐ RE-AIMED 22.09 BY v87 T2 (the hidden window), NOT WEAKENED, AND THE RE-AIM IS THE POINT
+    // OF THE CASE RATHER THAN MAINTENANCE ON IT. The clause gained a second half –
+    // `&& world.week >= world.pregnancy.announcedWeek` – because «a pregnancy exists» and «she has
+    // said so» stopped being the same week. Without it the door would have been suppressed for up to
+    // twelve weeks she was playing exactly as before, on careers whose only difference is a private
+    // girl's draw, and the design's §3 forbids a mechanic pricing those weeks in either direction.
+    // ⚠ The SHAPE claim this case makes is unchanged: one `if`, one `return`, no new machinery and
+    // no new date – `announcedWeek` is a field the record already carried.
+    expect(
+      src.includes('if (world.pregnancy !== null && world.week >= world.pregnancy.announcedWeek) return'),
+      'and the new clause is its twin – one `if`, one `return`, read at the week she said it',
+    ).toBe(true)
     expect(src.includes('ENDINGS.fallLeavingChance'), 'the coin is untouched').toBe(true)
   })
 

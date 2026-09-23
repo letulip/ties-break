@@ -212,6 +212,7 @@ function returned(prefix: string, rankAtPause: number | null = 41, age = 28): Wo
     const pausesWeek = world.week + BRIEF.playsOnWeeks
     world.pregnancy = {
       episodeId: world.loveEpisodes[0].id,
+      conceivedWeek: world.week,
       announcedWeek: world.week,
       pausesWeek,
       dueWeek: pausesWeek + BRIEF.termWeeks,
@@ -324,7 +325,7 @@ describe('wave 8 T6 A – the ramp is a blocking beat on the week she comes back
       const world = wedded(`w8-t6-ramp-stops-${i}`)
       const pausesWeek = world.week + BRIEF.playsOnWeeks
       world.pregnancy = {
-        episodeId: world.loveEpisodes[0].id, announcedWeek: world.week, pausesWeek,
+        episodeId: world.loveEpisodes[0].id, conceivedWeek: world.week, announcedWeek: world.week, pausesWeek,
         dueWeek: pausesWeek + BRIEF.termWeeks, support: 'warm', rankAtPause: 41,
       }
       world.week = decisionWeekOf(world.pregnancy)

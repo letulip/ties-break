@@ -708,7 +708,8 @@ export function resolveReturnDecision(world: WorldState): void {
   // on `CareerEndingType` carry `'family'` and nothing in `buildEndingView` asks which ending it is.
   // ⚠ THE ABSENCE IS COUNTED FROM `pausesWeek` AND NOT FROM THE ANNOUNCEMENT – the weeks the entries
   // were actually shut, which is what the detail line claims and the only span this ending can name
-  // without overstating (she played on for `playsOnWeeks` after she told him). Read off the local
+  // without overstating (she played on for UP TO `playsOnWeeks` after she told him – the trimester
+  // cap can close the entries earlier on a long window, the review's T2 fix). Read off the local
   // binding, so the clear one line below cannot take the number out from under it.
   const ending = endingForFamily(world.week, ageYears, world.week - pregnancy.pausesWeek)
   world.pregnancy = null
@@ -782,7 +783,16 @@ export function resolveLeaving(world: WorldState): void {
   //
   // ⚠ THE PLACEMENT IS THE COLLEGE CLAUSE'S: below the wrap-week test, so a career carrying a
   // pregnancy through an ordinary week pays nothing for this line at all.
-  if (world.pregnancy !== null) return
+  // ⭐⭐⭐ v87 T2 – NARROWED TO THE **ANNOUNCEMENT**, NOT WEAKENED, AND THE NARROWING IS WHAT KEEPS
+  // THIS CLAUSE DOING WHAT IT ALWAYS DID. Before the hidden window, «a pregnancy exists» and «she
+  // has said so» were the same week, and this line has always meant the second: its own note above
+  // is about a season she spent OFF TOUR having a child, and the entry gate does not shut until
+  // `pausesWeek`, eight weeks after she tells him. The window puts up to twelve weeks between the
+  // two – weeks she is playing exactly as before, and weeks the design's §3 says no mechanic may
+  // price. Read off the record's existence, this clause would have silently suppressed the fall
+  // door for a season she really did fall in, on careers whose only difference is a private girl's
+  // draw. So it reads the week she said it, which is the week it always read.
+  if (world.pregnancy !== null && world.week >= world.pregnancy.announcedWeek) return
   const view = leavingViewOf(world)
   const door = leavingDoorDue(view)
   if (door === null) return

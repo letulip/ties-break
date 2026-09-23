@@ -80,6 +80,7 @@
     "tools/spotlight-bench.ts",
     "tools/two-doors-bench.ts",
     "tools/wedding-bench.ts",
+    "tools/weight-bench.ts",
     "tools/world-turnover.ts"
   ]
 }

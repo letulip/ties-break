@@ -42,7 +42,7 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // composables/identityCopy.ts. The prologue's age-5 card asks the same three things (her name,
 // her birthday, her country) and invariant 4 says it must ask them in the same words, so there
 // is now ONE declaration and both surfaces read it. Not a string on this screen changed.
-import { DYNASTY_COPY, IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS, WEIGHT_COPY } from '../composables/identityCopy'
 // ⚠ AND NEITHER IS THE NAME POOL, SINCE 14.09 – see the header of composables/identityDice.ts. The
 // two dice below are the owner's «кубики», and the prologue's age-5 card grew a pair of its own
 // after creation moved there; a private `const NAMES` here would have made one label mean two
@@ -210,6 +210,11 @@ function poseUrl(id: PlayStyle): string {
 const STEP_COUNT = 6
 const step = ref(1)
 
+/** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, AS THE LAST STEP ANSWERED IT.
+ *  `false` is the RULED default (22.09: «absent means the ask's default, never silently on»), which
+ *  is also what `skipToDefaults` therefore sends without having to say so. */
+const weight = ref(false)
+
 /** ⭐⭐⭐ v86 T10 – THE LINE, THROUGH THE SKIP (his 22.09 ruling on the architect's recommendation:
  *  the skip stays, and the wizard learns the block). Absent, this file is byte-for-byte the wizard
  *  it has always been. Present, it carries exactly the deviations the prologue's identity card
@@ -341,7 +346,10 @@ function start(): void {
   // No seed input in the wizard – the store generates a readable one (see game.ts newCareer).
   // T10: except on a dynasty run, where the seed is the line's own `childSeed` – never a fresh
   // draw – and the block rides to `createWorld` exactly as the prologue's ninth card sends it.
-  game.newCareer(props.dynasty?.childSeed ?? '', finalProfile, undefined, props.dynasty)
+  // ⭐⭐⭐ v87 – AND THE SWITCH RIDES AS THE SIXTH ARGUMENT, exactly as the prologue's ninth card
+  // sends it. `skipToDefaults` above sends nothing, which the wire reads as the same `false` this
+  // ref holds until somebody flips it – «absent means the ask's default, never silently on».
+  game.newCareer(props.dynasty?.childSeed ?? '', finalProfile, undefined, props.dynasty, weight.value)
 }
 </script>
 
@@ -746,6 +754,31 @@ function start(): void {
           </dl>
         </Card>
 
+        <!-- ⭐⭐⭐ v87 - THE ONE SWITCH IN THE GAME, ON THE SKIP BRANCH TOO (his ruling of 22.09:
+             «the creation flow ASKS» - and this is the other creation flow). It is on the LAST step
+             rather than on a seventh of its own, because `STEP_COUNT` and the rail are presentation
+             the owner has passed and a new dot on it is a change nobody asked for.
+
+             ⚠ THE SAME CONTROL AND THE SAME WORDS AS THE PROLOGUE'S OPENING CARD - `WEIGHT_COPY`,
+             one declaration, three surfaces (the third is the settings row that changes it later). -->
+        <div class="ob-weight">
+          <p class="ob-weight-title" id="ob-weight-title">{{ WEIGHT_COPY.title }}</p>
+          <p class="ob-weight-lead">{{ WEIGHT_COPY.lead }}</p>
+          <button
+            class="sound-switch"
+            :class="{ on: weight }"
+            type="button"
+            role="switch"
+            :aria-checked="weight"
+            aria-labelledby="ob-weight-title"
+            @click="weight = !weight"
+          >
+            <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+            <span class="sound-switch-label">{{ weight ? WEIGHT_COPY.on : WEIGHT_COPY.off }}</span>
+          </button>
+          <p class="ob-weight-note">{{ WEIGHT_COPY.note }}</p>
+        </div>
+
         <p class="ob-vow">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 20C8.5 17.4 3.5 14 3.5 9.6A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8.5 2.6c0 4.4-5 7.8-8.5 10.4z" />
@@ -799,6 +832,40 @@ function start(): void {
 </template>
 
 <style scoped>
+/* ══ v87 - THE WEIGHT, ASKED ON THE LAST STEP ══
+   The prologue card's own block in the wizard's tokens: a bordered aside above the vow, so the
+   decision reads as one more thing settled before the career starts rather than as a warning. Every
+   colour is a DECLARED token with no fallback (round-17 #3's rule, which this screen shares). */
+.ob-weight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-top);
+}
+
+.ob-weight-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ob-weight-lead,
+.ob-weight-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.ob-weight .sound-switch {
+  align-self: flex-start;
+}
+
 /* ⚠ THE FOUR PLAY-STYLE COLOURS USED TO BE DECLARED HERE, on `.ob`, and they have GRADUATED to
    `src/style.css`'s :root as `--style-aggressive` / `--style-counterpuncher` / `--style-serve-first`
    / `--style-all-court`. The old block said "if a second screen ever needs them they graduate";

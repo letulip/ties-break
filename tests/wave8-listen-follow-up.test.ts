@@ -104,8 +104,14 @@ describe('wave 8 T2½ A – the pin knows how many kinds there are', () => {
     // if it were derived from the same place it is compared against. `KINDS` comes off
     // `LIFE_BEAT_BLOCKING` and the ten names are written out HERE, so a new member reds this line and
     // names itself.
-    expect(KINDS.length, 'eleven kinds as of v85 T6 – a new one reds here and in LIFE_BEAT_BLOCKING').toBe(11)
+    // ⭐ RE-AIMED 22.09 BY v87 T5 – THE PIN PAYING FOR ITSELF A SECOND TIME, exactly as it did at
+    // v85 T6: a new kind (`'bereavement'`, a death in the family) reddens here and names itself,
+    // which is what this count-plus-membership pair is for.
+    expect(KINDS.length, 'twelve kinds as of v87 T5 – a new one reds here and in LIFE_BEAT_BLOCKING').toBe(12)
     expect([...KINDS].sort()).toEqual([
+      // ⭐ v87 T5 – the twelfth, and its `LISTEN_FOLLOW_UP` cell is `null` WITH A REASON rather than
+      // a debt: the card offers one answer and it is not a question she is waiting on.
+      'bereavement',
       'ended',
       'engaged',
       'expecting',
@@ -145,7 +151,10 @@ describe('wave 8 T2½ B – the answer table, before and after the shape change'
     const digest = createHash('sha256').update(table.join('\n')).digest('hex')
     expect(digest, 'the function`s answer for every kind – byte-identical across the refactor')
       .toBe('0cad2b52be557a6a9434d6f5576a8c4d22822b4448c9bbbe833d5f27862c140a')
-    expect(answerTable().length, '...and the live table is eleven kinds wide now').toBe(1056)
+    // ⚠ RE-AIMED 22.09 BY v87 T5 BY MOVING THE **LIVE** COUNT AND NOT THE DIGEST, which is the same
+    // honest carry v85 T6 made: the ten kinds the digest was taken over are hashed exactly as they
+    // were, and every kind added since is asserted by the case below rather than re-hashed into it.
+    expect(answerTable().length, '...and the live table is twelve kinds wide now').toBe(1152)
   })
 
   it('⭐⭐ TEN kinds answer `null` to everything, whatever detail they carry', () => {

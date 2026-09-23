@@ -142,7 +142,20 @@ export type ToWorker =
   // childhood, so the ninth card sends both.
   // ⚠ IT WIDENS THE COMMAND AND NOT THE SCHEMA – what `createWorld` persists off it is `world.dynasty`,
   // whose own move is v86's, taken in T1/T2 before this line existed.
-  | { id: number; type: 'new'; seed: string; profile: PlayerProfile; prologue?: PrologueHandover; dynasty?: DynastyHandover }
+  // ⭐⭐⭐ v87 (the weight, wave 11 T1) – `weightEnabled` IS THE CREATION ASK'S ANSWER, and it is
+  // OPTIONAL through the whole wire exactly as `prologue` and `dynasty` are. ⚠ ABSENT MEANS **OFF**
+  // and never silently on (the plan's own words): the wizard and the prologue both send it, and
+  // every other creator of a career – the e2e fixtures, forty tools, `tests/helpers/career.ts` –
+  // sends nothing and gets the career it has always got.
+  | {
+      id: number
+      type: 'new'
+      seed: string
+      profile: PlayerProfile
+      prologue?: PrologueHandover
+      dynasty?: DynastyHandover
+      weightEnabled?: boolean
+    }
   | { id: number; type: 'tick'; weeks: number; baseRevision: number }
   // ⚠ `weeks` WAS `1 | 4` UNTIL ROUND 29 #6. The literal union was the engine's historical step
   // written into the wire, and it is exactly what made the span pill unable to say anything true
@@ -168,6 +181,12 @@ export type ToWorker =
   | { id: number; type: 'bookPractice'; week: number; withCoach: boolean; baseRevision: number }
   | { id: number; type: 'hireCoach'; coachId: string | null; baseRevision: number }
   | { id: number; type: 'setCoachOnEventWeeks'; on: boolean; baseRevision: number }
+  /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE SWITCH, BOTH DIRECTIONS, EFFECTIVE IMMEDIATELY (the
+   *  22.09 ruling: «changeable both ways in settings later»). `setCoachOnEventWeeks`'s shape one line
+   *  up and nothing new: one boolean, re-validated engine-side like every other command.
+   *  ⚠ IT NEVER DELETES LIVED STATE – the ruling's second half, and it is the ENGINE that guarantees
+   *  it (`setWeightEnabled`, world/lifeBeat.ts §15) rather than the screen that sends this. */
+  | { id: number; type: 'setWeightEnabled'; on: boolean; baseRevision: number }
   // ⭐ v49: ...and the nested half – does he go to the rungs that pay her nothing. Its own command
   // rather than a second argument on the one above, so that neither switch can silently move the
   // other: the screen sends exactly the decision the player took, and the engine records exactly it.
@@ -395,6 +414,7 @@ export const REPLY_BY_COMMAND = {
   setPsychologistRung: 'snapshot',
   setPsychologistFocus: 'snapshot',
   setCoachOnEventWeeks: 'snapshot',
+  setWeightEnabled: 'snapshot',
   setCoachOnJuniorEvents: 'snapshot',
   cancelPractice: 'snapshot',
   setPlan: 'snapshot',

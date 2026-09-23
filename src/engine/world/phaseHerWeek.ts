@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyPause, landWedding, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
+import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, landWedding, rollBereavement, rollPregnancyLoss, rollArrival, rollEnds, rollLeak, rollPregnancy, rollSmallTalk, rollSpouseView, rollWedding } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -392,6 +392,42 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        fires on `dueWeek` (T4); neither exists on this tree, so on this commit a pregnancy is a
   //        record, a card and a feed line about the answer, and nothing about the season moves.
   rollPregnancy(world)
+  // ⭐⭐⭐ 1c-say (v87, the weight – wave 11 T2): AND THE WEEK SHE SAYS SO, WHICH IS NO LONGER THE
+  //        WEEK SHE CONCEIVED.
+  //
+  //        ⚠⚠ IT IS A SEPARATE CALL BECAUSE THE TWO FACTS ARE NOW SEPARATE WEEKS – the hidden
+  //        window (docs/specs/the-weight-2026-09.md §2, the design's §3). `rollPregnancy` writes the
+  //        record and draws the window; this raises the blocking card `windowWeeks` later, and a
+  //        zero window – which the shipped `ECONOMY.life.lag` draws 70% of the time for an open girl
+  //        – makes the pair behave exactly as the single call did before this wave.
+  //
+  //        ⚠ IMMEDIATELY UNDER ITS OWN ROLL, so the zero-window case lands on the same tick and in
+  //        the same order the wave-8 tree did: the record, then the card. Anything between them
+  //        would be a week the world holds a pregnancy nobody has been told about – which is
+  //        exactly what the window IS, and it must be `windowWeeks` long and not one tick longer.
+  //
+  //        ⚠ ZERO DRAWS OF ANY KIND: two integers compared and one scan of `lifeLog`. It takes no
+  //        `rng`, so the frozen capture (41550 / e6b0c709) cannot see it.
+  // ⭐⭐⭐ 1c-loss (v87, the weight – wave 11 T4): AND THE WEEK A PREGNANCY ENDS WITHOUT A BIRTH.
+  //
+  //        ⚠⚠ **BEFORE THE ANNOUNCEMENT AND THE ORDER IS A DESIGN DECISION, NOT A FREE SLOT.** The
+  //        research's loss window is conception weeks 4–18 and a private hidden window runs to 12,
+  //        so the two really can land on ONE week. Running the loss FIRST means the card is never
+  //        raised on a pregnancy that ended the same week – she loses it before she gets to say it,
+  //        and an open girl's line then carries BOTH facts in one sentence (`LOSS_HER_LINE`'s
+  //        `untold` cells, which exist for exactly this case). Reversed, a player would meet a
+  //        blocking announcement and its end in a single tick.
+  //
+  //        ⚠ AND BEFORE `accrueSpirit`, WHICH IS THE ONE HARD CONSTRAINT: this is the THIRD writer
+  //        of `world.spiritShock`, and the pass that PAYS for a shock reads `shock.week ===
+  //        world.week`. `rollEnds`' arrangement, inherited for the third time.
+  //
+  //        ⚠ ZERO DRAWS WITH THE SWITCH OFF, WITH NO PREGNANCY, AND OUTSIDE THE RESEARCH'S OWN
+  //        WINDOW – the gate returns before the stream is derived, which is what makes §8 row 6's
+  //        byte-identity arm true rather than claimed. The frozen capture (41550 / e6b0c709) cannot
+  //        see it: it takes no `rng` and pulls only from `seed:life:pregnancy-loss:<conceived>:<week>`.
+  rollPregnancyLoss(world)
+  landPregnancyAnnouncement(world)
   // ⭐⭐ 1c-pause (v85, the pregnancy – wave 8 T3): AND THE WEEK THE ENTRIES CLOSE.
   //
   //        ⚠⚠ THIS IS NOT THE PAUSE. The pause is the entry gate reading
@@ -445,6 +481,23 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        ⚠ IT READS `world.pregnancy` AND NEVER THE EPISODE – the decoupling law (RULED 20.09),
   //        §14's banner, and the reason there is no `if` here about a marriage that ended.
   landBirth(world)
+  // ⭐⭐⭐ 1c-death (v87, the weight – wave 11 T5): AND A DEATH IN THE FAMILY.
+  //
+  //        ⚠⚠ THE ONE SLOT CONSTRAINT IS **BEFORE `accrueSpirit`**, the third writer of
+  //        `world.spiritShock` inheriting `landBirth`'s own arrangement one line up: the pass that
+  //        PAYS for a shock reads `shock.week === world.week`, so landing after it would apply the
+  //        bereavement band a week late for ever.
+  //
+  //        ⚠ AND **AFTER** THE BIRTH, WHICH IS THE ORDER THE SINGLE SLOT ASKS FOR: on the one week a
+  //        child is born AND somebody dies, the later call wins the mark, and the drafted depths say
+  //        which should – `bereavement` is −30/−46 against the postpartum −28.8/−45. The same
+  //        reasoning `rollEnds` and `landBirth` settled between them, applied one kind further on.
+  //
+  //        ⚠ ZERO DRAWS BELOW THE ADULT RUNG, WITH THE SWITCH OFF, PAST THE CAP AND INSIDE THE
+  //        SPACING – the gate returns before the stream is derived. It takes no `rng` and pulls only
+  //        from `seed:life:loss:<week>`, the key he named on 11.09, so the frozen capture
+  //        (41550 / e6b0c709) cannot see it.
+  rollBereavement(world)
   // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
   //
   //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a

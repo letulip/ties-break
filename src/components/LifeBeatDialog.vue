@@ -54,7 +54,14 @@
 // answer – a held Enter arriving with the dialog presses nothing. The `listen` detour keeps its own
 // two-step shape (10.09's ruling below), so nothing about «Say nothing» got a third tap.
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
-import type { LifeBeatFollowUp } from '../shared/protocol'
+import type { LifeBeatFollowUp, LifeBeatKind } from '../shared/protocol'
+// ⚠ v87 (wave 11 T5) – the ONE picture this card can carry, through the seam the bride's own note
+// argues for: the engine may not name a painting (invariant 1), so the KIND crosses the wire and the
+// view resolves the band. `portraitUrl` takes the widest union and resolves the band before it
+// builds the name, which is what makes a bereavement in `lateCareer` a fallback and never a 404.
+import { portraitUrl } from '../art/preload'
+import { useKidEmotion } from '../composables/kidEmotion'
+import type { MemoryFace } from '../shared/avatarEmotion'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
@@ -117,6 +124,18 @@ function followUpFor(optionId: string): LifeBeatFollowUp | undefined {
 // second press surfaces an error toast for a decision that actually succeeded – and `game.busy` is
 // the store's own in-flight flag, so a command started anywhere else disables these too. A set of
 // ids latched at mount would go stale the moment either moved.
+/** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – WHICH BEATS CARRY A PAINTING, as a table. Today exactly
+ *  one does. `FACE_BANDS`' own rule, applied one layer up: the next kind that wants a picture adds a
+ *  row here rather than editing a branch, and a kind with no row draws nothing – which is every
+ *  other beat in the game and is what keeps this card the words-only object it has always been. */
+const BEAT_FACE: Partial<Record<LifeBeatKind, MemoryFace>> = { bereavement: 'funeral' }
+
+const { stage } = useKidEmotion()
+const beatArt = computed(() => {
+  const face = prompt.value === null ? undefined : BEAT_FACE[prompt.value.kind]
+  return face === undefined ? null : portraitUrl(stage.value, face)
+})
+
 const sending = ref(false)
 const busy = computed(() => sending.value || game.busy)
 
@@ -227,6 +246,21 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            See the script header for the whole argument. -->
       <h2 id="life-beat-heading" class="season-summary-title">{{ prompt.heading }}</h2>
 
+      <!-- ⭐⭐⭐ v87 (the weight, wave 11 - T5) - THE FUNERAL PAINTING, WIRED AT LAST.
+           `fem-euro-brunnet-adult-funeral.webp` shipped with the art set on 11.09 and has been
+           referenced by nothing in `src/` since; his own ruling that day is what this draws:
+           «private grieves quietly - the feed and diary nearly silent, THE FACE AND THE FUNERAL
+           FRAME carrying it». A picture and not a word, which is why it is a builder's to wire
+           where copy would not be (invariant 4).
+
+           ⚠ A TABLE AND NOT AN `=== 'bereavement'`, `FACE_BANDS`' own note: the next kind that
+           wants a painting adds a row rather than finding a branch to edit.
+           ⚠ THE BAND IS RESOLVED BEFORE THE NAME IS BUILT (`portraitUrl` -> `paintedStemFor`), so a
+           career that meets one in `lateCareer` draws that band's own `norm` rather than a file
+           that is not on disk. ⚠ `alt=""` - it is atmosphere beside a heading that already says
+           what has happened, and a screen reader that read it twice would say it twice. -->
+      <img v-if="beatArt" class="life-beat-art" :src="beatArt" alt="" />
+
       <!-- HER LINE. Written against the four voice bibles engine-side and printed as it was
            written – this template may not touch it, shorten it or wrap it in anything. -->
       <p id="life-beat-said" class="life-beat-said">{{ prompt.said }}</p>
@@ -317,6 +351,21 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
 </template>
 
 <style scoped>
+/* ══ v87 - THE FUNERAL PAINTING ══
+   Full width, its own aspect, and a rounded corner so it reads as part of the card rather than as a
+   window cut in it. ⚠ `aspect-ratio` and `object-fit: cover` rather than a fixed height: the card
+   scrolls (round-20 #3's cap on `.dialog-card`), and a fixed pixel height would be one more thing
+   pushing the way out down a phone. ⚠ The margin is the card's own rhythm, not a new token. */
+.life-beat-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: 50% 30%;
+  border-radius: 10px;
+  margin: 0 0 12px;
+}
+
 /* Shares `dialog-overlay` / `dialog-card` / `season-summary-title` with the other blocking popups,
    so the scrim, the box, the height cap and the heading cannot drift apart from them. What is local
    is her line and the column of answers.

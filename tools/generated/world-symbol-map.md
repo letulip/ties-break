@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,845 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,879 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-618 exported names across 56 owning modules.
+627 exported names across 56 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 101 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 110 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
@@ -106,6 +106,8 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `arrivalEligible` – `src/engine/world/lifeBeat.ts`
 - `arrivalHazardFor` – `src/engine/world/lifeBeat.ts`
+- `bereavementChanceAt` – `src/engine/world/lifeBeat.ts`
+- `bereavementEligible` – `src/engine/world/lifeBeat.ts`
 - `boothMentionDue` – `src/engine/world/lifeBeat.ts`
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
@@ -113,6 +115,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `decisionWeekOf` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
 - `deliverOwnKey` – `src/engine/world/lifeBeat.ts`
+- `drawConceptionWindow` – `src/engine/world/lifeBeat.ts`
 - `drawEndsRead` – `src/engine/world/lifeBeat.ts`
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
 - `drawListenHeard` – `src/engine/world/lifeBeat.ts`
@@ -137,6 +140,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
 - `HeardRead` *(type)* – `src/engine/world/lifeBeat.ts`
 - `landBirth` – `src/engine/world/lifeBeat.ts`
+- `landPregnancyAnnouncement` – `src/engine/world/lifeBeat.ts`
 - `landPregnancyPause` – `src/engine/world/lifeBeat.ts`
 - `landWedding` – `src/engine/world/lifeBeat.ts`
 - `latchedEpisode` – `src/engine/world/lifeBeat.ts`
@@ -167,16 +171,21 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
 - `pregnancyChanceAt` – `src/engine/world/lifeBeat.ts`
 - `pregnancyEligible` – `src/engine/world/lifeBeat.ts`
+- `pregnancyLossChanceAt` – `src/engine/world/lifeBeat.ts`
+- `pregnancyLossEligible` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `reachableSituations` – `src/engine/world/lifeBeat.ts`
 - `returnChanceFor` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
+- `rollBereavement` – `src/engine/world/lifeBeat.ts`
 - `rollEnds` – `src/engine/world/lifeBeat.ts`
 - `rollLeak` – `src/engine/world/lifeBeat.ts`
 - `rollPregnancy` – `src/engine/world/lifeBeat.ts`
+- `rollPregnancyLoss` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `rollSpouseView` – `src/engine/world/lifeBeat.ts`
 - `rollWedding` – `src/engine/world/lifeBeat.ts`
+- `setWeightEnabled` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_EXCLUDE_LAST` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_FACTS` – `src/engine/world/lifeBeat.ts`

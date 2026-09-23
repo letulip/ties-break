@@ -384,6 +384,14 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         // which is what this fixture walks up with. They sort apart, which is why this one rides at
         // the head of the list and its twin sits between `form` and `prologueTrace` – the roster is
         // sorted, not chronological.
+        // ⭐ v87, THE WEIGHT – the NINTH time this roster is paid for, exactly as the note above
+        // predicted for «every future wave», and the first time it is paid THREE keys at once.
+        // `bereavementWeeks` and `pregnancyLossWeeks` are the append-only week lists and
+        // `weightEnabled` is the switch (docs/specs/the-weight-2026-09.md §1, his ruling of 22.09);
+        // the migration back-fills `[]`, `[]` and `false`, which is what this fixture walks up with.
+        // The three sort apart, which is why they are not together here – the roster is sorted, not
+        // chronological.
+        'bereavementWeeks',
         'children',
         'coachDeal',
         'coachPairs',
@@ -405,6 +413,7 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         // ⭐ v80, wave F1 – the third time this roster is paid for.
         'form',
         'pregnancy',
+        'pregnancyLossWeeks',
         // ⭐ v84, the album's one schema move – the FIFTH time this roster is paid for, exactly as
         // the note above predicted for «every future wave». `prologueTrace` is the childhood's own
         // record, written once at the handover (docs/specs/the-album-2026-09.md §3); the migration
@@ -414,6 +423,7 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         'sparringRung',
         'sparringTravels',
         'spotlightHabituation',
+        'weightEnabled',
       ])
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 

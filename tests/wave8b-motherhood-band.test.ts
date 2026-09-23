@@ -104,6 +104,7 @@ function expecting(seed: string): WorldState {
   world.condition = 100
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    conceivedWeek: week,
     announcedWeek: week,
     pausesWeek: week + BRIEF.playsOnWeeks,
     dueWeek: week + BRIEF.playsOnWeeks + BRIEF.termWeeks,

@@ -48,9 +48,31 @@ import {
   PRE_V84,
   PRE_V85,
   PRE_V86,
+  PRE_V87,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v87: rolling the schema back to 86 – dropping the weight\'s three keys – returns the v86 CAREER on all three', () => {
+    // ⭐⭐ AN IDENTITY, v86's OWN KIND, AND THE CASE NAME SAYS SO because the measurement was taken
+    // before a constant was touched. v87 appends THREE world keys – `weightEnabled`,
+    // `pregnancyLossWeeks` and `bereavementWeeks` (the weight spec §1, his ruling of 22.09) – written
+    // ONCE by `createWorld`, the first of them from an OPTIONAL SIXTH ARGUMENT that `openCareer`
+    // does not hand over, so every career in this file carries `false`, `[]` and `[]` for its life.
+    //
+    // ⚠⚠ AND THE SWITCH IS WHY THE WAVE CANNOT REACH THESE CAREERS AT ALL, which is a stronger
+    // statement than the peel makes on its own: both of the wave's hazards return on
+    // `world.weightEnabled` BEFORE their stream is derived, so a frozen career takes zero draws on
+    // either. A red HERE beside a green freeze means something started writing one of the three keys
+    // inside the tick, which `createWorld`'s own note forbids in as many words.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V87` in tests/coachTravelEdgeFixtures.ts: the
+    // three values below are the three `FROZEN` constants this repo shipped on `main`, reproduced
+    // character for character by the peel. Eleven live cells moved and every rollback rung held.
+    expect(careerHashAtSchema(5, 0, 86), '25k · middle coach · grinder – the verbatim v86 value').toBe(PRE_V87.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 86), '120k · elite coach · grinder – the verbatim v86 value').toBe(PRE_V87.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 86), '8k · self-coached · player – the verbatim v86 value').toBe(PRE_V87.selfTravelling)
+  })
+
   it('⭐⭐⭐ v86: rolling the schema back to 85 – dropping `dynasty` – returns the v85 CAREER on all three', () => {
     // ⭐⭐ AN IDENTITY, v84's AND v85's OWN KIND, AND THE CASE NAME SAYS SO because the measurement was
     // taken before a constant was touched. v86 appends ONE world key – `dynasty`, whose daughter she

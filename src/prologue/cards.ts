@@ -258,6 +258,24 @@ export interface PrologueCard {
    *  reads `options` alone – the five-year-old's card still carries none, and the shape the owner
    *  counted («может тогда больше без решений, 3 или 4?») is unchanged. */
   readonly identity?: true
+  /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ASKED ON THE **LAST** CARD OF
+   *  THE WALK – the card that creates the career (his ruling of 22.09: «set at new-career creation –
+   *  the creation flow ASKS»). ⚠ The plan said «the prologue's opening» and the age-5 card measured
+   *  240px OVER its owner-earned ceiling with the ask on it; the card's own note at `weight: true`
+   *  carries the numbers, and the review accepted the placement (23.09). `identity`'s shape and
+   *  `identity`'s reasons, one flag down.
+   *
+   *  ⚠ A FLAG AND NOT COPY, for `identity`'s own reason: the words live in
+   *  `composables/identityCopy.ts` (`WEIGHT_COPY`) where all THREE surfaces read them – this card,
+   *  the wizard, and the settings row that changes it later.
+   *
+   *  ⚠⚠ IT IS NOT A DECISION AND IT IS NOT A `prologue-picks` GROUP. `DECISION_AGES` reads `options`
+   *  alone, so the five-year-old's card still carries none; and the control is the app's own SWITCH
+   *  rather than a radio pair, which is a build decision with a measured reason – the e2e walk
+   *  answers «the first radiogroup with nothing checked» (wave 10's own repair), so a third group on
+   *  this card would quietly change which question that walk answers. A switch has a default, which
+   *  is what «absent means the ask's default, never silently on» asks for anyway. */
+  readonly weight?: true
 }
 
 // =================================================================================================
@@ -641,6 +659,21 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'The coach will tell you what it looks like in the spring.',
     },
     continueLabel: 'Wait for the coach',
+    // ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ON THE LAST CARD OF THE WALK,
+    // WHICH IS THE CARD THAT CREATES THE CAREER. ⚠⚠ THE PLAN SAID «THE PROLOGUE'S OPENING» AND IT IS
+    // HERE INSTEAD, AND THE REASON IS A MEASUREMENT RATHER THAN A PREFERENCE. The age-5 card already
+    // carries the identity fields, the origins question and its three answers, and round 35 #2 cut
+    // it down to a CEILING the owner earned: 2100px of content on a 375x667 phone
+    // (`tests/component/round35-prologue.test.ts`, `prologue-walk.test.ts`). The block measured
+    // **2339px** there – 240 over – so the first screen of the game would have grown back past the
+    // number those two pins exist to hold. Raising the ceiling was the one option not available: it
+    // is his number, measured, and the pins are what stop it drifting.
+    //
+    // ⚠ AND THIS CARD IS THE HONEST SECOND CHOICE rather than merely the emptiest one: it is the
+    // last thing a player reads before `newCareer` runs, which makes it the prologue's twin of the
+    // wizard's own last step – the same question, in the same words, at the same moment on both
+    // paths. A player who SKIPS at card 0 never reaches it and is asked by the wizard instead.
+    weight: true,
     sameAsLastYear: true,
     // ⭐⭐⭐ THE LAST ASKING, AND IT IS HER – the end of the escalation the owner named («или она
     // сама»). Nobody mentions it to you this year; the date is already on the wall in her writing,

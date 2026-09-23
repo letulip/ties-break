@@ -217,6 +217,12 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
     // one the girl married has something to say – and it is FALSE, tier 1's own word for the
     // marriage's standing surface: a Home card inside the standing window, and the week never waits.
     expect(LIFE_BEAT_BLOCKING, 'the ruled table: tier 2 blocks, tier 1 does not').toEqual({
+      // ⚠ RE-AIMED AN EIGHTH TIME BY v87, WAVE 11 T5 (22.09), NOT WEAKENED: `'bereavement'` is the
+      // twelfth kind – a death in the family – and it declares TRUE, tier 2's price at the heaviest
+      // thing this layer holds. A career that could tick past it would answer it by walking away.
+      // ⚠ IT BLOCKS FOR A PRIVATE GIRL TOO, which is not a contradiction of §4's «private grieves
+      // almost silently»: the silence is in the WORDS she says, not in whether the week stops.
+      bereavement: true,
       'fork-opinion': true,
       met: true,
       'small-talk': false,

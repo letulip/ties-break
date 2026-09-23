@@ -97,6 +97,13 @@ import type { LifeBeatKind } from '../src/shared/protocol'
  *  times over. `drainCostOf('fork-psy')` therefore returns 0 from a one-element spread, which is the
  *  proof rather than a claim about it. */
 export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
+  // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – `come`, AT 0, AND IT IS THE FIRST ROW IN THIS REGISTRY
+  // WHERE THE KIND HAS NO OTHER ANSWER TO CHOOSE FROM. `LIFE_BEAT_OPTIONS.bereavement` is a ONE-CELL
+  // pool priced 0 (its own block argues both halves), so «the mildest of a kind with no zero» – the
+  // rule the three rows below apply – simply does not arise, and a walk that drains one carries a
+  // skew of exactly 0. Read-independent BY CONSTRUCTION: no overlay in `lifeBeatOptionsFor` names
+  // this kind, so `drainCostOf` prices the same object under every `wants` and every ends-read.
+  bereavement: 'come',
   'fork-opinion': 'listen',
   met: 'wary',
   'small-talk': 'more',

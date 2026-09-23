@@ -98,7 +98,7 @@ export type PortraitEmotion = AvatarEmotion | 'rehab'
  *  that arrives needs exactly this seam, and a branch would have to be found and edited instead of a
  *  row being added») is used for the first time, and NOT ONE BRANCH was edited: a union member, a
  *  `FACE_BANDS` row, a `CROPS` rectangle and a cutter skip-list entry. */
-export type MemoryFace = PortraitEmotion | 'bride' | 'birth'
+export type MemoryFace = PortraitEmotion | 'bride' | 'birth' | 'funeral'
 
 /** ⭐ WHICH BANDS EACH FACE IS ACTUALLY PAINTED FOR. Absent from this table ⇒ all five, which is
  *  every face of `PORTRAIT_EMOTIONS` and is what makes the matrix a matrix.
@@ -113,6 +113,19 @@ export const FACE_BANDS: Partial<Record<MemoryFace, readonly PortraitStage[]>> =
   // its own `norm` through `paintedFaceFor`, exactly as the bride does, and the four absences are
   // swept against disk in `tests/portrait-bands.test.ts`.
   birth: ['adult'],
+  // ⭐⭐⭐ v87 (the weight, wave 11 – T5) – THE THIRD ONE-BAND MOMENT-FACE, and the first that was
+  // on disk BEFORE its mechanic existed rather than commissioned for one.
+  // `fem-euro-brunnet-adult-funeral.webp` shipped with the art set on 11.09 and has been on no
+  // screen since; the day's own log names the consequence this row now depends on: «Funeral exists
+  // at `adult` ONLY – the asset enforces his 23.08 «начиная со ступени adult» by construction.»
+  //
+  // ⚠⚠ THE FALLBACK IS THEREFORE UNREACHABLE THROUGH THE MECHANIC AND IS STILL BUILT, which is
+  // `paintedFaceFor`'s own standing rule («a total function cannot be made wrong by a future
+  // caller»): the bereavement gate is `kidAgeExact >= 23`, which is the `adult` band's own floor –
+  // but `lateCareer` starts at 31 and a career runs past it, so the honest band fallback is what
+  // draws a woman of thirty-four rather than a broken frame. Both arms are swept against the files
+  // on disk in `tests/portrait-bands.test.ts`.
+  funeral: ['adult'],
 }
 
 /** ⭐⭐ THE HONEST FALLBACK, AND IT IS EXPLICIT BECAUSE THE ALTERNATIVE IS A 404.

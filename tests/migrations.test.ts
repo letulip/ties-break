@@ -649,7 +649,11 @@ describe('save migrations', () => {
     // ⚠ RE-AIMED AT v86 (22.09, wave 10 – `world.dynasty`), NOT WEAKENED: this case is about the v63
     // -> v65 double step, and its last line simply follows the ladder's head so the sentence over it
     // stays checkable. v86 was moved with its full move, never by this line's item.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 86 – past the colliding 64, through 65').toBe(86)
+    // ⚠ RE-AIMED AT v87 (22.09, wave 11 – the weight: `weightEnabled`, `pregnancyLossWeeks`,
+    // `bereavementWeeks`), NOT WEAKENED, and for the same reason every re-aim above it was: this case
+    // is about the v63 -> v65 double step, and its last line simply follows the ladder's head so the
+    // sentence over it stays checkable. v87 was moved with its full move, never by this line's item.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 87 – past the colliding 64, through 65').toBe(87)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

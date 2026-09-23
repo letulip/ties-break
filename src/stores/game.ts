@@ -350,13 +350,25 @@ export const useGameStore = defineStore('game', {
        *  Optional through the whole wire, exactly as `prologue` is, and this store does no arithmetic
        *  on it either: `createWorld` owns every consequence. */
       dynasty?: DynastyHandover,
+      /** ⭐ v87 – the creation ask's answer (the weight spec §1). Optional through the whole wire,
+       *  exactly as `prologue` and `dynasty` are, and ⚠ ABSENT MEANS **OFF**: this store does no
+       *  arithmetic on it either – `createWorld` reads `?? false`, which is the ruled meaning of a
+       *  caller that did not ask. */
+      weightEnabled?: boolean,
     ) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
       await this.run(async () => {
         const res = this.takeOk(
-          await request({ type: 'new', seed: finalSeed, profile, prologue, dynasty: plainDynasty(dynasty) }),
+          await request({
+            type: 'new',
+            seed: finalSeed,
+            profile,
+            prologue,
+            dynasty: plainDynasty(dynasty),
+            weightEnabled,
+          }),
         )
         this.applySnapshot(res)
         this.recovered = false
@@ -648,6 +660,19 @@ export const useGameStore = defineStore('game', {
       await this.run(async () => {
         const res = this.takeOk(
           await request({ type: 'setCoachOnEventWeeks', on, baseRevision: this.revision }),
+        )
+        this.applySnapshot(res)
+        await this.refreshSlots()
+      })
+    },
+    /** ⭐⭐⭐ v87 – THE WEIGHT, ON OR OFF, MID-CAREER (the weight spec §1; his ruling of 22.09).
+     *  `setCoachOnEventWeeks`'s shape one action up. ⚠ The screen renders `snapshot.weightEnabled`
+     *  and never a local `ref`, so «effective immediately» is the snapshot this call returns rather
+     *  than an optimistic flip the engine might refuse. */
+    async setWeightEnabled(on: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setWeightEnabled', on, baseRevision: this.revision }),
         )
         this.applySnapshot(res)
         await this.refreshSlots()

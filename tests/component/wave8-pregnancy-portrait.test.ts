@@ -96,6 +96,8 @@ function expectingWorld(seed: string): WorldState {
   world.loveEpisodes = [married(announcedWeek - 104, announcedWeek - 52)]
   world.pregnancy = {
     episodeId: world.loveEpisodes[0].id,
+    // ⚠ v87 – the pre-window shape; the portrait band is read off the announcement, not the window.
+    conceivedWeek: announcedWeek,
     announcedWeek,
     pausesWeek: announcedWeek + BRIEF.playsOnWeeks,
     dueWeek: announcedWeek + BRIEF.playsOnWeeks + BRIEF.termWeeks,

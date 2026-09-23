@@ -1620,6 +1620,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // field of the record. No save key, no migration, no golden fixture.
     motherhoodBand: motherhoodBandAt(world),
     motherhoodSupport: world.pregnancy?.support ?? null,
+    // ⭐⭐⭐ v87 (the weight, wave 11 – T5): HOW LONG AGO THE MOST RECENT ONE WAS, or null. The list
+    // is append-only and never pruned, so the LAST entry is the most recent by construction and no
+    // sort is owed. ⚠ DERIVED AT SNAPSHOT TIME AND PERSISTED NOWHERE NEW – `motherhoodBand`'s own
+    // standing one line up.
+    bereavedWeeksAgo:
+      world.bereavementWeeks.length === 0
+        ? null
+        : world.week - world.bereavementWeeks[world.bereavementWeeks.length - 1],
     // ⭐⭐⭐ v86 (wave 10 T6b): the line, as the two facts a texture line may rest on. Derived at
     // render off `world.dynasty` – no save key, no migration, no golden fixture, exactly as the two
     // lines above it are derived off `pregnancy`.
@@ -1939,6 +1947,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // that figure names its seats instead of totalling the week's `category: 'staff'` rows. The ⚠
     // note beside the promise records the correction; the test that the strip moves by exactly the
     // salary is tests/wave5-psychologist-seat.test.ts §D.
+    // ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE SWITCH, STRAIGHT OFF THE WORLD. `?? false` is the
+    // same courtesy every persisted boolean on this file takes: a save loaded before its migration
+    // has run is never rendered, but a snapshot built over a crafted world in a test is, and
+    // «absent means off» is the ruled reading in both directions.
+    weightEnabled: world.weightEnabled ?? false,
     psychologistHired: world.psychologistHired ?? false,
     psychologistUnlocked: psychologistUnlocked(world),
     psychologistSalaryCents: psychologistWeeklyCents(world),

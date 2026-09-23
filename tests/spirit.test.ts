@@ -1205,14 +1205,49 @@ describe('the fence this step is judged by', () => {
     // `world.spiritShock`. The shipped order is the brief's own –
     // docs/plans/life-wave-8-builder-2026-09.md §2 T4. Still an exact list, still no wildcard, and a
     // THIRTEENTH call or a reordering is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s twelve weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 22.09 BY WAVE 11's T2, AND THE THIRTEENTH CALL IS HERE – the pin fired on the
+    // very next call to land, for the FIFTH wave running, which is the pin working rather than the
+    // pin rotting. `landPregnancyAnnouncement` is the week she SAYS it, slotted SIXTH, immediately
+    // under the roll it belongs to. ⚠ ITS SLOT IS LOAD-BEARING ON ONE SIDE ONLY and the side is
+    // argued at the call site: it must run in the SAME tick as `rollPregnancy` and immediately after
+    // it, because a zero window – which the shipped `ECONOMY.life.lag` draws 70% of the time for an
+    // open girl – has to behave exactly as the single wave-8 call did, and anything between the two
+    // would be one tick of a window nobody drew. Nothing else in the list reads or writes
+    // `world.pregnancy`. The shipped order is the plan's own –
+    // docs/plans/life-wave-11-builder-2026-09.md §T2. Still an exact list, still no wildcard, and a
+    // FOURTEENTH call or a reordering is red here.
+    // ⚠⚠ RE-AIMED 22.09 BY WAVE 11's T4, AND THE FOURTEENTH CALL IS HERE – the pin fired on the
+    // very next call to land, for the SIXTH wave running. `rollPregnancyLoss` is the week a
+    // pregnancy ends without a birth, slotted SIXTH, between the roll and the announcement. ⚠ ITS
+    // SLOT IS LOAD-BEARING IN BOTH DIRECTIONS and both halves are argued at the call site: (a) it
+    // must run BEFORE `landPregnancyAnnouncement`, because the research's loss window (conception
+    // weeks 4–18) and a private hidden window (up to 12) really can land on one week, and a card
+    // raised on a pregnancy that ended the same tick is the one reading of this arc that is wrong;
+    // (b) it must run BEFORE `accrueSpirit`, because it is the THIRD writer of `world.spiritShock`
+    // and the pass that PAYS for a shock reads `shock.week === world.week` – `rollEnds`' own
+    // arrangement, inherited for the third time. The shipped order is the plan's own –
+    // docs/plans/life-wave-11-builder-2026-09.md §T4. Still an exact list, still no wildcard, and a
+    // FIFTEENTH call or a reordering is red here.
+    // ⚠⚠ RE-AIMED 22.09 BY WAVE 11's T5, AND THE FIFTEENTH CALL IS HERE – twice in one wave, which
+    // is the pin working rather than the pin rotting. `rollBereavement` is a death in the family,
+    // slotted EIGHTH, immediately under the birth. ⚠ ITS SLOT IS LOAD-BEARING ON BOTH SIDES and both
+    // halves are argued at the call site: (a) BEFORE `accrueSpirit`, because it is the FOURTH writer
+    // of `world.spiritShock` and the pass that pays for a shock reads `shock.week === world.week`;
+    // (b) AFTER `landBirth`, because the single slot's rule is that the later call wins the mark on
+    // a week that holds both, and the drafted depths say which should – −30/−46 against the
+    // postpartum −28.8/−45. The shipped order is the plan's own –
+    // docs/plans/life-wave-11-builder-2026-09.md §T5. Still an exact list, still no wildcard.
+    expect(code.slice(i + 1, j), 'only the private life\'s fifteen weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
       'landWedding(world)',
       'rollPregnancy(world)',
+      'rollPregnancyLoss(world)',
+      'landPregnancyAnnouncement(world)',
       'landPregnancyPause(world)',
       'landBirth(world)',
+      'rollBereavement(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
       'deliverOwnKey(world)',
