@@ -107,7 +107,9 @@ function clashWorld(seed: string, opts: { shootWeeks?: number[]; termWeeks?: num
     decidedWeek: AT - 10,
     fromWeek: AT - 10,
     untilWeek: AT - 10 + termWeeks - 1,
-    terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks, shootCount: 2, shootWeeks: opts.shootWeeks ?? [CLASH] },
+    // ⚠ RE-AIMED 23.09 (the cancel-share repair): the real two-shoot WATCH shape – the divisor is
+    // the paper's list now, and the old single-week pose would render a full-cheque cancel.
+    terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks, shootCount: 2, shootWeeks: opts.shootWeeks ?? [CLASH, CLASH + 21] },
   })
   return world
 }

@@ -154,7 +154,11 @@ function clashWorld(seed: string): WorldState {
       cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
       termWeeks: 52,
       shootCount: 2,
-      shootWeeks: [CLASH],
+      // ⚠ RE-AIMED 23.09 (the cancel-share repair): the real two-shoot WATCH shape, matching the
+      // driven suite's own fixture – this file asserts flow and never money, but a single-week
+      // paper now reads as «the whole campaign in one shoot» and must not sit under a fixture
+      // labelled as the shipped legacy deal.
+      shootWeeks: [CLASH, CLASH + 21],
     } as AdOfferTerms,
   })
   return world
