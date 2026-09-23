@@ -119,10 +119,21 @@ describe('wave 12 T7.3 – the divorce card fits a phone', () => {
     expect(text).toContain(prompt.heading)
     expect(text).toContain(prompt.said)
     for (const o of prompt.options) expect(text, `the answer "${o.id}" is on the screen`).toContain(o.label)
-    // ⚠ AND NO PRICE, NO NUMBER AND NO METER anywhere on it – the layer's standing fence, and the
-    // four bond deltas this card carries are exactly what it forbids showing.
+    w.unmount()
+  })
+
+  it('⭐⭐⭐ and no price crosses the wire at all – the fence is the TYPE, not a scan of the text', () => {
+    // ⚠⚠ THE FIRST DRAFT ASSERTED THIS BY SCANNING THE RENDERED TEXT for each option's `bond`, and
+    // `vue-tsc` refused it: `LifeBeatOption` is `{ id, label }` and carries no price. That refusal
+    // is a STRONGER result than the assertion it replaced, so the case is re-cut around it rather
+    // than deleted. The layer's fence – «no meter, no badge, no label» – is not «the UI declines to
+    // print the number»; it is that the number never leaves the engine, so no UI CAN print it and no
+    // future template can start. A scan of the text would have passed on a wire that carried the
+    // price and a component that happened not to render it.
+    const { w, prompt } = mountAttached(80)
     for (const o of prompt.options) {
-      expect(text.includes(`${o.bond}`), `the card prints the bond delta for "${o.id}"`).toBe(false)
+      expect(Object.keys(o).sort(), `the "${o.id}" option carries an id and a label and nothing else`)
+        .toEqual(['id', 'label'])
     }
     w.unmount()
   })
