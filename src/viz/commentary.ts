@@ -868,7 +868,9 @@ const BOOTH_DIVORCED_TRUE: readonly ((who: string) => string)[] = [
 const BOOTH_DIVORCED_WRONG: readonly ((who: string) => string)[] = [
   // ⚠ HIS REVIEW APPLIED 23.09 – the same fact, tighter.
   (who) => `The papers have ${who} getting divorced. No two versions quite agree.`,
-  (who) => `Every front page has the divorce. The story changes from one to the next.`,
+  // ⚠ The second variant deliberately names nobody – the story, not the player, is the subject –
+  // so it takes no parameter at all: a `(who) =>` with an unused name is what vue-tsc refused.
+  () => `Every front page has the divorce. The story changes from one to the next.`,
 ]
 
 /** The pool for one packet – the two facts crossed, and nothing else decides it. */
