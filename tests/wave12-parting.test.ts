@@ -75,6 +75,32 @@
 //                                                                          pair 4 / 4b is what says
 //                                                                          exactly how far it
 //                                                                          reaches.
+//
+// T4's own arms, scope FOUR files – this one, week-notes, diary and wave3-diary-band – 149 cases,
+// control GREEN before the first arm and GREEN AGAIN after the last revert:
+//
+//   ARM 5  the `<= DIVORCED_WEEKS` window dropped from the         1 RED   week-notes' reached-with-
+//          divorce scrap's licence                                         its-window case: the
+//                                                                          `{ divorcedWeeksAgo: 60 }`
+//                                                                          sweep shapes are what it
+//                                                                          reaches.
+//   ARM 6  the fork scrap's licence reads the FACT without its     2 RED   week-notes' cross-arm case
+//          VALUE (`!== null` instead of `=== arm`)                         and the honesty sweep. ⭐
+//                                                                          This is the worst thing
+//                                                                          the pool could do – a line
+//                                                                          written for «she was
+//                                                                          overridden» landing on a
+//                                                                          week she was heard – and
+//                                                                          it is the reason
+//                                                                          `HOLDS.forkAftermath`
+//                                                                          takes the value.
+//   ARM 7  `forkAftermath` loses its one-week gate                 1 RED   §G's one-week-only case.
+//          (`fork.askedWeek !== world.week` removed)
+//   ARM 8  `divorcedWeeksAgo` ignores the latch – a plain          1 RED   §G's «an UNLATCHED episode
+//          break-up counted as a parting                                   that ended is not a
+//                                                                          divorce» case, which is
+//                                                                          exactly what that case was
+//                                                                          written for.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -107,6 +133,7 @@ import {
   pendingLifeBeat,
   rollEnds,
   rollWedding,
+  toSnapshot,
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
@@ -515,7 +542,11 @@ describe('wave 12 T3 F – the album keeps a line', () => {
       partnerId: 'p:second',
       knownWeek: secondWeek - 118,
     })
-    lifeLogOf(world).push({ week: secondWeek - 118, kind: 'met', detail: 'p:second', answer: 'wary' })
+    // ⚠ `lifeLogOf` returns a READONLY view – the row goes onto the world's own array, which is what
+    // the engine reads. The cast is the fixture stating that it is writing history, not reading it.
+    ;(world.lifeLog as { week: number; kind: string; detail: string; answer: string | null }[]).push({
+      week: secondWeek - 118, kind: 'met', detail: 'p:second', answer: 'wary',
+    })
     world.spiritShock = null
     // force the ending rather than hunting a second hit: the branch is what is under test here.
     const hit = firstLatchedHit(world, secondWeek)
@@ -545,5 +576,92 @@ describe('wave 12 T3 F – the album keeps a line', () => {
     // ⚠ NO DETAIL, and the absence is the assertion: the episode id is a machine value the scroll
     // must never print, and no duration, fault or name exists in the world to put there.
     expect(rows[0].detail ?? null).toBeNull()
+  })
+})
+
+// =================================================================================================
+// G. THE DIARY'S TWO FACTS (T4) – derived at snapshot time, persisted nowhere
+// =================================================================================================
+
+const factsOf = (world: WorldState) => toSnapshot(world).diary.facts
+
+describe('wave 12 T4 G – `divorcedWeeksAgo`', () => {
+  it('⭐⭐⭐ is null on a career that never married, and on one that is married still', () => {
+    // ⚠ TWO DIFFERENT TRUE THINGS SAID BY ONE ABSENCE, which is the field's own note made checkable:
+    // no line in the diary may tell them apart, because neither of them is «a divorce».
+    const never = careerAt('w12-facts-0', 900)
+    expect(factsOf(never).divorcedWeeksAgo, 'nobody was ever there').toBeNull()
+    const married = careerAt('w12-facts-1', 900, episode(700, 760))
+    expect(factsOf(married).divorcedWeeksAgo, 'she is married, and that is not a divorce').toBeNull()
+  })
+
+  it('⭐⭐ counts from the week the marriage ended', () => {
+    const world = careerAt('w12-facts-2', 900, { ...episode(700, 760), endedWeek: 880 })
+    expect(factsOf(world).divorcedWeeksAgo).toBe(20)
+  })
+
+  it('⭐⭐ an UNLATCHED episode that ended is not a divorce', () => {
+    // The other half of the derivation, and the one a careless `endedWeek !== null` would get wrong:
+    // a break-up is not a parting, however recent.
+    const world = careerAt('w12-facts-3', 900, { ...episode(700, null), endedWeek: 880 })
+    expect(factsOf(world).divorcedWeeksAgo).toBeNull()
+  })
+
+  it('⭐⭐ two marriages: the MOST RECENT one is what the diary sees', () => {
+    const world = careerAt(
+      'w12-facts-4',
+      900,
+      { ...episode(400, 440), endedWeek: 500 },
+      { ...episode(700, 760), id: 'p:700b', partnerId: 'p:700b', endedWeek: 880 },
+    )
+    expect(factsOf(world).divorcedWeeksAgo, 'the maximum, never the tail\u2019s').toBe(20)
+  })
+})
+
+describe('wave 12 T4 G – `forkAftermath`', () => {
+  /** A career whose fork was asked THIS week, with her want on the record and an answer given. */
+  function atTheFork(seed: string, want: 'college' | 'tour' | 'stop' | null, answer: 'college' | 'continue' | 'stop'): WorldState {
+    const world = careerAt(seed, 990)
+    world.fork = { askedWeek: 990, answer, offer: null }
+    if (want !== null) {
+      ;(world.lifeLog as { week: number; kind: string; detail: string; answer: string | null }[]).push({
+        week: 990, kind: 'fork-opinion', detail: want, answer: 'listen',
+      })
+    }
+    return world
+  }
+
+  it('⭐⭐⭐ `with` when the deed matched the want she stated', () => {
+    expect(factsOf(atTheFork('w12-fork-0', 'college', 'college')).forkAftermath).toBe('with')
+    expect(factsOf(atTheFork('w12-fork-1', 'tour', 'continue')).forkAftermath).toBe('with')
+    expect(factsOf(atTheFork('w12-fork-2', 'stop', 'stop')).forkAftermath).toBe('with')
+  })
+
+  it('⭐⭐⭐ `against` when it did not', () => {
+    expect(factsOf(atTheFork('w12-fork-3', 'college', 'continue')).forkAftermath).toBe('against')
+    expect(factsOf(atTheFork('w12-fork-4', 'stop', 'continue')).forkAftermath).toBe('against')
+    expect(factsOf(atTheFork('w12-fork-5', 'tour', 'stop')).forkAftermath).toBe('against')
+  })
+
+  it('⭐⭐⭐ a PRE-v73 career gets nothing – she was never asked, so there is nothing to have gone against', () => {
+    // ⚠ THE ABSENCE DISCIPLINE, and it is the case a `?? 'with'` anywhere on that line would fail.
+    expect(factsOf(atTheFork('w12-fork-6', null, 'college')).forkAftermath).toBeNull()
+  })
+
+  it('⭐⭐ ONE WEEK ONLY: the week after the fork resolved carries nothing', () => {
+    const world = atTheFork('w12-fork-7', 'college', 'continue')
+    expect(factsOf(world).forkAftermath, 'the week it resolved').toBe('against')
+    world.week += 1
+    expect(factsOf(world).forkAftermath, '...and the week after says nothing at all').toBeNull()
+  })
+
+  it('⭐⭐ an UNANSWERED fork carries nothing – the week is not over', () => {
+    const world = atTheFork('w12-fork-8', 'college', 'college')
+    world.fork = { askedWeek: 990, answer: null, offer: null }
+    expect(factsOf(world).forkAftermath).toBeNull()
+  })
+
+  it('⭐ a career that has not reached its fork carries nothing', () => {
+    expect(factsOf(careerAt('w12-fork-9', 990)).forkAftermath).toBeNull()
   })
 })

@@ -271,6 +271,40 @@ export interface WeekClaims {
    *  for a claim to carry. WHICH window a line may speak in is the LICENCE's job, which is where a
    *  number belongs. */
   bereaved?: true
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – ASSERTS HER MARRIAGE HAS ENDED WITHIN THE LINE'S OWN
+   *  WINDOW, and asserts nothing further. Unselectable unless `f.divorcedWeeksAgo !== null`;
+   *  `HOLDS.divorced` re-derives that off the fact (landed with the fact – R2-18's law).
+   *
+   *  ⚠⚠ WHAT A LINE CARRYING IT MAY SAY, AND WHY IT IS SO LITTLE. What the PARENT could see of a
+   *  household in the weeks after. It may NOT name the husband – the episode has carried a name
+   *  since v83, so this is a real thing a line could reach for and is refused because which surface
+   *  speaks it is the owner's question, not a diary scrap's. It may not say whose fault it was or
+   *  how long it had been coming (the world holds neither), may not carry a date, a figure or a
+   *  count, and may not state her interior as fact (the fallible-parent law).
+   *
+   *  ⚠ A BARE `true`, `bereaved`'s own call and its own reason: there are no named stages of a
+   *  parting in this model, so there is no value for a claim to carry, and WHICH window a line may
+   *  speak in is the LICENCE's job. */
+  divorced?: true
+  /** ⭐⭐⭐ v88 (wave 12 – T4.2, the architect's proposal on his «предложи что-то») – ASSERTS THAT
+   *  THE FORK RESOLVED **THIS WEEK** AND WHICH WAY IT WENT AGAINST WHAT SHE ASKED FOR.
+   *  `'with'` / `'against'`; `HOLDS.forkAftermath` re-derives it off `f.forkAftermath`.
+   *
+   *  ⚠⚠ IT IS A VALUED CLAIM AND THE TWO ABOVE ARE BARE, WHICH IS NOT AN INCONSISTENCY. Grief and
+   *  a parting have no stages this model names; the fork has exactly TWO outcomes and the copy is
+   *  written per outcome, which is `motherhood`'s own test for when a value belongs in a claim.
+   *
+   *  ⚠⚠ WHAT THE `'against'` LINES MAY SAY, AND IT IS THE TIGHTEST LICENCE IN THIS FILE. The fact,
+   *  in her voice, WITHOUT A VERDICT – no «should», no «wrong», no consequence foretold, and no
+   *  claim about what she will feel about it later, which the world does not hold. The whole point
+   *  of the scrap is that a silent delta becomes visible; a scrap that editorialised would be the
+   *  meter this layer refuses to build, spelled in a sentence. ⚠ AND NEITHER ARM MAY NAME THE WANT
+   *  ITSELF – college, tour or stop – because the line is about whether she was heard rather than
+   *  about which of the three she chose, and the screen said that already.
+   *
+   *  ⚠ ONE WEEK ONLY: `f.forkAftermath` is null on every week but the one the fork resolves on, so
+   *  the window is not the licence's to widen. */
+  forkAftermath?: 'with' | 'against'
 }
 
 export interface WeekNote {
@@ -942,8 +976,111 @@ const BEREAVED_VOICES: readonly WeekNote[] = (Object.keys(BEREAVED_WORDS) as Tem
     plainTraining(f) && f.bereavedWeeksAgo !== null && f.bereavedWeeksAgo <= BEREAVED_WEEKS && voiceOf(t)(f),
 }))
 
+/** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW LONG AFTER A MARRIAGE ENDS THE DIARY MAY STILL
+ *  SPEAK OF IT.** Drafted, and it is a LICENCE window rather than a shape: nothing about the lines
+ *  tapers, for `BEREAVED_WEEKS`' own reason one pool up.
+ *
+ *  ⚠ EIGHT, AND IT IS DERIVED FROM THE SHOCK'S ARITHMETIC EXACTLY AS THE SIX ABOVE IS, which is why
+ *  it is a different number rather than the same one copied. At `divorce` −27/−42 and
+ *  `returnPerWeek` 5 (steady) / 3 (intense), clearing at `baseline − shockClearWithin` = 68, a
+ *  steady girl is back inside ~4 weeks and an intense one takes ~11. The bereavement's window is
+ *  «the stretch where even the steady one is still in it» rounded up past the steady figure; the
+ *  same rule here would give 5. It is EIGHT because a parting is not only a mood: the practical
+ *  wreckage – an address, a name on a letterhead, a household coming apart – outlasts the week her
+ *  own meter comes back, and three of the four lines below are about exactly that rather than about
+ *  how she feels. ⚠ THE NUMBER IS THE BUILDER'S DRAFT and the owner's to move; what it must not do
+ *  is run so long that a line lands in a season with nothing left of the thing it is about. */
+export const DIVORCED_WEEKS = 8
+
+/** ⚠ ⚠ DRAFT – FOUR VOICES OVER THE WEEKS AFTER. ⚠ EVERY LINE IS THE PARENT REPORTING A WEEK – no
+ *  interior stated as fact, no husband named, no fault, no duration, no date and no number (the
+ *  `divorced` claim's own licence). ⚠ AND THEY FIT THE SCRAP: 80 characters, the budget
+ *  `docs/specs/voice-bibles-2026-09.md` pins and `tests/week-notes.test.ts` sweeps.
+ *
+ *  ⚠ THE TWO PRIVATE VOICES SAY THE LEAST, which is §4's «openness owns expression» arriving in the
+ *  diary rather than a second pricing of anything – `BEREAVED_WORDS`' own shape one pool up. */
+const DIVORCED_WORDS: Record<Temperament, string> = {
+  sunny: 'She talked about the flat, and about the diary, and not about the rest.',
+  fiery: 'She trained. The subject came up once and went straight back down.',
+  quiet: 'Boxes in her hall this week. She had the week planned to the hour.',
+  deep: 'She was on her own a lot, and did not seem to mind it as much as we did.',
+}
+
+/** THE FOUR ROWS, built from the words above so a licence can never be hand-copied wrong –
+ *  `BEREAVED_VOICES`' own law one pool up. */
+const DIVORCED_VOICES: readonly WeekNote[] = (Object.keys(DIVORCED_WORDS) as Temperament[]).map((t) => ({
+  text: DIVORCED_WORDS[t],
+  // ⚠ NO MOOD GATE, `BEREAVED_VOICES`' own call and its own reason: these four are written for a
+  // heavy week – the shock has just landed – and a line that could only be said on a bright week
+  // would be unreachable on exactly the weeks it is about.
+  claims: { notTravellingWeek: true, divorced: true } as WeekClaims,
+  license: (f: DiaryFacts) =>
+    plainTraining(f) && f.divorcedWeeksAgo !== null && f.divorcedWeeksAgo <= DIVORCED_WEEKS && voiceOf(t)(f),
+}))
+
+/** ⭐⭐⭐ v88 (wave 12 – T4.2) – **THE FORK'S AFTERMATH**, the architect's proposal on his
+ *  «голос интересно звучит, предложи что-то» (spec §7). Eight lines: four voices × {she was heard,
+ *  she was not}, on the ONE week the fork resolves.
+ *
+ *  ⚠⚠ WHAT IT REPAIRS. The congruence delta lands at `answerFork` – +3 with her want, −4 against it
+ *  – and NOTHING ON ANY SCREEN says it happened. A parent who overrode her pays a price he is never
+ *  shown, which is the one shape this layer's own fence («no meter, no badge, no label») is not
+ *  supposed to produce: the fence is against SHOWING A NUMBER, not against the week being legible.
+ *
+ *  ⚠⚠ AND THE AGAINST-ARM PASSES NO VERDICT, which is the whole of what makes this shippable. Each
+ *  of the four states the fact in her own register and stops – no «should», no «wrong», no
+ *  consequence foretold, and not one word about what she will feel about it later. The parent is
+ *  left to read four sentences about a quiet house; the game does not tell him what they mean.
+ *
+ *  ⚠ NEITHER ARM NAMES THE WANT. College, tour and stop are all invisible here: the line is about
+ *  whether she was heard, and the fork's own screen said which of the three it was.
+ *
+ *  ⚠ ZERO DRAWS AND NO NEW STATE – `f.forkAftermath` is a pure read of `world.fork.answer` against
+ *  the want on the `lifeLog`. A pre-v73 career has no want on record and honestly gets no scrap.
+ *
+ *  ⚠ ⚠ DRAFT – all eight, and they fit the 80-character scrap budget. */
+const FORK_AFTERMATH_WORDS: Record<Temperament, Record<'with' | 'against', string>> = {
+  sunny: {
+    with: 'She thanked us twice, and then talked about something else entirely.',
+    against: 'She took it well, out loud. She said less than usual for the rest of it.',
+  },
+  fiery: {
+    with: 'She was out the door before the sentence finished. That is a yes from her.',
+    against: 'She heard it, said fine, and trained like the week owed her something.',
+  },
+  quiet: {
+    with: 'She wrote the next month out that evening, without being asked to.',
+    against: 'She asked what the dates were now, and wrote them down in the same pen.',
+  },
+  deep: {
+    with: 'She did not say much. She has not put the racquet down all week either.',
+    against: 'She said she understood. She has said nothing about it since.',
+  },
+}
+
+const FORK_AFTERMATH_VOICES: readonly WeekNote[] = (Object.keys(FORK_AFTERMATH_WORDS) as Temperament[]).flatMap((t) =>
+  (['with', 'against'] as const).map((arm) => ({
+    text: FORK_AFTERMATH_WORDS[t][arm],
+    // ⚠⚠ `plainTraining` LIKE EVERY OTHER BAND, AND THE FIRST DRAFT DID NOT HAVE IT – kept here as
+    // the record of why it does. The reasoning was «the fork resolves on ONE week and that week may
+    // be a travelling one, so a gate could hide the scrap», and `tests/week-notes.test.ts`'s own
+    // layoff guard refused it in one run: **a layoff TAKES the note** – every line licensed on an
+    // injured week must claim the injury, or «she wrote the next month out that evening» draws on
+    // the week the ice pack came out. R2-18 wants the same thing for a road week, because three of
+    // these eight are household observation.
+    // ⚠ AND THE OBJECTION IT WAS WRITTEN AGAINST DOES NOT SURVIVE INSPECTION: the scrap was never a
+    // notification. A week note is chance-gated (`WEEK_NOTE_CHANCE`) and selected against a pool, so
+    // «the parent might not see it» is true of the whole mechanism and not something this licence
+    // introduces. What it buys instead is that the line is never WRONG about the week it lands in.
+    claims: { notTravellingWeek: true, forkAftermath: arm } as WeekClaims,
+    license: (f: DiaryFacts) => plainTraining(f) && f.forkAftermath === arm && voiceOf(t)(f),
+  })),
+)
+
 export const WEEK_NOTES: readonly WeekNote[] = [
   ...BEREAVED_VOICES,
+  ...DIVORCED_VOICES,
+  ...FORK_AFTERMATH_VOICES,
   // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
   {
     text: 'Six days on court. She ate like someone twice her size.',

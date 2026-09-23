@@ -351,6 +351,32 @@ export interface DiaryWorldView {
    *  wearing a vocabulary.
    *  ⚠ `null` IS EVERY CAREER IN THE GAME TODAY and is a real state: nobody has died. */
   bereavedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW MANY WEEKS SINCE HER MARRIAGE ENDED**, or `null`
+   *  for a career that has not had one end. Derived at snapshot time off the `loveEpisodes` rows
+   *  themselves (`latchedWeek !== null && endedWeek !== null`) and persisted nowhere new – the wave
+   *  adds no schema at all, so unlike `bereavedWeeksAgo` one field up there is no list to read.
+   *
+   *  ⚠ WEEKS-SINCE AND NOT A BAND, `bereavedWeeksAgo`'s own call and its own argument: a divorce has
+   *  no stages this game models, so the only honest fact is how long ago and the LICENCE decides
+   *  which window a line may speak in. ⚠ `null` IS EVERY CAREER THAT NEVER MARRIED and every one
+   *  whose marriage is still standing, which are two different true things said by one absence –
+   *  and no line in the diary may distinguish them, because neither is «a divorce». */
+  divorcedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (wave 12 – T4.2) – **DID THE PARENT DO WHAT SHE ASKED AT THE FORK**, on the week it
+   *  resolved: `'with'`, `'against'`, or `null` on every other week.
+   *
+   *  ⚠⚠ THIS IS THE ONE FACT IN THIS LIST THAT EXISTS SO A SILENT CONSEQUENCE CAN BE SEEN. The
+   *  congruence delta lands at `answerFork` (`ECONOMY.bond.delta.forkWithHerWant` +3 /
+   *  `forkAgainstHerWant` −4) and nothing on any screen says it happened, so a parent who overrode
+   *  her never learns that the game remembered. The spec's §7 is the architect's proposal on his
+   *  «предложи что-то»; the scrap is ONE line on ONE week and the against-arm states the fact in her
+   *  voice WITHOUT A VERDICT.
+   *
+   *  ⚠ `null` ON A PRE-v73 CAREER IS THE ABSENCE DISCIPLINE AND NOT A GAP: she was never asked, so
+   *  there is no want on record to have gone with or against, and a default would be the diary
+   *  inventing an opinion she never stated. ⚠ AND `null` ON EVERY OTHER WEEK is what keeps this a
+   *  single-week scrap rather than a mood that hangs around – see the licence in `weekNotes.ts`. */
+  forkAftermath: 'with' | 'against' | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – HER MOTHER'S CABINET, or null on every career that continues no line.
    *  Read straight off `world.dynasty.motherCareer.titles`; `null` and `0` are DIFFERENT and the
    *  difference is the whole licence: null is «there is no mother to be in this house», 0 is «she is

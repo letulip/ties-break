@@ -972,6 +972,45 @@ export interface DiaryFacts {
    *  their relation (RULED 22.09 – the deceased is UNNAMED in mechanics AND copy), may not carry a
    *  date, a figure or a count, and may not state her interior as fact (the fallible-parent law). */
   bereavedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW MANY WEEKS SINCE HER MARRIAGE ENDED**, or `null`
+   *  for a career that has not had one end. Derived at snapshot time off the `loveEpisodes` rows
+   *  themselves – `latchedWeek !== null && endedWeek !== null` – and persisted nowhere new.
+   *
+   *  ⚠⚠ THERE IS NO LIST BEHIND IT, WHICH IS THE ONE PLACE IT PARTS FROM THE FIELD ABOVE.
+   *  `bereavementWeeks` exists because a death writes no record anywhere else in the world; a
+   *  divorce writes one in the most durable place this layer has, and a second list beside the
+   *  episode would be one fact with two sources of truth.
+   *
+   *  ⚠ WEEKS-SINCE AND NOT A BAND, the field above's call and its argument: a parting has no stages
+   *  this game models, so the only honest fact is how long ago and the licence decides the window.
+   *  ⚠ `null` COVERS TWO DIFFERENT TRUE THINGS – she never married, and she is married still – and
+   *  no line may distinguish them, because neither of them is «a divorce».
+   *
+   *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: what the PARENT could see of a household after it. It may
+   *  NOT name the husband (the episode has carried a name since v83 and which surfaces speak it is
+   *  the owner's question), may not say whose fault it was or how long it had been coming, may not
+   *  carry a date, a figure or a count, and may not state her interior as fact. */
+  divorcedWeeksAgo: number | null
+  /** ⭐⭐⭐ v88 (wave 12 – T4.2) – **DID THE PARENT DO WHAT SHE ASKED AT THE FORK**, on the week it
+   *  resolved: `'with'`, `'against'`, or `null` on every other week of every career.
+   *
+   *  ⚠⚠ IT EXISTS SO A SILENT CONSEQUENCE CAN BE SEEN. The congruence delta lands at `answerFork`
+   *  (+3 with her want, −4 against it) and nothing on any screen says it happened, so a parent who
+   *  overrode her never learns the game remembered. The spec's §7 is the architect's own proposal on
+   *  the owner's «предложи что-то», and it is ONE scrap on ONE week.
+   *
+   *  ⚠ THE WEEK IS EXACT AND NOT APPROXIMATE: the fork HOLDS THE CALENDAR while it is unanswered, so
+   *  the week it was asked is the week it was answered, and no second date is persisted for it.
+   *
+   *  ⚠ `null` ON A PRE-v73 CAREER IS THE ABSENCE DISCIPLINE: she was never asked, so there is no
+   *  want on record to have gone with or against, and a default would be the diary inventing an
+   *  opinion she never stated.
+   *
+   *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: that the week held a decision and what the house looked
+   *  like afterwards. The against-arm may state the fact IN HER VOICE and may NOT pass a verdict on
+   *  the parent – no «should», no «wrong», no consequence foretold. It may not name a number, and it
+   *  may not claim what she will feel about it later, which is a fact the world does not hold. */
+  forkAftermath: 'with' | 'against' | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – her mother's cabinet, or null on a career that continues no line.
    *  `null` and `0` are different: null is «there is no mother in this house», 0 is «she is here
    *  and she won nothing», and a line about a cabinet may fire on neither. Derived at render off

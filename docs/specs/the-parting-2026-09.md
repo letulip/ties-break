@@ -63,6 +63,20 @@ asking for one rather than a duplicate: the two channels answer different questi
 life / what the family keeps). The two sentences are written not to stutter. Carried to the report,
 because two rows on one week is a thing the owner sees on a screen.
 
+**T4 has landed, both halves.** Two derived facts and no new schema: `divorcedWeeksAgo` off the
+`loveEpisodes` rows themselves (there is no list, because the episode already keeps both dates) and
+`forkAftermath` off `world.fork.answer` against the want on the `lifeLog`. Four voices for the
+parting (window `DIVORCED_WEEKS = 8`, derived from the shock's own arithmetic) and eight for the
+fork's aftermath.
+
+⚠ THREE THINGS THE EXISTING LINTS CAUGHT ON THE FIRST RUN, each a real defect rather than a rule
+getting in the way: «thank you» broke the no-second-person rule, «and left it there» is a BANNED
+TAIL (his own 11.09 replacement), and the fork scrap's first licence had no `plainTraining` gate –
+so it was licensed on a layoff week, which the house rule «a layoff TAKES the note» refuses. The
+objection the missing gate was written against does not survive inspection and the note records
+why: a week note is chance-gated already, so «the parent might not see it» is true of the whole
+mechanism.
+
 Still untouched: the
 diary (T4), the booth (T5), the bench (T6) and e2e (T7). The builder updates this section as tasks
 ship and fills §10's measured column from the bench, never predicted twice.
