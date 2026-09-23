@@ -906,9 +906,10 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   if (signed.kind === 'ad') {
     const t = signed.terms as AdOfferTerms
     // ⭐ STEP 2 (§4a) – THE SIGNATURE NAMES THE SHOOT WEEKS, before the money moves, so the paper is
-    // complete the moment it is a record: `shootCount` weeks, in-season and spaced by construction,
-    // anchored on the signing week (`chooseShootWeeks` – the choice's own comment carries the whole
-    // design). On the ad sub-stream at the moment of the player's action, exactly as the arrival
+    // complete the moment it is a record: `shootCount` weeks PER SEASON of the term (the field is
+    // the catalogue's `shootWeeksPerYear` under a shorter name – the 23.09 cancel-share defect grew
+    // exactly in that gap), in-season and spaced by construction, anchored on the signing week
+    // (`chooseShootWeeks` – the choice's own comment carries the whole design). On the ad sub-stream at the moment of the player's action, exactly as the arrival
     // roll is; ZERO draws on MAIN, so signing can never move the world's dice (input-independence).
     // The lead is read from the catalogue at signature rather than frozen at arrival because it is
     // mechanics of the choosing, not a promise on the paper – the letter never states it.
