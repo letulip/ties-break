@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 133 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 134 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 16 | [THE COLLEGE SCENE IS BUILT, AND TWO OF THE SPEC'S PREMISES WERE MEASURED FALSE](#24092026--the-college-scene-is-built-and-two-of-the-specs-premises-were-measured-false) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 18 | [«А ВОТ ЭТО ЕЩЕ ДИКИНЕШЬ МОЖЕ БЫТЬ?» – THE FIT HELPER'S BLIND CONTROL, ON THE SAME BRANCH](#24092026--а-вот-это-еще-дикинешь-може-быть--the-fit-helpers-blind-control-on-the-same-branch) | 2026-09-24 |
+| general | 19 | [THE ADVANCE IS RE-FIT PER GLYPH, AND ONE CONSTANT TURNS OUT TO HAVE BEEN TWO](#24092026--the-advance-is-re-fit-per-glyph-and-one-constant-turns-out-to-have-been-two) | 2026-09-24 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5333,3 +5333,71 @@ about it.
 model's demand for that row is strictly below the browser's – so a later re-fit that stays a floor
 cannot falsely redden a college test, and one that overtakes the browser reddens correctly. Proven by
 moving `ADVANCE`: green at 0.47 and 0.50, red at 0.52 (the row) and 0.90 (the span).
+
+## 24.09.2026 – THE ADVANCE IS RE-FIT PER GLYPH, AND ONE CONSTANT TURNS OUT TO HAVE BEEN TWO
+
+The card that the entry above left standing – «charging per glyph is a re-fit of `ADVANCE` with its own
+census» – built and measured on the same branch, on the same ruling.
+
+⚠⚠ THE RULING UNDER THE CARD, AND IT IS THE FINDING THE CARD DID NOT CONTAIN: `ADVANCE = 0.47` had TWO
+readers whose conservative directions are OPPOSITE. `demandedWidth` reads it for WIDTH, where a bigger
+advance is a FALSE RED; `lineCount` reads it for HEIGHT – it feeds `stackChildren` -> `boxOf` -> every
+height assertion in the file, including `measureDialog` and `assertDismissReachable` – where a SMALLER
+advance means fewer lines, a shorter modelled card, and a dialog that does not fit PASSING, which is
+round-20 #3 itself. So the obvious move, making the model narrower and more accurate, is the dangerous
+direction for every height verdict in the suite. **Two constants with two names** (`LABEL_ADVANCE` +
+its table for width, `WRAP_ADVANCE` for height), each docstring stating which way its own conservatism
+runs. The counterfactual, measured rather than argued: give `lineCount` the accurate per-glyph model and
+`TourBriefingDialog`'s modelled floor drops **1015.3 -> 923.6px** against Chromium's real 1078.1 – from
+0.94 of the truth to 0.86, every height verdict 9% laxer.
+
+THE HEIGHT ARM DID NOT MOVE, AND THAT IS A DIFF RATHER THAN AN INTENTION: the helper was instrumented
+behind an env flag, the whole component project run before and after, and the 3,520 `lineCount` records
+and 261 `measureDialog` results came back IDENTICAL, 0 on either side. ⚠ And the prior question – is the
+under-counting height ALREADY producing a false green – was answered before anything was touched, as
+arithmetic: all 261 calls re-scored with `contentFloor` multiplied by each of 107 factors from 1.00 to
+100, **0 calls cross between green and red**. The cap is why (of the 261, 0 are the one shape whose
+verdict could turn on the content floor).
+
+THE WIDTH CENSUS: **76 charged calls, 32 distinct labels, 8 files**, all Manrope at 10–14.5px and
+weights 400–800, each measured in headless Chromium over the repo's own `src/style.css` and
+`manrope-var.woff2`. Before, 5 of 32 were OVER the browser (max 1.043); after, **0 of 32**, min 0.552
+median 0.798 max 0.875. The table is the MINIMUM advance across the ten faces the app asks for, rounded
+down – 0 over-charges over 195 glyphs x 10 faces. ⚠ And the card's guess was wrong about the dash: `–`
+advances 0.540 in Manrope, WIDER than the average, so the false red on «Quarterfinal – C. Ostergaard»
+was its two spaces and its `. l i t f r`, not its dash.
+
+⚠⚠ A FULL PER-CHARACTER TABLE WAS MEASURED AND REFUSED: **NOT A FLOOR.** A shaped run is narrower than
+the sum of its glyphs' advances, so charging each glyph its own advance comes out OVER the browser on
+**46.5%** of the census's 749 Manrope strings – up to 2.96% from kerning alone («Rubber 1 – P. Kovac»
+113.68 modelled of 110.42 measured) and **73%** on a two-code-point flag that shapes into one glyph.
+Keeping it a floor needs a ~0.58 blanket haircut, which throws away what it bought. The card's own
+premise – «a per-character table is exact for the strings it covers» – is therefore false against a
+shaping engine, and that correction is in the helper's header in those words.
+
+⚠ THE PRICE, NAMED: the floor moves DOWN, median **0.918 -> 0.798** of the browser. A guard at 80% of
+the truth catches a row that overflows by more than ~20% of its text where the old one caught ~8%, and
+`assertInlineRowFits` has no height cap behind it. So the blind band was measured too: every assertion
+row that reaches a charged label, re-scored with the browser's width substituted (32 rows) – **0 where
+the model passes and the browser would fail**, and **1** that passes by less than the model's own error
+(`round26-span-gate-ui` at 320x568: 52.5px modelled slack, 20.1px browser slack, 32.3px error).
+
+⚠⚠ AND ONE ARM STOPPED BEING RED, WHICH IS THE INTERESTING DIRECTION – RE-AIMED, NOT SILENCED.
+`round26-span-gate-ui`'s mutation proof (give the span pill the week button's own `min-width: 206px`)
+reddened at 375x667 on the CTA's TEXT charge, which the re-fit lowers by 12.5px against 11.6px of
+margin. The browser says the mutated bar needs 357.3px of 343 – **14.3px over, so the row has not
+started fitting**. The helper's red moved to 320x568 (same 206px, 54px over) and the 375 claim is now
+asserted from a browser-measured «Training week» (91.296875px) instead of the model's, with the date and
+the numbers in the file.
+
+⚠⚠ AND THE WITHDRAWN CLAIM STAYS WITHDRAWN. «A red verdict from an under-counting model is therefore
+always true» was not restored, not even in the narrower form «true for a run whose glyphs are all in the
+table» – because that was measured FALSE: over 2,886 table-only strings x 10 faces, **167 of 28,860
+comparisons are over**, up to **1.556** (Manrope shapes «--» into ONE 0.540em glyph where the model
+charges 0.840; «".», «.1» and their kind run 22–47% over). What the header claims instead is exactly
+what was measured: under the browser on all 32 labels the file charges today, never able to charge more
+than the model it replaced, and NOT a universal law – with the fallback and shaping named as the two
+reasons, and the note that 0 of the 32 census labels are all-narrow.
+
+⭐ The follow-on is ruled to its own card, not this branch: browser-measured label constants
+(`MEASURED_PX`'s pattern, now proven twice) on the thin surfaces, with its own per-surface census.
