@@ -73,7 +73,9 @@
 // constant over-charges `.rubber-who` (171.08 modelled against 166.47 measured). The repair closed
 // 23.5px of a 44.4px gap and the remaining 20.9px still inverts the verdict, so `MEASURED_PX` stays
 // and the arithmetic below is unchanged. `⭐⭐ the shared helper's own verdict on this row` pins that
-// relationship so a later wave cannot quietly swap the browser numbers for the model's.
+// relationship as a DIRECTION rather than as a value – the model's demand is strictly below the
+// browser's – so a later wave cannot quietly swap the browser numbers for the model's, and a
+// legitimate `ADVANCE` re-fit does not redden a college test for no defect.
 //
 // ⚠ AND THERE IS NO DOUBLE CHARGE: `rowDemand` bills each span ONCE, from `MEASURED_PX`, and never
 // calls `demandedWidth` – only `availableWidth` comes from `fits.ts`. The repair changed which
@@ -170,8 +172,10 @@ import { formatShortName } from '../../src/shared/format'
 // the real cascade from the viewport down to the row's parent, which is exactly right and is not the
 // part that was wrong; the per-span DEMAND comes from `MEASURED_PX`, see the ⚠⚠ above it. The two
 // demand helpers are imported for ONE arm – `⭐⭐ the shared helper's own verdict on this row` – which
-// compares the repaired shared floor with the browser and pins the 20.9px they still disagree by.
-import { assertInlineRowFits, availableWidth, demandedWidth, PHONE, setViewport } from './fits'
+// compares the repaired shared floor with the browser and pins the DIRECTION they disagree in. ⚠ They
+// are READ there and never asserted through, so a future `ADVANCE` re-fit that reddens the row cannot
+// throw before the comparison that arm is about.
+import { availableWidth, demandedWidth, PHONE, rowItemWidth, setViewport } from './fits'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { answerBirthdayNeutral, drainLifeBeats } from '../helpers/career'
 import {
@@ -673,7 +677,7 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
   // ===============================================================================================
   // ⭐⭐ THE RECONCILIATION WITH THE SHARED HELPER, AS NUMBERS (24.09)
   // ===============================================================================================
-  it('⭐⭐ the shared helper\'s own verdict on this row – repaired, and STILL green where the browser is red', () => {
+  it('⭐⭐ the shared helper\'s own verdict on this row – repaired, and STILL strictly under the browser', () => {
     // ⚠ WHY THIS ARM EXISTS AND WHAT IT PROTECTS. `demandedWidth` was repaired on 24.09: it used to
     // charge a control's label only under `white-space: nowrap`, so `.rubber-watch` – which declares
     // neither that nor a `min-width` – was scored at **0.0px** of a real 41.33. The obvious next move
@@ -694,21 +698,40 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
     // browser numbers stay and this file keeps its own arithmetic. ⚠ AND THE ROW IS BILLED ONCE: this
     // is the only place in the file that asks `fits.ts` for a DEMAND, and `rowDemand` never does – so
     // there is no double charge between the two measurements, only a comparison.
+    //
+    // ⚠⚠ THE PROPERTY IS PINNED AND THE NUMBERS ARE NOT, ON THE COORDINATOR'S RULING (24.09). An
+    // `expect(...).toBeCloseTo(275.205)` here would rot on a change that is legitimate: `ADVANCE` is a
+    // FITTED constant and a later wave may correctly re-fit it against a new type stack, which would
+    // redden a college test with no defect anywhere. What must not rot is the reason `MEASURED_PX`
+    // exists, and that is a DIRECTION rather than a value: **the shared model's demand for this row is
+    // strictly below the browser's**. It survives any re-fit that stays a floor, and if a re-fit ever
+    // overtakes the browser it goes red – which is right, because at that point the browser would no
+    // longer be the more accurate of the two and somebody should look at this file again. The 275.205
+    // and the 20.9px live in the table above and in the messages below, where a stale number is read
+    // by a human instead of enforced against one.
     const w = openCard(titleRun())
     const row = w.find('.college-league-match').element
     const { who, score, watch } = rowItems(row)
-    // ⚠ THE REPAIR ITSELF, PINNED ON THE SPAN THAT WAS WRONG: a charge, not a zero.
-    const charged = demandedWidth(watch, 291)
-    expect(charged, 'the shared helper now charges the Watch control its label').toBeGreaterThan(0)
-    expect(charged, '...23.50px = 5 chars x 10px x ADVANCE, and no tracking, weight or case').toBeCloseTo(23.5, 2)
-    // ...and the whole row through the shared instrument, which is the part that must not be believed.
-    const modelled = assertInlineRowFits(row, [who, score, watch], PHONE, 'the league row, through the shared floor')
     const got = rowDemand(row)
-    expect(got.room - modelled, 'the shared model\'s demand for the worst row').toBeCloseTo(275.205, 2)
-    expect(modelled, '...which it reads as 15.8px of SPARE room').toBeCloseTo(15.795, 2)
-    // ⚠⚠ THE TWO MEASUREMENTS DISAGREE BY 20.9px AND THE BROWSER WINS. This is the sentence the pin is
-    // made of: while this number is positive the shared helper cannot be the instrument here.
-    expect(got.demand - (got.room - modelled), 'the browser charges 20.9px more than the model').toBeCloseTo(20.873, 2)
+    // ⚠ THE REPAIR ITSELF, ON THE SPAN THAT WAS WRONG: a charge, not a zero – and still under the
+    // browser's 41.33, which is the floor contract `fits.ts`'s own docstring commits to.
+    const charged = demandedWidth(watch, got.room)
+    expect(charged, 'the shared helper now charges the Watch control its label – it scored 0.0 until 24.09').toBeGreaterThan(0)
+    expect(charged, `...and stays a floor: ${charged.toFixed(2)}px modelled of the browser's ${got.watch.toFixed(2)}`).toBeLessThan(got.watch)
+    // ...and the whole row through the shared instrument, summed the way `assertInlineRowFits` sums it
+    // – read rather than asserted, so a re-fit that reddens the row cannot throw before the comparison
+    // this arm is actually about.
+    const modelled = [who, score, watch].reduce((sum, el) => sum + rowItemWidth(el, got.room), 0) + got.gaps
+    // ⚠⚠ THE ONE PIN: THE TWO MEASUREMENTS DISAGREE AND THE BROWSER IS THE BIGGER OF THEM. Measured
+    // 24.09 the two are 275.21 and 296.08 – 20.9px apart, the model reading 15.8px of SPARE room on a
+    // row the browser has 5.1px OVER – so while this holds the shared helper cannot be the instrument
+    // here and `MEASURED_PX` is load-bearing.
+    expect(
+      modelled,
+      `the shared floor demands ${modelled.toFixed(2)}px of this row where the browser measures ` +
+        `${got.demand.toFixed(2)} – if the model ever overtakes the browser, MEASURED_PX has stopped being ` +
+        'the more accurate source and this file needs re-reading',
+    ).toBeLessThan(got.demand)
     expect(got.slack, 'and the deficit this file records is the browser\'s, unchanged').toBeCloseTo(-5.078125, 2)
     w.unmount()
   })

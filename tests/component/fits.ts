@@ -29,6 +29,25 @@
 // the floor's accuracy stops mattering the moment the cap is in place. That is the property round-20
 // #4 actually asked for ("a dialog grows by one honest sentence at a time and nothing objects").
 //
+// ⚠⚠ THE SENTENCE ABOVE IS NOT TRUE OF THE `nowrap` BRANCH, MEASURED 24.09, AND IT IS CORRECTED HERE
+// RATHER THAN LEFT STANDING. `demandedWidth`'s nowrap arm charges `text.length * fontSize * ADVANCE`,
+// which bills a SPACE and a narrow `.` or `–` at the AVERAGE glyph advance – so on a label whose
+// glyphs run narrow the model asks for more than the browser does. Measured in headless Chromium over
+// the repo's own Manrope, `CollegeYearCard.vue`'s `.rubber-who` at 13px/400:
+// «Quarterfinal – C. Ostergaard» 171.08 modelled against 166.47 measured (**1.028**), and
+// «Semifinal – C. Ostergaard» 152.75 against 149.67 (**1.021**). So a red verdict from THIS model is
+// not always true: on such a label it can be a FALSE RED.
+//
+// ⚠ THE DIRECTION OF THE RISK IS FALSE-RED AND NEVER FALSE-GREEN, which is why it is recorded rather
+// than rushed. A model that over-asks refuses a row that would have fitted; it cannot pass a row that
+// would not. Everything this file gates therefore stays safe, and a red verdict is now «look at the
+// row» rather than «the row is broken» – which is what a human does with one anyway.
+// ⚠⚠ AND THE `nowrap` BRANCH IS DELIBERATELY NOT CHANGED HERE. The 24.09 wave was asked about the
+// OTHER branch – a label with nowhere to break, charged 0.0px – and it changed only that one. Fixing
+// an average-advance model to charge per glyph is a re-fit of `ADVANCE` itself, with its own census
+// and its own browser arms, and it is its own card. What this note buys is that the header no longer
+// claims a property this wave's own measurement falsified.
+//
 // ⚠ THE GLYPH ADVANCE IS MEASURED, NOT GUESSED (CLAUDE.md invariant 4). The one constant this model
 // needs is the average character advance, and it was fitted against the SHIPPED card rendered in a
 // real headless Chromium – the repo's own `src/style.css` and its own self-hosted Manrope/Sora, at
