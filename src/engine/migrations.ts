@@ -3283,10 +3283,19 @@ export function migrateSave(raw: unknown): WorldState {
   // world gains no key and there is nothing for a rung to remove; `PRE_V89` records that as a
   // measured identity instead.
   if (v === 88) {
-    // ⚠ THE CAST IS `Partial<DynastyRecord['motherCareer']>`'s JOB, v87's `Partial<PregnancyState>`
-    // courtesy one level deeper: `collegeTitles` is REQUIRED on the shipped type, and `??=` on a
-    // required field is a compile error rather than a no-op.
-    const dynasty = save.dynasty as { motherCareer?: Partial<DynastyRecord['motherCareer']> } | null | undefined
+    // ⚠ THE CAST IS v87's `Partial<PregnancyState>` COURTESY ONE LEVEL DEEPER, AND IT COULD NOT TAKE
+    // v87's SHAPE – measured, not chosen. `collegeTitles` is REQUIRED on the shipped type, so `??=`
+    // on it is a compile error rather than a no-op; but `Partial<DynastyRecord['motherCareer']>` does
+    // NOT fix that here, because this record is `readonly` all the way down (`DynastyHandover`'s own
+    // law – the wire object must not be mutable) and `Partial` keeps the modifier: vue-tsc answered
+    // «Cannot assign to 'collegeTitles' because it is a read-only property». So the shape is spelled
+    // inline and MUTABLE – and it still reads its type off the declaration rather than typing
+    // `number`, so a field that changed type could not pass through here unnoticed. `PregnancyState`
+    // is engine-internal and carries no `readonly`, which is why v87 did not meet this.
+    const dynasty = save.dynasty as
+      | { motherCareer?: { collegeTitles?: DynastyRecord['motherCareer']['collegeTitles'] } }
+      | null
+      | undefined
     if (dynasty?.motherCareer) dynasty.motherCareer.collegeTitles ??= 0
     v = 89
   }
