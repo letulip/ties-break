@@ -346,7 +346,13 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // own README row – and this rung is the plainest of the six, because v88 appends NO KEY AT ALL:
     // three union widenings, `schemaVersion` the only line that moved on the whole fixture. Nothing
     // in the parting touches a curve, or could.
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json') {
+    // ⚠ AND v89.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v88.json)`, the college
+    // scene's own README row – and it is plainer even than v88's rung: v89's one field is NESTED
+    // inside `dynasty`, which is `null` on every fixture in the corpus, so the serialised world gains
+    // no key at all and the file is the same length TO THE BYTE with `schemaVersion` the only line
+    // that moved (measured per key: 104 keys before, 104 after, added [], removed [], order
+    // identical). Nothing in the student cabinet touches a curve, or could. Re-aimed 24.09.
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

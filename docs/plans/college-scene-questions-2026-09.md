@@ -134,6 +134,13 @@ are named in the report with this receipt.
 | **A** (recommended) | that session commits its tools on its own branch, or removes them; the two steps then pass unchanged. |
 | B | I commit them here under a «foreign tools» note – but then this branch's PR carries another session's unfinished work, and the registry documents files that may never land. |
 
+⚠ ONE CONSEQUENCE TO KNOW ABOUT EITHER WAY: `tools/README.md` says «do not hand-edit» and carries its
+own file counts, so it was left exactly as it stands – which means **this wave's two new tools
+(`tools/college-scene-bench.ts`, `tools/_reveals.ts`) are not in the registry yet**. One
+`npm run tools:registry` picks them up the moment the seven foreign files are gone, and until then no
+regeneration is honest: the generator reads the DIRECTORY, so it would write another session's
+unfinished filenames into a tracked document on this branch.
+
 ## 6. Confirm the spun-off card
 
 `fits.ts` charging 0px for a single-word control is a **shared measurement helper** whose blast
