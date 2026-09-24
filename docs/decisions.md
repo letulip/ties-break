@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 131 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 132 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -33,7 +33,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
-| college | 15 | [THE COLLEGE SCENE RULED OPEN, AND THE GRADUATE'S SHELF RULED IN](#23092026--the-college-scene-ruled-open-and-the-graduates-shelf-ruled-in) | 2026-09-23 |
+| college | 16 | [THE COLLEGE SCENE IS BUILT, AND TWO OF THE SPEC'S PREMISES WERE MEASURED FALSE](#24092026--the-college-scene-is-built-and-two-of-the-specs-premises-were-measured-false) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
 | general | 17 | [THE CANCEL SHARE: «ОСТАВШИЕСЯ, ДЕЛАЙ»](#23092026--the-cancel-share-оставшиеся-делай) | 2026-09-23 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
@@ -5243,3 +5243,55 @@ Re-run green: §1's racing arm measures ~-6 condition per shoot week again; §2 
 violations P9-aware, with 100.0% of signature landings in the winter window – recorded in
 `the-cancel-share-2026-09.md` §4 with the observation that a signature shoot now practically
 cannot clash with a tournament (winter holds no entries), which is his to weigh, not a defect.
+
+## 24.09.2026 – THE COLLEGE SCENE IS BUILT, AND TWO OF THE SPEC'S PREMISES WERE MEASURED FALSE
+
+His two rulings of 23.09 both shipped on `college/scene`: the graduate's shelf reads no lower than
+the middle, and the championship that already plays got its record in the album and the handover
+(schema **v89**, `motherCareer.collegeTitles`, the ladder's first back-fill nested two levels inside
+a nullable record). Six tasks, the spec and the strings table pinned both ways.
+
+⚠⚠ THE WAVE'S OWN FINDING IS THAT A SPEC WRITTEN FROM A READING ASKS FOR THE WRONG THING TWICE, and
+both were caught by measuring the branch head before a builder was briefed
+(`docs/plans/college-scene-rulings-2026-09.md`). **The bracket §3 asked for what shipped on 22.08**
+(`1356712f`) and nearly had a builder delete the Watch control he has been pressing since August.
+**The floor §2 guarded a state with no producer** – all three `type: 'college'` latches carry a
+return week, `finishCollege` removes the latch at graduation, and the dynasty door opens only where
+there is none – so the clause reads THE DEGREE (`finishedTheCourse`, the album's own gate) and the
+spec is corrected in four places, each dated. Two smaller ones the same way: there is no college
+chapter in the album (five bands; the lines are the `graduated` sheet's checklist), and the booth's
+student register sits INSIDE the shipped licence rather than widening it, because `lineageLicensed`
+carries a ruling that a college-fork mother licenses nothing.
+
+⚠ AND THE ALBUM'S RECORD WAS BUILT AND DROPPED BEFORE THE REPAIR: the note asked its sheet's LEAD
+frame for the checklist, and `portraitStage` puts 17–22 in one band, so one junior title erased all
+three college rows. Measured, then fixed by asking the sheet. «Captured is not surfaced», again.
+
+⚠ THE CHAMPIONSHIP ROWS HAVE NOT FIT A PHONE SINCE 22.08, and nobody knew because the shared fit
+helper charges a control declaring neither `nowrap` nor `min-width` **nothing at all**. Measured in a
+real browser over the card's own markup, CSS and font: 296.1px demanded of 291.0px, 11 of 211
+surnames overflowing the quarterfinal row on straight sets and **129 of 211 after a retirement**
+(`ret.` costs the score span 22.3px); at 320x568 every surname overflows. Nobody is stranded – the
+row cannot wrap, so the name gives way through the ellipsis and the control never moves – so it is
+legibility, it is NOT fixed, and the six candidate repairs are priced for him without one being
+picked. The helper itself is a separate card: its blast radius is the whole component suite.
+
+MEASURED (`tools/college-scene-bench.ts`, 24 careers walked through the fork and out): the floor
+holds on 19 of 19 graduates and moved 0 of 24 control careers – **and it is nearly inert, which
+contradicts the parting's §12 premise**: the graduates' own accounts map to 17 wealthy / 1 middle /
+1 working, so the clause lifted ONE career of nineteen. She goes back on tour and she earns. Row 2
+came in at **36.4%** of championship years won against a predicted 15–35%, flagged not smoothed, with
+two thirds of college careers holding a title – a balance fact, his, and question 7.
+
+⚠ A SECOND ROTTEN BENCH, REPAIRED ON THIS BRANCH ON HIS OWN 23.09 RULING («иначе потеряем»):
+`tools/college-year-content.ts`, the instrument round 24's championship item was measured in, printed
+**1 college year against its own header's «3 careers × 4 years»**, `min Infinity max -Infinity`, 0.00
+watchable matches – and exited 0. Round 26 #6 put the championship behind a reveal `resumeFromCollege`
+refuses to spend a year over, and no tool answered it. Repaired through the player's own two doors as
+one shared helper (`tools/_reveals.ts`): 9 college years, tournaments per full year min 1 max 2, and
+**3.11 watchable matches per year** against the 0.71 the championship was built to raise. ⚠ The class
+problem is named rather than fixed: `check:tools` typechecks every tool and nothing RUNS one, so an
+instrument can stop measuring and the gate stays green.
+
+His seven questions are in `docs/plans/college-scene-questions-2026-09.md`, each priced, four
+answerable with a letter.
