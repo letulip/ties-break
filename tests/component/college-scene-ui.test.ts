@@ -138,6 +138,17 @@
 // Semifinal, and **52 of 211** overflow even «Final» (after a retirement: 211, 211, 193). The narrow
 // phone is not a tail case on this surface, it is the shape.
 //
+// ⚠⚠ HIS Q4 RULING, APPLIED 24.09 («по всем вопросам делай по твоим рекомендациям») – AND THE
+// RECORD ABOVE IS THE SHIPPED DEFECT, KEPT AS HISTORY. What the ruling spent and bought, in this
+// file's own numbers: the pill's tracking (exactly 5.0px, the decomposition's last step) went back
+// to the surname on EVERY row – the worst straight-sets row's deficit fell 5.078 -> 0.078px
+// (sub-pixel; no visible cut on any straight-sets round), and the «Lost» quarterfinal flipped to a
+// fit (+0.41). The retirement mark dropped its period (« ret», ~3px more on every ret row), so the
+// ret columns of the tables above shift right by ~8px of budget – the 211-name recount is not
+// re-run here (the harness session owns it); the ellipsis stays the net for the residual tail. At
+// 320-class widths the pill swaps to a glyph under a media query (visual only – the accessible
+// name «Watch» stays in the DOM), handing ~26px back where the row is ~60px over; 320 remains
+// below the phone law's bar and unpinned, as ruled.
 // THE MUTATION LEDGER – each arm run RED before this file was believed:
 //   * `LONGEST_SURNAME` lengthened by a second barrel (`Ostergaard` -> `Ostergaard-Vandenberg`), the
 //     structure and every class untouched -> RED, and with the RIGHT red: `measuredPx` REFUSES a
@@ -472,7 +483,10 @@ const MEASURED_PX: Readonly<Record<string, number>> = {
   'Won 6-3 6-4': 72.28125,
   'Lost 4-6 5-7': 71.796875,
   // `.rubber-watch` – 29.75 plain, 31.61 at weight 800, 36.33 uppercased, 41.33 with the tracking.
-  Watch: 41.328125,
+  // ⚠ RE-AIMED 24.09, HIS Q4 RULING: the tracking is GONE from the shipped pill, so the browser
+  // figure is the decomposition's own third step – 36.33 – and the 5.0px it held went back to the
+  // surname. The four-step decomposition above is kept as the record of what the ruling spent.
+  Watch: 36.328125,
 }
 
 /** The browser-measured width of a span's exact text. ⚠ IT THROWS ON AN UNMEASURED STRING, WHICH IS
@@ -611,7 +625,7 @@ describe('⭐⭐ T2 / ruling B – the championship block draws the rounds she p
 // reassurance where there should be a number. So the claim is not «it fits»: it is **the room and the
 // demand, as numbers**, with the deficit pinned. That pin reddens the moment anybody changes what the
 // row holds, which is the tripwire actually worth having on a shipped surface.
-describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the worst row is 5.1px OVER', () => {
+describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667: his 24.09 repair leaves the worst row 0.08px over, sub-pixel', () => {
   it('⚠⚠ the room is 291.0px, walked from the viewport through the real cascade', () => {
     const w = openCard(titleRun())
     const { room, gaps } = rowDemand(w.find('.college-league-match').element)
@@ -628,15 +642,15 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
       'a TITLE run',
       titleRun,
       [
-        { who: 'Quarterfinal – C. Ostergaard', score: 'Won 6-3 6-4', demand: 296.078125, slack: -5.078125 },
-        { who: 'Semifinal – C. Ostergaard', score: 'Won 6-3 6-4', demand: 279.28125, slack: 11.71875 },
-        { who: 'Final – C. Ostergaard', score: 'Won 6-3 6-4', demand: 251.546875, slack: 39.453125 },
+        { who: 'Quarterfinal – C. Ostergaard', score: 'Won 6-3 6-4', demand: 291.078125, slack: -0.078125 },
+        { who: 'Semifinal – C. Ostergaard', score: 'Won 6-3 6-4', demand: 274.28125, slack: 16.71875 },
+        { who: 'Final – C. Ostergaard', score: 'Won 6-3 6-4', demand: 246.546875, slack: 44.453125 },
       ],
     ],
     [
       'an EARLY EXIT',
       earlyExit,
-      [{ who: 'Quarterfinal – C. Ostergaard', score: 'Lost 4-6 5-7', demand: 295.59375, slack: -4.59375 }],
+      [{ who: 'Quarterfinal – C. Ostergaard', score: 'Lost 4-6 5-7', demand: 290.59375, slack: 0.40625 }],
     ],
   ] as [string, () => CollegeProgressView, { who: string; score: string; demand: number; slack: number }[]][]) {
     it(`⭐⭐⭐ ${shape}: every row's demand against its 291.0px, measured not modelled`, () => {
@@ -660,7 +674,12 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
   // ===============================================================================================
   // ⚠⚠⚠ THE DEFICIT ITSELF, PINNED – A SHIPPED LEGIBILITY DEFECT AND NOT THIS WAVE'S TO FIX
   // ===============================================================================================
-  it('⚠⚠⚠ the worst row is 5.1px OVER its room, and that is the card as it shipped on 22.08', () => {
+  it('⚠⚠⚠ the worst row is 0.08px over – sub-pixel – where the card as shipped on 22.08 was 5.1px over', () => {
+    // ⚠ RE-AIMED 24.09 BY HIS Q4 RULING, NOT WEAKENED: the pill's tracking (exactly 5.0px of the
+    // 41.33, the decomposition's own last step) went back to the surname, so the shipped 5.078px
+    // deficit is 0.078px now – no glyph the eye can see is cut on the worst straight-sets row, and
+    // the «Lost» variant flipped to a fit (+0.41). The slack stays pinned NEGATIVE deliberately:
+    // the row is still, honestly, a hair over, and a future change that grows it meets this pin.
     // ⚠ WHAT THIS PIN IS AND IS NOT. It is not a wish and it is not a tolerance: it is the arithmetic
     // of a surface that has been in the owner's hands since `1356712f`, stated so that changing what
     // the row holds cannot pass unnoticed. The worst row is the TITLE run's QUARTERFINAL – the
@@ -680,13 +699,13 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
     const w = openCard(titleRun())
     const worst = rowDemand(w.find('.college-league-match').element)
     expect(worst.room, 'the room').toBeCloseTo(291.0, 1)
-    expect(worst.demand, 'the demand').toBeCloseTo(296.078125, 2)
-    expect(worst.slack, 'the DEFICIT – negative, and pinned').toBeCloseTo(-5.078125, 2)
+    expect(worst.demand, 'the demand').toBeCloseTo(291.078125, 2)
+    expect(worst.slack, 'the DEFICIT – negative, sub-pixel, and pinned').toBeCloseTo(-0.078125, 2)
     expect(worst.slack, 'it is a deficit and not a fit').toBeLessThan(0)
     // The three parts, so a future change can be attributed rather than only detected.
     expect(worst.who).toBeCloseTo(166.46875, 2)
     expect(worst.score).toBeCloseTo(72.28125, 2)
-    expect(worst.watch, 'the Watch control, which the shared floor scored at 0.0 until 24.09').toBeCloseTo(41.328125, 2)
+    expect(worst.watch, 'the Watch control, untracked by his ruling').toBeCloseTo(36.328125, 2)
     w.unmount()
   })
 
@@ -759,7 +778,7 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
         `${got.demand.toFixed(2)} – if the model ever overtakes the browser, MEASURED_PX has stopped being ` +
         'the more accurate source and this file needs re-reading',
     ).toBeLessThan(got.demand)
-    expect(got.slack, 'and the deficit this file records is the browser\'s, unchanged').toBeCloseTo(-5.078125, 2)
+    expect(got.slack, 'and the deficit this file records is the browser\'s, post-ruling').toBeCloseTo(-0.078125, 2)
     w.unmount()
   })
 
@@ -813,8 +832,8 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
     // negative the row would genuinely push a control off a phone and the ellipsis could not save it –
     // that is the round-20 failure, and it is 161.4px away.
     const { room, rigid } = rowDemand(row)
-    expect(rigid, 'what cannot give way: 72.28 + 41.33 + 16').toBeCloseTo(129.609375, 2)
-    expect(room - rigid, 'px still left for the name once the two rigid spans are paid').toBeCloseTo(161.390625, 2)
+    expect(rigid, 'what cannot give way: 72.28 + 36.33 + 16 – the pill untracked by his 24.09 ruling').toBeCloseTo(124.609375, 2)
+    expect(room - rigid, 'px still left for the name once the two rigid spans are paid').toBeCloseTo(166.390625, 2)
     expect(rigid, 'the two spans that cannot yield fit the row on their own').toBeLessThan(room)
     w.unmount()
   })
@@ -857,12 +876,12 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
     // – it is the row against its container, and this is the half a width regression hides in.
     const w = openCard(titleRun())
     const row = w.find('.college-league-match').element
-    expect(rowDemand(row).slack, 'the shipped deficit').toBeCloseTo(-5.078125, 2)
+    expect(rowDemand(row).slack, 'the post-ruling deficit, sub-pixel').toBeCloseTo(-0.078125, 2)
     const card = w.find('.college-card').element as HTMLElement
     card.style.padding = '14px 80px'
     const grown = rowDemand(row)
     expect(grown.room, 'the card took 132px off the row').toBeCloseTo(291.0 - 132, 1)
-    expect(grown.slack, 'and the deficit grew by exactly that').toBeCloseTo(-5.078125 - 132, 2)
+    expect(grown.slack, 'and the deficit grew by exactly that').toBeCloseTo(-0.078125 - 132, 2)
     w.unmount()
   })
 
@@ -888,7 +907,7 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
 // =================================================================================================
 // ⚠ AND NOT ONE STRING MOVED (invariant 4)
 // =================================================================================================
-describe('⚠ T2 changes no wording on a shipped card', () => {
+describe('⚠ T2 changed no wording on the shipped card – and his 24.09 ruling then moved exactly ONE mark, asserted here', () => {
   it('the block\'s own words are the engine\'s, and the row label is `stageLabel` + the short name', () => {
     const w = openCard(titleRun())
     const block = w.find('.college-league')
@@ -902,5 +921,47 @@ describe('⚠ T2 changes no wording on a shipped card', () => {
     expect(block.text()).not.toMatch(/[Ѐ-ӿ]/)
     expect(block.text()).not.toContain('—')
     w.unmount()
+  })
+
+  it('⚠⚠ the pill\'s LIVE cascade matches the registry\'s recipe – the tripwire\'s missing half', () => {
+    // ⚠ FOUND BY THE 24.09 MUTATION RUN: restoring the tracking left every pin GREEN, because the
+    // demand side reads `MEASURED_PX` (browser constants) and nothing tied the LIVE cascade to the
+    // recipe those constants were measured under – a style drift desyncs the registry silently,
+    // which is the exact defect class the registry exists to prevent. This case is the other half:
+    // the four properties the «Watch» figure was measured under, pinned off the real cascade.
+    // MUTATION 24.09: `letter-spacing: 0.1em` restored on `.rubber-watch` -> THIS reddens.
+    const w = openCard(titleRun())
+    const cs = getComputedStyle(w.find('.rubber-watch').element)
+    expect(cs.letterSpacing === 'normal' || cs.letterSpacing === '' || cs.letterSpacing === '0px',
+      'the tracking his ruling removed must stay removed, or MEASURED_PX.Watch is a lie').toBe(true)
+    expect(cs.fontSize, 'the recipe\'s size').toBe('10px')
+    expect(cs.fontWeight, 'the recipe\'s weight').toBe('800')
+    expect(cs.textTransform, 'the recipe\'s case').toBe('uppercase')
+    w.unmount()
+  })
+
+  it('⚠ the retirement mark is « ret» – his 24.09 Q4 ruling, the period gone', () => {
+    const view = titleRun()
+    // Pose the final as a retirement: the other woman walked, the mark must render bare.
+    const final = view.leagueMatches[2]
+    view.leagueMatches = [view.leagueMatches[0], view.leagueMatches[1], { ...final, retiredId: final.bId }]
+    const w = openCard(view)
+    const scores = w.findAll('.college-league-match .rubber-score').map((el) => el.text())
+    expect(scores.some((t) => / ret$/.test(t)), 'one row carries the bare mark').toBe(true)
+    expect(scores.some((t) => t.includes('ret.')), 'no row carries the period any more').toBe(false)
+    w.unmount()
+  })
+
+  it('⚠ at 320-class widths the pill keeps its ACCESSIBLE name – the glyph swap is visual only', () => {
+    // The ::before glyph itself is paint, beyond a text read – what this guards is the half a screen
+    // reader depends on: the word «Watch» stays in the DOM whatever the media query does to its size.
+    setViewport({ ...PHONE, width: 320 })
+    const base = walkedCollegeSnapshot()
+    const game = useGameStore()
+    game.snapshot = { ...base, ending: { ...base.ending!, college: titleRun() } } as Snapshot
+    const w = mount(CollegeYearCard)
+    expect(w.find('.rubber-watch').text(), 'the accessible name survives the swap').toBe('Watch')
+    w.unmount()
+    setViewport(PHONE)
   })
 })
