@@ -103,7 +103,11 @@ function clashWorld(seed: string, opts: { shootWeeks?: number[]; deadlineWeek?: 
       cashCents: WATCH.cashCents,
       termWeeks: WATCH.termWeeks,
       shootCount: 2,
-      shootWeeks: opts.shootWeeks ?? [CLASH],
+      // ⚠ RE-AIMED 23.09 (the cancel-share repair): the default paper carries the REAL WATCH shape
+      // – two booked shoots over the year – because the divisor is the paper's list now, and the
+      // old single-week default would have read as «the whole campaign in one shoot» and priced a
+      // cancel at the full cheque. Cases that need another shape still pose their own.
+      shootWeeks: opts.shootWeeks ?? [CLASH, CLASH + 21],
     },
   })
   return world
@@ -186,7 +190,9 @@ describe('round 29 #3 – the four answers, and each costs something different',
     // costs from the calendar on any other week. Nothing new is invented for this route.
     expect(world.fundsCents, 'the fee came back on a closed list').toBe(funds)
     expect(funds, 'the fixture would prove nothing if the fee were zero').toBeGreaterThan(fee)
-    expect(termsOf(world).shootWeeks, 'the shoot moved too – the arms are not independent').toEqual([CLASH])
+    // ⚠ RE-AIMED 23.09 with the fixture's default paper (two booked shoots) – the claim is
+    // unchanged: the withdraw arm leaves the LIST exactly as posed.
+    expect(termsOf(world).shootWeeks, 'the shoot moved too – the arms are not independent').toEqual([CLASH, CLASH + 21])
     expect(shootClashOpen(world), 'the question is still standing').toBe(false)
   })
 
@@ -224,7 +230,12 @@ describe('round 29 #3 – the four answers, and each costs something different',
 
   it('⭐ CANCEL THE SHOOT – the week is freed and the campaign takes back the shoot\'s own share of the fee', () => {
     // The owner: «явно должны быть последствия какие-то». The consequence is the CONTRACT's own
-    // arithmetic – the cheque bought `shootCount` shoots – and not a number invented for this item.
+    // arithmetic – the cheque stands behind the shoots ON THE PAPER – and not an invented number.
+    // ⚠ RE-AIMED 23.09, NOT WEAKENED: the divisor was `shootCount` and that is the PER-YEAR figure
+    // (`bands[band].shootWeeksPerYear` under a shorter name), so on a multi-season paper it refunded
+    // a season's share, not a shoot's. On this one-year two-shoot paper the two spellings agree –
+    // the /2 below is now the POSED LIST's length, and the multi-season split lives in its own
+    // describe at the end of this file.
     const world = clashWorld('r29-3-cancel')
     const funds = world.fundsCents
     const share = shootCancelCents(termsOf(world))
@@ -311,5 +322,59 @@ describe('round 29 #3 – no answer can strand the career', () => {
     const world = clashWorld('r29-3-revalidate')
     world.entries = []
     expect(() => answerShootClash(world, 'play-both')).toThrow(/no shoot to decide/i)
+  })
+})
+
+// =================================================================================================
+// 23.09 – THE CANCEL SHARE READS THE PAPER (his «оставшиеся»; the spec is
+// docs/specs/the-cancel-share-2026-09.md and the function's own note carries the argument)
+// =================================================================================================
+describe('23.09 – the cancel share is the paper\'s own fraction', () => {
+  it('⭐⭐⭐ a three-season paper refunds a SHOOT\'s share, never a season\'s', () => {
+    // The defect's probe shape (found preparing the round-29 video): $400,000 over three seasons,
+    // `shootCount` 2 – the PER-YEAR figure – and SIX weeks on the paper. The old divisor handed
+    // back $200,000, half the campaign, for one cancelled shoot of six.
+    const weeks = [CLASH, CLASH + 21, CLASH + 52, CLASH + 54, CLASH + 104, CLASH + 106]
+    const world = clashWorld('r29-3-three-seasons', { shootWeeks: weeks })
+    const terms = termsOf(world)
+    terms.cashCents = 400_000_00
+    terms.termWeeks = 156
+    const funds = world.fundsCents
+    answerShootClash(world, 'cancel-shoot')
+    // ⚠ 1/6 of the cheque – and the FUNDS moved by that number, which also pins the ORDER: were
+    // the share computed after the removal, the arm would charge 1/5 ($80,000) and this reddens.
+    expect(funds - world.fundsCents, 'one shoot of six, to the cent').toBe(Math.round(400_000_00 / 6))
+    expect(termsOf(world).shootWeeks).toHaveLength(5)
+  })
+
+  it('⭐⭐ a `shootCount: 1` paper no longer refunds the whole cheque', () => {
+    // The defect report's own edge: with the old divisor, `Math.max(1, shootCount)` handed the
+    // ENTIRE cheque back for one cancelled week of several.
+    const weeks = [CLASH, CLASH + 30, CLASH + 41]
+    const world = clashWorld('r29-3-count-one', { shootWeeks: weeks })
+    termsOf(world).shootCount = 1
+    const funds = world.fundsCents
+    answerShootClash(world, 'cancel-shoot')
+    expect(funds - world.fundsCents, 'one shoot of three, whatever the per-year figure says').toBe(
+      Math.round(WATCH.cashCents / 3),
+    )
+  })
+
+  it('⚠ the stated drift: a REPEAT cancel divides by the shrunken paper, one step dearer', () => {
+    // DESIGNED and pinned as a fact rather than hidden (the function's own note): the signature
+    // count is not persisted, and re-deriving it would be a second spelling of the booking law.
+    const weeks = [CLASH, CLASH + 21, CLASH + 52, CLASH + 54, CLASH + 104, CLASH + 106]
+    const world = clashWorld('r29-3-drift', { shootWeeks: weeks })
+    answerShootClash(world, 'cancel-shoot')
+    expect(shootCancelCents(termsOf(world)), 'six booked, one cancelled – the next share is 1/5').toBe(
+      Math.round(WATCH.cashCents / 5),
+    )
+  })
+
+  it('⚠ a paper with no list at all falls back to the season figure, never to 1', () => {
+    // The belt: every 'ad' signature has written the list since the kind exists, but a poked or
+    // ancient paper must not refund a whole cheque through the Math.max floor.
+    const terms: AdOfferTerms = { brand: 'x', cashCents: 300_000_00, termWeeks: 52, shootCount: 2 }
+    expect(shootCancelCents(terms)).toBe(Math.round(300_000_00 / 2))
   })
 })

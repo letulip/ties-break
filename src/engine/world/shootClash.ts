@@ -34,7 +34,9 @@
 // `mandatoryBinds`/`chargeMandatoryPenalty` apply if the event binds her – and no new consequence is
 // written for it. Cancelling the SHOOT is the one place the owner asked for a consequence («явно
 // должны быть последствия какие-то») and it is read off the CONTRACT rather than tuned: the cheque
-// bought `shootCount` shoots, so one cancelled shoot hands back its own share of it.
+// stands behind the shoots on the paper, so one cancelled shoot hands back its own share of it
+// (⚠ the paper's LIST, never `shootCount` – that is the per-year figure; the 23.09 repair over
+// `shootCancelCents` carries the whole story).
 //
 // ⚠ RNG: ZERO DRAWS on any stream, in every arm. `chooseShootWeeks` rolls at the SIGNATURE; a move
 // here is the first eligible week by the paper's own rules, deterministically, because a draw taken
@@ -83,16 +85,32 @@ export function shootClashOpen(world: WorldState): boolean {
   return week !== null && !(world.shootClashAccepted ?? []).includes(week)
 }
 
-/** WHAT ONE SHOOT COST THE BRAND, read off the paper: the campaign fee divided by the number of
- *  shoots the term asked for. Cancelling one hands that share back.
+/** WHAT ONE SHOOT COST THE BRAND, read off the paper: the campaign fee divided by the shoots the
+ *  paper still books. Cancelling one hands that share back – his 23.09 ruling («оставшиеся»).
  *
- *  ⚠ IT IS THE CONTRACT'S OWN ARITHMETIC AND NOT A TUNED PENALTY. The owner asked for consequences
- *  and did not name them, and the terms already say what a shoot was worth: `cashCents` bought
- *  `shootCount` of them. Nothing new is invented, nothing new is persisted, and a retuned catalogue
- *  moves this with it because the terms are frozen per deal (`AdOfferTerms`' own rule). Money in
- *  cents; integer by construction. */
+ *  ⚠⚠ THE DIVISOR IS THE PAPER'S OWN LIST AND NOT `shootCount` – the 23.09 defect, found preparing
+ *  the round-29 video. `shootCount` is the PER-YEAR figure wearing a total's name: the catalogue
+ *  writes it from `bands[band].shootWeeksPerYear` and `chooseShootWeeks` books it once per season
+ *  of the term – so a three-season cheque divided by the season figure refunded HALF the campaign
+ *  for one cancelled shoot of six, and a `shootCount: 1` paper refunded the whole cheque.
+ *
+ *  ⭐ THE LIST IS THE HONEST DENOMINATOR because delivered weeks never leave it – only a cancel or
+ *  a move edits `shootWeeks` – so it counts every shoot the cheque still stands behind, the one
+ *  being cancelled included, and the share stays the signature's own fraction wherever in the term
+ *  the clash lands. ⚠ CALL IT BEFORE THE CANCEL EDITS THE LIST (the answer arm does, the prompt
+ *  always did): computed after the removal it would inflate by one step. ⚠ A REPEAT cancel on the
+ *  same campaign divides by the shrunken list – one step dearer per repeat. The signature count is
+ *  not persisted, and re-deriving it from the booking law would be a second spelling of
+ *  `chooseShootWeeks`; the drift is stated here, pinned in the tests and measured in the spec
+ *  (docs/specs/the-cancel-share-2026-09.md).
+ *
+ *  ⚠ A paper with no `shootWeeks` at all falls back to the season figure – the old divisor, never
+ *  to 1. The list has ridden every 'ad' signature since the kind exists, so the arm is a belt.
+ *  Nothing new is persisted, and a retuned catalogue moves this with it because the terms are
+ *  frozen per deal (`AdOfferTerms`' own rule). Money in cents; integer by construction. */
 export function shootCancelCents(terms: AdOfferTerms): number {
-  return Math.round(terms.cashCents / Math.max(1, terms.shootCount))
+  const booked = terms.shootWeeks?.length ?? terms.shootCount
+  return Math.round(terms.cashCents / Math.max(1, booked))
 }
 
 /** THE DEAL THAT NAMED THIS WEEK, or null – the paper every arm below writes to.
@@ -214,8 +232,11 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
     // contract's own number rather than a tuned one: the shoot's share of the campaign fee goes
     // back. Booked under 'sponsor', the category brand money has always used, so the Money breakdown
     // files it beside the cheque it reverses.
-    terms.shootWeeks = (terms.shootWeeks ?? []).filter((w) => w !== week)
+    // ⚠⚠ THE SHARE IS READ BEFORE THE LIST IS EDITED (23.09): the divisor is the paper's own list
+    // now, the cancelled week among the counted – computed after the removal it would take one
+    // step more of the cheque, and it is also what the prompt already quoted to the player.
     const cents = shootCancelCents(terms)
+    terms.shootWeeks = (terms.shootWeeks ?? []).filter((w) => w !== week)
     world.fundsCents -= cents
     addEvent(world, {
       week: world.week,
