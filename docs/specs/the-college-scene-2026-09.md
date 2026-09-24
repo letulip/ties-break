@@ -72,7 +72,7 @@ zero draws, one clause and its tests.
 24.09). This section asked for «the year card's one `leagueFact` line grows into the championship's
 own block: three rows – Quarterfinal / Semifinal / Final … each with the opponent's name and the
 score, read from the kept match rows of the run's week», for «a run that ended early shows the rounds
-she played» and for «the `null` run keeps today's absence`». **All four are true in `main` and have
+she played» and for «the `null` run keeps today's absence». **All four are true in `main` and have
 been since `1356712f`, 22.08** – `.college-league` in `CollegeYearCard.vue`, `v-for="m in
 leagueMatches"`, `leagueLabel` composed from `stageLabel(match.round, 2 ** rounds)` (the run's OWN
 persisted draw, so a re-tune cannot rename an old career's rounds) and `formatShortName(oppName)`,
