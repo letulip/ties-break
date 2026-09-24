@@ -56,15 +56,33 @@ match rows, the fixed album machinery and the dynasty door as they stand.
 
 `dynastyHandoverOf` maps the new family's background off her own account
 (`dynastyBackgroundOf(kidFundsCents)`: wealthy from $120k, middle from $25k, working below). ONE
-clause on top: **a career whose standing ending is the college one reads no lower than `middle`**
-– a degree and a profession are a middle start whatever the account says. The floor, never a
-ceiling: a college career that somehow retires wealthy stays wealthy. A college CHAPTER inside a
-pro career changes nothing – the clause reads the ENDING, not the biography, and a career that
-left college for the tour is priced by the tour career it became.
+clause on top: **a career that holds the DEGREE reads no lower than `middle`** – a degree and a
+profession are a middle start whatever the account says. The floor, never a ceiling: a graduate who
+retires wealthy stays wealthy, and the clause lifts only `working`.
+
+⚠⚠ THE READER IS THE DEGREE, AND THE SENTENCE THAT STOOD HERE ASKED FOR A STATE THAT CANNOT OCCUR.
+This paragraph used to say «a career whose standing ending is the college one» and «the clause reads
+the ENDING, not the biography». Ruling A (`docs/plans/college-scene-rulings-2026-09.md`) measured
+that on the branch head before a line was dispatched: all three sites that construct a
+`type: 'college'` latch carry a NON-NULL `resumesWeek`, `finishCollege` takes the latch off for good
+at graduation, and `EndingScreen.vue` draws the dynasty control under `resumes === null && dynasty`
+– so a college latch cannot open this door at all. A clause on the ending type would have been dead
+code with a measured share of zero, and §6 row 1 would have measured it as a success. Corrected in
+the same wave, 24.09; the shipped predicate is
+`college.doneWeek !== null && finishedTheCourse(years.length, ENDINGS.collegeYears)`, which is the
+ONE spelling this repo already keeps for the degree (the album's `graduated` occasion and
+`CollegeDoneDialog.vue` read the same one). The fork answer was refused by name as well: it would
+price a girl who enrolled and left after a year exactly like a graduate, and what he ruled on is
+«a degree and a profession».
+
+⚠ THE CONSEQUENCE, STATED RATHER THAN HIDDEN: a graduate who then had a full tour career and
+retired thin reads `middle` too – the degree does not stop being a degree when the tour is over.
+That is a widening of what the old sentence promised («a college CHAPTER inside a pro career changes
+nothing»), it is the honest reading of the ruling, and it is **question 1 of the wave's report**.
 
 ⚠ This CLOSES the «middle band is structurally empty» finding for the college route (the dynasty
-spec §8 row 3): the builder appends the dated note there, predicted and measured. Zero schema,
-zero draws, one clause and its tests.
+spec §8 row 3): the dated note is appended there, predicted and measured. Zero schema, zero draws,
+one wrapper (`dynastyBackgroundFloored`, no new exported symbol) and its tests.
 
 ## 3. The bracket – SHIPPED 22.08; what this wave added is the measurement
 
