@@ -69,6 +69,12 @@ import { comebackAtReturn, decisionWeekOf, drawForkWant, forkStandingOf, forkWan
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
 import { COLLEGE_OFFER, COLLEGE_TIER_ORDER, juniorRecordScore } from '../collegeOffer'
+// ⚠ A VALUE IMPORT FROM A LEAF ON THE SAME ARGUMENT AS `collegeOffer` ONE LINE UP, AND THE EDGE
+// ALREADY EXISTS: `engine/collegeLeague.ts` imports only `world/labels`, `season/names`, `rng` and
+// `match/types` – none of which reaches back here – and `world/college.ts`, which this file already
+// imports, takes it across the same edge. ⚠ `wonTheLeague` IS THE ONE SPELLING OF «she won it»
+// (derived, never a persisted `champion` flag) and `dynastyHandoverOf`'s `collegeTitles` folds it.
+import { wonTheLeague } from '../collegeLeague'
 // ⚠ THE TWO BASELINES ONLY, and both behind a `??` – the defensive read `accrueSpirit` uses for a
 // probe world hand-built before v72. `applyBondDelta` (engine/spirit.ts) stays the one WRITER.
 import { ECONOMY } from '../economy'
@@ -80,6 +86,11 @@ import { applyBondDelta, temperamentFor } from '../spirit'
 import { rngFromSeed } from '../rng'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel, weekMonth, weekStartDay } from '../../shared/dates'
+// ⚠ THE ONE SPELLING OF «SHE HOLDS THE DEGREE», IMPORTED AND NEVER RE-STATED – the same predicate
+// `world/albumBook.ts` gates the `graduated` occasion on and `CollegeDoneDialog.vue` draws the
+// graduation card on. `shared/avatarEmotion.ts` is a leaf (albumBook takes it across the same edge),
+// so this costs no new dependency direction. See `dynastyBackgroundFloored`.
+import { finishedTheCourse } from '../../shared/avatarEmotion'
 import { kidAgeYears } from './age'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
@@ -1320,12 +1331,63 @@ export function ancestorSeedOf(childSeed: string, generation: number): string {
  *  ⚠ IT READS HER OWN ACCOUNT (`kidFundsCents`, hers since round 23 #18) and NOT the family's:
  *  the mother is the one starting the next family, and the family purse she grew up in belongs to
  *  HER parent. A star with a cabinet retires wealthy; a college-fork mother honestly starts the line
- *  middle or working, which is §4's own sentence. */
+ *  middle or working, which is §4's own sentence.
+ *
+ *  ⚠⚠ AND SINCE 24.09 THIS IS NO LONGER THE WHOLE OF WHAT THE HANDOVER CARRIES – the paragraph above
+ *  is still exactly true OF THIS FUNCTION, which is why it is preserved verbatim, but a reader who
+ *  stops here is one layer short of the shipped behaviour. `dynastyHandoverOf` calls
+ *  `dynastyBackgroundFloored`, which FLOORS this answer at `middle` for a career that holds the
+ *  degree (the college scene's ruling A, his «ок» of 23.09). The cross-reference is the whole of the
+ *  edit: nothing about the band arithmetic below moved. */
 export function dynastyBackgroundOf(kidFundsCents: number): FamilyBackground {
   const bands = ECONOMY.startingFundsCents
   if (kidFundsCents >= bands.wealthy) return 'wealthy'
   if (kidFundsCents >= bands.middle) return 'middle'
   return 'working'
+}
+
+/** ⭐⭐⭐ THE GRADUATE'S FLOOR – HIS «ок» OF 23.09, AND IT READS **THE DEGREE**.
+ *
+ *  His ruling, verbatim, the sentence that closes the parting's §12: «Предложение в одну строку:
+ *  концовка-колледж даёт полку не ниже "середины" - ок» (23.09).
+ *
+ *  ⚠⚠ A FLOOR AND NEVER A CEILING, which is why it is a wrapper and not an edit one function up.
+ *  `dynastyBackgroundOf` stays a pure function of cents with its own boundary pins
+ *  (tests/wave10-handover.test.ts §B, every band edge to the cent); this READS its answer and only
+ *  refuses to let it sit below middle. A graduate who retires wealthy hands over `'wealthy'`.
+ *
+ *  ⚠⚠ AND THE READER IS THE DEGREE – NOT THE ENDING TYPE, NOT THE FORK ANSWER. Both alternatives
+ *  were MEASURED on this tree before this clause was written, and both are refused by name
+ *  (`docs/plans/college-scene-rulings-2026-09.md`, ruling A):
+ *
+ *   · **THE ENDING TYPE** (`world.ending?.type === 'college'`) HAS NO STATE TO FLOOR. All three
+ *     sites that construct a `'college'` latch – `ending.ts`'s `endingForForkAnswer` and twice in
+ *     `world.ts` – carry a NON-NULL `resumesWeek`, and `EndingScreen.vue` draws the dynasty control
+ *     under `resumes === null && dynasty`, so a college latch cannot open this door at all.
+ *     Graduation leaves no latch either: `finishCollege` takes it off for good («NO 'ending' HERE,
+ *     AND THE ASYMMETRY IS THE FACT»). A clause on the type would be dead code with a measured share
+ *     of zero – and the spec's own sentence «the clause reads the ENDING, not the biography» falls
+ *     with it, stated here rather than quietly worked around.
+ *   · **THE FORK ANSWER** (`world.fork?.answer === 'college'`) prices a girl who enrolled, played one
+ *     year and walked exactly like a graduate. What he ruled on is «a degree and a profession», and
+ *     one year is neither.
+ *
+ *  ⚠ THE CONSEQUENCE, STATED RATHER THAN HIDDEN: a graduate who then had a full tour career and
+ *  retired thin reads `middle` too. The degree does not stop being a degree when the tour is over –
+ *  it is the honest reading of the ruling, and it is question 1 of the wave's report.
+ *
+ *  ⚠ EXPORTED, AND DELIBERATELY **NOT** ADDED TO THE `engine/world` BARREL. It has a second reader –
+ *  `tools/dynasty-bench.ts`'s §4 guard, which re-derives the band to prove the block and the mapping
+ *  cannot be two spellings of one rule, and which would cry wolf on every graduate if it kept reading
+ *  the unfloored function. One spelling, two readers. The barrel's re-export list is the public API
+ *  that `tools/generated/world-symbol-map.md` indexes, and a probe-grade helper does not belong on
+ *  it: tools import `world/endings` directly (`tools/album-money-probe.ts` is the precedent). */
+export function dynastyBackgroundFloored(world: WorldState): FamilyBackground {
+  const band = dynastyBackgroundOf(world.kidFundsCents)
+  if (band !== 'working') return band
+  const college = world.college
+  const graduated = college?.doneWeek != null && finishedTheCourse(college.years.length, ENDINGS.collegeYears)
+  return graduated ? 'middle' : band
 }
 
 /** ⭐⭐⭐ THE INHERITANCE BLOCK – THE ONLY THING THAT CROSSES FROM ONE CAREER TO THE NEXT (§3).
@@ -1370,10 +1432,25 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
   // a migrated save is not one; writing the widening down is what stops the next reader "tidying"
   // the optional chain away.
   const slamShelf: TierTrophies | undefined = world.trophiesByTier.slam
+  // ⭐⭐⭐ v89 (the college scene, T4) – THE STUDENT CABINET, FOLDED OFF THE BANKED YEARS. Two
+  // conditions and neither is decorative: `year.league !== null` because a banked year legitimately
+  // holds no championship (a v55 save migrated mid-freeze, a year an ending cut short before
+  // `COLLEGE_LEAGUE.seasonWeek` – `CollegeYear.league`'s own note lists both), and `wonTheLeague`
+  // because a year she PLAYED is not a year she WON. ⚠ The predicate is IMPORTED and never re-spelled
+  // as `roundsWon === rounds`: a second spelling of «she won it» is how a derived fact and a stored
+  // one come to disagree, which is the argument `wonTheLeague` itself is written under.
+  // ⚠ ZERO DRAWS, like every other line of this block – `world.college.years` is persisted state.
+  let collegeTitles = 0
+  for (const year of world.college?.years ?? []) {
+    if (year.league !== null && wonTheLeague(year.league)) collegeTitles += 1
+  }
   return {
     generation,
     childSeed: childSeedFor(ancestorRoot, generation),
-    background: dynastyBackgroundOf(world.kidFundsCents),
+    // ⭐ THE FLOORED READ (the college scene, T1 – his «ок» of 23.09). `dynastyBackgroundFloored`
+    // holds the whole clause and the two refusals behind it; the band itself is still
+    // `dynastyBackgroundOf`'s, unwidened.
+    background: dynastyBackgroundFloored(world),
     raisedOnTour: wasThereAChild(world),
     motherName: { first: world.profile.kidName, last: world.profile.kidLastName },
     // §6.2 – the identity card pre-fills the country from hers and leaves it EDITABLE. See the field's
@@ -1387,6 +1464,9 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
     motherCareer: {
       titles,
       proTitles,
+      // ⭐ v89 – beside `proTitles` because the two cabinets are read as a pair and the copy forks on
+      // the pair; the fold and the reason it is two conditions are above.
+      collegeTitles,
       bestRank: best,
       // ⚠⚠ THE OPTIONAL READ IS NOT DEFENSIVENESS – IT IS THE MEASURED TRUTH ABOUT A MIGRATED SAVE,
       // AND WITHOUT IT THIS LINE **THREW**. The type says `Record<TierId, TierTrophies>` and a fresh

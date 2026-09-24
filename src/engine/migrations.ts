@@ -44,6 +44,11 @@ import {
 // `PregnancyState` is engine-internal (it is not on the wire – the field's own v85 note says why),
 // and type-only imports are erased, so no runtime arrow is added either way.
 import type { PregnancyState } from './world/state'
+// ⚠ v89 (the college scene, T4) – TYPE-ONLY, for the first step in this ladder that back-fills a
+// field TWO levels deep: inside `motherCareer`, inside the nullable `dynasty`. Same courtesy as
+// `Partial<PregnancyState>` one line up, one level deeper. ⚠ STRAIGHT FROM `./world/state` for the
+// same reason: the barrel does not carry it, and a type-only import is erased.
+import type { DynastyRecord } from './world/state'
 // v62: the peak-physical back-fill reproduces `growWeek`'s own decline arithmetic – see the v61 -> v62
 // block for why running it backwards is exact rather than an estimate.
 import { declineFactor, physicalMean, rollPotential, type KidSkills } from './development'
@@ -3236,6 +3241,63 @@ export function migrateSave(raw: unknown): WorldState {
   // and `PRE_V88` records that as a measured identity instead.
   if (v === 87) {
     v = 88
+  }
+
+  // ⭐⭐⭐ v88 -> v89 – THE STUDENT CABINET ON THE HANDOVER (the college scene, T4;
+  // docs/specs/the-college-scene-2026-09.md §4.2). ONE FIELD,
+  // `dynasty.motherCareer.collegeTitles`, and **THE FIRST BACK-FILL IN THIS LADDER THAT REACHES TWO
+  // LEVELS DEEP INSIDE A NULLABLE RECORD** – v87's `pregnancy.conceivedWeek` is one deep and is the
+  // precedent for the CAST below rather than for the depth.
+  //
+  // ⚠⚠ THE GUARD IS THE STATEMENT: `if (dynasty)`, so **only a save carrying a non-null `dynasty`
+  // is touched, and a null one is left exactly null**. A career with no line behind it has nothing
+  // to back-fill – the absence of a mother is a FACT about that career, not a missing default – and
+  // growing it an empty record here would invent a dynasty every generation-zero save never had.
+  // ⭐ WHICH ONE IT IS, MEASURED AND NOT GUESSED: **every one of the 89 golden fixtures carries
+  // `dynasty: null`** (the only producer of a real record is the ending's door, and taking it builds
+  // a NEW world at the current version), so the WRITING branch is unreachable from the corpus. It is
+  // crafted in `tests/college-scene.test.ts` §B, on `tests/wave10-handover.test.ts` §D's own
+  // precedent and for its own reason: a step the corpus cannot execute is a step the corpus cannot
+  // check.
+  //
+  // ⚠ `0` IS THE HONEST COUNT AND NOT A PLACEHOLDER, which is the one thing that makes this a
+  // back-fill rather than a reconstruction. A save written before this version never counted her
+  // student championships – but it never counted them because the field did not exist, and what it
+  // recorded of her college years is `world.college.years` on a career THAT SAVE NO LONGER HOLDS:
+  // the mother's save is a different file, and may be gone. So the count cannot be recovered and
+  // must not be invented (`prologueTrace`'s v84 refusal – «never invent a fact the save never
+  // held»); 0 is what «no student title is claimed» spells.
+  //
+  // ⚠ `??=` AND NEVER `||=`, the standing rule of every step above, and here the arm is REAL: 0 is
+  // the commonest value this key can hold and `||=` would overwrite a stored 0 with 0 today and with
+  // whatever a later author typed tomorrow. `??=` cannot.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: one `??=` gated on `v === 88`, writing a literal. No sub-stream is
+  // reached on this path, so MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched
+  // by construction.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v89.json,
+  // its row in tests/fixtures/saves/README.md, the e2e fixtures, and the mechanically-checked schema
+  // sentence in docs/context/saves-and-worker.md. ⚠ NO PEEL RUNG in
+  // tests/coachTravelEdgeFixtures.ts – every frozen career carries `dynasty: null`, so the serialised
+  // world gains no key and there is nothing for a rung to remove; `PRE_V89` records that as a
+  // measured identity instead.
+  if (v === 88) {
+    // ⚠ THE CAST IS v87's `Partial<PregnancyState>` COURTESY ONE LEVEL DEEPER, AND IT COULD NOT TAKE
+    // v87's SHAPE – measured, not chosen. `collegeTitles` is REQUIRED on the shipped type, so `??=`
+    // on it is a compile error rather than a no-op; but `Partial<DynastyRecord['motherCareer']>` does
+    // NOT fix that here, because this record is `readonly` all the way down (`DynastyHandover`'s own
+    // law – the wire object must not be mutable) and `Partial` keeps the modifier: vue-tsc answered
+    // «Cannot assign to 'collegeTitles' because it is a read-only property». So the shape is spelled
+    // inline and MUTABLE – and it still reads its type off the declaration rather than typing
+    // `number`, so a field that changed type could not pass through here unnoticed. `PregnancyState`
+    // is engine-internal and carries no `readonly`, which is why v87 did not meet this.
+    const dynasty = save.dynasty as
+      | { motherCareer?: { collegeTitles?: DynastyRecord['motherCareer']['collegeTitles'] } }
+      | null
+      | undefined
+    if (dynasty?.motherCareer) dynasty.motherCareer.collegeTitles ??= 0
+    v = 89
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

@@ -890,6 +890,12 @@ export interface CommentaryLineage {
    *  the architect's review (22.09): the full cabinet in this packet let the TITLED pool say «her
    *  mother won here» over a junior shelf, and the name now says what the booth may claim. */
   proTitles: number
+  /** ⭐⭐ v89 (the college scene, T4.3) – her mother's STUDENT championships, out of `world.college
+   *  .years`. It buys a THIRD pool inside the shipped licence and never a fourth way into it: the
+   *  engine still refuses a mother nobody watched (`lineageLicensed`, untouched), so this is only ever
+   *  non-zero on a packet that already existed. ⚠ It is not a pro count and nothing said off it may
+   *  claim a professional stage – a student title is not a WTA title (`proTitles`' own lesson). */
+  collegeTitles: number
   /** the slam shelf alone, out of the cabinet */
   slams: number
 }
@@ -910,9 +916,37 @@ const BOOTH_LINEAGE_KNOWN: readonly ((who: string) => string)[] = [
   (who) => `${who} is not the first in her family to walk out here. Her mother did it first.`,
 ]
 
-/** Which of the two the facts license – the fork the packet exists for. */
+/** ...and when the cabinet she has is a STUDENT one. DRAFTS for his pass – new strings, written once.
+ *
+ *  ⭐⭐⭐ v89 (the college scene, T4.3) – THE THIRD POOL, AND IT LIVES IN THE **KNOWN REGISTER** RATHER
+ *  THAN BESIDE THE TITLED ONE. The spec's §4.3 asks for a line «licensed off `collegeTitles > 0`»;
+ *  read literally that would widen `lineageLicensed`, whose ⚠⚠ is a shipped ruling of the dynasty
+ *  spec's §2 («A COLLEGE-FORK MOTHER LICENSES NOTHING»). The spec's own next clause settles it without
+ *  a widening – «the KNOWN-claim register, never the pro-cabinet one» – so this pool is a fork INSIDE
+ *  the licence and is reached only where the booth was already allowed to speak. That means her mother
+ *  really did hold a WTA ranking inside the bar, so «not the first in her family to walk out here»
+ *  stays true here exactly as it is in the KNOWN pool.
+ *
+ *  ⚠⚠ AND NOT ONE LINE CLAIMS A PROFESSIONAL STAGE. The win each of them names is the STUDENT one, in
+ *  as many words – a student title is not a WTA title, and the whole reason the count crossed as its
+ *  own field was so that the booth could not blur them. ⚠ Nor does either name the mother: the TITLED
+ *  pool's own rule, for the same reason (the packet carries no first name and none is invented). */
+const BOOTH_LINEAGE_COLLEGE: readonly ((who: string) => string)[] = [
+  (who) => `That surname won a student championship before it ever reached this stage. ${who} is the second of them out here.`,
+  (who) => `${who} is not the first in her family to walk out here. Her mother came through the college game, and won it on the way.`,
+]
+
+/** Which of the THREE the facts license – the fork the packet exists for.
+ *
+ *  ⚠⚠ THE ORDER IS THE CLAIM AND NOT A STYLE: `proTitles` FIRST, so a mother who has both cabinets is
+ *  spoken of by the bigger one. A student title beside a tour title is texture the booth does not owe
+ *  and would be the smaller claim winning – which is the same honesty rule that split TITLED from
+ *  KNOWN in the first place, applied to a third case rather than re-argued. ⚠ AND THE LAST ARM IS
+ *  UNCHANGED: `collegeTitles === 0` with no pro cabinet is KNOWN, exactly as it shipped. */
 export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: string) => string)[] {
-  return ctx.proTitles > 0 ? BOOTH_LINEAGE_TITLED : BOOTH_LINEAGE_KNOWN
+  if (ctx.proTitles > 0) return BOOTH_LINEAGE_TITLED
+  if (ctx.collegeTitles > 0) return BOOTH_LINEAGE_COLLEGE
+  return BOOTH_LINEAGE_KNOWN
 }
 
 function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => string)[] {

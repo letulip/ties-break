@@ -423,6 +423,30 @@ export interface DynastyHandover {
      *  pool («her mother won here») licensed off `titles > 0`, which a junior-cabinet mother
      *  satisfies without ever winning a professional event. Stage claims read THIS. */
     readonly proTitles: number
+    /** ⭐⭐⭐ v89 (the college scene, T4 – docs/specs/the-college-scene-2026-09.md §4.2) – THE STUDENT
+     *  CABINET: the count of her BANKED college years whose championship she WON (`wonTheLeague`,
+     *  `engine/collegeLeague.ts`, over `world.college.years`), and 0 on every career that never
+     *  enrolled – which is every career the game has created so far.
+     *
+     *  ⚠⚠ WHAT IT DOES **NOT** COUNT, because `proTitles`' own lesson is that a count nobody named
+     *  precisely gets read by something that needed a different one. A STUDENT TITLE IS NOT A WTA
+     *  TITLE: the College League awards zero prize money and zero ranking points BY DESIGN (a paying
+     *  student fixture would make four years of college a ranking route and unmake the fork – that
+     *  file carries the argument), so nothing counted here is also in `titles`, `proTitles` or
+     *  `slams`, none of it moved `bestRank`, and **no claim about a professional stage may be licensed
+     *  off it**. It is also not a count of her college YEARS and not a count of her college MATCHES –
+     *  a year she played and lost counts 0, and a year with no championship at all (a v55 save
+     *  migrated mid-freeze, or a year an ending cut short before the fixture's week) counts 0 too.
+     *
+     *  ⚠ REQUIRED AND NEVER OPTIONAL: the field is a COUNT and 0 is its honest value, so an optional
+     *  field would be a second spelling of zero – and every reader would owe a `?? 0` that the next
+     *  one forgets. The v88 -> v89 migration back-fills it for saves that predate the field.
+     *
+     *  ⚠ THE BOOTH READS IT INSIDE THE SHIPPED LICENCE AND NEVER WIDENS IT – `lineageLicensed`
+     *  (`world/spotlight.ts`) is untouched, because «A COLLEGE-FORK MOTHER LICENSES NOTHING» is a
+     *  shipped ruling of the dynasty spec's §2 and not this wave's to overturn. See
+     *  `boothLineageLines` in `src/viz/commentary.ts` for the three-arm fork this feeds. */
+    readonly collegeTitles: number
     /** ⚠⚠ THE PRO TABLE ALONE – `bestRankOn(world, 'wta')`, or null for a career that never held a
      *  WTA rank. NOT `bestRankEver`, which returns the highest ladder REACHED: on a junior-only
      *  career that is the junior table, and a junior #3 fed to `motherWasKnown` – whose bar,

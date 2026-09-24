@@ -24,7 +24,7 @@ export function dynastyOf(over: Partial<DynastyHandover> = {}): DynastyHandover 
     motherCountry: 'US',
     childBirthdays: [],
     motherTemperament: 'sunny',
-    motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 265, endingKind: 'stopped' },
+    motherCareer: { titles: 0, proTitles: 0, collegeTitles: 0, bestRank: null, slams: 0, endedWeek: 265, endingKind: 'stopped' },
     ...over,
   }
 }

@@ -376,14 +376,15 @@ describe('P5 – the college year block', () => {
 
   it('⚠ a rubber she walked out of says so, in the result sheet\'s own notation', async () => {
     // A bare "Lost 6-4 2-1" hides that she stopped, which is the lie the news line's verb exists to
-    // prevent one layer down. `ret.` sits beside the verb, so which of the two women retired is never
+    // prevent one layer down. ⚠ RE-AIMED 24.09 by his Q4 ruling: the mark is « ret», period gone
+    // (the card's own note carries the price). `ret` sits beside the verb, so which of the two women retired is never
     // in doubt: the one who retires is always the one who lost.
     const hers = rubber(0, { retiredId: 'kid', winnerId: 'nations-w295-r0', score: '6-4 2-1' })
     const theirs = rubber(1, { retiredId: 'nations-w295-r1', winnerId: 'kid', score: '6-4 3-0' })
     const wrapper = await openCollegeHome(collegeView({ rubbers: [hers, theirs] }))
     const rows = wrapper.findAll('.college-rubber:not(.college-league-match)')
-    expect(rows[0].text()).toContain('Lost 6-4 2-1 ret.')
-    expect(rows[1].text()).toContain('Won 6-4 3-0 ret.')
+    expect(rows[0].text()).toContain('Lost 6-4 2-1 ret')
+    expect(rows[1].text()).toContain('Won 6-4 3-0 ret')
     wrapper.unmount()
   })
 

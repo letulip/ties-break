@@ -238,25 +238,105 @@ describe('round 26 #1 – and the two-control bar still fits a phone', () => {
       // ⚠ AND THE MEASUREMENT IS NOT VACUOUS: the pill really does demand width. A control that
       // measured as zero would make the fit check pass on any bar at all.
       expect(demandedWidth(items[0], vp.width - 32), 'the pill cannot shrink below its own text').toBeGreaterThan(80)
-      // Measured 25.08: the pill demands 107.3px and the CTA 140.6px, so a 375px phone keeps 87.1px
-      // spare of its 343px bar and a 320px one keeps 32.1px of 288px. Both positive, and the 320
-      // margin is the one a third control or a longer label would spend first.
+      // Measured 25.08: the pill demanded 107.3px and the CTA 140.6px, so a 375px phone kept 87.1px
+      // spare of its 343px bar and a 320px one 32.1px of 288px. ⚠ RE-MEASURED 24.09, when `fits.ts`
+      // started charging a label per glyph instead of at the average advance: the pill demands
+      // **99.4px** and the CTA **128.1px**, leaving **107.5px** of 343 and **52.5px** of 288. The
+      // numbers went UP because the model went DOWN – it was over-billing the spaces and the narrow
+      // letters – so the browser's own widths (99.4 is a floor under a real 116.6, 128.1 under 143.3)
+      // have not moved and neither has the bar. The 320 margin is still the one a third control or a
+      // longer label would spend first.
       expect(slack, `${vp.width}px leaves ${slack.toFixed(0)}px spare`).toBeGreaterThanOrEqual(0)
       w.unmount()
     })
   }
 
+  // ===============================================================================================
+  // ⚠⚠ RE-AIMED 24.09 WHEN `fits.ts`'s WIDTH MODEL BECAME PER-GLYPH HONEST – AND THE MOVE IS
+  // REPORTED AS A NUMBER RATHER THAN ABSORBED
+  // ===============================================================================================
+  //
+  // ⚠⚠ WHAT HAPPENED, AND IT IS THE INTERESTING DIRECTION. This arm's red came from the CTA's TEXT
+  // charge, because `.next-week-bar.with-span .next-week-btn` drops the 206px floor when the pill is
+  // present («the min-width relaxation is geometry, not taste», src/style.css) – so with two controls
+  // in the bar the CTA is as wide as «Training week» and nothing else. `fits.ts` charged that label
+  // `13 * 14.5 * 0.47 = 88.59px` at the average glyph advance; the browser draws it at **91.30**, and
+  // the average was ONLY that close because it over-bills the space and the two `i`s. Charged per
+  // glyph the label is **76.12**, so the mutated bar models **342.1px of its 343px room** and the
+  // shared floor passes it by 0.9px where it used to refuse it by 11.6px.
+  //
+  // ⚠ THE ROW HAS NOT STARTED FITTING – CONFIRMED IN A BROWSER, WHICH IS THE POINT. The real demand
+  // is 206 (the mutated pill) + 8 (the gap) + 52 (the CTA's own padding) + 91.30 (its label) =
+  // **357.3px of 343**, still **14.3px OVER**. So the mutation is a genuine overflow that the shared
+  // FLOOR can no longer see, which is the price of the false red going away (`fits.ts`'s header
+  // carries the census and says so in the same words).
+  //
+  // ⚠⚠ SO THE GUARD IS RE-AIMED, NOT DELETED, IN TWO HALVES: the helper's own red moves to 320x568,
+  // where the identical mutation is 54px over and the floor still refuses it, and the 375x667 claim
+  // is asserted from the BROWSER's width instead of the model's – which is exactly
+  // `college-scene-ui.test.ts`'s `MEASURED_PX` argument, one file over. Nothing here is loosened: the
+  // mutation is the same 206px, and both viewports still say the bar overflows.
   it('⭐⭐ MUTATION PROOF – give the pill the week button\'s own min-width and the same check goes red', async () => {
     // The exact mistake a future wave makes by styling the pair "like the week button".
     // `.next-week-btn` carries `min-width: 206px`, which is right for ONE floating pill: 206 for the
-    // pill plus the CTA's own text plus the 8px gap is more than the 343px a 375px phone has.
-    const { w } = await openShell(quietWorld('r26-fit-mut'), PHONE)
+    // pill plus the CTA's own text plus the 8px gap is more than the 288px a 320px phone has – and
+    // more than the 343px of a 375px one, which the browser half below is about.
+    const { w } = await openShell(quietWorld('r26-fit-mut'), NARROW_PHONE)
     const bar = w.find('.next-week-bar').element
     const pill = w.find('.span-weeks-btn').element as HTMLElement
     const items = [pill, w.find('.next-week-btn').element]
-    assertRowFits(bar, items, PHONE, 'App (week bar, quiet week)') // green before the mutation
+    assertRowFits(bar, items, NARROW_PHONE, 'App (week bar, quiet week)') // green before the mutation
     pill.style.minWidth = '206px'
-    expect(() => assertRowFits(bar, items, PHONE, 'App (week bar, mutated)')).toThrow(/off the side of the phone/)
+    expect(() => assertRowFits(bar, items, NARROW_PHONE, 'App (week bar, mutated)')).toThrow(/off the side of the phone/)
+    w.unmount()
+  })
+
+  it('⭐⭐ ...AND AT 375x667 THE SAME MUTATION IS STILL AN OVERFLOW – measured, not modelled', async () => {
+    // ⚠ ONE BROWSER-MEASURED WIDTH, WITH ITS PROVENANCE, because the shared floor is 15.2px short of
+    // the truth on this label and the claim is about the truth. One-off headless Chromium (playwright,
+    // `deviceScaleFactor: 1`), 24.09, over the repo's real `src/style.css` and its own self-hosted
+    // `public/fonts/manrope-var.woff2`: «Training week» as `.next-week-btn` sets it – 14.5px, weight
+    // 500 (`button.primary` wins the cascade, see the rule's own note), `letter-spacing: -0.01em`
+    // resolving to -0.145px – measured `width: max-content` at **91.296875px**. ⚠ RE-MEASURE IT WITH
+    // THE SAME HARNESS IF THE LABEL, THE SIZE, THE WEIGHT OR THE TRACKING EVER MOVES; a stale constant
+    // here is a pin arguing with the screen. (`fits.ts`'s header documents the harness.)
+    const TRAINING_WEEK_PX = 91.296875
+    const { w } = await openShell(quietWorld('r26-fit-mut-375'), PHONE)
+    const bar = w.find('.next-week-bar').element
+    const pill = w.find('.span-weeks-btn').element as HTMLElement
+    const cta = w.find('.next-week-btn').element
+    // The label really is the one that was measured, or the constant above is about another screen.
+    expect((cta.textContent ?? '').trim(), 'the CTA holds the label that was measured').toBe('Training week')
+    const ccs = getComputedStyle(cta)
+    expect(parseFloat(ccs.fontSize), 'at the size it was measured at').toBeCloseTo(14.5, 2)
+    expect(ccs.fontWeight, '...and the weight').toBe('500')
+    // ⚠ AND THE RELAXATION IS WHY THE TEXT DECIDES: two controls in the bar means the CTA has no
+    // min-width floor left, so its demand IS its label. A rule that put the 206 back would make this
+    // arm about arithmetic instead of about type.
+    expect(parseFloat(ccs.minWidth), 'the CTA drops its 206px floor beside the pill').toBe(0)
+
+    const bcs = getComputedStyle(bar)
+    const room =
+      Math.min(PHONE.width, parseFloat(bcs.maxWidth)) - parseFloat(bcs.paddingLeft) - parseFloat(bcs.paddingRight)
+    expect(room, 'the bar\'s room on a 375px phone').toBeCloseTo(343, 1)
+    const gap = parseFloat(bcs.columnGap || bcs.gap)
+    const chrome = parseFloat(ccs.paddingLeft) + parseFloat(ccs.paddingRight)
+
+    pill.style.minWidth = '206px'
+    const real = 206 + gap + chrome + TRAINING_WEEK_PX
+    expect(
+      real,
+      `the mutated bar really needs ${real.toFixed(1)}px of a ${room.toFixed(0)}px bar – the browser's own width for the label`,
+    ).toBeGreaterThan(room)
+    // ⚠⚠ AND THE FLOOR IS UNDER THE TRUTH, WHICH IS THE PROPERTY `fits.ts` PROMISES AND THE ONE THAT
+    // MUST NOT ROT. The value is not pinned – `LABEL_ADVANCE` and its table are FITTED, and a later
+    // wave may legitimately re-fit them – but the DIRECTION is: if the shared model ever overtakes a
+    // browser measurement, it has stopped being a floor and this file needs re-reading.
+    const modelled = demandedWidth(pill, room) + gap + demandedWidth(cta, room)
+    expect(
+      modelled,
+      `the shared floor models ${modelled.toFixed(1)}px of the same bar – under the browser's ${real.toFixed(1)}, as a floor must be`,
+    ).toBeLessThan(real)
     w.unmount()
   })
 

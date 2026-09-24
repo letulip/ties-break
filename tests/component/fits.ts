@@ -21,26 +21,173 @@
 // (vitest's component project sets `css: true`), happy-dom resolves `vh` against the window, and
 // `window.happyDOM.setViewport` makes the viewport a parameter of the measurement.
 //
-// ⚠⚠ AND THE CONTENT MODEL IS A FLOOR, DELIBERATELY – IT UNDER-COUNTS AND NEVER OVER-COUNTS.
-// A red verdict from an under-counting model is therefore always true: if the floor already does not
-// fit, the real card does not fit either. A green verdict is only trustworthy because of the OTHER
+// ⚠⚠ AND THE CONTENT MODEL IS A FLOOR, DELIBERATELY – IT AIMS TO UNDER-COUNT AND NOT TO OVER-COUNT.
+// A green verdict is only trustworthy because of the OTHER
 // half of `fitsViewport` – the height CAP – which is content-independent: once the card is bounded by
 // the viewport and scrolls, no amount of future copy can push the dismiss control off the screen, so
 // the floor's accuracy stops mattering the moment the cap is in place. That is the property round-20
 // #4 actually asked for ("a dialog grows by one honest sentence at a time and nothing objects").
 //
-// ⚠ THE GLYPH ADVANCE IS MEASURED, NOT GUESSED (CLAUDE.md invariant 4). The one constant this model
-// needs is the average character advance, and it was fitted against the SHIPPED card rendered in a
-// real headless Chromium – the repo's own `src/style.css` and its own self-hosted Manrope/Sora, at
-// five widths. Predicted (this model) vs measured (Chromium), card border-box height in px:
+// ⚠⚠⚠ «A RED VERDICT FROM AN UNDER-COUNTING MODEL IS THEREFORE ALWAYS TRUE» USED TO STAND HERE. IT WAS
+// WITHDRAWN ON 24.09 AND IT **STAYS** WITHDRAWN – the 24.09 re-fit did not earn it back, and the
+// measurement that says so is the reason the claim is not being restored in a narrower form either.
+// What is true is stated exactly, below, and nothing wider than that:
+//
+//   · MEASURED TRUE OF EVERY LABEL THIS FILE CHARGES TODAY. All 32 charged labels in the project's
+//     census are UNDER the browser, by 12.5–45% (the table further down). So every red verdict this
+//     file can currently produce on a width is a real overflow.
+//   · AND IT CAN NEVER ASK FOR MORE THAN THE MODEL IT REPLACED, for any string, any face, any weight:
+//     every glyph is charged either its own measured advance (lower) or, if the table does not list
+//     it, exactly the old average (equal). That is structural, not census-bounded.
+//   · ⚠ BUT NOT A UNIVERSAL LAW, AND HERE ARE THE TWO REASONS, BOTH MEASURED. (1) THE FALLBACK: an
+//     unlisted glyph is charged the average 0.47, which is above the truth for anything narrower that
+//     the table misses and for the whole of Caveat. (2) ⚠⚠ AND SHAPING, WHICH IS THE ONE THAT KILLS
+//     THE NARROW FORM OF THE CLAIM: even a run whose every glyph IS in the table can come out over,
+//     because a browser kerns and ligates a run rather than summing advances. Probed over 2,886
+//     table-only strings x the 10 faces the app asks for, **167 of 28,860 comparisons are over**, up
+//     to **1.556**: Manrope shapes «--» into ONE glyph 0.540em wide where this model charges 0.840,
+//     and pairs like «".», «",», «.1», «,1» come out 22–47% over. So «a red is always true for a run
+//     whose glyphs are all in the table» is FALSE, and it is not written here.
+//   · ⭐ WHY IT DOES NOT BITE IN PRACTICE, AND WHERE IT WOULD. Those cases are all SHORT and
+//     all-narrow; any run with ordinary wide glyphs in it carries a large deficit from the 0.47 base
+//     (`o` really advances 0.592, `m` 0.848), which swamps a kerning pair. **0 of the census's 32
+//     labels are made only of table glyphs.** A short, all-narrow label – «1/1», «...», «--» – is
+//     where this model can still produce a false red, and if one ever appears on a surface this file
+//     measures, it needs a browser number the way `college-scene-ui.test.ts`'s row does.
+//
+// So `demandedWidth` charged `text.length * fontSize * ADVANCE` until 24.09, billing a SPACE (0.200 of
+// the font size in the app's own Manrope) and a `.` (0.253) at the AVERAGE 0.47 – over-asking on 5 of
+// the 32 labels in the census. It is charged per glyph now (`labelWidth`), and the census is below.
+//
+// ⚠⚠⚠ AND THE RE-FIT IS **WIDTH-ONLY**, WHICH IS THE LOAD-BEARING HALF OF THIS WAVE. The one constant
+// had TWO readers whose conservative directions are OPPOSITE: `lineCount` feeds `stackChildren` ->
+// `boxOf` -> every HEIGHT assertion in this file, and there a SMALLER advance means fewer lines, a
+// shorter modelled card, and a dialog that does not fit passing – round-20 #3 itself. So the accurate
+// per-glyph model is given to the width arm alone and the height arm keeps the fitted average under
+// its own name; see `WRAP_ADVANCE` / `LABEL_ADVANCE` for the two of them and why they are two.
+//
+// ⚠ AND THE HEIGHT ARM IS NOT MERELY «UNCHANGED BY INTENTION» – IT WAS MEASURED UNCHANGED. The
+// helper was instrumented behind an env flag, the whole component project was run before and after,
+// and two sets were diffed: every `lineCount` call's (text, width) input with its line count –
+// **3,520 records** – and every `measureDialog` result (`contentFloor`, `cardHeight`, `cardTop`,
+// `cardBottom`, `dismissTop`, `dismissBottom`) – **261 calls**. Both sets came back IDENTICAL, 0
+// records on either side of the diff.
+//
+// ⚠ AND THE FALSE-GREEN QUESTION WAS ASKED OF THE HEIGHT ARM BEFORE ANYTHING WAS
+// TOUCHED, because an under-counting height is the LAX direction: of the 261 `measureDialog` calls in
+// the project, 257 are `card-scrolls` and 4 `overlay-scrolls`; **0** are the one shape whose verdict
+// could turn on the content floor (a finite cap that does not scroll); the 45 uncapped `card-scrolls`
+// cases are red on the cap assertion whatever the content measures; and in `overlay-scrolls` the
+// dismiss box rests on the overlay's content-box bottom, which no advance can move. Replayed as
+// arithmetic rather than argued: all 261 calls re-scored with `contentFloor` multiplied by each of 107
+// factors from 1.00 to 100 – 216 green and 45 red at k=1, and **0 calls cross between green and red**
+// at any factor. So the height model's under-count is not producing a false green anywhere today, and
+// the cap is why.
+//
+// ⚠ THE GLYPH ADVANCES ARE MEASURED, NOT GUESSED (CLAUDE.md invariant 4). The HEIGHT model's one
+// constant was fitted against the SHIPPED card rendered in a real headless Chromium – the repo's own
+// `src/style.css` and its own self-hosted Manrope/Sora, at five widths. Predicted (this model) vs
+// measured (Chromium), card border-box height in px:
 //
 //     card width    343     288     360     544     880
 //     Chromium     1078.1  1169.8  1034.5   835.7   724.3
 //     this model   1015.3  1135.3   997.8   781.5   670.2
 //     ratio         0.942   0.970   0.965   0.935   0.925
 //
-// Under on all five, by 3–7.5%, which is the margin a floor is supposed to have. `ADVANCE` below is
-// the fitted number; re-fit it with the same harness if the type stack ever changes.
+// Under on all five, by 3–7.5%, which is the margin a floor is supposed to have. `WRAP_ADVANCE` is
+// that fitted number; re-fit it with the same harness if the type stack ever changes.
+//
+// =================================================================================================
+// ⚠⚠⚠ THE WIDTH ARM'S OWN CENSUS – EVERY LABEL THIS FILE CHARGES, AGAINST A BROWSER (24.09)
+// =================================================================================================
+//
+// THE HARNESS, in the same idiom: a one-off node script serves the worktree over http (mapping
+// `/fonts/*` onto `public/fonts/*` so `src/style.css`'s own `@font-face` rules resolve), loads a page
+// FROM that origin – `page.setContent` leaves the document on `about:blank`, where a web font is a
+// cross-origin request and every face fails CORS – and measures each string's intrinsic width
+// (`width: max-content; white-space: pre`) with every font property copied off the shipped span, so
+// the browser charges tracking, weight, case and figure width rather than a model. It reproduces
+// `college-scene-ui.test.ts`'s `MEASURED_PX` to the last digit (166.4688 for «Quarterfinal –
+// C. Ostergaard» at 13px/400), which is what says the harness is the same one. An advance scales
+// linearly with the font size in Chromium – checked at 10 / 10.5 / 11.5 / 12 / 12.5 / 13 / 14.5 / 16 /
+// 20px against a 100px reference, worst disagreement 0.013px – so the table is a fraction of the size.
+//
+// THE POPULATION, taken by instrumenting the helper and running the whole project: **76 charged calls,
+// 32 distinct (label, font)**, across 8 test files. Every one of them is Manrope, at 10–14.5px and
+// weights 400–800. Model against browser, as a ratio:
+//
+//                         over 1.0     min     median     max
+//     before (flat 0.47)     5/32     0.569     0.918    1.043
+//     after  (per glyph)     0/32     0.552     0.798    0.875
+//
+// The five the old model REFUSED, and what the new one charges (browser in the last column):
+//
+//     «7.74 units at $6,457 each»   11.5px/400    135.12 -> 113.39   of 129.56
+//     «Sell»                          12px/700     22.56 ->  16.80   of  21.84
+//     «Quarterfinal – C. Ostergaard»  13px/400    171.08 -> 142.35   of 166.47
+//     «1 year»                      11.5px/700     32.43 ->  27.14   of  31.58
+//     «8.55 units at $5,846 each»   11.5px/400    135.12 -> 113.39   of 133.33
+//
+// ⚠⚠ WHAT THIS COSTS, SAID OUT LOUD: the floor moves DOWN, from a median 0.918 of the browser to
+// 0.798. A width guard that charges 80% of the truth catches a row that overflows by more than ~20%
+// of its text, where the old one caught ~8% – and `assertInlineRowFits` has no height cap to fall back
+// on, so that is the price of the false red going away. It is the price this file already pays by
+// design (`demandedWidth`'s own docstring: the charges were under the truth by 4–43% before this
+// wave), and the surface where 5px of margin decides the verdict does not use the shared floor at all
+// – see `college-scene-ui.test.ts`'s `MEASURED_PX`, which is browser numbers for exactly that reason.
+//
+// ⚠⚠ AND THE COST WAS THEN MEASURED RATHER THAN LEFT AS A WORRY – THE BLIND BAND. Every assertion row
+// in the project that reaches a charged label was re-scored with the BROWSER's width substituted for
+// the model's, keeping each item's `min-width` and declared `width` (32 rows: 27 through
+// `assertRowFits`/`assertInlineRowFits`, 5 hand-rolled). Result:
+//
+//     rows where the model passes and the browser would FAIL      **0**
+//     rows that pass by LESS than the model's own error margin     **1**
+//
+// The one: `round26-span-gate-ui`'s «both controls are pressable at 320x568» – 52.5px of modelled
+// slack, **20.1px of browser slack**, against a model error of 32.3px. It passes honestly and it is
+// the thinnest surface the shared floor is asked about; the 375 half of the same bar has 75.1px of
+// browser slack. Everything else clears by 49.8px or more (the tightest after those: the rail's
+// psychologist seat row at 196px, 49.8px of browser slack; the invest stake row 76.4; the chart's
+// range picker 88.4). ⚠ The next-thinnest surface in the app is NOT in this list because it does not
+// use the shared floor: the college league row, which the browser has 5.1px OVER and which
+// `college-scene-ui.test.ts` measures with browser constants.
+//
+// ⚠⚠ AND THE OBVIOUS BETTER MODEL WAS MEASURED AND REJECTED: a full per-character table (every glyph
+// charged its own advance, not just the narrow ones) lands at a median 0.978 – far tighter – but it is
+// **NOT A FLOOR**. A shaped run is narrower than the sum of its glyphs' advances: over the census's 749
+// Manrope strings the sum is OVER the browser on **46.5%** of them, by up to 2.96% («Rubber 1 –
+// P. Kovac» 113.68 modelled of 110.42 measured) from kerning alone, and by **73%** on a two-code-point
+// flag that shapes into one glyph. Keeping it a floor would need a ~0.58 blanket haircut, which throws
+// away everything it bought. ⚠⚠ THE CARD'S OWN PREMISE WAS «A PER-CHARACTER TABLE IS EXACT FOR THE
+// STRINGS IT COVERS», AND IT IS FALSE AGAINST A SHAPING ENGINE – that sentence is corrected here
+// rather than worked around, because it is the sentence that would have sent the next wave down the
+// same road. The narrow-glyph half – which only ever LOWERS a charge, so it can never over-ask where
+// the old model did not – is the half that is safe to take.
+//
+// THE MUTATION LEDGER for this wave – each arm run after the re-fit, and each one RED. Full outputs
+// are in the wave's report:
+//   * a row that really overflows on TEXT: the league row's surname tripled
+//     («Quarterfinal – C. Ostergaard-Ostergaard-Ostergaard»), every declaration untouched ->
+//     `assertInlineRowFits` RED, «the controls demand 363px of a 291px row». The same row shipped is
+//     green through the floor with 53.2px spare.
+//   * a row that really overflows on its CONTAINER: `.college-card`'s padding grown 14 -> 42px a side
+//     -> RED, «the controls demand 238px of a 235px row».
+//   * a row that really overflows on a MIN-WIDTH: `.span-weeks-btn` given `.next-week-btn`'s own
+//     `min-width: 206px` -> `assertRowFits` RED at 320x568, «the controls demand 342px of a 288px
+//     bar». ⚠ AT 375x667 THAT ARM WENT GREEN BY 0.9px AND IT IS RE-AIMED RATHER THAN SILENCED – the
+//     CTA's own label is what it was charging, the browser says the mutated bar is 14.3px over, and
+//     `round26-span-gate-ui.test.ts` now carries both halves with the date and the numbers.
+//   * a dialog that really does not fit a phone: `.dialog-card`'s `max-height`/`overflow-y` killed by
+//     an injected `!important` override (the test layer, so `src/` is untouched), which is the shipped
+//     round-20 defect -> `assertDismissReachable` RED on `TourBriefingDialog` at 375x667, «content
+//     wants at least 1015, cap NONE, card does NOT scroll, 635px of room». **1015** is this header's
+//     own fit-table figure for a 343px card, unchanged by the re-fit; with the shipped rules back the
+//     same mount is green at 635 of 635.
+//   * the height model itself, which is the ruling above as a number: `lineCount` given the per-glyph
+//     width model by hand -> the same briefing's modelled floor drops **1015.3 -> 923.6px** against
+//     Chromium's real 1078.1, i.e. from 0.94 of the truth to 0.86. Every height verdict in this file
+//     would have been 9% laxer. That is why the two constants are two.
 import { expect } from 'vitest'
 
 export interface Viewport {
@@ -99,16 +246,117 @@ function num(value: string, base = 0): number {
   return Number.isFinite(n) ? n : 0
 }
 
-/** Average character advance as a fraction of the font size. See the fit table in the header. */
-const ADVANCE = 0.47
+// =================================================================================================
+// ⭐⭐⭐ THE TWO GLYPH MODELS, AND THEY ARE TWO CONSTANTS BECAUSE THEIR SAFE DIRECTIONS ARE OPPOSITE
+// =================================================================================================
+//
+// ⚠⚠ ONE CONSTANT SERVED BOTH UNTIL 24.09 AND THAT WAS THE DEFECT UNDER THE DEFECT. `ADVANCE = 0.47`
+// was read by `lineCount` (HEIGHT: a bigger advance means more lines, a taller modelled card, a
+// CONSERVATIVE verdict) and by `demandedWidth` (WIDTH: a bigger advance means a bigger demand, which
+// is a FALSE RED). So the two readers wanted the number moved in opposite directions, and a re-fit
+// for one silently re-aimed the other. They are two constants now, with the same number today and
+// two names, and each docstring says which way its own conservatism runs.
 
-/** Greedy word wrap at `ADVANCE`, which is how a browser breaks a paragraph: whole words, ragged
- *  right, and a word longer than the line gets its own. */
+/** ⭐ THE **HEIGHT** MODEL'S CONSTANT – the average character advance, read by `lineCount` and by
+ *  nothing else. It is the number the header's five-width fit table was fitted against, and it has
+ *  NOT moved: the 24.09 re-fit changed the width arm alone, so every height this file has ever
+ *  modelled is unchanged to the last decimal – the whole component project was run before and after
+ *  with the helper instrumented, and the 3,520 `lineCount` records and 261 `measureDialog` results
+ *  came back identical (the header carries the diff). ⚠ BIGGER IS SAFER HERE. More lines is a taller card is a stricter verdict, so a
+ *  future re-fit that LOWERS this number makes `measureDialog` and `assertDismissReachable` laxer,
+ *  which is the round-20 #3 failure. Re-fit it with the header's harness, and never to make a red
+ *  dialog green. */
+const WRAP_ADVANCE = 0.47
+
+/** ⚠ THE **WIDTH** MODEL'S BASE, and it is what a glyph the table below does not cover is charged –
+ *  which is exactly what EVERY glyph was charged before 24.09. So an unlisted character can never
+ *  make this model ask for more than the model it replaced, whatever face it is set in. ⚠ SMALLER IS
+ *  SAFER HERE, the opposite of `WRAP_ADVANCE`: a demand over the browser's is a false RED. */
+const LABEL_ADVANCE = 0.47
+
+/** ⭐⭐⭐ THE GLYPHS THAT RUN NARROWER THAN THE AVERAGE, CHARGED THEIR OWN MEASURED ADVANCE – which is
+ *  the whole of the 24.09 width re-fit. The average billed a SPACE (0.20) and a `.` (0.25) at 0.47,
+ *  so a label whose glyphs run narrow was charged MORE than the browser draws.
+ *
+ *  ⚠ MEASURED, NOT GUESSED, AND THE GUESS WAS WRONG ABOUT THE DASH. The card that asked for this
+ *  named `–` as a narrow glyph; the en dash advances **0.540** in Manrope, WIDER than the average, so
+ *  it is not here. What made «Quarterfinal – C. Ostergaard» a false red was its two spaces, its `.`
+ *  and its `l i t f r`, not its dash.
+ *
+ *  ⚠⚠ EVERY ENTRY IS THE **MINIMUM** ACROSS THE TEN FACES THE APP ACTUALLY ASKS FOR – Manrope and
+ *  Sora at 400/500/600/700/800 – so no entry can be over the truth on any of them. Verified over 195
+ *  glyphs x 10 faces in headless Chromium: **0 over-charges**. (The `@font-face` range goes down to
+ *  200, but no rule in `src/` asks for a weight under 400: `grep -rE 'font-weight:\s*(200|300)' src/`
+ *  finds only the range declaration itself.) ⚠ CAVEAT IS THE ONE FACE THIS TABLE IS STILL OVER, on 38
+ *  of its 53 entries – the hand face is ~30% narrower than Manrope everywhere. It was over before
+ *  too, and by MORE: measured over the census's 17 distinct Caveat strings the old flat model ran up to
+ *  **1.478** of the browser and this table runs up to **1.172**. Every Caveat string in the census
+ *  reaches the HEIGHT model, where over-asking is the conservative direction, and none reaches
+ *  `demandedWidth` at all.
+ *
+ *  Each value is the measured advance rounded DOWN to two decimals, so the rounding is a charge the
+ *  model gives up rather than one it invents. */
+const NARROW_ADVANCE: Readonly<Record<string, number>> = narrowTable([
+  [' ', 0.2],
+  ["'", 0.21],
+  ['·‘’', 0.22],
+  ['IilÌÍÎÏìíîï', 0.23],
+  ['.j|', 0.25],
+  [',:;', 0.26],
+  ['!¡', 0.29],
+  ['`', 0.3],
+  ['ª', 0.31],
+  ['‹›', 0.32],
+  ['/\\º', 0.34],
+  ['f', 0.35],
+  ['r', 0.36],
+  ['()[]{}°“”„', 0.37],
+  ['"1†‡', 0.39],
+  ['t', 0.4],
+  ['-‑', 0.42],
+  ['*•', 0.43],
+  ['J', 0.46],
+])
+
+function narrowTable(groups: [string, number][]): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [chars, advance] of groups) for (const ch of chars) out[ch] = advance
+  return out
+}
+
+/** ⭐⭐ WHAT A RUN OF TEXT TAKES ACROSS WHEN IT CANNOT WRAP – the width model, per glyph.
+ *
+ *  ⚠ IT ITERATES CODE POINTS, NOT UTF-16 UNITS, AND THAT ALONE FIXED AN OVER-CHARGE THE CENSUS
+ *  FOUND: `text.length` bills a flag twice. «🇺🇸» at 19px measured 22.00px in Chromium against
+ *  `4 * 19 * 0.47 = 35.72` from the old model – 1.62x over – and 2 code points at the base is 17.86,
+ *  under. (A combining mark would be the other direction, one code point too many; the census over
+ *  the whole component project holds none, and the app's names are ASCII by CLAUDE.md's Style rule.)
+ *
+ *  ⚠⚠ AND IT IS STILL A FLOOR AND STILL BLIND TO THE SAME FOUR THINGS, which is why the charge stays
+ *  well under the browser rather than level with it: nothing here reads WEIGHT (800 is wider than
+ *  400), `text-transform: uppercase`, `letter-spacing` or `font-variant-numeric: tabular-nums`. ⚠ AND
+ *  IT CANNOT: happy-dom does not resolve an inherited font property – measured, `getComputedStyle`
+ *  hands back the literal string `inherit` for `font-family` and `font-weight` on almost every
+ *  element in this app – and it computes an `em` letter-spacing as `NaNpx`. A face-aware or
+ *  tracking-aware model is not implementable in this instrument, so the model is deliberately
+ *  face-blind and the table is the narrowest face's. */
+function labelWidth(text: string, fontSize: number): number {
+  let advance = 0
+  for (const ch of text) advance += NARROW_ADVANCE[ch] ?? LABEL_ADVANCE
+  return advance * fontSize
+}
+
+/** Greedy word wrap at `WRAP_ADVANCE`, which is how a browser breaks a paragraph: whole words, ragged
+ *  right, and a word longer than the line gets its own.
+ *
+ *  ⚠ IT DOES NOT USE `labelWidth`, AND THAT IS THE RULING RATHER THAN AN OVERSIGHT. The accurate
+ *  per-glyph model is NARROWER, which here would mean FEWER lines, a SHORTER modelled card and a
+ *  dialog that does not fit passing – round-20 #3 exactly. See `WRAP_ADVANCE`. */
 function lineCount(text: string, fontSize: number, width: number): number {
   const words = text.trim().split(/\s+/).filter(Boolean)
   if (words.length === 0) return 0
   if (width <= 0) return words.length
-  const adv = fontSize * ADVANCE
+  const adv = fontSize * WRAP_ADVANCE
   const space = adv
   let lines = 1
   let used = 0
@@ -246,23 +494,69 @@ export function boxOf(el: Element, availableWidth: number): Box {
 // row of PILLS: a control that declares no minimum but is `white-space: nowrap` still cannot shrink
 // below its own text, and reading only the declared minimum would score such a row as free.
 
-/** The width a control wants: its declared `min-width`, and – when it is `white-space: nowrap` – at
- *  least its own label plus its padding and borders.
+/** ⚠⚠ WHERE A LINE MAY BREAK, MEASURED RATHER THAN ASSUMED (24.09) – and it is what makes the rule
+ *  below a floor instead of a guess. A browser breaks at whitespace and ALSO after a hyphen or a
+ *  dash, so «one word» for this model's purposes is a run with no break opportunity in it at all.
+ *  Measured in headless Chromium over the repo's own Manrope, `width: min-content` against
+ *  `width: max-content` on one token at 13px: the hyphen breaks (79.7 of 158.9), and so do the en,
+ *  em and figure dashes, the soft hyphen, the zero-width space and `?`. The NON-breaking hyphen
+ *  U+2011 does NOT (158.9 of 158.9), and neither do `/`, `,`, `.`, `:` or `)`. Charging a token this
+ *  set splits would OVER-count, which is the one thing this file may never do. */
+const BREAKS = /[\s\u00ad\u200b\u2012\u2013\u2014?-]/
+
+/** The width a control wants: its declared `min-width`, and – when its label cannot wrap – at least
+ *  that label plus its padding and borders.
  *
  *  ⚠ AN ELLIPSIS IS NOT CREDITED, AND THAT IS THE DECISION. `.next-week-btn` declares
  *  `text-overflow: ellipsis`, and style.css says what it is for in its own words: «the safety net at
  *  375px, not the plan». A control cut down to «Trai…» is not a control the measurement should score
  *  as fitting – crediting the ellipsis would let any pair of pills pass by shrinking the CTA to its
  *  padding. A control that may WRAP is different: it gives ground vertically, so its declared
- *  minimum is the floor. */
+ *  minimum is the floor.
+ *
+ *  ⚠⚠ AND THAT LAST SENTENCE WAS TRUE OF THE WRONG SET OF CONTENT UNTIL 24.09 – THIS IS THE AMENDMENT
+ *  RATHER THAN A NEW RULE. «Gives ground vertically» is sound for a label WITH a break opportunity in
+ *  it; content with NONE cannot wrap whatever `white-space` says, so it gives no ground at all – it
+ *  simply overflows. `lineCount` in this same file has always known it («a word longer than the line
+ *  gets its own»), and the old branch charged such a control **0.0px of text** whenever it also
+ *  declared no `min-width`, which is a set of two omissions that says nothing about how wide the
+ *  thing is.
+ *
+ *  ⚠ THE COST OF THAT, MEASURED ON A SHIPPED SURFACE. `CollegeYearCard.vue`'s `.rubber-watch` – the
+ *  **Watch** control on every championship row – declares neither, carries no padding, and was
+ *  therefore scored at **0.0px** against a real browser width of **41.33px** (headless Chromium,
+ *  the repo's own Manrope; `tests/component/college-scene-ui.test.ts`'s `MEASURED_PX` records the
+ *  provenance). ⚠⚠ AND `assertInlineRowFits` HAS NO HEIGHT CAP TO FALL BACK ON, which is why this
+ *  mattered more than the header's «a floor's red verdict is always true» allows for: in a dialog the
+ *  cap makes the floor's accuracy stop mattering, in a ROW nothing does, so an under-charged control
+ *  there produces a GREEN verdict on a row that really does not fit.
+ *
+ *  ⚠ THE CONTRACT IS UNTOUCHED AND THAT IS THE POINT: a single unbreakable word's width IS the
+ *  browser's own min-content width for that run, so charging it can never over-count – which is why
+ *  the change is to WHICH content the old branch was wrong about, not to how much a floor may charge.
+ *  Measured against Chromium, the charges are still under the truth by 17–45% (the figures moved when
+ *  the width model went per-glyph on 24.09; the browser's did not): `.seat-name`'s «Coach» 24.67 of
+ *  32.48, «Masseur» 33.39 of 42.95, «Psychologist» 53.45 of 64.78, and `.rubber-watch`'s «Watch»
+ *  22.80 of 41.33 – the last one because `labelWidth` charges nothing for weight 800, for `uppercase`
+ *  being wider than the glyphs it counts, or for `letter-spacing`.
+ *
+ *  ⚠ WHY NOT THE LONGEST WORD OF EVERY LABEL, which is strictly more correct still (a browser cannot
+ *  break a word wherever the label came from). It was measured too, over the whole component project:
+ *  it MOVES 25 charges across 10 assertion sites against this rule's 19 across 7 – so it is not free,
+ *  and the difference is six charges on labels that genuinely wrap («Raise her daughter»,
+ *  «She came by with something small.»). A rule that moves a number nobody asked about is a rule for
+ *  its own card, with its own arms. Neither rule reddens anything: both arms ran the whole project
+ *  green at 218 files / 2354 tests. */
 export function demandedWidth(el: Element, room: number): number {
   const cs = getComputedStyle(el)
   const chrome = num(cs.paddingLeft) + num(cs.paddingRight) + num(cs.borderLeftWidth) + num(cs.borderRightWidth)
   const declared = lengthPx(cs.minWidth, room)
   const floor = Number.isFinite(declared) ? declared : 0
-  if (cs.whiteSpace !== 'nowrap') return Math.max(floor, chrome)
   const text = (el.textContent ?? '').trim()
-  return Math.max(floor, chrome + text.length * num(cs.fontSize) * ADVANCE)
+  // The label is charged when it CANNOT wrap: either the control forbids wrapping, or the label has
+  // nowhere to break. Empty text charges nothing under either arm, as it always did.
+  if (cs.whiteSpace !== 'nowrap' && (text === '' || BREAKS.test(text))) return Math.max(floor, chrome)
+  return Math.max(floor, chrome + labelWidth(text, num(cs.fontSize)))
 }
 
 // =================================================================================================

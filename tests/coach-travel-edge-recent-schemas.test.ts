@@ -55,9 +55,34 @@ import {
   PRE_V86,
   PRE_V87,
   PRE_V88,
+  PRE_V89,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v89: rolling the schema back to 88 – with nothing to drop, because the new field is inside a NULL – returns the v88 CAREER on all three', () => {
+    // ⭐⭐⭐ THE SECOND RUNG IN A ROW WHOSE PEEL DOES NOTHING, AND THE REASON IS NOT v88's. v88 (the
+    // parting) appended no field at all; v89 (the college scene – T4) appends a REAL one,
+    // `dynasty.motherCareer.collegeTitles` – and it is nested TWO LEVELS DEEP inside a nullable
+    // record that every frozen career carries as `null` (the fork sits ~86 weeks past this freeze's
+    // horizon and the only producer of a dynasty record is the ending's door). So the field exists
+    // and the serialised world still gains no key: `careerHashAtSchema`'s tail answers 87, 88 and 89
+    // alike, and the only thing that differs is the version number the last line stamps in.
+    //
+    // ⚠⚠ SO THIS CASE PROVES A CLAIM ABOUT **WHERE** A SCHEMA MOVE LANDED, which is a narrower thing
+    // than the case below proves and a sharper one than the peel. Move `collegeTitles` up to the
+    // world, or let a frozen career acquire a dynasty, and all three lines go red at once – and
+    // neither change would fail anything else in this repo.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V89` in tests/coachTravelEdgeFixtures.ts: exactly
+    // ONE key moves on every career (`schemaVersion`), none is added or removed, the key ORDER is
+    // identical and `rngMain` is byte-identical – and the three values below are the three `FROZEN`
+    // constants this branch held at v88, reproduced character for character. Eleven live cells moved,
+    // eight distinct values, and every rollback rung held.
+    expect(careerHashAtSchema(5, 0, 88), '25k · middle coach · grinder – the verbatim v88 value').toBe(PRE_V89.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 88), '120k · elite coach · grinder – the verbatim v88 value').toBe(PRE_V89.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 88), '8k · self-coached · player – the verbatim v88 value').toBe(PRE_V89.selfTravelling)
+  })
+
   it('⭐⭐⭐ v88: rolling the schema back to 87 – with NOTHING to drop – returns the v87 CAREER on all three', () => {
     // ⭐⭐⭐ AN IDENTITY OF A KIND THIS LADDER HAS NEVER HELD BEFORE, and the case name says so: v88
     // (the parting, wave 12) appends **no key at all**. It is three UNION widenings –

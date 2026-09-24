@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 130 dated entries, newest 2026-09-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 135 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -33,9 +33,9 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
-| college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
+| college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 17 | [THE CANCEL SHARE: «ОСТАВШИЕСЯ, ДЕЛАЙ»](#23092026--the-cancel-share-оставшиеся-делай) | 2026-09-23 |
+| general | 19 | [THE ADVANCE IS RE-FIT PER GLYPH, AND ONE CONSTANT TURNS OUT TO HAVE BEEN TWO](#24092026--the-advance-is-re-fit-per-glyph-and-one-constant-turns-out-to-have-been-two) | 2026-09-24 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5193,6 +5193,25 @@ The builder's report brought eleven questions; his answers, one line each:
 10. **No tuning before play** – «пока не крутим, надо играть»: row 2's corpus stays n=88 and
     every drafted number stands until the playtest.
 
+## 23.09.2026 – THE COLLEGE SCENE RULED OPEN, AND THE GRADUATE'S SHELF RULED IN
+
+On the architect's unpacking (the parting's §12 and the college-content answer), three lines:
+
+1. **The floor** – «Предложение в одну строку: концовка-колледж даёт полку не ниже "середины" -
+   ок». The parting's §12 closes RULED: a career whose standing ending is the college one reads
+   no lower than `middle` at the dynasty door. Built as the college scene's T1, with the dated
+   addendum on the dynasty spec's §8 row 3 (the middle band's structural emptiness ends for the
+   college route).
+2. **The wave** – «Вместе — аккуратная волна "колледж-сцена", M. если скажете "да" — распишу
+   спеку тем же порядком. - да, сделай пожалуйста». Canonical spec
+   `docs/specs/the-college-scene-2026-09.md`; builder plan
+   `docs/plans/college-scene-builder-2026-09.md`; branch `college/scene`, stacked on the open
+   wave-12 head. The wave: the bracket block on the year card (the kept match rows get eyes), the
+   album book's college lines, the handover's `collegeTitles` with the booth's college-champion
+   line (v89, the one schema move, strikeable whole at dispatch), and the floor. Zero new RNG,
+   zero new simulation, no money and no points for the league – the standing ruling holds.
+3. **The wave-12 PR is his now** – «Я отправил реквест на проверки»: he opened it and runs the
+   checks; the architect's handed body stands.
 ## 23.09.2026 – THE CANCEL SHARE: «ОСТАВШИЕСЯ, ДЕЛАЙ»
 
 The gameplay-video session found `shootCancelCents` dividing the cheque by `shootCount` – the
@@ -5224,3 +5243,185 @@ Re-run green: §1's racing arm measures ~-6 condition per shoot week again; §2 
 violations P9-aware, with 100.0% of signature landings in the winter window – recorded in
 `the-cancel-share-2026-09.md` §4 with the observation that a signature shoot now practically
 cannot clash with a tournament (winter holds no entries), which is his to weigh, not a defect.
+
+## 24.09.2026 – THE COLLEGE SCENE IS BUILT, AND TWO OF THE SPEC'S PREMISES WERE MEASURED FALSE
+
+His two rulings of 23.09 both shipped on `college/scene`: the graduate's shelf reads no lower than
+the middle, and the championship that already plays got its record in the album and the handover
+(schema **v89**, `motherCareer.collegeTitles`, the ladder's first back-fill nested two levels inside
+a nullable record). Six tasks, the spec and the strings table pinned both ways.
+
+⚠⚠ THE WAVE'S OWN FINDING IS THAT A SPEC WRITTEN FROM A READING ASKS FOR THE WRONG THING TWICE, and
+both were caught by measuring the branch head before a builder was briefed
+(`docs/plans/college-scene-rulings-2026-09.md`). **The bracket §3 asked for what shipped on 22.08**
+(`1356712f`) and nearly had a builder delete the Watch control he has been pressing since August.
+**The floor §2 guarded a state with no producer** – all three `type: 'college'` latches carry a
+return week, `finishCollege` removes the latch at graduation, and the dynasty door opens only where
+there is none – so the clause reads THE DEGREE (`finishedTheCourse`, the album's own gate) and the
+spec is corrected in four places, each dated. Two smaller ones the same way: there is no college
+chapter in the album (five bands; the lines are the `graduated` sheet's checklist), and the booth's
+student register sits INSIDE the shipped licence rather than widening it, because `lineageLicensed`
+carries a ruling that a college-fork mother licenses nothing.
+
+⚠ AND THE ALBUM'S RECORD WAS BUILT AND DROPPED BEFORE THE REPAIR: the note asked its sheet's LEAD
+frame for the checklist, and `portraitStage` puts 17–22 in one band, so one junior title erased all
+three college rows. Measured, then fixed by asking the sheet. «Captured is not surfaced», again.
+
+⚠ THE CHAMPIONSHIP ROWS HAVE NOT FIT A PHONE SINCE 22.08, and nobody knew because the shared fit
+helper charges a control declaring neither `nowrap` nor `min-width` **nothing at all**. Measured in a
+real browser over the card's own markup, CSS and font: 296.1px demanded of 291.0px, 11 of 211
+surnames overflowing the quarterfinal row on straight sets and **129 of 211 after a retirement**
+(`ret.` costs the score span 22.3px); at 320x568 every surname overflows. Nobody is stranded – the
+row cannot wrap, so the name gives way through the ellipsis and the control never moves – so it is
+legibility, it is NOT fixed, and the six candidate repairs are priced for him without one being
+picked. The helper itself is a separate card: its blast radius is the whole component suite.
+
+MEASURED (`tools/college-scene-bench.ts`, 24 careers walked through the fork and out): the floor
+holds on 19 of 19 graduates and moved 0 of 24 control careers – **and it is nearly inert, which
+contradicts the parting's §12 premise**: the graduates' own accounts map to 17 wealthy / 1 middle /
+1 working, so the clause lifted ONE career of nineteen. She goes back on tour and she earns. Row 2
+came in at **36.4%** of championship years won against a predicted 15–35%, flagged not smoothed, with
+two thirds of college careers holding a title – a balance fact, his, and question 7.
+
+⚠ A SECOND ROTTEN BENCH, REPAIRED ON THIS BRANCH ON HIS OWN 23.09 RULING («иначе потеряем»):
+`tools/college-year-content.ts`, the instrument round 24's championship item was measured in, printed
+**1 college year against its own header's «3 careers × 4 years»**, `min Infinity max -Infinity`, 0.00
+watchable matches – and exited 0. Round 26 #6 put the championship behind a reveal `resumeFromCollege`
+refuses to spend a year over, and no tool answered it. Repaired through the player's own two doors as
+one shared helper (`tools/_reveals.ts`): 9 college years, tournaments per full year min 1 max 2, and
+**3.11 watchable matches per year** against the 0.71 the championship was built to raise. ⚠ The class
+problem is named rather than fixed: `check:tools` typechecks every tool and nothing RUNS one, so an
+instrument can stop measuring and the gate stays green.
+
+His seven questions are in `docs/plans/college-scene-questions-2026-09.md`, each priced, four
+answerable with a letter.
+
+## 24.09.2026 – «А ВОТ ЭТО ЕЩЕ ДИКИНЕШЬ МОЖЕ БЫТЬ?» – THE FIT HELPER'S BLIND CONTROL, ON THE SAME BRANCH
+
+His answer to question 6 of the college wave, and the same ruling he gave the bench rot the day
+before: the `fits.ts` card rides `college/scene` rather than a wave of its own.
+
+MEASURED FIRST, which is what the card was for: **88 calls through the fit helpers across 9 files –
+62 declare `nowrap`, 2 a `min-width` (both also `nowrap`), and 26 declare NEITHER**, nine unique
+shapes in six files. Four of the nine were billed **0.00px for their whole label** – three staff-seat
+names and the **Watch** control the college row's whole measurement turned on. Rule A (charge content
+that cannot wrap) moves 19 charges at 7 of 21 assertion sites and reddens nothing; rule B (the longest
+word, always) moves 25 at 10 sites and also reddens nothing, but is not free – it bills six labels
+that genuinely wrap – so A shipped.
+
+⚠ THE REFINEMENT WAS MEASURED, NOT REASONED: a browser breaks after a hyphen, so charging a whole
+whitespace-free token would OVER-count (Chromium: a hyphen splits 79.7 of 158.9; so do the en/em/figure
+dashes, the soft hyphen, ZWSP and `?`; the non-breaking hyphen, `/`, `,`, `.`, `:` and `)` do not). The
+rule charges a run with no break opportunity and records the set with its provenance. The floor holds:
+0.57–0.91 of the browser's width on every element in the census.
+
+⚠ THE PROOF IS THE MUTATION ARM: with the repair a 300-character unbreakable token reddens 9 seat
+assertions; without it all 26 pass, and three of four other census sites are INVISIBLE to the
+un-repaired helper. The college row's pinned deficit did not move (296.078125 of 291.0) and there was
+no double charge to undo – that file bills each span once from browser-measured constants.
+
+⚠⚠ AND A CLAIM IN THAT HELPER'S OWN HEADER WAS WITHDRAWN WITH A DATED NOTE, because the same pass
+falsified it: «a red verdict from an under-counting model is therefore always true». The `nowrap` arm
+bills a space and a narrow `.`/`–` at the AVERAGE advance, so `.rubber-who` measures 171.08 modelled
+against a browser's 166.47 (1.028; «Semifinal» 1.021). The direction is FALSE RED and never false
+green, so nothing gated is unsafe – and the arm is deliberately untouched, because charging per glyph
+is a re-fit of `ADVANCE` with its own census. That is its own card. A helper whose header claims a
+property the same wave measured false is the «unable to fail» family, and this repo has a long memory
+about it.
+
+⭐ The reconciliation pin was re-cast to assert the DIRECTION rather than the number – the shared
+model's demand for that row is strictly below the browser's – so a later re-fit that stays a floor
+cannot falsely redden a college test, and one that overtakes the browser reddens correctly. Proven by
+moving `ADVANCE`: green at 0.47 and 0.50, red at 0.52 (the row) and 0.90 (the span).
+
+## 24.09.2026 – THE ADVANCE IS RE-FIT PER GLYPH, AND ONE CONSTANT TURNS OUT TO HAVE BEEN TWO
+
+The card that the entry above left standing – «charging per glyph is a re-fit of `ADVANCE` with its own
+census» – built and measured on the same branch, on the same ruling.
+
+⚠⚠ THE RULING UNDER THE CARD, AND IT IS THE FINDING THE CARD DID NOT CONTAIN: `ADVANCE = 0.47` had TWO
+readers whose conservative directions are OPPOSITE. `demandedWidth` reads it for WIDTH, where a bigger
+advance is a FALSE RED; `lineCount` reads it for HEIGHT – it feeds `stackChildren` -> `boxOf` -> every
+height assertion in the file, including `measureDialog` and `assertDismissReachable` – where a SMALLER
+advance means fewer lines, a shorter modelled card, and a dialog that does not fit PASSING, which is
+round-20 #3 itself. So the obvious move, making the model narrower and more accurate, is the dangerous
+direction for every height verdict in the suite. **Two constants with two names** (`LABEL_ADVANCE` +
+its table for width, `WRAP_ADVANCE` for height), each docstring stating which way its own conservatism
+runs. The counterfactual, measured rather than argued: give `lineCount` the accurate per-glyph model and
+`TourBriefingDialog`'s modelled floor drops **1015.3 -> 923.6px** against Chromium's real 1078.1 – from
+0.94 of the truth to 0.86, every height verdict 9% laxer.
+
+THE HEIGHT ARM DID NOT MOVE, AND THAT IS A DIFF RATHER THAN AN INTENTION: the helper was instrumented
+behind an env flag, the whole component project run before and after, and the 3,520 `lineCount` records
+and 261 `measureDialog` results came back IDENTICAL, 0 on either side. ⚠ And the prior question – is the
+under-counting height ALREADY producing a false green – was answered before anything was touched, as
+arithmetic: all 261 calls re-scored with `contentFloor` multiplied by each of 107 factors from 1.00 to
+100, **0 calls cross between green and red**. The cap is why (of the 261, 0 are the one shape whose
+verdict could turn on the content floor).
+
+THE WIDTH CENSUS: **76 charged calls, 32 distinct labels, 8 files**, all Manrope at 10–14.5px and
+weights 400–800, each measured in headless Chromium over the repo's own `src/style.css` and
+`manrope-var.woff2`. Before, 5 of 32 were OVER the browser (max 1.043); after, **0 of 32**, min 0.552
+median 0.798 max 0.875. The table is the MINIMUM advance across the ten faces the app asks for, rounded
+down – 0 over-charges over 195 glyphs x 10 faces. ⚠ And the card's guess was wrong about the dash: `–`
+advances 0.540 in Manrope, WIDER than the average, so the false red on «Quarterfinal – C. Ostergaard»
+was its two spaces and its `. l i t f r`, not its dash.
+
+⚠⚠ A FULL PER-CHARACTER TABLE WAS MEASURED AND REFUSED: **NOT A FLOOR.** A shaped run is narrower than
+the sum of its glyphs' advances, so charging each glyph its own advance comes out OVER the browser on
+**46.5%** of the census's 749 Manrope strings – up to 2.96% from kerning alone («Rubber 1 – P. Kovac»
+113.68 modelled of 110.42 measured) and **73%** on a two-code-point flag that shapes into one glyph.
+Keeping it a floor needs a ~0.58 blanket haircut, which throws away what it bought. The card's own
+premise – «a per-character table is exact for the strings it covers» – is therefore false against a
+shaping engine, and that correction is in the helper's header in those words.
+
+⚠ THE PRICE, NAMED: the floor moves DOWN, median **0.918 -> 0.798** of the browser. A guard at 80% of
+the truth catches a row that overflows by more than ~20% of its text where the old one caught ~8%, and
+`assertInlineRowFits` has no height cap behind it. So the blind band was measured too: every assertion
+row that reaches a charged label, re-scored with the browser's width substituted (32 rows) – **0 where
+the model passes and the browser would fail**, and **1** that passes by less than the model's own error
+(`round26-span-gate-ui` at 320x568: 52.5px modelled slack, 20.1px browser slack, 32.3px error).
+
+⚠⚠ AND ONE ARM STOPPED BEING RED, WHICH IS THE INTERESTING DIRECTION – RE-AIMED, NOT SILENCED.
+`round26-span-gate-ui`'s mutation proof (give the span pill the week button's own `min-width: 206px`)
+reddened at 375x667 on the CTA's TEXT charge, which the re-fit lowers by 12.5px against 11.6px of
+margin. The browser says the mutated bar needs 357.3px of 343 – **14.3px over, so the row has not
+started fitting**. The helper's red moved to 320x568 (same 206px, 54px over) and the 375 claim is now
+asserted from a browser-measured «Training week» (91.296875px) instead of the model's, with the date and
+the numbers in the file.
+
+⚠⚠ AND THE WITHDRAWN CLAIM STAYS WITHDRAWN. «A red verdict from an under-counting model is therefore
+always true» was not restored, not even in the narrower form «true for a run whose glyphs are all in the
+table» – because that was measured FALSE: over 2,886 table-only strings x 10 faces, **167 of 28,860
+comparisons are over**, up to **1.556** (Manrope shapes «--» into ONE 0.540em glyph where the model
+charges 0.840; «".», «.1» and their kind run 22–47% over). What the header claims instead is exactly
+what was measured: under the browser on all 32 labels the file charges today, never able to charge more
+than the model it replaced, and NOT a universal law – with the fallback and shaping named as the two
+reasons, and the note that 0 of the 32 census labels are all-narrow.
+
+⭐ The follow-on is ruled to its own card, not this branch: browser-measured label constants
+(`MEASURED_PX`'s pattern, now proven twice) on the thin surfaces, with its own per-surface census.
+
+## 24.09.2026 – THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»
+
+«по всем вопросам делай по твоим рекомендациям. жду финальный гейт и ПР по скиллу» – the blanket
+over the wave's question list, materialised as:
+
+1. **Q1, the floor reads the degree** – A, as built. 2. **Q2, the booth licence** – A, unchanged;
+the student line stays texture inside it. 3. **Q3, the album's exit line** – B: «Went out in the
+Quarterfinal», the long form the card's own `leagueNote` already speaks; album, doc row, rendered
+examples and three pins re-aimed together. 4. **Q4, the phone fit** – the architect's lane built:
+the retirement mark drops its period (« ret», ~3px on every ret row), the pill's tracking goes
+(exactly 5.0px back to the surname – the worst straight-sets row falls from 5.078px over to
+0.078px, sub-pixel, and the «Lost» quarterfinal flips to a fit), and at 320-class widths the pill
+swaps to a glyph visually while keeping its accessible name. 5. **Q5** – A: the video session's
+files stay its own; this branch committed none and its gates ran in a clean worktree. 7. **Q7,
+36.4% of years titled** – A, left: the call-up ladder reads the result, and the field's
+no-scaling law stands. The second finding (the floor is nearly inert – graduates return and earn)
+is accepted as measured.
+
+⚠ AND THE RULING'S MUTATION RUN FOUND AN INSTRUMENT GAP: restoring the tracking left every pin
+green, because the demand side reads `MEASURED_PX` (browser constants) and nothing tied the LIVE
+cascade to the recipe the constants were measured under – a style drift desyncs the registry
+silently. The missing half is now a pin (`the pill's LIVE cascade matches the registry's recipe`),
+mutation-verified red-then-green.

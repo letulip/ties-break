@@ -296,13 +296,17 @@ function rubberLabel(match: WorldMatch, index: number): string {
 /** Won or lost, in the record's own words and with no adjective anywhere near it (§6: the game does
  *  not grade her, and ruling 4 keeps this card free of opinions).
  *
- *  ⚠ A RETIREMENT IS MARKED, AND IN THE RESULT SHEET'S OWN NOTATION. "Lost 6-4 2-1 ret." is her
- *  walking off, "Won 6-4 2-1 ret." is the other woman doing it, because the one who retires is
+ *  ⚠ A RETIREMENT IS MARKED, AND IN THE RESULT SHEET'S OWN NOTATION. "Lost 6-4 2-1 ret" is her
+ *  walking off, "Won 6-4 2-1 ret" is the other woman doing it, because the one who retires is
  *  always the one who lost. */
+// ⚠ RE-AIMED 24.09, HIS RULING ON THE WAVE'S Q4 («по всем вопросам делай по твоим рекомендациям»):
+// the mark drops its period – « ret», not « ret.» – because the period bought ~3px of the score
+// span on every retirement row and said nothing the three letters do not. The mark is still the
+// sheet's: "Lost 6-4 2-1 ret" is her walking off, "Won 6-4 2-1 ret" is the other woman doing it.
 function rubberOutcome(match: WorldMatch): string {
   const score = match.score ?? ''
   const verb = match.winnerId === KID_ID ? 'Won' : 'Lost'
-  return `${verb} ${score}${match.retiredId ? ' ret.' : ''}`.trim()
+  return `${verb} ${score}${match.retiredId ? ' ret' : ''}`.trim()
 }
 
 // --- ⭐⭐ ROUND 24 #3 – THE YEAR'S OWN CALENDAR --------------------------------------------------
@@ -658,9 +662,27 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
 .rubber-watch {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  /* ⚠ THE TRACKING IS GONE – his 24.09 Q4 ruling. It cost exactly 5.0px of the pill's 41.33
+     (measured, tests/component/college-scene-ui.test.ts), and those 5px were the difference
+     between the worst league row cutting two glyphs of a long surname and cutting nothing the
+     eye can see: the row's deficit fell 5.078 -> 0.078px, sub-pixel. */
   text-transform: uppercase;
   color: var(--accent);
+}
+
+/* ⚠ THE NARROW-PHONE SWAP – the second half of the same ruling. At 320-class widths the row is
+   over by ~60px and no wording survives that; the pill keeps its ACCESSIBLE name («Watch» stays
+   in the DOM for the screen reader) and shows the play glyph instead, handing ~28px back to the
+   surname. The ellipsis remains the safety net below the 375px law, as the stylesheet says. */
+@media (max-width: 340px) {
+  .rubber-watch {
+    font-size: 0;
+  }
+  .rubber-watch::before {
+    content: '▶';
+    font-size: 12px;
+    letter-spacing: normal;
+  }
 }
 
 /* THE YEAR AHEAD – three rows in fifty-two weeks, and the emptiness of the rest is the point. */
