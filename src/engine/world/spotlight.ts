@@ -172,8 +172,21 @@ export function lineageLicensed(world: WorldState): boolean {
  *  the press merely knew are two different true things, and a pool that blurred them would put a
  *  title in the booth's mouth that nobody won.
  *
+ *  ⭐⭐ v89 (the college scene, T4.3) – `collegeTitles` RIDES ALONG FOR EXACTLY THAT REASON AND FOR NO
+ *  OTHER, AND IT WIDENS NOTHING. The three gates above are untouched and `lineageLicensed` is
+ *  untouched: a mother whose only cabinet is a student one still licenses nothing, because the ⚠⚠ over
+ *  that function is a SHIPPED RULING («A COLLEGE-FORK MOTHER LICENSES NOTHING, AND THAT IS THE POINT
+ *  RATHER THAN A SIDE EFFECT»), and the college scene's spec §4.3 read literally would have overturned
+ *  it – which is not a builder's move and not an architect's either (the wave's rulings, D).
+ *
+ *  ⚠ SO THE THIRD COUNT IS A **FORK INSIDE THE LICENCE**, never a fourth way in. It is read only where
+ *  the packet already exists, i.e. where `proTitles > 0 || motherWasKnown(dynasty)` was already true –
+ *  and the live shape is a real career rather than a hypothetical: college at nineteen, the student
+ *  title, the degree, back to the tour, a WTA ranking inside `newsRankKnown`. There the booth has a
+ *  third true thing to say, and `src/viz/commentary.ts` owns whether to say it.
+ *
  *  ⚠ ZERO DRAWS AND ZERO WRITES, this file's own standing law: three reads and a record. */
-export function boothLineageAt(world: WorldState, tier: TierId): { proTitles: number; slams: number } | null {
+export function boothLineageAt(world: WorldState, tier: TierId): { proTitles: number; collegeTitles: number; slams: number } | null {
   if (!atOrAboveStageBar(tier)) return null
   if (newsStandingOf(world) === 'quiet') return null
   if (!lineageLicensed(world)) return null
@@ -181,7 +194,11 @@ export function boothLineageAt(world: WorldState, tier: TierId): { proTitles: nu
   // ⚠ THE PRO CABINET, matching the licence one function up: the packet is what the booth may CLAIM,
   // and the booth commentates the tour – a junior shelf in this packet would put a title in its
   // mouth that nobody won on one (the architect's review, 22.09).
-  return { proTitles: career.proTitles, slams: career.slams }
+  // ⚠ AND THE STUDENT CABINET BESIDE IT, WHICH IS A DIFFERENT CLAIM AND NOT A SMALLER ONE: it may be
+  // said in the KNOWN register and never in the pro-cabinet one. The junior shelves stay out of this
+  // packet (they are in `titles`, which this deliberately does not carry) – a student championship is
+  // a thing she won as an adult at a named competition, which is why it crosses and they do not.
+  return { proTitles: career.proTitles, collegeTitles: career.collegeTitles, slams: career.slams }
 }
 /** Is this tier at or above the big-stage bar? `TIER_LADDER`'s index and nothing else – ruling F.
  *

@@ -392,8 +392,14 @@ export interface PendingView {
    *  ⚠ IT IS **NOT** NARROWED TO THE FIRST WATCH, and that is the one difference from its neighbour.
    *  A private-life fact is SPENT once and for ever, so a re-watch that repeated it would make «once»
    *  visibly false; a lineage is true for ever and repeating it on a re-watch of the same match is
-   *  the booth saying a permanent thing twice, which is what a booth does. */
-  boothLineage: { proTitles: number; slams: number } | null
+   *  the booth saying a permanent thing twice, which is what a booth does.
+   *
+   *  ⭐⭐ v89 (the college scene, T4.3): `collegeTitles` JOINS THE PACKET AND WIDENS NO LICENCE. The
+   *  engine's gate is unchanged – `lineageLicensed` still refuses a mother nobody watched, which is a
+   *  shipped ruling of the dynasty spec's §2 – so the third count is only ever read where the packet
+   *  already exists. It is here because the copy forks on it a third time, in the KNOWN register and
+   *  never the pro-cabinet one: a student title is not a WTA title. */
+  boothLineage: { proTitles: number; collegeTitles: number; slams: number } | null
   /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
    *
    *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам

@@ -169,7 +169,9 @@ const props = withDefaults(
     /** ⭐⭐ v86 – her mother's cabinet, when the booth is licensed to name the line
      *  (`PendingView.boothLineage`). Null on every career that continues none, which is every career
      *  the game has ever created. */
-    boothLineage?: { proTitles: number; slams: number } | null
+    /** ⭐ v89 (the college scene, T4.3): `collegeTitles` rides the same packet – the copy forks on it
+     *  in `src/viz/commentary.ts` and this component still holds no opinion about what may be said. */
+    boothLineage?: { proTitles: number; collegeTitles: number; slams: number } | null
     /** ⭐ ROUND 39 #15a – ONE QUIET LINE UNDER THE RETIREMENT POPUP'S REASON, for the caller that
      *  knows more about the moment than the model does. The prologue's Local Open passes the
      *  parent's reassurance here (`LOCAL_OPEN_COPY.hurtNote` – a prologue weekend stores no injury,
