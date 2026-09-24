@@ -22,8 +22,15 @@
 //     the only one that can see this mutation at all. The next arm is what keeps them honest.
 //   · the `band !== 'working'` guard dropped, i.e. the floor made a MAP: **1 red** – §A's
 //     floor-never-a-ceiling case, which is what stops that case being vacuous.
-//   · the fold's `wonTheLeague(year.league)` -> `year.league !== null`: see §B.
-//   · the v88 -> v89 step's back-fill line removed: see §B.
+//   · the fold's `wonTheLeague(year.league)` -> `year.league !== null` (count every year that HELD a
+//     championship): **2 red of 19** – §B1's four-shape career (3 for 2) and §B1's lost-year cell
+//     (1 for 0). The leagueless cell stays green, which is correct: it is the arm the mutation keeps.
+//   · the v88 -> v89 step's back-fill line deleted: **1 red** – §B2's crafted payload, and only it.
+//     Every golden fixture stays green, which is the finding §B2's first case asserts.
+//   · the step's `??=` -> `=` (the clobber): **1 red** – §B2's keep-branch case, which is what makes
+//     the crafted payload worth crafting rather than a second copy of the back-fill case.
+//   · the booth fork's two arms swapped (`collegeTitles` read before `proTitles`): **1 red** – §B3's
+//     «TITLED still wins when both are set», which is what stops that case being vacuous.
 
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -33,6 +40,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { ENDINGS } from '../src/engine/ending'
 import { ECONOMY } from '../src/engine/economy'
 import { boothLineageLines } from '../src/viz/commentary'
+import { boothLineageAt, lineageLicensed } from '../src/engine/world/spotlight'
 import { DEFAULT_PROFILE, type CollegeLeagueRun, type CollegeState, type CollegeYear } from '../src/shared/protocol'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
@@ -151,5 +159,196 @@ describe('college scene T1 A – the graduate hands over no lower than middle', 
     expect(dynastyBackgroundOf(0), 'a pure function of cents, unchanged').toBe('working')
     expect(dynastyBackgroundOf(ECONOMY.startingFundsCents.middle - 1)).toBe('working')
     expect(dynastyBackgroundOf(ECONOMY.startingFundsCents.middle)).toBe('middle')
+  })
+})
+
+// =================================================================================================
+// B. THE STUDENT CABINET ON THE HANDOVER (T4, schema v89 – ruling E)
+// =================================================================================================
+
+describe('college scene T4 B1 – the fold equals the banked `wonTheLeague` count', () => {
+  it('⭐⭐⭐ a multi-year career counts the years she WON and no other kind of year', () => {
+    // ⚠ FOUR SHAPES IN ONE CAREER, and two of them must count ZERO – which is what makes this case a
+    // measurement of the fold rather than of a loop. Year 1 she won, year 2 she lost in the
+    // quarterfinal, year 3 held no championship at all (`league: null` – a v55 save migrated
+    // mid-freeze or a year an ending cut short before the fixture's week, `CollegeYear.league`'s own
+    // two legitimate nulls), year 4 she won again.
+    const world = posed('cs-t4-fold')
+    world.college = college(
+      [year(1, titleRun(312)), year(2, lostRun(364)), year(3, null), year(4, titleRun(468))],
+      500,
+    )
+    expect(dynastyHandoverOf(world).motherCareer.collegeTitles, 'two title years of four').toBe(2)
+  })
+
+  it('⚠ the two zero shapes, alone, so neither can hide behind the other', () => {
+    const lost = posed('cs-t4-lost')
+    lost.college = college([year(1, lostRun(312))], 352)
+    expect(dynastyHandoverOf(lost).motherCareer.collegeTitles, 'a year she played is not a year she won').toBe(0)
+
+    const leagueless = posed('cs-t4-null')
+    leagueless.college = college([year(1, null), year(2, null)], 404)
+    expect(dynastyHandoverOf(leagueless).motherCareer.collegeTitles, 'a year with no championship counts nothing').toBe(0)
+  })
+
+  it('⚠ a career that never enrolled counts 0 – REQUIRED, never optional, so 0 is the value and not an absence', () => {
+    // Ruling E in one assertion: the field is a count, 0 is its honest value, and an optional field
+    // would be a second spelling of zero.
+    const world = posed('cs-t4-none')
+    expect(world.college).toBe(null)
+    const career = dynastyHandoverOf(world).motherCareer
+    expect(career.collegeTitles).toBe(0)
+    expect('collegeTitles' in career, 'the key is THERE at zero, which is what "required" buys').toBe(true)
+  })
+
+  it('⚠⚠ the student cabinet is not the pro cabinet – nothing the fold counts reaches `titles`, `proTitles` or `slams`', () => {
+    // The field exists for exactly this, and `proTitles`' own lesson is that the separation has to be
+    // asserted rather than described: a student championship pays no ranking points and no cheque, so
+    // a career whose ONLY silverware is student silverware hands over an empty tour cabinet.
+    const world = posed('cs-t4-not-pro')
+    world.college = college([year(1, titleRun(312)), year(2, titleRun(364))], 404)
+    const career = dynastyHandoverOf(world).motherCareer
+    expect(career.collegeTitles, 'two student titles').toBe(2)
+    expect(career.titles, 'and not one trophy on any shelf the album counts').toBe(0)
+    expect(career.proTitles, 'and nothing at all on the tour').toBe(0)
+    expect(career.slams).toBe(0)
+    expect(career.bestRank, 'and no ranking, because a student field awards none').toBe(null)
+  })
+})
+
+describe('college scene T4 B2 – v89, the back-fill and the corpus that cannot see it', () => {
+  it('⭐⭐ every golden fixture migrates to v89 with a NULL dynasty – so the writing branch is unreachable from the corpus', () => {
+    // The measured reason the crafted case below has to exist, stated as an assertion rather than in a
+    // comment: `??=` versus `=` is invisible to a corpus whose every payload takes the other branch.
+    const migrated = rec(migrateSave(JSON.parse(readFileSync(`${SAVES}/v88.json`, 'utf8'))))
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(migrated.dynasty, 'the door is the only producer of a record, and taking it builds a NEW world').toBe(null)
+  })
+
+  it('⭐⭐⭐ the step BACK-FILLS 0 into a record a v88 save already carries – crafted, because the corpus cannot hold one', () => {
+    // ⚠ NO ENGINE PATH ON THIS TREE PRODUCES THIS PAYLOAD. tests/wave10-handover.test.ts §D is the
+    // precedent and the reason is verbatim: the only producer of a real record is the ending's door,
+    // and taking it builds a NEW world at the current version, so the corpus back-fills `dynasty`
+    // itself and never reaches inside it. This is the one thing in the repo that sees the new line.
+    const carried = {
+      generation: 3,
+      ancestorSeed: 'crafted-root',
+      raisedOnTour: true,
+      motherName: { first: 'Vera', last: 'Martin' },
+      motherTemperament: 'quiet',
+      motherCareer: { titles: 4, proTitles: 2, bestRank: 11, slams: 0, endedWeek: 812, endingKind: 'family' },
+    }
+    const save = JSON.parse(readFileSync(`${SAVES}/v88.json`, 'utf8'))
+    save.dynasty = JSON.parse(JSON.stringify(carried))
+    const migrated = rec(migrateSave(save))
+    const career = (migrated.dynasty as { motherCareer: Record<string, unknown> }).motherCareer
+    expect(career.collegeTitles, 'the honest count of what a pre-v89 save recorded').toBe(0)
+    // ...and NOTHING ELSE of the record moved – the back-fill is one key, not a rewrite.
+    expect({ ...career, collegeTitles: undefined }, 'every sibling field survives intact').toEqual({
+      ...carried.motherCareer,
+      collegeTitles: undefined,
+    })
+    expect((migrated.dynasty as { generation: number }).generation, 'a line three generations deep survives').toBe(3)
+  })
+
+  it('⚠ the step KEEPS a count a save already holds – the `=` arm, which `||=` would also clobber at zero', () => {
+    // ⚠ TWO HAZARDS IN ONE CASE. A plain `=` overwrites any stored count; `||=` overwrites a stored
+    // **0** – the commonest value this key can hold – and neither is visible to the corpus. A save
+    // carrying a real count can only exist once a v89 build has written one, which is tomorrow's
+    // save, which is exactly why the case is crafted today.
+    const save = JSON.parse(readFileSync(`${SAVES}/v88.json`, 'utf8'))
+    save.dynasty = {
+      generation: 2,
+      ancestorSeed: 'crafted-root-2',
+      raisedOnTour: false,
+      motherName: { first: 'Vera', last: 'Martin' },
+      motherTemperament: 'sunny',
+      motherCareer: { titles: 0, proTitles: 0, collegeTitles: 3, bestRank: 40, slams: 0, endedWeek: 700, endingKind: 'college' },
+    }
+    const migrated = rec(migrateSave(save))
+    const career = (migrated.dynasty as { motherCareer: { collegeTitles: number } }).motherCareer
+    expect(career.collegeTitles, 'three student titles are hers and the upgrade does not spend them').toBe(3)
+  })
+
+  it('⚠ a NULL dynasty is left exactly null – the guard is the statement, not a defensive read', () => {
+    const save = JSON.parse(readFileSync(`${SAVES}/v88.json`, 'utf8'))
+    expect(save.dynasty, 'the fixture carries none').toBe(null)
+    const migrated = rec(migrateSave(save))
+    expect(migrated.dynasty, 'and the step does not grow her a mother').toBe(null)
+  })
+})
+
+describe('college scene T4 B3 – the booth\'s third arm, INSIDE the shipped licence', () => {
+  it('⭐⭐⭐ `collegeTitles 1 / proTitles 0` takes the college pool, and 0/0 falls back to KNOWN', () => {
+    const collegePool = boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 1, slams: 0 })
+    const known = boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 0, slams: 0 })
+    expect(collegePool, 'a third true thing needs a third pool').not.toBe(known)
+    expect(collegePool.length, 'one or two lines, and never one – `variant` needs something to cycle').toBe(2)
+  })
+
+  it('⭐⭐⭐ TITLED still wins when BOTH are set – the bigger claim, never the smaller one', () => {
+    // ⚠ THE ORDER IS THE CLAIM. A mother with a tour cabinet AND a student one is spoken of by the
+    // tour one; the student title beside it is texture the booth does not owe.
+    const both = boothLineageLines({ side: 0, proTitles: 6, collegeTitles: 2, slams: 1 })
+    const titled = boothLineageLines({ side: 0, proTitles: 6, collegeTitles: 0, slams: 1 })
+    expect(both, 'the pro cabinet is read first').toBe(titled)
+  })
+
+  it('⚠⚠ not one college line claims a PROFESSIONAL stage, names the mother, or reads a number', () => {
+    // The three rules the pool inherits, asserted rather than trusted. The win each line names is the
+    // STUDENT one in as many words, which is why the register stays honest: a student title is not a
+    // WTA title, and the booth may not blur them.
+    for (const line of boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 1, slams: 0 }).map((f) => f('Nadia'))) {
+      expect(line, `it says the win happened HERE: ${line}`).not.toMatch(/won here|won it here|won this|trophies with that name/i)
+      expect(line, `it claims a tour cabinet: ${line}`).not.toMatch(/title with|tour title|trophy cabinet/i)
+      expect(line, `it names the student register: ${line}`).toMatch(/student|college/i)
+      expect(line, line).not.toMatch(/Alice|Martin|Vera/)
+      expect(line, line).not.toMatch(/\d/)
+    }
+  })
+
+  it('⚠ the ENGINE\'s licence is untouched – a mother with only a student cabinet still says nothing', () => {
+    // ⚠⚠ RULING D, as the one assertion that could catch it being overturned. `lineageLicensed`'s ⚠⚠
+    // is a SHIPPED ruling of the dynasty spec §2 – «A COLLEGE-FORK MOTHER LICENSES NOTHING» – and the
+    // college scene's §4.3 read literally would widen it. The pool above is a fork INSIDE the licence,
+    // so a mother the press never knew still buys her daughter no booth on any rung.
+    const world = createWorld('cs-t4-booth', DEFAULT_PROFILE, 'c-cs-t4-booth', undefined, {
+      generation: 1,
+      childSeed: 'cs-t4-booth:dynasty:1',
+      background: 'middle',
+      raisedOnTour: false,
+      motherName: { first: 'Alice', last: 'Martin' },
+      motherCountry: 'US',
+      childBirthdays: [],
+      motherTemperament: 'sunny',
+      motherCareer: { titles: 0, proTitles: 0, collegeTitles: 3, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'college' },
+    })
+    expect(lineageLicensed(world), 'three student titles and a career the press never saw').toBe(false)
+    for (const tier of ['local', 'w15', 'wta1000', 'slam'] as const) {
+      expect(boothLineageAt(world, tier), tier).toBe(null)
+    }
+  })
+
+  it('⭐⭐ ...and the LIVE shape reaches it: a known mother with a student title gets the college pool', () => {
+    // The career ruling D names: college at nineteen, the student title, the degree, back to the tour,
+    // a WTA ranking inside the news bar. The licence opens on the RANKING (`motherWasKnown`) exactly
+    // as it shipped, and the third arm is what she then has to say.
+    const world = createWorld('cs-t4-live', DEFAULT_PROFILE, 'c-cs-t4-live', undefined, {
+      generation: 1,
+      childSeed: 'cs-t4-live:dynasty:1',
+      background: 'middle',
+      raisedOnTour: false,
+      motherName: { first: 'Alice', last: 'Martin' },
+      motherCountry: 'US',
+      childBirthdays: [],
+      motherTemperament: 'sunny',
+      motherCareer: { titles: 0, proTitles: 0, collegeTitles: 1, bestRank: 12, slams: 0, endedWeek: 900, endingKind: 'natural' },
+    })
+    expect(lineageLicensed(world), 'the ranking is the licence, unchanged').toBe(true)
+    const packet = boothLineageAt(world, 'slam')
+    expect(packet, 'the student count rides the packet').toEqual({ proTitles: 0, collegeTitles: 1, slams: 0 })
+    expect(boothLineageLines({ side: 0, ...packet! }), 'and the copy forks on it').toBe(
+      boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 1, slams: 0 }),
+    )
   })
 })
