@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 134 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 135 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -33,7 +33,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
-| college | 16 | [THE COLLEGE SCENE IS BUILT, AND TWO OF THE SPEC'S PREMISES WERE MEASURED FALSE](#24092026--the-college-scene-is-built-and-two-of-the-specs-premises-were-measured-false) | 2026-09-24 |
+| college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
 | general | 19 | [THE ADVANCE IS RE-FIT PER GLYPH, AND ONE CONSTANT TURNS OUT TO HAVE BEEN TWO](#24092026--the-advance-is-re-fit-per-glyph-and-one-constant-turns-out-to-have-been-two) | 2026-09-24 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
@@ -5401,3 +5401,27 @@ reasons, and the note that 0 of the 32 census labels are all-narrow.
 
 ⭐ The follow-on is ruled to its own card, not this branch: browser-measured label constants
 (`MEASURED_PX`'s pattern, now proven twice) on the thin surfaces, with its own per-surface census.
+
+## 24.09.2026 – THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»
+
+«по всем вопросам делай по твоим рекомендациям. жду финальный гейт и ПР по скиллу» – the blanket
+over the wave's question list, materialised as:
+
+1. **Q1, the floor reads the degree** – A, as built. 2. **Q2, the booth licence** – A, unchanged;
+the student line stays texture inside it. 3. **Q3, the album's exit line** – B: «Went out in the
+Quarterfinal», the long form the card's own `leagueNote` already speaks; album, doc row, rendered
+examples and three pins re-aimed together. 4. **Q4, the phone fit** – the architect's lane built:
+the retirement mark drops its period (« ret», ~3px on every ret row), the pill's tracking goes
+(exactly 5.0px back to the surname – the worst straight-sets row falls from 5.078px over to
+0.078px, sub-pixel, and the «Lost» quarterfinal flips to a fit), and at 320-class widths the pill
+swaps to a glyph visually while keeping its accessible name. 5. **Q5** – A: the video session's
+files stay its own; this branch committed none and its gates ran in a clean worktree. 7. **Q7,
+36.4% of years titled** – A, left: the call-up ladder reads the result, and the field's
+no-scaling law stands. The second finding (the floor is nearly inert – graduates return and earn)
+is accepted as measured.
+
+⚠ AND THE RULING'S MUTATION RUN FOUND AN INSTRUMENT GAP: restoring the tracking left every pin
+green, because the demand side reads `MEASURED_PX` (browser constants) and nothing tied the LIVE
+cascade to the recipe the constants were measured under – a style drift desyncs the registry
+silently. The missing half is now a pin (`the pill's LIVE cascade matches the registry's recipe`),
+mutation-verified red-then-green.
