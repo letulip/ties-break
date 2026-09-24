@@ -53,12 +53,18 @@ import type {
   BuildLetterTerms,
   CareerEnding,
   CareerEndingType,
+  CollegeYear,
   Milestone,
   PrologueTrace,
   TravelHomeMood,
   TravelHomeScene,
 } from '../../shared/protocol'
 import { FIRST_COURT_AGE } from '../../shared/protocol'
+// ⚠ THE LEAF'S OWN NAMERS, AND NEVER A SECOND SPELLING OF THEM (the college scene, ruling C):
+// `wonTheLeague` is the title fork, `leagueExitLabel` is the round's name, `COLLEGE_LEAGUE.label` is
+// the competition's fictional one. `engine/collegeLeague.ts` is a leaf – no `WorldState`, no calendar –
+// so this import keeps the album's dependency direction intact.
+import { COLLEGE_LEAGUE, leagueExitLabel, wonTheLeague } from '../collegeLeague'
 import { ENDINGS } from '../ending'
 import { KID_ID } from './constants'
 import { temperamentFor, type Temperament } from '../spirit'
@@ -294,8 +300,12 @@ interface AlbumCandidate {
   /** a closer is guaranteed its frame and exempt from the caps – the ruled closing frames */
   closer?: boolean
   /** ⭐ v86 – THE NOTE'S RULED CHECKLIST, built engine-side (`AlbumNote.lines`, the form mockups AZ-B
-   *  and AZ-C already drew). Absent on every candidate the book has ever built, and present on the
-   *  heirloom alone: the corpus may carry no number, so the facts that ARE numbers ride here. */
+   *  and AZ-C already drew). Absent on almost every candidate the book builds: the corpus may carry no
+   *  number, so the facts that ARE numbers ride here.
+   *
+   *  Two writers today – the heirloom (`dynastyCandidates`, the mother's cabinet) and the graduate
+   *  (`collegeLeagueLines` on the `graduated` closer, the college scene's ruling C). Both obey the
+   *  same law: a line rests on a fact the record really holds, and an absent fact prints nothing. */
   lines?: readonly string[]
 }
 
@@ -318,7 +328,7 @@ function candidate(
   id: string,
   week: number,
   priority: number,
-  extra: Partial<Pick<AlbumCandidate, 'tier' | 'finish' | 'closer'>> = {},
+  extra: Partial<Pick<AlbumCandidate, 'tier' | 'finish' | 'closer' | 'lines'>> = {},
 ): AlbumCandidate {
   return { week, ageYears: kidAgeAt(world, week), occasion: occasionOf(id), priority, ...extra }
 }
@@ -691,6 +701,52 @@ function lastProvenCourtWeek(world: WorldState, by: number): number | null {
   return last
 }
 
+/** ⭐⭐ THE GRADUATE'S CHAMPIONSHIP RECORD, AS THE NOTE'S CHECKLIST – the college scene's ruling C
+ *  (docs/plans/college-scene-rulings-2026-09.md). The spec asked for «the album's college chapter
+ *  gains the championship's line per year» and THERE IS NO COLLEGE CHAPTER: `AlbumBand` has five
+ *  members and the album's whole college reading is the `graduated` closer. So the per-year lines
+ *  land where the shape already has a place for facts a corpus string may not carry – `AlbumNote.lines`,
+ *  «short ruled lines instead of a paragraph» – exactly as the heirloom's do (`dynastyCandidates`).
+ *
+ *  ⚠ ONE LINE PER BANKED YEAR THAT REALLY HELD A CHAMPIONSHIP, and a `league: null` year contributes
+ *  NOTHING rather than an absence sentence. Two careers legitimately carry that null (a v55 save
+ *  migrated mid-freeze, and a year cut short before week `COLLEGE_LEAGUE.seasonWeek` came round –
+ *  `CollegeYear.league`'s own note), and a «no championship» row would be the book describing a
+ *  fixture that never happened. Same rule as the heirloom's missing «Titles: 0».
+ *
+ *  ⚠ THE YEAR'S OWN `index`, NEVER A COUNT. `bankCollegeYear` writes `years.length + 1`, so the row
+ *  carries its own number – `CollegeYearCard.vue`'s `collegeReportHead` is written under the same
+ *  sentence, and a count here could drift from the number the card printed at the time.
+ *
+ *  ⚠ IT NEVER GRADES HER, which is `collegeLeagueLine`'s own ⚠ binding a second reader: «a
+ *  first-round exit and a title are stated in the same voice». One template, one forked value, no
+ *  score, no date, no adjective. `wonTheLeague` is the fork and `leagueExitLabel` is the namer – a
+ *  second idea of what a round is called may not get in (the rule `collegeLeague.ts` is written
+ *  under). The competition is `COLLEGE_LEAGUE.label` and never a real body's name (CLAUDE.md Style:
+ *  organisations are fictional).
+ *
+ *  ⚠ THE TWO RENDERINGS ARE DRAFTS for his pass (invariant 4), quoted in the wave's report and its
+ *  strings table. They deliberately reuse the words the year card already prints for this exact
+ *  fact – its `the College League` / `Won it` fact pair and `leagueExitLabel`'s round – so the two
+ *  surfaces cannot come to say different things about one championship. */
+function collegeLeagueLines(years: readonly CollegeYear[]): readonly string[] {
+  return years
+    .map((year) => {
+      // ⚠ TRUTHINESS, AND IT IS `lastLeagueRun`'s OWN IDIOM (world/college.ts) rather than a loose
+      // `=== null`: that function is the only other reader of this field and it asks `if (run)`. The
+      // declared type is `CollegeLeagueRun | null` and the v56 migration normalises a missing key to
+      // null (migrations.ts:1798), so the two spellings agree on every save – and on a hand-built
+      // probe year, which answers `undefined`, only this one is honest about «no run recorded».
+      const run = year.league
+      if (!run) return null
+      // ⚠ DRAFT x2 – the title year and the exit year, in one voice:
+      //     «Year 1, the College League: Won it»
+      //     «Year 2, the College League: Semifinal»
+      return `Year ${year.index}, ${COLLEGE_LEAGUE.label}: ${wonTheLeague(run) ? 'Won it' : leagueExitLabel(run)}`
+    })
+    .filter((line): line is string => line !== null)
+}
+
 /** THE CLOSERS – ruled 19.09, re-ruled 20.09, and checked by his own eyes on the paintings:
  *  `graduated` where a college happened (the FULL course – `finishedTheCourse` is the shared
  *  predicate, so a leaver gets no graduation frame on any surface); `farewell` where a last match
@@ -704,7 +760,10 @@ function closerCandidates(world: WorldState): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
   const college = world.college
   if (college?.doneWeek != null && finishedTheCourse(college.years.length, ENDINGS.collegeYears)) {
-    out.push(candidate(world, 'graduated', college.doneWeek, 1000, { closer: true }))
+    // ⭐ THE COLLEGE SCENE (ruling C) – the degree's page carries the championship record as its
+    // checklist. `lines` is empty on a course whose every year held a null run, which is the same
+    // book the graduate always had.
+    out.push(candidate(world, 'graduated', college.doneWeek, 1000, { closer: true, lines: collegeLeagueLines(college.years) }))
   }
   const ending = closingEndingOf(world)
   if (!ending) return out
@@ -1177,15 +1236,34 @@ function tagOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): Album
 // §7 SHEETS AND CHAPTERS
 // =================================================================================================
 
-function noteOf(c: AlbumCandidate, hand: AlbumHand): AlbumNote {
+function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate[] = [c]): AlbumNote {
   return {
     text: hand.note,
     dateLabel: c.week === null ? null : weekSpan(c.week),
     ageLabel: ageLabelOf(c.ageYears),
-    // ⭐ v86 – `[]` on every candidate but the heirloom, which is what it has always been: the ruled
-    // form exists in the shape and had no writer until the dynasty needed to print numbers a corpus
-    // string is forbidden to carry.
-    lines: c.lines ?? [],
+    // ⭐ v86 – `[]` on every candidate that carries no checklist, which is almost all of them: the
+    // ruled form exists in the shape and had no writer until the dynasty needed to print numbers a
+    // corpus string is forbidden to carry. The graduate's championship record joined it on the same
+    // argument (`collegeLeagueLines`).
+    //
+    // ⚠⚠ THE CHECKLIST IS THE SHEET's, NOT THE LEAD FRAME's, AND THAT IS A REPAIR WITH A MEASUREMENT
+    // BEHIND IT (the college scene, 24.09). This read used to be `c.lines ?? []` – the LEAD frame's
+    // alone – which was invisible while the heirloom was the only writer, because it always leads the
+    // prologue's first sheet. The graduate does not: `portraitStage` puts 17–22 in ONE band, so a
+    // girl who enrolled at eighteen and graduated at twenty-two shares her chapter with everything
+    // she did at seventeen, and those weeks sort ahead of the degree. MEASURED on the posed
+    // teen-band graduate: with no earlier teen moment the checklist printed its three rows, and with
+    // ONE it printed none – the record was built, banked and dropped on the way to the page.
+    // «Captured is not surfaced», and the fix is to ask the SHEET for its checklist.
+    //
+    // ⚠ IT CHANGES NOTHING FOR THE HEIRLOOM, which is why a generalisation was safe: it is the only
+    // candidate on its sheet that carries lines, so «the first frame with a checklist» and «the lead
+    // frame» are the same candidate there. Two sheets can never both be claimed – the heirloom rides
+    // the prologue chapter and the graduate the teen/adult one.
+    //
+    // ⚠ AND ONLY THE LINES MOVED. `dateLabel` and `ageLabel` stay the LEAD's, because they date the
+    // sheet, and `text` stays the SPEAKER's, because A32's closing words win their sheet by ruling.
+    lines: own.find((x) => (x.lines?.length ?? 0) > 0)?.lines ?? [],
   }
 }
 
@@ -1234,7 +1312,7 @@ function sheetsOf(
       chapterTitle: title,
       ageLabel: chapterAgeLabel,
       frames: own.map((c) => frameOf(world, c, voice)),
-      note: noteOf(lead, hand),
+      note: noteOf(lead, hand, own),
       line: hand.line,
       ticket: layout === 'B' && tournament ? ticketOf(tournament, flavour) : null,
       tag: layout === 'C' && tournament ? tagOf(tournament, flavour) : null,
