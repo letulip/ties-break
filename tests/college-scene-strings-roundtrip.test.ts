@@ -105,7 +105,9 @@ describe('the college scene – the strings table IS the corpus', () => {
     // `rounds` off the row for exactly that reason, and a draw of 8 has three of them.
     const rounds = 3
     const won = `Year 1, ${COLLEGE_LEAGUE.label}: Won it`
-    const out = `Year 2, ${COLLEGE_LEAGUE.label}: ${leagueExitLabel({ roundsWon: 0, rounds })}`
+    // ⚠ RE-AIMED 24.09 by his Q3 ruling (option B) – the reconstruction composes the long exit form
+    // exactly as `albumBook.ts` now does; a doc example carrying the old bare round reddens here.
+    const out = `Year 2, ${COLLEGE_LEAGUE.label}: Went out in the ${leagueExitLabel({ roundsWon: 0, rounds })}`
     const md = readFileSync(TABLE, 'utf8')
     expect(md.includes(`«${won}»`), `the title example must read «${won}»`).toBe(true)
     expect(md.includes(`«${out}»`), `the exit example must read «${out}»`).toBe(true)

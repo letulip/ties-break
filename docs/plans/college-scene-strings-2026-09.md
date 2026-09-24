@@ -31,16 +31,17 @@ One template on the `graduated` sheet's checklist, forking on whether she won it
 
 | id | home | text | status |
 | --- | --- | --- | --- |
-| C1 | `src/engine/world/albumBook.ts` | Year ${year.index}, ${COLLEGE_LEAGUE.label}: ${wonTheLeague(run) ? 'Won it' : leagueExitLabel(run)} | `DRAFT` |
+| C1 | `src/engine/world/albumBook.ts` | Year ${year.index}, ${COLLEGE_LEAGUE.label}: ${wonTheLeague(run) ? 'Won it' : `Went out in the ${leagueExitLabel(run)}`} | `DRAFT` |
 
 What it renders, on a career that won its first year and went out in the quarterfinal of its second –
 the two shapes, and the pin reconstructs both from the engine's own constants rather than trusting
 this paragraph:
 
 - «Year 1, the College League: Won it»
-- «Year 2, the College League: Quarterfinal»
+- «Year 2, the College League: Went out in the Quarterfinal»
 
-The only words this wave invented here are `Year `, the comma, the colon and `Won it`. The
+The only words this wave invented here are `Year `, the comma, the colon, `Won it` and – his Q3
+ruling of 24.09, option B – `Went out in the `. The
 competition is named by `COLLEGE_LEAGUE.label` and the round by `leagueExitLabel`, so the album and
 the year card cannot come to say different things about one championship – and `Won it` is the word
 the card's own fact pair already prints for it.

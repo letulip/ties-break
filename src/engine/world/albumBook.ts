@@ -741,8 +741,13 @@ function collegeLeagueLines(years: readonly CollegeYear[]): readonly string[] {
       if (!run) return null
       // ⚠ DRAFT x2 – the title year and the exit year, in one voice:
       //     «Year 1, the College League: Won it»
-      //     «Year 2, the College League: Semifinal»
-      return `Year ${year.index}, ${COLLEGE_LEAGUE.label}: ${wonTheLeague(run) ? 'Won it' : leagueExitLabel(run)}`
+      //     «Year 2, the College League: Went out in the Semifinal»
+      // ⚠ RE-AIMED 24.09, HIS RULING ON THE WAVE'S Q3 («по всем вопросам делай по твоим
+      // рекомендациям» – option B): the bare round read cold beside «Won it» could be heard as
+      // «she reached it». The long form is the engine's own sentence for this fact (the card's
+      // `leagueNote` spells it the same way), so the album stops reading like a results table and
+      // the two surfaces still share `leagueExitLabel`'s one spelling of the round.
+      return `Year ${year.index}, ${COLLEGE_LEAGUE.label}: ${wonTheLeague(run) ? 'Won it' : `Went out in the ${leagueExitLabel(run)}`}`
     })
     .filter((line): line is string => line !== null)
 }

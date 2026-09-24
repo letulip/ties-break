@@ -122,8 +122,9 @@ describe('the college scene T3 – the championship record on the graduate\'s pa
     world.college!.years = fourYears(world)
     expect(graduatedSheet(world).note!.lines, 'three championships in four years, and the null holds its peace').toEqual([
       'Year 1, the College League: Won it',
-      'Year 2, the College League: Quarterfinal',
-      'Year 4, the College League: Semifinal',
+      // ⚠ RE-AIMED 24.09 by his Q3 ruling (option B) – the long exit form; same pin, his words.
+      'Year 2, the College League: Went out in the Quarterfinal',
+      'Year 4, the College League: Went out in the Semifinal',
     ])
   })
 
