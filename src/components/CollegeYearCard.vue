@@ -296,8 +296,8 @@ function rubberLabel(match: WorldMatch, index: number): string {
 /** Won or lost, in the record's own words and with no adjective anywhere near it (§6: the game does
  *  not grade her, and ruling 4 keeps this card free of opinions).
  *
- *  ⚠ A RETIREMENT IS MARKED, AND IN THE RESULT SHEET'S OWN NOTATION. "Lost 6-4 2-1 ret." is her
- *  walking off, "Won 6-4 2-1 ret." is the other woman doing it, because the one who retires is
+ *  ⚠ A RETIREMENT IS MARKED, AND IN THE RESULT SHEET'S OWN NOTATION. "Lost 6-4 2-1 ret" is her
+ *  walking off, "Won 6-4 2-1 ret" is the other woman doing it, because the one who retires is
  *  always the one who lost. */
 // ⚠ RE-AIMED 24.09, HIS RULING ON THE WAVE'S Q4 («по всем вопросам делай по твоим рекомендациям»):
 // the mark drops its period – « ret», not « ret.» – because the period bought ~3px of the score
