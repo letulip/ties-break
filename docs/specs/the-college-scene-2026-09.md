@@ -119,17 +119,41 @@ card that quietly loses a button nobody asked to lose is round 29's rename in a 
 
 ## 4. The record – the album and the dynasty
 
-1. **The album book**: the college chapter gains the championship's line per year that held one –
+1. **The album book**: the graduate's page gains the championship's line per year that held one –
    a title year says so, an exit year says how far she went (DRAFT wording, one line per shape,
    his pass). The fixed seven-slot ending album is NOT touched (its redesign is his reserved
-   backlog item); this is the BOOK's college pages.
+   backlog item); this is the BOOK's.
+
+   ⚠⚠ THERE IS NO COLLEGE CHAPTER, AND THIS LINE USED TO SAY THERE WAS. Ruling C measured it:
+   `AlbumBand` has five members (`prologue` / `young` / `teen` / `adult` / `lateCareer`) and
+   `ALBUM_CHAPTER_TITLES` five entries, and the album's whole college reading is the **`graduated`
+   closer** (occasion A30, gate `college-finished`). So the lines land as `AlbumNote.lines` – the
+   checklist form the wire already declares – on that sheet, built engine-side, exactly as the
+   heirloom's cabinet facts are. Corrected 24.09.
+
+   ⚠ AND THE RECORD IS THE **SHEET's** CHECKLIST, NOT THE LEAD FRAME's, which is a repair the build
+   found and the spec could not have: `portraitStage` puts 17–22 in one band, so a girl who
+   graduated at twenty-two shares her chapter with her seventeenth year and those weeks sort ahead
+   of the degree. Measured – **one junior title erased all three college rows**. Captured is not
+   surfaced, and the fix was to ask the sheet.
 2. **The handover** (schema v89, the wave's one move): `motherCareer` gains
    `collegeTitles: number` – the count of her banked years with `wonTheLeague` – carried through
    `DynastyRecord` like every sibling field. Back-fill 0 for saves that predate it; append-only
    migration, golden fixture v89.json, e2e fixtures regenerated – the full four-part move.
-3. **The booth**: a lineage line for a college-champion mother, licensed off
-   `collegeTitles > 0` – the KNOWN-claim register, never the pro-cabinet one (a student title is
-   not a WTA title; `proTitles`' own lesson applied before it bites). One or two lines, DRAFT.
+3. **The booth**: a lineage line for a college-champion mother in the KNOWN-claim register, never
+   the pro-cabinet one (a student title is not a WTA title; `proTitles`' own lesson applied before
+   it bites). One or two lines, DRAFT.
+
+   ⚠⚠ IT IS A REGISTER **INSIDE** THE SHIPPED LICENCE AND NOT A WIDENING OF IT. Read literally,
+   «licensed off `collegeTitles > 0`» would overturn a ruling already in the code: `lineageLicensed`
+   (`world/spotlight.ts`) returns `proTitles > 0 || motherWasKnown(dynasty)` under a ⚠⚠ that says
+   «A COLLEGE-FORK MOTHER LICENSES NOTHING, AND THAT IS THE POINT RATHER THAN A SIDE EFFECT» (the
+   dynasty spec §2). Ruling D keeps it: `boothLineageLines` forks three ways inside the existing
+   licence – pro cabinet, else the student title, else the mother the tour merely knew – and
+   `lineageLicensed` is untouched, its guard green. The line is live for a real career (college at
+   nineteen, the student title, the degree, back on tour, a ranking inside `newsRankKnown`).
+   Whether a college champion the professional press never saw should be mentioned at all is
+   **question 2 of the wave's report**, and it is his.
 
 ⚠ Task 4 is the wave's only schema move and it is cleanly strikeable at dispatch: without it the
 wave still ships the floor, the bracket and the album lines, schema-free.
