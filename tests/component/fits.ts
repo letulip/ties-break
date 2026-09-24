@@ -246,22 +246,67 @@ export function boxOf(el: Element, availableWidth: number): Box {
 // row of PILLS: a control that declares no minimum but is `white-space: nowrap` still cannot shrink
 // below its own text, and reading only the declared minimum would score such a row as free.
 
-/** The width a control wants: its declared `min-width`, and – when it is `white-space: nowrap` – at
- *  least its own label plus its padding and borders.
+/** ⚠⚠ WHERE A LINE MAY BREAK, MEASURED RATHER THAN ASSUMED (24.09) – and it is what makes the rule
+ *  below a floor instead of a guess. A browser breaks at whitespace and ALSO after a hyphen or a
+ *  dash, so «one word» for this model's purposes is a run with no break opportunity in it at all.
+ *  Measured in headless Chromium over the repo's own Manrope, `width: min-content` against
+ *  `width: max-content` on one token at 13px: the hyphen breaks (79.7 of 158.9), and so do the en,
+ *  em and figure dashes, the soft hyphen, the zero-width space and `?`. The NON-breaking hyphen
+ *  U+2011 does NOT (158.9 of 158.9), and neither do `/`, `,`, `.`, `:` or `)`. Charging a token this
+ *  set splits would OVER-count, which is the one thing this file may never do. */
+const BREAKS = /[\s\u00ad\u200b\u2012\u2013\u2014?-]/
+
+/** The width a control wants: its declared `min-width`, and – when its label cannot wrap – at least
+ *  that label plus its padding and borders.
  *
  *  ⚠ AN ELLIPSIS IS NOT CREDITED, AND THAT IS THE DECISION. `.next-week-btn` declares
  *  `text-overflow: ellipsis`, and style.css says what it is for in its own words: «the safety net at
  *  375px, not the plan». A control cut down to «Trai…» is not a control the measurement should score
  *  as fitting – crediting the ellipsis would let any pair of pills pass by shrinking the CTA to its
  *  padding. A control that may WRAP is different: it gives ground vertically, so its declared
- *  minimum is the floor. */
+ *  minimum is the floor.
+ *
+ *  ⚠⚠ AND THAT LAST SENTENCE WAS TRUE OF THE WRONG SET OF CONTENT UNTIL 24.09 – THIS IS THE AMENDMENT
+ *  RATHER THAN A NEW RULE. «Gives ground vertically» is sound for a label WITH a break opportunity in
+ *  it; content with NONE cannot wrap whatever `white-space` says, so it gives no ground at all – it
+ *  simply overflows. `lineCount` in this same file has always known it («a word longer than the line
+ *  gets its own»), and the old branch charged such a control **0.0px of text** whenever it also
+ *  declared no `min-width`, which is a set of two omissions that says nothing about how wide the
+ *  thing is.
+ *
+ *  ⚠ THE COST OF THAT, MEASURED ON A SHIPPED SURFACE. `CollegeYearCard.vue`'s `.rubber-watch` – the
+ *  **Watch** control on every championship row – declares neither, carries no padding, and was
+ *  therefore scored at **0.0px** against a real browser width of **41.33px** (headless Chromium,
+ *  the repo's own Manrope; `tests/component/college-scene-ui.test.ts`'s `MEASURED_PX` records the
+ *  provenance). ⚠⚠ AND `assertInlineRowFits` HAS NO HEIGHT CAP TO FALL BACK ON, which is why this
+ *  mattered more than the header's «a floor's red verdict is always true» allows for: in a dialog the
+ *  cap makes the floor's accuracy stop mattering, in a ROW nothing does, so an under-charged control
+ *  there produces a GREEN verdict on a row that really does not fit.
+ *
+ *  ⚠ THE CONTRACT IS UNTOUCHED AND THAT IS THE POINT: a single unbreakable word's width IS the
+ *  browser's own min-content width for that run, so charging it can never over-count – which is why
+ *  the change is to WHICH content the old branch was wrong about, not to how much a floor may charge.
+ *  Measured against Chromium, the new charges are still under the truth by 4–43%: `.seat-name`'s
+ *  «Coach» 24.67 of 32.48, «Masseur» 34.54 of 42.95, «Psychologist» 59.22 of 64.78, and
+ *  `.rubber-watch`'s «Watch» 23.50 of 41.33 – the last one because `ADVANCE` charges nothing for
+ *  weight 800, for `uppercase` being wider than the glyphs it counts, or for `letter-spacing`.
+ *
+ *  ⚠ WHY NOT THE LONGEST WORD OF EVERY LABEL, which is strictly more correct still (a browser cannot
+ *  break a word wherever the label came from). It was measured too, over the whole component project:
+ *  it MOVES 25 charges across 10 assertion sites against this rule's 19 across 7 – so it is not free,
+ *  and the difference is six charges on labels that genuinely wrap («Raise her daughter»,
+ *  «She came by with something small.»). A rule that moves a number nobody asked about is a rule for
+ *  its own card, with its own arms. Neither rule reddens anything: both arms ran the whole project
+ *  green at 218 files / 2354 tests. */
 export function demandedWidth(el: Element, room: number): number {
   const cs = getComputedStyle(el)
   const chrome = num(cs.paddingLeft) + num(cs.paddingRight) + num(cs.borderLeftWidth) + num(cs.borderRightWidth)
   const declared = lengthPx(cs.minWidth, room)
   const floor = Number.isFinite(declared) ? declared : 0
-  if (cs.whiteSpace !== 'nowrap') return Math.max(floor, chrome)
   const text = (el.textContent ?? '').trim()
+  // The label is charged when it CANNOT wrap: either the control forbids wrapping, or the label has
+  // nowhere to break. Empty text charges nothing under either arm, as it always did.
+  if (cs.whiteSpace !== 'nowrap' && (text === '' || BREAKS.test(text))) return Math.max(floor, chrome)
   return Math.max(floor, chrome + text.length * num(cs.fontSize) * ADVANCE)
 }
 

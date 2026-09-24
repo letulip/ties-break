@@ -54,14 +54,30 @@
 //
 // ⚠⚠ AND THE FIRST VERSION OF THIS FILE SAID THE OPPOSITE, WHICH IS WHY THE HISTORY IS KEPT HERE. It
 // asserted «every row fits» through `fits.ts` and it was GREEN – because that helper is a documented
-// FLOOR and it charges `.rubber-watch` **0.0px** (`demandedWidth` credits a label only under
+// FLOOR and it charged `.rubber-watch` **0.0px** (`demandedWidth` credited a label only under
 // `white-space: nowrap`, which this span does not declare), while charging nothing anywhere for
 // `letter-spacing`, for `uppercase` being wider than the glyphs it counts, or for `tabular-nums`.
 // Against a row with ~5px of real margin that floor does not merely under-count, it INVERTS THE
 // VERDICT. A green test that says the opposite of the measurement is worse than no test: it is
 // round-20 #3's failure with the polarity reversed, a reassurance where a number belongs. So the
-// assertions below are the ROOM AND THE DEMAND AS NUMBERS with the deficit PINNED, `fits.ts` is left
-// exactly as it is (the helper question is its own card), and the per-span widths come from a browser.
+// assertions below are the ROOM AND THE DEMAND AS NUMBERS with the deficit PINNED, and the per-span
+// widths come from a browser.
+//
+// ⚠⚠ THE 0.0px HALF OF THAT WAS REPAIRED IN THE SHARED HELPER ON 24.09, AND THE PIN BELOW DID NOT
+// MOVE. `demandedWidth` now charges a label that has nowhere to break whatever `white-space` says, so
+// it scores **23.50px** for «Watch» instead of 0.0 (its own docstring carries the census and the
+// browser table). ⚠ THAT DOES NOT HAND THIS ROW BACK TO THE SHARED HELPER, which is the part worth
+// stating rather than assuming: measured through the repaired helper the row demands **275.2px of
+// 291.0** and is still GREEN, against the browser's 296.1 – because `ADVANCE` charges nothing for
+// weight 800, for `uppercase`, for the 0.1em tracking or for `tabular-nums`, and because the SAME
+// constant over-charges `.rubber-who` (171.08 modelled against 166.47 measured). The repair closed
+// 23.5px of a 44.4px gap and the remaining 20.9px still inverts the verdict, so `MEASURED_PX` stays
+// and the arithmetic below is unchanged. `⭐⭐ the shared helper's own verdict on this row` pins that
+// relationship so a later wave cannot quietly swap the browser numbers for the model's.
+//
+// ⚠ AND THERE IS NO DOUBLE CHARGE: `rowDemand` bills each span ONCE, from `MEASURED_PX`, and never
+// calls `demandedWidth` – only `availableWidth` comes from `fits.ts`. The repair changed which
+// sentences about the shared helper are true, not one number in this file.
 //
 // THE NUMBERS. Room for a row: 375 − 2x16 (the frame) − 30 (the Card's border and padding) = 313 to
 // the `li`, less the row's own 10px padding and 1px border a side = **291.0px**, two 8px gaps inside.
@@ -123,6 +139,11 @@
 //   * the row given `flex-wrap: wrap` -> the «nothing is displaced» pass goes RED. That is the
 //     repair a later wave reaches for to «fix the truncation», and it trades a cut name for a row of
 //     unpredictable height – the shape round-20 #3 is a record of.
+//   * (24.09, for the shared-helper arm) `.college-card`'s padding grown by 8px A SIDE, so the room
+//     drops from 291.0 to 275.0 -> the REPAIRED shared helper goes RED on this row («the controls
+//     demand 275px of a 275px row»), and against the helper as it stood BEFORE the repair the same
+//     mutation is green with 23.3px to spare. That pair is what says the Watch charge is load-bearing
+//     rather than decorative, and it is in the wave's report with both outputs.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 // ⚠ A RUNNER-SIZED CEILING, AND IT IS `round26-college-card.test.ts`'s ARITHMETIC, NOT A NEW ONE.
 // The heavy half is the walk under the fixtures – ~114 ticks to the college departure – and it is
@@ -145,10 +166,12 @@ import { SURNAMES } from '../../src/engine/season/names'
 import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
 import { stageLabel } from '../../src/engine/world/labels'
 import { formatShortName } from '../../src/shared/format'
-// ⚠ ONLY THE WALKED ROOM COMES FROM `fits.ts` – `availableWidth` reads the real cascade from the
-// viewport down to the row's parent, which is exactly right and is not the part that was wrong. The
-// per-span DEMAND does not come from that file; see `MEASURED_PX` and the ⚠⚠ above it.
-import { availableWidth, PHONE, setViewport } from './fits'
+// ⚠ THE ROW'S ARITHMETIC DOES NOT COME FROM `fits.ts` AND THAT IS THE POINT – `availableWidth` reads
+// the real cascade from the viewport down to the row's parent, which is exactly right and is not the
+// part that was wrong; the per-span DEMAND comes from `MEASURED_PX`, see the ⚠⚠ above it. The two
+// demand helpers are imported for ONE arm – `⭐⭐ the shared helper's own verdict on this row` – which
+// compares the repaired shared floor with the browser and pins the 20.9px they still disagree by.
+import { assertInlineRowFits, availableWidth, demandedWidth, PHONE, setViewport } from './fits'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { answerBirthdayNeutral, drainLifeBeats } from '../helpers/career'
 import {
@@ -392,13 +415,20 @@ function rowItems(row: Element): { who: Element; score: Element; watch: Element 
 // =================================================================================================
 //
 // ⚠⚠ THE SHARED HELPER CANNOT ANSWER THIS ROW, AND IT IS NOT ITS FAULT. `fits.ts` is a documented
-// FLOOR: `demandedWidth` credits a control's own label only under `white-space: nowrap` («an
-// ellipsis is not credited» – its own ⚠) and reads `min-width` otherwise. `.rubber-watch` declares
-// neither and carries no padding, so the shared instrument scores the button the owner presses at
-// **0.0px**, and its model of the other two charges nothing for `letter-spacing`, for `uppercase`
-// being wider than the glyphs it counts, or for `tabular-nums`. Against a row with ~5px of real
-// margin that floor does not merely under-count – it inverts the verdict. So the numbers below are
-// the browser's, and `fits.ts` is left exactly as it is (its own card covers the helper question).
+// FLOOR, and its model charges nothing for `letter-spacing`, for `uppercase` being wider than the
+// glyphs it counts, or for `tabular-nums`. Against a row with ~5px of real margin that floor does not
+// merely under-count – it inverts the verdict. So the numbers below are the browser's.
+//
+// ⚠ UNTIL 24.09 THE BIGGEST SINGLE HOLE WAS WORSE THAN A FITTED CONSTANT AND IT IS NOW FIXED:
+// `demandedWidth` credited a control's own label only under `white-space: nowrap` and read
+// `min-width` otherwise, and `.rubber-watch` declares NEITHER and carries no padding – so the shared
+// instrument scored the button the owner presses at **0.0px**. It now charges an unbreakable label
+// whatever `white-space` says (23.50px for «Watch»), because content with nowhere to break cannot
+// wrap and so gives no ground vertically. ⚠⚠ THE HELPER STILL CANNOT ANSWER THIS ROW: repaired, it
+// makes the worst row **275.2px of 291.0 – GREEN** where the browser says 296.1 and RED. The
+// remaining 20.9px is the fitted glyph advance against real type, which is a different card again;
+// see `⭐⭐ the shared helper's own verdict on this row`, where that gap is pinned rather than
+// described.
 //
 // PROVENANCE, in `fits.ts`'s own idiom for how `ADVANCE` was fitted. One-off headless Chromium
 // (playwright, `deviceScaleFactor: 1`), **24.09**, over this row's verbatim markup with the repo's
@@ -554,8 +584,9 @@ describe('⭐⭐ T2 / ruling B – the championship block draws the rounds she p
 // =================================================================================================
 //
 // ⚠⚠ THIS DESCRIBE USED TO ASSERT THAT EVERY ROW FITS, AND IT WAS GREEN, AND IT WAS WRONG. It ran on
-// `fits.ts`'s floor, which charges the Watch control 0.0px; the browser charges 41.33px, and the
-// worst row therefore needs **296.1px of a 291.0px row**. A green test that says the opposite of the
+// `fits.ts`'s floor, which charged the Watch control 0.0px until the helper was repaired on 24.09 and
+// charges 23.50px after it; the browser charges 41.33px, and the worst row therefore needs
+// **296.1px of a 291.0px row**. A green test that says the opposite of the
 // measurement is worse than no test – it is round-20's own failure with the polarity reversed, a
 // reassurance where there should be a number. So the claim is not «it fits»: it is **the room and the
 // demand, as numbers**, with the deficit pinned. That pin reddens the moment anybody changes what the
@@ -635,7 +666,50 @@ describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the wors
     // The three parts, so a future change can be attributed rather than only detected.
     expect(worst.who).toBeCloseTo(166.46875, 2)
     expect(worst.score).toBeCloseTo(72.28125, 2)
-    expect(worst.watch, 'the Watch control, which the shared floor scores at 0.0').toBeCloseTo(41.328125, 2)
+    expect(worst.watch, 'the Watch control, which the shared floor scored at 0.0 until 24.09').toBeCloseTo(41.328125, 2)
+    w.unmount()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ THE RECONCILIATION WITH THE SHARED HELPER, AS NUMBERS (24.09)
+  // ===============================================================================================
+  it('⭐⭐ the shared helper\'s own verdict on this row – repaired, and STILL green where the browser is red', () => {
+    // ⚠ WHY THIS ARM EXISTS AND WHAT IT PROTECTS. `demandedWidth` was repaired on 24.09: it used to
+    // charge a control's label only under `white-space: nowrap`, so `.rubber-watch` – which declares
+    // neither that nor a `min-width` – was scored at **0.0px** of a real 41.33. The obvious next move
+    // for a later wave is «the helper is fixed, so delete `MEASURED_PX` and call
+    // `assertInlineRowFits` like everybody else». THAT WOULD PUT THE FILE BACK WHERE IT STARTED, and
+    // the numbers below are why, measured rather than argued:
+    //
+    //     span              declares              modelled     browser       model/browser
+    //     .rubber-who       nowrap, min-width:0     171.08      166.47        1.028  ← OVER
+    //     .rubber-score     nowrap                   64.63       72.28        0.894
+    //     .rubber-watch     neither                  23.50       41.33        0.569
+    //     + two 8px gaps                             16.00       16.00
+    //     ------------------------------------------------------------------------------
+    //     the worst row                             275.21      296.08
+    //     of 291.0px of room                        GREEN       RED by 5.08
+    //
+    // The repair closed 23.5px of a 44.4px gap; the remaining 20.9px still inverts the verdict, so the
+    // browser numbers stay and this file keeps its own arithmetic. ⚠ AND THE ROW IS BILLED ONCE: this
+    // is the only place in the file that asks `fits.ts` for a DEMAND, and `rowDemand` never does – so
+    // there is no double charge between the two measurements, only a comparison.
+    const w = openCard(titleRun())
+    const row = w.find('.college-league-match').element
+    const { who, score, watch } = rowItems(row)
+    // ⚠ THE REPAIR ITSELF, PINNED ON THE SPAN THAT WAS WRONG: a charge, not a zero.
+    const charged = demandedWidth(watch, 291)
+    expect(charged, 'the shared helper now charges the Watch control its label').toBeGreaterThan(0)
+    expect(charged, '...23.50px = 5 chars x 10px x ADVANCE, and no tracking, weight or case').toBeCloseTo(23.5, 2)
+    // ...and the whole row through the shared instrument, which is the part that must not be believed.
+    const modelled = assertInlineRowFits(row, [who, score, watch], PHONE, 'the league row, through the shared floor')
+    const got = rowDemand(row)
+    expect(got.room - modelled, 'the shared model\'s demand for the worst row').toBeCloseTo(275.205, 2)
+    expect(modelled, '...which it reads as 15.8px of SPARE room').toBeCloseTo(15.795, 2)
+    // ⚠⚠ THE TWO MEASUREMENTS DISAGREE BY 20.9px AND THE BROWSER WINS. This is the sentence the pin is
+    // made of: while this number is positive the shared helper cannot be the instrument here.
+    expect(got.demand - (got.room - modelled), 'the browser charges 20.9px more than the model').toBeCloseTo(20.873, 2)
+    expect(got.slack, 'and the deficit this file records is the browser\'s, unchanged').toBeCloseTo(-5.078125, 2)
     w.unmount()
   })
 
