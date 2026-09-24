@@ -35,6 +35,7 @@ import type { Rng } from '../src/engine/rng'
 import type { WorldState } from '../src/engine/world'
 import type { CollegeTier } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+import { drainReveals } from './_reveals'
 
 const args = process.argv.slice(2)
 const numOf = (n: string, d: number): number => {
@@ -139,9 +140,21 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }, tier?: 
   // ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
   for (let gapW = 0; gapW < 54 && world.ending === null; gapW++) stepCareerWeek(world, rng, POLICIES[0])
   // Round 24: the year pauses on her birthday week – press, answer, press again.
-  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
+  //
+  // ⚠⚠ AND SINCE ROUND 26 #6 IT ALSO PAUSES ON THE CHAMPIONSHIP'S OWN REVEAL, which is what silently
+  // stopped this instrument measuring anything (repaired 24.09, the college scene). `resumeFromCollege`
+  // refuses to spend a year over an open reveal, so this loop pressed against a wall: on 24.09 the
+  // command `--careers 3` printed **1 college year** where its own header line says «3 careers x 4
+  // years», with `min Infinity max -Infinity` over 0 full years and 0.00 watchable matches per year –
+  // the exact opposite of the finding this file exists to hold – and it EXITED 0 while doing it.
+  // Nothing in the gate could see it: `check:tools` typechecks every tool and nothing runs one.
+  // `drainReveals` answers the reveal through the player's own two doors (`tools/_reveals.ts`), and the
+  // press budget goes to six per year because a year can now hold two answered fixtures and a pause.
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    drainLifeBeats(world)
+    drainReveals(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    resumeFromCollege(world, rng)
   }
   return rowsFor(world, at.label)
 }
