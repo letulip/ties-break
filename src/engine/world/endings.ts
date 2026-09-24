@@ -1331,7 +1331,14 @@ export function ancestorSeedOf(childSeed: string, generation: number): string {
  *  ⚠ IT READS HER OWN ACCOUNT (`kidFundsCents`, hers since round 23 #18) and NOT the family's:
  *  the mother is the one starting the next family, and the family purse she grew up in belongs to
  *  HER parent. A star with a cabinet retires wealthy; a college-fork mother honestly starts the line
- *  middle or working, which is §4's own sentence. */
+ *  middle or working, which is §4's own sentence.
+ *
+ *  ⚠⚠ AND SINCE 24.09 THIS IS NO LONGER THE WHOLE OF WHAT THE HANDOVER CARRIES – the paragraph above
+ *  is still exactly true OF THIS FUNCTION, which is why it is preserved verbatim, but a reader who
+ *  stops here is one layer short of the shipped behaviour. `dynastyHandoverOf` calls
+ *  `dynastyBackgroundFloored`, which FLOORS this answer at `middle` for a career that holds the
+ *  degree (the college scene's ruling A, his «ок» of 23.09). The cross-reference is the whole of the
+ *  edit: nothing about the band arithmetic below moved. */
 export function dynastyBackgroundOf(kidFundsCents: number): FamilyBackground {
   const bands = ECONOMY.startingFundsCents
   if (kidFundsCents >= bands.wealthy) return 'wealthy'
