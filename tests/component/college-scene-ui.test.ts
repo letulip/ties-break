@@ -24,21 +24,18 @@
 // round-20 #3 is a record of: «every check was about what the card SAYS, none about what the screen
 // can HOLD» (CLAUDE.md).
 //
-// ⚠ AND THE INSTRUMENT IS `assertInlineRowFits`, NOT `assertDismissReachable`. The card is NOT a
-// dialog – it is a block in Home's own flow – so it has no dismiss control to measure and no
-// overlay that can strand a career. What it has is a ROW: `.college-league-match` is
-// `display: flex` with three spans competing for the width of a phone (`.rubber-who`, which is
-// `white-space: nowrap`, `.rubber-score`, also nowrap, and `.rubber-watch`). A red verdict here is
-// not «the control is unreachable», it is the claim `fits.ts` states for this shape: the three
-// pieces do not stand beside each other, so the row the owner reads as one line is two lines on his
-// screen – with `.rubber-who`'s `text-overflow: ellipsis` eating the opponent's name to pay for it.
+// ⚠ THE CARD IS NOT A DIALOG, so `assertDismissReachable` is the wrong instrument: there is no
+// dismiss control to measure and no blocking overlay that can strand a career. What it has is a ROW.
+// `.college-league-match` is `display: flex` with three spans competing for the width of a phone –
+// `.rubber-who` (`nowrap` + `text-overflow: ellipsis`), `.rubber-score` (`nowrap`, `tabular-nums`)
+// and `.rubber-watch` (10px/800, uppercased, `letter-spacing: 0.1em`) – so the question is width, and
+// the failure mode is the opponent's name being eaten rather than a control leaving the screen.
 //
 // ⚠⚠ THE WORST CASE IS ASKED OF THE ENGINE'S OWN POOL AND NEVER TYPED. `.rubber-who` is the stage
 // word plus `formatShortName(oppName)`, and the stage words of a draw of eight are fixed by
-// `stageLabel` («Quarterfinal» is the longest of the three). The variable half is the surname, so
-// the fixture takes the LONGEST entry of `SURNAMES` – the same pool `collegeLeagueOpponent` draws
-// from – and puts it on every row. A fixture that typed «Kovac» would measure a row the draw can
-// beat.
+// `stageLabel` («Quarterfinal» is the longest of the three). The variable half is the surname, so the
+// fixture takes the LONGEST entry of `SURNAMES` – the same pool `collegeLeagueOpponent` draws from –
+// and puts it on every row. A fixture that typed «Kovac» would measure a row the draw can beat.
 //
 // ⚠ THE MOUNT IS THE CARD INSIDE THE APP FRAME, because the row's room is walked rather than
 // assumed (`availableWidth`) and the frame is where the gutter lives. The production chain from the
@@ -50,40 +47,40 @@
 // `ul.college-rubbers` (`padding: 0`) -> `li` -> the row. So the two elements this mount skips
 // contribute zero px across at 375, and the container below supplies the two that do not.
 //
-// WHAT IT MEASURES, AS THE NUMBERS RATHER THAN AS «IT FITS» (24.09, one quiet machine). Room for a
-// row: 375 − 2×16 (the frame) − 30 (the Card's border and padding) = 313 to the `li`, less the row's
-// own 10px padding and 1px border a side = **291.0px**, with two 8px gaps inside it. Demanded, worst
-// case per shape, with the Watch label credited (see `assertLeagueRowFits`):
+// =================================================================================================
+// ⚠⚠⚠ THE VERDICT: THE WORST SHIPPED ROW IS 5.1px OVER ITS ROOM AT 375x667, AND THE OPPONENT'S NAME
+// IS ALREADY BEING ELLIPSISED ON THE PHONE THIS HOUSE MEASURES AGAINST.
+// =================================================================================================
 //
-//     «Quarterfinal – C. Ostergaard  Won 6-3 6-4   Watch»   275.2 of 291.0   (15.8 spare)
-//     «Semifinal – C. Ostergaard     Won 6-3 6-4   Watch»   256.9 of 291.0   (34.1 spare)
-//     «Final – C. Ostergaard         Won 6-3 6-4   Watch»   232.4 of 291.0   (58.6 spare)
-//     «Quarterfinal – C. Ostergaard  Lost 4-6 5-7  Watch»   281.1 of 291.0   ( 9.9 spare)
+// ⚠⚠ AND THE FIRST VERSION OF THIS FILE SAID THE OPPOSITE, WHICH IS WHY THE HISTORY IS KEPT HERE. It
+// asserted «every row fits» through `fits.ts` and it was GREEN – because that helper is a documented
+// FLOOR and it charges `.rubber-watch` **0.0px** (`demandedWidth` credits a label only under
+// `white-space: nowrap`, which this span does not declare), while charging nothing anywhere for
+// `letter-spacing`, for `uppercase` being wider than the glyphs it counts, or for `tabular-nums`.
+// Against a row with ~5px of real margin that floor does not merely under-count, it INVERTS THE
+// VERDICT. A green test that says the opposite of the measurement is worse than no test: it is
+// round-20 #3's failure with the polarity reversed, a reassurance where a number belongs. So the
+// assertions below are the ROOM AND THE DEMAND AS NUMBERS with the deficit PINNED, `fits.ts` is left
+// exactly as it is (the helper question is its own card), and the per-span widths come from a browser.
 //
-// ⚠ THOSE FOUR ARE THE MODEL'S NUMBERS AND THEY ARE OPTIMISTIC. Read the block below before quoting
-// any of them: charged honestly, the first row needs 296.1 of the same 291.0.
+// THE NUMBERS. Room for a row: 375 − 2x16 (the frame) − 30 (the Card's border and padding) = 313 to
+// the `li`, less the row's own 10px padding and 1px border a side = **291.0px**, two 8px gaps inside.
+// Demand, per shape, from `MEASURED_PX` (the provenance of every figure is at that constant):
 //
-// ⚠⚠⚠ AND THE FLOOR ABOVE IS NOT THE TRUTH: MEASURED IN A REAL BROWSER THE WORST SHIPPED ROW IS
-// ~5px OVER ITS 291.0px, AND THE OPPONENT'S NAME IS ALREADY BEING ELLIPSISED ON A 375px PHONE.
+//     «Quarterfinal – C. Ostergaard  Won 6-3 6-4   Watch»   296.1 of 291.0   OVER by 5.1   <- worst
+//     «Semifinal – C. Ostergaard     Won 6-3 6-4   Watch»   279.3 of 291.0   11.7 spare
+//     «Final – C. Ostergaard         Won 6-3 6-4   Watch»   251.5 of 291.0   39.5 spare
+//     «Quarterfinal – C. Ostergaard  Lost 4-6 5-7  Watch»   295.6 of 291.0   OVER by 4.6
 //
-// This was NOT found by the assertions below and cannot be – they are `fits.ts`'s model, and the
-// model is a documented FLOOR. It was found by charging the two things this file's own report says
-// the floor omits. Instrument: one-off headless Chromium (playwright, `deviceScaleFactor: 1`) over
-// the row's verbatim markup, `src/style.css` and the repo's own self-hosted Manrope – the same
-// harness `fits.ts`'s header describes for fitting `ADVANCE`. Nothing of it is committed; it was a
-// measurement, not a test, and the numbers are recorded here because the run is gone.
-//
-//   the Watch span at 10px, decomposed:  «Watch» 400 = 29.75   800 = 31.61
-//                                        800+uppercase = 36.33   +`letter-spacing: 0.1em` = 41.33
-//   -> the model charges 23.5 for that span (and the SHARED helper charges 0.0). Real cost 41.33.
-//   the score, widest straight sets:     «Won 6-3 6-4» 72.3  (⚠ WIDER than «Lost 4-6 5-7», 71.8 –
-//                                        `tabular-nums` makes every digit the same width, so the
-//                                        model's character count had the two the wrong way round,
-//                                        and the TITLE run's Quarterfinal row is the worst, not the
-//                                        early exit's. The claim that stood here said the opposite.)
-//   -> so `.rubber-who`'s real budget is 291.0 − 16 (gaps) − 72.3 − 41.33 = **161.4px**
-//   «Quarterfinal – C. Ostergaard» measures **166.5px** -> needed 296.1 of 291.0, **OVER by 5.1**,
-//   and the rendered span confirms it: `scrollWidth` 166.5 against `clientWidth` 161.9, truncated.
+//   the Watch span at 10px, decomposed:   «Watch» at 400 = 29.75, at 800 = 31.61,
+//                                         800 + uppercase = 36.33, + the tracking = **41.33**
+//   ⚠ «Won 6-3 6-4» (72.28) IS WIDER THAN «Lost 4-6 5-7» (71.80) despite being the shorter string,
+//     because `tabular-nums` gives every figure the same advance. Counting characters had these two
+//     the wrong way round, which is how «the early exit is the worst row» came to be written here and
+//     then struck: the worst row is the TITLE run's QUARTERFINAL.
+//   -> `.rubber-who`'s real budget is 291.0 − 16 − 72.28 − 41.33 = **161.4px**, and
+//     «Quarterfinal – C. Ostergaard» measures **166.5px**. The rendered span confirms it
+//     independently: `scrollWidth` 166.5 against `clientWidth` 161.9, truncated.
 //
 // HOW MUCH OF THE DRAW THIS TOUCHES, counted over all 211 `SURNAMES` rather than argued:
 //
@@ -92,36 +89,40 @@
 //     Semifinal              0 of 211                 25 of 211
 //     Final                  0 of 211                  0 of 211
 //
-// So on a 375px phone this is the LONG-NAME TAIL of one round – ~5% of the draw – and it becomes the
-// COMMON case in any round she or her opponent retired in, because `ret.` costs the score span
-// 22.3px. ⚠ It is a legibility defect and NOT a stranded control: `.college-rubber` declares no
-// `flex-wrap`, so the row cannot wrap and nothing leaves the screen – `.rubber-who` gives way
-// through its own `text-overflow: ellipsis`, which `src/style.css` calls «the safety net at 375px,
-// not the plan». The Watch button and the score are never touched.
+// By surname length on the Quarterfinal row: <=7 chars all fit; 8 chars over by 1.4, 9 by 8.4, 10 by
+// 9.9. So on a 375px phone this is the LONG-NAME TAIL of one round – ~5% of the draw – and it becomes
+// the COMMON case in any round somebody retired in, because `ret.` costs the score span 22.3px more.
 //
-// ⚠ NOT FIXED HERE, AND DELIBERATELY. Every repair is a wording or a layout change to a card that
-// shipped on 22.08 – shortening the label, dropping the stage word, wrapping the row, restyling the
-// Watch pill – and invariant 4 says that is the owner's call and not this wave's. T2 was asked to
-// MEASURE this surface; the measurement found something and the number is recorded rather than
-// smoothed. The architect has it as a question.
+// ⚠⚠ IT IS A LEGIBILITY DEFECT AND NOT A STRANDED CONTROL, and that distinction is asserted rather
+// than asserted-about: `.college-rubber` declares no `flex-wrap`, so the row cannot spend a second
+// line and nothing leaves the screen; `.rubber-who` gives way through its own `text-overflow:
+// ellipsis`, which `src/style.css` calls «the safety net at 375px, not the plan»; and the two spans
+// that CANNOT yield cost 129.6 of the 291.0, leaving 161.4 for the name. Round-20 #3 is 161.4px away.
+//
+// ⚠ NOT FIXED HERE, AND DELIBERATELY. Every repair – shortening the label, dropping the stage word,
+// wrapping the row, restyling the Watch pill, trading the tracking – is a wording or a layout change
+// to a card that shipped on 22.08, which invariant 4 puts in the owner's hands and nobody else's. T2
+// was asked to MEASURE this surface; it measured it, the numbers are here rather than smoothed, and
+// the repair is a question in the wave's report.
 //
 // ⚠ 320x568 IS NOT MEASURED BY AN ARM IN THIS FILE, ON THE COORDINATOR'S RULING (24.09): 375x667 is
 // the house's phone law by name and a permanently red arm is not a measurement anybody can act on.
-// The number, for the record: room **236.0px**, the same row needs 296.1, **OVER by 60.1** – on
-// straight sets every one of the 211 surnames overflows the Quarterfinal and the Semifinal row, and
-// 52 overflow even «Final». The narrow phone is not a tail case on this surface, it is the shape.
+// The figures, for the record: room **236.0px**, the same worst row needs 296.1, **OVER by 60.1** –
+// on straight sets **211 of 211** surnames overflow the Quarterfinal row and **211 of 211** the
+// Semifinal, and **52 of 211** overflow even «Final» (after a retirement: 211, 211, 193). The narrow
+// phone is not a tail case on this surface, it is the shape.
 //
 // THE MUTATION LEDGER – each arm run RED before this file was believed:
-//   * `LONGEST_SURNAME` lengthened by a second barrel (`Ostergaard` -> `Ostergaard-Vandenberg`),
-//     the structure and every class untouched -> BOTH shape arms RED with the helper's own
-//     arithmetic: «the controls demand 319px of a 291px row» (title) and «325px of a 291px row»
-//     (early exit). This is the honest failure mode – the draw hands the card a longer name than the
-//     fixture did – and it is the arm that says the two green verdicts above are not vacuous.
-//   * `.college-card`'s own padding grown from the Card's 14px to 80px a side, nothing else ->
-//     RED, which is `fits.ts`'s own sentence about a walked room («a card that grows 8px of padding
-//     takes those px off every row inside it»).
-//   * the row's `display` taken off flex -> the helper REFUSES rather than passing, which is what
-//     stops a green verdict from surviving the block being rebuilt as a grid or a list.
+//   * `LONGEST_SURNAME` lengthened by a second barrel (`Ostergaard` -> `Ostergaard-Vandenberg`), the
+//     structure and every class untouched -> RED, and with the RIGHT red: `measuredPx` REFUSES a
+//     string no browser ever measured instead of extrapolating a number and under-reporting the
+//     deficit. That refusal is the tripwire – change what a row holds and the pin demands a new read.
+//   * `.college-card`'s padding grown from the Card's 14px to 80px a side, nothing else -> the room
+//     drops by 132px and the deficit grows by exactly 132px, which is `fits.ts`'s own sentence about
+//     a walked room («a card that grows 8px of padding takes those px off every row inside it»).
+//   * the row given `flex-wrap: wrap` -> the «nothing is displaced» pass goes RED. That is the
+//     repair a later wave reaches for to «fix the truncation», and it trades a cut name for a row of
+//     unpredictable height – the shape round-20 #3 is a record of.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 // ⚠ A RUNNER-SIZED CEILING, AND IT IS `round26-college-card.test.ts`'s ARITHMETIC, NOT A NEW ONE.
 // The heavy half is the walk under the fixtures – ~114 ticks to the college departure – and it is
@@ -134,7 +135,7 @@ import { mount } from '@vue/test-utils'
 import type { VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 // ⚠ THE REAL STYLESHEET. Every number below is read through `getComputedStyle`, and without the
-// app's own sheet the cascade is empty and the measurement passes vacuously – `assertInlineRowFits`
+// app's own sheet the cascade is empty and every measurement passes vacuously – so `openCard`
 // refuses outright if no `<style>` reached the document, which is the guard that says so out loud.
 import '../../src/style.css'
 import CollegeYearCard from '../../src/components/CollegeYearCard.vue'
@@ -144,7 +145,10 @@ import { SURNAMES } from '../../src/engine/season/names'
 import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
 import { stageLabel } from '../../src/engine/world/labels'
 import { formatShortName } from '../../src/shared/format'
-import { assertInlineRowFits, availableWidth, PHONE, setViewport } from './fits'
+// ⚠ ONLY THE WALKED ROOM COMES FROM `fits.ts` – `availableWidth` reads the real cascade from the
+// viewport down to the row's parent, which is exactly right and is not the part that was wrong. The
+// per-span DEMAND does not come from that file; see `MEASURED_PX` and the ⚠⚠ above it.
+import { availableWidth, PHONE, setViewport } from './fits'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { answerBirthdayNeutral, drainLifeBeats } from '../helpers/career'
 import {
@@ -351,6 +355,12 @@ function openCard(college: CollegeProgressView | null): VueWrapper {
   // computed-style read and caches it, so a viewport set after mounting measures the last screen
   // (`fits.ts`'s own ⚠⚠ on `TABLET`).
   setViewport(PHONE)
+  // ⚠ THE GUARD THAT MOVED OUT OF `assertInlineRowFits` WITH THE ARITHMETIC, and it may not be lost:
+  // every figure below is read through `getComputedStyle`, so a document with no sheet in it would
+  // hand this file a cascade of zeros and a set of confidently wrong numbers.
+  if (!document.head.querySelector('style')) {
+    throw new Error('no stylesheet in the document – without it every measurement here is vacuous')
+  }
   const base = walkedCollegeSnapshot()
   const game = useGameStore()
   game.snapshot = { ...base, ending: { ...base.ending!, college } } as Snapshot
@@ -365,48 +375,107 @@ function openCard(college: CollegeProgressView | null): VueWrapper {
 }
 
 /** The three spans of one league row, in the order they stand in. ⚠ IT THROWS on a missing span
- *  rather than measuring two of three: `assertInlineRowFits` would happily call a row of two
- *  controls a fit, and «the Watch control disappeared» must not read as «it fits better now». */
-function rowItems(row: Element): Element[] {
-  return ['.rubber-who', '.rubber-score', '.rubber-watch'].map((sel) => {
+ *  rather than measuring two of three: a row of two controls would score as cheaper than the real
+ *  one, and «the Watch control disappeared» must not read as «it fits better now». */
+function rowItems(row: Element): { who: Element; score: Element; watch: Element } {
+  const pick = (sel: string): Element => {
     const el = row.querySelector(sel)
     if (!el) throw new Error(`a league row has no ${sel} – the measurement below would be vacuous`)
     return el
-  })
+  }
+  return { who: pick('.rubber-who'), score: pick('.rubber-score'), watch: pick('.rubber-watch') }
 }
 
-/**
- * ⭐⭐ ONE LEAGUE ROW, MEASURED TWICE, AND THE SECOND READ IS THE ONE THAT MATTERS ON THIS SURFACE.
- *
- * ⚠⚠ THE SHARED FLOOR SCORES `.rubber-watch` AT ZERO PX, AND THAT IS A REAL HOLE HERE RATHER THAN A
- * QUIBBLE. `demandedWidth` credits a control's own label only when it is `white-space: nowrap`
- * («an ellipsis is not credited» – its own ⚠), and reads `min-width` otherwise. `.rubber-watch`
- * declares neither, and carries no padding, so the shared instrument measures the Watch control as
- * costing NOTHING across – measured here: `needed` 251.7px of a 291.0px row on the worst title row,
- * of which the button the owner presses contributed 0.0.
- *
- * ⚠ IT IS CLOSED WITHOUT TOUCHING `fits.ts`, by telling the model what the row already is: «Watch»
- * is one word in a 10px span that cannot break, so it behaves as `nowrap` whether or not it says so.
- * Setting that inline for the length of the read makes `demandedWidth` credit the label, and the
- * property is restored afterwards. The stricter number is the one this file believes: 275.2px of
- * 291.0 on the worst title row, 281.1 on the early exit's.
- *
- * ⚠ AND EVEN THE STRICT READ IS STILL A FLOOR, DELIBERATELY, in `fits.ts`'s own direction: the model
- * charges nothing for `.rubber-watch`'s `letter-spacing: 0.1em` (five characters, so ~5px) and
- * nothing for `text-transform: uppercase` being wider than the lower-case glyphs it measures. So a
- * green verdict here means «there is room», never «there is 10px of room».
- */
-function assertLeagueRowFits(row: Element, label: string): { loose: number; strict: number } {
-  const items = rowItems(row)
-  const loose = assertInlineRowFits(row, items, PHONE, label)
-  const watch = items[2] as HTMLElement
-  const prior = watch.style.whiteSpace
-  watch.style.whiteSpace = 'nowrap'
-  try {
-    return { loose, strict: assertInlineRowFits(row, items, PHONE, `${label}, with the Watch label credited`) }
-  } finally {
-    watch.style.whiteSpace = prior
+// =================================================================================================
+// ⭐⭐⭐ THE PER-SPAN WIDTHS, FITTED IN A REAL BROWSER – AND THIS IS WHY THIS FILE DOES NOT USE
+// `assertInlineRowFits` FOR THE NUMBER
+// =================================================================================================
+//
+// ⚠⚠ THE SHARED HELPER CANNOT ANSWER THIS ROW, AND IT IS NOT ITS FAULT. `fits.ts` is a documented
+// FLOOR: `demandedWidth` credits a control's own label only under `white-space: nowrap` («an
+// ellipsis is not credited» – its own ⚠) and reads `min-width` otherwise. `.rubber-watch` declares
+// neither and carries no padding, so the shared instrument scores the button the owner presses at
+// **0.0px**, and its model of the other two charges nothing for `letter-spacing`, for `uppercase`
+// being wider than the glyphs it counts, or for `tabular-nums`. Against a row with ~5px of real
+// margin that floor does not merely under-count – it inverts the verdict. So the numbers below are
+// the browser's, and `fits.ts` is left exactly as it is (its own card covers the helper question).
+//
+// PROVENANCE, in `fits.ts`'s own idiom for how `ADVANCE` was fitted. One-off headless Chromium
+// (playwright, `deviceScaleFactor: 1`), **24.09**, over this row's verbatim markup with the repo's
+// real `src/style.css` and its own self-hosted **Manrope** (`public/fonts/manrope-var.woff2`) –
+// `.rubber-who` at 13px/400, `.rubber-score` at 12.5px/400 with `font-variant-numeric:
+// tabular-nums`, `.rubber-watch` at 10px/800 with `letter-spacing: 0.1em` and
+// `text-transform: uppercase`. Each figure is the span's INTRINSIC width (`width: max-content`,
+// `white-space: nowrap`) with every font property copied off the shipped span, so the browser
+// charged tracking, weight, case and figure width rather than a model.
+//
+// ⚠ RE-FIT THESE WITH THE SAME HARNESS IF THE TYPE STACK, A FONT SIZE OR THE TRACKING EVER MOVES.
+// A stale constant here would be a pin arguing with the screen.
+const MEASURED_PX: Readonly<Record<string, number>> = {
+  // `.rubber-who` – the stage word, a dash, and the opponent in `formatShortName`'s short form
+  'Quarterfinal – C. Ostergaard': 166.46875,
+  'Semifinal – C. Ostergaard': 149.671875,
+  'Final – C. Ostergaard': 121.9375,
+  // `.rubber-score` – ⚠ «Won 6-3 6-4» is WIDER than «Lost 4-6 5-7» despite being shorter, because
+  // `tabular-nums` gives every figure the same advance. Counting characters got these two the wrong
+  // way round, which is how «the early exit is the worst row» came to be written and then struck.
+  'Won 6-3 6-4': 72.28125,
+  'Lost 4-6 5-7': 71.796875,
+  // `.rubber-watch` – 29.75 plain, 31.61 at weight 800, 36.33 uppercased, 41.33 with the tracking.
+  Watch: 41.328125,
+}
+
+/** The browser-measured width of a span's exact text. ⚠ IT THROWS ON AN UNMEASURED STRING, WHICH IS
+ *  THE TRIPWIRE THIS WHOLE APPROACH EXISTS FOR: the moment anybody changes what a league row holds –
+ *  a longer stage word, a tiebreak score, a fourth span – the pin cannot quietly keep reporting the
+ *  old arithmetic. It demands a new browser read, which is exactly the conversation that should
+ *  happen. */
+function measuredPx(text: string): number {
+  const w = MEASURED_PX[text.trim()]
+  if (w === undefined) {
+    throw new Error(
+      `«${text.trim()}» was never measured in a browser – re-fit MEASURED_PX with the harness this ` +
+        'file documents before asserting anything about a row that holds it',
+    )
   }
+  return w
+}
+
+interface RowDemand {
+  /** the row's content box, walked from the viewport through the real cascade */
+  room: number
+  who: number
+  score: number
+  watch: number
+  gaps: number
+  /** who + score + watch + gaps */
+  demand: number
+  /** room − demand: NEGATIVE is the shipped defect this file records */
+  slack: number
+  /** score + watch + gaps – what CANNOT give way, so the floor under «nothing is displaced» */
+  rigid: number
+}
+
+/** One league row's arithmetic: the walked room against the browser-measured demand. */
+function rowDemand(row: Element): RowDemand {
+  const cs = getComputedStyle(row)
+  const outer = availableWidth(row, PHONE)
+  const room =
+    outer -
+    parseFloat(cs.paddingLeft) -
+    parseFloat(cs.paddingRight) -
+    parseFloat(cs.borderLeftWidth) -
+    parseFloat(cs.borderRightWidth)
+  const gap = parseFloat(cs.columnGap || cs.gap)
+  const { who, score, watch } = rowItems(row)
+  const parts = {
+    who: measuredPx(who.textContent ?? ''),
+    score: measuredPx(score.textContent ?? ''),
+    watch: measuredPx(watch.textContent ?? ''),
+    gaps: gap * 2,
+  }
+  const demand = parts.who + parts.score + parts.watch + parts.gaps
+  return { room, ...parts, demand, slack: room - demand, rigid: parts.score + parts.watch + parts.gaps }
 }
 
 beforeEach(() => {
@@ -481,77 +550,195 @@ describe('⭐⭐ T2 / ruling B – the championship block draws the rounds she p
 })
 
 // =================================================================================================
-// ⚠⚠ THE PHONE LAW – THREE SPANS, 375px, AND THE MEASUREMENT CAN FAIL
+// ⚠⚠⚠ THE PHONE LAW, AS THE ARITHMETIC – AND IT DOES NOT SAY «IT FITS»
 // =================================================================================================
-describe('⚠⚠ T2 – a league row stands on one line of a 375x667 phone', () => {
-  for (const [name, view, count] of [
-    ['a TITLE run (Quarterfinal, Semifinal, Final)', titleRun, 3],
-    ['an EARLY EXIT (one round)', earlyExit, 1],
-  ] as [string, () => CollegeProgressView, number][]) {
-    it(`⭐⭐⭐ ${name}: every row fits at ${PHONE.width}x${PHONE.height}`, () => {
+//
+// ⚠⚠ THIS DESCRIBE USED TO ASSERT THAT EVERY ROW FITS, AND IT WAS GREEN, AND IT WAS WRONG. It ran on
+// `fits.ts`'s floor, which charges the Watch control 0.0px; the browser charges 41.33px, and the
+// worst row therefore needs **296.1px of a 291.0px row**. A green test that says the opposite of the
+// measurement is worse than no test – it is round-20's own failure with the polarity reversed, a
+// reassurance where there should be a number. So the claim is not «it fits»: it is **the room and the
+// demand, as numbers**, with the deficit pinned. That pin reddens the moment anybody changes what the
+// row holds, which is the tripwire actually worth having on a shipped surface.
+describe('⚠⚠⚠ T2 – the league row\'s arithmetic at 375x667, and the worst row is 5.1px OVER', () => {
+  it('⚠⚠ the room is 291.0px, walked from the viewport through the real cascade', () => {
+    const w = openCard(titleRun())
+    const { room, gaps } = rowDemand(w.find('.college-league-match').element)
+    // 375 − 2x16 (`#app`'s `--app-pad-x`) − 30 (the Card's border and padding) − 22 (the row's own)
+    expect(room, 'the row\'s content box on a 375px phone').toBeCloseTo(291.0, 1)
+    expect(gaps, 'two 8px gaps between three spans').toBeCloseTo(16.0, 1)
+    w.unmount()
+  })
+
+  // ⚠ ONE ROW PER LINE OF THE TABLE, AND THE NUMBERS ARE THE CLAIM. A deficit is written as a
+  // NEGATIVE slack rather than as a comment, so no future reader can mistake which rows pass.
+  for (const [shape, view, expected] of [
+    [
+      'a TITLE run',
+      titleRun,
+      [
+        { who: 'Quarterfinal – C. Ostergaard', score: 'Won 6-3 6-4', demand: 296.078125, slack: -5.078125 },
+        { who: 'Semifinal – C. Ostergaard', score: 'Won 6-3 6-4', demand: 279.28125, slack: 11.71875 },
+        { who: 'Final – C. Ostergaard', score: 'Won 6-3 6-4', demand: 251.546875, slack: 39.453125 },
+      ],
+    ],
+    [
+      'an EARLY EXIT',
+      earlyExit,
+      [{ who: 'Quarterfinal – C. Ostergaard', score: 'Lost 4-6 5-7', demand: 295.59375, slack: -4.59375 }],
+    ],
+  ] as [string, () => CollegeProgressView, { who: string; score: string; demand: number; slack: number }[]][]) {
+    it(`⭐⭐⭐ ${shape}: every row's demand against its 291.0px, measured not modelled`, () => {
       const w = openCard(view())
       const rows = w.findAll('.college-league-match')
-      expect(rows, 'the arm is not vacuous – the rows really are drawn').toHaveLength(count)
-      for (const row of rows) {
-        const label = `the league row «${row.text().replace(/\s+/g, ' ').trim()}»`
-        const { loose, strict } = assertLeagueRowFits(row.element, label)
-        // ⚠ THE HELPER'S RETURN IS THE PX LEFT OVER, and the two are recorded rather than discarded:
-        // an unresolvable length reaches `lengthPx` as NaN, and NaN compares true against nothing –
-        // so a room that quietly stopped being a number would pass the helper's `<=` and be believed.
-        expect(Number.isFinite(loose) && Number.isFinite(strict), 'the room left over is a number').toBe(true)
-        // ...and the stricter read can only ever be the smaller of the two, which is the sanity check
-        // on the credit itself: a Watch label that measured FREE under `nowrap` would mean the inline
-        // property never reached the cascade and this whole arm was the loose one twice.
-        expect(strict, 'crediting the Watch label costs the row width rather than giving it some').toBeLessThan(loose)
-      }
+      expect(rows, 'the arm is not vacuous – the rows really are drawn').toHaveLength(expected.length)
+      rows.forEach((row, i) => {
+        const want = expected[i]
+        const got = rowDemand(row.element)
+        const { who, score } = rowItems(row.element)
+        // The strings first, so a changed label cannot be absorbed by a number that still matches.
+        expect(who.textContent?.trim(), 'the row holds the label this line is about').toBe(want.who)
+        expect(score.textContent?.trim(), 'and the score this line is about').toBe(want.score)
+        expect(got.demand, `«${want.who} / ${want.score} / Watch» demands`).toBeCloseTo(want.demand, 2)
+        expect(got.slack, `...leaving, of ${got.room.toFixed(1)}px`).toBeCloseTo(want.slack, 2)
+      })
       w.unmount()
     })
   }
 
-  it('⭐⭐ THE MUTATION PROOF: a longer opponent name and the same assertion goes red', () => {
-    // THE HONEST FAILURE MODE, and it is one the DRAW can produce rather than one a wave has to
-    // write: `.rubber-who` is `white-space: nowrap` with `text-overflow: ellipsis`, and `fits.ts`
-    // refuses to credit the ellipsis on its own stated grounds – «a control cut down to "Trai…" is
-    // not a control the measurement should score as fitting». So a surname long enough pushes the
-    // three spans past the row's width, and what the player gets is a truncated opponent.
+  // ===============================================================================================
+  // ⚠⚠⚠ THE DEFICIT ITSELF, PINNED – A SHIPPED LEGIBILITY DEFECT AND NOT THIS WAVE'S TO FIX
+  // ===============================================================================================
+  it('⚠⚠⚠ the worst row is 5.1px OVER its room, and that is the card as it shipped on 22.08', () => {
+    // ⚠ WHAT THIS PIN IS AND IS NOT. It is not a wish and it is not a tolerance: it is the arithmetic
+    // of a surface that has been in the owner's hands since `1356712f`, stated so that changing what
+    // the row holds cannot pass unnoticed. The worst row is the TITLE run's QUARTERFINAL – the
+    // longest stage word beside the widest straight-sets score – and `tabular-nums` is why
+    // «Won 6-3 6-4» (72.28) beats «Lost 4-6 5-7» (71.80) despite being the shorter string.
+    //
+    // ⚠ THE MECHANISM THAT ABSORBS IT IS `.rubber-who`'s OWN `text-overflow: ellipsis`, which
+    // `src/style.css` calls «the safety net at 375px, not the plan». So what the owner sees is the
+    // opponent's name cut – «Quarterfinal – C. Ostergaar…» – and never a control he cannot reach.
+    // The test after this one is what makes that difference an assertion rather than a claim.
+    //
+    // ⚠⚠ AND THE REPAIR IS HIS RULING, NOT A BUILDER'S. Every candidate – shorten the label, drop the
+    // stage word, let the row wrap, restyle the Watch pill, trade the tracking – is a wording or a
+    // layout change to a shipped card, which invariant 4 puts in his hands and nobody else's. T2 was
+    // asked to MEASURE this surface. It measured it, the number is here, and the question is in the
+    // wave's report.
     const w = openCard(titleRun())
-    const row = w.find('.college-league-match')
-    // Green first, or the arm below proves nothing about the assertion.
-    assertLeagueRowFits(row.element, 'the league row')
+    const worst = rowDemand(w.find('.college-league-match').element)
+    expect(worst.room, 'the room').toBeCloseTo(291.0, 1)
+    expect(worst.demand, 'the demand').toBeCloseTo(296.078125, 2)
+    expect(worst.slack, 'the DEFICIT – negative, and pinned').toBeCloseTo(-5.078125, 2)
+    expect(worst.slack, 'it is a deficit and not a fit').toBeLessThan(0)
+    // The three parts, so a future change can be attributed rather than only detected.
+    expect(worst.who).toBeCloseTo(166.46875, 2)
+    expect(worst.score).toBeCloseTo(72.28125, 2)
+    expect(worst.watch, 'the Watch control, which the shared floor scores at 0.0').toBeCloseTo(41.328125, 2)
+    w.unmount()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ AND THE THING THAT IS TRUE AND MATTERS MOST: NOTHING IS DISPLACED, ONLY THE NAME GIVES WAY
+  // ===============================================================================================
+  it('⭐⭐⭐ the row cannot wrap, so the Watch control and the score are never displaced', () => {
+    // ⚠ THIS IS THE DIFFERENCE BETWEEN THIS FINDING AND ROUND-20 #3, and it is why the deficit above
+    // is a legibility defect rather than a stopped career. `TourBriefingDialog` put its dismiss
+    // control 188px below the bottom of a BLOCKING overlay; here the overflow has nowhere to go but
+    // into one span's ellipsis. Three declarations make that true, and all three are asserted:
+    //   1. the row is `flex-wrap: nowrap`, so there is no second line for anything to fall onto;
+    //   2. `.rubber-who` declares `min-width: 0` + `overflow: hidden` + `text-overflow: ellipsis`,
+    //      which is what lets it shrink below its own text – it is the span that yields;
+    //   3. the other two declare NO `min-width: 0` and no `overflow`, so their automatic min-content
+    //      floor stands and the browser takes the width out of `.rubber-who` first.
+    // ...and then the NUMBER that closes it: what cannot yield fits the row with room to spare.
+    const w = openCard(titleRun())
+    const row = w.find('.college-league-match').element
+    const { who, score, watch } = rowItems(row)
+    // ⚠ ASKED AS «NOT WRAPPING» AND NOT AS «== nowrap», FOR AN HONEST REASON. `.college-rubber`
+    // DECLARES no `flex-wrap` at all – it relies on the CSS initial value, which IS `nowrap`, and the
+    // Chromium probe that produced `MEASURED_PX` read it back as exactly that. happy-dom does not
+    // supply initial values for undeclared properties, so here the same property computes to `''`.
+    // Pinning the literal would therefore pin the RUNNER rather than the row; pinning «never wrap»
+    // is the claim itself, passes on both spellings, and still reddens on the mutation below.
+    expect(getComputedStyle(row).flexWrap, 'no second line exists for a control to fall onto').not.toBe('wrap')
+    expect(getComputedStyle(row).flexWrap, '...in either direction').not.toBe('wrap-reverse')
+
+    // ⚠ PARSED, NOT COMPARED AS A STRING. The sheet says `min-width: 0` and happy-dom hands back the
+    // declared token `'0'` where a browser normalises to `'0px'` – so the NUMBER is the claim and the
+    // spelling is the runner's business.
+    const whoCs = getComputedStyle(who)
+    expect(parseFloat(whoCs.minWidth), 'the name may shrink below its own text').toBe(0)
+    expect(whoCs.overflow, '...and is clipped rather than spilling').toBe('hidden')
+    expect(whoCs.textOverflow, '...with the ellipsis that says so to the reader').toBe('ellipsis')
+
+    for (const [label, el] of [
+      ['the score', score],
+      ['the Watch control', watch],
+    ] as [string, Element][]) {
+      const cs = getComputedStyle(el)
+      // Either it declares nothing (so `min-width: auto` leaves its min-CONTENT floor standing) or it
+      // declares a positive floor. What it must never be is the 0 that lets a flex item be crushed.
+      const floorIsZero = cs.minWidth !== '' && parseFloat(cs.minWidth) === 0
+      expect(floorIsZero, `${label} declares no zero floor, so its min-content width stands`).toBe(false)
+      expect(cs.overflow, `${label} is not clipped, so it cannot silently lose its text`).not.toBe('hidden')
+    }
+
+    // ⚠⚠ THE LOAD-BEARING ARITHMETIC: score + Watch + both gaps against the room. If THIS ever went
+    // negative the row would genuinely push a control off a phone and the ellipsis could not save it –
+    // that is the round-20 failure, and it is 161.4px away.
+    const { room, rigid } = rowDemand(row)
+    expect(rigid, 'what cannot give way: 72.28 + 41.33 + 16').toBeCloseTo(129.609375, 2)
+    expect(room - rigid, 'px still left for the name once the two rigid spans are paid').toBeCloseTo(161.390625, 2)
+    expect(rigid, 'the two spans that cannot yield fit the row on their own').toBeLessThan(room)
+    w.unmount()
+  })
+
+  it('⭐⭐ THE MUTATION PROOF for that pass: give the row `flex-wrap: wrap` and the read goes red', () => {
+    // A test that cannot fail on the broken version is not this test. `flex-wrap: wrap` is exactly the
+    // repair a future wave reaches for to «fix the truncation» – and it converts a cut name into a row
+    // of unpredictable height, which is the shape round-20 #3 is a record of. The assertion that must
+    // not be lost is the one that notices.
+    const w = openCard(titleRun())
+    const row = w.find('.college-league-match').element as HTMLElement
+    const cannotWrap = (): void => {
+      expect(getComputedStyle(row).flexWrap, 'the row cannot spend a second line').not.toBe('wrap')
+    }
+    cannotWrap() // green before the mutation, or the arm below proves nothing
+    row.style.flexWrap = 'wrap'
+    expect(cannotWrap, 'the same read fails on the broken version').toThrow(/cannot spend a second line/)
+    w.unmount()
+  })
+
+  it('⭐⭐ THE MUTATION PROOF for the arithmetic: a longer opponent name cannot pass quietly', () => {
+    // THE HONEST FAILURE MODE, and it is one the DRAW can produce rather than one a wave has to write.
+    // ⚠ AND THE RED IS THE RIGHT KIND: the model REFUSES a string it never measured in a browser
+    // instead of extrapolating a number and reporting a smaller deficit than the truth. That refusal
+    // is what stops this file going stale the way its own first version did.
+    const w = openCard(titleRun())
+    rowDemand(w.find('.college-league-match').element) // green first, or the arm below proves nothing
     w.unmount()
 
     const long = openCard(titleRun(`${LONGEST_SURNAME}-${LONGEST_SURNAME}`))
     const wide = long.find('.college-league-match')
     expect(wide.text(), 'the arm is not vacuous – the long name really is on the row').toContain(LONGEST_SURNAME)
-    expect(() => assertLeagueRowFits(wide.element, 'the league row')).toThrow(
-      /cannot stand beside each other and the row wraps/,
-    )
+    expect(() => rowDemand(wide.element)).toThrow(/was never measured in a browser/)
     long.unmount()
   })
 
-  it('⭐⭐ ...AND THE ROOM HALF FAILS TOO – a card that grows padding takes it off every row inside', () => {
+  it('⭐⭐ ...AND THE ROOM HALF MOVES TOO – a card that grows padding takes it off every row inside', () => {
     // `fits.ts`'s own sentence about why the room is WALKED rather than assumed: «a card that grows
-    // 8px of padding takes those px off every row inside it». This is the slow regression the phone
-    // law exists for – nothing about the row changes, and it stops fitting.
+    // 8px of padding takes those px off every row inside it». The deficit is not a constant of the row
+    // – it is the row against its container, and this is the half a width regression hides in.
     const w = openCard(titleRun())
-    const row = w.find('.college-league-match')
-    assertLeagueRowFits(row.element, 'the league row')
+    const row = w.find('.college-league-match').element
+    expect(rowDemand(row).slack, 'the shipped deficit').toBeCloseTo(-5.078125, 2)
     const card = w.find('.college-card').element as HTMLElement
     card.style.padding = '14px 80px'
-    expect(() => assertLeagueRowFits(row.element, 'the league row')).toThrow(
-      /cannot stand beside each other and the row wraps/,
-    )
-    w.unmount()
-  })
-
-  it('⚠ and a row that stops being a row is REFUSED, not passed', () => {
-    // The helper's first guard, and the reason it matters here: the block could be rebuilt as a grid
-    // or a definition list in a later wave, and a measurement that silently answered "fits" about a
-    // non-flex row would be a green test about nothing.
-    const w = openCard(titleRun())
-    const row = w.find('.college-league-match').element as HTMLElement
-    row.style.display = 'block'
-    expect(() => assertLeagueRowFits(row, 'the league row')).toThrow(/so its children are not on a line at all/)
+    const grown = rowDemand(row)
+    expect(grown.room, 'the card took 132px off the row').toBeCloseTo(291.0 - 132, 1)
+    expect(grown.slack, 'and the deficit grew by exactly that').toBeCloseTo(-5.078125 - 132, 2)
     w.unmount()
   })
 

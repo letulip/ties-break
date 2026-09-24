@@ -45,12 +45,17 @@ college reading is the closing `'left-the-tour'` latch; the dynasty handover car
 `dynastyBackgroundOf` reads her account alone, so a graduate's door reads `working`. The builder
 updates this section as tasks ship and fills §6's measured column.
 
+⚠ AND ONE THING THAT SHIPS TODAY IS A DEFECT: the championship block's row does **not** fit a 375px
+phone on the long-name and `ret.` tails – measured 24.09, **§3a**. It truncates the opponent's name
+rather than stranding a control, and the repair is his ruling.
+
 ## 1. One sentence of design
 
 Nothing new is simulated and no prize is added: the wave gives the championship that already happens
-a face that is MEASURED (the bracket shipped on 22.08 – §3 – and this wave holds it to the phone
-law), a memory (the album and the handover), and the graduate her honest shelf – reusing the kept
-match rows, the fixed album machinery and the dynasty door as they stand.
+a face that is MEASURED (the bracket shipped on 22.08 and this wave measured it against a phone – ⚠
+it does **not** fit on the long-name and `ret.` tails, §3a, and the repair is his), a memory (the
+album and the handover), and the graduate her honest shelf – reusing the kept match rows, the fixed
+album machinery and the dynasty door as they stand.
 
 ## 2. The floor – the graduate's shelf (his «ок», closing the parting's §12)
 
@@ -84,7 +89,7 @@ nothing»), it is the honest reading of the ruling, and it is **question 1 of th
 spec §8 row 3): the dated note is appended there, predicted and measured. Zero schema, zero draws,
 one wrapper (`dynastyBackgroundFloored`, no new exported symbol) and its tests.
 
-## 3. The bracket – SHIPPED 22.08; what this wave added is the measurement
+## 3. The bracket – SHIPPED 22.08; the measurement is what this wave added, and it found a defect
 
 ⚠⚠ THE ASK THAT STOOD HERE WAS ALREADY ANSWERED, AND IT IS CORRECTED RATHER THAN SOFTENED (ruling B,
 24.09). This section asked for «the year card's one `leagueFact` line grows into the championship's
@@ -106,11 +111,67 @@ the feed holds only the matches she played and `collegeLeagueMatchesOf` can answ
 both.
 
 ⚠ SO T2 SHIPPED NO MARKUP AND NO ENGINE FIELD. What the wave owed on this surface is the half that
-was never measured – **the phone law**, now a mounted 375x667 assertion over both shapes, mutated
-before believed (the numbers are in the test file's own header: a 291.0px row, 275.2px demanded on
-the worst title row and 281.1px on the early exit's, and the mutation arm – one longer surname –
-puts them at 319px and 325px of the same 291px). Nothing on the card changed: not a string, not a
-class, not a control.
+was never measured – **the phone law** – and measuring it found a defect. Nothing on the card changed
+while measuring it: not a string, not a class, not a control.
+
+### 3a. The phone law, measured – ⚠⚠ THE BLOCK DOES **NOT** FIT AT 375x667
+
+⚠⚠ THE FIRST NUMBERS THIS SECTION CARRIED (275.2 / 281.1 of 291.0, «it fits») WERE WRONG AND ARE
+STRUCK. They came from `tests/component/fits.ts`, which is a documented FLOOR: it charges the row's
+**Watch** control **0.0px** (`demandedWidth` credits a label only under `white-space: nowrap`, which
+`.rubber-watch` does not declare) and charges nothing anywhere for `letter-spacing`, for `uppercase`
+being wider than the glyphs it counts, or for `tabular-nums`. On a row with ~5px of real margin that
+floor does not merely under-count, it **inverts the verdict** – and a green test reporting the
+opposite of the measurement is worse than no test. Re-measured in a one-off headless Chromium over
+the row's verbatim markup with the real `src/style.css` and the repo's own self-hosted Manrope (the
+harness `fits.ts`'s header describes for fitting its own constant), 24.09:
+
+| row | demand | of room | verdict |
+| --- | --- | --- | --- |
+| `Quarterfinal – C. Ostergaard` / `Won 6-3 6-4` / `Watch` | 296.1 | 291.0 | ⚠ **OVER by 5.1** |
+| `Semifinal – C. Ostergaard` / `Won 6-3 6-4` / `Watch` | 279.3 | 291.0 | 11.7 spare |
+| `Final – C. Ostergaard` / `Won 6-3 6-4` / `Watch` | 251.5 | 291.0 | 39.5 spare |
+| `Quarterfinal – C. Ostergaard` / `Lost 4-6 5-7` / `Watch` | 295.6 | 291.0 | ⚠ **OVER by 4.6** |
+
+The Watch span costs **41.33px**, not the floor's 0.0: 29.75 plain, 31.61 at weight 800, 36.33
+uppercased, 41.33 with the 0.1em tracking. So `.rubber-who`'s real budget is `291.0 − 16 − 72.28 −
+41.33` = **161.4px** against the 166.5px it wants, and the rendered span confirms it independently
+(`scrollWidth` 166.5 vs `clientWidth` 161.9, truncated).
+
+⚠ AND THE WORST ROW IS THE **TITLE RUN'S QUARTERFINAL**, NOT THE EARLY EXIT'S – the earlier framing
+in this wave's documents (mine included) had it the other way round, from counting characters.
+`tabular-nums` gives every figure the same advance, so «Won 6-3 6-4» (72.28) is **wider** than the
+longer string «Lost 4-6 5-7» (71.80). Struck and corrected.
+
+**How much of the draw, counted over all 211 `SURNAMES`:**
+
+| stage word | straight sets | after a retirement (`ret.`, score 94.6) |
+| --- | --- | --- |
+| Quarterfinal | 11 of 211 | **129 of 211** |
+| Semifinal | 0 of 211 | 25 of 211 |
+| Final | 0 of 211 | 0 of 211 |
+
+⚠⚠ THE `ret.` COLUMN IS THE HEADLINE AND IT IS A MEASUREMENT, NOT A PROPOSAL: **the score span costs
+22.3px more when it carries `ret.`, which takes the Quarterfinal row from 11 of 211 surnames to 129
+of 211.** By surname length on straight sets: ≤7 characters all fit, 8 is over by 1.4, 9 by 8.4, 10
+by 9.9. At **320x568** (no test arm, on the coordinator's ruling – 375x667 is the house's phone law by
+name and a permanently red arm is not actionable) the room is **236.0px**, the same row is **over by
+60.1**, and 211 of 211 surnames overflow both the Quarterfinal and the Semifinal row while 52 of 211
+overflow even `Final`.
+
+⚠ THE FAILURE MODE IS **TRUNCATION, NOT A LOST CONTROL**, and this is the half that keeps it out of
+round-20 #3's category. `.college-rubber` declares no `flex-wrap`, so the row cannot spend a second
+line and nothing leaves the screen; `.rubber-who` gives way through its own `text-overflow: ellipsis`
+– what `src/style.css` calls «the safety net at 375px, not the plan» – so the owner sees
+«Quarterfinal – C. Ostergaar…». The two spans that CANNOT yield cost 129.6 of the 291.0, leaving
+161.4 for the name, so the Watch control and the score are never displaced. That is asserted and
+mutation-verified (`flex-wrap: wrap` reddens it), not claimed.
+
+⚠⚠ THE REPAIR IS **HIS RULING** AND NO BUILDER'S. Every candidate is a wording or a layout change to
+a card that shipped on 22.08, which invariant 4 puts in his hands: shorten the row label, drop the
+stage word, abbreviate or move the score's `ret.`, let the row wrap, restyle or shrink the Watch
+pill, trade the 0.1em tracking. The wave names the candidates and picks none. Question in the wave's
+report.
 
 ⚠⚠ AND THE WATCH CONTROL IS THE ONE THING THIS SECTION GOT BACKWARDS. §3 and §5 both refused a
 replay button as «his to ask for later»; it shipped a month ago, one per row, wired to
