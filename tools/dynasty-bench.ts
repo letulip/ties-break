@@ -30,6 +30,10 @@ import {
   wasThereAChild,
   type WorldState,
 } from '../src/engine/world'
+// ⚠ STRAIGHT FROM `world/endings` AND NOT THROUGH THE BARREL, `tools/album-money-probe.ts`'s own
+// precedent: the floored read is a probe-grade helper the barrel deliberately does not re-export
+// (its own note says why). The §4 guard below needs it, because the BLOCK's band is the floored one.
+import { dynastyBackgroundFloored } from '../src/engine/world/endings'
 import { rngFromSeed } from '../src/engine/rng'
 import { temperamentOpenness, TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
 import { ECONOMY } from '../src/engine/economy'
@@ -77,7 +81,7 @@ function blockOf(mother: Temperament, career: Partial<DynastyHandover['motherCar
     motherCountry: 'PL',
     childBirthdays: [],
     motherTemperament: mother,
-    motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural', ...career },
+    motherCareer: { titles: 0, proTitles: 0, collegeTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural', ...career },
   }
 }
 
@@ -190,10 +194,23 @@ function rowBackground(corpus: Lived[]): void {
     const block = dynastyHandoverOf(row.world)
     bands[block.background] += 1
     if (block.motherCareer.titles > 0 && block.background !== 'wealthy') titledButNotWealthy += 1
-    // ⚠ THE BAND IS RE-DERIVED FROM HER ACCOUNT HERE rather than trusted off the block, which is the
-    // cheapest possible statement that the mapping and the handover cannot disagree.
-    if (dynastyBackgroundOf(row.world.kidFundsCents) !== block.background) {
-      console.log(`   ⚠⚠ ${row.cell}: the block's band and the mapping DISAGREE – two spellings of §4`)
+    // ⚠ THE BAND IS RE-DERIVED HERE rather than trusted off the block, which is the cheapest possible
+    // statement that the mapping and the handover cannot disagree.
+    //
+    // ⚠⚠ RE-AIMED 24.09 FOR THE COLLEGE SCENE's T1 (his «ок» of 23.09), AND NOT WEAKENED. The block's
+    // band is `dynastyBackgroundFloored` now – a graduate's shelf reads no lower than `middle` – so
+    // this guard read against `dynastyBackgroundOf` alone would fire on EVERY graduate, by design,
+    // which is a guard that cries wolf and therefore a guard nobody reads. It compares against the
+    // SAME function the block calls, so it still fires the moment the two disagree for any reason
+    // other than the degree floor – and the raw mapping stays IN THE MESSAGE, so a real divergence is
+    // still legible at a glance and a floor that lifted the wrong career is visible as the pair.
+    const floored = dynastyBackgroundFloored(row.world)
+    const raw = dynastyBackgroundOf(row.world.kidFundsCents)
+    if (floored !== block.background) {
+      console.log(
+        `   ⚠⚠ ${row.cell}: the block's band and the mapping DISAGREE – two spellings of §4` +
+          ` (block ${block.background}, floored ${floored}, raw ${raw})`,
+      )
     }
   }
   const n = corpus.length

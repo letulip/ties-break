@@ -213,7 +213,11 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // re-stamp of this cell for a version that appends NO KEY: v88 is three union widenings and an
     // empty migration step. 88 was moved by that wave with its full move, never by this line's item,
     // and the cell was re-stamped in the schema's own gate as the note asks.
-    expect(SAVE_SCHEMA_VERSION).toBe(88)
+    // ⚠ AND AGAIN AT v89 (24.09, the college scene T4 – `dynasty.motherCareer.collegeTitles`), NOT
+    // WEAKENED: one field, nested two deep inside a nullable record, with its own full move. 89 was
+    // moved by that wave, never by this line's item, and the cell is re-stamped in the schema's own
+    // commit as the note below asks.
+    expect(SAVE_SCHEMA_VERSION).toBe(89)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

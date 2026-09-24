@@ -69,6 +69,12 @@ import { comebackAtReturn, decisionWeekOf, drawForkWant, forkStandingOf, forkWan
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
 import { COLLEGE_OFFER, COLLEGE_TIER_ORDER, juniorRecordScore } from '../collegeOffer'
+// ⚠ A VALUE IMPORT FROM A LEAF ON THE SAME ARGUMENT AS `collegeOffer` ONE LINE UP, AND THE EDGE
+// ALREADY EXISTS: `engine/collegeLeague.ts` imports only `world/labels`, `season/names`, `rng` and
+// `match/types` – none of which reaches back here – and `world/college.ts`, which this file already
+// imports, takes it across the same edge. ⚠ `wonTheLeague` IS THE ONE SPELLING OF «she won it»
+// (derived, never a persisted `champion` flag) and `dynastyHandoverOf`'s `collegeTitles` folds it.
+import { wonTheLeague } from '../collegeLeague'
 // ⚠ THE TWO BASELINES ONLY, and both behind a `??` – the defensive read `accrueSpirit` uses for a
 // probe world hand-built before v72. `applyBondDelta` (engine/spirit.ts) stays the one WRITER.
 import { ECONOMY } from '../economy'
@@ -1361,8 +1367,15 @@ export function dynastyBackgroundOf(kidFundsCents: number): FamilyBackground {
  *
  *  ⚠ THE CONSEQUENCE, STATED RATHER THAN HIDDEN: a graduate who then had a full tour career and
  *  retired thin reads `middle` too. The degree does not stop being a degree when the tour is over –
- *  it is the honest reading of the ruling, and it is question 1 of the wave's report. */
-function dynastyBackgroundFloored(world: WorldState): FamilyBackground {
+ *  it is the honest reading of the ruling, and it is question 1 of the wave's report.
+ *
+ *  ⚠ EXPORTED, AND DELIBERATELY **NOT** ADDED TO THE `engine/world` BARREL. It has a second reader –
+ *  `tools/dynasty-bench.ts`'s §4 guard, which re-derives the band to prove the block and the mapping
+ *  cannot be two spellings of one rule, and which would cry wolf on every graduate if it kept reading
+ *  the unfloored function. One spelling, two readers. The barrel's re-export list is the public API
+ *  that `tools/generated/world-symbol-map.md` indexes, and a probe-grade helper does not belong on
+ *  it: tools import `world/endings` directly (`tools/album-money-probe.ts` is the precedent). */
+export function dynastyBackgroundFloored(world: WorldState): FamilyBackground {
   const band = dynastyBackgroundOf(world.kidFundsCents)
   if (band !== 'working') return band
   const college = world.college
@@ -1412,6 +1425,18 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
   // a migrated save is not one; writing the widening down is what stops the next reader "tidying"
   // the optional chain away.
   const slamShelf: TierTrophies | undefined = world.trophiesByTier.slam
+  // ⭐⭐⭐ v89 (the college scene, T4) – THE STUDENT CABINET, FOLDED OFF THE BANKED YEARS. Two
+  // conditions and neither is decorative: `year.league !== null` because a banked year legitimately
+  // holds no championship (a v55 save migrated mid-freeze, a year an ending cut short before
+  // `COLLEGE_LEAGUE.seasonWeek` – `CollegeYear.league`'s own note lists both), and `wonTheLeague`
+  // because a year she PLAYED is not a year she WON. ⚠ The predicate is IMPORTED and never re-spelled
+  // as `roundsWon === rounds`: a second spelling of «she won it» is how a derived fact and a stored
+  // one come to disagree, which is the argument `wonTheLeague` itself is written under.
+  // ⚠ ZERO DRAWS, like every other line of this block – `world.college.years` is persisted state.
+  let collegeTitles = 0
+  for (const year of world.college?.years ?? []) {
+    if (year.league !== null && wonTheLeague(year.league)) collegeTitles += 1
+  }
   return {
     generation,
     childSeed: childSeedFor(ancestorRoot, generation),
@@ -1432,6 +1457,9 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
     motherCareer: {
       titles,
       proTitles,
+      // ⭐ v89 – beside `proTitles` because the two cabinets are read as a pair and the copy forks on
+      // the pair; the fold and the reason it is two conditions are above.
+      collegeTitles,
       bestRank: best,
       // ⚠⚠ THE OPTIONAL READ IS NOT DEFENSIVENESS – IT IS THE MEASURED TRUTH ABOUT A MIGRATED SAVE,
       // AND WITHOUT IT THIS LINE **THREW**. The type says `Record<TierId, TierTrophies>` and a fresh

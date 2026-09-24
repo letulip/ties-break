@@ -134,7 +134,13 @@ describe('wave 12 T1 A – v88, the move that appends nothing', () => {
     // ⚠ THE RECIPE, ASSERTED RATHER THAN DESCRIBED (the v25 one, README's own words): the fixture is
     // `migrateSave(v87.json)` and not a hand edit, so a reader can regenerate it and a drifting step
     // cannot hide behind a fixture somebody typed.
-    expect(migrateSave(read(87))).toEqual(read(88))
+    //
+    // ⚠ RE-AIMED 24.09 AT v89 (the college scene, T4), NOT WEAKENED, AND THE SHAPE IS THE POINT.
+    // `migrateSave` always walks to the LADDER'S HEAD, so the moment a version landed above v88 the
+    // left arm stopped being «the v88 fixture» and this line compared 89 with 88. Walking BOTH arms
+    // to the head asserts exactly the claim this case was written for – «the v88 step changes no byte
+    // of the corpus» – and it cannot rot again, because every future rung is applied to both sides.
+    expect(migrateSave(read(87))).toEqual(migrateSave(read(88)))
   })
 
   it('is idempotent – running it twice changes nothing', () => {
@@ -198,7 +204,12 @@ describe('wave 12 T1 B – a marriage that ended BEFORE the wave keeps every wor
     const after = rec(migrateSave(craftedLivedDivorce()))
     const moved = Object.keys(before).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]))
     expect(moved).toEqual(['schemaVersion'])
-    expect(after.schemaVersion).toBe(88)
+    // ⚠ RE-AIMED 24.09 AT v89 (the college scene, T4), NOT WEAKENED: the claim is «the whole payload
+    // survives and the version is the only difference», and the version is the LADDER'S HEAD rather
+    // than 88 now. ⭐ The `moved` line above is untouched and is the half that matters – v89 appends
+    // `dynasty.motherCareer.collegeTitles` and this payload's `dynasty` is `null`, so the new step
+    // writes nothing here and «one key» is still exactly true.
+    expect(after.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
   })
 })
 
@@ -212,11 +223,19 @@ describe('wave 12 T1 C – the chain', () => {
     // get here, and if v88's rung were missing from the ladder the throw would be «Save schema 87 is
     // newer than supported 88» rather than a silent pass. The corpus sweep in goldenSaves.test.ts
     // covers all 88 versions; this case is here so a reader of THIS wave can see the chain close.
+    // ⚠ RE-AIMED 24.09 AT v89 (the college scene, T4), NOT WEAKENED, and the mechanism is unchanged:
+    // `migrateSave` THROWS when the walk stops below the head, so a missing v88 rung still fails here
+    // – it would stop at 87 and throw «Save schema 87 is newer than supported 89». Reading the head
+    // rather than the literal is what keeps the sentence above checkable as the ladder grows.
     const out = rec(migrateSave(read(72)))
-    expect(out.schemaVersion).toBe(88)
+    expect(out.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
   })
 
   it('refuses a save from the future, with the version in the message', () => {
-    expect(() => migrateSave({ ...read(88), schemaVersion: 89 })).toThrow(/89/)
+    // ⚠ RE-AIMED 24.09 AT v89 (the college scene, T4), NOT WEAKENED: 89 IS a supported version now, so
+    // the literal had stopped describing a save from the future. `SAVE_SCHEMA_VERSION + 1` is the one
+    // spelling of «one past the head» and cannot go stale on the next bump.
+    const fromTheFuture = SAVE_SCHEMA_VERSION + 1
+    expect(() => migrateSave({ ...read(88), schemaVersion: fromTheFuture })).toThrow(new RegExp(String(fromTheFuture)))
   })
 })

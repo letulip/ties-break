@@ -33,7 +33,7 @@ function block(over: Partial<DynastyHandover['motherCareer']> = {}, temperament:
     motherCountry: 'PL',
     childBirthdays: [{ month: 7, day: 2 }],
     motherTemperament: temperament,
-    motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'college', ...over },
+    motherCareer: { titles: 0, proTitles: 0, collegeTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'college', ...over },
   }
 }
 

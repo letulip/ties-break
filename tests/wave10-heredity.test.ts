@@ -138,7 +138,7 @@ describe('wave 10 T3 C – determinism', () => {
       motherCountry: 'US',
       childBirthdays: [],
       motherTemperament: 'quiet',
-      motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
+      motherCareer: { titles: 0, proTitles: 0, collegeTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
     }
     const daughter = createWorld(block.childSeed, DEFAULT_PROFILE, 'c-w10-her', undefined, block)
     expect(daughter.temperament, 'the girl the leaned draw produced, stored once at birth').toBe(

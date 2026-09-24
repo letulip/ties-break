@@ -326,7 +326,7 @@ describe('wave 10 T2 C – absent means the career the game has always created',
       motherCountry: 'US',
       childBirthdays: [],
       motherTemperament: 'sunny',
-      motherCareer: { titles: 0, proTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
+      motherCareer: { titles: 0, proTitles: 0, collegeTitles: 0, bestRank: null, slams: 0, endedWeek: 900, endingKind: 'natural' },
     }
     const plain = rec(createWorld('w10-same', DEFAULT_PROFILE, 'c-w10-same'))
     const withLine = rec(createWorld('w10-same', DEFAULT_PROFILE, 'c-w10-same', undefined, block))
@@ -348,7 +348,7 @@ describe('wave 10 T2 C – absent means the career the game has always created',
       motherCountry: 'US',
       childBirthdays: [{ month: 3, day: 14 }],
       motherTemperament: 'deep',
-      motherCareer: { titles: 12, proTitles: 12, bestRank: 3, slams: 2, endedWeek: 1000, endingKind: 'natural' },
+      motherCareer: { titles: 12, proTitles: 12, collegeTitles: 0, bestRank: 3, slams: 2, endedWeek: 1000, endingKind: 'natural' },
     }
     const world = createWorld('w10-rich', { ...DEFAULT_PROFILE, background: 'working' }, 'c-w10-rich', undefined, wealthy)
     expect(world.profile.background, 'the origins card is not asked – the block answers it').toBe('wealthy')

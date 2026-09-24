@@ -116,6 +116,11 @@ function plainDynasty(block: DynastyHandover | undefined): DynastyHandover | und
     motherCareer: {
       titles: block.motherCareer.titles,
       proTitles: block.motherCareer.proTitles,
+      // ⭐ v89 (the college scene, T4) – the student cabinet crosses the wire with its siblings. The
+      // field-by-field law above is why this line exists at all: a field added to the type and not
+      // added here would reach the worker as `undefined` on a REAL handover and on nothing else, and
+      // no unit or mounted test crosses that boundary (the note above dates the last time).
+      collegeTitles: block.motherCareer.collegeTitles,
       bestRank: block.motherCareer.bestRank,
       slams: block.motherCareer.slams,
       endedWeek: block.motherCareer.endedWeek,

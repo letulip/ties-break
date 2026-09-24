@@ -658,7 +658,13 @@ describe('save migrations', () => {
     // widenings (`SpiritShockKind` + `'divorce'`, `MilestoneType` + `'divorce'`, `LifeBeatKind` +
     // `'divorced'`) and its step's body is empty. So the walk below gains a rung that writes
     // nothing, which changes no byte here for a reason even shorter than v85's and v86's.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 88 – past the colliding 64, through 65').toBe(88)
+    // ⚠ RE-AIMED AT v89 (24.09, the college scene T4 – the student cabinet on the handover), NOT
+    // WEAKENED, and for the same reason every re-aim above it was: this case is about the v63 -> v65
+    // double step, and its last line simply follows the ladder's head so the sentence over it stays
+    // checkable. v89 was moved with its full move, never by this line's item – and its step cannot
+    // touch this walk at all, because it writes only inside a NON-NULL `dynasty` and every fixture in
+    // the corpus carries `null`.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 89 – past the colliding 64, through 65').toBe(89)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

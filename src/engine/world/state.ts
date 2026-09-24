@@ -921,7 +921,42 @@ import type { AcademySupport } from '../academy'
 // row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
 // schema sentence, and the e2e fixtures. ⚠ NO PEEL RUNG – see the paragraph above; the rung would
 // have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V88` instead.
-export const SAVE_SCHEMA_VERSION = 88
+// ⭐⭐⭐ v89 – THE STUDENT CABINET ON THE HANDOVER (docs/specs/the-college-scene-2026-09.md §4.2,
+// the college scene T4). **ONE FIELD, AND IT IS NESTED TWO DEEP INSIDE A NULLABLE RECORD**:
+// `DynastyRecord.motherCareer.collegeTitles`, the count of her banked college years whose
+// championship she won (`wonTheLeague` over `world.college.years`).
+//
+// ⚠ REQUIRED AND NEVER OPTIONAL – the field is a COUNT and 0 is its honest value, so an optional
+// field would be a second spelling of zero and every reader would owe a `?? 0` that the next one
+// forgets. The cost of that decision was counted before it was taken: `motherCareer` literals live
+// in six files outside the engine plus `tools/dynasty-bench.ts`, and each gained the one line.
+//
+// ⚠⚠ THE BACK-FILL IS GUARDED ON A NON-NULL `dynasty`, WHICH IS THE LADDER'S FIRST BACK-FILL **TWO
+// LEVELS DEEP** – v87's `pregnancy.conceivedWeek` is one deep and is the precedent for the cast, not
+// for the depth. A null `dynasty` has nothing to back-fill and is deliberately left as `null` rather
+// than grown a record: the absence of a line is a fact about that career, not a missing default.
+//
+// ⚠ `DynastyRecord.motherCareer` ALIASES `DynastyHandover['motherCareer']`, so the persisted type
+// needs NO edit for this field – verified rather than assumed, and it is why a single declaration in
+// `shared/protocol/profile.ts` moves the wire and the save together.
+//
+// ⚠ ZERO DRAWS: one `??=` inside a nullable record, gated on `v === 88`, writing a literal. No
+// sub-stream is reached on this path, so MAIN cannot move and the frozen capture (41550 /
+// e6b0c709) is untouched by construction.
+//
+// ⚠⚠ AND THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE – v88's case exactly, and MEASURED rather than
+// predicted (per-key control captured as the builder's FIRST command on the untouched tree, headers
+// read back against the invocation, all three careers): every frozen career carries `dynasty: null`,
+// the new field is nested INSIDE that null, and the serialised world therefore gains **no key at
+// all**. So `careerHashAtSchema` needs NO new peel rung – its tail (`schemaVersion < 87 ? preWeight
+// : world`) answers 87, 88 and 89 alike – `PRE_V89` holds the verbatim v88 constants, and the live
+// registers still re-stamp because the version number is inside the hash.
+//
+// Full move: this constant, the v88 -> v89 step in migrations.ts, tests/fixtures/saves/v89.json, its
+// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
+// schema sentence, and the e2e fixtures. ⚠ NO PEEL RUNG – see the paragraph above; the rung would
+// have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V89` instead.
+export const SAVE_SCHEMA_VERSION = 89
 
 
 
