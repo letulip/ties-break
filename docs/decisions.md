@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 132 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 133 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 16 | [THE COLLEGE SCENE IS BUILT, AND TWO OF THE SPEC'S PREMISES WERE MEASURED FALSE](#24092026--the-college-scene-is-built-and-two-of-the-specs-premises-were-measured-false) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 17 | [THE CANCEL SHARE: «ОСТАВШИЕСЯ, ДЕЛАЙ»](#23092026--the-cancel-share-оставшиеся-делай) | 2026-09-23 |
+| general | 18 | [«А ВОТ ЭТО ЕЩЕ ДИКИНЕШЬ МОЖЕ БЫТЬ?» – THE FIT HELPER'S BLIND CONTROL, ON THE SAME BRANCH](#24092026--а-вот-это-еще-дикинешь-може-быть--the-fit-helpers-blind-control-on-the-same-branch) | 2026-09-24 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5295,3 +5295,41 @@ instrument can stop measuring and the gate stays green.
 
 His seven questions are in `docs/plans/college-scene-questions-2026-09.md`, each priced, four
 answerable with a letter.
+
+## 24.09.2026 – «А ВОТ ЭТО ЕЩЕ ДИКИНЕШЬ МОЖЕ БЫТЬ?» – THE FIT HELPER'S BLIND CONTROL, ON THE SAME BRANCH
+
+His answer to question 6 of the college wave, and the same ruling he gave the bench rot the day
+before: the `fits.ts` card rides `college/scene` rather than a wave of its own.
+
+MEASURED FIRST, which is what the card was for: **88 calls through the fit helpers across 9 files –
+62 declare `nowrap`, 2 a `min-width` (both also `nowrap`), and 26 declare NEITHER**, nine unique
+shapes in six files. Four of the nine were billed **0.00px for their whole label** – three staff-seat
+names and the **Watch** control the college row's whole measurement turned on. Rule A (charge content
+that cannot wrap) moves 19 charges at 7 of 21 assertion sites and reddens nothing; rule B (the longest
+word, always) moves 25 at 10 sites and also reddens nothing, but is not free – it bills six labels
+that genuinely wrap – so A shipped.
+
+⚠ THE REFINEMENT WAS MEASURED, NOT REASONED: a browser breaks after a hyphen, so charging a whole
+whitespace-free token would OVER-count (Chromium: a hyphen splits 79.7 of 158.9; so do the en/em/figure
+dashes, the soft hyphen, ZWSP and `?`; the non-breaking hyphen, `/`, `,`, `.`, `:` and `)` do not). The
+rule charges a run with no break opportunity and records the set with its provenance. The floor holds:
+0.57–0.91 of the browser's width on every element in the census.
+
+⚠ THE PROOF IS THE MUTATION ARM: with the repair a 300-character unbreakable token reddens 9 seat
+assertions; without it all 26 pass, and three of four other census sites are INVISIBLE to the
+un-repaired helper. The college row's pinned deficit did not move (296.078125 of 291.0) and there was
+no double charge to undo – that file bills each span once from browser-measured constants.
+
+⚠⚠ AND A CLAIM IN THAT HELPER'S OWN HEADER WAS WITHDRAWN WITH A DATED NOTE, because the same pass
+falsified it: «a red verdict from an under-counting model is therefore always true». The `nowrap` arm
+bills a space and a narrow `.`/`–` at the AVERAGE advance, so `.rubber-who` measures 171.08 modelled
+against a browser's 166.47 (1.028; «Semifinal» 1.021). The direction is FALSE RED and never false
+green, so nothing gated is unsafe – and the arm is deliberately untouched, because charging per glyph
+is a re-fit of `ADVANCE` with its own census. That is its own card. A helper whose header claims a
+property the same wave measured false is the «unable to fail» family, and this repo has a long memory
+about it.
+
+⭐ The reconciliation pin was re-cast to assert the DIRECTION rather than the number – the shared
+model's demand for that row is strictly below the browser's – so a later re-fit that stays a floor
+cannot falsely redden a college test, and one that overtakes the browser reddens correctly. Proven by
+moving `ADVANCE`: green at 0.47 and 0.50, red at 0.52 (the row) and 0.90 (the span).

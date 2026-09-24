@@ -141,13 +141,39 @@ own file counts, so it was left exactly as it stands – which means **this wave
 regeneration is honest: the generator reads the DIRECTORY, so it would write another session's
 unfinished filenames into a tracked document on this branch.
 
-## 6. Confirm the spun-off card
+## 6. ~~Confirm the spun-off card~~ – ANSWERED 24.09: «а вот это еще дикинешь может быть?»
 
-`fits.ts` charging 0px for a single-word control is a **shared measurement helper** whose blast
-radius is the whole component suite – a correct charge would move every row assertion in the app by
-an unknown amount, so it needs a census before it changes. It is on your task list as its own card
-rather than folded in here. Say if you would rather it rode this branch, as the bench rot did on your
-23.09 ruling.
+Ruled onto this branch, exactly as the bench rot was on 23.09. **Done**, and the census is the part
+worth reading:
+
+**88 measured calls across 9 files. 62 declare `nowrap`, 2 declare a `min-width` (both also
+`nowrap`), and 26 declare NEITHER** – nine unique element shapes in six files. Four of the nine were
+billed **0.00px for their entire label**: three staff-seat names («Coach», «Masseur»,
+«Psychologist») and your **Watch** control.
+
+| rule | charges moved | assertion sites moved | reddens |
+| --- | --- | --- | --- |
+| A – charge content that cannot wrap | 19 | 7 of 21 | nothing |
+| B – charge the longest word, always | 25 | 10, in 5 files | nothing |
+
+B is not free (it moves six charges on labels that genuinely wrap), so **A** shipped. The refinement
+inside it was measured rather than argued: a browser BREAKS after a hyphen, so charging a whole
+whitespace-free token would over-count – in Chromium a hyphen splits 79.7 of 158.9, and so do the
+en/em/figure dashes, the soft hyphen, ZWSP and `?`, while the non-breaking hyphen, `/`, `,`, `.`, `:`
+and `)` do not. The rule charges a run with **no break opportunity**, and the set is recorded with its
+provenance. The floor property survives: against Chromium the model still bills 0.57–0.91 of the real
+width.
+
+⚠ THE EVIDENCE IS THE MUTATION ARM, NOT THE GREEN RUN: with the repair, a 300-character unbreakable
+token in the staff seats reddens **9** assertions; without it, all 26 pass, and **three of four**
+other census sites are simply invisible to the un-repaired helper.
+
+⚠ AND ONE CLAIM IN THAT HELPER'S HEADER WAS WITHDRAWN, because the same measurement falsified it: it
+said «a red verdict from an under-counting model is therefore always true». The `nowrap` arm bills a
+space and a narrow `.`/`–` at the AVERAGE glyph advance, so `.rubber-who` measures 171.08 modelled of
+a browser's 166.47 (ratio 1.028). The direction is **false RED, never false green** – nothing gated is
+unsafe – and the arm is deliberately unchanged, because charging per glyph is a re-fit of `ADVANCE`
+with its own census. That is on your task list as its own card.
 
 ## 7. She wins the College League in more than a third of her years – is that the right student field?
 
