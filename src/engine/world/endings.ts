@@ -80,6 +80,11 @@ import { applyBondDelta, temperamentFor } from '../spirit'
 import { rngFromSeed } from '../rng'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel, weekMonth, weekStartDay } from '../../shared/dates'
+// ⚠ THE ONE SPELLING OF «SHE HOLDS THE DEGREE», IMPORTED AND NEVER RE-STATED – the same predicate
+// `world/albumBook.ts` gates the `graduated` occasion on and `CollegeDoneDialog.vue` draws the
+// graduation card on. `shared/avatarEmotion.ts` is a leaf (albumBook takes it across the same edge),
+// so this costs no new dependency direction. See `dynastyBackgroundFloored`.
+import { finishedTheCourse } from '../../shared/avatarEmotion'
 import { kidAgeYears } from './age'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
@@ -1328,6 +1333,43 @@ export function dynastyBackgroundOf(kidFundsCents: number): FamilyBackground {
   return 'working'
 }
 
+/** ⭐⭐⭐ THE GRADUATE'S FLOOR – HIS «ок» OF 23.09, AND IT READS **THE DEGREE**.
+ *
+ *  His ruling, verbatim, the sentence that closes the parting's §12: «Предложение в одну строку:
+ *  концовка-колледж даёт полку не ниже "середины" - ок» (23.09).
+ *
+ *  ⚠⚠ A FLOOR AND NEVER A CEILING, which is why it is a wrapper and not an edit one function up.
+ *  `dynastyBackgroundOf` stays a pure function of cents with its own boundary pins
+ *  (tests/wave10-handover.test.ts §B, every band edge to the cent); this READS its answer and only
+ *  refuses to let it sit below middle. A graduate who retires wealthy hands over `'wealthy'`.
+ *
+ *  ⚠⚠ AND THE READER IS THE DEGREE – NOT THE ENDING TYPE, NOT THE FORK ANSWER. Both alternatives
+ *  were MEASURED on this tree before this clause was written, and both are refused by name
+ *  (`docs/plans/college-scene-rulings-2026-09.md`, ruling A):
+ *
+ *   · **THE ENDING TYPE** (`world.ending?.type === 'college'`) HAS NO STATE TO FLOOR. All three
+ *     sites that construct a `'college'` latch – `ending.ts`'s `endingForForkAnswer` and twice in
+ *     `world.ts` – carry a NON-NULL `resumesWeek`, and `EndingScreen.vue` draws the dynasty control
+ *     under `resumes === null && dynasty`, so a college latch cannot open this door at all.
+ *     Graduation leaves no latch either: `finishCollege` takes it off for good («NO 'ending' HERE,
+ *     AND THE ASYMMETRY IS THE FACT»). A clause on the type would be dead code with a measured share
+ *     of zero – and the spec's own sentence «the clause reads the ENDING, not the biography» falls
+ *     with it, stated here rather than quietly worked around.
+ *   · **THE FORK ANSWER** (`world.fork?.answer === 'college'`) prices a girl who enrolled, played one
+ *     year and walked exactly like a graduate. What he ruled on is «a degree and a profession», and
+ *     one year is neither.
+ *
+ *  ⚠ THE CONSEQUENCE, STATED RATHER THAN HIDDEN: a graduate who then had a full tour career and
+ *  retired thin reads `middle` too. The degree does not stop being a degree when the tour is over –
+ *  it is the honest reading of the ruling, and it is question 1 of the wave's report. */
+function dynastyBackgroundFloored(world: WorldState): FamilyBackground {
+  const band = dynastyBackgroundOf(world.kidFundsCents)
+  if (band !== 'working') return band
+  const college = world.college
+  const graduated = college?.doneWeek != null && finishedTheCourse(college.years.length, ENDINGS.collegeYears)
+  return graduated ? 'middle' : band
+}
+
 /** ⭐⭐⭐ THE INHERITANCE BLOCK – THE ONLY THING THAT CROSSES FROM ONE CAREER TO THE NEXT (§3).
  *
  *  Built at the ENDING, carried on the ending view, and consumed by `createWorld` as its fifth
@@ -1373,7 +1415,10 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
   return {
     generation,
     childSeed: childSeedFor(ancestorRoot, generation),
-    background: dynastyBackgroundOf(world.kidFundsCents),
+    // ⭐ THE FLOORED READ (the college scene, T1 – his «ок» of 23.09). `dynastyBackgroundFloored`
+    // holds the whole clause and the two refusals behind it; the band itself is still
+    // `dynastyBackgroundOf`'s, unwidened.
+    background: dynastyBackgroundFloored(world),
     raisedOnTour: wasThereAChild(world),
     motherName: { first: world.profile.kidName, last: world.profile.kidLastName },
     // §6.2 – the identity card pre-fills the country from hers and leaves it EDITABLE. See the field's
