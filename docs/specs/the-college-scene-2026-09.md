@@ -245,11 +245,33 @@ every measured number HERE – deviations flagged, never smoothed.
 
 | # | claim | predicted | measured |
 | --- | --- | --- | --- |
-| 1 | the floor: posed college endings read `middle` or better, posed pro endings unmoved | 100% / 0 moved – a deviation is a defect | |
-| 2 | share of college YEARS that win the League (walked corpus, the fork answered `college`) | coarse 15–35%: field standard 56 under her year-2+ skill, three wins at draw 8 (confidence low, the measurement is the point) | |
-| 3 | share of college CAREERS with at least one title over their years | above row 2, coarse 40–70% | |
-| 4 | `collegeTitles` on the handover equals the banked `wonTheLeague` count on every walked ending | equality, every career – a disagreement is a defect | |
-| 5 | the frozen MAIN capture | untouched (41550 / `e6b0c709`) – the wave adds zero draws | |
+| 1 | the floor: college endings read `middle` or better, non-college endings unmoved | 100% / 0 moved – a deviation is a defect | **HELD. 19 of 19 graduates at or above `middle`; 0 of 24 control careers moved.** ⚠ And it is nearly INERT: only **1 of 19 (5.3%)** was actually lifted – see the note below |
+| 2 | share of college YEARS that win the League (walked corpus, the fork answered `college`) | coarse 15–35%: field standard 56 under her year-2+ skill, three wins at draw 8 (confidence low, the measurement is the point) | **36.4%** – 28 titles over 77 years that held a championship. ⚠ **1.4 points ABOVE the predicted band**, flagged not smoothed |
+| 3 | share of college CAREERS with at least one title over their years | above row 2, coarse 40–70% | **66.7%** – 16 of 24 careers; the spread is 8 / 9 / 3 / 3 / 1 careers at 0 / 1 / 2 / 3 / 4 titles. HELD, near the top of the band |
+| 4 | `collegeTitles` on the handover equals the banked `wonTheLeague` count on every walked ending | equality, every career – a disagreement is a defect | **HELD. 0 disagreements over 48 walked careers**, and the control arm carries 0 titles in total |
+| 5 | the frozen MAIN capture | untouched (41550 / `e6b0c709`) – the wave adds zero draws | **UNTOUCHED, and by a stronger receipt than a diff: `git log dab016fd..HEAD -- tests/condition.test.ts` returns zero commits** |
+
+**The instrument**: `tools/college-scene-bench.ts`, 24 careers reached the fork, both arms walked to
+an ending (79 banked college years, 77 of which held a championship; 19 graduates; all 24 control
+careers ended). 305s, exit 0 read from the log file. Every row prints the SPEC's prediction beside
+the measurement rather than this file's, which is `rank-plateau.md`'s lesson applied before the fact.
+
+⚠⚠ **ROW 1's REAL FINDING IS THAT THE FLOOR ALMOST NEVER FIRES, AND IT CONTRADICTS THE PARTING'S §12.**
+That section's premise was «a college-fork career ends with a small account, so the graduate's home
+reads `working`». Measured on the walked corpus, the graduates' raw bands are **17 wealthy, 1 middle,
+1 working** – a graduate goes back on tour and earns, so the shelf she would have had was already
+`wealthy` seventeen times in nineteen. The clause is right and it is worth having for the one career
+in nineteen that needs it; it is not the structural repair §12 thought it was.
+
+⚠ **AND THE POLICY IS A COMPETENT PARENT**, which is the honest caveat on those 17: the walk uses the
+bench's `player` policy (the reserve, the coach review), not a struggling one. A real player who plays
+worse would meet the floor more often than 5.3%, and nothing here measures how much more.
+
+⚠ **ROW 2's 36.4% IS A BALANCE FACT AND IT IS HIS**, not a defect: the field is `standard 56` and does
+not scale with her programme tier (that is the standing ruling – the tier buys development,
+development wins matches), so her own development is the only thing that moves this number, and by
+year two it has moved it past the band we guessed. Two thirds of college careers hold a title. See
+question 7 of [the questions](../plans/college-scene-questions-2026-09.md).
 
 ## 7. The strings
 

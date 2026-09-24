@@ -7,7 +7,7 @@ last-reviewed: 2026-09-24
 
 # The college scene – what is yours to answer
 
-Six questions, in the order they change the product. Every one of them is a place where the wave
+Seven questions, in the order they change the product. Every one of them is a place where the wave
 could not proceed on a measurement alone, so nothing below is a musing: each is a choice with its
 options priced. The wave is built and gated either way – answering these moves what ships next, not
 what shipped.
@@ -141,3 +141,42 @@ radius is the whole component suite – a correct charge would move every row as
 an unknown amount, so it needs a census before it changes. It is on your task list as its own card
 rather than folded in here. Say if you would rather it rode this branch, as the bench rot did on your
 23.09 ruling.
+
+## 7. She wins the College League in more than a third of her years – is that the right student field?
+
+Measured, not guessed (`tools/college-scene-bench.ts`, 24 careers walked through the fork and out the
+other side, 77 years that held a championship):
+
+| | measured | we had predicted |
+| --- | --- | --- |
+| college YEARS she wins | **36.4%** (28 of 77) | coarse 15–35% |
+| college CAREERS with at least one title | **66.7%** (16 of 24) | coarse 40–70% |
+| the spread | 8 careers with none, 9 with one, 3 with two, 3 with three, 1 with four | – |
+
+So two thirds of college careers hold a student title, and she wins better than one year in three.
+That is **1.4 points above the top of the band we predicted**, which is inside the honest error of a
+coarse guess – it is flagged rather than smoothed because invariant 5 says so, not because it is a
+defect.
+
+⚠ It is a balance fact and it is yours. The mechanism is the standing ruling working as designed: the
+field is `standard 56` and **does not scale with her programme tier**, so the only thing that moves
+this number is her own development – and by year two her development has moved it. Nothing is wrong;
+the question is whether a student championship she wins a third of the time is the story you want,
+given that it is the one tournament of the year and the thing the national selectors read.
+
+| option | what it means |
+| --- | --- |
+| **A – leave it** (recommended) | she is a scholarship athlete among scholarship athletes and she is good. The call-up ladder already reads the result, so a high title rate feeds the one stake the year has. |
+| B – raise the field | a stronger student field makes the title rarer. ⚠ It also makes the call-up rarer, because the selectors read this result – one number, two effects, and it needs a bench arm before it ships. |
+| C – widen the draw | 16 instead of 8 means four matches and a rarer title. Refused when the fixture was built, on your own «перелистывание 1 года за клик» – four watchable matches inside one week of a freeze designed as the shortcut. |
+
+## A second finding worth your eye, and it needs no answer
+
+The floor you ruled in Q1 is **nearly inert**, and the measurement says why. The parting's §12
+premise was «a college-fork career ends with a small account, so the graduate's home reads
+`working`». Walked: the graduates' own accounts map to **17 wealthy, 1 middle, 1 working**. She goes
+back on tour and she earns. So the clause lifted exactly **one career of nineteen (5.3%)** – it is
+right, it is worth having for that one, and it is not the structural repair §12 thought it was.
+
+⚠ The honest caveat: the walk uses the bench's competent `player` policy. A player who plays worse
+meets the floor more often than 5.3%, and nothing measures how much more.
