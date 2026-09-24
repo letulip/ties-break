@@ -58,12 +58,58 @@
 //     «Quarterfinal – C. Ostergaard  Won 6-3 6-4   Watch»   275.2 of 291.0   (15.8 spare)
 //     «Semifinal – C. Ostergaard     Won 6-3 6-4   Watch»   256.9 of 291.0   (34.1 spare)
 //     «Final – C. Ostergaard         Won 6-3 6-4   Watch»   232.4 of 291.0   (58.6 spare)
-//     «Quarterfinal – C. Ostergaard  Lost 4-6 5-7  Watch»   281.1 of 291.0   ( 9.9 spare)  <- worst
+//     «Quarterfinal – C. Ostergaard  Lost 4-6 5-7  Watch»   281.1 of 291.0   ( 9.9 spare)
 //
-// ⚠ THE WORST ROW IS THE EARLY EXIT'S AND NOT THE TITLE'S, which is the opposite of what «the
-// longest labels the block can hold» suggests: a LOST score is a character longer than a won one
-// («Lost 4-6 5-7» against «Won 6-3 6-4»), and that character costs more than the stage word saves.
-// So both shapes are measured rather than only the one with three rows.
+// ⚠ THOSE FOUR ARE THE MODEL'S NUMBERS AND THEY ARE OPTIMISTIC. Read the block below before quoting
+// any of them: charged honestly, the first row needs 296.1 of the same 291.0.
+//
+// ⚠⚠⚠ AND THE FLOOR ABOVE IS NOT THE TRUTH: MEASURED IN A REAL BROWSER THE WORST SHIPPED ROW IS
+// ~5px OVER ITS 291.0px, AND THE OPPONENT'S NAME IS ALREADY BEING ELLIPSISED ON A 375px PHONE.
+//
+// This was NOT found by the assertions below and cannot be – they are `fits.ts`'s model, and the
+// model is a documented FLOOR. It was found by charging the two things this file's own report says
+// the floor omits. Instrument: one-off headless Chromium (playwright, `deviceScaleFactor: 1`) over
+// the row's verbatim markup, `src/style.css` and the repo's own self-hosted Manrope – the same
+// harness `fits.ts`'s header describes for fitting `ADVANCE`. Nothing of it is committed; it was a
+// measurement, not a test, and the numbers are recorded here because the run is gone.
+//
+//   the Watch span at 10px, decomposed:  «Watch» 400 = 29.75   800 = 31.61
+//                                        800+uppercase = 36.33   +`letter-spacing: 0.1em` = 41.33
+//   -> the model charges 23.5 for that span (and the SHARED helper charges 0.0). Real cost 41.33.
+//   the score, widest straight sets:     «Won 6-3 6-4» 72.3  (⚠ WIDER than «Lost 4-6 5-7», 71.8 –
+//                                        `tabular-nums` makes every digit the same width, so the
+//                                        model's character count had the two the wrong way round,
+//                                        and the TITLE run's Quarterfinal row is the worst, not the
+//                                        early exit's. The claim that stood here said the opposite.)
+//   -> so `.rubber-who`'s real budget is 291.0 − 16 (gaps) − 72.3 − 41.33 = **161.4px**
+//   «Quarterfinal – C. Ostergaard» measures **166.5px** -> needed 296.1 of 291.0, **OVER by 5.1**,
+//   and the rendered span confirms it: `scrollWidth` 166.5 against `clientWidth` 161.9, truncated.
+//
+// HOW MUCH OF THE DRAW THIS TOUCHES, counted over all 211 `SURNAMES` rather than argued:
+//
+//                          straight sets            after a retirement («… ret.», score 94.6)
+//     Quarterfinal          11 of 211 overflow       129 of 211
+//     Semifinal              0 of 211                 25 of 211
+//     Final                  0 of 211                  0 of 211
+//
+// So on a 375px phone this is the LONG-NAME TAIL of one round – ~5% of the draw – and it becomes the
+// COMMON case in any round she or her opponent retired in, because `ret.` costs the score span
+// 22.3px. ⚠ It is a legibility defect and NOT a stranded control: `.college-rubber` declares no
+// `flex-wrap`, so the row cannot wrap and nothing leaves the screen – `.rubber-who` gives way
+// through its own `text-overflow: ellipsis`, which `src/style.css` calls «the safety net at 375px,
+// not the plan». The Watch button and the score are never touched.
+//
+// ⚠ NOT FIXED HERE, AND DELIBERATELY. Every repair is a wording or a layout change to a card that
+// shipped on 22.08 – shortening the label, dropping the stage word, wrapping the row, restyling the
+// Watch pill – and invariant 4 says that is the owner's call and not this wave's. T2 was asked to
+// MEASURE this surface; the measurement found something and the number is recorded rather than
+// smoothed. The architect has it as a question.
+//
+// ⚠ 320x568 IS NOT MEASURED BY AN ARM IN THIS FILE, ON THE COORDINATOR'S RULING (24.09): 375x667 is
+// the house's phone law by name and a permanently red arm is not a measurement anybody can act on.
+// The number, for the record: room **236.0px**, the same row needs 296.1, **OVER by 60.1** – on
+// straight sets every one of the 211 surnames overflows the Quarterfinal and the Semifinal row, and
+// 52 overflow even «Final». The narrow phone is not a tail case on this surface, it is the shape.
 //
 // THE MUTATION LEDGER – each arm run RED before this file was believed:
 //   * `LONGEST_SURNAME` lengthened by a second barrel (`Ostergaard` -> `Ostergaard-Vandenberg`),
