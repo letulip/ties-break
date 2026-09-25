@@ -98,7 +98,7 @@ import {
   kidAgeAt,
 } from '../src/engine/world'
 import { isOffSeasonWeek, WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
-import { activeLadderOf, tierOpenFor, hasOutgrown } from '../src/engine/world/ladder'
+import { tierOpenFor, hasOutgrown } from '../src/engine/world/ladder'
 import { UPCOMING_WEEKS } from '../src/engine/world/constants'
 import { seasonLastWeek } from '../src/engine/offers'
 import { feedContext, feedShows } from '../src/composables/tierState'
