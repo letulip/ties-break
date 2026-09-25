@@ -99,6 +99,17 @@ function engineFraction(tier: TierId, snapshot: Snapshot): string {
   return pointsLockNote(tier, need!, snapshot.ladders.domestic.points)
 }
 
+/** ...and the DISTANCE off the engine's own `pointsToEnter`, which is what the plaque's long form
+ *  reads since 25.09 (docs/specs/engine-ui-parity-2026-09.md §5's second instance, closed). Equal to
+ *  `derivedDistance` on every shipped fixture – `medical.ts` writes `tier.enterPointBand[0]` into
+ *  `pointsToEnter` at both of its call sites – which is precisely why the assertion had to be
+ *  re-pointed rather than left: a row that is green whichever source it reads is not measuring one. */
+function engineDistance(tier: TierId, snapshot: Snapshot): string {
+  const need = snapshot.tierRefusal[tier]?.pointsToEnter
+  expect(need, `${tier}: the engine really is quoting a threshold here`).toBeDefined()
+  return `${need! - snapshot.ladders.domestic.points} more ${LADDER_POINTS_LABEL.domestic}`
+}
+
 /** The strip's chips, by rung. ⚠ AT DESKTOP, where the row draws itself already open (the owner's
  *  ruling of 04.09, quoted on `stripExpanded`): the collapse is `home-strip-and-mail.test.ts`' claim
  *  and not this file's, and a phone would hide the very rungs the plaque is about. */
@@ -173,8 +184,13 @@ describe('site 2 – a rung she really is walking towards', () => {
     // The FRACTION is built with `tierRefusal.regional.pointsToEnter`, never with the tier's band, so
     // a plaque that started quoting its own threshold instead would redden here.
     expect(chip!.text).toContain(engineFraction('regional', CLIMBER_SNAP))
-    expect(chip!.title, 'and the long form states the distance').toContain(
-      derivedDistance('regional', CLIMBER_SNAP),
+    // ⚠ RE-AIMED 25.09 AT THE ENGINE'S NUMBER, and the re-aim is the point rather than a tidy-up.
+    // Until this wave the tooltip really WAS derived from the tier's own band, so this row was green
+    // whichever of the two sources it happened to read and could not tell them apart – §5's second
+    // instance, invisible by construction. `derivedDistance` stays in use in §2, where the BAND
+    // arithmetic is the lie being forbidden rather than the value being asserted.
+    expect(chip!.title, 'and the long form states the distance the ENGINE quoted').toContain(
+      engineDistance('regional', CLIMBER_SNAP),
     )
   })
 })
@@ -222,12 +238,17 @@ describe('site 2 – a rung she really is walking towards', () => {
 //      them. The repair keeps the fragment WHERE IT IS TRUE and lets the engine's sentence through,
 //      on the shape the `reached` arm one line up already had – so this file can now assert what it
 //      could not on 24.09, that the tooltip carries the engine's words.
-//   2. THE PLAQUE'S LOCKED ARM STILL RE-DERIVES ITS LONG FORM. `tierState`'s `locked` arm takes the
-//      engine's number for the chip (`input.refusal?.pointsToEnter ?? minPoints`) and the tier band's
-//      own `minPoints` for the tooltip beside it, so the two halves of one plaque read different
-//      sources. They agree today – the engine writes `tier.enterPointBand[0]` into `pointsToEnter`
-//      at both of `medical.ts`' call sites – so nothing is visible and nothing here can redden. It is
-//      the same shape as the defect above, one arm along.
+//   2. ⭐ FIXED 25.09 – the record, kept: «THE PLAQUE'S LOCKED ARM STILL RE-DERIVES ITS LONG FORM.
+//      `tierState`'s `locked` arm takes the engine's number for the chip
+//      (`input.refusal?.pointsToEnter ?? minPoints`) and the tier band's own `minPoints` for the
+//      tooltip beside it, so the two halves of one plaque read different sources. They agree today –
+//      the engine writes `tier.enterPointBand[0]` into `pointsToEnter` at both of `medical.ts`' call
+//      sites – so nothing is visible and nothing here can redden.» Measured before the repair: 351
+//      hits of that arm over 181 built snapshots, ZERO divergences, so the agreement is real and the
+//      invisibility was total. The re-derivation is deleted; the whole sentence reads one binding. The
+//      guard is `tests/round34-ladder-plaques.test.ts`' «BOTH HALVES … read the ENGINE's number»,
+//      which poses the divergence no fixture can produce, plus §1's row above, re-pointed at
+//      `engineDistance` so this surface stops being green whichever source it reads.
 describe('site 2 – the professional\'s plaque carries no arithmetic the engine did not do', () => {
   it('⭐⭐ the shipped lie is nowhere on the row – not on the chip, not in its tooltip', () => {
     const { byTier, whole } = stripChips(PRO_SNAP)

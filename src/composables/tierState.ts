@@ -908,6 +908,24 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     input.refusal.rankToEnter !== undefined
   const locked = input.refusal !== undefined ? input.refusal.reason === 'locked' && !refusedOnRank : bandLocked
   if (locked) {
+    // ⚠⚠ ONE NUMBER FOR ONE PLAQUE (25.09, docs/specs/engine-ui-parity-2026-09.md §5's second live
+    // instance, closed). The chip took the ENGINE's `pointsToEnter` and the tooltip beside it
+    // RE-DERIVED the same threshold from the tier's own `minPoints` – two reads of two sources for
+    // one plaque, which is form A's argument in miniature: one of them should not exist.
+    //
+    // ⚠ IT WAS INVISIBLE BY CONSTRUCTION, WHICH IS WHY IT NEEDED FINDING RATHER THAN CATCHING. They
+    // agreed because `engine/world/medical.ts` writes `tier.enterPointBand[0]` into `pointsToEnter`
+    // at both of its call sites (:1154 and :1321), so no fixture could separate them and no test
+    // could redden – measured across six built careers and 175 sampled weeks of a seventh, 0
+    // divergences. A latent instance is still an instance, and the day the engine quotes a threshold
+    // of its own – a per-event cut, a rung whose gate stops being its band's floor – the chip would
+    // have said one number and its own tooltip another.
+    //
+    // ⚠ AND THE WHOLE SENTENCE READS IT, not just the fraction: the distance, the "she has N of M"
+    // and the gap the results plan is priced against are one piece of arithmetic, so all of it comes
+    // off this one binding. `minPoints` still answers the BAND's own question above (`bandLocked`),
+    // where the band is the subject rather than a stand-in for the engine.
+    const toEnter = input.refusal?.pointsToEnter ?? minPoints
     // WHERE THE MISSING POINTS ARE EARNED, by table. The domestic sentence is the one this arm has
     // always said; the international one is its exact mirror for the w15 on-ramp - the J rungs are
     // the only events that pay the currency that band is counted in. Prose in a table rather than
@@ -937,8 +955,8 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // ⚠ THE ENGINE'S NUMBER WHEN IT HAS ONE. It carries `pointsToEnter` for a DOMESTIC rung it
       // locked; an acceptance-list rung is refused on a rank instead, and there the band's own
       // threshold is still the honest thing to print beside her points.
-      pointsToEnter: input.refusal?.pointsToEnter ?? minPoints,
-      note: pointsLockNote(id, input.refusal?.pointsToEnter ?? minPoints, bandPoints),
+      pointsToEnter: toEnter,
+      note: pointsLockNote(id, toEnter, bandPoints),
       // THE LONG FORM CARRIES THE PLAN. The chip has room for the fraction; the tooltip has room for
       // what the fraction would take, and for the one sentence that says which of the two point
       // tables this threshold is even counted in.
@@ -946,9 +964,9 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // only - the two ladders have no exchange rate), so an ITF-denominated gap states the table
       // and stops rather than offering a plan priced in the wrong currency.
       title:
-        `${tier.label} – locked: ${minPoints - bandPoints} more ${LADDER_POINTS_LABEL[bandTrack]} ` +
-        `(she has ${bandPoints} of ${minPoints})` +
-        `${bandTrack === 'domestic' && gapInResultsNote(minPoints - bandPoints, bandPoints) ? ` – ${gapInResultsNote(minPoints - bandPoints, bandPoints)}` : ''}` +
+        `${tier.label} – locked: ${toEnter - bandPoints} more ${LADDER_POINTS_LABEL[bandTrack]} ` +
+        `(she has ${bandPoints} of ${toEnter})` +
+        `${bandTrack === 'domestic' && gapInResultsNote(toEnter - bandPoints, bandPoints) ? ` – ${gapInResultsNote(toEnter - bandPoints, bandPoints)}` : ''}` +
         `. ${earnedAt[bandTrack]}`,
     }
   }

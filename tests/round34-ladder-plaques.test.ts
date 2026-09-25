@@ -156,6 +156,37 @@ describe('round 34 #6 – a locked rung can never quote a requirement of zero', 
     expect(s.title).toContain('38 more national pts')
   })
 
+  it('⭐⭐ ...and BOTH HALVES of it read the ENGINE\'s number, never the tier\'s own band', () => {
+    // ⚠⚠ docs/specs/engine-ui-parity-2026-09.md §5's SECOND live instance, closed 25.09. The chip
+    // took `refusal.pointsToEnter` and the tooltip beside it RE-DERIVED the same threshold from
+    // `TIERS[id].enterPointBand[0]` – two sources for one plaque.
+    //
+    // ⚠ NO FIXTURE COULD SEPARATE THEM, which is why this case has to MAKE the divergence rather than
+    // find one: `engine/world/medical.ts` writes `tier.enterPointBand[0]` into `pointsToEnter` at
+    // both of its call sites (:1154, :1321), measured over 351 hits of this arm across 181 built
+    // snapshots with zero divergences. So the guard poses the engine quoting a threshold of its own –
+    // a per-event cut, a rung whose gate stops being its band's floor – and asserts the whole plaque
+    // follows it. On the pre-fix code the tooltip goes on quoting the band while the chip quotes the
+    // engine, which is the defect made visible.
+    const band = TIERS.national.enterPointBand[0]
+    const engineNeed = band + 45 // derived from the band so the case cannot drift with a re-tune
+    const s = tierState('national', {
+      ...base,
+      points: 112,
+      engineOpen: false,
+      refusal: { reason: 'locked', detail: 'Not enough national pts for National Series yet', pointsToEnter: engineNeed },
+    })
+    expect(s.kind).toBe('locked')
+    expect(s.pointsToEnter, 'the projection is the engine\'s own number').toBe(engineNeed)
+    expect(s.note, 'and so is the chip').toBe(pointsLockNote('national', engineNeed, 112))
+    // THE HALF THAT USED TO DISAGREE. Both the distance and the "she has N of M" come off one number.
+    expect(s.title, 'the distance is the engine\'s').toContain(`${engineNeed - 112} more national pts`)
+    expect(s.title, 'and so is the denominator').toContain(`(she has 112 of ${engineNeed})`)
+    // ...and the band's own spelling is nowhere on the plaque, which is what "one source" means here.
+    expect(s.title, 'the tooltip re-derived the tier band').not.toContain(`${band - 112} more national pts`)
+    expect(s.title, 'nor its denominator').not.toContain(`of ${band})`)
+  })
+
   it('and a lock with NO distance at all is still «Outgrown», not a zero (round 28 #12\'s arm)', () => {
     // The play-down refusal carries neither number, and its arm sits above the one this round moved.
     // Asserted here so the ordering cannot be re-shuffled into printing «0 / 0» again.
