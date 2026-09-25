@@ -772,11 +772,35 @@ const seasonChips = computed<TierChip[]>(() =>
                   // same way an hour ago. If he wants the full words back on the strip, the honest
                   // lever is the WINDOW rule rather than the copy - four chips fitted, five do not.
                   'Enter your first!'
+    // ⚠⚠ THE ENGINE'S SENTENCE IS NOT THIS SCREEN'S TO REPLACE (25.09, docs/specs/
+    // engine-ui-parity-2026-09.md §3's second bullet and §5's first live instance). `avail.title` IS
+    // `tierState`'s `input.refusal.detail` – the sentence the ENGINE composed, which is the whole
+    // discipline the `refusal` projection was added for – and the `outgrown` arm used to DISCARD it
+    // for a line of its own. So `tests/dead-rungs.test.ts`' claim that the plaque carries the
+    // engine's words was true of the composable and false of this strip, and the words it threw away
+    // are the ones that tell her what to do instead: «Local Open pays national points – she is on the
+    // world tour now, at #110. The bigger draws are hers.», or, on a rung she has passed but may
+    // still enter, «…still hers to enter: next one Jul 11–17, 2033».
+    //
+    // ⚠⚠ AND THE DISCARD WAS ONLY HALF OF IT: THE CLAIM WAS UNCONDITIONAL. «her best result stays on
+    // the books» was asserted whether or not a best result exists, so on every rung with none the row
+    // promised a finish that is not there – measured on a professional at #110 whose domestic book is
+    // empty, where all three club rungs said it and `bestFinishByTier` held nothing for any of them.
+    // That is the part that is a defect rather than a preference.
+    //
+    // ⚠ NO NEW WORDS, AND THE SHAPE IS THE ARM ONE LINE UP. `reached` already keeps both halves –
+    // the screen's own fact, a `·`, then the engine's sentence – so this follows it rather than
+    // inventing a third pattern: the fragment survives verbatim WHERE IT IS TRUE, and where there is
+    // no finish the engine's sentence is the whole tooltip. The accessible name needs nothing here:
+    // `chipName`'s `outgrown` arm reads `chip.label` (the finish, or `avail.note`), never `title`, so
+    // the claim never reached a screen reader and no stale copy of it is left behind.
     const title =
       state === 'reached'
         ? `Best ${short} finish · ${avail.title}`
         : state === 'outgrown'
-          ? `Outgrown – her best ${short} result stays on the books`
+          ? best !== undefined
+            ? `Outgrown – her best ${short} result stays on the books · ${avail.title}`
+            : avail.title
           : avail.title
     return {
       id,

@@ -107,12 +107,24 @@ function stripChips(snapshot: Snapshot) {
   setActivePinia(createPinia())
   useGameStore().snapshot = snapshot
   const wrapper = mount(HomeScreen, { props: { recapFresh: false }, global: { stubs: { teleport: true } } })
-  const byTier = new Map<TierId, { text: string; title: string; classes: string[] }>()
+  // ⚠ `name` IS THE ACCESSIBLE NAME AND IT IS NOT THE TOOLTIP (§3). The chip is a `role="img"` with
+  // an `aria-label`, so `aria-label` REPLACES the content for a screen reader and `title` is not
+  // announced beside it – which makes them two different surfaces that can carry two different
+  // sentences. §3 asserts about both, because a repair that only reaches the sighted tooltip would
+  // leave the other one holding whatever it held.
+  const byTier = new Map<TierId, { text: string; title: string; name: string; classes: string[] }>()
   for (const chip of wrapper.findAll('.season-strip .tier-chip')) {
     if (chip.classes().includes('strip-more')) continue
     const short = chip.text().split('·')[0].trim()
     const id = TIER_LADDER.find((t) => TIER_SHORT[t] === short)
-    if (id) byTier.set(id, { text: chip.text(), title: chip.attributes('title') ?? '', classes: chip.classes() })
+    if (id) {
+      byTier.set(id, {
+        text: chip.text(),
+        title: chip.attributes('title') ?? '',
+        name: chip.attributes('aria-label') ?? '',
+        classes: chip.classes(),
+      })
+    }
   }
   const whole = wrapper.find('.season-strip').text()
   wrapper.unmount()
@@ -198,14 +210,18 @@ describe('site 2 – a rung she really is walking towards', () => {
 // is in scope for a guard. They are written down because this file is the first thing that renders
 // the plaque, so they are what rendering it FOUND.
 //
-//   1. THE ENGINE'S SENTENCE DOES NOT REACH THIS TOOLTIP. `tierState` puts `refusal.detail` on the
-//      plaque's `title` – the whole discipline the `refusal` projection was added for – and then
-//      `HomeScreen.vue`'s `seasonChips` OVERWRITES it for the `outgrown` state with a sentence of
-//      its own, about a best result. So the assertion `tests/dead-rungs.test.ts` makes about
-//      `state.title` is true of the composable and NOT of this surface, and on a career with no
-//      domestic finish at all the row promises a result that does not exist. This file therefore
-//      asserts the tooltip carries no RE-DERIVED DISTANCE (which is round 29 #12) rather than that it
-//      carries the engine's words (which it does not).
+//   1. ⭐ FIXED 25.09, AND §3 BELOW IS THE GUARD – the finding is kept because it is the record of
+//      what rendering the plaque FOUND. It read: «THE ENGINE'S SENTENCE DOES NOT REACH THIS TOOLTIP.
+//      `tierState` puts `refusal.detail` on the plaque's `title` – the whole discipline the `refusal`
+//      projection was added for – and then `HomeScreen.vue`'s `seasonChips` OVERWRITES it for the
+//      `outgrown` state with a sentence of its own, about a best result. So the assertion
+//      `tests/dead-rungs.test.ts` makes about `state.title` is true of the composable and NOT of this
+//      surface, and on a career with no domestic finish at all the row promises a result that does
+//      not exist.» Both halves were measured on `PRO_SNAP` before the repair: all three club rungs
+//      said «her best … result stays on the books» and `bestFinishByTier` held nothing for any of
+//      them. The repair keeps the fragment WHERE IT IS TRUE and lets the engine's sentence through,
+//      on the shape the `reached` arm one line up already had – so this file can now assert what it
+//      could not on 24.09, that the tooltip carries the engine's words.
 //   2. THE PLAQUE'S LOCKED ARM STILL RE-DERIVES ITS LONG FORM. `tierState`'s `locked` arm takes the
 //      engine's number for the chip (`input.refusal?.pointsToEnter ?? minPoints`) and the tier band's
 //      own `minPoints` for the tooltip beside it, so the two halves of one plaque read different
@@ -243,5 +259,83 @@ describe('site 2 – the professional\'s plaque carries no arithmetic the engine
     // career and not for the other, on one snapshot each.
     expect(stripChips(CLIMBER_SNAP).byTier.get('regional')!.classes).toContain('locked')
     expect(stripChips(PRO_SNAP).byTier.get('regional')!.classes).not.toContain('locked')
+  })
+})
+
+// =================================================================================================
+// §3 – ⭐⭐ THE OUTGROWN CHIP CARRIES THE ENGINE'S SENTENCE (finding 1, repaired 25.09)
+// =================================================================================================
+//
+// §3's second bullet in docs/specs/engine-ui-parity-2026-09.md, applied: «The screen prints a
+// sentence the engine composed → it prints the engine's string or it does not print one.» The
+// `outgrown` arm printed neither – it printed a third sentence of its own – so this is the class
+// wearing a different hat, and the spec's §5 recorded it as live and unfixed.
+//
+// ⚠ AND THE SECOND HALF IS WHY IT IS A DEFECT RATHER THAN A PREFERENCE: «her best result stays on
+// the books» was UNCONDITIONAL. A professional's domestic book is empty, so the strip promised her a
+// finish on three rungs she has never played.
+//
+// ⚠⚠ THE MUTATION TABLE, EACH ARM APPLIED ALONE AND REVERTED, MEASURED 25.09 – see the wave report
+// for the pasted output:
+//
+//   A. THE SOURCE MOVED – `playDownRefusalDetail`'s domestic sentence edited in
+//      `engine/world/ladder.ts`, i.e. the ENGINE's own words changed -> red HERE and red in
+//      `tests/dead-rungs.test.ts` («...AND SO DOES THE PLAQUE»). Both surfaces move with the source,
+//      which is what one source looks like from outside.
+//   B. ⭐⭐ ONLY THE UI MOVED – the discard put back exactly as it shipped (`seasonChips`' `outgrown`
+//      arm in `HomeScreen.vue`), a re-authored sentence living where no composable can see it ->
+//      red HERE and `dead-rungs.test.ts` ENTIRELY GREEN. That asymmetry is this section's whole
+//      reason to exist and it is the §5 finding reproduced: the composable net asserts
+//      `state.title`, and `state.title` is exactly what the template was overwriting.
+describe('site 2 – the outgrown chip prints the sentence the ENGINE composed', () => {
+  it('⭐⭐ a rung with NO best finish: the tooltip IS the engine\'s sentence, and promises no result', () => {
+    const { byTier } = stripChips(PRO_SNAP)
+    for (const t of DOMESTIC) {
+      const said = PRO_SNAP.tierRefusal[t]?.detail
+      expect(said, `${t}: the engine really did compose a sentence`).toBeTruthy()
+      expect(PRO_SNAP.bestFinishByTier[t], `${t}: and she has no finish on this rung`).toBeUndefined()
+      const chip = byTier.get(t)
+      expect(chip, `${t} is on the strip`).toBeDefined()
+      // BYTE-IDENTICAL, not merely containing: with no finish to state there is nothing to put in
+      // front of the engine's words, so the tooltip is the engine's words and nothing else.
+      expect(chip!.title, `${t}: the tooltip is the engine's own sentence`).toBe(said)
+      // ...and the promise that had no referent is gone from BOTH surfaces of the chip.
+      expect(chip!.title, `${t}: the tooltip promises a result she has not got`).not.toContain('stays on the books')
+      expect(chip!.name, `${t}: and neither does the accessible name`).not.toContain('stays on the books')
+    }
+  })
+
+  it('⭐⭐ ...and the SAME rung WITH one keeps both halves, on the `reached` arm\'s own shape', () => {
+    // ⚠ THE ACHIEVEMENT IS POSED AT THE SNAPSHOT, and deliberately so: `bestFinishByTier` is written
+    // by `finalizeTournament`, and playing a Local Open to a title with a professional world ranking
+    // is a career this engine will not produce – the rung is shut to her. What the pair needs is the
+    // SAME rung and the SAME engine sentence with the achievement half flipped, which is exactly what
+    // this is: one field of the message the screen is handed.
+    const posed: Snapshot = { ...PRO_SNAP, bestFinishByTier: { ...PRO_SNAP.bestFinishByTier, local: 0 } }
+    const said = posed.tierRefusal.local!.detail!
+    const chip = stripChips(posed).byTier.get('local')
+    expect(chip, 'the Local rung is on the strip').toBeDefined()
+    expect(chip!.classes, 'and it is still drawn as a rung she is past').toContain('outgrown')
+    expect(chip!.title, 'the engine\'s sentence survives the screen\'s fact').toContain(said)
+    expect(chip!.title, 'and the screen\'s own fact is stated, because now it is true').toContain('stays on the books')
+    // The shape is the `reached` arm's: the screen's fact, the `·`, then the engine's sentence LAST.
+    expect(chip!.title.endsWith(said), 'the engine\'s sentence is the tail, as `reached` writes it').toBe(true)
+    expect(chip!.title, 'joined by the separator that arm already uses').toContain(' · ')
+  })
+
+  it('⭐ TOTAL over the strip: every outgrown rung the engine refused prints its sentence', () => {
+    // ⚠ A SWEEP, NOT THE THREE RUNGS THE DEFECT HAPPENED TO TOUCH: a rung that starts arriving
+    // `outgrown` with a refusal tomorrow inherits the guard instead of needing its own case.
+    const { byTier } = stripChips(PRO_SNAP)
+    let checked = 0
+    for (const [t, chip] of byTier) {
+      if (!chip.classes.includes('outgrown')) continue
+      const said = PRO_SNAP.tierRefusal[t]?.detail
+      if (!said) continue
+      checked++
+      expect(chip.title, `${t}: the rendered tooltip dropped the engine's sentence`).toContain(said)
+    }
+    // Anti-vacuity: without this the sweep passes against a strip that draws no outgrown chip at all.
+    expect(checked, 'the sweep really looked at the rungs §0 posed').toBeGreaterThanOrEqual(DOMESTIC.length)
   })
 })
