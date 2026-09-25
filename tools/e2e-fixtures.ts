@@ -458,7 +458,6 @@ export function pauseRefusedCards(world: WorldState): string[] {
   const ctx = feedContext({
     ageYears: snap.ageYears,
     tierOpen: snap.tierOpen,
-    activeLadder: snap.activeLadder,
     upcoming: snap.upcoming,
   })
   return snap.upcoming
@@ -479,7 +478,6 @@ function feedStacksOf(world: WorldState): Map<number, number> {
   const ctx = feedContext({
     ageYears: snap.ageYears,
     tierOpen: snap.tierOpen,
-    activeLadder: snap.activeLadder,
     upcoming: snap.upcoming,
   })
   const perWeek = new Map<number, number>()

@@ -22,8 +22,9 @@ on `rig/parity-wake`. What stands today, measured on the branch head rather than
   own primitive – `weekDays.ts` calls `masseurWorksInWeek` (`engine/world/masseur.ts`) – and
   `tests/component/round29-masseur-parity.test.ts` witnesses it across four week kinds with both
   mutation arms. Nothing was added there; a second guard would have been strictly worse than none.
-* **The feed filter carries a COPY plus a witness, and that is now a DECISION rather than an
-  inheritance** – see «The feed filter's copy stays» below. The unit nets
+* **The feed filter's TABLE copy is GONE and the AGE half stays as form A** – his ruling C,
+  25.09, superseding the 24.09 keep-decision one day later; the section below keeps both records
+  in order. The unit nets
   (`tests/dead-rungs.test.ts`, `tests/round34-ladder-plaques.test.ts`) assert the composable; what was
   missing until 24.09 was the RENDERED surface, now `tests/component/parity-feed-ladder.test.ts` and
   `tests/component/parity-plaque-national.test.ts`.
@@ -82,6 +83,27 @@ deliberate nets:
    it is merely redundant.
 4. And it is the owner's call, because what is being removed for a tidiness gain is defence-in-depth
    on a shipped screen.
+
+### Ruled 25.09 – C: the table half went, the age half stays
+
+His word on the wave's Q3, one day after the analysis above: **C**. The analysis's own split was
+the answer – the AGE term calls the engine's `tierAgeBlock` (form A; it cannot drift and keeps
+`dead-rungs.test.ts`' age-withheld arm falsifiable) and STAYS; the TABLE half was a genuine second
+implementation with its own constant, and its one real property was the trap: it could silently
+defeat `PLAY_DOWN.domesticFromProTable`'s documented `false` arm. What the keep-decision priced as
+«what would have to change» was done in the same order it was priced:
+
+1. `paysIntoHerTables`, `FEED_TABLE_SLACK` and `feedContext`'s `activeLadder` input are gone –
+   `tierState.ts` carries the dated record and the 181-snapshot measurement at the removal site,
+   and every passer of the dead parameter was swept (four callers, four suites, the fixtures tool).
+2. `dead-rungs.test.ts`' `judge` lost its `table` knob WITH the copy it withheld – the «withheld»
+   assertions stand one storey stronger, as the production path; the AGE knob remains a pose.
+3. `tier-window.test.ts`' round-17 #19 case needed nothing: it was re-aimed 24.09 as a PURE-CALLER
+   guard and does not touch the table half.
+4. ⭐ The trap's closure is now its own guard: `parity-feed-ladder.test.ts`' «the A/B's screen
+   half, un-trapped» poses the knob's `false`-arm oracle (an open club draw under a `wta` ladder)
+   and the feed must OFFER it – the arm that re-adds any screen-side table cut goes red exactly
+   there, mutation-verified.
 
 ## 1. The two forms, and the order between them
 

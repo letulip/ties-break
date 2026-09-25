@@ -144,10 +144,22 @@ describe('site 1 – the fixture', () => {
 // =================================================================================================
 describe('site 1 – the screen draws what the ladder opens', () => {
   it('⭐⭐ a DOMESTIC row the ladder calls open is on the climber\'s screen', () => {
-    // The direction a hidden second rule breaks. `paysIntoHerTables` is a live screen-side copy of
-    // the engine's Play Down limb; widen it by one table and this girl loses the only tennis she has.
+    // The direction a hidden second rule breaks. ⚠ RE-AIMED 25.09 (his C): `paysIntoHerTables` WAS
+    // a live screen-side copy of the engine's Play Down limb and is GONE - tierState.ts carries the
+    // record - so this case now guards the door staying gone rather than the copy staying narrow.
     expect(CLIMBER_SNAP.tierOpen.local).toBe(true)
     expect(renderedTiers(CLIMBER_SNAP)).toContain('local')
+  })
+
+  it('⭐⭐⭐ the A/B\'s screen half, un-trapped (his C, 25.09): an oracle-open club draw reaches a PRO\'s screen', () => {
+    // ⚠ POSED, NOT FOUND: today's engine shuts `local` for a professional
+    // (`PLAY_DOWN.domesticFromProTable: true`), so this oracle is the KNOB'S OTHER ARM - the
+    // documented A/B whose `false` re-opens the club draws engine-side. Until 25.09 the screen's
+    // own table copy would have gone on hiding them and the A/B would have run silently defeated;
+    // this case is the proof the trap is gone, and the arm that re-adds a screen-side table cut
+    // goes red exactly here.
+    const knobFalse: Snapshot = { ...PRO_SNAP, tierOpen: { ...PRO_SNAP.tierOpen, local: true } }
+    expect(renderedTiers(knobFalse)).toContain('local')
   })
 
   it('⭐⭐ ...and so is a JUNIOR row, on the professional\'s – the age filter is the other copy', () => {

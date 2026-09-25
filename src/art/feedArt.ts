@@ -105,7 +105,6 @@ export function feedArtUrls(snap: Snapshot | null | undefined): string[] {
     ageYears: snap.ageYears,
     tierOpen: snap.tierOpen,
     tierOutgrown: snap.tierOutgrown,
-    activeLadder: snap.activeLadder,
     upcoming: snap.upcoming,
   })
   const byWeek = new Map<number, UpcomingEvent>()

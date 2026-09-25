@@ -26,10 +26,13 @@
 //      because `entryVerdict`'s ladder arms run before the age gate in `availabilityStatus`.
 //
 // ⚠⚠ AND THE HALF THAT MAKES IT A §4 BUG RATHER THAN A COSMETIC ONE. The Season feed was ALREADY
-// clean, because `feedContext` (composables/tierState.ts) re-derives BOTH rules in the UI – the age
+// clean, because `feedContext` (composables/tierState.ts) re-derived BOTH rules in the UI – the age
 // door since round-17 #19, the table she has left since round-21 #5. So the fix here is not "hide
 // the rows": it is to put the closure where §4 says it belongs, in the engine, and every assertion
-// below that matters is asserted with the UI's own filters WITHHELD. A test that only checked the
+// below that matters is asserted with the UI's own filters WITHHELD.
+// ⚠ RE-AIMED 25.09 (his C): the TABLE copy is gone from the UI entirely, so its «withheld» arm is
+// now the production path - the assertions stand, one storey stronger - and only the AGE knob
+// remains a pose. tierState.ts carries the removal's record and the 181-snapshot measurement. A test that only checked the
 // rendered feed would have passed before this wave and proved nothing.
 //
 // ⭐ WHAT PART 0 DOES NOT DO, and it is worth saying because the spec's other parts do: it moves no
@@ -98,14 +101,18 @@ const her = () => OWNER
 
 /** The feed as a screen would fold it. ⚠ `judge` is what the UI is allowed to decide for itself –
  *  withhold it and only the ENGINE's verdict is left, which is the whole point of this file. */
-function fold(snap: Snapshot, judge: { table?: boolean; age?: boolean } = { table: true, age: true }) {
+// ⚠ RE-AIMED 25.09, HIS RULING C ON THE RIG WAVE'S Q3: the `table` knob is GONE WITH THE COPY IT
+// WITHHELD. `feedContext` no longer takes `activeLadder` at all - the screen-side table filter was
+// removed (tierState.ts carries the record and the measurement), so «withheld» stopped being a
+// pose and became the only path there is. The AGE knob stays: that filter remains as form A (it
+// calls the engine's `tierAgeBlock`), and withholding it is still a real question.
+function fold(snap: Snapshot, judge: { age?: boolean } = { age: true }) {
   return feedContext({
     // ⚠ AGE ZERO IS "THE UI JUDGES NO AGE". `feedContext` filters `tierAgeBlock(t, ageYears) ===
     // 'old'` itself; at age 0 nothing is old, so what survives is the engine's answer alone.
     ageYears: judge.age === false ? 0 : snap.ageYears,
     tierOpen: snap.tierOpen,
     tierOutgrown: snap.tierOutgrown,
-    ...(judge.table === false ? {} : { activeLadder: snap.activeLadder }),
     upcoming: snap.upcoming,
   })
 }
@@ -149,10 +156,11 @@ describe('fault 1: Local Open closes for a player on the professional table', ()
     // means and what the owner read as `outgrown=n`.
     expect(snap.tierOutgrown.local).toBe(true)
 
-    // THE HALF THAT MAKES THIS A §4 FIX. Fold the feed with `activeLadder` withheld – i.e. with
-    // round-21 #5's UI filter switched off – and Local must STILL be gone. Before this wave it came
-    // straight back (tests/tier-window.test.ts pins that as the bug it was).
-    const blind = fold(snap, { table: false, age: true })
+    // THE HALF THAT MAKES THIS A §4 FIX. Since 25.09 there is no UI table filter to withhold (his
+    // C) - the feed IS the oracle's answer here - so this line asserts the engine's closure through
+    // the only path there is. Before Part 0 the copy came straight back
+    // (tests/tier-window.test.ts pins that era as the bug it was).
+    const blind = fold(snap, { age: true })
     expect(blind.rungs).not.toContain('local')
   })
 
@@ -170,7 +178,7 @@ describe('fault 1: Local Open closes for a player on the professional table', ()
     // «Если national доступен - показывать только их» taken to its end: on the professional table
     // there is no top open domestic rung left to collapse to.
     for (const t of DOMESTIC) expect(snap.tierOpen[t], t).toBe(false)
-    const blind = fold(snap, { table: false, age: true })
+    const blind = fold(snap, { age: true })
     expect(blind.rungs.filter((t) => TIERS[t].track === 'domestic')).toEqual([])
   })
 })
@@ -253,7 +261,7 @@ describe('fault 3: aged-out junior rungs', () => {
     for (const t of JUNIOR) expect(snap.tierOpen[t], `${t} is not open at 26`).toBe(false)
     // j30 is the one that proves it: its floor is the on-ramp LATCH, so before this wave the oracle
     // said OPEN at any age once she had crossed it once.
-    const blind = fold(snap, { table: true, age: false })
+    const blind = fold(snap, { age: false })
     expect(blind.rungs.filter((t) => TIERS[t].track === 'itf')).toEqual([])
   })
 
