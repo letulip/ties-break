@@ -126,9 +126,19 @@ describe('the window: exactly what the engine holds open', () => {
   // been deleted because the ladder carried the clause - and the ladder does not. `tierOpenFor` is
   // `tierFloorOpen`, and for j30 that is `onRampOpen('itf')`, A LATCH: crossed once at fourteen and
   // true for ever after, at any age.
+  //
+  // ⚠⚠ AND THE PREMISE BELOW WAS SUPERSEDED ON 28.08 AND NOBODY NOTICED, WHICH IS WORTH THE LINE
+  // (25.09, docs/specs/engine-ui-parity-2026-09.md «The feed filter's copy stays»). «The oracle does
+  // not answer it» is no longer true of a LIVE oracle: calendar Part 0 gave `tierOpenFor` its own
+  // `tierAgeBlock(tier, …) === 'old'` clause, so `Snapshot.tierOpen.j30` is FALSE at 19 and the engine
+  // now answers the age door itself. This case survives as a PURE-CALLER guard - it poses a `tierOpen`
+  // the engine can no longer emit - and that is the whole of what it still measures. It stayed green
+  // for a month because the UI copy it guards kept it green, which is exactly the shape row 13 is
+  // about, one storey up. `tests/dead-rungs.test.ts` fault 3 is where the ENGINE's half is asserted.
   it('⭐ a junior rung she has aged out of leaves the feed, however open the ladder says it is', () => {
-    // The ladder's own answer is UNCHANGED here - all three J rungs latched open - which is the
-    // point: the age door is a second question and the oracle does not answer it.
+    // ⚠ POSED, NOT FOUND: all three J rungs latched open at 19 is a map `toSnapshot` will not build
+    // since Part 0 - see the note above. What it still proves is that the composable does not need the
+    // oracle to be right about this one clause.
     const open = openMap(['j30', 'j60', 'j300', 'w75', 'w100'])
     const at18 = feedContext({ ageYears: 18, tierOpen: open, upcoming: [] })
     const at19 = feedContext({ ageYears: 19, tierOpen: open, upcoming: [] })

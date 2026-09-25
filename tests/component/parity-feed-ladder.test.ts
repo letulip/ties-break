@@ -17,9 +17,17 @@
 // – if a claim here can be made without mounting, it belongs in `dead-rungs.test.ts` instead.
 //
 // ⚠ THE SCREEN-SIDE COPIES ARE STILL LIVE, WHICH IS WHY THE GUARD IS WORTH HAVING. Part 0 moved the
-// closure into the ladder and LEFT `paysIntoHerTables` and the age filter in `feedContext` (harmless
-// while the two agree, and the safe direction when no oracle arrives). Two rules in two places is
-// two places to change, so the day one moves without the other this file reddens.
+// closure into the ladder and LEFT `paysIntoHerTables` and the age filter in `feedContext`. Two rules
+// in two places is two places to change, so the day one moves without the other this file reddens.
+//
+// ⚠⚠ AND «THE SAFE DIRECTION WHEN NO ORACLE ARRIVES» IS STRUCK OUT (25.09) – it was this header's own
+// sentence and it was wrong about the code. `feedContext` answers the no-oracle case on its FIRST
+// line (`if (!open) return` the whole ladder), so neither copy is ever reached by a caller without
+// one: they second-guess an oracle that IS present. Both are inert on the live path – 181 built
+// snapshots, 0 differences in `rungs`, `working` or the rendered rows with both copies deleted – and
+// they stay by a decision with its reasons written out in docs/specs/engine-ui-parity-2026-09.md,
+// «The feed filter's copy stays». That is where to argue with it, and it lists what has to change
+// first.
 //
 // ⚠ MUTATION-VERIFIED, three arms run RED before this was believed – see the table above §2, where
 // the third one is what proves this file is not a second copy of `dead-rungs.test.ts`.
