@@ -344,6 +344,27 @@ describe('site 2 – the outgrown chip prints the sentence the ENGINE composed',
     expect(chip!.title, 'joined by the separator that arm already uses').toContain(' · ')
   })
 
+  it('⭐⭐⭐ his Q2-A (25.09): the accessible NAME carries the engine\'s sentence, letter first', () => {
+    // The chip is `role=\"img\"` with an `aria-label`, which SUPPRESSES `title` - so until this
+    // ruling a screen reader heard neither sentence on an outgrown chip, and the actionable half
+    // lived on hover alone. The fold is the `locked` arm's own idiom, composed at the build site.
+    // MUTATION 25.09: drop the `outgrown` spread from the chip literal -> the two asserts on
+    // `chip.name` below go red together; the tooltip pair above stays green, which is the split.
+    const { byTier } = stripChips(PRO_SNAP)
+    for (const t of DOMESTIC) {
+      const said = PRO_SNAP.tierRefusal[t]?.detail
+      const best = PRO_SNAP.bestFinishByTier[t]
+      const chip = byTier.get(t)!
+      expect(chip.name, `${t}: the reader hears the engine's sentence`).toContain(said!)
+      if (best !== undefined) {
+        expect(
+          chip.name.indexOf(said!),
+          `${t}: the finish letter comes FIRST - the ruling's own sub-question, answered`,
+        ).toBeGreaterThan(chip.name.indexOf('outgrown'))
+      }
+    }
+  })
+
   it('⭐ TOTAL over the strip: every outgrown rung the engine refused prints its sentence', () => {
     // ⚠ A SWEEP, NOT THE THREE RUNGS THE DEFECT HAPPENED TO TOUCH: a rung that starts arriving
     // `outgrown` with a refusal tomorrow inherits the guard instead of needing its own case.

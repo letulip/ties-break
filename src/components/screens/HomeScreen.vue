@@ -791,9 +791,12 @@ const seasonChips = computed<TierChip[]>(() =>
     // ⚠ NO NEW WORDS, AND THE SHAPE IS THE ARM ONE LINE UP. `reached` already keeps both halves –
     // the screen's own fact, a `·`, then the engine's sentence – so this follows it rather than
     // inventing a third pattern: the fragment survives verbatim WHERE IT IS TRUE, and where there is
-    // no finish the engine's sentence is the whole tooltip. The accessible name needs nothing here:
-    // `chipName`'s `outgrown` arm reads `chip.label` (the finish, or `avail.note`), never `title`, so
-    // the claim never reached a screen reader and no stale copy of it is left behind.
+    // no finish the engine's sentence is the whole tooltip.
+    // ⚠ RE-AIMED 25.09, HIS RULING A ON THE RIG WAVE'S Q2: the accessible name now DOES carry the
+    // engine's sentence – `spoken` below, the letter in front where one exists – because a chip
+    // whose actionable half only ever appears on hover is a chip a screen reader cannot use. The
+    // untrue fragment still never reached a reader (it lived in `title` alone), so nothing stale
+    // is spoken; what is NEW to the ear is exactly the engine's own sentence.
     const title =
       state === 'reached'
         ? `Best ${short} finish · ${avail.title}`
@@ -813,6 +816,11 @@ const seasonChips = computed<TierChip[]>(() =>
       // here; every other chip's visible label IS its name.
       ...(state === 'waiting' && cappedSpend !== undefined ? { spoken: avail.note } : {}),
       ...(state === 'unlocked' ? { spoken: 'Unlocked – enter your first!' } : {}),
+      // ⚠ HIS RULING A ON THE RIG WAVE'S Q2 (25.09) – the `locked` arm's own idiom, letter first:
+      // the reader hears the finish she earned (where one exists) and then the ENGINE's sentence,
+      // never the screen-authored fragment. Composed HERE because this is the one site that knows
+      // `best`; `chipName` just speaks what it is handed.
+      ...(state === 'outgrown' ? { spoken: best !== undefined ? `${shortFinish(best)} – ${avail.title}` : avail.title } : {}),
     }
   }),
 )
@@ -841,7 +849,9 @@ function chipName(chip: TierChip): string {
     case 'reached':
       return `${chip.short}: reached, best finish ${chip.label}`
     case 'outgrown':
-      return `${chip.short}: outgrown – ${chip.label}`
+      // ⚠ RE-AIMED 25.09 (his Q2-A): the engine's sentence reaches the ear, letter first – `spoken`
+      // is composed at the chip's build site; the label fallback keeps the pure callers exact.
+      return `${chip.short}: outgrown – ${chip.spoken ?? chip.label}`
     case 'locked':
       return `${chip.short}: locked – ${chip.title}`
     case 'waiting':
@@ -919,7 +929,6 @@ const windowRungs = computed<readonly TierId[]>(
       // round-21 #5: and the table she has LEFT drops out of the strip too. The hole this row's own
       // note describes ("at nineteen ... the domestic three never close again") is closed at the
       // source now instead of only being hidden behind the ellipsis - `paysIntoHerTables`.
-      activeLadder: game.snapshot?.activeLadder,
       upcoming: game.snapshot?.upcoming ?? [],
     }).working,
 )
