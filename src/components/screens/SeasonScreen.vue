@@ -585,7 +585,6 @@ const feed = computed(() =>
   feedContext({
     ageYears: game.snapshot?.ageYears ?? 0,
     tierOpen: game.snapshot?.tierOpen,
-    activeLadder: game.snapshot?.activeLadder,
     upcoming: upcoming.value,
   }),
 )

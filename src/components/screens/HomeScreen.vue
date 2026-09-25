@@ -772,11 +772,38 @@ const seasonChips = computed<TierChip[]>(() =>
                   // same way an hour ago. If he wants the full words back on the strip, the honest
                   // lever is the WINDOW rule rather than the copy - four chips fitted, five do not.
                   'Enter your first!'
+    // ⚠⚠ THE ENGINE'S SENTENCE IS NOT THIS SCREEN'S TO REPLACE (25.09, docs/specs/
+    // engine-ui-parity-2026-09.md §3's second bullet and §5's first live instance). `avail.title` IS
+    // `tierState`'s `input.refusal.detail` – the sentence the ENGINE composed, which is the whole
+    // discipline the `refusal` projection was added for – and the `outgrown` arm used to DISCARD it
+    // for a line of its own. So `tests/dead-rungs.test.ts`' claim that the plaque carries the
+    // engine's words was true of the composable and false of this strip, and the words it threw away
+    // are the ones that tell her what to do instead: «Local Open pays national points – she is on the
+    // world tour now, at #110. The bigger draws are hers.», or, on a rung she has passed but may
+    // still enter, «…still hers to enter: next one Jul 11–17, 2033».
+    //
+    // ⚠⚠ AND THE DISCARD WAS ONLY HALF OF IT: THE CLAIM WAS UNCONDITIONAL. «her best result stays on
+    // the books» was asserted whether or not a best result exists, so on every rung with none the row
+    // promised a finish that is not there – measured on a professional at #110 whose domestic book is
+    // empty, where all three club rungs said it and `bestFinishByTier` held nothing for any of them.
+    // That is the part that is a defect rather than a preference.
+    //
+    // ⚠ NO NEW WORDS, AND THE SHAPE IS THE ARM ONE LINE UP. `reached` already keeps both halves –
+    // the screen's own fact, a `·`, then the engine's sentence – so this follows it rather than
+    // inventing a third pattern: the fragment survives verbatim WHERE IT IS TRUE, and where there is
+    // no finish the engine's sentence is the whole tooltip.
+    // ⚠ RE-AIMED 25.09, HIS RULING A ON THE RIG WAVE'S Q2: the accessible name now DOES carry the
+    // engine's sentence – `spoken` below, the letter in front where one exists – because a chip
+    // whose actionable half only ever appears on hover is a chip a screen reader cannot use. The
+    // untrue fragment still never reached a reader (it lived in `title` alone), so nothing stale
+    // is spoken; what is NEW to the ear is exactly the engine's own sentence.
     const title =
       state === 'reached'
         ? `Best ${short} finish · ${avail.title}`
         : state === 'outgrown'
-          ? `Outgrown – her best ${short} result stays on the books`
+          ? best !== undefined
+            ? `Outgrown – her best ${short} result stays on the books · ${avail.title}`
+            : avail.title
           : avail.title
     return {
       id,
@@ -789,6 +816,11 @@ const seasonChips = computed<TierChip[]>(() =>
       // here; every other chip's visible label IS its name.
       ...(state === 'waiting' && cappedSpend !== undefined ? { spoken: avail.note } : {}),
       ...(state === 'unlocked' ? { spoken: 'Unlocked – enter your first!' } : {}),
+      // ⚠ HIS RULING A ON THE RIG WAVE'S Q2 (25.09) – the `locked` arm's own idiom, letter first:
+      // the reader hears the finish she earned (where one exists) and then the ENGINE's sentence,
+      // never the screen-authored fragment. Composed HERE because this is the one site that knows
+      // `best`; `chipName` just speaks what it is handed.
+      ...(state === 'outgrown' ? { spoken: best !== undefined ? `${shortFinish(best)} – ${avail.title}` : avail.title } : {}),
     }
   }),
 )
@@ -817,7 +849,9 @@ function chipName(chip: TierChip): string {
     case 'reached':
       return `${chip.short}: reached, best finish ${chip.label}`
     case 'outgrown':
-      return `${chip.short}: outgrown – ${chip.label}`
+      // ⚠ RE-AIMED 25.09 (his Q2-A): the engine's sentence reaches the ear, letter first – `spoken`
+      // is composed at the chip's build site; the label fallback keeps the pure callers exact.
+      return `${chip.short}: outgrown – ${chip.spoken ?? chip.label}`
     case 'locked':
       return `${chip.short}: locked – ${chip.title}`
     case 'waiting':
@@ -895,7 +929,6 @@ const windowRungs = computed<readonly TierId[]>(
       // round-21 #5: and the table she has LEFT drops out of the strip too. The hole this row's own
       // note describes ("at nineteen ... the domestic three never close again") is closed at the
       // source now instead of only being hidden behind the ellipsis - `paysIntoHerTables`.
-      activeLadder: game.snapshot?.activeLadder,
       upcoming: game.snapshot?.upcoming ?? [],
     }).working,
 )

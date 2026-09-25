@@ -98,7 +98,7 @@ import {
   kidAgeAt,
 } from '../src/engine/world'
 import { isOffSeasonWeek, WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
-import { activeLadderOf, tierOpenFor, hasOutgrown } from '../src/engine/world/ladder'
+import { tierOpenFor, hasOutgrown } from '../src/engine/world/ladder'
 import { UPCOMING_WEEKS } from '../src/engine/world/constants'
 import { seasonLastWeek } from '../src/engine/offers'
 import { feedContext, feedShows } from '../src/composables/tierState'
@@ -242,7 +242,6 @@ function feedDraws(world: ReturnType<typeof openCareer>['world']): FeedRead {
     // ⚠ THE ROUND-21 #5 TABLE FILTER IS PASSED. `tools/feed-audit.ts` omits it, and
     // `paysIntoHerTables` returns its input untouched when `active` is falsy – so that tool reports
     // cards as SHOWN which the live screen hides, understating exactly this gap. Not repeated here.
-    activeLadder: activeLadderOf(world),
     upcoming: facts,
   })
   // ⚠ RETURNED IN TWO HALVES SO ONE WALK MEASURES THE BEFORE AND THE CANDIDATE FIX. `admitted` is

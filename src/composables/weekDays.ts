@@ -1050,12 +1050,11 @@ export const isSuitable: (e: UpcomingEvent, currentWeek: number) => boolean = ev
  *  booking or a tournament on it, and cancelling the layoff's weeks is not a thing anyone can do). */
 export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
   const rows: LookAheadRow[] = []
-  // round-21 #5: `activeLadder` rides along so the look-ahead markers and the Season rows show the
-  // same set - a marker for a rung the feed refuses to offer would be the two surfaces disagreeing.
+  // round-21 #5's rider left with the table filter (his C, 25.09 – tierState's own record): the
+  // look-ahead and the Season rows read the same `feedContext`, so they still cannot disagree.
   const feed = feedContext({
     ageYears: snap.ageYears ?? 0,
     tierOpen: snap.tierOpen,
-    activeLadder: snap.activeLadder,
     upcoming: snap.upcoming,
   })
   const first = snap.week + 2

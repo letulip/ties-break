@@ -29,6 +29,7 @@ import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composa
 // the transport's refs and own neither, so there is exactly one owner per fact.
 import { usePlaybackClock } from '../composables/playbackClock'
 import { useMatchAudio } from '../composables/matchAudio'
+import { useScreenWake } from '../composables/screenWake'
 // R2-11 – THE TRANSPORT IS A PROP-DRIVEN LEAF. It takes the two settings as values and says what
 // the player pressed; this screen keeps the match and stops owning the bar as well.
 import MatchControls from './MatchControls.vue'
@@ -255,6 +256,11 @@ const playback = usePlaybackClock({
   },
 })
 const { playing, finished } = playback
+// ROUND-16 #20 – THE SCREEN STAYS AWAKE WHILE THE MATCH RUNS, and it rides the clock's own `playing`
+// rather than a second idea of "a match is live". This is the only component in the game that draws a
+// match, so wiring it here covers every surface that mounts one; see composables/screenWake.ts for
+// why `mode === 'live'` is the wrong predicate and why the fallback is silence.
+useScreenWake(playing)
 /** Index of the last point whose point-end event has fired (-1 = match not started yet). */
 const displayedPointIndex = ref(-1)
 /**

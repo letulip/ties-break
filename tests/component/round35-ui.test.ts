@@ -380,7 +380,6 @@ function visibleOn(snap: Snapshot, week: number): UpcomingEvent[] {
   const feed = feedContext({
     ageYears: snap.ageYears,
     tierOpen: snap.tierOpen,
-    activeLadder: snap.activeLadder,
     upcoming: snap.upcoming,
   })
   return snap.upcoming.filter((e) => e.week === week && feedShows(e, feed))
