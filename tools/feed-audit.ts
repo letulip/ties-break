@@ -72,7 +72,6 @@ const ctx = feedContext({
   ageYears: age,
   tierOpen: open,
   tierOutgrown: snap.tierOutgrown,
-  activeLadder: snap.activeLadder,
   upcoming: facts,
 })
 console.log(`\n2. the window: ${ctx.rungs.map((t: TierId) => TIER_SHORT[t]).join(' + ')}  (${ctx.rungs.length} rungs)`)

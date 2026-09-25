@@ -150,7 +150,6 @@ function measureOne(presetIndex: number, seedIndex: number): void {
     const feed = feedContext({
       ageYears: snap.ageYears,
       tierOpen: snap.tierOpen,
-      activeLadder: snap.activeLadder,
       upcoming: snap.upcoming,
     })
     for (const e of snap.upcoming) {

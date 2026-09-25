@@ -242,7 +242,6 @@ function feedDraws(world: ReturnType<typeof openCareer>['world']): FeedRead {
     // ⚠ THE ROUND-21 #5 TABLE FILTER IS PASSED. `tools/feed-audit.ts` omits it, and
     // `paysIntoHerTables` returns its input untouched when `active` is falsy – so that tool reports
     // cards as SHOWN which the live screen hides, understating exactly this gap. Not repeated here.
-    activeLadder: activeLadderOf(world),
     upcoming: facts,
   })
   // ⚠ RETURNED IN TWO HALVES SO ONE WALK MEASURES THE BEFORE AND THE CANDIDATE FIX. `admitted` is
