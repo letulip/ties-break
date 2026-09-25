@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 135 dated entries, newest 2026-09-24. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 136 dated entries, newest 2026-09-25. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 19 | [THE ADVANCE IS RE-FIT PER GLYPH, AND ONE CONSTANT TURNS OUT TO HAVE BEEN TWO](#24092026--the-advance-is-re-fit-per-glyph-and-one-constant-turns-out-to-have-been-two) | 2026-09-24 |
+| general | 20 | [THE RIG WAVE'S FOUR, RULED IN ONE LINE: «ПО СВОИМ РЕКОМЕНДАЦИЯМ»](#25092026--the-rig-waves-four-ruled-in-one-line-по-своим-рекомендациям) | 2026-09-25 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5425,3 +5425,22 @@ green, because the demand side reads `MEASURED_PX` (browser constants) and nothi
 cascade to the recipe the constants were measured under – a style drift desyncs the registry
 silently. The missing half is now a pin (`the pill's LIVE cascade matches the registry's recipe`),
 mutation-verified red-then-green.
+
+## 25.09.2026 – THE RIG WAVE'S FOUR, RULED IN ONE LINE: «ПО СВОИМ РЕКОМЕНДАЦИЯМ»
+
+«сделай по своим рекомендациям пожалуйста и жду твой гейт финальный и ПР по скиллу» – the blanket
+over the wave's question list, materialised as:
+
+1. **Q1, the outgrown tooltip** – A, as shipped: his fragment leads where true, the engine's
+   sentence follows; where no finish exists the engine speaks alone.
+2. **Q2, the reader hears the chip** – A, built: the engine's sentence folds into the spoken name
+   (the `locked` arm's idiom), the finish letter FIRST where one exists – composed at the chip's
+   build site, the one place that knows `best`. Guarded by its own case with the drop-the-spread
+   mutation run red-then-green.
+3. **Q3, the feed filter** – C, built: the TABLE half (`paysIntoHerTables`, `FEED_TABLE_SLACK`,
+   the `activeLadder` input) removed with its 181-snapshot zero-diff measurement recorded at the
+   site; the AGE half stays as form A. The A/B trap is now its own guard – an oracle-open club
+   draw under a `wta` ladder must reach the screen, mutation-verified. The spec keeps both
+   records in order (the 24.09 keep-analysis, then this ruling).
+4. **Q4, the paused match** – A, as shipped: a pause is «I have looked away», the platform's idle
+   timer is the authority then.
