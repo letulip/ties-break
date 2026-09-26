@@ -88,6 +88,26 @@ import { useGameStore } from '../../src/stores/game'
 const { send, workerGlobal } = workerHarness<Reply>()
 harness.send = send as (m: unknown) => Promise<unknown>
 
+/** ⭐ W2, SECOND PASS (26.09) – EVERY MESSAGE THE SCREEN SENDS, so «which operation did the Retry
+ *  re-run» is a question about the WIRE and not about a label. The fourth and fifth cases below are
+ *  about a Retry that used to re-run a DIFFERENT command with the same button text, which nothing
+ *  readable off the screen can distinguish.
+ *
+ *  ⚠ WRAPPED, NOT REPLACED: the transport above is untouched and the first three cases read nothing
+ *  from here. */
+interface SentMsg {
+  type: string
+  slot?: string
+}
+const sent: SentMsg[] = []
+const plainSend = harness.send
+harness.send = async (m: unknown) => {
+  sent.push(structuredClone(m) as SentMsg)
+  return plainSend!(m)
+}
+const restoresSent = (): (string | undefined)[] =>
+  sent.filter((m) => m.type === 'restoreSlot').map((m) => m.slot)
+
 // -------------------------------------------------------------------------------------------------
 // READING THE DISK RAW. Lifted from tests/save-doors-fuzz.test.ts, whose `RawRecord` note argues for
 // a local copy: a shared reader would have to know which fields each suite compares, and «nothing
@@ -235,6 +255,7 @@ describe('⭐⭐ W2 – every in-game save-door refusal leaves a control that go
     setActivePinia(createPinia())
     backing.clear()
     document.body.innerHTML = ''
+    sent.length = 0
   })
 
   it('⭐⭐ a career that cannot render is refused, and the list still opens the one that can', async () => {
@@ -386,6 +407,152 @@ describe('⭐⭐ W2 – every in-game save-door refusal leaves a control that go
       status: 'ok',
     })
     expect(game.snapshot?.careerId, 'the good file did not become the career').toBe(incoming.careerId)
+    w.unmount()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ W2, SECOND PASS (26.09) – «RESTORE PREVIOUS»'s RETRY BELONGED TO SOMETHING ELSE
+  // ===============================================================================================
+  //
+  // `askRestorePrevious` is the ONE save operation on this screen not wrapped in `tracked`
+  // (MoreScreen.vue; its six siblings – the two career rows, the named delete, the named Load, the
+  // export and the import – all are). `tracked` records the operation as the Retry target, so the
+  // omission has two measured consequences, and the two cases below are one each:
+  //
+  //   1. the restore is the FIRST save op of a More visit -> `retrySaveAction` is still null, the row
+  //      renders no Retry at all, and the refusal is a dead end on this row;
+  //   2. something tracked ran EARLIER in the visit -> the Retry beside the restore's refusal
+  //      re-runs THAT operation. A control that silently runs a different command is worse than no
+  //      control, and nothing readable off the screen can tell the two apart – both say «Retry» – so
+  //      case 2 asks the WIRE which command went out.
+  //
+  // ⚠ NO COPY MOVES. The row, its label and the refusal are TB-19's and TB-02's and are untouched;
+  // the fix is the one `tracked(...)` wrapper its siblings already carry.
+  //
+  // ⚠ WHY THE STALE BELIEF IS PUT BACK BY HAND, and it is a real shape rather than a contrivance:
+  // D-01's first arm refreshes this screen's list on every move of THIS tab's revision, so what is
+  // left is the cross-tab case – another tab overwrites the record and this tab's list still holds
+  // the revision it had. The `STALE_REVISION` case above stages the identical belief the identical
+  // way for a named slot.
+  //
+  // ⚠ MUTATION ARM (E): drop the `tracked(...)` wrapper back off `askRestorePrevious`'s `onConfirm`
+  // – case 1 goes red with «the refusal row offers no Retry at all» and case 2 with the manual slot
+  // the Retry re-sent in place of the autosave one.
+
+  /** Make every autosave generation's revision in THIS SCREEN's list two behind the disk, which is
+   *  what a second tab's commit leaves. Whichever generation «Restore previous» targets is then
+   *  refused, so the case never has to guess which one that is. */
+  function staleAutoBelief(game: Game): void {
+    game.slots = game.slots.map((s) =>
+      s.slot.startsWith('auto:') ? { ...s, revision: (s.revision ?? 0) - 2 } : s,
+    )
+  }
+
+  const restorePreviousButton = (w: Wrapper) =>
+    // MoreScreen.vue's own label on the autosave row; the named table's controls carry aria-labels.
+    w.findAll('button').find((b) => b.text() === 'Restore previous')
+
+  const retryButton = (w: Wrapper) => w.findAll('.save-op-row button').find((b) => b.text() === 'Retry')
+
+  it('⭐⭐ a refused «Restore previous» has a Retry at all, on a visit that ran nothing before it', async () => {
+    const game = useGameStore()
+    const world = quietCareer('w2m-prev-first', 'c-w2m-prev-first', 'Gwen')
+    await adoptAutosave(world)
+    await game.loadCareer(world.careerId)
+    await game.advance(1)
+    await settle(game)
+    const before = await generationsRaw(world.careerId)
+
+    const w = await openSaves(game)
+    // ⚠ THE PRECONDITION IS ABOUT THE VISIT, NOT ABOUT `saveOp`. `saveOp` is STORE state and outlives
+    // the mount – the fixture's own `loadCareer` leaves an ok row on it – while `retrySaveAction` is
+    // per-screen-visit BY DESIGN (MoreScreen.vue: «a Retry button that outlived the list it acted on
+    // would be a trap»). So this visit has tracked nothing and the screen offers no Retry to inherit,
+    // which is exactly the state this case is about.
+    expect(retryButton(w), 'this visit has tracked nothing, so there is no Retry to inherit').toBeUndefined()
+    staleAutoBelief(game)
+    await flushPromises()
+
+    await pressAndConfirm(w, game, () => restorePreviousButton(w))
+    const message = expectRefusalOnScreen(w, game, 'a refused restore of the previous generation')
+    expect(await generationsRaw(world.careerId), 'a refused restore moved a generation').toBe(before)
+
+    // ⭐⭐ THE ITEM. The screen has other exits – the careers list, the named table, the import – so
+    // nobody is STUCK here, which is why this is a dead CONTROL rather than a dead end. It is still
+    // the row the player looks at, and the row said «failed» with nothing to press.
+    const retry = retryButton(w)
+    expect(retry, `the refusal row offers no Retry at all – ${message}`).toBeTruthy()
+    expect(retry!.attributes('disabled'), 'the Retry is on the screen and cannot be pressed').toBeUndefined()
+
+    // ...and it leads somewhere: `refreshAfterStale` re-read the list, so the second press states a
+    // belief the worker agrees with.
+    sent.length = 0
+    await retry!.trigger('click')
+    await flushPromises()
+    await settle(game)
+    await flushPromises()
+    expect(restoresSent(), 'the Retry sent no restore at all').toHaveLength(1)
+    expect(game.saveOp, `the Retry led back to the same refusal – ${message}`).toMatchObject({ status: 'ok' })
+    expect(game.error, 'the Retry was refused too').toBe('')
+    w.unmount()
+  })
+
+  it('⭐⭐ ...and the Retry re-runs THE RESTORE, not the tracked operation that ran before it', async () => {
+    const game = useGameStore()
+    const world = quietCareer('w2m-prev-inherit', 'c-w2m-prev-inherit', 'Hana')
+    await adoptAutosave(world)
+    await game.loadCareer(world.careerId)
+    await game.advance(1)
+    await game.saveNamed('backup')
+    await settle(game)
+
+    const w = await openSaves(game)
+
+    // AN EARLIER TRACKED OPERATION IN THE SAME VISIT – the named table's Load, which is wrapped, so
+    // after this press `retrySaveAction` holds a restore of the MANUAL slot.
+    const loadNamed = () => w.findAll('button').find((b) => b.attributes('aria-label') === 'Load save backup')
+    expect(loadNamed(), 'the named-save table offers its Load').toBeTruthy()
+    sent.length = 0
+    await loadNamed()!.trigger('click')
+    await flushPromises()
+    await settle(game)
+    await flushPromises()
+    expect(game.saveOp, 'the earlier operation succeeded, so the Retry it left is a live one').toMatchObject({
+      status: 'ok',
+    })
+    const earlier = restoresSent()
+    expect(earlier, 'the earlier press sent exactly one restore').toHaveLength(1)
+    expect(earlier[0], 'and it was the NAMED slot').toContain('manual:')
+
+    staleAutoBelief(game)
+    await flushPromises()
+    sent.length = 0
+    await pressAndConfirm(w, game, () => restorePreviousButton(w))
+    const message = expectRefusalOnScreen(w, game, 'a refused restore after a tracked operation')
+    const asked = restoresSent()
+    expect(asked, 'the press sent exactly one restore').toHaveLength(1)
+    const target = asked[0]!
+    expect(target.startsWith('auto:'), 'the control pressed was the AUTOSAVE restore').toBe(true)
+    expect(target, 'the two operations must target different slots, or this case proves nothing').not.toBe(
+      earlier[0],
+    )
+
+    // ⭐⭐ THE ITEM. Same button, same words, and until this wave it re-ran the LOAD above.
+    const retry = retryButton(w)
+    expect(retry, `the refusal row offers its Retry – ${message}`).toBeTruthy()
+    sent.length = 0
+    await retry!.trigger('click')
+    await flushPromises()
+    await settle(game)
+    await flushPromises()
+    const again = restoresSent()
+    expect(
+      again,
+      `the Retry beside the restore's refusal re-ran a DIFFERENT operation: it sent ${JSON.stringify(again)} ` +
+        `where the refused command was ${target}`,
+    ).toEqual([target])
+    expect(game.saveOp, `the Retry led back to the same refusal – ${message}`).toMatchObject({ status: 'ok' })
+    expect(game.error, 'the Retry was refused too').toBe('')
     w.unmount()
   })
 })

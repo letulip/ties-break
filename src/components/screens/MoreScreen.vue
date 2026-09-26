@@ -257,7 +257,16 @@ function askRestorePrevious(): void {
     // the NEWEST autosave before answering, so closing the app right here keeps the restore
     // (the old `load` swapped memory only, and a relaunch silently rolled back to pre-restore).
     // The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it.
-    onConfirm: () => game.restoreSlot(prev.slot),
+    //
+    // ⭐⭐ W2 (26.09) – ...AND IT IS `tracked` NOW, WHICH IT ALONE WAS NOT. This was the one save
+    // operation on the screen outside the wrapper its six siblings carry, and `tracked` is what
+    // records the Retry target – so the row's Retry did not belong to this command. Measured, both
+    // halves, in tests/component/principles-w2-more-door-exit.test.ts: with the restore the FIRST
+    // save op of a visit the refusal row offered no Retry at all, and with a tracked operation run
+    // earlier the Retry re-sent THAT one («manual:…:backup» where the refused command was
+    // «auto:…:b»). A control that silently runs a different command is worse than no control.
+    // ⚠ NO COPY MOVES: the row, its label and the refusal are TB-19's and TB-02's, untouched.
+    onConfirm: () => tracked(() => game.restoreSlot(prev.slot)),
   }
 }
 
