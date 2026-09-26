@@ -123,7 +123,9 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
  *  against a career that never reached a championship. */
 function walkToTheChampionship(seed: string): { world: WorldState; rng: Rng } {
   const { world, rng } = atCollege(seed)
-  for (let press = 0; press < 4; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year, so
+  // the walk has to be able to step past her card as well – bond-neutral – and the budget grows for it.
+  for (let press = 0; press < 6; press++) {
     resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) return { world, rng }
     // ⚠ ROUND 27 #6: the tie pauses the year too, so the walk has to be able to step past one on the
@@ -133,6 +135,7 @@ function walkToTheChampionship(seed: string): { world: WorldState; rng: Rng } {
       closeTournament(world)
     }
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a championship')

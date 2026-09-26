@@ -339,11 +339,25 @@ function press(world: WorldState, rng: Rng): void {
     closeTournament(world)
   }
   if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  // ⭐⭐⭐ B-01 / T2.3 RE-AIM (26.09) – AND HER CARD, WHICH PAUSES THE YEAR THE SAME WAY SINCE RULING
+  // 2(a) (measured: 23 of 217 year-calls ticked past an unanswered blocking row). This helper's own
+  // comment at the top says why a walk must answer EVERY pause – «a walk that answers one and not the
+  // other stalls on the first league week and measures the same rest state twelve times over» – and
+  // that is exactly what the gate saw here: 20 weeks of spread where the case demands more than 156.
+  // `drainLifeBeats` is bond-neutral and priced zero, so no digest row and no count moves.
+  drainLifeBeats(world)
 }
 
 const DIGEST = '🌍'
 const digestRows = (world: WorldState): WorldEvent[] => world.events.filter((e) => e.text.startsWith(DIGEST))
 
+// ⚠⚠ THE PRESS BUDGETS IN THIS FILE MOVED 26.09 (B-01 / T2.3), AND ONLY THE BUDGETS. Ruling 2(a)
+// makes a blocking life beat pause the college year the way the birthday and the two fixtures do
+// (measured before the ruling: 23 of 217 year-calls ticked past an unanswered blocking row), so
+// `press` above answers her card and a four-year degree costs up to one press a year more. Measured
+// here: at 3 presses a year the walk reached week 156 of the degree and «the rest states are spread
+// over the whole degree» wants MORE than 156 – it went red at `expected 156 to be greater than 156`,
+// one week short. The claim is the spread and it is untouched; what was too small was the budget.
 describe('round 26 #10 (again) – the world speaks on the week he is looking at', () => {
   it('puts a row about the tour on the CURRENT week at every rest state, all four years', () => {
     // ⭐⭐ THE ASSERTION IS RECENCY AND NOT A COUNT, because the count was never the complaint: the
@@ -351,7 +365,7 @@ describe('round 26 #10 (again) – the world speaks on the week he is looking at
     // anything whose week was the week he was standing on.
     const { world, rng } = enrolled('r26-alive-a')
     const seen: number[] = []
-    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+    for (let i = 0; i < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
       press(world, rng)
       const snap = toSnapshot(world)
       const onThisWeek = snap.events.filter((e) => e.week === snap.week && e.text.startsWith(DIGEST))
@@ -368,7 +382,7 @@ describe('round 26 #10 (again) – the world speaks on the week he is looking at
   it('says something DIFFERENT as the degree goes on – the number is the world moving', () => {
     const { world, rng } = enrolled('r26-alive-b')
     const lines: string[] = []
-    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+    for (let i = 0; i < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
       press(world, rng)
       const row = digestRows(world).find((e) => e.week === world.week)
       if (row) lines.push(row.text)
@@ -391,7 +405,7 @@ describe('round 26 #10 (again) – the world speaks on the week he is looking at
 
   it('names nobody with a pronoun and pays nobody', () => {
     const { world, rng } = enrolled('r26-alive-c')
-    for (let i = 0; i < 4 && world.ending?.type === 'college'; i++) press(world, rng)
+    for (let i = 0; i < 6 && world.ending?.type === 'college'; i++) press(world, rng)
     const rows = digestRows(world)
     expect(rows.length, 'there are rows to check').toBeGreaterThan(0)
     for (const e of rows) {
@@ -414,7 +428,7 @@ describe('round 26 #10 (again) – the world speaks on the week he is looking at
     const { world, rng } = enrolled('r26-alive-d')
     const keptBefore = world.events.filter((e) => e.keep).length
     let presses = 0
-    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+    for (let i = 0; i < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
       press(world, rng)
       presses++
     }

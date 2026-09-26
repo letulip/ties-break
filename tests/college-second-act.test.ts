@@ -15,7 +15,7 @@
 //   3. INPUT-INDEPENDENCE SURVIVES ALL OF IT. `tests/ending.test.ts` already proves that going to
 //      college cannot move the MAIN sequence; this file proves the same of the years INSIDE it, one
 //      call at a time, because the number of commands changed and the property must not have.
-import { answerBirthdayNeutral } from './helpers/career'
+import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
   skipTournament,
@@ -99,22 +99,30 @@ function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier)
 
 /** One college year, spent exactly as the Home shell's button spends it – press, answer the
  *  birthday it pauses for, press again (round 24, the owner's «да, день рождения делай»). The day
- *  together is the one option every birthday offers, so it is always a legal answer here. */
+ *  together is the one option every birthday offers, so it is always a legal answer here.
+ *
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+ *  year the way the birthday and the championship do – MEASURED before the ruling at 23 of 217
+ *  year-calls ticking past an unanswered blocking row – so the walk answers her card too
+ *  (`drainLifeBeats`, bond-neutral and priced ZERO) and the budget gains one press a year. Not one
+ *  assertion moved. */
 function spendYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
-  for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
 }
 
-/** The whole course, spent the same way. */
+/** The whole course, spent the same way. ⚠⚠ RE-AIMED 26.09 – see `spendYear` above. */
 function spendCourse(world: WorldState, rng: Rng): void {
-  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
 }
 
@@ -433,12 +441,17 @@ function collegeYearsWithACall(seed: string): { world: WorldState; stops: string
   const presses: string[][] = []
   for (let y = 0; y < ENDINGS.collegeYears; y++) {
     const seen = new Set<string>()
-    for (let press = 0; press < 4 && world.college!.years.length === y; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way the birthday and the championship do (measured: 23 of 217 year-calls ticked past an
+    // unanswered blocking row), so this walk answers her card – `drainLifeBeats`, bond-neutral and
+    // priced ZERO – and the budget gains a press a year. No assertion here moved.
+    for (let press = 0; press < 6 && world.college!.years.length === y; press++) {
       const list = resumeFromCollege(world, rng)
       presses.push(list)
       for (const s of list) seen.add(s)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     stops.push((STOP_PRECEDENCE as readonly string[]).filter((r) => seen.has(r)))
   }
@@ -533,10 +546,15 @@ describe('⭐⭐⭐ the college competition is played', () => {
     answerCollegeAndDepart(before.world, before.rng)
     const world = before.world
     // Round 24: press-answer-press – the years pause on her birthdays.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way the birthday and the championship do (measured: 23 of 217 year-calls ticked past an
+    // unanswered blocking row), so this walk answers her card – `drainLifeBeats`, bond-neutral and
+    // priced ZERO – and the budget gains a press a year. No assertion here moved.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, before.rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
     expect(world.entries).toHaveLength(0)
@@ -710,12 +728,18 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     // the arm STRONGER: pausing, answering and resuming must leave MAIN exactly where the same
     // number of uninterrupted control ticks leave it, or the birthday moved the world's dice.
     const yearEnds = college.week + WEEKS_PER_YEAR
-    for (let press = 0; press < 4 && college.week < yearEnds; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND IT MAKES THE ARM STRONGER AGAIN, for the sentence two lines
+    // up said a third time: ruling 2(a) makes her card pause the year, and answering it must cost MAIN
+    // NOTHING either – so pausing on a beat, answering it and resuming has to leave MAIN exactly where
+    // the same number of uninterrupted control ticks leave it. `drainLifeBeats` is the player's own
+    // answer and the identity below is what proves it takes no MAIN draw.
+    for (let press = 0; press < 6 && college.week < yearEnds; press++) {
       resumeFromCollege(college, rngA)
       // ⚠ ROUND 26 #6: the championship pauses the year too, and answering it must cost MAIN nothing
       // either – which makes this arm stronger again rather than different.
       answerCollegeReveal(college)
       if (pendingBirthday(college) !== null) answerBirthdayNeutral(college)
+      drainLifeBeats(college)
     }
     while (control.week < college.week) tickWeek(control, rngB)
 

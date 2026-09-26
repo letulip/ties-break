@@ -398,11 +398,16 @@ describe('#6b – on a career that really went', () => {
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // Press-answer-press (round 24): the year pauses on her birthday so the gift can be answered.
-    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered blocking
+    // row), so this walk answers her card too – `drainLifeBeats`, bond-neutral and priced ZERO – and
+    // the budget gains a press a year. Every line below is unchanged.
+    for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       const age = pendingBirthday(world)
       if (age !== null) chooseGift(world, answerableGift(world))
+      drainLifeBeats(world)
     }
     // ONE year lived, and she is still enrolled – the state the shipped flow spends the four years in.
     const enrolled = toSnapshot(world).life
@@ -454,12 +459,17 @@ describe('#6b – on a career that really went', () => {
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // Press-answer-press (round 24): each year pauses on her birthday week.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.college!.doneWeek === null; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered blocking
+    // row), so this walk answers her card too – `drainLifeBeats`, bond-neutral and priced ZERO – and
+    // the budget gains a press a year. Every line below is unchanged.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.college!.doneWeek === null; press++) {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       const age = pendingBirthday(world)
       if (age !== null) chooseGift(world, answerableGift(world))
+      drainLifeBeats(world)
     }
     expect(world.college!.doneWeek, 'the course is over').not.toBeNull()
     expect(world.college!.years.length).toBe(ENDINGS.collegeYears)

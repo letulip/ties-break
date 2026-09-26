@@ -1142,10 +1142,15 @@ describe('#2 college – the only ending that resumes', () => {
     for (let year = 1; year <= ENDINGS.collegeYears; year++) {
       // ⚠ ROUND 24 («да, день рождения делай»): the year PAUSES on her birthday week now, so a year
       // is press-answer-press. Every original assertion is unchanged and asked at the same boundary.
-      for (let press = 0; press < 4 && world.college!.years.length < year; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered
+      // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
+      // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary.
+      for (let press = 0; press < 6 && world.college!.years.length < year; press++) {
         resumeFromCollege(world, rng)
         answerCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
       expect(world.college!.years, `one row per year lived`).toHaveLength(year)
@@ -1167,10 +1172,15 @@ describe('#2 college – the only ending that resumes', () => {
     world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerCollegeAndDepart(world, rng)
     // Press-answer-press (round 24): each year pauses on her birthday week.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+    // year the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered
+    // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
+    // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
@@ -1184,10 +1194,16 @@ describe('#2 college – the only ending that resumes', () => {
     const from = world.week
     // Press-answer-press (round 24): each year pauses on her birthday week – and the gift charges
     // nothing, which is exactly what this case goes on to measure.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+    // year the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered
+    // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
+    // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary. Her card is priced ZERO too, so the bill this
+    // case measures is unmoved by the answer as well as by the pause.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
@@ -1355,12 +1371,16 @@ describe('⚠ input-independence survives college', () => {
     // ⚠ ROUND 24 – AND THE PROPERTY GETS STRONGER, NOT DIFFERENT: the years pause on her birthdays
     // and the gifts are answered mid-walk, so the arm now proves that pausing, answering and
     // resuming cost the MAIN stream not one draw either. The B arm never pauses at all.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND THE PROPERTY GETS STRONGER AGAIN, for the sentence above
+    // said a third time: ruling 2(a) makes her card pause the year, so this arm now also proves that
+    // pausing on a beat and ANSWERING it costs the MAIN stream not one draw. The B arm never pauses.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
       resumeFromCollege(a, rngA)
       // ⚠ ROUND 26 #6: and the championship's reveal is answered mid-walk too – the arm now proves
       // that watching a tournament costs the MAIN stream not one draw either.
       answerCollegeReveal(a)
       if (pendingBirthday(a) !== null) answerBirthdayNeutral(a)
+      drainLifeBeats(a)
     }
     while (b.week < a.week) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)

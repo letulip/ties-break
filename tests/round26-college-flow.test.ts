@@ -103,13 +103,17 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
  *  ⚠ IT THROWS IF IT NEVER GETS THERE, so a case cannot go green against a career that held no
  *  championship at all – the whole floor round 24 established. */
 function pressToTheChampionship(world: WorldState, rng: Rng): { stops: string[]; press: number } {
-  for (let press = 1; press <= 4; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year,
+  // so the walk has to be able to step past her card as well – `drainLifeBeats`, bond-neutral and
+  // priced ZERO – and the budget gains presses for it. It still THROWS if it never reaches one.
+  for (let press = 1; press <= 6; press++) {
     const stops = resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) return { stops, press }
     // ⚠ ROUND 27 #6: a career whose enrolment week falls between the two fixtures meets the tie
     // first, so the walk has to be able to step past one to reach a championship.
     if (callUpRevealOpen(world)) answerTheReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walk never reached a championship')
@@ -167,8 +171,13 @@ describe('#6 the championship stops the year instead of being reported after it'
       // ⚠ ROUND 27 #6: the tie pauses the year too, and this walk counts CHAMPIONSHIPS – so the
       // answer is unconditional and only the count is gated. A walk that answered one reveal and not
       // the other would stall on the first call-up and report one championship a career.
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday and the championship do (measured: 23 of 217 year-calls ticked past
+      // an unanswered blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral
+      // and priced ZERO. Nothing this case counts moved.
       answerTheReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(world.college!.years, 'she graduated – the reveals never stranded the career').toHaveLength(
       ENDINGS.collegeYears,
@@ -217,6 +226,12 @@ describe('#6 the stop, and round 24 rule 2 still holding underneath it', () => {
       answerTheReveal(world)
       expect(world.pendingTournament, 'and none after answering one either').toBeNull()
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – AND THE GUARD ITSELF NEVER MOVED, WHICH IS THE FINDING. The
+      // gate's red here was the LAST line of this case («four years»: `length 4 -> 1`), not either
+      // `pendingTournament` assertion inside the loop: ruling 2(a)'s pause ate presses, so the walk
+      // banked one year. It did NOT change when the reveal is written – round 24 rule 2 holds exactly
+      // as it did, and both in-loop guards pass on every press of the re-aimed walk.
+      drainLifeBeats(world)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
   })
@@ -403,13 +418,15 @@ describe('#6 v59 -> v60: nothing is back-filled and nothing is halted', () => {
     const world = migrateSave(JSON.parse(readFileSync(`${DIR}/v59.json`, 'utf8')))
     const rng = resumeMain(world.rngMain)
     let sawOne = false
-    for (let press = 0; press < 8 && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – see `pressToTheChampionship` above for the reason.
+    for (let press = 0; press < 12 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (collegeLeagueRevealOpen(world)) {
         sawOne = true
         answerTheReveal(world)
       }
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(sawOne, 'the next championship it plays is walked like everyone else`s').toBe(true)
   })
@@ -430,6 +447,8 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
       resumeFromCollege(world, rng)
       answerTheReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – her card pauses the year since ruling 2(a); bond-neutral.
+      drainLifeBeats(world)
     }
     expect(world.college!.years, 'four years really lived').toHaveLength(ENDINGS.collegeYears)
 
@@ -462,6 +481,8 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
       resumeFromCollege(world, rng)
       answerTheReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – her card pauses the year since ruling 2(a); bond-neutral.
+      drainLifeBeats(world)
     }
     for (let i = 0; i < 40; i++) {
       tickWeek(world, rng)

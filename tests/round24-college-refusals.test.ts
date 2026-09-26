@@ -349,10 +349,15 @@ describe('the family may take back a booking it made before the fork', () => {
     }
     // ⚠ Press-answer-press (round 24): the year pauses on her birthday, which can land before the
     // booked court – the whole year has to be spent for the trap to be provably real.
-    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY AND NOT BECAUSE IT WAS RED: ruling 2(a) makes a
+    // blocking life beat pause the college year, so a fixed-count walk that does not answer her card
+    // passes only while no beat happens to land in its window. `drainLifeBeats` is bond-neutral and
+    // priced ZERO, and the budget gains a press for the question a year can now raise.
+    for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
 
     // The friendly's own record, keyed by the week it was booked for – `resolvePractice` writes it.

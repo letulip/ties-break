@@ -748,9 +748,13 @@ describe('the freeze still behaves', () => {
     // MAIN position as the same weeks of uninterrupted control ticks, or the birthday moved the
     // world's dice.
     const yearEnds = college.week + WEEKS_PER_YEAR
-    for (let press = 0; press < 4 && college.week < yearEnds; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND IT MAKES THE ARM STRONGER AGAIN, for the sentence above said
+    // once more: ruling 2(a) makes her card pause the year, so this arm now also proves that pausing on
+    // a beat and ANSWERING it leaves MAIN exactly where the control's uninterrupted ticks leave it.
+    for (let press = 0; press < 6 && college.week < yearEnds; press++) {
       resumeFromCollege(college, rngA)
       if (pendingBirthday(college) !== null) answerBirthdayNeutral(college)
+      drainLifeBeats(college)
     }
     while (control.week < college.week) tickWeek(control, rngB)
     expect(college.week).toBe(control.week)
@@ -794,10 +798,15 @@ describe('a career migrated mid-college', () => {
     // presses because the year now holds one more stop than it did.
     const before = world.college!.years.length
     const rng = resumeMain(world.rngMain)
-    for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY AND NOT BECAUSE IT WAS RED: ruling 2(a) makes a
+    // blocking life beat pause the college year, so a fixed-count walk that does not answer her card
+    // passes only while no beat happens to land in its window. `drainLifeBeats` is bond-neutral and
+    // priced ZERO, and the budget gains a press for the question a year can now raise.
+    for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     const banked = world.college!.years
     expect(banked.length).toBe(before + 1)

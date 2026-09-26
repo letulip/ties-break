@@ -216,6 +216,11 @@ function walkedCollegeSnapshot(): Snapshot {
   resumeFromCollege(world, rng)
   answerCollegeReveal(world)
   if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY: ruling 2(a) makes a blocking life beat pause the
+  // college year, so a one-press fixture whose year happened to raise one would hand every case below
+  // a rest state with her card standing instead of the college view it names. Bond-neutral, priced
+  // zero; the throw two lines down is what would have caught it, loudly, one seed later.
+  drainLifeBeats(world)
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {
     throw new Error('the walked career is not at college – the fixture under every case below is wrong')

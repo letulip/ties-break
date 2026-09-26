@@ -496,11 +496,14 @@ describe('#6 the flow tells the truth about a week with no table, no rung and no
     // (b) the College League – the same walk, stopped one fixture earlier
     {
       const { world, rng } = atCollege('r27-pair-b')
-      for (let press = 0; press < 5 * ENDINGS.collegeYears; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY: her card pauses the year since ruling 2(a), so a
+      // walk that does not answer it passes only while no beat lands in its window. Bond-neutral.
+      for (let press = 0; press < 6 * ENDINGS.collegeYears; press++) {
         resumeFromCollege(world, rng)
         if (world.college!.leagueReveal) break
         answerAnyCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
       expect(world.college!.leagueReveal, 'the walk really reached a championship').toBeTruthy()
       const p = toSnapshot(world).pending!
