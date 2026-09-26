@@ -344,17 +344,26 @@ export const notTravellingWeek = (f: DiaryFacts): boolean =>
  *  space. A week under a knock is no longer an ordinary week: it has its own band below, the way an
  *  exam week and a layoff do. */
 
+// ⚠⚠ SIX `export` KEYWORDS LEFT THIS FILE ON 26.09 – C-P05 of the principles review, whose rule is
+// «drop `export` module by module when a wave touches the file, not as a sweep» (the 05.09 rule it
+// carries forward). The six – `injuredGroup`, `injuredPart`, `inHerVoice`, `wallsUp`, `levelWeek`,
+// `lowWeek` – had ZERO consumers outside this module across `src`, `tests`, `tools`, `e2e` and
+// `scripts`; every one is still used inside it, which is why `noUnusedLocals` stays quiet. The four
+// that DO have outside readers kept theirs: `notTravellingWeek`, `plainTraining`, `voiceOf` and
+// `brightWeek`. ⚠ Check before you add one back – an export with no reader is a name the bundler
+// must treat as a root, which is the neighbouring finding (G-01) wearing a smaller hat.
+
 /** W6c: WHERE HER LIVE INJURY IS, as the pool is allowed to ask. Null when she is healthy, and null
  *  when the part cannot be resolved from the persisted `kind` string - both mean the same thing to a
  *  line that wants to describe her body, which is "say nothing about it". */
-export const injuredGroup = (f: DiaryFacts): BodyGroup | null =>
+const injuredGroup = (f: DiaryFacts): BodyGroup | null =>
   f.injured === null ? null : bodyGroupOf(f.injured.kind)
 
 /** ...and the part, to name it. The fallback is UNREACHABLE IN SHIPPED COPY by construction: every
  *  template that calls this is licensed on `injuredGroup(f) !== null`, and a resolved group implies a
  *  resolved part. It exists so `renderAll` in the test can resolve every template in the pool against
  *  one fixture without throwing, which is how the voice and length guards read the real sentences. */
-export const injuredPart = (f: DiaryFacts): string =>
+const injuredPart = (f: DiaryFacts): string =>
   (f.injured === null ? null : bodyPartOf(f.injured.kind)) ?? 'injury'
 
 // --- v72: the three questions her own voice asks, one function each ---------------------------
@@ -363,12 +372,12 @@ export const injuredPart = (f: DiaryFacts): string =>
 // fifty-two lines below cannot each carry their own spelling of "is she talking to us this week".
 
 /** THE CHANNEL. She is close enough to speak in her own voice – `close` or `steady`. */
-export const inHerVoice = (f: DiaryFacts): boolean =>
+const inHerVoice = (f: DiaryFacts): boolean =>
   f.bondBand === 'close' || f.bondBand === 'steady'
 
 /** ...and the band where the four voices collapse into the shared flat pool. `cold` is deliberately
  *  NOT here: at `cold` there is no tier-0 line at all (who-she-is §5b's tier table). */
-export const wallsUp = (f: DiaryFacts): boolean => f.bondBand === 'strained'
+const wallsUp = (f: DiaryFacts): boolean => f.bondBand === 'strained'
 
 /** THE SHAPE. Her voice AND the channel, which is what every one of the 44 voiced lines needs. */
 export const voiceOf = (t: Temperament) => (f: DiaryFacts): boolean =>
@@ -377,8 +386,8 @@ export const voiceOf = (t: Temperament) => (f: DiaryFacts): boolean =>
 /** THE REGISTER, in the three spellings the claim uses – see `WeekClaims.register` for why `level`
  *  is "not low" rather than "exactly level". */
 export const brightWeek = (f: DiaryFacts): boolean => f.moodRegister === 'bright'
-export const levelWeek = (f: DiaryFacts): boolean => f.moodRegister !== 'low'
-export const lowWeek = (f: DiaryFacts): boolean => f.moodRegister === 'low'
+const levelWeek = (f: DiaryFacts): boolean => f.moodRegister !== 'low'
+const lowWeek = (f: DiaryFacts): boolean => f.moodRegister === 'low'
 
 export const plainTraining = (f: DiaryFacts): boolean =>
   notTravellingWeek(f) &&
