@@ -917,10 +917,39 @@ export const MOTHERHOOD_WORDS: Record<Temperament, Record<MotherhoodBand, string
   },
 }
 
+// =================================================================================================
+// ⚠⚠ WHY THE NEXT FOUR POOLS CARRY `/*#__PURE__*/` – G-01 of the 26.09 performance review, W3 T3.1.
+// =================================================================================================
+//
+// THE FOUR `…_VOICES` POOLS ARE BUILT BY A TOP-LEVEL `Object.keys(...).map(...)`, and rollup cannot
+// prove an unknown member call free of side effects. So it kept all four initialisers even though
+// nothing in the UI reads them – and with them the four `…_WORDS` tables they fold, which is how
+// `weekNotes.ts` came to ride in the **UI** chunk. The diary is engine code: its one caller is the
+// worker. Measured on the build before this annotation went in, one representative line per table:
+// `'She rang from the road.'`, `'She trained through it. Nobody suggested otherwise.'`,
+// `'She sent next week's dates.'` and `'She wrote the answer down and asked what came next.'` were
+// each in `dist/assets/index-*.js` as well as in `dist/assets/sim.worker-*.js`.
+//
+// ⚠⚠ FOUR ANNOTATIONS ARE NECESSARY AND NOT SUFFICIENT – `WEEK_NOTES` NEEDS ITS OWN WRAPPER, and
+// the first pass here concluded otherwise on a half-read measurement. The pool's 113 `text:` rows
+// really are absent from the UI chunk with no wrapper at all (0 of 113, against 113 of 113 in the
+// worker's), which read like proof that the array was already gone. It was not: rollup had dropped
+// the unused BINDING and the plain rows, and KEPT THE LITERAL as a bare expression statement for its
+// six spreads, which is what went on holding these four tables. The residue is quoted verbatim in
+// the block above `WEEK_NOTES` itself.
+// ⭐ THE LESSON IS THE REVIEW'S OWN ONE FLOOR DOWN: a corpus missing from a chunk is evidence about
+// THOSE BYTES, never about the statement that used to hold them.
+//
+// ⚠ AN ANNOTATION IS A PROMISE ABOUT THE EXPRESSION, SO IT BINDS WHAT MAY GO IN ONE. These four
+// build plain rows out of a frozen table; the day one of them reads the world, writes a module-level
+// counter or logs, the annotation becomes a lie the bundler believes. A new pool of this shape may
+// carry the comment; a pool that DOES something may not.
+// =================================================================================================
+
 /** THE 28 ROWS, built from the words above so a licence can never be hand-copied wrong – the spoken
  *  moments' own law, one surface over. ⚠ The claims match HIS line for the same band exactly, which
  *  is what keeps `HOLDS.motherhood` a total record over both pools. */
-const MOTHERHOOD_VOICES: readonly WeekNote[] = (
+const MOTHERHOOD_VOICES: readonly WeekNote[] = /*#__PURE__*/ (
   Object.keys(MOTHERHOOD_WORDS) as Temperament[]
 ).flatMap((t) =>
   (Object.keys(MOTHERHOOD_WORDS[t]) as MotherhoodBand[]).map((band) => ({
@@ -964,7 +993,7 @@ const BEREAVED_WORDS: Record<Temperament, string> = {
 
 /** THE FOUR ROWS, built from the words above so a licence can never be hand-copied wrong –
  *  `MOTHERHOOD_VOICES`' own law one pool up. */
-const BEREAVED_VOICES: readonly WeekNote[] = (Object.keys(BEREAVED_WORDS) as Temperament[]).map((t) => ({
+const BEREAVED_VOICES: readonly WeekNote[] = /*#__PURE__*/ (Object.keys(BEREAVED_WORDS) as Temperament[]).map((t) => ({
   text: BEREAVED_WORDS[t],
   // ⚠ THE MOOD GATE IS **ABSENT HERE AND THAT IS THE DIFFERENCE FROM THE MOTHERHOOD BAND**, which
   // is worth the sentence because the two pools sit beside each other. There the 28 are written in a
@@ -1011,7 +1040,7 @@ const DIVORCED_WORDS: Record<Temperament, string> = {
 
 /** THE FOUR ROWS, built from the words above so a licence can never be hand-copied wrong –
  *  `BEREAVED_VOICES`' own law one pool up. */
-const DIVORCED_VOICES: readonly WeekNote[] = (Object.keys(DIVORCED_WORDS) as Temperament[]).map((t) => ({
+const DIVORCED_VOICES: readonly WeekNote[] = /*#__PURE__*/ (Object.keys(DIVORCED_WORDS) as Temperament[]).map((t) => ({
   text: DIVORCED_WORDS[t],
   // ⚠ NO MOOD GATE, `BEREAVED_VOICES`' own call and its own reason: these four are written for a
   // heavy week – the shock has just landed – and a line that could only be said on a bright week
@@ -1067,7 +1096,7 @@ const FORK_AFTERMATH_WORDS: Record<Temperament, Record<'with' | 'against', strin
   },
 }
 
-const FORK_AFTERMATH_VOICES: readonly WeekNote[] = (Object.keys(FORK_AFTERMATH_WORDS) as Temperament[]).flatMap((t) =>
+const FORK_AFTERMATH_VOICES: readonly WeekNote[] = /*#__PURE__*/ (Object.keys(FORK_AFTERMATH_WORDS) as Temperament[]).flatMap((t) =>
   (['with', 'against'] as const).map((arm) => ({
     text: FORK_AFTERMATH_WORDS[t][arm],
     // ⚠⚠ `plainTraining` LIKE EVERY OTHER BAND, AND THE FIRST DRAFT DID NOT HAVE IT – kept here as
@@ -1085,7 +1114,21 @@ const FORK_AFTERMATH_VOICES: readonly WeekNote[] = (Object.keys(FORK_AFTERMATH_W
   })),
 )
 
-export const WEEK_NOTES: readonly WeekNote[] = [
+// ⚠⚠ AND THE POOL ITSELF NEEDS THE WRAPPER TOO, WHICH IS NOT OBVIOUS AND WAS MEASURED – G-01, T3.1.
+//
+// Annotating the four pools above is NECESSARY AND NOT SUFFICIENT. Rollup dropped the unused
+// `WEEK_NOTES` **binding** and every one of the 113 object rows below with it – and then kept the
+// array literal as a bare expression STATEMENT, because a spread invokes the iterator protocol and
+// that is a side effect it cannot rule out. The built UI chunk carried exactly that residue:
+// `[...s_,...o_,...r_,...e_(),...t_,{...Sa()}]`, six spreads with the copy gone, and those six
+// references were enough to hold all four `…_WORDS` tables in the chunk. **An annotation on a value
+// still reached at module scope frees nothing**; the initialiser has to become ONE call that rollup
+// may delete whole, which is what the IIFE does.
+//
+// ⚠ THE BODY IS DELIBERATELY NOT RE-INDENTED. It is 1,028 lines of HIS copy (invariant 4), and a
+// re-indent would move every one of them in the diff for no byte and no reader – so the wrapper is
+// two lines and the rows sit where they have always sat. Do not "tidy" this.
+export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   ...BEREAVED_VOICES,
   ...DIVORCED_VOICES,
   ...FORK_AFTERMATH_VOICES,
@@ -2113,7 +2156,7 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   { text: '"All right," she said. Two words, and no opening in them.', ...flat() },
   { text: '"It is healing," she said. Nothing about pain.', ...flatLayoff() },
   { text: '"On schedule," she said. That was the whole of the update.', ...flatLayoff() },
-]
+])()
 
 /**
  * The ordinary week's note, or null.

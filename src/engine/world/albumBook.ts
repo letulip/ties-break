@@ -312,7 +312,30 @@ interface AlbumCandidate {
 const TOP_RANK = 10
 const TOP_STREAK_YEARS = 4
 
-const OCCASION = new Map(ALBUM_CORPUS.map((o) => [o.id, o]))
+// ⚠⚠ THE WRAPPER IS DELIVERY, NOT SPEED, AND IT CHANGES NOTHING THAT RUNS – G-01 of the 26.09
+// performance review, W3 T3.1.
+//
+// THIS WAS A BARE `new Map(ALBUM_CORPUS.map(…))` AT MODULE SCOPE, and rollup cannot prove a
+// top-level `new Map(...)` free of side effects, so it kept the initialiser and everything it reads:
+// the whole of `albumCorpus.ts` rode in the **UI** chunk, which never calls one function in this
+// file. The only runtime path here is `BracketTabs.vue → engine/world.ts → world/albumBook.ts`, and
+// every UI import on it is a small symbol such as `KID_ID`. Measured on the build before the change:
+// `'She tried everything on.'` and `'She asked about the losses.'` were both in
+// `dist/assets/index-*.js` as well as in `dist/assets/sim.worker-*.js`, which is the only caller.
+// After it, neither is in the UI chunk and both are still in the worker's.
+//
+// ⚠ ONE ANNOTATED CALL, AND THAT IS WHY IT IS AN IIFE RATHER THAN A BARE `/*#__PURE__*/ new Map`.
+// The annotation is a promise about the call it precedes; the ARGUMENT `ALBUM_CORPUS.map(…)` is a
+// separate opaque member call, so annotating only the `new Map` would leave rollup holding the
+// argument's side effects – exactly the residue `WEEK_NOTES` was caught with in `diary/weekNotes.ts`.
+// Wrapping both in one call gives the bundler a single statement it may delete whole.
+//
+// ⚠ A LAZY ACCESSOR WAS THE OTHER ARM AND IT WAS MEASURED AND DROPPED (T3.1). `let OCCASION … |
+// null` built on the first `occasionOf` freed the SAME 49,042 B from the UI chunk and cost the
+// **worker** chunk 14 bytes and a new hash (664,405 → 664,419 B, `CVruQZj1` → `CDzw6KMU`), because
+// the guard ships in the worker's own code. This shape leaves the worker chunk byte-identical, which
+// is the proof G-01 asks for, so the cheaper arm won on the only axis that separated them.
+const OCCASION = /*#__PURE__*/ (() => new Map(ALBUM_CORPUS.map((o) => [o.id, o])))()
 function occasionOf(id: string): AlbumOccasion {
   const row = OCCASION.get(id)
   if (!row) throw new Error(`no occasion '${id}' in ALBUM_CORPUS – the selector and the corpus have drifted`)
