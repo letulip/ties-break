@@ -201,6 +201,8 @@ produced a *defect list* instead of a workaround list.
 | `storage-recovery.spec.ts` | a damaged newest autosave falls back to the previous generation, and the shell says so | 2, 1 |
 | `save-file.spec.ts` | a career round-trips through a real file: out of the app, and back in | 6 |
 | `save-file.spec.ts` | an untrusted file is refused at the door and the career on disk is untouched | 6 |
+| `save-safety.spec.ts` | «Restore previous» after one of D-01's fifteen non-refreshing commands: the world that comes back is the one from BEFORE it, and the generation it undid is still on disk byte for byte. Both generations are read out of IndexedDB through `page.evaluate`, because WHICH of the two rows holds which world is the whole of the finding – the rotation is decided inside one `readwrite` transaction over three rows, and a `fake-indexeddb` shim cannot be wrong about that the way a browser can. The stale list is a mounted screen's, too: `game.slots` has one reader and App.vue remounts it on every visit | 2, 1, 5 |
+| `save-safety.spec.ts` | a boot beside a newest generation one schema ahead of this build: the existing recovery screen, carrying the migration ladder's own sentence, instead of a silent roll-back onto the older week – and a second boot later both generations are still on disk untouched. The same refusal E-05 shipped on the FILE door, arriving through the player's own database, which is the one door a file import cannot reach | 2, 1 |
 | `onboarding-tour.spec.ts` | a new player is shown the interface tour, walks it, and dismisses it | 2, 5 |
 | `onboarding-tour.spec.ts` | it does not come back on the next boot – and an *unanswered* one still does | 2 |
 | `onboarding-tour.spec.ts` | changing tab ends the tour instead of describing a screen the player has left | 4, 5 |
@@ -440,7 +442,7 @@ message naming the fixture rather than the symptom:
 
 | dependency | who pins it | what red looks like |
 |---|---|---|
-| `junior` boots holding an unanswered knock | `week-advance.spec.ts`, first test | one named failure with an explanatory message |
+| `junior` boots holding an unanswered knock | `week-advance.spec.ts`, first test; and `save-safety.spec.ts`, whose first case ANSWERS it as its non-refreshing command – so a `junior` that boots clean would leave that walk asserting a restore it never set up | two named failures with explanatory messages, one in each file |
 | `pro` is one week from a season boundary | `week-advance.spec.ts`, second test | the wrap-up assertions fail together |
 | `sinking` is still under water the week *after* the one it was found on | `week-advance.spec.ts`, third test | the toast assertion alone, naming the fixture and the fix (raise its debt spell) |
 | `pro` boots with a feed of **more than one** enterable event | `tournament-entry.spec.ts` | the feed count, before anything is pressed |
