@@ -757,8 +757,6 @@ export function previewEvent(
   // THE RUNG'S OWN FIELD AND HER RESTED RATING – built once, read twice (band + figure).
   const expected = tierExpectedField(event.tier, rated ?? ratedField(world.cohort, event.surface))
   const mineAtRest = ratingOf(kidAtRest ?? kid, event.surface, JUNIOR_TOUR)
-  const posOf = new Map<string, number>()
-  ranking.forEach((r, i) => posOf.set(r.playerId, i))
   return {
     drawMade,
     firstMatchChance: opp
