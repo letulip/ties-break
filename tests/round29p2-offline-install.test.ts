@@ -160,6 +160,12 @@ describe('round 29 part two #7 – the art is in the PWA install', () => {
     const script = read('scripts/install-size.mjs')
     expect(script, 'install-size.mjs no longer reads the built service worker').toContain("join(DIST, 'sw.js')")
     expect(script, 'a missing dist/ must fail the gate, never skip it').toMatch(/dist\/sw\.js is missing/)
+    // ⚠ ADDED 26.09 (T3.12). The same script now also judges the precache's ICON SET, which is the
+    // one claim of that task no test in this project can make – see the case below for the split.
+    // This is the wiring pin for it: a deleted `iconVerdict` would otherwise take the artefact-level
+    // half of T3.12 with it in silence, and the config-level half would stay green.
+    expect(script, "install-size.mjs no longer judges the precache's icon set – T3.12").toContain('function iconVerdict(')
+    expect(script, 'the icon verdict is computed but never affects the exit code').toMatch(/if \(!icons\.ok\) process\.exitCode = 1/)
   })
 
   it('audio is IN, by his ruling – and cannot silently fall back out', () => {
