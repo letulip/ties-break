@@ -2782,7 +2782,7 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
 // =================================================================================================
 //
 // SHE ANNOUNCES – §4a's law at the layer's biggest moment, and the pool is `ENGAGED_HER_LINE`'s
-// shape rather than a new one: one cell per voice, no register axis, both presences, plus the dry
+// shape rather than a new one: one cell per voice, no register axis, plus the dry
 // card for a `strained`/`cold` home and one heading. There is no told-now/told-late split for the
 // same reason the wedding has none: there is nothing here to be learned late.
 //
