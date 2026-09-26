@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 136 dated entries, newest 2026-09-25. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 137 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 20 | [WAVE 12 REVIEWED: TEN ONE-LINERS, AND THE STRINGS REVIEW APPLIED IN-WAVE](#23092026--wave-12-reviewed-ten-one-liners-and-the-strings-review-applied-in-wave) | 2026-09-23 |
+| process-and-git | 21 | [THE PRINCIPLES REVIEW RECEIVED: TWO P0s CONFIRMED, SIX WAVES PROPOSED, NOTHING LAUNCHED](#26092026--the-principles-review-received-two-p0s-confirmed-six-waves-proposed-nothing-launched) | 2026-09-26 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
@@ -5444,3 +5444,25 @@ over the wave's question list, materialised as:
    records in order (the 24.09 keep-analysis, then this ruling).
 4. **Q4, the paused match** – A, as shipped: a pause is «I have looked away», the platform's idle
    timer is the authority then.
+
+## 26.09.2026 – THE PRINCIPLES REVIEW RECEIVED: TWO P0s CONFIRMED, SIX WAVES PROPOSED, NOTHING LAUNCHED
+
+His ask of 26.09 («полное комплексное мультиагентное ревью проекта на всем принципам
+программирования … находки, предложения по улучшению, оптимизации») was run against `03d92221`
+as briefed – read-only, a shared serial baseline, eight lanes, independent verification – and
+returned 65 written findings: **2 P0, 8 P1, 49 P2** (`docs/review-principles-2026-09-26/`).
+Taken in by the architect the same day (`docs/review-codex/14-principles-review-response-2026-09-26.md`):
+
+- **Every P0 and P1 re-verified in code before a verdict.** D-01 («Restore previous» overwrites
+  the true previous generation after 15 of 41 store mutations) and C-06 (a knock on the college
+  departure week soft-locks the career – the probe reproduced here, 3/60 and 2/30 on the same
+  seeds) both stand; the 13 e2e fixtures hold neither state.
+- **Verdicts:** the review's six waves adopted with four modifications (the rung ratchet stays
+  until the memo is proven on a runner; A-06 and H-08 become forward rules rather than sweeps;
+  A-02's bytes belong to G-01), one refutation accepted (G-06, covered by his ruling A), five
+  refuted leads recorded as Rejected rows in `docs/backlog/the-quality-rig.md` (22–26), the
+  waves as rows 16–21.
+- **H-09 is the architect's own call** under the 21.09 delegation of `CLAUDE.md`: option (b), the
+  incident narratives moved verbatim to `docs/context/`, inside the same 22k budget.
+- **Nineteen decisions and three questions wait on him**, each with a recommendation. ⚠ **Nothing
+  launches before his approve** (the intake's gate); W1 carries both P0s and goes first.
