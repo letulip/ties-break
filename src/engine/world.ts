@@ -1350,6 +1350,32 @@ export function closeTournament(world: WorldState): void {
   // ⭐⭐⭐ ROUND 27 #6 – the tie's finale «Continue». Answering it is what lets `resumeFromCollege`
   // spend the rest of the year, exactly as answering the championship's does.
   if (callUpRevealOpen(world)) return closeCallUpReveal(world)
+  // ⭐⭐⭐ B-05 / T2.5 (26.09) – AND AN UNFINISHED RUN IS FINISHED HERE, NOT DROPPED. This line was
+  // `world.pendingTournament = null` alone, against this function's own doc one comment up («Dismiss
+  // a FINISHED reveal») – so a `close` on a run nobody had read out threw the whole run away: her
+  // points, her match rows, her season record and the condition the week cost. MEASURED on three
+  // walked careers (the review's `b-close-unfinished` probe): close-only gave 0 match rows, 0 result
+  // rows, a 0-0 record and condition 100, against the UI's skip-then-close 2/3/1 match rows, 1/1/0
+  // result rows, records 1-1 / 2-1 / 0-1 and condition 92/88/97. The next tick then ran normally on
+  // top of the hole – a FREE tournament, which is precisely what the caller order was protecting.
+  //
+  // ⚠⚠ TOTAL AND NOT A REFUSAL, WHICH IS THE OWNER'S RULING 9. Invariant 1 says every command is
+  // re-validated engine-side, and the shipped UI never reaches this (`TournamentFlow` sends `close`
+  // only from the finale) – so what is wrong here is that the engine TRUSTED the screen's ordering. A
+  // refusal would fix that too, and it would need a player-facing sentence, and the copy is his; this
+  // needs none. The guaranteed exit `composables/blockingOverlay.ts` relies on is untouched: `close`
+  // still always closes, on every path, which is what makes the overlay unable to strand a career.
+  //
+  // ⚠ ZERO DRAWS ADDED. The run was simulated at the tick and `pendingTournament` holds its result –
+  // `skipTournament` reads the remaining rounds OUT and commits them, so nothing is rolled here and
+  // MAIN does not move. The frozen capture is untouched.
+  //
+  // ⚠ AND IT IS STILL TOTAL IF THE RUN CANNOT BE FINISHED: `skipTournament` returns early when the
+  // event has left the calendar (a repaired or foreign save), and the clear below then runs anyway.
+  // A career that could not clear this field is the one state `advanceWeeks` cannot tick past, so the
+  // fallback is the drop on purpose – and it is now the LAST resort rather than the only behaviour.
+  const p = world.pendingTournament
+  if (p && !p.finished) skipTournament(world)
   world.pendingTournament = null
 }
 
