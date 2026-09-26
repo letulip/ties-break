@@ -172,7 +172,11 @@ importantly, the arm-B mutation proves the pair is reading one source, which no 
 ⚠ This is a statement about the CLASS and not about the e2e suite, whose own row (15) stands: every
 wave that ships a mechanic still owes it a case.
 
-## 5. The two live instances found while applying this – ⭐ BOTH CLOSED 25.09
+## 5. The live instances found while applying this – ⭐ ALL CLOSED
+
+⚠ The heading carried a COUNT until 26.09 («the two live instances … BOTH CLOSED») and a third
+arrived, so it carries none now: a number a document states about itself rots and no test reads it
+(wave 9's finding). The instances are numbered below; the total is whatever that list holds.
 
 Both were found by the 24.09 pass and both are `src/` changes, so neither was made by a guard's
 builder. They were the class in shipped code; each record is kept verbatim, because what a defect
@@ -211,6 +215,31 @@ looked like before it was closed is the useful part, and each now carries what s
    fixed code the whole plaque follows the engine. Guard:
    `tests/round34-ladder-plaques.test.ts`' «BOTH HALVES … read the ENGINE's number», which POSES the
    divergence no fixture can produce.
+
+3. **The ad shelf restated the letter's own gate** – B-03, T3.3 of the principles fix.
+   The gate was spelled twice: `reviewAdOffer`'s four per-branch checks in `world/sponsors.ts`, and –
+   this is the part worth carrying – **an anonymous IIFE assigned to the `adPortfolio` key** in
+   `world/snapshot.ts`. It had no symbol at all, which is exactly why no `git grep` could find the
+   second spelling; the first two instances above were both findable by name and this one was not.
+   ⭐ **CLOSED 26.09** by form A: `adCategoryOpen(world, category)` in `world/sponsors.ts`, called by
+   the letter and by the shelf, with the derivation lifted out of the IIFE and given a name on the
+   way. Measured before: a kitless clothing row read `open` on **316 of 350** sampled weeks that had
+   no live kit deal; after, **0**. `toSnapshot` serialised whole over the 90 golden saves and the 13
+   e2e fixtures moved **15 rows in 15 fixtures** – `adPortfolio[3].state` open → closed and
+   `openCashCents` dropped, with `kitDeal` null in all 15 – and **nothing else at any depth**.
+   Guards: `tests/round29p4-ad-portfolio.test.ts` and `tests/component/round29p4-ad-portfolio-panel.test.ts`.
+   The three arms ran with the asymmetry intact: the shared SOURCE reddens the letter and the screen
+   together; the SHARING reddens the parity pair alone; the TEMPLATE reddens the mount alone.
+
+   ⚠⚠ **AND A FOURTH ARM THIS INSTANCE PRODUCED, WHICH THIS CONVENTION DID NOT PREDICT: A CLAUSE OF A
+   SHARED PRIMITIVE CAN HAVE ITS ONLY LIVE READER ON THE SURFACE.** Disabling `adCategoryOpen`'s
+   **band** clause left the engine's own door entirely green – 74 passed – because
+   `adTermsForCategory` refuses an unpriced cell by itself; it reddened only the screen's guards. So a
+   clause that reads as redundant with the engine's door is in fact the SCREEN's single line of
+   defence, and deleting it as duplication would be objected to by a UI test alone. ⭐ The rule that
+   follows, and it is cheap: **when form A merges two spellings, check per clause which side still has
+   an independent refusal.** The clauses that have none are where the primitive is load-bearing, and
+   they are the ones to name at the site rather than leave reading as belt-and-braces.
 
 ## 6. What this spec does not do
 
