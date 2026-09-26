@@ -60,11 +60,17 @@ export type {
 } from './protocol/profile'
 export {
   DEFAULT_PROFILE,
+  DYNASTY_HANDOVER_REFUSAL,
   FIRST_COURT_AGE,
+  PROLOGUE_HANDOVER_REFUSAL,
+  PROLOGUE_YEAR_AGES,
   SESSION_KINDS,
   WEEK_PLAN_PRESETS,
   PROFILE_NAME_MAX_CHARS,
+  // ⭐⭐ A-05 (26.09): the wire's three shape checks, and `new` calls all three before `createWorld`.
+  dynastyShapeError,
   profileShapeError,
+  prologueShapeError,
 } from './protocol/profile'
 
 // --- events --------------------------------------------------------------------------------------

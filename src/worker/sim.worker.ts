@@ -68,7 +68,8 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
-import { CommandRefusedError, profileShapeError } from '../shared/protocol'
+// ⭐⭐ A-05 (26.09): three shape checks now, not one – the profile, the childhood and the inheritance.
+import { CommandRefusedError, dynastyShapeError, profileShapeError, prologueShapeError } from '../shared/protocol'
 import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
@@ -348,16 +349,38 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // for seven others.
       const badProfile = profileShapeError(msg.profile)
       if (badProfile) throw new CommandRefusedError(`New career: ${badProfile}`)
+      // ⭐⭐⭐ A-05 (the principles review, 26.09 – ruling 8a) – AND SO ARE THE OTHER TWO PAYLOADS, ON
+      // THE SAME LINE OF THE SAME COMMAND. What stood here from v84 to v86 was the note below, which
+      // said the fifth argument «RIDES THROUGH UNTOUCHED» and gave a reason for the dynasty that did
+      // not hold: `createWorld` REPLACES the accepted background with `dynasty.background`
+      // (`world.ts`), after `profileShapeError` has already run. So the field the note claimed was
+      // covered was the one field that was not. Measured at the baseline: `spentCents: NaN` births a
+      // career with `fundsCents = NaN` whose own export file the import gate then refuses;
+      // `years[0].practice: NaN` births five NaN skills and exports and re-imports cleanly;
+      // `years: null` births a career on a different coach rung than the profile chose; and
+      // `dynasty.background: 'bogus'` was a bare `TypeError`. All four are refused here now.
+      //
+      // ⚠⚠ BEFORE `createWorld`, WHICH IS THE WHOLE OF THE E-06 ARGUMENT REPEATED: past that line the
+      // career EXISTS, `adoptAutosave` has written it to the player's disk and the only exit is
+      // deleting it. A check after it would be a diagnosis, not a refusal.
+      //
+      // ⚠ THE SHAPE IS `profileShapeError`'s, BYTE FOR BYTE – one `New career: <sentence>` per
+      // payload, refused as `INVALID_COMMAND` by the same `CommandRefusedError`. Two DRAFT sentences
+      // for the owner's pass (invariant 4), tabled in docs/plans/principles-fix-strings-2026-09.md;
+      // nothing else on this path moved a character.
+      const badPrologue = prologueShapeError(msg.prologue)
+      if (badPrologue) throw new CommandRefusedError(`New career: ${badPrologue}`)
+      const badDynasty = dynastyShapeError(msg.dynasty)
+      if (badDynasty) throw new CommandRefusedError(`New career: ${badDynasty}`)
       const seed = msg.seed.trim() || 'wildcard'
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       // Candidate-first like every other path: the fresh world only becomes the active one after
       // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
-      // ⭐⭐ v86 – THE FIFTH ARGUMENT RIDES THROUGH UNTOUCHED, and there is still ONE call. The block is
-      // re-validated by the same line that validates everything else about a new career: `createWorld`
-      // reads `dynasty.background` through `profile` (which `profileShapeError` has just accepted) and
-      // copies every other field rather than aliasing the message's object.
-      // ⭐⭐⭐ v87 – AND THE SIXTH RIDES THROUGH UNTOUCHED TOO. It is a plain boolean answered by a
-      // card on the creation path, so there is nothing to validate beyond what the wire's type says;
+      // ⭐⭐ v86 – THE FIFTH ARGUMENT NO LONGER RIDES THROUGH UNTOUCHED (A-05, 26.09 – the block above
+      // has the measurement), and there is still ONE call. `createWorld` copies every field rather
+      // than aliasing the message's object, which is the half of the old note that was always true.
+      // ⭐⭐⭐ v87 – AND THE SIXTH DOES STILL RIDE THROUGH UNTOUCHED. It is a plain boolean answered by
+      // a card on the creation path, so there is nothing to validate beyond what the wire's type says;
       // `createWorld` reads `?? false`, which is the ruled meaning of a caller that did not ask.
       const candidate = createWorld(
         seed,

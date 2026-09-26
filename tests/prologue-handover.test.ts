@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest'
 import { createHash } from 'node:crypto'
 import {
   createWorld,
+  dynastyHandoverOf,
   prologueCoachTier,
   PROLOGUE_COACH_LADDER,
   prologuePlayStyle,
@@ -34,10 +35,13 @@ import { resumeMain } from '../src/engine/rng'
 import { withHeadStart } from '../src/engine/world/player'
 import { HANDOVER_BASE_CUTS, coachRoomBand, coachRoomNote, handoverBaseBand, handoverRealisation, handoverRoomBand } from '../src/engine/world/coachMarket'
 import { ECONOMY, prologueFundsCents } from '../src/engine/economy'
-import { childhoodArrival, weightAt } from '../src/engine/childhood'
+// ⭐ A-05 (26.09): `CHILDHOOD_AGES` is one of the two joins only a test can make – `shared/` may not
+// import this module at runtime (tests/childhood.test.ts pins its importer set at two names).
+import { CHILDHOOD_AGES, childhoodArrival, weightAt } from '../src/engine/childhood'
 import { SKILL_KEYS, physicalMean, rollPotential } from '../src/engine/development'
 import { styleOf } from '../src/engine/season/rival'
-import { PROLOGUE_CARDS } from '../src/prologue/cards'
+// ⭐ A-05: ...and `CARD_AGES` is the other one – the UI's own nine, which `shared/` may not reach either.
+import { CARD_AGES, PROLOGUE_CARDS } from '../src/prologue/cards'
 import {
   COACH_BASE_READS,
   COACH_READS,
@@ -59,7 +63,20 @@ import {
   withPick,
   type PrologueRun,
 } from '../src/prologue/run'
-import { DEFAULT_PROFILE, type FamilyBackground, type PlayerProfile, type PrologueHandover } from '../src/shared/protocol'
+import {
+  DEFAULT_PROFILE,
+  DYNASTY_HANDOVER_REFUSAL,
+  PROLOGUE_HANDOVER_REFUSAL,
+  PROLOGUE_YEAR_AGES,
+  dynastyShapeError,
+  prologueShapeError,
+  type FamilyBackground,
+  type PlayerProfile,
+  type PrologueHandover,
+} from '../src/shared/protocol'
+import { dynastyOf } from './helpers/dynastyHandover'
+import { readFileSync } from 'node:fs'
+import { region } from './helpers/source'
 
 const BACKGROUNDS: readonly FamilyBackground[] = ['working', 'middle', 'wealthy']
 const DECISION_AGES = PROLOGUE_CARDS.filter((c) => c.options).map((c) => c.age)
@@ -1059,6 +1076,200 @@ describe('⚠ the copy obeys the house rules, and says nothing the ruling forbid
     // ...and no other string in the table carries a figure at all.
     for (const line of [...Object.values(HANDOVER_COPY), ...Object.values(WALK_COPY)]) {
       expect(/\d|\$/.test(line), line).toBe(false)
+    }
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ A-05 (the principles review, 26.09; ruling 8a) – THE HANDOVERS ARE SHAPE-CHECKED ON THE WIRE
+// =================================================================================================
+//
+// `profileShapeError` is E-06's fix and it was a third of the command. The worker's `new` case checked
+// the profile and handed `msg.prologue` and `msg.dynasty` into `createWorld` untouched, with a note
+// saying so – and the note's reason for the dynasty did not hold: `createWorld` replaces the accepted
+// background with `dynasty.background` AFTER the check has run. Measured at the baseline: a `NaN`
+// `spentCents` births a career with `fundsCents = NaN` whose own export file the import gate then
+// refuses; a `NaN` `practice` births five NaN skills and exports and re-imports cleanly; `years: null`
+// births a career on a rung the profile never chose; `background: 'bogus'` was a bare `TypeError`.
+//
+// ⚠⚠ THE PROOF THAT MATTERS MORE THAN THE REFUSALS IS THE OTHER DIRECTION, and it is the case named
+// «every handover the shipped table can produce PASSES» below. A validator that refuses a real
+// handover is a worse defect than the one it fixes, so the 32-run walk this file already owns is the
+// gate on this code: `everyRun()` is every childhood the cards can make, and each one goes through
+// `prologueShapeError` before anything else here is believed.
+//
+// ⚠ THE TWO SENTENCES ARE DRAFTS FOR HIS PASS (invariant 4), tabled in
+// docs/plans/principles-fix-strings-2026-09.md and pinned both ways by
+// tests/principles-fix-strings-roundtrip.test.ts. They are asserted here through the exported
+// constants rather than transcribed, so a re-wording moves the doc and this file together.
+//
+// ⚠ MUTATION ARMS, both measured (see the wave's report):
+//   * the two calls deleted from the worker's `new` case -> the source pin at the end of this block
+//     goes red, and the worker round-trips in tests/r37-command-refusals.test.ts go red on the
+//     sentence.
+//   * `PROLOGUE_YEAR_AGES` given a tenth age -> the join case below goes red naming both sides.
+
+describe('⭐⭐⭐ A-05 – the wire refuses a childhood it cannot read', () => {
+  it('⚠⚠ the wire, the engine and the cards name the SAME nine ages – the join no module can make', () => {
+    // `shared/protocol/profile.ts` may import neither `engine/childhood.ts` (its importer set is
+    // pinned at two names by tests/childhood.test.ts) nor `src/prologue` (invariant 1's zones), so the
+    // nine are spelled there and this is what stops that copy drifting. A childhood that grew a tenth
+    // year reddens HERE, not in a career born on a payload the wire quietly widened to accept.
+    expect(PROLOGUE_YEAR_AGES, 'the wire against the engine').toEqual([...CHILDHOOD_AGES])
+    expect(PROLOGUE_YEAR_AGES, 'the wire against the card table').toEqual([...CARD_AGES])
+    expect(PROLOGUE_YEAR_AGES.length, 'and there are nine of them').toBe(9)
+  })
+
+  it('⚠⚠ every handover the shipped table can produce PASSES – all 32 runs, and the wizard path too', () => {
+    // THE ACCEPTANCE. `everyRun()` is the whole reachable set (2^4 x 2, walked rather than sampled –
+    // see its own note), so this is the claim that the new check cannot refuse a real career.
+    for (const background of BACKGROUNDS) {
+      for (const run of everyRun(background)) {
+        const handover = handoverOf(run)
+        expect(prologueShapeError(handover), `${background}: a real handover was refused`).toBeNull()
+      }
+    }
+    // ...and absence, which is every career the game made before the prologue existed.
+    expect(prologueShapeError(undefined), 'the wizard hands over nothing, and that is valid').toBeNull()
+    // ...and the trace, which rides the same payload on a walked childhood.
+    expect(prologueShapeError({ ...CHEAPEST, trace: { picks: {}, entries: {}, opens: [] } })).toBeNull()
+  })
+
+  it('⚠ a handover shorter than nine years is still a handover – the cap is a cap, not an equality', () => {
+    // `childhoodWalk` normalises over whatever length it is handed, and a bench or a probe handing
+    // over four honest years is a legal childhood. What is refused is a payload nobody priced.
+    expect(prologueShapeError({ years: CHEAPEST.years.slice(0, 4), spentCents: 0 })).toBeNull()
+    expect(prologueShapeError({ years: [], spentCents: 0 }), 'and none at all, which is the wizard in long form').toBeNull()
+    const tooMany = [...CHEAPEST.years, CHEAPEST.years[0]]
+    expect(prologueShapeError({ years: tooMany, spentCents: 0 })).toBe(PROLOGUE_HANDOVER_REFUSAL)
+  })
+
+  it('⚠⚠ every malformed childhood is refused, with the one sentence', () => {
+    // ⭐ THE FOUR ROWS A-05 MEASURED GOING THROUGH ARE THE FIRST FOUR. The rest are the same field
+    // asked the other ways a wire can get it wrong.
+    const bad: unknown[] = [
+      { years: CHEAPEST.years, spentCents: Number.NaN }, // A-05: born with fundsCents = NaN
+      { years: CHEAPEST.years }, // A-05: absent spentCents, the same career
+      { years: [{ ...CHEAPEST.years[0], practice: Number.NaN }], spentCents: 0 }, // A-05: five NaN skills
+      { years: null, spentCents: 0 }, // A-05: a silently different coach rung
+      null,
+      'a childhood',
+      42,
+      [],
+      { years: CHEAPEST.years, spentCents: -1 },
+      { years: CHEAPEST.years, spentCents: 1.5 },
+      { years: CHEAPEST.years, spentCents: Number.POSITIVE_INFINITY },
+      { years: [{ ...CHEAPEST.years[0], age: 4 }], spentCents: 0 },
+      { years: [{ ...CHEAPEST.years[0], age: 14 }], spentCents: 0 },
+      { years: [{ ...CHEAPEST.years[0], age: '8' }], spentCents: 0 },
+      { years: [{ ...CHEAPEST.years[0], teaching: 1.0001 }], spentCents: 0 },
+      { years: [{ ...CHEAPEST.years[0], teaching: -0 - 0.5 }], spentCents: 0 },
+      { years: [{ ...CHEAPEST.years[0], focus: 'swimming' }], spentCents: 0 },
+      { years: [{ ...CHEAPEST.years[0], focus: undefined }], spentCents: 0 },
+      { years: ['not a year'], spentCents: 0 },
+      { years: CHEAPEST.years, spentCents: 0, trace: 'a record' },
+    ]
+    for (const payload of bad) {
+      expect(prologueShapeError(payload), JSON.stringify(payload) ?? String(payload)).toBe(PROLOGUE_HANDOVER_REFUSAL)
+    }
+    // ⚠ AND THE LIST IS NOT VACUOUS: the control passes, so the table is measuring the payloads and
+    // not a validator that refuses everything (the `return PROLOGUE_HANDOVER_REFUSAL` mutation).
+    expect(prologueShapeError(CHEAPEST)).toBeNull()
+  })
+})
+
+describe('⭐⭐⭐ A-05 – the wire refuses an inheritance it cannot read', () => {
+  it('⚠⚠ a REAL block passes – built by the engine itself, on a career and on the fixture shape', () => {
+    // `dynastyHandoverOf` is the one builder the app uses (engine/world/endings.ts) and
+    // `tests/helpers/dynastyHandover.ts` is the mounted tests' copy of its output. Both must pass, or
+    // this check refuses the career the ending screen actually offers.
+    for (const background of BACKGROUNDS) {
+      const world = createWorld('a05-dyn', profileFor(background))
+      expect(dynastyShapeError(dynastyHandoverOf(world)), background).toBeNull()
+      const walked = createWorld('a05-dyn-walked', profileFor(background))
+      const rng = resumeMain(walked.rngMain)
+      for (let i = 0; i < 12; i++) tickWeek(walked, rng)
+      expect(dynastyShapeError(dynastyHandoverOf(walked)), `${background}: walked`).toBeNull()
+    }
+    expect(dynastyShapeError(dynastyOf()), 'the fixture shape').toBeNull()
+    expect(dynastyShapeError(dynastyOf({ raisedOnTour: true, childBirthdays: [{ month: 12, day: 31 }] }))).toBeNull()
+    expect(dynastyShapeError(dynastyOf({ motherCareer: { ...dynastyOf().motherCareer, bestRank: 1 } }))).toBeNull()
+    // ...and absence, which is every career that is not a daughter's.
+    expect(dynastyShapeError(undefined), 'no dynasty is the normal case').toBeNull()
+  })
+
+  it('⚠⚠ every malformed inheritance is refused, with the one sentence', () => {
+    // ⭐ THE FIRST ROW IS A-05's OWN: `background: 'bogus'` reached `ECONOMY.startingFundsCents[...]`
+    // as `undefined` and threw a bare `TypeError` («undefined is not iterable»), which is the
+    // unnamed-crash class E-06 exists to close. The rest are the structural fields `createWorld` and
+    // `plainDynasty` copy field by field.
+    const career = dynastyOf().motherCareer
+    const bad: unknown[] = [
+      dynastyOf({ background: 'bogus' as never }), // A-05's measured crash
+      null,
+      'a mother',
+      [],
+      dynastyOf({ generation: 0 }),
+      dynastyOf({ generation: 1.5 }),
+      dynastyOf({ generation: Number.NaN }),
+      dynastyOf({ childSeed: '' }),
+      dynastyOf({ childSeed: '   ' }),
+      dynastyOf({ childSeed: 7 as never }),
+      dynastyOf({ raisedOnTour: 'yes' as never }),
+      dynastyOf({ motherName: { first: 'A' } as never }),
+      dynastyOf({ motherName: null as never }),
+      dynastyOf({ motherCountry: 3 as never }),
+      dynastyOf({ motherTemperament: '' as never }),
+      dynastyOf({ childBirthdays: null as never }),
+      dynastyOf({ childBirthdays: [{ month: 13, day: 1 }] }),
+      dynastyOf({ childBirthdays: [{ month: 1, day: 32 }] }),
+      dynastyOf({ childBirthdays: [{ month: Number.NaN, day: 1 }] }),
+      dynastyOf({ motherCareer: null as never }),
+      dynastyOf({ motherCareer: { ...career, titles: -1 } }),
+      dynastyOf({ motherCareer: { ...career, proTitles: Number.NaN } }),
+      dynastyOf({ motherCareer: { ...career, collegeTitles: 1.5 } }),
+      dynastyOf({ motherCareer: { ...career, slams: '0' as never } }),
+      dynastyOf({ motherCareer: { ...career, endedWeek: -1 } }),
+      dynastyOf({ motherCareer: { ...career, bestRank: 0 } }),
+      dynastyOf({ motherCareer: { ...career, bestRank: Number.NaN } }),
+      dynastyOf({ motherCareer: { ...career, endingKind: 7 as never } }),
+    ]
+    for (const payload of bad) {
+      expect(dynastyShapeError(payload), JSON.stringify(payload) ?? String(payload)).toBe(DYNASTY_HANDOVER_REFUSAL)
+    }
+    // ⚠ NOT VACUOUS: the control passes, so this table measures payloads and not a validator that
+    // refuses everything.
+    expect(dynastyShapeError(dynastyOf())).toBeNull()
+  })
+
+  it('⚠⚠ the `new` case asks all three, and it asks them BEFORE `createWorld`', () => {
+    // WHY A SOURCE PIN IS THE RIGHT SHAPE FOR THIS ONE CLAIM, and only this one. The behaviour – a
+    // malformed payload refused by the real worker, with the code and the sentence, and no career
+    // adopted – is driven over the protocol in tests/r37-command-refusals.test.ts, which is where
+    // E-06's own round-trips live. What no behaviour test can state is the ORDER, because past
+    // `createWorld` the career EXISTS and `adoptAutosave` has written it: the difference between a
+    // refusal and a diagnosis is which line comes first, and that is a fact about the source.
+    //
+    // ⚠ MUTATION ARM: delete either call -> red here, naming the payload that stopped being checked.
+    const worker = readFileSync(new URL('../src/worker/sim.worker.ts', import.meta.url), 'utf8')
+    const newCase = region(worker, "case 'new':", "case 'tick':")
+    const code = newCase
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('//'))
+      .join('\n')
+    const at = (needle: string): number => {
+      const i = code.indexOf(needle)
+      expect(i, `the \`new\` case does not call ${needle}`).toBeGreaterThan(-1)
+      return i
+    }
+    const born = at('createWorld(')
+    for (const check of ['profileShapeError(msg.profile)', 'prologueShapeError(msg.prologue)', 'dynastyShapeError(msg.dynasty)']) {
+      expect(at(check), `${check} must be asked BEFORE the career exists`).toBeLessThan(born)
+    }
+    // ...and each one is refused in the shape the profile's has used since 05.09, which is what makes
+    // the two new sentences reach the player's own error surface the way the seven before them do.
+    for (const bad of ['badProfile', 'badPrologue', 'badDynasty']) {
+      expect(code, `${bad} is not refused as a command`).toContain(`if (${bad}) throw new CommandRefusedError(\`New career: \${${bad}}\`)`)
     }
   })
 })

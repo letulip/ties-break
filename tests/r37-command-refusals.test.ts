@@ -7,11 +7,17 @@ import { resumeMain } from '../src/engine/rng'
 import { sanitizeName } from '../src/db/saves'
 import {
   DEFAULT_PROFILE,
+  // ⭐⭐ A-05 (26.09): the two DRAFT refusals the `new` case gained, read off the constants and never
+  // transcribed – see block 1b.
+  DYNASTY_HANDOVER_REFUSAL,
   PROFILE_NAME_MAX_CHARS,
+  PROLOGUE_HANDOVER_REFUSAL,
   profileShapeError,
   type PlayerProfile,
+  type PrologueHandover,
   type WorkerErrorCode,
 } from '../src/shared/protocol'
+import { dynastyOf } from './helpers/dynastyHandover'
 import { workerHarness } from './helpers/workerHarness'
 
 // =================================================================================================
@@ -162,6 +168,76 @@ describe('E-06 – a profile the engine will not open a career on', () => {
     // written: the refusal must come before `createWorld`/`adoptAutosave`, not after.
     const snap = await send({ type: 'getSnapshot' })
     if (snap.ok) expect(snap.snapshot?.careerId).not.toContain('r37-bad-profile')
+  })
+})
+
+// =================================================================================================
+// 1b. ⭐⭐⭐ THE OTHER TWO PAYLOADS OF THE SAME COMMAND (A-05, the principles review 26.09; ruling 8a)
+// =================================================================================================
+//
+// E-06 was fixed for `new.profile` on 05.09 and the three arguments added after it – v84 `trace`,
+// v86 `dynasty`, v87 `weightEnabled` – followed the «rides through untouched» precedent instead. So
+// the block above is a third of the command: the worker checked the profile and handed `msg.prologue`
+// and `msg.dynasty` into `createWorld` unread, and the note that said the dynasty was covered was
+// wrong about the one field that mattered – `createWorld` REPLACES the accepted background with
+// `dynasty.background` after the check has run.
+//
+// The two rows below are A-05's own measured payloads. `spentCents: NaN` birthed a career with
+// `fundsCents = NaN` that survived four ticks, was written as `null` by the autosave codec and whose
+// own export file the import gate then REFUSED; `dynasty.background: 'bogus'` was a bare `TypeError`.
+// Both now answer with a sentence and a code, like the profile's seven.
+//
+// ⚠ THE SENTENCES ARE READ OFF THE EXPORTED CONSTANTS AND NEVER TRANSCRIBED – they are DRAFTS for his
+// pass (invariant 4), tabled in docs/plans/principles-fix-strings-2026-09.md and pinned both ways by
+// tests/principles-fix-strings-roundtrip.test.ts, so a re-wording moves the doc and the code together
+// and leaves these two rows alone.
+//
+// ⚠ MUTATION-VERIFIED: deleting either `if (bad…) throw` line in the worker's `case 'new'` reddens
+// its row here on `ok` (the malformed career is ACCEPTED), while the validators' own tables in
+// tests/prologue-handover.test.ts stay green – which is the same split the profile's note above
+// describes, and the reason both halves exist.
+describe('A-05 – a childhood or an inheritance the engine will not open a career on', () => {
+  it('the worker refuses a NaN childhood spend with the code AND the sentence, and adopts nothing', async () => {
+    const res = await send({
+      type: 'new',
+      seed: 'a05-bad-prologue',
+      profile: DEFAULT_PROFILE,
+      prologue: { years: [], spentCents: Number.NaN } as unknown as PrologueHandover,
+    })
+    expect(res.ok).toBe(false)
+    expect(res.code).toBe('INVALID_COMMAND')
+    expect(res.error).toBe(`New career: ${PROLOGUE_HANDOVER_REFUSAL}`)
+    const snap = await send({ type: 'getSnapshot' })
+    if (snap.ok) expect(snap.snapshot?.careerId).not.toContain('a05-bad-prologue')
+  })
+
+  it('the worker refuses an unknown inherited background the same way', async () => {
+    const res = await send({
+      type: 'new',
+      seed: 'a05-bad-dynasty',
+      profile: DEFAULT_PROFILE,
+      dynasty: dynastyOf({ background: 'bogus' as never }),
+    })
+    expect(res.ok).toBe(false)
+    expect(res.code).toBe('INVALID_COMMAND')
+    expect(res.error).toBe(`New career: ${DYNASTY_HANDOVER_REFUSAL}`)
+    const snap = await send({ type: 'getSnapshot' })
+    if (snap.ok) expect(snap.snapshot?.careerId).not.toContain('a05-bad-dynasty')
+  })
+
+  // ⚠ AND THE CONTROL, WITHOUT WHICH THE TWO ABOVE ARE SATISFIED BY A WORKER THAT REFUSES EVERY `new`.
+  // A real inheritance – the shape `dynastyHandoverOf` produces and the ending screen offers – opens a
+  // career, and the childhood the cards produce rides beside it.
+  it('⚠ ...and a real handover still opens a career, which is what makes the refusals refusals', async () => {
+    const res = await send({
+      type: 'new',
+      seed: 'a05-good-handover',
+      profile: DEFAULT_PROFILE,
+      prologue: { years: [], spentCents: 0 },
+      dynasty: dynastyOf(),
+    })
+    expect(res.ok, res.error).toBe(true)
+    expect(res.snapshot?.week).toBe(0)
   })
 })
 

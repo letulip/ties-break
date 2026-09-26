@@ -8761,10 +8761,20 @@ export function parentIncomeForWeekCents(seedStr: string, background: FamilyBack
  *  written as `spendSwingCents / 25,000` = 0.399 – a number that was never chosen and never written
  *  down. See `ECONOMY.prologue.reserveSwingShare` for what moved it and why.
  *
- *  ⚠ THE CLAMP IS A GUARD AND NOT A DIAL. `spentCents` arrives over the wire, and invariant 1 says
- *  every command is re-validated engine-side – so a payload claiming a childhood that costs nothing,
- *  or one that costs a million, moves the reserve by exactly the swing the real table can produce and
- *  no further. A run through the shipped cards can never reach the clamp.
+ *  ⚠ THE CLAMP BOUNDS FINITE VALUES ONLY, AND IT IS NOT THE WIRE'S GUARD. `spentCents` arrives over
+ *  the wire, and a payload claiming a childhood that costs nothing, or one that costs a million, moves
+ *  the reserve by exactly the swing the real table can produce and no further. A run through the
+ *  shipped cards can never reach the clamp.
+ *
+ *  ⚠⚠ WHAT THIS DOC CLAIMED UNTIL 26.09, AND WHY IT WAS CORRECTED RATHER THAN KEPT (A-05, the
+ *  principles review). It said «THE CLAMP IS A GUARD AND NOT A DIAL … invariant 1 says every command
+ *  is re-validated engine-side» – i.e. it named itself as the re-validation. It is not one, for the one
+ *  input arithmetic cannot bound: `Math.max(-1, Math.min(1, NaN))` is `NaN`, so a `NaN` (or absent)
+ *  `spentCents` births a career with `fundsCents = NaN`, which survives four ticks, is written as
+ *  `null` by the autosave codec, and makes its own export file unreadable to the import gate –
+ *  measured at the baseline. Invariant 1 IS satisfied now, one layer up where it belongs:
+ *  `prologueShapeError` (shared/protocol/profile.ts) refuses a non-finite or non-integer `spentCents`
+ *  on the wire, before `createWorld` runs. The clamp stayed exactly as it was; only its claim moved.
  *
  *  ⚠ NO DRAW, NO STATE, NO SCHEMA. Integer cents out, rounded once. */
 export function prologueFundsCents(background: FamilyBackground, spentCents: number): number {
