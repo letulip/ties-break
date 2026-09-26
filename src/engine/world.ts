@@ -106,8 +106,8 @@ export { pendingKnock, knockRunning, ordinaryTrainingWeek, expireKnock, rollKnoc
 // ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
 // import without pulling the integration core in. Re-exported under `engine/world` like every other
 // extraction, so the 280-file public API is unchanged.
-import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek } from './world/multiWeek'
-export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek }
+import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, openQuestions, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek } from './world/multiWeek'
+export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, openQuestions, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek }
 // ⭐⭐ ROUND 29 #3 – the shoot that lands on a tournament week, and the four answers to it. Extracted
 // to `world/shootClash.ts` (a leaf) and re-exported here under the historical barrel, exactly as
 // every other decomposed concern is.
@@ -2406,13 +2406,16 @@ export function skipEvent(world: WorldState, eventId: string): void {
  *  the order to show them in. ZERO extra RNG draws and the identical number of ticks – the loop
  *  still breaks on the first week that stops it, it just no longer forgets the rest of the news. */
 export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason[] {
-  // ⚠⚠ THE SIX REFUSALS MOVED TO `world/multiWeek.ts` (R2-13 phase 1), COMMENTS AND ORDER INTACT,
+  // ⚠⚠ THE REFUSALS MOVED TO `world/multiWeek.ts` (R2-13 phase 1), COMMENTS AND ORDER INTACT,
   // AND THEY MOVED FOR ONE REASON: a second week control has to know whether this function will move
   // time at all, and a button that answers that question for itself is the arrival gate's three
   // disagreeing answers all over again (composables/weekAction.ts spells that lesson out). One
-  // predicate, two readers: the engine calls it here, and the shell re-asks the same six of the
+  // predicate, two readers: the engine calls it here, and the shell re-asks the same list of the
   // snapshot through `blockingOverlay` + `pending`, pinned agreeing in tests/r2-13-advance-span.ts.
   // Nothing about the behaviour changed – zero ticks, one reason, the identical order.
+  //
+  // ⚠ THE COUNT USED TO BE WRITTEN «SIX» HERE and the list has held EIGHT since round 29 #3; the
+  // number is `ADVANCE_REFUSALS`' and is not restated in prose any more (26.09, B-04 / T2.1).
   const refusal = advanceRefusal(world)
   if (refusal) return [refusal]
   const stops = new Set<StopReason>()
@@ -2455,21 +2458,34 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // week that is two things at once (the classic: she gets hurt in the season's last playing
     // week) must report both. The loop still breaks ONCE, after the week has been read out.
     //
-    // A tournament this week paused the resolution: stop so the flow can take over.
-    if (world.pendingTournament) stops.add('tournament')
-    // W4: she came off court sore and the parent has to answer. The `break` below then ends the
-    // advance, and the guard at the top of this function refuses to restart it until he has.
-    if (pendingKnock(world)) stops.add('knock')
-    // ⭐ v48: it is her birthday and nobody has answered it. Collected rather than returned early for
-    // R11-1's own reason – a birthday CAN land on a week that is also a tournament, an injury or the
-    // season wrap, and a week that is several things must report all of them.
-    if (pendingBirthday(world) !== null) stops.add('birthday')
-    // ⭐⭐ v73: she said something and nobody has answered her. Collected rather than returned early
-    // for R11-1's own reason, and this member needs it more than most – the beat that raises the
-    // fork-opinion row raises the FORK on the same tick by construction, so this week is two things
-    // every time it happens. `STOP_PRECEDENCE` puts her dialog first; `answerFork` refuses until it
-    // has been answered, so the ordering holds even if a surface ever renders them the other way.
-    if (pendingLifeBeat(world) !== null) stops.add('life')
+    // ⭐⭐⭐ B-04 / T2.1 (26.09) – AND THE BLOCKING QUESTIONS ARE NOW READ FROM THEIR ONE OWNER,
+    // WHICH IS THE ITEM. This stood as seven hand-written lines – tournament, knock, birthday, life,
+    // and (below the reports) ending, fork, retirement – against `ADVANCE_REFUSALS`' EIGHT, and the
+    // missing one was `'shoot-clash'`: a collision that opened mid-span was collected by nothing, so
+    // the span rolled past the one question two of whose four answers stop being possible once the
+    // week has begun. `openQuestions` (world/multiWeek.ts) is the list, once, and this reads it.
+    //
+    // ⚠ WHY IT MATTERED WHEN NOTHING A PLAYER CAN REACH CHANGED. The shell offers a span only inside
+    // a layoff (`spanWeeksFor`) and a layoff nulls the clash (`shootClashWeek`'s first guard), so no
+    // shipped press could arrive here – but the worker accepts `advance` for 1 to 52 weeks, so the
+    // engine was leaning on the SCREEN's span arithmetic to stay correct, which is exactly what
+    // invariant 1 forbids. The measured record for that lean: the life beat was missing from the
+    // worker's copy of this list from v73 to v85, and the college year's copy has no beat today
+    // (B-01, and that one is reached).
+    //
+    // ⚠ STILL COLLECTED, NEVER RETURNED EARLY, and the reasons each of the seven carried are in the
+    // owner's own clauses now: R11-1's rule is that a week which is several things reports all of
+    // them, and this member needs it more than most – the beat that raises the fork-opinion row
+    // raises the FORK on the same tick by construction, so that week is two things every time it
+    // happens. `STOP_PRECEDENCE` puts her dialog first, `answerFork` refuses until she is answered,
+    // and the ORDER the owner returns is `ADVANCE_REFUSALS`' rather than precedence's – which costs
+    // nothing here, because `stops` is a Set read out through `STOP_PRECEDENCE` at the bottom.
+    //
+    // ⚠ 'ending' COMES DOWN THIS ROAD TOO, from the same owner and for the same R11-1 reason it was
+    // collected rather than returned for before: a week that is BOTH an ending and something else
+    // (the classic: the season wraps up and she takes the offer on the same week) reports both, and
+    // the epilogue is the surface that renders last anyway.
+    for (const r of openQuestions(world)) stops.add(r)
     // Season just wrapped up (the tick landed on the year's first off-season week, week 49 of
     // the year): stop AFTER the wrap-up resolved, before week 50, so the season-summary popup
     // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.
@@ -2510,13 +2526,8 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // above it, so a week that is an offer AND something else still reports both (R11-1).
     if (stoppableOfferWeek(world)) stops.add('offer')
     if (world.fundsCents < 0) stops.add('funds')
-    // W2-ENDINGS. The three that the week may have just produced. `'ending'` is collected rather
-    // than returned early so a week that is BOTH an ending and something else (the classic: the
-    // season wraps up and she takes the offer on the same week) still reports both – R11-1's rule,
-    // and the epilogue is the surface that renders last anyway.
-    if (world.ending) stops.add('ending')
-    if (world.fork !== null && world.fork.answer === null) stops.add('fork')
-    if (world.retirementOffer !== null) stops.add('retirement')
+    // ⚠ W2-ENDINGS' THREE – 'ending', 'fork' and 'retirement' – USED TO BE SPELLED HERE and are the
+    // owner's now (B-04 / T2.1, 26.09); their argument rides with the `openQuestions` read above.
     // ⭐⭐ ROUND 29 #6 – THE LOOP BREAKS ON A REASON THAT HALTS, NOT ON EVERY REASON IT COLLECTED.
     // It used to be `if (stops.size > 0) break`, and the one member that difference is about is
     // 'season-end': a press made at the tail of a season bought two weeks of a six-week gap and
