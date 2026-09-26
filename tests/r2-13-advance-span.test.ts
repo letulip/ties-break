@@ -15,7 +15,7 @@
 //   C. COLLISION PRECEDENCE – a week that is two things reports both, in the documented order.
 //   D. THE GATE – the shell offers the span in exactly the states the engine can move time in.
 //   E. NOTHING IS LOST – the span reports every row the weeks it spent wrote.
-//   F. THE DRIFT GUARD – a seventh refusal cannot be added without this file noticing.
+//   F. THE DRIFT GUARD – one more refusal cannot be added without this file noticing.
 //
 // ⚠ NO NEW STOPPING MODEL. Every case below drives `advanceWeeks`, the function that has owned this
 // since the first slice; nothing here re-implements a halt, and no snapshot field and no schema
@@ -1111,7 +1111,7 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     // ⚠⚠ THE DIRECTION IS THE WHOLE CASE. The second pass narrowed WHEN the pill is drawn, from "the
     // engine can move time" (204 of 208 walked weeks) to his rule (5 of 208). The one way that can
     // go wrong is for the narrowing to leak into the engine – a week the pill is withheld on must
-    // still be a week the ADVANCE runs, or `advanceRefusal` has quietly grown a seventh member and
+    // still be a week the ADVANCE runs, or `advanceRefusal` has quietly grown a member and
     // a busy career has lost the ability to step at all.
     //
     // Driven on block B's own offer fixture, which is exactly such a week: at week 45 of this walk
@@ -1227,10 +1227,16 @@ describe('R2-13 E – the span reports every intermediate result', () => {
 // =================================================================================================
 // F. THE DRIFT GUARD
 // =================================================================================================
-describe('R2-13 F – a seventh refusal cannot be added without this file noticing', () => {
+// ⚠ RE-WORDED 26.09, AND THE WORD IS GONE RATHER THAN CORRECTED. This block said «a SEVENTH
+// refusal» in four places while `ADVANCE_REFUSALS` has held EIGHT since round 29 #3 – the ordinal
+// was never about a member, it meant «one more than the set», so it rotted the moment the set
+// grew and would have rotted again at the ninth. The count now lives only where a test reads it
+// (the assertion below counts `ADVANCE_REFUSALS` itself); the prose carries none. Same class as
+// A-P3-4's «six / five», corrected in `composables/weekAction.ts` in this wave.
+describe('R2-13 F – one more refusal cannot be added without this file noticing', () => {
   it('⚠⚠ `advanceRefusal` returns exactly the reasons `ADVANCE_REFUSALS` names, in that order', () => {
     // WHY THIS IS A SOURCE PIN AND NOT A BEHAVIOUR TEST. The failure it guards is a state nobody has
-    // written a fixture for yet: a seventh refusal added to the engine leaves the four-week pill
+    // written a fixture for yet: one more refusal added to the engine leaves the four-week pill
     // offered in a state the engine cannot move, which is R10-16's dead control – and no behaviour
     // test can cover a state that does not exist at the time the test is written. Counting the
     // refusals in the function's own source can. Location-independent (`worldFunction` reads the
