@@ -852,9 +852,11 @@ export function coachBilling(world: WorldState): {
  *  card yet and most needs to be told whose seat the scholarship pays for. The amount is large enough
  *  that no percentage cover rounds away to nothing. Pure; zero draws. */
 function travelCoverReachesHer(world: WorldState): boolean {
-  // `supportedTravelCents` reads the world and `event.travelCostCents`, and nothing else on the
-  // event, so the cast names what this object is FOR rather than pretending it is a real trip.
-  const probe = { travelCostCents: 10_000_00 } as SeasonEvent
+  // ⚠ NO CAST SINCE B-P3-11 (26.09): `supportedTravelCents` takes
+  // `Pick<SeasonEvent, 'travelCostCents'>`, so the promise this probe rested on – that the callee
+  // reads the world and `event.travelCostCents` and nothing else on the event – is the compiler's
+  // now rather than this comment's, and the probe no longer has to pretend to be a real trip.
+  const probe = { travelCostCents: 10_000_00 }
   // ⚠⚠ RE-AIMED AT ROUND 29 #5, AND THE CLAIM IS UNCHANGED – it asked `travelCostFor` and it now
   // asks the SUPPORT half of it. The question on screen is «is any support taking anything off her
   // travel», and §3f gave the family a way to cut its own fare that is emphatically not support: it

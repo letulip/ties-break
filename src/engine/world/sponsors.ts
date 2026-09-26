@@ -1201,8 +1201,16 @@ export function travelCostFor(world: WorldState, event: SeasonEvent): number {
 
 /** THE SUPPORT HALF ALONE – the academy's scholarship and the brand's share, composed, and NOTHING
  *  the family bought for itself. This is the body `travelCostFor` has always had; only the plane
- *  sits outside it (round 29 #5). Every future SUPPORT stream belongs in here. */
-export function supportedTravelCents(world: WorldState, event: SeasonEvent): number {
+ *  sits outside it (round 29 #5). Every future SUPPORT stream belongs in here.
+ *
+ *  ⚠ THE PARAMETER IS `Pick<SeasonEvent, 'travelCostCents'>` AND THAT IS THE NOTE MADE INTO A TYPE
+ *  (B-P3-11, 26.09). `travelCoverReachesHer` (world/coachMarket.ts) asks this question with a probe
+ *  object that is not a real trip, and the promise it rested on – «the callee reads the world and
+ *  `event.travelCostCents`, and nothing else on the event» – was a sentence in a comment plus an
+ *  `as SeasonEvent` cast that would have hidden the day this function started reading `week` or
+ *  `tier`. Now the compiler holds it and the cast is gone. Every real caller passes a whole
+ *  `SeasonEvent` and is unaffected. */
+export function supportedTravelCents(world: WorldState, event: Pick<SeasonEvent, 'travelCostCents'>): number {
   const afterAcademy = netTravelCents(event.travelCostCents, world.academy)
   const share = kitTravelShare(world.offers, world.week)
   if (share <= 0) return afterAcademy
