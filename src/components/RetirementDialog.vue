@@ -150,6 +150,7 @@
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { activeLadderOfSnapshot } from '../shared/protocol'
 // ⚠ THE SAME ONE SPELLING OF HIS NAME the coach note on Home signs itself with – «M. Ricci», not the
 // roster's full string. Two surfaces naming the same person must name him identically.
@@ -349,6 +350,19 @@ useDialogFocus(card)
              window, which is why there is no condition on the age or the share here. -->
         <p v-if="lastWinterWord" class="retire-last-winter">{{ lastWinterWord }}</p>
       </template>
+
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW EVERY BRANCH – ForkDialog's
+           own arrangement and its reason. There is no dismiss and no Escape on this card (the note on
+           the script side says why, and the FINAL card is the proof), so a refused answer left the
+           winter's question standing with nothing said. Reached without any engine bug by a second
+           tab's SAVE_CONFLICT, whose sentence names the way out, and by B-02's refused mutation.
+           ⚠ OUTSIDE the three `v-if` branches, so it is drawn on all three questions and on the final
+           card, and ABOVE `.retire-answers` so the answers stay last in the flow – which is where
+           `measureDialog` reads the way out off. Capped and scrolling by `.dialog-card`, measured with
+           the line up at 375x667 and 320x568 in
+           tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING: `StoreError` renders whatever the store already wrote (invariant 4). -->
+      <StoreError />
 
       <div class="retire-answers">
         <button class="retire-answer" type="button" :disabled="game.busy" @click="answer(true)">

@@ -43,6 +43,7 @@
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
 
@@ -138,6 +139,20 @@ useDialogFocus(card)
       <!-- ⭐ THE ASK, IN PROSE, AND NOTHING BELOW IT IS MARKED. One of the four rows answers this and
            three do not; the player reads. -->
       <p id="birthday-ask" class="birthday-ask">{{ prompt.ask }}</p>
+
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE FOUR ROWS – ForkDialog's own arrangement and
+           its reason. This card has no dismiss BY RULING (the header: «nothing» must be an explicit
+           button, never a dismissal), so a refused Proceed left the player looking at four rows that
+           were all answers to a question already refused, with nothing said. Reached without any
+           engine bug by a second tab's SAVE_CONFLICT, whose sentence names the way out, and by B-02's
+           refused mutation.
+           ⚠ ABOVE `.birthday-choices`, so the rows and their Proceed stay last in the flow – which is
+           where `measureDialog` reads the way out off. The card is capped and scrolls, so a line that
+           appears only on a refusal cannot put the Proceed out of reach: measured with the line up at
+           375x667 and 320x568 in tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING, and nothing here marks an answer: `StoreError` renders whatever the store
+           already wrote (invariant 4) and carries no class the do-not-mark ruling could catch on. -->
+      <StoreError />
 
       <!-- FOUR ROWS IN A COLUMN, the owner's own ruling (quoted in full on the script side, where the
            house convention keeps his words and where the no-Cyrillic-in-a-template rule allows them).

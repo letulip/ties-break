@@ -64,6 +64,7 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import type { MemoryFace } from '../shared/avatarEmotion'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 
 const game = useGameStore()
@@ -278,6 +279,21 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
       >
         {{ line }}
       </p>
+
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW HER WORDS – ForkDialog's
+           own arrangement and its reason. There is no dismiss on this card because a dialog the player
+           could walk away from would answer HER by walking away (the file header), so a refused
+           Proceed left her line on screen, the world unmoved and nothing said about why. Reached
+           without any engine bug by a second tab's SAVE_CONFLICT, whose sentence names the way out,
+           and by B-02's refused mutation.
+           ⚠ ABOVE the radiogroup and its Proceed, which is the structural rule the block below already
+           states: in either phase the LAST control in the card's flow is the one `fits.ts` measures.
+           The card is a plain tenant of `.dialog-card`, so it is capped and scrolls and a refusal line
+           cannot push that control off the phone – measured with the line up at 375x667 and 320x568 in
+           tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING. This card owns no sentence of its own and still owns none: `StoreError`
+           renders whatever the store already wrote (invariant 4). -->
+      <StoreError />
 
       <!-- ⭐⭐⭐ WHAT HE MAY SAY BACK – a real radio group, named by her line, because these controls
            SELECT rather than advance (round 40 #1). The order is the engine's. Every control is the

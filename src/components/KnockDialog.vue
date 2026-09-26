@@ -34,6 +34,7 @@
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
 
@@ -136,6 +137,21 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            ⚠ UNDER THE READ AND ABOVE THE BRANCHES, because it is context for the decision rather
            than part of it. Nothing about the two choices moved. -->
       <p class="knock-why">{{ prompt.cause }}</p>
+
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW EVERYTHING ELSE –
+           ForkDialog's own arrangement, for the reason that card's note gives. This dialog has no
+           dismiss and no way out that is not an answer (the file header says why), so until this line
+           existed a refused Proceed left the card standing with NOTHING said: the world had not
+           moved, the card was still up, and every control on it was an answer to the question that
+           had just been refused. Two paths reach it without an engine bug – a second tab's
+           SAVE_CONFLICT, whose sentence names the way out, and B-02's refused mutation.
+           ⚠ ABOVE `.knock-choices` because `measureDialog` reads the last answer's box off the card's
+           bottom edge, and the branches and their Proceed have to stay last in the flow. The card is
+           capped and scrolls (`.dialog-card`, round-20 #3), so a line that appears only on a refusal
+           cannot put the Proceed out of reach – asserted at 375x667 and 320x568 WITH the line up in
+           tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING: `StoreError` renders whatever the store already wrote (invariant 4). -->
+      <StoreError />
 
       <!-- THE TWO COSTS, SIDE BY SIDE AND SPELLED OUT. This is the legibility requirement: the
            player has to be able to see what he traded, in the currency he traded it in, before he
