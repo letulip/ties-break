@@ -5,6 +5,7 @@ import {
   closeTournament,
   createWorld,
   decideKnock,
+  inCollege,
   pendingKnock,
   revealTournamentRound,
   setWeightEnabled,
@@ -12,6 +13,7 @@ import {
   skipTournament,
   type WorldState,
 } from '../src/engine/world'
+import { openedAtCollege } from './collegeBirthdayFixtures'
 import { CAREER_ENDED_REFUSAL, UNKNOWN_CHOICE_REFUSAL } from '../src/engine/world/constants'
 import { adOfferId } from '../src/engine/offers'
 import { ECONOMY } from '../src/engine/economy'
@@ -200,6 +202,13 @@ describe('#9 · answerFork refuses an answer that is not one of its three (B-P3-
 // setWeightEnabled · MUTATION: remove the `guardNotEnded(world)` line in world/lifeBeat.ts
 // -------------------------------------------------------------------------------------------------
 describe('B-P3-01 · setWeightEnabled refuses on an ended career', () => {
+  // ⭐⭐ THE DISTINCTION IS THE CASE BELOW THIS ONE, AND IT IS WHY THE GUARD IS THE «FOR GOOD» ONE.
+  // Ruling 9 says «refuses on an ended career»; `guardNotEnded` over-delivers on that, because a
+  // college freeze is not an ended career – it is a pause the career returns from, and the tab shell
+  // sits UNDER the freeze (round 24 D1), so the weight row on MoreScreen is reachable and working
+  // there today. Taking a working control away at college is a behaviour change nobody asked for, and
+  // the switch's own ruling is «changeable both ways in settings later». So: terminal latch refuses,
+  // freeze passes through.
   it('the retirement latch refuses the setting, with the existing guard sentence', () => {
     const world = forkWorld('p9-weight')
     answerFork(world, 'stop')
@@ -215,6 +224,25 @@ describe('B-P3-01 · setWeightEnabled refuses on an ended career', () => {
     expect(world.weightEnabled).toBe(false)
     setWeightEnabled(world, true)
     expect(world.weightEnabled).toBe(true)
+  })
+
+  // ⚠ MUTATION: swap `guardNotEndedForGood` back to `guardNotEnded` in `setWeightEnabled`
+  // (world/lifeBeat.ts) and THIS case reddens on `COLLEGE_FREEZE_REFUSAL`, while the terminal case
+  // above stays green – which is the whole distinction, and the reason both live in one describe.
+  it('⭐ but a college freeze PASSES THROUGH – the switch keeps working at university, both ways', () => {
+    // ⚠ THE FIXTURE IS THE SHARED ONE, not a ninth local copy: `openedAtCollege` walks sixty lived
+    // weeks, answers the fork with «college» and plays the reserved gap out until the departure
+    // latches the freeze. H-07 / F-01 count `atCollege` at eight copies already, and T5.11 is the wave
+    // that merges them – adding one here would be adding to that bill.
+    const { world } = openedAtCollege('p9-weight-college', 6, 15)
+    expect(world.ending?.type, 'the latch really is the college one').toBe('college')
+    expect(inCollege(world), 'and she really is at a university this week').toBe(true)
+    const before = world.weightEnabled
+    expect(() => setWeightEnabled(world, !before), 'the freeze does not answer this command').not.toThrow()
+    expect(world.weightEnabled, 'the setting really moved, inside the freeze').toBe(!before)
+    // both ways, because «changeable both ways» is the ruling's own phrase
+    expect(() => setWeightEnabled(world, before)).not.toThrow()
+    expect(world.weightEnabled).toBe(before)
   })
 })
 

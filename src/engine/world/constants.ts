@@ -121,8 +121,23 @@ export function guardNotEnded(world: WorldState): void {
  *  college years are the shop's BEST moment, four years where the wallet rests and the parent has no
  *  weekly job to do. ⚠ Everything the freeze already shuts off in `tickWeek` still keeps
  *  `guardNotEnded` with the honest sentence; this is not a precedent for a tour command.
- *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset, and
- *  nothing else. */
+ *  ⭐⭐ MEMBER SIX IS `setWeightEnabled` (26.09, ruling 9 / B-P3-01) – AND IT IS THE FIRST ONE THAT IS
+ *  NEITHER THE FAMILY'S CALENDAR NOR THE FAMILY'S MONEY, so the clause above gains a third category
+ *  rather than being stretched to cover it. It is a CONTENT SETTING: whether the game may raise the
+ *  weight layer at all, answered at creation and «changeable both ways in settings later» (22.09). It
+ *  clears the operative half of the test exactly as the shop does – it reaches no decision about the
+ *  girl (no radar, no condition, no kit, no entry), it spends nothing, and it writes one boolean that
+ *  every hazard re-reads on the week it runs, so opening it can break nothing.
+ *
+ *  ⚠⚠ AND IT IS HERE BECAUSE `guardNotEnded` OVER-DELIVERED ON THE RULING, which asked for «refuses on
+ *  an ended career». A college freeze is not an ended career. The switch lives on MoreScreen, the tab
+ *  shell sits UNDER the freeze (round 24 D1 – the same premise that made E2's sentence necessary at
+ *  all), so the row is reachable and working at college today, and the tour guard would have answered
+ *  a tap with `COLLEGE_FREEZE_REFUSAL` and taken a working control away. Measured before it shipped:
+ *  `tests/principles-unknown-answers.test.ts` reddened on that exact sentence.
+ *
+ *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset,
+ *  setWeightEnabled, and nothing else. */
 export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }

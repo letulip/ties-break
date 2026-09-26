@@ -108,7 +108,7 @@ import { activeEpisode, endEpisode, loveEpisodesOf } from './loveEpisodes'
 // close a three-module loop – `world/knock.ts -> world/endings.ts -> world/lifeBeat.ts` is live on
 // the value-import graph today, measured rather than assumed – and `guardNotEndedForGood` on this
 // same line is in the leaf for exactly that reason, with the whole argument at its definition.
-import { guardNotEnded, guardNotEndedForGood, knockRunning, KID_ID } from './constants'
+import { guardNotEndedForGood, knockRunning, KID_ID } from './constants'
 // ⭐⭐⭐ ROUND 42 #15/#24 – THE THREE READS THE FACTUAL BOUNDARY NEEDS (§8d.5), and all three are
 // leaves or near-leaves that do not import back here (checked module by module before they were
 // added). `weekMonth` is `shared/dates.ts`' week → real-month mapping and that file imports NOTHING
@@ -7774,13 +7774,20 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
  *  for the weight, set at new-career creation (the creation flow ASKS), changeable both ways in
  *  settings later»). `setCoachOnEventWeeks`'s shape (`world/coachMarket.ts`) and nothing more.
  *
- *  ⚠⚠ RE-AIMED 26.09 (B-P3-01) – THE SHAPE CLAIM WAS FALSE AND IS NOW TRUE. The sentence above named
- *  `setCoachOnEventWeeks` as the model, and that command OPENS with `guardNotEnded`; this one did not,
- *  so a tab left open behind the epilogue could flip the weight for a girl who has retired – and
- *  «changeable both ways in settings later» is a rule about a LIVE career, which is the reading the
- *  missing guard quietly widened. The guard is the existing one and its sentence is the existing one:
- *  invariant 4 is untouched, no copy was written for this. `tests/principles-unknown-answers.test.ts`
- *  holds both halves – refused behind a latch, still writable both ways on a live career.
+ *  ⚠⚠ RE-AIMED 26.09 (B-P3-01), AND THE SHAPE CLAIM IS NOW **HALF** TRUE – WHICH IS THE PRECISE
+ *  READING, because it was «and nothing more» that was doing the lying. `setCoachOnEventWeeks` opens
+ *  with a guard and this command opened with none, so a tab left open behind the epilogue could flip
+ *  the weight for a girl who has retired. It has one now. But it is deliberately **not the same
+ *  guard**: that command is a TOUR command and takes `guardNotEnded`, this one takes
+ *  `guardNotEndedForGood`, so the college freeze passes through and a terminal latch still refuses.
+ *  The two shapes agree that a setting needs a guard and part on WHICH – see the guard's own note in
+ *  `world/constants.ts`, where this command is recorded as member six of that short list with its
+ *  reason. A reader who "tidies" the two back together to make this sentence true again would be
+ *  taking a working control away from a girl at university.
+ *
+ *  ⚠ NO COPY WAS WRITTEN FOR ANY OF THIS: the guard is existing, its sentence is existing, invariant 4
+ *  is untouched. `tests/principles-unknown-answers.test.ts` holds all three halves – refused behind a
+ *  terminal latch, writable both ways on a live career, and writable both ways INSIDE the freeze.
  *
  *  ⚠⚠ IT WRITES ONE FIELD AND DELETES NOTHING, WHICH IS THE **OTHER HALF OF THE RULING** and the
  *  half a future reader is most likely to get wrong: «turning it off stops NEW weight events and
@@ -7797,9 +7804,25 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
  *  frozen capture (41550 / e6b0c709) cannot see it. */
 export function setWeightEnabled(world: WorldState, on: boolean): void {
   // ⚠ W2-ENDINGS (added 26.09, B-P3-01): the career must still have a next week. The engine
-  // re-validates every command because the worker is not the gate – `setCoachOnEventWeeks`' own line,
-  // which is what the doc above has always claimed this function's shape to be.
-  guardNotEnded(world)
+  // re-validates every command because the worker is not the gate – a tab left open behind the
+  // epilogue must not be able to flip a career setting for a girl who has retired.
+  //
+  // ⚠⚠ `guardNotEndedForGood` AND NOT `guardNotEnded`, AND THAT IS THE RULING'S INTENT RATHER THAN AN
+  // EXCEPTION TO IT (26.09). Ruling 9's words are «refuses on an ended career». A COLLEGE FREEZE IS
+  // NOT AN ENDED CAREER – it is a pause the career returns from, which is the whole reason
+  // `guardNotEndedForGood` exists – and the switch's own ruling of 22.09 is «changeable both ways in
+  // settings later». The switch lives on MoreScreen, `nav.tab-bar` renders unconditionally, and round
+  // 24 D1's premise is that the tab shell sits UNDER the freeze, so the row is reachable and WORKING
+  // at college today. `guardNotEnded` here would have taken a working control away from a girl at
+  // university and answered the tap «She is at college – … this waits until she is back on tour»,
+  // which is a behaviour change nobody asked for. So: a terminal latch refuses, the freeze passes.
+  //
+  // ⚠⚠ DO NOT "TIDY" THIS BACK TO `guardNotEnded` FOR SYMMETRY WITH THE EIGHTEEN. The two names are
+  // the audit (`world/constants.ts` says so at the guard itself), and this command is a member of the
+  // short list on its own reason, recorded there. The net is
+  // `tests/principles-unknown-answers.test.ts`: the terminal latch refuses AND the freeze passes, and
+  // swapping this one identifier reddens the second case while leaving the first green.
+  guardNotEndedForGood(world)
   world.weightEnabled = on
 }
 
