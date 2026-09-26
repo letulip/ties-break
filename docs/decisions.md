@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 141 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 142 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 23 | [THE SECONDARY MARKET COMMISSIONED: THINGS SELL THROUGH TIME, AND BUYERS WRITE LETTERS](#26092026--the-secondary-market-commissioned-things-sell-through-time-and-buyers-write-letters) | 2026-09-26 |
+| general | 24 | [THE SECONDARY MARKET RULED: LETTERS PILE UP, THE CRISIS IS MODERATE, THE FIRE SALE IS IN](#26092026--the-secondary-market-ruled-letters-pile-up-the-crisis-is-moderate-the-fire-sale-is-in) | 2026-09-26 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5540,3 +5540,18 @@ The spec is docs/specs/secondary-market-2026-09.md (five rulings still open, the
 biggest of them); the step-by-step builder plan is docs/plans/secondary-market-builder-2026-09.md,
 gated on those rulings for the strings and the fire sale, free to start S1–S3 without them. The
 deposit and the index fund stay instant – parked cash is not a thing, and the need gate reads it.
+
+## 26.09.2026 – THE SECONDARY MARKET RULED: LETTERS PILE UP, THE CRISIS IS MODERATE, THE FIRE SALE IS IN
+
+All five of the spec's rulings, answered within the hour. The fire sale: «да» – instant full value
+disappears for things. The one-open-letter guard he struck himself: «почему одно? может же 2 и
+больше людей написать, так часто бывает. Просто выбор за игроком, как со спонсором сейчас» – so
+buyer letters accumulate exactly as sponsor letters do in the window. Withdrawing a listing kills
+its letters: «ок». The crisis coupling: «давай умеренно, после кризиса возвращается к своей обычной
+динамике, может даже чуть ниже на какое-то время» – moderate shifts and a decaying opposite-sign
+hangover for ~half a season after an arc. The brand: «подтверждаю, что-то вроде того, но не жести
+там сильно» – the business row sits at the soft end of the corridor table. And buying on the
+secondary market is parked, his word, in docs/backlog/the-shop-and-the-broker.md.
+
+Spec and plan updated in place; every step is now free for the builder once the principles waves
+land.
