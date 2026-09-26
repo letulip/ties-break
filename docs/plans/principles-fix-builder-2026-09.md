@@ -42,6 +42,9 @@ Lane files: `01-architecture` (A), `02-engine-core` (B), `03-engine-leaves` (C),
 | 17 | H-17 · H-02 (c) | freeze dormant archival tools out of `check:tools` (W5); the world map **stays committed** – the pre-commit hook keeps it fresh |
 | 19 | B-08 | collapse the unreachable roof cells in the `expecting`, `bereavement` and `engaged` pools (W3) |
 
+**Added 26.09 on his follow-up questions:** A-06, the split of `lifeBeat.ts` (T6.8), and a
+duplication re-measure with a guard against re-copying (T5.14).
+
 **Not in this plan:** C-03 (the `economy.ts` split – deferred behind O1); #12 H-09, the forward
 rules of A-06, H-08 and H-04, and A-03's `CLAUDE.md` line – all the architect's, after W6; #18,
 the asset decisions (`theme.mp3`, the maskable icon, raw-or-gzip) – the owner's; E-P07 (the
@@ -305,6 +308,12 @@ Tests and scripts only – no product file moves in this wave.
   with their numbers, collapses each comment block to its first line plus `[N lines: L-M]`, and
   keeps any line carrying ⚠⚠, «» or Cyrillic in full; an npm script for it; a unit test on a
   fixture file; register it. The `CLAUDE.md` line that tells agents to use it is the architect's.
+- **T5.14 · the copies stay merged** (the owner, 26.09: «копипаста растёт – это тоже чиним?»).
+  (1) Re-run jscpd at the 05.09 flags over `tests` and `tools` at the wave's head and report the
+  rates against 3.89 % / 2.81 %. (2) A guard test: the families this wave merged may not be
+  redefined locally – the storage shim outside `tests/component/setup.ts`, `clashWorld` /
+  `atCollege` / `walkWeeks` / `weekAtAge` outside `tests/helpers/`, `argOf` outside `tools/_args.ts`
+  in a live tool. Mutation: paste one local copy back → red.
 
 ## 8. W6 – structure · branch `fix/principles-w6`
 
@@ -336,7 +345,22 @@ Larger moves, each proven identical. One commit series per item.
 - **T6.7 · A-02 (PLAUSIBLE) – measure first.** Run the build arm the lane left open: repoint the
   17 UI imports off the barrel in a worktree and measure the UI chunk. Ship the repoint plus a
   reverse-purity gate only if the arm frees bytes; otherwise record the null result with the arm's
-  provenance.
+  provenance. (Context: 121,534 B of engine code sits in BOTH the UI chunk and the worker chunk –
+  `00-baseline.md` §A5 – so this is a delivery question as well as an architecture one.)
+- **T6.8 · A-06 – split `world/lifeBeat.ts` by beat kind** (the owner, 26.09: «можем распилить и
+  оптимизировать? это в спеке?»). After T3.9's key pin, never before. The lane's map is the plan:
+  the 14 per-kind copy sections (§3b–§3m) are leaves, and nine of the twelve hazard sections (§7–§11,
+  §13–§16) have zero inbound references. Move **one kind per commit** – its copy section and its
+  hazard section together – into `src/engine/world/lifeBeat/<kind>.ts` (`wedding`, `pregnancy`,
+  `weight`, `leak`, `booth`, `ownKey`, `spouseView`, `smallTalk`, `divorced` …); `lifeBeat.ts` keeps
+  the hub (the queue, raising and answering, prompt assembly, the shared presence law) and
+  re-exports every moved name under its historical name, so no importer and no barrel name moves.
+  Comments move verbatim. The pin query first (`git grep -l "world/lifeBeat" -- tests/`), and
+  `tests/worldSource.ts` gains a reader that returns the hub plus its kind modules, so positive
+  source pins survive the split; negative pins are re-read. Proof per commit: the capture holds,
+  T3.9's key inventory is identical, the life-beat key-count nets and every life-beat suite stay
+  green; the e2e life specs at the end. The forward rule («a new beat kind is a new module») is the
+  architect's `CLAUDE.md` line.
 
 ## 9. When you finish
 
