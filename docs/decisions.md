@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 142 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 143 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 24 | [THE SECONDARY MARKET RULED: LETTERS PILE UP, THE CRISIS IS MODERATE, THE FIRE SALE IS IN](#26092026--the-secondary-market-ruled-letters-pile-up-the-crisis-is-moderate-the-fire-sale-is-in) | 2026-09-26 |
+| general | 25 | [THE LISTING THAT NEVER SELLS: FRESHNESS DECAYS, THE MARKET REMEMBERS](#26092026--the-listing-that-never-sells-freshness-decays-the-market-remembers) | 2026-09-26 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5555,3 +5555,19 @@ secondary market is parked, his word, in docs/backlog/the-shop-and-the-broker.md
 
 Spec and plan updated in place; every step is now free for the builder once the principles waves
 land.
+
+## 26.09.2026 – THE LISTING THAT NEVER SELLS: FRESHNESS DECAYS, THE MARKET REMEMBERS
+
+His third pass on the secondary market, minutes after the rulings: «шанс на то, что объект не
+продастся вообще с предложением попробовать через некоторое время или "перевыложить" объявление?
+например элитный авто за 300к вполне может быть не очень востребован, да и яхта может провести на
+экспозиции неопределенное время» – and the details delegated («может быть ты еще что-то решишь или
+предложишь»). Landed in the spec as three terms and a prompt: the arrival hazard DECAYS from a
+fresh-ad peak to a small class floor, so the medians hold but the tail becomes «может висеть
+вечно»; expensive lots within a class sit in thinner markets (one continuous dampener off worth
+against the entry rung – his $300k car, by construction); and at the deterministic week the floor
+is reached, one info letter names the pair of honest moves – wait, or withdraw and try later. My
+own call against farming: the market remembers a withdrawn ad for ~12 weeks, so «перевыложить»
+resets freshness only when the waiting was real. The price-cut control stays a later slice, now
+marked as the natural revival lever. Spec §2d/§2i, plan S1–S6 updated; schema v90 gains the row's
+small listing memory.

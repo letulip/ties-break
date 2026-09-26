@@ -86,7 +86,19 @@ quieter offers, which is the shelf's own «продавать пока о ней
 - A lucky draw may land a touch ABOVE worth (cap ~1.05): waiting is occasionally delicious.
 
 **2d · Exposure.** Arrival is a weekly hazard per class (median weeks to a first acceptable letter);
-in a crash the hazard itself moves per class – yacht buyers vanish, house buyers multiply.
+in a crash the hazard itself moves per class – yacht buyers vanish, house buyers multiply. Three
+more terms, from his 26.09 follow-up («шанс на то, что объект не продастся вообще»):
+
+- **Freshness decays.** A fresh ad gets the viewings; a stale one is invisible. The hazard starts
+  at the class peak and decays over ~1–1.5× the class median toward a small FLOOR – so the medians
+  in the table hold, but the tail stops being «eventually» and becomes «может висеть вечно». The
+  floor is not zero: a miracle buyer for a hung yacht stays possible, just never expectable.
+- **Expensive lots sit in thinner markets.** Within a class the hazard is dampened by price – his
+  own example, «элитный авто за 300к вполне может быть не очень востребован»: the sensible car
+  sells in weeks, the $300k one waits seasons. One continuous factor off worth against the class's
+  entry rung – no new per-rung data, «дороже = тоньше рынок» by construction.
+- **The floor differs by class**: houses keep real residual demand; boats and planes decay to
+  nearly nothing – «яхта может провести на экспозиции неопределенное время», his words.
 
 Proposed starting numbers – **all six columns are to be measured by the probe (§6), none is final**:
 
@@ -120,6 +132,21 @@ every dialog owes.
 `revalueAssets`; the frozen MAIN capture. The instant `sellAsset` path survives as the settle
 function the letters and the fire sale both call – one body, two doors.
 
+**2i · The listing that does not sell.** When a listing's freshness reaches its floor (a
+deterministic week, class- and price-dependent – the quote knows it in advance), the game SAYS so
+rather than leaving a silently dead badge: the row flips to a stale state, and ONE info letter
+arrives – the inbox's existing `'info'` state, no sign/refuse – saying the interest has gone quiet
+and suggesting the two honest moves: wait it out (the floor still ticks), or withdraw and try again
+later. His ask verbatim: «с предложением попробовать через некоторое время или "перевыложить"
+объявление».
+
+And the market REMEMBERS, which is what keeps «перевыложить» from being farmed: a re-list within
+~12 weeks of the withdrawal resumes the OLD staleness – the buyers recognise the ad. Waiting longer
+resets it genuinely: the reset is earned by waiting, and waiting costs upkeep, so it is a decision
+rather than a button. (Stored as one small memory on the row – when the last listing ended and how
+exposed it was; schema §4.) The fire sale stays available on a stale listing – the exit is never
+locked.
+
 ## 3 · Determinism
 
 Listing is a player action, so its randomness lives on purpose-scoped sub-streams keyed
@@ -130,7 +157,8 @@ different, every variation reproducible.
 
 ## 4 · Save schema
 
-v89 → v90: `listedWeek?: number` on `OwnedAsset`; `Offer` gains kind `'sale'` with
+v89 → v90: `listedWeek?: number` and `lastListing?: { endedWeek, exposedWeeks }` (§2i's market
+memory) on `OwnedAsset`; `Offer` gains kind `'sale'` with
 `SaleOfferTerms { itemId, priceCents }` (letters already persist). Append-only migration (the field
 is optional – the migration is the version step), golden fixture, e2e fixtures regenerated – the
 three-part move plus the fixture regen, as always.
@@ -149,6 +177,13 @@ three-part move plus the fixture regen, as always.
 5. **The brand sells this way, gently** – «подтверждаю, что-то вроде того, но не жести там сильно».
    The business row sits at the soft end of the corridor table.
 
+6. **The unsold listing** – his follow-up the same day: «шанс на то, что объект не продастся
+   вообще с предложением попробовать через некоторое время или "перевыложить" объявление? например
+   элитный авто за 300к вполне может быть не очень востребован, да и яхта может провести на
+   экспозиции неопределенное время». Absorbed as §2d's freshness decay + thin-market dampener and
+   §2i's stale prompt with market memory; the rest he delegated («может быть ты еще что-то решишь
+   или предложишь») and §2i records my calls.
+
 And one more the same message: buying on the secondary market is NOT commissioned – «не уверен, что
 надо, но можно в беклог поставить». It went to
 [the-shop-and-the-broker.md](../backlog/the-shop-and-the-broker.md).
@@ -156,11 +191,15 @@ And one more the same message: buying on the secondary market is NOT commissione
 ## 6 · Measurement (invariant 5)
 
 `tools/sale-probe.ts` walks listed careers across seeds and classes: weeks-to-sale p10/p50/p90,
-mean price/worth, in and out of crash arcs. The table in §2d gets a measured column per class
+mean price/worth, in and out of crash arcs; the share UNSOLD at 2× median per class and price rung
+(the elite car and the yacht must show real dead listings, the first house must not); and the
+re-list effect – inside the memory window against after it. The table in §2d gets a measured column per class
 before the wave ships; predicted vs measured, and the misses explained, per the house rule.
 
 ## 7 · Left for a later slice, deliberately
 
 - Buying on the secondary market – now a backlog row by his word (§5), not a plan.
 - Two buyers in one week – an auction premium above the corridor. Spicy, rare, later.
-- A «reduce the asking price» control on a stale listing. The stale drift covers the need for now.
+- A «reduce the asking price» control on a stale listing – now clearly the natural REVIVAL move
+  (a cut could restore freshness, §2i). If stale listings frustrate in play, this is the lever to
+  reach for first.
