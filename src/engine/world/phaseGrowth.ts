@@ -84,6 +84,11 @@ import {
   settleCallUpLetter,
 } from './college'
 import { rollKnock } from './knock'
+// ⚠ C-06 (26.09) – the ONE predicate for «the departure resolves at this week's close», read here and
+// by `resolveCollegeDeparture` itself. A VALUE import, and it closes no cycle: nothing under
+// `src/engine/world/` imports this module (`world.ts` alone does, and `endings.ts` reaches `world.ts`
+// type-only). `tests/import-cycles.test.ts` is the guard that keeps that true.
+import { collegeDepartsThisWeek } from './endings'
 import { summerLoadFactor } from './summer'
 
 /** ⭐ PHASE 4 OF THE WEEKLY TICK – the ladder moves, she develops, and her life happens.
@@ -396,8 +401,28 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
   //   ⚠ IT WRITES TO `world.offers` AND NOTHING ELSE, and it re-derives `seed:callup:<tieWeek>` – the
   //   SAME sub-stream `resolveCallUp` will derive two weeks later, never a new one – so the frozen
   //   MAIN capture (41550 / e6b0c709) still cannot see any of this block.
-  if (!inCollege(world)) rollKnock(world)
-  else {
+  // ⚠⚠ AND NOT ON THE WEEK SHE LEAVES – C-06 (the 26.09 principles review, P0), the owner's ruling
+  //   1(a). `resolveCollegeDeparture` latches the college ending at THIS week's close, in step 7c′,
+  //   and `inCollege` is still false up here, so a knock raised now was latched over: `decideKnock`
+  //   throws COLLEGE_FREEZE_REFUSAL behind that ending and `KnockDialog` has no exit that is not an
+  //   answer, so the dialog came up at the first freeze pause and the year could not be pressed
+  //   again. Measured on 3 of 60 fixture careers and 2 of 30 that chose college at the real fork.
+  //   ⚠ THE RULING IS PREVENTION AND NOTHING IS RETIRED SILENTLY: the roll does not happen on that
+  //   one week. Retiring an arriving knock at the departure would have been the other candidate fix
+  //   and it is the one the owner refused – her last week at home does not end with a question the
+  //   game then eats on her behalf.
+  //   ⚠ ONE SPELLING, ASKED OF THE DEPARTURE ITSELF. `collegeDepartsThisWeek` is the very predicate
+  //   `resolveCollegeDeparture` guards on (world/endings.ts), so the roll and the latch cannot drift
+  //   apart the next time the departure clock moves – it has moved twice already.
+  //   ⚠ RNG: this skips ONE `seed:knock:<week>` sub-stream derivation, on one week of a career that
+  //   chose college, and no MAIN draw at all (`rollKnock`: «ZERO main-stream draws»), so the frozen
+  //   MAIN capture (41550 / e6b0c709) cannot see this either.
+  //   ⚠ THE `else` IS UNCHANGED AND THE NESTING IS WHY. Widening the `if` would have sent the
+  //   departure week into the college branch, whose three calls read `world.college!` – and on that
+  //   week `world.college` is still null up here.
+  if (!inCollege(world)) {
+    if (!collegeDepartsThisWeek(world)) rollKnock(world)
+  } else {
     resolveCollegeLeague(world)
     settleCallUpLetter(world)
     resolveCallUp(world)

@@ -48,7 +48,10 @@ import {
   type WorldState,
   answerLifeBeat,
   pendingLifeBeat,
+  pendingKnock,
+  decideKnock,
 } from '../src/engine/world'
+import { engineModuleFunction } from './worldSource'
 import { migrateSave } from '../src/engine/migrations'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { nextAcademicYearStart, schoolEndWeek } from '../src/engine/kidLife'
@@ -381,4 +384,120 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
       expect(inFreeze.length, 'four college birthdays, one per year, all answered').toBe(4)
     }, 240_000)
   }
+})
+
+// =================================================================================================
+// 6. C-06 (26.09 principles review, P0) – NOTHING IS LEFT WAITING UNDER THE LATCH
+// =================================================================================================
+//
+// THE DEFECT, and it was a soft-lock rather than a blemish. `growAndLive` rolled the knock on every
+// week she was not yet at college (`if (!inCollege(world)) rollKnock(world)`, world/phaseGrowth.ts
+// step 3c) and `resolveCollegeDeparture` latched the college ending at the SAME week's close (step
+// 7c′). On the departure week `inCollege` is still false at the roll, so a knock could arrive and
+// the latch landed on top of it: `decideKnock` opens with `guardNotEnded`, which throws
+// COLLEGE_FREEZE_REFUSAL behind a `college` ending, and `KnockDialog` is «the one dialog in the app
+// with no way out that is not an answer». The overlay outranks the birthday and the life beat once
+// either is laid over the college shell, so the first freeze pause put a dialog on screen whose only
+// control was refused on every press – and the year could not be pressed again.
+//
+// ⚠ THE OWNER'S RULING IS PREVENTION, AND NOTHING IS RETIRED SILENTLY (26.09, ruling 1(a)): no knock
+// ARRIVES on the departure week. There is no `retireKnock` at the departure and nothing expires – the
+// roll simply does not happen on that one week, which is also the reading that keeps her last week at
+// home from ending with a question the game then eats.
+//
+// ⚠ THE SEEDS ARE THE REVIEW PROBE'S OWN, and the walk below is its `live()` verbatim in shape –
+// docs/review-principles-2026-09-26/probes/c-knock-at-latch.ts, which measured 3 of 60 `forced60`
+// careers and 2 of 30 `age19` ones standing on a refused knock at the latch. `c-latch-forced60-0`
+// latches at week 86 and `c-latch-age19-18` at week 294, and BOTH held a knock stamped
+// `sinceWeek === college.fromWeek`. A different walk is a different career: `decideKnock` is
+// zero-draw but it moves `knock.untilWeek`, which moves the growth week's load factor, so the seeds
+// only reproduce under this policy (every knock answered `rest`, every birthday neutral, every
+// blocking beat drained).
+//
+// ⚠⚠ MUTATION ARM: drop the gate at world/phaseGrowth.ts step 3c – restore
+// `if (!inCollege(world)) rollKnock(world)` – and both cases redden with
+// «REFUSED: The career is over» in the message. Verified 26.09, both directions.
+//
+// ⚠ RNG: the gate removes one `seed:knock:<departure week>` SUB-STREAM derivation and no MAIN draw
+// (`rollKnock`'s own header: ZERO main-stream draws), so the frozen capture 41550 / e6b0c709 holds –
+// asserted where it lives, in tests/condition.test.ts.
+
+/** The review probe's own walk (`live()`), so the seeds below mean what the probe measured they mean:
+ *  every knock answered `rest`, every birthday answered neutrally, every blocking beat drained, and
+ *  every one of the three skipped once an ending has latched. */
+function liveOneWeek(world: WorldState, rng: Rng): void {
+  tickWeek(world, rng)
+  finishAnyReveal(world)
+  if (pendingKnock(world) && world.ending === null) decideKnock(world, 'rest')
+  if (world.ending === null && pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  if (world.ending === null) drainLifeBeats(world)
+}
+
+/** A career walked to the exact tick that latches the college ending – the probe's two arms.
+ *  `forced60` hand-opens the fork at week 60 (the shared college recipe, tests/collegeBirthdayFixtures
+ *  .ts); `age19` waits for the engine's own ask at school's end. */
+function latchedAtTheDeparture(seed: string, arm: 'forced60' | 'age19'): WorldState {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+  const rng = resumeMain(world.rngMain)
+  if (arm === 'forced60') {
+    for (let i = 0; i < 60; i++) liveOneWeek(world, rng)
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
+  } else {
+    for (let i = 0; i < 520 && world.fork === null && world.ending === null; i++) liveOneWeek(world, rng)
+    expect(world.fork, `${seed} reached the fork by playing`).not.toBeNull()
+    drainLifeBeats(world)
+  }
+  world.fundsCents = 500_000_00
+  answerFork(world, 'college')
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) liveOneWeek(world, rng)
+  expect(world.ending?.type, `${seed} latched the college ending`).toBe('college')
+  expect(world.college!.fromWeek, 'the latch is this very week').toBe(world.week)
+  return world
+}
+
+/** What is standing under the latch, as a sentence – so a red run says WHICH refusal it hit rather
+ *  than «expected true to be false». The answer is tried on a clone: this reads the state, it does
+ *  not spend it. */
+function questionUnderTheLatch(world: WorldState): string {
+  if (!pendingKnock(world)) return 'nothing waiting'
+  const clone = structuredClone(world)
+  try {
+    decideKnock(clone, 'rest')
+    return 'answerable'
+  } catch (e) {
+    return `REFUSED: ${(e as Error).message}`
+  }
+}
+
+describe('C-06 – the departure week leaves no question the engine will not take', () => {
+  for (const [seed, arm, latchWeek] of [
+    ['c-latch-forced60-0', 'forced60', 86],
+    ['c-latch-age19-18', 'age19', 294],
+  ] as const) {
+    it(`⭐⭐⭐ ${arm} ${seed}: no unanswerable knock stands under the college latch`, () => {
+      const world = latchedAtTheDeparture(seed, arm)
+      expect(world.week, 'the probe\'s own latch week').toBe(latchWeek)
+      // THE CLAIM: after the latch, either nothing is pending or the pending thing can be answered.
+      expect(
+        questionUnderTheLatch(world),
+        'a knock the engine refuses on every press is a career that cannot continue',
+      ).toMatch(/^(nothing waiting|answerable)$/)
+      // And the screen half at the source: no prompt is put on the wire for a knock nobody can answer.
+      expect(toSnapshot(world).knockPrompt, 'no knock dialog is offered under the latch').toBeNull()
+    }, 240_000)
+  }
+
+  // ⚠⚠ THE PARITY GUARD, AND IT IS THE POINT OF THE EXTRACTION RATHER THAN A NICETY. Two spellings of
+  // «the departure resolves at this week's close» – one in the roll's gate and one in
+  // `resolveCollegeDeparture`'s own early-outs – is the defect class this repo calls the parity class,
+  // and it would drift the first time the departure clock moved again (it has moved twice: round 24
+  // #5, and `>=` for migrated saves). So there is ONE predicate and both sites read it.
+  it('⭐⭐ one spelling: the roll\'s gate and the departure itself read the same predicate', () => {
+    const departure = engineModuleFunction('world/endings', 'resolveCollegeDeparture')
+    expect(departure, 'the departure guards on the shared predicate').toContain('collegeDepartsThisWeek(world)')
+    expect(departure, 'and holds no second copy of the booking condition').not.toContain('departsWeek')
+    const growth = engineModuleFunction('world/phaseGrowth', 'growAndLive')
+    expect(growth, 'and the knock roll is gated on it too').toContain('collegeDepartsThisWeek(world)')
+    expect(growth, 'the roll still happens on every other week she is at home').toContain('rollKnock(world)')
+  })
 })
