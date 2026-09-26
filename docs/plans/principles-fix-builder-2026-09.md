@@ -61,6 +61,7 @@ you have already closed goes first into the next one. Every entry is dated.
 | 26.09 | T1.7 – the save doors under hostile input (a seeded property test) | W1 |
 | 26.09 | W7 – the notes: chronicles move out of the code, verbatim, per module (T7.1–T7.5) | W7, after W6 |
 | 26.09 | C-03 revived as T7.3 (the `economy.ts` split rides the notes move) | W7 |
+| 26.09 | T3.12 – the manifest-only maskable icon leaves the precache (−105 KiB, no pixel moves) | W3 |
 
 **Not in this plan:** #12 H-09, the forward rules of A-06, H-08 and H-04, A-03's `CLAUDE.md`
 line and W7's `CLAUDE.md` rule – all the architect's; image re-encoding (the masters live only on
@@ -250,6 +251,16 @@ In this order – B-04 is the owner the others read.
   strings tables and their roundtrip pins with a dated note each. Test: a reachability sweep over
   every stage an eligible week can hold; mutation: re-add a roof read → the sweep's assertion
   names it.
+
+- **T3.12 · the manifest-only icon leaves the install** (appended 26.09, the architect's
+  delivery measurement). `pwa-maskable-512.png` (105.1 KiB) is read by the manifest alone – the
+  platform fetches it once, online, when the app is installed – so it joins the precache's
+  `globIgnores` in `vite.config.ts` and stays in the manifest's `icons`. ⚠ `pwa-192.png` and
+  `pwa-512.png` STAY precached: `src/audio/music.ts` hands them to the Media Session as the
+  lock-screen artwork, which must work offline. Proof: `vite build` + `node
+  scripts/install-size.mjs` (≈ −105 KiB), the manifest still lists the icon, the offline e2e green;
+  a unit check that the built precache manifest omits the maskable icon and keeps the other two.
+  Mutation: drop the ignore → red.
 
 **W3's behaviour proof, once for the wave:** serialise `toSnapshot` over the 90 golden saves and
 the 13 e2e fixtures at the wave's base and head (two worktrees) and diff byte for byte – the only
