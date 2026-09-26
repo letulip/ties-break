@@ -96,7 +96,7 @@ import { kidAgeYears } from './age'
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
 import { physicalMean, resolveAgeCurve } from '../development'
 import { buildAlbum, buildScroll } from './album'
-import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
+import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood, UNKNOWN_CHOICE_REFUSAL } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
 // has to hand back the entries the college answer strands, and every rule about what a release
 // refunds – the fee, the year's ITF slot, the pro slot, the season mirror, the desk's letter – lives
@@ -1023,10 +1023,28 @@ export function resolveCollegeDeparture(world: WorldState): void {
   if (ending) latchEnding(world, ending)
 }
 
+/** THE THREE ANSWERS THIS COMMAND OFFERS, derived from a TOTAL record rather than written out – so a
+ *  fourth `ForkAnswer` is a compile error here instead of a legal answer this file silently refuses.
+ *  `FORK_STOP_DRIVERS`' own shape (world/lifeBeat.ts). */
+const FORK_ANSWER_TOTAL: Record<ForkAnswer, true> = { continue: true, college: true, stop: true }
+const FORK_ANSWERS = Object.keys(FORK_ANSWER_TOTAL) as readonly ForkAnswer[]
+
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
 export function answerFork(world: WorldState, answer: ForkAnswer, tier?: CollegeTier): void {
   guardNotEnded(world)
+  // ⚠⚠ #9 · B-P3-02 (the principles review of 26.09) – THE ANSWER IS CHECKED AGAINST THE LIST THIS
+  // COMMAND OFFERS, AND THIS IS THE ARM THAT MADE THE TRIO A TASK. The college branch below is the
+  // only one keyed on a value; EVERYTHING ELSE falls through to `endingForForkAnswer`, so an unknown
+  // enum arriving from the worker's JSON dispatch **silently ended the career** – the most expensive
+  // click in the game, taken by nobody. It sits ABOVE the «not open» guard for one reason: it is a
+  // question about the PAYLOAD, which can be answered before the world is consulted at all.
+  //
+  // ⚠ IT IS NOT THE ROUND-24 RE-VALIDATION THAT WAS REMOVED. That one refused a legal answer
+  // («college») on a STATE the rule no longer has; this refuses a value that was never an answer.
+  // «Nothing removes the college answer» stands untouched, including the tier fallback further down –
+  // an unknown `tier` still falls back to the cheapest place rather than throwing.
+  if (!FORK_ANSWERS.includes(answer)) throw new Error(UNKNOWN_CHOICE_REFUSAL)
   if (world.fork === null || world.fork.answer !== null) throw new Error('The fork is not open')
   // ⭐⭐⭐ v73 – HE HEARS HER OUT FIRST, AND THE ENGINE IS WHAT SAYS SO (wave-2 runbook §3.3).
   //

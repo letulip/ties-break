@@ -34,6 +34,27 @@ export const KID_ID = 'kid'
  *  without pinning a spelling, on the precedent of `RELEASE_LINE_PREFIX`. */
 export const CAREER_ENDED_REFUSAL = 'This career has ended'
 
+/** ⭐⭐ #9 · B-P3-02 (the principles review of 26.09) – AN ANSWER THE GAME NEVER OFFERED. The one
+ *  sentence `decideKnock`, `answerShootClash` and `answerFork` all refuse an unknown member of their
+ *  own choice union with, on `setPsychologistFocus`'s shape (`PSY_FOCUSES.includes(focus)`).
+ *
+ *  ⚠⚠ WHY THREE COMMANDS SHARE ONE SENTENCE RATHER THAN CARRYING THREE. It is the same fault in all
+ *  three – a payload that does not match the list the engine itself offered – and a player cannot
+ *  reach any of them from a live screen, so three spellings would be three strings to вычитка with no
+ *  reader between them. The commands that CAN be reached wrongly keep their own specific refusals.
+ *
+ *  ⚠⚠ WHAT IT COST BEFORE IT EXISTED, and it is why the trio was one task: the other two arms wrote a
+ *  wrong row (a push nobody chose, a latched double week), and `answerFork` handed the unknown answer
+ *  to `endingForForkAnswer` – so a malformed command **silently ended the career**.
+ *
+ *  ⚠ IT IS A DIAGNOSTIC THE PLAYER SHOULD NEVER SEE, which is the whole of what it is allowed to say.
+ *  No apology, no advice, no naming of the legal values: a sentence reachable only by a malformed
+ *  command has no business teaching anybody the enum.
+ *
+ *  ⚠ DRAFT (invariant 4): the wording is the owner's to keep or replace – it is tabled in
+ *  docs/plans/principles-fix-strings-2026-09.md with the wave's other drafts, and this is its home. */
+export const UNKNOWN_CHOICE_REFUSAL = 'That is not one of the choices offered.'
+
 /** ⭐⭐ ROUND 24, E2 – THE SENTENCE WHILE SHE IS AT COLLEGE, AND IT EXISTS BECAUSE D1 PUT THE TAB
  *  SHELL BACK ON SCREEN UNDERNEATH THE FREEZE.
  *
