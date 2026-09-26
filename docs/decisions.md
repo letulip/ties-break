@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 137 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 138 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 20 | [THE RIG WAVE'S FOUR, RULED IN ONE LINE: «ПО СВОИМ РЕКОМЕНДАЦИЯМ»](#25092026--the-rig-waves-four-ruled-in-one-line-по-своим-рекомендациям) | 2026-09-25 |
+| general | 21 | [THE PRINCIPLES FIX RULED OPEN: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ», ALL OF IT](#26092026--the-principles-fix-ruled-open-по-твоим-рекомендациям-all-of-it) | 2026-09-26 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5466,3 +5466,17 @@ Taken in by the architect the same day (`docs/review-codex/14-principles-review-
   incident narratives moved verbatim to `docs/context/`, inside the same 22k budget.
 - **Nineteen decisions and three questions wait on him**, each with a recommendation. ⚠ **Nothing
   launches before his approve** (the intake's gate); W1 carries both P0s and goes first.
+
+## 26.09.2026 – THE PRINCIPLES FIX RULED OPEN: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ», ALL OF IT
+
+His go on the intake of the same day: «сделай пожалуйста полноценную пошаговую спеку для билдера на
+починку всего по твоим рекомендациям». Every choice the intake left open is settled by its
+recommendation: C-06 (a) no knock on the departure week; B-01 (a) the college year pauses for a
+blocking beat; C-07 (a); E-01 (a) the header reuses the pills' phrase (DRAFTs); B-03 (a) «Not open
+yet»; E-04 (a) the engine's sentence; E-02 (a) the layout is the preset's; A-05 (a); unknown
+answers refused; D-02 keeps its text; D-07 option A; H-04 O1; P4 finished (A-04 a) and the barrel
+frozen (A-03); dormant archival tools out of `check:tools`; the world map stays committed; B-08's
+unreachable roof cells collapsed. Builder plan: `docs/plans/principles-fix-builder-2026-09.md`,
+six stacked branches `fix/principles-w1` … `-w6`, W1 **Now**, the rest Next. Not in it: the
+`economy.ts` split (deferred), `CLAUDE.md`'s restructure and the forward rules (the architect's),
+the asset calls (his). He dispatches the builder.
