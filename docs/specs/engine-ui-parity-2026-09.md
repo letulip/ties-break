@@ -241,6 +241,15 @@ looked like before it was closed is the useful part, and each now carries what s
    an independent refusal.** The clauses that have none are where the primitive is load-bearing, and
    they are the ones to name at the site rather than leave reading as belt-and-braces.
 
+   ⚠ **And one clause has no mounted witness, recorded rather than left implicit: `'slam'`.** The ad
+   panel's fixture (#150, no banked seasons) shows the lifetime row closed whether the clause is there
+   or not, so the per-reason arm reddens a unit case and **nothing on a screen**. The cheapest shape is
+   one mounted case on a tenure-met fixture, which is a new screen fixture and therefore W4's lane
+   (the UI parity and accessibility wave) rather than W3's. Until it exists, `'slam'` is guarded at the
+   primitive and at the letter, and unguarded at the shelf. ⭐ The general form of this is worth having
+   beside the rule above: after per-clause arms, the clauses with **no** witness on one side are the
+   coverage the table has just measured – write them down where the next wave will read them.
+
 ## 6. What this spec does not do
 
 It adds no test framework, no helper and no CI step. It names a convention that two shipped files
