@@ -46,7 +46,11 @@ import type { AgeCurveBounds } from '../development'
 // never a second home for it.
 import { ENDINGS } from '../ending'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
-import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
+// ⚠ `Snapshot` IS IMPORTED FOR TWO RETURN TYPES AND FOR NOTHING ELSE (F-06, 26.09). `coachBilling`
+// and `coachEdgeView` restated `Snapshot['coachBilling']` / `Snapshot['coachEdge']` member for member
+// – 17/17 and 9/9 – and now read the wire shape itself, so a member added to either one can only be
+// added once. Type-only, erased at build; the protocol imports nothing back.
+import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile, Snapshot } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
 import { activeKitDeal, kitTravelShare } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
@@ -637,103 +641,115 @@ export function coachTravelsWithHer(world: WorldState): boolean {
  *  weeks - the owner's own save did, at week 255. It is no longer load-bearing for the bill, but it
  *  is still shown, and a figure that silently reads zero for three weeks a year is worse than none.
  *
- *  Derived at snapshot time; persists nothing. */
-export function coachBilling(world: WorldState): {
-  onEventWeeks: boolean
-  weeklyCents: number
-  /** ⭐⭐ U-03 (05.09 review) – WHAT A WEEK ACTUALLY LANDS AT, and what it is made of. Both were
-   *  computed by MoneyScreen and ThisWeekScreen for themselves, from `seed` through `coachById`,
-   *  `tierOf`, `facilityRateCents` and these two helpers - the third and fourth copies of an
-   *  arithmetic that already runs here, and the copies had ALREADY drifted once: the comment above
-   *  `ageAtWeek` in both screens records a December girl being quoted the development rate against
-   *  a bill charged at the professional one for 49 weeks. Projected rather than re-derived, the
-   *  screens cannot disagree with the till, because there is one arithmetic left.
-   *  ⚠ `split.totalCents` is `weeklyCents` by construction (same call, same defaults) and is kept
-   *  because a screen quoting the parts must quote the whole they add up to from the same object. */
-  weekRangeCents: [number, number]
-  split: { totalCents: number; coachCents: number; facilityCents: number }
-  eventWeeks: number
-  /** the weeks of the coming year the retainer is actually charged for */
-  billedWeeks: number
-  seasonCents: number
-  /** ⭐ v49: does he go to the rungs that pay her nothing too - the nested half of the stance. */
-  onJuniorEvents: boolean
-  /** ⭐ ROUND-21 #2: WHAT SENDING HIM WOULD ADD over the trips she has actually booked this season,
-   *  in cents. Zero when nothing is booked, and zero for a self-coached family - see
-   *  `coachTravelFareFor`, which is the one definition this sums and the reason the row on screen T
-   *  and the line on the till can never quote different money. Quoted whether the switch is ON or
-   *  OFF, because it is the price of the decision rather than a receipt for one.
-   *
-   *  ⚠ GROSS SINCE 15.08, AND THAT IS THE FIX THIS FIGURE OWED THE SCREEN. It summed `travelCostFor` -
-   *  HER fare, net of the academy scholarship and the brand's share - while the till charged his seat
-   *  at the full price (`coachTravelFareFor`, and the owner's principle behind it). So the one family
-   *  the number mattered most to was quoted less than it would pay. It reads the fare function itself
-   *  now, which is the only way the two can never disagree again.
-   *
-   *  ⚠ 17.08 – AND "GROSS" IS NOW "WHATEVER THE FARE FUNCTION SAYS", WHICH IS WHY THIS FIGURE NEEDED
-   *  NO CHANGE. A sponsor's travel share reduces his seat at the rungs that pay prize money, so the
-   *  word above is no longer literally true - but the SUM was rewritten to read `coachTravelFareFor`
-   *  rather than to re-derive a price, and that is exactly the property that made an amendment to the
-   *  rule cost nothing here. The academy scholarship still never reaches it. */
-  travelFareCents: number
-  /** ...and how many trips that is, so the screen can say "over the 9 he would be on" rather than
-   *  printing a season total with nothing to divide it by.
-   *
-   *  ⚠ TRIPS HE WOULD BE ON, NOT TRIPS SHE HAS BOOKED, since the fare gate. They are different
-   *  numbers the moment a junior rung is on her card and he is not going to it, and a count that
-   *  includes the trips the figure does NOT cover is the same lie in a different unit. */
-  travelTrips: number
-  /** ⭐ 15.08 – WHAT **HER** SEATS COST OVER THOSE SAME TRIPS, net of every cover she holds.
-   *
-   *  It exists because "twice the fare" stopped being true for the families it mattered to. His seat
-   *  did not follow her covers, so for a girl on a scholarship the trip is her discounted seat plus
-   *  his whole one - and the screen has to be able to print both figures rather than a multiple that
-   *  is right only for a family paying full price.
-   *
-   *  ⚠ 17.08 – AND "TWICE THE FARE" IS TRUE AGAIN FOR ONE FAMILY IN PARTICULAR: the one whose only
-   *  cover is a sponsor contract. That share now comes off both seats, so the two figures are EQUAL
-   *  for her and the trip really does cost double - which is the owner's own model of the rule and
-   *  the headline assertion of §4 in tests/support-never-pays-the-coach.test.ts. The scholarship is
-   *  what still splits them, and it is the only thing that does. */
-  travelHerFareCents: number
-  /** ⭐ v49 – WHAT THE NESTED OPTION WOULD ADD on top, over the same booked season, and over how many
-   *  more trips. The two sets are disjoint by construction (a rung either pays prize money or does
-   *  not), so this is the price of the second decision on its own, priced the same way: through
-   *  `coachTravelFareFor`, with the stance not consulted. */
-  travelJuniorCents: number
-  travelJuniorTrips: number
-  /** ⭐ 15.08 – IS ANY SUPPORT REDUCING HER TRAVEL AT ALL this week (a scholarship, a brand's share,
-   *  or anything added to `travelCostFor` after today)? Asked of the ONE fare definition rather than
-   *  of a list of covers, so a cover invented tomorrow is inside the answer by construction - and
-   *  answerable with nothing booked, which is when a junior family most needs the sentence. */
-  travelCovered: boolean
-  /** ⭐⭐ ROUND-21 #2, 17.08 – AND IS A CONTRACT REDUCING **HIS** SEAT, as a whole percentage, 0 when
-   *  nothing is. The one number that makes the sentence beside the switch true again: it has said
-   *  since 15.08 that "the coach travels at the full fare", and for a family under a big deal at the
-   *  professional rungs that is no longer so.
-   *
-   *  ⚠ A PERCENTAGE AND NOT A BOOLEAN, because the sentence has to name the figure - a cover the
-   *  player cannot size is indistinguishable from a price that quietly moved, which is the exact
-   *  dishonesty `chargeTravel`'s payer text exists to prevent.
-   *
-   *  ⚠ AND IT IS THE TERM ITSELF, NOT `1 - travelFareCents / gross`. Those trips are the ones he is
-   *  ON, and every one of them is a prize-money rung, so the ratio would agree today - but it would
-   *  start lying the day a rung is exempted, and a figure that is right by coincidence is the kind
-   *  that survives review. */
-  coachFareCoverPct: number
-  /** ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
-   *
-   *  The screen used to RECOVER it from any row that was over budget
-   *  (`weeklyCents - overBudgetCents === the cap`), which worked only while some row was over. Fixing
-   *  the income made the owner's own case - a million banked - the case where NO row is over, and the
-   *  meter would then have printed a $0.00 weekly cap with a full bar beside it. A number the screen
-   *  needs is a number the engine should hand over. */
-  weeklyIncomeCents: number
-  /** ⭐⭐ ROUND-28 #8 – the whole household's week, the masseur and the shelf included. Computed from
-   *  `weeklyCents` below rather than from a second read of the coach, so the block on screen T and
-   *  the meter inside it cannot describe two different bills. See `householdWeekly`. */
-  household: HouseholdWeekly
-} {
+ *  Derived at snapshot time; persists nothing.
+ *
+ *  ⚠ THE RETURN TYPE IS THE WIRE'S OWN – `Snapshot['coachBilling']` SINCE F-06 (26.09). All 17
+ *  members were declared here as well, identical to the snapshot's 17, each with its own
+ *  docstring; the compiler caught a type drift in one direction only and never caught a DOC
+ *  drift at all. The notes that hung off those members are kept below VERBATIM, which is also
+ *  where the wire already sends readers for them: «see the note on `coachBilling` in
+ *  `engine/world/coachMarket.ts` for the drift that cost, and why they are projected now».
+ *
+ *  **`weekRangeCents`** –
+ *  ⭐⭐ U-03 (05.09 review) – WHAT A WEEK ACTUALLY LANDS AT, and what it is made of. Both were
+ *  computed by MoneyScreen and ThisWeekScreen for themselves, from `seed` through `coachById`,
+ *  `tierOf`, `facilityRateCents` and these two helpers - the third and fourth copies of an
+ *  arithmetic that already runs here, and the copies had ALREADY drifted once: the comment above
+ *  `ageAtWeek` in both screens records a December girl being quoted the development rate against
+ *  a bill charged at the professional one for 49 weeks. Projected rather than re-derived, the
+ *  screens cannot disagree with the till, because there is one arithmetic left.
+ *  ⚠ `split.totalCents` is `weeklyCents` by construction (same call, same defaults) and is kept
+ *  because a screen quoting the parts must quote the whole they add up to from the same object.
+ *
+ *  **`billedWeeks`** –
+ *  the weeks of the coming year the retainer is actually charged for
+ *
+ *  **`onJuniorEvents`** –
+ *  ⭐ v49: does he go to the rungs that pay her nothing too - the nested half of the stance.
+ *
+ *  **`travelFareCents`** –
+ *  ⭐ ROUND-21 #2: WHAT SENDING HIM WOULD ADD over the trips she has actually booked this season,
+ *  in cents. Zero when nothing is booked, and zero for a self-coached family - see
+ *  `coachTravelFareFor`, which is the one definition this sums and the reason the row on screen T
+ *  and the line on the till can never quote different money. Quoted whether the switch is ON or
+ *  OFF, because it is the price of the decision rather than a receipt for one.
+ *
+ *  ⚠ GROSS SINCE 15.08, AND THAT IS THE FIX THIS FIGURE OWED THE SCREEN. It summed `travelCostFor` -
+ *  HER fare, net of the academy scholarship and the brand's share - while the till charged his seat
+ *  at the full price (`coachTravelFareFor`, and the owner's principle behind it). So the one family
+ *  the number mattered most to was quoted less than it would pay. It reads the fare function itself
+ *  now, which is the only way the two can never disagree again.
+ *
+ *  ⚠ 17.08 – AND "GROSS" IS NOW "WHATEVER THE FARE FUNCTION SAYS", WHICH IS WHY THIS FIGURE NEEDED
+ *  NO CHANGE. A sponsor's travel share reduces his seat at the rungs that pay prize money, so the
+ *  word above is no longer literally true - but the SUM was rewritten to read `coachTravelFareFor`
+ *  rather than to re-derive a price, and that is exactly the property that made an amendment to the
+ *  rule cost nothing here. The academy scholarship still never reaches it.
+ *
+ *  **`travelTrips`** –
+ *  ...and how many trips that is, so the screen can say "over the 9 he would be on" rather than
+ *  printing a season total with nothing to divide it by.
+ *
+ *  ⚠ TRIPS HE WOULD BE ON, NOT TRIPS SHE HAS BOOKED, since the fare gate. They are different
+ *  numbers the moment a junior rung is on her card and he is not going to it, and a count that
+ *  includes the trips the figure does NOT cover is the same lie in a different unit.
+ *
+ *  **`travelHerFareCents`** –
+ *  ⭐ 15.08 – WHAT **HER** SEATS COST OVER THOSE SAME TRIPS, net of every cover she holds.
+ *
+ *  It exists because "twice the fare" stopped being true for the families it mattered to. His seat
+ *  did not follow her covers, so for a girl on a scholarship the trip is her discounted seat plus
+ *  his whole one - and the screen has to be able to print both figures rather than a multiple that
+ *  is right only for a family paying full price.
+ *
+ *  ⚠ 17.08 – AND "TWICE THE FARE" IS TRUE AGAIN FOR ONE FAMILY IN PARTICULAR: the one whose only
+ *  cover is a sponsor contract. That share now comes off both seats, so the two figures are EQUAL
+ *  for her and the trip really does cost double - which is the owner's own model of the rule and
+ *  the headline assertion of §4 in tests/support-never-pays-the-coach.test.ts. The scholarship is
+ *  what still splits them, and it is the only thing that does.
+ *
+ *  **`travelJuniorCents`** –
+ *  ⭐ v49 – WHAT THE NESTED OPTION WOULD ADD on top, over the same booked season, and over how many
+ *  more trips. The two sets are disjoint by construction (a rung either pays prize money or does
+ *  not), so this is the price of the second decision on its own, priced the same way: through
+ *  `coachTravelFareFor`, with the stance not consulted.
+ *
+ *  **`travelCovered`** –
+ *  ⭐ 15.08 – IS ANY SUPPORT REDUCING HER TRAVEL AT ALL this week (a scholarship, a brand's share,
+ *  or anything added to `travelCostFor` after today)? Asked of the ONE fare definition rather than
+ *  of a list of covers, so a cover invented tomorrow is inside the answer by construction - and
+ *  answerable with nothing booked, which is when a junior family most needs the sentence.
+ *
+ *  **`coachFareCoverPct`** –
+ *  ⭐⭐ ROUND-21 #2, 17.08 – AND IS A CONTRACT REDUCING **HIS** SEAT, as a whole percentage, 0 when
+ *  nothing is. The one number that makes the sentence beside the switch true again: it has said
+ *  since 15.08 that "the coach travels at the full fare", and for a family under a big deal at the
+ *  professional rungs that is no longer so.
+ *
+ *  ⚠ A PERCENTAGE AND NOT A BOOLEAN, because the sentence has to name the figure - a cover the
+ *  player cannot size is indistinguishable from a price that quietly moved, which is the exact
+ *  dishonesty `chargeTravel`'s payer text exists to prevent.
+ *
+ *  ⚠ AND IT IS THE TERM ITSELF, NOT `1 - travelFareCents / gross`. Those trips are the ones he is
+ *  ON, and every one of them is a prize-money rung, so the ratio would agree today - but it would
+ *  start lying the day a rung is exempted, and a figure that is right by coincidence is the kind
+ *  that survives review.
+ *
+ *  **`weeklyIncomeCents`** –
+ *  ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
+ *
+ *  The screen used to RECOVER it from any row that was over budget
+ *  (`weeklyCents - overBudgetCents === the cap`), which worked only while some row was over. Fixing
+ *  the income made the owner's own case - a million banked - the case where NO row is over, and the
+ *  meter would then have printed a $0.00 weekly cap with a full bar beside it. A number the screen
+ *  needs is a number the engine should hand over.
+ *
+ *  **`household`** –
+ *  ⭐⭐ ROUND-28 #8 – the whole household's week, the masseur and the shelf included. Computed from
+ *  `weeklyCents` below rather than from a second read of the coach, so the block on screen T and
+ *  the meter inside it cannot describe two different bills. See `householdWeekly`.
+ */
+export function coachBilling(world: WorldState): Snapshot['coachBilling'] {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
   // ⭐ ROUND 42 #19 – the quote reads the SAME rate `resolveBaseCosts` bills at, so the card, the
@@ -1507,37 +1523,51 @@ export function coachPlaqueLine(view: {
  *  coach: the placement is re-derived off his id, so it is the same verdict waiting behind the same
  *  season, and only the hedging has started over.
  *
- *  Derived at snapshot time; persists nothing, exactly like `coachMarket` and `coachBilling`. */
-export function coachEdgeView(world: WorldState): {
-  /** [lo, hi] pp per match for the rung she is on - [0, 0] self-coached, which is not a corridor */
-  corridorPct: [number, number]
-  /** ⭐ ROUND-21 #2, THE LAST OPEN ITEM – ...AND THE SAME BAND DOUBLED, for a family whose coach is on
-   *  the trip with her. `null` when this family would not send him (no coach, or the stance off), so
-   *  a career that leaves him at home reads exactly what it read before.
-   *
-   *  ⚠ IT IS A BRACKET AND NOT HIS FIGURE, exactly like `corridorPct` beside it - see
-   *  `coachEdgeCorridorPp`, which is cut from the tier table and reads no coach id. §7's rule that no
-   *  screen may quote his own value is untouched, and so is §4's that the market may not quote a man. */
-  travelCorridorPct: [number, number] | null
-  /** WHICH THIRD of that corridor he landed in, or null while there is nothing honest to show. His
-   *  own pp figure is deliberately NOT on this view: it is not observable in principle (§7). */
-  placement: CoachEdgePlacement | null
-  /** is `placement` set - the plaque's own gate, so the screen never asks twice */
-  revealed: boolean
-  /** how long they have been together, in weeks */
-  weeksTogether: number
-  /** ⭐ ROUND-21 #7c: ...and THE WEEK THE VERDICT LANDS IN – an off-season, absolute, not a duration.
-   *  Was `revealAfterWeeks: 52`, a rolling bar that ignored the calendar; see `coachRevealWeek`. */
-  revealWeek: number
-  /** the same clock in whole seasons - what §8a bands the plaque's confidence on */
-  seasonsTogether: number
-  /** the plaque, written: place x confidence, one sentence */
-  plaqueLine: string
-  /** ⭐ ROUND-21 #2 – THE ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST, or '' when there is no
-   *  second figure. See `TRAVEL_EDGE_LINE` for why it names a condition instead of claiming a
-   *  doubling, and why it is composed here rather than on the card. */
-  travelLine: string
-} {
+ *  Derived at snapshot time; persists nothing, exactly like `coachMarket` and `coachBilling`.
+ *
+ *  ⚠ THE RETURN TYPE IS THE WIRE'S OWN – `Snapshot['coachEdge']` SINCE F-06 (26.09). All nine
+ *  members were declared here too, identical to the snapshot's nine and with a second set of
+ *  docstrings saying the same things in slightly different words. The notes that hung off those
+ *  members are kept below VERBATIM; the wire's own remain on `Snapshot.coachEdge`.
+ *
+ *  **`corridorPct`** –
+ *  [lo, hi] pp per match for the rung she is on - [0, 0] self-coached, which is not a corridor
+ *
+ *  **`travelCorridorPct`** –
+ *  ⭐ ROUND-21 #2, THE LAST OPEN ITEM – ...AND THE SAME BAND DOUBLED, for a family whose coach is on
+ *  the trip with her. `null` when this family would not send him (no coach, or the stance off), so
+ *  a career that leaves him at home reads exactly what it read before.
+ *
+ *  ⚠ IT IS A BRACKET AND NOT HIS FIGURE, exactly like `corridorPct` beside it - see
+ *  `coachEdgeCorridorPp`, which is cut from the tier table and reads no coach id. §7's rule that no
+ *  screen may quote his own value is untouched, and so is §4's that the market may not quote a man.
+ *
+ *  **`placement`** –
+ *  WHICH THIRD of that corridor he landed in, or null while there is nothing honest to show. His
+ *  own pp figure is deliberately NOT on this view: it is not observable in principle (§7).
+ *
+ *  **`revealed`** –
+ *  is `placement` set - the plaque's own gate, so the screen never asks twice
+ *
+ *  **`weeksTogether`** –
+ *  how long they have been together, in weeks
+ *
+ *  **`revealWeek`** –
+ *  ⭐ ROUND-21 #7c: ...and THE WEEK THE VERDICT LANDS IN – an off-season, absolute, not a duration.
+ *  Was `revealAfterWeeks: 52`, a rolling bar that ignored the calendar; see `coachRevealWeek`.
+ *
+ *  **`seasonsTogether`** –
+ *  the same clock in whole seasons - what §8a bands the plaque's confidence on
+ *
+ *  **`plaqueLine`** –
+ *  the plaque, written: place x confidence, one sentence
+ *
+ *  **`travelLine`** –
+ *  ⭐ ROUND-21 #2 – THE ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST, or '' when there is no
+ *  second figure. See `TRAVEL_EDGE_LINE` for why it names a condition instead of claiming a
+ *  doubling, and why it is composed here rather than on the card.
+ */
+export function coachEdgeView(world: WorldState): Snapshot['coachEdge'] {
   const tier = coachTierById(world.coachId)
   const since = coachSinceWeek(world)
   const weeksTogether = Math.max(0, world.week - since)

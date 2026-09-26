@@ -1555,7 +1555,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       : null,
     events: world.events,
-    lossStreak,
+    lossStreakRun: lossStreak,
     // ⚠ HER LADDER, NOT THE INTERNATIONAL ONE (31.07, fix/ladder-separation). This pair feeds exactly
     // one derivation - `rankClimbed` - and `rankClimbed` licenses three lines that say she "moved up
     // the table" plus the loss softener behind her face. It was `world.kidRank` / `world.prevKidRank`,

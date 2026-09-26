@@ -144,6 +144,9 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
   })
 
   it('the ENGINE captures it: strictly-better rank, gated off while a reveal is unfinished', () => {
+    // ⚠ RE-AIMED 26.09 (F P3-17, T3.6): the view's `lossStreak` is `lossStreakRun` now. It carried the
+    // engine's streak OBJECT while `DiaryFacts.lossStreak` carried a COUNT – one name, two meanings,
+    // bridged in `assembleDiaryFacts`. The wire field is untouched; only this fixture's key moved.
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
       seed: 's',
       week: 10,
@@ -162,7 +165,7 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       fundsCents: 100_000_00,
       injury: null,
       events: [],
-      lossStreak: null,
+      lossStreakRun: null,
       kidRank: 50,
       prevKidRank: 60,
       pendingUnfinished: false,

@@ -480,14 +480,27 @@ export interface ShopPricePoint {
   cents: number
 }
 
+/** ⭐ WHICH KIND OF THING ON THE SHELF, DECLARED ONCE (F-06, 26.09). It was spelled out here and
+ *  again on `ShopItem` (`engine/world/assets.ts`) – the catalogue rung and the row the screen reads –
+ *  and round 29 #5 and P7 each had to edit both. `assets.ts` imports it; the engine may read the
+ *  protocol and this closes no cycle.
+ *
+ *  Both declarations' notes, kept verbatim:
+ *
+ *  ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g): the COMMISSIONED families –
+ *  ordered, waited for, and kept every week – and the one thing on the shelf that is built in
+ *  stages and outlives the career. ⭐ ROUND 29 PART FOUR P7 added 'business': the rungs that
+ *  EARN every week – the merch brand, the parent's first business, income riding on fame.
+ *
+ *  ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g) – the two commissioned families
+ *  and the one thing on the shelf that is built in stages. ⭐ ROUND 29 PART FOUR P7 added
+ *  'business' – the rungs that EARN every week (the merch brand; see world/business.ts). */
+export type ShopFamily = 'investment' | 'car' | 'house' | 'business' | 'boat' | 'plane' | 'academy'
+
 /** One rung of the shelf, as the Money screen reads it. */
 export interface ShopRowView {
   id: string
-  /** ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g): the COMMISSIONED families –
-   *  ordered, waited for, and kept every week – and the one thing on the shelf that is built in
-   *  stages and outlives the career. ⭐ ROUND 29 PART FOUR P7 added 'business': the rungs that
-   *  EARN every week – the merch brand, the parent's first business, income riding on fame. */
-  family: 'investment' | 'car' | 'house' | 'business' | 'boat' | 'plane' | 'academy'
+  family: ShopFamily
   /** 'fixed' – one price. 'open' – the family names an amount, at least `entryCents`. */
   stake: 'fixed' | 'open'
   label: string

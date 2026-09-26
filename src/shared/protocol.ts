@@ -222,6 +222,7 @@ export type {
   KitState,
   KitLineView,
   KitDealView,
+  ShopFamily,
   ShopPricePoint,
   ShopPurchaseView,
   ShopRowView,

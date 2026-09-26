@@ -16,21 +16,23 @@ import {
   type LastKidTitle,
   type MemoryFace,
 } from '../../shared/avatarEmotion'
+// ⚠ FOUR TYPE IMPORTS LEFT WITH `DiaryWorldView`'s PICKED MEMBERS (F-06, 26.09): `KnockChoice`,
+// `MotherhoodBand`, `SpouseViewOccasion` and `Temperament` were named ONLY to restate members
+// `DiaryFacts` already declares, so the pick took them with it. ⭐ v72's note on the last of them,
+// verbatim, because the rule outlives the line: «who she is, type-only – the derivation and the
+// physics stay in engine/spirit.ts.» That is still how this module sees her; it now sees her through
+// the wire type instead of through a second declaration.
 import type {
   ConditionBand,
+  DiaryFacts,
   DiaryLifeStage,
   FundsPressure,
   Milestone,
   MilestoneType,
-  KnockChoice,
   LossStreak,
-  MotherhoodBand,
-  SpouseViewOccasion,
   WorldEvent,
 } from '../../shared/protocol'
 import { TIERS, tierFromLabel } from '../season/calendar'
-// ⭐ v72: who she is, type-only – the derivation and the physics stay in engine/spirit.ts.
-import type { Temperament } from '../spirit'
 
 const TIER_IDS = Object.keys(TIERS) as TierId[]
 import type { TierId } from '../season/types'
@@ -214,21 +216,79 @@ export const MEMORY_EMOTION: Record<MilestoneType, MemoryFace> = {
 
 // --- the facts ------------------------------------------------------------------------------
 
-/** The narrow slice of the world the diary is allowed to read. Assembled by toSnapshot – the
+/** ⭐⭐ THE 27 FACTS THE DIARY CARRIES STRAIGHT THROUGH ARE PICKED OFF `DiaryFacts` (F-06, 26.09) AND
+ *  NO LONGER RESTATED HERE. The two interfaces declared 28 members on both sides of the boundary,
+ *  each with its own docstring, and 13 of the 15 commits that touched this file since `98e3560b`
+ *  touched `shared/protocol/narrative.ts` as well – three edits and two docstrings per carried fact.
+ *  The compiler caught a TYPE drift in one direction only and never caught a DOC drift at all: the
+ *  two `freshBreakup` notes had already come to stress different halves of the same ruling. Every
+ *  carried member's licence note lives on `DiaryFacts` now, which is where a line's author reads it.
+ *
+ *  ⚠ EVERY CARRIED MEMBER IS REQUIRED AND MUTABLE BECAUSE `DiaryFacts` IS – the rule the notes here
+ *  used to have to state field by field is now a property of the derivation, and a `?` cannot be
+ *  forgotten onto one of them. The chronicle of that rule, verbatim from `vacationPackageId`, whose
+ *  pick took it out of this list:
+ *
+ *      «⚠ NO LONGER OPTIONAL, AND THE OLD NOTE HERE EXPLAINS EXACTLY WHY IT COULD NOT STAY SO. It
+ *      read: "`trainPct` / `knockChoice` / `knockPart` all feed COPY LICENCES, so a fixture that
+ *      forgot one would silently sweep the wrong space. This one selects a PAINTING and nothing else
+ *      - no licence in either pool reads it - so a view that omits it is a view about the words."
+ *
+ *      That reasoning was right, and it is what changed: the photo and condition pools now license
+ *      on this field, one line per package (owner, 31.07: «куда бы ни поехала ... week recap, ну
+ *      кроме картинки» - the picture was the ONLY thing it moved). So it has joined the class the
+ *      note describes, and it takes that class's rule with it: a fixture that omitted it would still
+ *      build, still pass, and quietly sweep the generic sentence instead of the six new ones.
+ *      Required. That world.ts really passes it is pinned in tests/week-scene.test.ts.»
+ *
+ *  ⚠ AND `schoolOver`'s OWN HALF OF THAT RULE STAYS ON THIS SIDE, verbatim, because it is about the
+ *  VIEW rather than about the fact: «The diary owns no calendar arithmetic, so the answer arrives
+ *  with the facts – `schoolIsOver(week, birthMonth)`.» `kidAgeAt` below is the same rule pointing the
+ *  other way, and says so in its own note.
+ *
+ *  ⚠ `lossStreak` IS THE ONE SHARED NAME THAT NEVER MEANT ONE THING, so it is RENAMED rather than
+ *  picked (F P3-17): an object here, a count on the wire. It is `lossStreakRun` below;
+ *  `DiaryFacts.lossStreak` keeps its name and its count, and `assembleDiaryFacts` still bridges the
+ *  two in the one line it always did.
+ *
+ *  The narrow slice of the world the diary is allowed to read. Assembled by toSnapshot – the
  *  structural type is what keeps this module free of a world.ts import cycle. */
-export interface DiaryWorldView {
+export interface DiaryWorldView
+  extends Pick<
+    DiaryFacts,
+    | 'week'
+    | 'ageYears'
+    | 'schoolOver'
+    | 'condition'
+    | 'temperament'
+    | 'runPointsThisWeek'
+    | 'vacationWeek'
+    | 'vacationPackageId'
+    | 'partnerKnown'
+    | 'freshBreakup'
+    | 'spouseOccasion'
+    | 'ownKeyWeek'
+    | 'motherhoodBand'
+    | 'motherhoodSupport'
+    | 'bereavedWeeksAgo'
+    | 'divorcedWeeksAgo'
+    | 'forkAftermath'
+    | 'lineageTitles'
+    | 'lineageOpen'
+    | 'lineageEndedHurt'
+    | 'trainPct'
+    | 'knockChoice'
+    | 'knockPart'
+    | 'birthdayAge'
+    | 'birthdayGift'
+    | 'birthdayWanted'
+    | 'birthdayRepeatAge'
+  > {
   seed: string
-  week: number
   /** Current age and college status are carried only to choose an honest narrative viewpoint.
-   *  Neither is persisted by the diary. */
-  ageYears: number
+   *  Neither is persisted by the diary. (`ageYears` is the other half of that sentence and is picked
+   *  off `DiaryFacts` above; this is the half that stays.) */
   inCollege: boolean
-  /** W4-SCHOOL: is she past her last school year in THIS week? The diary owns no calendar
-   *  arithmetic, so the answer arrives with the facts – `schoolIsOver(week, birthMonth)`. A view
-   *  that omits it is a view about a schoolgirl, which is why it is required rather than optional:
-   *  the exam pool's licences all read `examsWeek`, and a defaulted `false` puts revision notes in a
-   *  twenty-two-year-old's diary, which is the bug this wave is here to fix. */
-  schoolOver: boolean
   kidId: string
   /** ⭐⭐⭐ HER AGE IN ANY WEEK, THE ONE CLOCK, HANDED IN RATHER THAN RE-DERIVED (D-01, 05.09 review).
    *
@@ -251,180 +311,37 @@ export interface DiaryWorldView {
    *  milestone's week, which may be seasons back, so this is asked about arbitrary past weeks and
    *  not only about `week`. */
   kidAgeAt: (week: number) => number
-  condition: number
   /** ⭐ v72 – HER TWO NUMBERS, RAW, AND THIS IS THE LAST PLACE THEY ARE NUMBERS. `assembleDiaryFacts`
    *  bands both on the way in (`spiritBandOf` / `bondBandOf`) and `DiaryFacts` carries no figure for
    *  either: the fog law is enforced by the shape of the object the UI actually receives.
    *
-   *  ⚠ REQUIRED, NOT OPTIONAL, AND `vacationPackageId` BELOW SPELLS OUT WHY AT LENGTH: both feed COPY
+   *  ⚠ REQUIRED, NOT OPTIONAL, AND THE INTERFACE'S OWN BLOCK ABOVE SPELLS OUT WHY AT LENGTH
+   *  (`vacationPackageId`'s chronicle, which moved there with the pick): both feed COPY
    *  LICENCES now – the spirit register picks the variant, the bond band picks the channel – so a
    *  fixture that omitted one would still build, still pass, and quietly sweep the wrong space. */
   spirit: number
   bond: number
-  /** ⭐ v72 – WHO SHE IS. The licence all 44 voiced lines read; without it none is selectable and the
-   *  wave ships dead copy. Required for the same reason as the two above. */
-  temperament: Temperament
   fundsCents: number
   injury: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** the FULL retained event log (not the snapshot's trailing 60) */
   events: readonly WorldEvent[]
-  /** the engine's streak, computed once per snapshot (computeLossStreak) */
-  lossStreak: LossStreak | null
+  /** the engine's streak, computed once per snapshot (computeLossStreak). ⚠ THE OBJECT, and the
+   *  reason the name differs from `DiaryFacts.lossStreak`'s count – see F P3-17 in the block above. */
+  lossStreakRun: LossStreak | null
   kidRank: number
   prevKidRank: number | null
   /** a tournament reveal is in progress and NOT yet finalized: the week's rank recompute has not
    *  run, so `rankClimbed` must not read last week's movement as this week's. */
   pendingUnfinished: boolean
-  /** R13-2: the ranking points the kid's run AWARDED this week (sum of her result rows at
-   *  `week`). 0 on a first-round exit – see DiaryFacts.runPointsThisWeek. */
-  runPointsThisWeek: number
   milestones: readonly Milestone[]
-  /** a booked family vacation resolved this week */
-  vacationWeek: boolean
-  /** W5: ...and WHICH package. Non-null on exactly the weeks `vacationWeek` is true and the booking
-   *  is still on file (bookings are retained four trailing weeks after they resolve, so the week's
-   *  own row is always there when its story is told).
-   *
-   *  ⚠ NO LONGER OPTIONAL, AND THE OLD NOTE HERE EXPLAINS EXACTLY WHY IT COULD NOT STAY SO. It read:
-   *  "`trainPct` / `knockChoice` / `knockPart` all feed COPY LICENCES, so a fixture that forgot one
-   *  would silently sweep the wrong space. This one selects a PAINTING and nothing else - no licence
-   *  in either pool reads it - so a view that omits it is a view about the words."
-   *
-   *  That reasoning was right, and it is what changed: the photo and condition pools now license on
-   *  this field, one line per package (owner, 31.07: «куда бы ни поехала ... week recap, ну кроме
-   *  картинки» - the picture was the ONLY thing it moved). So it has joined the class the note
-   *  describes, and it takes that class's rule with it: a fixture that omitted it would still build,
-   *  still pass, and quietly sweep the generic sentence instead of the six new ones. Required.
-   *  That world.ts really passes it is pinned in tests/week-scene.test.ts. */
-  vacationPackageId: string | null
   /** ⭐ ROUND-21 #2: did the coach travel with her? `coachTravelsWithHer(world)` – the ONE predicate
    *  the tournament flow and the live commentary also read, so the three surfaces cannot disagree
    *  about the same trip.
    *
-   *  Required rather than optional, for the reason `vacationPackageId` above spells out at length: it
+   *  Required rather than optional, for the reason the interface's own block above spells out at
+   *  length (`vacationPackageId`'s chronicle): it
    *  selects COPY, and a view that forgot it would build, pass, and quietly say he stayed home. */
   coachTravelled: boolean
-  /** ⭐⭐ v74 (the private life, wave 3 – T6) – DOES THE PARENT KNOW THERE IS SOMEONE? The ONE
-   *  predicate, `knownPartner(world, week) !== null`, asked at snapshot time and carried – exactly
-   *  the shape `coachTravelled` above records, and for the same reason: the beat, the feed row and
-   *  the diary must not be able to disagree about the same attachment.
-   *
-   *  Required rather than optional, for the reason `vacationPackageId` spells out at length: it
-   *  selects COPY, and a view that forgot it would build, pass, and quietly say nobody is there. */
-  partnerKnown: boolean
-  /** ⭐⭐ v75 (the private life, wave 4 – T6) – IS THE MARK OF AN ENDING STILL ON HER? The ONE
-   *  predicate, `world.spiritShock !== null && kind === 'breakup'`, asked at snapshot time and carried
-   *  – exactly the shape `partnerKnown` above and `coachTravelled` before it record, and for the same
-   *  reason: the week note and the engine's own recovery arithmetic must not be able to disagree about
-   *  whether she is still carrying it.
-   *
-   *  Required rather than optional, for the reason `vacationPackageId` spells out at length: it selects
-   *  COPY, and a view that forgot it would build, pass, and quietly sweep the ordinary week instead.
-   *
-   *  ⚠ IT IS NOT `partnerKnown` INVERTED. That fact is about DISCLOSURE and goes false the instant an
-   *  episode ends; this one is about HER, and is true for weeks on end after an ending the parent may
-   *  never have heard of. See the field's note in `shared/protocol/narrative.ts`. */
-  freshBreakup: boolean
-  /** ⭐ v83 (the wedding, wave 7 – T5) – THE OCCASION THE SPOUSE RAISED THIS WEEK, or null. The ONE
-   *  derivation is `spouseViewOccasionThisWeek(world)` (world/lifeBeat.ts §12), asked at snapshot
-   *  time and carried – `partnerKnown`'s own shape, and REQUIRED for its reason: it selects COPY
-   *  (the week note's `spouseSpoke` band), and a view that forgot it would build, pass, and quietly
-   *  say nothing was said at home. See the field's full licence note in
-   *  `shared/protocol/narrative.ts` (`DiaryFacts.spouseOccasion`). */
-  spouseOccasion: SpouseViewOccasion | null
-  /** ⭐ v83 (wave 7 – T10) – THIS IS THE WEEK SHE GOT HER OWN PLACE. The ONE derivation is
-   *  `ownKeyThisWeek(world)` (world/lifeBeat.ts §13), asked at snapshot time and carried, and
-   *  REQUIRED for the field above's reason: it selects COPY (the week note's `ownKey` line). See
-   *  `shared/protocol/narrative.ts` (`DiaryFacts.ownKeyWeek`) for the licence. */
-  ownKeyWeek: boolean
-  /** ⭐⭐⭐ wave 8b T2 (C6) – WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS, or null. The ONE derivation
-   *  is `motherhoodBandAt(world)` (`world/lifeBeat.ts` §14), asked at snapshot time and carried –
-   *  `spouseOccasion`'s own shape, and REQUIRED for its reason: it selects COPY (the week note's
-   *  motherhood band), and a view that forgot it would build, pass, and quietly sweep the ordinary
-   *  week through the biggest stretch of her life. See `shared/protocol/narrative.ts`
-   *  (`MotherhoodBand`) for the seven words and for what a line resting on one may say. */
-  motherhoodBand: MotherhoodBand | null
-  /** ⭐⭐ wave 8b T2 (C6) – THE GRADE HE ANSWERED THE ANNOUNCEMENT WITH, or null. Read straight off
-   *  `world.pregnancy.support`; null before he answers and on every week after the record clears.
-   *  Required for the field above's reason – exactly one line of the band licenses on it. */
-  motherhoodSupport: 'warm' | 'measured' | 'cold' | null
-  /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – **HOW MANY WEEKS SINCE THE MOST RECENT DEATH IN THE
-   *  FAMILY**, or `null` for a career that has met none. Derived at snapshot time off
-   *  `world.bereavementWeeks` and persisted nowhere new.
-   *
-   *  ⚠⚠ WEEKS-SINCE AND NOT A BAND, WHICH IS THE OPPOSITE CALL FROM `motherhoodBand` ONE FIELD UP
-   *  AND IS DELIBERATE. A band is right where the arc has NAMED STAGES the copy is written per stage
-   *  (announced, early, mid, last, birth…). Grief has no stages this game models – §5 refuses a
-   *  taper and a recovering flag in as many words – so the only honest fact is how long ago, and the
-   *  LICENCE below decides which window a line may speak in. A band here would have been a curve
-   *  wearing a vocabulary.
-   *  ⚠ `null` IS EVERY CAREER IN THE GAME TODAY and is a real state: nobody has died. */
-  bereavedWeeksAgo: number | null
-  /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW MANY WEEKS SINCE HER MARRIAGE ENDED**, or `null`
-   *  for a career that has not had one end. Derived at snapshot time off the `loveEpisodes` rows
-   *  themselves (`latchedWeek !== null && endedWeek !== null`) and persisted nowhere new – the wave
-   *  adds no schema at all, so unlike `bereavedWeeksAgo` one field up there is no list to read.
-   *
-   *  ⚠ WEEKS-SINCE AND NOT A BAND, `bereavedWeeksAgo`'s own call and its own argument: a divorce has
-   *  no stages this game models, so the only honest fact is how long ago and the LICENCE decides
-   *  which window a line may speak in. ⚠ `null` IS EVERY CAREER THAT NEVER MARRIED and every one
-   *  whose marriage is still standing, which are two different true things said by one absence –
-   *  and no line in the diary may distinguish them, because neither is «a divorce». */
-  divorcedWeeksAgo: number | null
-  /** ⭐⭐⭐ v88 (wave 12 – T4.2) – **DID THE PARENT DO WHAT SHE ASKED AT THE FORK**, on the week it
-   *  resolved: `'with'`, `'against'`, or `null` on every other week.
-   *
-   *  ⚠⚠ THIS IS THE ONE FACT IN THIS LIST THAT EXISTS SO A SILENT CONSEQUENCE CAN BE SEEN. The
-   *  congruence delta lands at `answerFork` (`ECONOMY.bond.delta.forkWithHerWant` +3 /
-   *  `forkAgainstHerWant` −4) and nothing on any screen says it happened, so a parent who overrode
-   *  her never learns that the game remembered. The spec's §7 is the architect's proposal on his
-   *  «предложи что-то»; the scrap is ONE line on ONE week and the against-arm states the fact in her
-   *  voice WITHOUT A VERDICT.
-   *
-   *  ⚠ `null` ON A PRE-v73 CAREER IS THE ABSENCE DISCIPLINE AND NOT A GAP: she was never asked, so
-   *  there is no want on record to have gone with or against, and a default would be the diary
-   *  inventing an opinion she never stated. ⚠ AND `null` ON EVERY OTHER WEEK is what keeps this a
-   *  single-week scrap rather than a mood that hangs around – see the licence in `weekNotes.ts`. */
-  forkAftermath: 'with' | 'against' | null
-  /** ⭐⭐⭐ v86 (wave 10 T6b) – HER MOTHER'S CABINET, or null on every career that continues no line.
-   *  Read straight off `world.dynasty.motherCareer.titles`; `null` and `0` are DIFFERENT and the
-   *  difference is the whole licence: null is «there is no mother to be in this house», 0 is «she is
-   *  here and she won nothing», and a line about a cabinet may fire on neither.
-   *
-   *  ⚠ REQUIRED, for `motherhoodBand`'s own reason: it selects COPY, and a view that forgot it would
-   *  build, pass, and quietly sweep a whole generation out of the diary. */
-  lineageTitles: number | null
-  /** ⭐⭐ v86 (wave 10 T6b) – IS HER MOTHER AN OPEN WOMAN? §7's axis, read off the record's stored
-   *  temperament through `temperamentOpenness` – the ONE projection of it (engine/spirit.ts), never a
-   *  second spelling. Null exactly when `lineageTitles` is.
-   *
-   *  ⚠ IT PRICES WHERE SHE IS FELT AND NOT WHETHER. An open mother is QUOTED – she says things, in
-   *  front of people; a private one is FELT – the parent notices what she did, not what she said.
-   *  Same presence, two registers, which is the axis doing exactly what §7 chose it for. */
-  lineageOpen: boolean | null
-  /** ⭐⭐ v86 (wave 10 T6b) – DID HER MOTHER'S CAREER END ON HER BODY? Read off the record's
-   *  `endingKind`, and it is the ONE fact the scar lines lean on: «a friction from her own career's
-   *  scars» may only be said where a scar is recorded. Null exactly when `lineageTitles` is.
-   *
-   *  ⚠ IT IS A FACT AND NOT A JUDGEMENT. The ending id says the career stopped on an injury; nothing
-   *  here says which part, how bad, or how she feels about it, and no line may. */
-  lineageEndedHurt: boolean | null
-  /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
-  trainPct: number
-  /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training
-   *  court, `'push'` on the weeks she is training through it. Assembled by toSnapshot off
-   *  `world.knock`, which is the persisted record of what the player answered. */
-  knockChoice: KnockChoice | null
-  /** W4: where it is, on exactly the weeks `knockChoice` is non-null. */
-  knockPart: string | null
-  /** the age she turns this week, or null - world.ts derives it from her birth month */
-  birthdayAge: number | null
-  /** ⭐ v48: what he gave her, as a noun ("the headphones"), or null until he has answered. */
-  birthdayGift: string | null
-  /** ⭐ v48: whether it answered what she had been asking for. */
-  birthdayWanted: boolean
-  /** ⭐ v48: the age she was the last time she was given this exact thing, or null the first time. */
-  birthdayRepeatAge: number | null
 }
 
 /** One derived answer for every diary surface that needs to know how close the parent is to the
