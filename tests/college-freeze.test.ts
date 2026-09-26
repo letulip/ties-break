@@ -185,20 +185,32 @@ function spendTheYears(world: WorldState, rng: Rng): void {
   // ⚠ ROUND 26 #6 re-aim: a year now holds THREE stops at the outside – the championship, her
   // birthday, and the year's end – so the ceiling goes from 3 presses a year to 4. Nothing measured
   // below moved; the walk simply answers one more question, the way a player does.
-  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), BUDGET AND ONE ANSWER – NO ASSERTION BELOW MOVED. Ruling 2(a)
+  // made a blocking life beat pause the college year the way the birthday does (MEASURED before the
+  // ruling: 23 of 217 year-calls ticked past an unanswered blocking row), so a year can now raise one
+  // more question and a walk that did not answer it stalled: `drainLifeBeats` is the player's own
+  // answer, priced ZERO, and the ceiling moves by one press a year. This is the same re-aim the
+  // round-26 collect made when the championship became a pause – «a walk answering one pause but not
+  // the other stalls on the first league week».
+  for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
 }
 
-/** Press until ONE more year is banked – the boundary every card is read at. */
+/** Press until ONE more year is banked – the boundary every card is read at.
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) for the reason written at `spendTheYears` above: the budget is a
+ *  GUARD and the loop still terminates on the year being banked, so this is «press until it is
+ *  banked» with one more press of margin, plus her card answered. */
 function spendOneYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
-  for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
 }
 

@@ -69,6 +69,7 @@ import {
   decideKnock,
   pendingBirthday,
   pendingKnock,
+  pendingLifeBeat,
   resumeFromCollege,
   revealTournamentRound,
   tickWeek,
@@ -177,13 +178,20 @@ export const OLD_BIKE_ASK = 'She has counted the minutes she spends walking betw
 export function collegeBirthdays(seed: string, walletCents: number, kidCents: number) {
   const { world, rng } = openedAtCollege(seed, 6, 15)
   const prompts: Array<{ age: number; ask: string; ids: string[]; labels: string[] }> = []
-  for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+  for (let guard = 0; guard < 30 && world.ending?.type === 'college'; guard++) {
     resumeFromCollege(world, rng)
     // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
     // only for the cake. Another branch of the SAME round taught it to pause for the championship
     // too, and a walk answering one pause but not the other stalls on the first league week - it
     // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
     answerCollegeReveal(world)
+    // ⚠⚠ AND THE SAME THING HAPPENED A SECOND TIME, 26.09 (B-01 / T2.3) – THE SENTENCE ABOVE IS THE
+    // WHOLE DIAGNOSIS, with a blocking life beat in the championship's place. Ruling 2(a) makes her
+    // card pause the year, so a walk that answered the reveal and the cake but not the card stalled
+    // on the first beat and read ONE college birthday where four happen. `drainLifeBeats` answers it
+    // with the option priced ZERO, so no wallet, bond or gift number below moves; the guard gains
+    // six presses for the beats a four-year course can now raise.
+    if (pendingLifeBeat(world) !== null) drainLifeBeats(world)
     if (pendingBirthday(world) === null) continue
     // ⚠ SET ON THE BIRTHDAY WEEK ITSELF, both purses, because the claim is about what the
     // household has ON THE DAY and four college years of base costs move it.

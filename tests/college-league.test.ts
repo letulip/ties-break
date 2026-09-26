@@ -25,7 +25,7 @@
 //   THE PRICE    it awards nothing. She is an amateur while she is there; a student fixture paying
 //                ranking points would make four years of college a ranking route and the fork would
 //                stop being a real choice.
-import { answerBirthdayNeutral } from './helpers/career'
+import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -37,6 +37,7 @@ import {
   createWorld,
   answerFork,
   pendingBirthday,
+  pendingLifeBeat,
   resumeFromCollege,
   collegeLeagueMatchId,
   collegeLeagueMatchesOf,
@@ -126,20 +127,30 @@ function answerCollegeReveal(world: WorldState): void {
 function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   const { world, rng } = atTheFork(seed)
   answerCollegeAndDepart(world, rng, tier)
-  for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), BUDGET AND ONE ANSWER – NO ASSERTION BELOW MOVED. Ruling 2(a)
+  // made a blocking life beat pause the college year the way the birthday does (MEASURED before the
+  // ruling: 23 of 217 year-calls ticked past an unanswered blocking row), so a year can now raise one
+  // more question and a walk that did not answer it stalled: `drainLifeBeats` is the player's own
+  // answer, priced ZERO, and the ceiling moves by one press a year. This is the same re-aim the
+  // round-26 collect made when the championship became a pause – «a walk answering one pause but not
+  // the other stalls on the first league week».
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
   return world
 }
 
-/** Press until exactly `years` are banked – the boundary the college card is read at. */
+/** Press until exactly `years` are banked – the boundary the college card is read at.
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) for the reason written at `walkFourYears` above. */
 function spendYears(world: WorldState, rng: Rng, years: number): void {
-  for (let press = 0; press < 5 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 6 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
 }
 
@@ -530,11 +541,35 @@ describe('⭐⭐⭐ ROUND 27 #2 – «will the next press end at the championshi
 
       let saidYes = 0
       let played = 0
-      for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      let heldByHer = 0
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – A FOURTH MID-YEAR STOP ARRIVED, AND IT IS THE ONLY ONE THE
+      // SCAN CANNOT SEE COMING. `collegeNextStop` reads WEEKS: the championship is arithmetic, the tie
+      // is a per-week roll it can ask about, the birthday is a date. A blocking life beat is rolled
+      // DURING the year, so there is nothing to scan – ruling 2(a) therefore lets a press stop on her
+      // card in front of a fixture the view has already named.
+      //
+      // ⚠ THE IFF IS KEPT AND THE EXCEPTION IS NAMED RATHER THAN TOLERATED: on a press her card took
+      // and the fixture did NOT open, the case asserts the promise is DEFERRED AND NOT LOST – her card
+      // is really standing, and once answered the view names the same fixture again for the next
+      // press. On every other press, including one that is both, the original both-directions claim
+      // runs unchanged. Whether the LABEL should read differently on such a press is a wording
+      // question and therefore the owner's (CLAUDE.md invariant 4).
+      for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
         // The engine's answer, read the way the screen reads it: off the view, before the press.
         const promised = toSnapshot(world).ending?.college?.leagueIsNextStop ?? false
-        resumeFromCollege(world, rng)
+        const stops = resumeFromCollege(world, rng)
         const opened = collegeLeagueRevealOpen(world)
+
+        if (stops.includes('life') && !opened) {
+          heldByHer++
+          expect(pendingLifeBeat(world), `press ${press}: 'life' was reported with no card standing`).not.toBeNull()
+          drainLifeBeats(world)
+          expect(
+            toSnapshot(world).ending?.college?.leagueIsNextStop ?? false,
+            `press ${press}: her card deferred the promise, it did not cancel it`,
+          ).toBe(promised)
+          continue
+        }
 
         // ⭐⭐⭐ THE CLAIM, both directions. A predicate that only ever said `false` would satisfy
         // "never promises what it does not deliver" and nothing else; a predicate that said `true`
@@ -547,6 +582,7 @@ describe('⭐⭐⭐ ROUND 27 #2 – «will the next press end at the championshi
 
         answerCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
 
       // Not vacuous: four years, four championships, and the predicate fired on four presses.

@@ -294,10 +294,14 @@ describe('a v57 save already inside the freeze', () => {
     const rng = resumeMain(world.rngMain)
     const yearsBefore = world.college!.years.length
     const from = world.week
-    for (let press = 0; press < 4 && world.college!.years.length === yearsBefore; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): her card pauses the year since ruling 2(a), so the walk
+    // answers it (`drainLifeBeats`, priced zero) and the guard gains a press. The loop still ends on
+    // the year being banked, and the two assertions below are untouched.
+    for (let press = 0; press < 6 && world.college!.years.length === yearsBefore; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(world.college!.years.length, 'one more year banked').toBe(yearsBefore + 1)
     expect(world.week, 'exactly fifty-two weeks later').toBe(from + WEEKS_PER_YEAR)
@@ -364,11 +368,19 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
       expect(world.college?.fromWeek).toBe(departs)
 
       const birthdaysBefore = world.birthdays.length
-      for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND THE bm=6 ARM IS WORTH RECORDING, because it looked like a
+      // defect in the pause before it was measured. That career's REST STATE at the departure week
+      // (294) already held an unanswered `met` raised at week 247 – in the pre-college gap, not inside
+      // a year – so with ruling 2(a) every one of the sixteen presses was refused with `["life"]` and
+      // ZERO years banked. The card was real, hers, and on screen; what this walk lacked was the
+      // answer. `drainLifeBeats` is that answer, priced zero, and the budget gains a press a year for
+      // the beat a year can now raise. No assertion below moved.
+      for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
         world.fundsCents = Math.max(world.fundsCents, 500_000_00)
         resumeFromCollege(world, rng)
         answerCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
 
       // G1's floor: every full year holds its championship – enrolment at offset 34 puts the League
