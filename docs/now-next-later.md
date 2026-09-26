@@ -166,6 +166,14 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
 - **Round 8 #1, the in-tournament player card** – untouched since 25.07 and the oldest open item in
   the folder. ([rounds/README.md](rounds/README.md), the round-8 row.)
 
+- **`TIER_LADDER.indexOf` is spelled in 33 files** (F P3-08 of the 26.09 principles review) – one
+  `tierRung(tier)` and 33 repointings. It is queued rather than ridden along on purpose, and the
+  reason is the interesting part: W3's builder edited **1 of the 33** and declined the row, because
+  converting two sites adds a THIRD spelling instead of removing one, and a 33-file sweep across
+  three live builders' surfaces is not a ride-along. So it is all-or-nothing work, it needs a wave
+  with no neighbours in those files, and nothing has to be decided first.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F P3-08.)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
