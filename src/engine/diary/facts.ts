@@ -6,7 +6,16 @@
 // week notes, memory - reads these and not the other way round.
 //
 // ⚠ RNG: nothing here draws. These are pure reads over the events ledger and two numeric bands.
-import { resultShowsOnHerFace, type LastKidResult, type LastKidTitle, type MemoryFace } from '../../shared/avatarEmotion'
+// ⚠ `CONDITION_TIRED_BELOW` / `CONDITION_SERIOUS_BELOW` come from here and are NOT restated below
+// (F-11, 26.09): `conditionBandOf`'s lower two rungs are the idle-emotion ladder's own two.
+import {
+  CONDITION_SERIOUS_BELOW,
+  CONDITION_TIRED_BELOW,
+  resultShowsOnHerFace,
+  type LastKidResult,
+  type LastKidTitle,
+  type MemoryFace,
+} from '../../shared/avatarEmotion'
 import type {
   ConditionBand,
   DiaryLifeStage,
@@ -430,13 +439,21 @@ export function diaryLifeStageFor(
   return ageYears >= 22 ? 'independent' : 'after-school'
 }
 
-/** Condition, as the word Home speaks (D3). The 80/60/40 rungs mirror the idle-emotion ladder
- *  (tired < 40, serious < 60) plus the "genuinely fresh" line the honesty pin holds tired-copy
- *  against: no tired phrase at 80+. */
+/** Condition, as the word Home speaks (D3). The lower two rungs ARE the idle-emotion ladder – they
+ *  read its own `CONDITION_TIRED_BELOW` / `CONDITION_SERIOUS_BELOW` – plus the "genuinely fresh" line
+ *  the honesty pin holds tired-copy against: no tired phrase at 80+, which is this function's own rung
+ *  and stays a literal here.
+ *
+ *  ⚠ IT ASKS RATHER THAN MIRRORS SINCE 26.09 (F-11). This note used to say «the 80/60/40 rungs MIRROR
+ *  the idle-emotion ladder (tired < 40, serious < 60)» while spelling 40 and 60 itself, and no test
+ *  tied the two together – the face ladder was pinned against `conditionDeviation` and this third
+ *  copy against nothing, so a retune of the face would have landed on two rungs of three and the
+ *  word and the face would have described different weeks. The numbers did not change; only their
+ *  source did. `>=` here is the exact complement of the owner's strict `<`. */
 export function conditionBandOf(condition: number): ConditionBand {
   if (condition >= 80) return 'fresh'
-  if (condition >= 60) return 'ok'
-  if (condition >= 40) return 'worn'
+  if (condition >= CONDITION_SERIOUS_BELOW) return 'ok'
+  if (condition >= CONDITION_TIRED_BELOW) return 'worn'
   return 'drained'
 }
 

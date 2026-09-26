@@ -498,16 +498,41 @@ export interface AvatarEmotionInput {
 // Comparing the raw distances would be arithmetic dressed as a rule. Each side is asked how far from
 // its own neutral it is – 0, 1 or 2 – and the larger answer speaks.
 
+/** ⭐⭐ THE BODY LADDER'S TWO RUNGS – THE ONE PLACE 40 AND 60 ARE WRITTEN DOWN (F-11, 26.09).
+ *
+ *  Three functions decide something off these two numbers: `conditionDeviation` (how far the body is
+ *  from `norm`, in rungs), `idleRead` (which face a quiet week wears) and `conditionBandOf`
+ *  (`engine/diary/facts.ts` – the word Home speaks). Until today all three spelled the numbers
+ *  themselves, and the diary's copy said so in its own note – «the 80/60/40 rungs mirror the
+ *  idle-emotion ladder» – with no test tying it to anything. The hazard is the one `conditionDeviation`
+ *  already describes below: **the day they disagree the face and the word start describing different
+ *  weeks.** Two of the three were pinned against each other; the third was not.
+ *
+ *  ⚠ THEY ARE EXPORTED SO THE READERS CAN ASK RATHER THAN RESTATE – engine-ui-parity §1's form A.
+ *  `engine/diary/facts.ts` imports them (engine → shared is allowed, and that file already takes this
+ *  module's `resultShowsOnHerFace`), so there is no second implementation left to drift and the
+ *  sharing is a property of the CODE rather than of a test that watches it. `< 40` and `< 60` are
+ *  STRICT and the diary's `>=` arms are their exact complements, which is why one pair of constants
+ *  serves both spellings. The «genuinely fresh» 80 stays the diary's own, with its own stated reason
+ *  (no tired phrase at 80+) – it is not a rung of this ladder.
+ *
+ *  ⚠ NO NUMBER MOVES HERE AND NO WORD ON SCREEN MOVES: 40 and 60 are the shipped values, and only
+ *  their SOURCE moved. Guarded by tests/principles-f11-condition-ladder.test.ts. */
+export const CONDITION_TIRED_BELOW = 40
+export const CONDITION_SERIOUS_BELOW = 60
+
 /** How far from `norm` the BODY ladder is this week, in rungs. ⚠ IT READS `idleEmotion`'s OWN
  *  THRESHOLDS and must keep reading them: the two are one ladder counted two ways, and the day they
  *  disagree the face and the word start describing different weeks. Pinned in tests/spirit.test.ts.
+ *  ⚠ SINCE 26.09 BOTH READ THE CONSTANTS ABOVE (F-11), so «must keep reading them» is no longer a
+ *  discipline anybody has to keep – there is one spelling and a third reader in the diary.
  *
  *  ⚠ DOWNWARD ONLY, because the ladder is: there is no face for «unusually fresh», so `norm` is both
  *  the neutral rung and the top one. The mood ladder deviates BOTH ways, and that asymmetry is what
  *  lets a `Glowing` week put a smile on a girl who won nothing – the layer, in one sentence. */
 export function conditionDeviation(condition: number): number {
-  if (condition < 40) return 2
-  if (condition < 60) return 1
+  if (condition < CONDITION_TIRED_BELOW) return 2
+  if (condition < CONDITION_SERIOUS_BELOW) return 1
   return 0
 }
 
@@ -579,8 +604,8 @@ export function idleRead(
   const mood = spiritBand ? MOOD_DEVIATION[spiritBand] : 0
   // ⚠ STRICTLY GREATER: a tie leaves the shipped face and the shipped word exactly where they are.
   if (spiritBand && mood > body) return { emotion: MOOD_FACE[spiritBand], channel: 'mood' }
-  if (condition < 40) return { emotion: 'tired', channel: 'body' }
-  if (condition < 60) return { emotion: 'serious', channel: 'body' }
+  if (condition < CONDITION_TIRED_BELOW) return { emotion: 'tired', channel: 'body' }
+  if (condition < CONDITION_SERIOUS_BELOW) return { emotion: 'serious', channel: 'body' }
   return { emotion: 'norm', channel: 'body' }
 }
 
