@@ -6,7 +6,7 @@ import { resumeMain } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE, REPLY_BY_COMMAND, type ToWorker, type WorkerErrorCode } from '../src/shared/protocol'
 import { workerHarness, type WorkerMsg } from './helpers/workerHarness'
-import { scriptCodeOf } from './helpers/source'
+import { region, scriptCodeOf } from './helpers/source'
 
 // =================================================================================================
 // R2-05 (TB-06 / PR-07) — THE WORKER'S HALF OF THE REQUEST/REPLY CORRELATION.
@@ -296,6 +296,37 @@ describe('the four behaviours this typing wave promised not to disturb', () => {
     // The negative half: no lookup table, no computed handler, nothing indexed by the message type.
     expect(code, 'no dynamic dispatch on the message type').not.toMatch(/\[\s*msg\.type\s*\]/)
     expect(code, 'no handler registry').not.toMatch(/Record<\s*ToWorker\['type'\]/)
+  })
+
+  // ⭐ D-P2 (principles review, 26.09) – THE PROSE CLASSIFICATION TABLE IS PINNED AGAINST THE TABLE
+  // THE COMPILER KNOWS. `sim.worker.ts` carries a comment table of every message with its class,
+  // world effect, storage effect and revision effect – TB-02 asked for it recorded – and it had
+  // silently fallen 11 rows behind the switch (`setWeightEnabled`, the four college/fork/retirement
+  // answers, `answerShootClash`, `chooseGift`, `answerLifeBeat`, `buyAsset`, `sellAsset`, `album`).
+  // That is CLAUDE.md's own lesson about a number written in prose: nothing read it, so nothing
+  // objected. It is read now, and against `REPLY_BY_COMMAND` rather than against a count.
+  //
+  // ⚠ THE RAW SOURCE, NOT `code`: the table lives in a comment, which is exactly what `scriptCodeOf`
+  // strips. `region` throws on an absent marker, so a renamed heading fails loudly instead of
+  // widening the slice to the rest of the file.
+  it('⭐ D-P2 – the message-classification table names every command, and only commands', () => {
+    const table = region(worker, '//   message            class', '// WHY QUERIES RIDE THE SAME QUEUE')
+    const listed = table
+      .split('\n')
+      .map((line) => /^\/\/ {3}(\S+)\s+(?:lifecycle|mutation|persistence|query)\b/.exec(line))
+      .filter((m): m is RegExpExecArray => m !== null)
+      // `save/saveNamed` shares one row: two commands, one line, because they differ in nothing the
+      // table has a column for.
+      .flatMap((m) => m[1].split('/'))
+    const commands = Object.keys(REPLY_BY_COMMAND) as ToWorker['type'][]
+    expect(
+      commands.filter((c) => !listed.includes(c)),
+      'every command the protocol table declares has a row here',
+    ).toEqual([])
+    expect(
+      listed.filter((name) => !commands.includes(name as ToWorker['type'])),
+      'and no row names a message that does not exist',
+    ).toEqual([])
   })
 
   it('the export reply transfers its buffer – a save is never structured-cloned', async () => {

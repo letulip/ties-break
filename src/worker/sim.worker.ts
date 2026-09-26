@@ -242,10 +242,23 @@ async function mutate(
   const rng = resumeMain(candidate.rngMain)
   const stopReasons = command(candidate, rng) ?? undefined
 
+  // ⭐⭐ B-02 (principles review, 26.09) – AND THE SNAPSHOT IS BUILT BEFORE ANYTHING IS COMMITTED,
+  // which is E-02's ordering rule finally reaching the everyday path. `new`, `restoreSlot` and
+  // `importSave` have built it first since E-02 ("the ordering is the property, and a lifecycle path
+  // that commits before it can render is the defect regardless of which of the three found it
+  // first"); all 41 `return mutate(` commands still ran `commitAutosave` → `world = candidate` →
+  // `snapshotMsg`, and `snapshotMsg` builds `toSnapshot` at reply time. So any engine bug that makes
+  // the snapshot throw turned a refused command into a career persisted in a state that cannot
+  // render – and that class has already bricked a save once (round 42 #15: `smallTalkOpener` threw
+  // inside the snapshot the whole app renders from, `world/lifeBeat.ts`).
+  // ⚠ IT COSTS NOTHING: every command built this snapshot anyway, one line later. `revision` is
+  // still read off `committedRevision` at reply time, inside `snapshotMsg`, so the reply reports the
+  // number this commit allocated and not the one it was based on.
+  const snapshot = toSnapshot(candidate, stopReasons)
   await commitAutosave(candidate, committedRevision + 1)
   world = candidate
   committedRevision += 1
-  return snapshotMsg(id, candidate, { stopReasons })
+  return snapshotMsg(id, candidate, { stopReasons, snapshot })
 }
 
 /** THE SPAN OF THE TWO COMMANDS THAT MOVE TIME (E-06, 05.09 engine review).
@@ -891,9 +904,19 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   setPsychologistFocus mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setWeightEnabled   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerFork         mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerRetirement   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   resumeFromCollege  mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   endCollegeEarly    mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPlan            mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerShootClash   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   decideKnock        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   chooseGift         mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerLifeBeat     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   buyAsset           mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   sellAsset          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   signOffer          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   refuseOffer        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPhysio          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
@@ -906,6 +929,7 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   importSave         lifecycle    replaces  autosave+meta (adopt)      allocates disk+1
 //   peekSave           query        none      none                       unchanged
 //   getSnapshot        query        reads     none                       unchanged
+//   album              query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged
 //   listCareers        query        none      reads                      unchanged
 //   exportSave         query        reads     none                       unchanged
