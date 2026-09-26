@@ -19,11 +19,8 @@
 import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
 import {
-  closeTournament,
-  collegeLeagueRevealOpen,
   pendingBirthday,
   resumeFromCollege,
-  skipTournament,
   toSnapshot,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
@@ -34,6 +31,7 @@ import type { Rng } from '../src/engine/rng'
 import type { WorldState } from '../src/engine/world'
 import type { WorldEvent } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+import { drainReveals } from './_reveals'
 
 const args = process.argv.slice(2)
 const numOf = (n: string, d: number): number => {
@@ -206,10 +204,16 @@ function walkToFork(preset: (typeof PRESETS)[number], i: number): { world: World
  *  all twelve presses of every career at the SAME week (324), reported the freeze span as 208 weeks
  *  because it reads `untilWeek - fromWeek`, and divided real rows by imaginary weeks. The player
  *  answers it with «Skip all rounds» then «Continue»; these are those two commands. */
+/** ⚠⚠ WIDENED 26.09 TO EVERY COLLEGE REVEAL, AND IT IS A ROUND-26/27 GAP THAT B-01's REPAIR EXPOSED
+ *  rather than anything ruling 2(a) caused. It answered the CHAMPIONSHIP alone – true when that was
+ *  the only college fixture pausing the year (round 26 #6) – and round 27 #6 then made the Nations Cup
+ *  tie pause it the same way. A walk blind to the tie presses against a year it cannot spend, and that
+ *  was invisible while the walk stalled on her card weeks earlier. `tools/_reveals.ts`'s shared
+ *  `drainReveals` answers whichever is standing, «Skip all rounds» then «Continue» – the player's own
+ *  two presses, and the one spelling of them. The measured cost of the blindness is in the wave
+ *  report's before/after pair for this bench. */
 function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
+  drainReveals(world)
 }
 
 /** One career, four years, exactly as the Home shell's «Another year» spends them. */
@@ -233,8 +237,21 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }): Freeze
     for (const e of world.events) if (e.id > cursor) written.push(e)
     if (world.events.length) cursor = Math.max(cursor, ...world.events.map((e) => e.id))
   }
-  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+  // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+  // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+  // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+  // first beat of a degree stopped the years banking and the budget ran out against a career still
+  // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+  // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+  // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+  // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+  // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+  // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+  // along.
+  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    drainLifeBeats(world)
     collect()
     // ⭐⭐ THE REST STATE – THIS IS THE SCREEN HE IS LOOKING AT. Between two presses of «Another
     // year» the college Home shell is drawn off exactly this snapshot window, so the honest measure

@@ -179,9 +179,23 @@ function runCollegeCareer(presetIndex: number, seedIndex: number, weeks: number)
   // college, 0 years», which is a NULL ARM and not a null result. The reveal pair is answered the
   // way `tests/round23-kid-life.test.ts` answers it – the player's own two presses.
   for (let y = 0; y < 4 && world.ending?.type === 'college'; y++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+    // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+    // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+    // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+    // first beat of a degree stopped the years banking and the budget ran out against a career still
+    // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+    // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+    // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+    // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+    // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+    // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+    // along. ⚠ The 12-press-a-year cap is
+    // left alone: it was already headroom, and the beat adds at most one press.
     for (let press = 0; press < 12 && world.college.years.length === y && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
       if (collegeLeagueRevealOpen(world) || callUpRevealOpen(world)) {
         skipTournament(world)
         closeTournament(world)

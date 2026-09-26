@@ -216,6 +216,19 @@ function walkCollege(preset: (typeof PRESETS)[number], i: number, out: BirthdayR
     }
     if (answerIfBirthday(world, career, out, (ids) => ids[0])) continue
     resumeFromCollege(world, rng)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+    // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+    // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+    // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+    // first beat of a degree stopped the years banking and the budget ran out against a career still
+    // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+    // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+    // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+    // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+    // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+    // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+    // along.
+    drainLifeBeats(world)
   }
   return true
 }
