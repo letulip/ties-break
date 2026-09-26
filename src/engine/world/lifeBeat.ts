@@ -2663,36 +2663,38 @@ function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: Hear
 // and what the parent holds is a reaction. The pool is `ENDED_HER_LINE`'s shape one register
 // smaller: one cell per voice (no register axis – the announcement is one scene, and unlike an
 // ending it carries no told-now/told-late split, because `rollWedding` raises it the week she
-// decides and there is nothing to hear about late), in both presences, plus the dry card for a
-// `strained`/`cold` home and one heading.
+// decides and there is nothing to hear about late), plus the dry card for a `strained`/`cold` home
+// and one heading.
 //
-// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule): what presence
-// changes is the FRAME the parent is standing in, never the sentence she says inside the quotation
-// marks. ⚠ NO NAME AND NO GENDER in any line – the name is WRITTEN at this beat (T3's
-// `partnerNameFor`) but which surfaces SPEAK it is a later task's question, and a pool that jumped
-// ahead of that ruling would be taking a wording decision that is his.
+// ⚠⚠ RE-AIMED 26.09 (the owner's ruling 19 on B-08): «in both presences» above WAS TRUE OF THE POOL
+// AND FALSE OF THE GAME, and the four roof cells have gone. `weddingEligible` refuses below
+// `ECONOMY.wedding.ageGate` (23) and no career can be under a roof at 23 – school is over by 18.92
+// for every girl the game can generate and `diaryLifeStageFor` sends everyone past 22 to
+// `independent`, with `college` away too – so the roof column was four lines the owner had read and
+// no player could reach. `DIVORCED_HER_LINE`'s collapse of 23.09 is the precedent, argued the same
+// way; the measurement is `tests/principles-b08-presence-reach.test.ts` §A, which sweeps every
+// profile the clamp can hold against every week a career can reach. ⚠ NOT ONE SURVIVING BYTE MOVED
+// (invariant 4): the `away` cells are the values below, verbatim.
+//
+// ⚠ NO NAME AND NO GENDER in any line – the name is WRITTEN at this beat (T3's `partnerNameFor`) but
+// which surfaces SPEAK it is a later task's question, and a pool that jumped ahead of that ruling
+// would be taking a wording decision that is his.
 
-/** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, in both presences. The voice bibles govern: `sunny` says
+/** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, ONE CHANNEL. The voice bibles govern: `sunny` says
  *  it evenly and names the feeling; `fiery` gives the verdict first, at speed, in absolutes;
  *  `quiet` says the practical surface and leaves herself out; `deep` says one true thing, late,
- *  stripped of its size, in full stops. */
-const ENGAGED_HER_LINE: Record<Temperament, PresenceCell> = {
-  sunny: {
-    roof: 'She sat us down at the table and could not keep it in past the kettle. "We are getting married. I wanted you to hear it from me first."',
-    away: 'She called before we had even asked about the week. "We are getting married. I wanted you to hear it from me first."',
-  },
-  fiery: {
-    roof: 'She came in already talking. "We are getting married. Yes, we are sure. No, we are not waiting."',
-    away: 'She rang, and led with it. "We are getting married. Yes, we are sure. No, we are not waiting."',
-  },
-  quiet: {
-    roof: 'She said it while she was clearing the table, as if it were about the schedule. "We are getting married. In a couple of months, probably."',
-    away: 'She sent the season\'s dates through, and this was at the top of the message. "We are getting married. In a couple of months, probably."',
-  },
-  deep: {
-    roof: 'She waited until the room had gone quiet and said it once. "We are getting married. I have thought about it. It is right."',
-    away: 'She let the call run almost to the end and said it before goodbye. "We are getting married. I have thought about it. It is right."',
-  },
+ *  stripped of its size, in full stops.
+ *
+ *  ⚠⚠ THE PRESENCE AXIS IS GONE, AND ITS ABSENCE IS A MEASURED FACT RATHER THAN A SIMPLIFICATION
+ *  (26.09, ruling 19 on B-08 – `DIVORCED_HER_LINE`'s own sentence one wave back). An engagement
+ *  under a roof cannot happen: the gate is 23 and every stage at 23 is away. The
+ *  `Record<Temperament, string>` says so in the type, so a roof line cannot be written back in
+ *  without the type refusing it first. Each cell below is the `away` frame that shipped. */
+const ENGAGED_HER_LINE: Record<Temperament, string> = {
+  sunny: 'She called before we had even asked about the week. "We are getting married. I wanted you to hear it from me first."',
+  fiery: 'She rang, and led with it. "We are getting married. Yes, we are sure. No, we are not waiting."',
+  quiet: 'She sent the season\'s dates through, and this was at the top of the message. "We are getting married. In a couple of months, probably."',
+  deep: 'She let the call run almost to the end and said it before goodbye. "We are getting married. I have thought about it. It is right."',
 }
 
 /** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `ENDED_DRY`'s shape
@@ -2799,9 +2801,15 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
 // could carry it – that is a wording decision, and it is the OWNER's (invariant 4), raised in the
 // wave's report rather than taken here.
 //
-// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule): what presence
-// changes is the FRAME the parent is standing in, never the sentence she says inside the quotation
-// marks.
+// ⚠⚠ RE-AIMED 26.09 (the owner's ruling 19 on B-08) – THE SHARED-SPAN RULE STOOD HERE AND HAS NOTHING
+// LEFT TO GOVERN, because the presence axis is gone and the four roof cells with it. The announcement
+// is raised by `landPregnancyAnnouncement`, which needs `world.pregnancy`, which needs a LATCHED
+// episode – and `landWedding` writes that latch only from an ANSWERED `'engaged'` row, itself gated
+// at 23. At 23 every stage is away (school is over by 18.92, `diaryLifeStageFor` sends everyone past
+// 22 to `independent`, `college` is away), so the roof column could never be shown. §3m's own
+// collapse of 23.09 is the precedent; the measurement is
+// `tests/principles-b08-presence-reach.test.ts` §A and §D. ⚠ NOT ONE SURVIVING BYTE MOVED
+// (invariant 4): the `away` cells are the values below, verbatim.
 //
 // ⚠⚠ NO NAME AND NO GENDER FOR THE ONE SHE MARRIED, the standing law of §3g and §3h: the episode
 // holds a persisted name since wave 7, but which surfaces SPEAK it is the owner's call and is still
@@ -2816,10 +2824,17 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
 // ⚠ NO DATE AND NO NUMBER IN ANY LINE (rule 4). `dueWeek` is on the record and the calendar is where
 // a date belongs; a card that named the week would also be naming a constant T9 is going to retune.
 
-/** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, in both presences. The voice bibles govern, `ENGAGED_HER_
+/** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, ONE CHANNEL. The voice bibles govern, `ENGAGED_HER_
  *  LINE`'s own reading of them: `sunny` says it evenly and names the feeling; `fiery` gives the
  *  verdict first, in absolutes; `quiet` says the practical surface and leaves herself out; `deep`
  *  says one true thing, late, stripped of its size, in full stops.
+ *
+ *  ⚠⚠ THE PRESENCE AXIS IS GONE, AND ITS ABSENCE IS A MEASURED FACT RATHER THAN A SIMPLIFICATION
+ *  (26.09, ruling 19 on B-08 – `DIVORCED_HER_LINE`'s own sentence one wave back, and §3j's banner
+ *  carries the chain): the latch this card stands behind cannot be written before 23, and every stage
+ *  at 23 is away. The `Record<Temperament, string>` says so in the type, so a roof line cannot be
+ *  written back in without the type refusing it first. Each cell below is the `away` frame that
+ *  shipped, its v87 T3 clause included.
  *
  *  ⭐⭐⭐ v87 T3 – **THE QUOTED SPANS GAINED ONE CLAUSE EACH, AND THE NARRATION DID NOT MOVE A BYTE.**
  *  The design's §4 table crosses HOW LONG THE WINDOW LASTS with THE ANNOUNCEMENT, and T2 built the
@@ -2840,23 +2855,11 @@ const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, a
  *  ⚠ THE OLD SPANS ARE LISTED VERBATIM IN THE WAVE'S REPORT beside these, which is the one thing a
  *  builder owes when a task asks for copy that already exists (invariant 4's own corollary – the
  *  owner reads the replacement beside what it replaced, and the strings stay his). */
-const EXPECTING_HER_LINE: Record<Temperament, PresenceCell> = {
-  sunny: {
-    roof: 'She waited until we were all sitting down, and then said it straight out. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
-    away: 'She called on a Sunday, before anything else had been said. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
-  },
-  fiery: {
-    roof: 'She came in and said it before her coat was off. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
-    away: 'She rang between flights and led with it. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
-  },
-  quiet: {
-    roof: 'She mentioned it while she was looking at the calendar, as if it were a fixture change. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
-    away: 'She sent the next block of dates through, and this was underneath them. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
-  },
-  deep: {
-    roof: 'She sat with it through most of the evening, and then put it in one sentence. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
-    away: 'She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
-  },
+const EXPECTING_HER_LINE: Record<Temperament, string> = {
+  sunny: 'She called on a Sunday, before anything else had been said. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both."',
+  fiery: 'She rang between flights and led with it. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished."',
+  quiet: 'She sent the next block of dates through, and this was underneath them. "We are having a baby. I have known a while. I will play a while yet, and then I will not."',
+  deep: 'She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it."',
 }
 
 /** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `ENGAGED_DRY`'s shape
@@ -2891,33 +2894,33 @@ const EXPECTING_HEADING = 'A child is coming, and she has already decided'
 // axis and lives in `engine/spirit.ts`; what this pool carries is how much she SAYS, and the private
 // voices say least. Nothing in these words is a second pricing of anything.
 //
-// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule, §3j's inheritance):
-// what presence changes is the FRAME the parent is standing in, never the sentence she says inside
-// the quotation marks.
+// ⚠⚠ RE-AIMED 26.09 (the owner's ruling 19 on B-08) – THE SHARED-SPAN RULE STOOD HERE TOO AND HAS
+// NOTHING LEFT TO GOVERN: the presence axis is gone and the four roof cells with it.
+// `bereavementEligible` refuses below `ECONOMY.weight.bereavement.fromAgeYears` (23), and at 23 every
+// stage is away – school is over by 18.92 for every girl the game can generate, `diaryLifeStageFor`
+// sends everyone past 22 to `independent`, and `college` is away as well – so the roof column was
+// four lines nobody could be shown. §3m's own collapse of 23.09 is the precedent, argued the same
+// way; the measurement is `tests/principles-b08-presence-reach.test.ts` §A and §D. ⚠ NOT ONE
+// SURVIVING BYTE MOVED (invariant 4): the `away` cells are the values below, verbatim.
 //
 // ⚠ NO DATE AND NO NUMBER IN ANY LINE (rule 4). The week is on the world and the calendar is where a
 // date belongs; a line that named one would also be naming a constant T6 is going to measure.
 
-/** ⚠ ⚠ DRAFT – WHAT SHE SAYS, BY VOICE, in both presences. The voice bibles govern: `sunny` says it
+/** ⚠ ⚠ DRAFT – WHAT SHE SAYS, BY VOICE, ONE CHANNEL. The voice bibles govern: `sunny` says it
  *  plainly and wants him near; `fiery` says it loudly and then will not sit with it; `quiet` says
- *  the practical surface and leaves herself out; `deep` says the one fact and nothing else at all. */
-const BEREAVEMENT_HER_LINE: Record<Temperament, PresenceCell> = {
-  sunny: {
-    roof: 'She came round in the evening and said it before she had taken her coat off. "There has been a death in the family. I would rather you heard it from me."',
-    away: 'She rang in the evening, before anything else had been said. "There has been a death in the family. I would rather you heard it from me."',
-  },
-  fiery: {
-    roof: 'She said it in the hall, loudly, and then would not sit down with it. "There has been a death in the family. I am not going to be much use this week."',
-    away: 'She rang and led with it, and was off the phone not long after. "There has been a death in the family. I am not going to be much use this week."',
-  },
-  quiet: {
-    roof: 'She mentioned it while she was putting something away, as if it were an errand. "There has been a death in the family. There are arrangements to make."',
-    away: 'She sent the week\'s dates through, and this was underneath them. "There has been a death in the family. There are arrangements to make."',
-  },
-  deep: {
-    roof: 'She sat in the kitchen a long time before she said anything at all. "There has been a death in the family."',
-    away: 'The call was mostly quiet. She said it once, near the end of it. "There has been a death in the family."',
-  },
+ *  the practical surface and leaves herself out; `deep` says the one fact and nothing else at all.
+ *
+ *  ⚠⚠ THE PRESENCE AXIS IS GONE, AND ITS ABSENCE IS A MEASURED FACT RATHER THAN A SIMPLIFICATION
+ *  (26.09, ruling 19 on B-08 – `DIVORCED_HER_LINE`'s own sentence one wave back): the rung nothing
+ *  fires below is 23, and every stage at 23 is away. The `Record<Temperament, string>` says so in the
+ *  type, so a roof line cannot be written back in without the type refusing it first. Each cell below
+ *  is the `away` frame that shipped. ⚠ §4's «private grieves almost silently» is untouched by this:
+ *  openness reaches the card through the four voice cells themselves, never through the axis removed. */
+const BEREAVEMENT_HER_LINE: Record<Temperament, string> = {
+  sunny: 'She rang in the evening, before anything else had been said. "There has been a death in the family. I would rather you heard it from me."',
+  fiery: 'She rang and led with it, and was off the phone not long after. "There has been a death in the family. I am not going to be much use this week."',
+  quiet: 'She sent the week\'s dates through, and this was underneath them. "There has been a death in the family. There are arrangements to make."',
+  deep: 'The call was mostly quiet. She said it once, near the end of it. "There has been a death in the family."',
 }
 
 /** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `EXPECTING_DRY`'s
@@ -2968,8 +2971,13 @@ const BEREAVEMENT_HEADING = 'There has been a death in the family'
  *  (his 23.09 review, must-fix 1). A `roof` divorce cannot happen: the latch needs 23+,
  *  `independent` begins at 22 and `college` is an away stage too – so every divorce a real career
  *  can produce is `away`, and eight cells would be four reachable lines towing four dead ones. The
- *  `Record<Temperament, string>` says so in the type; the sibling roof cells still standing in the
- *  wave-11 pools are the same finding one wave back, listed in the backlog rather than churned here.
+ *  `Record<Temperament, string>` says so in the type; the sibling roof cells then still standing in
+ *  the wave-7 and wave-11 pools were the same finding one wave back, listed in the backlog rather
+ *  than churned here. ⚠ RE-AIMED 26.09: those siblings are GONE (ruling 19 on B-08 – `'engaged'`,
+ *  `'expecting'` and `'bereavement'` collapsed the same way), and the reachability argument this
+ *  paragraph makes by hand is now MEASURED for all four pools at once by
+ *  `tests/principles-b08-presence-reach.test.ts`, which also refuses a FIFTH pool keyed on presence
+ *  behind a gate at 22 or over.
  *
  *  ⚠ EACH VOICE SAYS THE SAME FACT AND KEEPS ITS OWN HABIT: `sunny` reassures before the news has
  *  landed, `fiery` closes the subject in the same breath, `quiet` arrives at it through the
@@ -4003,9 +4011,13 @@ export function lifeBeatSaid(
     // is no told-late wedding, because `rollWedding` raises the card on the week she decides and
     // nothing about it can be learned late. What it reads is the bond's two-rung channel – her own
     // voice against the dry card – which is `'ended'`'s shape one axis smaller.
+    // ⚠⚠ AND NO `presence` SINCE 26.09 (ruling 19 on B-08), which is `'divorced'`'s reading arriving
+    // here: this card fires at 23 or over and no stage at 23 is a roof stage, so the roof column was
+    // four lines no career could show. `tests/principles-b08-presence-reach.test.ts` is the guard – a
+    // `presenceLine(…)` read put back on this arm goes red there by name.
     case 'engaged':
       return speaksInHerOwnVoice(bond)
-        ? presenceLine(ENGAGED_HER_LINE[voice], presence)
+        ? ENGAGED_HER_LINE[voice]
         : ENGAGED_DRY
     // ⭐⭐ v83 (wave 7 – T5) – THE EIGHTH KIND, AND THE FIRST WHOSE SPEAKER IS NEITHER HER NOR STAFF.
     // It reads its own `detail` like tier 1 does – the OCCASION is stamped at the raise, so a row
@@ -4033,9 +4045,12 @@ export function lifeBeatSaid(
     // card. ⚠⚠ AND IT READS NOTHING ABOUT THE MARRIAGE, WHICH IS THE DECOUPLING LAW ARRIVING AT THE
     // WORDING (§14): the card is assembled from her voice and the house's distance, so a card
     // re-rendered in a week the carrying episode has since ended says exactly what it said before.
+    // ⚠⚠ AND NO `presence` SINCE 26.09 (ruling 19 on B-08) – §3g's note, inherited: the latch this
+    // card stands behind cannot be written before 23, and no stage at 23 is a roof stage. «The house's
+    // distance» above is now the BOND's distance and not the stage's, which is what it always priced.
     case 'expecting':
       return speaksInHerOwnVoice(bond)
-        ? presenceLine(EXPECTING_HER_LINE[voice], presence)
+        ? EXPECTING_HER_LINE[voice]
         : EXPECTING_DRY
     // ⭐⭐⭐ v85 (the return, wave 8 – T6) – THE ELEVENTH KIND, AND THE ONE-CELL POOL IS `'own-key'`'s
     // AND IS ARGUED AT ITS BANNER (§3k): THE CARD QUOTES NOBODY. The completeness rule – «a `quiet` girl
@@ -4052,9 +4067,11 @@ export function lifeBeatSaid(
     // REGISTER: this is her week's biggest fact whatever the weather. ⚠⚠ AND OPENNESS REACHES IT
     // THROUGH THE VOICE CELLS THEMSELVES rather than through a second axis – §4's «private grieves
     // almost silently» is `quiet` and `deep` having less to say, which is what the four cells are.
+    // ⚠⚠ AND NO `presence` SINCE 26.09 (ruling 19 on B-08) – §3g's note, inherited: the rung nothing
+    // fires below is 23 and no stage at 23 is a roof stage.
     case 'bereavement':
       return speaksInHerOwnVoice(bond)
-        ? presenceLine(BEREAVEMENT_HER_LINE[voice], presence)
+        ? BEREAVEMENT_HER_LINE[voice]
         : BEREAVEMENT_DRY
     // ⭐⭐⭐ v88 (the parting, wave 12 – T1) – THE THIRTEENTH KIND, AND IT IS `'ended'`'s READING
     // WITH ONE AXIS TAKEN OUT. Her own voice against the dry card on the bond's two-rung channel,

@@ -224,10 +224,14 @@ playtest can reopen it:
   richer road (23.09).
 - **Per-kind life glyphs** – the standing 🤍-v1 deferral (T9's discriminator) refreshed 23.09 for
   `'divorced'`: «не уверен, что будет везде корректно отображаться, давай пока так оставим».
-- **The unreachable-roof siblings** – the finding that collapsed the divorce her-line (a roof
-  variant cannot happen at 23+) also holds for the wave-11 expecting/bereavement roof cells, and
-  `ENDED_NOW_EVENT` still carries the «nobody in her life now» tail his review struck from the
-  divorce row – shipped wording, his eye before any churn (23.09 review).
+- **The unreachable-roof siblings** – ⚠ **THE ROOF HALF IS DONE, 26.09** (the owner's ruling 19 on
+  B-08, W3's T3.11): the finding that collapsed the divorce her-line also held for the wave-7
+  `'engaged'` pool and the wave-11 expecting/bereavement ones, and all twelve roof cells are gone –
+  strings REMOVED, none reworded, with the reachability measured over every profile and week by
+  `tests/principles-b08-presence-reach.test.ts`, which also refuses the next pool keyed on presence
+  behind a gate at 22 or over. **What is still queued is the WORDING half:** `ENDED_NOW_EVENT` still
+  carries the «nobody in her life now» tail his review struck from the divorce row – shipped wording,
+  his eye before any churn (23.09 review).
 - **The college-mother middle floor** – one clause, UNDER DISCUSSION, unpacked twice
   (the-parting §12).
 - **College as played content** – his 23.09 question (a walkable bracket like the prologue's, and

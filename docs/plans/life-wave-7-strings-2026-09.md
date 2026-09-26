@@ -29,14 +29,26 @@ constants) are carried in §5 rather than silently dropped.
 
 ## 0. The count
 
+⚠⚠ **RE-AIMED 26.09 – THE TOTALS ARE NO LONGER STATED HERE, AND THAT IS WAVE 9'S FINDING APPLIED
+RATHER THAN AN OMISSION.** A count written in prose survives a full gate because no test reads it:
+wave 9 shipped two documents saying 32 where the corpus held 28, through `check`, `e2e` and the sims.
+This table said **96** twice and **T2 16** in its per-task row, and the owner's ruling 19 on B-08
+removed four of §1's rows on 26.09 (the unreachable roof cells of `ENGAGED_HER_LINE` – §1's own dated
+note), so all three numbers moved. They are not restated with new values here. **§1's count lives in
+`tests/wave7-strings-roundtrip.test.ts`**, beside the roundtrip that holds each of its rows against
+`src/engine/world/lifeBeat.ts` character for character – the only place in this repo where a number a
+document states about itself is safe. ⚠ The other sections of this table still have no roundtrip pin
+and therefore no home for a total; that is an open item for the architect, not a number to guess here.
+
 | | |
 | --- | ---: |
-| player-facing **strings** the wave ADDED to the tree | **96** |
+| player-facing **strings** the wave ADDED to the tree | pinned, never restated – see the note above |
 | of them **ruled** | **0** |
-| of them **draft – awaiting his pass** | **96** |
+| of them **draft – awaiting his pass** | all of them |
 | removed by his ruling after transcription (18.09 – W2, §2's note) | **1** |
+| removed as UNREACHABLE by ruling 19 (26.09 – §1's note, B-08) | **4** |
 | shipped strings that **MOVED** | **0** |
-| per task | T2 **16** · T3 **2** + the 28-name pool · T5 **13** · T10 **6** · **§7 31** |
+| per task | T2 pinned in the test above · T3 2 strings + the 28-name pool · T5 · T10 · §7 |
 | flagged **non-string** drafts carried in §5 | the memory-face pick · the drafted numbers |
 
 ⚠ **§7 IS NOT A WEDDING TASK AND IS COUNTED SEPARATELY ABOVE.** Round 44 #7 – the staff's year-end
@@ -48,21 +60,32 @@ same rules as the rest of this table; §§1-6 are untouched by it.
 
 ## 1. T2 – the engagement beat (`'engaged'`)
 
-`src/engine/world/lifeBeat.ts` – **16 strings**, all draft. She announces; the parent reacts. The
-quoted span is shared between the two presences by the вычитка's own law (what presence changes is
-the frame, never her sentence). ⚠ No name and no gender in any cell – the name is WRITTEN at this
-beat (`partnerNameFor`) but which surfaces SPEAK it is §5 Q-2, his.
+`src/engine/world/lifeBeat.ts`, all draft. She announces; the parent reacts. ⚠ No name and no gender
+in any cell – the name is WRITTEN at this beat (`partnerNameFor`) but which surfaces SPEAK it is
+§5 Q-2, his.
+
+⚠ **REMOVED 26.09 – the owner's ruling 19 on B-08: the four ROOF rows are gone (E1, E3, E5, E7), and
+the ids of the survivors are unchanged so an older report still reads against this table.**
+`weddingEligible` refuses below `ECONOMY.wedding.ageGate` (23), and at 23 there is no roof stage left
+to be in – school is over by 18.92 for every girl the game can generate and `diaryLifeStageFor` sends
+everyone past 22 to `independent`, `college` being away as well. So `ENGAGED_HER_LINE` lost its
+presence axis the way `DIVORCED_HER_LINE` did on 23.09, the shared-span law above has nothing left to
+govern, and the four surviving voice rows are the `away` frames byte-identical to what shipped.
+**No string was reworded** (invariant 4): four were removed because no career could ever be shown
+them. `tests/principles-b08-presence-reach.test.ts` §A is the measurement and §C refuses the next
+pool keyed on presence behind a gate at 22 or over.
+
+⚠ **THE COUNT IS NOT IN THIS PROSE ANY MORE** – wave 9's finding: a count written in a document
+survives a full gate, because no test reads it. This section's number lives in
+`tests/wave7-strings-roundtrip.test.ts`, which also holds every row below against the shipped source
+character for character. §0's totals carry the same note.
 
 | # | home (`file` · constant) | when the player sees it | the string, verbatim | |
 | ---: | --- | --- | --- | --- |
-| E1 | `lifeBeat.ts` · `ENGAGED_HER_LINE.sunny.roof` | the `'engaged'` card's line while she lives under the roof, bond `close`/`steady`, voice `sunny` | She sat us down at the table and could not keep it in past the kettle. "We are getting married. I wanted you to hear it from me first." | `DRAFT – awaiting his pass` |
-| E2 | `ENGAGED_HER_LINE.sunny.away` | the same card from college/independence – the call frame | She called before we had even asked about the week. "We are getting married. I wanted you to hear it from me first." | `DRAFT – awaiting his pass` |
-| E3 | `ENGAGED_HER_LINE.fiery.roof` | as E1, voice `fiery` | She came in already talking. "We are getting married. Yes, we are sure. No, we are not waiting." | `DRAFT – awaiting his pass` |
-| E4 | `ENGAGED_HER_LINE.fiery.away` | as E2, voice `fiery` | She rang, and led with it. "We are getting married. Yes, we are sure. No, we are not waiting." | `DRAFT – awaiting his pass` |
-| E5 | `ENGAGED_HER_LINE.quiet.roof` | as E1, voice `quiet` | She said it while she was clearing the table, as if it were about the schedule. "We are getting married. In a couple of months, probably." | `DRAFT – awaiting his pass` |
-| E6 | `ENGAGED_HER_LINE.quiet.away` | as E2, voice `quiet` | She sent the season's dates through, and this was at the top of the message. "We are getting married. In a couple of months, probably." | `DRAFT – awaiting his pass` |
-| E7 | `ENGAGED_HER_LINE.deep.roof` | as E1, voice `deep` | She waited until the room had gone quiet and said it once. "We are getting married. I have thought about it. It is right." | `DRAFT – awaiting his pass` |
-| E8 | `ENGAGED_HER_LINE.deep.away` | as E2, voice `deep` | She let the call run almost to the end and said it before goodbye. "We are getting married. I have thought about it. It is right." | `DRAFT – awaiting his pass` |
+| E2 | `lifeBeat.ts` · `ENGAGED_HER_LINE.sunny` | the `'engaged'` card's line, bond `close`/`steady`, voice `sunny` – the call frame | She called before we had even asked about the week. "We are getting married. I wanted you to hear it from me first." | `DRAFT – awaiting his pass` |
+| E4 | `ENGAGED_HER_LINE.fiery` | as E2, voice `fiery` | She rang, and led with it. "We are getting married. Yes, we are sure. No, we are not waiting." | `DRAFT – awaiting his pass` |
+| E6 | `ENGAGED_HER_LINE.quiet` | as E2, voice `quiet` | She sent the season's dates through, and this was at the top of the message. "We are getting married. In a couple of months, probably." | `DRAFT – awaiting his pass` |
+| E8 | `ENGAGED_HER_LINE.deep` | as E2, voice `deep` | She let the call run almost to the end and said it before goodbye. "We are getting married. I have thought about it. It is right." | `DRAFT – awaiting his pass` |
 | E9 | `ENGAGED_DRY` | the same card at `strained`/`cold` – the dry rung, not one word of hers | She is getting married. The news reached this house second-hand. | `DRAFT – awaiting his pass` |
 | E10 | `ENGAGED_HEADING` | the parent's frame over the card, every bond band, every week | A wedding is coming, and she has made up her mind | `DRAFT – awaiting his pass` |
 | E11 | `LIFE_BEAT_OPTIONS.engaged[0]` (`bless`) | the card's first answer button (+2.5 on `bond`, the drafted number – T8's bench) | Give them our blessing | `DRAFT – awaiting his pass` |
@@ -190,7 +213,7 @@ its flag in code.**
 
 | flagged site (file · what) | rows here |
 | --- | --- |
-| `lifeBeat.ts` §3g banner + `ENGAGED_HER_LINE` / `ENGAGED_DRY` / `ENGAGED_HEADING` | E1–E10 |
+| `lifeBeat.ts` §3g banner + `ENGAGED_HER_LINE` / `ENGAGED_DRY` / `ENGAGED_HEADING` | E2, E4, E6, E8, E9, E10 (⚠ 26.09: was E1–E10; the four roof rows left by ruling 19 – §1's note) |
 | `lifeBeat.ts` `LIFE_BEAT_OPTIONS.engaged` (three `⚠ DRAFT` rows) | E11–E13 |
 | `lifeBeat.ts` `ANSWER_EVENT.engaged` (three `⚠ DRAFT` rows) | E14–E16 |
 | `lifeBeat.ts` `landWedding` (the kept line; the ledger line left with the 18.09 ruling – §2's note) | W1 |
