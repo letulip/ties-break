@@ -1433,6 +1433,27 @@ function staffSeatFareCents(world: WorldState, event: SeasonEvent, paysPrizeMone
   return afterOwnPlaneCents(world, event.travelCostCents - Math.round(event.travelCostCents * share))
 }
 
+/** ⭐ THE HIRED SEAT'S WHOLE QUESTION, ASKED ONCE (F P3-14, 26.09) – «is he hired, has the family
+ *  switched the trips on, and does this rung pay prize money»: the three gates the masseur's fare and
+ *  the hitting partner's shared line for line, over a different pair of flags. They were two
+ *  identical five-line bodies until this wave, which is the same drift `staffSeatFareCents` below was
+ *  extracted to prevent one level down – the PRICE had one owner and the GATE had two.
+ *
+ *  ⚠ THE COACH'S FARE IS NOT A CALLER AND MUST NOT BECOME ONE. His gates are genuinely different –
+ *  `coachId === null` is the parent on the court, and `coachOnJuniorEvents` buys the rungs that pay
+ *  nothing, an override no other seat has (see `coachTravelFareFor`, where the owner's ruling and the
+ *  bankruptcy measurement behind it live). Folding a fourth flag in here to cover him would put the
+ *  two seats' rules back in one body under a flag, which is the shape this extraction is against.
+ *
+ *  Zero draws: three reads and `staffSeatFareCents`. */
+function staffSeatFareFor(world: WorldState, event: SeasonEvent, hired: boolean, travels: boolean): number {
+  if (!hired) return 0
+  if (!travels) return 0
+  const paysPrizeMoney = TIERS[event.tier].prizeCents !== undefined
+  if (!paysPrizeMoney) return 0
+  return staffSeatFareCents(world, event, true)
+}
+
 /** ⭐ TRAVELLING TEAM STEP 2 – WHAT THE MASSEUR'S SEAT COSTS, and it is the coach's own rule asked
  *  for one more seat (`staffSeatFareCents`), NOT a second implementation – the owner refused a
  *  parallel travel model at round 22 and the same reasoning holds for a third seat.
@@ -1450,21 +1471,37 @@ function staffSeatFareCents(world: WorldState, event: SeasonEvent, paysPrizeMone
  *  one week by construction. Charged on the PLAY week only (the arm where she actually boarded),
  *  so the injury walkover and the medical withdrawal never pay it. Zero draws. */
 export function masseurTravelFareFor(world: WorldState, event: SeasonEvent): number {
-  if (!(world.masseurHired ?? false)) return 0
-  if (!(world.masseurTravels ?? false)) return 0
-  const paysPrizeMoney = TIERS[event.tier].prizeCents !== undefined
-  if (!paysPrizeMoney) return 0
-  return staffSeatFareCents(world, event, true)
+  return staffSeatFareFor(world, event, world.masseurHired ?? false, world.masseurTravels ?? false)
 }
 
-/** THE CHARGE – `chargeCoachTravel`'s shape for the next seat over: category `travel` (a fare
- *  moves with the calendar, not with the week), its own line, the payer named on the line itself.
- *  Returns the fare actually charged so the play arm can record the presence the money bought.
- *  No pronoun names the masseur in player copy (R15-7's standing order). Zero draws. */
-export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): number {
-  const fare = masseurTravelFareFor(world, event)
+/** ⭐ ONE CHARGE FOR ONE SEAT, WRITTEN ONCE (F-05, 26.09) – the body the coach's fare, the masseur's
+ *  and the hitting partner's each carried in full, differing only in the label and the return type:
+ *  category `travel` (a fare moves with the calendar, not with the week), its own line, the payer
+ *  named on the line itself, and the fare returned so a caller's play arm can record the presence the
+ *  money bought.
+ *
+ *  ⚠ THE LABEL IS THE CALLER'S AND PASSES THROUGH VERBATIM, so every row this writes is byte-identical
+ *  to the row its own seat wrote before: «Coach travel to …», «Masseur travel to …», «Hitting partner
+ *  travel to …». The WORDING of a row belongs to the seat (the 17.09 copy review's rewrite of the
+ *  hitting partner's is recorded at `chargeSparringTravel`, where it was ruled); what belongs here is
+ *  the SHAPE, which is the thing that was copied three times.
+ *
+ *  ⚠ AND THAT 17.09 REVIEW HAD TO BE APPLIED PER COPY – the cost this extraction pays off. The next
+ *  pass over the shape of this row is one edit rather than three, and the honesty rule below has one
+ *  body to keep honest rather than three.
+ *
+ *  ⚠ NO PRONOUN NAMES ANY OF THE THREE in player copy: R15-7 (owner, 09.08) for the coach, and the
+ *  same standing order carried to the two seats after him. The labels above are the whole reason a
+ *  caller passes one.
+ *
+ *  Zero draws. */
+function chargeStaffFare(world: WorldState, event: SeasonEvent, fare: number, label: string): number {
   if (fare <= 0) return 0
   world.fundsCents -= fare
+  // ⭐ ROUND-21 #2 (17.08) – WHO PAID FOR IT, ON THE LINE ITSELF, exactly as `chargeTravel` says it
+  // for her seat and for the same stated reason: a cost that quietly shrinks is the dishonesty that
+  // text exists to prevent. The share is re-read rather than reverse-engineered off `fare`, so a
+  // rounded cent can never turn 25% into "24%" on the paper.
   const share = fare < event.travelCostCents ? kitTravelShare(world.offers, world.week) : 0
   const deal = share > 0 ? activeKitDeal(world.offers, world.week) : null
   const payer = deal ? ` (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)` : ''
@@ -1472,10 +1509,16 @@ export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): numb
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Masseur travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
+    text: `${label} travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
     amountCents: -fare,
   })
   return fare
+}
+
+/** THE CHARGE – `chargeStaffFare`'s shape, with the masseur's own label. Returns the fare actually
+ *  charged so the play arm can record the presence the money bought. Zero draws. */
+export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): number {
+  return chargeStaffFare(world, event, masseurTravelFareFor(world, event), 'Masseur')
 }
 
 /** ⭐⭐⭐ v80, WAVE F2 – WHAT THE SPARRING PARTNER'S SEAT COSTS, and it is `masseurTravelFareFor`'s
@@ -1497,37 +1540,20 @@ export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): numb
  *  week only, beside the coach's and the masseur's, so a walkover and a medical withdrawal never pay
  *  it. Zero draws. */
 export function sparringTravelFareFor(world: WorldState, event: SeasonEvent): number {
-  if (!(world.sparringHired ?? false)) return 0
-  if (!(world.sparringTravels ?? false)) return 0
-  const paysPrizeMoney = TIERS[event.tier].prizeCents !== undefined
-  if (!paysPrizeMoney) return 0
-  return staffSeatFareCents(world, event, true)
+  return staffSeatFareFor(world, event, world.sparringHired ?? false, world.sparringTravels ?? false)
 }
 
-/** THE CHARGE – `chargeMasseurTravel`'s shape for the seat after it: category `travel` (a fare moves
- *  with the calendar, not with the week), its own line, the payer named on the line itself. No
- *  pronoun names him (R15-7's standing order). Zero draws.
+/** THE CHARGE – `chargeStaffFare`'s shape, with the hitting partner's own label. Zero draws.
  *
  *  ⭐⭐ THE ROW IS HIS, FROM THE 17.09 COPY REVIEW. «Your hitting partner travels to the …» became
  *  «Hitting partner travel to …»: a ledger row is a LABEL and not a sentence addressed to the reader,
  *  and every other row in this feed is written that way («Hitting partner – weekly salary»). ⚠ AND
  *  «one more fare» became ONE ADDITIONAL FARE, which is the terminology sheet's single wording for
- *  the travel cost – the card's switch and the feed entries carry the same three words now. */
+ *  the travel cost – the card's switch and the feed entries carry the same three words now. ⚠ THE
+ *  LABEL IS THE HALF OF THAT SENTENCE THAT LIVES HERE; «travel to … – one additional fare» is the
+ *  shared shape's, and the review's second half is why the three words are spelled there once. */
 export function chargeSparringTravel(world: WorldState, event: SeasonEvent): number {
-  const fare = sparringTravelFareFor(world, event)
-  if (fare <= 0) return 0
-  world.fundsCents -= fare
-  const share = fare < event.travelCostCents ? kitTravelShare(world.offers, world.week) : 0
-  const deal = share > 0 ? activeKitDeal(world.offers, world.week) : null
-  const payer = deal ? ` (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)` : ''
-  addEvent(world, {
-    week: world.week,
-    type: 'expense',
-    category: 'travel',
-    text: `Hitting partner travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
-    amountCents: -fare,
-  })
-  return fare
+  return chargeStaffFare(world, event, sparringTravelFareFor(world, event), 'Hitting partner')
 }
 
 /** THE CHARGE, on the week she travelled and he came with her. One row, its own line in the feed:
@@ -1540,25 +1566,14 @@ export function chargeSparringTravel(world: WorldState, event: SeasonEvent): num
  *  `WorldEventCategory` is added, so nothing here touches the save schema.
  *
  *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08): `buildCoachRoster` puts a woman on every
- *  roster by construction, so "his fare" would print under Sabine Kobayashi. */
+ *  roster by construction, so "his fare" would print under Sabine Kobayashi.
+ *
+ *  ⚠ THE BODY IS `chargeStaffFare`'s, AND ROUND-21 #2's PAYER RULE MOVED THERE WITH IT (F-05, 26.09)
+ *  – it was written here first and the two seats after this one copied it. The return type stays
+ *  `void`: nothing records a presence the coach's fare bought, because `coachTravelFareFor(world,
+ *  event) > 0` is the one question the helping and the commentary already ask. */
 export function chargeCoachTravel(world: WorldState, event: SeasonEvent): void {
-  const fare = coachTravelFareFor(world, event)
-  if (fare <= 0) return
-  world.fundsCents -= fare
-  // ⭐ ROUND-21 #2 (17.08) – WHO PAID FOR IT, ON THE LINE ITSELF, exactly as `chargeTravel` says it
-  // for her seat and for the same stated reason: a cost that quietly shrinks is the dishonesty that
-  // text exists to prevent. The share is re-read rather than reverse-engineered off `fare`, so a
-  // rounded cent can never turn 25% into "24%" on the paper.
-  const share = fare < event.travelCostCents ? kitTravelShare(world.offers, world.week) : 0
-  const deal = share > 0 ? activeKitDeal(world.offers, world.week) : null
-  const payer = deal ? ` (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)` : ''
-  addEvent(world, {
-    week: world.week,
-    type: 'expense',
-    category: 'travel',
-    text: `Coach travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
-    amountCents: -fare,
-  })
+  chargeStaffFare(world, event, coachTravelFareFor(world, event), 'Coach')
 }
 
 export function chargeTravel(world: WorldState, event: SeasonEvent): void {
