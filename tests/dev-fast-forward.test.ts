@@ -2,10 +2,13 @@ import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
+  ADVANCE_REFUSALS,
+  advanceWeeks,
   createWorld,
   tickWeek,
   enterEvent,
   entryStatus,
+  openQuestions,
   pendingKnock,
   pendingBirthday,
   pendingLifeBeat,
@@ -14,9 +17,12 @@ import {
   decideKnock,
   type WorldState,
 } from '../src/engine/world'
-import { rngFromSeed } from '../src/engine/rng'
+import { rngFromSeed, resumeMain } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import { ECONOMY } from '../src/engine/economy'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type StopReason } from '../src/shared/protocol'
+import type { SeasonEvent } from '../src/engine/season/types'
+import { drainLifeBeats } from './helpers/career'
 import { workerHarness } from './helpers/workerHarness'
 import { region } from './helpers/source'
 
@@ -53,35 +59,49 @@ describe('layer 1 — the source carries the ruling and the guard', () => {
     expect(more, 'the dead flag went with the gate').not.toContain('const isDev')
   })
 
-  // ⚠ RE-AIMED AT W2-ENDINGS, and WIDENED rather than relaxed. The pin used to name the two
-  // predicates literally (`world.pendingTournament || pendingKnock(world)`) in both positions. Since
-  // v39 there are FIVE things the raw loop must not outrun - the two above plus the terminal latch,
-  // the unanswered fork at nineteen and the natural end's open offer - so the worker folds them into
-  // one `decisionOpen` predicate used in both positions, which is the only way the two can be kept
-  // in step. The pin now asserts THAT: every one of the five is named, and the same function guards
-  // entry and the loop. Layer 2 below still drives the real worker, which is what the header means
-  // by "a guard whose only witness is a regex is a guard a refactor can silently drop".
-  it("the worker's tick case refuses at entry and stops mid-loop, on every predicate advanceWeeks blocks on", () => {
-    expect(worker).toMatch(/import \{[\s\S]*?pendingKnock,[\s\S]*?\} from '\.\.\/engine\/world'/)
+  // ⚠⚠ RE-AIMED 26.09 (A-01 = D-03) AND IT IS THE WHOLE POINT OF THAT TASK. This case used to assert
+  // SEVEN `toContain` spellings of the worker's own copy of the blocking list – «every predicate
+  // advanceWeeks blocks on», in its own title – and the list has held EIGHT since round 29 #3. It
+  // never named `shootClashOpen(w)`, so replacing that clause with `false` in the worker left this
+  // file 5 passed: measured three times in the principles review and a fourth time immediately before
+  // the fix. A pin that reads a copy character by character is exactly as complete as whoever wrote
+  // it, and it cannot notice the member it never learned about.
+  //
+  // What replaces it is ONE pin plus behaviour. The pin: the tick case ASKS `advanceRefusal`, the
+  // engine's own refusal, and keeps no clause of its own – so there is no copy left to fall behind.
+  // The behaviour: layer 2 below drives the real worker over every member of `ADVANCE_REFUSALS`, and
+  // the mutation that proves those cases lives in the OWNER (`openQuestions`, engine/world/
+  // multiWeek.ts) rather than in a spelling here – drop a clause there and the case for that member
+  // goes red, which is the thing the seven spellings could not do.
+  //
+  // ⚠ NOTHING WAS WEAKENED. The two positions are still pinned as one function (`decisionOpen` at
+  // entry AND mid-loop), the negative below is NEW – no clause of the old copy may come back – and
+  // the eight members are now covered by cases rather than by a transcription.
+  it("the worker's tick case asks the engine which questions stop time, and keeps no copy of the list", () => {
+    expect(worker).toMatch(/import \{[\s\S]*?advanceRefusal,[\s\S]*?\} from '\.\.\/engine\/world'/)
     const tickCase = region(worker, "case 'tick':", "case 'advance':")
-    // the predicate names every one, so nothing the engine blocks on can be missing from the loop
-    // ⚠ WIDENED AT v48, NOT WEAKENED: the birthday is the sixth thing `advanceWeeks` refuses to tick
-    // past, and the dev fast-forward ships in every build – so a `▶▶ 52` that outran it would carry a
-    // year of her life past the one popup the owner asked to fire ALWAYS, with nobody answering it.
-    // That is the exact hole this list exists to close, one member wider.
-    // ⚠ WIDENED AGAIN AT v85 (T11b), AND THAT ONE WAS A REAL HOLE RATHER THAN A NEW MEMBER: a
-    // BLOCKING LIFE BEAT has stopped both supervised paths since v73 (`advanceRefusal` returns
-    // `'life'`, `advanceWeeks` adds the `'life'` stop) and was missing from this list the whole time,
-    // so `▶▶ 52 (dev)` could tick a year past her card with nobody answering her. The layer-2 case
-    // below is what MEASURES it – a source pin would have been green on the day the hole existed,
-    // because there was nothing to read.
-    expect(tickCase).toContain('w.pendingTournament !== null')
-    expect(tickCase).toContain('pendingKnock(w)')
-    expect(tickCase).toContain('pendingBirthday(w) !== null')
-    expect(tickCase).toContain('pendingLifeBeat(w) !== null')
-    expect(tickCase).toContain('w.ending !== null')
-    expect(tickCase).toContain('w.fork !== null && w.fork.answer === null')
-    expect(tickCase).toContain('w.retirementOffer !== null')
+    // THE ONE PIN: the predicate is the engine's, asked, and it is one line.
+    expect(tickCase).toContain('const decisionOpen = (w: WorldState): boolean => advanceRefusal(w) !== null')
+    // ...and NOT ONE CLAUSE OF THE COPY CAME BACK. Comments stripped first: this file's own note
+    // above names `shootClashOpen(w)` and the worker's note names the four imports it dropped, so a
+    // scan over raw source would fire on the prose explaining the rule (worker-reply-correlation's
+    // own idiom, same reason).
+    const code = tickCase
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('//'))
+      .join('\n')
+    for (const clause of [
+      'w.pendingTournament',
+      'pendingKnock(',
+      'pendingBirthday(',
+      'pendingLifeBeat(',
+      'w.ending',
+      'w.fork',
+      'w.retirementOffer',
+      'shootClashOpen(',
+    ]) {
+      expect(code, `the tick case re-asks '${clause}' instead of the engine`).not.toContain(clause)
+    }
     // entry: a refusal, the typed error every handler uses
     expect(tickCase).toMatch(/if \(decisionOpen\(world\)\) \{\s*\n\s*throw new Error\(/)
     // mid-loop: a stop, on the SAME predicate
@@ -287,4 +307,195 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
     expect(ticked.ok, ticked.error).toBe(true)
     expect(ticked.snapshot!.week).toBe(week + 1)
   }, 60_000)
+})
+
+// =================================================================================================
+// ⭐⭐⭐ layer 2b (A-01 = D-03, 26.09) – THE FIVE MEMBERS NOBODY HAD EVER DRIVEN THROUGH THE WORKER
+// =================================================================================================
+//
+// The three cases above drive a reveal, a knock and her card. `ADVANCE_REFUSALS` holds EIGHT, and the
+// other five – the birthday, the fork, the retirement offer, the terminal latch and the shoot/
+// tournament collision – were covered by nothing but seven `toContain` spellings of the worker's own
+// copy of the list, one of which (the collision) was never written. That is why deleting the clash
+// clause from the worker left this file 5 passed, three times in the review and once more before the
+// fix: nothing in the repository sent a `tick` to a world holding a clash.
+//
+// ⚠⚠ EVERY FIXTURE HOLDS EXACTLY ONE OPEN QUESTION, and the `openQuestions(world)` precondition in
+// each builder says so. This is the whole difference between a net and a formality: `decisionOpen` is
+// now ONE call into an eight-clause owner, so a fixture holding a knock alongside the member under
+// test would refuse the tick with that member's clause DELETED, and the case would pass against the
+// hole it exists to close. The life-beat fixture above makes the same argument in seven negatives;
+// this says it in one line by asking the owner itself.
+//
+// ⚠ BUILT THE CHEAPEST HONEST WAY, which is `tests/r2-13-advance-span.test.ts`' refusal table's own
+// rule: the point is that the EIGHT are the eight, not how each one is reached. Three of these five
+// write the pending record directly – there is no second boolean to set – and every one of them then
+// travels the real save codec into the real worker, which is what layer 2 is for.
+//
+// ⚠ THE CLASH FIXTURE IS A FOURTH COPY OF `clashWorld` AND W5's T5.11 IS WHERE IT STOPS BEING ONE
+// (`tests/helpers/scenarios/`, the principles plan §7). Left local and named here rather than
+// half-extracted in a wave that owns neither file.
+
+/** A career with an empty calendar, walked `weeks` weeks with nothing left standing. `season = []` is
+ *  `quietCareer`'s own move (r2-13) and for its reason: a case about one refusal must not also be a
+ *  case about the tournament desk. */
+function quietWalk(seed: string, weeks: number): WorldState {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE })
+  world.season = []
+  // ⚠ `resumeMain` AND NOT `rngFromSeed`, which is r2-13's own note: the persisted position only moves
+  // when the draws go through the pair on the world, and this world is about to be ENCODED and read
+  // back by the real worker, whose `ensureMainState` compares the two.
+  const rng = resumeMain(world.rngMain)
+  for (let i = 0; i < weeks; i++) {
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    drainLifeBeats(world)
+    tickWeek(world, rng)
+  }
+  if (pendingKnock(world)) decideKnock(world, 'rest')
+  drainLifeBeats(world)
+  return world
+}
+
+/** ONE SIGNED CAMPAIGN NAMING `shootWeek` – `signShootAt`'s shape from r2-13, kept field for field. */
+function signShootAt(world: WorldState, shootWeek: number): void {
+  world.offers.push({
+    id: `devff-ad-${shootWeek}`,
+    kind: 'ad',
+    week: world.week - 5,
+    deadlineWeek: world.week - 2,
+    state: 'signed',
+    decidedWeek: world.week - 5,
+    fromWeek: world.week - 5,
+    untilWeek: world.week + 40,
+    terms: {
+      brand: ECONOMY.advertising.categories.watches.houses[0],
+      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
+      termWeeks: 52,
+      shootCount: 2,
+      shootWeeks: [shootWeek],
+    },
+  })
+}
+
+interface RefusalFixture {
+  reason: StopReason
+  /** what `advanceWeeks` re-reports at the same week, which is always the member itself */
+  build: () => WorldState
+}
+
+const FIXTURES: RefusalFixture[] = [
+  {
+    // ⭐ v48's member, and the walk stops on it rather than counting to a week: `birthdayTurning`'s
+    // marked week has moved twice (round 34 #3 alone shifted it by one), so a hand-typed week number
+    // here would be a third spelling of her calendar.
+    reason: 'birthday',
+    build: () => {
+      const world = createWorld('devff-bday', { ...DEFAULT_PROFILE })
+      world.season = []
+      const rng = resumeMain(world.rngMain)
+      for (let i = 0; i < 208 && pendingBirthday(world) === null; i++) {
+        if (pendingKnock(world)) decideKnock(world, 'rest')
+        drainLifeBeats(world)
+        tickWeek(world, rng)
+      }
+      drainLifeBeats(world)
+      return world
+    },
+  },
+  {
+    // The fork is asked at nineteen; the record IS the pending state and there is no second boolean,
+    // so a fresh career carrying an unanswered row is the state, reached honestly.
+    reason: 'fork',
+    build: () => {
+      const world = quietWalk('devff-fork', 4)
+      world.fork = { askedWeek: world.week, answer: null, offer: null, departsWeek: null }
+      return world
+    },
+  },
+  {
+    reason: 'retirement',
+    build: () => {
+      const world = quietWalk('devff-retire', 4)
+      world.retirementOffer = { askedWeek: world.week, seasonIndex: 0, reason: 'age', final: false }
+      return world
+    },
+  },
+  {
+    // ⚠ THE LATCH IS THE ENGINE'S OWN, NOT A WRITTEN FIELD. `world.ending` is the one member of this
+    // table whose record carries a type, a week, an age and a detail line the epilogue renders, so an
+    // invented one would be a fixture about this test's imagination. A career that cannot pay walks
+    // into the real one in a handful of weeks (r2-13's `gate-ending` row, same arrangement).
+    reason: 'ending',
+    build: () => {
+      const world = createWorld('devff-ending', { ...DEFAULT_PROFILE })
+      world.season = []
+      world.fundsCents = -100_000_00
+      const rng = resumeMain(world.rngMain)
+      for (let i = 0; i < 60 && world.ending === null; i++) {
+        if (pendingKnock(world)) decideKnock(world, 'rest')
+        drainLifeBeats(world)
+        advanceWeeks(world, rng, 1)
+      }
+      return world
+    },
+  },
+  {
+    // ⭐⭐ ROUND 29 #3's member – THE ONE THE OLD PIN NEVER NAMED AND NO TEST EVER DROVE. A signed
+    // campaign names the week ahead and she is entered in it: two of the parent's four answers stop
+    // being possible the moment that week begins.
+    reason: 'shoot-clash',
+    build: () => {
+      const world = quietWalk('devff-clash', 10)
+      const shootWeek = world.week + 1
+      const event: SeasonEvent = {
+        id: `devff-clash-${shootWeek}`,
+        week: shootWeek,
+        tier: 'local',
+        surface: 'hard',
+        travelCostCents: 100_00,
+        deadlineWeek: world.week,
+      }
+      world.season = [event]
+      enterEvent(world, event.id)
+      signShootAt(world, shootWeek)
+      expect(shootClashOpen(world), 'the collision really is standing').toBe(true)
+      return world
+    },
+  },
+]
+
+describe('layer 2b — every other member of ADVANCE_REFUSALS refuses the tick, driven through the worker', () => {
+  for (const fixture of FIXTURES) {
+    it(`an open '${fixture.reason}' refuses the tick and holds the week`, async () => {
+      const world = fixture.build()
+      // ⚠⚠ THE PRECONDITION IS THE NET. One question standing and no other, asked of the owner the
+      // worker now reads – so this case can only pass while `openQuestions`' own clause for this
+      // member is live. Delete the clause and the tick goes through.
+      expect(openQuestions(world), `${fixture.reason}: exactly one question stands`).toEqual([fixture.reason])
+      const week = await loadIntoWorker(world)
+
+      const refusal = await send({ type: 'tick', weeks: 52, baseRevision: lastRevision })
+      expect(refusal.ok, `${fixture.reason}: the tick is refused`).toBe(false)
+      expect(refusal.error).toContain('resolve the tournament or knock')
+
+      // ...and the world behind the refusal is exactly where it was: the supervised path re-reports
+      // the SAME reason at the SAME week, which is also the assertion that the raw loop and
+      // `advanceWeeks` are refusing on one state.
+      const after = await send({ type: 'advance', weeks: 1, baseRevision: lastRevision })
+      expect(after.ok, after.error).toBe(true)
+      expect(after.snapshot!.week, `${fixture.reason}: not one week moved`).toBe(week)
+      expect(after.snapshot!.stopReasons, `${fixture.reason}: the engine names it`).toContain(fixture.reason)
+    }, 120_000)
+  }
+
+  // ⚠⚠ AND A NINTH MEMBER CANNOT BE ADDED WITHOUT THIS FILE NOTICING. The pin above no longer counts
+  // clauses – it asserts the copy is GONE – so this is what makes the behaviour cover the list: the
+  // three named cases plus this table's five are exactly `ADVANCE_REFUSALS`, and a new blocking kind
+  // lands here as a missing case rather than as a silently untested one.
+  it('⚠⚠ the eight members of ADVANCE_REFUSALS are exactly the eight this file drives', () => {
+    const NAMED = ['tournament', 'knock', 'life'] as const
+    const driven = [...NAMED, ...FIXTURES.map((f) => f.reason)]
+    expect([...driven].sort()).toEqual([...ADVANCE_REFUSALS].sort())
+    expect(new Set(driven).size, 'no member is driven twice').toBe(driven.length)
+  })
 })

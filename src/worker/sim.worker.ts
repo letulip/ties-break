@@ -3,13 +3,13 @@ import {
   createWorld,
   tickWeek,
   advanceWeeks,
+  // ⭐⭐ A-01 = D-03 (26.09) – the engine's own «which questions stop time», asked by the `tick` case
+  // instead of re-spelled there. The four predicates that used to be imported for the hand copy
+  // (`pendingKnock`, `shootClashOpen`, `pendingBirthday`, `pendingLifeBeat`) left with it.
+  advanceRefusal,
   maxMainDraws,
-  pendingKnock,
-  shootClashOpen,
-  pendingBirthday,
   chooseGift,
   answerLifeBeat,
-  pendingLifeBeat,
   replayMainState,
   enterEvent,
   withdrawEvent,
@@ -405,42 +405,30 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         // past the most expensive click in the game with nobody answering it, and a loop that outran
         // the LATCH would keep ticking a career that has ended. Same two positions as the pair above,
         // same reasoning: a refusal at entry, a stop mid-loop.
-        const decisionOpen = (w: WorldState): boolean =>
-          w.pendingTournament !== null ||
-          pendingKnock(w) ||
-          // ⭐ v48: ...AND THE BIRTHDAY, for the reason the whole list exists. The dev fast-forward
-          // ships in EVERY build (an owner ruling), so a `▶▶ 52` that outran an unanswered birthday
-          // would tick a year past the one popup the owner asked to fire ALWAYS, with nobody
-          // answering it – which is exactly the hole the knock and the fork are on this list to close.
-          pendingBirthday(w) !== null ||
-          // ⭐⭐⭐ v85 T11b: ...AND A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, which is the birthday's
-          // own argument in its strongest form. The birthday is on this list because a `▶▶ 52` that
-          // outran it would tick a year past the one popup the owner asked to fire ALWAYS; a blocking
-          // beat is HER SPEAKING, so a loop that outran one would answer her by walking away – and
-          // that is an answer nobody chose and nobody would ever be told about. `advanceRefusal`
-          // (world/multiWeek.ts) carries that sentence for the supervised path and the `'life'` stop
-          // in `advanceWeeks` (world.ts) is its other half; this is the third caller finally saying
-          // the same thing, and it is placed here rather than lower so the ORDER matches
-          // `advanceRefusal`'s own – birthday, then her card, then the fork.
-          //
-          // ⚠⚠ THE HOLE PREDATES THIS WAVE AND IS SAID OUT LOUD RATHER THAN FIXED QUIETLY: `'met'`,
-          // `'ended'`, `'engaged'` and `'fork-opinion'` have all been blocking since v73–v83, and the
-          // button could tick a year past every one of them. What makes it THIS wave's line is that
-          // wave 8 adds two more blocking kinds – `'expecting'`, the layer's biggest news, and
-          // `'return-plan'`, the beat the entries seam reads – and shipping them beside a button that
-          // can skip them is shipping a hole in the thing the wave is about. Nothing here is new
-          // design: it is a known-shape omission from a list that exists for exactly this.
-          pendingLifeBeat(w) !== null ||
-          w.ending !== null ||
-          (w.fork !== null && w.fork.answer === null) ||
-          w.retirementOffer !== null ||
-          // ⭐⭐ ROUND 29 #3: ...AND THE SHOOT/TOURNAMENT COLLISION, for the reason this whole list
-          // exists. The dev fast-forward ships in EVERY build (an owner ruling), so a `▶▶ 52` that
-          // outran this question would tick a year past a decision two of whose four answers stop
-          // being possible the moment the week starts – which is exactly the hole the knock and the
-          // fork are on this list to close, with the extra sharpness that it fires on the week BEFORE
-          // the one it is about.
-          shootClashOpen(w)
+        // ⭐⭐⭐ A-01 = D-03 (the principles review, 26.09) – AND IT NOW ASKS THE ENGINE RATHER THAN
+        // RE-SPELLING IT. This was an OR over the same eight predicates `advanceRefusal` asks, in the
+        // same order, with the reasoning for every clause copied beside it – and the copy had already
+        // lost a member: the life beat was missing HERE from v73 to v85 (`827efe6f`), so `▶▶ 52 (dev)`
+        // could tick a year of her life past her own card while both supervised paths refused it. The
+        // eight clauses and every word of their reasoning live ONCE now, in `openQuestions`
+        // (engine/world/multiWeek.ts) – the owner of «which questions stop time» – and this is the
+        // third reader finally asking it instead of answering for itself. Parity form A
+        // (docs/specs/engine-ui-parity-2026-09.md §1): the engine holds the predicate, the worker asks.
+        //
+        // ⚠ THE BEHAVIOUR IS BYTE-IDENTICAL, which is a measurement and not a hope: the two lists were
+        // identical by construction on the day this line changed – `world/state.ts` types every field
+        // it reads non-optional – so `advanceRefusal(w) !== null` is the same boolean in both
+        // positions. What changes is the FUTURE: a ninth blocking kind reaches this loop without
+        // anybody having to remember a second file.
+        //
+        // ⚠⚠ AND THE PIN THAT GUARDED IT MOVED WITH IT, because it was the weaker half. Seven
+        // `toContain` spellings in tests/dev-fast-forward.test.ts read this predicate's own SOURCE and
+        // could not see its eighth clause at all: replacing `shootClashOpen(w)` here with `false` left
+        // that file 5/5 green – measured three times in the review and a fourth time before this fix.
+        // It is one pin that this case calls `advanceRefusal` now, plus a table-driven behaviour case
+        // per member, and the mutation that proves them lives in the OWNER: drop a clause from
+        // `openQuestions` and the behaviour case for that member goes red.
+        const decisionOpen = (w: WorldState): boolean => advanceRefusal(w) !== null
         // ⚠ THE SHAPE AND THE WORDING ARE BOTH PINNED (tests/dev-fast-forward.test.ts): it matches
         // `if (decisionOpen(world)) {` followed immediately by the throw, and asserts the substring
         // "resolve the tournament or knock". So v48's birthday joins the parenthesis rather than

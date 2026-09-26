@@ -951,6 +951,39 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     expect(advanceRefusal(world), 'and the head of nothing is null').toBeNull()
   })
 
+  // ⭐⭐⭐ RE-AIMED AND WIDENED 26.09 (A-01 = D-03, principles review) – THE DRIFT GUARD NOW COVERS
+  // EVERY MEMBER OF `ADVANCE_REFUSALS` ON THE SHELL SIDE TOO, and that is the second half of the
+  // finding rather than a tidy extra. The list is spelled in the engine (`openQuestions`, pinned
+  // above), it WAS spelled again in the worker's `decisionOpen` – deleted 26.09, the worker asks
+  // `advanceRefusal` now – and it is STILL spelled a third time as the `BlockingOverlay` union
+  // (`src/composables/blockingOverlay.ts`). A ninth refusal added to the engine with no overlay to
+  // draw it is the round-24 STRAND: a week the engine has stopped with nothing on screen to answer it,
+  // measured twice already (the birthday inside the college latch, then the life beat behind it).
+  //
+  // ⚠ ASKED OF THE SHELL'S OWN FUNCTION OVER THE SNAPSHOT, not of the type's source text. A union is
+  // erased at runtime, so the only honest enumeration is behavioural – and this file already builds a
+  // world for each of the eight, so the question «can the shell draw this?» costs one snapshot each.
+  //
+  // ⚠ `'tournament'` IS THE ONE EXEMPTION AND IT IS NAMED RATHER THAN SKIPPED: the reveal is
+  // `TournamentFlow`'s, mounted by App.vue off `snapshot.pendingTournament`, and the queue
+  // deliberately has no entry for it («the reveal owns the screen while it is up» – round-21 #9, block
+  // C's own note). The case asserts THAT, so an overlay quietly growing a ninth entry for the reveal
+  // reddens here instead of shipping two owners for one question.
+  it('⚠⚠ every refusal the engine has is a question the SHELL can put on screen', () => {
+    const drawn = new Map<StopReason, ReturnType<typeof blockingOverlay>>()
+    for (const { reason, world } of refusalWorlds()) drawn.set(reason, blockingOverlay(toSnapshot(world)))
+    expect([...drawn.keys()], 'the table still covers the refusal list exactly').toEqual([...ADVANCE_REFUSALS])
+    for (const reason of ADVANCE_REFUSALS) {
+      if (reason === 'tournament') continue
+      expect(drawn.get(reason), `${reason}: the shell has an overlay for it`).toBe(reason)
+    }
+    // ...and the exemption, stated: the reveal refuses the span and is NOT an overlay.
+    const reveal = refusalWorlds().find((r) => r.reason === 'tournament')!
+    const snap = toSnapshot(reveal.world)
+    expect(snap.pendingTournament, 'the reveal really is open').not.toBeNull()
+    expect(drawn.get('tournament'), 'and the queue leaves it to TournamentFlow').toBeNull()
+  })
+
   it('⚠ on a LAYOFF week with nothing pending, the span IS offered', () => {
     // The other half – without it the gate above is satisfied by a control that never appears.
     // ⚠ RE-AIMED NOTE (round 26 #1): this stayed green for a DIFFERENT REASON than it used to.
