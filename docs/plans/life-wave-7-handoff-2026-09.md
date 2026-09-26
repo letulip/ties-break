@@ -10,7 +10,16 @@ last-reviewed: 2026-09-18
 
 Four builders, four gates, one day. Each builder's full report lives in the session; this file is
 the distilled record the repo keeps. Read beside [the brief](life-wave-7-builder-2026-09.md), [the
-strings table](life-wave-7-strings-2026-09.md) (65 drafts, ALL awaiting his pass) and [the wedding
+strings table](life-wave-7-strings-2026-09.md) (ALL awaiting his pass)
+
+⚠⚠ **THIS LINE CARRIED A COUNT AND IT DISAGREED WITH THE TABLE'S OWN, 26.09.** It said «65 drafts»
+while the table's §0 said 96, in two places; both were prose, neither was pinned, and the
+disagreement predates ruling 19. Which scope 65 meant cannot be recovered, so no third number is
+being put into circulation here – the count is simply gone from this sentence. Ruling 19 (B-08) then
+removed four of §1's rows, so both figures were stale regardless. §0 no longer states a total, and
+§1 is pinned row by row against `src/engine/world/lifeBeat.ts` by
+`tests/wave7-strings-roundtrip.test.ts`, which is where its count lives. §§2–7 remain unpinned and
+are a queued test item (`docs/backlog/the-quality-rig.md`) and [the wedding
 spec](../specs/the-wedding-2026-09.md) (predicted before measured).
 
 ## What shipped, task by task
