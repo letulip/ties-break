@@ -321,13 +321,17 @@ describe('⭐⭐⭐ #7 – and the replay is still there afterwards, in the feed
     skipTournament(world)
     closeTournament(world)
     // Finish the degree and then play on, exactly as he did.
-    for (let press = 0; press < 24 && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year,
+    // so this walk answers her card too (`drainLifeBeats`, priced ZERO) and the guard gains presses
+    // for the question a year can now raise. No assertion moved.
+    for (let press = 0; press < 32 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (collegeLeagueRevealOpen(world)) {
         skipTournament(world)
         closeTournament(world)
       }
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     for (let i = 0; i < 60; i++) {
       tickWeek(world, rng)

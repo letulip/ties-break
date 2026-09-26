@@ -273,10 +273,14 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     // the Nations Cup tie and the cake. The BUDGET moved from three presses a year to five; the
     // assertions below are untouched and still measure four banked years over 208 weeks.
     const rest: { yearsDone: number; latched: boolean }[] = []
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday and the two fixtures do, so the walk answers her card too –
+      // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
       const view = toSnapshot(world).ending?.college ?? null
       rest.push({ yearsDone: view?.yearsDone ?? world.college!.years.length, latched: view !== null })
     }
@@ -312,10 +316,14 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
 
   it('⚠ the engine refuses a fifth year, so the button that offered one was offering a throw', () => {
     const { world, rng } = atCollege('r26-fifth')
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday and the two fixtures do, so the walk answers her card too –
+      // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     // The refusal is the engine's, at its own entry, and it is a THROW rather than a no-op – which

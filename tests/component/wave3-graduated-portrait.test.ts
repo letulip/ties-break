@@ -147,11 +147,15 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
  *  so is the cleared knock, which is a walked-career artefact rather than anything about college. */
 function graduate(seed: string): WorldState {
   const { world, rng } = atCollege(seed)
-  for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+  // year the way the birthday and the two fixtures do, so the walk answers her card too –
+  // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     skipTournament(world)
     closeTournament(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
   expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
   expect(world.college?.years).toHaveLength(ENDINGS.collegeYears)
@@ -165,11 +169,13 @@ function graduate(seed: string): WorldState {
  *  rather than on the COUNT would appear here too. */
 function leaveEarly(seed: string): WorldState {
   const { world, rng } = atCollege(seed)
-  for (let press = 0; press < 5 && world.college!.years.length === 0; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – see `graduate` above for the reason.
+  for (let press = 0; press < 7 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     skipTournament(world)
     closeTournament(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
   endCollegeEarly(world)
   expect(world.college?.years.length, 'she really did leave short of the degree').toBeLessThan(ENDINGS.collegeYears)

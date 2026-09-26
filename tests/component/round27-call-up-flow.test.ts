@@ -120,12 +120,17 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
 let lastStops: string[] = []
 function walkToTheTie(seed: string): WorldState {
   const { world, rng } = atCollege(seed)
-  for (let press = 0; press < 5 * ENDINGS.collegeYears; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year, so
+  // a walk that answered the championship and the cake but not her card stalled before the tie –
+  // MEASURED as «the walked career never reached a Nations Cup tie». `drainLifeBeats` is the player's
+  // own answer, bond-neutral, and the budget gains a press a year for the question a year now holds.
+  for (let press = 0; press < 6 * ENDINGS.collegeYears; press++) {
     lastStops = resumeFromCollege(world, rng)
     if (callUpRevealOpen(world)) return world
     skipTournament(world)
     closeTournament(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a Nations Cup tie')
@@ -246,7 +251,7 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
     // the tie still ahead. A mount is the only thing that can tell those two apart.
     const { world, rng } = atCollege('r27c-flow-a')
     let reached = false
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       if (toSnapshot(world).ending?.college?.callUpIsNextStop) {
         reached = true
         break
@@ -255,6 +260,9 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): her card pauses the year since ruling 2(a), so a walk that
+      // did not answer it stalled before the tie – `drainLifeBeats` is bond-neutral and moves nothing.
+      drainLifeBeats(world)
     }
     expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
     expect(callUpRevealOpen(world), 'and the tie has NOT been played yet – this is before it').toBe(false)
@@ -284,7 +292,7 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
     // along. Walked to the rest state BEFORE a tie and read off the DOM.
     const { world, rng } = atCollege('r27c-label')
     let reached = false
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       if (toSnapshot(world).ending?.college?.callUpIsNextStop) {
         reached = true
         break
@@ -293,6 +301,9 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): her card pauses the year since ruling 2(a), so a walk that
+      // did not answer it stalled before the tie – `drainLifeBeats` is bond-neutral and moves nothing.
+      drainLifeBeats(world)
     }
     expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
 

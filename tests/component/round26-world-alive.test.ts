@@ -127,11 +127,16 @@ function press(world: WorldState, rng: Rng): void {
   // that answers only the championship stalls on the first call-up week and measures ONE rest state
   // over and over – the exact failure this helper's own note above was written about, arriving from
   // the second fixture.
+  // ⭐⭐⭐ B-01 / T2.3 RE-AIM (26.09) – AND HER CARD, WHICH PAUSES THE YEAR THE SAME WAY SINCE RULING
+  // 2(a). The note above says why a walk must answer every pause: one it does not answer measures ONE
+  // rest state over and over. This is that sentence a third time, with a blocking life beat in the
+  // call-up's place. `drainLifeBeats` is bond-neutral, so nothing this file counts moves.
   if (collegeLeagueRevealOpen(world) || callUpRevealOpen(world)) {
     skipTournament(world)
     closeTournament(world)
   }
   if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  drainLifeBeats(world)
 }
 
 async function openHome(world: WorldState) {
@@ -169,7 +174,11 @@ describe('⭐⭐⭐ #10 (again) – the college news card is about the week he i
   it('opens every rest state of the degree with a row about the tour, dated today', async () => {
     const { world, rng } = atCollege('r26-alive-home')
     const visited: number[] = []
-    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), BUDGET ONLY – `press` now answers her card too, and a year can
+    // hold one more pause than it did, so the walk needs one more press per year to cross the degree.
+    // The two counts below are the claim and they are untouched: at least eight rest states, spanning
+    // more than 150 weeks.
+    for (let i = 0; i < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
       press(world, rng)
       const wrapper = await openHome(world)
       const rows = newsRows(wrapper)
