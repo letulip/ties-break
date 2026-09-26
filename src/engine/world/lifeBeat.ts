@@ -108,7 +108,7 @@ import { activeEpisode, endEpisode, loveEpisodesOf } from './loveEpisodes'
 // close a three-module loop – `world/knock.ts -> world/endings.ts -> world/lifeBeat.ts` is live on
 // the value-import graph today, measured rather than assumed – and `guardNotEndedForGood` on this
 // same line is in the leaf for exactly that reason, with the whole argument at its definition.
-import { guardNotEndedForGood, knockRunning, KID_ID } from './constants'
+import { guardNotEnded, guardNotEndedForGood, knockRunning, KID_ID } from './constants'
 // ⭐⭐⭐ ROUND 42 #15/#24 – THE THREE READS THE FACTUAL BOUNDARY NEEDS (§8d.5), and all three are
 // leaves or near-leaves that do not import back here (checked module by module before they were
 // added). `weekMonth` is `shared/dates.ts`' week → real-month mapping and that file imports NOTHING
@@ -121,6 +121,16 @@ import { guardNotEndedForGood, knockRunning, KID_ID } from './constants'
 // would have supplied are field reads (`world.entries.includes`, `world.coachId !== null`) and are
 // spelled inline for that reason and no other.
 import { entryStatus } from './medical'
+// ⭐ C-07 (the owner's ruling 3(a), 26.09) – THE FOURTH READ §8d.5's FACTUAL BOUNDARY NEEDS, and it
+// passes the same test the three above did before it was added. `world/college.ts` imports assets,
+// rng, coach, development, ending, calendar, economy, nationalTeam, collegeLeague, match/engine,
+// tournament, player, constants, format, collegeOffer, offers, ledger, age and ladder – a 51-module
+// value closure that does not contain this file – so the edge lifeBeat -> college is one-way. It is
+// also the edge nine other `world/*` modules already take for THIS predicate, counted rather than
+// quoted (`birthday.ts`, `endings.ts`, `masseur.ts`, `phaseFinance.ts`, `phaseGrowth.ts`,
+// `phaseHerWeek.ts`, `phaseObligations.ts`, `psychologist.ts`, `sparring.ts`), so this is the house
+// spelling and not a new one.
+import { inCollege } from './college'
 // ⭐ v83 (the wedding, wave 7 – T3) – THE MILESTONE CHANNEL, `markSchoolEnd`'s own two surfaces:
 // the kept feed line and the scroll's row, both idempotent by key. ⚠ ONE-WAY ARROW, MEASURED THE
 // HOUSE WAY before it was believed: `world/milestones.ts` imports the calendar, dates, money, the
@@ -1719,11 +1729,35 @@ export function nextWeekIsClear(world: WorldState): boolean {
  *  three; written as part of the gate, the situation simply does not arise on a week where that
  *  sentence would be false, and all three stances stay honest by construction.
  *  ⚠ `world.week < e.deadlineWeek` AND NOT `<=`: the deadline is the END of that week, so equality
- *  means «decide now», which is precisely when «there's time to decide» stops being true. */
+ *  means «decide now», which is precisely when «there's time to decide» stops being true.
+ *
+ *  ⚠⚠ AND IT CARRIES `!inCollege(world)` SINCE C-07 (the owner's ruling 3(a), 26.09). The three
+ *  clauses above ask the CALENDAR whether a March door is open; none of them asks the freeze, and
+ *  neither does `entryStatus` → `entryVerdict`. The door is shut somewhere else entirely: `enterEvent`
+ *  opens with `guardNotEnded`, which throws `COLLEGE_FREEZE_REFUSAL` under the college latch. So the
+ *  fact was true on 24 of 95 college pause-weeks the review sampled and the engine refused the entry
+ *  on all 24 – a card asking the parent about an entry nobody could make, which is exactly what the
+ *  contract three paragraphs up forbids.
+ *
+ *  ⚠⚠ `world.college` AND NEVER `world.ending`, and this is the one clause where the difference is
+ *  the whole fix. The small-talk roll runs INSIDE `resumeFromCollege`'s loop, which sets
+ *  `world.ending = null` before it ticks – so an ending test would read false on precisely the weeks
+ *  the gate has to be false on. `inCollege` is derived from the span (`world.college.untilWeek`), so
+ *  it answers the same on a save taken mid-freeze.
+ *
+ *  ⚠ WHAT IT COSTS, PRICED AND NOT ASSUMED: R8 `alone-or-with-them` and R20
+ *  `the-money-she-did-not-ask-about` are the two rows on this gate and both declare `college`, so
+ *  both college cells go silent together (K5b: 24.6 % of college pause-weeks → 0, the independent
+ *  column untouched at 66.1 %). Their `independent` column is the whole of their life now. Nothing is
+ *  reworded and no row is removed – the situations simply stop being reachable at one stage.
+ *
+ *  ⚠ `tests/principles-c07-march-entry.test.ts` is the net, and it asks the ENGINE rather than this
+ *  clause: no week may have both the gate true and `enterEvent` refusing with the freeze sentence. */
 const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
   'played-recently': (world) =>
     kidMatchRows(world).some((r) => r.week > world.week - SMALL_TALK_FACT_WEEKS && r.week <= world.week),
   'march-entry-open': (world) =>
+    !inCollege(world) &&
     world.season.some(
       (e) =>
         weekMonth(e.week) === MARCH &&
@@ -3787,6 +3821,12 @@ function lifeStageOf(world: WorldState): DiaryLifeStage {
  *  ⚠ IT IS BEHAVIOUR-IDENTICAL FOR EVERY BLOCKING KIND, and that is checkable rather than hoped: a
  *  blocking row stops the week (`advanceWeeks` and `answerFork` both refuse while one is unanswered),
  *  so `row.week === world.week` on every one of them and this returns exactly what it always did.
+ *  ⚠ AND IT HAS ONE FEWER EXCEPTION SINCE 26.09 (B-P3-07, re-aimed on B-01's ruling 2(a)): the claim
+ *  above USED TO BE FALSE INSIDE `resumeFromCollege`, which ticked a whole year past an unanswered
+ *  blocking row – 23 of 217 year-calls did – so a beat raised in April was worded in December and
+ *  this function's `week` argument was the only thing keeping that row in its own room. The loop now
+ *  pauses on `'life'` (`COLLEGE_PAUSES`, world/multiWeek.ts), so the sentence holds everywhere; the
+ *  `week` argument stays, because a SOFT row still waits three weeks and that was always its reason.
  *
  *  ⚠ `fromWeek` JOINS THE COLLEGE TEST HERE and does not change today's answer either: at
  *  `world.week` a live college freeze always satisfies it. It is needed because an EARLIER week may
@@ -4580,6 +4620,9 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       // conversation into a room it was never in – and, for a situation with only one frame, into a
       // room it has no line for at all, which throws inside `toSnapshot`. Byte-identical for every
       // blocking kind, because a blocking row stops the week.
+      // ⚠ RE-AIMED 26.09 (B-P3-07): «stops the week» was false inside `resumeFromCollege` until
+      // B-01's ruling 2(a) made that loop pause on `'life'`. See `lifeStageAt`'s own note for the
+      // measurement; the argument is unchanged, it is the exception that closed.
       lifeStageAt(world, row.week),
       forkStopDriverOf(world.spirit ?? ECONOMY.spirit.baseline, world.bond ?? ECONOMY.bond.start),
       // ⭐ v75 T4 – THE NINTH IS THE ENDING'S REGISTER, threaded exactly as `wants`, `stage` and
@@ -7731,6 +7774,14 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
  *  for the weight, set at new-career creation (the creation flow ASKS), changeable both ways in
  *  settings later»). `setCoachOnEventWeeks`'s shape (`world/coachMarket.ts`) and nothing more.
  *
+ *  ⚠⚠ RE-AIMED 26.09 (B-P3-01) – THE SHAPE CLAIM WAS FALSE AND IS NOW TRUE. The sentence above named
+ *  `setCoachOnEventWeeks` as the model, and that command OPENS with `guardNotEnded`; this one did not,
+ *  so a tab left open behind the epilogue could flip the weight for a girl who has retired – and
+ *  «changeable both ways in settings later» is a rule about a LIVE career, which is the reading the
+ *  missing guard quietly widened. The guard is the existing one and its sentence is the existing one:
+ *  invariant 4 is untouched, no copy was written for this. `tests/principles-unknown-answers.test.ts`
+ *  holds both halves – refused behind a latch, still writable both ways on a live career.
+ *
  *  ⚠⚠ IT WRITES ONE FIELD AND DELETES NOTHING, WHICH IS THE **OTHER HALF OF THE RULING** and the
  *  half a future reader is most likely to get wrong: «turning it off stops NEW weight events and
  *  never deletes lived state». `pregnancyLossWeeks`, `bereavementWeeks`, the album, the diary and a
@@ -7745,6 +7796,10 @@ export function comebackAtReturn(pregnancy: PregnancyState, week: number): Comeb
  *  ⚠ ZERO DRAWS: one assignment. It takes no `Rng`, so MAIN is structurally out of reach and the
  *  frozen capture (41550 / e6b0c709) cannot see it. */
 export function setWeightEnabled(world: WorldState, on: boolean): void {
+  // ⚠ W2-ENDINGS (added 26.09, B-P3-01): the career must still have a next week. The engine
+  // re-validates every command because the worker is not the gate – `setCoachOnEventWeeks`' own line,
+  // which is what the doc above has always claimed this function's shape to be.
+  guardNotEnded(world)
   world.weightEnabled = on
 }
 
