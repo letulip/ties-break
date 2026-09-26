@@ -320,9 +320,16 @@ function answerWhateverIsOpen(
     out.wentToCollege = true
     // one year per press since P5 – and since round 24 a year pauses on her birthday week, so the
     // press is press-answer-press.
-    for (let press = 0; press < 3 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THIS ONE IS IN THE GATE'S PATH: `tests/endings-bench.test.ts`
+    // drives this walk. Ruling 2(a) makes a blocking life beat pause the college year the way the
+    // birthday does (measured before the ruling: 23 of 217 year-calls ticked past an unanswered
+    // blocking row), so a fixed-count press loop that does not answer her card stops banking the year
+    // the moment one lands. `drainLifeBeats` is the player's own answer, priced ZERO on every option,
+    // so the college column's numbers are unmoved by the answer as well as by the pause.
+    for (let press = 0; press < 5 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
   }
   if (world.retirementOffer !== null) {
