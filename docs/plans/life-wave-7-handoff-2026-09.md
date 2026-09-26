@@ -69,6 +69,12 @@ REMOVED price.
    the throttle is one drafted hazard constant.
 4. The march-entry-open 24.6% vs live 91% disagreement (K5 addendum) – which instrument reads the
    design's truth.
+   ⚠ **Half of this is settled, 26.09, and the half that is his is still open.** C-07 of the
+   principles review found the fact certifying a March entry that the college freeze refuses, and
+   his ruling 3(a) gates it on `!inCollege(world)` – so the COLLEGE half of the disagreement is
+   gone by construction: 24.6 % -> 0.0 %, measured on 130 college pause-weeks. What remains his is
+   the original question on the weeks she is NOT at college: whether 24.6 % or the live 91 % reads
+   the design's truth there. Nothing about the independent weeks moved.
 
 ---
 

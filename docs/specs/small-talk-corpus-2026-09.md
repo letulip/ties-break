@@ -1232,6 +1232,19 @@ live in.
 measured on the posed walk. The posed arms plus the real arm run in ~6 minutes
 (`npx vite-node tools/small-talk-corpus-bench.ts`, 18.09).
 
+⚠⚠ **THE TABLE BELOW IS AN 18.09 SNAPSHOT AND NOT A CURRENT STATEMENT – R8 AND R20's COLLEGE CELL
+IS 0.0 % SINCE 26.09.** The owner's ruling 3(a) on C-07 (the 26.09 principles review) gates
+`march-entry-open` on `!inCollege(world)`, because the fact certified a March entry the freeze
+refuses – measured 24 of 95 college pause-weeks asked, refused 24 of 24. So both rows' college
+reachability is now **0.0 %** and their `independent` column is untouched by the ruling. Re-measured
+the same day with the same command, K5b: `24.6 % -> 0.0 %` on 130 college pause-weeks, independent
+unmoved. ⚠ The independent column has ALSO drifted on its own, for a different reason and on a
+different day – today's run reads 66.1 % of 16,448 weeks where this table says 66.5 % of 17,017 – so
+the cells below are not half-corrected here: the whole table is the 18.09 measurement, kept verbatim
+for provenance, and this note is what is true now. ⚠ No gate reads either number (the prose-number
+class `CLAUDE.md` names); a pin that compares this table with the bench is a test item, not a
+correction.
+
 **The healed numbers** (that command, 18.09 – 240 posed seeds, 24 real careers, 12 through
 college; 2,241 college weeks lived, 73 college-stage small-talk rows raised):
 
