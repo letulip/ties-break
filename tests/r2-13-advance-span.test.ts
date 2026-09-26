@@ -978,9 +978,13 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
       expect(drawn.get(reason), `${reason}: the shell has an overlay for it`).toBe(reason)
     }
     // ...and the exemption, stated: the reveal refuses the span and is NOT an overlay.
+    // ⚠ `snapshot.pending` IS THE WIRE'S NAME FOR IT and `world.pendingTournament` is the engine's –
+    // `PendingView`, «present while a tournament reveal is in progress (drives TournamentFlow)», which
+    // is the very sentence this case is quoting. Asserted on the SNAPSHOT because that is the object
+    // `blockingOverlay` is asked about, so the two halves of the claim read one thing.
     const reveal = refusalWorlds().find((r) => r.reason === 'tournament')!
     const snap = toSnapshot(reveal.world)
-    expect(snap.pendingTournament, 'the reveal really is open').not.toBeNull()
+    expect(snap.pending, 'the reveal really is open on the wire').toBeTruthy()
     expect(drawn.get('tournament'), 'and the queue leaves it to TournamentFlow').toBeNull()
   })
 
