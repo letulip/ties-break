@@ -57,6 +57,7 @@ import {
   adBandFor,
   adCategoryOf,
   adFeeFor,
+  adJuniorAt,
   adSpokenFor,
   adWritesAt,
   isWinterShootWeek,
@@ -97,6 +98,16 @@ function probeWorld(seed: string, week: number, rank: number): WorldState {
 /** The first week at or after `from` whose dice write the named category. -1 for none. */
 function rollFor(seed: string, category: AdCategory, from: number, limit = 200): number {
   for (let w = from; w < from + limit; w++) if (adWritesAt(seed, w, AD.offerChance, category)) return w
+  return -1
+}
+
+/** The first week she is exactly `age`, off the same clock the gate reads. -1 for none. */
+function weekAtAgeOf(seed: string, age: number): number {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
+  for (let week = 0; week < 900; week++) {
+    world.week = week
+    if (ageOf(world) === age) return week
+  }
   return -1
 }
 
@@ -269,16 +280,6 @@ describe('the double programme – «Можно даже текущих испо
 // parity; a test can only witness it») – and it is the arm that reddens if a future row starts
 // deciding for itself again, whichever category it invents the rule for.
 describe('B-03 – the shelf asks the letter`s question, category by category', () => {
-  /** The first week she is exactly `age`, off the same clock the gate reads. */
-  function weekAtAgeOf(seed: string, age: number): number {
-    const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
-    for (let week = 0; week < 900; week++) {
-      world.week = week
-      if (ageOf(world) === age) return week
-    }
-    return -1
-  }
-
   /** The states the shelf can be asked about, each built through the engine's own doors: an adult
    *  nobody dresses, the same adult under a kit deal, a junior inside a band, an adult with no
    *  professional standing at all, and a girl below the shelf's own age gate. */
@@ -343,6 +344,139 @@ describe('B-03 – the shelf asks the letter`s question, category by category', 
     expect(openRows).toEqual(['drinks'])
     expect(adCategoryOpen(world, 'clothing')).toEqual({ open: false, reason: 'kit' })
     expect(adCategoryOpen(world, 'watches')).toEqual({ open: false, reason: 'junior' })
+  })
+})
+
+// =================================================================================================
+// 2c – B-03 (26.09): THE PRIMITIVE ITSELF – all six refusals and the open verdict
+// =================================================================================================
+//
+// ⚠⚠ WHY THE PRIMITIVE IS ASKED DIRECTLY AND NOT ONLY THROUGH ITS TWO CALLERS. `adCategoryOpen`
+// answers «is this category open to her this week» for ANY caller, and one of its clauses – the AGE
+// gate – is unreachable from both of today's callers: `reviewAdOffer` returns before its loop and
+// `adPortfolioView` returns `[]`, each on the same constant. The architect's call (26.09) is that the
+// arm STAYS, because a primitive that answers the question incompletely is the parity trap one storey
+// down: a third caller would either re-spell the age check – which is the defect B-03 just closed – or
+// be told a category is open to a fourteen-year-old. ⚠ But an unreachable arm with NO test is a line
+// nobody has ever run, which is how a clause rots between a documented intention and a live reader. So
+// it is run here, beside the five arms that do have callers.
+//
+// MUTATION ARMS, ONE PER REASON – each clause disabled alone, and exactly its own case reddens
+// (measured 26.09; the readers each clause has on the two surfaces are recorded at the function):
+//   * `age`    → «the shelf`s own age gate is the only thing refusing her: expected { open: true } to
+//                deeply equal { open: false, reason: 'age' }» – and NOTHING else in the repo reddens,
+//                which is the whole reason this case exists.
+//   * `junior` → this file's junior case, plus round41-ad-junior's letter §2 AND shelf §3 together.
+//   * `band`   → this file's two band cases and the panel's fragrance row; the letter side stays green
+//                (`adTermsForCategory` refuses an unpriced cell on its own – see the note at the site).
+//   * `tenure` → the capstone case here, §3's boundary case (the letter) and the panel's capstone row.
+//   * `slam`   → the lifetime case here; the capstone's own verdict on the same world does not move.
+//   * `kit`    → §2's kitless arm, the parity sweep and the mounted row.
+describe('B-03 – `adCategoryOpen`, asked directly: every reason it refuses on', () => {
+  /** `n` banked seasons ENDED inside the top 10 – the shape the tenure gates fold over. */
+  function withTenure(world: WorldState, seasons: number): void {
+    world.seasonHistory = Array.from({ length: seasons }, (_, i) => seasonAt(i, 5))
+  }
+  /** `n` Slam titles on the ledger, weeks in the past – the lifetime letter's other half. */
+  function withSlams(world: WorldState, n: number): void {
+    world.trophiesByTier.slam ??= { titles: [], finals: [] }
+    for (let i = 0; i < n; i++) world.trophiesByTier.slam!.titles.push(world.week - 30 - i)
+  }
+
+  it('⭐⭐⭐ `age` – the ONE clause no caller reaches, with a band and a priced cell so nothing else can refuse', () => {
+    const SEED = 'p4a-gate-age'
+    const week = weekAtAgeOf(SEED, ECONOMY.advertising.fromAgeYears - 1)
+    expect(week, 'the fixture found a week she is one year under the gate').toBeGreaterThan(0)
+    const world = probeWorld(SEED, week, 150)
+    expect(ageOf(world)).toBe(ECONOMY.advertising.fromAgeYears - 1)
+    // ANTI-VACUITY, and it is the whole case: she STANDS in a band and the drink IS priced there, so
+    // the age clause is the only line that can be answering. A fixture without this would pass on a
+    // world the band clause refuses anyway.
+    const band = adBandFor(sponsorStandingOf(world))
+    expect(band, 'she really does stand in a band under the gate').not.toBeNull()
+    expect(adFeeFor('drinks', band!), 'and the drink is priced at it').not.toBeNull()
+    expect(adJuniorAt(ageOf(world)), 'and the junior shelf does not reach this far down either').toBe(false)
+    expect(adCategoryOpen(world, 'drinks')).toEqual({ open: false, reason: 'age' })
+    // ...and it is the WHOLE shelf, not one category: the age gate is the shelf's own.
+    for (const category of AD_CATEGORIES) {
+      expect(adCategoryOpen(world, category), `${category} under the age gate`).toEqual({ open: false, reason: 'age' })
+    }
+  })
+
+  it('⭐⭐ `junior` – a category the junior shelf does not carry, at a rank that meets its band', () => {
+    const SEED = 'p4a-gate-junior'
+    const week = weekAtAgeOf(SEED, ECONOMY.advertising.fromAgeYears)
+    const world = probeWorld(SEED, week, 150)
+    expect(adJuniorAt(ageOf(world)), 'she is inside the junior band').toBe(true)
+    const band = adBandFor(sponsorStandingOf(world))!
+    expect(adFeeFor('watches', band), 'the watch cell IS priced at her standing').not.toBeNull()
+    expect(adCategoryOpen(world, 'watches')).toEqual({ open: false, reason: 'junior' })
+    // ...and the junior shelf's own two categories are not refused on her age
+    expect(adCategoryOpen(world, 'drinks')).toEqual({ open: true })
+  })
+
+  it('⭐⭐ `band` – twice: no professional standing at all, and a standing whose cell is unpriced', () => {
+    // (a) NO STANDING: an adult with no counting W result stands in no band, so every trade category
+    //     answers `band` – «a floor tie is not a standing», `adBandFor`'s own guard.
+    const bare = createWorld('p4a-gate-band', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    bare.week = weekAtAgeOf('p4a-gate-band', ADULT_AGE)
+    expect(ageOf(bare)).toBeGreaterThanOrEqual(ECONOMY.advertising.fromAgeYears)
+    expect(adBandFor(sponsorStandingOf(bare)), 'she stands in no band').toBeNull()
+    expect(adCategoryOpen(bare, 'drinks')).toEqual({ open: false, reason: 'band' })
+
+    // (b) A STANDING, AN UNPRICED CELL: #150 is not the fragrance house's rung, and the SAME world
+    //     opens the drink – which is what makes this the cell's answer rather than the standing's.
+    const ranked = probeWorld('p4a-gate-band', bare.week, 150)
+    const band = adBandFor(sponsorStandingOf(ranked))!
+    expect(adFeeFor('fragrance', band), 'the fragrance cell is empty at her band').toBeNull()
+    expect(adCategoryOpen(ranked, 'fragrance')).toEqual({ open: false, reason: 'band' })
+    expect(adCategoryOpen(ranked, 'drinks')).toEqual({ open: true })
+  })
+
+  it('⭐⭐ `tenure` – the capstone one season short, and the lifetime letter one season short WITH its Slam', () => {
+    const SEED = 'p4a-gate-tenure'
+    const week = weekAtAgeOf(SEED, ADULT_AGE)
+    const capstone = probeWorld(SEED, week, 5)
+    withTenure(capstone, AD.capstone.seasonsInTop10 - 1)
+    expect(capstoneSeasonsOf(capstone)).toBe(AD.capstone.seasonsInTop10 - 1)
+    expect(adCategoryOpen(capstone, 'capstone')).toEqual({ open: false, reason: 'tenure' })
+
+    // The lifetime letter's tenure is its own number (3, not the capstone's 4) and its Slam is HELD
+    // here, so the only thing left to refuse on is the tenure – the arm that would otherwise hide
+    // behind `slam` above it.
+    const lifetime = probeWorld(SEED, week, 5)
+    withTenure(lifetime, AD.lifetime.seasonsInTop10 - 1)
+    withSlams(lifetime, AD.lifetime.slamTitles)
+    expect(adCategoryOpen(lifetime, 'lifetime')).toEqual({ open: false, reason: 'tenure' })
+  })
+
+  it('⭐⭐ `slam` – tenure enough for BOTH crowns and no Slam on the ledger: the capstone opens, the lifetime does not', () => {
+    const SEED = 'p4a-gate-slam'
+    const week = weekAtAgeOf(SEED, ADULT_AGE)
+    const world = probeWorld(SEED, week, 5)
+    withTenure(world, Math.max(AD.capstone.seasonsInTop10, AD.lifetime.seasonsInTop10))
+    expect(world.trophiesByTier.slam?.titles ?? [], 'no Slam on the ledger').toEqual([])
+    expect(adCategoryOpen(world, 'lifetime')).toEqual({ open: false, reason: 'slam' })
+    // ...and the capstone on the SAME world is open, so the Slam is the only difference between them.
+    expect(adCategoryOpen(world, 'capstone')).toEqual({ open: true })
+    // ...and one Slam opens it, at the same tenure: the boundary, from the other side.
+    withSlams(world, AD.lifetime.slamTitles)
+    expect(adCategoryOpen(world, 'lifetime')).toEqual({ open: true })
+  })
+
+  it('⭐⭐⭐ `kit` – B-03 itself, at the primitive: the clothing slot needs the house that dresses her', () => {
+    const SEED = 'p4a-gate-kit'
+    const week = weekAtAgeOf(SEED, ADULT_AGE)
+    const world = probeWorld(SEED, week, 150)
+    const band = adBandFor(sponsorStandingOf(world))!
+    // ANTI-VACUITY: the clothing cell IS priced at her band, so `band` cannot be the answer – which
+    // is exactly the state the shelf used to call «open» and the letter refused.
+    expect(adFeeFor('clothing', band), 'the clothing cell is priced at her standing').not.toBeNull()
+    expect(activeKitDeal(world.offers, world.week), 'and nobody dresses her').toBeNull()
+    expect(adCategoryOpen(world, 'clothing')).toEqual({ open: false, reason: 'kit' })
+    // ...and the same week under a kit deal is open, through the engine's own signature.
+    signKit(world, 'tour')
+    expect(adCategoryOpen(world, 'clothing')).toEqual({ open: true })
   })
 })
 

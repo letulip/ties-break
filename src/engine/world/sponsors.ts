@@ -761,7 +761,37 @@ export type AdCategoryGate = { open: true } | { open: false; reason: AdCategoryC
  *  ⚠ THE ORDER OF THE CLAUSES IS THE SHELF'S COPY, not a preference: the junior refusal is read
  *  BEFORE the band's, because a sixteen-year-old inside the watch band's rank is refused on her AGE
  *  and a row that answered `'band'` there would blame a rank she has (round 41 #15's own ruling, kept
- *  verbatim at the row). */
+ *  verbatim at the row).
+ *
+ *  ⚠⚠ WHICH CLAUSE HAS WHICH LIVE READER – MEASURED 26.09, one clause disabled at a time, because two
+ *  of these clauses READ AS REDUNDANT AND ARE NOT. The per-reason cases are
+ *  `tests/round29p4-ad-portfolio.test.ts` §2c; what each arm reddened:
+ *    * `'age'` – NO caller reaches it. `reviewAdOffer` returns before its loop and `adPortfolioView`
+ *      returns `[]`, both on `fromAgeYears`, so across `round29p4-ad-portfolio`, `round41-ad-junior`
+ *      and `ad-offer` (80 cases) exactly ONE moved – its own – with the two mounted shelf files (13)
+ *      untouched: the direct case is the only cover this line has. Kept deliberately (the architect, 26.09): a
+ *      primitive that answers «is this category open» incompletely is this same defect one storey
+ *      down, because a third caller would either re-spell the age gate or be told a category is open
+ *      to a fourteen-year-old.
+ *    * `'junior'` – BOTH surfaces, together: the letter (`round41-ad-junior` §2, «a watch … written to
+ *      nobody before eighteen») and the shelf (§3, «CLOSED, and says nothing about a rank»).
+ *    * `'band'` – ⚠⚠ THE SHELF IS ITS ONLY LIVE CONSUMER TODAY. Disabling it left every letter-side
+ *      suite green (79 passed, `ad-offer` and `round29p2-ad-ladder` included) because
+ *      `adTermsForCategory` refuses an unpriced cell on its own (`offers.ts:2138-2139` → `if (!terms)
+ *      continue`), and reddened only the SCREEN – the round-29 fragrance row read «Not open yet» where
+ *      it states «Opens inside WTA #10» – plus the parity sweep. That second refusal is a SECOND LINE
+ *      OF DEFENCE and not a duplicate: it cannot answer WHY, so a shelf that lost this clause would
+ *      print the reasonless row over a category a rank explains, which is exactly what the arm did.
+ *      So do not delete this clause believing the letter covers it: only a UI test objects.
+ *    * `'tenure'` – BOTH surfaces: the letter (§3's capstone boundary, «three top-10 seasons buy no
+ *      letter») and the shelf (the panel's capstone row flipped to open).
+ *    * `'slam'` – the letter (`r39-term-ladder` §3, «four top-10 seasons and no Slam is not a legend»)
+ *      and this primitive. ⚠ NO mounted witness: the panel's fixture holds no tenure, so its lifetime
+ *      row is closed either way – the one row in this gate whose screen side is unmeasured.
+ *    * `'kit'` – B-03 itself: the shelf's kitless arm, the parity sweep and the mounted row. The letter
+ *      stays green here, because its author read (`if (!kit) continue` below, which exists for
+ *      `clothing`'s empty house list) refuses independently – which is why THAT arm reddens the shelf
+ *      alone and is the file's arm-B asymmetry. */
 export function adCategoryOpen(world: WorldState, category: AdCategory): AdCategoryGate {
   const s = ECONOMY.advertising
   // FROM SIXTEEN SINCE ROUND 41 #15 – her real age, `kidAgeAt`, the one-clock ruling: never the
