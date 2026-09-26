@@ -17,6 +17,8 @@ import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { reqToPromise } from '../src/db/idb'
 import { compressWorld } from '../src/engine/saveCodec'
+import { SaveFileError } from '../src/engine/saveGuard'
+import { SAVE_SCHEMA_VERSION } from '../src/engine/world/state'
 
 // White-box: these are the DB name/store internal to src/db/saves.ts. Kept in sync deliberately
 // so the migration + corruption tests can seed and tamper with raw records.
@@ -125,6 +127,52 @@ describe('save slots (careers + generations)', () => {
     // The adoption point is the HIGHEST revision on disk, not the loaded record's own (1):
     // adopting 1 would make the next CAS commit (2) collide with the corrupt corpse forever.
     expect(revision).toBe(2)
+  })
+
+  // ⭐⭐ D-02 (principles review, 26.09) – A SAVE WRITTEN BY A NEWER BUILD IS NOT CORRUPTION, and the
+  // boot door used to treat it as exactly that. `decompressWorld` handed the payload straight to
+  // `migrateSave`, which throws a plain `Error` for a schema it does not know, and this function
+  // caught ANY throw from the newer generation and loaded the older one with `recovered: true`. So a
+  // player whose newer tab (or newer installed shell – `registerType: 'prompt'` means an old worker
+  // can live for days) had written one command was told the career was "repaired", walked back a
+  // week, and then had the newer generation overwritten by the next two commits.
+  //
+  // ⚠ THE STRADDLE IS THE CASE, and it is why U-01's boot refusal never saw this: that refusal needs
+  // BOTH generations to be too new. One-of-two is the shape a real version skew produces.
+  //
+  // ⚠ MUTATION-VERIFIED: restore the catch-all (`catch { if (gens.length > 1) … }` with no code
+  // check) in `readLatestAutosave` and this case goes red on the first `rejects`.
+  it('⭐⭐ D-02 – a newer-schema NEWEST generation is refused, not silently rolled back', async () => {
+    const cid = 'c-straddle'
+    await commitAutosave(worldAt('str', 1, cid), 1) // gen a, this build's schema
+    const newer = worldAt('str', 2, cid)
+    newer.schemaVersion = SAVE_SCHEMA_VERSION + 1 // what a newer build would have written
+    await commitAutosave(newer, 2) // gen b, the NEWEST generation
+
+    // The DB door answers with a CODE now – `future-schema`, the one whose whole point is that the
+    // answer is «update the app» rather than «this file is broken».
+    const thrown = await readSlot(`auto:${cid}:b`).then(
+      () => null,
+      (err: unknown) => err,
+    )
+    expect(thrown).toBeInstanceOf(SaveFileError)
+    expect((thrown as SaveFileError).code).toBe('future-schema')
+    // Byte-identical to the sentence the migration ladder has always thrown – no copy moved.
+    expect((thrown as Error).message).toBe(
+      `Save schema ${SAVE_SCHEMA_VERSION + 1} is newer than supported ${SAVE_SCHEMA_VERSION}`,
+    )
+
+    // ...and the boot door does NOT answer with the older week. A fallback exists for corruption,
+    // which is unrecoverable; a future schema is recoverable by updating the app, so both
+    // generations are left exactly where they are.
+    await expect(readLatestAutosave(cid)).rejects.toMatchObject({ code: 'future-schema' })
+    expect((await readSlot(`auto:${cid}:a`)).week, 'the older generation is untouched').toBe(1)
+    const stillThere = await readSlot(`auto:${cid}:b`).then(
+      () => null,
+      (err: unknown) => (err as SaveFileError).code,
+    )
+    expect(stillThere, 'the newer generation is still on disk, still too new').toBe('future-schema')
+    expect((await listSlots(cid)).map((s) => s.revision).sort()).toEqual([1, 2])
   })
 
   it('⚠ E-12 – two generations that TIE resolve by insertion order, not by the comparator flipping', async () => {

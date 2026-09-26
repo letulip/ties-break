@@ -1,5 +1,6 @@
 import { openDB, reqToPromise } from './idb'
 import { compressWorld, decompressWorld } from '../engine/saveCodec'
+import { SaveFileError } from '../engine/saveGuard'
 import type { WorldState } from '../engine/world'
 import { CommandRefusedError } from '../shared/protocol'
 import type { SlotMeta, CareerMeta } from '../shared/protocol'
@@ -569,6 +570,16 @@ export async function readLatestAutosave(
     const world = await decompressWorld(gens[0].payload, gens[0].checksum)
     return { world, recovered: false, revision }
   } catch (err) {
+    // ⭐⭐ D-02 (principles review, 26.09) – THE FALLBACK IS FOR CORRUPTION AND ONLY FOR CORRUPTION.
+    // It used to catch ANY throw, which turned a straddled version skew (one generation written by a
+    // newer build, one by this one) into a silent rollback: the player was told the career had been
+    // "repaired", handed the older week, and had the newer generation overwritten by the next two
+    // commits. A checksum mismatch, a broken gzip or unparseable JSON is unrecoverable and the older
+    // generation is genuinely the best answer; a `future-schema` is recoverable by updating the app,
+    // so it is rethrown with BOTH generations untouched and `errorMsg` carries the code to the store.
+    // U-01's boot refusal is reached only when both generations are too new, which is why it never
+    // saw this case.
+    if (!(err instanceof SaveFileError) || err.code !== 'corrupted') throw err
     if (gens.length > 1) {
       const world = await decompressWorld(gens[1].payload, gens[1].checksum)
       return { world, recovered: true, revision }

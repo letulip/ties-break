@@ -1,4 +1,5 @@
 import type { WorldState } from './world'
+import { SAVE_SCHEMA_VERSION } from './world'
 import { migrateSave } from './migrations'
 import {
   guardCompressedSize,
@@ -79,13 +80,59 @@ async function verifyChecksum(payload: Uint8Array, checksum: Uint8Array): Promis
   }
 }
 
+/** ⭐ D-02's other half: run `step` and give whatever it throws raw the `corrupted` CODE, with its
+ *  MESSAGE untouched. `readLatestAutosave` may fall back to the older autosave generation on
+ *  corruption alone now, and "corruption" here means every way a record of ours can be unreadable –
+ *  a torn gzip stream, unparseable JSON, a migration block tripping over data the checksum happily
+ *  blessed. Those are exactly the cases the two-generation design exists for, and leaving them
+ *  untyped would have made the narrower fallback a data-loss regression. Nothing is re-worded:
+ *  `decodeExportFile` writes its own sentences one door along because a FILE is untrusted; a record
+ *  out of the player's own database already has a sentence on the boot path and it stays. */
+async function asCorrupted<T>(step: () => T | Promise<T>): Promise<T> {
+  try {
+    return await step()
+  } catch (err) {
+    if (err instanceof SaveFileError) throw err
+    throw new SaveFileError('corrupted', err instanceof Error ? err.message : String(err))
+  }
+}
+
 /** The DB-record door: caps + checksum + migration. See the trust-levels note up top for why this
  *  path deliberately does NOT run the bounds walk or the spine – the autosave chain is family. */
 export async function decompressWorld(payload: Uint8Array, checksum?: Uint8Array): Promise<WorldState> {
   guardCompressedSize(payload.byteLength)
   if (checksum) await verifyChecksum(payload, checksum)
-  const json = new TextDecoder().decode(await gunzipBounded(payload, MAX_EXPANDED_BYTES))
-  return migrateSave(JSON.parse(json))
+  const parsed = await asCorrupted(async () =>
+    JSON.parse(new TextDecoder().decode(await gunzipBounded(payload, MAX_EXPANDED_BYTES))),
+  )
+  // ⭐⭐ D-02 (principles review, 26.09) – A SAVE FROM A NEWER BUILD IS NOT CORRUPTION, AND THIS DOOR
+  // USED TO SAY IT WAS. `migrateSave` refuses a schema it does not know with a plain `Error`, so no
+  // code crossed, and `readLatestAutosave`'s corruption fallback caught it like any other throw: the
+  // player was told the career had been "repaired", handed the older generation, and had the newer
+  // one overwritten two commits later. E-05 already fixed this on the FILE door
+  // (`guardDeclaredVersion`, saveGuard.ts), where the answer is «update the app, then import it»;
+  // this is the same question arriving through the player's own database, and it has to be the same
+  // KIND of answer. The migration ladder is the wrong place to ask it – its charter is that
+  // migrations "upgrade versions, they do not audit".
+  // ⚠ THE SENTENCE IS THE LADDER'S OWN, BYTE FOR BYTE (`migrations.ts`: `Save schema ${v} is newer
+  // than supported ${SAVE_SCHEMA_VERSION}`), because no shipped migration may be edited and no copy
+  // is this wave's to change. What is new is the TYPE around it: `future-schema` reaches the store,
+  // and the fallback can tell "unrecoverable" from "recoverable by updating".
+  const declared = (parsed as { schemaVersion?: unknown } | null)?.schemaVersion
+  if (typeof declared === 'number' && declared > SAVE_SCHEMA_VERSION) {
+    throw new SaveFileError('future-schema', `Save schema ${declared} is newer than supported ${SAVE_SCHEMA_VERSION}`)
+  }
+  // ⚠ AND EVERY OTHER FAILURE OF THIS DOOR CARRIES THE `corrupted` CODE, which is what lets
+  // `readLatestAutosave` fall back on corruption ALONE. Without it, "fall back only on 'corrupted'"
+  // would have deleted today's net for the one case that really needs it: a record whose bytes are
+  // intact – so the checksum blesses them – and which then explodes inside a migration block, e.g.
+  // the ladder's own "missing seed/week/profile". That is an unreadable newer generation and the
+  // older one IS the answer; refusing it would turn a safety net into data loss, which is the
+  // argument this file's trust-levels note already makes.
+  // ⚠ THE MESSAGE IS THE ORIGINAL, UNCHANGED – only a code is added around it. `decodeExportFile`
+  // does the same thing one door along and REWRITES the sentence there; here the sentence is what a
+  // player already sees on the boot path and no copy in this wave is ours to move.
+  return asCorrupted(() => migrateSave(parsed))
 }
 
 export async function encodeExportFile(world: WorldState): Promise<Uint8Array> {
