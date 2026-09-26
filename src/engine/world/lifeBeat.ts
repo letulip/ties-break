@@ -2760,6 +2760,17 @@ const SPOUSE_VIEW_CARD = 'The one she married wants a word.'
 // her, and this card quotes nobody. Giving the scene a voiced line of hers – four cells, two
 // presences – is a wording decision the owner may take at T7's table; a draft that jumped ahead of
 // it would be choosing for him.
+//
+// ⚠⚠ AND IF HE EVER TAKES IT, THE SHAPE IS **FOUR CELLS AND NO PRESENCE AXIS** – 26.09, ruling 19 on
+// B-08, said here rather than left for the test to say. `'own-key'` fires on the week she lives behind
+// her own door, which is past the age at which any stage is still `roof`: school is over by 18.92 for
+// every girl the game can generate and `diaryLifeStageFor` sends everyone past 22 to `independent`,
+// `college` being away as well. A `roof` column written here would be four lines the owner had read
+// and no player could ever be shown – the exact defect ruling 19 removed from §3g, §3j and §3l. ⚠ IT
+// IS ALSO ENFORCED: `tests/principles-b08-presence-reach.test.ts` §C measures which kinds read the
+// stage and refuses a presence-keyed pool whose roof is unreachable, NAMING the kind – so a voiced
+// `'own-key'` pool with two columns goes red there, and this paragraph is how the author connects
+// that red to the banner that invited it.
 
 /** ⚠ ⚠ DRAFT – the card's one line: what the week holds, seen from the family's side. */
 const OWN_KEY_SAID = 'She has a place of her own now. A spare key went onto the hook by our door, and Sunday dinner is a standing thing.'
