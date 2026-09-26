@@ -60,7 +60,7 @@ import {
   adoptAutosave,
   SaveConflictError,
   writeNamed,
-  readSlot,
+  readSlotRecord,
   readLatestAutosave,
   listSlots,
   deleteSlot,
@@ -683,7 +683,22 @@ async function handle(msg: ToWorker): Promise<ToUI> {
      * Named saves are untouched by construction — this writes only the autosave rotation.
      */
     case 'restoreSlot': {
-      const candidate = await readSlot(msg.slot)
+      const { world: candidate, meta } = await readSlotRecord(msg.slot)
+      // ⭐⭐ D-01 (principles review, 26.09) – THE KEY WAS RE-VALIDATED FOR EXISTENCE AND NOTHING
+      // ELSE, which is invariant 1 with a hole in it: a screen holding a stale slot list names the
+      // generation that holds the CURRENT state, and the restore commits it over the only generation
+      // that still held the previous one. `baseRevision` protects every mutation from exactly this
+      // ("a command issued against a snapshot the worker has since moved past must not run at all")
+      // and a restore is a mutation of the career's timeline – it just measures the staleness
+      // against a different thing: the RECORD's revision versus the one the caller read off its
+      // SlotMeta. Refused with the same typed STALE_REVISION, carrying the committed revision so the
+      // caller refreshes and re-decides.
+      // ⚠ ONLY WHEN THE CALLER SAID SO. A pre-W1-INTEGRITY-A record has no revision and a caller
+      // that never read the list has no belief to state; neither may be locked out of a restore, so
+      // an absent `msg.revision` skips the comparison exactly as the wire's optional field promises.
+      if (msg.revision !== undefined && msg.revision !== (meta.revision ?? 0)) {
+        throw new StaleRevisionError(committedRevision, msg.revision)
+      }
       const rngRecovered = ensureMainState(candidate)
       // ⭐ E-02: after every repair, before any commit – see `snapshotMsg`. A slot that cannot render
       // must leave the world the player is playing exactly where it was.

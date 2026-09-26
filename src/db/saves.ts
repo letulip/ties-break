@@ -184,6 +184,20 @@ function tx(database: IDBDatabase, stores: string | string[], mode: IDBTransacti
   return database.transaction(stores, mode)
 }
 
+/** ⭐ D-P5 (principles review, 26.09) – RESOLVE ON `complete`, WHICH IS THIS FILE'S OWN RULE. The
+ *  header above says every write is "resolved only on the transaction's `complete` event", and
+ *  `deleteCareer` wrote that out by hand – but `touchCareer` and `deleteSlot` resolved on the
+ *  REQUEST's `success`, which is not durability: a transaction can still abort after a request has
+ *  succeeded, and the caller has already been told the write happened. One helper so the three
+ *  writes have one spelling of "it is on disk". */
+function txDone(transaction: IDBTransaction, what: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error ?? new Error(`${what} failed`))
+    transaction.onabort = () => reject(transaction.error ?? new Error(`${what} aborted`))
+  })
+}
+
 function toMeta(r: SaveRecord): SlotMeta {
   return {
     slot: r.slot,
@@ -365,10 +379,12 @@ export async function listCareers(): Promise<CareerMeta[]> {
  *  it opens rather than waiting for the first week to tick. */
 export async function touchCareer(careerId: string, at: number = Date.now()): Promise<void> {
   const database = await db()
-  const store = tx(database, CAREERS, 'readwrite').objectStore(CAREERS)
+  const transaction = tx(database, CAREERS, 'readwrite')
+  const store = transaction.objectStore(CAREERS)
   const existing = (await reqToPromise(store.get(careerId))) as CareerMeta | undefined
   if (!existing) return // nothing to touch - a slot with no meta row is already an inconsistency
-  await reqToPromise(store.put({ ...existing, lastPlayedAt: at }))
+  store.put({ ...existing, lastPlayedAt: at })
+  await txDone(transaction, 'touchCareer')
 }
 
 /** Delete every slot belonging to a career plus its meta row, in one transaction. */
@@ -381,11 +397,7 @@ export async function deleteCareer(careerId: string): Promise<void> {
     if (r.careerId === careerId) saves.delete(r.slot)
   }
   transaction.objectStore(CAREERS).delete(careerId)
-  await new Promise<void>((resolve, reject) => {
-    transaction.oncomplete = () => resolve()
-    transaction.onerror = () => reject(transaction.error ?? new Error('deleteCareer failed'))
-    transaction.onabort = () => reject(transaction.error ?? new Error('deleteCareer aborted'))
-  })
+  await txDone(transaction, 'deleteCareer')
 }
 
 // --- slots -------------------------------------------------------------------
@@ -399,15 +411,26 @@ export async function listSlots(careerId: string): Promise<SlotMeta[]> {
     .sort((a, b) => b.savedAt - a.savedAt)
 }
 
-export async function readSlot(slot: string): Promise<WorldState> {
+/** ⭐⭐ D-01 – THE RECORD'S OWN ENVELOPE, alongside the world it carries. `restoreSlot` has to
+ *  compare the revision the caller BELIEVED this slot held against the one it actually holds, and
+ *  the payload was already being decoded, so this is the same single `get` rather than a second
+ *  read of the whole record (D-P6's complaint, not made worse). `readSlot` is the one-field reading
+ *  of it – no caller that only wants the world has to learn about the meta. */
+export async function readSlotRecord(slot: string): Promise<{ world: WorldState; meta: SlotMeta }> {
   const record = await getRecord(slot)
   if (!record) throw new Error(`No save in slot "${slot}"`)
-  return decompressWorld(record.payload, record.checksum)
+  return { world: await decompressWorld(record.payload, record.checksum), meta: toMeta(record) }
+}
+
+export async function readSlot(slot: string): Promise<WorldState> {
+  return (await readSlotRecord(slot)).world
 }
 
 export async function deleteSlot(slot: string): Promise<void> {
   const database = await db()
-  await reqToPromise(tx(database, STORE, 'readwrite').objectStore(STORE).delete(slot))
+  const transaction = tx(database, STORE, 'readwrite')
+  transaction.objectStore(STORE).delete(slot)
+  await txDone(transaction, 'deleteSlot')
 }
 
 /**

@@ -67,11 +67,31 @@ const confirmingNewCareer = ref(false)
 // worker's refusal of a pending tournament/knock stays, and it is the half that ever protected a
 // save (tests/dev-fast-forward.test.ts pins the bargain in both directions).
 
-// game.tick()/setPlan() don't refresh `careers` (only newCareer/loadCareer/deleteCareer/
-// importSave do – see game.ts), so the active career's week/lastPlayedAt can go stale
-// while the player stays on Home ticking weeks. App.vue mounts this screen fresh each
-// time the tab is opened (plain v-if chain, no keep-alive), so this catches it on entry.
+// Most mutations don't refresh `careers` (the ones that do are listed beside their own
+// `refreshCareers()` in game.ts), so the active career's week/lastPlayedAt can go stale while the
+// player stays on Home ticking weeks. App.vue mounts this screen fresh each time the tab is opened
+// (plain v-if chain, no keep-alive), so this catches it on entry.
+// ⚠ 26.09 – THIS NOTE USED TO NAME `tick`/`setPlan` AS THE TWO THAT DO NOT REFRESH, and `tick` has
+// refreshed for some time (D-P3). A list of call sites written out here is a second copy of a fact
+// that lives in the store, so it is stated as the rule instead of enumerated: the enumeration is
+// what rotted, and nothing on this screen depends on which commands are in it.
 onMounted(() => game.refreshCareers())
+// ⭐⭐ D-01 (principles review, 26.09) – AND `slots` IS THE SAME OMISSION ONE FIELD ALONG, with a
+// worse ending. 41 store actions commit an autosave into the OLDER generation and only 26 of them
+// refresh the list; the other 15 include every irreversible dialog answer and `setPlan`. `game.slots`
+// has exactly ONE reader – this screen – so the stale list was never anybody else's problem and
+// never got corrected: «Restore previous» is `autoSlots[1]` sorted by the record's own `savedAt`,
+// and after one unrefreshed mutation that row points at the slot holding the CURRENT state. The
+// restore then reported ok, moved nothing the player could see, and overwrote the one generation
+// that still held the pre-command career – the corruption insurance the owner's ruling
+// (decisions.md:135) put behind that button.
+//
+// ⚠ THE ONE READER BECOMES THE ONE REFRESH, which is why this is a `watch` on the revision rather
+// than 15 more `refreshSlots()` calls in the store: the revision is the worker's own count of
+// committed mutations, so "the list may have moved" has exactly one spelling and a sixteenth
+// action cannot forget it. `immediate` covers the ordinary order (tick on Home, then open More);
+// the watch covers the ▶▶ 52 (dev) button, which sits on this very tab.
+watch(() => game.revision, () => void game.refreshSlots(), { immediate: true })
 const saveName = ref('')
 const seedCopied = ref(false)
 

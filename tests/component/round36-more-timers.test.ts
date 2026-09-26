@@ -54,6 +54,9 @@ function mountMore(seed: string): ReturnType<typeof mount> {
   const store = useGameStore()
   store.snapshot = careerSnapshot(4, seed)
   store.refreshCareers = async () => {}
+  // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+  // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+  store.refreshSlots = async () => {}
   return mount(MoreScreen, { attachTo: document.body })
 }
 

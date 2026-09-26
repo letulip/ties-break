@@ -290,7 +290,16 @@ export type ToWorker =
   // relaunch then picked the newer pre-restore generation and silently rolled the restore back.
   // Loading-for-inspection (read without becoming the active career) is deliberately NOT this
   // command; no surface needs it today, and when one does it must be a separate query.
-  | { id: number; type: 'restoreSlot'; slot: string }
+  // ⭐⭐ D-01 (principles review, 26.09) – `revision` IS INVARIANT 1 APPLIED TO A RESTORE. The slot
+  // KEY was re-validated only for existence, so a screen holding a stale slot list could name the
+  // generation that holds the CURRENT state and have it committed over the real previous one. This
+  // is the same optimistic-concurrency token every mutation carries as `baseRevision`, measured
+  // against a different thing: not the world's revision but the one the SlotMeta the caller read
+  // claimed the RECORD held. A disagreement is the existing STALE_REVISION refusal.
+  // ⚠ OPTIONAL ON THE WIRE, deliberately: records written before W1-INTEGRITY-A carry no revision,
+  // and a caller that cannot say must still be able to restore. It lives on the record envelope, so
+  // no save payload and no schema version moves.
+  | { id: number; type: 'restoreSlot'; slot: string; revision?: number }
   // W1-INTEGRITY-A: read-only snapshot of the committed world – the stale-revision refresh path.
   | { id: number; type: 'getSnapshot' }
   // ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по требованию,

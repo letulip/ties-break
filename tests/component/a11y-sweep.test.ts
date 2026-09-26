@@ -257,6 +257,9 @@ function mountMore(careers: CareerMeta[] = []) {
   // MoreScreen asks the worker for the career list when it mounts, and there is no worker in this
   // runner. The list is supplied above, so the call has nothing to do here but fail.
   store.refreshCareers = async () => {}
+  // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+  // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+  store.refreshSlots = async () => {}
   return mount(MoreScreen, { global: { stubs: { teleport: true } } })
 }
 

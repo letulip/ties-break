@@ -790,7 +790,14 @@ export const useGameStore = defineStore('game', {
      *  this replaced `load`, whose restored world evaporated on the next boot. */
     async restoreSlot(slot: string) {
       await this.runOp('load', async () => {
-        const res = this.takeOk(await request({ type: 'restoreSlot', slot }))
+        // ⭐⭐ D-01 – WHAT THIS SCREEN BELIEVED THE SLOT HELD RIDES ALONG. `slots` IS the UI's belief
+        // (More is its only reader), so the revision is read off it here rather than passed in by
+        // every call site: a caller that never saw the list sends nothing and the worker checks
+        // nothing, while a caller working from a stale list is refused with STALE_REVISION instead
+        // of committing the present over the past. Undefined for a pre-revision record, which is
+        // the same "cannot say" the wire's optional field means.
+        const believed = this.slots.find((s) => s.slot === slot)?.revision
+        const res = this.takeOk(await request({ type: 'restoreSlot', slot, revision: believed }))
         this.applySnapshot(res)
         this.recovered = res.recovered ?? false
         await this.refreshSlots()
