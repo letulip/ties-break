@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 140 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 141 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 22 | [AVIF RULED OUT BY HIS TERMS, AND THE MEASUREMENTS HANDED TO THE ARCHITECT](#26092026--avif-ruled-out-by-his-terms-and-the-measurements-handed-to-the-architect) | 2026-09-26 |
+| general | 23 | [THE SECONDARY MARKET COMMISSIONED: THINGS SELL THROUGH TIME, AND BUYERS WRITE LETTERS](#26092026--the-secondary-market-commissioned-things-sell-through-time-and-buyers-write-letters) | 2026-09-26 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5523,3 +5523,20 @@ one manifest-only icon (T3.12, −105 KiB, W3; `pwa-192` / `pwa-512` stay – th
 artwork reads them offline). ~0.3 MB in all – after that the ceiling is his own constraint, and it
 rises when an art round needs it, as he said himself: «это наше ограничение, мы его будем
 неизбежно поднимать».
+
+## 26.09.2026 – THE SECONDARY MARKET COMMISSIONED: THINGS SELL THROUGH TIME, AND BUYERS WRITE LETTERS
+
+His micro-wave for after the principles fixes, planned while the builder works. Selling a thing –
+car, house, boat, plane, the brand, the academy – stops being instant: «все объекты имеют свой срок
+экспозиции … дом более ликвидный, яхта менее ликвидная», each class with its own discount corridor,
+and the corridor coupled to the market's existing crash arcs PER CLASS, signed – «в кризис может
+быть еще больше на какой-то класс активов … а на какой-то меньше или вообще наоборот – цены могут
+подняться, как часто бывает с недвижимостью». Buyers write letters into the existing inbox with a
+price and принять/отклонить – his own extension the same hour. And one ruling he made on the spot:
+**the academy sells only as one lot** – «вряд ли мы в реальности можем только корты продать, землю
+или админ здание. Это тоже надо заложить и предупредить пользователя».
+
+The spec is docs/specs/secondary-market-2026-09.md (five rulings still open, the fire sale the
+biggest of them); the step-by-step builder plan is docs/plans/secondary-market-builder-2026-09.md,
+gated on those rulings for the strings and the fire sale, free to start S1–S3 without them. The
+deposit and the index fund stay instant – parked cash is not a thing, and the need gate reads it.
