@@ -25,7 +25,7 @@
 // what the install glob sweeps in, and the housekeeping that stops a phone paying twice.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { extname, join } from 'node:path'
+import { basename, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dropLegacyArtCaches, LEGACY_ART_CACHES } from '../src/pwa'
 
@@ -45,6 +45,39 @@ const PRECACHED_EXT = (() => {
   const m = read('vite.config.ts').match(/globPatterns: \['\*\*\/\*\.\{([^}]+)\}'\]/)
   if (!m) throw new Error('globPatterns is no longer a single brace list – re-aim this reader')
   return new Set(m[1].split(',').map((e) => `.${e.trim()}`))
+})()
+
+/**
+ * The files `globIgnores` SUBTRACTS from that sweep – READ OUT OF THE CONFIG, for exactly
+ * `PRECACHED_EXT`'s reason one block up.
+ *
+ * ⚠⚠ ADDED 26.09 (W3 T3.12) AND THE FIXTURE WOULD OTHERWISE HAVE LIED. `precached` below was an
+ * extension test and nothing else, so the moment the config gained an ignore list every claim in
+ * this file went on counting a file the phone no longer downloads. That is this file's own founding
+ * failure – «the fixture and the claim were two copies of the same constant» – arriving from the
+ * other direction, and it would have made the install look 105 KiB fuller than it is.
+ *
+ * ⚠ IT THROWS ON A SHAPE IT DOES NOT UNDERSTAND rather than quietly matching nothing. A reader that
+ * returns an empty set when its pattern rots turns every claim below into a tautology.
+ *
+ * ⚠⚠ AND THE MATCH IS ANCHORED TO A WHOLE LINE, WHICH IS NOT FUSSINESS – the first draft read
+ * `globIgnores: ['**&#47;images/**']` out of the config's own PROSE, five screens above the real
+ * option, where that string is quoted in the sentence recording that the art ignore was REMOVED on
+ * 29.08. It is the same trap as this file's `cacheName:` note one describe down: a word-level match
+ * fires on its own documentation. Caught on the first run, by the throw above.
+ */
+const PRECACHE_IGNORED = (() => {
+  const m = read('vite.config.ts').match(/^\s*globIgnores: \[([^\]]*)\],?\s*$/m)
+  if (!m) throw new Error('globIgnores is no longer a single-line array in vite.config.ts – re-aim this reader')
+  const patterns = [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]!)
+  if (patterns.length === 0) throw new Error('globIgnores is empty – re-aim this reader, or restore the entry T3.12 put in it')
+  return new Set(
+    patterns.map((p) => {
+      const one = p.match(/^\*\*\/([^*/]+)$/)
+      if (!one) throw new Error(`globIgnores pattern '${p}' is not the '**/<file>' shape this reader understands`)
+      return one[1]!
+    }),
+  )
 })()
 
 const pkg = JSON.parse(read('package.json')) as { scripts: Record<string, string> }
@@ -72,7 +105,8 @@ function walk(dir: string): string[] {
 const PUBLIC = walk(join(ROOT, 'public')).map((f) => ({
   rel: f.slice(join(ROOT, 'public').length + 1),
   bytes: statSync(f).size,
-  precached: PRECACHED_EXT.has(extname(f)),
+  // ⚠ TWO GATES, NOT ONE – the glob sweeps by extension and `globIgnores` subtracts by name (T3.12).
+  precached: PRECACHED_EXT.has(extname(f)) && !PRECACHE_IGNORED.has(basename(f)),
 }))
 
 const kib = (files: { bytes: number }[]) => files.reduce((a, f) => a + f.bytes, 0) / 1024
@@ -147,6 +181,46 @@ describe('round 29 part two #7 – the art is in the PWA install', () => {
     // be in the install.
     expect(fonts.length).toBe(3)
     expect(fonts.every((f) => f.precached)).toBe(true)
+  })
+
+  // ⚠⚠ ADDED 26.09 – T3.12 OF THE PRINCIPLES FIX, AND IT IS A THREE-WAY DISTINCTION RATHER THAN A
+  // SIZE RULE. The maskable icon (105.1 KiB) is read by the MANIFEST alone: the platform fetches it
+  // once, online, when the app is installed – the one moment a precache cannot help. `pwa-192` and
+  // `pwa-512` are read by RUNNING code, `src/audio/music.ts`'s Media Session artwork, on a phone
+  // that may never be online again. So one leaves the install and two stay, and the reason is WHO
+  // READS THEM, never how big they are.
+  //
+  // ⚠ TWO DOORS, AND THE FIRST ATTEMPT CLOSED ONLY ONE. `globIgnores` filters the glob over the
+  // build directory; vite-plugin-pwa ALSO pushes every `manifest.icons[].src` into the precache by
+  // hand (`includeManifestIcons`, default true), and that path ignores `globIgnores` entirely. With
+  // only the glob closed the built worker still listed the icon and the install did not move –
+  // 368 listed entries → 367, 362 UNIQUE → 362. Both doors, or neither: that is why both lines are
+  // pinned here.
+  //
+  // MUTATION ARMS: delete the `globIgnores` entry → `PRECACHE_IGNORED`'s reader throws by name.
+  // Delete `includeManifestIcons: false` → the second expectation goes red, and it is the one that
+  // actually frees the bytes.
+  it('the manifest-only maskable icon is out of the install, and the two the music reads are in', () => {
+    const vite = read('vite.config.ts')
+    expect(PRECACHE_IGNORED, 'the glob no longer subtracts the maskable icon').toContain('pwa-maskable-512.png')
+    expect(vite, "the manifest's own icon path still precaches it – globIgnores cannot reach that one").toMatch(
+      /includeManifestIcons: false/,
+    )
+
+    const icon = (name: string) => PUBLIC.find((f) => f.rel === name)
+    expect(icon('pwa-maskable-512.png'), 'the fixture has something to say').toBeDefined()
+    expect(icon('pwa-maskable-512.png')!.precached).toBe(false)
+    // ...and it is still SHIPPED, which is the half that must not be "optimised" next: the platform
+    // fetches it from the manifest at install time, so removing the file breaks the launcher icon.
+    expect(vite, 'the manifest no longer lists the maskable icon at all').toContain("src: 'pwa-maskable-512.png'")
+
+    // THE TWO THAT STAY, and their reason, pinned together so neither can be dropped as a spare copy.
+    for (const name of ['pwa-192.png', 'pwa-512.png']) {
+      expect(icon(name), `${name} is missing from public/`).toBeDefined()
+      expect(icon(name)!.precached, `${name} must stay in the install – the lock-screen artwork`).toBe(true)
+      expect(vite, `${name} is no longer named in includeAssets`).toContain(`'${name}'`)
+      expect(read('src/audio/music.ts'), `${name} is no longer the Media Session artwork`).toContain(name)
+    }
   })
 
   it('the two runtime art routes are gone from the config, not merely unused', () => {
