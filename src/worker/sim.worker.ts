@@ -204,6 +204,44 @@ function ensureMainState(w: WorldState): boolean {
 }
 
 /**
+ * ⭐⭐ D-04 (principles review, 26.09) – THE IMPORT DOOR RENDERS **AND TICKS** THE CANDIDATE BEFORE IT
+ * ADOPTS ANYTHING, and both throws come back as the same typed refusal.
+ *
+ * E-02 moved `toSnapshot` in front of the adopt, which stopped a file that cannot RENDER from
+ * becoming a persisted career. The 26.09 sweep found the next step of the same hole: of the 16 top
+ * level fields that still passed the spine at v89, three (`knockHistory`, `children`, `dynasty`)
+ * rendered fine, were written as the newest autosave, and then threw on the first tick – a persisted
+ * career that cannot ADVANCE. Spine rows answer the three that are lists; this answers the rest, and
+ * every hole after them, WITHOUT enumerating anything: if the file cannot survive one week it does
+ * not come in.
+ *
+ * ⚠ THE TICK RUNS ON A CLONE THAT IS THROWN AWAY, so the committed RNG stream does not move a single
+ * draw: `resumeMain` mutates the pair it is handed, and the pair it is handed belongs to the discarded
+ * copy. The candidate this function returns a snapshot for is byte-for-byte the one that arrived.
+ *
+ * ⚠ AND THE SENTENCE IS `decodeExportFile`'s OWN, BYTE FOR BYTE – the same «damaged» line a file that
+ * will not parse already gets. No copy is written here: this is the import door reporting the same
+ * kind of news about the same file, and a new sentence would be the owner's to write. The code is
+ * `corrupted` for the same reason the codec wraps its own raw throws that way: «the player never sees
+ * a bare stack-trace message», which is exactly what the 13 snapshot-throwers used to produce.
+ *
+ * ⚠ IT COSTS ONE TICK (~7 ms) ON A PATH A PLAYER TAKES BY HAND, once per imported file. This is
+ * B-06's «normalise at the door, once» in concrete form – the door, not every reader, answers whether
+ * the world is usable.
+ */
+function importDryRun(candidate: WorldState): Snapshot {
+  try {
+    const snapshot = toSnapshot(candidate)
+    const rehearsal = structuredClone(candidate)
+    tickWeek(rehearsal, resumeMain(rehearsal.rngMain))
+    return snapshot
+  } catch (err) {
+    if (err instanceof SaveFileError) throw err
+    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+  }
+}
+
+/**
  * TB-03 — THE CANDIDATE-STATE COMMIT, the shape of every mutating command:
  *
  *     capture committed state            (`world`, `committedRevision`)
@@ -747,7 +785,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // that can throw runs BEFORE the file becomes the active career and before it is written as
       // the newest autosave: a foreign file that cannot render is now a refused import rather than a
       // persisted career that renders nothing. See `snapshotMsg`.
-      const snapshot = toSnapshot(candidate)
+      const snapshot = importDryRun(candidate)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision

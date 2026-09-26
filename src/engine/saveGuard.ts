@@ -228,10 +228,14 @@ const SPINE: SpineRule[] = [
   // ⚠ AND EVERY ONE OF THEM IS A DEREFERENCE, NOT A TASTE: `injuryHistory` and `financeWeeks` are
   // iterated, `birthdays` and `milestones` are `.some`d, `internationalEntryWeeks` is `.filter`ed,
   // `vacations` and `practices` are `.find`/`.map`ped, and `careerTotals.prizeCents` is read
-  // outright. The fields the same probe found SELF-HEALING (`assets`, `knockHistory`,
-  // `kidFundsCents`, `peakPhysical`, `masseurSessionsPerWeek` – every reader guards them with `??`)
-  // are deliberately NOT here: a spine row for a field the engine survives without would refuse a
-  // file this build can actually read, which is the opposite of what the gate is for.
+  // outright. The fields the same probe found SELF-HEALING (`assets`, `kidFundsCents`,
+  // `peakPhysical`, `masseurSessionsPerWeek` – every reader guards them with `??`) are deliberately
+  // NOT here: a spine row for a field the engine survives without would refuse a file this build can
+  // actually read, which is the opposite of what the gate is for.
+  // ⚠⚠ 26.09 – `knockHistory` LEFT THAT LIST, AND IT LEFT IT BY MEASUREMENT (D-04). It was self
+  // healing at v70 and is not any more: a reader lost its `??` between then and v89, so a file
+  // without it renders and then throws on the FIRST TICK. The list above is a claim about the code as
+  // it stands, not a permanent property, which is why the sweep is re-run rather than remembered.
   { field: 'financeWeeks', since: 11, check: anArray },
   { field: 'injuryHistory', since: 12, check: anArray },
   { field: 'vacations', since: 13, check: anArray },
@@ -250,6 +254,20 @@ const SPINE: SpineRule[] = [
         : 'must carry the career totals',
   },
   { field: 'birthdays', since: 48, check: anArray },
+  // ⭐⭐ D-04 (principles review, 26.09) – THE THREE ARRAY FIELDS THE SWEEP FOUND, and only those
+  // three. The same method as E-02's rows one block up, re-run on `v89.json`: 16 top-level fields
+  // passed this gate and then threw, 13 inside `toSnapshot` and 3 on the first tick after the file had
+  // already been persisted as the newest autosave. These are the three of the 16 that are LISTS, so
+  // `anArray` and its existing detail («must be a list») answer them inside the sentence this
+  // function already writes – no new wording, which is why the other 13 are not here. They are
+  // covered instead by `importSave`'s one-tick dry run, which needs no enumeration at all.
+  // ⚠ `since` IS THE VERSION THAT MADE EACH ONE REQUIRED, from migrations.ts's own steps
+  // (`knockHistory` v26, `children` v85, `bereavementWeeks` v87), so an older declared version skips
+  // the row exactly as `proEntryWeeks` and `penalties` do, and the golden corpus v0..current still
+  // imports.
+  { field: 'knockHistory', since: 26, check: anArray },
+  { field: 'children', since: 85, check: anArray },
+  { field: 'bereavementWeeks', since: 87, check: anArray },
   { field: 'trophiesByTier', since: 31, check: (v) => (isObject(v) ? null : 'must be the trophies ledger') },
   { field: 'offers', since: 32, check: anArray },
   {

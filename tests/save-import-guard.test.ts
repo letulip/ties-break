@@ -68,7 +68,11 @@ async function craftJsonFile(declared: number, json: string): Promise<Uint8Array
  *  (`financeWeeks` v11 … `milestones` v18) were already required at v35, so this literal – which
  *  claims in its own name to satisfy the v35 spine – had simply been an incomplete v35 file all
  *  along. Every arm that reads it still asserts exactly what it asserted before, and the two rows
- *  that arrived after v35 (`careerTotals` 39, `birthdays` 48) are correctly absent here. */
+ *  that arrived after v35 (`careerTotals` 39, `birthdays` 48) are correctly absent here.
+ *
+ *  ⚠ AND BY ONE MORE UNDER D-04 (26.09), for exactly the same reason: `knockHistory` is required
+ *  since v26, so this literal was an incomplete v35 file for that field too. `children` (v85) and
+ *  `bereavementWeeks` (v87) arrived after v35 and are correctly absent, like the two rows above. */
 function spineV35(overrides: Record<string, unknown> = {}): string {
   return JSON.stringify({
     schemaVersion: 35,
@@ -86,6 +90,7 @@ function spineV35(overrides: Record<string, unknown> = {}): string {
     nextEventId: 1,
     financeWeeks: [],
     injuryHistory: [],
+    knockHistory: [],
     vacations: [],
     practices: [],
     internationalEntryWeeks: [],
@@ -266,8 +271,14 @@ describe('layer 1b – the spine covers every required field a v70 file must car
     for (const [, since] of REQUIRED) expect(since).toBeLessThanOrEqual(SAVE_SCHEMA_VERSION)
   })
 
+  // ⚠⚠ RE-AIMED 26.09, AND THE PREMISE IS WHAT MOVED, NOT THE STANDARD. `knockHistory` left this
+  // list because it stopped being self-healing: D-04's sweep on `v89.json` found that a file without
+  // it renders and then throws on the FIRST TICK, so a reader lost its `??` somewhere between v70 and
+  // v89. The claim this arm makes is unchanged – a field the engine survives without must not be
+  // refused – and the four that still satisfy it are still asserted. `knockHistory` is now asserted
+  // the other way round, in layer 4, which is the honest place for a field that IS required.
   it('⚠ and the SELF-HEALING fields are deliberately NOT in it – removing them still imports', async () => {
-    for (const field of ['assets', 'knockHistory', 'kidFundsCents', 'peakPhysical', 'masseurSessionsPerWeek']) {
+    for (const field of ['assets', 'kidFundsCents', 'peakPhysical', 'masseurSessionsPerWeek']) {
       const json = v70Payload()
       delete json[field]
       const imported = await decodeExportFile(await craftJsonFile(70, JSON.stringify(json)))
@@ -306,6 +317,10 @@ interface Reply {
   id: number
   ok: boolean
   error?: string
+  /** ⭐ D-04 asks about this field by name: a refusal the store can BRANCH on, never a bare
+   *  TypeError. `errorMsg` leaves it absent for an untyped throw, which is exactly the tell. */
+  code?: string
+  revision?: number
   recovered?: true
   snapshot?: { week: number; careerId: string }
   bytes?: ArrayBuffer
@@ -436,4 +451,120 @@ describe('layer 3 — a failed import changes NOTHING', () => {
     expect(await slotFingerprint()).toBe(slotsBefore)
     expect(JSON.stringify((await send({ type: 'listCareers' })).careers)).toBe(careersBefore)
   })
+})
+
+// =================================================================================================
+// ⭐⭐ LAYER 4 – D-04 (principles review of 26.09, 04-worker-protocol-persistence.md): AT v89, 16 TOP
+// LEVEL FIELDS PASSED THE GATE. 13 of them threw inside `toSnapshot` – refused, but with a bare
+// `TypeError` and no `code`, which is precisely what the codec's own header says must never reach a
+// player – and 3 (`knockHistory`, `children`, `dynasty`) passed the snapshot, were PERSISTED as the
+// newest autosave, and then threw on the first tick: E-02's «a persisted career that cannot render»
+// moved one step later, into a career that cannot ADVANCE.
+//
+// Two halves, and this table is the one assertion over both:
+//   1. spine rows for the three ARRAY fields, which `anArray` and its existing detail already cover;
+//   2. a one-tick DRY RUN inside `importSave`, on a `structuredClone` that is thrown away, so the
+//      next hole is caught without anybody enumerating it first. This is the concrete form of B-06's
+//      «normalise at the door, once».
+//
+// ⚠ THE PROPERTY IS THE POINT, NOT THE 16 NAMES. Each field is asked the same question – if this file
+// gets through the door, can the career it becomes be RENDERED and ADVANCED? – and a refusal must
+// carry a code. So a seventeenth hole appearing in a future schema fails this table as soon as its
+// name is added, and the dry run means most of them never get through at all.
+//
+// ⚠ MUTATION-VERIFIED: remove the dry run from `case 'importSave'` and this table goes red.
+// =================================================================================================
+
+/** The review's own list, from `probes/d-spine-sweep.ts` re-run on this tree: 13 snapshot-throwers
+ *  then the 3 that reached the first tick. */
+const D04_GATE_PASSERS = [
+  'skills',
+  'potential',
+  'pendingTournament',
+  'bestFinishByTier',
+  'injury',
+  'knock',
+  'ending',
+  'fork',
+  'college',
+  'coachPairs',
+  'pregnancy',
+  'comeback',
+  'bereavementWeeks',
+  'knockHistory',
+  'children',
+  'dynasty',
+] as const
+
+/** The CURRENT golden, by name rather than by literal – `v70Payload` above is E-02's fixture and
+ *  three of the fields below did not exist yet at v70. */
+function currentPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const file = `${FIXTURES}/v${SAVE_SCHEMA_VERSION}.json`
+  return { ...(JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>), ...overrides }
+}
+
+async function currentFile(json: Record<string, unknown>): Promise<ArrayBuffer> {
+  const bytes = await craftJsonFile(SAVE_SCHEMA_VERSION, JSON.stringify(json))
+  return bytes.slice().buffer as ArrayBuffer
+}
+
+describe('layer 4 – D-04: nothing gets through the door that cannot render AND advance', () => {
+  // ⭐ HALF 1, AT THE GATE ITSELF. The three of the 16 that are LISTS are refused by the spine and
+  // NAMED, which is a better answer than the dry run's – it tells the player which field is wrong –
+  // and it is the only half a caller that never reaches the worker (`peekSave`, a future inspector)
+  // gets. Their own mutation: delete a row from SPINE and this table goes red on that field.
+  // ⚠ `since` MATTERS HERE AND IS ASSERTED: `children` (v85) and `bereavementWeeks` (v87) are
+  // required only on files that declare a version at or above their own, which is what keeps the
+  // golden corpus v0..current importable (layer 2 is the corpus-wide proof).
+  const D04_ARRAY_ROWS: [string, number][] = [
+    ['knockHistory', 26],
+    ['children', 85],
+    ['bereavementWeeks', 87],
+  ]
+
+  for (const [field, since] of D04_ARRAY_ROWS) {
+    it(`the gate names "${field}" (a list required since v${since}) instead of leaving it to the renderer`, async () => {
+      const json = currentPayload()
+      delete json[field]
+      await expectCode(
+        await craftJsonFile(SAVE_SCHEMA_VERSION, JSON.stringify(json)),
+        'invalid-shape',
+        new RegExp(`"${field}" must be a list`),
+      )
+      expect(since).toBeLessThanOrEqual(SAVE_SCHEMA_VERSION)
+    })
+  }
+
+  it('the control arm: the untouched current golden imports, renders and advances', async () => {
+    const res = await send({ type: 'importSave', bytes: await currentFile(currentPayload()) })
+    expect(res.ok, res.error).toBe(true)
+    const advanced = await send({ type: 'advance', weeks: 1, baseRevision: res.revision! })
+    expect(advanced.ok, advanced.error).toBe(true)
+  }, 60_000)
+
+  for (const field of D04_GATE_PASSERS) {
+    it(`a current-schema file without "${field}" is refused with a CODE, or renders and advances`, async () => {
+      const anchor = await exportedWorld()
+      const slotsBefore = await slotFingerprint()
+      const json = currentPayload()
+      delete json[field]
+
+      const res = await send({ type: 'importSave', bytes: await currentFile(json) })
+      if (res.ok) {
+        // It rendered, so the door has promised it works – and «works» includes the next week.
+        const advanced = await send({ type: 'advance', weeks: 1, baseRevision: res.revision! })
+        expect(advanced.ok, `without ${field}: a file the gate let through must also advance`).toBe(true)
+        return
+      }
+      // A refusal is the other acceptable answer, and it must be a TYPED one: the store cannot tell a
+      // refusal from a bug when the code is absent, and the player is shown the stack-trace sentence.
+      expect(res.code, `without ${field}: the refusal must carry a code`).toBeTruthy()
+      expect(res.error, `without ${field}: ...and a sentence`).toBeTruthy()
+      // ...and the career the player was playing is still the one the worker holds, on disk too.
+      const held = await exportedWorld()
+      expect(held.careerId).toBe(anchor.careerId)
+      expect(held.week).toBe(anchor.week)
+      expect(await slotFingerprint()).toBe(slotsBefore)
+    }, 60_000)
+  }
 })

@@ -18,9 +18,16 @@ import { workerHarness } from './helpers/workerHarness'
 // v35 — THE WORKER'S RNG REGIME (docs/review/proposals/P3-rng-persistence.md).
 //
 // Three claims, each of which is the wave's acceptance list verbatim:
-//   1. A load performs ZERO tickWeek calls — the persisted position is verified and resumed, and
-//      the whole-career replay is GONE from the load paths. Proved at the module boundary with
+//   1. A load performs no REPLAY — the persisted position is verified and resumed, and the
+//      whole-career replay is GONE from the load paths. Proved at the module boundary with
 //      spies, not with a grep: a regex can miss a re-import, a spy cannot.
+//      ⚠ RE-AIMED 26.09: this line read "ZERO tickWeek calls" until D-04 gave the import door a
+//      one-tick DRY RUN on a discarded `structuredClone` (sim.worker.ts, `importDryRun`), which
+//      stops a file that renders but cannot ADVANCE from being persisted. The property this claim
+//      is about is unchanged and still asserted below, twice over: the count is pinned at exactly
+//      ONE, so a replay through `tickWeek` (1040 of them for the career under test) fails it, and
+//      the position the worker holds is still identical to the one the save carried – which is the
+//      assertion that proves the rehearsal drew on the clone and not on the committed pair.
 //   2. A corrupted `rngMain` load still SUCCEEDS, through `recoverMainState`, and the snapshot
 //      arrives carrying `recovered: true` — the same flag (and the same UI surfacing) the autosave
 //      generation fallback has always used. Both corruption shapes are exercised: a pair that
@@ -88,7 +95,7 @@ beforeAll(async () => {
 })
 
 describe('a load verifies and resumes — it never replays', () => {
-  it('a 20-season import performs ZERO tickWeek calls and ZERO replays', async () => {
+  it('a 20-season import performs ONE dry-run tick and ZERO replays', async () => {
     const world = liveCareer('rng-regime-20s', 20 * 52)
     expect(world.rngMain.n).toBeGreaterThan(0)
 
@@ -97,8 +104,11 @@ describe('a load verifies and resumes — it never replays', () => {
     const res = await importIntoWorker(world)
     expect(res.ok, res.error).toBe(true)
     expect(res.snapshot!.week).toBe(20 * 52)
-    // The acceptance line itself: no tick, no replay, no recovery — the pair verified and stood.
-    expect(vi.mocked(tickWeek)).not.toHaveBeenCalled()
+    // The acceptance line itself: no replay, no recovery — the pair verified and stood. The single
+    // tick is D-04's import dry run (`importDryRun`), which runs on a clone that is thrown away;
+    // ONE rather than `not.toHaveBeenCalled()` keeps this arm a replay detector, since a replay of
+    // this career would be 1 040 of them.
+    expect(vi.mocked(tickWeek), 'the dry run, and nothing resembling a replay').toHaveBeenCalledTimes(1)
     expect(vi.mocked(replayMainState)).not.toHaveBeenCalled()
     expect(res.recovered).toBeUndefined()
 
