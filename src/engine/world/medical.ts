@@ -702,8 +702,12 @@ export function availabilityStatus(
   // So it sits below `injured` and below the suspension – whose own comment claims it «OUTRANKS EVERY
   // OTHER REFUSAL BUT INJURY», a sentence this task has no reason to falsify – and ABOVE everything
   // that follows, on the caps' own criterion one branch down: «an exam week tells her nothing she can
-  // act on, while "the allowance is gone until the season turns" is the fact that should reshape the
-  // rest of her year». The pause reshapes more than a year of it, and every refusal below is a
+  // act on, while "the allowance is gone until her next birthday" is the fact that should reshape the
+  // rest of her year». (⚠ THE QUOTED CLAUSE SAID «until the season turns» until 26.09, B-P3-09: the
+  // window has been her BIRTHDAY YEAR since P2 and both refusals below say so in the sentence the
+  // parent reads. The criterion this argument rests on is untouched – a fact that reshapes the rest of
+  // her year outranks a week she can do nothing about, whichever date it turns on.)
+  // The pause reshapes more than a year of it, and every refusal below is a
   // smaller truth about a rung or a week that would otherwise be printed in front of a larger one.
   //   ⚠ THE ONE SLOT BOUNDARY THAT IS UNOBSERVABLE THROUGH THE GATE, said so rather than claimed:
   //   the tier age gate immediately below can only answer 'old' at 24–35 (the junior rungs), and
@@ -792,7 +796,15 @@ export function availabilityStatus(
   // read as one paragraph rather than two unrelated gates. Precedence therefore runs
   // injured > too young > CAPPED > vacation/exam > medical > fatigued. Above the week-level
   // blackouts on purpose: an exam week tells her nothing she can act on, while "the allowance is
-  // gone until the season turns" is the fact that should reshape the rest of her year.
+  // gone until her next birthday" is the fact that should reshape the rest of her year.
+  //
+  // ⚠⚠ "UNTIL HER NEXT BIRTHDAY", AND IT SAID "UNTIL THE SEASON TURNS" UNTIL 26.09 (B-P3-09). The
+  // window is `entryCapUsage`'s, and that has been her BIRTHDAY YEAR since P2 – `world/entryCaps.ts`
+  // carries the measurement that moved it (a season-block window with an age-keyed limit leaked up to
+  // 28 entries in a birth year, measured at 18.8 against a rulebook 12). The refusal string below has
+  // said «A fresh allowance on her next birthday» since that wave; this note went on describing the
+  // window it replaced, so the file disagreed with itself about the date and only the comment was
+  // wrong. Nothing else in the paragraph moves: the precedence and its argument are untouched.
   //
   // Deliberately BELOW `injured`: a layoff is the fresher, more urgent news and it names a return
   // week, whereas the cap will still be there to report the moment she is fit again.
@@ -816,10 +828,19 @@ export function availabilityStatus(
   }
   // THE PRO AER (W2-LADDER §5) – the same family of rule one table up, in the same slot of the
   // precedence for the same reason: it is age eligibility from the tour's own book, and "the
-  // allowance is gone until the season turns" is the fact that reshapes the rest of her year.
+  // allowance is gone until her next birthday" is the fact that reshapes the rest of her year.
   // THE REFUSAL NAMES THE RULE (owner ruling 1's transparency, §5's «the refusal names the rule»):
-  // a parent reading this must know it is the tour's age rule, that it is THIS season's, and what
-  // she is still free to play – the guard that ships with the cap promises tennis exists.
+  // a parent reading this must know it is the tour's age rule, that it is THIS AGE-YEAR's – hers,
+  // birthday to birthday – and what she is still free to play; the guard that ships with the cap
+  // promises tennis exists.
+  //
+  // ⚠⚠ "THIS AGE-YEAR's", AND IT SAID "THIS SEASON's" UNTIL 26.09 (B-P3-09). `proEntryCapUsage` is
+  // `entryCapUsage`'s birthday window verbatim over the pro ledger (`world/entryCaps.ts`), and the
+  // string below has always named the right date – «A fresh allowance on her next birthday; the junior
+  // and national events stay open». So this note was telling the next builder that the refusal MUST
+  // say a thing the refusal does not say and should not: a builder who obeyed the note would have
+  // broken the sentence. The transparency requirement itself is unchanged – the refusal still names the
+  // rule, the window and what stays open.
   if (isCappedProTier(event.tier)) {
     const cap = proEntryCapUsage(world, event.week)
     if (cap.remaining <= 0) {

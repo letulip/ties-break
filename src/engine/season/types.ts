@@ -201,8 +201,14 @@ export interface TierDef {
    *  two weeks. A per-tier knob rather than a rule, so which rungs care is an explicit table
    *  somebody can read and retune, not something to re-derive from `everyNWeeks`. */
   minGapWeeks?: number
-  /** Minimum age in years to enter. Absent = no age gate. The junior tour opens at 13; our
-   *  detailed sim starts at 14, so it never bites today – it is here for the childhood prologue. */
+  /** Minimum age in years to enter. Absent = no age gate. The floors themselves are the table's own –
+   *  read `TIERS[*].minAgeYears` in `season/calendar.ts`, never a number written here; the grid's one
+   *  prose copy is `docs/specs/college-is-its-own-branch-2026-08.md` §0a.
+   *  ⚠ THE J RUNGS' OWN FLOOR NEVER BITES, AND THAT IS NOT A CLAIM ABOUT THIS FIELD (scoped 26.09,
+   *  C-02's pass). The junior floor is below the week the detailed sim opens, so it is here for the
+   *  childhood prologue – but other rungs' floors DO bite: `tierAgeBlock` answers `'young'` and
+   *  `world/medical.ts` prints «… opens at N – she is too young» on a live career. The earlier wording
+   *  («so it never bites today») read as a claim about `minAgeYears` as a whole and is false of it. */
   minAgeYears?: number
   /** MAXIMUM age in years to enter, INCLUSIVE – she may play the whole season she turns this age
    *  and never again (§4.1 of docs/specs/adult-tour-and-endings.md). Absent = the rung never ages
@@ -223,11 +229,26 @@ export interface TierDef {
    *  ~2,000, and no age rule fixes that. Anybody retuning this number for the field's sake is
    *  tuning the wrong knob and should read living-field.md instead.
    *
-   *  ⚠ AND IT IS WHY THE OVERLAP IS REAL. W15 opens at 16 and the J rungs close after 18, so a
-   *  sixteen-to-eighteen-year-old holds both tours at once and arrives at nineteen having seen what
-   *  each one costs and pays. That is what makes the fork at 19 (§4.2 A) a decision made with
-   *  evidence rather than a wall she walks into on a birthday. Capping without the adult rungs
-   *  underneath would have been the wall, which is why §7 sequences this second. */
+   *  ⚠ AND IT IS WHY THE OVERLAP IS REAL – but the overlap is WIDER than this note used to say, and
+   *  the correction is 26.09's (C-02). The W rungs' floor and this ceiling are both in
+   *  `TIERS[*].minAgeYears` / `maxAgeYears` (`season/calendar.ts`; the grid's one prose copy is
+   *  `docs/specs/college-is-its-own-branch-2026-08.md` §0a) and the window between them is what makes
+   *  it: from the W floor to this ceiling she holds BOTH tours at once and arrives at nineteen having
+   *  seen what each one costs and pays. That is what makes the fork at 19 (§4.2 A) a decision made
+   *  with evidence rather than a wall she walks into on a birthday. Capping without the adult rungs
+   *  underneath would have been the wall, which is why §7 sequences this second.
+   *
+   *  ⚠⚠ WHAT THIS SAID, AND THE TWO THINGS WRONG WITH IT. Verbatim: *"W15 opens at 16 and the J rungs
+   *  close after 18, so a sixteen-to-eighteen-year-old holds both tours at once …"*.
+   *    1. THE NUMBER. The owner's age-grid ruling of 16.08 put the W floor below 16, so the overlap is
+   *       not a sixteen-to-eighteen window – it is the whole span from the W floor up to this ceiling.
+   *       `docs/decisions.md` logged THIS NOTE by name that evening as STILL OUTSTANDING, IN CODE, and
+   *       it stood 41 days: `npm run context:audit`'s age-grid guard reads DOCS, not code.
+   *    2. ⚠⚠ THE PILLAR HAD NO ORIGINAL. The sentence was quoted as `adult-tour-and-endings.md` §4.1's
+   *       own words, in three documents and in this comment. §4.1 never contained it – it was written
+   *       as a paraphrase in `junior-access-2026-08.md` §2a and re-quoted from there, which is how a
+   *       design pillar was defended for two weeks with nothing to read behind it (the 16.08 log).
+   *       `calendar.ts`' own w35 note keeps the same record from the constants' side. */
   maxAgeYears?: number
   /** AI entrant-selection WINDOW on standings PERCENTILE (`(position + 1) / fieldSize`, 0 = best):
    *  a cohort player is a candidate for this tier's draws iff her percentile sits inside it.

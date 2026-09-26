@@ -11,7 +11,7 @@
 //
 // So the states are now told apart, in words:
 //   'age-locked'  the tier's age window does not contain her – she is younger than `minAgeYears`
-//                 (the junior tour is 13+, the adult rungs 16/16/17), or since §4.1 OLDER than
+//                 (the rung's own floor, never a number written here), or since §4.1 OLDER than
 //                 `maxAgeYears` (the junior tour is U18). ⚠ ONE KIND, TWO OPPOSITE SENTENCES: the
 //                 planner's job is the same either way (not enterable, nothing to say about
 //                 scheduling), but "Opens at 13" and "Under-19" are a countdown and a closed door,
@@ -19,9 +19,18 @@
 //   'locked'      she is BELOW enterPointBand[0] – "Reach N pts", the one real lock
 //   'outgrown'    her windowed points are past enterPointBand[1] (unchanged behaviour)
 //   'capped'      she has spent this YEAR's allowance of international entries (the ITF annual
-//                 entry cap) – blocked, but only until the season turns
+//                 entry cap) – blocked, but only until her next birthday
 //   'scheduled'   she can enter it AND one is on the calendar – the week is named
 //   'unscheduled' she can enter it and NOTHING is on the calendar – say exactly that
+//
+// ⚠⚠ TWO CLAUSES ABOVE WERE CORRECTED 26.09 AND NO RENDERED WORD MOVED (C-02 / B-P3-09's class, found
+// by reading this header against `TIERS` and `entryCapUsage`). They read *"the adult rungs 16/16/17"* –
+// the pre-16.08 chain, which the owner's age-grid ruling moved that evening (the grid's one prose copy
+// is `docs/specs/college-is-its-own-branch-2026-08.md` §0a, and the constants are
+// `TIERS[*].minAgeYears`) – and *"blocked, but only until the season turns"*, where the allowance's
+// window has been her BIRTHDAY YEAR since P2 (`world/entryCaps.ts`). This file renders neither number
+// nor date: the age sentence comes from the engine and the long form says the allowance returns without
+// naming a season, which is why nothing on screen was wrong while these two lines were.
 //
 // 'capped' is a FOURTH thing the muted dash used to hide, and the one most likely to be misread as
 // permanent: a parent who has used all fourteen must not conclude the tier is shut. So it is a
@@ -644,7 +653,9 @@ export interface TierState {
   kind: TierStateKind
   /** 'locked' only: the tier's entry threshold, for "Reach N pts". */
   pointsToEnter?: number
-  /** 'capped' only: the season allowance behind the verdict, for "N of M". */
+  /** 'capped' only: the BIRTHDAY-YEAR allowance behind the verdict, for "N of M" – `entryCapUsage`'s
+   *  own window (`world/entryCaps.ts`), which has not been the season block since P2. Said «the season
+   *  allowance» until 26.09; the rendered sentence beside it has always named the birthday. */
   entryCap?: EntryCapUsage
   /** 'scheduled' only: the week of the next event of this tier inside the horizon. */
   nextWeek?: number

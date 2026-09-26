@@ -4628,7 +4628,12 @@ export const ECONOMY = {
     /** Start, range and the granularity every write rounds to (build plan §1d: 0..100 in steps of
      *  0.5). Its own block beside `spirit` rather than a key inside it: they are two numbers with two
      *  rules – one is weather and moves on the world, the other is a relationship and moves ONLY on
-     *  parent decisions – and nesting one under the other would say they are one thing. */
+     *  parent decisions – and nesting one under the other would say they are one thing.
+     *
+     *  ⚠ `step` HAS A READER SINCE 26.09 AND DID NOT BEFORE (C-05). `roundToStep` in `engine/spirit.ts`
+     *  is the one writer's rounding and it reads this key, so turning the dial turns the grid. Until
+     *  then the sentence above described a hard-coded `Math.round(x * 2) / 2` and only a test read the
+     *  constant – the claim was true of the DESIGN and false of the code. */
     start: 70,
     min: 0,
     max: 100,
@@ -4639,7 +4644,7 @@ export const ECONOMY = {
      *  season it was taken in.
      *
      *  ⚠⚠ IT IS NOT A CONTINUOUS DIAL, AND IT LOOKS LIKE ONE. Every bond write goes through
-     *  `roundHalf` onto the `step` grid above, so a week's regression is quantised before it lands:
+     *  `roundToStep` onto the `step` grid above, so a week's regression is quantised before it lands:
      *  measured through the engine's own weekly rule, 0.5 / 0.4 / 0.3 / 0.25 ALL move exactly 0.5,
      *  and 0.24 / 0.2 / 0.1 ALL move exactly 0.00 – a −25 season then never heals at all, at any
      *  horizon, rather than healing slowly. The cliff sits at half a step. So this constant has two
@@ -4649,7 +4654,10 @@ export const ECONOMY = {
      *  The rule that follows, pinned in `tests/spirit.test.ts`: **a positive multiple of `step`.**
      *  Anything else is a value whose measured behaviour is not the value written here. If a later
      *  wave wants slower healing than half a point a week, the honest move is a finer `step` or a
-     *  regression that carries its remainder – not a smaller number here. */
+     *  regression that carries its remainder – not a smaller number here.
+     *  ⚠ AND THE FIRST OF THOSE TWO IS A WORKING MOVE SINCE 26.09 (C-05): `roundToStep` reads `step`,
+     *  so a finer grid changes every bond write. It was not before – `roundHalf` spelled the 0.5 –
+     *  which made this paragraph an instruction to turn a dial that was not wired to anything. */
     regressionPerWeek: 0.5,
     /** WHAT THE PARENT'S DECISIONS ARE WORTH (build plan §1d, verbatim). Every row lands at a real
      *  decision site – see `engine/spirit.ts`'s header for the map of which one writes which. */
@@ -6273,12 +6281,26 @@ export const ECONOMY = {
      *  docs/specs/acceptance-cuts-2026-08.md line 145: *"the WTA's sub-cap of three W75+ events
      *  inside a 14-year-old's eight – a quota, not a door"*).
      *
-     *  ⚠ IT CANNOT BIND AT THE SHIPPED CONSTANTS, AND IT SHIPS ANYWAY – the same choice, for the same
-     *  reason, that put 14 and 15 in `proPerYearByAge` and 13 in `meritIncrease.juniorByAge`. W75
-     *  opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can reach exactly
-     *  one professional rung and it is far below the ceiling this counts. The rule is here so that a
-     *  phase which opens a rung lower does not have to remember it, and so that the game states the
-     *  regulation it models rather than a subset of it. §5 of the spec measures the zero.
+     *  ⚠⚠ IT CAN BIND AT THE SHIPPED CONSTANTS, AND IT MEASURES ZERO FOR A DIFFERENT REASON –
+     *  CORRECTED 26.09 (C-02). The doorway is not what stops it: read `TIERS[*].minAgeYears`
+     *  (`season/calendar.ts`; the grid's one prose copy is
+     *  `docs/specs/college-is-its-own-branch-2026-08.md` §0a), where a fourteen-year-old is too young
+     *  for no W rung at all. What holds the count at zero is the ACCEPTANCE LIST one field over –
+     *  `w75.acceptsRank` – which she cannot satisfy at fourteen because she holds no professional
+     *  ranking yet. `world/entryCaps.ts`' `proSubCapUsage` is the long version of both halves, with
+     *  the measurement (n = 90, 676 weeks: mean 0.0) and the ledger limitation the live case promotes.
+     *  The rule is here so that a phase which opens a rung lower does not have to remember it, and so
+     *  that the game states the regulation it models rather than a subset of it.
+     *
+     *  ⚠ THE SUPERSEDED SENTENCE, KEPT AS HISTORY THE WAY `entryCaps.ts` KEEPS ITS OWN. This item read:
+     *  *"IT CANNOT BIND AT THE SHIPPED CONSTANTS, AND IT SHIPS ANYWAY – the same choice, for the same
+     *  reason, that put 14 and 15 in `proPerYearByAge` and 13 in `meritIncrease.juniorByAge`. W75 opens
+     *  at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can reach exactly one
+     *  professional rung and it is far below the ceiling this counts. §5 of the spec measures the
+     *  zero."* The owner's age-grid ruling of 16.08 moved those floors and this note did not move with
+     *  them; `docs/decisions.md` logged it that evening as STILL OUTSTANDING, IN CODE, and it stood 41
+     *  days. ⚠ The reason it survived a full gate: `npm run context:audit`'s age-grid guard reads
+     *  DOCS, not code, so no gate has ever read this line against `TIERS`.
      *
      *  `fromTier` is a rung, not a list: "at or above W75" is a walk of TIER_LADDER, so a re-ordered
      *  or inserted rung moves with it. */
