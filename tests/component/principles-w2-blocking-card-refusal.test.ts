@@ -72,11 +72,21 @@
 // ⚠ MUTATION ARMS – each applied, watched red, reverted. Outputs quoted in the wave's report:
 //   A. THE SURFACE, five arms: `<StoreError />` deleted from each card in turn -> that card's
 //      «renders the store's sentence» case red, naming it.
-//   B. THE FIT, shipped as its own case (the repo's own idiom – round42-select-confirm.test.ts and
-//      r2-07-dialog-shell.test.ts both carry it): `max-height` stripped off the card in the test
-//      layer so `src/` is untouched, and the SAME `assertDismissReachable` call goes red with the
-//      last answer's real y-coordinates. Run with the refusal UP, so it is round-20 #3 arriving by
-//      exactly the route this wave opened.
+//   B. THE FIT, in TWO shipped cases (the repo's own idiom – round42-select-confirm.test.ts and
+//      r2-07-dialog-shell.test.ts both carry the weak half). Nothing in `src/` is touched in either.
+//      B1, the WEAK half: `max-height` stripped off the card in the test layer -> red on the cap
+//      declaration, which proves the declaration is being read. Measured, all five:
+//        «card 343x455/470/634/315/538, cap NONE … the card declares no height bound that fits».
+//      B2, THE ROUND-20 DEFECT ITSELF, which is what the law asks for – the row this wave added is
+//      lengthened (16 copies of the store's own sentence) with the cap off, and the LAST ANSWER
+//      really leaves the screen. Measured, all five, against a 667px viewport:
+//        KnockDialog      card 1190  last answer y=867..911
+//        ShootClashDialog card 1205                y=861..919
+//        BirthdayDialog   card 1370                y=957..1001
+//        LifeBeatDialog   card 1050                y=797..841
+//        RetirementDialog card 1273                y=888..953
+//      ...and the same over-long row with the cap PUT BACK is green on all five, which is what says
+//      the cap – not the length of today's copy – is what protects the player.
 //   C. THE ANTI-VACUITY HALF, five arms: `v-if="game.error"` -> `v-if="true"` in StoreError.vue ->
 //      all five «shows nothing when nothing was refused» cases red.
 import 'fake-indexeddb/auto'
@@ -467,10 +477,12 @@ for (const surface of SURFACES) {
       assertDismissReachable(card, answer, NARROW_PHONE, `${surface.name} (refusal up, narrow)`)
     })
 
-    it('⚠⚠ MUTATION PROOF – lengthen the card past the cap and the SAME assertion goes red', async () => {
+    it('⚠⚠ MUTATION PROOF – strip the cap and the SAME assertion goes red', async () => {
       // «A fit test that cannot fail on the too-tall version is not this test» (CLAUDE.md). The cap is
       // the shared `.dialog-card`'s, so the arm strips it in the TEST layer – `src/` is untouched, the
-      // same way round42-select-confirm.test.ts and r2-07-dialog-shell.test.ts take theirs.
+      // same way round42-select-confirm.test.ts and r2-07-dialog-shell.test.ts take theirs. This is
+      // the WEAK arm: it proves the declaration is being read, not that this card would really
+      // overflow. The case below is the strong one.
       open(SENTENCE, PHONE)
       const { card, answer } = await surface.stage()
       assertDismissReachable(card, answer, PHONE, `${surface.name} (bounded)`)
@@ -484,6 +496,40 @@ for (const surface of SURFACES) {
       // ...and putting it back is green again, which is what says the CAP is what holds.
       ;(card as HTMLElement).style.maxHeight = ''
       assertDismissReachable(card, answer, PHONE, `${surface.name} (cap restored)`)
+    })
+
+    it('⚠⚠⚠ MUTATION PROOF – round-20 #3 ITSELF: grow the refusal row and the LAST ANSWER leaves the screen', async () => {
+      // ⭐⭐ THE STRONG ARM, and the one the task of this wave actually names: «lengthen the card until
+      // the control leaves the screen and watch the assertion redden». The row this wave added is the
+      // thing lengthened – sixteen copies of the store's own sentence, which is the house idiom for a
+      // content arm (fits.ts's ledger tripled a surname; round42-select-confirm.test.ts repeats its
+      // beat 22 times). Nothing in `src/` is touched: the sentence is set on the store and the cap is
+      // stripped in the test layer.
+      //
+      // ⚠ THE THIRD ASSERTION IS THE POINT OF THE OTHER TWO. Same over-long row, cap PUT BACK, green –
+      // so what protects the player from the next honest sentence is the cap and not the length of
+      // today's copy. That is exactly the property round-20 #4 asked for.
+      open(SENTENCE, PHONE)
+      const { w, card, answer } = await surface.stage()
+      const bounded = measureDialog(card, answer, PHONE)
+
+      useGameStore().error = new Array(16).fill(SENTENCE).join(' ')
+      await w.vm.$nextTick()
+      ;(card as HTMLElement).style.maxHeight = 'none'
+      const grown = measureDialog(card, answer, PHONE)
+      expect(grown.contentFloor, 'the arm did not actually make the card taller').toBeGreaterThan(
+        bounded.contentFloor + 400,
+      )
+      expect(
+        () => assertDismissReachable(card, answer, PHONE, `${surface.name} (row grown, cap removed)`),
+        `${surface.name}: the last answer is at y=${grown.dismissTop.toFixed(0)}..${grown.dismissBottom.toFixed(0)} ` +
+          'and this file called that reachable',
+      ).toThrow(/outside the viewport/)
+
+      ;(card as HTMLElement).style.maxHeight = ''
+      const capped = assertDismissReachable(card, answer, PHONE, `${surface.name} (row grown, cap back)`)
+      expect(capped.scrollable, 'the over-long row is reachable by scrolling').toBe(true)
+      expect(capped.cardHeight, 'the cap, not the copy, is what bounds the card').toBeLessThanOrEqual(635)
     })
   })
 }
