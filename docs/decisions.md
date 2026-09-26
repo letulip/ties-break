@@ -3143,6 +3143,16 @@ wave-1 question:
   right way at 3.6× SEM, nothing drifts, nothing clamps, and the fairness corridor holds on every row
   of every sweep (worst 0.179 pp against 1.5).
 
+⚠ **ANNOTATED 26.09, NOT EDITED – `roundHalf` NO LONGER EXISTS AND THE GRID DID NOT MOVE.** C-05 of
+the principles review found that `ECONOMY.bond.step` was a dial nothing read: the grid below was a
+hard-coded `Math.round(x * 2) / 2` and `step: 0.5` had one reader, a test. It is now
+`roundToStep(x) = Math.round(x / ECONOMY.bond.step) * ECONOMY.bond.step`, which reads the dial inside
+its own body. **Every number in the paragraph below is still true of the shipped constant** – the
+identity was measured over 2,106,039 points under `Object.is`, 0 disagreements – so nothing here is
+reversed. What changed is that the instruction at the end of this entry's own thinking, «a wave
+wanting slower healing changes the mechanism – a finer `step`», is now a working move rather than
+advice about an unwired constant.
+
 ⚠ **One defect was found and fixed rather than ruled**: `bond.regressionPerWeek` looked like a
 continuous dial and is not. Every bond write is quantised by `roundHalf` onto the 0.5 grid, so 0.5,
 0.4, 0.3 and 0.25 all move exactly half a point and 0.24, 0.2 and 0.1 all move exactly nothing – a
