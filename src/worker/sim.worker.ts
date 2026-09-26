@@ -713,14 +713,33 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // about either through the one flag, because the message to them is the same: "this career
       // was repaired on the way in".
       const rngRecovered = ensureMainState(loaded)
+      // ⭐⭐ B-02's LAST LIFECYCLE PATH (principles review, 26.09) – THE SNAPSHOT IS BUILT BEFORE
+      // ANYTHING IS ADOPTED, which is the ordering E-02 gave `new` / `restoreSlot` / `importSave` and
+      // T1.4 gave all 41 mutations, arriving on the one path both of them left. `snapshotMsg` builds
+      // `toSnapshot` at reply time, so a newest generation that cannot render used to REPLACE the
+      // career the worker was holding: W1's own fuzz corpus measured the active career
+      // `{"careerId":"c-e2e-pro","week":413}` becoming a reply with no snapshot at all, after which
+      // every `getSnapshot` threw and the screen the player was on was gone until a reload. Nothing
+      // is written to the saves store on this path, so it is an IN-MEMORY loss – which is why no
+      // save-side gate could have caught it.
+      //
+      // ⚠ AFTER `ensureMainState` AND NOT BEFORE IT: the repair mutates `loaded` and the render must
+      // see the repaired world. On a refusal `loaded` is discarded whole, so that mutation reaches
+      // nothing.
+      const snapshot = toSnapshot(loaded)
       // Opening it counts as playing it, or the next boot ignores the choice - see touchCareer.
+      // ⚠ AND ONLY A LOAD THAT CAN RENDER COUNTS AS OPENING IT, which is the half that made the
+      // defect SELF-REPRODUCING. This mark is what the next boot sorts on, so touching before the
+      // render made the career that cannot render the first one the next boot opens: the player
+      // reloaded and landed on the same wall. A load that renders still touches, in this same place
+      // relative to the two assignments; a REFUSED load now touches nothing.
       await touchCareer(loaded.careerId)
       world = loaded
       // The disk's highest known revision, NOT the loaded record's own: after a generation
       // fallback the corpse generation still owns a higher number, and the next CAS commit must
       // clear it (readLatestAutosave documents the wedge this avoids).
       committedRevision = revision
-      return snapshotMsg(msg.id, loaded, { recovered: recovered || rngRecovered })
+      return snapshotMsg(msg.id, loaded, { recovered: recovered || rngRecovered, snapshot })
     }
     /**
      * TB-01 — RESTORE AS A COMMITTED REVISION. Restoring a slot IS a mutation of the career's

@@ -69,6 +69,18 @@ import { workerHarness } from './helpers/workerHarness'
 const enc = new TextEncoder()
 const dec = new TextDecoder()
 
+/** ⭐ THE RECIPE LINES ARE OPT-IN, THE MEASUREMENT IS NOT (26.09). This file printed ~45 lines on
+ *  every unit run – one per instrument, three lists of them – and a diagnostic that nobody asked for
+ *  is a diagnostic nobody reads. What stays unconditional is what the corpus EXISTS to produce: the
+ *  tally, the code histogram and the load door's counts, four lines. The per-variant recipes go
+ *  behind the flag, and they cost nothing to get back, because a red arm already quotes the variant
+ *  id and the recipe in its own message.
+ *
+ *  ⚠ `TB_` AND THE TWO SPELLINGS ARE THE HOUSE'S, not a new convention: `TB_SNAPSHOT_VERIFY`,
+ *  `TB_UNIT_SKIP_HEAVY`, `TB_BENCH_NO_AUTORUN`, and `snapshotVerifyEnabled` (world/derivedCache.ts)
+ *  accepts exactly `1` and `true`. */
+const VERBOSE = process.env.TB_FUZZ_VERBOSE === '1' || process.env.TB_FUZZ_VERBOSE === 'true'
+
 async function gz(data: Uint8Array): Promise<Uint8Array> {
   const stream = new Blob([data as BlobPart]).stream().pipeThrough(new CompressionStream('gzip'))
   return new Uint8Array(await new Response(stream).arrayBuffer())
@@ -640,14 +652,19 @@ beforeAll(async () => {
   console.log(`[fuzz] built in ${corpusMs} ms, both doors in ${Date.now() - drove} ms`)
   console.log(`[fuzz] tally ${JSON.stringify(tally)}`)
   console.log(`[fuzz] codes ${JSON.stringify(codes)}`)
-  for (const m of MEASURED.filter((x) => x.rehearsal && !x.rehearsal.ok)) {
-    console.log(`[fuzz] import-accepted-then-${m.rehearsal!.stage}: ${m.variant.id} :: ${m.variant.recipe}`)
-  }
-  // ⚠ THE BOOT DOOR'S OWN LIST, AND IT IS LONGER THAN THE IMPORT DOOR'S BY DESIGN – see the header:
-  // that door runs neither the bounds walk nor the spine nor a dry run. Printed rather than asserted
-  // because closing it is a product decision about `loadCareer`, not this test's to take.
-  for (const m of MEASURED.filter((x) => x.bootRehearsal && !x.bootRehearsal.ok)) {
-    console.log(`[fuzz] boot-accepted-then-${m.bootRehearsal!.stage}: ${m.variant.id} :: ${m.variant.recipe}`)
+  // The two instrument lists, one line per variant, under `TB_FUZZ_VERBOSE=1`. Their COUNTS are in
+  // the tally above (`importAcceptedUnusable`, `bootAcceptedUnusable`), so the default run still
+  // states how many there are – only the recipes are opt-in.
+  if (VERBOSE) {
+    for (const m of MEASURED.filter((x) => x.rehearsal && !x.rehearsal.ok)) {
+      console.log(`[fuzz] import-accepted-then-${m.rehearsal!.stage}: ${m.variant.id} :: ${m.variant.recipe}`)
+    }
+    // ⚠ THE BOOT DOOR'S OWN LIST, AND IT IS LONGER THAN THE IMPORT DOOR'S BY DESIGN – see the header:
+    // that door runs neither the bounds walk nor the spine nor a dry run. Printed rather than asserted
+    // because closing it is a product decision about `loadCareer`, not this test's to take.
+    for (const m of MEASURED.filter((x) => x.bootRehearsal && !x.bootRehearsal.ok)) {
+      console.log(`[fuzz] boot-accepted-then-${m.bootRehearsal!.stage}: ${m.variant.id} :: ${m.variant.recipe}`)
+    }
   }
   // ⚠ THE HOOK CARRIES A BUDGET AND THE TESTS DELIBERATELY DO NOT. Every `it` below reads numbers
   // this hook already took, so the slowest of them is 0.7 s and the project's own 60 s ceiling
@@ -854,8 +871,8 @@ describe('T1.7 – the save doors under a seeded hostile corpus', () => {
   // `toSnapshot` inside `snapshotMsg`), and that pairing is the boot-side twin of `decodeExportFile`
   // + `importSave`. The corpus finds records this door accepts and the engine then throws on
   // (`bootAcceptedUnusable` in the log, one `boot-accepted-then-…` line each), and driving them
-  // through the real command measured two things this file does NOT assert, because
-  // both need a product decision rather than a stricter test (reported to the architect, 26.09, with
+  // through the real command measured two things this file did NOT assert when it landed, because
+  // both needed a product decision rather than a stricter test (reported to the architect, 26.09, with
   // these recipes):
   //   * the refusal is UNTYPED – a bare `TypeError` message with no `code`, which is D-04's own
   //     finding arriving on the door D-02 has just been through;
@@ -863,17 +880,38 @@ describe('T1.7 – the save doors under a seeded hostile corpus', () => {
   //     generation cannot render replaces the career the worker was holding and every later
   //     `getSnapshot` throws. E-02 fixed that ordering for `new` / `restoreSlot` / `importSave` and
   //     B-02 for all 41 mutations; this is the one lifecycle path it has not reached.
-  // ⚠ NEITHER IS PINNED HERE. A test that asserted today's answer would pin the defect, and one that
-  // asserted the answer the two notes above want would be red on a branch that cannot fix it without
-  // a wording and an ordering decision. What IS asserted is the half the door genuinely promises and
-  // the half that matters most: whatever the reply, THE DISK DOES NOT MOVE – the known-good older
-  // generation is still there, byte for byte, after every one of them.
+  //
+  // ⭐⭐ THE SECOND ONE IS FIXED AND IS NOW ASSERTED HERE – «fix(worker): a load adopts only what can
+  // render – B-02's last lifecycle path». It needed no decision after all: the snapshot moves in
+  // front of `touchCareer` and both assignments, which is the one-line shape E-02 gave the three
+  // lifecycle paths and T1.4 gave all 41 mutations, with no wording, no schema and no RNG in it. So
+  // the property below is the one this corpus created: a load the door refuses leaves the career the
+  // worker was holding intact AND answerable. ⚠ The reorder also stops a refused load TOUCHING the
+  // career, which is what made the defect self-reproducing – the career that cannot render was marked
+  // as just-played before the render, so it became the one the next boot opens first and the player's
+  // reload landed on the same wall. That half is pinned in tests/principles-b02-commit-order.test.ts,
+  // where a spied throw can name the careers row; here the property is asserted on the real data.
+  //
+  // ⚠ MUTATION ARM, THE FILE'S THIRD (the other two are D-02's catch-all and T1.5's dry run): move
+  // `const snapshot = toSnapshot(loaded)` back behind `touchCareer` and the two assignments in
+  // `loadCareer`, and this arm goes red on the first refusal of the corpus – «golden-v89/field-deleted/0
+  // (deleted ending (depth wish 1)): the worker can no longer answer for the career it held – Cannot
+  // read properties of undefined (reading 'type')».
+  //
+  // ⚠ THE FIRST ONE IS STILL OPEN AND STILL NOT PINNED. Which sentence a refused load should carry is
+  // the owner's (CLAUDE.md invariant 4), and this wave answers no part of it: a test that asserted
+  // today's bare `TypeError` would pin the defect, and one that asserted a sentence would be inventing
+  // his copy. The last assertion is unchanged and still the one that matters most whatever the reply:
+  // THE DISK DOES NOT MOVE – the known-good older generation is still there, byte for byte, after
+  // every one of them.
   it('a hostile newest generation cannot cost the player the generation behind it', async () => {
     const unusable = MEASURED.filter((m) => m.bootRehearsal && !m.bootRehearsal.ok)
     expect(unusable.length, 'the corpus must reach this door at all').toBeGreaterThan(0)
     // One block rather than one line per call: vitest prefixes every `console.log` with the test's
     // full name, and eighteen of those is 2 kB of header for 18 lines of measurement.
     const answers: string[] = []
+    let refused = 0
+    let loaded = 0
     for (const m of unusable) {
       const why = `${m.variant.id} (${m.variant.recipe})`
       await putRaw(db, {
@@ -885,7 +923,20 @@ describe('T1.7 – the save doors under a seeded hostile corpus', () => {
         checksum: m.variant.checksum,
         payload: m.variant.payload,
       })
+      // ⚠ READ IMMEDIATELY BEFORE THE LOAD, not once for the loop: a variant the door ACCEPTS
+      // legitimately becomes the career the worker holds, so "what the player was on" is whatever the
+      // previous iteration left – and the property is about the load that is refused, not about one
+      // fixed career surviving eighteen of them.
+      const before = await activeFingerprint()
       const res = await send({ type: 'loadCareer', careerId: BOOT_CAREER })
+      if (!res.ok) {
+        refused++
+        const held = await send({ type: 'getSnapshot' })
+        expect(held.ok, `${why}: the worker can no longer answer for the career it held – ${held.error}`).toBe(true)
+        expect(await activeFingerprint(), `${why}: the refused load took the career the player was on`).toBe(before)
+      } else {
+        loaded++
+      }
       // A load that SUCCEEDS is asked the second half of D-04's question, because the boot path has
       // no dry run: does the career it just opened survive one week?
       const next = res.ok ? await send({ type: 'advance', weeks: 1, baseRevision: lastRevision }) : null
@@ -901,7 +952,10 @@ describe('T1.7 – the save doors under a seeded hostile corpus', () => {
       const stillReads = await through(() => decompressWorld(good!.payload, good!.checksum))
       expect(stillReads.ok, `${why}: the known-good generation stopped reading`).toBe(true)
     }
-    console.log(answers.join('\n'))
+    // The count stays unconditional – it is this door's half of the tally – and the recipes behind
+    // `TB_FUZZ_VERBOSE=1`, like the two instrument lists in the hook.
+    console.log(`[fuzz] loadCareer ${unusable.length} unusable newest generations: ${refused} refused, ${loaded} loaded`)
+    if (VERBOSE) console.log(answers.join('\n'))
   })
 
   // -----------------------------------------------------------------------------------------------
