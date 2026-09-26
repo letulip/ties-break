@@ -399,6 +399,7 @@ const FIXTURES: RefusalFixture[] = [
         tickWeek(world, rng)
       }
       drainLifeBeats(world)
+      expect(pendingBirthday(world), 'the walk must end on an unanswered birthday').not.toBeNull()
       return world
     },
   },
@@ -436,6 +437,7 @@ const FIXTURES: RefusalFixture[] = [
         drainLifeBeats(world)
         advanceWeeks(world, rng, 1)
       }
+      expect(world.ending, 'the debt must really have ended the career').not.toBeNull()
       return world
     },
   },
@@ -468,10 +470,6 @@ describe('layer 2b — every other member of ADVANCE_REFUSALS refuses the tick, 
   for (const fixture of FIXTURES) {
     it(`an open '${fixture.reason}' refuses the tick and holds the week`, async () => {
       const world = fixture.build()
-      // ⚠⚠ THE PRECONDITION IS THE NET. One question standing and no other, asked of the owner the
-      // worker now reads – so this case can only pass while `openQuestions`' own clause for this
-      // member is live. Delete the clause and the tick goes through.
-      expect(openQuestions(world), `${fixture.reason}: exactly one question stands`).toEqual([fixture.reason])
       const week = await loadIntoWorker(world)
 
       const refusal = await send({ type: 'tick', weeks: 52, baseRevision: lastRevision })
@@ -485,6 +483,18 @@ describe('layer 2b — every other member of ADVANCE_REFUSALS refuses the tick, 
       expect(after.ok, after.error).toBe(true)
       expect(after.snapshot!.week, `${fixture.reason}: not one week moved`).toBe(week)
       expect(after.snapshot!.stopReasons, `${fixture.reason}: the engine names it`).toContain(fixture.reason)
+
+      // ⚠⚠ ...AND THE REFUSAL WAS THIS MEMBER'S AND NOTHING ELSE'S. `decisionOpen` is ONE call into an
+      // eight-clause owner, so a fixture that also held a knock would refuse the tick with this
+      // member's clause DELETED and the case would pass against the hole it exists to close. The
+      // life-beat case above makes the same argument in seven negatives; this makes it in one line by
+      // asking the owner itself.
+      //
+      // ⚠ IT SITS LAST DELIBERATELY. As a precondition it fired FIRST under the mutation arm and the
+      // red read «expected [] to equal ['shoot-clash']» – true, but it named a list rather than the
+      // behaviour. Here the same mutation reddens on «the tick is refused: expected true to be false»,
+      // which is the defect in the words a reader needs, and the isolation claim is still asserted.
+      expect(openQuestions(world), `${fixture.reason}: exactly one question stood`).toEqual([fixture.reason])
     }, 120_000)
   }
 
