@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 138 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 139 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 21 | [THE PRINCIPLES FIX RULED OPEN: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ», ALL OF IT](#26092026--the-principles-fix-ruled-open-по-твоим-рекомендациям-all-of-it) | 2026-09-26 |
+| general | 22 | [AVIF RULED OUT BY HIS TERMS, AND THE MEASUREMENTS HANDED TO THE ARCHITECT](#26092026--avif-ruled-out-by-his-terms-and-the-measurements-handed-to-the-architect) | 2026-09-26 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5480,3 +5480,27 @@ unreachable roof cells collapsed. Builder plan: `docs/plans/principles-fix-build
 six stacked branches `fix/principles-w1` … `-w6`, W1 **Now**, the rest Next. Not in it: the
 `economy.ts` split (deferred), `CLAUDE.md`'s restructure and the forward rules (the architect's),
 the asset calls (his). He dispatches the builder.
+
+## 26.09.2026 – AVIF RULED OUT BY HIS TERMS, AND THE MEASUREMENTS HANDED TO THE ARCHITECT
+
+Two lines of his, the same evening: «AVIF … нам главное, чтобы качество картинок не просело ни на
+миллиметр» and «что там с поддержкой AVIF на всех устройствах и браузерах? нам нужно 100% покрытие
+только, другое не подходит, а держать 2 сета картинок не вижу смысла» – and then the delegation:
+«По остальным вопросам и задачам вся ответственность за измерения и фиксы после них на тебе.
+Спека есть, если что – дописывай туда следом еще пункты, пока билдер работает, он подхватит».
+
+- **AVIF is out.** The build's own floor is Vite 7's default target – Chrome 107, Edge 107,
+  Firefox 104, Safari 16 (v7.vite.dev) – and inside it AVIF is not 100 %: Safari decodes AVIF
+  through the system on macOS 13 Ventura or later only, so Safari 16–17 on macOS 11–12 would run the
+  game with blank art, and Edge gained AVIF only at 121 (caniuse). WebP covers the whole floor. A
+  second image set was refused by him outright. ⭐ **And it would not have paid anyway:** measured
+  on 202 master → shipped pairs with his quality rule made exact – the smallest AVIF whose SSIM on
+  every colour plane AND PSNR against the master are no worse than today's webp – the saving is
+  **14.7 %** (7,817 → 6,671 KiB; trophies −65 %, everything else −7…−20 %).
+- **The measurements and the fixes after them are the architect's.** Appended to the builder plan
+  the same day, under its new «picked up at every wave boundary» section: T1.6 (the save doors in a
+  real browser), T1.7 (the doors under seeded hostile input), and **W7** – the notes: dated
+  chronicles move out of the code verbatim, per module at the moment of a split, behind a pointer
+  check; the pilot is the schema history in `state.ts`, and C-03 (`economy.ts`) is revived inside
+  it. Image re-encoding stays with the architect (the masters are local only), measured first
+  under the same no-worse rule.
