@@ -329,9 +329,31 @@ export const useGameStore = defineStore('game', {
       try {
         const res = this.takeOk(await request({ type: 'getSnapshot' }))
         this.applySnapshot(res)
+        await this.refreshSlots()
       } catch {
         /* no active career or a fresh failure – the copy below still explains the refusal */
       }
+      // ⭐⭐ W2 (26.09) – AND THE SLOT LIST IS THE OTHER THING THE NEXT PRESS DECIDES AGAINST. The
+      // owner's ruling on the save doors is about EXITS («лишь бы пользователь не застрял в этом
+      // флоу», decisions.md 26.09): every refusal must leave a control that leads somewhere other
+      // than the same refusal. This handler refreshed the SNAPSHOT so "the player decides against
+      // what IS" – true of the week on screen, and not of `slots`, which D-01 established IS the UI's
+      // belief about the generations (`restoreSlot` reads the revision it sends off this list). So a
+      // restore refused with STALE_REVISION left More's «Retry» re-sending the SAME stale belief, to
+      // the SAME refusal, for ever: measured as a dead control in
+      // tests/component/principles-w2-more-door-exit.test.ts before this line existed.
+      //
+      // ⚠ WHY HERE AND NOT IN `restoreSlot`. The staleness is not that command's property – this is
+      // the one place the store answers a stale refusal, and D-01's own lesson is that a belief with
+      // one reader wants one refresh rather than a call at every site that can invalidate it.
+      // ⚠ AND INSIDE THE SAME `try`, WHICH IS NOT TIDINESS. This whole handler runs inside `run`'s
+      // CATCH block, so anything that throws here escapes the command itself rather than being
+      // absorbed – `refreshSlots` swallows a failed REPLY by its own rule but not a dead transport,
+      // and a worker that died between the refusal and the refresh would have thrown out of
+      // `advance()` unhandled. Both refreshes are best-effort; the sentence below is the part that is
+      // not optional.
+      // ⚠ NO SENTENCE MOVES: the line below is TB-02's and is untouched. The insurance is the net,
+      // not the message.
       this.error = 'That action was based on an outdated screen – it was refreshed. Try again.'
     },
     /** `run`, plus a visible outcome (TB-19). Save-management actions route through this so the
