@@ -42,11 +42,35 @@ Lane files: `01-architecture` (A), `02-engine-core` (B), `03-engine-leaves` (C),
 | 17 | H-17 · H-02 (c) | freeze dormant archival tools out of `check:tools` (W5); the world map **stays committed** – the pre-commit hook keeps it fresh |
 | 19 | B-08 | collapse the unreachable roof cells in the `expecting`, `bereavement` and `engaged` pools (W3) |
 
-**Not in this plan:** C-03 (the `economy.ts` split – deferred behind O1); #12 H-09, the forward
-rules of A-06, H-08 and H-04, and A-03's `CLAUDE.md` line – all the architect's, after W6; #18,
-the asset decisions (`theme.mp3`, the maskable icon, raw-or-gzip) – the owner's; E-P07 (the
-planner preview) – a question for the owner; B-06's `??` ratchet. If the owner's own saves turn
-out to hold the C-06 state, their repair is a separate item with its own schema move.
+**Added 26.09 on his follow-up questions:** A-06, the split of `lifeBeat.ts` (T6.8), and a
+duplication re-measure with a guard against re-copying (T5.14).
+
+### 1a. Appended after dispatch – pick these up
+
+⚠ **This plan grows while you build** – the owner, 26.09: «По остальным вопросам и задачам вся
+ответственность за измерения и фиксы после них на тебе. Спека есть, если что – дописывай туда
+следом еще пункты, пока билдер работает, он подхватит». The architect appends on
+`review/principles-2026-09-26`. **At every wave boundary** run `git fetch origin && git merge
+origin/review/principles-2026-09-26` into your current wave branch (the appends are docs only),
+re-read this section, and take every entry whose wave you have not closed. An entry for a wave
+you have already closed goes first into the next one. Every entry is dated.
+
+| added | task | wave |
+| --- | --- | --- |
+| 26.09 | T1.6 – the save doors in a real browser (e2e) | W1 |
+| 26.09 | T1.7 – the save doors under hostile input (a seeded property test) | W1 |
+| 26.09 | W7 – the notes: chronicles move out of the code, verbatim, per module (T7.1–T7.5) | W7, after W6 |
+| 26.09 | C-03 revived as T7.3 (the `economy.ts` split rides the notes move) | W7 |
+| 26.09 | T3.12 – the manifest-only maskable icon leaves the precache (−105 KiB, no pixel moves) | W3 |
+
+**Not in this plan:** #12 H-09, the forward rules of A-06, H-08 and H-04, A-03's `CLAUDE.md`
+line and W7's `CLAUDE.md` rule – all the architect's; image re-encoding (the masters live only on
+the owner's machine – the architect's, measured first); E-P07 (the planner preview) – a question
+for the owner; B-06's `??` ratchet. ⚠ **AVIF is ruled out** (26.09): inside the browser floor
+this build targets (Vite 7: Chrome 107, Edge 107, Firefox 104, Safari 16) it breaks images on
+Safari under macOS 11–12 and on Edge 107–120, and the owner's terms are 100 % coverage from one
+image set. If the owner's own saves turn out to hold the C-06 state, their repair is a separate
+item with its own schema move.
 
 ## 2. How every wave works
 
@@ -120,6 +144,28 @@ The two P0s and the save layer's edges. All S.
   `importSave`, a throw wrapped as `corrupted` with the existing «damaged» sentence (B-06's door
   normaliser rides here, named). Test: the table-driven `save-import-guard` case over the lane's
   16 fields; mutation: remove the dry run → red.
+- **T1.6 · the save doors in a real browser** (appended 26.09 – D-01 was proven in node over
+  fake IndexedDB, and a harness is not the runtime). `e2e/save-safety.spec.ts`, two cases:
+  1. **Restore after a non-refreshing action.** Load a fixture, perform one of D-01's fifteen
+     actions through the UI (answering a knock is the natural one), open More, «Restore
+     previous» – the restored world is the pre-action one and the later generation still exists on
+     disk (read IndexedDB through `page.evaluate`). Mutation: revert T1.1's More refresh → red.
+  2. **Boot beside a newer build's save.** Seed IndexedDB with a newest generation whose
+     `schemaVersion` is one above this build's (encode a fixture, bump the field, re-encode) and a
+     valid older one; boot. The app must not silently open the older generation, the existing
+     error surface shows, and after two commands the newer generation is still on disk. Mutation:
+     restore D-02's catch-all → red.
+  Add both to `docs/specs/e2e-coverage.md`.
+- **T1.7 · the save doors under hostile input** (appended 26.09). `tests/save-doors-fuzz.test.ts`:
+  a seeded generator (fixed seeds, no `Math.random`) derives ~200 variants from the golden saves and
+  the e2e fixtures – truncated at random offsets, a field deleted at a random depth, a type swapped,
+  `schemaVersion` moved by ±k, a checksum flipped – and drives each through the import door and the
+  boot door (`readLatestAutosave` with the variant as the newest generation beside a valid older
+  one). The invariants, each asserted per variant: every refusal is a typed `SaveFileError` carrying
+  an existing sentence (never a bare `TypeError`); nothing accepted throws on the next tick or in
+  `toSnapshot`; the boot door falls back only on `corrupted`; no call overwrites or deletes a
+  known-good generation. Mutations: restore D-02's catch-all → red; remove T1.5's dry run → red.
+  It runs in the unit project under the 60 s budget – split the corpus if it does not.
 
 ## 4. W2 – one owner for «which questions stop time» · branch `fix/principles-w2`
 
@@ -205,6 +251,16 @@ In this order – B-04 is the owner the others read.
   strings tables and their roundtrip pins with a dated note each. Test: a reachability sweep over
   every stage an eligible week can hold; mutation: re-add a roof read → the sweep's assertion
   names it.
+
+- **T3.12 · the manifest-only icon leaves the install** (appended 26.09, the architect's
+  delivery measurement). `pwa-maskable-512.png` (105.1 KiB) is read by the manifest alone – the
+  platform fetches it once, online, when the app is installed – so it joins the precache's
+  `globIgnores` in `vite.config.ts` and stays in the manifest's `icons`. ⚠ `pwa-192.png` and
+  `pwa-512.png` STAY precached: `src/audio/music.ts` hands them to the Media Session as the
+  lock-screen artwork, which must work offline. Proof: `vite build` + `node
+  scripts/install-size.mjs` (≈ −105 KiB), the manifest still lists the icon, the offline e2e green;
+  a unit check that the built precache manifest omits the maskable icon and keeps the other two.
+  Mutation: drop the ignore → red.
 
 **W3's behaviour proof, once for the wave:** serialise `toSnapshot` over the 90 golden saves and
 the 13 e2e fixtures at the wave's base and head (two worktrees) and diff byte for byte – the only
@@ -305,6 +361,12 @@ Tests and scripts only – no product file moves in this wave.
   with their numbers, collapses each comment block to its first line plus `[N lines: L-M]`, and
   keeps any line carrying ⚠⚠, «» or Cyrillic in full; an npm script for it; a unit test on a
   fixture file; register it. The `CLAUDE.md` line that tells agents to use it is the architect's.
+- **T5.14 · the copies stay merged** (the owner, 26.09: «копипаста растёт – это тоже чиним?»).
+  (1) Re-run jscpd at the 05.09 flags over `tests` and `tools` at the wave's head and report the
+  rates against 3.89 % / 2.81 %. (2) A guard test: the families this wave merged may not be
+  redefined locally – the storage shim outside `tests/component/setup.ts`, `clashWorld` /
+  `atCollege` / `walkWeeks` / `weekAtAge` outside `tests/helpers/`, `argOf` outside `tools/_args.ts`
+  in a live tool. Mutation: paste one local copy back → red.
 
 ## 8. W6 – structure · branch `fix/principles-w6`
 
@@ -336,9 +398,58 @@ Larger moves, each proven identical. One commit series per item.
 - **T6.7 · A-02 (PLAUSIBLE) – measure first.** Run the build arm the lane left open: repoint the
   17 UI imports off the barrel in a worktree and measure the UI chunk. Ship the repoint plus a
   reverse-purity gate only if the arm frees bytes; otherwise record the null result with the arm's
-  provenance.
+  provenance. (Context: 121,534 B of engine code sits in BOTH the UI chunk and the worker chunk –
+  `00-baseline.md` §A5 – so this is a delivery question as well as an architecture one.)
+- **T6.8 · A-06 – split `world/lifeBeat.ts` by beat kind** (the owner, 26.09: «можем распилить и
+  оптимизировать? это в спеке?»). After T3.9's key pin, never before. The lane's map is the plan:
+  the 14 per-kind copy sections (§3b–§3m) are leaves, and nine of the twelve hazard sections (§7–§11,
+  §13–§16) have zero inbound references. Move **one kind per commit** – its copy section and its
+  hazard section together – into `src/engine/world/lifeBeat/<kind>.ts` (`wedding`, `pregnancy`,
+  `weight`, `leak`, `booth`, `ownKey`, `spouseView`, `smallTalk`, `divorced` …); `lifeBeat.ts` keeps
+  the hub (the queue, raising and answering, prompt assembly, the shared presence law) and
+  re-exports every moved name under its historical name, so no importer and no barrel name moves.
+  Comments move verbatim. The pin query first (`git grep -l "world/lifeBeat" -- tests/`), and
+  `tests/worldSource.ts` gains a reader that returns the hub plus its kind modules, so positive
+  source pins survive the split; negative pins are re-read. Proof per commit: the capture holds,
+  T3.9's key inventory is identical, the life-beat key-count nets and every life-beat suite stay
+  green; the e2e life specs at the end. The forward rule («a new beat kind is a new module») is the
+  architect's `CLAUDE.md` line.
 
-## 9. When you finish
+## 9. W7 – the notes: the chronicles move out of the code · branch `fix/principles-w7`
+
+Appended 26.09. The comment convention measured: 75.6 % of `src`'s tokens are comments, growing
+two comment lines per code line, and 67.8 % of the comment lines sit in blocks that are dated or
+name a round, wave or review item (H-04). The owner's own proposal – «реорганизовать в отдельные
+файлы, а в коде держать только ссылки» – is H-04's O2; the architect rules it under the 26.09
+delegation, **per module at the moment of a split, never as a sweep**.
+
+**What stays at the site:** the «why» in at most five lines; every ⚠ warning, one line each; the
+owner's ruling as one line with its date; and a pointer `→ docs/notes/<area>/<file>.md#<anchor>`.
+**What moves, verbatim:** dated re-aim chronicles, measurement narratives, «what stood here
+before» blocks and the long quotes – byte for byte, Cyrillic included, never paraphrased. Every
+notes file carries the front matter `npm run context:audit` accepts (`type: reference`). Source pins
+that read moved text are repointed at the notes file through a notes reader in
+`tests/helpers/source.ts` – never deleted; find them first by grepping each moved block's most
+distinctive phrase in `tests/`.
+
+- **T7.1 · the pointer check.** `scripts/notes-pointers.mjs`, wired into `npm run check` after
+  `context:audit`: every `docs/notes/…#anchor` pointer in `src` resolves to an existing file and
+  heading. A unit test over a fixture; mutation: rename an anchor → red.
+- **T7.2 · the pilot – the schema history.** The version-by-version history above
+  `SAVE_SCHEMA_VERSION` in `world/state.ts` (the lane measured the block at lines ~89–958) moves to
+  `docs/notes/engine/save-schema-history.md`; the site keeps what the rules above keep. Report the
+  file's lines, comment share and O1 reading tokens (T5.13's tool) before and after.
+- **T7.3 · `economy.ts`, split and annotated (C-03 revived).** One module per block under
+  `src/engine/economy/`, `ECONOMY` re-assembled in `economy.ts` in the same key order (the 191
+  importers do not move); each constant keeps its one-line why and a pointer; the essays move to
+  `docs/notes/economy/<block>.md`. Proof: `sha256(JSON.stringify(ECONOMY))` identical and key order
+  identical at every depth (a test), `npm run bench:econ` byte-identical.
+- **T7.4 · the life-beat kinds** (after T6.8): each kind module's chronicles move to
+  `docs/notes/life-beats/<kind>.md`.
+- **T7.5 · the measurement.** The comment share and O1 token count of every touched module and of
+  `src` as a whole, before and after – in the report, never in prose that no test reads.
+
+## 10. When you finish
 
 The last report lists, per wave: the branch and its head, the gate verdicts from files, the proofs,
 the DRAFT strings verbatim, the P3 rows applied, and the questions. The architect reviews each
