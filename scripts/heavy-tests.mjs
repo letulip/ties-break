@@ -246,6 +246,16 @@ export const HEAVY_UNIT_FILES = [
   // unraisable 60 s window at CI's ~1.9x. Same remedy as every entry above: one process each.
   'tests/travel-home.test.ts',
   'tests/ladder-floor.test.ts',
+  // ⚠ ADDED 26.09 WITH THE FILE (B-01 / T2.3), MEASURED BEFORE IT WAS WRITTEN RATHER THAN AFTER IT
+  // STALLED – which is the one thing every entry above wishes it had done. It walks four careers to
+  // a forced fork, into the September departure and through four academic years each, pressing
+  // `resumeFromCollege` and reading what the press walked past: ~1.5 s to open a career at college
+  // and ~3.1 s to walk its years, so the corpus sets the cost directly. Measured at EIGHT careers it
+  // read 45 s solo – past this list's own line (~32 s in-pool, CI ~1.9x local) – so the corpus was
+  // cut to four (~23 s solo) AND the file takes a process. The four are a prefix of the seed list,
+  // never a selection by outcome; the full sixteen-career measure is the review's own probe
+  // (`docs/review-principles-2026-09-26/probes/b-college-beats.ts`), run as the task's proof.
+  'tests/college-blocking-beat.test.ts',
   // ⚠⚠ THE THIRD TIME, AND THIS TIME THE BULK POOL ITSELF WENT OVER THE WALL (26.08, round 26).
   // `npm test` stalled on CI at 19+ minutes against a 25-minute ceiling, and the same shape
   // reproduced ON A QUIET MAC – `--reporter=json` over the bulk pass returned `success: true`,

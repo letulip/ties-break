@@ -2555,6 +2555,39 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 export const COLLEGE_REVEAL_REFUSAL =
   'A tournament is still waiting to be resolved – close it before spending another college year'
 
+/** ⭐⭐⭐ THE QUESTIONS A COLLEGE YEAR MAY PAUSE ON – the two EXCEPTIONS to «it collects, it does not
+ *  halt», which is the owner's own standing ruling for this loop (round 24, quoted at
+ *  `resumeFromCollege`: «родители не будут посещать все игры в колледже», the year is ONE click).
+ *
+ *  ⚠⚠ THE RULING IS RECORDED HERE SO IT IS NOT REDISCOVERED AS A BUG. A reader who finds a loop
+ *  that halts where its own note says it collects will «fix» the halt. Both members are exceptions
+ *  he granted, each by name and each with a date:
+ *    · `'birthday'` – ROUND 24, 22.08: «да, день рождения делай». `chooseGift` records the gift
+ *      against `world.week`, so the answer has to land ON the birthday week: it cannot be collected,
+ *      it has to be ASKED, on its own week.
+ *    · `'life'` – RULING 2(a), 26.09 (B-01). The same argument one rung stronger: a beat is HER
+ *      SPEAKING, so a year that outran one would answer her by walking away – an answer nobody chose
+ *      and nobody would ever be told about (the worker's own sentence for why `▶▶ 52` stops for it).
+ *      MEASURED before the ruling: 23 of 217 year-calls ticked past at least one unanswered blocking
+ *      row, 15 `met` and 10 `ended`, and each of those cards then surfaced weeks late, worded as
+ *      news, with its own break-up card queued behind it.
+ *
+ *  ⚠ AND THE SIX MEMBERS THAT ARE NOT HERE, because an absence in a set like this has to be read as
+ *  a decision rather than as an oversight. `'ending'` is the college latch itself, which this command
+ *  CLEARS – pausing for it would be pausing for the state it exists to lift. `'tournament'` has its
+ *  own treatment two guards up, and it is a THROW rather than a pause for a stated reason (no surface
+ *  in the app can draw a tour reveal behind the epilogue). `'knock'` cannot be raised inside the
+ *  freeze (`world/phaseGrowth.ts`: `if (!inCollege(world)) rollKnock(world)`), `'fork'` is answered
+ *  by the time the latch is on, `'retirement'` is the tour's own question, and `'shoot-clash'`
+ *  requires an ENTERED event on the week ahead, which rule 1 releases at the fork and rule 3 keeps
+ *  released. None of the six is reachable here; if one becomes reachable it needs its own ruling.
+ *
+ *  ⚠ THE REVEALS ARE NOT IN THIS SET EITHER, and that is not an omission: `'call-up'` and
+ *  `'college-league'` are not `ADVANCE_REFUSALS` members at all (no advance can produce them –
+ *  `tests/r2-13-advance-span.test.ts` pins that as an absence), so they are this loop's own clauses
+ *  and keep their own `callUpPlayedThisWeek` / `collegeLeaguePlayedThisWeek` reads. */
+const COLLEGE_PAUSES: ReadonlySet<StopReason> = new Set<StopReason>(['birthday', 'life'])
+
 /** «ANOTHER YEAR» – the one command that CLEARS an ending (contract §5.1).
  *
  *  College is the only ending that resumes, and this is where it does. The latch comes off, ONE year
@@ -2676,7 +2709,16 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   // is answered.
   // Nothing is mutated and nothing is drawn; `['birthday']` is the same no-op report the advance
   // gives, so the caller cannot mistake a refusal for a spent year.
-  if (pendingBirthday(world) !== null) return ['birthday']
+  //
+  // ⭐⭐⭐ B-01 / T2.3 (26.09) – AND HER CARD JOINS THE BIRTHDAY HERE, READ FROM THE ONE OWNER. The
+  // set is `COLLEGE_PAUSES` over `openQuestions(world)` (world/multiWeek.ts): the pause set is no
+  // longer a fifth hand-written copy of «which questions stop time», which is the drift B-04 closed
+  // and this loop was the one place it had already cost a player something. Both members return with
+  // ZERO ticks, on the identical contract, for the identical reason – the state has a SURFACE, so the
+  // same click works the moment it is answered. STOP_PRECEDENCE-ordered because a rest state can hold
+  // both at once and R11-1's rule is that the caller gets all of it.
+  const standing = openQuestions(world).filter((r) => COLLEGE_PAUSES.has(r))
+  if (standing.length > 0) return STOP_PRECEDENCE.filter((r) => standing.includes(r))
   // ⭐ THE YEAR IN PROGRESS, OR A FRESH ONE. `pendingYearStart` is non-null exactly when the last
   // press paused the year mid-flight – on her birthday since round 24, and on the championship since
   // round 26 #6: the year's opening measurements are HISTORY by now (her
@@ -2741,8 +2783,23 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     // the exact sentence `pendingBirthday`'s old college exclusion was built on, now honoured by
     // pausing instead of by silence. Collected before the break so a birthday that lands on the
     // championship week reports both (R11-1's rule: one week can be several things at once).
-    if (pendingBirthday(world) !== null) {
-      stops.add('birthday')
+    //
+    // ⭐⭐⭐ B-01 / T2.3 (26.09) – AND IT IS NO LONGER THE ONE MID-YEAR STOP: HER CARD PAUSES THE YEAR
+    // THE SAME WAY (the owner's ruling 2(a), 26.09), read from the one owner of «which questions stop
+    // time» rather than re-listed here. `COLLEGE_PAUSES` above carries the ruling, its date and the
+    // reason each of the other six members is NOT in it – the owner's standing rule for this loop is
+    // «it collects, it does not halt», so every exception to it is recorded rather than inferred.
+    //
+    // ⚠ THE LIFE ROLLS RUN AT COLLEGE BY DESIGN and always have (`resolveBodyAndPlanner` carries no
+    // `inCollege` guard – only the knock is suppressed), so this is the state the year was walking
+    // past: MEASURED at 23 of 217 year-calls, 15 `met` and 10 `ended`.
+    //
+    // ⚠ RNG-SAFE, WHICH IS WHY A PAUSE COULD BE ADDED AT ALL. `rngMain` is persisted and the year
+    // resumes from `pendingYearStart` – the birthday's own mechanism since round 24 – so the weeks,
+    // the keys and the draws of every year that holds no blocking beat are byte-identical.
+    for (const r of openQuestions(world)) {
+      if (!COLLEGE_PAUSES.has(r)) continue
+      stops.add(r)
       pauseHere = true
     }
     // ⚠⚠ ONE BREAK FOR BOTH, AND IT IS R11-1's RULE RATHER THAN A TIDY-UP. A birthday landing on the
@@ -2784,10 +2841,16 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   // are the same three facts whichever question stopped the loop, and a second copy of this block is
   // how two pauses come to disagree about where the academic year ends. A birthday landing ON the
   // championship week takes this branch once and both stops are already in the set (R11-1).
+  //
+  // ⭐⭐⭐ B-01 / T2.3 (26.09) – AND HER CARD PAUSES IT THROUGH THIS SAME BLOCK, for round 26 #6's own
+  // reason said once more: a THIRD copy of the latch and its `resumesWeek` is how three pauses come
+  // to disagree about where the academic year ends. The cause is read from `openQuestions` through
+  // `COLLEGE_PAUSES`, which is the same list the loop broke on – so the branch cannot be reachable by
+  // a question the loop does not pause for, or unreachable by one it does.
   if (
     world.ending === null &&
     world.week < yearEnds &&
-    (pendingBirthday(world) !== null || collegeLeagueRevealOpen(world) || callUpRevealOpen(world))
+    (openQuestions(world).some((r) => COLLEGE_PAUSES.has(r)) || collegeLeagueRevealOpen(world) || callUpRevealOpen(world))
   ) {
     college.pendingYearStart = start
     world.ending = {
