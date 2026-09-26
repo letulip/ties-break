@@ -21,7 +21,7 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, hasLiveOffer, seasonLastWeek } from '../offers'
+import { activeAdDeals, hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -64,7 +64,6 @@ import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../
 import type { SeasonResult } from '../season/ranking'
 import {
   type AdOfferTerms,
-  type AdPortfolioRow,
   type ArrivalPreview,
   type CountingResult,
   type InjuryCircumstanceKind,
@@ -128,7 +127,9 @@ import { merchWeeklyIncomeCents } from './business'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
+// ⭐⭐ B-03 (26.09): `adPortfolioView` is the Money shelf's rows, derived beside the letter writer
+// that decides what may be written – one gate, two surfaces (see the `adPortfolio` line below).
+import { adPortfolioView, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, travelCostFor } from './sponsors'
 // Round 29 part four P7/P8 – the fame fold (zero draws, nothing persisted; see world/fame.ts).
 import { fameAt } from './fame'
 // ⭐⭐⭐ v77 (the spotlight – T7): the booth's packet, READ off the episode's stamps. A pure derivation
@@ -1749,104 +1750,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // («у пользователя целые в интерфейсе»); no screen may round it again.
     fame: Math.round(fameAt(world)),
     // ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE PORTFOLIO SHELF, one row per category in shelf order,
-    // filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a
-    // junior (`reviewAdOffer`'s own age gate, read through the same constant).
-    adPortfolio: (() => {
-      const adAge = kidAgeAt(world, world.week)
-      if (adAge < ECONOMY.advertising.fromAgeYears) return []
-      // ⭐⭐⭐ ROUND 41 #15 – THE SHELF KNOWS ABOUT THE JUNIOR BAND, AND IT HAS TO. The owner opened
-      // the letters at sixteen with «юниорские суммы, реже», so between sixteen and eighteen the
-      // engine writes two categories at half the cheque – and a shelf that went on quoting the adult
-      // figure would be promising $80,000 over a letter that brings $40,000. Two sides asking
-      // different functions about one question is this repo's most-caught defect; both sides ask
-      // `adJuniorOpen` and `adJuniorFeeCents`.
-      const junior = adJuniorAt(adAge)
-      const standing = sponsorStandingOf(world)
-      const band = adBandFor(standing)
-      const rows: AdPortfolioRow[] = []
-      for (const category of AD_CATEGORIES) {
-        const deal = activeAdDealIn(world.offers, category, world.week)
-        if (deal) {
-          const t = deal.terms as AdOfferTerms
-          // ⭐ ROUND 39 #3 – a filled LIFETIME row carries the flag instead of a years-and-runs-to
-          // pair the paper does not have; the screen branches on it and says «for life».
-          rows.push({
-            category,
-            label:
-              category === 'capstone' ? 'The capstone' : category === 'lifetime' ? 'The lifetime deal' : ECONOMY.advertising.categories[category].label,
-            state: 'filled',
-            brand: t.brand,
-            cashCents: t.cashCents,
-            ...(t.lifetime === true
-              ? { lifetime: true as const }
-              : { termYears: Math.max(1, t.termYears ?? 1), untilWeek: deal.untilWeek ?? deal.week }),
-          })
-          continue
-        }
-        // ⭐ ROUND 39 #3 – the crown above the crown: once the shelf exists for her, the lifetime
-        // row shows its two-part gate the way the capstone row shows its tenure – held and needed,
-        // counted plainly, so the ladder's true end is visible from the first professional rung.
-        if (category === 'lifetime') {
-          if (band === null) continue
-          const l = ECONOMY.advertising.lifetime
-          const seasonsHeld = capstoneSeasonsOf(world)
-          const slamsHeld = world.trophiesByTier?.slam?.titles?.length ?? 0
-          rows.push(
-            seasonsHeld >= l.seasonsInTop10 && slamsHeld >= l.slamTitles
-              ? { category, label: 'The lifetime deal', state: 'open', lifetime: true, openCashCents: l.cashCents }
-              : {
-                  category,
-                  label: 'The lifetime deal',
-                  state: 'closed',
-                  lifetime: true,
-                  seasonsInTop10: { held: seasonsHeld, needed: l.seasonsInTop10 },
-                  slamTitles: { held: slamsHeld, needed: l.slamTitles },
-                },
-          )
-          continue
-        }
-        if (category === 'capstone') {
-          const held = capstoneSeasonsOf(world)
-          const needed = ECONOMY.advertising.capstone.seasonsInTop10
-          // The crowning row shows only once the shelf itself exists for her – any band open – so
-          // the ladder's end is visible from the first professional rung, tenure counted plainly.
-          if (band === null) continue
-          rows.push(
-            held >= needed
-              ? { category, label: 'The capstone', state: 'open', openCashCents: ECONOMY.advertising.capstone.cashCents }
-              : { category, label: 'The capstone', state: 'closed', seasonsInTop10: { held, needed } },
-          )
-          continue
-        }
-        const def = ECONOMY.advertising.categories[category]
-        // ⚠⚠ ROUND 41 #15 – A CATEGORY THE JUNIOR BAND DOES NOT WRITE IS CLOSED WITH NO RANK HINT,
-        // AND THAT IS THE HONEST ROW RATHER THAN A CONVENIENT ONE. `opensAtRank` answers «how far up
-        // the ladder does this open», which is TRUE and NOT THE REASON here: a sixteen-year-old
-        // inside WTA #180 meets the watch band's rank and is still refused, on her age. So the row
-        // falls through to the shelf's own existing «Not open yet» – the string the template has
-        // carried since round 29 for exactly a closed row with nothing more to say, so this item
-        // adds no player-facing copy and needs no template edit.
-        const adultFee = band === null ? null : adFeeFor(category, band)
-        const fee = junior && !adJuniorOpen(category) ? null : adultFee
-        if (fee !== null) {
-          // ⚠ AND THE OPEN ROW QUOTES THE JUNIOR CHEQUE, off the same function the letter is written
-          // with, so the promise on the shelf is the money in the envelope.
-          rows.push({ category, label: def.label, state: 'open', openCashCents: junior ? adJuniorFeeCents(fee) : fee })
-        } else if (junior && !adJuniorOpen(category)) {
-          rows.push({ category, label: def.label, state: 'closed' })
-        } else {
-          // the weakest band whose cell is priced = the standing the category opens at
-          const openIdx = def.feeCentsByBand.findIndex((c) => c !== null)
-          rows.push({
-            category,
-            label: def.label,
-            state: 'closed',
-            opensAtRank: openIdx >= 0 ? ECONOMY.advertising.bands[openIdx].maxWtaRank : undefined,
-          })
-        }
-      }
-      return rows
-    })(),
+    // filled/open/closed, every number the engine's own.
+    //
+    // ⚠⚠ B-03 (26.09) – IT USED TO BE DERIVED IN AN IIFE RIGHT HERE, and that is where it drifted
+    // from the letter it describes: the row's `state` was a second reading of `reviewAdOffer`'s gate,
+    // and it did not ask about the kit deal a clothing letter needs, so the shelf promised «A letter
+    // here writes about $X a year» on 316 of 316 sampled kitless weeks. The projection now lives
+    // beside its writer as `adPortfolioView` (`world/sponsors.ts`) and both surfaces read one
+    // exported primitive, `adCategoryOpen` – the parity spec's form A.
+    adPortfolio: adPortfolioView(world),
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,

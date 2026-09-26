@@ -27,7 +27,7 @@ import { useGameStore } from '../../src/stores/game'
 import { openBillsTab } from './shelf'
 import { createWorld, toSnapshot, KID_ID, type WorldState } from '../../src/engine/world'
 import { acceptOffer, reviewAdOffer } from '../../src/engine/world/sponsors'
-import { adCategoryOf, adWritesAt } from '../../src/engine/offers'
+import { activeKitDeal, adCategoryOf, adWritesAt } from '../../src/engine/offers'
 import { ECONOMY } from '../../src/engine/economy'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Snapshot } from '../../src/shared/protocol'
 import { formatCents } from '../../src/shared/money'
@@ -116,6 +116,36 @@ describe('the portfolio shelf on the Bills page – categories filled/empty, the
     const capstone = rows.find((r) => r.text().includes('The capstone'))!
     expect(capstone.classes()).toContain('is-closed')
     expect(capstone.text()).toContain(`0 of ${AD.capstone.seasonsInTop10} top-10 seasons`)
+    wrapper.unmount()
+  })
+
+  // ⭐⭐⭐ B-03 / T3.3 (26.09) – THE THIRD ARM THE PARITY CONVENTION OWES A TEMPLATE
+  // (docs/specs/engine-ui-parity-2026-09.md §2: «a third arm is owed where the surface is a
+  // template»). The engine's row is asserted in tests/round29p4-ad-portfolio.test.ts; what only a
+  // MOUNT can say is which of MoneyScreen's three closed-row spellings the kitless slot lands on –
+  // the owner's ruling 5a is «closed, with the EXISTING «Not open yet»», and that string is chosen
+  // inside the template's own ternary, where no engine assertion reaches.
+  //
+  // THE FIXTURE ALREADY POSED IT: `worldWithSignedAd` signs a WATCHES deal and nobody ever dresses
+  // her, so this career's clothing slot is exactly the state the probe found on 316 of 316 sampled
+  // weeks – and before T3.3 this very mount rendered «Open – nobody signed» over a letter
+  // `reviewAdOffer` refuses.
+  //
+  // MUTATION ARM (the template's own, run alone): make the closed row's fallback print
+  // `row.opensAtRank ? … : ''` → this case reddens on the missing sentence while every unit net,
+  // including the engine-side arm above, stays green.
+  it('⭐⭐ B-03 – a kitless clothing slot is closed on screen, in the sentence the shelf already had', async () => {
+    const world = worldWithSignedAd()
+    expect(activeKitDeal(world.offers, world.week), 'nobody dresses her in this fixture').toBeNull()
+    const wrapper = await mountBills(toSnapshot(world))
+    const clothing = wrapper.findAll('.ad-slot').find((r) => r.text().includes('Clothing'))
+    expect(clothing, 'a Clothing row exists').toBeTruthy()
+    expect(clothing!.classes()).toContain('is-closed')
+    expect(clothing!.text()).toContain('Not open yet')
+    // ...and none of the open row's promise survives in it: no «nobody signed», no cheque a letter
+    // could not bring.
+    expect(clothing!.text()).not.toContain('Open – nobody signed')
+    expect(clothing!.text()).not.toContain('a year')
     wrapper.unmount()
   })
 

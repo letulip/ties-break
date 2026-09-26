@@ -23,9 +23,9 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
-import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
+import { LADDER_LABEL, type AdCategory, type AdOfferTerms, type AdPortfolioRow, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
 // ⚠ ROUND 29 #5 – the leaf, never `./shop`: `shop.ts` imports `./endings`, `endings` imports
@@ -725,6 +725,82 @@ export function capstoneSeasonsOf(world: WorldState): number {
   return n
 }
 
+/** WHY A CATEGORY IS SHUT, when it is – the gate's reason, so a surface can say the true thing
+ *  rather than the convenient one. `'age'` is the whole shelf's own gate («no shelf for a junior»),
+ *  `'junior'` the two-category shelf between sixteen and eighteen, `'band'` an unpriced cell at her
+ *  standing (which is also «no standing at all»), `'tenure'` / `'slam'` the two crowning rows' gates,
+ *  and `'kit'` the double programme's: nobody dresses her, so nobody writes the poster. */
+export type AdCategoryClosedReason = 'age' | 'junior' | 'band' | 'tenure' | 'slam' | 'kit'
+export type AdCategoryGate = { open: true } | { open: false; reason: AdCategoryClosedReason }
+
+/** ⭐⭐⭐ IS THIS CATEGORY OPEN TO HER THIS WEEK – the letter's own question, asked by the letter and
+ *  by the shelf (B-03, 26.09; the owner's ruling 5a).
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE THE TWO SURFACES HAD DRIFTED, INSIDE ONE ENGINE. `reviewAdOffer` refuses a
+ *  clothing letter without a live kit deal («двойной программой»: no kit deal, nobody to write it);
+ *  `toSnapshot`'s portfolio IIFE marked the same category `open` whenever its fee cell was priced and
+ *  asked nothing about kit, so the Money shelf promised «A letter here writes about $X a year» on
+ *  weeks the engine could not write one. Measured over three whole careers, every fourth week:
+ *  316 / 331 / 302 sampled weeks read `open`, and a live kit deal existed on NONE of them
+ *  (docs/review-principles-2026-09-26/probes/b-ad-shelf-parity.ts). The review's shape is the repo's
+ *  most-caught defect – two spellings of one fact – and the fix is the parity spec's FORM A: one
+ *  exported primitive, called by both, so there is nothing left to drift
+ *  (docs/specs/engine-ui-parity-2026-09.md §1).
+ *
+ *  ⚠ WHAT IT DELIBERATELY DOES NOT ASK: whether the SLOT IS TAKEN. `adSpokenFor` (a letter still on
+ *  the table or a term still running) is the letter side's own question and `activeAdDealIn` is the
+ *  shelf's – «is a deal live in this category» is what the `filled` row is for, and folding it in here
+ *  would turn every week a letter is in the inbox into a `closed` row that says «Not open yet» about a
+ *  category she is being written to. This answers ONE question: is the category open AT HER STANDING.
+ *
+ *  ⚠ PURE, AND ZERO DRAWS. It reads her age, her standing and the paper trail; the arrival dice stay
+ *  where they were (`adWritesAt` on `seed:ad:<category>:<week>`, reached only when this says open, and
+ *  the set of category-weeks that reach it is unchanged by construction). The frozen MAIN capture
+ *  (41550 / e6b0c709) cannot see any of it.
+ *
+ *  ⚠ THE ORDER OF THE CLAUSES IS THE SHELF'S COPY, not a preference: the junior refusal is read
+ *  BEFORE the band's, because a sixteen-year-old inside the watch band's rank is refused on her AGE
+ *  and a row that answered `'band'` there would blame a rank she has (round 41 #15's own ruling, kept
+ *  verbatim at the row). */
+export function adCategoryOpen(world: WorldState, category: AdCategory): AdCategoryGate {
+  const s = ECONOMY.advertising
+  // FROM SIXTEEN SINCE ROUND 41 #15 – her real age, `kidAgeAt`, the one-clock ruling: never the
+  // band's clock, never a birthday approximation.
+  const ageYears = kidAgeAt(world, world.week)
+  if (ageYears < s.fromAgeYears) return { open: false, reason: 'age' }
+  // ⭐⭐ THE TWO YEARS THE SHELF OPENED ARE THEIR OWN SHELF – two categories, half the cheque, half
+  // the arrivals, one year. Before eighteen a watch, a car, an airline and a fragrance write nothing
+  // at all, and neither do the two crowns (whose own tenure gates could not be met at seventeen
+  // either – refused twice on purpose, because an unreachable gate is a gate somebody deletes).
+  if (adJuniorAt(ageYears) && !adJuniorOpen(category)) return { open: false, reason: 'junior' }
+  // RESULTS ONLY: a counting professional standing inside a band of the gradient. The `wtaRanked`
+  // guard is the brand ladder's own – a floor tie is not a standing, and `adBandFor` holds it. The
+  // band sets every category's cheque at once (§8: the cheque is the only axis that scales).
+  const band = adBandFor(sponsorStandingOf(world))
+  if (band === null) return { open: false, reason: 'band' }
+  // ⭐⭐ THE CAPSTONE GATE IS TENURE, NOT TODAY'S RANK – four seasons ENDED inside the top 10 (his
+  // ruling; `capstoneSeasonsOf` above), one such deal at a time for its whole eight years.
+  if (category === 'capstone') {
+    return capstoneSeasonsOf(world) >= s.capstone.seasonsInTop10 ? { open: true } : { open: false, reason: 'tenure' }
+  }
+  // ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»). The gate is the capstone's
+  // own tenure read – the SAME fold, never a second derivation – plus the one thing the capstone never
+  // asks: a Slam title on the ledger. A legend without a Slam is not one, in this sport.
+  if (category === 'lifetime') {
+    if ((world.trophiesByTier?.slam?.titles?.length ?? 0) < s.lifetime.slamTitles) return { open: false, reason: 'slam' }
+    return capstoneSeasonsOf(world) >= s.lifetime.seasonsInTop10 ? { open: true } : { open: false, reason: 'tenure' }
+  }
+  // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from the
+  // first professional cash, the airline from the top 100, fragrance at the top 10 (§7).
+  if (adFeeFor(category, band) === null) return { open: false, reason: 'band' }
+  // ⭐ THE DOUBLE PROGRAMME («двойной программой»): the clothing category's author is the live kit
+  // deal's own brand – the poster campaign on top of the racket bag, two deals, one brand, separate
+  // letters, separate money. No kit deal, nobody to write it, and since B-03 nobody to promise it
+  // either.
+  if (category === 'clothing' && activeKitDeal(world.offers, world.week) === null) return { open: false, reason: 'kit' }
+  return { open: true }
+}
+
 /** WHETHER THIS IS THE WEEK A CAMPAIGN NOTICES HER – and if it is, the letter is raised. Weekly,
  *  not windowed: an endorsement is not an off-season ritual, and the plan's own table says the deal
  *  LAGS results – `ECONOMY.advertising.offerChance` a week, from the week she qualifies, is that
@@ -755,14 +831,17 @@ export function reviewAdOffer(world: WorldState): void {
   // молодые тоже в рекламах снимаются», and then, on option A1: «реклама открывается с 16
   // (юниорские суммы, реже) … согласен».
   const ageYears = kidAgeAt(world, world.week)
+  // ⚠ THE WHOLE POST'S EARLY-OUTS, NOT A SECOND VERDICT (B-03, 26.09). `adCategoryOpen` holds these
+  // same two facts and holds them PER CATEGORY – it is the decision, and it is asked below for every
+  // category. These two lines only stop the loop before it starts, and they are safe in the one
+  // direction that matters: an early-out that was wrong could admit nothing the gate does not admit.
+  // `band` also has to be a number for the terms the letter is written from, which is why it is read
+  // here at all.
   if (ageYears < s.fromAgeYears) return
   // ⭐⭐ AND THE TWO YEARS IT OPENED ARE THEIR OWN SHELF – two categories, half the cheque, half the
   // arrivals, one year. From her eighteenth birthday this is false and every line below is the
   // shipped code, byte for byte.
   const junior = adJuniorAt(ageYears)
-  // RESULTS ONLY: a counting professional standing inside a band of the gradient. The `wtaRanked`
-  // guard is the brand ladder's own – a floor tie is not a standing, and `adBandFor` holds it. The
-  // band sets every category's cheque at once (§8: the cheque is the only axis that scales).
   const standing = sponsorStandingOf(world)
   const band = adBandFor(standing)
   if (band === null) return
@@ -775,32 +854,32 @@ export function reviewAdOffer(world: WorldState): void {
     // other <trade> campaign while that runs») untrue – the same argument the one-post rule always
     // made, now made per slot.
     if (adSpokenFor(world.offers, world.week, category)) continue
-    // ⭐⭐ ROUND 41 #15 – THE JUNIOR SHELF IS TWO CATEGORIES WIDE. Before eighteen a watch, a car, an
-    // airline and a fragrance write nothing at all, and neither do the two crowns (whose own tenure
-    // gates could not be met at seventeen either – refused twice on purpose, because an unreachable
-    // gate is a gate somebody deletes).
-    if (junior && !adJuniorOpen(category)) continue
+    // ⭐⭐⭐ B-03 (26.09) – AND HERE IS THE GATE, IN ONE LINE AND IN ONE PLACE. The junior shelf, the
+    // band's priced cell, the two crowns' tenure and the double programme's kit deal all live in
+    // `adCategoryOpen` above, which the Money shelf calls for the very same verdict
+    // (`adPortfolioView`). What used to be a check per branch here, restated per row there, is now
+    // one primitive with two callers – the parity spec's form A.
+    if (!adCategoryOpen(world, category).open) continue
     // ⚠ «РЕЖЕ» IS THE ARRIVAL BAR AND NOTHING ELSE – the SAME sub-stream at a lower threshold, so the
     // draw count, the stream and its position are untouched at every age. A career that crosses
     // eighteen mid-week does not re-roll anything; it simply starts clearing the adult bar.
     const chance = junior ? (s.offerChance * s.junior.chanceBps) / 10_000 : s.offerChance
     let terms: AdOfferTerms | null = null
     if (category === 'capstone') {
-      // ⭐⭐ THE CAPSTONE GATE IS TENURE, NOT TODAY'S RANK – four seasons ENDED inside the top 10
-      // (his ruling; `capstoneSeasonsOf` above), one such deal at a time for its whole eight
-      // years. The author is the kit house that already dresses her – his own sentence is a kit
-      // brand paying for a face – falling back to the icon rung's brand between kit deals so the
-      // tenure gate he ruled is the only gate there is.
-      if (capstoneSeasonsOf(world) < s.capstone.seasonsInTop10) continue
+      // ⭐⭐ THE CAPSTONE'S TENURE GATE IS `adCategoryOpen`'S (B-03) – four seasons ENDED inside the
+      // top 10, his ruling, read through `capstoneSeasonsOf` in the one place both surfaces read it.
+      // What is left here is the AUTHOR: the kit house that already dresses her – his own sentence is
+      // a kit brand paying for a face – falling back to the icon rung's brand between kit deals so
+      // the tenure gate he ruled is the only gate there is.
       const kit = activeKitDeal(world.offers, world.week)
       const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
       if (!adWritesAt(world.seed, world.week, chance, category)) continue
       terms = adCapstoneTerms(author)
     } else if (category === 'lifetime') {
-      // ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»), once per career. The
-      // gate is the capstone's own tenure read – `capstoneSeasonsOf`, the SAME fold, never a second
-      // derivation – plus the one thing the capstone never asks: a Slam title on the ledger. A
-      // legend without a Slam is not one, in this sport.
+      // ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»), once per career. Its
+      // two-part gate is `adCategoryOpen`'s since B-03 – the capstone's own tenure read plus the one
+      // thing the capstone never asks, a Slam title on the ledger; a legend without a Slam is not
+      // one, in this sport – and the shelf's crowning row now reads that same verdict.
       //
       // ⚠ «ONCE PER CAREER» IS NOT A COUNTER, it is `adSpokenFor` above doing what it always does:
       // a signed lifetime deal never lapses, so its slot never re-opens and no second letter can
@@ -810,19 +889,23 @@ export function reviewAdOffer(world: WorldState): void {
       // ⚠ RNG: the arrival roll on `seed:ad:lifetime:<week>` is the category's own purpose scope,
       // the same shape every category rolls; NO letter rng and NO term draw – the term is «for
       // ever» and the author is the rule, so this letter, like the capstone, draws exactly once.
-      if ((world.trophiesByTier?.slam?.titles?.length ?? 0) < s.lifetime.slamTitles) continue
-      if (capstoneSeasonsOf(world) < s.lifetime.seasonsInTop10) continue
       const kit = activeKitDeal(world.offers, world.week)
       const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
       if (!adWritesAt(world.seed, world.week, chance, category)) continue
       terms = adLifetimeTerms(author)
     } else {
-      // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from
-      // the first professional cash, the airline from the top 100, fragrance at the top 10 (§7).
-      if (adFeeFor(category, band) === null) continue
+      // The priced cell at her band – watches/cars/drinks/clothing from the first professional cash,
+      // the airline from the top 100, fragrance at the top 10 (§7) – is `adCategoryOpen`'s `'band'`
+      // arm since B-03, and the shelf's own `opensAtRank` hint reads the same verdict.
+      //
       // ⭐ THE DOUBLE PROGRAMME («двойной программой»): the clothing category's author is the live
       // kit deal's own brand – the poster campaign on top of the racket bag, two deals, one brand,
       // separate letters, separate money. No kit deal, nobody to write it.
+      //
+      // ⚠ THE GATE ABOVE HAS ALREADY REFUSED A KITLESS WEEK (`adCategoryOpen`'s `'kit'` arm, which is
+      // the DECISION and the one the shelf reads too). What this read is for is the AUTHOR, and it
+      // must stay a read of the LIVE deal: `clothing`'s house list is empty on purpose, so there is
+      // no catalogue to fall back on and a `pickAdHouse` here would have nothing to pick from.
       let author: string | undefined
       if (category === 'clothing') {
         const kit = activeKitDeal(world.offers, world.week)
@@ -869,6 +952,143 @@ export function reviewAdOffer(world: WorldState): void {
     // what this letter promised. The WEEKS themselves are the signature's to name – `acceptOffer`.
     raiseAdOffer(world.offers, world.week, terms, deadline)
   }
+}
+
+// =================================================================================================
+// THE SHELF – the letter's own gate, read from the other side (B-03, 26.09)
+// =================================================================================================
+//
+// ⚠⚠ MOVED HERE OUT OF `toSnapshot`'s `adPortfolio` IIFE (world/snapshot.ts:1754-1849 at the
+// 26.09 baseline), where it had grown a SECOND SPELLING of the letter's gate and drifted from it –
+// B-03, and the review's own reason for the move: «the gate's second spelling was not a function,
+// so no `git grep` for the gate's name could find it». It is a projection and nothing else: zero
+// draws, zero writes, and every number it prints comes off the same functions `reviewAdOffer` is
+// written from. The snapshot calls it in the same position in the same key, so the wire is unchanged.
+
+/** ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE PORTFOLIO SHELF, one row per category in shelf order,
+ *  filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a junior
+ *  (`reviewAdOffer`'s own age gate, read through the same constant).
+ *
+ *  ⚠ «BEFORE EIGHTEEN» IS «BEFORE SIXTEEN» SINCE ROUND 41 #15 (12.09) and the sentence above predates
+ *  the junior shelf – corrected here, 26.09, rather than left to read as a constant: the age is
+ *  `ECONOMY.advertising.fromAgeYears`, read by this function and by `adCategoryOpen`, never typed. */
+export function adPortfolioView(world: WorldState): AdPortfolioRow[] {
+  const adAge = kidAgeAt(world, world.week)
+  if (adAge < ECONOMY.advertising.fromAgeYears) return []
+  // ⭐⭐⭐ ROUND 41 #15 – THE SHELF KNOWS ABOUT THE JUNIOR BAND, AND IT HAS TO. The owner opened
+  // the letters at sixteen with «юниорские суммы, реже», so between sixteen and eighteen the
+  // engine writes two categories at half the cheque – and a shelf that went on quoting the adult
+  // figure would be promising $80,000 over a letter that brings $40,000. Two sides asking
+  // different functions about one question is this repo's most-caught defect; both sides ask
+  // `adJuniorOpen` and `adJuniorFeeCents`.
+  //
+  // ⚠⚠ AND THAT IS PRECISELY WHAT B-03 FOUND HAD HAPPENED ANYWAY, one category along: the row's
+  // `state` was its own reading of the gate, and it did not ask about kit. Every verdict below is
+  // now `adCategoryOpen`'s; what is left here is the row's NUMBERS.
+  const junior = adJuniorAt(adAge)
+  const band = adBandFor(sponsorStandingOf(world))
+  const rows: AdPortfolioRow[] = []
+  for (const category of AD_CATEGORIES) {
+    const deal = activeAdDealIn(world.offers, category, world.week)
+    if (deal) {
+      const t = deal.terms as AdOfferTerms
+      // ⭐ ROUND 39 #3 – a filled LIFETIME row carries the flag instead of a years-and-runs-to
+      // pair the paper does not have; the screen branches on it and says «for life».
+      rows.push({
+        category,
+        label:
+          category === 'capstone' ? 'The capstone' : category === 'lifetime' ? 'The lifetime deal' : ECONOMY.advertising.categories[category].label,
+        state: 'filled',
+        brand: t.brand,
+        cashCents: t.cashCents,
+        ...(t.lifetime === true
+          ? { lifetime: true as const }
+          : { termYears: Math.max(1, t.termYears ?? 1), untilWeek: deal.untilWeek ?? deal.week }),
+      })
+      continue
+    }
+    // THE VERDICT, ASKED ONCE – the letter's own gate (`adCategoryOpen`, above `reviewAdOffer`).
+    // Every `state` below is this answer; the row decides only how to SAY it.
+    const gate = adCategoryOpen(world, category)
+    // ⭐ ROUND 39 #3 – the crown above the crown: once the shelf exists for her, the lifetime
+    // row shows its two-part gate the way the capstone row shows its tenure – held and needed,
+    // counted plainly, so the ladder's true end is visible from the first professional rung.
+    if (category === 'lifetime') {
+      if (band === null) continue
+      const l = ECONOMY.advertising.lifetime
+      const seasonsHeld = capstoneSeasonsOf(world)
+      const slamsHeld = world.trophiesByTier?.slam?.titles?.length ?? 0
+      rows.push(
+        gate.open
+          ? { category, label: 'The lifetime deal', state: 'open', lifetime: true, openCashCents: l.cashCents }
+          : {
+              category,
+              label: 'The lifetime deal',
+              state: 'closed',
+              lifetime: true,
+              seasonsInTop10: { held: seasonsHeld, needed: l.seasonsInTop10 },
+              slamTitles: { held: slamsHeld, needed: l.slamTitles },
+            },
+      )
+      continue
+    }
+    if (category === 'capstone') {
+      const held = capstoneSeasonsOf(world)
+      const needed = ECONOMY.advertising.capstone.seasonsInTop10
+      // The crowning row shows only once the shelf itself exists for her – any band open – so
+      // the ladder's end is visible from the first professional rung, tenure counted plainly.
+      if (band === null) continue
+      rows.push(
+        gate.open
+          ? { category, label: 'The capstone', state: 'open', openCashCents: ECONOMY.advertising.capstone.cashCents }
+          : { category, label: 'The capstone', state: 'closed', seasonsInTop10: { held, needed } },
+      )
+      continue
+    }
+    const def = ECONOMY.advertising.categories[category]
+    if (!gate.open) {
+      // ⚠⚠ ROUND 41 #15 – A CATEGORY THE JUNIOR BAND DOES NOT WRITE IS CLOSED WITH NO RANK HINT,
+      // AND THAT IS THE HONEST ROW RATHER THAN A CONVENIENT ONE. `opensAtRank` answers «how far up
+      // the ladder does this open», which is TRUE and NOT THE REASON here: a sixteen-year-old
+      // inside WTA #180 meets the watch band's rank and is still refused, on her age. So the row
+      // falls through to the shelf's own existing «Not open yet» – the string the template has
+      // carried since round 29 for exactly a closed row with nothing more to say, so this item
+      // adds no player-facing copy and needs no template edit.
+      //
+      // ⭐⭐⭐ B-03 / RULING 5a (26.09) – AND THE KITLESS CLOTHING ROW IS THE SAME SHAPE, for the same
+      // reason and in the same words: «двойной программой» means the poster is written by the house
+      // that already dresses her, so a week nobody dresses her is not a week a rank would explain.
+      // The owner's ruling: `closed`, with the EXISTING «Not open yet». No new sentence.
+      //
+      // the weakest band whose cell is priced = the standing the category opens at
+      const openIdx = def.feeCentsByBand.findIndex((c) => c !== null)
+      rows.push(
+        gate.reason === 'band'
+          ? {
+              category,
+              label: def.label,
+              state: 'closed',
+              opensAtRank: openIdx >= 0 ? ECONOMY.advertising.bands[openIdx].maxWtaRank : undefined,
+            }
+          : { category, label: def.label, state: 'closed' },
+      )
+      continue
+    }
+    // ⚠ AND THE OPEN ROW QUOTES THE JUNIOR CHEQUE, off the same function the letter is written
+    // with, so the promise on the shelf is the money in the envelope.
+    //
+    // ⚠ THE `null` LIMB IS THE GATE'S OWN `'band'` ARM AND CANNOT BE REACHED FROM IT: the cell is
+    // priced at her band on every week `adCategoryOpen` opens the category. It is kept as the SAFE
+    // direction rather than a `?? 0` – a shelf that cannot price a slot says nothing about it, and
+    // never promises a cheque no letter would carry.
+    const fee = band === null ? null : adFeeFor(category, band)
+    rows.push(
+      fee === null
+        ? { category, label: def.label, state: 'closed' }
+        : { category, label: def.label, state: 'open', openCashCents: junior ? adJuniorFeeCents(fee) : fee },
+    )
+  }
+  return rows
 }
 
 /** THE PARENT SIGNS. Returns the signed offer, or throws with the engine's own reason – past the

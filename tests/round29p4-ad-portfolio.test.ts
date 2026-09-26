@@ -43,15 +43,20 @@ import {
   kidAgeYears,
   recomputeKidRank,
   tickWeek,
+  toSnapshot,
   KID_ID,
   bankSponsorCheque,
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import {
+  AD_CATEGORIES,
   activeAdDealIn,
   activeAdDeals,
+  activeKitDeal,
+  adBandFor,
   adCategoryOf,
+  adFeeFor,
   adSpokenFor,
   adWritesAt,
   isWinterShootWeek,
@@ -59,7 +64,7 @@ import {
   pickAdHouse,
   signOffer,
 } from '../src/engine/offers'
-import { reviewAdOffer, acceptOffer, capstoneSeasonsOf, payAdAnniversaries, sponsorStandingOf } from '../src/engine/world/sponsors'
+import { adCategoryOpen, reviewAdOffer, acceptOffer, capstoneSeasonsOf, payAdAnniversaries, sponsorStandingOf } from '../src/engine/world/sponsors'
 import { recoveryBaseFor } from '../src/engine/world/medical'
 import { ECONOMY, managerCommissionCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -213,6 +218,131 @@ describe('the double programme – «Можно даже текущих испо
     const world = probeWorld(SEED, hit, 150) // identical, minus the kit signature
     reviewAdOffer(world)
     expect(post(world, 'clothing')).toEqual([])
+  })
+
+  // ⭐⭐⭐ B-03 / T3.3 (26.09) – AND THE SHELF SAYS THE SAME THING, WHICH IS THE HALF THAT WAS
+  // MISSING. The arm above proves the LETTER is refused on a kitless week; the Money shelf went on
+  // marking the category `open` on that very week and promising the cheque – measured on 316 of 316
+  // sampled weeks of `bench-middle-0` where the row read `open` and no kit deal existed
+  // (docs/review-principles-2026-09-26/probes/b-ad-shelf-parity.ts). Both surfaces now read
+  // `adCategoryOpen` (world/sponsors.ts), so the promise cannot outlive the gate.
+  //
+  // MUTATION ARMS, run before this was believed:
+  //   * drop `adCategoryOpen`'s kit clause → this case reddens (the row reads 'open' again);
+  //   * drop its junior clause (the shared source) → BOTH surfaces redden, in
+  //     tests/round41-ad-junior.test.ts' letter arm and its shelf arm together;
+  //   * re-spell the shelf's own openness off the fee cell (the sharing) → the parity sweep below
+  //     and this case redden ALONE, while tests/ad-offer.test.ts stays green.
+  it('⭐⭐ ...and the SHELF says so too – a kitless clothing slot is closed, never an open promise', () => {
+    const SEED = 'p4a-double'
+    const hit = rollFor(SEED, 'clothing', 300)
+    const world = probeWorld(SEED, hit, 150) // the same week as the negative arm above, no kit
+    expect(activeKitDeal(world.offers, world.week), 'nobody dresses her on the week under test').toBeNull()
+    const row = toSnapshot(world).adPortfolio.find((r) => r.category === 'clothing')!
+    expect(row.state, 'the shelf does not promise a letter the engine would refuse').toBe('closed')
+    expect(row.openCashCents, 'and quotes no cheque for it').toBeUndefined()
+    // ⚠ NO RANK IS BLAMED, and that is the round-41 #15 shape re-used rather than a new sentence:
+    // she MEETS the clothing band, so `opensAtRank` would be true and not the reason. The row falls
+    // through to the template's own «Not open yet», shipped since round 29 – no copy is added.
+    const band = adBandFor(sponsorStandingOf(world))
+    expect(band, 'she stands in a band at all').not.toBeNull()
+    expect(adFeeFor('clothing', band!), 'and the clothing cell IS priced at it').not.toBeNull()
+    expect(row.opensAtRank, 'so the row does not blame a rank she has').toBeUndefined()
+    // ...and the complementary arm, so this is not a case that merely closes the row: the very same
+    // seed and week, once a house dresses her, is open on the shelf exactly as the letter is written.
+    const dressed = probeWorld(SEED, hit, 150)
+    signKit(dressed, 'tour')
+    const dressedRow = toSnapshot(dressed).adPortfolio.find((r) => r.category === 'clothing')!
+    expect(dressedRow.state, 'a dressed week is open on the shelf').toBe('open')
+    expect(dressedRow.openCashCents, 'and quotes the band`s own cell').toBe(adFeeFor('clothing', band!))
+  })
+})
+
+// =================================================================================================
+// 2b – B-03 (26.09): ONE GATE, TWO SURFACES – the shelf's `state` IS the letter's verdict
+// =================================================================================================
+//
+// ⚠⚠ WHY A SWEEP AND NOT ONE MORE CASE. The kitless clothing arm above is the defect B-03 measured;
+// this is the CLASS, asserted as a property: for every category on every posed week, the row's
+// openness must be `adCategoryOpen`'s answer and nothing else. That is what makes the fix form A
+// rather than a patched row (docs/specs/engine-ui-parity-2026-09.md §1: «form A GUARANTEES the
+// parity; a test can only witness it») – and it is the arm that reddens if a future row starts
+// deciding for itself again, whichever category it invents the rule for.
+describe('B-03 – the shelf asks the letter`s question, category by category', () => {
+  /** The first week she is exactly `age`, off the same clock the gate reads. */
+  function weekAtAgeOf(seed: string, age: number): number {
+    const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
+    for (let week = 0; week < 900; week++) {
+      world.week = week
+      if (ageOf(world) === age) return week
+    }
+    return -1
+  }
+
+  /** The states the shelf can be asked about, each built through the engine's own doors: an adult
+   *  nobody dresses, the same adult under a kit deal, a junior inside a band, an adult with no
+   *  professional standing at all, and a girl below the shelf's own age gate. */
+  function posed(): Array<readonly [string, WorldState]> {
+    const hit = rollFor('p4a-parity', 'clothing', 300)
+    const undressed = probeWorld('p4a-parity', hit, 150)
+    const dressed = probeWorld('p4a-parity', hit, 150)
+    signKit(dressed, 'tour')
+    const junior = probeWorld('p4a-parity-j', weekAtAgeOf('p4a-parity-j', 16), 150)
+    const unranked = createWorld('p4a-parity-u', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    unranked.week = hit
+    const child = createWorld('p4a-parity-c', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    child.week = weekAtAgeOf('p4a-parity-c', 14)
+    return [
+      ['undressed adult #150', undressed],
+      ['dressed adult #150', dressed],
+      ['junior #150', junior],
+      ['adult, no professional standing', unranked],
+      ['below the age gate', child],
+    ] as const
+  }
+
+  it('⭐⭐⭐ every row`s openness is the gate`s own answer, both directions, on five posed worlds', () => {
+    let examined = 0
+    let open = 0
+    let closed = 0
+    for (const [name, world] of posed()) {
+      const rows = toSnapshot(world).adPortfolio
+      // 1. Nothing the shelf calls open is a letter the engine would refuse.
+      for (const row of rows) {
+        if (row.state === 'filled') continue
+        examined++
+        if (row.state === 'open') open++
+        else closed++
+        expect(row.state === 'open', `${name} / ${row.category}: the row disagrees with the gate`).toBe(
+          adCategoryOpen(world, row.category).open,
+        )
+      }
+      // 2. ...and nothing the engine would write is missing from the shelf, which is the direction a
+      //    row that simply closed everything would pass.
+      for (const category of AD_CATEGORIES) {
+        if (!adCategoryOpen(world, category).open) continue
+        const row = rows.find((r) => r.category === category)
+        expect(row, `${name} / ${category}: the gate opens it and the shelf has no row`).toBeDefined()
+        expect(['open', 'filled'], `${name} / ${category}`).toContain(row!.state)
+      }
+    }
+    // ANTI-VACUITY: the sweep really saw both answers, in numbers.
+    expect(examined, 'rows examined').toBeGreaterThan(20)
+    expect(open, 'open rows seen').toBeGreaterThan(0)
+    expect(closed, 'closed rows seen').toBeGreaterThan(0)
+  })
+
+  it('⚠ and the junior shelf is the same gate: two categories open, the rest closed on her age', () => {
+    const week = weekAtAgeOf('p4a-parity-j', 16)
+    const world = probeWorld('p4a-parity-j', week, 150)
+    expect(ageOf(world), 'the fixture really is a junior').toBe(16)
+    const rows = toSnapshot(world).adPortfolio
+    const openRows = rows.filter((r) => r.state === 'open').map((r) => r.category)
+    // The junior shelf is `drinks` and `clothing` – and clothing needs the kit deal she has not got,
+    // so a junior nobody dresses is offered exactly the drink.
+    expect(openRows).toEqual(['drinks'])
+    expect(adCategoryOpen(world, 'clothing')).toEqual({ open: false, reason: 'kit' })
+    expect(adCategoryOpen(world, 'watches')).toEqual({ open: false, reason: 'junior' })
   })
 })
 
