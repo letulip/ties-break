@@ -39,6 +39,11 @@
 //   C. THE EXIT, case 2: revert `refreshAfterStale`'s `refreshSlots()` (stores/game.ts) – the Retry
 //      then re-sends the same stale belief and is refused again.
 //   D. THE EXIT, case 3: drop `@click="fileInput?.click()"` off «Import from file».
+//   E. ⭐ W2, SECOND PASS (26.09) – THE RESTORE'S OWN RETRY: drop the `tracked(...)` wrapper back off
+//      `askRestorePrevious`'s `onConfirm` (MoreScreen.vue). Cases 4 and 5 go red and the three above
+//      stay green: «the refusal row offers no Retry at all – That action was based on an outdated
+//      screen – it was refreshed. Try again.» and «it sent ["manual:c-w2m-prev-inherit:backup"] where
+//      the refused command was auto:c-w2m-prev-inherit:b».
 import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
