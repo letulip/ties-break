@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 140 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 141 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -43,7 +43,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | process-and-git | 21 | [THE PRINCIPLES REVIEW RECEIVED: TWO P0s CONFIRMED, SIX WAVES PROPOSED, NOTHING LAUNCHED](#26092026--the-principles-review-received-two-p0s-confirmed-six-waves-proposed-nothing-launched) | 2026-09-26 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
-| saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
+| saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
 | simulation-and-balance | 7 | [THE DELIVERY MEASURED: THE ART STAYS BYTE-IDENTICAL, THE CEILING RISES WHEN IT MUST](#26092026--the-delivery-measured-the-art-stays-byte-identical-the-ceiling-rises-when-it-must) | 2026-09-26 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
@@ -5523,3 +5523,51 @@ one manifest-only icon (T3.12, −105 KiB, W3; `pwa-192` / `pwa-512` stay – th
 artwork reads them offline). ~0.3 MB in all – after that the ceiling is his own constraint, and it
 rises when an art round needs it, as he said himself: «это наше ограничение, мы его будем
 неизбежно поднимать».
+
+## 26.09.2026 – NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK
+
+W1 of the principles fix closed with three questions. His answers, verbatim:
+
+1. «у нас сейчас нет игроков, старые сейвы нас не интересуют, нужна будущая 100% обратная
+   совместимость, но страховку сделать можно, по твоей рекомендации, лишь бы пользователь не застрял
+   в этом флоу»
+2. «по твоей рекомендации»
+3. «сделай как считаешь нужным»
+
+**What answer 1 settles, and what it does NOT.** The question was which sentence a save-door refusal
+carries, on three paths at once: a refused `loadCareer`, `deleteSlot` handed an `auto:` key (D-P7),
+and whether the boot door should print `saveGuard`'s «update the app, then import it» instead of the
+migration ladder's own sentence. His answer moves the question off wording and onto **exits**: the
+test is not what the screen says, it is whether the player can leave. So –
+
+- **No sentence is reworded and no sentence is invented.** Invariant 4 stands; «страховку сделать
+  можно» authorises a guaranteed exit, not new copy. A refusal reachable only by a malformed record
+  is a diagnostic, and a diagnostic with a working Retry / Import / «Start a new career» beside it is
+  not a stuck player. If a path turns out to have no exit, the fix is the exit; if that needs copy, it
+  comes back as a DRAFT for his pass.
+- **The insurance is a net, not a message**: every refusal the save doors can produce must land on a
+  surface with a working exit, proven by mutation. The sharp target is `loadCareer`'s refusal, because
+  this wave created it (B-02's last lifecycle path) – a refusal that did not exist cannot have been
+  covered by an older net.
+- **«Будущая 100% обратная совместимость» is the three-part law already in `CLAUDE.md`**, and it needs
+  nothing built: append-only migrations, a bump per change, and one golden fixture per version
+  enforced by `tests/goldenSaves.test.ts`. Old saves being uninteresting (his 03.09 ruling, no players
+  yet) is what makes the FORWARD direction the only live risk, and that is the one W1's T1.3 closed –
+  a save from a newer build is refused as `future-schema` instead of being called corruption and
+  rolled back over.
+
+**What answer 2 settles.** Two findings W1's own fuzz corpus turned up ride as their own items, not
+as appendices to a wave:
+
+- **A dry run on the boot door.** Three seeded variants load and then refuse the next week
+  (`golden-v35/type-swapped/1 injury := a number`, `e2e-fresh/field-deleted/1 deleted injuryHistory`,
+  `e2e-pro/field-deleted/5 deleted seasonEntries.rows`). T1.5's dry run covers `importSave`, which is
+  rare; boot is not, and the tick is paid on every one. Its own item, measured first.
+- **B-02's load-side fallback** – trying the older generation when the newest cannot render. It is a
+  product decision, not an ordering fix: a second generation opening silently in place of the first is
+  exactly the rollback T1.3 just narrowed, and it needs the sentence question above.
+
+**What answer 3 settles.** The `loadCareer` ordering fix (`96748400`) has no row in
+`docs/plans/principles-fix-builder-2026-09.md` §3, which lists T1.1–T1.7. The plan is appended to by
+the architect's other hand, and a row from this side in the same region would conflict at the next
+wave-boundary merge for no gain, so the record lives in the commit and here instead.
