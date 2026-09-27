@@ -320,9 +320,19 @@ const TOP_STREAK_YEARS = 4
 // the whole of `albumCorpus.ts` rode in the **UI** chunk, which never calls one function in this
 // file. The only runtime path here is `BracketTabs.vue → engine/world.ts → world/albumBook.ts`, and
 // every UI import on it is a small symbol such as `KID_ID`. Measured on the build before the change:
-// `'She tried everything on.'` and `'She asked about the losses.'` were both in
-// `dist/assets/index-*.js` as well as in `dist/assets/sim.worker-*.js`, which is the only caller.
-// After it, neither is in the UI chunk and both are still in the worker's.
+// two of the corpus' own sentences were in `dist/assets/index-*.js` as well as in
+// `dist/assets/sim.worker-*.js`, which is the only caller. After it, neither is in the UI chunk and
+// both are still in the worker's.
+//
+// ⚠⚠ THE TWO SENTENCES ARE DELIBERATELY NOT QUOTED HERE, AND THE GATE IS WHY (27.09).
+// `tests/component/album-mobile.test.ts` refuses any corpus string anywhere in `src/` outside
+// `albumCorpus.ts`, comments included, and it caught this note on the wave's own gate. It is RIGHT to:
+// a sentence quoted in a comment is a SECOND COPY of copy the corpus owns, and one day it will quote
+// a line the corpus no longer holds - which is the «a note restates a rule the code owns» class this
+// same wave spent a whole pass (T3.8, C-02) clearing out of nine other sites, one of which would have
+// had a builder break a correct shipped sentence. To re-take this measurement, grep the built chunks
+// for the sentences `ALBUM_CORPUS` holds rather than for a pair transcribed here: that is a count over
+// the whole corpus and strictly better evidence than two samples.
 //
 // ⚠ ONE ANNOTATED CALL, AND THAT IS WHY IT IS AN IIFE RATHER THAN A BARE `/*#__PURE__*/ new Map`.
 // The annotation is a promise about the call it precedes; the ARGUMENT `ALBUM_CORPUS.map(…)` is a
