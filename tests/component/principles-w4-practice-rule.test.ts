@@ -24,11 +24,18 @@
 // RUBBER and a narrowed one the PRACTICE. A fixture with the practice first would pass under either
 // rule and prove nothing.
 //
-// ⚠⚠ MUTATION ARMS, BOTH RUN – see the wave's report for the quoted output of each:
-//   arm A (the shared SOURCE): change `practiceMatchId`'s format in `world/planner.ts` and BOTH
-//     screens lose the card together, because they read one engine answer.
-//   arm B (the SHARING): restore `e.friendly &&` on ONE screen and only that screen's case reddens,
-//     while the other screen's own files stay entirely green.
+// ⚠⚠ MUTATION ARMS, ALL THREE RUN – see the wave's report for the quoted output of each:
+//   arm A (the shared SOURCE): widen `isPracticeMatchEvent` back to `friendly` inside the engine and
+//     BOTH rendered surfaces lose the practice to the rubber TOGETHER (4 of 5 cases red) – which is
+//     what «they read one engine answer» looks like from outside.
+//   arm B (the SHARING): restore `e.friendly &&` on ONE screen and only that screen's case reddens
+//     (1 of 5), while the screen's own file – `season-screen.test.ts`, 11 tests – stays entirely
+//     green. That asymmetry is this file's licence to exist.
+//   ⚠ a third arm, and its result is worth writing down because it is NOT the spec's arm A: changing
+//     `practiceMatchId`'s FORMAT reddens the format pin alone, and both rendered cases stay green –
+//     the fixture builds its ids from the same exported function, so the screens follow the engine
+//     wherever it goes. A format change is not a divergence, and this file says so rather than
+//     claiming a red it does not produce.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'

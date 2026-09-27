@@ -1544,7 +1544,10 @@ function reopenTour(): void {
 
 <template>
   <!-- PWA update prompt (registerType 'prompt'): fixed above everything, all app states. -->
-  <div v-if="needRefresh" class="update-banner">
+  <!-- ⭐ E-10 / T4.9 – `role="status"`, the app's own `StoreError` treatment («an error that appears
+       without moving focus is announced by nothing otherwise»). A polite live region: it never
+       interrupts, and it is an ATTRIBUTE – not one word of the three notices moves. -->
+  <div v-if="needRefresh" class="update-banner" role="status">
     <span>New version available</span>
     <button class="primary" @click="applyUpdate">Update</button>
   </div>
@@ -1633,7 +1636,10 @@ function reopenTour(): void {
          mounted-tested in tests/component/round28-top-notices.test.ts - the App shell became
          mountable in this round (see the alias in vite.config.ts), so the claim D11 could only
          state backwards as a source pin is now made forwards, on the rendered button. -->
-    <div v-if="game.recovered" class="recovered-banner">
+    <!-- ⭐ E-10 / T4.9 – `role="status"`: the recovered banner is the ONE message about a damaged
+         save, and until this wave a screen reader was told nothing about it. See the update
+         banner above for the treatment; no wording moves. -->
+    <div v-if="game.recovered" class="recovered-banner" role="status">
       <span>Autosave was damaged – restored the previous one.</span>
       <button aria-label="Dismiss autosave notice" @click="dismissRecovered">Dismiss</button>
     </div>
@@ -1641,7 +1647,9 @@ function reopenTour(): void {
     <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
          screen too (playPracticeWeek), and a stop the player never sees is a stop that did not
          happen as far as they are concerned. -->
-    <div v-if="showStopToast" class="stop-toast">
+    <!-- ⭐ E-10 / T4.9 – `role="status"`: this toast is the game's whole explanation of why a
+         multi-week advance halted, so a player who cannot see it was being told nothing at all. -->
+    <div v-if="showStopToast" class="stop-toast" role="status">
       <span>{{ stopReasonText }}</span>
       <!-- Its message always opens with the word "Stopped:", so the accessible name's own noun is
            the sentence's and not a new one invented for the button. -->
