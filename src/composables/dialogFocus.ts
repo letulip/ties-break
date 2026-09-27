@@ -22,7 +22,19 @@
 // which are not this wave's - and `aria-modal` already carries the same promise to assistive
 // technology. A MOUSE can still reach the page behind a dialog; the keyboard and the screen reader
 // cannot. That is where this stops, and it is written down rather than left to be discovered.
-import { onBeforeUnmount, onMounted, type Ref } from 'vue'
+//
+// ⚠⚠ AND IT ARMS WHEN THE CARD APPEARS, NOT ONLY WHEN THE COMPONENT MOUNTS – E-08 / T4.7, 27.09.
+// Every caller before this one is an SFC that IS its own overlay: the card exists for exactly as long
+// as the component, so `onMounted` was the whole lifecycle. `MatchViewer.vue`'s `.mv-hurt` is the
+// first caller whose card is a `v-if` INSIDE a long-lived component – the viewer is mounted for the
+// whole match and the retirement popup appears near the end of it – and on that shape `onMounted` ran
+// with `root.value === null`, took the `if (!el) return` door and NEVER added the listener. A trap
+// that silently does not arm is the failure `aria-modal` makes worse than nothing, which is this
+// file's own opening argument, so the lifecycle follows the CARD now: `arm` when the ref becomes an
+// element, `disarm` when it goes away or the component unmounts, and `armed` makes both idempotent.
+// Nothing moves for the other fifteen callers – their ref is set during the mount patch, so `arm`
+// runs from `onMounted` exactly as it always did and the watcher's later call is a no-op.
+import { onBeforeUnmount, onMounted, watch, type Ref } from 'vue'
 
 /** Everything the keyboard can land on inside `root`, in document order. Deliberately a short,
  *  readable selector rather than a general one: these dialogs are two buttons and some prose, and a
@@ -112,22 +124,27 @@ export function useDialogFocus(root: Ref<HTMLElement | null>, onEscape?: () => v
     }
   }
 
-  onMounted(() => {
-    if (typeof document === 'undefined') return
+  /** ⚠ IDEMPOTENT ON PURPOSE. A card that is present at mount reaches this from `onMounted` and then
+   *  again from the watcher (the template ref is assigned during the same patch), and arming twice
+   *  would add a second listener and re-read `returnTo` from inside the dialog. */
+  let armed = false
+
+  function arm(el: HTMLElement): void {
+    if (armed) return
+    armed = true
     const previous = document.activeElement
     returnTo = previous instanceof HTMLElement ? previous : null
-    const el = root.value
-    if (!el) return
     // Capture, on the document: the dialog's own listener would never fire on the one press this
     // guard exists for - the Tab that happens while focus has already escaped the card.
     document.addEventListener('keydown', onKeydown, true)
     // ROUND 42 #8 – 'card' lands on the dialog itself (announced through its `aria-labelledby`),
     // so an arriving keypress presses nothing; Tab still reaches every control from there.
     focus(options?.focusOn === 'card' ? el : (focusables(el)[0] ?? el))
-  })
+  }
 
-  onBeforeUnmount(() => {
-    if (typeof document === 'undefined') return
+  function disarm(): void {
+    if (!armed) return
+    armed = false
     document.removeEventListener('keydown', onKeydown, true)
     // ROUND 42 #17(c) – a dialog that was raised OVER the week press opts out of the hand-back:
     // returning focus to Proceed re-fires a held Enter, which was a measured double-advance.
@@ -136,5 +153,28 @@ export function useDialogFocus(root: Ref<HTMLElement | null>, onEscape?: () => v
     // button is re-rendered by every snapshot, and focusing a detached node silently sends focus to
     // <body>, which is where it would have gone anyway.
     if (returnTo?.isConnected) focus(returnTo)
+  }
+
+  onMounted(() => {
+    if (typeof document === 'undefined') return
+    const el = root.value
+    if (el) arm(el)
+  })
+
+  // ⚠ `flush: 'post'` – the element has to be in the document before focus is moved into it, and a
+  // 'pre' watcher on a template ref can run before the patch that put it there is finished.
+  watch(
+    root,
+    (el) => {
+      if (typeof document === 'undefined') return
+      if (el) arm(el)
+      else disarm()
+    },
+    { flush: 'post' },
+  )
+
+  onBeforeUnmount(() => {
+    if (typeof document === 'undefined') return
+    disarm()
   })
 }
