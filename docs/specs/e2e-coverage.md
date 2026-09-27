@@ -234,6 +234,7 @@ produced a *defect list* instead of a workaround list.
 | `expecting.spec.ts` | a career months into the maternity pause comes back out of IndexedDB still carrying: her hero wears the pregnancy painting the wire named and the browser really decodes it, the Season cards are shut with the engine's own sentence under a lock, and one press still moves the week – she is off tour, the household is not. The only fixture parked INSIDE its beat, because the beat is not what is under test: the pause is | 1, 2, 5 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
+| `project-order.spec.ts` | the suite's own schedule has not rotted: `chromium-wedding` is still the FIRST project `playwright.config.ts` declares, which is worth 25.6 s of every local run (71.7 s → 46.1 s, measured 27.09 – G-04 (a)), and it is neither first-and-empty nor ALSO left in `chromium`. Added 27.09; like the row above it asserts a property of this repo rather than a journey a player walks, and it needs no browser | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->
 
 `e2e/journey.ts` and `e2e/careerAt.ts` are architecture rather than specs, so neither appears above.
