@@ -34,12 +34,17 @@
  *   and it moves only when the horizon on its own line moves. (`tools/pro-season-probe.ts:531`'s
  *   «ages 16-18» is the same distinction from the other side – the probe's own season span, checked
  *   and NOT a grid claim, so it is not a site.)
- *   ⚠⚠ AND THE SAME FALSE CLAIM IS A **PRINTED LEGEND** AT `:136`: the `14→16` row's
- *   `blurb: 'the junior sink – nothing she can enter pays a cent'`. `w15` pays $2,200 and opens at 14,
- *   so that sentence is as stale as the one above it – and it goes on screen, so correcting it moves
- *   this bench's output and is NOT a comment-only change. Left alone deliberately, flagged for the
- *   architect: it needs the same before/after diff every other change in T5.12 carries, and the
- *   14→16 row's own line above now points at `prizeCents` so a reader of the SOURCE is not misled.
+ *   ⚠⚠ AND THE SAME FALSE CLAIM WAS A **PRINTED LEGEND** AT `HORIZONS[0]`, WHICH IS WHY IT MATTERED
+ *   MORE THAN THE COMMENT – corrected 28.09 with its own diff, on the architect's ruling. Verbatim:
+ *   `blurb: 'the junior sink – nothing she can enter pays a cent'`. `w15` opens at 14 and
+ *   `w15.prizeCents` starts at $2,200, so that legend contradicted the very table it prints beside –
+ *   and a false printed legend is worse than a false comment, because it is the thing somebody quotes
+ *   into a spec. It now points at `TierDef.prizeCents` instead of restating it.
+ *     ⚠ IT MOVED PRINTED OUTPUT, so it was NOT a comment-only change and it carries the proof every
+ *     other T5.12 change carries: `bench:econ` run before and after, and the diff shows the TWENTY
+ *     lines that interpolate that one string and NOTHING else – the legend block, the 14→16 horizon
+ *     header, and its eighteen `[target: …]` reach rows – nine presets × two policies. Every other byte of the
+ *     176 KB is unchanged, checksums and all.
  *
  * State carries across seasons because we keep ONE createWorld + ONE rngFromSeed for the whole horizon
  * and just tick further – fundsCents, kidRank, the rolling results ledger, bestFinishByTier and
@@ -131,16 +136,22 @@ export interface Horizon {
 
 // Three horizons, all iterated in main. weeks = (targetAge - 14) * 52.
 //
-// ⚠ THE THIRD ONE EXISTS BECAUSE THE ADULT TOUR IS UNREACHABLE INSIDE THE OTHER TWO (task #17, A4).
-// W15 has `minAgeYears: 16`, which is week 104 – the exact last week of the 14→16 horizon – so the
-// junior horizon can never see a professional entry, and 14→18 leaves at most two seasons of it. The
-// A4 question ("in what week does prize money first exceed the week's costs?") needs the adult rungs
-// to have been played for long enough to answer honestly, and a horizon that reports "never" because
-// it stopped too early would be the same non-measurement REACH_TARGET_MONEY was before it was
-// re-based. Six seasons takes her to 20 – past the fork at 19 that §4 of
+// ⚠ THE THIRD ONE EXISTS BECAUSE THE A4 QUESTION NEEDS A LONG ENOUGH ADULT RUN (task #17, A4). It
+// asks "in what week does prize money first exceed the week's costs?", which needs the paying rungs to
+// have been played for long enough to answer honestly; a horizon that reports "never" because it
+// stopped too early would be the same non-measurement REACH_TARGET_MONEY was before it was
+// re-based.
+//
+// ⚠⚠ THE SEVENTH COPY OF THE AGE GRID WAS HERE, AND IT IS WHY THE 14→16 LEGEND LIED – corrected 28.09.
+// Verbatim: *"THE ADULT TOUR IS UNREACHABLE INSIDE THE OTHER TWO. W15 has `minAgeYears: 16`, which is
+// week 104 – the exact last week of the 14→16 horizon – so the junior horizon can never see a
+// professional entry, and 14→18 leaves at most two seasons of it."* Against `TIERS`, `w15.minAgeYears`
+// is **14**, so the junior horizon can see a professional entry from its first week. The premise here,
+// the derived claim, and the PRINTED legend below all rotted together off one restated constant – which
+// is the shape of this defect class, and the reason the repair names the field instead of the number. Six seasons takes her to 20 – past the fork at 19 that §4 of
 // docs/specs/adult-tour-and-endings.md will eventually make a decision rather than a birthday.
 export const HORIZONS: Horizon[] = [
-  { label: '14→16', weeks: 104, targetAge: 16, blurb: 'the junior sink – nothing she can enter pays a cent' },
+  { label: '14→16', weeks: 104, targetAge: 16, blurb: 'the junior sink – see TierDef.prizeCents for what pays' },
   { label: '14→18', weeks: 208, targetAge: 18, blurb: 'pro attempt proxy (top-50 once ranked, or 60 points)' },
   { label: '14→20', weeks: 312, targetAge: 20, blurb: 'the adult tour – can the tennis start paying for itself?' },
 ]
