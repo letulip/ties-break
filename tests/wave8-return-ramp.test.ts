@@ -146,8 +146,8 @@ import { advanceRefusal } from '../src/engine/world/multiWeek'
 import { rankIn } from '../src/engine/world/ladder'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
-import type { LoveEpisode } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { married } from './helpers/scenarios/love'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's ARM 2 law.
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31, protectedEntries: 12 } as const
@@ -169,14 +169,6 @@ function weekAtAge(world: WorldState, years: number): number {
     if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
   }
   throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
 }
 
 function wedded(seed: string, age = 28): WorldState {

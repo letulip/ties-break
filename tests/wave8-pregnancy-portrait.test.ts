@@ -53,7 +53,7 @@ import {
 } from '../src/shared/avatarEmotion'
 import { PREGNANT_ART_STEM, pregnantUrl } from '../src/art/preload'
 import { CROPS, PAINTING_ONLY_FACES } from '../src/art/faceRects'
-import type { LoveEpisode } from '../src/shared/protocol'
+import { married } from './helpers/scenarios/love'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY.motherhood` – wave 3's ARM 2
 // law, inherited through T2's and T3's own §BRIEF blocks: an expectation read out of the thing under
@@ -263,14 +263,6 @@ describe('wave 8 T10 §D – `toSnapshot` carries the answer, and only the answe
       if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
     }
     throw new Error(`no week reaches age ${years}`)
-  }
-
-  function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-    return {
-      id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-      partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-      airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-    }
   }
 
   /** A married career carrying the record T2's `rollPregnancy` writes, hand-built on the BRIEF's own

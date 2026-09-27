@@ -62,7 +62,7 @@ import { ALBUM_CHAPTER_TITLES } from '../src/engine/world/albumBook'
 import { PARTNER_NAME_POOL } from '../src/engine/world'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import type { LoveEpisode } from '../src/shared/protocol'
+import { married } from './helpers/scenarios/love'
 
 const PUBLIC = fileURLToPath(new URL('../public', import.meta.url))
 
@@ -72,14 +72,6 @@ function weekAtAge(world: WorldState, years: number): number {
     if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
   }
   throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
 }
 
 /** ⭐⭐ A MARRIED CAREER PARKED ON A WEEK WHOSE PREGNANCY UNIFORM IS A REAL **HIT**, on the engine's

@@ -58,7 +58,8 @@ import {
 import { PREGNANT_ART_STEM, pregnantUrl } from '../../src/art/preload'
 import { facePoint } from '../../src/art/faceRects'
 import { lifeRowGlyph } from '../../src/components/screens/lifeRowGlyphs'
-import type { LoveEpisode, Snapshot } from '../../src/shared/protocol'
+import type { Snapshot } from '../../src/shared/protocol'
+import { married } from '../helpers/scenarios/love'
 
 /** The eight band paintings a portrait surface shows on an ordinary week – the set the hero must be
  *  wearing whenever a pregnancy painting is not on it. A pattern rather than one face, for
@@ -75,14 +76,6 @@ function weekAtAge(world: WorldState, years: number): number {
     if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
   }
   throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
 }
 
 /** A married career of 28 carrying the record `rollPregnancy` writes. */

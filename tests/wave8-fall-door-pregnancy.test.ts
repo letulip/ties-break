@@ -49,7 +49,7 @@ import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { seasonIndexOf } from '../src/engine/world/ledger'
 import { engineModuleSource } from './worldSource'
 import { region } from './helpers/source'
-import type { LoveEpisode } from '../src/shared/protocol'
+import { married } from './helpers/scenarios/love'
 
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31 } as const
 
@@ -58,14 +58,6 @@ function weekAtAge(world: WorldState, years: number): number {
     if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
   }
   throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
 }
 
 /** ⭐⭐ A CAREER STANDING ON AN OFF-SEASON WRAP WEEK WITH THE FALL'S THREE TERMS MET.

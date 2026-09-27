@@ -87,8 +87,8 @@ import { accrueSpirit } from '../src/engine/spirit'
 import { MEMORY_EMOTION } from '../src/engine/diary'
 import { paintedStemFor } from '../src/shared/avatarEmotion'
 import { rngFromSeed } from '../src/engine/rng'
-import type { LoveEpisode } from '../src/shared/protocol'
 import type { PregnancyState } from '../src/engine/world/state'
+import { married } from './helpers/scenarios/love'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's ARM 2 law,
 // inherited through T2's and T3's own `BRIEF` blocks: an expectation read out of the thing under
@@ -111,15 +111,6 @@ function weekAtAge(world: WorldState, years: number): number {
     if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
   }
   throw new Error(`no week reaches age ${years}`)
-}
-
-/** A married row of the v83 shape – `latchedWeek` non-null, `endedWeek` null (T2's helper). */
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
 }
 
 /** A married career standing at `age`, funded, fit, with an EMPTY calendar – every case builds what
