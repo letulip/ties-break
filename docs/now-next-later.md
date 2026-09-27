@@ -252,6 +252,28 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   RPC window is what converts a readable timeout into it, so W5's clamp can only move the failure in the
   readable direction. ([CLAUDE.md](../CLAUDE.md), the contention and sentinel gotchas; H-06.)
 
+- **One rank rule for `quantile`, ruled 28.09, and the migration is measured per bench.** Three live
+  benches compute a percentile as `round(q·(n−1))` while the shared `tools/_stats.ts` uses
+  `floor(q·n)`. ⚠ The defect is in the RECORD rather than in the code: a spec quoting p90 from two
+  benches quotes two different numbers. **The ruling is `floor(q·n)`, the shared module's.** It is not a
+  sweep, because changing a holdout **moves its printed output** – one bench at a time, each with its
+  before/after diff stated, which is the standard W5's T5.12 held itself to on 31 captures.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-04.)
+- **The 68 component files that still spell the storage shim themselves.** T5.10 gave it one home and
+  made it opt-in – which is what F-03 asked – and converted no callers; only 4 of 72 import
+  `installMemoryStorage`. ⚠ Converting 68 files is its own migration with its own risk, so the interim
+  is T5.14's **shrink-only ratchet**: the 68 are listed, a new copy is red, a migrating file simply drops
+  out, and a companion arm prints how much of the list is still load-bearing so a green run cannot hide
+  a rotted ratchet. ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-03.)
+- **`tools/weight-bench.ts` holds byte-identical copies of two `tests/helpers/career.ts` helpers**
+  (`married`, `weekAtAge`), and a tool cannot import `tests/helpers/` – that module re-exports **from**
+  `tools/`, so the dependency runs the other way. ⚠ A tools-side home would mean a second home plus
+  re-pointing `tests/helpers` at it, which inverts a documented direction for two small helpers, so the
+  bench keeps them with a dated note naming the home. **If a third such copy appears the move becomes
+  worth it** – that is the trigger, not a count of lines. Found 28.09 by T5.14's own mutation arm, after
+  the normaliser learned to strip a leading `export` (one keyword had kept the guard green).
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02 / F-04.)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
