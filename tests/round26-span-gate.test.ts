@@ -51,7 +51,10 @@ import { DEFAULT_PROFILE, type Snapshot, type SnapshotInjury, type UpcomingEvent
 // One walked career of 208 weeks with a snapshot taken every week. Deterministic but slow, and the
 // unit project runs many files in parallel – the same file-level ceiling `r2-13-advance-span.test.ts`
 // carries, for the same reason.
-vi.setConfig({ testTimeout: 240_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 4.94 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 // -------------------------------------------------------------------------------------------------
 // THE WALK

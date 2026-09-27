@@ -524,7 +524,10 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     expect(withKey.week, 'the arms really walked 156 weeks').toBe(156)
     expect(withKey.rngMain.n, '...and really spent MAIN draws doing it').toBeGreaterThan(0)
     expect(withKey.events.length, '...and really lived a career').toBeGreaterThan(10)
-  }, 120_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 2.37 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⭐⭐⭐ and a career CARRYING ATTACHMENTS walks the same weeks with the four row fields and without them', () => {
     // ⚠⚠ THE ROW-LEVEL HALF OF THE SAME CLAIM, and it needs its own case because the walk above can
@@ -576,7 +579,7 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     expect(bWorld.week, 'the arms really walked 156 weeks').toBe(156)
     expect(bWorld.loveEpisodes.length, 'and the attachments are still on the record').toBeGreaterThanOrEqual(2)
     expect(bWorld.lifeLog.length, '...and the beats they raise really were lived').toBeGreaterThan(0)
-  }, 120_000)
+  }, 60_000)
 
   it('⚠ and the five fields come out of a walked career exactly as they went in – T1 ships no reader', () => {
     // The other direction of the same claim, and the one that would catch a tick that WROTE one of
@@ -597,7 +600,7 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
       expect(row.airedMetWeek, `${row.id}: no booth exists to voice it`).toBeNull()
       expect(row.airedEndedWeek).toBeNull()
     }
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================

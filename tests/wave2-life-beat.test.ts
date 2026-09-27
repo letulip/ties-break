@@ -82,7 +82,10 @@ import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type MoodRegister } fr
 
 // Several blocks walk a real career to its fork (242 weeks). Deterministic but slow, and the suite
 // runs many files in parallel – the same generous file-level timeout r2-13 and round11 carry.
-vi.setConfig({ testTimeout: 240_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 2.52 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES

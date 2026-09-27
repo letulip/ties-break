@@ -505,7 +505,10 @@ describe('layer 2b — every other member of ADVANCE_REFUSALS refuses the tick, 
       // behaviour. Here the same mutation reddens on «the tick is refused: expected true to be false»,
       // which is the defect in the words a reader needs, and the isolation claim is still asserted.
       expect(openQuestions(world), `${fixture.reason}: exactly one question stood`).toEqual([fixture.reason])
-    }, 120_000)
+    // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+    // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 1.32 s.
+    // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+    }, 60_000)
   }
 
   // ⚠⚠ AND A NINTH MEMBER CANNOT BE ADDED WITHOUT THIS FILE NOTICING. The pin above no longer counts

@@ -273,7 +273,10 @@ describe('the routing: who answers the knock', () => {
     // the reason is T16b: the coach answers more of her knocks alone, so she rests fewer weeks and
     // plays more tennis. Trimming seeds until the case fits buys speed with coverage (scripts/units.mjs
     // states that trade), so the seeds stay and the ceiling is named.
-  }, 90_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 90 s. This file's SLOWEST TEST, in the real bulk pool: 16.00 s; solo, twice: 8.89 / 9.23 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('a knock the coach answered still costs, still shows, and still owns the week', () => {
     // The event may not vanish with the dialog. Same three consequences as a parent's answer.

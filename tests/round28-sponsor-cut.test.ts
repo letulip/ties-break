@@ -66,7 +66,10 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // A real career to eighteen is ~210 ticks; the runner is shared with heavier suites.
-vi.setConfig({ testTimeout: 300_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 300 s. This file's SLOWEST TEST, in the real bulk pool: 0.27 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 import {
   acceptOffer,

@@ -30,7 +30,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { drainLifeBeats } from './helpers/career'
 
 // The rise/fall arm ticks two full seasons of a real career to reach its second review.
-vi.setConfig({ testTimeout: 120_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 0.68 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 import {
   advanceWeeks,

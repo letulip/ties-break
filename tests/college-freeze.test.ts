@@ -221,7 +221,10 @@ describe('the freeze keeps the world playing', () => {
       table.filter((r) => r.points > 0).length,
       'somebody in the field holds a junior point – 0 here is the all-ties-at-first bug',
     ).toBeGreaterThan(0)
-  }, 120_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 2.09 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 })
 
 // =================================================================================================
@@ -433,7 +436,7 @@ describe('rule 3 – tickWeek plays no tournament for a girl who is at college',
       fullRanking(world).filter((r) => r.points > 0).length,
       'the table still has points on it',
     ).toBeGreaterThan(0)
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================

@@ -5,7 +5,10 @@ import { readFileSync } from 'node:fs'
 // Two of these replay whole careers (49 and 101 weeks, plus a 101-week bench career with a real
 // entry policy). Deterministic but slow, and the suite runs eight files in parallel – same
 // generous file-level timeout the econ/fatigue benches carry, same reason.
-vi.setConfig({ testTimeout: 240_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 3.72 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 import {
   createWorld,

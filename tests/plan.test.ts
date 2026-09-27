@@ -5,7 +5,10 @@ import { describe, it, expect, vi } from 'vitest'
 // – past vitest's 20s per-test default with ZERO assertion failures, the documented slow-machine
 // signature (CLAUDE.md). The ceiling is sized ~15x local so it can only fire on a genuine wedge.
 // (Here the corpus loop also GROWS one full-career fixture per schema version by design – v59 = 13.)
-vi.setConfig({ testTimeout: 120_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 14.44 s; solo, twice: 8.18 / 8.25 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {

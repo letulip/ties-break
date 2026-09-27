@@ -428,7 +428,10 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     const reachable = snap.events.filter((e) => e.match?.eventId.startsWith('college-w'))
     expect(reachable.length, 'and the feed carries every one of them anyway').toBe(collegeRows.length)
     expect(reachable.every((e) => typeof e.match!.seed === 'string' && e.match!.seed.length > 0)).toBe(true)
-  }, 240_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 2.47 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⚠ and the feed is still ONE chronological list, with nothing said twice', () => {
     const { world, rng } = atCollege('r26-feed-b')
@@ -451,7 +454,7 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     // those at «twelve at the very outside, over a whole degree».
     const extra = rows.length - Math.min(world.events.length, SNAPSHOT_EVENTS)
     expect(extra, 'a dozen rows at the outside, never a second whole ledger').toBeLessThanOrEqual(20)
-  }, 240_000)
+  }, 60_000)
 
   it('⚠ a career that never went to college pays nothing for this at all', () => {
     const world = createWorld('r26-feed-tour', { ...DEFAULT_PROFILE })
@@ -468,5 +471,5 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     expect(toSnapshot(world).events, 'so the feed is byte-for-byte the trailing window').toEqual(
       world.events.slice(-SNAPSHOT_EVENTS),
     )
-  }, 240_000)
+  }, 60_000)
 })

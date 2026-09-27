@@ -661,7 +661,10 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     expect(withKeys.week, 'the arms really walked 156 weeks').toBe(156)
     expect(withKeys.rngMain.n, '...and really spent MAIN draws doing it').toBeGreaterThan(0)
     expect(withKeys.events.length, '...and really lived a career').toBeGreaterThan(10)
-  }, 120_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 2.44 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⚠ and the six keys come out of a walked career exactly as they went in – T1 ships no writer', () => {
     // The other direction of the same claim, and the one that would catch a tick that WROTE one of
@@ -691,7 +694,7 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     // ⚠ AND THE BOND IS WHY, stated rather than implied – the claim above is about a caring career and
     // would be false of a grinding one, which is T7's own test file's business.
     expect(world.bond, 'her bond never left the caring band').toBeGreaterThanOrEqual(ECONOMY.bond.band.steady)
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================

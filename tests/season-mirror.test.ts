@@ -17,7 +17,10 @@ import { describe, it, expect, vi } from 'vitest'
 // on a 10-core local machine, and GitHub's ubuntu runner runs this suite at 4-5x local wall clock
 // – past vitest's 20s per-test default with ZERO assertion failures, the documented slow-machine
 // signature (CLAUDE.md). The ceiling is sized ~15x local so it can only fire on a genuine wedge.
-vi.setConfig({ testTimeout: 120_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 8.56 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 import {
   activeLadderOf,
   entryCouldNotMove,

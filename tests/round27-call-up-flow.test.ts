@@ -596,7 +596,10 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
     // the twenty-odd, which is the ~1-in-9 frequency B-01 measured, and the other presses are the iff.
     expect(heldByHer, 'her card really did take a press, so the carve-out is exercised').toBeGreaterThan(0)
     expect(heldByHer, 'and it is the exception rather than the rule').toBeLessThan(4)
-  }, 120_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 2.55 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⚠ it is false at a rest state the tie is BEHIND – there is nothing left to play', () => {
     const { world, rng } = atCollege('r27-next-stop')
@@ -605,7 +608,7 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
     const view = toSnapshot(world).ending?.college
     expect(view?.callUpIsNextStop, 'after: the week has been played').toBe(false)
     expect(view?.yearInProgress, 'and the year is still the same one').toBe(true)
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================

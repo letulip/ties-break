@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // The career-level tests below tick five to ten seasons to reach the turnover they are about.
-vi.setConfig({ testTimeout: 180_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 180 s. This file's SLOWEST TEST, in the real bulk pool: 4.25 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament, type WorldState } from '../src/engine/world'
 import { CONVEYOR, renewCohort, stayChance } from '../src/engine/season/conveyor'

@@ -156,7 +156,10 @@ describe('P5 – the college years are lived one at a time', () => {
     expect(world.ending).toBeNull()
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     expect(inCollege(world)).toBe(false)
-  }, 90_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 240 s, 120 s, 90 s. This file's SLOWEST TEST, in the real bulk pool: 1.70 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⚠ the year card is measured at BOTH ENDS, because nothing else in the save can rebuild it', () => {
     // `pruneResults` deletes a result 52 weeks after it happened and `financeWeeks` keeps a 60-week
@@ -187,7 +190,7 @@ describe('P5 – the college progress view', () => {
     spendCourse(world, rng) // round 24: press-answer-press, the years pause on her birthdays
     // She is out: no ending, so no view at all.
     expect(buildEndingView(world)).toBeNull()
-  }, 90_000)
+  }, 60_000)
 
   it('⚠ `final` means THE NEXT YEAR IS THE LAST ONE, and it is false until it is', () => {
     const { world, rng } = atTheFork('p5-view-final')
@@ -202,7 +205,7 @@ describe('P5 – the college progress view', () => {
       expect(view.last!.index).toBe(y)
       expect(view.final, `after year ${y}`).toBe(y + 1 >= ENDINGS.collegeYears)
     }
-  }, 90_000)
+  }, 60_000)
 
   it('the snapshot carries it, so a reload lands back on the same question', () => {
     const { world, rng } = atTheFork('p5-view-snapshot')
@@ -232,7 +235,7 @@ describe('P5 – the national-team call-up', () => {
     // the whole point of the world still ticking. What must be empty is HER column.
     expect(world.results.filter((r) => r.playerId === 'KID')).toHaveLength(0)
     expect(world.entries).toHaveLength(0)
-  }, 90_000)
+  }, 60_000)
 
   it('⚠ it fires ONLY inside the freeze – a career on the tour never sees one', () => {
     // The scope decision, asserted rather than asserted-in-a-comment. The competition's real minimum
@@ -242,7 +245,7 @@ describe('P5 – the national-team call-up', () => {
     advanceWeeks(world, rng, 3 * WEEKS_PER_YEAR)
     const news = world.events.filter((e) => e.text.includes(NATIONAL_TEAM.label))
     expect(news, 'three seasons on the tour and not one letter').toHaveLength(0)
-  }, 90_000)
+  }, 60_000)
 
   it('⚠ it lands in the record with `keep: true`, so the album still has it four years later', () => {
     const { world, rng } = atTheFork('p5-callup-record')
@@ -262,7 +265,7 @@ describe('P5 – the national-team call-up', () => {
     expect(summaries.length, 'one summary line per letter').toBeGreaterThan(0)
     for (const row of summaries) expect(row.type).toBe('milestone')
     for (const row of rubbers) expect(row.type).toBe('match')
-  }, 90_000)
+  }, 60_000)
 
   it('⚠ the same seed gives the same weeks, and a REPLAY of the same week is identical', () => {
     // The sub-stream is re-derived at the call site and persists nothing, so the same `(seed, week)`
@@ -453,7 +456,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       }
     }
     expect(anyPlayed, 'over four years she took the court at least once').toBeGreaterThan(0)
-  }, 120_000)
+  }, 60_000)
 
   it('⭐⭐ 2. the stored record REPLAYS – the same mechanism, exactly, as any other match', () => {
     // This is the owner's «так же, как и наши текущие» as a mechanical claim: `MatchReplay` and
@@ -471,7 +474,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), 'byte-for-byte, off the stored seed').toBe(m.score)
       expect(again.winner === 0 ? KID_ID : m.bId).toBe(m.winnerId)
     }
-  }, 120_000)
+  }, 60_000)
 
   it('⭐⭐⭐ 3. THE YEAR REPORTS THE WEEK – the four-year loop stops where the player can see it', () => {
     // ⚠⚠ THE GUARD, AND IT FAILS IF THE STOP STOPS STOPPING. Round 23 #16 was an academy verdict on
@@ -497,7 +500,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       const order = list.map((r) => STOP_PRECEDENCE.indexOf(r as never))
       expect([...order].sort((a, b) => a - b), 'precedence order, not insertion order').toEqual(order)
     }
-  }, 240_000)
+  }, 60_000)
 
   it('⚠ 3b. every press that leaves the latch on reports it, and the last press reports no ending', () => {
     // R11-1's rule on a second producer: one call can be several things at once. ⚠ RE-AIMED BY THE
@@ -512,7 +515,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     }
     expect(presses[presses.length - 1], 'the course is finished: no latch left').not.toContain('ending')
     expect(world.ending).toBeNull()
-  }, 240_000)
+  }, 60_000)
 
   it('⚠ 4. it still pays nothing and costs nothing: no result, no rank, no cheque, no condition', () => {
     const before = atTheFork('college-rubbers-free')
@@ -544,7 +547,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       expect(row.amountCents, 'no money changes hands').toBeUndefined()
       expect(row.text).toContain('no ranking points')
     }
-  }, 120_000)
+  }, 60_000)
 
   it('⚠ 5. the played rubber TRACKS THE MODEL IT REPLACED – the calibration is measured, not asserted', () => {
     // `NATIONAL_TEAM.rubber.standard` means "the level at which she is an even bet", and it now means
@@ -595,7 +598,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     const rate = won / n
     expect(rate, `a level player wins ${(rate * 100).toFixed(1)}% of rubbers – the model says 50%`).toBeGreaterThan(0.4)
     expect(rate).toBeLessThan(0.6)
-  }, 120_000)
+  }, 60_000)
 
   it('⚠ the opponent is a real player, drawn around the standard, and her side is drawn whole', () => {
     // Nine draws each, `tiesInTheWeek` of them per week whether or not she plays them all – so who
@@ -629,7 +632,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     expect(rubbers).toHaveLength(year!.callUp!.rubbersPlayed)
     // and the id names no tier, so the commentary correctly claims no occasion (see `occasionOf`).
     for (const m of rubbers) expect(m.eventId).toBe(callUpRubberId(year!.callUp!.week, m.round))
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================

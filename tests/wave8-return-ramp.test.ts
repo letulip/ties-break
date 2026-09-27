@@ -493,7 +493,10 @@ function firstFreezeEvent(world: WorldState): SeasonEvent {
 // =================================================================================================
 describe('wave 8 T6 D – the trap, measured', () => {
   it('⭐⭐⭐ SMALL-FIRST vs STRAIGHT-BACK over twelve months, on the same careers', {
-    timeout: 900_000,
+    // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+    // WAS 900 s. This file's SLOWEST TEST, in the real bulk pool: 7.05 s.
+    // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+    timeout: 60_000,
   }, () => {
     // ⚠⚠ THE TWO WORLDS DIFFER IN EXACTLY ONE FIELD: the answer to the beat. Everything else – the
     // seed, the week, the freeze, the calendar, the MAIN stream – is a `structuredClone` of one

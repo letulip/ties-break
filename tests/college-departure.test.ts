@@ -197,7 +197,10 @@ describe('the three moments, on a career that reaches the fork by playing', () =
 
     // ...and the reservation stops being marked once it is honoured.
     expect(toSnapshot(world).collegeDepartsWeek, 'the marker leaves the wire at enrolment').toBeNull()
-  }, 120_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 240 s, 120 s, 90 s. This file's SLOWEST TEST, in the real bulk pool: 3.79 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 })
 
 // =================================================================================================
@@ -237,7 +240,7 @@ describe('a terminal ending in the gap', () => {
     // Direct call too – the guard is on the function, not only on its caller's ordering.
     resolveCollegeDeparture(world)
     expect(world.college, 'the departure refuses to run behind a latched ending').toBeNull()
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================
@@ -269,7 +272,7 @@ describe('a v57 save already inside the freeze', () => {
     }
     expect(world.college!.years.length, 'one more year banked').toBe(yearsBefore + 1)
     expect(world.week, 'exactly fifty-two weeks later').toBe(from + WEEKS_PER_YEAR)
-  }, 90_000)
+  }, 60_000)
 })
 
 // =================================================================================================
@@ -358,7 +361,7 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
       // E3's pause: her birthday happened INSIDE the freeze, every year – answered, on the record.
       const inFreeze = world.birthdays.slice(birthdaysBefore).filter((b) => b.week > departs && b.week <= departs + 4 * WEEKS_PER_YEAR)
       expect(inFreeze.length, 'four college birthdays, one per year, all answered').toBe(4)
-    }, 240_000)
+    }, 60_000)
   }
 })
 
@@ -460,7 +463,7 @@ describe('C-06 – the departure week leaves no question the engine will not tak
       ).toMatch(/^(nothing waiting|answerable)$/)
       // And the screen half at the source: no prompt is put on the wire for a knock nobody can answer.
       expect(toSnapshot(world).knockPrompt, 'no knock dialog is offered under the latch').toBeNull()
-    }, 240_000)
+    }, 60_000)
   }
 
   // ⚠⚠ THE PARITY GUARD, AND IT IS THE POINT OF THE EXTRACTION RATHER THAN A NICETY. Two spellings of

@@ -463,7 +463,10 @@ describe('T16b – the three bars', () => {
     // ⚠ AN EXPLICIT CEILING for the same reason `tests/coach-load.test.ts`' ladder case carries one:
     // the pooled walks are the expensive half of this file and the default 20 s is not a statement
     // about them.
-  }, 90_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 90 s. This file's SLOWEST TEST, in the real bulk pool: 7.90 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⭐ BAR 2 – THE MIDDLE RUNG: the shipped career is asked about her body, and not constantly', () => {
     // T12 measured ~1.5 asks per career at the shipped rung and called the −5 bond row nearly dead;

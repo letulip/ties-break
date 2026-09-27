@@ -382,7 +382,10 @@ describe('wave 6 T4 C – a career that was never news plays the tennis it playe
     // ⚠ AND THE WALK REALLY WALKED, so the identity above is not the identity of two empty worlds.
     expect(withKey.rngMain.n, 'the arms really spent MAIN draws').toBeGreaterThan(0)
     expect(withKey.events.length, '...and really lived a career').toBeGreaterThan(10)
-  }, 120_000)
+  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 0.84 s.
+  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+  }, 60_000)
 
   it('⭐⭐⭐ ⚠ THE NULL-ARM CHECK – the same construction on a KNOWN career DIVERGES', () => {
     // ⚠⚠ RULING Q ASKS FOR THIS BY NAME: «pin it against a world that HAS been news as well … so the
@@ -403,7 +406,7 @@ describe('wave 6 T4 C – a career that was never news plays the tennis it playe
     expect(withKey.spotlightHabituation, 'the apparatus really can count a week').toBeGreaterThan(0)
     expect(withoutKey.spotlightHabituation, '...and it counts on the stripped arm too, from the same zero')
       .toBe(withKey.spotlightHabituation)
-  }, 120_000)
+  }, 60_000)
 })
 
 // =================================================================================================
