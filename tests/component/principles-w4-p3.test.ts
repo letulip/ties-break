@@ -67,6 +67,21 @@ describe('W4 P3 · E-P04 – one spelling of "the deadline has passed"', () => {
     wrapper.unmount()
   })
 
+  it('⭐ the deadline WEEK ITSELF is still open – the boundary, which is where an off-by-one lives', () => {
+    // ⚠ THIS CASE EXISTS BECAUSE THE ARM ABOVE COULD NOT REDDEN WITHOUT IT (measured 27.09): with the
+    // two cases at +2 and -1, turning `entriesClosed`'s `>` into `>=` left both of them green. The
+    // whole value of routing the row through one predicate is that a change to it moves every surface,
+    // and this is the input where the predicate's own edge is visible. `week > deadlineWeek` – she may
+    // still enter on the closing week.
+    const snap = withDeadline(0)
+    const wrapper = mountSeason(snap)
+    const pill = wrapper.findAll('.event-card .pill').find((p) => /closes|Closed/.test(p.text()))
+    expect(pill, 'the deadline pill must be on the card').toBeDefined()
+    expect(pill!.text(), 'the closing week is not past yet').toContain('closes')
+    expect(pill!.classes()).not.toContain('negative')
+    wrapper.unmount()
+  })
+
   it('⚠ an ENTERED card past its deadline keeps the word and drops the alarm', () => {
     // The one asymmetry between the two halves of the old inline pair – the class carried
     // `&& !ev.entered` and the word did not – asserted so the de-duplication cannot quietly align
