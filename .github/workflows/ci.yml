@@ -249,14 +249,21 @@ jobs:
   # the file onto `unit-bulk`. Corrected by moving the LABEL to the work, not the work to the label,
   # and the reason is a measurement plus a standing owner priority:
   #   THE COST IS THE BROWSER, NOT THE SUITE. The step below it fetches ~273 MiB of Chromium and
-  #     spends ~2 minutes doing it. The suite itself is 69 tests in 15 files - 67 `chromium` and 2
-  #     `chromium-sw` - measured here on 05.09 with `npx playwright test --list`, against this job's
-  #     20-minute ceiling. It read «31 tests in 13 files, 17 s of test time» on 02.09; the count is
-  #     re-taken rather than carried, because it keeps growing and a stale one is how «narrow the
-  #     job» gets argued. Filtering to one spec would save seconds off a job whose cost is dominated
-  #     by a download that both arms pay in full.
-  #   NARROWING WOULD DELETE LIVE COVERAGE. All 69 are green on every PR today. «Restore an
-  #     intentional smoke selection» reads as a cleanup and lands as a coverage cut.
+  #     spends ~2 minutes doing it, against this job's 20-minute ceiling. Filtering to one spec would
+  #     save seconds off a job whose cost is dominated by a download that both arms pay in full.
+  #     ⚠⚠ AND THIS BLOCK NO LONGER STATES A TEST COUNT OR A PER-PROJECT SPLIT (27.09). It has
+  #     carried three of them - «31 tests in 13 files» (02.09), then «69 tests in 15 files - 67
+  #     `chromium` and 2 `chromium-sw`» (05.09) - and each went stale within weeks, the second one
+  #     twice over: the suite grew, and W5 gave the wedding spec a project of its own
+  #     (`chromium-wedding`), which re-cut the split without touching a single test. NOTHING IN THIS
+  #     WORKFLOW READS THOSE NUMBERS, so no test can guard them and the next reader inherits whatever
+  #     rotted. The source of truth is `playwright.config.ts` for the projects and
+  #     `npx playwright test --list` for the tally - one command, always current. What the argument
+  #     above actually needs is the DOWNLOAD's price, and that is measured right here.
+  #   NARROWING WOULD DELETE LIVE COVERAGE. Every test in the suite is green on every PR today, and
+  #     the step below runs `npm run test:e2e` with no `--project` filter, so every project declared
+  #     in the config is exercised - a new one needs no wiring here. «Restore an intentional smoke
+  #     selection» reads as a cleanup and lands as a coverage cut.
   #   ⭐ AND IT WOULD CONTRADICT A STANDING CALL. «Grow the e2e suite, and keep growing it» is the
   #     owner's own of 29.08 (docs/now-next-later.md, Next). A gate pinned to one spec while the
   #     suite grows is the exact defect P-01 exists to remove: a gate nobody runs.

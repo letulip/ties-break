@@ -21,6 +21,7 @@
     "tools:registry": "node scripts/tools-registry.mjs",
     "tools:registry:check": "node scripts/tools-registry.mjs --check",
     "doc:facts": "node scripts/doc-facts.mjs",
+    "code:view": "node scripts/code-view.mjs",
     "icons": "node scripts/gen-icons.mjs",
     "art": "node scripts/optimize-art.mjs",
     "bench:dual": "vite-node tools/dual-universe-bench.ts",
