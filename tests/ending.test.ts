@@ -81,7 +81,7 @@ import { kidAgeExact, kidAgeYears } from '../src/engine/world'
 import { pendingLifeBeat } from '../src/engine/world'
 import { growAndLive } from '../src/engine/world/phaseGrowth'
 import { ageAtPhysicalShare } from '../src/engine/development'
-import { answerCollegeReveal } from './helpers/scenarios/college'
+import { answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
@@ -1154,10 +1154,7 @@ describe('#2 college – the only ending that resumes', () => {
     // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
     // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary.
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
@@ -1177,10 +1174,7 @@ describe('#2 college – the only ending that resumes', () => {
     // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary. Her card is priced ZERO too, so the bill this
     // case measures is unmoved by the answer as well as by the pause.
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
     }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last

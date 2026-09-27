@@ -56,7 +56,7 @@ import {
   type WorldState,
 } from '../../src/engine/world'
 import { type CollegeProgressView, type CollegeYear, type Snapshot } from '../../src/shared/protocol'
-import { answerCollegeReveal, atCollege } from '../helpers/scenarios/college'
+import { answerCollegeReveal, atCollege, pressCollegeYear } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND `HomeScreen` READS IT. The same shim `college-second-act`,
 // `home-strip-and-mail` and `round24-coach-card` carry, for the reason quoted there in full: the
@@ -221,10 +221,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
       // year the way the birthday and the two fixtures do, so the walk answers her card too –
       // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
       const view = toSnapshot(world).ending?.college ?? null
       rest.push({ yearsDone: view?.yearsDone ?? world.college!.years.length, latched: view !== null })
     }
@@ -264,10 +261,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
       // year the way the birthday and the two fixtures do, so the walk answers her card too –
       // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     // The refusal is the engine's, at its own entry, and it is a THROW rather than a no-op – which

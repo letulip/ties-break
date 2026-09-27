@@ -53,7 +53,6 @@ import {
   assembleAlbum,
   createWorld,
   decisionWeekOf,
-  kidAgeExact,
   kidAgeYears,
   resolveReturnDecision,
   returnChanceFor,
@@ -64,16 +63,10 @@ import { ENDING_BLURB, ENDING_TITLE } from '../../src/engine/ending'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { married } from '../helpers/scenarios/love'
+import { weekAtAge } from '../helpers/career'
 
 /** ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED – wave 3's ARM 2 law, inherited through T2..T6. */
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31 } as const
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
 
 /** T5's `wedded` + `expecting`, verbatim in shape: a married career of 28 carrying the record
  *  `rollPregnancy` writes, parked where the decision falls. */

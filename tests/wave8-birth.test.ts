@@ -72,7 +72,6 @@ import { readFileSync } from 'node:fs'
 import {
   createWorld,
   endEpisode,
-  kidAgeExact,
   landBirth,
   latchedEpisode,
   pregnancyEligible,
@@ -89,6 +88,7 @@ import { paintedStemFor } from '../src/shared/avatarEmotion'
 import { rngFromSeed } from '../src/engine/rng'
 import type { PregnancyState } from '../src/engine/world/state'
 import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's ARM 2 law,
 // inherited through T2's and T3's own `BRIEF` blocks: an expectation read out of the thing under
@@ -106,13 +106,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock (T2's helper). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** A married career standing at `age`, funded, fit, with an EMPTY calendar – every case builds what
  *  it needs, so nothing the season generator happens to schedule can decide an assertion. */
 function wedded(seed: string, age = 28): WorldState {

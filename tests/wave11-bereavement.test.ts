@@ -38,7 +38,6 @@ import {
   bereavementEligible,
   buildLifeBeatPrompt,
   createWorld,
-  kidAgeExact,
   LIFE_BEAT_OPTIONS,
   lifeBeatSaid,
   lifeLogOf,
@@ -50,19 +49,13 @@ import {
 import { ECONOMY } from '../src/engine/economy'
 import { TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
 import { FACE_BANDS, paintedStemFor } from '../src/shared/avatarEmotion'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ HIS 11.09 FIGURES, TRANSCRIBED AND NEVER READ OFF `ECONOMY.weight.bereavement` (wave 3's ARM 2
 // law): the whole of §A is «the shipped constants are the ones he drafted», and an expectation read
 // out of the constant would be the constant agreeing with itself.
 const HIS = { perWeek: 0.0008, spacingWeeks: 156, capPerCareer: 2, fromAgeYears: 23 } as const
 const B = ECONOMY.weight.bereavement
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
 
 /** An adult career with the weight ON and nothing else arranged. */
 function adult(seed: string, atAge = 26): WorldState {

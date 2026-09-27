@@ -38,7 +38,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   createWorld,
-  kidAgeExact,
   resolveLeaving,
   type WorldState,
 } from '../src/engine/world'
@@ -50,15 +49,9 @@ import { seasonIndexOf } from '../src/engine/world/ledger'
 import { engineModuleSource } from './worldSource'
 import { region } from './helpers/source'
 import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31 } as const
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
 
 /** ⭐⭐ A CAREER STANDING ON AN OFF-SEASON WRAP WEEK WITH THE FALL'S THREE TERMS MET.
  *

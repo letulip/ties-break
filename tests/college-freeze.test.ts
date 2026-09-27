@@ -30,7 +30,6 @@
 // ⚠ THE FACTS ARE PINNED, NOT THE STRINGS. Every assertion below is a property of the world – the
 // calendar has future events, the ledger has rows, the table has somebody holding a point, the fee
 // came back, no week ticked – so a re-tuned calendar or a re-worded feed row cannot make it lie.
-import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
@@ -38,7 +37,6 @@ import {
   tickWeek,
   enterEvent,
   answerFork,
-  pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
   inCollege,
@@ -54,7 +52,7 @@ import { ENDINGS } from '../src/engine/ending'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
-import { finishAnyReveal, answerCollegeReveal } from './helpers/scenarios/college'
+import { finishAnyReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 /** A career that has actually been played – a calendar, a cohort with a results ledger behind it and
  *  a junior table with real points on it. `tickWeek` is total (only `advanceWeeks` halts), so the
@@ -161,10 +159,7 @@ function spendTheYears(world: WorldState, rng: Rng): void {
   // round-26 collect made when the championship became a pause – «a walk answering one pause but not
   // the other stalls on the first league week».
   for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
 }
 
@@ -175,10 +170,7 @@ function spendTheYears(world: WorldState, rng: Rng): void {
 function spendOneYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
   for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
 }
 

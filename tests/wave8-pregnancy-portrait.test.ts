@@ -40,7 +40,6 @@ import { existsSync } from 'node:fs'
 import {
   createWorld,
   toSnapshot,
-  kidAgeExact,
   type WorldState,
 } from '../src/engine/world'
 import {
@@ -54,6 +53,7 @@ import {
 import { PREGNANT_ART_STEM, pregnantUrl } from '../src/art/preload'
 import { CROPS, PAINTING_ONLY_FACES } from '../src/art/faceRects'
 import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY.motherhood` – wave 3's ARM 2
 // law, inherited through T2's and T3's own §BRIEF blocks: an expectation read out of the thing under
@@ -258,13 +258,6 @@ describe('wave 8 T10 §C – the paintings are on disk and the face table knows 
 // so no surface can build a countdown to a birth the wave tells the player nowhere.
 describe('wave 8 T10 §D – `toSnapshot` carries the answer, and only the answer', () => {
   /** The FIRST week she reads at or above `years` – T2's helper, and T3's. */
-  function weekAtAge(world: WorldState, years: number): number {
-    for (let w = 0; w < 40 * 52; w++) {
-      if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-    }
-    throw new Error(`no week reaches age ${years}`)
-  }
-
   /** A married career carrying the record T2's `rollPregnancy` writes, hand-built on the BRIEF's own
    *  arithmetic (T3's `expectingFrom`, one task on) so a case can choose the week it is posed on. */
   function expecting(seed: string): WorldState {

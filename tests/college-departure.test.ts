@@ -57,7 +57,7 @@ import { ENDINGS } from '../src/engine/ending'
 // ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
 import { drainLifeBeats } from './helpers/career'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import { finishAnyReveal, answerCollegeReveal } from './helpers/scenarios/college'
+import { finishAnyReveal, answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 /** An ORGANIC career walked to the fork – no hand-opened fork, no forced week: the ask below is the
  *  engine's own. Reveals are closed on the way (`tickWeek` is total; only `advanceWeeks` halts). */
@@ -265,10 +265,7 @@ describe('a v57 save already inside the freeze', () => {
     // answers it (`drainLifeBeats`, priced zero) and the guard gains a press. The loop still ends on
     // the year being banked, and the two assertions below are untouched.
     for (let press = 0; press < 6 && world.college!.years.length === yearsBefore; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
     }
     expect(world.college!.years.length, 'one more year banked').toBe(yearsBefore + 1)
     expect(world.week, 'exactly fifty-two weeks later').toBe(from + WEEKS_PER_YEAR)

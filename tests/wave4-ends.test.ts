@@ -152,6 +152,7 @@ import { ECONOMY } from '../src/engine/economy'
 import type { Temperament } from '../src/engine/spirit'
 import type { LoveEpisode } from '../src/shared/protocol'
 import { worldFunction } from './worldSource'
+import { weekAtAge } from './helpers/career'
 
 const LIFE = ECONOMY.life
 /** `src/`, for §F's whole-tree reader. ⚠ `import.meta.url` is legal here – this file runs in the UNIT
@@ -174,13 +175,6 @@ beforeEach(() => {
 /** The FIRST week she reads at or above `years` – found by walking the same clock the engine reads,
  *  never by arithmetic of our own, so a walk that needs her to be an adult starts where the engine
  *  says she is one (`tests/wave3-arrival.test.ts`'s own helper). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** A row of the v74 shape. `endedWeek: null` is «still going». */
 function episode(sinceWeek: number, knownWeek: number | null = null, endedWeek: number | null = null): LoveEpisode {
   return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }

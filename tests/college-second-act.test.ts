@@ -49,7 +49,7 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CollegeTier } from '../src/sha
 import type { MatchPlayer } from '../src/engine/match/types'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
-import { answerCollegeReveal } from './helpers/scenarios/college'
+import { answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 function freshWorld(seed = 'p5-college'): { world: WorldState; rng: Rng } {
   const world = createWorld(seed, { ...DEFAULT_PROFILE })
@@ -85,20 +85,14 @@ function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier)
 function spendYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
   for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
 }
 
 /** The whole course, spent the same way. ⚠⚠ RE-AIMED 26.09 – see `spendYear` above. */
 function spendCourse(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
 }
 

@@ -51,7 +51,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   createWorld,
-  kidAgeExact,
   pregnancyEligible,
   pregnancyLossChanceAt,
   pregnancyLossEligible,
@@ -63,6 +62,7 @@ import {
 import { ECONOMY } from '../src/engine/economy'
 import { temperamentFor } from '../src/engine/spirit'
 import type { LoveEpisode, WeekPlan } from '../src/shared/protocol'
+import { weekAtAge } from './helpers/career'
 
 const W = ECONOMY.weight
 
@@ -78,13 +78,6 @@ const STUDY = [
 /** The research's own recognised-pregnancy window on the conception clock – 6..20 GESTATIONAL weeks,
  *  which is two ahead of conception. Transcribed for the same reason the totals are. */
 const WINDOW = { from: 4, until: 18 } as const
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
 
 function married(latchedWeek: number, sinceWeek: number): LoveEpisode {
   return {

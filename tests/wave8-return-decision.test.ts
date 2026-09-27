@@ -83,7 +83,6 @@ import {
   endEpisode,
   entryStatus,
   guardNotEnded,
-  kidAgeExact,
   kidAgeYears,
   pauseCovering,
   resolveEndings,
@@ -103,6 +102,7 @@ import type { AlbumPage } from '../src/shared/protocol'
 import type { PregnancyState } from '../src/engine/world/state'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's ARM 2 law,
 // inherited through T2's, T3's and T4's own `BRIEF` blocks: an expectation read out of the thing
@@ -137,13 +137,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock (T2's helper). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** A married career standing at `age`, funded, fit, with an EMPTY calendar and both meters at their
  *  baselines, so §B's weights are read against a known point.
  *

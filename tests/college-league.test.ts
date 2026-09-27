@@ -68,7 +68,7 @@ import { rngFromSeed, resumeMain, initMainState, type Rng } from '../src/engine/
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type CollegeTier, type CollegeYear } from '../src/shared/protocol'
-import { answerCollegeReveal } from './helpers/scenarios/college'
+import { answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 /** A career standing at the fork – the same cheap opener `college-second-act.test.ts` uses.
  *
@@ -110,10 +110,7 @@ function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   // round-26 collect made when the championship became a pause – «a walk answering one pause but not
   // the other stalls on the first league week».
   for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
   return world
 }
@@ -122,10 +119,7 @@ function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
  *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) for the reason written at `walkFourYears` above. */
 function spendYears(world: WorldState, rng: Rng, years: number): void {
   for (let press = 0; press < 6 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
 }
 
@@ -783,10 +777,7 @@ describe('a career migrated mid-college', () => {
     // passes only while no beat happens to land in its window. `drainLifeBeats` is bond-neutral and
     // priced ZERO, and the budget gains a press for the question a year can now raise.
     for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
     }
     const banked = world.college!.years
     expect(banked.length).toBe(before + 1)

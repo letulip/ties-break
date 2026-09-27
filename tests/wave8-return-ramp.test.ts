@@ -128,7 +128,6 @@ import {
   decisionWeekOf,
   enterEvent,
   entryStatus,
-  kidAgeExact,
   kidPoints,
   pendingLifeBeat,
   pendingLifeBeatOptions,
@@ -148,6 +147,7 @@ import { TIER_LADDER } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's ARM 2 law.
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31, protectedEntries: 12 } as const
@@ -163,13 +163,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 // FIXTURES – T5's and half 1's own
 // -------------------------------------------------------------------------------------------------
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
 
 function wedded(seed: string, age = 28): WorldState {
   const world = createWorld(seed)

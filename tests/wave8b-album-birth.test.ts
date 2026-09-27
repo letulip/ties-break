@@ -43,7 +43,6 @@ import { describe, it, expect } from 'vitest'
 import {
   assembleAlbum,
   createWorld,
-  kidAgeExact,
   pregnancyChanceAt,
   rollPregnancy,
   tickWeek,
@@ -63,17 +62,11 @@ import { PARTNER_NAME_POOL } from '../src/engine/world'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 const PUBLIC = fileURLToPath(new URL('../public', import.meta.url))
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock. */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** ⭐⭐ A MARRIED CAREER PARKED ON A WEEK WHOSE PREGNANCY UNIFORM IS A REAL **HIT**, on the engine's
  *  own stream and at the engine's own age-shaped chance – `tests/wave8-pause.test.ts`' `onHitWeek`,
  *  carried verbatim because two spellings of one recipe are two recipes.

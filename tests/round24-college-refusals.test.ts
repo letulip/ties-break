@@ -23,7 +23,6 @@
 // ⚠ AND THE SPELLINGS ARE IMPORTED, NOT TYPED. Both sentences are player-facing copy that reaches a
 // toast through the worker's error channel; a literal copied into a test is a rename that breaks a
 // report in silence. Same precedent as `RELEASE_LINE_PREFIX` and `COLLEGE_REVEAL_REFUSAL`.
-import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
   CAREER_ENDED_REFUSAL,
@@ -56,7 +55,6 @@ import {
   inCollege,
   latchEnding,
   pendingBirthday,
-  resumeFromCollege,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
   setKitGrade,
@@ -74,7 +72,7 @@ import { ENDING_TITLE } from '../src/engine/ending'
 import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
-import { finishAnyReveal, answerCollegeReveal } from './helpers/scenarios/college'
+import { finishAnyReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 // =================================================================================================
 // The walked career – the same shape tests/college-freeze.test.ts uses, for the same reason
@@ -124,10 +122,7 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
     drainLifeBeats(world)
   }
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
   expect(inCollege(world), 'and she really is at a university this week').toBe(true)
@@ -180,10 +175,7 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   }
   // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
   expect(world.ending?.type).toBe('college')
   // ⚠ AND BOTH SURVIVED THE YEAR – `prunePlannerBookings` keeps four trailing weeks, and these are
@@ -321,10 +313,7 @@ describe('the family may take back a booking it made before the fork', () => {
     // passes only while no beat happens to land in its window. `drainLifeBeats` is bond-neutral and
     // priced ZERO, and the budget gains a press for the question a year can now raise.
     for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-      drainLifeBeats(world)
+      pressCollegeYear(world, rng)
     }
 
     // The friendly's own record, keyed by the week it was booked for – `resolvePractice` writes it.
