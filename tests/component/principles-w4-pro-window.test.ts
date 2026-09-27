@@ -92,6 +92,14 @@ describe('T4.11 · E-01 – one window, on the header and on the cards', () => {
     expect(atTurn.used, 'if this ever falls at the season turn, the OLD wording was right').toBe(
       snap.proEntryCap.used,
     )
+    // ⚠⚠ THE WINDOW'S OWN NUMBERS, PINNED, AND THAT IS WHAT MAKES ARM A POSSIBLE. Without a value
+    // here, widening `proEntryCapUsage`'s window moves the header and the pills TOGETHER and nothing
+    // in this file can see it – both surfaces would go on agreeing with each other about a wrong
+    // figure, which is the one thing a parity witness must not be able to do. `6 of 12` is E-01's own
+    // measurement on this save, and a red here means the engine's window moved: read `entryCaps.ts`
+    // before touching this line.
+    expect(snap.proEntryCap.used, 'v46: the engine no longer counts 6 pro entries in her age-year').toBe(6)
+    expect(snap.proEntryCap.limit, 'v46: the metered limit at sixteen moved').toBe(12)
   })
 
   // ===============================================================================================
@@ -104,6 +112,8 @@ describe('T4.11 · E-01 – one window, on the header and on the cards', () => {
     const header = wrapper.find('.season-pro-budget')
     expect(header.exists(), 'the header must be on screen on a metered age-year').toBe(true)
     expect(header.text()).toContain(`${snap.proEntryCap.used} of ${snap.proEntryCap.limit}`)
+    // ...and the figure itself, so arm A (a moved engine window) reddens HERE and not only in §1.
+    expect(header.text(), 'the header is printing a different allowance than v46 holds').toContain('6 of 12')
     expect(header.text(), 'the line itself names the window').toContain(WINDOW)
     expect(header.attributes('title'), 'and so does its long form').toContain(WINDOW)
     expect(header.text(), 'the season window is back on the line').not.toMatch(OLD_WINDOW)
@@ -119,6 +129,8 @@ describe('T4.11 · E-01 – one window, on the header and on the cards', () => {
     for (const pill of pills) {
       expect(pill.attributes('title')).toContain(WINDOW)
       expect(pill.attributes('title')).not.toMatch(OLD_WINDOW)
+      // The pills' half of arm A: the same engine window, so the same figure.
+      expect(pill.text(), 'a W card is printing a different allowance than v46 holds').toContain('6 / 12')
     }
     // THE NUMBERS, where the two windows coincide. Each pill reads its own EVENT's week (round-17 #2)
     // and the header reads THIS week, so they agree exactly on the cards inside her current age-year
