@@ -203,6 +203,32 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P11 / E-P12 / E-P13; T6.4 of
   [the fix plan](plans/principles-fix-builder-2026-09.md).)
 
+- **Two files mean the opposite thing by the same call: `married(latchedWeek, sinceWeek)`.**
+  `tests/wave11-loss.test.ts:82` and `tests/wave11-window.test.ts:110` declare a helper with the same
+  name and a byte-identical body as the other sixteen, **with the two week arguments the other way
+  round**. Both parameters are weeks, so nothing type-checks differently and nothing throws – the two
+  files simply pose different careers while reading as if they posed the same one. ⚠ It is not a
+  refactor: re-pointing them at the shared builder CHANGES what they pose, so it needs its own hash
+  control and its own commit, and first it needs somebody to establish which of the two readings the
+  wave's spec meant. Measured and noted at both sites 27.09 by W5's T5.11, deliberately not merged.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02.)
+- **T5.1's ratchet retirement waits on one RUNNER run, and the wave gate does not cover it.**
+  `walkFrozenCareer` is memoised and deep-frozen, and the family's solo cost fell **114.30 s →
+  33.37 s (−71 %)** locally. The intake's modification keeps `coach-travel-edge-rungs-ratchet` in place
+  until a CI run confirms the timings, because the bar it enforces is a **runner** bar and every figure
+  above is local. So the trigger is «one green runner run of the family», not «the wave's gate», and
+  the ratchet stays until then. ([07-performance.md](review-principles-2026-09-26/07-performance.md),
+  G-02 = H-01.)
+- **F-02's remaining tail, named and deliberately unmerged.** 5 `weekAtAge` variants, 5 `married`
+  variants (two of them the swapped pair above), `round43-clear-next-week`'s own `careerAt`, and the 48
+  press loops whose body is not the canonical four lines. ⚠ Each survivor differs for a stated reason –
+  a different question (`kidAgeAt === age` versus `>=`), a different key order, an unbounded `while`
+  that can never name its problem, or a different return type – and this wave measured what merging
+  without a per-site control costs: 32 moved hashes from one defaults-spread. T5.14's guard covers the
+  FORWARD direction (no new local copy of a merged family), which is the half that matters; the tail
+  is a follow-up that needs a measurement per site, not a sweep.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02.)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
