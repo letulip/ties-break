@@ -24,7 +24,10 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // Four real careers to eighteen (~210 ticks each) plus up to a season of arrivals.
-vi.setConfig({ testTimeout: 300_000 })
+// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
+// WAS 300 s. This file's SLOWEST TEST, in the real bulk pool: 0.00 s.
+// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+vi.setConfig({ testTimeout: 60_000 })
 
 import {
   createWorld,
