@@ -31,6 +31,9 @@
 // to the row's template) redden the mounted file ALONE and cannot move a line here.
 import { describe, it, expect } from 'vitest'
 import {
+  PLAN_DAYS,
+  PLAN_MAX_SESSIONS,
+  PLAN_MIN_SESSIONS,
   PLAN_PRESET_KEYS,
   planFromWeek,
   planShapeError,
@@ -111,6 +114,28 @@ function* everyLegalKindWeek(): Generator<Week> {
   }
 }
 
+/** HOW MANY WEEKS THE SECOND ENUMERATION MUST YIELD, in closed form off the engine's own constants:
+ *  choose which days hold a session, then a kind for each. ⚠ IT IS THE ANTI-VACUITY GUARD AND NOT a
+ *  decoration – a generator that silently yielded a tenth of the space would pass every assertion
+ *  below, which is this repo's own «a search that quietly answers a different question». Derived rather
+ *  than written down, so the 4..6 band moving moves this with it instead of reddening for that. */
+function expectedKindWeeks(): number {
+  const choose = (n: number, k: number) => {
+    let r = 1
+    for (let i = 0; i < k; i++) r = (r * (n - i)) / (i + 1)
+    return Math.round(r)
+  }
+  let total = 0
+  for (let k = PLAN_MIN_SESSIONS; k <= PLAN_MAX_SESSIONS; k++) {
+    total += choose(PLAN_DAYS, k) * SESSION_KINDS.length ** k
+  }
+  return total
+}
+
+/** And the first one's size: the 4..6 slice of 3^7 day-counts. Measured, and stated here rather than in
+ *  prose so something reads it (wave 9's lesson). */
+const LEGAL_LAYOUTS = 784
+
 describe('E-02 – `presetOf` IS HerWeekTab\'s rule, on every legal week', () => {
   it('agrees with the rule it was asked to carry over every legal LAYOUT', () => {
     let walked = 0
@@ -123,7 +148,7 @@ describe('E-02 – `presetOf` IS HerWeekTab\'s rule, on every legal week', () =>
     }
     // Named with the count, because "some week disagrees" is the failure and the message should say
     // how big the space it disagreed in was.
-    expect(walked, 'the space is not empty').toBeGreaterThan(100)
+    expect(walked, 'every 4..6 slice of the 3^7 day-counts').toBe(LEGAL_LAYOUTS)
     expect(wrong, `${wrong.length} of ${walked} legal layouts disagree`).toEqual([])
   })
 
@@ -134,7 +159,7 @@ describe('E-02 – `presetOf` IS HerWeekTab\'s rule, on every legal week', () =>
       walked++
       if (presetOf(week) !== herWeekTabRule(week)) wrong.push(week)
     }
-    expect(walked, 'every kind, every day, 4..6 sessions').toBeGreaterThan(10_000)
+    expect(walked, 'every kind, every day, 4..6 sessions').toBe(expectedKindWeeks())
     expect(wrong, `${wrong.length} of ${walked} legal weeks disagree`).toEqual([])
   })
 
@@ -154,7 +179,7 @@ describe('E-02 – `presetOf` IS HerWeekTab\'s rule, on every legal week', () =>
       ['grind', 1],
       ['light', 1],
     ])
-    expect(walked, 'out of this many legal weeks').toBeGreaterThan(10_000)
+    expect(walked, 'out of this many legal weeks').toBe(expectedKindWeeks())
     // ...and each one is the week `planWeek` lays that preset's own plan out as.
     for (const key of PLAN_PRESET_KEYS) {
       expect(presetOf(planWeek(WEEK_PLAN_PRESETS[key])), key).toBe(key)
