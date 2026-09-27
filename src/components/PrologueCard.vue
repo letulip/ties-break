@@ -61,6 +61,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import IconButton from './ui/IconButton.vue'
 import { prologueArtUrl, prologueFacePoint, type PrologueOutcome } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
 // ⚠⚠ THE THREE FIELDS ARE THE WIZARD'S AND SO ARE THEIR WORDS. Not one label, placeholder or
 // screen-reader name below is written here: they all come from `composables/identityCopy.ts`, which
@@ -401,25 +402,15 @@ const choosing = computed(() => picks.value.length > 0)
  *  decision of its own for it to wait behind. */
 const askOpen = computed(() => Boolean(props.ask) && (!choosing.value || props.picked !== undefined))
 
-/** ⭐ THE RADIO GROUP'S OWN KEYS – arrows move the focus round the group, as they do in every radio
- *  group, and the press itself is the button's own (Space and Enter, natively).
- *
- *  ⚠ THE ARROWS DO NOT SELECT, WHICH IS THE DOCUMENTED VARIATION AND NOT AN OMISSION. WAI-ARIA's
- *  radio-group pattern checks the radio the arrow lands on «unless doing so triggers a significant
- *  change» - and here it does: on the eight, the nine and the ten the card is finished the moment
- *  its one question is answered, so selecting on focus would walk the player off the screen with an
- *  arrow key. Focus moves; Space commits. */
-function onGroupKey(event: KeyboardEvent): void {
-  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-  if (!forward && !back) return
-  const group = event.currentTarget as HTMLElement
-  const items = [...group.querySelectorAll<HTMLButtonElement>('button')]
-  const at = items.indexOf(document.activeElement as HTMLButtonElement)
-  if (at < 0) return
-  event.preventDefault()
-  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
-}
+// ⭐ THE RADIO GROUP'S OWN KEYS ARE `composables/radioGroupKeys.ts`' SINCE F-10 / T4.10 (27.09).
+// This file held the ORIGIN of the four copies, and it is the one whose selector had drifted: it read
+// every `button` where the three dialogs read `button:not([disabled])`. The shared handler ships the
+// `:not([disabled])` form, which is F-10's own proposal and which changes nothing here – every radio
+// in both of this card's groups binds the same `:disabled="busy"`, so the group is never half
+// disabled (the finding's verification says exactly that). The documented variation is argued in the
+// composable, this card's reason included: on the eight, the nine and the ten the card is finished the
+// moment its one question is answered, so selecting on focus would walk the player off the screen with
+// an arrow key. Focus moves; Space commits.
 
 /** ⭐ THE LINE UNDER THE TITLE, AND IT IS THE CARD'S OWN AGAIN (round 35 #4). It used to be replaced
  *  by the ask's line on the second beat, which is exactly what made two screens out of one: the
@@ -749,7 +740,7 @@ useDialogFocus(cardEl)
           class="prologue-picks"
           role="radiogroup"
           :aria-labelledby="card.question ? 'prologue-question' : 'prologue-title'"
-          @keydown="onGroupKey"
+          @keydown="onRadioGroupKey"
         >
           <button
             v-for="control in picks"
@@ -791,7 +782,7 @@ useDialogFocus(cardEl)
              re-choosable, and this pair is ADDED under them. -->
         <template v-if="askOpen && ask">
           <p id="prologue-ask" class="prologue-ask">{{ ask.lede }}</p>
-          <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-ask" @keydown="onGroupKey">
+          <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-ask" @keydown="onRadioGroupKey">
             <button
               v-for="control in askChoices"
               :key="control.id"

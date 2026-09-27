@@ -34,6 +34,7 @@
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
@@ -70,20 +71,11 @@ async function confirm(): Promise<void> {
   }
 }
 
-/** ⭐ THE RADIO GROUP'S OWN KEYS – `LifeBeatDialog`'s handler and the same documented variation:
- *  the arrows move FOCUS and do not select, because selecting on focus would mark a branch of her
- *  body's question with an arrow key. Space and Enter are the button's own. */
-function onGroupKey(event: KeyboardEvent): void {
-  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-  if (!forward && !back) return
-  const group = event.currentTarget as HTMLElement
-  const items = [...group.querySelectorAll<HTMLButtonElement>('button:not([disabled])')]
-  const at = items.indexOf(document.activeElement as HTMLButtonElement)
-  if (at < 0) return
-  event.preventDefault()
-  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
-}
+// ⭐ THE RADIO GROUP'S OWN KEYS ARE `composables/radioGroupKeys.ts`' SINCE F-10 / T4.10 (27.09) – this
+// was one of four byte-identical copies whose docstrings cited each other. The documented variation
+// that used to be argued here is argued there, this card's reason included: the arrows move FOCUS and
+// do not select, because selecting on focus would mark a branch of her body's question with an arrow
+// key. Space and Enter are the button's own.
 
 // The same alert the injury stop uses. Deliberately the SAME sound and not a new one: to the parent
 // this is the same kind of moment, one notch quieter, and a bespoke sting would oversell it.
@@ -159,7 +151,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            ⭐⭐⭐ ROUND 42 #8 – a real radio group now, named by the part of her it is about: the
            first tap marks a branch (the ball says so on screen), and only the Proceed below records.
            No positional selector and no marked default anywhere - the card may not recommend. -->
-      <div class="knock-choices" role="radiogroup" aria-labelledby="knock-dialog-title" @keydown="onGroupKey">
+      <div class="knock-choices" role="radiogroup" aria-labelledby="knock-dialog-title" @keydown="onRadioGroupKey">
         <button
           class="knock-choice"
           type="button"

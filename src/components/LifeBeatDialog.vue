@@ -64,6 +64,7 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import type { MemoryFace } from '../shared/avatarEmotion'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 
@@ -204,20 +205,11 @@ async function finishReply(): Promise<void> {
   }
 }
 
-/** ⭐ THE RADIO GROUP'S OWN KEYS, `PrologueCard.vue`'s handler and its documented variation: the
- *  arrows move FOCUS and do not select, because selecting on focus would answer her with an arrow
- *  key and take the week with it. Space and Enter are the button's own. */
-function onGroupKey(event: KeyboardEvent): void {
-  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-  if (!forward && !back) return
-  const group = event.currentTarget as HTMLElement
-  const items = [...group.querySelectorAll<HTMLButtonElement>('button:not([disabled])')]
-  const at = items.indexOf(document.activeElement as HTMLButtonElement)
-  if (at < 0) return
-  event.preventDefault()
-  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
-}
+// ⭐ THE RADIO GROUP'S OWN KEYS ARE `composables/radioGroupKeys.ts`' SINCE F-10 / T4.10 (27.09) – this
+// was one of four byte-identical copies whose docstrings cited each other. The documented variation
+// that used to be argued here is argued there, this card's reason included: the arrows move FOCUS and
+// do not select, because selecting on focus would answer her with an arrow key and take the week with
+// it. Space and Enter are the button's own.
 
 // D1 – IT IS A MODAL, IT SAYS SO, AND IT HOLDS THE KEYBOARD. Escape is passed no handler, for the
 // reason at the top of this file: there is no way out of this card that is not an answer.
@@ -311,7 +303,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         class="life-beat-choices"
         role="radiogroup"
         aria-labelledby="life-beat-said"
-        @keydown="onGroupKey"
+        @keydown="onRadioGroupKey"
       >
         <button
           v-for="option in prompt.options"
