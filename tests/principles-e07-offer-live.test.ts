@@ -34,8 +34,9 @@
 //   arm C (the TEMPLATE, spec §2's third arm): spell the liveness inline in `OfferLetter`'s own
 //     `v-if` and the MOUNT reddens alone.
 import { describe, it, expect } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { adUntilWeek, hasLiveOffer, isOfferLive, offerAnswerError } from '../src/engine/offers'
-import { letterDeletable } from '../src/composables/inboxMail'
+import { letterDeletable, useInboxMail } from '../src/composables/inboxMail'
 import { engineModuleFunction, componentFile } from './worldSource'
 import { codeOf, region } from './helpers/source'
 import type { AdOfferTerms, Offer } from '../src/shared/protocol'
@@ -175,5 +176,45 @@ describe('E-P05: the ad confirm quotes the week the signature will write', () =>
     expect(adUntilWeek(terms(4), 40), 'four weeks: 40, 41, 42, 43').toBe(43)
     expect(adUntilWeek(terms(0), 40), 'a zero-week paper still covers its own week').toBe(40)
     expect(adUntilWeek(terms(-3), 40), 'and so does a malformed one').toBe(40)
+  })
+})
+
+// =================================================================================================
+// E-P14 RIDES TOO – the storage guard in the one file of the eight this task touched.
+// =================================================================================================
+//
+// The row: «the `localStorage` guard is spelled in 8 files (21 accesses); `localStore.ts` has one user»,
+// proposal «migrate on touch, as 05.09 planned» – which is also what `localStore.ts`' own header asks for
+// («the eight migrate on touch rather than in a sweep nobody asked for»). `inboxMail.ts` is one of the
+// eight and T4.2 touched it, so it migrates.
+//
+// ⚠⚠ THE HAZARD IS THE PROPERTY ACCESS, NOT THE CALL, which is why this is asserted by BEHAVIOUR and not
+// by a source pin. A browser with site data blocked throws on `localStorage` itself – before `getItem` is
+// reached – and inside a composable's setup that is a component which never renders. The case below poses
+// exactly that and asks the two facts to answer their documented default.
+describe('E-P14: the inbox annotations survive storage that throws on access', () => {
+  it('⚠⚠ a `localStorage` that throws on the PROPERTY leaves the two facts at their safe default', () => {
+    const real = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('SecurityError: site data is blocked')
+      },
+    })
+    try {
+      setActivePinia(createPinia())
+      // `useInboxMail` reads both sets during setup, through `useCareerSync`. Before the migration this
+      // was a hand-rolled try around `localStorage.getItem`, which is the shape that DOES catch this –
+      // so nothing behavioural moves, and the case exists to say that rather than to assume it.
+      const mail = useInboxMail()
+      expect(mail.isRead('off-1'), 'nothing read – an unread letter costs a bold row, never a hidden one').toBe(false)
+      expect(mail.isBinned('off-1'), 'nothing binned – a letter that refuses to hide costs a second press').toBe(false)
+      // ...and a write goes nowhere without throwing: the list behaves for the session.
+      expect(() => mail.markRead('off-1')).not.toThrow()
+      expect(mail.isRead('off-1'), 'the in-memory set still answers').toBe(true)
+    } finally {
+      if (real) Object.defineProperty(globalThis, 'localStorage', real)
+      else Reflect.deleteProperty(globalThis, 'localStorage')
+    }
   })
 })
