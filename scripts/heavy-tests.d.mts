@@ -11,6 +11,11 @@ export declare const HEAVY_SIM_FILES: readonly string[]
  *  and excluded from the unit project's bulk pass when `TB_UNIT_SKIP_HEAVY` is set. */
 export declare const HEAVY_UNIT_FILES: readonly string[]
 
+/** The family globs `HEAVY_UNIT_FILES` must hold whole, matched against a test file's STEM
+ *  (`tests/<stem>.test.ts`); `*` is the only metacharacter. Read by
+ *  `tests/sim-serialisation.test.ts` against the real directory. */
+export declare const HEAVY_UNIT_FAMILIES: readonly string[]
+
 /** Bare paths -> the `**\/`-prefixed patterns a vitest project's `include`/`exclude` matches with.
  *  The prefix is required: project patterns are matched against the resolved path. */
 export declare function asProjectGlobs(files: readonly string[]): string[]
