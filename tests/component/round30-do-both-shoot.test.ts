@@ -72,6 +72,26 @@ const BRAND = 'Nine Bells'
 /** The shared collision with this file's own brand – see the note on `BRAND` above. */
 const clashWorld = (seed: string): WorldState => sharedClash(seed, { brand: BRAND })
 
+// ⚠⚠ THE STANCE BELOW IS ANSWERED, AND THE ANSWER IS THE CLASH FIXTURE IN THIS SAME FILE (26.09,
+// T5.11). It says, of `facts()`: «copied rather than imported because a fixture shared across files
+// drifts into being a second production module» – the same claim its sibling
+// `tests/component/round29-trip-week.test.ts:117-119` makes.
+//
+// It is a real risk and it is not the one that cost this repo a gate. On 23.09 the cancel-share repair
+// had to re-aim the shoot-clash paper, and the COPIES drifted: `5fce54c1` fixed two of the three
+// `clashWorld` bodies, the third was invisible to the grep, and it was found only by a full gate and
+// repaired alone in `bc29ac13` – whose message is «the third sibling the sweep missed». By this wave
+// the copies had reached FIVE, one of them posing a brand the engine cannot write and a term
+// hard-coded as `51`, green because «this file asserts flow and never money» (:158 below). Copying did
+// not prevent a second production module; it produced five inconsistent ones and a red gate.
+//
+// So the stance holds for what it warns about and loses on the evidence, and the cure keeps BOTH halves:
+// `clashWorld` moved to `tests/helpers/scenarios/clash.ts` (one owner, every default naming the call
+// site it came from), while everything that is really THIS file's – its `'Nine Bells'` brand, its own
+// `facts()` bag – stays here, at the call site, where a reader can see it. What stopped being copied is
+// the part that was identical five times; what the stance is protecting was never that part. `facts()`
+// is therefore left exactly as it is: it has ONE sibling and no drift on record, so merging it would be
+// a guess where the clash was a measurement.
 /** A plain fact bag – the `facts()` idiom `round29-trip-week.test.ts` keeps, copied rather than
  *  imported because a fixture shared across files drifts into being a second production module. */
 function facts(over: Partial<CalendarWeekFacts> = {}): CalendarWeekFacts {
