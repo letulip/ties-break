@@ -56,7 +56,9 @@ import { LADDER_LABEL } from '../shared/protocol'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
 import { WEEKS_IN_SEASON, weekLabel, weekRange } from '../shared/dates'
-import { adCampaignCutShort, apparelBondCost, dealUntilWeek, sponsorTierOfBrand } from '../engine/offers'
+// ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
+// decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
+import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand } from '../engine/offers'
 import PaperNote from './ui/PaperNote.vue'
 
 // ⭐⭐ ROUND 39 #17 – `offers` IS THE WHOLE INBOX AND IT IS OPTIONAL. One clause on a rival house's
@@ -594,7 +596,15 @@ const signedRun = computed(() => {
   return `In their kit ${weekLabel(o.fromWeek)} – ${weekLabel(o.untilWeek)} · ${seasonWord.value.toLowerCase()}`
 })
 
-const live = computed(() => props.offer.state === 'open' && props.week <= props.offer.deadlineWeek)
+/** IS THIS PAPER STILL A DECISION – the ENGINE's own question, asked (T4.2 · E-07, 27.09).
+ *
+ *  ⚠⚠ IT WAS `props.offer.state === 'open' && props.week <= props.offer.deadlineWeek`, a second body
+ *  of `isOfferLive` in a file that already imported from `engine/offers`. This computed gates the
+ *  Sign / Refuse pair on BOTH letter feet, so the copy was the one that could draw a live control
+ *  over a refusal `offerAnswerError` would then throw on – the «текущее кривое» shape round 35 #10
+ *  closed one screen over: a press spent, a confirm answered, and the answer an error message. One
+ *  call, and the buttons and the turnstile shut on the same week. */
+const live = computed(() => isOfferLive(props.offer, props.week))
 /** How long is left, in whole weeks, counting the current one. The quiet half of the owner's ask:
  *  «давать человеку какое-то время на подумать». */
 const weeksLeft = computed(() => Math.max(0, props.offer.deadlineWeek - props.week + 1))

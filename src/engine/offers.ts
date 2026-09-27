@@ -1090,8 +1090,13 @@ export function offerAnswerError(offers: Offer[], offerId: string, week: number)
   const offer = offers.find((o) => o.id === offerId)
   if (!offer) return 'That letter is not in the inbox.'
   if (offer.state === 'signed') return 'That deal is already signed.'
-  if (offer.state !== 'open') return 'That offer has already gone.'
-  if (week > offer.deadlineWeek) return 'That offer has already gone.'
+  // ⚠⚠ ONE QUESTION, ASKED OF THE FUNCTION THAT OWNS IT (T4.2 · C-P10, 27.09). These were two lines –
+  // `state !== 'open'`, then `week > deadlineWeek` – returning ONE sentence from two branches, which
+  // is `isOfferLive` re-spelled twenty lines below its own definition and inside its own file. The
+  // fold is byte-identical: the same string for both ways of being gone, and it stays BELOW the
+  // `signed` arm above, because a signed deal is not live either and a fold written one line higher
+  // would have replaced that sentence with this one.
+  if (!isOfferLive(offer, week)) return 'That offer has already gone.'
   // ⚠ AND SINCE THE WINDOW, THE ONE-BRAND RULE HAS TO BE ENFORCED ON THE WAY IN AS WELL (05.08). The
   // window deliberately leaves several letters open at once so a choice can accumulate; without this
   // line a parent could sign two of them and the game's oldest invariant - at most one deal - would

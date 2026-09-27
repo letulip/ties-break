@@ -44,6 +44,9 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { careerKey, useCareerSync } from './inboxCue'
+// ⭐⭐ T4.2 · E-07 – the engine's «is this letter still a decision», read rather than re-spelled. It is
+// a pure function of an offer and a week, so importing it here adds no world and no draw.
+import { isOfferLive } from '../engine/offers'
 import type { Offer } from '../shared/protocol'
 
 const READ_KEY = 'tb:inbox:read'
@@ -68,7 +71,12 @@ const BINNED_KEY = 'tb:inbox:binned'
  *  notices, a brand's goodbye), a signed deal that has run its course, and an `open` letter whose
  *  deadline has passed - that one already renders as "Expired" and is no longer a decision. */
 export function letterDeletable(offer: Offer, week: number): boolean {
-  if (offer.state === 'open') return week > offer.deadlineWeek
+  // ⚠⚠ THE OPEN ARM IS THE ENGINE'S ANSWER, INVERTED (T4.2 · E-07, 27.09). It spelled
+  // `week > offer.deadlineWeek` – `isOfferLive`'s second half written backwards, which is a copy
+  // however short it is, and the negation is the direction that MATTERS here: if the two ever drifted,
+  // the bin would offer to clear a letter the sheet was still calling a decision. One question, one
+  // function, and the answer is inverted at the point of use rather than re-derived.
+  if (offer.state === 'open') return !isOfferLive(offer, week)
   if (offer.state === 'signed') return week > (offer.untilWeek ?? -1)
   return true
 }

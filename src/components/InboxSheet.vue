@@ -50,7 +50,11 @@ import type {
 // here: it is the ENGINE's own predicate for «is she under contract this week» – the very function
 // the wear ceiling reads – so the line below cannot claim a deal the engine is not honouring. Pure:
 // no world in it and no draw behind it.
-import { SPONSOR_TIERS, activeKitDeal, apparelBondCost, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
+// ⭐⭐ T4.2 · E-07 – `isOfferLive` JOINS THE SAME IMPORT, for the reason the note above gives about
+// `activeKitDeal`: it is the ENGINE's own predicate for «is this letter still a decision», the very
+// function the inbox dot and the worker's refusal read, so the list below cannot answer it
+// differently. Pure: no world in it and no draw behind it.
+import { SPONSOR_TIERS, activeKitDeal, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { seasonYear, weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -86,7 +90,14 @@ const letters = computed(() =>
     .sort((a, b) => b.o.week - a.o.week || rungOf(b.o) - rungOf(a.o) || b.i - a.i)
     .map((x) => x.o),
 )
-const live = (o: Offer): boolean => o.state === 'open' && week.value <= o.deadlineWeek
+/** ⚠⚠ THE ENGINE'S QUESTION, ASKED (T4.2 · E-07, 27.09). This spelled `o.state === 'open' &&
+ *  week.value <= o.deadlineWeek` – a second body of `isOfferLive`, in a file that already imported
+ *  from `engine/offers` five lines up. Home's dot asks the engine (`hasLiveOffer`, `Snapshot
+ *  .offerOpen`); this list asked a copy, and they agreed only because the copy was faithful. THREE
+ *  readers hang off this one call – the `open` list below (and through it the «nothing waiting» hint),
+ *  the row's «Needs an answer» pill, and `metaOf`'s «N weeks to decide» tail – so the day a deadline
+ *  rule gains a clause all three follow the engine rather than three-quarters of the screen. */
+const live = (o: Offer): boolean => isOfferLive(o, week.value)
 const open = computed(() => letters.value.filter(live))
 
 /** ⭐⭐ ROUND 42 #39a – WHAT SHE IS UNDER, AND UNTIL WHEN, or '' when nobody is dressing her.
