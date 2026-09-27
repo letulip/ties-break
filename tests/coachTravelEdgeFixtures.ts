@@ -5407,7 +5407,77 @@ export const PRE_V50 = {
 
 const FREEZE_WEEKS = 156
 
-function walkFrozenCareer(
+/** ⭐⭐⭐ THE WALK IS MEMOISED PER PROCESS, AND THE WORLD IT HANDS OUT IS DEEP-FROZEN (26.09, W5's
+ *  T5.1 – findings G-02 = H-01). Every exported hash helper below called `walkFrozenCareer` afresh:
+ *  111 `careerHashAtSchema` calls across six `-schemas` files, plus `careerHash`, the two window-rule
+ *  readers and the old-name reader, and they reach exactly THREE careers – `(0,1)`, `(5,0)` and
+ *  `(8,0)`. So 93 of the 111 walks were the same 156 ticks a second, third and thirty-seventh time,
+ *  at 0.79–0.84 s each; the files were essentially walks. MEASURED SOLO, one file at a time, on a
+ *  machine with no other test process running – 1-min load 2.84–3.81 on the before arm and 1.78–2.28
+ *  on the after arm, quoted beside every number in the W5 report because a timing under load is not a
+ *  measurement (this repo has moved a control variable 12.1 s -> 47.9 s between two runs of identical
+ *  code). Wall seconds for the whole run of each file:
+ *
+ *      -mid      23.12 -> 3.85       -older              14.15 -> 3.82
+ *      -recent   19.19 -> 3.79       -deepest            13.39 -> 3.93
+ *      -prior    15.74 -> 3.81       coach-travel-edge   11.23 -> 8.58
+ *      -late     15.71 -> 3.82       -helping             1.77 -> 1.75
+ *
+ *  The family's sum falls 114.30 s -> 33.37 s (−71 %). ⚠ `coach-travel-edge.test.ts` is the one file
+ *  that keeps most of its time, and for a reason the memo cannot remove: unlike the `-schemas` files,
+ *  its rungs pass different `force` bags, three `profileOverride`s and the window-rule presets, so its
+ *  14 calls are TEN distinct careers and only four of them repeat. That is the memo working rather
+ *  than failing – the repeats are what it removes, and this file has almost none.
+ *
+ *  ⚠⚠ THE MEMO IS SAFE ONLY BECAUSE THE FREEZE IS THERE, and that is the whole design rather than a
+ *  belt-and-braces flourish. A shared world that any reader mutated would make every later rung hash
+ *  a DIRTIED fixture and still be green – the exact failure a whole-world hash is worst at
+ *  explaining. `Object.freeze` in an ES module is strict-mode, so a write THROWS at the site that
+ *  made it instead of drifting into the next hash. Every reader was read before the memo landed and
+ *  all of them are non-mutating: `careerHashAtSchema`'s key peel is object rest and spread
+ *  (`:5548-5600`), `underTheWindowRule` maps to new objects, `windowRuleWitness` only reads.
+ *
+ *  ⚠ THE RUNG RATCHET STAYS (`tests/coach-travel-edge-rungs-ratchet.test.ts`). H-01 proposes retiring
+ *  it once the memo lands; the intake's modification keeps it until one RUNNER run confirms these
+ *  timings, because the bar it enforces is a runner bar and this measurement is local.
+ *
+ *  ⚠ AND THE KEY IS ALL FOUR ARGUMENTS, not the two the finding's call-count table groups by:
+ *  `careerHash` passes `force`, `careerHashUnderTheOldName` passes a `profileOverride`, and a memo
+ *  keyed on `(preset, policy)` alone would hand the Vera career's world to a rung asking for the
+ *  shipped name. `JSON.stringify` of the four is a stable key because both optionals are flat bags of
+ *  primitives; a future argument that is not needs its own spelling here, not a looser key.
+ *
+ *  ⚠ THE GUARD ASSERTIONS BELOW NOW RUN ONCE PER CAREER PER PROCESS rather than once per rung, which
+ *  costs nothing: they are assertions about the WALK, and the walk is what is shared. They are still
+ *  inside the memoised body deliberately – a career that first reached this file through a cache
+ *  would be a career no line of this apparatus had checked. */
+const FROZEN_WALKS = new Map<string, ReturnType<typeof walkOneFrozenCareer>>()
+
+/** Freeze in place, every layer, and hand back the same reference and the same type. Returning `T`
+ *  rather than `Readonly<T>` is deliberate: every reader's types stay byte-identical, so the freeze
+ *  is a RUNTIME guard and not a typing migration that would have touched the peel's 90 destructures. */
+function deepFreeze<T>(value: T): T {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value
+  Object.freeze(value)
+  for (const inner of Object.values(value as Record<string, unknown>)) deepFreeze(inner)
+  return value
+}
+
+export function walkFrozenCareer(
+  presetIndex: number,
+  policyIndex: number,
+  force?: Partial<{ coachOnEventWeeks: boolean }>,
+  profileOverride?: Partial<PlayerProfile>,
+) {
+  const key = JSON.stringify([presetIndex, policyIndex, force ?? null, profileOverride ?? null])
+  const memo = FROZEN_WALKS.get(key)
+  if (memo) return memo
+  const walked = deepFreeze(walkOneFrozenCareer(presetIndex, policyIndex, force, profileOverride))
+  FROZEN_WALKS.set(key, walked)
+  return walked
+}
+
+function walkOneFrozenCareer(
   presetIndex: number,
   policyIndex: number,
   force?: Partial<{ coachOnEventWeeks: boolean }>,
