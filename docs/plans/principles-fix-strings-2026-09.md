@@ -17,10 +17,12 @@ pins every row to the source character for character AND pins the status cell �
 TEST own the count, this prose deliberately states none** (wave 9's finding: a count written in prose
 survives a full gate because no test reads it).
 
-⚠ **Nothing here re-words a string shipped before this fix.** Every row is a sentence that did not
-exist before it; not one pre-fix sentence moved. Where a fix makes an EXISTING engine sentence appear
-on a new surface (E-04's tier chip, W4) that is a row about a surface and not about words, and it goes
-in with its own «engine sentence, new surface» note when that wave lands.
+⚠ **Nothing here re-words a string shipped before this fix.** Every row of §1–§3 is a sentence that
+did not exist before it; not one pre-fix sentence moved. Where a fix makes an EXISTING engine sentence
+appear on a new surface (E-04's tier chip, W4) that is a row about a SURFACE and not about words –
+§4 is that block, it landed 27.09, and it carries its own status spelling and its own count in the
+pin. Its rows are **not DRAFTs**: there is no new copy in them to approve, and what he is being asked
+to read is where words he already owns now appear.
 
 ⚠ **Not in this table, deliberately:** every comment corrected in this fix. `weekAction.ts`'s stale
 «six / five», `prologueFundsCents`' clamp doc and the worker's «rides through untouched» note are code
@@ -100,3 +102,85 @@ crosses that gap.
 `capped` arm. Both are code comments, both are named in the wave's report, and neither reaches a
 screen. ⚠ And the LABELS on that arm – «Year limit» and «Tour age rule» – did **not** move: neither
 of them names a date, so neither was stale.
+
+## 4. Engine sentences reaching a new surface (W4 · T4.13 · E-04, ruling 6a)
+
+Five surfaces, and **not one new word**: the tier chip stops composing its own refusals and prints the
+ones `src/engine/world/medical.ts` and `src/engine/world/entryCaps.ts` already wrote. Ruling 6a is the
+authorisation – «the tier chip prints the engine's `refusal.detail` for the aged-out and capped arms» –
+so what is tabled here is not copy to approve but PLACES to check: each row is one engine sentence and
+the surface it now reaches. The status cell says exactly that, and it is deliberately not a draft status.
+
+⚠ **This section writes no status cell in backticks except its own**, and the reason is a red this very
+section produced: the DRAFT count is enforced as «how many times the document says the draft status
+inside backticks», so one backticked mention in §4's prose made the DRAFT pin read 6 where the corpus
+holds 5. The seam between the two corpora is a real edge, the pin found it in one run, and the second
+block now guards it from the other side as well.
+
+⚠ **THE ROWS ARE TABLED IN THE ENGINE'S OWN SPELLING, interpolations and all**, for PF4's reason one
+section up: the pin is containment against the home file, so a row that quotes a shape the code does
+not hold is a row that cannot be checked. What each one READS LIKE is illustrated below the table, and
+those illustrations are **not** the pinned form – the rendered sentences are asserted against a built
+career in `tests/principles-e04-tier-cap-refusal.test.ts` and on the strip in
+`tests/component/principles-w4-tier-cap-chip.test.ts`, which is where a rendered claim belongs.
+
+⚠ **WHAT WENT AWAY, so his pass has both halves.** Four screen-composed sentences stop being printed
+(they survive in `composables/tierState.ts` as the fallback for a caller with no world to ask, and in
+the wave's report verbatim). Both cap sentences get SHORTER and lose the explicit «Not locked:»
+framing; the reassurance itself survives in the engine's «A fresh allowance on her next birthday». If
+he wants «Not locked» back, that is a change to the ENGINE's sentence – these rows' homes – and not a
+revert of the fix.
+
+⚠ **The chip's SHORT labels did not move and are not rows here.** «Year limit – N of M» and «Tour age
+rule – N of M» are the owner's existing spellings, `SeasonScreen.vue` picks between the same two on the
+same predicate, and the counts inside them come off the engine's own `entryCap`. The sub-capped chip in
+ES5 wears the second of them with the sub-cap's numbers – an existing label over a new allowance, never
+a new label. `tests/principles-e04-tier-cap-refusal.test.ts` pins both spellings, on a posed rung and
+on a built career.
+
+| id | home | text | surface | status |
+| --- | --- | --- | --- | --- |
+| ES1 | `src/engine/world/medical.ts` | ${tier.label} is under-${tier.maxAgeYears! + 1} – at ${kidAgeAt(world, event.week)} she has aged out. | the aged-out tier chip's TOOLTIP, where the screen composed «…aged out of it.» | `engine sentence, new surface` |
+| ES2 | `src/engine/world/medical.ts` | ${tier.label} is under-${tier.maxAgeYears! + 1} – at ${kidAgeAt(world, event.week)} she has aged out. | the same chip's ACCESSIBLE NAME, spoken as «J30: locked – …» | `engine sentence, new surface` |
+| ES3 | `src/engine/world/medical.ts` | Year limit reached – ${cap.used} of ${cap.limit} international events at ${ageYears}. A fresh allowance on her next birthday. | the ITF-year-capped tier chip's TOOLTIP | `engine sentence, new surface` |
+| ES4 | `src/engine/world/medical.ts` | Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. A fresh allowance on her next birthday; the junior and national events stay open. | the pro-age-year-capped tier chip's TOOLTIP | `engine sentence, new surface` |
+| ES5 | `src/engine/world/entryCaps.ts` | Tour age rule – at ${ageYears} only ${usage.limit} of her professional entries may be at ${TIERS[fromTier].label} or above, and she has used ${usage.used}. The smaller rungs stay open. | ⚠ LATENT – the sub-capped rung's chip, which had no cap chip at all | `engine sentence, new surface` |
+
+**What they read like**, on the fixtures the wave measured (illustrations, pinned elsewhere – see above):
+
+* ES1 / ES2 – `Junior Tour 30 is under-19 – at 26 she has aged out.` The screen's own line was
+  `Junior Tour 30 is under-19 – at 26 she has aged out of it.` – three characters, and the engine was
+  already saying it beside the screen.
+* ES3 – `Year limit reached – 14 of 14 international events at 15. A fresh allowance on her next
+  birthday.` The screen's own line was `Junior Tour 30 – she has used all 14 of her international
+  events for this year (age 15). Not locked: a fresh allowance arrives on her next birthday.`
+* ES4 – `Tour age rule – 12 of 12 pro entries at 16. A fresh allowance on her next birthday; the
+  junior and national events stay open.` The screen's own line was `World Tour 15 – the tour's age rule
+  allows 12 pro entries at 16 and she has used all 12. Not locked: a fresh allowance arrives on her next
+  birthday, and the junior and national events stay open.`
+* ES5 – `Tour age rule – at 14 only 3 of her professional entries may be at World Tour 75 or above, and
+  she has used 3. The smaller rungs stay open.` Nothing stood here before: the rung read `unlocked` and
+  the strip offered «Enter your first!» over a rung `enterEvent` refuses.
+
+⚠⚠ **ES5 IS LATENT AT THE SHIPPED CONSTANTS AND THE ROW SAYS SO, because a row he cannot reach in a
+playtest is a row that would waste his pass.** The WTA sub-cap can bind – the age-grid ruling of 16.08
+put `w75.minAgeYears` at 14 – and it does not: what holds the count at zero is `w75.acceptsRank`, which
+a fourteen-year-old cannot satisfy because she holds no professional ranking yet. Measured in
+`world/entryCaps.ts`: **mean 0.0 W75-or-above entries at fourteen over n = 90 careers, 676 weeks**
+(the frozen battery of `college-is-its-own-branch-2026-08.md` §3). The rule ships anyway, by its own
+note, «so that a phase which opens a rung lower does not have to remember it» – and the chip was the
+surface that had to remember. So ES5 is a DIAGNOSTIC: read it as the sentence that will appear the day
+a rung opens lower, not as copy on a screen today. The wave poses it rather than walking to it, and
+says so at the fixture.
+
+⚠ **ES1 and ES2 carry ONE sentence and are two rows on purpose.** The tooltip and the accessible name
+are two surfaces that can hold two different sentences – `parity-plaque-national.test.ts` §3 records a
+repair that reached only the tooltip and left the other one holding a claim nobody had checked – so the
+corpus names both. `aria-label` REPLACES a chip's content under accname, which is why the second one is
+not a duplicate of the first.
+
+⚠ **A finding this section turned up and did not fix:** the aged-out sentence is spelled TWICE in
+`world/medical.ts` – `entryVerdict`'s own arm (ES1/ES2's home, the one a rung's card gets) and
+`availabilityStatus`'s age arm, differing only in how they read her age. They agree today, and one of
+them should not exist; it is E-06's class inside a single engine file. It is named in the wave's report
+for the architect rather than merged here, because merging it is not what ruling 6a asked for.

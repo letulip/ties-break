@@ -31,6 +31,27 @@
 // a round-trip pin earns the name: one character changed in a doc row fails by id, and one character
 // changed in the shipped string fails the same row with the arrow the other way. Both measured – see
 // the wave's report.
+//
+// ⚠⚠ AND THERE ARE TWO CORPORA IN THIS FILE SINCE 27.09 (W4 · T4.13 · E-04), BECAUSE THE TABLE GREW A
+// SECOND KIND OF ROW. §1–§3 are DRAFTs – copy that did not exist and needs his approval. §4's rows are
+// EXISTING ENGINE SENTENCES REACHING A NEW SURFACE, authorised by ruling 6a, and there is no new word in
+// any of them: what he is asked to read is WHERE words he already owns now appear. They therefore carry
+// their own status spelling, their own parser, their own count and their own home claim, and
+// `EXPECTED_ROWS` below is untouched – it counts the DRAFTs, and its parser keys on the `DRAFT` cell, so
+// a §4 row cannot drift into it.
+//
+// ⚠ THE SECOND BLOCK'S HOME CLAIM IS THE WHOLE POINT OF ITS STATUS: every §4 home is an ENGINE file. If
+// one of those rows ever comes to live in a component, the status is a lie – the screen would be
+// authoring the sentence again, which is the defect E-04 closed – and the set below says so by name
+// rather than leaving a reader to check five paths.
+//
+// ⚠⚠ AND IT NEEDED ONE NORMALISATION THE FIRST BLOCK DOES NOT: A CONCATENATED TEMPLATE LITERAL. Three
+// of the five engine sentences are written as two adjacent template literals joined by `+` so the line
+// fits, which is ONE string at runtime and TWO in the file – so plain containment fails on a row that
+// is perfectly correct. `joinedSource` closes those seams and nothing else. It is the same kind of gap
+// PF5's escaped fallback crosses (the doc quotes the runtime spelling; the source escapes its
+// apostrophes), and it is sound in one direction only: a `` ` + ` `` seam in a source file IS runtime
+// concatenation, so joining it cannot invent a string the program does not build.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -62,6 +83,34 @@ function sourceOf(path: string): string {
     sourceCache.set(path, src)
   }
   return src
+}
+
+/** §4's rows carry a fourth cell – the SURFACE the sentence now reaches – because that is what the
+ *  status is a claim about. `[^|]` on every cell rather than `.`: a `.` matches a pipe, so a
+ *  non-greedy split could land in the wrong column the day a sentence contains one. */
+interface SurfaceRow extends Row {
+  surface: string
+}
+
+const SURFACE_STATUS = 'engine sentence, new surface'
+
+function parseSurfaceTable(path: string): SurfaceRow[] {
+  const md = readFileSync(path, 'utf8')
+  const rows: SurfaceRow[] = []
+  for (const line of md.split('\n')) {
+    // | ES1 | `src/engine/...` | the sentence | the surface | `engine sentence, new surface` |
+    const m = new RegExp(
+      String.raw`^\| (ES\d+) \| \x60([^|]+?)\x60 \| ([^|]+?) \| ([^|]+?) \| \x60${SURFACE_STATUS}\x60 \|$`,
+    ).exec(line)
+    if (m) rows.push({ id: m[1], home: m[2], text: m[3], surface: m[4] })
+  }
+  return rows
+}
+
+/** The home file with adjacent template-literal seams closed – see the header. `` `a ` + `b` `` is one
+ *  string at runtime and two in the file, and three of §4's five sentences are written that way. */
+function joinedSource(path: string): string {
+  return sourceOf(path).replace(/\x60\s*\+\s*\x60/g, '')
 }
 
 const TABLE = 'docs/plans/principles-fix-strings-2026-09.md'
@@ -129,5 +178,83 @@ describe('the principles fix – the strings table IS the corpus', () => {
         'src/components/screens/SeasonScreen.vue',
       ]),
     )
+  })
+})
+
+/** ⚠ THE SECOND CORPUS'S ONLY STATEMENT OF ITS COUNT. Five surfaces from T4.13 (W4 · E-04, ruling 6a);
+ *  the document states no total, for the same wave-9 reason `EXPECTED_ROWS` carries. It is a SEPARATE
+ *  number from the DRAFT count on purpose: the two corpora move for different reasons – a DRAFT leaves
+ *  when he approves it, a surface row leaves when the code stops printing the engine's sentence there. */
+const EXPECTED_SURFACE_ROWS = 5
+
+describe('the principles fix – engine sentences on new surfaces (§4)', () => {
+  const rows = parseSurfaceTable(TABLE)
+
+  it(`the parser found §4 at all – ${EXPECTED_SURFACE_ROWS} rows`, () => {
+    expect(rows.length, `${TABLE}: §4 rows found`).toBe(EXPECTED_SURFACE_ROWS)
+    expect(new Set(rows.map((r) => r.id)).size, 'ids are unique').toBe(rows.length)
+  })
+
+  it('⭐⭐ every row matches the ENGINE\'s own sentence character for character', () => {
+    // The whole claim of this status, mechanised: the sentence is the engine's, so it must BE in the
+    // engine. A row whose text has drifted from its home fails by id here; a home whose sentence has
+    // been reworded fails the same row from the other side, which is what makes this a round trip.
+    for (const row of rows) {
+      const escaped = row.text.replaceAll("'", "\\'")
+      const src = joinedSource(row.home)
+      expect(
+        src.includes(row.text) || src.includes(escaped),
+        `${row.id}: ${row.home} does not contain the row's text`,
+      ).toBe(true)
+    }
+  })
+
+  it('⚠⚠ every §4 home is an ENGINE file – the status\'s own claim, by name', () => {
+    // «Engine sentence» is falsifiable exactly here. A home under `src/components` or
+    // `src/composables` would mean a screen authoring the words again, which is the defect E-04 closed,
+    // and then the status cell would be describing something that is not true of the row.
+    for (const row of rows) expect(() => sourceOf(row.home), `${row.id}: ${row.home}`).not.toThrow()
+    expect(new Set(rows.map((r) => r.home))).toEqual(
+      new Set(['src/engine/world/medical.ts', 'src/engine/world/entryCaps.ts']),
+    )
+    for (const row of rows) {
+      expect(row.home.startsWith('src/engine/'), `${row.id} is not authored by a screen`).toBe(true)
+    }
+  })
+
+  it('⚠ each row names the surface it reaches, and no two DIFFERENT sentences share one surface cell', () => {
+    // The surface cell is the payload of this block – a row that named no surface would be a row about
+    // words, which is what §1-§3 are for. ES1 and ES2 deliberately share one SENTENCE across two
+    // surfaces (a tooltip and an accessible name are two places a repair can reach one of), so the
+    // uniqueness runs the other way round: every surface cell is its own.
+    for (const row of rows) expect(row.surface.trim().length, `${row.id} names a surface`).toBeGreaterThan(8)
+    expect(new Set(rows.map((r) => r.surface)).size, 'each surface is named once').toBe(rows.length)
+  })
+
+  it('⚠ the LATENT row says so, and it is the only one', () => {
+    // A row he cannot reach in a playtest must be readable as a diagnostic or his pass is spent on copy
+    // no career prints. ES5's surface cell carries the mark and the section carries the measurement
+    // (mean 0.0 over n = 90 careers, 676 weeks); this asserts the mark is where a reader will meet it.
+    const latent = rows.filter((r) => r.surface.includes('LATENT'))
+    expect(latent.map((r) => r.id), 'the sub-cap, and nothing else').toEqual(['ES5'])
+    expect(latent[0].home, 'and its home is the allowance that cannot bind yet').toBe('src/engine/world/entryCaps.ts')
+  })
+
+  it('⚠ §4 carries no DRAFT cell, so the two corpora cannot be counted as one', () => {
+    // The guard on the seam between the blocks. `EXPECTED_ROWS`'s status pin counts every `\`DRAFT\``
+    // in the whole document, so a §4 row that arrived wearing that status would break the DRAFT count
+    // for a reason nobody would look for here.
+    for (const row of rows) {
+      expect(row.text.includes('DRAFT'), `${row.id} carries a DRAFT cell`).toBe(false)
+      expect(row.surface.includes('DRAFT'), `${row.id}'s surface carries a DRAFT cell`).toBe(false)
+    }
+  })
+
+  it('⚠ no row carries the long dash', () => {
+    // CLAUDE.md's style rule, on the engine's sentences this time.
+    for (const row of rows) {
+      expect(row.text.includes('—'), `${row.id} carries the long dash`).toBe(false)
+      expect(row.surface.includes('—'), `${row.id}'s surface cell carries the long dash`).toBe(false)
+    }
   })
 })
