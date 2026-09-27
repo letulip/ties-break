@@ -236,8 +236,14 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   holds one worker and nine others try to report. W5 hit it on a 33-file sweep that returned **exit 1
   with 33 files passed and 687 of 687 tests passed**, at load 89.64 once and 322 % CPU the other time;
   W3 hit the same thing on `tests/condition.test.ts` inside a 23-file batch, 60 s limit against zero
-  assertion failures. The identical 31-file subset is clean at exit 0, and the two files that turn it
-  are a fast guard plus `round34-reachable-ceiling`, whose 120 s `beforeAll` holds a worker for 16.58 s+.
+  assertion failures.
+  ⚠⚠ **CORRECTED 27.09 – THE EXIT CODE TRACKS THE MACHINE AND NOTHING ELSE, AND THE LONG-HOOK
+  MECHANISM THIS ROW FIRST CARRIED IS REFUTED.** Five runs of one command on one tree: 31 files at load
+  2.12 → exit 0; 31 at load 38 → exit 1; 33 at load 89 → exit 1; 33 at 322 % CPU → exit 1; **33 on a
+  quiet machine → 687 of 687, exit 0, 58.36 s.** Identical test results every time. And
+  `round34-reachable-ceiling` plus the gate ran 24 of 24 at exit 0 **inside** the busy window, which
+  disposes of the 120 s `beforeAll` explanation this entry offered on its first writing – recorded on a
+  builder's own hypothesis, refuted by that builder's own measurement an hour later.
   ⚠ **It is a machine result, not a branch result** – CLAUDE.md already records the shape, and the
   `sim.mjs` retry classifier already carries the sim project's version of it. What is missing is the
   same treatment for the UNIT project: a run whose every test passed should not hand back a status that
