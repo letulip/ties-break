@@ -28,6 +28,12 @@ import { useWeekAction } from './composables/weekAction'
 // the label and the press read one number by construction and there is nothing here for a second
 // opinion to be.
 import { spanDigest } from './engine/world/multiWeek'
+// ⭐ F-07 (26.09 principles review) – "is this the week's practice friendly" is the ENGINE's
+// question and this shell no longer spells its own answer. See `isPracticeMatchEvent`'s note in
+// world/planner.ts: `friendly` also rides on a college call-up rubber, so `e.friendly` alone is a
+// predicate about zero ranking points and not about practice. Imported from the leaf, like
+// `spanDigest` above.
+import { isPracticeMatchEvent } from './engine/world/planner'
 // ⚠ RE-AIMED, NOT RETIRED: `calendarOwnsWeekAhead` used to decide where a week LANDED and now decides
 // which weeks the calendar PLAYS. That is closer to the owner's original sentence than the landing
 // rule ever was - the Calendar tab is «активной при нетурнирных неделях», and a tab that runs the
@@ -950,7 +956,10 @@ async function playWeek(weeks: number): Promise<void> {
   if (weeks > 1 && spanTo > spanFrom) weekSpan.value = { from: spanFrom, to: spanTo }
   if (throughPractice) {
     const s = game.snapshot
-    const friendly = s?.events.find((e) => e.type === 'match' && e.friendly && e.week === s.week && e.match)
+    // ⚠ F-07: THE WEEK IS THIS SHELL'S FILTER, THE REST IS THE ENGINE'S PREDICATE. The broad
+    // `e.friendly` spelling that stood here would hand the practice flow a college call-up RUBBER
+    // raised in the same week – a match the player never booked and never paid for.
+    const friendly = s?.events.find((e) => e.week === s.week && isPracticeMatchEvent(e))
     if (friendly?.match) practiceLive.value = friendly.match
   }
 }

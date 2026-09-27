@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,979 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,982 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-628 exported names across 56 owning modules.
+630 exported names across 56 owning modules.
 
 ## Areas
 
@@ -33,6 +33,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
+| `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 9 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
@@ -40,7 +41,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
-| `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
 | `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 7 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
@@ -632,6 +632,20 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
 
+### `src/engine/world/planner.ts`
+
+THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives.
+
+- `bookPractice` – `src/engine/world/planner.ts`
+- `bookVacation` – `src/engine/world/planner.ts`
+- `cancelPractice` – `src/engine/world/planner.ts`
+- `cancelVacation` – `src/engine/world/planner.ts`
+- `consecutivePracticeWeeks` – `src/engine/world/planner.ts`
+- `isPracticeMatchEvent` – `src/engine/world/planner.ts`
+- `practiceCaution` – `src/engine/world/planner.ts`
+- `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
+- `practiceMatchId` – `src/engine/world/planner.ts`
+
 ### `src/engine/world/fame.ts`
 
 ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
@@ -718,18 +732,6 @@ INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recove
 - `resolvePhysio` – `src/engine/world/injury.ts`
 - `retirementInjury` – `src/engine/world/injury.ts`
 - `rollInjury` – `src/engine/world/injury.ts`
-
-### `src/engine/world/planner.ts`
-
-THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives.
-
-- `bookPractice` – `src/engine/world/planner.ts`
-- `bookVacation` – `src/engine/world/planner.ts`
-- `cancelPractice` – `src/engine/world/planner.ts`
-- `cancelVacation` – `src/engine/world/planner.ts`
-- `consecutivePracticeWeeks` – `src/engine/world/planner.ts`
-- `practiceCaution` – `src/engine/world/planner.ts`
-- `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
 
 ### `src/engine/world/shop.ts`
 

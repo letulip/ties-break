@@ -48,7 +48,7 @@ import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle } from '../../engine/match/style'
 // ⚠ `COLLEGE_FREEZE_REFUSAL` IS THE ENGINE'S OWN SENTENCE AND THIS SCREEN ONLY PRINTS IT – see
 // `frozenForCollege` below for the whole argument.
-import { COLLEGE_FREEZE_REFUSAL, KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+import { COLLEGE_FREEZE_REFUSAL, KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, isPracticeMatchEvent, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 // The wild-card badge quotes the engine's own count, never a literal – see the badge in the
 // template and `WILD_CARD` in engine/season/tournament.ts for why the number lives there.
@@ -1242,8 +1242,14 @@ const thisWeekMatches = computed<WorldEvent[]>(
 const thisWeekSummary = computed<WorldEvent | null>(
   () => game.snapshot?.events.find((e) => e.type === 'tournament' && e.week === week.value) ?? null,
 )
+// ⚠ F-07 (26.09 principles review) – THE PRACTICE CARD ASKS THE ENGINE WHICH MATCH IS THE PRACTICE.
+// `e.friendly` alone means "a watchable match worth ZERO ranking points", and a college call-up
+// RUBBER wears that flag too, so the broad spelling that stood here could put a national-team match
+// under the heading «This week's practice match» with a Watch button that replays it as a friendly.
+// `isPracticeMatchEvent` is the recap card's own narrowing, now the engine's (world/planner.ts);
+// WHICH week this screen is showing stays this screen's filter and nothing else.
 const thisWeekFriendly = computed<WorldEvent | null>(
-  () => game.snapshot?.events.find((e) => e.type === 'match' && e.friendly && e.week === week.value) ?? null,
+  () => game.snapshot?.events.find((e) => e.week === week.value && isPracticeMatchEvent(e)) ?? null,
 )
 
 // R12-12 (the owner's SECOND ask – round-11's one-line fix was the practice row; THIS is the

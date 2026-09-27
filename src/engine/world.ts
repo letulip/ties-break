@@ -118,8 +118,11 @@ export { answerShootClash, buildShootClashPrompt, shootCancelCents, shootClashOp
 import { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering } from './world/multiWeek'
 export { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering }
 export type { SpanWeek } from './world/multiWeek'
-import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
-export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
+import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, practiceMatchId, isPracticeMatchEvent } from './world/planner'
+// ⭐ F-07 (26.09) – `practiceMatchId` and `isPracticeMatchEvent` join the barrel because their
+// readers are SCREENS: `App.vue` and `SeasonScreen.vue` ask "is this the week's practice friendly"
+// and must ask the engine's own predicate rather than spell `e.friendly` a third and fourth time.
+export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, practiceMatchId, isPracticeMatchEvent }
 export type { PracticeCaution } from './world/planner'
 import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, bankCoachResidual, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
 // ⭐⭐ ROUND 42 #42 – `supportPayrollWeeklyCents` joins the barrel: it is read by `coachMarket`'s own
