@@ -726,10 +726,24 @@ export type TierOpenMap = Record<TierId, boolean>
  *  to the half a rung can answer. `detail` is the refusal's own words, the same string an event's
  *  card gets, because 'unavailable' alone is five different refusals collapsed into one code. */
 export interface TierRefusal {
-  reason: 'locked' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  /** ⚠⚠ NARROWED TO WHAT THE PRODUCER CAN EMIT (D-P9, riding T4.13 · E-04, 27.09). This admitted
+   *  `'injured' | 'medical'` as well, and neither was reachable: `tierVerdict` asks `entryVerdict(…,
+   *  availability = false)`, whose ladder half returns only `'locked'` and `'unavailable'`, and the
+   *  projection cast the row with an `as` so the compiler checked nothing at all. Two dead members on a
+   *  wire type are an invitation to read them – E-04's own dead-arm fix is what the lane predicted – so
+   *  they are gone, and `world/snapshot.ts` now builds each row against this type WITHOUT a cast, which
+   *  is what makes the narrowing enforced rather than asserted.
+   *
+   *  ⭐ `'capped'` IS LIVE AS OF TODAY and was not before: D-P9 priced the narrowing as «drop `entryCap`
+   *  and widen it again in the same commit that makes `tierVerdict` carry caps». This is that commit, so
+   *  the member and the field stay – `tierCapRefusal` (`world/medical.ts`) is the producer, and the tier
+   *  chip's cap arm is the reader. A refusal that can name an allowance carries it. */
+  reason: 'locked' | 'unavailable' | 'capped'
   detail?: string
   pointsToEnter?: number
   rankToEnter?: number
+  /** `'capped'` only: the allowance behind the verdict – the ITF year's, the pro age-year's, or the WTA
+   *  sub-cap's – so the chip prints the ENGINE's count and never re-derives one. */
   entryCap?: EntryCapUsage
 }
 

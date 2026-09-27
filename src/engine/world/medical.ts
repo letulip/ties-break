@@ -630,6 +630,109 @@ export function projectedConditionAt(world: WorldState, week: number): number {
   return clamp(world.condition + bookedRestGainBetween(world, week), c.min, c.max)
 }
 
+/** ⭐⭐ THE THREE ALLOWANCES, AS ONE BLOCK WITH A NAME (T4.13 · E-04, 27.09) – null when none of them
+ *  refuses this rung on this week.
+ *
+ *  ⚠⚠ IT WAS INLINE IN `availabilityStatus` AND THAT MADE IT UNREACHABLE FROM A RUNG'S CARD, which is
+ *  the whole of E-04's second half. `tierVerdict` asks `entryVerdict(…, availability = false)` – for a
+ *  measured reason, recorded at that parameter: availability answers «can she play AT ALL this week»,
+ *  which is a fact about a WEEK and not about a rung, and including it reported every rung of a resting
+ *  world as refused. But the CAPS are not week facts: every one of them is keyed on the RUNG
+ *  (`isCappedTier`, `isCappedProTier`, `proSubCapUsage`'s floor) and on her age-year, so they belong to
+ *  the half of the verdict a card may ask for. Extracting them is what lets the chip print the engine's
+ *  own sentence instead of composing two of its own and being blind to the third.
+ *
+ *  ⚠ `availabilityStatus` CALLS THIS, so there is exactly ONE spelling and nothing about a tournament's
+ *  verdict moves: same three checks, same order, same strings, in the same slot of the precedence
+ *  (injured > suspended > pause > too-young > CAPPED > vacation/exam > medical > fatigued). The block's
+ *  own notes travel with it verbatim, including why it sits where it does.
+ *
+ *  ⚠ THE WEEK IS A PARAMETER AND NOT `world.week`: the event gate reads the EVENT's week (entries
+ *  commit weeks ahead), and `tierVerdict` reads today's, exactly as it does for her age and her
+ *  allowance. Zero draws on any stream – all three usages are folds over persisted ledgers. */
+export function tierCapRefusal(world: WorldState, tier: TierId, week: number): AvailabilityStatus | null {
+  const ageYears = kidAgeAt(world, week)
+  // THE ITF ANNUAL ENTRY CAP – she has used her year's international allowance.
+  //
+  // Placed HERE, immediately after the tier's minimum age, because it is the same family of rule
+  // from the same source: both are ITF eligibility, both are about how old she is, and the two
+  // read as one paragraph rather than two unrelated gates. Precedence therefore runs
+  // injured > too young > CAPPED > vacation/exam > medical > fatigued. Above the week-level
+  // blackouts on purpose: an exam week tells her nothing she can act on, while "the allowance is
+  // gone until her next birthday" is the fact that should reshape the rest of her year.
+  //
+  // ⚠⚠ "UNTIL HER NEXT BIRTHDAY", AND IT SAID "UNTIL THE SEASON TURNS" UNTIL 26.09 (B-P3-09). The
+  // window is `entryCapUsage`'s, and that has been her BIRTHDAY YEAR since P2 – `world/entryCaps.ts`
+  // carries the measurement that moved it (a season-block window with an age-keyed limit leaked up to
+  // 28 entries in a birth year, measured at 18.8 against a rulebook 12). The refusal string below has
+  // said «A fresh allowance on her next birthday» since that wave; this note went on describing the
+  // window it replaced, so the file disagreed with itself about the date and only the comment was
+  // wrong. Nothing else in the paragraph moves: the precedence and its argument are untouched.
+  //
+  // Deliberately BELOW `injured`: a layoff is the fresher, more urgent news and it names a return
+  // week, whereas the cap will still be there to report the moment she is fit again.
+  if (isCappedTier(tier)) {
+    const cap = entryCapUsage(world, week)
+    if (cap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
+        // spent all fourteen has to understand she is capped for the year, not shut out.
+        // ⚠ "ON HER NEXT BIRTHDAY" AND NO LONGER "NEXT SEASON" (P2). The allowance's window is her
+        // birthday year now, not the season block, so the old sentence named the wrong date – and a
+        // refusal that names the wrong date is worse than one that names none.
+        detail:
+          `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
+          `${ageYears}. A fresh allowance on her next birthday.`,
+        entryCap: cap,
+      }
+    }
+  }
+  // THE PRO AER (W2-LADDER §5) – the same family of rule one table up, in the same slot of the
+  // precedence for the same reason: it is age eligibility from the tour's own book, and "the
+  // allowance is gone until her next birthday" is the fact that reshapes the rest of her year.
+  // THE REFUSAL NAMES THE RULE (owner ruling 1's transparency, §5's «the refusal names the rule»):
+  // a parent reading this must know it is the tour's age rule, that it is THIS AGE-YEAR's – hers,
+  // birthday to birthday – and what she is still free to play; the guard that ships with the cap
+  // promises tennis exists.
+  //
+  // ⚠⚠ "THIS AGE-YEAR's", AND IT SAID "THIS SEASON's" UNTIL 26.09 (B-P3-09). `proEntryCapUsage` is
+  // `entryCapUsage`'s birthday window verbatim over the pro ledger (`world/entryCaps.ts`), and the
+  // string below has always named the right date – «A fresh allowance on her next birthday; the junior
+  // and national events stay open». So this note was telling the next builder that the refusal MUST
+  // say a thing the refusal does not say and should not: a builder who obeyed the note would have
+  // broken the sentence. The transparency requirement itself is unchanged – the refusal still names the
+  // rule, the window and what stays open.
+  if (isCappedProTier(tier)) {
+    const cap = proEntryCapUsage(world, week)
+    if (cap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        detail:
+          `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
+          `A fresh allowance on her next birthday; the junior and national events stay open.`,
+        entryCap: cap,
+      }
+    }
+    // ...AND THE SUB-CAP INSIDE IT (P2): at most three of a fourteen-year-old's eight may be at W75
+    // or above (WTA §X.A.2). It sits immediately after its parent allowance because it is the same
+    // rule's second sentence, and it is a QUOTA rather than a door - it refuses this entry at this
+    // rung while the smaller ones stay open, which is what the copy says.
+    const subCap = proSubCapUsage(world, week, tier)
+    if (subCap && subCap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        detail: proSubCapRefusalDetail(ageYears, subCap, ECONOMY.entryCap.proSubCapByAge[ageYears].fromTier),
+        entryCap: subCap,
+      }
+    }
+  }
+  return null
+}
+
 export function availabilityStatus(
   world: WorldState,
   // ⚠ WIDENED TO WHAT IT READS (PR-09): this function touches `event.tier` and `event.week` and
@@ -789,84 +892,12 @@ export function availabilityStatus(
           : `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${ageYears} she has aged out.`,
     }
   }
-  // THE ITF ANNUAL ENTRY CAP – she has used her year's international allowance.
-  //
-  // Placed HERE, immediately after the tier's minimum age, because it is the same family of rule
-  // from the same source: both are ITF eligibility, both are about how old she is, and the two
-  // read as one paragraph rather than two unrelated gates. Precedence therefore runs
-  // injured > too young > CAPPED > vacation/exam > medical > fatigued. Above the week-level
-  // blackouts on purpose: an exam week tells her nothing she can act on, while "the allowance is
-  // gone until her next birthday" is the fact that should reshape the rest of her year.
-  //
-  // ⚠⚠ "UNTIL HER NEXT BIRTHDAY", AND IT SAID "UNTIL THE SEASON TURNS" UNTIL 26.09 (B-P3-09). The
-  // window is `entryCapUsage`'s, and that has been her BIRTHDAY YEAR since P2 – `world/entryCaps.ts`
-  // carries the measurement that moved it (a season-block window with an age-keyed limit leaked up to
-  // 28 entries in a birth year, measured at 18.8 against a rulebook 12). The refusal string below has
-  // said «A fresh allowance on her next birthday» since that wave; this note went on describing the
-  // window it replaced, so the file disagreed with itself about the date and only the comment was
-  // wrong. Nothing else in the paragraph moves: the precedence and its argument are untouched.
-  //
-  // Deliberately BELOW `injured`: a layoff is the fresher, more urgent news and it names a return
-  // week, whereas the cap will still be there to report the moment she is fit again.
-  if (isCappedTier(event.tier)) {
-    const cap = entryCapUsage(world, event.week)
-    if (cap.remaining <= 0) {
-      return {
-        level: 'blocked',
-        reason: 'capped',
-        // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
-        // spent all fourteen has to understand she is capped for the year, not shut out.
-        // ⚠ "ON HER NEXT BIRTHDAY" AND NO LONGER "NEXT SEASON" (P2). The allowance's window is her
-        // birthday year now, not the season block, so the old sentence named the wrong date – and a
-        // refusal that names the wrong date is worse than one that names none.
-        detail:
-          `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
-          `${ageYears}. A fresh allowance on her next birthday.`,
-        entryCap: cap,
-      }
-    }
-  }
-  // THE PRO AER (W2-LADDER §5) – the same family of rule one table up, in the same slot of the
-  // precedence for the same reason: it is age eligibility from the tour's own book, and "the
-  // allowance is gone until her next birthday" is the fact that reshapes the rest of her year.
-  // THE REFUSAL NAMES THE RULE (owner ruling 1's transparency, §5's «the refusal names the rule»):
-  // a parent reading this must know it is the tour's age rule, that it is THIS AGE-YEAR's – hers,
-  // birthday to birthday – and what she is still free to play; the guard that ships with the cap
-  // promises tennis exists.
-  //
-  // ⚠⚠ "THIS AGE-YEAR's", AND IT SAID "THIS SEASON's" UNTIL 26.09 (B-P3-09). `proEntryCapUsage` is
-  // `entryCapUsage`'s birthday window verbatim over the pro ledger (`world/entryCaps.ts`), and the
-  // string below has always named the right date – «A fresh allowance on her next birthday; the junior
-  // and national events stay open». So this note was telling the next builder that the refusal MUST
-  // say a thing the refusal does not say and should not: a builder who obeyed the note would have
-  // broken the sentence. The transparency requirement itself is unchanged – the refusal still names the
-  // rule, the window and what stays open.
-  if (isCappedProTier(event.tier)) {
-    const cap = proEntryCapUsage(world, event.week)
-    if (cap.remaining <= 0) {
-      return {
-        level: 'blocked',
-        reason: 'capped',
-        detail:
-          `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
-          `A fresh allowance on her next birthday; the junior and national events stay open.`,
-        entryCap: cap,
-      }
-    }
-    // ...AND THE SUB-CAP INSIDE IT (P2): at most three of a fourteen-year-old's eight may be at W75
-    // or above (WTA §X.A.2). It sits immediately after its parent allowance because it is the same
-    // rule's second sentence, and it is a QUOTA rather than a door - it refuses this entry at this
-    // rung while the smaller ones stay open, which is what the copy says.
-    const subCap = proSubCapUsage(world, event.week, event.tier)
-    if (subCap && subCap.remaining <= 0) {
-      return {
-        level: 'blocked',
-        reason: 'capped',
-        detail: proSubCapRefusalDetail(ageYears, subCap, ECONOMY.entryCap.proSubCapByAge[ageYears].fromTier),
-        entryCap: subCap,
-      }
-    }
-  }
+  // ⚠⚠ THE THREE ALLOWANCES LIVE IN `tierCapRefusal` SINCE 27.09 (T4.13 · E-04) AND NOTHING HERE MOVED
+  // BUT THE ADDRESS. Same three checks, same order, same sentences, same slot in the precedence – see
+  // that function for why they had to become reachable from a RUNG's card, and for the notes that used
+  // to stand on these lines.
+  const capped = tierCapRefusal(world, event.tier, event.week)
+  if (capped) return capped
   // Season planner: a booked family-vacation week is a HARD blackout – the family is away, so
   // nothing is enterable (spec §3). It outranks the exam/off-season blackout copy so the chip
   // names the actual reason she is unavailable.
@@ -1029,10 +1060,27 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
  *  ⚠ THE WEEK IS `world.week`, deliberately. A rung's card means "where do I stand with this rung
  *  TODAY", and her age, her allowance and the accelerator's usage are all read at that week. */
 export function tierVerdict(world: WorldState, tier: TierId): EntryStatus {
-  return {
-    ...entryVerdict(world, { tier, week: world.week, id: null }, false),
-    outgrown: hasOutgrown(world, tier),
+  const ladder = entryVerdict(world, { tier, week: world.week, id: null }, false)
+  // ⭐⭐ AND THE RUNG'S OWN ALLOWANCES (T4.13 · E-04, 27.09). Until today this verdict could not carry a
+  // cap at all – `availability = false` skips `availabilityStatus`, where all three of them lived – so
+  // `Snapshot.tierRefusal` never held one and the tier chip composed two sentences of its own and was
+  // BLIND TO THE THIRD (the WTA sub-cap). The day the sub-cap binds, the strip said «open» while
+  // `enterEvent` refused: E-04's own reading of it.
+  //
+  // ⚠ THE LADDER STILL ANSWERS FIRST, which preserves the precedence a named event gets: `entryVerdict`
+  // runs its ladder arms above `availabilityStatus`, so a rung that is both point-locked and capped
+  // reports 'locked' on a card exactly as it does at the turnstile. This only speaks where the ladder
+  // had nothing to say.
+  //
+  // ⚠ AND IT IS NOT THE WHOLE OF AVAILABILITY, deliberately – see `entryVerdict`'s `availability`
+  // parameter for the measurement that keeps injury, condition, the off-season, an exam week and a
+  // booked holiday out of a RUNG's answer: 27 disagreements, every one of them a world-level condition
+  // wearing a rung's clothes. A cap is the opposite kind of fact: it is keyed on the rung.
+  if (ladder.level !== 'blocked') {
+    const capped = tierCapRefusal(world, tier, world.week)
+    if (capped) return { ...capped, outgrown: hasOutgrown(world, tier) }
   }
+  return { ...ladder, outgrown: hasOutgrown(world, tier) }
 }
 
 /** ⭐⭐ PR-09 / TB-05 – WHAT THE VERDICT ACTUALLY NEEDS, which turned out not to be an event.

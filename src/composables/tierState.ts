@@ -785,7 +785,15 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       note: `Under-${tier.maxAgeYears! + 1}`,
       // No `tierOpensWhen` here on purpose: every clause it can write is a condition she could still
       // meet, and none of them is true any more. The tooltip states the rule and her age against it.
-      title: `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${input.ageYears} she has aged out of it.`,
+      //
+      // ⚠⚠ AND THE SENTENCE IS THE ENGINE'S WHEN THE ENGINE HAS ONE (T4.13 · E-04, the owner's ruling
+      // 6a). This arm RE-AUTHORED it: `entryVerdict`'s own first clause already composes «… is
+      // under-19 – at 26 she has aged out.» for the identical rung (`world/medical.ts`), and this line
+      // wrote a second, almost-identical one and SHIPPED IT BESIDE the engine's – parity spec §3's
+      // second bullet exactly, «the screen re-authored a sentence the engine composed». The age check
+      // runs before the refusal is read, so the engine's words were simply discarded. The fallback is
+      // the old line, for the pure callers that hand no `refusal` at all.
+      title: input.refusal?.detail ?? `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${input.ageYears} she has aged out of it.`,
     }
   }
   if (ageBlock === 'young') {
@@ -1032,6 +1040,46 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // many entries she has left) and BEFORE the calendar, because a scheduled event she may not take
   // must never read "Open – on the calendar". Mirrors the engine's own precedence: band, then
   // availability, and the cap sits in availability (world.ts availabilityStatus).
+  //
+  // ⭐⭐⭐ T4.13 · E-04 – AND THE ENGINE ANSWERS IT NOW, FOR ALL THREE ALLOWANCES (the owner's ruling 6a).
+  //
+  // WHAT WAS WRONG, in two halves. (1) The two arms below COMPOSED their own sentences from
+  // `snapshot.entryCap` and `snapshot.proEntryCap`, while the engine already writes one per allowance
+  // (`tierCapRefusal`, world/medical.ts) – the same re-authoring the aged-out arm did. (2) Worse, the
+  // engine has THREE cap refusals and this file knew about two: the WTA sub-cap («at most three of a
+  // fourteen-year-old's eight may be at W75 or above») had no arm at all, so on a sub-capped rung this
+  // rule fell through to 'scheduled' / 'unscheduled' and the strip said OPEN over a rung `enterEvent`
+  // refuses. It agreed today only because the sub-cap cannot bind at the shipped constants – a latent
+  // instance is still an instance, and `economy.ts`' own note says the rule ships «so that a phase which
+  // opens a rung lower does not have to remember it». The chip was the surface that had to remember.
+  //
+  // ⚠ SO THIS ARM IS KEYED ON THE VERDICT AND NOT ON A COUNT, which is what makes it total: any cap the
+  // engine adds arrives here already worded. `reason: 'capped'` is the whole test.
+  //
+  // ⚠ THE NOTE IS STILL THE SCREEN'S, and it must be: it is the chip's SHORT form, both spellings are
+  // the owner's existing words (`SeasonScreen.vue` picks between the same two, on the same predicate),
+  // and neither names a date or a number of its own – the count comes off the engine's own `entryCap`.
+  // What changed is the long form, which is now the engine's sentence rather than a second one.
+  //
+  // ⚠ THE TWO ARMS BELOW STAY as the answer for a caller with NO oracle – a pure test, a bench, an older
+  // fixture – exactly as every other arm in this function falls back to the live band. For a live
+  // caller they are unreachable, and the numbers they would produce are identical: both read
+  // `entryCapUsage` / `proEntryCapUsage` at `world.week`, which is the week `tierVerdict` asks about.
+  // ⚠ IT ASKS FOR THE SENTENCE AS WELL AS THE VERDICT, and that is not belt-and-braces: this arm's whole
+  // job is to PRINT the engine's words, so a refusal that carries none has nothing for it to print.
+  // `tierCapRefusal` always writes one, so the clause is unreachable today; the shape matters because the
+  // alternative – composing a third sentence here for that case – is the defect this arm removes.
+  // Without a detail the two legacy arms below answer, as they did before, and nothing is left blank.
+  if (input.refusal?.reason === 'capped' && input.refusal.detail !== undefined) {
+    const cap = input.refusal.entryCap ?? (isCappedProTier(id) ? input.proEntryCap : input.entryCap)
+    return {
+      id,
+      kind: 'capped',
+      entryCap: cap,
+      note: `${isCappedProTier(id) ? 'Tour age rule' : 'Year limit'} – ${cap.used} of ${cap.limit}`,
+      title: input.refusal.detail,
+    }
+  }
   if (isCappedTier(id) && input.entryCap.remaining <= 0) {
     const { used, limit } = input.entryCap
     return {

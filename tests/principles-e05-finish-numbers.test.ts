@@ -44,7 +44,6 @@ import {
   createWorld,
   enterEvent,
   revealTournamentRound,
-  skipTournament,
   tickWeek,
   toSnapshot,
   type WorldState,

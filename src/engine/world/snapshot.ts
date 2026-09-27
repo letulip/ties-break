@@ -110,7 +110,7 @@ import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict } from './medical'
+import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
@@ -1510,6 +1510,61 @@ function birthdayGiftFactsOf(world: WorldState): {
   }
 }
 
+/** WHY EACH SHUT RUNG IS SHUT, as `Snapshot.tierRefusal` carries it (PR-09 / TB-05; lifted out of the
+ *  snapshot literal by T4.13 · E-04 + D-P9, 27.09).
+ *
+ *  ⚠⚠ IT IS A FUNCTION WITH A TYPED RETURN, AND THAT IS THE FIX D-P9 ASKED FOR. The rows were built by
+ *  `Object.fromEntries(...)` and forced with `as Partial<Record<TierId, TierRefusal>>`, so the compiler
+ *  compared NOTHING: `reason: v.reason` type-checked against `any`, and `TierRefusal.reason` drifted into
+ *  admitting `'injured'` and `'medical'`, which its only producer cannot emit. Assigning each row into a
+ *  declared record checks every field on the way in, so the wire type's narrowing is now enforced by
+ *  `vue-tsc` and a future `EntryStatus` member cannot arrive here unnoticed.
+ *
+ *  Only refusals are written: an open rung has no entry, which is why this never restates `tierOpen`. */
+function tierRefusals(world: WorldState): Partial<Record<TierId, TierRefusal>> {
+  const out: Partial<Record<TierId, TierRefusal>> = {}
+  for (const t of TIER_LADDER) {
+    const v = tierVerdict(world, t)
+    if (v.level !== 'blocked') continue
+    const reason = rungRefusalReason(v.reason)
+    if (reason === null) continue
+    out[t] = {
+      reason,
+      ...(v.detail !== undefined ? { detail: v.detail } : {}),
+      ...(v.pointsToEnter !== undefined ? { pointsToEnter: v.pointsToEnter } : {}),
+      ...(v.rankToEnter !== undefined ? { rankToEnter: v.rankToEnter } : {}),
+      ...(v.entryCap !== undefined ? { entryCap: v.entryCap } : {}),
+    }
+  }
+  return out
+}
+
+/** THE HALF OF `EntryStatus.reason` A RUNG CAN ANSWER, or null where the verdict is not a rung's refusal
+ *  at all. Exhaustive on purpose (D-P9): the `never` guard is what makes a new `EntryStatus` member a
+ *  COMPILE error here rather than a silently dropped row, and it is this file's own `unhandled: never`
+ *  idiom. `'outgrown'` is a LABEL and never a refusal since 06.08 (`ladder-floor-2026-08.md`), so it is
+ *  dropped exactly as it always was; `'injured'`, `'fatigued'` and `'medical'` are week facts a rung's
+ *  verdict never reaches (`entryVerdict`'s `availability = false` – and `tierCapRefusal`, the one part of
+ *  availability a card DOES ask, answers only `'capped'`). */
+function rungRefusalReason(reason: EntryStatus['reason']): TierRefusal['reason'] | null {
+  switch (reason) {
+    case 'locked':
+    case 'unavailable':
+    case 'capped':
+      return reason
+    case 'outgrown':
+    case 'injured':
+    case 'fatigued':
+    case 'medical':
+    case undefined:
+      return null
+    default: {
+      const unhandled: never = reason
+      return unhandled
+    }
+  }
+}
+
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
   // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
@@ -2083,22 +2138,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // stops the UI rebuilding the rule. `tierVerdict` asks the SAME `entryVerdict` the turnstile
     // asks, so a card and `enterEvent` cannot disagree by construction. Only refusals are written:
     // an open rung has no entry here, which is why this never restates `tierOpen` beside it.
-    tierRefusal: Object.fromEntries(
-      TIER_LADDER.map((t) => {
-        const v = tierVerdict(world, t)
-        if (v.level !== 'blocked' || !v.reason || v.reason === 'outgrown') return [t, undefined]
-        return [
-          t,
-          {
-            reason: v.reason,
-            ...(v.detail !== undefined ? { detail: v.detail } : {}),
-            ...(v.pointsToEnter !== undefined ? { pointsToEnter: v.pointsToEnter } : {}),
-            ...(v.rankToEnter !== undefined ? { rankToEnter: v.rankToEnter } : {}),
-            ...(v.entryCap !== undefined ? { entryCap: v.entryCap } : {}),
-          },
-        ]
-      }).filter(([, r]) => r !== undefined),
-    ) as Partial<Record<TierId, TierRefusal>>,
+    // ⚠⚠ AND IT CARRIES THE CAPS SINCE 27.09 (T4.13 · E-04): `tierVerdict` consults `tierCapRefusal`,
+    // so a rung whose allowance is spent arrives here as `'capped'` with the engine's own count and
+    // sentence, and the tier chip prints them instead of composing two of its own and missing the third.
+    //
+    // ⚠⚠ BUILT WITHOUT THE `as` CAST, WHICH IS D-P9's WHOLE ASK. This was one `Object.fromEntries(...)`
+    // forced to `Partial<Record<TierId, TierRefusal>>`, and the cast meant the compiler never compared
+    // `reason` with `TierRefusal`'s union at all – which is how that type came to admit two members its
+    // only producer cannot emit. Assigning row by row into a typed record checks every field, so the
+    // narrowing is now enforced by `vue-tsc` rather than by a reader's care. `narrowTierRefusal` is
+    // where the widest thing `EntryStatus` can say is reduced to the half a rung can answer, in one
+    // place, exhaustively.
+    tierRefusal: tierRefusals(world),
     // ⚠ `onRampCleared` WAS BUILT HERE AND IS GONE (E-07, 05.09 engine review), AND ITS OWN NOTE HAD
     // ALREADY RECORDED HALF THE JOURNEY. R15-9 surfaced it "read-only, for the SLIDING TIER WINDOW";
     // W2-LADDER §4 then derived the calendar's pair from `tierOpen` instead ("the on-ramp rungs'

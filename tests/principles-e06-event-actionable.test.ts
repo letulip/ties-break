@@ -27,14 +27,22 @@
 // quoted in the wave's report. The asymmetry is the whole record: the arm that breaks the SHARING
 // cannot be seen by any test that only compares answers.
 import { describe, it, expect } from 'vitest'
-import { eventActionable } from '../src/composables/tierState'
+import { eventActionable, type StackableEvent } from '../src/composables/tierState'
 import { isSuitable } from '../src/composables/weekDays'
 import { eventIsHers } from '../src/engine/world'
 import type { UpcomingEvent } from '../src/shared/protocol'
 
-// The three fields the predicate reads, and nothing else – `StackableEvent`'s own shape minus the
-// identity and the rung, which it never touches.
-const card = (entered: boolean, eligible: boolean, deadlineWeek: number) => ({ entered, eligible, deadlineWeek })
+// A whole `StackableEvent`, because that is the signature this export declares – `vue-tsc` refused a
+// three-field literal here and was right to: the assignment keeps the UI's parameter type, so a test
+// that posed only the three fields the BODY reads would be asserting against a signature the callers
+// do not have. `id` and `tier` are carried and never touched, which is the point.
+const card = (entered: boolean, eligible: boolean, deadlineWeek: number): StackableEvent => ({
+  id: `w${deadlineWeek}-local`,
+  tier: 'local',
+  entered,
+  eligible,
+  deadlineWeek,
+})
 
 describe('E-06 §1: three names, one body', () => {
   it('⚠⚠ `eventActionable` IS the engine\'s `eventIsHers` – not a faithful copy of it', () => {
@@ -57,7 +65,7 @@ describe('E-06 §2: and the answer is unchanged, which is why this was a refacto
   // the proof that nothing MOVED – E-06's «there is no behaviour change, because the bodies are
   // identical» measured rather than asserted in prose.
   const week = 40
-  const rows: Array<{ label: string; e: ReturnType<typeof card>; want: boolean }> = [
+  const rows: Array<{ label: string; e: StackableEvent; want: boolean }> = [
     { label: 'entered, list long closed – hers whatever the deadline says', e: card(true, false, 1), want: true },
     { label: 'entered and still eligible', e: card(true, true, 44), want: true },
     { label: 'eligible, list open this very week', e: card(false, true, week), want: true },
