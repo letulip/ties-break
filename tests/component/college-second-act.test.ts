@@ -43,14 +43,13 @@ import {
   createWorld,
   measureCollegeOffer,
   resumeFromCollege,
-  revealTournamentRound,
   tickWeek,
   toSnapshot,
-  type WorldState,
 } from '../../src/engine/world'
 import { resumeMain } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type CollegeProgressView, type CollegeYear, type Snapshot, type WorldMatch } from '../../src/shared/protocol'
 import type { MatchPlayer } from '../../src/engine/match/types'
+import { finishAnyReveal } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND `HomeScreen` READS IT. The same shim `home-strip-and-mail`,
 // `round20-ui` and `round24-coach-card` carry, and for the reason quoted there in full: happy-dom is
@@ -199,13 +198,6 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
 // her – and those are rolls. A test that waited for the RNG to produce a retirement would be a test
 // that runs sometimes. So: a real snapshot underneath, one field swapped, which is the only field
 // any of these assertions is about.
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
 let walked: Snapshot | null = null
 
 /** A career at college with one year behind her, built once – the walk is the expensive half and it

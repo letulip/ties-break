@@ -79,6 +79,14 @@ Object.defineProperty(globalThis, 'localStorage', {
   },
 })
 
+// ⚠⚠ NOT MIGRATED TO `tests/helpers/scenarios/college.ts` (26.09, T5.11) – DELIBERATELY, AND BOTH
+// REASONS ARE DICE RATHER THAN STYLE. `finishAnyReveal` here SKIPS the bracket where the shared one
+// REVEALS it round by round (`revealTournamentRound`, the body 16 other files share), and `atCollege`
+// below clamps the wallet at the top of EVERY tick where the shared one clamps once after the walk,
+// because these cases read one world over and over. Either difference alone makes this a different
+// career, so folding it in behind an option would have hidden the drift behind a default – which is
+// the shape H-07's own migration rule forbids. If a later sweep wants to unify them, it needs a world
+// hash for this file's two seeds first, not the matching names.
 function finishAnyReveal(world: WorldState): void {
   for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) skipTournament(world)
   if (world.pendingTournament) closeTournament(world)

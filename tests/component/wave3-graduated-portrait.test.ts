@@ -82,65 +82,26 @@ import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
-  answerFork,
   closeTournament,
-  createWorld,
   endCollegeEarly,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
-  revealTournamentRound,
   skipTournament,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { resumeMain, type Rng } from '../../src/engine/rng'
 import { ENDINGS } from '../../src/engine/ending'
 import { GRADUATED_ART_STEM, graduatedUrl } from '../../src/art/preload'
 import { facePoint } from '../../src/art/faceRects'
-import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
+import { type Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, PHONE, setViewport } from './fits'
+import { atCollege } from '../helpers/scenarios/college'
 
 /** The eight band paintings a portrait surface can show on an ordinary week – the set the hero must
  *  be wearing whenever the graduation painting is not on it. Spelled as a pattern rather than a
  *  single face because the walked career's emotion on the week is the engine's business, not this
  *  file's; what matters is that it is one of HER faces and not the gown. */
 const BAND_PAINTING = /fem-euro-brunnet-(jun|young|teen|adult|lateCareer)-(angry|happy|injury|norm|rehab|sad|serious|tired)\.webp$/
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** A career really played to the fork and really answered «college» – round24-college-shell's
- *  `atCollege`, verbatim in shape including its one thumb on the scale (four years of base costs
- *  would otherwise bankrupt the family mid-freeze, which measures the budget rather than this). */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
-  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
-  drainLifeBeats(world)
-  answerFork(world, 'college')
-  for (let i = 0; i < 54 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
 
 /** THE GRADUATE: four years, spent one at a time exactly as the bottom control spends them. The
  *  press loop is round24's – a year pauses on her birthday, on the championship and on the tie – and

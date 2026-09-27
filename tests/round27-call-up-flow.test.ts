@@ -30,7 +30,6 @@
 import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect, beforeAll } from 'vitest'
 import {
-  answerFork,
   callUpFor,
   callUpLetterWeek,
   nextCallUpWeekAfter,
@@ -41,7 +40,6 @@ import {
   createWorld,
   enterEvent,
   KID_ID,
-  measureCollegeOffer,
   pendingBirthday,
   pendingLifeBeat,
   resumeFromCollege,
@@ -62,43 +60,16 @@ import { DEFAULT_PROFILE, STOP_PRECEDENCE, type CallUpLetterTerms, type Offer } 
 import { drainLifeBeats } from './helpers/career'
 import { componentFile } from './worldSource'
 import { region } from './helpers/source'
-
-/** A tour reveal, walked out – the loop every college fixture in this repo already carries. */
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** ⭐ A CAREER THAT REALLY PLAYED TO THE FORK AND REALLY ANSWERED «college» – never a hand-built
- *  snapshot. The same opener round 26 #6's suite walks, thumb on the scale and all: four years is
- *  208 weeks of base costs and a career that went bankrupt inside them would be measuring the family
- *  budget instead of this. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    // ⚠ v74 (wave 3, T8): tier-1 small talk raises an answerable `lifeLog` row from week 0 and
-    // `answerFork` refuses while any row is unanswered. Bond-neutral drain – nothing measured moves.
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
+import { finishAnyReveal, atCollege } from './helpers/scenarios/college'
 
 /** «Skip all rounds» then the finale's «Continue» – the two commands the flow's own controls call,
- *  dispatched at whichever college reveal is standing. */
+ *  dispatched at whichever college reveal is standing.
+ *
+ *  ⚠⚠ THE ONE REVEAL ANSWER THAT STAYS LOCAL (26.09, T5.11), and the difference is the GUARD. The
+ *  eleven-copy `answerCollegeReveal` now in `tests/helpers/scenarios/college.ts` returns early unless
+ *  a college league or call-up reveal is standing; this one presses unconditionally, because this file
+ *  drives the tie from outside that guard. Migrating it would have changed which brackets it resolves,
+ *  so it keeps its body and this note keeps the reason where the next sweep will read it. */
 function answerAnyCollegeReveal(world: WorldState): void {
   skipTournament(world)
   closeTournament(world)

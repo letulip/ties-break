@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
   COLLEGE_FREEZE_REFUSAL,
   answerFork,
-  callUpRevealOpen,
-  closeTournament,
-  collegeLeagueRevealOpen,
   createWorld,
   decideKnock,
   enterEvent,
@@ -13,8 +10,6 @@ import {
   pendingKnock,
   reachableSituations,
   resumeFromCollege,
-  revealTournamentRound,
-  skipTournament,
   tickWeek,
   TEMPERAMENTS,
   type WorldState,
@@ -24,6 +19,7 @@ import { resumeMain, type Rng } from '../src/engine/rng'
 import { weekMonth } from '../src/shared/dates'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
+import { finishAnyReveal, answerCollegeReveal } from './helpers/scenarios/college'
 
 // =================================================================================================
 // ⭐⭐ C-07 (principles review of 26.09, docs/review-principles-2026-09-26/03-engine-leaves.md) –
@@ -63,22 +59,6 @@ import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
 // the fixture shape `tests/college-freeze.test.ts` already uses. The frozen capture (41550 /
 // e6b0c709) is untouched; `tests/condition.test.ts` is not part of this task.
 // =================================================================================================
-
-/** The player's own two presses at a college reveal – «Skip all rounds», then the finale's
- *  «Continue» – so a press does not hang the year on an unanswered championship or Nations Cup tie.
- *  The shape is `tests/college-freeze.test.ts`'s `answerCollegeReveal`, verbatim in behaviour. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
 
 /** One ordinary lived week: tick, close whatever the tick produced, answer what blocks. */
 function live(world: WorldState, rng: Rng): void {

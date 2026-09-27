@@ -44,25 +44,20 @@ import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
-  answerFork,
   closeTournament,
   callUpRevealOpen,
-  createWorld,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
-  revealTournamentRound,
   skipTournament,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING } from '../../src/engine/nationalTeam'
 import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
 import { ENDINGS } from '../../src/engine/ending'
-import { resumeMain, type Rng } from '../../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
-import { DEFAULT_PROFILE, LADDER_LABEL } from '../../src/shared/protocol'
+import { LADDER_LABEL } from '../../src/shared/protocol'
+import { atCollege } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND THE SHELL READS IT. Same shim as round26-college-flow –
 // supply the browser's object, do not weaken the app.
@@ -80,39 +75,6 @@ Object.defineProperty(globalThis, 'localStorage', {
     },
   },
 })
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** A career that really played to the fork and really answered «college» – never a hand-built
- *  snapshot. `round26-college-flow.test.ts`'s own opener, including its one thumb on the scale. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
-  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
-  drainLifeBeats(world)
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
 
 /** Press the Home shell's college button until a Nations Cup tie is standing open, answering the
  *  championship and her birthday on the way. ⚠ THROWS rather than returning quietly, so no case

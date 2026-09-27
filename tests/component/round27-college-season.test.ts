@@ -41,25 +41,16 @@ import {
   answerFork,
   bookPractice,
   bookVacation,
-  closeTournament,
   createWorld,
   measureCollegeOffer,
-  revealTournamentRound,
   tickWeek,
   toSnapshot,
-  type WorldState,
 } from '../../src/engine/world'
 import { resumeMain } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
 import { mountSeason } from '../helpers/mountSeason'
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
+import { finishAnyReveal } from '../helpers/scenarios/college'
 
 /** ⭐⭐⭐ A CAREER THAT WAS REALLY PLAYED TO THE FORK, REALLY ANSWERED «college», AND REALLY WALKED TO
  *  THE SEPTEMBER SHE LEAVES IN – round24-college-shell.test.ts's `atCollege`, plus the two bookings

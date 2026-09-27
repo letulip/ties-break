@@ -26,9 +26,6 @@
 import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
-  skipTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   COLLEGE_FREEZE_REFUSAL,
   acceptOffer,
@@ -43,7 +40,6 @@ import {
   buyAsset,
   sellAsset,
   chooseGift,
-  closeTournament,
   createWorld,
   decideKnock,
   declineOffer,
@@ -61,7 +57,6 @@ import {
   latchEnding,
   pendingBirthday,
   resumeFromCollege,
-  revealTournamentRound,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
   setKitGrade,
@@ -79,39 +74,11 @@ import { ENDING_TITLE } from '../src/engine/ending'
 import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
- *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
- *  complaint was that the year reported the tournament and ticked on past it. So every walk here
- *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
- *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
- *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
- *  The full note is in tests/college-league.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
+import { finishAnyReveal, answerCollegeReveal } from './helpers/scenarios/college'
 
 // =================================================================================================
 // The walked career – the same shape tests/college-freeze.test.ts uses, for the same reason
 // =================================================================================================
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
 
 /** A career that has really been played: a calendar, a cohort, a ledger and a table with points on
  *  it. `tickWeek` is total (only `advanceWeeks` halts), so the loop closes any reveal it makes. */

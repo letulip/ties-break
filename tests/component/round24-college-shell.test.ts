@@ -55,24 +55,22 @@ import CollegeDoneDialog from '../../src/components/CollegeDoneDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   skipTournament,
-  answerFork,
   closeTournament,
   createWorld,
   endCollegeEarly,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
-  revealTournamentRound,
   tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { resumeMain, type Rng } from '../../src/engine/rng'
+import { resumeMain } from '../../src/engine/rng'
 import { ENDINGS } from '../../src/engine/ending'
 import { assertDismissReachable, PHONE, setViewport } from './fits'
 import { DEFAULT_PROFILE, type CareerEnding } from '../../src/shared/protocol'
 // ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
 import { drainLifeBeats } from '../helpers/career'
+import { finishAnyReveal, atCollege } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE GRADUATION CARD'S WATERMARK IS localStorage. Same shim
 // as round19-wrapup / round21-popup-order – supply the browser's object, do not weaken the app.
@@ -90,44 +88,6 @@ Object.defineProperty(globalThis, 'localStorage', {
     },
   },
 })
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** ⭐⭐⭐ A CAREER THAT WAS REALLY PLAYED TO THE FORK AND REALLY ANSWERED «college» – not a hand-built
- *  snapshot. `tickWeek` is total (only `advanceWeeks` halts), so the loop closes any reveal it
- *  produces and keeps going, exactly as `tests/college-freeze.test.ts` walks one. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  // ⚠ THE ONE THUMB ON THE SCALE, and it is `college-freeze.test.ts`'s: four years is 208 weeks of
-  // base costs, and a career that went bankrupt inside them would be measuring the family budget.
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
-  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
-  drainLifeBeats(world)
-  answerFork(world, 'college')
-  // ⚠ ROUND 24 #5: the answer reserves – the walk to the September departure is what latches the
-  // college ending now (the gap semantics are pinned in tests/college-departure.test.ts).
-  for (let i = 0; i < 54 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
 
 /** Mount the shell on a world, past the splash. */
 async function openShell(world: WorldState) {

@@ -96,13 +96,11 @@ import { blockingOverlay } from '../../src/composables/blockingOverlay'
 import {
   answerFork,
   answerLifeBeat,
-  closeTournament,
   createWorld,
   measureCollegeOffer,
   pendingBirthday,
   pendingLifeBeat,
   raiseLifeBeat,
-  revealTournamentRound,
   tickWeek,
   toSnapshot,
   type WorldState,
@@ -110,6 +108,7 @@ import {
 import { resumeMain } from '../../src/engine/rng'
 import { assertDismissReachable, PHONE, setViewport } from './fits'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
+import { finishAnyReveal } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage – the same shim round19-wrapup / round21-popup-order /
 // round24-college-shell install. Supply the browser's object, do not weaken the app.
@@ -127,13 +126,6 @@ Object.defineProperty(globalThis, 'localStorage', {
     },
   },
 })
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
 
 /** ⭐⭐⭐ A CAREER REALLY PLAYED TO THE FORK, REALLY ANSWERED «college» AND REALLY WALKED TO THE
  *  DEPARTURE THAT LATCHES IT – round24-college-shell.test.ts's `atCollege`, and it is copied rather

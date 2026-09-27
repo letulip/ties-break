@@ -30,10 +30,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
-  skipTournament,
-  callUpRevealOpen,
   collegeLeagueRevealOpen,
-  closeTournament,
   createWorld,
   answerFork,
   pendingBirthday,
@@ -71,6 +68,7 @@ import { rngFromSeed, resumeMain, initMainState, type Rng } from '../src/engine/
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type CollegeTier, type CollegeYear } from '../src/shared/protocol'
+import { answerCollegeReveal } from './helpers/scenarios/college'
 
 /** A career standing at the fork – the same cheap opener `college-second-act.test.ts` uses.
  *
@@ -94,28 +92,6 @@ function atTheFork(seed: string, birthMonth: number = DEFAULT_PROFILE.birthMonth
 function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier): void {
   answerFork(world, 'college', tier)
   for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) tickWeek(world, rng)
-}
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP, AND IT IS NOT A WEAKENING.
- *  `resumeFromCollege` used to report the championship week and keep ticking; the owner's complaint
- *  was exactly that («опять сообщили только постфактум»), so the year now PAUSES on it and
- *  `TournamentFlow` walks the matches. Every walk helper in this suite therefore has to answer the
- *  reveal the way the player does, exactly as it already answers her birthday one line down and a
- *  tour reveal one function up – «Skip all rounds» then the finale's «Continue», which are
- *  `skipTournament` and `closeTournament` dispatched at the college reveal. What the suite MEASURES
- *  is unchanged: the same years, the same championships, the same letters. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
 }
 
 // ⚠ FIVE PRESSES A YEAR AND IT USED TO BE THREE (round 27 #6). It is a BUDGET, not a claim: a

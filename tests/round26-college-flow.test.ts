@@ -32,14 +32,12 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
-  answerFork,
   closeTournament,
   collegeLeagueMatchesOf,
   collegeLeagueRevealMatches,
   callUpRevealOpen,
   collegeLeagueRevealOpen,
   createWorld,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
@@ -59,45 +57,13 @@ import { DEFAULT_PROFILE, STOP_PRECEDENCE } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – `tools/_lifeBeats.ts` through this file's own
 // re-export. It answers a beat with the option whose delta is zero and THROWS if a kind has none.
 import { drainLifeBeats } from './helpers/career'
+// ⚠⚠ RE-AIMED 26.09 (T5.11): `answerTheReveal` was this file's own name for the eleven-copy
+// `answerCollegeReveal`, body for body, and the alias keeps every call site's own word rather than
+// renaming twenty-three lines to prove a point about a helper. Its own round-27 note went to the
+// shared module with the other six retellings of it.
+import { atCollege, finishAnyReveal, answerCollegeReveal as answerTheReveal } from './helpers/scenarios/college'
 
 const DIR = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
-
-/** A tour reveal, walked out – the loop every college fixture in this repo already carries. */
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** ⭐⭐⭐ A CAREER THAT REALLY PLAYED TO THE FORK AND REALLY ANSWERED «college» – never a hand-built
- *  snapshot. The same opener `tests/component/round24-college-shell.test.ts` walks, including its one
- *  thumb on the scale: four years is 208 weeks of base costs and a career that went bankrupt inside
- *  them would be measuring the family budget instead of this. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-    // talk raises an answerable `lifeLog` row from week 0 at up to 8%/wk, and `answerFork` refuses
-    // while ANY row is unanswered («hear her out before answering the fork»), so this opener threw
-    // before it reached a single case. `drainLifeBeats` answers with the option priced ZERO, which
-    // is what keeps a walk that never meant to price a beat from moving any number below.
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
 
 /** Press until the championship's reveal is standing open, answering her birthday on the way.
  *  ⚠ IT THROWS IF IT NEVER GETS THERE, so a case cannot go green against a career that held no
@@ -117,17 +83,6 @@ function pressToTheChampionship(world: WorldState, rng: Rng): { stops: string[];
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walk never reached a championship')
-}
-
-/** «Skip all rounds» then the finale's «Continue» – the two commands the flow's own controls call.
- ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO.
- *  ⚠ IT USED TO CLAIM: «the championship is the only reveal a college year raises» (round 26 #6).
- *  ⚠ WHY IT MOVED: the call-up now pauses the year and is walked in the same flow, so a walk that
- *  answered one of the two would hang on the other. The assertions in this file are untouched. */
-function answerTheReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
 }
 
 // =================================================================================================

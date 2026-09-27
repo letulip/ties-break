@@ -41,8 +41,6 @@ import {
 import { leavingView } from './helpers/leavingView'
 import {
   closeTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   skipTournament,
   createWorld,
   advanceWeeks,
@@ -83,28 +81,7 @@ import { kidAgeExact, kidAgeYears } from '../src/engine/world'
 import { pendingLifeBeat } from '../src/engine/world'
 import { growAndLive } from '../src/engine/world/phaseGrowth'
 import { ageAtPhysicalShare } from '../src/engine/development'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
- *  the year on the College League week the way it already pauses on her birthday, because the owner
- *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
- *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
- *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
- *  answers one more question and its press ceiling grows by one a year. The full note is in
- *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
+import { answerCollegeReveal } from './helpers/scenarios/college'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
