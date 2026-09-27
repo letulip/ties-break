@@ -401,7 +401,11 @@ describe('E-08 · MatchViewer `.mv-hurt` – announced, contained, and inside a 
     wrappers = wrappers.filter((w) => w !== plain)
     document.body.innerHTML = ''
 
-    const long = track(await mountHurt(LONGEST_NOTE))
+    // ⚠ `track` is what the binding was for: it registers the wrapper for this file's own
+    // unmount sweep and returns it, and the second mount is measured through the DOM. Bound, the
+    // handle is a TS6133 and `vue-tsc -b --force` is a link in `check`, so it takes the whole
+    // gate red before a test runs (27.09). Do not re-bind it for symmetry with the line above.
+    track(await mountHurt(LONGEST_NOTE))
     const card = document.querySelector('.mv-hurt')!
     expect(card.textContent, 'the longest note is not on the card being measured').toContain('bored')
     const fit = assertDismissReachable(card, dismissOf(card), PHONE, '.mv-hurt (longest note)')
