@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { feedContext, feedShows, preferredWeekEvent, type FeedEventFacts } from '../src/composables/tierState'
-import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, tierAgeBlock } from '../src/engine/season/calendar'
 import {
   KID_ID,
   activeLadderOf,
@@ -166,8 +166,25 @@ describe('the window: exactly what the engine holds open', () => {
     // OLD can never reopen, so the card is dead furniture; too YOUNG opens on a birthday, and the
     // feed is also how she learns what is out there. Hiding those would be the empty-weeks
     // regression the 06.08 ladder-floor ruling was about.
-    const ctx = feedContext({ ageYears: 14, tierOpen: openMap(['local', 'j30', 'w15']), upcoming: [] })
-    expect(feedShows(row('w15', 9), ctx), 'W15 opens at 16 and she is 14').toBe(true)
+    //
+    // ⚠ RE-AIMED 27.09 (T5.4 · H-19), AND WHAT MOVED IS THE FIXTURE, NOT THE CLAIM. The age was the
+    // literal `14`, with the message «W15 opens at 16 and she is 14» – the pre-16.08 grid restated in
+    // a test. `TIERS.w15.minAgeYears` went 16 → 14 on the owner's ruling of 16.08 (`3372ec10`, «W15
+    // opens at fourteen, as the sport's grid says»), so `tierAgeBlock('w15', 14)` became `null` and
+    // this case stopped building a too-young rung at all: for 41 days it posed an OPEN rung and
+    // asserted that an open rung shows. Measured – with `tierState`'s `!== 'old'` mutated to
+    // `=== null`, which hides too-young rungs too, the file stayed 29/29 green.
+    //
+    // Derived from the table it cannot rot that way, and the precondition is the lens: if a future
+    // grid leaves no rung a girl one year under the floor is too young for, this case fails loudly on
+    // its own premise instead of passing empty. The general rule (H-19's own): a fixture that stands
+    // in for a table value READS the table.
+    const minAge = TIERS.w15.minAgeYears ?? 0
+    expect(minAge, 'w15 declares an age floor, or this case has no too-young arm to pose').toBeGreaterThan(0)
+    const age = minAge - 1
+    expect(tierAgeBlock('w15', age), 'the premise: one year under the floor is too YOUNG').toBe('young')
+    const ctx = feedContext({ ageYears: age, tierOpen: openMap(['local', 'j30', 'w15']), upcoming: [] })
+    expect(feedShows(row('w15', 9), ctx), `W15 opens at ${minAge} and she is ${age}`).toBe(true)
     expect(ctx.rungs).toEqual(['local', 'j30', 'w15'])
   })
 
