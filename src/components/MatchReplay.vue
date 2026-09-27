@@ -6,10 +6,7 @@
 // annotateMatch then layers the rally/probability presentation on top.
 import { computed } from 'vue'
 import type { WorldMatch } from '../shared/protocol'
-import type { MatchOptions } from '../engine/match/types'
-import { simulateMatch } from '../engine/match/engine'
-import { annotateMatch } from '../engine/match/rally'
-import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { replayMatch } from '../composables/annotatedMatch'
 import { occasionOf } from '../viz/preview'
 import MatchViewer from './MatchViewer.vue'
 import IconButton from './ui/IconButton.vue'
@@ -34,16 +31,11 @@ const props = withDefaults(
 )
 defineEmits<{ close: [] }>()
 
-const opts = computed<MatchOptions>(() => ({
-  surface: props.match.surface,
-  tour: JUNIOR_TOUR,
-  seed: props.match.seed ?? '',
-}))
-
-const annotated = computed(() => {
-  const result = simulateMatch(props.match.a, props.match.b, opts.value)
-  return annotateMatch(result, props.match.a, props.match.b, opts.value)
-})
+// ⚠ THE RECIPE IS `composables/annotatedMatch.ts`' AND THE OPTIONS ARE THE ENGINE'S (F-08, 27.09).
+// The three lines that stood here – the `{ surface, tour, seed }` literal, `simulateMatch`, then
+// `annotateMatch` – were one of four copies matched against the engine's recording sites by
+// convention; `replayMatch` is the one spelling both ends now read.
+const annotated = computed(() => replayMatch(props.match))
 
 /**
  * ⭐ ROUND-23 #4 – WHICH TOURNAMENT THIS WAS, and it is the fix for a bug the owner keeps catching by

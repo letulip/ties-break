@@ -37,18 +37,17 @@ import ConfirmDialog from './ConfirmDialog.vue'
 import AppIcon from './ui/AppIcon.vue'
 import Card from './ui/Card.vue'
 import ConfettiBurst from './ui/ConfettiBurst.vue'
+import BoxScoreTable from './ui/BoxScoreTable.vue'
 import IconButton from './ui/IconButton.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import ProgressRing from './ui/ProgressRing.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 import StoreError from './ui/StoreError.vue'
 import { playSfx, primeSfx } from '../audio/sfx'
-import { simulateMatch } from '../engine/match/engine'
-import { annotateMatch } from '../engine/match/rally'
+import { replayMatch } from '../composables/annotatedMatch'
 import { computeMatchStats } from '../viz/match/matchStats'
 import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
 import { surfaceStyleHint } from '../engine/match/style'
-import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore, prizeCentsFor } from '../engine/world'
 import { LADDER_LABEL } from '../shared/protocol'
@@ -56,7 +55,7 @@ import { formatShortName, rankLabel, shortTierLabel } from '../shared/format'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
-import type { MatchOptions, Side } from '../engine/match/types'
+import type { Side } from '../engine/match/types'
 import type { MatchStatRow } from '../composables/matchStatTable'
 import type { WorldMatch } from '../shared/protocol'
 // HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
@@ -690,8 +689,8 @@ watch(isFinalRound, (isFinal) => { if (isFinal) primeSfx('applauseFinal') }, { i
 const annotated = computed(() => {
   const m = currentMatch.value
   if (!m) return null
-  const opts: MatchOptions = { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed ?? '' }
-  return annotateMatch(simulateMatch(m.a, m.b, opts), m.a, m.b, opts)
+  // ⚠ ONE RECIPE, THE ENGINE'S OPTIONS (F-08, 27.09) – see `composables/annotatedMatch.ts`.
+  return replayMatch(m)
 })
 const kidSide = computed<Side>(() => (currentMatch.value?.aId === KID_ID ? 0 : 1))
 const kidWon = computed(() => currentMatch.value?.winnerId === KID_ID)
@@ -1251,28 +1250,17 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       <p class="hint" style="margin: 0 0 12px">
         {{ kidShort }} vs {{ oppShort }}<template v-if="ladderLabel !== null"> · {{ ladderLabel }} ranking</template>
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>
-              <span class="ph-name">{{ kidShort }}</span>
-              <span v-if="kidRank !== null" class="ph-rank">#{{ kidRank }}</span>
-            </th>
-            <th>
-              <span class="ph-name">{{ oppShort }}</span>
-              <span v-if="currentOppRank != null" class="ph-rank">#{{ currentOppRank }}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in statRows" :key="row.label">
-            <th>{{ row.label }}</th>
-            <td class="num">{{ row.kid }}</td>
-            <td class="num">{{ row.opp }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- ⚠ THE TABLE ITSELF IS `ui/BoxScoreTable.vue` NOW (F-08, 27.09) – the friendly had the same
+           markup character for character, one layer out from the five ROWS the note below already
+           says have one author. Both ranks are null on a student match, which is what leaves the
+           line above with only the two names to say. -->
+      <BoxScoreTable
+        :kid-name="kidShort"
+        :opp-name="oppShort"
+        :kid-rank="kidRank"
+        :opp-rank="currentOppRank"
+        :rows="statRows"
+      />
       <p v-if="matchMeta" class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
       <div class="tf-actions">
         <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">Watch again</button>

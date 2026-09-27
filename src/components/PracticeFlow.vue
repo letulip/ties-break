@@ -12,19 +12,18 @@
 import { computed, ref } from 'vue'
 import MatchViewer from './MatchViewer.vue'
 import MatchScene from './MatchScene.vue'
+import BoxScoreTable from './ui/BoxScoreTable.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 import { useKidEmotion } from '../composables/kidEmotion'
-import { simulateMatch } from '../engine/match/engine'
-import { annotateMatch } from '../engine/match/rally'
+import { replayMatch } from '../composables/annotatedMatch'
 import { computeMatchStats } from '../viz/match/matchStats'
 import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
-import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { KID_ID, flipScore } from '../engine/world'
 import { occasionOf } from '../viz/preview'
 import { formatShortName } from '../shared/format'
 import { weekLabel, weekRange } from '../shared/dates'
-import type { MatchOptions, Side } from '../engine/match/types'
+import type { Side } from '../engine/match/types'
 import type { WorldMatch } from '../shared/protocol'
 
 const props = withDefaults(
@@ -63,15 +62,11 @@ const { stage: kidStage } = useKidEmotion()
 // 'pre' = the VS card, 'live' = the viewer (autoplaying), 'post' = the box score.
 const phase = ref<'pre' | 'live' | 'post'>('pre')
 
-const opts = computed<MatchOptions>(() => ({
-  surface: props.match.surface,
-  tour: JUNIOR_TOUR,
-  seed: props.match.seed ?? '',
-}))
-const annotated = computed(() => {
-  const result = simulateMatch(props.match.a, props.match.b, opts.value)
-  return annotateMatch(result, props.match.a, props.match.b, opts.value)
-})
+// ⚠ THE RECIPE IS `composables/annotatedMatch.ts`' AND THE OPTIONS ARE THE ENGINE'S (F-08, 27.09).
+// The `{ surface, tour, seed }` literal and the two engine calls under it were one of four copies
+// matched against the engine's four recording sites by convention; `replayMatch` is the one
+// spelling both ends read, so the header's promise above is now a property of the code.
+const annotated = computed(() => replayMatch(props.match))
 
 /**
  * ⭐ ROUND-23 #4 – AND HERE THE ANSWER IS GENUINELY null, WHICH IS WHY IT IS COMPUTED AND NOT OMITTED.
@@ -234,27 +229,11 @@ function close(): void {
         <span class="tf-scoreline num">{{ kidScore }}</span>
       </div>
       <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · practice – no ranking points</p>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>
-              <span class="ph-name">{{ kidShort }}</span>
-              <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
-            </th>
-            <th>
-              <span class="ph-name">{{ oppShort }}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in statRows" :key="row.label">
-            <th>{{ row.label }}</th>
-            <td class="num">{{ row.kid }}</td>
-            <td class="num">{{ row.opp }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- ⚠ THE TABLE ITSELF IS `ui/BoxScoreTable.vue` NOW (F-08, 27.09) – it was written out character
+           for character in TournamentFlow, one layer out from the five ROWS this screen's own note
+           above already says have one author. `opp-rank` is null because a friendly belongs to
+           neither table, which is what the "No ranking points" pill one row up says in words. -->
+      <BoxScoreTable :kid-name="kidShort" :opp-name="oppShort" :kid-rank="kidRank" :opp-rank="null" :rows="statRows" />
       <p class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
       <div class="tf-actions">
         <button class="sfx-watch" @click="watchIt">Watch again</button>

@@ -139,15 +139,13 @@ import MatchScene from './MatchScene.vue'
 import MatchViewer from './MatchViewer.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
-import { simulateMatch } from '../engine/match/engine'
-import { annotateMatch } from '../engine/match/rally'
-import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { replayMatch } from '../composables/annotatedMatch'
 import { stageLabel } from '../engine/world/labels'
 import { venueArtUrl } from '../art/venues'
 import { portraitStage, type PortraitStage } from '../shared/avatarEmotion'
 import { LOCAL_OPEN_COPY, localDrawLine } from '../prologue/cards'
 import { herMatches, LOCAL_POOL, type LocalOpen } from '../prologue/pool'
-import type { MatchOptions, MatchPlayer } from '../engine/match/types'
+import type { MatchPlayer } from '../engine/match/types'
 
 const props = defineProps<{
   /** the weekend, as `playLocalOpen` resolved it – the bracket is already decided */
@@ -189,17 +187,13 @@ const sides = computed<{ a: MatchPlayer; b: MatchPlayer } | null>(() => {
   return rec.aId === props.kid.id ? { a: props.kid, b: opponent } : { a: opponent, b: props.kid }
 })
 
-const options = computed<MatchOptions>(() => ({
-  surface: props.open.event.surface,
-  tour: JUNIOR_TOUR,
-  seed: record.value?.seed ?? '',
-}))
-
+// ⚠ ONE RECIPE, THE ENGINE'S OPTIONS (F-08, 27.09). The surface comes off the WEEKEND'S EVENT and
+// not off the record, because a prologue `MatchRecord` carries none – which is why
+// `recordedMatchOptions` takes the two fields rather than the row (see `match/engine.ts`).
 const annotated = computed(() => {
   const two = sides.value
   if (!two) return null
-  const opts = options.value
-  return annotateMatch(simulateMatch(two.a, two.b, opts), two.a, two.b, opts)
+  return replayMatch({ surface: props.open.event.surface, seed: record.value?.seed, a: two.a, b: two.b })
 })
 
 /** The round, in the draw sheet's own words – the engine's namer, so there is no second idea here of
