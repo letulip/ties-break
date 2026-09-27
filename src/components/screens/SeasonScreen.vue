@@ -241,6 +241,22 @@ function vacationGain(row: CalendarRow): number {
   return vacationPackage(row.vacation?.packageId ?? '')?.conditionGain ?? 0
 }
 
+/** ⚠ E-P13 (26.09) – THE CARD'S ACCESSIBLE NAME NAMES THE TRIP AND THE WEEK, AND THE TWO CHIPS
+ *  BESIDE IT WERE REACHED BY NOBODY. The card is one control (`role="button"`, it opens the
+ *  planner), so a screen reader hears its `aria-label` and stops: the condition the week is worth
+ *  and the money the family paid for it are on screen and outside the name. `aria-describedby`
+ *  points at the spans the sighted player is reading, which is the pattern E-03 / T4.6 uses for the
+ *  rank chips – NO NEW WORDS anywhere, and nothing is repeated in two places to drift.
+ *
+ *  ⚠ THE GAIN'S ID IS ONLY LISTED WHEN THE CHIP IS DRAWN. A `describedby` naming an element that is
+ *  not in the document is silently dropped by every AT, which would make this look like it works and
+ *  announce nothing on a zero-gain package. */
+function vacationDescribedBy(row: CalendarRow): string {
+  const ids = vacationGain(row) > 0 ? [`vac-gain-w${row.week}`] : []
+  ids.push(`vac-paid-w${row.week}`)
+  return ids.join(' ')
+}
+
 function weekTitle(row: CalendarRow): string {
   // ⭐⭐ ROUND 28 #4 – A SHOOT WEEK NAMES ITSELF, and it names itself in the SAME WORDS the button
   // into it uses (`useWeekAhead` -> 'Shooting week') and the Calendar's own eyebrow uses. Three
@@ -1649,8 +1665,13 @@ function closeExhibition(): void {
                    reason: both are facts ABOUT the week rather than what the week IS. -->
               <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               <!-- Round-7 item 21: past tense once the window has shut. -->
-              <span class="pill" :class="{ negative: week > ev.deadlineWeek && !ev.entered }">
-                {{ week > ev.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek) }}
+              <!-- ⚠ E-P04 (26.09) – `entriesClosed(ev)`, twice, where this row spelled
+                   `week > ev.deadlineWeek` inline. The screen already owns that question one
+                   function up and the pill below it calls it; two spellings of a deadline on one
+                   card is the kind of pair that drifts the day the rule grows an `!ev.entered` or a
+                   freeze clause. Both words and both classes are byte-identical. -->
+              <span class="pill" :class="{ negative: entriesClosed(ev) && !ev.entered }">
+                {{ entriesClosed(ev) ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek) }}
               </span>
               <span v-if="ev.entered" class="pill ok">Entered</span>
               <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
@@ -1946,6 +1967,7 @@ function closeExhibition(): void {
             role="button"
             tabindex="0"
             :aria-label="`${packageLabel(row.vacation.packageId)}, ${weekLabel(row.week)} - open the planner`"
+            :aria-describedby="vacationDescribedBy(row)"
             @click="openPlanner(row)"
             @keydown.enter.prevent="openPlanner(row)"
             @keydown.space.prevent="openPlanner(row)"
@@ -1963,8 +1985,9 @@ function closeExhibition(): void {
                 <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
                 <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
-                <span v-if="vacationGain(row) > 0" class="pill">+{{ vacationGain(row) }} condition</span>
-                <span class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
+                <!-- ⚠ E-P13: the two ids are what the card's `aria-describedby` points at. -->
+                <span v-if="vacationGain(row) > 0" :id="`vac-gain-w${row.week}`" class="pill">+{{ vacationGain(row) }} condition</span>
+                <span :id="`vac-paid-w${row.week}`" class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
                 <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
               </div>
             </div>
