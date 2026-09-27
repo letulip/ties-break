@@ -14,10 +14,33 @@
  * WHOLE HORIZON (Wave 1): instead of one 52-week season, run the SAME world forward to two career
  * milestones and report, per profile, the cumulative chance of surviving (not going bankrupt) and a
  * reach-rate proxy:
- *   14→16 = 104 weeks (2 seasons, the junior sink – no rung she can enter pays anything)
+ *   14→16 = 104 weeks (2 seasons, the junior sink – see `TierDef.prizeCents` for which rungs pay)
  *   14→18 = 208 weeks (4 seasons, "pro attempt" proxy)
- *   14→20 = 312 weeks (6 seasons, THE ADULT TOUR – W15 opens at 16, W100 at 17, so this is the
- *                      first horizon in which the prize-money question can be asked at all)
+ *   14→20 = 312 weeks (6 seasons, THE ADULT TOUR – the longest horizon; each rung's own age gate
+ *                      is its `minAgeYears` / `maxAgeYears` in `TIERS`)
+ *
+ * ⚠⚠ THE CLAUSE ABOVE USED TO RESTATE THE AGE GRID AND THE GRID HAD MOVED – corrected 27.09, the
+ * FIFTH copy (the other four – three test comments and a test title – went the same day). Verbatim:
+ * *"THE ADULT TOUR – W15 opens at 16, W100 at 17, so this is the first horizon in which the
+ * prize-money question can be asked at all"*. Against `TIERS` both open at **`minAgeYears: 14`**:
+ * w15, w35, w50, w75, w100 and slam are all 14, and only the four WTA rungs are 15. The sentence was
+ * the pre-16.08 chain the owner's ruling that evening replaced – `season/calendar.ts:1625` keeps that
+ * history beside the constants it moved. AND THE CONSEQUENCE ROTTED WITH IT: `w15.prizeCents` starts
+ * at $2,200 and w15 is open at 14, so the FIRST horizon (14→16) already reaches prize money.
+ *   ⚠ THE REPAIR IS TO REMOVE THE NUMBER, NOT TO ADVANCE IT. A sentence that points at `minAgeYears`
+ *   cannot go stale when `minAgeYears` moves; a sentence with a new digit in it resets the clock, and
+ *   every one of the six counts this wave has corrected had been advanced at least once before.
+ *   ⚠ «6 SEASONS» IS NOT A GRID CLAIM AND IT IS CORRECT: it is this bench's own span, 312 weeks ÷ 52,
+ *   and it moves only when the horizon on its own line moves. (`tools/pro-season-probe.ts:531`'s
+ *   «ages 16-18» is the same distinction from the other side – the probe's own season span, checked
+ *   and NOT a grid claim, so it is not a site.)
+ *   ⚠⚠ AND THE SAME FALSE CLAIM IS A **PRINTED LEGEND** AT `:136`: the `14→16` row's
+ *   `blurb: 'the junior sink – nothing she can enter pays a cent'`. `w15` pays $2,200 and opens at 14,
+ *   so that sentence is as stale as the one above it – and it goes on screen, so correcting it moves
+ *   this bench's output and is NOT a comment-only change. Left alone deliberately, flagged for the
+ *   architect: it needs the same before/after diff every other change in T5.12 carries, and the
+ *   14→16 row's own line above now points at `prizeCents` so a reader of the SOURCE is not misled.
+ *
  * State carries across seasons because we keep ONE createWorld + ONE rngFromSeed for the whole horizon
  * and just tick further – fundsCents, kidRank, the rolling results ledger, bestFinishByTier and
  * lastSeasonSummary all live on the world.
