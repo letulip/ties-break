@@ -1479,15 +1479,34 @@ async function leaveCollege(): Promise<void> {
           <p class="diary-age">{{ ageYears }} years old {{ flag }}</p>
           <!-- The chip is drawn only once something counts somewhere - rankChipTrack owns the rule
                (null = no counting result in any table yet, and nothing to read on a chip). -->
+          <!-- ⭐⭐ E-03 / T4.6 (27.09) - THE CHIP DESCRIBES ITSELF, because its NAME could not.
+               `aria-label` wins over name-from-content in the accessible-name algorithm, so the
+               button that exists to show her rank was called "How ranking points work" and the number
+               never reached a screen reader at all - the parity wave's lesson about a sentence,
+               applied to a number. The label is the owner's and does not move (invariant 4): the two
+               spans it hides are handed over as the button's DESCRIPTION instead, which is the same
+               shape D15 used for the header's dots one block up (a fact that ARRIVES is a
+               description, never part of the name).
+               ⚠ THE IDS ARE HOST-SCOPED AND THEY HAVE TO BE. From 1024 the rail draws this same chip
+               (`RailIdentity.vue`) and Home's own copy is still in the DOM, merely `display: none`
+               (`.diary-id > .diary-rank` in this file's own scoped block at 1024) - so a shared id
+               would be duplicated in the document on every desktop Home. `rail-rank-*` is the rail's
+               pair.
+               ⚠ THE MOVEMENT SPAN IS DELIBERATELY NOT DESCRIBED. It renders a glyph rather than a
+               word (an arrow and a number, or a bare dash when she has not moved), it is conditional
+               on `ranked`, and naming a conditional element would put an id in the attribute that
+               resolves to nothing on an unranked career. The two spans below are the chip's every
+               week, and the headline fact the label was dropping is in them. -->
           <button
             v-if="chipTrack !== null"
             class="diary-rank"
             aria-label="How ranking points work"
+            aria-describedby="diary-rank-ladder diary-rank-value"
             :title="rankChipTitle"
             @click="openRankHelp"
           >
-            <span class="rank-ladder">{{ ladderLabel }}</span>
-            <span>{{ rankText }}</span>
+            <span id="diary-rank-ladder" class="rank-ladder">{{ ladderLabel }}</span>
+            <span id="diary-rank-value">{{ rankText }}</span>
             <template v-if="ranked">
               <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
               <span v-else-if="rankMovement.dir === 'down'" class="rank-move down">&#8595;{{ rankMovement.by }}</span>
