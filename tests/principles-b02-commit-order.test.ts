@@ -74,6 +74,14 @@ vi.mock('../src/db/saves', async (importOriginal) => {
 import { createWorld, refreshDerivedRankCaches, tickWeek, toSnapshot, type WorldState } from '../src/engine/world'
 import { commitAutosave, listCareers, listSlots, touchCareer } from '../src/db/saves'
 
+// ⚠⚠ THE FOUR PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction, so it needed no measurement, unlike the 31 files whose budgets were ABOVE the ceiling.
+// A budget BELOW the ceiling would have stayed – that one says something. The ceiling, the measured table
+// and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+
 interface Reply {
   id: number
   ok: boolean
@@ -148,7 +156,7 @@ describe('⭐⭐ B-02 – a mutation commits only what can render', () => {
     expect(retried.ok, retried.error).toBe(true)
     expect(retried.revision).toBe(rev + 1)
     expect(retried.snapshot!.week).toBe(week + 1)
-  }, 60_000)
+  })
 
   it('⭐ the reply carries the snapshot built from the candidate, not a second one built later', async () => {
     const imported = await importIntoWorker(quietCareer('b02-once'))
@@ -161,7 +169,7 @@ describe('⭐⭐ B-02 – a mutation commits only what can render', () => {
     // already paid for is the one the reply carries.
     expect(oracle.calls - before, 'the mutation built exactly one snapshot').toBe(1)
     expect(res.revision, 'the revision is still read off committedRevision at reply time').toBe(rev + 1)
-  }, 60_000)
+  })
 })
 
 // -------------------------------------------------------------------------------------------------
@@ -230,7 +238,7 @@ describe('⭐⭐ B-02 – a load adopts only what can render', () => {
     expect(vi.mocked(touchCareer).mock.calls.length, 'a load that renders still touches').toBe(1)
     const touched = (await listCareers()).find((c) => c.careerId === other.careerId)!
     expect(touched.lastPlayedAt, 'and the row moves off the marker').toBeGreaterThan(MARKER)
-  }, 60_000)
+  })
 
   it('⭐ a successful load answers exactly what it answered before the reorder, field for field', async () => {
     const world = quietCareer('b02-load-identical', 8)
@@ -252,5 +260,5 @@ describe('⭐⭐ B-02 – a load adopts only what can render', () => {
     expect(plain(reply), 'the reorder moved WHEN the snapshot is built, not what the reply says').toEqual(
       plain({ ...expected, id: reply.id }),
     )
-  }, 60_000)
+  })
 })

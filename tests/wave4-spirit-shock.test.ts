@@ -109,6 +109,15 @@ import { birthdayTurning } from '../src/engine/world/age'
 import { migrateSave } from '../src/engine/migrations'
 import type { LoveEpisode, WorldEvent } from '../src/shared/protocol'
 
+// ⚠⚠ THE SEVEN PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction, so it needed no measurement, unlike the 31 files whose budgets were ABOVE the ceiling.
+// A budget BELOW the ceiling would have stayed – that one says something. ⚠ This file's `}, 60_000)` idiom
+// is the one `wave5-psychologist-recovery.test.ts` copied and cited; that citation is re-aimed in the same
+// pass. The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 
@@ -376,7 +385,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     expect(landed.quiet, 'quiet is steady – the same two numbers, because it is the INTENSITY axis').toBe(48)
     expect(landed.fiery, 'fiery is intense').toBe(38)
     expect(landed.deep, 'deep is intense').toBe(38)
-  }, 60_000)
+  })
 
   it('⚠⚠ RULING C: it is added AFTER the scale, never through it – a flat 70 lands on 48 and 36', () => {
     // ⚠⚠ THE DISCRIMINATING CASE FOR THE WHOLE RULING, and it needs the FLAT baseline to be readable:
@@ -397,7 +406,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
       expect(world.spirit, `${t}: the shock is not scaled a second time (that would read ${intense ? 27.5 : 52.4})`)
         .toBe(intense ? 36 : 48)
     }
-  }, 60_000)
+  })
 
   it('⚠ the table is §4\'s own two numbers, and the −27.5 base is a reconstruction rather than the row', () => {
     // The LITERAL table pin – ruling E's lesson from T2 applied one field over: a corridor built out
@@ -426,7 +435,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     world.week += 1
     accrueSpirit(world, false, [])
     expect(world.spirit, 'the NEXT week is the return rule alone – 48 + 5, not 48 + 5 − 22').toBe(53)
-  }, 60_000)
+  })
 
   it('⚠ bond is untouched by the shock – parent-decision-only, in this wave as in every other', () => {
     // §4a.2, restated where it could be broken cheaply: an ending is not a decision, and a bond line
@@ -439,7 +448,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     // ⚠ The 0.5/week regression toward 70 is the STANDING weekly rule and fires on every tick; what is
     // asserted is that the ending added nothing to it. 64 + 0.5 = 64.5 and not one half-point more.
     expect(world.bond, 'and the standing regresses by its own half point, with nothing added').toBe(64.5)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -472,7 +481,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
       expect(world.spiritShock, `${t}: the mark survives its own setting tick`).toEqual({ week, kind: 'breakup' })
       expect(world.spirit, `${t}: and it is a long way under 68`).toBeLessThan(68)
     }
-  }, 60_000)
+  })
 
   it('⭐⭐ the walk back is the standing return and NOTHING else – the whole trace, per intensity', () => {
     // ⚠⚠ THE RECOVERY SHAPE AS A LITERAL LADDER, because «no special curve» is a negative and a
@@ -514,7 +523,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
         .toBe(intensity === 'steady' ? 2 : 7)
       expect(trace.indexOf(70), `${t}: back at her own baseline`).toBe(intensity === 'steady' ? 5 : 11)
     }
-  }, 60_000)
+  })
 
   it('⚠⚠ RULING D: the bar is her OWN baseline even while somebody new is there', () => {
     // ⚠⚠ THE CASE THE RULING EXISTS FOR, and it is the one a mutation to `s.baseline + s.attachmentLift`
@@ -640,7 +649,7 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
       expect(read.channel, `${t}: the mood channel speaks`).toBe('mood')
       expect(read.emotion, `${t}: and her life going wrong reads as the sad painting`).toBe('sad')
     }
-  }, 60_000)
+  })
 
   it('⚠⚠ THE WAVE-2 «a live shock outranks result joy» RULE DOES NOT EXIST ON THIS TREE, and T3 did not invent it', () => {
     // ⚠⚠ A FINDING, WRITTEN AS A PIN SO IT CANNOT BE FORGOTTEN. The wave-4 brief (§2 T3) and the T3

@@ -49,6 +49,12 @@ import { engineModuleFunction, worldFunction } from './worldSource'
 import { lineAt, region } from './helpers/source'
 import type { WorldState } from '../src/engine/world'
 
+// ⚠⚠ THE PER-TEST BUDGET IN THIS FILE WAS REMOVED 27.09 (T5.3 · H-06). It read 60 s, which only restated
+// the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where it cannot follow
+// its source means that if the ceiling ever moves, this file silently stays at 60. ⚠ No cost claim is made:
+// removing a declaration equal to the default is behaviour-neutral by construction. A budget BELOW the
+// ceiling would have stayed. The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 
@@ -730,7 +736,7 @@ describe('the v72 schema move', () => {
       expect(typeof migrated.bond, file).toBe('number')
       expect(TEMPERAMENTS, file).toContain(migrated.temperament)
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================

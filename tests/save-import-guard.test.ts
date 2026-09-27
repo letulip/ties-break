@@ -15,6 +15,15 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { closeDb } from '../src/db/saves'
 import { workerHarness } from './helpers/workerHarness'
 
+// ⚠⚠ THE TWO PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which only
+// restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where it
+// cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction. A budget BELOW the ceiling would have stayed – that one says something.
+// ⚠ `new Array(60_000)` further down is a DATA literal and not a budget; the gate's parser matches the
+// declaration forms only, which is why it reads two sites here and not three.
+// The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 // =================================================================================================
 // W1-INTEGRITY-B (Codex TB-06) — THE IMPORT GATE'S FUZZ CORPUS, in three layers.
 //
@@ -540,7 +549,7 @@ describe('layer 4 – D-04: nothing gets through the door that cannot render AND
     expect(res.ok, res.error).toBe(true)
     const advanced = await send({ type: 'advance', weeks: 1, baseRevision: res.revision! })
     expect(advanced.ok, advanced.error).toBe(true)
-  }, 60_000)
+  })
 
   for (const field of D04_GATE_PASSERS) {
     it(`a current-schema file without "${field}" is refused with a CODE, or renders and advances`, async () => {
@@ -565,6 +574,6 @@ describe('layer 4 – D-04: nothing gets through the door that cannot render AND
       expect(held.careerId).toBe(anchor.careerId)
       expect(held.week).toBe(anchor.week)
       expect(await slotFingerprint()).toBe(slotsBefore)
-    }, 60_000)
+    })
   }
 })

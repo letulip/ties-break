@@ -14,6 +14,14 @@ import { encodeExportFile, decodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { workerHarness } from './helpers/workerHarness'
 
+// ⚠⚠ THE SIX PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which only
+// restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where it
+// cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction, so it needed no measurement, unlike the 31 files whose budgets were ABOVE the ceiling.
+// A budget BELOW the ceiling would have stayed – that one says something. The ceiling, the measured table
+// and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+
 // =================================================================================================
 // v35 — THE WORKER'S RNG REGIME (docs/review/proposals/P3-rng-persistence.md).
 //
@@ -115,7 +123,7 @@ describe('a load verifies and resumes — it never replays', () => {
     // ...and the position the worker holds is the position the save carried, to the draw.
     const held = await exportedWorld()
     expect(held.rngMain).toEqual(world.rngMain)
-  }, 60_000)
+  })
 
   it('the position rides the world: ticking advances the persisted pair the next export carries', async () => {
     const world = liveCareer('rng-regime-rides', 10)
@@ -138,7 +146,7 @@ describe('a load verifies and resumes — it never replays', () => {
     // in-place mutation reached the world that autosave/export serialise, with no mirror to forget.
     expect(after.rngMain.n).toBeGreaterThan(world.rngMain.n)
     expect(mainStateConsistent(after.seed, after.rngMain)).toBe(true)
-  }, 60_000)
+  })
 })
 
 describe('corruption recovers, loudly', () => {
@@ -157,7 +165,7 @@ describe('corruption recovers, loudly', () => {
     expect(mainStateConsistent(repaired.seed, repaired.rngMain)).toBe(true)
     // ...and is exactly the replay's best-effort answer for this career's length.
     expect(repaired.rngMain.n).toBeGreaterThan(0)
-  }, 60_000)
+  })
 
   it('a pair that satisfies the algebra but fails the plausibility bound recovers too', async () => {
     const world = liveCareer('rng-regime-implausible', 10)
@@ -175,14 +183,14 @@ describe('corruption recovers, loudly', () => {
 
     const repaired = await exportedWorld()
     expect(mainStateConsistent(repaired.seed, repaired.rngMain)).toBe(true)
-  }, 60_000)
+  })
 
   it('a clean save never trips the fallback (no false alarms)', async () => {
     const world = liveCareer('rng-regime-clean', 30)
     const res = await importIntoWorker(world)
     expect(res.ok, res.error).toBe(true)
     expect(res.recovered).toBeUndefined()
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -219,7 +227,7 @@ describe('the bound is slack the tick can grow into', () => {
       perWeek * REQUIRED_HEADROOM,
       `a week costs ${perWeek.toFixed(2)} draws and the bound gives ${MAIN_DRAWS_PER_WEEK_MAX}`,
     ).toBeLessThanOrEqual(MAIN_DRAWS_PER_WEEK_MAX)
-  }, 60_000)
+  })
 
   it('and `maxMainDraws` is that per-week number, scaled – the two cannot drift apart', () => {
     // The named constant and the function are one statement about the budget, not two: a wave that

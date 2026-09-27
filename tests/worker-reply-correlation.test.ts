@@ -8,6 +8,13 @@ import { DEFAULT_PROFILE, REPLY_BY_COMMAND, type ToWorker, type WorkerErrorCode 
 import { workerHarness, type WorkerMsg } from './helpers/workerHarness'
 import { region, scriptCodeOf } from './helpers/source'
 
+// ⚠⚠ THE THREE PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction. A budget BELOW the ceiling would have stayed – that one says something.
+// The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 // =================================================================================================
 // R2-05 (TB-06 / PR-07) — THE WORKER'S HALF OF THE REQUEST/REPLY CORRELATION.
 //
@@ -236,7 +243,7 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     for (const command of ['getSnapshot', 'album', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
       expect(arms.get(command), `'${command}' must succeed on a quiet career`).toBe(REPLY_BY_COMMAND[command])
     }
-  }, 60_000)
+  })
 
   it('⚠ E-05 – a refused save file answers with its CODE, not with prose the UI has to parse', async () => {
     // ⭐ THE CLAIM THE GATE'S HEADER ALREADY MAKES: "the code exists so tests (and any future UI
@@ -277,7 +284,7 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       // to STALE_REVISION and SAVE_CONFLICT, and widening the union must not have widened it.
       expect(reply.revision, `${code}: a refused file has no revision`).toBeUndefined()
     }
-  }, 60_000)
+  })
 })
 
 describe('the four behaviours this typing wave promised not to disturb', () => {
@@ -345,7 +352,7 @@ describe('the four behaviours this typing wave promised not to disturb', () => {
     // holding some other buffer would satisfy a count.
     expect(post.transfer, 'the export posts a transfer list').toHaveLength(1)
     expect(post.transfer![0], "and the thing transferred IS the reply's own buffer").toBe(exported.bytes)
-  }, 60_000)
+  })
 
   it('a reply with no buffer transfers nothing – the list is not a blanket', async () => {
     posts.length = 0
