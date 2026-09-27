@@ -837,9 +837,18 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
     expect(TIERS.slam.minAgeYears, 'a major is not a WTA event – its own floor is 14').toBe(14)
   })
 
-  // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for three whole
-  // seasons she holds both tours at once and can price one against the other with real results.
-  it('16-18 is a genuine overlap – both tours open at once', () => {
+  // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for every season
+  // between the adult floor and the junior door she holds both tours at once and can price one
+  // against the other with real results.
+  //
+  // ⚠ THE NUMBERS LEFT THIS TITLE AND THIS NOTE ON 27.09 (T5.4), and they left rather than moved.
+  // Both said «16-18» / «three whole seasons», which was the pre-16.08 grid: the overlap is
+  // `TIERS.w15.minAgeYears` to `TIERS.j30.maxAgeYears`, and the ruling of 16.08 moved the first of
+  // those without moving the sentence. The ages below are a sample INSIDE the overlap and were true
+  // throughout – nothing here is re-aimed, which is exactly why nothing red ever pointed at the
+  // stale title. A test's name is read by everyone who runs the file, so it states the property and
+  // lets the table carry the digits.
+  it('the two tours genuinely overlap – both are open at once before the junior door shuts', () => {
     for (const age of [16, 17, 18]) {
       expect(isTierAgeOpen('j30', age), `j30 at ${age}`).toBe(true)
       expect(isTierAgeOpen('w15', age), `w15 at ${age}`).toBe(true)
@@ -852,9 +861,13 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
   // ⚠ RE-AIMED, NOT WEAKENED (task #17), and this one changed because the WORLD changed rather than
   // because the test was wrong. It asserted that NO event on a fourteen-year-old's calendar can be
   // refused on age, which was true when every rung opened at 13 or lower and was the whole content of
-  // "our start is above the gate". Three rungs now open at 16/16/17, so a fourteen-year-old's
-  // calendar contains events she genuinely may not enter, and an assertion that no such event exists
-  // would be asserting the adult tour away.
+  // "our start is above the gate". Rungs now open ABOVE her starting age – `TIERS[*].minAgeYears`,
+  // which the loop below reads through `isTierAgeOpen` – so a fourteen-year-old's calendar contains
+  // events she genuinely may not enter, and an assertion that no such event exists would be
+  // asserting the adult tour away. (⚠ The count and the digits «three rungs … 16/16/17» stood here
+  // until 27.09, T5.4: the 16.08 ruling moved the grid and left the sentence behind. The rule is
+  // named instead, because a note that points at `minAgeYears` cannot go stale when it moves –
+  // `calendar.ts`'s own repair, one file up.)
   //
   // The rule it was protecting is intact and is what is asserted now: NOTHING SHE IS OLD ENOUGH FOR
   // MAY BE REFUSED ON AGE. The junior and domestic rungs are still all open to her on day one, and
@@ -907,11 +920,15 @@ describe('L8 — she can only play ONE tournament a week', () => {
       if (e.deadlineWeek < world.week) continue
       // ⚠ AND THE ADULT RUNGS ARE FILTERED OUT, WHICH IS NOT A WEAKENING (task #17). The rule under
       // test is a CALENDAR rule – one body, one week – and the fixture's whole job is to clear every
-      // OTHER gate so that rule is the only thing left standing between her and a second entry. She
-      // is fourteen here, so a W15/W35/W100 on a stacked week is refused on AGE and the throw the
-      // assertion below reads would be the wrong throw entirely: the test would pass while proving
-      // nothing. No third pile of points can fix that, because age is not a pile of points. Filtering
-      // to what a fourteen-year-old may enter is the same move the two piles above already make.
+      // OTHER gate so that rule is the only thing left standing between her and a second entry. A rung
+      // above her age on a stacked week is refused on AGE and the throw the assertion below reads
+      // would be the wrong throw entirely: the test would pass while proving nothing. No third pile of
+      // points can fix that, because age is not a pile of points. Filtering to what she may enter at
+      // the age the gate reads is the same move the two piles above already make.
+      // ⚠ THAT SENTENCE NAMED «W15/W35/W100» AND «she is fourteen here» UNTIL 27.09 (T5.4), and the
+      // note directly below had already contradicted both: she is genuinely THIRTEEN at week 0, and
+      // since 16.08 W15 opens at fourteen. Two sentences four lines apart disagreeing about the grid is
+      // the whole shape this pass is about, so the rung list and the age leave and the clock stays.
       // ⚠ HER AGE, NOT THE BAND (P2). Same correction as L7 above and for the same reason: she is
       // genuinely thirteen at week 0 on the shipped birthday, and since the owner's ruling of 16.08
       // W15 opens at fourteen – so filtering on the BAND let a W15 through that the gate then refuses
