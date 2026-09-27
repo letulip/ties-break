@@ -10,11 +10,51 @@ import type {
   PointContext,
   PointLogEntry,
   Side,
+  Surface,
+  Tour,
 } from './types'
 import { createScore, awardPoint, contextOf, decidingClose, formatScore } from './scoring'
 import { basePServe, calibratedPServe, modifiedPServe, retireDurability, retireHazard, type Streak } from './point'
 import { pMatchBo3 } from './closedForm'
 import { rngFromSeed } from '../rng'
+
+// Junior events run under WTA-average scoring (the project is WTA-first). Fixed so
+// stored kid-match seeds reproduce exactly.
+//
+// ⚠ IT WAS DECLARED IN `season/tournament.ts` UNTIL 27.09 AND THAT FILE RE-EXPORTS IT UNDER ITS
+// HISTORICAL NAME (C-04). `recordedMatchOptions` below is the one owner of "the options a recorded
+// match was played under", and the plan puts that owner in this module – but `season/tournament.ts`
+// imports THIS file for `simulateMatch`, so reading the constant from there would have made the
+// match package import the season package back at runtime. Nothing about the constant itself moved:
+// same name, same value, same import path for all 31 call sites, and `vue-tsc -b --force` is the
+// proof that not one of them noticed.
+export const JUNIOR_TOUR: Tour = 'wta'
+
+/**
+ * ⭐⭐ THE OPTIONS A RECORDED MATCH WAS PLAYED UNDER – ONE SPELLING, FOR BOTH ENDS OF A REPLAY.
+ *
+ * A stored match is re-watched by re-running `simulateMatch(a, b, opts)` on the stored seed, which is
+ * a pure function – so the ONLY link between what a replay plays and the scoreline printed beside it
+ * is OPTION EQUALITY. Until 27.09 the literal `{ surface, tour: JUNIOR_TOUR, seed }` was written out
+ * at every recording site and again at every replaying site – four and four – and the two ends matched
+ * by convention (C-04 and F-08, the principles review of 26.09). The day a recorder gains `momentum`,
+ * `firstServer` or a `condition` map – `MatchOptions` has all three, and the point loop reads every
+ * one of them – a missed copy replays a DIFFERENT match under the recorded scoreline, and the screen
+ * shows a result that disagrees with the feed line above it.
+ *
+ * ⚠ IT TAKES THE RECORD'S OWN TWO FIELDS AND NOTHING ELSE, so a `WorldMatch` satisfies it as it
+ * stands and the prologue's `MatchRecord` – which carries no surface, because its weekend's event
+ * does – composes the same shape from the event it was played at.
+ *
+ * ⚠ THE `?? ''` IS THE REPLAYERS' OWN HISTORICAL SPELLING, KEPT VERBATIM RATHER THAN MADE A THROW.
+ * `MatchRecord.seed` is optional: an AI-AI row carries none because it resolved through the closed
+ * form, and there is nothing in one to watch. Every recording site passes a seed it has just built,
+ * so the fallback is unreachable from the four recorders and reachable only from a screen handed a
+ * row that cannot be replayed at all – exactly what those screens did before.
+ */
+export function recordedMatchOptions(rec: { surface: Surface; seed?: string }): MatchOptions {
+  return { surface: rec.surface, tour: JUNIOR_TOUR, seed: rec.seed ?? '' }
+}
 
 // Closed-form match win probability. No RNG, no per-point modifiers – the world "fast sim" path
 // when a full log isn't needed, and the number the calendar card quotes.

@@ -4,8 +4,8 @@
 // resolve from the closed-form win probability with a single RNG draw.
 
 import { rngFromSeed, type Rng } from '../rng'
-import type { MatchPlayer, Tour } from '../match/types'
-import { simulateMatch, fastMatchProbability } from '../match/engine'
+import type { MatchPlayer } from '../match/types'
+import { simulateMatch, fastMatchProbability, recordedMatchOptions, JUNIOR_TOUR } from '../match/engine'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from './calendar'
 import { NATION_POOL } from './cohort'
 import { ECONOMY } from '../economy'
@@ -13,7 +13,13 @@ import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, Tournament
 
 // Junior events run under WTA-average scoring (the project is WTA-first). Fixed so
 // stored kid-match seeds reproduce exactly.
-export const JUNIOR_TOUR: Tour = 'wta'
+//
+// ⚠ THE DECLARATION MOVED TO `match/engine.ts` ON 27.09 (C-04) AND THIS LINE IS ALL THAT IS LEFT OF
+// IT. `recordedMatchOptions` is the one owner of the options a recorded match was played under, it
+// lives beside `simulateMatch`, and it needs this constant – which this file could not lend it
+// without the match package importing the season package back. The name is re-exported here because
+// 31 call sites import it from this path and that public spelling must not move.
+export { JUNIOR_TOUR }
 
 // AI entry ambition, by standings PERCENTILE (`(position + 1) / fieldSize`, 0 = best).
 //
@@ -1092,7 +1098,7 @@ function playMatch(
   const kidPlays = kid !== null && (a.id === kid.id || b.id === kid.id)
   if (kidPlays) {
     const seed = `${worldSeed}:${event.id}:r${round}`
-    const res = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed })
+    const res = simulateMatch(a, b, recordedMatchOptions({ surface: event.surface, seed }))
     const winnerId = res.winner === 0 ? a.id : b.id
     const score = res.sets.map((s) => `${s.a}-${s.b}`).join(' ')
     // SHE (or her opponent) STOPPED. `simulateMatch` has already done the work: the loser is the
