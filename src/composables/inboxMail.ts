@@ -44,6 +44,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { careerKey, useCareerSync } from './inboxCue'
+import { readLocal, writeLocal } from './localStore'
 // ⭐⭐ T4.2 · E-07 – the engine's «is this letter still a decision», read rather than re-spelled. It is
 // a pure function of an offer and a week, so importing it here adds no world and no draw.
 import { isOfferLive } from '../engine/offers'
@@ -84,11 +85,19 @@ export function letterDeletable(offer: Offer, week: number): boolean {
 /** localStorage as a set of ids, per career. Storage failures claim NOTHING - an empty set means
  *  "nothing read" and "nothing binned", and both of those are the safe direction: an unread letter
  *  shown in bold costs a bold row, and a letter that refuses to stay hidden costs a second press.
- *  The opposite defaults would hide a live offer. */
+ *  The opposite defaults would hide a live offer.
+ *
+ *  ⚠⚠ THE ACCESS GUARD IS `composables/localStore.ts`' SINCE 27.09 (E-P14, «migrate on touch»), AND THE
+ *  HAZARD IT COVERS IS NOT THE ONE A HAND-ROLLED TRY USUALLY CATCHES. A browser that blocks site data
+ *  throws `SecurityError` on the PROPERTY ACCESS – `localStorage` itself, before `getItem` is reached –
+ *  which inside a composable's setup is a component that does not render at all. `readLocal` is the one
+ *  spelling of that guard; this module keeps the two things that ARE its own, the JSON shape and the
+ *  missing-key rule, and the parse keeps a `try` of its own because malformed stored text is a different
+ *  failure from unreachable storage and answers the same way for a different reason. */
 function readSet(key: string): Set<string> {
+  const raw = readLocal(key)
+  if (!raw) return new Set()
   try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return new Set()
     const parsed: unknown = JSON.parse(raw)
     return new Set(Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [])
   } catch {
@@ -97,11 +106,9 @@ function readSet(key: string): Set<string> {
 }
 
 function writeSet(key: string, value: Set<string>): void {
-  try {
-    localStorage.setItem(key, JSON.stringify([...value]))
-  } catch {
-    // storage unavailable: the list still behaves for this session, it just will not persist
-  }
+  // Silent when storage will not take it – the list still behaves for this session, it just will not
+  // persist. `writeLocal` owns that decision and states the argument for it.
+  writeLocal(key, JSON.stringify([...value]))
 }
 
 export interface InboxMail {
