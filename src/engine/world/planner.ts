@@ -19,14 +19,13 @@ import { pickInt, rngFromSeed, type Rng } from '../rng'
 import { isExamWeek, isOffSeasonWeek } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
-import { simulateMatch } from '../match/engine'
+import { recordedMatchOptions, simulateMatch } from '../match/engine'
 import { clamp, matchDrain } from '../condition'
 import { applyBondDelta } from '../spirit'
 import type { AiPlayer } from '../season/types'
 import type { MatchPlayer, Surface } from '../match/types'
 import type { WorldEvent } from '../../shared/protocol'
 import { rivalGroundstrokes } from '../season/rival'
-import { JUNIOR_TOUR } from '../season/tournament'
 import { formatShortName } from '../../shared/format'
 import { addEvent, seasonStartWeek } from './ledger'
 import { ageWindowStartWeek } from './age'
@@ -444,7 +443,15 @@ export function resolvePractice(world: WorldState): void {
     age: opponent.ageYears,
   }
   const seed = `${world.seed}:practicematch:${world.week}:m`
-  const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+  // ⭐ C-04 / F-08 (27.09) – THE FOURTH RECORDER JOINS THE ONE SPELLING. This wrote
+  // `{ surface, tour: JUNIOR_TOUR, seed }` out for itself, and every replayer of a booked friendly
+  // wrote the same literal at the other end; option equality is the ONLY link between what a replay
+  // plays and the scoreline stored beside it, so a convention is not enough. `recordedMatchOptions`
+  // returns exactly those three fields today, so nothing about this match moves – and the day a
+  // recorder gains `momentum`, `firstServer` or a condition map, both ends move together.
+  // ⚠ THE SEED STAYS AT THIS CALL SITE, which is what keeps the sub-stream byte-identical: the
+  // primitive spells the OPTIONS, never the key.
+  const result = simulateMatch(kid, opp, recordedMatchOptions({ surface, seed }))
   const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
   const kidWon = result.winner === 0
   // The spec's drain rule, graded off the real scoreline via the SAME matchDrain the tour uses.
