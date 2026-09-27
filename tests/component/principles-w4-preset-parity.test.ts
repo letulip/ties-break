@@ -93,6 +93,32 @@ const LABELS: Record<keyof typeof ORDER, readonly string[]> = {
   thisWeek: ['Grind 85/15', 'Balanced 75/25', 'Light 60/40'],
 }
 
+/** THE ACCESSIBLE NAME, RESOLVED OUT OF THE DOCUMENT the way a screen reader resolves it – `aria-label`
+ *  first, then `aria-labelledby`, then name-from-content. The same two steps
+ *  `principles-w4-rank-chip.test.ts` and `a11y-sweep.test.ts` carry.
+ *
+ *  ⚠ IT THROWS ON AN ID NOTHING ANSWERS TO rather than resolving it to ''. A browser skips a dangling
+ *  `aria-labelledby` in silence, so pinning the ATTRIBUTE as a string would pass on a name that reaches
+ *  nobody – which is exactly the defect class this wave is about. `role="group"` is asked for too,
+ *  because a name on an element with no grouping role is a name for nothing. */
+function groupName(el: Element): string | null {
+  const ids = el.getAttribute('aria-labelledby')
+  if (ids === null) return el.getAttribute('aria-label')
+  if (el.getAttribute('role') !== 'group') {
+    throw new Error('the row is named but carries no grouping role, so the name names nothing')
+  }
+  return ids
+    .split(/\s+/)
+    .map((id) => {
+      const target = document.getElementById(id)
+      if (target === null) {
+        throw new Error(`aria-labelledby names #${id}, and nothing in the document answers to it`)
+      }
+      return target.textContent?.trim() ?? ''
+    })
+    .join(' ')
+}
+
 type Row = { labels: string[]; active: PresetKey | null; pressed: (string | undefined)[] }
 
 /** What one row says: the words on it, which preset it calls hers, and what it tells a screen reader. */
@@ -222,16 +248,80 @@ describe('E-02 – the three preset rows answer "which preset is hers" the same 
     const row = wrapper.find('.hw-presets')
     expect(row.classes(), 'the shared row class rides with the component').toContain('option-row')
     expect(row.findAll('.option-pill').length).toBe(3)
-    // ⚠ AND NO WORD WAS INVENTED. `SegmentedRow`'s other half is `groupLabel`, and a name for what
-    // each of these three rows IS would be three new sentences – which is the owner's, not a
-    // builder's (invariant 4). The row ships with `aria-pressed` and without a name of its own, and
-    // this is the assertion that says the extraction did not smuggle one in.
+    // ⚠ AND NO WORD WAS INVENTED HERE – see the two cases below for the full record.
     expect(row.attributes('aria-label')).toBeUndefined()
-    expect(row.attributes('aria-labelledby')).toBeUndefined()
     // ⚠ THE SCOPED RULE STILL REACHES IT. `.hw-presets { margin-bottom: 10px }` lives in
     // HerWeekTab's own `<style scoped>`, and a child component's root carries the parent's scope id –
     // which is the one thing an extraction like this can silently lose.
     expect(getComputedStyle(row.element).marginBottom).toBe('10px')
     wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// THE GROUP'S NAME – one row can be named for nothing, and two cannot. 27.09.
+// =================================================================================================
+//
+// ⚠ NO WORD IS NEW ON ANY OF THE THREE, and the mechanism is what makes that true: the name is a
+// REFERENCE (`aria-labelledby`) to a heading the host already renders, never a string a caller types.
+// `SegmentedRow`'s own half at `:101-102` is `role="group"` + `:aria-label="groupLabel"` – a string –
+// and taking that would have re-typed shipped copy into a second place, which is the duplication this
+// component was built to remove.
+describe('the preset row\'s accessible name', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it("⭐ This week's row is named by its OWN visible heading – the same sentence, a second surface", () => {
+    // `<h2>Training plan</h2>` was already immediately above the row. Naming the group with it is not
+    // a new sentence; it is the one on screen reaching a reader.
+    //
+    // ⚠ THE NAME IS RESOLVED OUT OF THE DOCUMENT, not read off the attribute. A dangling
+    // `aria-labelledby` is skipped in silence by a browser, so `groupName` throws on an id nothing
+    // answers to – which is what makes the arm below (the id dropped from the heading) go red.
+    const store = useGameStore()
+    store.snapshot = { ...career(), plan: planOf(BALANCED_WEEK) }
+    store.setPlan = vi.fn(async () => {}) as unknown as typeof store.setPlan
+    const wrapper = mount(ThisWeekScreen, { attachTo: document.body })
+    const section = wrapper.findAll('section').find((s) => s.text().includes('Training plan'))!
+    const row = section.find('.option-row')
+    const heading = section.find('h2')
+
+    // ⚠ NOTHING IS COMPARED WITH A TYPED STRING. The claim is that the name IS that heading node, so
+    // the assertion is an identity between the row's reference and the heading's own id – a rename of
+    // the heading carries the name with it and can never leave the two disagreeing.
+    expect(heading.attributes('id'), 'the heading carries an id to be named by').toBeTruthy()
+    expect(row.attributes('aria-labelledby')).toBe(heading.attributes('id'))
+    expect(groupName(row.element), "and it resolves to the heading's own words").toBe(heading.text())
+    expect(groupName(row.element), 'which is a name and not an empty one').not.toBe('')
+    wrapper.unmount()
+  })
+
+  it("⚠ ...and the other two rows are DELIBERATELY unnamed, waiting on the owner's words", () => {
+    // MEASURED, NOT ASSUMED. Above `HerWeekTab`'s row there is only a code comment («1a. THE PRESETS»)
+    // and above the Coach market's only «THE TRAINING REGULATOR». A comment is not player copy, and
+    // putting a comment's words on a screen for a reader to speak is AUTHORING COPY – invariant 4
+    // says that is the owner's and not a builder's. So both pass no name and render no `role="group"`
+    // either, since a group with no name announces a boundary and then says nothing about it.
+    //
+    // ⚠ THIS ASSERTION IS THE POINT OF WRITING IT DOWN. An absence that is asserted cannot be quietly
+    // filled by a later wave inventing a phrase, and cannot be mistaken for an oversight. When he
+    // gives each row its words, THIS is the test that has to change, in the same commit.
+    const snapshot = { ...career(), plan: planOf(BALANCED_WEEK) }
+    const store = useGameStore()
+    store.snapshot = snapshot
+    store.setPlan = vi.fn(async () => {}) as unknown as typeof store.setPlan
+
+    const dials = mount(HerWeekTab, { global: { stubs: { teleport: true } } })
+    const herRow = dials.find('.hw-presets')
+    expect(groupName(herRow.element), 'Her week: no name an agent chose').toBeNull()
+    expect(herRow.attributes('role'), '...and no unnamed group role either').toBeUndefined()
+    dials.unmount()
+
+    const market = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
+    const tabs = market.findAll('.tb-seg .tab-pill')
+    void tabs[1].trigger('click')
+    const marketRow = market.find('.cm-plan')
+    expect(groupName(marketRow.element), 'the regulator: no name an agent chose').toBeNull()
+    expect(marketRow.attributes('role'), '...and no unnamed group role either').toBeUndefined()
+    market.unmount()
   })
 })

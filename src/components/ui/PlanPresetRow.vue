@@ -27,11 +27,27 @@
 // which is the correct keyboard shape for a group of toggles.
 //
 // ⚠ AND IT INVENTS NO WORD (CLAUDE.md invariant 4). The labels arrive as PROPS so each host passes the
-// words it already rendered – three label sets, three orders, byte-identical per host – and the row
-// carries no name of its own. `SegmentedRow`'s other half, `groupLabel`, would need three new sentences
-// to say what each of these rows IS, and a sentence is the owner's; the row is shipped without one
-// rather than with one an agent chose. `tests/component/principles-w4-preset-parity.test.ts` asserts
-// both halves: every label byte-identical, and no name here.
+// words it already rendered – three label sets, three orders, byte-identical per host.
+//
+// ⚠⚠ THE GROUP'S NAME IS `aria-labelledby` AND NOT `groupLabel`, AND THE DIFFERENCE IS THE WHOLE POINT.
+// `SegmentedRow`'s half at `:101-102` is `role="group"` plus `:aria-label="groupLabel"` – a STRING the
+// caller types. Taking that here would mean re-typing copy that is already on the screen into a second
+// place, which is the exact duplication this component exists to remove, and for two of the three hosts
+// it would mean authoring a sentence that does not exist anywhere. So the name is a REFERENCE to a node
+// the host already renders: no word is written, the name IS the visible heading, and the two cannot
+// drift. What reaches a reader is the same sentence on a second surface, the shape this wave has been
+// treating as free all along.
+//
+// ⚠ AND ONLY ONE HOST CAN PAY FOR IT TODAY, measured rather than assumed:
+//   * `ThisWeekScreen` has a visible `<h2>Training plan</h2>` immediately above its row – it passes
+//     that heading's id and the group is named out of shipped copy.
+//   * `HerWeekTab` has only a CODE COMMENT above its row («1a. THE PRESETS») and `CoachMarketScreen`
+//     only «THE TRAINING REGULATOR». A comment is not player copy, and putting a comment's words on a
+//     screen for a reader to speak is authoring copy – the owner's, never a builder's. Those two pass
+//     nothing, deliberately, and render no `role="group"` at all rather than an unnamed one (a group
+//     with no name announces a boundary and says nothing about it). The absence is ASSERTED in
+//     `tests/component/principles-w4-preset-parity.test.ts` so it cannot be quietly filled by a later
+//     wave inventing a phrase, and cannot be read as an oversight either. It waits on his words.
 //
 // ⚠ NO ELEMENT WAS ADDED. Root `.option-row`, three `.option-pill` buttons, one text node each – the
 // shipped markup, so no host's block is taller than it was and the popup law has nothing new to
@@ -46,13 +62,21 @@ defineProps<{
   /** `presetOf(week)`'s answer – the engine's, never a predicate of this component's own. */
   active: PlanPresetKey | null
   disabled?: boolean
+  /** The id of a heading the HOST ALREADY RENDERS, which becomes the group's accessible name.
+   *
+   *  ⚠ AN ID, NEVER A STRING – see the note above. Pass this only where the words are already on the
+   *  screen; a host with nothing visible to point at passes nothing and stays unnamed until the owner
+   *  gives it words. Two of the three do today, on purpose. */
+  labelledBy?: string
 }>()
 
 const emit = defineEmits<{ pick: [key: PlanPresetKey] }>()
 </script>
 
 <template>
-  <div class="option-row">
+  <!-- ⚠ `role="group"` ARRIVES WITH THE NAME AND NOT BEFORE IT: an unnamed group announces a boundary
+       and then says nothing about it, which is worse than no role at all. -->
+  <div class="option-row" :role="labelledBy ? 'group' : undefined" :aria-labelledby="labelledBy">
     <button
       v-for="o in options"
       :key="o.value"

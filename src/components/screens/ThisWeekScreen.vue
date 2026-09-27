@@ -362,8 +362,14 @@ const spendRange = computed<[number, number]>(() => {
          its presets, its plan line and its spend row untouched – and it is not on a screen whose
          subject is a tournament that has not been played yet. -->
     <section v-if="!tournamentOnly">
-      <h2>Training plan</h2>
+      <!-- ⚠ THE ID IS THE PRESET ROW'S ACCESSIBLE NAME AND NO WORD IS NEW (E-02, 27.09). The heading
+           was already here and already read «Training plan»; `aria-labelledby` below points a screen
+           reader at THIS node, so the group is named out of shipped copy and the two cannot drift. It
+           is the only one of the three preset rows that can be named for free – the other two have a
+           code comment above them and nothing visible, so they stay unnamed until the owner rules. -->
+      <h2 id="this-week-plan-title">Training plan</h2>
       <PlanPresetRow
+        labelled-by="this-week-plan-title"
         style="margin-top: 10px"
         :options="PRESET_OPTIONS"
         :active="activePreset"
