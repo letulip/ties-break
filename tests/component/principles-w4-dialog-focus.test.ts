@@ -22,19 +22,32 @@
 // that take that guarantee away, and they were run rather than reasoned about (full outputs in the
 // wave's report):
 //
-//   ARM A · the card lengthened to its longest content with `.dialog-card`'s cap and scroller killed
-//           by an injected `!important` override (the TEST layer – `src/` untouched), which is the
-//           shipped round-20 defect: RED, «the dismiss control sits at y=-119..-75, outside the
-//           viewport». The same mount with the shipped rules back is green at y=439..483.
-//   ARM B · the same override with the SHIPPED note: RED on the other sentence, «the card declares no
-//           height bound that fits», which is the half that keeps holding after the next paragraph is
-//           added.
-//   ARM C · the cap LEFT ALONE and the note's paragraph repeated BELOW `.dialog-actions` in
-//           MatchViewer's own template – content growing UNDER the way out, which no cap can help
-//           with: RED, «the dismiss control sits at y=-166..-122, outside the viewport». This is the
-//           arm that proves the net measures the CONTROL and not merely the declaration.
-//   ARM D · `useDialogFocus` removed from each of the three surfaces in turn → that surface's focus
-//           and containment cases go red.
+//   ARM A · THE CARD LENGTHENED UNTIL THE WAY OUT LEAVES THE SCREEN, WITH THE SHARED CAP UNTOUCHED.
+//           The note's paragraph repeated SIX TIMES BELOW `.dialog-actions` in MatchViewer's own
+//           template – content growing UNDER the way out, which is the one lengthening a `max-height`
+//           cannot rescue, because `tailBelow` is what puts the control on the screen. RED:
+//             «card 320x635 (content wants at least 1201, cap 635, card scrolls) – the dismiss
+//              control sits at y=-322..-284, outside the viewport»
+//           The shipped card at the same viewport is green at y=420..458 with the longest note and
+//           y=347..386 with none (the case prints both). Three repeats instead of six is still GREEN at
+//           y=137..175, which is what «until the control leaves the viewport» means as a number: the
+//           arm was grown until it did.
+//   ARM B · the round-20 defect itself – `.dialog-card`'s `max-height`/`overflow-y` killed by an
+//           injected `!important` override (the TEST layer, so `src/` is untouched). RED on the
+//           content-independent sentence, which is the half that keeps holding after the next honest
+//           paragraph is added:
+//             «cap NONE, card does NOT scroll, 635px of room – the card declares no height bound that
+//              fits, so its height is whatever its content happens to be»
+//           ⚠ It reddens on the FIRST of the case's two mounts, so this arm can never also produce the
+//           y-coordinate sentence; ARM A is the one that does, and it does it with the cap in place,
+//           which is strictly the harder claim.
+//   ARM C · `useDialogFocus` removed from each of the three surfaces in turn → 2 red on that surface
+//           and that surface only: its focus case and its containment case, on all three.
+//   ⚠⚠ AND ONE ARM THAT CAUGHT THE TEST RATHER THAN THE CODE, which is why `pressTab` takes a ring
+//   with a decoy at EACH END. Handed the card's own controls alone, the emulated step off the last one
+//   lands on `undefined`, focus stays put, and `card.contains(...)` passed with the trap REMOVED – on
+//   all three surfaces. The first run of ARM C reddened 1 case where it should have reddened 2, and
+//   that discrepancy is what found it.
 //
 // ⚠ THE ORDER IS ALWAYS `setViewport` -> mount -> read (fits.ts's own note beside `TABLET`): happy-dom
 // evaluates a media query on an element's first computed-style read and caches it.
@@ -173,15 +186,22 @@ function endedCareer(seed: string): Snapshot {
 }
 
 /** One Tab press: the trap's half is the REAL document listener, the platform's half (stepping to the
- *  next control when nobody called `preventDefault`) is emulated, because happy-dom has no sequential
- *  focus navigation. r2-07-dialog-shell.test.ts's helper, verbatim in shape. */
-function pressTab(items: HTMLElement[], shift = false): void {
+ *  next thing in the document's tab order when nobody called `preventDefault`) is emulated, because
+ *  happy-dom has no sequential focus navigation at all. r2-07-dialog-shell.test.ts's helper in shape.
+ *
+ *  ⚠⚠ THE RING INCLUDES THE CONTROLS OUTSIDE THE CARD, AND THAT WAS FOUND BY MUTATING RATHER THAN
+ *  REASONED ABOUT. Handed the card's own controls alone, the emulated step off the LAST one lands on
+ *  `undefined` and focus simply stays where it was – inside the card – so `card.contains(...)` passed
+ *  with the trap REMOVED, on all three surfaces. A walk that cannot leave the ring cannot discriminate.
+ *  With a decoy at each end the platform's half can do what a browser does, and the only thing that
+ *  keeps focus inside is the trap. */
+function pressTab(ring: HTMLElement[], shift = false): void {
   const before = document.activeElement as HTMLElement | null
   const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: shift, bubbles: true, cancelable: true })
   ;(before ?? document.body).dispatchEvent(event)
   if (event.defaultPrevented) return
-  const i = before ? items.indexOf(before) : -1
-  items[i + (shift ? -1 : 1)]?.focus()
+  const i = before ? ring.indexOf(before) : -1
+  ring[i + (shift ? -1 : 1)]?.focus()
 }
 
 function controlsIn(card: Element): HTMLElement[] {
@@ -190,11 +210,23 @@ function controlsIn(card: Element): HTMLElement[] {
 
 /** A control OUTSIDE the card, which is the thing `aria-modal` promises a screen reader is not there.
  *  The whole point of the trap is that Tab cannot land on it. */
-function decoyOutside(): HTMLButtonElement {
+function decoyOutside(where: 'before' | 'after'): HTMLButtonElement {
   const decoy = document.createElement('button')
-  decoy.textContent = 'behind the scrim'
-  document.body.appendChild(decoy)
+  decoy.textContent = `behind the scrim (${where})`
+  if (where === 'before') document.body.prepend(decoy)
+  else document.body.appendChild(decoy)
+  decoys.push(decoy)
   return decoy
+}
+
+/** The document's tab order as this test models it: a control behind the scrim, the card's own
+ *  controls, and another control behind the scrim. See `pressTab` for why both ends are needed. */
+function tabRing(card: Element): { ring: HTMLElement[]; items: HTMLElement[]; before: HTMLButtonElement; after: HTMLButtonElement } {
+  const before = decoyOutside('before')
+  const after = decoyOutside('after')
+  const items = controlsIn(card)
+  expect(items.length, 'a card with no control has nothing to trap – this assertion would be vacuous').toBeGreaterThan(0)
+  return { ring: [before, ...items, after], items, before, after }
 }
 
 let wrappers: VueWrapper[] = []
@@ -229,8 +261,7 @@ afterEach(() => {
 describe('E-08 · EndingScreen – the takeover holds the keyboard it told a screen reader to trust', () => {
   it('⭐⭐ it is still the same modal, and focus is INSIDE it the moment it is drawn', async () => {
     useGameStore().snapshot = endedCareer('e08-ending-focus')
-    const before = decoyOutside()
-    decoys.push(before)
+    const before = decoyOutside('before')
     before.focus()
 
     const wrapper = track(mount(EndingScreen, { attachTo: document.body }))
@@ -253,27 +284,24 @@ describe('E-08 · EndingScreen – the takeover holds the keyboard it told a scr
     const wrapper = track(mount(EndingScreen, { attachTo: document.body }))
     await nextTick()
     const card = wrapper.find('.ending').element
-    const outside = decoyOutside()
-    decoys.push(outside)
+    const { ring, items, after } = tabRing(card)
 
-    const items = controlsIn(card)
-    expect(items.length, 'a takeover with no controls has no way forward at all').toBeGreaterThan(0)
-
-    // Forwards from the last control wraps to the first rather than reaching the page behind.
+    // Forwards off the LAST control wraps to the first rather than reaching the shell behind.
     items[items.length - 1].focus()
-    pressTab(items)
+    pressTab(ring)
     expect(card.contains(document.activeElement), 'Tab left the epilogue for the shell behind it').toBe(true)
 
     // ...and backwards, which a one-directional trap gets wrong.
     items[0].focus()
-    pressTab(items, true)
+    pressTab(ring, true)
     expect(card.contains(document.activeElement), 'Shift+Tab left the epilogue').toBe(true)
 
-    // ...and a press that arrives while something else already has focus pulls it back, which is the
-    // one press the document-level capture exists for.
-    outside.focus()
-    pressTab(items)
-    expect(card.contains(document.activeElement), 'focus stayed on a control a modal hid').toBe(true)
+    // ...and a press that arrives while something else ALREADY has focus pulls it back, which is the
+    // one press `dialogFocus.ts` listens on the document in capture mode for. ⚠ No platform half here
+    // on purpose: emulating a step would move focus into the card by itself and prove nothing.
+    after.focus()
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+    expect(card.contains(document.activeElement), 'focus stayed on a control a modal had hidden').toBe(true)
   })
 
   it('⚠⚠ ESCAPE IS NOT A WAY OUT – the career is over and the footer owns the ways forward', async () => {
@@ -309,14 +337,17 @@ describe('E-08 · MatchViewer `.mv-hurt` – announced, contained, and inside a 
   it('⭐⭐ Tab is contained, and Escape is the keyboard spelling of the backdrop tap it already had', async () => {
     const wrapper = track(await mountHurt())
     const card = wrapper.find('.mv-hurt').element
-    const outside = decoyOutside()
-    decoys.push(outside)
+    const { ring, items, after } = tabRing(card)
 
-    const items = controlsIn(card)
-    expect(items.length, 'the card has no control at all').toBeGreaterThan(0)
-    outside.focus()
-    pressTab(items)
+    // Off the last control, forwards – the decoy is where a browser would go.
+    items[items.length - 1].focus()
+    pressTab(ring)
     expect(card.contains(document.activeElement), 'Tab reached the match behind the scrim').toBe(true)
+
+    // ...and the press that arrives from outside, with no platform half emulated.
+    after.focus()
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+    expect(card.contains(document.activeElement), 'focus stayed behind the scrim').toBe(true)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     await nextTick()
@@ -398,14 +429,15 @@ describe('E-08 · TierGuide – the last roleless overlay takes its sibling\'s f
   it('⭐⭐ Tab is contained, and Escape closes it the way the backdrop already did', async () => {
     const wrapper = mountGuide()
     const card = wrapper.find('.guide-card').element
-    const outside = decoyOutside()
-    decoys.push(outside)
+    const { ring, items, after } = tabRing(card)
 
-    const items = controlsIn(card)
-    expect(items.length, 'the guide has no control at all').toBeGreaterThan(0)
-    outside.focus()
-    pressTab(items)
+    items[items.length - 1].focus()
+    pressTab(ring)
     expect(card.contains(document.activeElement), 'Tab left the guide for the screen behind it').toBe(true)
+
+    after.focus()
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+    expect(card.contains(document.activeElement), 'focus stayed on the screen behind the scrim').toBe(true)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     await nextTick()
