@@ -37,6 +37,7 @@ import {
 import { NATIONAL_TEAM, binomial, callUpLine, callUpOpponent, rollCallUp, rubberWinChance } from '../src/engine/nationalTeam'
 import { KID_ID, callUpRubberId, callUpRubbersOf } from '../src/engine/world'
 import { simulateMatch } from '../src/engine/match/engine'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { STOP_PRECEDENCE } from '../src/shared/protocol'
 import { rngFromSeed, initMainState } from '../src/engine/rng'
@@ -494,7 +495,10 @@ describe('⭐⭐⭐ the college competition is played', () => {
     const all = world.college!.years.flatMap((y) => (y.callUp ? callUpRubbersOf(world, y.callUp.week) : []))
     expect(all.length).toBeGreaterThan(0)
     for (const m of all) {
-      const again = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 (C-04): `replayMatch` IS what `MatchReplay` and `PracticeFlow` call, so the
+      // sentence above – «both re-run simulateMatch(a, b, {surface, tour, seed})» – is now the code
+      // rather than a description of two copies that happen to agree.
+      const again = replayMatch(m).result
       expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), 'byte-for-byte, off the stored seed').toBe(m.score)
       expect(again.winner === 0 ? KID_ID : m.bId).toBe(m.winnerId)
     }

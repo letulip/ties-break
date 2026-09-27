@@ -19,8 +19,7 @@ import {
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
-import { simulateMatch } from '../src/engine/match/engine'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import type { SeasonEvent } from '../src/engine/season/types'
 import type { SeasonResult } from '../src/engine/season/ranking'
 
@@ -278,7 +277,10 @@ describe('a tournament week the kid entered', () => {
       expect(m).toBeTruthy()
       expect(m.seed).toBeTruthy()
       expect([m.aId, m.bId]).toContain(KID_ID)
-      const replay = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04): this line used to spell
+      // `{ surface, tour: JUNIOR_TOUR, seed }` itself and therefore proved that THIS FILE reproduces
+      // the engine, not that the replay surfaces do. `replayMatch` is what they call.
+      const replay = replayMatch(m).result
       const winnerId = replay.winner === 0 ? m.aId : m.bId
       expect(winnerId).toBe(m.winnerId)
       expect(replay.sets.map((s) => `${s.a}-${s.b}`).join(' ')).toBe(m.score)

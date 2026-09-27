@@ -52,8 +52,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain, type Rng } from '../src/engine/rng'
-import { simulateMatch } from '../src/engine/match/engine'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING } from '../src/engine/nationalTeam'
 import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
 import { ENDINGS } from '../src/engine/ending'
@@ -378,7 +377,12 @@ describe('#6 the tie is played through the ordinary tournament flow', () => {
           // no seed is a replay button with nothing behind it, which is the failure this case exists
           // to catch, and `?? ''` would have replayed a different match and called it a match.
           expect(m.seed, `rubber ${m.eventId} carries its seed`).toBeTruthy()
-          const again = simulateMatch(m.a!, m.b!, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+          // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04). This line spelled
+          // `{ surface, tour: JUNIOR_TOUR, seed }` itself, so it proved that THIS FILE's spelling
+          // reproduces the engine – not that the four replay surfaces' does. `replayMatch` is the
+          // function `MatchReplay` and its three siblings call, and its options are the ones the
+          // recorder built with, so the claim now covers the path a player actually walks.
+          const again = replayMatch({ surface: m.surface, seed: m.seed, a: m.a!, b: m.b! }).result
           expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), `rubber ${m.eventId}`).toBe(m.score)
           replayed++
         }

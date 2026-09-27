@@ -18,14 +18,12 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import MatchViewer from '../../src/components/MatchViewer.vue'
-import { simulateMatch } from '../../src/engine/match/engine'
-import { annotateMatch } from '../../src/engine/match/rally'
-import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
+import { replayMatch } from '../../src/composables/annotatedMatch'
 import { expectedServeSpeed, LEGACY_SNAPSHOT_AGE } from '../../src/engine/match/serveSpeed'
 import { KID_ID } from '../../src/engine/world'
 import { LOCAL_POOL, playLocalOpen, type LocalOpen } from '../../src/prologue/pool'
 import { SKILL_KEYS, STARTING_SKILL_BAND } from '../../src/engine/development'
-import type { MatchOptions, MatchPlayer } from '../../src/engine/match/types'
+import type { MatchPlayer } from '../../src/engine/match/types'
 
 const SKIP_LABEL = 'Skip to the result'
 
@@ -49,8 +47,7 @@ function firstRound(seed = 'prologue-open'): {
   open: LocalOpen
   a: MatchPlayer
   b: MatchPlayer
-  match: ReturnType<typeof annotateMatch>
-  opts: MatchOptions
+  match: ReturnType<typeof replayMatch>
 } {
   const kid = her()
   const open = playLocalOpen(seed, kid, 10)
@@ -61,8 +58,10 @@ function firstRound(seed = 'prologue-open'): {
   expect(opponent, 'her opponent is not a child from the pool').toBeTruthy()
   const a = record!.aId === KID_ID ? kid : opponent!
   const b = record!.aId === KID_ID ? opponent! : kid
-  const opts: MatchOptions = { surface: open.event.surface, tour: JUNIOR_TOUR, seed: record!.seed! }
-  return { open, a, b, match: annotateMatch(simulateMatch(a, b, opts), a, b, opts), opts }
+  // ⚠ RE-AIMED 27.09 AT THE ONE RECIPE (C-04 / F-08). The sentence above – «the same simulateMatch +
+  // annotateMatch recipe every other viewer surface already uses» – was a claim about copies; it is
+  // `replayMatch` now, the function `PrologueLocalOpen` itself calls. The unused `opts` went with it.
+  return { open, a, b, match: replayMatch({ surface: open.event.surface, seed: record!.seed, a, b }) }
 }
 
 function mountOpen(seed?: string) {

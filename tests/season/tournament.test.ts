@@ -7,13 +7,12 @@ import {
   isEntrantBand,
   topBandForPercentile,
   weekFieldExclusion,
-  JUNIOR_TOUR,
 } from '../../src/engine/season/tournament'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from '../../src/engine/season/calendar'
 import { fieldProsFor, mergedWtaRanking, universeForTier } from '../../src/engine/season/fieldPros'
 import { generateCohort } from '../../src/engine/season/cohort'
 import { rngFromSeed } from '../../src/engine/rng'
-import { simulateMatch } from '../../src/engine/match/engine'
+import { replayMatch } from '../../src/composables/annotatedMatch'
 import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../../src/engine/season/types'
 import type { MatchPlayer, Surface } from '../../src/engine/match/types'
 import { rivalGroundstrokes } from '../../src/engine/season/rival'
@@ -210,7 +209,9 @@ describe('runTournament — the kid enters', () => {
       expect(m.score).toBeTruthy()
       const a = lookup(m.aId)
       const b = lookup(m.bId)
-      const replay = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04). A bracket record carries no surface –
+      // the EVENT does – which is why `recordedMatchOptions` takes the two fields rather than the row.
+      const replay = replayMatch({ surface: event.surface, seed: m.seed, a, b }).result
       const replayWinner = replay.winner === 0 ? m.aId : m.bId
       expect(replayWinner).toBe(m.winnerId)
       expect(replay.sets.map((s) => `${s.a}-${s.b}`).join(' ')).toBe(m.score)

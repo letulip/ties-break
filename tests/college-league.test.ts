@@ -64,8 +64,7 @@ import {
 } from '../src/engine/collegeLeague'
 import { NATIONAL_TEAM, callChanceFor, rollCallUp } from '../src/engine/nationalTeam'
 import { migrateSave } from '../src/engine/migrations'
-import { simulateMatch } from '../src/engine/match/engine'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { COLLEGE_TIER_ORDER } from '../src/engine/collegeOffer'
 import { fullRanking } from '../src/engine/world/ladder'
 import { rngFromSeed, resumeMain, initMainState, type Rng } from '../src/engine/rng'
@@ -450,7 +449,12 @@ describe('the championship is watchable', () => {
           // the type (old rows have none) and a record without one cannot be replayed at all – a
           // `?? ''` here would have quietly re-run a DIFFERENT match and compared it to nothing.
           expect(m.seed, `${m.eventId}: a record with no seed is a Watch button that opens on air`).toBeTruthy()
-          const again = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+          // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04). This line spelled
+          // `{ surface, tour: JUNIOR_TOUR, seed }` itself, so it proved that THIS FILE's spelling
+          // reproduces the engine – not that the four replay surfaces' does. `replayMatch` is the
+          // function `MatchReplay` and its three siblings call, and its options are the ones the
+          // recorder built with, so the claim now covers the path a player actually walks.
+          const again = replayMatch(m).result
           expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), m.eventId).toBe(m.score ?? '')
           expect(again.winner === 0 ? KID_ID : m.bId).toBe(m.winnerId)
           checked += 1
