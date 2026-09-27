@@ -45,10 +45,14 @@
 // family cut for cost keeps all its pieces out of the bulk pool – was kept by hand and was already
 // broken. The new describe is at the bottom of this file; the rule it reads is declared beside the
 // list it guards (`HEAVY_UNIT_FAMILIES`), not here, so a future cut declares its family in one place.
+//
+// ⚠ 27.09 (T5.3 · H-06) – AND A THIRD, about the one number a test file can write that silently
+// defeats the pool it runs in: a per-test budget above birpc's window. Same shape again – the rule is
+// `vite.config.ts`'s own `testTimeout`, this file only enforces it. The new describe is at the bottom.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { HEAVY_UNIT_FAMILIES, HEAVY_UNIT_FILES } from '../scripts/heavy-tests.mjs'
+import { HEAVY_UNIT_FAMILIES, HEAVY_UNIT_FILES, HEAVY_SIM_FILES } from '../scripts/heavy-tests.mjs'
 
 const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8')) as {
   scripts: Record<string, string>
@@ -242,5 +246,189 @@ describe('the heavy unit pool takes whole families', () => {
       'these globs no longer describe a family: either a cut was renamed out from under them, or ' +
         'the family shrank back to one file and the glob should go with it',
     ).toEqual([])
+  })
+})
+
+// =================================================================================================
+// A GATE ON THE PER-TEST BUDGET – T5.3 · H-06 (27.09).
+//
+// ⚠⚠ WHY A NUMBER IN A TEST FILE CAN DEFEAT THE POOL IT RUNS IN. `vite.config.ts`'s unit project sets
+// `testTimeout: 60_000` and states the reason at the declaration: birpc's own RPC window is a hard,
+// unraisable 60 s, so a per-test budget ABOVE it can never actually be spent by a test. What it does
+// instead is convert a readable «Test timed out in 60000ms» into an opaque
+// `Timeout calling "onTaskUpdate"` stall with EVERY TEST GREEN – the signature `scripts/lib/stall.mjs`
+// retries and CLAUDE.md spends a paragraph on, and the one the coach-travel-edge family has produced
+// on the runner five times. So the override buys nothing and hides the thing it looks like it is
+// protecting against. A test that genuinely needs longer belongs in the heavy pool (H-05) or needs a
+// cut; it does not need a bigger number.
+//
+// ⚠ A HOOK IS NOT BOUND BY THE WINDOW AND KEEPS ITS OWN BUDGET. `beforeAll` is not reported per test,
+// so it never crosses an RPC boundary the way a test does. `tests/round34-reachable-ceiling.test.ts:505`
+// is the case in the corpus – 120 s, deliberately, with its own dated note recording the 16.58 s idle
+// measurement and the above-3.1x two-core factor behind it. This gate therefore classifies every budget
+// it finds as test-level or hook-level and rules only on the first kind. Getting that wrong in the
+// permissive direction would let a real override through; getting it wrong in the strict direction
+// would redden a legitimately slow hook. Both branches are covered by the fixture case below.
+//
+// ⚠⚠ THE 78 CLAMPS THIS GATE LOCKS IN, AND THE MEASUREMENT UNDER THEM – because a clamp without one is
+// a policy, and a policy that reddens a legitimately slow file on a contended runner has replaced a
+// documented number with a flake. 78 test-level budgets in 31 bulk-pool files, from 90 s to 900 s, came
+// down to 60 s on 27.09. All 31 were run at once in the real bulk pool first (ten cores shared, 1-min
+// load 2.12 at the start, JSON reporter, per-test durations): the SLOWEST TEST IN THE WHOLE SET IS
+// 16.00 s (`coach-load`), second 14.44 s (`plan`), third 9.35 s (`ending`), and 25 of the 31 are under
+// 5 s. The two slowest were then read SOLO, twice, on a quiet machine (1-min load 2.21-2.58):
+// coach-load 8.89 / 9.23 s, plan 8.18 / 8.25 s – so this machine's bulk pool costs about 1.75x.
+//
+// The headroom is stated at the STRICTEST factor on record rather than the friendliest: round34's note
+// measured the two-core shared pool at ABOVE 3.1x an idle ten-core reading. 9.23 s x 3.1 = 28.6 s,
+// which leaves the worst file in the set 31 s of margin (2.1x) under the ceiling; every other file is
+// under 9.35 s in the pool and so under 29 s on the runner. Nothing in the set needed promoting, so
+// `scripts/heavy-tests.mjs` was not touched.
+//
+// ⚠ MUTATION-VERIFIED (27.09), and both arms are quoted in the T5.3 report: restoring ONE real budget
+// (`tests/coach-load.test.ts`, 60_000 -> 240_000) reddens the corpus case naming that file and line.
+//
+// ⚠ THE PARSER IS TESTED ON A FIXTURE, NOT ONLY ON THE CORPUS, and that is deliberate. A corpus check
+// alone is vacuous the moment the parser stops matching – it would find zero budgets and pass – which
+// is the same hole the sim rules above spent nineteen days in. So the fixture states known inputs with
+// known answers, and the corpus case then uses a parser the fixture has proven.
+
+/** The project's own ceiling for a per-TEST budget, from `vite.config.ts`'s unit project. */
+const TEST_BUDGET_CEILING_MS = 60_000
+
+/** The four textual forms a budget is written in here, as the corpus actually writes them:
+ *  `vi.setConfig({ testTimeout: N })`, `hookTimeout: N`, an `it(..., { timeout: N }, fn)` option, and
+ *  the trailing positional `}, N)`. */
+const BUDGET = /(testTimeout|hookTimeout|timeout)\s*:\s*([0-9_]+)|\},\s*([0-9_]{5,})\s*\)/g
+const HOOK_NAME = /\b(beforeAll|afterAll|beforeEach|afterEach)\b/
+
+interface Budget {
+  line: number
+  ms: number
+  /** `test` is bound by birpc's window; `hook` is not. */
+  kind: 'test' | 'hook'
+}
+
+/**
+ * Every budget declaration in `source`, with the line it sits on and whether it binds a test or a hook.
+ *
+ * ⚠ THE CLASSIFIER WALKS BACKWARDS AND STOPS AT THE FIRST OPENER IT MEETS. A trailing `}, N)` belongs
+ * to whichever call it closes, and the cheap way to know which is to look up for `it(` / `test(` (stop:
+ * a test budget) or a hook call (stop: a hook budget). `testTimeout` and `hookTimeout` name themselves
+ * and need no walk. The 80-line reach is above the longest case in the corpus; a case longer than that
+ * reads as a test, which is the strict direction and the safe one for a ceiling.
+ */
+function budgetsIn(source: string): Budget[] {
+  const lines = source.split('\n')
+  const found: Budget[] = []
+  for (let i = 0; i < lines.length; i++) {
+    for (const m of lines[i].matchAll(BUDGET)) {
+      const ms = Number((m[2] || m[3]).replace(/_/g, ''))
+      if (m[1] === 'hookTimeout') {
+        found.push({ line: i + 1, ms, kind: 'hook' })
+        continue
+      }
+      if (m[1] === 'testTimeout') {
+        found.push({ line: i + 1, ms, kind: 'test' })
+        continue
+      }
+      let kind: Budget['kind'] = 'test'
+      for (let j = i; j >= Math.max(0, i - 80); j--) {
+        if (/^\s*(it|test)\s*\(|^\s*(it|test)\.\w+\s*\(/.test(lines[j])) break
+        if (HOOK_NAME.test(lines[j]) && /\(\s*(async\s*)?\(/.test(lines[j])) {
+          kind = 'hook'
+          break
+        }
+      }
+      found.push({ line: i + 1, ms, kind })
+    }
+  }
+  return found
+}
+
+/** The unit files that share the bulk pool: not heavy, and – `readdirSync` being non-recursive – never
+ *  a mounted `tests/component/` test. The DIRECTORY and not a list, for H-03's reason: what runs is
+ *  what is on disk. */
+function bulkPoolUnitFiles(): string[] {
+  const heavy = new Set([...HEAVY_UNIT_FILES, ...HEAVY_SIM_FILES].map((f) => f.replace(/^\.\//, '')))
+  return readdirSync(fileURLToPath(new URL('../tests/', import.meta.url)))
+    .filter((f) => f.endsWith('.test.ts'))
+    .map((f) => `tests/${f}`)
+    .filter((f) => !heavy.has(f))
+    .sort()
+}
+
+const budgetsOf = (path: string): Budget[] =>
+  budgetsIn(readFileSync(fileURLToPath(new URL(`../${path}`, import.meta.url)), 'utf8'))
+
+describe('no bulk-pool test declares a budget above birpc’s window', () => {
+  it('the parser reads all four forms and tells a test budget from a hook budget', () => {
+    // ⚠ KNOWN INPUTS, KNOWN ANSWERS – so the corpus case below cannot pass by finding nothing.
+    //
+    // ⚠⚠ EVERY NUMBER IS INTERPOLATED, AND THE FIRST RUN OF THIS GATE IS WHY. Written as plain
+    // literals these twelve lines ARE budget declarations in this file's own source, and this file is
+    // itself a bulk-pool unit file – so the corpus case read its own fixture and went red naming three
+    // «violations» at these very lines. Excluding this file from the sweep would have fixed the symptom
+    // and opened a hole: nobody could then park a 900 s budget here. Interpolating keeps the file under
+    // its own rule instead. A `$` after the colon means the parser does not match the SOURCE, while the
+    // string it is HANDED still reads the budget, and the assertion is on the parsed result – so
+    // nothing about the test is weakened.
+    const fixture = [
+      `vi.setConfig({ testTimeout: ${300_000} })`, //  1 – test, names itself
+      `vi.setConfig({ hookTimeout: ${300_000} })`, //  2 – hook, names itself
+      `it('a', { timeout: ${900_000} }, () => {`, //   3 – test, an option object
+      `})`,
+      `it('b', () => {`, //                            5
+      `  expect(1).toBe(1)`,
+      `}, ${240_000})`, //                             7 – test, trailing positional
+      `beforeAll(() => {`, //                          8
+      `  build()`,
+      `}, ${120_000})`, //                            10 – HOOK, trailing positional
+      `it('c', () => {`, //                            11
+      `}, ${30_000})`, //                             12 – test, under the ceiling
+    ].join('\n')
+    expect(budgetsIn(fixture), 'every form, with its line and its kind').toEqual([
+      { line: 1, ms: 300_000, kind: 'test' },
+      { line: 2, ms: 300_000, kind: 'hook' },
+      { line: 3, ms: 900_000, kind: 'test' },
+      { line: 7, ms: 240_000, kind: 'test' },
+      { line: 10, ms: 120_000, kind: 'hook' },
+      { line: 12, ms: 30_000, kind: 'test' },
+    ])
+  })
+
+  it('⭐⭐⭐ no bulk-pool file declares a per-TEST budget over the ceiling', () => {
+    const over = bulkPoolUnitFiles().flatMap((path) =>
+      budgetsOf(path)
+        .filter((b) => b.kind === 'test' && b.ms > TEST_BUDGET_CEILING_MS)
+        .map((b) => `${path}:${b.line}  ${b.ms / 1000} s`),
+    )
+    expect(
+      over,
+      `these declare a per-test budget above ${TEST_BUDGET_CEILING_MS / 1000} s, which birpc's window ` +
+        'means no test can ever spend: it only turns a readable timeout into an opaque ' +
+        '`Timeout calling "onTaskUpdate"` stall with every test green. Lower it to the ceiling and, if ' +
+        'the test really needs longer, promote the file in scripts/heavy-tests.mjs or cut it – with a ' +
+        'measurement, the way T5.3 did',
+    ).toEqual([])
+  })
+
+  it('⚠ ...and the sweep really read the corpus – a parser that matched nothing would pass above', () => {
+    // ⚠⚠ THE ANTI-VACUOUS HALF, the same one the heavy-family gate above needed. `BUDGET` failing to
+    // match would empty the case above in silence. The corpus is full of budgets AT or under the
+    // ceiling – 78 of them were clamped to exactly it on 27.09 – so their presence is the proof the
+    // sweep reads anything at all, and the hook count proves the classifier's other branch is live.
+    const all = bulkPoolUnitFiles().flatMap(budgetsOf)
+    expect(all.length, 'no budget declarations found anywhere – the parser has rotted').toBeGreaterThan(50)
+    expect(
+      all.filter((b) => b.kind === 'test' && b.ms === TEST_BUDGET_CEILING_MS).length,
+      'no test budget sits AT the ceiling, so either the clamps were reverted or the parser stopped ' +
+        'reading the form they are written in',
+    ).toBeGreaterThan(50)
+    expect(
+      all.filter((b) => b.kind === 'hook').length,
+      'the classifier never returns `hook`, so its hook branch is dead and a real hook budget would be ' +
+        'judged as a test budget – round34-reachable-ceiling.test.ts:505 is the case that must hit it',
+    ).toBeGreaterThan(0)
   })
 })
