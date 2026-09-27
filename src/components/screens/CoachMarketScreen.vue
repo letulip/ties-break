@@ -48,6 +48,7 @@ import SupportStaffTab from '../SupportStaffTab.vue'
 import IconButton from '../ui/IconButton.vue'
 import StoreError from '../ui/StoreError.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
+import PlanPresetRow from '../ui/PlanPresetRow.vue'
 // ⭐⭐⭐ ROUND 42 #52 / ROUND 44 – THE CHEMISTRY MARKER. The gauge is the SHIPPED ring at the size the
 // owner himself named in round 41 #28, and the mark above it is the icon he handed over, served
 // through the app's one file-icon door so it takes `--accent` from the caller and nothing else.
@@ -55,6 +56,7 @@ import AppIcon from '../ui/AppIcon.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
+import { planWeek, presetOf } from '../../engine/plan'
 // ⭐ ROUND-23 #5 / #1 – TWO PURE LOOKUPS, in the same register as `COACH_TIER_LABEL` above and for the
 // same reason: they are label tables keyed on data the row already carries, not decisions. `coachBlurb`
 // maps a portrait stem to that coach's own description and `coachRoomBand` is the one splitter the engine
@@ -241,11 +243,21 @@ function cycleStyle(): void {
 const PLAN_ORDER = ['light', 'balanced', 'grind'] as const
 const planLabel = (k: (typeof PLAN_ORDER)[number]) =>
   `${k[0].toUpperCase()}${k.slice(1)} ${coachHoursForPlan(WEEK_PLAN_PRESETS[k])}/wk`
+/** ⚠ THE WORDS THIS SCREEN ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). `planLabel` above is
+ *  untouched, so every pill reads exactly what it read – this row's labels are its own and not the
+ *  dials tab's, which is what «labels as props» buys. */
+const PLAN_OPTIONS = PLAN_ORDER.map((value) => ({ value, label: planLabel(value) }))
+/** ⚠ WHICH PRESET IS HERS IS THE ENGINE'S ANSWER SINCE E-02 (ruling 7a, 26.09). This compared
+ *  `plan.train` alone – and `planShapeError` admits only 4..6 sessions while `planTrainPct` maps 4/5/6
+ *  onto exactly the three presets' `train`, so EVERY legal hand-arranged week lit a pill here while the
+ *  dials tab six pixels away lit none. `presetOf` carries the dials tab's rule, which is his: the
+ *  layout is the preset's. */
 const activePlan = computed(() => {
   const p = game.snapshot?.plan
-  if (!p) return null
-  return PLAN_ORDER.find((k) => WEEK_PLAN_PRESETS[k].train === p.train) ?? null
+  return p ? presetOf(planWeek(p)) : null
 })
+/** A preset is `setPlan` in one press, and the prices come back from the ENGINE at the new plan. */
+const applyPlan = (k: (typeof PLAN_ORDER)[number]) => game.setPlan(WEEK_PLAN_PRESETS[k])
 const sessionsNow = computed(() => (game.snapshot ? coachHoursForPlan(game.snapshot.plan) : 0))
 
 // --- DOES HE COME TO TOURNAMENTS (owner, R4) ----------------------------------------------------
@@ -938,18 +950,13 @@ function scrollToTier(tier: CoachTier): void {
     </section>
 
     <!-- THE TRAINING REGULATOR. Half of every price on this screen, so it belongs on it. -->
-    <div class="option-row cm-plan">
-      <button
-        v-for="k in PLAN_ORDER"
-        :key="k"
-        class="option-pill"
-        :class="{ selected: activePlan === k }"
-        :disabled="game.busy"
-        @click="game.setPlan(WEEK_PLAN_PRESETS[k])"
-      >
-        {{ planLabel(k) }}
-      </button>
-    </div>
+    <PlanPresetRow
+      class="cm-plan"
+      :options="PLAN_OPTIONS"
+      :active="activePlan"
+      :disabled="game.busy"
+      @pick="applyPlan"
+    />
     <!-- R15-7: no pronoun names a coach on this screen. The roster puts women on every list by
          construction (COACH_FIRST_F), and "More of him costs more" was the copy guessing - on the
          one screen where the player is looking at their faces. The owner's own fix: drop it and join

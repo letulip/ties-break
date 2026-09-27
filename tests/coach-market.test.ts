@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { after, region } from './helpers/source'
+import { componentLogic } from './worldSource'
 
 // SCREEN T - COACH MARKET. Facts about a template, which is exactly the kind of fact that silently
 // rots (tests/round13-nav.test.ts states the house rule). Registration, the door and the copy rules
@@ -12,6 +13,10 @@ const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.met
 const market = read('../src/components/screens/CoachMarketScreen.vue')
 const css = read('../src/style.css')
 const tokens = read('../docs/design/tokens.css')
+/** ⚠ THE TRAINING REGULATOR'S ROW LEFT THIS FILE ON 27.09 (T4.12 / E-02) and is now one component
+ *  across three screens. POSITIVE claims about it read `componentLogic`, per CLAUDE.md's helper rule;
+ *  `market` above is the .vue alone and stays the source for this file's negatives. */
+const presetRow = componentLogic('components/ui/PlanPresetRow.vue')
 
 describe('screen T renders what the design specified', () => {
   it('groups by TIER as a section, not a filter – the chips scroll to a group', () => {
@@ -152,10 +157,17 @@ describe('screen T, round 3', () => {
     expect(market).not.toContain('width="46"')
   })
 
+  // ⚠ RE-AIMED 27.09 BY T4.12 / E-02, AND THE CLAIM GOT STRONGER RATHER THAN LOOSER. «the planner's
+  // control, not a new idiom» was pinned by this file's own template carrying `option-pill`. The three
+  // preset rows are now ONE component – `ui/PlanPresetRow.vue`, which the planner's own tab mounts too –
+  // so the pill markup legitimately left this screen, and «not a new idiom» is no longer a resemblance
+  // between two templates but the same file. Both halves are asserted: this screen mounts the shared
+  // row, and the shared row IS the pill row. The command's text is unmoved (`applyPlan`).
   it('carries the training regulator, writing through with the planner\'s own command', () => {
     // The weekly bill is `rate x hours(plan)`, so the plan is half of every price on this screen.
     expect(market).toContain('game.setPlan(WEEK_PLAN_PRESETS[k])')
-    expect(market).toContain('option-pill') // the planner's control, not a new idiom
+    expect(market).toContain('PlanPresetRow') // the planner's control, and now literally the same one
+    expect(presetRow).toContain('option-pill') // ...which is still the pill row, not a new idiom
     expect(market).toContain('coachHoursForPlan')
     // Prices come back from the ENGINE after the write - the screen must not reprice locally.
     expect(market).not.toContain('coachWeeklyCents(')

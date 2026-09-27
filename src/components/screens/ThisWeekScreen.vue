@@ -43,8 +43,10 @@ import WeekRecapCard from '../WeekRecapCard.vue'
 import NextTournamentPanel from '../NextTournamentPanel.vue'
 import IconButton from '../ui/IconButton.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
+import PlanPresetRow from '../ui/PlanPresetRow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
+import { planWeek, presetOf } from '../../engine/plan'
 
 // W1: THE × IS A CLOSE NOW. The story opens itself when a week resolves (App.vue's `week` watcher –
 // the design's «Конец недели (игровой тик) → D. Weekly Story ... × возвращает на Home»), so the
@@ -196,12 +198,21 @@ const PRESET_LABEL: Record<(typeof PRESET_ORDER)[number], string> = {
   balanced: 'Balanced 75/25',
   light: 'Light 60/40',
 }
+/** ⚠ THE WORDS THIS SCREEN ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). `PRESET_LABEL` and
+ *  `PRESET_ORDER` above are untouched – this block reads grind-first with the percentages in the label,
+ *  and the dials tab reads light-first with bare words; both keep their own. */
+const PRESET_OPTIONS = PRESET_ORDER.map((value) => ({ value, label: PRESET_LABEL[value] }))
 const plan = computed(() => game.snapshot?.plan ?? WEEK_PLAN_PRESETS.balanced)
+/** ⚠ WHICH PRESET IS HERS IS THE ENGINE'S ANSWER SINCE E-02 (ruling 7a, 26.09). This compared `train`
+ *  AND `rest`, which is the same test as comparing `train` alone because `rest = 100 - train`
+ *  (`planFromWeek`) – so every legal hand-arranged week lit a pill here too. `presetOf` carries
+ *  HerWeekTab's rule, which is his: the layout is the preset's, not the share. */
 const activePreset = computed(() => {
   const p = game.snapshot?.plan
-  if (!p) return null
-  return PRESET_ORDER.find((k) => WEEK_PLAN_PRESETS[k].train === p.train && WEEK_PLAN_PRESETS[k].rest === p.rest) ?? null
+  return p ? presetOf(planWeek(p)) : null
 })
+/** A preset is `setPlan` in one press; the spend row reprices off the engine's own answer. */
+const applyPreset = (k: (typeof PRESET_ORDER)[number]) => game.setPlan(WEEK_PLAN_PRESETS[k])
 const spendRange = computed<[number, number]>(() => {
   const snap = game.snapshot
   if (!snap) return [0, 0]
@@ -352,18 +363,13 @@ const spendRange = computed<[number, number]>(() => {
          subject is a tournament that has not been played yet. -->
     <section v-if="!tournamentOnly">
       <h2>Training plan</h2>
-      <div class="option-row" style="margin-top: 10px">
-        <button
-          v-for="p in PRESET_ORDER"
-          :key="p"
-          class="option-pill"
-          :class="{ selected: activePreset === p }"
-          :disabled="game.busy"
-          @click="game.setPlan(WEEK_PLAN_PRESETS[p])"
-        >
-          {{ PRESET_LABEL[p] }}
-        </button>
-      </div>
+      <PlanPresetRow
+        style="margin-top: 10px"
+        :options="PRESET_OPTIONS"
+        :active="activePreset"
+        :disabled="game.busy"
+        @pick="applyPreset"
+      />
       <!-- R9-8: the plan reads as unbordered plain text, ONE line, with this week's
            tournament name when one is entered (the pill frame is gone). -->
       <p class="this-week-plan">
