@@ -32,18 +32,24 @@ import App from '../../src/App.vue'
 import SplashScreen from '../../src/components/SplashScreen.vue'
 import ShootClashDialog from '../../src/components/ShootClashDialog.vue'
 import { useGameStore } from '../../src/stores/game'
+// ⚠⚠ THE FIXTURE IS THE SHARED ONE AND THE ONE-LINE BINDING NAMES THIS FILE'S OWN DIFFERENCE (26.09,
+// T5.11): `bodyPose: false`. Two of the five `clashWorld` copies – both UI ones – never posed
+// `plan`/`physioActive`/`condition`, and the other three did, so the shared builder poses by default
+// and this line says so out loud rather than letting a default decide it. `career.ts`'s own rule: each
+// file keeps a one-line binding that names its own career. All 7 call sites' world hashes are unchanged.
+import { clashWorld as sharedClash, WATCH, CLASH, AT } from '../helpers/scenarios/clash'
+
+const clashWorld = (seed: string, opts: { shootWeeks?: number[]; termWeeks?: number } = {}): WorldState =>
+  sharedClash(seed, { ...opts, bodyPose: false })
 import {
   answerShootClash,
-  createWorld,
   shootMoveTarget,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { adOfferId } from '../../src/engine/offers'
 import { ECONOMY } from '../../src/engine/economy'
 import { PLAN_DAYS } from '../../src/engine/plan'
-import { DEFAULT_PROFILE, type ShootClashChoice } from '../../src/shared/protocol'
-import type { SeasonEvent } from '../../src/engine/season/types'
+import { type ShootClashChoice } from '../../src/shared/protocol'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND THE SHELL'S WATERMARKS ARE localStorage. Same shim as
 // r2-13-span-report / round26-span-gate-ui – supply the browser's object, do not weaken the app.
@@ -71,48 +77,7 @@ const AD = ECONOMY.advertising
 // ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
 // prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
 // itself was lifted tenfold at that rung by the owner's approved table.
-const WATCH = {
-  brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
-  termWeeks: 52,
-  shootWeeksPerTerm: 2,
-}
-const CLASH = 216
-const AT = CLASH - 1
 
-/** The collision, built the way the engine file builds it – a signed campaign naming `CLASH` and an
- *  entry she holds for the same week, with the world standing the week before. */
-function clashWorld(seed: string, opts: { shootWeeks?: number[]; termWeeks?: number } = {}): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
-  world.week = AT
-  world.fundsCents = 500_000_00
-  const event: SeasonEvent = {
-    id: `${seed}-event`,
-    week: CLASH,
-    tier: 'local',
-    surface: 'hard',
-    travelCostCents: 100_00,
-    deadlineWeek: AT - 2,
-  }
-  world.season = [event]
-  world.entries = [event.id]
-  const termWeeks = opts.termWeeks ?? WATCH.termWeeks
-  world.offers.push({
-    id: adOfferId(AT - 10),
-    kind: 'ad',
-    week: AT - 10,
-    deadlineWeek: AT - 7,
-    state: 'signed',
-    decidedWeek: AT - 10,
-    fromWeek: AT - 10,
-    untilWeek: AT - 10 + termWeeks - 1,
-    // ⚠ RE-AIMED 23.09 (the cancel-share repair): the real two-shoot WATCH shape – the divisor is
-    // the paper's list now, and the old single-week pose would render a full-cheque cancel.
-    terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks, shootCount: 2, shootWeeks: opts.shootWeeks ?? [CLASH, CLASH + 21] },
-  })
-  return world
-}
 
 async function openShell(world: WorldState, vp = PHONE) {
   // ⚠ THE VIEWPORT FIRST – happy-dom resolves lengths at `getComputedStyle` time, so a viewport set

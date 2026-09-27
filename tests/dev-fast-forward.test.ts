@@ -332,9 +332,19 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
 // write the pending record directly – there is no second boolean to set – and every one of them then
 // travels the real save codec into the real worker, which is what layer 2 is for.
 //
-// ⚠ THE CLASH FIXTURE IS A FOURTH COPY OF `clashWorld` AND W5's T5.11 IS WHERE IT STOPS BEING ONE
-// (`tests/helpers/scenarios/`, the principles plan §7). Left local and named here rather than
-// half-extracted in a wave that owns neither file.
+// ⚠⚠ RE-AIMED 26.09 (W5's T5.11) – AND THE ANSWER IS THAT IT WAS NEVER A COPY OF `clashWorld`.
+// ⚠ IT USED TO SAY: «THE CLASH FIXTURE IS A FOURTH COPY OF `clashWorld` AND W5's T5.11 IS WHERE IT
+// STOPS BEING ONE (`tests/helpers/scenarios/`, the principles plan §7). Left local and named here
+// rather than half-extracted in a wave that owns neither file.»
+// ⚠ WHY IT MOVED: T5.11 came and read it. `clashWorld` – now `tests/helpers/scenarios/clash.ts`, five
+// copies merged – POSES week 216: a fresh world standing on 215, a paper dated 205 running a 52-week
+// term, and `world.entries` assigned. This fixture shares the IDEA and none of the construction. It
+// WALKS a quiet career to an arbitrary week (`quietWalk`), signs a paper with its own id scheme
+// (`devff-ad-<week>`) and its own window (`world.week - 5` to `world.week + 40`), and takes the entry
+// through the real `enterEvent` command rather than by assignment – because this world is about to
+// travel the real save codec into the real worker, which is the whole point of layer 2. Importing the
+// shared builder here would change the fixture this file exists to drive. So it stays local, and the
+// promise is withdrawn instead of being kept wrongly.
 
 /** A career with an empty calendar, walked `weeks` weeks with nothing left standing. `season = []` is
  *  `quietCareer`'s own move (r2-13) and for its reason: a case about one refusal must not also be a

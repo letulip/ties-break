@@ -117,8 +117,6 @@ import {
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { adOfferId } from '../../src/engine/offers'
-import { ECONOMY } from '../../src/engine/economy'
 import { resumeMain, rngFromSeed } from '../../src/engine/rng'
 import { careerSnapshot } from '../helpers/career'
 import {
@@ -127,7 +125,6 @@ import {
   type LifeBeatPrompt,
   type Snapshot,
 } from '../../src/shared/protocol'
-import type { SeasonEvent } from '../../src/engine/season/types'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND SOME OF THESE COMPONENTS REACH IT THROUGH THE STORE. The same
 // shim round36-error-surfaces.test.ts installs, for the reason quoted there: supply the browser's own
@@ -161,6 +158,21 @@ vi.mock('../../src/worker/client', () => ({
   request: async (msg: unknown) => structuredClone(await harness.send!(structuredClone(msg))),
 }))
 import { useGameStore } from '../../src/stores/game'
+// ⚠⚠ THE FOURTH COPY OF `clashWorld`, MIGRATED THE WEEK AFTER IT WAS WRITTEN (26.09, T5.11 – W2 wrote
+// it, copying the UI file's). The binding below names the two things that are THIS file's and not the
+// builder's: `bodyPose: false` (the UI copies never posed the body), and the move-arm PRECONDITION,
+// which is an ASSERTION and therefore stays at the call site – the four-answer card is the tallest of
+// the five and a three-answer fixture would silently measure the wrong dialog. The world hash of this
+// file's call site is unchanged.
+import { clashWorld as sharedClash, CLASH } from '../helpers/scenarios/clash'
+
+function clashWorld(seed: string): WorldState {
+  const world = sharedClash(seed, { bodyPose: false })
+  // The move arm is conditional on there being a week left in the term (ShootClashDialog's own note),
+  // so the four-answer card – the tallest of the five – is the one measured rather than a three.
+  expect(shootMoveTarget(world, CLASH), 'the fixture must offer the move arm, or the card is a three').not.toBeNull()
+  return world
+}
 
 // ⚠ AT MODULE SCOPE, before the dynamic import of the worker in `beforeAll`: the worker module
 // assigns `self.onmessage` while it evaluates.
@@ -240,52 +252,7 @@ const BEAT: LifeBeatPrompt = {
   confirm: 'FIXTURE proceed',
 }
 
-const WATCH = {
-  brand: ECONOMY.advertising.categories.watches.houses[0],
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
-  termWeeks: 52,
-}
-const CLASH = 216
-const AT = CLASH - 1
 
-/** The shoot/tournament collision, built the way round29-shoot-clash-ui.test.ts builds it – a signed
- *  campaign naming `CLASH` and an entry she holds for the same week, world standing the week before. */
-function clashWorld(seed: string): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
-  world.week = AT
-  world.fundsCents = 500_000_00
-  const event: SeasonEvent = {
-    id: `${seed}-event`,
-    week: CLASH,
-    tier: 'local',
-    surface: 'hard',
-    travelCostCents: 100_00,
-    deadlineWeek: AT - 2,
-  }
-  world.season = [event]
-  world.entries = [event.id]
-  world.offers.push({
-    id: adOfferId(AT - 10),
-    kind: 'ad',
-    week: AT - 10,
-    deadlineWeek: AT - 7,
-    state: 'signed',
-    decidedWeek: AT - 10,
-    fromWeek: AT - 10,
-    untilWeek: AT - 10 + WATCH.termWeeks - 1,
-    terms: {
-      brand: WATCH.brand,
-      cashCents: WATCH.cashCents,
-      termWeeks: WATCH.termWeeks,
-      shootCount: 2,
-      shootWeeks: [CLASH, CLASH + 21],
-    },
-  })
-  // The move arm is conditional on there being a week left in the term (ShootClashDialog's own note),
-  // so the four-answer card – the tallest of the five – is the one measured rather than a three.
-  expect(shootMoveTarget(world, CLASH), 'the fixture must offer the move arm, or the card is a three').not.toBeNull()
-  return world
-}
 
 /** A career standing at a birthday, birthday-dialog.test.ts's own fixture. */
 function birthdaySnapshot(seed: string): Snapshot {

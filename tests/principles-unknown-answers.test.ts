@@ -14,11 +14,12 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { openedAtCollege } from './collegeBirthdayFixtures'
+// ⚠ THE FIFTH COPY OF `clashWorld`, MIGRATED THE WEEK IT WAS WRITTEN (26.09, T5.11 – W2 wrote it). Its
+// body was this file's transcription of `tests/round29-shoot-clash.test.ts`' and is now the one owner's;
+// nothing this file asserts moved, and both call sites' world hashes are unchanged.
+import { clashWorld, CLASH } from './helpers/scenarios/clash'
 import { CAREER_ENDED_REFUSAL, UNKNOWN_CHOICE_REFUSAL } from '../src/engine/world/constants'
-import { adOfferId } from '../src/engine/offers'
-import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type AdOfferTerms, type ForkAnswer, type KnockChoice, type ShootClashChoice } from '../src/shared/protocol'
-import type { SeasonEvent } from '../src/engine/season/types'
 
 // =================================================================================================
 // ⭐⭐ #9 · B-05 · B-P3-01 · B-P3-02 (principles review of 26.09,
@@ -100,48 +101,7 @@ describe('#9 · decideKnock refuses an answer that is not one of its two', () =>
 // answerShootClash · MUTATION: remove the `SHOOT_CLASH_CHOICES.includes(choice)` line in
 // world/shootClash.ts – the unknown answer then falls off the end into the «play both» latch.
 // -------------------------------------------------------------------------------------------------
-const CLASH = 216
-const AT = CLASH - 1
 
-/** The collision, built the way `tests/round29-shoot-clash.test.ts` builds it (its own `clashWorld`,
- *  the shipped watch paper's shape): a signed campaign naming `CLASH` and an entry for the same week,
- *  with the world standing the week before – the only week the question can be asked on. */
-function clashWorld(seed: string): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
-  world.week = AT
-  world.plan = { train: 60, rest: 40 }
-  world.physioActive = false
-  world.condition = 50
-  world.fundsCents = 500_000_00
-  const event: SeasonEvent = {
-    id: `${seed}-event`,
-    week: CLASH,
-    tier: 'local',
-    surface: 'hard',
-    travelCostCents: 100_00,
-    deadlineWeek: AT - 2,
-  }
-  world.season = [event]
-  world.entries = [event.id]
-  world.offers.push({
-    id: adOfferId(AT - 10),
-    kind: 'ad',
-    week: AT - 10,
-    deadlineWeek: AT - 7,
-    state: 'signed',
-    decidedWeek: AT - 10,
-    fromWeek: AT - 10,
-    untilWeek: AT - 10 + 52 - 1,
-    terms: {
-      brand: ECONOMY.advertising.categories.watches.houses[0],
-      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
-      termWeeks: 52,
-      shootCount: 2,
-      shootWeeks: [CLASH, CLASH + 21],
-    },
-  })
-  return world
-}
 
 const termsOf = (world: WorldState): AdOfferTerms => world.offers.find((o) => o.kind === 'ad')!.terms as AdOfferTerms
 

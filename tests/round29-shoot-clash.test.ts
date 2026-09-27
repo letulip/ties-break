@@ -23,7 +23,6 @@ import {
   accrueCondition,
   advanceWeeks,
   answerShootClash,
-  createWorld,
   shootCancelCents,
   shootClashOpen,
   shootClashWeek,
@@ -32,13 +31,19 @@ import {
   toSnapshot,
   type WorldState,
 } from '../src/engine/world'
-import { adShootWeek, adOfferId } from '../src/engine/offers'
+import { adShootWeek } from '../src/engine/offers'
+// ⚠⚠ THE FIXTURE MOVED TO `tests/helpers/scenarios/clash.ts` (26.09, T5.11) AND THE ASSERTIONS DID
+// NOT. This file's `clashWorld` was the FIRST of five copies – W2 wrote the fourth and fifth – and the
+// 23.09 cancel-share repair had to find every one of them by hand, missing the third until a full gate
+// (`bc29ac13`, «the third sibling the sweep missed»). Its body, its `WATCH` paper, `CLASH` and `AT` are
+// now imported from the one owner; this file's options (`shootWeeks`, `deadlineWeek`) pass straight
+// through, and the world hash of all 20 call sites here is unchanged.
+import { clashWorld, WATCH, CLASH, AT } from './helpers/scenarios/clash'
 import { resumeMain } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { PLAN_DAYS } from '../src/engine/plan'
 import { TIERS, isOffSeasonWeek } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE, type AdOfferTerms } from '../src/shared/protocol'
-import type { SeasonEvent } from '../src/engine/season/types'
+import { type AdOfferTerms } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
 /** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
@@ -51,67 +56,7 @@ const AD = ECONOMY.advertising
 // ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
 // prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
 // itself was lifted tenfold at that rung by the owner's approved table.
-const WATCH = {
-  brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
-  termWeeks: 52,
-  shootWeeksPerTerm: 2,
-}
-/** Week 216 – offset 8 of season 5, an ordinary in-season adult week (asserted in the fixture
- *  block). `tests/ad-offer.test.ts`'s own probe week, for the same reason: one condition varies. */
-const CLASH = 216
-const AT = CLASH - 1
 
-/** THE COLLISION, BUILT: a signed campaign that names `CLASH`, and an entry she holds for the same
- *  week, with the world standing the week before – which is the only week the question can be asked
- *  on, because two of its four answers stop being possible once the week begins.
- *
- *  The `shootProbe` idiom of `tests/ad-offer.test.ts`: a fresh world handed a signed deal whose
- *  shoot weeks the test controls. Walking a career until a house happened to write AND the dice
- *  happened to name a week she was entered in would be testing `chooseShootWeeks` and `rollInjury`
- *  at once; what is under test here is what the collision DOES. */
-function clashWorld(seed: string, opts: { shootWeeks?: number[]; deadlineWeek?: number } = {}): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
-  world.week = AT
-  world.plan = { train: 60, rest: 40 }
-  world.physioActive = false
-  world.condition = 50
-  world.fundsCents = 500_000_00
-  const event: SeasonEvent = {
-    id: `${seed}-event`,
-    week: CLASH,
-    tier: 'local',
-    surface: 'hard',
-    travelCostCents: 100_00,
-    // Past the deadline by default – the realistic case, and the one where a withdrawal forfeits.
-    deadlineWeek: opts.deadlineWeek ?? AT - 2,
-  }
-  world.season = [event]
-  world.entries = [event.id]
-  world.offers.push({
-    id: adOfferId(AT - 10),
-    kind: 'ad',
-    week: AT - 10,
-    deadlineWeek: AT - 7,
-    state: 'signed',
-    decidedWeek: AT - 10,
-    fromWeek: AT - 10,
-    untilWeek: AT - 10 + WATCH.termWeeks - 1,
-    terms: {
-      brand: WATCH.brand,
-      cashCents: WATCH.cashCents,
-      termWeeks: WATCH.termWeeks,
-      shootCount: 2,
-      // ⚠ RE-AIMED 23.09 (the cancel-share repair): the default paper carries the REAL WATCH shape
-      // – two booked shoots over the year – because the divisor is the paper's list now, and the
-      // old single-week default would have read as «the whole campaign in one shoot» and priced a
-      // cancel at the full cheque. Cases that need another shape still pose their own.
-      shootWeeks: opts.shootWeeks ?? [CLASH, CLASH + 21],
-    },
-  })
-  return world
-}
 
 const termsOf = (world: WorldState): AdOfferTerms => world.offers.find((o) => o.kind === 'ad')!.terms as AdOfferTerms
 
