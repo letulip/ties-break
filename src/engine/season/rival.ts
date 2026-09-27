@@ -163,7 +163,10 @@ function strainKnobsUnchanged(knobs: StrainKnobs): boolean {
   return true
 }
 
-function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } {
+/** The table plus its last-resort row – what one freshness decision buys. */
+type RunsIndex = { byPoints: Map<number, RivalRun[]>; fallback: RivalRun }
+
+function runsIndex(): RunsIndex {
   if (runsIndexCache && strainKnobsUnchanged(runsIndexCache.knobs)) {
     return runsIndexCache
   }
@@ -213,7 +216,24 @@ function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } 
  *  hand-edited save; it reads as the cheapest first-round exit (Local, one match), which is the
  *  right instinct for an unknown row: never free, never inflated. */
 export function reconstructRun(result: SeasonResult): RivalRun {
-  const { byPoints, fallback } = runsIndex()
+  return reconstructRunIn(runsIndex(), result)
+}
+
+/** ⭐ THE INDEX IS RESOLVED ONCE PER FIELD READ, NOT ONCE PER ROW (C-01, 27.09). The freshness
+ *  decision is a comparison over ~40 numbers – cheap per call, but `rivalConditions` reconstructs
+ *  one run per ledger row in the window (~1400 rows at the shipped scale: the review's ~22.3 events
+ *  per rival per season over 199 rivals, inside `rivalFatigueWindowWeeks`), so paying it per ROW
+ *  TRIPLED the call. Measured on a quiet machine (load 2.8-3.2, three interleaved sweeps,
+ *  `docs/review-principles-2026-09-26/probes/rival-memo-cost.ts`) – `rivalConditions`, 1400 rows,
+ *  ms/call:
+ *      the two-ladder identity key (pre-fix)   0.229 / 0.231 / 0.235
+ *      the content key, checked once per ROW   0.613 / 0.629 / 0.638
+ *      the content key, resolved HERE          0.199 / 0.208
+ *  Same table, same answer: no knob can move between two rows of one read, and a single field read
+ *  asking ONE table is the stricter property anyway. `reconstructRun` keeps its signature for the
+ *  tests and for `tools/rival-fatigue-audit.ts`. */
+function reconstructRunIn(index: RunsIndex, result: SeasonResult): RivalRun {
+  const { byPoints, fallback } = index
   const candidates = byPoints.get(result.points)
   if (result.tier !== undefined) {
     const exact = candidates?.find((c) => c.tier === result.tier)
@@ -257,12 +277,13 @@ function walkWindow(runs: Map<number, RivalRun[]>, week: number): number {
  *  Zero RNG draws. For a whole field prefer `rivalConditions`, which indexes the ledger once. */
 export function rivalCondition(results: readonly SeasonResult[], playerId: string, week: number): number {
   const runs = new Map<number, RivalRun[]>()
+  const index = runsIndex()
   const from = week - ECONOMY.condition.rivalFatigueWindowWeeks + 1
   for (const r of results) {
     if (r.playerId !== playerId || r.week < from || r.week > week) continue
     const list = runs.get(r.week)
-    if (list) list.push(reconstructRun(r))
-    else runs.set(r.week, [reconstructRun(r)])
+    if (list) list.push(reconstructRunIn(index, r))
+    else runs.set(r.week, [reconstructRunIn(index, r)])
   }
   return walkWindow(runs, week)
 }
@@ -273,6 +294,7 @@ export function rivalCondition(results: readonly SeasonResult[], playerId: strin
  *  `rivalMatchPlayer` treats a missing entry as exactly that. */
 export function rivalConditions(results: readonly SeasonResult[], week: number): Map<string, number> {
   const from = week - ECONOMY.condition.rivalFatigueWindowWeeks + 1
+  const index = runsIndex()
   const byPlayer = new Map<string, Map<number, RivalRun[]>>()
   for (const r of results) {
     if (r.week < from || r.week > week) continue
@@ -282,8 +304,8 @@ export function rivalConditions(results: readonly SeasonResult[], week: number):
       byPlayer.set(r.playerId, runs)
     }
     const list = runs.get(r.week)
-    if (list) list.push(reconstructRun(r))
-    else runs.set(r.week, [reconstructRun(r)])
+    if (list) list.push(reconstructRunIn(index, r))
+    else runs.set(r.week, [reconstructRunIn(index, r)])
   }
   const conditions = new Map<string, number>()
   for (const [playerId, runs] of byPlayer) conditions.set(playerId, walkWindow(runs, week))
