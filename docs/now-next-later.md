@@ -231,6 +231,21 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   is a follow-up that needs a measurement per site, not a sweep.
   ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02.)
 
+- **A green run that reports exit 1, twice in one week, and the cause is known.**
+  `[vitest-worker]: Timeout calling "onTaskUpdate"` – birpc's RPC window closing while a long hook
+  holds one worker and nine others try to report. W5 hit it on a 33-file sweep that returned **exit 1
+  with 33 files passed and 687 of 687 tests passed**, at load 89.64 once and 322 % CPU the other time;
+  W3 hit the same thing on `tests/condition.test.ts` inside a 23-file batch, 60 s limit against zero
+  assertion failures. The identical 31-file subset is clean at exit 0, and the two files that turn it
+  are a fast guard plus `round34-reachable-ceiling`, whose 120 s `beforeAll` holds a worker for 16.58 s+.
+  ⚠ **It is a machine result, not a branch result** – CLAUDE.md already records the shape, and the
+  `sim.mjs` retry classifier already carries the sim project's version of it. What is missing is the
+  same treatment for the UNIT project: a run whose every test passed should not hand back a status that
+  reads like a failure, because that is the exact input a false verdict is made of. ⭐ And one mechanical
+  consolation worth keeping beside it: **lowering a budget cannot cause this stall** – a budget above the
+  RPC window is what converts a readable timeout into it, so W5's clamp can only move the failure in the
+  readable direction. ([CLAUDE.md](../CLAUDE.md), the contention and sentinel gotchas; H-06.)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
