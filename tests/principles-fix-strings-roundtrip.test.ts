@@ -19,10 +19,13 @@
 // corpus held 28, through `check`, `e2e` and the sims. `EXPECTED_ROWS` below is the only statement of
 // it; the document states no total.
 //
-// ⚠⚠ THE COUNT MOVES IN W4 AND IT IS MEANT TO BE ONE LINE. E-01's header line and its title are two
-// more DRAFT rows (the wave's plan §6, T4.11), so `EXPECTED_ROWS` goes 3 -> 5 in that wave with a
-// dated note beside it and NOTHING ELSE in this file changes – the parser, the containment and the
-// status pin are all count-agnostic by construction.
+// ⚠⚠ THE COUNT MOVED IN W4 (27.09, T4.11). E-01's header line and its title are two more DRAFT rows
+// (the wave's plan §6), so `EXPECTED_ROWS` went 3 -> 5 with a dated note beside it. ⚠ THE PREDICTION
+// THAT «NOTHING ELSE IN THIS FILE CHANGES» WAS WRONG BY ONE CASE, and the correction is kept here
+// because a prediction that quietly failed is worse than one that says so: the parser, the
+// containment and the status pin ARE count-agnostic by construction, but the HOME SET at the bottom of
+// this file is an enumeration, and T4.11's rows live on a screen – a third home. Its own note carries
+// why that set is deliberately not count-agnostic.
 //
 // MUTATION-VERIFIED IN BOTH DIRECTIONS, which is wave 12's own header's requirement and the only way
 // a round-trip pin earns the name: one character changed in a doc row fails by id, and one character
@@ -62,8 +65,9 @@ function sourceOf(path: string): string {
 }
 
 const TABLE = 'docs/plans/principles-fix-strings-2026-09.md'
-/** ⚠ THE ONE STATEMENT OF THE COUNT. W4 takes it to 5 (E-01's line and title) with a dated note. */
-const EXPECTED_ROWS = 3
+/** ⚠ THE ONE STATEMENT OF THE COUNT. 3 -> 5 on 27.09 (W4 · T4.11 · E-01): the Season header's
+ *  pro-budget line and its title, tabled as §3. No other number in this repo states it. */
+const EXPECTED_ROWS = 5
 
 describe('the principles fix – the strings table IS the corpus', () => {
   const rows = parseTable(TABLE)
@@ -104,15 +108,26 @@ describe('the principles fix – the strings table IS the corpus', () => {
     }
   })
 
-  it('⚠ every home is a real file, and the two the fix added are the wire and the engine leaf', () => {
+  it('⚠ every home is a real file, and the three are the wire, the engine leaf and the screen', () => {
     // Without this a typo in a home path is a `readFileSync` throw whose message is about a path
     // rather than about the row – and the second half states the claim the barrel note makes: the
     // engine leaf is the home, never `src/engine/world.ts`.
+    //
+    // ⚠⚠ THE HEADER ABOVE PROMISED «NOTHING ELSE IN THIS FILE CHANGES» IN W4 AND WAS WRONG ABOUT THIS
+    // ONE CASE (27.09). The parser, the containment and the status pin really are count-agnostic; this
+    // set is not, and it is deliberately not – a home is a claim about WHERE the fix puts words, and
+    // T4.11's two rows put them on a SCREEN for the first time, which is the fact a reader of this
+    // corpus should be made to notice. The correction is recorded here rather than in the header,
+    // because the header's own sentence is what went stale.
     for (const row of rows) {
       expect(() => sourceOf(row.home), `${row.id}: ${row.home}`).not.toThrow()
     }
     expect(new Set(rows.map((r) => r.home))).toEqual(
-      new Set(['src/shared/protocol/profile.ts', 'src/engine/world/constants.ts']),
+      new Set([
+        'src/shared/protocol/profile.ts',
+        'src/engine/world/constants.ts',
+        'src/components/screens/SeasonScreen.vue',
+      ]),
     )
   })
 })

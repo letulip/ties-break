@@ -776,13 +776,26 @@ function defendingPts(e: UpcomingEvent): number | null {
   return r ? r.points : null
 }
 
-// THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries this season: N of M», finite seasons only.
-// The engine's own current-season count (Snapshot.proEntryCap); null hides the line entirely on
-// the seasons the rule does not meter, which is every season but 16 and 17.
+// THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries, birthday to birthday: N of M», finite ages only.
+// The engine's own count (Snapshot.proEntryCap); null hides the line entirely on the age-years the
+// rule does not meter, which is every one but 16 and 17.
+//
+// ⚠⚠ IT SAID «THIS SEASON» UNTIL T4.11 (E-01, the 26.09 principles review), AND THE NUMBER HAD NOT
+// SAID THAT SINCE 16.08. `proEntryCapUsage` counts `proEntryWeeks` whose `kidAgeAt` equals her age
+// now – a BIRTHDAY-TO-BIRTHDAY window (`world/entryCaps.ts`, «`entryCapUsage`'s birthday window
+// verbatim») – and this line and its title were written in `fdce8055` (02.08) against the season
+// block, twenty minutes before the card pills below were re-aimed and never re-aimed themselves.
+// MEASURED on the `v46` golden save (a sixteen-year-old at week 155): the header read «6 of 12» at a
+// season turn where the engine's count stays 6 and does not fall to 0 until her birthday at w180 – so
+// for 24 weeks it named this season's allowance against ONE entry made this season. The owner's
+// ruling 4a: the header reuses the phrase the same screen's pills already carry.
+//
+// ⚠ NOTHING ELSE MOVED. The number, the null rule and `proEntryCap` are untouched; this is the label
+// and the title catching up with the window the engine has counted for six weeks.
 const proBudgetLine = computed<string | null>(() => {
   const cap = game.snapshot?.proEntryCap
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
-  return `Pro entries this season: ${cap.used} of ${cap.limit}`
+  return `Pro entries, birthday to birthday: ${cap.used} of ${cap.limit}`
 })
 
 // THE PLANNING COUNTER (owner, 02.08: how many tournaments are available to us and at what level,
@@ -888,11 +901,20 @@ function lockLabel(e: UpcomingEvent): string {
     // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
     case 'medical':
       return 'Not cleared to play'
-    // The annual entry cap: she has spent this YEAR's international allowance. The count comes
+    // The annual entry cap: she has spent this AGE-YEAR's international allowance. The count comes
     // from the engine's verdict on THIS event (never the ladder's current-season read) for the same
-    // reason `pointsToEnter` does – an event in the next season is judged against a different
-    // year's allowance. "Year limit" rather than "Locked": the block lifts when the season turns,
-    // and the tier ladder's long form says so in full.
+    // reason `pointsToEnter` does – an event past her next birthday is judged against a different
+    // year's allowance. "Year limit" rather than "Locked": the block lifts, and the tier ladder's
+    // long form says so in full.
+    // ⚠⚠ AND IT SAID «THE BLOCK LIFTS WHEN THE SEASON TURNS» UNTIL T4.11 (E-01), which was the same
+    // staleness the header above carried: BOTH caps behind this one reason code count her BIRTHDAY
+    // year (`entryCapUsage` and `proEntryCapUsage`, `world/entryCaps.ts`), and both engine refusals
+    // have said «A fresh allowance on her next birthday» since P2 – `world/medical.ts` corrected its
+    // own two notes on 26.09 (B-P3-09) for exactly this reason. A W3 builder found this line and
+    // deliberately left it: correcting the comment while the string two lines down still said «this
+    // season» would have made the block MORE self-contradictory, not less. The string moved in this
+    // task, so the comment moves with it. ⚠ The LABELS are untouched (invariant 4): «Year limit» and
+    // «Tour age rule» are the owner's words and neither names a date.
     // ⚠ TWO CAPS, ONE REASON CODE since W2-LADDER §5: a W rung's 'capped' is the TOUR's age rule,
     // not the junior Appendix-F one, and the refusal names the rule (owner ruling 1's
     // transparency). The family split is the engine's own (`isCappedProTier`), never guessed from
@@ -1386,10 +1408,14 @@ function closeExhibition(): void {
           <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
         </p>
         <!-- THE PRO BUDGET (W2-LADDER, spec 5: the player sees the budget). Rendered only on the
-             seasons the tour's age rule actually meters (16 and 17) - an unlimited season would
+             ages the tour's age rule actually meters (16 and 17) - an unlimited age-year would
              print a MAX_SAFE_INTEGER, and a budget that cannot run out is not a budget. The
-             number is the engine's own count for THIS season, straight off the snapshot. -->
-        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter this season. A fresh allowance arrives when the season turns; junior and national events are not counted.'">
+             number is the engine's own count for THIS AGE-YEAR, straight off the snapshot.
+             ⚠ E-01 / T4.11: the window in the line and in the title is `proEntryCapUsage`'s -
+             birthday to birthday - and it is the phrase the card pills below already carry
+             (`:title` on `.pro-entries`). See `proBudgetLine` in the script for the measurement
+             that moved it and for what did NOT move. -->
+        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter in the year she is this age – counted from birthday to birthday. A fresh allowance arrives on her next birthday; junior and national events are not counted.'">
           {{ proBudgetLine }}
         </p>
         <!-- THE PLANNING COUNTER: how much tennis is left in the season and on which rungs. It
