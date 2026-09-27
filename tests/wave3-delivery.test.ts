@@ -81,7 +81,6 @@ import {
   answerLifeBeat,
   buildLifeBeatPrompt,
   chooseGift,
-  createWorld,
   deliverKnownPartner,
   kidAgeExact,
   knownPartner,
@@ -101,7 +100,11 @@ import { resumeMain } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { bondBandOf } from '../src/engine/spirit'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
-import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
+import { STOP_PRECEDENCE, type BondBand, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
+// ⚠ THE SHARED POKE UNDER THIS FILE'S OWN WORD (26.09, T5.11): `pokedAt` is F-02's name for the
+// 19 `careerAt` pokes, 5 of them byte-identical to the body that stood here. The alias keeps every
+// call site's own word rather than renaming them to prove a point about a helper.
+import { pokedAt as careerAt } from './helpers/career'
 
 const MET_OPTIONS = LIFE_BEAT_OPTIONS.met
 
@@ -119,13 +122,6 @@ function bondFor(band: BondBand): number {
 
 /** A career parked at `week` with an empty life. ⚠ A REAL `createWorld`, so the profile, the seed and
  *  the temperament are the engine's own (wave3-arrival.test.ts's own fixture doctrine). */
-function careerAt(seed: string, week: number): WorldState {
-  const world = createWorld(seed, DEFAULT_PROFILE)
-  world.season = []
-  world.week = week
-  return world
-}
-
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED, and that is the point of the whole file:
  *  T3's hazard decides WHETHER someone appears and T5's draws decide WHEN he hears – neither is under
  *  test here, and a fixture that had to roll for them would be testing the dice again. */

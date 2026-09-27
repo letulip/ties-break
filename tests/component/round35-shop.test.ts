@@ -29,10 +29,7 @@ import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import {
   buyAsset,
-  closeTournament,
   createWorld,
-  skipTournament,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
@@ -43,19 +40,12 @@ import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { aspectHeightPx, demandedWidth, lengthPx, setViewport, PHONE } from './fits'
 import { SHELF_TAB_LABELS, openShelfTab, shelfRow } from './shelf'
+import { walkWeeks } from '../helpers/career'
 
 /** A real career, walked by the real engine – `shop-tab.test.ts`'s own recipe. */
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 /** A career that can see the whole shelf: professional, and rich enough that no row is greyed for

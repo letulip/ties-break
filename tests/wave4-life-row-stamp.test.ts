@@ -99,7 +99,6 @@ import { describe, expect, it } from 'vitest'
 
 import {
   answerLifeBeat,
-  createWorld,
   deliverKnownPartner,
   endsHazardFor,
   lifeLogOf,
@@ -108,10 +107,14 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import { DEFAULT_PROFILE, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
+import { type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
 import { LIFE_BEAT_ROW_KINDS } from '../src/components/screens/lifeRowGlyphs'
 import { engineSource } from './worldSource'
 import { codeOf } from './helpers/source'
+// ⚠ THE SHARED POKE UNDER THIS FILE'S OWN WORD (26.09, T5.11): `pokedAt` is F-02's name for the
+// 19 `careerAt` pokes, 5 of them byte-identical to the body that stood here. The alias keeps every
+// call site's own word rather than renaming them to prove a point about a helper.
+import { pokedAt as careerAt } from './helpers/career'
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES – wave 4 T4's own, transcribed rather than imported, because that file's helpers are
@@ -120,13 +123,6 @@ import { codeOf } from './helpers/source'
 
 /** A career parked at `week` with an empty life. ⚠ A REAL `createWorld`, so the profile, the seed and
  *  the temperament are the engine's own (wave 3's and wave 4's shared fixture doctrine). */
-function careerAt(seed: string, week: number): WorldState {
-  const world = createWorld(seed, DEFAULT_PROFILE)
-  world.season = []
-  world.week = week
-  return world
-}
-
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED where the roll is not what is under test. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {
   return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null, ...over }

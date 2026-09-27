@@ -146,14 +146,11 @@ import {
   type Temperament,
 } from '../src/engine/spirit'
 import {
-  closeTournament,
   createWorld,
   KID_ID,
   kidPoints,
   newsStandingOf,
   recomputeKidRank,
-  skipTournament,
-  tickWeek,
   type ExposureEvent,
   type ExposureKind,
   type WorldState,
@@ -165,6 +162,7 @@ import { isBlackoutWeek } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
 import { birthdayTurning } from '../src/engine/world/age'
 import { standHerAt } from './helpers/newsStanding'
+import { walkWeeks } from './helpers/career'
 
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 
@@ -273,15 +271,7 @@ function costOf(world: WorldState, exposure: readonly ExposureEvent[]): number {
  *  it is what the WORKER threads through the tick (v35) and it mutates `world.rngMain` in place, so
  *  the persisted MAIN position advances with the walk and lands inside §C's key-for-key comparison. */
 function walk(world: WorldState, weeks: number): WorldState {
-  const rng = resumeMain(world.rngMain)
-  for (let w = 0; w < weeks; w++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, resumeMain(world.rngMain), weeks)
 }
 
 // =================================================================================================

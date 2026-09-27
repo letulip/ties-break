@@ -38,19 +38,12 @@ import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
 import { shelfRow, shelfText } from './shelf'
+import { walkWeeks } from '../helpers/career'
 
 /** A real career, walked by the real engine – `shop-tab.test.ts`'s own recipe. */
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 /** ⚠ THE DOOR IS OPENED THE WAY THE ENGINE OPENS IT – the never-pruned `bestFinishByTier` mark. */

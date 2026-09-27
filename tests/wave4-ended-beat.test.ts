@@ -157,8 +157,12 @@ import { ECONOMY } from '../src/engine/economy'
 import { bondBandOf, temperamentOpenness } from '../src/engine/spirit'
 import { rngFromSeed } from '../src/engine/rng'
 import { drainCostOf, drainLifeBeats, drainLifeBeatsTallied, drainSkewLine, DRAIN_ANSWER } from '../tools/_lifeBeats'
-import { DEFAULT_PROFILE, type BondBand, type DiaryLifeStage, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
+import { type BondBand, type DiaryLifeStage, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
 import { worldFunction } from './worldSource'
+// ⚠ THE SHARED POKE UNDER THIS FILE'S OWN WORD (26.09, T5.11): `pokedAt` is F-02's name for the
+// 19 `careerAt` pokes, 5 of them byte-identical to the body that stood here. The alias keeps every
+// call site's own word rather than renaming them to prove a point about a helper.
+import { pokedAt as careerAt } from './helpers/career'
 
 // -------------------------------------------------------------------------------------------------
 // THE RULINGS, TRANSCRIBED AS LITERALS
@@ -193,13 +197,6 @@ const MET_TOLD_OPEN = 'She told us there is someone in her life.'
 
 /** A career parked at `week` with an empty life. ⚠ A REAL `createWorld`, so the profile, the seed and
  *  the temperament are the engine's own (wave 3's and wave 4 T2's shared fixture doctrine). */
-function careerAt(seed: string, week: number): WorldState {
-  const world = createWorld(seed, DEFAULT_PROFILE)
-  world.season = []
-  world.week = week
-  return world
-}
-
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED: T2's hazard decides WHEN it ends and T5's
  *  draws decide when he hears, and neither is under test in this file. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {

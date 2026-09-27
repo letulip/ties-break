@@ -75,20 +75,13 @@ import {
 import { unitPriceCents } from '../../src/engine/world/assets'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
+import { walkWeeks } from '../helpers/career'
 
 /** shop-tab.test.ts's own two helpers, unchanged – a real career, then the professional mark that is
  *  the shelf's one-way door (`activeLadderOf`), set at its own source rather than walked to. */
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 function professional(world: WorldState): WorldState {
   world.bestFinishByTier.wta250 = 3

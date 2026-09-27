@@ -21,28 +21,18 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   createWorld,
-  tickWeek,
   toSnapshot,
-  skipTournament,
-  closeTournament,
   type WorldState,
 } from '../../src/engine/world'
 import { ECONOMY } from '../../src/engine/economy'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { BILLS_TAB_LABELS, SHELF_TAB_LABELS, openBillsTab, openShelfTab } from './shelf'
+import { walkWeeks } from '../helpers/career'
 
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 /** The professional door, opened the way the engine opens it – `shop-tab.test.ts`'s own recipe. */

@@ -40,27 +40,17 @@ import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import {
   createWorld,
-  tickWeek,
-  skipTournament,
-  closeTournament,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { TIERS } from '../../src/engine/season/calendar'
 import { WINDOW_BY_TRACK } from '../../src/engine/season/ranking'
+import { walkWeeks } from '../helpers/career'
 
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 /** The guide, over a real career, with the row for one rung read back as its cells. */

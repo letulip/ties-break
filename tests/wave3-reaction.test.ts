@@ -159,7 +159,6 @@ import { describe, expect, it } from 'vitest'
 import {
   answerLifeBeat,
   buildLifeBeatPrompt,
-  createWorld,
   deliverKnownPartner,
   lifeBeatHeading,
   lifeBeatOptionsFor,
@@ -181,7 +180,11 @@ import { bondBandOf } from '../src/engine/spirit'
 // a thing benches do to careers nobody is playing; the engine has no opinion about it and must not
 // grow one. §D is the law's pin and this is the one import that gives it the subject.
 import { DRAIN_ANSWER, drainCostOf, drainLifeBeats, drainLifeBeatsTallied, drainSkewLine } from '../tools/_lifeBeats'
-import { DEFAULT_PROFILE, type BondBand, type LifeBeatKind, type LoveEpisode } from '../src/shared/protocol'
+import { type BondBand, type LifeBeatKind, type LoveEpisode } from '../src/shared/protocol'
+// ⚠ THE SHARED POKE UNDER THIS FILE'S OWN WORD (26.09, T5.11): `pokedAt` is F-02's name for the
+// 19 `careerAt` pokes, 5 of them byte-identical to the body that stood here. The alias keeps every
+// call site's own word rather than renaming them to prove a point about a helper.
+import { pokedAt as careerAt } from './helpers/career'
 
 // -------------------------------------------------------------------------------------------------
 // THE TABLE, TRANSCRIBED
@@ -223,13 +226,6 @@ const MID_BOND = 60
 
 /** A career parked at `week` with an empty life – a REAL `createWorld`, so the profile, the seed and
  *  the temperament are the engine's own (wave3-arrival.test.ts's fixture doctrine). */
-function careerAt(seed: string, week: number): WorldState {
-  const world = createWorld(seed, DEFAULT_PROFILE)
-  world.season = []
-  world.week = week
-  return world
-}
-
 /** An attachment, hand-built – T5's draws decide `wants` in a career and are not under test here. */
 function episode(sinceWeek: number, knownWeek: number, wants: LoveEpisode['wants']): LoveEpisode {
   return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }

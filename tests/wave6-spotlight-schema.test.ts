@@ -81,10 +81,11 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { createWorld, tickWeek, skipTournament, closeTournament, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import { createWorld, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
 import type { LoveEpisode } from '../src/shared/protocol'
+import { walkWeeks } from './helpers/career'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -114,15 +115,7 @@ function preV77Row(sinceWeek: number, endedWeek: number | null, knownWeek: numbe
  *  a fresh stream `rngMain` never moves and «the two arms agree on `rngMain`» would be the agreement
  *  of two untouched initial values. */
 function walk(world: WorldState, weeks: number): WorldState {
-  const rng = resumeMain(world.rngMain)
-  for (let w = 0; w < weeks; w++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, resumeMain(world.rngMain), weeks)
 }
 
 /** Source with every comment removed – `tests/spirit.test.ts`'s own helper verbatim, for §E: a pin

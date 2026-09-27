@@ -14,7 +14,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot, buyAsset, skipTournament, closeTournament, type WorldState } from '../../src/engine/world'
+import { createWorld, toSnapshot, buyAsset, type WorldState } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
@@ -23,21 +23,14 @@ import { assertDismissReachable, setViewport, PHONE } from './fits'
 // route to the row. The helpers' own header carries the argument, including why «every rung is on
 // the shelf» is now walked rather than counted in one document.
 import { allShelfRows, openShelfTab, shelfRow, shelfText } from './shelf'
+import { walkWeeks } from '../helpers/career'
 
 /** A real career, walked by the real engine – `tests/helpers/career.ts`'s own recipe, kept local
  *  because these fixtures need the world afterwards (the professional mark, the purchase) and that
  *  helper deliberately returns only the snapshot. */
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 /** ⚠ THE DOOR IS OPENED THE WAY THE ENGINE OPENS IT – `activeLadderOf`'s professional arm reads the

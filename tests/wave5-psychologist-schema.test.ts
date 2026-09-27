@@ -128,12 +128,13 @@ import {
   TEMPERAMENTS,
   type Temperament,
 } from '../src/engine/spirit'
-import { createWorld, tickWeek, skipTournament, closeTournament, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import { createWorld, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
 // ⚠ T7: `ECONOMY.bond.band` is read by §E's re-aimed second case, which now states the CONDITION its
 // two walls assertions hold under instead of asserting them into a comment that stopped being true.
 import { ECONOMY } from '../src/engine/economy'
+import { walkWeeks } from './helpers/career'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -194,15 +195,7 @@ function srcFiles(dir = SRC, prefix = ''): [string, string][] {
  *  agreement of two untouched initial values. Caught by this file's own null-arm check, which is
  *  what that check is for. */
 function walk(world: WorldState, weeks: number): WorldState {
-  const rng = resumeMain(world.rngMain)
-  for (let w = 0; w < weeks; w++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, resumeMain(world.rngMain), weeks)
 }
 
 // =================================================================================================
