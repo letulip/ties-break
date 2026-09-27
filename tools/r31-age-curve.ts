@@ -48,14 +48,11 @@ import {
 import { weeksLostSoFar } from '../src/engine/ending'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean } from './econ-bench'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule – see `tools/_args.ts`.
+import { finiteArgOf } from './_args'
 
-const argOf = (name: string, fallback: number): number => {
-  const next = process.argv[process.argv.indexOf(`--${name}`) + 1]
-  const n = Number(next)
-  return Number.isFinite(n) ? n : fallback
-}
-const SEEDS = argOf('seeds', 4000)
-const CAREERS = argOf('careers', 2)
+const SEEDS = finiteArgOf('seeds', 4000)
+const CAREERS = finiteArgOf('careers', 2)
 
 const rule = (s: string) => console.log(`\n${'='.repeat(96)}\n${s}\n${'='.repeat(96)}`)
 const f2 = (x: number) => x.toFixed(2)

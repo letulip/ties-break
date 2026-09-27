@@ -20,14 +20,12 @@ import { ECONOMY } from '../src/engine/economy'
 import { kidPoints } from '../src/engine/world'
 import type { InjurySeverity } from '../src/shared/protocol'
 import type { Policy, Profile } from './fatigue-bench'
+// T5.12 · F-04, 27.09: `argOf` was one of seven byte-identical live copies – see `tools/_args.ts`,
+// which reads `process.argv.slice(2)` itself, so the local `args` const went with it.
+import { argOf } from './_args'
 
 const { PROFILES, POLICIES, openFatigueCareer, stepFatigueWeek } = await import('./fatigue-bench')
 
-const args = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const SEEDS = argOf('seeds', 10)
 const HORIZON = argOf('horizon', 104)
 

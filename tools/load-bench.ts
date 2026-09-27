@@ -65,23 +65,22 @@ import {
   type KnockChoice,
   type WeekPlan,
 } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `mean` was a local with econ-bench's own body – see `tools/_stats.ts`.
+import { mean } from './_stats'
+// ⚠ T5.12 · F-04, 27.09: `flag` was the SAME BODY as the copies called `argOf`, under another name –
+// invisible to a census keyed on the name. Renamed `argOf` at the call sites. See `tools/_args.ts`.
+import { argOf } from './_args'
 
-const args = process.argv.slice(2)
-function flag(name: string, fallback: number): number {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 /** 24 by default: the spec asks for 120, which takes minutes; 24 is the number that fits an iteration
  *  loop. The figure quoted to the owner is always a full `--seeds 120` run. */
-const SEEDS = flag('seeds', 24)
+const SEEDS = argOf('seeds', 24)
 /** 14 -> 18, the career the game actually ships. */
-const WEEKS = flag('weeks', 208)
+const WEEKS = argOf('weeks', 208)
 const TIERS: CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
 
 const f1 = (x: number) => x.toFixed(1)
 const pad = (s: string, n: number) => s.padEnd(n)
 const padL = (s: string, n: number) => s.padStart(n)
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 
 // =================================================================================================
 // THE TWO ARMS

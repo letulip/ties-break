@@ -75,12 +75,12 @@ import {
 } from '../src/engine/season/fieldPros'
 import type { MatchPlayer } from '../src/engine/match/types'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+// T5.12 · F-04, 27.09: `mean` and `median` were locals with econ-bench's own rules – empty is 0 and an
+// even-length median is the averaged middle. See `tools/_stats.ts`.
+import { mean, median } from './_stats'
+import { argOf } from './_args'
 
 const args = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const SEEDS = argOf('seeds', 8)
 const AGE = argOf('age', 24)
 const ONLY = (() => {
@@ -94,12 +94,6 @@ const SEASON_BLOCK = 5
 const PROBE_SEED = 'points-economy'
 const PROBE_SEASON = 4
 
-const mean = (xs: number[]) => (xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length)
-const median = (xs: number[]) => {
-  const s = [...xs].sort((a, b) => a - b)
-  if (!s.length) return 0
-  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2
-}
 const pad = (s: string | number, w: number) => String(s).padStart(w)
 const padE = (s: string | number, w: number) => String(s).padEnd(w)
 const rule = (n = 100) => '-'.repeat(n)

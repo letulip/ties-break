@@ -54,28 +54,27 @@ import {
 import type { CoachTier, FamilyBackground } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule – see `tools/_args.ts`.
+import { finiteArgOf } from './_args'
+// T5.12 · F-04, 27.09: `money` was one of six live copies of the unsigned console spelling and `pct`
+// one of ten fraction copies – see `tools/_fmt.ts`, which records why the unsigned body is the one
+// that moved rather than `src/shared/money`'s `formatCents`.
+import { money, pctOf } from './_fmt'
 
-const argOf = (name: string, fallback: number): number => {
-  const at = process.argv.indexOf(`--${name}`)
-  const n = Number(process.argv[at + 1])
-  return at > 0 && Number.isFinite(n) ? n : fallback
-}
-const SEEDS = argOf('seeds', 12)
+const SEEDS = finiteArgOf('seeds', 12)
 /** ⚠ 780 AND NOT 416. Ages 13.6 to 28.6 – fifteen anniversaries, both age-band steps and the whole
  *  professional era. A shorter walk would never reach the rank bands the ceiling is made of, and a
  *  bench that cannot reach the mechanic measures the null arm twice. */
-const WEEKS = argOf('weeks', 780)
+const WEEKS = finiteArgOf('weeks', 780)
 /** THE ARM SWITCH. The header prints the EFFECTIVE values, so a run can never be mislabelled. */
-const FLOOR = argOf('floor', ECONOMY.coach.raise.askFloor)
-const CEILING = argOf('ceiling', ECONOMY.coach.raise.askCeiling)
+const FLOOR = finiteArgOf('floor', ECONOMY.coach.raise.askFloor)
+const CEILING = finiteArgOf('ceiling', ECONOMY.coach.raise.askCeiling)
 
 const TIERS: CoachTier[] = ['budget', 'middle', 'high', 'elite']
 const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
-const money = (cents: number): string => `$${Math.round(cents / 100).toLocaleString('en-US')}`
-const pct = (x: number): string => `${(x * 100).toFixed(1)}%`
 
 console.log(
-  `coach-raise bench – seeds ${SEEDS} · weeks ${WEEKS} · corridor ${pct(FLOOR)}–${pct(CEILING)}` +
+  `coach-raise bench – seeds ${SEEDS} · weeks ${WEEKS} · corridor ${pctOf(FLOOR)}–${pctOf(CEILING)}` +
     `${FLOOR === ECONOMY.coach.raise.askFloor && CEILING === ECONOMY.coach.raise.askCeiling ? ' (shipped)' : ' (OVERRIDDEN)'}`,
 )
 
@@ -326,11 +325,11 @@ if (allAsks.length > 0) {
   const fr = allAsks.map((a) => a.fraction).sort((a, b) => a - b)
   const q = (t: number): number => fr[Math.min(fr.length - 1, Math.floor(t * fr.length))]
   const mean = fr.reduce((a, b) => a + b, 0) / fr.length
-  console.log(`  ask size   min ${pct(fr[0])} · p25 ${pct(q(0.25))} · median ${pct(q(0.5))} · p75 ${pct(q(0.75))} · max ${pct(fr[fr.length - 1])} · mean ${pct(mean)}`)
+  console.log(`  ask size   min ${pctOf(fr[0])} · p25 ${pctOf(q(0.25))} · median ${pctOf(q(0.5))} · p75 ${pctOf(q(0.75))} · max ${pctOf(fr[fr.length - 1])} · mean ${pctOf(mean)}`)
   const inCorridor = fr.filter((x) => x >= FLOOR - 1e-9 && x <= CEILING + 1e-9).length
-  console.log(`  inside his ${pct(FLOOR)}–${pct(CEILING)}: ${inCorridor}/${fr.length} (${pct(inCorridor / fr.length)})`)
+  console.log(`  inside his ${pctOf(FLOOR)}–${pctOf(CEILING)}: ${inCorridor}/${fr.length} (${pctOf(inCorridor / fr.length)})`)
   const clamped = allAsks.filter((a) => a.clampedByCeiling).length
-  console.log(`  decided by the CEILING rather than by the score: ${clamped}/${allAsks.length} (${pct(clamped / allAsks.length)})`)
+  console.log(`  decided by the CEILING rather than by the score: ${clamped}/${allAsks.length} (${pctOf(clamped / allAsks.length)})`)
   const perCareer = coached.length * SEEDS
   console.log(`  asks per career: ${(allAsks.length / perCareer).toFixed(2)} over ${(WEEKS / WEEKS_PER_YEAR).toFixed(0)} years`)
 }
@@ -350,7 +349,7 @@ for (const { p } of coached) {
   const paid = mean((r) => r.billedCents)
   const would = mean((r) => r.shippedCents)
   console.log(
-    `${p.label.padEnd(32)}${mean((r) => r.asks.length).toFixed(1).padStart(5)}  ${money(first).padStart(10)}  ${money(last).padStart(10)}   x${(last / first).toFixed(2)}   ${pct(would > 0 ? paid / would : 1).padStart(8)}`,
+    `${p.label.padEnd(32)}${mean((r) => r.asks.length).toFixed(1).padStart(5)}  ${money(first).padStart(10)}  ${money(last).padStart(10)}   x${(last / first).toFixed(2)}   ${pctOf(would > 0 ? paid / would : 1).padStart(8)}`,
   )
 }
 

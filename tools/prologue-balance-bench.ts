@@ -65,6 +65,10 @@ import {
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import { coachWeeklyBandCents } from '../src/engine/coach'
 import { POLICIES, stepCareerWeek } from './econ-bench'
+// T5.12 · F-04, 27.09: `money` was one of six live copies of the unsigned console spelling – see
+// `tools/_fmt.ts`. ⚠ It prints a deficit `$-1,234`, which is this bench's own historical output and
+// NOT `src/shared/money`'s player-facing `-$1,234`.
+import { money } from './_fmt'
 
 const BACKGROUNDS: readonly FamilyBackground[] = ['working', 'middle', 'wealthy']
 const DECISION_AGES = PROLOGUE_CARDS.filter((c) => c.options).map((c) => c.age)
@@ -75,7 +79,6 @@ const CAREER_SEEDS = 24
 /** PART D walks three seasons so "the runway" is a number rather than a yes/no */
 const CAREER_WEEKS = 3 * WEEKS_IN_SEASON
 
-const money = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
 
 /** Every childhood the table can produce: four binary decisions at 8..11 settle the twelfth's face,
  *  and the face offers two answers of its own. 2^4 x 2 = 32. */

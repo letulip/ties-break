@@ -71,12 +71,11 @@ import { fastMatchProbability } from '../src/engine/match/engine'
 import type { MatchPlayer } from '../src/engine/match/types'
 import type { RankingRow, TierId } from '../src/engine/season/types'
 import type { WorldState } from '../src/engine/world'
+// T5.12 · F-04, 27.09: `mean` was a local with econ-bench's own body – see `tools/_stats.ts`.
+import { mean } from './_stats'
+import { argOf } from './_args'
 
 const args = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const SEEDS = argOf('seeds', 3)
 const SEASONS = argOf('seasons', 24)
 const NO_LIVE = args.includes('--no-live')
@@ -89,7 +88,6 @@ const CUTS: { tier: keyof typeof TIERS; at: number }[] = (
   ['w75', 'w100', 'wta125', 'wta250', 'slam', 'wta500', 'wta1000'] as const
 ).map((t) => ({ tier: t, at: TIERS[t].acceptsRank ?? 0 }))
 
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 const sd = (xs: number[]) => {
   if (xs.length < 2) return 0
   const m = mean(xs)

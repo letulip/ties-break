@@ -77,6 +77,9 @@ import { ECONOMY, recommendVacationPackage } from '../src/engine/economy'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+// T5.12 · F-04, 27.09: the three bodies moved to `_stats.ts` and are re-exported below under their
+// historical names – see the `--- stats ---` section for why the lift was byte-identical.
+import { mean, median, stddev } from './_stats'
 
 export { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -1066,25 +1069,21 @@ export function runCareer(
 }
 
 // --- stats -------------------------------------------------------------------
-
-export function mean(xs: number[]): number {
-  if (xs.length === 0) return 0
-  return xs.reduce((s, x) => s + x, 0) / xs.length
-}
-
-/** Population standard deviation (we have the whole 30-seed population, not a sample). */
-export function stddev(xs: number[]): number {
-  if (xs.length === 0) return 0
-  const m = mean(xs)
-  return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)))
-}
-
-export function median(xs: number[]): number {
-  if (xs.length === 0) return 0
-  const s = [...xs].sort((a, b) => a - b)
-  const mid = Math.floor(s.length / 2)
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
-}
+//
+// ⚠⚠ THE BODIES MOVED TO `tools/_stats.ts` ON 27.09 (T5.12 · F-04) AND THESE THREE NAMES DID NOT.
+// 120 files in `tools/` and 23 in `tests/` import SOMETHING from here, and **44 of them take `mean`,
+// `median` or `stddev`** – 43 tools (14 of them live) and one test. Counted by parsing whole
+// multi-line `import { … }` statements, because a line-wise grep undercounts a name on its own line;
+// that is what made econ-bench the benches' statistics home whether or not anybody named it one, and
+// it is why the review's fix was to LIFT these three bodies rather than write a better rule.
+//
+// The re-export keeps every one of those import paths exactly where it was, and `_stats.ts` records
+// the reference behaviour all 44 already print: empty array → 0, and an even-length median is the
+// average of the two middles.
+//
+// The doc comment that stood on `stddev` here, kept verbatim because it is this bench's own reason:
+// *"Population standard deviation (we have the whole 30-seed population, not a sample)."*
+export { mean, median, stddev }
 
 // --- formatting --------------------------------------------------------------
 

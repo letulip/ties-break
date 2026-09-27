@@ -8,12 +8,15 @@
   // ones (`tools/generated/archival-frozen.json`). `tsconfig.tools.json` inherits this through
   // `extends` and declares `"include": []`, so these paths are the program's only roots.
   "files": [
+    "tools/_args.ts",
     "tools/_birthday.ts",
     "tools/_corridor.ts",
+    "tools/_fmt.ts",
     "tools/_knocks.ts",
     "tools/_lifeBeats.ts",
     "tools/_reveals.ts",
     "tools/_spotlight.ts",
+    "tools/_stats.ts",
     "tools/ad-shoot-bench.ts",
     "tools/age-injury-fit.ts",
     "tools/album-corpus-emit.ts",

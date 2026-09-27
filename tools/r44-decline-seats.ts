@@ -99,16 +99,16 @@ import {
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, type Preset, type Policy } from './econ-bench'
 import { answerBirthdayNeutral } from './_birthday'
 import { drainLifeBeats } from './_lifeBeats'
+// ⚠ T5.12 · F-04, 27.09: `flag` was the SAME BODY as the thirteen copies called `argOf`, under another
+// name – invisible to a census keyed on the name. Renamed `argOf` at the call sites. See
+// `tools/_args.ts`.
+import { argOf } from './_args'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type WeekPlan } from '../src/shared/protocol'
 
 const args = process.argv.slice(2)
-const flag = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const ACTUATE = args.includes('--actuate')
 const LIVE = args.includes('--live') || !ACTUATE
-const SEEDS = flag('seeds', 4)
+const SEEDS = argOf('seeds', 4)
 
 const f1 = (x: number) => x.toFixed(1)
 const f2 = (x: number) => x.toFixed(2)

@@ -41,12 +41,14 @@ import {
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `argOf` was one of seven byte-identical live copies, and the local `pct`, over a
+// numerator and a denominator, was one of three copies of the padded spelling – renamed `shareOfPadded`
+// at the call sites. `strOf` stays local: F-04 named `argOf`, and a string arm is a separate census.
+// See `tools/_args.ts` and `tools/_fmt.ts`.
+import { argOf } from './_args'
+import { shareOfPadded } from './_fmt'
 
 const args = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const strOf = (name: string, fallback: string): string => {
   const i = args.indexOf(`--${name}`)
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback
@@ -259,7 +261,6 @@ function runCareer(presetIndex: number, index: number, policy: Policy): CareerRo
 // --- printing ------------------------------------------------------------------------------------
 
 const padEnd = (s: string, w: number): string => (s.length >= w ? s : s + ' '.repeat(w - s.length))
-const pct = (n: number, d: number): string => (d === 0 ? '   – ' : `${((100 * n) / d).toFixed(1).padStart(5)}%`)
 
 function rankLine(label: string, ranks: (number | null)[]): string {
   const held = ranks.filter((r): r is number => r !== null).sort((a, b) => a - b)
@@ -278,7 +279,7 @@ function report(rows: CareerRow[], policyLabel: string): void {
   const withAny = rows.filter((r) => r.releases.length > 0)
   console.log('')
   console.log('  1. FIRE RATE – the deadline release')
-  console.log(`     careers that saw at least one : ${withAny.length}/${rows.length} (${pct(withAny.length, rows.length).trim()})`)
+  console.log(`     careers that saw at least one : ${withAny.length}/${rows.length} (${shareOfPadded(withAny.length, rows.length).trim()})`)
   console.log(`     releases in total             : ${all.length}` +
     (rows.length ? ` · mean ${(all.length / rows.length).toFixed(2)}/career · worst ${Math.max(0, ...rows.map((r) => r.releases.length))}` : ''))
   if (all.length > 0) {
@@ -294,7 +295,7 @@ function report(rows: CareerRow[], policyLabel: string): void {
   if (all.length === 0) {
     console.log('     (no releases – nothing to reach him. This is the honoured-entry arm.)')
   } else {
-    console.log(`     an inbox LETTER went out     : ${all.filter((r) => r.letter).length}/${all.length} (${pct(all.filter((r) => r.letter).length, all.length).trim()})`)
+    console.log(`     an inbox LETTER went out     : ${all.filter((r) => r.letter).length}/${all.length} (${shareOfPadded(all.filter((r) => r.letter).length, all.length).trim()})`)
     const w = all.filter((r) => r.inSnapshot.length === 4)
     const at = (i: number) => `${w.filter((r) => r.inSnapshot[i]).length}/${w.length}`
     console.log(`     the info ROW in the snapshot : same week ${at(0)} · +1w ${at(1)} · +4w ${at(2)} · +12w ${at(3)}`)
@@ -305,7 +306,7 @@ function report(rows: CareerRow[], policyLabel: string): void {
   const draws = rows.reduce((n, r) => n + Object.values(r.drawsByTier).reduce((a, b) => a + b, 0), 0)
   const outDraws = rows.reduce((n, r) => n + r.outgrownDraws, 0)
   const outPts = rows.reduce((n, r) => n + r.outgrownPoints, 0)
-  console.log(`     draws played                 : ${draws} · of them at an outgrown rung ${outDraws} (${pct(outDraws, draws).trim()})`)
+  console.log(`     draws played                 : ${draws} · of them at an outgrown rung ${outDraws} (${shareOfPadded(outDraws, draws).trim()})`)
   console.log(`     points those draws paid      : ${outPts} · mean ${outDraws ? (outPts / outDraws).toFixed(1) : '0.0'}/draw`)
   console.log(`     longest unbroken run of them : ${Math.max(0, ...rows.map((r) => r.maxOutgrownRun))} tournaments · mean ${mean(rows.map((r) => r.maxOutgrownRun)).toFixed(2)}`)
   if (outDraws > 0) {

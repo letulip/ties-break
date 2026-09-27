@@ -58,6 +58,10 @@ import type { CareerEndingType } from '../src/shared/protocol'
 import type { Temperament } from '../src/engine/spirit'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { FULL_CAREER_WEEKS, FULL_CAREER_AGE_YEARS } from './endings-bench'
+// T5.12 · F-04, 27.09: the local `pct`, taking a numerator and a denominator, was one of THREE
+// byte-identical copies of the padded spelling – renamed `shareOfPadded` at the call sites so the pair
+// contract is visible beside the nine siblings whose `pct` takes a fraction. See `tools/_fmt.ts`.
+import { shareOfPadded } from './_fmt'
 
 /** The candidate top-N bands for the peak gate, swept in one pass exactly as the bankruptcy grace
  *  window is: the predicate takes the band as a parameter, so «would N have opened» is exact. */
@@ -207,10 +211,6 @@ export function runCareer(preset: Preset, index: number, policy: Policy): DoorOu
   return out
 }
 
-function pct(n: number, d: number): string {
-  return d === 0 ? '   – ' : `${((100 * n) / d).toFixed(1).padStart(5)}%`
-}
-
 function padEnd(s: string, w: number): string {
   return s.length >= w ? s : s + ' '.repeat(w - s.length)
 }
@@ -319,9 +319,9 @@ export function main(argv = process.argv.slice(2)): void {
       .filter((a): a is number => a !== null)
       .sort((a, b) => a - b)
     console.log(
-      `  ${padEnd(door, 8)}${String(census.length).padStart(8)}${pct(eligible, census.length).padStart(10)}${`${(
+      `  ${padEnd(door, 8)}${String(census.length).padStart(8)}${shareOfPadded(eligible, census.length).padStart(10)}${`${(
         100 * expected
-      ).toFixed(2)}%`.padStart(10)}${pct(left.length, shipped.length).padStart(10)}   ${
+      ).toFixed(2)}%`.padStart(10)}${shareOfPadded(left.length, shipped.length).padStart(10)}   ${
         ages.length ? median(ages).toFixed(0) : '–'
       }            ${firsts.length ? `${median(firsts).toFixed(0)} (min ${firsts[0]}, n ${firsts.length})` : '–'}`,
     )
@@ -376,10 +376,10 @@ export function main(argv = process.argv.slice(2)): void {
     const rows = census.filter((o) => o.temperament === t)
     const open = (door: 'peak' | 'fall') => rows.filter((o) => o.eligibleSeasons[door].length > 0).length
     console.log(
-      `  ${padEnd(t, 8)}${String(rows.length).padStart(8)}${pct(rows.length, census.length)}${pct(
+      `  ${padEnd(t, 8)}${String(rows.length).padStart(8)}${shareOfPadded(rows.length, census.length)}${shareOfPadded(
         open('peak'),
         Math.max(1, rows.length),
-      ).padStart(10)}${pct(open('fall'), Math.max(1, rows.length)).padStart(10)}`,
+      ).padStart(10)}${shareOfPadded(open('fall'), Math.max(1, rows.length)).padStart(10)}`,
     )
   }
   console.log('')
@@ -405,7 +405,7 @@ export function main(argv = process.argv.slice(2)): void {
   for (const band of PEAK_BANDS) {
     const hit = peakGirls.filter((o) => o.peakBand[band]).length
     console.log(
-      `  ${padEnd(`top ${band}`, 8)}${`${hit}/${peakGirls.length}`.padStart(22)}${pct(hit, census.length).padStart(17)}${
+      `  ${padEnd(`top ${band}`, 8)}${`${hit}/${peakGirls.length}`.padStart(22)}${shareOfPadded(hit, census.length).padStart(17)}${
         band === ENDINGS.peakRankBand ? '   <- shipped' : ''
       }`,
     )
@@ -465,10 +465,10 @@ export function main(argv = process.argv.slice(2)): void {
   for (const type of ['stopped', 'college', 'bankruptcy', 'injury', 'natural', 'plateau', 'peak', 'fall'] as const) {
     const rows = shipped.filter((o) => o.ending === type)
     if (rows.length === 0 && type !== 'peak' && type !== 'fall') continue
-    console.log(`  ${padEnd(type, 12)}${String(rows.length).padStart(6)}${pct(rows.length, shipped.length).padStart(9)}`)
+    console.log(`  ${padEnd(type, 12)}${String(rows.length).padStart(6)}${shareOfPadded(rows.length, shipped.length).padStart(9)}`)
   }
   const open = shipped.filter((o) => o.ending === null).length
-  console.log(`  ${padEnd('(still playing)', 12)}${String(open).padStart(6)}${pct(open, shipped.length).padStart(9)}`)
+  console.log(`  ${padEnd('(still playing)', 12)}${String(open).padStart(6)}${shareOfPadded(open, shipped.length).padStart(9)}`)
   console.log('')
 }
 

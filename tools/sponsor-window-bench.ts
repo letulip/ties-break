@@ -42,6 +42,12 @@ import { reviewSponsors, sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY } from '../src/engine/economy'
 import type { KitOfferTerms, Offer, SponsorTier } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Preset, type Policy } from './econ-bench'
+// T5.12 · F-04, 27.09: `pct` was one of ten live copies of the fraction spelling, and `usd` was the
+// SAME BODY as the six copies called `money` under a different name – see `tools/_fmt.ts`. Renamed to
+// `money` at its five call sites so one rule reads as one name across the benches.
+// ⚠ `quantile` below STAYS local: its rank rule is `round(q · (n−1))` where `_stats.quantile` is
+// `floor(q · n)`, and a p-value is a printed cell.
+import { money, pctOf } from './_fmt'
 
 /** Six seasons – the horizon the econ bench calls "the adult tour", and the first one in which the
  *  professional rungs of the ladder are reachable at all. */
@@ -510,12 +516,6 @@ export function runSponsorCareer(
 
 // --- reporting -------------------------------------------------------------------------------------
 
-function pct(x: number): string {
-  return `${(x * 100).toFixed(1)}%`
-}
-function usd(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`
-}
 function quantile(xs: number[], q: number): number {
   if (xs.length === 0) return 0
   const s = [...xs].sort((a, b) => a - b)
@@ -561,15 +561,15 @@ export function main(argv: string[] = process.argv.slice(2)): void {
           [
             preset.label,
             policy.label.slice(0, 7),
-            pct(mean(cell.map((r) => r.coverage))),
+            pctOf(mean(cell.map((r) => r.coverage))),
             `${median(gaps).toFixed(0)}/${quantile(gaps, 0.9).toFixed(0)}/${Math.max(...gaps).toFixed(0)}`,
             `${median(after).toFixed(0)}/${quantile(after, 0.9).toFixed(0)}/${Math.max(...after).toFixed(0)}`,
             mean(letters).toFixed(1),
             mean(cell.map((r) => r.signed)).toFixed(1),
             mean(cell.map((r) => r.refused)).toFixed(1),
             mean(cell.map((r) => r.expiredUnsigned)).toFixed(1),
-            usd(mean(cell.map((r) => r.sponsorCents))),
-            pct(mean(share)),
+            money(mean(cell.map((r) => r.sponsorCents))),
+            pctOf(mean(share)),
           ].join('\t'),
         )
       }
@@ -578,14 +578,14 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const after = arm.map((r) => r.longestGapAfterFirstWeeks)
     const everSigned = arm.filter((r) => r.firstDealWeek !== null)
     console.log(
-      `ALL\tcover ${pct(mean(arm.map((r) => r.coverage)))}\tgap p50 ${median(gaps).toFixed(0)} p90 ${quantile(gaps, 0.9).toFixed(0)} max ${Math.max(...gaps).toFixed(0)}` +
+      `ALL\tcover ${pctOf(mean(arm.map((r) => r.coverage)))}\tgap p50 ${median(gaps).toFixed(0)} p90 ${quantile(gaps, 0.9).toFixed(0)} max ${Math.max(...gaps).toFixed(0)}` +
         `\tgap-after-1st p50 ${median(after).toFixed(0)} p90 ${quantile(after, 0.9).toFixed(0)} max ${Math.max(...after).toFixed(0)}` +
-        `\tsponsor ${usd(mean(arm.map((r) => r.sponsorCents)))}\tshare ${pct(mean(arm.map((r) => (r.incomeCents > 0 ? r.sponsorCents / r.incomeCents : 0))))}`,
+        `\tsponsor ${money(mean(arm.map((r) => r.sponsorCents)))}\tshare ${pctOf(mean(arm.map((r) => (r.incomeCents > 0 ? r.sponsorCents / r.incomeCents : 0))))}`,
     )
     console.log(
       `  ever covered: ${everSigned.length}/${arm.length} careers; first deal at week p50 ${median(everSigned.map((r) => r.firstDealWeek!)).toFixed(0)}` +
-        `\tkit ${usd(mean(arm.map((r) => r.kitCoveredCents)))}  retainer ${usd(mean(arm.map((r) => r.retainerCents)))}` +
-        `  appearance ${usd(mean(arm.map((r) => r.appearanceCents)))}  bonus ${usd(mean(arm.map((r) => r.bonusCents)))}  travel ${usd(mean(arm.map((r) => r.travelCoveredCents)))}`,
+        `\tkit ${money(mean(arm.map((r) => r.kitCoveredCents)))}  retainer ${money(mean(arm.map((r) => r.retainerCents)))}` +
+        `  appearance ${money(mean(arm.map((r) => r.appearanceCents)))}  bonus ${money(mean(arm.map((r) => r.bonusCents)))}  travel ${money(mean(arm.map((r) => r.travelCoveredCents)))}`,
     )
 
     // THE FLOOR: split the arm by whether she was actually competing. A career that stops playing
@@ -593,10 +593,10 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const busy = arm.filter((r) => r.eventsPlayed >= median(arm.map((x) => x.eventsPlayed)))
     const quiet = arm.filter((r) => r.eventsPlayed < median(arm.map((x) => x.eventsPlayed)))
     console.log(
-      `  competing half (>= median ${median(arm.map((x) => x.eventsPlayed)).toFixed(0)} events): cover ${pct(mean(busy.map((r) => r.coverage)))}, letters ${mean(busy.map((r) => Object.values(r.raisedByTier).reduce((a, b) => a + b, 0))).toFixed(1)}`,
+      `  competing half (>= median ${median(arm.map((x) => x.eventsPlayed)).toFixed(0)} events): cover ${pctOf(mean(busy.map((r) => r.coverage)))}, letters ${mean(busy.map((r) => Object.values(r.raisedByTier).reduce((a, b) => a + b, 0))).toFixed(1)}`,
     )
     console.log(
-      `  quieter half:                       cover ${pct(mean(quiet.map((r) => r.coverage)))}, letters ${mean(quiet.map((r) => Object.values(r.raisedByTier).reduce((a, b) => a + b, 0))).toFixed(1)}`,
+      `  quieter half:                       cover ${pctOf(mean(quiet.map((r) => r.coverage)))}, letters ${mean(quiet.map((r) => Object.values(r.raisedByTier).reduce((a, b) => a + b, 0))).toFixed(1)}`,
     )
 
     // ⚠ THE FLOOR, AS THE OWNER COUNTS IT (09.08). Not weeks - SEASONS that began with nothing.
@@ -604,7 +604,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const bare = arm.reduce((a, r) => a + r.seasonsOpenedBare, 0)
     const bareShare = arm.map((r) => (r.seasonsOpened > 0 ? r.seasonsOpenedBare / r.seasonsOpened : 0))
     console.log(
-      `  THE FLOOR:    ${opened} seasons opened (season 1+) – ${bare} of them with NO kit deal (${pct(opened > 0 ? bare / opened : 0)}); per career p50 ${pct(median(bareShare))}, careers never bare ${arm.filter((r) => r.seasonsOpenedBare === 0).length}/${arm.length}`,
+      `  THE FLOOR:    ${opened} seasons opened (season 1+) – ${bare} of them with NO kit deal (${pctOf(opened > 0 ? bare / opened : 0)}); per career p50 ${pctOf(median(bareShare))}, careers never bare ${arm.filter((r) => r.seasonsOpenedBare === 0).length}/${arm.length}`,
     )
     // ⚠⚠ ...AND THE SAME FLOOR AFTER HE HAS ANSWERED THE POST (28.08, round 28 #17-b). The line
     //    above reads before the parent acts, which since the owner's ruling can call a season bare
@@ -615,7 +615,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const bareWeeks = arm.reduce((a, r) => a + r.bareOpeningWeeks, 0)
     const bareRuns = arm.reduce((a, r) => a + r.bareOpeningRuns, 0)
     console.log(
-      `  ...AFTER POST: ${bareAfter} of ${opened} opened bare (${pct(opened > 0 ? bareAfter / opened : 0)}); careers never bare ${arm.filter((r) => r.seasonsOpenedBareAfterPost === 0).length}/${arm.length}` +
+      `  ...AFTER POST: ${bareAfter} of ${opened} opened bare (${pctOf(opened > 0 ? bareAfter / opened : 0)}); careers never bare ${arm.filter((r) => r.seasonsOpenedBareAfterPost === 0).length}/${arm.length}` +
         `; uncovered opening weeks ${bareWeeks} over ${bareRuns} runs (mean ${bareRuns > 0 ? (bareWeeks / bareRuns).toFixed(1) : '0.0'} wk), ${(bareWeeks / arm.length).toFixed(1)} wk per career`,
     )
     // ...and WHY the bare ones were bare. Four verdicts, and only three of them can leave a season
@@ -645,10 +645,10 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const open = arm.reduce((a, r) => a + r.wintersOpen, 0)
     const silent = arm.reduce((a, r) => a + r.wintersSilent, 0)
     console.log(
-      `  THE SCHEDULE: ${probed} winters replayed from every entry week – ${dependent} came out different (${pct(probed > 0 ? dependent / probed : 0)}), ${lost} letters lost to arriving late`,
+      `  THE SCHEDULE: ${probed} winters replayed from every entry week – ${dependent} came out different (${pctOf(probed > 0 ? dependent / probed : 0)}), ${lost} letters lost to arriving late`,
     )
     console.log(
-      `  THE DICE:     ${open} winters open to her – ${silent} in which no brand wrote (${pct(open > 0 ? silent / open : 0)}); that is offerChance, and it is the design`,
+      `  THE DICE:     ${open} winters open to her – ${silent} in which no brand wrote (${pctOf(open > 0 ? silent / open : 0)}); that is offerChance, and it is the design`,
     )
 
     // BY RUNG – which brands actually wrote, so a change in the schedule cannot hide behind a total.

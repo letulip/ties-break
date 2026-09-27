@@ -65,15 +65,15 @@ import type { TierId } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type WeekPlan } from '../src/shared/protocol'
 import type { MatchPlayer } from '../src/engine/match/types'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `argOf` was one of seven byte-identical live copies – see `tools/_args.ts`.
+// ⚠ `pctl` and `mean` below STAY local: both return NaN on an empty array and `_stats.ts` returns 0,
+// which is a printed cell and not a style.
+import { argOf } from './_args'
 
 // -------------------------------------------------------------------------------------------------
 // args
 // -------------------------------------------------------------------------------------------------
 const args = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const CAREER_SEEDS = argOf('seeds', 4)
 const DIAL_SEEDS = argOf('dial-seeds', 6)
 const onlyArg = args.indexOf('--only') >= 0 ? (args[args.indexOf('--only') + 1] ?? '') : ''

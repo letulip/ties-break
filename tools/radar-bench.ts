@@ -60,14 +60,14 @@ import {
 import { SKILL_KEYS, type SkillKey } from '../src/engine/development'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type WorldMatch } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `mean` was a local with econ-bench's own body – see `tools/_stats.ts`.
+import { mean } from './_stats'
+// ⚠ T5.12 · F-04, 27.09: `flag` was the SAME BODY as the copies called `argOf`, under another name –
+// invisible to a census keyed on the name. Renamed `argOf` at the call sites. See `tools/_args.ts`.
+import { argOf } from './_args'
 
-const args = process.argv.slice(2)
-function flag(name: string, fallback: number): number {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
-const SEEDS = flag('seeds', 8)
-const WEEKS = flag('weeks', 208)
+const SEEDS = argOf('seeds', 8)
+const WEEKS = argOf('weeks', 208)
 const MARKS = [1, 18, 52, 104, 208].filter((w) => w <= WEEKS)
 const TIERS: CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
 
@@ -75,7 +75,6 @@ const f1 = (x: number) => x.toFixed(1)
 const f2 = (x: number) => x.toFixed(2)
 const pad = (s: string, n: number) => s.padEnd(n)
 const padL = (s: string, n: number) => s.padStart(n)
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 
 // --- a career, driven the way an ordinary player drives one ------------------------------------
 

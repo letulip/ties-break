@@ -54,18 +54,20 @@ import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Polic
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { CoachTier, TierOpenMap } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `argOf` was the seventh live copy of one body – the only difference was that
+// this file calls its `process.argv.slice(2)` `argv` rather than `args`. `strOf` stays local.
+import { argOf } from './_args'
+// T5.12 · F-04, 27.09: the local `pct`, taking a numerator and a denominator, was one of two
+// byte-identical copies – renamed `shareOf` at the call sites so the pair contract is visible beside
+// the nine siblings whose `pct` takes a FRACTION.
+import { shareOf } from './_fmt'
 
 const argv = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = argv.indexOf(`--${name}`)
-  return i >= 0 && argv[i + 1] ? Number(argv[i + 1]) : fallback
-}
 const strOf = (name: string, fallback: string): string => {
   const i = argv.indexOf(`--${name}`)
   return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback
 }
 const padE = (s: string | number, w: number) => String(s).padEnd(w)
-const pct = (n: number, d: number): string => (d === 0 ? '   – ' : `${((100 * n) / d).toFixed(1)}%`)
 
 /** ⚠ IS ANYBODY BEING PAID TO HAVE A VIEW – the same gate `toSnapshot` puts on both of the coach's
  *  opinions, so this tool cannot hear a line the screen would not print. A self-coached career gets
@@ -147,9 +149,9 @@ async function saveArm(path: string): Promise<void> {
   const span = weeks.length ? weeks[weeks.length - 1] - world.week : 0
 
   console.log('')
-  console.log(`  future events: ${facts.length - enterable.length} blocked · ${enterable.length} enterable   (${pct(enterable.length, facts.length)} enterable)`)
+  console.log(`  future events: ${facts.length - enterable.length} blocked · ${enterable.length} enterable   (${shareOf(enterable.length, facts.length)} enterable)`)
   console.log(`  weeks that CARRY an event      : ${weeks.length} of ${span} remaining weeks`)
-  console.log(`  weeks where NOTHING is enterable: ${deadWeeks.length} of ${weeks.length}   (${pct(deadWeeks.length, weeks.length)})`)
+  console.log(`  weeks where NOTHING is enterable: ${deadWeeks.length} of ${weeks.length}   (${shareOf(deadWeeks.length, weeks.length)})`)
   console.log(
     `  why the blocked ones refuse    : ${[...reasons.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(' · ')}`,
   )
@@ -329,7 +331,7 @@ function report(rows: CareerRow[], label: string): void {
   console.log('')
   console.log(`══ ${label} · ${rows.length} careers · ${seasons.toFixed(0)} career-seasons ══`)
   console.log(`  PLAYABLE WEEKS per season (>=1 enterable event) : ${(playable / seasons).toFixed(1)} of ${(weeksWithEvent / seasons).toFixed(1)} weeks that carry one`)
-  console.log(`  ...as a share of the weeks that carry an event  : ${pct(playable, weeksWithEvent)}`)
+  console.log(`  ...as a share of the weeks that carry an event  : ${shareOf(playable, weeksWithEvent)}`)
   console.log(`  entries per season                              : ${(sum((r) => r.entries) / seasons).toFixed(1)}`)
   const byTier = new Map<TierId, number>()
   for (const r of rows) for (const [t, n] of r.byTier) byTier.set(t, (byTier.get(t) ?? 0) + n)
@@ -351,10 +353,10 @@ function report(rows: CareerRow[], label: string): void {
   for (const r of rows) for (const [k, n] of r.byLine) lines.set(k, (lines.get(k) ?? 0) + n)
   console.log(
     `  THE COACH, as the player MEETS him: ${sum((r) => r.shownSpoke)} of ${sum((r) => r.shownCards)} rendered cards` +
-      ` (${pct(sum((r) => r.shownSpoke), sum((r) => r.shownCards))}) – both feeds show ONE card a week`,
+      ` (${shareOf(sum((r) => r.shownSpoke), sum((r) => r.shownCards))}) – both feeds show ONE card a week`,
   )
   console.log(
-    `  ...over every enterable card, rendered or not: ${spoke} of ${cards} (${pct(spoke, cards)})` +
+    `  ...over every enterable card, rendered or not: ${spoke} of ${cards} (${shareOf(spoke, cards)})` +
       (lines.size ? ` · ${[...lines.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(' · ')}` : ''),
   )
   const byRung = new Map<string, { cards: number; spoke: number; careers: number }>()
@@ -367,7 +369,7 @@ function report(rows: CareerRow[], label: string): void {
   }
   console.log(
     `  ...by HIS rung : ` +
-      [...byRung.entries()].map(([t, v]) => `${t} ${pct(v.spoke, v.cards)} (${v.careers} careers)`).join(' · '),
+      [...byRung.entries()].map(([t, v]) => `${t} ${shareOf(v.spoke, v.cards)} (${v.careers} careers)`).join(' · '),
   )
   if (sum((r) => r.vetoed) > 0) console.log(`  entries he talked her out of                    : ${sum((r) => r.vetoed)}`)
   const wta = rows.map((r) => r.peakWta).filter((x): x is number => x !== null).sort((a, b) => a - b)

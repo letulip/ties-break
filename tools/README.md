@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-266 TRACKED TypeScript files: **55 live**, **211 archival**
+269 TRACKED TypeScript files: **58 live**, **211 archival**
 (of which **113 frozen** out of `check:tools` and **98 still swept**).
 
 ## Why the split exists
@@ -36,10 +36,13 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 
 | Tool | Why it is live |
 | --- | --- |
+| `_args.ts` | imported by a live tool |
 | `_birthday.ts` | imported by the test suite |
+| `_fmt.ts` | imported by a live tool |
 | `_knocks.ts` | imported by the test suite |
 | `_lifeBeats.ts` | imported by the test suite |
 | `_spotlight.ts` | imported by a live tool |
+| `_stats.ts` | imported by a live tool |
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
 | `album-corpus-emit.ts` | writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album's 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec |
 | `album-corpus-parse.ts` | imported by the test suite |

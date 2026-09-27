@@ -85,17 +85,18 @@ import type { TierId } from '../src/engine/season/types'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, type Preset, type Policy } from './econ-bench'
 import { answerBirthdayNeutral } from './_birthday'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `mean` and `median` were locals with econ-bench's own rules – see `tools/_stats.ts`.
+import { mean, median } from './_stats'
+// ⚠ T5.12 · F-04, 27.09: `numOf` was the SAME BODY as the copies called `argOf`, under another name –
+// invisible to a census keyed on the name. Renamed `argOf` at the call sites. See `tools/_args.ts`.
+import { argOf } from './_args'
 
 // =================================================================================================
 // CLI
 // =================================================================================================
 const args = process.argv.slice(2)
-const numOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
-const SEEDS = numOf('seeds', 6)
-const TO_AGE = numOf('toAge', 27)
+const SEEDS = argOf('seeds', 6)
+const TO_AGE = argOf('toAge', 27)
 const ACTUATE = args.includes('--actuate')
 const GRID = args.includes('--grid')
 const STAFFING = args.includes('--staffing')
@@ -114,13 +115,6 @@ const f2 = (x: number) => x.toFixed(2)
 const padL = (s: string | number, n: number) => String(s).padStart(n)
 const padR = (s: string | number, n: number) => String(s).padEnd(n)
 const rule = (n = 108) => '='.repeat(n)
-const mean = (xs: number[]) => (xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length)
-const median = (xs: number[]) => {
-  if (xs.length === 0) return 0
-  const s = [...xs].sort((a, b) => a - b)
-  const m = s.length >> 1
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
-}
 const sem = (xs: number[]) => {
   if (xs.length < 2) return 0
   const m = mean(xs)

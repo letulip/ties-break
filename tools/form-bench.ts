@@ -45,6 +45,14 @@ import { KID_ID } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { MatchOptions, MatchPlayer, Tour } from '../src/engine/match/types'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
+// T5.12 · F-04, 27.09: four copies in one file. `mean` and `quantile` were econ-bench's and this
+// file's own bodies – `_stats.quantile` IS this file's, lifted verbatim, since `form-g-sweep` carried
+// the same one. `money` was one of six unsigned console copies and `pct` one of ten fraction copies.
+// ⚠ `num` below STAYS LOCAL, and it is a FIFTH arg-reader behaviour rather than a sixth copy: it
+// guards on `argv[i + 1] !== undefined` where `_args.argOf` guards on truthiness, so `--sims ''`
+// yields 0 here and the fallback there.
+import { mean, quantile } from './_stats'
+import { money, pctOf } from './_fmt'
 
 const argv = process.argv.slice(2)
 const num = (flag: string, dflt: number): number => {
@@ -60,16 +68,8 @@ const OPTS: MatchOptions = { surface: 'hard', tour: TOUR, seed: '' }
 const F = ECONOMY.form
 
 const pp = (x: number): string => `${x >= 0 ? '+' : ''}${(100 * x).toFixed(2)}pp`
-const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 const padL = (s: string | number, n: number): string => String(s).padStart(n)
 const padR = (s: string | number, n: number): string => String(s).padEnd(n)
-const money = (c: number): string => `$${Math.round(c / 100).toLocaleString('en-US')}`
-const mean = (xs: number[]): number => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
-const quantile = (xs: number[], q: number): number => {
-  if (xs.length === 0) return 0
-  const s = [...xs].sort((a, b) => a - b)
-  return s[Math.min(s.length - 1, Math.max(0, Math.floor(q * s.length)))]
-}
 
 // =================================================================================================
 // THE TWO BUILDS EVERY MATCH SECTION USES
@@ -121,9 +121,9 @@ function sectionZero(): void {
   const base = winRate(atForm(62, 0), opp, 'proof')
   const low = winRate(atForm(62, F.min), opp, 'proof')
   const high = winRate(atForm(62, F.max), opp, 'proof')
-  console.log(`  form 0      loop ${pct(base)}`)
-  console.log(`  form ${padL(F.min, 3)}    loop ${pct(low)}   ${pp(low - base)}`)
-  console.log(`  form ${padL(`+${F.max}`, 3)}    loop ${pct(high)}   ${pp(high - base)}`)
+  console.log(`  form 0      loop ${pctOf(base)}`)
+  console.log(`  form ${padL(F.min, 3)}    loop ${pctOf(low)}   ${pp(low - base)}`)
+  console.log(`  form ${padL(`+${F.max}`, 3)}    loop ${pctOf(high)}   ${pp(high - base)}`)
   const span = Math.abs(high - low)
   console.log(`  => clamp-to-clamp span ${pp(span)}${span < 0.005 ? '   ⚠⚠ THE READER IS INERT' : ''}`)
   // The absurd arm: K x 10. If the shipped K's effect is not roughly a tenth of this, the reader is
@@ -162,7 +162,7 @@ function sectionOne(): void {
     const worst = Math.max(Math.abs(low - zero), Math.abs(high - zero))
     const inside = 100 * worst >= F.corridorPp[0] && 100 * worst <= F.corridorPp[1]
     console.log(
-      `  ${padR(label, 22)}${padL(pct(fastMatchProbability(atForm(core, 0), opp, OPTS)), 10)}${padL(pct(zero), 9)}` +
+      `  ${padR(label, 22)}${padL(pctOf(fastMatchProbability(atForm(core, 0), opp, OPTS)), 10)}${padL(pctOf(zero), 9)}` +
         `${padL(pp(low - zero), 11)}${padL(pp(floor - zero), 10)}${padL(pp(high - zero), 11)}` +
         `${padL((100 * worst).toFixed(2), 12)}${padL(inside ? 'inside' : 'OUTSIDE', 10)}`,
     )
@@ -316,7 +316,7 @@ function sectionTwo(rows: CareerRead[]): void {
       `${padL(Math.min(...all).toFixed(1), 8)}${padL(Math.max(...all).toFixed(1), 8)}`,
   )
   console.log('')
-  const share = (f: (x: number) => boolean): string => pct(all.filter(f).length / all.length)
+  const share = (f: (x: number) => boolean): string => pctOf(all.filter(f).length / all.length)
   console.log(`  weeks at exactly neutral          ${padL(share((x) => x === 0), 8)}`)
   console.log(`  weeks in a slump (<= ${F.rustNoteAt})          ${padL(share((x) => x <= F.rustNoteAt), 8)}`)
   console.log(`  weeks striking it clean (>= ${F.goodNoteAt})   ${padL(share((x) => x >= F.goodNoteAt), 8)}`)
@@ -420,9 +420,9 @@ function sectionThree(cals: Calendar[]): void {
     const m = mean(trace)
     const d = m - baseMean
     console.log(
-      `  ${padR(label, 28)}${padL(m.toFixed(3), 12)}${padL(pct(trace.filter((x) => x <= F.rustNoteAt).length / trace.length), 11)}` +
-        `${padL(pct(trace.filter((x) => x <= F.rustFloor).length / trace.length), 11)}` +
-        `${padL(`${d >= 0 ? '+' : ''}${d.toFixed(3)}`, 12)}${padL(baseMean === 0 ? '–' : pct(d / -baseMean), 13)}`,
+      `  ${padR(label, 28)}${padL(m.toFixed(3), 12)}${padL(pctOf(trace.filter((x) => x <= F.rustNoteAt).length / trace.length), 11)}` +
+        `${padL(pctOf(trace.filter((x) => x <= F.rustFloor).length / trace.length), 11)}` +
+        `${padL(`${d >= 0 ? '+' : ''}${d.toFixed(3)}`, 12)}${padL(baseMean === 0 ? '–' : pctOf(d / -baseMean), 13)}`,
     )
     return d
   }
@@ -442,7 +442,7 @@ function sectionThree(cals: Calendar[]): void {
     const away = gained[`${r.label} · travels`] ?? 0
     console.log(
       `     ${padR(r.label, 20)} home ${padL(home.toFixed(3), 8)}  travels ${padL(away.toFixed(3), 8)}  ` +
-        `home reaches ${away === 0 ? '–' : pct(home / away)}  (round 42 predicted 89.4%)`,
+        `home reaches ${away === 0 ? '–' : pctOf(home / away)}  (round 42 predicted 89.4%)`,
     )
   }
 }

@@ -79,23 +79,27 @@ import { rngFromSeed } from '../src/engine/rng'
 import { spiritBandOf } from '../src/engine/spirit'
 import { drainKnock } from './_knocks'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayStyle } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: the local `mean` was `(xs.length || 1)`, which is econ-bench's rule spelled
+// differently – empty is 0 either way. See `tools/_stats.ts` for the reference behaviour.
+import { mean } from './_stats'
+// ⚠ T5.12 · F-04, 27.09: `flag` was the SAME BODY as the thirteen copies called `argOf`, under
+// another name – F-04's census greps for the name, so three live `flag`s and one `numOf` were invisible
+// to it. Renamed `argOf` at the call sites. See `tools/_args.ts`.
+import { argOf } from './_args'
+// T5.12 · F-04, 27.09: `pct` was one of ten live copies of the fraction spelling – see `tools/_fmt.ts`.
+// ⚠ `quantile` below STAYS local: it takes an ALREADY-SORTED array and returns NaN on empty.
+import { pctOf } from './_fmt'
 
 const args = process.argv.slice(2)
-function flag(name: string, fallback: number): number {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
-const SEEDS = flag('seeds', 3000)
-const PAIRS = flag('pairs', 4000)
-const WALK_YEARS = flag('walkyears', 400)
+const SEEDS = argOf('seeds', 3000)
+const PAIRS = argOf('pairs', 4000)
+const WALK_YEARS = argOf('walkyears', 400)
 const ACTUATE = args.includes('--actuate')
 
 const f1 = (x: number) => x.toFixed(1)
 const f2 = (x: number) => x.toFixed(2)
-const pct = (x: number) => `${(x * 100).toFixed(1)}%`
 const pad = (s: string, n: number) => s.padEnd(n)
 const padL = (s: string, n: number) => s.padStart(n)
-const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1)
 const variance = (xs: number[]) => {
   const m = mean(xs)
   return mean(xs.map((x) => (x - m) * (x - m)))
@@ -227,7 +231,7 @@ function b0(): void {
   for (const [label, key] of rows) {
     const p = hits[key] / careers.length
     console.log(
-      `${pad(label, 44)}${padL(pct(p), 8)}${padL(oneIn(p), 12)}  ${seedFor[key] ?? '– NEVER HAPPENED –'}`,
+      `${pad(label, 44)}${padL(pctOf(p), 8)}${padL(oneIn(p), 12)}  ${seedFor[key] ?? '– NEVER HAPPENED –'}`,
     )
   }
   const zero = rows.slice(0, 6).filter(([, k]) => hits[k] === 0)
@@ -313,7 +317,7 @@ function turnOffs(levels: number[], bar: number): number {
 }
 
 function b12(): void {
-  const pairs = flag('readpairs', 240)
+  const pairs = argOf('readpairs', 240)
   console.log(`\nB12 · WHEN THE GAUGE FIRST LIGHTS – ${pairs} pairs x ${READ_WEEKS} weeks, one walk read by two gates`)
 
   const OLD_BAR = CHEM.ceilingAtNone // the shipped single bar, which WAS `ceilingAtNone` by derivation
@@ -372,7 +376,7 @@ function b12(): void {
     console.log(
       `${pad(label, 30)}${padL(String(seen[0]), 7)}${padL(String(quantile(seen, 0.1)), 6)}` +
         `${padL(String(quantile(seen, 0.5)), 8)}${padL(String(quantile(seen, 0.9)), 6)}` +
-        MARKS.map((m) => padL(pct(firsts.filter((w) => w > 0 && w <= m).length / firsts.length), 10)).join('') +
+        MARKS.map((m) => padL(pctOf(firsts.filter((w) => w > 0 && w <= m).length / firsts.length), 10)).join('') +
         `${padL(`${never}/${firsts.length}`, 9)}${padL(f2(off), 11)}`,
     )
   }
@@ -490,11 +494,11 @@ function b9(): void {
   const weeksInLong = runs.filter((r) => r >= 8).reduce((a, b) => a + b, 0) / phases.length
   console.log(`\nB9 · DO PERIODS APPEAR? – ${WALK_YEARS} years of one perfect pair's weather`)
   console.log(`  runs on one side of the mean: ${runs.length}   mean length ${f1(mean(runs))} weeks   longest ${Math.max(...runs)}`)
-  console.log(`  runs of 8+ weeks: ${long} of ${runs.length} (${pct(long / runs.length)}), holding ${pct(weeksInLong)} of all weeks`)
+  console.log(`  runs of 8+ weeks: ${long} of ${runs.length} (${pctOf(long / runs.length)}), holding ${pctOf(weeksInLong)} of all weeks`)
   console.log(
     long === 0
       ? '⚠⚠ WHITE NOISE WEARING A PHASE – §3.3 has not been built.'
-      : `✓ periods are real: the series spends ${pct(weeksInLong)} of its life inside a run of 8 weeks or more.`,
+      : `✓ periods are real: the series spends ${pctOf(weeksInLong)} of its life inside a run of 8 weeks or more.`,
   )
 }
 
@@ -516,7 +520,7 @@ function b7(): void {
     console.log(
       `${pad(f2(a), 12)}${padL(f1(floorOf(a)), 10)}${padL(f1(driftOf(a)), 10)}${padL(f1(ceilOf(a)), 10)}` +
         `${padL(f1(sorted[Math.floor(sorted.length / 2)]), 11)}${padL(f1(sorted[sorted.length - 1]), 10)}` +
-        `${padL(f1(sorted[0]), 11)}${padL(`${pct(down)} (${oneIn(down)})`, 18)}`,
+        `${padL(f1(sorted[0]), 11)}${padL(`${pctOf(down)} (${oneIn(down)})`, 18)}`,
     )
   }
 
@@ -574,7 +578,7 @@ function actuate(): void {
     const r = b10()
     console.log(
       `${pad(f2(scale) + (scale === was ? '  (shipped)' : ''), 16)}${padL(f2(r.within), 10)}${padL(f2(r.between), 10)}` +
-        `${padL(r.between < 1e-12 ? 'inf' : f1(r.ratio), 10)}${padL(pct(r.click), 10)}`,
+        `${padL(r.between < 1e-12 ? 'inf' : f1(r.ratio), 10)}${padL(pctOf(r.click), 10)}`,
     )
   }
   CHEM.centreScale = was
@@ -592,8 +596,8 @@ function actuate(): void {
  *  arithmetic this engine has run since round 2. If the two arms come out identical, the mechanic is
  *  not wired to development and every corner above is a fact about a number nobody reads. */
 function careerArm(): void {
-  const careers = flag('careers', 12)
-  const weeks = flag('weeks', 260)
+  const careers = argOf('careers', 12)
+  const weeks = argOf('weeks', 260)
   console.log(`\n⭐ THE WAVE'S ACTUATION – ${careers} paired careers x ${weeks} weeks, chemistry ON against the same tree NEUTRALISED`)
   const anchors = ['ceilingAtPerfect', 'ceilingAtNone', 'ceilingAtAnti', 'floorAtPerfect', 'floorAtNone', 'floorAtAnti', 'driftAtPerfect', 'driftAtAnti'] as const
   const saved = Object.fromEntries(anchors.map((k) => [k, CHEM[k]])) as Record<string, number>
@@ -729,7 +733,7 @@ function run(): void {
   const r = b10()
   console.log('\nB10 · THE LOOKUP TEST – variance of realised affinity, WITHIN a cell against BETWEEN cells')
   console.log(`  within-cell  ${f2(r.within)}    between-cell ${f2(r.between)}    RATIO ${f1(r.ratio)} : 1`)
-  console.log(`  P(a pair is a click, A >= ${CLICK}) = ${pct(r.click)}  (${oneIn(r.click)} pairs)`)
+  console.log(`  P(a pair is a click, A >= ${CLICK}) = ${pctOf(r.click)}  (${oneIn(r.click)} pairs)`)
   console.log(
     r.ratio >= 2
       ? `✓ the draw dominates the table at ${f1(r.ratio)}:1 – a player who memorised the 4x4 still cannot predict a pairing.`
