@@ -77,6 +77,53 @@ const tour = read('../src/components/OnboardingTour.vue')
 // the Kid screen – both of which predate this change. The test below pins exactly that, so "More
 // left the bar" can never quietly become "More left the app".
 // ===========================================================================
+/** ⚠ The `globIgnores` array's entries, read off the config's own TEXT. A config key is a line that
+ *  starts with it – the note at the Trophies case explains why prose and `codeOf` both lie here. It
+ *  throws rather than returning nothing when the word is present but the shape is not the one it
+ *  knows, because a reader that finds no patterns would pass this file for the wrong reason. */
+function globIgnoresOf(config: string): string[] {
+  const at = config.search(/^\s*globIgnores:/m)
+  if (at < 0) {
+    if (/globIgnores/.test(config.replace(/^\s*\/\/.*$/gm, ''))) {
+      throw new Error('globIgnores is in the config but not as a key line – re-aim globIgnoresOf')
+    }
+    return []
+  }
+  const tail = config.slice(at)
+  const open = tail.indexOf('[')
+  const close = tail.indexOf(']')
+  if (open < 0 || close < open) throw new Error('globIgnores is not an inline array – re-aim globIgnoresOf')
+  const body = tail.slice(open + 1, close)
+  const out = [...body.matchAll(/'([^']*)'|"([^"]*)"/g)].map((m) => m[1] ?? m[2])
+  if (out.length === 0) throw new Error(`globIgnores parsed to nothing from ${JSON.stringify(body)} – re-aim globIgnoresOf`)
+  return out
+}
+
+/** ⚠ A minimal glob to RegExp for the forms this config uses, matched against build-relative paths.
+ *  It throws on any other metacharacter, so a pattern it cannot judge fails loudly instead of
+ *  matching nothing and letting the art leave the install unnoticed. */
+function globToRegExp(pattern: string): RegExp {
+  if (/[{}[\]()!+@]/.test(pattern)) {
+    throw new Error(`glob '${pattern}' uses syntax this reader cannot judge – re-aim globToRegExp`)
+  }
+  let re = ''
+  for (let i = 0; i < pattern.length; i += 1) {
+    const c = pattern[i]
+    if (c === '*' && pattern[i + 1] === '*') {
+      if (pattern[i + 2] === '/') {
+        re += '(?:.*/)?'
+        i += 2
+      } else {
+        re += '.*'
+        i += 1
+      }
+    } else if (c === '*') re += '[^/]*'
+    else if (c === '?') re += '[^/]'
+    else re += c.replace(/[.^$|\\]/g, '\\$&')
+  }
+  return new RegExp(`^${re}$`)
+}
+
 describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
     const tabs = region(app, 'const TABS', '/** The one writer')
@@ -143,10 +190,38 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     // stripper opens a match there and eats everything up to the next `*/` in the file – the
     // positive assertion below then fails, and the negative one would have passed for the wrong
     // reason. A config KEY is a line that starts with it; prose is a line that starts with `//`.
+    //
+    // ⚠⚠ RE-AIMED 27.09 BY T3.12, AND POINTED AT THE FACT INSTEAD OF AT THE ABSENCE OF A LINE.
+    // This read `not.toMatch(/^\s*globIgnores:/m)` – no ignore line may exist at all – which was a
+    // true proxy only while the config had none. T3.12 (the 26.09 principles review, G-P3-08) takes
+    // the manifest-only maskable icon out of the PRECACHE with
+    // `globIgnores: ['**/pwa-maskable-512.png']`, and that icon is not art: it is fetched once,
+    // online, at install, and `manifest.icons` still lists all three. So the line-absence proxy went
+    // red on a change that does not touch the guarded fact.
+    // ⭐ The claim is unchanged and the new form is STRICTER, which is why this is a re-aim and not a
+    // loosening: it asserts that no ignore pattern can reach any file the player installs under
+    // `images/`, read off the tree rather than listed here. `globIgnores: ['**/images/**']` – the
+    // exact line this test was born to refuse – reddens by construction, and so does a pattern that
+    // merely clips ONE trophy, which the old absence check could never have seen.
+    // ⚠ Both helpers THROW on a shape they cannot judge rather than matching nothing: a reader that
+    // quietly finds no patterns is a green that means «I could not look», which is the failure mode
+    // `install-size.mjs`' own icon verdict was written against on the same day.
     const vite = read('../vite.config.ts')
-    expect(vite, 'the art is in the install now – see round 29 part two #7').not.toMatch(
-      /^\s*globIgnores:/m,
-    )
+    const ignores = globIgnoresOf(vite)
+    const art = readdirSync(fileURLToPath(new URL('../public/images', import.meta.url)), {
+      recursive: true,
+    })
+      .map((p) => `images/${String(p)}`)
+      .filter((p) => /\.(webp|png|svg|jpe?g|avif)$/.test(p))
+    expect(art.length, 'the art tree is empty – this assertion would be vacuous').toBeGreaterThan(100)
+    for (const pattern of ignores) {
+      const re = globToRegExp(pattern)
+      const hit = art.find((f) => re.test(f))
+      expect(
+        hit,
+        `globIgnores '${pattern}' takes ${hit} out of the install – the art is IN, see round 29 part two #7`,
+      ).toBeUndefined()
+    }
     // ⚠ RE-AIMED AGAIN 29.08, SAME DISCIPLINE AS THE BLOCK ABOVE: `mp3` joined the pattern by the
     // owner's audio ruling (19d1e62 – «audio joins the install by his ruling», the offline wave),
     // and this pin was left reading the old glob – caught as a pre-existing red at the ledger head
