@@ -36,7 +36,7 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 
 | Tool | Why it is live |
 | --- | --- |
-| `_args.ts` | imported by a live tool |
+| `_args.ts` | imported by the test suite |
 | `_birthday.ts` | imported by the test suite |
 | `_fmt.ts` | imported by a live tool |
 | `_knocks.ts` | imported by the test suite |

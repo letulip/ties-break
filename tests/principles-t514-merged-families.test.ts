@@ -189,7 +189,7 @@ export function newShimCopies(files: { file: string; text: string }[], known: Se
 const ARG_DEF = /^(export )?(function (argOf|finiteArgOf)\b|const (argOf|finiteArgOf) *=)/m
 
 /** ⚠⚠ AND THE SAME BODY UNDER ANY OTHER NAME, because a census keyed on the name is a FLOOR on the
- *  copies and never the count – measured 27.09, when four live copies called `flag` / `numOf` and one
+ *  copies and never the count – measured 27.09, when five live copies called `flag` / `numOf` and one
  *  called `usd` turned out to be invisible to F-04's own grep. It matches the numeric reader's two
  *  load-bearing lines and nothing else, and the two clauses are both load-bearing: the string readers
  *  (`strOf`, `text`, `arg`) return the token rather than `Number(` it, and `form-bench.ts:55`'s `num`
@@ -201,12 +201,18 @@ const ARG_DEF = /^(export )?(function (argOf|finiteArgOf)\b|const (argOf|finiteA
  *  parameter `flag`. A guard that passes by accident is the class this whole file is about. */
 const ARG_BODY = /indexOf\(`--\$\{\w+\}`\)[\s\S]{0,140}?\[i \+ 1\]\s*\?\s*Number\(/
 
-/** ⚠ `snapshot-bench.ts` KEEPS ITS COPY, and the reason is a measurement rather than a preference:
- *  EVERY numeric cell it prints is a `performance.now()` millisecond (`timeArm`, `:161-195`), so the
- *  before/after output diff that every other migration in T5.12 is proved by cannot be taken for this
- *  one. An unprovable migration of a bench is exactly what F-04's own terms forbid, so its `flag` stays
- *  until somebody decides what proof a timing bench's refactor gets. */
-const ARG_BODY_EXEMPT = new Set(['tools/snapshot-bench.ts'])
+/** ⚠⚠ THIS SET IS EMPTY, AND IT USED TO HOLD `tools/snapshot-bench.ts` – THE ENTRY IS GONE BECAUSE THE
+ *  PROOF CHANGED, NOT BECAUSE THE RULE SOFTENED (28.09). Every numeric cell that bench prints is a
+ *  `performance.now()` millisecond, so the before/after output diff that certifies the other thirty
+ *  T5.12 migrations cannot certify it, and I exempted it on that ground. The architect's answer: an
+ *  argument reader's correctness is «the same argv produces the same parsed values», which is a UNIT
+ *  assertion over a handful of argv shapes – a STRONGER proof than an output diff, because it tests the
+ *  function rather than a run that happens to contain it.
+ *  `tests/principles-t512-arg-readers.test.ts` is that proof, and the bench is routed.
+ *
+ *  The set stays, empty, as the shape for the next case of «this copy cannot be diffed» – so that
+ *  exempting one is a visible edit with a reason beside it rather than a quietly-widened regex. */
+const ARG_BODY_EXEMPT = new Set<string>()
 
 export function argOfOffenders(files: { file: string; text: string }[], live: Set<string>): string[] {
   return files
@@ -485,9 +491,15 @@ describe('T5.14 – the mutation arms: each rule reddens on a real pasted copy',
     // `form-bench`'s `num` guards on `!== undefined`, which is a fifth behaviour rather than a copy.
     const undef = numeric.replace('args[i + 1] ?', 'args[i + 1] !== undefined ?')
     expect(argBodyOffenders([{ file: 'tools/econ-bench.ts', text: undef }], live)).toEqual([])
-    // An ARCHIVAL probe keeps its copy, and so does the one live bench whose output is all wall-clock.
+    // An ARCHIVAL probe keeps its copy – it is a reproduction, and its copy is what it measured with.
     expect(argBodyOffenders([{ file: 'tools/r31-her-arc.ts', text: numeric }], live)).toEqual([])
-    expect(argBodyOffenders([{ file: 'tools/snapshot-bench.ts', text: numeric }], live)).toEqual([])
+    // ⚠ AND `snapshot-bench` IS NO LONGER EXEMPT (28.09). It was, on the ground that a bench whose every
+    // printed cell is wall-clock cannot be certified by an output diff; it is routed now, certified by
+    // `tests/principles-t512-arg-readers.test.ts` instead. This is the arm that would go red if the
+    // exemption came back without a reason beside it.
+    expect(argBodyOffenders([{ file: 'tools/snapshot-bench.ts', text: numeric }], live)).toEqual([
+      'tools/snapshot-bench.ts',
+    ])
   })
 
   it('RULE B fires on a pasted `weekAtAge` and not on a survivor that differs', () => {

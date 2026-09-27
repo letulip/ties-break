@@ -48,12 +48,17 @@ export function median(xs: number[]): number {
  *  and `form-g-sweep` already shared. It takes the array UNSORTED and sorts a copy, so a caller
  *  cannot get a wrong answer by forgetting to sort.
  *
- *  ⚠ THE OTHER FOUR LIVE `quantile`s ARE DIFFERENT RULES AND THEY STAY LOCAL. `childhood-bench.ts:42`
- *  and `sponsor-window-bench.ts:519` use `round(q · (n−1))`; `spirit-bench.ts:1005` INTERPOLATES
- *  between the two neighbours; `chemistry-bench.ts:291` and `skill-ceiling.ts:97`'s `pctl` use this
- *  rank rule but take an ALREADY-SORTED array (and `chemistry`/`skill-ceiling` return NaN on empty).
- *  A spec that quotes p90 from two benches is still quoting two rank rules – that is F-04's finding
- *  and it needs a ruling on WHICH rule, not a silent switch. */
+ *  ⚠⚠ THIS IS NOW **THE** RANK RULE – the architect's ruling, 28.09. A spec that quotes p90 from two
+ *  benches quotes two different numbers, which is a defect in the RECORD rather than in the code, and
+ *  the ruling settles which rule wins so nobody re-litigates it: `floor(q · n)`, this body.
+ *
+ *  ⚠ THE FOUR HOLDOUTS STAY UNTIL THEY ARE MEASURED, AND THAT IS THE SAME RULING'S OTHER HALF.
+ *  `childhood-bench.ts:42` and `sponsor-window-bench.ts:519` use `round(q · (n−1))`;
+ *  `spirit-bench.ts:1005` INTERPOLATES between the two neighbours; `chemistry-bench.ts:291` and
+ *  `skill-ceiling.ts:97`'s `pctl` use this rank rule but take an ALREADY-SORTED array (and both return
+ *  NaN on empty). Routing them MOVES THEIR PRINTED OUTPUT, so it is a measured follow-up – one bench at
+ *  a time with its own before/after diff – and not a wave that also had thirty other diffs to keep
+ *  honest. It is queued with the ruling attached. */
 export function quantile(xs: number[], q: number): number {
   if (xs.length === 0) return 0
   const s = [...xs].sort((a, b) => a - b)

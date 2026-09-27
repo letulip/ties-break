@@ -10,37 +10,49 @@
 //
 // ⚠ AND SIX MORE WERE INVISIBLE TO THAT CENSUS BECAUSE IT GREPS FOR THE NAME, AT COLUMN 0: `flag` in
 // `chemistry-bench.ts:90`, `load-bench.ts:72`, `radar-bench.ts:67`, `r44-decline-seats.ts:105` and
-// `snapshot-bench.ts:53`, and `numOf` in `season-equation.ts:95`, are byte-identical bodies. Five of
-// the six are routed here.
-//   ⚠ `snapshot-bench` KEEPS ITS COPY, and the reason is the PROOF and not a preference: every
-//   numeric cell it prints is a `performance.now()` millisecond (`timeArm`, `:161-195`), so the
-//   before/after output diff that proves every other migration in T5.12 cannot be taken for it.
-//   `tests/principles-t514-merged-families.test.ts` records that exemption with the same reason.
-//   ⚠ `form-bench.ts:55`'s `num` is also NOT routed, and it is a FIFTH behaviour rather than a copy:
-//   it guards on `argv[i + 1] !== undefined` where `argOf` guards on truthiness, so `--sims ''`
-//   yields 0 there and the fallback here.
+// `snapshot-bench.ts:53`, and `numOf` in `season-equation.ts:95`, are byte-identical bodies. All six
+// are routed here.
+//   ⚠⚠ `snapshot-bench` WAS THE ONE I FIRST REFUSED, AND THE PROOF IS WHAT CHANGED, NOT THE RISK.
+//   Every numeric cell it prints is a `performance.now()` millisecond (`timeArm`, `:161-195`), so the
+//   before/after output diff that certifies the other 30 migrations cannot certify that one. The
+//   architect's answer, 28.09: an argument reader's correctness is «the same argv produces the same
+//   parsed values», which is a UNIT assertion over a handful of argv shapes – a STRONGER proof than an
+//   output diff, because it tests the function instead of a run that happens to contain it.
+//   `tests/principles-t512-arg-readers.test.ts` drives both readers against the historical bodies they
+//   replaced over thirteen argv shapes and asserts they agree on every one.
+//   ⚠ `form-bench.ts:55`'s `num` is NOT routed, and it is a distinct behaviour rather than a copy: it
+//   guards on `argv[i + 1] !== undefined` where `argOf` guards on truthiness, so `--sims ''` yields 0
+//   there and the fallback here.
 //
-// WHAT ACTUALLY DIFFERS IS ONE CASE: `npm run bench:x -- --seeds abc`.
+// WHAT DIFFERS BETWEEN THE TWO IS **THREE SHAPES, IN TWO DIRECTIONS** – and the unit arms above are how
+// that is known, because my own first write-up of this file said «one case» and was wrong:
 //
-//   `argOf`        → `Number('abc')` = **NaN**, and the bench walks NaN seeds.
-//   `finiteArgOf`  → the fallback, and the bench runs its default arm.
+//   `--seeds abc`        `argOf` → **NaN**      `finiteArgOf` → the fallback
+//   `--seeds --weeks`    `argOf` → **NaN**      `finiteArgOf` → the fallback   (same class: not a number)
+//   `--seeds ''`         `argOf` → the fallback `finiteArgOf` → **0**          (the other direction)
 //
-// Both are below, verbatim, because each is what its benches have always done and a bench's arm is
-// the thing a spec quotes. ⚠ THE SECOND IS THE BETTER RULE and collapsing the first into it is a
-// one-line follow-up – but it is a behaviour change to how a mistyped arm is handled, it cannot be
-// seen in any bench's output (every run in this repo passes well-formed arms), and «measured, not
-// guessed» cuts both ways: an invisible change is exactly the kind that needs asking first.
+// ⚠⚠ BOTH SURVIVE, AND THE OWNER'S SIDE OF IT IS THE RULING (the architect, 28.09), NOT TIDINESS.
+// I had written that `finiteArgOf` «is the better rule» and that collapsing the first into it was a
+// one-line follow-up. That is wrong for a MEASUREMENT INSTRUMENT, and the reason is worth more than the
+// line it saves: **loud corruption is a feature here.** `NaN` poisons every derived cell visibly, so a
+// bench run on a mistyped flag announces itself; a silent fallback hands a plausible, WRONG number to
+// whoever quotes the bench into a spec, and nobody ever learns. A bench's arm is the thing a spec
+// quotes, so the failure that must not be quiet is the one that changes the arm.
+//   ⚠ And the third shape cuts against `finiteArgOf` on the same argument: `Number('') === 0` is
+//   finite, so it INVENTS a zero for a flag it was handed nothing for, and zero is a plausible arm.
+//   That is precisely the quiet substitution the paragraph above is about, which is the second reason
+//   not to unify on it. Neither reader is simply better; each is loud where the other is quiet.
 //
 // ⚠ NO TOP-LEVEL SIDE EFFECTS – see `_stats.ts`. These read `process.argv` when CALLED, which is why
 // a bench's `const SEEDS = argOf('seeds', 12)` still runs at the bench's own top level.
 
 /** `--<name> <number>` out of the command line, else `fallback`.
  *
- *  ⚠ A NON-NUMERIC VALUE RETURNS **NaN**, NOT THE FALLBACK. That is this body's own behaviour, lifted
- *  from the twelve live copies at `dead-week-probe.ts:32`, `injury-landscape.ts:27`,
- *  `ladder-floor.ts:59`, `outgrown-entry-probe.ts:46`, `points-economy.ts:80`, `skill-ceiling.ts:73`
- *  and `world-turnover.ts:76`, plus the five spelled `flag` / `numOf` above. Prefer `finiteArgOf` in
- *  anything new. */
+ *  ⚠ A NON-NUMERIC VALUE RETURNS **NaN**, NOT THE FALLBACK, AND THAT IS THE POINT rather than the
+ *  compromise – see the ruling in the header. Lifted from the thirteen live copies at
+ *  `dead-week-probe.ts:32`, `injury-landscape.ts:27`, `ladder-floor.ts:59`,
+ *  `outgrown-entry-probe.ts:46`, `points-economy.ts:80`, `skill-ceiling.ts:73` and
+ *  `world-turnover.ts:76`, plus the six spelled `flag` / `numOf` above. */
 export const argOf = (name: string, fallback: number): number => {
   const args = process.argv.slice(2)
   const i = args.indexOf(`--${name}`)
