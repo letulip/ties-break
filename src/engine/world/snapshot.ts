@@ -103,7 +103,7 @@ import { buildShootClashPrompt } from './shootClash'
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView, physicalShareOf } from './endings'
-import { finishLabel, stageLabel } from './labels'
+import { finishLabel, isFinalStage, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
@@ -1218,6 +1218,12 @@ export function pendingView(world: WorldState): PendingView | undefined {
     fullBracket,
     finished: p.finished,
     kidChampion: kidFinish === 0,
+    // ⭐⭐ T4.4 · E-05 – THE NUMBER BEHIND THE WORD, so no screen has to compare the word. The tour's
+    // index is the run's own, unclamped: `finishLabel` one line down is made of exactly this, which is
+    // the parity `PendingView.kidFinish` promises. And the round on deck, off the engine's one
+    // arithmetic (`isFinalStage`) rather than off the name `stageLabel` gave it above.
+    kidFinish,
+    isFinal: isFinalStage(current.round, tier.drawSize),
     tierLabel: tier.label,
     points: tier.points[kidFinish] ?? 0,
     finishLabel: finishLabel(kidFinish),
@@ -1255,6 +1261,12 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
   const surface = COLLEGE_LEAGUE.surface
   const finished = revealed >= matches.length
   const kidFinish = run.rounds - run.roundsWon
+  // ⭐⭐ T4.4 · E-05 – THE INDEX THE NAMER IS HANDED, ONCE, read twice. `finishLabel` below used to
+  // carry this expression inline; the projection needs the SAME number or the screen's `kidFinish ===
+  // 1` and the screen's «Runner-up» could disagree on the one fixture that clamps – which is E-05's
+  // own defect wearing the other hat. The clamp itself is unchanged: a run longer than the league's
+  // rounds is named by the deepest round it HAS (see `COLLEGE_LEAGUE_ROUNDS`).
+  const namedFinish = kidFinish <= 0 ? 0 : Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)
   const bracket: PendingBracketRound[] = matches.slice(0, revealed).map((m) => ({
     roundLabel: stageLabel(m.round, drawSize),
     oppName: formatShortName(m.oppName),
@@ -1330,12 +1342,17 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     fullBracket: [],
     finished,
     kidChampion: wonTheLeague(run),
+    // ⭐⭐ T4.4 · E-05 – the named index and the bracket's own «is this the final», for the reason
+    // `PendingView.kidFinish` gives. The College League IS a knockout of eight (see `drawSize` above),
+    // so both answers are real here and the flow's poster routing works off them unmodified.
+    kidFinish: namedFinish,
+    isFinal: isFinalStage(current.round, drawSize),
     tierLabel: COLLEGE_LEAGUE.label,
     // ⚠⚠ ZERO, AND IT IS THE CONSTRAINT RATHER THAN A PLACEHOLDER (round 25's ruling). A student
     // fixture paying WTA/ITF points would make four years of college a quiet ranking route and the
     // fork would stop being a real choice.
     points: 0,
-    finishLabel: kidFinish <= 0 ? finishLabel(0) : finishLabel(Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)),
+    finishLabel: finishLabel(namedFinish),
     crowd: 0,
   }
 }
@@ -1444,6 +1461,16 @@ function callUpPendingView(world: WorldState): PendingView | undefined {
     // `nationFinish === 1` would hang a champion's poster, with her name and her photograph on it,
     // on somebody else's result – which is the exact inversion the fixture exists to demonstrate.
     kidChampion: false,
+    // ⚠⚠ T4.4 · E-05 – NULL, AND IT IS A FACT ABOUT THIS COMPETITION RATHER THAN A DEFAULT. There is no
+    // round she reached: the week is three rubbers and no bracket (`drawSize: null` above says the same
+    // thing), and the label two lines down is her NATION's placing rather than a stage of hers. An
+    // invented 0 would hand the flow a champion's index on somebody else's result – the same inversion
+    // `kidChampion` refuses immediately above – and an invented `Math.log2` of a draw that does not
+    // exist is the `?? 'domestic'` trap this view was widened to stop.
+    kidFinish: null,
+    // ...and no rubber is a final, for the same reason: there is nothing here for a final to be the
+    // last round of.
+    isFinal: false,
     tierLabel: NATIONAL_TEAM.label,
     // ⚠⚠ ZERO, AND IT IS THE RULEBOOK RATHER THAN A PLACEHOLDER – research §0.4 / §5.5: the ranking
     // chart has no row for this competition at all.

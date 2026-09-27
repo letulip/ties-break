@@ -39,10 +39,27 @@ export function prizeCentsFor(tier: TierId, finish: number): number {
   return TIERS[tier].prizeCents?.[finish] ?? 0
 }
 
+/** ⭐⭐ IS THIS ROUND THE FINAL – the one arithmetic, named (T4.4 · E-05, 27.09).
+ *
+ *  ⚠⚠ IT EXISTS SO THAT NOTHING COMPARES THE WORD. `TournamentFlow` asked
+ *  `pending.roundLabel === 'Final'` and hung the celebration cue and the viewer's `final-match` prop
+ *  on it – a behaviour keyed off `stageLabel`'s display vocabulary, which CLAUDE.md invariant 4 makes
+ *  the owner's to rename at any time, and its corollary says a rename is the one diff no test catches.
+ *  The snapshot projects the answer now (`PendingView.isFinal`), and the screen reads it.
+ *
+ *  ⚠ AND `stageLabel` CALLS IT rather than keeping its own `remaining === 2`, which is the whole point:
+ *  a predicate beside the namer that re-spelled the same division would be the parity class one layer
+ *  further down – two spellings of one arithmetic with a display string between them. One spelling, two
+ *  readers, and `tests/principles-e05-finish-numbers.test.ts` §2 walks every shipped draw size to say
+ *  the word and the flag cannot disagree. */
+export function isFinalStage(round: number, drawSize: number): boolean {
+  return drawSize / 2 ** round === 2
+}
+
 // Stage name of a match played in the given round of a draw of `drawSize`.
 export function stageLabel(round: number, drawSize: number): string {
   const remaining = drawSize / 2 ** round
-  if (remaining === 2) return 'Final'
+  if (isFinalStage(round, drawSize)) return 'Final'
   if (remaining === 4) return 'Semifinal'
   if (remaining === 8) return 'Quarterfinal'
   return `Round of ${remaining}`

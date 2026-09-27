@@ -173,8 +173,18 @@ const amateur = computed(() => pending.value !== null && pending.value.tier === 
  *  suppression: no draw line, round names off the record, and no price to the title. */
 const drawSize = computed<number | null>(() => pending.value?.drawSize ?? null)
 
-// Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
-const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
+// Round 5 item 11 fallback: lost the final => silver-styled card, serious art, the silver plate.
+//
+// ⚠⚠ IT COMPARED THE OWNER'S WORD UNTIL 27.09 (T4.4 · E-05). This read `finishLabel === 'Runner-up'`,
+// and `finishLabel` is `world/labels.ts`' DISPLAY vocabulary – which CLAUDE.md invariant 4 makes his to
+// change at any time, and whose corollary is the sharp end: «a wording change is the one kind of diff
+// no test catches – the pins assert what the string IS, so they move with it and stay green». A
+// sanctioned rename to «Finalist» would therefore have silently stopped the silver trophy's flight into
+// the cabinet (`continueFinale`), hung the wrong poster and re-tuned the finale's tone, with every
+// string pin in the repo green. The engine projects the INDEX now (`PendingView.kidFinish`, the very
+// number `finishLabel` is made of), so the behaviour follows the fact and the word stays a rendering.
+// The poster still PRINTS his words, one line below, untouched.
+const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.kidFinish === 1)
 /** WHICH PAINTING the finale poster hangs. Champion = the happy frame – and note WHAT IS IN IT
  *  (docs/lore/setting.md): "earned delight, holding a small club trophy or a medal, confetti of
  *  the cheap paper kind".
@@ -224,7 +234,11 @@ const replayAdvances = ref(false)
 // MatchViewer now PLAYS the celebration itself, at the deciding point (`finalMatch`), and reports
 // it via `endApplause`; the finale screen below only claps when nobody watched the final. Still
 // exactly one `applauseFinal` – it just isn't a beat late any more.
-const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
+// ⚠⚠ AND THIS ONE COMPARED `stageLabel`'s WORD (T4.4 · E-05) – `roundLabel === 'Final'`, driving the
+// celebration cue and the live viewer's `final-match` prop. Same argument as `isRunnerUp` above: the
+// engine answers it (`PendingView.isFinal`, off `isFinalStage`, which `stageLabel` itself calls), so the
+// round's NAME and the flow's behaviour cannot come apart under a rename.
+const isFinalRound = computed(() => pending.value?.isFinal === true)
 /**
  * WHICH ROUND THE OPEN VIEWER IS ACTUALLY SHOWING.
  *

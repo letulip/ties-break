@@ -485,6 +485,39 @@ export interface PendingView {
   /** true once the last kid match has been revealed and the run finalized */
   finished: boolean
   kidChampion: boolean
+  /** ⭐⭐ HOW FAR SHE GOT, AS THE INDEX THE ENGINE'S OWN NAMER WAS HANDED – 0 champion, 1 beaten
+   *  finalist, 2 semi-finalist – or `null` where the fixture has no knockout finish at all (T4.4 ·
+   *  E-05, 27.09).
+   *
+   *  ⚠⚠ IT IS HERE BECAUSE A SCREEN WAS KEYING BEHAVIOUR OFF THE OWNER'S WORDS. `TournamentFlow` read
+   *  `finishLabel === 'Runner-up'` and drove the finale's tone, the silver trophy's flight into the
+   *  cabinet, the podium poster and one guard off it. `finishLabel` is `world/labels.ts`' display
+   *  vocabulary and invariant 4 makes it the owner's to change at any time – so a sanctioned rename
+   *  («Runner-up» → «Finalist») would have stopped the silver flight and hung the wrong poster, with
+   *  every string pin in the repo staying green. The number is the fact; the word is the rendering.
+   *
+   *  ⚠ «THE INDEX THE NAMER WAS HANDED» IS THE EXACT CONTRACT, not «the index of her run». The College
+   *  League CLAMPS before naming (`Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)`), so carrying the raw
+   *  run index would have shipped a number that disagreed with the word printed beside it – the same
+   *  defect from the other side. `finishLabel === finishLabel(kidFinish)` holds on every non-null view,
+   *  asserted rather than asserted-in-prose (`tests/principles-e05-finish-numbers.test.ts` §1).
+   *
+   *  ⚠⚠ `null` IS «THIS FIXTURE HAS NO ROUND SHE REACHED», the same shape `tier`, `drawSize` and
+   *  `ladder` carry above, and the Nations Cup is the case: its `finishLabel` is `nationFinishLabel` –
+   *  her NATION's placing, «2nd of 8 nations» – and there is no knockout index behind it. An invented 0
+   *  would have hung a champion's poster on somebody else's result, which is the inversion
+   *  `kidChampion`'s own note refuses one field up. */
+  kidFinish: number | null
+  /** ⭐⭐ IS THE ROUND ON DECK THE FINAL – the engine's own `isFinalStage`, carried (T4.4 · E-05).
+   *
+   *  ⚠ THE SAME ARGUMENT AS `kidFinish` DIRECTLY ABOVE, on the other predicate E-05 names: the flow
+   *  read `roundLabel === 'Final'` and hung the celebration cue and the live viewer's `final-match`
+   *  prop on a display string. The arithmetic is `stageLabel`'s own – one spelling, shared – so the
+   *  word and this flag cannot disagree.
+   *
+   *  ⚠ FALSE ON A FIXTURE WITH NO BRACKET, by construction: a Nations Cup week is three rubbers and no
+   *  knockout, so there is no final in it for her to be playing (`drawSize: null` is the same fact). */
+  isFinal: boolean
   /** finale card copy */
   tierLabel: string
   points: number
