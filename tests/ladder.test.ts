@@ -848,14 +848,34 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
   // throughout – nothing here is re-aimed, which is exactly why nothing red ever pointed at the
   // stale title. A test's name is read by everyone who runs the file, so it states the property and
   // lets the table carry the digits.
+  //
+  // ⚠⚠ AND THE WALK IS DERIVED 27.09 TOO, WHICH IS THE OTHER HALF OF THE SAME REPAIR. It sampled
+  // `[16, 17, 18]` – three of the FIVE seasons the rule spans – and every one of those assertions was
+  // true, which is exactly the state the stale comments were in when they were found: a guard NARROWER
+  // than the constant it guards cannot object the day the constant moves. It could not have caught the
+  // 16.08 ruling either, because 16-18 stayed inside the widened window. Walking `minAgeYears` to
+  // `maxAgeYears` covers whatever the grid says, and the two preconditions below are the lens: a floor
+  // that vanished would make the loop run ZERO times and pass, which is the vacuity H-19 is about.
   it('the two tours genuinely overlap – both are open at once before the junior door shuts', () => {
-    for (const age of [16, 17, 18]) {
-      expect(isTierAgeOpen('j30', age), `j30 at ${age}`).toBe(true)
-      expect(isTierAgeOpen('w15', age), `w15 at ${age}`).toBe(true)
+    // The window's two ends, read from the table rather than restated: the adult floor and the junior
+    // door. Named in every message below, so a failure says WHICH end moved.
+    const adultFloor = TIERS.w15.minAgeYears ?? 0
+    const juniorDoor = TIERS.j30.maxAgeYears ?? 0
+    expect(adultFloor, 'w15 declares an age floor, or there is no overlap to walk').toBeGreaterThan(0)
+    expect(juniorDoor, 'the junior door is not below the adult floor, or the overlap is empty').toBeGreaterThanOrEqual(
+      adultFloor,
+    )
+    const overlap = `TIERS.w15.minAgeYears (${adultFloor}) to TIERS.j30.maxAgeYears (${juniorDoor})`
+    for (let age = adultFloor; age <= juniorDoor; age++) {
+      expect(isTierAgeOpen('j30', age), `j30 at ${age}, inside ${overlap}`).toBe(true)
+      expect(isTierAgeOpen('w15', age), `w15 at ${age}, inside ${overlap}`).toBe(true)
     }
-    // ...and at 19 the junior half is gone while the adult half remains.
-    expect(isTierAgeOpen('j30', 19)).toBe(false)
-    expect(isTierAgeOpen('w15', 19)).toBe(true)
+    // ...and the year after the junior door the junior half is gone while the adult half remains –
+    // derived from the same constant, so the walk's top end always has a boundary immediately above it.
+    // With a hardcoded 19 beside a derived walk, a door that moved DOWN would leave the years between
+    // the new door and 19 asserted by nobody.
+    expect(isTierAgeOpen('j30', juniorDoor + 1), `j30 the year after ${overlap}`).toBe(false)
+    expect(isTierAgeOpen('w15', juniorDoor + 1), `w15 the year after ${overlap}`).toBe(true)
   })
 
   // ⚠ RE-AIMED, NOT WEAKENED (task #17), and this one changed because the WORLD changed rather than
