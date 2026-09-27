@@ -84,17 +84,33 @@ jobs:
       # «the moment you bump». `--require` makes a missing ref a failure rather than a skip.
       - run: git fetch --depth=1 origin main
       - run: node scripts/schema-ladder.mjs --require
+      # ⚠⚠ THE TWO FAST GATES THAT LIVED ONLY IN `npm run check` – H-02 (b), 26.09. `pins:check` and
+      # `decisions:check` ran in the pre-push gate and NOWHERE ELSE, so a pull request could carry a
+      # new raw marker slice or a stale decision index and pass every job here. Both are
+      # sub-second file reading. The measured cost of leaving them out: over the 1,036 commits to
+      # 26.09 the decision index was stale at 13 of them and twice a wave's own BASE was red, which
+      # stops `check`'s `&&` chain at step 5 and hides the typecheck, the unit gate and the build.
+      # They run in `check`'s own order, before the two generated registries below.
+      # ⚠ `pins:check` IS A RATCHET, NOT A STYLE RULE (H-20). It refuses a NEW raw `indexOf`/`slice`
+      # source cut, the shape that widens in silence when a marker rots; its baseline is a count, so
+      # a PR that removes one can never be asked to re-add it.
+      - run: npm run pins:check
+      - run: npm run decisions:check
       # ⚠ THE GENERATED SYMBOL MAP, AND THE CHECK IS THE WHOLE POINT OF GENERATING IT (TOK-4).
-      # `tools/generated/world-symbol-map.md` says which module DECLARES each of the 233 names the
-      # `engine/world` barrel re-exports - the question 277 importers cannot otherwise answer
-      # without opening a 3,600-line file. A generated index nobody verifies is just a document
-      # that goes stale, so this fails the PR that moves a symbol without regenerating. It reads
-      # source text and runs in about a second; the fix is one command, named in the failure.
+      # `tools/generated/world-symbol-map.md` says which module DECLARES each of the 630 names the
+      # `engine/world` barrel re-exports - the question 769 importers cannot otherwise answer
+      # without opening a 2,981-line file (counts re-taken 26.09; they read 233 / 277 / 3,600 and had
+      # rotted, which is the T-10 class this file has been caught by twice). A generated index nobody
+      # verifies is just a document that goes stale, so this fails the PR that moves a symbol without
+      # regenerating. It reads source text and runs in about a second; the fix is one command, named
+      # in the failure.
       - run: node scripts/world-map.mjs --check
       # ⚠ WHICH TOOLS ARE LIVE, AND THE ASSERTION THAT MATTERS IS THE SECOND ONE. The registry
-      # rewrites `tools/README.md` from the tree and checks that `tsconfig.app.json`'s `tools/`
-      # entries are exactly the live set; without it the two lists drift and the build quietly grows
-      # back to every file in the directory. Sub-second of file reading.
+      # rewrites `tools/README.md` from the INDEX (`git ls-files`, never `readdir` - H-03) and checks
+      # that `tsconfig.app.json`'s `tools/` entries are exactly the live set; without it the two lists
+      # drift and the build quietly grows back to every file in the directory. It also owns the two
+      # other generated artefacts the step at :116 depends on - the compiled file list and the freeze -
+      # and refuses a frozen probe that has changed. Sub-second of file reading.
       - run: npm run tools:registry:check
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
@@ -106,13 +122,21 @@ jobs:
       # archival probe is evidence, and evidence that no longer compiles cannot be re-run.
       # Measured at 4.2 s locally; it is a typecheck, so it sits beside the one above.
       # ⚠ AND IT TYPECHECKS `src` A SECOND TIME. RECORDED, NOT FIXED (P-19, 05.09).
-      # `tsconfig.app.json` includes `src/**`, `tests/**` and 33 named `tools/*.ts`;
-      # `tsconfig.tools.json` includes all 185 of `tools/`, of which 181 import `../src/`, so the
-      # second program re-reads the engine and 33 files sit in both. The whole repeat costs 2.7 s of
-      # a 422 s gate. Trimming the 33 names would save a fraction of a second; making
-      # `tsconfig.tools.json` a project reference would save more and is a build-graph change.
-      # NEITHER IS WORTH DOING - this note exists so the next reader who spots the overlap does not
-      # spend an afternoon re-deriving its price.
+      # `tsconfig.app.json` includes `src/**`, `tests/**` and 55 named `tools/*.ts`;
+      # `tsconfig.tools.json` compiles 153 of the 266 tracked tools, of which 147 import `../src/`, so
+      # the second program re-reads the engine and those 55 files sit in both (counts re-taken 26.09:
+      # they read 33 / 185 / 181 / 33). The whole repeat costs about 2.5 s of a gate of minutes.
+      # Trimming the 55 names would save a fraction of a second; making `tsconfig.tools.json` a
+      # project reference would save more and is a build-graph change. NEITHER IS WORTH DOING - this
+      # note exists so the next reader who spots the overlap does not spend an afternoon re-deriving
+      # its price.
+      # ⚠⚠ AND WHAT IT COMPILES IS A GENERATED LIST, NOT A GLOB (H-03, H-17, 26.09). It used to
+      # `include: ["tools/**/*.ts"]`, so the gate judged the DIRECTORY: an untracked probe from
+      # another session - the owner's checkout holds seven - was compiled by a step whose verdict is
+      # supposed to be a function of the commit. `scripts/tools-registry.mjs` now writes
+      # `tsconfig.tools.files.json` from `git ls-files`, minus the 113 dormant archival probes frozen
+      # at their blob id in `tools/generated/archival-frozen.json`. The step above owns the freeze's
+      # own guard: an edited frozen probe reddens `tools:registry:check`, not this.
       - run: npm run check:tools
       # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
       # decision, not an omission - see .github/workflows/simulation.yml and the note in

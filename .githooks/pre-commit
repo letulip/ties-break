@@ -1,0 +1,86 @@
+#!/bin/sh
+# FAIL AT THE STALE COMMIT, NOT AT THE NEXT PERSON'S GATE – H-02 (a), T5.8 of the principles fix.
+#
+# ⚠⚠ THE MEASUREMENT THAT PUT THIS HERE. Three files in this repository are GENERATED and COMMITTED
+# (`tools/README.md`, `tools/generated/world-symbol-map.md`, the block inside `docs/decisions.md`),
+# and a commit that edits their inputs without regenerating them is red for whoever gates, bisects or
+# branches at it. Replayed over all 1,036 commits of the 22 days to 26.09: 132 of them (12.7 %) fail
+# at least one of the three checks, in 34 onsets, and an episode runs about four commits before a
+# catch-up commit clears it (16 such commits exist). Twice a wave's BASE was already red – «the gate
+# stopped there and nothing after it ran – the typecheck, the unit suite, the component project and
+# the build included», because `npm run check` is an `&&` chain and these are steps 5-7. Zero of
+# main's first-parent commits are red: the staleness lives on branches, which is where agents gate.
+#
+# ⚠ WHAT IT DOES NOT DO, AND THAT IS THE DESIGN. It runs a check only when THAT check's inputs are
+# staged, so the overwhelmingly common commit pays one `git diff --cached` (about 10 ms) and nothing
+# else. All three together are about 0.5 s. A hook that fires on every commit is a tax on every agent
+# in this repository, and there are usually three working at once.
+#
+# ⚠⚠ AND IT MUST NEVER BLOCK A COMMIT IT CANNOT JUDGE. A hook that exits non-zero on a machine with
+# no toolchain turns every commit into a puzzle, and a puzzle gets `--no-verify`d for ever. So every
+# door below is «skip silently», never «refuse»: no `node`, no `git`, no `node_modules`, a missing
+# script, a check whose dependency is absent. It refuses exactly one thing – a check that RAN and
+# said no – and then it prints the one command that fixes it. `git commit --no-verify` is the
+# deliberate escape hatch and it is named on the way out.
+#
+# ⚠ `pins:check` IS DELIBERATELY NOT HERE. It is not a generated-file staleness check – it is a
+# one-way ratchet over the whole of `tests/`, and over the same 1,036 commits it went red ONCE, in a
+# 6-commit episode cleared the same day. Its hole was that CI never ran it, and T5.8 (b) closes that
+# in `.github/workflows/ci.yml` instead. Nothing is gained by charging every commit for it.
+#
+# Hooks run with the working tree's top directory as the cwd, in a worktree exactly as in the main
+# checkout, and `core.hooksPath` is relative – so `../tb-*` worktrees each run their own copy of this
+# file and this wave's changes cannot reach the owner's checkout before the merge does.
+
+command -v node >/dev/null 2>&1 || exit 0
+command -v git >/dev/null 2>&1 || exit 0
+# An install is a precondition for judging, not something to complain about: a fresh clone with no
+# `npm ci` yet, or a CI image that has only fetched the sources, commits freely.
+[ -d node_modules ] || exit 0
+
+# ⚠ THE STAGED SET, AND `git diff --cached` IS THE RIGHT QUESTION EVEN FOR `git commit -- <paths>`.
+# The pathspec form builds a temporary index and points `GIT_INDEX_FILE` at it, so this reads what
+# will be COMMITTED rather than what happens to be staged. `--diff-filter=ACMR` drops deletions,
+# whose paths are not inputs any more. If git cannot answer, there is nothing to judge.
+staged=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null) || exit 0
+[ -n "$staged" ] || exit 0
+
+failed=0
+
+# Run one `--check`, but only if its script is present on this branch. `$2` is the command that
+# regenerates what it guards – the whole point of the hook is that the fix is one line away.
+run_check() {
+  script=$1
+  fix=$2
+  [ -f "$script" ] || return 0
+  output=$(node "$script" --check 2>&1) || {
+    printf '%s\n' "$output"
+    printf 'pre-commit: this commit leaves a generated file stale. Run:\n    %s\n' "$fix"
+    failed=1
+  }
+}
+
+# The three input sets, each named after what the generator reads.
+#   docs/decisions.md            -> the index block inside it        (scripts/decision-index.mjs)
+#   src/engine/world{.ts,/}      -> the barrel's symbol map          (scripts/world-map.mjs)
+#   tools|tests|e2e + the two    -> the tools registry and the list  (scripts/tools-registry.mjs)
+#     tsconfigs + package.json      `check:tools` compiles
+if printf '%s\n' "$staged" | grep -q '^docs/decisions\.md$'; then
+  run_check scripts/decision-index.mjs 'npm run decisions'
+fi
+# ⚠ `typescript` is the one external dependency any of these three has (`world-map.mjs` parses the
+# barrel with the real compiler). Absent, the check cannot run, so it is skipped rather than failed.
+if [ -d node_modules/typescript ] && printf '%s\n' "$staged" |
+  grep -qE '^src/engine/world(\.ts|/)|^tools/generated/world-symbol-map\.md$'; then
+  run_check scripts/world-map.mjs 'npm run map:world'
+fi
+if printf '%s\n' "$staged" |
+  grep -qE '^(tools|tests|e2e)/|^package\.json$|^tsconfig\.(app|tools|tools\.files)\.json$'; then
+  run_check scripts/tools-registry.mjs 'npm run tools:registry'
+fi
+
+if [ "$failed" -ne 0 ]; then
+  printf 'pre-commit: nothing was committed. `git commit --no-verify` skips this hook.\n'
+  exit 1
+fi
+exit 0
