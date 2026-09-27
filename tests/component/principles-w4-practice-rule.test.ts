@@ -8,6 +8,13 @@
 // the college wave a national-team RUBBER wears it too (`callUpRubberId`). So the two broad readers
 // could hand the practice flow a match the player never booked and never paid for.
 //
+// ⚠⚠ ALL THREE READERS ARE IN, AND THE THIRD CAME IN SECOND (27.09). The first commit moved the two
+// broad ones and left `WeekRecapCard.vue` on its own prefix spelling, on the reasoning that it was
+// already narrow and outside the task's named surface – so F-07's «one rule» was two rules for a few
+// hours, and this header said so. The third reader joined later the same day. What it gave up is a
+// PREFIX test, which is the only difference left between the card's own rule and the engine's, and
+// §2b is that difference on the screen.
+//
 // ⚠⚠ FORM A, NOT FORM B (docs/specs/engine-ui-parity-2026-09.md §1). The fix EXPORTS the engine's own
 // primitive – `practiceMatchId(week)` and `isPracticeMatchEvent(e)` in `world/planner.ts` – and both
 // screens call it, so there is no second implementation left to drift and this file can only WITNESS
@@ -28,9 +35,14 @@
 //   arm A (the shared SOURCE): widen `isPracticeMatchEvent` back to `friendly` inside the engine and
 //     BOTH rendered surfaces lose the practice to the rubber TOGETHER (4 of 5 cases red) – which is
 //     what «they read one engine answer» looks like from outside.
-//   arm B (the SHARING): restore `e.friendly &&` on ONE screen and only that screen's case reddens
-//     (1 of 5), while the screen's own file – `season-screen.test.ts`, 11 tests – stays entirely
-//     green. That asymmetry is this file's licence to exist.
+//   arm B (the SHARING): restore `e.friendly &&` on ONE screen and only that screen's case reddens,
+//     while the screen's own file – `season-screen.test.ts`, 11 tests – stays entirely green. That
+//     asymmetry is this file's licence to exist.
+//   arm B' (the THIRD reader, 27.09): restore the PREFIX form on `WeekRecapCard.vue` and only §2b's
+//     stale-id case reddens, while the other two readers' cases and the card's own suites stay green.
+//     ⚠ The rubber fixture cannot produce that red – a rubber's id fails a prefix test too, because
+//     the recap has been narrow since the college wave – so the third reader's arm had to be the
+//     stale id, which is the whole of what it gave up by joining the primitive.
 //   ⚠ a third arm, and its result is worth writing down because it is NOT the spec's arm A: changing
 //     `practiceMatchId`'s FORMAT reddens the format pin alone, and both rendered cases stay green –
 //     the fixture builds its ids from the same exported function, so the screens follow the engine
@@ -43,7 +55,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import App from '../../src/App.vue'
 import SplashScreen from '../../src/components/SplashScreen.vue'
 import PracticeFlow from '../../src/components/PracticeFlow.vue'
+import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
+import PrimaryPill from '../../src/components/ui/PrimaryPill.vue'
 import { mountSeason } from '../helpers/mountSeason'
+import { careerSnapshot } from '../helpers/career'
 import { useGameStore } from '../../src/stores/game'
 import {
   KID_ID,
@@ -214,6 +229,62 @@ describe('T4.3 · F-07 – the engine owns "this week\'s practice friendly"', ()
     expect(card!.text(), 'the national-team rubber is not this week\'s practice').not.toContain('National team rubber')
     // The Watch button opens THIS match, so the id is asserted where the player's tap lands.
     expect(card!.find('button[aria-label="Watch practice match"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  // ===============================================================================================
+  // 2b. THE WEEK STORY – the THIRD reader, which had the rule first and now asks for it
+  // ===============================================================================================
+
+  it('⭐ the recap card offers the PRACTICE to replay, with a rubber in the same week', async () => {
+    // The happy path, for the anti-vacuity: the offer really is on the card and it really is about
+    // this week's practice. ⚠ THIS HALF DOES NOT DISCRIMINATE and says so, because the rubber's id
+    // fails a prefix test too – the recap has been narrow since the college wave. What separates the
+    // two spellings on THIS reader is the case below.
+    const snap = seasonSnapshot('w4-f07-recap')
+    useGameStore().snapshot = snap
+    const wrapper = mount(WeekRecapCard, { global: { stubs: { teleport: true } } })
+    expect(wrapper.find('.recap-watch').exists(), 'the week played a practice, so the replay offer must be there').toBe(true)
+    expect(wrapper.findComponent(PracticeFlow).exists(), 'the card mounts no flow until the pill is pressed').toBe(false)
+    wrapper.findComponent(PrimaryPill).vm.$emit('click')
+    await nextTick()
+    const opened = wrapper.findComponent(PracticeFlow)
+    expect(opened.exists(), 'pressing the pill opens the replay').toBe(true)
+    // Which match it hands the flow is the claim, so it is read off the RECORD rather than off the
+    // button's words – the label is the owner's and not this file's business.
+    expect((opened.props('match') as WorldMatch).eventId).toBe(practiceMatchId(snap.week))
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ ...and a practice id from ANOTHER week is not this week\'s practice – the recap\'s own gain', () => {
+    // ⚠⚠ THIS IS THE ONE INPUT THAT SEPARATES THE TWO SPELLINGS ON THIS READER, and it is what the
+    // card gave up a prefix test for. `WeekRecapCard.vue` had the narrowing FIRST – its note is what
+    // `isPracticeMatchEvent` was made out of – so joining the primitive could only ever be about the
+    // remaining difference: a stored `practice-w<n>` sitting on a week-<m> row passes `startsWith` and
+    // is refused by `=== practiceMatchId(e.week)`. Posed, because the engine cannot file one: the id
+    // and the row are written in the same breath by `resolvePractice`. A save edited by hand, a
+    // migration that renumbered weeks, or a future recorder that files ahead can all produce it, and
+    // the honest answer on a week she did not play a practice in is no offer at all.
+    const base = careerSnapshot(6, 'w4-f07-recap-stale')
+    const stale: WorldEvent = {
+      id: 90_004,
+      week: base.week,
+      type: 'match',
+      friendly: true,
+      text: 'Practice match: a record filed under another week',
+      match: record(practiceMatchId(base.week - 1), KID_ID),
+    }
+    const snap: Snapshot = { ...base, events: [...base.events, stale] }
+    // The fixture's honesty check, stated as arithmetic: a prefix reader accepts this row.
+    expect(stale.match!.eventId.startsWith('practice-w'), 'the posed id must still LOOK like a practice').toBe(true)
+    expect(isPracticeMatchEvent(stale), 'and the engine must refuse it').toBe(false)
+
+    useGameStore().snapshot = snap
+    const wrapper = mount(WeekRecapCard, { global: { stubs: { teleport: true } } })
+    expect(
+      wrapper.find('.recap-watch').exists(),
+      'the card offers a replay of a practice that belongs to another week',
+    ).toBe(false)
     wrapper.unmount()
   })
 

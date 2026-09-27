@@ -39,6 +39,10 @@ import { nextGoalFor } from '../composables/nextGoal'
 // The day layout, ONCE: screen H's calendar grid and this card's dot row are the same fact about the
 // same week, seen from either end of it. See the note above `dayDots`.
 import { planWeek } from '../engine/plan'
+// ⭐ F-07 / T4.3 – "is this the week's practice friendly", asked of the engine. See `friendlyMatch`
+// below: this card's own narrowing is what the primitive was made out of. Imported from the leaf,
+// like `planWeek` above.
+import { isPracticeMatchEvent } from '../engine/world/planner'
 import { vacationPackage } from '../engine/economy'
 import { vacationArtUrl, weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
@@ -748,13 +752,18 @@ const goalLine = computed(() => (game.snapshot ? nextGoalFor(game.snapshot).text
 // which is the word the sentence beside this button says. It cannot fire today (the epilogue covers
 // the shell for every college week, and the week the recap draws is the year boundary rather than the
 // call-up), and "cannot fire today" is precisely how the unreachable copy this wave was sent to fix
-// came about. `practice-w<week>` is what `resolvePractice` files under; `nations-w<week>-r<i>` is what
-// a rubber does.
+// came about. `resolvePractice` files a practice under its own id; a rubber gets `callUpRubberId`'s.
+//
+// ⚠⚠ AND SINCE F-07 / T4.3 (27.09) THE NARROWING IS THE ENGINE'S, NOT THIS CARD'S. The rule above was
+// written here first and correctly, and it was the ONLY one of the three UI readers that had it – so
+// `isPracticeMatchEvent` (world/planner.ts) is this comment's own rule moved behind an export, and
+// `App.vue` and `SeasonScreen.vue` now ask the same question of the same function. What this card
+// gives up by calling it is a PREFIX test: a stored id from another week passed `startsWith` and is
+// refused by the engine's `=== practiceMatchId(e.week)`, which is stricter in the one direction that
+// matters. Form A, so there is nothing left to drift
+// (docs/specs/engine-ui-parity-2026-09.md §1).
 const friendlyMatch = computed<WorldMatch | null>(
-  () =>
-    weekEvents.value.find(
-      (e) => e.type === 'match' && e.friendly && e.match?.eventId.startsWith('practice-w'),
-    )?.match ?? null,
+  () => weekEvents.value.find((e) => isPracticeMatchEvent(e))?.match ?? null,
 )
 const practiceLive = ref<WorldMatch | null>(null)
 // Same one answer the rank-move line above uses, and the same reason – see `activeLadderOfSnapshot`.
