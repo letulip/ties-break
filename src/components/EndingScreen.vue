@@ -24,6 +24,7 @@ import type { DynastyHandover } from '../shared/protocol'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
+import StoreError from './ui/StoreError.vue'
 
 const game = useGameStore()
 const emit = defineEmits<{
@@ -338,6 +339,20 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         </p>
 
         <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
+
+        <!-- ⚠⚠ E-09 / T4.8 (27.09) – THE REFUSAL HAD NOWHERE TO GO ON A BLOCKING TAKEOVER. This screen
+             issues `resumeFromCollege` from the pill below and `newCareer` used to come from here too,
+             and it rendered no error element of ANY kind – so a refused answer wrote `game.error` into
+             Home's paragraph BEHIND the scrim while this card stayed up and nothing on it changed.
+             Two paths reach it without an engine bug (the W2 commit for the five blocking cards names
+             both): another tab's SAVE_CONFLICT, whose sentence already tells the player to reload, and
+             B-02's, where the mutation is refused because `toSnapshot` threw.
+             ⚠ NO COPY (invariant 4): `StoreError` owns no wording and renders whatever the store
+             already wrote.
+             ⚠ AND IT IS ABOVE THE PILLS, which is where ForkDialog and the five blocking cards put
+             theirs – so the way forward stays LAST in the flow, where `measureDialog` reads the box
+             off, and the epilogue's fit case measures the card with the line up. -->
+        <StoreError />
 
         <!-- ⭐⭐⭐ ROUND 24 #2b/#3 – THE COLLEGE YEAR BLOCK HAS LEFT THIS SCREEN, and its absence is
              the whole of the owner's item – the album read to him as if the career had ended. (His

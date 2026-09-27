@@ -31,6 +31,7 @@ import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type DynastyHa
 import { daysInBirthMonth } from '../shared/dates'
 import { onboardingHeroUrl, portraitUrl } from '../art/preload'
 import ScreenShell from './ui/ScreenShell.vue'
+import StoreError from './ui/StoreError.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -786,7 +787,13 @@ function start(): void {
           <span>Every practice. Every match. Every choice. You've got this.</span>
         </p>
 
-        <p v-if="game.error" class="error">{{ game.error }}</p>
+        <!-- ⚠⚠ E-09 / T4.8 (27.09) – `<StoreError />`. What stood here was a hand-rolled paragraph on
+             the error class, guarded on `game.error` and interpolating it, with no `role="status"`, and
+             this is the one surface a single notice in `App.vue`'s frame could never have reached: the
+             wizard is branched ABOVE the tab shell (`showOnboarding` renders it INSTEAD of the frame),
+             which is `ui/StoreError.vue`'s own first reason for being a component. Same element, same
+             class, same sentence – the store's. -->
+        <StoreError />
       </section>
 
       <template #footer>

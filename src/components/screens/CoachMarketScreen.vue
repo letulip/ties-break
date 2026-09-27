@@ -46,6 +46,7 @@ import HerWeekTab from '../HerWeekTab.vue'
 import HouseholdStrip from '../HouseholdStrip.vue'
 import SupportStaffTab from '../SupportStaffTab.vue'
 import IconButton from '../ui/IconButton.vue'
+import StoreError from '../ui/StoreError.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 // ⭐⭐⭐ ROUND 42 #52 / ROUND 44 – THE CHEMISTRY MARKER. The gauge is the SHIPPED ring at the size the
 // owner himself named in round 41 #28, and the mark above it is the icon he handed over, served
@@ -850,7 +851,16 @@ function scrollToTier(tier: CoachTier): void {
 
 <template>
   <template v-if="game.snapshot">
-    <p v-if="game.error" class="error">{{ game.error }}</p>
+    <!-- ⚠⚠ E-09 / T4.8 (27.09) – `<StoreError />`, not a fourth copy of it. What stood here was a
+         hand-rolled paragraph on the error class, guarded on `game.error` and interpolating it: the
+         same element, the same class and the same sentence, and no `role="status"`, so a refused hire
+         on the screen that issues the most expensive commands in the game was announced by nothing.
+         ⚠ THE OLD MARKUP IS NOT QUOTED HERE, DELIBERATELY – `tests/coach-market.test.ts` used to grep
+         this file for that exact string, and a quotation in a comment would answer the grep instead of
+         the screen. That pin reads the mount now, with its date. `ui/StoreError.vue` owns
+         the element and the store owns the sentence; this screen still owns WHERE it stands, which is
+         the component's own argument for being a component (above the head, where it always was). -->
+    <StoreError />
 
     <section class="bare market-head">
       <IconButton class="back-link" variant="bare" icon="back" label="Back" @click="emit('back')" />

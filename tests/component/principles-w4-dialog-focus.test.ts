@@ -73,13 +73,15 @@ import MatchViewer from '../../src/components/MatchViewer.vue'
 import TierGuide from '../../src/components/TierGuide.vue'
 import { useGameStore } from '../../src/stores/game'
 import { careerSnapshot } from '../helpers/career'
+import { moneyOf } from '../helpers/careerMoney'
+import { dynastyOf } from '../helpers/dynastyHandover'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
 import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
 import { KID_ID } from '../../src/engine/world'
 import type { AnnotatedMatch } from '../../src/viz/types'
 import type { MatchOptions, MatchPlayer } from '../../src/engine/match/types'
-import type { Snapshot } from '../../src/shared/protocol'
+import type { AlbumPage, EndingView, Snapshot } from '../../src/shared/protocol'
 import { PHONE, assertDismissReachable, measureDialog, setViewport } from './fits'
 
 const backing = new Map<string, string>()
@@ -160,29 +162,60 @@ async function mountHurt(hurtNote?: string): Promise<VueWrapper> {
   return wrapper
 }
 
-/** An ENDED career, so the epilogue has a `view` to draw. `careerSnapshot` never ends one by itself,
- *  and a takeover with no view renders nothing at all – which would make every arm below vacuous. */
-function endedCareer(seed: string): Snapshot {
-  const snap = careerSnapshot(40, seed)
-  snap.ending = {
-    kind: 'retired',
-    week: snap.week,
-    pages: [
-      { slot: 0, stage: 13, emotion: 'calm', caption: 'The first week', why: 'It began here.', fact: null, week: 2, empty: false },
-      { slot: 1, stage: 16, emotion: 'calm', caption: 'A season later', why: 'She kept going.', fact: null, week: 60, empty: false },
-    ],
+/** ⚠ THE EPILOGUE'S FIXTURE IS `wave10-dynasty-door.test.ts`'S, WHICH IS THE HOUSE SHAPE FOR THIS
+ *  SCREEN, and the keys are why it is borrowed rather than written: the album is `view.album` and the
+ *  resume week is `view.handoff.resumesWeek`, so an invented `pages` or `resumes` draws an epilogue
+ *  with no album and no footer while every root-level assertion below still passes. Seven pages, which
+ *  is what the engine hands, so «the first focusable is an album ARROW» is measured on the screen a
+ *  player gets. */
+function endingView(): EndingView {
+  const totals = { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
+  return {
+    ending: { type: 'natural', week: 900, ageYears: 31, detail: 'she stopped at thirty-one', resumesWeek: null },
+    album: [0, 1, 2, 3, 4, 5, 6].map(
+      (slot) =>
+        ({
+          slot,
+          why: `why ${slot}`,
+          caption: `caption ${slot}`,
+          fact: `fact ${slot}`,
+          week: 52 * slot,
+          seasonIndex: slot,
+          stage: 'teen',
+          emotion: 'norm',
+          empty: false,
+        }) as AlbumPage,
+    ),
     scroll: [],
-    money: { prizeCents: 0, outlayCents: 0, herAccountCents: 0, holdingsCents: 0, portfolioCents: 0 },
-    seasonsPlayed: 3,
-    bestRank: 110,
-    titles: 1,
-    oneMoreYearCount: 0,
+    handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
+    totals,
+    money: moneyOf(totals),
+    seasonsPlayed: 17,
+    bestRank: 11,
+    bestRankTrack: 'wta',
+    titles: 9,
+    oneMoreYearCount: 2,
     academy: null,
     lifetimeDeal: null,
-    resumes: null,
-    dynasty: { raisedOnTour: true },
-  } as unknown as Snapshot['ending']
-  return snap
+    college: null,
+    dynasty: dynastyOf(),
+  } as EndingView
+}
+
+/** The epilogue, mounted over an ended career – `mountEpilogue`'s own store shape. */
+function mountEnding(): VueWrapper {
+  useGameStore().$patch({
+    snapshot: {
+      ageYears: 31,
+      week: 900,
+      kidRank: 11,
+      fundsCents: 1234_00,
+      careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+      careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
+      ending: endingView(),
+    } as unknown as Snapshot,
+  })
+  return mount(EndingScreen, { attachTo: document.body })
 }
 
 /** One Tab press: the trap's half is the REAL document listener, the platform's half (stepping to the
@@ -260,11 +293,11 @@ afterEach(() => {
 // =================================================================================================
 describe('E-08 · EndingScreen – the takeover holds the keyboard it told a screen reader to trust', () => {
   it('⭐⭐ it is still the same modal, and focus is INSIDE it the moment it is drawn', async () => {
-    useGameStore().snapshot = endedCareer('e08-ending-focus')
+
     const before = decoyOutside('before')
     before.focus()
 
-    const wrapper = track(mount(EndingScreen, { attachTo: document.body }))
+    const wrapper = track(mountEnding())
     await nextTick()
 
     const card = wrapper.find('.ending')
@@ -280,8 +313,8 @@ describe('E-08 · EndingScreen – the takeover holds the keyboard it told a scr
   })
 
   it('⭐⭐ Tab cannot walk out of it, in either direction', async () => {
-    useGameStore().snapshot = endedCareer('e08-ending-trap')
-    const wrapper = track(mount(EndingScreen, { attachTo: document.body }))
+
+    const wrapper = track(mountEnding())
     await nextTick()
     const card = wrapper.find('.ending').element
     const { ring, items, after } = tabRing(card)
@@ -305,8 +338,8 @@ describe('E-08 · EndingScreen – the takeover holds the keyboard it told a scr
   })
 
   it('⚠⚠ ESCAPE IS NOT A WAY OUT – the career is over and the footer owns the ways forward', async () => {
-    useGameStore().snapshot = endedCareer('e08-ending-escape')
-    const wrapper = track(mount(EndingScreen, { attachTo: document.body }))
+
+    const wrapper = track(mountEnding())
     await nextTick()
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     await nextTick()

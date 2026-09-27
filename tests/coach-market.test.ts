@@ -104,7 +104,13 @@ describe('screen T renders what the design specified', () => {
   })
 
   it('surfaces command failures the way every commanding screen does', () => {
-    expect(market).toContain('<p v-if="game.error" class="error">')
+    // ⚠ RE-AIMED BY E-09 / T4.8 (27.09), NOT WEAKENED. The screen rendered a hand-rolled paragraph on
+    // the error class – one of the five copies `ui/StoreError.vue` was written as a home for and never
+    // collected – and it carried no `role="status"`, so a refused hire was announced by nothing. The
+    // claim is the same claim; what changed is that the element belongs to the component now, so the
+    // pin asks for THAT rather than for markup the screen must no longer contain.
+    expect(market).toContain('<StoreError />')
+    expect(market).toMatch(/import StoreError from '[^']*StoreError\.vue'/)
   })
 })
 

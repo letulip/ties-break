@@ -34,7 +34,9 @@ import { workerHarness } from './helpers/workerHarness'
 // ⚠ EVERY REFUSAL IS ASSERTED TWICE – the CODE and the SENTENCE – and neither is decoration. The
 // code is the branch a test or a future UI takes (`saveGuard.ts`'s own header: "the code exists so
 // tests … never match on prose"); the sentence is what the player is actually shown, through
-// `stores/game.ts` -> `StoreError.vue` and the wizard's own `<p class="error">`.
+// `stores/game.ts` -> `StoreError.vue`, on the wizard among nine other surfaces. (⚠ Re-aimed 27.09 by
+// E-09 / T4.8: this line used to say «and the wizard's own `<p class="error">`», which was true until
+// the wizard's hand-rolled copy became `<StoreError />` like everybody else's.)
 //
 // ⚠ MUTATION-VERIFIED. What each mutation reddened is written above the block it belongs to.
 // =================================================================================================

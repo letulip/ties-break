@@ -79,6 +79,7 @@ import { useLetterWatermark, useNewsWatermark } from '../../composables/inboxCue
 // own it is now in this file's <style scoped> block rather than in src/style.css - see the note at
 // the top of that block for why that matters to the five screens being built in parallel.
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import Polaroid from '../ui/Polaroid.vue'
@@ -1341,8 +1342,19 @@ async function leaveCollege(): Promise<void> {
            over this line and `position: relative` put it in a later paint step. Moving the line in
            here stops the hero being `:first-child`, which is what switches that margin off.
            ⚠ NO NEW WORDING (invariant 4): the element, its class and its text are the engine's own,
-           moved and not rewritten. -->
-      <p v-if="game.error" class="error">{{ game.error }}</p>
+           moved and not rewritten.
+           ⚠⚠ AND IT IS `<StoreError />` SINCE E-09 / T4.8 (27.09), NOT A COPY OF ONE. What stood here
+           was a hand-rolled paragraph on the error class, guarded on `game.error` and interpolating it
+           – the same element, the same class and the same sentence the component renders, and NO
+           `role="status"`, so on the busiest screen in the app a refusal was silent to a screen reader.
+           ⚠ THE OLD MARKUP IS NOT QUOTED HERE, DELIBERATELY: a source pin greps this file for it
+           (`tests/coach-market.test.ts` had exactly such a pin one screen over), and a quotation in a
+           comment would keep that grep green over a screen that no longer renders one. The component is the
+           one owner (`ui/StoreError.vue` calls itself a home for the five shipped copies, and this was
+           one of them); the sentence is the store's own either way, and round 35 #11's placement –
+           INSIDE the shell, above the hero – is untouched, which is what keeps the photograph from
+           painting over it. -->
+      <StoreError />
 
       <!-- 1 + 2. THE HERO. Full-bleed, and it carries the header: the photograph IS the top of the
            page, not a picture placed on it. Two scrims do the work – one darkens the top so the

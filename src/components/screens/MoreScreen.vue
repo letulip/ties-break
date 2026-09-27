@@ -12,6 +12,7 @@ import { weekLabel } from '../../shared/dates'
 import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
+import StoreError from '../ui/StoreError.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { AUDIO_COPY } from '../../composables/audioCopy'
@@ -710,8 +711,15 @@ const TAB_OPTIONS = [
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
     <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
          line catches everything else (the fast-forward refusing over an open knock/reveal), which
-         previously failed silently here – More never rendered `game.error` at all. -->
-    <p v-if="game.error && game.error !== game.saveOp?.message" class="error">{{ game.error }}</p>
+         previously failed silently here – More never rendered `game.error` at all.
+         ⚠⚠ E-09 / T4.8 (27.09) – `<StoreError />` WITH THE GUARD AS A PROP. What stood here was a
+         hand-rolled paragraph on the error class whose guard also compared `game.error` with
+         `saveOp.message`, and that condition is the whole reason it was hand-rolled: the Saves strip above
+         already prints `saveOp.message`, so a failed import used to be sayable twice on one screen.
+         `except` carries exactly that one sentence and nothing else, so the element, the class, the
+         sentence and the suppression are all what they were – and it gains the `role="status"` the
+         hand-rolled copy never had. -->
+    <StoreError :except="game.saveOp?.message ?? null" />
   </section>
 
   <!-- D2 – FIVE SWITCHES THAT WERE ALL CALLED `ON` OR `OFF`. Each one already carried `role="switch"`

@@ -25,11 +25,34 @@
 //
 // `role="status"` because an error that appears without moving focus is announced by nothing
 // otherwise; it is a polite live region, so it never interrupts.
+//
+// ⚠⚠ AND SINCE E-09 / T4.8 (27.09) THE FIVE SHIPPED COPIES THIS FILE WAS WRITTEN FOR ARE GONE, which
+// is what the header above has claimed to be «a home for» since 05.09. U-02 was fixed where it was
+// MEASURED – on the nine silent surfaces – and never reached the five that already rendered the
+// sentence by hand, so the two busiest screens in the app said a refusal with no live region at all.
+// Four of the five moved here; `SeasonScreen.vue`'s copy is the one that did not, because it was
+// another builder's file in this same wave – it is the one site E-09 leaves open, and it is named in
+// the wave's report rather than left to be rediscovered.
+//
+// ⚠ `except` IS MoreScreen'S GUARD AND NOTHING ELSE, and it is the finding's own first option. That
+// screen's Saves strip renders `saveOp.message` in its own row a few lines up, so the one sentence
+// this element must NOT repeat is that one – «Import failed – …» printed twice, once as the operation's
+// result and once as the store's error, was the reason its copy carried a hand-written condition. The
+// prop is a SENTENCE to suppress, never a sentence to write: there is still no wording in this file and
+// there may never be one (CLAUDE.md invariant 4).
+import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 
+const props = defineProps<{
+  /** A sentence this surface has already said somewhere else, and must not say twice. */
+  except?: string | null
+}>()
+
 const game = useGameStore()
+
+const shown = computed(() => (game.error && game.error !== props.except ? game.error : ''))
 </script>
 
 <template>
-  <p v-if="game.error" class="error" role="status">{{ game.error }}</p>
+  <p v-if="shown" class="error" role="status">{{ shown }}</p>
 </template>
