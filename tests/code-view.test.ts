@@ -55,10 +55,22 @@ const FIXTURE = [
 
 const view = codeView(FIXTURE)
 const rendered = view.lines.join('\n')
-/** The rendered line whose gutter number is `n`, without the gutter. */
+/**
+ * The rendered line whose gutter number is `n`, without the gutter – or `null` when that line was
+ * not printed at all, which is what every keep-rule case below is really asking.
+ *
+ * ⚠ THE GUTTER IS PARSED, NEVER SLICED AT AN `indexOf`. The first draft read
+ * `line.slice(line.indexOf(n) + …)` and `npm run pins:check` refused it (4 raw slices against a
+ * baseline of 3) – rightly: `indexOf` returns -1 on a miss and the slice then silently returns
+ * something instead of failing, which is the whole defect that ratchet exists to stop.
+ */
+const GUTTER = /^ *(\d+)(?: {2}(.*))?$/
 const at = (n: number) => {
-  const line = view.lines.find((l) => l.trimStart().startsWith(`${n}  `))
-  return line ? line.slice(line.indexOf(`${n}  `) + `${n}  `.length) : null
+  for (const line of view.lines) {
+    const match = GUTTER.exec(line)
+    if (match && Number(match[1]) === n) return match[2] ?? ''
+  }
+  return null
 }
 
 describe('code-view keeps the rulings and collapses the prose', () => {
@@ -104,7 +116,7 @@ describe('code-view keeps the rulings and collapses the prose', () => {
     const kinds = classifyLines(lines)
     const printed = new Set(
       view.lines.flatMap((l) => {
-        const match = /^\s*(\d+) {2}/.exec(l)
+        const match = GUTTER.exec(l)
         return match ? [Number(match[1])] : []
       }),
     )
