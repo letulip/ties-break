@@ -3218,6 +3218,19 @@ button.note-card:active:not(:disabled) {
    player has today, to half a pixel, and the first width at which it stops being a function of how
    many lines the quote wraps to.
 
+   ⚠ E-P19 (27.09) – AND «THE MASTER» IS NOT ONE SIZE, WHICH IS WHY THIS PARAGRAPH NOW SAYS SO. Round
+   42 #3 paid this debt on the coach MARKET, where the strip reads the taller figure; here the number
+   above is still the 264 one. Measured off the shipped assets rather than off a constant:
+   `public/images/coaches/budget-1.webp` is 162x264 and `budget-2.webp` is 162x280, so a height-driven
+   picture is 83.45px wide over one master and 136 x 162/280 = 78.69px over the other.
+   ⚠ NO PIXEL MOVES AND NONE IS OWED. 84 is a ceiling, not a fit: the narrower figure simply leaves
+   5.3px of the strip empty, and the mask is already at 3.7% opacity there (its stops are percentages
+   of THIS box and reach transparent at 96% of 84 = 80.64px), so the difference is invisible on either
+   master and no coach is cut. `src/art/preload.ts:310`'s «162x264 webp» docstring is the same stale
+   half-truth one file over, and the stale `162/264` comment at
+   `tests/component/round21-coach-photo.test.ts:224`, over a `PORTRAIT_H = 280` constant, is lane H's
+   by the finding's own note.
+
    ⚠ NOTHING VISIBLE IS CUT, AND THE MASK IS WHY – the same argument round-18 #2 makes. The mask's
    stops are percentages of THIS box, so it reaches transparent at 96% of 84 = 80.64px, and whatever
    the clip takes past that is already fully transparent. A taller card enlarges the man and fades
