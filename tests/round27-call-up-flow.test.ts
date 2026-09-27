@@ -596,10 +596,12 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
     // the twenty-odd, which is the ~1-in-9 frequency B-01 measured, and the other presses are the iff.
     expect(heldByHer, 'her card really did take a press, so the carve-out is exercised').toBeGreaterThan(0)
     expect(heldByHer, 'and it is the exception rather than the rule').toBeLessThan(4)
-  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 2.55 s.
-  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-  }, 60_000)
+  // ⚠⚠ THE TWO PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s -> 60 s
+  // on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s own unit
+  // `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. ⚠ Its `beforeAll` keeps its own 30 s: a hook is not bound by birpc's window.
+  // SLOWEST TEST here, in the real bulk pool: 2.55 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ it is false at a rest state the tie is BEHIND – there is nothing left to play', () => {
     const { world, rng } = atCollege('r27-next-stop')
@@ -608,7 +610,7 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
     const view = toSnapshot(world).ending?.college
     expect(view?.callUpIsNextStop, 'after: the week has been played').toBe(false)
     expect(view?.yearInProgress, 'and the year is still the same one').toBe(true)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================

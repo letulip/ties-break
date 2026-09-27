@@ -221,10 +221,13 @@ describe('the freeze keeps the world playing', () => {
       table.filter((r) => r.points > 0).length,
       'somebody in the field holds a junior point – 0 here is the all-ties-at-first bug',
     ).toBeGreaterThan(0)
-  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-  // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 2.09 s.
-  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-  }, 60_000)
+  // ⚠⚠ EVERY PER-TEST BUDGET IN THIS FILE IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: the two over the
+  // ceiling went 120 s -> 60 s on a measurement and were then DELETED, and the five that already sat
+  // AT 60 s went with them – at 60 s all of them only restated `vite.config.ts`'s own unit
+  // `testTimeout`, and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 2.09 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 })
 
 // =================================================================================================
@@ -266,7 +269,7 @@ describe('rule 1 – an outstanding entry is released when the freeze starts, an
       world.internationalEntryWeeks.includes(event.week) || world.proEntryWeeks.includes(event.week),
       'the year\'s slot follows the fee back – she never participated',
     ).toBe(false)
-  }, 60_000)
+  })
 
   it('⭐ AND IT REFUNDS PAST THE ENTRY DEADLINE TOO – the one release that does', () => {
     // Lists close two weeks out (`deadlineWeek = week - 2`), so an entry whose play week straddles
@@ -309,7 +312,7 @@ describe('rule 1 – an outstanding entry is released when the freeze starts, an
     expect(refunds, 'full refund – she is not pulling out, the game is').toHaveLength(1)
     expect(refunds[0].amountCents).toBe(TIERS[event.tier].entryFeeCents)
     expect(world.penalties, 'and no price for the closed list either').toHaveLength(0)
-  }, 60_000)
+  })
 
   it('⚠ the feed does not tell him HE withdrew her – the 05.08 misattribution bug, in college colours', () => {
     const { world, rng } = playedCareer('r24-release-voice', 60)
@@ -325,7 +328,7 @@ describe('rule 1 – an outstanding entry is released when the freeze starts, an
       expect(row.text.startsWith(RELEASE_LINE_PREFIX.parent), row.text).toBe(false)
       expect(row.text.startsWith(RELEASE_LINE_PREFIX.college), row.text).toBe(true)
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -373,7 +376,7 @@ describe('rule 2 – resumeFromCollege will not tick past an open reveal', () =>
     expect(world.rngMain.n, 'and the MAIN stream did not move either').toBe(drawsBefore)
     expect(world.college!.years, 'no year was opened or banked').toHaveLength(0)
     expect(world.ending, 'the epilogue is still there to ask the question again').toBe(latchBefore)
-  }, 60_000)
+  })
 
   it('⭐ and the refusal is not a dead end: close the reveal and the same click works', () => {
     const { world, rng } = atCollegeWithAnOpenReveal('r24-refuse-recover')
@@ -384,7 +387,7 @@ describe('rule 2 – resumeFromCollege will not tick past an open reveal', () =>
     spendOneYear(world, rng)
     expect(world.week, 'the year is spent, exactly as it always was').toBe(from + WEEKS_PER_YEAR)
     expect(world.college!.years).toHaveLength(1)
-  }, 60_000)
+  })
 
   it('⚠ the guard stands in BOTH positions – at entry and inside the loop', async () => {
     // ⚠ A SOURCE PIN, AND IT IS THE HONEST INSTRUMENT HERE RATHER THAN A SHORTCUT. Rule 3 makes a
@@ -436,7 +439,7 @@ describe('rule 3 – tickWeek plays no tournament for a girl who is at college',
       fullRanking(world).filter((r) => r.points > 0).length,
       'the table still has points on it',
     ).toBeGreaterThan(0)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================

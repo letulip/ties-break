@@ -1138,10 +1138,12 @@ describe('#2 college – the only ending that resumes', () => {
     expect(world.week).toBe(from + ENDINGS.collegeYears * WEEKS_PER_YEAR)
     expect(inCollege(world)).toBe(false)
     expect(world.college?.doneWeek).toBe(world.week)
-  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-  // WAS 90 s. This file's SLOWEST TEST, in the real bulk pool: 9.35 s.
-  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-  }, 60_000)
+  // ⚠⚠ EVERY PER-TEST BUDGET IN THIS FILE IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: the four over the
+  // ceiling went 90 s -> 60 s on a measurement and were then DELETED, and the one that already sat AT
+  // 60 s went with them – at 60 s all of them only restated `vite.config.ts`'s own unit `testTimeout`,
+  // and a restated constant cannot follow its source, so a ceiling moved to 90 s would leave this file
+  // at 60. SLOWEST TEST here, in the real bulk pool: 9.35 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ she comes back with no ranking at all, and no rule was written for it', () => {
     // She entered nothing for 208 weeks, so every result she owned has aged out of the rolling
@@ -1161,7 +1163,7 @@ describe('#2 college – the only ending that resumes', () => {
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
-  }, 60_000)
+  })
 
   it('the family stops paying: no coaching is billed across the freeze', () => {
     const { world, rng } = freshWorld('college-money')
@@ -1190,7 +1192,7 @@ describe('#2 college – the only ending that resumes', () => {
     // ...and the balance is HIGHER than it was, because the parent kept working.
     expect(world.careerTotals.earnedCents).toBeGreaterThan(0)
     expect(world.careerTotals.spentCents).toBeGreaterThanOrEqual(spentBefore)
-  }, 60_000)
+  })
 })
 
 describe('the break-even milestone – captured, never reconstructed', () => {
@@ -1360,7 +1362,7 @@ describe('⚠ input-independence survives college', () => {
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)
     expect(a.rngMain.s).toBe(b.rngMain.s)
-  }, 60_000)
+  })
 })
 
 // --- acceptance: a PRE-WAVE save opens, plays, and can reach an ending ----------------------------
@@ -1438,5 +1440,5 @@ describe('⚠ a career saved before this wave existed', () => {
     expect(view.album).toHaveLength(7)
     expect(view.album.every((p) => p.why.length > 0)).toBe(true)
     expect(view.totals.spentCents).toBeGreaterThan(0)
-  }, 60_000)
+  })
 })

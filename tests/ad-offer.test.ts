@@ -31,14 +31,15 @@
 // week. Nothing here is seed-hunted into passing: where a fixture needs a property of the dice, the
 // property is asserted as a fixture fact first, so a retuned chance fails loudly instead of quietly
 // testing nothing.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // The shared walk is a real career to eighteen (~210 ticks) plus up to a season of arrivals; the
 // runner is shared with heavier suites.
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 300 s. This file's SLOWEST TEST, in the real bulk pool: 0.35 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 300 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 0.35 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   accrueCondition,

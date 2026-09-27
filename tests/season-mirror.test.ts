@@ -11,16 +11,17 @@
 // ledger after the fact – the season's money and the best result off the 400-row `events` feed, the
 // season start rank off the 52-week `results` ledger – and this one is asked a question that is
 // strictly harder than any of those: what her best-N book looked like on each of forty separate weeks.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // ⚠ THE 2-CORE RUNNER'S ARITHMETIC (22.08, the round-25 PR): the heaviest test here measures ~7s
 // on a 10-core local machine, and GitHub's ubuntu runner runs this suite at 4-5x local wall clock
 // – past vitest's 20s per-test default with ZERO assertion failures, the documented slow-machine
 // signature (CLAUDE.md). The ceiling is sized ~15x local so it can only fire on a genuine wedge.
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 8.56 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 8.56 s. Table:
+// tests/sim-serialisation.test.ts.
 import {
   activeLadderOf,
   entryCouldNotMove,

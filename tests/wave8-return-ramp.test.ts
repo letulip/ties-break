@@ -492,12 +492,13 @@ function firstFreezeEvent(world: WorldState): SeasonEvent {
 // D. ⚠⚠ THE TWO ARMS – the wrong ramp must measurably fail more often
 // =================================================================================================
 describe('wave 8 T6 D – the trap, measured', () => {
-  it('⭐⭐⭐ SMALL-FIRST vs STRAIGHT-BACK over twelve months, on the same careers', {
-    // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-    // WAS 900 s. This file's SLOWEST TEST, in the real bulk pool: 7.05 s.
-    // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-    timeout: 60_000,
-  }, () => {
+  // ⚠⚠ THE `{ timeout }` OPTION OBJECT IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 900 s -> 60 s on a
+  // measurement, then DELETED with the object that carried it, because at 60 s it only restated
+  // `vite.config.ts`'s own unit `testTimeout` – and a restated constant cannot follow its source, so a
+  // ceiling moved to 90 s would leave this test at 60. 900 s was the largest budget in the corpus and
+  // the furthest from its own cost: SLOWEST TEST here, in the real bulk pool, 7.05 s – a factor of 128.
+  // Table: tests/sim-serialisation.test.ts.
+  it('⭐⭐⭐ SMALL-FIRST vs STRAIGHT-BACK over twelve months, on the same careers', () => {
     // ⚠⚠ THE TWO WORLDS DIFFER IN EXACTLY ONE FIELD: the answer to the beat. Everything else – the
     // seed, the week, the freeze, the calendar, the MAIN stream – is a `structuredClone` of one
     // career, which is CLAUDE.md's «name the commit each arm was built at» rule applied to a fixture

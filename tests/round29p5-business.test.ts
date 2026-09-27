@@ -21,12 +21,13 @@
 //      round 28 #8's law is a live guard, not a restatement;
 //   M7 `assetWeeklyIncomeCents` reading `kidRankWta` instead of fame → 2 red, §2's «NOT rank»
 //      assertion by name plus the fame arithmetic beside it.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 300 s. This file's SLOWEST TEST, in the real bulk pool: 3.65 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 300 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 3.65 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   academyReputationOf,

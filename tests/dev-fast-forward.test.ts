@@ -247,7 +247,7 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
     expect(after.ok).toBe(true)
     expect(after.snapshot!.week).toBe(week)
     expect(after.snapshot!.stopReasons).toContain('tournament')
-  }, 60_000)
+  })
 
   it('an unanswered knock refuses the tick and holds the week', async () => {
     const week = await loadIntoWorker(pendingKnockWorld())
@@ -268,7 +268,7 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
     const ticked = await send({ type: 'tick', weeks: 1, baseRevision: lastRevision })
     expect(ticked.ok, ticked.error).toBe(true)
     expect(ticked.snapshot!.week).toBe(week + 1)
-  }, 60_000)
+  })
 
   // ⭐⭐⭐ v85 T11b – AND A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, which is the member this list was
   // MISSING rather than the one it grew. The layer-1 pin above could not have caught it: a source pin
@@ -306,7 +306,7 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
     const ticked = await send({ type: 'tick', weeks: 1, baseRevision: lastRevision })
     expect(ticked.ok, ticked.error).toBe(true)
     expect(ticked.snapshot!.week).toBe(week + 1)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -505,10 +505,13 @@ describe('layer 2b — every other member of ADVANCE_REFUSALS refuses the tick, 
       // behaviour. Here the same mutation reddens on «the tick is refused: expected true to be false»,
       // which is the defect in the words a reader needs, and the isolation claim is still asserted.
       expect(openQuestions(world), `${fixture.reason}: exactly one question stood`).toEqual([fixture.reason])
-    // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-    // WAS 120 s. This file's SLOWEST TEST, in the real bulk pool: 1.32 s.
-    // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-    }, 60_000)
+    // ⚠⚠ EVERY PER-TEST BUDGET IN THIS FILE IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: the one over the
+    // ceiling went 120 s -> 60 s on a measurement and was then DELETED, and the three that already sat
+    // AT 60 s went with it – at 60 s all of them only restated `vite.config.ts`'s own unit
+    // `testTimeout`, and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+    // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 1.32 s. Table:
+    // tests/sim-serialisation.test.ts.
+    })
   }
 
   // ⚠⚠ AND A NINTH MEMBER CANNOT BE ADDED WITHOUT THIS FILE NOTICING. The pin above no longer counts

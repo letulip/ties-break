@@ -21,13 +21,15 @@
 // RNG: a letter's rolls live on `seed:ad:<category>:<week>` (+ `:letter`) – purpose-scoped, never
 // MAIN – so the walk can read the same dice the engine will roll and step exactly to the first true
 // week.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // Four real careers to eighteen (~210 ticks each) plus up to a season of arrivals.
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 300 s. This file's SLOWEST TEST, in the real bulk pool: 0.00 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 300 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. ⚠ Its SLOWEST TEST reads 0.00 s in the pool because the cost is in a
+// `beforeAll`, which `testTimeout` never bound at all – so this override was buying nothing twice over.
+// Table: tests/sim-serialisation.test.ts.
 
 import {
   createWorld,

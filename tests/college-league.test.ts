@@ -196,10 +196,12 @@ describe('the floor: every college year holds a student tournament', () => {
       }
     }
     expect(years, 'six careers × four years').toBe(SEEDS.length * ENDINGS.collegeYears)
-  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-  // WAS 240 s, 120 s. This file's SLOWEST TEST, in the real bulk pool: 4.58 s.
-  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-  }, 60_000)
+  // ⚠⚠ ALL TWENTY-ONE PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS:
+  // 240 / 120 s -> 60 s on a measurement, then DELETED, because at 60 s they only restated
+  // `vite.config.ts`'s own unit `testTimeout` – and a restated constant cannot follow its source, so a
+  // ceiling moved to 90 s would leave this file at 60. SLOWEST TEST here, in the real bulk pool:
+  // 4.58 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('⭐⭐ the floor is not a property of the dear places – it holds at every tier', () => {
     // The tier buys development (`collegeCoachFactor`, `matchesPerWeek`); it does not buy the
@@ -210,7 +212,7 @@ describe('the floor: every college year holds a student tournament', () => {
       expect(list.length, `${tier}: four years`).toBe(ENDINGS.collegeYears)
       for (const year of list) expect(year.league, `${tier} year ${year.index}`).not.toBeNull()
     }
-  }, 60_000)
+  })
 
   it('⚠ it is ARITHMETIC and not probability – the week occurs exactly once in every college year', () => {
     // The property the guarantee rests on, asserted directly on the calendar rather than inferred
@@ -225,7 +227,7 @@ describe('the floor: every college year holds a student tournament', () => {
         expect(year.league!.week).toBe(hits[0])
       }
     }
-  }, 60_000)
+  })
 
   it('⚠ and the predicate refuses outside the freeze – a girl on the tour is not in a student draw', () => {
     const { world, rng } = atTheFork('r24-league-scope')
@@ -238,7 +240,7 @@ describe('the floor: every college year holds a student tournament', () => {
     for (let i = 0; i < 2 * WEEKS_PER_YEAR; i++) tickWeek(tour, tourRng)
     expect(tour.events.filter((e) => e.text.includes(COLLEGE_LEAGUE.label))).toHaveLength(0)
     void rng
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -256,7 +258,7 @@ describe('the ceiling: never a third tournament in one academic year', () => {
       }
     }
     expect(two, 'and both tournaments really do co-occur, or the ceiling is untested').toBeGreaterThan(0)
-  }, 60_000)
+  })
 
   it('⚠ the three marked kinds of week are three DIFFERENT weeks, so none can silently merge', () => {
     // A trip landing on the championship week would make one week mean two things and would delete
@@ -282,7 +284,7 @@ describe('the ceiling: never a third tournament in one academic year', () => {
     expect(sameYearOrder, 'the ordinary case is the championship first, in the same year').toBe(
       SEEDS.length * ENDINGS.collegeYears,
     )
-  }, 60_000)
+  })
 
   it('⚠ exactly ONE championship summary row per college year – it cannot fire twice', () => {
     for (const world of walked()) {
@@ -297,7 +299,7 @@ describe('the ceiling: never a third tournament in one academic year', () => {
         expect(rows, `${world.seed} year ${year.index}`).toHaveLength(1)
       }
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -400,7 +402,7 @@ describe('the call-up leans on the championship result', () => {
     // ⚠ AND THE SAMPLE REALLY CONTAINS YEARS THE OLD CONSTANT WOULD HAVE JUDGED DIFFERENTLY, or the
     // case above would pass against a reverted seam by accident.
     expect(onTheHighRungs, 'years whose rung is above the historical bare roll').toBeGreaterThan(0)
-  }, 60_000)
+  })
 
   it('⚠ the middle rung IS the historical bare roll, so the mechanic was re-shaped and not re-tuned', () => {
     expect(callChanceFor(1)).toBe(NATIONAL_TEAM.callChance)
@@ -435,7 +437,7 @@ describe('the championship is watchable', () => {
       }
     }
     expect(checked, 'and there was something to replay').toBeGreaterThan(SEEDS.length * ENDINGS.collegeYears)
-  }, 60_000)
+  })
 
   it('⭐⭐ it reaches the SNAPSHOT the college card reads – the run and its matches, together', () => {
     // ⚠ THE CARD IS DRAWN AT A YEAR BOUNDARY, where the ending is latched. The FOURTH year takes the
@@ -453,7 +455,7 @@ describe('the championship is watchable', () => {
       expect(m.eventId.startsWith(`college-w${college!.league!.week}-r`)).toBe(true)
       expect(m.seed, 'a record with no seed cannot be replayed').toBeTruthy()
     }
-  }, 60_000)
+  })
 
   it('⚠ the id names no tier, exactly like a rubber, so nothing invents a rung for it', () => {
     expect(collegeLeagueMatchId(300, 1)).toBe('college-w300-r1')
@@ -477,7 +479,7 @@ describe('the championship is watchable', () => {
         expect(rubbers.every((m) => m.eventId.startsWith('nations-w'))).toBe(true)
       }
     }
-  }, 60_000)
+  })
 
   it('⚠ and the week reports itself out of the year-long loop – it cannot pass in silence', () => {
     const { world, rng } = atTheFork('r24-league-stop')
@@ -489,7 +491,7 @@ describe('the championship is watchable', () => {
     if (stops.includes('call-up')) {
       expect(stops.indexOf('college-league')).toBeLessThan(stops.indexOf('call-up'))
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -566,7 +568,7 @@ describe('⭐⭐⭐ ROUND 27 #2 – «will the next press end at the championshi
       expect(played, 'every college year holds its championship').toBe(ENDINGS.collegeYears)
       expect(saidYes, 'and the button named it on exactly those four presses').toBe(ENDINGS.collegeYears)
       expect(world.college!.years, 'the course really ran to the end').toHaveLength(ENDINGS.collegeYears)
-    }, 60_000)
+    })
   }
 
   it('⚠ it is false at a rest state the championship is BEHIND – «Finish the year» comes after it', () => {
@@ -581,7 +583,7 @@ describe('⭐⭐⭐ ROUND 27 #2 – «will the next press end at the championshi
     answerCollegeReveal(world)
     expect(toSnapshot(world).ending?.college?.leagueIsNextStop, 'after: there is nothing left to play').toBe(false)
     expect(toSnapshot(world).ending?.college?.yearInProgress, 'and the year is still the same one').toBe(true)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -602,7 +604,7 @@ describe('the championship awards nothing, and that is the constraint', () => {
         expect(world.results.filter((r) => r.week === week && r.playerId === KID_ID)).toHaveLength(0)
       }
     }
-  }, 60_000)
+  })
 
   it('⭐⭐⭐ ROUND 27 #4 – the reveal names NO table: `ladder` is null, not a placeholder', () => {
     // The owner, 27.08: «на экране итогов матча the College League написано Professional ranking –
@@ -628,7 +630,7 @@ describe('the championship awards nothing, and that is the constraint', () => {
     expect(pending!.points, 'nothing to award').toBe(0)
     expect(pending!.kidRank, 'and no rank to print in a table she is not in').toBeNull()
     expect(pending!.opponent.rank, 'on either side').toBeNull()
-  }, 60_000)
+  })
 
   it('⚠ every match row is a FRIENDLY and is KEPT – it is not evidence, and it is not prunable', () => {
     // `friendly` is the one predicate the radar, the avatar's emotion, the knock history and the
@@ -649,7 +651,7 @@ describe('the championship awards nothing, and that is the constraint', () => {
         expect(row.amountCents, 'no cheque, in either direction').toBeUndefined()
       }
     }
-  }, 60_000)
+  })
 
   it('⚠ the line states the two facts and grades nothing (career-contract §6)', () => {
     const line = collegeLeagueLine({ roundsWon: 1, rounds: 3 })
@@ -703,7 +705,7 @@ describe('the freeze still behaves', () => {
       expect(fullRanking(world).filter((r) => r.points > 0).length, 'somebody holds a point').toBeGreaterThan(0)
       expect(world.entries, 'nothing stale survived the freeze').toHaveLength(0)
     }
-  }, 60_000)
+  })
 
   it('⚠⚠ the championship costs the MAIN stream NOTHING – input-independence (invariant 2)', () => {
     // Its draws are `seed:collegeleague:<week>` and `seed:collegematch:<week>:<r>`, both re-derived
@@ -737,13 +739,13 @@ describe('the freeze still behaves', () => {
     expect(college.week).toBe(control.week)
     expect(college.rngMain.n, 'the same number of MAIN draws').toBe(control.rngMain.n)
     expect(rngA()).toBe(rngB())
-  }, 60_000)
+  })
 
   it('⚠ the same seed and week give the same championship, however often it is asked', () => {
     const a = walkFourYears('r24-league-repeat')
     const b = walkFourYears('r24-league-repeat')
     expect(yearsOf(a).map((y) => y.league)).toEqual(yearsOf(b).map((y) => y.league))
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -786,7 +788,7 @@ describe('a career migrated mid-college', () => {
     expect(banked.length).toBe(before + 1)
     expect(banked[banked.length - 1].league, 'the first year it plays under v56 has one').not.toBeNull()
     expect(lastLeagueRun(world.college!)).not.toBeNull()
-  }, 60_000)
+  })
 
   it('⚠ a save with no college at all falls straight through the migration', () => {
     const raw = JSON.parse(readFileSync(`${DIR}/v54.json`, 'utf8'))

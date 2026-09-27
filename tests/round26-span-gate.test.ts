@@ -22,7 +22,7 @@
 //     span) – the same file, block D's last case;
 //   * the pill's POSITION and its fit on a phone – `tests/component/round26-span-gate-ui.test.ts`,
 //     which mounts the real shell because a source pin cannot say which control is on the left.
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – the walk answers her beats like its knocks.
 import { drainLifeBeats } from './helpers/career'
 import {
@@ -51,10 +51,11 @@ import { DEFAULT_PROFILE, type Snapshot, type SnapshotInjury, type UpcomingEvent
 // One walked career of 208 weeks with a snapshot taken every week. Deterministic but slow, and the
 // unit project runs many files in parallel – the same file-level ceiling `r2-13-advance-span.test.ts`
 // carries, for the same reason.
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 4.94 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 4.94 s. Table:
+// tests/sim-serialisation.test.ts.
 
 // -------------------------------------------------------------------------------------------------
 // THE WALK

@@ -27,7 +27,7 @@
 // its negative, C gets the new slot pinned from both sides, D gets the refusal list's silence about
 // it asserted rather than assumed, A gets the law re-run over a span that stops on it – and nothing
 // here was relaxed to let the new member through.
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   ACADEMY_NOTICE,
   ADVANCE_REFUSALS,
@@ -74,10 +74,11 @@ import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // Two cases walk real careers (242 and 829 weeks). Deterministic but slow, and the suite runs many
 // files in parallel – the same generous file-level timeout round11.test.ts carries, same reason.
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 6.51 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 6.51 s. Table:
+// tests/sim-serialisation.test.ts.
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES

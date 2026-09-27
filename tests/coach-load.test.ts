@@ -273,10 +273,11 @@ describe('the routing: who answers the knock', () => {
     // the reason is T16b: the coach answers more of her knocks alone, so she rests fewer weeks and
     // plays more tennis. Trimming seeds until the case fits buys speed with coverage (scripts/units.mjs
     // states that trade), so the seeds stay and the ceiling is named.
-  // ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-  // WAS 90 s. This file's SLOWEST TEST, in the real bulk pool: 16.00 s; solo, twice: 8.89 / 9.23 s.
-  // The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-  }, 60_000)
+  // ⚠⚠ THE PER-TEST BUDGET IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 90 s -> 60 s on a measurement,
+  // then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit `testTimeout` – and a
+  // restated constant cannot follow its source, so a ceiling moved to 90 s would leave this file at 60.
+  // SLOWEST TEST here, in the real bulk pool: 16.00 s; solo, twice: 8.89 / 9.23 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('a knock the coach answered still costs, still shows, and still owns the week', () => {
     // The event may not vanish with the dialog. Same three consequences as a parent's answer.

@@ -1,14 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { worldFunction, worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 
 // Two of these replay whole careers (49 and 101 weeks, plus a 101-week bench career with a real
 // entry policy). Deterministic but slow, and the suite runs eight files in parallel – same
 // generous file-level timeout the econ/fatigue benches carry, same reason.
-// ⚠⚠ CLAMPED 27.09 TO THE PROJECT'S OWN CEILING (T5.3 · H-06), ON A MEASUREMENT, NOT A POLICY.
-// WAS 240 s. This file's SLOWEST TEST, in the real bulk pool: 3.72 s.
-// The ceiling, the measured table and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
-vi.setConfig({ testTimeout: 60_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 3.72 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   createWorld,
