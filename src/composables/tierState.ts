@@ -41,7 +41,7 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER, hasAcceptanceList } from '../engine/season/calendar'
-import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
+import { eventIsHers, isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
 import { UPCOMING_WEEKS } from '../engine/world/constants'
 // ⚠ ROUND 34 #1 – THE WINDOW A THRESHOLD IS COUNTED OVER is part of the condition, not a detail of
 // the fold: the domestic table is a season race and the other two roll 52 weeks. Read, never
@@ -320,10 +320,25 @@ export interface StackableEvent {
 
 /** CAN SHE ACT ON THIS CARD THIS WEEK – she is in it, or its list is still open to her. One
  *  definition, because `weekEventStack` below, the Season header's «N of them on the cards below»
- *  counter and «is this week still hers to plan» must not come to mean three different things. */
-export function eventActionable(e: StackableEvent, week: number): boolean {
-  return e.entered || (e.eligible && week <= e.deadlineWeek)
-}
+ *  counter and «is this week still hers to plan» must not come to mean three different things.
+ *
+ *  ⚠⚠ AND IT IS THE ENGINE'S OWN FUNCTION NOW, NOT A FAITHFUL COPY OF IT (T4.1 · E-06, 27.09) – the
+ *  `isSuitable` / `TIER_SHORT` / `layoffCoversWeek` pattern, and here the reason is the sentence
+ *  directly above. The body used to be written out here, byte-identical to `eventIsHers`
+ *  (`engine/world/multiWeek.ts`) except for the parameter's name, and the two sites each carried a
+ *  comment arguing for ONE spelling: this one, and `weekDays.ts`' re-export – «or the markers under
+ *  the grid and the control above the tab bar would disagree about what an empty stretch is». Two
+ *  arguments for one definition, over two definitions. The Season week stack and the header's
+ *  counter read THIS name; the calendar's look-ahead markers and the span pill read the engine's.
+ *  They agreed by COPY, which is exactly what both comments say must not be the mechanism.
+ *
+ *  ⚠ THE TYPE ANNOTATION IS DELIBERATE and is the `isSuitable` line's own shape: it keeps this
+ *  export's declared signature at `StackableEvent`, so every caller and every test type-checks
+ *  against the same parameter it always did while the BODY is the engine's. Nothing behavioural
+ *  moves – the bodies were identical – which is why this is a refactor and not a fix.
+ *  Witness: `tests/principles-e06-event-actionable.test.ts` (form A, spec §1: the identity is the
+ *  claim, because a table of agreements is what the copy already passed). */
+export const eventActionable: (e: StackableEvent, week: number) => boolean = eventIsHers
 
 /**
  * ⭐⭐⭐ ROUND 34 #14 – EVERY CARD A WEEK OFFERS, LEAD FIRST. The owner's ruling on the calendar item,
