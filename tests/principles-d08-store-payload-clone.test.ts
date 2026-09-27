@@ -109,7 +109,8 @@ const plainPrologue = (): PrologueHandover => ({ years: [], spentCents: 0 })
 /** ⚠ REACTIVE ON PURPOSE. The inheritance block starts life on `Snapshot.ending.dynasty`, which
  *  Pinia has made reactive; `plainDynasty` is what makes it crossable. This IS the real call site. */
 const liveDynasty = () => reactive(dynastyOf())
-const tsaveFile = () => new File([new Uint8Array([1, 2, 3, 4])], 'career.tsave')
+/** Something the door can read twice; the bytes' CONTENT is the worker's business, not this file's. */
+const tsaveFile = () => new File(['d08-export-bytes'], 'career.tsave')
 
 type Store = ReturnType<typeof useGameStore>
 
@@ -193,7 +194,6 @@ function storeSenders(): string[] {
     .map((h) => h[1])
 }
 
-let store: Store
 let driven: string[] = []
 
 beforeEach(async () => {
@@ -201,7 +201,7 @@ beforeEach(async () => {
   mockRequest.mockReset()
   crossings = []
   driven = []
-  store = useGameStore()
+  const store = useGameStore()
   // `reloadAfterRestart` reloads the career the player is IN, so it needs one to be in.
   store.snapshot = snap()
   mockRequest.mockImplementation(async (msg) => {
