@@ -79,16 +79,56 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
+  // ⚠⚠ THE ORDER OF THIS ARRAY IS LOAD-BEARING AND IT IS NOT ALPHABETICAL HOUSEKEEPING (G-04 (a),
+  // T5.9, 27.09). Playwright fills its dispatch queue by walking the root suite – projects in the
+  // order they are DECLARED here, then files, then tests – so the project written first is the
+  // project whose work a worker picks up first. With `fullyParallel: true` and five local workers
+  // that is the only lever the config has over which test starts when, and it is the lever the
+  // longest test needs: see `chromium-wedding` immediately below.
   projects: [
+    {
+      // ⚠⚠ ONE SPEC, AND IT IS HERE PURELY TO START FIRST – G-04 (a), measured before and after.
+      //
+      // WHAT WAS MEASURED (27.09, quiet machine, load 1.74 at the start, `npx playwright test
+      // --reporter=json`): 136 tests, 71.33 s of reported duration, 179.9 s of summed test time
+      // across five workers – and `wedding.spec.ts` is ONE test of 36.5 s that began at +26.3 s and
+      // finished at +62.9 s, when every other test in the suite had finished by +30.5 s. Four workers
+      // sat idle for the last ~32 s of the run, which is 45 % of it.
+      //
+      // WHY THE SPEC IS LONG IS NOT A DEFECT, which is why the fix is the schedule and not the spec.
+      // It presses the week ten times because the wedding is the one mechanic in the private life
+      // that is a DISTANCE rather than a card – eight ordinary weeks between her decision and the day
+      // – and each press walks the product's own route, through the calendar sweep a player sees. The
+      // spec's header defends that walk in as many words. Turning the sweep off for the eight
+      // ordinary presses is G-04's option (b) and it CHANGES the route the spec walks, so it is a
+      // question for the owner rather than a builder's default. This is option (a): the same work, at
+      // the front of the queue.
+      //
+      // ⚠ A PROJECT RATHER THAN A RENAMED FILE, and the pin query is why. `e2e/coverage-map.spec.ts`
+      // reads `docs/specs/e2e-coverage.md`'s JOURNEYS table against `readdirSync(e2e/)` and asserts
+      // the two are EQUAL, so a file renamed to sort first would redden that gate and move a
+      // documented row; eight other files also name `e2e/wedding.spec.ts` in prose. A project moves
+      // nothing on disk. Everything else is `chromium`'s, copied deliberately rather than inherited:
+      // the same viewport (the owner's phone, and a different one would render a layout no player
+      // uses) and no `baseURL`, so it takes the top-level one and meets the same build on PORT.
+      name: 'chromium-wedding',
+      testMatch: /wedding\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 576, height: 1280 },
+      },
+    },
     {
       // ⚠ CHROMIUM ONLY, AND THAT IS S0's SCOPE RATHER THAN AN OVERSIGHT. The plan's §6 splits the
       // work: the PR gate runs smoke on one engine, and the full device/browser matrix plus visual
       // and a11y belongs to S3's nightly `e2e-full.yml`. One browser is also ~273 MiB of download
       // per cold CI run; three would be most of the job's wall-clock, for a smoke test.
       name: 'chromium',
-      // Every spec except the one that needs a live service worker. Named by file rather than by a
-      // tag so the exclusion is greppable from the spec itself.
-      testIgnore: /offline\.spec\.ts/,
+      // Every spec except the one that needs a live service worker and the one that has to start
+      // first. Named by file rather than by a tag so each exclusion is greppable from the spec
+      // itself – and ⚠ a spec left in BOTH this project and one above would simply run twice, so
+      // every project above has its own `testMatch` and this list carries the same file.
+      testIgnore: /(?:offline|wedding)\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         // THE OWNER'S PHONE, and this app is phone-first: 576x1280 is the width the redesign was
