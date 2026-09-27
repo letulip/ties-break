@@ -54,7 +54,7 @@ import type {
 // `activeKitDeal`: it is the ENGINE's own predicate for «is this letter still a decision», the very
 // function the inbox dot and the worker's refusal read, so the list below cannot answer it
 // differently. Pure: no world in it and no draw behind it.
-import { SPONSOR_TIERS, activeKitDeal, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive } from '../engine/offers'
+import { SPONSOR_TIERS, activeKitDeal, adUntilWeek, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { seasonYear, weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -379,7 +379,11 @@ const confirmMessage = computed(() => {
     if (t.lifetime === true) {
       return `Sign with ${t.brand}? ${formatCents(t.cashCents)} a year, paid to her every year for life – no shoot weeks, no end date. This cannot be undone.`
     }
-    const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
+    // ⚠ THE WEEK THE ENGINE WILL WRITE, ASKED (E-P05, 27.09). This spelled the clamp and the inclusive
+    // `- 1` itself; `adUntilWeek` is the function `signOffer` uses, so the confirm cannot promise an end
+    // date the signature does not produce – `dealUntilWeek`'s rule for the kit confirm, one letter
+    // family over, and the same-code rule the shoot-week preview above already follows.
+    const until = weekLabel(adUntilWeek(t, week.value))
     const years = Math.max(1, t.termYears ?? 1)
     // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
     // rest of it arrives; a one-year letter keeps its original sentence to the word.

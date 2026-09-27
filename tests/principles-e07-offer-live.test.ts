@@ -34,11 +34,11 @@
 //   arm C (the TEMPLATE, spec §2's third arm): spell the liveness inline in `OfferLetter`'s own
 //     `v-if` and the MOUNT reddens alone.
 import { describe, it, expect } from 'vitest'
-import { hasLiveOffer, isOfferLive, offerAnswerError } from '../src/engine/offers'
+import { adUntilWeek, hasLiveOffer, isOfferLive, offerAnswerError } from '../src/engine/offers'
 import { letterDeletable } from '../src/composables/inboxMail'
 import { engineModuleFunction, componentFile } from './worldSource'
 import { codeOf, region } from './helpers/source'
-import type { Offer } from '../src/shared/protocol'
+import type { AdOfferTerms, Offer } from '../src/shared/protocol'
 
 /** One letter, at the grain the question reads: a state and a deadline. `kind: 'kit'` with no terms
  *  is never handed to a renderer here – these rows ask the four predicates directly. */
@@ -138,5 +138,42 @@ describe('E-07 §2: the boundary week – the clause a re-spelling drifts on', (
 
   it('⚠ and a letter that is not in the inbox is still its own refusal', () => {
     expect(offerAnswerError([letter('open', WEEK)], 'off-nope', WEEK)).toBe('That letter is not in the inbox.')
+  })
+})
+
+// =================================================================================================
+// E-P05 RIDES HERE – the lane's P3 row for the OTHER letter family, in the two files this task opened.
+// =================================================================================================
+//
+// The row: «the ad confirm's until-week is spelled with `Math.max(1, …)`, the engine's without»
+// (`InboxSheet.vue` vs `engine/offers.ts`), proposal «one exported `adUntilWeek(terms, week)`».
+//
+// ⚠ THE PREMISE IS HALF WRONG ON THIS TREE AND THE ROW STILL STANDS. `signOffer`'s ad arm clamps too –
+// `Math.max(1, (offer.terms as AdOfferTerms).termWeeks)` – so the two spellings AGREED byte for byte and
+// nothing was diverging. What made it worth closing anyway is `dealUntilWeek`'s own sentence, quoted at
+// the kit confirm: «a screen that computed the term itself is a screen that can promise a season the
+// till does not honour». The confirm quotes an end date BEFORE the signature, so it is the one surface
+// where a second derivation is a promise.
+describe('E-P05: the ad confirm quotes the week the signature will write', () => {
+  it('⚠⚠ `signOffer`\'s ad arm asks `adUntilWeek` rather than deriving the end week', () => {
+    const src = codeOf(engineModuleFunction('offers', 'signOffer'))
+    expect(src, 'the engine writes the shared answer').toContain('adUntilWeek(offer.terms as AdOfferTerms, week)')
+    expect(src, 'and no longer clamps a term of its own').not.toContain('Math.max(1, (offer.terms as AdOfferTerms).termWeeks)')
+  })
+
+  it('⚠ ...and so does the confirm, which quotes it to the player first', () => {
+    const sheet = codeOf(componentFile('components/InboxSheet.vue'))
+    expect(sheet, 'the sheet calls the engine\'s function').toContain('adUntilWeek(t, week.value)')
+    expect(sheet, 'and spells no term arithmetic of its own').not.toContain('Math.max(1, t.termWeeks)')
+  })
+
+  it('⭐ the window is INCLUSIVE of the signing week, and a zero-week paper still covers it', () => {
+    // Both halves of the rule, asserted where one function owns them: the clamp is part of the answer
+    // rather than a guard, and the `- 1` is what makes the end week the last covered one.
+    const terms = (termWeeks: number) => ({ termWeeks }) as unknown as AdOfferTerms
+    expect(adUntilWeek(terms(1), 40), 'a one-week campaign ends the week it starts').toBe(40)
+    expect(adUntilWeek(terms(4), 40), 'four weeks: 40, 41, 42, 43').toBe(43)
+    expect(adUntilWeek(terms(0), 40), 'a zero-week paper still covers its own week').toBe(40)
+    expect(adUntilWeek(terms(-3), 40), 'and so does a malformed one').toBe(40)
   })
 })

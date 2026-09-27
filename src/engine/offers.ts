@@ -1154,11 +1154,14 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
       offer.fromWeek = week
       return offer
     }
-    const termWeeks = Math.max(1, (offer.terms as AdOfferTerms).termWeeks)
     offer.state = 'signed'
     offer.decidedWeek = week
     offer.fromWeek = week
-    offer.untilWeek = week + termWeeks - 1
+    // ⚠ ONE SPELLING, SHARED WITH THE CONFIRM (E-P05, riding T4.2's wave 27.09) – see `adUntilWeek`.
+    // The clamp and the inclusive `- 1` were written out here and again in `InboxSheet.vue`'s ad
+    // confirm, which is `dealUntilWeek`'s own rule one letter family over: the screen quotes the week
+    // the engine will write, by calling the function that writes it.
+    offer.untilWeek = adUntilWeek(offer.terms as AdOfferTerms, week)
     return offer
   }
   // ⭐⭐ ROUND 29 PART TWO #12 – SHE STEPS UP, AND THE BRAND SHE LEAVES IS TOLD SO. `rungTurnedAway`
@@ -1249,6 +1252,24 @@ export function coveredSeasonStart(week: number): number {
 export function dealUntilWeek(offer: Offer): number {
   const seasons = Math.max(1, (offer.terms as KitOfferTerms).seasons ?? 1)
   return coveredSeasonStart(offer.week) + (seasons - 1) * WEEKS_PER_YEAR + (WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+}
+
+/** THE LAST WEEK AN AD CAMPAIGN COVERS – `dealUntilWeek`'s sibling for the other letter family, and
+ *  the same rule for existing at all (E-P05, 27.09).
+ *
+ *  ⚠ THE CLAMP IS PART OF THE ANSWER, not a guard: a paper with `termWeeks` of 0 still covers the week
+ *  it was signed in, and the `- 1` is what makes the window INCLUSIVE of that week. Both halves were
+ *  written out twice – here and in `InboxSheet.vue`'s ad confirm, which quotes the end week to the
+ *  player BEFORE he signs – so the screen promised a date it had derived rather than the date the
+ *  engine was about to write. They agreed byte for byte (E-P05 reported the engine as unclamped; on
+ *  this tree it clamps too, so the row is a de-duplication and not a divergence repaired), and
+ *  `dealUntilWeek`'s own note is the argument for closing it anyway: «a screen that computed the term
+ *  itself is a screen that can promise a season the till does not honour».
+ *
+ *  ⚠ A LIFETIME PAPER HAS NO END AND NEVER REACHES THIS. `signOffer` returns on `lifetime === true`
+ *  before it asks, and the confirm's own lifetime branch quotes no week at all – see both sites. */
+export function adUntilWeek(terms: AdOfferTerms, week: number): number {
+  return week + Math.max(1, terms.termWeeks) - 1
 }
 
 /** REFUSE IT. Terminal, like signing, and for the same reason: a "no" the player could take back
