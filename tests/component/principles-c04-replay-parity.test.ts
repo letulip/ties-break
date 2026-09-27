@@ -44,7 +44,7 @@ const RICH_CENTS = 9_999_999_00
  *  `enterPointBand` starts at 0 – "a fresh kid always starts here" – so `enterEvent` is the whole of
  *  entering it, and this file copies none of the six local `enterEligible` helpers that exist to
  *  grant a ranking the higher rungs ask for. */
-function recordedTournamentMatch(seed: string): WorldMatch {
+function recordedTournamentRun(seed: string): WorldMatch[] {
   const world = createWorld(seed)
   const rng = rngFromSeed(world.seed)
   world.fundsCents = RICH_CENTS
@@ -56,9 +56,11 @@ function recordedTournamentMatch(seed: string): WorldMatch {
   // match events (the "skip tournament" path).
   expect(world.pendingTournament, 'the tournament week did not pause into a reveal').toBeTruthy()
   skipTournament(world)
-  const ev = world.events.find((e) => e.type === 'match' && e.week === event!.week && e.match)
-  expect(ev, 'the resolved run emitted no kid match').toBeTruthy()
-  return ev!.match!
+  const run = world.events
+    .filter((e) => e.type === 'match' && e.week === event!.week && e.match)
+    .map((e) => e.match!)
+  expect(run.length, 'the resolved run emitted no kid match').toBeGreaterThan(1)
+  return run
 }
 
 /** A booked friendly, resolved – a match RECORDED by `world/planner.ts`' `resolvePractice`, on its
@@ -115,22 +117,33 @@ async function replayed(match: WorldMatch): Promise<{ scoreline: string; setsWon
 }
 
 describe('C-04 – a re-watch on screen plays the match the engine recorded', () => {
-  it('⭐⭐ a tournament round: the scoreline MatchReplay shows is the scoreline on the record', async () => {
-    const m = recordedTournamentMatch('c04-tournament')
+  /** The two claims, per record: the rendered scoreline IS the row's own, and the scoreboard has the
+   *  recorded player winning. The winner is read off the CELLS rather than off the record, because
+   *  both names render whoever won – "the winner's name is on screen" is a claim that cannot fail. */
+  async function assertReplayMatchesRecord(m: WorldMatch): Promise<void> {
     expect(m.seed, 'a record with no seed cannot be replayed at all').toBeTruthy()
     expect(m.score, 'the recorder wrote no scoreline to compare with').toBeTruthy()
-    // ⚠ A PRECONDITION, NOT AN ASSERTION ABOUT THE FIX: on the ~2.7% of matches that end in a
-    // retirement the sets do not name the winner, so the winner half below would be measuring the
-    // seed. If this ever fires, move the fixture's seed rather than dropping the claim.
-    expect(m.retiredId, 'this fixture happens to be a retirement – pick another seed').toBeUndefined()
+    // ⚠ A PRECONDITION, NOT A CLAIM ABOUT THE FIX: on the ~2.7% of matches that end in a retirement
+    // the sets do not name the winner, so the winner half would be measuring the seed. If this fires,
+    // move the fixture's seed rather than dropping the claim.
+    expect(m.retiredId, `${m.seed}: this fixture is a retirement – pick another seed`).toBeUndefined()
     const { scoreline, setsWonBySide, unmount } = await replayed(m)
     // THE ASSERTION THE WHOLE FILE IS FOR: the screen's re-simulation resolved the recorded match.
-    expect(scoreline, 'the replay played a different match from the one the engine recorded').toBe(m.score)
-    // ...and the winner with it, off the SCOREBOARD rather than off the record – both names render
-    // whoever won, so "the winner's name is on screen" would be a claim that cannot fail.
+    expect(scoreline, `${m.seed}: the replay played a different match from the one the engine recorded`).toBe(m.score)
     const shown = setsWonBySide[0] > setsWonBySide[1] ? m.aId : m.bId
-    expect(shown, 'the scoreboard has the other player winning').toBe(m.winnerId)
+    expect(shown, `${m.seed}: the scoreboard has the other player winning`).toBe(m.winnerId)
     unmount()
+  }
+
+  it('⭐⭐ a tournament run: every round MatchReplay re-watches ends on the recorded scoreline', async () => {
+    // ⚠ THE WHOLE RUN AND NOT ITS FIRST MATCH, AND THAT IS A MEASUREMENT RATHER THAN THOROUGHNESS.
+    // The mutation arm was run against one record first and came back GREEN: `momentum: false` is a
+    // 0.015 nudge that only applies on a streak of three, so it flips a served point only when the
+    // uniform falls inside that window, and this fixture's FIRST round happens not to contain one.
+    // Measured on the same seed, the run's three rounds diverged 2 of 3 – so the corpus is the floor
+    // here exactly as it is in `tests/match/match-annotation-parity.test.ts`: a net aimed at one
+    // record would have been measuring the seed and reporting the recorder.
+    for (const m of recordedTournamentRun('c04-tournament')) await assertReplayMatchesRecord(m)
   })
 
   it('⭐ a booked friendly: the same, through the other recorder', async () => {
@@ -138,27 +151,21 @@ describe('C-04 – a re-watch on screen plays the match the engine recorded', ()
     // `playMatch` records the tournament round; an arm each is what makes the mutation asymmetric.
     const m = recordedFriendly('c04-friendly')
     expect(m.seed, 'a record with no seed cannot be replayed at all').toContain(':practicematch:')
-    expect(m.score, 'the recorder wrote no scoreline to compare with').toBeTruthy()
-    expect(m.retiredId, 'this fixture happens to be a retirement – pick another seed').toBeUndefined()
     expect([m.aId, m.bId], 'the friendly is not her match').toContain(KID_ID)
-    const { scoreline, setsWonBySide, unmount } = await replayed(m)
-    expect(scoreline, 'the replay played a different match from the one the engine recorded').toBe(m.score)
-    const shown = setsWonBySide[0] > setsWonBySide[1] ? m.aId : m.bId
-    expect(shown, 'the scoreboard has the other player winning').toBe(m.winnerId)
-    unmount()
+    await assertReplayMatchesRecord(m)
   })
 
-  // ⚠ NOT VACUOUS. Both arms above would pass on a one-point walkover, and they would pass on a
-  // reader that returned the record instead of the screen. The floors are here.
-  it('...and the reading is real: the cells hold a played match, and a different record reads differently', async () => {
-    const one = recordedTournamentMatch('c04-tournament')
-    const two = recordedFriendly('c04-friendly')
-    expect(one.seed === two.seed || one.score === two.score, 'the two arms are the same match').toBe(false)
-    const first = await replayed(one)
+  // ⚠ NOT VACUOUS. The arms above would pass on a one-point walkover, and they would pass on a reader
+  // that returned the record instead of the screen. The floors are here.
+  it('...and the reading is real: the cells hold played matches, and two records read differently', async () => {
+    const run = recordedTournamentRun('c04-tournament')
+    const friendly = recordedFriendly('c04-friendly')
+    const first = await replayed(run[0])
     expect(first.scoreline, 'the scoreline is not a scoreline').toMatch(/^\d+-\d+( \d+-\d+)+$/)
     expect(first.setsWonBySide[0] + first.setsWonBySide[1], 'nobody won a set').toBeGreaterThan(1)
     first.unmount()
-    const second = await replayed(two)
+    const second = await replayed(friendly)
+    // Two careers, two recorders, two matches: a reader returning a constant shows up right here.
     expect(second.scoreline).not.toBe(first.scoreline)
     second.unmount()
   })
