@@ -185,6 +185,24 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   ([03-engine-leaves.md](review-principles-2026-09-26/03-engine-leaves.md), C-02; T5.4 of
   [the fix plan](plans/principles-fix-builder-2026-09.md).)
 
+- **`rescueTitle` restates the engine's tired limb** (E-P02, `SeasonScreen.vue:1230`) – form A for a
+  rendered-string branch, queued rather than guessed at because the analysis is already done. The
+  row's proposal, reading `practiceCaution(...).reasons.includes('tired')`, needs a `practiceCaution`
+  INPUT – a `practiceWeeks` list and a week – on a card where no booking exists, and synthesising one
+  would drag the `'streak'` limb into a title that must turn on tiredness alone. Doing it properly is a
+  small engine primitive (`practiceTired(condition)`) in `world/planner.ts`, four lines plus a case. W4
+  did not authorise a new primitive for a P3 row.
+  ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P02.)
+- **Three findings wait on one missing utility: this app has no screen-reader-only class.** E-P11,
+  E-P12 and E-P13 all propose routing `title` text into `aria-describedby`, which must point at an
+  ELEMENT – so each needs a visually-hidden span, and a grep for `sr-only`, `visually-hidden` or
+  `clip: rect` over `src/` returns **nothing**. ⚠ It is not new copy: those sentences already exist in
+  `title`, so it is the same sentence on a new surface, spoken instead of hovered. The shared rule
+  belongs in `src/style.css` beside F-09 / T6.4's other shared objects, and the three findings are its
+  first consumers – one utility, not three inventions.
+  ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P11 / E-P12 / E-P13; T6.4 of
+  [the fix plan](plans/principles-fix-builder-2026-09.md).)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши

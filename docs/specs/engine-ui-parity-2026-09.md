@@ -149,6 +149,30 @@ composable: `parity-feed-ladder.test.ts` carries an arm that adds a fourth filte
 unit net stays green. That arm is the one-line argument for why a rendered assertion exists at all
 beside a composable one.
 
+### ⭐⭐ A PAIRED WITNESS MUST PIN THE VALUE, NOT ONLY THE SHARED PHRASING (27.09, W4's T4.11)
+
+The sharpest failure a form-B test can have is not a false red. It is agreeing with itself.
+
+E-01's net began by asserting the WORD both surfaces print - «birthday to birthday» on the season
+header and on every W pill - and left the FIGURE to `snapshot.proEntryCap`. Arm A then moved
+`proEntryCapUsage`'s window inside the engine, from the birthday year to the season block, and the
+header and the pills moved **together**: both surfaces went on agreeing with each other, about a
+number that was now wrong, and nothing in the file could see it. A witness that can only see
+divergence is blind to a shared error, which is the one thing a parity test exists to refuse.
+
+⭐ **So the rule: a form-B case pins the VALUE on the snapshot AND on every surface, each assertion
+naming the engine site the number comes from.** After that, arm A reddens three cases across two
+files from one engine edit - the witness's own and the other surface's suite - which is what arm A is
+supposed to look like. Form A does not need this, because there is only one reader; it is the price
+of a witness.
+
+⚠ **And a corollary measured the same day: a FORMAT change is not a divergence.** Changing
+`practiceMatchId`'s spelling (`practice-w` → `friendly-w`) reddened the format pin alone and left both
+rendered surfaces green - correctly, because the fixture builds its ids from the same exported
+function, so the screens follow the engine wherever it goes. That is form A working, not a hole. A
+test header that claims such an arm will redden the surfaces is claiming a red it cannot produce;
+measure the arm before writing what it does.
+
 ## 3. When each applies
 
 * The screen prints a **refusal, a price, an openness, a count or a date** that the engine also
