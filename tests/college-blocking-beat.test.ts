@@ -26,8 +26,14 @@
 // in the wave report). What lives here, in the suite, is the same measure over the forced-fork
 // careers – the arm every other college file walks. MEASURED: one career costs ~1.5 s to open at
 // college and ~3.1 s to walk its four academic years, so eight of them read 45 s solo, which is past
-// this repo's own line (`scripts/heavy-tests.mjs`: ~32 s in-pool, and CI runs ~1.9x local). Four is
+// this repo's own line (`scripts/heavy-tests.mjs`: ~31 s SOLO, and CI runs ~1.9-2.3x local). Four is
 // ~23 s, and the file is in `HEAVY_UNIT_FILES` so it owns its process.
+// ⚠ CORRECTED 27.09 (T5.2 · G-05): this line said «~32 s in-pool», and it was the FOURTH site of a
+// measure `52ded7ae` withdrew on the day it was written («By the honest measure – solo cost»). The
+// other three are in `scripts/heavy-tests.mjs`, whose round-26 block now carries the correction and
+// derives the line from birpc's 60 s window over the 1.9-2.3x CI factor. ⚠ The sentence also compared
+// 45 s SOLO against an IN-POOL bar, which is two different units – the reading above did not change,
+// only the bar it is measured against, and against the solo bar the conclusion is the same one.
 //
 // ⚠ THE FOUR ARE A PREFIX OF THE SEED LIST AND NOT A SELECTION. Two of them hold blocking beats
 // inside a college year (measured: 3 passed rows before the fix, `met@178` on `b01-1` and
