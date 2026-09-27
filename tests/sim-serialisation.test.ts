@@ -319,12 +319,54 @@ interface Budget {
 /**
  * Every budget declaration in `source`, with the line it sits on and whether it binds a test or a hook.
  *
- * ⚠ THE CLASSIFIER WALKS BACKWARDS AND STOPS AT THE FIRST OPENER IT MEETS. A trailing `}, N)` belongs
- * to whichever call it closes, and the cheap way to know which is to look up for `it(` / `test(` (stop:
- * a test budget) or a hook call (stop: a hook budget). `testTimeout` and `hookTimeout` name themselves
- * and need no walk. The 80-line reach is above the longest case in the corpus; a case longer than that
- * reads as a test, which is the strict direction and the safe one for a ceiling.
+ * A trailing `}, N)` belongs to whichever call it closes, so the classifier finds that call by MATCHING
+ * THE PARENTHESIS – counting `)` against `(` backwards from the budget until the depth returns to zero –
+ * and reads the opener's line for `it(` / `test(` (a test budget) or a hook name (a hook budget).
+ * `testTimeout` and `hookTimeout` name themselves and need no walk.
+ *
+ * ⚠⚠ IT USED TO WALK BACK AT MOST 80 LINES AND DEFAULT TO `test`, AND THAT WAS WRONG IN THE ONE
+ * DIRECTION THAT COSTS SOMETHING. `tests/save-doors-fuzz.test.ts` opens a `beforeAll` at line 561 and
+ * closes it with `}, 60_000)` at line 675 – **114 lines**, past the window – so the old classifier
+ * reported that hook's budget as a TEST budget. The 80-line default was chosen as «the strict direction,
+ * safe for a ceiling», and for FLAGGING it is: a human dismisses a false violation. But T5.3's second
+ * pass then used this same classifier to decide which declarations to DELETE, and under that use the
+ * same default says «delete a hook budget that its own note measured as necessary» – vitest's default
+ * `hookTimeout` is 10 s, that hook needs ~3 s solo and `unit-bulk`'s multiplier is at least 3.1x, which
+ * is exactly on the wall. It was caught by reading the one site whose indentation looked odd, one command
+ * before the deletion ran. ⭐ The lesson is not «widen the window»: a heuristic that is safe for one use
+ * of a parser is not safe for another, and the fix is to stop guessing – the parenthesis is exact.
  */
+/**
+ * Which call a trailing `}, N)` closes – `test` or `hook` – by matching its parenthesis.
+ *
+ * Walks backwards character by character from the budget, `)` deepening and `(` unwinding, and reads the
+ * line holding the `(` that brought the depth back to zero. ⚠ It defaults to `test` only when no opener
+ * is found at all (a syntactically impossible file), never as a distance cut-off – see `budgetsIn`.
+ */
+function enclosingCallKind(lines: string[], lineIndex: number, matchEnd: number): Budget['kind'] {
+  let depth = 0
+  for (let i = lineIndex; i >= 0; i--) {
+    // ⚠ THE SLICE MUST INCLUDE THE MATCH'S OWN `)`, which is the whole point: that paren is the one
+    // being matched. The first draft sliced up to the `}` instead and the depth never returned to zero,
+    // so every budget came back `test` – the fixture case caught it on the first run.
+    const upTo = i === lineIndex ? lines[i].slice(0, matchEnd) : lines[i]
+    for (let c = upTo.length - 1; c >= 0; c--) {
+      if (upTo[c] === ')') depth++
+      else if (upTo[c] === '(') {
+        depth--
+        if (depth === 0) {
+          const opener = lines[i].slice(0, c)
+          if (HOOK_NAME.test(opener)) return 'hook'
+          if (/\b(it|test)(\.\w+)?\s*$/.test(opener)) return 'test'
+          // `describe(…, N)` and anything else that takes a budget is bound by the test window too.
+          return 'test'
+        }
+      }
+    }
+  }
+  return 'test'
+}
+
 function budgetsIn(source: string): Budget[] {
   const lines = source.split('\n')
   const found: Budget[] = []
@@ -350,15 +392,13 @@ function budgetsIn(source: string): Budget[] {
         found.push({ line: i + 1, ms, kind: 'test' })
         continue
       }
-      let kind: Budget['kind'] = 'test'
-      for (let j = i; j >= Math.max(0, i - 80); j--) {
-        if (/^\s*(it|test)\s*\(|^\s*(it|test)\.\w+\s*\(/.test(lines[j])) break
-        if (HOOK_NAME.test(lines[j]) && /\(\s*(async\s*)?\(/.test(lines[j])) {
-          kind = 'hook'
-          break
-        }
+      if (m[1] === 'timeout') {
+        // The OPTIONS-OBJECT form, `it(name, { timeout: N }, fn)`. It is always a test budget: vitest
+        // gives a hook a positional timeout only (`beforeAll(fn, N)`), so `{ timeout }` cannot be one.
+        found.push({ line: i + 1, ms, kind: 'test' })
+        continue
       }
-      found.push({ line: i + 1, ms, kind })
+      found.push({ line: i + 1, ms, kind: enclosingCallKind(lines, i, (m.index ?? 0) + m[0].length) })
     }
   }
   return found
@@ -417,6 +457,21 @@ describe('no bulk-pool test declares a budget above birpc’s window', () => {
       { line: 12, ms: 30_000, kind: 'test' },
       // lines 13-15 contribute NOTHING: a whole-line `//`, a JSDoc `*` line, and a trailing comment.
       // Every one of T5.3's 31 dated notes is shaped like line 13, so this is not a hypothetical.
+    ])
+  })
+
+  it('⚠⚠ a hook budget is a hook budget however far its body runs – the 114-line regression', () => {
+    // ⚠⚠ THE CASE THE OLD 80-LINE WINDOW GOT WRONG, generated rather than transcribed so it cannot rot.
+    // `tests/save-doors-fuzz.test.ts` opens a `beforeAll` at 561 and closes it with `}, 60_000)` at 675 –
+    // 114 lines – and the window classified that hook's budget as a TEST budget. Harmless while the gate
+    // only FLAGS; lethal the moment the same parser decides what to DELETE, which is what T5.3's second
+    // pass asked it to do. So distance is pinned here: the answer must not depend on how long the body is.
+    const filler = Array.from({ length: 120 }, (_, k) => `  step(${k})`).join('\n')
+    expect(budgetsIn(`beforeAll(async () => {\n${filler}\n}, ${90_000})`), 'a 120-line hook').toEqual([
+      { line: 122, ms: 90_000, kind: 'hook' },
+    ])
+    expect(budgetsIn(`it('slow', async () => {\n${filler}\n}, ${90_000})`), 'a 120-line test').toEqual([
+      { line: 122, ms: 90_000, kind: 'test' },
     ])
   })
 
