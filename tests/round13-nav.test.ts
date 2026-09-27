@@ -484,8 +484,15 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
     // condition live where the condition is asserted:
     // `tests/component/round33-tournament-arrival.test.ts` mounts both arrivals and asserts each
     // one's whole section list, which is a stronger statement than either of these lines.
+    // ⚠ RE-AIMED 27.09 BY E-02 (T4.12) ONTO THE IDIOM ITS NEIGHBOUR ALREADY USED, and not weakened.
+    // The second line read `'<h2>Training plan</h2>'`, which asserts the heading's ATTRIBUTES as well
+    // as its text – so it broke the moment the heading gained an `id`, which is now the preset row's
+    // accessible name (`aria-labelledby`, no new words). The line above it has matched on
+    // `'>This week</h2>'` since round 33 for exactly this reason: that heading carries a `v-if`. Both
+    // now assert the protected fact – the heading text is on this screen – and neither pins an
+    // attribute list that a name or a condition may legitimately grow.
     expect(weekScreen).toContain('>This week</h2>')
-    expect(weekScreen).toContain('<h2>Training plan</h2>')
+    expect(weekScreen).toContain('>Training plan</h2>')
   })
 
   it('the card renders by the SHARED existence rule – the same one the dot reads', () => {

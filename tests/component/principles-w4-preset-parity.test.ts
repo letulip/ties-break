@@ -324,4 +324,35 @@ describe('the preset row\'s accessible name', () => {
     expect(marketRow.attributes('role'), '...and no unnamed group role either').toBeUndefined()
     market.unmount()
   })
+
+  it('⚠ ...and `groupName` is not vacuous: a name that reaches nobody THROWS', () => {
+    // ON A FIXTURE RATHER THAN ON THE TREE, because neither source mutation can reach these two
+    // throws – the identity assertion above fires first, which is the right order for catching the
+    // real defect and the wrong order for proving the guard. A guard whose only witness is «the tree
+    // is clean today» cannot tell a working rule from dead code (`pin-hygiene.test.ts`'s own
+    // argument), and both of these are the failure a browser performs IN SILENCE.
+    const dangling = document.createElement('div')
+    dangling.setAttribute('role', 'group')
+    dangling.setAttribute('aria-labelledby', 'nothing-answers-to-this')
+    expect(() => groupName(dangling), 'an id nothing answers to is not a name').toThrow(
+      /nothing in the document answers to it/,
+    )
+
+    const roleless = document.createElement('div')
+    roleless.setAttribute('aria-labelledby', 'this-week-plan-title')
+    expect(() => groupName(roleless), 'a name on a row that is not a group names nothing').toThrow(
+      /no grouping role/,
+    )
+
+    // ...and the honest shape resolves, so the rule is not simply throwing at everything.
+    const heading = document.createElement('h2')
+    heading.id = 'fixture-heading'
+    heading.textContent = 'Training plan'
+    document.body.append(heading)
+    const named = document.createElement('div')
+    named.setAttribute('role', 'group')
+    named.setAttribute('aria-labelledby', 'fixture-heading')
+    expect(groupName(named)).toBe('Training plan')
+    heading.remove()
+  })
 })
