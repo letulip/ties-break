@@ -274,6 +274,24 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   the normaliser learned to strip a leading `export` (one keyword had kept the guard green).
   ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02 / F-04.)
 
+- **Nothing answers «which tests exercise this module», and the barrel is why.** `world/lifeBeat.ts`
+  owns 110 barrel symbols; `CLAUDE.md`'s pin query, widened to the module's quoted path and
+  `engineModuleSource('world/lifeBeat'`, finds **1** test file, while **81** files import the barrel
+  and name at least one of those 110 symbols. The queue entry is the tool the finding names, not a
+  rename: `node scripts/world-map.mjs --tests <module>` resolves each test file's barrel imports
+  through the AST map the script already builds, and prints the test files touching any symbol the
+  module owns, plus the direct-path importers and the `engineModuleSource` pins. `npm run test:quiet --
+  $(…)` then runs exactly those. ⚠ **Renames are explicitly refused**: 336 of 607 test files are named
+  after the round that wrote them, and renaming them would buy churn and merge conflicts for no
+  behaviour – the defect is that the barrel hides the owner from `grep`, so the repair belongs in the
+  script that already knows ownership. Blast radius measured at none (`git grep -l "world-map" --
+  tests/` = 1). The trigger is a module split: `git grep -l "world/lifeBeat" -- tests/` returns **29**
+  file names that record the round that wrote them, so a builder asked to run «the life-beat suites»
+  guesses from those or pays the full unit gate – and a split into a package does not change that
+  number, because the barrel is what hides the owner.
+  ([08-tests-tooling-docs.md](review-principles-2026-09-26/08-tests-tooling-docs.md), H-08; the
+  forward rule is the architect's, per §1a of [the fix plan](plans/principles-fix-builder-2026-09.md).)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
