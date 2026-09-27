@@ -234,6 +234,35 @@ describe('E-04 §3: the chip prints it, and composes nothing', () => {
     expect(s.note).toBe(`Under-${TIERS.j30.maxAgeYears! + 1}`)
   })
 
+  it('⭐⭐ the ITF year cap on a LIVE career: the note is byte-identical, the tooltip is the engine\'s', () => {
+    // ⚠⚠ THE WAVE-LEVEL PROOF FOR THE ONE LABEL THAT COULD HAVE MOVED. The engine arm composes the
+    // chip's short note from `refusal.entryCap` where the legacy arm read `snapshot.entryCap`; they are
+    // the same fold at the same week (`entryCapUsage(world, world.week)`), so the label is unchanged –
+    // asserted on a real snapshot rather than argued, because «identical by construction» is exactly the
+    // claim that needs a measurement (invariant 4: a string this task did not mean to move must not).
+    const world = createWorld('e04-itf-cap', DEFAULT_PROFILE)
+    let at = -1
+    for (let w = 0; w < 200 && at < 0; w++) if (kidAgeAt(world, w) === SUB_AGE) at = w
+    world.week = at + 20
+    // ⚠ THE LADDER HAS TO HOLD j30 OPEN FIRST, or the verdict comes back 'locked' and the case measures
+    // the point band instead of the allowance (measured: it did, on the first run). The rung's door is her
+    // DOMESTIC standing, so a domestic book past its floor is what opens it – `onRampCleared` is the
+    // engine's own latch and is set by the same crossing.
+    world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'national' })
+    world.onRampCleared = { ...(world.onRampCleared ?? {}), itf: true }
+    recomputeKidRank(world)
+    // Her birthday year's international entries, spent past the allowance – the ledger `enterEvent`
+    // writes, filled directly because the point here is the CHIP and not the turnstile.
+    world.internationalEntryWeeks = Array.from({ length: 20 }, (_, i) => at + i)
+    const snap = toSnapshot(world)
+    expect(snap.entryCap.remaining, 'the fixture really is out of allowance').toBe(0)
+    const s = stateOf(snap, 'j30')
+    expect(s.kind).toBe('capped')
+    expect(s.note, 'the chip\'s short label, unchanged').toBe(`Year limit – ${snap.entryCap.used} of ${snap.entryCap.limit}`)
+    expect(s.title, 'and the long form is the engine\'s own sentence').toBe(snap.tierRefusal.j30!.detail)
+    expect(s.entryCap, 'with the engine\'s own count behind it').toEqual(snap.entryCap)
+  })
+
   it('⚠ a caller with NO oracle keeps every sentence it had – the pure-caller fallback', () => {
     // Every arm in this file falls back to the live rule for a bench, a test or a fixture that hands no
     // `refusal`. Asserted in both directions so the fix cannot be read as «the arms below are dead».
