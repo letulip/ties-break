@@ -198,6 +198,29 @@ describe('⭐⭐⭐ #12 – the epilogue hands the player back to the childhood'
     // route. What IS observable is the flag's in-memory half, through `tourWanted`: this device has
     // never been onboarded, so if it takes the childhood's own way out to the wizard, its tour must
     // still be waiting on the far side. A route that marked the device would have eaten it.
+    //
+    // ⚠⚠ THE PREMISE IS NOW ASSERTED AND NOT ONLY STATED (added 27.09, T5.10 · F-03). Everything in
+    // this arm reasons from the sentence above – «this runner has no storage» – and until today
+    // nothing in the repo checked it. `tests/component/setup.ts` deliberately EXPORTS the memory
+    // shim rather than installing it, so files like this one keep the absence they were written
+    // against; the line below is that contract read from the one place that depends on it.
+    //
+    // ⚠⚠ AND THE MEASUREMENT IS WHY A POINTER WOULD NOT HAVE BEEN ENOUGH: THIS FILE CANNOT NOTICE
+    // LOSING THE ABSENCE. With the shim installed globally in that setup file, this file is GREEN –
+    // 23/23 together with `prologue-two-paths.test.ts`, and so are the other 166 no-shim component
+    // files audited under the same mutation, 0 red. The mechanism is `useDeviceFlag`
+    // (`src/composables/inboxCue.ts:258`): with NO storage the `getItem` throws and its `catch`
+    // answers `false`; with an EMPTY storage `getItem` returns `null`, and `null !== '1'` is `false`
+    // too. Both routes give the same flag, so every assertion below holds either way and the arm
+    // would go on passing while the sentence it reasons from had quietly become false – which is
+    // exactly how the FIRST version of this arm scored 0 on the `markTourSeen()` mutation.
+    // `tests/component/storage-shim-scope.test.ts` is the guard that speaks for the project; this
+    // one line is the premise guarded where it is USED.
+    expect(
+      typeof globalThis.localStorage,
+      'this arm reasons from an ABSENT localStorage – see the note above and ' +
+        'tests/component/storage-shim-scope.test.ts before changing tests/component/setup.ts',
+    ).toBe('undefined')
     const { wrapper } = mountShell()
     const game = useGameStore()
     await wrapper.vm.$nextTick()
