@@ -14,10 +14,12 @@
 //   W4   (27.09, this)        the five hand-rolled COPIES, which rendered the sentence with no live
 //                             region, and `EndingScreen`, which rendered no element at all.
 //
-// ⚠⚠ FOUR OF THE FIVE COPIES, NOT FIVE. `SeasonScreen.vue`'s copy is another builder's file in this
-// same wave and is deliberately untouched; it is E-09's one open site and is named in the wave's
-// report rather than left to be rediscovered. This file asserts the four that moved, so the day the
-// fifth moves it joins a table rather than needing a test.
+// ⚠⚠ ALL FIVE COPIES, SINCE 27.09 – and this note used to say FOUR. `SeasonScreen.vue` was another
+// builder's file in this same wave, so E-09 was left with one open site and the wave's claim («the
+// five hand-rolled refusal lines → `<StoreError />`») was false by one screen. That builder landed
+// the fifth on the same day and it joined the table below, which is what the old note said would
+// happen: «the day the fifth moves it joins a table rather than needing a test». So the count here is
+// SIX surfaces for FIVE copies plus EndingScreen, and the table is the statement of it.
 //
 // ⚠ THE SENTENCE IS PRODUCED, NOT TYPED. `refusalSentence()` drives a REAL refusal through the real
 // store with only the transport mocked, exactly as round36-error-surfaces.test.ts does, and every
@@ -37,6 +39,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
+import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import MoreScreen from '../../src/components/screens/MoreScreen.vue'
 import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
 import EndingScreen from '../../src/components/EndingScreen.vue'
@@ -165,6 +168,18 @@ const SURFACES: Surface[] = [
     },
   },
   {
+    // ⭐ THE FIFTH COPY, ADDED 27.09 WITH ITS FIX. The Season Planner is the screen where every entry
+    // is committed, cancelled and paid for, so it commands more than any other surface in this table –
+    // and its refusal was a bare paragraph with no live region. `tests/helpers/mountSeason.ts` is the
+    // arrangement four suites already share (store-driven, teleports stubbed); `attachTo` is added here
+    // because this file measures the cascade.
+    name: 'SeasonScreen',
+    mount: async () => {
+      useGameStore().snapshot = careerSnapshot(30, 'w4-e09-season')
+      return mount(SeasonScreen, { attachTo: document.body, global: { stubs: { teleport: true } } })
+    },
+  },
+  {
     name: 'MoreScreen',
     // ⚠ THE LINE IS BEHIND THE SAVES TAB (`screenTab === 'saves'`) and the default tab is Play, so the
     // tab is pressed the way a player presses it rather than by writing the ref.
@@ -242,7 +257,10 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-describe('E-09 – the five surfaces that said a refusal badly, or not at all', () => {
+// ⚠ THE TITLE NAMES NO NUMBER SINCE 27.09, and that is deliberate: it said «the five surfaces» while
+// the table held five, the fifth copy landed the same day and made it six, and a count a test states
+// about itself is the thing wave 9 measured rotting through a full gate. The table is the count.
+describe('E-09 – the surfaces that said a refusal badly, or not at all', () => {
   for (const surface of SURFACES) {
     it(`⭐⭐ ${surface.name} renders the store's own sentence, in a live region`, async () => {
       const sentence = await refusalSentence()

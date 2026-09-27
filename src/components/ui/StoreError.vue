@@ -30,9 +30,11 @@
 // is what the header above has claimed to be «a home for» since 05.09. U-02 was fixed where it was
 // MEASURED – on the nine silent surfaces – and never reached the five that already rendered the
 // sentence by hand, so the two busiest screens in the app said a refusal with no live region at all.
-// Four of the five moved here; `SeasonScreen.vue`'s copy is the one that did not, because it was
-// another builder's file in this same wave – it is the one site E-09 leaves open, and it is named in
-// the wave's report rather than left to be rediscovered.
+// ⚠ FOUR MOVED FIRST AND THE FIFTH FOLLOWED THE SAME DAY. `SeasonScreen.vue`'s copy was another
+// builder's file in the same wave, so this note recorded it as E-09's one open site; that builder
+// landed it later on 27.09 and the record is kept in order rather than rewritten, because «four of
+// five is not five» was true for a few hours and the wave's claim depended on it. Every hand-rolled
+// copy now reads this element.
 //
 // ⚠ `except` IS MoreScreen'S GUARD AND NOTHING ELSE, and it is the finding's own first option. That
 // screen's Saves strip renders `saveOp.message` in its own row a few lines up, so the one sentence

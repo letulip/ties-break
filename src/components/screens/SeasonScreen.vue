@@ -39,6 +39,9 @@ import ScreenShell from '../ui/ScreenShell.vue'
 // MatchViewer is mounted. It was the one that did not have it - see the note at its call site.
 import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
+// ⭐ E-09 / T4.8 – the store's refusal, on the element that owns it. See the call site above
+// `ScreenShell` in the template for what this replaced and what it adds.
+import StoreError from '../ui/StoreError.vue'
 import IconButton from '../ui/IconButton.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
@@ -1404,7 +1407,15 @@ function closeExhibition(): void {
 
 <template>
   <template v-if="game.snapshot">
-    <p v-if="game.error" class="error">{{ game.error }}</p>
+    <!-- ⭐⭐ E-09 / T4.8 – THE STORE'S REFUSAL, SAID BY THE ELEMENT THAT OWNS IT. This was the fifth
+         and last of the hand-rolled copies `ui/StoreError.vue` was written as a home for: a bare
+         paragraph on the error class, interpolating `game.error`. Same sentence, same element, same
+         class – the store owns the wording and this file never did (invariant 4), so no copy moves.
+         What it GAINS is `role="status"`: a refusal that appears without moving focus was announced
+         to a screen reader by nothing at all, on the screen where every entry is committed. It stays
+         ABOVE `ScreenShell`, where it always stood – the shell's own paint order is not this
+         element's business. -->
+    <StoreError />
 
     <!-- U0: Season had NO wrapper at all – its blocks were a bare fragment dropped into the app's
          <main>. That is the thing ScreenShell replaces: the stack is now a named object with the
