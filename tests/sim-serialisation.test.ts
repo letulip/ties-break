@@ -263,17 +263,24 @@ describe('the heavy unit pool takes whole families', () => {
 // cut; it does not need a bigger number.
 //
 // ⚠ A HOOK IS NOT BOUND BY THE WINDOW AND KEEPS ITS OWN BUDGET. `beforeAll` is not reported per test,
-// so it never crosses an RPC boundary the way a test does. `tests/round34-reachable-ceiling.test.ts:505`
-// is the case in the corpus – 120 s, deliberately, with its own dated note recording the 16.58 s idle
-// measurement and the above-3.1x two-core factor behind it. This gate therefore classifies every budget
+// so it never crosses an RPC boundary the way a test does. `tests/round34-reachable-ceiling.test.ts` is
+// the case in the corpus – 120 s, deliberately, with its own dated note recording the 16.58 s idle
+// measurement and the above-3.1x two-core factor behind it. ⚠ No line number is cited on purpose: the
+// first draft of this block said `:505`, and adding the pointer note in that file moved the hook to
+// :518 within the hour. That file names this dependency at the budget itself, which is where it cannot
+// drift. This gate therefore classifies every budget
 // it finds as test-level or hook-level and rules only on the first kind. Getting that wrong in the
 // permissive direction would let a real override through; getting it wrong in the strict direction
 // would redden a legitimately slow hook. Both branches are covered by the fixture case below.
 //
-// ⚠⚠ THE 78 CLAMPS THIS GATE LOCKS IN, AND THE MEASUREMENT UNDER THEM – because a clamp without one is
-// a policy, and a policy that reddens a legitimately slow file on a contended runner has replaced a
+// ⚠⚠ THE 78 OVERRIDES THIS GATE LOCKS OUT, AND THE MEASUREMENT UNDER THEM – because a clamp without one
+// is a policy, and a policy that reddens a legitimately slow file on a contended runner has replaced a
 // documented number with a flake. 78 test-level budgets in 31 bulk-pool files, from 90 s to 900 s, came
-// down to 60 s on 27.09. All 31 were run at once in the real bulk pool first (ten cores shared, 1-min
+// down to 60 s on 27.09 and were then DELETED, together with the 18 in those same files that already sat
+// at 60 s: a budget equal to the project default states nothing, and a constant restated where it cannot
+// follow its source is the failure this wave has been removing – move this ceiling to 90 s and every one
+// of those files would have silently stayed at 60. 96 declarations gone from 31 files; a budget BELOW the
+// ceiling says something and stays (four remain in those files, all at 30 s). All 31 were run at once in the real bulk pool first (ten cores shared, 1-min
 // load 2.12 at the start, JSON reporter, per-test durations): the SLOWEST TEST IN THE WHOLE SET IS
 // 16.00 s (`coach-load`), second 14.44 s (`plan`), third 9.35 s (`ending`), and 25 of the 31 are under
 // 5 s. The two slowest were then read SOLO, twice, on a quiet machine (1-min load 2.21-2.58):
@@ -413,22 +420,26 @@ describe('no bulk-pool test declares a budget above birpc’s window', () => {
     ).toEqual([])
   })
 
-  it('⚠ ...and the sweep really read the corpus – a parser that matched nothing would pass above', () => {
-    // ⚠⚠ THE ANTI-VACUOUS HALF, the same one the heavy-family gate above needed. `BUDGET` failing to
-    // match would empty the case above in silence. The corpus is full of budgets AT or under the
-    // ceiling – 78 of them were clamped to exactly it on 27.09 – so their presence is the proof the
-    // sweep reads anything at all, and the hook count proves the classifier's other branch is live.
+  it('⚠ ...and the classifier’s hook branch is live on the real corpus, not only on the fixture', () => {
+    // ⚠⚠ THE ANTI-VACUITY RESTS ON THE FIXTURE ABOVE, DELIBERATELY, AND THIS IS THE RE-ANCHORING NOTE
+    // (27.09, second pass). The first version of this case asserted «over 50 test budgets sit AT the
+    // ceiling», which was true the hour it was written – the 78 clamps – and was the wrong shape twice
+    // over. It read as a claim about the corpus's CONTENT when the rule is about a CEILING, and it
+    // would have gone red on a future wave doing legitimate work: the very next step of T5.3 deleted
+    // those 78 (a budget equal to the project default states nothing and cannot follow it if the
+    // ceiling moves), and the assertion would have failed on the improvement.
+    //
+    // The real claim – «no test-level budget exceeds the ceiling» – needs NO declaration to exist, so
+    // its emptiness must be proven somewhere that cannot be emptied by ordinary work. That is the
+    // fixture case above: known inputs, known answers, every form and both branches. What is left for
+    // the corpus is the one thing a fixture cannot show – that the `hook` branch fires on REAL source,
+    // which is what stops a legal `beforeAll` budget being judged as a test budget.
     const all = bulkPoolUnitFiles().flatMap(budgetsOf)
-    expect(all.length, 'no budget declarations found anywhere – the parser has rotted').toBeGreaterThan(50)
-    expect(
-      all.filter((b) => b.kind === 'test' && b.ms === TEST_BUDGET_CEILING_MS).length,
-      'no test budget sits AT the ceiling, so either the clamps were reverted or the parser stopped ' +
-        'reading the form they are written in',
-    ).toBeGreaterThan(50)
     expect(
       all.filter((b) => b.kind === 'hook').length,
-      'the classifier never returns `hook`, so its hook branch is dead and a real hook budget would be ' +
-        'judged as a test budget – round34-reachable-ceiling.test.ts:505 is the case that must hit it',
+      'the classifier never returns `hook` on the real corpus, so its hook branch is dead here and a ' +
+        'legal hook budget would be judged as a test budget – see the pointer in ' +
+        'tests/round34-reachable-ceiling.test.ts, which holds the only hook budget above the ceiling',
     ).toBeGreaterThan(0)
   })
 })

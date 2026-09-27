@@ -502,6 +502,19 @@ describe('bundle I: which band each rung reaches, walked through the real engine
     // window the way `testTimeout` is – see vite.config.ts's unit project for that boundary.
     // ⚠ The job's own `timeout-minutes: 25` is what catches a genuine hang here. This number only
     // has to be above what the walk really costs on the slowest machine that runs it.
+    //
+    // ⚠⚠ AND SINCE 27.09 (T5.3 · H-06) A GATE IN ANOTHER FILE DEPENDS ON THIS NUMBER EXISTING, so it
+    // is written here rather than left for whoever removes it to discover. `tests/sim-serialisation.test.ts`
+    // sweeps every bulk-pool unit file for per-test budgets above the 60 s ceiling and must NOT redden
+    // on this one, because a `beforeAll` is not reported per test and is not bound by birpc's window.
+    // To do that its parser classifies each budget as test-level or hook-level – and **this line is the
+    // corpus's ONLY hook budget above the ceiling**, so it is the only live proof that the parser's
+    // `hook` branch actually runs on real source. T5.3's own mutation run measured the consequence:
+    // deleting `kind = 'hook'` from that classifier turns THIS line into a reported violation.
+    // So if this budget is ever lowered under 60 s or removed, that gate's last case goes red with a
+    // message about a dead classifier branch rather than about the file that left. It is not wrong –
+    // the branch really would be unproven – but the cause would be here. Re-point it at whatever hook
+    // budget replaces this one, or move its proof into that file's fixture.
   }, 120_000)
 
   it('no rung flickers – the band never steps back on a career that is merely progressing', () => {
