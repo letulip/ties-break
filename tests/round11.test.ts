@@ -312,7 +312,11 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
     expect(injury).not.toContain('tab.value')
     expect(summary).not.toContain('tab.value')
     // ...and the toast's own render is no longer Home-only either.
-    expect(APP).toContain('<div v-if="showStopToast" class="stop-toast">')
+    // ⚠ RE-AIMED 27.09 (T4.9 / E-10), NOT RELAXED. This pinned the whole opening tag, so it went red
+    // when the strip gained `role="status"` – an a11y ATTRIBUTE that says nothing about which tab is
+    // showing, which is the only thing this `it` is about. The claim is now the CONDITION: the toast
+    // renders on `showStopToast` and on nothing else, whatever else hangs off the element.
+    expect(APP).toMatch(/<div v-if="showStopToast" class="stop-toast"[^>]*>/)
   })
 
   it('both dialogs read the SET, and the wrap-up defers to the injury (one overlay, defined order)', () => {
