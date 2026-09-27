@@ -174,16 +174,18 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   with no neighbours in those files, and nothing has to be decided first.
   ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F P3-08.)
 
-- **Four test-side copies of the «16/16/17» age grid** – `tests/ladder.test.ts:855`,
-  `tests/events.test.ts:60`, `tests/world.test.ts:95` say «three rungs now open at 16/16/17», and
-  `tests/ladder.test.ts:840`'s `it()` is titled «16-18 is a genuine overlap». Against `TIERS` the W
-  rungs open at **14** (w15–w100 and slam) and **15** (the four WTA rungs), and the junior overlap is
-  **14–18**. ⚠ Every one of those tests' ASSERTIONS is true – it is the comments and the one title that
-  are stale, which is why nothing red ever pointed at them. **Home: T5.4 / H-19's pass in W5**, which
-  the 26.09 review already routed this sentence to for `tier-window`; these four widen its scope.
-  The title is the sharpest of the four, because a test name is read by everyone who runs the file.
-  ([03-engine-leaves.md](review-principles-2026-09-26/03-engine-leaves.md), C-02; T5.4 of
-  [the fix plan](plans/principles-fix-builder-2026-09.md).)
+- ⭐ **DONE 27.09 – the four test-side copies of the «16/16/17» grid, and a FIFTH the queue did not
+  know about.** Corrected in W5's T5.4 pass: `tests/ladder.test.ts` (the `it()` **title**, the
+  «three whole seasons» clause and the «three rungs» note), `tests/events.test.ts`, `tests/world.test.ts`,
+  plus `tests/ladder.test.ts:921` – an L8 note that contradicted a note four lines below it – which the
+  mandated literal query turned up and the same pass fixed. ⚠ **The digits LEFT rather than advanced**,
+  each site now pointing at `TIERS[*].minAgeYears` the way `season/calendar.ts:1631` does, because a
+  count that is advanced only resets its clock: «three whole seasons» was five, and `world.test.ts`'s
+  sentence was wrong in both directions. ⚠ A **sixth** copy stands in `tools/econ-bench.ts:19` and is
+  routed to that wave's `tools/` builder. ⭐ And the severity question the review left open is answered
+  by measurement rather than left unproven: `tests/component/home-strip-and-mail.test.ts` DOES catch
+  H-19's mutation, on 6 of its 25 tests, so H-19 stays **P2** and the class is netted a storey up – what
+  was vacuous was the named case, not the class.
 
 - **`rescueTitle` restates the engine's tired limb** (E-P02, `SeasonScreen.vue:1230`) – form A for a
   rendered-string branch, queued rather than guessed at because the analysis is already done. The
