@@ -329,7 +329,18 @@ function budgetsIn(source: string): Budget[] {
   const lines = source.split('\n')
   const found: Budget[] = []
   for (let i = 0; i < lines.length; i++) {
+    // ⚠⚠ PROSE IS NOT A DECLARATION, and this gate found that out on its own corpus. Its header quotes
+    // «`testTimeout: 60_000`» when explaining the ceiling, and the first version of this parser read
+    // that sentence as a budget. At 60 s it was harmless; a note explaining a 300 s override that USED
+    // to be here would have reddened the gate on a comment. This corner matters more here than in most
+    // parsers, because every one of T5.3's 31 dated notes quotes the thing it removed – the fix and the
+    // hazard arrived in the same commit. So: a whole-line comment is skipped, and a match that starts
+    // after a `//` on its own line is skipped. Budgets are never written inside strings in this corpus,
+    // which is what makes the cheap test sound.
+    if (/^\s*(\/\/|\*|\/\*)/.test(lines[i])) continue
+    const commentAt = lines[i].indexOf('//')
     for (const m of lines[i].matchAll(BUDGET)) {
+      if (commentAt >= 0 && (m.index ?? 0) > commentAt) continue
       const ms = Number((m[2] || m[3]).replace(/_/g, ''))
       if (m[1] === 'hookTimeout') {
         found.push({ line: i + 1, ms, kind: 'hook' })
@@ -393,14 +404,19 @@ describe('no bulk-pool test declares a budget above birpc’s window', () => {
       `}, ${120_000})`, //                            10 – HOOK, trailing positional
       `it('c', () => {`, //                            11
       `}, ${30_000})`, //                             12 – test, under the ceiling
+      `// it was once vi.setConfig({ testTimeout: ${900_000} }) – PROSE, not a declaration`, // 13
+      `  * a JSDoc line naming timeout: ${900_000} is prose too`, //                            14
+      `it('d', () => {}) // this trailing comment names }, ${900_000}) and is still prose`, //  15
     ].join('\n')
-    expect(budgetsIn(fixture), 'every form, with its line and its kind').toEqual([
+    expect(budgetsIn(fixture), 'every form, with its line and its kind – and no prose').toEqual([
       { line: 1, ms: 300_000, kind: 'test' },
       { line: 2, ms: 300_000, kind: 'hook' },
       { line: 3, ms: 900_000, kind: 'test' },
       { line: 7, ms: 240_000, kind: 'test' },
       { line: 10, ms: 120_000, kind: 'hook' },
       { line: 12, ms: 30_000, kind: 'test' },
+      // lines 13-15 contribute NOTHING: a whole-line `//`, a JSDoc `*` line, and a trailing comment.
+      // Every one of T5.3's 31 dated notes is shaped like line 13, so this is not a hypothetical.
     ])
   })
 
