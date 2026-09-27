@@ -79,8 +79,18 @@ Object.defineProperty(globalThis, 'localStorage', {
 })
 
 /** A match record of the right SHAPE under whatever id the case is about – the two readers only ever
- *  look at `eventId`, and the rest is what makes the row renderable (a winner, a scoreline). */
+ *  look at `eventId`, and the rest is what makes the row renderable (a winner, a scoreline) and
+ *  replayable (the two builds `MatchReplay` re-simulates from). */
 function record(eventId: string, winnerId: string): WorldMatch {
+  const player = (id: string, name: string) => ({
+    id,
+    name,
+    serve: 55,
+    ret: 52,
+    composure: 50,
+    stamina: 54,
+    groundstrokes: 51,
+  })
   return {
     round: 0,
     aId: KID_ID,
@@ -91,6 +101,8 @@ function record(eventId: string, winnerId: string): WorldMatch {
     eventId,
     surface: 'hard',
     oppName: 'T. Seed',
+    a: player(KID_ID, 'A. Rose'),
+    b: player('opp', 'T. Seed'),
   }
 }
 
@@ -141,7 +153,7 @@ describe('T4.3 · F-07 – the engine owns "this week\'s practice friendly"', ()
     tickWeek(world, rng)
     world.condition = 90
     world.fundsCents = 500_000_00
-    bookPractice(world, world.week + 1, 'self')
+    bookPractice(world, world.week + 1, false)
     tickWeek(world, rng)
     const played = world.events.find((e) => e.friendly && e.week === world.week)
     expect(played, 'the fixture must actually play the booked friendly').toBeDefined()
@@ -223,7 +235,7 @@ describe('T4.3 · F-07 – the engine owns "this week\'s practice friendly"', ()
     world.condition = 90
     world.fundsCents = 500_000_00
     world.season = []
-    bookPractice(world, world.week + 1, 'self')
+    bookPractice(world, world.week + 1, false)
     // The rubber is raised on the week the practice will resolve in, BEFORE the tick, so it lands
     // earlier in `events` than the practice the tick appends.
     world.events.push(rubberThenPractice(world.week + 1)[0])
