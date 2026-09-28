@@ -9,10 +9,10 @@
 // over, and the 26.09 lane measured what that costs: it holds the type-only SCC at 107 files, so the
 // layering report cannot say anything about layering (A-P3-2, `01-architecture.md:565`'s table).
 //
-// ⚠ WHY A RATCHET AND NOT A 48-FILE SWEEP – the architect's ruling. A churn commit across
-// `src/engine/world/**` would collide with T6.8, which is splitting `lifeBeat.ts` into that same
-// directory right now. So: the set that exists TODAY is grandfathered by path, a NEW one is an
-// error, and each grandfathered file converts when it is next touched for its own reasons. The
+// ⚠ WHY A RATCHET AND NOT A 47-FILE SWEEP – the architect's ruling. A churn commit across
+// `src/engine/world/**` would have collided with T6.8, which was splitting `lifeBeat.ts` into that
+// same directory when this landed. So: the set that exists TODAY is grandfathered by path, a NEW one
+// is an error, and each grandfathered file converts when it is next touched for its own reasons. The
 // design is `scripts/context-audit.mjs`'s baseline block, whose header states the property this
 // file keeps: «A baseline entry that DISAPPEARS never fails. Tightening must not require a
 // co-ordinated commit, or the next person banks their new debt into the baseline instead of paying
@@ -50,18 +50,22 @@ import { dirname, join, relative, resolve } from 'node:path'
 import ts from 'typescript'
 
 /** THE BASELINE – every file under `src/engine/world/**` that reached through the barrel for a type
- *  on 28.09.2026, measured with the arm below rather than listed by hand. An entry ending in `/` is a
- *  DIRECTORY prefix.
+ *  on 28.09.2026, measured with the arm below rather than listed by hand. **Exact paths only, and the
+ *  arithmetic below cannot express anything else.**
  *
- *  ⚠ THE ONE PREFIX ENTRY IS DATED AND TEMPORARY. `src/engine/world/lifeBeat/` is being created
- *  module by module by T6.8 while this lands (kinds 11-13 committed within the hour), and every new
- *  kind module follows `CLAUDE.md`'s CURRENT wording, so a per-path baseline would go red on a
- *  colleague's next commit – and a gate that reddens somebody else's in-flight work is a gate that
- *  gets switched off. It comes off when T6.8 lands: replace this line with the kind modules' paths,
- *  or convert them, whichever the architect prefers. Three of them carry the import today
- *  (`booth.ts`, `forkPsyCopy.ts`, `leak.ts`). */
+ *  ⚠⚠ IT HELD ONE DIRECTORY PREFIX FOR PART OF A DAY, AND THE ARCHITECT'S RULING ON IT IS THE
+ *  DESIGN NOTE WORTH KEEPING. `src/engine/world/lifeBeat/` was grandfathered as a directory while
+ *  T6.8 was creating kind modules inside it, so that the gate could not redden a colleague's next
+ *  commit. T6.8 landed (`ca0fedda`, 13 kind modules), and the ruling was **convert the three, do not
+ *  tighten the prefix**: three files is not the 48-file sweep the ratchet exists to avoid, and
+ *  «a dated prefix in a one-way ratchet is a hole that closes on its own schedule rather than on a
+ *  measurement». So `booth.ts`, `forkPsyCopy.ts` and `leak.ts` now import `WorldState` from
+ *  `../state`, the census went 50 → 47, and the prefix is gone – along with the CODE that matched
+ *  one, so re-introducing that hole means re-introducing a branch somebody has to review.
+ *
+ *  ⚠ NOT ASSERTED, ON PURPOSE: that the baseline equals today's offender set. It is allowed to be
+ *  larger, for ever – see case 3. */
 const GRANDFATHERED: readonly string[] = [
-  'src/engine/world/lifeBeat/', // ⚠ dated prefix – see the note above; T6.8 is live in this directory
   'src/engine/world/age.ts', 'src/engine/world/album.ts', 'src/engine/world/albumBook.ts',
   'src/engine/world/assets.ts', 'src/engine/world/birthday.ts', 'src/engine/world/bookings.ts',
   'src/engine/world/brand.ts', 'src/engine/world/brandStrength.ts', 'src/engine/world/business.ts',
@@ -128,9 +132,11 @@ function reachesTheBarrel(): Reach[] {
 }
 
 /** The ratchet's arithmetic, in one place so case 3 can feed it synthetic input. MEMBERSHIP ONLY,
- *  which is what makes it one-way: a baseline entry with no matching file contributes nothing. */
+ *  which is what makes it one-way: a baseline entry with no matching file contributes nothing.
+ *  ⚠ EXACT EQUALITY, NOT `startsWith` – the prefix branch was deleted with the prefix entry (see the
+ *  baseline's note), so a directory cannot be grandfathered by accident or by expedience. */
 const notGrandfathered = (files: readonly string[]): string[] =>
-  files.filter((f) => !GRANDFATHERED.some((g) => (g.endsWith('/') ? f.startsWith(g) : f === g)))
+  files.filter((f) => !GRANDFATHERED.includes(f))
 
 describe('A-P3-2 · the world package reaches its own state module, and the barrel only by grandfather', () => {
   it('⚠⚠ a NEW `import type { … } from \'…/world\'` inside src/engine/world/** is an error', () => {
@@ -166,12 +172,23 @@ describe('A-P3-2 · the world package reaches its own state module, and the barr
     expect(notGrandfathered([]), 'every grandfathered file converted at once: still green').toEqual([])
     expect(notGrandfathered(['src/engine/world/summer.ts']), 'one stays behind: still green').toEqual([])
     expect(
-      notGrandfathered(['src/engine/world/lifeBeat/aNewKindModule.ts']),
-      'a file under the dated prefix is covered by it, however new',
-    ).toEqual([])
-    expect(
       notGrandfathered(['src/engine/world/draw.ts']),
       'and a module NOT on the baseline is named the moment it reaches for the barrel',
     ).toEqual(['src/engine/world/draw.ts'])
+  })
+
+  it('⭐⭐ and NO entry is a directory – the hole that would close on its own schedule', () => {
+    // ⚠ THE OTHER HALF OF THE ARCHITECT'S RULING, said mechanically. A prefix entry grandfathers
+    // files that do not exist yet, so the ratchet stops being a measurement of today's debt and
+    // becomes a promise about tomorrow's. Two assertions, because either alone is escapable: the
+    // LIST carries no directory, and the ARITHMETIC would not honour one if it did.
+    expect(
+      GRANDFATHERED.filter((g) => g.endsWith('/') || !g.endsWith('.ts')),
+      'every baseline entry is one .ts file – a directory prefix is not a grandfather',
+    ).toEqual([])
+    expect(
+      notGrandfathered(['src/engine/world/lifeBeat/aNewKindModule.ts']),
+      'a new kind module is NOT covered by its directory – T6.8 landed and the three converted',
+    ).toEqual(['src/engine/world/lifeBeat/aNewKindModule.ts'])
   })
 })

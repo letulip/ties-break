@@ -16,7 +16,7 @@
 // `tests/import-cycles.test.ts` does not count either, which is the licence every `world/*` module
 // uses (CLAUDE.md's P4 rules).
 import type { ForkStopDriver } from '../lifeBeat'
-import type { WorldState } from '../../world'
+import type { WorldState } from '../state'
 
 // =================================================================================================
 // 3f. `'fork-psy'` – THE PSYCHOLOGIST'S READ ON THE SAME `stop` (wave 5, T8). EVERY WORD IS A DRAFT.

@@ -13,7 +13,7 @@ import { loveEpisodesOf } from '../loveEpisodes'
 import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from '../spotlight'
 import type { LoveEpisode } from '../../../shared/protocol/narrative'
 import type { TierId } from '../../season/types'
-import type { WorldState } from '../../world'
+import type { WorldState } from '../state'
 
 // =================================================================================================
 // 10. THE BOOTH – ⚠⚠ THE WEEK IT SAYS IT OUT LOUD (the spotlight, wave 6: T7)

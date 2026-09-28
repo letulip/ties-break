@@ -25,7 +25,7 @@ import { addEvent } from '../ledger'
 import { activeEpisode } from '../loveEpisodes'
 import { fameAt } from '../fame'
 import { newsStandingOf } from '../spotlight'
-import type { WorldState } from '../../world'
+import type { WorldState } from '../state'
 
 // =================================================================================================
 // 9. THE LEAK – ⚠⚠ THE WEEK THE **WORLD** FINDS OUT (the spotlight, wave 6: T6)
