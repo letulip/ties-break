@@ -446,6 +446,16 @@ distinctive phrase in `tests/`.
   identical at every depth (a test), `npm run bench:econ` byte-identical.
 - **T7.4 · the life-beat kinds** (after T6.8): each kind module's chronicles move to
   `docs/notes/life-beats/<kind>.md`.
+- **T7.6 · `composables/shop.ts`, added 28.09 by the architect.** W6's T6.3 moved the Money shelf into
+  `src/composables/shop.ts` (1,135 lines) and `src/components/ShopPanel.vue`; `npm run context:audit`
+  reports the new file `over 1,000 lines; 59,151 comment characters over 20,000` – a WARNING by that
+  script's own design, never an error, so no gate reddens on it. Those 59 k characters are the chronicles
+  `MoneyScreen.vue` was already carrying, and they travelled verbatim as `CLAUDE.md` requires. **They move
+  under W7's rules, not W6's**, and the ruling is the same one H-04's O2 carries: per module at the moment
+  of a split, never as a sweep – and `shop.ts` IS a module at the moment of a split, so it is a natural
+  second pilot beside T7.2's `state.ts`. Target `docs/notes/money/`, behind T7.1's pointer check, which is
+  why it cannot ride W6: the check does not exist yet, so a pointer written now would be unverified prose.
+  Report the file's lines, comment share and O1 reading tokens before and after, per T7.5.
 - **T7.5 · the measurement.** The comment share and O1 token count of every touched module and of
   `src` as a whole, before and after – in the report, never in prose that no test reads.
 
