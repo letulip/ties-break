@@ -2270,9 +2270,10 @@ const { pendingShop, shopConfirmMessage, confirmShop, openChapter } = shop
   margin-top: 10px;
 }
 
-.ledger-week {
-  margin-top: 14px;
-}
+/* ⭐ P3-01 (28.09, with T6.4) – `.ledger-week`'s top margin joined its own other half in src/style.css,
+   where the class's `:last-child` zero and its label rule already live. It was declared in both files
+   and neither half shadowed the other, so the object was half here and half there – the August review's
+   «global/scoped split-brain» row. The shared rule carries the measurement. */
 
 /* --- 5b. HER KIT ------------------------------------------------------------------------------
    Three stacked lines, each with a row of four rungs. The rungs WRAP rather than scroll: at 375px

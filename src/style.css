@@ -3192,7 +3192,19 @@ button.primary.risky {
 
 /* News (Home) + Ledger (Money): week-grouped feeds sharing one rhythm. */
 .news-week,
+/* ⭐ P3-01 (28.09, riding along with T6.4) – THE OTHER HALF OF THIS OBJECT LIVED IN MoneyScreen.vue.
+   The class was declared in BOTH places and neither shadowed the other: the bottom margin here, the top
+   margin in the screen's scoped block, so a reader of either file saw half a rule. That is the August
+   review's «global/scoped split-brain» row, and P3-01's instruction is «move `ledger-week` to one side».
+   THIS is the side: the class has one markup user (`MoneyScreen.vue`'s ledger group) and the sheet
+   already owns its other two rules – the `:last-child` zero below and `.ledger-week-label`, which
+   MoneyScreen's own note records as deliberately shared vocabulary.
+   ⚠ NO VALUE MOVED, AND IT IS MEASURED RATHER THAN ARGUED: the scoped rule was (0,2,0) and nothing at
+   (0,1,0) or above declares a top margin on this element, so the same 14px arrives from here.
+   `tests/component/principles-f09-shared-objects.test.ts` reads both margins through the real cascade,
+   on a middle week AND on the last one – the `:last-child` zero below is why those are two readings. */
 .ledger-week {
+  margin-top: 14px;
   margin-bottom: 12px;
 }
 

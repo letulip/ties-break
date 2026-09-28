@@ -536,6 +536,14 @@ const CAPTURED: Record<string, Record<string, string>> = {
     'cursor': 'default',
     'opacity': '0.55',
   },
+  'ledger-week@money': {
+    'margin-top': '14px',
+    'margin-bottom': '12px',
+  },
+  'ledger-week@money:last': {
+    'margin-top': '14px',
+    'margin-bottom': '0px',
+  },
   // --- the four .money-* objects T6.3 had to copy ---
   'money-panel@money': {
     'margin-top': '14px',
@@ -615,6 +623,10 @@ interface Member {
   readonly classes: readonly string[]
   readonly anchor: string | null
   readonly disabled?: true
+  /** ⚠ GIVE THE NODE A TRAILING SIBLING. `.ledger-week:last-child` zeroes the bottom margin, and a lone
+   *  node appended to `body` IS the last child – so without this the reading is the last week's rather
+   *  than a middle one's, and the 12px the rule exists for would go unmeasured. Found by running it. */
+  readonly notLast?: true
   /** the file whose static markup must carry the shared class beside the member's own */
   readonly markup?: string
 }
@@ -739,6 +751,16 @@ const MONEY: readonly Member[] = [
   { name: 'money-window@shop', classes: ['tab-row', 'tb-seg', 'money-window'], anchor: 'shelf-tabs' },
   { name: 'money-subtabs@money', classes: ['tab-row', 'tb-seg', 'money-window', 'money-subtabs'], anchor: 'money-debt' },
   { name: 'money-subtabs@shop', classes: ['tab-row', 'tb-seg', 'money-window', 'money-subtabs', 'shelf-tabs'], anchor: 'shelf-tabs' },
+  // ⭐ P3-01's `.ledger-week` HALF, RIDING ALONG (lane F's polish table). The class was defined in BOTH
+  // places – `margin-bottom: 12px` in src/style.css and `margin-top: 14px` scoped in MoneyScreen.vue –
+  // which is the August review's «global/scoped split-brain» row. Neither shadowed the other: they
+  // declared different properties, so the object was HALF in each file and a reader of either saw half
+  // a rule. It has one markup user (`MoneyScreen.vue:1649`) and the sheet already owns its three other
+  // rules (`:last-child`, `-label`, and the note at MoneyScreen.vue:1885 records `-label` as
+  // deliberately shared), so the sheet is the side it moves to. Read here with the screen's scope on, so
+  // the reading is the shipped element's.
+  { name: 'ledger-week@money', classes: ['ledger-week'], anchor: 'money-debt', notLast: true },
+  { name: 'ledger-week@money:last', classes: ['ledger-week'], anchor: 'money-debt' },
 ]
 
 /**
@@ -790,6 +812,7 @@ function cascadeNode(m: Member, extra: readonly string[] = []): HTMLElement {
   if (m.anchor) el.setAttribute(scopeOf(m.anchor), '')
   if (m.disabled) el.setAttribute('disabled', '')
   document.body.appendChild(el)
+  if (m.notLast) document.body.appendChild(document.createElement('span'))
   return el
 }
 
