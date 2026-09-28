@@ -135,6 +135,7 @@ import { migrateSave } from '../src/engine/migrations'
 // two walls assertions hold under instead of asserting them into a comment that stopped being true.
 import { ECONOMY } from '../src/engine/economy'
 import { walkWeeks } from './helpers/career'
+import { engineModuleSource } from './worldSource'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -727,8 +728,18 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     const named = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('expressedTemperamentOf'))
       .map(([path]) => path)
-    expect(named, 'the reader set is exactly the two modules T7 re-pointed')
-      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat.ts'])
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06, AND IT WENT RED ON CONTACT, WHICH IS THE PIN WORKING. The
+    // life beat is being split by KIND, and §9's `rollLeak` – the FOURTH mechanic this case's own
+    // paragraph below counts – moved to `world/lifeBeat/leak.ts` with its openness read. So the census
+    // is three files, and the 4/2 split below is now asserted over the MODULE SET (`lifeBeat.ts` plus
+    // `lifeBeat/*.ts`, read through `tests/worldSource.ts`' `engineModuleSource`) rather than over one
+    // path – which keeps ruling A's real content, the split itself, exactly where it was: 3 expression
+    // reads in the hub plus 1 in the leak, and both birth reads still in the hub.
+    // ⚠ NOT WEAKENED: the file list is still EXACT, both counts are still exact, and the private birth
+    // reader is still asserted to exist, so no half of this can go green by deletion. ⚠ THE PACKAGE
+    // SORTS BEFORE ITS HUB: `srcFiles` walks, and `readdirSync` meets the directory before the file.
+    expect(named, 'the reader set is exactly the two modules T7 re-pointed, plus T6.8\'s leak module')
+      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/lifeBeat.ts'])
     // ⭐⭐ RULING A, COUNTED. `lifeBeat.ts` held FIVE `temperamentOf(world)` calls before T7. Three are
     // evaluated-now mechanics (`rollArrival`'s hazard/wants/lag, `arrivalEligible`'s cooldown,
     // `rollEnds`'s hazard) and read EXPRESSION; two re-derive the `'ended'` card's PRICE
@@ -745,7 +756,7 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // walls is seen less and misreported more, which is §2a doing exactly what §3c-bis says openness
     // does. WHAT DID NOT MOVE: the birth count below stays 2 – T6 re-derives no price – so the split
     // is now 4/2 and every one of the six is still named.
-    const beats = codeOnly(readFileSync(`${SRC}engine/world/lifeBeat.ts`, 'utf8'))
+    const beats = codeOnly(engineModuleSource('world/lifeBeat'))
     expect(beats.split('expressedTemperamentOf(world)').length - 1, '⚠ ruling A: FOUR mechanics read expression')
       .toBe(4)
     // ⚠ THE TWO COUNTS DO NOT OVERLAP, WHICH WAS MEASURED RATHER THAN ASSUMED (the first drafting of

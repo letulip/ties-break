@@ -590,10 +590,20 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // span-moves), so the birth value is spelled at the new path. ⚠ NOT WEAKENED: the list is still
     // EXACT and still in the walk's own order, a file joining it is still red, and the claim under it
     // is untouched – the move added no reader and removed none.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06 – A SEVENTH ENTRY, AND IT IS A TYPE REFERENCE RATHER THAN A
+    // READER, WHICH IS WHY THE CLAIM IS UNCHANGED. `world/lifeBeat.ts` is being split by beat kind, and
+    // `'fork-psy'`'s copy moved to `world/lifeBeat/forkPsyCopy.ts` – the `PsyRegister` type is
+    // `'plain' | NonNullable<WorldState['spiritShock']>['kind']`, so the new module NAMES the field in a
+    // type position and nothing else. It neither sets it nor reads it at runtime: `rollEnds` is still
+    // the one place it is SET, and that is still `lifeBeat.ts`. ⚠ NOT WEAKENED: the list is still
+    // EXACT and still in the walk's own order, and a file that joins it is still red. ⚠ AND THE PACKAGE
+    // SORTS BEFORE ITS HUB, which is that order being the WALK's rather than a path's: `readdirSync`
+    // meets the directory `lifeBeat` before the file `lifeBeat.ts`.
     expect(named).toEqual([
       'engine/migrations.ts', // the v74 -> v75 back-fill
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
       'engine/world/create.ts', // `createWorld`'s literal – null
+      'engine/world/lifeBeat/forkPsyCopy.ts', // T6.8 – `PsyRegister`'s type only, no read and no write
       'engine/world/lifeBeat.ts', // `rollEnds` – the one place it is SET
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
