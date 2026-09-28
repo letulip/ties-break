@@ -566,7 +566,13 @@ describe('wave 4 T3 D – when the mark comes off', () => {
 // E. WHAT MAY READ IT – the exhaustive list, and how Mood shows the shock with ZERO new code
 // =================================================================================================
 describe('wave 4 T3 E – the readers, and the Mood surface', () => {
-  it('⚠⚠ the field is named in exactly six files in src/, and they are the writers, the seat and T6\'s derivation', () => {
+  // ⚠⚠ THE TITLE CARRIES NO COUNT, AND THAT IS A FIX RATHER THAN A STYLE CHOICE (28.09, T6.10). It used
+  // to say «exactly six files» and the list had grown to ELEVEN – a number in a test's NAME is prose that
+  // no assertion reads, which is CLAUDE.md's own measured hazard («a count written in PROSE survives a
+  // full gate»: wave 9 shipped two documents saying 32 over a corpus of 28, through `check`, `e2e` and
+  // the sims). It went stale four times in one wave here – T6.5, T6.8 and T6.10 twice – and nothing could
+  // go red. So the name states the CLAIM and the count is ASSERTED below, beside the list it counts.
+  it('⚠⚠ the field is named in an exhaustive, pinned list of files in src/ – the writers, the seat and T6\'s derivation', () => {
     // ⚠ THE T3 BRIEF'S «EXHAUSTIVE LIST», MADE MECHANICAL. The field is persisted FOR wave 5's
     // psychologist; a reader added anywhere else is scope the owner did not ask for, and the cheapest
     // way to notice one is to pin the set. ⚠ `codeOnly`, because `economy.ts` discusses the field in
@@ -621,9 +627,12 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // the FOURTH writer – `landBirth` sets `kind: 'postpartum'`, the mark the months after leave on her.
     // All four writers are now one per file and none of them is the hub. ⚠ NOT WEAKENED: still exact,
     // still the walk's order, still red on a new file.
-    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS ELEVEN. Left as it stands rather than renamed here –
-    // it is CLAUDE.md's «a count written in PROSE survives a full gate» in a test's own name, reported
-    // to the architect with T6.10 rather than fixed inside a span-move commit.
+    // ⭐ THE COUNT IS ASSERTED, NOT NARRATED, AND IT GOES **FIRST** (28.09). The list below already pins
+    // the exact set, so this adds no new claim – what it adds is a number that cannot go stale, which is
+    // the whole reason the `it` name no longer carries one. ⚠ IT IS ABOVE THE LIST ON PURPOSE: both
+    // assertions live in one `it`, so whichever runs first is the one that speaks. A census change now
+    // reddens on the COUNT, with the number in the message, before the identity diff.
+    expect(named, 'the exhaustive list – counted here, never in prose').toHaveLength(11)
     expect(named).toEqual([
       'engine/migrations.ts', // the v74 -> v75 back-fill
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
