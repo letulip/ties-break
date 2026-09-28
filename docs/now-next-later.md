@@ -342,6 +342,47 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   ([the fix plan](plans/principles-fix-builder-2026-09.md) §2's wording rule; row 49 of
   [the-quality-rig.md](backlog/the-quality-rig.md).)
 
+- **44 test files strip comments with a local copy of the regexes W6 replaced, and 21 of them never
+  import the helper at all.** Swept and counted 28.09 by T6.11 after it fixed `tests/helpers/source.ts`;
+  nothing was edited, on purpose. By variant: **12** block-only, **11** block plus an anchored line
+  strip (the exact defect just fixed), **14** block plus an **UNANCHORED** line strip – ⚠ that one also
+  deletes **trailing** comments, which is the single direction that removes code and therefore turns a
+  **negative** pin green – and **9** with HTML variants.
+
+  ⚠ **The priority subset is a local strip that both eats code in a file it reads AND carries a negative
+  claim – six files**, measured against the scanner on the files each one actually reads:
+
+  | file | eats | negatives | variant |
+  | --- | ---: | ---: | --- |
+  | `tests/wave5-psychologist-schema.test.ts` | **698** | 11 | UNANCHORED, no helper |
+  | `tests/portrait-bands.test.ts` | 392 | 23 | anchored |
+  | `tests/knock.test.ts` | 260 | 31 | anchored |
+  | `tests/ladder-separation.test.ts` | 260 | 8 | anchored |
+  | `tests/spirit.test.ts` | 200 | 12 | UNANCHORED |
+  | `tests/kidLife.test.ts` | 143 | 5 | anchored, no helper |
+
+  The first is the top of the queue: 698 characters of `src/engine/world/lifeBeat.ts` – the same phantom
+  block that blinded the cycle judge – with 11 negative assertions, the unanchored variant, and no import
+  of the helper. Total across all 44: **3,349 characters** eaten in the files they read.
+
+  ⭐ **The other 38 are latent, not live**, and that distinction is why this is a queue row rather than an
+  emergency: the defect is in the instrument, the exposure depends on what it is pointed at, and the
+  exposure moves the moment a comment in a read file gains a glob. `tests/wave4-spirit-shock.test.ts` is
+  in the unanchored fourteen, eats 0 today, and is the file whose own regex tripped an earlier draft of
+  the scanner – which is the shape of how this becomes live.
+
+  The repair is to route each one through `stripComments` / `codeOf`, one file at a time with the
+  triage T6.11 ran for the 26 readers: every new red is either a hole the strip was hiding or a pin that
+  was always over-strict, and a `src/` finding gets reported, never fixed in the same commit.
+  ([source.ts](../tests/helpers/source.ts); rows 47, 48 and 50 of
+  [the-quality-rig.md](backlog/the-quality-rig.md).)
+
+- **The cycle judge could treat `<!-- -->` as a comment for free, and does not.** Measured 28.09: with
+  HTML comments stripped the resolved edge set is the same **1,729** – **0 edges live only inside a
+  `.vue` template comment today**. Left unchanged because the unification's whole claim was that nothing
+  moves; the note is here so the next person knows the cost is zero rather than unmeasured.
+  ([import-cycles.test.ts](../tests/import-cycles.test.ts).)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
