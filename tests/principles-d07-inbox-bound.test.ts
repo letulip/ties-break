@@ -260,4 +260,57 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     empty.offers.length = 0
     expect(toSnapshot(empty).newestLetterId, 'an empty inbox has no newest letter').toBe(null)
   })
+
+  // -----------------------------------------------------------------------------------------------
+  // D-P8 – THE KEY COUNT, PINNED RATHER THAN WRITTEN DOWN
+  //
+  // ⚠ WHY IT IS HERE AT ALL. D-P8 states «the snapshot carries 110 top-level keys (05.09: 88)» and this
+  // task adds `newestLetterId`, so the number moves to 111. A count a document states about itself
+  // survives a full gate, because no test reads it – CLAUDE.md's own rule, and it has cost this wave
+  // twice already. So the number lives here, compared with the thing.
+  //
+  // ⚠⚠ AND IT CARRIES AN ANTI-VACUITY HALF, which is row 43 of `docs/backlog/the-quality-rig.md`:
+  // «a zero-assertion needs a size floor, and a size floor needs a scope it cannot outgrow – state the
+  // corpus the floor is over, not just the number». Four things make this one non-vacuous:
+  //   (a) the corpus is NAMED AND COUNTED – every career in `e2e/fixtures/manifest.json`, read from the
+  //       manifest rather than from a list written here, so a fourteenth fixture joins the day it lands
+  //       and cannot narrow the sweep by being forgotten;
+  //   (b) the KEY SET is compared, not only its length – a count that stayed at 111 while a field was
+  //       swapped for another would pass a length check and fails this one;
+  //   (c) the three keys the count is ABOUT are named, so a snapshot that dropped `newestLetterId` and
+  //       gained something unrelated still reddens;
+  //   (d) ⭐ THE SCOPE CANNOT NARROW THE WAY ROW 43's DID. Its corpus was a hand-listed `readdirSync`
+  //       that stopped seeing a third of its subject after a split; this reader IS
+  //       `Object.keys(toSnapshot(world))` – the function under test – so there is no separate reader
+  //       to fall behind. What it can do is GROW, which is why (a) reads the manifest.
+  //
+  // ⚠ ARMED, NOT ASSERTED. Mutation arm K1: delete the `newestLetterId` line from `toSnapshot` – the
+  // count goes 111 → 110 and (c) names the missing key. Both outputs are in T6.2's report.
+  // -----------------------------------------------------------------------------------------------
+  it('⭐ D-P8 – 111 top-level keys, the same set in the same order on every committed career', async () => {
+    const manifest = JSON.parse(readFileSync(resolve(CAREERS, 'manifest.json'), 'utf8')) as {
+      fixtures: { name: string }[]
+    }
+    const names = manifest.fixtures.map((f) => f.name)
+    // (a) THE CORPUS, COUNTED. Thirteen careers on 28.09; the floor is the manifest's own length, so a
+    // fixture removed from the manifest cannot silently shrink what this sweeps without saying so.
+    expect(names.length, 'the fixture manifest was not read – this case would prove nothing').toBe(13)
+
+    const keysByCareer: Record<string, string[]> = {}
+    for (const name of names) keysByCareer[name] = Object.keys(toSnapshot(await career(name)))
+    expect(Object.keys(keysByCareer).length, 'every career in the manifest was read').toBe(names.length)
+
+    const reference = keysByCareer[names[0]]
+    // (b) THE COUNT, and (c) the keys it is about – both against the list rather than against prose.
+    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(111)
+    for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
+      expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)
+    }
+    // ...and the SET and the ORDER are the wire's shape rather than one career's. Order matters because
+    // it is what every hash of a snapshot sees and what `toEqual` cannot: W5 shipped a green suite and
+    // 32 moved world hashes from a re-spread literal.
+    for (const name of names) {
+      expect(keysByCareer[name], `${name}: the wire has one shape, in one order`).toEqual(reference)
+    }
+  })
 })

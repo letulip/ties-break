@@ -86,6 +86,12 @@ const game = useGameStore()
 // because the alternative is one frame of «Nothing yet. Sponsors write to players they have been
 // watching for a season.» on a career holding three hundred letters – a false sentence is worse than a
 // quiet frame. `inboxMail`'s prune reads the same null the same way: it does not prune.
+// ⚠ AND IT CARRIES NO REQUEST TICKET, WHICH IS A RULING AND NOT AN OMISSION (28.09). `App.vue` guards
+// `albumBook` with one because the album is a TAB that can be left and re-entered, so two fetches can
+// be in flight and the slower one would paint a book the player has navigated away from. This sheet is
+// `v-if`'d in HomeScreen: it mounts fresh, fires exactly one request, and the ref dies with it – there
+// is no leave-and-return path that could land a second answer. Symmetry with the album is not a reason
+// to carry three lines that cannot fire.
 const post = ref<Offer[] | null>(null)
 const loaded = computed(() => post.value !== null)
 onMounted(async () => {
