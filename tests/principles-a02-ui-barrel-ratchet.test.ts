@@ -60,11 +60,18 @@
 //   4. No baseline entry is a directory prefix.
 //   0. And the scanner has a non-empty denominator, so none of the above can pass by reading nothing.
 //
-// WHAT IT DOES NOT CLAIM: not that the baseline shrinks; not that the barrel is absent from the main
-// chunk (that is a build fact, re-measurable with the arm above, and no unit test should assert on
-// `dist/`); nothing about `src/stores`, which engine-purity's UI_DIRS lists but A-02's rule does not
-// name and which imports no barrel name today – widening this sentence past the finding it enforces
-// is the failure the header just described.
+// WHAT IT DOES NOT CLAIM: not that the baseline shrinks; and not that the barrel is absent from the
+// main chunk – that is a build fact, re-measurable with the arm above, and no unit test should assert
+// on `dist/`.
+//
+// ⚠ AND `src/stores` IS OUT OF THE ZONE LIST BY DECISION, NOT BY OVERSIGHT (the architect's ruling,
+// 28.09, on T6.7's own question). `scripts/engine-purity.mjs`'s `UI_DIRS` lists `stores`, A-02's rule
+// names seven zones and not this one, and `stores/game.ts` imports no barrel name today – so adding it
+// would be a rule with no offender, which is a rule with no measurement, and widening a gate's sentence
+// past the finding it enforces is the failure `engine-purity.mjs`'s own header records against itself.
+// ⭐ **THE TRIGGER, ON RECORD: the first barrel import from `src/stores` is the day the zone list
+// grows.** One line in `ZONES` and its first entry in the baseline, and the rule follows the offender
+// rather than the other way round. `src/main.ts` and `src/pwa.ts` are out on the same terms.
 //
 // MUTATION ARMS (all three run on the real tree at T6.7, both outputs quoted in the report):
 //   A. `import { KID_ID } from '../engine/world'` added to `src/composables/weekAhead.ts` – a UI file
@@ -74,10 +81,9 @@
 //   C. `import type { WorldState } from '../engine/world'` in that same non-grandfathered UI file
 //      leaves case 1 green – case 2's claim, demonstrated on the real tree.
 import { describe, expect, it } from 'vitest'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
-import ts from 'typescript'
-import { regions } from './helpers/source'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { filesUnder, importsOf, isWorldBarrel, ROOT } from './helpers/engineImports'
 
 /** A-02's proposal item 2, verbatim: «no file under `components`, `composables`, `viz`, `prologue`,
  *  `art`, `audio` or `App.vue` imports `engine/world` at runtime». */
@@ -118,41 +124,12 @@ const GRANDFATHERED: readonly string[] = [
   'src/composables/weekDays.ts',
 ]
 
-const ROOT = resolve(new URL('..', import.meta.url).pathname)
-const BARREL = resolve(ROOT, 'src/engine/world.ts')
-const SCRIPT_OPEN = 'lang="ts">'
-
-const walk = (d: string): string[] =>
-  readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]))
-
-/** Every `.ts` and `.vue` file in A-02's seven zones. A zone that is a FILE (`src/App.vue`) counts as
- *  itself, which is why this does not just walk directories. */
-function uiFiles(): { file: string; text: string }[] {
-  const out: { file: string; text: string }[] = []
-  for (const zone of ZONES) {
-    const abs = resolve(ROOT, zone)
-    const paths = statSync(abs).isDirectory() ? walk(abs) : [abs]
-    for (const p of paths.filter((f) => f.endsWith('.ts') || f.endsWith('.vue'))) {
-      out.push({ file: relative(ROOT, p), text: readFileSync(p, 'utf8') })
-    }
-  }
-  return out
-}
-
-/** The script bodies a parser should see: a `.ts` file whole, a `.vue` file's `<script … lang="ts">`
- *  blocks (both spellings in the tree end in that marker, and six of the 95 SFCs are the non-`setup`
- *  form). ⚠ Cut with `regions` from `tests/helpers/source.ts`, never a raw `indexOf` – CLAUDE.md's
- *  rule and the reason it exists: a `-1` from the raw form widens the region to the whole file while
- *  the pin stays green. `regions` answers `[]` for an absent start marker, which for a `.vue` would
- *  mean READING NO IMPORTS AT ALL, so that case throws here rather than passing quietly. */
-function scriptsOf(file: string, text: string): string[] {
-  if (!file.endsWith('.vue')) return [text]
-  const bodies = regions(text, SCRIPT_OPEN, '</script>').map((b) => b.slice(SCRIPT_OPEN.length))
-  if (bodies.length === 0) {
-    throw new Error(`${file}: no <script … ${SCRIPT_OPEN} block – the scanner would read this SFC as importing nothing`)
-  }
-  return bodies
-}
+// ⚠⚠ THE RESOLUTION LIVES IN `tests/helpers/engineImports.ts`, NOT HERE (T6.7 · Q3, 28.09). Two
+// negative pins had to be re-aimed off `not.toContain('engine/world')` on the day this gate landed –
+// `calendar-screen.test.ts` and `trophy-podium.test.ts`, both of which a substring would have reddened
+// on the conversion this gate ASKS for. The thing that would drift between three copies is the
+// DEFINITION of «reaches the barrel», which is exactly the argument `helpers/source.ts`'s lexer header
+// makes about the definition of a comment. One definition, three instruments.
 
 interface Reach {
   file: string
@@ -167,47 +144,21 @@ interface Census {
   statements: number
 }
 
-/** Every import or re-export in the UI zones whose specifier RESOLVES to `src/engine/world.ts`.
- *  Takes its input so case 2 and case 3 can feed it synthetic files. */
+/** Every `.ts` and `.vue` file in A-02's seven zones. A zone that is a FILE (`src/App.vue`) counts as
+ *  itself, which is why `filesUnder` answers for a file as well as for a directory. */
+function uiFiles(): { file: string; text: string }[] {
+  return ZONES.flatMap(filesUnder).map((file) => ({ file, text: readFileSync(resolve(ROOT, file), 'utf8') }))
+}
+
+/** Every import or re-export in the UI zones whose specifier RESOLVES to `src/engine/world.ts`, plus
+ *  the denominator case 0 asserts on. Takes its input so cases 2 and 3 can feed it synthetic files. */
 function scan(files: { file: string; text: string }[]): Census {
-  const reaches: Reach[] = []
-  let statements = 0
-  for (const { file, text } of files) {
-    const abs = resolve(ROOT, file)
-    for (const body of scriptsOf(file, text)) {
-      const sf = ts.createSourceFile(abs, body, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
-      for (const st of sf.statements) {
-        if (!ts.isImportDeclaration(st) && !ts.isExportDeclaration(st)) continue
-        if (!st.moduleSpecifier || !ts.isStringLiteral(st.moduleSpecifier)) continue
-        statements += 1
-        const spec = st.moduleSpecifier.text
-        if (!spec.startsWith('.')) continue
-        const target = resolve(dirname(abs), spec)
-        if (target !== BARREL && target !== BARREL.replace(/\.ts$/, '')) continue
-        const clause = ts.isImportDeclaration(st) ? st.importClause : null
-        const nb = clause?.namedBindings
-        const exportEls = ts.isExportDeclaration(st) && st.exportClause && ts.isNamedExports(st.exportClause)
-          ? [...st.exportClause.elements]
-          : []
-        const els = nb && ts.isNamedImports(nb) ? [...nb.elements] : exportEls
-        // Type-only = `import type { … }` on the statement, or every named binding carrying its own
-        // `type` keyword. ⚠ A MIXED import is a VALUE import – it emits a runtime edge, and two of
-        // the baseline's files are exactly that shape (`… , type PracticeCaution }`).
-        const statementTypeOnly = clause?.isTypeOnly || (ts.isExportDeclaration(st) && st.isTypeOnly)
-        const typeOnly = Boolean(statementTypeOnly || (els.length > 0 && els.every((el) => el.isTypeOnly)))
-        reaches.push({
-          file,
-          names: els.map((el) => (el.propertyName ?? el.name).text),
-          kind: typeOnly ? 'type' : 'value',
-        })
-      }
-    }
-  }
+  const all = files.flatMap(({ file, text }) => importsOf(file, text))
   return {
-    reaches,
+    reaches: all.filter(isWorldBarrel).map((r) => ({ file: r.file, names: r.names, kind: r.kind })),
     files: files.length,
     vueFiles: files.filter((f) => f.file.endsWith('.vue')).length,
-    statements,
+    statements: all.length,
   }
 }
 
