@@ -658,16 +658,28 @@ describe('wave 6 T1 E – nothing reads them yet, and that is pinned rather than
     // commit that earned it. ⚠ The case's TITLE moved with it: «every one of them WRITES or DECLARES»
     // stopped being true the moment a reader existed, and a title that lies is how a pin stops being
     // read.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06, AND IT COST THE SHARED LIST – WHICH IS THE FINDING, NOT THE
+    // DAMAGE. `world/lifeBeat.ts` is being split by beat KIND, so the file that WRITES a pair of
+    // these stamps is no longer the same file for all four: `rollLeak` moved to
+    // `world/lifeBeat/leak.ts` with §9 and takes `publicWeek` / `publicWrong` with it, while the two
+    // booth stamps stay where T7 wrote them until §10 moves. The four rows below are therefore
+    // per-field and still TOTAL – a fifth file naming any one of them reddens here exactly as before,
+    // and `lifeBeat.ts` stays on every row because `rollArrival`'s push still states the four birth
+    // values out loud. ⚠ The one thing NOT done here is collapsing `lifeBeat.ts` and
+    // `lifeBeat/<kind>.ts` into a glob: that would let the next kind module name a stamp without
+    // anybody reading this case, which is the opposite of what a total pin is for.
+    const OWNERS: Record<(typeof V77_ROW_FIELDS)[number], readonly string[]> = {
+      publicWeek: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+      publicWrong: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+      airedMetWeek: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+      airedEndedWeek: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+    }
     for (const field of V77_ROW_FIELDS) {
       const named = srcFiles()
         .filter(([, source]) => codeOnly(source).includes(field))
         .map(([path]) => path)
-      expect(named.sort(), `${field}: the protocol declaration, the one writer, the migration, and T2's ledger`).toEqual([
-        'engine/migrations.ts',
-        'engine/world/lifeBeat.ts',
-        'engine/world/spotlight.ts',
-        'shared/protocol/narrative.ts',
-      ])
+      expect(named.sort(), `${field}: the protocol declaration, the writer, the migration, and T2's ledger`).toEqual([...OWNERS[field]].sort())
     }
   })
 
