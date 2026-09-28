@@ -22,6 +22,15 @@
 // directory layout rather than through a rename. So: the package is FLAT, mechanically, and the
 // reader is checked against each module's own text rather than trusted.
 //
+// ⚠⚠ THAT CAUSE IS CLOSED, AND THE PARAGRAPH ABOVE IS NOW A CHRONICLE RATHER THAN A REASON (T6.10,
+// 28.09). T6.9 taught `engineModuleSource` to RECURSE (`8ea19c22`), so the arm quoted below – a key
+// parked in `world/lifeBeat/copy/` – now reddens `tests/life-beat-keys.test.ts` instead of slipping past
+// it. The architect wrote the same stale premise into CLAUDE.md and has corrected it there. WHAT THE
+// FLATNESS CASE RESTS ON NOW: the package is flat because that is the DECOMPOSITION'S SHAPE and the
+// forward rule made mechanical – a new beat KIND is a new module here, which is also the premise the line
+// ceiling above is written on – and NOT because a reader cannot see deeper. The assertion is kept and its
+// failure message says «the package grew a directory», which is the thing it can still honestly observe.
+//
 // ⭐ WHICH ASSERTIONS ARE RED-FIRST AND WHICH ARE FORWARD GUARDS – said plainly, because this repo
 // has had three vacuous probes in one week and every one of them was a guard with nothing to look at:
 //
@@ -284,20 +293,26 @@ function barrelSpecifiers(): Map<string, string[]> {
 // top-level declarations** at W6's head, **6,486 / 167** after T6.8's thirteen moves, with 1,990 lines
 // living in thirteen kind modules.
 //
-// ⚠ TIGHTENED 28.09 BY T6.10, which moved five of the seven hazard sections T6.8 could not move –
-// §16 the death, §15 the weight, §11 the wedding, §8 the end, §7 tier-1 small talk. Measured after
-// them: **5,528 lines / 145 declarations**, with 1,229 more lines living in five new kind modules. ⚠ The
-// number is the one `wc -l` prints on the LAST commit of the task, not on the last span-move – the six
-// banner lines the leak and the booth gained are honest hub lines too, and a note that quoted the
-// cheaper figure would be CLAUDE.md's «a count written in PROSE survives a full gate» in this file. The
-// ceilings leave ~172 lines and 5 declarations of honest slack and no more, because the forward rule is
-// that a new beat KIND is a new module rather than a new section here. ⚠ §13 the independent life and
-// §14 the pregnancy are STILL IN THE HUB and the ceilings hold their ~855 lines: `world/snapshot.ts`
-// imports `ownKeyThisWeek` and `motherhoodBandAt` from the hub at runtime (`from './lifeBeat'`), so
-// those two cannot move until that one import is repointed. When they go, the ceiling comes down again –
-// it is a ratchet.
-const LINE_CEILING = 5700
-const DECL_CEILING = 150
+// ⚠ TIGHTENED 28.09 BY T6.10, which moved SEVEN hazard sections in two passes – §16 the death, §15 the
+// weight, §11 the wedding, §8 the end, §7 tier-1 small talk, then §13 the independent life and §14 the
+// pregnancy once the sibling imports blocking them were found and split. ⭐ ALL NINE of A-06's
+// zero-inbound hazard sections are now kind modules. Measured on the LAST commit of the task: **4,707
+// lines / 129 declarations**, against 8,109 / 223 at W6's head, with 4165 lines living in 20 modules under
+// `world/lifeBeat/`.
+//
+// ⚠ THE NUMBER IS THE ONE `wc -l` PRINTS ON THE LAST COMMIT, not on the last span-move – the banner lines
+// each MOVED TO note leaves behind are honest hub lines too, and a note quoting the cheaper figure would
+// be CLAUDE.md's «a count written in PROSE survives a full gate» inside this file – it already cost T6.10
+// one corrective commit. The ceilings leave ~143 lines and 5 declarations of honest slack and no more,
+// because the forward rule is that a new beat KIND is a new module rather than a new section here.
+//
+// ⚠ WHAT THE HUB STILL HOLDS, AND WHY IT IS NOT DEBT: the queue (§1), her want at the fork (§2), the copy
+// pools and round 42's situation layer (§3, §3c-2, §3f, §3k), raising and answering (§4), the arrival (§5),
+// the delivery (§6) and the spouse's opinion surface (§12). Every one of those either IS the hub's job or
+// has inbound references from it – §3c-2 has eight, all from §3k's prompt assembly – which is P4's own rule
+// producing the right answer rather than a shortfall.
+const LINE_CEILING = 4850
+const DECL_CEILING = 134
 
 /** Top-level declarations in one file – column-0 `function` / `const` / `type` / `interface` …,
  *  exported or not. The same shape `grep -cE` gives, so the number in the header is checkable. */
@@ -382,12 +397,21 @@ describe('A-06 – world/lifeBeat is a hub with kind modules, and the arrows all
     expect(offenders, offenders.length ? `\n${offenders.join('\n')}\n` : '').toEqual([])
   })
 
-  it('⭐⭐ the package is FLAT – a nested module would leave T3.9\'s key inventory blind', () => {
-    // ⚠ THE REASON IS IN THE HEADER AND IT IS NOT STYLE. `engineModuleSource` globs `<name>/*.ts`
-    // without recursing, so a `rngFromSeed` key in a subdirectory silently leaves the inventory that
-    // exists to stop a silent re-deal.
+  it('⭐⭐ the package is FLAT – a directory here is the decomposition losing its shape', () => {
+    // ⚠⚠ RE-AIMED 28.09 BY T6.10, AND THE REASON CHANGED WHILE THE ASSERTION DID NOT. This case used to
+    // say «a nested module would leave T3.9's key inventory blind», and it was true until T6.9 made the
+    // source readers recurse (`8ea19c22`): a key one directory deeper now reddens
+    // `tests/life-beat-keys.test.ts` on its own. What the case stands on now is A-06's own shape – twenty
+    // kind modules, one level, one glob, and the forward rule «a new beat KIND is a new module HERE»,
+    // which is also the premise the line ceiling is written on. A directory under this package means a
+    // grouping nobody ruled, and it is cheaper to refuse than to discover.
+    // ⚠ NOT WEAKENED AND NOT DELETED: same assertion, same subject, an honest message instead of a stale
+    // one. The header keeps the old cause as a chronicle, marked closed.
     const dirs = packageEntries().filter((e) => e.dir).map((e) => e.name)
-    expect(dirs, 'subdirectories under src/engine/world/lifeBeat/').toEqual([])
+    expect(
+      dirs,
+      'the package grew a directory – src/engine/world/lifeBeat/ is FLAT, one module per beat kind',
+    ).toEqual([])
   })
 
   it('⭐⭐⭐ engineModuleSource reads the hub AND every kind module', () => {

@@ -617,7 +617,11 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // the THREE writers are one per file and none of them is the hub, which is A-06's shape reached:
     // `lifeBeat.ts` still appears because `beatEndsRead` and the told-late branch READ the field.
     // ⚠ NOT WEAKENED: still exact, still the walk's order, still red on a new file.
-    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS TEN. Left as it stands rather than renamed here –
+    // ⚠⚠ AND AN ELEVENTH WHEN §14 MOVED (T6.10's second pass): `world/lifeBeat/pregnancy.ts`, and it is
+    // the FOURTH writer – `landBirth` sets `kind: 'postpartum'`, the mark the months after leave on her.
+    // All four writers are now one per file and none of them is the hub. ⚠ NOT WEAKENED: still exact,
+    // still the walk's order, still red on a new file.
+    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS ELEVEN. Left as it stands rather than renamed here –
     // it is CLAUDE.md's «a count written in PROSE survives a full gate» in a test's own name, reported
     // to the architect with T6.10 rather than fixed inside a span-move commit.
     expect(named).toEqual([
@@ -627,6 +631,7 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
       'engine/world/lifeBeat/bereavement.ts', // T6.10 – `rollBereavement` SETS it, kind `'bereavement'`
       'engine/world/lifeBeat/ended.ts', // T6.10 – `rollEnds` SETS it, kind `'breakup'`
       'engine/world/lifeBeat/forkPsyCopy.ts', // T6.8 – `PsyRegister`'s type only, no read and no write
+      'engine/world/lifeBeat/pregnancy.ts', // T6.10 – `landBirth` SETS it, kind `'postpartum'`
       'engine/world/lifeBeat/weight.ts', // T6.10 – `rollPregnancyLoss` SETS it, kind `'pregnancy-loss'`
       'engine/world/lifeBeat.ts', // `beatEndsRead` and the told-late branch READ it; no writer left here
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean

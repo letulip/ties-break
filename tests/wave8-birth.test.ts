@@ -68,7 +68,6 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
 })
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { readFileSync } from 'node:fs'
 import {
   createWorld,
   endEpisode,
@@ -86,6 +85,7 @@ import { accrueSpirit } from '../src/engine/spirit'
 import { MEMORY_EMOTION } from '../src/engine/diary'
 import { paintedStemFor } from '../src/shared/avatarEmotion'
 import { rngFromSeed } from '../src/engine/rng'
+import { engineModuleSource } from './worldSource'
 import type { PregnancyState } from '../src/engine/world/state'
 import { married } from './helpers/scenarios/love'
 import { weekAtAge } from './helpers/career'
@@ -629,11 +629,20 @@ describe('wave 8 T4 F – the marriage ends mid-term and the birth is the same b
 /** The BODY of an exported engine function, comments stripped – so a structural claim about the code
  *  cannot be satisfied or broken by prose. ⚠ Cut with an explicit start marker and a brace walk
  *  rather than a raw `indexOf` slice, which is CLAUDE.md's own gotcha: a rotted marker must throw
- *  instead of silently widening the region to the rest of the file. */
+ *  instead of silently widening the region to the rest of the file.
+ *
+ *  ⚠⚠ RE-AIMED 28.09 BY T6.10 / A-06, AND IT THREW RATHER THAN WIDENING, WHICH IS THE MARKER DISCIPLINE
+ *  EARNING ITS RUNTIME: «no exported function 'landBirth' in world/lifeBeat.ts». §14 the pregnancy moved
+ *  to `world/lifeBeat/pregnancy.ts` in the split by beat kind, so a reader hard-coded to the hub's path
+ *  could not find it. It now reads the MODULE SET through `tests/worldSource.ts`, which is CLAUDE.md's own
+ *  prescription for a source pin over a decomposing module – «read it through `tests/worldSource.ts` …
+ *  rather than pinning a path». ⚠ NOT WIDENED AS A CLAIM: the brace walk still cuts ONE function's body
+ *  off an explicit `export function <name>(` marker and still throws when the marker is absent; what
+ *  widened is only WHERE the marker is looked for. */
 function engineFunctionSource(name: string): string {
-  const src = readFileSync('src/engine/world/lifeBeat.ts', 'utf8')
+  const src = engineModuleSource('world/lifeBeat')
   const start = src.indexOf(`export function ${name}(`)
-  if (start < 0) throw new Error(`no exported function '${name}' in world/lifeBeat.ts`)
+  if (start < 0) throw new Error(`no exported function '${name}' in the world/lifeBeat module set`)
   let depth = 0
   let i = src.indexOf('{', start)
   if (i < 0) throw new Error(`no body for '${name}'`)

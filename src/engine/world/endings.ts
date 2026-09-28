@@ -64,7 +64,12 @@ import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer
 // ⚠ T6 TAKES A THIRD (`comebackAtReturn`) ON THE SAME SPLIT AND FOR THE SAME REASON: the freeze's
 // arithmetic – the ruled rank / 12 / 156 – is a pure function of the pregnancy and belongs with the
 // arc, while the WRITE has to happen here, in the one-line window between the draw and the clear.
-import { comebackAtReturn, decisionWeekOf, drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, returnChanceFor, FORK_WANT_ANSWER } from './lifeBeat'
+import { drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, FORK_WANT_ANSWER } from './lifeBeat'
+// ⚠ THE THREE PREGNANCY VALUES COME OFF THE KIND MODULE (A-06 / T6.10, 28.09). §14 moved to
+// `world/lifeBeat/pregnancy.ts` and it imports the hub, so the hub cannot re-export them back without
+// the cycle A-06 is about – see that file's header. The split above and below is the SAME one-way edge
+// the three paragraphs above describe; nothing about which module owns the arithmetic has changed.
+import { comebackAtReturn, decisionWeekOf, returnChanceFor } from './lifeBeat/pregnancy'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE. `engine/collegeOffer.ts` imports only `shared/protocol`
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
