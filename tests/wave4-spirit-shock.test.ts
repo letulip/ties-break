@@ -585,13 +585,18 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // census grew by exactly the file that ruling required and by nothing else, which is the claim
     // this pin was built to make. ⚠ NOT WEAKENED: the list is still exact, still ordered by the walk,
     // and the wire assertion below is UNCHANGED and has been joined by a stronger one.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – THE NAME MOVED, THE CENSUS DID NOT. `createWorld` and
+    // its 93-property literal left the barrel for `engine/world/create.ts` (P4's last three
+    // span-moves), so the birth value is spelled at the new path. ⚠ NOT WEAKENED: the list is still
+    // EXACT and still in the walk's own order, a file joining it is still red, and the claim under it
+    // is untouched – the move added no reader and removed none.
     expect(named).toEqual([
       'engine/migrations.ts', // the v74 -> v75 back-fill
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
+      'engine/world/create.ts', // `createWorld`'s literal – null
       'engine/world/lifeBeat.ts', // `rollEnds` – the one place it is SET
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
-      'engine/world.ts', // `createWorld`'s literal – null
     ])
     // ...and it is still NOT on the wire, which is the other half of the same claim: no component,
     // store or composable can be reading a field the snapshot does not carry.

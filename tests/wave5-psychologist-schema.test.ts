@@ -817,10 +817,16 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     //
     // ⚠ THE ORDER IS THE WALK'S, NOT AN ALPHABET'S: `srcFiles` recurses a directory where it meets
     // it, so `engine/world/` is exhausted before `engine/world.ts` («world» sorts before «world.ts»).
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – THE THIRD WRITER IS `engine/world/create.ts` NOW, AND IT
+    // TRADED PLACES WITH THE SECOND. P4's last three span-moves took `createWorld`'s literal out of
+    // the barrel, and `create.ts` sorts before `state.ts` inside `engine/world/`, so the ORDER of
+    // this array follows the walk exactly as the comment above demands. ⚠ NOT WEAKENED: still three
+    // writers, still an exact ordered list per key, still red on a fourth.
     const WRITERS = [
       'engine/migrations.ts', // the v75 -> v76 back-fill
+      'engine/world/create.ts', // `createWorld`'s literal
       'engine/world/state.ts', // the seat itself
-      'engine/world.ts', // `createWorld`'s literal
     ]
     const WALLS_KEYS = ['wallsLean', 'wallsFlipped'] as const
     for (const key of WALLS_KEYS) {
@@ -938,6 +944,12 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       'components/SupportStaffTab.vue',
       'engine/migrations.ts',
       'engine/spirit.ts',
+      // ⚠⚠ THE THIRTEENTH ENTRY, AND IT IS T6.5 / A-04 (a) MOVING A NAME RATHER THAN A READER (28.09).
+      // `createWorld`'s literal left the barrel for `engine/world/create.ts` – and unlike every other
+      // census this wave re-aimed, `engine/world.ts` STAYS below, because the barrel goes on naming
+      // `psychologistFocusOpen` in the re-export line the two screens reach it through. So the list
+      // GREW by one while the roads did not: the birth value is written in one place, read in none.
+      'engine/world/create.ts',
       'engine/world/psychologist.ts',
       'engine/world/snapshot.ts',
       // ⭐⭐ ROUND 44 #7 – the staff's year-end post reads `psychologistFocus` together with

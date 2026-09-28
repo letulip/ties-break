@@ -628,10 +628,15 @@ describe('wave 6 T1 E – nothing reads them yet, and that is pinned rather than
     const named = srcFiles()
       .filter(([, source]) => codeOnly(source).includes('spotlightHabituation'))
       .map(([path]) => path)
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a): the birth value this case's own title names is written in
+    // `engine/world/create.ts` now, because P4's last three span-moves took `createWorld` out of the
+    // barrel. Sorted, so `engine/world/create.ts` lands where the comparison puts it. ⚠ The claim is
+    // untouched and still TOTAL – four files, a fifth is red – and «nothing reads them yet» is as
+    // true of a module as it was of a barrel.
     expect(named.sort(), 'the declaration, the birth value, the migration – and T4\'s growth and read').toEqual([
       'engine/migrations.ts',
       'engine/spirit.ts',
-      'engine/world.ts',
+      'engine/world/create.ts',
       'engine/world/state.ts',
     ])
   })
