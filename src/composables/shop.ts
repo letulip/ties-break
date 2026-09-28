@@ -1076,10 +1076,11 @@ export function useShop(week: ComputedRef<number>) {
   // place. The shape is `ShopState` (see the type above).
   return {
     // --- the wire, and the shelf's own reading of it -------------------------------------------
+    // ⚠ `shopRows` AND `SHOP_FAMILIES` ARE DELIBERATELY NOT HERE. Neither surface reads them – the
+    // markup reads `shelfFamilies` (the open tab's slice) and `shopRowsOf` (one family's rungs) – and
+    // a returned name nobody reads is the dead re-export A-03 is deleting 93 of, one file over.
     shop,
-    shopRows,
     shopCheapest,
-    SHOP_FAMILIES,
     shopRowsOf,
     // --- the front door and the six segments (round 35 #3, round 30 #5, round 36 review #10) ---
     shopHome,
