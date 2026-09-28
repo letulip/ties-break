@@ -34,6 +34,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { homeSource } from './worldSource'
 import { DYNASTY_COPY, WEIGHT_COPY } from '../src/composables/identityCopy'
 
 interface Row {
@@ -59,11 +60,33 @@ const EXPORTED: Record<string, Record<string, string>> = {
   WEIGHT_COPY: WEIGHT_COPY as unknown as Record<string, string>,
 }
 
+// ⚠⚠ RE-AIMED 28.09 BY T6.9 – THE HOME IS READ THROUGH ITS MODULE SET, AND THE TRADE IS NAMED.
+//
+// It was `readFileSync(row.home)`, and on the branch head that was RED with nothing wrong with the
+// string: T6.8 / A-06 moved the life-beat copy sections into `src/engine/world/lifeBeat/<kind>Copy.ts`
+// and every W-row whose home says `src/engine/world/lifeBeat.ts` lost sight of its own words –
+//
+//     W9: src/engine/world/lifeBeat.ts contains the row's text: expected false to be true
+//
+// – while `BEREAVED_WORDS` shipped, unmoved, one directory deeper. The reader's scope broke, not the
+// corpus, which is the same defect `tests/worldSource.ts`' own header records in two other shapes.
+//
+// ⚠ THE DOCUMENT IS NOT EDITED. `docs/plans/life-wave-11-strings-2026-09.md` is the record of what
+// shipped in wave 11; rewriting a historical record so an instrument stops failing is rewriting
+// history to satisfy the instrument. `homeSource` resolves an `src/engine/**.ts` home through
+// `engineModuleSource`, so the home the owner reads stays the home the document states.
+//
+// ⚠⚠ WHAT IS TRADED, SAID PLAINLY: the claim goes from «this string lives in this FILE» to «this
+// string lives in this MODULE SET». That is a real loss of precision – a row can no longer tell a
+// reader which file of a package holds its words – and it is accepted because the property these
+// tables exist for is «the document and the code say the same thing», which never depended on a file
+// boundary. Nothing else weakens: the strict `#OBJECT.field` homes are untouched, the count is
+// untouched, and for a module with no package directory `homeSource` is the old read byte for byte.
 const sourceCache = new Map<string, string>()
 function sourceOf(path: string): string {
   let src = sourceCache.get(path)
   if (src === undefined) {
-    src = readFileSync(path, 'utf8')
+    src = homeSource(path)
     sourceCache.set(path, src)
   }
   return src

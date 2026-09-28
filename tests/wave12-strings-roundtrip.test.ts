@@ -32,6 +32,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { homeSource } from './worldSource'
 
 interface Row {
   id: string
@@ -52,11 +53,36 @@ function parseTable(path: string): Row[] {
   return rows
 }
 
+// ⚠⚠ RE-AIMED 28.09 BY T6.9 – THE HOME IS READ THROUGH ITS MODULE SET, AND THE TRADE IS NAMED.
+//
+// It was `readFileSync(row.home)`, and on the branch head that was RED with the string shipping
+// exactly as the table records it: T6.8 / A-06 moved the life-beat copy sections into
+// `src/engine/world/lifeBeat/<kind>Copy.ts`, so every P-row whose home says
+// `src/engine/world/lifeBeat.ts` stopped being able to see its own words –
+//
+//     P1: src/engine/world/lifeBeat.ts does not contain the row's text: expected false to be true
+//
+// – the parting's pools having moved one directory deeper, unchanged. The reader's scope broke, not
+// the corpus; `tests/worldSource.ts`' header records the same defect in two other shapes and the
+// header of `tests/wave1011-strings-roundtrip.test.ts` carries the twin of this note.
+//
+// ⚠ THE DOCUMENT IS NOT EDITED. `docs/plans/life-wave-12-strings-2026-09.md` is the record of what
+// shipped and of where his review landed; rewriting it so an instrument stops failing is rewriting
+// history to satisfy the instrument. `homeSource` resolves an `src/engine/**.ts` home through
+// `engineModuleSource`, so the home the owner reads stays the home the document states.
+//
+// ⚠⚠ WHAT IS TRADED, SAID PLAINLY: the claim goes from «this string lives in this FILE» to «this
+// string lives in this MODULE SET». That is a real loss of precision – a row can no longer tell a
+// reader which file of a package holds its words – and it is accepted because the property this table
+// exists for is «the document and the code say the same thing», which never depended on a file
+// boundary. This wave's corpus is ALL bare paths, so the trade touches every row here and there is no
+// stricter half left standing beside it; the count, the status pin and the dash pin are untouched, and
+// for a module with no package directory `homeSource` is the old read byte for byte.
 const sourceCache = new Map<string, string>()
 function sourceOf(path: string): string {
   let src = sourceCache.get(path)
   if (src === undefined) {
-    src = readFileSync(path, 'utf8')
+    src = homeSource(path)
     sourceCache.set(path, src)
   }
   return src

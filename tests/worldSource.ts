@@ -9,18 +9,54 @@
 // swallows the rest of the file, which is how a "must not contain amountCents" assertion started
 // reading someone else's function. Reading the whole module set keeps the invariant honest and
 // location-independent, so the remaining extractions need no test edits.
+//
+// ⚠⚠ AND THAT LAST SENTENCE WAS FALSE FOR ELEVEN DAYS – T6.9, 28.09. IT IS CORRECTED BY THE CODE
+// BELOW RATHER THAN BY REWORDING IT, because the promise was the right one; the reader was not.
+//
+// `readdirSync(...).filter(f => f.endsWith('.ts'))` DOES NOT RECURSE. T6.8 created
+// `src/engine/world/lifeBeat/` with thirteen kind modules, and from that commit `worldSource()`
+// returned 63 of the module set's 77 files while still calling itself "the whole module set" – so the
+// sentence above stopped being true of a PACKAGE the moment the decomposition P4 describes grew one.
+// «Location-independent» meant «independent of WHICH FILE», never «independent of how deep», and
+// nothing said so.
+//
+// IT BROKE A REAL GUARD, MEASURED BOTH WAYS. `tests/wave5-psy-counsel.test.ts`' «no new
+// `type: 'life'` write site anywhere in the engine» counted 8 sites before the leak section moved and
+// 7 after: the write site had not gone anywhere, the SWEEP had. Through `engineSource()` it is 8. And
+// `tests/life-beat-keys.test.ts` – T3.9's inventory against CLAUDE.md invariant 2's silent re-deal –
+// reads `engineModuleSource('world/lifeBeat')`, which had the identical flat read: a module at
+// `world/lifeBeat/copy/<kind>.ts` holding a `rngFromSeed` key left that file GREEN with the key
+// nowhere in its inventory (armed by hand, both outputs in T6.9's report).
+//
+// ⚠ SO BOTH READERS RECURSE, THROUGH ONE WALKER (`tsTree`) SHARED WITH `engineSource()` BELOW. Three
+// copies of the same directory read is how the two halves drifted apart in the first place – the
+// layer reader recursed from the day it was written and the module readers never did. Recursion can
+// only ADD text, so no POSITIVE pin can lose a claim; the direction that needs care is a NEGATIVE one
+// («the world module set contains no X»), which gets STRICTER. Every consumer was run and triaged
+// file by file when this landed – see T6.9's report – and a pin that turned out to be about the HUB
+// specifically gets a narrower reader rather than a widened sentence.
 import { readFileSync, readdirSync } from 'node:fs'
 
 const ROOT = new URL('../src/engine/', import.meta.url)
 
-/** world.ts followed by every world/*.ts part, concatenated with a marker between files. */
+/** Every `.ts` under `dir`, RECURSIVELY, each preceded by a `// ==== src/engine/<path> ====` marker.
+ *  Sorted at every level, so the concatenation is stable and a package's files sit at the point their
+ *  directory name sorts to. ⚠ THE ONE DIRECTORY WALK IN THIS FILE – see the header on why. */
+function tsTree(dir: URL, prefix: string): string[] {
+  const out: string[] = []
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (entry.isDirectory()) out.push(...tsTree(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`))
+    else if (entry.name.endsWith('.ts')) {
+      out.push(`\n// ==== src/engine/${prefix}${entry.name} ====\n` + readFileSync(new URL(entry.name, dir), 'utf8'))
+    }
+  }
+  return out
+}
+
+/** world.ts followed by every `world/**\/*.ts` part, concatenated with a marker between files. */
 export function worldSource(): string {
   const main = readFileSync(new URL('world.ts', ROOT), 'utf8')
-  const parts = readdirSync(new URL('world/', ROOT))
-    .filter((f) => f.endsWith('.ts'))
-    .sort()
-    .map((f) => `\n// ==== src/engine/world/${f} ====\n` + readFileSync(new URL(`world/${f}`, ROOT), 'utf8'))
-  return main + parts.join('')
+  return main + tsTree(new URL('world/', ROOT), 'world/').join('')
 }
 
 /** The source of one top-level function, wherever in the world module set it now lives.
@@ -37,15 +73,13 @@ export function worldFunction(name: string): string {
 // helper and no test edits.
 // -------------------------------------------------------------------------------------------------
 
-/** `<name>.ts` followed by every `<name>/*.ts` part, concatenated with a marker between files. */
+/** `<name>.ts` followed by every `<name>/**\/*.ts` part, concatenated with a marker between files.
+ *  ⚠ RECURSIVE SINCE T6.9 (28.09) – it was flat, and the header says what that cost. */
 export function engineModuleSource(name: string): string {
   const main = readFileSync(new URL(`${name}.ts`, ROOT), 'utf8')
   let parts: string[] = []
   try {
-    parts = readdirSync(new URL(`${name}/`, ROOT))
-      .filter((f) => f.endsWith('.ts'))
-      .sort()
-      .map((f) => `\n// ==== src/engine/${name}/${f} ====\n` + readFileSync(new URL(`${name}/${f}`, ROOT), 'utf8'))
+    parts = tsTree(new URL(`${name}/`, ROOT), `${name}/`)
   } catch {
     // no package directory yet - the module has not been decomposed, which is not an error
   }
@@ -58,9 +92,50 @@ export function engineModuleFunction(module: string, name: string): string {
   return moduleFunction(engineModuleSource(module), name, `src/engine/${module}.ts + ${module}/*.ts`)
 }
 
-/** diary.ts + every diary/*.ts part. */
+/** diary.ts + every diary/*.ts part.
+ *  ⚠ T6.9, 28.09: this one carried the flat read only BY DELEGATION – it has always been
+ *  `engineModuleSource('diary')` and nothing else, so fixing that reader fixed this one, and there is
+ *  no second copy of the walk here to drift. `src/engine/diary/` is flat today; it no longer has to
+ *  stay that way for the pins over it to be honest. */
 export function diarySource(): string {
   return engineModuleSource('diary')
+}
+
+// -------------------------------------------------------------------------------------------------
+// ⚠⚠ AND THE SAME HOLE ARRIVED IN A THIRD SHAPE – A HOME SPELLED IN A DOCUMENT (T6.9, 28.09).
+// -------------------------------------------------------------------------------------------------
+//
+// The strings-roundtrip files pin «the document's row and the shipped string are one corpus» by
+// reading a HOME out of the table – a path the document itself spells – and asserting containment
+// against that file. T6.8 moved the life-beat copy sections into `world/lifeBeat/<kind>Copy.ts`, and
+// both tables' homes still say `src/engine/world/lifeBeat.ts`, so two files went RED on the branch
+// head with the string still shipping, unmoved, one directory deeper:
+//
+//     W9: src/engine/world/lifeBeat.ts contains the row's text: expected false to be true
+//     P1: src/engine/world/lifeBeat.ts does not contain the row's text: expected false to be true
+//
+// ⚠ THE DOCUMENTS ARE NOT EDITED TO SILENCE THEM. They are the wave-10/11 and wave-12 records of
+// what shipped, and rewriting a record so an instrument stops failing is the wrong direction of fix.
+// The reader is what was wrong, exactly as it was for `worldSource()` above.
+//
+// ⚠⚠ AND THE TRADE IS STATED RATHER THAN SLIPPED IN, because it IS a loss of precision: the claim
+// moves from «this string lives in this FILE» to «this string lives in this MODULE SET». A row can no
+// longer tell you which of a package's files holds its words. That is the same trade CLAUDE.md's own
+// gotcha already made for every source pin – «read it through `tests/worldSource.ts` … rather than
+// pinning a path» – and it is the honest one here, because the property the tables are for is «the
+// document and the code say the same thing», which a file boundary was never part of.
+
+const REPO = new URL('../', import.meta.url)
+
+/** A source-pin HOME as a DOCUMENT spells it, repo-root relative, resolved the way CLAUDE.md's
+ *  gotcha prescribes: a path under `src/engine/` is read through its MODULE SET (`<module>.ts` plus
+ *  its package, recursively), anything else is that file alone. ⚠ For a module with no package
+ *  directory this is byte-for-byte the old single-file read, so it widens only where a split has
+ *  actually happened – see the note above for the claim that is traded. */
+export function homeSource(pathFromRepoRoot: string): string {
+  const engineModule = /^src\/engine\/(.+)\.ts$/.exec(pathFromRepoRoot)
+  if (engineModule) return engineModuleSource(engineModule[1])
+  return readFileSync(new URL(pathFromRepoRoot, REPO), 'utf8')
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -83,19 +158,13 @@ export function diarySource(): string {
 
 /** EVERY `.ts` under `src/engine/`, recursively, with a marker before each file – for laws that are
  *  about the engine LAYER rather than about one module. Sorted, so the concatenation is stable.
- *  ⚠ POSITIVE AND NEGATIVE claims are both honest against it: it is the whole layer, not a sample. */
+ *  ⚠ POSITIVE AND NEGATIVE claims are both honest against it: it is the whole layer, not a sample.
+ *  ⚠ T6.9, 28.09: its private `read` was lifted to `tsTree` at the top of this file, byte for byte,
+ *  and the two module readers now share it. This reader recursed from the day it was written and they
+ *  did not, which is exactly the drift one copy of the walk prevents. Output byte-identical
+ *  (6,375,197 characters on the clean tree, measured across the change). */
 export function engineSource(): string {
-  const read = (dir: URL, prefix: string): string[] => {
-    const out: string[] = []
-    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-      if (entry.isDirectory()) out.push(...read(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`))
-      else if (entry.name.endsWith('.ts')) {
-        out.push(`\n// ==== src/engine/${prefix}${entry.name} ====\n` + readFileSync(new URL(entry.name, dir), 'utf8'))
-      }
-    }
-    return out
-  }
-  return read(ROOT, '').join('')
+  return tsTree(ROOT, '').join('')
 }
 
 // -------------------------------------------------------------------------------------------------
