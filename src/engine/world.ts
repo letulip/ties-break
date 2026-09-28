@@ -63,13 +63,13 @@ export { pendingKnock, knockRunning, ordinaryTrainingWeek, expireKnock, rollKnoc
 // ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
 // import without pulling the integration core in. Re-exported under `engine/world` like every other
 // extraction, so the 280-file public API is unchanged.
-import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, openQuestions, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek } from './world/multiWeek'
-export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, openQuestions, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek }
+import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, openQuestions, spanDigest, spanRowCount, spanWeeksFor } from './world/multiWeek'
+export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, openQuestions, spanDigest, spanRowCount, spanWeeksFor }
 // ⭐⭐ ROUND 29 #3 – the shoot that lands on a tournament week, and the four answers to it. Extracted
 // to `world/shootClash.ts` (a leaf) and re-exported here under the historical barrel, exactly as
 // every other decomposed concern is.
-import { answerShootClash, buildShootClashPrompt, shootCancelCents, shootClashOpen, shootClashWeek, shootMoveTarget } from './world/shootClash'
-export { answerShootClash, buildShootClashPrompt, shootCancelCents, shootClashOpen, shootClashWeek, shootMoveTarget }
+import { answerShootClash, shootCancelCents, shootClashOpen, shootClashWeek, shootMoveTarget } from './world/shootClash'
+export { answerShootClash, shootCancelCents, shootClashOpen, shootClashWeek, shootMoveTarget }
 // ⭐⭐ ROUND 26 #1 (second pass): WHEN the span is offered, which is the owner's rule and not the
 // engine's refusal – see `world/multiWeek.ts` for why the two are deliberately separate gates.
 import { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering } from './world/multiWeek'
@@ -81,7 +81,7 @@ import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutive
 // and must ask the engine's own predicate rather than spell `e.friendly` a third and fourth time.
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, practiceMatchId, isPracticeMatchEvent }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, bankCoachResidual, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
 // ⭐⭐ ROUND 42 #42 – `supportPayrollWeeklyCents` joins the barrel: it is read by `coachMarket`'s own
 // affordability arithmetic and by `householdWeekly`, and the bench that priced the cap
 // (`tools/r42-team-budget-cap.ts`) asks it the same question the screens do rather than summing two
@@ -90,12 +90,12 @@ import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matche
 // read from outside this module (the bench, the pins, `world/form.ts`'s weekly bank and
 // `phaseHerWeek`'s anniversary), and the barrel's own rule is that the public API is what the rest of
 // the repo imports rather than what world.ts happens to use.
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, bankCoachResidual, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS }
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. ⚠ `GEAR_CATEGORY_LINE` came back from equipment.ts to this
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
-import { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES, gearRestWeeksOf, recordGearRestWeek, GEAR_REST_WINDOW } from './world/kit'
-export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES, gearRestWeeksOf, recordGearRestWeek, GEAR_REST_WINDOW }
+import { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, recordGearRestWeek, GEAR_REST_WINDOW } from './world/kit'
+export { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, recordGearRestWeek, GEAR_REST_WINDOW }
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
@@ -106,8 +106,8 @@ export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryT
 // ⭐⭐⭐ v80, WAVE F1 + F2 – her form and the third seat. Both modules import `WorldState` as a
 // TYPE-ONLY import, so the values come back here and are re-exported under their own names exactly
 // as every other extracted concern is.
-import { accrueFormWeek, coachFormNote, formMatchlessWeeks, formResidualsOf, herWeekForForm, sparringComebackGap } from './world/form'
-export { accrueFormWeek, coachFormNote, formMatchlessWeeks, formResidualsOf, herWeekForForm, sparringComebackGap }
+import { coachFormNote, formMatchlessWeeks } from './world/form'
+export { coachFormNote, formMatchlessWeeks }
 import { hireSparring, resolveSparring, setSparringRung, setSparringTravels, sparringRungOf, sparringRustCut, sparringStoodDown, sparringUnlocked, sparringWeeklyCents, sparringWorksThisWeek, SPARRING_CHANGE_KEY, SPARRING_LOCKED_DETAIL, SPARRING_RECEIPT } from './world/sparring'
 export { hireSparring, resolveSparring, setSparringRung, setSparringTravels, sparringRungOf, sparringRustCut, sparringStoodDown, sparringUnlocked, sparringWeeklyCents, sparringWorksThisWeek, SPARRING_CHANGE_KEY, SPARRING_LOCKED_DETAIL, SPARRING_RECEIPT }
 import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
@@ -126,30 +126,28 @@ export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek,
 // rule is instead of re-deriving it beside the engine and drifting from it.
 import { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, setPsychologistFocus, psychologistFocusRefusal, psychologistFocusOpen, psychologistFocusDetailOf, psychologistFocusSeasonFor, PSY_FOCUSES, PSY_FOCUS_LABEL, PSY_FOCUS_LINE, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL, PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL } from './world/psychologist'
 export { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, setPsychologistFocus, psychologistFocusRefusal, psychologistFocusOpen, psychologistFocusDetailOf, psychologistFocusSeasonFor, PSY_FOCUSES, PSY_FOCUS_LABEL, PSY_FOCUS_LINE, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL, PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL }
-import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
-export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
+import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX } from './world/entries'
+export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX }
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { captureBreakEven, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, seasonWrapDue } from './world/milestones'
-export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven, maybeFireSeasonWrapUp, seasonWrapDue }
+import { captureBreakEven, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger } from './world/milestones'
+export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven, maybeFireSeasonWrapUp }
 // ⭐⭐⭐ ROUND 44 #7 – the four salaried seats' year-end post, raised one line under the wrap-up in
 // `world/phaseAiWeek.ts`. Re-exported under its own name on the barrel's standing rule: the import
 // list and the re-export list carry the SAME names, so a caller never learns which module owns one.
-import { seatWeeksServedIn, settleStaffLetters } from './world/staffLetters'
-export { seatWeeksServedIn, settleStaffLetters }
+import { settleStaffLetters } from './world/staffLetters'
+export { settleStaffLetters }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
 // extracted module here keeps.
 import {
   answerFork,
   answerRetirement,
-  buildDebtView,
   buildEndingView,
-  cheapestEntryFeeCents,
   // ⭐⭐ v73: the fork will not be answered while her opinion of it stands unanswered – the other
   // half of `'life'`'s slot in STOP_PRECEDENCE, off the barrel so a test pins the rule and not a
-  // spelling. `raiseForkOpinion` rides beside it for the same reason `latchEnding` does.
-  raiseForkOpinion,
+  // spelling. ⚠ `raiseForkOpinion` rode beside it here until A-03 / T6.6 froze the barrel (28.09):
+  // it had no reader through this file, and `world/endings.ts` is where its readers import it from.
   FORK_UNHEARD_REFUSAL,
   guardNotEnded,
   latchEnding,
@@ -191,9 +189,7 @@ export {
   // college years are the SHORTCUT, so it is two trips a year now. Nothing outside `world/college.ts`
   // ever read it – it shipped on 17.08 and this is the same day – so the rename breaks no call site.
   COLLEGE_TRIP_WEEKS,
-  bankCollegeYear,
   // ⭐⭐ THE COLLEGE WAVE: the played rubbers and the predicate that stops them passing in silence.
-  callUpPlayedThisWeek,
   callUpRubberId,
   callUpRubbersOf,
   // ⭐⭐⭐ ROUND 27 #6 – THE TIE'S REVEAL, and the letter that arrives the week before it. Six names,
@@ -204,50 +200,28 @@ export {
   nextCallUpWeekAfter,
   callUpRevealMatches,
   callUpRevealOpen,
-  closeCallUpReveal,
-  revealCallUpRubber,
-  settleCallUpLetter,
-  skipCallUpRubbers,
-  collegeCoachFactor,
   collegeEpilogueLine,
   // ⭐⭐⭐ ROUND 24 – THE STUDENT CHAMPIONSHIP: the one tournament a college year is guaranteed, and
   // the predicate that keeps its week from passing in silence. Same six names, same shape, as the
   // call-up above it – deliberately, because they are the same KIND of thing.
   collegeLeagueMatchId,
   collegeLeagueMatchesOf,
-  collegeLeaguePlayedThisWeek,
   // ⭐⭐⭐ ROUND 26 #6 – THE REVEAL. The predicate, its matches, and the three commands the
   // tour's own reveal trio dispatches into (see `revealTournamentRound` below).
   collegeLeagueRevealMatches,
   collegeLeagueRevealOpen,
   collegeLeagueWeek,
-  // ⭐⭐⭐ ROUND 27 #2 – WILL THE NEXT PRESS END AT THE CHAMPIONSHIP? The fact behind the bottom
-  // control's fifth label, and the week-level test it is built on.
-  collegeLeagueIsNextStop,
-  // ⭐⭐⭐ ROUND 27 #6 – ...and the tie is the third stop that predicate's own ⚠⚠ asked for.
-  collegeCallUpIsNextStop,
-  collegeNextStop,
-  isCollegeLeagueWeek,
-  collegeMatchesThisWeek,
   collegePausedShareYears,
-  collegeProgressOf,
-  collegeRecruitViewOf,
   inCollege,
   lastLeagueRun,
   measureCollegeOffer,
-  openCollegeYear,
-  resolveCallUp,
   resolveCollegeBill,
-  resolveCollegeLeague,
   skillMeanOf,
 } from './world/college'
 export {
   answerFork,
   answerRetirement,
-  buildDebtView,
   buildEndingView,
-  cheapestEntryFeeCents,
-  raiseForkOpinion,
   FORK_UNHEARD_REFUSAL,
   guardNotEnded,
   latchEnding,
@@ -270,28 +244,24 @@ export {
 export { buildAlbum, buildScroll } from './world/album'
 // ⭐ THE ALBUM BOOK (docs/specs/the-album-2026-09.md) – the on-demand assembly the worker's `album`
 // query serves, plus the mood table and the draft chapter headings for the tests and the owner's pass.
-export { assembleAlbum, ALBUM_MOOD, ALBUM_CHAPTER_TITLES } from './world/albumBook'
-import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
-// W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
-// implementation exactly as every other sponsor helper is.
-export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
+export { assembleAlbum, ALBUM_MOOD } from './world/albumBook'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, bankSponsorCheque } from './world/sponsors'
 // ⭐ ROUND-28 #15 – the one splitter every sponsor cheque goes through, re-exported for the same
 // reason: a test that wants to know what her cut of a brand's money is must ask the shipped one.
 export { bankSponsorCheque }
 // ⭐ ROUND 42 #5 – the cameo's cadence half, re-exported beside its need half for the same reason
 // `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
 export { sponsorCameoWilling, sponsorCameoCents }
-export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, reviewAdOffer, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor }
 import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, POSTPARTUM_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, pauseCovering, PREGNANCY_PAUSE_DETAIL, POSTPARTUM_PAUSE_DETAIL, availabilityStatus, entryStatus, arrivalStatus }
-export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
 export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor } from './condition'
 // ⭐ v72: the private life's leaf, beside condition's and re-exported on the same line of reasoning –
 // the barrel is what the rest of the repo imports the engine through. The temperament TYPE travels
 // with them because `WorldState.temperament` is declared in it.
-export { accrueSpirit, applyBondDelta, spiritMatchFactor, temperamentFor, temperamentIntensity, TEMPERAMENTS } from './spirit'
+export { accrueSpirit, temperamentFor, temperamentIntensity, TEMPERAMENTS } from './spirit'
 export type { Temperament } from './spirit'
 // ⭐ v79: the chemistry leaf, beside the private life's and on the same line of reasoning – the
 // barrel is what the rest of the repo imports the engine through, and `CoachPair` travels with them
@@ -314,16 +284,16 @@ export {
   nextChemistryPhase,
   quietWeek,
 } from './chemistry'
-export type { ChemistryWeek, CoachManner, CoachPair } from './chemistry'
+export type { ChemistryWeek, CoachManner } from './chemistry'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
 // W4-SCHOOL: the school calendar. Lives in kidLife.ts with `gradeOf`, whose arithmetic it is.
 import { schoolEndWeek, schoolIsOver, schoolIsOverForBand } from './kidLife'
 export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
-import { vacationForWeek, practiceForWeek } from './world/bookings'
-export { vacationForWeek, practiceForWeek }
-import { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, protectedRankPlace, PLAY_DOWN, playDownBars } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, protectedRankPlace, PLAY_DOWN, playDownBars }
+import { vacationForWeek } from './world/bookings'
+export { vacationForWeek }
+import { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, protectedRankPlace, PLAY_DOWN, playDownBars } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, protectedRankPlace, PLAY_DOWN, playDownBars }
 import { KID_ID, SLAM_DEBUT_KEY } from './world/constants'
 export { KID_ID, SLAM_DEBUT_KEY }
 // ⭐⭐ ROUND 24, E2 – THE TWO SENTENCES THE COMMAND GUARD CAN SAY, and the guard that lets the college
@@ -332,49 +302,35 @@ export { KID_ID, SLAM_DEBUT_KEY }
 // error channel, so a test that pinned the spelling instead of the symbol would break a report in
 // silence. See the note beside `guardNotEnded` in world/constants.ts for why there are two.
 export { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEndedForGood } from './world/constants'
-import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow } from './world/entryCaps'
+import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage } from './world/entryCaps'
 // P1 – the junior access rulebook (the Accelerator table and the W15 reserved-place door). Re-exported
 // under its own names for the same reason the caps are: the worker, the snapshot and the tools must
 // read ONE implementation. `docs/specs/junior-access-2026-08.md`.
-import { ACCELERATOR, JUNIOR_RESERVED, acceleratorAdmits, acceleratorUsage, juniorReservedRank } from './world/entryCaps'
-export { ACCELERATOR, JUNIOR_RESERVED, acceleratorAdmits, acceleratorUsage, juniorReservedRank }
+import { acceleratorAdmits, acceleratorUsage, juniorReservedRank } from './world/entryCaps'
+export { acceleratorAdmits, acceleratorUsage, juniorReservedRank }
 // W3-ACT2 §6 - the mandatory regime. Re-exported below under its own names so the worker, the
 // snapshot and the tools read one implementation, exactly as entryCaps is.
 import {
   buildTourBriefing,
   chargeMandatoryPenalty,
-  dueMandatoriesAt,
-  isMandatoryTier,
   isSuspendedAt,
   mandatoryBinds,
-  mandatoryBindsRank,
-  penaltyPointsAt,
-  quotaPlayedIn,
-  quotaShortfallAt,
-  suspensionWeeksLeft,
 } from './world/mandatory'
 export {
   buildTourBriefing,
   chargeMandatoryPenalty,
-  dueMandatoriesAt,
-  isMandatoryTier,
   isSuspendedAt,
   mandatoryBinds,
-  mandatoryBindsRank,
-  penaltyPointsAt,
-  quotaPlayedIn,
-  quotaShortfallAt,
-  suspensionWeeksLeft,
 }
-export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow }
+export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage }
 import { finishLabel, prizeCentsFor } from './world/labels'
 export { finishLabel, prizeCentsFor }
 import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning } from './world/age'
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning }
 // ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
-import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE } from './world/birthday'
-export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE }
+import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, pendingBirthday, buildBirthdayPrompt, chooseGift, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE } from './world/birthday'
+export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, pendingBirthday, buildBirthdayPrompt, chooseGift, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE }
 // ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` arrive on the barrel too –
 // the ACTIVE attachment is a question asked of `loveEpisodes`, never a field, so every reader in the
 // repo has to arrive at it through this one function or the derivation acquires a second spelling.
@@ -442,8 +398,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyAnnouncement, drawConceptionWindow, rollPregnancyLoss, pregnancyLossChanceAt, pregnancyLossEligible, rollBereavement, bereavementChanceAt, bereavementEligible, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, setWeightEnabled, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch } from './world/lifeBeat'
-export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyAnnouncement, drawConceptionWindow, rollPregnancyLoss, pregnancyLossChanceAt, pregnancyLossEligible, rollBereavement, bereavementChanceAt, bereavementEligible, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, setWeightEnabled, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, SMALL_TALK_FRAME_EXCLUDE_LAST, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkVoiceEntry, type SmallTalkFrame, type SmallTalkBranch }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyAnnouncement, drawConceptionWindow, rollPregnancyLoss, pregnancyLossChanceAt, pregnancyLossEligible, rollBereavement, bereavementChanceAt, bereavementEligible, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, setWeightEnabled, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type HeardRead, type ForkStopDriver, type ForkWant, type SmallTalkSituation, type SmallTalkVoiceEntry } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, deliverOwnKey, ownKeyDue, ownKeyThisWeek, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, latchedEpisode, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, landWedding, partnerNameFor, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, rollSpouseView, rollWedding, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, spouseViewEligible, spouseViewOccasionsAt, spouseViewOccasionThisWeek, weddingEligible, pregnancyChanceAt, pregnancyEligible, rollPregnancy, landPregnancyAnnouncement, drawConceptionWindow, rollPregnancyLoss, pregnancyLossChanceAt, pregnancyLossEligible, rollBereavement, bereavementChanceAt, bereavementEligible, landPregnancyPause, landBirth, motherhoodBandAt, decisionWeekOf, returnChanceFor, comebackAtReturn, setWeightEnabled, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, SMALL_TALK_FRAMES, PARTNER_NAME_POOL, SPOUSE_VIEW_OCCASIONS, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type HeardRead, type ForkStopDriver, type ForkWant, type SmallTalkSituation, type SmallTalkVoiceEntry }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -457,8 +413,8 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // ⭐⭐⭐ ROUND 29 PART THREE #16 adds §4's moving price – `assetWorthCents` (the ONE thing that turns
 // a holding into a number now that a market is in it), `marketSeasonMove` and `reportMarketSeason`.
 // The path itself is `world/market.ts` and is re-exported one line down.
-import { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reachableFundsCents, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents } from './world/shop'
-export { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reachableFundsCents, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents }
+import { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, marketSeasonMove, nameSuggestionsFor, ownedAssets, reachableFundsCents, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents } from './world/shop'
+export { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, marketSeasonMove, nameSuggestionsFor, ownedAssets, reachableFundsCents, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents }
 import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
 export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio }
 // ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
@@ -487,10 +443,8 @@ export { brandStrengthAt, strengthDecayAt }
 import { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandReachOf, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
 export { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandReachOf, brandSignalsOf, brandWeeklyGrossCents }
 export type { BrandSignals } from './world/brand'
-import { academyReputationOf, academyWeeklyIncomeCents, assetKidShareCents, assetWeeklyFamilyIncomeCents, assetWeeklyIncomeCents, merchFamilyWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
-export { academyReputationOf, academyWeeklyIncomeCents, assetKidShareCents, assetWeeklyFamilyIncomeCents, assetWeeklyIncomeCents, merchFamilyWeeklyIncomeCents, merchWeeklyIncomeCents }
-export type { MarketCrash } from './world/market'
-export type { ShopItem } from './world/shop'
+import { academyReputationOf, academyWeeklyIncomeCents, assetKidShareCents, assetWeeklyIncomeCents, merchFamilyWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
+export { academyReputationOf, academyWeeklyIncomeCents, assetKidShareCents, assetWeeklyIncomeCents, merchFamilyWeeklyIncomeCents, merchWeeklyIncomeCents }
 export type { FamilyMeans } from './world/means'
 
 // ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA DECLARES ITSELF IN `./world/state.ts` NOW.
@@ -509,11 +463,11 @@ export type { FamilyMeans } from './world/means'
 // other extraction in this barrel is: `ACADEMY_NOTICE`, `academySpokeThisWeek` and `reviewAcademy`
 // are imported from `engine/world` by the tests, the advance's stop set and the academy's own
 // module, and that public API must not change.
-import { ACADEMY_NOTICE, academySpokeThisWeek, reviewAcademy } from './world/phaseObligations'
-export { ACADEMY_NOTICE, academySpokeThisWeek, reviewAcademy }
+import { ACADEMY_NOTICE, reviewAcademy } from './world/phaseObligations'
+export { ACADEMY_NOTICE, reviewAcademy }
 // ⭐⭐ ROUND 26 #10, SECOND PASS – the tour's one compressed line at a college rest state. Re-exported
 // under its own name like every other decomposed symbol: `tests/` reads it from `engine/world`.
-export { announceCampusInterlude, campusDigestLine, FIELD_NEWS } from './world/fieldNews'
+export { campusDigestLine } from './world/fieldNews'
 // ⭐ R2-10 STEP 2, PHASE 2 – what the week costs, and the five private helpers it is made of.
 // `coachWorksThisWeek` is re-exported under its historical name: the development step below reads
 // it, the snapshot reads it, the tests read it, and there must go on being ONE of it.
@@ -525,18 +479,13 @@ export { coachWorksThisWeek }
 // ⭐ R2-10 STEP 2, PHASE 4 – the cohort's drift, her development, the knock or the college year's
 // own arrivals, and the three dates on the family's calendar.
 // ⭐ R2-10 STEP 2, PHASE 5 – the canonical AI brackets and the week's close.
-// `ensureSeason` is re-exported under its historical name; `recomputeRankAndMilestones` and
-// `housekeep` come back for the two OTHER closing paths that still live in this file –
-// `finalizeTournament`'s deferred step 5-6 and `skipEvent`.
-import { ensureSeason } from './world/bookkeeping'
-export { ensureSeason }
 // ⭐ v76 (the psychologist's year, wave 5): `PsyFocus` joins the barrel's type surface beside the
 // three that were already here – the year-focus union, declared in state.ts with the field it types.
 // The barrel is a COMPATIBILITY contract (hundreds of files import from `engine/world`), so a new
 // engine type that the seat's commands and T2's snapshot will both name belongs on it from the day it
 // exists rather than being reached for through `engine/world/state` by whoever needs it first.
-import type { BrandStrengthSeed, PendingTournament, PsyFocus, WorldState } from './world/state'
-export type { BrandStrengthSeed, PendingTournament, PsyFocus, WorldState }
+import type { PendingTournament, PsyFocus, WorldState } from './world/state'
+export type { PendingTournament, PsyFocus, WorldState }
 import { SAVE_SCHEMA_VERSION } from './world/state'
 export { SAVE_SCHEMA_VERSION }
 
