@@ -403,13 +403,49 @@ export async function deleteCareer(careerId: string): Promise<void> {
 
 // --- slots -------------------------------------------------------------------
 
+/**
+ * ⭐⭐ D-05 (principles review, 26.09) – ONE CAREER'S KEYS, AS A RANGE.
+ *
+ * The keys this file writes are career-scoped by construction: `autoSlot` builds
+ * `auto:{careerId}:{gen}` and `namedSlot` builds `manual:{careerId}:{name}`, and `migrateV1toV2`'s
+ * `rescope` goes through the same two helpers. So every record belonging to career X has a key
+ * prefixed `auto:X:` or `manual:X:`, and a prefix on a `keyPath: 'slot'` store is a bound range.
+ *
+ * ⚠ NO DB UPGRADE, AND THAT IS WHY THIS SHAPE WAS CHOSEN over a payload-free meta store: a range is
+ * a READ. `DB_VERSION` does not move, no `if (oldVersion < N)` block is added, and a database written
+ * by the previous build answers these queries on the first open.
+ *
+ * ⚠ `￿` IS THE UPPER BOUND and it is safe for what can follow the prefix: a generation is `a` or
+ * `b` and a name has been through `sanitizeName` ([a-z0-9-]), so nothing sorts above it. An astral
+ * character would arrive as a surrogate pair, whose first code unit is below `￿` too.
+ */
+function slotRange(prefix: 'auto' | 'manual', careerId: string): IDBKeyRange {
+  return IDBKeyRange.bound(`${prefix}:${careerId}:`, `${prefix}:${careerId}:￿`)
+}
+
 export async function listSlots(careerId: string): Promise<SlotMeta[]> {
   const database = await db()
-  const records = (await reqToPromise(tx(database, STORE, 'readonly').objectStore(STORE).getAll())) as SaveRecord[]
-  return records
-    .filter((r) => r.careerId === careerId)
-    .map(toMeta)
-    .sort((a, b) => b.savedAt - a.savedAt)
+  const saves = tx(database, STORE, 'readonly').objectStore(STORE)
+  // ⚠ BOTH REQUESTS ARE ISSUED BEFORE THE AWAIT, which is this file's standing rule rather than
+  // style: a transaction commits once its requests have all settled and control returns to the event
+  // loop, so a second `getAll` created AFTER awaiting the first would be posted to a finished
+  // transaction. `readLatestAutosave` builds its three reads the same way, for the same reason.
+  const [autos, named] = (await Promise.all([
+    reqToPromise(saves.getAll(slotRange('auto', careerId))),
+    reqToPromise(saves.getAll(slotRange('manual', careerId))),
+  ])) as [SaveRecord[], SaveRecord[]]
+  return (
+    [...autos, ...named]
+      // ⚠ THE `careerId` EQUALITY FILTER IS KEPT ON THE ALREADY-NARROWED SET, AND IT IS A BELT THAT
+      // EARNS ITS PLACE rather than a leftover. `makeCareerId` is `c-{seed}-{base36}` and the seed is
+      // whatever the player typed, so a careerId CAN contain a colon – and then one career's prefix
+      // is another's: `auto:c-x:y:a` starts with `auto:c-x:`. The range alone would hand the shorter
+      // career the longer one's records. Two ranges cost nothing to re-check, and the old scan's own
+      // filter is exactly the check that refuses it.
+      .filter((r) => r.careerId === careerId)
+      .map(toMeta)
+      .sort((a, b) => b.savedAt - a.savedAt)
+  )
 }
 
 /** ⭐⭐ D-01 – THE RECORD'S OWN ENVELOPE, alongside the world it carries. `restoreSlot` has to

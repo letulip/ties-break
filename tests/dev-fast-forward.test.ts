@@ -24,7 +24,7 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type StopReason } from '../src/shar
 import type { SeasonEvent } from '../src/engine/season/types'
 import { drainLifeBeats } from './helpers/career'
 import { workerHarness } from './helpers/workerHarness'
-import { region } from './helpers/source'
+import { codeOf, region } from './helpers/source'
 
 // =================================================================================================
 // P6 (c) — THE DEV FAST-FORWARD CANNOT OUTRUN A DECISION, in two layers.
@@ -53,7 +53,18 @@ describe('layer 1 — the source carries the ruling and the guard', () => {
   const worker = readFileSync(new URL('../src/worker/sim.worker.ts', import.meta.url), 'utf8')
 
   it('the ▶▶ button ships UNGATED — the owner ruling, not an accident', () => {
-    const button = more.split('\n').find((l) => l.includes('▶▶ 52 (dev)'))
+    // ⚠⚠ RE-AIMED 28.09 BY D-05 (T6.1), AND THE MISS IS INSTRUCTIVE RATHER THAN INCIDENTAL. This read
+    // the raw file and took the FIRST line mentioning `▶▶ 52 (dev)` – a proxy for the button's own
+    // markup that held only while nothing else on this screen named the button. D-05 gave More a
+    // second refresh watch whose note says the watch «covers the ▶▶ 52 (dev) button» and, in the same
+    // sentence, that App.vue mounts the screen through «a plain v-if chain with no keep-alive» – so the
+    // pin found a COMMENT and failed on the word `v-if` in prose that is not a gate and cannot be one.
+    // `codeOf` is the house answer to exactly this (tests/helpers/source.ts: a `not.toContain` over raw
+    // source fires on a note that merely NAMES the thing it forbids). Nothing is weakened: stripping
+    // comments can only remove false positives, because a real `v-if` on the button is not a comment.
+    const button = codeOf(more)
+      .split('\n')
+      .find((l) => l.includes('▶▶ 52 (dev)'))
     expect(button, 'the fast-forward button exists').toBeDefined()
     expect(button, 'no build gate on the button - see the ruling in the component comment').not.toContain('v-if')
     expect(more, 'the dead flag went with the gate').not.toContain('const isDev')
