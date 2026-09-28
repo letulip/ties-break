@@ -607,7 +607,12 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // in the same file, so the census never saw two writers. Now it does. ⚠ NOT WEAKENED: the list is
     // still EXACT, still in the walk's own order, a file joining it is still red, and the wire
     // assertions below are untouched – the move added no reader and removed none.
-    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS EIGHT. Left as it stands rather than renamed here –
+    // ⚠⚠ AND A NINTH ON THE NEXT COMMIT OF THE SAME TASK: §15 «the weight» moved to
+    // `world/lifeBeat/weight.ts`, and `rollPregnancyLoss` is the THIRD writer (`kind:
+    // 'pregnancy-loss'`). The three writers are now one per file, which is the shape A-06 is for – the
+    // census reads as a map of who may set the field rather than as «the life-beat file, and trust it».
+    // ⚠ NOT WEAKENED: still exact, still the walk's order, still red on a new file.
+    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS NINE. Left as it stands rather than renamed here –
     // it is CLAUDE.md's «a count written in PROSE survives a full gate» in a test's own name, reported
     // to the architect with T6.10 rather than fixed inside a span-move commit.
     expect(named).toEqual([
@@ -616,7 +621,8 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
       'engine/world/create.ts', // `createWorld`'s literal – null
       'engine/world/lifeBeat/bereavement.ts', // T6.10 – `rollBereavement` SETS it, kind `'bereavement'`
       'engine/world/lifeBeat/forkPsyCopy.ts', // T6.8 – `PsyRegister`'s type only, no read and no write
-      'engine/world/lifeBeat.ts', // `rollEnds` – the other place it is SET
+      'engine/world/lifeBeat/weight.ts', // T6.10 – `rollPregnancyLoss` SETS it, kind `'pregnancy-loss'`
+      'engine/world/lifeBeat.ts', // `rollEnds` – the third place it is SET
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
     ])
