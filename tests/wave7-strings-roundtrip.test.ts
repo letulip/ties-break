@@ -25,8 +25,19 @@
 //
 // MUTATION-VERIFIED: one character changed in a document row fails by id, and one character changed
 // in `ENGAGED_HER_LINE` fails the same row with the arrow the other way. Both are in the wave's report.
+//
+// ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06 – FROM ONE PATH TO THE MODULE SET, WHICH IS A WIDENING AND NOT A
+// WEAKENING. `world/lifeBeat.ts` is being split by beat kind, and `ENGAGED_HER_LINE`, `ENGAGED_DRY`
+// and `ENGAGED_HEADING` moved to `world/lifeBeat/weddingCopy.ts` byte for byte. This pin went RED on
+// E2 (`src/engine/world/lifeBeat.ts does not contain the row's text`), which is the pin doing its job
+// – so it now reads the module through `tests/worldSource.ts`' `engineModuleSource`, the helper that
+// exists for exactly this («read it through the reader, not at a path» – CLAUDE.md's source-pin
+// gotcha). Every assertion below is POSITIVE containment, so a wider corpus cannot make one pass for
+// the wrong reason; and the reader is `<name>.ts` PLUS `<name>/*.ts`, so the next kind module is
+// covered the day it lands with no edit here.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { engineModuleSource } from './worldSource'
 
 interface Row {
   id: string
@@ -35,7 +46,7 @@ interface Row {
 }
 
 const TABLE = 'docs/plans/life-wave-7-strings-2026-09.md'
-const HOME = 'src/engine/world/lifeBeat.ts'
+const HOME = "src/engine/world/lifeBeat.ts + world/lifeBeat/*.ts"
 const STATUS = 'DRAFT – awaiting his pass'
 
 // ⚠⚠ THE COUNT LIVES HERE AND NOWHERE IN PROSE (wave 9's finding verbatim).
@@ -59,7 +70,7 @@ function parseSectionOne(): Row[] {
 
 describe('wave 7 §1 – the engagement\'s strings table IS the corpus', () => {
   const rows = parseSectionOne()
-  const src = readFileSync(HOME, 'utf8')
+  const src = engineModuleSource('world/lifeBeat')
 
   it(`the parser found the table at all – ${EXPECTED_ROWS} rows`, () => {
     // A renamed heading or a reshaped row empties the parse; the count is the tripwire.
