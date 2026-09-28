@@ -351,6 +351,95 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   verification, which predicted exactly this; §A5 of
   [00-baseline.md](review-principles-2026-09-26/00-baseline.md) for the figure it replaces.)
 
+- **Which of the 58 double-shipped engine modules does the UI actually NEED?** Measured 28.09 by T6.7
+  at `e5800d32`, per-module, out of the built chunks' own source maps. The main chunk carries **79,464 B
+  of engine/shared/db/worker code in 64 modules, 72,944 B of it in 58 modules that are ALSO in the
+  worker chunk**; 6 modules, 6,520 B, are main-only and legitimately so (`engine/match/rally.ts`,
+  `worker/client.ts`, `engine/match/liveProb.ts`, `shared/matchViz.ts` and two protocol shapes – the
+  live match view and the RPC). That is §A5's 121,534 B, less what T3.1, T3.12 and this wave took out.
+  ⚠ **It is NOT the barrel, and no repoint touches it**: `src/engine/world.ts` is 0 B of both chunks,
+  and every one of the 58 is reached by a DIRECT UI import. So this is not a refactor waiting for a
+  scheduler; it is 58 yes/no questions whose answer is either «it is real» (the UI formats money, so it
+  reads `ECONOMY`) or «it is a leak», and the ones that say «leak» end in an owner decision about what a
+  screen may compute. That is why it is a row and not a W7 task – W7 is the notes wave.
+  ⭐ **The cut that makes it a morning's work rather than a survey: 20 of the 58 are WHOLLY in both
+  chunks** – their main-chunk share is at least 80 % of their worker share, so the UI evaluates
+  essentially the entire module – and those 20 are **53,029 B of the 72,944**. The other 38 are slivers
+  tree-shaking has already narrowed (19,915 B, and 12 of them are under 100 B). **Five rows are 58 % of
+  the total.** Start at the top and stop when the rows stop being worth a question.
+  ⚠ **The trigger is already on record and it is not a date**: `docs/now-next-later.md`'s own Later
+  section plans the install-ceiling raise for the first art round, and the ceiling is what this buys
+  back – 172 KiB of headroom today, and `engine/economy.ts` alone is 26,364 B of the main chunk against
+  `ECONOMY`'s handful of numbers that a screen actually formats. The first art round that needs the
+  raise is when this row gets picked up; before that it is measurement, not a fix.
+  (The first table on this page, deliberately: 58 named modules is actionable and «the chunks overlap»
+  is not. Bytes as the chunk's own source map attributes them – the minified bytes, not source lines.)
+
+  | module | main chunk | worker chunk |
+  | --- | ---: | ---: |
+  | `engine/economy.ts` | 26,364 | 26,785 |
+  | `engine/season/calendar.ts` | 7,984 | 8,254 |
+  | `engine/season/names.ts` | 2,730 | 2,802 |
+  | `engine/world/birthday.ts` | 2,655 | 19,699 |
+  | `engine/offers.ts` | 2,349 | 13,945 |
+  | `engine/match/scoring.ts` | 2,319 | 2,319 |
+  | `shared/dates.ts` | 2,029 | 1,109 |
+  | `engine/coach.ts` | 2,006 | 4,582 |
+  | `engine/match/engine.ts` | 1,946 | 1,957 |
+  | `engine/childhood.ts` | 1,706 | 1,705 |
+  | `engine/world/coachMarket.ts` | 1,669 | 13,676 |
+  | `engine/season/tournament.ts` | 1,366 | 6,246 |
+  | `shared/protocol/messages.ts` | 1,324 | 80 |
+  | `engine/match/point.ts` | 1,196 | 1,196 |
+  | `engine/plan.ts` | 1,139 | 1,298 |
+  | `engine/ending.ts` | 1,068 | 5,103 |
+  | `engine/match/style.ts` | 907 | 565 |
+  | `engine/match/closedForm.ts` | 820 | 820 |
+  | `engine/collegeOffer.ts` | 791 | 1,735 |
+  | `engine/development.ts` | 756 | 5,232 |
+  | `engine/world/lifeBeat.ts` | 754 | 31,404 |
+  | `engine/world/planner.ts` | 719 | 4,792 |
+  | `engine/world/psychologist.ts` | 715 | 2,599 |
+  | `shared/avatarEmotion.ts` | 707 | 1,656 |
+  | `engine/world/age.ts` | 606 | 1,378 |
+  | `engine/world/multiWeek.ts` | 585 | 457 |
+  | `engine/match/serveSpeed.ts` | 554 | 92 |
+  | `engine/world/medical.ts` | 477 | 6,377 |
+  | `engine/rng.ts` | 449 | 777 |
+  | `shared/protocol/ladder.ts` | 412 | 159 |
+  | `engine/world/player.ts` | 412 | 1,523 |
+  | `engine/world/labels.ts` | 361 | 360 |
+  | `shared/format.ts` | 360 | 145 |
+  | `engine/collegeLeague.ts` | 325 | 875 |
+  | `shared/protocol/profile.ts` | 308 | 2,720 |
+  | `engine/nationalTeam.ts` | 288 | 2,069 |
+  | `shared/money.ts` | 265 | 204 |
+  | `shared/countries.ts` | 143 | 198 |
+  | `engine/season/ranking.ts` | 122 | 1,999 |
+  | `engine/world/entryCaps.ts` | 119 | 4,221 |
+  | `engine/world/constants.ts` | 116 | 504 |
+  | `engine/knock.ts` | 113 | 4,192 |
+  | `engine/diary/facts.ts` | 105 | 1,352 |
+  | `engine/world/masseur.ts` | 105 | 3,888 |
+  | `engine/radar.ts` | 102 | 12,726 |
+  | `engine/world/matchNews.ts` | 86 | 1,799 |
+  | `engine/world/sparring.ts` | 83 | 1,840 |
+  | `db/saves.ts` | 76 | 6,042 |
+  | `engine/world/ledger.ts` | 70 | 2,284 |
+  | `engine/world/means.ts` | 60 | 373 |
+  | `engine/world/derivedCache.ts` | 56 | 1,456 |
+  | `engine/chemistry.ts` | 53 | 1,400 |
+  | `engine/world/create.ts` | 52 | 3,531 |
+  | `shared/protocol/offers.ts` | 16 | 16 |
+  | `engine/world/college.ts` | 16 | 8,054 |
+  | `engine/world/assets.ts` | 12 | 4,634 |
+  | `engine/world/state.ts` | 12 | 12 |
+  | `engine/migrations.ts` | 6 | 16,633 |
+
+  ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-02's null result above for
+  the arm and the provenance; §A5 of
+  [00-baseline.md](review-principles-2026-09-26/00-baseline.md) for the reading this replaces.)
+
 - **63 of the strings tables' rows have no roundtrip pin at all.** Six tables name
   `src/engine/world/lifeBeat.ts` as the home of **106** rows; three of them have a
   `*strings-roundtrip*` test and three do not – wave 5 (**54** rows), wave 6 (**4**) and wave 8 (**5**).
