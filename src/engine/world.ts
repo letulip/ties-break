@@ -39,6 +39,17 @@
 // more either: the window review went to world/phaseObligations.ts and the letters' own prune to
 // world/bookkeeping.ts, with the steps that call them (R2-10 step 2).
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
+//
+// ⚠⚠ A-P3-3 (26.09 lane A, applied 28.09 with T6.5): «WORLD-FREE» IS FALSE OF THREE OF THE SIX
+// CLAIMS ABOVE, AND THE RULE THEY WERE REACHING FOR IS «ACYCLIC». Measured on this tree, not
+// remembered: `offers.ts:86` imports `world/ledger`, `kidLife.ts:37` imports `world/age` and
+// `diary/weekNotes.ts:14` imports `world/birthdayGift` – every one of them at RUNTIME, so for those
+// three the dependency does not run one way. `radar.ts`, `knock.ts` and `coachLoad.ts` still take
+// nothing from the package at all. The lane counted 16 such edges from 10 engine-root / diary modules
+// into `world/*` (C3), which makes a leaf reading one PART of the package the norm here rather than a
+// defect – and the property that actually holds is not a promise in a comment but a test,
+// `tests/import-cycles.test.ts`. What a leaf may never do is import `world.ts` itself, the barrel,
+// and that is the edge the package's own type-only rule protects (see `world/tick.ts`'s banner).
 import { seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
 import { activeLadderOf, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
