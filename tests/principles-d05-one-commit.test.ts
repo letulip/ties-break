@@ -40,7 +40,7 @@ import { readFileSync } from 'node:fs'
 import { createPinia, setActivePinia } from 'pinia'
 import { request } from '../src/worker/client'
 import { REPLY_BY_COMMAND, type Snapshot, type ToUI } from '../src/shared/protocol'
-import { commitAutosave, closeDb, listSlots, writeNamed } from '../src/db/saves'
+import { commitAutosave, closeDb, listCareers, listSlots, writeNamed } from '../src/db/saves'
 import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 // Comments are not code, and a missing marker throws rather than widening the slice – the house
@@ -285,6 +285,55 @@ describe("D-05 (2) – listSlots reads only its own career's two key ranges", ()
       (r) => !r.slot.startsWith(`auto:${r.careerId}:`) && !r.slot.startsWith(`manual:${r.careerId}:`),
     )
     expect(disagreeing.map((r) => `${r.slot} claims ${r.careerId}`), 'a key that disagrees with its own row').toEqual([])
+  })
+
+  // ===============================================================================================
+  // (3) D-P4 – ONE BUILDER FOR THE CAREERS ROW, AND THE HARM THE FINDING NAMES
+  // ===============================================================================================
+  //
+  // The review's evidence for folding the two hand-built rows together is not tidiness, it is a cost
+  // already paid: when the age clock needed her birthday on the Careers list (09.08), `birthMonth` and
+  // `birthDay` had to be added in TWO places, and a field added to one path only reaches the list for
+  // autosaves and not for named saves, with nothing to say so. So this case drives BOTH write paths
+  // and asks the same question of both rows.
+  //
+  // ⚠ MUTATION ARM (measured 28.09): delete `birthDay: world.profile.birthDay` from `careerRowFor`
+  // (db/saves.ts) → «both write paths put her birthday on the row» goes RED on both paths at once,
+  // which is the property one builder buys. Before D-P4 the same deletion in ONE of the two literals
+  // reddened nothing, because no test asked either path.
+  it('⭐ D-P4 – both write paths put the same career row on disk, her birthday included', async () => {
+    const careerId = 'c-d05-row'
+    const world = worldAt('d05row', 6, careerId)
+    world.profile = { ...world.profile, birthMonth: 3, birthDay: 17 }
+
+    await commitAutosave(world, 1)
+    const afterAuto = (await listCareers()).find((c) => c.careerId === careerId)!
+    expect(afterAuto, 'the autosave path wrote a careers row').toBeTruthy()
+    expect(afterAuto.birthMonth, 'the autosave row carries her birth month').toBe(3)
+    expect(afterAuto.birthDay, 'the autosave row carries her birth day').toBe(17)
+
+    await writeNamed(world, 'backup', 2)
+    const afterNamed = (await listCareers()).find((c) => c.careerId === careerId)!
+    expect(afterNamed.birthMonth, 'the named row carries her birth month too').toBe(3)
+    expect(afterNamed.birthDay, 'the named row carries her birth day too').toBe(17)
+
+    // ⚠ AND THE FORWARD-ONLY RULE IS `writeNamed`'s, SHARED WITHOUT BECOMING THE AUTOSAVE PATH'S
+    // PROBLEM. A named save whose revision is BEHIND the row must not drag the resume pointer back;
+    // the autosave path can never be behind, because its own CAS refuses anything that is not
+    // strictly ahead. Both halves matter, so both are asserted.
+    const ahead = worldAt('d05row', 40, careerId)
+    ahead.profile = { ...ahead.profile, birthMonth: 3, birthDay: 17 }
+    await commitAutosave(ahead, 3)
+    const atThree = (await listCareers()).find((c) => c.careerId === careerId)!
+    expect(atThree.revision, 'the autosave moved the row forward').toBe(3)
+
+    const stale = worldAt('d05row', 6, careerId)
+    stale.profile = { ...stale.profile, birthMonth: 3, birthDay: 17 }
+    await writeNamed(stale, 'from-a-stale-tab', 2)
+    const afterStale = (await listCareers()).find((c) => c.careerId === careerId)!
+    expect(afterStale.revision, 'a behind-the-row named save did not regress the revision').toBe(3)
+    expect(afterStale.week, '...nor the week the resume pointer reads').toBe(atThree.week)
+    expect(afterStale.lastPlayedAt, '...and saving still counts as playing').toBeGreaterThan(atThree.lastPlayedAt)
   })
 
   it('⚠ the careerId filter is a BELT and it earns its place: one careerId may prefix another', async () => {

@@ -199,6 +199,76 @@ function txDone(transaction: IDBTransaction, what: string): Promise<void> {
   })
 }
 
+/**
+ * ⭐ D-P4 (principles review, 26.09) – ONE BUILDER FOR THE SAVE RECORD, AND ONE FOR THE CAREERS ROW.
+ *
+ * `runAutosaveTx` and `writeNamed` each built both by hand, field for field, and the review's
+ * evidence is the cost rather than the tidiness: when the age clock needed her birthday on the
+ * Careers list (09.08), `birthMonth` and `birthDay` had to be added in TWO places, and a field added
+ * to one of them reaches the list for autosaves and not for named saves – or the other way round –
+ * with nothing to say so. Two spellings of one fact.
+ *
+ * ⚠ `migrateV1toV2`'s HISTORICAL ROW STAYS LITERAL and deliberately does not come through here. It
+ * writes `kidName: 'Vera'` and `country: 'US'` – facts about what v1 saves held, not about a world –
+ * and it is an append-only migration whose output must never move under a later field.
+ */
+function recordFor(
+  world: WorldState,
+  slot: string,
+  savedAt: number,
+  revision: number,
+  payload: Uint8Array,
+  checksum: Uint8Array,
+): SaveRecord {
+  return {
+    slot,
+    careerId: world.careerId,
+    savedAt,
+    week: world.week,
+    seed: world.seed,
+    bytes: payload.byteLength,
+    kidName: world.profile.kidName,
+    country: world.profile.country,
+    revision,
+    checksum,
+    payload,
+  }
+}
+
+/**
+ * The careers row for a world that has just been written, with the FORWARD-ONLY rule both callers
+ * need. `week` and `revision` move only when this write's revision is not behind the row – a named
+ * save from a stale tab must not regress the career list's resume pointer – while `lastPlayedAt`
+ * always bumps, because saving is playing (owner, 29.07).
+ *
+ * ⚠ THE RULE IS `writeNamed`'s AND IT IS FREE FOR THE AUTOSAVE PATH, which is what makes one helper
+ * honest rather than a merge of two behaviours. `runAutosaveTx` wrote `week`/`revision`
+ * unconditionally – and it could, because its own CAS has already refused anything that is not
+ * strictly ahead (`revision <= diskRevision` fails, and `adopt` allocates `diskRevision + 1`). So
+ * `ahead` is provably true on every autosave commit and the row it produces is byte-identical.
+ */
+function careerRowFor(
+  world: WorldState,
+  existing: CareerMeta | undefined,
+  savedAt: number,
+  revision: number,
+): CareerMeta {
+  const ahead = revision >= (existing?.revision ?? 0)
+  return {
+    careerId: world.careerId,
+    kidName: world.profile.kidName,
+    country: world.profile.country,
+    seed: world.seed,
+    createdAt: existing?.createdAt ?? savedAt,
+    lastPlayedAt: savedAt,
+    week: ahead ? world.week : (existing?.week ?? world.week),
+    revision: ahead ? revision : existing?.revision,
+    // One clock, on the Careers list too (09.08) – the row printed the band before this.
+    birthMonth: world.profile.birthMonth,
+    birthDay: world.profile.birthDay,
+  }
+}
+
 function toMeta(r: SaveRecord): SlotMeta {
   return {
     slot: r.slot,
@@ -318,34 +388,9 @@ async function runAutosaveTx(
         else if (!recB) gen = 'b'
         else gen = recNewer(recA, recB) ? 'b' : 'a'
 
-        const record: SaveRecord = {
-          slot: autoSlot(world.careerId, gen),
-          careerId: world.careerId,
-          savedAt,
-          week: world.week,
-          seed: world.seed,
-          bytes: payload.byteLength,
-          kidName: world.profile.kidName,
-          country: world.profile.country,
-          revision,
-          checksum,
-          payload,
-        }
-        const meta: CareerMeta = {
-          careerId: world.careerId,
-          kidName: world.profile.kidName,
-          country: world.profile.country,
-          seed: world.seed,
-          createdAt: existing?.createdAt ?? savedAt,
-          lastPlayedAt: savedAt,
-          week: world.week,
-          revision,
-          // One clock, on the Careers list too (09.08) – the row printed the band before this.
-          birthMonth: world.profile.birthMonth,
-        birthDay: world.profile.birthDay,
-        }
+        const record = recordFor(world, autoSlot(world.careerId, gen), savedAt, revision, payload, checksum)
         saves.put(record)
-        careers.put(meta)
+        careers.put(careerRowFor(world, existing, savedAt, revision))
         out = { meta: toMeta(record), revision }
       }
       aReq.onsuccess = () => {
@@ -477,6 +522,9 @@ export async function deleteSlot(slot: string): Promise<void> {
  * never CAS-refused – but the careers row only moves FORWARD: `week`/`revision` update only when
  * this write's revision is not behind the row (a named save from a stale tab must not regress the
  * career list's resume pointer), while `lastPlayedAt` always bumps (saving is playing).
+ *
+ * ⭐ D-P4 (28.09): that forward-only rule now lives in `careerRowFor`, which the autosave path shares
+ * – see the helper for why sharing it changes nothing there.
  */
 export async function writeNamed(world: WorldState, name: string, revision: number): Promise<SlotMeta> {
   // ⭐⭐ E-06 (05.09 engine review) – A NAME THE SANITISER CANNOT KEEP IS NOT A SLOT. `sanitizeName`
@@ -504,39 +552,13 @@ export async function writeNamed(world: WorldState, name: string, revision: numb
       /* the abort that follows carries transaction.error */
     }
 
-    const record: SaveRecord = {
-      slot: namedSlot(world.careerId, name),
-      careerId: world.careerId,
-      savedAt,
-      week: world.week,
-      seed: world.seed,
-      bytes: payload.byteLength,
-      kidName: world.profile.kidName,
-      country: world.profile.country,
-      revision,
-      checksum,
-      payload,
-    }
+    const record = recordFor(world, namedSlot(world.careerId, name), savedAt, revision, payload, checksum)
     transaction.objectStore(STORE).put(record)
 
     const careers = transaction.objectStore(CAREERS)
     const metaReq = careers.get(world.careerId)
     metaReq.onsuccess = () => {
-      const existing = metaReq.result as CareerMeta | undefined
-      const ahead = revision >= (existing?.revision ?? 0)
-      careers.put({
-        careerId: world.careerId,
-        kidName: world.profile.kidName,
-        country: world.profile.country,
-        seed: world.seed,
-        createdAt: existing?.createdAt ?? savedAt,
-        lastPlayedAt: savedAt,
-        week: ahead ? world.week : (existing?.week ?? world.week),
-        revision: ahead ? revision : existing?.revision,
-        // One clock, on the Careers list too (09.08) – the row printed the band before this.
-        birthMonth: world.profile.birthMonth,
-        birthDay: world.profile.birthDay,
-      } satisfies CareerMeta)
+      careers.put(careerRowFor(world, metaReq.result as CareerMeta | undefined, savedAt, revision))
       out = toMeta(record)
     }
   })
