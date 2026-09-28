@@ -692,13 +692,17 @@ body {
      paragraph measure on a phone (343px at 15px type) taken out to a desktop's 13px.» Four files
      agreeing in prose is exactly the state `--app-pad-x` was in before it drifted.
      Consumers: `.ob-shell`'s three parts (OnboardingWizard.vue), `.prologue-card` (PrologueCard.vue),
-     `.money-share` and `.shelf-cats` (MoneyScreen.vue). All four are inside `min-width` queries, so
-     not one phone pixel moves. */
+     `.money-share` (MoneyScreen.vue) and `.shelf-cats` (ShopPanel.vue). All four are inside
+     `min-width` queries, so not one phone pixel moves.
+     ⚠ `.shelf-cats`' FILE CORRECTED 28.09 (T6.4): it left MoneyScreen.vue with the shop in T6.3 ·
+     E-11, and a comment that sends the next reader to the wrong file is the one rot a green gate
+     cannot see – no test reads prose. */
   --read-max: 640px;
   /* ⭐⭐ U-09 – THE PHONE'S OWN CARD, WHICH IS THE FLOOR EVERY DESKTOP GRID COUNTS UP FROM. Spelled
      twice as `minmax(343px, 1fr)`, and both sites argue it identically: `.tier-block` here («the
      floor is the phone's card, and the count follows from it») and `.shop-family`
-     (MoneyScreen.vue: «as many as fit at no less than the phone's own card width»). 343 is
+     (ShopPanel.vue – file corrected 28.09, T6.4, the shelf left MoneyScreen.vue in T6.3 · E-11:
+     «as many as fit at no less than the phone's own card width»). 343 is
      375 − 2 × `--app-pad-x`, i.e. the content width of the narrowest phone the app is drawn for.
      ⚠ NOT DERIVED FROM `--app-pad-x` IN THE CALC, deliberately: that would make it a function of a
      375px viewport that is nowhere in the expression, and the grids want the measured card, not an
@@ -2362,24 +2366,19 @@ button.primary.risky {
 }
 
 /* A3: no bar, no panel, no border – just the button, floating. The row still POSITIONS it (fixed,
-   centred, above the tab bar) and still catches nothing, so the page scrolls under it. */
+   centred, above the tab bar) and still catches nothing, so the page scrolls under it.
+   ⭐⭐ T6.4 · F-09 (28.09) – THE BOX IS `.floating-cta` NOW, beside `.dialog-card`, and the markup
+   carries both classes. Ten declarations left this rule for it – `position: fixed`, the three round-36
+   tokens (`--app-bar-left`, `--app-bar-bottom`, `--app-bar-max`), the centring transform, the width,
+   `display: flex`, the 16px gutter, `pointer-events: none` and `z-index: 39` – because `.cal-go` and
+   `.week-proceed` stated all ten as well and round 36 had to visit each of them by hand. What stays
+   here is what makes this one the SHELL's bar: it centres its single pill, where the calendar's copy
+   stacks a note above one.
+   ⚠ THE CLASS NAME IS UNCHANGED AND THE ROUND-13 REFUSAL IS UNTOUCHED: no tab screen may carry the
+   string `next-week-bar`, and none does – the shared name is neutral precisely so that pin keeps its
+   teeth (tests/round13-nav.test.ts). */
 .next-week-bar {
-  position: fixed;
-  /* ⭐ ROUND 36 PHASE 3 – the middle of the COLUMN, which below 1024 is the middle of the window and
-     computes to the 50% this line has always said. See `--app-bar-left`. */
-  left: var(--app-bar-left);
-  transform: translateX(-50%);
-  bottom: var(--app-bar-bottom);
-  width: 100%;
-  /* Follows the column with the tab bar it stands above (round 36 phase 1). The button inside is
-     centred, so the only thing this width decides is where the CTA sits – and it must be the middle
-     of the column, not the middle of a 520px box left behind under a wider one. */
-  max-width: var(--app-bar-max);
-  display: flex;
   justify-content: center;
-  padding: 0 16px;
-  pointer-events: none;
-  z-index: 39;
 }
 
 /* ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, floated just above the bar. The visual
@@ -2387,21 +2386,18 @@ button.primary.risky {
    beside the week button» surface – same pill radius, same warning hairline, same 11.5px. Absolute
    against the bar's own fixed box so the two buttons never move under the finger (no layout shift),
    and `pointer-events: none` so the press that answers the ask is the same press the bar already
-   takes. */
+   takes.
+   ⭐⭐ T6.4 · F-09 (28.09) – AND THE VOCABULARY IS A RULE NOW RATHER THAN A SENTENCE. The eight
+   declarations this note describes as «`.cal-go-note`'s» are `.floating-cta-note` beside
+   `.dialog-card`, and the markup carries both classes. What is left below is what is genuinely this
+   copy's own: WHERE it sits (absolute against the bar's own fixed box, so the two buttons never move
+   under the finger) and that it passes the press through. */
 .next-week-note {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
-  margin: 0;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--panel);
-  border: var(--stroke-hair) solid var(--warning);
-  font-size: 11.5px;
-  color: var(--warning);
-  text-align: center;
   pointer-events: none;
 }
 
@@ -2742,6 +2738,293 @@ button.primary.risky {
   max-width: 320px;
   max-height: 100%;
   overflow-y: auto;
+}
+
+/* =================================================================================================
+   ⭐⭐⭐ T6.4 · F-09 (28.09) – THE SHARED CSS OBJECTS, BESIDE `.dialog-card` BECAUSE THAT IS THE ONE
+   THIS FILE ALREADY SHARED.
+   =================================================================================================
+   Eleven objects were pasted across two to four sites each, and the cost is on the record rather than
+   predicted: round 36 phase 1 put the floating CTA on `--app-bar-max` HERE, and phase 2 then had to
+   carry the same line to the other two copies by hand – «THE THIRD OF THE THREE FLOATING CTA BOXES,
+   ONTO THE TOKEN» (CalendarScreen.vue), «three copies of one floating-CTA box, and phase 1 moved only
+   the one that lives in the sheet» (ThisWeekScreen.vue). Those two notes stay where they are: they are
+   the evidence, and they are about a chase that happened, not about this rule.
+
+   HOW EACH ONE IS USED. The component adds the shared class BESIDE its own and keeps its own rule for
+   the deltas only. Every computed value is byte-identical to what it was before – measured, not
+   argued, in `tests/component/principles-f09-shared-objects.test.ts`, which reads all 422 declarations
+   of all 45 family readings through the real cascade at 375x667.
+
+   ⚠⚠ THE NAMES ARE NEUTRAL, AND THAT IS THE WHOLE REASON THIS LANDED THIS TIME. 05.09 proposed the
+   same merge (C.6) and nobody shipped it, because `tests/round13-nav.test.ts` refuses the string
+   `next-week-bar` inside a tab screen – the pin that keeps the irreversible ADVANCE act in the App
+   shell (see `.next-week-bar` above, and the notes at `.cal-go` / `.week-proceed`). A shared rule
+   named after the shell's bar would have forced that guard to be weakened. `.floating-cta` is a name
+   about the BOX, so the guard keeps its teeth and the geometry is shared anyway: the refusal at
+   round13-nav.test.ts is untouched and still reads every tab screen for the literal string.
+
+   ⚠ ZERO PROPERTY OVERLAP WITH THE GLOBAL MEMBERS, BY CONSTRUCTION, AND IT IS NOT TIDINESS.
+   `.next-week-bar`, `.next-week-note`, `.knock-proceed` and `.cm-art` live in THIS file, so they are
+   (0,1,0) exactly like the objects below and a shared/own collision would be settled by SOURCE ORDER –
+   which a browser and happy-dom resolve in OPPOSITE directions (the hazard `.tier-block .cm-art` and
+   `PrologueCard.vue:1449-1452` both record). So nothing below is re-declared by a global member; the
+   scoped members are free to override, because a scoped selector carries its `data-v-…` attribute and
+   is (0,2,0) in both engines.
+
+   ⚠ WHAT DELIBERATELY DID NOT MOVE. The two `img` rules of the portrait strip: `.cm-art img`'s 12 %
+   and `.staff-art img`'s 38 % are two separate measurements over two different sets of masters (16
+   coaches framed head-on against 2 women with hair past the jaw), and F-09 says so. The strip's own
+   box is the object; the window inside it is not.
+   ================================================================================================= */
+
+/* THE FLOATING CTA'S BOX – fixed, centred on the reading column, above the bar's clearance, and
+   transparent to taps so the page scrolls under it while only the pill takes a press.
+   Members: `.next-week-bar` (the App shell, this file), `.cal-go` (CalendarScreen.vue),
+   `.week-proceed` (ThisWeekScreen.vue). All three tokens are round 36's: see `--app-bar-left`. */
+.floating-cta {
+  position: fixed;
+  left: var(--app-bar-left);
+  transform: translateX(-50%);
+  bottom: var(--app-bar-bottom);
+  width: 100%;
+  max-width: var(--app-bar-max);
+  display: flex;
+  padding: 0 16px;
+  pointer-events: none;
+  z-index: 39;
+}
+
+/* ONE LINE BESIDE THE WEEK BUTTON – the app's established «a sentence floated by the CTA» surface:
+   pill radius, warning hairline, 11.5px. Members: `.cal-go-note` (CalendarScreen.vue) and
+   `.next-week-note` (this file). The vocabulary is `.cal-go-note`'s and always was, which is what
+   `.next-week-note`'s own note above says; this is that sentence as a rule.
+   ⚠ HOW IT IS POSITIONED IS NOT HERE, and that is a real difference rather than an omission: the
+   calendar's note is a flow child of `.cal-go` and takes the press, the shell's is absolute against
+   the bar's fixed box and passes it through. Both stay per site. */
+.floating-cta-note {
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  border: var(--stroke-hair) solid var(--warning);
+  font-size: 11.5px;
+  color: var(--warning);
+  text-align: center;
+}
+
+/* THE EXPORT'S FOUR-STOP VERTICAL SCRIM, over the page colour, so a bright court never eats the type
+   at either end. Members: `.cal-card-scrim` (CalendarScreen.vue), `.event-art-scrim`
+   (SeasonScreen.vue) – the pair jscpd names, and `.cal-card-scrim`'s own note already called it «the
+   same four-stop shape the Season card's uses».
+   ⚠ `.week-art-scrim` IS NOT A MEMBER AND THAT IS MEASURED, NOT AN OVERSIGHT. It is two gradients at
+   100deg and 180deg over a different colour – dark on the left where the words are, clear on the right
+   where she is – so it shares the box and none of the paint. */
+.art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 17, 23, 0.55) 0%,
+    rgba(11, 17, 23, 0.12) 34%,
+    rgba(11, 17, 23, 0.55) 78%,
+    rgba(11, 17, 23, 0.86) 100%
+  );
+}
+
+/* A DIALOG'S KICKER AND ITS TITLE – the two lines every long card opens with. Members: ForkDialog,
+   PrologueCard, PrologueHandover, RetirementDialog.
+   ⚠⚠ NOT `ui/Eyebrow.vue`, AND THE DISTINCTION IS THE COMPONENT'S OWN. Eyebrow's header rules the
+   11px section label on a PAGE; this is the kicker over a dialog's title, and merging the two would
+   put one rule in charge of two objects that are allowed to move apart. F-09 says so in as many
+   words. */
+.dialog-kicker {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* …and the title under it. `.handover-title` keeps `margin-bottom: 10px` as its own delta: that card
+   has no art above the block and the extra two pixels are its own measurement. */
+.dialog-title {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+/* A PHOTOGRAPH WITH NO BOTTOM EDGE – the box of the fade that takes a hero picture into the surface
+   under it. Members: `.diary-hero-fade` (HomeScreen.vue), `.prologue-hero-fade` (PrologueCard.vue),
+   `.plo-hero-fade` (PrologueLocalOpen.vue).
+   ⚠ THE GRADIENT ITSELF STAYS PER SITE, because each one ends in ITS OWN surface's colour – that is
+   the whole argument Home's note makes («it takes the photograph into --panel by 100%, which is what
+   makes the picture read as the page itself») and round 35 #2 re-made for the prologue card. Home
+   fades from 46 % at 0.72; the two prologue surfaces from 52 % at 0.55. Three measurements, one box. */
+.hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ⭐ THE ADVANCE IDIOM – the one control on a card that records the answer and moves on.
+   `--accent-wash` on `--accent-soft` is what this app paints a way ON (round 40 #1), at the answer
+   rows' own box metrics so the card does not jump when it appears, every colour a declared token with
+   no fallback (round-17 #3). Members: `.birthday-proceed` (BirthdayDialog.vue), `.knock-proceed`
+   (this file), `.life-beat-proceed` and `.life-beat-listen-done` (LifeBeatDialog.vue).
+   ⚠ `margin-top: 8px` IS A DELTA AND NOT PART OF THE OBJECT: three of the four carry it and the
+   detour's `done` does not, which is the one thing that separates the pair LifeBeatDialog's note calls
+   «the SAME rule on purpose». */
+.dialog-proceed {
+  width: 100%;
+  padding: 11px 13px;
+  text-align: center;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  background: var(--accent-wash);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.dialog-proceed:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* THE PORTRAIT STRIP – 96px down the left of a card, clipped, fading out at the halfway stop so what
+   goes is the background past his shoulder rather than his jaw. Members: `.cm-art` (this file, the
+   coach roster) and `.staff-art` (SupportStaffTab.vue), whose own note already said «THE MASK IS THE
+   COACH STRIP'S, STOP FOR STOP» – the note recorded the identity, and this is the identity.
+   ⚠ THE MASK'S STOPS ARE PERCENTAGES OF THE BOX, so the fade reaches transparent exactly at the clip
+   line on both cards although the two cards are different heights. See `.cm-art img` below for why
+   `object-fit: cover` on this box is a horizontal clip and nothing else (the A2c/d ruling), and why
+   the two `object-position` values stay per strip. */
+.portrait-strip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 96px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+}
+
+/* A DIALOG'S ANSWER ROW, TRANSPARENT – three answers, one weight, no primary and no ordering cue
+   beyond the order they are written in. Members: `.fork-answer` (ForkDialog.vue), `.retire-answer`
+   (RetirementDialog.vue). */
+.dialog-option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 14px;
+  border: var(--stroke-hair) solid var(--ink-dim);
+  border-radius: var(--radius-control);
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.dialog-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* …AND THE ACCENT FORM OF IT: the row that is a way ON rather than a choice between three (round 40
+   #1's distinction, in the tokens that round set). Members: `.prologue-answer` (PrologueCard.vue),
+   `.handover-answer` (PrologueHandover.vue).
+   ⚠⚠ IT IS A SIBLING OF `.dialog-option` AND NOT A MODIFIER LAYERED ON IT, WHICH IS MEASURED RATHER
+   THAN STYLISTIC – the `--` in the name is F-09's own spelling and it is kept, but an element may not
+   carry both. The transparent form declares `font: inherit`, which resets font-family, weight and
+   line-height to the card's; the accent form carries no `font` at all and therefore keeps the app's
+   `button` metrics. Layering would silently change the typeface of every answer in the prologue and in
+   the handover – the one thing F-09 forbids – and restoring it would mean hard-coding here what the
+   cascade gives, which is the kind of value that goes stale without a reader noticing. Seven of the
+   eleven declarations differ between the two forms, so there is no base worth sharing: what is shared
+   is the NAME, so a reader meets one family. */
+.dialog-option--accent {
+  width: 100%;
+  padding: 11px 13px;
+  text-align: left;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  background: var(--accent-wash);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.dialog-option--accent:hover:not(:disabled) {
+  background: var(--accent-fill);
+}
+
+.dialog-option--accent:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* =================================================================================================
+   ⭐ T6.4 (28.09) – AND THE FOUR OBJECTS T6.3 HAD TO COPY, COLLAPSED HERE UNDER THEIR OWN NAMES.
+   =================================================================================================
+   When the shop's markup left `MoneyScreen.vue` for `ShopPanel.vue` (T6.3 · E-11), these four rules
+   had to be DUPLICATED into the new component's scoped block: a `<style scoped>` block paints only the
+   component it is written in, so the shelf plate and the shelf's own switcher would otherwise have
+   rendered unstyled. Each copy carried a note naming T6.4 as where they collapse, and this is it.
+
+   ⚠ NO RENAME AND NO MARKUP CHANGE, because each class has exactly TWO users in all of `src` –
+   `MoneyScreen.vue` and `ShopPanel.vue` – re-counted before the move over class attributes and over
+   selectors alike. A global rule reaches any element with the class, so that count is the whole
+   licence for promoting rather than sharing under a third name. Both scoped copies are gone.
+
+   ⚠ WHY THE `.money-` PREFIX STAYS. It is not tidiness debt: invariant 4's corollary is that a name
+   nobody had to change cannot regress, and `tests/component/principles-e11-shop-identity.test.ts`'s
+   render-identity fixture reads these class names off the shop's own DOM. A neutral rename would have
+   been a second change riding on a merge that is supposed to move nothing.
+   ================================================================================================= */
+
+/* The panel plate's own top rhythm, and the small note under a panel's heading. */
+.money-panel {
+  margin-top: 14px;
+}
+
+.money-panel-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+/* The period switcher's slot, and the second row of tabs INSIDE a chapter. The wrap is a 375px
+   argument rather than a taste one: six segments at the shared pill metrics ask ~450px of the 343px a
+   phone has inside `--app-pad-x`, and `.tab-row` is a bare `display: flex` with no wrap, so the
+   overflow would push the DOCUMENT sideways – and «at 375 px the app does not scroll sideways» is one
+   of the two invariants `e2e/responsive.spec.ts` has held since it was written. The wrap is the
+   guarantee that a longer word, a larger font or a 320px screen costs a second line instead of a
+   broken page. */
+.money-window {
+  margin-top: 14px;
+}
+
+/* ⚠⚠ ONE CLASS HEAVIER THAN THE OTHER THREE, AND THAT IS THE PROMOTION'S ONE REAL COST. While this
+   rule was SCOPED it was `.money-subtabs[data-v-…]`, i.e. (0,2,0), and it beat `.tab-row`'s own
+   `border-radius: var(--radius-pill)` (0,1,0) further down this file. A bare `.money-subtabs` here
+   would TIE with `.tab-row` and be settled by SOURCE ORDER – and `.tab-row` is ~1,400 lines below, so
+   a browser would take the pill radius back while happy-dom kept the card radius, i.e. a regression no
+   mounted test could see. `.tab-row.money-subtabs` is (0,2,0) and wins in both engines, which is the
+   argument `.tab-row.as-bare` twelve hundred lines down already makes in these words: «the same
+   argument each copy used to make with a scoped data-v attribute, now made once». Both shipped sites
+   ARE a `.tab-row` (it is `SegmentedRow`'s root), so the selector matches everywhere the class does. */
+.tab-row.money-subtabs {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  border-radius: var(--radius-card);
 }
 
 .dialog-message {
@@ -5437,17 +5720,16 @@ tr.kid-row td {
    at the foot of this file, where the numbers it supersedes live.
 
    ⚠ NOTHING ABOUT THE A2c/d RULING IS SPENT – see `.cm-art img` below for why `object-fit: cover` on
-   this box is a HORIZONTAL clip and nothing else. */
-.cm-art {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 96px;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
-}
+   this box is a HORIZONTAL clip and nothing else.
+
+   ⭐⭐ T6.4 · F-09 (28.09) – THE BOX IS `.portrait-strip` NOW, beside `.dialog-card`, and
+   `CoachMarketScreen.vue`'s span carries both classes. All eight declarations went: `.staff-art`
+   (SupportStaffTab.vue) stated the same eight, «THE MASK IS THE COACH STRIP'S, STOP FOR STOP», and
+   jscpd read the two rules as one clone. Everything ABOVE and BELOW this line stays exactly where it
+   is – the 96px is argued here because this is the card the sweep was measured on, and `.cm-art img`'s
+   12% is a separate measurement from the staff strip's 38%, so the two `img` rules do not share. The
+   overrides `.cm-row.current .cm-art` (112px) and `.cm-row.blocked .cm-art` are (0,2,0) and keep
+   winning over the shared (0,1,0) in either engine. */
 /* ⭐⭐ ROUND 42 #3 – THE WINDOW IS AIMED AT THE FACE NOW, AND IT COSTS THE 28.07 RULING NOTHING.
    `overflow: hidden` on the strip above always kept the LEFT edge of the picture and threw the rest
    away; a coach painted a little right of centre therefore lost his far cheek before anything else.
@@ -5758,8 +6040,9 @@ tr.kid-row td {
      189.03 → 124.34 at 1060, 160.69 → 124.34 at 1440.
 
      ⭐ AND `align-items: start` IS LITERALLY «КАК НА ЭКРАНАХ МАГАЗИНА»: `.shop-family` in
-     MoneyScreen.vue is the same two-up grid on the same `auto-fill` ladder and already declares it,
+     ShopPanel.vue is the same two-up grid on the same `auto-fill` ladder and already declares it,
      which is why a car nobody bought does not stand as tall as one that was.
+     ⚠ FILE CORRECTED 28.09 (T6.4) – it said MoneyScreen.vue, where the shelf lived until T6.3 · E-11.
 
      ⚠ WHAT D4 KEEPS. Its «во всю высоту» reading survives where it was actually about the PORTRAIT –
      `.cm-art` is still `top: 0; bottom: 0`, so the picture still fills its whole card with no band of
@@ -6101,24 +6384,15 @@ button.linkish:hover:not(:disabled) {
    `--accent-soft` is what this app paints a way ON, round 40 #1), the same box metrics as the rows
    above it, every colour a declared token with no fallback (round-17 #3). It records the selected
    branch and is the card's last element while rendered - the phone-fit measurement reads the way
-   out off it. */
+   out off it.
+   ⭐⭐ T6.4 · F-09 (28.09) – THE IDIOM IS `.dialog-proceed` NOW, beside `.dialog-card`, and the markup
+   carries both classes. Eleven declarations and the disabled pair left this rule for it: this note and
+   BirthdayDialog's («the same declarations `.knock-proceed` and `.life-beat-proceed` carry») were both
+   already describing one object, and F-09 counted three copies of it. The 8px is what stays: it is the
+   rows' own vertical rhythm above this control, and the detour's `done` in LifeBeatDialog does not
+   carry it. */
 .knock-proceed {
-  width: 100%;
   margin-top: 8px;
-  padding: 11px 13px;
-  text-align: center;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.35;
-  cursor: pointer;
-}
-.knock-proceed:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 /* Pushing through is the warned branch, in the colour the app already uses for "you may, and you were
    told" (--warning is the fatigue caution's own token). NOT --danger: this is a legitimate move a

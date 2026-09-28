@@ -737,7 +737,7 @@ async function doSetFocus(): Promise<void> {
          coach rows are a scroll, two seats are a screen, and a lazy image on a card the player is
          already looking at buys a blank strip rather than a saved request. -->
     <div class="staff-card" :class="{ locked: !m.unlocked }">
-      <span class="staff-art"><img :src="supportPortraitUrl(m.portrait)" alt="" /></span>
+      <span class="staff-art portrait-strip"><img :src="supportPortraitUrl(m.portrait)" alt="" /></span>
       <span class="staff-body">
         <span class="cm-load staff-line">{{ m.line }}</span>
       </span>
@@ -943,16 +943,12 @@ async function doSetFocus(): Promise<void> {
    widens the picture) cannot start here.
    ⚠ THE MASK IS THE COACH STRIP'S, STOP FOR STOP. Its stops are percentages of THIS box, so the fade
    reaches transparent exactly at the clip line - which is what the floor above exists to keep true. */
-.staff-art {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 96px;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – AND «STOP FOR STOP» IS ONE RULE NOW. The note above recorded that this
+   strip IS the coach roster's, and F-09's own reading of it was that the note «records the identity, not
+   a reason to copy it». All eight declarations are `.portrait-strip` in src/style.css, beside
+   `.dialog-card`, and this span carries both classes; the scoped rule is gone whole. The `img` rule
+   below did NOT join it: its 38% is read off these two masters and round 42 #3's 12% off sixteen
+   others, which is two measurements rather than one. */
 /* ⭐⭐ ROUND 43 #2 – AND IT IS A CLIP, NEVER A STRETCH, which is the A2c/d ruling `.cm-art img`
    inherits and the one thing a `cover` on this box has to prove. `cover` scales by
    max(boxW/imgW, boxH/imgH); while the box is narrower than the picture's own ratio the height term

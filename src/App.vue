@@ -1759,7 +1759,7 @@ function reopenTour(): void {
          forbidden (tests/template-copy-rules.test.ts). -->
     <div
       v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"
-      class="next-week-bar"
+      class="next-week-bar floating-cta"
       :class="{ 'with-span': !!weekAction.multi }"
     >
       <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, floated above the bar in the calendar
@@ -1768,7 +1768,7 @@ function reopenTour(): void {
            both projections of the press – DRAFT, recorded in docs/rounds/round-42.md #20. Shown from
            the consumed first press until the press that leaves; the second press goes through the
            same button underneath it. -->
-      <p v-if="softLeave.asking.value" class="next-week-note">{{ SOFT_LEAVE_LINE }}</p>
+      <p v-if="softLeave.asking.value" class="next-week-note floating-cta-note">{{ SOFT_LEAVE_LINE }}</p>
       <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
            deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
            thing the player came to play"); what makes this one a different button is `multi`, which

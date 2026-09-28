@@ -186,7 +186,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            it through `decideKnock`, and is the card's LAST element while rendered - which is what
            the phone-fit measurement reads the way out off. The word is the prologue's shipped
            confirm vocabulary (round 41 #9), not a coinage. -->
-      <button v-if="chosen !== null" class="knock-proceed" type="button" :disabled="sending" @click="confirm()">
+      <button v-if="chosen !== null" class="knock-proceed dialog-proceed" type="button" :disabled="sending" @click="confirm()">
         Proceed
       </button>
     </div>

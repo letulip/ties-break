@@ -1232,7 +1232,7 @@ function scrollToTier(tier: CoachTier): void {
       >
         <!-- `alt=""` now that the row carries its own label: the portrait's only text was the name,
              which the label already says, and Home's coach card decorates the same way. -->
-        <span class="cm-art"><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /></span>
+        <span class="cm-art portrait-strip"><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /></span>
         <span class="cm-body">
           <span class="cm-name">{{ r.name }}</span>
           <span class="cm-meta">

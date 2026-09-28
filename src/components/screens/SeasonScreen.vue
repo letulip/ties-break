@@ -1616,7 +1616,7 @@ function closeExhibition(): void {
                  doing. Same picker Home uses: one tournament, one photograph. -->
             <div class="event-art">
               <img :src="venueUrl(ev)" alt="" />
-              <span class="event-art-scrim"></span>
+              <span class="event-art-scrim art-scrim"></span>
             </div>
 
             <div class="event-card-top">
@@ -2755,18 +2755,11 @@ section.bare .event-cards {
   pointer-events: none;
 }
 
-/* The export's four-stop vertical scrim. Without it a bright court eats the type at both ends. */
-.event-art-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(11, 17, 23, 0.55) 0%,
-    rgba(11, 17, 23, 0.12) 34%,
-    rgba(11, 17, 23, 0.55) 78%,
-    rgba(11, 17, 23, 0.86) 100%
-  );
-}
+/* The export's four-stop vertical scrim. Without it a bright court eats the type at both ends.
+   ⭐⭐ T6.4 · F-09 (28.09) – it is `.art-scrim` in src/style.css now, carried beside this class, and the
+   scoped rule is gone because all three of its declarations were the shared ones. `.week-art-scrim`
+   further down is NOT the same object and did not join: it is two gradients at 100deg and 180deg over
+   a different colour, dark on the left where the words are. Same box, different paint. */
 
 /* Everything after the art is a sibling of it, so it needs to sit above. */
 .event-card > *:not(.event-art) {

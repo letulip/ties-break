@@ -1368,7 +1368,7 @@ async function leaveCollege(): Promise<void> {
              darkens the left edge only – her face sits centre-right in all 35 paintings, so it
              never touches her. -->
         <div class="diary-hero-left"></div>
-        <div class="diary-hero-fade"></div>
+        <div class="diary-hero-fade hero-fade"></div>
 
         <!-- v48: CONFETTI ON HER BIRTHDAY WEEK, the owner's own suggestion (docs/specs/
              birthday-and-gifts.md §3). Over the scrims and under the header, so it falls across the
@@ -2078,10 +2078,12 @@ async function leaveCollege(): Promise<void> {
   background: linear-gradient(180deg, rgba(6, 10, 14, 0.78) 0%, rgba(6, 10, 14, 0.18) 22%, rgba(6, 10, 14, 0) 40%);
 }
 
+/* ⭐⭐ T6.4 · F-09 (28.09) – the BOX is `.hero-fade` in src/style.css now, carried beside this class;
+   three surfaces stated the same three declarations. The GRADIENT stays here, because it is the half
+   this note is actually about: each fade ends in ITS OWN surface's colour, which is what makes the
+   picture read as the page rather than as a banner on top of it. Home fades from 46% at 0.72; the two
+   prologue surfaces from 52% at 0.55. */
 .diary-hero-fade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background: linear-gradient(180deg, rgba(9, 14, 19, 0) 46%, rgba(11, 17, 23, 0.72) 78%, var(--bg) 100%);
 }
 

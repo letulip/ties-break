@@ -2000,9 +2000,13 @@ const { pendingShop, shopConfirmMessage, confirmShop, openChapter } = shop
 
 /* --- 3. THE PERIOD ---------------------------------------------------------------------------- */
 
-.money-window {
-  margin-top: 14px;
-}
+/* ⭐ T6.4 (28.09) – `.money-window` IS IN src/style.css NOW, and so are the three objects beside it.
+   T6.3 · E-11 had to COPY these four rules into `ShopPanel.vue`'s scoped block when the shelf's markup
+   left this screen – a `<style scoped>` block paints only its own component – and every copy carried a
+   note naming T6.4 as where they collapse. Each of the four has exactly two users in all of `src`, this
+   file and `ShopPanel.vue`, re-counted over class attributes and over selectors before the move, so
+   promoting the rule under its own name is a no-rename, no-markup-change operation. The `.money-`
+   prefix stays: a name nobody had to change cannot regress. */
 
 /* ⭐⭐ ROUND 30 #5 – THE SECOND ROW OF TABS, INSIDE A CHAPTER. It is `.money-window`'s object (the
    Spending period switcher he named as the model) with one addition, and the addition is a 375px
@@ -2019,11 +2023,10 @@ const { pendingShop, shopConfirmMessage, confirmShop, openChapter } = shop
    true at the width he plays at, and the wrap is the guarantee that a longer word, a larger font or
    a 320px screen costs a second line instead of a broken page. Verified in a real browser at 375px
    by `e2e/responsive.spec.ts`, which now opens both chapters. */
-.money-subtabs {
-  flex-wrap: wrap;
-  row-gap: 4px;
-  border-radius: var(--radius-card);
-}
+/* ⭐ T6.4 (28.09) – in src/style.css, as `.tab-row.money-subtabs`. The extra compound is not tidiness:
+   scoped, this rule was (0,2,0) and beat `.tab-row`'s own `border-radius`; global and bare it would tie
+   with it and be settled by source order, which a browser and happy-dom resolve in opposite directions.
+   The shared rule carries the measurement. */
 
 /* The empty arm of a sub-tab still has to say something – see the note in the template. */
 .money-subtab-empty {
@@ -2236,17 +2239,12 @@ const { pendingShop, shopConfirmMessage, confirmShop, openChapter } = shop
 
 /* --- 5-6. THE PANELS -------------------------------------------------------------------------- */
 
-.money-panel {
-  margin-top: 14px;
-}
-
-.money-panel-note {
-  margin: 10px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--ink-soft);
-  text-wrap: pretty;
-}
+/* ⭐ T6.4 (28.09) – `.money-panel` and `.money-panel-note` are in src/style.css now, beside
+   `.money-window`. See the note at `.money-window` above for the two-user count that licenses the
+   promotion. The three rules that BUILD on the note – `.money-panel-note-live`, `.money-bill-note` and
+   `.money-coach-share + .money-bill-note` – stay scoped here, and they still win: a scoped selector
+   carries its `data-v-…` attribute and is (0,2,0) against the promoted rule's (0,1,0) in either
+   engine. */
 
 /* The rehab line while she is actually hurt: the same note, in the body colour, because on that week
    it describes money leaving the account rather than money that might. No new register, no plate -

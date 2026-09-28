@@ -604,65 +604,25 @@ const screenTab = computed(() => props.screenTab)
 
 <style scoped>
 /* =================================================================================================
-   ⚠⚠ FOUR OBJECTS ARE COPIED HERE FROM MoneyScreen.vue'S OWN BLOCK, AND THE COPY IS NOT A CHOICE.
+   ⭐⭐ T6.4 (28.09) – THE FOUR COPIED OBJECTS ARE GONE, COLLAPSED WHERE THEIR OWN NOTES SAID THEY WOULD BE.
    =================================================================================================
-   A `<style scoped>` block paints the component it is written in. When the shelf's markup left
-   MoneyScreen.vue, `.money-panel`, `.money-panel-note`, `.money-window` and `.money-subtabs` stayed
-   behind with the four chapters that still use them – so the shelf plate and the shelf's own switcher
-   would have rendered unstyled, which is a change the class list cannot see and the render-identity
-   net measures (`tests/component/principles-e11-shop-identity.test.ts`, the computed-style probes).
-   The declarations below are byte-identical to the ones that remain there.
+   T6.3 · E-11 had to duplicate `.money-panel`, `.money-panel-note`, `.money-window` and `.money-subtabs`
+   into this block, because a `<style scoped>` block paints the component it is written in and the four
+   chapters that still use them stayed in MoneyScreen.vue. Each copy said «the moment those four are
+   objects in `style.css`, both copies read one rule and these five blocks go». They are objects in
+   `src/style.css` now, beside the F-09 shared objects, under their OWN names – each class had exactly two
+   users in all of `src`, this file and MoneyScreen.vue, re-counted over class attributes and over
+   selectors before the move – so no markup and no class name changed on either side of the seam.
 
-   ⚠ WHICH FOUR, AND HOW THEY WERE FOUND – by probe rather than by eye: every top-level selector in
-   MoneyScreen's block was matched against the shop's own DOM subtrees across all six shelf pages, and
-   exactly these four matched markup on BOTH sides of the seam. Nothing inside the shelf's own span
-   matched anything outside it.
+   ⚠ WHAT THE PROMOTION HAD TO PAY, ONCE. `.money-subtabs` is `.tab-row.money-subtabs` in the shared
+   sheet rather than a bare class: scoped, it was (0,2,0) and beat `.tab-row`'s own `border-radius`, and
+   a bare global rule would TIE with it and be settled by source order, which a browser and happy-dom
+   resolve in opposite directions. Round 30 #5's 375px argument for the wrap is quoted in full at the
+   shared rule, where the declarations now live.
 
-   ⚠ AND THE DUPLICATION IS T6.4's, NOT A DEBT THIS FILE CREATES. F-09 hoists shared CSS objects into
-   `src/style.css` under neutral names this wave, and the same shape is already in the review's own
-   table one row up (`SupportStaffTab.vue` carries a copy of the coach strip's mask). The moment those
-   four are objects in `style.css`, both copies read one rule and these five blocks go.
-   ⚠ `src/style.css` IS NOT TOUCHED FROM HERE, deliberately: it is global, so every rule the shelf
-   reads out of it keeps matching this component unchanged, and moving one would collide with T6.4.
+   ⚠ AND `.shelf-tabs :deep(.tab-pill)` BELOW IS STILL THIS FILE'S, because it is the shelf's own
+   tightening of the pills inside its six-segment row and has one user.
    ================================================================================================= */
-.money-panel {
-  margin-top: 14px;
-}
-
-.money-panel-note {
-  margin: 10px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--ink-soft);
-  text-wrap: pretty;
-}
-
-/* --- 3. THE PERIOD ---------------------------------------------------------------------------- */
-
-.money-window {
-  margin-top: 14px;
-}
-
-/* ⭐⭐ ROUND 30 #5 – THE SECOND ROW OF TABS, INSIDE A CHAPTER. It is `.money-window`'s object (the
-   Spending period switcher he named as the model) with one addition, and the addition is a 375px
-   argument rather than a taste one.
-
-   ⚠⚠ SIX SEGMENTS DO NOT FIT ON A PHONE AT THE SHARED PILL METRICS. `.tab-pill` is 13px type in
-   6px/16px padding, which puts Invest/Cars/Property/Business/Water/Air at roughly 450px against the
-   343px a 375px phone actually has inside `--app-pad-x`. `.tab-row` is a bare `display: flex` with
-   no wrap, so the overflow would push the DOCUMENT sideways - and "at 375 px the app does not scroll
-   sideways" is one of the two invariants `e2e/responsive.spec.ts` has held since it was written.
-
-   The row is therefore allowed to WRAP rather than to overflow, and the pills are tightened so that
-   on the phone it does not have to. Both halves are wanted: the tightening is what keeps his «в ряд»
-   true at the width he plays at, and the wrap is the guarantee that a longer word, a larger font or
-   a 320px screen costs a second line instead of a broken page. Verified in a real browser at 375px
-   by `e2e/responsive.spec.ts`, which now opens both chapters. */
-.money-subtabs {
-  flex-wrap: wrap;
-  row-gap: 4px;
-  border-radius: var(--radius-card);
-}
 
 .shelf-tabs :deep(.tab-pill) {
   padding-inline: 9px;

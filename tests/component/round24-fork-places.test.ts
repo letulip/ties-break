@@ -218,9 +218,16 @@ describe('⭐⭐ round 24 #2a – the three places are read before anything is c
     const w = mountFor(atTheFork('r24-2a-ruling4', ABROAD))
     const answers = w.findAll('.fork-answer')
     expect(answers).toHaveLength(3)
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AND IT IS STRICTER, NOT LOOSER. `toEqual(['fork-answer'])` was
+    // the literal class list, and the answer row is a shared object now (`.dialog-option` in
+    // src/style.css, carried beside the card's own class). Ruling 4 is that the card may not point at one
+    // answer, i.e. that no answer is decorated differently from its siblings – which is now asserted as
+    // a set comparison rather than implied by there being one class to name.
+    const worn = answers.map((a) => [...a.classes()].sort().join(' '))
+    expect(new Set(worn).size, 'no answer wears a class its siblings do not').toBe(1)
     for (const a of answers) {
       expect(a.attributes('disabled'), 'no answer is refused').toBeUndefined()
-      expect(a.classes(), 'and none is decorated').toEqual(['fork-answer'])
+      expect(a.classes(), 'and the shared answer object is what they wear').toContain('dialog-option')
     }
     expect(w.findAll('.fork-places .fork-answer'), 'no place is an answer').toHaveLength(0)
     expect(w.findAll('.tb-pill'), 'still no primary').toHaveLength(0)

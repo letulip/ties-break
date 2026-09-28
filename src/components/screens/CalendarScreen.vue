@@ -528,17 +528,17 @@ const showGo = computed(() => !game.snapshot?.pending)
            thumb off the tab bar. Same state and same handler as Home's - see composables/weekAction.ts
            for why that is one composable and not two computeds. -->
       <template v-if="showGo" #footer>
-        <div class="cal-go">
+        <div class="cal-go floating-cta">
           <!-- A SKIP NOBODY IS TOLD ABOUT IS NOT A SKIP. The hint takes the same slot the blocked
                reason does, and the two can never collide: a blocked button cannot start a sweep. -->
-          <p v-if="skippable" class="cal-go-note cal-go-skip">Tap anywhere to skip</p>
+          <p v-if="skippable" class="cal-go-note floating-cta-note cal-go-skip">Tap anywhere to skip</p>
           <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, in this screen's own note slot.
                The line is the shared DRAFT constant; the second press of the same button leaves.
                Above the blocked reason in the chain because the ask is the fact the press just
                made, and a blocked button could not have consumed the ask at all. -->
-          <p v-else-if="softLeave.asking.value" class="cal-go-note">{{ SOFT_LEAVE_LINE }}</p>
+          <p v-else-if="softLeave.asking.value" class="cal-go-note floating-cta-note">{{ SOFT_LEAVE_LINE }}</p>
           <!-- R10-16's doctrine: a disabled control says why, on screen, rather than being dead. -->
-          <p v-else-if="action.blockedNote" class="cal-go-note">{{ action.blockedNote }}</p>
+          <p v-else-if="action.blockedNote" class="cal-go-note floating-cta-note">{{ action.blockedNote }}</p>
           <PrimaryPill
             variant="cta"
             class="cal-go-btn"
@@ -576,7 +576,7 @@ const showGo = computed(() => !game.snapshot?.pending)
       <Card variant="photo" pad="16px 16px 12px" class="cal-card">
         <div class="cal-card-art">
           <img :src="venueUrl(marker)" alt="" />
-          <span class="cal-card-scrim"></span>
+          <span class="cal-card-scrim art-scrim"></span>
         </div>
 
         <!-- WHICH DAYS, in full. The header names the week in the game's own shorthand; a trip is
@@ -1240,47 +1240,41 @@ const showGo = computed(() => !game.snapshot?.pending)
    (U0 #7) and the same object App.vue's button renders by hand - so the two cannot drift in
    appearance. `pointer-events` follows the same pattern: the strip is transparent so the calendar
    scrolls under it and only the pill takes a press. */
+/* ⭐ ROUND 36 PHASE 3 – the same two tokens the sheet's own floating CTA reads, for the same
+   reason phase 2 gave the width one: from 1024 a rail takes a strip off the left of the page, so
+   the middle of the window is no longer the middle of what a player is reading, and the bottom
+   clearance stops being «above the bar» and becomes the margin off the page's edge the owner asked
+   for. Below 1024 both tokens compute to the 50% and the 58px this rule already said. */
+/* ⚠ ROUND 36 PHASE 2 – THE THIRD OF THE THREE FLOATING CTA BOXES, ONTO THE TOKEN. The shell's own
+   week button in src/style.css is the same object with the same six declarations, and phase 1 put
+   it on `--app-bar-max` with an argument that applies here word for word: the button inside is
+   centred, so the only thing this width decides is where the CTA sits, and it must be the middle
+   of the column rather than the middle of a 520px box left behind under a wider one. Below 768 the
+   token IS 520, and the button is centred at every width, so today this moves nothing at all - it
+   stops the box from being wrong. `.week-proceed` in ThisWeekScreen.vue is the other one.
+   ⚠ THE SHELL'S RULE IS DELIBERATELY NOT NAMED BY ITS CLASS HERE. tests/round13-nav.test.ts reads
+   this file as TEXT and refuses that class name in a tab screen - the pin that keeps the advance
+   act in the App shell - and it does not distinguish a comment from markup. It is right to be
+   that blunt; the sentence is what moves. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – AND THE CHASE THE TWO NOTES ABOVE RECORD IS OVER. They are kept
+   verbatim, and unmoved from this file, because they are F-09's own cost evidence: a token pass that
+   paid for one copy and had to come back for the other two. The ten declarations all three copies
+   stated are `.floating-cta` in src/style.css now, beside `.dialog-card`, and the markup carries both
+   classes. The shared name is NEUTRAL for exactly the reason the second note gives - a rule named
+   after the shell's bar would have forced round13-nav's refusal to be weakened, and it is untouched.
+   What stays below is this copy's own arrangement: a COLUMN with the note above the pill, where the
+   shell's copy centres a single one. */
 .cal-go {
-  position: fixed;
-  /* ⭐ ROUND 36 PHASE 3 – the same two tokens the sheet's own floating CTA reads, for the same
-     reason phase 2 gave the width one: from 1024 a rail takes a strip off the left of the page, so
-     the middle of the window is no longer the middle of what a player is reading, and the bottom
-     clearance stops being «above the bar» and becomes the margin off the page's edge the owner asked
-     for. Below 1024 both tokens compute to the 50% and the 58px this rule already said. */
-  left: var(--app-bar-left);
-  transform: translateX(-50%);
-  bottom: var(--app-bar-bottom);
-  width: 100%;
-  /* ⚠ ROUND 36 PHASE 2 – THE THIRD OF THE THREE FLOATING CTA BOXES, ONTO THE TOKEN. The shell's own
-     week button in src/style.css is the same object with the same six declarations, and phase 1 put
-     it on `--app-bar-max` with an argument that applies here word for word: the button inside is
-     centred, so the only thing this width decides is where the CTA sits, and it must be the middle
-     of the column rather than the middle of a 520px box left behind under a wider one. Below 768 the
-     token IS 520, and the button is centred at every width, so today this moves nothing at all - it
-     stops the box from being wrong. `.week-proceed` in ThisWeekScreen.vue is the other one.
-     ⚠ THE SHELL'S RULE IS DELIBERATELY NOT NAMED BY ITS CLASS HERE. tests/round13-nav.test.ts reads
-     this file as TEXT and refuses that class name in a tab screen - the pin that keeps the advance
-     act in the App shell - and it does not distinguish a comment from markup. It is right to be
-     that blunt; the sentence is what moves. */
-  max-width: var(--app-bar-max);
-  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 0 16px;
-  pointer-events: none;
-  z-index: 39;
 }
 
+/* ⭐⭐ T6.4 · F-09 (28.09) – the eight declarations this pill shares with the shell's «leave anyway»
+   note are `.floating-cta-note` in src/style.css. The shell's own rule already said the vocabulary was
+   this one's («The visual vocabulary is `.cal-go-note`'s»), so the sentence became the rule. What stays
+   is the one genuine difference: this note is a flow child of the strip and TAKES the press. */
 .cal-go-note {
-  margin: 0;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--panel);
-  border: var(--stroke-hair) solid var(--warning);
-  font-size: 11.5px;
-  color: var(--warning);
-  text-align: center;
   pointer-events: auto;
 }
 
@@ -1326,18 +1320,11 @@ const showGo = computed(() => !game.snapshot?.pending)
 }
 
 /* The vertical scrim, so a bright court never eats the type at either end. Same four-stop shape the
-   Season card's uses, over the same page colour. */
-.cal-card-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(11, 17, 23, 0.55) 0%,
-    rgba(11, 17, 23, 0.12) 34%,
-    rgba(11, 17, 23, 0.55) 78%,
-    rgba(11, 17, 23, 0.86) 100%
-  );
-}
+   Season card's uses, over the same page colour.
+   ⭐⭐ T6.4 · F-09 (28.09) – and «the same shape» is one rule now: `.art-scrim` in src/style.css, which
+   this element carries beside its own class. The scoped rule is gone entirely, because all three of its
+   declarations were the shared ones; the class name stays so the markup and every pin naming it are
+   untouched. */
 
 /* The hairline between the surface mark and the week in the takeover's subtitle. Same 1px x 13px rule
    the Season screen draws in the same slot; see the note at the call site for why it is re-stated.

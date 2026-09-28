@@ -183,7 +183,7 @@ useDialogFocus(card)
            LAST element, which is what the phone-fit measurement reads the way out off. -->
       <button
         v-if="chosen !== null"
-        class="birthday-proceed"
+        class="birthday-proceed dialog-proceed"
         type="button"
         :disabled="sending"
         @click="confirm()"
@@ -313,23 +313,12 @@ useDialogFocus(card)
 /* ⭐ THE ADVANCE IDIOM for the one control that gives the present – the same declarations
    `.knock-proceed` and `.life-beat-proceed` carry, with the rows' own box metrics so the card does
    not jump when it appears. Every colour a declared token with no fallback (round-17 #3). */
+/* ⭐⭐ T6.4 · F-09 (28.09) – AND THE SENTENCE ABOVE IS A RULE NOW. «the same declarations
+   `.knock-proceed` and `.life-beat-proceed` carry» was a note describing an object that existed in
+   three places; it is `.dialog-proceed` in src/style.css, beside `.dialog-card`, and this button carries
+   both classes. The disabled pair went with it. What stays is the rows' own top rhythm, which the
+   detour's `done` in LifeBeatDialog deliberately does not have. */
 .birthday-proceed {
-  width: 100%;
   margin-top: 8px;
-  padding: 11px 13px;
-  text-align: center;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.35;
-  cursor: pointer;
-}
-
-.birthday-proceed:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 </style>

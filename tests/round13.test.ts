@@ -10,6 +10,8 @@ import { avatarEmotion, avatarEmotionRead, heroFaceOf } from '../src/shared/avat
 import { DIARY_POOL, diaryLine } from '../src/engine/diary'
 import type { DiaryFacts } from '../src/shared/protocol'
 import { at, region } from './helpers/source'
+// ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header.
+import { carriesClasses } from './helpers/markup'
 import {
   bookVacation,
   createWorld,
@@ -331,7 +333,12 @@ describe('R13-8 — a paused tournament owns the primary button', () => {
     expect(app).not.toContain('tournament-paused')
     expect(app).not.toMatch(/tab !== 'home'/)
     // ⚠ RE-AIMED by wave 2: Home-only to advance, global to resume - see round13-nav.test.ts.
-    expect(app).toContain(`class="next-week-bar"`)
+    // ⚠⚠ RE-AIMED AGAIN 28.09 (T6.4 · F-09), IN ITS SPELLING ONLY. The bar's geometry is the shared
+    // `.floating-cta` in src/style.css, so the shipped attribute is `class="next-week-bar floating-cta"`.
+    // The claim – the shell draws the bar – is unchanged and is now whole-token rather than exact-text,
+    // i.e. stricter about the fact and indifferent to what else is on the element. See
+    // tests/helpers/markup.ts, and round13-nav.test.ts for the arm this one echoes.
+    expect(carriesClasses(app, 'next-week-bar')).toBe(true)
     expect(app).toContain(`game.snapshot?.pending`)
   })
 })

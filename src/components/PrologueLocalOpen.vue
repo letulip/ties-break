@@ -307,7 +307,7 @@ function next(): void {
     <section v-if="beat === 'splash'" class="plo-splash">
       <div class="plo-hero">
         <img class="plo-hero-img" :src="venueUrl" alt="" />
-        <div class="plo-hero-fade"></div>
+        <div class="plo-hero-fade hero-fade"></div>
       </div>
       <!-- The two facts the prologue's weekend actually has, in the flow's own words: the surface
            and the size of the draw. No points, no cheque and no crowd - see the blockers in the
@@ -580,10 +580,9 @@ function next(): void {
 
 /* Home's `.diary-hero-fade`, ending in this takeover's own colour so the photograph has no bottom
    edge and the line under it reads as the page. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – the box is `.hero-fade` in src/style.css, carried beside this class; the
+   gradient stays because it ends in THIS takeover's own colour, which is what the note above says. */
 .plo-hero-fade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background: linear-gradient(180deg, rgba(9, 14, 19, 0) 52%, rgba(11, 17, 23, 0.55) 82%, var(--bg) 100%);
 }
 

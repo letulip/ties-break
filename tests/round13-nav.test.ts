@@ -17,6 +17,9 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
 import { after, at, codeOf, region, regionToLast } from './helpers/source'
+// ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header for why the
+// exact-attribute pin below became a whole-token one.
+import { carriesClasses } from './helpers/markup'
 import { componentLogic, engineModuleSource } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -658,9 +661,22 @@ describe('the advance button lives in the App shell, and splits by what a stray 
     // at college it is the ONLY way to clear the state `resumeFromCollege` refuses to tick past
     // (COLLEGE_REVEAL_REFUSAL, round 24 rule 2), so it must stay global and unconditional. Both
     // halves are pinned separately below precisely so a future edit cannot merge them by accident.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, IN ITS SPELLING ONLY, AND IT IS STRICTER THAN IT WAS. The bar's
+    // ten geometry declarations are a shared object in src/style.css now (`.floating-cta`, beside
+    // `.dialog-card`), so the shipped attribute is `class="next-week-bar floating-cta"` and an exact
+    // attribute pin cannot hold. What the arm is ABOUT – the shell's bar is THIS class – survives a
+    // second token, so it is a WHOLE-TOKEN test on the attribute instead: indifferent to order and to
+    // what else is on the element, unsatisfiable by a longer class name (`with-next-week-bar`) or by a
+    // comment naming it. `tests/helpers/markup.ts` carries the argument.
+    // ⚠ THE SIBLING TEST BELOW – no tab screen carries the string at all – IS UNTOUCHED, and the neutral
+    // name is the whole reason it could be: F-09 records this pin as the obstacle that stopped 05.09
+    // shipping the merge, because a rule named after the shell's bar would have forced it to be weakened.
     expect(app).toContain(`v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"`)
-    expect(app).toContain(`class="next-week-bar"`)
+    expect(carriesClasses(app, 'next-week-bar'), 'the shell draws the bar').toBe(true)
     // ...and the room reserved under it follows the same rule rather than being paid on every tab.
+    // ⚠ NOT RE-AIMED: `<main>` takes no shared class – `.app-content.with-next-week-bar` is the room
+    // under the bar, not the floating box – so the exact form is still the shipped form.
     expect(app).toContain(`<main class="app-content with-next-week-bar" :class="{ home: tab === 'home' }">`)
   })
 
@@ -906,9 +922,20 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     expect(weekScreen).toContain('<PrimaryPill variant="cta" class="week-proceed-btn"')
     expect(weekScreen).toContain("import PrimaryPill from '../ui/PrimaryPill.vue'")
     // ...floating, centred, one thumb off the tab bar - Home's own geometry.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AND THE RE-AIM NAMES THE PATH BECAUSE THAT IS NOW THE CLAIM.
+    // «Home's own geometry» used to be three copies of ten declarations, and this arm read this screen's
+    // copy. There is one object now – `.floating-cta` in src/style.css, beside `.dialog-card` – and this
+    // screen claims it by carrying the class. So the fact splits exactly the way it really is: the SHARED
+    // rule floats and clears the bar, this screen's own rule centres its single pill, and the element asks
+    // for both. Nothing is dropped; what the screen's own rule no longer has to say, it no longer says.
+    // ⚠ The behaviour behind it is measured rather than read, at 375x667 through the real cascade, in
+    // tests/component/principles-f09-shared-objects.test.ts – which is where a computed value belongs.
+    expect(carriesClasses(weekScreen, 'week-proceed', 'floating-cta'), 'the box is the shared one').toBe(true)
+    const shared = region(read('../src/style.css'), '.floating-cta {', '}')
+    expect(shared, 'the shared box floats').toContain('position: fixed')
     const bar = region(weekScreen, '.week-proceed {', '.week-proceed-btn')
-    expect(bar).toContain('position: fixed')
-    expect(bar).toContain('justify-content: center')
+    expect(bar, "and this screen centres its own pill").toContain('justify-content: center')
     // ⚠ RE-AIMED BY ROUND 36 PHASE 3, AND THE NUMBER IS STILL PINNED – one file further out. The
     // claim here is «one thumb off the bottom, the same distance as Home's own button», and until
     // this round the only way to say that was to write 58 in three places (the sheet, this screen
@@ -916,7 +943,9 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     // there is no bar to clear and the owner asked for a margin off the page's edge instead. So the
     // three copies read ONE token and this pin reads the token's own value out of the sheet – the
     // same shape phase 2 gave the width, and it still goes red on a box that stops floating.
-    expect(bar).toContain('bottom: var(--app-bar-bottom)')
+    // ⚠ AND ONE FILE FURTHER OUT AGAIN SINCE 28.09 (T6.4 · F-09): the token is read by the shared box,
+    // which is the ONLY place it is read now – phase 2's whole cost was that three rules had to read it.
+    expect(shared).toContain('bottom: var(--app-bar-bottom)')
     expect(read('../src/style.css')).toContain('--app-bar-bottom: 58px')
     // ...and it exists only while there is a story to leave.
     // ⚠ RE-AIMED BY ROUND 33 #1: the flag is `showStory` now, which is `showRecap` minus the

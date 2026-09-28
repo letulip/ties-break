@@ -327,7 +327,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            honest in both. -->
       <button
         v-else
-        class="life-beat-listen-done"
+        class="life-beat-listen-done dialog-proceed"
         type="button"
         :disabled="busy"
         @click="finishReply()"
@@ -347,7 +347,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            answers to one question. -->
       <button
         v-if="replying === null && chosen !== null"
-        class="life-beat-proceed"
+        class="life-beat-proceed dialog-proceed"
         type="button"
         :disabled="busy"
         @click="confirm()"
@@ -482,26 +482,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
    ⭐ ROUND 42 #8 – `.life-beat-proceed` is the SAME rule on purpose: the Proceed under the answers
    and the detour's `done` are the same kind of control (the one that records), so they wear one
    idiom and cannot drift apart. */
-.life-beat-listen-done,
-.life-beat-proceed {
-  width: 100%;
-  padding: 11px 13px;
-  text-align: center;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.35;
-  cursor: pointer;
-}
-
-.life-beat-listen-done:disabled,
-.life-beat-proceed:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – THE IDIOM IS `.dialog-proceed` IN src/style.css NOW, and BOTH controls
+   carry it. The note above says the two «wear one idiom and cannot drift apart», and F-09 found a third
+   and a fourth copy of that idiom (`.knock-proceed`, `.birthday-proceed`) which could and did have to be
+   kept in step by hand. Taking only `.life-beat-proceed` into the shared object would have split the
+   pair this note exists to hold together, so the `done` is a member too. Eleven declarations and the
+   disabled pair left this block; the Proceed's own 8px below is all that is left, and that is exactly
+   the one thing that separated the two. */
 
 /* The Proceed keeps the answers' own vertical rhythm under the group. */
 .life-beat-proceed {

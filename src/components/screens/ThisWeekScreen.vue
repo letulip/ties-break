@@ -394,7 +394,7 @@ const spendRange = computed<[number, number]>(() => {
          arrival has its own way off in the header, and it is a back arrow rather than this pill
          because this one silences a week's story on the way out. -->
     <template v-if="showStory" #footer>
-      <div class="week-proceed">
+      <div class="week-proceed floating-cta">
         <PrimaryPill variant="cta" class="week-proceed-btn" @click="dismissRecap">Proceed to Home</PrimaryPill>
       </div>
     </template>
@@ -466,28 +466,23 @@ const spendRange = computed<[number, number]>(() => {
        cannot drift in appearance while staying honestly different in meaning.
    `pointer-events` follows Home's pattern: the strip is transparent to taps so the story scrolls
    under it, and only the pill takes the press. */
+/* ⭐ ROUND 36 PHASE 3 – see `.cal-go` in CalendarScreen.vue: from 1024 the rail moves the middle of
+   the reading column off the middle of the window, and the bottom clearance becomes a margin off
+   the page's edge because there is no bar under it any more. Both tokens compute to this rule's
+   own 50% and 58px below 1024. */
+/* ⚠ ROUND 36 PHASE 2 – see `.cal-go` in CalendarScreen.vue and the shell's own week button in
+   src/style.css: three copies of one floating-CTA box, and phase 1 moved only the one that lives
+   in the sheet. The button is centred, so the token changes nothing on screen at any width; it
+   stops this box from being a 520px island under a 736px column.
+   ⚠ The shell's rule is not named by its class here on purpose - tests/round13-nav.test.ts reads
+   this file as text and refuses that name in a tab screen, comments included. See CalendarScreen. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – THE THIRD COPY IS GONE AND THE TWO NOTES ABOVE ARE KEPT VERBATIM, in this
+   file, because they are the finding's cost evidence: «three copies of one floating-CTA box, and phase 1
+   moved only the one that lives in the sheet». The box is `.floating-cta` in src/style.css now and this
+   element carries both classes; nothing is left here but the centring of the single pill, and the
+   shared name is neutral so the round-13 refusal above still reads this file for the literal string. */
 .week-proceed {
-  position: fixed;
-  /* ⭐ ROUND 36 PHASE 3 – see `.cal-go` in CalendarScreen.vue: from 1024 the rail moves the middle of
-     the reading column off the middle of the window, and the bottom clearance becomes a margin off
-     the page's edge because there is no bar under it any more. Both tokens compute to this rule's
-     own 50% and 58px below 1024. */
-  left: var(--app-bar-left);
-  transform: translateX(-50%);
-  bottom: var(--app-bar-bottom);
-  width: 100%;
-  /* ⚠ ROUND 36 PHASE 2 – see `.cal-go` in CalendarScreen.vue and the shell's own week button in
-     src/style.css: three copies of one floating-CTA box, and phase 1 moved only the one that lives
-     in the sheet. The button is centred, so the token changes nothing on screen at any width; it
-     stops this box from being a 520px island under a 736px column.
-     ⚠ The shell's rule is not named by its class here on purpose - tests/round13-nav.test.ts reads
-     this file as text and refuses that name in a tab screen, comments included. See CalendarScreen. */
-  max-width: var(--app-bar-max);
-  display: flex;
   justify-content: center;
-  padding: 0 16px;
-  pointer-events: none;
-  z-index: 39;
 }
 
 .week-proceed-btn {
