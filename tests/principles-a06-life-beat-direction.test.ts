@@ -34,6 +34,30 @@
 //     * «`engineModuleSource` sees every module» – vacuous over an empty package, so it is asserted
 //       against the module list rather than against a count.
 //
+// ⚠⚠ T6.10 (28.09) – THE SECOND HALF OF THE DIRECTION, AND IT LIVES IN `world.ts` RATHER THAN HERE.
+// T6.8 moved the two hazard sections that reference nothing (§9 the leak, §10 the booth) and could
+// NOT move the other seven, and the reason it measured is the whole of this note: a hazard section
+// needs the hub at RUNTIME (`raiseLifeBeat`, `kidAgeNow`, `hasBeatFor`, `lifeStageOf`,
+// `latchedEpisode`), so if the hub ALSO re-exports the hazard's names for the barrel's sake there is
+// an edge hub → kind on top of the edge kind → hub, and `tests/import-cycles.test.ts` refuses it:
+//
+//     cycle over 2 modules:
+//         src/engine/world/lifeBeat.ts       -> src/engine/world/lifeBeat/_arm.ts  { armRollBereavement }
+//         src/engine/world/lifeBeat/_arm.ts  -> src/engine/world/lifeBeat.ts       { raiseLifeBeat }
+//
+// The way through costs one import line: **`src/engine/world.ts` takes a hazard module's names from
+// the KIND MODULE, never from the hub.** The edge becomes world.ts → kind → hub, and the hub reaches
+// `world.ts` only through `import type`, which TypeScript erases. So the rule this file now states
+// per module is CLAUDE.md's own line – «a hazard's names are re-exported by `src/engine/world.ts`
+// directly from the kind module, never through the hub» – and the test below reads it off both files
+// rather than trusting the sentence.
+//
+// ⚠ A «HAZARD MODULE» IS DETECTED, NOT LISTED: it is a package module the hub does not IMPORT. A copy
+// leaf is a module the hub calls, so the hub imports it and the direction is settled by the case
+// above; a hazard exists for the barrel and for `world/phaseHerWeek.ts`, and the hub has no business
+// reaching it at all. Detection rather than a list is deliberate – a name list is the thing that goes
+// stale on the next kind, which is the failure A-06 is about.
+//
 //   FORWARD GUARDS (green on the pre-split tree because there is nothing to break yet; each one was
 //   ARMED BY HAND on 28.09 and both outputs are quoted here rather than promised):
 //     * «no module both imports the hub and is reached by it». ARM: a module that imports
@@ -45,6 +69,23 @@
 //               src/engine/world/lifeBeat.ts -> src/engine/world/lifeBeat/_arm.ts  { { armRollBereavement } }
 //               src/engine/world/lifeBeat/_arm.ts -> src/engine/world/lifeBeat.ts  { { raiseLifeBeat } }
 //       Reverted; `git status` clean afterwards.
+//     * «the hub re-exports NO hazard module, and the barrel takes their names direct» (T6.10, 28.09).
+//       ARM: one hazard name back on a hub re-export line, placed INSIDE the hub's import block where the
+//       old comment stripper was blind - `export { rollBereavement } from './lifeBeat/bereavement'` at
+//       line 235, with `bereavement.ts` importing `kidAgeNow` and `raiseLifeBeat` back. TWO cases of this
+//       file went red, which is the arm doing double duty:
+//           ⭐⭐⭐ the hub re-exports NO hazard module, and the barrel takes their names direct - T6.10
+//           world/lifeBeat.ts re-exports ./lifeBeat/bereavement - a hazard module's names come off the
+//           BARREL, not off the hub (CLAUDE.md, the life-beat rule)
+//           ⭐⭐⭐ no kind module both imports the hub and is reached by it - the cycle A-06 is about
+//           world/lifeBeat/bereavement.ts: the hub exports it, and it imports the hub back -
+//           { import { kidAgeNow, raiseLifeBeat } }
+//       ⚠⚠ AND `tests/import-cycles.test.ts` STAYED GREEN ON IT - exit 0, 6 tests passed - on a textbook
+//       2-cycle, in all THREE positions tried (end of file, at the section banner, inside the import
+//       block). The reason is the comment-stripper hole measured at `codeOnly` above: that file cannot see
+//       either half of this edge. ⭐ It is also why the SECOND case above only fires since T6.10 fixed the
+//       strip order - with the old order it fired from the end of the file and nowhere a builder would
+//       actually put the line. Reverted; `git status` clean afterwards.
 //     * «the package is flat». ARM: `world/lifeBeat/copy/armNested.ts` holding
 //       `rngFromSeed(\`${seed}:life:arm-nested:${week}\`)`. This test:
 //           subdirectories under src/engine/world/lifeBeat/: expected [ 'copy' ] to deeply equal []
@@ -59,9 +100,30 @@ const ENGINE = new URL('../src/engine/', import.meta.url)
 const MODULE = 'world/lifeBeat'
 
 /** Comments stripped first: this file's own prose, and the hub's, name module paths in sentences, and
- *  a sentence must never count as a dependency (the cycle test's own reasoning). */
+ *  a sentence must never count as a dependency (the cycle test's own reasoning).
+ *
+ *  ⚠⚠ LINE COMMENTS GO FIRST, AND THE ORDER IS A MEASURED BUG FIX (T6.10, 28.09) RATHER THAN A STYLE
+ *  CHOICE. The usual spelling strips BLOCK comments first and line comments second. On this corpus that
+ *  loses real code: a line comment that mentions a path GLOB in backticks - «world» then a slash then a
+ *  star, or the same with «.ts» after it, or an images path with two stars - puts a slash immediately
+ *  before a star, which the block-comment matcher reads as an OPENER. It then runs lazily forward to the
+ *  next star-slash, which is the end of the next JSDoc, and everything in between is deleted - imports
+ *  and exports included. Stripping line comments first removes the phantom opener before the block
+ *  matcher can see it.
+ *
+ *  MEASURED ACROSS `src/` on 28.09: the block-first order loses **122 runtime import/export edges in 24
+ *  files** - ALL of `world/lifeBeat/leak.ts`' 8, ALL of `booth.ts`' 6, ALL of `bereavement.ts`' 4, ALL of
+ *  `world/state.ts`' 9, ALL of `world/phaseObligations.ts`' 18, and 16 of the hub`s 39: its whole import
+ *  block, swallowed by a line-129 comment naming nine other package modules with a glob, running to a
+ *  JSDoc close on line 248.
+ *
+ *  ⚠⚠ AND THE SAME HOLE IS IN `tests/import-cycles.test.ts`, WHICH IS THE JUDGE OF THIS ARCHITECTURE.
+ *  Reported to the architect rather than fixed here, because that file belongs to another task this
+ *  wave. What it costs is written into the ARM below: a hub re-export of a kind module, with that module
+ *  importing the hub, is a textbook 2-cycle and the cycle test stays **GREEN** on it - three positions
+ *  tried. So on this package THIS file is the guard, and not that one. */
 function codeOnly(text: string): string {
-  return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')
+  return text.replace(/^[ \t]*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 }
 
 // =================================================================================================
@@ -173,6 +235,46 @@ function hubReach(name: string): { imports: boolean; reexports: boolean } {
 }
 
 // =================================================================================================
+// T6.10 – THE BARREL'S SIDE OF THE SAME ARROW
+// =================================================================================================
+
+/** A HAZARD MODULE: a package module the hub does not import. Detected rather than listed – see the
+ *  header. A copy leaf is imported by the hub; a hazard is not, and the hub must not reach it at all. */
+function hazardModules(): string[] {
+  return kindModules().filter((name) => !hubReach(name).imports)
+}
+
+/** Every name one module declares with `export` – functions, consts, types, interfaces. The set the
+ *  barrel could possibly be carrying on that module's behalf. */
+function exportedNames(text: string): string[] {
+  const out: string[] = []
+  for (const m of codeOnly(text).matchAll(/^export (?:function|const|type|interface|class|let) ([A-Za-z0-9_]+)/gm)) out.push(m[1])
+  return out
+}
+
+/** For every name `src/engine/world.ts` imports off a `./world/lifeBeat…` specifier, WHICH specifier
+ *  it came in on. The barrel's import list is one statement per module, so this is the whole answer to
+ *  «where does the barrel think this name lives». */
+function barrelSpecifiers(): Map<string, string[]> {
+  const text = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+  const out = new Map<string, string[]>()
+  for (const edge of runtimeEdges(text)) {
+    if (!edge.spec.startsWith('./world/lifeBeat')) continue
+    // ⚠ MATCHED, NOT SLICED BETWEEN TWO `indexOf` CALLS. `scripts/pin-ratchet.mjs` is right to refuse
+    // that shape even here: a clause with no brace list would make `indexOf` return -1 and the slice
+    // would silently WIDEN to the whole clause. A match yields nothing on a default import, which is
+    // the honest answer - it carries no named binding for the barrel to mis-route.
+    const list = /\{([^}]*)\}/.exec(edge.clause)?.[1] ?? ''
+    for (const raw of list.split(',')) {
+      const name = raw.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]
+      if (!name) continue
+      out.set(name, [...(out.get(name) ?? []), edge.spec])
+    }
+  }
+  return out
+}
+
+// =================================================================================================
 // THE CEILINGS – RED-FIRST, AND A CEILING RATHER THAN AN EQUALITY ON PURPOSE
 // =================================================================================================
 //
@@ -180,10 +282,19 @@ function hubReach(name: string): { imports: boolean; reexports: boolean } {
 // would go red on an honest commit and teach the next person to bump the number. A ceiling can only be
 // breached by the file GROWING BACK, which is the failure A-06 is about. Measured: **8,109 lines / 223
 // top-level declarations** at W6's head, **6,486 / 167** after T6.8's thirteen moves, with 1,990 lines
-// living in thirteen kind modules. The ceilings leave ~300 lines of honest slack and no more, because
-// the forward rule is that a new beat KIND is a new module rather than a new section here.
-const LINE_CEILING = 6800
-const DECL_CEILING = 175
+// living in thirteen kind modules.
+//
+// ⚠ TIGHTENED 28.09 BY T6.10, which moved five of the seven hazard sections T6.8 could not move –
+// §16 the death, §15 the weight, §11 the wedding, §8 the end, §7 tier-1 small talk. Measured after
+// them: **5,522 lines / 145 declarations**, with 1,246 more lines living in five new kind modules. The
+// ceilings leave ~178 lines and 5 declarations of honest slack and no more, because the forward rule is
+// that a new beat KIND is a new module rather than a new section here. ⚠ §13 the independent life and
+// §14 the pregnancy are STILL IN THE HUB and the ceilings hold their ~855 lines: `world/snapshot.ts`
+// imports `ownKeyThisWeek` and `motherhoodBandAt` from the hub at runtime (`from './lifeBeat'`), so
+// those two cannot move until that one import is repointed. When they go, the ceiling comes down again –
+// it is a ratchet.
+const LINE_CEILING = 5700
+const DECL_CEILING = 150
 
 /** Top-level declarations in one file – column-0 `function` / `const` / `type` / `interface` …,
  *  exported or not. The same shape `grep -cE` gives, so the number in the header is checkable. */
@@ -209,13 +320,49 @@ describe('A-06 – world/lifeBeat is a hub with kind modules, and the arrows all
       reach.filter((r) => r.imports).map((r) => r.name),
       'at least one copy leaf the hub imports',
     ).not.toEqual([])
-    // A KIND THE BARREL ONLY CARRIES: the hub re-exports its names under their historical spelling
-    // and never calls them – `world.ts`'s import list does not move, and the hub does not grow a
-    // dependency on the kind. This is the hazard direction.
+    // ⚠ RE-AIMED 28.09 BY T6.10, NOT WEAKENED. It used to read «at least one kind module the hub only
+    // RE-EXPORTS», which was T6.8's shape: the hub carried the two zero-reference hazards' names for
+    // the barrel. That shape cannot hold for a hazard that needs the hub at runtime – it IS the cycle
+    // (see the header) – so the second direction now ends at `world.ts` instead of at the hub: a kind
+    // module the hub does not reach AT ALL, whose names the barrel takes from the module itself. Same
+    // claim, one link further along, and the case below is what makes it a rule rather than an example.
+    expect(hazardModules(), 'at least one hazard module – one the hub does not import').not.toEqual([])
+    const carried = barrelSpecifiers()
     expect(
-      reach.filter((r) => r.reexports).map((r) => r.name),
-      'at least one kind module the hub only re-exports',
+      hazardModules().filter((name) =>
+        exportedNames(kindSource(name)).some((n) => (carried.get(n) ?? []).includes(`./world/lifeBeat/${name.replace(/\.ts$/, '')}`)),
+      ),
+      'at least one hazard module whose names `world.ts` takes DIRECTLY',
     ).not.toEqual([])
+  })
+
+  it('⭐⭐⭐ the hub re-exports NO hazard module, and the barrel takes their names direct – T6.10', () => {
+    // ⚠⚠ THE TWO HALVES ARE ONE RULE AND BOTH ARE HERE ON PURPOSE. (a) the hub must not reach a
+    // hazard module, because a hazard imports the hub and the pair is the cycle `tests/import-cycles`
+    // refuses; (b) the names must still be ON the barrel under their historical spelling, taken from
+    // the kind module – otherwise «no cycle» would be satisfiable by the names quietly disappearing,
+    // and hundreds of files import them from `engine/world`.
+    const carried = barrelSpecifiers()
+    const offenders: string[] = []
+    for (const name of hazardModules()) {
+      const stem = name.replace(/\.ts$/, '')
+      const reach = hubReach(name)
+      if (reach.reexports) {
+        offenders.push(
+          `world/lifeBeat.ts re-exports ./lifeBeat/${stem} – a hazard module's names come off the BARREL, not off the hub (CLAUDE.md, the life-beat rule)`,
+        )
+      }
+      for (const n of exportedNames(kindSource(name))) {
+        const specs = carried.get(n) ?? []
+        if (specs.includes('./world/lifeBeat')) {
+          offenders.push(`world.ts imports ${n} from './world/lifeBeat' – it is declared in world/lifeBeat/${name}`)
+        }
+        if (specs.length && !specs.includes(`./world/lifeBeat/${stem}`)) {
+          offenders.push(`world.ts imports ${n} from ${specs.join(' + ')} – expected './world/lifeBeat/${stem}'`)
+        }
+      }
+    }
+    expect(offenders, offenders.length ? `\n${offenders.join('\n')}\n` : '').toEqual([])
   })
 
   it('⭐⭐⭐ no kind module both imports the hub and is reached by it – the cycle A-06 is about', () => {

@@ -4458,17 +4458,23 @@ export function deliverKnownPartner(world: WorldState): void {
 // =================================================================================================
 //
 // The pilot move of the split: §9 referenced nothing in this file and nothing here referenced it, so
-// it left whole – banner, chronicles and all – and the four names below are re-exported under their
-// historical spelling. No importer and no barrel name moved.
-export { leakEligible, leakHazardFor, leakWrongShareFor, rollLeak } from './lifeBeat/leak'
+// it left whole – banner, chronicles and all.
+//
+// ⚠⚠ THE RE-EXPORT THAT USED TO SIT HERE WENT ON 28.09 (T6.10), AND ITS ABSENCE IS THE RULE RATHER THAN
+// A TIDY-UP. T6.8 could re-export the leak's four names from this hub because this section references
+// nothing – no cycle was possible. But the hub carrying a kind module's names for the barrel's sake is
+// the SHAPE that becomes a cycle the moment that kind needs the hub, which is exactly what stopped the
+// other seven hazard sections here for a whole task. So the rule is mechanical and has no exceptions:
+// `src/engine/world.ts` takes a kind module's names from the KIND MODULE. CLAUDE.md's life-beat line
+// says it, and `tests/principles-a06-life-beat-direction.test.ts` refuses a hub re-export per module.
 
 // =================================================================================================
 // 10. THE BOOTH – MOVED TO `world/lifeBeat/booth.ts` (A-06 / T6.8, 28.09)
 // =================================================================================================
 //
 // The second of the review's two zero-reference sections: it left whole, banner and chronicles
-// included, and the two names below are re-exported under their historical spelling.
-export { airBoothMention, boothMentionDue } from './lifeBeat/booth'
+// included. Its two names come off `world/lifeBeat/booth.ts` directly – see §9's note for why the hub
+// re-export that used to sit here is gone and may not come back.
 
 // =================================================================================================
 // 11. THE WEDDING – MOVED TO `world/lifeBeat/wedding.ts` (A-06 / T6.10, 28.09)

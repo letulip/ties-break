@@ -51,7 +51,7 @@ import { addEvent } from './ledger'
 // `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
 // MATCH and the match does not exist two phases earlier. See the call site for the measurement and
 // for why that is ruling P working rather than a second clock.
-import { airBoothMention, deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, rollArrival, rollLeak, rollPregnancy, rollSpouseView } from './lifeBeat'
+import { deliverKnownPartner, deliverOwnKey, landBirth, landPregnancyAnnouncement, landPregnancyPause, rollArrival, rollPregnancy, rollSpouseView } from './lifeBeat'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `rollBereavement`
 // imports the hub, so the hub cannot re-export it back without the cycle `tests/import-cycles.test.ts`
 // refuses – see `world/lifeBeat/bereavement.ts`'s header. The call site below did not move.
@@ -60,6 +60,8 @@ import { rollPregnancyLoss } from './lifeBeat/weight'
 import { landWedding, rollWedding } from './lifeBeat/wedding'
 import { rollEnds } from './lifeBeat/ended'
 import { rollSmallTalk } from './lifeBeat/smallTalk'
+import { rollLeak } from './lifeBeat/leak'
+import { airBoothMention } from './lifeBeat/booth'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
