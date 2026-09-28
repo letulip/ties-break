@@ -99,7 +99,11 @@ import { careerMoney } from './reckoning'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, motherhoodBandAt, ownKeyThisWeek, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, motherhoodBandAt, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+// ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
+// imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
+// `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
+import { ownKeyThisWeek } from './lifeBeat/ownKey'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
