@@ -99,8 +99,20 @@ const confirmingNewCareer = ref(false)
 // and `tick` had refreshed for some time (D-P3). A list of call sites written out here was a second
 // copy of a fact that lived in the store; there is no list left to copy now, which is the cheapest
 // possible ending for that class of rot.
-watch(() => game.revision, () => void game.refreshSlots(), { immediate: true })
-watch(() => game.revision, () => void game.refreshCareers(), { immediate: true })
+//
+// ⚠⚠ AND THE KEY IS «WHICH CAREER, AT WHICH REVISION» RATHER THAN THE REVISION ALONE, which is not
+// belt-and-braces – it is the one case the revision cannot see. `loadCareer` does NOT commit: the
+// worker ADOPTS the revision it finds on disk for the career it opened. So switching between two
+// careers that sit at the same revision – two fresh ones both at 1, or any two played about as much –
+// moves `careerId` and leaves `revision` exactly where it was. Keyed on the revision alone, `slots`
+// would still hold the PREVIOUS career's records, `autoSlots` below filters on the `auto:` prefix and
+// not on the career, and «Restore previous» would offer a slot belonging to the career the player has
+// just left. That is D-01's ending by a different road. Both lists are a function of both facts, so
+// both facts are the key. Pinned in tests/component/principles-d05-careers-freshness.test.ts, whose
+// last case is red on a revision-only key and green here.
+const listKey = () => `${game.snapshot?.careerId ?? ''}@${game.revision}`
+watch(listKey, () => void game.refreshSlots(), { immediate: true })
+watch(listKey, () => void game.refreshCareers(), { immediate: true })
 const saveName = ref('')
 const seedCopied = ref(false)
 

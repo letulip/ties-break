@@ -59,38 +59,78 @@ Object.defineProperty(globalThis, 'localStorage', {
 })
 
 const CAREER_ID = 'c-d05-fresh'
+/** ⚠ THE SECOND CAREER SITS AT THE SAME REVISION ON PURPOSE – see the switch case at the foot. */
+const OTHER_ID = 'c-d05-other'
 
-/** The worker's committed state, as far as this file is concerned: a week and a revision that move
- *  together, because the revision IS the worker's count of committed mutations. */
-const committed = { week: 1, revision: 4 }
+/** The worker's committed state, as far as this file is concerned: which career is loaded, its week
+ *  and its revision. The revision moves with a mutation, because it IS the worker's count of
+ *  committed mutations – and it does NOT move on a career switch, which is the point of the last
+ *  case: `loadCareer` adopts the revision found on the career it opened. */
+const committed = { careerId: CAREER_ID, week: 1, revision: 4 }
 
 const snapshotOf = (): Snapshot =>
-  ({ careerId: CAREER_ID, week: committed.week, kidName: 'Vera' }) as unknown as Snapshot
+  ({ careerId: committed.careerId, week: committed.week, kidName: 'Vera' }) as unknown as Snapshot
 
-const careerRow = (): CareerMeta => ({
-  careerId: CAREER_ID,
-  kidName: 'Vera',
+const careerRow = (careerId: string, week: number): CareerMeta => ({
+  careerId,
+  kidName: careerId === CAREER_ID ? 'Vera' : 'Nadia',
   country: 'US',
   seed: 'd05-fresh',
   createdAt: 1,
-  lastPlayedAt: 1000 + committed.week,
-  week: committed.week,
+  lastPlayedAt: 1000 + week,
+  week,
   revision: committed.revision,
 })
 
+/** Both careers, the loaded one at the committed week and the other parked at week 200. */
+const careerRows = (): CareerMeta[] => [
+  careerRow(CAREER_ID, committed.careerId === CAREER_ID ? committed.week : 1),
+  careerRow(OTHER_ID, committed.careerId === OTHER_ID ? committed.week : 200),
+]
+
+/** One autosave per career, keyed the way db/saves.ts keys them – the list More filters for `auto:`. */
+const slotsFor = (careerId: string) => [
+  {
+    slot: `auto:${careerId}:a`,
+    careerId,
+    savedAt: 5000,
+    week: committed.week,
+    seed: 'd05-fresh',
+    bytes: 10,
+    revision: committed.revision,
+  },
+  {
+    slot: `auto:${careerId}:b`,
+    careerId,
+    savedAt: 6000,
+    week: committed.week,
+    seed: 'd05-fresh',
+    bytes: 10,
+    revision: committed.revision,
+  },
+]
+
 vi.mock('../../src/worker/client', () => ({
   WorkerRestartError: class extends Error {},
-  request: vi.fn(async (msg: { type: string; weeks?: number }): Promise<ToUI> => {
+  request: vi.fn(async (msg: { type: string; weeks?: number; careerId?: string }): Promise<ToUI> => {
     if (msg.type === 'tick' || msg.type === 'advance') {
       committed.week += msg.weeks ?? 1
       committed.revision += 1
       return { id: 0, ok: true, type: 'snapshot', snapshot: snapshotOf(), revision: committed.revision }
     }
+    if (msg.type === 'loadCareer') {
+      // ⚠ THE REVISION DOES NOT MOVE. The worker adopts the revision it finds on disk for the career
+      // it opened, and two careers with the same number of commits are at the same number – which is
+      // exactly the case the last test is about.
+      committed.careerId = msg.careerId ?? CAREER_ID
+      committed.week = committed.careerId === OTHER_ID ? 200 : 1
+      return { id: 0, ok: true, type: 'snapshot', snapshot: snapshotOf(), revision: committed.revision }
+    }
     if (msg.type === 'listCareers') {
-      return { id: 0, ok: true, type: 'careers', careers: [careerRow()], revision: committed.revision }
+      return { id: 0, ok: true, type: 'careers', careers: careerRows(), revision: committed.revision }
     }
     if (msg.type === 'listSlots') {
-      return { id: 0, ok: true, type: 'slots', slots: [], revision: committed.revision }
+      return { id: 0, ok: true, type: 'slots', slots: slotsFor(committed.careerId), revision: committed.revision }
     }
     return { id: 0, ok: true, type: 'snapshot', snapshot: snapshotOf(), revision: committed.revision }
   }),
@@ -109,11 +149,14 @@ async function openSaves(): Promise<ReturnType<typeof mount>> {
   return w
 }
 
-/** The career row's own hint line – the week, her age and when it was last played. */
+/** The ACTIVE career's row hint – the week, her age and when it was last played. */
 function rowHint(w: ReturnType<typeof mount>): string {
-  const row = w.find('.career-row .hint')
-  expect(row.exists(), 'the careers list drew a row').toBe(true)
-  return row.text()
+  const row = w
+    .findAll('.career-row')
+    .find((r) => r.find('.pill.ok').exists())
+    ?.find('.hint')
+  expect(row?.exists(), 'the careers list drew a row for the active career').toBe(true)
+  return row!.text()
 }
 
 describe('⭐⭐ D-05 – the careers row follows the career while More is open', () => {
@@ -121,6 +164,7 @@ describe('⭐⭐ D-05 – the careers row follows the career while More is open'
     setActivePinia(createPinia())
     backing.clear()
     document.body.innerHTML = ''
+    committed.careerId = CAREER_ID
     committed.week = 1
     committed.revision = 4
   })
@@ -168,6 +212,58 @@ describe('⭐⭐ D-05 – the careers row follows the career while More is open'
     await flushPromises()
     const after = mocked.mock.calls.filter(([m]) => m.type === 'listCareers').length
     expect(after - before, 'a refresh whose revision did not move asks exactly once more').toBe(1)
+    w.unmount()
+  })
+
+  // ===============================================================================================
+  // ⚠⚠ THE HOLE D-05 WOULD HAVE OPENED IF THE WATCH KEY WERE THE REVISION ALONE
+  // ===============================================================================================
+  //
+  // Found by reading the deletion back rather than by a failing run, and it is the one case where
+  // «refresh on `revision`» is not enough. `loadCareer` does NOT commit: the worker ADOPTS the
+  // revision it finds on disk for the career it opened. So switching between two careers that happen
+  // to sit at the same revision – two fresh ones both at 1, or any two played about as much – moves
+  // `snapshot.careerId` and leaves `revision` exactly where it was.
+  //
+  // Before D-05 that could not bite, because `loadCareer` carried its own `refreshSlots()`. With the
+  // tail gone and the watch keyed on the revision alone, `game.slots` would still hold the PREVIOUS
+  // career's records – and MoreScreen's `autoSlots` filters on the `auto:` prefix, not on the career –
+  // so the Saves section would list the old career's generations under the new one and «Restore
+  // previous» would target a slot belonging to a career the player has just left. That is D-01's
+  // ending reached by a different road, which is why the key is «which career, at which revision».
+  //
+  // ⚠ MUTATION ARM (measured 28.09): change either watch's key back to `() => game.revision` → this
+  // case goes RED, the Saves list still showing `auto:c-d05-fresh:…` after the switch. The three cases
+  // above stay green, which is what makes this one worth its own place.
+  it('⭐⭐⭐ a career switch at the SAME revision still moves the lists', async () => {
+    const game: Game = useGameStore()
+    game.snapshot = snapshotOf()
+    const w = await openSaves()
+    expect(game.slots.map((s) => s.slot), 'the list starts on the loaded career').toEqual([
+      `auto:${CAREER_ID}:a`,
+      `auto:${CAREER_ID}:b`,
+    ])
+    const revisionBefore = game.revision
+
+    const load = w.findAll('button').find((b) => b.attributes('aria-label') === 'Load career – Nadia')
+    expect(load, 'the other career offers its Load').toBeTruthy()
+    await load!.trigger('click')
+    await flushPromises()
+    const dialog = w.findAllComponents({ name: 'ConfirmDialog' })[0]
+    if (dialog) {
+      await dialog.findAll('button')[1].trigger('click')
+      await flushPromises()
+    }
+    await flushPromises()
+    await flushPromises()
+
+    expect(game.snapshot!.careerId, 'the switch landed – the case is not vacuous').toBe(OTHER_ID)
+    expect(game.revision, 'and it did NOT move the revision, which is the whole premise').toBe(revisionBefore)
+    expect(game.slots.map((s) => s.slot), 'the Saves list belongs to the career now open').toEqual([
+      `auto:${OTHER_ID}:a`,
+      `auto:${OTHER_ID}:b`,
+    ])
+    expect(rowHint(w), "and the active row is the newly opened career's").toContain(weekLabel(200))
     w.unmount()
   })
 })
