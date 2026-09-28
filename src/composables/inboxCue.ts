@@ -86,15 +86,29 @@ export function latestNewsId(snapshot: Snapshot | null | undefined): number {
  *  takes to climb back. The list is append-only at the END and pruned only at the front, so the last
  *  element is stable and changes exactly when a letter arrives.
  *
+ *  ⚠⚠ AND SINCE T6.2 · D-07 (28.09) THE ENGINE HANDS IT OVER RATHER THAN THIS READING THE LAST ROW.
+ *  The paragraph above is an argument about the WORLD's list, and `Snapshot.offers` is no longer that
+ *  list: it carries the letters this week still needs (the live ones and the deals in force), so its
+ *  last element is a different letter - and on a career whose newest letter is terminal it is not the
+ *  newest letter at all. `Snapshot.newestLetterId` is the same fact derived where the full list lives,
+ *  so the semantics this header claims are exactly the semantics it now has.
+ *  ⚠ THE FIELD CARRIES THIS FUNCTION'S NAME ON PURPOSE. It is ONE fact, and two spellings of one fact
+ *  is the defect class this wave is about – so the wire field, this accessor and every test read
+ *  `newestLetterId` and nothing else. The function stays because it is the SEAM its three callers
+ *  (`useLetterWatermark` below, `composables/tabSeen.ts`, `App.vue`) already read, and because
+ *  «or null for a snapshot that is not there yet» is a question a field cannot answer for itself.
+ *
  *  ⚠ AND IT DELIBERATELY DOES NOT ASK `state`. `Snapshot.offerOpen` (engine: `hasLiveOffer`) is the
  *  right question for the INBOX ICON's dot - "is a decision waiting" - and it is already wired
  *  there. This is a different question: "did something LAND in the family's post". Since 04.08 a kit
  *  deal ends with a NOTICE (`state: 'info'`), which is never live and would therefore never ring or
  *  raise a dot if this asked the same question the icon does - and that notice is precisely the one
- *  the owner said the player misses ("the bills are his again"). Two dots, two facts, on purpose. */
+ *  the owner said the player misses ("the bills are his again"). Two dots, two facts, on purpose.
+ *  ⭐ IT IS ALSO WHY THE FIELD IS MANDATORY AND NOT BELT-AND-BRACES: that notice is never live, so it
+ *  is never carried, so a dot reading the carried list would go quiet for exactly the arrival he
+ *  raised. */
 export function newestLetterId(snapshot: Snapshot | null | undefined): string | null {
-  const offers = snapshot?.offers ?? []
-  return offers.length ? offers[offers.length - 1].id : null
+  return snapshot?.newestLetterId ?? null
 }
 
 /** `prefix:careerId` - THE ONE SHAPE OF A CAREER-SCOPED KEY, so no two surfaces can namespace the

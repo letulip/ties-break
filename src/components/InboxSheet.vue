@@ -32,7 +32,7 @@
 // Removing a letter from the list gets its own confirm because the owner asked for one, and because
 // a control that empties a row on a single press is one mis-tap from a pile the player cannot get
 // back - even though nothing behind it is destroyed.
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import type {
@@ -69,7 +69,30 @@ import { playSfx } from '../audio/sfx'
 defineEmits<{ close: [] }>()
 
 const game = useGameStore()
-const mail = useInboxMail()
+
+// ⭐⭐ THE POST IS ASKED FOR WHEN THE SHEET OPENS (T6.2 · D-07, 28.09) – the album's precedent, one
+// surface over (`docs/specs/the-album-2026-09.md` §8b, `stores/game.ts`' `loadAlbum`). A career's
+// whole post used to ride every weekly Snapshot – 261 rows at week 1133, of which NONE were live,
+// 45 % of the snapshot's bytes and 94 % of everything a career added to it – and this sheet is the
+// only surface that reads them all. So the weekly wire carries what the week needs and the list is a
+// QUERY: read-only against the committed world, asked once here, held nowhere else.
+//
+// ⚠ THE REF IS THE POST'S ONLY HOME, and that is half the mechanism rather than a detail. The sheet is
+// `v-if`'d in HomeScreen, so it mounts fresh and dies with its copy – a store that held the list would
+// show career A's letters to career B for as long as the next fetch took.
+//
+// ⚠ NULL IS «NOT ANSWERED YET OR REFUSED», NOT «EMPTY», and every reader below is written for that:
+// the list region draws nothing at all until the answer lands (the album screen's own empty chrome),
+// because the alternative is one frame of «Nothing yet. Sponsors write to players they have been
+// watching for a season.» on a career holding three hundred letters – a false sentence is worse than a
+// quiet frame. `inboxMail`'s prune reads the same null the same way: it does not prune.
+const post = ref<Offer[] | null>(null)
+const loaded = computed(() => post.value !== null)
+onMounted(async () => {
+  post.value = await game.loadInbox()
+})
+
+const mail = useInboxMail(() => post.value)
 const week = computed(() => game.snapshot?.week ?? 0)
 /** Newest first: the letter that needs answering is the one that just arrived.
  *
@@ -85,7 +108,11 @@ const RUNG_RANK = new Map<string, number>(SPONSOR_TIERS.map((t, i) => [t, i]))
 const rungOf = (o: Offer): number =>
   o.kind === 'kit' ? (RUNG_RANK.get((o.terms as KitOfferTerms).tier) ?? -1) : -1
 const letters = computed(() =>
-  [...(game.snapshot?.offers ?? [])]
+  // ⚠ THE QUERY'S LIST AND NOT `snapshot.offers` (T6.2 · D-07): the snapshot carries this week's
+  // letters, and the sheet is the surface whose whole job is the career's post. The tie-break below
+  // reads the array's own index, and the query answers in `world.offers`' order – oldest first, the
+  // same order the snapshot carried – so the rendered order is unmoved.
+  [...(post.value ?? [])]
     .map((o, i) => ({ o, i }))
     .sort((a, b) => b.o.week - a.o.week || rungOf(b.o) - rungOf(a.o) || b.i - a.i)
     .map((x) => x.o),
@@ -125,6 +152,11 @@ const open = computed(() => letters.value.filter(live))
  *  brand is the paper's own `terms.brand`, and `untilWeek` is what `signOffer` wrote onto the offer –
  *  never a length this sheet worked out from `seasons`. */
 const contractNote = computed(() => {
+  // ⚠ THE SNAPSHOT AND NOT THE QUERY (T6.2 · D-07), and it is the right source rather than the
+  // convenient one: `Snapshot.offers` carries the deals IN FORCE this week, which is exactly what
+  // `activeKitDeal` selects from – it applies its own `[fromWeek, untilWeek]` clause to whatever list
+  // it is handed, and the carried set is a superset of what it can select, so the answer is identical.
+  // It also means this sentence is on screen on the FIRST frame, before the post arrives.
   const deal = activeKitDeal(game.snapshot?.offers ?? [], week.value)
   if (!deal) return ''
   const terms = deal.terms as KitOfferTerms
@@ -449,6 +481,10 @@ const confirmMessage = computed(() => {
   // the paper at all – called here on the same inbox and the same week the letter is handed
   // (`game.snapshot.offers` is what the sheet passes it), so the paper, this confirm and the till
   // cannot answer the question differently. Null on every letter that costs nothing.
+  //
+  // ⚠ AND IT STAYS ON THE SNAPSHOT AFTER T6.2 · D-07, for `contractNote`'s reason: the bond reads
+  // `runningClothingCampaign`, which is `activeAdDeals` asked about one category, and the deals in
+  // force are precisely what the weekly wire carries. Same question, same answer, one frame earlier.
   const bond = apparelBondCost(game.snapshot?.offers ?? [], week.value, t.brand)
   const bondBrand = bond ? (bond.campaign.terms as AdOfferTerms).brand : ''
   // Two arms, and the second is the owner's own wording: a term played out owes nothing, and saying
@@ -543,47 +579,56 @@ async function doRefuse(id: string): Promise<void> {
              worth the most. No mechanic moves - see the ⚠⚠ note on the computed. -->
         <p v-if="contractNote" class="hint inbox-contract">{{ contractNote }}</p>
 
-        <p v-if="letters.length === 0" class="hint">
-          Nothing yet. Sponsors write to players they have been watching for a season.
-        </p>
-        <p v-else-if="rows.length === 0" class="hint">
-          Your inbox is clear. Everything you took off the list is still in her history.
-        </p>
-        <p v-else-if="open.length === 0" class="hint">Nothing waiting on an answer.</p>
+        <!-- ⚠⚠ THE LIST WAITS FOR ITS ANSWER (T6.2 · D-07). The post is a query now, so for the frame
+             between opening and the reply there is no list to draw – and the four sentences below are
+             each a CLAIM about a list, so drawing any of them early would state something false: a
+             career holding three hundred letters would be told «Nothing yet» for a tick. The album
+             screen draws its own empty chrome for exactly this frame; so does this one. The contract
+             line above is outside the gate on purpose – it reads the snapshot, so it is already
+             right. -->
+        <template v-if="loaded">
+          <p v-if="letters.length === 0" class="hint">
+            Nothing yet. Sponsors write to players they have been watching for a season.
+          </p>
+          <p v-else-if="rows.length === 0" class="hint">
+            Your inbox is clear. Everything you took off the list is still in her history.
+          </p>
+          <p v-else-if="open.length === 0" class="hint">Nothing waiting on an answer.</p>
 
-        <ul v-if="rows.length" class="inbox-list">
-          <li v-for="row in rows" :key="row.offer.id" class="inbox-row" :class="{ unread: row.unread }">
-            <!-- THE ROW IS A BUTTON AND THE BIN IS A SECOND ONE, side by side rather than nested:
-                 a button inside a button is not a thing, and a row that swallowed the bin's click
-                 would open the letter it was asked to remove. -->
-            <button class="inbox-open" type="button" @click="openRow(row.offer.id)">
-              <span class="inbox-line">
-                <span class="inbox-from">{{ row.from }}</span>
-                <span v-if="row.waiting" class="pill ok inbox-waiting">Needs an answer</span>
-              </span>
-              <span class="inbox-subject">{{ row.subject }}</span>
-              <span class="hint inbox-meta">{{ row.meta }}</span>
-            </button>
-            <!-- THE BIN GLYPH, AND THE GAP IS CLOSED (10.08). This shipped as the WORD `Delete`
-                 while `public/icons/` had no bin - a flagged art gap, never a design choice - and
-                 the note here said the swap would be one element the day the master landed. The
-                 owner drew it, so this is that one element.
-                 ⚠ THE NAME DID NOT CHANGE WITH THE PICTURE. A glyph is `aria-hidden` inside
-                 IconButton, so the label IS the control's whole accessible name, and it still names
-                 the letter rather than the verb - two rows both called "Delete" would be the D11
-                 defect one screen over. It no longer needs to contain a visible word because there
-                 is no longer a visible word to contain (WCAG 2.5.3 binds a name to visible TEXT). -->
-            <IconButton
-              v-if="row.removable"
-              class="inbox-bin"
-              icon="bin"
-              variant="bare"
-              :icon-size="16"
-              :label="`Delete the letter: ${row.from} – ${row.subject}`"
-              @click="askBin(row.offer)"
-            />
-          </li>
-        </ul>
+          <ul v-if="rows.length" class="inbox-list">
+            <li v-for="row in rows" :key="row.offer.id" class="inbox-row" :class="{ unread: row.unread }">
+              <!-- THE ROW IS A BUTTON AND THE BIN IS A SECOND ONE, side by side rather than nested:
+                   a button inside a button is not a thing, and a row that swallowed the bin's click
+                   would open the letter it was asked to remove. -->
+              <button class="inbox-open" type="button" @click="openRow(row.offer.id)">
+                <span class="inbox-line">
+                  <span class="inbox-from">{{ row.from }}</span>
+                  <span v-if="row.waiting" class="pill ok inbox-waiting">Needs an answer</span>
+                </span>
+                <span class="inbox-subject">{{ row.subject }}</span>
+                <span class="hint inbox-meta">{{ row.meta }}</span>
+              </button>
+              <!-- THE BIN GLYPH, AND THE GAP IS CLOSED (10.08). This shipped as the WORD `Delete`
+                   while `public/icons/` had no bin - a flagged art gap, never a design choice - and
+                   the note here said the swap would be one element the day the master landed. The
+                   owner drew it, so this is that one element.
+                   ⚠ THE NAME DID NOT CHANGE WITH THE PICTURE. A glyph is `aria-hidden` inside
+                   IconButton, so the label IS the control's whole accessible name, and it still names
+                   the letter rather than the verb - two rows both called "Delete" would be the D11
+                   defect one screen over. It no longer needs to contain a visible word because there
+                   is no longer a visible word to contain (WCAG 2.5.3 binds a name to visible TEXT). -->
+              <IconButton
+                v-if="row.removable"
+                class="inbox-bin"
+                icon="bin"
+                variant="bare"
+                :icon-size="16"
+                :label="`Delete the letter: ${row.from} – ${row.subject}`"
+                @click="askBin(row.offer)"
+              />
+            </li>
+          </ul>
+        </template>
       </template>
     </div>
   </TakeoverShell>

@@ -124,10 +124,23 @@ export interface InboxMail {
  * ⚠ THE STORED SETS ARE PRUNED TO THE LETTERS THAT STILL EXIST, on every write. `pruneEntryLetters`
  * drops tournament-desk receipts a year after they were filed, so an unpruned set grows for the whole
  * length of a career and is mostly ids of letters nobody can see. Pruning on write keeps it the size
- * of the inbox. It is also why the prune reads the SNAPSHOT rather than a stored count: the list is
+ * of the inbox. It is also why the prune reads the LIST rather than a stored count: the list is
  * the authority on what exists, and this module is only ever an annotation on it.
+ *
+ * ⚠⚠ AND THE LIST IS THE CALLER'S NOW, NOT `Snapshot.offers` (T6.2 · D-07, 28.09), BECAUSE A PARTIAL
+ * LIST TURNS THE PRUNE INTO A DESTRUCTOR. Since D-07 the weekly snapshot carries only the letters
+ * this week still needs, so pruning against it would delete the player's OWN annotations on every
+ * older letter the moment anything was read or binned – a binned letter would un-bin itself the week
+ * its offer expired, and the write is persisted, so it would not be recoverable. Binning one letter
+ * would in fact clear the bin marks of all the others, which is the defect in its purest form.
+ *
+ * `allLetters` is therefore the WHOLE post – `InboxSheet` passes the `inbox` query's answer, which it
+ * has in hand for as long as it is open, and this composable has no other caller. Its `null` means
+ * «I cannot say», and the answer to that is TO NOT PRUNE: a set that keeps a stale id costs a few
+ * bytes, and a set that lost a real one costs the player something he did. Safe by construction – the
+ * partial list is no longer reachable from here.
  */
-export function useInboxMail(): InboxMail {
+export function useInboxMail(allLetters: () => Offer[] | null): InboxMail {
   const game = useGameStore()
   const careerId = computed(() => game.snapshot?.careerId ?? '')
   const key = (prefix: string) => careerKey(prefix, careerId.value)
@@ -146,11 +159,15 @@ export function useInboxMail(): InboxMail {
 
   function persist(which: 'read' | 'binned'): void {
     if (!careerId.value) return
-    const live = new Set((game.snapshot?.offers ?? []).map((o) => o.id))
     const target = which === 'read' ? read : binned
-    const pruned = new Set([...target.value].filter((id) => live.has(id)))
-    target.value = pruned
-    writeSet(key(which === 'read' ? READ_KEY : BINNED_KEY), pruned)
+    const all = allLetters()
+    // ⚠ NO LIST, NO PRUNE – see the header. The annotation is still written, so the press the player
+    // just made survives a reload; what is skipped is the half that DELETES.
+    if (all !== null) {
+      const exists = new Set(all.map((o) => o.id))
+      target.value = new Set([...target.value].filter((id) => exists.has(id)))
+    }
+    writeSet(key(which === 'read' ? READ_KEY : BINNED_KEY), target.value)
   }
 
   return {
