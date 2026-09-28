@@ -127,6 +127,142 @@ export function importStatements(text: string): string[] {
   return out
 }
 
+// =================================================================================================
+// ⚠⚠ THE COMMENT STRIP IS A SCANNER AND NOT TWO REGEXES – T6.9 second pass, 28.09, AND THIS DEFECT
+// SAT UNDER EVERY MEASUREMENT THIS FILE HAS EVER MADE
+// =================================================================================================
+//
+// WHAT WAS HERE: `.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')` – block comments
+// first, then whole-line comments – at three sites.
+//
+// ⚠ IT WAS FOUND THE ONLY WAY THIS COULD BE FOUND: another builder planted a real 2-cycle
+// (`export { rollBereavement } from './lifeBeat/bereavement'` in the hub, and that module imports the
+// hub back) and **this file stayed GREEN, exit 0, 6 tests passed.** Three positions were tried; only
+// one at end-of-file reddened anything.
+//
+// THE CAUSE IS UPSTREAM OF THE PARSER. This codebase writes path globs in prose – `` `world/*` ``
+// appears in a `//` line nine times, `` `world/*.ts` `` eight, `public/images/**` more – and a glob
+// puts a SLASH IMMEDIATELY BEFORE A STAR. Run the block matcher first and that `/*` is an OPENER: it
+// runs to the next `*/`, which is the close of the next JSDoc, and everything between is deleted.
+// Measured on `src/engine/world/lifeBeat.ts`: the opener is line 129
+// (`// also the edge nine other \`world/*\` modules already take for THIS predicate…`) and the match
+// runs to line 247 – **10,469 characters, the hub's entire import block**.
+//
+// ⚠⚠ THE SIZE OF IT, because a judge that cannot see an edge cannot refuse a cycle. Same parser, only
+// the strip changed: **1651 -> 1728 resolved runtime edges, 77 RECOVERED ACROSS 17 FILES** (326 source
+// files, 28.09 – ⚠ the absolute totals move with the tree, the +77 / 17 did not across two measurements
+// an hour apart, and the per-file figures below are the ones worth reading):
+// `world/phaseObligations.ts` +17, the hub **19 -> 30**, `lifeBeat/leak.ts` **0 -> 7, it was ENTIRELY
+// invisible**, `lifeBeat/bereavement.ts` 0 -> 3, `lifeBeat/booth.ts` 0 -> 3, `world/summer.ts` +7,
+// `world/kit.ts` +6, `art/feedArt.ts` +7. Nothing was ever INVENTED by the bad strip – it only ate –
+// so no cycle this file ever reported was false; it simply could not see these 77 edges.
+//
+// ⭐ WHY A SCANNER AND NOT THE SWAP. Swapping the two `.replace` calls fixes the live case, and on
+// this tree it is byte-for-byte what the scanner produces (measured: 0 edges differ). It is still not
+// CORRECT, and the case it moves the failure to is a real one – a block comment whose closing `*/`
+// sits on a line beginning with `//` loses its terminator to the line pass, and the block then runs
+// to the NEXT `*/`, eating code exactly as before. Both fixtures are asserted at the foot of this
+// file. A third case only the scanner survives: `/*` or `*/` inside a STRING. So the strip is one
+// left-to-right pass that knows what a comment IS – the same reasoning `tests/helpers/source.ts`
+// applies to its two strippers, taken one step further because this file's verdict is a cycle.
+//
+// ⚠ DIFFERENCES FROM THE OLD STRIP, both in the safe direction: a TRAILING `code // note` comment is
+// now removed too (the old regex only took whole-line ones), which can only drop a phantom, and
+// newlines inside a block comment are KEPT, so `^`-anchored matching still sees one statement per
+// line instead of two joined ones. Measured: 0 resolved edges turn on either.
+//
+// ⚠ AND IT IS DELIBERATELY NOT REGEX-AWARE. A regex literal holding an unescaped `/*` inside a
+// character class would fool it, and telling a regex literal from a division needs a real parser. The
+// tree holds none today (the scanner agrees with the swap on all 325 files, and the swap is not
+// regex-aware either), so the honest position is: this is a lexer for comments, strings and
+// templates, and that is the whole of what it claims.
+export function codeOnly(text: string): string {
+  let out = ''
+  let i = 0
+  const n = text.length
+  while (i < n) {
+    const c = text[i]
+    const next = text[i + 1]
+    if (c === '/' && next === '/') {
+      while (i < n && text[i] !== '\n') i++ // the newline is emitted by the ordinary path below
+      continue
+    }
+    if (c === '/' && next === '*') {
+      i += 2
+      while (i < n && !(text[i] === '*' && text[i + 1] === '/')) {
+        if (text[i] === '\n') out += '\n' // keep the line count – see the note on `^` anchoring
+        i++
+      }
+      i += 2
+      continue
+    }
+    if (c === '"' || c === "'") {
+      const quote = c
+      out += c
+      i++
+      // ⚠ BOUNDED TO THE LINE. An unterminated quote is a `.vue` template's apostrophe («she's»), not
+      // a string, and a scanner that ran to the next quote would swallow the rest of the file.
+      while (i < n && text[i] !== quote && text[i] !== '\n') {
+        if (text[i] === '\\') {
+          out += text[i]
+          i++
+          if (i < n) {
+            out += text[i]
+            i++
+          }
+          continue
+        }
+        out += text[i]
+        i++
+      }
+      if (i < n && text[i] === quote) {
+        out += quote
+        i++
+      }
+      continue
+    }
+    if (c === '`') {
+      out += c
+      i++
+      let depth = 0 // `${ … }` nests, and a nested expression may hold its own backtick
+      while (i < n) {
+        if (text[i] === '\\') {
+          out += text[i]
+          i++
+          if (i < n) {
+            out += text[i]
+            i++
+          }
+          continue
+        }
+        if (depth === 0 && text[i] === '`') {
+          out += '`'
+          i++
+          break
+        }
+        if (text[i] === '$' && text[i + 1] === '{') {
+          depth++
+          out += '${'
+          i += 2
+          continue
+        }
+        if (depth > 0 && text[i] === '}') {
+          depth--
+          out += '}'
+          i++
+          continue
+        }
+        out += text[i]
+        i++
+      }
+      continue
+    }
+    out += c
+    i++
+  }
+  return out
+}
+
 /** Every `import`/`export … from` edge in one source text, read per statement. */
 export function importEdges(text: string): Edge[] {
   const out: Edge[] = []
@@ -176,16 +312,23 @@ function resolveSpec(from: string, spec: string): string {
   return ''
 }
 
-function runtimeGraph(): { edges: Map<string, Set<string>>; what: Map<string, string> } {
+/** The runtime dependency graph of one tree. ⚠ `dir` AND `strip` ARE PARAMETERS SO THE JUDGE CAN BE
+ *  PUT IN FRONT OF A KNOWN CYCLE – see ARM 4. Defaults are the real ones, so every caller that asks
+ *  about `src/` asks exactly what it always asked. */
+function runtimeGraph(
+  dir: string = SRC,
+  strip: (text: string) => string = codeOnly,
+): { edges: Map<string, Set<string>>; what: Map<string, string> } {
   const edges = new Map<string, Set<string>>()
   const what = new Map<string, string>()
-  for (const file of sourceFiles(SRC)) {
+  for (const file of sourceFiles(dir)) {
     // Comments are stripped FIRST: this file and several engine modules name the old cycle edges in
     // prose ("used to import WEEKS_PER_YEAR from season/calendar.ts"), and a comment must never
     // count as a dependency.
-    const text = readFileSync(file, 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/^[ \t]*\/\/.*$/gm, '')
+    // ⚠⚠ THROUGH THE SCANNER SINCE 28.09, NOT TWO REGEXES – it was two, block-first, and that strip
+    // deleted the hub's whole import block and 77 edges besides. The header on `codeOnly` has the
+    // measurement and why the obvious swap is not the fix.
+    const text = strip(readFileSync(file, 'utf8'))
     const deps = new Set<string>()
     for (const { typeOnly, clause, spec } of importEdges(text)) {
       if (typeOnly) continue // erased at compile time – not a runtime edge
@@ -368,8 +511,11 @@ describe('runtime import cycles', () => {
     // a line comment. Both were found here and fixed, not reasoned about.
     //
     // ⭐⭐ AND THE MEASUREMENT DID NOT COME OUT «IDENTICAL», WHICH IS A FINDING AND NOT A WEAKENING.
-    // 28.09, 319 source files: **1601 resolved runtime edges by the dot-all regex, 1599 by the
-    // statement reader, 0 added.** The two it drops are the dot-all clause's THIRD defect, and it is
+    // ⚠⚠ RE-TAKEN 28.09 AFTER THE STRIP FIX, BECAUSE THE FIRST NUMBERS WERE READ THROUGH THE HOLE:
+    // «1601 -> 1599» was a true statement about two BLINDFOLDED readings, 77 edges missing from each
+    // arm. With the scanner in place: **1730 resolved runtime edges by the dot-all regex, 1728 by the
+    // statement reader, 0 added** – and the conclusion is UNCHANGED, the same two edges drop for the
+    // same reason. The two it drops are the dot-all clause's THIRD defect, and it is
     // the worst-directed of the three for this file – a PHANTOM runtime edge invented out of a
     // type-only import, because the match began on a line ABOVE it and so the `(type[ \t]+)?` group
     // came back empty:
@@ -388,9 +534,9 @@ describe('runtime import cycles', () => {
     const { edges } = runtimeGraph()
     const legacy = new Map<string, Set<string>>()
     for (const file of sourceFiles(SRC)) {
-      const text = readFileSync(file, 'utf8')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/^[ \t]*\/\/.*$/gm, '')
+      // ⚠ BOTH ARMS READ THE SAME CORPUS, through the scanner – see the case's own header for why the
+      // first numbers had to be thrown away and re-taken.
+      const text = codeOnly(readFileSync(file, 'utf8'))
       const deps = new Set<string>()
       for (const [, typeMod, , spec] of text.matchAll(DOT_ALL)) {
         if (typeMod) continue
@@ -417,9 +563,7 @@ describe('runtime import cycles', () => {
     for (const [from, tos] of legacy) {
       for (const to of tos) {
         if (edges.get(from)?.has(to)) continue
-        const text = readFileSync(from, 'utf8')
-          .replace(/\/\*[\s\S]*?\*\//g, '')
-          .replace(/^[ \t]*\/\/.*$/gm, '')
+        const text = codeOnly(readFileSync(from, 'utf8'))
         const owner = importStatements(text).filter((stmt) => {
           const spec = SPEC.exec(stmt)
           return spec !== null && resolveSpec(from, spec[1]) === to
@@ -431,6 +575,104 @@ describe('runtime import cycles', () => {
         ).toBe(true)
       }
     }
+  })
+
+  // ===============================================================================================
+  // ⚠⚠ ARM 4 – THE ONE ASSERTION THAT SAYS THE JUDGE STILL JUDGES (T6.9 second pass, 28.09)
+  // ===============================================================================================
+  //
+  // ⭐⭐⭐ WHY AN EDGE-SET COMPARISON IS NOT ENOUGH, said plainly because it is the lesson of this whole
+  // task. ARM 3 proves the parser adds no phantom and loses no value edge. It cannot tell you the file
+  // can still REFUSE A CYCLE – it compares two readings of the same corpus, and if the corpus is wrong
+  // both readings are wrong together. Both of T6.9's defects were found by somebody planting a real
+  // cycle and getting a green run; neither was found by a count. So the judge is put in front of a
+  // cycle it must find.
+  const FIXTURE = fileURLToPath(new URL('fixtures/import-cycle/', import.meta.url))
+  /** The strip that was here until 28.09: block comments first, then whole-line comments. */
+  const blockFirst = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')
+  /** The obvious fix, and not the one that shipped – see the header on `codeOnly`. */
+  const lineFirst = (t: string) => t.replace(/^[ \t]*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
+
+  it('⭐⭐⭐ ARM 4 – a real 2-module cycle is found, and the OLD strip could not see it', () => {
+    // ⚠ `strip` OMITTED means «whatever this file really uses», which is the point of the second
+    // assertion below – see its note.
+    const named = (strip?: (t: string) => string) =>
+      cycles((strip === undefined ? runtimeGraph(FIXTURE) : runtimeGraph(FIXTURE, strip)).edges).map((comp) =>
+        comp.map((p) => relative(FIXTURE, p)).sort().join(' <-> '),
+      )
+    // ⚠ NOT VACUOUS: the fixture directory has to have been read at all.
+    expect(sourceFiles(FIXTURE).map((p) => relative(FIXTURE, p)).sort()).toEqual(['hub.ts', 'leaf.ts'])
+    // THE MEASUREMENT. With the strip this file shipped until today the cycle is INVISIBLE –
+    expect(named(blockFirst), '⚠ the old strip: the re-export is inside the span it deletes').toEqual([])
+    // – and with the one this file actually uses it is named. ⚠ NO STRIP ARGUMENT, DELIBERATELY: this
+    // asks `runtimeGraph`'s own default, so a strip quietly reverted here reddens THIS line by name
+    // rather than leaving a case that only ever compares two strips it was handed.
+    expect(named(), 'the judge finds the cycle the fixture holds').toEqual(['hub.ts <-> leaf.ts'])
+    // ...and the failure message a builder would actually see carries the clause, which is the half
+    // that makes a red actionable rather than a puzzle.
+    const { edges, what } = runtimeGraph(FIXTURE)
+    const hub = join(FIXTURE, 'hub.ts')
+    const leaf = join(FIXTURE, 'leaf.ts')
+    expect(what.get(edgeKey(hub, leaf)), 'the hub -> leaf edge names its own statement').toBe('export { leafValue }')
+    expect(what.get(edgeKey(leaf, hub)), 'and the leaf -> hub edge names its own').toBe('import { hubValue }')
+    expect(edges.get(hub)?.has(leaf)).toBe(true)
+    expect(edges.get(leaf)?.has(hub)).toBe(true)
+  })
+
+  it('⚠⚠ ARM 5 – neither regex ORDER is correct, which is why the strip is a scanner', () => {
+    // ⭐ THE QUESTION THE SWAP DOES NOT ANSWER. Swapping the two `.replace` calls fixes the live case
+    // and is byte-identical to the scanner on all 325 files of `src/` today. It is still not correct,
+    // and these three fixtures are the reason – each is legal source, and each order gets one wrong.
+    const specs = (t: string) => importEdges(t).map((e) => e.spec)
+
+    // (a) THE LIVE CASE: a `//` line holding a path glob. `world/*` is a slash before a star, so the
+    //     block matcher opens there and runs to the JSDoc's close, taking the import with it.
+    const glob = [
+      '// nine other `world/*` modules already take this edge',
+      "import { rollBereavement } from './lifeBeat/bereavement'",
+      '/** a later doc */',
+      'export const x = 1',
+    ].join('\n')
+    expect(specs(blockFirst(glob)), 'block-first EATS the import').toEqual([])
+    expect(specs(lineFirst(glob)), 'line-first survives it').toEqual(['./lifeBeat/bereavement'])
+    expect(specs(codeOnly(glob)), 'and so does the scanner').toEqual(['./lifeBeat/bereavement'])
+
+    // (b) THE MIRROR CASE, which is what the swap costs: a block comment whose closing `*/` sits on a
+    //     line that BEGINS with `//`. The line pass deletes the terminator, so the block then runs to
+    //     the next `*/` and eats the import – the same failure, from the other side.
+    const mirror = [
+      '/* a note',
+      '// and the close is on this line */',
+      "import { a } from './alpha'",
+      '/** a later doc */',
+      'export const y = 1',
+    ].join('\n')
+    expect(specs(lineFirst(mirror)), '⚠ line-first EATS the import here').toEqual([])
+    expect(specs(blockFirst(mirror)), 'block-first survives this one').toEqual(['./alpha'])
+    expect(specs(codeOnly(mirror)), 'and the scanner survives both').toEqual(['./alpha'])
+
+    // (c) AND THE CASE NEITHER ORDER CAN GET RIGHT: a `/*` inside a STRING. No ordering of two
+    //     regexes knows what a string is, which is the whole argument for one left-to-right pass.
+    const inString = [
+      "const marker = '/*'",
+      "import { b } from './beta'",
+      '/** a later doc */',
+      'export const z = marker',
+    ].join('\n')
+    expect(specs(blockFirst(inString)), 'block-first eats it').toEqual([])
+    expect(specs(lineFirst(inString)), 'line-first eats it too').toEqual([])
+    expect(specs(codeOnly(inString)), 'only the scanner keeps the edge').toEqual(['./beta'])
+
+    // ...and the scanner still removes what a strip is FOR: prose that names an edge it does not take.
+    // This is the property the whole strip exists for (see `runtimeGraph`'s own note).
+    const prose = [
+      "// used to import WEEKS_PER_YEAR from './season/calendar'",
+      '/* and this paragraph mentions',
+      "   import { X } from './ghost'",
+      '*/',
+      "import { real } from './real'",
+    ].join('\n')
+    expect(specs(codeOnly(prose)), 'a comment is never a dependency').toEqual(['./real'])
   })
 
   // ⚠⚠ R2-03 – NO NUL BYTE IN TRACKED SOURCE TEXT, AND THIS FILE IS WHY THE CHECK EXISTS.
