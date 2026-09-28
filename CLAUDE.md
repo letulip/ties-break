@@ -119,11 +119,11 @@ docs/review/     2026-08 full review + P1–P9 proposals
   ```
   Every hit is a pin that will break, and each one needs repointing at the source helper. Measured against the `world.ts` and `diary.ts` splits, this predicted **17 of 17 real breakages (100% recall, 81% precision)** – the four false positives cost seconds to dismiss. Those 20 break events were originally found reactively, one failing test run at a time, purely because nobody ran this query first. See `docs/research/graph-tooling-benchmark.md`.
 
-  ⚠ **Run a second spelling too** (28.09, after its first measured false negative – it matches a path *string*, so a pin that ASSEMBLES its path is invisible to it):
+  ⚠ **Run a second spelling too** (28.09, after its first false negative – it matches a path *string*, so a pin that ASSEMBLES its path is invisible):
   ```bash
   git grep -ln "'<module>.ts'" -- tests/ tools/ e2e/
   ```
-  For a `.vue` extraction a **class-name grep** is a third command: without it recall was 3 of 6. ⚠ And **no grep can enumerate a reader's SCOPE** – a split breaks pins by widening or narrowing what a source reader sweeps, which no path query sees. Row 30 of `docs/backlog/the-quality-rig.md` has all of it, measured, and why these cannot be merged into one command.
+  For a `.vue` extraction a **class-name grep** is a third command: without it recall was 3 of 6. ⚠ Neither spelling finds a pin that **quotes** an import line as data (0 of 3, measured), and **no grep can enumerate a reader's SCOPE** – a split breaks pins by widening what a source reader sweeps. Row 30 of `docs/backlog/the-quality-rig.md` has all five blind spots and why they cannot merge.
 - **Never gate while agents are working, and never read an exit code through a pipe.** Five ways this
   has produced a false verdict here, each measured; the incidents are in
   [the-quality-rig.md](docs/backlog/the-quality-rig.md).
