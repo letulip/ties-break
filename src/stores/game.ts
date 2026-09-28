@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { request, WorkerRestartError } from '../worker/client'
+import { request, WorkerRestartError, type WorkerRequest } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type AlbumBook,
@@ -72,6 +72,25 @@ function expectArm<K extends OkReply['type']>(res: OkReply, arm: K): Extract<OkR
   // lets the guard exist at all, for the one caller the compiler cannot see coming.
   return res as Extract<OkReply, { type: K }>
 }
+
+// Omit must distribute over the message union, else only the shared fields survive – the same
+// helper `worker/client.ts` declares for `WorkerRequest`, written out here for the same reason.
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+
+/**
+ * ⭐⭐ D-05 – A MUTATION, IDENTIFIED BY THE FIELD THAT MAKES IT ONE.
+ *
+ * Every command the wire declares with a `baseRevision` is a mutation: the worker re-validates it
+ * against its own committed revision and refuses a stale one (W1-INTEGRITY-A), and a query carries
+ * none. `REPLY_BY_COMMAND` pairs every single one of them with the `snapshot` arm, which is why ONE
+ * body can serve all of them – `commit` applies the snapshot and nothing narrows per command.
+ *
+ * ⚠ THE SET IS NEVER SPELLED OUT HERE, and that is the point rather than economy: a forty-second
+ * mutation joins it by declaring the field on the wire, so this store cannot be the place that
+ * forgets one. `baseRevision` is omitted because `commit` supplies it – a caller that passed its own
+ * would be stating a revision it does not own.
+ */
+type MutationMessage = DistributiveOmit<Extract<WorkerRequest, { baseRevision: number }>, 'baseRevision'>
 
 /** Which save-management operation a status row is about – the UI maps these to labels/retries. */
 export type SaveOpKind = 'save' | 'load' | 'delete' | 'delete-career' | 'export' | 'import'
@@ -365,6 +384,41 @@ export const useGameStore = defineStore('game', {
       this.saveOp = this.error ? { op, status: 'error', message: this.error } : { op, status: 'ok' }
       return out
     },
+    /**
+     * ⭐⭐⭐ D-05 (principles review, 26.09) – THE ONE MUTATION BODY, AND EVERY NAMED ACTION IS NOW
+     * ONE LINE OF IT.
+     *
+     * What stood here instead was 41 hand-copied bodies of the same four statements, and the copies
+     * had DRIFTED: 26 of them ended in `await this.refreshSlots()` and 15 did not, with no rule
+     * behind the split. `buyAsset`'s own comment said «refreshSlots because money moved» – `SlotMeta`
+     * carries no money (shared/protocol/messages.ts) and every mutation writes an autosave, so the
+     * sentence was not describing anything. That drift IS D-01: the 15 that did not refresh left
+     * More's «Restore previous» pointing at the slot holding the CURRENT state, and the restore then
+     * overwrote the one generation that still held the pre-command career.
+     *
+     * ⚠ THE COPIES WERE THE DEFECT, not the duplication. One spelling of «send, absorb, apply» is
+     * one place for the next rule to live, and the reason the drift could exist is that there were 41
+     * places to remember it in.
+     *
+     * ⚠⚠ AND THE LIST REFRESHES ARE GONE RATHER THAN MOVED IN HERE. `slots` and `careers` have ONE
+     * reader in the whole app – MoreScreen – and it refreshes them itself on mount and on every
+     * change of `revision` (D-01's shape, and the careers half landed with this change). So the
+     * refresh happens where the list is READ, once, instead of at 31 call sites that could each
+     * forget; an advance is one round trip instead of three, and a settings command one instead of
+     * two. ⚠ The two refreshes in `reloadAfterRestart` and `refreshAfterStale` are NOT of that
+     * family and stay: they are recovery paths re-syncing this store's own belief after a crash or a
+     * refusal, and their own notes say why (the second is pinned as a dead-control net by
+     * tests/component/principles-w2-more-door-exit.test.ts).
+     *
+     * ⚠ IT IS NOT `runOp`'s SIBLING. A mutation is not a save-management operation: no `saveOp` row
+     * is written, because the player did not ask for a save and a failed tick is not a failed save.
+     */
+    async commit(msg: MutationMessage): Promise<void> {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ ...msg, baseRevision: this.revision }))
+        this.applySnapshot(res)
+      })
+    },
     /** ⭐ `prologue` IS THE SECOND PATH AND IT IS OPTIONAL (build spec §6). The wizard calls this with
      *  two arguments exactly as it always has; the nine cards call it with three. Everything the
      *  prologue earned is applied engine-side by `createWorld` – this store does no arithmetic and
@@ -399,8 +453,6 @@ export const useGameStore = defineStore('game', {
         )
         this.applySnapshot(res)
         this.recovered = false
-        await this.refreshCareers()
-        await this.refreshSlots()
       })
     },
     /** ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по
@@ -418,12 +470,7 @@ export const useGameStore = defineStore('game', {
       )
     },
     async tick(weeks: number) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'tick', weeks, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-        await this.refreshCareers()
-      })
+      await this.commit({ type: 'tick', weeks })
     },
     // ⚠ ROUND 29 #6: `1 | 4` widened to a plain count – the span the pill offers is now the length
     // of the actual quiet slot (`spanWeeksFor`), not the engine's historical step.
@@ -440,19 +487,10 @@ export const useGameStore = defineStore('game', {
     // rule. Pinned in tests/round42-one-press.test.ts, mutation-proven.
     async advance(weeks: number) {
       if (this.busy) return
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'advance', weeks, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-        await this.refreshCareers()
-      })
+      await this.commit({ type: 'advance', weeks })
     },
     async enterEvent(eventId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'enterEvent', eventId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'enterEvent', eventId })
     },
     // W2-ENDINGS. Three answers to three questions the engine asked. `startFreshCareer` is not one
     // of them: the hand-off's «raise another» is a UI transition into onboarding, not a command, and
@@ -461,18 +499,10 @@ export const useGameStore = defineStore('game', {
     // ⭐ `tier` IS THE PLACE THE PLAYER PICKED (17.08). Optional on the wire because only one of the
     // three answers has one – see the command's own note in `protocol.ts`.
     async answerFork(answer: ForkAnswer, tier?: CollegeTier) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'answerFork', answer, tier, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'answerFork', answer, tier })
     },
     async answerRetirement(retire: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'answerRetirement', retire, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'answerRetirement', retire })
     },
     /** «Another year» – the one command that CLEARS an ending. It ticks a college year inside a
      *  single worker call, so it is one of the slowest commands in the game; the store's own `busy`
@@ -481,281 +511,154 @@ export const useGameStore = defineStore('game', {
      *  ⭐ P5: it used to tick 208 weeks and hand back a twenty-two-year-old. One year at a time is
      *  what makes the early return possible at all – see `endCollegeEarly`. */
     async resumeFromCollege() {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'resumeFromCollege', baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'resumeFromCollege' })
     },
     /** ⭐ P5 – «back on tour now». The other answer at a college year boundary: it takes the latch
      *  off for good instead of putting it back on. Engine-side it refuses on a career that is not at
      *  a boundary, so this is a request and not a guarantee. */
     async endCollegeEarly() {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'endCollegeEarly', baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'endCollegeEarly' })
     },
     async withdrawEvent(eventId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'withdrawEvent', eventId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'withdrawEvent', eventId })
     },
     /** R10-13: cancel an entry before its week starts. Past the deadline the entry fee is NOT
      *  refunded and the week becomes plannable again (practice/vacation); before the deadline it is
      *  an ordinary withdrawal with a full refund. */
     async cancelEntry(eventId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'cancelEntry', eventId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'cancelEntry', eventId })
     },
     /** R9-9: skip an entered tournament at its event week (fee forfeited, travel refunded). */
     async skipEvent(eventId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'skipEvent', eventId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'skipEvent', eventId })
     },
     async tournamentReveal() {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'tournamentReveal', baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'tournamentReveal' })
     },
     async tournamentSkip() {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'tournamentSkip', baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'tournamentSkip' })
     },
     async tournamentClose() {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'tournamentClose', baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'tournamentClose' })
     },
     // --- season planner (v13) -------------------------------------------------------------
     /** Book a family vacation on an empty future week (price = the sub-stream quote). */
     async bookVacation(week: number, packageId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'bookVacation', week, packageId, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'bookVacation', week, packageId })
     },
     /** Cancel a booked vacation before its week starts – full refund. */
     async cancelVacation(week: number) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'cancelVacation', week, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'cancelVacation', week })
     },
     /** ⭐ v63, the shop slice 1: buy a rung of the shelf. `stakeCents` is the amount on an 'open'
-     *  rung (an investment names a minimum) and is ignored on a 'fixed' one. `refreshSlots` because
-     *  money moved – the same reason the two bookings above refresh and `chooseGift` does not. */
+     *  rung (an investment names a minimum) and is ignored on a 'fixed' one.
+     *
+     *  ⚠ «`refreshSlots` because money moved – the same reason the two bookings above refresh and
+     *  `chooseGift` does not» STOOD HERE AND IS GONE WITH ITS CALL (D-05, 28.09). It was not a stale
+     *  call with a sound reason behind it: `SlotMeta` carries no money at all
+     *  (shared/protocol/messages.ts), and every mutation writes an autosave, so neither half of the
+     *  sentence described anything. A comment left standing to justify a call that no longer exists
+     *  is worse than the call was. */
     async buyAsset(itemId: string, stakeCents?: number, name?: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'buyAsset', itemId, stakeCents, name, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'buyAsset', itemId, stakeCents, name })
     },
     /** ...and sell one, at the value the engine stored – never at a price this side computed. */
     async sellAsset(itemId: string, amountCents?: number) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'sellAsset', itemId, amountCents, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'sellAsset', itemId, amountCents })
     },
     /** Book a practice match (watchable friendly) on an empty future week. */
     async bookPractice(week: number, withCoach: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'bookPractice', week, withCoach, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'bookPractice', week, withCoach })
     },
     /** Hire a coach off the market, or pass `null` to put the parent back on the court. */
     async hireCoach(coachId: string | null) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'hireCoach', coachId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'hireCoach', coachId })
     },
     /** v59, the travelling team step 1: the masseur on or off the payroll. The engine re-validates
      *  the pro-career gate and the college freeze; this is a thin RPC like every other command. */
     async hireMasseur(hire: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'hireMasseur', hire, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'hireMasseur', hire })
     },
     /** v59 step 2: the sessions dial – the engine refuses a rung the market does not sell. */
     async setMasseurSessions(sessions: number) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setMasseurSessions', sessions, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setMasseurSessions', sessions })
     },
     /** v59 step 2: the travel stance – one more fare on every trip to a paying rung. */
     async setMasseurTravels(on: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setMasseurTravels', on, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setMasseurTravels', on })
     },
     /** ⭐⭐⭐ v80, WAVE F2: the hitting partner on or off the payroll. The engine re-validates the
      *  pro-career gate and the college freeze; this is a thin RPC like every other command. */
     async hireSparring(hire: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'hireSparring', hire, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'hireSparring', hire })
     },
     /** v80 wave F2: the roster dial – the engine refuses an index the market does not sell. */
     async setSparringRung(rung: number) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setSparringRung', rung, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setSparringRung', rung })
     },
     /** v80 wave F2: the travel stance – one more fare on every trip to a paying rung, and the seat
      *  stops standing down on the weeks she is away. */
     async setSparringTravels(on: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setSparringTravels', on, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setSparringTravels', on })
     },
     /** v76, the psychologist's year (wave 5 T2): the second salaried seat on or off the payroll. The
      *  engine re-validates the pro-career gate and the college freeze; this is a thin RPC like every
      *  other command. */
     async hirePsychologist(hire: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'hirePsychologist', hire, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'hirePsychologist', hire })
     },
     /** v76: the roster dial – which of the three takes the weekly call. The engine refuses an index
      *  the roster does not hold. */
     async setPsychologistRung(rung: number) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setPsychologistRung', rung, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setPsychologistRung', rung })
     },
     /** v76 T3: the YEAR-FOCUS – what the seat works on for a season. Every refusal is the engine's
      *  (the id, the hire, her consent, the once-a-season off-season window) and every one of them
      *  arrives as a thrown sentence on the error channel – the same sentence the card is already
      *  printing under the row, because both come from `psychologistFocusRefusal`. */
     async setPsychologistFocus(focus: PsyFocus) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setPsychologistFocus', focus, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setPsychologistFocus', focus })
     },
     /** Buy the coach for competition weeks too, or send him home for them. */
     async setCoachOnEventWeeks(on: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setCoachOnEventWeeks', on, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'setCoachOnEventWeeks', on })
     },
     /** ⭐⭐⭐ v87 – THE WEIGHT, ON OR OFF, MID-CAREER (the weight spec §1; his ruling of 22.09).
      *  `setCoachOnEventWeeks`'s shape one action up. ⚠ The screen renders `snapshot.weightEnabled`
      *  and never a local `ref`, so «effective immediately» is the snapshot this call returns rather
      *  than an optimistic flip the engine might refuse. */
     async setWeightEnabled(on: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setWeightEnabled', on, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'setWeightEnabled', on })
     },
     /** ⭐ v49: ...and send him to the junior and domestic trips too, or stop. The screen warns what
      *  that costs before it calls this; the engine records the decision and refuses nothing. */
     async setCoachOnJuniorEvents(on: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(
-          await request({ type: 'setCoachOnJuniorEvents', on, baseRevision: this.revision }),
-        )
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'setCoachOnJuniorEvents', on })
     },
     /** Cancel a booked practice match before its week starts – full refund. */
     async cancelPractice(week: number) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'cancelPractice', week, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'cancelPractice', week })
     },
     async setPlan(plan: WeekPlan) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'setPlan', plan, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setPlan', plan })
     },
     // W4: answer the knock. Nothing else can clear it and the sim will not tick until it is answered,
     // so this is the one action on the store that unblocks time.
     async decideKnock(choice: KnockChoice) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'decideKnock', choice, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'decideKnock', choice })
     },
     /** ⭐⭐ ROUND 29 #3: answer the shoot that landed on a tournament week. Like `decideKnock` above,
      *  nothing else can clear it and the sim will not tick until it is answered – and unlike the
      *  knock two of its four answers stop being POSSIBLE once the week starts, which is why the
      *  engine refuses to move time in front of it rather than merely halting on it. */
     async answerShootClash(choice: ShootClashChoice) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'answerShootClash', choice, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'answerShootClash', choice })
     },
     /** ⭐ v48: answer the birthday. Like `decideKnock` above, nothing else can clear it and the sim
      *  will not tick until it is answered – and unlike the knock there is no "skip" branch to reach
      *  for, because all four options are presents in their own way. */
     async chooseGift(giftId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'chooseGift', giftId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'chooseGift', giftId })
     },
     /** ⭐⭐ v73: answer a life beat. Like `decideKnock` above, nothing else can clear it and the sim
      *  will not tick until it is answered – and here that is stronger than the knock's contract
@@ -764,42 +667,24 @@ export const useGameStore = defineStore('game', {
      *  the list it offered (invariant 1), so a stale dialog cannot record an answer this beat never
      *  had, and it carries no `amountCents` – an answer is never a purchase. */
     async answerLifeBeat(optionId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'answerLifeBeat', optionId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'answerLifeBeat', optionId })
     },
     /** THE INBOX (v32): sign a letter. Irreversible – the UI puts a ConfirmDialog in front of this
      *  and there is no unsign command to reach for afterwards. */
     async signOffer(offerId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'signOffer', offerId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'signOffer', offerId })
     },
     /** ...and refuse one. Terminal in the same way, so the deadline means something on both sides. */
     async refuseOffer(offerId: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'refuseOffer', offerId, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'refuseOffer', offerId })
     },
     async setPhysio(active: boolean) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'setPhysio', active, baseRevision: this.revision }))
-        this.applySnapshot(res)
-      })
+      await this.commit({ type: 'setPhysio', active })
     },
     /** W3-KIT: put one line of her kit on another rung. Moving up buys the item and is billed at
      *  once; moving down is free and lands at the next scheduled purchase. */
     async setKitGrade(line: KitLine, grade: KitGrade) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'setKitGrade', line, grade, baseRevision: this.revision }))
-        this.applySnapshot(res)
-        await this.refreshSlots()
-      })
+      await this.commit({ type: 'setKitGrade', line, grade })
     },
     async saveManual() {
       await this.runOp('save', async () => {
@@ -822,8 +707,6 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(await request({ type: 'restoreSlot', slot, revision: believed }))
         this.applySnapshot(res)
         this.recovered = res.recovered ?? false
-        await this.refreshSlots()
-        await this.refreshCareers()
       })
     },
     async saveNamed(name: string) {
@@ -837,7 +720,6 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(await request({ type: 'loadCareer', careerId }))
         this.applySnapshot(res)
         this.recovered = res.recovered ?? false
-        await this.refreshSlots()
       })
     },
     async deleteSlot(slot: string) {
@@ -860,6 +742,13 @@ export const useGameStore = defineStore('game', {
     // list beats noise, and `init` deliberately does NOT come through here for exactly that reason
     // (its own note says why). R2-05 removed only the `&& res.type === 'slots'` half of the
     // condition – the reply's arm is now decided by the command – and left the `res.ok` half alone.
+    // ⭐⭐ D-05 (28.09) – AND THEIR CALLERS ARE NOW THE READERS RATHER THAN THE WRITERS. 31 mutation
+    // and lifecycle bodies called these as a tail; MoreScreen, the only reader of either list, calls
+    // them on mount and on every change of `revision` (its own `watch`es say why). What is left here
+    // is the two RECOVERY paths above – `reloadAfterRestart` and `refreshAfterStale` – which re-sync
+    // this store's own belief after a crash or a refusal and are a different job from keeping a
+    // screen current. ⚠ Writing `revision` back is what stops a watch from chasing its own tail: a
+    // query commits nothing, so the value the reply carries is the one that asked for it.
     async refreshSlots() {
       const res = await request({ type: 'listSlots' })
       if (res.ok) {
@@ -923,8 +812,6 @@ export const useGameStore = defineStore('game', {
         const bytes = await file.arrayBuffer()
         const res = this.takeOk(await request({ type: 'importSave', bytes }, [bytes]))
         this.applySnapshot(res)
-        await this.refreshCareers()
-        await this.refreshSlots()
         // A successful import IS a way out of storage recovery – the write went through, so the
         // database is back (or was never the problem). Flip to ready so the shell mounts the game.
         if (this.phase === 'recovery') {
