@@ -31,6 +31,14 @@
 //   * NOT that the 537 remaining names are USED. Most are; the claim here is only that the SURFACE
 //     is the surface, so a change to it is a decision somebody made on purpose. «Is this name read?»
 //     is the census's question, and its answer decays the moment a reader is added or removed.
+//     ⭐ 28.09 – AND THAT CENSUS IS `tools/barrel-census.ts`, WHICH IS THE POINT OF THIS SENTENCE
+//     RATHER THAN A CROSS-REFERENCE: when a list below changes, run it to learn whether the new name
+//     has a reader, or whether a dropped one still had one. It reproduces A-03's own 627 / 93 on
+//     `03d92221` with `--root`, and that reproduction is what licenses any number it prints. It is
+//     filed ARCHIVAL in `tools/README.md` on purpose – the registry's rule is that an instrument
+//     earns its line by having been RUN AGAIN, not by looking useful, and nothing had asked it a
+//     second question on the day it was written. This pin is the trigger that will ask; the day it
+//     does, the tool moves to `INSTRUMENTS` by that rule and not by anybody's prediction.
 //   * NOT a claim about where a name LIVES. `node scripts/world-map.mjs <symbol>` owns that.
 //
 // ⚠ THE COUNTS LIVE IN THE LISTS, NEVER IN THE PROSE ABOVE. The two numbers this header quotes are
