@@ -115,11 +115,22 @@ function reachesTheBarrel(): Reach[] {
       if (target !== BARREL && target !== BARREL.replace(/\.ts$/, '')) continue
       const clause = ts.isImportDeclaration(st) ? st.importClause : null
       const nb = clause?.namedBindings
-      const els = nb && ts.isNamedImports(nb) ? [...nb.elements] : []
+      // ⚠⚠ 28.09 – AND THE RE-EXPORT ARM READS ITS OWN ELEMENTS, which is not tidying: the line
+      // below used to be `st.isTypeOnly` against the union, which does not typecheck (`TS2339` –
+      // `isTypeOnly` is on `ExportDeclaration` and on an import's CLAUSE, never on `ImportDeclaration`)
+      // and, worse, left `els` empty for every `export { … } from` – so an `export { type X } from
+      // '../world'` inside the package would have been filed as a VALUE import and the value case
+      // asserts zero with no grandfather. The bug was a red gate; the hole under it was silent.
+      const exportEls = ts.isExportDeclaration(st) && st.exportClause && ts.isNamedExports(st.exportClause)
+        ? [...st.exportClause.elements]
+        : []
+      const els = nb && ts.isNamedImports(nb) ? [...nb.elements] : exportEls
       const names = els.map((el) => (el.propertyName ?? el.name).text)
-      // Type-only = `import type { … }` on the clause, or every named binding carrying its own
-      // `type` keyword. A MIXED import is a value import: it emits a require at runtime.
-      const typeOnly = Boolean(clause?.isTypeOnly || st.isTypeOnly || (els.length > 0 && els.every((el) => el.isTypeOnly)))
+      // Type-only = `import type { … }` / `export type { … }` on the statement, or every named
+      // binding carrying its own `type` keyword. A MIXED import is a value import: it emits a require
+      // at runtime.
+      const statementTypeOnly = clause?.isTypeOnly || (ts.isExportDeclaration(st) && st.isTypeOnly)
+      const typeOnly = Boolean(statementTypeOnly || (els.length > 0 && els.every((el) => el.isTypeOnly)))
       out.push({
         file: relative(ROOT, abs),
         line: sf.getLineAndCharacterOfPosition(st.getStart()).line + 1,
