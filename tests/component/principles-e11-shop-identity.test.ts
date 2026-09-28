@@ -52,6 +52,23 @@
 // `TB_WRITE_SHOP_IDENTITY=1 npx vitest run --project component tests/component/principles-e11-shop-identity.test.ts`
 // rewrites the record and asserts nothing. A refactor that needs it has changed behaviour, and THAT
 // is the finding.
+//
+// ⚠⚠ THE RECORD WAS REGENERATED ONCE, ON 28.09 (T6.4 · E-P12), AND HERE IS THE FINDING IT ASKS FOR.
+// The shelf's own tab row gained an accessibility surface: lane E found `SegmentedRow.vue:104` putting
+// what a segment is FOR into a `title` attribute only – a desktop tooltip, absent from the accessible
+// name and from a phone entirely – and E-P12's repair routes that same sentence into
+// `aria-describedby`, pointing at a `.sr-only` span. So the shop region really does render six more
+// elements and six more attributes than the frozen record held, and the record had to move.
+//
+// ⚠ WHAT WAS VERIFIED BEFORE IT MOVED, because «the record moved» is not a verdict on its own. The old
+// and the new capture were diffed structurally with the six inserted sentences removed: every price,
+// every family title, every «Worth now» figure, every wait sentence, every `aria-label`,
+// `aria-pressed`, `disabled`, `placeholder`, `min` and `title`, and every computed-style probe is
+// IDENTICAL. The whole delta is (a) the six description sentences joining the row's `textContent`, and
+// (b) `aria-describedby` appearing on the six segments. No wording moved: the six sentences are the
+// ones the `title` attributes already held, character for character, which
+// `tests/component/a11y-sweep.test.ts`'s E-P12 block pins against each other rather than against a
+// literal.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -146,12 +163,29 @@ const ATTRS = [
   'viewBox',
 ] as const
 
+/**
+ * ⚠⚠ ONE ATTRIBUTE VALUE IS NORMALISED, ADDED 28.09 (T6.4 · E-P12), AND IT IS THE SAME ARGUMENT THE
+ * `data-v-*` NOTE ABOVE MAKES. `SegmentedRow.vue` generates its description ids from a MODULE COUNTER
+ * (`tb-seg-desc-<n>-<value>`) – ConfirmDialog.vue's own measured precedent, because Vue's `useId`
+ * collides across `createApp` roots. That `<n>` counts every row this whole FILE has ever mounted, so
+ * the raw value is a function of test order and of how many arms ran before this one: freezing it would
+ * guarantee a red run the day an arm is added above, for the one reason that is not a defect. The
+ * counter is masked; what stays pinned is that the attribute is THERE and that it names THIS option,
+ * which is the fact E-P12 is about.
+ */
+const NORMALISE: Partial<Record<(typeof ATTRS)[number], (v: string) => string>> = {
+  'aria-describedby': (v) => v.replace(/^tb-seg-desc-\d+-/, 'tb-seg-desc-#-'),
+}
+
 /** One element as a line: depth, tag, classes, the attributes above, and its OWN text (never its
  *  children's, so a parent does not restate the whole subtree). */
 function lineOf(el: Element, depth: number): string {
   const classes = [...el.classList].sort().join('.')
   const attrs = ATTRS.filter((a) => el.hasAttribute(a))
-    .map((a) => `${a}=${JSON.stringify(el.getAttribute(a) ?? '')}`)
+    .map((a) => {
+      const raw = el.getAttribute(a) ?? ''
+      return `${a}=${JSON.stringify(NORMALISE[a]?.(raw) ?? raw)}`
+    })
     .join(' ')
   const own = [...el.childNodes]
     .filter((n) => n.nodeType === 3)

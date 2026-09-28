@@ -1,3 +1,11 @@
+<script lang="ts">
+// ⚠ MODULE SCOPE, AND IT HAS TO BE A SECOND BLOCK – `ConfirmDialog.vue`'s own note, for its own reason.
+// Everything inside `<script setup>` is the setup FUNCTION's body and runs once per INSTANCE, so a
+// counter declared there would be 1 for every Home in the document, which is the collision it exists
+// to prevent. See `STRIP_GAP_DESC` in the setup block below (E-P11, 28.09).
+let stripSeq = 0
+</script>
+
 <script setup lang="ts">
 // epic/redesign-home, slice A – HOME AS A DIARY PAGE (the owner's redesign, 28.07).
 //
@@ -1098,6 +1106,15 @@ type StripCell =
  * carries its own count, because "…" that hides eleven rungs and "…" that hides one are different
  * promises and the player is entitled to know which one he is tapping.
  */
+/** ⭐⭐ E-P11 (28.09) – THE ID BASE FOR THE GAP CHIPS' DESCRIPTION SPANS, and it is a module counter on
+ *  `ConfirmDialog.vue`'s own measured precedent rather than Vue's `useId`: `useId` counts per APP
+ *  INSTANCE, so two screens created by two different `createApp` roots both come back `v-0`, and a
+ *  duplicate id makes `aria-describedby` resolve to whichever came first – the wrong range read over
+ *  the right chip. A module-scoped counter is unique per document because there is one module, and it
+ *  is read once at setup so it is stable across re-renders, which is the property the attribute needs.
+ *  `cell.key` (`gap-<index>`) makes it unique WITHIN the row. */
+const STRIP_GAP_DESC = `tb-strip-gap-${++stripSeq}`
+
 const stripCells = computed<StripCell[]>(() => {
   const cells: StripCell[] = []
   const vis = stripVisible.value
@@ -1837,8 +1854,23 @@ async function leaveCollege(): Promise<void> {
               :aria-expanded="stripExpanded"
               :aria-label="cell.label"
               :title="cell.title"
+              :aria-describedby="`${STRIP_GAP_DESC}-${cell.key}`"
               @click="stripExpanded = true"
             >&hellip;</button>
+            <!-- ⭐⭐⭐ E-P11 (28.09, T6.4) – THE RANGE, SPOKEN. `cell.title` already names WHICH rungs are
+                 behind the ellipsis – «5 levels hidden (National to W15) – tap to show the whole
+                 ladder» – and until now it said so in a `title` attribute only: a desktop tooltip,
+                 absent from the accessible name, absent on a phone. The NAME stays `cell.label` («Show
+                 5 more levels»), because a fact that arrives may not rename a control (D7's rule), and
+                 the range arrives as the DESCRIPTION. Same sentence, new surface: not one new word.
+                 `.sr-only` is in src/style.css beside T6.4's shared objects, so the span is out of flow
+                 and the row's layout is untouched.
+                 ⚠ BESIDE THE CHIP AND NOT INSIDE IT, for the reason SegmentedRow.vue's own copy of this
+                 note records: a span inside a control joins the control's `textContent`, which several
+                 tests and `fits.ts`'s width model read as if it were what a player sees. -->
+            <span v-if="cell.kind === 'gap'" :id="`${STRIP_GAP_DESC}-${cell.key}`" class="sr-only">{{
+              cell.title
+            }}</span>
             <span
               v-else
               class="pill tier-chip"

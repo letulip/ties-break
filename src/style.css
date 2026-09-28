@@ -2970,6 +2970,61 @@ button.primary.risky {
 }
 
 /* =================================================================================================
+   ⭐⭐⭐ T6.4 (28.09) – THE SCREEN-READER-ONLY CLASS, WHICH THIS APP DID NOT HAVE.
+   =================================================================================================
+   Three findings of the 26.09 review waited on one missing utility. E-P11 (which rungs the ladder's
+   «…» chip hides), E-P12 (what each segment of a segmented row is for) and E-P13 (the vacation card's
+   gain and the price paid) each found a fact living ONLY in a `title` attribute – a desktop tooltip,
+   which is not in the accessible name, is not spoken, and does not exist at all on a phone. All three
+   proposed the same repair: route the sentence into `aria-describedby`. That attribute points at an
+   ELEMENT, so each one needed a visually hidden span, and a grep for `sr-only`, `visually-hidden` or
+   `clip: rect` over `src/` returned nothing. One utility, not three inventions
+   (docs/now-next-later.md, queued here by name).
+
+   ⚠ IT CARRIES NO NEW COPY, AND THAT IS WHY IT NEEDS NO OWNER RULING (invariant 4). Every sentence it
+   holds is the sentence the `title` already holds, character for character; what changes is that it
+   is SPOKEN instead of only hovered. `tests/component/a11y-sweep.test.ts` pins the described text
+   against the element's own `title`, never against a literal, so the two cannot drift.
+
+   ⚠ THE `title` STAYS, DELIBERATELY. Removing it would take a tooltip off the owner's own desktop
+   playtest device, which is invariant 4 territory, and E-P12's own row offers «or accept it as a
+   desktop tooltip» as the ALTERNATIVE to routing it – so the row is not asking for the tooltip to go.
+   A sighted mouse user keeps the hover; a screen-reader user gains the description. Nothing is lost.
+
+   ⚠⚠ WHY THIS EXACT RECIPE. `display: none` and `visibility: hidden` take the element out of the
+   accessibility tree as well as off the screen, so an `aria-describedby` pointing at one announces
+   NOTHING – the failure would look exactly like success. So the span stays rendered and is clipped:
+   one pixel, out of flow, its own overflow hidden, and `clip-path` for the engines that dropped the
+   deprecated `clip`. Both are kept because they are read by different engines and neither is
+   universal. `white-space: nowrap` is what stops a long sentence being laid out as a 1px column of
+   single characters, which some engines charge as layout work on every frame.
+
+   ⚠ `position: absolute` IS THE HALF THAT COSTS NOTHING ON SCREEN, and the mounted nets assert it
+   rather than trusting it: an out-of-flow span takes no flex slot and no width, so a description may
+   be added inside a control without moving the control.
+   ⚠⚠ AND ONE INSTRUMENT CANNOT SEE THAT, WHICH IS WORTH KNOWING BEFORE IT BITES:
+   `tests/component/fits.ts`'s `demandedWidth` charges `el.textContent`, which INCLUDES an out-of-flow
+   descendant. No fit assertion today measures a control that carries one of these spans (checked:
+   the `assertRowFits` / `assertInlineRowFits` callers are the week bar, the invest stake row and the
+   two seat tables), so nothing is wrong today – but a future fit net over a segmented pill would
+   charge a whole sentence for a span that occupies one pixel. It is reported for the architect rather
+   than repaired here, on wave 10's own precedent: a shared measurement instrument is not loosened
+   mid-wave by the builder who happens to notice.
+   ================================================================================================= */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* =================================================================================================
    ⭐ T6.4 (28.09) – AND THE FOUR OBJECTS T6.3 HAD TO COPY, COLLAPSED HERE UNDER THEIR OWN NAMES.
    =================================================================================================
    When the shop's markup left `MoneyScreen.vue` for `ShopPanel.vue` (T6.3 · E-11), these four rules

@@ -1,3 +1,10 @@
+<script lang="ts">
+// ⚠ MODULE SCOPE, AND IT HAS TO BE A SECOND BLOCK – `ConfirmDialog.vue`'s own note and its own measured
+// reason. `<script setup>` is the setup FUNCTION's body, so a counter declared there would be 1 for
+// every row in the document. See the E-P12 note and `descBase` in the setup block below (28.09).
+let rowSeq = 0
+</script>
+
 <script setup lang="ts">
 // U0 #8 – SEGMENTED ROW. One rounded plate, the chosen segment filled solid accent, the rest muted.
 // Options in, the active value out - so a screen that needs a switcher writes one line and cannot
@@ -44,11 +51,40 @@
 // name whatever descendants it grows, so `getByRole('button', { name: 'Support staff', exact: true })`
 // keeps working in both states. The dot itself carries no word: this round was not asked for one, and
 // CLAUDE.md invariant 4 says an unasked sentence is not a builder's to add.
+// ⭐⭐⭐ E-P12 (28.09, T6.4) – AND A SEGMENT'S `title` IS SPOKEN NOW, NOT ONLY HOVERED.
+// Lane E's accessibility sweep found `SegmentedRow.vue:104` in its «information in the title only»
+// list: every caller that passes `title` was putting what a segment is FOR into a desktop tooltip,
+// which is not in the accessible name, is not announced, and does not exist on a phone at all. The
+// row's proposal is this one - «route `title` to `aria-describedby` in `SegmentedRow`» - so it is
+// fixed once here rather than at each of the four callers.
+//
+// ⚠ NOT ONE NEW WORD (invariant 4). The described span holds `o.title`, the caller's own sentence,
+// character for character; `tests/component/a11y-sweep.test.ts` pins the two against each other
+// rather than against a literal, so they cannot drift apart.
+//
+// ⚠ THE `title` STAYS. E-P12's own row offers «or accept it as a desktop tooltip» as the ALTERNATIVE
+// to routing it, so the row is not asking for the tooltip to go, and taking it away would remove a
+// hover the owner has on his own playtest machine.
+//
+// ⚠ THE SEGMENT'S NAME DOES NOT MOVE UNDER THE NEW SPAN - the same argument the accent dot needed one
+// note down. The button carries an explicit `aria-label` (`o.label`), which pins the accessible name
+// whatever descendants it grows, so `getByRole('button', { name: 'History', exact: true })` keeps
+// working. The span is `.sr-only`, so it is in the accessibility tree and off the screen.
+//
+// ⚠⚠ AND THE ID IS A MODULE COUNTER, ON ConfirmDialog's OWN MEASURED PRECEDENT. `useId` counts per APP
+// INSTANCE, so two rows created by two different `createApp` roots both come back `v-0` - a duplicate
+// id makes `aria-describedby` resolve to whichever came first, i.e. the wrong sentence read over the
+// right segment. A module-scoped counter is unique per document because there is one module, and it
+// is read once in setup so it is stable across re-renders, which is the property the attribute needs.
+// MoneyScreen alone renders three of these rows at once. The counter lives in the SECOND script block
+// at the top of this file, because everything in `<script setup>` is the setup function's body and runs
+// once per instance – which is the collision it exists to prevent.
 defineProps<{
   options: readonly {
     value: string
     label: string
     short?: string
+    /** Hovered on a desktop AND spoken as the segment's description - see the E-P12 note above. */
     title?: string
     /** ⭐ ROUND 42 #28: draw the accent dot on this segment. See the note above. */
     dot?: boolean
@@ -88,6 +124,13 @@ defineProps<{
 
 /** `v-model` – the ACTIVE option's value, never an index. */
 const model = defineModel<string>({ required: true })
+
+/** The id base for this row's description spans – see the E-P12 note at the top of this block. */
+const descBase = `tb-seg-desc-${++rowSeq}`
+/** The id of one segment's description, or `undefined` when the caller passed no sentence: an
+ *  `aria-describedby` with nothing behind it is a promise a screen reader answers with silence. */
+const descId = (value: string, title?: string): string | undefined =>
+  title === undefined ? undefined : `${descBase}-${value}`
 </script>
 
 <template>
@@ -109,6 +152,7 @@ const model = defineModel<string>({ required: true })
       :aria-pressed="o.value === model"
       :aria-label="o.label"
       :title="o.title"
+      :aria-describedby="descId(o.value, o.title)"
       @click="model = o.value"
     >
       {{ o.short ?? o.label }}
@@ -116,5 +160,20 @@ const model = defineModel<string>({ required: true })
            the script note for why it is silent and why the segment's name cannot move under it. -->
       <span v-if="o.dot" class="tab-pill-dot" data-nudge="psychologist-focus"></span>
     </button>
+    <!-- ⭐⭐⭐ E-P12 – THE TOOLTIPS' OWN SENTENCES, ON A SURFACE A SCREEN READER READS. Same words, new
+         surface; `aria-describedby` above points at them by id, which works from anywhere in the
+         document. Rendered only for an option that has one, so no segment carries a promise with
+         nothing behind it.
+         ⚠⚠ BESIDE THE BUTTONS AND NOT INSIDE THEM, AND THAT IS MEASURED RATHER THAN TIDY. Inside, the
+         span joins the button's `textContent` – which is not what a sighted player sees, but IS what a
+         test sees: `tests/component/round30-subtabs.test.ts` opens a chapter with
+         `findAll('button.tab-pill').find((n) => n.text().trim() === 'Bills')`, and ten of its tests went
+         red because the segment's text had become «Bills The recurring costs the family has signed up
+         to». `tests/component/fits.ts`'s `demandedWidth` reads `textContent` the same way and would
+         charge a whole sentence for a one-pixel span. Out here, every control's own text is exactly
+         what it was and the accessibility relationship is unchanged. -->
+    <template v-for="o in options" :key="`desc-${o.value}`">
+      <span v-if="o.title" :id="descId(o.value, o.title)" class="sr-only">{{ o.title }}</span>
+    </template>
   </div>
 </template>

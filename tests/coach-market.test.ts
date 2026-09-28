@@ -17,6 +17,11 @@ const tokens = read('../docs/design/tokens.css')
  *  across three screens. POSITIVE claims about it read `componentLogic`, per CLAUDE.md's helper rule;
  *  `market` above is the .vue alone and stays the source for this file's negatives. */
 const presetRow = componentLogic('components/ui/PlanPresetRow.vue')
+/** ⚠ T6.4 · F-09 (28.09) – THE OTHER MEMBER OF THE PORTRAIT-STRIP FAMILY, read as the `.vue` ALONE.
+ *  The claim it carries is a POSITIVE one about markup in THAT file (its span asks for the shared box),
+ *  and the honest source for «which file carries this» is the file – `componentLogic` follows a
+ *  composable but not a child `.vue`, so it could not answer it either way. */
+const staffTab = read('../src/components/SupportStaffTab.vue')
 
 describe('screen T renders what the design specified', () => {
   it('groups by TIER as a section, not a filter – the chips scroll to a group', () => {
@@ -148,8 +153,32 @@ describe('screen T, round 3', () => {
     // the narrow side of that line. The behavioural net is
     // tests/component/round42-coach-portrait.test.ts, which measures it through a mounted cascade
     // rather than through this file's source text.
-    expect(css).toMatch(/\.cm-art\s*\{[^}]*position: absolute/)
-    expect(css).toMatch(/\.cm-art\s*\{[^}]*mask-image: linear-gradient/)
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AT THE OBJECT RATHER THAN AT THE FILE, AND IT IS STRICTER.
+    // The two arms above read `.cm-art {`'s own declarations out of src/style.css. That rule is gone:
+    // `.staff-art` in `src/components/SupportStaffTab.vue` stated the same eight declarations, its own
+    // note said so – «THE MASK IS THE COACH STRIP'S, STOP FOR STOP» – and F-09's reading was that the
+    // note «records the identity, not a reason to copy it». The box is now `.portrait-strip` in
+    // src/style.css and the market's span carries it beside `.cm-art`.
+    //
+    // ⚠ SO THE ARMS NAME THE PATH, because that is what the claim now is (CLAUDE.md: a claim about
+    // which file carries which CSS declaration is a claim about the path, and `componentLogic` cannot
+    // answer it – it follows a composable but NOT a child `.vue`). And the fact that actually matters –
+    // the coach strip and the staff strip compute the SAME box – is not a text fact at all: it is
+    // measured on BOTH members through the real cascade at 375x667 in
+    // tests/component/principles-f09-shared-objects.test.ts, whose mutation arm reddens every member of
+    // a family when one shared declaration moves. A source pin could never have said that; the two
+    // copies agreed here only by inspection, and F-09's own evidence is a round-36 chase where exactly
+    // that assumption failed and phase 2 had to visit the siblings by hand.
+    expect(css, 'the strip is a shared object in this file').toMatch(/\.portrait-strip\s*\{[^}]*position: absolute/)
+    expect(css).toMatch(/\.portrait-strip\s*\{[^}]*mask-image: linear-gradient/)
+    expect(market, 'and the market span asks for it').toContain('class="cm-art portrait-strip"')
+    expect(staffTab, 'and so does the support seat, which is the whole point of sharing it').toContain(
+      'class="staff-art portrait-strip"',
+    )
+    // ⚠ The `img` rules did NOT join it, and that is F-09's own ruling: `.cm-art img`'s 12% is read off
+    // sixteen coach masters and `.staff-art img`'s 38% off two support masters, so they are two
+    // measurements rather than one. They stay per strip, and stay pinned here.
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*height: 100%/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-fit: cover/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-position: /)

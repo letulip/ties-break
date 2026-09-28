@@ -741,6 +741,26 @@ const MONEY: readonly Member[] = [
   { name: 'money-subtabs@shop', classes: ['tab-row', 'tb-seg', 'money-window', 'money-subtabs', 'shelf-tabs'], anchor: 'shelf-tabs' },
 ]
 
+/**
+ * ⭐⭐ T6.4 – AND THE UTILITY THE THREE ACCESSIBILITY ROWS WAITED ON, read the same way. `.sr-only` is
+ * not an F-09 family (nothing was pasted), but it is a shared object in the same block and the thing
+ * that must be true of it is a COMPUTED one: out of flow, one pixel, clipped – and NEITHER
+ * `display: none` NOR `visibility: hidden`, because both of those take the element out of the
+ * ACCESSIBILITY TREE as well as off the screen, so an `aria-describedby` pointing at one announces
+ * nothing and the failure looks exactly like success. `tests/component/a11y-sweep.test.ts` holds the
+ * other half: that the described text IS the element's own `title`, byte for byte.
+ */
+const SR_ONLY_EXPECTED: Record<string, string> = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  margin: '-1px',
+  padding: '0px',
+  overflow: 'hidden',
+  'clip-path': 'inset(50%)',
+  'white-space': 'nowrap',
+}
+
 /** Every injected stylesheet's text, in document order. */
 function allCss(): string {
   return [...document.querySelectorAll('style')].map((s) => s.textContent ?? '').join('\n')
@@ -830,6 +850,27 @@ describe('T6.4 · F-09 – the shared objects compute byte-identically', () => {
       })
     })
   }
+
+  it('⭐⭐ .sr-only is spoken and not seen – out of flow, one pixel, and never `display: none`', () => {
+    const el = document.createElement('span')
+    el.className = 'sr-only'
+    el.textContent = 'a sentence a screen reader must still be able to read'
+    document.body.appendChild(el)
+    try {
+      const cs = getComputedStyle(el)
+      const got: Record<string, string> = {}
+      for (const p of Object.keys(SR_ONLY_EXPECTED)) got[p] = cs.getPropertyValue(p)
+      expect(got, '.sr-only through the real cascade').toEqual(SR_ONLY_EXPECTED)
+      // ⚠⚠ THE TWO THAT MUST *NOT* BE THERE, and this is the half that makes the utility correct
+      // rather than merely invisible: `display: none` and `visibility: hidden` remove the element
+      // from the accessibility tree, so the description would be silent while every structural
+      // check passed. E-P11 to E-P13 are exactly that defect class one layer up.
+      expect(cs.display, 'a hidden element is not in the accessibility tree').not.toBe('none')
+      expect(cs.visibility, 'and neither is an invisible one').not.toBe('hidden')
+    } finally {
+      el.remove()
+    }
+  })
 
   it('⭐ the four .money-* objects compute identically on MoneyScreen and on ShopPanel', () => {
     // The collapse T6.3's notes pointed here. No shared class and no rename: the promotion is only
