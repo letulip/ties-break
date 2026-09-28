@@ -775,13 +775,25 @@ export interface Snapshot {
    *  trophies from the start, locked, so an absent key would be a shape the reader has to defend
    *  against for no gain. */
   trophiesByTier: Record<TierId, TierTrophies>
-  /** THE INBOX (schema v32): every letter this career has been sent, oldest first – open, signed,
-   *  refused and expired alike. See `Offer`.
+  /** THE LETTERS THIS WEEK STILL NEEDS, oldest first – not the career's post. See `Offer`.
    *
-   *  ⚠ PERSISTED STATE, LIKE `trophiesByTier` AND FOR THE SAME REASON: a signed deal has to outlive
-   *  every prune. The event feed caps at 400 rows and only the trailing 60 reach this snapshot, so a
-   *  contract that lives in the feed is a contract that silently stops existing two seasons later.
-   *  Bounded by construction – at most a handful of letters a season – so it is never pruned. */
+   *  ⚠⚠ IT WAS THE WHOLE INBOX UNTIL T6.2 · D-07 (28.09) AND THE LIST YOU RENDER IS NOT THIS FIELD.
+   *  `world.offers` holds every letter a career was ever sent and is never pruned – a signed deal has
+   *  to outlive every prune, which is why the record lives on the world rather than in the 400-row
+   *  event feed. What changed is what rides the WEEKLY wire: measured at career end, the field was
+   *  261 rows of which none were live, 45 % of the snapshot's bytes and 94 % of everything a career
+   *  added to it. So the snapshot carries the letters that are still a decision plus the deals in
+   *  force, and the whole post is served on demand by the worker's `inbox` query when `InboxSheet`
+   *  opens (`useGameStore().loadInbox()`). The engine's own predicate decides it – see
+   *  `carriedOnTheWire` in `engine/world/snapshot.ts`.
+   *
+   *  ⭐ WHAT IT IS STILL EXACTLY RIGHT FOR, and the reason it is not empty: every question about what
+   *  is IN FORCE this week. `activeKitDeal`, `activeAdDeals` and `apparelBondCost` each apply their
+   *  own week clause to the list they are handed, and the carried set is a superset of what any of
+   *  them can select – so asking them about this field and about `world.offers` cannot differ.
+   *  ⚠ WHAT IT IS NOT FOR: «has anything arrived» (that is `newestLetterId`, below) and «show me my
+   *  letters» (that is the query). Both of those read the FULL list, and a filtered one answers them
+   *  wrongly while looking right. */
   offers: Offer[]
   /** ⚠ THE INBOX DOT, AND THE ENGINE DECIDES IT. Exactly the bell's discipline (HomeScreen's own
    *  comment: "the bell's dot asserts one FACT and not the 'unread' it cannot know"): this asserts
@@ -792,6 +804,19 @@ export interface Snapshot {
    *  It goes out on its own: the last open offer being signed, refused or expiring is the same
    *  event as this turning false. */
   offerOpen: boolean
+  /** ⭐⭐ THE NEWEST LETTER'S ID, or null for a career nobody has written to yet (T6.2 · D-07, 28.09).
+   *
+   *  ⚠ IT IS A FIELD AND NOT A LIST SCAN, AND THAT IS THE WHOLE POINT. `inboxCue.newestLetterId` read
+   *  the last element of `offers` and argued – correctly – that the list is append-only at the END and
+   *  pruned only at the front, so the last element changes exactly when a letter arrives. The argument
+   *  is about the WORLD's list; the last element of a filtered one is a different letter. And the
+   *  letter it matters most for is the one the owner said the player misses: since 04.08 a kit deal
+   *  ends with a NOTICE (`state: 'info'`), which is never live and therefore never carried, so a dot
+   *  reading the carried list would stop ringing for exactly that arrival.
+   *
+   *  ⚠ AND IT DELIBERATELY DOES NOT ASK `state`, which `offerOpen` above does. Two dots, two facts:
+   *  «is a decision waiting» and «did something land in the family's post». */
+  newestLetterId: string | null
   /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
    *  accumulate at finalizeTournament and reset at each season wrap-up.
    *

@@ -51,6 +51,11 @@ import {
   guardNotEnded,
   type WorldState,
 } from '../engine/world'
+// ⭐⭐ T6.2 · D-07 – `assembleInbox` is imported from the module that OWNS it rather than through the
+// `engine/world` barrel. The barrel re-exports the engine's HISTORICAL public API – hundreds of files
+// import from it and none of their names may move (CLAUDE.md) – and a symbol born after A-03 freezes
+// that list does not join it. `assembleAlbum` above predates the freeze and keeps its barrel name.
+import { assembleInbox } from '../engine/world/snapshot'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
@@ -874,6 +879,18 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       if (!world) throw new Error('No active career')
       return { id: msg.id, ok: true, type: 'album', album: assembleAlbum(world), revision: committedRevision }
     }
+    case 'inbox': {
+      // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the `album` case above, one surface over and
+      // for the same reason: the career's whole post was riding every weekly Snapshot (261 rows at
+      // week 1133, of which none were live; 45 % of the snapshot's bytes), and only the sheet that
+      // lists them ever reads them all. A query in the strict sense: `assembleInbox` is a pure read of
+      // the COMMITTED world that takes no draw, so it cannot move `world.rngMain` and cannot commit
+      // anything – `committedRevision` is reported unchanged, which is what a query means here.
+      // ⚠ NOTHING IS PRUNED BY THIS. The world keeps every letter for ever; the weekly wire carries
+      // what this week needs (`carriedOnTheWire`) and the sheet asks for the rest.
+      if (!world) throw new Error('No active career')
+      return { id: msg.id, ok: true, type: 'inbox', inbox: assembleInbox(world), revision: committedRevision }
+    }
     case 'listSlots': {
       const careerId = msg.careerId ?? world?.careerId
       return {
@@ -998,6 +1015,7 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   peekSave           query        none      none                       unchanged
 //   getSnapshot        query        reads     none                       unchanged
 //   album              query        reads     none                       unchanged
+//   inbox              query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged
 //   listCareers        query        none      reads                      unchanged
 //   exportSave         query        reads     none                       unchanged

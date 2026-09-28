@@ -13,7 +13,7 @@ import type { SaveFileErrorCode } from '../../engine/saveGuard'
 import type { PsyFocus } from '../../engine/world/state'
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
-import type { KitGrade, KitLine, ShootClashChoice } from './offers'
+import type { KitGrade, KitLine, Offer, ShootClashChoice } from './offers'
 import type { DynastyHandover, PlayerProfile, PrologueHandover, WeekPlan } from './profile'
 import type { AlbumBook } from './album'
 import type { Snapshot } from './snapshot'
@@ -307,6 +307,12 @@ export type ToWorker =
   // tick). A QUERY in the strict sense, `getSnapshot`'s own shape: read-only against the committed
   // world, no `baseRevision`, assembled fresh on every ask and persisted nowhere.
   | { id: number; type: 'album' }
+  // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the album's precedent, one surface over. The
+  // weekly Snapshot carries the letters this week still needs; the career's whole post – 261 rows at
+  // week 1133, of which none were live – is asked for when `InboxSheet` opens and dropped when it
+  // closes. A QUERY in the strict sense, `album`'s own shape: read-only against the committed world,
+  // no `baseRevision`, assembled fresh on every ask and persisted nowhere.
+  | { id: number; type: 'inbox' }
   | { id: number; type: 'listSlots'; careerId?: string }
   | { id: number; type: 'deleteSlot'; slot: string }
   | { id: number; type: 'listCareers' }
@@ -337,6 +343,9 @@ export type ToUI =
   | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string; revision: number }
   | { id: number; ok: true; type: 'peek'; peek: SavePeek; revision: number }
   | { id: number; ok: true; type: 'album'; album: AlbumBook; revision: number }
+  // ⭐⭐ T6.2 · D-07 – the whole post, `album`'s own shape. `Offer[]` and not an envelope: the
+  // list IS the answer, and the sheet reads nothing else off it.
+  | { id: number; ok: true; type: 'inbox'; inbox: Offer[]; revision: number }
   | {
       id: number
       ok: false
@@ -384,6 +393,7 @@ export type CareersReply = Extract<OkReply, { type: 'careers' }>
 export type ExportedReply = Extract<OkReply, { type: 'exported' }>
 export type PeekReply = Extract<OkReply, { type: 'peek' }>
 export type AlbumReply = Extract<OkReply, { type: 'album' }>
+export type InboxReply = Extract<OkReply, { type: 'inbox' }>
 
 /**
  * The reply each command answers with, on success. Grouped in the worker's own dispatch order so
@@ -449,6 +459,7 @@ export const REPLY_BY_COMMAND = {
   // queries
   getSnapshot: 'snapshot',
   album: 'album',
+  inbox: 'inbox',
   listSlots: 'slots',
   listCareers: 'careers',
   exportSave: 'exported',

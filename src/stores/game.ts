@@ -11,6 +11,7 @@ import {
   type KitGrade,
   type KitLine,
   type KnockChoice,
+  type Offer,
   type OkReply,
   type PlayerProfile,
   type DynastyHandover,
@@ -466,6 +467,25 @@ export const useGameStore = defineStore('game', {
         (await this.run(async () => {
           const res = this.takeOk(await request({ type: 'album' }))
           return expectArm(res, 'album').album
+        })) ?? null
+      )
+    },
+    /** ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – `loadAlbum`'s own shape, one surface over, and
+     *  the three properties above hold here for the same three reasons.
+     *
+     *  A read-only query against the committed world returning the career's WHOLE post, or null on a
+     *  refusal (no active career, a restarted worker), which `InboxSheet` already draws as its empty
+     *  chrome. The store HOLDS no post: the sheet owns its copy for exactly as long as it is open, so
+     *  a career switch cannot leave the previous girl's letters cached behind a live one.
+     *
+     *  ⚠ NULL IS «I CANNOT SAY», NOT «THE INBOX IS EMPTY», and the difference is load-bearing for the
+     *  one caller: `inboxMail.persist` prunes the read/binned annotations against the list it is given,
+     *  so a null must leave them alone rather than prune against nothing. An empty post is `[]`. */
+    async loadInbox(): Promise<Offer[] | null> {
+      return (
+        (await this.run(async () => {
+          const res = this.takeOk(await request({ type: 'inbox' }))
+          return expectArm(res, 'inbox').inbox
         })) ?? null
       )
     },

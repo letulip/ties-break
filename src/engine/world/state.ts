@@ -1395,8 +1395,16 @@ export interface WorldState {
    *  silently stops existing - and "silently" is the whole problem, because the thing it would stop
    *  paying is her equipment. The same argument `trophiesByTier` makes one field up.
    *
-   *  Bounded by construction: the shop reviews once a season and writes at most one letter, so this
-   *  is a handful of rows per career and is never pruned. Pruning it would defeat what it is for. */
+   *  ⚠⚠ AND IT IS NOT BOUNDED, WHICH THIS PARAGRAPH CLAIMED UNTIL 28.09 (T6.2 · D-07). It read
+   *  «Bounded by construction: the shop reviews once a season and writes at most one letter, so this is
+   *  a handful of rows per career and is never pruned» – false by about fifty times, because the kit
+   *  ladder is one of nine writers (the endorsement shelf, the tournament desk, the tour office, the
+   *  academy, the four salaried seats and the build shelf are the others). Measured on the committed
+   *  careers: 261 rows at week 1133 and 77 at week 412, of which 0 and 2 respectively are still live.
+   *  Nor is it strictly unpruned – `pruneEntryLetters` ages out the two DESKS' letters after a season,
+   *  and only those. Pruning the rest would defeat what it is for: the paragraph above is that argument
+   *  and it stands, so the list stays append-only on disk. What changed is the WIRE – `toSnapshot`
+   *  carries the letters this week still needs and the sheet asks for the post on demand. */
   offers: Offer[]
   /** Diary-1 D10 (v18): the durable milestone ledger behind the Memory card. The event feed
    *  prunes at 400 rows, so memories need their own record: first title and first final per tier,

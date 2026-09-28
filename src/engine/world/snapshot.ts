@@ -21,7 +21,10 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { activeAdDeals, hasLiveOffer, seasonLastWeek } from '../offers'
+// ⭐⭐ T6.2 · D-07 (28.09) – `activeKitDeal` and `isOfferLive` join the two already here, because the
+// weekly snapshot now carries only the letters this week still needs and those are THE ENGINE's own
+// questions rather than a rule written out at this seam. See `carriedOnTheWire` below.
+import { activeAdDeals, activeKitDeal, hasLiveOffer, isOfferLive, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -70,6 +73,7 @@ import {
   type InjuryEntryRow,
   type InjuryReport,
   type LadderView,
+  type Offer,
   type PendingView,
   type Snapshot,
   type FullBracketMatch,
@@ -1565,6 +1569,62 @@ function rungRefusalReason(reason: EntryStatus['reason']): TierRefusal['reason']
   }
 }
 
+/** ONE LETTER, COPIED OUT OF THE ENGINE. The snapshot and the `inbox` query both cross
+ *  `postMessage`, so neither may hand the UI a live view of engine state – a screen holding the
+ *  engine's own `terms` object could mutate the contract it is rendering. `Offer` is flat apart from
+ *  `terms`, so two spreads is the whole of it. One spelling, because two would be two things to keep
+ *  in step. */
+function copyOffer(o: Offer): Offer {
+  return { ...o, terms: { ...o.terms } }
+}
+
+/**
+ * ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the whole post, copied for the wire. Served by the
+ * worker's `inbox` query when `InboxSheet` opens, exactly as `assembleAlbum` is served by `album`.
+ *
+ * A PURE READ: it takes no draw, keeps nothing and writes nothing, so it can be asked as often as a
+ * screen likes and the committed revision is reported unchanged. The world remains the one authority
+ * on what letters exist – nothing here or anywhere else prunes the list on disk.
+ */
+export function assembleInbox(world: WorldState): Offer[] {
+  return world.offers.map(copyOffer)
+}
+
+/**
+ * ⭐⭐ WHAT THE WEEKLY SNAPSHOT CARRIES OF THE INBOX (T6.2 · D-07, 28.09) – the letters THIS WEEK
+ * still needs, and not the career's post.
+ *
+ * ⚠ THE FIELD USED TO BE THE WHOLE LIST, and `state.ts` called that «a handful of rows». Measured on
+ * the product's own careers: 261 rows at week 1133 and 77 at week 412, of which 0 and 2 are live –
+ * `offers` was 45 % of the late snapshot and 94 % of everything a career added to it. The history is
+ * not pruned anywhere (that would defeat what the list is for); it simply stops riding every tick.
+ *
+ * FOUR CLAUSES, each named for the reader that needs it, and three of them are the engine's own
+ * predicate rather than a rule re-spelled here:
+ *   `isOfferLive`    a letter that is still a decision – the list's «Needs an answer», `offerOpen`,
+ *                    the worker's own refusal when one is answered.
+ *   `activeKitDeal`  the kit deal in force – the sheet's contract line and the wear ceiling.
+ *   `activeAdDeals`  the advertising portfolio in force – `apparelBondCost` reads it to say what a
+ *                    rival signature would cost, and `adShoots` above is the same call.
+ *   signed, not yet started – the one row all three refuse (each asks `week >= fromWeek`) while the
+ *                    family is already bound by it. Inside the five-week sponsor window a deal can be
+ *                    signed three weeks before its cover begins. A superset by one row is the safe
+ *                    direction: every predicate above applies its own week clause to what it is given,
+ *                    so a row too many changes no answer and a row too few would.
+ */
+function carriedOnTheWire(world: WorldState): Offer[] {
+  const week = world.week
+  const keep = new Set<string>()
+  for (const o of world.offers) if (isOfferLive(o, week)) keep.add(o.id)
+  const kit = activeKitDeal(world.offers, week)
+  if (kit) keep.add(kit.id)
+  for (const o of activeAdDeals(world.offers, week)) keep.add(o.id)
+  for (const o of world.offers) {
+    if (o.state === 'signed' && week < (o.fromWeek ?? o.decidedWeek ?? o.week)) keep.add(o.id)
+  }
+  return world.offers.filter((o) => keep.has(o.id)).map(copyOffer)
+}
+
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
   // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
@@ -2214,14 +2274,25 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // boundary and must never be a live view of engine state.
     trophiesByTier: copyTrophyLedger(world),
     // v32: THE INBOX, copied one level deep for the same reason the cabinet above is - the snapshot
-    // crosses the worker boundary and must never be a live view of engine state. `terms` is copied
-    // too, because a screen holding the engine's own terms object could mutate the contract it is
-    // rendering. (`Offer` is flat apart from `terms`, so two spreads is the whole of it.)
-    offers: world.offers.map((o) => ({ ...o, terms: { ...o.terms } })),
+    // crosses the worker boundary and must never be a live view of engine state. `copyOffer` is that
+    // copy, in one place, because the `inbox` query makes the same one.
+    // ⚠⚠ AND SINCE T6.2 · D-07 IT IS THIS WEEK'S LETTERS, NOT THE CAREER'S POST – see
+    // `carriedOnTheWire`, which names the four readers that decide it. The whole list is served on
+    // demand by the worker's `inbox` query when the sheet opens (`assembleInbox`); the world keeps
+    // every letter for ever, and nothing is pruned on disk.
+    offers: carriedOnTheWire(world),
     // ...AND THE DOT, DECIDED HERE. It asserts one FACT - an offer is open and its deadline has not
     // passed - exactly as the bell's dot asserts that the week put something in the feed. It is never
     // "unread": the engine cannot know what the player has looked at, and neither can this.
     offerOpen: hasLiveOffer(world.offers, world.week),
+    // ⭐⭐ ...AND WHICH LETTER LANDED LAST, DECIDED HERE TOO (T6.2 · D-07). `inboxCue.newestLetterId`
+    // used to read the last element of `offers`, on the argument its own header makes: the list is
+    // append-only at the END and pruned only at the front, so the last element changes exactly when a
+    // letter arrives. That argument holds for the WORLD's list and not for a filtered one – and the
+    // letter it is most about is a kit deal's closing NOTICE (`state: 'info'`), which is never live and
+    // is therefore never carried. So the fact is derived HERE, off the full list, and the dot keeps
+    // ringing for the one arrival the owner said the player misses.
+    newestLetterId: world.offers.length ? world.offers[world.offers.length - 1].id : null,
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
     // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
     // same matches told apart, and the two always agree because finalizeTournament writes both.
