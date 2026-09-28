@@ -3,7 +3,13 @@
 // The owner asked for sub-tabs inside Bills and Shop («Внутри Bills и Shop сделать дополнительные
 // вкладки как на экране Spending … Для Shop … Invest / Cars / Property / Business (Academy is
 // subdivision inside) / Water / Air»). His words in full, and the map from tab to family, are in
-// `MoneyScreen.vue`'s script beside `SHELF_TAB_OPTIONS`.
+// `src/composables/shop.ts` beside `SHELF_TAB_OPTIONS`.
+//
+// ⚠ THE THREE POINTERS IN THIS FILE WERE RE-AIMED ON 28.09 (E-11), and only the pointers: the shop
+// left MoneyScreen.vue for `ShopPanel.vue` plus `composables/shop.ts` with nothing renamed, so every
+// selector, label and helper below is unchanged and every caller of them is untouched. What moved is
+// which file a reader should open, and a comment that sends the next person to the wrong file is the
+// one kind of rot a green gate cannot see.
 //
 // ⚠⚠ WHY THIS FILE EXISTS RATHER THAN A LINE OF `v-if`-DODGING IN EACH TEST. Seven mounted files
 // reach into the shelf, and every one of them was written when `wrapper.findAll('.shop-row')`
@@ -20,7 +26,7 @@
 import { expect } from 'vitest'
 import type { VueWrapper } from '@vue/test-utils'
 
-/** The six segments, in the order they are drawn. His spellings, and `MoneyScreen.vue` is the
+/** The six segments, in the order they are drawn. His spellings, and `composables/shop.ts` is the
  *  source of truth for them – if a label here stops matching, the tab was renamed and that is
  *  exactly what CLAUDE.md invariant 4 wants somebody to notice.
  *
@@ -43,7 +49,7 @@ export const BILLS_TAB_LABELS = ['Her Kit', 'Advs Portfolio'] as const
  *  текущей и не меняется», so the switcher could not grow a seventh segment for the home.
  *
  *  ⚠ SO EVERY CALLER OF THIS HELPER IS RE-AIMED IN ONE PLACE RATHER THAN SEVEN. The six category
- *  cards carry the SAME six words as the six segments (`MoneyScreen.vue` reads the card's name out
+ *  cards carry the SAME six words as the six segments (`composables/shop.ts` reads the card's name out
  *  of `SHELF_TAB_OPTIONS`, so they cannot drift), which is what lets one lookup serve both: from the
  *  home the tile is pressed, and the segment is then pressed as well so the tab is genuinely open
  *  and a later `openShelfTab` on the same wrapper behaves exactly as it did before. */
