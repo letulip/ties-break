@@ -612,7 +612,12 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // 'pregnancy-loss'`). The three writers are now one per file, which is the shape A-06 is for – the
     // census reads as a map of who may set the field rather than as «the life-beat file, and trust it».
     // ⚠ NOT WEAKENED: still exact, still the walk's order, still red on a new file.
-    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS NINE. Left as it stands rather than renamed here –
+    // ⚠⚠ AND A TENTH ON THE FOURTH COMMIT: §8 «the end» moved to `world/lifeBeat/ended.ts`, and
+    // `rollEnds` – the writer this census has named since wave 4 – is spelled at the new path. After it
+    // the THREE writers are one per file and none of them is the hub, which is A-06's shape reached:
+    // `lifeBeat.ts` still appears because `beatEndsRead` and the told-late branch READ the field.
+    // ⚠ NOT WEAKENED: still exact, still the walk's order, still red on a new file.
+    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS TEN. Left as it stands rather than renamed here –
     // it is CLAUDE.md's «a count written in PROSE survives a full gate» in a test's own name, reported
     // to the architect with T6.10 rather than fixed inside a span-move commit.
     expect(named).toEqual([
@@ -620,9 +625,10 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
       'engine/world/create.ts', // `createWorld`'s literal – null
       'engine/world/lifeBeat/bereavement.ts', // T6.10 – `rollBereavement` SETS it, kind `'bereavement'`
+      'engine/world/lifeBeat/ended.ts', // T6.10 – `rollEnds` SETS it, kind `'breakup'`
       'engine/world/lifeBeat/forkPsyCopy.ts', // T6.8 – `PsyRegister`'s type only, no read and no write
       'engine/world/lifeBeat/weight.ts', // T6.10 – `rollPregnancyLoss` SETS it, kind `'pregnancy-loss'`
-      'engine/world/lifeBeat.ts', // `rollEnds` – the third place it is SET
+      'engine/world/lifeBeat.ts', // `beatEndsRead` and the told-late branch READ it; no writer left here
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
     ])

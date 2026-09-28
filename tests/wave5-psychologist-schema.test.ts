@@ -738,11 +738,17 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // ⚠ NOT WEAKENED: the file list is still EXACT, both counts are still exact, and the private birth
     // reader is still asserted to exist, so no half of this can go green by deletion. ⚠ THE PACKAGE
     // SORTS BEFORE ITS HUB: `srcFiles` walks, and `readdirSync` meets the directory before the file.
-    expect(named, 'the reader set is exactly the two modules T7 re-pointed, plus T6.8\'s leak module')
-      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/lifeBeat.ts'])
+    // ⚠⚠ RE-AIMED AGAIN 28.09 BY T6.10 / A-06 – A FOURTH FILE, SAME REASON, AND THE COUNTS BELOW DID
+    // NOT MOVE. §8 «the end» moved to `world/lifeBeat/ended.ts`, taking `rollEnds`'s expression read
+    // with it. The 4/2 split is asserted over the MODULE SET, so it is unchanged and still exact – what
+    // moved is only WHICH file inside the set spells one of the four. ⚠ NOT WEAKENED: the file list is
+    // still EXACT and a reader appearing anywhere else is still red.
+    expect(named, 'the reader set is exactly the two modules T7 re-pointed, plus the leak and the end')
+      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat/ended.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/lifeBeat.ts'])
     // ⭐⭐ RULING A, COUNTED. `lifeBeat.ts` held FIVE `temperamentOf(world)` calls before T7. Three are
     // evaluated-now mechanics (`rollArrival`'s hazard/wants/lag, `arrivalEligible`'s cooldown,
-    // `rollEnds`'s hazard) and read EXPRESSION; two re-derive the `'ended'` card's PRICE
+    // `rollEnds`'s hazard – the last of which now lives in `world/lifeBeat/ended.ts`, T6.10) and read
+    // EXPRESSION; two re-derive the `'ended'` card's PRICE
     // (`beatEndsRead`, and the told-late kept row) and must read BIRTH, because `answerLifeBeat`
     // re-validates the chosen option against a set that has to be reconstructible from persisted
     // facts – and expression is a fact about the current week, not about the episode.

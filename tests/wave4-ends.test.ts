@@ -766,8 +766,13 @@ describe('wave 4 T2 F – the hazard is the tick\'s, and the tick\'s alone', () 
       // (`engine/world/` precedes `engine/world.ts`), which is a fact about `readdirSync` and not
       // about this claim.
       .sort()
+    // ⚠⚠ RE-AIMED 28.09 BY T6.10 / A-06 – THE HAZARD MOVED, THE CLAIM DID NOT. §8 «the end» left
+    // `world/lifeBeat.ts` for `world/lifeBeat/ended.ts` (the split by beat kind), so the ONE caller is
+    // spelled at the new path and the leaf that declares it is unchanged. ⚠ NOT WEAKENED: the list is
+    // still EXACT – a second caller anywhere, including back in the hub, is still red – and the
+    // `endedWeek` writer assertion below is untouched, which is the half that carries «one spelling».
     expect(enders, 'declared in the leaf, called from the hazard, and nowhere else').toEqual([
-      'engine/world/lifeBeat.ts',
+      'engine/world/lifeBeat/ended.ts',
       'engine/world/loveEpisodes.ts',
     ])
     // ...and nothing outside that leaf assigns the field by hand.
