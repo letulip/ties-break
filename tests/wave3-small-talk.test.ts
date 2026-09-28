@@ -942,9 +942,15 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       // (`engine/world/` precedes `engine/world.ts`), which is a fact about `readdirSync` and not
       // about this claim. A pin that encoded the walk order would go red on an unrelated new module.
       .sort()
+    // ⚠⚠ RE-AIMED 28.09 BY T6.10 / A-06 – THE DECLARING MODULE MOVED, THE CLAIM DID NOT. §7 «tier-1
+    // small talk» left `world/lifeBeat.ts` for `world/lifeBeat/smallTalk.ts` (the split by beat kind),
+    // so the file that DECLARES the raise is spelled at the new path. The barrel still re-exports it –
+    // off the kind module now, never through the hub, because the kind module imports the hub and a hub
+    // re-export would be the cycle `tests/import-cycles.test.ts` refuses. ⚠ NOT WEAKENED: still exactly
+    // three files, still one caller above, and a fourth file naming `rollSmallTalk` is still red.
     expect(named, 'declared, exported, and called from one phase').toEqual([
       'engine/world.ts',
-      'engine/world/lifeBeat.ts',
+      'engine/world/lifeBeat/smallTalk.ts',
       'engine/world/phaseHerWeek.ts',
     ])
     // ...and the constants behind it are the ones the owner ruled, unchanged by the surface step.
