@@ -519,6 +519,20 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   moves; the note is here so the next person knows the cost is zero rather than unmeasured.
   ([import-cycles.test.ts](../tests/import-cycles.test.ts).)
 
+- **`loadAlbum` clears a pending refusal the same way the inbox did, and nothing has measured the harm.**
+  Found 28.09 by T6.2 while fixing its own instance: `run()` opens by clearing `error`, which is right for
+  a command the player took and wrong for a query a component fires. `App.vue` fires `loadAlbum` on
+  entering the album tab, so entering the album clears a sentence the player may not have read. ⚠ Not
+  fixed here, and the reason is that the claim is **smaller and unproven**: the album screen carries no
+  `StoreError` of its own, so what a player loses is a sentence on the surface they navigated away from,
+  not on the one in front of them. The fix is one argument (`run(fn, { keepError: true })`, already built
+  and defaulting to false, so it changes no other caller); what it needs is a net that says which sentence
+  is lost and where it was visible. ⭐ And the general question behind both: a query fired by a component
+  is not a command the player took, so **clearing the error belongs to the command path, not to `run`** –
+  five callers agree with that today by accident rather than by rule.
+  ([round36-error-surfaces.test.ts](../tests/component/round36-error-surfaces.test.ts); row 51 of
+  [the-quality-rig.md](backlog/the-quality-rig.md).)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
