@@ -317,6 +317,31 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   corpus-completeness half left to whoever owns each wave's spec.
   ([the fix plan](plans/principles-fix-builder-2026-09.md) §2's wording rule; measured at W6's head.)
 
+- **`fits.ts`'s `demandedWidth` charges `el.textContent`, which includes out-of-flow descendants.**
+  Found 28.09 by T6.4 while adding the `.sr-only` utility: a visually-hidden span is `position:
+  absolute` and one pixel wide, but its sentence is inside its parent's `textContent`, so a fit
+  assertion over a control that carries one would charge the whole sentence. ⚠ **Nothing is wrong
+  today** – the four `assertRowFits` / `assertInlineRowFits` callers are the week bar, the invest stake
+  row and the two seat tables, and none of them carries an `.sr-only` span. And the error runs in the
+  **safe** direction: over-charging produces a false RED, which costs attention and never ships a
+  defect – which is why this is queued rather than repaired mid-wave, on wave 10's precedent about
+  shared measurement instruments. The repair is to charge only in-flow text. The trigger is the first
+  fit net over a segmented pill; the note at `.sr-only` in `src/style.css` says so, so the next person
+  finds the answer instead of the symptom.
+  ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P11 / E-P12; [fits.ts](../tests/component/fits.ts).)
+
+- **Ten strings-table rows are pinned by containment only, and containment cannot see a string grow.**
+  §3's PF4/PF5 and §4's five rows (plus §1–§2's) assert that the tabled text is *contained* in the home
+  file – measured 28.09: `'The garage'` → `'The garages'` leaves such a pin **green**. T6.4 closed it for
+  §5 with a whole-delimited-literal check; ⚠ the same fix does **not** transfer, because those rows are
+  interpolated or concatenated and are not whole literals in the source, so each needs a shape chosen
+  for it (the delimited fragments, or a rebuilt literal from the same inputs the code uses). That is a
+  per-row measurement over ten rows, which is why it is a row here and not a ride-along. Register row 49
+  carries the general form and the one-command test for any containment pin: append a character to the
+  shipped string and watch it.
+  ([the fix plan](plans/principles-fix-builder-2026-09.md) §2's wording rule; row 49 of
+  [the-quality-rig.md](backlog/the-quality-rig.md).)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
