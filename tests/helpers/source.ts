@@ -26,9 +26,68 @@
 // on today the outputs are byte-identical, so nothing is being papered over – the difference is
 // prospective, which is precisely when a guard is worth keeping.
 
-const BLOCK = /\/\*[\s\S]*?\*\//g
-const HTML = /<!--[\s\S]*?-->/g
-const LINE = /^\s*\/\/.*$/gm
+// =================================================================================================
+// ⚠⚠ AND THE ORDERING WAS ITSELF THE FAILURE THE NOTE ABOVE DESCRIBES – T6.11, 28.09.
+// =================================================================================================
+//
+// ⭐ THE SENTENCE THAT IS THE FINDING. The header argues that folding the two strippers «would make
+// every pin they carry read LESS text than it reads today – and a source pin that stops seeing
+// something goes GREEN». That reasoning was right and it was pointed at the wrong change. The
+// stripping ORDER was already doing exactly that, in 85 files, every day, and nothing said so.
+//
+// WHAT THESE THREE USED TO BE, and the order they ran in:
+//
+//     const BLOCK = /\/\*[\s\S]*?\*\//g
+//     const HTML  = /<!--[\s\S]*?-->/g
+//     const LINE  = /^\s*\/\/.*$/gm
+//     codeOf       = src.replace(BLOCK, '').replace(HTML, '').replace(LINE, '')
+//     scriptCodeOf = src.replace(BLOCK, '').replace(LINE, '')
+//
+// BLOCK ran FIRST. This codebase writes path globs in prose – `world/*`, `world/*.ts`,
+// `public/images/**` – and a glob puts a SLASH IMMEDIATELY BEFORE A STAR. So a `//` line, or a
+// regex literal, or a quoted marker in a string, could OPEN a block comment that ran to the next
+// `*/` anywhere below and deleted the code in between. Found in `tests/import-cycles.test.ts`, whose
+// own copy of this order left it unable to see a planted import cycle (T6.9); this is the same
+// defect in the house helper, where 27 test files read through it.
+//
+// ⚠⚠ MEASURED BEFORE THE CHANGE, 1,355 files across `src`, `tests`, `tools`, `e2e`, `scripts`:
+// **85 files in which `codeOf()` deleted code a comment-aware strip keeps, 183,115 non-whitespace
+// characters.** `tests/offers.test.ts` 47,739 · `tests/knock.test.ts` 18,854 ·
+// `tests/wave4-ended-beat.test.ts` 15,965 · `tests/spirit.test.ts` 11,202 ·
+// `tests/wave6-spotlight-pressure.test.ts` 9,212 · `tools/album-corpus-emit.ts` 4,020.
+//
+// ⭐⭐ WHY NOT JUST SWAP THE TWO CALLS, which is the obvious fix and is what `import-cycles` first
+// tried. Because it is not correct, and here the difference is not theoretical: a block comment whose
+// closing marker sits on a line beginning `//` loses its terminator to the LINE pass and the block
+// then runs on exactly as before, and neither ordering knows what a STRING is. Measured on the same
+// 1,355 files: **the swap still disagrees with the scanner in 41 of them, and in all 41 it is the
+// swap that eats** – `tests/offers.test.ts` +34,596 characters, `tests/knock.test.ts` +11,248,
+// `tests/spirit.test.ts` +11,202, `tools/album-corpus-emit.ts` +4,020. Test files quote comment
+// markers and regexes for a living, which is exactly where the 27 readers point.
+//
+// ⚠ THE CHANGE IS DELIBERATELY MONOTONE, and this is what makes the triage of those 27 readable:
+// **0 files lose a single character.** The scanner reproduces the old semantics exactly – a line
+// comment is dropped only when it was the whole line, a trailing `code // note` is KEPT verbatim
+// (it simply can no longer open a block), block and HTML comments are replaced by '' with no newline
+// kept, like the regexes – so the only difference anywhere is that an opener inside a string, a
+// template or a comment is no longer an opener. Text can only come BACK, which makes every negative
+// pin STRICTER and never weaker, so a new red is a real hole and not a re-calibration.
+//
+// ⚠ ITS STATED LIMIT, UNCHANGED FROM `tests/import-cycles.test.ts`: **it is not regex-literal-aware.**
+// The claim is «a lexer for comments, strings and templates», and no more. Telling a regex literal
+// from a division needs a real parser. This is not idle – `tests/wave4-spirit-shock.test.ts` holds
+// `.replace(/\/\*[\s\S]*?\*\//g, '')`, whose bytes contain a `*` next to a `/`, and an earlier draft
+// of this scanner that treated a TRAILING `//` as a comment deleted 498 characters there. Restricting
+// the drop to whole-line comments closes that case too: a regex literal never begins a line with two
+// slashes. A `/*` inside a regex literal on a line of its own would still fool it; the tree holds
+// none, and when one appears the honest fix is a parser, not another special case.
+//
+// ⚠ WHAT `<!--` NOW DOES. It is folded into the same pass rather than left as a second regex beside
+// it, so `codeOf` treats it as a comment ONLY where it is markup: inside a string or a template
+// literal it is now ordinary text and survives, where the old `HTML` regex removed it wherever it
+// appeared. That is the same monotone direction (text comes back) and it is the honest reading – a
+// `'<!-- x -->'` inside a quoted string is a string, not a template comment. `scriptCodeOf` does not
+// treat `<!--` as a comment at all, which is the whole reason the two helpers exist.
 
 /**
  * Code with the prose taken out: block comments, HTML/template comments, then line comments.
@@ -37,7 +96,7 @@ const LINE = /^\s*\/\/.*$/gm
  * written in `<!-- -->` inside the template, quoting the very markup the pin bans.
  */
 export function codeOf(src: string): string {
-  return src.replace(BLOCK, '').replace(HTML, '').replace(LINE, '')
+  return stripComments(src, true)
 }
 
 /**
@@ -48,7 +107,110 @@ export function codeOf(src: string): string {
  * particular file apply it at that call site, where the choice is visible.
  */
 export function scriptCodeOf(src: string): string {
-  return src.replace(BLOCK, '').replace(LINE, '')
+  return stripComments(src, false)
+}
+
+/**
+ * ONE left-to-right pass that knows what a comment IS – see the block above for the defect it
+ * replaces, the measurement, and its stated limit. `html` decides whether `<!-- -->` counts as a
+ * comment, which is the one difference between the two exported helpers.
+ */
+function stripComments(src: string, html: boolean): string {
+  let out = ''
+  let i = 0
+  const n = src.length
+  while (i < n) {
+    const c = src[i]
+    // A LINE COMMENT. Dropped only when it was the whole line – the old `LINE` regex was anchored
+    // with `^\s*`, and a trailing comment stays so this change cannot take text away from any pin.
+    if (c === '/' && src[i + 1] === '/') {
+      const from = i
+      while (i < n && src[i] !== '\n') i++
+      const lineStart = out.lastIndexOf('\n') + 1
+      if (out.slice(lineStart).trim() === '') out = out.slice(0, lineStart)
+      else out += src.slice(from, i)
+      continue
+    }
+    // A BLOCK COMMENT. Replaced by '' with its newlines, exactly as the regex did.
+    if (c === '/' && src[i + 1] === '*') {
+      i += 2
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i++
+      i += 2
+      continue
+    }
+    // AN HTML/TEMPLATE COMMENT, for `codeOf` only.
+    if (html && c === '<' && src.startsWith('<!--', i)) {
+      i += 4
+      while (i < n && !src.startsWith('-->', i)) i++
+      i += 3
+      continue
+    }
+    // A STRING. ⚠ BOUNDED TO THE LINE: an unterminated quote is a `.vue` template's apostrophe
+    // («she's»), not a string, and a scan that ran on to the next quote would swallow the file.
+    if (c === '"' || c === "'") {
+      const quote = c
+      out += c
+      i++
+      while (i < n && src[i] !== quote && src[i] !== '\n') {
+        if (src[i] === '\\') {
+          out += src[i]
+          i++
+          if (i < n) {
+            out += src[i]
+            i++
+          }
+          continue
+        }
+        out += src[i]
+        i++
+      }
+      if (i < n && src[i] === quote) {
+        out += quote
+        i++
+      }
+      continue
+    }
+    // A TEMPLATE LITERAL, whose `${ … }` nests and may hold another backtick.
+    if (c === '`') {
+      out += c
+      i++
+      let depth = 0
+      while (i < n) {
+        if (src[i] === '\\') {
+          out += src[i]
+          i++
+          if (i < n) {
+            out += src[i]
+            i++
+          }
+          continue
+        }
+        if (depth === 0 && src[i] === '`') {
+          out += '`'
+          i++
+          break
+        }
+        if (src[i] === '$' && src[i + 1] === '{') {
+          depth++
+          out += '${'
+          i += 2
+          continue
+        }
+        if (depth > 0 && src[i] === '}') {
+          depth--
+          out += '}'
+          i++
+          continue
+        }
+        out += src[i]
+        i++
+      }
+      continue
+    }
+    out += c
+    i++
+  }
+  return out
 }
 
 // =================================================================================================
