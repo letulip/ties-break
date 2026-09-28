@@ -2710,42 +2710,14 @@ const SPOUSE_VIEW_HEADING = 'The one she married has something to say about this
 const SPOUSE_VIEW_CARD = 'The one she married wants a word.'
 
 // =================================================================================================
-// 3i. `'own-key'` – THE WEEK SHE LIVES BEHIND HER OWN DOOR (wave 7: T10, backlog §8).
-//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// 3i. `'own-key'` – THE COPY MOVED TO `world/lifeBeat/ownKeyCopy.ts` (A-06 / T6.8, 28.09)
 // =================================================================================================
 //
-// ONE SCENE, TOLD ONCE, IN THE PARENT'S OWN NARRATION – deliberately NO quoted line of hers, and
-// that absence is what keeps this a one-cell pool without breaking the voice law: the completeness
-// rule («a `quiet` girl can never silently receive a `fiery` girl's line») binds pools that QUOTE
-// her, and this card quotes nobody. Giving the scene a voiced line of hers – four cells, two
-// presences – is a wording decision the owner may take at T7's table; a draft that jumped ahead of
-// it would be choosing for him.
-//
-// ⚠⚠ AND IF HE EVER TAKES IT, THE SHAPE IS **FOUR CELLS AND NO PRESENCE AXIS** – 26.09, ruling 19 on
-// B-08, said here rather than left for the test to say. `'own-key'` fires on the week she lives behind
-// her own door, which is past the age at which any stage is still `roof`: school is over by 18.92 for
-// every girl the game can generate and `diaryLifeStageFor` sends everyone past 22 to `independent`,
-// `college` being away as well. A `roof` column written here would be four lines the owner had read
-// and no player could ever be shown – the exact defect ruling 19 removed from §3g, §3j and §3l. ⚠ IT
-// IS ALSO ENFORCED: `tests/principles-b08-presence-reach.test.ts` §C measures which kinds read the
-// stage and refuses a presence-keyed pool whose roof is unreachable, NAMING the kind – so a voiced
-// `'own-key'` pool with two columns goes red there, and this paragraph is how the author connects
-// that red to the banner that invited it.
-
-/** ⚠ ⚠ DRAFT – the card's one line: what the week holds, seen from the family's side. */
-const OWN_KEY_SAID = 'She has a place of her own now. A spare key went onto the hook by our door, and Sunday dinner is a standing thing.'
-
-/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – the scene is the
- *  same scene at every distance and in every weather. */
-const OWN_KEY_HEADING = 'She lives behind her own door now'
-
-/** ⚠ ⚠ DRAFT – the Home card's invitation, one short concrete line. */
-const OWN_KEY_CARD = 'She came by with a spare key.'
-
-/** ⚠ ⚠ DRAFT – the kept feed row, written at the raise (`deliverKnownPartner`'s `keep: true`
- *  doctrine: the week she moved out is not a line the album may be missing). ⚠ NO cents, no
- *  mechanic, no address – backlog §8's own boundary. */
-const OWN_KEY_ROW = 'She has her own place now. A spare key lives on the hook, and Sunday dinner stands.'
+// A pure leaf – it referenced nothing at all – so it left whole, banner and chronicles included, and
+// the hub imports the four strings back: the dispatcher reads three and §13's `deliverOwnKey` reads
+// `OWN_KEY_ROW`. ⚠ §13 itself is still in this file: it calls back into the hub and its names reach
+// `world.ts` through the hub's re-export, so it is the «both directions are true» case P4 refuses.
+import { OWN_KEY_CARD, OWN_KEY_HEADING, OWN_KEY_ROW, OWN_KEY_SAID } from './lifeBeat/ownKeyCopy'
 
 // =================================================================================================
 // 3j. `'expecting'` – THE COPY MOVED TO `world/lifeBeat/pregnancyCopy.ts` (A-06 / T6.8, 28.09)
