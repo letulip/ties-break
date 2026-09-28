@@ -101,6 +101,13 @@ docs/review/     2026-08 full review + P1–P9 proposals
   `node scripts/world-map.mjs <symbol>`, or read `tools/generated/world-symbol-map.md`.
 - If a candidate block calls back into `world.ts` at runtime, it is **not** ready to move — that needs dependency inversion, not a span-move.
 
+**A new beat kind is a new module** (A-06's forward rule, 28.09). `world/lifeBeat.ts` went 0 → 8,003 lines in 17 days before anything stopped it, so the rule is mechanical rather than cultural:
+- A beat kind's **copy** is a leaf the hub imports: `src/engine/world/lifeBeat/<kind>Copy.ts`. Its **hazard** is a module that imports the hub: `src/engine/world/lifeBeat/<kind>.ts`. **Never one file with both halves** — the hub imports the copy and the hazard imports the hub, so a single module would be imported by the hub and import it back, and `tests/import-cycles.test.ts` is the judge that refuses it.
+- The hub keeps the queue, the fork want, the presence law, raising and answering, prompt assembly, and the sections another section references. A section with **zero inbound references inside the file** is a span-move candidate; one with inbound stays.
+- ⚠ **A hazard's names are re-exported by `src/engine/world.ts` directly from the kind module, never through the hub** — a hub re-export is a runtime edge hub → kind and re-creates the cycle. `world.ts` is the hub's only importer in `src`, so this costs one import line and the barrel's name set does not move.
+- ⚠ **The package is FLAT.** `tests/worldSource.ts`' readers take one directory level, so a module at `lifeBeat/<group>/<kind>.ts` is invisible to them — and `tests/life-beat-keys.test.ts` (T3.9's sub-stream key inventory) reads through one of them. A nested module's `rngFromSeed` key drops out of that inventory **while the pin stays green**, which is the silent re-deal of every career's deaths and conceptions that the pin exists to catch. Reproduced, armed and pinned in `tests/principles-a06-life-beat-direction.test.ts`.
+- Comments move verbatim, and the chronicles move out under W7's rules, never in the same commit as the split.
+
 ## Style
 
 - **Boring TypeScript**: strict mode, no generic gymnastics, no enums, no decorators. Types document the save schema and engine parameters.
