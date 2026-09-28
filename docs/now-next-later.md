@@ -304,6 +304,53 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-03; measured at W6's head
   after T6.5 and T6.6.)
 
+- **A-02's repoint frees nothing, the bytes it was after were already collected, and the gate shipped
+  anyway – a NULL RESULT with its cause and its provenance.** A-02 asked for the 17 UI runtime imports
+  of `engine/world` to be repointed at their owning modules, against 28,275 B of dead album corpus in
+  the UI chunk and 17 KiB of install headroom. T6.7 ran the build arm the lane left open, in a
+  dedicated worktree at `e99956ed` with both arms built from that one commit, so neither carries
+  another builder's work. **Denominator: 18 files, 19 barrel import lines out, 36 owning-module lines
+  in** (17 in the finding, 18 today – T6.3 extracted `ShopPanel.vue` out of `MoneyScreen.vue` earlier
+  in this wave and it took `ASSET_NAME_MAX_CHARS` with it). Baseline → Cell A, the 18 files repointed:
+  main chunk **707,351 → 707,345 B, and gzipped 238,225 → 238,270 B, so 45 bytes LARGER on the wire**;
+  worker chunk 663,952 B with hash `D9jZhF4G` unchanged; install 16,212 KiB / 361 entries / 172 KiB of
+  headroom, unchanged to the byte of the precache manifest. Cell B added the save layer's three barrel
+  value imports (`saveCodec.ts`, `saveGuard.ts`, `migrations.ts`, 18 lines out, 13 in) and produced a
+  **byte-identical chunk to Cell A, same hash**.
+  ⚠ **Two named causes, which is what makes this a finding rather than a shrug.** (1) The 28,275 B left
+  in W3's T3.1 (`58ccb8f6`). Counted the way `world/albumBook.ts:327` instructs – over the sentences
+  `ALBUM_CORPUS` itself holds, not the two the finding transcribed – **0 of 424 are in the main chunk
+  and 424 of 424 are in the worker's**, and that second figure is the positive control that makes the
+  first a measurement. (2) ⭐ **The barrel cannot cost bytes, because it does not ship**: per-module
+  attribution of the chunk's own source map puts `src/engine/world.ts` at **0 B**. It is bodiless
+  (`principles-a04-barrel-no-bodies.test.ts`) and side-effect-free, so rollup erases it and resolves
+  every re-export to its owning module at build time – the chunk's 235-module composition is identical
+  under both spellings, and only the minifier's identifier allocation moves, which is the whole −6 B.
+  ⚠ A-02's verification also named a main-thread route that does not exist at runtime: `src/db/saves.ts:4`
+  is `import type`, erased, and `saveCodec`/`saveGuard` are tree-shaken out of the main chunk entirely
+  because `MoreScreen` reaches `db/saves` for `sanitizeName` and nothing else. Severing
+  `saveCodec → migrations` moves the main chunk by the **6 B** `migrations.ts` actually holds there and
+  the worker chunk by **−17,456 B**, which is where that code lives.
+  **Shipped: the reverse gate only** (`tests/principles-a02-ui-barrel-ratchet.test.ts`) – a new UI
+  runtime import of the barrel is red, today's 18 are grandfathered by exact path and convert when their
+  file is next touched, type-only stays allowed. It is a gate because the RULE is now `CLAUDE.md`'s P4
+  sentence and T6.6's frozen surface rather than a bytes argument, and a rule with no mechanism is the
+  «кто вспомнит?» failure. **Refused: the 18-file repoint**, on the plan's own condition – an arm that
+  makes the download larger has not earned a churn commit – so the three source pins that quote a UI
+  barrel import line (`money-format.test.ts:124`, `prize-money.test.ts:443`,
+  `calendar-screen.test.ts:850`) do not move.
+  ⭐ **And the delivery question A-02 was standing in front of is still open, with a fresh number on
+  it.** At W6's head (`b82f209b`) the main chunk carries **79,464 B of engine/shared/db/worker code in
+  64 modules, 72,944 B of it in 58 modules that are ALSO in the worker chunk** – §A5's 121,534 B, minus
+  what T3.1, T3.12 and this wave have taken out. The top of that list is `engine/economy.ts` at
+  **26,364 B** and `engine/season/calendar.ts` at **7,984 B**, and every one of them is reached by a
+  DIRECT UI import rather than through the barrel. So the next arm is a lane-G question about what a
+  screen actually needs from `economy.ts`, not a question about specifiers, and no repoint of any
+  spelling will answer it.
+  ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-02 and its PLAUSIBLE
+  verification, which predicted exactly this; §A5 of
+  [00-baseline.md](review-principles-2026-09-26/00-baseline.md) for the figure it replaces.)
+
 - **63 of the strings tables' rows have no roundtrip pin at all.** Six tables name
   `src/engine/world/lifeBeat.ts` as the home of **106** rows; three of them have a
   `*strings-roundtrip*` test and three do not – wave 5 (**54** rows), wave 6 (**4**) and wave 8 (**5**).
@@ -462,7 +509,11 @@ playtest can reopen it:
   divorce shock row and answer prices, the parting census at corpus-400 – all wait for the
   playtest, and he watches the mirrored prices himself.
 - **The install ceiling** – 17 KiB under 16384 after wave 12; the raise is his «по необходимости»,
-  and the first art round hits it.
+  and the first art round hits it. ⚠ **Re-aimed 28.09 by T6.7: that 17 KiB is spent history rather than
+  today's headroom** – T3.1 and T3.12 gave it back, and the wave's own builds print three figures the
+  ceiling is nowhere near. No fresh number is written here on purpose: `node scripts/install-size.mjs`
+  prints it one step after every `vite build`, and a headroom figure in prose rots between two art
+  rounds. What is unchanged is the RULING – the raise is his, and the trigger is still the art.
 - **Boys / an ATP branch** – out of the layer, game-scale (22.09: the birth key is reserved in
   writing).
 
