@@ -599,12 +599,24 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // EXACT and still in the walk's own order, and a file that joins it is still red. ⚠ AND THE PACKAGE
     // SORTS BEFORE ITS HUB, which is that order being the WALK's rather than a path's: `readdirSync`
     // meets the directory `lifeBeat` before the file `lifeBeat.ts`.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.10 / A-06 – AN EIGHTH ENTRY, AND THIS ONE IS A REAL WRITER. §16 «a death
+    // in the family» moved to `world/lifeBeat/bereavement.ts`, and `rollBereavement` is the second place
+    // the field is SET (`spiritShock = { week, kind: 'bereavement' }`). ⚠ AND THAT CORRECTS A SENTENCE
+    // ABOVE RATHER THAN CHANGING A FACT: the T6.8 note says «`rollEnds` is still the one place it is
+    // SET», which was already only true of the FILE – `rollBereavement` has set it since wave 11 and sat
+    // in the same file, so the census never saw two writers. Now it does. ⚠ NOT WEAKENED: the list is
+    // still EXACT, still in the walk's own order, a file joining it is still red, and the wire
+    // assertions below are untouched – the move added no reader and removed none.
+    // ⚠ THE `it` TITLE SAYS «SIX» AND THE LIST HOLDS EIGHT. Left as it stands rather than renamed here –
+    // it is CLAUDE.md's «a count written in PROSE survives a full gate» in a test's own name, reported
+    // to the architect with T6.10 rather than fixed inside a span-move commit.
     expect(named).toEqual([
       'engine/migrations.ts', // the v74 -> v75 back-fill
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
       'engine/world/create.ts', // `createWorld`'s literal – null
+      'engine/world/lifeBeat/bereavement.ts', // T6.10 – `rollBereavement` SETS it, kind `'bereavement'`
       'engine/world/lifeBeat/forkPsyCopy.ts', // T6.8 – `PsyRegister`'s type only, no read and no write
-      'engine/world/lifeBeat.ts', // `rollEnds` – the one place it is SET
+      'engine/world/lifeBeat.ts', // `rollEnds` – the other place it is SET
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
     ])
