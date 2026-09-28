@@ -14,6 +14,14 @@
 // `src/engine/world/constants.ts` itself. A pin aimed at the barrel would be green today for the
 // wrong reason – the string is not there – and would go on being green if the constant moved.
 //
+// ⚠⚠ AND THERE ARE THREE CORPORA IN THIS FILE SINCE 28.09 (W6 · T6.4 · E-P11 / E-P12). §5 is §4's CLASS
+// of row – an existing sentence reaching a new surface, no new word in it – but the sentences are the
+// APP's rather than the engine's, and the surface is the accessibility tree rather than a screen. It
+// therefore carries its own status spelling, its own parser, its own count (`EXPECTED_ARIA_ROWS`) and its
+// own home claim, which is the MIRROR of §4's: a §5 home under `src/engine/` would be a row in the wrong
+// section. `EXPECTED_ROWS` and `EXPECTED_SURFACE_ROWS` are untouched, because each parser keys on its own
+// status cell and a row cannot drift between them.
+//
 // ⚠ THE COUNT LIVES HERE AND NOWHERE IN PROSE – wave 9's finding verbatim: a count written in prose
 // survives a full gate because no test reads it, and wave 9 shipped two documents saying 32 where the
 // corpus held 28, through `check`, `e2e` and the sims. `EXPECTED_ROWS` below is the only statement of
@@ -252,6 +260,130 @@ describe('the principles fix – engine sentences on new surfaces (§4)', () => 
 
   it('⚠ no row carries the long dash', () => {
     // CLAUDE.md's style rule, on the engine's sentences this time.
+    for (const row of rows) {
+      expect(row.text.includes('—'), `${row.id} carries the long dash`).toBe(false)
+      expect(row.surface.includes('—'), `${row.id}'s surface cell carries the long dash`).toBe(false)
+    }
+  })
+})
+
+/** ⚠ THE THIRD CORPUS'S ONLY STATEMENT OF ITS COUNT. Nineteen surfaces from T6.4 (W6 · E-P11 / E-P12);
+ *  the document states no total, for the same wave-9 reason `EXPECTED_ROWS` carries. It is a SEPARATE
+ *  number from the other two on purpose, and the three move for three different reasons: a DRAFT leaves
+ *  when he approves it, a §4 surface leaves when the code stops printing the engine's sentence there,
+ *  and a §5 surface leaves when a control stops carrying a `title` at all. */
+const EXPECTED_ARIA_ROWS = 19
+
+const ARIA_STATUS = 'existing title, spoken surface'
+
+/** §5's rows carry §4's five cells, so the parser is §4's with its own id prefix and its own status.
+ *  `[^|]` on every cell for §4's reason: a `.` matches a pipe. */
+function parseAriaTable(path: string): SurfaceRow[] {
+  const md = readFileSync(path, 'utf8')
+  const rows: SurfaceRow[] = []
+  for (const line of md.split('\n')) {
+    // | AS1 | `src/components/...` | the sentence | the surface | `existing title, spoken surface` |
+    const m = new RegExp(
+      String.raw`^\| (AS\d+) \| \x60([^|]+?)\x60 \| ([^|]+?) \| ([^|]+?) \| \x60${ARIA_STATUS}\x60 \|$`,
+    ).exec(line)
+    if (m) rows.push({ id: m[1], home: m[2], text: m[3], surface: m[4] })
+  }
+  return rows
+}
+
+describe('the principles fix – existing title sentences on a spoken surface (§5)', () => {
+  const rows = parseAriaTable(TABLE)
+
+  it(`the parser found §5 at all – ${EXPECTED_ARIA_ROWS} rows`, () => {
+    expect(rows.length, `${TABLE}: §5 rows found`).toBe(EXPECTED_ARIA_ROWS)
+    expect(new Set(rows.map((r) => r.id)).size, 'ids are unique').toBe(rows.length)
+  })
+
+  it('⭐⭐ every row matches the sentence its home already held, character for character', () => {
+    // The whole claim of this status, mechanised. A row whose text has drifted from its home fails by
+    // id here; a home whose sentence has been reworded fails the same row from the other side, which is
+    // what makes this a round trip. `joinedSource` for §4's reason – a `` ` + ` `` seam in a source file
+    // IS runtime concatenation – although no §5 row needs it today.
+    //
+    // ⚠⚠ THE SENTENCE MUST BE A WHOLE LITERAL, NOT MERELY CONTAINED, AND THAT IS A CORRECTION RATHER
+    // THAN A FLOURISH. Measured while mutation-verifying this block: plain containment is BLIND IN ONE
+    // DIRECTION for a short row. `title: 'The garage'` changed to `'The garages'` left the pin green,
+    // because the tabled text is still a substring of the shipped one – so a sentence that GROWS drifts
+    // past the guard while a sentence that shrinks or is reworded is caught. Every §5 sentence is a
+    // quoted literal in its home (eighteen single-quoted, AS19 a template literal), so requiring the
+    // DELIMITERS closes that direction at no cost, and the arm reddens as it should.
+    //
+    // ⚠ §1-§4 keep plain containment: their rows are interpolated engine sentences that are NOT whole
+    // literals in the source (PF4 is tabled as `${cap.used}`, three §4 rows are concatenated across two
+    // literals), so the same tightening would be false there. The weakness is named in the wave's report
+    // for the architect rather than papered over here.
+    for (const row of rows) {
+      const src = joinedSource(row.home)
+      const escaped = row.text.replaceAll("'", "\\'")
+      const delimited = [row.text, escaped].flatMap((t) => [`'${t}'`, `"${t}"`, `\`${t}\``])
+      expect(
+        delimited.some((form) => src.includes(form)),
+        `${row.id}: ${row.home} does not hold the row's text as a whole literal`,
+      ).toBe(true)
+    }
+  })
+
+  it('⚠⚠ every §5 home is a SCREEN or a composable – the mirror of §4\'s claim, by name', () => {
+    // §4's status is a claim that the sentence belongs to the ENGINE. §5's is the opposite: these are the
+    // app's own UI sentences, already rendered, now reaching a second surface. A home under
+    // `src/engine/` would mean a row that belongs in §4 wearing §5's status, and the set below says so
+    // rather than leaving a reader to check nineteen paths.
+    for (const row of rows) expect(() => sourceOf(row.home), `${row.id}: ${row.home}`).not.toThrow()
+    expect(new Set(rows.map((r) => r.home))).toEqual(
+      new Set([
+        'src/components/screens/MoneyScreen.vue',
+        'src/components/screens/MoreScreen.vue',
+        'src/components/screens/StatsScreen.vue',
+        'src/components/screens/HomeScreen.vue',
+        'src/composables/shop.ts',
+      ]),
+    )
+    for (const row of rows) {
+      expect(row.home.startsWith('src/engine/'), `${row.id} is an engine sentence, so it belongs in §4`).toBe(false)
+    }
+  })
+
+  it('⚠ each row names the surface it reaches, and no two rows share one', () => {
+    // The payload of this block: a row that named no surface would be a row about WORDS, which is what
+    // §1-§3 are for. Unlike §4 there is no shared-sentence case here, so the uniqueness runs both ways -
+    // nineteen controls, nineteen descriptions, and a duplicated surface cell would mean two rows are
+    // describing one control.
+    for (const row of rows) expect(row.surface.trim().length, `${row.id} names a surface`).toBeGreaterThan(8)
+    expect(new Set(rows.map((r) => r.surface)).size, 'each surface is named once').toBe(rows.length)
+  })
+
+  it('⚠ every row says DESCRIPTION, because that is the surface and not the name', () => {
+    // ⚠⚠ THE ONE DISTINCTION THIS WHOLE SECTION TURNS ON. A fact that arrives may not RENAME a control
+    // (D7's rule, and the reason `accName` exists in the a11y sweep): the segments still answer to their
+    // own labels and the ladder chip still answers to «Show 14 more levels». If a row ever came to mean
+    // «the accessible NAME», the fix would have changed what a control is CALLED - which is invariant 4
+    // territory and needs his ruling, not a builder's.
+    for (const row of rows) {
+      expect(row.surface.includes('DESCRIPTION'), `${row.id} must name the description, not the name`).toBe(true)
+    }
+  })
+
+  it('⚠ §5 carries no DRAFT cell and no §4 status, so the three corpora cannot be counted as one', () => {
+    // The guard on both seams. `EXPECTED_ROWS`'s status pin counts every `\`DRAFT\`` in the whole
+    // document, and `EXPECTED_SURFACE_ROWS` counts §4's own spelling; a §5 row wearing either would break
+    // a count nobody would look for here.
+    for (const row of rows) {
+      expect(row.text.includes('DRAFT'), `${row.id} carries a DRAFT cell`).toBe(false)
+      expect(row.surface.includes('DRAFT'), `${row.id}'s surface carries a DRAFT cell`).toBe(false)
+      expect(row.surface.includes(SURFACE_STATUS), `${row.id} wears §4's status`).toBe(false)
+    }
+    const md = readFileSync(TABLE, 'utf8')
+    expect(md.split(`\`${ARIA_STATUS}\``).length - 1, 'the status column, counted').toBe(EXPECTED_ARIA_ROWS)
+  })
+
+  it('⚠ no row carries the long dash', () => {
+    // CLAUDE.md's style rule, on the app's own sentences this time. Two of them carry the SHORT dash,
+    // which is the one this repo uses.
     for (const row of rows) {
       expect(row.text.includes('—'), `${row.id} carries the long dash`).toBe(false)
       expect(row.surface.includes('—'), `${row.id}'s surface cell carries the long dash`).toBe(false)

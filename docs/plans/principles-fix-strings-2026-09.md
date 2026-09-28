@@ -184,3 +184,73 @@ not a duplicate of the first.
 `availabilityStatus`'s age arm, differing only in how they read her age. They agree today, and one of
 them should not exist; it is E-06's class inside a single engine file. It is named in the wave's report
 for the architect rather than merged here, because merging it is not what ruling 6a asked for.
+
+## 5. Existing `title` sentences reaching the accessibility tree (W6 · T6.4 · E-P11 / E-P12)
+
+Nineteen surfaces, and **not one new word**. Lane E's accessibility sweep found three places where a
+fact lived ONLY in a `title` attribute – a desktop tooltip, which is not part of the accessible name,
+is not announced, and does not exist at all on a phone: E-P11 (which rungs the ladder's «…» chip
+hides), E-P12 (what each segment of a segmented row is for) and E-P13 (the vacation card's gain and
+the price paid). All three propose the same repair, routing the sentence into `aria-describedby`.
+
+⚠ **This is §4's class of row, not §1–§3's**, and it carries its own status spelling and its own count
+for the same reason §4 does: there is no copy to approve. Each row is a sentence the app already
+prints, and what he is being asked to read is where a sentence he already owns is now SPOKEN as well
+as hovered. The rows are **not DRAFTs**.
+
+⚠ **The `title` stays on every one of them.** Removing it would take a tooltip away from the owner's
+own desktop playtest device, and E-P12's own row offers «or accept it as a desktop tooltip» as the
+ALTERNATIVE to routing it – so the row is not asking for the tooltip to go. A sighted mouse user keeps
+the hover; a screen-reader user gains the description. Nothing is lost on either side.
+
+⚠ **E-P13 is not a row here, because it was already done and never needed the utility.** W4 landed it
+in `0b3adb22` and pointed the vacation card's `aria-describedby` at the two VISIBLE pills the sighted
+player is already reading (`SeasonScreen.vue`, `vacationDescribedBy`). A hidden copy of a sentence that
+is on screen would have been a second spelling of one fact.
+
+⚠ **Why nineteen and not E-P12's ten.** E-P12's proposal is «route `title` to `aria-describedby` in
+`SegmentedRow`» – in the shared component, which is the whole point of one utility rather than three
+inventions – so EVERY caller that passes a `title` gains the surface, not only the Money screen the row
+was measured on. Four files do: the budget screen's two rows (6), the shelf's own row (6, now in
+`composables/shop.ts` after T6.3), Settings (3) and the Stats ladder switch (3). E-P11's gap chip is the
+nineteenth and is `HomeScreen.vue`'s own.
+
+⚠ **THE ROWS ARE TABLED IN EACH HOME'S OWN SPELLING, interpolations and all**, for PF4's reason: the pin
+is containment against the home file, so a row that quotes a shape the code does not hold is a row that
+cannot be checked. AS19 is therefore tabled as the template literal `HomeScreen.vue` actually holds.
+
+| id | home | text | surface | status |
+| --- | --- | --- | --- | --- |
+| AS1 | `src/components/screens/MoneyScreen.vue` | Where the money went in the chosen period | the Spending chapter segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS2 | `src/components/screens/MoneyScreen.vue` | The recurring costs the family has signed up to | the Bills chapter segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS3 | `src/components/screens/MoneyScreen.vue` | Every season, and every transaction | the History chapter segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS4 | `src/components/screens/MoneyScreen.vue` | What the family can buy with what is left | the Shop chapter segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS5 | `src/components/screens/MoneyScreen.vue` | What she plays with, and what replacing it costs | the Her Kit segment's accessible DESCRIPTION, inside Bills | `existing title, spoken surface` |
+| AS6 | `src/components/screens/MoneyScreen.vue` | The advertising categories, filled and open | the Advs Portfolio segment's accessible DESCRIPTION, inside Bills | `existing title, spoken surface` |
+| AS7 | `src/composables/shop.ts` | Money that stays money | the Invest segment's accessible DESCRIPTION, on the shelf | `existing title, spoken surface` |
+| AS8 | `src/composables/shop.ts` | What the family owns that earns – the academy included | the Business segment's accessible DESCRIPTION, on the shelf | `existing title, spoken surface` |
+| AS9 | `src/composables/shop.ts` | The garage | the Cars segment's accessible DESCRIPTION, on the shelf | `existing title, spoken surface` |
+| AS10 | `src/composables/shop.ts` | Somewhere to live | the Property segment's accessible DESCRIPTION, on the shelf | `existing title, spoken surface` |
+| AS11 | `src/composables/shop.ts` | Boats, ordered rather than bought | the Water segment's accessible DESCRIPTION, on the shelf | `existing title, spoken surface` |
+| AS12 | `src/composables/shop.ts` | The family aeroplane | the Air segment's accessible DESCRIPTION, on the shelf | `existing title, spoken surface` |
+| AS13 | `src/components/screens/MoreScreen.vue` | Sound, animations and how a match opens | the Play segment's accessible DESCRIPTION, in Settings | `existing title, spoken surface` |
+| AS14 | `src/components/screens/MoreScreen.vue` | Careers, save slots, import and export | the Saves segment's accessible DESCRIPTION, in Settings | `existing title, spoken surface` |
+| AS15 | `src/components/screens/MoreScreen.vue` | Version, seed and privacy | the About segment's accessible DESCRIPTION, in Settings | `existing title, spoken surface` |
+| AS16 | `src/components/screens/StatsScreen.vue` | Local, Regional and National results. These are the points that open her next tier. | the Domestic ladder segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS17 | `src/components/screens/StatsScreen.vue` | Junior Tour results only. A national title is worth nothing here – the two tables never meet. | the International ladder segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS18 | `src/components/screens/StatsScreen.vue` | W15 and up – the paid tour. Junior points never cross over. | the Professional ladder segment's accessible DESCRIPTION | `existing title, spoken surface` |
+| AS19 | `src/components/screens/HomeScreen.vue` | ${hidden} ${noun} hidden (${span}) – tap to show the whole ladder | the season strip's «…» chip's accessible DESCRIPTION | `existing title, spoken surface` |
+
+**What AS19 reads like**, on the ladder as it actually collapses (an illustration, not the pinned form –
+the pinned form is the literal above, and the rendered text is asserted against the element's own
+`title` in `tests/component/a11y-sweep.test.ts`): `14 levels hidden (National to Slam) – tap to show
+the whole ladder`, against an accessible name of `Show 14 more levels`. The COUNT was already in the
+name; the RANGE was the half only a mouse could reach.
+
+⚠ **Nothing in this section is a rendered-string change, and there is a mechanical guard for that
+claim.** The described element holds its control's own `title`, read from the same binding, and the
+mounted net compares the two against each other rather than against a literal – so a wording change on
+either side reddens instead of drifting. The sixteen segment rows are proved on the budget screen's own
+mount; the shelf's six are additionally frozen in
+`tests/component/principles-e11-shop-identity.test.ts`'s render record, which was regenerated once for
+this surface with the whole delta verified as «the six sentences and the attribute, and nothing else».
