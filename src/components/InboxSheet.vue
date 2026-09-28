@@ -32,7 +32,7 @@
 // Removing a letter from the list gets its own confirm because the owner asked for one, and because
 // a control that empties a row on a single press is one mis-tap from a pile the player cannot get
 // back - even though nothing behind it is destroyed.
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import type {
@@ -86,17 +86,51 @@ const game = useGameStore()
 // because the alternative is one frame of «Nothing yet. Sponsors write to players they have been
 // watching for a season.» on a career holding three hundred letters – a false sentence is worse than a
 // quiet frame. `inboxMail`'s prune reads the same null the same way: it does not prune.
-// ⚠ AND IT CARRIES NO REQUEST TICKET, WHICH IS A RULING AND NOT AN OMISSION (28.09). `App.vue` guards
-// `albumBook` with one because the album is a TAB that can be left and re-entered, so two fetches can
-// be in flight and the slower one would paint a book the player has navigated away from. This sheet is
-// `v-if`'d in HomeScreen: it mounts fresh, fires exactly one request, and the ref dies with it – there
-// is no leave-and-return path that could land a second answer. Symmetry with the album is not a reason
-// to carry three lines that cannot fire.
+//
+// ⚠⚠ AND IT IS ASKED AGAIN WHENEVER THE WORLD MOVES, WHICH THE FIRST DRAFT DID NOT DO AND SHIPPED
+// (28.09). It was `onMounted` and nothing else, so the sheet rendered the list it had fetched when it
+// opened – and this is a surface the player ACTS on: `signOffer` closes the whole kit family in one
+// call («a player in one brand's kit is in nobody else's»), so two sibling letters the engine had just
+// resolved kept their «Needs an answer» pill, and the signed paper still offered a second signature.
+// Caught by `e2e/sponsor-inbox.spec.ts` («signing a kit letter closes the whole table»), which had
+// asserted it for weeks; the mounted nets could not, because they are HANDED a post.
+//
+// ⭐⭐ THE RULE IS D-05's, AND IT IS THE SAME LINE `MoreScreen` CARRIES: «THE ONE READER BECOMES THE ONE
+// REFRESH – the revision is the worker's own count of committed mutations, so "the list may have moved"
+// has exactly one spelling and a sixteenth action cannot forget it». This sheet is the one reader of
+// the post, so it is that one refresh. ⚠ KEYED ON «WHICH CAREER, AT WHICH REVISION» for MoreScreen's
+// own reason rather than by imitation: `loadCareer` does NOT commit – the worker ADOPTS the revision it
+// finds on disk – so a career switch can move `careerId` and leave `revision` exactly where it was.
+// ⚠ AND `{ immediate: true }` REPLACES `onMounted`: two spellings of one fetch is the shape D-05 exists
+// to remove, so the open and the refresh are one line and cannot drift apart.
+// ⚠ NO FEEDBACK LOOP: the query answers with the committed revision UNCHANGED, so `takeOk`'s latch
+// re-assigns the same value and the key does not move.
+//
+// ⚠ THE REFRESH NEVER BLANKS WHAT IS ON SCREEN. Only a non-null answer is assigned, so the previous
+// post stays up while the next one is in flight: a refresh that reset this to `null` would turn the
+// first-frame gate above into a flicker, and a career holding 77 letters would read «Nothing waiting on
+// an answer.» for a tick – the false sentence the gate exists to prevent. On the FIRST ask a refusal
+// still leaves `null`, which is the empty chrome that case wants.
+//
+// ⚠ AND ONLY THE NEWEST ASK MAY WRITE. The 28.09 ruling that this sheet needs no request ticket was
+// about LEAVE-AND-RETURN, and it stands: the sheet is `v-if`'d in HomeScreen, mounts fresh and dies
+// with its ref, so no navigation can land two answers. A refresh fired by a MUTATION is the case that
+// ruling did not cover – a second command can commit while the first refresh is in flight – so the
+// guard is here and it is three lines that CAN fire. It does not rest on the worker's queue being FIFO.
+const postKey = () => `${game.snapshot?.careerId ?? ''}@${game.revision}`
 const post = ref<Offer[] | null>(null)
 const loaded = computed(() => post.value !== null)
-onMounted(async () => {
-  post.value = await game.loadInbox()
-})
+let asked = 0
+watch(
+  postKey,
+  async () => {
+    const ticket = ++asked
+    const answer = await game.loadInbox()
+    if (ticket !== asked || answer === null) return
+    post.value = answer
+  },
+  { immediate: true },
+)
 
 const mail = useInboxMail(() => post.value)
 const week = computed(() => game.snapshot?.week ?? 0)

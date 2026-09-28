@@ -286,9 +286,20 @@ export const useGameStore = defineStore('game', {
       this.ready = true
       this.phase = 'ready'
     },
-    async run<T>(fn: () => Promise<T>): Promise<T | undefined> {
+    /**
+     * ⚠⚠ `keepError` – A READ A SURFACE FIRES IS NOT AN ACTION THE PLAYER TOOK (28.09, T6.2's follow-up).
+     * The clear below is right for a command: a new action supersedes the previous complaint, which is
+     * what forty callers want and none of them passes this option. It is WRONG for a query a component
+     * asks on its own – `InboxSheet` asks for its post on opening and again on every committed mutation,
+     * and clearing there wipes a refusal the player has not read yet, on the very surface whose
+     * `StoreError` exists to show it. ⚠ THE OPTION RATHER THAN A RESTORE AT THE CALL SITE: the clear is
+     * synchronous and lands before the first render, so putting the sentence back after the await is
+     * after the paint that needed it – measured red in `tests/component/round36-error-surfaces.test.ts`.
+     * Default false, so every existing caller is byte-identical in behaviour.
+     */
+    async run<T>(fn: () => Promise<T>, options?: { keepError?: boolean }): Promise<T | undefined> {
       this.busy = true
-      this.error = ''
+      if (!options?.keepError) this.error = ''
       try {
         return await fn()
       } catch (err) {
@@ -480,13 +491,25 @@ export const useGameStore = defineStore('game', {
      *
      *  ⚠ NULL IS «I CANNOT SAY», NOT «THE INBOX IS EMPTY», and the difference is load-bearing for the
      *  one caller: `inboxMail.persist` prunes the read/binned annotations against the list it is given,
-     *  so a null must leave them alone rather than prune against nothing. An empty post is `[]`. */
+     *  so a null must leave them alone rather than prune against nothing. An empty post is `[]`.
+     *
+     *  ⚠⚠ AND IT KEEPS THE PLAYER'S LAST SENTENCE, WHICH IS A DEFECT T6.2 SHIPPED AND THE REFRESH
+     *  EXPOSED (28.09). `run()` opens by clearing `error`, which is right for a command the PLAYER took;
+     *  this query is one the SHEET fires, on opening and again on every committed mutation, so clearing
+     *  there wipes a refusal the player never read – on the very surface whose `StoreError` exists to
+     *  show it. Before T6.2 the sheet made no store call on open at all. Measured:
+     *  `tests/component/round36-error-surfaces.test.ts` («InboxSheet renders the store's sentence») had
+     *  been passing on a render-timing accident and went red the moment the fetch moved into setup.
+     *  `keepError` is the distinction, stated where the clear lives – see `run`. */
     async loadInbox(): Promise<Offer[] | null> {
       return (
-        (await this.run(async () => {
-          const res = this.takeOk(await request({ type: 'inbox' }))
-          return expectArm(res, 'inbox').inbox
-        })) ?? null
+        (await this.run(
+          async () => {
+            const res = this.takeOk(await request({ type: 'inbox' }))
+            return expectArm(res, 'inbox').inbox
+          },
+          { keepError: true },
+        )) ?? null
       )
     },
     async tick(weeks: number) {
