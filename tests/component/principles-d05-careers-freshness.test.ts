@@ -31,6 +31,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { installMemoryStorage } from './setup'
 import MoreScreen from '../../src/components/screens/MoreScreen.vue'
 import type { CareerMeta, Snapshot, ToUI } from '../../src/shared/protocol'
 // ⚠ THE APP'S OWN LABEL, NOT A SECOND SPELLING OF IT. The row prints `weekLabel(c.week)`, whose
@@ -40,23 +41,14 @@ import type { CareerMeta, Snapshot, ToUI } from '../../src/shared/protocol'
 import { weekLabel } from '../../src/shared/dates'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND MoreScreen READS IT ON MOUNT (sound, motion, match
-// defaults) – the same shim round21-dialogs.test.ts, round20-ui.test.ts and
-// principles-d01-restore-previous.test.ts install, for the reason quoted there: supply the browser's
-// own object rather than weaken the app to suit the runner.
-const backing = new Map<string, string>()
-Object.defineProperty(globalThis, 'localStorage', {
-  configurable: true,
-  value: {
-    getItem: (k: string) => (backing.has(k) ? backing.get(k)! : null),
-    setItem: (k: string, v: string) => void backing.set(k, String(v)),
-    removeItem: (k: string) => void backing.delete(k),
-    clear: () => backing.clear(),
-    key: (i: number) => [...backing.keys()][i] ?? null,
-    get length() {
-      return backing.size
-    },
-  },
-})
+// defaults) – supply the browser's own object rather than weaken the app to suit the runner.
+// ⚠⚠ 28.09 – AND IT ASKS THE SHARED HELPER RATHER THAN SPELLING THE BLOCK, which is not a
+// style preference: `tests/principles-t514-merged-families.test.ts` RULE A (a) is a one-way ratchet
+// over F-03's clone family, and it counted this file as the 69th copy of a block that 68 files
+// already spell. Its header refuses the other reading in as many words – a ratchet, not a pardon –
+// so the measured list stays at 27.09's 68 and a file written today imports the helper instead.
+const storage = installMemoryStorage()
+const backing = storage.backing
 
 const CAREER_ID = 'c-d05-fresh'
 /** ⚠ THE SECOND CAREER SITS AT THE SAME REVISION ON PURPOSE – see the switch case at the foot. */
