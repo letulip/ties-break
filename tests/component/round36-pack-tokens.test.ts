@@ -116,21 +116,36 @@ describe('⭐ U-09 – the pack dimensions have one home', () => {
     wrapper.unmount()
   })
 
+  // ⚠ RE-AIMED BY E-11 ON 28.09, AND NOT WEAKENED: the same six declarations are pinned, two of them
+  // in a new file. The shelf left MoneyScreen.vue for `ShopPanel.vue` (T6.3, the Money shop's own
+  // component), and it took its own two token readings with it – `.shelf-cats`' reading cap on the
+  // six category tiles and `.shop-family`'s `auto-fill` grid. Nothing about the CLAIM moved: each site
+  // still has to read the token instead of the number, and the count below still catches a fix that
+  // converts one reading column and leaves the other.
+  //
+  // ⚠ THE SITES ARE NAMED BY PATH RATHER THAN THROUGH `componentLogic`, deliberately. That helper is
+  // the SFC plus the COMPOSABLES it imports; it does not follow a child component, and these are CSS
+  // declarations rather than logic. For a claim about which file carries which declaration, the path
+  // IS the claim – so an extraction re-aims it by naming the new file, which is what happened here.
   it('⚠ and the six declarations read the token rather than the number', () => {
     const sites: [string, string][] = [
       ['src/components/OnboardingWizard.vue', 'max-width: var(--read-max)'],
       ['src/components/PrologueCard.vue', 'max-width: var(--read-max)'],
       ['src/components/screens/MoneyScreen.vue', 'max-width: var(--read-max)'],
-      ['src/components/screens/MoneyScreen.vue', 'minmax(var(--card-min), 1fr)'],
+      ['src/components/ShopPanel.vue', 'max-width: var(--read-max)'],
+      ['src/components/ShopPanel.vue', 'minmax(var(--card-min), 1fr)'],
       ['src/style.css', 'minmax(var(--card-min), 1fr)'],
     ]
     for (const [rel, needle] of sites) {
       expect(repoFile(rel), `${rel} does not read ${needle}`).toContain(needle)
     }
-    // Money carries TWO of the reading-measure rules, so a fix that converted one and left the other
-    // would pass the loop above.
+    // Money and the shelf carry ONE reading-measure rule each now – her account's column on the screen,
+    // the six category tiles on the shelf – and the pair is what a fix that converted one and left the
+    // other would fail. Before E-11 both counts were on MoneyScreen and this read `toHaveLength(2)`.
     const money = repoFile('src/components/screens/MoneyScreen.vue')
-    expect(money.match(/max-width: var\(--read-max\)/g) ?? [], 'Money has two reading columns').toHaveLength(2)
+    expect(money.match(/max-width: var\(--read-max\)/g) ?? [], 'Money lost her account\'s column').toHaveLength(1)
+    const shop = repoFile('src/components/ShopPanel.vue')
+    expect(shop.match(/max-width: var\(--read-max\)/g) ?? [], 'the shelf lost its tile grid\'s cap').toHaveLength(1)
   })
 
   it('⚠ 104px is NOT one dimension, and is deliberately left alone', () => {

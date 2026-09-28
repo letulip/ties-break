@@ -181,10 +181,19 @@ const WEEK_PRINTING_FILES = [
   // ⚠ App.vue LEFT this list in A2 (28.07): the shell's header was its only week-printing surface,
   // and the header is gone. It routes now and prints nothing – so requiring the import would pin a
   // dead import rather than a live rule. Home took the job (see the date-line test below).
+  // ⚠ ShopPanel.vue JOINED IT ON 28.09 (E-11), and a JOIN rather than a swap is the point. The Money
+  // shop moved into its own component and took two week-printing surfaces with it – the delivery
+  // date on an ordered rung («On order», `weekLabel(row.readyWeek ?? 0)`) and the build ring's spoken
+  // sentence in `buildRingLabel` – while MoneyScreen.vue kept the ledger's week headings and the
+  // balance line, so BOTH files print a week and both have to import the formatter. Adding it is not
+  // housekeeping: this list's own note says a screen that STOPS printing a week is meant to be
+  // noticed, and the mirror of that is that a NEW surface silently outside the list is a surface the
+  // guard below never scans for the raw-integer spelling the owner met in a playtest.
   'components/CountingResultsTable.vue',
   'components/InjuryStopDialog.vue',
   'components/PlanWeekSheet.vue',
   'components/PracticeFlow.vue',
+  'components/ShopPanel.vue',
   'components/WeekRecapCard.vue',
   // The calendar (screen H) prints a week in three places: its header's date line, the week label on
   // every look-ahead row, and the entry deadline on the one event a marker opens. Added to this list
