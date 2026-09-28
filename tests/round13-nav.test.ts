@@ -400,9 +400,16 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
     // NOT in the save: no store/engine surface knows the key.
     // ⚠ WIDENED by R2-09 for the protocol arm, NOT weakened: `shared/protocol` is a barrel since
     // the split, so protocol.ts alone is re-export lines and could not hold the key either way.
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts']) {
-      expect(read(rel)).not.toContain('kidAvatarHint')
-    }
+    expect(read('../src/stores/game.ts')).not.toContain('kidAvatarHint')
+    // ⚠⚠ WIDENED 28.09 BY T6.5 / A-04 (a) – A NEGATIVE PIN THAT NOW READS A BARREL IS ASKING NOTHING.
+    // This case did not break with P4's last three span-moves; it QUIETLY STOPPED MEANING WHAT IT
+    // SAYS, which is the worse half of the same family (CLAUDE.md: the region that silently widens,
+    // the helper that silently returns ''). `src/engine/world.ts` holds no function body any more, so
+    // «the engine must not know this» read against that file alone could not fail for any engine code
+    // whatsoever. `worldSource()` is world.ts + every world/*.ts part, so the claim is read over the
+    // whole module set – and widening can only ADD text to a NEGATIVE assertion, which makes it
+    // STRICTER and never weaker. Measured before the change: the key appears in no engine code.
+    expect(engineModuleSource('world'), 'no engine surface knows the key').not.toContain('kidAvatarHint')
     expect(engineModuleSource('../shared/protocol')).not.toContain('kidAvatarHint')
   })
 

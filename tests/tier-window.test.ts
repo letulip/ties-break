@@ -16,6 +16,7 @@ import { resumeMain } from '../src/engine/rng'
 import type { TierId } from '../src/engine/season/types'
 // Comments are not code – the house helper, now in tests/helpers/source.ts.
 import { codeOf } from './helpers/source'
+import { worldSource } from './worldSource'
 
 // =================================================================================================
 // THE SLIDING WINDOW (act2-pro-tour.md §11, owner ruling 11) — and the stacked-week pick that
@@ -293,8 +294,16 @@ describe('the feed follows the calendar, and blank weeks are allowed', () => {
 
 describe('visibility is not access: the engine never reads the feed rule', () => {
   it('the engine sources are free of the feed vocabulary', () => {
-    for (const rel of ['../src/engine/world.ts', '../src/engine/season/calendar.ts']) {
-      const src = codeOf(read(rel))
+    // ⚠⚠ WIDENED 28.09 BY T6.5 / A-04 (a) – A NEGATIVE PIN THAT NOW READS A BARREL IS ASKING NOTHING.
+    // This case did not break with P4's last three span-moves; it QUIETLY STOPPED MEANING WHAT IT
+    // SAYS, which is the worse half of the same family (CLAUDE.md: the region that silently widens,
+    // the helper that silently returns ''). `src/engine/world.ts` holds no function body any more, so
+    // «the engine must not know this» read against that file alone could not fail for any engine code
+    // whatsoever. `worldSource()` is world.ts + every world/*.ts part, so the claim is read over the
+    // whole module set – and widening can only ADD text to a NEGATIVE assertion, which makes it
+    // STRICTER and never weaker. Measured before the change: both names appear in the package only inside COMMENTS (world/ladder.ts, world/multiWeek.ts),
+    // which `codeOf` strips – so the widened claim is true of the code and says so about all of it.
+    for (const src of [codeOf(worldSource()), codeOf(read('../src/engine/season/calendar.ts'))]) {
       expect(src).not.toContain('feedShows')
       expect(src).not.toContain('feedContext')
     }

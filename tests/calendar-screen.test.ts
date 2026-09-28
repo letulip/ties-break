@@ -14,7 +14,7 @@
 //      a per-day editor, and a second week button that computes its own state.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { componentLogic } from './worldSource'
+import { componentLogic, worldSource } from './worldSource'
 // Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
 // helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
 // documents at length, including documenting what it deliberately did not do.
@@ -999,9 +999,18 @@ describe('the days cross themselves out', () => {
     expect(cross).toContain("const PACE_KEY = 'tb-day-cross-pace'")
     expect(cross).toContain("return localStorage.getItem(OFF_KEY) === '1'")
     expect(cross).toContain('} catch {')
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
+    for (const rel of ['../src/stores/game.ts', '../src/shared/protocol.ts']) {
       expect(read(rel), `${rel} must not know the flag`).not.toContain('dayCross')
     }
+    // ⚠⚠ WIDENED 28.09 BY T6.5 / A-04 (a) – A NEGATIVE PIN THAT NOW READS A BARREL IS ASKING NOTHING.
+    // This case did not break with P4's last three span-moves; it QUIETLY STOPPED MEANING WHAT IT
+    // SAYS, which is the worse half of the same family (CLAUDE.md: the region that silently widens,
+    // the helper that silently returns ''). `src/engine/world.ts` holds no function body any more, so
+    // «the engine must not know this» read against that file alone could not fail for any engine code
+    // whatsoever. `worldSource()` is world.ts + every world/*.ts part, so the claim is read over the
+    // whole module set – and widening can only ADD text to a NEGATIVE assertion, which makes it
+    // STRICTER and never weaker. Measured before the change: the symbol appears in no engine code.
+    expect(worldSource(), 'the engine must not know the flag').not.toContain('dayCross')
   })
 
   it('the switch is on the settings screen, in the shape its four siblings have', () => {
