@@ -35,6 +35,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { StopReason } from '../src/shared/protocol'
 import { region } from './helpers/source'
+import { worldSource } from './worldSource'
 
 const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
 
@@ -182,7 +183,13 @@ describe('#19 – the popup is gated on STATE, not on a screen having been open'
     // The stop reason is not the popup's gate any more; it is still what stops time so the week can
     // be read. Deleting it would let a four-week skip run straight past an injury, which is a
     // different feature and not this one's to remove.
-    const world = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
-    expect(world).toContain("stops.add('injury')")
+    // ⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – THE MODULE SET, NOT THE BARREL FILE. The stop set is
+    // assembled in `advanceWeeks`, which P4's last span-move took to `engine/world/tick.ts`, so a read
+    // of `world.ts` now sees the barrel's layering comments and nothing else – it went red on exactly
+    // that, which is the arm for this re-aim. `worldSource()` is world.ts + every world/*.ts part,
+    // which is CLAUDE.md's rule for a pin over engine source and is the scope this claim was always
+    // about: «the ENGINE stop reason», not «a line in one file». Nothing is weaker – the string is
+    // still asserted PRESENT, and the module set can only contain more text, never less.
+    expect(worldSource()).toContain("stops.add('injury')")
   })
 })
