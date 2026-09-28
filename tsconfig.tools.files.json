@@ -24,6 +24,7 @@
     "tools/album-money-probe.ts",
     "tools/album-spread-probe.ts",
     "tools/alice-story-read.ts",
+    "tools/barrel-census.ts",
     "tools/birthday-pool.ts",
     "tools/cancel-share-bench.ts",
     "tools/chemistry-bench.ts",
