@@ -150,10 +150,10 @@ useDialogFocus(cardEl)
            the whole subject of this screen is that the decision is yours. Same rule, and the same
            absence of a positional selector, as `.prologue-answer`. -->
       <div class="handover-answers">
-        <button class="handover-answer dialog-option--accent" type="button" :disabled="busy" @click="emit('go-on')">
+        <button class="handover-answer dialog-option-accent" type="button" :disabled="busy" @click="emit('go-on')">
           {{ copy.goOn }}
         </button>
-        <button class="handover-answer dialog-option--accent" type="button" :disabled="busy" @click="emit('start-again')">
+        <button class="handover-answer dialog-option-accent" type="button" :disabled="busy" @click="emit('start-again')">
           {{ copy.startAgain }}
         </button>
       </div>
@@ -272,7 +272,7 @@ useDialogFocus(cardEl)
    `:first-child` here would be the screen pointing at the answer it prefers, on the one screen whose
    entire subject is that the choice is the parent's. */
 /* ⭐⭐ T6.4 · F-09 (28.09) – eight of the eleven declarations, the hover and the disabled pair are
-   `.dialog-option--accent` in src/style.css; this element carries that class beside its own. What stays
+   `.dialog-option-accent` in src/style.css; this element carries that class beside its own. What stays
    is this card's own single-line row: a BLOCK at 15px/1.3, where `.prologue-answer` is a column of a
    label and a note. See PrologueCard.vue for why the accent form is a sibling of `.dialog-option` rather
    than a modifier layered on it. */

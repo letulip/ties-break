@@ -73,7 +73,7 @@ import '../../src/components/BirthdayDialog.vue'
 import '../../src/components/LifeBeatDialog.vue'
 import '../../src/components/SupportStaffTab.vue'
 import { PHONE, setViewport } from './fits'
-import { carriesClasses } from '../helpers/markup'
+import { countCarrying } from '../helpers/markup'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -469,7 +469,7 @@ const CAPTURED: Record<string, Record<string, string>> = {
     'cursor': 'default',
     'opacity': '0.5',
   },
-  // --- option, accent · .dialog-option--accent ---
+  // --- option, accent · .dialog-option-accent ---
   'prologue-answer': {
     'width': '100%',
     'display': 'flex',
@@ -722,7 +722,7 @@ const FAMILIES: readonly Family[] = [
     ],
   },
   {
-    shared: 'dialog-option--accent',
+    shared: 'dialog-option-accent',
     members: [
       { name: 'prologue-answer', classes: ['prologue-answer'], anchor: 'prologue-answers', markup: '../../src/components/PrologueCard.vue' },
       { name: 'handover-answer', classes: ['handover-answer'], anchor: 'handover-card', markup: '../../src/components/PrologueHandover.vue' },
@@ -840,16 +840,28 @@ describe('T6.4 · F-09 – the shared objects compute byte-identically', () => {
 
   for (const family of FAMILIES) {
     describe(`.${family.shared}`, () => {
-      it('every member carries the shared class beside its own', () => {
+      it('EVERY element with the member\'s own class carries the shared one', () => {
         // ⚠ RED ON THE UNFIXED TREE, which is this arm's whole purpose – the shared class does not
         // exist there, so no markup carries it. A token-set comparison, not a text search: see
         // tests/helpers/markup.ts for why the obvious `toContain` would be a weakening.
+        //
+        // ⚠⚠ AND IT COUNTS RATHER THAN MERELY EXISTS, WHICH IS A CORRECTION MEASURED ON 28.09. This arm
+        // asked «does SOME element carry both», and that is satisfied by one site while a sibling has
+        // quietly lost the class. Proven by mutating: dropping the shared class from ONE of
+        // PrologueHandover's two answers left the whole file GREEN, because the other one still carried
+        // it. Several members have more than one site in their file – PrologueCard draws six accent
+        // answers, ForkDialog three options, RetirementDialog three titles – so «some» was never the
+        // claim. The two counts must be EQUAL: no element may wear the own class without the shared one.
         for (const m of family.members) {
           if (!m.markup) continue
+          const own = m.classes[m.classes.length - 1]
+          const src = read(m.markup)
+          const sites = countCarrying(src, own)
+          expect(sites, `${m.markup}: .${own} is drawn at all`).toBeGreaterThan(0)
           expect(
-            carriesClasses(read(m.markup), m.classes[m.classes.length - 1], family.shared),
-            `${m.markup}: .${m.classes[m.classes.length - 1]} carries .${family.shared}`,
-          ).toBe(true)
+            countCarrying(src, own, family.shared),
+            `${m.markup}: all ${sites} .${own} sites carry .${family.shared}`,
+          ).toBe(sites)
         }
       })
 

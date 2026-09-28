@@ -620,7 +620,7 @@ useDialogFocus(cardEl)
               <button
                 v-for="b in recordedBirthdays"
                 :key="`${b.month}-${b.day}`"
-                class="prologue-answer dialog-option--accent prologue-choice"
+                class="prologue-answer dialog-option-accent prologue-choice"
                 type="button"
                 role="radio"
                 :aria-checked="birthdayTaken(b)"
@@ -745,7 +745,7 @@ useDialogFocus(cardEl)
           <button
             v-for="control in picks"
             :key="control.id"
-            class="prologue-answer dialog-option--accent prologue-choice"
+            class="prologue-answer dialog-option-accent prologue-choice"
             type="button"
             role="radio"
             :aria-checked="taken(control.id)"
@@ -762,7 +762,7 @@ useDialogFocus(cardEl)
 
         <!-- ...and on a card with nothing to decide, the one control that is not a choice at all.
              It emits `null` exactly as it always did. -->
-        <button v-if="wayOn" class="prologue-answer dialog-option--accent" type="button" :disabled="busy" @click="emit('answer', null)">
+        <button v-if="wayOn" class="prologue-answer dialog-option-accent" type="button" :disabled="busy" @click="emit('answer', null)">
           <span class="prologue-answer-label">{{ wayOn }}</span>
         </button>
 
@@ -786,7 +786,7 @@ useDialogFocus(cardEl)
             <button
               v-for="control in askChoices"
               :key="control.id"
-              class="prologue-answer dialog-option--accent prologue-choice"
+              class="prologue-answer dialog-option-accent prologue-choice"
               type="button"
               role="radio"
               :aria-checked="taken(control.id)"
@@ -819,7 +819,7 @@ useDialogFocus(cardEl)
              is that item's negative arm still holding: what LOOKS like a choice must BE one. -->
         <button
           v-if="proceedLabel"
-          class="prologue-answer dialog-option--accent prologue-proceed"
+          class="prologue-answer dialog-option-accent prologue-proceed"
           type="button"
           :disabled="busy"
           @click="emit('proceed')"
@@ -835,7 +835,7 @@ useDialogFocus(cardEl)
              it. -->
         <button
           v-if="skipLabel"
-          class="prologue-answer dialog-option--accent prologue-skip"
+          class="prologue-answer dialog-option-accent prologue-skip"
           type="button"
           :disabled="busy"
           @click="emit('skip')"
@@ -1391,13 +1391,15 @@ useDialogFocus(cardEl)
    whose entire subject is that the decision is the parent's. Same reasoning, and the same tokens, as
    `.birthday-choice`: the two are the same object and should not drift apart. */
 /* ⭐⭐ T6.4 · F-09 (28.09) – eight of the eleven declarations, and the hover, are
-   `.dialog-option--accent` in src/style.css; this element carries that class beside its own.
+   `.dialog-option-accent` in src/style.css; this element carries that class beside its own.
    `.handover-answer` stated the same eight, and jscpd read the pair as one clone (#32). What stays is
    the COLUMN this card's answers stack their label and note in – the handover's rows are a single line
    and are `display: block`.
-   ⚠ `.dialog-option--accent` IS NOT LAYERED ON `.dialog-option`, and this element must never carry
+   ⚠ `.dialog-option-accent` IS NOT LAYERED ON `.dialog-option`, and this element must never carry
    both: the transparent form declares `font: inherit`, which would change the typeface, the weight and
-   the line-height of every answer on this card. The shared rule's own note carries the measurement. */
+   the line-height of every answer on this card. The shared rule's own note carries the measurement, and
+   the name is ONE dash for that reason – BEM's `--` would claim «add me to the base», which is exactly
+   the edit the two forms cannot survive (architect's ruling, 28.09; F-09 wrote the `--` spelling). */
 .prologue-answer {
   display: flex;
   flex-direction: column;
@@ -1524,7 +1526,7 @@ useDialogFocus(cardEl)
   min-width: 0;
 }
 
-/* ⭐ T6.4 · F-09 (28.09) – the disabled pair went with the rest to `.dialog-option--accent:disabled`
+/* ⭐ T6.4 · F-09 (28.09) – the disabled pair went with the rest to `.dialog-option-accent:disabled`
    in src/style.css; the handover's rows stated exactly the same two declarations. */
 
 /* ⚠ QUIETER, AND STILL A DECLARED TOKEN PAIR WITH NO FALLBACK. The border goes and the wash goes;

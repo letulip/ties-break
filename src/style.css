@@ -2941,15 +2941,22 @@ button.primary.risky {
    #1's distinction, in the tokens that round set). Members: `.prologue-answer` (PrologueCard.vue),
    `.handover-answer` (PrologueHandover.vue).
    ⚠⚠ IT IS A SIBLING OF `.dialog-option` AND NOT A MODIFIER LAYERED ON IT, WHICH IS MEASURED RATHER
-   THAN STYLISTIC – the `--` in the name is F-09's own spelling and it is kept, but an element may not
-   carry both. The transparent form declares `font: inherit`, which resets font-family, weight and
-   line-height to the card's; the accent form carries no `font` at all and therefore keeps the app's
-   `button` metrics. Layering would silently change the typeface of every answer in the prologue and in
-   the handover – the one thing F-09 forbids – and restoring it would mean hard-coding here what the
-   cascade gives, which is the kind of value that goes stale without a reader noticing. Seven of the
-   eleven declarations differ between the two forms, so there is no base worth sharing: what is shared
-   is the NAME, so a reader meets one family. */
-.dialog-option--accent {
+   THAN STYLISTIC. An element may not carry both. The transparent form declares `font: inherit`, which
+   resets font-family, weight and line-height to the card's; the accent form carries no `font` at all and
+   therefore keeps the app's `button` metrics. Layering would silently change the typeface of every
+   answer in the prologue and in the handover – the one thing F-09 forbids – and restoring it would mean
+   hard-coding here what the cascade gives, which is the kind of value that goes stale without a reader
+   noticing. Seven of the eleven declarations differ between the two forms, so there is no base worth
+   sharing: what is shared is the NAME, so a reader meets one family.
+
+   ⚠⚠ AND THE NAME IS ONE DASH, NOT TWO, WHICH IS A RULING AND NOT A TYPO (architect, 28.09). F-09
+   writes `.dialog-option--accent`, and that spelling was the review's rather than a decision: BEM's `--`
+   claims MODIFIER, i.e. «add me to the base», so the convention itself invites the one edit that
+   reproduces the defect this object exists to avoid – a reader tidies the apparent violation by adding
+   `.dialog-option`, and every answer on two screens changes typeface, weight and line-height with
+   nothing on screen to say why. The note above mitigates that; a name that does not lie removes it.
+   `.dialog-option-accent` claims only kinship. */
+.dialog-option-accent {
   width: 100%;
   padding: 11px 13px;
   text-align: left;
@@ -2960,11 +2967,11 @@ button.primary.risky {
   cursor: pointer;
 }
 
-.dialog-option--accent:hover:not(:disabled) {
+.dialog-option-accent:hover:not(:disabled) {
   background: var(--accent-fill);
 }
 
-.dialog-option--accent:disabled {
+.dialog-option-accent:disabled {
   opacity: 0.55;
   cursor: default;
 }

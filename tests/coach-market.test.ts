@@ -179,6 +179,16 @@ describe('screen T, round 3', () => {
     // ⚠ The `img` rules did NOT join it, and that is F-09's own ruling: `.cm-art img`'s 12% is read off
     // sixteen coach masters and `.staff-art img`'s 38% off two support masters, so they are two
     // measurements rather than one. They stay per strip, and stay pinned here.
+    // ⚠⚠ AND THE TWO ARMS BELOW KEEP THEIR OLD SHAPE DELIBERATELY – a declaration in a NAMED FILE, which
+    // is the wrong shape for a shared object and the RIGHT one for a per-strip measurement (architect's
+    // ruling, 28.09). The split of claims is the point, and it is worth reading once: the strip's BOX is
+    // pinned BY VALUE, on both members, through the real cascade in
+    // tests/component/principles-f09-shared-objects.test.ts – because «the two strips compute the same
+    // box» is not a text fact and no source pin can say it. The WINDOW inside the box is one number per
+    // set of masters, so it is pinned BY DECLARATION here, where a reader looking for «which file decides
+    // the crop» will find it. The behavioural half of the window – that a `cover` on this box is a
+    // horizontal clip and nothing else, the A2c/d ruling – is measured through a mounted cascade in
+    // tests/component/round42-coach-portrait.test.ts.
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*height: 100%/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-fit: cover/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-position: /)
