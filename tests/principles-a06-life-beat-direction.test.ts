@@ -286,8 +286,11 @@ function barrelSpecifiers(): Map<string, string[]> {
 //
 // ⚠ TIGHTENED 28.09 BY T6.10, which moved five of the seven hazard sections T6.8 could not move –
 // §16 the death, §15 the weight, §11 the wedding, §8 the end, §7 tier-1 small talk. Measured after
-// them: **5,522 lines / 145 declarations**, with 1,246 more lines living in five new kind modules. The
-// ceilings leave ~178 lines and 5 declarations of honest slack and no more, because the forward rule is
+// them: **5,528 lines / 145 declarations**, with 1,229 more lines living in five new kind modules. ⚠ The
+// number is the one `wc -l` prints on the LAST commit of the task, not on the last span-move – the six
+// banner lines the leak and the booth gained are honest hub lines too, and a note that quoted the
+// cheaper figure would be CLAUDE.md's «a count written in PROSE survives a full gate» in this file. The
+// ceilings leave ~172 lines and 5 declarations of honest slack and no more, because the forward rule is
 // that a new beat KIND is a new module rather than a new section here. ⚠ §13 the independent life and
 // §14 the pregnancy are STILL IN THE HUB and the ceilings hold their ~855 lines: `world/snapshot.ts`
 // imports `ownKeyThisWeek` and `motherhoodBandAt` from the hub at runtime (`from './lifeBeat'`), so
