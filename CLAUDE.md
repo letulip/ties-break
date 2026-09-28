@@ -84,9 +84,10 @@ docs/specs/      one spec per shipped mechanic; docs/decisions.md is the dated o
 docs/review/     2026-08 full review + P1–P9 proposals
 ```
 
-`world.ts` is being decomposed into `src/engine/world/*.ts` (see `docs/review/proposals/P4-world-decomposition.md`). Rules for that work:
-- Extracted modules import `WorldState` as **`import type`** from `../world` — type-only, erased at compile time, so no runtime cycle.
-- `world.ts` imports the values back and **re-exports them under their historical names**: **hundreds of
+`world.ts` **is decomposed** (see `docs/review/proposals/P4-world-decomposition.md`). P4 finished on 28.09: the file holds **0 function bodies and 0 declarations**, pinned by `tests/principles-a04-barrel-no-bodies.test.ts`, and its named surface is **frozen at 537** by `tests/principles-a03-barrel-surface.test.ts` – the 630 it carried minus 93 that no file in `src`, `tests`, `tools`, `scripts` or `e2e` ever imported through it. Rules for working on it:
+- ⚠ **It is not «compatibility under historical names» any more, and calling it that was the stale sentence A-03 found.** 511 of its 627 names were born AFTER the split; the barrel is now a **frozen public surface**. A symbol born in `world/*` is imported **from its owning module** (`node scripts/world-map.mjs <symbol>` names the owner), and the barrel carries only names already in the frozen list – so adding a re-export line is a decision the pin makes you take on purpose, not a habit. A hazard module's names are re-exported by `world.ts` directly from that module, never through an intermediate hub.
+- Extracted modules import `WorldState` as **`import type` from `./state`** – the module that **declares** it (`world/state.ts`) – not from `../world`. Type-only either way, so no runtime cycle; the barrel was simply the wrong door for a type living one directory over, and routing through it held the type-only SCC at 107 files (A-P3-2). ⚠ **The flip is a ratchet, not a sweep**: `tests/principles-a03-type-import-ratchet.test.ts` grandfathers the `world/*` files that predate the rule and fails a **new** one; each grandfathered file converts when it is next touched. A **value** import of `world.ts` from inside the package is an error with no grandfather.
+- `world.ts` imports the values back and **re-exports them**: **hundreds of
   files** import from `engine/world` and that public API must not change. ⚠ Count it, do not quote it –
   three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
   right" under different scopes, which is how a stale number survives, as **280 (19.08; 698 on 19.09)** did here.

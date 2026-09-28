@@ -292,6 +292,18 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   ([08-tests-tooling-docs.md](review-principles-2026-09-26/08-tests-tooling-docs.md), H-08; the
   forward rule is the architect's, per §1a of [the fix plan](plans/principles-fix-builder-2026-09.md).)
 
+- **`world.ts` states four counts about itself in prose, and all four are wrong.** `:65` says «the
+  280-file public API», `:259` «the ~111 modules importing them», `:331` «111 files import from
+  `engine/world`», and `:116` / `:484` say «hundreds of files». Measured 28.09 by T6.6: **777 files
+  import the barrel by name, 782 import from any `world` path**. ⚠ **Deliberately not refreshed**, and
+  the reason is `CLAUDE.md`'s own rule – a fresh number in prose rots exactly the same way, and «a count
+  a document states about itself needs a pin that compares it with the thing». So this is W7 material
+  rather than a one-line edit: either the sentences stop stating counts, or one pin states the count and
+  the prose points at it, the way `tests/wave9-strings-roundtrip.test.ts` does for a corpus. `:259` also
+  carries a pre-existing text gap – «importing them from  keep working» lost its specifier.
+  ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-03; measured at W6's head
+  after T6.5 and T6.6.)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши

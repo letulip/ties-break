@@ -2,11 +2,25 @@
 
 // THE AREA -> OWNER SYMBOL MAP FOR THE `engine/world` BARREL (TOK-4).
 //
-// ⚠ WHY THIS EXISTS. `src/engine/world.ts` is COMPATIBILITY, NOT DISCOVERY. It re-exports the
-// decomposed `engine/world/*` modules under their historical names so that the 277 files importing
-// `engine/world` keep working (CLAUDE.md: "that public API must not change"). The cost is that a
-// reader who knows a symbol's NAME has no way to find the module that DEFINES it without opening a
-// 3,600-line file – ~59k tokens to answer "where does `rollInjury` live?".
+// ⚠ WHY THIS EXISTS. `src/engine/world.ts` is A SURFACE, NOT DISCOVERY. It re-exports the
+// decomposed `engine/world/*` modules so that the files importing `engine/world` keep working
+// (CLAUDE.md: "that public API must not change").
+// -------------------------------------------------------------------------------------------------
+// ⚠⚠ 28.09 – AND THIS PARAGRAPH USED TO SAY "COMPATIBILITY ... UNDER THEIR HISTORICAL NAMES",
+// WHICH A-03 MEASURED AS FALSE: 511 of the barrel's 627 names were born AFTER the split, so it had
+// stopped being a shim for history and become a public surface in its own right. It is now FROZEN at
+// 537 names by `tests/principles-a03-barrel-surface.test.ts`, with the 93 nothing read dropped, and
+// the forward rule lives in CLAUDE.md's P4 block: a symbol born in `world/*` is imported from its
+// owning module, and the barrel carries only names already in the frozen list. The count that stood
+// here (277) is deliberately NOT replaced with today's - a number a document states about itself
+// rots the same way, which is the whole argument of CLAUDE.md's "Count it, do not quote it".
+// -------------------------------------------------------------------------------------------------
+// The cost of a surface this wide is that a reader who knows a symbol's NAME has no way to find the
+// module that DEFINES it: the re-export line names the owner, but 537 of them do not fit in a head.
+// ⚠ The figure that stood here – "a 3,600-line file, ~59k tokens to answer where `rollInjury`
+// lives" – was true of the barrel that still held the code. P4 finished on 28.09 and the file is a
+// list of re-exports, so the cost is now a search rather than a read; the QUESTION this script exists
+// to answer has not changed at all, which is why it stays.
 //
 // This script answers that question three ways, all of them free:
 //
