@@ -304,6 +304,19 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-03; measured at W6's head
   after T6.5 and T6.6.)
 
+- **63 of the strings tables' rows have no roundtrip pin at all.** Six tables name
+  `src/engine/world/lifeBeat.ts` as the home of **106** rows; three of them have a
+  `*strings-roundtrip*` test and three do not – wave 5 (**54** rows), wave 6 (**4**) and wave 8 (**5**).
+  Measured 28.09 by T6.10 while checking whether its seven moves invalidated any home. ⚠ The reason this
+  is a queue row and not a quick fix: a roundtrip pin is two claims, «every row's text is in the file it
+  names» and «every DRAFT in the file is a row», and the second needs somebody to establish what those
+  three waves' corpora actually were – writing the pin against today's source would pin the drift rather
+  than the intent. The pinned three are the model (`tests/wave12-strings-roundtrip.test.ts`), and
+  T6.9's `homeSource()` already resolves a `src/engine/` home through its module set, so a split no
+  longer breaks them. Cheapest honest start: the containment half for all 63 rows, with the
+  corpus-completeness half left to whoever owns each wave's spec.
+  ([the fix plan](plans/principles-fix-builder-2026-09.md) §2's wording rule; measured at W6's head.)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
