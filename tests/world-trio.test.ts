@@ -357,8 +357,21 @@ describe('item 2 — no engine text prints a raw absolute week', () => {
   })
 
   it('the engine reaches for the SHARED formatter, and does not grow one of its own', () => {
-    const world = readFileSync(new URL('world.ts', ENGINE_DIR), 'utf8')
-    expect(world).toMatch(/import \{[^}]*\bweekLabel\b[^}]*\} from '\.\.\/shared\/dates'/)
+    // ⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – THE MODULE SET, NOT THE BARREL FILE, AND NOTHING IS
+    // WEAKER. `weekLabel`'s one caller in this module set was `finalizeTournament`, which is now
+    // `world/tournamentClose.ts`, so the import travelled with it and a pin on `world.ts` alone asked
+    // a question about a barrel. `worldSource()` is world.ts + every world/*.ts part (CLAUDE.md's
+    // rule for exactly this: read engine source through `tests/worldSource.ts`, never a path), so the
+    // claim – «the string the engine writes for a player goes through the shared formatter» – is now
+    // read over the whole set that writes those strings. The depth of the specifier is allowed to be
+    // either `../shared/dates` (the barrel) or `../../shared/dates` (a part), because which file
+    // holds the import is the thing P4 keeps moving and is not what this test is about.
+    //
+    // ⚠ AND THE PIN QUERY DID NOT PREDICT THIS ONE. `git grep -l "engine/world.ts'" -- tests/`
+    // named 12 files and this is a 13th, because the path here is spelled `new URL('world.ts',
+    // ENGINE_DIR)` – the same read, assembled from two halves the grep cannot see. Recorded in T6.5's
+    // report as the query's first measured false negative.
+    expect(worldSource()).toMatch(/import \{[^}]*\bweekLabel\b[^}]*\} from '(?:\.\.\/)+shared\/dates'/)
     // The layering allows this: shared/dates.ts imports nothing, so engine -> shared is the same
     // one-way seam world.ts already uses for shared/protocol and shared/format. What must NOT
     // happen is a second formatter appearing inside the engine to avoid the import.
