@@ -22,6 +22,7 @@ import { describe, expect, it } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, relative, resolve } from 'node:path'
+import { stripComments } from './helpers/source'
 
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 
@@ -176,91 +177,26 @@ export function importStatements(text: string): string[] {
 // tree holds none today (the scanner agrees with the swap on all 325 files, and the swap is not
 // regex-aware either), so the honest position is: this is a lexer for comments, strings and
 // templates, and that is the whole of what it claims.
+// ⚠⚠ AND THE LEXER ITSELF NOW LIVES IN `tests/helpers/source.ts` – T6.11, the same day. It was a
+// SECOND COPY of the house strip, and F-03 / T5.14's rule bites hardest here: the thing that would
+// drift between two copies is **the definition of a comment**, which is exactly what both instruments
+// were wrong about, in two different ways, inside one wave. One lexer with a parameter is one
+// definition; two lexers differing in one behaviour are two definitions that agree today.
+//
+// ⚠ WHY THIS CALL SITE PASSES `newlines: true` AND `codeOf` PASSES `false`, said here so the flag has
+// a reason rather than a value: the parser below is `^`-ANCHORED, one statement per line. With the
+// newlines dropped, an inline block comment BETWEEN two import statements joins them into a single
+// line and the second import stops being seen at all – the dropped-edge defect arriving through the
+// strip instead of through the regex. `codeOf`'s 26 pins are calibrated to the collapsing form, so it
+// keeps it. `tests/helpers.test.ts` pins both readings of one input.
+//
+// ⚠ `html: false` HOLDS THE JUDGE'S READING STILL. This file never treated `<!-- -->` as a comment,
+// so an import-shaped line inside a `.vue` template comment has always counted as an edge here.
+// Changing that would move the graph, and the unification's whole safety claim is that it does not:
+// the resolved edge set is identical before and after, measured both ways. Whether it SHOULD change is
+// a separate question, and it is in the report rather than in this commit.
 export function codeOnly(text: string): string {
-  let out = ''
-  let i = 0
-  const n = text.length
-  while (i < n) {
-    const c = text[i]
-    const next = text[i + 1]
-    if (c === '/' && next === '/') {
-      while (i < n && text[i] !== '\n') i++ // the newline is emitted by the ordinary path below
-      continue
-    }
-    if (c === '/' && next === '*') {
-      i += 2
-      while (i < n && !(text[i] === '*' && text[i + 1] === '/')) {
-        if (text[i] === '\n') out += '\n' // keep the line count – see the note on `^` anchoring
-        i++
-      }
-      i += 2
-      continue
-    }
-    if (c === '"' || c === "'") {
-      const quote = c
-      out += c
-      i++
-      // ⚠ BOUNDED TO THE LINE. An unterminated quote is a `.vue` template's apostrophe («she's»), not
-      // a string, and a scanner that ran to the next quote would swallow the rest of the file.
-      while (i < n && text[i] !== quote && text[i] !== '\n') {
-        if (text[i] === '\\') {
-          out += text[i]
-          i++
-          if (i < n) {
-            out += text[i]
-            i++
-          }
-          continue
-        }
-        out += text[i]
-        i++
-      }
-      if (i < n && text[i] === quote) {
-        out += quote
-        i++
-      }
-      continue
-    }
-    if (c === '`') {
-      out += c
-      i++
-      let depth = 0 // `${ … }` nests, and a nested expression may hold its own backtick
-      while (i < n) {
-        if (text[i] === '\\') {
-          out += text[i]
-          i++
-          if (i < n) {
-            out += text[i]
-            i++
-          }
-          continue
-        }
-        if (depth === 0 && text[i] === '`') {
-          out += '`'
-          i++
-          break
-        }
-        if (text[i] === '$' && text[i + 1] === '{') {
-          depth++
-          out += '${'
-          i += 2
-          continue
-        }
-        if (depth > 0 && text[i] === '}') {
-          depth--
-          out += '}'
-          i++
-          continue
-        }
-        out += text[i]
-        i++
-      }
-      continue
-    }
-    out += c
-    i++
-  }
-  return out
+  return stripComments(text, { html: false, newlines: true })
 }
 
 /** Every `import`/`export … from` edge in one source text, read per statement. */
@@ -617,6 +553,23 @@ describe('runtime import cycles', () => {
     expect(what.get(edgeKey(leaf, hub)), 'and the leaf -> hub edge names its own').toBe('import { hubValue }')
     expect(edges.get(hub)?.has(leaf)).toBe(true)
     expect(edges.get(leaf)?.has(hub)).toBe(true)
+  })
+
+  it('⚠⚠ the shared lexer is used here with `newlines: true`, and an edge is what the flag costs', () => {
+    // ⚠ THE FLAG IS PINNED AT ITS CALL SITE, in this file's own units. `tests/helpers/source.ts` owns
+    // the lexer now (T6.11) and `codeOf` passes `newlines: false`; this file must pass `true`, because
+    // the parser is `^`-anchored. With the newlines dropped, an INLINE comment between two import
+    // statements joins them into one line and the second edge is never emitted – the dropped-edge
+    // defect ARM 2 is about, arriving through the strip instead of through the regex.
+    const inline = ["import { a } from './a' /* note", "   more */ import { b } from './b'"].join('\n')
+    expect(importEdges(codeOnly(inline)).map((e) => e.spec), 'both edges, as this file reads it').toEqual([
+      './a',
+      './b',
+    ])
+    expect(
+      importEdges(stripComments(inline, { html: false, newlines: false })).map((e) => e.spec),
+      '⚠ and what flipping the flag would cost: one edge, silently',
+    ).toEqual(['./a'])
   })
 
   it('⚠⚠ ARM 5 – neither regex ORDER is correct, which is why the strip is a scanner', () => {

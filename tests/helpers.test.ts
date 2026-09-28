@@ -14,7 +14,7 @@
 // A comment saying "do not merge these" would not have held – tests/pin-hygiene.test.ts exists for
 // exactly that reason. This file makes the wrong merge FAIL.
 import { describe, it, expect } from 'vitest'
-import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf } from './helpers/source'
+import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments } from './helpers/source'
 import { fnv1a, fnv1aHex } from './helpers/hash'
 
 describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
@@ -117,6 +117,31 @@ describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
     expect(codeOf(`${trailing}\n/** doc */\nconst z = 3`)).toContain('const y = 2')
     // a WHOLE-LINE comment goes, indentation and all – unchanged from the regex it replaces
     expect(codeOf('a\n   // gone\nb')).toBe('a\n\nb')
+  })
+
+  it('⭐⭐⭐ the `newlines` flag: one input, both readings, and the CONSEQUENCE of each', () => {
+    // ⚠⚠ THE FLAG IS PINNED HERE RATHER THAN LEFT TO ITS TWO CALLERS. `codeOf` passes false, the cycle
+    // judge passes true, and a parameter only one call site ever exercises is a parameter nobody
+    // maintains – so both values are asserted against the same text, with the consequence that makes
+    // the choice matter rather than only the shape of the output.
+    const src = ["import { a } from './a'", '/* a note', '   over three', '   lines */', "import { b } from './b'"].join('\n')
+    // false – the regexes' behaviour, and what `codeOf`'s 26 pins are calibrated to
+    expect(stripComments(src, { html: false, newlines: false })).toBe("import { a } from './a'\n\nimport { b } from './b'")
+    // true – the line structure survives, one line per source line
+    expect(stripComments(src, { html: false, newlines: true })).toBe("import { a } from './a'\n\n\n\nimport { b } from './b'")
+
+    // ⭐ AND THE CONSEQUENCE, which is why `tests/import-cycles.test.ts` needs `true`: with the
+    // newlines dropped, an INLINE comment between two statements joins them into ONE line, and a
+    // parser anchored on `^` then sees a single statement. That is the dropped-edge defect arriving
+    // through the strip instead of through a regex.
+    const inline = ["import { a } from './a' /* note", "   more */ import { b } from './b'"].join('\n')
+    expect(stripComments(inline, { html: false, newlines: false }).split('\n')).toHaveLength(1)
+    expect(stripComments(inline, { html: false, newlines: true }).split('\n')).toHaveLength(2)
+
+    // ...and `newlines` changes nothing for a line comment, which never held a newline to begin with.
+    for (const newlines of [false, true]) {
+      expect(stripComments('a\n   // gone\nb', { html: false, newlines })).toBe('a\n\nb')
+    }
   })
 
   it('⚠ `codeOf` treats `<!--` as markup, not as text inside a string', () => {

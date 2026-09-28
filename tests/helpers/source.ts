@@ -96,7 +96,7 @@
  * written in `<!-- -->` inside the template, quoting the very markup the pin bans.
  */
 export function codeOf(src: string): string {
-  return stripComments(src, true)
+  return stripComments(src, { html: true, newlines: false })
 }
 
 /**
@@ -107,15 +107,40 @@ export function codeOf(src: string): string {
  * particular file apply it at that call site, where the choice is visible.
  */
 export function scriptCodeOf(src: string): string {
-  return stripComments(src, false)
+  return stripComments(src, { html: false, newlines: false })
 }
 
+// =================================================================================================
+// ⚠⚠ ONE LEXER, AND IT IS SHARED WITH `tests/import-cycles.test.ts` – T6.11, 28.09.
+// =================================================================================================
+//
+// WHY IT IS NOT TWO. The cycle judge had its own copy of this scan, and the argument for folding them
+// is not tidiness (F-03 / T5.14's rule): **the thing that would drift between two copies is the
+// DEFINITION OF A COMMENT, and that definition is exactly what both instruments were wrong about, in
+// two different ways, inside one wave.** A shared lexer with a parameter is one definition with a
+// parameter; two lexers that differ in one behaviour are two definitions that happen to agree today.
+// The defect bit the live `world/lifeBeat.ts`, a fixture written to demonstrate it, and the probe
+// written to measure it – three times in one session, in a codebase that writes globs and regexes in
+// prose.
+//
+// ⚠ THE TWO OPTIONS ARE BOTH REQUIRED, with no default, so every call site states what it wants and
+// nobody inherits a reading they did not choose. `tests/helpers.test.ts` pins both values of
+// `newlines` against the same input, so the flag's meaning is asserted rather than implied.
 /**
  * ONE left-to-right pass that knows what a comment IS – see the block above for the defect it
- * replaces, the measurement, and its stated limit. `html` decides whether `<!-- -->` counts as a
- * comment, which is the one difference between the two exported helpers.
+ * replaces, the measurement, and its stated limit (it is NOT regex-literal-aware).
+ *
+ * `html` – does `<!-- -->` count as a comment? True for `codeOf`, false for `scriptCodeOf` and for
+ *          the cycle judge, whose reading of `src/` must not move.
+ * `newlines` – does a block/HTML comment leave its newlines behind?
+ *          **false** reproduces the regexes this replaced, which is what the 26 pins reading through
+ *          `codeOf` are calibrated to: a multi-line comment collapses and the text around it joins.
+ *          **true** keeps the line structure, which `tests/import-cycles.test.ts` needs because its
+ *          parser is `^`-anchored – with the newlines dropped, an inline comment between two import
+ *          statements JOINS them into one line and the second one stops being seen at all.
  */
-function stripComments(src: string, html: boolean): string {
+export function stripComments(src: string, options: { html: boolean; newlines: boolean }): string {
+  const { html, newlines } = options
   let out = ''
   let i = 0
   const n = src.length
@@ -131,18 +156,29 @@ function stripComments(src: string, html: boolean): string {
       else out += src.slice(from, i)
       continue
     }
-    // A BLOCK COMMENT. Replaced by '' with its newlines, exactly as the regex did.
+    // A BLOCK COMMENT. Replaced by '' – with its newlines when `newlines`, exactly as the regex did
+    // when not. See the options' note: dropping them JOINS the lines around the comment.
     if (c === '/' && src[i + 1] === '*') {
       i += 2
-      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i++
+      let broke = 0
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) {
+        if (src[i] === '\n') broke++
+        i++
+      }
       i += 2
+      if (newlines) out += '\n'.repeat(broke)
       continue
     }
     // AN HTML/TEMPLATE COMMENT, for `codeOf` only.
     if (html && c === '<' && src.startsWith('<!--', i)) {
       i += 4
-      while (i < n && !src.startsWith('-->', i)) i++
+      let broke = 0
+      while (i < n && !src.startsWith('-->', i)) {
+        if (src[i] === '\n') broke++
+        i++
+      }
       i += 3
+      if (newlines) out += '\n'.repeat(broke)
       continue
     }
     // A STRING. ⚠ BOUNDED TO THE LINE: an unterminated quote is a `.vue` template's apostrophe
