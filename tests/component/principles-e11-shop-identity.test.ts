@@ -52,7 +52,7 @@
 // `TB_WRITE_SHOP_IDENTITY=1 npx vitest run --project component tests/component/principles-e11-shop-identity.test.ts`
 // rewrites the record and asserts nothing. A refactor that needs it has changed behaviour, and THAT
 // is the finding.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
@@ -469,4 +469,52 @@ describe('E-11 – the shop region renders identically before and after the extr
     expect(golden['pro-bought'].counts['Invest.marks'], 'the chart drew no purchase mark').toBe(2)
     expect(golden['pro-bought'].text['ask-sell'], 'the part-sale question was never asked').toMatch(/out of/)
   })
+
+  // ===============================================================================================
+  // ⚠⚠ THE ONE THING THE FROZEN RECORD CANNOT SEE, AND THE EXTRACTION PUTS A BOUNDARY THROUGH IT.
+  // ===============================================================================================
+  //
+  // `pendingShop` is WRITTEN FROM A TEMPLATE – `@cancel="pendingShop = null"` on the question – and
+  // after E-11 that ref is reached through a destructure of what `useShop()` returns rather than
+  // through a `ref()` the compiler can see declared in the same block. Vue handles it (a maybe-ref
+  // setup binding is written through an `isRef` guard), and a capture of what the page SAYS could
+  // not tell the difference between «the write works» and «the dialog never closes»: the record
+  // photographs the dialog OPEN and says nothing about either exit.
+  //
+  // So both exits are pressed here. It is a new case rather than a new key in the record, on purpose:
+  // the record has to stay byte-identical across the move for it to prove anything.
+  it('⚠ the question closes on Cancel and dispatches on confirm – the seam the move runs through', async () => {
+    const world = await career('pro')
+    buyTheShelf(world)
+    const store = useGameStore()
+    const wrapper = await mountShop(toSnapshot(world))
+    await openShelfTab(wrapper, 'Invest')
+    const sold = vi.spyOn(store, 'sellAsset').mockResolvedValue(undefined)
+
+    const ask = async (): Promise<void> => {
+      const field = wrapper.find('.shop-stake-row .shop-stake-input')
+      await field.setValue('1000')
+      const sell = wrapper.findAll('.shop-stake-row .shop-action').find((b) => b.text().trim() === 'Sell')
+      expect(sell, 'the Sell control on the deposit').toBeTruthy()
+      await sell!.trigger('click')
+    }
+
+    await ask()
+    expect(wrapper.findAll('.dialog-card'), 'the question did not open').toHaveLength(1)
+    const cancel = wrapper.findAll('.dialog-card button').find((b) => b.text().trim() === 'Cancel')
+    await cancel!.trigger('click')
+    expect(wrapper.findAll('.dialog-card'), 'Cancel left the question on screen').toHaveLength(0)
+    expect(sold, 'Cancel sent the command anyway').not.toHaveBeenCalled()
+
+    await ask()
+    const confirm = wrapper.findAll('.dialog-card button').find((b) => b.text().trim() === 'Sell it')
+    await confirm!.trigger('click')
+    expect(wrapper.findAll('.dialog-card'), 'confirming left the question on screen').toHaveLength(0)
+    // ⚠ THE AMOUNT IS THE ASSERTION, not the fact of a call: `askSell` sends `partCents` and nothing
+    // else for a part sale, which is the engine's «sell the lot» told apart from «sell this much».
+    expect(sold).toHaveBeenCalledTimes(1)
+    expect(sold.mock.calls[0]).toEqual(['deposit', 1000_00])
+    sold.mockRestore()
+    wrapper.unmount()
+  }, 60_000)
 })
