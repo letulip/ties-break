@@ -122,6 +122,11 @@ function driversFor(s: Store): Record<string, () => unknown> {
     reloadAfterRestart: () => s.reloadAfterRestart(),
     refreshAfterStale: () => s.refreshAfterStale(new CommandRejected('stale', 'STALE_REVISION', 3)),
     newCareer: () => s.newCareer('d08-seed', plainProfile(), plainPrologue(), liveDynasty(), true),
+    // ⭐ D-05 (28.09): the one body every mutation goes through, driven DIRECTLY as well as through
+    // its 41 callers – because `commit` is what spreads the caller's message, so it is the step that
+    // could stop the copy being crossable. Driven with the one mutation payload that carries an
+    // object, so the carriers table below is asked the same question about the same type either way.
+    commit: () => s.commit({ type: 'setPlan', plan: WEEK_PLAN_PRESETS.balanced }),
     loadAlbum: () => s.loadAlbum(),
     tick: () => s.tick(1),
     advance: () => s.advance(2),
@@ -180,8 +185,18 @@ function driversFor(s: Store): Record<string, () => unknown> {
   }
 }
 
-/** Every action in `src/stores/game.ts` whose own body calls `request(` – read from the source, with
- *  the prose stripped first so a mention in a comment cannot enrol one. */
+/** Every action in `src/stores/game.ts` that puts a message on the wire – read from the source, with
+ *  the prose stripped first so a mention in a comment cannot enrol one.
+ *
+ *  ⚠⚠ RE-AIMED 28.09 BY D-05 (T6.1), AND WIDENED RATHER THAN WEAKENED. This read `request(` alone,
+ *  which was the whole story while all 41 mutations posted their own message. D-05 collapsed those 41
+ *  bodies into one private `commit(msg)`, so on that tree `request(` found SIXTEEN senders against
+ *  the 57 driven below and the equality went red – with nothing wrong: the actions still cross the
+ *  boundary, one level down. `this.commit(` is the second spelling of "this action posts a message",
+ *  so it is matched too, and `commit` itself is enrolled (it calls `request`) and driven below. The
+ *  question the case asks is unchanged and the set it asks it about is the same 57 plus `commit`.
+ *  ⚠ WHY NOT JUST DROP THE EQUALITY: because the equality is the guard. A table that may hold fewer
+ *  names than the store has senders is D-08's own defect with a test in front of it. */
 function storeSenders(): string[] {
   const src = codeOf(readFileSync(new URL('../src/stores/game.ts', import.meta.url), 'utf8'))
   const block = after(src, '  actions: {')
@@ -189,7 +204,7 @@ function storeSenders(): string[] {
   return heads
     .filter((h, i) => {
       const body = block.slice(h.index, i + 1 < heads.length ? heads[i + 1].index : block.length)
-      return /\brequest\(/.test(body)
+      return /\brequest\(/.test(body) || /\bthis\.commit\(/.test(body)
     })
     .map((h) => h[1])
 }

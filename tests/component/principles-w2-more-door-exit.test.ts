@@ -205,6 +205,26 @@ async function settle(game: Game): Promise<void> {
   expect(game.busy, 'the store settled').toBe(false)
 }
 
+/**
+ * ⚠⚠ ADDED 28.09 BY D-05, AND IT IS A SECOND END CONDITION RATHER THAN MORE FLUSHES. `busy` covers
+ * the COMMAND; until D-05 it covered the list refresh too, because every mutation awaited
+ * `refreshSlots()` inside `run`. The refresh happens where the list is READ now – this screen's own
+ * `watch`es on `game.revision` – so it is a floating promise outside `busy`. Two cases here failed on
+ * that: «a career that cannot render» could not find its Load row (the careers list had not landed),
+ * and both restore cases came back `ok` because a refresh still in flight overwrote the stale belief
+ * `staleAutoBelief` had just staged. Waiting for the list to be CURRENT is what makes staging a stale
+ * one mean something. Lifted verbatim from principles-d01-restore-previous.test.ts.
+ */
+async function settleLists(game: Game): Promise<void> {
+  const newest = (): number => Math.max(0, ...game.slots.map((s) => s.revision ?? 0))
+  const behind = (): boolean => game.slots.length === 0 || newest() < game.revision || game.careers.length === 0
+  for (let i = 0; i < 500 && behind(); i++) await flushPromises()
+  expect(newest(), "More's refresh caught the slot list up to the committed revision").toBeGreaterThanOrEqual(
+    game.revision,
+  )
+  expect(game.careers.length, "...and its careers refresh landed too").toBeGreaterThan(0)
+}
+
 /** Mount More on the Saves tab – the tab Careers, the autosave rows, import/export and the save-op
  *  row all live behind. */
 async function openSaves(game: Game): Promise<ReturnType<typeof mount>> {
@@ -212,6 +232,7 @@ async function openSaves(game: Game): Promise<ReturnType<typeof mount>> {
   const tab = w.findAll('.more-tabs .tab-pill').find((t) => t.text() === 'Saves')!
   await tab.trigger('click')
   await settle(game)
+  await settleLists(game)
   await flushPromises()
   return w
 }
@@ -529,6 +550,10 @@ describe('⭐⭐ W2 – every in-game save-door refusal leaves a control that go
     expect(earlier, 'the earlier press sent exactly one restore').toHaveLength(1)
     expect(earlier[0], 'and it was the NAMED slot').toContain('manual:')
 
+    // ⚠ D-05 (28.09): the press above committed a revision, so a refresh is in flight behind it. Let
+    // it land BEFORE the stale belief is staged – otherwise it overwrites the staging and the restore
+    // below is accepted, which is what this case measured on the first run after D-05.
+    await settleLists(game)
     staleAutoBelief(game)
     await flushPromises()
     sent.length = 0

@@ -8,6 +8,13 @@
 // the CURRENT state. Restoring it reported ok, moved nothing the player could see, and overwrote the
 // only generation that still held the one-command-old career.
 //
+// ⚠ 28.09 – THE 26/15 SPLIT ABOVE IS NOW HISTORY RATHER THAN A LIVE COUNT, and the paragraph is kept
+// because it is what this file's cases are shaped by. D-05 collapsed the 41 bodies into one
+// `commit(msg)` and deleted every refresh tail with them, so the number of actions that "forget" the
+// list is no longer 15 – it is zero, and there is nowhere left to forget it. This file did not move:
+// the watch it measures is the mechanism that made the deletion safe, so its cases got STRONGER, and
+// its mutation arm (delete the `watch` block) is unchanged.
+//
 // ⚠ MOUNTED, OVER THE REAL STORE AND THE REAL WORKER, because the defect lives in the join: the
 // screen's stale `autoSlots[1]`, the store's missing refresh and the worker's existence-only
 // re-validation of the slot key. A source pin on MoreScreen would have passed on every day this
@@ -96,12 +103,36 @@ async function settle(game: Game): Promise<void> {
   expect(game.busy, 'the store settled').toBe(false)
 }
 
+/**
+ * ⚠⚠ ADDED 28.09 BY D-05, AND IT IS A SECOND END CONDITION RATHER THAN MORE FLUSHES. `busy` covers
+ * the COMMAND; until D-05 it covered the list refresh too, because every mutation awaited
+ * `refreshSlots()` inside `run`. The refresh happens where the list is READ now – this screen's own
+ * `watch` on `game.revision` – so it is a floating promise outside `busy`, and `openSaves`'s two
+ * `flushPromises()` stopped being enough: «the screen offers a previous generation to restore» failed
+ * on an empty list and «the toggle is given back» on a list the refresh had not caught up yet.
+ *
+ * ⚠ IT IS NOT A WEAKENING, and the distinction matters: the condition asserted here is exactly the
+ * claim – the list on the glass has caught up with the revision the worker has committed. If the
+ * watch never fires, this fails BY NAME instead of leaving the case to fail on a missing button.
+ * Both assertions below the loop are kept for that reason: a bound that expires is a legible failure.
+ */
+async function settleLists(game: Game): Promise<void> {
+  const newest = (): number => Math.max(0, ...game.slots.map((s) => s.revision ?? 0))
+  const behind = (): boolean => game.slots.length === 0 || newest() < game.revision || game.careers.length === 0
+  for (let i = 0; i < 500 && behind(); i++) await flushPromises()
+  expect(newest(), "More's refresh caught the slot list up to the committed revision").toBeGreaterThanOrEqual(
+    game.revision,
+  )
+  expect(game.careers.length, "...and its careers refresh landed too").toBeGreaterThan(0)
+}
+
 /** Mount More on the Saves tab – the tab the autosave rows and «Restore previous» live behind. */
 async function openSaves(game: Game): Promise<ReturnType<typeof mount>> {
   const w = mount(MoreScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
   const tab = w.findAll('.more-tabs .tab-pill').find((t) => t.text() === 'Saves')!
   await tab.trigger('click')
   await settle(game)
+  await settleLists(game)
   await flushPromises()
   return w
 }
@@ -146,7 +177,9 @@ describe('⭐⭐ D-01 – «Restore previous» targets the generation the player
     expect(game.error).toBe('')
     const physioBefore = game.snapshot!.physioActive as boolean
 
-    // `setPhysio` is one of the 15 store actions with no `refreshSlots` (stores/game.ts).
+    // `setPhysio` was one of the 15 store actions with no `refreshSlots` – ⚠ re-aimed 28.09 by D-05:
+    // no action carries one now, so `setPhysio` is simply a mutation that moves the revision, which is
+    // the only property this case ever needed of it.
     await game.setPhysio(!physioBefore)
     expect(game.error).toBe('')
     expect(game.snapshot!.physioActive).toBe(!physioBefore)
@@ -187,6 +220,11 @@ describe('⭐⭐ D-01 – «Restore previous» targets the generation the player
     expect(game.error).toBe('')
     await flushPromises()
     await settle(game)
+    // ⭐ D-05 (28.09): THIS is «moves the list under it», made an explicit end condition. The store no
+    // longer awaits the refresh inside the command, so the list arrives through this screen's watch –
+    // and if it never did, `settleLists` says so by name rather than leaving the restore below to
+    // target the wrong generation and fail one assertion later.
+    await settleLists(game)
     expect(game.snapshot!.physioActive).toBe(!physioBefore)
 
     await restorePrevious(w, game)

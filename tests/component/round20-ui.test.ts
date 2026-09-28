@@ -40,8 +40,11 @@ function withSnapshot(snapshot: Snapshot) {
   return store
 }
 
-/** MoreScreen and nothing else calls the WORKER on mount (`onMounted(() => game.refreshCareers())`,
- *  which exists so the careers list cannot go stale while the player ticks weeks on Home). There is
+/** MoreScreen and nothing else calls the WORKER on mount (⚠ re-aimed 28.09 by D-05: the careers
+ *  refresh was `onMounted(() => game.refreshCareers())` and is now the `{ immediate: true }` half of a
+ *  `watch` on `game.revision`, so it fires on mount as before AND while the screen is open – the
+ *  stubs below are unchanged, and it exists for the same reason, so the careers list cannot go stale
+ *  while the player ticks weeks on Home). There is
  *  no `Worker` under happy-dom, so leaving it alone means an unhandled rejection per mount and
  *  vitest's own "this might cause false positive tests" warning on a green run. The action is
  *  replaced rather than the screen changed: what is under test here is which sections render, and

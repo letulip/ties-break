@@ -46,7 +46,9 @@ function installClipboard(): void {
   })
 }
 
-/** ⚠ MoreScreen AND NOTHING ELSE CALLS THE WORKER ON MOUNT (`onMounted(() => game.refreshCareers())`)
+/** ⚠ MoreScreen AND NOTHING ELSE CALLS THE WORKER ON MOUNT (⚠ re-aimed 28.09 by D-05: the careers
+ *  refresh was `onMounted(() => game.refreshCareers())` and is now the `{ immediate: true }` half of a
+ *  `watch` on `game.revision` – it still fires on mount, and the stubs below are unchanged)
  *  and there is no `Worker` under happy-dom, so leaving it alone is an unhandled rejection per mount
  *  – which vitest reports as an error and the run exits 1 with every test green. The same one-line
  *  stub tests/component/round20-ui.test.ts and a11y-sweep.test.ts both carry, for the same reason. */

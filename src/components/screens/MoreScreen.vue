@@ -4,7 +4,9 @@
 // skip), and About. Destructive/generation-switching actions go through the shared
 // ConfirmDialog popup; "New career" keeps its pre-existing inline confirm (only the
 // copy changed) since it doesn't touch any stored data.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+// ⚠ `onMounted` IS GONE FROM THIS LIST (D-05, 28.09) – the careers refresh it carried is a
+// `watch(…, { immediate: true })` now, and `immediate` IS the mount half. Nothing else here mounts.
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SavePeek, SlotMeta } from '../../shared/protocol'
@@ -68,31 +70,37 @@ const confirmingNewCareer = ref(false)
 // worker's refusal of a pending tournament/knock stays, and it is the half that ever protected a
 // save (tests/dev-fast-forward.test.ts pins the bargain in both directions).
 
-// Most mutations don't refresh `careers` (the ones that do are listed beside their own
-// `refreshCareers()` in game.ts), so the active career's week/lastPlayedAt can go stale while the
-// player stays on Home ticking weeks. App.vue mounts this screen fresh each time the tab is opened
-// (plain v-if chain, no keep-alive), so this catches it on entry.
-// ⚠ 26.09 – THIS NOTE USED TO NAME `tick`/`setPlan` AS THE TWO THAT DO NOT REFRESH, and `tick` has
-// refreshed for some time (D-P3). A list of call sites written out here is a second copy of a fact
-// that lives in the store, so it is stated as the rule instead of enumerated: the enumeration is
-// what rotted, and nothing on this screen depends on which commands are in it.
-onMounted(() => game.refreshCareers())
-// ⭐⭐ D-01 (principles review, 26.09) – AND `slots` IS THE SAME OMISSION ONE FIELD ALONG, with a
-// worse ending. 41 store actions commit an autosave into the OLDER generation and only 26 of them
-// refresh the list; the other 15 include every irreversible dialog answer and `setPlan`. `game.slots`
-// has exactly ONE reader – this screen – so the stale list was never anybody else's problem and
-// never got corrected: «Restore previous» is `autoSlots[1]` sorted by the record's own `savedAt`,
-// and after one unrefreshed mutation that row points at the slot holding the CURRENT state. The
-// restore then reported ok, moved nothing the player could see, and overwrote the one generation
-// that still held the pre-command career – the corruption insurance the owner's ruling
-// (decisions.md:135) put behind that button.
+// ⭐⭐ D-01 (principles review, 26.09) – `slots` AND `careers` ARE REFRESHED HERE BECAUSE HERE IS
+// WHERE THEY ARE READ. This screen is the only reader of either list in the whole app, and both used
+// to be kept current by refresh tails hand-copied into the store's mutation bodies: 26 of 41 for
+// `slots`, five actions for `careers`. The 15 that forgot `slots` are D-01 itself – «Restore
+// previous» is `autoSlots[1]` sorted by the record's own `savedAt`, so after one unrefreshed mutation
+// that row points at the slot holding the CURRENT state. The restore then reported ok, moved nothing
+// the player could see, and overwrote the one generation that still held the pre-command career – the
+// corruption insurance the owner's ruling (decisions.md:135) put behind that button.
 //
-// ⚠ THE ONE READER BECOMES THE ONE REFRESH, which is why this is a `watch` on the revision rather
-// than 15 more `refreshSlots()` calls in the store: the revision is the worker's own count of
-// committed mutations, so "the list may have moved" has exactly one spelling and a sixteenth
-// action cannot forget it. `immediate` covers the ordinary order (tick on Home, then open More);
-// the watch covers the ▶▶ 52 (dev) button, which sits on this very tab.
+// ⚠ THE ONE READER BECOMES THE ONE REFRESH, which is why these are `watch`es on the revision rather
+// than more calls in the store: the revision is the worker's own count of committed mutations, so
+// "the list may have moved" has exactly one spelling and no action can forget it. `immediate` covers
+// the ordinary order (tick on Home, then open More – and App.vue mounts this screen fresh each time
+// the tab is opened, a plain v-if chain with no keep-alive); the watch covers the ▶▶ 52 (dev) button,
+// which sits on this very tab.
+//
+// ⭐⭐ D-05 (28.09) – AND `careers` GOT THE SECOND HALF IT WAS MISSING, WHICH IS WHAT LICENSED
+// DELETING THE STORE'S TAILS. It had `onMounted(() => game.refreshCareers())` and nothing else, so it
+// was covered for «tick on Home, then open More» and not for the one control that can tick WITHOUT
+// leaving the screen. Deleting `tick`'s own `refreshCareers()` without this line leaves the career
+// row's week and last-played frozen under the ▶▶ 52 button standing beside it – measured red in
+// tests/component/principles-d05-careers-freshness.test.ts on exactly that intermediate tree.
+// ⚠ Two watches and not one combined handler: they are two independent queries on the wire, and a
+// screen that reads one list is not asking for the other.
+//
+// ⚠ 26.09 – THE CAREERS NOTE USED TO NAME `tick`/`setPlan` AS THE TWO COMMANDS THAT DO NOT REFRESH,
+// and `tick` had refreshed for some time (D-P3). A list of call sites written out here was a second
+// copy of a fact that lived in the store; there is no list left to copy now, which is the cheapest
+// possible ending for that class of rot.
 watch(() => game.revision, () => void game.refreshSlots(), { immediate: true })
+watch(() => game.revision, () => void game.refreshCareers(), { immediate: true })
 const saveName = ref('')
 const seedCopied = ref(false)
 
@@ -257,7 +265,10 @@ function askRestorePrevious(): void {
     // W1-INTEGRITY-A (TB-01): `restoreSlot`, not `load` — the worker commits the restored state as
     // the NEWEST autosave before answering, so closing the app right here keeps the restore
     // (the old `load` swapped memory only, and a relaunch silently rolled back to pre-restore).
-    // The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it.
+    // ⚠ «The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it»
+    // STOOD HERE AND IS RE-AIMED (D-05, 28.09): the action refreshes nothing now. Both lists follow
+    // the revision the restore commits, through the two watches at the head of this script – which is
+    // the same guarantee one level up, and the level where this screen's other 40-odd commands get it.
     //
     // ⭐⭐ W2 (26.09) – ...AND IT IS `tracked` NOW, WHICH IT ALONE WAS NOT. This was the one save
     // operation on the screen outside the wrapper its six siblings carry, and `tracked` is what

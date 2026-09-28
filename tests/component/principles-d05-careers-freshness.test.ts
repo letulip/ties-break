@@ -10,14 +10,18 @@
 // the ONE control that can tick without leaving the screen: the `▶▶ 52 (dev)` button, which ships in
 // every build by an owner ruling and sits on this very tab beside the list it would leave behind.
 //
-// ⚠⚠ THE MUTATION ARM IS THE INTERMEDATE TREE, AND SAYING SO IS NOT A FORMALITY. This case is GREEN
+// ⚠⚠ THE MUTATION ARM IS THE INTERMEDIATE TREE, AND SAYING SO IS NOT A FORMALITY. This case is GREEN
 // on the pre-D-05 tree – for the wrong reason: the store's own `refreshCareers()` tail inside `tick`.
-// A net that is green before and after, with no arm in between, is not evidence. Its honest arm is
-// the middle commit of D-05's series, where the tails are gone and the watch is not there yet:
-//   · MEASURED 28.09 on that tree: «the row follows the week the press bought» goes RED with the row
-//     still reading «Season 1 · week 1» after a press that moved the career to week 53.
-//   · On the finished tree the same press moves the row, and deleting the careers `watch` from
-//     MoreScreen.vue reproduces the red arm at any later date.
+// A net that is green before and after, with no arm in between, is not evidence. Both arms were run:
+//   · THE DISCRIMINATING ARM, measured 28.09 on the middle commit of D-05's series (23cd200a: the
+//     tails gone, the careers watch not there yet, the mount-only refresh still in place) – «the row
+//     follows the week the press bought» goes RED with the row still reading `W2 '31` after a press
+//     that moved the career to week 53, while the mount half stays green. That is the watch half
+//     alone, which is the half this file exists for.
+//   · THE COARSE ARM, on the finished tree: delete the `watch(() => game.revision, () =>
+//     void game.refreshCareers(), …)` line from MoreScreen.vue → all THREE cases go red, on «the
+//     careers list drew a row», because `immediate` IS the mount half now and there is no second
+//     refresh left behind it.
 //
 // ⚠ THE TRANSPORT IS STUBBED AND THE SCREEN IS REAL, which is the right way round for this claim.
 // What is under test is WHERE the list is refreshed, not what the engine does with 52 weeks: the stub
