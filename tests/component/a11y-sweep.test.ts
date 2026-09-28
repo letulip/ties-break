@@ -47,11 +47,11 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TrophiesScreen from '../../src/components/screens/TrophiesScreen.vue'
 import StatRow from '../../src/components/ui/StatRow.vue'
-import InboxSheet from '../../src/components/InboxSheet.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { weekDateLine, weekLabel } from '../../src/shared/dates'
 import { latestNewsId } from '../../src/composables/inboxCue'
+import { mountInbox } from './inbox'
 import type { CareerMeta, KnockPrompt, SeasonSummary, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
 
@@ -483,8 +483,13 @@ describe('D13 - the one irreversible press has a name of its own', () => {
     // A career far enough in to have kit letters waiting; the sheet opens on the list, and a letter
     // has to be OPEN before its Sign exists at all.
     const snapshot = snapshotAfter(30)
-    withSnapshot(snapshot)
-    const wrapper = mount(InboxSheet, { global: { stubs: { teleport: true } } })
+    // ⚠ REPOINTED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly snapshot carries
+    // the letters this week still needs and `loadInbox()` answers with the career's whole post – so an
+    // unanswered query renders NO rows at all, and this case's `if (!row)` fallback would become the
+    // only path it could ever take. ⚠ MEASURED, BECAUSE THE HONEST VERSION MATTERS: `careerSnapshot(30)`
+    // holds ZERO letters today, so the fallback was ALREADY the live path and nothing behavioural moves
+    // here. The repoint is what stops the query being the reason the day the fixture has post.
+    const wrapper = await mountInbox(snapshot, { global: { stubs: { teleport: true } } })
 
     const row = wrapper.findAll('.inbox-row').find((r) => r.text().length > 0)
     if (!row) {

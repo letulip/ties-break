@@ -105,6 +105,10 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       // ⭐ the album, on demand (docs/specs/the-album-2026-09.md §8b) – a query against the imported
       // career, `getSnapshot`'s own shape: read-only, no baseRevision, answered with its own arm.
       album: { type: 'album' },
+      // ⭐ T6.2 · D-07 (28.09) – the inbox, on demand: the album's precedent one surface over, and the
+      // same three properties. The roster is TOTAL over the command union by type, so this row was a
+      // compile error the moment the command existed, which is the roster's job.
+      inbox: { type: 'inbox' },
       listSlots: { type: 'listSlots' },
       listCareers: { type: 'listCareers' },
       exportSave: { type: 'exportSave' },
@@ -237,10 +241,13 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     // ⭐ `album` joined the set with its own arm (docs/specs/the-album-2026-09.md §8b) – the sixth,
     // and the welcome red this guard exists for: a new ok arm may not ship unexercised.
     const seen = new Set([...arms.values()].filter((a) => a !== 'refused'))
-    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'peek', 'slots', 'snapshot'])
+    // ⚠ RE-AIMED, NOT WIDENED (T6.2 · D-07, 28.09): `inbox` is the SEVENTH ok arm and it joins the
+    // literal for the reason the album joined it – this guard's whole point is that a new ok arm may
+    // not ship unexercised, so the list grows by exactly the arm that was added and stays an equality.
+    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'inbox', 'peek', 'slots', 'snapshot'])
     // ...and these eight in particular must have COMMITTED, one per arm plus the two mutation
     // paths, so a future refusal creeping into a load-bearing command cannot hide inside the set.
-    for (const command of ['getSnapshot', 'album', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
+    for (const command of ['getSnapshot', 'album', 'inbox', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
       expect(arms.get(command), `'${command}' must succeed on a quiet career`).toBe(REPLY_BY_COMMAND[command])
     }
   })

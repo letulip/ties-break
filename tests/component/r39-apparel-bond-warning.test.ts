@@ -30,9 +30,8 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
-import InboxSheet from '../../src/components/InboxSheet.vue'
-import { useGameStore } from '../../src/stores/game'
 import { careerSnapshot } from '../helpers/career'
+import { mountInbox, withPost } from './inbox'
 import { ECONOMY } from '../../src/engine/economy'
 import { kitTermsFor, type SponsorStanding } from '../../src/engine/offers'
 import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
@@ -279,17 +278,22 @@ describe('round 39 #17 wave G2 – and the inbox names it a renewal before he op
 
   /** Every subject the sheet renders, off a real career snapshot – `round29-inbox-subjects`' idiom,
    *  because `subjectOf` is private to a `<script setup>` and what he reads is `.inbox-subject`. */
-  function subjects(offers: Offer[]): string[] {
+  /** ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly
+   *  snapshot carries the letters this week still needs and `loadInbox()` answers with the career's
+   *  whole post – so a mounted test answers it and waits one microtask. `./inbox` is that arrangement;
+   *  every assertion below is unchanged. ⚠ AND THE CONFIRM'S OWN READ DID NOT MOVE: `apparelBondCost`
+   *  still reads `snapshot.offers`, because a RUNNING campaign is exactly what the weekly wire carries. */
+  async function subjects(offers: Offer[]): Promise<string[]> {
     const base = careerSnapshot(8, 'r39-17-g2-inbox')
-    const store = useGameStore()
-    store.snapshot = { ...base, offers: [...base.offers, ...offers], week: WEEK }
-    const wrapper = mount(InboxSheet, { global: { stubs: { teleport: true } } })
+    const wrapper = await mountInbox(withPost(base, [...base.offers, ...offers], WEEK), {
+      global: { stubs: { teleport: true } },
+    })
     const out = wrapper.findAll('.inbox-subject').map((n) => n.text().replace(/\s+/g, ' ').trim())
     wrapper.unmount()
     return out
   }
 
-  it('⭐⭐ the notice’s subject says it is a renewal, and it is NOT the incumbent’s', () => {
+  it('⭐⭐ the notice’s subject says it is a renewal, and it is NOT the incumbent’s', async () => {
     const notice: Offer = {
       id: `kit-bond-${WEEK - 1}`,
       kind: 'kit',
@@ -298,7 +302,7 @@ describe('round 39 #17 wave G2 – and the inbox names it a renewal before he op
       terms: { ...kitTermsFor(standing, 'icon')!, brand: S.premium.brand, apparelBond: true },
       state: 'open',
     }
-    const lines = subjects([notice])
+    const lines = await subjects([notice])
     expect(lines).toContain('Renewing her kit with us')
     // ⚠ AND NOT the stranger's line, which is the defect this arm exists to stop – round 28 #17's
     // own reasoning: a subject that introduces a house already paying to photograph her is false.
@@ -306,12 +310,12 @@ describe('round 39 #17 wave G2 – and the inbox names it a renewal before he op
     expect(lines).not.toContain('Another year in our kit')
   })
 
-  it('⚠ CONTROL – an ordinary kit letter still says what it always said', () => {
+  it('⚠ CONTROL – an ordinary kit letter still says what it always said', async () => {
     const plain: Offer = {
       id: `kit-${WEEK}`, kind: 'kit', week: WEEK, deadlineWeek: WEEK + 4,
       terms: kitTermsFor(standing, 'icon')!, state: 'open',
     }
-    expect(subjects([plain])).toContain('A kit deal for your daughter')
+    expect(await subjects([plain])).toContain('A kit deal for your daughter')
   })
 })
 
@@ -353,12 +357,11 @@ describe('round 39 #17 wave G3 – the sign confirm carries the cost the letter 
    *  unambiguous if nothing else in the pile wears that subject, and the assertion below says so. */
   async function pressSign(letter: Offer, running: Offer[]) {
     const base: Snapshot = careerSnapshot(8, 'r39-17-g3-confirm')
-    const store = useGameStore()
-    store.snapshot = { ...base, offers: [...running, letter], week: WEEK }
     // ⚠ ATTACHED TO THE REAL DOCUMENT, like ad-offer-letter.test.ts' own fit case: `.dialog-card`'s
     // height cap only exists in the cascade for an element the document can style, so a detached
-    // mount would make the phone measurement at the end of this block vacuous.
-    const wrapper = mount(InboxSheet, { attachTo: document.body })
+    // mount would make the phone measurement at the end of this block vacuous. The post is answered
+    // through `./inbox` – see `subjects`' note above.
+    const wrapper = await mountInbox(withPost(base, [...running, letter], WEEK), { attachTo: document.body })
     const rows = wrapper.findAll('.inbox-open').filter((b) => b.text().includes('A kit deal for your daughter'))
     expect(rows, 'exactly one kit letter should be openable in this pile').toHaveLength(1)
     await rows[0]!.trigger('click')

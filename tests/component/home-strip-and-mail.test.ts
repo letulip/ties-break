@@ -30,6 +30,7 @@ import type { Snapshot, Offer, TierOpenMap } from '../../src/shared/protocol'
 import type { TierId } from '../../src/engine/season/types'
 import { careerSnapshot } from '../helpers/career'
 import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
+import { withPost } from './inbox'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE MARKER IS ABOUT localStorage. Same finding and the
 // same shim as tests/component/round20-ui.test.ts, quoted there in full: happy-dom is configured
@@ -352,14 +353,19 @@ describe('Home inbox marker – a letter that asks for no decision still shows u
 
   it('lights for an arrival even though no offer is open', async () => {
     const base = snapshotAfter(6)
-    const snap: Snapshot = { ...base, offerOpen: false, offers: [letter('L1')] }
+    // ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): «did something land in the post» is a FIELD on
+    // the snapshot now (`newestLetterId`), derived off the full list in the engine, because
+    // `snapshot.offers` carries only the letters this week still needs and its last element is a
+    // different letter. `withPost` is what a POSED snapshot owes the two facts, together, so they
+    // cannot drift. The claim – a notice letter raises the marker with `offerOpen` false – is the same.
+    const snap: Snapshot = withPost({ ...base, offerOpen: false }, [letter('L1')])
     const wrapper = mountHome(snap)
     // The FIRST evaluation seeds the watermark - a career restored from a file must not claim that
     // post arrived while he watched (inboxCue's "a missing watermark is the current value").
     expect(dot(wrapper), 'a loaded career does not invent an arrival').toBe(false)
 
     // ...and now one really lands.
-    useGameStore().snapshot = { ...snap, offers: [letter('L1'), letter('L2')] }
+    useGameStore().snapshot = withPost(snap, [letter('L1'), letter('L2')])
     await nextTick()
     expect(dot(wrapper), 'a notice letter raises the marker even with offerOpen false').toBe(true)
     wrapper.unmount()
@@ -368,8 +374,8 @@ describe('Home inbox marker – a letter that asks for no decision still shows u
   it('clears when he opens the inbox, and STAYS clear across a remount (save/load)', async () => {
     const base = snapshotAfter(6)
     const store = useGameStore()
-    const wrapper = mountHome({ ...base, offerOpen: false, offers: [letter('L1')] })
-    store.snapshot = { ...store.snapshot!, offers: [letter('L1'), letter('L2')] }
+    const wrapper = mountHome(withPost({ ...base, offerOpen: false }, [letter('L1')]))
+    store.snapshot = withPost(store.snapshot!, [letter('L1'), letter('L2')])
     await nextTick()
     expect(dot(wrapper)).toBe(true)
 
@@ -391,7 +397,7 @@ describe('Home inbox marker – a letter that asks for no decision still shows u
 
   it('still lights for a LIVE offer – the engine fact it has always shown is untouched', () => {
     const base = snapshotAfter(6)
-    const wrapper = mountHome({ ...base, offerOpen: true, offers: [] })
+    const wrapper = mountHome(withPost({ ...base, offerOpen: true }, []))
     expect(dot(wrapper)).toBe(true)
     wrapper.unmount()
   })

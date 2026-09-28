@@ -47,6 +47,7 @@ import { latestNewsId, newestLetterId } from '../../src/composables/inboxCue'
 import { recapExists } from '../../src/composables/weekRecap'
 import { trophyPieces } from '../../src/composables/trophyArrival'
 import type { Offer, Snapshot, WorldEvent } from '../../src/shared/protocol'
+import { withPost } from './inbox'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE SHELL'S SCREENS READ IT AT SETUP. Same shim and same
 // argument as tests/component/round28-top-notices.test.ts and round31-week-entry.test.ts, quoted
@@ -122,12 +123,19 @@ function fixture(seed: string): Snapshot {
     text: SEASON_MARK_TEXT,
   }
   const shelves = { ...base.trophiesByTier, local: { titles: [1, 2], finals: [3] } }
-  const snap: Snapshot = {
-    ...base,
-    events: [...base.events, marker],
-    offers: [letter('L1')],
-    trophiesByTier: shelves,
-  }
+  // ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): «did something land in the post» is a FIELD on the
+  // snapshot now (`newestLetterId`), derived off the full list in the engine, because `snapshot.offers`
+  // carries only the letters this week still needs and its last element is a different letter.
+  // `withPost` sets the rows and the id together so a posed snapshot cannot say two different things.
+  // Every arm below is unchanged – this fixture's job is still to light four dots.
+  const snap: Snapshot = withPost(
+    {
+      ...base,
+      events: [...base.events, marker],
+      trophiesByTier: shelves,
+    },
+    [letter('L1')],
+  )
 
   // The fixture's own honesty checks. Every arm below asserts that a dot goes OUT; an arm whose dot
   // was never lit would pass on nothing at all.
@@ -155,7 +163,7 @@ function fixture(seed: string): Snapshot {
  */
 function arrive(snap: Snapshot): Snapshot {
   const line: WorldEvent = { id: 900_002, week: snap.week, type: 'info', text: 'Her rank moved' }
-  return { ...snap, events: [...snap.events, line], offers: [...snap.offers, letter('L2')] }
+  return withPost({ ...snap, events: [...snap.events, line] }, [...snap.offers, letter('L2')])
 }
 
 /**

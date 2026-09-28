@@ -10,11 +10,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import PlanWeekSheet from '../../src/components/PlanWeekSheet.vue'
-import InboxSheet from '../../src/components/InboxSheet.vue'
 import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot, bookVacation } from '../../src/engine/world'
@@ -26,6 +25,7 @@ import { weekRange } from '../../src/shared/dates'
 import type { Offer, Snapshot } from '../../src/shared/protocol'
 import { mountSeason } from '../helpers/mountSeason'
 import { after, before, region } from '../helpers/source'
+import { mountInbox as mountInboxSheet, withPost } from './inbox'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND ITEM 2 IS ABOUT localStorage. The same shim
 // tests/component/home-strip-and-mail.test.ts and round20-ui.test.ts already carry, for the same
@@ -289,17 +289,22 @@ function deskLetter(id = 'desk-1'): Offer {
   } as unknown as Offer
 }
 
-function mountInbox(offers: Offer[], week = 102) {
+/** ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly
+ *  snapshot carries the letters this week still needs and `loadInbox()` answers with the career's whole
+ *  post – so a mounted test answers it and waits one microtask. `./inbox` is that arrangement, shared by
+ *  the eight suites that render this sheet; every assertion below is unchanged. */
+function mountInbox(offers: Offer[], week = 102): Promise<VueWrapper> {
   const base = toSnapshot(worldAfter(6))
-  useGameStore().snapshot = { ...base, week, offers, careerId: 'r14-inbox' }
-  return mount(InboxSheet, { global: { stubs: { teleport: true } } })
+  return mountInboxSheet({ ...withPost(base, offers, week), careerId: 'r14-inbox' }, {
+    global: { stubs: { teleport: true } },
+  })
 }
 
-const rows = (w: ReturnType<typeof mountInbox>) => w.findAll('.inbox-row')
-const openRow = async (w: ReturnType<typeof mountInbox>, i: number) => {
+const rows = (w: VueWrapper) => w.findAll('.inbox-row')
+const openRow = async (w: VueWrapper, i: number) => {
   await rows(w)[i].find('.inbox-open').trigger('click')
 }
-const backToList = async (w: ReturnType<typeof mountInbox>) => {
+const backToList = async (w: VueWrapper) => {
   await w.find('button[aria-label="Back to all letters"]').trigger('click')
 }
 
@@ -309,8 +314,8 @@ describe('R14-2 – the inbox is a list you open letters from', () => {
     localStorage.clear()
   })
 
-  it('renders one ROW per letter and no open paper at all', () => {
-    const wrapper = mountInbox([kitOffer(), deskLetter()])
+  it('renders one ROW per letter and no open paper at all', async () => {
+    const wrapper = await mountInbox([kitOffer(), deskLetter()])
     expect(rows(wrapper)).toHaveLength(2)
     // the whole complaint: every letter used to be open at once
     expect(wrapper.findAll('.offer-letter')).toHaveLength(0)
@@ -321,7 +326,7 @@ describe('R14-2 – the inbox is a list you open letters from', () => {
   })
 
   it('clicking a row opens THAT letter, and only that one', async () => {
-    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    const wrapper = await mountInbox([kitOffer(), deskLetter()])
     await openRow(wrapper, 1) // newest first puts the kit letter (week 100) above the desk's (99)
     expect(wrapper.findAll('.offer-letter')).toHaveLength(1)
     expect(wrapper.text()).toContain('Your entry for the World Tour 50 is confirmed')
@@ -333,7 +338,7 @@ describe('R14-2 – the inbox is a list you open letters from', () => {
   })
 
   it('every letter starts unread, and opening one is what marks it read', async () => {
-    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    const wrapper = await mountInbox([kitOffer(), deskLetter()])
     expect(wrapper.findAll('.inbox-row.unread')).toHaveLength(2)
     await openRow(wrapper, 0)
     await backToList(wrapper)
@@ -345,12 +350,12 @@ describe('R14-2 – the inbox is a list you open letters from', () => {
     // Per career, in localStorage, never in the save – the discipline inboxCue.ts records at length.
     // App.vue mounts every screen fresh on each tab visit, so a read state that did not persist would
     // come straight back bold on the next visit.
-    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    const wrapper = await mountInbox([kitOffer(), deskLetter()])
     await openRow(wrapper, 0)
     await backToList(wrapper)
     wrapper.unmount()
 
-    const again = mountInbox([kitOffer(), deskLetter()])
+    const again = await mountInbox([kitOffer(), deskLetter()])
     expect(again.findAll('.inbox-row.unread')).toHaveLength(1)
     again.unmount()
   })
@@ -372,10 +377,10 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
     localStorage.clear()
   })
 
-  const bins = (w: ReturnType<typeof mountInbox>) => w.findAll('.inbox-bin')
+  const bins = (w: VueWrapper) => w.findAll('.inbox-bin')
 
   it('no bin until the letter has been read – the owner asked for it "once read"', async () => {
-    const wrapper = mountInbox([kitOffer({ id: 'refused-1', state: 'refused' })])
+    const wrapper = await mountInbox([kitOffer({ id: 'refused-1', state: 'refused' })])
     expect(bins(wrapper)).toHaveLength(0)
     await openRow(wrapper, 0)
     await backToList(wrapper)
@@ -386,7 +391,7 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
   it('⚠ a letter that can still be ANSWERED never grows one, however often it is opened', async () => {
     // Deleting an answerable offer deletes the decision, not a record of one. Week 102 is inside the
     // deadline of 104, so this letter is still a live choice.
-    const wrapper = mountInbox([kitOffer()], 102)
+    const wrapper = await mountInbox([kitOffer()], 102)
     await openRow(wrapper, 0)
     await backToList(wrapper)
     expect(bins(wrapper)).toHaveLength(0)
@@ -397,7 +402,7 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
 
   it('⚠ nor does a SIGNED deal while it is still running – the letter is the live contract', async () => {
     const running = kitOffer({ id: 'signed-1', state: 'signed', fromWeek: 100, untilWeek: 150 })
-    const wrapper = mountInbox([running], 120)
+    const wrapper = await mountInbox([running], 120)
     await openRow(wrapper, 0)
     await backToList(wrapper)
     expect(bins(wrapper)).toHaveLength(0)
@@ -406,7 +411,7 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
 
   it('...and it DOES once that deal has run its course, so nothing is uncleanable for ever', async () => {
     const finished = kitOffer({ id: 'signed-1', state: 'signed', fromWeek: 100, untilWeek: 150 })
-    const wrapper = mountInbox([finished], 151)
+    const wrapper = await mountInbox([finished], 151)
     await openRow(wrapper, 0)
     await backToList(wrapper)
     expect(bins(wrapper)).toHaveLength(1)
@@ -414,7 +419,7 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
   })
 
   it('the bin asks yes/no, and a NO leaves the row exactly where it was', async () => {
-    const wrapper = mountInbox([kitOffer({ id: 'refused-1', state: 'refused' })])
+    const wrapper = await mountInbox([kitOffer({ id: 'refused-1', state: 'refused' })])
     await openRow(wrapper, 0)
     await backToList(wrapper)
     await bins(wrapper)[0].trigger('click')
@@ -431,7 +436,7 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
   })
 
   it('a YES takes it off the list – and the LETTER ITSELF is untouched in the save', async () => {
-    const wrapper = mountInbox([kitOffer({ id: 'refused-1', state: 'refused' }), deskLetter()])
+    const wrapper = await mountInbox([kitOffer({ id: 'refused-1', state: 'refused' }), deskLetter()])
     await openRow(wrapper, 0)
     await backToList(wrapper)
     await bins(wrapper)[0].trigger('click')
@@ -446,14 +451,14 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
 
   it('...and it stays off across a remount, without ever reaching the engine', async () => {
     const offers = [kitOffer({ id: 'refused-1', state: 'refused' }), deskLetter()]
-    const wrapper = mountInbox(offers)
+    const wrapper = await mountInbox(offers)
     await openRow(wrapper, 0)
     await backToList(wrapper)
     await bins(wrapper)[0].trigger('click')
     await wrapper.find('.dialog-card').findAll('button').find((b) => b.text() === 'Delete')!.trigger('click')
     wrapper.unmount()
 
-    const again = mountInbox(offers)
+    const again = await mountInbox(offers)
     expect(rows(again)).toHaveLength(1)
     again.unmount()
   })

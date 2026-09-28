@@ -206,7 +206,12 @@ describe('E-P14: the inbox annotations survive storage that throws on access', (
       // `useInboxMail` reads both sets during setup, through `useCareerSync`. Before the migration this
       // was a hand-rolled try around `localStorage.getItem`, which is the shape that DOES catch this –
       // so nothing behavioural moves, and the case exists to say that rather than to assume it.
-      const mail = useInboxMail()
+      // ⚠ RE-AIMED, NOT WIDENED (T6.2 · D-07, 28.09): `useInboxMail` takes the POST now – the query's
+      // list, or null for «I cannot say» – because pruning the stored annotations against the weekly
+      // snapshot would delete the player's own marks on every older letter. This case is about storage
+      // that throws on the property access and nothing else, so it hands over an empty post: the sets
+      // must answer their safe default whatever the list says.
+      const mail = useInboxMail(() => [])
       expect(mail.isRead('off-1'), 'nothing read – an unread letter costs a bold row, never a hidden one').toBe(false)
       expect(mail.isBinned('off-1'), 'nothing binned – a letter that refuses to hide costs a second press').toBe(false)
       // ...and a write goes nowhere without throwing: the list behaves for the session.

@@ -98,6 +98,10 @@ const REPLY_BY_ARM: Record<(typeof REPLY_BY_COMMAND)[keyof typeof REPLY_BY_COMMA
   slots: () => ({ id: 0, ok: true, type: 'slots', slots: [], revision: 1 }),
   careers: () => ({ id: 0, ok: true, type: 'careers', careers: [], revision: 1 }),
   album: () => ({ id: 0, ok: true, type: 'album', album: {} as AlbumBook, revision: 1 }),
+  // ⚠ RE-AIMED, NOT WIDENED (T6.2 · D-07, 28.09): the record is TOTAL over the protocol's reply arms.
+  // `inbox` carries a LIST OUT of the worker, which is the direction D-08 is not about – the finding is
+  // about objects the store sends IN – but the arm still has to exist for the sweep to run.
+  inbox: () => ({ id: 0, ok: true, type: 'inbox', inbox: [], revision: 1 }),
   exported: () => ({ id: 0, ok: true, type: 'exported', bytes: new ArrayBuffer(8), filename: 'c.tsave', revision: 1 }),
   peek: () => ({ id: 0, ok: true, type: 'peek', peek: {} as SavePeek, revision: 1 }),
 }
@@ -128,6 +132,9 @@ function driversFor(s: Store): Record<string, () => unknown> {
     // object, so the carriers table below is asked the same question about the same type either way.
     commit: () => s.commit({ type: 'setPlan', plan: WEEK_PLAN_PRESETS.balanced }),
     loadAlbum: () => s.loadAlbum(),
+    // ⚠ T6.2 · D-07, 28.09 – the new sending action, driven because the enumeration below is EQUALITY
+    // in both directions: a sender left undriven is exactly the defect D-08 describes coming back.
+    loadInbox: () => s.loadInbox(),
     tick: () => s.tick(1),
     advance: () => s.advance(2),
     enterEvent: () => s.enterEvent('e-1'),

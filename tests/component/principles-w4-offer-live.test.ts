@@ -29,13 +29,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import InboxSheet from '../../src/components/InboxSheet.vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
-import { useGameStore } from '../../src/stores/game'
 import { acceptOffer, createWorld, toSnapshot, type WorldState } from '../../src/engine/world'
 import { isOfferLive, raiseKitOffers } from '../../src/engine/offers'
-import { DEFAULT_PROFILE, type Offer, type Snapshot } from '../../src/shared/protocol'
+import { DEFAULT_PROFILE, type Offer } from '../../src/shared/protocol'
 import type { SponsorStanding } from '../../src/engine/offers'
+import { mountInbox } from './inbox'
 
 // The inbox annotates letters with two per-device facts (read / binned) and both live in
 // localStorage; this runner has none. Same shim, and the same argument, as the other mail suites.
@@ -94,9 +93,17 @@ function onTheLastWeek(seed: string): { world: WorldState; offer: Offer } {
   throw new Error(`no seed near "${seed}" was written to in 20 tries – the offer roll has broken`)
 }
 
-function sheetOn(snapshot: Snapshot): { text: string; waiting: boolean } {
-  useGameStore().snapshot = snapshot
-  const wrapper = mount(InboxSheet, { global: { stubs: { teleport: true } } })
+/** ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly
+ *  snapshot carries the letters this week still needs and `loadInbox()` answers with the career's whole
+ *  post – so a mounted test answers it and waits one microtask. `./inbox` is that arrangement. ⚠ THE
+ *  CLAIM IS UNTOUCHED: E-07 is about the sheet asking `isOfferLive` rather than re-spelling it, and a
+ *  live letter is carried on the wire either way – the query is here so the LIST is the real one. */
+async function sheetOn(world: WorldState): Promise<{ text: string; waiting: boolean }> {
+  const wrapper = await mountInbox(
+    toSnapshot(world),
+    { global: { stubs: { teleport: true } } },
+    world.offers.map((o) => ({ ...o, terms: { ...o.terms } })),
+  )
   const out = {
     text: wrapper.text().replace(/\s+/g, ' ').trim(),
     waiting: wrapper.find('.inbox-waiting').exists(),
@@ -120,26 +127,26 @@ describe('E-07 rendered: the sheet\'s list reads the engine on the last week', (
     expect(isOfferLive(offer, world.week), 'her last week is a week the engine still calls live').toBe(true)
   })
 
-  it('⭐⭐ the row wears «Needs an answer» on the very week the window closes', () => {
+  it('⭐⭐ the row wears «Needs an answer» on the very week the window closes', async () => {
     const { world } = onTheLastWeek('e07-sheet-pill')
-    const { waiting, text } = sheetOn(toSnapshot(world))
+    const { waiting, text } = await sheetOn(world)
     expect(waiting, 'the accent pill the copy drove').toBe(true)
     // The empty-state hint is the same computed read from the other side: `open.length === 0`.
     expect(text, 'and the sheet does not call the list empty').not.toContain('Nothing waiting on an answer.')
   })
 
-  it('⭐ ...and the tail counts the last week as one week to decide', () => {
+  it('⭐ ...and the tail counts the last week as one week to decide', async () => {
     const { world } = onTheLastWeek('e07-sheet-tail')
-    const { text } = sheetOn(toSnapshot(world))
+    const { text } = await sheetOn(world)
     // `metaOf`'s early return is the THIRD reader of the sheet's one liveness call: a letter it
     // thinks is gone prints the filing line and stops. Singular, because the boundary week is one.
     expect(text, 'the row still offers the decision').toContain('1 week to decide')
   })
 
-  it('⚠ one week later the same three readers go quiet together', () => {
+  it('⚠ one week later the same three readers go quiet together', async () => {
     const { world } = onTheLastWeek('e07-sheet-past')
     world.week += 1
-    const { waiting, text } = sheetOn(toSnapshot(world))
+    const { waiting, text } = await sheetOn(world)
     expect(waiting, 'no pill past the deadline').toBe(false)
     expect(text, 'the sheet says the list is empty').toContain('Nothing waiting on an answer.')
     expect(text, 'and no decision is offered').not.toContain('week to decide')

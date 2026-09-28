@@ -25,10 +25,8 @@
 // with `weekLabel` and `formatCents` beside it. What the owner reads is `.inbox-subject`, so that is
 // what this file reads.
 import { describe, it, expect, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import InboxSheet from '../../src/components/InboxSheet.vue'
-import { useGameStore } from '../../src/stores/game'
+import { mountInbox, withPost } from './inbox'
 import {
   chargeMandatoryPenalty,
   createWorld,
@@ -194,11 +192,16 @@ const STAFF_SPARRING = letter({
 })
 
 /** Every subject line the sheet renders, in one array, off a career's real snapshot. */
-function subjects(offers: Offer[]): string[] {
+// ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly snapshot
+// carries the letters this week still needs and `loadInbox()` answers with the career's whole post – so
+// a mounted test has to answer it and wait one microtask. `tests/component/inbox.ts` is that arrangement
+// for the eight suites that render this sheet; every assertion below is unchanged.
+async function subjects(offers: Offer[]): Promise<string[]> {
   const base: Snapshot = careerSnapshot(8, 'r29-16-inbox')
-  const store = useGameStore()
-  store.snapshot = { ...base, offers: [...base.offers, ...offers], week: 320 }
-  const wrapper = mount(InboxSheet, { global: { stubs: { teleport: true } } })
+  const wrapper = await mountInbox(
+    withPost(base, [...base.offers, ...offers], 320),
+    { global: { stubs: { teleport: true } } },
+  )
   const out = wrapper.findAll('.inbox-subject').map((n) => n.text().replace(/\s+/g, ' ').trim())
   wrapper.unmount()
   return out
@@ -210,13 +213,13 @@ describe('Round 29 #16 – the tour desk raises four notices, and each says whic
     backing.clear()
   })
 
-  it('⚠⚠ THE SEASON BRIEFING NO LONGER CALLS ITSELF A SUSPENSION – it names the regime it is about', () => {
+  it('⚠⚠ THE SEASON BRIEFING NO LONGER CALLS ITSELF A SUSPENSION – it names the regime it is about', async () => {
     const season = seasonLetter()
     const terms = season.terms as TourLetterTerms
-    const line = subjects([season]).find((s) => s.startsWith('Required season'))
+    const line = (await subjects([season])).find((s) => s.startsWith('Required season'))
 
     // The defect, stated as the thing that must not be true. His screenshot is this letter.
-    expect(subjects([season]), 'the season briefing must not wear the suspension letter\'s title')
+    expect(await subjects([season]), 'the season briefing must not wear the suspension letter\'s title')
       .not.toContain('Entries suspended')
 
     // ...and what stands there instead restates the sheet's own first sentence, «Her ranking is
@@ -229,22 +232,22 @@ describe('Round 29 #16 – the tour desk raises four notices, and each says whic
     expect(line).toContain(String(ECONOMY.mandatory.maxRank))
   })
 
-  it('the SUSPENSION keeps the title that was always true of it – the fall-through case', () => {
+  it('the SUSPENSION keeps the title that was always true of it – the fall-through case', async () => {
     // ⚠ THE ARM THAT USED TO BE THE FALL-THROUGH. It is an explicit branch now, and this is the pin
     // that says the fix did not move the letter the title actually belonged to.
-    expect(subjects([suspensionLetter()])).toContain('Entries suspended')
+    expect(await subjects([suspensionLetter()])).toContain('Entries suspended')
   })
 
-  it('the WARNING names the event it is about', () => {
-    expect(subjects([dueLetter()])).toContain(`Required event – ${TIERS.wta1000.label}`)
+  it('the WARNING names the event it is about', async () => {
+    expect(await subjects([dueLetter()])).toContain(`Required event – ${TIERS.wta1000.label}`)
   })
 
-  it('the CHARGE says a charge has been recorded', () => {
-    expect(subjects([penaltyLetter()])).toContain('Penalty points recorded')
+  it('the CHARGE says a charge has been recorded', async () => {
+    expect(await subjects([penaltyLetter()])).toContain('Penalty points recorded')
   })
 
-  it('⚠ all four are DIFFERENT lines – which is the whole of the complaint', () => {
-    const all = subjects([dueLetter(), penaltyLetter(), seasonLetter(), suspensionLetter()])
+  it('⚠ all four are DIFFERENT lines – which is the whole of the complaint', async () => {
+    const all = await subjects([dueLetter(), penaltyLetter(), seasonLetter(), suspensionLetter()])
     const tour = all.filter(
       (s) => s.startsWith('Required ') || s === 'Penalty points recorded' || s === 'Entries suspended',
     )
@@ -276,13 +279,13 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
   ]
 
   for (const [what, offer, expected] of CASES) {
-    it(`${what} – "${expected}"`, () => {
-      expect(subjects([offer])).toContain(expected)
+    it(`${what} – "${expected}"`, async () => {
+      expect(await subjects([offer])).toContain(expected)
     })
   }
 
-  it('the squad call-up carries the week, because the week is its whole content', () => {
-    const line = subjects([CALL_UP]).find((s) => s.startsWith('Named in the squad'))
+  it('the squad call-up carries the week, because the week is its whole content', async () => {
+    const line = (await subjects([CALL_UP])).find((s) => s.startsWith('Named in the squad'))
     expect(line).toBeTruthy()
     // The week label is `weekLabel`'s and is not spelled out here – what is pinned is that the
     // competition and a week are both on the line, which is the branch's own promise.
@@ -290,8 +293,8 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     expect(line).toMatch(/W\d+ '\d\d/)
   })
 
-  it('the advertising house carries the fee, and the fee is the engine\'s', () => {
-    const line = subjects([AD]).find((s) => s.startsWith('Her face in a campaign'))
+  it('the advertising house carries the fee, and the fee is the engine\'s', async () => {
+    const line = (await subjects([AD])).find((s) => s.startsWith('Her face in a campaign'))
     expect(line).toBeTruthy()
     // ⚠ FORMATTED FROM CENTS, so this is the number the letter is worth and not a re-typing of it.
     // ⚠⚠ RE-AIMED BY ROUND 34 #7/#11/#12/#13 (03.09): the owner ruled the foot of the endorsement
@@ -303,10 +306,10 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     expect(ECONOMY.advertising.categories.watches.feeCentsByBand[1]).toBe(200_000_00)
   })
 
-  it('⚠ THE WHOLE POST AT ONCE – eighteen letters, eighteen distinct subjects, none of them borrowed', () => {
+  it('⚠ THE WHOLE POST AT ONCE – eighteen letters, eighteen distinct subjects, none of them borrowed', async () => {
     // ⭐ ROUND 43 #11 made it fourteen; round 44 #7's four seats make it eighteen. The count in this case's name is the point of it: a new kind
     // that quietly fell through to somebody else's title would leave the pile one subject short.
-    const all = subjects([
+    const all = await subjects([
       ENTRY_IN, ENTRY_OUT_PARENT, ENTRY_OUT_DESK,
       dueLetter(), penaltyLetter(), seasonLetter(), suspensionLetter(),
       ACADEMY_IN, ACADEMY_REVIEW, ACADEMY_END,

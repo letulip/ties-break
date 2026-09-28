@@ -43,6 +43,7 @@ import EndingScreen from '../../src/components/EndingScreen.vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import { useGameStore } from '../../src/stores/game'
+import { answerInbox } from './inbox'
 import {
   closeTournament,
   callUpRevealOpen,
@@ -108,6 +109,14 @@ async function openShell(world: WorldState) {
   // WITH them: a snapshot built without them would show no toast for the trivial reason that it was
   // handed none, which is exactly the vacuous pass that case exists to avoid.
   game.snapshot = toSnapshot(world, lastStops as Parameters<typeof toSnapshot>[1])
+  // ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): `InboxSheet`'s list is a QUERY now – the weekly
+  // snapshot carries the letters this week still needs and `loadInbox()` answers with the career's whole
+  // post – and this shell really opens that sheet, so the query has to be answered. There is no worker
+  // here (`init` is already mocked two lines up), so the world's own post is the answer, copied the way
+  // the wire copies it. The claim below is unchanged: the invitation is on the list before its week.
+  // ⚠ THE PIN QUERY DID NOT PREDICT THIS FILE – it names none of `InboxSheet` / `inboxCue` /
+  // `newestLetterId` / `inboxMail`, it reaches the sheet through the SHELL's own door and by class.
+  answerInbox(world.offers.map((o) => ({ ...o, terms: { ...o.terms } })))
   const w = mount(App, { attachTo: document.body, global: { stubs: { teleport: true } } })
   w.findComponent(SplashScreen).vm.$emit('done')
   await flushPromises()

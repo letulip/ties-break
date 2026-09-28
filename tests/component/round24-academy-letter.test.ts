@@ -15,11 +15,10 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
-import InboxSheet from '../../src/components/InboxSheet.vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
-import { useGameStore } from '../../src/stores/game'
 import type { AcademyLetterTerms, Offer, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+import { mountInbox as mountInboxSheet, withPost } from './inbox'
 
 // The inbox annotates letters with two per-device facts (read / binned) and both live in
 // localStorage; this runner has none. Same shim, and the same argument, as the other mail suites.
@@ -113,16 +112,21 @@ describe('InboxSheet – the letter is in the list, and the row opens it', () =>
     backing.clear()
   })
 
-  /** A real career's snapshot, with the academy's post added to the letters it already has. */
-  function mountInbox(offers: Offer[]) {
+  /** A real career's snapshot, with the academy's post added to the letters it already has.
+   *
+   *  ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly
+   *  snapshot carries the letters this week still needs and `loadInbox()` answers with the whole post –
+   *  so a mounted test answers it and waits one microtask. `./inbox` is that arrangement, shared by the
+   *  eight suites that render this sheet. Every assertion below is unchanged. */
+  async function mountInbox(offers: Offer[]) {
     const base: Snapshot = careerSnapshot(8, 'r24-inbox')
-    const store = useGameStore()
-    store.snapshot = { ...base, offers: [...base.offers, ...offers] }
-    return mount(InboxSheet, { global: { stubs: { teleport: true } } })
+    return mountInboxSheet(withPost(base, [...base.offers, ...offers]), {
+      global: { stubs: { teleport: true } },
+    })
   }
 
-  it('all three notices are listed, signed by the academy, and each subject says which it is', () => {
-    const wrapper = mountInbox([ARRIVED, REVIEWED, ENDED])
+  it('all three notices are listed, signed by the academy, and each subject says which it is', async () => {
+    const wrapper = await mountInbox([ARRIVED, REVIEWED, ENDED])
     const rows = wrapper.findAll('.inbox-row')
     const text = rows.map((r) => r.text())
     expect(text.filter((t) => t.includes('The academy'))).toHaveLength(3)
@@ -136,7 +140,7 @@ describe('InboxSheet – the letter is in the list, and the row opens it', () =>
   })
 
   it('...and clicking the row opens the letter he was told to go and read', async () => {
-    const wrapper = mountInbox([ARRIVED])
+    const wrapper = await mountInbox([ARRIVED])
     const row = wrapper.findAll('.inbox-open').find((b) => b.text().includes('The academy'))
     expect(row, 'the academy letter must have a row to press').toBeTruthy()
     await row!.trigger('click')
@@ -150,12 +154,17 @@ describe('InboxSheet – the letter is in the list, and the row opens it', () =>
   })
 
   it('the newest post is the academy, so the mail cue has something to point at', async () => {
-    // `newestLetterId` is the LAST element of `snapshot.offers` – the fact the bell's second dot
-    // reads. It deliberately does not ask `state`, which is what lets an `info` notice announce
-    // itself; this pins that an academy letter is a letter for that purpose.
+    // `newestLetterId` is the newest letter of the WHOLE post – the fact the bell's second dot reads.
+    // It deliberately does not ask `state`, which is what lets an `info` notice announce itself; this
+    // pins that an academy letter is a letter for that purpose.
+    // ⚠ RE-AIMED, NOT WEAKENED (T6.2 · D-07, 28.09): it read the LAST ELEMENT of `snapshot.offers`,
+    // and that field is no longer the career's post – it carries the letters this week still needs, so
+    // its last element is a different letter and on a career whose newest letter is terminal it is not
+    // the newest letter at all. The engine derives the fact off the full list now
+    // (`Snapshot.newestLetterId`), and `withPost` is what a POSED snapshot owes it. The claim is the
+    // same claim: an academy notice announces itself.
     const { newestLetterId } = await import('../../src/composables/inboxCue')
     const base: Snapshot = careerSnapshot(8, 'r24-inbox')
-    const snap: Snapshot = { ...base, offers: [...base.offers, ARRIVED] }
-    expect(newestLetterId(snap)).toBe(ARRIVED.id)
+    expect(newestLetterId(withPost(base, [...base.offers, ARRIVED]))).toBe(ARRIVED.id)
   })
 })
