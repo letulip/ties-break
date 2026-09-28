@@ -121,6 +121,13 @@ docs/review/     2026-08 full review + P1–P9 proposals
   git grep -l "engine/<module>.ts'" -- tests/
   ```
   Every hit is a pin that will break, and each one needs repointing at the source helper. Measured against the `world.ts` and `diary.ts` splits, this predicted **17 of 17 real breakages (100% recall, 81% precision)** – the four false positives cost seconds to dismiss. Those 20 break events were originally found reactively, one failing test run at a time, purely because nobody ran this query first. See `docs/research/graph-tooling-benchmark.md`.
+
+  ⚠ **It needs a second spelling, added 28.09 after its first measured false negative.** The command matches a path *string*, so a source pin that ASSEMBLES its path is invisible to it. Emptying `world.ts` of its function bodies (A-04) broke a 13th file the query never named – `tests/world-trio.test.ts` reads `new URL('world.ts', ENGINE_DIR)` – which took recall to 6 of 7 that wave. Run both, always:
+  ```bash
+  git grep -l "engine/<module>.ts'" -- tests/
+  git grep -ln "'<module>.ts'" -- tests/ tools/ e2e/
+  ```
+  The second costs nothing in precision (three hits repo-wide for `world.ts`) and catches this repo's own house style for building a path. ⚠ For an extraction out of a `.vue` file a **class-name grep** is a third command: without it recall was 3 of 6. The wider blind spots – a value reader with no `.ts` in its import, and a file reaching the symbol only through a shared fixture – are row 30 of `docs/backlog/the-quality-rig.md`, with the companion command and why the two cannot be merged into one.
 - **Never gate while agents are working, and never read an exit code through a pipe.** Two measured
   hazards, both of which have already produced a false verdict here. (a) CONTENTION: with three
   agents active this machine reached load 69 / 33 node processes, and a full `npm run check` came
