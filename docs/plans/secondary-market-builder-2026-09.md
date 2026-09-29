@@ -17,7 +17,23 @@ every step below is free to start; the strings stay DRAFTs for his wording pass 
 House law that binds every step: pathspec commits, never `--amend`; gate verdicts from files with
 fresh mtime; every new player-facing string is a DRAFT for his wording pass (invariant 4); no
 `Rng` argument and no MAIN draw anywhere in the new code – sub-streams
-`${seed}:sale:${itemId}:${week}` only (invariant 2).
+`${seed}:sale:${itemId}:${week}` only (invariant 2). **And the token law
+(docs/context/token-discipline.md, owner 29.09)**: every brief carries its §2 block verbatim; one
+agent – one step with a defined output, killed on report; the heavy gates (`check` / `test:sim` /
+`test:e2e`) run ONCE, at S6, in the parent session or a thin gate-agent – never inside the step
+agents, which run only their own named test files.
+
+## Dispatch table (token-discipline §1.1 – chosen, not defaulted)
+
+| step | model | effort | move budget | why this and not more |
+| --- | --- | --- | --- | --- |
+| S1 | sonnet | medium | ~60 | pure functions against a written formula; the spec carries the math |
+| S2 | sonnet | low | ~50 | mechanical schema/command plumbing with a named law per guard |
+| S3 | sonnet | high | ~80 | the one integration step – offers, tick, settle extraction, the capture pin |
+| S4 | sonnet | low | ~40 | one settle-price switch and two tests |
+| S5 | sonnet | medium | ~70 | screens + mounted tests; the strings are DRAFTs, no judgment calls |
+| S6 | sonnet | medium | ~60 | probe + numbers into the spec; gates run OUTSIDE this agent |
+| review + PR | architect session (opus) | – | – | the wave review and `pull-request` are the architect's own |
 
 ## S1 · The corridor and the quote – pure reads, no behaviour change
 

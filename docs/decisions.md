@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 144 dated entries, newest 2026-09-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 146 dated entries, newest 2026-09-29. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 25 | [THE LISTING THAT NEVER SELLS: FRESHNESS DECAYS, THE MARKET REMEMBERS](#26092026--the-listing-that-never-sells-freshness-decays-the-market-remembers) | 2026-09-26 |
+| general | 27 | [AGENTS RUN SEQUENTIALLY, AND THE SIX WAVES' QUESTIONS ARE ANSWERED: W7 IS GO](#29092026--agents-run-sequentially-and-the-six-waves-questions-are-answered-w7-is-go) | 2026-09-29 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5628,3 +5628,37 @@ own call against farming: the market remembers a withdrawn ad for ~12 weeks, so 
 resets freshness only when the waiting was real. The price-cut control stays a later slice, now
 marked as the natural revival lever. Spec §2d/§2i, plan S1–S6 updated; schema v90 gains the row's
 small listing memory.
+
+## 29.09.2026 – THE TOKEN LAW: HARD LIMITS ON EVERY DISPATCH, AND THE WAVE BOUNDARY MADE PHYSICAL
+
+The principles wave overran its budget and the owner ruled the fix into law: «видимо все наши
+правила по использованию были проигнорированы, так что давай на уровне проекта где-то сделаем
+жесткие ограничения» – six named implementations, his own cost measurements attached. They live in
+docs/context/token-discipline.md, pointed to from CLAUDE.md: the model and effort chosen per step
+in every wave plan (a dispatch table is now part of a plan's shape – the secondary-market plan
+carries the first one); one agent per task, killed on report; briefs carry excerpts and line
+ranges, never document links; §2's in-agent block (batch, read once, no wandering, trim at source)
+quoted verbatim in every brief; heavy gates outside fat agents – parent session or a thin
+gate-agent, background+poll if unavoidable; no SendMessage into a fat agent; sessions worked in
+blocks, paused via handoff notes, small questions to fresh sessions. The wave boundary is physical
+now: a closing wave writes docs/handoff/<wave>.md and the next wave opens in a fresh session that
+reads only that file. The parent-directory settings hole he caught himself – sessions started from
+~/Projects/Claude never saw the repo's deny rules – is mirrored shut in that directory's own
+.claude/settings.json. The running principles waves pick the law up through the plan's §1a at
+their next boundary.
+
+## 29.09.2026 – AGENTS RUN SEQUENTIALLY, AND THE SIX WAVES' QUESTIONS ARE ANSWERED: W7 IS GO
+
+Two rulings in one message. First, the token law grew its eighth clause by his word: «работа
+агентов по коду и разработке только последовательно, шаг за шагом, не параллельно» – now §1.2 of
+docs/context/token-discipline.md; parallel stays legal only for read-only fan-out. Second, the
+builder closed W1–W6 and filed every accumulated question with its number
+(principles-fix-questions-2026-09.md, w6 head); the owner handed the list to the architect and
+ruled the sequel himself: «если блокеров не будет – можешь приступать к W7». The verdicts are
+docs/plans/principles-fix-answers-2026-09.md, none blocking: the 29 strings approved as tabled
+(PF4/PF5 the only player-met DRAFTs, his pass at the PR), the Reload control is IN as W7's first
+commit T7.0 – he playtests the installed build, where a blocking card saying «reload» without a
+control is a dead end – 'Nine Bells' was a slip, both wording declines stand under invariant 4,
+the wedding spec keeps walking the player's route (G-04 (b) declined), and the 58-module row waits
+for its recorded trigger. W7 runs under the token law, sequentially, and closes with the first
+physical handoff file.

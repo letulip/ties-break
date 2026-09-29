@@ -28,6 +28,10 @@ Setup, the benchmarks behind each of those rules, and the measured failure modes
 [docs/context/graphify.md](docs/context/graphify.md).
 
 
+## Token discipline
+
+[docs/context/token-discipline.md](docs/context/token-discipline.md) binds dispatch (29.09): model+effort per step, §2 in briefs, sequential agents, gates outside, handoffs.
+
 ## Non-negotiable invariants
 
 **1. The engine never imports the UI.** Zero imports of Vue/Pinia/components anywhere in `src/engine`, `src/worker`, `src/db`, `src/shared`. The worker owns the world; the UI only ever sees `Snapshot`. Every command is re-validated engine-side, so a stale screen cannot corrupt a career.
@@ -87,7 +91,7 @@ docs/review/     2026-08 full review + P1–P9 proposals
 `world.ts` **is decomposed** – P4 finished 28.09 (`docs/review/proposals/P4-world-decomposition.md`). It holds **0 function bodies** (`tests/principles-a04-barrel-no-bodies.test.ts`) and a **frozen** name surface (`tests/principles-a03-barrel-surface.test.ts`, which carries the numbers and names the census). Rules:
 - ⚠ It is a **frozen public surface**, not «compatibility under historical names» – A-03 measured that sentence stale. A symbol born in `world/*` is imported **from its owning module**; the barrel carries only frozen names, so a new re-export line is a decision the pin makes you take.
 - `WorldState` comes as **`import type` from `./state`**, the module that declares it – not from `../world`. ⚠ A **ratchet, not a sweep**: `tests/principles-a03-type-import-ratchet.test.ts` grandfathers the files that predate the rule, fails a **new** one, and refuses a **value** import of the barrel from inside the package with no grandfather.
-- `world.ts` re-exports the values: **hundreds of files** import from `engine/world` and that public API must not change. ⚠ **Count it, do not quote it** – three numbers for this were in circulation on one day, all "essentially right" under different scopes, which is how a stale number survives. And ⚠ **a count written in PROSE survives a full gate**, because no test reads it: wave 9 shipped two documents saying 32 where the corpus held 28, through `check`, `e2e` and the sims. A number a document states about itself needs a pin that compares it with the thing (`tests/wave9-strings-roundtrip.test.ts`).
+- `world.ts` re-exports the values – **hundreds of files** import from `engine/world`. ⚠ **Count it, do not quote it**: three "essentially right" numbers circulated in one day, which is how a stale one survives. And ⚠ **a count written in PROSE survives a full gate** (wave 9: docs said 32, the corpus held 28) – a self-stated number needs a pin against the thing (`tests/wave9-strings-roundtrip.test.ts`).
   ```bash
   git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l   # the importers
   node scripts/world-map.mjs <symbol>                                        # which module owns it
