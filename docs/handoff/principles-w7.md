@@ -63,3 +63,6 @@ resumes from THIS file, not from any prior session's history.
 - check: CHECK_EXIT=0 (/tmp/w7-gate-check.log 15:53)
 - sim: TESTSIM_EXIT=0 – 13 files green in 470s (/tmp/w7-gate-sim.log 16:01)
 - e2e: E2E_EXIT=0 – 139 passed in 50s (/tmp/w7-gate-e2e.log 16:02)
+- component: COMP_EXIT=0 – 245 files after the CI-red fix (storage contract enforced; time-bound
+  door waits). ⚠ The PR's first CI run caught what no local gate list held: test:component was in
+  neither check nor the pull-request skill – the skill carries it now (step 2a-bis).
