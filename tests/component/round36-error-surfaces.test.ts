@@ -30,7 +30,7 @@ import PlanWeekSheet from '../../src/components/PlanWeekSheet.vue'
 import InboxSheet from '../../src/components/InboxSheet.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import ForkDialog from '../../src/components/ForkDialog.vue'
-import { useGameStore } from '../../src/stores/game'
+import { SAVE_CONFLICT_RELOAD_LABEL, useGameStore } from '../../src/stores/game'
 import { request } from '../../src/worker/client'
 import {
   createWorld,
@@ -194,7 +194,10 @@ describe('⚠⚠ U-02 – every surface that can provoke a refusal can say what 
       const wrapper = surface.mount()
       const line = wrapper.find('.error')
       expect(line.exists(), `${surface.name} still has nowhere to say a refusal`).toBe(true)
-      expect(line.text()).toBe(sentence)
+      // T7.0: in the conflict state the element also holds the store's Reload control, INSIDE it (one root, so the host's
+      // scoped rules still reach the sentence – principles-w7-reload.test.ts (i)); the sentence is what this pin is about.
+      const said = line.text()
+      expect(said.endsWith(SAVE_CONFLICT_RELOAD_LABEL) ? said.slice(0, -SAVE_CONFLICT_RELOAD_LABEL.length) : said).toBe(sentence)
       // A live region, so a sentence that appears without moving focus is announced by something.
       expect(line.attributes('role')).toBe('status')
       wrapper.unmount()

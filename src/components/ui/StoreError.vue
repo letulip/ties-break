@@ -55,9 +55,14 @@ const game = useGameStore()
 const shown = computed(() => (game.error && game.error !== props.except ? game.error : ''))
 
 // T7.0: the Reload label is the STORE's (SAVE_CONFLICT_RELOAD_LABEL) – this file renders what the store owns, no wording of its own.
-// ⚠ A SENTENCE TOO, NOT THE KIND ALONE: round36-error-surfaces.test.ts clears `error` by assignment after a real conflict, which
-// leaves the kind behind, and a Reload with no sentence before it is an orphan (it stopped `.kid-hero` being the shell's first child).
-const offerReload = computed(() => game.errorKind === 'save-conflict' && game.error !== '')
+// ⚠⚠ THE BUTTON IS INSIDE THE `<p>` AND THE `<p>` STAYS THE ONLY ROOT, ON PURPOSE: Vue hands a parent's scoped-style attribute to a
+// child's root element only when the child HAS ONE root, and a sibling `<button>` made this a fragment – KidScreen's and HomeScreen's
+// scoped `.error { grid-column }` stopped matching EVERY store error (measured: '1 / -1' became '', and no gate saw it). The `<br>`
+// puts the button under the sentence without any CSS. tests/component/principles-w7-reload.test.ts (i) is the guard.
+// ⚠ AND THE `<p>` RENDERS ONLY WHEN THERE IS A SENTENCE TO SHOW, as it always did: that is what keeps a kind that outlived its
+// sentence (a fixture clearing `error` by assignment – round36-error-surfaces.test.ts does) from drawing an orphan Reload, and
+// MoreScreen's `except` from drawing one beside the strip's own copy of the sentence. (h) and the w4 «not twice» case are the guards.
+const offerReload = computed(() => game.errorKind === 'save-conflict')
 
 function reload(): void {
   window.location.reload()
@@ -65,6 +70,7 @@ function reload(): void {
 </script>
 
 <template>
-  <p v-if="shown" class="error" role="status">{{ shown }}</p>
-  <button v-if="offerReload" type="button" @click="reload">{{ SAVE_CONFLICT_RELOAD_LABEL }}</button>
+  <p v-if="shown" class="error" role="status">
+    {{ shown }}<br v-if="offerReload" /><button v-if="offerReload" type="button" @click="reload">{{ SAVE_CONFLICT_RELOAD_LABEL }}</button>
+  </p>
 </template>

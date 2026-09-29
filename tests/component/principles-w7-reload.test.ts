@@ -9,7 +9,7 @@
 // (`SAVE_CONFLICT_RELOAD_LABEL`, row PF6 of the strings table) that reloads the page.
 //
 // THE CASES
-//   (a) the conflict puts a button right after the sentence, carrying the STORE's label
+//   (a) the conflict puts a button inside the refusal element, after the sentence, carrying the STORE's label
 //   (b) ⚠⚠ that button's box is inside 375x667 – CLAUDE.md's popup law, on a BLOCKING card
 //   (c) any other refusal, and no refusal at all, shows no Reload
 //   (d) ⚠⚠ THE PAIRING – the kind leaves with its sentence: replaced by a stranger, cleared by the next
@@ -18,6 +18,7 @@
 //   (f) the label is the one row PF6 tables for his pass
 //   (g) every write to `error` inside the store is followed by its kind write
 //   (h) ⚠ a kind whose sentence was cleared BY ASSIGNMENT draws nothing – no orphan Reload
+//   (i) ⚠⚠ the sentence keeps its HOST's scope attribute, conflict or not – the element is still ONE root
 //
 // ⚠ THE STATE IS PRODUCED BY THE SHIPPED CODE, NOT WRITTEN INTO THE STORE. The conflict goes through
 // `game.run` as a real `CommandRejected('SAVE_CONFLICT')`, so the sentence AND its kind are the store's own
@@ -44,22 +45,21 @@
 // the same way.
 //
 // MUTATION TABLE – every arm was really run against the real files, watched going red, and put back.
-// The count in brackets is how many of the 11 cases one mutation took: a mutation that reddens the WRONG
+// The count in brackets is how many of the 13 cases one mutation took: a mutation that reddens the WRONG
 // case is as much a finding as one that reddens nothing. Each arm was checked to have APPLIED (a null arm is
-// not a result) and its file put back byte for byte (sha256 before and after all ten).
+// not a result) and its file put back byte for byte (sha256 before and after all eleven).
 //
-//   1. StoreError.vue `v-if="offerReload"` -> `v-if="true"` (a Reload under EVERY error)
-//      -> RED [5]: (c) x2, (d) stranger, (d) next action, (h). (a) and (b) stay green BY CONSTRUCTION – the
-//      Reload is there under a conflict too – which is the whole reason (c) exists.
+//   1. StoreError.vue the button's `v-if="offerReload"` -> `v-if="true"` (a Reload inside EVERY sentence)
+//      -> RED [2]: (c) any other refusal, (d) stranger. (a) and (b) stay green BY CONSTRUCTION – the Reload
+//      is there under a conflict too – which is the whole reason (c) exists. (c) «no refusal at all» stays
+//      green because the `<p>` itself does not render without a sentence.
 //   2. StoreError.vue `{{ SAVE_CONFLICT_RELOAD_LABEL }}` -> `Refresh` (mislabelled)
-//      -> RED [6]: (a) «the card offers the Reload», (b), (d) x3, (e) – every case that finds the control
-//      by the store's word.
+//      -> RED [6]: (a), (b), (d) x3, (e) – every case that finds the control by the store's word.
 //   3. StoreError.vue `window.location.reload()` -> `void 0` (a button that does nothing) -> RED [1]: (e).
 //   4. game.ts `run`'s generic write (`err.message`) loses its kind reset -> RED [2]: (d) stranger, (g).
-//   5. game.ts `run`'s top-of-function clear loses its kind reset -> RED [2]: (d) next action, (g). ⚠ MEASURED
-//      AS RED [2], THEN [1], THEN [2] AGAIN: once the element required a sentence too (arm 10) it hid a stale
-//      kind at rest, so «no Reload after the next action» could no longer see this omission and only (g) did;
-//      that case now also asserts `errorKind` at the store, which is where the pair's contract lives.
+//   5. game.ts `run`'s top-of-function clear loses its kind reset -> RED [2]: (d) next action, (g). ⚠ (d) next
+//      action asserts `errorKind` at the STORE and not only the absence of a button: the element renders only
+//      with a sentence, so a stale kind at rest is invisible on screen and only the store's own state shows it.
 //   6. game.ts the kind cleared even under `keepError` (moved out of the `if`) -> RED [2]: (d) keeps, (g) –
 //      the second is the structural net seeing `this.error = ''` unpaired, which is this mutation's shape.
 //   7. game.ts `SAVE_CONFLICT_RELOAD_LABEL = 'Reload'` -> `'Refresh'` (the word drifts from the table)
@@ -73,12 +73,16 @@
 //      this is life-beat-dialog.test.ts's own second arm, on the card WITH the Reload up.
 //   9. game.ts the stale-screen write (`refreshAfterStale`) loses its kind reset – a site NO mounted case
 //      reaches, because provoking it needs a worker -> RED [1]: (g) alone. That is what (g) is for.
-//  10. StoreError.vue `game.errorKind === 'save-conflict' && game.error !== ''` -> the kind alone (the FIRST
-//      version of this element, and the one that shipped red to the suite) -> RED [1]: (h). ⚠ AND THE SUITE
-//      HAD ALREADY CAUGHT IT: round36-error-surfaces.test.ts «the Kid hero stops eating the line…» went red
-//      on this exact mutation, before (h) existed – it clears `error` by assignment after a real conflict,
-//      so the stale kind drew an orphan Reload, and the hero stopped being the shell's first child. Control:
-//      the same case on `HEAD`'s sources is green, so the regression was this change's and not the machine's.
+//  10. StoreError.vue the root's `v-if="shown"` -> `v-if="shown || offerReload"` (the kind alone renders the
+//      element: the orphan Reload) -> RED [1]: (h). ⚠ AND THE SUITE HAD ALREADY CAUGHT IT, BEFORE (h) EXISTED:
+//      round36-error-surfaces.test.ts «the Kid hero stops eating the line…» is red on this mutation too (exit 1,
+//      measured in the same run). It clears `error` by assignment after a real conflict, so the stale kind drew
+//      an orphan Reload and the hero stopped being the shell's first child. Control: that case on `HEAD`'s
+//      sources was green, so the regression was this change's and not the machine's.
+//  11. StoreError.vue back to TWO ROOTS – the sentence and the button as siblings, this change's FIRST version
+//      -> RED [4]: (a), (h), (i) x2. ⚠⚠ AND EVERYTHING ELSE STAYED GREEN: principles-w4-refusal-surfaces.test.ts
+//      exits 0 on this mutation (measured in the same run), and so did the whole component project (245 files,
+//      2,576 tests) and the typecheck – that version was committed green. Only the scope attribute shows it.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, enableAutoUnmount } from '@vue/test-utils'
@@ -90,9 +94,11 @@ import { fileURLToPath } from 'node:url'
 import '../../src/style.css'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
 import LifeBeatDialog from '../../src/components/LifeBeatDialog.vue'
+import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { CommandRejected, SAVE_CONFLICT_RELOAD_LABEL, useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type LifeBeatPrompt } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
 
 // A wrapper left mounted by a FAILED assertion keeps a live focus trap over every later case
 // (`useDialogFocus` listens on `document`) – the W2 file's own reason for this line.
@@ -152,21 +158,24 @@ beforeEach(() => {
 })
 
 describe('⭐⭐ T7.0 – the save-conflict refusal comes with its Reload', () => {
-  it('(a) the conflict puts a button right after the sentence, carrying the STORE\'s label', async () => {
+  it('(a) the conflict puts a button inside the refusal element, after the sentence, carrying the STORE\'s label', async () => {
     await refuseWithConflict()
     const game = useGameStore()
     expect(game.errorKind, 'the store paired the kind with the sentence').toBe('save-conflict')
     const { card } = stage()
     const line = card.querySelector('.error')
     expect(line, 'the sentence is on the card').toBeTruthy()
-    expect(line!.textContent, 'and it is the store\'s').toBe(game.error)
+    expect(line!.firstChild!.textContent, 'and it is the store\'s, first in the element').toBe(game.error)
     expect(line!.getAttribute('role'), 'a polite live region, as before').toBe('status')
     const reload = reloadIn(card)
     expect(reload, 'the card offers the Reload').toBeDefined()
     expect(reload!.textContent, 'with exactly the label the store owns').toBe(SAVE_CONFLICT_RELOAD_LABEL)
     expect(reload!.getAttribute('type'), 'a button that submits nothing').toBe('button')
-    expect(line!.nextElementSibling, 'standing right after the sentence').toBe(reload)
-    expect(line!.contains(reload!), 'and outside the live region').toBe(false)
+    // ⚠ INSIDE the `<p>` and not beside it – see (i): a sibling would make the element a fragment and cost
+    // every host's scoped rules their grip on the sentence. It is the LAST thing in it, so it reads after the
+    // sentence; the `<br>` between them is what puts it on its own line.
+    expect(reload!.parentElement, 'inside the one element that owns the refusal').toBe(line)
+    expect(line!.lastElementChild, 'and last in it, after the sentence').toBe(reload)
   })
 
   it('(b) ⚠⚠ the Reload is inside 375x667 with the conflict up, on a card that cannot be dismissed', async () => {
@@ -265,7 +274,8 @@ describe('⭐⭐ T7.0 – the save-conflict refusal comes with its Reload', () =
     // a real conflict through the store and then writes `store.error = ''` DIRECTLY. That bypasses the
     // pairing – nothing in `src/` writes `error` outside the store, but a fixture may – so the kind stays
     // behind, and a kind-only condition drew a Reload with no sentence before it, which was enough to stop
-    // `.kid-hero` being the shell's first child. The element requires a sentence as well as the kind.
+    // `.kid-hero` being the shell's first child. The element now renders ONLY with a sentence to show (as it
+    // always did), so a kind that outlived its sentence draws nothing – and so does MoreScreen's `except`.
     await refuseWithConflict()
     const game = useGameStore()
     game.error = ''
@@ -289,4 +299,31 @@ describe('⭐⭐ T7.0 – the save-conflict refusal comes with its Reload', () =
       expect(next, `line ${i + 1} (${text.trim()}) is not followed by a kind write`).toMatch(/^\s*this\.errorKind = /)
     }
   })
+
+  // ⚠⚠ THE REGRESSION THIS CHANGE'S FIRST VERSION SHIPPED, AND NO GATE SAW IT. `StoreError` was a fragment –
+  // the sentence and the button as two roots – and Vue hands a parent's scoped-style attribute to a child
+  // component's root ONLY when the child has ONE root. KidScreen's and HomeScreen's scoped `.error { grid-column }`
+  // stopped matching every store error on the two busiest screens: measured through the real cascade,
+  // `grid-column` went from '1 / -1' to '' and the attribute list from [data-v-…, class, role] to [class, role].
+  // All 2,576 component tests stayed green, because nothing measured the attribute. The hero's own scope
+  // attribute is the reference: it is the screen's id, `StoreError` has no scoped style of its own to confuse it.
+  // THE PRICE OF ONE ROOT is that in the conflict state the element's text is the sentence PLUS the label, so
+  // round36-error-surfaces.test.ts and principles-w4-refusal-surfaces.test.ts (which compared it whole) strip the
+  // store's label from the end before comparing – nothing else about those pins moved.
+  for (const [what, refuse] of [
+    ['an unrelated refusal', () => refuseWith(UNRELATED)],
+    ['the conflict, with its Reload up', () => refuseWithConflict()],
+  ] as const) {
+    it(`(i) ⚠⚠ the sentence still carries its host's scope attribute – ${what}`, async () => {
+      await refuse()
+      useGameStore().snapshot = careerSnapshot(6, 'w7-scope')
+      mount(KidScreen, { attachTo: document.body })
+      const line = document.querySelector('.error')
+      const hero = document.querySelector('.kid-hero')
+      expect(line, 'the sentence is on the Kid screen').toBeTruthy()
+      const scope = hero!.getAttributeNames().find((n) => n.startsWith('data-v-'))
+      expect(scope, 'the hero carries its screen\'s scope attribute – the reference').toBeTruthy()
+      expect(line!.hasAttribute(scope!), 'and so does the sentence, or the screen\'s scoped `.error` rules never reach it').toBe(true)
+    })
+  }
 })

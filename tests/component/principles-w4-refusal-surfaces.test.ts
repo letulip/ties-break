@@ -43,7 +43,7 @@ import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import MoreScreen from '../../src/components/screens/MoreScreen.vue'
 import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
 import EndingScreen from '../../src/components/EndingScreen.vue'
-import { useGameStore } from '../../src/stores/game'
+import { SAVE_CONFLICT_RELOAD_LABEL, useGameStore } from '../../src/stores/game'
 import { request } from '../../src/worker/client'
 import { careerSnapshot } from '../helpers/career'
 import { moneyOf } from '../helpers/careerMoney'
@@ -274,7 +274,13 @@ describe('E-09 – the surfaces that said a refusal badly, or not at all', () =>
 
       const line = wrapper.find('.error')
       expect(line.exists(), `${surface.name} still has nowhere to say a refusal`).toBe(true)
-      expect(line.text(), `${surface.name} says something other than what the store wrote`).toBe(sentence)
+      // T7.0: in the conflict state the element also holds the store's Reload control, INSIDE it (one root, so the host's
+      // scoped rules still reach the sentence – principles-w7-reload.test.ts (i)); the sentence is what this pin is about.
+      const said = line.text()
+      expect(
+        said.endsWith(SAVE_CONFLICT_RELOAD_LABEL) ? said.slice(0, -SAVE_CONFLICT_RELOAD_LABEL.length) : said,
+        `${surface.name} says something other than what the store wrote`,
+      ).toBe(sentence)
       // THE HALF THE HAND-ROLLED COPIES ALL MISSED: a sentence that appears without moving focus is
       // announced by nothing otherwise.
       expect(line.attributes('role'), `${surface.name}'s refusal is announced by nothing`).toBe('status')
@@ -314,7 +320,11 @@ describe('E-09 – the surfaces that said a refusal badly, or not at all', () =>
     store.saveOp = { op: 'import', status: 'error', message: 'Import failed – the file is not one of ours.' }
     await nextTick()
     expect(
-      wrapper.findAll('.error').filter((p) => p.text() === sentence).length,
+      // T7.0: the store's refusal now ends in its Reload label, inside the element – the sentence is what is counted.
+      wrapper.findAll('.error').filter((p) => {
+        const said = p.text()
+        return (said.endsWith(SAVE_CONFLICT_RELOAD_LABEL) ? said.slice(0, -SAVE_CONFLICT_RELOAD_LABEL.length) : said) === sentence
+      }).length,
       'the store\'s refusal was suppressed by an unrelated save result',
     ).toBe(1)
   })
