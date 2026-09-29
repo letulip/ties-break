@@ -28,6 +28,10 @@ Setup, the benchmarks behind each of those rules, and the measured failure modes
 [docs/context/graphify.md](docs/context/graphify.md).
 
 
+## Token discipline (29.09)
+
+Dispatch and session hygiene: [docs/context/token-discipline.md](docs/context/token-discipline.md). Model+effort fixed per step in the plan; every brief carries its §2 block; gates run outside fat agents; a wave closes by writing docs/handoff/.
+
 ## Non-negotiable invariants
 
 **1. The engine never imports the UI.** Zero imports of Vue/Pinia/components anywhere in `src/engine`, `src/worker`, `src/db`, `src/shared`. The worker owns the world; the UI only ever sees `Snapshot`. Every command is re-validated engine-side, so a stale screen cannot corrupt a career.
