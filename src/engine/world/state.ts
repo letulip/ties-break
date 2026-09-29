@@ -86,876 +86,247 @@ import type { AcademySupport } from '../academy'
 //     because no loaded career depends on the historical count being reproducible — each carries
 //     its own position.
 
+// THE SCHEMA VERSION AND ITS LADDER. A bump is CLAUDE.md invariant 3's three-part move: this constant, an APPEND-ONLY step
+// in migrations.ts, a golden fixture – plus its README row, the schema sentence docs/context/saves-and-worker.md checks,
+// the e2e fixtures and the frozen-career peel rung in tests/coachTravelEdgeFixtures.ts (a PRE_Vn constant if no key moves).
+// Versions are taken on ARRIVAL, never booked; a back-fill states what an old save TRULY held and never reconstructs it.
+// The v36-v89 chronicle moved out verbatim, a heading per rung → docs/notes/engine/save-schema-history.md#save-schema-history
+//
+// v36 and v37 → docs/notes/engine/save-schema-history.md#v36-and-v37--the-pro-aer-ledger-and-the-kit-ladder
 // v36 = W2-LADDER's `proEntryWeeks` (the pro AER ledger); v37 = W3-KIT's quality ladder (`world.kit`).
 //
-// ⚠ v38 = W3-ACT2's PENALTY LEDGER (`penalties` + `suspendedUntilWeek`), and it takes the number
-// act2-pro-tour.md §9 had reserved for psyche. The §9 renumbering («v36 = W2-LADDER, v37 = endings,
-// v38 = psyche») was written before W3-KIT and the endings wave landed in a different order, so the
-// reservations had already drifted by one; versions are allocated on arrival, not booked, and the
-// append-only migration ladder is what makes that safe. Endings and psyche take the next free
-// numbers when they ship.
-// ⚠ v40 = ONE FIELD, `careerTotals.weeksLostToInjury` – the monotone total of weeks her body has
-// spent off court (docs/specs/fatigue-injury-audit-2026-08.md §6). It exists because
-// `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
-// the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
-// end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-// ⚠ v45 = ONE FIELD, `seasonEntries` – the season's entry ledger, and it is v40's argument arriving on
-// a different ledger. `world.results` prunes at 52 weeks, so "could a title at this rung have entered
-// the book she held that week" is unanswerable three weeks after the fact; the wrap-up needs it a year
-// later. So it is captured in the branch that commits the entry, exactly as `weeksLostToInjury` is
-// counted in the branch that ends a layoff (docs/specs/season-mirror-2026-08.md). Pure state, zero
-// draws on any stream – the frozen MAIN capture cannot see it either.
-// ⚠ v46 = ONE FIELD, `seasonHistory[].byTrack` – a finished season told apart by table, and it is a
-// SCHEMA change because it could not be anything else. The Stats screen showed the identical
-// season-by-season table under all three tabs (the owner, twice, most recently 09.08), and no work on
-// that screen could have fixed it: the record carried one rank and three folds, so the tabs had nothing
-// to differ by. What v46 adds is a per-track {endRank?, points, wins, losses} beside them, banked at the
-// wrap-up off ledgers that are about to be pruned or reset. Rows banked BEFORE it carry no per-track
-// figures and none are invented – see the v45 -> v46 step in migrations.ts. Pure state, zero draws on
-// any stream: the wrap folds ledgers that already exist, so the frozen MAIN capture cannot see it.
-// ⚠ v47 = ONE FIELD, `plan.week` – SEVEN DAYS OF SESSION KINDS, and it is the slice where the calendar
-// stops being a drawing of a scalar and becomes the plan (docs/specs/training-dials.md). The owner:
-// «у нас есть расписание недели и на каждый день там идут разные тренировки – это и есть ручки».
-// `train`/`rest` are KEPT and become a projection of the ticked week (4/5/6 sessions -> 60/75/85), so
-// all four engine readers of `plan.train` are byte-identical and the migration is a pure default: a
-// v46 career lays down `sessionsForPlan` days of `general`, which is exactly the week `growWeek` has
-// been running since week one. Pure state, zero draws on any stream. The one BEHAVIOURAL change rides
-// on the same field and is ruled rather than implied – `summerLoadFactor` now follows the doubling
-// instead of the calendar (owner, 10.08: «да»), so a migrated career's school-free weeks come back at
-// 1.0 until he ticks a second session onto a day. See engine/world/summer.ts and the v46 -> v47 step.
-// ⭐ v48 = ONE FIELD, `birthdays` – ONE ROW PER BIRTHDAY, and it is the whole persisted footprint of
-// docs/specs/birthday-and-gifts.md. The week, the age she turned, what she had been asking for and
-// what was chosen. The DIARY reads it; nothing else does – no morale, no condition, no mood modifier,
-// because that system does not exist yet and this slice only lays the ground (owner, 11.08: «мораль и
-// психологи у нас в будущем, так что сейчас можно просто подготовку сделать»). It is a SCHEMA change
-// because it could not be anything else: the choice is a decision the player made, and a decision that
-// evaporates on reload is not one – the same argument that made `knock.choice` v26's only field.
-// ⚠ THE MIGRATION IS A PURE DEFAULT, `[]`, AND THAT IS "no birthdays recorded" RATHER THAN "gave
-// nothing every year". Absent is not zero – the distinction v45 and v46 were both built around, and
-// spec ship rule 5. Zero draws on any stream (the ask rides a purpose-scoped `seed:birthday:<age>`
-// sub-stream and persists nothing), so the frozen MAIN capture cannot see this either.
-// ⚠ AND THE NUMBER IS 48, NOT THE 49 THE SPEC SAYS. The spec was written assuming the flags/grant wave
-// would take 48, but that wave is still documents and nothing has claimed 48 in code – so this takes
-// 48 and docs/plans/wave-flags-grant.md now reserves 49. Two waves must not both take one number.
-// ⭐ v49 = ONE FIELD, `coachOnJuniorEvents` – DOES HE TRAVEL TO THE RUNGS THAT PAY HER NOTHING TOO.
-// The owner, 15.08, asked for the fare gate to become the player's decision rather than the engine's:
-// «делаем тогда», and the model is his own – «По мне игрок сам решает: есть деньги - едет тренер, нет
-// - не едет, или едет, но быстрее банкротится.» So the junior/domestic rungs stop being refused and
-// start being OPT-IN, with no protective gate on the outcome: bankruptcy is the player's own
-// responsibility (his standing ruling), and what is controlled instead is that no support mechanism
-// pays for it (`coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
-// ⚠ 17.08: and at the JUNIOR rungs this field opens, that is still absolute - nothing reaches his
-// seat there, contract included. A sponsor's travel share does now reduce it, but only at the rungs
-// that pay prize money («только для профессиональной лиги»), which is the one place these two fields
-// stay cleanly apart. §2 of that test file is the guard.
-// ⚠ IT IS A SECOND FIELD AND NOT A RETYPING OF `coachOnEventWeeks`, deliberately. A scope union
-// («none | w-series | all») reads cleaner on paper and would have retyped a field persisted since
-// v24 and touched every reader of it; a second optional boolean defaulting FALSE leaves every existing
-// save byte-identical in behaviour and every existing reader untouched. On screen it is a NESTED
-// option, meaningful only while the first is on, which is also what it is: a second, more expensive
-// choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
-// ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
-// number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-// ⭐ v54 = ONE FIELD, `kidFundsCents` – HER OWN BANK ACCOUNT (round-23 #18). The owner: «после
-// появления её счета в банке в 18 начать ей призовые переводить какие-то суммы, например начать с
-// 10-20% и может быть наращивать год к году», capped on his own widening – «может не до 30, а до 40
-// или 50 вообще, это всё-таки ее карьера?». `ECONOMY.kidShare` is the ramp; `finalizeTournament`
-// splits the cheque; the migration back-fills ZERO and invents no history (a career that reached
-// this build has never made a transfer, and re-deriving eight years of them is impossible anyway –
-// `financeWeeks` prunes at sixty weeks). Pure state, zero draws on any stream, so the frozen MAIN
-// capture cannot see it.
-// ⭐⭐⭐ v55 – THE STRANDED REVEAL, CLEARED ON LOAD (round 24, the freeze's hygiene). It is a REPAIR
-// and not a shape: no field is added, removed or renamed. A career that came out of the college
-// freeze holding a `pendingTournament` whose event is no longer on the calendar cannot be played at
-// all, and cannot be RESCUED from inside the app either – `pendingView` returns undefined when
-// `eventById` misses, so the snapshot's `pending` is null, so `TournamentFlow` never mounts, the
-// sticky bar never draws its resume button, and `advanceWeeks` returns 'tournament' with no tick and
-// no toast ('tournament' is deliberately absent from `STOP_REASON_TEXT` because the overlay owns it).
-// Measured on the owner's own w474 save: season 0, results 1, `pendingTournament` 5-w270-wta500
-// finished, `snapshot.pending` NULL. Rules 1-3 stop new careers reaching that state; this is the one
-// door already-broken ones can come back through. See the migration for what it does and does not do.
-// v58 (round 24 #5): `fork.departsWeek` – the college answer RESERVES a place and she departs on the
-// next academic year's September; see the migration and docs/specs/college-departure-2026-08.md.
-// v59 (the travelling team, steps 1+2): `masseurHired` – the first staff seat beyond the coach,
-// pro-career gated, salary + body effect in world/masseur.ts; false for every earlier save (the
-// seat did not exist). ⚠ EXTENDED IN PLACE BY STEP 2 ON THE SAME UNMERGED BRANCH (22.08) – v59 has
-// never reached a player, so append-only does not bind it yet: `masseurSessionsPerWeek` (the
-// owner's sessions dial, 4 = the middle rung for every earlier save) and `masseurTravels` (the
-// travel stance, false – the switch is what buys the seat) ride in the same migration.
-// Rows of `injuryHistory` MAY carry `weeksSaved`, written only when he saved something – absent
-// everywhere in old saves, so nothing is back-filled; `pendingTournament` MAY carry `masseurThere`
-// on a week he made the trip. See docs/specs/the-masseur-2026-08.md.
-//
-// ⭐⭐⭐ v60 (round 26 #6, THE COLLEGE LEAGUE IS WALKED AND NOT REPORTED): `CollegeState.leagueReveal`
-// – two numbers saying where the player is in the championship's reveal. The owner had asked for
-// this once already («Я уже просил это сделать»), and round 25 answered it with a summary line plus
-// replay buttons on a card, which is exactly «сообщили постфактум». The reveal makes the year STOP
-// on the championship week, the way a tour week stops, and `TournamentFlow` walks it.
-// ⚠ NULL FOR EVERY EARLIER SAVE AND NOTHING IS BACK-FILLED: a championship already lived is not
-// re-offered, so a career mid-freeze resumes with no reveal open and its NEXT year's gets one.
-//
-// ⭐⭐⭐ v61 (round 26 #2 second pass, THE HOME UNIVERSITY EXISTS EVERYWHERE): `CollegeQuote.open` is
-// REMOVED – the first field this ladder has ever deleted rather than added. The owner, having asked
-// twice why the cheapest place was refused: «по-моему в каждой стране есть домашний универ». The
-// boolean was false on one rule – the in-state price IS US residence – and that rule shut the rung in
-// 23 of the 24 playable countries, on a choice made at onboarding ~440 weeks earlier. He overruled
-// the rule, so the field goes with it: an always-true boolean would leave the next reader believing a
-// place can be shut and the next edit able to shut one.
-// ⚠ THE MIGRATION IS NOT COSMETIC. A career sitting on an unanswered fork carries `state: {open:
-// false}`, and `answerFork` filtered on it – so the card would have drawn the home row pressable and
-// the engine would have quietly enrolled her at the next place up, $20,000 a year dearer. Deleting
-// the key and deleting the filter are one fix in two places.
-//
-// ⭐⭐⭐ v62 (the long goodbye, step 1): `peakPhysical` – the best her body has ever been, as one
-// number, kept as a running maximum by the growth phase. Written every tick and READ BY NOTHING YET;
-// docs/specs/the-long-goodbye-2026-08.md §3b is what it is for (the last retirement offer will land
-// on a share of HER OWN PEAK instead of on her 38th birthday, so that a body kept well plays to 41
-// and a wrecked one finishes early).
-// ⚠ IT HAD TO BE STATE, and §3b says why the obvious alternative is wrong: reading her current
-// physical against `potential` costs nothing and is already persisted, but a girl who never came
-// near her ceiling would read as finished while still young. The signal is what she actually
-// reached, and nothing in a save remembers that – `growWeek` overwrites `skills` in place.
-// ⚠ AND IT IS RECONSTRUCTED, NOT DEFAULTED, FOR AN EXISTING CAREER. See the migration: seeding
-// "today" would tell a 38-year-old she is at 100% of her peak. Pure state, zero draws on any
-// stream, so the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-// ⭐⭐⭐ v63 (the shop, slice 1): `assets` – WHAT THE FAMILY OWNS THAT IS NOT TENNIS
-// (docs/specs/the-shop-2026-08.md §5). One array, empty on every career that has ever existed, and
-// the ONLY thing this feature persists: the shelf itself is `ECONOMY.shop.catalogue`, a constant, so
-// slices 2-7 can add a rung without a migration.
-// ⚠ THE BACK-FILL IS EMPTY AND THERE IS NOTHING TO RECONSTRUCT – v26's `knock` case rather than
-// v62's `peakPhysical` one. A career that reached this build could not buy anything: there was no
-// shelf, no command and no ledger row, so there is no earlier evidence to mine and an invented row
-// would hand a family a car it never chose. Pure state, zero draws on any stream, so the frozen MAIN
-// capture (41550 / e6b0c709) cannot see it.
-// ⭐⭐⭐ v64 (round 27 #6, THE NATIONS CUP TIE IS WALKED AND NOT REPORTED): `CollegeState.callUpReveal`
-// – a second optional reveal beside v60's `leagueReveal`, back-filling NULL. ⚠ ADDED HERE BY THE
-// MERGE OF 28.08, NOT BY ITS OWN WAVE: PR #112 shipped the field, the migration, the fixture and the
-// README row and left this ladder – the only place that reads as the complete list – one rung short
-// at v63. A ladder with a hole in it is how the next reader picks the wrong number for the next
-// bump, which is exactly what happened on the branch below.
-// ⭐⭐⭐ v65: `fieldSeasonTitles` – WHO WON EACH AI TOURNAMENT. `runAiTournament` has always computed
-// the champion of every canonical bracket and then dropped her on the floor; this is the tally that
-// keeps her. Same family, same lifecycle and same argument as v53's `fieldSeasonPoints` one rung
-// below – a per-season TALLY, not rows – and it is the second half of the same repair: v53 kept what
-// the field EARNED, this keeps what the field WON.
-// ⚠ THE BACK-FILL IS EMPTY AND IT IS A PRESERVATION, exactly as v53's was: every career saved before
-// this build was played on an engine that discarded the champion, so an empty tally is precisely what
-// those seasons contained, and it fills itself from the next tournament week on. Pure post-draw
-// bookkeeping – the finish is already decided when it is read – so zero draws on any stream and the
-// frozen MAIN capture (41550 / e6b0c709) cannot see it.
-// ⚠⚠ AND IT SHIPPED AS v64 ON ITS OWN BRANCH, WHICH IS THE REASON THIS COMMENT NAMES 65. The wave was
-// built off round 28's ledger branch while that branch still read 63, so it did the whole three-part
-// move correctly against the only chain it could see – and `main` had meanwhile taken 64 for the
-// call-up reveal above. Two different v64 schemas existed for a day, and a save written by either
-// could not be read by the other. Renumbered on the merge: the version, the migration's place in the
-// append-only chain, and the golden fixture, all three together.
-//
-// ⚠ v66 = ONE UNION MEMBER, `WorldEventCategory` gains 'business' (round 29 part four P7 – the
-// merch brand's and the academy's weekly income lines, written by `resolveBusinessIncome`). NO
-// field moved and NOTHING is back-filled: the businesses did not exist, so an old save genuinely
-// has no rows of them. The version moves anyway, BY THE v44 PRECEDENT VERBATIM («'facility'… a new
-// member of that union is a schema change by the rule in CLAUDE.md §3, so the version moves») –
-// events and `financeWeeks.byCategory` are persisted, and a v66 save loaded by a v65 build would
-// carry a category that build's union does not know. The round-29 ledger weighed the two zero-cost
-// reuses and refused both: 'income' folds a built business into «the parents' job», and 'academy'
-// already means the scholarship SHE receives – two facts under one name is the defect v44 was cut
-// to end. Full move: this constant, the v65 -> v66 step in migrations.ts, tests/fixtures/saves/
-// v66.json, and the union member's own doc in shared/protocol/events.ts.
-//
-// ⭐⭐ v67 (round 30 #14 and #8/#10 – the fund's UNITS and the brand's / academy's NAME). ⚠ IT IS A
-// RENUMBER RATHER THAN A NEW SLICE OF WORK: both back-fills were written into the v65 -> v66 step
-// above while main still read 65, which was correct at the time and stopped being correct when PR
-// #114 shipped v66. A v66 save – the owner's own, already in play – would have SKIPPED them. The
-// two steps moved out of v66 intact and v66's step is byte-identical to main's; the reasoning, and
-// the rule that keeps the next wave from repeating it, is the header of migrations.ts. Full move:
-// this constant, the v66 -> v67 step in migrations.ts, and tests/fixtures/saves/v67.json.
-//
-// ⭐⭐⭐ v68 (round 31 #10 + #13 – THE AGE CURVE STOPS BEING ONE CURVE). World `+ageCurve`, optional:
-// `{plateauStart, declineStart, injuryFrom}`. A new career resolves it when the fork at nineteen is
-// answered – the direct route peaks 22-26 and declines from 27, college keeps today's 23-28/29 – with
-// a per-career spread drawn off `seed:decline` and the weeks her body has lost pulling it earlier.
-//
-// ⚠⚠ AND THE MIGRATION IS THE POINT OF THE VERSION MOVE RATHER THAN THE PRICE OF IT. The step writes
-// {plateauStart: 23, declineStart: 29, injuryFrom: <weeks already lost>} onto EVERY existing save:
-// today's behaviour exactly, pinned, so the owner's live career (Alice, week 933, 31.7) reads the
-// same decline on the load after the update as on the load before it. The field is optional because
-// `createWorld` does NOT write it – see `WorldState.ageCurve` for why the fork is the honest moment
-// and what that buys the frozen career hashes. Full move: this constant, the v67 -> v68 step in
-// migrations.ts, tests/fixtures/saves/v68.json, and docs/specs/age-curve-fork-and-spread.md.
-//
-// ⭐⭐⭐ v69 (round 32 #4 – THE BRAND STOPS EVAPORATING). World `+brandStrengthSeed`, optional:
-// `{week, value}`.
-//
-// ⚠⚠ AND THE MIGRATION IS THE POINT OF THE VERSION MOVE RATHER THAN THE PRICE OF IT, exactly as v68's
-// was. The brand's WORTH now reads a slow stock instead of this week's fame (`world/brandStrength.ts`),
-// and that stock is DERIVED – nothing is carried week to week. What cannot be derived is «what was
-// this career reading the day before the update», so the step writes {week: <the save's own week>,
-// value: <the fame it holds there>} onto EVERY existing save: today's number exactly, pinned, so a
-// career already in play reads the same brand value on the load after the update as on the load
-// before it, and only the years AFTER it are flattened.
-//
-// ⚠ THE FIELD IS OPTIONAL BECAUSE `createWorld` DOES NOT WRITE IT and no phase of the tick writes it
-// either – a career started after this ships has no pin and derives its whole own history, which is
-// the behaviour a new career should have. See `WorldState.brandStrengthSeed` for the four things that
-// buys, including the one that keeps the eighteen frozen career hashes moving by `schemaVersion`
-// alone.
-//
-// ⚠ IDEMPOTENT and DRAW-FREE. One read of `fameAt` – a fold over records the save already carries –
-// and two literals; no stream is touched on any key, so the frozen capture (41550 / e6b0c709) cannot
-// move. Full move: this constant, the v68 -> v69 step in migrations.ts, tests/fixtures/saves/v69.json,
-// docs/specs/brand-inertia-2026-08.md and docs/specs/collaborations-as-early-fame-2026-08.md.
-//
-// ⭐⭐⭐ v70 (round 35 #14 – THE DRAW BECOMES A FACT). World `+drawnFirstRounds`, optional:
-// `Record<eventId, opponentId>`.
-//
-// HIS COMPLAINT, 03.09: «на неделе перед турниром случилась жеребьевка, мне сказали "играем против
-// №118 шанс 71%", пошел турнир - соперник в первом раунде №76». The draw was stored NOWHERE and was
-// re-derived from live inputs on every read – see `WorldState.drawnFirstRounds` for the whole
-// diagnosis and for why one opponent id is the entire payload.
-//
-// ⚠ THE MIGRATION WRITES AN EMPTY TABLE AND NOT A DRAW, which is a deliberate refusal. Back-filling
-// would mean re-deriving the very thing this item exists to stop re-deriving, on a world whose
-// inputs have already moved; an existing save simply has no draw recorded, its next tick records
-// one, and everything from there on is a fact. Cheap by his own ruling of 03.09 («никто не купил,
-// нет игроков»); what still binds is that every older schema loads, which
-// tests/fixtures/saves/v70.json is the proof of.
-//
-// ⚠ IDEMPOTENT and DRAW-FREE: `save.drawnFirstRounds ??= {}` touches no stream, so the frozen MAIN
-// capture (41550 / e6b0c709) cannot move. Full move: this constant, the v69 -> v70 step in
-// migrations.ts, tests/fixtures/saves/v70.json and tests/round35-draw-fact.test.ts.
-//
-// ⭐⭐⭐ v71 (round 39 #5, REOPENED – A REPEAT BRAND COSTS WHAT A BRAND IS WORTH). World
-// `+brandFounded`, optional boolean: has this career EVER founded a merch brand?
-//
-// HIS COMPLAINT, 08.09: «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его
-// продал. Потом купил новый за 250к, а он снова за несколько недель уже 30+ стоит.» The cycle is
-// sell at the (ramped) worth, re-buy at the flat catalogue price, wait for the ramp – and the
-// re-buy price is the hole. His round-38 law «неизменно для первого открытия стоит 250к» binds the
-// FIRST founding only, so the fix prices a REPEAT founding at the market's current derived worth
-// (`assetEntryPriceCents`) – and «repeat» is a fact the world has to REMEMBER, because the sold
-// brand's row is gone. One flag, written by `buyAsset`, read by the pricing.
-//
-// ⚠ THE MIGRATION GIVES THE BENEFIT OF THE DOUBT, both ways stated: a save that OWNS a merch brand
-// has founded one (his own live career must not re-buy at $250k after the update – the exploit is
-// exactly there), and a save that owns none carries no record of a founding that may or may not
-// have happened, so it keeps the first-founding price. Guessing «founded» from a ledger row would
-// be re-deriving a fact from prose; the flag starts where the facts are.
-//
-// ⚠ IDEMPOTENT and DRAW-FREE: one `some()` over `save.assets` and at most one literal write; no
-// stream is touched, so the frozen MAIN capture (41550 / e6b0c709) cannot move. Full move: this
-// constant, the v70 -> v71 step in migrations.ts, tests/fixtures/saves/v71.json and
-// tests/r39-brand-rebuy.test.ts.
-//
-// ⭐⭐⭐ v72 (THE PRIVATE LIFE, WAVE 1) – THE TWO NUMBERS, AND WHO SHE IS. World `+spirit`, `+bond`
-// and `+temperament`; see the three fields above and `src/engine/spirit.ts` for the rules.
-//
-// ⚠⚠ THE BACK-FILL IS TWO KINDS OF THING IN ONE STEP, and the difference is the whole reason the
-// migration is worth reading. `spirit` and `bond` are back-filled to the literal 70 – UNIFORM,
-// ruling V4, because 70 is where a career starts and there is nothing in an old save to derive a
-// truer number from (and 70 is above the knee, so a migrated career plays byte-identical tennis
-// until something actually moves her). `temperament` is DERIVED, not defaulted and not drawn: the
-// step calls `temperamentFor` – THE SAME exported function `createWorld` calls – on the career's own
-// seed, so a career already in flight turns out to have always been her. A second spelling of that
-// formula would hand a live save a different girl from the one the engine would have drawn, which
-// is the one defect this move exists to make impossible.
-//
-// ⚠ IDEMPOTENT and DRAW-FREE ON MAIN: three `??=` writes gated on `v === 71`, and the only stream
-// touched anywhere is the purpose-scoped `seed:temperament` sub-stream, re-derived at the call site
-// and persisting nothing. The frozen MAIN capture (41550 / e6b0c709) cannot move. Full move: this
-// constant, the v71 -> v72 step in migrations.ts, tests/fixtures/saves/v72.json, and
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-// ⭐⭐⭐ v73 – THE PRIVATE LIFE, WAVE 2: `lifeLog` STOPS BEING OPTIONAL. Wave 1's wire shipped the
-// field behind a `?` so both halves of this wave could build against it before anything wrote a row;
-// step 4 makes it required, back-fills `[]` in an append-only migration and freezes the golden
-// fixture. Back-filling an EMPTY list is the exactly-true answer rather than a bargain struck with a
-// pruned log (v29/v31's shape): a career that predates the layer has lived no beats, because there
-// were none to live. Full move: this constant, the v72 -> v73 step in migrations.ts,
-// tests/fixtures/saves/v73.json, and docs/context/saves-and-worker.md's mechanically-checked
-// schema sentence.
-// ⭐⭐⭐ v74 – THE PRIVATE LIFE, WAVE 3: `loveEpisodes`, SOMEONE EXISTS. World `+loveEpisodes` – one
-// append-only row per attachment, never pruned, and the ACTIVE one is DERIVED from the list rather
-// than stored beside it (`activeEpisode`, world/lifeBeat.ts: the last row with `endedWeek === null`).
-// A romance that begins and ends before the parent knew must survive save and reload intact and
-// surface later as one honest late row – the 09.09 re-cut, review find #5 – which a single nullable
-// slot would have overwritten out of existence. The back-fill is `[]` and it is EXACTLY TRUE in v73's
-// own sense: a career that predates the layer has lived no attachments, because there were none to
-// live. Full move: this constant, the v73 -> v74 step in migrations.ts, tests/fixtures/saves/v74.json,
-// and docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-// ⭐⭐⭐ v75 – THE PRIVATE LIFE, WAVE 4: IT ENDS. World `+spiritShock` – the mark an ending leaves on
-// her while it is still sitting there, `{week, kind}` or null (`docs/plans/life-wave-4-builder-2026-09.md`
-// §2 T1/T3, constants from `docs/specs/who-she-is-2026-09.md` §4). The back-fill is `null` and it is
-// EXACTLY TRUE in v73's and v74's own sense one rung further on: a career that predates the layer
-// carries no live shock, because there was nothing in its past that could have shocked her. T1 ships
-// the SEAT and no writer at all – `rollEnds` is T2 and the shock itself is T3 – so this version is
-// inert by construction, which is all a schema move should ever be, and the frozen careers prove it.
-//
-// ⚠⚠ THE SAME BUMP CARRIES `WorldEvent.lifeKind?` AND THAT FIELD IS OWED NO BACK-FILL, which is said
-// here rather than left for a reader to wonder whether it was forgotten. It is OPTIONAL and purely
-// additive – absent means exactly what every historical row already means, «this row carries no
-// life-kind discriminator», and that is true of every row ever written – and NOTHING writes it before
-// T5, so there is no shape anywhere for a migration to repair. On `WorldEvent.entryRef`'s own rule it
-// would have moved no number at all had it shipped alone; it rides this version because the two land
-// in one commit, not because it needs one.
-//
-// Full move: this constant, the v74 -> v75 step in migrations.ts, tests/fixtures/saves/v75.json, and
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-// ⭐⭐⭐ v76 – THE PSYCHOLOGIST'S YEAR, WAVE 5: THE SEAT, AND HER WALLS. World `+psychologistHired`,
-// `+psychologistRung`, `+psychologistFocus`, `+psychologistFocusSeason`, `+wallsLean` and
-// `+wallsFlipped` – SIX keys in one append (`docs/plans/life-wave-5-builder-2026-09.md` §2 T1, the
-// walls model verbatim from `docs/specs/who-she-is-2026-09.md` §2a). The first four are the staff
-// seat, shaped on v59's masseur block; the last two are the §2a leanings and their hysteresis state.
-// ⭐ AMENDED PRE-MERGE 14.09 – `+peakDomesticPoints` makes SEVEN: the owner's elite-gate ruling
-// («фраза про карьеру, а не про неделю»), added to this SAME unshipped step rather than a v77
-// because no v76 save exists outside this branch; the field's own docblock beside
-// `bestFinishByTier` carries the measurement and the doctrine.
-//
-// ⚠⚠ SIX KEYS IN ONE VERSION, AND THEY ARE TWO DIFFERENT KINDS OF THING RIDING ONE BUMP – said here
-// so the next reader does not look for a single story. The seat is a STAFFING DECISION (hired, at
-// which rung, working on which focus, set in which season); the walls pair is a FACT ABOUT HER that
-// no player ever chooses. They land together because the wave that reads them is one wave and a
-// schema move costs a fixture, a peel rung and ten e2e regenerations whether it carries one key or
-// six – v72's own three-in-one-append precedent, for the same reason.
-//
-// ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT ONE OF THEM IS A BARGAIN, in v73's / v74's / v75's own
-// sense one rung further on. `false` – the seat did not exist, so nobody was ever hired into it.
-// `1` – the DEFAULT rung, meaningless until hired, and the masseur's middle-rung precedent verbatim
-// (v59 back-filled `4` sessions onto careers that had never met a masseur, for the same reason: a
-// dial has to read something and the shipped default is the only non-invented answer). `null` twice
-// – no focus was ever picked, and no season ever held a pick. `{open: 0, reg: 0}` – ZERO IS THE
-// IDENTITY, not a placeholder for one: a leaning of 0 means «expression equals nature», which is
-// exactly what every career that predates the walls has always been. `{open: false, reg: false}` –
-// nothing has flipped, because nothing could have.
-//
-// ⚠⚠ AND THE ZERO BACK-FILL IS WHY A MIGRATED CAREER PLAYS BYTE-IDENTICAL TENNIS. `wallsLean` 0 with
-// nothing flipped makes `expressedTemperamentOf` (engine/spirit.ts) return BIRTH – so every mechanic
-// T7 re-points reads exactly the value it reads today, which is the zero-diff proof T1 ships and T7
-// stands on. Nothing on this tree calls that function outside its own module; the seat has no writer
-// at all (T2), no focus command (T3) and no leaning pass (T7), so this version is INERT by
-// construction, which is all a schema move should ever be, and the frozen careers prove it.
-//
-// Full move: this constant, the v75 -> v76 step in migrations.ts, tests/fixtures/saves/v76.json, and
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-// ⭐⭐⭐ v77 – THE SPOTLIGHT, WAVE 6: WHAT LIVING KNOWN COSTS HER, AND WHAT THE WORLD KNOWS OF HER
-// PRIVATE LIFE. World `+spotlightHabituation`, and FOUR fields on the `LoveEpisode` ROW –
-// `+publicWeek`, `+publicWrong`, `+airedMetWeek`, `+airedEndedWeek`
-// (`docs/plans/life-wave-6-builder-2026-09.md` §2 T1; the model is `docs/specs/who-she-is-2026-09.md`
-// §3c and §3c-bis, the booth's boundary `docs/plans/the-way-she-sounds-2026-09.md` C4).
-//
-// ⚠⚠ THE FIRST SCHEMA MOVE IN THIS LADDER THAT WIDENS A ROW INSIDE A LIST RATHER THAN THE WORLD, and
-// that is the sentence a later reader needs before anything else. v73 added `lifeLog`, v74
-// `loveEpisodes`, v75 `spiritShock`, v76 seven world keys – every one of them a key on `WorldState`,
-// which a top-level `??=` back-fills and a top-level object rest peels. FOUR of this version's five
-// fields live on `LoveEpisode` ENTRIES, so the migration must WALK the list and `??=` each row, and
-// the frozen-career peel had to learn to map over an array
-// (`careerHashAtSchema`'s own «THE PROTOCOL'S FIRST NESTED PEEL» note). Neither is difficult; both
-// are silently skipped by the mechanical habits this ladder built up over thirteen flat versions,
-// which is why the shape is named here rather than left to be discovered.
-//
-// ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT ONE OF THEM IS A BARGAIN, in v73's / v74's / v75's /
-// v76's own sense one rung further on. `spotlightHabituation = 0` – ⭐ ZERO IS THE IDENTITY AND NOT A
-// PLACEHOLDER FOR ONE: it counts «known weeks» she has actually lived toward `habituationFullWeeks`,
-// and a career that predates the spotlight has lived none of them, because nothing was counting and
-// no pressure existed to acclimate to. `publicWeek = null` – the world never learned, and null is
-// that rather than «week 0»; the press did not exist as a mechanic, so no story ever ran. `publicWrong
-// = false` – no story ran, so no story ran wrong; the flag is meaningless while `publicWeek` is null
-// and `false` is the only value that invents no tabloid. `airedMetWeek` / `airedEndedWeek = null` –
-// the booth has never voiced a private fact, because there was no channel for it to voice one
-// through. Not one of the five reconstructs anything: this version is «nothing about her private
-// life was ever public, and she has never lived a week known», written down for the first time.
-//
-// ⚠⚠ AND THAT IS WHY A MIGRATED CAREER PLAYS BYTE-IDENTICAL TENNIS, which is this step's strongest
-// property and the wave's first pin. Every wave-6 mechanic – the five exposure kinds, the pressure
-// term, habituation's growth, both leak streams and the booth's stamp – is gated on `newsStandingOf`
-// (the rank bands, D1 14.09)
-// (T2) or on a non-null `publicWeek` (T6/T7), and at the back-fills NONE of them can fire. T1 ships
-// five seats and NO READER AT ALL: `world/spotlight.ts` is T2, the pressure T3, habituation T4, the
-// fifth focus T5, the leak T6 and the booth channel T7 – so this version is INERT by construction,
-// which is all a schema move should ever be, and the frozen careers prove it on five careers.
-//
-// Full move: this constant, the v76 -> v77 step in migrations.ts, tests/fixtures/saves/v77.json, and
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-// ⭐⭐⭐ v78 – ONE BUMP, THREE CUSTOMERS, which is the owner's own scheduling («41 #22 давай тоже в
-// v78 закинем», 15.09) and the whole economy of a schema move: the ritual costs a fixture, a peel
-// rung and ten e2e regenerations whether it carries one key or six, so three items that each need
-// one thing persisted ride it together. World `+composureBonus`, `+sparringHired`, `+sparringRung`;
-// the ROWS of `world.assets` gain `+entries`.
-//
-//   · round 42 #35 – `composureBonus`. THE ONLY QUANTITY IN THE GAME THAT LIVES ABOVE A ROLLED
-//     CEILING, earned by sustained psychologist work on the nerve focus and lost slowly without it.
-//     Its three numbers are the owner's, verbatim: «+5 потолок, по очку за сезон… 0.2пп за сезон
-//     без этой тренировки». It has to persist because it is earned over seasons and cannot be
-//     re-derived from anything the save already holds – weeks hired are not enough, since the focus
-//     can change under a standing hire, and `psychologistFocusSeason` is a STAMP rather than a
-//     tenure (its own docblock refuses exactly that proxy, one field group down).
-//   · round 41 #22 – `OwnedAsset.entries`. The fund chart's purchase marks; the field's own block in
-//     shared/protocol/profile.ts carries the argument, and it is the reason this version's step
-//     walks the ROWS of a list as well as the keys of the world.
-//   · round 42 #45 / item 19 – `sparringHired` and `sparringRung`. ⚠⚠ THE KEYS ONLY, AND NOTHING
-//     READS THEM ON THIS TREE, AND THE SEAT DID NOT LAND IN THIS ROUND EITHER. ⚠⚠ Round 42 bundle
-//     13 STOPPED on two missing things and was right to: `world.form` does not exist (the RHYTHM
-//     channel the seat's whole effect cuts ships in wave F1, which never shipped – `git grep
-//     rustAfterWeeks -- src` is empty), and the owner's 15.09 travel override needs a third key,
-//     `sparringTravels`, which v78 was scoped before he gave. So a seat built on these two would
-//     have cut a drift that does not drift. The keys stay because they are correct and append-only
-//     migrations are forever; the seat lands with F1 and with its travel key, in its own version.
-//
-// ⚠⚠ AND THE FOUR ARE THREE DIFFERENT KINDS OF THING, named so the next reader does not look for one
-// story: `composureBonus` is a FACT ABOUT HER that the parent's spending earned; `entries` is a
-// LEDGER OF WHAT THE FAMILY DID; the sparring pair is a STAFFING DECISION nobody can make yet. v76's
-// seat-plus-walls append is the precedent for riding one bump, for the identical reason.
-//
-// ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT ONE IS A BARGAIN – v73/v74/v75/v76/v77's discipline one
-// rung on. `composureBonus = 0` – ⭐ ZERO IS THE IDENTITY AND NOT A PLACEHOLDER: the bonus is «how
-// far above her rolled ceiling the psychologist's years have carried her», and a career that
-// predates the mechanic has been carried nowhere, because there was no mechanic to carry it. At 0
-// the effective ceiling IS `potential.composure` and `growWeek` is byte-identical – see
-// `composureCeilingOf`. `sparringHired = false` – the seat did not exist, so nobody was hired into
-// it. `sparringRung = 1` – the DEFAULT rung, meaningless until hired, which is v59's masseur dial
-// and v76's psychologist rung quoted rather than re-argued. `entries = []` – «this career recorded
-// no purchases», which is what a save written before the road existed is.
-//
-// ⚠ ONE OF THE FOUR IS NOT INERT, AND THAT IS THE DIFFERENCE FROM v75/v76/v77. Those shipped seats
-// with no reader at all. `composureBonus` ships WITH its reader (`composureCeilingOf`,
-// `composureBonusAfterWeek`, and the two new `growWeek` arguments), because a bonus nobody can earn
-// is not a testable claim. What keeps the frozen careers honest instead is that the bonus can only
-// move on a week the psychologist is working the `'coolhead'` focus, and no frozen career ever hires
-// him – `walkFrozenCareer` already asserts `psychologistHired === false`. So the mechanic is
-// unreachable in every one of them, which is a property the peel rung MEASURES rather than assumes.
-//
-// Full move: this constant, the v77 -> v78 step in migrations.ts, tests/fixtures/saves/v78.json,
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e fixtures.
-// ⭐⭐⭐ v79 – THE CHEMISTRY WAVE C1, AND THE KEY #48 HAS BEEN WAITING FOR SINCE v78 WAS SCOPED.
-// `docs/specs/the-chemistry-2026-09.md` §10: one bump, two customers. World `+coachPairs`,
-// `+sparringTravels`.
-//
-//   · the chemistry wave C1 – `coachPairs`. ⭐ ONE KEY WITH THREE NUMBERS AND NOT THREE PARALLEL
-//     MAPS, which is the spec's own §10 warning: all three are facts about one PAIR, written on the
-//     same week by the same pass, and three maps keyed on the same coach id would be three chances
-//     for them to disagree about who exists. The pair has to persist because it is PATH-DEPENDENT –
-//     the first draft of the spec said the rate «is not persisted at all: it is a pure function of
-//     (seed, coachId)» and that stopped being true the moment the rate started moving with results
-//     and with her state. ⚠ WHAT IS STILL PURE IS THE AFFINITY: `affinityFor` is drawn from
-//     `(seed, coachId)` and nothing else, so it is re-derived at every call site and stored nowhere,
-//     and that is the half which keeps «every variation reproducible» true. The roster's drawn
-//     `manner` and `style` are not persisted either, for the same reason – `buildCoachRoster` was a
-//     pure function of `(seed, ageYears)` before this wave and is still one after it.
-//   · round 42 #48 – `sparringTravels`. THE THIRD SPARRING KEY, and the one v78 was scoped before
-//     the owner gave it («у остальных есть галочка ездит», 15.09). v78's own block names its absence
-//     as one of the two reasons the seat did not land in that round; it rides here because it costs
-//     this version nothing – a boolean and a `??= false` – and because the alternative is a schema
-//     move of its own for one field. ⚠⚠ AND IT IS STILL KEYS-ONLY: nothing on this tree reads any of
-//     the three sparring fields, the seat lands with wave F1, and a reader who finds an unused key
-//     here is reading a SCHEDULING decision and not a half-built feature. v78 said that about two
-//     keys; this version says it about the third.
-//
-// ⚠⚠ ONE OF THE TWO IS NOT INERT, AND THE OTHER IS – the same split v78 had, named so the peel rung
-// is not asked to prove the wrong thing. `sparringTravels` has no reader at all. `coachPairs` ships
-// WITH its reader (`accrueChemistry` in the weekly tick, and `coachFactor`'s new third argument),
-// because a relationship nobody can accrue is not a testable claim. ⚠ SO THE FROZEN CAREERS MOVE,
-// and they move for a REASON rather than by a key append: every one of them hires a coach, so every
-// one of them now has a relationship. That is a behaviour change, it was diffed per key before it
-// was believed (`tools/frozen-key-diff.ts`, control = this wave's own change neutralised in place),
-// and the constants are re-stamped with the dated note the protocol asks for.
-//
-// ⚠ `standing` IS WRITTEN AND NEVER READ, which is v78's sparring pair one version on and is said
-// here for the same reason it was said there: it is wave C2's (spec §4 – the coach's own tier climbs
-// with her results), all three numbers are written by one pass on one week, and splitting the key to
-// keep an unread field out of it would have bought nothing and cost the guarantee above.
-//
-// ⚠ `standing` STORES THE SCORE AND NOT THE TIER (spec §10), so the rung is always a pure function
-// of it and a threshold retune moves every save at once instead of stranding careers at a rung that
-// no longer exists.
-//
-// Full move: this constant, the v78 -> v79 step in migrations.ts, tests/fixtures/saves/v79.json,
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
-// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v80 – WAVE F1, `world.form`. `docs/specs/the-form-and-the-sparring-2026-09.md` §6: ONE key,
-// ONE customer, and the version the three sparring keys have been waiting for since v78.
-//
-//   · `form` – tenths, 0-centred, clamped [-10, +10], back-fill **0 = neutral**. 0 is the IDENTITY
-//     AND NOT A PLACEHOLDER FOR ONE (v77's `composureBonus` rule, quoted): at 0 `formComposureDelta`
-//     returns an exact 0, `kidMatchPlayerFor` takes its untouched early return, and every migrated
-//     career and every stored replay is byte-identical until something actually moves her.
-//
-// ⚠⚠ IT IS NOT INERT, AND SAYING SO IS HALF THE MOVE. v78 and v79 each shipped keys with no reader;
-// this one ships WITH its reader (the weekly pass in `world/phaseHerWeek.ts`, and `composureEff` at
-// `MatchPlayer` build time), because a slump nobody can feel is the decorative mechanic round 42
-// found twice. ⚠ SO THE FROZEN CAREERS MOVE, and they move for a REASON rather than by a key
-// append: every frozen career plays matches and has gaps, so every one of them now carries form into
-// its own results. That is a behaviour change, it was diffed per key before it was believed
-// (`tools/frozen-key-diff.ts`, control = this wave's own change neutralised in place), and the
-// constants are re-stamped with the dated note the protocol asks for.
-//
-// ⚠ AND THE SEAT'S THREE KEYS FINALLY GAIN THEIR READER IN THE SAME WAVE, with NO key of their own:
-// `sparringHired` / `sparringRung` (v78) and `sparringTravels` (v79) are read by `world/sparring.ts`
-// from this version on. F2 checked before it bumped and needed nothing – which is what those two
-// versions' «a reader who finds an unused key here is reading a SCHEDULING decision» was promising.
-//
-// ⚠ `seed:form:<week>` STAYS RESERVED AND UNUSED (O4). Zero draws anywhere in this wave, so the
-// frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
-//
-// Full move: this constant, the v79 -> v80 step in migrations.ts, tests/fixtures/saves/v80.json,
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
-// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v81 – ROUND 44, `LifeBeatRecord.frame`. `docs/specs/the-frame-pool-2026-09.md`'s third
-// mechanical ruling, and it is the only one of the three that costs a schema version.
-//
-//   · `frame` – the id of the delivery frame a `'small-talk'` beat was raised in (`'kettle'`,
-//     `'call-late'`), on the ROW and not on the world. **Optional, never back-filled**, and the
-//     ABSENCE is a true statement about every older row: nothing drew a frame before this version.
-//
-// ⚠⚠ WHY IT IS STATE AT ALL, WHICH IS THE WHOLE ARGUMENT. His rule, 17.09: a frame may not change
-// after a save, a reload, **or the pool growing**. A frame DERIVED from a purpose-scoped stream keyed
-// on the career week survives a save and a reload perfectly – the key is reconstructible for the life
-// of the career – and it cannot survive the third: a pool that grows from nine lines to ten
-// re-derives a different member for a beat already on the screen. That third clause is the whole of
-// the difference between this key and `heard` one field over, which took no bump for exactly the
-// reason this one needs one.
-//
-// ⭐ AND THE FALLBACK IS WHAT KEEPS THE MIGRATION TRIVIAL. A row with no frame renders the FIRST line
-// of its presence's pool, and `kettle` / `call-middle` are exactly the two frames the shipped
-// catalogue wrapped `practice-clicked` in – so a small-talk row already sitting in a save reads back
-// byte-identically to what it showed on the week it was raised. Nothing historical is re-worded.
-//
-// ⚠⚠ THE FROZEN CAREERS MOVE, AND NOT BECAUSE OF THIS KEY. The round also lands the 43-situation
-// corpus, so the POOL a career draws from grows from 8 situations to 51 and every `lifeLog` row's
-// `detail` changes with it. That is a behaviour change, it was diffed per key before it was believed
-// (`tools/frozen-key-diff.ts`, control = this round's own change neutralised in place), and the
-// constants are re-stamped with the dated note the protocol asks for.
-//
-// ⚠ ZERO MAIN DRAWS. The frame is drawn on `seed:smalltalk:frame:<week>` – a purpose-scoped
-// sub-stream re-derived at the call site, persisting nothing – so the frozen MAIN capture
-// (41550 / e6b0c709) is untouched by construction.
-//
-// Full move: this constant, the v80 -> v81 step in migrations.ts, tests/fixtures/saves/v81.json,
-// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
-// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v82 – ROUND 42 #51 / ROUND 44, `coachDeal`. THE AGREED WEEKLY FIGURE, WRITTEN DOWN
-// (docs/specs/the-coachs-raise-2026-09.md). The owner, 17.09: «"зафиксировать при найме и пусть
-// просит, как массажист" – верно».
-//
-//   · `coachDeal` – the contract with the man currently on the payroll: his agreed LABOUR rate, the
-//     week it was struck, the marks the next ask is judged against, and the residual banked since.
-//     `null` for a self-coaching family, which is what every historical save honestly is.
-//
-// ⚠⚠ WHY IT COULD NOT BE DERIVED, WHICH IS THE ONLY QUESTION THIS KEY HAD TO ANSWER. The masseur's
-// own ask took no schema at all (`docs/specs/the-masseurs-ask-2026-09.md` §1): his rate is a pure
-// function of WEEKS SERVED, and the weeks are summed off tagged ledger rows `pruneEvents` never
-// touches. The coach's is not. A fee that is fixed AT HIRE is by definition a fact about the moment
-// it was fixed, and the market it was fixed in has moved since - her age band, her ranking and
-// therefore the whole of `bandedRateCents` - so there is no function of today's world that returns
-// it. `coachSinceWeek` is still derived, and this key deliberately does NOT duplicate it.
-//
-// ⚠ THE BACK-FILL IS `null` AND THE MIGRATION WRITES A LITERAL, which is the house rule on
-// `migrations.ts` kept rather than argued around. `null` is TRUE of every save ever written: nobody
-// has agreed a figure in writing, because there was nowhere to write one. The first tick after the
-// upgrade settles a deal for a family that already has a coach (`settleCoachDeal`), and it dates it
-// from `coachSinceWeek` - the ledger's own record of when the arrangement began - so a migrated
-// career's first anniversary arrives on the schedule it always had.
-//
-// ⚠⚠ THE FROZEN CAREERS MOVE ON SEVEN KEYS AND NOT ONE, AND THE PREDICTION THAT SAID OTHERWISE WAS
-// WRONG AND IS RECORDED AS SUCH. The build predicted a pure key append – «156 weeks ends inside
-// `coachAgeBand` 0 with no WTA rank, so the agreed labour equals the market's and no ask can fire» –
-// and the per-key diff the protocol demands BEFORE the constants are touched said otherwise on four
-// of five cells. The prediction was off by ONE WEEK: `ageAtWeek` returns whole years, she turns 17 at
-// week 156 exactly, and `walkFrozenCareer`'s last tick runs AT 156. So the final week of every
-// coached frozen career crosses an age band – where the shipped till re-drew the man's rate from a
-// dearer row and this one does not – and week 156 is also `3 x 52`, an anniversary, so the ask fires
-// on it too. `careerTotals`, `events`, `financeWeeks`, `fundsCents` and `nextEventId` move with the
-// bill and the row; the self-coached cell moves on `coachDeal` and `schemaVersion` alone.
-//
-// ⭐ THE DIFF IS WHY THIS IS A SENTENCE RATHER THAN A SURPRISE. A re-stamp done on the prediction
-// would have re-frozen a BEHAVIOUR change under a comment claiming a key append, which is the exact
-// defect that file exists to catch. The full per-key table and `rngMain`'s three canonical
-// fingerprints (unmoved) are in the dated block at the head of tests/coachTravelEdgeFixtures.ts.
-//
-// ⚠ ZERO MAIN DRAWS. The ask is a weighted mean over state the tick has already written, the score
-// draws nothing, and the fee is integer arithmetic - so the frozen MAIN capture (41550 / e6b0c709)
-// is untouched by construction.
-//
-// Full move: this constant, the v81 -> v82 step in migrations.ts, tests/fixtures/saves/v82.json,
-// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
-// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
-// tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v83 – THE WEDDING, WAVE 7 (life/wave-7 T1; `docs/plans/life-wave-7-builder-2026-09.md` §2,
-// the design `docs/plans/the-wedding-and-the-children.md` §1). NOTHING ON THE WORLD, AND TWO FIELDS
-// ON EVERY `LoveEpisode` ROW – v77's shape, one wave on:
-//
-//   · `latchedWeek: number | null`  – the week the wedding happened on THIS episode. The latch
-//     lives ON THE ROW and never as a global boolean (the 11.09 re-shape, on the owner's own
-//     «а свадьба может быть у нас не одна, кстати?»): a marriage is a property of one episode, a
-//     divorce (if ever built) is an ending on a latched episode, and a second wedding is the same
-//     machinery on a later row – zero migrations later. Back-fill null: no career has ever reached
-//     a wedding, because until this version there was no wedding to reach.
-//   · `partnerName: string | null`  – written ONCE at the engagement beat by `partnerNameFor`
-//     (drawn on `seed:life:partner-name:<episodeId>`, persisted, never re-derived at read – a later
-//     pool edit must never rename a husband an old career already has). Back-fill null: nobody was
-//     ever named, and readers fall back to the unnamed phrasing they use today.
-//
-// ⚠⚠ THE MIGRATION WALKS `loveEpisodes` AND `??=`s EACH ROW – v77's nested peel is the precedent,
-// and its standing note in migrations.ts binds here too: the golden corpus could not witness a
-// per-row back-fill until THIS version, whose own fixture (v83.json) is the first golden save that
-// HOLDS episode rows. The crafted witness is tests/wave7-wedding-schema.test.ts.
-//
-// ⚠ THE `'wedding'` MILESTONE MEMBER RIDES THIS SAME BUMP (T3's album entry) – a new persisted
-// union member is a schema change by invariant 3 (the v44 'facility' / v66 'business' precedent),
-// and it ships inside this version rather than costing a second one.
-//
-// ⚠ ZERO MAIN DRAWS ANYWHERE IN THE WAVE. The hazard is `seed:life:wedding:<week>`, the name is
-// `seed:life:partner-name:<episodeId>` – purpose-scoped sub-streams, re-derived at the call site,
-// persisting nothing – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
-// The frozen careers are predicted IDENTITY in behaviour: 156 weeks never reaches 23, so no wedding
-// hazard, no beat, no name and no cost can fire there – the per-key diff moves on `schemaVersion`
-// everywhere and on `loveEpisodes` only where a row exists to gain the two null fields
-// (`eliteGrinder`, v77's own witness cell).
-//
-// Full move: this constant, the v82 -> v83 step in migrations.ts, tests/fixtures/saves/v83.json,
-// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
-// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
-// tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v84 – THE ALBUM's ONE SCHEMA MOVE (docs/specs/the-album-2026-09.md §3, his ruling of 19.09 –
-// path (а): «хорошо бы, чтобы в финальный альбом что-то оттуда попадало тоже вообще. Первый раз на
-// корте, первый турнир и/или победа»). ONE key on the world:
-//
-//   · `prologueTrace: PrologueTrace | null` – the compact slice of the childhood's own `PrologueRun`
-//     (`picks`, `entries`, `opens`; the origin stays on the profile, where it already lives),
-//     written ONCE at the handover by `createWorld` from the handover's optional `trace` and by
-//     nothing else – not a migration, not any phase of the tick. The prologue threw this away at the
-//     handover until now (the spec's own grep: no narrative trace anywhere), and the album's first
-//     chapter cannot be written out of nothing.
-//
-// ⚠⚠ THE BACK-FILL IS `null` AND IT IS EXACTLY TRUE RATHER THAN A BARGAIN – his own word on the
-// missing history: «это не страшно». No save written before this version walked a childhood whose
-// record survived the handover, and a wizard career never walks one at all; for both, «no record»
-// is the complete statement, and the album's first chapter honestly does not exist for them. The
-// tempting reconstruction (re-deriving a run off the career's seed) is refused for `form`'s own v80
-// reason: the run is the PLAYER's walk, not a function of the seed, and no function of today's
-// world returns the cards he answered.
-//
-// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE. The migration writes one literal; the writer copies a wire
-// value; the album that reads it draws only on the purpose-scoped `seed:album:flavour:<sheet>`
-// sub-stream at assembly time, re-derived at the call site and persisting nothing – so the frozen
-// MAIN capture (41550 / e6b0c709) is untouched by construction. The frozen careers move on
-// `schemaVersion` and the new key alone: `walkFrozenCareer` builds its worlds with no prologue, so
-// every cell carries `null` – a pure key append, `PRE_V84` in tests/coachTravelEdgeFixtures.ts
-// asserts the verbatim v83 constants come back off the peel.
-//
-// Full move: this constant, the v83 -> v84 step in migrations.ts, tests/fixtures/saves/v84.json,
-// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
-// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
-// tests/coachTravelEdgeFixtures.ts. The non-null shape's witness (the corpus cannot hold one – a
-// walked probe skips the prologue) is tests/album-trace-schema.test.ts, through the real writer.
-// ⭐⭐⭐ v85 – THE PREGNANCY AND THE RETURN, WAVE 8 T1 (`docs/plans/life-wave-8-builder-2026-09.md`
-// §2 T1; the design `docs/plans/the-wedding-and-the-children.md` §5, steps W3+W4). TWO keys on the
-// world and ONE union widened – and, after gate 2, a THIRD key, whose own block sits below these:
-//
-//   · `pregnancy: PregnancyState | null` – the one she is carrying, or nothing. `null` is the state
-//     of every career that is not expecting, which on this tree is every career there is: T1 ships
-//     the seat and NO WRITER AT ALL (the hazard is T2's, the pause T3's, the birth T4's).
-//   · `children: ChildRecord[]` – the born, append-only, one row per birth. Empty is the state of
-//     every career that has had none. It is on the world rather than on the pregnancy because a
-//     birth must land somewhere the week it happens and the pregnancy that produced it is cleared
-//     the same week (§0's own delta): W5 then READS the array and appends fields to the row if it
-//     needs them, its own append-only move, where a birth recorded only on `pregnancy` would make
-//     W5's migration re-derive children from episode history.
-//   · `spiritShock.kind` widens `'breakup'` -> `'breakup' | 'postpartum'`. The build plan's step-7
-//     row reserved exactly this widening and the field's own note predicted it in as many words
-//     («a union with one member today, on purpose, and the roster is the place the second one gets
-//     noticed»). TYPE-LEVEL ONLY, WITH NO DATA TO MIGRATE: no save can hold `'postpartum'`, because
-//     nothing has ever written it – T4 is the only writer the kind will ever get.
-//
-// ⭐⭐⭐ AND A THIRD KEY, ADDED TO THIS SAME VERSION AFTER GATE 2 (20.09, the architect's ruling –
-// task T2½ piece 1). `comeback: ComebackState | null` – the week she came back and the freeze she
-// came back with:
-//
-//   · T6 needs BOTH facts persisted and NEITHER is derivable. `protectedRank.entriesLeft` counts
-//     down as she spends her twelve entries, so it is mutable state; `returnedWeek` is the staged
-//     factor's only argument and nothing in the world records it (`dueWeek` is the BIRTH, and the
-//     decision lands anywhere inside a 20-week window after it).
-//   · IT CANNOT LIVE ON `pregnancy`, for a reason §0 states as a REQUIREMENT: «this wave builds the
-//     machinery so re-entry is free», and T2's gate refuses while a pregnancy exists – so the record
-//     must be CLEARED at the return for W5's repeat pregnancy to be possible at all. State that
-//     outlives the pregnancy cannot live on the pregnancy.
-//
-// ⚠⚠ WHY v85 GREW RATHER THAN v86 ARRIVING, and it is the one argument that licenses this: NOTHING
-// HAS SHIPPED. v85 exists only on `life/wave-8`, no save in the world holds it, and §0's «this wave
-// takes 85» – the sentence the owner read – stays true. ⚠ AND THIS IS THE LAST KEY v85 TAKES: the
-// architect walked T3–T11 against T1's shape and this was the only gap, so a second one is a STOP
-// and a question rather than a fourth key. A version that grows twice is a version nobody can reason
-// about.
-//
-// ⚠⚠ THE BACK-FILL IS `null` AND `[]`, AND BOTH ARE EXACTLY TRUE RATHER THAN BARGAINS. This is
-// `loveEpisodes`'s v72 argument and emphatically NOT `prologueTrace`'s v84 one a paragraph up: there
-// is nothing here that a reconstruction is even TEMPTED by. No save written before this version
-// could hold a pregnancy or a child, because there were none to hold – the mechanic arrives with
-// this version – so «not expecting» and «no children» are the complete statement about every career
-// in the corpus, and no evidence anywhere in a save could say otherwise.
-//
-// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE. The migration writes three literals and reaches no stream at
-// all; the wave's own draws, when its later tasks land, live on `seed:life:pregnancy:<week>` and
-// `seed:life:return:<week>` – purpose-scoped sub-streams re-derived at the call site, persisting
-// nothing – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. The frozen
-// careers are predicted and MEASURED IDENTITY: `walkFrozenCareer` runs 156 weeks from the start, the
-// girl never reaches 23, and in any case no writer exists on this tree for any of the three, so
-// every cell carries `null`, `[]` and `null` – a pure key append, and `PRE_V85` in
-// tests/coachTravelEdgeFixtures.ts holds the verbatim v84 constants off the peel. RE-MEASURED for
-// the third key, never assumed: the per-key diff was taken again on the untouched tree before
-// `comeback` was written.
-//
-// Full move: this constant, the v84 -> v85 step in migrations.ts, tests/fixtures/saves/v85.json,
-// its row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's
-// mechanically-checked schema sentence, the e2e fixtures, and the frozen-career peel rung in
-// tests/coachTravelEdgeFixtures.ts. The non-null shape's witness is tests/wave8-pregnancy-schema.test.ts,
-// which crafts one – the corpus CANNOT hold one and will not until T11 regenerates the e2e fixtures
-// over a tree that has writers.
-//
-// ⭐⭐⭐ v86 (THE DYNASTY, WAVE 10 T1/T2 – docs/specs/the-dynasty-2026-09.md §3): ONE KEY,
-// `dynasty`, back-filled `null`. His ask, 11.09: «в конце карьеры можно сделать хук на новую
-// карьеру через ребенка, например»; his go for the wave, 22.09.
-//
-// ⚠⚠ THE BACK-FILL IS `null` AND IT IS EXACTLY TRUE, which is v85's argument one paragraph up and
-// not v84's: EVERY SAVE IN THE WORLD IS A GENERATION-ZERO CAREER, because there was no way to create
-// any other kind until this version. «This career began no line» is the complete statement about all
-// of them, and nothing in a save could say otherwise.
-//
-// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE, and this version adds NO MAIN DRAW ANYWHERE IN THE WAVE – the
-// frozen capture (41550 / e6b0c709) is predicted UNMOVED for the whole of wave 10 (§8 row 5), and if
-// it moves something is wrong rather than something is new. The one draw the dynasty touches at all
-// is `seed:temperament`, whose COUNT does not move either: §7's lean re-maps two picks it does not
-// add to (`temperamentFor`, T3).
-//
-// ⚠⚠ BUT THE FROZEN CAREERS ARE **NOT** AN IDENTITY THIS TIME, unlike v85's, and the difference is
-// worth naming rather than discovering: `dynasty` joins `createWorld`'s literal, so the LIVE
-// serialisation of every walked career gains a key and every live register re-stamps. The ROLLBACK
-// rungs all hold – `careerHashAtSchema` peels the key ahead of v85's three – and `PRE_V86` therefore
-// holds the verbatim v85 constants, character for character, which is the receipt for «a pure key
-// append» rather than a sentence claiming one.
-//
-// Full move: this constant, the v85 -> v86 step in migrations.ts, tests/fixtures/saves/v86.json, its
-// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
-// schema sentence, the e2e fixtures, and the frozen-career peel rung in
-// tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v87 (THE WEIGHT, WAVE 11 T1 – docs/specs/the-weight-2026-09.md §1/§2): THREE KEYS ON THE
-// WORLD AND ONE FIELD ON THE PREGNANCY RECORD. The layer's last step, and the first version in this
-// ladder whose headline key is a SWITCH rather than a seat.
-//
-//   · `weightEnabled: boolean` – the off switch, RULED 22.09 ahead of the build: «only for the
-//     weight, set at new-career creation (the creation flow ASKS), changeable both ways in settings
-//     later; turning it off stops NEW weight events and never deletes lived state».
-//   · `pregnancyLossWeeks: number[]` and `bereavementWeeks: number[]` – append-only week lists, the
-//     `children` precedent one version down: a loss clears the pregnancy record and a death writes
-//     no record at all, so a week recorded only on the thing that ends is a week recorded nowhere.
-//     The bereavement's SPACING and CAP read the second list and never a derived guess.
-//   · `PregnancyState.conceivedWeek` – the hidden window's one persisted number (§2), on the record
-//     rather than on the world for `dueWeek`'s own law: it is the clock a live pregnancy is already
-//     being carried on, and a later retune may not move it.
-//
-// ⚠⚠ THE BACK-FILL IS **`false`** FOR THE SWITCH, AND IT IS A RULING RATHER THAN A DEFAULT (22.09,
-// question 1): «nobody asked a migrated save at creation, and the weight does not arrive uninvited
-// in a career's middle. The settings row is the door for a player who wants it.» ⚠ THIS IS THE FIRST
-// BACK-FILL IN THE LADDER THAT IS NOT THE MECHANIC'S OWN IDENTITY – `createWorld` writes what the
-// creation ask answered, which is a different value from what the migration writes, and that
-// asymmetry is the ruling and not a defect. v86's own block is the contrast: there the literal and
-// the back-fill agree «for the same reason rather than by coincidence».
-//
-// ⚠ THE TWO LISTS BACK-FILL `[]` AND THAT ONE **IS** EXACTLY TRUE – `children`'s v85 argument
-// verbatim: no save written before this version could hold a loss or a bereavement, because there
-// were none to hold. `conceivedWeek` back-fills onto any live pregnancy as its `announcedWeek`,
-// which is the PRE-WINDOW TRUTH: before this version the announcement WAS the conception (the
-// research's finding about `termWeeks: 31`), so the back-fill states what that save actually means
-// rather than reconstructing a window it never had.
-//
-// ⚠ ZERO DRAWS ANYWHERE IN THE MOVE: three `??=` on three world keys plus one `??=` inside a
-// nullable record, gated on `v === 86`, writing literals. No sub-stream is reached on this path, so
-// MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched by construction.
-// `spiritShock.kind`'s widening to `'breakup' | 'postpartum' | 'loss' | 'bereavement'` rides this
-// same version and needs NO step at all – v85's own sentence, twice over: adding a union member
-// cannot invalidate a stored value, and nothing has ever written either new one.
-//
-// ⚠⚠ AND THE FROZEN CAREERS ARE **NOT** AN IDENTITY, v86's case and not v85's: all three keys join
-// `createWorld`'s literal, so the LIVE serialisation of every walked career gains them and every
-// live register re-stamps. The ROLLBACK rungs hold – `careerHashAtSchema` peels the three ahead of
-// `dynasty` – and `PRE_V87` therefore holds the verbatim v86 constants, character for character,
-// which is the receipt for «a pure key append» rather than a sentence claiming one.
-//
-// Full move: this constant, the v86 -> v87 step in migrations.ts, tests/fixtures/saves/v87.json, its
-// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
-// schema sentence, the e2e fixtures, and the frozen-career peel rung in
-// tests/coachTravelEdgeFixtures.ts.
-// ⭐⭐⭐ v88 – THE PARTING (docs/specs/the-parting-2026-09.md §8, wave 12 T1). **NOT ONE NEW KEY,
-// ANYWHERE** – three union widenings and nothing else:
-//
-//   · `SpiritShockKind` + `'divorce'`       – the marriage ending's own shock row (§3)
-//   · `MilestoneType` + `'divorce'`         – the album line, on his «можно» of 23.09 (§5)
-//   · `LifeBeatKind` + `'divorced'`         – the card that replaces `'ended'` on a latched row (§4)
-//
-// ⚠⚠ SO THIS IS THE FIRST BUMP IN THE LADDER WHOSE MIGRATION HAS **NOTHING TO WALK**, and the
-// version is taken anyway rather than saved. Invariant 3's rule is that a new persisted union
-// member is a schema change, and all three of these are persisted: the shock kind sits on
-// `world.spiritShock`, the milestone type on a `world.milestones` row, the beat kind on a
-// `world.lifeLog` row. v85's own sentence is the precedent read at full strength – «adding a union
-// member cannot invalidate a stored value, and nothing has ever written the new one» – and the
-// difference is that there v85 ALSO appended keys, so the widening rode a step that existed. Here
-// there is no step to ride, which is exactly why the empty one is written out: a version whose
-// migration is a comment is a claim that has to be reviewable.
-//
-// ⚠⚠ AND NOTHING BELOW v88 CAN HOLD ONE OF THE THREE. `'divorce'` on the shock is written only by
-// the latched branch this wave builds; the milestone is captured only there; the beat kind is
-// raised only there. A v87 save that lived through a marriage ending carries `'breakup'`,
-// `'ended'` and no album line, and that is what it HELD – re-labelling it now would rewrite a
-// career's history to match a wave that was not running when it was lived.
-//
-// ⚠⚠ THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE AND THE LIVE REGISTERS STILL RE-STAMP, which is
-// v85's third-key arithmetic in reverse and is stated as a measurement rather than a hope: the
-// serialised world gains no key, so `careerHashAtSchema(·, ·, 87)` needs NO new peel rung and
-// returns today's `FROZEN` values character for character (that is what `PRE_V88` holds), while
-// the LIVE registers move because `schemaVersion` itself is inside the hash. **Exactly one line
-// moves on the per-key diff, `schemaVersion`** – and on this rung that is the whole claim rather
-// than half of it.
-//
-// ⚠ ZERO NEW RNG STREAMS AND ZERO MOVED DRAWS IN THE WHOLE WAVE (§9) – the ends key, the leak keys
-// and the booth's stamp are existing machinery and the latched branch is a pure read. The frozen
-// MAIN capture (41550 / e6b0c709) is untouched by construction.
-//
-// Full move: this constant, the v87 -> v88 step in migrations.ts, tests/fixtures/saves/v88.json, its
-// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
-// schema sentence, and the e2e fixtures. ⚠ NO PEEL RUNG – see the paragraph above; the rung would
-// have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V88` instead.
-// ⭐⭐⭐ v89 – THE STUDENT CABINET ON THE HANDOVER (docs/specs/the-college-scene-2026-09.md §4.2,
-// the college scene T4). **ONE FIELD, AND IT IS NESTED TWO DEEP INSIDE A NULLABLE RECORD**:
-// `DynastyRecord.motherCareer.collegeTitles`, the count of her banked college years whose
-// championship she won (`wonTheLeague` over `world.college.years`).
-//
-// ⚠ REQUIRED AND NEVER OPTIONAL – the field is a COUNT and 0 is its honest value, so an optional
-// field would be a second spelling of zero and every reader would owe a `?? 0` that the next one
-// forgets. The cost of that decision was counted before it was taken: `motherCareer` literals live
-// in six files outside the engine plus `tools/dynasty-bench.ts`, and each gained the one line.
-//
-// ⚠⚠ THE BACK-FILL IS GUARDED ON A NON-NULL `dynasty`, WHICH IS THE LADDER'S FIRST BACK-FILL **TWO
-// LEVELS DEEP** – v87's `pregnancy.conceivedWeek` is one deep and is the precedent for the cast, not
-// for the depth. A null `dynasty` has nothing to back-fill and is deliberately left as `null` rather
-// than grown a record: the absence of a line is a fact about that career, not a missing default.
-//
-// ⚠ `DynastyRecord.motherCareer` ALIASES `DynastyHandover['motherCareer']`, so the persisted type
-// needs NO edit for this field – verified rather than assumed, and it is why a single declaration in
-// `shared/protocol/profile.ts` moves the wire and the save together.
-//
-// ⚠ ZERO DRAWS: one `??=` inside a nullable record, gated on `v === 88`, writing a literal. No
-// sub-stream is reached on this path, so MAIN cannot move and the frozen capture (41550 /
-// e6b0c709) is untouched by construction.
-//
-// ⚠⚠ AND THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE – v88's case exactly, and MEASURED rather than
-// predicted (per-key control captured as the builder's FIRST command on the untouched tree, headers
-// read back against the invocation, all three careers): every frozen career carries `dynasty: null`,
-// the new field is nested INSIDE that null, and the serialised world therefore gains **no key at
-// all**. So `careerHashAtSchema` needs NO new peel rung – its tail (`schemaVersion < 87 ? preWeight
-// : world`) answers 87, 88 and 89 alike – `PRE_V89` holds the verbatim v88 constants, and the live
-// registers still re-stamp because the version number is inside the hash.
-//
-// Full move: this constant, the v88 -> v89 step in migrations.ts, tests/fixtures/saves/v89.json, its
-// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked
-// schema sentence, and the e2e fixtures. ⚠ NO PEEL RUNG – see the paragraph above; the rung would
-// have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V89` instead.
+// v38 → docs/notes/engine/save-schema-history.md#v38--the-penalty-ledger
+// ⚠ v38 = W3-ACT2's PENALTY LEDGER (`penalties`, `suspendedUntilWeek`) took psyche's number: allocated on arrival, not booked.
+//
+// v40 → docs/notes/engine/save-schema-history.md#v40--weeks-lost-to-injury
+// ⚠ v40 = ONE FIELD, `careerTotals.weeksLostToInjury`: `injuryHistory` prunes to 20 rows, the career-ending rule keys on their SUM.
+//
+// v45 → docs/notes/engine/save-schema-history.md#v45--the-season-entry-ledger
+// ⚠ v45 = ONE FIELD, `seasonEntries`: `world.results` prunes at 52 weeks, so the entry ledger is captured where the entry commits.
+//
+// v46 → docs/notes/engine/save-schema-history.md#v46--seasons-told-apart-by-track
+// ⚠ v46 = ONE FIELD, `seasonHistory[].byTrack`: the record had one rank and three folds, so the Stats tabs had nothing to differ by.
+// owner (v46), 09.08 (for the second time): the Stats screen showed the identical season-by-season table under all three tabs.
+//
+// v47 → docs/notes/engine/save-schema-history.md#v47--the-week-plan
+// ⚠ v47 = ONE FIELD, `plan.week`: seven days of session kinds – the calendar stops being a drawing of a scalar and becomes the plan.
+// owner (v47): «у нас есть расписание недели и на каждый день там идут разные тренировки – это и есть ручки».
+// owner (v47), 10.08: «да» – `summerLoadFactor` follows the doubling, not the calendar: a migrated career's school-free weeks return at 1.0.
+//
+// v48 → docs/notes/engine/save-schema-history.md#v48--birthdays
+// v48 = ONE FIELD, `birthdays` – one row per birthday, read only by the DIARY (no morale, condition or mood modifier yet).
+// owner (v48), 11.08: «мораль и психологи у нас в будущем, так что сейчас можно просто подготовку сделать».
+// ⚠ v48: THE MIGRATION IS A PURE DEFAULT `[]` = "no birthdays recorded", not "gave nothing every year": absent is not zero.
+// ⚠ v48: AND THE NUMBER IS 48, NOT THE 49 THE SPEC SAYS: nothing had claimed 48 in code, so the flags/grant wave now reserves 49.
+//
+// v49 → docs/notes/engine/save-schema-history.md#v49--the-coach-at-the-junior-rungs
+// v49 = ONE FIELD, `coachOnJuniorEvents`: does the coach travel to rungs that pay her nothing – OPT-IN, no protective gate.
+// owner (v49), 15.08: «делаем тогда» – the fare gate becomes the player's decision; bankruptcy is his own responsibility.
+// ⚠ v49: 17.08: at the JUNIOR rungs this field opens it is still absolute – nothing reaches his seat there, contract included.
+// ⚠ v49: IT IS A SECOND FIELD AND NOT A RETYPING OF `coachOnEventWeeks`: a scope union would have retyped a field persisted since v24.
+// ⚠ v49: AND IT TAKES 49 UNDER THE v48 RULE – whoever lands in code first owns the number; the flags/grant wave now reserves 50.
+//
+// v54 → docs/notes/engine/save-schema-history.md#v54--her-own-bank-account
+// v54 = ONE FIELD, `kidFundsCents` – HER OWN BANK ACCOUNT (round-23 #18); back-filled ZERO, no history invented.
+// owner (v54), round 23 #18: «начать с 10-20%», and on widening it: «может не до 30, а до 40 или 50 вообще, это всё-таки ее карьера?».
+//
+// v55 → docs/notes/engine/save-schema-history.md#v55--the-stranded-reveal-cleared-on-load
+// v55 = a REPAIR, not a shape: a `pendingTournament` on a vanished event could be neither played nor rescued – cleared on load.
+//
+// v58 → docs/notes/engine/save-schema-history.md#v58--the-college-departure-week
+// v58 (round 24 #5): `fork.departsWeek` – the college answer RESERVES a place; she departs on the next academic year's September.
+//
+// v59 → docs/notes/engine/save-schema-history.md#v59--the-masseur
+// v59 (the travelling team, steps 1+2): `masseurHired`, `masseurSessionsPerWeek`, `masseurTravels` – the first staff seat beyond the coach.
+// ⚠ EXTENDED IN PLACE BY STEP 2 on the same unmerged branch (22.08): v59 had never reached a player, so append-only did not bind it yet.
+//
+// v60 → docs/notes/engine/save-schema-history.md#v60--the-college-league-reveal
+// v60 (round 26 #6): `CollegeState.leagueReveal` – the championship is WALKED and not reported: the year STOPS on that week.
+// owner (v60, asked once already): «Я уже просил это сделать» – round 25's summary plus replay buttons was «сообщили постфактум».
+// ⚠ v60: NULL FOR EVERY EARLIER SAVE and nothing is back-filled: a championship already lived is not re-offered.
+//
+// v61 → docs/notes/engine/save-schema-history.md#v61--the-home-university-a-field-deleted
+// v61 (round 26 #2 second pass): `CollegeQuote.open` is REMOVED – the first field this ladder ever deleted rather than added.
+// owner (v61, asked twice): «по-моему в каждой стране есть домашний универ» – he overruled the rule that shut it, so the boolean goes.
+// ⚠ v61: THE MIGRATION IS NOT COSMETIC: an unanswered fork carrying `open: false` would have enrolled her a place up, $20,000 a year dearer.
+//
+// v62 → docs/notes/engine/save-schema-history.md#v62--the-peak-physical
+// v62 (the long goodbye, step 1): `peakPhysical` – the best her body has ever been, a running maximum READ BY NOTHING YET.
+// ⚠ v62: IT HAD TO BE STATE: `growWeek` overwrites `skills` in place, so nothing in a save remembers what she actually reached.
+// ⚠ v62: AND IT IS RECONSTRUCTED, NOT DEFAULTED, for an existing career – seeding "today" would tell a 38-year-old she is at 100% of her peak.
+//
+// v63 → docs/notes/engine/save-schema-history.md#v63--the-shop-assets
+// v63 (the shop, slice 1): `assets` – what the family owns that is not tennis; the shelf is a constant, so later slices need no migration.
+// ⚠ v63: THE BACK-FILL IS EMPTY AND THERE IS NOTHING TO RECONSTRUCT (v26's `knock` case, not v62's): no earlier career could buy anything.
+//
+// v64 → docs/notes/engine/save-schema-history.md#v64--the-call-up-reveal
+// v64 (round 27 #6): `CollegeState.callUpReveal` – the Nations Cup tie is WALKED, not reported; back-fills NULL like v60's.
+// ⚠ v64: ADDED HERE BY THE MERGE OF 28.08, NOT BY ITS OWN WAVE: a ladder with a hole is how the next bump picks the wrong number.
+//
+// v65 → docs/notes/engine/save-schema-history.md#v65--who-won-each-ai-tournament
+// v65 = `fieldSeasonTitles` – WHO WON EACH AI TOURNAMENT: a per-season tally beside v53's `fieldSeasonPoints` (what the field earned).
+// ⚠ v65: THE BACK-FILL IS EMPTY AND IT IS A PRESERVATION, as v53's: every earlier career ran on an engine that dropped the champion.
+// ⚠⚠ v65: IT SHIPPED AS v64 ON ITS OWN BRANCH while `main` took 64: two v64 schemas for a day; renumbered on merge, all three parts.
+//
+// v66 → docs/notes/engine/save-schema-history.md#v66--the-business-event-category
+// ⚠ v66 = ONE UNION MEMBER: `WorldEventCategory` gains 'business' (round 29 P7) – no field moved, yet the version moves.
+//
+// v67 → docs/notes/engine/save-schema-history.md#v67--the-renumbered-back-fills
+// v67 (round 30 #14 and #8/#10): the fund's UNITS and the brand's / academy's NAME back-fills, moved out of v66's step into their own.
+// ⚠ v67: A RENUMBER, NOT A NEW SLICE: back-fills written into v66's step while main read 65 would have been SKIPPED by a v66 save.
+//
+// v68 → docs/notes/engine/save-schema-history.md#v68--the-age-curve
+// v68 (round 31 #10 + #13): the age curve stops being one curve – `+ageCurve` {plateauStart, declineStart, injuryFrom}.
+// ⚠⚠ v68: THE MIGRATION IS THE POINT OF THE VERSION MOVE: every save is pinned to {23, 29, weeks lost} – today's decline, unchanged.
+//
+// v69 → docs/notes/engine/save-schema-history.md#v69--the-brand-strength-seed
+// v69 (round 32 #4): the brand stops evaporating – `+brandStrengthSeed` {week, value}, optional; WORTH reads a slow DERIVED stock.
+// ⚠⚠ v69: THE MIGRATION IS THE POINT OF THE VERSION MOVE, as v68's: the save's own week and the fame it holds there pin today's number.
+// ⚠ v69: THE FIELD IS OPTIONAL BECAUSE `createWorld` DOES NOT WRITE IT: a career started later derives its whole own history.
+// ⚠ v69: IDEMPOTENT and DRAW-FREE: one `fameAt` read and two literals; the frozen capture (41550 / e6b0c709) cannot move.
+//
+// v70 → docs/notes/engine/save-schema-history.md#v70--the-draw-becomes-a-fact
+// v70 (round 35 #14): the draw becomes a fact – `+drawnFirstRounds` `Record<eventId, opponentId>`; it was stored nowhere.
+// owner (v70), 03.09: «мне сказали "играем против №118 шанс 71%", пошел турнир - соперник в первом раунде №76».
+// owner (v70), 03.09: «никто не купил, нет игроков» – so back-compat is cheap; what still binds is that every older schema loads.
+// ⚠ v70: THE MIGRATION WRITES AN EMPTY TABLE AND NOT A DRAW: back-filling would re-derive the very thing this item exists to stop re-deriving.
+// ⚠ v70: IDEMPOTENT and DRAW-FREE: `save.drawnFirstRounds ??= {}` touches no stream; the frozen MAIN capture (41550 / e6b0c709) cannot move.
+//
+// v71 → docs/notes/engine/save-schema-history.md#v71--the-repeat-brand
+// v71 (round 39 #5, reopened): a repeat brand costs what a brand is worth – `+brandFounded`, written by `buyAsset`.
+// owner (v71), 08.09: «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал.» – the re-buy at the flat 250k is the hole.
+// owner (v71), round-38 law: «неизменно для первого открытия стоит 250к» – it binds the FIRST founding only.
+// ⚠ v71: THE MIGRATION GIVES THE BENEFIT OF THE DOUBT: a save that OWNS a brand has founded one; a save with none keeps the first price.
+// ⚠ v71: IDEMPOTENT and DRAW-FREE: one `some()` over `save.assets`, at most one literal write; the frozen MAIN capture cannot move.
+//
+// v72 → docs/notes/engine/save-schema-history.md#v72--spirit-bond-and-temperament
+// v72 (the private life, wave 1): World `+spirit`, `+bond` and `+temperament` – the two numbers, and who she is (`src/engine/spirit.ts`).
+// ⚠⚠ v72: TWO KINDS OF BACK-FILL IN ONE STEP: `spirit`/`bond` = the literal 70 (ruling V4); `temperament` is DERIVED by `temperamentFor`.
+// ⚠ v72: IDEMPOTENT and DRAW-FREE ON MAIN: three `??=` writes gated on `v === 71`; only the sub-stream `seed:temperament` is touched.
+//
+// v73 → docs/notes/engine/save-schema-history.md#v73--the-life-log-stops-being-optional
+// v73 (private life, wave 2): `lifeLog` STOPS BEING OPTIONAL – back-filled `[]`, exactly true: no earlier career lived a beat.
+//
+// v74 → docs/notes/engine/save-schema-history.md#v74--love-episodes
+// v74 (the private life, wave 3): `loveEpisodes` – one append-only row per attachment, never pruned; the ACTIVE one is DERIVED, not stored.
+//
+// v75 → docs/notes/engine/save-schema-history.md#v75--the-spirit-shock
+// v75 (private life, wave 4): `+spiritShock` `{week, kind}` or null – the mark an ending leaves; T1 ships the seat, no writer.
+// ⚠⚠ v75: THE SAME BUMP CARRIES `WorldEvent.lifeKind?` AND OWES IT NO BACK-FILL: optional, purely additive, and nothing writes it before T5.
+//
+// v76 → docs/notes/engine/save-schema-history.md#v76--the-psychologist-and-her-walls
+// v76 (psychologist's year, wave 5): the SEAT `+psychologistHired` `+psychologistRung` `+psychologistFocus` `+psychologistFocusSeason`
+// and HER WALLS `+wallsLean` `+wallsFlipped`; `+peakDomesticPoints` makes it seven, added to the same unshipped step.
+// owner (v76), 14.09 (amended pre-merge): «фраза про карьеру, а не про неделю» – the elite-gate ruling behind that seventh key.
+// ⚠⚠ v76: SIX KEYS IN ONE VERSION, TWO KINDS OF THING ON ONE BUMP: the seat is a STAFFING DECISION, the walls pair a FACT ABOUT HER.
+// ⚠⚠ v76: THE BACK-FILLS ARE EXACTLY TRUE, NOT BARGAINS: false, 1, null, null, {0, 0}, {false, false} – ZERO IS THE IDENTITY.
+// ⚠⚠ v76: THE ZERO BACK-FILL KEEPS A MIGRATED CAREER'S TENNIS BYTE-IDENTICAL: `expressedTemperamentOf` returns BIRTH; inert by construction.
+//
+// v77 → docs/notes/engine/save-schema-history.md#v77--the-spotlight
+// v77 (the spotlight, wave 6): World `+spotlightHabituation`, and FOUR fields on each `LoveEpisode` row:
+// `+publicWeek` `+publicWrong` `+airedMetWeek` `+airedEndedWeek`.
+// ⚠⚠ v77: THE FIRST MOVE THAT WIDENS A ROW INSIDE A LIST: the migration WALKS `loveEpisodes` and `??=`s each row; the peel maps an array.
+// ⚠⚠ v77: THE BACK-FILLS ARE EXACTLY TRUE, NOT BARGAINS: 0, null, false, null, null – nothing was ever public, and she never lived a week known.
+// ⚠⚠ v77: SO A MIGRATED CAREER PLAYS BYTE-IDENTICAL TENNIS: every wave-6 mechanic is gated on `newsStandingOf` or a non-null `publicWeek`.
+//
+// v78 → docs/notes/engine/save-schema-history.md#v78--one-bump-three-customers
+// v78 – ONE BUMP, THREE CUSTOMERS: `+composureBonus` `+sparringHired` `+sparringRung`, and `+entries` on the ROWS of `world.assets`.
+// owner (v78), 15.09: «41 #22 давай тоже в v78 закинем» – his own scheduling of the three customers onto one bump.
+// owner (v78), `composureBonus`: «+5 потолок, по очку за сезон… 0.2пп за сезон без этой тренировки».
+// ⚠⚠ v78: `sparringHired` / `sparringRung` ARE KEYS ONLY: nothing reads them on this tree, and the seat did not land in this round either.
+// ⚠⚠ v78: Round 42 bundle 13 STOPPED, rightly: no `world.form` and no travel key yet – a seat built now would cut a drift that does not drift.
+// ⚠⚠ v78: THE FOUR ARE THREE KINDS OF THING: `composureBonus` a fact about her, `entries` a family ledger, the sparring pair a staffing call.
+// ⚠⚠ v78: THE BACK-FILLS ARE EXACTLY TRUE, NOT BARGAINS: 0, false, 1, [] – at 0 `composureBonus` leaves `growWeek` byte-identical.
+// ⚠ v78: ONE OF THE FOUR IS NOT INERT: `composureBonus` has its reader; no frozen career hires a psychologist, so it never moves there.
+//
+// v79 → docs/notes/engine/save-schema-history.md#v79--the-chemistry-and-the-sparring-travel-key
+// v79 – THE CHEMISTRY WAVE C1 and the key #48 waited for: `+coachPairs` (one key, three numbers, a PAIR), `+sparringTravels`.
+// owner (v79), 15.09: «у остальных есть галочка ездит» – the third sparring key, which v78 was scoped before he gave.
+// ⚠ v79: WHAT IS STILL PURE IS THE AFFINITY: `affinityFor` comes from `(seed, coachId)` alone – re-derived at every call, stored nowhere.
+// ⚠⚠ v79: `sparringTravels` IS STILL KEYS-ONLY: nothing reads the three sparring fields – an unused key is a SCHEDULING decision (wave F1).
+// ⚠⚠ v79: ONE OF THE TWO IS NOT INERT: `coachPairs` ships WITH its reader (`accrueChemistry`, `coachFactor`); `sparringTravels` has none.
+// ⚠ v79: SO THE FROZEN CAREERS MOVE, for a REASON (every one hires a coach): diffed per key (`tools/frozen-key-diff.ts`), then re-stamped.
+// ⚠ v79: `standing` IS WRITTEN AND NEVER READ: it is wave C2's (the coach's tier climbs with her results); one pass writes all three.
+// ⚠ v79: `standing` STORES THE SCORE, NOT THE TIER (spec §10): a threshold retune then moves every save instead of stranding careers.
+//
+// v80 → docs/notes/engine/save-schema-history.md#v80--form
+// v80 – WAVE F1, `world.form`: ONE key, tenths, 0-centred, clamped [-10, +10], back-filled 0 = neutral – the identity, not a placeholder.
+// ⚠⚠ v80: IT IS NOT INERT, AND SAYING SO IS HALF THE MOVE: it ships WITH its reader (`world/phaseHerWeek.ts`, `composureEff`).
+// ⚠ v80: SO THE FROZEN CAREERS MOVE, for a REASON (every one plays matches and has gaps): diffed per key, then re-stamped.
+// ⚠ v80: THE SEAT'S THREE KEYS (`sparringHired` `sparringRung` `sparringTravels`) FINALLY GAIN THEIR READER in `world/sparring.ts`.
+// ⚠ v80: `seed:form:<week>` STAYS RESERVED AND UNUSED (O4): zero draws in the wave, so the frozen MAIN capture (41550 / e6b0c709) holds.
+//
+// v81 → docs/notes/engine/save-schema-history.md#v81--the-small-talk-frame
+// v81 – ROUND 44, `LifeBeatRecord.frame`: the delivery frame a 'small-talk' beat was raised in, on the ROW; optional, never back-filled.
+// owner's rule (v81), 17.09: a frame may not change after a save, a reload, OR THE POOL GROWING – only a stored frame survives the third.
+// ⚠⚠ v81: WHY IT IS STATE AT ALL: a week-keyed frame survives save and reload, but a pool that grows re-derives a different member.
+// The fallback keeps the migration trivial: a row with no frame renders the FIRST line of its pool – what the catalogue showed.
+// ⚠⚠ v81: THE FROZEN CAREERS MOVE, AND NOT BECAUSE OF THIS KEY: the round's corpus grows the pool, so every `lifeLog` row's `detail` changes.
+// ⚠ v81: ZERO MAIN DRAWS: the frame rides the sub-stream `seed:smalltalk:frame:<week>`; the frozen MAIN capture (41550 / e6b0c709) is untouched.
+//
+// v82 → docs/notes/engine/save-schema-history.md#v82--the-coach-deal
+// v82 – ROUND 42 #51 / ROUND 44, `coachDeal`: the AGREED weekly figure, written down; `null` for a self-coaching family.
+// owner (v82), 17.09: «"зафиксировать при найме и пусть просит, как массажист" – верно».
+// ⚠⚠ v82: WHY IT COULD NOT BE DERIVED: a fee fixed AT HIRE is a fact about that moment, and the market has moved since.
+// ⚠ v82: THE BACK-FILL IS `null`, WRITTEN AS A LITERAL: true of every save; the first tick after the upgrade settles a deal (`settleCoachDeal`).
+// ⚠⚠ v82: THE FROZEN CAREERS MOVE ON SEVEN KEYS, NOT ONE: the prediction was off by one week (table in tests/coachTravelEdgeFixtures.ts).
+// ⚠ v82: ZERO MAIN DRAWS: the ask is a weighted mean over state already written and the fee is integer arithmetic (41550 / e6b0c709 holds).
+//
+// v83 → docs/notes/engine/save-schema-history.md#v83--the-wedding
+// v83 – THE WEDDING, WAVE 7: NOTHING ON THE WORLD, TWO FIELDS ON EVERY `LoveEpisode` ROW: `latchedWeek`, `partnerName` (null).
+// owner (v83), 11.09: «а свадьба может быть у нас не одна, кстати?» – hence the latch lives ON THE ROW and never as a global boolean.
+// ⚠⚠ THE MIGRATION WALKS `loveEpisodes` AND `??=`s EACH ROW (v77's nested peel); v83.json is the first golden save that HOLDS episode rows.
+// ⚠ v83: THE 'wedding' MILESTONE MEMBER RIDES THIS BUMP: a new persisted union member is a schema change (the v44 / v66 precedent).
+// ⚠ v83: ZERO MAIN DRAWS IN THE WAVE (`seed:life:wedding:<week>`, `seed:life:partner-name:<episodeId>`): frozen careers predicted IDENTITY.
+//
+// v84 → docs/notes/engine/save-schema-history.md#v84--the-prologue-trace
+// v84 – THE ALBUM's ONE SCHEMA MOVE: `prologueTrace` – the compact slice of the childhood's `PrologueRun`, written ONCE at the handover.
+// owner (v84), 19.09 (а): «хорошо бы, чтобы в финальный альбом что-то оттуда попадало тоже вообще»; missing history: «это не страшно».
+// ⚠⚠ v84: THE BACK-FILL `null` IS EXACTLY TRUE: no earlier save kept the childhood; a re-derived run is refused – it is the PLAYER's walk.
+// ⚠ v84: ZERO DRAWS: the album's flavour rides the sub-stream `seed:album:flavour:<sheet>`; frozen careers move on `schemaVersion` + the key.
+//
+// v85 → docs/notes/engine/save-schema-history.md#v85--the-pregnancy-and-the-return
+// v85 – THE PREGNANCY AND THE RETURN, WAVE 8 T1: `pregnancy`, `children`, and `spiritShock.kind` widened by 'postpartum' (type-level only).
+// v85 grew a THIRD key after gate 2 (20.09, architect's ruling): `comeback`, the return week and its freeze – not on `pregnancy`.
+// ⚠⚠ WHY v85 GREW RATHER THAN v86 ARRIVING: NOTHING HAS SHIPPED – v85 exists only on `life/wave-8`, and no save in the world holds it.
+// ⚠ AND THIS IS THE LAST KEY v85 TAKES: a second gap is a STOP and a question, not a fourth key.
+// ⚠⚠ v85: THE BACK-FILLS `null` AND `[]` ARE EXACTLY TRUE (v72's argument, not v84's): no earlier save could hold a pregnancy or a child.
+// ⚠ v85: ZERO DRAWS IN THE MOVE: wave draws live on `seed:life:pregnancy:<week>`, `seed:life:return:<week>`; frozen careers MEASURED IDENTITY.
+//
+// v86 → docs/notes/engine/save-schema-history.md#v86--the-dynasty
+// v86 (THE DYNASTY, WAVE 10 T1/T2): ONE KEY, `dynasty`, back-filled `null`.
+// owner (v86), 11.09: «в конце карьеры можно сделать хук на новую карьеру через ребенка, например» – and his go for the wave, 22.09.
+// ⚠⚠ v86: THE BACK-FILL IS `null`, EXACTLY TRUE: every save in the world is a generation-zero career – no other kind existed until now.
+// ⚠ v86: NO MAIN DRAW ANYWHERE IN WAVE 10: the frozen capture (41550 / e6b0c709) is predicted UNMOVED – if it moves, something is wrong.
+// ⚠⚠ v86: BUT THE FROZEN CAREERS ARE NOT AN IDENTITY THIS TIME: `dynasty` joins `createWorld`'s literal, so every live register re-stamps.
+//
+// v87 → docs/notes/engine/save-schema-history.md#v87--the-weight
+// v87 (THE WEIGHT, WAVE 11 T1): `weightEnabled` `pregnancyLossWeeks` `bereavementWeeks`, and `conceivedWeek` on the pregnancy.
+// owner (v87), 22.09: «only for the weight, set at new-career creation (the creation flow ASKS), changeable both ways in settings later».
+// ⚠⚠ v87: THE SWITCH BACK-FILLS `false` AS A RULING, NOT A DEFAULT (22.09, question 1): a migrated save was never asked at creation.
+// ⚠ v87: THE FIRST BACK-FILL THAT IS NOT THE MECHANIC'S IDENTITY: `createWorld` writes the creation answer, the migration `false` – the ruling.
+// ⚠ v87: THE TWO LISTS BACK-FILL `[]`, EXACTLY TRUE; `conceivedWeek` back-fills as `announcedWeek` – the pre-window truth.
+// ⚠ v87: ZERO DRAWS IN THE MOVE: `??=` writes gated on `v === 86`; `spiritShock.kind`'s widening rides this version and needs NO step.
+// ⚠⚠ v87: THE FROZEN CAREERS ARE NOT AN IDENTITY (v86's case, not v85's): all three keys join `createWorld`'s literal; rollback rungs hold.
+//
+// v88 → docs/notes/engine/save-schema-history.md#v88--the-parting
+// v88 – THE PARTING, WAVE 12 T1: NOT ONE NEW KEY – three union widenings:
+// `SpiritShockKind` + 'divorce', `MilestoneType` + 'divorce', `LifeBeatKind` + 'divorced'.
+// owner (v88), 23.09: «можно» – the album line for a divorce (§5).
+// ⚠⚠ v88: THE FIRST BUMP WITH NOTHING TO WALK, TAKEN ANYWAY: all three are persisted; a version whose migration is a comment must be reviewable.
+// ⚠⚠ NOTHING BELOW v88 CAN HOLD ONE OF THE THREE: an old ending carries 'breakup' / 'ended', no album line – re-labelling rewrites history.
+// ⚠⚠ v88: FROZEN CAREERS ARE AN IDENTITY IN SHAPE, LIVE REGISTERS STILL RE-STAMP: only `schemaVersion` moves on the per-key diff (`PRE_V88`).
+// ⚠ v88: ZERO NEW RNG STREAMS AND ZERO MOVED DRAWS IN THE WAVE: the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+// ⚠ v88: NO PEEL RUNG: the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V88` instead.
+//
+// v89 → docs/notes/engine/save-schema-history.md#v89--the-student-cabinet
+// v89 – THE STUDENT CABINET ON THE HANDOVER: ONE FIELD, NESTED TWO DEEP IN A NULLABLE RECORD – `DynastyRecord.motherCareer.collegeTitles`.
+// ⚠ v89: REQUIRED AND NEVER OPTIONAL: it is a COUNT and 0 is its honest value – an optional one is a second spelling of zero.
+// ⚠⚠ v89: THE BACK-FILL IS GUARDED ON A NON-NULL `dynasty` (THE FIRST TWO LEVELS DEEP): a null `dynasty` stays null – absence is a fact.
+// ⚠ v89: `DynastyRecord.motherCareer` ALIASES `DynastyHandover['motherCareer']`, so `shared/protocol/profile.ts` moves wire and save.
+// ⚠ v89: ZERO DRAWS: one `??=` inside a nullable record, gated on `v === 88`; the frozen MAIN capture (41550 / e6b0c709) is untouched.
+// ⚠⚠ v89: FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case, MEASURED): `dynasty: null` in every one – no key gained, no peel rung.
+// ⚠ v89: NO PEEL RUNG: the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V89` instead.
 export const SAVE_SCHEMA_VERSION = 89
 
 
