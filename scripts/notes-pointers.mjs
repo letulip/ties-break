@@ -17,11 +17,11 @@
 // THE POINTER GRAMMAR. From each occurrence of `docs/notes/` the text must parse as
 //     docs/notes/<path>.md#<anchor>
 //   <path>    `/`-separated segments of [A-Za-z0-9._-], none of them `.` or `..`, the last ending `.md`
-//   <anchor>  letters, digits and hyphens (Unicode letters and digits count), and not run straight on
-//             into another letter, digit, `_` or `#`
+//   <anchor>  letters, digits, hyphens and underscores (Unicode letters and digits count), and not run
+//             straight on into a `#`
 // An occurrence that does not parse is itself an ERROR – `malformed pointer` – never prose. A bare
-// `docs/notes/`, a path with no `#anchor`, an empty anchor, a `..` climb and an anchor with an underscore
-// in it are all refused, because a mention the gate skipped is exactly the hole it exists to close.
+// `docs/notes/`, a path with no `#anchor`, an empty anchor, a `..` climb and an anchor glued straight to a
+// second `#` are all refused, because a mention the gate skipped is exactly the hole it exists to close.
 // Sentence punctuation right after the anchor (`.`, `,`, `)`, a quote) is fine: no slug contains it.
 //
 // RESOLUTION. `<path>` must be a file under the root's `docs/notes/`, and `<anchor>` must EQUAL the slug of
@@ -30,11 +30,12 @@
 //
 // THE SLUG RULE – T7.2..T7.6 write their anchors against exactly this. A heading's anchor is its text
 //   1. LOWERCASED;
-//   2. with everything but letters, digits, spaces and hyphens STRIPPED – punctuation, backticks, dashes
-//      of every length, emoji, underscores (letters and digits are Unicode: Cyrillic stays);
-//   3. with every space turned into a hyphen;
-//   4. with runs of hyphens COLLAPSED into one.
-//     `## The 30% rule – why (and when) it bites`   ->  #the-30-rule-why-and-when-it-bites
+//   2. with everything but letters, digits, spaces, hyphens and underscores STRIPPED – punctuation,
+//      backticks, dashes of every length, emoji (letters and digits are Unicode: Cyrillic stays);
+//   3. with every space turned into a hyphen. ⚠ Runs of hyphens are NOT collapsed – this is GitHub's own
+//      slug, unchanged on purpose, so a pointer clicked in a PR scrolls to its heading; a ` – ` between
+//      words therefore slugs to `--`.
+//     `## The 30% rule – why (and when) it bites`   ->  #the-30-rule--why-and-when-it-bites
 //     `## Round 29: «So far»`                       ->  #round-29-so-far
 // Nothing is trimmed: a heading that OPENS with a stripped symbol (`## ⚠ Flat`) keeps the hyphen its space
 // became (`#-flat`), so open a heading with a letter. Only ATX headings (`#` to `######`) count, and only
@@ -55,7 +56,7 @@ import { fileURLToPath } from 'node:url'
 
 const MARK = 'docs/notes/'
 /** A well-formed pointer, matched from the start of the mark (sticky) – THE POINTER GRAMMAR above. */
-const POINTER = /docs\/notes\/((?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.md)#([\p{L}\p{N}-]+)(?![\p{L}\p{N}_#-])/uy
+const POINTER = /docs\/notes\/((?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.md)#([\p{L}\p{N}_-]+)(?![\p{L}\p{N}_#-])/uy
 const MALFORMED = 'malformed pointer: expected docs/notes/<path>.md#<anchor>'
 const USAGE = 'usage: node scripts/notes-pointers.mjs [--root <dir>]'
 
@@ -63,9 +64,8 @@ const USAGE = 'usage: node scripts/notes-pointers.mjs [--root <dir>]'
 function slugify(heading) {
   return heading
     .toLowerCase()
-    .replace(/[^\p{L}\p{N} \-]/gu, '')
+    .replace(/[^\p{L}\p{N} _\-]/gu, '')
     .replace(/ /g, '-')
-    .replace(/-{2,}/g, '-')
 }
 
 /** Every anchor a notes file offers: ATX headings, outside front matter and fenced code. */

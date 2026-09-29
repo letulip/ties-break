@@ -8,7 +8,7 @@
 //   valid/            five pointers: a .ts (one in a comment, two on a line where the first sits in a
 //                     string) and a .vue (one in the script block, one in a template comment). The notes
 //                     file's headings run the slug rule end to end – capitals, `–`, `%`, parentheses and
-//                     a double hyphen to collapse, Cyrillic letters, a sentence-ending full stop.
+//                     a ` – ` that slugs to a DOUBLE hyphen (GitHub does not collapse), an underscore kept, Cyrillic letters, a sentence-ending full stop.
 //   anchor-missing/   an anchor no heading slugs to; the same anchor with a capital (a slug is lowercase,
 //                     so an anchor must be too); and, as the control, the right one.
 //   file-missing/     a pointer at a notes file that is not there, in a tree with no docs at all.
@@ -31,7 +31,9 @@
 //   · stop skipping YAML front matter: RED, 1 failed (false-headings).
 //   · stop honouring fenced code: RED, 1 failed (false-headings).
 //   · let a `..` climb through as a pointer: RED, 1 failed (malformed).
-//   · drop the lookahead that refuses an anchor glued to an underscore: RED, 1 failed (malformed).
+//   · drop the lookahead that refuses an anchor glued to a second `#`: RED, 1 failed (malformed).
+//   · re-verified 29.09 after the GitHub-exact slug (architect): restore the hyphen collapse into slugify
+//     -> RED, 1 failed (the valid tree – its `--` anchors stop resolving); removed again -> green.
 import { describe, it, expect } from 'vitest'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -57,7 +59,7 @@ describe('the pointer check – a pointer that does not resolve turns the gate r
   it('passes a tree whose every pointer resolves: comments, strings, .vue, the slug rule end to end', SPAWN, () => {
     const run = onFixture('valid')
     expect(run.err).toBe('')
-    expect(run.out).toBe('notes-pointers: 5 pointers, all resolve\n')
+    expect(run.out).toBe('notes-pointers: 6 pointers, all resolve\n')
     expect(run.status).toBe(0)
   })
 
@@ -88,7 +90,7 @@ describe('the pointer check – a pointer that does not resolve turns the gate r
       [4, 'docs/notes/engine/ladder.md#'], // an empty anchor
       [5, 'docs/notes/../ladder.md#why-the-ladder-is-flat'], // climbs out of the notes folder
       [6, 'docs/notes/'], // the bare folder
-      [7, 'docs/notes/engine/ladder.md#why_the_ladder'], // an anchor glued to an underscore
+      [7, 'docs/notes/engine/ladder.md#why#the-ladder'], // an anchor glued straight to a second hash
     ]
     for (const [line, shown] of refused) {
       expect(run.err, `line ${line}`).toContain(`src/engine/ladder.ts:${line} -> ${shown} (${MALFORMED})`)
