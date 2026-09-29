@@ -86,6 +86,16 @@ globalThis.fetch = ((input: RequestInfo | URL): Promise<Response> =>
 // files and no `beforeEach` has to defend against another file's leftovers. Within one file, the
 // returned handle IS the shared map – `backing.clear()` in a `beforeEach` is the intended use.
 //
+// ⚠⚠ AND SINCE 29.09 THE ABSENCE IS ENFORCED HERE RATHER THAN INHERITED, because the pin fired on
+// CI exactly as designed: on Node 22 the runner DOES supply `localStorage` – happy-dom's own – and
+// ten component tests reasoning from the absence went red on the PR. Locally, Node 26.5's
+// experimental global (an own property holding `undefined`) had been shadowing happy-dom's by
+// ACCIDENT, so the contract held on an environment quirk. The line below makes it deliberate: an
+// own property holding `undefined` – the exact shape Node 26.5 leaves and `installMemoryStorage`
+// installs over – whatever the platform supplied. `sessionStorage` is deliberately untouched:
+// `storage-shim-scope.test.ts` pins it as a real Storage.
+Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: undefined })
+
 // ⚠ THE SCOPE IS PROVEN, NOT ASSERTED. `storage-shim-scope.test.ts` imports this module, opts OUT,
 // and asserts `localStorage` is still absent; `storage-shim-optin.test.ts` opts IN and asserts the
 // contract. The named mutation is «make the shim global»: call `installMemoryStorage()` at this

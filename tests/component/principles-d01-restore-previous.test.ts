@@ -98,8 +98,22 @@ type Game = ReturnType<typeof useGameStore>
  *  and a fixed number of `flushPromises()` calls is a coin toss (four was not enough; the first
  *  draft of this file failed on a restore that had not finished yet). The store's own `busy` flag is
  *  the honest end condition; the bound only stops a hang from becoming a silent pass. */
+/** ⚠ RE-AIMED 29.09 (the PR's CI): the wait is TIME-bound, never tick-COUNTED – the end condition
+ *  each caller asserts is unchanged. 500 counted flushes missed on the 2-core CI runner (~20x slower
+ *  than a dev box: this suite 868s there against ~45s here), where the save codec's zlib and the IDB
+ *  callbacks land AFTER a counted loop exhausts – reproduced by no local arm (node 22, storage sim,
+ *  full suite all green here), which is exactly what a wall-time race looks like from a fast box.
+ *  A real latch still fails – in 30s instead of 500 ticks – so nothing is weakened. */
+async function waitUntil(done: () => boolean): Promise<void> {
+  const until = Date.now() + 30_000
+  while (!done() && Date.now() < until) {
+    await flushPromises()
+    await new Promise((r) => setTimeout(r, 10))
+  }
+}
+
 async function settle(game: Game): Promise<void> {
-  for (let i = 0; i < 500 && game.busy; i++) await flushPromises()
+  await waitUntil(() => !game.busy)
   expect(game.busy, 'the store settled').toBe(false)
 }
 
@@ -119,7 +133,7 @@ async function settle(game: Game): Promise<void> {
 async function settleLists(game: Game): Promise<void> {
   const newest = (): number => Math.max(0, ...game.slots.map((s) => s.revision ?? 0))
   const behind = (): boolean => game.slots.length === 0 || newest() < game.revision || game.careers.length === 0
-  for (let i = 0; i < 500 && behind(); i++) await flushPromises()
+  await waitUntil(() => !behind())
   expect(newest(), "More's refresh caught the slot list up to the committed revision").toBeGreaterThanOrEqual(
     game.revision,
   )

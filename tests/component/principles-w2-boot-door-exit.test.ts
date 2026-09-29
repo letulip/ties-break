@@ -199,8 +199,22 @@ type Game = ReturnType<typeof useGameStore>
 /** The store's own `busy` flag is the honest end condition for a save round trip (gzip + SHA-256 +
  *  an IndexedDB transaction settle over several macrotasks); the bound only stops a hang becoming a
  *  silent pass. Lifted from principles-d01-restore-previous.test.ts, which argues it in full. */
+/** ⚠ RE-AIMED 29.09 (the PR's CI): the wait is TIME-bound, never tick-COUNTED – the end condition
+ *  each caller asserts is unchanged. 500 counted flushes missed on the 2-core CI runner (~20x slower
+ *  than a dev box: this suite 868s there against ~45s here), where the save codec's zlib and the IDB
+ *  callbacks land AFTER a counted loop exhausts – reproduced by no local arm (node 22, storage sim,
+ *  full suite all green here), which is exactly what a wall-time race looks like from a fast box.
+ *  A real latch still fails – in 30s instead of 500 ticks – so nothing is weakened. */
+async function waitUntil(done: () => boolean): Promise<void> {
+  const until = Date.now() + 30_000
+  while (!done() && Date.now() < until) {
+    await flushPromises()
+    await new Promise((r) => setTimeout(r, 10))
+  }
+}
+
 async function settle(game: Game): Promise<void> {
-  for (let i = 0; i < 500 && game.busy; i++) await flushPromises()
+  await waitUntil(() => !game.busy)
   expect(game.busy, 'the store settled').toBe(false)
 }
 
@@ -214,7 +228,7 @@ async function settle(game: Game): Promise<void> {
 async function boot(): Promise<{ wrapper: VueWrapper; game: Game }> {
   const wrapper = mount(App, { global: { stubs: { teleport: true } }, attachTo: document.body })
   const game = useGameStore()
-  for (let i = 0; i < 500 && game.phase === 'loading'; i++) await flushPromises()
+  await waitUntil(() => game.phase !== 'loading')
   expect(game.phase, 'init settled into one of its two exits').not.toBe('loading')
   await settle(game)
   await flushPromises()
