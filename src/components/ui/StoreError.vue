@@ -25,11 +25,52 @@
 //
 // `role="status"` because an error that appears without moving focus is announced by nothing
 // otherwise; it is a polite live region, so it never interrupts.
-import { useGameStore } from '../../stores/game'
+//
+// ⚠⚠ AND SINCE E-09 / T4.8 (27.09) THE FIVE SHIPPED COPIES THIS FILE WAS WRITTEN FOR ARE GONE, which
+// is what the header above has claimed to be «a home for» since 05.09. U-02 was fixed where it was
+// MEASURED – on the nine silent surfaces – and never reached the five that already rendered the
+// sentence by hand, so the two busiest screens in the app said a refusal with no live region at all.
+// ⚠ FOUR MOVED FIRST AND THE FIFTH FOLLOWED THE SAME DAY. `SeasonScreen.vue`'s copy was another
+// builder's file in the same wave, so this note recorded it as E-09's one open site; that builder
+// landed it later on 27.09 and the record is kept in order rather than rewritten, because «four of
+// five is not five» was true for a few hours and the wave's claim depended on it. Every hand-rolled
+// copy now reads this element.
+//
+// ⚠ `except` IS MoreScreen'S GUARD AND NOTHING ELSE, and it is the finding's own first option. That
+// screen's Saves strip renders `saveOp.message` in its own row a few lines up, so the one sentence
+// this element must NOT repeat is that one – «Import failed – …» printed twice, once as the operation's
+// result and once as the store's error, was the reason its copy carried a hand-written condition. The
+// prop is a SENTENCE to suppress, never a sentence to write: there is still no wording in this file and
+// there may never be one (CLAUDE.md invariant 4).
+import { computed } from 'vue'
+import { SAVE_CONFLICT_RELOAD_LABEL, useGameStore } from '../../stores/game'
+
+const props = defineProps<{
+  /** A sentence this surface has already said somewhere else, and must not say twice. */
+  except?: string | null
+}>()
 
 const game = useGameStore()
+
+const shown = computed(() => (game.error && game.error !== props.except ? game.error : ''))
+
+// T7.0: the Reload label is the STORE's (SAVE_CONFLICT_RELOAD_LABEL) – this file renders what the store owns, no wording of its own.
+// ⚠⚠ THE BUTTON IS INSIDE THE `<p>` AND THE `<p>` STAYS THE ONLY ROOT, ON PURPOSE: Vue hands a parent's scoped-style attribute to a
+// child's root element only when the child HAS ONE root, and a sibling `<button>` made this a fragment – KidScreen's and HomeScreen's
+// scoped `.error { grid-column }` stopped matching EVERY store error (measured: '1 / -1' became '', and no gate saw it). The `<br>`
+// puts the button under the sentence without any CSS. tests/component/principles-w7-reload.test.ts (i) is the guard.
+// ⚠ AND THE `<p>` RENDERS ONLY WHEN THERE IS A SENTENCE TO SHOW, as it always did: that is what keeps a kind that outlived its
+// sentence (a fixture clearing `error` by assignment – round36-error-surfaces.test.ts does) from drawing an orphan Reload, and
+// MoreScreen's `except` from drawing one beside the strip's own copy of the sentence. (h) and the w4 «not twice» case are the guards.
+const offerReload = computed(() => game.errorKind === 'save-conflict')
+
+function reload(): void {
+  window.location.reload()
+}
 </script>
 
 <template>
-  <p v-if="game.error" class="error" role="status">{{ game.error }}</p>
+  <p v-if="shown" class="error" role="status">
+    {{ shown }}<br v-if="offerReload" /><button v-if="offerReload" type="button" @click="reload">{{ SAVE_CONFLICT_RELOAD_LABEL }}</button>
+  </p>
 </template>

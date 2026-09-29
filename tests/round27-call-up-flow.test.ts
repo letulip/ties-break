@@ -30,7 +30,6 @@
 import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect, beforeAll } from 'vitest'
 import {
-  answerFork,
   callUpFor,
   callUpLetterWeek,
   nextCallUpWeekAfter,
@@ -41,8 +40,8 @@ import {
   createWorld,
   enterEvent,
   KID_ID,
-  measureCollegeOffer,
   pendingBirthday,
+  pendingLifeBeat,
   resumeFromCollege,
   revealTournamentRound,
   skipTournament,
@@ -51,8 +50,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain, type Rng } from '../src/engine/rng'
-import { simulateMatch } from '../src/engine/match/engine'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING } from '../src/engine/nationalTeam'
 import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
 import { ENDINGS } from '../src/engine/ending'
@@ -62,54 +60,31 @@ import { DEFAULT_PROFILE, STOP_PRECEDENCE, type CallUpLetterTerms, type Offer } 
 import { drainLifeBeats } from './helpers/career'
 import { componentFile } from './worldSource'
 import { region } from './helpers/source'
-
-/** A tour reveal, walked out – the loop every college fixture in this repo already carries. */
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** ⭐ A CAREER THAT REALLY PLAYED TO THE FORK AND REALLY ANSWERED «college» – never a hand-built
- *  snapshot. The same opener round 26 #6's suite walks, thumb on the scale and all: four years is
- *  208 weeks of base costs and a career that went bankrupt inside them would be measuring the family
- *  budget instead of this. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    // ⚠ v74 (wave 3, T8): tier-1 small talk raises an answerable `lifeLog` row from week 0 and
-    // `answerFork` refuses while any row is unanswered. Bond-neutral drain – nothing measured moves.
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
+import { finishAnyReveal, atCollege } from './helpers/scenarios/college'
 
 /** «Skip all rounds» then the finale's «Continue» – the two commands the flow's own controls call,
- *  dispatched at whichever college reveal is standing. */
+ *  dispatched at whichever college reveal is standing.
+ *
+ *  ⚠⚠ THE ONE REVEAL ANSWER THAT STAYS LOCAL (26.09, T5.11), and the difference is the GUARD. The
+ *  eleven-copy `answerCollegeReveal` now in `tests/helpers/scenarios/college.ts` returns early unless
+ *  a college league or call-up reveal is standing; this one presses unconditionally, because this file
+ *  drives the tie from outside that guard. Migrating it would have changed which brackets it resolves,
+ *  so it keeps its body and this note keeps the reason where the next sweep will read it. */
 function answerAnyCollegeReveal(world: WorldState): void {
   skipTournament(world)
   closeTournament(world)
 }
 
-/** ⚠ FIVE PRESSES A YEAR: a college year raises up to three questions now (the championship, the
- *  tie, her birthday) and each of them ends a press, so finishing one costs up to four. The loop
- *  terminates on the latch, which is what makes a stranded career a failing assertion rather than a
- *  hang. */
+/** ⚠ SIX PRESSES A YEAR: a college year raises up to FOUR questions now (the championship, the tie,
+ *  her birthday and – since 26.09 – a blocking life beat) and each of them ends a press, so finishing
+ *  one costs up to five. The loop terminates on the latch, which is what makes a stranded career a
+ *  failing assertion rather than a hang.
+ *
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), BUDGET ONLY – this helper already drained her card. It read FIVE
+ *  presses and «up to three questions»; ruling 2(a) made a blocking beat pause the year the way the
+ *  birthday does, so the ceiling moved by one and the prose that stated the old one moved with it. */
 function walkTheFreeze(world: WorldState, rng: Rng): void {
-  for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerAnyCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
@@ -119,13 +94,22 @@ function walkTheFreeze(world: WorldState, rng: Rng): void {
 
 /** Press until a Nations Cup tie is standing open, answering everything else on the way.
  *  ⚠ IT THROWS IF IT NEVER GETS THERE, so no case below can go green against a career whose country
- *  never wrote – which is a real outcome and not one this file is allowed to mistake for a pass. */
+ *  never wrote – which is a real outcome and not one this file is allowed to mistake for a pass.
+ *
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – IT ANSWERED THREE OF THE YEAR'S QUESTIONS AND NOT HER CARD, and
+ *  that is the same defect the round-26 collect fixed in `collegeBirthdays`: «a walk answering one
+ *  pause but not the other stalls on the first league week». Ruling 2(a) makes a blocking life beat
+ *  pause the year, so a press that stopped on her card left the card standing and every later press
+ *  returned with zero ticks – MEASURED as five red cases in this file, all of them «the walked career
+ *  never reached a Nations Cup tie». `drainLifeBeats` is the player's own answer and its sibling
+ *  `walkTheFreeze` five lines up has always called it; nothing this file MEASURES moved. */
 function pressToTheTie(world: WorldState, rng: Rng): string[] {
-  for (let press = 0; press < 5 * ENDINGS.collegeYears; press++) {
+  for (let press = 0; press < 6 * ENDINGS.collegeYears; press++) {
     const stops = resumeFromCollege(world, rng)
     if (callUpRevealOpen(world)) return stops
     answerAnyCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a Nations Cup tie')
@@ -364,7 +348,12 @@ describe('#6 the tie is played through the ordinary tournament flow', () => {
           // no seed is a replay button with nothing behind it, which is the failure this case exists
           // to catch, and `?? ''` would have replayed a different match and called it a match.
           expect(m.seed, `rubber ${m.eventId} carries its seed`).toBeTruthy()
-          const again = simulateMatch(m.a!, m.b!, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+          // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04). This line spelled
+          // `{ surface, tour: JUNIOR_TOUR, seed }` itself, so it proved that THIS FILE's spelling
+          // reproduces the engine – not that the four replay surfaces' does. `replayMatch` is the
+          // function `MatchReplay` and its three siblings call, and its options are the ones the
+          // recorder built with, so the claim now covers the path a player actually walks.
+          const again = replayMatch({ surface: m.surface, seed: m.seed, a: m.a!, b: m.b! }).result
           expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), `rubber ${m.eventId}`).toBe(m.score)
           replayed++
         }
@@ -482,11 +471,14 @@ describe('#6 the flow tells the truth about a week with no table, no rung and no
     // (b) the College League – the same walk, stopped one fixture earlier
     {
       const { world, rng } = atCollege('r27-pair-b')
-      for (let press = 0; press < 5 * ENDINGS.collegeYears; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY: her card pauses the year since ruling 2(a), so a
+      // walk that does not answer it passes only while no beat lands in its window. Bond-neutral.
+      for (let press = 0; press < 6 * ENDINGS.collegeYears; press++) {
         resumeFromCollege(world, rng)
         if (world.college!.leagueReveal) break
         answerAnyCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
       expect(world.college!.leagueReveal, 'the walk really reached a championship').toBeTruthy()
       const p = toSnapshot(world).pending!
@@ -542,19 +534,51 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
     //
     // ⚠ AND IT ASKS BOTH DIRECTIONS ON BOTH FIELDS, because a predicate that only ever said `false`
     // would satisfy «never promises what it does not deliver» and nothing else.
+    //
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE ⚠⚠ ABOVE FIRED A SECOND TIME – THIS TIME FROM A STOP
+    // THE SCAN CANNOT SEE. Ruling 2(a) made a blocking life beat pause the year the way the birthday
+    // and the two fixtures do, so it is the FOURTH mid-year stop; but unlike the other three it is
+    // not on the calendar. `collegeNextStop` scans WEEKS – a championship is arithmetic, the tie is a
+    // per-week roll it can ask about, the birthday is a date it can read – and a beat is rolled DURING
+    // the year that has not been lived yet. There is nothing to scan, so the press can stop on her
+    // card in front of a championship the view had already named, MEASURED here as «press 10: the
+    // championship was promised iff it was delivered: expected true to be false».
+    //
+    // ⚠ SO THE IFF IS KEPT AND THE ONE EXCEPTION IS NAMED RATHER THAN TOLERATED. On every press her
+    // card did not take, both facts still hold in both directions – the guard round 27 #2 wrote is
+    // untouched, and it still fails for any other reason a label could over-promise. On a press she
+    // DID take, the case asserts the promise is DEFERRED AND NOT LOST: her card is really standing,
+    // and once it is answered the view names the same fixture again for the next press. That is the
+    // property a player needs from the label, and it is a stronger claim than «promised ⊇ delivered».
+    //
+    // ⚠ WHETHER THE LABEL ITSELF SHOULD SAY SOMETHING ELSE ON SUCH A PRESS IS A WORDING QUESTION AND
+    // THEREFORE THE OWNER'S (CLAUDE.md invariant 4). Nothing here changes a rendered string.
     const { world, rng } = atCollege('r27-next-stop')
     let promisedTie = 0
     let playedTie = 0
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    let heldByHer = 0
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       // The engine's answer, read the way the screen reads it: off the view, before the press.
       const view = toSnapshot(world).ending?.college
       const saysLeague = view?.leagueIsNextStop ?? false
       const saysTie = view?.callUpIsNextStop ?? false
       expect(saysLeague && saysTie, 'the two facts are one walk – they can never both claim a press').toBe(false)
 
-      resumeFromCollege(world, rng)
+      const stops = resumeFromCollege(world, rng)
       const league = (world.college?.leagueReveal ?? null) !== null
       const tie = callUpRevealOpen(world)
+      if (stops.includes('life') && !league && !tie) {
+        // Her card got there first – the one stop the scan cannot see coming. ⚠ AND ONLY WHEN IT
+        // ACTUALLY PRE-EMPTED: a week that is BOTH her card and a fixture delivered the fixture, so it
+        // falls through to the iff rather than into this carve-out.
+        heldByHer++
+        expect(pendingLifeBeat(world), `press ${press}: 'life' was reported with no card standing`).not.toBeNull()
+        drainLifeBeats(world)
+        const after = toSnapshot(world).ending?.college
+        expect(after?.leagueIsNextStop ?? false, `press ${press}: the championship is still promised`).toBe(saysLeague)
+        expect(after?.callUpIsNextStop ?? false, `press ${press}: and so is the tie`).toBe(saysTie)
+        continue
+      }
       expect(saysLeague, `press ${press}: the championship was promised iff it was delivered`).toBe(league)
       expect(saysTie, `press ${press}: the tie was promised iff it was delivered`).toBe(tie)
       if (saysTie) promisedTie++
@@ -562,12 +586,22 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
 
       answerAnyCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     // Not vacuous: the career really met ties, and the button really named them.
     expect(playedTie, 'the walked career really played ties').toBeGreaterThan(0)
     expect(promisedTie, 'and the button named every one of them').toBe(playedTie)
     expect(world.college!.years, 'the course really ran to the end').toHaveLength(ENDINGS.collegeYears)
-  }, 120_000)
+    // ...and the new carve-out is not what carried the case: this seed meets her card on ONE press of
+    // the twenty-odd, which is the ~1-in-9 frequency B-01 measured, and the other presses are the iff.
+    expect(heldByHer, 'her card really did take a press, so the carve-out is exercised').toBeGreaterThan(0)
+    expect(heldByHer, 'and it is the exception rather than the rule').toBeLessThan(4)
+  // ⚠⚠ THE TWO PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s -> 60 s
+  // on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s own unit
+  // `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. ⚠ Its `beforeAll` keeps its own 30 s: a hook is not bound by birpc's window.
+  // SLOWEST TEST here, in the real bulk pool: 2.55 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ it is false at a rest state the tie is BEHIND – there is nothing left to play', () => {
     const { world, rng } = atCollege('r27-next-stop')
@@ -576,7 +610,7 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
     const view = toSnapshot(world).ending?.college
     expect(view?.callUpIsNextStop, 'after: the week has been played').toBe(false)
     expect(view?.yearInProgress, 'and the year is still the same one').toBe(true)
-  }, 120_000)
+  })
 })
 
 // =================================================================================================

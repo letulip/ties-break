@@ -43,6 +43,13 @@ import type { AlbumSheetModel, CollegeLeagueRun, CollegeYear, Milestone } from '
 
 /** The first week she is `age` – `tests/albumBook.test.ts`'s own helper, scanned rather than assumed
  *  so a birth-month change cannot silently re-band the case. */
+/** ⚠⚠ NOT THE SHARED `weekAtAge` (26.09, T5.11), AND THE DIFFERENCE IS THE COMPARATOR. This one asks
+ *  `kidAgeAt(world, w) === age`, which answers «the first week of the year she is that age»; the
+ *  `tests/helpers/career.ts` one asks `kidAgeExact(...) >= years`, which answers «the first week she has
+ *  REACHED it». 20 of the 27 copies F-02 counted used the `>=` form and are now that one; this file and
+ *  `college-scene-album.test.ts` are the two that mean the other thing. Kept, named, and left out of the
+ *  merge – F-02's own sentence is «"the same helper" gives two answers», and the cure is to stop calling
+ *  them the same helper, not to make one of them wrong. */
 function weekAtAge(world: WorldState, age: number): number {
   for (let w = 0; w < 2000; w++) if (kidAgeAt(world, w) === age) return w
   throw new Error(`no week reaches age ${age}`)

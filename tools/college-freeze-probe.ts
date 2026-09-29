@@ -90,6 +90,7 @@ import { KID_ID } from '../src/engine/world/constants'
 import type { WorldState } from '../src/engine/world'
 import type { CollegeTier } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+import { drainReveals } from './_reveals'
 
 const args = process.argv.slice(2)
 const strOf = (n: string): string | null => {
@@ -273,7 +274,19 @@ async function walkCollege(
     for (let r = 0; r < 40 && world.pendingTournament && !world.pendingTournament.finished; r++) revealTournamentRound(world)
     if (world.pendingTournament) closeTournament(world)
   }
-  for (let y = 0; y < 12 && world.ending?.type === 'college'; y++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+  // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+  // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+  // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+  // first beat of a degree stopped the years banking and the budget ran out against a career still
+  // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+  // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+  // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+  // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+  // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+  // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+  // along.
+  for (let y = 0; y < 20 && world.ending?.type === 'college'; y++) {
     if (leaveAfter !== null && (world.college?.years.length ?? 0) >= leaveAfter) {
       endCollegeEarly(world)
       break
@@ -281,6 +294,15 @@ async function walkCollege(
     resumeFromCollege(world, rng)
     // Round 24: the year pauses on her birthday week; answer it so the next press finishes the year.
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
+    // ⚠⚠ AND THE REVEALS, WHICH THIS WALK NEVER ANSWERED – a round-26/27 gap that B-01's repair
+    // exposed rather than anything ruling 2(a) caused. The championship (round 26 #6) and the Nations
+    // Cup tie (round 27 #6) each PAUSE the college year, and a walk blind to them presses against a
+    // year it cannot spend; it was invisible while the walk stalled on her card weeks earlier.
+    // `drainReveals` (tools/_reveals.ts) is «Skip all rounds» then «Continue», the player's own two
+    // presses and the one spelling of them. ⚠ SO THIS BENCH'S COLLEGE FIGURES MOVE TWICE OVER, and the
+    // before/after pair in the wave report is the record of both.
+    drainReveals(world)
     if (trip !== 'none' && world.ending?.type === 'college') {
       world = trip === 'export'
         ? await decodeExportFile(await encodeExportFile(world))
@@ -341,10 +363,15 @@ function walkWithStaleEntry(at: AtFork, weeksOut: number, finishReveal: boolean)
   const entry = bookAnEntryInsideTheFreeze(world, weeksOut)
   drainLifeBeats(world)
   answerFork(world, 'college', undefined)
-  for (let y = 0; y < 16 && world.ending?.type === 'college'; y++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – see the walk above for the whole note and the measurement.
+  for (let y = 0; y < 24 && world.ending?.type === 'college'; y++) {
     resumeFromCollege(world, rng)
     // Round 24: the year pauses on her birthday week; answer it so the next press finishes the year.
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
+    // ⚠⚠ AND THE REVEALS – see the walk above for the whole note. ⚠ THE TOUR reveal below is a
+    // DIFFERENT field and is deliberately left to `finishReveal`: that one is this case's subject.
+    drainReveals(world)
   }
   if (finishReveal && world.pendingTournament) {
     for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {

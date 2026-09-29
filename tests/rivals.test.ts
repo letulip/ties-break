@@ -755,7 +755,15 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     // per-match drain the kid does and recovers at recoveryBase 1/week with no slider, no physio and
     // no vacation, so a base raise lands on the rivals harder than on any player. MEASURED, 8 seeds
     // × 40 ticked weeks × 199 rivals, window 20w (tools sweep, base patched with the runsIndex memo
-    // invalidated – it is keyed on the ladder array, so a matchFatigue patch alone is invisible to it):
+    // invalidated BY HAND – it was keyed on the ladder array, so a matchFatigue patch alone was
+    // invisible to it):
+    //   ⚠ RE-AIMED 27.09 BY C-01, AND THE HAND-INVALIDATION IS NO LONGER NEEDED. The sentence above
+    //   is kept because it records how the numbers below were obtained, not because the constraint
+    //   still exists: `runsIndex` (`season/rival.ts`) is keyed on the CONTENT of all five knobs
+    //   `runStrain` reads since C-01, so a `matchFatigue` or `tierMatchFatigue` patch re-prices the
+    //   cohort on its own, in place or not. A sweep re-run today needs no ladder poke – and if you
+    //   find one in a new tool, delete it rather than copy it. The guard is
+    //   `tests/principles-c01-rival-memo.test.ts`, whose mutation arm is the old two-ladder key.
     //     base 1   worst floored 7-13/20 · heavy(>=10w) 0-2 · ever floored 13.1-15.1% · min median 98
     //     base 2   worst floored 12-14/20 · heavy(>=10w) 2-9 · ever floored 21.1-23.6% · min median 93-96
     // So: claims (1) and (3) hold with room to spare – the median rival is still fit every week, i.e.

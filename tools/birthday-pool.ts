@@ -20,11 +20,8 @@ import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
 import {
   buildBirthdayPrompt,
   chooseGift,
-  closeTournament,
-  collegeLeagueRevealOpen,
   pendingBirthday,
   resumeFromCollege,
-  skipTournament,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, birthdayOffer, birthdayOfferFor } from '../src/engine/world/birthday'
@@ -33,6 +30,7 @@ import { meansOfCents, MEANS_BANDS } from '../src/engine/world/means'
 import { ENDINGS } from '../src/engine/ending'
 import type { WorldState } from '../src/engine/world'
 import { drainLifeBeats } from './_lifeBeats'
+import { drainReveals } from './_reveals'
 
 const args = process.argv.slice(2)
 const numOf = (n: string, d: number): number => {
@@ -209,13 +207,28 @@ function walkCollege(preset: (typeof PRESETS)[number], i: number, out: BirthdayR
   // ⚠ AND THE BUDGET GREW WITH IT: two stops a year plus the press that spends it is three, so six
   // per year is the same headroom the old three gave one stop.
   for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    if (collegeLeagueRevealOpen(world)) {
-      skipTournament(world)
-      closeTournament(world)
-      continue
-    }
+    // ⚠⚠ WIDENED 26.09 TO THE TIE AS WELL, AND IT IS A ROUND-27 GAP THAT B-01's REPAIR EXPOSED. This
+    // answered the championship alone – true when that was the only college fixture pausing the year
+    // (round 26 #6) – and round 27 #6 made the Nations Cup tie pause it the same way. A walk blind to
+    // the tie presses against a year it cannot spend, which was invisible while it stalled on her card
+    // weeks earlier. `drainReveals` (tools/_reveals.ts) answers whichever is standing, «Skip all
+    // rounds» then «Continue» – the player's own two presses, and the one spelling of them.
+    if (drainReveals(world) > 0) continue
     if (answerIfBirthday(world, career, out, (ids) => ids[0])) continue
     resumeFromCollege(world, rng)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+    // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+    // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+    // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+    // first beat of a degree stopped the years banking and the budget ran out against a career still
+    // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+    // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+    // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+    // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+    // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+    // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+    // along.
+    drainLifeBeats(world)
   }
   return true
 }

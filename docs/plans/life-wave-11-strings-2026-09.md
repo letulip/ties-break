@@ -38,17 +38,25 @@ One declaration, three surfaces: the prologue's opening card, the wizard, the se
 
 The narration frames are wave 8's rows; wave 11's delta is the window clause inside the quotation
 marks – ruled STANDING on 23.09. Listed whole because the whole string is what the player reads;
-roof and away per voice.
+one row per voice.
+
+⚠ **REMOVED 26.09 – the owner's ruling 19 on B-08: the four ROOF rows are gone (W8, W10, W12, W14),
+and the ids of the survivors are unchanged so an older report still reads against this table.** The
+announcement stands behind the wedding latch, which cannot be written before she is 23, and at 23
+there is no roof stage left to be in – school is over by 18.92 for every girl the game can generate
+and `diaryLifeStageFor` sends everyone past 22 to `independent`, `college` being away as well. So
+`EXPECTING_HER_LINE` lost its presence axis the way `DIVORCED_HER_LINE` did on 23.09, and the four
+rows below are the `away` frames, byte-identical to what shipped. **No string was reworded**
+(invariant 4): four were removed because no career could ever be shown them.
+`tests/principles-b08-presence-reach.test.ts` §A is the measurement and §C refuses the next pool
+keyed on presence behind a gate at 22 or over. ⚠ Wave 8's own table still quotes the four removed
+narrations at P1/P3/P5/P7 and carries the same dated note.
 
 | id | home | text | status |
 | --- | --- | --- | --- |
-| W8 | `src/engine/world/lifeBeat.ts` | She waited until we were all sitting down, and then said it straight out. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both." | `DRAFT` |
 | W9 | `src/engine/world/lifeBeat.ts` | She called on a Sunday, before anything else had been said. "We are having a baby. I have barely sat on it. I am happy and I am frightened, and I wanted you to know both." | `DRAFT` |
-| W10 | `src/engine/world/lifeBeat.ts` | She came in and said it before her coat was off. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished." | `DRAFT` |
 | W11 | `src/engine/world/lifeBeat.ts` | She rang between flights and led with it. "We are having a baby. I did not wait to be sure. I have thought about the tennis. I am not finished." | `DRAFT` |
-| W12 | `src/engine/world/lifeBeat.ts` | She mentioned it while she was looking at the calendar, as if it were a fixture change. "We are having a baby. I have known a while. I will play a while yet, and then I will not." | `DRAFT` |
 | W13 | `src/engine/world/lifeBeat.ts` | She sent the next block of dates through, and this was underneath them. "We are having a baby. I have known a while. I will play a while yet, and then I will not." | `DRAFT` |
-| W14 | `src/engine/world/lifeBeat.ts` | She sat with it through most of the evening, and then put it in one sentence. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it." | `DRAFT` |
 | W15 | `src/engine/world/lifeBeat.ts` | She was quiet for most of the call, and said it just before goodbye. "We are having a baby. I have known a long time, and I needed to know what I felt about it first. I know what it costs. I want it." | `DRAFT` |
 
 ## 3. The third answer, re-worded to a position
@@ -75,18 +83,22 @@ absence. Told and untold arms for the two open voices.
 ## 5. The bereavement card
 
 The deceased is UNNAMED in mechanics and in copy (ruled 22.09) – no relation word anywhere. Her
-line per voice and presence; the dry card for the strained/cold distances; one frame; ONE answer
+line per voice; the dry card for the strained/cold distances; one frame; ONE answer
 at 0 bond (ruled 23.09) and its feed row.
+
+⚠ **REMOVED 26.09 – the owner's ruling 19 on B-08: the four ROOF rows are gone (W22, W24, W26, W28),
+and the ids of the survivors are unchanged.** `bereavementEligible` refuses below
+`ECONOMY.weight.bereavement.fromAgeYears` (23), and at 23 every stage is away, so the roof column was
+four lines no career could reach. §2's note carries the argument in full; the four rows below are the
+`away` frames, byte-identical to what shipped, and **no string was reworded** (invariant 4). §4's
+«private grieves almost silently» is untouched: openness reaches the card through the four voice
+cells themselves, never through the axis removed.
 
 | id | home | text | status |
 | --- | --- | --- | --- |
-| W22 | `src/engine/world/lifeBeat.ts` | She came round in the evening and said it before she had taken her coat off. "There has been a death in the family. I would rather you heard it from me." | `DRAFT` |
 | W23 | `src/engine/world/lifeBeat.ts` | She rang in the evening, before anything else had been said. "There has been a death in the family. I would rather you heard it from me." | `DRAFT` |
-| W24 | `src/engine/world/lifeBeat.ts` | She said it in the hall, loudly, and then would not sit down with it. "There has been a death in the family. I am not going to be much use this week." | `DRAFT` |
 | W25 | `src/engine/world/lifeBeat.ts` | She rang and led with it, and was off the phone not long after. "There has been a death in the family. I am not going to be much use this week." | `DRAFT` |
-| W26 | `src/engine/world/lifeBeat.ts` | She mentioned it while she was putting something away, as if it were an errand. "There has been a death in the family. There are arrangements to make." | `DRAFT` |
 | W27 | `src/engine/world/lifeBeat.ts` | She sent the week's dates through, and this was underneath them. "There has been a death in the family. There are arrangements to make." | `DRAFT` |
-| W28 | `src/engine/world/lifeBeat.ts` | She sat in the kitchen a long time before she said anything at all. "There has been a death in the family." | `DRAFT` |
 | W29 | `src/engine/world/lifeBeat.ts` | The call was mostly quiet. She said it once, near the end of it. "There has been a death in the family." | `DRAFT` |
 | W30 | `src/engine/world/lifeBeat.ts` | There has been a death in her family. The house heard it from somebody else. | `DRAFT` |
 | W31 | `src/engine/world/lifeBeat.ts` | There has been a death in the family | `DRAFT` |

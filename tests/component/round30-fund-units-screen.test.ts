@@ -51,18 +51,11 @@ import {
 import { rngFromSeed } from '../../src/engine/rng'
 import { formatCents } from '../../src/shared/money'
 import type { Snapshot } from '../../src/shared/protocol'
+import { walkWeeks } from '../helpers/career'
 
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 async function mountShop(snapshot: Snapshot) {

@@ -26,13 +26,18 @@
 //
 // ⚠ MUTATION-VERIFIED. Restoring `Dismiss autosave notice` / `Dismiss stop notice` as the VISIBLE
 // copy turns the first two blocks red; dropping either `aria-label` turns the third red.
-import { describe, it, expect, beforeEach } from 'vitest'
+// ⚠⚠ AND SINCE T4.9 (E-10, the 26.09 principles review) THIS FILE ALSO OWNS THEIR LIVE REGION – the
+// second `describe` below. The enumeration above is the reason the claim landed here rather than in a
+// file of its own: «a fix that lands on one of three» is the false-done this file already exists to
+// prevent, and the third strip is the one nothing raises by accident.
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import App from '../../src/App.vue'
 import SplashScreen from '../../src/components/SplashScreen.vue'
 import { useGameStore } from '../../src/stores/game'
+import { needRefresh } from '../../src/pwa'
 import { careerSnapshot } from '../helpers/career'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND `HomeScreen` READS IT AT SETUP. The same shim and the same
@@ -158,6 +163,98 @@ describe('round 28 #10 - the top notifications say one word', () => {
     // ...and it is genuinely absent here, because nothing in this fixture raises it: `needRefresh`
     // only flips when a service worker is waiting, and the stub registers none.
     expect(banner.exists()).toBe(false)
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ T4.9 · E-10 – THE THREE NOTICES ARE ANNOUNCED, AND THEY ARE FOUND BY ROLE
+// =================================================================================================
+//
+// The finding (docs/review-principles-2026-09-26/05-ui.md, E-10): `.update-banner`, `.recovered-banner`
+// and `.stop-toast` carried no `role` and no `aria-live`, so the game's one message about a damaged
+// save and its whole explanation of why a multi-week advance halted were announced by nothing. The
+// app already had the treatment one door along – `StoreError.vue`'s own note: «an error that appears
+// without moving focus is announced by nothing otherwise».
+//
+// ⚠ IT IS AN ATTRIBUTE AND NOT A WORD. Invariant 4: no copy moves in this change, which is why every
+// assertion below is about the ROLE and the text is only ever used to say WHICH strip was found.
+//
+// ⚠⚠ ALL THREE RAISED AT ONCE, which the round-28 fixture above deliberately could not do: nothing
+// in it flips `needRefresh`, so the update prompt was asserted ABSENT there. `src/pwa.ts` exports it
+// as a plain `ref` and the harness stub's own note names this as the way to raise the banner («a suite
+// that wants that banner sets `needRefresh` itself»). It is reset after every case, so the file's
+// earlier claim that the prompt is absent in its own fixture still means what it meant.
+//
+// ⚠ MUTATION-VERIFIED: dropping `role="status"` from any ONE of the three reddens the census case by
+// name, and the per-strip cases say which. Both outputs are quoted in the wave's report.
+describe('T4.9 - the three top notices are live regions', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+  })
+  afterEach(() => {
+    needRefresh.value = false
+  })
+
+  /** The shell with all THREE strips up. `mountShell` raises two; the update prompt is the third. */
+  async function mountAllThree(): Promise<VueWrapper> {
+    needRefresh.value = true
+    const wrapper = await mountShell()
+    await nextTick()
+    return wrapper
+  }
+
+  it('raises all three strips at once, so nothing below is vacuous', async () => {
+    const wrapper = await mountAllThree()
+    for (const selector of ['.update-banner', '.recovered-banner', '.stop-toast']) {
+      expect(wrapper.find(selector).exists(), `${selector} must be on screen`).toBe(true)
+    }
+    wrapper.unmount()
+  })
+
+  it('⭐ every one of the three is reachable BY ROLE, not merely on screen', async () => {
+    // The census, and it is the assertion a dropped role reddens: the set of strips that announce
+    // themselves must be the whole enumeration, so a fix that reaches two of three fails here.
+    const wrapper = await mountAllThree()
+    const announced = wrapper.findAll('[role="status"]').map((el) => el.attributes('class') ?? '')
+    for (const cls of ['update-banner', 'recovered-banner', 'stop-toast']) {
+      expect(
+        announced.some((c) => c.split(/\s+/).includes(cls)),
+        `.${cls} is on screen with no live region - a screen reader is told nothing about it`,
+      ).toBe(true)
+    }
+    wrapper.unmount()
+  })
+
+  it('...and each one announces its OWN message, in the element that holds it', async () => {
+    // A `role` on an empty wrapper announces nothing, so the role and the sentence have to be in the
+    // same subtree. Per strip, because "one of three" is this file's whole subject.
+    const wrapper = await mountAllThree()
+    const cases: [string, string][] = [
+      ['.update-banner', 'New version available'],
+      ['.recovered-banner', 'Autosave was damaged'],
+      ['.stop-toast', 'Stopped:'],
+    ]
+    for (const [selector, said] of cases) {
+      const strip = wrapper.find(selector)
+      expect(strip.attributes('role'), `${selector} carries no role`).toBe('status')
+      expect(strip.text(), `${selector} announces a region with nothing in it`).toContain(said)
+    }
+    wrapper.unmount()
+  })
+
+  it('⚠ polite, never assertive - a notice may not interrupt what she is reading', async () => {
+    // `role="status"` IS `aria-live="polite"` by mapping, and the point of saying it out loud is that
+    // the day somebody reaches for `alert` or `aria-live="assertive"` on a strip at the top of a game
+    // screen, this is where it is refused. The stop toast is the case that matters: it appears at the
+    // end of an advance the player asked for, not in front of them.
+    const wrapper = await mountAllThree()
+    for (const selector of ['.update-banner', '.recovered-banner', '.stop-toast']) {
+      const strip = wrapper.find(selector)
+      expect(strip.attributes('role')).toBe('status')
+      expect(strip.attributes('aria-live') ?? 'polite', `${selector} interrupts`).toBe('polite')
+    }
     wrapper.unmount()
   })
 })

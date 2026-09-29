@@ -15,15 +15,38 @@
 // which reads the whole source and not only the template.) The condition comes from
 // `tierOpensWhen` now, which reads the gate the engine actually applies and re-words itself when that
 // gate is re-tuned.
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import { tierOpensWhen } from '../composables/tierState'
 import { formatCents } from '../shared/money'
 import type { TierId } from '../engine/season/types'
 import IconButton from './ui/IconButton.vue'
 
-defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: [] }>()
+
+// ⚠⚠ E-08 / T4.7 – THE LAST OF THE FOUR ROLELESS OVERLAYS, AND ITS SIBLING'S FIX IS THE WHOLE PATCH.
+// This card had NO role, no trap, no Escape and no phone net: `getByRole('dialog')` found nothing
+// while it was open, a screen reader was never told a card had opened at all, and Tab walked out of it
+// into the tab bar behind the scrim. `composables/dialogFocus.ts` states why those halves have to
+// arrive together rather than one at a time.
+//
+// ⚠ `RankHelpDialog.vue` IS THE PRECEDENT AND IT IS THE SAME `.guide-card`, which is what makes this
+// four lines rather than a design: U-06 fixed the sibling on this very box, so the cap, the scroller
+// and the pinned close are already measured for a phone – see the new fit case in
+// tests/component/principles-w4-dialog-focus.test.ts, which asserts them here too rather than
+// assuming the shared class.
+//
+// ⚠ ESCAPE IS PASSED, for the sibling's reason: this card already closes on a backdrop click, and
+// Escape is the keyboard's spelling of that same gesture (the composable's rule – the blocking
+// questions, which have no way out that is not an answer, pass nothing). It is a reference table; it
+// asks nothing.
+//
+// ⚠ NOT ONE WORD MOVED (invariant 4): the title, the six column headings and the closing paragraph are
+// exactly what they were, and the title simply gained an id so it can NAME the dialog.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card, () => emit('close'))
 
 const game = useGameStore()
 
@@ -67,10 +90,20 @@ const rows = computed<TierRow[]>(() =>
 </script>
 
 <template>
-  <div class="dialog-overlay" @click.self="$emit('close')">
-    <div class="guide-card">
-      <IconButton class="replay-close" icon="close" label="Close tier guide" title="Close" @click="$emit('close')" />
-      <p class="guide-title">Tour guide</p>
+  <div class="dialog-overlay" @click.self="emit('close')">
+    <!-- ⚠ E-08 / T4.7: role/aria-modal on the CARD and not on the scrim, `tabindex="-1"` so the trap
+         has a landing place, and the title element names it - the same four lines every other dialog in
+         the app carries (R2-07), and `RankHelpDialog.vue`'s verbatim. -->
+    <div
+      ref="card"
+      class="guide-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tier-guide-title"
+      tabindex="-1"
+    >
+      <IconButton class="replay-close" icon="close" label="Close tier guide" title="Close" @click="emit('close')" />
+      <p id="tier-guide-title" class="guide-title">Tour guide</p>
       <div class="guide-table-wrap">
         <table>
           <thead>

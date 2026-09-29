@@ -42,6 +42,7 @@ import type { TierId } from '../src/engine/season/types'
 // what the emoji it replaced used to be. A ban that reads the comments fires on its own
 // documentation, and the only way to satisfy it would be to delete the reasoning.
 import { codeOf, region, regionToLast } from './helpers/source'
+import { describeReaches, importsOf, isWorldBarrel, isWorldPackage, WORLD_PACKAGE } from './helpers/engineImports'
 // ⚠ WAVE B (07.09) – THE SHELL'S LOGIC IS TWO FILES NOW. `App.vue`'s four tab "seen" marks, their
 // watchers and their dot computeds moved to `composables/tabSeen.ts` (U-04), so every POSITIVE claim
 // this file makes about "the shell" is aimed at `componentLogic` – the SFC PLUS the composables it
@@ -55,6 +56,16 @@ const read = (p: string) => readFileSync(`${ROOT}${p}`, 'utf8')
 
 const RESOLVER = 'src/art/trophies.ts'
 const ARRIVAL = 'src/composables/trophyArrival.ts'
+/** Modules of `src/engine/world/` this presentation slice MAY import – a module that holds constants
+ *  and cannot reach the rng, named without its directory (`'constants'`).
+ *
+ *  ⚠ **EMPTY ON PURPOSE (T6.7 · Q3, 28.09)**: it is a seam, not a concession. `TIER_LADDER` lives in
+ *  `engine/season/calendar` today and could be born in `world/constants` tomorrow; one dated line here
+ *  admits that ONE module, so the judgement «this cannot draw» is made at a reviewable line instead of
+ *  in a builder's head while a red they did not expect is in front of them. */
+const PURE_WORLD_MODULES: readonly string[] = []
+const allowedWorldModule = (resolved: string): boolean =>
+  PURE_WORLD_MODULES.some((name) => resolved === `${WORLD_PACKAGE}/${name}`)
 const FLOW = 'src/components/TournamentFlow.vue'
 const CABINET = 'src/components/screens/TrophiesScreen.vue'
 const SHELL = 'src/App.vue'
@@ -336,7 +347,31 @@ describe('the flight is assembly, and it stays out of the simulation', () => {
       const src = read(p)
       expect(src, `${p} must not draw`).not.toContain('Math.random')
       expect(src, `${p} must not touch the rng`).not.toContain('engine/rng')
-      expect(src, `${p} must not touch the world`).not.toContain('engine/world')
+      // ⚠⚠ RE-AIMED 28.09 (T6.7 · Q3), FROM `not.toContain('engine/world')` TO TWO RESOLVED CLAIMS.
+      // A substring cannot tell the BARREL from the PACKAGE – `'../engine/world/constants'` CONTAINS
+      // `'../engine/world'` – so this line reddened on the spelling `CLAUDE.md`'s P4 rule and
+      // `tests/principles-a02-ui-barrel-ratchet.test.ts` ASK a UI file to use, and it also reddened on
+      // a COMMENT naming a world module as the home of a rule. Neither is this slice coming near a
+      // draw, which is the claim. Split so each half says what it means:
+      //   (a) the BARREL is refused outright. It re-exports the whole engine including `tickWeek` and
+      //       `replayMainState`, so a barrel import here is the maximal reach and needs no discussion.
+      //   (b) a module INSIDE the package is refused too, but through a named allowlist, because that
+      //       is the case that has an answer rather than a verdict: `TIER_LADDER` lives in
+      //       `engine/season/calendar` today and could be born in `world/constants` tomorrow, and a
+      //       pure constant does not draw. The list is EMPTY, so nothing is admitted silently – the
+      //       red now tells the next person what to do instead of contradicting the rule they follow.
+      // ⚠ NOT WEAKENED: on imports this is strictly stronger than the substring, because a specifier
+      // is resolved and no spelling evades it. What it stops matching is text.
+      const imports = importsOf(p, src)
+      expect(
+        describeReaches(imports.filter(isWorldBarrel)),
+        `${p} imports the engine's world BARREL – it re-exports the tick, and this slice is presentation`,
+      ).toEqual([])
+      expect(
+        describeReaches(imports.filter((r) => isWorldPackage(r) && !allowedWorldModule(r.resolved))),
+        `${p} imports a module of engine/world – if it is a PURE constant module that cannot draw, add ` +
+          'it to PURE_WORLD_MODULES with a dated note; if it can reach the rng, this slice may not have it',
+      ).toEqual([])
     }
     // What they DO import from the engine is a constant and a type – the tier ladder, so a new rung
     // is a shelf the day it is added, and `TierId`, which is a compile-time name.

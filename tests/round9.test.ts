@@ -31,6 +31,8 @@ import { TIERS } from '../src/engine/season/calendar'
 import { INCOME_CATS } from '../tools/econ-bench'
 import { fnv1aHex } from './helpers/hash'
 import { after, region } from './helpers/source'
+// ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header.
+import { carriesClasses } from './helpers/markup'
 
 // ---------------------------------------------------------------------------
 // Round-9 pt3 — engine pack: savings interest (R9-1), per-match tournament
@@ -644,7 +646,12 @@ describe('R9-9/R9-21a — UI wiring', () => {
     // ⚠ RE-AIMED by wave 2: the bar is Home-only for ADVANCING and global for RESUMING a
     // paused reveal (see round13-nav.test.ts). What R9-9 cares about is that the shell owns it and
     // no screen grows one of its own - that is unchanged.
-    expect(src).toContain(`class="next-week-bar"`)
+    // ⚠⚠ RE-AIMED AGAIN 28.09 (T6.4 · F-09), IN ITS SPELLING ONLY. The bar's geometry moved into the
+    // shared `.floating-cta` in src/style.css, so the attribute now reads
+    // `class="next-week-bar floating-cta"`. R9-9a's property – no tab can strand the career, because the
+    // shell owns the one resume control – is untouched; the pin is whole-token now rather than exact
+    // text. tests/helpers/markup.ts carries the argument.
+    expect(carriesClasses(src, 'next-week-bar')).toBe(true)
     expect(src).toContain(`game.snapshot?.pending`)
     expect(src).toContain('tournamentHidden.value = false') // the re-open path playWeek takes
   })

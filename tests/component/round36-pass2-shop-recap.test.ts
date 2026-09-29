@@ -22,10 +22,7 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
-  closeTournament,
   createWorld,
-  skipTournament,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
@@ -33,6 +30,7 @@ import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, type Viewport, aspectHeightPx, boxOf, lengthPx, setViewport } from './fits'
 import { shelfText } from './shelf'
+import { walkWeeks } from '../helpers/career'
 
 function assertSheetPresent(): void {
   if (!document.head.querySelector('style')) {
@@ -44,15 +42,7 @@ function assertSheetPresent(): void {
  *  that reaches the shelf or the week's story. */
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 
 /** Rich enough that no rung is greyed for money alone, so every family draws its full shelf. */

@@ -331,6 +331,26 @@ export function drainLifeBeatsTallied(
   const bondBefore = world.bond
   let cleared = 0
   let bondSkew = 0
+  // ⚠⚠ A CAREER THAT HAS ENDED FOR GOOD HAS NOTHING ANSWERABLE, AND THAT IS A NO-OP RATHER THAN A
+  // THROW (26.09, found by B-01 / T2.3's bench repair). `answerLifeBeat` calls `guardNotEndedForGood`,
+  // which refuses on every ending except the resumable college latch – correctly, it is a DECISION on
+  // a career with no next week. But a walker's contract here is «answer whatever is pending», and a
+  // college press loop can latch a TERMINAL ending mid-year (the loop's own note: «a career-ending
+  // injury can land at college – she is playing a lot of tennis»), so the drain that follows the press
+  // met a dead career and threw `This career has ended` out of nine benches at once. MEASURED: it
+  // killed `tools/college-return-probe.ts` outright the first time its careers actually graduated.
+  //
+  // ⚠ THE COLLEGE LATCH IS NOT «ENDED» HERE, deliberately – it is the one ending that resumes, her
+  // card really is answerable behind it, and a guard that skipped it would silently stop draining at
+  // exactly the state B-01's ruling is about. This is `guardNotEndedForGood`'s own predicate, read
+  // rather than re-spelled: everything it refuses, this skips; everything it allows, this drains.
+  //
+  // ⚠ IT IS A SKIP AND NOT A SILENCE: the tally comes back with `cleared: 0`, so a caller that counts
+  // drained rows still sees the truth. The read-dependent-price refusal below is untouched and stays
+  // loud – that one is about a harness asking for an answer nobody can price, which is a real error.
+  if (world.ending !== null && world.ending.type !== 'college') {
+    return { cleared, byKind, bondSkew, bondMoved: world.bond - bondBefore }
+  }
   for (let guard = 0; guard < 200; guard++) {
     const row = pendingLifeBeat(world)
     // ⚠ `except` IS FOR A HARNESS WHOSE SUBJECT IS ONE OF THE KINDS: a walk that drained the beat it

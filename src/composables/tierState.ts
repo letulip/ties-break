@@ -11,7 +11,7 @@
 //
 // So the states are now told apart, in words:
 //   'age-locked'  the tier's age window does not contain her – she is younger than `minAgeYears`
-//                 (the junior tour is 13+, the adult rungs 16/16/17), or since §4.1 OLDER than
+//                 (the rung's own floor, never a number written here), or since §4.1 OLDER than
 //                 `maxAgeYears` (the junior tour is U18). ⚠ ONE KIND, TWO OPPOSITE SENTENCES: the
 //                 planner's job is the same either way (not enterable, nothing to say about
 //                 scheduling), but "Opens at 13" and "Under-19" are a countdown and a closed door,
@@ -19,9 +19,18 @@
 //   'locked'      she is BELOW enterPointBand[0] – "Reach N pts", the one real lock
 //   'outgrown'    her windowed points are past enterPointBand[1] (unchanged behaviour)
 //   'capped'      she has spent this YEAR's allowance of international entries (the ITF annual
-//                 entry cap) – blocked, but only until the season turns
+//                 entry cap) – blocked, but only until her next birthday
 //   'scheduled'   she can enter it AND one is on the calendar – the week is named
 //   'unscheduled' she can enter it and NOTHING is on the calendar – say exactly that
+//
+// ⚠⚠ TWO CLAUSES ABOVE WERE CORRECTED 26.09 AND NO RENDERED WORD MOVED (C-02 / B-P3-09's class, found
+// by reading this header against `TIERS` and `entryCapUsage`). They read *"the adult rungs 16/16/17"* –
+// the pre-16.08 chain, which the owner's age-grid ruling moved that evening (the grid's one prose copy
+// is `docs/specs/college-is-its-own-branch-2026-08.md` §0a, and the constants are
+// `TIERS[*].minAgeYears`) – and *"blocked, but only until the season turns"*, where the allowance's
+// window has been her BIRTHDAY YEAR since P2 (`world/entryCaps.ts`). This file renders neither number
+// nor date: the age sentence comes from the engine and the long form says the allowance returns without
+// naming a season, which is why nothing on screen was wrong while these two lines were.
 //
 // 'capped' is a FOURTH thing the muted dash used to hide, and the one most likely to be misread as
 // permanent: a parent who has used all fourteen must not conclude the tier is shut. So it is a
@@ -32,7 +41,7 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER, hasAcceptanceList } from '../engine/season/calendar'
-import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
+import { eventIsHers, isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
 import { UPCOMING_WEEKS } from '../engine/world/constants'
 // ⚠ ROUND 34 #1 – THE WINDOW A THRESHOLD IS COUNTED OVER is part of the condition, not a detail of
 // the fold: the domestic table is a season race and the other two roll 52 weeks. Read, never
@@ -311,10 +320,25 @@ export interface StackableEvent {
 
 /** CAN SHE ACT ON THIS CARD THIS WEEK – she is in it, or its list is still open to her. One
  *  definition, because `weekEventStack` below, the Season header's «N of them on the cards below»
- *  counter and «is this week still hers to plan» must not come to mean three different things. */
-export function eventActionable(e: StackableEvent, week: number): boolean {
-  return e.entered || (e.eligible && week <= e.deadlineWeek)
-}
+ *  counter and «is this week still hers to plan» must not come to mean three different things.
+ *
+ *  ⚠⚠ AND IT IS THE ENGINE'S OWN FUNCTION NOW, NOT A FAITHFUL COPY OF IT (T4.1 · E-06, 27.09) – the
+ *  `isSuitable` / `TIER_SHORT` / `layoffCoversWeek` pattern, and here the reason is the sentence
+ *  directly above. The body used to be written out here, byte-identical to `eventIsHers`
+ *  (`engine/world/multiWeek.ts`) except for the parameter's name, and the two sites each carried a
+ *  comment arguing for ONE spelling: this one, and `weekDays.ts`' re-export – «or the markers under
+ *  the grid and the control above the tab bar would disagree about what an empty stretch is». Two
+ *  arguments for one definition, over two definitions. The Season week stack and the header's
+ *  counter read THIS name; the calendar's look-ahead markers and the span pill read the engine's.
+ *  They agreed by COPY, which is exactly what both comments say must not be the mechanism.
+ *
+ *  ⚠ THE TYPE ANNOTATION IS DELIBERATE and is the `isSuitable` line's own shape: it keeps this
+ *  export's declared signature at `StackableEvent`, so every caller and every test type-checks
+ *  against the same parameter it always did while the BODY is the engine's. Nothing behavioural
+ *  moves – the bodies were identical – which is why this is a refactor and not a fix.
+ *  Witness: `tests/principles-e06-event-actionable.test.ts` (form A, spec §1: the identity is the
+ *  claim, because a table of agreements is what the copy already passed). */
+export const eventActionable: (e: StackableEvent, week: number) => boolean = eventIsHers
 
 /**
  * ⭐⭐⭐ ROUND 34 #14 – EVERY CARD A WEEK OFFERS, LEAD FIRST. The owner's ruling on the calendar item,
@@ -644,7 +668,9 @@ export interface TierState {
   kind: TierStateKind
   /** 'locked' only: the tier's entry threshold, for "Reach N pts". */
   pointsToEnter?: number
-  /** 'capped' only: the season allowance behind the verdict, for "N of M". */
+  /** 'capped' only: the BIRTHDAY-YEAR allowance behind the verdict, for "N of M" – `entryCapUsage`'s
+   *  own window (`world/entryCaps.ts`), which has not been the season block since P2. Said «the season
+   *  allowance» until 26.09; the rendered sentence beside it has always named the birthday. */
   entryCap?: EntryCapUsage
   /** 'scheduled' only: the week of the next event of this tier inside the horizon. */
   nextWeek?: number
@@ -759,7 +785,15 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       note: `Under-${tier.maxAgeYears! + 1}`,
       // No `tierOpensWhen` here on purpose: every clause it can write is a condition she could still
       // meet, and none of them is true any more. The tooltip states the rule and her age against it.
-      title: `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${input.ageYears} she has aged out of it.`,
+      //
+      // ⚠⚠ AND THE SENTENCE IS THE ENGINE'S WHEN THE ENGINE HAS ONE (T4.13 · E-04, the owner's ruling
+      // 6a). This arm RE-AUTHORED it: `entryVerdict`'s own first clause already composes «… is
+      // under-19 – at 26 she has aged out.» for the identical rung (`world/medical.ts`), and this line
+      // wrote a second, almost-identical one and SHIPPED IT BESIDE the engine's – parity spec §3's
+      // second bullet exactly, «the screen re-authored a sentence the engine composed». The age check
+      // runs before the refusal is read, so the engine's words were simply discarded. The fallback is
+      // the old line, for the pure callers that hand no `refusal` at all.
+      title: input.refusal?.detail ?? `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${input.ageYears} she has aged out of it.`,
     }
   }
   if (ageBlock === 'young') {
@@ -1006,6 +1040,46 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // many entries she has left) and BEFORE the calendar, because a scheduled event she may not take
   // must never read "Open – on the calendar". Mirrors the engine's own precedence: band, then
   // availability, and the cap sits in availability (world.ts availabilityStatus).
+  //
+  // ⭐⭐⭐ T4.13 · E-04 – AND THE ENGINE ANSWERS IT NOW, FOR ALL THREE ALLOWANCES (the owner's ruling 6a).
+  //
+  // WHAT WAS WRONG, in two halves. (1) The two arms below COMPOSED their own sentences from
+  // `snapshot.entryCap` and `snapshot.proEntryCap`, while the engine already writes one per allowance
+  // (`tierCapRefusal`, world/medical.ts) – the same re-authoring the aged-out arm did. (2) Worse, the
+  // engine has THREE cap refusals and this file knew about two: the WTA sub-cap («at most three of a
+  // fourteen-year-old's eight may be at W75 or above») had no arm at all, so on a sub-capped rung this
+  // rule fell through to 'scheduled' / 'unscheduled' and the strip said OPEN over a rung `enterEvent`
+  // refuses. It agreed today only because the sub-cap cannot bind at the shipped constants – a latent
+  // instance is still an instance, and `economy.ts`' own note says the rule ships «so that a phase which
+  // opens a rung lower does not have to remember it». The chip was the surface that had to remember.
+  //
+  // ⚠ SO THIS ARM IS KEYED ON THE VERDICT AND NOT ON A COUNT, which is what makes it total: any cap the
+  // engine adds arrives here already worded. `reason: 'capped'` is the whole test.
+  //
+  // ⚠ THE NOTE IS STILL THE SCREEN'S, and it must be: it is the chip's SHORT form, both spellings are
+  // the owner's existing words (`SeasonScreen.vue` picks between the same two, on the same predicate),
+  // and neither names a date or a number of its own – the count comes off the engine's own `entryCap`.
+  // What changed is the long form, which is now the engine's sentence rather than a second one.
+  //
+  // ⚠ THE TWO ARMS BELOW STAY as the answer for a caller with NO oracle – a pure test, a bench, an older
+  // fixture – exactly as every other arm in this function falls back to the live band. For a live
+  // caller they are unreachable, and the numbers they would produce are identical: both read
+  // `entryCapUsage` / `proEntryCapUsage` at `world.week`, which is the week `tierVerdict` asks about.
+  // ⚠ IT ASKS FOR THE SENTENCE AS WELL AS THE VERDICT, and that is not belt-and-braces: this arm's whole
+  // job is to PRINT the engine's words, so a refusal that carries none has nothing for it to print.
+  // `tierCapRefusal` always writes one, so the clause is unreachable today; the shape matters because the
+  // alternative – composing a third sentence here for that case – is the defect this arm removes.
+  // Without a detail the two legacy arms below answer, as they did before, and nothing is left blank.
+  if (input.refusal?.reason === 'capped' && input.refusal.detail !== undefined) {
+    const cap = input.refusal.entryCap ?? (isCappedProTier(id) ? input.proEntryCap : input.entryCap)
+    return {
+      id,
+      kind: 'capped',
+      entryCap: cap,
+      note: `${isCappedProTier(id) ? 'Tour age rule' : 'Year limit'} – ${cap.used} of ${cap.limit}`,
+      title: input.refusal.detail,
+    }
+  }
   if (isCappedTier(id) && input.entryCap.remaining <= 0) {
     const { used, limit } = input.entryCap
     return {

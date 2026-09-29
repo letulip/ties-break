@@ -19,8 +19,7 @@ import {
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
-import { simulateMatch } from '../src/engine/match/engine'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import type { SeasonEvent } from '../src/engine/season/types'
 import type { SeasonResult } from '../src/engine/season/ranking'
 
@@ -57,11 +56,17 @@ function advanceAnswering(world: WorldState, rng: Rng, weeks: number): StopReaso
 // The earliest event whose entry deadline has not yet passed.
 //
 // ⚠ ...AND WHOSE AGE GATE SHE CLEARS (task #17). `enterEligible` below can grant her any number of
-// POINTS, in any table, but it cannot make her older, and three rungs now open at 16/16/17 against a
-// career that starts at 14. These cases are about fees, refunds and duplicate entries – "the earliest
+// POINTS, in any table, but it cannot make her older, and rungs open ABOVE her starting age –
+// `TIERS[*].minAgeYears`, which `isTierAgeOpen` reads in the filter below, against a career that
+// starts at `START_AGE_YEARS`. These cases are about fees, refunds and duplicate entries – "the earliest
 // enterable event" is fixture scaffolding, not the subject – so the filter simply says what the
 // function's name already claimed. The events it skips are the ones a fourteen-year-old genuinely
 // cannot enter, which is `enterEvent` working, not failing.
+//
+// ⚠ «three rungs now open at 16/16/17» STOOD HERE UNTIL 27.09 (T5.4) and the digits are gone rather
+// than advanced: the 16.08 ruling moved the grid and no test read this sentence, so nothing objected
+// for a month. The fields are named instead – a note that points at `minAgeYears` cannot rot when
+// `minAgeYears` moves (`calendar.ts`'s own repair).
 function firstEnterable(world: WorldState) {
   const age = START_AGE_YEARS + Math.floor(world.week / WEEKS_PER_YEAR)
   // ⚠ AND THE PROFESSIONAL RUNGS TOO (W2-WINDOW), for the reason the age filter above gives, one
@@ -278,7 +283,10 @@ describe('a tournament week the kid entered', () => {
       expect(m).toBeTruthy()
       expect(m.seed).toBeTruthy()
       expect([m.aId, m.bId]).toContain(KID_ID)
-      const replay = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04): this line used to spell
+      // `{ surface, tour: JUNIOR_TOUR, seed }` itself and therefore proved that THIS FILE reproduces
+      // the engine, not that the replay surfaces do. `replayMatch` is what they call.
+      const replay = replayMatch(m).result
       const winnerId = replay.winner === 0 ? m.aId : m.bId
       expect(winnerId).toBe(m.winnerId)
       expect(replay.sets.map((s) => `${s.a}-${s.b}`).join(' ')).toBe(m.score)

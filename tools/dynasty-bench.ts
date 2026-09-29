@@ -39,6 +39,8 @@ import { temperamentOpenness, TEMPERAMENTS, type Temperament } from '../src/engi
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type DynastyHandover, type FamilyBackground } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
+// T5.12 · F-04, 27.09: `pct` was one of ten live copies of the fraction spelling – see `tools/_fmt.ts`.
+import { pctOf } from './_fmt'
 
 // --- arguments -----------------------------------------------------------------------------------
 
@@ -69,7 +71,6 @@ const CORPUS_N = numArg(argv, '--corpus', 24)
  *  silently counted as one of the endings. */
 const CAP = numArg(argv, '--cap', 1600)
 
-const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 
 function blockOf(mother: Temperament, career: Partial<DynastyHandover['motherCareer']> = {}): DynastyHandover {
   return {
@@ -102,7 +103,7 @@ function rowLean(): void {
     // The binomial standard error at the drafted rate, so the row can be read without a calculator.
     const sem = Math.sqrt((share * (1 - share)) / LEAN_N)
     console.log(
-      `   mother ${mother.padEnd(6)} (${pole.padEnd(7)}) – measured ${pct(share)} ± ${pct(sem)}  ` +
+      `   mother ${mother.padEnd(6)} (${pole.padEnd(7)}) – measured ${pctOf(share)} ± ${pctOf(sem)}  ` +
         `(${took} of ${LEAN_N})`,
     )
   }
@@ -112,7 +113,7 @@ function rowLean(): void {
   for (let i = 0; i < LEAN_N; i += 1) {
     if (temperamentOpenness(temperamentFor(`bench-lean-${i}`)) === 'open') open += 1
   }
-  console.log(`   no mother          – measured ${pct(open / LEAN_N)} open  (predicted 50.0%, uniform)`)
+  console.log(`   no mother          – measured ${pctOf(open / LEAN_N)} open  (predicted 50.0%, uniform)`)
 }
 
 // =================================================================================================

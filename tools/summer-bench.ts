@@ -16,7 +16,7 @@
 // `ECONOMY.summerBlock` zeroed out. Zeroing rather than deleting keeps every other code path
 // identical, and the block spends no RNG on any stream, so the two runs walk byte-identical
 // sequences and the difference is the block and nothing else.
-import { createWorld, tickWeek, bookVacation, enterEvent, closeTournament, summerBlockWeek } from '../src/engine/world'
+import { createWorld, tickWeek, bookVacation, enterEvent, closeTournament, skipTournament, summerBlockWeek } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
 import { SKILL_KEYS } from '../src/engine/development'
 import { SUMMER_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -75,7 +75,28 @@ function career(
     const probe = { ...w, week: w.week + 1 }
     if (summerBlockWeek(probe as typeof w)) blockWeeks++
     tickWeek(w, rng)
-    if (w.pendingTournament) closeTournament(w)
+    // ⚠⚠ RE-AIMED 26.09 (B-05 / T2.5) AND IT IS THE ARM'S OWN PREMISE THAT WAS BROKEN, NOT THE CALL.
+    // This read `if (w.pendingTournament) closeTournament(w)` and RELIED ON THE DROP: `close` cleared
+    // an unfinished reveal without finalising it, and `matchDrain` is charged at
+    // `finalizeTournament` – so the racing arm above, whose whole stated reason is that «the cost of a
+    // fuller summer is only visible on a body that is already carrying a season», entered everything,
+    // played everything, and then threw every run away before it could cost her a point of condition.
+    // The arm was measuring a girl who travels and never gets tired.
+    //
+    // ⚠ NOW THE PLAYER'S OWN TWO PRESSES, SPELLED OUT. `closeTournament` finalises an unfinished run
+    // itself since T2.5, so `closeTournament` alone would do it – written as skip-then-close anyway,
+    // because what this bench WANTS at this line is «read the run out and commit it», and a harness
+    // that states its intent cannot be quietly re-aimed again by a change to the close.
+    //
+    // ⚠⚠ SO ITS PRINTED NUMBERS MOVE, ON THE RACING ROWS ONLY. The training-only arm enters nothing
+    // and reaches no reveal, so its columns are untouched; the racing arm's condition and injury
+    // columns now carry the matches she plays. `docs/specs/kit-ladder-and-summer-block.md` §1c records
+    // «racing career … fatigue 0.0» from a run of this bench BEFORE the repair – that 0.0 is the
+    // artefact, and re-reading it needs a fresh run rather than a re-labelled table.
+    if (w.pendingTournament) {
+      skipTournament(w)
+      closeTournament(w)
+    }
     conditionSum += w.condition
     if (w.injury && w.injury.sinceWeek === w.week) injuries++
     if (w.week % WEEKS_PER_YEAR === SUMMER_WEEKS[1] + 1) september += w.condition

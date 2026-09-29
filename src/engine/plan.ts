@@ -157,6 +157,51 @@ export function planFromWeek(week: readonly (readonly SessionKind[])[]): WeekPla
   return { train, rest: 100 - train, week: week.map((day) => [...day]) }
 }
 
+/** The three presets there are, as a list. ⚠ NOT A DISPLAY ORDER AND THE SCREENS KEEP THEIR OWN:
+ *  `HerWeekTab` and the Coach market draw them light-first, `ThisWeekScreen` grind-first, and which
+ *  way a row reads has never been able to change which preset a week IS. Exported for the type and
+ *  for a caller that wants the set; `presetOf` below is the only rule. */
+export const PLAN_PRESET_KEYS = ['light', 'balanced', 'grind'] as const
+
+export type PlanPresetKey = (typeof PLAN_PRESET_KEYS)[number]
+
+/**
+ * WHICH PRESET A WEEK IS, or null – ONE rule for every surface that lights a preset pill.
+ *
+ * ⚠ A PRESET IS SELECTED WHEN THE WEEK IS ITS WEEK, not when the train percentage matches. Five
+ * sessions arranged by hand project to the same 75/25 as Balanced does (`planTrainPct`), so reading
+ * `plan.train` back would light a pill up under a week the pill would not produce.
+ *
+ * That paragraph is `HerWeekTab.vue`'s own note, moved here verbatim with the rule it justifies – the
+ * owner's ruling 7a of 26.09 on E-02, «the layout is the preset's», which is HerWeekTab's reading and
+ * not a blend of the three that shipped. The other two DID read the pair back
+ * (`CoachMarketScreen`'s `activePlan` compared `train`, `ThisWeekScreen`'s `activePreset` compared
+ * `train` and `rest`, which is the same test because `rest = 100 - train`), and since
+ * `planShapeError` admits only 4..6 sessions and `planTrainPct` maps 4/5/6 onto exactly the three
+ * presets' `train`, EVERY legal hand-arranged week lit a pill on those two. Both of them and
+ * HerWeekTab are reachable from one screen, so the disagreement was live by construction.
+ *
+ * One exported primitive rather than three predicates is the parity spec's form A
+ * (docs/specs/engine-ui-parity-2026-09.md §1): there is no second implementation left to drift, so the
+ * sharing is a property of the code and a test can only witness it.
+ *
+ * ⚠ IT TAKES A WEEK, NOT A PLAN, and a caller holding a `WeekPlan` hands it `planWeek(plan)` – which
+ * is how a save that predates the matrix still answers: `planWeek` reads a weekless plan back as the
+ * week the Calendar has been drawing for that scalar, so a migrated career and an old literal cannot
+ * disagree about which preset they are.
+ */
+export function presetOf(week: readonly (readonly SessionKind[])[]): PlanPresetKey | null {
+  return (
+    PLAN_PRESET_KEYS.find((key) => {
+      const preset = planWeek(WEEK_PLAN_PRESETS[key])
+      return preset.every((day, d) => {
+        const mine = week[d] ?? []
+        return day.length === mine.length && day.every((kind, i) => kind === mine[i])
+      })
+    }) ?? null
+  )
+}
+
 /** How many sessions one day may hold this week. `schoolFree` is `summerBlockWeek`'s own verdict –
  *  asked of the world by the caller, never re-derived here (this module has no world). */
 export function dayCapacity(schoolFree: boolean): number {

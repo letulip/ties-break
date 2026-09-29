@@ -29,9 +29,18 @@
 // lands before he reads rather than after. Adding a phrase tightens the ratchet; removing one is his
 // call, exactly as with `BANNED_TAILS`.
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { engineModuleSource } from './worldSource'
 
-const SOURCE = 'src/engine/world/lifeBeat.ts'
+// ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06 – FROM ONE PATH TO THE MODULE SET, AND IT WENT RED LOUDLY, WHICH
+// IS WHY `poolSpan`'s existence guard is written the way it is. `world/lifeBeat.ts` is being split by
+// beat kind and `ENDED_HER_LINE` moved to `world/lifeBeat/endedCopy.ts` byte for byte; this lint said
+// «ENDED_HER_LINE must exist in src/engine/world/lifeBeat.ts – if it was renamed, re-aim this lint»
+// rather than sweeping an empty span. It now reads the module through `tests/worldSource.ts`'
+// `engineModuleSource` – `<name>.ts` PLUS `<name>/*.ts` – which is CLAUDE.md's source-pin rule («read it
+// through the reader, not at a path») and covers the next kind module with no edit here.
+// ⚠ NOT A WEAKENING: the span is still cut to the one pool, the 16-cell floor still runs before the
+// negative assertion, and the in-test ARM below still proves the ban list can match.
+const SOURCE = 'src/engine/world/lifeBeat.ts + world/lifeBeat/*.ts'
 
 /** Phrases that take a position on PRESENCE – whether she wants somebody with her. The heading owns
  *  that question; her line must not answer it. ⚠ Not a style list: every entry here would make the
@@ -56,7 +65,11 @@ const PRESENCE_CLAIMS = [
  *  silently narrowing the sweep. */
 function poolSpan(src: string, name: string): string {
   const lines = src.split('\n')
-  const start = lines.findIndex((l) => l.startsWith(`const ${name}`))
+  // ⚠ `export const` TOO SINCE T6.8: a pool that moved into a kind module is `export`ed so the hub can
+  //   import it back, and a prefix match on `const ` alone would have found nothing – which the guard
+  //   below would have reported honestly, but a lint that has to be re-aimed on every move is a lint
+  //   people learn to widen. Both spellings, one pool.
+  const start = lines.findIndex((l) => l.startsWith(`const ${name}`) || l.startsWith(`export const ${name}`))
   expect(start, `${name} must exist in ${SOURCE} – if it was renamed, re-aim this lint`).toBeGreaterThan(-1)
   const end = lines.findIndex((l, i) => i > start && l === '}')
   expect(end, `${name} must close at column 0`).toBeGreaterThan(start)
@@ -86,7 +99,7 @@ function leansIn(texts: readonly string[]): string[] {
 
 describe('ruling J – her ending line stays read-neutral', () => {
   it('⭐⭐⭐ no line in ENDED_HER_LINE takes the side the heading is deciding', () => {
-    const texts = stringsIn(poolSpan(readFileSync(SOURCE, 'utf8'), 'ENDED_HER_LINE'))
+    const texts = stringsIn(poolSpan(engineModuleSource('world/lifeBeat'), 'ENDED_HER_LINE'))
     // ⚠ A NEGATIVE ASSERTION MUST FIRST PROVE ITS TARGET EXISTS (the wave-3 family). Sixteen cells:
     // 4 voices x 2 registers x 2 presences. A regex that matched nothing would pass this test while
     // sweeping an empty list.

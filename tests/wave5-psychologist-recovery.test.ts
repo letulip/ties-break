@@ -860,12 +860,26 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
     return [...out].sort()
   }
 
-  // ⚠ 60 s, NOT THE 20 s DEFAULT, AND IT IS THE NEIGHBOURS' OWN IDIOM RATHER THAN A WEAKENING:
-  // tests/wave4-spirit-shock.test.ts carries `}, 60_000)` on every case that walks the engine.
-  // These three open a real career and step it through `stepCareerWeek` – 280 walked weeks for the
-  // pair of arms – and the first gate run of this commit blew the default under contention (48 unit
-  // tests timed out across 33 files, ZERO assertion failures, on a machine at load 28). The budget
-  // moves; not one assertion does.
+  // ⚠⚠ RE-AIMED 27.09 (T5.3 · H-06) – THE BUDGETS ARE GONE AND THE MEASUREMENT THEY RECORD IS NOT.
+  // ⚠ IT USED TO SAY: «60 s, NOT THE 20 s DEFAULT, AND IT IS THE NEIGHBOURS' OWN IDIOM RATHER THAN A
+  //   WEAKENING: tests/wave4-spirit-shock.test.ts carries a 60 s budget on every case that walks the
+  //   engine. These three open a real career and step it through `stepCareerWeek` – 280 walked weeks
+  //   for the pair of arms – and the first gate run of this commit blew the default under contention
+  //   (48 unit tests timed out across 33 files, ZERO assertion failures, on a machine at load 28).
+  //   The budget moves; not one assertion does.»
+  // ⚠ WHY IT MOVED, IN TWO PARTS. First, «the 20 s DEFAULT» is STALE: the unit project's own
+  //   `testTimeout` is 60_000 (`vite.config.ts`), so these three declarations had come to restate the
+  //   default exactly and bought nothing – which is why they went, with the other 38 at the ceiling.
+  //   The number was true when it was written; it stopped being true when the default was raised.
+  // ⚠ Second, and this is the part worth keeping: THE INCIDENT IT RECORDS IS REAL AND IS THE SAME
+  //   PHENOMENON T5.3 MEASURED FIVE TIMES. «48 unit tests timed out across 33 files, ZERO assertion
+  //   failures, at load 28» is contention, not cost – and on 27.09 the identical 31-file command came
+  //   back exit 0 at load 2.12 and exit 1 at load 38 with byte-identical results. A budget is not the
+  //   cure for that; the cure is not gating while agents work. So the sentence stays as evidence and
+  //   the numbers leave with the declarations.
+  // ⚠ The 280-walked-weeks fact is this file's own and still true: it is why these three are the
+  //   slowest here, and if they ever need MORE than the ceiling the answer is the heavy pool, not a
+  //   bigger number. The measured table: tests/sim-serialisation.test.ts.
   it('⭐⭐⭐ AN EMPTY SEAT AND AN ABSENT ONE ARE THE SAME PROGRAM – every key, every week, twenty weeks', () => {
     // ⚠⚠ THE HONEST CONTROL AVAILABLE IN ONE TREE. «Byte-identical to wave-4's» cannot be measured
     // against wave-4's tree from inside this one – so it is measured against the world SHAPE wave 4
@@ -884,7 +898,7 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
     // ...and the walk really carried a shock through, so the identity above is a claim about the
     // recovery and not about two worlds where nothing happened.
     expect(empty.world.spiritShock, 'the mark came off inside the walk').toBeNull()
-  }, 60_000)
+  })
 
   it('⭐⭐⭐ THE ISOLATION – a HIRED seat on the recovery year moves FOUR keys and no others', () => {
     // ⚠⚠ BOTH ARMS PAY THE SAME SALARY, which is what makes this about the SLOPE rather than about
@@ -913,7 +927,7 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
     // measurement of a walk that did something rather than of two quiet worlds.
     expect(working.world.events.filter((e) => e.text === RECOVERY_RECEIPT).length, 'the walked career cleared and printed').toBe(1)
     expect(idle.world.events.filter((e) => e.text === RECOVERY_RECEIPT), '...and the idle seat printed nothing').toEqual([])
-  }, 60_000)
+  })
 
   it('⚠ ALL FOUR TEMPERAMENTS WALK THE EMPTY SEAT’S OWN LADDER – the control, over the whole roster', () => {
     // ⚠ §A reads two of the four because the intensity axis has two poles; this reads all four, so a
@@ -927,7 +941,7 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
       expect(walked.spirit, `${t}: her own rate and nothing else`)
         .toEqual([0, 1, 2, 3, 4, 5].map((k) => Math.min(70, start + rate * (k + 1))))
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================

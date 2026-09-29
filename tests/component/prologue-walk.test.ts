@@ -716,9 +716,7 @@ describe('⭐⭐ the ten-minute budget, measured as a reading length', () => {
 //             The viewer's own pills reach 4x and «Full», so this is the middle of what a player can
 //             choose rather than a ceiling.
 import { buildTimeline } from '../../src/viz/timeline'
-import { simulateMatch } from '../../src/engine/match/engine'
-import { annotateMatch } from '../../src/engine/match/rally'
-import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
+import { replayMatch } from '../../src/composables/annotatedMatch'
 import { KID_ID } from '../../src/engine/world'
 import { LOCAL_OPEN_COPY, TOURNAMENT_ANSWER, localOpenCard } from '../../src/prologue/cards'
 import { chosenYears, enteredAges, withEntry } from '../../src/prologue/run'
@@ -766,8 +764,8 @@ function tennisOf(road: Record<number, string>, enter: boolean): {
       const opp = open.field.find((p) => p.id === oppId)!
       const a = rec.aId === KID_ID ? kid : opp
       const b = rec.aId === KID_ID ? opp : kid
-      const opts = { surface: open.event.surface, tour: JUNIOR_TOUR, seed: rec.seed! }
-      const annotated = annotateMatch(simulateMatch(a, b, opts), a, b, opts)
+      // ⚠ RE-AIMED 27.09 AT THE ONE RECIPE (C-04 / F-08) – `PrologueLocalOpen`'s own function.
+      const annotated = replayMatch({ surface: open.event.surface, seed: rec.seed, a, b })
       watchSeconds += buildTimeline(annotated, 'key').duration / DEFAULT_SPEED
     }
     resultWords += wordsOn(localOpenCard(slot.age, outcomeOf(open)), run)

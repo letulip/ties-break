@@ -21,7 +21,10 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, hasLiveOffer, seasonLastWeek } from '../offers'
+// ⭐⭐ T6.2 · D-07 (28.09) – `activeKitDeal` and `isOfferLive` join the two already here, because the
+// weekly snapshot now carries only the letters this week still needs and those are THE ENGINE's own
+// questions rather than a rule written out at this seam. See `carriedOnTheWire` below.
+import { activeAdDeals, activeKitDeal, hasLiveOffer, isOfferLive, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -64,13 +67,13 @@ import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../
 import type { SeasonResult } from '../season/ranking'
 import {
   type AdOfferTerms,
-  type AdPortfolioRow,
   type ArrivalPreview,
   type CountingResult,
   type InjuryCircumstanceKind,
   type InjuryEntryRow,
   type InjuryReport,
   type LadderView,
+  type Offer,
   type PendingView,
   type Snapshot,
   type FullBracketMatch,
@@ -96,7 +99,12 @@ import { careerMoney } from './reckoning'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, motherhoodBandAt, ownKeyThisWeek, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+// ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
+// imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
+// `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
+import { ownKeyThisWeek } from './lifeBeat/ownKey'
+import { motherhoodBandAt } from './lifeBeat/pregnancy'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -104,14 +112,14 @@ import { buildShootClashPrompt } from './shootClash'
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView, physicalShareOf } from './endings'
-import { finishLabel, stageLabel } from './labels'
+import { finishLabel, isFinalStage, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict } from './medical'
+import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
@@ -128,7 +136,9 @@ import { merchWeeklyIncomeCents } from './business'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
+// ⭐⭐ B-03 (26.09): `adPortfolioView` is the Money shelf's rows, derived beside the letter writer
+// that decides what may be written – one gate, two surfaces (see the `adPortfolio` line below).
+import { adPortfolioView, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, travelCostFor } from './sponsors'
 // Round 29 part four P7/P8 – the fame fold (zero draws, nothing persisted; see world/fame.ts).
 import { fameAt } from './fame'
 // ⭐⭐⭐ v77 (the spotlight – T7): the booth's packet, READ off the episode's stamps. A pure derivation
@@ -1217,6 +1227,12 @@ export function pendingView(world: WorldState): PendingView | undefined {
     fullBracket,
     finished: p.finished,
     kidChampion: kidFinish === 0,
+    // ⭐⭐ T4.4 · E-05 – THE NUMBER BEHIND THE WORD, so no screen has to compare the word. The tour's
+    // index is the run's own, unclamped: `finishLabel` one line down is made of exactly this, which is
+    // the parity `PendingView.kidFinish` promises. And the round on deck, off the engine's one
+    // arithmetic (`isFinalStage`) rather than off the name `stageLabel` gave it above.
+    kidFinish,
+    isFinal: isFinalStage(current.round, tier.drawSize),
     tierLabel: tier.label,
     points: tier.points[kidFinish] ?? 0,
     finishLabel: finishLabel(kidFinish),
@@ -1254,6 +1270,12 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
   const surface = COLLEGE_LEAGUE.surface
   const finished = revealed >= matches.length
   const kidFinish = run.rounds - run.roundsWon
+  // ⭐⭐ T4.4 · E-05 – THE INDEX THE NAMER IS HANDED, ONCE, read twice. `finishLabel` below used to
+  // carry this expression inline; the projection needs the SAME number or the screen's `kidFinish ===
+  // 1` and the screen's «Runner-up» could disagree on the one fixture that clamps – which is E-05's
+  // own defect wearing the other hat. The clamp itself is unchanged: a run longer than the league's
+  // rounds is named by the deepest round it HAS (see `COLLEGE_LEAGUE_ROUNDS`).
+  const namedFinish = kidFinish <= 0 ? 0 : Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)
   const bracket: PendingBracketRound[] = matches.slice(0, revealed).map((m) => ({
     roundLabel: stageLabel(m.round, drawSize),
     oppName: formatShortName(m.oppName),
@@ -1329,12 +1351,17 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     fullBracket: [],
     finished,
     kidChampion: wonTheLeague(run),
+    // ⭐⭐ T4.4 · E-05 – the named index and the bracket's own «is this the final», for the reason
+    // `PendingView.kidFinish` gives. The College League IS a knockout of eight (see `drawSize` above),
+    // so both answers are real here and the flow's poster routing works off them unmodified.
+    kidFinish: namedFinish,
+    isFinal: isFinalStage(current.round, drawSize),
     tierLabel: COLLEGE_LEAGUE.label,
     // ⚠⚠ ZERO, AND IT IS THE CONSTRAINT RATHER THAN A PLACEHOLDER (round 25's ruling). A student
     // fixture paying WTA/ITF points would make four years of college a quiet ranking route and the
     // fork would stop being a real choice.
     points: 0,
-    finishLabel: kidFinish <= 0 ? finishLabel(0) : finishLabel(Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)),
+    finishLabel: finishLabel(namedFinish),
     crowd: 0,
   }
 }
@@ -1443,6 +1470,16 @@ function callUpPendingView(world: WorldState): PendingView | undefined {
     // `nationFinish === 1` would hang a champion's poster, with her name and her photograph on it,
     // on somebody else's result – which is the exact inversion the fixture exists to demonstrate.
     kidChampion: false,
+    // ⚠⚠ T4.4 · E-05 – NULL, AND IT IS A FACT ABOUT THIS COMPETITION RATHER THAN A DEFAULT. There is no
+    // round she reached: the week is three rubbers and no bracket (`drawSize: null` above says the same
+    // thing), and the label two lines down is her NATION's placing rather than a stage of hers. An
+    // invented 0 would hand the flow a champion's index on somebody else's result – the same inversion
+    // `kidChampion` refuses immediately above – and an invented `Math.log2` of a draw that does not
+    // exist is the `?? 'domestic'` trap this view was widened to stop.
+    kidFinish: null,
+    // ...and no rubber is a final, for the same reason: there is nothing here for a final to be the
+    // last round of.
+    isFinal: false,
     tierLabel: NATIONAL_TEAM.label,
     // ⚠⚠ ZERO, AND IT IS THE RULEBOOK RATHER THAN A PLACEHOLDER – research §0.4 / §5.5: the ranking
     // chart has no row for this competition at all.
@@ -1480,6 +1517,117 @@ function birthdayGiftFactsOf(world: WorldState): {
     birthdayWanted: today.given === today.asked,
     birthdayRepeatAge: earlier.length ? earlier[earlier.length - 1].age : null,
   }
+}
+
+/** WHY EACH SHUT RUNG IS SHUT, as `Snapshot.tierRefusal` carries it (PR-09 / TB-05; lifted out of the
+ *  snapshot literal by T4.13 · E-04 + D-P9, 27.09).
+ *
+ *  ⚠⚠ IT IS A FUNCTION WITH A TYPED RETURN, AND THAT IS THE FIX D-P9 ASKED FOR. The rows were built by
+ *  `Object.fromEntries(...)` and forced with `as Partial<Record<TierId, TierRefusal>>`, so the compiler
+ *  compared NOTHING: `reason: v.reason` type-checked against `any`, and `TierRefusal.reason` drifted into
+ *  admitting `'injured'` and `'medical'`, which its only producer cannot emit. Assigning each row into a
+ *  declared record checks every field on the way in, so the wire type's narrowing is now enforced by
+ *  `vue-tsc` and a future `EntryStatus` member cannot arrive here unnoticed.
+ *
+ *  Only refusals are written: an open rung has no entry, which is why this never restates `tierOpen`. */
+function tierRefusals(world: WorldState): Partial<Record<TierId, TierRefusal>> {
+  const out: Partial<Record<TierId, TierRefusal>> = {}
+  for (const t of TIER_LADDER) {
+    const v = tierVerdict(world, t)
+    if (v.level !== 'blocked') continue
+    const reason = rungRefusalReason(v.reason)
+    if (reason === null) continue
+    out[t] = {
+      reason,
+      ...(v.detail !== undefined ? { detail: v.detail } : {}),
+      ...(v.pointsToEnter !== undefined ? { pointsToEnter: v.pointsToEnter } : {}),
+      ...(v.rankToEnter !== undefined ? { rankToEnter: v.rankToEnter } : {}),
+      ...(v.entryCap !== undefined ? { entryCap: v.entryCap } : {}),
+    }
+  }
+  return out
+}
+
+/** THE HALF OF `EntryStatus.reason` A RUNG CAN ANSWER, or null where the verdict is not a rung's refusal
+ *  at all. Exhaustive on purpose (D-P9): the `never` guard is what makes a new `EntryStatus` member a
+ *  COMPILE error here rather than a silently dropped row, and it is this file's own `unhandled: never`
+ *  idiom. `'outgrown'` is a LABEL and never a refusal since 06.08 (`ladder-floor-2026-08.md`), so it is
+ *  dropped exactly as it always was; `'injured'`, `'fatigued'` and `'medical'` are week facts a rung's
+ *  verdict never reaches (`entryVerdict`'s `availability = false` – and `tierCapRefusal`, the one part of
+ *  availability a card DOES ask, answers only `'capped'`). */
+function rungRefusalReason(reason: EntryStatus['reason']): TierRefusal['reason'] | null {
+  switch (reason) {
+    case 'locked':
+    case 'unavailable':
+    case 'capped':
+      return reason
+    case 'outgrown':
+    case 'injured':
+    case 'fatigued':
+    case 'medical':
+    case undefined:
+      return null
+    default: {
+      const unhandled: never = reason
+      return unhandled
+    }
+  }
+}
+
+/** ONE LETTER, COPIED OUT OF THE ENGINE. The snapshot and the `inbox` query both cross
+ *  `postMessage`, so neither may hand the UI a live view of engine state – a screen holding the
+ *  engine's own `terms` object could mutate the contract it is rendering. `Offer` is flat apart from
+ *  `terms`, so two spreads is the whole of it. One spelling, because two would be two things to keep
+ *  in step. */
+function copyOffer(o: Offer): Offer {
+  return { ...o, terms: { ...o.terms } }
+}
+
+/**
+ * ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the whole post, copied for the wire. Served by the
+ * worker's `inbox` query when `InboxSheet` opens, exactly as `assembleAlbum` is served by `album`.
+ *
+ * A PURE READ: it takes no draw, keeps nothing and writes nothing, so it can be asked as often as a
+ * screen likes and the committed revision is reported unchanged. The world remains the one authority
+ * on what letters exist – nothing here or anywhere else prunes the list on disk.
+ */
+export function assembleInbox(world: WorldState): Offer[] {
+  return world.offers.map(copyOffer)
+}
+
+/**
+ * ⭐⭐ WHAT THE WEEKLY SNAPSHOT CARRIES OF THE INBOX (T6.2 · D-07, 28.09) – the letters THIS WEEK
+ * still needs, and not the career's post.
+ *
+ * ⚠ THE FIELD USED TO BE THE WHOLE LIST, and `state.ts` called that «a handful of rows». Measured on
+ * the product's own careers: 261 rows at week 1133 and 77 at week 412, of which 0 and 2 are live –
+ * `offers` was 45 % of the late snapshot and 94 % of everything a career added to it. The history is
+ * not pruned anywhere (that would defeat what the list is for); it simply stops riding every tick.
+ *
+ * FOUR CLAUSES, each named for the reader that needs it, and three of them are the engine's own
+ * predicate rather than a rule re-spelled here:
+ *   `isOfferLive`    a letter that is still a decision – the list's «Needs an answer», `offerOpen`,
+ *                    the worker's own refusal when one is answered.
+ *   `activeKitDeal`  the kit deal in force – the sheet's contract line and the wear ceiling.
+ *   `activeAdDeals`  the advertising portfolio in force – `apparelBondCost` reads it to say what a
+ *                    rival signature would cost, and `adShoots` above is the same call.
+ *   signed, not yet started – the one row all three refuse (each asks `week >= fromWeek`) while the
+ *                    family is already bound by it. Inside the five-week sponsor window a deal can be
+ *                    signed three weeks before its cover begins. A superset by one row is the safe
+ *                    direction: every predicate above applies its own week clause to what it is given,
+ *                    so a row too many changes no answer and a row too few would.
+ */
+function carriedOnTheWire(world: WorldState): Offer[] {
+  const week = world.week
+  const keep = new Set<string>()
+  for (const o of world.offers) if (isOfferLive(o, week)) keep.add(o.id)
+  const kit = activeKitDeal(world.offers, week)
+  if (kit) keep.add(kit.id)
+  for (const o of activeAdDeals(world.offers, week)) keep.add(o.id)
+  for (const o of world.offers) {
+    if (o.state === 'signed' && week < (o.fromWeek ?? o.decidedWeek ?? o.week)) keep.add(o.id)
+  }
+  return world.offers.filter((o) => keep.has(o.id)).map(copyOffer)
 }
 
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
@@ -1554,7 +1702,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       : null,
     events: world.events,
-    lossStreak,
+    lossStreakRun: lossStreak,
     // ⚠ HER LADDER, NOT THE INTERNATIONAL ONE (31.07, fix/ladder-separation). This pair feeds exactly
     // one derivation - `rankClimbed` - and `rankClimbed` licenses three lines that say she "moved up
     // the table" plus the loss softener behind her face. It was `world.kidRank` / `world.prevKidRank`,
@@ -1749,104 +1897,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // («у пользователя целые в интерфейсе»); no screen may round it again.
     fame: Math.round(fameAt(world)),
     // ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE PORTFOLIO SHELF, one row per category in shelf order,
-    // filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a
-    // junior (`reviewAdOffer`'s own age gate, read through the same constant).
-    adPortfolio: (() => {
-      const adAge = kidAgeAt(world, world.week)
-      if (adAge < ECONOMY.advertising.fromAgeYears) return []
-      // ⭐⭐⭐ ROUND 41 #15 – THE SHELF KNOWS ABOUT THE JUNIOR BAND, AND IT HAS TO. The owner opened
-      // the letters at sixteen with «юниорские суммы, реже», so between sixteen and eighteen the
-      // engine writes two categories at half the cheque – and a shelf that went on quoting the adult
-      // figure would be promising $80,000 over a letter that brings $40,000. Two sides asking
-      // different functions about one question is this repo's most-caught defect; both sides ask
-      // `adJuniorOpen` and `adJuniorFeeCents`.
-      const junior = adJuniorAt(adAge)
-      const standing = sponsorStandingOf(world)
-      const band = adBandFor(standing)
-      const rows: AdPortfolioRow[] = []
-      for (const category of AD_CATEGORIES) {
-        const deal = activeAdDealIn(world.offers, category, world.week)
-        if (deal) {
-          const t = deal.terms as AdOfferTerms
-          // ⭐ ROUND 39 #3 – a filled LIFETIME row carries the flag instead of a years-and-runs-to
-          // pair the paper does not have; the screen branches on it and says «for life».
-          rows.push({
-            category,
-            label:
-              category === 'capstone' ? 'The capstone' : category === 'lifetime' ? 'The lifetime deal' : ECONOMY.advertising.categories[category].label,
-            state: 'filled',
-            brand: t.brand,
-            cashCents: t.cashCents,
-            ...(t.lifetime === true
-              ? { lifetime: true as const }
-              : { termYears: Math.max(1, t.termYears ?? 1), untilWeek: deal.untilWeek ?? deal.week }),
-          })
-          continue
-        }
-        // ⭐ ROUND 39 #3 – the crown above the crown: once the shelf exists for her, the lifetime
-        // row shows its two-part gate the way the capstone row shows its tenure – held and needed,
-        // counted plainly, so the ladder's true end is visible from the first professional rung.
-        if (category === 'lifetime') {
-          if (band === null) continue
-          const l = ECONOMY.advertising.lifetime
-          const seasonsHeld = capstoneSeasonsOf(world)
-          const slamsHeld = world.trophiesByTier?.slam?.titles?.length ?? 0
-          rows.push(
-            seasonsHeld >= l.seasonsInTop10 && slamsHeld >= l.slamTitles
-              ? { category, label: 'The lifetime deal', state: 'open', lifetime: true, openCashCents: l.cashCents }
-              : {
-                  category,
-                  label: 'The lifetime deal',
-                  state: 'closed',
-                  lifetime: true,
-                  seasonsInTop10: { held: seasonsHeld, needed: l.seasonsInTop10 },
-                  slamTitles: { held: slamsHeld, needed: l.slamTitles },
-                },
-          )
-          continue
-        }
-        if (category === 'capstone') {
-          const held = capstoneSeasonsOf(world)
-          const needed = ECONOMY.advertising.capstone.seasonsInTop10
-          // The crowning row shows only once the shelf itself exists for her – any band open – so
-          // the ladder's end is visible from the first professional rung, tenure counted plainly.
-          if (band === null) continue
-          rows.push(
-            held >= needed
-              ? { category, label: 'The capstone', state: 'open', openCashCents: ECONOMY.advertising.capstone.cashCents }
-              : { category, label: 'The capstone', state: 'closed', seasonsInTop10: { held, needed } },
-          )
-          continue
-        }
-        const def = ECONOMY.advertising.categories[category]
-        // ⚠⚠ ROUND 41 #15 – A CATEGORY THE JUNIOR BAND DOES NOT WRITE IS CLOSED WITH NO RANK HINT,
-        // AND THAT IS THE HONEST ROW RATHER THAN A CONVENIENT ONE. `opensAtRank` answers «how far up
-        // the ladder does this open», which is TRUE and NOT THE REASON here: a sixteen-year-old
-        // inside WTA #180 meets the watch band's rank and is still refused, on her age. So the row
-        // falls through to the shelf's own existing «Not open yet» – the string the template has
-        // carried since round 29 for exactly a closed row with nothing more to say, so this item
-        // adds no player-facing copy and needs no template edit.
-        const adultFee = band === null ? null : adFeeFor(category, band)
-        const fee = junior && !adJuniorOpen(category) ? null : adultFee
-        if (fee !== null) {
-          // ⚠ AND THE OPEN ROW QUOTES THE JUNIOR CHEQUE, off the same function the letter is written
-          // with, so the promise on the shelf is the money in the envelope.
-          rows.push({ category, label: def.label, state: 'open', openCashCents: junior ? adJuniorFeeCents(fee) : fee })
-        } else if (junior && !adJuniorOpen(category)) {
-          rows.push({ category, label: def.label, state: 'closed' })
-        } else {
-          // the weakest band whose cell is priced = the standing the category opens at
-          const openIdx = def.feeCentsByBand.findIndex((c) => c !== null)
-          rows.push({
-            category,
-            label: def.label,
-            state: 'closed',
-            opensAtRank: openIdx >= 0 ? ECONOMY.advertising.bands[openIdx].maxWtaRank : undefined,
-          })
-        }
-      }
-      return rows
-    })(),
+    // filled/open/closed, every number the engine's own.
+    //
+    // ⚠⚠ B-03 (26.09) – IT USED TO BE DERIVED IN AN IIFE RIGHT HERE, and that is where it drifted
+    // from the letter it describes: the row's `state` was a second reading of `reviewAdOffer`'s gate,
+    // and it did not ask about the kit deal a clothing letter needs, so the shelf promised «A letter
+    // here writes about $X a year» on 316 of 316 sampled kitless weeks. The projection now lives
+    // beside its writer as `adPortfolioView` (`world/sponsors.ts`) and both surfaces read one
+    // exported primitive, `adCategoryOpen` – the parity spec's form A.
+    adPortfolio: adPortfolioView(world),
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,
@@ -2144,22 +2203,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // stops the UI rebuilding the rule. `tierVerdict` asks the SAME `entryVerdict` the turnstile
     // asks, so a card and `enterEvent` cannot disagree by construction. Only refusals are written:
     // an open rung has no entry here, which is why this never restates `tierOpen` beside it.
-    tierRefusal: Object.fromEntries(
-      TIER_LADDER.map((t) => {
-        const v = tierVerdict(world, t)
-        if (v.level !== 'blocked' || !v.reason || v.reason === 'outgrown') return [t, undefined]
-        return [
-          t,
-          {
-            reason: v.reason,
-            ...(v.detail !== undefined ? { detail: v.detail } : {}),
-            ...(v.pointsToEnter !== undefined ? { pointsToEnter: v.pointsToEnter } : {}),
-            ...(v.rankToEnter !== undefined ? { rankToEnter: v.rankToEnter } : {}),
-            ...(v.entryCap !== undefined ? { entryCap: v.entryCap } : {}),
-          },
-        ]
-      }).filter(([, r]) => r !== undefined),
-    ) as Partial<Record<TierId, TierRefusal>>,
+    // ⚠⚠ AND IT CARRIES THE CAPS SINCE 27.09 (T4.13 · E-04): `tierVerdict` consults `tierCapRefusal`,
+    // so a rung whose allowance is spent arrives here as `'capped'` with the engine's own count and
+    // sentence, and the tier chip prints them instead of composing two of its own and missing the third.
+    //
+    // ⚠⚠ BUILT WITHOUT THE `as` CAST, WHICH IS D-P9's WHOLE ASK. This was one `Object.fromEntries(...)`
+    // forced to `Partial<Record<TierId, TierRefusal>>`, and the cast meant the compiler never compared
+    // `reason` with `TierRefusal`'s union at all – which is how that type came to admit two members its
+    // only producer cannot emit. Assigning row by row into a typed record checks every field, so the
+    // narrowing is now enforced by `vue-tsc` rather than by a reader's care. `narrowTierRefusal` is
+    // where the widest thing `EntryStatus` can say is reduced to the half a rung can answer, in one
+    // place, exhaustively.
+    tierRefusal: tierRefusals(world),
     // ⚠ `onRampCleared` WAS BUILT HERE AND IS GONE (E-07, 05.09 engine review), AND ITS OWN NOTE HAD
     // ALREADY RECORDED HALF THE JOURNEY. R15-9 surfaced it "read-only, for the SLIDING TIER WINDOW";
     // W2-LADDER §4 then derived the calendar's pair from `tierOpen` instead ("the on-ramp rungs'
@@ -2224,14 +2279,25 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // boundary and must never be a live view of engine state.
     trophiesByTier: copyTrophyLedger(world),
     // v32: THE INBOX, copied one level deep for the same reason the cabinet above is - the snapshot
-    // crosses the worker boundary and must never be a live view of engine state. `terms` is copied
-    // too, because a screen holding the engine's own terms object could mutate the contract it is
-    // rendering. (`Offer` is flat apart from `terms`, so two spreads is the whole of it.)
-    offers: world.offers.map((o) => ({ ...o, terms: { ...o.terms } })),
+    // crosses the worker boundary and must never be a live view of engine state. `copyOffer` is that
+    // copy, in one place, because the `inbox` query makes the same one.
+    // ⚠⚠ AND SINCE T6.2 · D-07 IT IS THIS WEEK'S LETTERS, NOT THE CAREER'S POST – see
+    // `carriedOnTheWire`, which names the four readers that decide it. The whole list is served on
+    // demand by the worker's `inbox` query when the sheet opens (`assembleInbox`); the world keeps
+    // every letter for ever, and nothing is pruned on disk.
+    offers: carriedOnTheWire(world),
     // ...AND THE DOT, DECIDED HERE. It asserts one FACT - an offer is open and its deadline has not
     // passed - exactly as the bell's dot asserts that the week put something in the feed. It is never
     // "unread": the engine cannot know what the player has looked at, and neither can this.
     offerOpen: hasLiveOffer(world.offers, world.week),
+    // ⭐⭐ ...AND WHICH LETTER LANDED LAST, DECIDED HERE TOO (T6.2 · D-07). `inboxCue.newestLetterId`
+    // used to read the last element of `offers`, on the argument its own header makes: the list is
+    // append-only at the END and pruned only at the front, so the last element changes exactly when a
+    // letter arrives. That argument holds for the WORLD's list and not for a filtered one – and the
+    // letter it is most about is a kit deal's closing NOTICE (`state: 'info'`), which is never live and
+    // is therefore never carried. So the fact is derived HERE, off the full list, and the dot keeps
+    // ringing for the one arrival the owner said the player misses.
+    newestLetterId: world.offers.length ? world.offers[world.offers.length - 1].id : null,
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
     // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
     // same matches told apart, and the two always agree because finalizeTournament writes both.

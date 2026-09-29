@@ -47,11 +47,9 @@ import { weekGridFor, type BlockKind, type DayBlock, type GridDay } from '../../
 import { weekDayNumbers } from '../../src/shared/dates'
 import { TIER_LADDER } from '../../src/engine/season/calendar'
 import type { TierId } from '../../src/engine/season/types'
-import { adOfferId } from '../../src/engine/offers'
-import { ECONOMY } from '../../src/engine/economy'
-import { answerShootClash, createWorld, shootClashOpen, toSnapshot, type WorldState } from '../../src/engine/world'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type AdOfferTerms } from '../../src/shared/protocol'
-import type { SeasonEvent } from '../../src/engine/season/types'
+import { answerShootClash, shootClashOpen, toSnapshot, type WorldState } from '../../src/engine/world'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../../src/shared/protocol'
+import { clashWorld as sharedClash, CLASH } from '../helpers/scenarios/clash'
 
 // =================================================================================================
 // FIXTURES
@@ -62,8 +60,38 @@ const GRID_START = 7
 const GRID_END = 19
 
 const WEEK = 6
+/** ⚠⚠ KEPT AT THE CALL SITE ON PURPOSE (26.09, T5.11), AND IT IS THE ONE THING THIS MIGRATION WOULD
+ *  HAVE HIDDEN. `'Nine Bells'` is not a house the engine can write – `ECONOMY` lists «Quiet Hour»,
+ *  «Halfpast» and «Silver Alder» – and the other four `clashWorld` copies all pose
+ *  `ECONOMY…watches.houses[0]`. The shared builder therefore defaults to the houses' first, which is
+ *  those four's own constant, and THIS file passes its brand explicitly: the world hash of all four
+ *  call sites here is unchanged, and the question F-01 raises – whether a brand outside the ladder was
+ *  ever intended (its Question 1) – stays open for the owner instead of being answered by a default. */
 const BRAND = 'Nine Bells'
 
+/** The shared collision with this file's own brand – see the note on `BRAND` above. */
+const clashWorld = (seed: string): WorldState => sharedClash(seed, { brand: BRAND })
+
+// ⚠⚠ THE STANCE BELOW IS ANSWERED, AND THE ANSWER IS THE CLASH FIXTURE IN THIS SAME FILE (26.09,
+// T5.11). It says, of `facts()`: «copied rather than imported because a fixture shared across files
+// drifts into being a second production module» – the same claim its sibling
+// `tests/component/round29-trip-week.test.ts:117-119` makes.
+//
+// It is a real risk and it is not the one that cost this repo a gate. On 23.09 the cancel-share repair
+// had to re-aim the shoot-clash paper, and the COPIES drifted: `5fce54c1` fixed two of the three
+// `clashWorld` bodies, the third was invisible to the grep, and it was found only by a full gate and
+// repaired alone in `bc29ac13` – whose message is «the third sibling the sweep missed». By this wave
+// the copies had reached FIVE, one of them posing a brand the engine cannot write and a term
+// hard-coded as `51`, green because «this file asserts flow and never money» (:158 below). Copying did
+// not prevent a second production module; it produced five inconsistent ones and a red gate.
+//
+// So the stance holds for what it warns about and loses on the evidence, and the cure keeps BOTH halves:
+// `clashWorld` moved to `tests/helpers/scenarios/clash.ts` (one owner, every default naming the call
+// site it came from), while everything that is really THIS file's – its `'Nine Bells'` brand, its own
+// `facts()` bag – stays here, at the call site, where a reader can see it. What stopped being copied is
+// the part that was identical five times; what the stance is protecting was never that part. `facts()`
+// is therefore left exactly as it is: it has ONE sibling and no drift on record, so merging it would be
+// a guess where the clash was a measurement.
 /** A plain fact bag – the `facts()` idiom `round29-trip-week.test.ts` keeps, copied rather than
  *  imported because a fixture shared across files drifts into being a second production module. */
 function facts(over: Partial<CalendarWeekFacts> = {}): CalendarWeekFacts {
@@ -112,57 +140,7 @@ const RUNGS: readonly TierId[] = TIER_LADDER
 // THE DRIVEN COLLISION – `round29-shoot-clash.test.ts`'s `clashWorld`, kept to the field.
 // -------------------------------------------------------------------------------------------------
 
-/** Week 216 – offset 8 of season 5, an ordinary in-season adult week, exactly as the engine-side
- *  clash file probes it. The question can only be asked on the week BEFORE, because two of its four
- *  answers stop being possible once the week begins. */
-const CLASH = 216
-const AT = CLASH - 1
 
-/** THE COLLISION, BUILT: a signed campaign that names `CLASH` and an entry she holds for the same
- *  week, with the world standing on `AT`. Walking a career until a house happened to write AND the
- *  dice happened to name a week she was entered in would be testing `chooseShootWeeks` rather than
- *  what the collision DRAWS. */
-function clashWorld(seed: string): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
-  world.week = AT
-  world.plan = { train: 60, rest: 40 }
-  world.physioActive = false
-  world.condition = 50
-  world.fundsCents = 500_000_00
-  const event: SeasonEvent = {
-    id: `${seed}-event`,
-    week: CLASH,
-    tier: 'local',
-    surface: 'hard',
-    travelCostCents: 100_00,
-    deadlineWeek: AT - 2,
-  }
-  world.season = [event]
-  world.entries = [event.id]
-  world.offers.push({
-    id: adOfferId(AT - 10),
-    kind: 'ad',
-    week: AT - 10,
-    deadlineWeek: AT - 7,
-    state: 'signed',
-    decidedWeek: AT - 10,
-    fromWeek: AT - 10,
-    untilWeek: AT - 10 + 51,
-    terms: {
-      brand: BRAND,
-      // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
-      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
-      termWeeks: 52,
-      shootCount: 2,
-      // ⚠ RE-AIMED 23.09 (the cancel-share repair): the real two-shoot WATCH shape, matching the
-      // driven suite's own fixture – this file asserts flow and never money, but a single-week
-      // paper now reads as «the whole campaign in one shoot» and must not sit under a fixture
-      // labelled as the shipped legacy deal.
-      shootWeeks: [CLASH, CLASH + 21],
-    } as AdOfferTerms,
-  })
-  return world
-}
 
 /** The clash week as the CALENDAR sees it, off a real snapshot of a real world. */
 function drawnClashWeek(world: WorldState): GridDay[] {

@@ -32,14 +32,12 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
-  answerFork,
   closeTournament,
   collegeLeagueMatchesOf,
   collegeLeagueRevealMatches,
   callUpRevealOpen,
   collegeLeagueRevealOpen,
   createWorld,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
@@ -59,71 +57,32 @@ import { DEFAULT_PROFILE, STOP_PRECEDENCE } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – `tools/_lifeBeats.ts` through this file's own
 // re-export. It answers a beat with the option whose delta is zero and THROWS if a kind has none.
 import { drainLifeBeats } from './helpers/career'
+// ⚠⚠ RE-AIMED 26.09 (T5.11): `answerTheReveal` was this file's own name for the eleven-copy
+// `answerCollegeReveal`, body for body, and the alias keeps every call site's own word rather than
+// renaming twenty-three lines to prove a point about a helper. Its own round-27 note went to the
+// shared module with the other six retellings of it.
+import { atCollege, finishAnyReveal, answerCollegeReveal as answerTheReveal } from './helpers/scenarios/college'
 
 const DIR = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
-
-/** A tour reveal, walked out – the loop every college fixture in this repo already carries. */
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** ⭐⭐⭐ A CAREER THAT REALLY PLAYED TO THE FORK AND REALLY ANSWERED «college» – never a hand-built
- *  snapshot. The same opener `tests/component/round24-college-shell.test.ts` walks, including its one
- *  thumb on the scale: four years is 208 weeks of base costs and a career that went bankrupt inside
- *  them would be measuring the family budget instead of this. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-    // talk raises an answerable `lifeLog` row from week 0 at up to 8%/wk, and `answerFork` refuses
-    // while ANY row is unanswered («hear her out before answering the fork»), so this opener threw
-    // before it reached a single case. `drainLifeBeats` answers with the option priced ZERO, which
-    // is what keeps a walk that never meant to price a beat from moving any number below.
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
 
 /** Press until the championship's reveal is standing open, answering her birthday on the way.
  *  ⚠ IT THROWS IF IT NEVER GETS THERE, so a case cannot go green against a career that held no
  *  championship at all – the whole floor round 24 established. */
 function pressToTheChampionship(world: WorldState, rng: Rng): { stops: string[]; press: number } {
-  for (let press = 1; press <= 4; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year,
+  // so the walk has to be able to step past her card as well – `drainLifeBeats`, bond-neutral and
+  // priced ZERO – and the budget gains presses for it. It still THROWS if it never reaches one.
+  for (let press = 1; press <= 6; press++) {
     const stops = resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) return { stops, press }
     // ⚠ ROUND 27 #6: a career whose enrolment week falls between the two fixtures meets the tie
     // first, so the walk has to be able to step past one to reach a championship.
     if (callUpRevealOpen(world)) answerTheReveal(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walk never reached a championship')
-}
-
-/** «Skip all rounds» then the finale's «Continue» – the two commands the flow's own controls call.
- ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO.
- *  ⚠ IT USED TO CLAIM: «the championship is the only reveal a college year raises» (round 26 #6).
- *  ⚠ WHY IT MOVED: the call-up now pauses the year and is walked in the same flow, so a walk that
- *  answered one of the two would hang on the other. The assertions in this file are untouched. */
-function answerTheReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
 }
 
 // =================================================================================================
@@ -167,8 +126,13 @@ describe('#6 the championship stops the year instead of being reported after it'
       // ⚠ ROUND 27 #6: the tie pauses the year too, and this walk counts CHAMPIONSHIPS – so the
       // answer is unconditional and only the count is gated. A walk that answered one reveal and not
       // the other would stall on the first call-up and report one championship a career.
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday and the championship do (measured: 23 of 217 year-calls ticked past
+      // an unanswered blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral
+      // and priced ZERO. Nothing this case counts moved.
       answerTheReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(world.college!.years, 'she graduated – the reveals never stranded the career').toHaveLength(
       ENDINGS.collegeYears,
@@ -217,6 +181,12 @@ describe('#6 the stop, and round 24 rule 2 still holding underneath it', () => {
       answerTheReveal(world)
       expect(world.pendingTournament, 'and none after answering one either').toBeNull()
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – AND THE GUARD ITSELF NEVER MOVED, WHICH IS THE FINDING. The
+      // gate's red here was the LAST line of this case («four years»: `length 4 -> 1`), not either
+      // `pendingTournament` assertion inside the loop: ruling 2(a)'s pause ate presses, so the walk
+      // banked one year. It did NOT change when the reveal is written – round 24 rule 2 holds exactly
+      // as it did, and both in-loop guards pass on every press of the re-aimed walk.
+      drainLifeBeats(world)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
   })
@@ -403,13 +373,15 @@ describe('#6 v59 -> v60: nothing is back-filled and nothing is halted', () => {
     const world = migrateSave(JSON.parse(readFileSync(`${DIR}/v59.json`, 'utf8')))
     const rng = resumeMain(world.rngMain)
     let sawOne = false
-    for (let press = 0; press < 8 && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – see `pressToTheChampionship` above for the reason.
+    for (let press = 0; press < 12 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (collegeLeagueRevealOpen(world)) {
         sawOne = true
         answerTheReveal(world)
       }
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(sawOne, 'the next championship it plays is walked like everyone else`s').toBe(true)
   })
@@ -430,6 +402,8 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
       resumeFromCollege(world, rng)
       answerTheReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – her card pauses the year since ruling 2(a); bond-neutral.
+      drainLifeBeats(world)
     }
     expect(world.college!.years, 'four years really lived').toHaveLength(ENDINGS.collegeYears)
 
@@ -454,7 +428,12 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     const reachable = snap.events.filter((e) => e.match?.eventId.startsWith('college-w'))
     expect(reachable.length, 'and the feed carries every one of them anyway').toBe(collegeRows.length)
     expect(reachable.every((e) => typeof e.match!.seed === 'string' && e.match!.seed.length > 0)).toBe(true)
-  }, 240_000)
+  // ⚠⚠ THE THREE PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 s ->
+  // 60 s on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s own unit
+  // `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 2.47 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ and the feed is still ONE chronological list, with nothing said twice', () => {
     const { world, rng } = atCollege('r26-feed-b')
@@ -462,6 +441,8 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
       resumeFromCollege(world, rng)
       answerTheReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) – her card pauses the year since ruling 2(a); bond-neutral.
+      drainLifeBeats(world)
     }
     for (let i = 0; i < 40; i++) {
       tickWeek(world, rng)
@@ -475,7 +456,7 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     // those at «twelve at the very outside, over a whole degree».
     const extra = rows.length - Math.min(world.events.length, SNAPSHOT_EVENTS)
     expect(extra, 'a dozen rows at the outside, never a second whole ledger').toBeLessThanOrEqual(20)
-  }, 240_000)
+  })
 
   it('⚠ a career that never went to college pays nothing for this at all', () => {
     const world = createWorld('r26-feed-tour', { ...DEFAULT_PROFILE })
@@ -492,5 +473,5 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     expect(toSnapshot(world).events, 'so the feed is byte-for-byte the trailing window').toEqual(
       world.events.slice(-SNAPSHOT_EVENTS),
     )
-  }, 240_000)
+  })
 })

@@ -316,6 +316,9 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
     // `tests/childhood.test.ts` forbids, because that module's importer set is pinned as exactly
     // `['engine/world.ts']`. The card table is the honest source anyway: the sentence is about what
     // the PLAYER walked, and what the player walked is the cards.
+    // ⚠ 28.09, T6.5 / A-04 (a): that set is `['engine/world/create.ts', 'prologue/pool.ts']` now, the
+    // barrel having handed `createWorld` to `world/create.ts`. What it forbids is unchanged, and so is
+    // the reason the divisor is spelled the way it is one line up.
     //
     // ⚠ PHASE 11 ADDED ONE, AND IT IS A SIBLING RATHER THAN AN ENGINE MODULE. `handover.ts` names
     // `./run` for `PlayedOpen` – the record of one weekend the run keeps – because the handover's

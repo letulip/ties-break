@@ -51,6 +51,12 @@ import type { CareerEndingType } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Rng } from '../src/engine/rng'
+// T5.12 · F-04, 27.09: the local `pct`, taking a numerator and a denominator, was one of THREE
+// byte-identical copies of the padded spelling – `outgrown-entry-probe.ts:262` and
+// `two-doors-bench.ts:210` were the others, dash cell and `padStart(5)` included. Renamed
+// `shareOfPadded` at the call sites, because nine live siblings call a FRACTION `pct` and one name
+// over two contracts is how a ×100 arrives. See `tools/_fmt.ts`.
+import { shareOfPadded } from './_fmt'
 
 /** A full playing life: fourteen to two whole years past the age the last offer can land on.
  *
@@ -320,9 +326,16 @@ function answerWhateverIsOpen(
     out.wentToCollege = true
     // one year per press since P5 – and since round 24 a year pauses on her birthday week, so the
     // press is press-answer-press.
-    for (let press = 0; press < 3 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THIS ONE IS IN THE GATE'S PATH: `tests/endings-bench.test.ts`
+    // drives this walk. Ruling 2(a) makes a blocking life beat pause the college year the way the
+    // birthday does (measured before the ruling: 23 of 217 year-calls ticked past an unanswered
+    // blocking row), so a fixed-count press loop that does not answer her card stops banking the year
+    // the moment one lands. `drainLifeBeats` is the player's own answer, priced ZERO on every option,
+    // so the college column's numbers are unmoved by the answer as well as by the pause.
+    for (let press = 0; press < 5 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
   }
   if (world.retirementOffer !== null) {
@@ -352,11 +365,6 @@ export function sweepGrace(
  *  them – which is the order this table already printed. A hand-written array is how a new ending
  *  ends up missing from the very bench that measures how often endings happen. */
 const ENDING_ORDER = Object.keys(ENDING_TITLE) as CareerEndingType[]
-
-function pct(n: number, d: number): string {
-  if (d === 0) return '   – '
-  return `${((100 * n) / d).toFixed(1).padStart(5)}%`
-}
 
 function padEnd(s: string, w: number): string {
   return s.length >= w ? s : s + ' '.repeat(w - s.length)
@@ -411,14 +419,14 @@ export function main(argv = process.argv.slice(2)): void {
       const rows = a.rows.filter((o) => o.ending === type)
       const ages = rows.map((o) => o.endedAge ?? 0).sort((x, y) => x - y)
       console.log(
-        `  ${padEnd(type, 14)}${String(rows.length).padStart(9)}${pct(rows.length, a.rows.length).padStart(8)}   ${
+        `  ${padEnd(type, 14)}${String(rows.length).padStart(9)}${shareOfPadded(rows.length, a.rows.length).padStart(8)}   ${
           ages.length ? median(ages).toFixed(0) : '–'
         }`,
       )
     }
     const unresolved = a.rows.filter((o) => o.ending === null).length
     console.log(
-      `  ${padEnd('(still playing)', 14)}${String(unresolved).padStart(9)}${pct(unresolved, a.rows.length).padStart(8)}`,
+      `  ${padEnd('(still playing)', 14)}${String(unresolved).padStart(9)}${shareOfPadded(unresolved, a.rows.length).padStart(8)}`,
     )
   }
   console.log('')
@@ -456,7 +464,7 @@ export function main(argv = process.argv.slice(2)): void {
     const asked = arms[1].rows.filter((o) => o.plateauAsksAt[n] !== null)
     const seasons = asked.map((o) => o.plateauAsksAt[n]!).sort((a, b) => a - b)
     console.log(
-      `  ${padEnd(String(n), 10)}${String(asked.length).padStart(15)}${pct(asked.length, arms[1].rows.length).padStart(8)}${(seasons.length ? median(seasons).toFixed(0) : '–').padStart(15)}${n === ENDINGS.plateauSeasons ? '   <- shipped' : ''}`,
+      `  ${padEnd(String(n), 10)}${String(asked.length).padStart(15)}${shareOfPadded(asked.length, arms[1].rows.length).padStart(8)}${(seasons.length ? median(seasons).toFixed(0) : '–').padStart(15)}${n === ENDINGS.plateauSeasons ? '   <- shipped' : ''}`,
     )
   }
   console.log('')
@@ -533,7 +541,7 @@ export function main(argv = process.argv.slice(2)): void {
     const reached = a.rows.filter((o) => o.collegeOpenAtFork !== null)
     const open = reached.filter((o) => o.collegeOpenAtFork === true)
     console.log(
-      `  ${padEnd(a.label, 22)}${String(a.rows.length).padStart(9)}${String(reached.length).padStart(12)}${String(open.length).padStart(11)}${pct(open.length, reached.length).padStart(10)}`,
+      `  ${padEnd(a.label, 22)}${String(a.rows.length).padStart(9)}${String(reached.length).padStart(12)}${String(open.length).padStart(11)}${shareOfPadded(open.length, reached.length).padStart(10)}`,
     )
   }
   console.log('')
@@ -551,7 +559,7 @@ export function main(argv = process.argv.slice(2)): void {
     if (rows.length === 0) continue
     const ages = rows.map((o) => o.collegeShutAge ?? 0).sort((x, y) => x - y)
     console.log(
-      `  ${padEnd(tier, 22)}${String(rows.length).padStart(9)}${pct(rows.length, shut.length).padStart(15)}${median(ages).toFixed(0).padStart(12)}${String(ages[0]).padStart(10)}`,
+      `  ${padEnd(tier, 22)}${String(rows.length).padStart(9)}${shareOfPadded(rows.length, shut.length).padStart(15)}${median(ages).toFixed(0).padStart(12)}${String(ages[0]).padStart(10)}`,
     )
   }
   const unattributed = shut.filter((o) => o.collegeShutTier === null).length
@@ -561,7 +569,7 @@ export function main(argv = process.argv.slice(2)): void {
   console.log('')
   const shutBeforeFork = shut.filter((o) => (o.collegeShutAge ?? 99) < ENDINGS.forkAgeYears).length
   console.log(
-    `  careers whose door ever shut : ${shut.length}/${doorRows.length} = ${pct(shut.length, doorRows.length).trim()}` +
+    `  careers whose door ever shut : ${shut.length}/${doorRows.length} = ${shareOfPadded(shut.length, doorRows.length).trim()}` +
       ` · and ${shutBeforeFork} of those shut BEFORE the fork, which is the only half that costs her the answer`,
   )
   console.log('')
@@ -617,11 +625,11 @@ export function main(argv = process.argv.slice(2)): void {
   console.log('  ── SLOT 6: THE TURN. Two different crossings, and they are years apart ──')
   console.log('')
   console.log(
-    `  a WEEK that paid for itself    : ${wk.length}/${turnRows.length} = ${pct(wk.length, turnRows.length).trim()}` +
+    `  a WEEK that paid for itself    : ${wk.length}/${turnRows.length} = ${shareOfPadded(wk.length, turnRows.length).trim()}` +
       `   median week ${wk.length ? median(wk.map((o) => o.weekTurnWeek!)).toFixed(0) : '–'} (age ${ageOf(wk.length ? median(wk.map((o) => o.weekTurnWeek!)) : null)})`,
   )
   console.log(
-    `  the CUMULATIVE crossing (§9.2) : ${cum.length}/${turnRows.length} = ${pct(cum.length, turnRows.length).trim()}` +
+    `  the CUMULATIVE crossing (§9.2) : ${cum.length}/${turnRows.length} = ${shareOfPadded(cum.length, turnRows.length).trim()}` +
       `   median week ${cum.length ? median(cum.map((o) => o.cumulativeTurnWeek!)).toFixed(0) : '–'} (age ${ageOf(cum.length ? median(cum.map((o) => o.cumulativeTurnWeek!)) : null)})`,
   )
   console.log('')
@@ -645,11 +653,11 @@ export function main(argv = process.argv.slice(2)): void {
     const sub = pro.filter((_, i) => Math.floor(i / seeds) === presets.indexOf(preset))
     console.log(
       `  ${padEnd(preset.label, 30)}` +
-        `${pct(sub.filter((o) => o.ending === 'bankruptcy').length, sub.length).padStart(9)}` +
-        `${pct(sub.filter((o) => o.ending === 'injury').length, sub.length).padStart(8)}` +
-        `${pct(sub.filter((o) => o.ending === 'natural').length, sub.length).padStart(9)}` +
-        `${pct(sub.filter((o) => o.ending === 'plateau').length, sub.length).padStart(9)}` +
-        `${pct(sub.filter((o) => o.cumulativeTurnWeek !== null).length, sub.length).padStart(8)}`,
+        `${shareOfPadded(sub.filter((o) => o.ending === 'bankruptcy').length, sub.length).padStart(9)}` +
+        `${shareOfPadded(sub.filter((o) => o.ending === 'injury').length, sub.length).padStart(8)}` +
+        `${shareOfPadded(sub.filter((o) => o.ending === 'natural').length, sub.length).padStart(9)}` +
+        `${shareOfPadded(sub.filter((o) => o.ending === 'plateau').length, sub.length).padStart(9)}` +
+        `${shareOfPadded(sub.filter((o) => o.cumulativeTurnWeek !== null).length, sub.length).padStart(8)}`,
     )
   }
   console.log('')

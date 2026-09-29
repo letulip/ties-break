@@ -78,16 +78,15 @@ import { bondBandOf, moodRegisterOf, spiritBandOf, temperamentFor } from '../src
 import { diaryLifeStageFor } from '../src/engine/diary/facts'
 import { schoolIsOver } from '../src/engine/kidLife'
 import type { BondBand, DiaryLifeStage, MoodRegister } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule and `pct` one of ten
+// fraction copies – see `tools/_args.ts` and `tools/_fmt.ts`.
+import { finiteArgOf } from './_args'
+import { pctOf } from './_fmt'
 
-const argOf = (name: string, fallback: number): number => {
-  const at = process.argv.indexOf(`--${name}`)
-  const n = Number(process.argv[at + 1])
-  return at > 0 && Number.isFinite(n) ? n : fallback
-}
-const SEEDS = argOf('seeds', 240)
-const CONVERSATIONS = argOf('conversations', 40)
+const SEEDS = finiteArgOf('seeds', 240)
+const CONVERSATIONS = finiteArgOf('conversations', 40)
 /** K5b's walked careers (wave 7 T9). 24 = 8 per background, every second one through college. */
-const REAL_CAREERS = argOf('real', 24)
+const REAL_CAREERS = finiteArgOf('real', 24)
 
 const REGISTERS: readonly MoodRegister[] = ['bright', 'level', 'low']
 const STAGES: readonly DiaryLifeStage[] = ['school', 'after-school', 'college', 'independent']
@@ -95,7 +94,6 @@ const STAGES: readonly DiaryLifeStage[] = ['school', 'after-school', 'college', 
  *  of his own range, so a cell at 3 passes and a cell at 2 is named. */
 const SUBJECT_FLOOR = 3
 
-const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 const pad = (s: string, n: number): string => s.padEnd(n)
 const padL = (s: string, n: number): string => s.padStart(n)
 
@@ -395,7 +393,7 @@ function k2k3(posed: boolean): { a: Cell; b: Cell; drawn: Set<string>; poolHist:
 
 function reportCell(name: string, c: Cell): void {
   console.log(
-    `   ${pad(name, 22)}${padL(pct(c.adjacent / c.careers), 9)}${padL(pct(c.withinThree / c.careers), 11)}` +
+    `   ${pad(name, 22)}${padL(pctOf(c.adjacent / c.careers), 9)}${padL(pctOf(c.withinThree / c.careers), 11)}` +
       `${padL((c.conversations / c.careers).toFixed(1), 9)}${padL((c.distinct / c.careers).toFixed(1), 10)}` +
       `${padL((c.legacy / c.careers).toFixed(2), 9)}` +
       `${padL(`${c.pairsBad}/${c.pairs}`, 13)}${padL(`${c.triplesBad}/${c.triples}`, 13)}`,
@@ -652,8 +650,8 @@ function k5RealArm(careers: number): { drawn: Set<string>; walks: RealWalk[] } {
     )
     console.log(
       `     ${pad(id, 34)} gate ${pad(String(s?.fact), 18)} drawn: college ${drawnCollege}, independent ${drawnIndep} · ` +
-        `reachable: ${pauses.weeks ? pct(pauses.hit / pauses.weeks) : '–'} of ${pauses.weeks} college pause-weeks, ` +
-        `${indep.weeks ? pct(indep.hit / indep.weeks) : '–'} of ${indep.weeks} independent weeks`,
+        `reachable: ${pauses.weeks ? pctOf(pauses.hit / pauses.weeks) : '–'} of ${pauses.weeks} college pause-weeks, ` +
+        `${indep.weeks ? pctOf(indep.hit / indep.weeks) : '–'} of ${indep.weeks} independent weeks`,
     )
   }
   return { drawn, walks }
@@ -718,8 +716,8 @@ function armTable(label: string, posed: boolean): { a: Cell; b: Cell; drawn: Set
   reportCell('A · no exclusion', run.a)
   reportCell('B · last-two excluded', run.b)
   console.log(
-    `   ⭐ K2 careers with ≥1 adjacent repeat: ${pct(run.a.adjacent / run.a.careers)} → ` +
-      `${pct(run.b.adjacent / run.b.careers)}`,
+    `   ⭐ K2 careers with ≥1 adjacent repeat: ${pctOf(run.a.adjacent / run.a.careers)} → ` +
+      `${pctOf(run.b.adjacent / run.b.careers)}`,
   )
   console.log(
     `   ⭐ K2 ACCEPTANCE – adjacent pairs whose later draw HAD an alternative (pool ≥ 2): ` +
@@ -727,8 +725,8 @@ function armTable(label: string, posed: boolean): { a: Cell; b: Cell; drawn: Set
       `  ${run.b.pairsBad === 0 ? '✅ zero' : '❌'}`,
   )
   console.log(
-    `   K3 careers with a repeat inside three: ${pct(run.a.withinThree / run.a.careers)} → ` +
-      `${pct(run.b.withinThree / run.b.careers)}`,
+    `   K3 careers with a repeat inside three: ${pctOf(run.a.withinThree / run.a.careers)} → ` +
+      `${pctOf(run.b.withinThree / run.b.careers)}`,
   )
   console.log(
     `   K3 ACCEPTANCE – draws with a pool of 3 or more: ` +
@@ -741,7 +739,7 @@ function armTable(label: string, posed: boolean): { a: Cell; b: Cell; drawn: Set
   const total = hist.reduce((sum, [, n]) => sum + n, 0)
   console.log(
     `   pool she was drawn from, per conversation: ` +
-      hist.map(([n, c]) => `${n}→${pct(c / total)}`).join('  '),
+      hist.map(([n, c]) => `${n}→${pctOf(c / total)}`).join('  '),
   )
   return run
 }

@@ -246,15 +246,44 @@ export const HEAVY_UNIT_FILES = [
   // unraisable 60 s window at CI's ~1.9x. Same remedy as every entry above: one process each.
   'tests/travel-home.test.ts',
   'tests/ladder-floor.test.ts',
+  // ⚠ ADDED 26.09 WITH THE FILE (B-01 / T2.3), MEASURED BEFORE IT WAS WRITTEN RATHER THAN AFTER IT
+  // STALLED – which is the one thing every entry above wishes it had done. It walks four careers to
+  // a forced fork, into the September departure and through four academic years each, pressing
+  // `resumeFromCollege` and reading what the press walked past: ~1.5 s to open a career at college
+  // and ~3.1 s to walk its years, so the corpus sets the cost directly. Measured at EIGHT careers it
+  // read 45 s solo – past this list's own line (~31 s SOLO; see the bar's correction two entries
+  // down, where it read «~32 s in-pool» until 27.09) – so the corpus was
+  // cut to four (~23 s solo) AND the file takes a process. The four are a prefix of the seed list,
+  // never a selection by outcome; the full sixteen-career measure is the review's own probe
+  // (`docs/review-principles-2026-09-26/probes/b-college-beats.ts`), run as the task's proof.
+  'tests/college-blocking-beat.test.ts',
   // ⚠⚠ THE THIRD TIME, AND THIS TIME THE BULK POOL ITSELF WENT OVER THE WALL (26.08, round 26).
   // `npm test` stalled on CI at 19+ minutes against a 25-minute ceiling, and the same shape
   // reproduced ON A QUIET MAC – `--reporter=json` over the bulk pass returned `success: true`,
   // 3455 tests, 0 failed, EXIT 1. Not a slower runner this time: the pool has simply grown to 172
   // files and 3455 tests, and the contention penalty measured uniformly x2.9 (solo -> in-pool).
   //
-  // The bar is this file's own, unchanged: a file near 40 s in-pool locally is past birpc's
-  // unraisable 60 s window at CI's ~1.9x, so the line sits at ~32 s in-pool. Twelve files crossed
-  // it. Measured both ways before anything moved, in-pool -> solo:
+  // ⚠⚠ THE BAR IS SOLO SECONDS, AND THIS PARAGRAPH SAID IN-POOL FOR A MONTH (corrected 27.09,
+  // T5.2 · G-05). What stood here was «a file near 40 s in-pool locally is past birpc's unraisable
+  // 60 s window at CI's ~1.9x, so the line sits at ~32 s in-pool» – and `52ded7ae`, committed the
+  // SAME DAY as this block, withdrew in-pool as the measure in as many words («By the honest
+  // measure – solo cost»). The reason is the one the paragraph below the table already gives: an
+  // in-pool number describes the POOL it was taken in, so it moves with the file count, the core
+  // count and whatever else is on the machine, and two of them a month apart are not comparable.
+  // Every reading taken since is solo – 12.09's sweep of the whole list, 18.09's re-measure – and
+  // both were judged against the **~31 s SOLO** line the -recent/-prior block below states twice.
+  //
+  // THE LINE, DERIVED RATHER THAN REMEMBERED: birpc's window is a hard 60 s and this repo's runners
+  // have measured 1.9x-2.3x local (2.24x on 12.09, 2.3x on 18.09's red run), so the largest solo
+  // cost that still clears the window is 60/2.3 ≈ 26 s at the worst factor and 60/1.9 ≈ 31 s at the
+  // best – hence ~31 s solo, with the multiplier printed beside every entry that used it. ⚠ A fresh
+  // pair, taken 27.09 on a quiet machine (load 1.57-1.74, `npx vitest run --project unit
+  // --reporter=json`, one file): `coach-travel-edge-late-schemas` 15.72 / 15.74 / 15.77 s and
+  // `-mid-schemas` 20.21 / 20.27 s – so the dearest member 18.09 named has NOT grown this wave
+  // (20.38 s then) and nothing in the list is near the line.
+  //
+  // ⚠ Twelve files crossed the 26.08 reading. The numbers below are THE RECORD OF THAT SWEEP, kept
+  // verbatim, and they are not the line. Measured both ways before anything moved, in-pool -> solo:
   //
   //     college-birthday    77.7 -> 27      college-second-act  42.0 -> 14
   //       <- cut in two on 12.09; this row is the record of the reading, not of a file that still
@@ -374,10 +403,12 @@ export const HEAVY_UNIT_FILES = [
   // the walk and the per-key protocol, so `careerHashAtSchema`'s key-peeling – the one piece that
   // must never have two truths – is imported by both halves rather than copied into each.
   //
-  // ⚠ THE THIRD FILE IS NOT HERE, ON PURPOSE. `coach-travel-edge-helping` is 0.39 s solo and about
-  // 1.1 s at the pool's measured x2.9, an order of magnitude under this list's ~32 s in-pool line,
-  // so promoting it would cost the gate a vitest start to serialise nothing. The bar is cost, and
-  // it does not meet it.
+  // ⚠ THE THIRD FILE IS NOT HERE, ON PURPOSE. `coach-travel-edge-helping` is 0.39 s solo – nearly two
+  // orders of magnitude under this list's ~31 s SOLO line (the sentence here said «~32 s in-pool»
+  // until 27.09; see the bar's correction in the round-26 block above) – so promoting it would cost
+  // the gate a vitest start to serialise nothing. The bar is cost, and it does not meet it. ⚠ And it
+  // is outside `HEAVY_UNIT_FAMILIES`' globs for that reason: the families name the seam that was cut
+  // (`-*-schemas`), not the prefix, so the membership gate cannot drag a cheap file in by its name.
   //
   // ⚠⚠ AND ON 12.09 THE LADDER WENT BACK OVER THE WALL AND WAS CUT AGAIN – the fifth red
   // `unit-heavy` of wave 3's PR #135, and the file that actually caused it. 29.78 / 29.69 / 29.69 s
@@ -442,6 +473,18 @@ export const HEAVY_UNIT_FILES = [
   'tests/coach-travel-edge.test.ts',
   'tests/coach-travel-edge-mid-schemas.test.ts',
   'tests/coach-travel-edge-recent-schemas.test.ts',
+  // ⚠ ADDED 27.09 (T5.2 · H-05), FOUR DAYS LATE AND BY A RULE RATHER THAN BY AN INCIDENT. The fifth
+  // cut (`154b17d0`, 23.09) created this file – v82 down to v77, lifted out of -recent-schemas – and
+  // did not touch this module, so a rung of a ladder whose other six members are all here spent four
+  // days in the contended bulk pool. Nothing could say so, which is why `HEAVY_UNIT_FAMILIES` below
+  // now exists and `tests/sim-serialisation.test.ts` reads it against the real directory: its first
+  // run was red on exactly this path. Measured solo afterwards, the method every entry here uses
+  // (`npx vitest run --project unit --reporter=json`, one file, quiet machine, load 1.57-1.67):
+  // 15.72 / 15.74 / 15.77 s wall and 14.20 / 14.35 / 14.36 s of test time over 6 cases, under 0.06 s
+  // of spread. ⚠ That is well under the bar below and it is NOT why it is here – the FAMILY is why.
+  // Its promotion is a membership fix, not a re-curation: G-05's re-ranking of this whole list by
+  // solo seconds needs one CI run per arm and is deliberately not in this wave.
+  'tests/coach-travel-edge-late-schemas.test.ts',
   'tests/coach-travel-edge-prior-schemas.test.ts',
   'tests/coach-travel-edge-older-schemas.test.ts',
   'tests/coach-travel-edge-deepest-schemas.test.ts',
@@ -543,6 +586,45 @@ export const HEAVY_UNIT_FILES = [
   // its own process at the 2.24x factor – under the per-test ceiling with thin margin, and if it
   // ever crosses THERE, the file splits along the §C seam exactly as coach-travel-edge did.
   'tests/wave5-elite-gate.test.ts',
+]
+
+/** THE FAMILIES – the one rule the list above has, stated so a gate can read it (T5.2 · H-05, 27.09).
+ *
+ *  ⚠ WHY: EVERY ENTRY ABOVE ARRIVED AFTER AN INCIDENT, AND ONE SIBLING NEVER ARRIVED AT ALL. Read
+ *  the blocks above in order and the pattern is the same each time – a file crosses the wall, it is
+ *  cut into siblings, and every sibling is added here because the cut divided the COST rather than
+ *  removing it. `154b17d0` (23.09) made the fifth cut of the coach-travel-edge ladder and created
+ *  `tests/coach-travel-edge-late-schemas.test.ts`, touching three files, NONE of them this one. The
+ *  family's other six members are all listed; that one was left in the bulk pool for four days with
+ *  nothing able to say so, because membership was a habit and not a rule.
+ *
+ *  ⚠ SO THE RULE IS MEMBERSHIP, NOT COST, and the distinction is the whole reason this can be a
+ *  gate. «Is this file expensive enough?» needs a fresh measurement and a judgement (the bar below,
+ *  and G-05's re-curation, which is NOT this rule). «Did every member of a family that was cut for
+ *  cost get a process?» needs neither: the cut is what established the cost, the siblings inherit
+ *  it, and the filesystem answers the question. A glob here is a promise that the whole family is
+ *  above, enforced by `tests/sim-serialisation.test.ts` over the real directory.
+ *
+ *  ⚠ A GLOB MATCHES A TEST FILE'S STEM – `tests/<stem>.test.ts` – and `*` is its only metacharacter.
+ *  Stems, not paths, so `tests/goldenSavesCorpus.ts` (the shared corpus reader, not a test) cannot
+ *  be claimed by `goldenSaves*`, and a family that ever needs a subdirectory gets the `/` written
+ *  into its glob rather than inferred.
+ *
+ *  ⚠ AND `coach-travel-edge-helping` IS DELIBERATELY OUTSIDE EVERY GLOB, which is the rule staying
+ *  honest rather than an omission. Its own block above argues it: 0.39 s solo, ~1.1 s in the pool,
+ *  an order of magnitude under the bar, so promoting it would cost the gate a vitest start to
+ *  serialise nothing. It shares the ladder's NAME, not the ladder's cost – and the globs name the
+ *  seam that was cut (`-*-schemas`, the version ladder), not the prefix. `-rungs-ratchet` is the
+ *  same: it guards the ladder, it does not walk it.
+ *
+ *  Adding a family here is how the NEXT cut stops being a thing to remember. */
+export const HEAVY_UNIT_FAMILIES = [
+  // The coach-travel-edge version ladder, cut five times (31.08, 12.09, 18.09, 23.09) – every rung
+  // is ~2.5 s of real career walking and the cut divides rungs, never removes them.
+  'coach-travel-edge-*-schemas',
+  // The golden-saves corpus, cut three ways on 12.09 – one `migrateSave` walk per file, 75 fixtures
+  // each, and each new schema version makes all three dearer at once.
+  'goldenSaves*',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

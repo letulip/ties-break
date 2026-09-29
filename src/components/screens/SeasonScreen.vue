@@ -39,6 +39,9 @@ import ScreenShell from '../ui/ScreenShell.vue'
 // MatchViewer is mounted. It was the one that did not have it - see the note at its call site.
 import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
+// ⭐ E-09 / T4.8 – the store's refusal, on the element that owns it. See the call site above
+// `ScreenShell` in the template for what this replaced and what it adds.
+import StoreError from '../ui/StoreError.vue'
 import IconButton from '../ui/IconButton.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
@@ -48,7 +51,7 @@ import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle } from '../../engine/match/style'
 // ⚠ `COLLEGE_FREEZE_REFUSAL` IS THE ENGINE'S OWN SENTENCE AND THIS SCREEN ONLY PRINTS IT – see
 // `frozenForCollege` below for the whole argument.
-import { COLLEGE_FREEZE_REFUSAL, KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+import { COLLEGE_FREEZE_REFUSAL, KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, isPracticeMatchEvent, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 // The wild-card badge quotes the engine's own count, never a literal – see the badge in the
 // template and `WILD_CARD` in engine/season/tournament.ts for why the number lives there.
@@ -239,6 +242,22 @@ function vacationArt(row: CalendarRow): string | null {
  *  family actually paid for it (the quote is per (seed, week, package), so the booking carries it). */
 function vacationGain(row: CalendarRow): number {
   return vacationPackage(row.vacation?.packageId ?? '')?.conditionGain ?? 0
+}
+
+/** ⚠ E-P13 (26.09) – THE CARD'S ACCESSIBLE NAME NAMES THE TRIP AND THE WEEK, AND THE TWO CHIPS
+ *  BESIDE IT WERE REACHED BY NOBODY. The card is one control (`role="button"`, it opens the
+ *  planner), so a screen reader hears its `aria-label` and stops: the condition the week is worth
+ *  and the money the family paid for it are on screen and outside the name. `aria-describedby`
+ *  points at the spans the sighted player is reading, which is the pattern E-03 / T4.6 uses for the
+ *  rank chips – NO NEW WORDS anywhere, and nothing is repeated in two places to drift.
+ *
+ *  ⚠ THE GAIN'S ID IS ONLY LISTED WHEN THE CHIP IS DRAWN. A `describedby` naming an element that is
+ *  not in the document is silently dropped by every AT, which would make this look like it works and
+ *  announce nothing on a zero-gain package. */
+function vacationDescribedBy(row: CalendarRow): string {
+  const ids = vacationGain(row) > 0 ? [`vac-gain-w${row.week}`] : []
+  ids.push(`vac-paid-w${row.week}`)
+  return ids.join(' ')
 }
 
 function weekTitle(row: CalendarRow): string {
@@ -776,13 +795,26 @@ function defendingPts(e: UpcomingEvent): number | null {
   return r ? r.points : null
 }
 
-// THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries this season: N of M», finite seasons only.
-// The engine's own current-season count (Snapshot.proEntryCap); null hides the line entirely on
-// the seasons the rule does not meter, which is every season but 16 and 17.
+// THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries, birthday to birthday: N of M», finite ages only.
+// The engine's own count (Snapshot.proEntryCap); null hides the line entirely on the age-years the
+// rule does not meter, which is every one but 16 and 17.
+//
+// ⚠⚠ IT SAID «THIS SEASON» UNTIL T4.11 (E-01, the 26.09 principles review), AND THE NUMBER HAD NOT
+// SAID THAT SINCE 16.08. `proEntryCapUsage` counts `proEntryWeeks` whose `kidAgeAt` equals her age
+// now – a BIRTHDAY-TO-BIRTHDAY window (`world/entryCaps.ts`, «`entryCapUsage`'s birthday window
+// verbatim») – and this line and its title were written in `fdce8055` (02.08) against the season
+// block, twenty minutes before the card pills below were re-aimed and never re-aimed themselves.
+// MEASURED on the `v46` golden save (a sixteen-year-old at week 155): the header read «6 of 12» at a
+// season turn where the engine's count stays 6 and does not fall to 0 until her birthday at w180 – so
+// for 24 weeks it named this season's allowance against ONE entry made this season. The owner's
+// ruling 4a: the header reuses the phrase the same screen's pills already carry.
+//
+// ⚠ NOTHING ELSE MOVED. The number, the null rule and `proEntryCap` are untouched; this is the label
+// and the title catching up with the window the engine has counted for six weeks.
 const proBudgetLine = computed<string | null>(() => {
   const cap = game.snapshot?.proEntryCap
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
-  return `Pro entries this season: ${cap.used} of ${cap.limit}`
+  return `Pro entries, birthday to birthday: ${cap.used} of ${cap.limit}`
 })
 
 // THE PLANNING COUNTER (owner, 02.08: how many tournaments are available to us and at what level,
@@ -888,11 +920,20 @@ function lockLabel(e: UpcomingEvent): string {
     // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
     case 'medical':
       return 'Not cleared to play'
-    // The annual entry cap: she has spent this YEAR's international allowance. The count comes
+    // The annual entry cap: she has spent this AGE-YEAR's international allowance. The count comes
     // from the engine's verdict on THIS event (never the ladder's current-season read) for the same
-    // reason `pointsToEnter` does – an event in the next season is judged against a different
-    // year's allowance. "Year limit" rather than "Locked": the block lifts when the season turns,
-    // and the tier ladder's long form says so in full.
+    // reason `pointsToEnter` does – an event past her next birthday is judged against a different
+    // year's allowance. "Year limit" rather than "Locked": the block lifts, and the tier ladder's
+    // long form says so in full.
+    // ⚠⚠ AND IT SAID «THE BLOCK LIFTS WHEN THE SEASON TURNS» UNTIL T4.11 (E-01), which was the same
+    // staleness the header above carried: BOTH caps behind this one reason code count her BIRTHDAY
+    // year (`entryCapUsage` and `proEntryCapUsage`, `world/entryCaps.ts`), and both engine refusals
+    // have said «A fresh allowance on her next birthday» since P2 – `world/medical.ts` corrected its
+    // own two notes on 26.09 (B-P3-09) for exactly this reason. A W3 builder found this line and
+    // deliberately left it: correcting the comment while the string two lines down still said «this
+    // season» would have made the block MORE self-contradictory, not less. The string moved in this
+    // task, so the comment moves with it. ⚠ The LABELS are untouched (invariant 4): «Year limit» and
+    // «Tour age rule» are the owner's words and neither names a date.
     // ⚠ TWO CAPS, ONE REASON CODE since W2-LADDER §5: a W rung's 'capped' is the TOUR's age rule,
     // not the junior Appendix-F one, and the refusal names the rule (owner ruling 1's
     // transparency). The family split is the engine's own (`isCappedProTier`), never guessed from
@@ -1242,8 +1283,14 @@ const thisWeekMatches = computed<WorldEvent[]>(
 const thisWeekSummary = computed<WorldEvent | null>(
   () => game.snapshot?.events.find((e) => e.type === 'tournament' && e.week === week.value) ?? null,
 )
+// ⚠ F-07 (26.09 principles review) – THE PRACTICE CARD ASKS THE ENGINE WHICH MATCH IS THE PRACTICE.
+// `e.friendly` alone means "a watchable match worth ZERO ranking points", and a college call-up
+// RUBBER wears that flag too, so the broad spelling that stood here could put a national-team match
+// under the heading «This week's practice match» with a Watch button that replays it as a friendly.
+// `isPracticeMatchEvent` is the recap card's own narrowing, now the engine's (world/planner.ts);
+// WHICH week this screen is showing stays this screen's filter and nothing else.
 const thisWeekFriendly = computed<WorldEvent | null>(
-  () => game.snapshot?.events.find((e) => e.type === 'match' && e.friendly && e.week === week.value) ?? null,
+  () => game.snapshot?.events.find((e) => e.week === week.value && isPracticeMatchEvent(e)) ?? null,
 )
 
 // R12-12 (the owner's SECOND ask – round-11's one-line fix was the practice row; THIS is the
@@ -1360,7 +1407,15 @@ function closeExhibition(): void {
 
 <template>
   <template v-if="game.snapshot">
-    <p v-if="game.error" class="error">{{ game.error }}</p>
+    <!-- ⭐⭐ E-09 / T4.8 – THE STORE'S REFUSAL, SAID BY THE ELEMENT THAT OWNS IT. This was the fifth
+         and last of the hand-rolled copies `ui/StoreError.vue` was written as a home for: a bare
+         paragraph on the error class, interpolating `game.error`. Same sentence, same element, same
+         class – the store owns the wording and this file never did (invariant 4), so no copy moves.
+         What it GAINS is `role="status"`: a refusal that appears without moving focus was announced
+         to a screen reader by nothing at all, on the screen where every entry is committed. It stays
+         ABOVE `ScreenShell`, where it always stood – the shell's own paint order is not this
+         element's business. -->
+    <StoreError />
 
     <!-- U0: Season had NO wrapper at all – its blocks were a bare fragment dropped into the app's
          <main>. That is the thing ScreenShell replaces: the stack is now a named object with the
@@ -1380,10 +1435,14 @@ function closeExhibition(): void {
           <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
         </p>
         <!-- THE PRO BUDGET (W2-LADDER, spec 5: the player sees the budget). Rendered only on the
-             seasons the tour's age rule actually meters (16 and 17) - an unlimited season would
+             ages the tour's age rule actually meters (16 and 17) - an unlimited age-year would
              print a MAX_SAFE_INTEGER, and a budget that cannot run out is not a budget. The
-             number is the engine's own count for THIS season, straight off the snapshot. -->
-        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter this season. A fresh allowance arrives when the season turns; junior and national events are not counted.'">
+             number is the engine's own count for THIS AGE-YEAR, straight off the snapshot.
+             ⚠ E-01 / T4.11: the window in the line and in the title is `proEntryCapUsage`'s -
+             birthday to birthday - and it is the phrase the card pills below already carry
+             (`:title` on `.pro-entries`). See `proBudgetLine` in the script for the measurement
+             that moved it and for what did NOT move. -->
+        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter in the year she is this age – counted from birthday to birthday. A fresh allowance arrives on her next birthday; junior and national events are not counted.'">
           {{ proBudgetLine }}
         </p>
         <!-- THE PLANNING COUNTER: how much tennis is left in the season and on which rungs. It
@@ -1557,7 +1616,7 @@ function closeExhibition(): void {
                  doing. Same picker Home uses: one tournament, one photograph. -->
             <div class="event-art">
               <img :src="venueUrl(ev)" alt="" />
-              <span class="event-art-scrim"></span>
+              <span class="event-art-scrim art-scrim"></span>
             </div>
 
             <div class="event-card-top">
@@ -1617,8 +1676,13 @@ function closeExhibition(): void {
                    reason: both are facts ABOUT the week rather than what the week IS. -->
               <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               <!-- Round-7 item 21: past tense once the window has shut. -->
-              <span class="pill" :class="{ negative: week > ev.deadlineWeek && !ev.entered }">
-                {{ week > ev.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek) }}
+              <!-- ⚠ E-P04 (26.09) – `entriesClosed(ev)`, twice, where this row spelled
+                   `week > ev.deadlineWeek` inline. The screen already owns that question one
+                   function up and the pill below it calls it; two spellings of a deadline on one
+                   card is the kind of pair that drifts the day the rule grows an `!ev.entered` or a
+                   freeze clause. Both words and both classes are byte-identical. -->
+              <span class="pill" :class="{ negative: entriesClosed(ev) && !ev.entered }">
+                {{ entriesClosed(ev) ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek) }}
               </span>
               <span v-if="ev.entered" class="pill ok">Entered</span>
               <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
@@ -1914,6 +1978,7 @@ function closeExhibition(): void {
             role="button"
             tabindex="0"
             :aria-label="`${packageLabel(row.vacation.packageId)}, ${weekLabel(row.week)} - open the planner`"
+            :aria-describedby="vacationDescribedBy(row)"
             @click="openPlanner(row)"
             @keydown.enter.prevent="openPlanner(row)"
             @keydown.space.prevent="openPlanner(row)"
@@ -1931,8 +1996,9 @@ function closeExhibition(): void {
                 <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
                 <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
-                <span v-if="vacationGain(row) > 0" class="pill">+{{ vacationGain(row) }} condition</span>
-                <span class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
+                <!-- ⚠ E-P13: the two ids are what the card's `aria-describedby` points at. -->
+                <span v-if="vacationGain(row) > 0" :id="`vac-gain-w${row.week}`" class="pill">+{{ vacationGain(row) }} condition</span>
+                <span :id="`vac-paid-w${row.week}`" class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
                 <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
               </div>
             </div>
@@ -2689,18 +2755,11 @@ section.bare .event-cards {
   pointer-events: none;
 }
 
-/* The export's four-stop vertical scrim. Without it a bright court eats the type at both ends. */
-.event-art-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(11, 17, 23, 0.55) 0%,
-    rgba(11, 17, 23, 0.12) 34%,
-    rgba(11, 17, 23, 0.55) 78%,
-    rgba(11, 17, 23, 0.86) 100%
-  );
-}
+/* The export's four-stop vertical scrim. Without it a bright court eats the type at both ends.
+   ⭐⭐ T6.4 · F-09 (28.09) – it is `.art-scrim` in src/style.css now, carried beside this class, and the
+   scoped rule is gone because all three of its declarations were the shared ones. `.week-art-scrim`
+   further down is NOT the same object and did not join: it is two gradients at 100deg and 180deg over
+   a different colour, dark on the left where the words are. Same box, different paint. */
 
 /* Everything after the art is a sibling of it, so it needs to sit above. */
 .event-card > *:not(.event-art) {

@@ -109,6 +109,15 @@ import { birthdayTurning } from '../src/engine/world/age'
 import { migrateSave } from '../src/engine/migrations'
 import type { LoveEpisode, WorldEvent } from '../src/shared/protocol'
 
+// ⚠⚠ THE SEVEN PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction, so it needed no measurement, unlike the 31 files whose budgets were ABOVE the ceiling.
+// A budget BELOW the ceiling would have stayed – that one says something. ⚠ This file's `}, 60_000)` idiom
+// is the one `wave5-psychologist-recovery.test.ts` copied and cited; that citation is re-aimed in the same
+// pass. The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 
@@ -376,7 +385,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     expect(landed.quiet, 'quiet is steady – the same two numbers, because it is the INTENSITY axis').toBe(48)
     expect(landed.fiery, 'fiery is intense').toBe(38)
     expect(landed.deep, 'deep is intense').toBe(38)
-  }, 60_000)
+  })
 
   it('⚠⚠ RULING C: it is added AFTER the scale, never through it – a flat 70 lands on 48 and 36', () => {
     // ⚠⚠ THE DISCRIMINATING CASE FOR THE WHOLE RULING, and it needs the FLAT baseline to be readable:
@@ -397,7 +406,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
       expect(world.spirit, `${t}: the shock is not scaled a second time (that would read ${intense ? 27.5 : 52.4})`)
         .toBe(intense ? 36 : 48)
     }
-  }, 60_000)
+  })
 
   it('⚠ the table is §4\'s own two numbers, and the −27.5 base is a reconstruction rather than the row', () => {
     // The LITERAL table pin – ruling E's lesson from T2 applied one field over: a corridor built out
@@ -426,7 +435,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     world.week += 1
     accrueSpirit(world, false, [])
     expect(world.spirit, 'the NEXT week is the return rule alone – 48 + 5, not 48 + 5 − 22').toBe(53)
-  }, 60_000)
+  })
 
   it('⚠ bond is untouched by the shock – parent-decision-only, in this wave as in every other', () => {
     // §4a.2, restated where it could be broken cheaply: an ending is not a decision, and a bond line
@@ -439,7 +448,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     // ⚠ The 0.5/week regression toward 70 is the STANDING weekly rule and fires on every tick; what is
     // asserted is that the ending added nothing to it. 64 + 0.5 = 64.5 and not one half-point more.
     expect(world.bond, 'and the standing regresses by its own half point, with nothing added').toBe(64.5)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -472,7 +481,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
       expect(world.spiritShock, `${t}: the mark survives its own setting tick`).toEqual({ week, kind: 'breakup' })
       expect(world.spirit, `${t}: and it is a long way under 68`).toBeLessThan(68)
     }
-  }, 60_000)
+  })
 
   it('⭐⭐ the walk back is the standing return and NOTHING else – the whole trace, per intensity', () => {
     // ⚠⚠ THE RECOVERY SHAPE AS A LITERAL LADDER, because «no special curve» is a negative and a
@@ -514,7 +523,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
         .toBe(intensity === 'steady' ? 2 : 7)
       expect(trace.indexOf(70), `${t}: back at her own baseline`).toBe(intensity === 'steady' ? 5 : 11)
     }
-  }, 60_000)
+  })
 
   it('⚠⚠ RULING D: the bar is her OWN baseline even while somebody new is there', () => {
     // ⚠⚠ THE CASE THE RULING EXISTS FOR, and it is the one a mutation to `s.baseline + s.attachmentLift`
@@ -557,7 +566,13 @@ describe('wave 4 T3 D – when the mark comes off', () => {
 // E. WHAT MAY READ IT – the exhaustive list, and how Mood shows the shock with ZERO new code
 // =================================================================================================
 describe('wave 4 T3 E – the readers, and the Mood surface', () => {
-  it('⚠⚠ the field is named in exactly six files in src/, and they are the writers, the seat and T6\'s derivation', () => {
+  // ⚠⚠ THE TITLE CARRIES NO COUNT, AND THAT IS A FIX RATHER THAN A STYLE CHOICE (28.09, T6.10). It used
+  // to say «exactly six files» and the list had grown to ELEVEN – a number in a test's NAME is prose that
+  // no assertion reads, which is CLAUDE.md's own measured hazard («a count written in PROSE survives a
+  // full gate»: wave 9 shipped two documents saying 32 over a corpus of 28, through `check`, `e2e` and
+  // the sims). It went stale four times in one wave here – T6.5, T6.8 and T6.10 twice – and nothing could
+  // go red. So the name states the CLAIM and the count is ASSERTED below, beside the list it counts.
+  it('⚠⚠ the field is named in an exhaustive, pinned list of files in src/ – the writers, the seat and T6\'s derivation', () => {
     // ⚠ THE T3 BRIEF'S «EXHAUSTIVE LIST», MADE MECHANICAL. The field is persisted FOR wave 5's
     // psychologist; a reader added anywhere else is scope the owner did not ask for, and the cheapest
     // way to notice one is to pin the set. ⚠ `codeOnly`, because `economy.ts` discusses the field in
@@ -576,13 +591,60 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // census grew by exactly the file that ruling required and by nothing else, which is the claim
     // this pin was built to make. ⚠ NOT WEAKENED: the list is still exact, still ordered by the walk,
     // and the wire assertion below is UNCHANGED and has been joined by a stronger one.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – THE NAME MOVED, THE CENSUS DID NOT. `createWorld` and
+    // its 93-property literal left the barrel for `engine/world/create.ts` (P4's last three
+    // span-moves), so the birth value is spelled at the new path. ⚠ NOT WEAKENED: the list is still
+    // EXACT and still in the walk's own order, a file joining it is still red, and the claim under it
+    // is untouched – the move added no reader and removed none.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06 – A SEVENTH ENTRY, AND IT IS A TYPE REFERENCE RATHER THAN A
+    // READER, WHICH IS WHY THE CLAIM IS UNCHANGED. `world/lifeBeat.ts` is being split by beat kind, and
+    // `'fork-psy'`'s copy moved to `world/lifeBeat/forkPsyCopy.ts` – the `PsyRegister` type is
+    // `'plain' | NonNullable<WorldState['spiritShock']>['kind']`, so the new module NAMES the field in a
+    // type position and nothing else. It neither sets it nor reads it at runtime: `rollEnds` is still
+    // the one place it is SET, and that is still `lifeBeat.ts`. ⚠ NOT WEAKENED: the list is still
+    // EXACT and still in the walk's own order, and a file that joins it is still red. ⚠ AND THE PACKAGE
+    // SORTS BEFORE ITS HUB, which is that order being the WALK's rather than a path's: `readdirSync`
+    // meets the directory `lifeBeat` before the file `lifeBeat.ts`.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.10 / A-06 – AN EIGHTH ENTRY, AND THIS ONE IS A REAL WRITER. §16 «a death
+    // in the family» moved to `world/lifeBeat/bereavement.ts`, and `rollBereavement` is the second place
+    // the field is SET (`spiritShock = { week, kind: 'bereavement' }`). ⚠ AND THAT CORRECTS A SENTENCE
+    // ABOVE RATHER THAN CHANGING A FACT: the T6.8 note says «`rollEnds` is still the one place it is
+    // SET», which was already only true of the FILE – `rollBereavement` has set it since wave 11 and sat
+    // in the same file, so the census never saw two writers. Now it does. ⚠ NOT WEAKENED: the list is
+    // still EXACT, still in the walk's own order, a file joining it is still red, and the wire
+    // assertions below are untouched – the move added no reader and removed none.
+    // ⚠⚠ AND A NINTH ON THE NEXT COMMIT OF THE SAME TASK: §15 «the weight» moved to
+    // `world/lifeBeat/weight.ts`, and `rollPregnancyLoss` is the THIRD writer (`kind:
+    // 'pregnancy-loss'`). The three writers are now one per file, which is the shape A-06 is for – the
+    // census reads as a map of who may set the field rather than as «the life-beat file, and trust it».
+    // ⚠ NOT WEAKENED: still exact, still the walk's order, still red on a new file.
+    // ⚠⚠ AND A TENTH ON THE FOURTH COMMIT: §8 «the end» moved to `world/lifeBeat/ended.ts`, and
+    // `rollEnds` – the writer this census has named since wave 4 – is spelled at the new path. After it
+    // the THREE writers are one per file and none of them is the hub, which is A-06's shape reached:
+    // `lifeBeat.ts` still appears because `beatEndsRead` and the told-late branch READ the field.
+    // ⚠ NOT WEAKENED: still exact, still the walk's order, still red on a new file.
+    // ⚠⚠ AND AN ELEVENTH WHEN §14 MOVED (T6.10's second pass): `world/lifeBeat/pregnancy.ts`, and it is
+    // the FOURTH writer – `landBirth` sets `kind: 'postpartum'`, the mark the months after leave on her.
+    // All four writers are now one per file and none of them is the hub. ⚠ NOT WEAKENED: still exact,
+    // still the walk's order, still red on a new file.
+    // ⭐ THE COUNT IS ASSERTED, NOT NARRATED, AND IT GOES **FIRST** (28.09). The list below already pins
+    // the exact set, so this adds no new claim – what it adds is a number that cannot go stale, which is
+    // the whole reason the `it` name no longer carries one. ⚠ IT IS ABOVE THE LIST ON PURPOSE: both
+    // assertions live in one `it`, so whichever runs first is the one that speaks. A census change now
+    // reddens on the COUNT, with the number in the message, before the identity diff.
+    expect(named, 'the exhaustive list – counted here, never in prose').toHaveLength(11)
     expect(named).toEqual([
       'engine/migrations.ts', // the v74 -> v75 back-fill
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
-      'engine/world/lifeBeat.ts', // `rollEnds` – the one place it is SET
+      'engine/world/create.ts', // `createWorld`'s literal – null
+      'engine/world/lifeBeat/bereavement.ts', // T6.10 – `rollBereavement` SETS it, kind `'bereavement'`
+      'engine/world/lifeBeat/ended.ts', // T6.10 – `rollEnds` SETS it, kind `'breakup'`
+      'engine/world/lifeBeat/forkPsyCopy.ts', // T6.8 – `PsyRegister`'s type only, no read and no write
+      'engine/world/lifeBeat/pregnancy.ts', // T6.10 – `landBirth` SETS it, kind `'postpartum'`
+      'engine/world/lifeBeat/weight.ts', // T6.10 – `rollPregnancyLoss` SETS it, kind `'pregnancy-loss'`
+      'engine/world/lifeBeat.ts', // `beatEndsRead` and the told-late branch READ it; no writer left here
       'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
-      'engine/world.ts', // `createWorld`'s literal – null
     ])
     // ...and it is still NOT on the wire, which is the other half of the same claim: no component,
     // store or composable can be reading a field the snapshot does not carry.
@@ -640,7 +702,7 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
       expect(read.channel, `${t}: the mood channel speaks`).toBe('mood')
       expect(read.emotion, `${t}: and her life going wrong reads as the sad painting`).toBe('sad')
     }
-  }, 60_000)
+  })
 
   it('⚠⚠ THE WAVE-2 «a live shock outranks result joy» RULE DOES NOT EXIST ON THIS TREE, and T3 did not invent it', () => {
     // ⚠⚠ A FINDING, WRITTEN AS A PIN SO IT CANNOT BE FORGOTTEN. The wave-4 brief (§2 T3) and the T3

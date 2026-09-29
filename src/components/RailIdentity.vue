@@ -99,15 +99,23 @@ function openKid(): void {
     </button>
     <!-- The chip is drawn only once something counts somewhere – `rankChipTrack` owns that rule
          (null = no counting result in any table yet, and nothing to read on a chip). -->
+    <!-- ⭐⭐ E-03 / T4.6 (27.09) – THE RAIL'S CHIP DESCRIBES ITSELF TOO, and it is the same fix on the
+         same terms: `aria-label` beats name-from-content, so this button was called «How ranking
+         points work» and her rank never reached a screen reader. The label is untouched; the two spans
+         are the DESCRIPTION. HomeScreen.vue's own copy carries the whole argument beside its chip.
+         ⚠ THE IDS ARE THE RAIL'S OWN (`rail-rank-*`) rather than Home's. From 1024 both chips are in
+         the document – Home's is `display: none`, not absent – so one shared id would be duplicated
+         on every desktop Home. -->
     <button
       v-if="chipTrack !== null"
       class="diary-rank rail-id-rank"
       aria-label="How ranking points work"
+      aria-describedby="rail-rank-ladder rail-rank-value"
       :title="rankChipTitle"
       @click="emit('rank-help')"
     >
-      <span class="rank-ladder">{{ ladderLabel }}</span>
-      <span>{{ rankText }}</span>
+      <span id="rail-rank-ladder" class="rank-ladder">{{ ladderLabel }}</span>
+      <span id="rail-rank-value">{{ rankText }}</span>
       <template v-if="ranked">
         <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
         <span v-else-if="rankMovement.dir === 'down'" class="rank-move down">&#8595;{{ rankMovement.by }}</span>

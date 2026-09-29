@@ -10,8 +10,9 @@
 // WHAT THIS FILE MAY NOT DO: choose. Every word on a page comes from the engine (`AlbumPage`), the
 // selection rule included, because §6 promises the game never grades her and a UI that picked the
 // adjectives would be the game grading her in a different font.
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
@@ -23,6 +24,7 @@ import type { DynastyHandover } from '../shared/protocol'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
+import StoreError from './ui/StoreError.vue'
 
 const game = useGameStore()
 const emit = defineEmits<{
@@ -146,10 +148,44 @@ async function resumeCollege(): Promise<void> {
 // an ending typed 'college' WITHOUT a progress view still lands on (App.vue's `showCollege` requires
 // one) and a blocking takeover may not have a state with no way out of it.
 
+// --- ⚠⚠ E-08 / T4.7 – THE TAKEOVER HOLDS THE KEYBOARD, AND UNTIL NOW IT ONLY SAID IT DID ---------
+//
+// THE DEFECT, STATED (docs/review-principles-2026-09-26/05-ui.md E-08, carried from U-06's second
+// half). The root below has had `role="dialog" aria-modal="true"` since it shipped and no focus
+// management at all – which `composables/dialogFocus.ts` calls worse than neither in its own opening
+// paragraph, and it is right: `aria-modal` tells assistive technology to ignore everything outside
+// this card while Tab is still free to walk into the tab bar behind it. A keyboard user could reach
+// the shell a screen reader had just been told to ignore.
+//
+// ⚠ NO ESCAPE HANDLER, and that is the decision rather than an omission. This is a BLOCKING takeover
+// like the knock: the career is over, the tab shell is gone, and the ways forward are the footer's
+// own pills. A key that closed it would leave the player on a screen the shell does not draw.
+//
+// ⚠ `focusOn: 'card'` – ROUND 42 #8's ruling, on the same grounds. The first focusable in here is an
+// album ARROW, and the epilogue arrives on the advance that ended the career, so a held Enter would
+// turn the first page of her album before it had been read. Focus lands on the takeover itself, which
+// `aria-label="Epilogue"` names, and Tab reaches every control from there.
+//
+// ⚠ `restore: false` – ROUND 42 #17(c), and for its measured reason: the press that advanced the week
+// is what raised this, so «back where it came from» is back on Proceed, where a held Enter re-fires
+// the thing that ended the career.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
+
 </script>
 
 <template>
-  <div v-if="view" class="ending" role="dialog" aria-modal="true" aria-label="Epilogue">
+  <!-- ⚠ `tabindex="-1"` IS WHAT GIVES THE TRAP SOMEWHERE TO LAND (E-08 / T4.7) – the same four lines
+       every other dialog in the app carries (R2-07). Not one word of the epilogue moved. -->
+  <div
+    v-if="view"
+    ref="card"
+    class="ending"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Epilogue"
+    tabindex="-1"
+  >
     <!-- THE RECORD (section 9.3): every milestone in order, paged by season. The floor under the
          album, for the player who wants the record rather than the story. -->
     <section v-if="scrollOpen" class="ending-scroll">
@@ -303,6 +339,20 @@ async function resumeCollege(): Promise<void> {
         </p>
 
         <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
+
+        <!-- ⚠⚠ E-09 / T4.8 (27.09) – THE REFUSAL HAD NOWHERE TO GO ON A BLOCKING TAKEOVER. This screen
+             issues `resumeFromCollege` from the pill below and `newCareer` used to come from here too,
+             and it rendered no error element of ANY kind – so a refused answer wrote `game.error` into
+             Home's paragraph BEHIND the scrim while this card stayed up and nothing on it changed.
+             Two paths reach it without an engine bug (the W2 commit for the five blocking cards names
+             both): another tab's SAVE_CONFLICT, whose sentence already tells the player to reload, and
+             B-02's, where the mutation is refused because `toSnapshot` threw.
+             ⚠ NO COPY (invariant 4): `StoreError` owns no wording and renders whatever the store
+             already wrote.
+             ⚠ AND IT IS ABOVE THE PILLS, which is where ForkDialog and the five blocking cards put
+             theirs – so the way forward stays LAST in the flow, where `measureDialog` reads the box
+             off, and the epilogue's fit case measures the card with the line up. -->
+        <StoreError />
 
         <!-- ⭐⭐⭐ ROUND 24 #2b/#3 – THE COLLEGE YEAR BLOCK HAS LEFT THIS SCREEN, and its absence is
              the whole of the owner's item – the album read to him as if the career had ended. (His

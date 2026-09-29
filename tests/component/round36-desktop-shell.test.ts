@@ -40,6 +40,8 @@ import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
+// ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header.
+import { carriesClasses } from '../helpers/markup'
 
 // This runner has no web storage and three of the screens below read it at setup. The same shim,
 // and the same argument, as tests/component/round28-top-notices.test.ts: the browser's own object is
@@ -302,21 +304,41 @@ describe('round 36 phase 3 – the yellow button is the mobile one, moved off th
     expect(tokenAt(DESKTOP, '--app-bar-bottom'), 'and a desktop CTA clears the edge by that').toBe('24px')
   })
 
-  it('⚠ all three copies of the floating box read the tokens, not the numbers', () => {
+  it('⚠ there is ONE floating box now, it reads the tokens, and all three elements ask for it', () => {
     // Phase 1 found five rules carrying a literal 520 and phase 2 found two more; this is the same
     // shape of finding for the other two properties. The shell's own rule is in the sheet, and the
     // Calendar's and This Week's are copies of it in their own SFCs – so a token that only the sheet
     // reads would move one box of three and leave two behind, which is precisely how `.cal-go` and
     // `.week-proceed` kept a 520px cap through the whole of phase 1.
-    const shellBar = region(sheet(), '.next-week-bar {', '}')
-    expect(shellBar, "the shell's own button").toContain('left: var(--app-bar-left)')
-    expect(shellBar).toContain('bottom: var(--app-bar-bottom)')
-    const calendar = region(sfc('../../src/components/screens/CalendarScreen.vue'), '.cal-go {', '}')
-    expect(calendar, "the calendar's advance CTA").toContain('left: var(--app-bar-left)')
-    expect(calendar).toContain('bottom: var(--app-bar-bottom)')
-    const week = region(sfc('../../src/components/screens/ThisWeekScreen.vue'), '.week-proceed {', '}')
-    expect(week, "the story's Proceed").toContain('left: var(--app-bar-left)')
-    expect(week).toContain('bottom: var(--app-bar-bottom)')
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AND THE RE-AIM IS WHY THE FINDING EXISTED. «All three copies read
+    // the tokens» was the best a pin could say while there WERE three copies; F-09 quotes phase 2's own
+    // chase as its cost evidence. There is one copy now – `.floating-cta` in src/style.css – so the arm
+    // says the stronger thing: the tokens are read in exactly one rule, and each of the three elements
+    // claims that rule by carrying its class. The negative half below is what keeps the teeth phase 1
+    // earned: no member rule may re-declare either property, with a token or with a literal, which is
+    // the state phase 1 found and could not express.
+    const box = region(sheet(), '.floating-cta {', '}')
+    expect(box, 'one box, reading the column token').toContain('left: var(--app-bar-left)')
+    expect(box, 'and the bottom clearance token').toContain('bottom: var(--app-bar-bottom)')
+    // ⚠ THE SHELL'S OWN RULE LIVES IN THE SHEET, NOT IN App.vue – so its markup is checked in the .vue
+    // and its remaining rule in the sheet. Naming the path is the claim (CLAUDE.md: a claim about which
+    // file carries which CSS declaration is a claim about the path).
+    const members: [string, string, string, string][] = [
+      ['../../src/App.vue', 'next-week-bar', 'sheet', "the shell's own button"],
+      ['../../src/components/screens/CalendarScreen.vue', 'cal-go', 'sfc', "the calendar's advance CTA"],
+      ['../../src/components/screens/ThisWeekScreen.vue', 'week-proceed', 'sfc', "the story's Proceed"],
+    ]
+    for (const [path, own, where, what] of members) {
+      const src = sfc(path)
+      expect(carriesClasses(src, own, 'floating-cta'), what).toBe(true)
+      // ⚠ A NEGATIVE CLAIM, so it is read off the ONE file that owns the rule and never off a widened
+      // source – the `componentFile` discipline, applied to a stylesheet region.
+      const rule = region(where === 'sheet' ? sheet() : src, `.${own} {`, '}')
+      expect(rule, `${what} declares no left of its own`).not.toContain('left:')
+      expect(rule, `${what} declares no bottom of its own`).not.toContain('bottom:')
+      expect(rule, `${what} declares no max-width of its own`).not.toContain('max-width:')
+    }
   })
 })
 

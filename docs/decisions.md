@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 136 dated entries, newest 2026-09-25. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 146 dated entries, newest 2026-09-29. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,16 +35,16 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 20 | [THE RIG WAVE'S FOUR, RULED IN ONE LINE: «ПО СВОИМ РЕКОМЕНДАЦИЯМ»](#25092026--the-rig-waves-four-ruled-in-one-line-по-своим-рекомендациям) | 2026-09-25 |
+| general | 27 | [AGENTS RUN SEQUENTIALLY, AND THE SIX WAVES' QUESTIONS ARE ANSWERED: W7 IS GO](#29092026--agents-run-sequentially-and-the-six-waves-questions-are-answered-w7-is-go) | 2026-09-29 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 20 | [WAVE 12 REVIEWED: TEN ONE-LINERS, AND THE STRINGS REVIEW APPLIED IN-WAVE](#23092026--wave-12-reviewed-ten-one-liners-and-the-strings-review-applied-in-wave) | 2026-09-23 |
+| process-and-git | 21 | [THE PRINCIPLES REVIEW RECEIVED: TWO P0s CONFIRMED, SIX WAVES PROPOSED, NOTHING LAUNCHED](#26092026--the-principles-review-received-two-p0s-confirmed-six-waves-proposed-nothing-launched) | 2026-09-26 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
-| saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
-| simulation-and-balance | 6 | [THE BENCH ROT RIDES THE SAME BRANCH: «ИНАЧЕ ПОТЕРЯЕМ»](#23092026--the-bench-rot-rides-the-same-branch-иначе-потеряем) | 2026-09-23 |
+| saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
+| simulation-and-balance | 7 | [THE DELIVERY MEASURED: THE ART STAYS BYTE-IDENTICAL, THE CEILING RISES WHEN IT MUST](#26092026--the-delivery-measured-the-art-stays-byte-identical-the-ceiling-rises-when-it-must) | 2026-09-26 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -3143,6 +3143,16 @@ wave-1 question:
   right way at 3.6× SEM, nothing drifts, nothing clamps, and the fairness corridor holds on every row
   of every sweep (worst 0.179 pp against 1.5).
 
+⚠ **ANNOTATED 26.09, NOT EDITED – `roundHalf` NO LONGER EXISTS AND THE GRID DID NOT MOVE.** C-05 of
+the principles review found that `ECONOMY.bond.step` was a dial nothing read: the grid below was a
+hard-coded `Math.round(x * 2) / 2` and `step: 0.5` had one reader, a test. It is now
+`roundToStep(x) = Math.round(x / ECONOMY.bond.step) * ECONOMY.bond.step`, which reads the dial inside
+its own body. **Every number in the paragraph below is still true of the shipped constant** – the
+identity was measured over 2,106,039 points under `Object.is`, 0 disagreements – so nothing here is
+reversed. What changed is that the instruction at the end of this entry's own thinking, «a wave
+wanting slower healing changes the mechanism – a finer `step`», is now a working move rather than
+advice about an unwired constant.
+
 ⚠ **One defect was found and fixed rather than ruled**: `bond.regressionPerWeek` looked like a
 continuous dial and is not. Every bond write is quantised by `roundHalf` onto the 0.5 grid, so 0.5,
 0.4, 0.3 and 0.25 all move exactly half a point and 0.24, 0.2 and 0.1 all move exactly nothing – a
@@ -5444,3 +5454,211 @@ over the wave's question list, materialised as:
    records in order (the 24.09 keep-analysis, then this ruling).
 4. **Q4, the paused match** – A, as shipped: a pause is «I have looked away», the platform's idle
    timer is the authority then.
+
+## 26.09.2026 – THE PRINCIPLES REVIEW RECEIVED: TWO P0s CONFIRMED, SIX WAVES PROPOSED, NOTHING LAUNCHED
+
+His ask of 26.09 («полное комплексное мультиагентное ревью проекта на всем принципам
+программирования … находки, предложения по улучшению, оптимизации») was run against `03d92221`
+as briefed – read-only, a shared serial baseline, eight lanes, independent verification – and
+returned 65 written findings: **2 P0, 8 P1, 49 P2** (`docs/review-principles-2026-09-26/`).
+Taken in by the architect the same day (`docs/review-codex/14-principles-review-response-2026-09-26.md`):
+
+- **Every P0 and P1 re-verified in code before a verdict.** D-01 («Restore previous» overwrites
+  the true previous generation after 15 of 41 store mutations) and C-06 (a knock on the college
+  departure week soft-locks the career – the probe reproduced here, 3/60 and 2/30 on the same
+  seeds) both stand; the 13 e2e fixtures hold neither state.
+- **Verdicts:** the review's six waves adopted with four modifications (the rung ratchet stays
+  until the memo is proven on a runner; A-06 and H-08 become forward rules rather than sweeps;
+  A-02's bytes belong to G-01), one refutation accepted (G-06, covered by his ruling A), five
+  refuted leads recorded as Rejected rows in `docs/backlog/the-quality-rig.md` (22–26), the
+  waves as rows 16–21.
+- **H-09 is the architect's own call** under the 21.09 delegation of `CLAUDE.md`: option (b), the
+  incident narratives moved verbatim to `docs/context/`, inside the same 22k budget.
+- **Nineteen decisions and three questions wait on him**, each with a recommendation. ⚠ **Nothing
+  launches before his approve** (the intake's gate); W1 carries both P0s and goes first.
+
+## 26.09.2026 – THE PRINCIPLES FIX RULED OPEN: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ», ALL OF IT
+
+His go on the intake of the same day: «сделай пожалуйста полноценную пошаговую спеку для билдера на
+починку всего по твоим рекомендациям». Every choice the intake left open is settled by its
+recommendation: C-06 (a) no knock on the departure week; B-01 (a) the college year pauses for a
+blocking beat; C-07 (a); E-01 (a) the header reuses the pills' phrase (DRAFTs); B-03 (a) «Not open
+yet»; E-04 (a) the engine's sentence; E-02 (a) the layout is the preset's; A-05 (a); unknown
+answers refused; D-02 keeps its text; D-07 option A; H-04 O1; P4 finished (A-04 a) and the barrel
+frozen (A-03); dormant archival tools out of `check:tools`; the world map stays committed; B-08's
+unreachable roof cells collapsed. Builder plan: `docs/plans/principles-fix-builder-2026-09.md`,
+six stacked branches `fix/principles-w1` … `-w6`, W1 **Now**, the rest Next. Not in it: the
+`economy.ts` split (deferred), `CLAUDE.md`'s restructure and the forward rules (the architect's),
+the asset calls (his). He dispatches the builder.
+
+## 26.09.2026 – AVIF RULED OUT BY HIS TERMS, AND THE MEASUREMENTS HANDED TO THE ARCHITECT
+
+Two lines of his, the same evening: «AVIF … нам главное, чтобы качество картинок не просело ни на
+миллиметр» and «что там с поддержкой AVIF на всех устройствах и браузерах? нам нужно 100% покрытие
+только, другое не подходит, а держать 2 сета картинок не вижу смысла» – and then the delegation:
+«По остальным вопросам и задачам вся ответственность за измерения и фиксы после них на тебе.
+Спека есть, если что – дописывай туда следом еще пункты, пока билдер работает, он подхватит».
+
+- **AVIF is out.** The build's own floor is Vite 7's default target – Chrome 107, Edge 107,
+  Firefox 104, Safari 16 (v7.vite.dev) – and inside it AVIF is not 100 %: Safari decodes AVIF
+  through the system on macOS 13 Ventura or later only, so Safari 16–17 on macOS 11–12 would run the
+  game with blank art, and Edge gained AVIF only at 121 (caniuse). WebP covers the whole floor. A
+  second image set was refused by him outright. ⭐ **And it would not have paid anyway:** measured
+  on 202 master → shipped pairs with his quality rule made exact – the smallest AVIF whose SSIM on
+  every colour plane AND PSNR against the master are no worse than today's webp – the saving is
+  **14.7 %** (7,817 → 6,671 KiB; trophies −65 %, everything else −7…−20 %).
+- **The measurements and the fixes after them are the architect's.** Appended to the builder plan
+  the same day, under its new «picked up at every wave boundary» section: T1.6 (the save doors in a
+  real browser), T1.7 (the doors under seeded hostile input), and **W7** – the notes: dated
+  chronicles move out of the code verbatim, per module at the moment of a split, behind a pointer
+  check; the pilot is the schema history in `state.ts`, and C-03 (`economy.ts`) is revived inside
+  it. Image re-encoding stays with the architect (the masters are local only), measured first
+  under the same no-worse rule.
+
+## 26.09.2026 – THE DELIVERY MEASURED: THE ART STAYS BYTE-IDENTICAL, THE CEILING RISES WHEN IT MUST
+
+Under his «качество не должно просесть ни на миллиметр» and «100% покрытие … 2 сета не вижу
+смысла», the architect measured every image lever on the 202 master → shipped pairs, with the rule
+made exact (every SSIM plane AND PSNR against the master no worse than today's file):
+
+- **AVIF** – 14.7 % saved, and ruled out by coverage (the entry above).
+- **WebP with a stronger encoder** (effort 6, smart chroma subsampling) – **0.4 %** (8 of 202
+  files). The shipped webp is already at its format's floor for its quality.
+- **Lossless PNG recompression** of the root icons – no gain: the committed files are smaller than a
+  lossless re-encode; their pixels were already packed tighter.
+
+So no byte of art moves. What remains without touching a pixel: the engine corpus in the UI chunk
+(G-01, −49 KB, W3), the engine code duplicated in both chunks (A-02, measured first in W6), and the
+one manifest-only icon (T3.12, −105 KiB, W3; `pwa-192` / `pwa-512` stay – the lock-screen music
+artwork reads them offline). ~0.3 MB in all – after that the ceiling is his own constraint, and it
+rises when an art round needs it, as he said himself: «это наше ограничение, мы его будем
+неизбежно поднимать».
+
+## 26.09.2026 – NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK
+
+W1 of the principles fix closed with three questions. His answers, verbatim:
+
+1. «у нас сейчас нет игроков, старые сейвы нас не интересуют, нужна будущая 100% обратная
+   совместимость, но страховку сделать можно, по твоей рекомендации, лишь бы пользователь не застрял
+   в этом флоу»
+2. «по твоей рекомендации»
+3. «сделай как считаешь нужным»
+
+**What answer 1 settles, and what it does NOT.** The question was which sentence a save-door refusal
+carries, on three paths at once: a refused `loadCareer`, `deleteSlot` handed an `auto:` key (D-P7),
+and whether the boot door should print `saveGuard`'s «update the app, then import it» instead of the
+migration ladder's own sentence. His answer moves the question off wording and onto **exits**: the
+test is not what the screen says, it is whether the player can leave. So –
+
+- **No sentence is reworded and no sentence is invented.** Invariant 4 stands; «страховку сделать
+  можно» authorises a guaranteed exit, not new copy. A refusal reachable only by a malformed record
+  is a diagnostic, and a diagnostic with a working Retry / Import / «Start a new career» beside it is
+  not a stuck player. If a path turns out to have no exit, the fix is the exit; if that needs copy, it
+  comes back as a DRAFT for his pass.
+- **The insurance is a net, not a message**: every refusal the save doors can produce must land on a
+  surface with a working exit, proven by mutation. The sharp target is `loadCareer`'s refusal, because
+  this wave created it (B-02's last lifecycle path) – a refusal that did not exist cannot have been
+  covered by an older net.
+- **«Будущая 100% обратная совместимость» is the three-part law already in `CLAUDE.md`**, and it needs
+  nothing built: append-only migrations, a bump per change, and one golden fixture per version
+  enforced by `tests/goldenSaves.test.ts`. Old saves being uninteresting (his 03.09 ruling, no players
+  yet) is what makes the FORWARD direction the only live risk, and that is the one W1's T1.3 closed –
+  a save from a newer build is refused as `future-schema` instead of being called corruption and
+  rolled back over.
+
+**What answer 2 settles.** Two findings W1's own fuzz corpus turned up ride as their own items, not
+as appendices to a wave:
+
+- **A dry run on the boot door.** Three seeded variants load and then refuse the next week
+  (`golden-v35/type-swapped/1 injury := a number`, `e2e-fresh/field-deleted/1 deleted injuryHistory`,
+  `e2e-pro/field-deleted/5 deleted seasonEntries.rows`). T1.5's dry run covers `importSave`, which is
+  rare; boot is not, and the tick is paid on every one. Its own item, measured first.
+- **B-02's load-side fallback** – trying the older generation when the newest cannot render. It is a
+  product decision, not an ordering fix: a second generation opening silently in place of the first is
+  exactly the rollback T1.3 just narrowed, and it needs the sentence question above.
+
+**What answer 3 settles.** The `loadCareer` ordering fix (`96748400`) has no row in
+`docs/plans/principles-fix-builder-2026-09.md` §3, which lists T1.1–T1.7. The plan is appended to by
+the architect's other hand, and a row from this side in the same region would conflict at the next
+wave-boundary merge for no gain, so the record lives in the commit and here instead.
+## 26.09.2026 – THE SECONDARY MARKET COMMISSIONED: THINGS SELL THROUGH TIME, AND BUYERS WRITE LETTERS
+
+His micro-wave for after the principles fixes, planned while the builder works. Selling a thing –
+car, house, boat, plane, the brand, the academy – stops being instant: «все объекты имеют свой срок
+экспозиции … дом более ликвидный, яхта менее ликвидная», each class with its own discount corridor,
+and the corridor coupled to the market's existing crash arcs PER CLASS, signed – «в кризис может
+быть еще больше на какой-то класс активов … а на какой-то меньше или вообще наоборот – цены могут
+подняться, как часто бывает с недвижимостью». Buyers write letters into the existing inbox with a
+price and принять/отклонить – his own extension the same hour. And one ruling he made on the spot:
+**the academy sells only as one lot** – «вряд ли мы в реальности можем только корты продать, землю
+или админ здание. Это тоже надо заложить и предупредить пользователя».
+
+The spec is docs/specs/secondary-market-2026-09.md (five rulings still open, the fire sale the
+biggest of them); the step-by-step builder plan is docs/plans/secondary-market-builder-2026-09.md,
+gated on those rulings for the strings and the fire sale, free to start S1–S3 without them. The
+deposit and the index fund stay instant – parked cash is not a thing, and the need gate reads it.
+
+## 26.09.2026 – THE SECONDARY MARKET RULED: LETTERS PILE UP, THE CRISIS IS MODERATE, THE FIRE SALE IS IN
+
+All five of the spec's rulings, answered within the hour. The fire sale: «да» – instant full value
+disappears for things. The one-open-letter guard he struck himself: «почему одно? может же 2 и
+больше людей написать, так часто бывает. Просто выбор за игроком, как со спонсором сейчас» – so
+buyer letters accumulate exactly as sponsor letters do in the window. Withdrawing a listing kills
+its letters: «ок». The crisis coupling: «давай умеренно, после кризиса возвращается к своей обычной
+динамике, может даже чуть ниже на какое-то время» – moderate shifts and a decaying opposite-sign
+hangover for ~half a season after an arc. The brand: «подтверждаю, что-то вроде того, но не жести
+там сильно» – the business row sits at the soft end of the corridor table. And buying on the
+secondary market is parked, his word, in docs/backlog/the-shop-and-the-broker.md.
+
+Spec and plan updated in place; every step is now free for the builder once the principles waves
+land.
+
+## 26.09.2026 – THE LISTING THAT NEVER SELLS: FRESHNESS DECAYS, THE MARKET REMEMBERS
+
+His third pass on the secondary market, minutes after the rulings: «шанс на то, что объект не
+продастся вообще с предложением попробовать через некоторое время или "перевыложить" объявление?
+например элитный авто за 300к вполне может быть не очень востребован, да и яхта может провести на
+экспозиции неопределенное время» – and the details delegated («может быть ты еще что-то решишь или
+предложишь»). Landed in the spec as three terms and a prompt: the arrival hazard DECAYS from a
+fresh-ad peak to a small class floor, so the medians hold but the tail becomes «может висеть
+вечно»; expensive lots within a class sit in thinner markets (one continuous dampener off worth
+against the entry rung – his $300k car, by construction); and at the deterministic week the floor
+is reached, one info letter names the pair of honest moves – wait, or withdraw and try later. My
+own call against farming: the market remembers a withdrawn ad for ~12 weeks, so «перевыложить»
+resets freshness only when the waiting was real. The price-cut control stays a later slice, now
+marked as the natural revival lever. Spec §2d/§2i, plan S1–S6 updated; schema v90 gains the row's
+small listing memory.
+
+## 29.09.2026 – THE TOKEN LAW: HARD LIMITS ON EVERY DISPATCH, AND THE WAVE BOUNDARY MADE PHYSICAL
+
+The principles wave overran its budget and the owner ruled the fix into law: «видимо все наши
+правила по использованию были проигнорированы, так что давай на уровне проекта где-то сделаем
+жесткие ограничения» – six named implementations, his own cost measurements attached. They live in
+docs/context/token-discipline.md, pointed to from CLAUDE.md: the model and effort chosen per step
+in every wave plan (a dispatch table is now part of a plan's shape – the secondary-market plan
+carries the first one); one agent per task, killed on report; briefs carry excerpts and line
+ranges, never document links; §2's in-agent block (batch, read once, no wandering, trim at source)
+quoted verbatim in every brief; heavy gates outside fat agents – parent session or a thin
+gate-agent, background+poll if unavoidable; no SendMessage into a fat agent; sessions worked in
+blocks, paused via handoff notes, small questions to fresh sessions. The wave boundary is physical
+now: a closing wave writes docs/handoff/<wave>.md and the next wave opens in a fresh session that
+reads only that file. The parent-directory settings hole he caught himself – sessions started from
+~/Projects/Claude never saw the repo's deny rules – is mirrored shut in that directory's own
+.claude/settings.json. The running principles waves pick the law up through the plan's §1a at
+their next boundary.
+
+## 29.09.2026 – AGENTS RUN SEQUENTIALLY, AND THE SIX WAVES' QUESTIONS ARE ANSWERED: W7 IS GO
+
+Two rulings in one message. First, the token law grew its eighth clause by his word: «работа
+агентов по коду и разработке только последовательно, шаг за шагом, не параллельно» – now §1.2 of
+docs/context/token-discipline.md; parallel stays legal only for read-only fan-out. Second, the
+builder closed W1–W6 and filed every accumulated question with its number
+(principles-fix-questions-2026-09.md, w6 head); the owner handed the list to the architect and
+ruled the sequel himself: «если блокеров не будет – можешь приступать к W7». The verdicts are
+docs/plans/principles-fix-answers-2026-09.md, none blocking: the 29 strings approved as tabled
+(PF4/PF5 the only player-met DRAFTs, his pass at the PR), the Reload control is IN as W7's first
+commit T7.0 – he playtests the installed build, where a blocking card saying «reload» without a
+control is a dead end – 'Nine Bells' was a slip, both wording declines stand under invariant 4,
+the wedding spec keeps walking the player's route (G-04 (b) declined), and the 58-module row waits
+for its recorded trigger. W7 runs under the token law, sequentially, and closes with the first
+physical handoff file.

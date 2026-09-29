@@ -28,6 +28,10 @@ Setup, the benchmarks behind each of those rules, and the measured failure modes
 [docs/context/graphify.md](docs/context/graphify.md).
 
 
+## Token discipline
+
+[docs/context/token-discipline.md](docs/context/token-discipline.md) binds dispatch (29.09): model+effort per step, §2 in briefs, sequential agents, gates outside, handoffs.
+
 ## Non-negotiable invariants
 
 **1. The engine never imports the UI.** Zero imports of Vue/Pinia/components anywhere in `src/engine`, `src/worker`, `src/db`, `src/shared`. The worker owns the world; the UI only ever sees `Snapshot`. Every command is re-validated engine-side, so a stale screen cannot corrupt a career.
@@ -84,22 +88,19 @@ docs/specs/      one spec per shipped mechanic; docs/decisions.md is the dated o
 docs/review/     2026-08 full review + P1–P9 proposals
 ```
 
-`world.ts` is being decomposed into `src/engine/world/*.ts` (see `docs/review/proposals/P4-world-decomposition.md`). Rules for that work:
-- Extracted modules import `WorldState` as **`import type`** from `../world` — type-only, erased at compile time, so no runtime cycle.
-- `world.ts` imports the values back and **re-exports them under their historical names**: **hundreds of
-  files** import from `engine/world` and that public API must not change. ⚠ Count it, do not quote it –
-  three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
-  right" under different scopes, which is how a stale number survives, as **280 (19.08; 698 on 19.09)** did here.
-  ⚠ **And a count written in PROSE survives a full gate**, because no test reads it: wave 9 shipped two
-  documents saying 32 where the corpus held 28, through `check`, `e2e` and the sims. A number a document
-  states about itself needs a pin that compares it with the thing (`tests/wave9-strings-roundtrip.test.ts`).
-  The command for this one:
+`world.ts` **is decomposed** – P4 finished 28.09 (`docs/review/proposals/P4-world-decomposition.md`). It holds **0 function bodies** (`tests/principles-a04-barrel-no-bodies.test.ts`) and a **frozen** name surface (`tests/principles-a03-barrel-surface.test.ts`, which carries the numbers and names the census). Rules:
+- ⚠ It is a **frozen public surface**, not «compatibility under historical names» – A-03 measured that sentence stale. A symbol born in `world/*` is imported **from its owning module**; the barrel carries only frozen names, so a new re-export line is a decision the pin makes you take.
+- `WorldState` comes as **`import type` from `./state`**, the module that declares it – not from `../world`. ⚠ A **ratchet, not a sweep**: `tests/principles-a03-type-import-ratchet.test.ts` grandfathers the files that predate the rule, fails a **new** one, and refuses a **value** import of the barrel from inside the package with no grandfather.
+- `world.ts` re-exports the values – **hundreds of files** import from `engine/world`. ⚠ **Count it, do not quote it**: three "essentially right" numbers circulated in one day, which is how a stale one survives. And ⚠ **a count written in PROSE survives a full gate** (wave 9: docs said 32, the corpus held 28) – a self-stated number needs a pin against the thing (`tests/wave9-strings-roundtrip.test.ts`).
   ```bash
-  git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
+  git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l   # the importers
+  node scripts/world-map.mjs <symbol>                                        # which module owns it
   ```
-  For the other half of the barrel problem – *which module actually owns a symbol* – use
-  `node scripts/world-map.mjs <symbol>`, or read `tools/generated/world-symbol-map.md`.
 - If a candidate block calls back into `world.ts` at runtime, it is **not** ready to move — that needs dependency inversion, not a span-move.
+
+**A new beat kind is a new module** (A-06, 28.09) – `world/lifeBeat.ts` reached 8,003 lines in 17 days before anything stopped it. The **direction** is the rule; `tests/principles-a06-life-beat-direction.test.ts` judges it and carries the measurements:
+- A kind's **copy** is a leaf the hub imports (`lifeBeat/<kind>Copy.ts`); its **hazard** imports the hub (`lifeBeat/<kind>.ts`). ⚠ **Never one file with both halves** – that module would be imported by the hub and import it back, and `tests/import-cycles.test.ts` refuses the cycle. A hazard's names are re-exported by **`world.ts` directly from the kind module**, never through the hub, for the same reason.
+- The hub keeps the queue, the fork want, the presence law, raising and answering, prompt assembly, and any section another section references. **Zero inbound references inside the file** is what makes a section movable. The package is **flat**; chronicles leave under W7's rules, never in a split's own commit.
 
 ## Style
 
@@ -112,80 +113,78 @@ docs/review/     2026-08 full review + P1–P9 proposals
 ## Gotchas
 
 - **Prefer a mounted test to a source pin.** `tests/component/` mounts real components (vitest project `component`, happy-dom). Source pins break on contact with a refactor and prove nothing about behaviour; MatchViewer and SeasonScreen now have mutation-verified nets there, which is what makes them safe to split. Mutate the thing you think you are covering and watch it fail before you believe a green run.
+- **A screen that restates an engine verdict is the parity class** – the screen holds a predicate the engine does not (three defects in round 29 alone). Call the engine's own primitive, or pair a mounted test over one snapshot with its mutation table: [engine-ui-parity-2026-09.md](docs/specs/engine-ui-parity-2026-09.md).
 - Some tests are **source-pin tests**: they read engine source text and assert on structure. When moving code, read it through `tests/worldSource.ts` (`worldSource()`, `diarySource()`, or `engineModuleSource(name)` for any decomposed module) rather than pinning a path.
-- **⚠ CUT EVERY SOURCE REGION WITH THE MARKER HELPERS, NEVER WITH A RAW `indexOf`.** `tests/helpers/source.ts` exports `region` / `regionToLast` / `regions` / `after` / `before` / `at` / `lastAt` / `lineAt`, and every one of them THROWS on an absent marker. The raw form does not fail when a marker rots – `indexOf` returns `-1`, `slice(start, -1)` runs to the end of the string, and the region silently WIDENS to almost the whole file while the pin stays green. All 176 raw slices were migrated on 24.08 and **two of them had been lying**: a "the hero carries these six parts" pin was reading 59,944 of HomeScreen.vue's 126,815 characters, and a "the practice row" pin was reading SeasonScreen.vue's whole 30,684-character tail. `npm run pins:check` is the one-way ratchet that stops a new one appearing.
-- **Component pins ask two different questions, and the helpers are named for them.** `componentLogic(path)` = the SFC **plus every composable it imports** — for POSITIVE claims ("this logic exists somewhere in the component"), and it survives extraction. `componentFile(path)` = the `.vue` **alone** — the only honest source for a NEGATIVE claim about that file ("imports no setter"). Widening a negative assertion makes it over-strict: it trips on a symbol *defined* in a composable it was never talking about. `tests/pin-hygiene.test.ts` enforces this mechanically and is mutation-verified; use one name per source kind per file (`viewer` / `viewerFile`), since the check is file-scoped.
+- **⚠ CUT EVERY SOURCE REGION WITH THE MARKER HELPERS, NEVER WITH A RAW `indexOf`.** `tests/helpers/source.ts` exports `region` / `regionToLast` / `regions` / `after` / `before` / `at` / `lastAt` / `lineAt`, and every one THROWS on an absent marker. The raw form does not: `indexOf` returns `-1`, `slice(start, -1)` runs to the end, and the region silently WIDENS to almost the whole file while the pin stays green. Of the 176 raw slices migrated on 24.08, **two had been lying** – one "six parts of the hero" pin was reading 59,944 of HomeScreen.vue's 126,815 characters. `npm run pins:check` is the one-way ratchet against a new one.
+- **Component pins ask two questions and the helpers are named for them.** `componentLogic(path)` = the SFC **plus every composable it imports** — for POSITIVE claims, and it survives extraction (⚠ it does **not** follow a child `.vue`, so a claim about which file carries a CSS declaration is a claim about the **path**). `componentFile(path)` = the `.vue` **alone** — the only honest source for a NEGATIVE claim. Widening a negative makes it over-strict: it trips on a symbol *defined* in a composable it was never talking about. `tests/pin-hygiene.test.ts` enforces this, file-scoped, so use one name per source kind per file (`viewer` / `viewerFile`).
 - **Before moving anything out of a module, run the pin query first:**
   ```bash
   git grep -l "engine/<module>.ts'" -- tests/
   ```
   Every hit is a pin that will break, and each one needs repointing at the source helper. Measured against the `world.ts` and `diary.ts` splits, this predicted **17 of 17 real breakages (100% recall, 81% precision)** – the four false positives cost seconds to dismiss. Those 20 break events were originally found reactively, one failing test run at a time, purely because nobody ran this query first. See `docs/research/graph-tooling-benchmark.md`.
-- **Never gate while agents are working, and never read an exit code through a pipe.** Two measured
-  hazards, both of which have already produced a false verdict here. (a) CONTENTION: with three
-  agents active this machine reached load 69 / 33 node processes, and a full `npm run check` came
-  back with three RED files — all of them timeouts (20 s, 240 s, 20 s), zero assertion failures, in
-  files the branch had not touched. The same contention turned a 3-minute sim run into 90 and a
-  3-second performance assertion into 16. Verify branches AFTER the agents finish, one at a time.
-  (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
-  `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
-  pipeline.
-  (c) ⚠⚠ AND THE BACKGROUND TASK'S "exit code 0" IS THE SAME LIE WEARING A HARNESS. A run started
-  with `run_in_background` reports the status of the WRAPPER, not of `npm run check`: on 19.08 the
-  completion notice said *exit code 0* twice in a row while the log said `CHECK_EXIT=2` and then
-  `CHECK_EXIT=1` — sixteen real failures between them, including a `vue-tsc` duplicate-identifier
-  error. Believing the notice would have pushed a red branch and reported it green. **Append
-  `echo "CHECK_EXIT=$?"` to the log inside the command and read the verdict out of the FILE.** The
-  notification tells you the run finished; it does not tell you it passed.
-  (d) ⚠⚠ AND A MISSING SENTINEL IS NOT A VERDICT EITHER (19.09). Twice in one wave a backgrounded
-  run was reported "failed with exit code 144" while the command itself ran to completion: the
-  WRAPPER died before the `echo "…_EXIT=$?"` line could execute, so the file never got its sentinel
-  and the technique above silently could not fire. **No sentinel line means no measurement** – not a
-  failure and not a pass. Re-run it, or wait on the PID, and never report a verdict from that log.
+
+  ⚠ **Run a second spelling too** (28.09, after its first false negative – it matches a path *string*, so a pin that ASSEMBLES its path is invisible):
+  ```bash
+  git grep -ln "'<module>.ts'" -- tests/ tools/ e2e/
+  ```
+  For a `.vue` extraction a **class-name grep** is a third command: without it recall was 3 of 6. ⚠ Neither spelling finds a pin that **quotes** an import line as data (0 of 3, measured), and **no grep can enumerate a reader's SCOPE** – a split breaks pins by widening what a source reader sweeps. Row 30 of `docs/backlog/the-quality-rig.md` has all five blind spots and why they cannot merge.
+- **Never gate while agents are working, and never read an exit code through a pipe.** Five ways this
+  has produced a false verdict here, each measured; the incidents are in
+  [the-quality-rig.md](docs/backlog/the-quality-rig.md).
+  (a) CONTENTION: three live agents put this machine at load 69 and `npm run check` came back with
+  three RED files — all timeouts, **zero assertion failures**, in files the branch had not touched.
+  Gate AFTER the agents finish, one run at a time.
+  (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** status, so a run with real errors "passes".
+  (c) THE BACKGROUND WRAPPER'S "exit code 0" is the same lie wearing a harness — it is the wrapper's
+  status, not the command's; a notice said *exit code 0* twice over a log saying `CHECK_EXIT=2` then
+  `CHECK_EXIT=1`, sixteen real failures between them. So: **append `echo "CHECK_EXIT=$?"` inside the
+  command and read the verdict out of the FILE.** The notice says the run finished, never that it passed.
+  (d) A MISSING SENTINEL IS NOT A VERDICT either: if the wrapper dies before the `echo` runs, the file
+  never gets its line and the technique cannot fire. **No sentinel means no measurement** – not a
+  failure and not a pass. Re-run, or wait on the PID.
+  (e) ⚠⚠ AND THE SCRATCHPAD IS SHARED BETWEEN LIVE SESSIONS (28.09): a log written to a plain name
+  there came back holding **another builder's** gate output – a sentinel read out of a file somebody
+  else also writes is somebody else's verdict. **Name gate logs for the task**, and check the log's
+  mtime is fresher than your command.
 - **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
-  older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
-  Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was
-  diagnosed as a regression in the wave, and twice it was the machine (`mobileassetd` at 143 % for
-  three hours, load 113; later `signpost_reporter` at 96 %, 7.8 M pageouts). The tell that should
-  have stopped it sooner: **the failing set CHANGED between runs** — 18 files, then 9, then 12
-  different ones — and a real defect fails the same test twice. When the control finally ran, the
-  pre-wave commit wedged identically at 1871 s against its own green 76 s an hour earlier, and its
-  `collect` alone burned 3636 s of CPU **before any test logic**. Two cheap confirmations to run
-  first, in this order: `--no-file-parallelism` (if the whole shard then passes in ~250 s the WORK is
-  fine and the pool is the problem), and the same shard on the last known-green commit.
+  older code, in a worktree – one run, and it ends the argument. Skipping it cost most of 16.08: twice
+  that day a red `npm run check` with **zero assertion failures** was diagnosed as a regression in the
+  wave and twice it was the machine (`mobileassetd` at 143 %, load 113). ⚠ **The tell is that the
+  failing set CHANGES between runs** — 18 files, then 9, then 12 different ones — and a real defect
+  fails the same test twice. Two cheap confirmations first, in order: `--no-file-parallelism` (if the
+  shard then passes the WORK is fine and the pool is the problem), then the same shard on the last
+  known-green commit.
 - **⚠⚠ BEFORE YOU BELIEVE A NULL RESULT, PROVE THE ARM CONTAINS BOTH THE CHANGE AND ITS READER.**
   On 17.08 two people measured the same fix and both got a convincing "it does nothing", by opposite
-  mistakes made within an hour of each other. One built the A arm in a worktree at the commit BEFORE
-  the engine change, so the new constant sat in a tree where no code read it — a constant without its
-  reader is a null arm that looks like a null result. The other ran both arms against the SAME tree,
-  because the agent under measurement had been committing as it went, and got a byte-identical diff
-  which is exactly what comparing a thing with itself produces. **A null result is a claim and needs
-  the same provenance check as a positive one**: name the commit each arm was built at, and confirm
-  the reader is present — `git grep <theConstant> -- src/` on the A tree costs one command. The
-  cheapest sanity check is to set the constant to an absurd value and watch the output move; if it
-  does not, the arm is wrong before the hypothesis is.
+  mistakes within an hour: one built the A arm at the commit BEFORE the engine change, so the new
+  constant sat where no code read it; the other ran both arms against the SAME tree and got a
+  byte-identical diff, which is what comparing a thing with itself produces. **A null result is a
+  claim and needs a positive result's provenance**: name the commit each arm was built at, confirm the
+  reader is present (`git grep <theConstant> -- src/`), and **print a non-empty denominator on both
+  arms** – on 28.09 an A/B whose two arms each ran zero test files reported IDENTICAL, because `zsh`
+  does not word-split an unquoted `$FILES`. Cheapest sanity check: set the constant absurd and watch
+  the output move; if it does not, the arm is wrong before the hypothesis is.
 - **⚠ IN A SHARED CHECKOUT THE CONTROL IS YOUR COMMIT WITH YOUR CHANGE REVERTED, NEVER THE PREVIOUS
   COMMIT.** Somebody else's work lands between yours, so "branch head before mine vs mine" measures
-  both. On 17.08 this produced a false NEGATIVE for one agent (a merit-only award appearing to move
-  with family wealth) and a false POSITIVE for another (wild cards credited with a college change) in
-  the same hour. Build the A arm as `git revert --no-commit <your engine commit>` in a dedicated
-  worktree. ⚠ And restoring B is `git reset --hard`, not `git checkout -- src`: checkout restores
-  from the INDEX, which a staged revert has already overwritten, so "back to B" silently runs A
-  twice and yields a byte-identical diff that looks like a null result.
-- **`git checkout <sha> -- <path>` is the concurrent-agent hazard pointing the other way.** The note
-  above about `git commit` taking the whole index has a mirror: an agent bisecting a hash divergence
-  reverted `src` under another agent's live edits on 16.08. Nothing was lost — the pathspec habit
-  saved it — but in a shared checkout a checkout-with-pathspec is as destructive as a commit-without.
+  both – on 17.08 that gave one agent a false NEGATIVE and another a false POSITIVE in the same hour.
+  Build the A arm as `git revert --no-commit <your commit>` in a dedicated worktree. ⚠ Restore B with
+  `git reset --hard`, never `git checkout -- src`: checkout restores from the INDEX, which a staged
+  revert has already overwritten, so "back to B" runs A twice and yields a byte-identical diff that
+  looks like a null result.
+- **`git checkout <sha> -- <path>` is that hazard pointing the other way** – on 16.08 an agent
+  bisecting a hash divergence reverted `src` under another agent's live edits. Nothing was lost, but in
+  a shared checkout a checkout-with-pathspec is as destructive as a commit-without.
 - **A POPUP MUST BE MEASURED AGAINST A PHONE BEFORE IT SHIPS, and "it reads well" is not that
-  measurement.** Round-20 #3: `TourBriefingDialog` shipped with a lead, a requirements list, five
-  cost bullets and a closing line on the shared `dialog-card`, which declares no `max-height` and no
-  `overflow`. On a 375x667 viewport the dismiss control left the screen – and it is a BLOCKING
-  overlay, so the owner's career stopped there and could not be resumed. It HAD a mounted test, and
-  the test measured contrast through the real cascade, once-ness, and that the numbers came from
-  `ECONOMY` rather than the template: **every check was about what the card SAYS, none about what
-  the screen can HOLD.** The failure mode is slow – a dialog grows by one honest sentence at a time
-  and nothing objects until it is taller than a phone. **So any dialog you add or lengthen gets a
-  mounted assertion that its dismiss control's box is inside a 375x667 viewport**, and prove it by
-  mutating: a test that cannot fail on the too-tall version is not this test.
+  measurement.** Round-20 #3: `TourBriefingDialog` grew a lead, a list, five bullets and a closing
+  line on the shared `dialog-card`, which declares no `max-height` and no `overflow`. At 375x667 the
+  dismiss control left the screen – a BLOCKING overlay, so the career stopped there unresumable. It
+  HAD a mounted test, measuring contrast, once-ness and that the numbers came from `ECONOMY`:
+  **every check was about what the card SAYS, none about what the screen can HOLD.** The failure mode
+  is slow – one honest sentence at a time, and nothing objects until it is taller than a phone.
+  **So any dialog you add or lengthen gets a mounted assertion that its dismiss control's box is
+  inside 375x667**, proven by mutating: a test that cannot fail on the too-tall version is not it.
+  ⚠ `setViewport(PHONE)` must run BEFORE the mount – happy-dom caches a media query on the first
+  computed-style read, so a late call measures the desktop column and the arm cannot redden.
 - **With concurrent agents in ONE checkout, `git commit` takes the whole INDEX, not your files.**
   `git add a.ts b.ts && git commit -m …` looks like it commits two files; it commits everything
   anybody has staged. Measured here on 13.08: a two-file ledger commit swallowed another agent's
@@ -210,8 +209,8 @@ docs/review/     2026-08 full review + P1–P9 proposals
   orphaned bench holds a core.
 - **A backgrounded command starts in the SESSION's cwd, not yours.** The shell's directory persists
   between foreground calls, so `npm run check` works – and the same line sent with
-  `run_in_background` lands in the parent directory and dies with `ENOENT … Claude/package.json`,
-  exit 254. Hit three times on 13.08 alone, each costing a gate run. **Put `cd <repo> &&` inside
-  every backgrounded command**, however recently a foreground call cd'd there.
+  `run_in_background` dies in the parent directory with `ENOENT … Claude/package.json`, exit 254.
+  Three times on 13.08, each costing a gate run. **Put `cd <repo> &&` inside every backgrounded
+  command**, however recently a foreground call cd'd there.
 - The sim project MUST run serialised: every script that touches it carries `--no-file-parallelism` (birpc has a hard-coded 60s RPC timeout that a minutes-long synchronous Monte-Carlo file will blow past, exiting 1 with every test green). If you add a script that runs the sim project, carry the flag.
-- The `▶▶ 52 (dev)` button in More ships in EVERY build – an owner ruling (the deployed build is the playtest device), not a regression. Its unsafe half is fixed: the worker's `tick` handler now enforces the same open-knock / unrevealed-tournament / **unanswered-life-beat** guards as `advanceWeeks`, refusing at entry and stopping mid-loop. `tests/dev-fast-forward.test.ts` pins both halves. ⚠ The life beat joined the list in wave 8 (`827efe6f`) – it had been missing since the kinds began blocking, so a loop could tick a year past her card.
+- The `▶▶ 52 (dev)` button in More ships in EVERY build – an owner ruling (the deployed build is the playtest device), not a regression. Its unsafe half is fixed: the worker's `tick` handler enforces the same open-knock / unrevealed-tournament / **unanswered-life-beat** guards as `advanceWeeks`, refusing at entry and stopping mid-loop; `tests/dev-fast-forward.test.ts` pins both halves.

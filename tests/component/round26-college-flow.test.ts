@@ -47,12 +47,9 @@ import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
-  answerFork,
   closeTournament,
   callUpRevealOpen,
   collegeLeagueRevealOpen,
-  createWorld,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
@@ -62,11 +59,11 @@ import {
   type WorldState,
 } from '../../src/engine/world'
 import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
-import { resumeMain, type Rng } from '../../src/engine/rng'
+import { type Rng } from '../../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import { PHONE, setViewport } from './fits'
-import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import { formatShortName } from '../../src/shared/format'
+import { finishAnyReveal, atCollege } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND THE SHELL READS IT. Same shim as round19-wrapup /
 // round24-college-shell – supply the browser's object, do not weaken the app.
@@ -85,45 +82,14 @@ Object.defineProperty(globalThis, 'localStorage', {
   },
 })
 
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** A career that really played to the fork and really answered «college» – never a hand-built
- *  snapshot. `round24-college-shell.test.ts`'s own opener, including its one thumb on the scale. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
-  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
-  drainLifeBeats(world)
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
-
 /** Press the Home shell's college button until the championship's reveal is standing open, answering
  *  her birthday on the way. ⚠ THROWS rather than returning quietly, so no case below can go green
  *  against a career that never reached a championship. */
 function walkToTheChampionship(seed: string): { world: WorldState; rng: Rng } {
   const { world, rng } = atCollege(seed)
-  for (let press = 0; press < 4; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year, so
+  // the walk has to be able to step past her card as well – bond-neutral – and the budget grows for it.
+  for (let press = 0; press < 6; press++) {
     resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) return { world, rng }
     // ⚠ ROUND 27 #6: the tie pauses the year too, so the walk has to be able to step past one on the
@@ -133,6 +99,7 @@ function walkToTheChampionship(seed: string): { world: WorldState; rng: Rng } {
       closeTournament(world)
     }
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a championship')
@@ -321,13 +288,17 @@ describe('⭐⭐⭐ #7 – and the replay is still there afterwards, in the feed
     skipTournament(world)
     closeTournament(world)
     // Finish the degree and then play on, exactly as he did.
-    for (let press = 0; press < 24 && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year,
+    // so this walk answers her card too (`drainLifeBeats`, priced ZERO) and the guard gains presses
+    // for the question a year can now raise. No assertion moved.
+    for (let press = 0; press < 32 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       if (collegeLeagueRevealOpen(world)) {
         skipTournament(world)
         closeTournament(world)
       }
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     for (let i = 0; i < 60; i++) {
       tickWeek(world, rng)

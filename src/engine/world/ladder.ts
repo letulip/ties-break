@@ -809,13 +809,21 @@ export function tierOutgrown(world: WorldState, tier: TierId): boolean {
   // season. MEASURED before this clause, tools/boredom-guard.ts, 8 maximal-grinder careers x 260
   // weeks: 516 cap refusals over 317 weeks, and 144 of those weeks had NOTHING else, every one of
   // them because the ceiling had closed the J or domestic event sitting on it. So a spent pro
-  // allowance lifts the ceiling on the NON-professional rungs until the season turns - she may
+  // allowance lifts the ceiling on the NON-professional rungs until her next birthday - she may
   // enter the junior and national tennis she has technically outgrown, which is exactly what
   // ruling 2 promises and what the old feed-level "substitution" could only ever SHOW her.
   //
   // It is deliberately narrow: professional rungs never re-open (the cap is about them), it lasts
-  // only while the allowance is spent, and the allowance resets every season - so it can never be
-  // the reason a twenty-year-old is offered a J30, because `proPerYearByAge` is unlimited from 18.
+  // only while the allowance is spent, and the allowance turns over on her birthday - so it can never
+  // be the reason a twenty-year-old is offered a J30, because `proPerYearByAge` is unlimited from 18.
+  //
+  // ⚠⚠ "UNTIL HER NEXT BIRTHDAY" AND "TURNS OVER ON HER BIRTHDAY", AND BOTH SAID "SEASON" UNTIL 26.09
+  // (B-P3-09's class, found by reading this note against the function it calls). The line below asks
+  // `proEntryCapUsage`, whose window is `kidAgeAt(row) === kidAgeAt(event)` - her BIRTHDAY YEAR since
+  // P2, never the season block (`world/entryCaps.ts` carries the measurement that moved it). So the
+  // lift this clause grants ended on a date this note named wrongly, in the same direction and for the
+  // same reason as `world/medical.ts`' two refusal notes. The mechanism is untouched: nothing here
+  // changes, only the sentence describing when it stops.
   if (TIERS[tier].track !== 'wta' && proEntryCapUsage(world, world.week).remaining <= 0) return false
   const above = TIER_LADDER[i + WINDOW_RUNGS]
   // ⚠ HER AGE, NOT THE BAND'S (owner ruling 1, 09.08 - world/age.ts). «A door she cannot open yet

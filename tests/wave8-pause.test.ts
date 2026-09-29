@@ -73,7 +73,6 @@ import {
   createWorld,
   enterEvent,
   entryStatus,
-  kidAgeExact,
   landBirth,
   landPregnancyPause,
   pauseCovering,
@@ -93,7 +92,8 @@ import { tierVerdict } from '../src/engine/world/medical'
 import { rngFromSeed } from '../src/engine/rng'
 import { isOffSeasonWeek, TIER_LADDER } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
-import type { LoveEpisode } from '../src/shared/protocol'
+import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY.motherhood` – wave 3's ARM 2
 // law, inherited through T2's own §BRIEF block: an expectation read out of the thing under test moves
@@ -109,22 +109,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock (T2's helper). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
-/** A married row of the v83 shape – `latchedWeek` non-null, `endedWeek` null (T2's helper). */
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
-}
-
 /** A married career standing at `age`, funded, fit, and with an EMPTY calendar – every case builds
  *  the events it needs, so nothing the season generator happens to schedule can decide a verdict. */
 function wedded(seed: string, age = 28): WorldState {

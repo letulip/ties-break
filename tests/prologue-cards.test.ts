@@ -5,6 +5,10 @@
 // so the table declares its own `PrologueYear` and its own copy of `appetiteAt`. Both duplicates
 // are checked HERE against the real thing: the years go through the real `childhoodWalk`, and the
 // assignment below type-checks under `vue-tsc`, so neither can drift without a red gate.
+// ⚠ 28.09, T6.5 / A-04 (a): that pinned set reads `['engine/world/create.ts', 'prologue/pool.ts']`
+// now – `createWorld` left the barrel with P4's last span-moves, and phase 12 added the second name.
+// Neither the refusal above nor this file's duplicates move with it; the prose is corrected because a
+// stale one survives the whole gate (CLAUDE.md), not because the claim changed.
 //
 // ⚠ MUTATION-VERIFIED. Every block was watched failing before it was believed – the mutation is
 // named beside the claim it breaks.

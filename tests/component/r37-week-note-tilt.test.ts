@@ -42,16 +42,14 @@ import '../../src/style.css'
 import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
-  closeTournament,
   createWorld,
-  skipTournament,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, type Viewport, aspectHeightPx, boxOf, lengthPx, setViewport } from './fits'
+import { walkWeeks } from '../helpers/career'
 
 function assertSheetPresent(): void {
   if (!document.head.querySelector('style')) {
@@ -62,15 +60,7 @@ function assertSheetPresent(): void {
 /** The recipe every file that reaches the week's story shares. */
 function walk(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, rngFromSeed(world.seed), weeks)
 }
 /** The same seed and the same twelve weeks round36-pass2-shop-recap.test.ts walks, so the two files
  *  are measuring one card rather than two careers that happen to share a component. */

@@ -55,10 +55,14 @@
 //   * `accrueKidShare` storing the handed-in `bps` again instead of the effective one -> §1's
 //     identity arm and §2's label arm go RED together, which is the defect this item is about
 //     arriving by a new route.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // A real career walked to the cap birthday is ~1,350 ticks; the runner is shared with heavier suites.
-vi.setConfig({ testTimeout: 300_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 300 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 6.40 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   KID_ID,

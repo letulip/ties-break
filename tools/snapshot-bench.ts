@@ -48,12 +48,22 @@ import { planWeek } from '../src/engine/plan'
 import { resumeMain } from '../src/engine/rng'
 import type { KitGrade } from '../src/shared/protocol'
 import { clearDerivedCache, derivedCacheStats, resetDerivedCacheStats, snapshotCacheEnabled } from '../src/engine/world/derivedCache'
+// ⚠⚠ T5.12 · F-04, 28.09 – AND THE PROOF HERE IS NOT AN OUTPUT DIFF, DELIBERATELY. `flag` was a
+// byte-identical copy of the thirteen called `argOf` (`tools/_args.ts`), invisible to F-04's census
+// because that greps for the name. It was the one copy I first refused to route, because EVERY numeric
+// cell this bench prints is a `performance.now()` millisecond (`timeArm` below), so the before/after
+// output diff that certifies the other 30 migrations cannot certify this one.
+//
+// The architect's answer, 28.09, and it is the right one: an argument reader's correctness is «the same
+// argv produces the same parsed values», which is a UNIT assertion over a handful of argv shapes – a
+// STRONGER proof than an output diff, not a weaker one, because it tests the function instead of a run
+// that happens to contain it. `tests/principles-t512-arg-readers.test.ts` drives the shared `argOf`
+// and this file's historical body over the same table and asserts they agree on every shape.
+//
+// ⚠ `text` STAYS LOCAL: F-04 named the numeric reader, and a string arm is a separate census.
+import { argOf } from './_args'
 
 const args = process.argv.slice(2)
-function flag(name: string, fallback: number): number {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 function text(name: string, fallback: string): string {
   const i = args.indexOf(`--${name}`)
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback
@@ -61,8 +71,8 @@ function text(name: string, fallback: string): string {
 
 /** 25 by default. The review's own figures are medians of 50-200; 25 is what fits an iteration loop
  *  and is already far past the JIT's warm-up on every arm measured here. */
-const REPEATS = flag('repeats', 25)
-const WARMUP = flag('warmup', 20)
+const REPEATS = argOf('repeats', 25)
+const WARMUP = argOf('warmup', 20)
 const WANTED = text('fixtures', 'junior,pro,golden')
   .split(',')
   .map((s) => s.trim())

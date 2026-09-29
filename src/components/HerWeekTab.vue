@@ -30,12 +30,14 @@ import {
   planFromWeek,
   planSessions,
   planWeek,
+  presetOf,
   resolveWeek,
 } from '../engine/plan'
 import { coachHoursForPlan } from '../engine/coach'
 import { DAY_LONG, DAY_SHORT, useCalendarWeek } from '../composables/weekDays'
 import { SESSION_KINDS, WEEK_PLAN_PRESETS, type SessionKind } from '../shared/protocol'
 import { formatCents } from '../shared/money'
+import PlanPresetRow from './ui/PlanPresetRow.vue'
 
 const game = useGameStore()
 
@@ -65,6 +67,10 @@ const PRESET_LABEL: Record<(typeof PLAN_ORDER)[number], string> = {
   balanced: 'Balanced',
   grind: 'Grind',
 }
+/** ⚠ THE WORDS THIS TAB ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). The row is one component
+ *  across three screens and each of them keeps its own label set and its own order, so nothing about
+ *  what is on screen moves – `PRESET_LABEL` above is untouched and this is the only new line. */
+const PRESET_OPTIONS = PLAN_ORDER.map((value) => ({ value, label: PRESET_LABEL[value] }))
 
 // --- the week he is editing ---------------------------------------------------------------------
 // ⚠ A LOCAL DRAFT THAT IS RE-SYNCED FROM THE SNAPSHOT, NOT A SECOND SOURCE OF TRUTH. Every tick fires
@@ -163,18 +169,12 @@ async function applyPreset(key: (typeof PLAN_ORDER)[number]): Promise<void> {
   await game.setPlan(WEEK_PLAN_PRESETS[key])
 }
 
-/** ⚠ A PRESET IS SELECTED WHEN THE WEEK IS ITS WEEK, not when the train percentage matches. Five
- *  sessions arranged by hand project to the same 75/25 as Balanced does (`planTrainPct`), so reading
- *  `plan.train` back would light a pill up under a week the pill would not produce. */
-const activePreset = computed(() =>
-  PLAN_ORDER.find((key) => {
-    const preset = planWeek(WEEK_PLAN_PRESETS[key])
-    return preset.every((day, d) => {
-      const mine = draft.value[d] ?? []
-      return day.length === mine.length && day.every((kind, i) => kind === mine[i])
-    })
-  }) ?? null,
-)
+/** ⚠ A PRESET IS SELECTED WHEN THE WEEK IS ITS WEEK, not when the train percentage matches – and since
+ *  E-02 (ruling 7a, 26.09) that is the ENGINE's rule rather than this tab's. The note that argued it
+ *  moved with the predicate into `presetOf` (`engine/plan.ts`), which the Coach market's regulator and
+ *  This week's plan block now call too: they each read `plan.train` back and so lit a pill under every
+ *  legal hand-arranged week, which is a disagreement two tabs of ONE screen could show at once. */
+const activePreset = computed(() => presetOf(draft.value))
 
 /** THE READ-OUT. The legend, in the parent's language – what she does, what it costs in HER time, and
  *  what it costs in money. The price is the ENGINE's (`coachBilling`, recomputed on every `setPlan`),
@@ -343,18 +343,13 @@ function boxLabel(kind: SessionKind, day: number): string {
              Short labels on purpose - the market tab's own `Light 4/wk · Balanced 5/wk · Grind 6/wk`
              computes past the 343px available at 375 (spec §9c), and the counts live in the
              read-out instead. -->
-        <div class="option-row hw-presets">
-          <button
-            v-for="key in PLAN_ORDER"
-            :key="key"
-            class="option-pill"
-            :class="{ selected: activePreset === key }"
-            :disabled="game.busy || !panelLive"
-            @click="applyPreset(key)"
-          >
-            {{ PRESET_LABEL[key] }}
-          </button>
-        </div>
+        <PlanPresetRow
+          class="hw-presets"
+          :options="PRESET_OPTIONS"
+          :active="activePreset"
+          :disabled="game.busy || !panelLive"
+          @pick="applyPreset"
+        />
 
         <!-- 1b. THE DAY HEADS, and the per-day limit shown as dots that fill. One dot on a school
              day, two on a day with no school, drawn before he bumps into the limit rather than

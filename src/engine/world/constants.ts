@@ -34,6 +34,27 @@ export const KID_ID = 'kid'
  *  without pinning a spelling, on the precedent of `RELEASE_LINE_PREFIX`. */
 export const CAREER_ENDED_REFUSAL = 'This career has ended'
 
+/** ⭐⭐ #9 · B-P3-02 (the principles review of 26.09) – AN ANSWER THE GAME NEVER OFFERED. The one
+ *  sentence `decideKnock`, `answerShootClash` and `answerFork` all refuse an unknown member of their
+ *  own choice union with, on `setPsychologistFocus`'s shape (`PSY_FOCUSES.includes(focus)`).
+ *
+ *  ⚠⚠ WHY THREE COMMANDS SHARE ONE SENTENCE RATHER THAN CARRYING THREE. It is the same fault in all
+ *  three – a payload that does not match the list the engine itself offered – and a player cannot
+ *  reach any of them from a live screen, so three spellings would be three strings to вычитка with no
+ *  reader between them. The commands that CAN be reached wrongly keep their own specific refusals.
+ *
+ *  ⚠⚠ WHAT IT COST BEFORE IT EXISTED, and it is why the trio was one task: the other two arms wrote a
+ *  wrong row (a push nobody chose, a latched double week), and `answerFork` handed the unknown answer
+ *  to `endingForForkAnswer` – so a malformed command **silently ended the career**.
+ *
+ *  ⚠ IT IS A DIAGNOSTIC THE PLAYER SHOULD NEVER SEE, which is the whole of what it is allowed to say.
+ *  No apology, no advice, no naming of the legal values: a sentence reachable only by a malformed
+ *  command has no business teaching anybody the enum.
+ *
+ *  ⚠ DRAFT (invariant 4): the wording is the owner's to keep or replace – it is tabled in
+ *  docs/plans/principles-fix-strings-2026-09.md with the wave's other drafts, and this is its home. */
+export const UNKNOWN_CHOICE_REFUSAL = 'That is not one of the choices offered.'
+
 /** ⭐⭐ ROUND 24, E2 – THE SENTENCE WHILE SHE IS AT COLLEGE, AND IT EXISTS BECAUSE D1 PUT THE TAB
  *  SHELL BACK ON SCREEN UNDERNEATH THE FREEZE.
  *
@@ -100,8 +121,23 @@ export function guardNotEnded(world: WorldState): void {
  *  college years are the shop's BEST moment, four years where the wallet rests and the parent has no
  *  weekly job to do. ⚠ Everything the freeze already shuts off in `tickWeek` still keeps
  *  `guardNotEnded` with the honest sentence; this is not a precedent for a tour command.
- *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset, and
- *  nothing else. */
+ *  ⭐⭐ MEMBER SIX IS `setWeightEnabled` (26.09, ruling 9 / B-P3-01) – AND IT IS THE FIRST ONE THAT IS
+ *  NEITHER THE FAMILY'S CALENDAR NOR THE FAMILY'S MONEY, so the clause above gains a third category
+ *  rather than being stretched to cover it. It is a CONTENT SETTING: whether the game may raise the
+ *  weight layer at all, answered at creation and «changeable both ways in settings later» (22.09). It
+ *  clears the operative half of the test exactly as the shop does – it reaches no decision about the
+ *  girl (no radar, no condition, no kit, no entry), it spends nothing, and it writes one boolean that
+ *  every hazard re-reads on the week it runs, so opening it can break nothing.
+ *
+ *  ⚠⚠ AND IT IS HERE BECAUSE `guardNotEnded` OVER-DELIVERED ON THE RULING, which asked for «refuses on
+ *  an ended career». A college freeze is not an ended career. The switch lives on MoreScreen, the tab
+ *  shell sits UNDER the freeze (round 24 D1 – the same premise that made E2's sentence necessary at
+ *  all), so the row is reachable and working at college today, and the tour guard would have answered
+ *  a tap with `COLLEGE_FREEZE_REFUSAL` and taken a working control away. Measured before it shipped:
+ *  `tests/principles-unknown-answers.test.ts` reddened on that exact sentence.
+ *
+ *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset,
+ *  setWeightEnabled, and nothing else. */
 export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }

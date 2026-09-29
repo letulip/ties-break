@@ -242,7 +242,13 @@ describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
   // roughly 3,300 simulated weeks. It sat just under the 20s default and tipped over it once the
   // date-clock wave pushed every fork a week later. The dates ARE the coverage (each one used to
   // fail), so the honest fix is to declare the cost rather than to thin the sweep.
-  it('the fork is raised at the week school ends, at eighteen, for every birth date', { timeout: 60_000 }, () => {
+  // ⚠⚠ THE `{ timeout: 60_000 }` OPTION WAS REMOVED 27.09 (T5.3 · H-06): it only restated the unit
+  // project's own `testTimeout` (`vite.config.ts`), and a constant restated where it cannot follow its
+  // source means that if the ceiling ever moves, this case silently stays at 60. ⚠ No cost claim is made –
+  // removing a declaration equal to the default is behaviour-neutral by construction. The note above still
+  // stands on its own: the cost is declared there, not bought with a budget. A budget BELOW the ceiling
+  // would have stayed. The ceiling and the measured table: tests/sim-serialisation.test.ts.
+  it('the fork is raised at the week school ends, at eighteen, for every birth date', () => {
     // ⚠⚠ RE-AIMED A SECOND TIME, BY ROUND 24 #5 – and this time the CLOCK moved, not the defect.
     // The 18.08 version guarded «the fork lands in her birthday's own week for every date», which
     // was the one-clock ruling's closing of round-17 #7. The owner's round-24 ruling then moved the

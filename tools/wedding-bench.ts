@@ -81,22 +81,22 @@ import { resumeMain } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { temperamentOpenness, type Temperament } from '../src/engine/spirit'
 import type { LifeBeatKind, LoveEpisode } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule – see `tools/_args.ts`.
+import { finiteArgOf } from './_args'
+// T5.12 · F-04, 27.09: `money` was one of six live copies – see `tools/_fmt.ts`.
+// ⚠ `pct` below STAYS LOCAL and that is not an oversight: its `d === 0` cell is `'   –'` where the
+// five siblings print `'   – '` with a trailing space. One byte, and it is a printed column.
+import { money } from './_fmt'
 
-const argOf = (name: string, fallback: number): number => {
-  const at = process.argv.indexOf(`--${name}`)
-  const n = Number(process.argv[at + 1])
-  return at > 0 && Number.isFinite(n) ? n : fallback
-}
 /** 56 x the three backgrounds = 168 careers, every one a distinct seed. */
-const SEEDS = argOf('seeds', 56)
+const SEEDS = finiteArgOf('seeds', 56)
 /** 912 weeks from 13.56 is age 31.1 – past the census's 30 with a season in hand for (d)'s +52
  *  capture on a late wedding. */
-const WALK_WEEKS = argOf('walk', 912)
+const WALK_WEEKS = finiteArgOf('walk', 912)
 
 const pad = (s: string, n: number): string => s.padEnd(n)
 const padL = (s: string, n: number): string => s.padStart(n)
 const pct = (n: number, d: number): string => (d === 0 ? '   –' : `${((100 * n) / d).toFixed(1)}%`)
-const money = (cents: number): string => `$${Math.round(cents / 100).toLocaleString('en-US')}`
 
 // =================================================================================================
 // THE WALK – one career, with the wedding's own hooks

@@ -81,6 +81,12 @@ import { region } from './helpers/source'
 import { engineModuleSource } from './worldSource'
 import type { WorldState } from '../src/engine/world'
 
+// ⚠⚠ THE PER-TEST BUDGET IN THIS FILE WAS REMOVED 27.09 (T5.3 · H-06). It read 60 s, which only restated
+// the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where it cannot follow
+// its source means that if the ceiling ever moves, this file silently stays at 60. ⚠ No cost claim is made:
+// removing a declaration equal to the default is behaviour-neutral by construction. A budget BELOW the
+// ceiling would have stayed. The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 const FITS: readonly StyleFit[] = ['great', 'good', 'off']
 const STYLES: readonly PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 const BANDS: readonly CoachProfileBand[] = ['above', 'level', 'under', 'under-self']
@@ -389,7 +395,7 @@ describe('wave 5 T12 E - a lens, not a lever', () => {
     expect([...moved].sort(), '⚠⚠ reading the profile moves no key on any week').toEqual([])
     expect(Object.keys(without[0]).length, 'and the sweep really saw a populated world').toBeGreaterThan(50)
     expect('rngMain' in without[0], 'including the MAIN position, which is where a stray draw would land').toBe(true)
-  }, 60_000)
+  })
 
   it('⭐⭐⭐ and NO MODULE UNDER src/engine IMPORTS IT – the instrument the walk above is blind to', () => {
     // ⚠⚠ A LEVER INSIDE THE ENGINE MOVES BOTH ARMS OF THE WALK EQUALLY, so the equality above cannot

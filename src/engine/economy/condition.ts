@@ -1,0 +1,125 @@
+// ONE BLOCK OF `ECONOMY` (T7.3 of the principles fix): assembled in `../economy.ts`, in the key order the literal always had.
+// The essays that stood here moved out verbatim → docs/notes/economy/condition.md#the-condition-block
+
+import type { TierId } from '../season/types'
+
+export const condition = {
+  start: 100,
+  min: 0,
+  max: 100,
+  // V2.1 SHIPPED (owner 25.07 "все чуть ниже к концу сезона", same pass as the V2 flip): every
+  // MATCH-FREE week recovers this base (was 2) – the free-week ladder is now grinder +1 /
+  // balanced +2 / careful +3 via the slider bonus, so every policy ARRIVES at the season wrap
+  // below 100 and the off-season + a planner vacation earn their keep.
+  //
+  // ⚠⚠ condition.recoveryBase: 1 -> 8 (W2-FATIGUE, docs/specs/fatigue-reprice-2026-08.md §3).
+  // owner (condition.recoveryBase): «то, что за off-season РЕАЛЬНО восстановить с 1 большим или парой небольших отпусков»
+  // ⚠⚠⚠ condition.recoveryBase: THE OWNER RELEASED «ARRIVE AT THE OFF-SEASON DOOR AROUND 45-50» ON 19.09…
+  // owner (condition.recoveryBase), 19.09: «давай изменим эту цель, если она нам мешает.»
+  // ⚠ condition.recoveryBase: The 8 itself did NOT move with the release - nothing measured asked it to…
+  // ⚠ condition.recoveryBase: IT IS GLOBAL, SO THE JUNIOR ERA AND THE COHORT GET IT TOO - deliberate, not collateral.
+  // → docs/notes/economy/condition.md#conditionrecoverybase
+  recoveryBase: 8,
+  // ⭐ THE PRO PHASE RECOVERS ON 5, NOT 8 (owner 22.08, variant C of his own proposal: «может
+  // быть нам тогда стоит дефолтное восстановление с 10 в неделю на 7 опустить? тогда массажист
+  // как раз будет еще немного накидывать, может вполне гармонично получиться»).
+  //
+  // ⚠ condition.proPhaseRecoveryBase: THE GLOBAL DROP (variant B) WAS MEASURED AND REJECTED
+  // → docs/notes/economy/condition.md#conditionprophaserecoverybase
+  proPhaseRecoveryBase: 5,
+  // ⭐⭐⭐ THE FLOOR UNDER THE FADING RECOVERY (the long goodbye §4a, owner 26.08 – «пол 2.5 ок»).
+  // From `declineStart` the base above is multiplied by the share of her own peak physical she
+  // has left, and this is the lowest that multiplier may go: 0.5, so a professional rest week
+  // can never return less than 2.5.
+  //
+  // owner (condition.recoveryAgeFloor): «и физика будет падать и восстанавливаться будет дольше»
+  // ⚠ condition.recoveryAgeFloor: IT IS A MULTIPLIER ON `recoveryBaseFor`, NOT A SECOND CURVE.
+  // ⚠⚠ condition.recoveryAgeFloor: AND IT IS ALMOST INERT UNDER THE SHIPPED THRESHOLD, which is worth knowing BEFORE anybody reaches for…
+  // ⚠ condition.recoveryAgeFloor: The ONE thing that legitimately moves it is §6.6's veto – if the fade pushes season injury prevalence…
+  // → docs/notes/economy/condition.md#conditionrecoveryagefloor
+  recoveryAgeFloor: 0.5,
+  // V2 SHIPPED (owner verdict 25.07 "V2 хорош", after two fatigue-bench rounds): a tournament
+  // week is travel + competition, not rest – NO base recovery on a week the kid plays. The
+  // knob stays (the bench's 'legacy' scenario patches it back to 2 for reference runs).
+  matchWeekRecoveryBase: 0,
+  // Match-free weeks only, first matching threshold wins (descending): the slider stays
+  // meaningful – money (planFactor), future skill growth, and recovery pacing.
+  restRecoveryBonus: [
+    { minRest: 40, bonus: 2 },
+    { minRest: 25, bonus: 1 },
+  ] as { minRest: number; bonus: number }[],
+  blackoutBonus: 1, // off-season (weeks 49-51) and exam weeks (replaces the old offSeasonGain)
+  // Per-match drain components (see world.ts matchDrain).
+  //
+  // ⚠ condition.matchFatigue: AND THE FRIENDLY NO LONGER READS LOCAL'S SURCHARGE AT ALL (W2-WINDOW)
+  // → docs/notes/economy/condition.md#conditionmatchfatigue
+  matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
+  // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
+  // (ladder-up): international travel, time-zone changes and a fortnight away from home make
+  // them the most draining weeks she plays.
+  //
+  // ⚠ condition.tierMatchFatigue: THE W FAMILY IS REPRICED ONE STEP OVER THE J FAMILY
+  // ⚠ condition.tierMatchFatigue: PRICED FOR TODAY'S SOFT FIELDS, ON PURPOSE, AND THAT IS A DATED DECISION
+  // ⚠ condition.tierMatchFatigue: W50/W75/WTA125 (W2-LADDER) INTERPOLATE INSIDE THE PRICED FAMILY, THEY DO NOT EXTEND IT.
+  // ⚠⚠ condition.tierMatchFatigue: AND NOW THE WHOLE W FAMILY IS REPRICED DOWN INTO THE 2-3 BAND
+  // owner (condition.tierMatchFatigue), 03.08: «по усталости нам надо комплексно что-то сделать, я чувствую.»
+  // owner (condition.tierMatchFatigue): «это же работа, она привыкла»
+  // ⚠ condition.tierMatchFatigue: SO THE J -> W SEAM NOW DROPS BY THREE, AND A W15 MATCH COSTS WHAT A NATIONAL ONE DOES (both 4).
+  // ⚠ condition.tierMatchFatigue: THE ENTRY FLOORS DID NOT MOVE WITH THEM, so R15-6's `floor = 30 + 5 x surcharge` pairing is retired…
+  // ⚠⚠⚠ condition.tierMatchFatigue: AND THE DOMESTIC FAMILY GOES UP BY ONE
+  // owner (condition.tierMatchFatigue), 03.08: «как для local, Regional и national мы могли бы легко брать больше condition за них»…
+  // → docs/notes/economy/condition.md#conditiontiermatchfatigue
+  tierMatchFatigue: {
+    local: 1, regional: 2, national: 3,
+    j30: 3, j60: 4, j300: 5,
+    w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
+    // W3-ACT2. The family's own step continues rather than a new scale being invented: the top
+    // half of the W family sits at 3, so the 250/500 pair takes 4 and the 1000/Slam pair takes 5 -
+    // which lands the biggest week in the game on exactly J300's number, the most expensive match
+    // anywhere else on the ladder. What it prices is the WEEK, not the prestige: a major is a
+    // fortnight's trip across a time zone against the strongest field that exists, and every match
+    // in it is played after one of those.
+    wta250: 4, wta500: 4, wta1000: 5, slam: 5,
+  } as Record<TierId, number>,
+  // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
+  // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
+  // scoreline drain – the deeper she goes, the more that week grinds her down. The array is the
+  // extra, INDEXED BY MATCH-WITHIN-RUN: index 0 = her first match = 0 extra, index 1 = the
+  // second match, and so on (world.ts runFatigueExtra / tournamentRunStrain).
+  // → docs/notes/economy/condition.md#conditionrunfatigueladder
+  runFatigueLadder: [0, 1, 1, 2, 2] as number[],
+  // ⚠ ...AND THE W FAMILY RUNS ON HIS LADDER D (R15-6, owner 01.08: «может быть будет иметь
+  // смысл использовать другой кумулятивный механизм для мировой серии, с меньшими надбавками
+  // просто. Я несколько тогда предлагал»).
+  //
+  // ⚠ condition.runFatigueLadderWta: THE TWO BIG RUNGS DO NOT RUN ON THIS LADDER ANY MORE (14.08)
+  // ⚠⚠ condition.runFatigueLadderWta: MEASURED ON 19.09 AND DELIBERATELY NOT MOVED
+  // → docs/notes/economy/condition.md#conditionrunfatigueladderwta
+  runFatigueLadderWta: [0, 1, 1, 1, 1] as number[],
+  /** ⚠⚠ THE OWNER'S OWN CURVE FOR THE DEEP DRAWS, 14.08, given as the two bounds of a match at a
+   *  Slam and a WTA 1000 round by round: min 5 6 7 7 7 7 7, max 7 8 9 9 9 9 9.
+   *
+   *  ⚠ condition.runFatigueLadderDeep: IT REPLACES A CAP OF MINE THAT MADE A CLIFF.
+   *  owner (condition.runFatigueLadderDeep): «а сейчас немного некорректно получается»
+   *  ⚠⚠ condition.runFatigueLadderDeep: AND THAT REJECTION IS A STANDING SHAPE RULE, WHICH THE 19.09 PASS READ OFF IT AND OBEYED.
+   *  owner (condition.runFatigueLadderDeep), 19.09: «немного уменьшить усталость на глубоких турнирах»
+   *  → docs/notes/economy/condition.md#conditionrunfatigueladderdeep
+   */
+  runFatigueLadderDeep: [-2, -1, 0] as number[],
+  // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
+  // then linear down to `floor` at condition 0:
+  //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
+  // The kid's MatchPlayer scales by it on the EVENT-scoped `seed:kidtour` stream only; the
+  // slice-B fast-follow the owner proved necessary (won a Regional at 0 condition).
+  matchStrengthKnee: 70,
+  matchStrengthFloor: 0.55,
+  // RIVALS BECOME REAL (rival-life slice): how many trailing weeks of the results ledger a
+  // COHORT player's condition is reconstructed from. The kid carries a persisted `condition`
+  // counter; a rival cannot (world.cohort is inside every save, and a new field would cost a
+  // schema bump AND re-roll all 199 players), so hers is DERIVED on the fly from the rows she
+  // already has – which means the scan has to be bounded.
+  //
+  // ⚠ condition.rivalFatigueWindowWeeks: W2-FATIGUE RETIRED THAT PREMISE AND LEFT THE NUMBER ALONE, ON PURPOSE.
+  // → docs/notes/economy/condition.md#conditionrivalfatiguewindowweeks
+  rivalFatigueWindowWeeks: 16,
+} as const

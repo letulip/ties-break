@@ -11,8 +11,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import { simulateMatch } from '../src/engine/match/engine'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { TIERS, hasAcceptanceList } from '../src/engine/season/calendar'
 
 // Build a world paused on the kid's entered tournament (pendingTournament set, not yet revealed).
@@ -118,7 +117,8 @@ describe('tournament reveal – reveal, do not re-run', () => {
     expect(kidMatches.length).toBeGreaterThanOrEqual(1)
     for (const ev of kidMatches) {
       const m = ev.match!
-      const replay = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04) – see `composables/annotatedMatch.ts`.
+      const replay = replayMatch(m).result
       const winnerId = replay.winner === 0 ? m.aId : m.bId
       expect(winnerId).toBe(m.winnerId)
       expect(replay.sets.map((s) => `${s.a}-${s.b}`).join(' ')).toBe(m.score)

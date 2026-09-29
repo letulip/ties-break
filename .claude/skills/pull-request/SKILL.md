@@ -41,6 +41,12 @@ a box it has not proven with a command in this session.
    ⭐ Check the mtime, or use a prefix unique to the run. A stale green is worse than a red: red stops
    you, stale ships.
 
+2a-bis. **⚠ `npm run test:component`, ALWAYS** (29.09, learned from a red PR: CLAUDE.md calls it
+   «the only real UI regression gate», and it was in nobody's gate list – ten CI failures shipped
+   past a green `check`, which does not run it). ~45s locally.
+
+       npm run test:component > /tmp/pr-component.log 2>&1; echo "COMPONENT_EXIT=$?" >> /tmp/pr-component.log
+
 2b. **⚠ `npm run test:e2e`, ALWAYS, the same way** (owner, 29.08: «добавить в skill pull-request и
    гонять на локале как условие отправки кода на сервер»). Measured that day: **30 tests, 22 seconds,
    the whole suite** – cheaper than a single unit shard. At that price "smoke only" stopped being an

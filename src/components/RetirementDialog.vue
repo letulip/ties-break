@@ -150,6 +150,7 @@
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { activeLadderOfSnapshot } from '../shared/protocol'
 // ⚠ THE SAME ONE SPELLING OF HIS NAME the coach note on Home signs itself with – «M. Ricci», not the
 // roster's full string. Two surfaces naming the same person must name him identically.
@@ -298,17 +299,17 @@ useDialogFocus(card)
            she is, then which of the three questions this winter is. ⚠ THE THREE HEADINGS SHARE ONE
            id AND THAT IS SAFE – they are `v-if`/`v-else-if`/`v-else`, so exactly one is ever in the
            document, and a per-branch id would make the name depend on which question was asked. -->
-      <p id="retire-dialog-kicker" class="retire-kicker">Off-season – she is {{ age }}</p>
+      <p id="retire-dialog-kicker" class="retire-kicker dialog-kicker">Off-season – she is {{ age }}</p>
 
       <!-- ⭐⭐⭐ THE LAST ONE IS HERS. The heading reports her, the lede IS her - `lastWordLine`,
            the engine's own sentence, rendered rather than retyped. It read «Nobody is going to ask
            her again», which is the game announcing that it has stopped asking; she was not in it. -->
       <template v-if="offer.final">
-        <h2 id="retire-dialog-title" class="retire-title">She told you at the end of the season.</h2>
+        <h2 id="retire-dialog-title" class="retire-title dialog-title">She told you at the end of the season.</h2>
         <p class="retire-lede">{{ lastWord }}</p>
       </template>
       <template v-else-if="offer.reason === 'plateau'">
-        <h2 id="retire-dialog-title" class="retire-title">She said it in the car.</h2>
+        <h2 id="retire-dialog-title" class="retire-title dialog-title">She said it in the car.</h2>
         <!-- RE-WORDED 12.08. This used to end "- her words, not the game's", an aside meant to say
              "this is HER wish, nothing is being forced" - but it names THE GAME, which is a wall no
              line of copy here is allowed to break, and the owner read it as noise (round-17, his
@@ -323,7 +324,7 @@ useDialogFocus(card)
       <!-- ⭐⭐⭐ ROUND 30 #7 – RE-WORDED, AND THE LEDE ONLY. See the note at the top of this file for
            what the mechanic actually promises and why the old sentence was not the whole of it. -->
       <template v-else>
-        <h2 id="retire-dialog-title" class="retire-title">Is there another year in this?</h2>
+        <h2 id="retire-dialog-title" class="retire-title dialog-title">Is there another year in this?</h2>
         <p class="retire-lede">
           Twenty-nine is when the question starts being asked, not a countdown to anything. There is
           no wrong answer, and she can say no for as many winters as her body gives her.
@@ -350,14 +351,27 @@ useDialogFocus(card)
         <p v-if="lastWinterWord" class="retire-last-winter">{{ lastWinterWord }}</p>
       </template>
 
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW EVERY BRANCH – ForkDialog's
+           own arrangement and its reason. There is no dismiss and no Escape on this card (the note on
+           the script side says why, and the FINAL card is the proof), so a refused answer left the
+           winter's question standing with nothing said. Reached without any engine bug by a second
+           tab's SAVE_CONFLICT, whose sentence names the way out, and by B-02's refused mutation.
+           ⚠ OUTSIDE the three `v-if` branches, so it is drawn on all three questions and on the final
+           card, and ABOVE `.retire-answers` so the answers stay last in the flow – which is where
+           `measureDialog` reads the way out off. Capped and scrolling by `.dialog-card`, measured with
+           the line up at 375x667 and 320x568 in
+           tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING: `StoreError` renders whatever the store already wrote (invariant 4). -->
+      <StoreError />
+
       <div class="retire-answers">
-        <button class="retire-answer" type="button" :disabled="game.busy" @click="answer(true)">
+        <button class="retire-answer dialog-option" type="button" :disabled="game.busy" @click="answer(true)">
           <strong>{{ answerLabel }}</strong>
           <span>{{ answerNote }}</span>
         </button>
         <button
           v-if="!offer.final"
-          class="retire-answer"
+          class="retire-answer dialog-option"
           type="button"
           :disabled="game.busy"
           @click="answer(false)"
@@ -385,21 +399,9 @@ useDialogFocus(card)
   margin-bottom: 14px;
 }
 
-.retire-kicker {
-  margin: 0 0 4px;
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.retire-title {
-  margin: 0 0 8px;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  line-height: 1.25;
-  color: var(--ink);
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – `.dialog-kicker` and `.dialog-title` in src/style.css, carried beside
+   these two classes; both scoped rules are gone because every declaration in them was shared with the
+   fork, the prologue card and the handover. See ForkDialog.vue for the Eyebrow distinction. */
 
 .retire-lede {
   margin: 0 0 18px;
@@ -455,24 +457,8 @@ useDialogFocus(card)
   gap: 8px;
 }
 
-.retire-answer {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: left;
-  padding: 12px 14px;
-  border: var(--stroke-hair) solid var(--ink-dim);
-  border-radius: var(--radius-control);
-  background: transparent;
-  font: inherit;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.retire-answer:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – `.dialog-option` in src/style.css, carried beside this class; the rule and
+   its disabled pair are gone because `.fork-answer` stated all of it too. See ForkDialog.vue. */
 
 .retire-answer strong {
   font-size: 15px;

@@ -207,18 +207,12 @@ import { availableWidth, demandedWidth, PHONE, rowItemWidth, setViewport } from 
 import { answerBirthdayNeutral, drainLifeBeats } from '../helpers/career'
 import {
   answerFork,
-  callUpRevealOpen,
-  closeTournament,
-  collegeLeagueRevealOpen,
   createWorld,
   measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
-  revealTournamentRound,
-  skipTournament,
   tickWeek,
   toSnapshot,
-  type WorldState,
 } from '../../src/engine/world'
 import { resumeMain } from '../../src/engine/rng'
 import {
@@ -229,6 +223,7 @@ import {
   type WorldMatch,
 } from '../../src/shared/protocol'
 import type { MatchPlayer } from '../../src/engine/match/types'
+import { finishAnyReveal, answerCollegeReveal } from '../helpers/scenarios/college'
 
 // =================================================================================================
 // THE FIXTURES – a real career underneath, the championship's OUTCOME posed
@@ -337,22 +332,6 @@ function earlyExit(surname: string = LONGEST_SURNAME): CollegeProgressView {
 // =================================================================================================
 // A WALKED CAREER UNDER THE FIXTURES, BUILT ONCE
 // =================================================================================================
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** The player's own two presses at a mid-year reveal – the championship's and the tie's. A walk that
- *  answered one and not the other stalls on the first league week and banks zero years, which is the
- *  failure `round26-college-card.test.ts` records against its own earlier version of this helper. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
 
 let walked: Snapshot | null = null
 

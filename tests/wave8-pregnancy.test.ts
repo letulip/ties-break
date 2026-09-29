@@ -74,7 +74,6 @@ import {
   buildLifeBeatPrompt,
   createWorld,
   endEpisode,
-  kidAgeExact,
   knockRunning,
   landPregnancyAnnouncement,
   latchedEpisode,
@@ -91,6 +90,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { drainLifeBeats, DRAIN_ANSWER, drainCostOf } from '../tools/_lifeBeats'
 import type { LoveEpisode } from '../src/shared/protocol'
+import { weekAtAge } from './helpers/career'
 
 const MOTHERHOOD = ECONOMY.motherhood
 
@@ -115,13 +115,6 @@ beforeEach(() => {
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock, never our
  *  arithmetic (`tests/wave4-ends.test.ts`'s helper, through wave 7). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** A row of the v83 shape. `latchedWeek` non-null and `endedWeek` null is «married and not over»,
  *  which is `latchedEpisode`'s own reading and this wave's door. */
 function married(sinceWeek: number, latchedWeek: number, endedWeek: number | null = null): LoveEpisode {

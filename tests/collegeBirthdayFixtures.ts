@@ -60,17 +60,13 @@
 
 import { expect } from 'vitest'
 import {
-  skipTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   answerFork,
-  closeTournament,
   createWorld,
   decideKnock,
   pendingBirthday,
   pendingKnock,
+  pendingLifeBeat,
   resumeFromCollege,
-  revealTournamentRound,
   tickWeek,
   toSnapshot,
   type WorldState,
@@ -81,34 +77,16 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { answerBirthdayNeutral } from '../tools/_birthday'
 import { drainLifeBeats } from './helpers/career'
 
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
- *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
- *  complaint was that the year reported the tournament and ticked on past it. So every walk here
- *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
- *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
- *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
- *  The full note is in tests/college-league.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-export function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
-
-export function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
+// ⚠⚠ RE-EXPORTED, NOT COPIED (26.09, T5.11) – `career.ts`'s own arrangement for `drainLifeBeats`,
+// and for its reason. These two bodies were the ninth and tenth copies of themselves
+// (`answerCollegeReveal` had ELEVEN definitions in tests/ and `finishAnyReveal` seventeen), and this
+// module's versions are the EXPORTED ones: `college-blocking-beat.test.ts`, `college-birthday.test.ts`
+// and `principles-unknown-answers.test.ts` import them from here. So the surface stays exactly where
+// its importers look for it and only the second copy of the body goes. The two dated re-aim
+// chronicles that stood here – round 26 #6 and round 27 #6 – moved VERBATIM to the shared module,
+// which is where the other six retellings of them went too.
+import { answerCollegeReveal, finishAnyReveal } from './helpers/scenarios/college'
+export { answerCollegeReveal, finishAnyReveal }
 
 /** Any pending birthday, answered neutrally. ⚠ RE-AIMED BY ROUND 42 #1 (ruled A, 15.09): the day
  *  together reaches the card from SIXTEEN now, so «the one option every birthday offers» stopped
@@ -177,13 +155,20 @@ export const OLD_BIKE_ASK = 'She has counted the minutes she spends walking betw
 export function collegeBirthdays(seed: string, walletCents: number, kidCents: number) {
   const { world, rng } = openedAtCollege(seed, 6, 15)
   const prompts: Array<{ age: number; ask: string; ids: string[]; labels: string[] }> = []
-  for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+  for (let guard = 0; guard < 30 && world.ending?.type === 'college'; guard++) {
     resumeFromCollege(world, rng)
     // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
     // only for the cake. Another branch of the SAME round taught it to pause for the championship
     // too, and a walk answering one pause but not the other stalls on the first league week - it
     // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
     answerCollegeReveal(world)
+    // ⚠⚠ AND THE SAME THING HAPPENED A SECOND TIME, 26.09 (B-01 / T2.3) – THE SENTENCE ABOVE IS THE
+    // WHOLE DIAGNOSIS, with a blocking life beat in the championship's place. Ruling 2(a) makes her
+    // card pause the year, so a walk that answered the reveal and the cake but not the card stalled
+    // on the first beat and read ONE college birthday where four happen. `drainLifeBeats` answers it
+    // with the option priced ZERO, so no wallet, bond or gift number below moves; the guard gains
+    // six presses for the beats a four-year course can now raise.
+    if (pendingLifeBeat(world) !== null) drainLifeBeats(world)
     if (pendingBirthday(world) === null) continue
     // ⚠ SET ON THE BIRTHDAY WEEK ITSELF, both purses, because the claim is about what the
     // household has ON THE DAY and four college years of base costs move it.

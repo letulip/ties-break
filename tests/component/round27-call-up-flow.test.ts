@@ -43,26 +43,22 @@ import EndingScreen from '../../src/components/EndingScreen.vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import { useGameStore } from '../../src/stores/game'
+import { answerInbox } from './inbox'
 import {
-  answerFork,
   closeTournament,
   callUpRevealOpen,
-  createWorld,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
-  revealTournamentRound,
   skipTournament,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING } from '../../src/engine/nationalTeam'
 import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
 import { ENDINGS } from '../../src/engine/ending'
-import { resumeMain, type Rng } from '../../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
-import { DEFAULT_PROFILE, LADDER_LABEL } from '../../src/shared/protocol'
+import { LADDER_LABEL } from '../../src/shared/protocol'
+import { atCollege } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND THE SHELL READS IT. Same shim as round26-college-flow –
 // supply the browser's object, do not weaken the app.
@@ -81,51 +77,23 @@ Object.defineProperty(globalThis, 'localStorage', {
   },
 })
 
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** A career that really played to the fork and really answered «college» – never a hand-built
- *  snapshot. `round26-college-flow.test.ts`'s own opener, including its one thumb on the scale. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
-  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
-  drainLifeBeats(world)
-  answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
-
 /** Press the Home shell's college button until a Nations Cup tie is standing open, answering the
  *  championship and her birthday on the way. ⚠ THROWS rather than returning quietly, so no case
  *  below can go green against a career whose country never wrote. */
 let lastStops: string[] = []
 function walkToTheTie(seed: string): WorldState {
   const { world, rng } = atCollege(seed)
-  for (let press = 0; press < 5 * ENDINGS.collegeYears; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year, so
+  // a walk that answered the championship and the cake but not her card stalled before the tie –
+  // MEASURED as «the walked career never reached a Nations Cup tie». `drainLifeBeats` is the player's
+  // own answer, bond-neutral, and the budget gains a press a year for the question a year now holds.
+  for (let press = 0; press < 6 * ENDINGS.collegeYears; press++) {
     lastStops = resumeFromCollege(world, rng)
     if (callUpRevealOpen(world)) return world
     skipTournament(world)
     closeTournament(world)
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a Nations Cup tie')
@@ -141,6 +109,14 @@ async function openShell(world: WorldState) {
   // WITH them: a snapshot built without them would show no toast for the trivial reason that it was
   // handed none, which is exactly the vacuous pass that case exists to avoid.
   game.snapshot = toSnapshot(world, lastStops as Parameters<typeof toSnapshot>[1])
+  // ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): `InboxSheet`'s list is a QUERY now – the weekly
+  // snapshot carries the letters this week still needs and `loadInbox()` answers with the career's whole
+  // post – and this shell really opens that sheet, so the query has to be answered. There is no worker
+  // here (`init` is already mocked two lines up), so the world's own post is the answer, copied the way
+  // the wire copies it. The claim below is unchanged: the invitation is on the list before its week.
+  // ⚠ THE PIN QUERY DID NOT PREDICT THIS FILE – it names none of `InboxSheet` / `inboxCue` /
+  // `newestLetterId` / `inboxMail`, it reaches the sheet through the SHELL's own door and by class.
+  answerInbox(world.offers.map((o) => ({ ...o, terms: { ...o.terms } })))
   const w = mount(App, { attachTo: document.body, global: { stubs: { teleport: true } } })
   w.findComponent(SplashScreen).vm.$emit('done')
   await flushPromises()
@@ -246,7 +222,7 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
     // the tie still ahead. A mount is the only thing that can tell those two apart.
     const { world, rng } = atCollege('r27c-flow-a')
     let reached = false
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       if (toSnapshot(world).ending?.college?.callUpIsNextStop) {
         reached = true
         break
@@ -255,6 +231,9 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): her card pauses the year since ruling 2(a), so a walk that
+      // did not answer it stalled before the tie – `drainLifeBeats` is bond-neutral and moves nothing.
+      drainLifeBeats(world)
     }
     expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
     expect(callUpRevealOpen(world), 'and the tie has NOT been played yet – this is before it').toBe(false)
@@ -284,7 +263,7 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
     // along. Walked to the rest state BEFORE a tie and read off the DOM.
     const { world, rng } = atCollege('r27c-label')
     let reached = false
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       if (toSnapshot(world).ending?.college?.callUpIsNextStop) {
         reached = true
         break
@@ -293,6 +272,9 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): her card pauses the year since ruling 2(a), so a walk that
+      // did not answer it stalled before the tie – `drainLifeBeats` is bond-neutral and moves nothing.
+      drainLifeBeats(world)
     }
     expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
 

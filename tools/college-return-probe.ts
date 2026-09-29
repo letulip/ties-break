@@ -32,6 +32,7 @@ import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { CollegeOffer, CollegeTier } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+import { drainReveals } from './_reveals'
 
 const args = process.argv.slice(2)
 const argOf = (n: string, d: number) => {
@@ -114,9 +115,30 @@ function walkOneArm(
   for (let y = 0; y < YEARS && at.world.ending?.type === 'college'; y++) {
     const yearStart = at.world.week
     // Round 24: the year pauses on her birthday week – press, answer, press again.
-    for (let press = 0; press < 3 && at.world.college!.years.length === y && at.world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+    // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+    // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+    // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+    // first beat of a degree stopped the years banking and the budget ran out against a career still
+    // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+    // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+    // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+    // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+    // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+    // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+    // along.
+    for (let press = 0; press < 5 && at.world.college!.years.length === y && at.world.ending?.type === 'college'; press++) {
       resumeFromCollege(at.world, at.rng)
       if (pendingBirthday(at.world) !== null) answerBirthdayNeutral(at.world)
+      drainLifeBeats(at.world)
+      // ⚠⚠ AND THE REVEALS, WHICH THIS WALK NEVER ANSWERED – a round-26/27 gap that B-01's repair
+      // exposed rather than anything ruling 2(a) caused. The championship (round 26 #6) and the Nations
+      // Cup tie (round 27 #6) each PAUSE the college year, and a walk blind to them presses against a
+      // year it cannot spend; it was invisible while the walk stalled on her card weeks earlier.
+      // `drainReveals` (tools/_reveals.ts) is «Skip all rounds» then «Continue», the player's own two
+      // presses and the one spelling of them. ⚠ SO THIS BENCH'S COLLEGE FIGURES MOVE TWICE OVER, and the
+      // before/after pair in the wave report is the record of both.
+      drainReveals(at.world)
     }
     if (trace) traceYear(at.world, yearStart, trace)
   }

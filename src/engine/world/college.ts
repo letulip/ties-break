@@ -35,8 +35,7 @@ import {
   collegeLeagueOpponent,
   type CollegeLeagueResult,
 } from '../collegeLeague'
-import { simulateMatch } from '../match/engine'
-import { JUNIOR_TOUR } from '../season/tournament'
+import { simulateMatch, recordedMatchOptions } from '../match/engine'
 import { kidMatchPlayerFor } from './player'
 import { KID_ID } from './constants'
 import { formatShortName } from '../../shared/format'
@@ -539,7 +538,7 @@ function playCallUpRubbers(world: WorldState, rubbers: number): number {
     const { player: opp, nation } = opponents[i]
     const eventId = callUpRubberId(world.week, i)
     const seed = `${world.seed}:rubber:${world.week}:${i}`
-    const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+    const result = simulateMatch(kid, opp, recordedMatchOptions({ surface, seed }))
     const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
     const kidWon = result.winner === 0
     if (kidWon) won += 1
@@ -901,7 +900,7 @@ function playCollegeLeague(world: WorldState): CollegeLeagueResult {
     const opp = draw[r]
     const eventId = collegeLeagueMatchId(world.week, r)
     const seed = `${world.seed}:collegematch:${world.week}:${r}`
-    const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+    const result = simulateMatch(kid, opp, recordedMatchOptions({ surface, seed }))
     const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
     const kidWon = result.winner === 0
     // ⚠ A ROUND IS A MATCH AND SHE CAN STOP IN ONE – the same sentence `resolvePractice` and

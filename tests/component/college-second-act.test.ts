@@ -43,14 +43,13 @@ import {
   createWorld,
   measureCollegeOffer,
   resumeFromCollege,
-  revealTournamentRound,
   tickWeek,
   toSnapshot,
-  type WorldState,
 } from '../../src/engine/world'
 import { resumeMain } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type CollegeProgressView, type CollegeYear, type Snapshot, type WorldMatch } from '../../src/shared/protocol'
 import type { MatchPlayer } from '../../src/engine/match/types'
+import { finishAnyReveal } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND `HomeScreen` READS IT. The same shim `home-strip-and-mail`,
 // `round20-ui` and `round24-coach-card` carry, and for the reason quoted there in full: happy-dom is
@@ -199,13 +198,6 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
 // her – and those are rolls. A test that waited for the RNG to produce a retirement would be a test
 // that runs sometimes. So: a real snapshot underneath, one field swapped, which is the only field
 // any of these assertions is about.
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
 let walked: Snapshot | null = null
 
 /** A career at college with one year behind her, built once – the walk is the expensive half and it
@@ -244,13 +236,18 @@ function walkedCollegeSnapshot(): Snapshot {
   // answers the reveal the way the player does («Skip all rounds», then the finale's «Continue») and
   // keeps pressing until a year is actually banked. The same shape `finishAnyReveal` above already
   // has for a tour reveal, one competition along.
-  for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY AND NOT BECAUSE IT WAS RED: ruling 2(a) makes a
+  // blocking life beat pause the college year, so a fixed-count walk that does not answer her card
+  // passes only while no beat happens to land in its window. `drainLifeBeats` is bond-neutral and
+  // priced ZERO, and the budget gains a press for the question a year can now raise.
+  for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) {
       skipTournament(world)
       closeTournament(world)
     }
     if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    drainLifeBeats(world)
   }
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {

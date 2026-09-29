@@ -149,6 +149,30 @@ composable: `parity-feed-ladder.test.ts` carries an arm that adds a fourth filte
 unit net stays green. That arm is the one-line argument for why a rendered assertion exists at all
 beside a composable one.
 
+### ⭐⭐ A PAIRED WITNESS MUST PIN THE VALUE, NOT ONLY THE SHARED PHRASING (27.09, W4's T4.11)
+
+The sharpest failure a form-B test can have is not a false red. It is agreeing with itself.
+
+E-01's net began by asserting the WORD both surfaces print - «birthday to birthday» on the season
+header and on every W pill - and left the FIGURE to `snapshot.proEntryCap`. Arm A then moved
+`proEntryCapUsage`'s window inside the engine, from the birthday year to the season block, and the
+header and the pills moved **together**: both surfaces went on agreeing with each other, about a
+number that was now wrong, and nothing in the file could see it. A witness that can only see
+divergence is blind to a shared error, which is the one thing a parity test exists to refuse.
+
+⭐ **So the rule: a form-B case pins the VALUE on the snapshot AND on every surface, each assertion
+naming the engine site the number comes from.** After that, arm A reddens three cases across two
+files from one engine edit - the witness's own and the other surface's suite - which is what arm A is
+supposed to look like. Form A does not need this, because there is only one reader; it is the price
+of a witness.
+
+⚠ **And a corollary measured the same day: a FORMAT change is not a divergence.** Changing
+`practiceMatchId`'s spelling (`practice-w` → `friendly-w`) reddened the format pin alone and left both
+rendered surfaces green - correctly, because the fixture builds its ids from the same exported
+function, so the screens follow the engine wherever it goes. That is form A working, not a hole. A
+test header that claims such an arm will redden the surfaces is claiming a red it cannot produce;
+measure the arm before writing what it does.
+
 ## 3. When each applies
 
 * The screen prints a **refusal, a price, an openness, a count or a date** that the engine also
@@ -172,7 +196,11 @@ importantly, the arm-B mutation proves the pair is reading one source, which no 
 ⚠ This is a statement about the CLASS and not about the e2e suite, whose own row (15) stands: every
 wave that ships a mechanic still owes it a case.
 
-## 5. The two live instances found while applying this – ⭐ BOTH CLOSED 25.09
+## 5. The live instances found while applying this – ⭐ ALL CLOSED
+
+⚠ The heading carried a COUNT until 26.09 («the two live instances … BOTH CLOSED») and a third
+arrived, so it carries none now: a number a document states about itself rots and no test reads it
+(wave 9's finding). The instances are numbered below; the total is whatever that list holds.
 
 Both were found by the 24.09 pass and both are `src/` changes, so neither was made by a guard's
 builder. They were the class in shipped code; each record is kept verbatim, because what a defect
@@ -211,6 +239,40 @@ looked like before it was closed is the useful part, and each now carries what s
    fixed code the whole plaque follows the engine. Guard:
    `tests/round34-ladder-plaques.test.ts`' «BOTH HALVES … read the ENGINE's number», which POSES the
    divergence no fixture can produce.
+
+3. **The ad shelf restated the letter's own gate** – B-03, T3.3 of the principles fix.
+   The gate was spelled twice: `reviewAdOffer`'s four per-branch checks in `world/sponsors.ts`, and –
+   this is the part worth carrying – **an anonymous IIFE assigned to the `adPortfolio` key** in
+   `world/snapshot.ts`. It had no symbol at all, which is exactly why no `git grep` could find the
+   second spelling; the first two instances above were both findable by name and this one was not.
+   ⭐ **CLOSED 26.09** by form A: `adCategoryOpen(world, category)` in `world/sponsors.ts`, called by
+   the letter and by the shelf, with the derivation lifted out of the IIFE and given a name on the
+   way. Measured before: a kitless clothing row read `open` on **316 of 350** sampled weeks that had
+   no live kit deal; after, **0**. `toSnapshot` serialised whole over the 90 golden saves and the 13
+   e2e fixtures moved **15 rows in 15 fixtures** – `adPortfolio[3].state` open → closed and
+   `openCashCents` dropped, with `kitDeal` null in all 15 – and **nothing else at any depth**.
+   Guards: `tests/round29p4-ad-portfolio.test.ts` and `tests/component/round29p4-ad-portfolio-panel.test.ts`.
+   The three arms ran with the asymmetry intact: the shared SOURCE reddens the letter and the screen
+   together; the SHARING reddens the parity pair alone; the TEMPLATE reddens the mount alone.
+
+   ⚠⚠ **AND A FOURTH ARM THIS INSTANCE PRODUCED, WHICH THIS CONVENTION DID NOT PREDICT: A CLAUSE OF A
+   SHARED PRIMITIVE CAN HAVE ITS ONLY LIVE READER ON THE SURFACE.** Disabling `adCategoryOpen`'s
+   **band** clause left the engine's own door entirely green – 74 passed – because
+   `adTermsForCategory` refuses an unpriced cell by itself; it reddened only the screen's guards. So a
+   clause that reads as redundant with the engine's door is in fact the SCREEN's single line of
+   defence, and deleting it as duplication would be objected to by a UI test alone. ⭐ The rule that
+   follows, and it is cheap: **when form A merges two spellings, check per clause which side still has
+   an independent refusal.** The clauses that have none are where the primitive is load-bearing, and
+   they are the ones to name at the site rather than leave reading as belt-and-braces.
+
+   ⚠ **And one clause has no mounted witness, recorded rather than left implicit: `'slam'`.** The ad
+   panel's fixture (#150, no banked seasons) shows the lifetime row closed whether the clause is there
+   or not, so the per-reason arm reddens a unit case and **nothing on a screen**. The cheapest shape is
+   one mounted case on a tenure-met fixture, which is a new screen fixture and therefore W4's lane
+   (the UI parity and accessibility wave) rather than W3's. Until it exists, `'slam'` is guarded at the
+   primitive and at the letter, and unguarded at the shelf. ⭐ The general form of this is worth having
+   beside the rule above: after per-clause arms, the clauses with **no** witness on one side are the
+   coverage the table has just measured – write them down where the next wave will read them.
 
 ## 6. What this spec does not do
 

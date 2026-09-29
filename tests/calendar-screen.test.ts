@@ -14,11 +14,12 @@
 //      a per-day editor, and a second week button that computes its own state.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { componentLogic } from './worldSource'
+import { componentLogic, worldSource } from './worldSource'
 // Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
 // helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
 // documents at length, including documenting what it deliberately did not do.
 import { after, codeOf, region, regionToLast } from './helpers/source'
+import { describeReaches, importsOf, isWorldPackage } from './helpers/engineImports'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -51,6 +52,9 @@ import { OFF_SEASON_WEEKS, SUMMER_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeason
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const app = read('../src/App.vue')
+/** The screen's repo-relative path, so the resolved-import pin below can resolve `'../../engine/…'`
+ *  against the SCREEN's directory rather than this test's. */
+const SCREEN = 'src/components/screens/CalendarScreen.vue'
 const screen = read('../src/components/screens/CalendarScreen.vue')
 /** The SFC PLUS every composable it imports – for POSITIVE claims only, so a pin survives the
  *  logic being extracted. `screen` above stays the .vue alone, which is the only honest corpus
@@ -827,8 +831,38 @@ describe('the marker opens ONE event, with enter-or-close', () => {
 })
 
 describe('the calendar reads the snapshot and nothing else', () => {
+  // ⚠⚠ RE-AIMED 28.09 (T6.7 · Q3) – SAME CLAIM, SAME CORPUS, JUDGED ON RESOLVED IMPORTS INSTEAD OF A
+  // SUBSTRING. The world half of the list below was `not.toContain('engine/world')`, and a substring
+  // cannot tell the BARREL from the PACKAGE: `'../../engine/world/medical'` CONTAINS
+  // `'../../engine/world'`. Two ways that misfires, and neither is this screen doing anything wrong.
+  //   1. `CLAUDE.md`'s P4 rule and `tests/principles-a02-ui-barrel-ratchet.test.ts` tell a UI file to
+  //      import from the OWNING module. So the day this screen legitimately needs one pure constant,
+  //      the pin reddens on the very spelling the gate demanded – a gate and a pin saying opposite
+  //      things about one edit, met by whoever converts next and has no context for it.
+  //   2. A COMMENT naming `engine/world/medical.ts` as the home of a rule reddened a claim about
+  //      IMPORTS, and this repository writes exactly those notes on purpose (`weekDays.ts` has one).
+  // NOT WEAKENED, and for this file that is the point: the claim is «reads the snapshot and nothing
+  // else», so the whole world package stays forbidden here – barrel AND module – which is STRICTER on
+  // imports than the substring was (a specifier is resolved, so no spelling evades it) and drops only
+  // the text matches, which were never the claim. The sibling pin in `trophy-podium.test.ts` re-aims
+  // at the BARREL alone, because its sentence is «never comes near a draw» and a pure constant does
+  // not; per-pin, from each pin's own words.
+  // MUTATION ARMS, all three run (T6.7 · Q3, both outputs in the report): `import { KID_ID } from
+  // '../../engine/world'` in CalendarScreen.vue reddens it naming the line; `'../../engine/world/
+  // constants'` reddens it too, because here the package is the claim; and a comment mentioning
+  // either stays GREEN, where the substring form went red.
+  it('no module of the engine\'s world is imported – the screen is given a snapshot', () => {
+    expect(
+      describeReaches(importsOf(SCREEN, screen).filter(isWorldPackage)),
+      'the calendar screen imports from engine/world – it is given a snapshot, and a fact it needs ' +
+        'belongs in the composable or in the engine primitive the composable already calls',
+    ).toEqual([])
+  })
+
   it('no engine state is reached for, and no fact is derived that the composable owns', () => {
-    for (const forbidden of ['engine/world', 'createWorld', 'tickWeek', 'game.tick(']) {
+    // The remaining three are a CALL SITE and two names, not specifiers, so the file's text is the
+    // right corpus for them and they stay exactly as they were.
+    for (const forbidden of ['createWorld', 'tickWeek', 'game.tick(']) {
       expect(screen, `the screen reaches for ${forbidden}`).not.toContain(forbidden)
     }
   })
@@ -999,9 +1033,18 @@ describe('the days cross themselves out', () => {
     expect(cross).toContain("const PACE_KEY = 'tb-day-cross-pace'")
     expect(cross).toContain("return localStorage.getItem(OFF_KEY) === '1'")
     expect(cross).toContain('} catch {')
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
+    for (const rel of ['../src/stores/game.ts', '../src/shared/protocol.ts']) {
       expect(read(rel), `${rel} must not know the flag`).not.toContain('dayCross')
     }
+    // ⚠⚠ WIDENED 28.09 BY T6.5 / A-04 (a) – A NEGATIVE PIN THAT NOW READS A BARREL IS ASKING NOTHING.
+    // This case did not break with P4's last three span-moves; it QUIETLY STOPPED MEANING WHAT IT
+    // SAYS, which is the worse half of the same family (CLAUDE.md: the region that silently widens,
+    // the helper that silently returns ''). `src/engine/world.ts` holds no function body any more, so
+    // «the engine must not know this» read against that file alone could not fail for any engine code
+    // whatsoever. `worldSource()` is world.ts + every world/*.ts part, so the claim is read over the
+    // whole module set – and widening can only ADD text to a NEGATIVE assertion, which makes it
+    // STRICTER and never weaker. Measured before the change: the symbol appears in no engine code.
+    expect(worldSource(), 'the engine must not know the flag').not.toContain('dayCross')
   })
 
   it('the switch is on the settings screen, in the shape its four siblings have', () => {

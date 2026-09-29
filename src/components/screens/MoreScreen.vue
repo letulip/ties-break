@@ -4,7 +4,9 @@
 // skip), and About. Destructive/generation-switching actions go through the shared
 // ConfirmDialog popup; "New career" keeps its pre-existing inline confirm (only the
 // copy changed) since it doesn't touch any stored data.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+// ⚠ `onMounted` IS GONE FROM THIS LIST (D-05, 28.09) – the careers refresh it carried is a
+// `watch(…, { immediate: true })` now, and `immediate` IS the mount half. Nothing else here mounts.
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SavePeek, SlotMeta } from '../../shared/protocol'
@@ -12,6 +14,7 @@ import { weekLabel } from '../../shared/dates'
 import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
+import StoreError from '../ui/StoreError.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { AUDIO_COPY } from '../../composables/audioCopy'
@@ -67,11 +70,49 @@ const confirmingNewCareer = ref(false)
 // worker's refusal of a pending tournament/knock stays, and it is the half that ever protected a
 // save (tests/dev-fast-forward.test.ts pins the bargain in both directions).
 
-// game.tick()/setPlan() don't refresh `careers` (only newCareer/loadCareer/deleteCareer/
-// importSave do – see game.ts), so the active career's week/lastPlayedAt can go stale
-// while the player stays on Home ticking weeks. App.vue mounts this screen fresh each
-// time the tab is opened (plain v-if chain, no keep-alive), so this catches it on entry.
-onMounted(() => game.refreshCareers())
+// ⭐⭐ D-01 (principles review, 26.09) – `slots` AND `careers` ARE REFRESHED HERE BECAUSE HERE IS
+// WHERE THEY ARE READ. This screen is the only reader of either list in the whole app, and both used
+// to be kept current by refresh tails hand-copied into the store's mutation bodies: 26 of 41 for
+// `slots`, five actions for `careers`. The 15 that forgot `slots` are D-01 itself – «Restore
+// previous» is `autoSlots[1]` sorted by the record's own `savedAt`, so after one unrefreshed mutation
+// that row points at the slot holding the CURRENT state. The restore then reported ok, moved nothing
+// the player could see, and overwrote the one generation that still held the pre-command career – the
+// corruption insurance the owner's ruling (decisions.md:135) put behind that button.
+//
+// ⚠ THE ONE READER BECOMES THE ONE REFRESH, which is why these are `watch`es on the revision rather
+// than more calls in the store: the revision is the worker's own count of committed mutations, so
+// "the list may have moved" has exactly one spelling and no action can forget it. `immediate` covers
+// the ordinary order (tick on Home, then open More – and App.vue mounts this screen fresh each time
+// the tab is opened, a plain v-if chain with no keep-alive); the watch covers the ▶▶ 52 (dev) button,
+// which sits on this very tab.
+//
+// ⭐⭐ D-05 (28.09) – AND `careers` GOT THE SECOND HALF IT WAS MISSING, WHICH IS WHAT LICENSED
+// DELETING THE STORE'S TAILS. It had `onMounted(() => game.refreshCareers())` and nothing else, so it
+// was covered for «tick on Home, then open More» and not for the one control that can tick WITHOUT
+// leaving the screen. Deleting `tick`'s own `refreshCareers()` without this line leaves the career
+// row's week and last-played frozen under the ▶▶ 52 button standing beside it – measured red in
+// tests/component/principles-d05-careers-freshness.test.ts on exactly that intermediate tree.
+// ⚠ Two watches and not one combined handler: they are two independent queries on the wire, and a
+// screen that reads one list is not asking for the other.
+//
+// ⚠ 26.09 – THE CAREERS NOTE USED TO NAME `tick`/`setPlan` AS THE TWO COMMANDS THAT DO NOT REFRESH,
+// and `tick` had refreshed for some time (D-P3). A list of call sites written out here was a second
+// copy of a fact that lived in the store; there is no list left to copy now, which is the cheapest
+// possible ending for that class of rot.
+//
+// ⚠⚠ AND THE KEY IS «WHICH CAREER, AT WHICH REVISION» RATHER THAN THE REVISION ALONE, which is not
+// belt-and-braces – it is the one case the revision cannot see. `loadCareer` does NOT commit: the
+// worker ADOPTS the revision it finds on disk for the career it opened. So switching between two
+// careers that sit at the same revision – two fresh ones both at 1, or any two played about as much –
+// moves `careerId` and leaves `revision` exactly where it was. Keyed on the revision alone, `slots`
+// would still hold the PREVIOUS career's records, `autoSlots` below filters on the `auto:` prefix and
+// not on the career, and «Restore previous» would offer a slot belonging to the career the player has
+// just left. That is D-01's ending by a different road. Both lists are a function of both facts, so
+// both facts are the key. Pinned in tests/component/principles-d05-careers-freshness.test.ts, whose
+// last case is red on a revision-only key and green here.
+const listKey = () => `${game.snapshot?.careerId ?? ''}@${game.revision}`
+watch(listKey, () => void game.refreshSlots(), { immediate: true })
+watch(listKey, () => void game.refreshCareers(), { immediate: true })
 const saveName = ref('')
 const seedCopied = ref(false)
 
@@ -236,8 +277,20 @@ function askRestorePrevious(): void {
     // W1-INTEGRITY-A (TB-01): `restoreSlot`, not `load` — the worker commits the restored state as
     // the NEWEST autosave before answering, so closing the app right here keeps the restore
     // (the old `load` swapped memory only, and a relaunch silently rolled back to pre-restore).
-    // The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it.
-    onConfirm: () => game.restoreSlot(prev.slot),
+    // ⚠ «The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it»
+    // STOOD HERE AND IS RE-AIMED (D-05, 28.09): the action refreshes nothing now. Both lists follow
+    // the revision the restore commits, through the two watches at the head of this script – which is
+    // the same guarantee one level up, and the level where this screen's other 40-odd commands get it.
+    //
+    // ⭐⭐ W2 (26.09) – ...AND IT IS `tracked` NOW, WHICH IT ALONE WAS NOT. This was the one save
+    // operation on the screen outside the wrapper its six siblings carry, and `tracked` is what
+    // records the Retry target – so the row's Retry did not belong to this command. Measured, both
+    // halves, in tests/component/principles-w2-more-door-exit.test.ts: with the restore the FIRST
+    // save op of a visit the refusal row offered no Retry at all, and with a tracked operation run
+    // earlier the Retry re-sent THAT one («manual:…:backup» where the refused command was
+    // «auto:…:b»). A control that silently runs a different command is worse than no control.
+    // ⚠ NO COPY MOVES: the row, its label and the refusal are TB-19's and TB-02's, untouched.
+    onConfirm: () => tracked(() => game.restoreSlot(prev.slot)),
   }
 }
 
@@ -681,8 +734,15 @@ const TAB_OPTIONS = [
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
     <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
          line catches everything else (the fast-forward refusing over an open knock/reveal), which
-         previously failed silently here – More never rendered `game.error` at all. -->
-    <p v-if="game.error && game.error !== game.saveOp?.message" class="error">{{ game.error }}</p>
+         previously failed silently here – More never rendered `game.error` at all.
+         ⚠⚠ E-09 / T4.8 (27.09) – `<StoreError />` WITH THE GUARD AS A PROP. What stood here was a
+         hand-rolled paragraph on the error class whose guard also compared `game.error` with
+         `saveOp.message`, and that condition is the whole reason it was hand-rolled: the Saves strip above
+         already prints `saveOp.message`, so a failed import used to be sayable twice on one screen.
+         `except` carries exactly that one sentence and nothing else, so the element, the class, the
+         sentence and the suppression are all what they were – and it gains the `role="status"` the
+         hand-rolled copy never had. -->
+    <StoreError :except="game.saveOp?.message ?? null" />
   </section>
 
   <!-- D2 – FIVE SWITCHES THAT WERE ALL CALLED `ON` OR `OFF`. Each one already carried `role="switch"`

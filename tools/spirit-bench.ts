@@ -1260,7 +1260,7 @@ function healWeeksForMinus25(): number {
 /** ⚠⚠ THE OTHER HALF OF THE SAME PROOF, AND THE REASON THREE ROWS OF SWEEP 2 READ IDENTICALLY.
  *  What ONE week of the regression is actually worth at the dial as currently set, measured by
  *  running `accrueSpirit` exactly once on the same probe world. It is NOT the dial: every bond
- *  write goes through the engine's `roundHalf`, which lands the result on `ECONOMY.bond.step`
+ *  write goes through the engine's `roundToStep`, which lands the result on `ECONOMY.bond.step`
  *  (0.5), so a rate of 0.4 or 0.3 rounds UP to a full half-point and a rate of 0.2 or 0.1 rounds
  *  DOWN to nothing. Printed rather than argued, so a row that looks like a dial that failed to
  *  apply can be read as the quantisation it is – and so the injection itself is visibly working,
@@ -1491,7 +1491,7 @@ function sweepBond(): void {
   console.log(`    "gap @ S3" = the mean of ${SEED_COUNT} PAIRED per-seed care−grind differences at the end of season 3; BAR 3 is ≥ 12 AND > 2×SEM.`)
   console.log('    "care med"/"grind med" = the arm\'s bond median over every resolved week (bar 4\'s own reading); "clamped" = either median at 0 or 100.')
   console.log('    ⚠⚠ "eff. step/wk" = what ONE week of the regression is actually worth at that dial, measured by running `accrueSpirit`')
-  console.log('       once. It is NOT the dial: `roundHalf` lands every bond write on `ECONOMY.bond.step` (0.5), so 0.4 and 0.3 round UP')
+  console.log('       once. It is NOT the dial: `roundToStep` lands every bond write on `ECONOMY.bond.step` (0.5), so 0.4 and 0.3 round UP')
   console.log('       to a full half-point and 0.2 and 0.1 round DOWN to zero. Rows that read identically are that quantisation, not a')
   console.log('       dial that failed to apply – a dial that never reached the engine would print ONE number down the whole column.')
   console.log('    ⚠⚠ "−25 heals in" = weeks of `accrueSpirit` for a bond of 45 to reach 70 again, MEASURED through the engine\'s own')

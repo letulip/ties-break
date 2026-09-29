@@ -159,7 +159,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type DiaryLifeStage, type LifeBeatKind } from '../src/shared/protocol'
 import { LIFE_BEAT_ROW_KINDS, lifeRowGlyph, LIFE_ROW_EMOJI } from '../src/components/screens/lifeRowGlyphs'
 import { DRAIN_ANSWER, drainCostOf, drainLifeBeats, drainLifeBeatsTallied, drainSkewLine } from '../tools/_lifeBeats'
-import { worldFunction, worldSource } from './worldSource'
+import { engineSource, worldFunction } from './worldSource'
 import { at, codeOf } from './helpers/source'
 
 const B = ECONOMY.bond
@@ -508,7 +508,14 @@ describe('wave 5 T8 D – nothing about the queue or the fork changed shape to t
   })
 
   it('⭐⭐ the whole of the raise is ONE call site in the engine, and the queue predicate is untouched', () => {
-    const source = codeOf(worldSource())
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06 – `worldSource()` → `engineSource()`, AND IT IS THE SCOPE
+    // ARGUMENT `tests/wave4-life-row-stamp.test.ts`' ARM 11 ALREADY WON. This case's sentence says «in
+    // the ENGINE», and `worldSource()` is `world.ts` plus `world/*.ts` – FLAT, so it cannot see
+    // `world/lifeBeat/*.ts`, which T6.8 has started filling with one module per beat kind. A guard
+    // whose scope is narrower than its sentence is the «unable to fail» family, and here it would go
+    // quiet in the worst direction: a second `'fork-psy'` raise added inside a kind module would not
+    // be counted. `engineSource()` recurses over `src/engine/`, so it is total by construction.
+    const source = codeOf(engineSource())
     // The positive control first: the sweep really finds the raise it is about to count.
     const raises = [...source.matchAll(/raiseLifeBeat\(\s*world,\s*'fork-psy'/g)]
     expect(raises.length, '⭐⭐⭐ ONE `raiseLifeBeat` at the reserved slot, and nowhere else').toBe(1)
@@ -604,7 +611,16 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // `lifeKind: 'own-key'` – and both halves of the pin move together, so «every site stamps a
     // kind» stays the total claim it became at D3. An UNSTAMPED site still reddens the second
     // assertion alone, which is the ratchet's whole point.
-    const code = codeOf(worldSource())
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06, AND THE RATCHET CAUGHT IT: the count went 8 → 7 the moment
+    // §9's leak moved to `world/lifeBeat/leak.ts`, because `worldSource()` reads `world.ts` plus
+    // `world/*.ts` FLAT and cannot see one directory deeper – the row had not gone anywhere, the
+    // SWEEP had. `engineSource()` recurses over the whole of `src/engine/`, which is the scope this
+    // case's own title («anywhere in the engine») has always claimed, and it puts the count back at 8
+    // with the leak's site named in `world/lifeBeat/leak.ts`. Measured both ways on the day:
+    // `worldSource()` 7, `engineSource()` 8. ⚠ A WIDENING, NOT A LOOSENING – `src/engine/spirit.ts`'s
+    // own life row is not of this literal shape, so no site is added by the wider corpus, and every
+    // assertion below still reddens on a new or unstamped site.
+    const code = codeOf(engineSource())
     // ⭐ RE-AIMED 20.09 BY v85 (wave 8 – T3), THE RATCHET DOING ITS JOB A SECOND TIME: the count
     // moved 5 → 6 because `landPregnancyPause` writes the wave's ONE new `type: 'life'` row – kept,
     // stamped `lifeKind: 'expecting'` – on the week the entries close. Both halves move together, so

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { after, region } from './helpers/source'
+import { componentLogic } from './worldSource'
 
 // SCREEN T - COACH MARKET. Facts about a template, which is exactly the kind of fact that silently
 // rots (tests/round13-nav.test.ts states the house rule). Registration, the door and the copy rules
@@ -12,6 +13,15 @@ const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.met
 const market = read('../src/components/screens/CoachMarketScreen.vue')
 const css = read('../src/style.css')
 const tokens = read('../docs/design/tokens.css')
+/** ⚠ THE TRAINING REGULATOR'S ROW LEFT THIS FILE ON 27.09 (T4.12 / E-02) and is now one component
+ *  across three screens. POSITIVE claims about it read `componentLogic`, per CLAUDE.md's helper rule;
+ *  `market` above is the .vue alone and stays the source for this file's negatives. */
+const presetRow = componentLogic('components/ui/PlanPresetRow.vue')
+/** ⚠ T6.4 · F-09 (28.09) – THE OTHER MEMBER OF THE PORTRAIT-STRIP FAMILY, read as the `.vue` ALONE.
+ *  The claim it carries is a POSITIVE one about markup in THAT file (its span asks for the shared box),
+ *  and the honest source for «which file carries this» is the file – `componentLogic` follows a
+ *  composable but not a child `.vue`, so it could not answer it either way. */
+const staffTab = read('../src/components/SupportStaffTab.vue')
 
 describe('screen T renders what the design specified', () => {
   it('groups by TIER as a section, not a filter – the chips scroll to a group', () => {
@@ -104,7 +114,13 @@ describe('screen T renders what the design specified', () => {
   })
 
   it('surfaces command failures the way every commanding screen does', () => {
-    expect(market).toContain('<p v-if="game.error" class="error">')
+    // ⚠ RE-AIMED BY E-09 / T4.8 (27.09), NOT WEAKENED. The screen rendered a hand-rolled paragraph on
+    // the error class – one of the five copies `ui/StoreError.vue` was written as a home for and never
+    // collected – and it carried no `role="status"`, so a refused hire was announced by nothing. The
+    // claim is the same claim; what changed is that the element belongs to the component now, so the
+    // pin asks for THAT rather than for markup the screen must no longer contain.
+    expect(market).toContain('<StoreError />')
+    expect(market).toMatch(/import StoreError from '[^']*StoreError\.vue'/)
   })
 })
 
@@ -137,8 +153,42 @@ describe('screen T, round 3', () => {
     // the narrow side of that line. The behavioural net is
     // tests/component/round42-coach-portrait.test.ts, which measures it through a mounted cascade
     // rather than through this file's source text.
-    expect(css).toMatch(/\.cm-art\s*\{[^}]*position: absolute/)
-    expect(css).toMatch(/\.cm-art\s*\{[^}]*mask-image: linear-gradient/)
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AT THE OBJECT RATHER THAN AT THE FILE, AND IT IS STRICTER.
+    // The two arms above read `.cm-art {`'s own declarations out of src/style.css. That rule is gone:
+    // `.staff-art` in `src/components/SupportStaffTab.vue` stated the same eight declarations, its own
+    // note said so – «THE MASK IS THE COACH STRIP'S, STOP FOR STOP» – and F-09's reading was that the
+    // note «records the identity, not a reason to copy it». The box is now `.portrait-strip` in
+    // src/style.css and the market's span carries it beside `.cm-art`.
+    //
+    // ⚠ SO THE ARMS NAME THE PATH, because that is what the claim now is (CLAUDE.md: a claim about
+    // which file carries which CSS declaration is a claim about the path, and `componentLogic` cannot
+    // answer it – it follows a composable but NOT a child `.vue`). And the fact that actually matters –
+    // the coach strip and the staff strip compute the SAME box – is not a text fact at all: it is
+    // measured on BOTH members through the real cascade at 375x667 in
+    // tests/component/principles-f09-shared-objects.test.ts, whose mutation arm reddens every member of
+    // a family when one shared declaration moves. A source pin could never have said that; the two
+    // copies agreed here only by inspection, and F-09's own evidence is a round-36 chase where exactly
+    // that assumption failed and phase 2 had to visit the siblings by hand.
+    expect(css, 'the strip is a shared object in this file').toMatch(/\.portrait-strip\s*\{[^}]*position: absolute/)
+    expect(css).toMatch(/\.portrait-strip\s*\{[^}]*mask-image: linear-gradient/)
+    expect(market, 'and the market span asks for it').toContain('class="cm-art portrait-strip"')
+    expect(staffTab, 'and so does the support seat, which is the whole point of sharing it').toContain(
+      'class="staff-art portrait-strip"',
+    )
+    // ⚠ The `img` rules did NOT join it, and that is F-09's own ruling: `.cm-art img`'s 12% is read off
+    // sixteen coach masters and `.staff-art img`'s 38% off two support masters, so they are two
+    // measurements rather than one. They stay per strip, and stay pinned here.
+    // ⚠⚠ AND THE TWO ARMS BELOW KEEP THEIR OLD SHAPE DELIBERATELY – a declaration in a NAMED FILE, which
+    // is the wrong shape for a shared object and the RIGHT one for a per-strip measurement (architect's
+    // ruling, 28.09). The split of claims is the point, and it is worth reading once: the strip's BOX is
+    // pinned BY VALUE, on both members, through the real cascade in
+    // tests/component/principles-f09-shared-objects.test.ts – because «the two strips compute the same
+    // box» is not a text fact and no source pin can say it. The WINDOW inside the box is one number per
+    // set of masters, so it is pinned BY DECLARATION here, where a reader looking for «which file decides
+    // the crop» will find it. The behavioural half of the window – that a `cover` on this box is a
+    // horizontal clip and nothing else, the A2c/d ruling – is measured through a mounted cascade in
+    // tests/component/round42-coach-portrait.test.ts.
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*height: 100%/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-fit: cover/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-position: /)
@@ -146,10 +196,17 @@ describe('screen T, round 3', () => {
     expect(market).not.toContain('width="46"')
   })
 
+  // ⚠ RE-AIMED 27.09 BY T4.12 / E-02, AND THE CLAIM GOT STRONGER RATHER THAN LOOSER. «the planner's
+  // control, not a new idiom» was pinned by this file's own template carrying `option-pill`. The three
+  // preset rows are now ONE component – `ui/PlanPresetRow.vue`, which the planner's own tab mounts too –
+  // so the pill markup legitimately left this screen, and «not a new idiom» is no longer a resemblance
+  // between two templates but the same file. Both halves are asserted: this screen mounts the shared
+  // row, and the shared row IS the pill row. The command's text is unmoved (`applyPlan`).
   it('carries the training regulator, writing through with the planner\'s own command', () => {
     // The weekly bill is `rate x hours(plan)`, so the plan is half of every price on this screen.
     expect(market).toContain('game.setPlan(WEEK_PLAN_PRESETS[k])')
-    expect(market).toContain('option-pill') // the planner's control, not a new idiom
+    expect(market).toContain('PlanPresetRow') // the planner's control, and now literally the same one
+    expect(presetRow).toContain('option-pill') // ...which is still the pill row, not a new idiom
     expect(market).toContain('coachHoursForPlan')
     // Prices come back from the ENGINE after the write - the screen must not reprice locally.
     expect(market).not.toContain('coachWeeklyCents(')

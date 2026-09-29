@@ -44,6 +44,10 @@ import { buyAsset, sellAsset, shopItem, ownedAssets } from '../src/engine/world'
 import { seasonIndexOf } from '../src/engine/world/ledger'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldEventCategory } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `pct` was one of ten live copies of the fraction spelling – see `tools/_fmt.ts`.
+// ⚠ `money` below STAYS local: this file's rule puts the sign OUTSIDE the dollar (`-$1,234`), which is
+// the opposite of the six-copy console spelling `_fmt.ts` holds, and it is a printed column.
+import { pctOf } from './_fmt'
 
 /** The rung §2e-1 names: «the good car». */
 const THE_CAR = 'car-good'
@@ -171,7 +175,6 @@ function shopShareOf(s: SeasonSpend): number {
 }
 
 const money = (cents: number): string => `${cents < 0 ? '-' : ''}$${Math.abs(Math.round(cents / 100)).toLocaleString('en-US')}`
-const pct = (x: number): string => `${(x * 100).toFixed(1)}%`
 
 export function main(argv: string[] = process.argv.slice(2)): void {
   const seedArg = argv.indexOf('--seeds')
@@ -201,7 +204,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     console.log(`   median reach: week ${median(unlocks).toFixed(0)} (season ${median(bySeason).toFixed(1)})`)
     console.log(`   earliest: week ${Math.min(...unlocks)} (season ${seasonIndexOf(Math.min(...unlocks))})`)
     const before4 = bySeason.filter((s) => s < 4).length
-    console.log(`   reachable before season 4: ${before4} of ${armsA.length} careers (${pct(before4 / armsA.length)})`)
+    console.log(`   reachable before season 4: ${before4} of ${armsA.length} careers (${pctOf(before4 / armsA.length)})`)
   }
 
   // --- 2. §2e-1 – THE CAR, BOUGHT AND SOLD -------------------------------------------------------
@@ -210,7 +213,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   for (const a of traded.slice(0, 5)) {
     const loss = a.soldForCents! - a.paidCents!
     console.log(
-      `   ${a.seed.padEnd(20)} bought w${a.boughtWeek} ${money(a.paidCents!)} -> sold w${a.soldWeek} ${money(a.soldForCents!)}  loss ${money(loss)} (${pct(loss / a.paidCents!)})`,
+      `   ${a.seed.padEnd(20)} bought w${a.boughtWeek} ${money(a.paidCents!)} -> sold w${a.soldWeek} ${money(a.soldForCents!)}  loss ${money(loss)} (${pctOf(loss / a.paidCents!)})`,
     )
   }
   if (traded.length) {
@@ -236,7 +239,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   }
   console.log(`   careers that bought anything before season 4: ${armsWithEarlyShop} of ${armsB.length}`)
   console.log(`   season-slots (career x season 0-3) where the shop was the LARGEST outgoing: ${dominantCount} of ${armsB.length * 4}`)
-  console.log(`   worst shop share of a season's outgoings, seasons 0-3: ${pct(worstShare)}`)
+  console.log(`   worst shop share of a season's outgoings, seasons 0-3: ${pctOf(worstShare)}`)
   // ⚠ WHO, exactly – an aggregate that hides which families it is about would be the wrong number.
   for (const a of armsB) {
     for (let s = 0; s < Math.min(4, a.spendBySeason.length); s++) {
@@ -244,7 +247,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
       if (share <= 0) continue
       const dom = dominantOutgoing(a.spendBySeason[s])
       console.log(
-        `     ${a.preset} · ${a.seed} · season ${s}: shop ${pct(share)} of outgoings, largest = ${dom.cat} (${pct(dom.share)})`,
+        `     ${a.preset} · ${a.seed} · season ${s}: shop ${pctOf(share)} of outgoings, largest = ${dom.cat} (${pctOf(dom.share)})`,
       )
     }
   }

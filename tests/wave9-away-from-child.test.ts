@@ -33,6 +33,10 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // the mechanic no longer uses.
 import { AWAY_OFTEN } from '../src/engine/kidLife'
 
+/** ⚠⚠ NOT THE SHARED `weekAtAge` (26.09, T5.11), AND THE DIFFERENCE IS THE FAILURE MODE. This one
+ *  loops unbounded and can never throw; the `tests/helpers/career.ts` one stops at `40 * 52` and throws
+ *  `no week reaches age N`. On a profile no week satisfies, this hangs where the shared one names the
+ *  problem – which is a reason to migrate it later with its own control, not to fold it in now. */
 function weekAtAge(world: WorldState, years: number): number {
   let w = 0
   while (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) < years) w += 1

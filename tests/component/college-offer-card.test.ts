@@ -306,9 +306,19 @@ describe('⭐⭐ the card says what each college place costs', () => {
       'no place is preselected',
     ).toHaveLength(0)
     // Every answer is still an equal, undecorated control.
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AND IT IS STRICTER, NOT LOOSER. It read
+    // `toEqual(['fork-answer'])`, i.e. the literal class list; the answer row is a shared object now
+    // (`.dialog-option` in src/style.css, carried beside the card's own class) so that list has two
+    // members. What ruling 4 is about is that no answer is decorated DIFFERENTLY FROM ITS SIBLINGS –
+    // the card may not point at one – and that claim is asserted directly below: every answer's class
+    // list is the SAME set. A per-answer literal could never have said that; it only happened to imply
+    // it while there was one class to name.
+    const answerClasses = w.findAll('.fork-answer').map((a) => [...a.classes()].sort().join(' '))
+    expect(answerClasses.length, 'there are answers to compare').toBeGreaterThan(1)
+    expect(new Set(answerClasses).size, 'no answer wears a class its siblings do not').toBe(1)
     for (const a of w.findAll('.fork-answer')) {
       expect(a.attributes('disabled')).toBeUndefined()
-      expect(a.classes()).toEqual(['fork-answer'])
+      expect(a.classes(), 'and the shared answer object is what they wear').toContain('dialog-option')
     }
     w.unmount()
   })

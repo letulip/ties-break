@@ -10,7 +10,16 @@ last-reviewed: 2026-09-18
 
 Four builders, four gates, one day. Each builder's full report lives in the session; this file is
 the distilled record the repo keeps. Read beside [the brief](life-wave-7-builder-2026-09.md), [the
-strings table](life-wave-7-strings-2026-09.md) (65 drafts, ALL awaiting his pass) and [the wedding
+strings table](life-wave-7-strings-2026-09.md) (ALL awaiting his pass)
+
+⚠⚠ **THIS LINE CARRIED A COUNT AND IT DISAGREED WITH THE TABLE'S OWN, 26.09.** It said «65 drafts»
+while the table's §0 said 96, in two places; both were prose, neither was pinned, and the
+disagreement predates ruling 19. Which scope 65 meant cannot be recovered, so no third number is
+being put into circulation here – the count is simply gone from this sentence. Ruling 19 (B-08) then
+removed four of §1's rows, so both figures were stale regardless. §0 no longer states a total, and
+§1 is pinned row by row against `src/engine/world/lifeBeat.ts` by
+`tests/wave7-strings-roundtrip.test.ts`, which is where its count lives. §§2–7 remain unpinned and
+are a queued test item (`docs/backlog/the-quality-rig.md`) and [the wedding
 spec](../specs/the-wedding-2026-09.md) (predicted before measured).
 
 ## What shipped, task by task
@@ -69,6 +78,12 @@ REMOVED price.
    the throttle is one drafted hazard constant.
 4. The march-entry-open 24.6% vs live 91% disagreement (K5 addendum) – which instrument reads the
    design's truth.
+   ⚠ **Half of this is settled, 26.09, and the half that is his is still open.** C-07 of the
+   principles review found the fact certifying a March entry that the college freeze refuses, and
+   his ruling 3(a) gates it on `!inCollege(world)` – so the COLLEGE half of the disagreement is
+   gone by construction: 24.6 % -> 0.0 %, measured on 130 college pause-weeks. What remains his is
+   the original question on the weeks she is NOT at college: whether 24.6 % or the live 91 % reads
+   the design's truth there. Nothing about the independent weeks moved.
 
 ---
 

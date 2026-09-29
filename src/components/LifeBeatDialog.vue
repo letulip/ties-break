@@ -64,6 +64,8 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import type { MemoryFace } from '../shared/avatarEmotion'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { onRadioGroupKey } from '../composables/radioGroupKeys'
+import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 
 const game = useGameStore()
@@ -203,20 +205,11 @@ async function finishReply(): Promise<void> {
   }
 }
 
-/** ⭐ THE RADIO GROUP'S OWN KEYS, `PrologueCard.vue`'s handler and its documented variation: the
- *  arrows move FOCUS and do not select, because selecting on focus would answer her with an arrow
- *  key and take the week with it. Space and Enter are the button's own. */
-function onGroupKey(event: KeyboardEvent): void {
-  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-  if (!forward && !back) return
-  const group = event.currentTarget as HTMLElement
-  const items = [...group.querySelectorAll<HTMLButtonElement>('button:not([disabled])')]
-  const at = items.indexOf(document.activeElement as HTMLButtonElement)
-  if (at < 0) return
-  event.preventDefault()
-  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
-}
+// ⭐ THE RADIO GROUP'S OWN KEYS ARE `composables/radioGroupKeys.ts`' SINCE F-10 / T4.10 (27.09) – this
+// was one of four byte-identical copies whose docstrings cited each other. The documented variation
+// that used to be argued here is argued there, this card's reason included: the arrows move FOCUS and
+// do not select, because selecting on focus would answer her with an arrow key and take the week with
+// it. Space and Enter are the button's own.
 
 // D1 – IT IS A MODAL, IT SAYS SO, AND IT HOLDS THE KEYBOARD. Escape is passed no handler, for the
 // reason at the top of this file: there is no way out of this card that is not an answer.
@@ -279,6 +272,21 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         {{ line }}
       </p>
 
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW HER WORDS – ForkDialog's
+           own arrangement and its reason. There is no dismiss on this card because a dialog the player
+           could walk away from would answer HER by walking away (the file header), so a refused
+           Proceed left her line on screen, the world unmoved and nothing said about why. Reached
+           without any engine bug by a second tab's SAVE_CONFLICT, whose sentence names the way out,
+           and by B-02's refused mutation.
+           ⚠ ABOVE the radiogroup and its Proceed, which is the structural rule the block below already
+           states: in either phase the LAST control in the card's flow is the one `fits.ts` measures.
+           The card is a plain tenant of `.dialog-card`, so it is capped and scrolls and a refusal line
+           cannot push that control off the phone – measured with the line up at 375x667 and 320x568 in
+           tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING. This card owns no sentence of its own and still owns none: `StoreError`
+           renders whatever the store already wrote (invariant 4). -->
+      <StoreError />
+
       <!-- ⭐⭐⭐ WHAT HE MAY SAY BACK – a real radio group, named by her line, because these controls
            SELECT rather than advance (round 40 #1). The order is the engine's. Every control is the
            same class: nothing here marks one of them as the one to take, on a card whose whole
@@ -295,7 +303,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         class="life-beat-choices"
         role="radiogroup"
         aria-labelledby="life-beat-said"
-        @keydown="onGroupKey"
+        @keydown="onRadioGroupKey"
       >
         <button
           v-for="option in prompt.options"
@@ -319,7 +327,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            honest in both. -->
       <button
         v-else
-        class="life-beat-listen-done"
+        class="life-beat-listen-done dialog-proceed"
         type="button"
         :disabled="busy"
         @click="finishReply()"
@@ -339,7 +347,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            answers to one question. -->
       <button
         v-if="replying === null && chosen !== null"
-        class="life-beat-proceed"
+        class="life-beat-proceed dialog-proceed"
         type="button"
         :disabled="busy"
         @click="confirm()"
@@ -474,26 +482,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
    ⭐ ROUND 42 #8 – `.life-beat-proceed` is the SAME rule on purpose: the Proceed under the answers
    and the detour's `done` are the same kind of control (the one that records), so they wear one
    idiom and cannot drift apart. */
-.life-beat-listen-done,
-.life-beat-proceed {
-  width: 100%;
-  padding: 11px 13px;
-  text-align: center;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.35;
-  cursor: pointer;
-}
-
-.life-beat-listen-done:disabled,
-.life-beat-proceed:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – THE IDIOM IS `.dialog-proceed` IN src/style.css NOW, and BOTH controls
+   carry it. The note above says the two «wear one idiom and cannot drift apart», and F-09 found a third
+   and a fourth copy of that idiom (`.knock-proceed`, `.birthday-proceed`) which could and did have to be
+   kept in step by hand. Taking only `.life-beat-proceed` into the shared object would have split the
+   pair this note exists to hold together, so the `done` is a member too. Eleven declarations and the
+   disabled pair left this block; the Proceed's own 8px below is all that is left, and that is exactly
+   the one thing that separated the two. */
 
 /* The Proceed keeps the answers' own vertical rhythm under the group. */
 .life-beat-proceed {

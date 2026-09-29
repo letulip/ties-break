@@ -70,6 +70,12 @@ import { coachIncludesPhysio } from '../src/engine/coach'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
+// T5.12 · F-04, 27.09. `mean` / `stddev` are re-exported below from `tools/_stats.ts`, byte-identical
+// – the names and the import path do not move. `money` replaces the local `dollars` at
+// `economyLine` and `runfatRow`: two FUNCTION-SCOPED copies of the same body the six top-level
+// `money`s carry, which F-04's census missed because it greps for the name at column 0.
+import { mean, stddev } from './_stats'
+import { money } from './_fmt'
 
 export const START_AGE_YEARS = 14
 export const SEEDS_PER_CELL = 30
@@ -1186,18 +1192,17 @@ export function runCell(profile: Profile, policy: Policy, horizonWeeks: number, 
 }
 
 // --- stats ----------------------------------------------------------------------
-
-export function mean(xs: number[]): number {
-  if (xs.length === 0) return 0
-  return xs.reduce((s, x) => s + x, 0) / xs.length
-}
-
-/** Population standard deviation (the 30 seeds are the whole population of the cell). */
-export function stddev(xs: number[]): number {
-  if (xs.length === 0) return 0
-  const m = mean(xs)
-  return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)))
-}
+//
+// ⚠⚠ THE BODIES MOVED TO `tools/_stats.ts` ON 27.09 (T5.12 · F-04) AND THESE TWO NAMES DID NOT.
+// They were byte-identical to `econ-bench.ts:1070,1076` – the same two functions written twice in
+// two live benches – so both files now import the one body and re-export it under its historical
+// name. Nothing about the public shape moved: same names, same behaviour (empty array is 0), same
+// import path for every reader.
+//
+// The local doc comment that stood on `stddev` here, kept verbatim because it says something this
+// file knows and `_stats.ts` does not: *"Population standard deviation (the 30 seeds are the whole
+// population of the cell)."*
+export { mean, stddev }
 
 export interface CellStats {
   profile: Profile
@@ -1514,13 +1519,12 @@ function tierSplit(c: CellStats): string {
  *  per season and OF WHAT TIER, what the trips + fees cost, total family spend, end funds and the
  *  survival rate. A heavier body cost should show up HERE as fewer / cheaper events. */
 function economyLine(c: CellStats): string {
-  const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
   return (
     '  ' +
     padEnd(`economy ${c.policy.id}`, 20) +
     `ent ${c.entriesPerSeason.toFixed(1)}/s (${tierSplit(c)})` +
-    ` · travel ${dollars(c.travelPerSeasonCents)}/s · fees ${dollars(c.entryFeePerSeasonCents)}/s` +
-    ` · spend ${dollars(c.totalSpendPerSeasonCents)}/s · endFunds ${dollars(c.endFundsMeanCents)}` +
+    ` · travel ${money(c.travelPerSeasonCents)}/s · fees ${money(c.entryFeePerSeasonCents)}/s` +
+    ` · spend ${money(c.totalSpendPerSeasonCents)}/s · endFunds ${money(c.endFundsMeanCents)}` +
     ` · survived ${c.survivalPct.toFixed(0)}%`
   )
 }
@@ -2241,7 +2245,6 @@ function runfatHeader(): string {
 
 function runfatRow(scenario: Scenario, c: CellStats): string {
   const ladder = scenario.patch.runFatigueLadder ?? ECONOMY.condition.runFatigueLadder
-  const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
   const cells = [
     scenario.id.replace('runfat-', ''),
     `[${ladder.join(',')}]`,
@@ -2255,9 +2258,9 @@ function runfatRow(scenario: Scenario, c: CellStats): string {
     c.entriesPerSeason.toFixed(1),
     c.matchesPerSeason.toFixed(1),
     c.winPct.toFixed(1),
-    dollars(c.travelPerSeasonCents),
-    dollars(c.totalSpendPerSeasonCents),
-    dollars(c.endFundsMeanCents),
+    money(c.travelPerSeasonCents),
+    money(c.totalSpendPerSeasonCents),
+    money(c.endFundsMeanCents),
     c.survivalPct.toFixed(0),
     c.medicalBlocksPerSeason.toFixed(2),
     c.medicalWithdrawalsPerSeason.toFixed(2),

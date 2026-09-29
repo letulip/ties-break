@@ -88,26 +88,86 @@ function runStrain(tier: TierId, matches: number): number {
  *  one property the shared ladder exists for: the fatigue bench's `--scenario runfat-*` sections
  *  swap the knob to compare the owner's four ladders, and with a frozen index the KID moved while
  *  the cohort stayed on variant C – so the comparison the owner reads to pick a ladder measured
- *  half the game. Keyed on array IDENTITY (withScenario patches in a fresh copy and restores the
- *  original instance), which is also how the rest of the engine treats ECONOMY: a knob object is
- *  replaced, never scribbled on in place. */
+ *  half the game. */
 // ⚠ KEYED ON BOTH LADDERS SINCE R15-6. The strain column reads `runFatigueExtra`, which is
 // per-family now (C for domestic+J, the owner's D for the W rungs), so the index is a function of
 // TWO knob arrays and must watch both identities - a cache keyed on the C ladder alone survived a
 // swap of the W one and quietly served the cohort stale professional strains. Caught by this
 // round's own attribution probe, not by a test: the probe swapped `runFatigueLadderWta` mid-process
 // and the rivals did not move.
+//
+// ⚠⚠ AND KEYED ON THE CONTENT OF ALL FIVE KNOBS SINCE C-01 (principles review, 26.09). THE NOTE
+// ABOVE STATED THE RIGHT RULE AND THE KEY KEPT UNDERCOUNTING IT – a third time, and the sentence
+// that let it happen is kept here as history, verbatim: «Keyed on array IDENTITY (withScenario
+// patches in a fresh copy and restores the original instance), which is also how the rest of the
+// engine treats ECONOMY: a knob object is replaced, never scribbled on in place.» Two things were
+// false about it by 26.09. FIRST, `runStrain` reads FIVE knobs, not two: `matchDrain` takes
+// `matchFatigue.straightSets` and `tierMatchFatigue[tier]`, and `ladderFor` picks
+// `runFatigueLadderDeep` for every draw over 32 – which arrived on 14.08 (`84c7d12e`) and never
+// joined the key. SECOND, THE REPO'S OWN BENCHES DO SCRIBBLE IN PLACE: `tools/season-equation.ts`'s
+// `withDials` patches `tierMatchFatigue[t]` and `matchFatigue.*` on the live object, which is the
+// one shape an identity key cannot see. Measured on the review's probe: a `tierMatchFatigue +3`
+// dial moved the kid's w35 title from 24 to 39 and left all 199 rivals at 24.
+//
+// So the key is now the VALUES – `sameNumbers` over the three ladders plus the 16 rungs of
+// `tierMatchFatigue`, and one integer compare for `straightSets`. Nothing is allocated on a hit
+// (the cache holds copies, taken on the rebuild that filled it), so a knob patched in place is
+// caught by the same test that catches a knob replaced. ⚠ Do NOT narrow this back to identity for
+// the arrays: that is the shape that has now failed three times, and `tests/principles-c01-rival-memo.test.ts`
+// is the arm that reddens on it.
 let runsIndexCache: {
-  ladder: readonly number[]
-  ladderWta: readonly number[]
+  knobs: StrainKnobs
   byPoints: Map<number, RivalRun[]>
   fallback: RivalRun
 } | null = null
 
-function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } {
-  const ladder = ECONOMY.condition.runFatigueLadder
-  const ladderWta = ECONOMY.condition.runFatigueLadderWta
-  if (runsIndexCache && runsIndexCache.ladder === ladder && runsIndexCache.ladderWta === ladderWta) {
+/** Every knob `runStrain` reads, as values rather than references – the cache's key. The rung
+ *  surcharges are held in `TIER_LADDER` order, which is the order the index is built in, so the
+ *  key covers exactly the cells the table has. */
+interface StrainKnobs {
+  ladder: readonly number[]
+  ladderWta: readonly number[]
+  ladderDeep: readonly number[]
+  straightSets: number
+  tierSurcharge: readonly number[]
+}
+
+function sameNumbers(a: readonly number[], b: readonly number[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}
+
+/** Copies, not references: a cached reference to a knob the benches patch in place would compare
+ *  equal to itself forever, which is the defect this key replaces. */
+function strainKnobs(): StrainKnobs {
+  const c = ECONOMY.condition
+  return {
+    ladder: [...c.runFatigueLadder],
+    ladderWta: [...c.runFatigueLadderWta],
+    ladderDeep: [...c.runFatigueLadderDeep],
+    straightSets: c.matchFatigue.straightSets,
+    tierSurcharge: TIER_LADDER.map((tier) => c.tierMatchFatigue[tier]),
+  }
+}
+
+function strainKnobsUnchanged(knobs: StrainKnobs): boolean {
+  const c = ECONOMY.condition
+  if (knobs.straightSets !== c.matchFatigue.straightSets) return false
+  if (!sameNumbers(knobs.ladder, c.runFatigueLadder)) return false
+  if (!sameNumbers(knobs.ladderWta, c.runFatigueLadderWta)) return false
+  if (!sameNumbers(knobs.ladderDeep, c.runFatigueLadderDeep)) return false
+  for (let i = 0; i < TIER_LADDER.length; i++) {
+    if (knobs.tierSurcharge[i] !== c.tierMatchFatigue[TIER_LADDER[i]]) return false
+  }
+  return true
+}
+
+/** The table plus its last-resort row – what one freshness decision buys. */
+type RunsIndex = { byPoints: Map<number, RivalRun[]>; fallback: RivalRun }
+
+function runsIndex(): RunsIndex {
+  if (runsIndexCache && strainKnobsUnchanged(runsIndexCache.knobs)) {
     return runsIndexCache
   }
   const byPoints = new Map<number, RivalRun[]>()
@@ -130,7 +190,9 @@ function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } 
   // matches no tier at all (a hand-edited or future-tier save). One match at the entry tier: never a
   // crash, and never free. Her first match of a run pays 0 ladder, so this is pure matchDrain.
   const fallback: RivalRun = { tier: TIER_LADDER[0], matches: 1, strain: runStrain(TIER_LADDER[0], 1) }
-  runsIndexCache = { ladder, ladderWta, byPoints, fallback }
+  // The snapshot is taken AFTER the build, so the key can never describe knobs the table was not
+  // built on (the build reads them live; nothing between the two lines can move them).
+  runsIndexCache = { knobs: strainKnobs(), byPoints, fallback }
   return runsIndexCache
 }
 
@@ -154,7 +216,24 @@ function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } 
  *  hand-edited save; it reads as the cheapest first-round exit (Local, one match), which is the
  *  right instinct for an unknown row: never free, never inflated. */
 export function reconstructRun(result: SeasonResult): RivalRun {
-  const { byPoints, fallback } = runsIndex()
+  return reconstructRunIn(runsIndex(), result)
+}
+
+/** ⭐ THE INDEX IS RESOLVED ONCE PER FIELD READ, NOT ONCE PER ROW (C-01, 27.09). The freshness
+ *  decision is a comparison over ~40 numbers – cheap per call, but `rivalConditions` reconstructs
+ *  one run per ledger row in the window (~1400 rows at the shipped scale: the review's ~22.3 events
+ *  per rival per season over 199 rivals, inside `rivalFatigueWindowWeeks`), so paying it per ROW
+ *  TRIPLED the call. Measured on a quiet machine (load 2.8-3.2, three interleaved sweeps,
+ *  `docs/review-principles-2026-09-26/probes/rival-memo-cost.ts`) – `rivalConditions`, 1400 rows,
+ *  ms/call:
+ *      the two-ladder identity key (pre-fix)   0.229 / 0.231 / 0.235
+ *      the content key, checked once per ROW   0.613 / 0.629 / 0.638
+ *      the content key, resolved HERE          0.199 / 0.208
+ *  Same table, same answer: no knob can move between two rows of one read, and a single field read
+ *  asking ONE table is the stricter property anyway. `reconstructRun` keeps its signature for the
+ *  tests and for `tools/rival-fatigue-audit.ts`. */
+function reconstructRunIn(index: RunsIndex, result: SeasonResult): RivalRun {
+  const { byPoints, fallback } = index
   const candidates = byPoints.get(result.points)
   if (result.tier !== undefined) {
     const exact = candidates?.find((c) => c.tier === result.tier)
@@ -198,12 +277,13 @@ function walkWindow(runs: Map<number, RivalRun[]>, week: number): number {
  *  Zero RNG draws. For a whole field prefer `rivalConditions`, which indexes the ledger once. */
 export function rivalCondition(results: readonly SeasonResult[], playerId: string, week: number): number {
   const runs = new Map<number, RivalRun[]>()
+  const index = runsIndex()
   const from = week - ECONOMY.condition.rivalFatigueWindowWeeks + 1
   for (const r of results) {
     if (r.playerId !== playerId || r.week < from || r.week > week) continue
     const list = runs.get(r.week)
-    if (list) list.push(reconstructRun(r))
-    else runs.set(r.week, [reconstructRun(r)])
+    if (list) list.push(reconstructRunIn(index, r))
+    else runs.set(r.week, [reconstructRunIn(index, r)])
   }
   return walkWindow(runs, week)
 }
@@ -214,6 +294,7 @@ export function rivalCondition(results: readonly SeasonResult[], playerId: strin
  *  `rivalMatchPlayer` treats a missing entry as exactly that. */
 export function rivalConditions(results: readonly SeasonResult[], week: number): Map<string, number> {
   const from = week - ECONOMY.condition.rivalFatigueWindowWeeks + 1
+  const index = runsIndex()
   const byPlayer = new Map<string, Map<number, RivalRun[]>>()
   for (const r of results) {
     if (r.week < from || r.week > week) continue
@@ -223,8 +304,8 @@ export function rivalConditions(results: readonly SeasonResult[], week: number):
       byPlayer.set(r.playerId, runs)
     }
     const list = runs.get(r.week)
-    if (list) list.push(reconstructRun(r))
-    else runs.set(r.week, [reconstructRun(r)])
+    if (list) list.push(reconstructRunIn(index, r))
+    else runs.set(r.week, [reconstructRunIn(index, r)])
   }
   const conditions = new Map<string, number>()
   for (const [playerId, runs] of byPlayer) conditions.set(playerId, walkWindow(runs, week))

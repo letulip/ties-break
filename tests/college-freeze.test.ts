@@ -30,21 +30,15 @@
 // ⚠ THE FACTS ARE PINNED, NOT THE STRINGS. Every assertion below is a property of the world – the
 // calendar has future events, the ledger has rows, the table has somebody holding a point, the fee
 // came back, no week ticked – so a re-tuned calendar or a re-worded feed row cannot make it lie.
-import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
-  skipTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   createWorld,
   tickWeek,
   enterEvent,
   answerFork,
-  pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
-  closeTournament,
   inCollege,
   COLLEGE_REVEAL_REFUSAL,
   RELEASE_LINE_PREFIX,
@@ -58,28 +52,7 @@ import { ENDINGS } from '../src/engine/ending'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
- *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
- *  complaint was that the year reported the tournament and ticked on past it. So every walk here
- *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
- *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
- *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
- *  The full note is in tests/college-league.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
+import { finishAnyReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 /** A career that has actually been played – a calendar, a cohort with a results ledger behind it and
  *  a junior table with real points on it. `tickWeek` is total (only `advanceWeeks` halts), so the
@@ -96,13 +69,6 @@ function playedCareer(seed: string, weeks: number): { world: WorldState; rng: Rn
     drainLifeBeats(world)
   }
   return { world, rng }
-}
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
 }
 
 /** Book the latest entry she can afford inside `weeksOut`, exactly as the probe does. ⚠ NOTHING IS
@@ -185,20 +151,26 @@ function spendTheYears(world: WorldState, rng: Rng): void {
   // ⚠ ROUND 26 #6 re-aim: a year now holds THREE stops at the outside – the championship, her
   // birthday, and the year's end – so the ceiling goes from 3 presses a year to 4. Nothing measured
   // below moved; the walk simply answers one more question, the way a player does.
-  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), BUDGET AND ONE ANSWER – NO ASSERTION BELOW MOVED. Ruling 2(a)
+  // made a blocking life beat pause the college year the way the birthday does (MEASURED before the
+  // ruling: 23 of 217 year-calls ticked past an unanswered blocking row), so a year can now raise one
+  // more question and a walk that did not answer it stalled: `drainLifeBeats` is the player's own
+  // answer, priced ZERO, and the ceiling moves by one press a year. This is the same re-aim the
+  // round-26 collect made when the championship became a pause – «a walk answering one pause but not
+  // the other stalls on the first league week».
+  for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    pressCollegeYear(world, rng)
   }
 }
 
-/** Press until ONE more year is banked – the boundary every card is read at. */
+/** Press until ONE more year is banked – the boundary every card is read at.
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) for the reason written at `spendTheYears` above: the budget is a
+ *  GUARD and the loop still terminates on the year being banked, so this is «press until it is
+ *  banked» with one more press of margin, plus her card answered. */
 function spendOneYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
-  for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+    pressCollegeYear(world, rng)
   }
 }
 
@@ -249,7 +221,13 @@ describe('the freeze keeps the world playing', () => {
       table.filter((r) => r.points > 0).length,
       'somebody in the field holds a junior point – 0 here is the all-ties-at-first bug',
     ).toBeGreaterThan(0)
-  }, 120_000)
+  // ⚠⚠ EVERY PER-TEST BUDGET IN THIS FILE IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: the two over the
+  // ceiling went 120 s -> 60 s on a measurement and were then DELETED, and the five that already sat
+  // AT 60 s went with them – at 60 s all of them only restated `vite.config.ts`'s own unit
+  // `testTimeout`, and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 2.09 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 })
 
 // =================================================================================================
@@ -291,7 +269,7 @@ describe('rule 1 – an outstanding entry is released when the freeze starts, an
       world.internationalEntryWeeks.includes(event.week) || world.proEntryWeeks.includes(event.week),
       'the year\'s slot follows the fee back – she never participated',
     ).toBe(false)
-  }, 60_000)
+  })
 
   it('⭐ AND IT REFUNDS PAST THE ENTRY DEADLINE TOO – the one release that does', () => {
     // Lists close two weeks out (`deadlineWeek = week - 2`), so an entry whose play week straddles
@@ -334,7 +312,7 @@ describe('rule 1 – an outstanding entry is released when the freeze starts, an
     expect(refunds, 'full refund – she is not pulling out, the game is').toHaveLength(1)
     expect(refunds[0].amountCents).toBe(TIERS[event.tier].entryFeeCents)
     expect(world.penalties, 'and no price for the closed list either').toHaveLength(0)
-  }, 60_000)
+  })
 
   it('⚠ the feed does not tell him HE withdrew her – the 05.08 misattribution bug, in college colours', () => {
     const { world, rng } = playedCareer('r24-release-voice', 60)
@@ -350,7 +328,7 @@ describe('rule 1 – an outstanding entry is released when the freeze starts, an
       expect(row.text.startsWith(RELEASE_LINE_PREFIX.parent), row.text).toBe(false)
       expect(row.text.startsWith(RELEASE_LINE_PREFIX.college), row.text).toBe(true)
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -398,7 +376,7 @@ describe('rule 2 – resumeFromCollege will not tick past an open reveal', () =>
     expect(world.rngMain.n, 'and the MAIN stream did not move either').toBe(drawsBefore)
     expect(world.college!.years, 'no year was opened or banked').toHaveLength(0)
     expect(world.ending, 'the epilogue is still there to ask the question again').toBe(latchBefore)
-  }, 60_000)
+  })
 
   it('⭐ and the refusal is not a dead end: close the reveal and the same click works', () => {
     const { world, rng } = atCollegeWithAnOpenReveal('r24-refuse-recover')
@@ -409,7 +387,7 @@ describe('rule 2 – resumeFromCollege will not tick past an open reveal', () =>
     spendOneYear(world, rng)
     expect(world.week, 'the year is spent, exactly as it always was').toBe(from + WEEKS_PER_YEAR)
     expect(world.college!.years).toHaveLength(1)
-  }, 60_000)
+  })
 
   it('⚠ the guard stands in BOTH positions – at entry and inside the loop', async () => {
     // ⚠ A SOURCE PIN, AND IT IS THE HONEST INSTRUMENT HERE RATHER THAN A SHORTCUT. Rule 3 makes a
@@ -461,7 +439,7 @@ describe('rule 3 – tickWeek plays no tournament for a girl who is at college',
       fullRanking(world).filter((r) => r.points > 0).length,
       'the table still has points on it',
     ).toBeGreaterThan(0)
-  }, 120_000)
+  })
 })
 
 // =================================================================================================

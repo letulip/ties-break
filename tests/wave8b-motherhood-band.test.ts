@@ -58,14 +58,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   comebackAtReturn,
   createWorld,
-  kidAgeExact,
   landBirth,
   motherhoodBandAt,
   type WorldState,
 } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
 import { PREGNANT_LAST_WEEKS } from '../src/shared/avatarEmotion'
-import type { LoveEpisode } from '../src/shared/protocol'
+import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY.motherhood` – wave 3's ARM 2
 // law, kept by every file of this wave: an expectation read out of the thing under test moves with
@@ -77,21 +77,6 @@ beforeEach(() => {
 })
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock. */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
-}
-
 /** A married career standing at 28, carrying a pregnancy announced on her current week. The RECORD
  *  is the T3 suite's own `expectingFrom` shape – the dates are the brief's arithmetic, not the
  *  economy's – so a retune cannot quietly move what this file measures. */

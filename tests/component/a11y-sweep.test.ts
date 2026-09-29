@@ -35,7 +35,7 @@
 //   D10 `role="heading"` removed from the date line -> red.
 //   D12 the `:role` binding removed from the trophy cell -> red on the not-yet-won plate only, which
 //       is exactly the half of the cabinet the defect was about.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { mount, type VueWrapper } from '@vue/test-utils'
@@ -47,13 +47,19 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TrophiesScreen from '../../src/components/screens/TrophiesScreen.vue'
 import StatRow from '../../src/components/ui/StatRow.vue'
-import InboxSheet from '../../src/components/InboxSheet.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { weekDateLine, weekLabel } from '../../src/shared/dates'
 import { latestNewsId } from '../../src/composables/inboxCue'
+import { mountInbox } from './inbox'
 import type { CareerMeta, KnockPrompt, SeasonSummary, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+// ⚠ E-P11 (28.09) needs the PHONE, because the ladder only elides on one – see its own block at the
+// foot of this file. Nothing else here is viewport-dependent.
+import { PHONE, setViewport, type Viewport } from './fits'
+
+/** happy-dom's own default window, restored after the one block that changes it. */
+const HAPPY_DOM_DEFAULT: Viewport = { width: 1024, height: 768 }
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND HomeScreen READS IT AT SETUP. Same finding and the same
 // shim as tests/component/home-strip-and-mail.test.ts and round20-ui.test.ts, argued at length
@@ -257,6 +263,9 @@ function mountMore(careers: CareerMeta[] = []) {
   // MoreScreen asks the worker for the career list when it mounts, and there is no worker in this
   // runner. The list is supplied above, so the call has nothing to do here but fail.
   store.refreshCareers = async () => {}
+  // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+  // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+  store.refreshSlots = async () => {}
   return mount(MoreScreen, { global: { stubs: { teleport: true } } })
 }
 
@@ -480,8 +489,13 @@ describe('D13 - the one irreversible press has a name of its own', () => {
     // A career far enough in to have kit letters waiting; the sheet opens on the list, and a letter
     // has to be OPEN before its Sign exists at all.
     const snapshot = snapshotAfter(30)
-    withSnapshot(snapshot)
-    const wrapper = mount(InboxSheet, { global: { stubs: { teleport: true } } })
+    // ⚠ REPOINTED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly snapshot carries
+    // the letters this week still needs and `loadInbox()` answers with the career's whole post – so an
+    // unanswered query renders NO rows at all, and this case's `if (!row)` fallback would become the
+    // only path it could ever take. ⚠ MEASURED, BECAUSE THE HONEST VERSION MATTERS: `careerSnapshot(30)`
+    // holds ZERO letters today, so the fallback was ALREADY the live path and nothing behavioural moves
+    // here. The repoint is what stops the query being the reason the day the fixture has post.
+    const wrapper = await mountInbox(snapshot, { global: { stubs: { teleport: true } } })
 
     const row = wrapper.findAll('.inbox-row').find((r) => r.text().length > 0)
     if (!row) {
@@ -570,6 +584,170 @@ describe('D10 - ...and the OTHER date line, which was on nobody\'s list', () => 
     const heading = wrapper.find('[role="heading"][aria-level="1"]')
     expect(heading.exists(), 'it was a bare <p>, reachable only as free text').toBe(true)
     expect(heading.text()).toContain(weekDateLine(snapshot.week))
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// E-P11 / E-P12 – A SENTENCE THAT ONLY A MOUSE COULD REACH
+// =================================================================================================
+//
+// Lane E's accessibility sweep (docs/review-principles-2026-09-26/05-ui.md) found three surfaces
+// where a FACT lives only in a `title` attribute: E-P11 (which rungs the ladder's «…» chip hides),
+// E-P12 (what each segment of a segmented row is for) and E-P13 (the vacation card's gain and price).
+// A `title` is a desktop tooltip: it is not in the accessible name, it is not spoken, and a phone has
+// no hover at all. All three rows propose the same repair – route the sentence into
+// `aria-describedby`, which must point at an ELEMENT, so the app needed a screen-reader-only class it
+// did not have (`docs/now-next-later.md`, queued at T6.4). One utility, three consumers.
+//
+// ⚠ NO NEW WORDS ANYWHERE, and that is the whole reason these rows need no owner ruling: the
+// described element holds the sentence the `title` ALREADY holds, character for character. The pins
+// below are equality against the element's own `title`, never a literal – a test that quoted the
+// sentence could go green while the two drifted apart, which is the defect one layer up.
+//
+// ⚠⚠ AND `accName` ABOVE DOES NOT RESOLVE `aria-describedby` – it walks `aria-label` then
+// `aria-labelledby` and stops, because a DESCRIPTION is not a name. So these tests resolve the ids
+// against the rendered tree themselves and assert the DESCRIBED TEXT. Asserting that the attribute is
+// merely PRESENT would pass over an `aria-describedby` pointing at a missing or empty element, which
+// is precisely the class of defect E-P11 to E-P13 are in: a promise on the element and nothing behind
+// it. `describedText` refuses an id that resolves to nothing.
+//
+// ⚠ E-P13 IS NOT HERE BECAUSE IT WAS ALREADY DONE, and it never needed this utility: W4 landed it in
+// `0b3adb22` and pointed the card's `aria-describedby` at the two VISIBLE pills the sighted player is
+// already reading (`SeasonScreen.vue`, `vacationDescribedBy`). A hidden span would have been a second
+// copy of a sentence that is on screen. So the utility has two consumers, not three.
+//
+// ⚠ MUTATION-VERIFIED, in this file's own style:
+//   E-P11  the `aria-describedby` binding removed from the gap chip -> red on the missing attribute;
+//          the described span's text changed to `cell.label` -> red on the byte-for-byte comparison
+//          while the presence half stays green, which is why the value is what is pinned.
+//   E-P12  `:aria-describedby` removed from SegmentedRow's button -> every titled segment red;
+//          the span's `{{ o.title }}` changed to `{{ o.label }}` -> red on the comparison alone.
+//          `.sr-only` deleted from src/style.css -> the out-of-flow arm red, the text arms green,
+//          which is the pair that says the sentence is spoken AND not seen.
+
+/**
+ * The text `aria-describedby` actually delivers: every id resolved against the rendered tree and
+ * joined with a space, the way the accname spec joins a description's parts.
+ *
+ * ⚠ IT REFUSES AN ID THAT RESOLVES TO NOTHING rather than returning `''`. An unresolvable id is the
+ * silent half of this defect class – the attribute is there, a checker that looks for it passes, and
+ * the screen reader says nothing at all.
+ */
+function describedText(wrapper: VueWrapper, el: ReturnType<VueWrapper['find']>): string {
+  const ids = el.attributes('aria-describedby')
+  if (ids === undefined) throw new Error('the element carries no aria-describedby')
+  return ids
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((id) => {
+      const target = wrapper.find(`#${id}`)
+      if (!target.exists()) throw new Error(`aria-describedby points at #${id}, which is not in the tree`)
+      const text = target.text()
+      if (text.trim() === '') throw new Error(`#${id} is in the tree and empty – nothing would be spoken`)
+      return text
+    })
+    .join(' ')
+}
+
+describe('E-P11 – the ladder chip says WHICH rungs are behind it, and not only how many', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+    // ⚠⚠ THE PHONE, AND IT MUST BE SET BEFORE THE MOUNT – this file's only viewport-dependent block.
+    // `stripExpanded` is `ref(window.matchMedia('(min-width: 768px)').matches)`, and happy-dom's
+    // default window is 1024x768, so a Home mounted without this is FULLY EXPANDED: no ellipsis chip
+    // is rendered at all and every loop below would pass by not running. fits.ts's own rule (the
+    // viewport is a parameter of the measurement, and it is read at mount) applied to a fixture.
+    setViewport(PHONE)
+  })
+  // ...and put back what the rest of this runner expects, so an arm appended after this block is not
+  // silently measured on a phone.
+  afterEach(() => setViewport(HAPPY_DOM_DEFAULT))
+
+  /** Only the ellipsis affordances: the collapse control shares the class and is not a gap. */
+  const gapChips = (wrapper: VueWrapper) =>
+    wrapper.findAll('.strip-more').filter((b) => b.attributes('aria-label')?.startsWith('Show ') === true)
+
+  it('the «…» chip is described by an element holding its own title, byte for byte', () => {
+    const wrapper = mountHome(snapshotAfter(30))
+    const gaps = gapChips(wrapper)
+    // ⚠ NON-VACUOUS OR NOTHING: a fixture whose ladder has no elision would make every loop below
+    // pass by not running. The collapse is the row's normal state on a phone (`stripVisible`).
+    expect(gaps.length, 'this career\'s ladder really does elide rungs').toBeGreaterThan(0)
+    for (const gap of gaps) {
+      const title = gap.attributes('title')
+      expect(title, 'the chip still has its tooltip').toBeTruthy()
+      // The RANGE was the half only a mouse could reach: «5 levels hidden (National to W15) – tap to
+      // show the whole ladder», against an accessible name of «Show 5 more levels».
+      expect(describedText(wrapper, gap), 'the tooltip IS the description').toBe(title)
+      // ...and the NAME is untouched, which is the half D7 established: a fact that ARRIVES may not
+      // rename a control. The two are different sentences on purpose – «Show 5 more levels» is what
+      // the button DOES, and the range is what is behind it.
+      expect(accName(wrapper, gap), 'the name is still the label').toBe(gap.attributes('aria-label'))
+      expect(accName(wrapper, gap)).toMatch(/^Show \d+ more level/)
+      expect(accName(wrapper, gap), 'the description is not the name').not.toBe(title)
+    }
+    wrapper.unmount()
+  })
+
+  it('…and the description is spoken, not SEEN: the target is the shared hidden class', () => {
+    // ⚠ THIS FILE IMPORTS NO STYLESHEET, DELIBERATELY – every other arm in it is about the
+    // accessibility TREE, and pulling src/style.css in here would change the cascade under twenty
+    // unrelated mounted tests mid-wave. So the two halves are asserted where each one can be:
+    //   * the span carries `.sr-only` – here, on the rendered tree;
+    //   * `.sr-only` is out of flow, one pixel, and NEITHER `display: none` NOR
+    //     `visibility: hidden` (both of which would take it out of the accessibility tree as well
+    //     and announce nothing) – in tests/component/principles-f09-shared-objects.test.ts, which
+    //     reads it as a computed value through the real cascade at 375x667.
+    const wrapper = mountHome(snapshotAfter(30))
+    const gaps = gapChips(wrapper)
+    expect(gaps.length).toBeGreaterThan(0)
+    for (const gap of gaps) {
+      const id = gap.attributes('aria-describedby')!
+      const span = wrapper.find(`#${id}`)
+      expect(span.exists(), 'the id resolves').toBe(true)
+      expect(span.classes(), 'the description is hidden by the shared utility, not by hand').toContain('sr-only')
+      expect(span.element.tagName, 'and it is an element an AT will read').toBe('SPAN')
+    }
+    wrapper.unmount()
+  })
+})
+
+describe('E-P12 – a segment\'s description is the sentence its own title already held', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+  })
+
+  it('every titled segment on the budget screen is described by its title, byte for byte', () => {
+    withSnapshot(snapshotAfter(60))
+    const wrapper = mount(MoneyScreen, { global: { stubs: { teleport: true } } })
+    const titled = wrapper.findAll('.tab-pill').filter((p) => p.attributes('title') !== undefined)
+    // Four chapter segments; the period switcher carries no titles, which is the point of the
+    // `v-if` – see the «no dangling promise» arm below.
+    expect(titled.length, 'the chapter picker really is titled').toBeGreaterThan(3)
+    for (const pill of titled) {
+      expect(describedText(wrapper, pill), `${pill.attributes('aria-label')}`).toBe(pill.attributes('title'))
+    }
+    // ...and the NAME of every segment is exactly what it was: the option's own label, which is what
+    // `getByRole('button', { name })` in the e2e layer addresses.
+    for (const pill of titled) expect(accName(wrapper, pill)).toBe(pill.attributes('aria-label'))
+    wrapper.unmount()
+  })
+
+  it('⚠ a segment with no title makes no promise: no attribute, no empty span', () => {
+    // The silent half of this defect class. `aria-describedby` pointing at an element that is not
+    // there, or at an empty one, is worse than no attribute: a checker sees the promise and an AT says
+    // nothing. The period switcher (`WINDOW_OPTIONS`) has no titles and is the fixture for it.
+    withSnapshot(snapshotAfter(60))
+    const wrapper = mount(MoneyScreen, { global: { stubs: { teleport: true } } })
+    const untitled = wrapper.findAll('.tab-pill').filter((p) => p.attributes('title') === undefined)
+    expect(untitled.length, 'some row on this screen really is untitled').toBeGreaterThan(0)
+    for (const pill of untitled) {
+      expect(pill.attributes('aria-describedby'), 'no promise where there is no sentence').toBeUndefined()
+      expect(pill.find('.sr-only').exists(), 'and no empty span either').toBe(false)
+    }
     wrapper.unmount()
   })
 })

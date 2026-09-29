@@ -64,7 +64,12 @@ import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer
 // ⚠ T6 TAKES A THIRD (`comebackAtReturn`) ON THE SAME SPLIT AND FOR THE SAME REASON: the freeze's
 // arithmetic – the ruled rank / 12 / 156 – is a pure function of the pregnancy and belongs with the
 // arc, while the WRITE has to happen here, in the one-line window between the draw and the clear.
-import { comebackAtReturn, decisionWeekOf, drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, returnChanceFor, FORK_WANT_ANSWER } from './lifeBeat'
+import { drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, FORK_WANT_ANSWER } from './lifeBeat'
+// ⚠ THE THREE PREGNANCY VALUES COME OFF THE KIND MODULE (A-06 / T6.10, 28.09). §14 moved to
+// `world/lifeBeat/pregnancy.ts` and it imports the hub, so the hub cannot re-export them back without
+// the cycle A-06 is about – see that file's header. The split above and below is the SAME one-way edge
+// the three paragraphs above describe; nothing about which module owns the arithmetic has changed.
+import { comebackAtReturn, decisionWeekOf, returnChanceFor } from './lifeBeat/pregnancy'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE. `engine/collegeOffer.ts` imports only `shared/protocol`
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
@@ -96,7 +101,7 @@ import { kidAgeYears } from './age'
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
 import { physicalMean, resolveAgeCurve } from '../development'
 import { buildAlbum, buildScroll } from './album'
-import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
+import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood, UNKNOWN_CHOICE_REFUSAL } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
 // has to hand back the entries the college answer strands, and every rule about what a release
 // refunds – the fee, the year's ITF slot, the pro slot, the season mirror, the desk's letter – lives
@@ -932,6 +937,42 @@ function releaseEntriesForTheFreeze(world: WorldState): void {
   }
 }
 
+/** ⭐⭐⭐ DOES THE DEPARTURE RESOLVE AT THIS WEEK'S CLOSE? ONE spelling of that question, read by
+ *  `resolveCollegeDeparture` below – the step that answers it – and by the knock roll in
+ *  `world/phaseGrowth.ts` step 3c, which must not raise a question the latch is about to eat.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE THE SECOND READER ARRIVED, AND A SECOND COPY WOULD HAVE BEEN THE PARITY CLASS
+ *  (C-06, the 26.09 principles review, P0). The tick rolled the knock in step 3c on every week she was
+ *  not yet at college and latched the college ending in step 7c′ of the SAME week, so a knock could
+ *  arrive and be latched over: `decideKnock` throws COLLEGE_FREEZE_REFUSAL behind that ending and
+ *  `KnockDialog` offers no exit that is not an answer, so the year could not be pressed again.
+ *  Measured on 3 of 60 fixture careers and on 2 of 30 that chose college at the real fork. The owner's
+ *  ruling is PREVENTION – no knock ARRIVES on the departure week, nothing is retired and nothing
+ *  expires – and prevention means the roll has to ask the departure's own question. Asked twice, in
+ *  two spellings, it would drift the next time the departure clock moves, and that clock has moved
+ *  twice already (round 24 #5 took it off her birthday; the `>=` below took in the migrated saves).
+ *
+ *  ⚠ IT IS ASKED AT STEP 3c AND ANSWERED AT STEP 7c′ OF THE SAME WEEK, and the one way the two can
+ *  differ is harmless BY CONSTRUCTION: a terminal ending latched in between (bankruptcy, the
+ *  career-ending injury) voids the reservation, and the roll will already have been skipped – a knock
+ *  raised into a career that ends the same week is the same unanswerable question. It cannot differ
+ *  the other way: `departsWeek` is booked by `answerFork`, which is a command and not part of a tick,
+ *  and `world.college` is written only by the departure itself and by `leaveCollege`.
+ *
+ *  ⚠ `>=` RATHER THAN `===`, so a save that somehow rests past its departure week (a migrated
+ *  career answered under the birthday-era clock, a test walk that ticked through) departs on its
+ *  next resolved week instead of never. Enrolment is at `world.week` – the week it actually
+ *  happened – and `untilWeek` runs the whole course from there.
+ *
+ *  ⚠ RNG: ZERO DRAWS on any stream – four state reads. */
+export function collegeDepartsThisWeek(world: WorldState): boolean {
+  if (world.ending !== null) return false
+  const fork = world.fork
+  if (!fork || fork.answer !== 'college' || world.college !== null) return false
+  const departsWeek = fork.departsWeek ?? null
+  return departsWeek !== null && world.week >= departsWeek
+}
+
 /** ⭐⭐⭐ ROUND 24 #5 – THE DEPARTURE: the reserved place is taken up on the academic year's own
  *  September. One moment became three (ask / hold / depart), and this is the third.
  *
@@ -952,19 +993,14 @@ function releaseEntriesForTheFreeze(world: WorldState): void {
  *  the full-refund rung with the past-deadline exemption and the desk's letter – no penalty of any
  *  kind («мы ни за что не наказываем»).
  *
- *  ⚠ `>=` RATHER THAN `===`, so a save that somehow rests past its departure week (a migrated
- *  career answered under the birthday-era clock, a test walk that ticked through) departs on its
- *  next resolved week instead of never. Enrolment is at `world.week` – the week it actually
- *  happened – and `untilWeek` runs the whole course from there.
+ *  ⚠ ITS GUARD IS `collegeDepartsThisWeek` AND NOT A COPY OF ONE – the same predicate the knock roll
+ *  reads in `world/phaseGrowth.ts` step 3c (C-06, 26.09). The early-outs, the `>=` and the reason it
+ *  is `>=` all live in that predicate's own note, one screen up.
  *
  *  ⚠ RNG: ZERO DRAWS on any stream. State writes, ledger rows and `releaseEntry`'s pure refund
  *  arithmetic; the frozen MAIN capture (41550 / e6b0c709) cannot see it. */
 export function resolveCollegeDeparture(world: WorldState): void {
-  if (world.ending !== null) return
-  const fork = world.fork
-  if (!fork || fork.answer !== 'college' || world.college !== null) return
-  const departsWeek = fork.departsWeek ?? null
-  if (departsWeek === null || world.week < departsWeek) return
+  if (!collegeDepartsThisWeek(world)) return
   // ⚠ `untilWeek` IS THE WHOLE COURSE EVEN THOUGH SHE MAY LEAVE AFTER ONE YEAR (P5). It is the
   // contract she signed, and `leaveCollege` (world/college.ts) is what breaks it – by moving this
   // week BACK to the week she leaves, which is what makes `inCollege` false with no second flag.
@@ -992,10 +1028,28 @@ export function resolveCollegeDeparture(world: WorldState): void {
   if (ending) latchEnding(world, ending)
 }
 
+/** THE THREE ANSWERS THIS COMMAND OFFERS, derived from a TOTAL record rather than written out – so a
+ *  fourth `ForkAnswer` is a compile error here instead of a legal answer this file silently refuses.
+ *  `FORK_STOP_DRIVERS`' own shape (world/lifeBeat.ts). */
+const FORK_ANSWER_TOTAL: Record<ForkAnswer, true> = { continue: true, college: true, stop: true }
+const FORK_ANSWERS = Object.keys(FORK_ANSWER_TOTAL) as readonly ForkAnswer[]
+
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
 export function answerFork(world: WorldState, answer: ForkAnswer, tier?: CollegeTier): void {
   guardNotEnded(world)
+  // ⚠⚠ #9 · B-P3-02 (the principles review of 26.09) – THE ANSWER IS CHECKED AGAINST THE LIST THIS
+  // COMMAND OFFERS, AND THIS IS THE ARM THAT MADE THE TRIO A TASK. The college branch below is the
+  // only one keyed on a value; EVERYTHING ELSE falls through to `endingForForkAnswer`, so an unknown
+  // enum arriving from the worker's JSON dispatch **silently ended the career** – the most expensive
+  // click in the game, taken by nobody. It sits ABOVE the «not open» guard for one reason: it is a
+  // question about the PAYLOAD, which can be answered before the world is consulted at all.
+  //
+  // ⚠ IT IS NOT THE ROUND-24 RE-VALIDATION THAT WAS REMOVED. That one refused a legal answer
+  // («college») on a STATE the rule no longer has; this refuses a value that was never an answer.
+  // «Nothing removes the college answer» stands untouched, including the tier fallback further down –
+  // an unknown `tier` still falls back to the cheapest place rather than throwing.
+  if (!FORK_ANSWERS.includes(answer)) throw new Error(UNKNOWN_CHOICE_REFUSAL)
   if (world.fork === null || world.fork.answer !== null) throw new Error('The fork is not open')
   // ⭐⭐⭐ v73 – HE HEARS HER OUT FIRST, AND THE ENGINE IS WHAT SAYS SO (wave-2 runbook §3.3).
   //

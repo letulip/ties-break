@@ -48,10 +48,14 @@
 //      sentence's own computed, never of the whole file: a whole-file «no manager» asserts that the
 //      code carries no COMMENT about the manager, and the note explaining this change quotes the
 //      words it removed. The first draft did exactly that and the gate caught it.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // A driven title is a handful of ticks, but the runner is shared with heavier suites.
-vi.setConfig({ testTimeout: 120_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 0.07 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   KID_ID,

@@ -146,14 +146,11 @@ import {
   type Temperament,
 } from '../src/engine/spirit'
 import {
-  closeTournament,
   createWorld,
   KID_ID,
   kidPoints,
   newsStandingOf,
   recomputeKidRank,
-  skipTournament,
-  tickWeek,
   type ExposureEvent,
   type ExposureKind,
   type WorldState,
@@ -165,6 +162,7 @@ import { isBlackoutWeek } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
 import { birthdayTurning } from '../src/engine/world/age'
 import { standHerAt } from './helpers/newsStanding'
+import { walkWeeks } from './helpers/career'
 
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 
@@ -273,15 +271,7 @@ function costOf(world: WorldState, exposure: readonly ExposureEvent[]): number {
  *  it is what the WORKER threads through the tick (v35) and it mutates `world.rngMain` in place, so
  *  the persisted MAIN position advances with the walk and lands inside §C's key-for-key comparison. */
 function walk(world: WorldState, weeks: number): WorldState {
-  const rng = resumeMain(world.rngMain)
-  for (let w = 0; w < weeks; w++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, resumeMain(world.rngMain), weeks)
 }
 
 // =================================================================================================
@@ -392,7 +382,12 @@ describe('wave 6 T4 C – a career that was never news plays the tennis it playe
     // ⚠ AND THE WALK REALLY WALKED, so the identity above is not the identity of two empty worlds.
     expect(withKey.rngMain.n, 'the arms really spent MAIN draws').toBeGreaterThan(0)
     expect(withKey.events.length, '...and really lived a career').toBeGreaterThan(10)
-  }, 120_000)
+  // ⚠⚠ THE TWO PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s -> 60 s
+  // on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s own unit
+  // `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 0.84 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 
   it('⭐⭐⭐ ⚠ THE NULL-ARM CHECK – the same construction on a KNOWN career DIVERGES', () => {
     // ⚠⚠ RULING Q ASKS FOR THIS BY NAME: «pin it against a world that HAS been news as well … so the
@@ -413,7 +408,7 @@ describe('wave 6 T4 C – a career that was never news plays the tennis it playe
     expect(withKey.spotlightHabituation, 'the apparatus really can count a week').toBeGreaterThan(0)
     expect(withoutKey.spotlightHabituation, '...and it counts on the stripped arm too, from the same zero')
       .toBe(withKey.spotlightHabituation)
-  }, 120_000)
+  })
 })
 
 // =================================================================================================

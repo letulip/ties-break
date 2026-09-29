@@ -28,9 +28,6 @@ import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
-  skipTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   createWorld,
   tickWeek,
   enterEvent,
@@ -38,8 +35,6 @@ import {
   pendingBirthday,
   resumeFromCollege,
   resolveCollegeDeparture,
-  revealTournamentRound,
-  closeTournament,
   inCollege,
   buildEndingView,
   toSnapshot,
@@ -48,7 +43,10 @@ import {
   type WorldState,
   answerLifeBeat,
   pendingLifeBeat,
+  pendingKnock,
+  decideKnock,
 } from '../src/engine/world'
+import { engineModuleFunction } from './worldSource'
 import { migrateSave } from '../src/engine/migrations'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { nextAcademicYearStart, schoolEndWeek } from '../src/engine/kidLife'
@@ -59,35 +57,7 @@ import { ENDINGS } from '../src/engine/ending'
 // ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
 import { drainLifeBeats } from './helpers/career'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
- *  the year on the College League week the way it already pauses on her birthday, because the owner
- *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
- *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
- *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
- *  answers one more question and its press ceiling grows by one a year. The full note is in
- *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
+import { finishAnyReveal, answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 /** An ORGANIC career walked to the fork – no hand-opened fork, no forced week: the ask below is the
  *  engine's own. Reveals are closed on the way (`tickWeek` is total; only `advanceWeeks` halts). */
@@ -227,7 +197,12 @@ describe('the three moments, on a career that reaches the fork by playing', () =
 
     // ...and the reservation stops being marked once it is honoured.
     expect(toSnapshot(world).collegeDepartsWeek, 'the marker leaves the wire at enrolment').toBeNull()
-  }, 120_000)
+  // ⚠⚠ THE FIVE PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 / 120 /
+  // 90 s -> 60 s on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s
+  // own unit `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to
+  // 90 s would leave this file at 60. SLOWEST TEST here, in the real bulk pool: 3.79 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 })
 
 // =================================================================================================
@@ -267,7 +242,7 @@ describe('a terminal ending in the gap', () => {
     // Direct call too – the guard is on the function, not only on its caller's ordering.
     resolveCollegeDeparture(world)
     expect(world.college, 'the departure refuses to run behind a latched ending').toBeNull()
-  }, 120_000)
+  })
 })
 
 // =================================================================================================
@@ -291,14 +266,15 @@ describe('a v57 save already inside the freeze', () => {
     const rng = resumeMain(world.rngMain)
     const yearsBefore = world.college!.years.length
     const from = world.week
-    for (let press = 0; press < 4 && world.college!.years.length === yearsBefore; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): her card pauses the year since ruling 2(a), so the walk
+    // answers it (`drainLifeBeats`, priced zero) and the guard gains a press. The loop still ends on
+    // the year being banked, and the two assertions below are untouched.
+    for (let press = 0; press < 6 && world.college!.years.length === yearsBefore; press++) {
+      pressCollegeYear(world, rng)
     }
     expect(world.college!.years.length, 'one more year banked').toBe(yearsBefore + 1)
     expect(world.week, 'exactly fifty-two weeks later').toBe(from + WEEKS_PER_YEAR)
-  }, 90_000)
+  })
 })
 
 // =================================================================================================
@@ -361,11 +337,19 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
       expect(world.college?.fromWeek).toBe(departs)
 
       const birthdaysBefore = world.birthdays.length
-      for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND THE bm=6 ARM IS WORTH RECORDING, because it looked like a
+      // defect in the pause before it was measured. That career's REST STATE at the departure week
+      // (294) already held an unanswered `met` raised at week 247 – in the pre-college gap, not inside
+      // a year – so with ruling 2(a) every one of the sixteen presses was refused with `["life"]` and
+      // ZERO years banked. The card was real, hers, and on screen; what this walk lacked was the
+      // answer. `drainLifeBeats` is that answer, priced zero, and the budget gains a press a year for
+      // the beat a year can now raise. No assertion below moved.
+      for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
         world.fundsCents = Math.max(world.fundsCents, 500_000_00)
         resumeFromCollege(world, rng)
         answerCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
 
       // G1's floor: every full year holds its championship – enrolment at offset 34 puts the League
@@ -379,6 +363,122 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
       // E3's pause: her birthday happened INSIDE the freeze, every year – answered, on the record.
       const inFreeze = world.birthdays.slice(birthdaysBefore).filter((b) => b.week > departs && b.week <= departs + 4 * WEEKS_PER_YEAR)
       expect(inFreeze.length, 'four college birthdays, one per year, all answered').toBe(4)
-    }, 240_000)
+    })
   }
+})
+
+// =================================================================================================
+// 6. C-06 (26.09 principles review, P0) – NOTHING IS LEFT WAITING UNDER THE LATCH
+// =================================================================================================
+//
+// THE DEFECT, and it was a soft-lock rather than a blemish. `growAndLive` rolled the knock on every
+// week she was not yet at college (`if (!inCollege(world)) rollKnock(world)`, world/phaseGrowth.ts
+// step 3c) and `resolveCollegeDeparture` latched the college ending at the SAME week's close (step
+// 7c′). On the departure week `inCollege` is still false at the roll, so a knock could arrive and
+// the latch landed on top of it: `decideKnock` opens with `guardNotEnded`, which throws
+// COLLEGE_FREEZE_REFUSAL behind a `college` ending, and `KnockDialog` is «the one dialog in the app
+// with no way out that is not an answer». The overlay outranks the birthday and the life beat once
+// either is laid over the college shell, so the first freeze pause put a dialog on screen whose only
+// control was refused on every press – and the year could not be pressed again.
+//
+// ⚠ THE OWNER'S RULING IS PREVENTION, AND NOTHING IS RETIRED SILENTLY (26.09, ruling 1(a)): no knock
+// ARRIVES on the departure week. There is no `retireKnock` at the departure and nothing expires – the
+// roll simply does not happen on that one week, which is also the reading that keeps her last week at
+// home from ending with a question the game then eats.
+//
+// ⚠ THE SEEDS ARE THE REVIEW PROBE'S OWN, and the walk below is its `live()` verbatim in shape –
+// docs/review-principles-2026-09-26/probes/c-knock-at-latch.ts, which measured 3 of 60 `forced60`
+// careers and 2 of 30 `age19` ones standing on a refused knock at the latch. `c-latch-forced60-0`
+// latches at week 86 and `c-latch-age19-18` at week 294, and BOTH held a knock stamped
+// `sinceWeek === college.fromWeek`. A different walk is a different career: `decideKnock` is
+// zero-draw but it moves `knock.untilWeek`, which moves the growth week's load factor, so the seeds
+// only reproduce under this policy (every knock answered `rest`, every birthday neutral, every
+// blocking beat drained).
+//
+// ⚠⚠ MUTATION ARM: drop the gate at world/phaseGrowth.ts step 3c – restore
+// `if (!inCollege(world)) rollKnock(world)` – and both cases redden with
+// «REFUSED: The career is over» in the message. Verified 26.09, both directions.
+//
+// ⚠ RNG: the gate removes one `seed:knock:<departure week>` SUB-STREAM derivation and no MAIN draw
+// (`rollKnock`'s own header: ZERO main-stream draws), so the frozen capture 41550 / e6b0c709 holds –
+// asserted where it lives, in tests/condition.test.ts.
+
+/** The review probe's own walk (`live()`), so the seeds below mean what the probe measured they mean:
+ *  every knock answered `rest`, every birthday answered neutrally, every blocking beat drained, and
+ *  every one of the three skipped once an ending has latched. */
+function liveOneWeek(world: WorldState, rng: Rng): void {
+  tickWeek(world, rng)
+  finishAnyReveal(world)
+  if (pendingKnock(world) && world.ending === null) decideKnock(world, 'rest')
+  if (world.ending === null && pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  if (world.ending === null) drainLifeBeats(world)
+}
+
+/** A career walked to the exact tick that latches the college ending – the probe's two arms.
+ *  `forced60` hand-opens the fork at week 60 (the shared college recipe, tests/collegeBirthdayFixtures
+ *  .ts); `age19` waits for the engine's own ask at school's end. */
+function latchedAtTheDeparture(seed: string, arm: 'forced60' | 'age19'): WorldState {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+  const rng = resumeMain(world.rngMain)
+  if (arm === 'forced60') {
+    for (let i = 0; i < 60; i++) liveOneWeek(world, rng)
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
+  } else {
+    for (let i = 0; i < 520 && world.fork === null && world.ending === null; i++) liveOneWeek(world, rng)
+    expect(world.fork, `${seed} reached the fork by playing`).not.toBeNull()
+    drainLifeBeats(world)
+  }
+  world.fundsCents = 500_000_00
+  answerFork(world, 'college')
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) liveOneWeek(world, rng)
+  expect(world.ending?.type, `${seed} latched the college ending`).toBe('college')
+  expect(world.college!.fromWeek, 'the latch is this very week').toBe(world.week)
+  return world
+}
+
+/** What is standing under the latch, as a sentence – so a red run says WHICH refusal it hit rather
+ *  than «expected true to be false». The answer is tried on a clone: this reads the state, it does
+ *  not spend it. */
+function questionUnderTheLatch(world: WorldState): string {
+  if (!pendingKnock(world)) return 'nothing waiting'
+  const clone = structuredClone(world)
+  try {
+    decideKnock(clone, 'rest')
+    return 'answerable'
+  } catch (e) {
+    return `REFUSED: ${(e as Error).message}`
+  }
+}
+
+describe('C-06 – the departure week leaves no question the engine will not take', () => {
+  for (const [seed, arm, latchWeek] of [
+    ['c-latch-forced60-0', 'forced60', 86],
+    ['c-latch-age19-18', 'age19', 294],
+  ] as const) {
+    it(`⭐⭐⭐ ${arm} ${seed}: no unanswerable knock stands under the college latch`, () => {
+      const world = latchedAtTheDeparture(seed, arm)
+      expect(world.week, 'the probe\'s own latch week').toBe(latchWeek)
+      // THE CLAIM: after the latch, either nothing is pending or the pending thing can be answered.
+      expect(
+        questionUnderTheLatch(world),
+        'a knock the engine refuses on every press is a career that cannot continue',
+      ).toMatch(/^(nothing waiting|answerable)$/)
+      // And the screen half at the source: no prompt is put on the wire for a knock nobody can answer.
+      expect(toSnapshot(world).knockPrompt, 'no knock dialog is offered under the latch').toBeNull()
+    })
+  }
+
+  // ⚠⚠ THE PARITY GUARD, AND IT IS THE POINT OF THE EXTRACTION RATHER THAN A NICETY. Two spellings of
+  // «the departure resolves at this week's close» – one in the roll's gate and one in
+  // `resolveCollegeDeparture`'s own early-outs – is the defect class this repo calls the parity class,
+  // and it would drift the first time the departure clock moved again (it has moved twice: round 24
+  // #5, and `>=` for migrated saves). So there is ONE predicate and both sites read it.
+  it('⭐⭐ one spelling: the roll\'s gate and the departure itself read the same predicate', () => {
+    const departure = engineModuleFunction('world/endings', 'resolveCollegeDeparture')
+    expect(departure, 'the departure guards on the shared predicate').toContain('collegeDepartsThisWeek(world)')
+    expect(departure, 'and holds no second copy of the booking condition').not.toContain('departsWeek')
+    const growth = engineModuleFunction('world/phaseGrowth', 'growAndLive')
+    expect(growth, 'and the knock roll is gated on it too').toContain('collegeDepartsThisWeek(world)')
+    expect(growth, 'the roll still happens on every other week she is at home').toContain('rollKnock(world)')
+  })
 })

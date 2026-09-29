@@ -1616,8 +1616,20 @@ export const TIER_SHORT: Record<TierId, string> = {
   slam: 'Slam',
 }
 
-/** Pure age gate for a tier: the junior tour is 13-18, the domestic ladder has no gate at all, the
- *  adult rungs open at 16/16/17 and never close. No world/RNG dependency.
+/** Pure age gate for a tier, and it states NO number of its own: the floor and the ceiling are the
+ *  rung's own `minAgeYears` / `maxAgeYears` in the table above, read straight out of `TIERS` two lines
+ *  down. The J rungs are the only ones carrying a ceiling; the domestic ladder carries neither. No
+ *  world/RNG dependency. The grid's one prose copy, if you need the numbers written out, is
+ *  `docs/specs/college-is-its-own-branch-2026-08.md` §0a.
+ *
+ *  ⚠⚠ IT USED TO RESTATE THE GRID AND THE GRID HAD MOVED – corrected 26.09 (C-02). Verbatim: *"the
+ *  junior tour is 13-18, the domestic ladder has no gate at all, the adult rungs open at 16/16/17 and
+ *  never close."* The first two halves were true; «16/16/17» was the pre-16.08 chain (W35/W50 at 16,
+ *  W75/W100 at 17) and the owner's ruling that evening moved every one of those floors – see the w35
+ *  block's own note, which keeps that chain as history beside the constants it replaced. ⚠ Nothing
+ *  caught it for 41 days because `npm run context:audit`'s age-grid guard reads DOCS, not code. The
+ *  repair is to name the field rather than the number: a doc that points at `minAgeYears` cannot go
+ *  stale when `minAgeYears` moves.
  *
  *  ⚠ IT LIVES HERE, NEXT TO THE TABLE IT READS, BECAUSE THE COHORT NEEDS IT TOO (task #17). It was
  *  world.ts's `isTierAgeOpen` and only ever asked about the KID – which was harmless while every

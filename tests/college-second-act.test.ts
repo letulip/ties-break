@@ -15,13 +15,9 @@
 //   3. INPUT-INDEPENDENCE SURVIVES ALL OF IT. `tests/ending.test.ts` already proves that going to
 //      college cannot move the MAIN sequence; this file proves the same of the years INSIDE it, one
 //      call at a time, because the number of commands changed and the property must not have.
-import { answerBirthdayNeutral } from './helpers/career'
+import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
-  skipTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
-  closeTournament,
   createWorld,
   advanceWeeks,
   tickWeek,
@@ -37,6 +33,7 @@ import {
 import { NATIONAL_TEAM, binomial, callUpLine, callUpOpponent, rollCallUp, rubberWinChance } from '../src/engine/nationalTeam'
 import { KID_ID, callUpRubberId, callUpRubbersOf } from '../src/engine/world'
 import { simulateMatch } from '../src/engine/match/engine'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { STOP_PRECEDENCE } from '../src/shared/protocol'
 import { rngFromSeed, initMainState } from '../src/engine/rng'
@@ -52,28 +49,7 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CollegeTier } from '../src/sha
 import type { MatchPlayer } from '../src/engine/match/types'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
- *  the year on the College League week the way it already pauses on her birthday, because the owner
- *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
- *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
- *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
- *  answers one more question and its press ceiling grows by one a year. The full note is in
- *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
+import { answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 function freshWorld(seed = 'p5-college'): { world: WorldState; rng: Rng } {
   const world = createWorld(seed, { ...DEFAULT_PROFILE })
@@ -99,22 +75,24 @@ function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier)
 
 /** One college year, spent exactly as the Home shell's button spends it – press, answer the
  *  birthday it pauses for, press again (round 24, the owner's «да, день рождения делай»). The day
- *  together is the one option every birthday offers, so it is always a legal answer here. */
+ *  together is the one option every birthday offers, so it is always a legal answer here.
+ *
+ *  ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+ *  year the way the birthday and the championship do – MEASURED before the ruling at 23 of 217
+ *  year-calls ticking past an unanswered blocking row – so the walk answers her card too
+ *  (`drainLifeBeats`, bond-neutral and priced ZERO) and the budget gains one press a year. Not one
+ *  assertion moved. */
 function spendYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
-  for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  for (let press = 0; press < 6 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+    pressCollegeYear(world, rng)
   }
 }
 
-/** The whole course, spent the same way. */
+/** The whole course, spent the same way. ⚠⚠ RE-AIMED 26.09 – see `spendYear` above. */
 function spendCourse(world: WorldState, rng: Rng): void {
-  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    pressCollegeYear(world, rng)
   }
 }
 
@@ -139,7 +117,7 @@ describe('P5 – the college years are lived one at a time', () => {
     expect(world.ending?.type, 'the latch goes back on, so the question can be asked').toBe('college')
     expect(world.ending!.resumesWeek).toBe(from + 2 * WEEKS_PER_YEAR)
     expect(inCollege(world), 'still on the scholarship').toBe(true)
-  }, 60_000)
+  })
 
   it('⭐ THE EARLY RETURN: she leaves after one year and the career resumes there', () => {
     // The sport's own case. Diana Shnaider left NC State after about a season.
@@ -155,7 +133,7 @@ describe('P5 – the college years are lived one at a time', () => {
     expect(world.college!.untilWeek).toBe(leftAt)
     expect(inCollege(world), 'the freeze is over').toBe(false)
     expect(world.college!.years).toHaveLength(1)
-  }, 60_000)
+  })
 
   it('⚠ she may NOT leave a year she has not spent, and the engine is the gate', () => {
     // CLAUDE.md invariant 1: the worker is not the gate. The screen stops drawing the button and
@@ -178,7 +156,13 @@ describe('P5 – the college years are lived one at a time', () => {
     expect(world.ending).toBeNull()
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     expect(inCollege(world)).toBe(false)
-  }, 90_000)
+  // ⚠⚠ EVERY PER-TEST BUDGET IN THIS FILE IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: the thirteen over
+  // the ceiling went 240 / 120 / 90 s -> 60 s on a measurement and were then DELETED, and the nine that
+  // already sat AT 60 s went with them – at 60 s all of them only restated `vite.config.ts`'s own unit
+  // `testTimeout`, and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 1.70 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ the year card is measured at BOTH ENDS, because nothing else in the save can rebuild it', () => {
     // `pruneResults` deletes a result 52 weeks after it happened and `financeWeeks` keeps a 60-week
@@ -196,7 +180,7 @@ describe('P5 – the college years are lived one at a time', () => {
     expect(year.startSkill).toBeGreaterThan(0)
     expect(year.endSkill).toBeGreaterThanOrEqual(year.startSkill)
     expect(year.fundsDeltaCents).toBe(world.fundsCents - fundsBefore)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -209,7 +193,7 @@ describe('P5 – the college progress view', () => {
     spendCourse(world, rng) // round 24: press-answer-press, the years pause on her birthdays
     // She is out: no ending, so no view at all.
     expect(buildEndingView(world)).toBeNull()
-  }, 90_000)
+  })
 
   it('⚠ `final` means THE NEXT YEAR IS THE LAST ONE, and it is false until it is', () => {
     const { world, rng } = atTheFork('p5-view-final')
@@ -224,7 +208,7 @@ describe('P5 – the college progress view', () => {
       expect(view.last!.index).toBe(y)
       expect(view.final, `after year ${y}`).toBe(y + 1 >= ENDINGS.collegeYears)
     }
-  }, 90_000)
+  })
 
   it('the snapshot carries it, so a reload lands back on the same question', () => {
     const { world, rng } = atTheFork('p5-view-snapshot')
@@ -233,7 +217,7 @@ describe('P5 – the college progress view', () => {
     const snap = toSnapshot(world)
     expect(snap.ending!.college).not.toBeNull()
     expect(snap.ending!.college!.yearsDone).toBe(1)
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -254,7 +238,7 @@ describe('P5 – the national-team call-up', () => {
     // the whole point of the world still ticking. What must be empty is HER column.
     expect(world.results.filter((r) => r.playerId === 'KID')).toHaveLength(0)
     expect(world.entries).toHaveLength(0)
-  }, 90_000)
+  })
 
   it('⚠ it fires ONLY inside the freeze – a career on the tour never sees one', () => {
     // The scope decision, asserted rather than asserted-in-a-comment. The competition's real minimum
@@ -264,7 +248,7 @@ describe('P5 – the national-team call-up', () => {
     advanceWeeks(world, rng, 3 * WEEKS_PER_YEAR)
     const news = world.events.filter((e) => e.text.includes(NATIONAL_TEAM.label))
     expect(news, 'three seasons on the tour and not one letter').toHaveLength(0)
-  }, 90_000)
+  })
 
   it('⚠ it lands in the record with `keep: true`, so the album still has it four years later', () => {
     const { world, rng } = atTheFork('p5-callup-record')
@@ -284,7 +268,7 @@ describe('P5 – the national-team call-up', () => {
     expect(summaries.length, 'one summary line per letter').toBeGreaterThan(0)
     for (const row of summaries) expect(row.type).toBe('milestone')
     for (const row of rubbers) expect(row.type).toBe('match')
-  }, 90_000)
+  })
 
   it('⚠ the same seed gives the same weeks, and a REPLAY of the same week is identical', () => {
     // The sub-stream is re-derived at the call site and persists nothing, so the same `(seed, week)`
@@ -433,12 +417,17 @@ function collegeYearsWithACall(seed: string): { world: WorldState; stops: string
   const presses: string[][] = []
   for (let y = 0; y < ENDINGS.collegeYears; y++) {
     const seen = new Set<string>()
-    for (let press = 0; press < 4 && world.college!.years.length === y; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way the birthday and the championship do (measured: 23 of 217 year-calls ticked past an
+    // unanswered blocking row), so this walk answers her card – `drainLifeBeats`, bond-neutral and
+    // priced ZERO – and the budget gains a press a year. No assertion here moved.
+    for (let press = 0; press < 6 && world.college!.years.length === y; press++) {
       const list = resumeFromCollege(world, rng)
       presses.push(list)
       for (const s of list) seen.add(s)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     stops.push((STOP_PRECEDENCE as readonly string[]).filter((r) => seen.has(r)))
   }
@@ -470,7 +459,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       }
     }
     expect(anyPlayed, 'over four years she took the court at least once').toBeGreaterThan(0)
-  }, 120_000)
+  })
 
   it('⭐⭐ 2. the stored record REPLAYS – the same mechanism, exactly, as any other match', () => {
     // This is the owner's «так же, как и наши текущие» as a mechanical claim: `MatchReplay` and
@@ -481,11 +470,14 @@ describe('⭐⭐⭐ the college competition is played', () => {
     const all = world.college!.years.flatMap((y) => (y.callUp ? callUpRubbersOf(world, y.callUp.week) : []))
     expect(all.length).toBeGreaterThan(0)
     for (const m of all) {
-      const again = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 (C-04): `replayMatch` IS what `MatchReplay` and `PracticeFlow` call, so the
+      // sentence above – «both re-run simulateMatch(a, b, {surface, tour, seed})» – is now the code
+      // rather than a description of two copies that happen to agree.
+      const again = replayMatch(m).result
       expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), 'byte-for-byte, off the stored seed').toBe(m.score)
       expect(again.winner === 0 ? KID_ID : m.bId).toBe(m.winnerId)
     }
-  }, 120_000)
+  })
 
   it('⭐⭐⭐ 3. THE YEAR REPORTS THE WEEK – the four-year loop stops where the player can see it', () => {
     // ⚠⚠ THE GUARD, AND IT FAILS IF THE STOP STOPS STOPPING. Round 23 #16 was an academy verdict on
@@ -511,7 +503,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       const order = list.map((r) => STOP_PRECEDENCE.indexOf(r as never))
       expect([...order].sort((a, b) => a - b), 'precedence order, not insertion order').toEqual(order)
     }
-  }, 240_000)
+  })
 
   it('⚠ 3b. every press that leaves the latch on reports it, and the last press reports no ending', () => {
     // R11-1's rule on a second producer: one call can be several things at once. ⚠ RE-AIMED BY THE
@@ -526,17 +518,22 @@ describe('⭐⭐⭐ the college competition is played', () => {
     }
     expect(presses[presses.length - 1], 'the course is finished: no latch left').not.toContain('ending')
     expect(world.ending).toBeNull()
-  }, 240_000)
+  })
 
   it('⚠ 4. it still pays nothing and costs nothing: no result, no rank, no cheque, no condition', () => {
     const before = atTheFork('college-rubbers-free')
     answerCollegeAndDepart(before.world, before.rng)
     const world = before.world
     // Round 24: press-answer-press – the years pause on her birthdays.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way the birthday and the championship do (measured: 23 of 217 year-calls ticked past an
+    // unanswered blocking row), so this walk answers her card – `drainLifeBeats`, bond-neutral and
+    // priced ZERO – and the budget gains a press a year. No assertion here moved.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, before.rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      drainLifeBeats(world)
     }
     expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
     expect(world.entries).toHaveLength(0)
@@ -553,7 +550,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
       expect(row.amountCents, 'no money changes hands').toBeUndefined()
       expect(row.text).toContain('no ranking points')
     }
-  }, 120_000)
+  })
 
   it('⚠ 5. the played rubber TRACKS THE MODEL IT REPLACED – the calibration is measured, not asserted', () => {
     // `NATIONAL_TEAM.rubber.standard` means "the level at which she is an even bet", and it now means
@@ -604,7 +601,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     const rate = won / n
     expect(rate, `a level player wins ${(rate * 100).toFixed(1)}% of rubbers – the model says 50%`).toBeGreaterThan(0.4)
     expect(rate).toBeLessThan(0.6)
-  }, 120_000)
+  })
 
   it('⚠ the opponent is a real player, drawn around the standard, and her side is drawn whole', () => {
     // Nine draws each, `tiesInTheWeek` of them per week whether or not she plays them all – so who
@@ -638,7 +635,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     expect(rubbers).toHaveLength(year!.callUp!.rubbersPlayed)
     // and the id names no tier, so the commentary correctly claims no occasion (see `occasionOf`).
     for (const m of rubbers) expect(m.eventId).toBe(callUpRubberId(year!.callUp!.week, m.round))
-  }, 120_000)
+  })
 })
 
 // =================================================================================================
@@ -654,7 +651,7 @@ describe('P5 – the epilogue line', () => {
     expect(line).toContain('1 year of student tennis')
     expect(line).not.toContain('Four years')
     expect(line.toLowerCase()).not.toContain('degree')
-  }, 60_000)
+  })
 
   it('states the money, because that is the one thing the years demonstrably did', () => {
     const { world, rng } = atTheFork('p5-epilogue-money')
@@ -663,7 +660,7 @@ describe('P5 – the epilogue line', () => {
     const line = collegeEpilogueLine(world)
     expect(line).toMatch(/\$[\d,]+ better off/)
     expect(line).toMatch(/[Qq]ualifying/)
-  }, 60_000)
+  })
 
   it('⚠ THE SIGN IS A DIFFERENT SENTENCE: a family further under water is not "worse better off"', () => {
     const { world, rng } = atTheFork('p5-epilogue-debt')
@@ -674,7 +671,7 @@ describe('P5 – the epilogue line', () => {
     expect(line).toContain('$4,123 further under')
     expect(line).not.toContain('better off')
     expect(line).not.toContain('worse better')
-  }, 60_000)
+  })
 
   it('⚠ and it reports the CALL-UPS honestly, including none at all', () => {
     const { world, rng } = atTheFork('p5-epilogue-calls')
@@ -682,7 +679,7 @@ describe('P5 – the epilogue line', () => {
     spendYear(world, rng)
     world.college!.years = world.college!.years.map((y) => ({ ...y, callUp: null }))
     expect(collegeEpilogueLine(world)).toContain('Her country never called')
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -710,19 +707,25 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     // the arm STRONGER: pausing, answering and resuming must leave MAIN exactly where the same
     // number of uninterrupted control ticks leave it, or the birthday moved the world's dice.
     const yearEnds = college.week + WEEKS_PER_YEAR
-    for (let press = 0; press < 4 && college.week < yearEnds; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND IT MAKES THE ARM STRONGER AGAIN, for the sentence two lines
+    // up said a third time: ruling 2(a) makes her card pause the year, and answering it must cost MAIN
+    // NOTHING either – so pausing on a beat, answering it and resuming has to leave MAIN exactly where
+    // the same number of uninterrupted control ticks leave it. `drainLifeBeats` is the player's own
+    // answer and the identity below is what proves it takes no MAIN draw.
+    for (let press = 0; press < 6 && college.week < yearEnds; press++) {
       resumeFromCollege(college, rngA)
       // ⚠ ROUND 26 #6: the championship pauses the year too, and answering it must cost MAIN nothing
       // either – which makes this arm stronger again rather than different.
       answerCollegeReveal(college)
       if (pendingBirthday(college) !== null) answerBirthdayNeutral(college)
+      drainLifeBeats(college)
     }
     while (control.week < college.week) tickWeek(control, rngB)
 
     expect(college.week).toBe(control.week)
     // The two streams have been pulled the same number of times: the next value off each is equal.
     expect(rngA()).toBe(rngB())
-  }, 60_000)
+  })
 })
 
 // =================================================================================================

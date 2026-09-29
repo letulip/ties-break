@@ -30,6 +30,7 @@ import { latestNewsId, newestLetterId, useLetterWatermark } from '../../src/comp
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
 import { PHONE, setViewport } from './fits'
+import { withPost } from './inbox'
 
 /** A real career, walked `weeks` weeks. */
 const snapshotAfter = (weeks: number, seed = 'component-round20'): Snapshot => careerSnapshot(weeks, seed)
@@ -40,8 +41,11 @@ function withSnapshot(snapshot: Snapshot) {
   return store
 }
 
-/** MoreScreen and nothing else calls the WORKER on mount (`onMounted(() => game.refreshCareers())`,
- *  which exists so the careers list cannot go stale while the player ticks weeks on Home). There is
+/** MoreScreen and nothing else calls the WORKER on mount (⚠ re-aimed 28.09 by D-05: the careers
+ *  refresh was `onMounted(() => game.refreshCareers())` and is now the `{ immediate: true }` half of a
+ *  `watch` on `game.revision`, so it fires on mount as before AND while the screen is open – the
+ *  stubs below are unchanged, and it exists for the same reason, so the careers list cannot go stale
+ *  while the player ticks weeks on Home). There is
  *  no `Worker` under happy-dom, so leaving it alone means an unhandled rejection per mount and
  *  vitest's own "this might cause false positive tests" warning on a green run. The action is
  *  replaced rather than the screen changed: what is under test here is which sections render, and
@@ -49,6 +53,9 @@ function withSnapshot(snapshot: Snapshot) {
 function mountMore(snapshot: Snapshot) {
   const store = withSnapshot(snapshot)
   store.refreshCareers = async () => {}
+  // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+  // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+  store.refreshSlots = async () => {}
   return mount(MoreScreen, mountOpts)
 }
 
@@ -235,7 +242,11 @@ describe('the news and letter watermarks', () => {
   // here through a component, the way App.vue uses it, rather than left on inspection alone.
   it('a letter landing turns the cue on, and marking it seen turns it off and STAYS off', async () => {
     const base = snapshotAfter(20)
-    const store = withSnapshot({ ...base, offers: [] as unknown as Snapshot['offers'] })
+    // ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the arrival fact is a snapshot FIELD now
+    // (`newestLetterId`), derived off the full list in the engine, because `snapshot.offers` carries only
+    // the letters this week still needs. `withPost` sets the rows and the id together. The arm is the
+    // same arm: an empty inbox is never new, one letter landing lights the dot, and marking it sticks.
+    const store = withSnapshot(withPost(base, []))
     let api: ReturnType<typeof useLetterWatermark> | null = null
     const Probe = defineComponent({
       setup() {
@@ -248,7 +259,7 @@ describe('the news and letter watermarks', () => {
     expect(wrapper.find('.dot').exists()).toBe(false)
 
     const letter = { id: 'kit-end-x' } as unknown as Snapshot['offers'][number]
-    store.snapshot = { ...base, offers: [letter] as unknown as Snapshot['offers'] }
+    store.snapshot = withPost(base, [letter] as unknown as Snapshot['offers'])
     await nextTick()
     expect(wrapper.find('.dot').exists()).toBe(true)
 
@@ -262,12 +273,18 @@ describe('the news and letter watermarks', () => {
     again.unmount()
   })
 
+  // ⚠ RE-AIMED, NOT WEAKENED (T6.2 · D-07, 28.09): it read the LAST ELEMENT of `snapshot.offers`, and
+  // that field is no longer the career's post – it carries the letters this week still needs, so its
+  // last element is a different letter. The fact is derived in the engine off the full list now
+  // (`Snapshot.newestLetterId`) and `withPost` is what a POSED snapshot owes it. The claim is exactly
+  // the claim it always made, and «whatever its state» is why the field exists: a kit deal's closing
+  // NOTICE is never live and is therefore never on the wire.
   it('newestLetterId is the last letter, whatever its state', () => {
     expect(newestLetterId(null)).toBe(null)
     const snapshot = snapshotAfter(4)
-    expect(newestLetterId({ ...snapshot, offers: [] })).toBe(null)
+    expect(newestLetterId(withPost(snapshot, []))).toBe(null)
     const offers = [{ id: 'a' }, { id: 'b' }] as unknown as Snapshot['offers']
-    expect(newestLetterId({ ...snapshot, offers })).toBe('b')
+    expect(newestLetterId(withPost(snapshot, offers))).toBe('b')
   })
 })
 

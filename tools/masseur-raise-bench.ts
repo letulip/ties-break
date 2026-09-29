@@ -40,20 +40,22 @@ import {
 import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { FamilyBackground } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `mean` was a local with econ-bench's own body – see `tools/_stats.ts`.
+import { mean } from './_stats'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule – see `tools/_args.ts`.
+import { finiteArgOf } from './_args'
+// T5.12 · F-04, 27.09: `money` and `pct` were copies of the six-file and ten-file spellings – see
+// `tools/_fmt.ts`. (`(100 * x)` here and `(x * 100)` in six siblings were bit-identical.)
+import { money, pctOf } from './_fmt'
 
-const argOf = (name: string, fallback: number): number => {
-  const at = process.argv.indexOf(`--${name}`)
-  const n = Number(process.argv[at + 1])
-  return at > 0 && Number.isFinite(n) ? n : fallback
-}
-const SEEDS = argOf('seeds', 12)
+const SEEDS = finiteArgOf('seeds', 12)
 /** ⚠ 728 AND NOT THE MASSEUR BENCH'S 416. Ages 14 to 28: the professional gate opens around 17–18,
  *  so 416 weeks leaves barely one anniversary inside the walk and the two arms would differ by a
  *  rounding. This bench is about what a DECADE of service does to a modest household. */
-const WEEKS = argOf('weeks', 728)
+const WEEKS = finiteArgOf('weeks', 728)
 /** ⚠ THE ARM SWITCH, and the header line below prints the EFFECTIVE value so a run can never be
  *  mislabelled – the masseur bench's own `--relief` idiom, and the zsh word-split incident's rule. */
-const RAISE = argOf('raise', ECONOMY.masseur.raisePerYear)
+const RAISE = finiteArgOf('raise', ECONOMY.masseur.raisePerYear)
 
 /** The coach's own annual ask (round 42 #51 – specified, not yet built). The whole of «не так
  *  интенсивно как тренер» is that this seat sits under the FLOOR of that corridor. */
@@ -65,8 +67,6 @@ const INCOME_BAND = ECONOMY.incomeGrowthBand
 const HIRE_FLOOR_CENTS = 25_000_00
 const RELEASE_FLOOR_CENTS = 10_000_00
 
-const money = (cents: number): string => `$${Math.round(cents / 100).toLocaleString('en-US')}`
-const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 const pad = (s: string, n: number): string => s.padEnd(n)
 const padL = (s: string, n: number): string => s.padStart(n)
 
@@ -101,8 +101,8 @@ function m1(): void {
 
 function m2(): void {
   console.log('\n=== M2 · THE INTENSITY – measured against the COACH, never against a market ===')
-  console.log(`   the ask ${pct(RAISE)}/yr · the coach's corridor ${pct(COACH_CORRIDOR[0])}–${pct(COACH_CORRIDOR[1])}/yr (round 42 #51)`)
-  console.log(`   the family's own income ladder ${pct(INCOME_BAND[0])}–${pct(INCOME_BAND[1])}/season (his round-12 ruling)\n`)
+  console.log(`   the ask ${pctOf(RAISE)}/yr · the coach's corridor ${pctOf(COACH_CORRIDOR[0])}–${pctOf(COACH_CORRIDOR[1])}/yr (round 42 #51)`)
+  console.log(`   the family's own income ladder ${pctOf(INCOME_BAND[0])}–${pctOf(INCOME_BAND[1])}/season (his round-12 ruling)\n`)
   console.log(`   ${pad('years', 7)}${padL('masseur ×', 12)}${padL('coach 5% ×', 12)}${padL('coach 15% ×', 13)}${padL('income 5% ×', 13)}`)
   for (const y of YEARS) {
     console.log(
@@ -145,7 +145,7 @@ function m3(): void {
       const share = sum / SEEDS
       if (first[background] === undefined) first[background] = share
       last[background] = share
-      cells.push(padL(pct(share), 14))
+      cells.push(padL(pctOf(share), 14))
     }
     console.log(`   ${pad(String(y), 7)}${padL(money(bill), 12)}${cells.join('')}`)
   }
@@ -155,13 +155,13 @@ function m3(): void {
     const rose = last[background] > first[background]
     if (rose) ok = false
     console.log(
-      `   ${rose ? '❌' : '✅'} ${pad(background, 9)} the entry rung costs ${pct(first[background])} of the week at hire` +
-        ` and ${pct(last[background])} after ${YEARS[YEARS.length - 1]} years`,
+      `   ${rose ? '❌' : '✅'} ${pad(background, 9)} the entry rung costs ${pctOf(first[background])} of the week at hire` +
+        ` and ${pctOf(last[background])} after ${YEARS[YEARS.length - 1]} years`,
     )
   }
   console.log(
     `   ⭐ ${ok ? 'PASS' : 'FAIL'} – the bottom rung gets ${ok ? 'CHEAPER' : 'DEARER'} against the household, every year,` +
-      ` because ${pct(RAISE)} loses to ${pct(INCOME_BAND[0])}–${pct(INCOME_BAND[1])}`,
+      ` because ${pctOf(RAISE)} loses to ${pctOf(INCOME_BAND[0])}–${pctOf(INCOME_BAND[1])}`,
   )
 }
 
@@ -187,7 +187,7 @@ function m4(): void {
   for (const [i, r] of rungs.entries()) {
     const below = i === 0 ? null : rungs[i - 1]
     const keep = (y: number): string => padL(money(r.sessions * rateAfter(y)), 9)
-    const saves = below === null ? '– the floor' : `${pct(1 - below.sessions / r.sessions)} of the bill`
+    const saves = below === null ? '– the floor' : `${pctOf(1 - below.sessions / r.sessions)} of the bill`
     console.log(
       `   ${pad(`${r.sessions}/wk`, 10)}${pad(money(r.sessions * ECONOMY.masseur.perSessionCents), 10)}` +
         `${keep(1)}${keep(4)}${keep(8)}${keep(12)}${padL(saves, 20)}`,
@@ -272,13 +272,9 @@ function walk(presetIndex: number, seedIndex: number): Run {
   }
 }
 
-function mean(xs: number[]): number {
-  return xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length
-}
-
 function m5(): void {
   console.log('\n=== M5 · THE PAIRED CAREER WALK – the entry rung, the modest presets, same seeds ===')
-  console.log(`   ${SEEDS} seeds × ${WEEKS} weeks · A = the ask OFF (raisePerYear 0) · B = ON (${pct(RAISE)})\n`)
+  console.log(`   ${SEEDS} seeds × ${WEEKS} weeks · A = the ask OFF (raisePerYear 0) · B = ON (${pctOf(RAISE)})\n`)
   console.log(
     `   ${pad('preset', 30)}${pad('arm', 5)}${padL('wks hired', 11)}${padL('wks served', 12)}${padL('releases', 10)}` +
       `${padL('salary paid', 13)}${padL('end funds', 12)}${padL('end rate', 10)}${padL('bankrupt', 10)}`,
@@ -323,7 +319,7 @@ function m5(): void {
 function main(): void {
   console.log('THE MASSEUR`S ANNUAL ASK – round 43 #4')
   console.log(
-    `raisePerYear ${pct(RAISE)} (shipped ${pct(ECONOMY.masseur.raisePerYear)}) · opening session ` +
+    `raisePerYear ${pctOf(RAISE)} (shipped ${pctOf(ECONOMY.masseur.raisePerYear)}) · opening session ` +
       `${money(ECONOMY.masseur.perSessionCents)} · rungs ${ECONOMY.masseur.rungs.map((r) => r.sessions).join('/')}`,
   )
   Object.assign(ECONOMY.masseur, { raisePerYear: RAISE })

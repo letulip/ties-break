@@ -1,9 +1,17 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // The determinism smoke below replays one short career TWICE on the live engine – deterministic but
 // not free, and the unit project runs many files in parallel. Same contention-budget reasoning as
 // the sibling bench tests (vite.config.ts): the real cost is a couple of seconds on an idle core.
-vi.setConfig({ testTimeout: 60_000 })
+//
+// ⚠⚠ AND THE `vi.setConfig({ testTimeout: 60_000 })` THAT STOOD HERE WAS REMOVED 27.09 (T5.3 · H-06),
+// WITHOUT WEAKENING THE PARAGRAPH ABOVE. It asked for exactly the 60 s the unit project already grants
+// (`vite.config.ts`), so it changed nothing – and a constant restated where it cannot follow its source
+// means that if the ceiling ever moves, this file silently stays at 60 while its siblings follow. The
+// reasoning about contention is still true and still worth reading; it simply does not need a number
+// here to be true. ⚠ No cost claim is made for this file: removing a declaration equal to the default is
+// behaviour-neutral by construction. A budget BELOW the ceiling would have stayed – that one says
+// something. The ceiling and the measured table: tests/sim-serialisation.test.ts.
 
 import {
   counterfactualLedger,

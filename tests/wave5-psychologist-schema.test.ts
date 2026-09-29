@@ -128,12 +128,14 @@ import {
   TEMPERAMENTS,
   type Temperament,
 } from '../src/engine/spirit'
-import { createWorld, tickWeek, skipTournament, closeTournament, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import { createWorld, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
 // ⚠ T7: `ECONOMY.bond.band` is read by §E's re-aimed second case, which now states the CONDITION its
 // two walls assertions hold under instead of asserting them into a comment that stopped being true.
 import { ECONOMY } from '../src/engine/economy'
+import { walkWeeks } from './helpers/career'
+import { engineModuleSource } from './worldSource'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -194,15 +196,7 @@ function srcFiles(dir = SRC, prefix = ''): [string, string][] {
  *  agreement of two untouched initial values. Caught by this file's own null-arm check, which is
  *  what that check is for. */
 function walk(world: WorldState, weeks: number): WorldState {
-  const rng = resumeMain(world.rngMain)
-  for (let w = 0; w < weeks; w++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, resumeMain(world.rngMain), weeks)
 }
 
 // =================================================================================================
@@ -668,7 +662,12 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     expect(withKeys.week, 'the arms really walked 156 weeks').toBe(156)
     expect(withKeys.rngMain.n, '...and really spent MAIN draws doing it').toBeGreaterThan(0)
     expect(withKeys.events.length, '...and really lived a career').toBeGreaterThan(10)
-  }, 120_000)
+  // ⚠⚠ THE TWO PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s -> 60 s
+  // on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s own unit
+  // `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 2.44 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ and the six keys come out of a walked career exactly as they went in – T1 ships no writer', () => {
     // The other direction of the same claim, and the one that would catch a tick that WROTE one of
@@ -698,7 +697,7 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     // ⚠ AND THE BOND IS WHY, stated rather than implied – the claim above is about a caring career and
     // would be false of a grinding one, which is T7's own test file's business.
     expect(world.bond, 'her bond never left the caring band').toBeGreaterThanOrEqual(ECONOMY.bond.band.steady)
-  }, 120_000)
+  })
 })
 
 // =================================================================================================
@@ -729,11 +728,27 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     const named = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('expressedTemperamentOf'))
       .map(([path]) => path)
-    expect(named, 'the reader set is exactly the two modules T7 re-pointed')
-      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat.ts'])
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06, AND IT WENT RED ON CONTACT, WHICH IS THE PIN WORKING. The
+    // life beat is being split by KIND, and §9's `rollLeak` – the FOURTH mechanic this case's own
+    // paragraph below counts – moved to `world/lifeBeat/leak.ts` with its openness read. So the census
+    // is three files, and the 4/2 split below is now asserted over the MODULE SET (`lifeBeat.ts` plus
+    // `lifeBeat/*.ts`, read through `tests/worldSource.ts`' `engineModuleSource`) rather than over one
+    // path – which keeps ruling A's real content, the split itself, exactly where it was: 3 expression
+    // reads in the hub plus 1 in the leak, and both birth reads still in the hub.
+    // ⚠ NOT WEAKENED: the file list is still EXACT, both counts are still exact, and the private birth
+    // reader is still asserted to exist, so no half of this can go green by deletion. ⚠ THE PACKAGE
+    // SORTS BEFORE ITS HUB: `srcFiles` walks, and `readdirSync` meets the directory before the file.
+    // ⚠⚠ RE-AIMED AGAIN 28.09 BY T6.10 / A-06 – A FOURTH FILE, SAME REASON, AND THE COUNTS BELOW DID
+    // NOT MOVE. §8 «the end» moved to `world/lifeBeat/ended.ts`, taking `rollEnds`'s expression read
+    // with it. The 4/2 split is asserted over the MODULE SET, so it is unchanged and still exact – what
+    // moved is only WHICH file inside the set spells one of the four. ⚠ NOT WEAKENED: the file list is
+    // still EXACT and a reader appearing anywhere else is still red.
+    expect(named, 'the reader set is exactly the two modules T7 re-pointed, plus the leak and the end')
+      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat/ended.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/lifeBeat.ts'])
     // ⭐⭐ RULING A, COUNTED. `lifeBeat.ts` held FIVE `temperamentOf(world)` calls before T7. Three are
     // evaluated-now mechanics (`rollArrival`'s hazard/wants/lag, `arrivalEligible`'s cooldown,
-    // `rollEnds`'s hazard) and read EXPRESSION; two re-derive the `'ended'` card's PRICE
+    // `rollEnds`'s hazard – the last of which now lives in `world/lifeBeat/ended.ts`, T6.10) and read
+    // EXPRESSION; two re-derive the `'ended'` card's PRICE
     // (`beatEndsRead`, and the told-late kept row) and must read BIRTH, because `answerLifeBeat`
     // re-validates the chosen option against a set that has to be reconstructible from persisted
     // facts – and expression is a fact about the current week, not about the episode.
@@ -747,7 +762,7 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // walls is seen less and misreported more, which is §2a doing exactly what §3c-bis says openness
     // does. WHAT DID NOT MOVE: the birth count below stays 2 – T6 re-derives no price – so the split
     // is now 4/2 and every one of the six is still named.
-    const beats = codeOnly(readFileSync(`${SRC}engine/world/lifeBeat.ts`, 'utf8'))
+    const beats = codeOnly(engineModuleSource('world/lifeBeat'))
     expect(beats.split('expressedTemperamentOf(world)').length - 1, '⚠ ruling A: FOUR mechanics read expression')
       .toBe(4)
     // ⚠ THE TWO COUNTS DO NOT OVERLAP, WHICH WAS MEASURED RATHER THAN ASSUMED (the first drafting of
@@ -819,10 +834,16 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     //
     // ⚠ THE ORDER IS THE WALK'S, NOT AN ALPHABET'S: `srcFiles` recurses a directory where it meets
     // it, so `engine/world/` is exhausted before `engine/world.ts` («world» sorts before «world.ts»).
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – THE THIRD WRITER IS `engine/world/create.ts` NOW, AND IT
+    // TRADED PLACES WITH THE SECOND. P4's last three span-moves took `createWorld`'s literal out of
+    // the barrel, and `create.ts` sorts before `state.ts` inside `engine/world/`, so the ORDER of
+    // this array follows the walk exactly as the comment above demands. ⚠ NOT WEAKENED: still three
+    // writers, still an exact ordered list per key, still red on a fourth.
     const WRITERS = [
       'engine/migrations.ts', // the v75 -> v76 back-fill
+      'engine/world/create.ts', // `createWorld`'s literal
       'engine/world/state.ts', // the seat itself
-      'engine/world.ts', // `createWorld`'s literal
     ]
     const WALLS_KEYS = ['wallsLean', 'wallsFlipped'] as const
     for (const key of WALLS_KEYS) {
@@ -940,6 +961,12 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       'components/SupportStaffTab.vue',
       'engine/migrations.ts',
       'engine/spirit.ts',
+      // ⚠⚠ THE THIRTEENTH ENTRY, AND IT IS T6.5 / A-04 (a) MOVING A NAME RATHER THAN A READER (28.09).
+      // `createWorld`'s literal left the barrel for `engine/world/create.ts` – and unlike every other
+      // census this wave re-aimed, `engine/world.ts` STAYS below, because the barrel goes on naming
+      // `psychologistFocusOpen` in the re-export line the two screens reach it through. So the list
+      // GREW by one while the roads did not: the birth value is written in one place, read in none.
+      'engine/world/create.ts',
       'engine/world/psychologist.ts',
       'engine/world/snapshot.ts',
       // ⭐⭐ ROUND 44 #7 – the staff's year-end post reads `psychologistFocus` together with

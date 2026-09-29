@@ -597,7 +597,14 @@ describe('what the childhood may not touch', () => {
       .filter((f) => !f.endsWith(`engine${'/'}childhood.ts`))
       .filter((f) => /from\s*['"][^'"]*\bchildhood['"]/.test(readFileSync(f, 'utf8')))
       .map((f) => f.slice(SRC.length))
-    expect(importers.sort()).toEqual(['engine/world.ts', 'prologue/pool.ts'])
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a) – ONE NAME RE-SPELLED, THE CLAIM UNTOUCHED. P4's last
+    // three span-moves took `createWorld` out of the barrel into `engine/world/create.ts`, and the
+    // childhood import travelled with its only caller (the note above it in create.ts says so from
+    // that end). Still exactly TWO importers in the whole of `src/`, still neither on the tick path –
+    // and the second half of the argument for the first name is unchanged and is the reason this is a
+    // re-spelling rather than a widening: `create.ts` runs ONCE, at the birth of a career, and
+    // `tickWeek` cannot reach it.
+    expect(importers.sort()).toEqual(['engine/world/create.ts', 'prologue/pool.ts'])
 
     // ⭐⭐ AND HERE IS WHY THE SECOND NAME COSTS THE GUARANTEE NOTHING – the half the widened set
     // cannot state on its own. `src/prologue` is UI-side: not one file in the four framework-free

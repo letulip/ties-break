@@ -27,12 +27,16 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { UpcomingEvent } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `argOf` was one of seven byte-identical live copies. `strOf` below is NOT in
+// `_args.ts` – F-04 named `argOf`, and a string arm is a separate census.
+import { argOf } from './_args'
+// T5.12 · F-04, 27.09: the local `pct`, taking a numerator and a denominator, was one of two
+// byte-identical copies of that spelling, dash cell included – renamed `shareOf` at the call sites,
+// because nine live siblings call a FRACTION `pct`, and one name over two contracts is how a ×100
+// arrives. See `tools/_fmt.ts`.
+import { shareOf } from './_fmt'
 
 const args = process.argv.slice(2)
-const argOf = (name: string, fallback: number): number => {
-  const i = args.indexOf(`--${name}`)
-  return i >= 0 && args[i + 1] ? Number(args[i + 1]) : fallback
-}
 const strOf = (name: string, fallback: string): string => {
   const i = args.indexOf(`--${name}`)
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback
@@ -191,7 +195,6 @@ function runCareer(presetIndex: number, index: number, policy: Policy): CareerRo
 }
 
 const padEnd = (s: string, w: number): string => (s.length >= w ? s : s + ' '.repeat(w - s.length))
-const pct = (n: number, d: number): string => (d === 0 ? '   – ' : `${((100 * n) / d).toFixed(1)}%`)
 
 function report(rows: CareerRow[], label: string): void {
   const judged = rows.reduce((n, r) => n + r.judged, 0)
@@ -201,9 +204,9 @@ function report(rows: CareerRow[], label: string): void {
   console.log('')
   console.log(`══ ${label} · ${rows.length} careers ══`)
   console.log(`  weeks judged (a card was shown)   : ${judged}`)
-  console.log(`  DEAD – the card refuses her       : ${dead} (${pct(dead, judged)})`)
-  console.log(`    of those, DISPLAY (she could have entered something else that week) : ${alt} (${pct(alt, dead)})`)
-  console.log(`    of those, SUPPLY  (the week held nothing enterable at all)          : ${none} (${pct(none, dead)})`)
+  console.log(`  DEAD – the card refuses her       : ${dead} (${shareOf(dead, judged)})`)
+  console.log(`    of those, DISPLAY (she could have entered something else that week) : ${alt} (${shareOf(alt, dead)})`)
+  console.log(`    of those, SUPPLY  (the week held nothing enterable at all)          : ${none} (${shareOf(none, dead)})`)
   const runs = rows.map((r) => r.worstRun)
   console.log(
     `  worst run of dead weeks on ONE screen: max ${Math.max(0, ...runs)} · median ${median(runs).toFixed(1)} · mean ${mean(runs).toFixed(2)}` +
@@ -240,7 +243,7 @@ function report(rows: CareerRow[], label: string): void {
   for (const [k, v] of [...split.entries()].sort((x, y) => y[1].display + y[1].supply - x[1].display - x[1].supply)) {
     const tot = v.display + v.supply
     console.log(
-      `      ${padEnd(k, 13)} ${String(tot).padStart(4)} dead · display ${String(v.display).padStart(4)} (${pct(v.display, tot)})` +
+      `      ${padEnd(k, 13)} ${String(tot).padStart(4)} dead · display ${String(v.display).padStart(4)} (${shareOf(v.display, tot)})` +
         ` · supply ${String(v.supply).padStart(4)} · of the supply weeks, ${v.alone} carried NO other event` +
         (v.alsoBlocked.size
           ? ` · the others refused for: ${[...v.alsoBlocked.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([r, n]) => `${r} ${n}`).join(', ')}`

@@ -73,7 +73,13 @@ export type { WeekClaims, WeekNote } from './diary/weekNotes'
 import { DIARY_POOL, diaryLine } from './diary/pool'
 export { DIARY_POOL, diaryLine }
 export type { DiarySurface, DiaryClaims, DiaryPhrase } from './diary/pool'
-import { short } from './diary/words'
+// ⚠ `capitalise` JOINS `short` HERE INSTEAD OF BEING DECLARED AGAIN (F P3-09, 26.09). This file
+// carried a local `capitalize` (`s.length > 0 ? s[0].toUpperCase() … : s`) beside `diary/words.ts`'s
+// `capitalise` (`s.charAt(0).toUpperCase() …`) – two spellings of one word, byte-identical on every
+// input including '', since `charAt(0)` on an empty string is ''. `words.ts` is the shared-vocabulary
+// leaf this file's pools already read, and `diarySource()` covers diary.ts + diary/*.ts, so no source
+// pin's scope moves.
+import { capitalise, short } from './diary/words'
 import type { DiaryWorldView } from './diary/facts'
 import { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor } from './diary/travelHome'
 export { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor }
@@ -121,7 +127,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     injured: view.injury !== null,
     lastResult,
     lastTitle,
-    lossStreak: view.lossStreak,
+    lossStreak: view.lossStreakRun,
     rankClimbed,
     runPointsThisWeek: view.runPointsThisWeek,
     spiritBand,
@@ -166,7 +172,10 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     resultTier: resultFresh ? (lastResult.tier ?? null) : null,
     rankClimbed,
     runPointsThisWeek: view.runPointsThisWeek,
-    lossStreak: view.lossStreak?.losses ?? 0,
+    // ⚠ THE BRIDGE, AND SINCE F P3-17 (26.09) THE TWO NAMES SAY WHICH SIDE IS WHICH: the view
+    // carries the engine's streak OBJECT (`lossStreakRun`), the wire carries the COUNT. One line,
+    // one direction, and no reader of either can mistake one for the other any more.
+    lossStreak: view.lossStreakRun?.losses ?? 0,
     condition: view.condition,
     conditionBand: conditionBandOf(view.condition),
     // ⭐⭐ v72 – WHO SHE IS, HOW SHE IS, AND WHERE THE TWO OF THEM STAND.
@@ -509,10 +518,6 @@ export interface MemoryLine {
   text: (m: Milestone) => string
 }
 
-function capitalize(s: string): string {
-  return s.length > 0 ? s[0].toUpperCase() + s.slice(1) : s
-}
-
 /** How long a memory line may be. The Memory polaroid is a `card-short` (138px) in Home's 2x2 grid,
  *  and the line is set in the handwriting face beside a 68px photograph – so a long sentence does not
  *  clip, it STRETCHES the grid row and the card stops matching the coach card next to it. 39 is the
@@ -531,7 +536,7 @@ export const MEMORY_LINES: readonly MemoryLine[] = [
   // R15-5: the first cheque, in the parent's voice and inside the 39-char budget the card sets.
   { type: 'prize', text: (m) => (m.tier ? `First prize money – a ${short(m.tier)} cheque.` : 'First prize money – a real cheque.') },
   { type: 'prize', text: () => 'The first week the tennis paid her.' },
-  { type: 'injury', text: (m) => `${capitalize(m.kind ?? 'an injury')} – her first injury.` },
+  { type: 'injury', text: (m) => `${capitalise(m.kind ?? 'an injury')} – her first injury.` },
   // ⭐ ROUND-17 #16 – A RANK PRINTED WITHOUT ITS TABLE IS NOT A FACT. These two lines read "Season
   // 2035 closed at #79." and named no table, on a career that has THREE of them. The number is
   // `Milestone.rank`, and `captureMilestone` writes `world.kidRank` into it - which is the

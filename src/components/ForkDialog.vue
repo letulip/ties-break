@@ -336,8 +336,8 @@ useDialogFocus(card)
     >
       <img class="fork-art" :src="artUrl" :style="artStyle" alt="" />
       <!-- BOTH LINES ARE THE NAME, in the order they are read: her age, then what has happened. -->
-      <p id="fork-dialog-kicker" class="fork-kicker">She is {{ fork.ageYears }}</p>
-      <h2 id="fork-dialog-title" class="fork-title">School is over.</h2>
+      <p id="fork-dialog-kicker" class="fork-kicker dialog-kicker">She is {{ fork.ageYears }}</p>
+      <h2 id="fork-dialog-title" class="fork-title dialog-title">School is over.</h2>
       <!-- ⚠ ROUND 24 #5 – the lede carries the ONE new fact of the redesign: college is a
            reservation taken up at the academic year's start, and the season until then is played.
            It may not recommend (ruling 4), so it states the three roads' timing and stops. -->
@@ -468,7 +468,7 @@ useDialogFocus(card)
       <StoreError />
 
       <div class="fork-answers">
-        <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('continue')">
+        <button class="fork-answer dialog-option" type="button" :disabled="game.busy" @click="answer('continue')">
           <strong>Turn professional</strong>
           <span>W15 and up. Real cheques, real bills, and the family keeps paying.</span>
         </button>
@@ -487,7 +487,7 @@ useDialogFocus(card)
              mechanisms that shared a noun. `docs/specs/round17-triage.md` §B has the evidence; this
              button's job is to make sure nobody has to go and read it. -->
         <button
-          class="fork-answer"
+          class="fork-answer dialog-option"
           type="button"
           :disabled="game.busy"
           @click="answer('college')"
@@ -503,7 +503,7 @@ useDialogFocus(card)
           <span v-if="effectiveLine">{{ effectiveLine }}</span>
           <span v-else>Four years of student tennis on a college scholarship, from the next academic year. No ranking points.</span>
         </button>
-        <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
+        <button class="fork-answer dialog-option" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>
           <span>She had a childhood in the sport. That is a whole thing to have had.</span>
         </button>
@@ -527,21 +527,13 @@ useDialogFocus(card)
   margin-bottom: 14px;
 }
 
-.fork-kicker {
-  margin: 0 0 4px;
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.fork-title {
-  margin: 0 0 8px;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  line-height: 1.25;
-  color: var(--ink);
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – THE KICKER AND THE TITLE ARE `.dialog-kicker` / `.dialog-title` in
+   src/style.css now, and both elements carry the shared class beside their own. Four dialogs stated the
+   kicker's five declarations and four stated the title's; the two scoped rules are gone entirely
+   because every declaration in them was the shared one. The class names stay, so the markup, the two
+   `aria-labelledby` ids and every pin naming them are untouched. NOT `ui/Eyebrow.vue`: that component
+   rules the 11px label on a PAGE, and F-09 says in as many words that the dialog kicker is a different
+   object. */
 
 .fork-lede {
   margin: 0 0 16px;
@@ -585,24 +577,10 @@ useDialogFocus(card)
   gap: 8px;
 }
 
-.fork-answer {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: left;
-  padding: 12px 14px;
-  border: var(--stroke-hair) solid var(--ink-dim);
-  border-radius: var(--radius-control);
-  background: transparent;
-  font: inherit;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.fork-answer:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – THE ROW ITSELF IS `.dialog-option` IN src/style.css NOW, carried beside
+   this class. `.retire-answer` stated the same eleven declarations and the same disabled pair, and jscpd
+   read the two rules as one clone (#19, 05.09's C.6). The two child rules below – `strong` and `span` –
+   stay: they are this card's own two-line answer and the retirement card's are its own. */
 
 .fork-answer strong {
   font-size: 15px;

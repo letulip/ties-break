@@ -38,7 +38,6 @@ import {
   buildSoftBeatInvite,
   createWorld,
   deliverOwnKey,
-  kidAgeExact,
   lifeLogOf,
   liveSoftBeat,
   ownKeyDue,
@@ -49,19 +48,13 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { drainCostOf } from '../tools/_lifeBeats'
+import { weekAtAge } from './helpers/career'
 
 beforeEach(() => {
   rngKeys.length = 0
 })
 
 /** The FIRST week she reads at or above `years` – the engine's own clock (wave 7's shared shape). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** A career parked at its first `independent` week – 22+, school long over, no college. */
 function independent(seed: string): WorldState {
   const world = createWorld(seed)

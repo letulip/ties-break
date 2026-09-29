@@ -19,13 +19,13 @@ import { pickInt, rngFromSeed, type Rng } from '../rng'
 import { isExamWeek, isOffSeasonWeek } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
-import { simulateMatch } from '../match/engine'
+import { recordedMatchOptions, simulateMatch } from '../match/engine'
 import { clamp, matchDrain } from '../condition'
 import { applyBondDelta } from '../spirit'
 import type { AiPlayer } from '../season/types'
 import type { MatchPlayer, Surface } from '../match/types'
+import type { WorldEvent } from '../../shared/protocol'
 import { rivalGroundstrokes } from '../season/rival'
-import { JUNIOR_TOUR } from '../season/tournament'
 import { formatShortName } from '../../shared/format'
 import { addEvent, seasonStartWeek } from './ledger'
 import { ageWindowStartWeek } from './age'
@@ -344,6 +344,34 @@ export function pickSparringPartner(world: WorldState, rng: Rng): AiPlayer {
   return byId.get(ranking[pick]?.playerId ?? '') ?? world.cohort[0]
 }
 
+/** ⭐⭐ THE ID A RESOLVED PRACTICE IS FILED UNDER, IN ONE PLACE – written by `resolvePractice`
+ *  below and read by every surface that asks "is this the week's practice friendly". Until F-07
+ *  (26.09 principles review) the format was spelled on both sides of the engine/UI boundary: the
+ *  template string here and the prefix `'practice-w'` in `WeekRecapCard.vue`. */
+export function practiceMatchId(week: number): string {
+  return `practice-w${week}`
+}
+
+/** ⚠⚠ `friendly` NEVER MEANT "PRACTICE", AND THIS IS THE ONE PREDICATE THAT KNOWS THE DIFFERENCE.
+ *  `friendly` means "a watchable match that awards ZERO ranking points" – the flag the radar, the
+ *  avatar's emotion, the knock history and the Weekly Story read to decide whether a match is
+ *  evidence about her form – and since the college wave a national-team RUBBER wears it too
+ *  (`world/college.ts`, `callUpRubberId`). So "the week's practice friendly" is `friendly` AND the
+ *  id `resolvePractice` files under, never `friendly` alone.
+ *
+ *  ⚠ F-07 (26.09): `WeekRecapCard.vue` narrowed to the id in the college wave and called it «a trap
+ *  closed rather than a bug fixed»; `App.vue` and `SeasonScreen.vue` kept the broad `e.friendly`
+ *  spelling, so the three surfaces could disagree about which match the week's practice card is
+ *  about. This is form A of `docs/specs/engine-ui-parity-2026-09.md` §1 – the engine's own
+ *  primitive, so there is no second implementation left to drift.
+ *
+ *  ⚠ THE WEEK COMES OFF THE EVENT, not from a caller, so the id and the row are checked against
+ *  EACH OTHER: a stored `practice-w41` sitting on a week-42 row is not this week's practice under
+ *  any reading. Which week the caller is SHOWING stays the caller's own filter. */
+export function isPracticeMatchEvent(e: WorldEvent): boolean {
+  return e.type === 'match' && e.friendly === true && e.match?.eventId === practiceMatchId(e.week)
+}
+
 /** Tick step 1c: play a booked practice match. A watchable friendly through the SAME record
  *  shape a tournament match uses (MatchReplay re-simulates from the stored seed), ZERO ranking
  *  points, and the spec's drain: `max(1, local-scoreline drain − 1)` – a friendly is one lighter
@@ -415,7 +443,15 @@ export function resolvePractice(world: WorldState): void {
     age: opponent.ageYears,
   }
   const seed = `${world.seed}:practicematch:${world.week}:m`
-  const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+  // ⭐ C-04 / F-08 (27.09) – THE FOURTH RECORDER JOINS THE ONE SPELLING. This wrote
+  // `{ surface, tour: JUNIOR_TOUR, seed }` out for itself, and every replayer of a booked friendly
+  // wrote the same literal at the other end; option equality is the ONLY link between what a replay
+  // plays and the scoreline stored beside it, so a convention is not enough. `recordedMatchOptions`
+  // returns exactly those three fields today, so nothing about this match moves – and the day a
+  // recorder gains `momentum`, `firstServer` or a condition map, both ends move together.
+  // ⚠ THE SEED STAYS AT THIS CALL SITE, which is what keeps the sub-stream byte-identical: the
+  // primitive spells the OPTIONS, never the key.
+  const result = simulateMatch(kid, opp, recordedMatchOptions({ surface, seed }))
   const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
   const kidWon = result.winner === 0
   // The spec's drain rule, graded off the real scoreline via the SAME matchDrain the tour uses.
@@ -463,7 +499,7 @@ export function resolvePractice(world: WorldState): void {
       seed,
       score,
       ...(retiredId ? { retiredId } : {}),
-      eventId: `practice-w${world.week}`,
+      eventId: practiceMatchId(world.week),
       surface,
       oppName: opp.name,
       a: { ...kid },

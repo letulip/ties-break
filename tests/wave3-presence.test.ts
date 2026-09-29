@@ -97,7 +97,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildLifeBeatPrompt,
-  createWorld,
   deliverKnownPartner,
   kidAgeExact,
   lifeBeatSaid,
@@ -110,6 +109,10 @@ import {
 import { schoolIsOver } from '../src/engine/kidLife'
 import { bondBandOf } from '../src/engine/spirit'
 import { DEFAULT_PROFILE, type BondBand, type CollegeState, type DiaryLifeStage, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
+// ⚠ THE SHARED POKE UNDER THIS FILE'S OWN WORD (26.09, T5.11): `pokedAt` is F-02's name for the
+// 19 `careerAt` pokes, 5 of them byte-identical to the body that stood here. The alias keeps every
+// call site's own word rather than renaming them to prove a point about a helper.
+import { pokedAt as careerAt } from './helpers/career'
 
 // -------------------------------------------------------------------------------------------------
 // THE AXIS, AS A TOTAL RECORD
@@ -209,13 +212,6 @@ function bondFor(band: BondBand): number {
 }
 
 /** A career parked at `week` with an empty life – wave3-delivery's own `careerAt`, verbatim. */
-function careerAt(seed: string, week: number): WorldState {
-  const world = createWorld(seed, DEFAULT_PROFILE)
-  world.season = []
-  world.week = week
-  return world
-}
-
 /** ⭐⭐ A CAREER STANDING IN A NAMED LIFE STAGE, with the news owed to it this week.
  *
  *  ⚠⚠ THE STAGE IS FOUND AND THEN CONFIRMED AGAINST THE ENGINE'S OWN READER, which is what stops

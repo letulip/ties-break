@@ -32,3 +32,20 @@ export function fnv1a(s: string): number {
 export function fnv1aHex(s: string): string {
   return fnv1a(s).toString(16).padStart(8, '0')
 }
+
+/** ⭐ A WHOLE WORLD'S FINGERPRINT – the control for a fixture MIGRATION (26.09, W5's T5.11).
+ *
+ *  H-07's migration path asks for «a world-hash identity before and after at every call site», and
+ *  this is that hash: a scenario builder that moved out of a test file into `scenarios/` must hand
+ *  back the same world, and a migration that moves a hash is not a migration. `JSON.stringify` is the
+ *  right serialisation and not a shortcut – it is what `coachTravelEdgeFixtures.ts`' frozen ladder
+ *  hashes too, and it therefore sees key ORDER as well as values, which is exactly what a hand-posed
+ *  fixture's field list can quietly change.
+ *
+ *  ⚠ IT IS A CONTROL, NEVER A PIN. Nothing should ever commit one of these hex strings: a posed
+ *  fixture changes for real reasons all the time, and a pin on this would be a second `PRE_V*` ladder
+ *  with nobody's protocol behind it. Capture it in a probe, compare the two arms, throw the probe
+ *  away – the migration's report carries the numbers. */
+export function worldHash(world: unknown): string {
+  return fnv1aHex(JSON.stringify(world))
+}

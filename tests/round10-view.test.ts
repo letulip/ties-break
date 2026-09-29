@@ -18,8 +18,7 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { simulateMatch } from '../src/engine/match/engine'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { replayMatch } from '../src/composables/annotatedMatch'
 import { seasonYear } from '../src/shared/dates'
 import type { WorldEvent } from '../src/shared/protocol'
 
@@ -240,13 +239,16 @@ describe('R10-12 — watching the booked friendly cannot change it', () => {
     const { friendly } = playPracticeWeek('r10-practice')
     const m = friendly.match!
     // EXACTLY what the viewer does (PracticeFlow/MatchReplay): the stored players + stored seed.
-    const replayed = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed ?? '' })
+    // ⚠ AND SINCE 27.09 THAT IS LITERAL RATHER THAN DESCRIPTIVE (C-04). The three lines here spelled
+    // the recipe out, so «exactly what the viewer does» was a claim about two copies agreeing;
+    // `replayMatch` is the function both screens call and its options are the recorder's own.
+    const replayed = replayMatch(m).result
     const replayedScore = replayed.sets.map((s) => `${s.a}-${s.b}`).join(' ')
     const replayedWinnerId = replayed.winner === 0 ? m.aId : m.bId
     expect(replayedScore).toBe(m.score)
     expect(replayedWinnerId).toBe(m.winnerId)
     // …and twice more: a re-watch is byte-identical too (pure function of the stored inputs).
-    const again = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed ?? '' })
+    const again = replayMatch(m).result
     expect(again).toEqual(replayed)
   })
 
@@ -266,8 +268,8 @@ describe('R10-12 — watching the booked friendly cannot change it', () => {
     const m = friendly.match!
     const before = structuredClone(world)
     // Watch it (twice, and via the annotated path the component uses).
-    simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed ?? '' })
-    simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed ?? '' })
+    replayMatch(m)
+    replayMatch(m)
     expect(world).toEqual(before)
   })
 })

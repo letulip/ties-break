@@ -43,8 +43,10 @@ import WeekRecapCard from '../WeekRecapCard.vue'
 import NextTournamentPanel from '../NextTournamentPanel.vue'
 import IconButton from '../ui/IconButton.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
+import PlanPresetRow from '../ui/PlanPresetRow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
+import { planWeek, presetOf } from '../../engine/plan'
 
 // W1: THE × IS A CLOSE NOW. The story opens itself when a week resolves (App.vue's `week` watcher –
 // the design's «Конец недели (игровой тик) → D. Weekly Story ... × возвращает на Home»), so the
@@ -196,12 +198,21 @@ const PRESET_LABEL: Record<(typeof PRESET_ORDER)[number], string> = {
   balanced: 'Balanced 75/25',
   light: 'Light 60/40',
 }
+/** ⚠ THE WORDS THIS SCREEN ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). `PRESET_LABEL` and
+ *  `PRESET_ORDER` above are untouched – this block reads grind-first with the percentages in the label,
+ *  and the dials tab reads light-first with bare words; both keep their own. */
+const PRESET_OPTIONS = PRESET_ORDER.map((value) => ({ value, label: PRESET_LABEL[value] }))
 const plan = computed(() => game.snapshot?.plan ?? WEEK_PLAN_PRESETS.balanced)
+/** ⚠ WHICH PRESET IS HERS IS THE ENGINE'S ANSWER SINCE E-02 (ruling 7a, 26.09). This compared `train`
+ *  AND `rest`, which is the same test as comparing `train` alone because `rest = 100 - train`
+ *  (`planFromWeek`) – so every legal hand-arranged week lit a pill here too. `presetOf` carries
+ *  HerWeekTab's rule, which is his: the layout is the preset's, not the share. */
 const activePreset = computed(() => {
   const p = game.snapshot?.plan
-  if (!p) return null
-  return PRESET_ORDER.find((k) => WEEK_PLAN_PRESETS[k].train === p.train && WEEK_PLAN_PRESETS[k].rest === p.rest) ?? null
+  return p ? presetOf(planWeek(p)) : null
 })
+/** A preset is `setPlan` in one press; the spend row reprices off the engine's own answer. */
+const applyPreset = (k: (typeof PRESET_ORDER)[number]) => game.setPlan(WEEK_PLAN_PRESETS[k])
 const spendRange = computed<[number, number]>(() => {
   const snap = game.snapshot
   if (!snap) return [0, 0]
@@ -351,19 +362,20 @@ const spendRange = computed<[number, number]>(() => {
          its presets, its plan line and its spend row untouched – and it is not on a screen whose
          subject is a tournament that has not been played yet. -->
     <section v-if="!tournamentOnly">
-      <h2>Training plan</h2>
-      <div class="option-row" style="margin-top: 10px">
-        <button
-          v-for="p in PRESET_ORDER"
-          :key="p"
-          class="option-pill"
-          :class="{ selected: activePreset === p }"
-          :disabled="game.busy"
-          @click="game.setPlan(WEEK_PLAN_PRESETS[p])"
-        >
-          {{ PRESET_LABEL[p] }}
-        </button>
-      </div>
+      <!-- ⚠ THE ID IS THE PRESET ROW'S ACCESSIBLE NAME AND NO WORD IS NEW (E-02, 27.09). The heading
+           was already here and already read «Training plan»; `aria-labelledby` below points a screen
+           reader at THIS node, so the group is named out of shipped copy and the two cannot drift. It
+           is the only one of the three preset rows that can be named for free – the other two have a
+           code comment above them and nothing visible, so they stay unnamed until the owner rules. -->
+      <h2 id="this-week-plan-title">Training plan</h2>
+      <PlanPresetRow
+        labelled-by="this-week-plan-title"
+        style="margin-top: 10px"
+        :options="PRESET_OPTIONS"
+        :active="activePreset"
+        :disabled="game.busy"
+        @pick="applyPreset"
+      />
       <!-- R9-8: the plan reads as unbordered plain text, ONE line, with this week's
            tournament name when one is entered (the pill frame is gone). -->
       <p class="this-week-plan">
@@ -382,7 +394,7 @@ const spendRange = computed<[number, number]>(() => {
          arrival has its own way off in the header, and it is a back arrow rather than this pill
          because this one silences a week's story on the way out. -->
     <template v-if="showStory" #footer>
-      <div class="week-proceed">
+      <div class="week-proceed floating-cta">
         <PrimaryPill variant="cta" class="week-proceed-btn" @click="dismissRecap">Proceed to Home</PrimaryPill>
       </div>
     </template>
@@ -454,28 +466,23 @@ const spendRange = computed<[number, number]>(() => {
        cannot drift in appearance while staying honestly different in meaning.
    `pointer-events` follows Home's pattern: the strip is transparent to taps so the story scrolls
    under it, and only the pill takes the press. */
+/* ⭐ ROUND 36 PHASE 3 – see `.cal-go` in CalendarScreen.vue: from 1024 the rail moves the middle of
+   the reading column off the middle of the window, and the bottom clearance becomes a margin off
+   the page's edge because there is no bar under it any more. Both tokens compute to this rule's
+   own 50% and 58px below 1024. */
+/* ⚠ ROUND 36 PHASE 2 – see `.cal-go` in CalendarScreen.vue and the shell's own week button in
+   src/style.css: three copies of one floating-CTA box, and phase 1 moved only the one that lives
+   in the sheet. The button is centred, so the token changes nothing on screen at any width; it
+   stops this box from being a 520px island under a 736px column.
+   ⚠ The shell's rule is not named by its class here on purpose - tests/round13-nav.test.ts reads
+   this file as text and refuses that name in a tab screen, comments included. See CalendarScreen. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – THE THIRD COPY IS GONE AND THE TWO NOTES ABOVE ARE KEPT VERBATIM, in this
+   file, because they are the finding's cost evidence: «three copies of one floating-CTA box, and phase 1
+   moved only the one that lives in the sheet». The box is `.floating-cta` in src/style.css now and this
+   element carries both classes; nothing is left here but the centring of the single pill, and the
+   shared name is neutral so the round-13 refusal above still reads this file for the literal string. */
 .week-proceed {
-  position: fixed;
-  /* ⭐ ROUND 36 PHASE 3 – see `.cal-go` in CalendarScreen.vue: from 1024 the rail moves the middle of
-     the reading column off the middle of the window, and the bottom clearance becomes a margin off
-     the page's edge because there is no bar under it any more. Both tokens compute to this rule's
-     own 50% and 58px below 1024. */
-  left: var(--app-bar-left);
-  transform: translateX(-50%);
-  bottom: var(--app-bar-bottom);
-  width: 100%;
-  /* ⚠ ROUND 36 PHASE 2 – see `.cal-go` in CalendarScreen.vue and the shell's own week button in
-     src/style.css: three copies of one floating-CTA box, and phase 1 moved only the one that lives
-     in the sheet. The button is centred, so the token changes nothing on screen at any width; it
-     stops this box from being a 520px island under a 736px column.
-     ⚠ The shell's rule is not named by its class here on purpose - tests/round13-nav.test.ts reads
-     this file as text and refuses that name in a tab screen, comments included. See CalendarScreen. */
-  max-width: var(--app-bar-max);
-  display: flex;
   justify-content: center;
-  padding: 0 16px;
-  pointer-events: none;
-  z-index: 39;
 }
 
 .week-proceed-btn {

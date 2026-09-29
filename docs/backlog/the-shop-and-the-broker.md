@@ -271,3 +271,12 @@ or never, without stranding anything else.
 ⚠ **AND THE GATE ON STEP 1 IS §6.1's QUESTION, NOT A DATE**: a shop that opens before the money turns
 positive is a shop with an empty shelf. Round 23 measured that turn at season 2-3 on his own careers
 (-$11k, -$9k, +$20k, +$47k, +$126k), so "her first professional season" is the honest candidate.
+
+## Buying on the secondary market (26.09.2026 – parked, his word)
+
+The secondary market wave (docs/specs/secondary-market-2026-09.md) sells the family's OWN things
+through time – exposure, buyer letters, crisis-coupled corridors. The mirror – the family shopping
+somebody else's crisis, picking up a repossessed yacht at the bottom of an arc – came up the same
+day and was parked verbatim: «покупку на вторичке не уверен, что надо, но можно в беклог
+поставить». If it ever opens, it wants its own shelf (listings that exist without the player,
+which is new) and its own wave; the selling side's corridor arithmetic would be reused as-is.

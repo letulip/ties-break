@@ -281,6 +281,16 @@ this season: 0 of 8"* from age 14. Both are gates. Neither says the junior point
 > surfaces state a gate and neither states that the junior points stop counting. Grid, stated once:
 > [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 
+> ⚠ **AND SINCE 27.09 THE HEADER'S QUOTATION IS THE 12.08 SCREEN TOO.** The shipped season header no
+> longer says «Pro entries this season»: E-01 of the 26.09 principles review found the phrase naming a
+> window the engine does not count – `proEntryCapUsage` meters her BIRTHDAY YEAR, not the season – and
+> the owner's ruling 4a replaced it with the pills' own phrase, «birthday to birthday». Measured on
+> `v46`: week 155, age 16, 6 of 12 used, and still 6 at week 156, the season turn. `0 of 8` is a 12.08
+> grid as well. The quotation is kept for the same reason the chip's is, and the paragraph's point is
+> untouched: the gate is stated, the junior points' silence is not. The live wording is
+> [`principles-fix-strings-2026-09.md`](../plans/principles-fix-strings-2026-09.md) §3, PF4 and PF5,
+> `DRAFT` and awaiting his pass.
+
 **So the honest answer is no.** The information exists in the engine, is correct, and is
 unreachable in practice.
 

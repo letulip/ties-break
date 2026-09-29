@@ -79,6 +79,14 @@ Object.defineProperty(globalThis, 'localStorage', {
   },
 })
 
+// ⚠⚠ NOT MIGRATED TO `tests/helpers/scenarios/college.ts` (26.09, T5.11) – DELIBERATELY, AND BOTH
+// REASONS ARE DICE RATHER THAN STYLE. `finishAnyReveal` here SKIPS the bracket where the shared one
+// REVEALS it round by round (`revealTournamentRound`, the body 16 other files share), and `atCollege`
+// below clamps the wallet at the top of EVERY tick where the shared one clamps once after the walk,
+// because these cases read one world over and over. Either difference alone makes this a different
+// career, so folding it in behind an option would have hidden the drift behind a default – which is
+// the shape H-07's own migration rule forbids. If a later sweep wants to unify them, it needs a world
+// hash for this file's two seeds first, not the matching names.
 function finishAnyReveal(world: WorldState): void {
   for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) skipTournament(world)
   if (world.pendingTournament) closeTournament(world)
@@ -127,11 +135,16 @@ function press(world: WorldState, rng: Rng): void {
   // that answers only the championship stalls on the first call-up week and measures ONE rest state
   // over and over – the exact failure this helper's own note above was written about, arriving from
   // the second fixture.
+  // ⭐⭐⭐ B-01 / T2.3 RE-AIM (26.09) – AND HER CARD, WHICH PAUSES THE YEAR THE SAME WAY SINCE RULING
+  // 2(a). The note above says why a walk must answer every pause: one it does not answer measures ONE
+  // rest state over and over. This is that sentence a third time, with a blocking life beat in the
+  // call-up's place. `drainLifeBeats` is bond-neutral, so nothing this file counts moves.
   if (collegeLeagueRevealOpen(world) || callUpRevealOpen(world)) {
     skipTournament(world)
     closeTournament(world)
   }
   if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  drainLifeBeats(world)
 }
 
 async function openHome(world: WorldState) {
@@ -169,7 +182,11 @@ describe('⭐⭐⭐ #10 (again) – the college news card is about the week he i
   it('opens every rest state of the degree with a row about the tour, dated today', async () => {
     const { world, rng } = atCollege('r26-alive-home')
     const visited: number[] = []
-    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), BUDGET ONLY – `press` now answers her card too, and a year can
+    // hold one more pause than it did, so the walk needs one more press per year to cross the degree.
+    // The two counts below are the claim and they are untouched: at least eight rest states, spanning
+    // more than 150 weeks.
+    for (let i = 0; i < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
       press(world, rng)
       const wrapper = await openHome(world)
       const rows = newsRows(wrapper)

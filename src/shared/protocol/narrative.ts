@@ -909,7 +909,14 @@ export interface DiaryFacts {
    *
    *  ⚠ IT IS ABOUT DISCLOSURE AND NOT ABOUT THE ATTACHMENT. A romance the parent has not been told
    *  about reads `false` here while `activeEpisode` is non-null and spirit's baseline is already
-   *  lifted – which is the design: he sees a lighter week before he knows why. */
+   *  lifted – which is the design: he sees a lighter week before he knows why.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «The ONE predicate, `knownPartner(world, week) !== null`, asked at snapshot time and carried –
+   *  exactly the shape `coachTravelled` records, and for the same reason: the beat, the feed row and
+   *  the diary must not be able to disagree about the same attachment.»
+   */
   partnerKnown: boolean
   /** ⭐⭐ v75 (the private life, wave 4 – T6) – AN ATTACHMENT OF HERS ENDED RECENTLY AND THE MARK IS
    *  STILL ON HER: `world.spiritShock` live and of kind `'breakup'`. Derived at snapshot time, never
@@ -927,7 +934,15 @@ export interface DiaryFacts {
    *  ⚠ AND IT CARRIES NO WHEN, NO WHO AND NO WHY. The schema holds no reason for an ending any more
    *  than it holds a name for the person (see `LoveEpisode`), and `DiaryFacts` deliberately carries
    *  neither `endedWeek` nor the read – so a line reaching for a cause would be inventing the one
-   *  consequential fact the whole mechanic refuses to model. */
+   *  consequential fact the whole mechanic refuses to model.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «The ONE predicate, `world.spiritShock !== null && kind === 'breakup'`, asked at snapshot time
+   *  and carried – exactly the shape `partnerKnown` above and `coachTravelled` before it record, and
+   *  for the same reason: the week note and the engine's own recovery arithmetic must not be able to
+   *  disagree about whether she is still carrying it.»
+   */
   freshBreakup: boolean
   /** ⭐ v83 (the wedding, wave 7 – T5) – THE OCCASION THE SPOUSE RAISED **THIS WEEK**, or null on
    *  every other week of the career: `spouseViewOccasionThisWeek(world)`, asked at snapshot time and
@@ -940,14 +955,24 @@ export interface DiaryFacts {
    *  the row. It may NOT say the parent's answer (the row may still be unanswered when the note is
    *  written), may not name or gender the spouse (the standing law – the persisted name's surfaces
    *  are the owner's call), and may not carry a figure (the money law). Required rather than
-   *  optional, `vacationPackageId`'s standing argument: it selects COPY. */
+   *  optional, `vacationPackageId`'s standing argument: it selects COPY.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «The ONE derivation is `spouseViewOccasionThisWeek(world)` (world/lifeBeat.ts §12).»
+   */
   spouseOccasion: SpouseViewOccasion | null
   /** ⭐ v83 (wave 7 – T10) – THIS IS THE WEEK SHE GOT HER OWN PLACE: `ownKeyThisWeek(world)`, true
    *  exactly once per career, on the `'own-key'` row's raise week. Asked at snapshot time and
    *  carried, the field above's own shape. ⚠ WHAT A LINE LICENSED ON THIS MAY SAY: that she lives
    *  behind her own door now, the spare key, the standing Sunday – the beat's own three facts. NO
    *  address, NO rent, NO mechanic of any kind (backlog §8's boundary), and required rather than
-   *  optional for the standing reason: it selects COPY. */
+   *  optional for the standing reason: it selects COPY.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «The ONE derivation is `ownKeyThisWeek(world)` (world/lifeBeat.ts §13).»
+   */
   ownKeyWeek: boolean
   /** ⭐⭐⭐ wave 8b T2 (C6) – WHERE IN THE MOTHERHOOD ARC THIS WEEK FALLS, or null on every week of
    *  every career that never paused. The ONE derivation is `motherhoodBandAt(world)`
@@ -980,7 +1005,13 @@ export interface DiaryFacts {
    *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: what the PARENT could see of a house after a death, and
    *  how long ago it was in the vaguest terms the language allows. It may NOT name the deceased or
    *  their relation (RULED 22.09 – the deceased is UNNAMED in mechanics AND copy), may not carry a
-   *  date, a figure or a count, and may not state her interior as fact (the fallible-parent law). */
+   *  date, a figure or a count, and may not state her interior as fact (the fallible-parent law).
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «A band here would have been a curve wearing a vocabulary.» And: «⚠ `null` IS EVERY CAREER IN
+   *  THE GAME TODAY and is a real state: nobody has died.»
+   */
   bereavedWeeksAgo: number | null
   /** ⭐⭐⭐ v88 (the parting, wave 12 – T4) – **HOW MANY WEEKS SINCE HER MARRIAGE ENDED**, or `null`
    *  for a career that has not had one end. Derived at snapshot time off the `loveEpisodes` rows
@@ -1019,18 +1050,46 @@ export interface DiaryFacts {
    *  ⚠ WHAT A LINE RESTING ON IT MAY SAY: that the week held a decision and what the house looked
    *  like afterwards. The against-arm may state the fact IN HER VOICE and may NOT pass a verdict on
    *  the parent – no «should», no «wrong», no consequence foretold. It may not name a number, and it
-   *  may not claim what she will feel about it later, which is a fact the world does not hold. */
+   *  may not claim what she will feel about it later, which is a fact the world does not hold.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «⚠ AND `null` ON EVERY OTHER WEEK is what keeps this a single-week scrap rather than a mood that
+   *  hangs around – see the licence in `weekNotes.ts`.»
+   */
   forkAftermath: 'with' | 'against' | null
   /** ⭐⭐⭐ v86 (wave 10 T6b) – her mother's cabinet, or null on a career that continues no line.
    *  `null` and `0` are different: null is «there is no mother in this house», 0 is «she is here
    *  and she won nothing», and a line about a cabinet may fire on neither. Derived at render off
-   *  `world.dynasty` – no save key, no migration, no golden fixture. */
+   *  `world.dynasty` – no save key, no migration, no golden fixture.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «Read straight off `world.dynasty.motherCareer.titles`.»
+   */
   lineageTitles: number | null
   /** ⭐⭐ v86 – §7's openness axis, read off the record's stored temperament. It prices WHERE she is
-   *  felt: an open mother is quoted, a private one is noticed. Null exactly when the field above is. */
+   *  felt: an open mother is quoted, a private one is noticed. Null exactly when the field above is.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «§7's axis, read off the record's stored temperament through `temperamentOpenness` – the ONE
+   *  projection of it (engine/spirit.ts), never a second spelling. ⚠ IT PRICES WHERE SHE IS FELT AND
+   *  NOT WHETHER. An open mother is QUOTED – she says things, in front of people; a private one is
+   *  FELT – the parent notices what she did, not what she said. Same presence, two registers, which
+   *  is the axis doing exactly what §7 chose it for.»
+   */
   lineageOpen: boolean | null
   /** ⭐⭐ v86 – her mother's career ended on her body (`endingKind`), which is the one fact the scar
-   *  lines lean on. Null exactly when the two fields above are. */
+   *  lines lean on. Null exactly when the two fields above are.
+   *
+   *  ⚠ CARRIED VERBATIM FROM `DiaryWorldView`'s OWN NOTE, which stopped restating this member and
+   *  started picking it (F-06, 26.09):
+   *  «Read off the record's `endingKind`, and it is the ONE fact the scar lines lean on: «a friction
+   *  from her own career's scars» may only be said where a scar is recorded. ⚠ IT IS A FACT AND NOT A
+   *  JUDGEMENT. The ending id says the career stopped on an injury; nothing here says which part, how
+   *  bad, or how she feels about it, and no line may.»
+   */
   lineageEndedHurt: boolean | null
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
@@ -1047,6 +1106,9 @@ export interface DiaryFacts {
    *  DERIVED at snapshot time like everything here, never persisted – no schema move. */
   schoolOver: boolean
   offSeasonWeek: boolean
+  /** a booked family vacation resolved this week – `DiaryWorldView`'s own line, and the only note
+   *  either side of this boundary ever carried for the member. Kept here when the view stopped
+   *  declaring it (F-06, 26.09). */
   vacationWeek: boolean
   /** WHICH family package that week was – the catalogue's own id, or null when she was not away (or
    *  when the booking has aged off the four-week retention and the save no longer knows).

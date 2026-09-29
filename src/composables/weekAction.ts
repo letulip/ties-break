@@ -189,12 +189,19 @@ export function useWeekAction(): ComputedRef<WeekAction> {
  * as a predicate, exported so a test can walk a real career through it without mounting anything.
  *
  * ⚠⚠ THE FIRST CLAUSE IS THE ENGINE'S OWN REFUSAL, ASKED OF THE SNAPSHOT. `advanceWeeks` returns a
- * reason and ticks NOTHING in six states (engine/world/multiWeek.ts `advanceRefusal`): an ending, an
- * open reveal, an unanswered knock, an unanswered birthday, the fork and the retirement offer. Five
- * of those six are exactly what `blockingOverlay` enumerates – it was written from the same list,
- * for the same reason ("the five overlays below all stop the world") – and the sixth is `pending`.
- * So the two readers are the same rule seen from either side of the wire, and
- * `tests/r2-13-advance-span.test.ts` walks a world into every one of the six and asserts they agree.
+ * reason and ticks NOTHING in EIGHT states (engine/world/multiWeek.ts `ADVANCE_REFUSALS`, whose
+ * `openQuestions` spells them): an ending, an open reveal, an unanswered knock, an unanswered
+ * birthday, a blocking life beat, the fork, the retirement offer and a shoot/tournament collision.
+ * SEVEN of those eight are exactly what `blockingOverlay` enumerates – it was written from the same
+ * list, for the same reason – and the eighth is the reveal, which `TournamentFlow` owns rather than
+ * the overlay queue. So the two readers are the same rule seen from either side of the wire, and
+ * `tests/r2-13-advance-span.test.ts` walks a world into every one of the eight and asserts they agree.
+ *
+ * ⚠ THE NUMBERS WERE «six» AND «five» UNTIL 26.09 AND BOTH HAD BEEN WRONG SINCE ROUND 29 #3 (A-P3-4,
+ * the principles review): the life beat made seven at v73 and the collision made eight. Comment-only,
+ * corrected rather than softened into «the others» – a count is the one part of a sentence a reader can
+ * check, and this one is now checked: the r2-13 case named above asserts the seven-of-eight claim over
+ * `blockingOverlay` itself, so a ninth refusal with no overlay reddens instead of rotting this prose.
  *
  * ⚠⚠ AND `'offer'` IS DELIBERATELY NOT A SEVENTH CLAUSE, WHICH IS A DECISION AND NOT AN OMISSION.
  * The offer stop HALTS a span and does not REFUSE one: `advanceRefusal` does not name it, so the

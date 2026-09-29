@@ -24,10 +24,14 @@
 // feature reach a player had no guard anywhere in the repo. It now has twelve. Do not reintroduce a
 // direct call here – a walked career is the whole claim, and the walk must ask the engine, not the
 // settler.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // Six to eight seasons of a real career per arm; measured at ~2s each, but the runner is shared.
-vi.setConfig({ testTimeout: 300_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 300 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 6.36 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   ACADEMY_NOTICE,

@@ -12,7 +12,6 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
-import InboxSheet from '../../src/components/InboxSheet.vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
 import { useGameStore } from '../../src/stores/game'
 import { ECONOMY } from '../../src/engine/economy'
@@ -25,6 +24,7 @@ import { careerSnapshot } from '../helpers/career'
 // fit measurement below is vacuous. Same reason r2-07-dialog-shell.test.ts imports it.
 import '../../src/style.css'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
+import { mountInbox as mountInboxSheet, withPost } from './inbox'
 
 const AD = ECONOMY.advertising
 /** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
@@ -174,15 +174,19 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
   })
 
   /** A real career's snapshot, with the house's letter added to the post it already has. */
-  function mountInbox(offers: Offer[]) {
+  /** ⚠ REPOINTED, NOT WEAKENED (T6.2 · D-07, 28.09): the sheet's list is a QUERY now – the weekly
+   *  snapshot carries the letters this week still needs and `loadInbox()` answers with the career's
+   *  whole post – so a mounted test answers it and waits one microtask. `./inbox` is that arrangement,
+   *  shared by the eight suites that render this sheet; every assertion below is unchanged. */
+  async function mountInbox(offers: Offer[]) {
     const base: Snapshot = careerSnapshot(8, 'ad-inbox')
-    const store = useGameStore()
-    store.snapshot = { ...base, offers: [...base.offers, ...offers], week: offers[0]?.week ?? base.week }
-    return mount(InboxSheet, { global: { stubs: { teleport: true } } })
+    return mountInboxSheet(withPost(base, [...base.offers, ...offers], offers[0]?.week ?? base.week), {
+      global: { stubs: { teleport: true } },
+    })
   }
 
-  it('the row is signed by the brand, the subject names the fee, and a live letter wears the pill', () => {
-    const wrapper = mountInbox([letter()])
+  it('the row is signed by the brand, the subject names the fee, and a live letter wears the pill', async () => {
+    const wrapper = await mountInbox([letter()])
     const rows = wrapper.findAll('.inbox-row')
     const row = rows.map((r) => r.text()).find((t) => t.includes(WATCH.brand))
     expect(row).toBeTruthy()
@@ -196,7 +200,7 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
 
   it('clicking the row opens the paper, and pressing Sign raises the endorsement\'s OWN confirm', async () => {
     const open = letter()
-    const wrapper = mountInbox([open])
+    const wrapper = await mountInbox([open])
     const row = wrapper.findAll('.inbox-open').find((b) => b.text().includes(WATCH.brand))
     expect(row).toBeTruthy()
     await row!.trigger('click')
@@ -308,9 +312,10 @@ describe('⚠ the confirm the BIGGEST house produces still fits a phone', () => 
     const h = { brand: adCapstoneTerms('Aurelia').brand, trade: 'We make her kit' }
     const open = letter({}, adCapstoneTerms('Aurelia'))
     const base: Snapshot = careerSnapshot(8, 'ad-inbox-fit')
-    const store = useGameStore()
-    store.snapshot = { ...base, offers: [...base.offers, open], week: open.week }
-    const wrapper = mount(InboxSheet, { attachTo: document.body })
+    // ⚠ ATTACHED, and the post answered – see `mountInbox`'s note above.
+    const wrapper = await mountInboxSheet(withPost(base, [...base.offers, open], open.week), {
+      attachTo: document.body,
+    })
     const row = wrapper.findAll('.inbox-open').find((b) => b.text().includes(h.brand))!
     await row.trigger('click')
     await nextTick()

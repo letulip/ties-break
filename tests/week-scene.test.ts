@@ -88,6 +88,9 @@ function trip(week: number, tier: TierId): WorldEvent[] {
 }
 
 /** A view with nothing happening – the fourth arm's own week. */
+// ⚠ RE-AIMED 26.09 (F P3-17, T3.6): the view's `lossStreak` is `lossStreakRun` now. It carried the
+// engine's streak OBJECT while `DiaryFacts.lossStreak` carried a COUNT – one name, two meanings,
+// bridged in `assembleDiaryFacts`. The wire field is untouched; only this fixture's key moved.
 const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   seed: 's',
   week: 11,
@@ -105,7 +108,7 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   fundsCents: 100_000_00,
   injury: null,
   events: [],
-  lossStreak: null,
+  lossStreakRun: null,
   kidRank: 50,
   prevKidRank: 50,
   pendingUnfinished: false,

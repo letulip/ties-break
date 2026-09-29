@@ -171,6 +171,11 @@ function nameError(value: unknown, what: string): string | null {
  *
  * Total over `unknown` on purpose – this is the engine's re-validation of a WIRE payload, and the
  * whole point is that the sender may be anything.
+ *
+ * ⚠ IT IS ONE OF THREE NOW, NOT THE WHOLE OF `new` (A-05, 26.09). `prologueShapeError` and
+ * `dynastyShapeError` are further down this file, below the two handover shapes they read, and the
+ * `new` case calls all three before `createWorld`. This one was on its own from 05.09 to 26.09 and the
+ * gap was measured – see the A-05 block over the pair.
  */
 export function profileShapeError(profile: unknown): string | null {
   if (!isObject(profile)) return 'A career needs a profile'
@@ -252,7 +257,7 @@ export const SESSION_KINDS: readonly SessionKind[] = ['general', 'serve', 'rally
  *  importable by `engine/world.ts` alone, so the protocol may not reach it, and
  *  `tests/prologue-cards.test.ts` asserts the two shapes are assignable in both directions. */
 export interface PrologueYear {
-  /** her age at the START of the year: 5 through 13 */
+  /** her age at the START of the year: 5 through 13 – one of `PROLOGUE_YEAR_AGES` below */
   age: number
   /** how much tennis, 0 (none) .. 1 (as much as anyone does at any age) – ABSOLUTE, not relative to
    *  her age. That is phase 1's anti-grind mechanism and nothing downstream may soften it. */
@@ -261,6 +266,25 @@ export interface PrologueYear {
   teaching: number
   focus: SessionKind
 }
+
+/** ⭐⭐ THE NINE AGES A HANDOVER MAY NAME, 5..13 – the wire's own copy of the childhood's window, and
+ *  `prologueShapeError` below is its one reader.
+ *
+ *  ⚠⚠ IT IS SPELLED HERE AND NOT IMPORTED, AND THAT IS INVARIANT 1 RATHER THAN LAZINESS. The engine's
+ *  `CHILDHOOD_AGES` (engine/childhood.ts) is these nine numbers, derived from `CHILDHOOD.startAge` /
+ *  `endAge` – but `tests/childhood.test.ts` pins that module's importer set as EXACTLY
+ *  `['engine/world.ts', 'prologue/pool.ts']` and reddens on a third importer, and `src/prologue/
+ *  cards.ts`' `CARD_AGES` is UI-side, which the same test's second half forbids `shared/` to reach.
+ *  `src/prologue/handover.ts` met this identical wall and wrote the reason down: «IT MAY NOT IMPORT
+ *  `engine/childhood.ts` for the nine, however natural `CHILDHOOD.startAge` would read». So the
+ *  protocol is once again the one roof both sides are allowed under – `FIRST_COURT_AGE`'s own idiom,
+ *  for `FIRST_COURT_AGE`'s own reason.
+ *
+ *  ⚠ THE AGREEMENT IS THEREFORE PINNED RATHER THAN IMPORTED: `tests/prologue-handover.test.ts`
+ *  asserts this array equals both `CHILDHOOD_AGES` and `CARD_AGES`, which is a join only a test can
+ *  make. A childhood that grew a tenth year reddens there instead of quietly widening what the wire
+ *  accepts, and a wire that narrowed would refuse a real handover – the worse of the two defects. */
+export const PROLOGUE_YEAR_AGES: readonly number[] = [5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 /** ⭐ v84 – ONE WEEKEND SHE PLAYED, as the persisted trace keeps it (the album spec,
  *  docs/specs/the-album-2026-09.md §3, ruled path (а) 19.09). The same five numbers and the derived
@@ -466,6 +490,157 @@ export interface DynastyHandover {
      *  and nothing else – no mechanic may branch on it. */
     readonly endingKind: string
   }
+}
+
+// =================================================================================================
+// ⭐⭐⭐ A-05 (the principles review, 26.09; ruling 8a) – THE OTHER TWO PAYLOADS `new` USED TO TRUST
+// =================================================================================================
+//
+// `profileShapeError` is E-06's fix (05.09) and it was only ever a third of the command. The worker's
+// `new` case checked the profile and then handed `msg.prologue` and `msg.dynasty` into `createWorld`
+// untouched – its own note said so out loud, «THE FIFTH ARGUMENT RIDES THROUGH UNTOUCHED», and the
+// reason given for the dynasty did not hold: `createWorld` REPLACES the accepted background with
+// `dynasty.background` (world.ts) after the check has already run.
+//
+// WHAT WENT THROUGH, measured at the baseline (A-05's table):
+//   * `spentCents: NaN` (or absent)  -> a career born with `fundsCents = NaN`, still NaN four ticks
+//     later; the autosave codec writes it as `null` and the export file is then REFUSED by the import
+//     gate. The clamp documented as the guard for this – `prologueFundsCents`, engine/economy.ts –
+//     is `Math.max(-1, Math.min(1, x))`, and that returns NaN for NaN. Arithmetic cannot clamp NaN.
+//   * `years[0].practice: NaN`       -> five of five skills NaN, and THAT file exports and re-imports
+//     cleanly, because the import spine checks `fundsCents` and not `skills`.
+//   * `years: null`                  -> a career born on a different coach rung than the profile
+//     chose. Silently a different career.
+//   * `dynasty.background: 'bogus'`  -> a bare `TypeError` («undefined is not iterable»), which is
+//     the unnamed-crash class E-06 exists to close.
+//
+// ⚠⚠ NOT REACHABLE THROUGH THE SHIPPED SCREENS, which is why A-05 is a P2 and why the acceptance
+// proof is the other direction: `tests/prologue-handover.test.ts` walks all 32 runs the card table can
+// produce and every one of them must PASS these checks. A validator that refuses a real handover is a
+// worse defect than the one it fixes, so that walk is the gate on this code and not a formality.
+//
+// ⚠ THE TWO SENTENCES ARE DRAFTS FOR THE OWNER'S PASS (invariant 4), tabled verbatim in
+// docs/plans/principles-fix-strings-2026-09.md and pinned both ways by
+// tests/principles-fix-strings-roundtrip.test.ts. They say what could not be read and nothing else:
+// no apology, no advice, and no field name a player could not act on. Reachable only by a malformed
+// payload, so they are diagnostics a player should never see – which is exactly why they must not
+// pretend to be help.
+
+/** ⚠ DRAFT (invariant 4) – the whole refusal for a childhood handover the wire cannot read. ONE
+ *  sentence for every reason: a player cannot act on WHICH field of a payload they never typed was
+ *  wrong, and `new`'s existing shape puts it behind «New career: ». */
+export const PROLOGUE_HANDOVER_REFUSAL = 'The childhood cannot be read'
+
+/** ⚠ DRAFT (invariant 4) – the same, for the block that crosses from the mother's career. «Story» is
+ *  the word the shipped dynasty copy already uses for it (`DYNASTY_COPY.familyNote`: «The means she
+ *  starts with are her mother's story, not a choice.»), so the sentence names nothing new. */
+export const DYNASTY_HANDOVER_REFUSAL = 'The mother\'s story cannot be read'
+
+/** 0..1 INCLUSIVE AND FINITE – the shape of both of a prologue year's dials. `Number.isFinite`
+ *  refuses NaN and both infinities, which the comparisons alone cannot: every comparison against NaN
+ *  is false, so `!(x < 0) && !(x > 1)` would ACCEPT it. That is the same hole one layer up, where
+ *  `Math.min`/`Math.max` pass NaN through. */
+const isUnitDial = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1
+
+/** A WHOLE COUNT, `min` or more. `Number.isInteger` refuses NaN, the infinities and 0.5 in one call. */
+const isCount = (v: unknown, min: number): boolean => typeof v === 'number' && Number.isInteger(v) && v >= min
+
+/**
+ * IS THIS A CHILDHOOD A CAREER MAY BE OPENED ON? Returns the reason it is not, or null.
+ *
+ * Total over `unknown` on purpose, exactly as `profileShapeError` is: this is the engine's
+ * re-validation of a WIRE payload and the sender may be anything.
+ *
+ * ⚠ `undefined` IS VALID AND IS THE WIZARD PATH. `PrologueHandover` is an optional argument to
+ * `createWorld` and absence is the identity – every career the game made before the prologue existed
+ * hands over nothing. `null` is NOT the same thing and is refused: the wire type does not offer it, so
+ * a `null` here is a caller that built the field and got it wrong.
+ *
+ * ⚠ IT CHECKS `years.length` AND NOT `=== 9`. A run of the shipped table is always nine, but a bench
+ * or a probe handing over four honest years is a legal childhood and `childhoodWalk` normalises over
+ * whatever length it is given; the CAP is what matters, because a payload with two hundred rows is
+ * arithmetic nobody priced. The cap is the childhood's own window and never a literal.
+ *
+ * ⚠ AND IT DOES NOT CHECK THAT THE AGES ARE DISTINCT OR IN ORDER, deliberately: `childhoodArrival`
+ * folds the rows it is given in the order it is given them and makes no claim about either. A rule
+ * this function does not need is a rule that would one day refuse a caller for no reason.
+ */
+export function prologueShapeError(prologue: unknown): string | null {
+  if (prologue === undefined) return null
+  if (!isObject(prologue)) return PROLOGUE_HANDOVER_REFUSAL
+  const years = prologue.years
+  if (!Array.isArray(years) || years.length > PROLOGUE_YEAR_AGES.length) return PROLOGUE_HANDOVER_REFUSAL
+  for (const row of years) {
+    if (!isObject(row)) return PROLOGUE_HANDOVER_REFUSAL
+    if (typeof row.age !== 'number' || !PROLOGUE_YEAR_AGES.includes(row.age)) return PROLOGUE_HANDOVER_REFUSAL
+    if (!isUnitDial(row.practice) || !isUnitDial(row.teaching)) return PROLOGUE_HANDOVER_REFUSAL
+    if (!SESSION_KINDS.includes(row.focus as SessionKind)) return PROLOGUE_HANDOVER_REFUSAL
+  }
+  // ⚠ AN INTEGER, BECAUSE THE HOUSE LAW IS CENTS: half a cent is not money, and `prologueFundsCents`
+  // divides this by a swing constant and rounds once. Negative is refused because a childhood that
+  // PAID the family is not a state the card table can produce, and the reserve model reads the number
+  // as a spend.
+  if (!isCount(prologue.spentCents, 0)) return PROLOGUE_HANDOVER_REFUSAL
+  // ⚠ THE TRACE IS OPTIONAL AND IS CHECKED ONLY AS FAR AS `createWorld` READS IT – an object. Its
+  // three fields are album texture: `assembleAlbum` reads them defensively and a missing chapter is
+  // an honest absence (`PrologueTrace`'s own note: «a childhood that was never walked leaves no
+  // record»). Refusing a trace on a field nothing branches on would be a rule with no defect behind it.
+  if (prologue.trace !== undefined && !isObject(prologue.trace)) return PROLOGUE_HANDOVER_REFUSAL
+  return null
+}
+
+/**
+ * IS THIS AN INHERITANCE A CAREER MAY BE OPENED ON? Returns the reason it is not, or null.
+ *
+ * ⚠⚠ `background` IS THE ONE FIELD WITH A DEFECT BEHIND IT AND THE REST ARE STRUCTURAL. That field is
+ * the measured crash: `createWorld` writes it onto the profile AFTER `profileShapeError` has run, and
+ * `ECONOMY.startingFundsCents[background]` on an unknown band is `undefined`, which threw a bare
+ * `TypeError` two lines later. Everything else here is the shape `createWorld` and `plainDynasty`
+ * copy field by field, asked for as the type declares it.
+ *
+ * ⚠ `motherTemperament` IS CHECKED AS A NON-EMPTY STRING AND NOT AGAINST THE ENGINE'S LIST, and the
+ * boundary is the reason rather than an oversight: `Temperament` is imported here TYPE-ONLY (see this
+ * module's header), so `shared/` stays a runtime leaf; importing the engine's value list to validate
+ * it would trade invariant 1 for a check on a field that only picks texture. Named here so the next
+ * reader knows it was a choice.
+ *
+ * ⚠ `childBirthdays` MAY BE EMPTY. That is the epilogue variant's own state – «a birth written after
+ * the farewell has no recorded week» – and refusing it would refuse the real handover of every career
+ * whose daughter arrived after the goodbye.
+ */
+export function dynastyShapeError(dynasty: unknown): string | null {
+  if (dynasty === undefined) return null
+  if (!isObject(dynasty)) return DYNASTY_HANDOVER_REFUSAL
+  if (!BACKGROUNDS_ALLOWED.includes(dynasty.background as FamilyBackground)) return DYNASTY_HANDOVER_REFUSAL
+  // ⚠ ONE OR MORE: `1` is the first daughter of a career that had no dynasty, so 0 is a generation
+  // nothing can be the child of.
+  if (!isCount(dynasty.generation, 1)) return DYNASTY_HANDOVER_REFUSAL
+  // The child's seed BECOMES the new world's `seed`, and an empty seed is a career with no dice.
+  if (typeof dynasty.childSeed !== 'string' || dynasty.childSeed.trim().length === 0) return DYNASTY_HANDOVER_REFUSAL
+  if (typeof dynasty.raisedOnTour !== 'boolean') return DYNASTY_HANDOVER_REFUSAL
+  const name = dynasty.motherName
+  if (!isObject(name) || typeof name.first !== 'string' || typeof name.last !== 'string') return DYNASTY_HANDOVER_REFUSAL
+  // ⚠ A STRING AND NOT A PLAYABLE COUNTRY. It only PRE-FILLS the identity card, which the player may
+  // then change, and `profileShapeError` is what judges the country the career is actually opened on –
+  // so `isPlayableCountry` here would refuse a mother from a build whose country list has since moved.
+  if (typeof dynasty.motherCountry !== 'string') return DYNASTY_HANDOVER_REFUSAL
+  if (typeof dynasty.motherTemperament !== 'string' || dynasty.motherTemperament.length === 0) return DYNASTY_HANDOVER_REFUSAL
+  if (!Array.isArray(dynasty.childBirthdays)) return DYNASTY_HANDOVER_REFUSAL
+  for (const born of dynasty.childBirthdays) {
+    if (!isObject(born)) return DYNASTY_HANDOVER_REFUSAL
+    if (!isCount(born.month, 1) || (born.month as number) > 12) return DYNASTY_HANDOVER_REFUSAL
+    if (!isCount(born.day, 1) || (born.day as number) > 31) return DYNASTY_HANDOVER_REFUSAL
+  }
+  const career = dynasty.motherCareer
+  if (!isObject(career)) return DYNASTY_HANDOVER_REFUSAL
+  for (const count of [career.titles, career.proTitles, career.collegeTitles, career.slams, career.endedWeek]) {
+    if (!isCount(count, 0)) return DYNASTY_HANDOVER_REFUSAL
+  }
+  // ⚠ `null` IS A VALUE HERE AND NOT AN ABSENCE – «a career that never held a WTA rank», and §5's news
+  // floor says a null qualifies for nothing. A rank is 1 or better-numbered, never 0.
+  if (career.bestRank !== null && !isCount(career.bestRank, 1)) return DYNASTY_HANDOVER_REFUSAL
+  if (typeof career.endingKind !== 'string') return DYNASTY_HANDOVER_REFUSAL
+  return null
 }
 
 /** Weekly time split in percent; train + rest === 100. */

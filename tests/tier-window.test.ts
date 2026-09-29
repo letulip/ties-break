@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { feedContext, feedShows, preferredWeekEvent, type FeedEventFacts } from '../src/composables/tierState'
-import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, tierAgeBlock } from '../src/engine/season/calendar'
 import {
   KID_ID,
   activeLadderOf,
@@ -16,6 +16,7 @@ import { resumeMain } from '../src/engine/rng'
 import type { TierId } from '../src/engine/season/types'
 // Comments are not code – the house helper, now in tests/helpers/source.ts.
 import { codeOf } from './helpers/source'
+import { worldSource } from './worldSource'
 
 // =================================================================================================
 // THE SLIDING WINDOW (act2-pro-tour.md §11, owner ruling 11) — and the stacked-week pick that
@@ -166,8 +167,25 @@ describe('the window: exactly what the engine holds open', () => {
     // OLD can never reopen, so the card is dead furniture; too YOUNG opens on a birthday, and the
     // feed is also how she learns what is out there. Hiding those would be the empty-weeks
     // regression the 06.08 ladder-floor ruling was about.
-    const ctx = feedContext({ ageYears: 14, tierOpen: openMap(['local', 'j30', 'w15']), upcoming: [] })
-    expect(feedShows(row('w15', 9), ctx), 'W15 opens at 16 and she is 14').toBe(true)
+    //
+    // ⚠ RE-AIMED 27.09 (T5.4 · H-19), AND WHAT MOVED IS THE FIXTURE, NOT THE CLAIM. The age was the
+    // literal `14`, with the message «W15 opens at 16 and she is 14» – the pre-16.08 grid restated in
+    // a test. `TIERS.w15.minAgeYears` went 16 → 14 on the owner's ruling of 16.08 (`3372ec10`, «W15
+    // opens at fourteen, as the sport's grid says»), so `tierAgeBlock('w15', 14)` became `null` and
+    // this case stopped building a too-young rung at all: for 41 days it posed an OPEN rung and
+    // asserted that an open rung shows. Measured – with `tierState`'s `!== 'old'` mutated to
+    // `=== null`, which hides too-young rungs too, the file stayed 29/29 green.
+    //
+    // Derived from the table it cannot rot that way, and the precondition is the lens: if a future
+    // grid leaves no rung a girl one year under the floor is too young for, this case fails loudly on
+    // its own premise instead of passing empty. The general rule (H-19's own): a fixture that stands
+    // in for a table value READS the table.
+    const minAge = TIERS.w15.minAgeYears ?? 0
+    expect(minAge, 'w15 declares an age floor, or this case has no too-young arm to pose').toBeGreaterThan(0)
+    const age = minAge - 1
+    expect(tierAgeBlock('w15', age), 'the premise: one year under the floor is too YOUNG').toBe('young')
+    const ctx = feedContext({ ageYears: age, tierOpen: openMap(['local', 'j30', 'w15']), upcoming: [] })
+    expect(feedShows(row('w15', 9), ctx), `W15 opens at ${minAge} and she is ${age}`).toBe(true)
     expect(ctx.rungs).toEqual(['local', 'j30', 'w15'])
   })
 
@@ -276,8 +294,16 @@ describe('the feed follows the calendar, and blank weeks are allowed', () => {
 
 describe('visibility is not access: the engine never reads the feed rule', () => {
   it('the engine sources are free of the feed vocabulary', () => {
-    for (const rel of ['../src/engine/world.ts', '../src/engine/season/calendar.ts']) {
-      const src = codeOf(read(rel))
+    // ⚠⚠ WIDENED 28.09 BY T6.5 / A-04 (a) – A NEGATIVE PIN THAT NOW READS A BARREL IS ASKING NOTHING.
+    // This case did not break with P4's last three span-moves; it QUIETLY STOPPED MEANING WHAT IT
+    // SAYS, which is the worse half of the same family (CLAUDE.md: the region that silently widens,
+    // the helper that silently returns ''). `src/engine/world.ts` holds no function body any more, so
+    // «the engine must not know this» read against that file alone could not fail for any engine code
+    // whatsoever. `worldSource()` is world.ts + every world/*.ts part, so the claim is read over the
+    // whole module set – and widening can only ADD text to a NEGATIVE assertion, which makes it
+    // STRICTER and never weaker. Measured before the change: both names appear in the package only inside COMMENTS (world/ladder.ts, world/multiWeek.ts),
+    // which `codeOf` strips – so the widened claim is true of the code and says so about all of it.
+    for (const src of [codeOf(worldSource()), codeOf(read('../src/engine/season/calendar.ts'))]) {
       expect(src).not.toContain('feedShows')
       expect(src).not.toContain('feedContext')
     }

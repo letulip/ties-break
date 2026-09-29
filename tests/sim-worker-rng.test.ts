@@ -14,13 +14,28 @@ import { encodeExportFile, decodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { workerHarness } from './helpers/workerHarness'
 
+// ⚠⚠ THE SIX PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which only
+// restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where it
+// cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction, so it needed no measurement, unlike the 31 files whose budgets were ABOVE the ceiling.
+// A budget BELOW the ceiling would have stayed – that one says something. The ceiling, the measured table
+// and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+
 // =================================================================================================
 // v35 — THE WORKER'S RNG REGIME (docs/review/proposals/P3-rng-persistence.md).
 //
 // Three claims, each of which is the wave's acceptance list verbatim:
-//   1. A load performs ZERO tickWeek calls — the persisted position is verified and resumed, and
-//      the whole-career replay is GONE from the load paths. Proved at the module boundary with
+//   1. A load performs no REPLAY — the persisted position is verified and resumed, and the
+//      whole-career replay is GONE from the load paths. Proved at the module boundary with
 //      spies, not with a grep: a regex can miss a re-import, a spy cannot.
+//      ⚠ RE-AIMED 26.09: this line read "ZERO tickWeek calls" until D-04 gave the import door a
+//      one-tick DRY RUN on a discarded `structuredClone` (sim.worker.ts, `importDryRun`), which
+//      stops a file that renders but cannot ADVANCE from being persisted. The property this claim
+//      is about is unchanged and still asserted below, twice over: the count is pinned at exactly
+//      ONE, so a replay through `tickWeek` (1040 of them for the career under test) fails it, and
+//      the position the worker holds is still identical to the one the save carried – which is the
+//      assertion that proves the rehearsal drew on the clone and not on the committed pair.
 //   2. A corrupted `rngMain` load still SUCCEEDS, through `recoverMainState`, and the snapshot
 //      arrives carrying `recovered: true` — the same flag (and the same UI surfacing) the autosave
 //      generation fallback has always used. Both corruption shapes are exercised: a pair that
@@ -88,7 +103,7 @@ beforeAll(async () => {
 })
 
 describe('a load verifies and resumes — it never replays', () => {
-  it('a 20-season import performs ZERO tickWeek calls and ZERO replays', async () => {
+  it('a 20-season import performs ONE dry-run tick and ZERO replays', async () => {
     const world = liveCareer('rng-regime-20s', 20 * 52)
     expect(world.rngMain.n).toBeGreaterThan(0)
 
@@ -97,15 +112,18 @@ describe('a load verifies and resumes — it never replays', () => {
     const res = await importIntoWorker(world)
     expect(res.ok, res.error).toBe(true)
     expect(res.snapshot!.week).toBe(20 * 52)
-    // The acceptance line itself: no tick, no replay, no recovery — the pair verified and stood.
-    expect(vi.mocked(tickWeek)).not.toHaveBeenCalled()
+    // The acceptance line itself: no replay, no recovery — the pair verified and stood. The single
+    // tick is D-04's import dry run (`importDryRun`), which runs on a clone that is thrown away;
+    // ONE rather than `not.toHaveBeenCalled()` keeps this arm a replay detector, since a replay of
+    // this career would be 1 040 of them.
+    expect(vi.mocked(tickWeek), 'the dry run, and nothing resembling a replay').toHaveBeenCalledTimes(1)
     expect(vi.mocked(replayMainState)).not.toHaveBeenCalled()
     expect(res.recovered).toBeUndefined()
 
     // ...and the position the worker holds is the position the save carried, to the draw.
     const held = await exportedWorld()
     expect(held.rngMain).toEqual(world.rngMain)
-  }, 60_000)
+  })
 
   it('the position rides the world: ticking advances the persisted pair the next export carries', async () => {
     const world = liveCareer('rng-regime-rides', 10)
@@ -128,7 +146,7 @@ describe('a load verifies and resumes — it never replays', () => {
     // in-place mutation reached the world that autosave/export serialise, with no mirror to forget.
     expect(after.rngMain.n).toBeGreaterThan(world.rngMain.n)
     expect(mainStateConsistent(after.seed, after.rngMain)).toBe(true)
-  }, 60_000)
+  })
 })
 
 describe('corruption recovers, loudly', () => {
@@ -147,7 +165,7 @@ describe('corruption recovers, loudly', () => {
     expect(mainStateConsistent(repaired.seed, repaired.rngMain)).toBe(true)
     // ...and is exactly the replay's best-effort answer for this career's length.
     expect(repaired.rngMain.n).toBeGreaterThan(0)
-  }, 60_000)
+  })
 
   it('a pair that satisfies the algebra but fails the plausibility bound recovers too', async () => {
     const world = liveCareer('rng-regime-implausible', 10)
@@ -165,14 +183,14 @@ describe('corruption recovers, loudly', () => {
 
     const repaired = await exportedWorld()
     expect(mainStateConsistent(repaired.seed, repaired.rngMain)).toBe(true)
-  }, 60_000)
+  })
 
   it('a clean save never trips the fallback (no false alarms)', async () => {
     const world = liveCareer('rng-regime-clean', 30)
     const res = await importIntoWorker(world)
     expect(res.ok, res.error).toBe(true)
     expect(res.recovered).toBeUndefined()
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -209,7 +227,7 @@ describe('the bound is slack the tick can grow into', () => {
       perWeek * REQUIRED_HEADROOM,
       `a week costs ${perWeek.toFixed(2)} draws and the bound gives ${MAIN_DRAWS_PER_WEEK_MAX}`,
     ).toBeLessThanOrEqual(MAIN_DRAWS_PER_WEEK_MAX)
-  }, 60_000)
+  })
 
   it('and `maxMainDraws` is that per-week number, scaled – the two cannot drift apart', () => {
     // The named constant and the function are one statement about the budget, not two: a wave that

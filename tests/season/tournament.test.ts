@@ -7,13 +7,12 @@ import {
   isEntrantBand,
   topBandForPercentile,
   weekFieldExclusion,
-  JUNIOR_TOUR,
 } from '../../src/engine/season/tournament'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from '../../src/engine/season/calendar'
 import { fieldProsFor, mergedWtaRanking, universeForTier } from '../../src/engine/season/fieldPros'
 import { generateCohort } from '../../src/engine/season/cohort'
 import { rngFromSeed } from '../../src/engine/rng'
-import { simulateMatch } from '../../src/engine/match/engine'
+import { replayMatch } from '../../src/composables/annotatedMatch'
 import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../../src/engine/season/types'
 import type { MatchPlayer, Surface } from '../../src/engine/match/types'
 import { rivalGroundstrokes } from '../../src/engine/season/rival'
@@ -210,7 +209,9 @@ describe('runTournament — the kid enters', () => {
       expect(m.score).toBeTruthy()
       const a = lookup(m.aId)
       const b = lookup(m.bId)
-      const replay = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      // ⚠ RE-AIMED 27.09 AT THE SCREENS' OWN RECIPE (C-04). A bracket record carries no surface –
+      // the EVENT does – which is why `recordedMatchOptions` takes the two fields rather than the row.
+      const replay = replayMatch({ surface: event.surface, seed: m.seed, a, b }).result
       const replayWinner = replay.winner === 0 ? m.aId : m.bId
       expect(replayWinner).toBe(m.winnerId)
       expect(replay.sets.map((s) => `${s.a}-${s.b}`).join(' ')).toBe(m.score)
@@ -451,6 +452,52 @@ describe('weekFieldExclusion — the higher W rung draws first', () => {
     expect([...weekFieldExclusion(season[0], season, universe, merged, SEED)].sort()).toEqual(
       [...weekFieldExclusion(season[0], season, universe, merged, SEED)].sort(),
     )
+  })
+
+  // ⚠⚠ ADDED 26.09 (W3 T3.10, G-03 of the 26.09 performance review) – THE FIELDS ARE DRAWN WHEN THE
+  // SET IS READ, NOT WHEN IT IS ASKED FOR.
+  //
+  // WHY THE PROPERTY NEEDS A GUARD OF ITS OWN. `toSnapshot` assembles a preview card's arguments
+  // once per event and hands `excluded` to BOTH readings of them; past `DRAW_LEAD_WEEKS` neither
+  // reading looks at it, because `firstRoundDraw` returns null on its first line. That cost 5–15 of
+  // these calls and 4–16 `selectEntrants` runs on the first snapshot after every week advance, and
+  // nothing in the suite could have noticed it coming back – every other case here reads the set,
+  // and a set that is built too early answers identically. So this is the one case that must NOT.
+  //
+  // THE TRIPWIRE IS THE `ranking` ARGUMENT. `selectEntrants` folds it on its second line
+  // (`ranking.forEach`), so an eager build cannot avoid touching it; a lazy one cannot reach it.
+  // MUTATION ARM: drop the `lazySet` wrapper in `season/tournament.ts` and build `booked` in the
+  // function body again → the first expectation throws the tripwire and this case goes red.
+  it('draws no field until the set is read – the far preview card never reads it', () => {
+    const e = season.find((x) => x.tier === 'w15')!
+    let reads = 0
+    const tripwire = Object.assign([] as RankingRow[], {
+      forEach() {
+        reads++
+        throw new Error('TRIPWIRE: selectEntrants ran – weekFieldExclusion built its set eagerly')
+      },
+    }) as unknown as RankingRow[]
+
+    const excluded = weekFieldExclusion(e, season, universe, tripwire, SEED)
+    expect(reads, 'asking for the exclusion draws nothing').toBe(0)
+
+    // ...and the work really is behind that first read, so the assertion above is not vacuous.
+    expect(() => excluded.has('anyone')).toThrow('TRIPWIRE')
+    expect(reads, 'reading it draws the fields').toBe(1)
+  })
+
+  // ⚠ AND THE NON-W ANSWER IS NOT LAZY, which is what keeps the six junior/domestic rungs on exactly
+  // the path they were on: a real empty `Set`, allocated and returned, with no build to trigger.
+  it('a non-W event answers with a plain empty set, eagerly', () => {
+    const junior = ev('j300', week)
+    const tripwire = Object.assign([] as RankingRow[], {
+      forEach() {
+        throw new Error('TRIPWIRE: a non-W event reached the field draw')
+      },
+    }) as unknown as RankingRow[]
+    const excluded = weekFieldExclusion(junior, [junior, ev('w100', week)], universe, tripwire, SEED)
+    expect(excluded instanceof Set, 'the non-W answer is a real Set').toBe(true)
+    expect(excluded.size).toBe(0)
   })
 })
 

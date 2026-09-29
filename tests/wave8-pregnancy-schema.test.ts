@@ -134,6 +134,13 @@ import { createWorld, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine
 import { migrateSave } from '../src/engine/migrations'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
+// ⚠⚠ THE THREE PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction. A budget BELOW the ceiling would have stayed – that one says something.
+// The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 
 /** The world keys this version adds, in the order `createWorld`'s literal appends them – which is
@@ -283,7 +290,7 @@ describe('wave 8 T1 A – v85, the three-part move', () => {
       expect(migrated.children, `v${v}.json`).toEqual([])
       expect(migrated.comeback, `v${v}.json`).toBe(null)
     }
-  }, 60_000)
+  })
 
   it('⚠ the corpus really does hold no pregnancy and no child – the measurement §B exists for', () => {
     // ⚠ ASSERTED RATHER THAN QUOTED, so the claim above cannot rot into a sentence nobody re-checks.
@@ -302,7 +309,7 @@ describe('wave 8 T1 A – v85, the three-part move', () => {
       return save.pregnancy != null || (Array.isArray(save.children) && save.children.length > 0) || save.comeback != null
     })
     expect(carrying, 'no golden save holds one, because on this tree nothing can write one').toEqual([])
-  }, 60_000)
+  })
 })
 
 // =================================================================================================
@@ -500,5 +507,5 @@ describe('wave 8 T1 D – T1 ships the seats and no writer at all', () => {
     }
     expect([...kinds].sort(), 'no save can hold `postpartum`, because nothing has ever written it')
       .not.toContain('postpartum')
-  }, 60_000)
+  })
 })

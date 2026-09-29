@@ -1,3 +1,11 @@
+<script lang="ts">
+// ⚠ MODULE SCOPE, AND IT HAS TO BE A SECOND BLOCK – `ConfirmDialog.vue`'s own note, for its own reason.
+// Everything inside `<script setup>` is the setup FUNCTION's body and runs once per INSTANCE, so a
+// counter declared there would be 1 for every Home in the document, which is the collision it exists
+// to prevent. See `STRIP_GAP_DESC` in the setup block below (E-P11, 28.09).
+let stripSeq = 0
+</script>
+
 <script setup lang="ts">
 // epic/redesign-home, slice A – HOME AS A DIARY PAGE (the owner's redesign, 28.07).
 //
@@ -79,6 +87,7 @@ import { useLetterWatermark, useNewsWatermark } from '../../composables/inboxCue
 // own it is now in this file's <style scoped> block rather than in src/style.css - see the note at
 // the top of that block for why that matters to the five screens being built in parallel.
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import Polaroid from '../ui/Polaroid.vue'
@@ -1097,6 +1106,15 @@ type StripCell =
  * carries its own count, because "…" that hides eleven rungs and "…" that hides one are different
  * promises and the player is entitled to know which one he is tapping.
  */
+/** ⭐⭐ E-P11 (28.09) – THE ID BASE FOR THE GAP CHIPS' DESCRIPTION SPANS, and it is a module counter on
+ *  `ConfirmDialog.vue`'s own measured precedent rather than Vue's `useId`: `useId` counts per APP
+ *  INSTANCE, so two screens created by two different `createApp` roots both come back `v-0`, and a
+ *  duplicate id makes `aria-describedby` resolve to whichever came first – the wrong range read over
+ *  the right chip. A module-scoped counter is unique per document because there is one module, and it
+ *  is read once at setup so it is stable across re-renders, which is the property the attribute needs.
+ *  `cell.key` (`gap-<index>`) makes it unique WITHIN the row. */
+const STRIP_GAP_DESC = `tb-strip-gap-${++stripSeq}`
+
 const stripCells = computed<StripCell[]>(() => {
   const cells: StripCell[] = []
   const vis = stripVisible.value
@@ -1341,8 +1359,19 @@ async function leaveCollege(): Promise<void> {
            over this line and `position: relative` put it in a later paint step. Moving the line in
            here stops the hero being `:first-child`, which is what switches that margin off.
            ⚠ NO NEW WORDING (invariant 4): the element, its class and its text are the engine's own,
-           moved and not rewritten. -->
-      <p v-if="game.error" class="error">{{ game.error }}</p>
+           moved and not rewritten.
+           ⚠⚠ AND IT IS `<StoreError />` SINCE E-09 / T4.8 (27.09), NOT A COPY OF ONE. What stood here
+           was a hand-rolled paragraph on the error class, guarded on `game.error` and interpolating it
+           – the same element, the same class and the same sentence the component renders, and NO
+           `role="status"`, so on the busiest screen in the app a refusal was silent to a screen reader.
+           ⚠ THE OLD MARKUP IS NOT QUOTED HERE, DELIBERATELY: a source pin greps this file for it
+           (`tests/coach-market.test.ts` had exactly such a pin one screen over), and a quotation in a
+           comment would keep that grep green over a screen that no longer renders one. The component is the
+           one owner (`ui/StoreError.vue` calls itself a home for the five shipped copies, and this was
+           one of them); the sentence is the store's own either way, and round 35 #11's placement –
+           INSIDE the shell, above the hero – is untouched, which is what keeps the photograph from
+           painting over it. -->
+      <StoreError />
 
       <!-- 1 + 2. THE HERO. Full-bleed, and it carries the header: the photograph IS the top of the
            page, not a picture placed on it. Two scrims do the work – one darkens the top so the
@@ -1356,7 +1385,7 @@ async function leaveCollege(): Promise<void> {
              darkens the left edge only – her face sits centre-right in all 35 paintings, so it
              never touches her. -->
         <div class="diary-hero-left"></div>
-        <div class="diary-hero-fade"></div>
+        <div class="diary-hero-fade hero-fade"></div>
 
         <!-- v48: CONFETTI ON HER BIRTHDAY WEEK, the owner's own suggestion (docs/specs/
              birthday-and-gifts.md §3). Over the scrims and under the header, so it falls across the
@@ -1479,15 +1508,34 @@ async function leaveCollege(): Promise<void> {
           <p class="diary-age">{{ ageYears }} years old {{ flag }}</p>
           <!-- The chip is drawn only once something counts somewhere - rankChipTrack owns the rule
                (null = no counting result in any table yet, and nothing to read on a chip). -->
+          <!-- ⭐⭐ E-03 / T4.6 (27.09) - THE CHIP DESCRIBES ITSELF, because its NAME could not.
+               `aria-label` wins over name-from-content in the accessible-name algorithm, so the
+               button that exists to show her rank was called "How ranking points work" and the number
+               never reached a screen reader at all - the parity wave's lesson about a sentence,
+               applied to a number. The label is the owner's and does not move (invariant 4): the two
+               spans it hides are handed over as the button's DESCRIPTION instead, which is the same
+               shape D15 used for the header's dots one block up (a fact that ARRIVES is a
+               description, never part of the name).
+               ⚠ THE IDS ARE HOST-SCOPED AND THEY HAVE TO BE. From 1024 the rail draws this same chip
+               (`RailIdentity.vue`) and Home's own copy is still in the DOM, merely `display: none`
+               (`.diary-id > .diary-rank` in this file's own scoped block at 1024) - so a shared id
+               would be duplicated in the document on every desktop Home. `rail-rank-*` is the rail's
+               pair.
+               ⚠ THE MOVEMENT SPAN IS DELIBERATELY NOT DESCRIBED. It renders a glyph rather than a
+               word (an arrow and a number, or a bare dash when she has not moved), it is conditional
+               on `ranked`, and naming a conditional element would put an id in the attribute that
+               resolves to nothing on an unranked career. The two spans below are the chip's every
+               week, and the headline fact the label was dropping is in them. -->
           <button
             v-if="chipTrack !== null"
             class="diary-rank"
             aria-label="How ranking points work"
+            aria-describedby="diary-rank-ladder diary-rank-value"
             :title="rankChipTitle"
             @click="openRankHelp"
           >
-            <span class="rank-ladder">{{ ladderLabel }}</span>
-            <span>{{ rankText }}</span>
+            <span id="diary-rank-ladder" class="rank-ladder">{{ ladderLabel }}</span>
+            <span id="diary-rank-value">{{ rankText }}</span>
             <template v-if="ranked">
               <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
               <span v-else-if="rankMovement.dir === 'down'" class="rank-move down">&#8595;{{ rankMovement.by }}</span>
@@ -1806,8 +1854,23 @@ async function leaveCollege(): Promise<void> {
               :aria-expanded="stripExpanded"
               :aria-label="cell.label"
               :title="cell.title"
+              :aria-describedby="`${STRIP_GAP_DESC}-${cell.key}`"
               @click="stripExpanded = true"
             >&hellip;</button>
+            <!-- ⭐⭐⭐ E-P11 (28.09, T6.4) – THE RANGE, SPOKEN. `cell.title` already names WHICH rungs are
+                 behind the ellipsis – «5 levels hidden (National to W15) – tap to show the whole
+                 ladder» – and until now it said so in a `title` attribute only: a desktop tooltip,
+                 absent from the accessible name, absent on a phone. The NAME stays `cell.label` («Show
+                 5 more levels»), because a fact that arrives may not rename a control (D7's rule), and
+                 the range arrives as the DESCRIPTION. Same sentence, new surface: not one new word.
+                 `.sr-only` is in src/style.css beside T6.4's shared objects, so the span is out of flow
+                 and the row's layout is untouched.
+                 ⚠ BESIDE THE CHIP AND NOT INSIDE IT, for the reason SegmentedRow.vue's own copy of this
+                 note records: a span inside a control joins the control's `textContent`, which several
+                 tests and `fits.ts`'s width model read as if it were what a player sees. -->
+            <span v-if="cell.kind === 'gap'" :id="`${STRIP_GAP_DESC}-${cell.key}`" class="sr-only">{{
+              cell.title
+            }}</span>
             <span
               v-else
               class="pill tier-chip"
@@ -2047,10 +2110,12 @@ async function leaveCollege(): Promise<void> {
   background: linear-gradient(180deg, rgba(6, 10, 14, 0.78) 0%, rgba(6, 10, 14, 0.18) 22%, rgba(6, 10, 14, 0) 40%);
 }
 
+/* ⭐⭐ T6.4 · F-09 (28.09) – the BOX is `.hero-fade` in src/style.css now, carried beside this class;
+   three surfaces stated the same three declarations. The GRADIENT stays here, because it is the half
+   this note is actually about: each fade ends in ITS OWN surface's colour, which is what makes the
+   picture read as the page rather than as a banner on top of it. Home fades from 46% at 0.72; the two
+   prologue surfaces from 52% at 0.55. */
 .diary-hero-fade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background: linear-gradient(180deg, rgba(9, 14, 19, 0) 46%, rgba(11, 17, 23, 0.72) 78%, var(--bg) 100%);
 }
 
@@ -3186,6 +3251,19 @@ button.note-card:active:not(:disabled) {
    where it comes out 83.45px at all four. 84 is that number at the next whole pixel: the picture the
    player has today, to half a pixel, and the first width at which it stops being a function of how
    many lines the quote wraps to.
+
+   ⚠ E-P19 (27.09) – AND «THE MASTER» IS NOT ONE SIZE, WHICH IS WHY THIS PARAGRAPH NOW SAYS SO. Round
+   42 #3 paid this debt on the coach MARKET, where the strip reads the taller figure; here the number
+   above is still the 264 one. Measured off the shipped assets rather than off a constant:
+   `public/images/coaches/budget-1.webp` is 162x264 and `budget-2.webp` is 162x280, so a height-driven
+   picture is 83.45px wide over one master and 136 x 162/280 = 78.69px over the other.
+   ⚠ NO PIXEL MOVES AND NONE IS OWED. 84 is a ceiling, not a fit: the narrower figure simply leaves
+   5.3px of the strip empty, and the mask is already at 3.7% opacity there (its stops are percentages
+   of THIS box and reach transparent at 96% of 84 = 80.64px), so the difference is invisible on either
+   master and no coach is cut. `src/art/preload.ts:310`'s «162x264 webp» docstring is the same stale
+   half-truth one file over, and the stale `162/264` comment at
+   `tests/component/round21-coach-photo.test.ts:224`, over a `PORTRAIT_H = 280` constant, is lane H's
+   by the finding's own note.
 
    ⚠ NOTHING VISIBLE IS CUT, AND THE MASK IS WHY – the same argument round-18 #2 makes. The mask's
    stops are percentages of THIS box, so it reaches transparent at 96% of 84 = 80.64px, and whatever

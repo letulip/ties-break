@@ -17,6 +17,9 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
 import { after, at, codeOf, region, regionToLast } from './helpers/source'
+// ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header for why the
+// exact-attribute pin below became a whole-token one.
+import { carriesClasses } from './helpers/markup'
 import { componentLogic, engineModuleSource } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -77,6 +80,53 @@ const tour = read('../src/components/OnboardingTour.vue')
 // the Kid screen – both of which predate this change. The test below pins exactly that, so "More
 // left the bar" can never quietly become "More left the app".
 // ===========================================================================
+/** ⚠ The `globIgnores` array's entries, read off the config's own TEXT. A config key is a line that
+ *  starts with it – the note at the Trophies case explains why prose and `codeOf` both lie here. It
+ *  throws rather than returning nothing when the word is present but the shape is not the one it
+ *  knows, because a reader that finds no patterns would pass this file for the wrong reason. */
+function globIgnoresOf(config: string): string[] {
+  const at = config.search(/^\s*globIgnores:/m)
+  if (at < 0) {
+    if (/globIgnores/.test(config.replace(/^\s*\/\/.*$/gm, ''))) {
+      throw new Error('globIgnores is in the config but not as a key line – re-aim globIgnoresOf')
+    }
+    return []
+  }
+  const tail = config.slice(at)
+  const open = tail.indexOf('[')
+  const close = tail.indexOf(']')
+  if (open < 0 || close < open) throw new Error('globIgnores is not an inline array – re-aim globIgnoresOf')
+  const body = tail.slice(open + 1, close)
+  const out = [...body.matchAll(/'([^']*)'|"([^"]*)"/g)].map((m) => m[1] ?? m[2])
+  if (out.length === 0) throw new Error(`globIgnores parsed to nothing from ${JSON.stringify(body)} – re-aim globIgnoresOf`)
+  return out
+}
+
+/** ⚠ A minimal glob to RegExp for the forms this config uses, matched against build-relative paths.
+ *  It throws on any other metacharacter, so a pattern it cannot judge fails loudly instead of
+ *  matching nothing and letting the art leave the install unnoticed. */
+function globToRegExp(pattern: string): RegExp {
+  if (/[{}[\]()!+@]/.test(pattern)) {
+    throw new Error(`glob '${pattern}' uses syntax this reader cannot judge – re-aim globToRegExp`)
+  }
+  let re = ''
+  for (let i = 0; i < pattern.length; i += 1) {
+    const c = pattern[i]
+    if (c === '*' && pattern[i + 1] === '*') {
+      if (pattern[i + 2] === '/') {
+        re += '(?:.*/)?'
+        i += 2
+      } else {
+        re += '.*'
+        i += 1
+      }
+    } else if (c === '*') re += '[^/]*'
+    else if (c === '?') re += '[^/]'
+    else re += c.replace(/[.^$|\\]/g, '\\$&')
+  }
+  return new RegExp(`^${re}$`)
+}
+
 describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
     const tabs = region(app, 'const TABS', '/** The one writer')
@@ -143,10 +193,38 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     // stripper opens a match there and eats everything up to the next `*/` in the file – the
     // positive assertion below then fails, and the negative one would have passed for the wrong
     // reason. A config KEY is a line that starts with it; prose is a line that starts with `//`.
+    //
+    // ⚠⚠ RE-AIMED 27.09 BY T3.12, AND POINTED AT THE FACT INSTEAD OF AT THE ABSENCE OF A LINE.
+    // This read `not.toMatch(/^\s*globIgnores:/m)` – no ignore line may exist at all – which was a
+    // true proxy only while the config had none. T3.12 (the 26.09 principles review, G-P3-08) takes
+    // the manifest-only maskable icon out of the PRECACHE with
+    // `globIgnores: ['**/pwa-maskable-512.png']`, and that icon is not art: it is fetched once,
+    // online, at install, and `manifest.icons` still lists all three. So the line-absence proxy went
+    // red on a change that does not touch the guarded fact.
+    // ⭐ The claim is unchanged and the new form is STRICTER, which is why this is a re-aim and not a
+    // loosening: it asserts that no ignore pattern can reach any file the player installs under
+    // `images/`, read off the tree rather than listed here. `globIgnores: ['**/images/**']` – the
+    // exact line this test was born to refuse – reddens by construction, and so does a pattern that
+    // merely clips ONE trophy, which the old absence check could never have seen.
+    // ⚠ Both helpers THROW on a shape they cannot judge rather than matching nothing: a reader that
+    // quietly finds no patterns is a green that means «I could not look», which is the failure mode
+    // `install-size.mjs`' own icon verdict was written against on the same day.
     const vite = read('../vite.config.ts')
-    expect(vite, 'the art is in the install now – see round 29 part two #7').not.toMatch(
-      /^\s*globIgnores:/m,
-    )
+    const ignores = globIgnoresOf(vite)
+    const art = readdirSync(fileURLToPath(new URL('../public/images', import.meta.url)), {
+      recursive: true,
+    })
+      .map((p) => `images/${String(p)}`)
+      .filter((p) => /\.(webp|png|svg|jpe?g|avif)$/.test(p))
+    expect(art.length, 'the art tree is empty – this assertion would be vacuous').toBeGreaterThan(100)
+    for (const pattern of ignores) {
+      const re = globToRegExp(pattern)
+      const hit = art.find((f) => re.test(f))
+      expect(
+        hit,
+        `globIgnores '${pattern}' takes ${hit} out of the install – the art is IN, see round 29 part two #7`,
+      ).toBeUndefined()
+    }
     // ⚠ RE-AIMED AGAIN 29.08, SAME DISCIPLINE AS THE BLOCK ABOVE: `mp3` joined the pattern by the
     // owner's audio ruling (19d1e62 – «audio joins the install by his ruling», the offline wave),
     // and this pin was left reading the old glob – caught as a pre-existing red at the ledger head
@@ -325,9 +403,16 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
     // NOT in the save: no store/engine surface knows the key.
     // ⚠ WIDENED by R2-09 for the protocol arm, NOT weakened: `shared/protocol` is a barrel since
     // the split, so protocol.ts alone is re-export lines and could not hold the key either way.
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts']) {
-      expect(read(rel)).not.toContain('kidAvatarHint')
-    }
+    expect(read('../src/stores/game.ts')).not.toContain('kidAvatarHint')
+    // ⚠⚠ WIDENED 28.09 BY T6.5 / A-04 (a) – A NEGATIVE PIN THAT NOW READS A BARREL IS ASKING NOTHING.
+    // This case did not break with P4's last three span-moves; it QUIETLY STOPPED MEANING WHAT IT
+    // SAYS, which is the worse half of the same family (CLAUDE.md: the region that silently widens,
+    // the helper that silently returns ''). `src/engine/world.ts` holds no function body any more, so
+    // «the engine must not know this» read against that file alone could not fail for any engine code
+    // whatsoever. `worldSource()` is world.ts + every world/*.ts part, so the claim is read over the
+    // whole module set – and widening can only ADD text to a NEGATIVE assertion, which makes it
+    // STRICTER and never weaker. Measured before the change: the key appears in no engine code.
+    expect(engineModuleSource('world'), 'no engine surface knows the key').not.toContain('kidAvatarHint')
     expect(engineModuleSource('../shared/protocol')).not.toContain('kidAvatarHint')
   })
 
@@ -409,8 +494,15 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
     // condition live where the condition is asserted:
     // `tests/component/round33-tournament-arrival.test.ts` mounts both arrivals and asserts each
     // one's whole section list, which is a stronger statement than either of these lines.
+    // ⚠ RE-AIMED 27.09 BY E-02 (T4.12) ONTO THE IDIOM ITS NEIGHBOUR ALREADY USED, and not weakened.
+    // The second line read `'<h2>Training plan</h2>'`, which asserts the heading's ATTRIBUTES as well
+    // as its text – so it broke the moment the heading gained an `id`, which is now the preset row's
+    // accessible name (`aria-labelledby`, no new words). The line above it has matched on
+    // `'>This week</h2>'` since round 33 for exactly this reason: that heading carries a `v-if`. Both
+    // now assert the protected fact – the heading text is on this screen – and neither pins an
+    // attribute list that a name or a condition may legitimately grow.
     expect(weekScreen).toContain('>This week</h2>')
-    expect(weekScreen).toContain('<h2>Training plan</h2>')
+    expect(weekScreen).toContain('>Training plan</h2>')
   })
 
   it('the card renders by the SHARED existence rule – the same one the dot reads', () => {
@@ -569,9 +661,22 @@ describe('the advance button lives in the App shell, and splits by what a stray 
     // at college it is the ONLY way to clear the state `resumeFromCollege` refuses to tick past
     // (COLLEGE_REVEAL_REFUSAL, round 24 rule 2), so it must stay global and unconditional. Both
     // halves are pinned separately below precisely so a future edit cannot merge them by accident.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, IN ITS SPELLING ONLY, AND IT IS STRICTER THAN IT WAS. The bar's
+    // ten geometry declarations are a shared object in src/style.css now (`.floating-cta`, beside
+    // `.dialog-card`), so the shipped attribute is `class="next-week-bar floating-cta"` and an exact
+    // attribute pin cannot hold. What the arm is ABOUT – the shell's bar is THIS class – survives a
+    // second token, so it is a WHOLE-TOKEN test on the attribute instead: indifferent to order and to
+    // what else is on the element, unsatisfiable by a longer class name (`with-next-week-bar`) or by a
+    // comment naming it. `tests/helpers/markup.ts` carries the argument.
+    // ⚠ THE SIBLING TEST BELOW – no tab screen carries the string at all – IS UNTOUCHED, and the neutral
+    // name is the whole reason it could be: F-09 records this pin as the obstacle that stopped 05.09
+    // shipping the merge, because a rule named after the shell's bar would have forced it to be weakened.
     expect(app).toContain(`v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"`)
-    expect(app).toContain(`class="next-week-bar"`)
+    expect(carriesClasses(app, 'next-week-bar'), 'the shell draws the bar').toBe(true)
     // ...and the room reserved under it follows the same rule rather than being paid on every tab.
+    // ⚠ NOT RE-AIMED: `<main>` takes no shared class – `.app-content.with-next-week-bar` is the room
+    // under the bar, not the floating box – so the exact form is still the shipped form.
     expect(app).toContain(`<main class="app-content with-next-week-bar" :class="{ home: tab === 'home' }">`)
   })
 
@@ -817,9 +922,20 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     expect(weekScreen).toContain('<PrimaryPill variant="cta" class="week-proceed-btn"')
     expect(weekScreen).toContain("import PrimaryPill from '../ui/PrimaryPill.vue'")
     // ...floating, centred, one thumb off the tab bar - Home's own geometry.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.4 · F-09, AND THE RE-AIM NAMES THE PATH BECAUSE THAT IS NOW THE CLAIM.
+    // «Home's own geometry» used to be three copies of ten declarations, and this arm read this screen's
+    // copy. There is one object now – `.floating-cta` in src/style.css, beside `.dialog-card` – and this
+    // screen claims it by carrying the class. So the fact splits exactly the way it really is: the SHARED
+    // rule floats and clears the bar, this screen's own rule centres its single pill, and the element asks
+    // for both. Nothing is dropped; what the screen's own rule no longer has to say, it no longer says.
+    // ⚠ The behaviour behind it is measured rather than read, at 375x667 through the real cascade, in
+    // tests/component/principles-f09-shared-objects.test.ts – which is where a computed value belongs.
+    expect(carriesClasses(weekScreen, 'week-proceed', 'floating-cta'), 'the box is the shared one').toBe(true)
+    const shared = region(read('../src/style.css'), '.floating-cta {', '}')
+    expect(shared, 'the shared box floats').toContain('position: fixed')
     const bar = region(weekScreen, '.week-proceed {', '.week-proceed-btn')
-    expect(bar).toContain('position: fixed')
-    expect(bar).toContain('justify-content: center')
+    expect(bar, "and this screen centres its own pill").toContain('justify-content: center')
     // ⚠ RE-AIMED BY ROUND 36 PHASE 3, AND THE NUMBER IS STILL PINNED – one file further out. The
     // claim here is «one thumb off the bottom, the same distance as Home's own button», and until
     // this round the only way to say that was to write 58 in three places (the sheet, this screen
@@ -827,7 +943,9 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     // there is no bar to clear and the owner asked for a margin off the page's edge instead. So the
     // three copies read ONE token and this pin reads the token's own value out of the sheet – the
     // same shape phase 2 gave the width, and it still goes red on a box that stops floating.
-    expect(bar).toContain('bottom: var(--app-bar-bottom)')
+    // ⚠ AND ONE FILE FURTHER OUT AGAIN SINCE 28.09 (T6.4 · F-09): the token is read by the shared box,
+    // which is the ONLY place it is read now – phase 2's whole cost was that three rules had to read it.
+    expect(shared).toContain('bottom: var(--app-bar-bottom)')
     expect(read('../src/style.css')).toContain('--app-bar-bottom: 58px')
     // ...and it exists only while there is a story to leave.
     // ⚠ RE-AIMED BY ROUND 33 #1: the flag is `showStory` now, which is `showRecap` minus the

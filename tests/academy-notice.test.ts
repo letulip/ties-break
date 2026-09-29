@@ -25,12 +25,16 @@
 // red if the notice stops firing on any of its three arms. The last one is the MEASUREMENT of (3),
 // pinned so the collision cannot quietly change shape – see its own comment for what to do with it
 // on the day the advance learns to stop here.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked career must be able to pass a beat.
 import { drainLifeBeats } from './helpers/career'
 
 // The rise/fall arm ticks two full seasons of a real career to reach its second review.
-vi.setConfig({ testTimeout: 120_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 0.68 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   advanceWeeks,

@@ -591,12 +591,17 @@ describe('round 42 v78 G – the sparring seat is two keys and no behaviour', ()
     // ⚠ `worker/sim.worker.ts` IS ABSENT AND THAT IS CORRECT: it names the three COMMANDS
     // (`hireSparring`, `setSparringRung`, `setSparringTravels`) and never the two FIELDS, which is
     // the invariant-1 seam working – the worker routes, the engine decides.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a): `engine/world.ts` -> `engine/world/create.ts`. The barrel
+    // was on this list for `createWorld`'s literal alone, and P4's last three span-moves took that
+    // literal to `world/create.ts`. The census is still TOTAL and still sorted; nothing joined it and
+    // nothing left, so the «named rather than pattern-excluded» claim is word for word as strong.
     expect(readers, 'the seat`s whole footprint, named rather than pattern-excluded').toEqual([
       'components/SupportStaffTab.vue',
       'composables/coachingBudget.ts',
       'engine/migrations.ts',
-      'engine/world.ts',
       'engine/world/coachMarket.ts',
+      'engine/world/create.ts',
       'engine/world/snapshot.ts',
       'engine/world/sparring.ts',
       'engine/world/sponsors.ts',

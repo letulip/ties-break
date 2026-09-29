@@ -166,6 +166,373 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
 - **Round 8 #1, the in-tournament player card** – untouched since 25.07 and the oldest open item in
   the folder. ([rounds/README.md](rounds/README.md), the round-8 row.)
 
+- **`TIER_LADDER.indexOf` is spelled in 33 files** (F P3-08 of the 26.09 principles review) – one
+  `tierRung(tier)` and 33 repointings. It is queued rather than ridden along on purpose, and the
+  reason is the interesting part: W3's builder edited **1 of the 33** and declined the row, because
+  converting two sites adds a THIRD spelling instead of removing one, and a 33-file sweep across
+  three live builders' surfaces is not a ride-along. So it is all-or-nothing work, it needs a wave
+  with no neighbours in those files, and nothing has to be decided first.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F P3-08.)
+
+- ⭐ **DONE 27.09 – the four test-side copies of the «16/16/17» grid, and a FIFTH the queue did not
+  know about.** Corrected in W5's T5.4 pass: `tests/ladder.test.ts` (the `it()` **title**, the
+  «three whole seasons» clause and the «three rungs» note), `tests/events.test.ts`, `tests/world.test.ts`,
+  plus `tests/ladder.test.ts:921` – an L8 note that contradicted a note four lines below it – which the
+  mandated literal query turned up and the same pass fixed. ⚠ **The digits LEFT rather than advanced**,
+  each site now pointing at `TIERS[*].minAgeYears` the way `season/calendar.ts:1631` does, because a
+  count that is advanced only resets its clock: «three whole seasons» was five, and `world.test.ts`'s
+  sentence was wrong in both directions. ⚠ A **sixth** copy stands in `tools/econ-bench.ts:19` and is
+  routed to that wave's `tools/` builder. ⭐ And the severity question the review left open is answered
+  by measurement rather than left unproven: `tests/component/home-strip-and-mail.test.ts` DOES catch
+  H-19's mutation, on 6 of its 25 tests, so H-19 stays **P2** and the class is netted a storey up – what
+  was vacuous was the named case, not the class.
+
+- **`rescueTitle` restates the engine's tired limb** (E-P02, `SeasonScreen.vue:1230`) – form A for a
+  rendered-string branch, queued rather than guessed at because the analysis is already done. The
+  row's proposal, reading `practiceCaution(...).reasons.includes('tired')`, needs a `practiceCaution`
+  INPUT – a `practiceWeeks` list and a week – on a card where no booking exists, and synthesising one
+  would drag the `'streak'` limb into a title that must turn on tiredness alone. Doing it properly is a
+  small engine primitive (`practiceTired(condition)`) in `world/planner.ts`, four lines plus a case. W4
+  did not authorise a new primitive for a P3 row.
+  ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P02.)
+- **Three findings wait on one missing utility: this app has no screen-reader-only class.** E-P11,
+  E-P12 and E-P13 all propose routing `title` text into `aria-describedby`, which must point at an
+  ELEMENT – so each needs a visually-hidden span, and a grep for `sr-only`, `visually-hidden` or
+  `clip: rect` over `src/` returns **nothing**. ⚠ It is not new copy: those sentences already exist in
+  `title`, so it is the same sentence on a new surface, spoken instead of hovered. The shared rule
+  belongs in `src/style.css` beside F-09 / T6.4's other shared objects, and the three findings are its
+  first consumers – one utility, not three inventions.
+  ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P11 / E-P12 / E-P13; T6.4 of
+  [the fix plan](plans/principles-fix-builder-2026-09.md).)
+
+- **Two files mean the opposite thing by the same call: `married(latchedWeek, sinceWeek)`.**
+  `tests/wave11-loss.test.ts:82` and `tests/wave11-window.test.ts:110` declare a helper with the same
+  name and a byte-identical body as the other sixteen, **with the two week arguments the other way
+  round**. Both parameters are weeks, so nothing type-checks differently and nothing throws – the two
+  files simply pose different careers while reading as if they posed the same one. ⚠ It is not a
+  refactor: re-pointing them at the shared builder CHANGES what they pose, so it needs its own hash
+  control and its own commit, and first it needs somebody to establish which of the two readings the
+  wave's spec meant. Measured and noted at both sites 27.09 by W5's T5.11, deliberately not merged.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02.)
+- **T5.1's ratchet retirement waits on one RUNNER run, and the wave gate does not cover it.**
+  `walkFrozenCareer` is memoised and deep-frozen, and the family's solo cost fell **114.30 s →
+  33.37 s (−71 %)** locally. The intake's modification keeps `coach-travel-edge-rungs-ratchet` in place
+  until a CI run confirms the timings, because the bar it enforces is a **runner** bar and every figure
+  above is local. So the trigger is «one green runner run of the family», not «the wave's gate», and
+  the ratchet stays until then. ([07-performance.md](review-principles-2026-09-26/07-performance.md),
+  G-02 = H-01.)
+- **F-02's remaining tail, named and deliberately unmerged.** 5 `weekAtAge` variants, 5 `married`
+  variants (two of them the swapped pair above), `round43-clear-next-week`'s own `careerAt`, and the 48
+  press loops whose body is not the canonical four lines. ⚠ Each survivor differs for a stated reason –
+  a different question (`kidAgeAt === age` versus `>=`), a different key order, an unbounded `while`
+  that can never name its problem, or a different return type – and this wave measured what merging
+  without a per-site control costs: 32 moved hashes from one defaults-spread. T5.14's guard covers the
+  FORWARD direction (no new local copy of a merged family), which is the half that matters; the tail
+  is a follow-up that needs a measurement per site, not a sweep.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02.)
+
+- **A green run that reports exit 1, twice in one week, and the cause is known.**
+  `[vitest-worker]: Timeout calling "onTaskUpdate"` – birpc's RPC window closing while a long hook
+  holds one worker and nine others try to report. W5 hit it on a 33-file sweep that returned **exit 1
+  with 33 files passed and 687 of 687 tests passed**, at load 89.64 once and 322 % CPU the other time;
+  W3 hit the same thing on `tests/condition.test.ts` inside a 23-file batch, 60 s limit against zero
+  assertion failures.
+  ⚠⚠ **CORRECTED 27.09 – THE EXIT CODE TRACKS THE MACHINE AND NOTHING ELSE, AND THE LONG-HOOK
+  MECHANISM THIS ROW FIRST CARRIED IS REFUTED.** Five runs of one command on one tree: 31 files at load
+  2.12 → exit 0; 31 at load 38 → exit 1; 33 at load 89 → exit 1; 33 at 322 % CPU → exit 1; **33 on a
+  quiet machine → 687 of 687, exit 0, 58.36 s.** Identical test results every time. And
+  `round34-reachable-ceiling` plus the gate ran 24 of 24 at exit 0 **inside** the busy window, which
+  disposes of the 120 s `beforeAll` explanation this entry offered on its first writing – recorded on a
+  builder's own hypothesis, refuted by that builder's own measurement an hour later.
+  ⚠ **It is a machine result, not a branch result** – CLAUDE.md already records the shape, and the
+  `sim.mjs` retry classifier already carries the sim project's version of it. What is missing is the
+  same treatment for the UNIT project: a run whose every test passed should not hand back a status that
+  reads like a failure, because that is the exact input a false verdict is made of. ⭐ And one mechanical
+  consolation worth keeping beside it: **lowering a budget cannot cause this stall** – a budget above the
+  RPC window is what converts a readable timeout into it, so W5's clamp can only move the failure in the
+  readable direction. ([CLAUDE.md](../CLAUDE.md), the contention and sentinel gotchas; H-06.)
+
+- **One rank rule for `quantile`, ruled 28.09, and the migration is measured per bench.** Three live
+  benches compute a percentile as `round(q·(n−1))` while the shared `tools/_stats.ts` uses
+  `floor(q·n)`. ⚠ The defect is in the RECORD rather than in the code: a spec quoting p90 from two
+  benches quotes two different numbers. **The ruling is `floor(q·n)`, the shared module's.** It is not a
+  sweep, because changing a holdout **moves its printed output** – one bench at a time, each with its
+  before/after diff stated, which is the standard W5's T5.12 held itself to on 31 captures.
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-04.)
+- **The 68 component files that still spell the storage shim themselves.** T5.10 gave it one home and
+  made it opt-in – which is what F-03 asked – and converted no callers; only 4 of 72 import
+  `installMemoryStorage`. ⚠ Converting 68 files is its own migration with its own risk, so the interim
+  is T5.14's **shrink-only ratchet**: the 68 are listed, a new copy is red, a migrating file simply drops
+  out, and a companion arm prints how much of the list is still load-bearing so a green run cannot hide
+  a rotted ratchet. ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-03.)
+- **`tools/weight-bench.ts` holds byte-identical copies of two `tests/helpers/career.ts` helpers**
+  (`married`, `weekAtAge`), and a tool cannot import `tests/helpers/` – that module re-exports **from**
+  `tools/`, so the dependency runs the other way. ⚠ A tools-side home would mean a second home plus
+  re-pointing `tests/helpers` at it, which inverts a documented direction for two small helpers, so the
+  bench keeps them with a dated note naming the home. **If a third such copy appears the move becomes
+  worth it** – that is the trigger, not a count of lines. Found 28.09 by T5.14's own mutation arm, after
+  the normaliser learned to strip a leading `export` (one keyword had kept the guard green).
+  ([06-duplication.md](review-principles-2026-09-26/06-duplication.md), F-02 / F-04.)
+
+- **Nothing answers «which tests exercise this module», and the barrel is why.** `world/lifeBeat.ts`
+  owns 110 barrel symbols; `CLAUDE.md`'s pin query, widened to the module's quoted path and
+  `engineModuleSource('world/lifeBeat'`, finds **1** test file, while **81** files import the barrel
+  and name at least one of those 110 symbols. The queue entry is the tool the finding names, not a
+  rename: `node scripts/world-map.mjs --tests <module>` resolves each test file's barrel imports
+  through the AST map the script already builds, and prints the test files touching any symbol the
+  module owns, plus the direct-path importers and the `engineModuleSource` pins. `npm run test:quiet --
+  $(…)` then runs exactly those. ⚠ **Renames are explicitly refused**: 336 of 607 test files are named
+  after the round that wrote them, and renaming them would buy churn and merge conflicts for no
+  behaviour – the defect is that the barrel hides the owner from `grep`, so the repair belongs in the
+  script that already knows ownership. Blast radius measured at none (`git grep -l "world-map" --
+  tests/` = 1). The trigger is a module split: `git grep -l "world/lifeBeat" -- tests/` returns **29**
+  file names that record the round that wrote them, so a builder asked to run «the life-beat suites»
+  guesses from those or pays the full unit gate – and a split into a package does not change that
+  number, because the barrel is what hides the owner.
+  ([08-tests-tooling-docs.md](review-principles-2026-09-26/08-tests-tooling-docs.md), H-08; the
+  forward rule is the architect's, per §1a of [the fix plan](plans/principles-fix-builder-2026-09.md).)
+
+- **`world.ts` states four counts about itself in prose, and all four are wrong.** `:65` says «the
+  280-file public API», `:259` «the ~111 modules importing them», `:331` «111 files import from
+  `engine/world`», and `:116` / `:484` say «hundreds of files». Measured 28.09 by T6.6: **777 files
+  import the barrel by name, 782 import from any `world` path**. ⚠ **Deliberately not refreshed**, and
+  the reason is `CLAUDE.md`'s own rule – a fresh number in prose rots exactly the same way, and «a count
+  a document states about itself needs a pin that compares it with the thing». So this is W7 material
+  rather than a one-line edit: either the sentences stop stating counts, or one pin states the count and
+  the prose points at it, the way `tests/wave9-strings-roundtrip.test.ts` does for a corpus. `:259` also
+  carries a pre-existing text gap – «importing them from  keep working» lost its specifier.
+  ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-03; measured at W6's head
+  after T6.5 and T6.6.)
+
+- **A-02's repoint frees nothing, the bytes it was after were already collected, and the gate shipped
+  anyway – a NULL RESULT with its cause and its provenance.** A-02 asked for the 17 UI runtime imports
+  of `engine/world` to be repointed at their owning modules, against 28,275 B of dead album corpus in
+  the UI chunk and 17 KiB of install headroom. T6.7 ran the build arm the lane left open, in a
+  dedicated worktree at `e99956ed` with both arms built from that one commit, so neither carries
+  another builder's work. **Denominator: 18 files, 19 barrel import lines out, 36 owning-module lines
+  in** (17 in the finding, 18 today – T6.3 extracted `ShopPanel.vue` out of `MoneyScreen.vue` earlier
+  in this wave and it took `ASSET_NAME_MAX_CHARS` with it). Baseline → Cell A, the 18 files repointed:
+  main chunk **707,351 → 707,345 B, and gzipped 238,225 → 238,270 B, so 45 bytes LARGER on the wire**;
+  worker chunk 663,952 B with hash `D9jZhF4G` unchanged; install 16,212 KiB / 361 entries / 172 KiB of
+  headroom, unchanged to the byte of the precache manifest. Cell B added the save layer's three barrel
+  value imports (`saveCodec.ts`, `saveGuard.ts`, `migrations.ts`, 18 lines out, 13 in) and produced a
+  **byte-identical chunk to Cell A, same hash**.
+  ⚠ **Two named causes, which is what makes this a finding rather than a shrug.** (1) The 28,275 B left
+  in W3's T3.1 (`58ccb8f6`). Counted the way `world/albumBook.ts:327` instructs – over the sentences
+  `ALBUM_CORPUS` itself holds, not the two the finding transcribed – **0 of 424 are in the main chunk
+  and 424 of 424 are in the worker's**, and that second figure is the positive control that makes the
+  first a measurement. (2) ⭐ **The barrel cannot cost bytes, because it does not ship**: per-module
+  attribution of the chunk's own source map puts `src/engine/world.ts` at **0 B**. It is bodiless
+  (`principles-a04-barrel-no-bodies.test.ts`) and side-effect-free, so rollup erases it and resolves
+  every re-export to its owning module at build time – the chunk's 235-module composition is identical
+  under both spellings, and only the minifier's identifier allocation moves, which is the whole −6 B.
+  ⚠ A-02's verification also named a main-thread route that does not exist at runtime: `src/db/saves.ts:4`
+  is `import type`, erased, and `saveCodec`/`saveGuard` are tree-shaken out of the main chunk entirely
+  because `MoreScreen` reaches `db/saves` for `sanitizeName` and nothing else. Severing
+  `saveCodec → migrations` moves the main chunk by the **6 B** `migrations.ts` actually holds there and
+  the worker chunk by **−17,456 B**, which is where that code lives.
+  **Shipped: the reverse gate only** (`tests/principles-a02-ui-barrel-ratchet.test.ts`) – a new UI
+  runtime import of the barrel is red, today's 18 are grandfathered by exact path and convert when their
+  file is next touched, type-only stays allowed. It is a gate because the RULE is now `CLAUDE.md`'s P4
+  sentence and T6.6's frozen surface rather than a bytes argument, and a rule with no mechanism is the
+  «кто вспомнит?» failure. **Refused: the 18-file repoint**, on the plan's own condition – an arm that
+  makes the download larger has not earned a churn commit – so the three source pins that quote a UI
+  barrel import line (`money-format.test.ts:124`, `prize-money.test.ts:443`,
+  `calendar-screen.test.ts:850`) do not move.
+  ⭐ **And the delivery question A-02 was standing in front of is still open, with a fresh number on
+  it.** At W6's head (`b82f209b`) the main chunk carries **79,464 B of engine/shared/db/worker code in
+  64 modules, 72,944 B of it in 58 modules that are ALSO in the worker chunk** – §A5's 121,534 B, minus
+  what T3.1, T3.12 and this wave have taken out. The top of that list is `engine/economy.ts` at
+  **26,364 B** and `engine/season/calendar.ts` at **7,984 B**, and every one of them is reached by a
+  DIRECT UI import rather than through the barrel. So the next arm is a lane-G question about what a
+  screen actually needs from `economy.ts`, not a question about specifiers, and no repoint of any
+  spelling will answer it.
+  ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-02 and its PLAUSIBLE
+  verification, which predicted exactly this; §A5 of
+  [00-baseline.md](review-principles-2026-09-26/00-baseline.md) for the figure it replaces.)
+
+- **Which of the 58 double-shipped engine modules does the UI actually NEED?** Measured 28.09 by T6.7
+  at `e5800d32`, per-module, out of the built chunks' own source maps. The main chunk carries **79,464 B
+  of engine/shared/db/worker code in 64 modules, 72,944 B of it in 58 modules that are ALSO in the
+  worker chunk**; 6 modules, 6,520 B, are main-only and legitimately so (`engine/match/rally.ts`,
+  `worker/client.ts`, `engine/match/liveProb.ts`, `shared/matchViz.ts` and two protocol shapes – the
+  live match view and the RPC). That is §A5's 121,534 B, less what T3.1, T3.12 and this wave took out.
+  ⚠ **It is NOT the barrel, and no repoint touches it**: `src/engine/world.ts` is 0 B of both chunks,
+  and every one of the 58 is reached by a DIRECT UI import. So this is not a refactor waiting for a
+  scheduler; it is 58 yes/no questions whose answer is either «it is real» (the UI formats money, so it
+  reads `ECONOMY`) or «it is a leak», and the ones that say «leak» end in an owner decision about what a
+  screen may compute. That is why it is a row and not a W7 task – W7 is the notes wave.
+  ⭐ **The cut that makes it a morning's work rather than a survey: 20 of the 58 are WHOLLY in both
+  chunks** – their main-chunk share is at least 80 % of their worker share, so the UI evaluates
+  essentially the entire module – and those 20 are **53,029 B of the 72,944**. The other 38 are slivers
+  tree-shaking has already narrowed (19,915 B, and 12 of them are under 100 B). **Five rows are 58 % of
+  the total.** Start at the top and stop when the rows stop being worth a question.
+  ⚠ **The trigger is already on record and it is not a date**: `docs/now-next-later.md`'s own Later
+  section plans the install-ceiling raise for the first art round, and the ceiling is what this buys
+  back – 172 KiB of headroom today, and `engine/economy.ts` alone is 26,364 B of the main chunk against
+  `ECONOMY`'s handful of numbers that a screen actually formats. The first art round that needs the
+  raise is when this row gets picked up; before that it is measurement, not a fix.
+  (The first table on this page, deliberately: 58 named modules is actionable and «the chunks overlap»
+  is not. Bytes as the chunk's own source map attributes them – the minified bytes, not source lines.)
+
+  | module | main chunk | worker chunk |
+  | --- | ---: | ---: |
+  | `engine/economy.ts` | 26,364 | 26,785 |
+  | `engine/season/calendar.ts` | 7,984 | 8,254 |
+  | `engine/season/names.ts` | 2,730 | 2,802 |
+  | `engine/world/birthday.ts` | 2,655 | 19,699 |
+  | `engine/offers.ts` | 2,349 | 13,945 |
+  | `engine/match/scoring.ts` | 2,319 | 2,319 |
+  | `shared/dates.ts` | 2,029 | 1,109 |
+  | `engine/coach.ts` | 2,006 | 4,582 |
+  | `engine/match/engine.ts` | 1,946 | 1,957 |
+  | `engine/childhood.ts` | 1,706 | 1,705 |
+  | `engine/world/coachMarket.ts` | 1,669 | 13,676 |
+  | `engine/season/tournament.ts` | 1,366 | 6,246 |
+  | `shared/protocol/messages.ts` | 1,324 | 80 |
+  | `engine/match/point.ts` | 1,196 | 1,196 |
+  | `engine/plan.ts` | 1,139 | 1,298 |
+  | `engine/ending.ts` | 1,068 | 5,103 |
+  | `engine/match/style.ts` | 907 | 565 |
+  | `engine/match/closedForm.ts` | 820 | 820 |
+  | `engine/collegeOffer.ts` | 791 | 1,735 |
+  | `engine/development.ts` | 756 | 5,232 |
+  | `engine/world/lifeBeat.ts` | 754 | 31,404 |
+  | `engine/world/planner.ts` | 719 | 4,792 |
+  | `engine/world/psychologist.ts` | 715 | 2,599 |
+  | `shared/avatarEmotion.ts` | 707 | 1,656 |
+  | `engine/world/age.ts` | 606 | 1,378 |
+  | `engine/world/multiWeek.ts` | 585 | 457 |
+  | `engine/match/serveSpeed.ts` | 554 | 92 |
+  | `engine/world/medical.ts` | 477 | 6,377 |
+  | `engine/rng.ts` | 449 | 777 |
+  | `shared/protocol/ladder.ts` | 412 | 159 |
+  | `engine/world/player.ts` | 412 | 1,523 |
+  | `engine/world/labels.ts` | 361 | 360 |
+  | `shared/format.ts` | 360 | 145 |
+  | `engine/collegeLeague.ts` | 325 | 875 |
+  | `shared/protocol/profile.ts` | 308 | 2,720 |
+  | `engine/nationalTeam.ts` | 288 | 2,069 |
+  | `shared/money.ts` | 265 | 204 |
+  | `shared/countries.ts` | 143 | 198 |
+  | `engine/season/ranking.ts` | 122 | 1,999 |
+  | `engine/world/entryCaps.ts` | 119 | 4,221 |
+  | `engine/world/constants.ts` | 116 | 504 |
+  | `engine/knock.ts` | 113 | 4,192 |
+  | `engine/diary/facts.ts` | 105 | 1,352 |
+  | `engine/world/masseur.ts` | 105 | 3,888 |
+  | `engine/radar.ts` | 102 | 12,726 |
+  | `engine/world/matchNews.ts` | 86 | 1,799 |
+  | `engine/world/sparring.ts` | 83 | 1,840 |
+  | `db/saves.ts` | 76 | 6,042 |
+  | `engine/world/ledger.ts` | 70 | 2,284 |
+  | `engine/world/means.ts` | 60 | 373 |
+  | `engine/world/derivedCache.ts` | 56 | 1,456 |
+  | `engine/chemistry.ts` | 53 | 1,400 |
+  | `engine/world/create.ts` | 52 | 3,531 |
+  | `shared/protocol/offers.ts` | 16 | 16 |
+  | `engine/world/college.ts` | 16 | 8,054 |
+  | `engine/world/assets.ts` | 12 | 4,634 |
+  | `engine/world/state.ts` | 12 | 12 |
+  | `engine/migrations.ts` | 6 | 16,633 |
+
+  ([01-architecture.md](review-principles-2026-09-26/01-architecture.md), A-02's null result above for
+  the arm and the provenance; §A5 of
+  [00-baseline.md](review-principles-2026-09-26/00-baseline.md) for the reading this replaces.)
+
+- **63 of the strings tables' rows have no roundtrip pin at all.** Six tables name
+  `src/engine/world/lifeBeat.ts` as the home of **106** rows; three of them have a
+  `*strings-roundtrip*` test and three do not – wave 5 (**54** rows), wave 6 (**4**) and wave 8 (**5**).
+  Measured 28.09 by T6.10 while checking whether its seven moves invalidated any home. ⚠ The reason this
+  is a queue row and not a quick fix: a roundtrip pin is two claims, «every row's text is in the file it
+  names» and «every DRAFT in the file is a row», and the second needs somebody to establish what those
+  three waves' corpora actually were – writing the pin against today's source would pin the drift rather
+  than the intent. The pinned three are the model (`tests/wave12-strings-roundtrip.test.ts`), and
+  T6.9's `homeSource()` already resolves a `src/engine/` home through its module set, so a split no
+  longer breaks them. Cheapest honest start: the containment half for all 63 rows, with the
+  corpus-completeness half left to whoever owns each wave's spec.
+  ([the fix plan](plans/principles-fix-builder-2026-09.md) §2's wording rule; measured at W6's head.)
+
+- **`fits.ts`'s `demandedWidth` charges `el.textContent`, which includes out-of-flow descendants.**
+  Found 28.09 by T6.4 while adding the `.sr-only` utility: a visually-hidden span is `position:
+  absolute` and one pixel wide, but its sentence is inside its parent's `textContent`, so a fit
+  assertion over a control that carries one would charge the whole sentence. ⚠ **Nothing is wrong
+  today** – the four `assertRowFits` / `assertInlineRowFits` callers are the week bar, the invest stake
+  row and the two seat tables, and none of them carries an `.sr-only` span. And the error runs in the
+  **safe** direction: over-charging produces a false RED, which costs attention and never ships a
+  defect – which is why this is queued rather than repaired mid-wave, on wave 10's precedent about
+  shared measurement instruments. The repair is to charge only in-flow text. The trigger is the first
+  fit net over a segmented pill; the note at `.sr-only` in `src/style.css` says so, so the next person
+  finds the answer instead of the symptom.
+  ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P11 / E-P12; [fits.ts](../tests/component/fits.ts).)
+
+- **Ten strings-table rows are pinned by containment only, and containment cannot see a string grow.**
+  §3's PF4/PF5 and §4's five rows (plus §1–§2's) assert that the tabled text is *contained* in the home
+  file – measured 28.09: `'The garage'` → `'The garages'` leaves such a pin **green**. T6.4 closed it for
+  §5 with a whole-delimited-literal check; ⚠ the same fix does **not** transfer, because those rows are
+  interpolated or concatenated and are not whole literals in the source, so each needs a shape chosen
+  for it (the delimited fragments, or a rebuilt literal from the same inputs the code uses). That is a
+  per-row measurement over ten rows, which is why it is a row here and not a ride-along. Register row 49
+  carries the general form and the one-command test for any containment pin: append a character to the
+  shipped string and watch it.
+  ([the fix plan](plans/principles-fix-builder-2026-09.md) §2's wording rule; row 49 of
+  [the-quality-rig.md](backlog/the-quality-rig.md).)
+
+- **44 test files strip comments with a local copy of the regexes W6 replaced, and 21 of them never
+  import the helper at all.** Swept and counted 28.09 by T6.11 after it fixed `tests/helpers/source.ts`;
+  nothing was edited, on purpose. By variant: **12** block-only, **11** block plus an anchored line
+  strip (the exact defect just fixed), **14** block plus an **UNANCHORED** line strip – ⚠ that one also
+  deletes **trailing** comments, which is the single direction that removes code and therefore turns a
+  **negative** pin green – and **9** with HTML variants.
+
+  ⚠ **The priority subset is a local strip that both eats code in a file it reads AND carries a negative
+  claim – six files**, measured against the scanner on the files each one actually reads:
+
+  | file | eats | negatives | variant |
+  | --- | ---: | ---: | --- |
+  | `tests/wave5-psychologist-schema.test.ts` | **698** | 11 | UNANCHORED, no helper |
+  | `tests/portrait-bands.test.ts` | 392 | 23 | anchored |
+  | `tests/knock.test.ts` | 260 | 31 | anchored |
+  | `tests/ladder-separation.test.ts` | 260 | 8 | anchored |
+  | `tests/spirit.test.ts` | 200 | 12 | UNANCHORED |
+  | `tests/kidLife.test.ts` | 143 | 5 | anchored, no helper |
+
+  The first is the top of the queue: 698 characters of `src/engine/world/lifeBeat.ts` – the same phantom
+  block that blinded the cycle judge – with 11 negative assertions, the unanchored variant, and no import
+  of the helper. Total across all 44: **3,349 characters** eaten in the files they read.
+
+  ⭐ **The other 38 are latent, not live**, and that distinction is why this is a queue row rather than an
+  emergency: the defect is in the instrument, the exposure depends on what it is pointed at, and the
+  exposure moves the moment a comment in a read file gains a glob. `tests/wave4-spirit-shock.test.ts` is
+  in the unanchored fourteen, eats 0 today, and is the file whose own regex tripped an earlier draft of
+  the scanner – which is the shape of how this becomes live.
+
+  The repair is to route each one through `stripComments` / `codeOf`, one file at a time with the
+  triage T6.11 ran for the 26 readers: every new red is either a hole the strip was hiding or a pin that
+  was always over-strict, and a `src/` finding gets reported, never fixed in the same commit.
+  ([source.ts](../tests/helpers/source.ts); rows 47, 48 and 50 of
+  [the-quality-rig.md](backlog/the-quality-rig.md).)
+
+- **The cycle judge could treat `<!-- -->` as a comment for free, and does not.** Measured 28.09: with
+  HTML comments stripped the resolved edge set is the same **1,729** – **0 edges live only inside a
+  `.vue` template comment today**. Left unchanged because the unification's whole claim was that nothing
+  moves; the note is here so the next person knows the cost is zero rather than unmeasured.
+  ([import-cycles.test.ts](../tests/import-cycles.test.ts).)
+
+- **`loadAlbum` clears a pending refusal the same way the inbox did, and nothing has measured the harm.**
+  Found 28.09 by T6.2 while fixing its own instance: `run()` opens by clearing `error`, which is right for
+  a command the player took and wrong for a query a component fires. `App.vue` fires `loadAlbum` on
+  entering the album tab, so entering the album clears a sentence the player may not have read. ⚠ Not
+  fixed here, and the reason is that the claim is **smaller and unproven**: the album screen carries no
+  `StoreError` of its own, so what a player loses is a sentence on the surface they navigated away from,
+  not on the one in front of them. The fix is one argument (`run(fn, { keepError: true })`, already built
+  and defaulting to false, so it changes no other caller); what it needs is a net that says which sentence
+  is lost and where it was visible. ⭐ And the general question behind both: a query fired by a component
+  is not a command the player took, so **clearing the error belongs to the command path, not to `run`** –
+  five callers agree with that today by accident rather than by rule.
+  ([round36-error-surfaces.test.ts](../tests/component/round36-error-surfaces.test.ts); row 51 of
+  [the-quality-rig.md](backlog/the-quality-rig.md).)
+
 ## Later – needs the owner's word, not an engineer's
 
 **News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
@@ -224,10 +591,14 @@ playtest can reopen it:
   richer road (23.09).
 - **Per-kind life glyphs** – the standing 🤍-v1 deferral (T9's discriminator) refreshed 23.09 for
   `'divorced'`: «не уверен, что будет везде корректно отображаться, давай пока так оставим».
-- **The unreachable-roof siblings** – the finding that collapsed the divorce her-line (a roof
-  variant cannot happen at 23+) also holds for the wave-11 expecting/bereavement roof cells, and
-  `ENDED_NOW_EVENT` still carries the «nobody in her life now» tail his review struck from the
-  divorce row – shipped wording, his eye before any churn (23.09 review).
+- **The unreachable-roof siblings** – ⚠ **THE ROOF HALF IS DONE, 26.09** (the owner's ruling 19 on
+  B-08, W3's T3.11): the finding that collapsed the divorce her-line also held for the wave-7
+  `'engaged'` pool and the wave-11 expecting/bereavement ones, and all twelve roof cells are gone –
+  strings REMOVED, none reworded, with the reachability measured over every profile and week by
+  `tests/principles-b08-presence-reach.test.ts`, which also refuses the next pool keyed on presence
+  behind a gate at 22 or over. **What is still queued is the WORDING half:** `ENDED_NOW_EVENT` still
+  carries the «nobody in her life now» tail his review struck from the divorce row – shipped wording,
+  his eye before any churn (23.09 review).
 - **The college-mother middle floor** – one clause, UNDER DISCUSSION, unpacked twice
   (the-parting §12).
 - **College as played content** – his 23.09 question (a walkable bracket like the prologue's, and
@@ -241,7 +612,11 @@ playtest can reopen it:
   divorce shock row and answer prices, the parting census at corpus-400 – all wait for the
   playtest, and he watches the mirrored prices himself.
 - **The install ceiling** – 17 KiB under 16384 after wave 12; the raise is his «по необходимости»,
-  and the first art round hits it.
+  and the first art round hits it. ⚠ **Re-aimed 28.09 by T6.7: that 17 KiB is spent history rather than
+  today's headroom** – T3.1 and T3.12 gave it back, and the wave's own builds print three figures the
+  ceiling is nowhere near. No fresh number is written here on purpose: `node scripts/install-size.mjs`
+  prints it one step after every `vite build`, and a headroom figure in prose rots between two art
+  rounds. What is unchanged is the RULING – the raise is his, and the trigger is still the art.
 - **Boys / an ATP branch** – out of the layer, game-scale (22.09: the birth key is reserved in
   writing).
 

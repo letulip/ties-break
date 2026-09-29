@@ -86,6 +86,109 @@ function bytesOf(url) {
   throw new Error(`precache entry "${url}" resolves to no file under dist/ – re-aim this reader`)
 }
 
+// =================================================================================================
+// ⚠⚠ WHICH ICONS THE PRECACHE HOLDS – READ OFF THE BUILT WORKER, BECAUSE A CONFIG ASSERTION CANNOT
+// SEE THIS (T3.12, 26.09).
+// =================================================================================================
+//
+// THE FAILURE THIS EXISTS FOR, AND IT HAPPENED. T3.12 took the manifest-only maskable icon out of
+// the install by adding `globIgnores: ['**/pwa-maskable-512.png']` to `vite.config.ts` – and that
+// alone freed NOTHING, while reading exactly like a 105 KiB win. vite-plugin-pwa ALSO pushes every
+// `manifest.icons[].src` into the precache by hand (`includeIcons` → `additionalManifestEntries`),
+// and that path does not consult `globIgnores`. Measured on that arm: 368 listed entries → 367,
+// **362 unique → 362**, install 16,320 → 16,320 KiB, the icon still in `dist/sw.js`. The second door
+// is `includeManifestIcons: false`, and only the BUILT worker can say whether both are shut.
+//
+// So `tests/round29p2-offline-install.test.ts` keeps the config-level guard – it is offline, it costs
+// nothing and it fails four seconds into `check` – and this one asserts the artefact. **They fail for
+// different reasons and that is the point**: a config regression trips the test, a plugin default or
+// a second injection path trips this.
+//
+// ⚠ NOTHING IS COPIED HERE. The three icon names are read out of `dist/manifest.webmanifest`, and
+// which of them is manifest-only is read off its own `purpose`, so the rule is derived from the same
+// artefact it judges. A list of names in this file would be the «two copies of one constant» hazard
+// that the offline test's own docblock was written about.
+//
+// ⚠⚠ AND IT FAILS LOUDLY ON A SHAPE IT DOES NOT UNDERSTAND. An absent or unparseable manifest, an
+// empty `icons` array, or a build with no maskable icon or no ordinary one all exit 1 with a re-aim
+// message – never green. ⭐ The positive half is also the anti-vacuity guard for the negative half: if
+// the name matching below ever stopped matching anything, «the maskable icon is absent» would pass
+// for the wrong reason, and «pwa-192 and pwa-512 are present» goes red in the same breath.
+//
+// WHY THE TWO ORDINARY ICONS MUST STAY IN, recorded here because it is the half a later size pass
+// will be tempted by: `src/audio/music.ts` hands `pwa-192.png` and `pwa-512.png` to the Media Session
+// as the lock-screen artwork, on a phone that may never be online again. The difference between the
+// three icons is WHO READS THEM, never how big they are.
+function iconVerdict(precachedUrls) {
+  let manifest
+  try {
+    manifest = JSON.parse(readFileSync(join(DIST, 'manifest.webmanifest'), 'utf8'))
+  } catch (e) {
+    return { ok: false, line: `  error: dist/manifest.webmanifest could not be read or parsed (${e.message}) – re-aim this reader` }
+  }
+  const icons = manifest.icons
+  if (!Array.isArray(icons) || icons.length === 0) {
+    return { ok: false, line: '  error: the built manifest declares no `icons` array – re-aim this reader' }
+  }
+  // ⚠ COMPARED BY BASENAME, for `bytesOf`'s reason one function up: `deploy.yml` builds with
+  // `BASE_PATH=/ties-break/`, so the same file is spelled two ways across the manifest and the
+  // worker. Every icon sits at the root of `dist/`, so the basename is the whole identity.
+  const nameOf = (u) => decodeURIComponent(String(u)).split('?')[0].split('/').pop()
+  const inPrecache = new Set(precachedUrls.map(nameOf))
+  const purposes = (i) => String(i.purpose ?? 'any').trim().split(/\s+/)
+  const manifestOnly = icons.filter((i) => purposes(i).includes('maskable'))
+  const readAtRuntime = icons.filter((i) => !manifestOnly.includes(i))
+  if (manifestOnly.length === 0 || readAtRuntime.length === 0) {
+    return {
+      ok: false,
+      line:
+        `  error: the manifest holds ${manifestOnly.length} maskable and ${readAtRuntime.length} ordinary icons; ` +
+        'this reader expects at least one of each (T3.12) and will not judge a shape it does not know – re-aim it',
+    }
+  }
+  const kibOf = (name) => {
+    try {
+      return `${(statSync(join(DIST, name)).size / 1024).toFixed(0)} KiB`
+    } catch {
+      return 'missing'
+    }
+  }
+  const problems = []
+  for (const i of icons) {
+    const name = nameOf(i.src)
+    try {
+      statSync(join(DIST, name))
+    } catch {
+      problems.push(`${name} is in the manifest but absent from dist/ – the installed icon would 404`)
+    }
+  }
+  for (const i of manifestOnly) {
+    const name = nameOf(i.src)
+    if (inPrecache.has(name)) {
+      problems.push(
+        `${name} is manifest-only (${kibOf(name)}) and is back in the precache – the platform fetches it once, ` +
+          'online, at install. T3.12 needs BOTH doors shut: `globIgnores` in workbox AND `includeManifestIcons: false`',
+      )
+    }
+  }
+  for (const i of readAtRuntime) {
+    const name = nameOf(i.src)
+    if (!inPrecache.has(name)) {
+      problems.push(
+        `${name} has LEFT the precache – src/audio/music.ts hands it to the Media Session as the ` +
+          'lock-screen artwork, which must work offline (an owner-facing behaviour, not a spare copy)',
+      )
+    }
+  }
+  if (problems.length > 0) return { ok: false, line: problems.map((p) => `  error: ${p}`).join('\n') }
+  return {
+    ok: true,
+    line:
+      `  icons: ${manifestOnly.map((i) => nameOf(i.src)).join(', ')} out of the precache (manifest-only), ` +
+      `${readAtRuntime.map((i) => nameOf(i.src)).join(', ')} in it (read offline)`,
+  }
+}
+
 let sw
 try {
   sw = readFileSync(join(DIST, 'sw.js'), 'utf8')
@@ -140,3 +243,10 @@ if (kib >= CEILING_KIB) {
       `(+${workerKib.toFixed(0)} KiB of worker scripts outside the manifest; dist built ${built})`,
   )
 }
+
+// ⚠ AFTER THE SIZE LINE, AND IT SETS `exitCode` RATHER THAN EXITING – so a run that trips this still
+// prints the number it measured. Both failures are real failures; seeing both at once is cheaper than
+// two runs. See the block above `iconVerdict` for what it is guarding and why a config test cannot.
+const icons = iconVerdict(urls)
+console.log(icons.line)
+if (!icons.ok) process.exitCode = 1

@@ -28,6 +28,12 @@ import { useWeekAction } from './composables/weekAction'
 // the label and the press read one number by construction and there is nothing here for a second
 // opinion to be.
 import { spanDigest } from './engine/world/multiWeek'
+// ⭐ F-07 (26.09 principles review) – "is this the week's practice friendly" is the ENGINE's
+// question and this shell no longer spells its own answer. See `isPracticeMatchEvent`'s note in
+// world/planner.ts: `friendly` also rides on a college call-up rubber, so `e.friendly` alone is a
+// predicate about zero ranking points and not about practice. Imported from the leaf, like
+// `spanDigest` above.
+import { isPracticeMatchEvent } from './engine/world/planner'
 // ⚠ RE-AIMED, NOT RETIRED: `calendarOwnsWeekAhead` used to decide where a week LANDED and now decides
 // which weeks the calendar PLAYS. That is closer to the owner's original sentence than the landing
 // rule ever was - the Calendar tab is «активной при нетурнирных неделях», and a tab that runs the
@@ -950,7 +956,10 @@ async function playWeek(weeks: number): Promise<void> {
   if (weeks > 1 && spanTo > spanFrom) weekSpan.value = { from: spanFrom, to: spanTo }
   if (throughPractice) {
     const s = game.snapshot
-    const friendly = s?.events.find((e) => e.type === 'match' && e.friendly && e.week === s.week && e.match)
+    // ⚠ F-07: THE WEEK IS THIS SHELL'S FILTER, THE REST IS THE ENGINE'S PREDICATE. The broad
+    // `e.friendly` spelling that stood here would hand the practice flow a college call-up RUBBER
+    // raised in the same week – a match the player never booked and never paid for.
+    const friendly = s?.events.find((e) => e.week === s.week && isPracticeMatchEvent(e))
     if (friendly?.match) practiceLive.value = friendly.match
   }
 }
@@ -1535,7 +1544,10 @@ function reopenTour(): void {
 
 <template>
   <!-- PWA update prompt (registerType 'prompt'): fixed above everything, all app states. -->
-  <div v-if="needRefresh" class="update-banner">
+  <!-- ⭐ E-10 / T4.9 – `role="status"`, the app's own `StoreError` treatment («an error that appears
+       without moving focus is announced by nothing otherwise»). A polite live region: it never
+       interrupts, and it is an ATTRIBUTE – not one word of the three notices moves. -->
+  <div v-if="needRefresh" class="update-banner" role="status">
     <span>New version available</span>
     <button class="primary" @click="applyUpdate">Update</button>
   </div>
@@ -1624,7 +1636,10 @@ function reopenTour(): void {
          mounted-tested in tests/component/round28-top-notices.test.ts - the App shell became
          mountable in this round (see the alias in vite.config.ts), so the claim D11 could only
          state backwards as a source pin is now made forwards, on the rendered button. -->
-    <div v-if="game.recovered" class="recovered-banner">
+    <!-- ⭐ E-10 / T4.9 – `role="status"`: the recovered banner is the ONE message about a damaged
+         save, and until this wave a screen reader was told nothing about it. See the update
+         banner above for the treatment; no wording moves. -->
+    <div v-if="game.recovered" class="recovered-banner" role="status">
       <span>Autosave was damaged – restored the previous one.</span>
       <button aria-label="Dismiss autosave notice" @click="dismissRecovered">Dismiss</button>
     </div>
@@ -1632,7 +1647,9 @@ function reopenTour(): void {
     <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
          screen too (playPracticeWeek), and a stop the player never sees is a stop that did not
          happen as far as they are concerned. -->
-    <div v-if="showStopToast" class="stop-toast">
+    <!-- ⭐ E-10 / T4.9 – `role="status"`: this toast is the game's whole explanation of why a
+         multi-week advance halted, so a player who cannot see it was being told nothing at all. -->
+    <div v-if="showStopToast" class="stop-toast" role="status">
       <span>{{ stopReasonText }}</span>
       <!-- Its message always opens with the word "Stopped:", so the accessible name's own noun is
            the sentence's and not a new one invented for the button. -->
@@ -1742,7 +1759,7 @@ function reopenTour(): void {
          forbidden (tests/template-copy-rules.test.ts). -->
     <div
       v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"
-      class="next-week-bar"
+      class="next-week-bar floating-cta"
       :class="{ 'with-span': !!weekAction.multi }"
     >
       <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, floated above the bar in the calendar
@@ -1751,7 +1768,7 @@ function reopenTour(): void {
            both projections of the press – DRAFT, recorded in docs/rounds/round-42.md #20. Shown from
            the consumed first press until the press that leaves; the second press goes through the
            same button underneath it. -->
-      <p v-if="softLeave.asking.value" class="next-week-note">{{ SOFT_LEAVE_LINE }}</p>
+      <p v-if="softLeave.asking.value" class="next-week-note floating-cta-note">{{ SOFT_LEAVE_LINE }}</p>
       <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
            deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
            thing the player came to play"); what makes this one a different button is `multi`, which

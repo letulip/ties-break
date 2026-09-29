@@ -81,10 +81,11 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { createWorld, tickWeek, skipTournament, closeTournament, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import { createWorld, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
 import type { LoveEpisode } from '../src/shared/protocol'
+import { walkWeeks } from './helpers/career'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -114,15 +115,7 @@ function preV77Row(sinceWeek: number, endedWeek: number | null, knownWeek: numbe
  *  a fresh stream `rngMain` never moves and «the two arms agree on `rngMain`» would be the agreement
  *  of two untouched initial values. */
 function walk(world: WorldState, weeks: number): WorldState {
-  const rng = resumeMain(world.rngMain)
-  for (let w = 0; w < weeks; w++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-  }
-  return world
+  return walkWeeks(world, resumeMain(world.rngMain), weeks)
 }
 
 /** Source with every comment removed – `tests/spirit.test.ts`'s own helper verbatim, for §E: a pin
@@ -531,7 +524,12 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     expect(withKey.week, 'the arms really walked 156 weeks').toBe(156)
     expect(withKey.rngMain.n, '...and really spent MAIN draws doing it').toBeGreaterThan(0)
     expect(withKey.events.length, '...and really lived a career').toBeGreaterThan(10)
-  }, 120_000)
+  // ⚠⚠ THE THREE PER-TEST BUDGETS IN THIS FILE ARE GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 120 s ->
+  // 60 s on a measurement, then DELETED, because at 60 s they only restated `vite.config.ts`'s own unit
+  // `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+  // leave this file at 60. SLOWEST TEST here, in the real bulk pool: 2.37 s. Table:
+  // tests/sim-serialisation.test.ts.
+  })
 
   it('⭐⭐⭐ and a career CARRYING ATTACHMENTS walks the same weeks with the four row fields and without them', () => {
     // ⚠⚠ THE ROW-LEVEL HALF OF THE SAME CLAIM, and it needs its own case because the walk above can
@@ -583,7 +581,7 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     expect(bWorld.week, 'the arms really walked 156 weeks').toBe(156)
     expect(bWorld.loveEpisodes.length, 'and the attachments are still on the record').toBeGreaterThanOrEqual(2)
     expect(bWorld.lifeLog.length, '...and the beats they raise really were lived').toBeGreaterThan(0)
-  }, 120_000)
+  })
 
   it('⚠ and the five fields come out of a walked career exactly as they went in – T1 ships no reader', () => {
     // The other direction of the same claim, and the one that would catch a tick that WROTE one of
@@ -604,7 +602,7 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
       expect(row.airedMetWeek, `${row.id}: no booth exists to voice it`).toBeNull()
       expect(row.airedEndedWeek).toBeNull()
     }
-  }, 120_000)
+  })
 })
 
 // =================================================================================================
@@ -630,10 +628,15 @@ describe('wave 6 T1 E – nothing reads them yet, and that is pinned rather than
     const named = srcFiles()
       .filter(([, source]) => codeOnly(source).includes('spotlightHabituation'))
       .map(([path]) => path)
+    // ⚠⚠ RE-AIMED 28.09 BY T6.5 / A-04 (a): the birth value this case's own title names is written in
+    // `engine/world/create.ts` now, because P4's last three span-moves took `createWorld` out of the
+    // barrel. Sorted, so `engine/world/create.ts` lands where the comparison puts it. ⚠ The claim is
+    // untouched and still TOTAL – four files, a fifth is red – and «nothing reads them yet» is as
+    // true of a module as it was of a barrel.
     expect(named.sort(), 'the declaration, the birth value, the migration – and T4\'s growth and read').toEqual([
       'engine/migrations.ts',
       'engine/spirit.ts',
-      'engine/world.ts',
+      'engine/world/create.ts',
       'engine/world/state.ts',
     ])
   })
@@ -655,16 +658,28 @@ describe('wave 6 T1 E – nothing reads them yet, and that is pinned rather than
     // commit that earned it. ⚠ The case's TITLE moved with it: «every one of them WRITES or DECLARES»
     // stopped being true the moment a reader existed, and a title that lies is how a pin stops being
     // read.
+    //
+    // ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06, AND IT COST THE SHARED LIST – WHICH IS THE FINDING, NOT THE
+    // DAMAGE. `world/lifeBeat.ts` is being split by beat KIND, so the file that WRITES a pair of
+    // these stamps is no longer the same file for all four: `rollLeak` moved to
+    // `world/lifeBeat/leak.ts` with §9 and takes `publicWeek` / `publicWrong` with it, while the two
+    // booth stamps went to `world/lifeBeat/booth.ts` with §10 in the very next commit. The four rows below are therefore
+    // per-field and still TOTAL – a fifth file naming any one of them reddens here exactly as before,
+    // and `lifeBeat.ts` stays on every row because `rollArrival`'s push still states the four birth
+    // values out loud. ⚠ The one thing NOT done here is collapsing `lifeBeat.ts` and
+    // `lifeBeat/<kind>.ts` into a glob: that would let the next kind module name a stamp without
+    // anybody reading this case, which is the opposite of what a total pin is for.
+    const OWNERS: Record<(typeof V77_ROW_FIELDS)[number], readonly string[]> = {
+      publicWeek: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/lifeBeat/booth.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+      publicWrong: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/lifeBeat/leak.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+      airedMetWeek: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/lifeBeat/booth.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+      airedEndedWeek: ['engine/migrations.ts', 'engine/world/lifeBeat.ts', 'engine/world/lifeBeat/booth.ts', 'engine/world/spotlight.ts', 'shared/protocol/narrative.ts'],
+    }
     for (const field of V77_ROW_FIELDS) {
       const named = srcFiles()
         .filter(([, source]) => codeOnly(source).includes(field))
         .map(([path]) => path)
-      expect(named.sort(), `${field}: the protocol declaration, the one writer, the migration, and T2's ledger`).toEqual([
-        'engine/migrations.ts',
-        'engine/world/lifeBeat.ts',
-        'engine/world/spotlight.ts',
-        'shared/protocol/narrative.ts',
-      ])
+      expect(named.sort(), `${field}: the protocol declaration, the writer, the migration, and T2's ledger`).toEqual([...OWNERS[field]].sort())
     }
   })
 

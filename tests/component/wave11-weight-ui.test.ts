@@ -146,6 +146,9 @@ describe('wave 11 T7 – the settings row', () => {
     // ⚠ MoreScreen ASKS THE WORKER FOR THE CAREER LIST ON MOUNT and there is no worker in this
     // runner – a11y-sweep's own note, and the same stub.
     store.refreshCareers = async () => {}
+    // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+    // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+    store.refreshSlots = async () => {}
     const wrapper = mount(MoreScreen, { global: { stubs: { teleport: true } } })
     const row = wrapper.findAll('[role="switch"]').find((s) => s.attributes('aria-labelledby') === 'more-weight-label')
     expect(row, 'the row is a real switch').toBeDefined()
@@ -158,6 +161,9 @@ describe('wave 11 T7 – the settings row', () => {
     const store = useGameStore()
     store.snapshot = null
     store.refreshCareers = async () => {}
+    // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+    // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+    store.refreshSlots = async () => {}
     const wrapper = mount(MoreScreen, { global: { stubs: { teleport: true } } })
     const row = wrapper.findAll('[role="switch"]').find((s) => s.attributes('aria-labelledby') === 'more-weight-label')
     expect(row, 'a switch with nothing to switch would be a control that lies').toBeUndefined()

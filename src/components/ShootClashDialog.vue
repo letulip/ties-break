@@ -23,6 +23,7 @@
 import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { formatCents } from '../shared/money'
 import type { ShootClashChoice } from '../shared/protocol'
 
@@ -74,6 +75,20 @@ useDialogFocus(card)
         {{ prompt.brand }} want her that week, and so does the {{ prompt.eventLabel }}.
       </h2>
       <p class="hint knock-read">Something has to give. All four answers are hers to make.</p>
+
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE FOUR ANSWERS – ForkDialog's own arrangement
+           and its reason. There is no dismiss on this card and two of its four arms stop being
+           possible once the week begins (the file header), so a refused answer used to leave the
+           parent looking at four controls that were all answers to a question just refused, with
+           nothing said. Reached without any engine bug by a second tab's SAVE_CONFLICT, whose
+           sentence names the way out, and by B-02's refused mutation.
+           ⚠ ABOVE `.knock-choices`: `measureDialog` reads the last answer's box off the card's bottom
+           edge, so the answers stay last in the flow. This is the TALLEST blocking card in the app
+           (four two-line answers), so it is the one the phone verdict matters most on – measured with
+           the line up at 375x667 and 320x568 in
+           tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING: `StoreError` renders whatever the store already wrote (invariant 4). -->
+      <StoreError />
 
       <div class="knock-choices">
         <button class="knock-choice" :disabled="sending" @click="decide('withdraw')">

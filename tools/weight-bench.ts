@@ -40,6 +40,13 @@ import { TEMPERAMENTS, temperamentOpenness, type Temperament } from '../src/engi
 import type { LoveEpisode } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
+// T5.12 · F-04, 27.09: `pct` was one of ten live copies of the fraction spelling – see `tools/_fmt.ts`.
+// ⚠ The local `weekAtAge` and `married` are NOT in scope here: F-04 is the tools' stats/format/args
+// copies, and those two belong to the TEST helpers' families (T5.11 · F-01/F-02). `married` here is
+// byte-identical to `tests/wave11-loss.test.ts:82` and `wave11-window.test.ts:110`, and it cannot take
+// `tests/helpers/scenarios/love.ts` – a tool importing `tests/` inverts the dependency, since
+// `tests/helpers/career.ts` re-exports FROM `tools/`. It needs a tools-side home, which is its own item.
+import { pctOf } from './_fmt'
 
 // --- arguments -----------------------------------------------------------------------------------
 
@@ -61,7 +68,6 @@ const CAP = numArg('--cap', 1600)
  *  worlds – thousands of draws for the price of none of the tick. */
 const HAZARD_N = numArg('--hazard', 4000)
 
-const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 const W = ECONOMY.weight
 
 // --- fixtures ------------------------------------------------------------------------------------
@@ -178,7 +184,7 @@ function row1(corpus: Lived[]): void {
   // rather than hide: a walked career only accrues tail weeks while it is still running.
   const tail = 52 * (35 - 23)
   console.log(`   closed form over a FULL tail (${tail} weeks at ${W.bereavement.perWeek}/wk):`)
-  console.log(`     one or more ${pct(1 - Math.pow(1 - W.bereavement.perWeek, tail))} · E = ${(tail * W.bereavement.perWeek).toFixed(2)}`)
+  console.log(`     one or more ${pctOf(1 - Math.pow(1 - W.bereavement.perWeek, tail))} · E = ${(tail * W.bereavement.perWeek).toFixed(2)}`)
   let met = 0
   let twice = 0
   let violations = 0
@@ -195,7 +201,7 @@ function row1(corpus: Lived[]): void {
     adultWeeks += Math.max(0, row.world.week - adultFrom)
   }
   const n = corpus.length
-  console.log(`   measured over ${n} walked careers: met one ${pct(met / n)} · a second ${pct(twice / n)}`)
+  console.log(`   measured over ${n} walked careers: met one ${pctOf(met / n)} · a second ${pctOf(twice / n)}`)
   console.log(`     cap/spacing violations: ${violations}   (any number but 0 is a defect)`)
   console.log(`     ⚠ mean ADULT weeks actually lived: ${(adultWeeks / n).toFixed(0)} of ${tail} –`)
   console.log('       the share is a share of the tail a career REACHES, not of the tail on paper')
@@ -284,7 +290,7 @@ function row4(): void {
     // cannot bound is a number and not a measurement.
     const share = n === 0 ? 0 : k / n
     const sem = n === 0 ? 0 : Math.sqrt((share * (1 - share)) / n)
-    console.log(`   ${label}: ${n === 0 ? '   –' : pct(share)} ± ${pct(sem)} over ${n} pregnancies   (target ${pct(target)})`)
+    console.log(`   ${label}: ${n === 0 ? '   –' : pctOf(share)} ± ${pctOf(sem)} over ${n} pregnancies   (target ${pctOf(target)})`)
     console.log(`     per-week rate ${pregnancyLossChanceAt(age).toFixed(6)} over ${W.lossUntilWeek - W.lossFromWeek} weeks`)
   }
   console.log('   ⚠⚠ AND THE 35+ RUNG IS ALMOST UNREACHABLE, WHICH IS A FINDING ABOUT THE **PREGNANCY**')
@@ -307,7 +313,7 @@ function row5(): void {
     const nonZero = draws.filter((d) => d > 0)
     const medianNonZero = nonZero[Math.floor(nonZero.length / 2)]
     console.log(`   ${openness}: median ${median} · median of the NON-ZERO draws ${medianNonZero} ·`)
-    console.log(`     zero ${pct(zero / draws.length)} · max ${draws[draws.length - 1]} · n ${draws.length}`)
+    console.log(`     zero ${pctOf(zero / draws.length)} · max ${draws[draws.length - 1]} · n ${draws.length}`)
   }
   console.log('     ⚠ the ZERO share is the shipped `ECONOMY.life.lag` table, not this wave\'s: an')
   console.log('       open girl tells at once 70% of the time (moved there 11.09, by measurement)')

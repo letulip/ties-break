@@ -36,8 +36,7 @@
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
-import { pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
-import { collegeLeagueRevealOpen } from '../src/engine/world/college'
+import { pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
 // GAME. The owner removed the rule that closed the college door on a result («Колледж – это
@@ -65,6 +64,7 @@ import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { FamilyBackground } from '../src/shared/protocol'
 import { drainLifeBeats } from './_lifeBeats'
+import { drainReveals } from './_reveals'
 
 /** ⚠⚠⚠ THE GAP BETWEEN THE ANSWER AND THE DEPARTURE, AND THE REASON THIS PROBE READ A WORLD THAT
  *  NEVER WENT TO COLLEGE. Round 24 split the two: `answerFork('college')` RESERVES a place and
@@ -92,10 +92,17 @@ function departToCollege(world: WorldState, rng: Rng): void {
  *  round 26's student league gave it a second – the championship is revealed and `resumeFromCollege`
  *  REFUSES to spend another year while it is open (`COLLEGE_REVEAL_REFUSAL`). Mirrors the helper the
  *  college suites use: «Skip all rounds» then the finale's «Continue». */
+/** ⚠⚠ WIDENED 26.09 TO THE TIE AS WELL, AND IT IS A ROUND-27 GAP THAT B-01's REPAIR EXPOSED rather
+ *  than anything ruling 2(a) caused. It read `collegeLeagueRevealOpen` alone – true when the only
+ *  college fixture that paused the year was the championship (round 26 #6). Round 27 #6 made the
+ *  Nations Cup tie pause it the same way, and this walk was never taught, so a career whose tie came
+ *  before its championship pressed against a year it could not spend. It was invisible while the walk
+ *  stalled on her card two weeks earlier; answering the card carried the walk to the tie and the
+ *  bench's own alarm fired, `college walk stalled at 1/4 years`. Now `tools/_reveals.ts`'s shared
+ *  `drainReveals` answers whichever is standing – «Skip all rounds» then «Continue», the player's own
+ *  two presses – which is the helper written for exactly this class and the one spelling of it. */
 function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
+  drainReveals(world)
 }
 
 
@@ -244,10 +251,23 @@ for (let p = 0; p < PRESETS.length; p++) {
       answerFork(at.world, 'college')
       departToCollege(at.world, at.rng)
       // Round 24: the year pauses on her birthday week – press, answer, press again.
-      for (let press = 0; press < 3 * YEARS && at.world.ending?.type === 'college'; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+      // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+      // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+      // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+      // first beat of a degree stopped the years banking and the budget ran out against a career still
+      // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+      // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+      // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+      // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+      // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+      // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+      // along.
+      for (let press = 0; press < 5 * YEARS && at.world.ending?.type === 'college'; press++) {
         resumeFromCollege(at.world, at.rng)
-          answerLeagueReveal(at.world)
+        answerLeagueReveal(at.world)
         if (pendingBirthday(at.world) !== null) answerBirthdayNeutral(at.world)
+        drainLifeBeats(at.world)
       }
       // ⚠ THE ALARM THE OLD WALK DID NOT HAVE. A press budget that runs out is INDISTINGUISHABLE
       // from a career that finished, and that is how this file reported 0/n bankruptcies off a

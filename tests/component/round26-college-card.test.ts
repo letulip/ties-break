@@ -47,22 +47,16 @@ import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
 import { setViewport, PHONE } from './fits'
 import { parseColor, contrastRatio, effectiveBackground, effectiveColor } from './contrast'
 import {
-  answerFork,
   closeTournament,
-  createWorld,
-  measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
-  callUpRevealOpen,
   collegeLeagueRevealOpen,
   skipTournament,
-  revealTournamentRound,
-  tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { resumeMain, type Rng } from '../../src/engine/rng'
-import { DEFAULT_PROFILE, type CollegeProgressView, type CollegeYear, type Snapshot } from '../../src/shared/protocol'
+import { type CollegeProgressView, type CollegeYear, type Snapshot } from '../../src/shared/protocol'
+import { answerCollegeReveal, atCollege, pressCollegeYear } from '../helpers/scenarios/college'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND `HomeScreen` READS IT. The same shim `college-second-act`,
 // `home-strip-and-mail` and `round24-coach-card` carry, for the reason quoted there in full: the
@@ -152,62 +146,7 @@ function atYear(done: number, over: Partial<CollegeProgressView> = {}): CollegeP
   })
 }
 
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
-
-/** ⭐⭐⭐ A CAREER THAT WAS REALLY PLAYED TO THE FORK AND REALLY ANSWERED «college» – the same walk
- *  `round24-college-shell.test.ts` and `college-freeze.test.ts` use, including its one thumb on the
- *  scale: four years is 208 weeks of base costs and a career that went bankrupt inside them would be
- *  measuring the family budget instead of the card. */
-function atCollege(seed: string): { world: WorldState; rng: Rng } {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE })
-  const rng = resumeMain(world.rngMain)
-  for (let i = 0; i < 60; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  world.fundsCents = 500_000_00
-  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
-  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
-  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
-  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
-  drainLifeBeats(world)
-  answerFork(world, 'college')
-  for (let i = 0; i < 54 && world.ending === null; i++) {
-    tickWeek(world, rng)
-    finishAnyReveal(world)
-    drainLifeBeats(world)
-  }
-  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
-  return { world, rng }
-}
-
 let walked: Snapshot | null = null
-
-/** ⚠ ADDED AT THE ROUND-26 COLLECT. This file was written on a branch where a college year paused
- *  only for her birthday. Another branch of the SAME round taught the year to pause for the
- *  championship too (#6 – the owner's «сообщили только постфактум»), and a walk that answers one
- *  pause but not the other stalls on the first league week: these cases read ZERO banked years
- *  where four are lived. The player answers it with «Skip all rounds» then «Continue», which is
- *  what these two commands are. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
 
 /** The base snapshot every fixture case is mounted over: a real career, one year into college. */
 function walkedCollegeSnapshot(): Snapshot {
@@ -216,6 +155,11 @@ function walkedCollegeSnapshot(): Snapshot {
   resumeFromCollege(world, rng)
   answerCollegeReveal(world)
   if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+  // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY: ruling 2(a) makes a blocking life beat pause the
+  // college year, so a one-press fixture whose year happened to raise one would hand every case below
+  // a rest state with her card standing instead of the college view it names. Bond-neutral, priced
+  // zero; the throw two lines down is what would have caught it, loudly, one seed later.
+  drainLifeBeats(world)
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {
     throw new Error('the walked career is not at college – the fixture under every case below is wrong')
@@ -273,10 +217,11 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     // the Nations Cup tie and the cake. The BUDGET moved from three presses a year to five; the
     // assertions below are untouched and still measure four banked years over 208 weeks.
     const rest: { yearsDone: number; latched: boolean }[] = []
-    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday and the two fixtures do, so the walk answers her card too –
+      // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      pressCollegeYear(world, rng)
       const view = toSnapshot(world).ending?.college ?? null
       rest.push({ yearsDone: view?.yearsDone ?? world.college!.years.length, latched: view !== null })
     }
@@ -312,10 +257,11 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
 
   it('⚠ the engine refuses a fifth year, so the button that offered one was offering a throw', () => {
     const { world, rng } = atCollege('r26-fifth')
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday and the two fixtures do, so the walk answers her card too –
+      // `drainLifeBeats`, priced ZERO – and each budget gains a press a year. No assertion moved.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      pressCollegeYear(world, rng)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     // The refusal is the engine's, at its own entry, and it is a THROW rather than a no-op – which

@@ -11,11 +11,13 @@
 // can stop before a blocking event", and that sentence has exactly two halves, which is why this file
 // exports exactly two things beside the span itself:
 //
-//   1. `advanceRefusal` – CAN THE ENGINE TICK AT ALL? Six states refuse a tick outright, and a
+//   1. `advanceRefusal` – CAN THE ENGINE TICK AT ALL? Eight states refuse a tick outright, and a
 //      control offered in one of them is the R10-16 dead click. This IS `advanceWeeks`'s own entry
 //      gate: the function calls this, so there is one refusal in the engine and not a copy of it
-//      behind a button. (The UI cannot call it – it holds a `Snapshot`, not a `WorldState` – so it
-//      re-asks the same six through `blockingOverlay` + `snapshot.pending`, and
+//      behind a button. (⚠ AND SINCE 26.09 IT IS THE HEAD OF `openQuestions`, which is the one owner
+//      of the eight – B-04 / T2.1, whose note on that function carries the drift it closes.)
+//      (The UI cannot call it – it holds a `Snapshot`, not a `WorldState` – so it
+//      re-asks the same eight through `blockingOverlay` + `snapshot.pending`, and
 //      `tests/r2-13-advance-span.test.ts` walks a world into every one of them and asserts the two
 //      readers agree. That is the discipline App.vue's birthday and injury gates already keep:
 //      "the identical predicate `advanceWeeks` blocks on", asked of the snapshot.)
@@ -303,34 +305,56 @@ export function spanWeeksFor(
  *  `UPCOMING_WEEKS` (8), so no press can cross two of them. */
 export const SPAN_REPORTS_ONLY: ReadonlySet<StopReason> = new Set<StopReason>(['season-end'])
 
-/** The six states in which `advanceWeeks` refuses to tick AT ALL, in the order it asks them.
+/** The EIGHT states in which `advanceWeeks` refuses to tick AT ALL, in the order it asks them.
+ *
+ *  ⚠ THE COUNT WAS «SIX» IN PROSE UNTIL 26.09 AND THE LIST HAS HELD EIGHT SINCE ROUND 29 #3 (the
+ *  life beat made seven at v73, the shoot clash eight). Corrected here and at the three other
+ *  spellings in this file and in `advanceWeeks`' own note – a count a document states about itself
+ *  needs a pin or it rots, and this one had. Nothing but the prose moved.
  *
  *  ⚠ THE ORDER IS THE FUNCTION'S, NOT `STOP_PRECEDENCE`'S, and the difference is real: precedence
  *  orders reasons that all fired on ONE week, while this orders mutually exclusive questions about
  *  the world as it stands. They agree on the only pair where both are meaningful ('ending' first).
  *
- *  ⚠ EXPORTED FOR THE DRIFT GUARD. A seventh refusal added to `advanceWeeks` without a line here
+ *  ⚠ EXPORTED FOR THE DRIFT GUARD. A ninth refusal added to `advanceWeeks` without a line here
  *  would leave the four-week control offered in a state the engine cannot move – the dead click
- *  again – so `tests/r2-13-advance-span.test.ts` counts the refusals in the function's own source
+ *  again – so `tests/r2-13-advance-span.test.ts` counts the clauses in `openQuestions`' own source
  *  against this list. Hand-written on the `STOP_PRECEDENCE` precedent (round11.test.ts): derived
  *  from the code it could never catch the member the code forgot. */
 export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'life', 'fork', 'retirement', 'shoot-clash']
 
-/** WHY THE ADVANCE WILL NOT MOVE, or `null` when it will. `advanceWeeks`'s entry gate, extracted
- *  verbatim so the gate and the button read one rule.
+/** ⭐⭐⭐ EVERY QUESTION STANDING OVER THIS WORLD, in `ADVANCE_REFUSALS` order – THE ONE OWNER OF
+ *  «which questions stop time» (B-04 / T2.1, 26.09).
  *
- *  ⚠ IT IS A REFUSAL AND NOT A STOP. Every reason here is returned with ZERO ticks: the week the
- *  player pressed for does not happen, and the reason names the question standing in front of it.
- *  `resumeFromCollege` keeps the same contract at its own entry and says so in its own note. */
-export function advanceRefusal(world: WorldState): StopReason | null {
+ *  ⚠⚠ WHY IT EXISTS, AND IT IS A MEASURED DRIFT RATHER THAN TIDINESS. The list was written FIVE
+ *  times – this constant, the refusal below, the worker's `decisionOpen`, `advanceWeeks`' mid-loop
+ *  stops and `resumeFromCollege`'s pause set – and two of the five had already lost a member. The
+ *  record: the life beat was missing from the worker's copy from v73 to v85 (`827efe6f`), so a
+ *  `▶▶ 52` could tick a year past her card; `advanceWeeks` was collecting seven of the eight and not
+ *  `'shoot-clash'`, which this constant and the refusal both carried; and the college year's pause
+ *  set had no life beat at all (B-01, and that one is REACHED – 23 of 217 measured year-calls ticked
+ *  past an unanswered blocking row). Each new blocking kind had to be added in five places, and
+ *  three times out of three it was not.
+ *
+ *  ⚠ IT COLLECTS EVERY ONE, NOT THE FIRST, because the two readers ask different questions of it.
+ *  `advanceRefusal` wants the head – one reason, zero ticks. `advanceWeeks`' loop wants ALL of them,
+ *  because R11-1's rule is that a week which is several things reports all of them (the classic: the
+ *  beat that raises the fork-opinion row raises the FORK on the same tick, by construction). A
+ *  first-match owner would have made the loop's collect impossible and left the copy in place.
+ *
+ *  ⚠ PURE, ZERO DRAWS, in every clause – it is asked once per tick inside a 52-week loop.
+ *
+ *  ⚠ THE ORDER IS THIS FUNCTION'S, NOT `STOP_PRECEDENCE`'S – see `ADVANCE_REFUSALS`. */
+export function openQuestions(world: WorldState): StopReason[] {
+  const open: StopReason[] = []
   // ⚠ W2-ENDINGS – AND THE STORY HAS NO NEXT WEEK. First, above every other block, because it is
   // not a pause: there is nothing left to resolve and nothing to come back to. The epilogue's
   // surface REPLACES the app shell rather than laying a dialog over it, so an advance behind it
   // would be ticking a world nobody can see. The one ending that resumes clears this latch through
   // `resumeFromCollege`, which is a command and not a tick.
-  if (world.ending) return 'ending'
+  if (world.ending) open.push('ending')
   // A pending reveal must resolve (and close) before time moves on.
-  if (world.pendingTournament) return 'tournament'
+  if (world.pendingTournament) open.push('tournament')
   // ⚠ W4 – AND SO MUST AN UNANSWERED KNOCK. This line is the mechanical heart of the whole slice.
   //
   // The owner's complaint was that training weeks «просто скипались» – he pressed +4 and four weeks
@@ -339,13 +363,13 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   // BLOCKS, on the identical contract `pendingTournament` has above – no tick at all until
   // `decideKnock` runs. Both branches of the dialog are valid answers, so this can never dead-end a
   // career (see KnockDialog: there is no third button and no way out that is not a choice).
-  if (pendingKnock(world)) return 'knock'
+  if (pendingKnock(world)) open.push('knock')
   // ⭐ v48 – AND SO DOES AN UNANSWERED BIRTHDAY, on the identical contract, because the owner asked
   // for the popup to fire ALWAYS («я бы оставил попап на ДР всегда») and a popup a `+4` ticks past
   // does not always fire. It also forces the shape of the dialog: if the advance could roll on, then
   // walking away would silently become the "gave nothing" branch and the player would pick it by
   // accident, every year, and never know. Four buttons, all of them answers, and no other way out.
-  if (pendingBirthday(world) !== null) return 'birthday'
+  if (pendingBirthday(world) !== null) open.push('birthday')
   // ⭐⭐ v73 – AND SO DOES A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, on the identical contract and
   // for the strongest version of the birthday's reason. The birthday BLOCKS because walking away
   // would silently become the «gave nothing» branch; a beat is HER SPEAKING, so a week a player
@@ -357,13 +381,13 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   // the same week by construction, and the parent must have heard her before he may answer. The
   // other half of that rule is `answerFork`'s own refusal (world/endings.ts) – the precedence puts
   // her dialog in front of the card, and the command refuses if anything ever gets past it.
-  if (pendingLifeBeat(world) !== null) return 'life'
+  if (pendingLifeBeat(world) !== null) open.push('life')
   // ⚠ ...AND SO DOES AN UNANSWERED FORK OR AN UNANSWERED OFFER, on the identical contract. Two of
   // the fork's three answers END the career, so a player who could press +4 past it would have the
   // engine choosing "continue" for him – which is exactly the «просто скипались» complaint the knock
   // block above exists to answer, one order of magnitude more expensive.
-  if (world.fork !== null && world.fork.answer === null) return 'fork'
-  if (world.retirementOffer !== null) return 'retirement'
+  if (world.fork !== null && world.fork.answer === null) open.push('fork')
+  if (world.retirementOffer !== null) open.push('retirement')
   // ⭐⭐ ROUND 29 #3 – AND SO DOES AN UNANSWERED SHOOT/TOURNAMENT COLLISION, on the identical
   // contract and for the sharpest version of the reason above it. Two of its four answers are
   // IMPOSSIBLE once the week has begun – `cancelEntry` refuses on the week itself and a shoot cannot
@@ -374,8 +398,25 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   // ⚠ LAST IN THE ORDER, WHICH IS THIS FUNCTION'S OWN ORDER AND NOT `STOP_PRECEDENCE`'S (see the
   // note on ADVANCE_REFUSALS). It is the only question here about a week that has not started, so
   // every state above it is about something already true and answers first.
-  if (shootClashOpen(world)) return 'shoot-clash'
-  return null
+  if (shootClashOpen(world)) open.push('shoot-clash')
+  return open
+}
+
+/** WHY THE ADVANCE WILL NOT MOVE, or `null` when it will. `advanceWeeks`'s entry gate, extracted
+ *  verbatim so the gate and the button read one rule.
+ *
+ *  ⚠ IT IS A REFUSAL AND NOT A STOP. Every reason here is returned with ZERO ticks: the week the
+ *  player pressed for does not happen, and the reason names the question standing in front of it.
+ *  `resumeFromCollege` keeps the same contract at its own entry and says so in its own note.
+ *
+ *  ⚠⚠ IT IS NOW THE HEAD OF `openQuestions` AND CARRIES NO CLAUSE OF ITS OWN (B-04 / T2.1, 26.09).
+ *  The eight clauses and every word of their reasoning moved UP into the owner, unchanged and in the
+ *  same order; the ONE thing this function still decides is that a refusal is the FIRST question
+ *  standing and not a list of them – which is the whole difference between this reader and the
+ *  loop's. Behaviour is byte-identical: `openQuestions` asks the same eight predicates in the same
+ *  order, so its head is the reason the eight `if`s used to return. */
+export function advanceRefusal(world: WorldState): StopReason | null {
+  return openQuestions(world)[0] ?? null
 }
 
 /**

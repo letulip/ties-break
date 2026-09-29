@@ -2,156 +2,118 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,879 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (670 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-627 exported names across 56 owning modules.
+537 exported names across 68 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
-| `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 110 |
-| `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
-| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
-| `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 25 |
-| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 24 |
-| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 23 |
-| `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 23 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 55 |
+| `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 24 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 23 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
+| `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
-| `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 19 |
-| `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
-| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 17 |
-| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
-| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
+| `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 20 |
+| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 20 |
+| `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 18 |
+| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 17 |
+| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 14 |
+| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 14 |
 | `src/engine/world/sparring.ts` | THE SPARRING PARTNER: the third seat of the travelling team, and the one with the narrowest job in the game | 13 |
-| `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
-| `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
+| `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 11 |
+| `src/engine/world/lifeBeat/pregnancy.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §14 MOVED HERE VERBATIM, span for span, comments and all | 11 |
+| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
+| `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 9 |
+| `src/engine/world/tick.ts` | ⭐⭐ THE WEEK ITSELF – the tick, the multi-week advance, and the two exits that spend weeks through them (A-04 (a) / T6.5, the last of P4's span-moves; docs/review/proposals/P4-world-decomposition.md) | 9 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
-| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
-| `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 7 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 7 |
+| `src/engine/world/create.ts` | ⭐⭐ THE BIRTH OF A CAREER – `createWorld`, the prologue handover it applies, and the one hydration a pre-v6 save still needs (A-04 (a) / T6.5; docs/review/proposals/P4-world-decomposition.md) | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
-| `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
-| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
+| `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 7 |
+| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 7 |
 | `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 7 |
-| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
-| `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
-| `src/engine/world/form.ts` | HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts` | 6 |
-| `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
-| `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
+| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 6 |
+| `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 5 |
+| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 5 |
+| `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 5 |
+| `src/engine/world/lifeBeat/wedding.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §11 MOVED HERE VERBATIM, span for span, comments and all | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
-| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 5 |
+| `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 5 |
+| `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
+| `src/engine/world/lifeBeat/leak.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §9 MOVED HERE VERBATIM, span for span, comments and all | 4 |
+| `src/engine/world/lifeBeat/smallTalk.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §7 MOVED HERE VERBATIM, span for span, comments and all | 4 |
+| `src/engine/world/lifeBeat/weight.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §15 MOVED HERE VERBATIM, span for span, comments and all | 4 |
 | `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 4 |
+| `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 4 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 4 |
+| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 4 |
+| `src/engine/world/tournamentClose.ts` | ⭐⭐ THE TOURNAMENT CLOSE – committing the kid's run, and the three commands that read it out (A-04 (a) / T6.5, the last span-moves P4 left; docs/review/proposals/P4-world-decomposition.md) | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
-| `src/engine/world/albumBook.ts` | THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-album-2026-09.md) | 3 |
-| `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
-| `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
+| `src/engine/world/lifeBeat/bereavement.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §16 MOVED HERE VERBATIM, span for span, comments and all | 3 |
+| `src/engine/world/lifeBeat/ended.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §8 MOVED HERE VERBATIM, span for span, comments and all | 3 |
+| `src/engine/world/lifeBeat/ownKey.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §13 MOVED HERE VERBATIM, span for span, comments and all | 3 |
+| `src/engine/world/lifeBeat/smallTalkCopy.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §3c MOVED HERE VERBATIM, span for span, comments and all | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
 | `src/engine/world/album.ts` | THE ALBUM: seven polaroids, and the rule printed on every one of them | 2 |
-| `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 2 |
+| `src/engine/world/albumBook.ts` | THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-album-2026-09.md) | 2 |
 | `src/engine/world/brandStrength.ts` | ⭐⭐⭐ BRAND STRENGTH – round 32 #4, docs/specs/brand-inertia-2026-08.md | 2 |
+| `src/engine/world/form.ts` | HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts` | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
+| `src/engine/world/lifeBeat/booth.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §10 MOVED HERE VERBATIM, span for span, comments and all | 2 |
+| `src/engine/world/lifeBeat/endedCopy.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §3e MOVED HERE VERBATIM, span for span, comments and all | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
-| `src/engine/world/staffLetters.ts` | THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished | 2 |
-| `src/engine/world/bookkeeping.ts` | ⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar | 1 |
+| `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 2 |
+| `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 1 |
+| `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 1 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
 | `src/engine/world/phaseFinance.ts` | ⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out | 1 |
 | `src/engine/world/snapshot.ts` | THE SNAPSHOT: everything the UI is ever allowed to see, built fresh from the world on every command | 1 |
+| `src/engine/world/staffLetters.ts` | THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished | 1 |
 
 ## Symbols by owner
-
-### `src/engine/world.ts`
-
-THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts`.
-
-- `advanceWeeks` – `src/engine/world.ts`
-- `closeTournament` – `src/engine/world.ts`
-- `COLLEGE_REVEAL_REFUSAL` – `src/engine/world.ts`
-- `createWorld` – `src/engine/world.ts`
-- `endCollegeEarly` – `src/engine/world.ts`
-- `MAIN_DRAWS_PER_WEEK_MAX` – `src/engine/world.ts`
-- `maxMainDraws` – `src/engine/world.ts`
-- `PARENT_INCOME_CENTS` – `src/engine/world.ts`
-- `PROLOGUE_COACH_LADDER` – `src/engine/world.ts`
-- `prologueCoachTier` – `src/engine/world.ts`
-- `prologuePlayStyle` – `src/engine/world.ts`
-- `rankingDeltaSuffix` – `src/engine/world.ts`
-- `replayMainState` – `src/engine/world.ts`
-- `resumeFromCollege` – `src/engine/world.ts`
-- `revealTournamentRound` – `src/engine/world.ts`
-- `seedWorldForV6` – `src/engine/world.ts`
-- `skipEvent` – `src/engine/world.ts`
-- `skipTournament` – `src/engine/world.ts`
-- `STARTING_FUNDS_CENTS` – `src/engine/world.ts`
-- `tickWeek` – `src/engine/world.ts`
 
 ### `src/engine/world/lifeBeat.ts`
 
 THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
 
-- `airBoothMention` – `src/engine/world/lifeBeat.ts`
 - `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `arrivalEligible` – `src/engine/world/lifeBeat.ts`
 - `arrivalHazardFor` – `src/engine/world/lifeBeat.ts`
-- `bereavementChanceAt` – `src/engine/world/lifeBeat.ts`
-- `bereavementEligible` – `src/engine/world/lifeBeat.ts`
-- `boothMentionDue` – `src/engine/world/lifeBeat.ts`
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
-- `comebackAtReturn` – `src/engine/world/lifeBeat.ts`
-- `decisionWeekOf` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
-- `deliverOwnKey` – `src/engine/world/lifeBeat.ts`
-- `drawConceptionWindow` – `src/engine/world/lifeBeat.ts`
 - `drawEndsRead` – `src/engine/world/lifeBeat.ts`
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
 - `drawListenHeard` – `src/engine/world/lifeBeat.ts`
 - `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
 - `drawRawLag` – `src/engine/world/lifeBeat.ts`
 - `endedKeptRow` – `src/engine/world/lifeBeat.ts`
-- `ENDS_READS` – `src/engine/world/lifeBeat.ts`
-- `ENDS_REGISTERS` – `src/engine/world/lifeBeat.ts`
-- `endsEligible` – `src/engine/world/lifeBeat.ts`
-- `endsHazardFor` – `src/engine/world/lifeBeat.ts`
-- `EndsRead` *(type)* – `src/engine/world/lifeBeat.ts`
-- `EndsRegister` *(type)* – `src/engine/world/lifeBeat.ts`
 - `FORK_STOP_DRIVERS` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANTS` – `src/engine/world/lifeBeat.ts`
-- `forkStandingOf` – `src/engine/world/lifeBeat.ts`
 - `ForkStopDriver` *(type)* – `src/engine/world/lifeBeat.ts`
 - `forkStopDriverOf` – `src/engine/world/lifeBeat.ts`
 - `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
 - `forkWantOf` – `src/engine/world/lifeBeat.ts`
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
 - `HeardRead` *(type)* – `src/engine/world/lifeBeat.ts`
-- `landBirth` – `src/engine/world/lifeBeat.ts`
-- `landPregnancyAnnouncement` – `src/engine/world/lifeBeat.ts`
-- `landPregnancyPause` – `src/engine/world/lifeBeat.ts`
-- `landWedding` – `src/engine/world/lifeBeat.ts`
 - `latchedEpisode` – `src/engine/world/lifeBeat.ts`
-- `leakEligible` – `src/engine/world/lifeBeat.ts`
-- `leakHazardFor` – `src/engine/world/lifeBeat.ts`
-- `leakWrongShareFor` – `src/engine/world/lifeBeat.ts`
-- `LEGACY_SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
-- `LegacySmallTalkSubject` *(type)* – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_BLOCKING` – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
-- `LifeBeatAnswer` *(type)* – `src/engine/world/lifeBeat.ts`
 - `lifeBeatFollowUps` – `src/engine/world/lifeBeat.ts`
 - `lifeBeatHeading` – `src/engine/world/lifeBeat.ts`
 - `lifeBeatListenFollowUp` – `src/engine/world/lifeBeat.ts`
@@ -160,139 +122,33 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `lifeLogOf` – `src/engine/world/lifeBeat.ts`
 - `liveSoftBeat` – `src/engine/world/lifeBeat.ts`
 - `metKeptRow` – `src/engine/world/lifeBeat.ts`
-- `motherhoodBandAt` – `src/engine/world/lifeBeat.ts`
 - `nextWeekIsClear` – `src/engine/world/lifeBeat.ts`
-- `ownKeyDue` – `src/engine/world/lifeBeat.ts`
-- `ownKeyThisWeek` – `src/engine/world/lifeBeat.ts`
-- `PARTNER_NAME_POOL` – `src/engine/world/lifeBeat.ts`
 - `PARTNER_WANTS` – `src/engine/world/lifeBeat.ts`
-- `partnerNameFor` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
-- `pregnancyChanceAt` – `src/engine/world/lifeBeat.ts`
-- `pregnancyEligible` – `src/engine/world/lifeBeat.ts`
-- `pregnancyLossChanceAt` – `src/engine/world/lifeBeat.ts`
-- `pregnancyLossEligible` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `reachableSituations` – `src/engine/world/lifeBeat.ts`
-- `returnChanceFor` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
-- `rollBereavement` – `src/engine/world/lifeBeat.ts`
-- `rollEnds` – `src/engine/world/lifeBeat.ts`
-- `rollLeak` – `src/engine/world/lifeBeat.ts`
-- `rollPregnancy` – `src/engine/world/lifeBeat.ts`
-- `rollPregnancyLoss` – `src/engine/world/lifeBeat.ts`
-- `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `rollSpouseView` – `src/engine/world/lifeBeat.ts`
-- `rollWedding` – `src/engine/world/lifeBeat.ts`
-- `setWeightEnabled` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_EXCLUDE_LAST` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_FACTS` – `src/engine/world/lifeBeat.ts`
-- `SMALL_TALK_FRAME_EXCLUDE_LAST` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_FRAMES` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_SITUATIONS` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_STANCE_ID` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_STANCES` – `src/engine/world/lifeBeat.ts`
-- `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
-- `SmallTalkBranch` *(type)* – `src/engine/world/lifeBeat.ts`
-- `smallTalkChanceFor` – `src/engine/world/lifeBeat.ts`
-- `smallTalkEligible` – `src/engine/world/lifeBeat.ts`
-- `SmallTalkFact` *(type)* – `src/engine/world/lifeBeat.ts`
-- `SmallTalkFrame` *(type)* – `src/engine/world/lifeBeat.ts`
 - `SmallTalkSituation` *(type)* – `src/engine/world/lifeBeat.ts`
-- `SmallTalkStance` *(type)* – `src/engine/world/lifeBeat.ts`
-- `SmallTalkSubject` *(type)* – `src/engine/world/lifeBeat.ts`
-- `smallTalkSubjectFor` – `src/engine/world/lifeBeat.ts`
-- `smallTalkThisSeason` – `src/engine/world/lifeBeat.ts`
 - `SmallTalkVoiceEntry` *(type)* – `src/engine/world/lifeBeat.ts`
 - `SPOUSE_VIEW_OCCASIONS` – `src/engine/world/lifeBeat.ts`
 - `spouseViewEligible` – `src/engine/world/lifeBeat.ts`
 - `spouseViewOccasionsAt` – `src/engine/world/lifeBeat.ts`
 - `spouseViewOccasionThisWeek` – `src/engine/world/lifeBeat.ts`
-- `weddingEligible` – `src/engine/world/lifeBeat.ts`
 - `withoutRecentSituations` – `src/engine/world/lifeBeat.ts`
-
-### `src/engine/world/college.ts`
-
-⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md).
-
-- `bankCollegeYear` – `src/engine/world/college.ts`
-- `callUpFor` – `src/engine/world/college.ts`
-- `callUpLetterWeek` – `src/engine/world/college.ts`
-- `callUpPlayedThisWeek` – `src/engine/world/college.ts`
-- `callUpRevealMatches` – `src/engine/world/college.ts`
-- `callUpRevealOpen` – `src/engine/world/college.ts`
-- `callUpRubberId` – `src/engine/world/college.ts`
-- `callUpRubbersOf` – `src/engine/world/college.ts`
-- `closeCallUpReveal` – `src/engine/world/college.ts`
-- `COLLEGE_TRIP_WEEKS` – `src/engine/world/college.ts`
-- `collegeCallUpIsNextStop` – `src/engine/world/college.ts`
-- `collegeCoachFactor` – `src/engine/world/college.ts`
-- `collegeEpilogueLine` – `src/engine/world/college.ts`
-- `collegeLeagueIsNextStop` – `src/engine/world/college.ts`
-- `collegeLeagueMatchesOf` – `src/engine/world/college.ts`
-- `collegeLeagueMatchId` – `src/engine/world/college.ts`
-- `collegeLeaguePlayedThisWeek` – `src/engine/world/college.ts`
-- `collegeLeagueRevealMatches` – `src/engine/world/college.ts`
-- `collegeLeagueRevealOpen` – `src/engine/world/college.ts`
-- `collegeLeagueWeek` – `src/engine/world/college.ts`
-- `collegeMatchesThisWeek` – `src/engine/world/college.ts`
-- `collegeNextStop` – `src/engine/world/college.ts`
-- `collegePausedShareYears` – `src/engine/world/college.ts`
-- `collegeProgressOf` – `src/engine/world/college.ts`
-- `collegeRecruitViewOf` – `src/engine/world/college.ts`
-- `inCollege` – `src/engine/world/college.ts`
-- `isCollegeLeagueWeek` – `src/engine/world/college.ts`
-- `lastLeagueRun` – `src/engine/world/college.ts`
-- `measureCollegeOffer` – `src/engine/world/college.ts`
-- `nextCallUpWeekAfter` – `src/engine/world/college.ts`
-- `openCollegeYear` – `src/engine/world/college.ts`
-- `resolveCallUp` – `src/engine/world/college.ts`
-- `resolveCollegeBill` – `src/engine/world/college.ts`
-- `resolveCollegeLeague` – `src/engine/world/college.ts`
-- `revealCallUpRubber` – `src/engine/world/college.ts`
-- `settleCallUpLetter` – `src/engine/world/college.ts`
-- `skillMeanOf` – `src/engine/world/college.ts`
-- `skipCallUpRubbers` – `src/engine/world/college.ts`
-
-### `src/engine/world/assets.ts`
-
-⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
-
-- `academyReputationOf` – `src/engine/world/assets.ts`
-- `ASSET_NAME_MAX_CHARS` – `src/engine/world/assets.ts`
-- `assetDelivered` – `src/engine/world/assets.ts`
-- `assetEarningsRateCents` – `src/engine/world/assets.ts`
-- `assetEntryPriceCents` – `src/engine/world/assets.ts`
-- `assetHeldWeeks` – `src/engine/world/assets.ts`
-- `assetNameOf` – `src/engine/world/assets.ts`
-- `assetNameSuggestions` – `src/engine/world/assets.ts`
-- `assetUpkeepCents` – `src/engine/world/assets.ts`
-- `assetValueCents` – `src/engine/world/assets.ts`
-- `assetWorthCents` – `src/engine/world/assets.ts`
-- `avgUnitPriceCents` – `src/engine/world/assets.ts`
-- `deliveredAssets` – `src/engine/world/assets.ts`
-- `grantedVacationIds` – `src/engine/world/assets.ts`
-- `isNameable` – `src/engine/world/assets.ts`
-- `marketSeasonMove` – `src/engine/world/assets.ts`
-- `nameSuggestionsFor` – `src/engine/world/assets.ts`
-- `ownedAssets` – `src/engine/world/assets.ts`
-- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
-- `reachableFundsCents` – `src/engine/world/assets.ts`
-- `sanitiseAssetName` – `src/engine/world/assets.ts`
-- `shopCatalogue` – `src/engine/world/assets.ts`
-- `shopItem` – `src/engine/world/assets.ts`
-- `ShopItem` *(type)* – `src/engine/world/assets.ts`
-- `unitPriceCents` – `src/engine/world/assets.ts`
-- `unitPriceHistory` – `src/engine/world/assets.ts`
-- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
 
 ### `src/engine/world/coachMarket.ts`
 
 THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
 
-- `bankCoachResidual` – `src/engine/world/coachMarket.ts`
 - `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts`
 - `coachBilling` – `src/engine/world/coachMarket.ts`
 - `coachEdgeView` – `src/engine/world/coachMarket.ts`
@@ -318,90 +174,33 @@ THE COACH MARKET: who is available at her age and rung, what they cost, and what
 - `settleCoachDeal` – `src/engine/world/coachMarket.ts`
 - `supportPayrollWeeklyCents` – `src/engine/world/coachMarket.ts`
 
-### `src/engine/world/medical.ts`
+### `src/engine/world/assets.ts`
 
-THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
+⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
 
-- `accrueCondition` – `src/engine/world/medical.ts`
-- `adShootHolds` – `src/engine/world/medical.ts`
-- `arrivalStatus` – `src/engine/world/medical.ts`
-- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
-- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
-- `availabilityStatus` – `src/engine/world/medical.ts`
-- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts`
-- `entryStatus` – `src/engine/world/medical.ts`
-- `EntryStatus` *(type)* – `src/engine/world/medical.ts`
-- `layoffBlock` – `src/engine/world/medical.ts`
-- `LayoffBlock` *(type)* – `src/engine/world/medical.ts`
-- `layoffCovering` – `src/engine/world/medical.ts`
-- `layoffCoversWeek` – `src/engine/world/medical.ts`
-- `medicalBlock` – `src/engine/world/medical.ts`
-- `MedicalBlock` *(type)* – `src/engine/world/medical.ts`
-- `medicalClearance` – `src/engine/world/medical.ts`
-- `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
-- `pauseCovering` – `src/engine/world/medical.ts`
-- `POSTPARTUM_PAUSE_DETAIL` – `src/engine/world/medical.ts`
-- `PREGNANCY_PAUSE_DETAIL` – `src/engine/world/medical.ts`
-- `recoveryAgeFade` – `src/engine/world/medical.ts`
-- `recoveryBaseFor` – `src/engine/world/medical.ts`
-- `restRecoveryBonus` – `src/engine/world/medical.ts`
-- `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
-
-### `src/engine/world/endings.ts`
-
-THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
-
-- `ancestorSeedOf` – `src/engine/world/endings.ts`
-- `answerFork` – `src/engine/world/endings.ts`
-- `answerRetirement` – `src/engine/world/endings.ts`
-- `autoEndingViewOf` – `src/engine/world/endings.ts`
-- `buildDebtView` – `src/engine/world/endings.ts`
-- `buildEndingView` – `src/engine/world/endings.ts`
-- `cheapestEntryFeeCents` – `src/engine/world/endings.ts`
-- `childSeedFor` – `src/engine/world/endings.ts`
-- `dynastyBackgroundOf` – `src/engine/world/endings.ts`
-- `dynastyHandoverOf` – `src/engine/world/endings.ts`
-- `FORK_UNHEARD_REFUSAL` – `src/engine/world/endings.ts`
-- `LAST_OFFER_NOT_A_QUESTION` – `src/engine/world/endings.ts`
-- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
-- `latchEnding` – `src/engine/world/endings.ts`
-- `leavingViewOf` – `src/engine/world/endings.ts`
-- `plateauViewOf` – `src/engine/world/endings.ts`
-- `raiseForkOpinion` – `src/engine/world/endings.ts`
-- `resolveCollegeDeparture` – `src/engine/world/endings.ts`
-- `resolveEndings` – `src/engine/world/endings.ts`
-- `resolveLeaving` – `src/engine/world/endings.ts`
-- `resolveReturnDecision` – `src/engine/world/endings.ts`
-- `wasThereAChild` – `src/engine/world/endings.ts`
-- `wonTopTitleInSeason` – `src/engine/world/endings.ts`
-
-### `src/engine/world/ladder.ts`
-
-THE LADDER: where she stands, and what that standing opens.
-
-- `acceptanceRank` – `src/engine/world/ladder.ts`
-- `activeLadderOf` – `src/engine/world/ladder.ts`
-- `bookClosedTo` – `src/engine/world/ladder.ts`
-- `captureEntryRow` – `src/engine/world/ladder.ts`
-- `entryCouldNotMove` – `src/engine/world/ladder.ts`
-- `hasOutgrown` – `src/engine/world/ladder.ts`
-- `homeWildCardPlace` – `src/engine/world/ladder.ts`
-- `inTrack` – `src/engine/world/ladder.ts`
-- `isTierEligible` – `src/engine/world/ladder.ts`
-- `juniorAccessOpen` – `src/engine/world/ladder.ts`
-- `kidDomesticPoints` – `src/engine/world/ladder.ts`
-- `kidPoints` – `src/engine/world/ladder.ts`
-- `outgrewTier` – `src/engine/world/ladder.ts`
-- `PLAY_DOWN` – `src/engine/world/ladder.ts`
-- `playDownBars` – `src/engine/world/ladder.ts`
-- `proDoors` – `src/engine/world/ladder.ts`
-- `protectedRankPlace` – `src/engine/world/ladder.ts`
-- `recomputeKidRank` – `src/engine/world/ladder.ts`
-- `refreshDerivedRankCaches` – `src/engine/world/ladder.ts`
-- `tableSize` – `src/engine/world/ladder.ts`
-- `tierFloorOpen` – `src/engine/world/ladder.ts`
-- `tierOpenFor` – `src/engine/world/ladder.ts`
-- `tierOutgrown` – `src/engine/world/ladder.ts`
+- `academyReputationOf` – `src/engine/world/assets.ts`
+- `ASSET_NAME_MAX_CHARS` – `src/engine/world/assets.ts`
+- `assetDelivered` – `src/engine/world/assets.ts`
+- `assetEarningsRateCents` – `src/engine/world/assets.ts`
+- `assetEntryPriceCents` – `src/engine/world/assets.ts`
+- `assetHeldWeeks` – `src/engine/world/assets.ts`
+- `assetNameOf` – `src/engine/world/assets.ts`
+- `assetNameSuggestions` – `src/engine/world/assets.ts`
+- `assetUpkeepCents` – `src/engine/world/assets.ts`
+- `assetValueCents` – `src/engine/world/assets.ts`
+- `assetWorthCents` – `src/engine/world/assets.ts`
+- `avgUnitPriceCents` – `src/engine/world/assets.ts`
+- `deliveredAssets` – `src/engine/world/assets.ts`
+- `marketSeasonMove` – `src/engine/world/assets.ts`
+- `nameSuggestionsFor` – `src/engine/world/assets.ts`
+- `ownedAssets` – `src/engine/world/assets.ts`
+- `reachableFundsCents` – `src/engine/world/assets.ts`
+- `sanitiseAssetName` – `src/engine/world/assets.ts`
+- `shopCatalogue` – `src/engine/world/assets.ts`
+- `shopItem` – `src/engine/world/assets.ts`
+- `unitPriceCents` – `src/engine/world/assets.ts`
+- `unitPriceHistory` – `src/engine/world/assets.ts`
+- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
 
 ### `src/engine/world/psychologist.ts`
 
@@ -431,6 +230,33 @@ THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does 
 - `setPsychologistFocus` – `src/engine/world/psychologist.ts`
 - `setPsychologistRung` – `src/engine/world/psychologist.ts`
 
+### `src/engine/world/ladder.ts`
+
+THE LADDER: where she stands, and what that standing opens.
+
+- `acceptanceRank` – `src/engine/world/ladder.ts`
+- `activeLadderOf` – `src/engine/world/ladder.ts`
+- `bookClosedTo` – `src/engine/world/ladder.ts`
+- `captureEntryRow` – `src/engine/world/ladder.ts`
+- `entryCouldNotMove` – `src/engine/world/ladder.ts`
+- `hasOutgrown` – `src/engine/world/ladder.ts`
+- `homeWildCardPlace` – `src/engine/world/ladder.ts`
+- `inTrack` – `src/engine/world/ladder.ts`
+- `isTierEligible` – `src/engine/world/ladder.ts`
+- `juniorAccessOpen` – `src/engine/world/ladder.ts`
+- `kidPoints` – `src/engine/world/ladder.ts`
+- `outgrewTier` – `src/engine/world/ladder.ts`
+- `PLAY_DOWN` – `src/engine/world/ladder.ts`
+- `playDownBars` – `src/engine/world/ladder.ts`
+- `proDoors` – `src/engine/world/ladder.ts`
+- `protectedRankPlace` – `src/engine/world/ladder.ts`
+- `recomputeKidRank` – `src/engine/world/ladder.ts`
+- `refreshDerivedRankCaches` – `src/engine/world/ladder.ts`
+- `tableSize` – `src/engine/world/ladder.ts`
+- `tierFloorOpen` – `src/engine/world/ladder.ts`
+- `tierOpenFor` – `src/engine/world/ladder.ts`
+- `tierOutgrown` – `src/engine/world/ladder.ts`
+
 ### `src/engine/world/masseur.ts`
 
 THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
@@ -458,6 +284,56 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
+### `src/engine/world/college.ts`
+
+⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md).
+
+- `callUpFor` – `src/engine/world/college.ts`
+- `callUpLetterWeek` – `src/engine/world/college.ts`
+- `callUpRevealMatches` – `src/engine/world/college.ts`
+- `callUpRevealOpen` – `src/engine/world/college.ts`
+- `callUpRubberId` – `src/engine/world/college.ts`
+- `callUpRubbersOf` – `src/engine/world/college.ts`
+- `COLLEGE_TRIP_WEEKS` – `src/engine/world/college.ts`
+- `collegeEpilogueLine` – `src/engine/world/college.ts`
+- `collegeLeagueMatchesOf` – `src/engine/world/college.ts`
+- `collegeLeagueMatchId` – `src/engine/world/college.ts`
+- `collegeLeagueRevealMatches` – `src/engine/world/college.ts`
+- `collegeLeagueRevealOpen` – `src/engine/world/college.ts`
+- `collegeLeagueWeek` – `src/engine/world/college.ts`
+- `collegePausedShareYears` – `src/engine/world/college.ts`
+- `inCollege` – `src/engine/world/college.ts`
+- `lastLeagueRun` – `src/engine/world/college.ts`
+- `measureCollegeOffer` – `src/engine/world/college.ts`
+- `nextCallUpWeekAfter` – `src/engine/world/college.ts`
+- `resolveCollegeBill` – `src/engine/world/college.ts`
+- `skillMeanOf` – `src/engine/world/college.ts`
+
+### `src/engine/world/endings.ts`
+
+THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
+
+- `ancestorSeedOf` – `src/engine/world/endings.ts`
+- `answerFork` – `src/engine/world/endings.ts`
+- `answerRetirement` – `src/engine/world/endings.ts`
+- `autoEndingViewOf` – `src/engine/world/endings.ts`
+- `buildEndingView` – `src/engine/world/endings.ts`
+- `childSeedFor` – `src/engine/world/endings.ts`
+- `dynastyBackgroundOf` – `src/engine/world/endings.ts`
+- `dynastyHandoverOf` – `src/engine/world/endings.ts`
+- `FORK_UNHEARD_REFUSAL` – `src/engine/world/endings.ts`
+- `LAST_OFFER_NOT_A_QUESTION` – `src/engine/world/endings.ts`
+- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
+- `latchEnding` – `src/engine/world/endings.ts`
+- `leavingViewOf` – `src/engine/world/endings.ts`
+- `plateauViewOf` – `src/engine/world/endings.ts`
+- `resolveCollegeDeparture` – `src/engine/world/endings.ts`
+- `resolveEndings` – `src/engine/world/endings.ts`
+- `resolveLeaving` – `src/engine/world/endings.ts`
+- `resolveReturnDecision` – `src/engine/world/endings.ts`
+- `wasThereAChild` – `src/engine/world/endings.ts`
+- `wonTopTitleInSeason` – `src/engine/world/endings.ts`
+
 ### `src/engine/chemistry.ts`
 
 CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1).
@@ -474,7 +350,6 @@ CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2
 - `chemistryWeeklyRate` – `src/engine/chemistry.ts`
 - `COACH_MANNERS` – `src/engine/chemistry.ts`
 - `CoachManner` *(type)* – `src/engine/chemistry.ts`
-- `CoachPair` *(type)* – `src/engine/chemistry.ts`
 - `freshCoachPair` – `src/engine/chemistry.ts`
 - `mannerFromAxes` – `src/engine/chemistry.ts`
 - `mannerPush` – `src/engine/chemistry.ts`
@@ -482,49 +357,27 @@ CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2
 - `nextChemistryPhase` – `src/engine/chemistry.ts`
 - `quietWeek` – `src/engine/chemistry.ts`
 
-### `src/engine/world/entryCaps.ts`
+### `src/engine/world/medical.ts`
 
-THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks.
+THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
 
-- `ACCELERATOR` – `src/engine/world/entryCaps.ts`
-- `acceleratorAdmits` – `src/engine/world/entryCaps.ts`
-- `acceleratorUsage` – `src/engine/world/entryCaps.ts`
-- `annualEntryLimit` – `src/engine/world/entryCaps.ts`
-- `annualProEntryLimit` – `src/engine/world/entryCaps.ts`
-- `bestJuniorRankInWindow` – `src/engine/world/entryCaps.ts`
-- `entryCapUsage` – `src/engine/world/entryCaps.ts`
-- `isCappedProTier` – `src/engine/world/entryCaps.ts`
-- `isCappedTier` – `src/engine/world/entryCaps.ts`
-- `JUNIOR_RESERVED` – `src/engine/world/entryCaps.ts`
-- `juniorMerit` – `src/engine/world/entryCaps.ts`
-- `juniorReservedRank` – `src/engine/world/entryCaps.ts`
-- `proEntryCapUsage` – `src/engine/world/entryCaps.ts`
-- `proMerit` – `src/engine/world/entryCaps.ts`
-- `proSubCapRefusalDetail` – `src/engine/world/entryCaps.ts`
-- `proSubCapUsage` – `src/engine/world/entryCaps.ts`
-- `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
-
-### `src/engine/world/sponsors.ts`
-
-THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
-
-- `acceptOffer` – `src/engine/world/sponsors.ts`
-- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
-- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
-- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
-- `declineOffer` – `src/engine/world/sponsors.ts`
-- `isRetainerWeek` – `src/engine/world/sponsors.ts`
-- `localSponsorCents` – `src/engine/world/sponsors.ts`
-- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
-- `resultBonusFor` – `src/engine/world/sponsors.ts`
-- `reviewAdOffer` – `src/engine/world/sponsors.ts`
-- `reviewSponsors` – `src/engine/world/sponsors.ts`
-- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
-- `sparringTravelFareFor` – `src/engine/world/sponsors.ts`
-- `sponsorCameoCents` – `src/engine/world/sponsors.ts`
-- `sponsorCameoWilling` – `src/engine/world/sponsors.ts`
-- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
-- `travelCostFor` – `src/engine/world/sponsors.ts`
+- `accrueCondition` – `src/engine/world/medical.ts`
+- `adShootHolds` – `src/engine/world/medical.ts`
+- `arrivalStatus` – `src/engine/world/medical.ts`
+- `availabilityStatus` – `src/engine/world/medical.ts`
+- `entryStatus` – `src/engine/world/medical.ts`
+- `layoffBlock` – `src/engine/world/medical.ts`
+- `layoffCovering` – `src/engine/world/medical.ts`
+- `layoffCoversWeek` – `src/engine/world/medical.ts`
+- `medicalBlock` – `src/engine/world/medical.ts`
+- `medicalClearance` – `src/engine/world/medical.ts`
+- `pauseCovering` – `src/engine/world/medical.ts`
+- `POSTPARTUM_PAUSE_DETAIL` – `src/engine/world/medical.ts`
+- `PREGNANCY_PAUSE_DETAIL` – `src/engine/world/medical.ts`
+- `recoveryAgeFade` – `src/engine/world/medical.ts`
+- `recoveryBaseFor` – `src/engine/world/medical.ts`
+- `restRecoveryBonus` – `src/engine/world/medical.ts`
+- `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
 
 ### `src/engine/world/birthday.ts`
 
@@ -535,14 +388,12 @@ HER BIRTHDAY, AND WHAT YOU GIVE HER.
 - `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
 - `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
 - `birthdayHeading` – `src/engine/world/birthday.ts`
-- `birthdayHistory` – `src/engine/world/birthday.ts`
 - `birthdayOffer` – `src/engine/world/birthday.ts`
 - `birthdayOfferFor` – `src/engine/world/birthday.ts`
 - `birthdayOptions` – `src/engine/world/birthday.ts`
 - `birthdayWords` – `src/engine/world/birthday.ts`
 - `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
 - `chooseGift` – `src/engine/world/birthday.ts`
-- `collegeBirthdayIndexOf` – `src/engine/world/birthday.ts`
 - `DAY_TOGETHER_FROM_AGE` – `src/engine/world/birthday.ts`
 - `giftNoun` – `src/engine/world/birthday.ts`
 - `pendingBirthday` – `src/engine/world/birthday.ts`
@@ -558,14 +409,13 @@ HER BIRTHDAY, AND WHAT YOU GIVE HER.
 - `LONG_LAYOFF_WEEKS` – `src/engine/world/multiWeek.ts`
 - `longLayoff` – `src/engine/world/multiWeek.ts`
 - `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
+- `openQuestions` – `src/engine/world/multiWeek.ts`
 - `QUIET_WINDOW_WEEKS` – `src/engine/world/multiWeek.ts`
-- `SPAN_REPORTS_ONLY` – `src/engine/world/multiWeek.ts`
 - `spanDigest` – `src/engine/world/multiWeek.ts`
 - `spanRowCount` – `src/engine/world/multiWeek.ts`
 - `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
 - `spanWeeksFor` – `src/engine/world/multiWeek.ts`
 - `spanWorthOffering` – `src/engine/world/multiWeek.ts`
-- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/sparring.ts`
 
@@ -585,37 +435,53 @@ THE SPARRING PARTNER: the third seat of the travelling team, and the one with th
 - `sparringWeeklyCents` – `src/engine/world/sparring.ts`
 - `sparringWorksThisWeek` – `src/engine/world/sparring.ts`
 
-### `src/engine/world/kit.ts`
+### `src/engine/world/entryCaps.ts`
 
-THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
+THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks.
 
-- `GEAR_REST_WINDOW` – `src/engine/world/kit.ts`
-- `gearRestWeeksOf` – `src/engine/world/kit.ts`
-- `goodWeeksFor` – `src/engine/world/kit.ts`
-- `KIT_LINES` – `src/engine/world/kit.ts`
-- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts`
-- `kitDealView` – `src/engine/world/kit.ts`
-- `kitLineViews` – `src/engine/world/kit.ts`
-- `kitPurchaseSplit` – `src/engine/world/kit.ts`
-- `kitStateOf` – `src/engine/world/kit.ts`
-- `recordGearRestWeek` – `src/engine/world/kit.ts`
-- `setKitGrade` – `src/engine/world/kit.ts`
+- `acceleratorAdmits` – `src/engine/world/entryCaps.ts`
+- `acceleratorUsage` – `src/engine/world/entryCaps.ts`
+- `annualEntryLimit` – `src/engine/world/entryCaps.ts`
+- `annualProEntryLimit` – `src/engine/world/entryCaps.ts`
+- `entryCapUsage` – `src/engine/world/entryCaps.ts`
+- `isCappedProTier` – `src/engine/world/entryCaps.ts`
+- `isCappedTier` – `src/engine/world/entryCaps.ts`
+- `juniorReservedRank` – `src/engine/world/entryCaps.ts`
+- `proEntryCapUsage` – `src/engine/world/entryCaps.ts`
+- `proSubCapUsage` – `src/engine/world/entryCaps.ts`
+- `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
-### `src/engine/world/mandatory.ts`
+### `src/engine/world/lifeBeat/pregnancy.ts`
 
-THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6).
+A-06 / T6.10 – `world/lifeBeat.ts` §14 MOVED HERE VERBATIM, span for span, comments and all.
 
-- `buildTourBriefing` – `src/engine/world/mandatory.ts`
-- `chargeMandatoryPenalty` – `src/engine/world/mandatory.ts`
-- `dueMandatoriesAt` – `src/engine/world/mandatory.ts`
-- `isMandatoryTier` – `src/engine/world/mandatory.ts`
-- `isSuspendedAt` – `src/engine/world/mandatory.ts`
-- `mandatoryBinds` – `src/engine/world/mandatory.ts`
-- `mandatoryBindsRank` – `src/engine/world/mandatory.ts`
-- `penaltyPointsAt` – `src/engine/world/mandatory.ts`
-- `quotaPlayedIn` – `src/engine/world/mandatory.ts`
-- `quotaShortfallAt` – `src/engine/world/mandatory.ts`
-- `suspensionWeeksLeft` – `src/engine/world/mandatory.ts`
+- `comebackAtReturn` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `decisionWeekOf` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `drawConceptionWindow` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `landBirth` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `landPregnancyAnnouncement` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `landPregnancyPause` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `motherhoodBandAt` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `pregnancyChanceAt` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `pregnancyEligible` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `returnChanceFor` – `src/engine/world/lifeBeat/pregnancy.ts`
+- `rollPregnancy` – `src/engine/world/lifeBeat/pregnancy.ts`
+
+### `src/engine/world/sponsors.ts`
+
+THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
+
+- `acceptOffer` – `src/engine/world/sponsors.ts`
+- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
+- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
+- `declineOffer` – `src/engine/world/sponsors.ts`
+- `localSponsorCents` – `src/engine/world/sponsors.ts`
+- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
+- `reviewAdOffer` – `src/engine/world/sponsors.ts`
+- `reviewSponsors` – `src/engine/world/sponsors.ts`
+- `sponsorCameoCents` – `src/engine/world/sponsors.ts`
+- `sponsorCameoWilling` – `src/engine/world/sponsors.ts`
+- `travelCostFor` – `src/engine/world/sponsors.ts`
 
 ### `src/engine/world/age.ts`
 
@@ -630,6 +496,34 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidAgeYears` – `src/engine/world/age.ts`
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
+
+### `src/engine/world/planner.ts`
+
+THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives.
+
+- `bookPractice` – `src/engine/world/planner.ts`
+- `bookVacation` – `src/engine/world/planner.ts`
+- `cancelPractice` – `src/engine/world/planner.ts`
+- `cancelVacation` – `src/engine/world/planner.ts`
+- `consecutivePracticeWeeks` – `src/engine/world/planner.ts`
+- `isPracticeMatchEvent` – `src/engine/world/planner.ts`
+- `practiceCaution` – `src/engine/world/planner.ts`
+- `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
+- `practiceMatchId` – `src/engine/world/planner.ts`
+
+### `src/engine/world/tick.ts`
+
+⭐⭐ THE WEEK ITSELF – the tick, the multi-week advance, and the two exits that spend weeks through them (A-04 (a) / T6.5, the last of P4's span-moves; docs/review/proposals/P4-world-decomposition.md).
+
+- `advanceWeeks` – `src/engine/world/tick.ts`
+- `COLLEGE_REVEAL_REFUSAL` – `src/engine/world/tick.ts`
+- `endCollegeEarly` – `src/engine/world/tick.ts`
+- `MAIN_DRAWS_PER_WEEK_MAX` – `src/engine/world/tick.ts`
+- `maxMainDraws` – `src/engine/world/tick.ts`
+- `replayMainState` – `src/engine/world/tick.ts`
+- `resumeFromCollege` – `src/engine/world/tick.ts`
+- `skipEvent` – `src/engine/world/tick.ts`
+- `tickWeek` – `src/engine/world/tick.ts`
 
 ### `src/engine/world/fame.ts`
 
@@ -657,31 +551,6 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `radarViewOf` – `src/engine/world/knock.ts`
 - `rollKnock` – `src/engine/world/knock.ts`
 
-### `src/engine/world/market.ts`
-
-⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
-
-- `marketCrash` – `src/engine/world/market.ts`
-- `MarketCrash` *(type)* – `src/engine/world/market.ts`
-- `marketCrashFellIn` – `src/engine/world/market.ts`
-- `marketCrashLog` – `src/engine/world/market.ts`
-- `marketIndex` – `src/engine/world/market.ts`
-- `marketWave` – `src/engine/world/market.ts`
-- `worstCrashFreeRatio` – `src/engine/world/market.ts`
-- `worstMarketRatio` – `src/engine/world/market.ts`
-
-### `src/engine/spirit.ts`
-
-THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings.
-
-- `accrueSpirit` – `src/engine/spirit.ts`
-- `applyBondDelta` – `src/engine/spirit.ts`
-- `spiritMatchFactor` – `src/engine/spirit.ts`
-- `Temperament` *(type)* – `src/engine/spirit.ts`
-- `temperamentFor` – `src/engine/spirit.ts`
-- `temperamentIntensity` – `src/engine/spirit.ts`
-- `TEMPERAMENTS` – `src/engine/spirit.ts`
-
 ### `src/engine/world/brand.ts`
 
 ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
@@ -706,6 +575,18 @@ THE SHARED IDS AND CAPS: the handful of constants more than one world module nee
 - `knockRunning` – `src/engine/world/constants.ts`
 - `SLAM_DEBUT_KEY` – `src/engine/world/constants.ts`
 
+### `src/engine/world/create.ts`
+
+⭐⭐ THE BIRTH OF A CAREER – `createWorld`, the prologue handover it applies, and the one hydration a pre-v6 save still needs (A-04 (a) / T6.5; docs/review/proposals/P4-world-decomposition.md).
+
+- `createWorld` – `src/engine/world/create.ts`
+- `PARENT_INCOME_CENTS` – `src/engine/world/create.ts`
+- `PROLOGUE_COACH_LADDER` – `src/engine/world/create.ts`
+- `prologueCoachTier` – `src/engine/world/create.ts`
+- `prologuePlayStyle` – `src/engine/world/create.ts`
+- `seedWorldForV6` – `src/engine/world/create.ts`
+- `STARTING_FUNDS_CENTS` – `src/engine/world/create.ts`
+
 ### `src/engine/world/injury.ts`
 
 INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates.
@@ -718,29 +599,29 @@ INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recove
 - `retirementInjury` – `src/engine/world/injury.ts`
 - `rollInjury` – `src/engine/world/injury.ts`
 
-### `src/engine/world/planner.ts`
+### `src/engine/world/kit.ts`
 
-THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives.
+THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
 
-- `bookPractice` – `src/engine/world/planner.ts`
-- `bookVacation` – `src/engine/world/planner.ts`
-- `cancelPractice` – `src/engine/world/planner.ts`
-- `cancelVacation` – `src/engine/world/planner.ts`
-- `consecutivePracticeWeeks` – `src/engine/world/planner.ts`
-- `practiceCaution` – `src/engine/world/planner.ts`
-- `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
+- `GEAR_REST_WINDOW` – `src/engine/world/kit.ts`
+- `goodWeeksFor` – `src/engine/world/kit.ts`
+- `kitLineViews` – `src/engine/world/kit.ts`
+- `kitPurchaseSplit` – `src/engine/world/kit.ts`
+- `kitStateOf` – `src/engine/world/kit.ts`
+- `recordGearRestWeek` – `src/engine/world/kit.ts`
+- `setKitGrade` – `src/engine/world/kit.ts`
 
-### `src/engine/world/shop.ts`
+### `src/engine/world/market.ts`
 
-⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
 
-- `buyAsset` – `src/engine/world/shop.ts`
-- `deliverAssets` – `src/engine/world/shop.ts`
-- `reportMarketSeason` – `src/engine/world/shop.ts`
-- `revalueAssets` – `src/engine/world/shop.ts`
-- `sellableAsset` – `src/engine/world/shop.ts`
-- `sellAsset` – `src/engine/world/shop.ts`
-- `shopView` – `src/engine/world/shop.ts`
+- `marketCrash` – `src/engine/world/market.ts`
+- `marketCrashFellIn` – `src/engine/world/market.ts`
+- `marketCrashLog` – `src/engine/world/market.ts`
+- `marketIndex` – `src/engine/world/market.ts`
+- `marketWave` – `src/engine/world/market.ts`
+- `worstCrashFreeRatio` – `src/engine/world/market.ts`
+- `worstMarketRatio` – `src/engine/world/market.ts`
 
 ### `src/engine/world/spotlight.ts`
 
@@ -754,13 +635,33 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `NewsStanding` *(type)* – `src/engine/world/spotlight.ts`
 - `newsStandingOf` – `src/engine/world/spotlight.ts`
 
+### `src/engine/world/shop.ts`
+
+⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+
+- `buyAsset` – `src/engine/world/shop.ts`
+- `deliverAssets` – `src/engine/world/shop.ts`
+- `revalueAssets` – `src/engine/world/shop.ts`
+- `sellableAsset` – `src/engine/world/shop.ts`
+- `sellAsset` – `src/engine/world/shop.ts`
+- `shopView` – `src/engine/world/shop.ts`
+
+### `src/engine/spirit.ts`
+
+THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings.
+
+- `accrueSpirit` – `src/engine/spirit.ts`
+- `Temperament` *(type)* – `src/engine/spirit.ts`
+- `temperamentFor` – `src/engine/spirit.ts`
+- `temperamentIntensity` – `src/engine/spirit.ts`
+- `TEMPERAMENTS` – `src/engine/spirit.ts`
+
 ### `src/engine/world/business.ts`
 
 ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
 
 - `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `assetKidShareCents` – `src/engine/world/business.ts`
-- `assetWeeklyFamilyIncomeCents` – `src/engine/world/business.ts`
 - `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `merchFamilyWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
@@ -771,43 +672,19 @@ THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
 
 - `cancelEntry` – `src/engine/world/entries.ts`
 - `enterEvent` – `src/engine/world/entries.ts`
-- `INJURY_RELEASE_SUFFIX` – `src/engine/world/entries.ts`
 - `RELEASE_LINE_PREFIX` – `src/engine/world/entries.ts`
 - `releaseEntry` – `src/engine/world/entries.ts`
 - `withdrawEvent` – `src/engine/world/entries.ts`
 
-### `src/engine/world/form.ts`
+### `src/engine/world/lifeBeat/wedding.ts`
 
-HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts`.
+A-06 / T6.10 – `world/lifeBeat.ts` §11 MOVED HERE VERBATIM, span for span, comments and all.
 
-- `accrueFormWeek` – `src/engine/world/form.ts`
-- `coachFormNote` – `src/engine/world/form.ts`
-- `formMatchlessWeeks` – `src/engine/world/form.ts`
-- `formResidualsOf` – `src/engine/world/form.ts`
-- `herWeekForForm` – `src/engine/world/form.ts`
-- `sparringComebackGap` – `src/engine/world/form.ts`
-
-### `src/engine/world/milestones.ts`
-
-WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to.
-
-- `captureBreakEven` – `src/engine/world/milestones.ts`
-- `emptySeasonEntries` – `src/engine/world/milestones.ts`
-- `emptySeasonRecord` – `src/engine/world/milestones.ts`
-- `emptyTrophyLedger` – `src/engine/world/milestones.ts`
-- `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
-- `seasonWrapDue` – `src/engine/world/milestones.ts`
-
-### `src/engine/world/shootClash.ts`
-
-⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT.
-
-- `answerShootClash` – `src/engine/world/shootClash.ts`
-- `buildShootClashPrompt` – `src/engine/world/shootClash.ts`
-- `shootCancelCents` – `src/engine/world/shootClash.ts`
-- `shootClashOpen` – `src/engine/world/shootClash.ts`
-- `shootClashWeek` – `src/engine/world/shootClash.ts`
-- `shootMoveTarget` – `src/engine/world/shootClash.ts`
+- `landWedding` – `src/engine/world/lifeBeat/wedding.ts`
+- `PARTNER_NAME_POOL` – `src/engine/world/lifeBeat/wedding.ts`
+- `partnerNameFor` – `src/engine/world/lifeBeat/wedding.ts`
+- `rollWedding` – `src/engine/world/lifeBeat/wedding.ts`
+- `weddingEligible` – `src/engine/world/lifeBeat/wedding.ts`
 
 ### `src/engine/world/means.ts`
 
@@ -819,15 +696,25 @@ WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for 
 - `MEANS_BANDS` – `src/engine/world/means.ts`
 - `meansOfCents` – `src/engine/world/means.ts`
 
-### `src/engine/world/state.ts`
+### `src/engine/world/milestones.ts`
 
-⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
+WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to.
 
-- `BrandStrengthSeed` *(type)* – `src/engine/world/state.ts`
-- `PendingTournament` *(type)* – `src/engine/world/state.ts`
-- `PsyFocus` *(type)* – `src/engine/world/state.ts`
-- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
-- `WorldState` *(type)* – `src/engine/world/state.ts`
+- `captureBreakEven` – `src/engine/world/milestones.ts`
+- `emptySeasonEntries` – `src/engine/world/milestones.ts`
+- `emptySeasonRecord` – `src/engine/world/milestones.ts`
+- `emptyTrophyLedger` – `src/engine/world/milestones.ts`
+- `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
+
+### `src/engine/world/shootClash.ts`
+
+⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT.
+
+- `answerShootClash` – `src/engine/world/shootClash.ts`
+- `shootCancelCents` – `src/engine/world/shootClash.ts`
+- `shootClashOpen` – `src/engine/world/shootClash.ts`
+- `shootClashWeek` – `src/engine/world/shootClash.ts`
+- `shootMoveTarget` – `src/engine/world/shootClash.ts`
 
 ### `src/engine/condition.ts`
 
@@ -856,6 +743,33 @@ THE LEDGER: the two write primitives every world mutation goes through, and the 
 - `seasonIndexOf` – `src/engine/world/ledger.ts`
 - `seasonStartWeek` – `src/engine/world/ledger.ts`
 
+### `src/engine/world/lifeBeat/leak.ts`
+
+A-06 / T6.8 – `world/lifeBeat.ts` §9 MOVED HERE VERBATIM, span for span, comments and all.
+
+- `leakEligible` – `src/engine/world/lifeBeat/leak.ts`
+- `leakHazardFor` – `src/engine/world/lifeBeat/leak.ts`
+- `leakWrongShareFor` – `src/engine/world/lifeBeat/leak.ts`
+- `rollLeak` – `src/engine/world/lifeBeat/leak.ts`
+
+### `src/engine/world/lifeBeat/smallTalk.ts`
+
+A-06 / T6.10 – `world/lifeBeat.ts` §7 MOVED HERE VERBATIM, span for span, comments and all.
+
+- `rollSmallTalk` – `src/engine/world/lifeBeat/smallTalk.ts`
+- `smallTalkChanceFor` – `src/engine/world/lifeBeat/smallTalk.ts`
+- `smallTalkEligible` – `src/engine/world/lifeBeat/smallTalk.ts`
+- `smallTalkThisSeason` – `src/engine/world/lifeBeat/smallTalk.ts`
+
+### `src/engine/world/lifeBeat/weight.ts`
+
+A-06 / T6.10 – `world/lifeBeat.ts` §15 MOVED HERE VERBATIM, span for span, comments and all.
+
+- `pregnancyLossChanceAt` – `src/engine/world/lifeBeat/weight.ts`
+- `pregnancyLossEligible` – `src/engine/world/lifeBeat/weight.ts`
+- `rollPregnancyLoss` – `src/engine/world/lifeBeat/weight.ts`
+- `setWeightEnabled` – `src/engine/world/lifeBeat/weight.ts`
+
 ### `src/engine/world/loveEpisodes.ts`
 
 THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now.
@@ -864,6 +778,15 @@ THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's e
 - `endEpisode` – `src/engine/world/loveEpisodes.ts`
 - `knownPartner` – `src/engine/world/loveEpisodes.ts`
 - `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
+
+### `src/engine/world/mandatory.ts`
+
+THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6).
+
+- `buildTourBriefing` – `src/engine/world/mandatory.ts`
+- `chargeMandatoryPenalty` – `src/engine/world/mandatory.ts`
+- `isSuspendedAt` – `src/engine/world/mandatory.ts`
+- `mandatoryBinds` – `src/engine/world/mandatory.ts`
 
 ### `src/engine/world/player.ts`
 
@@ -874,6 +797,24 @@ THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbe
 - `kidMatchPlayerFor` – `src/engine/world/player.ts`
 - `startingSkills` – `src/engine/world/player.ts`
 
+### `src/engine/world/state.ts`
+
+⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
+
+- `PendingTournament` *(type)* – `src/engine/world/state.ts`
+- `PsyFocus` *(type)* – `src/engine/world/state.ts`
+- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
+- `WorldState` *(type)* – `src/engine/world/state.ts`
+
+### `src/engine/world/tournamentClose.ts`
+
+⭐⭐ THE TOURNAMENT CLOSE – committing the kid's run, and the three commands that read it out (A-04 (a) / T6.5, the last span-moves P4 left; docs/review/proposals/P4-world-decomposition.md).
+
+- `closeTournament` – `src/engine/world/tournamentClose.ts`
+- `rankingDeltaSuffix` – `src/engine/world/tournamentClose.ts`
+- `revealTournamentRound` – `src/engine/world/tournamentClose.ts`
+- `skipTournament` – `src/engine/world/tournamentClose.ts`
+
 ### `src/engine/kidLife.ts`
 
 HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results.
@@ -882,29 +823,37 @@ HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are n
 - `schoolIsOver` – `src/engine/kidLife.ts`
 - `schoolIsOverForBand` – `src/engine/kidLife.ts`
 
-### `src/engine/world/albumBook.ts`
+### `src/engine/world/lifeBeat/bereavement.ts`
 
-THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-album-2026-09.md).
+A-06 / T6.10 – `world/lifeBeat.ts` §16 MOVED HERE VERBATIM, span for span, comments and all.
 
-- `ALBUM_CHAPTER_TITLES` – `src/engine/world/albumBook.ts`
-- `ALBUM_MOOD` – `src/engine/world/albumBook.ts`
-- `assembleAlbum` – `src/engine/world/albumBook.ts`
+- `bereavementChanceAt` – `src/engine/world/lifeBeat/bereavement.ts`
+- `bereavementEligible` – `src/engine/world/lifeBeat/bereavement.ts`
+- `rollBereavement` – `src/engine/world/lifeBeat/bereavement.ts`
 
-### `src/engine/world/fieldNews.ts`
+### `src/engine/world/lifeBeat/ended.ts`
 
-⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10).
+A-06 / T6.10 – `world/lifeBeat.ts` §8 MOVED HERE VERBATIM, span for span, comments and all.
 
-- `announceCampusInterlude` – `src/engine/world/fieldNews.ts`
-- `campusDigestLine` – `src/engine/world/fieldNews.ts`
-- `FIELD_NEWS` – `src/engine/world/fieldNews.ts`
+- `endsEligible` – `src/engine/world/lifeBeat/ended.ts`
+- `endsHazardFor` – `src/engine/world/lifeBeat/ended.ts`
+- `rollEnds` – `src/engine/world/lifeBeat/ended.ts`
 
-### `src/engine/world/phaseObligations.ts`
+### `src/engine/world/lifeBeat/ownKey.ts`
 
-⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS.
+A-06 / T6.10 – `world/lifeBeat.ts` §13 MOVED HERE VERBATIM, span for span, comments and all.
 
-- `ACADEMY_NOTICE` – `src/engine/world/phaseObligations.ts`
-- `academySpokeThisWeek` – `src/engine/world/phaseObligations.ts`
-- `reviewAcademy` – `src/engine/world/phaseObligations.ts`
+- `deliverOwnKey` – `src/engine/world/lifeBeat/ownKey.ts`
+- `ownKeyDue` – `src/engine/world/lifeBeat/ownKey.ts`
+- `ownKeyThisWeek` – `src/engine/world/lifeBeat/ownKey.ts`
+
+### `src/engine/world/lifeBeat/smallTalkCopy.ts`
+
+A-06 / T6.8 – `world/lifeBeat.ts` §3c MOVED HERE VERBATIM, span for span, comments and all.
+
+- `LEGACY_SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat/smallTalkCopy.ts`
+- `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat/smallTalkCopy.ts`
+- `smallTalkSubjectFor` – `src/engine/world/lifeBeat/smallTalkCopy.ts`
 
 ### `src/engine/world/summer.ts`
 
@@ -921,12 +870,12 @@ THE ALBUM: seven polaroids, and the rule printed on every one of them.
 - `buildAlbum` – `src/engine/world/album.ts`
 - `buildScroll` – `src/engine/world/album.ts`
 
-### `src/engine/world/bookings.ts`
+### `src/engine/world/albumBook.ts`
 
-THE BOOKINGS, read side: what the family has put in the diary for a given week.
+THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-album-2026-09.md).
 
-- `practiceForWeek` – `src/engine/world/bookings.ts`
-- `vacationForWeek` – `src/engine/world/bookings.ts`
+- `ALBUM_MOOD` – `src/engine/world/albumBook.ts`
+- `assembleAlbum` – `src/engine/world/albumBook.ts`
 
 ### `src/engine/world/brandStrength.ts`
 
@@ -935,12 +884,33 @@ THE BOOKINGS, read side: what the family has put in the diary for a given week.
 - `brandStrengthAt` – `src/engine/world/brandStrength.ts`
 - `strengthDecayAt` – `src/engine/world/brandStrength.ts`
 
+### `src/engine/world/form.ts`
+
+HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts`.
+
+- `coachFormNote` – `src/engine/world/form.ts`
+- `formMatchlessWeeks` – `src/engine/world/form.ts`
+
 ### `src/engine/world/labels.ts`
 
 FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it.
 
 - `finishLabel` – `src/engine/world/labels.ts`
 - `prizeCentsFor` – `src/engine/world/labels.ts`
+
+### `src/engine/world/lifeBeat/booth.ts`
+
+A-06 / T6.8 – `world/lifeBeat.ts` §10 MOVED HERE VERBATIM, span for span, comments and all.
+
+- `airBoothMention` – `src/engine/world/lifeBeat/booth.ts`
+- `boothMentionDue` – `src/engine/world/lifeBeat/booth.ts`
+
+### `src/engine/world/lifeBeat/endedCopy.ts`
+
+A-06 / T6.8 – `world/lifeBeat.ts` §3e MOVED HERE VERBATIM, span for span, comments and all.
+
+- `ENDS_READS` – `src/engine/world/lifeBeat/endedCopy.ts`
+- `ENDS_REGISTERS` – `src/engine/world/lifeBeat/endedCopy.ts`
 
 ### `src/engine/world/matchNews.ts`
 
@@ -949,18 +919,24 @@ MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the
 - `computeLossStreak` – `src/engine/world/matchNews.ts`
 - `flipScore` – `src/engine/world/matchNews.ts`
 
-### `src/engine/world/staffLetters.ts`
+### `src/engine/world/phaseObligations.ts`
 
-THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished.
+⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS.
 
-- `seatWeeksServedIn` – `src/engine/world/staffLetters.ts`
-- `settleStaffLetters` – `src/engine/world/staffLetters.ts`
+- `ACADEMY_NOTICE` – `src/engine/world/phaseObligations.ts`
+- `reviewAcademy` – `src/engine/world/phaseObligations.ts`
 
-### `src/engine/world/bookkeeping.ts`
+### `src/engine/world/bookings.ts`
 
-⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar.
+THE BOOKINGS, read side: what the family has put in the diary for a given week.
 
-- `ensureSeason` – `src/engine/world/bookkeeping.ts`
+- `vacationForWeek` – `src/engine/world/bookings.ts`
+
+### `src/engine/world/fieldNews.ts`
+
+⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10).
+
+- `campusDigestLine` – `src/engine/world/fieldNews.ts`
 
 ### `src/engine/world/knockHistory.ts`
 
@@ -979,4 +955,10 @@ THE KNOCK'S RECORD: the capped history of every knock she has had, and the one w
 THE SNAPSHOT: everything the UI is ever allowed to see, built fresh from the world on every command.
 
 - `toSnapshot` – `src/engine/world/snapshot.ts`
+
+### `src/engine/world/staffLetters.ts`
+
+THE STAFF'S YEAR-END POST (round 44 #7) – the four salaried seats report on the season that has just finished.
+
+- `settleStaffLetters` – `src/engine/world/staffLetters.ts`
 

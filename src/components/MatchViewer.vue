@@ -3,7 +3,7 @@
 // (buildTimeline, geometry, drawScene) outputs only; no game math lives here. The
 // component owns the rAF clock and walks the (pure, pre-timed) Timeline, deriving
 // canvas SceneState + the surrounding score/probability/stats readout from it.
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, useTemplateRef, watch } from 'vue'
 import type { AnnotatedMatch, CourtPoint, ShotResult, Timeline, TimelineEvent, ViewMode } from '../viz/types'
 import { useMatchReadout } from '../composables/matchReadout'
 import { COURT } from '../viz/types'
@@ -30,6 +30,7 @@ import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composa
 import { usePlaybackClock } from '../composables/playbackClock'
 import { useMatchAudio } from '../composables/matchAudio'
 import { useScreenWake } from '../composables/screenWake'
+import { useDialogFocus } from '../composables/dialogFocus'
 // R2-11 – THE TRANSPORT IS A PROP-DRIVEN LEAF. It takes the two settings as values and says what
 // the player pressed; this screen keeps the match and stops owning the bar as well.
 import MatchControls from './MatchControls.vue'
@@ -1097,6 +1098,34 @@ function dismissRetirementNotice(): void {
   playSfx('clickSoft')
 }
 
+// --- ⚠⚠ E-08 / T4.7 – THE POPUP HOLDS THE KEYBOARD, AND IT IS THE FIRST CALLER WHOSE CARD IS A `v-if`
+//
+// THE DEFECT, STATED (docs/review-principles-2026-09-26/05-ui.md E-08). `.mv-hurt` is a
+// `role="alertdialog"` card on a full-screen scrim with NO `aria-modal` and no focus move, and an
+// alertdialog that does not take focus is not reliably announced at all – so the one popup in the app
+// that reports an injury mid-match was the one a screen reader could miss. It gained a paragraph in
+// `9cd78d8f` (08.09, round 39 #15a) AFTER the popup law was written, with no phone net either; both
+// halves are closed here.
+//
+// ⚠⚠ AND ARMING IT NEEDED `dialogFocus.ts` TO FOLLOW THE CARD RATHER THAN THE COMPONENT. The other
+// fifteen callers ARE their own overlay; this viewer is mounted for the whole match and the popup
+// appears near the end of it, so the composable's `onMounted` used to run with the ref still null and
+// never armed. That lifecycle is fixed in the composable, where the argument is written down.
+//
+// ⚠ ESCAPE DISMISSES, because this card already closes on a backdrop click and Escape is the
+// keyboard's spelling of that same gesture – `dialogFocus.ts`'s own rule for which dialogs get one.
+// It is a REPORT, not a question: the match is still underneath and «Stay with her» is where the
+// player goes back to.
+//
+// ⚠ `focusOn: 'card'` – ROUND 42 #8's ruling, and here it is load-bearing rather than tidy. The notice
+// is raised on the beat playback ENDS, and a SKIP press is one of the things that ends it
+// (`jumpToEnd`), so the player's finger may still be down on a control when the card appears. Enter
+// activates a button on the KEYDOWN repeat, so landing focus on «Stay with her» would let a held Skip
+// press dismiss the injury report before it was read – one of round 42 #17's three measured
+// double-press mechanisms, in a new place. Focus lands on the card, which `mv-hurt-title` names.
+const hurtCard = useTemplateRef<HTMLElement>('hurtCard')
+useDialogFocus(hurtCard, dismissRetirementNotice, { focusOn: 'card' })
+
 /**
  * PLAYBACK HAS ENDED. Two things happen here and only one of them is new.
  *
@@ -1430,7 +1459,18 @@ watch(finished, (isFinished) => {
          The app's shared dialog vocabulary (`.dialog-overlay` / `.dialog-card`), not a seventh
          popup shape - see ConfirmDialog for the same three classes. -->
     <div v-if="retirementNotice" class="dialog-overlay" @click.self="dismissRetirementNotice">
-      <div class="dialog-card mv-hurt" role="alertdialog" aria-labelledby="mv-hurt-title">
+      <!-- ⚠ E-08 / T4.7 – `aria-modal` and `tabindex="-1"` arrive together with the trap, which is
+           `dialogFocus.ts`'s own rule: announcing modality without containing the keyboard is worse
+           than doing neither. The script block beside `dismissRetirementNotice` carries the argument.
+           Not one word of this card moved. -->
+      <div
+        ref="hurtCard"
+        class="dialog-card mv-hurt"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="mv-hurt-title"
+        tabindex="-1"
+      >
         <p id="mv-hurt-title" class="mv-hurt-title">{{ retiredName }} could not continue.</p>
         <p class="dialog-message">
           She retired hurt at <span class="num">{{ finalScoreLine }}</span

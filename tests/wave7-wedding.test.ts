@@ -75,6 +75,7 @@ import { drainLifeBeats, DRAIN_ANSWER, drainCostOf } from '../tools/_lifeBeats'
 import type { LoveEpisode } from '../src/shared/protocol'
 import { MEMORY_EMOTION } from '../src/engine/diary'
 import { paintedFaceFor, portraitStage } from '../src/shared/avatarEmotion'
+import { weekAtAge } from './helpers/career'
 
 const WEDDING = ECONOMY.wedding
 
@@ -88,13 +89,6 @@ beforeEach(() => {
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock, never our
  *  arithmetic (`tests/wave4-ends.test.ts`'s helper). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 /** A row of the v83 shape. `endedWeek: null` is «still going». */
 function episode(sinceWeek: number, endedWeek: number | null = null): LoveEpisode {
   return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek: sinceWeek + 2, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }

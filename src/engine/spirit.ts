@@ -440,10 +440,25 @@ function roundTenth(x: number): number {
   return Math.round(x * 10) / 10
 }
 
-/** Bond moves in HALVES – the delta table has a 2.5 and a −1.5 in it and the regression is 0.5, so
- *  every write lands on the grid the design named (0..100 in steps of 0.5). */
-function roundHalf(x: number): number {
-  return Math.round(x * 2) / 2
+/** Bond moves on `ECONOMY.bond.step`'s grid – the delta table has a 2.5 and a −1.5 in it and the
+ *  regression is 0.5, so every write lands on the grid the design named (0..100 in steps of `step`).
+ *
+ *  ⚠⚠ IT READS THE DIAL INSTEAD OF SPELLING IT, AND THAT IS C-05 (26.09). This was `roundHalf`, a
+ *  private `Math.round(x * 2) / 2`, while `ECONOMY.bond.step` declared itself «the granularity every
+ *  write rounds to» and NOTHING in `src/` read it: the only reader was a test. So a tuner who turned
+ *  the dial – which `economy.ts`' own `regressionPerWeek` note and `tests/spirit.test.ts` both tell
+ *  them to do for slower healing – changed no engine write at all. One fact, two spellings, and one
+ *  of the two was a dial that did nothing and said it did.
+ *
+ *  ⚠ BYTE-IDENTICAL AT THE SHIPPED 0.5, AND THAT IS MEASURED RATHER THAN ARGUED. «Dividing by a
+ *  power of two is exact in IEEE-754» is a true sentence about a formula nobody runs; the identity
+ *  that matters is between the two whole expressions. Swept 26.09 over 2,106,039 points – the legal
+ *  range at 0.001, the nextUp/nextDown neighbour of every quarter-point, 2M seeded randoms and the
+ *  delta table at every rung – with 0 disagreements, and the sweep lives in `tests/spirit.test.ts`
+ *  beside the case that proves the dial is now LIVE. A bond value that moved would be a career that
+ *  moved, which is why the identity half is asserted at all. */
+function roundToStep(x: number): number {
+  return Math.round(x / ECONOMY.bond.step) * ECONOMY.bond.step
 }
 
 /** One step of `by` toward `target`, never past it. The shape both numbers' returns share. */
@@ -1405,7 +1420,7 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //    order: the regression toward 70 first, then the week's own event. The zero-vacations row is
   //    the only thing here that can move `bond` without a decision, and it is an absence of one.
   const settled = stepToward(world.bond ?? b.start, b.start, b.regressionPerWeek)
-  world.bond = roundHalf(clamp(settled, b.min, b.max))
+  world.bond = roundToStep(clamp(settled, b.min, b.max))
   if (wrapWithNoVacation) applyBondDelta(world, b.delta.seasonWithNoVacation)
 
   // 4. ⭐⭐ AND THE MARK CLEARS WHEN SHE IS BACK – v75 T3's one line in this tail, read against the
@@ -1654,9 +1669,10 @@ export function driftWalls(world: WorldState, psychologistWorks: boolean): void 
   world.wallsFlipped = flipped
 }
 
-/** THE ONE WRITER for every `bond` delta – clamped to 0..100 and rounded onto the 0.5 grid, so no
- *  decision site has to remember either rule. `world.bond` is the only field it touches. */
+/** THE ONE WRITER for every `bond` delta – clamped to `min`..`max` and rounded onto
+ *  `ECONOMY.bond.step`'s grid, so no decision site has to remember either rule. `world.bond` is the
+ *  only field it touches. */
 export function applyBondDelta(world: WorldState, delta: number): void {
   const b = ECONOMY.bond
-  world.bond = roundHalf(clamp((world.bond ?? b.start) + delta, b.min, b.max))
+  world.bond = roundToStep(clamp((world.bond ?? b.start) + delta, b.min, b.max))
 }

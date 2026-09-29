@@ -16,7 +16,7 @@
 // tails are literal substrings, so reading the literals is exact rather than approximate. The cost
 // is that this file knows a path; the ARM below is what keeps that honest.
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { BANNED_TAILS, TAIL_EXEMPT_LINES, narrationOf, tailExempt } from './helpers/bannedTails'
 
 // ⚠⚠ TWO FILES SINCE ROUND 44, AND THE SECOND ONE IS WHY THIS IS A LIST. The ban is about the LIFE
@@ -25,7 +25,41 @@ import { BANNED_TAILS, TAIL_EXEMPT_LINES, narrationOf, tailExempt } from './help
 // would have gone on passing while the corpus it cannot see grew – «a guard whose scope is narrower
 // than its sentence», the family `tests/worldSource.ts`' ruling-T note is named for and the one this
 // repo has now met twenty times. ⚠ A NEW POOL FILE BELONGS HERE THE DAY IT LANDS.
-const SOURCES = ['src/engine/world/lifeBeat.ts', 'src/engine/world/smallTalkCorpus.ts']
+// ⚠⚠ RE-AIMED 28.09 BY T6.8 / A-06 – AND THIS IS THE «NEW POOL FILE» THE LINE ABOVE PROMISED, ARRIVING
+// THIRTEEN AT A TIME. T6.8 split `world/lifeBeat.ts` by beat KIND, so `ENGAGED_HER_LINE`,
+// `MET_HER_LINE`, `SMALL_TALK_LINE`, `ENDED_HER_LINE`, `DIVORCED_HER_LINE`, `BEREAVEMENT_HER_LINE` and
+// `EXPECTING_HER_LINE` all live in `world/lifeBeat/<kind>Copy.ts` now.
+//
+// ⚠⚠ NOTHING WENT RED, AND THAT IS THE POINT. This lint asserts ZERO banned tails, so a corpus that
+// quietly shrinks goes on passing – it just stops being about anything. MEASURED on the day, with the
+// same extractor: 2,249 literals under the old two-path list, **216 in the kind modules it could no
+// longer see**, 2,465 with the package back. Eight per cent of the sweep, and precisely the
+// narration-heavy eight per cent this ban is for. That is the family this file's own header is named
+// after – «a green gate is evidence about what the gate RUNS» – caught by reading the query's
+// prediction rather than by a failure.
+//
+// ⚠ SO THE PACKAGE IS READ FROM THE DIRECTORY AND NOT LISTED, on `tests/worldSource.ts`' ruling-T
+// argument: a hand-written list of thirteen rots the moment a fourteenth kind lands, and nothing goes
+// red to say so. `readdirSync` is total by construction. (Flat, deliberately: T6.8's own net pins that
+// the package has no subdirectories, for the same reason `engineModuleSource` does not recurse.)
+//
+// ⭐ AND THE WIDENING IS ARMED RATHER THAN ASSERTED, because «I added the files» is not evidence that the
+// sweep reaches into them. `ENGAGED_DRY` in `world/lifeBeat/weddingCopy.ts` – a MOVED pool, in a file
+// the old list could not see – was given the tail `which is the tell`. This case went red naming the
+// string verbatim:
+//     a banned narrator tail reached a life string: expected [ Array(1) ] to deeply equal []
+//     + "She is getting married. The news reached this house second-hand, which is the tell."
+// and green again on revert. 2,465 literals, still zero banned tails – a stronger result than the
+// 2,249 this file was passing on yesterday.
+const LIFE_BEAT_PACKAGE = 'src/engine/world/lifeBeat'
+const SOURCES = [
+  `${LIFE_BEAT_PACKAGE}.ts`,
+  ...readdirSync(LIFE_BEAT_PACKAGE)
+    .filter((f) => f.endsWith('.ts'))
+    .sort()
+    .map((f) => `${LIFE_BEAT_PACKAGE}/${f}`),
+  'src/engine/world/smallTalkCorpus.ts',
+]
 
 /** Every single-quoted string literal in the file, comments stripped first.
  *  ⚠ COMMENTS MUST GO FIRST and not merely be skipped: this repo records owner rulings verbatim in

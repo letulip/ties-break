@@ -61,6 +61,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import IconButton from './ui/IconButton.vue'
 import { prologueArtUrl, prologueFacePoint, type PrologueOutcome } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
 // ⚠⚠ THE THREE FIELDS ARE THE WIZARD'S AND SO ARE THEIR WORDS. Not one label, placeholder or
 // screen-reader name below is written here: they all come from `composables/identityCopy.ts`, which
@@ -401,25 +402,15 @@ const choosing = computed(() => picks.value.length > 0)
  *  decision of its own for it to wait behind. */
 const askOpen = computed(() => Boolean(props.ask) && (!choosing.value || props.picked !== undefined))
 
-/** ⭐ THE RADIO GROUP'S OWN KEYS – arrows move the focus round the group, as they do in every radio
- *  group, and the press itself is the button's own (Space and Enter, natively).
- *
- *  ⚠ THE ARROWS DO NOT SELECT, WHICH IS THE DOCUMENTED VARIATION AND NOT AN OMISSION. WAI-ARIA's
- *  radio-group pattern checks the radio the arrow lands on «unless doing so triggers a significant
- *  change» - and here it does: on the eight, the nine and the ten the card is finished the moment
- *  its one question is answered, so selecting on focus would walk the player off the screen with an
- *  arrow key. Focus moves; Space commits. */
-function onGroupKey(event: KeyboardEvent): void {
-  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-  if (!forward && !back) return
-  const group = event.currentTarget as HTMLElement
-  const items = [...group.querySelectorAll<HTMLButtonElement>('button')]
-  const at = items.indexOf(document.activeElement as HTMLButtonElement)
-  if (at < 0) return
-  event.preventDefault()
-  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
-}
+// ⭐ THE RADIO GROUP'S OWN KEYS ARE `composables/radioGroupKeys.ts`' SINCE F-10 / T4.10 (27.09).
+// This file held the ORIGIN of the four copies, and it is the one whose selector had drifted: it read
+// every `button` where the three dialogs read `button:not([disabled])`. The shared handler ships the
+// `:not([disabled])` form, which is F-10's own proposal and which changes nothing here – every radio
+// in both of this card's groups binds the same `:disabled="busy"`, so the group is never half
+// disabled (the finding's verification says exactly that). The documented variation is argued in the
+// composable, this card's reason included: on the eight, the nine and the ten the card is finished the
+// moment its one question is answered, so selecting on focus would walk the player off the screen with
+// an arrow key. Focus moves; Space commits.
 
 /** ⭐ THE LINE UNDER THE TITLE, AND IT IS THE CARD'S OWN AGAIN (round 35 #4). It used to be replaced
  *  by the ask's line on the second beat, which is exactly what made two screens out of one: the
@@ -476,11 +467,11 @@ useDialogFocus(cardEl)
         <img class="prologue-hero-img" :src="artUrl" :style="artStyle" alt="" />
         <!-- The scrim that takes the picture into the card, so it has no bottom edge – Home's own
              `.diary-hero-fade`, ending in this surface's colour instead of the page's. -->
-        <div class="prologue-hero-fade"></div>
+        <div class="prologue-hero-fade hero-fade"></div>
       </div>
 
-      <p id="prologue-kicker" class="prologue-kicker">{{ card.kicker }}</p>
-      <h2 id="prologue-title" class="prologue-title">{{ card.title }}</h2>
+      <p id="prologue-kicker" class="prologue-kicker dialog-kicker">{{ card.kicker }}</p>
+      <h2 id="prologue-title" class="prologue-title dialog-title">{{ card.title }}</h2>
       <p class="prologue-lede">{{ lede }}</p>
 
       <!-- WHAT YOU CAN SEE OF HER, AND IT IS NEVER A NUMBER. Two sentences: whether she is enjoying
@@ -629,7 +620,7 @@ useDialogFocus(cardEl)
               <button
                 v-for="b in recordedBirthdays"
                 :key="`${b.month}-${b.day}`"
-                class="prologue-answer prologue-choice"
+                class="prologue-answer dialog-option-accent prologue-choice"
                 type="button"
                 role="radio"
                 :aria-checked="birthdayTaken(b)"
@@ -749,12 +740,12 @@ useDialogFocus(cardEl)
           class="prologue-picks"
           role="radiogroup"
           :aria-labelledby="card.question ? 'prologue-question' : 'prologue-title'"
-          @keydown="onGroupKey"
+          @keydown="onRadioGroupKey"
         >
           <button
             v-for="control in picks"
             :key="control.id"
-            class="prologue-answer prologue-choice"
+            class="prologue-answer dialog-option-accent prologue-choice"
             type="button"
             role="radio"
             :aria-checked="taken(control.id)"
@@ -771,7 +762,7 @@ useDialogFocus(cardEl)
 
         <!-- ...and on a card with nothing to decide, the one control that is not a choice at all.
              It emits `null` exactly as it always did. -->
-        <button v-if="wayOn" class="prologue-answer" type="button" :disabled="busy" @click="emit('answer', null)">
+        <button v-if="wayOn" class="prologue-answer dialog-option-accent" type="button" :disabled="busy" @click="emit('answer', null)">
           <span class="prologue-answer-label">{{ wayOn }}</span>
         </button>
 
@@ -791,11 +782,11 @@ useDialogFocus(cardEl)
              re-choosable, and this pair is ADDED under them. -->
         <template v-if="askOpen && ask">
           <p id="prologue-ask" class="prologue-ask">{{ ask.lede }}</p>
-          <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-ask" @keydown="onGroupKey">
+          <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-ask" @keydown="onRadioGroupKey">
             <button
               v-for="control in askChoices"
               :key="control.id"
-              class="prologue-answer prologue-choice"
+              class="prologue-answer dialog-option-accent prologue-choice"
               type="button"
               role="radio"
               :aria-checked="taken(control.id)"
@@ -828,7 +819,7 @@ useDialogFocus(cardEl)
              is that item's negative arm still holding: what LOOKS like a choice must BE one. -->
         <button
           v-if="proceedLabel"
-          class="prologue-answer prologue-proceed"
+          class="prologue-answer dialog-option-accent prologue-proceed"
           type="button"
           :disabled="busy"
           @click="emit('proceed')"
@@ -844,7 +835,7 @@ useDialogFocus(cardEl)
              it. -->
         <button
           v-if="skipLabel"
-          class="prologue-answer prologue-skip"
+          class="prologue-answer dialog-option-accent prologue-skip"
           type="button"
           :disabled="busy"
           @click="emit('skip')"
@@ -980,28 +971,16 @@ useDialogFocus(cardEl)
    `--panel` ever was: the card is painted the page, so the fade ends in the page and the picture
    genuinely has no bottom edge. Leaving `--panel` here would have drawn a one-pixel band of the
    frame that was just taken off, along the bottom of every painting in the walk. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – the box is `.hero-fade` in src/style.css, carried beside this class. The
+   gradient stays: it is the one thing the note above is about, and its `--bg` stop is round 35 #2's own
+   ruling. */
 .prologue-hero-fade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background: linear-gradient(180deg, rgba(9, 14, 19, 0) 52%, rgba(11, 17, 23, 0.55) 82%, var(--bg) 100%);
 }
 
-.prologue-kicker {
-  margin: 0 0 4px;
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.prologue-title {
-  margin: 0 0 8px;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  line-height: 1.25;
-  color: var(--ink);
-}
+/* ⭐⭐ T6.4 · F-09 (28.09) – `.dialog-kicker` and `.dialog-title` in src/style.css, carried beside
+   these two classes; both scoped rules are gone because every declaration in them was shared with the
+   fork, the retirement card and the handover. See ForkDialog.vue for the Eyebrow distinction. */
 
 .prologue-lede {
   margin: 0 0 14px;
@@ -1411,22 +1390,20 @@ useDialogFocus(cardEl)
    here would be a mark by another name - the screen pointing at the answer it prefers on a card
    whose entire subject is that the decision is the parent's. Same reasoning, and the same tokens, as
    `.birthday-choice`: the two are the same object and should not drift apart. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – eight of the eleven declarations, and the hover, are
+   `.dialog-option-accent` in src/style.css; this element carries that class beside its own.
+   `.handover-answer` stated the same eight, and jscpd read the pair as one clone (#32). What stays is
+   the COLUMN this card's answers stack their label and note in – the handover's rows are a single line
+   and are `display: block`.
+   ⚠ `.dialog-option-accent` IS NOT LAYERED ON `.dialog-option`, and this element must never carry
+   both: the transparent form declares `font: inherit`, which would change the typeface, the weight and
+   the line-height of every answer on this card. The shared rule's own note carries the measurement, and
+   the name is ONE dash for that reason – BEM's `--` would claim «add me to the base», which is exactly
+   the edit the two forms cannot survive (architect's ruling, 28.09; F-09 wrote the `--` spelling). */
 .prologue-answer {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 100%;
-  padding: 11px 13px;
-  text-align: left;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.prologue-answer:hover:not(:disabled) {
-  background: var(--accent-fill);
 }
 
 /* ═════════════════════════════════════════════════════════════════════════════════════════════════
@@ -1549,10 +1526,8 @@ useDialogFocus(cardEl)
   min-width: 0;
 }
 
-.prologue-answer:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
+/* ⭐ T6.4 · F-09 (28.09) – the disabled pair went with the rest to `.dialog-option-accent:disabled`
+   in src/style.css; the handover's rows stated exactly the same two declarations. */
 
 /* ⚠ QUIETER, AND STILL A DECLARED TOKEN PAIR WITH NO FALLBACK. The border goes and the wash goes;
    the LABEL keeps `var(--text)` so this control is held to the same AA measurement every answer on

@@ -1,3 +1,11 @@
+---
+type: spec
+status: current
+area: simulation-and-balance
+canonical: false
+last-reviewed: 2026-09-26
+---
+
 # W3 — the kit ladder, and summer as a real training block
 
 Two owner items in one wave, with one thing in common: both add a REAL cost and a REAL benefit to a
@@ -104,6 +112,17 @@ credit and the vacation gain so `accrueCondition` keeps its pinned arity-2 zero-
 | training-only career | 9.0 | **+0.35** skill points | 0.0 |
 | racing career | 3.9 | **+0.18** skill points | 0.0 |
 | from a real deficit (condition 20 at the window's open) | — | — | **−7.0** condition at September (93.0 vs 100.0) |
+
+⚠⚠ **THE RACING ROW'S `0.0` IS AN ARTEFACT AND THE TABLE IS NOT RE-MEASURED HERE (26.09, B-05 /
+T2.5).** The bench closed each tournament reveal with `closeTournament` alone, and that command
+cleared an UNFINISHED reveal without finalising it – while `matchDrain` is charged at
+`finalizeTournament`. So the racing arm entered everything, played everything, and dropped every run
+before it could cost a point of condition: its fatigue column was measuring a girl who travels and
+never gets tired. The bench now reads the run out and commits it (`tools/summer-bench.ts`, dated note
+at the call), so **a fresh run will move the racing row's fatigue and injury columns**. The numbers
+above are left exactly as they were measured, because a re-labelled table is not a measurement – the
+re-run is its own item. The training-only rows and the deficit row enter nothing, reach no reveal and
+are unaffected.
 
 Two findings worth stating plainly:
 

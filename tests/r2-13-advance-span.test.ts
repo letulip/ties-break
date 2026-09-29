@@ -15,7 +15,7 @@
 //   C. COLLISION PRECEDENCE – a week that is two things reports both, in the documented order.
 //   D. THE GATE – the shell offers the span in exactly the states the engine can move time in.
 //   E. NOTHING IS LOST – the span reports every row the weeks it spent wrote.
-//   F. THE DRIFT GUARD – a seventh refusal cannot be added without this file noticing.
+//   F. THE DRIFT GUARD – one more refusal cannot be added without this file noticing.
 //
 // ⚠ NO NEW STOPPING MODEL. Every case below drives `advanceWeeks`, the function that has owned this
 // since the first slice; nothing here re-implements a halt, and no snapshot field and no schema
@@ -27,7 +27,7 @@
 // its negative, C gets the new slot pinned from both sides, D gets the refusal list's silence about
 // it asserted rather than assumed, A gets the law re-run over a span that stops on it – and nothing
 // here was relaxed to let the new member through.
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   ACADEMY_NOTICE,
   ADVANCE_REFUSALS,
@@ -41,10 +41,12 @@ import {
   entryStatus,
   answerLifeBeat,
   lifeLogOf,
+  openQuestions,
   pendingBirthday,
   pendingKnock,
   pendingLifeBeat,
   recomputeKidRank,
+  shootClashOpen,
   skipTournament,
   spanDigest,
   spanRowCount,
@@ -72,7 +74,11 @@ import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // Two cases walk real careers (242 and 829 weeks). Deterministic but slow, and the suite runs many
 // files in parallel – the same generous file-level timeout round11.test.ts carries, same reason.
-vi.setConfig({ testTimeout: 240_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 6.51 s. Table:
+// tests/sim-serialisation.test.ts.
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES
@@ -203,6 +209,38 @@ function putLetter(world: WorldState, o: { week: number; state: OfferState }): v
     state: o.state,
   }
   world.offers.push(letter)
+}
+
+/** ONE SIGNED CAMPAIGN THAT SHOOTS ON A NAMED WEEK – the paper half of the shoot/tournament
+ *  collision, with the entry half left to `injectEvent` + `enterEvent` at the call site.
+ *
+ *  ⚠ LIFTED OUT OF `refusalWorlds` ON 26.09 (B-04 / T2.1) AND NOT COPIED. The mid-span case in
+ *  block F needs the identical paper on a DIFFERENT week, and a second hand-written copy of it in
+ *  this same file is how the two rows come to disagree about what a signed watch deal looks like.
+ *  Nothing about the refusal table's paper moved: same id shape, same band cell, same 52-week term,
+ *  same two-shoot ask.
+ *
+ *  The LEGACY watch paper's own shape (real saves hold letters exactly like it): the fee is the
+ *  watches category's anchor cell, the term the old 52-week one. ⚠ index 1 since round 34: a band
+ *  was prepended at ≤400 and this is still the ≤200 cell. */
+function signShootAt(world: WorldState, shootWeek: number): void {
+  world.offers.push({
+    id: `ad-r2-13-${shootWeek}`,
+    kind: 'ad',
+    week: world.week - 5,
+    deadlineWeek: world.week - 2,
+    state: 'signed',
+    decidedWeek: world.week - 5,
+    fromWeek: world.week - 5,
+    untilWeek: world.week + 40,
+    terms: {
+      brand: ECONOMY.advertising.categories.watches.houses[0],
+      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
+      termWeeks: 52,
+      shootCount: 2,
+      shootWeeks: [shootWeek],
+    },
+  })
 }
 
 /** WHERE A REASON SITS IN THE PRECEDENCE, AND IT THROWS WHEN THE REASON IS NOT THERE.
@@ -859,29 +897,13 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     // entered in it: the parent has to choose, and two of his four answers stop being possible once
     // the week begins. Built the cheapest honest way like every other row here – the point of the
     // table is that the SEVEN are the seven, not how each one is reached.
+    // ⚠ THE PAPER MOVED TO `signShootAt` ON 26.09 (B-04 / T2.1), BYTE-IDENTICAL IN EVERY FIELD THAT
+    // MATTERS HERE – block F's mid-span case needs the same letter on a later week, and one spelling
+    // is the point of that task. Only the letter's `id` differs (it carries the shoot week now).
     const clash = quietCareer('gate-shoot-clash')
     const clashEv = injectEvent(clash.world, { week: clash.world.week + 1, tier: 'local', deadlineWeek: clash.world.week })
     enterEvent(clash.world, clashEv.id)
-    clash.world.offers.push({
-      id: 'ad-gate-clash',
-      kind: 'ad',
-      week: clash.world.week - 5,
-      deadlineWeek: clash.world.week - 2,
-      state: 'signed',
-      decidedWeek: clash.world.week - 5,
-      fromWeek: clash.world.week - 5,
-      untilWeek: clash.world.week + 40,
-      terms: {
-        // The LEGACY watch paper's own shape (real saves hold letters exactly like it): the fee is
-        // the watches category's anchor cell, the term the old 52-week one.
-        brand: ECONOMY.advertising.categories.watches.houses[0],
-        // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
-        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
-        termWeeks: 52,
-        shootCount: 2,
-        shootWeeks: [clash.world.week + 1],
-      },
-    })
+    signShootAt(clash.world, clash.world.week + 1)
 
     return [
       { reason: 'ending', world: ending.world },
@@ -907,6 +929,67 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
       // The shell's answer, asked of the SNAPSHOT – the same six seen from the other side of the wire.
       expect(multiOffered(toSnapshot(world), 'training'), `${reason}: and the pill is not on offer`).toBe(false)
     }
+  })
+
+  // ⭐⭐ B-04 / T2.1 (26.09) – ONE OWNER FOR «WHICH QUESTIONS STOP TIME», AND THE TWO READERS THAT
+  // USED TO CARRY THEIR OWN COPY OF IT. The list was written five times and the engine's own
+  // multi-week loop had already dropped `'shoot-clash'` – it collected seven of the eight blocking
+  // members while `STOP_PRECEDENCE` and `advanceRefusal` both carried all eight.
+  it('⚠⚠ `advanceRefusal` is the HEAD of `openQuestions`, and the loop reads the same owner', () => {
+    // The behavioural half, over the refusal table this file already builds: for every one of the
+    // eight states, the owner names the reason and the refusal is the first thing it names.
+    const table = refusalWorlds()
+    expect(table.map((r) => r.reason), 'the table still covers the refusal list exactly').toEqual([...ADVANCE_REFUSALS])
+    for (const { reason, world } of table) {
+      const open = openQuestions(world)
+      expect(open, `${reason}: the owner names it`).toContain(reason)
+      expect(advanceRefusal(world), `${reason}: and the refusal is the owner's head`).toBe(open[0] ?? null)
+      // ⚠ EVERY MEMBER IT RETURNS IS IN `ADVANCE_REFUSALS` ORDER – a subsequence, not a set. Two of
+      // these worlds hold more than one question at once (the epilogue's career is also broke), and
+      // the ORDER is what makes `[0]` a refusal rather than an arbitrary pick.
+      expect(open, `${reason}: in the list's own order`).toEqual(ADVANCE_REFUSALS.filter((r) => open.includes(r)))
+    }
+    // ...and a world with nothing standing answers with an empty list rather than a null.
+    const { world } = quietCareer('owner-quiet')
+    expect(openQuestions(world), 'nothing open, nothing returned').toEqual([])
+    expect(advanceRefusal(world), 'and the head of nothing is null').toBeNull()
+  })
+
+  // ⭐⭐⭐ RE-AIMED AND WIDENED 26.09 (A-01 = D-03, principles review) – THE DRIFT GUARD NOW COVERS
+  // EVERY MEMBER OF `ADVANCE_REFUSALS` ON THE SHELL SIDE TOO, and that is the second half of the
+  // finding rather than a tidy extra. The list is spelled in the engine (`openQuestions`, pinned
+  // above), it WAS spelled again in the worker's `decisionOpen` – deleted 26.09, the worker asks
+  // `advanceRefusal` now – and it is STILL spelled a third time as the `BlockingOverlay` union
+  // (`src/composables/blockingOverlay.ts`). A ninth refusal added to the engine with no overlay to
+  // draw it is the round-24 STRAND: a week the engine has stopped with nothing on screen to answer it,
+  // measured twice already (the birthday inside the college latch, then the life beat behind it).
+  //
+  // ⚠ ASKED OF THE SHELL'S OWN FUNCTION OVER THE SNAPSHOT, not of the type's source text. A union is
+  // erased at runtime, so the only honest enumeration is behavioural – and this file already builds a
+  // world for each of the eight, so the question «can the shell draw this?» costs one snapshot each.
+  //
+  // ⚠ `'tournament'` IS THE ONE EXEMPTION AND IT IS NAMED RATHER THAN SKIPPED: the reveal is
+  // `TournamentFlow`'s, mounted by App.vue off `snapshot.pendingTournament`, and the queue
+  // deliberately has no entry for it («the reveal owns the screen while it is up» – round-21 #9, block
+  // C's own note). The case asserts THAT, so an overlay quietly growing a ninth entry for the reveal
+  // reddens here instead of shipping two owners for one question.
+  it('⚠⚠ every refusal the engine has is a question the SHELL can put on screen', () => {
+    const drawn = new Map<StopReason, ReturnType<typeof blockingOverlay>>()
+    for (const { reason, world } of refusalWorlds()) drawn.set(reason, blockingOverlay(toSnapshot(world)))
+    expect([...drawn.keys()], 'the table still covers the refusal list exactly').toEqual([...ADVANCE_REFUSALS])
+    for (const reason of ADVANCE_REFUSALS) {
+      if (reason === 'tournament') continue
+      expect(drawn.get(reason), `${reason}: the shell has an overlay for it`).toBe(reason)
+    }
+    // ...and the exemption, stated: the reveal refuses the span and is NOT an overlay.
+    // ⚠ `snapshot.pending` IS THE WIRE'S NAME FOR IT and `world.pendingTournament` is the engine's –
+    // `PendingView`, «present while a tournament reveal is in progress (drives TournamentFlow)», which
+    // is the very sentence this case is quoting. Asserted on the SNAPSHOT because that is the object
+    // `blockingOverlay` is asked about, so the two halves of the claim read one thing.
+    const reveal = refusalWorlds().find((r) => r.reason === 'tournament')!
+    const snap = toSnapshot(reveal.world)
+    expect(snap.pending, 'the reveal really is open on the wire').toBeTruthy()
+    expect(drawn.get('tournament'), 'and the queue leaves it to TournamentFlow').toBeNull()
   })
 
   it('⚠ on a LAYOFF week with nothing pending, the span IS offered', () => {
@@ -1032,7 +1115,7 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     // ⚠⚠ THE DIRECTION IS THE WHOLE CASE. The second pass narrowed WHEN the pill is drawn, from "the
     // engine can move time" (204 of 208 walked weeks) to his rule (5 of 208). The one way that can
     // go wrong is for the narrowing to leak into the engine – a week the pill is withheld on must
-    // still be a week the ADVANCE runs, or `advanceRefusal` has quietly grown a seventh member and
+    // still be a week the ADVANCE runs, or `advanceRefusal` has quietly grown a member and
     // a busy career has lost the ability to step at all.
     //
     // Driven on block B's own offer fixture, which is exactly such a week: at week 45 of this walk
@@ -1148,19 +1231,68 @@ describe('R2-13 E – the span reports every intermediate result', () => {
 // =================================================================================================
 // F. THE DRIFT GUARD
 // =================================================================================================
-describe('R2-13 F – a seventh refusal cannot be added without this file noticing', () => {
+// ⚠ RE-WORDED 26.09, AND THE WORD IS GONE RATHER THAN CORRECTED. This block said «a SEVENTH
+// refusal» in four places while `ADVANCE_REFUSALS` has held EIGHT since round 29 #3 – the ordinal
+// was never about a member, it meant «one more than the set», so it rotted the moment the set
+// grew and would have rotted again at the ninth. The count now lives only where a test reads it
+// (the assertion below counts `ADVANCE_REFUSALS` itself); the prose carries none. Same class as
+// A-P3-4's «six / five», corrected in `composables/weekAction.ts` in this wave.
+describe('R2-13 F – one more refusal cannot be added without this file noticing', () => {
   it('⚠⚠ `advanceRefusal` returns exactly the reasons `ADVANCE_REFUSALS` names, in that order', () => {
     // WHY THIS IS A SOURCE PIN AND NOT A BEHAVIOUR TEST. The failure it guards is a state nobody has
-    // written a fixture for yet: a seventh refusal added to the engine leaves the four-week pill
+    // written a fixture for yet: one more refusal added to the engine leaves the four-week pill
     // offered in a state the engine cannot move, which is R10-16's dead control – and no behaviour
     // test can cover a state that does not exist at the time the test is written. Counting the
     // refusals in the function's own source can. Location-independent (`worldFunction` reads the
     // whole world module set), so a further extraction needs no edit here.
-    const fn = worldFunction('advanceRefusal')
+    //
+    // ⚠⚠ RE-AIMED 26.09 (B-04 / T2.1) AT `openQuestions`, AND THE CLAIM IS UNTOUCHED. It read
+    // `worldFunction('advanceRefusal')`, which carried the eight clauses itself; the list is now
+    // spelled ONCE, in `openQuestions`, and `advanceRefusal` is its head (`openQuestions(w)[0] ??
+    // null`). So the clauses to count are `openQuestions`' and the same eight names, in the same
+    // order, are what this asserts. The old spelling counted `return '<reason>'`; the owner collects
+    // rather than returns, so the shape counted is `open.push('<reason>')` – one per clause, in the
+    // order the code asks them. ⚠ AND THE HEAD IS PINNED IN THE CASE BELOW, so `advanceRefusal`
+    // growing a private ninth clause is still a red here-or-there rather than nowhere.
+    const fn = worldFunction('openQuestions')
     expect(fn).not.toBe('')
     const code = fn.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n')
-    const returned = [...code.matchAll(/return '([a-z-]+)'/g)].map((m) => m[1])
+    const returned = [...code.matchAll(/open\.push\('([a-z-]+)'\)/g)].map((m) => m[1])
     expect(returned, 'every refusal in the code is in the list, in the order the code asks them').toEqual([...ADVANCE_REFUSALS])
+  })
+
+  it('⚠⚠ a shoot/tournament collision that OPENS MID-SPAN stops the advance on its own week', () => {
+    // ⭐ THE PROBE, AS A CASE (`docs/review-principles-2026-09-26/probes/b-clash-midspan.ts`). The
+    // control – standing ON the question week – has refused since round 29 #3 and is the first case
+    // of block B. This is the arm that was silently passing: the same collision built TWO weeks
+    // early, so the question opens INSIDE the span rather than in front of it. The probe measured
+    // `stops=["tournament"]` at week 216 on three seeds with `w215:open=true` passed without a stop,
+    // which means neither of the two answers that are only possible before the week begins
+    // (`cancelEntry` refuses on the week itself; a shoot cannot be moved out of a week being lived)
+    // remained possible – the owner's four-answer question was never asked.
+    //
+    // ⚠ NOTHING A PLAYER CAN REACH CHANGES AND THAT IS NOT WHY THIS EXISTS. The shell offers a span
+    // only inside a layoff (`spanWeeksFor`) and a layoff nulls the clash (`shootClashWeek`'s first
+    // guard), so the state below is unreachable from the UI today. The engine is still wrong to rely
+    // on that: the worker accepts `advance` for 1 to 52 weeks, and an engine leaning on the screen's
+    // span arithmetic is exactly what invariant 1 forbids.
+    //
+    // ⚠ MUTATION ARM: drop the `'shoot-clash'` clause from `openQuestions` → this case reads
+    // `["tournament"]` at the clash week, which is the shipped defect restored.
+    const { world, rng } = quietCareer('b04-midspan')
+    const at = world.week
+    const clashWeek = at + 3
+    const ev = injectEvent(world, { week: clashWeek, tier: 'local', deadlineWeek: at })
+    enterEvent(world, ev.id)
+    signShootAt(world, clashWeek)
+    expect(shootClashOpen(world), 'the question is NOT in front of the press – it opens inside it').toBe(false)
+
+    const stops = advanceWeeks(world, rng, MULTI_WEEK_SPAN)
+
+    expect(stops, 'the span stops on the collision, not on the tournament it became').toEqual(['shoot-clash'])
+    expect(world.week, 'and it stops the week BEFORE the clash, where all four answers are still possible').toBe(clashWeek - 1)
+    expect(shootClashOpen(world), 'the question really is standing when the press hands back').toBe(true)
+    expect(world.pendingTournament, 'the week that would have buried it has not been played').toBeNull()
   })
 
   it('⚠ `advanceWeeks` asks that one gate and keeps no private copy of it', () => {

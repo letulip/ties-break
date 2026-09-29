@@ -76,6 +76,9 @@ async function openSaves(careers: CareerMeta[], peek: SavePeek | null = PEEK) {
   // No worker under happy-dom. `refreshCareers` is replaced rather than the screen changed (the same
   // argument round20-ui.test.ts makes), and the two save actions are spied so nothing tries to post.
   store.refreshCareers = async () => {}
+  // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+  // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+  store.refreshSlots = async () => {}
   const peekSpy = vi.spyOn(store, 'peekSave').mockResolvedValue(peek)
   const importSpy = vi.spyOn(store, 'importSave').mockResolvedValue(undefined)
   const w = mount(MoreScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })

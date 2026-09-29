@@ -1176,8 +1176,11 @@ describe('⭐ round 42 – the beat\'s card at 375 / 768 / 900 / 1280, in every 
 // =================================================================================================
 //
 // CLAUDE.md's gotcha binds a dialog that is EXTENDED as hard as one that is new, and wave 8 extends
-// this card twice: `'expecting'` (the layer's biggest news – four voices × two presences, and the
-// longest single line the layer has shipped) and `'return-plan'` (one cell, two answers, a said that
+// this card twice: `'expecting'` (the layer's biggest news – four voices × two presences when this
+// block was written, four voices and ONE channel since 26.09's ruling 19 on B-08 took the
+// unreachable roof column out, and still the longest single line the layer has shipped; the numbers
+// below that say «eight» are the arms as they were MEASURED and are left as the record they are)
+// and `'return-plan'` (one cell, two answers, a said that
 // runs to two sentences). Both BLOCK. «The owner's career stopped there and could not be resumed» is
 // what the law is for, and it is the same card and the same scrim as `TourBriefingDialog`'s.
 //
@@ -1240,17 +1243,25 @@ describe('⚠⚠⚠ v85 T10 – `expecting` and `return-plan` fit a phone, askin
   const EXPECTING = raised('expecting')
   const RETURN_PLAN = raised('return-plan')
 
-  /** ⭐ THE WORST CELL OF THE ANNOUNCEMENT'S POOL, FOUND BY MEASUREMENT. `EXPECTING_HER_LINE` is four
-   *  voices × two presences and the pool is module-private, so the cells are asked for through the
-   *  engine's own assembler – the same road `lifeBeatPromptFor` takes – rather than transcribed.
-   *  `'school'` is under the roof and `'independent'` is away (`awayVoice`, diary/words.ts). */
-  const EXPECTING_CELLS = TEMPERAMENTS.flatMap((voice) =>
-    (['school', 'independent'] as const).map((stage) => ({
-      voice,
-      stage,
-      said: lifeBeatSaid('expecting', 'p:900', voice, 'level', 'close', 'open', stage),
-    })),
-  )
+  /** ⭐ THE WORST CELL OF THE ANNOUNCEMENT'S POOL, FOUND BY MEASUREMENT. The pool is module-private, so
+   *  the cells are asked for through the engine's own assembler – the same road `lifeBeatPromptFor`
+   *  takes – rather than transcribed.
+   *
+   *  ⚠⚠ RE-AIMED 26.09 (the owner's ruling 19 on B-08), NOT WEAKENED. `EXPECTING_HER_LINE` WAS four
+   *  voices × two presences, and the four roof cells have gone: the announcement stands behind the
+   *  wedding latch, so it cannot fire before 23, and no stage at 23 is a roof stage
+   *  (`tests/principles-b08-presence-reach.test.ts` §A measures it over every profile and week).
+   *  So the pool is four cells, one channel, and the sweep asks for each voice ONCE.
+   *
+   *  ⚠ THE STAGE ARGUMENT STAYS AND IS STILL LOAD-BEARING HERE, in the direction that matters for a
+   *  FIT test: `'independent'` is the presence a real career carries on this card, and the case below
+   *  asserts every other stage gives the identical line – so this block can never again go back to
+   *  measuring a cell the phone will not be shown. */
+  const EXPECTING_CELLS = TEMPERAMENTS.map((voice) => ({
+    voice,
+    stage: 'independent' as const,
+    said: lifeBeatSaid('expecting', 'p:900', voice, 'level', 'close', 'open', 'independent'),
+  }))
   const WORST_EXPECTING = [...EXPECTING_CELLS].sort((a, b) => b.said.length - a.said.length)[0]
 
   /** The engine's own card with one cell's line in it – heading, options and confirm untouched,
@@ -1275,12 +1286,20 @@ describe('⚠⚠⚠ v85 T10 – `expecting` and `return-plan` fit a phone, askin
   }
 
   it('the pools really are what is being measured (a fixture nobody wrote passes everything)', () => {
-    expect(EXPECTING_CELLS, 'four voices × two presences').toHaveLength(8)
-    expect(new Set(EXPECTING_CELLS.map((c) => c.said)).size, 'and eight distinct lines, not one repeated').toBe(8)
-    // ...and both PRESENCES are really reached, or the sweep is four cells wearing eight names.
-    const roof = EXPECTING_CELLS.filter((c) => c.stage === 'school').map((c) => c.said)
-    const away = EXPECTING_CELLS.filter((c) => c.stage === 'independent').map((c) => c.said)
-    for (const line of roof) expect(away, 'the away frames differ from the roof ones').not.toContain(line)
+    // ⚠ RE-AIMED 26.09 (ruling 19 on B-08): «four voices × two presences» became four voices, ONE
+    // channel, when the unreachable roof column left the pool. The claim is unchanged in kind – the
+    // sweep must really reach every cell the card can draw – and the arithmetic moved with the pool.
+    expect(EXPECTING_CELLS, 'four voices, one channel').toHaveLength(4)
+    expect(new Set(EXPECTING_CELLS.map((c) => c.said)).size, 'and four distinct lines, not one repeated').toBe(4)
+    // ⚠ AND THE COLLAPSE IS ASSERTED HERE TOO, so this block cannot drift back to measuring a cell no
+    // phone will ever draw: every stage gives the line `'independent'` gives. The reachability argument
+    // itself lives in `tests/principles-b08-presence-reach.test.ts`.
+    for (const stage of ['school', 'after-school', 'college'] as const) {
+      for (const cell of EXPECTING_CELLS) {
+        expect(lifeBeatSaid('expecting', 'p:900', cell.voice, 'level', 'close', 'open', stage),
+          `'expecting' reads the stage again (${cell.voice}/${stage})`).toBe(cell.said)
+      }
+    }
     expect(EXPECTING.options, 'the parent\'s three answers').toHaveLength(3)
     expect(RETURN_PLAN.options, 'and the return\'s two').toHaveLength(2)
     expect(lifeBeatOptionsFor('expecting', 'open'), 'the option set is the engine\'s own').toHaveLength(3)

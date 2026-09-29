@@ -49,7 +49,6 @@ import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   createWorld,
-  kidAgeExact,
   landBirth,
   landPregnancyPause,
   toSnapshot,
@@ -58,7 +57,9 @@ import {
 import { PREGNANT_ART_STEM, pregnantUrl } from '../../src/art/preload'
 import { facePoint } from '../../src/art/faceRects'
 import { lifeRowGlyph } from '../../src/components/screens/lifeRowGlyphs'
-import type { LoveEpisode, Snapshot } from '../../src/shared/protocol'
+import type { Snapshot } from '../../src/shared/protocol'
+import { married } from '../helpers/scenarios/love'
+import { weekAtAge } from '../helpers/career'
 
 /** The eight band paintings a portrait surface shows on an ordinary week – the set the hero must be
  *  wearing whenever a pregnancy painting is not on it. A pattern rather than one face, for
@@ -69,21 +70,6 @@ const BAND_PAINTING = /fem-euro-brunnet-(jun|young|teen|adult|lateCareer)-(angry
  *  `LAST_WEEKS` is T10's own draft and is transcribed for the same reason. */
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31 } as const
 const LAST_WEEKS = 12
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
-}
 
 /** A married career of 28 carrying the record `rollPregnancy` writes. */
 function expectingWorld(seed: string): WorldState {

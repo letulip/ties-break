@@ -44,6 +44,7 @@ import {
   latchEnding,
   pendingBirthday,
   pendingKnock,
+  pendingLifeBeat,
   resumeFromCollege,
   skillMeanOf,
   tickWeek,
@@ -171,6 +172,8 @@ describe('a walked career through four college years gets four birthdays', () =>
         answerBirthday(world)
         feedAtBirthday.push(world.events.filter((e) => e.week === world.week).map((e) => e.text).join(' | '))
       }
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year the way the birthday does, so a walk that answered the reveal and the cake but not her card stalled – `drainLifeBeats` is the player's own answer, priced ZERO, so nothing this case measures moves.
+      drainLifeBeats(world)
     }
 
     // Four years really spent, and she is out with the latch off.
@@ -225,10 +228,16 @@ describe('a walked career through four college years gets four birthdays', () =>
 
     // Answer, finish the year, and the bank reads the opening – not the pause.
     answerBirthday(world)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year the way the birthday does, so a walk that answered the reveal and the cake but not her card stalled – `drainLifeBeats` is the player's own answer, priced ZERO, so nothing this case measures moves.
+    // The two hand-written presses become «press until it banks», bounded – the loop still ends on
+    // the year being banked, which is what the assertion below reads.
     const fundsAtBank = (() => {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (world.college!.years.length === 0) resumeFromCollege(world, rng)
+      for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
+        resumeFromCollege(world, rng)
+        answerCollegeReveal(world)
+        if (pendingBirthday(world) !== null) answerBirthday(world)
+        drainLifeBeats(world)
+      }
       return world.fundsCents
     })()
     expect(world.college!.years, 'now the year banks').toHaveLength(1)
@@ -364,10 +373,17 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     expect(world.rngMain, 'and not one draw spent').toEqual(rngBefore)
     expect(world.college!.years, 'and nothing banked twice').toHaveLength(1)
 
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year
+    // the way this birthday does, so «the same press works» is a walk to the next boundary rather than
+    // two hand-written presses – it still ends on the SECOND year being banked, which is the claim.
+    // `drainLifeBeats` is the player's own answer, priced ZERO, so nothing here moves.
     answerBirthday(world)
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (world.college!.years.length === 1) resumeFromCollege(world, rng)
+    for (let press = 0; press < 6 && world.college!.years.length === 1; press++) {
+      resumeFromCollege(world, rng)
+      answerCollegeReveal(world)
+      if (pendingBirthday(world) !== null) answerBirthday(world)
+      drainLifeBeats(world)
+    }
     expect(world.college!.years, 'answered, the same press works').toHaveLength(2)
   })
 })
@@ -399,18 +415,26 @@ describe('the guards: ended stays ended, and the early return respects the pause
     // ⚠ ROUND 26 #6 re-aim: a year now holds TWO mid-year stops, so «spend a year» is a walk rather
     // than a fixed number of presses. `pressToBirthday` answers the championship on the way and
     // throws if it never reaches the cake, so the precondition cannot go quietly wrong.
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year the way the birthday does, so a walk that answered the reveal and the cake but not her card stalled – `drainLifeBeats` is the player's own answer, priced ZERO, so nothing this case measures moves.
     pressToBirthday(world, rng) // pause in year 1
     answerBirthday(world)
-    resumeFromCollege(world, rng) // year 1 banks
-    answerCollegeReveal(world)
+    for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
+      resumeFromCollege(world, rng) // year 1 banks
+      answerCollegeReveal(world)
+      if (pendingBirthday(world) !== null) answerBirthday(world)
+      drainLifeBeats(world)
+    }
     pressToBirthday(world, rng) // pause in year 2
     expect(world.college!.pendingYearStart, 'year 2 is mid-flight').not.toBeNull()
     answerBirthday(world)
     expect(() => endCollegeEarly(world), 'mid-year the door is shut, with the reason').toThrow(/still running/)
     expect(toSnapshot(world).ending?.college?.yearInProgress, 'and the screen is told to stand its button down').toBe(true)
-    resumeFromCollege(world, rng) // year 2 banks – a boundary again
-    answerCollegeReveal(world)
-    if ((world.college!.pendingYearStart ?? null) !== null) resumeFromCollege(world, rng)
+    for (let press = 0; press < 6 && (world.college!.pendingYearStart ?? null) !== null; press++) {
+      resumeFromCollege(world, rng) // year 2 banks – a boundary again
+      answerCollegeReveal(world)
+      if (pendingBirthday(world) !== null) answerBirthday(world)
+      drainLifeBeats(world)
+    }
     expect(world.college!.pendingYearStart ?? null).toBeNull()
     expect(() => endCollegeEarly(world), 'at the boundary the early return works as it always did').not.toThrow()
     expect(world.ending, 'she is back on tour').toBeNull()
@@ -569,13 +593,16 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
     if (pendingBirthday(world) !== null) answerBirthday(world)
 
     const rendered: Array<{ year: number; age: number; ask: string; ids: string[] }> = []
-    for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+    for (let guard = 0; guard < 30 && world.ending?.type === 'college'; guard++) {
       resumeFromCollege(world, rng)
       // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
       // only for the cake. Another branch of the SAME round taught it to pause for the championship
       // too, and a walk answering one pause but not the other stalls on the first league week - it
       // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
       answerCollegeReveal(world)
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college year the way the birthday does, so a walk that answered the reveal and the cake but not her card stalled – `drainLifeBeats` is the player's own answer, priced ZERO, so nothing this case measures moves. It is the SAME sentence one paragraph up with a life beat in the
+      // championship's place, which is the third time this walk has been taught to answer a new pause.
+      if (pendingLifeBeat(world) !== null) drainLifeBeats(world)
       if (pendingBirthday(world) === null) continue
       world.fundsCents = 584_375_00
       world.kidFundsCents = 59_220_00

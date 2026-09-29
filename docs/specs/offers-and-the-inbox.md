@@ -1,3 +1,11 @@
+---
+type: spec
+status: draft
+area: economy
+canonical: false
+last-reviewed: 2026-09-28
+---
+
 # The inbox: sponsors, agents and investors — design note (31.07.2026, pre-code)
 
 The owner, on the kit deal that already exists:
@@ -34,8 +42,54 @@ new economy; he is asking for the money to arrive **as an offer** instead of as 
 
 ## 2. The Inbox
 
-One durable list on the world, surfaced on the Snapshot, rendered behind a second `.diary-tool`
-beside the bell.
+One durable list on the world, rendered behind a second `.diary-tool` beside the bell.
+
+> ⚠⚠ **CORRECTED 28.09.2026 (T6.2 · D-07): THE LIST IS NOT «SURFACED ON THE SNAPSHOT» ANY MORE, AND
+> THIS SENTENCE SAID IT WAS.** The correction is here rather than in a later document because D-07's
+> whole finding was *a documented bound that is false, and three screens trust it* – so a fix shipping
+> beside a second stale document would reproduce the defect in the wave that removed it.
+>
+> **What is durable is unchanged.** `world.offers` still holds every letter a career was ever sent,
+> oldest first, and is still never pruned – a signed deal has to outlive every prune, which is why the
+> record lives on the world rather than in the 400-row event feed. **Nothing was pruned on disk and no
+> save-schema version moved.** What changed is the WIRE.
+>
+> **What the weekly `Snapshot` carries** is the letters *this week still needs*, and the engine's own
+> predicates decide it – four clauses, three of them a function the engine already exported
+> (`engine/world/snapshot.ts`, `carriedOnTheWire`):
+>
+> 1. `isOfferLive(o, week)` – still a decision (the list's «Needs an answer», and the dot rule below);
+> 2. `activeKitDeal` – the kit deal in force (the sheet's contract line, the freshness ceiling);
+> 3. `activeAdDeals` – the advertising portfolio in force (`apparelBondCost` reads it to say what a
+>    rival signature would cost, and `adShoots` is the same call);
+> 4. a `signed` paper whose cover has not begun – the one row all three of the above refuse, because
+>    each asks `week >= fromWeek`, while the family is already bound by it. Inside the five-week
+>    sponsor window a deal can be signed three weeks before its cover starts.
+>
+> That set is a **superset** of what any of those predicates can select, which is the property the whole
+> change rests on: each applies its own week clause to the list it is handed, so asking one about
+> `Snapshot.offers` and about `world.offers` cannot give different answers. It is why the contract line
+> and the sign confirm still read the snapshot – and why they are therefore on screen on the first frame.
+>
+> **What the query serves** is everything else. `InboxSheet` asks the worker for the career's whole post
+> when it opens – `{ type: 'inbox' }`, answered by `assembleInbox`, the album's precedent one surface
+> over (`the-album-2026-09.md` §8b) – and holds it in its own ref for exactly as long as it is open, so
+> a career switch cannot leave the previous girl's letters behind a live one. A query in the strict
+> sense: read-only against the committed world, no `baseRevision`, the committed revision reported
+> unchanged, assembled fresh on every ask and persisted nowhere.
+>
+> **Two facts that are NOT the list, and must not be read off it.** «Has anything arrived» is
+> `Snapshot.newestLetterId`, derived off the FULL list in the engine – the last element of a filtered
+> list is a different letter, and the arrival that matters most is a kit deal's closing NOTICE
+> (`state: 'info'`), which is never live and therefore never carried. And the read/binned marks in
+> `composables/inboxMail.ts` prune against **the query's** list, never the snapshot's: pointed at a
+> partial list the same prune is a destructor, and binning one letter would clear every other letter's
+> bin mark.
+>
+> **Why it was measured at all.** At career end the field was 261 rows of which **none** were live –
+> 45.0 % of the snapshot's bytes and 94 % of everything a career added to it. After: 0.0 % on `parting`
+> and 0.9 % on `pro`. The numbers live in `tests/principles-d07-inbox-bound.test.ts`, never in this
+> prose, because a number a document states about itself survives a full gate.
 
 ```ts
 interface Offer {

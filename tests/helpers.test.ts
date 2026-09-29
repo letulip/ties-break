@@ -14,7 +14,7 @@
 // A comment saying "do not merge these" would not have held – tests/pin-hygiene.test.ts exists for
 // exactly that reason. This file makes the wrong merge FAIL.
 import { describe, it, expect } from 'vitest'
-import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf } from './helpers/source'
+import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments } from './helpers/source'
 import { fnv1a, fnv1aHex } from './helpers/hash'
 
 describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
@@ -43,6 +43,114 @@ describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
   it('neither eats code that merely looks like a comment opener', () => {
     expect(scriptCodeOf('const url = "https://x/y"')).toBe('const url = "https://x/y"')
     expect(codeOf('const url = "https://x/y"')).toBe('const url = "https://x/y"')
+  })
+
+  // ===============================================================================================
+  // ⚠⚠ T6.11, 28.09 – THE ORDER WAS THE FAILURE THE HEADER DESCRIBES, AND THESE ARE ITS ARMS
+  // ===============================================================================================
+  //
+  // The case above («neither eats code that merely looks like a comment opener») was the right
+  // question asked of one shape. Asked of three more, both strippers failed: they ran `BLOCK` FIRST,
+  // so a `/*` inside a `//` line, a regex or a STRING opened a block comment that ran to the next
+  // close and deleted the code between. Measured over 1,355 files before the fix: **85 files in which
+  // `codeOf()` deleted code a comment-aware strip keeps, 183,115 non-whitespace characters.**
+  //
+  // ⭐ THE OLD ORDER IS WRITTEN OUT HERE ON PURPOSE. A reader who "simplifies" the scanner back to two
+  // regexes meets the measurement instead of discovering it a wave later, which is the device
+  // `tests/import-cycles.test.ts` ARM 5 uses for the same defect in its own copy of this strip.
+  const BLOCK_FIRST = (s: string) =>
+    s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/^\s*\/\/.*$/gm, '')
+  const LINE_FIRST = (s: string) =>
+    s.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '')
+
+  it('⭐⭐⭐ a path glob in a line comment does not eat the code under it', () => {
+    // THE LIVE CASE. This codebase writes `world/*` and `public/images/**` in prose, and a glob puts a
+    // slash immediately before a star. `src/engine/world/lifeBeat.ts` carried exactly this shape and
+    // it cost `tests/import-cycles.test.ts` the ability to see a planted import cycle.
+    const src = [
+      '// nine other `world/*` modules already take this edge',
+      "const banned = 'amountCents'",
+      '/** a later doc */',
+      'const after = 1',
+    ].join('\n')
+    expect(BLOCK_FIRST(src), '⚠ the old order deletes the declaration').not.toContain('amountCents')
+    expect(codeOf(src), 'the scanner keeps it').toContain("const banned = 'amountCents'")
+    expect(scriptCodeOf(src)).toContain("const banned = 'amountCents'")
+    // ...and the comment itself is still gone, which is what the helper is FOR.
+    expect(codeOf(src)).not.toContain('nine other')
+  })
+
+  it('⭐⭐ a block comment closing on a `//` line – the case the obvious swap would break', () => {
+    // ⚠ WHY THE FIX IS A SCANNER AND NOT `LINE` BEFORE `BLOCK`. Swapping them fixes the case above and
+    // breaks this one: the line pass takes the comment's terminator with the line, and the block then
+    // runs on to the next close exactly as before. Measured: the swap still disagrees with the scanner
+    // on 41 files, and in all 41 it is the swap that eats – `tests/offers.test.ts` by 34,596 characters.
+    const src = [
+      '/* a note',
+      '// and the close is on this line */',
+      "const banned = 'amountCents'",
+      '/** a later doc */',
+      'const after = 1',
+    ].join('\n')
+    expect(LINE_FIRST(src), '⚠ the swap deletes the declaration here').not.toContain('amountCents')
+    expect(codeOf(src), 'the scanner keeps it').toContain("const banned = 'amountCents'")
+  })
+
+  it('⭐⭐ a comment opener inside a STRING is not an opener – no regex order can know that', () => {
+    const src = ["const marker = '/*'", "const banned = 'amountCents'", '/** a later doc */'].join('\n')
+    expect(BLOCK_FIRST(src)).not.toContain('amountCents')
+    expect(LINE_FIRST(src)).not.toContain('amountCents')
+    expect(codeOf(src), 'only one left-to-right pass keeps it').toContain("const banned = 'amountCents'")
+    // the marker string itself survives too – it is a string, not a comment
+    expect(codeOf(src)).toContain("const marker = '/*'")
+  })
+
+  it('⚠⚠ the change is MONOTONE: a trailing comment is still KEPT, so no pin reads less', () => {
+    // ⚠ THIS IS THE PROPERTY THAT MADE THE CHANGE SAFE TO MAKE, and it is deliberate rather than
+    // accidental. The old `LINE` regex was anchored `^\s*`, so it only ever removed WHOLE-LINE
+    // comments; an earlier draft of the scanner removed trailing ones too and that is the one
+    // direction that makes a negative pin WEAKER. Measured after the fix: 0 of 1,355 files lose a
+    // single character, 188,106 come back. A new red is therefore a real hole, never a re-calibration.
+    const trailing = "const x = 1 // note about world/*\nconst y = 2"
+    expect(codeOf(trailing), 'the trailing comment stays').toContain('// note about world/*')
+    // ...and it still cannot open a block comment, which is the whole of the fix
+    expect(codeOf(`${trailing}\n/** doc */\nconst z = 3`)).toContain('const y = 2')
+    // a WHOLE-LINE comment goes, indentation and all – unchanged from the regex it replaces
+    expect(codeOf('a\n   // gone\nb')).toBe('a\n\nb')
+  })
+
+  it('⭐⭐⭐ the `newlines` flag: one input, both readings, and the CONSEQUENCE of each', () => {
+    // ⚠⚠ THE FLAG IS PINNED HERE RATHER THAN LEFT TO ITS TWO CALLERS. `codeOf` passes false, the cycle
+    // judge passes true, and a parameter only one call site ever exercises is a parameter nobody
+    // maintains – so both values are asserted against the same text, with the consequence that makes
+    // the choice matter rather than only the shape of the output.
+    const src = ["import { a } from './a'", '/* a note', '   over three', '   lines */', "import { b } from './b'"].join('\n')
+    // false – the regexes' behaviour, and what `codeOf`'s 26 pins are calibrated to
+    expect(stripComments(src, { html: false, newlines: false })).toBe("import { a } from './a'\n\nimport { b } from './b'")
+    // true – the line structure survives, one line per source line
+    expect(stripComments(src, { html: false, newlines: true })).toBe("import { a } from './a'\n\n\n\nimport { b } from './b'")
+
+    // ⭐ AND THE CONSEQUENCE, which is why `tests/import-cycles.test.ts` needs `true`: with the
+    // newlines dropped, an INLINE comment between two statements joins them into ONE line, and a
+    // parser anchored on `^` then sees a single statement. That is the dropped-edge defect arriving
+    // through the strip instead of through a regex.
+    const inline = ["import { a } from './a' /* note", "   more */ import { b } from './b'"].join('\n')
+    expect(stripComments(inline, { html: false, newlines: false }).split('\n')).toHaveLength(1)
+    expect(stripComments(inline, { html: false, newlines: true }).split('\n')).toHaveLength(2)
+
+    // ...and `newlines` changes nothing for a line comment, which never held a newline to begin with.
+    for (const newlines of [false, true]) {
+      expect(stripComments('a\n   // gone\nb', { html: false, newlines })).toBe('a\n\nb')
+    }
+  })
+
+  it('⚠ `codeOf` treats `<!--` as markup, not as text inside a string', () => {
+    // The one place the fix is not a pure recovery of JS code: `<!-- -->` inside a quoted string used
+    // to be removed wherever it appeared, and is now kept, because a string is a string. Same monotone
+    // direction (text comes back), and `scriptCodeOf` still never treats it as a comment at all.
+    expect(codeOf('const s = "<!-- kept -->"')).toBe('const s = "<!-- kept -->"')
+    expect(codeOf('<div><!-- gone --></div>')).toBe('<div></div>')
+    expect(scriptCodeOf('<div><!-- kept --></div>')).toBe('<div><!-- kept --></div>')
   })
 })
 

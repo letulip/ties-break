@@ -463,7 +463,11 @@ describe('T16b – the three bars', () => {
     // ⚠ AN EXPLICIT CEILING for the same reason `tests/coach-load.test.ts`' ladder case carries one:
     // the pooled walks are the expensive half of this file and the default 20 s is not a statement
     // about them.
-  }, 90_000)
+  // ⚠⚠ THE PER-TEST BUDGET IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 90 s -> 60 s on a measurement,
+  // then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit `testTimeout` – and a
+  // restated constant cannot follow its source, so a ceiling moved to 90 s would leave this file at 60.
+  // SLOWEST TEST here, in the real bulk pool: 7.90 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('⭐ BAR 2 – THE MIDDLE RUNG: the shipped career is asked about her body, and not constantly', () => {
     // T12 measured ~1.5 asks per career at the shipped rung and called the −5 bond row nearly dead;

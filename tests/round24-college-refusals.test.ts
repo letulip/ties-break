@@ -23,12 +23,8 @@
 // ⚠ AND THE SPELLINGS ARE IMPORTED, NOT TYPED. Both sentences are player-facing copy that reaches a
 // toast through the worker's error channel; a literal copied into a test is a rename that breaks a
 // report in silence. Same precedent as `RELEASE_LINE_PREFIX` and `COLLEGE_REVEAL_REFUSAL`.
-import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
-  skipTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   COLLEGE_FREEZE_REFUSAL,
   acceptOffer,
@@ -43,7 +39,6 @@ import {
   buyAsset,
   sellAsset,
   chooseGift,
-  closeTournament,
   createWorld,
   decideKnock,
   declineOffer,
@@ -60,8 +55,6 @@ import {
   inCollege,
   latchEnding,
   pendingBirthday,
-  resumeFromCollege,
-  revealTournamentRound,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
   setKitGrade,
@@ -79,39 +72,11 @@ import { ENDING_TITLE } from '../src/engine/ending'
 import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
- *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
- *  complaint was that the year reported the tournament and ticked on past it. So every walk here
- *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
- *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
- *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
- *  The full note is in tests/college-league.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
+import { finishAnyReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 // =================================================================================================
 // The walked career – the same shape tests/college-freeze.test.ts uses, for the same reason
 // =================================================================================================
-
-function finishAnyReveal(world: WorldState): void {
-  for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
-    revealTournamentRound(world)
-  }
-  if (world.pendingTournament) closeTournament(world)
-}
 
 /** A career that has really been played: a calendar, a cohort, a ledger and a table with points on
  *  it. `tickWeek` is total (only `advanceWeeks` halts), so the loop closes any reveal it makes. */
@@ -157,10 +122,7 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
     drainLifeBeats(world)
   }
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
   expect(inCollege(world), 'and she really is at a university this week').toBe(true)
@@ -213,10 +175,7 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   }
   // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
-    resumeFromCollege(world, rng)
-    answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
-    drainLifeBeats(world)
+    pressCollegeYear(world, rng)
   }
   expect(world.ending?.type).toBe('college')
   // ⚠ AND BOTH SURVIVED THE YEAR – `prunePlannerBookings` keeps four trailing weeks, and these are
@@ -349,10 +308,12 @@ describe('the family may take back a booking it made before the fork', () => {
     }
     // ⚠ Press-answer-press (round 24): the year pauses on her birthday, which can land before the
     // booked court – the whole year has to be spent for the trap to be provably real.
-    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), PRE-EMPTIVELY AND NOT BECAUSE IT WAS RED: ruling 2(a) makes a
+    // blocking life beat pause the college year, so a fixed-count walk that does not answer her card
+    // passes only while no beat happens to land in its window. `drainLifeBeats` is bond-neutral and
+    // priced ZERO, and the budget gains a press for the question a year can now raise.
+    for (let press = 0; press < 6 && world.college!.years.length === 0; press++) {
+      pressCollegeYear(world, rng)
     }
 
     // The friendly's own record, keyed by the week it was booked for – `resolvePractice` writes it.

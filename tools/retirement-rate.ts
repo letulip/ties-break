@@ -97,8 +97,7 @@ import {
   retireDurability,
   spentness,
 } from '../src/engine/match/point'
-import { simulateMatch } from '../src/engine/match/engine'
-import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { simulateMatch, recordedMatchOptions } from '../src/engine/match/engine'
 import type { TierId } from '../src/engine/season/types'
 
 const CAREERS = Number(process.env.CAREERS ?? 12)
@@ -223,7 +222,15 @@ function walk(arm: ArmId, careerIndex: number, out: ArmOut): void {
         // off a re-simulation at the stored seed rather than counted out of a scoreline. NO
         // `condition` option is passed, deliberately: the freshness rides on the frozen players, so
         // this is the same call `MatchReplay` makes and a green arm is a green Watch button.
-        const res = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: m.seed })
+        // ⚠⚠ AND IT IS NOW THE SAME CALL BY CONSTRUCTION, NOT BY CONVENTION (T5.12, 27.09). The line
+        // above used to spell `{ surface, tour: JUNIOR_TOUR, seed }` by hand – the last hand-spelled
+        // copy of the recipe, after W4 routed every other recorder and replayer through
+        // `recordedMatchOptions` (C-04, F-08). The claim the comment makes is exactly the one that
+        // primitive exists to keep true, so the comment and the code now agree mechanically: the day
+        // a recorder gains `momentum` or a `condition` map, this bench moves with the screens instead
+        // of measuring a match nobody plays. `m.seed` is guaranteed truthy by the guard above, so the
+        // primitive's `?? ''` cannot fire and the object is byte-identical to the literal.
+        const res = simulateMatch(a, b, recordedMatchOptions({ surface: event.surface, seed: m.seed }))
         const score = res.sets.map((s) => `${s.a}-${s.b}`).join(' ')
         const winnerId = res.winner === 0 ? m.aId : m.bId
         if (score !== (m.score ?? '') || winnerId !== m.winnerId) out.resimMismatch++

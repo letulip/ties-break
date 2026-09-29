@@ -112,6 +112,15 @@ const HEAVY_COMMANDS: ReadonlySet<ToWorker['type']> = new Set([
   'new',
   'tick',
   'advance',
+  // ⭐ D-06 (26.09, riding B-01 / T2.3): `resumeFromCollege` ticks up to FIFTY-TWO weeks in one
+  // command – the same class as `advance` and a longer span than any `advance` the shell offers – and
+  // it was budgeted with the reads. Desktop estimate ≈ 0.3–0.4 s (52 weeks at the measured 5–7 ms),
+  // so the 10 s budget needed a device ~25x slower than an M4 to bite and the harm was never
+  // observed; it is the CLASSIFICATION that was wrong, and this is the cheap half of it. ⚠ AND THE
+  // COMMAND GOT LONGER ON THE SAME DAY: B-01's pause splits a year across presses rather than
+  // shortening it, so the worst case is unchanged, but a year that ends in a pause now also builds
+  // a snapshot per press.
+  'resumeFromCollege',
   'loadCareer',
   'restoreSlot',
   'importSave',

@@ -158,7 +158,6 @@ import {
   createWorld,
   deliverKnownPartner,
   endsHazardFor,
-  kidAgeExact,
   landWedding,
   lifeBeatOptionsFor,
   boothMentionDue,
@@ -184,6 +183,7 @@ import { DRAIN_ANSWER, drainCostOf } from '../tools/_lifeBeats'
 // RESULTS ledger, so a posed `kidRankWta` alone leaves the gate shut. `standHerAt` poses both and
 // throws if the fold does not count its own row.
 import { standHerAt } from './helpers/newsStanding'
+import { weekAtAge } from './helpers/career'
 
 const WEDDING = ECONOMY.wedding
 
@@ -194,13 +194,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 // FIXTURES
 // -------------------------------------------------------------------------------------------------
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
 
 /** A row of the v83 shape. `latchedWeek` is what this whole file is about, so it is a parameter. */
 function episode(sinceWeek: number, latchedWeek: number | null = null, knownWeek: number | null = null): LoveEpisode {

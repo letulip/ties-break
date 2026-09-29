@@ -6,7 +6,14 @@ import { resumeMain } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE, REPLY_BY_COMMAND, type ToWorker, type WorkerErrorCode } from '../src/shared/protocol'
 import { workerHarness, type WorkerMsg } from './helpers/workerHarness'
-import { scriptCodeOf } from './helpers/source'
+import { region, scriptCodeOf } from './helpers/source'
+
+// ⚠⚠ THE THREE PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction. A budget BELOW the ceiling would have stayed – that one says something.
+// The ceiling and the measured table: tests/sim-serialisation.test.ts.
 
 // =================================================================================================
 // R2-05 (TB-06 / PR-07) — THE WORKER'S HALF OF THE REQUEST/REPLY CORRELATION.
@@ -98,6 +105,10 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       // ⭐ the album, on demand (docs/specs/the-album-2026-09.md §8b) – a query against the imported
       // career, `getSnapshot`'s own shape: read-only, no baseRevision, answered with its own arm.
       album: { type: 'album' },
+      // ⭐ T6.2 · D-07 (28.09) – the inbox, on demand: the album's precedent one surface over, and the
+      // same three properties. The roster is TOTAL over the command union by type, so this row was a
+      // compile error the moment the command existed, which is the roster's job.
+      inbox: { type: 'inbox' },
       listSlots: { type: 'listSlots' },
       listCareers: { type: 'listCareers' },
       exportSave: { type: 'exportSave' },
@@ -230,13 +241,16 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     // ⭐ `album` joined the set with its own arm (docs/specs/the-album-2026-09.md §8b) – the sixth,
     // and the welcome red this guard exists for: a new ok arm may not ship unexercised.
     const seen = new Set([...arms.values()].filter((a) => a !== 'refused'))
-    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'peek', 'slots', 'snapshot'])
+    // ⚠ RE-AIMED, NOT WIDENED (T6.2 · D-07, 28.09): `inbox` is the SEVENTH ok arm and it joins the
+    // literal for the reason the album joined it – this guard's whole point is that a new ok arm may
+    // not ship unexercised, so the list grows by exactly the arm that was added and stays an equality.
+    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'inbox', 'peek', 'slots', 'snapshot'])
     // ...and these eight in particular must have COMMITTED, one per arm plus the two mutation
     // paths, so a future refusal creeping into a load-bearing command cannot hide inside the set.
-    for (const command of ['getSnapshot', 'album', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
+    for (const command of ['getSnapshot', 'album', 'inbox', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
       expect(arms.get(command), `'${command}' must succeed on a quiet career`).toBe(REPLY_BY_COMMAND[command])
     }
-  }, 60_000)
+  })
 
   it('⚠ E-05 – a refused save file answers with its CODE, not with prose the UI has to parse', async () => {
     // ⭐ THE CLAIM THE GATE'S HEADER ALREADY MAKES: "the code exists so tests (and any future UI
@@ -277,7 +291,7 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       // to STALE_REVISION and SAVE_CONFLICT, and widening the union must not have widened it.
       expect(reply.revision, `${code}: a refused file has no revision`).toBeUndefined()
     }
-  }, 60_000)
+  })
 })
 
 describe('the four behaviours this typing wave promised not to disturb', () => {
@@ -298,6 +312,37 @@ describe('the four behaviours this typing wave promised not to disturb', () => {
     expect(code, 'no handler registry').not.toMatch(/Record<\s*ToWorker\['type'\]/)
   })
 
+  // ⭐ D-P2 (principles review, 26.09) – THE PROSE CLASSIFICATION TABLE IS PINNED AGAINST THE TABLE
+  // THE COMPILER KNOWS. `sim.worker.ts` carries a comment table of every message with its class,
+  // world effect, storage effect and revision effect – TB-02 asked for it recorded – and it had
+  // silently fallen 11 rows behind the switch (`setWeightEnabled`, the four college/fork/retirement
+  // answers, `answerShootClash`, `chooseGift`, `answerLifeBeat`, `buyAsset`, `sellAsset`, `album`).
+  // That is CLAUDE.md's own lesson about a number written in prose: nothing read it, so nothing
+  // objected. It is read now, and against `REPLY_BY_COMMAND` rather than against a count.
+  //
+  // ⚠ THE RAW SOURCE, NOT `code`: the table lives in a comment, which is exactly what `scriptCodeOf`
+  // strips. `region` throws on an absent marker, so a renamed heading fails loudly instead of
+  // widening the slice to the rest of the file.
+  it('⭐ D-P2 – the message-classification table names every command, and only commands', () => {
+    const table = region(worker, '//   message            class', '// WHY QUERIES RIDE THE SAME QUEUE')
+    const listed = table
+      .split('\n')
+      .map((line) => /^\/\/ {3}(\S+)\s+(?:lifecycle|mutation|persistence|query)\b/.exec(line))
+      .filter((m): m is RegExpExecArray => m !== null)
+      // `save/saveNamed` shares one row: two commands, one line, because they differ in nothing the
+      // table has a column for.
+      .flatMap((m) => m[1].split('/'))
+    const commands = Object.keys(REPLY_BY_COMMAND) as ToWorker['type'][]
+    expect(
+      commands.filter((c) => !listed.includes(c)),
+      'every command the protocol table declares has a row here',
+    ).toEqual([])
+    expect(
+      listed.filter((name) => !commands.includes(name as ToWorker['type'])),
+      'and no row names a message that does not exist',
+    ).toEqual([])
+  })
+
   it('the export reply transfers its buffer – a save is never structured-cloned', async () => {
     const world = quietCareer('reply-transfer')
     const imported = await send({ type: 'importSave', bytes: await saveBytes(world) })
@@ -314,7 +359,7 @@ describe('the four behaviours this typing wave promised not to disturb', () => {
     // holding some other buffer would satisfy a count.
     expect(post.transfer, 'the export posts a transfer list').toHaveLength(1)
     expect(post.transfer![0], "and the thing transferred IS the reply's own buffer").toBe(exported.bytes)
-  }, 60_000)
+  })
 
   it('a reply with no buffer transfers nothing – the list is not a blanket', async () => {
     posts.length = 0

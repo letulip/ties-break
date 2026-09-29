@@ -1,5 +1,6 @@
 import { openDB, reqToPromise } from './idb'
 import { compressWorld, decompressWorld } from '../engine/saveCodec'
+import { SaveFileError } from '../engine/saveGuard'
 import type { WorldState } from '../engine/world'
 import { CommandRefusedError } from '../shared/protocol'
 import type { SlotMeta, CareerMeta } from '../shared/protocol'
@@ -184,6 +185,90 @@ function tx(database: IDBDatabase, stores: string | string[], mode: IDBTransacti
   return database.transaction(stores, mode)
 }
 
+/** ⭐ D-P5 (principles review, 26.09) – RESOLVE ON `complete`, WHICH IS THIS FILE'S OWN RULE. The
+ *  header above says every write is "resolved only on the transaction's `complete` event", and
+ *  `deleteCareer` wrote that out by hand – but `touchCareer` and `deleteSlot` resolved on the
+ *  REQUEST's `success`, which is not durability: a transaction can still abort after a request has
+ *  succeeded, and the caller has already been told the write happened. One helper so the three
+ *  writes have one spelling of "it is on disk". */
+function txDone(transaction: IDBTransaction, what: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error ?? new Error(`${what} failed`))
+    transaction.onabort = () => reject(transaction.error ?? new Error(`${what} aborted`))
+  })
+}
+
+/**
+ * ⭐ D-P4 (principles review, 26.09) – ONE BUILDER FOR THE SAVE RECORD, AND ONE FOR THE CAREERS ROW.
+ *
+ * `runAutosaveTx` and `writeNamed` each built both by hand, field for field, and the review's
+ * evidence is the cost rather than the tidiness: when the age clock needed her birthday on the
+ * Careers list (09.08), `birthMonth` and `birthDay` had to be added in TWO places, and a field added
+ * to one of them reaches the list for autosaves and not for named saves – or the other way round –
+ * with nothing to say so. Two spellings of one fact.
+ *
+ * ⚠ `migrateV1toV2`'s HISTORICAL ROW STAYS LITERAL and deliberately does not come through here. It
+ * writes `kidName: 'Vera'` and `country: 'US'` – facts about what v1 saves held, not about a world –
+ * and it is an append-only migration whose output must never move under a later field.
+ */
+function recordFor(
+  world: WorldState,
+  slot: string,
+  savedAt: number,
+  revision: number,
+  payload: Uint8Array,
+  checksum: Uint8Array,
+): SaveRecord {
+  return {
+    slot,
+    careerId: world.careerId,
+    savedAt,
+    week: world.week,
+    seed: world.seed,
+    bytes: payload.byteLength,
+    kidName: world.profile.kidName,
+    country: world.profile.country,
+    revision,
+    checksum,
+    payload,
+  }
+}
+
+/**
+ * The careers row for a world that has just been written, with the FORWARD-ONLY rule both callers
+ * need. `week` and `revision` move only when this write's revision is not behind the row – a named
+ * save from a stale tab must not regress the career list's resume pointer – while `lastPlayedAt`
+ * always bumps, because saving is playing (owner, 29.07).
+ *
+ * ⚠ THE RULE IS `writeNamed`'s AND IT IS FREE FOR THE AUTOSAVE PATH, which is what makes one helper
+ * honest rather than a merge of two behaviours. `runAutosaveTx` wrote `week`/`revision`
+ * unconditionally – and it could, because its own CAS has already refused anything that is not
+ * strictly ahead (`revision <= diskRevision` fails, and `adopt` allocates `diskRevision + 1`). So
+ * `ahead` is provably true on every autosave commit and the row it produces is byte-identical.
+ */
+function careerRowFor(
+  world: WorldState,
+  existing: CareerMeta | undefined,
+  savedAt: number,
+  revision: number,
+): CareerMeta {
+  const ahead = revision >= (existing?.revision ?? 0)
+  return {
+    careerId: world.careerId,
+    kidName: world.profile.kidName,
+    country: world.profile.country,
+    seed: world.seed,
+    createdAt: existing?.createdAt ?? savedAt,
+    lastPlayedAt: savedAt,
+    week: ahead ? world.week : (existing?.week ?? world.week),
+    revision: ahead ? revision : existing?.revision,
+    // One clock, on the Careers list too (09.08) – the row printed the band before this.
+    birthMonth: world.profile.birthMonth,
+    birthDay: world.profile.birthDay,
+  }
+}
+
 function toMeta(r: SaveRecord): SlotMeta {
   return {
     slot: r.slot,
@@ -303,34 +388,9 @@ async function runAutosaveTx(
         else if (!recB) gen = 'b'
         else gen = recNewer(recA, recB) ? 'b' : 'a'
 
-        const record: SaveRecord = {
-          slot: autoSlot(world.careerId, gen),
-          careerId: world.careerId,
-          savedAt,
-          week: world.week,
-          seed: world.seed,
-          bytes: payload.byteLength,
-          kidName: world.profile.kidName,
-          country: world.profile.country,
-          revision,
-          checksum,
-          payload,
-        }
-        const meta: CareerMeta = {
-          careerId: world.careerId,
-          kidName: world.profile.kidName,
-          country: world.profile.country,
-          seed: world.seed,
-          createdAt: existing?.createdAt ?? savedAt,
-          lastPlayedAt: savedAt,
-          week: world.week,
-          revision,
-          // One clock, on the Careers list too (09.08) – the row printed the band before this.
-          birthMonth: world.profile.birthMonth,
-        birthDay: world.profile.birthDay,
-        }
+        const record = recordFor(world, autoSlot(world.careerId, gen), savedAt, revision, payload, checksum)
         saves.put(record)
-        careers.put(meta)
+        careers.put(careerRowFor(world, existing, savedAt, revision))
         out = { meta: toMeta(record), revision }
       }
       aReq.onsuccess = () => {
@@ -365,10 +425,12 @@ export async function listCareers(): Promise<CareerMeta[]> {
  *  it opens rather than waiting for the first week to tick. */
 export async function touchCareer(careerId: string, at: number = Date.now()): Promise<void> {
   const database = await db()
-  const store = tx(database, CAREERS, 'readwrite').objectStore(CAREERS)
+  const transaction = tx(database, CAREERS, 'readwrite')
+  const store = transaction.objectStore(CAREERS)
   const existing = (await reqToPromise(store.get(careerId))) as CareerMeta | undefined
   if (!existing) return // nothing to touch - a slot with no meta row is already an inconsistency
-  await reqToPromise(store.put({ ...existing, lastPlayedAt: at }))
+  store.put({ ...existing, lastPlayedAt: at })
+  await txDone(transaction, 'touchCareer')
 }
 
 /** Delete every slot belonging to a career plus its meta row, in one transaction. */
@@ -381,33 +443,76 @@ export async function deleteCareer(careerId: string): Promise<void> {
     if (r.careerId === careerId) saves.delete(r.slot)
   }
   transaction.objectStore(CAREERS).delete(careerId)
-  await new Promise<void>((resolve, reject) => {
-    transaction.oncomplete = () => resolve()
-    transaction.onerror = () => reject(transaction.error ?? new Error('deleteCareer failed'))
-    transaction.onabort = () => reject(transaction.error ?? new Error('deleteCareer aborted'))
-  })
+  await txDone(transaction, 'deleteCareer')
 }
 
 // --- slots -------------------------------------------------------------------
 
+/**
+ * ⭐⭐ D-05 (principles review, 26.09) – ONE CAREER'S KEYS, AS A RANGE.
+ *
+ * The keys this file writes are career-scoped by construction: `autoSlot` builds
+ * `auto:{careerId}:{gen}` and `namedSlot` builds `manual:{careerId}:{name}`, and `migrateV1toV2`'s
+ * `rescope` goes through the same two helpers. So every record belonging to career X has a key
+ * prefixed `auto:X:` or `manual:X:`, and a prefix on a `keyPath: 'slot'` store is a bound range.
+ *
+ * ⚠ NO DB UPGRADE, AND THAT IS WHY THIS SHAPE WAS CHOSEN over a payload-free meta store: a range is
+ * a READ. `DB_VERSION` does not move, no `if (oldVersion < N)` block is added, and a database written
+ * by the previous build answers these queries on the first open.
+ *
+ * ⚠ `￿` IS THE UPPER BOUND and it is safe for what can follow the prefix: a generation is `a` or
+ * `b` and a name has been through `sanitizeName` ([a-z0-9-]), so nothing sorts above it. An astral
+ * character would arrive as a surrogate pair, whose first code unit is below `￿` too.
+ */
+function slotRange(prefix: 'auto' | 'manual', careerId: string): IDBKeyRange {
+  return IDBKeyRange.bound(`${prefix}:${careerId}:`, `${prefix}:${careerId}:￿`)
+}
+
 export async function listSlots(careerId: string): Promise<SlotMeta[]> {
   const database = await db()
-  const records = (await reqToPromise(tx(database, STORE, 'readonly').objectStore(STORE).getAll())) as SaveRecord[]
-  return records
-    .filter((r) => r.careerId === careerId)
-    .map(toMeta)
-    .sort((a, b) => b.savedAt - a.savedAt)
+  const saves = tx(database, STORE, 'readonly').objectStore(STORE)
+  // ⚠ BOTH REQUESTS ARE ISSUED BEFORE THE AWAIT, which is this file's standing rule rather than
+  // style: a transaction commits once its requests have all settled and control returns to the event
+  // loop, so a second `getAll` created AFTER awaiting the first would be posted to a finished
+  // transaction. `readLatestAutosave` builds its three reads the same way, for the same reason.
+  const [autos, named] = (await Promise.all([
+    reqToPromise(saves.getAll(slotRange('auto', careerId))),
+    reqToPromise(saves.getAll(slotRange('manual', careerId))),
+  ])) as [SaveRecord[], SaveRecord[]]
+  return (
+    [...autos, ...named]
+      // ⚠ THE `careerId` EQUALITY FILTER IS KEPT ON THE ALREADY-NARROWED SET, AND IT IS A BELT THAT
+      // EARNS ITS PLACE rather than a leftover. `makeCareerId` is `c-{seed}-{base36}` and the seed is
+      // whatever the player typed, so a careerId CAN contain a colon – and then one career's prefix
+      // is another's: `auto:c-x:y:a` starts with `auto:c-x:`. The range alone would hand the shorter
+      // career the longer one's records. Two ranges cost nothing to re-check, and the old scan's own
+      // filter is exactly the check that refuses it.
+      .filter((r) => r.careerId === careerId)
+      .map(toMeta)
+      .sort((a, b) => b.savedAt - a.savedAt)
+  )
+}
+
+/** ⭐⭐ D-01 – THE RECORD'S OWN ENVELOPE, alongside the world it carries. `restoreSlot` has to
+ *  compare the revision the caller BELIEVED this slot held against the one it actually holds, and
+ *  the payload was already being decoded, so this is the same single `get` rather than a second
+ *  read of the whole record (D-P6's complaint, not made worse). `readSlot` is the one-field reading
+ *  of it – no caller that only wants the world has to learn about the meta. */
+export async function readSlotRecord(slot: string): Promise<{ world: WorldState; meta: SlotMeta }> {
+  const record = await getRecord(slot)
+  if (!record) throw new Error(`No save in slot "${slot}"`)
+  return { world: await decompressWorld(record.payload, record.checksum), meta: toMeta(record) }
 }
 
 export async function readSlot(slot: string): Promise<WorldState> {
-  const record = await getRecord(slot)
-  if (!record) throw new Error(`No save in slot "${slot}"`)
-  return decompressWorld(record.payload, record.checksum)
+  return (await readSlotRecord(slot)).world
 }
 
 export async function deleteSlot(slot: string): Promise<void> {
   const database = await db()
-  await reqToPromise(tx(database, STORE, 'readwrite').objectStore(STORE).delete(slot))
+  const transaction = tx(database, STORE, 'readwrite')
+  transaction.objectStore(STORE).delete(slot)
+  await txDone(transaction, 'deleteSlot')
 }
 
 /**
@@ -417,6 +522,9 @@ export async function deleteSlot(slot: string): Promise<void> {
  * never CAS-refused – but the careers row only moves FORWARD: `week`/`revision` update only when
  * this write's revision is not behind the row (a named save from a stale tab must not regress the
  * career list's resume pointer), while `lastPlayedAt` always bumps (saving is playing).
+ *
+ * ⭐ D-P4 (28.09): that forward-only rule now lives in `careerRowFor`, which the autosave path shares
+ * – see the helper for why sharing it changes nothing there.
  */
 export async function writeNamed(world: WorldState, name: string, revision: number): Promise<SlotMeta> {
   // ⭐⭐ E-06 (05.09 engine review) – A NAME THE SANITISER CANNOT KEEP IS NOT A SLOT. `sanitizeName`
@@ -444,39 +552,13 @@ export async function writeNamed(world: WorldState, name: string, revision: numb
       /* the abort that follows carries transaction.error */
     }
 
-    const record: SaveRecord = {
-      slot: namedSlot(world.careerId, name),
-      careerId: world.careerId,
-      savedAt,
-      week: world.week,
-      seed: world.seed,
-      bytes: payload.byteLength,
-      kidName: world.profile.kidName,
-      country: world.profile.country,
-      revision,
-      checksum,
-      payload,
-    }
+    const record = recordFor(world, namedSlot(world.careerId, name), savedAt, revision, payload, checksum)
     transaction.objectStore(STORE).put(record)
 
     const careers = transaction.objectStore(CAREERS)
     const metaReq = careers.get(world.careerId)
     metaReq.onsuccess = () => {
-      const existing = metaReq.result as CareerMeta | undefined
-      const ahead = revision >= (existing?.revision ?? 0)
-      careers.put({
-        careerId: world.careerId,
-        kidName: world.profile.kidName,
-        country: world.profile.country,
-        seed: world.seed,
-        createdAt: existing?.createdAt ?? savedAt,
-        lastPlayedAt: savedAt,
-        week: ahead ? world.week : (existing?.week ?? world.week),
-        revision: ahead ? revision : existing?.revision,
-        // One clock, on the Careers list too (09.08) – the row printed the band before this.
-        birthMonth: world.profile.birthMonth,
-        birthDay: world.profile.birthDay,
-      } satisfies CareerMeta)
+      careers.put(careerRowFor(world, metaReq.result as CareerMeta | undefined, savedAt, revision))
       out = toMeta(record)
     }
   })
@@ -546,6 +628,16 @@ export async function readLatestAutosave(
     const world = await decompressWorld(gens[0].payload, gens[0].checksum)
     return { world, recovered: false, revision }
   } catch (err) {
+    // ⭐⭐ D-02 (principles review, 26.09) – THE FALLBACK IS FOR CORRUPTION AND ONLY FOR CORRUPTION.
+    // It used to catch ANY throw, which turned a straddled version skew (one generation written by a
+    // newer build, one by this one) into a silent rollback: the player was told the career had been
+    // "repaired", handed the older week, and had the newer generation overwritten by the next two
+    // commits. A checksum mismatch, a broken gzip or unparseable JSON is unrecoverable and the older
+    // generation is genuinely the best answer; a `future-schema` is recoverable by updating the app,
+    // so it is rethrown with BOTH generations untouched and `errorMsg` carries the code to the store.
+    // U-01's boot refusal is reached only when both generations are too new, which is why it never
+    // saw this case.
+    if (!(err instanceof SaveFileError) || err.code !== 'corrupted') throw err
     if (gens.length > 1) {
       const world = await decompressWorld(gens[1].payload, gens[1].checksum)
       return { world, recovered: true, revision }

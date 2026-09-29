@@ -83,7 +83,6 @@ import {
   decisionWeekOf,
   enterEvent,
   entryStatus,
-  kidAgeExact,
   landPregnancyPause,
   protectedRankPlace,
   resolveReturnDecision,
@@ -97,9 +96,10 @@ import { tierFloorOpen } from '../src/engine/world/ladder'
 import { WINDOW_BY_TRACK, windowFromWeek } from '../src/engine/season/ranking'
 import { TIER_LADDER, TIERS } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
-import type { LoveEpisode } from '../src/shared/protocol'
 import type { PregnancyState } from '../src/engine/world/state'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S AND THE RULING'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's
 // ARM 2 law, inherited through T2..T5's own `BRIEF` blocks: an expectation read out of the thing
@@ -129,22 +129,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 
 /** The FIRST week she reads at or above `years` – walked on the engine's own clock (T2's helper). */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
-/** A married row of the v83 shape – `latchedWeek` non-null, `endedWeek` null (T2's helper). */
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
-}
-
 /** A married career standing at `age`, funded, fit, with an EMPTY calendar and the fork long since
  *  answered (T5's `wedded`, and its note: `forkDue` is true of every week of a twenty-eight-year-old,
  *  so an unanswered fork would stop `resolveEndings` two steps above the one under test). */

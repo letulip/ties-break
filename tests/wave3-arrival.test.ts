@@ -116,6 +116,10 @@ function ageAt(world: WorldState, week: number): number {
 
 /** The FIRST week she reads at or above `years` – found by walking the same clock the gate reads,
  *  never by arithmetic of our own, so the boundary this file tests is the boundary the engine has. */
+/** ⚠⚠ NOT THE SHARED `weekAtAge` (26.09, T5.11): it reads this file's own `ageAt(world, w)` rather than
+ *  `kidAgeExact(w, birthMonth, birthDay)`. The bound and the throw match the shared one, so this is a
+ *  candidate for the merge once `ageAt` is proven equivalent – which needs a control this wave did not
+ *  run, so it keeps its body and says why. */
 function weekAtAge(world: WorldState, years: number): number {
   for (let w = 0; w < 40 * 52; w++) if (ageAt(world, w) >= years) return w
   throw new Error(`no week reaches age ${years}`)

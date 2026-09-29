@@ -146,7 +146,31 @@ export default defineConfig({
       // 'prompt': a new build waits for the user to tap "Update" (App.vue UpdateBanner),
       // instead of silently reloading mid-session.
       registerType: 'prompt',
-      includeAssets: ['ball.svg', 'pwa-apple-180.png', 'favicon.png'],
+      // ⚠⚠ `pwa-192.png` AND `pwa-512.png` ARE NAMED HERE ON PURPOSE, AND THEIR NEIGHBOUR IS NOT –
+      // T3.12 of the 26.09 principles fix. See `includeManifestIcons` below for the half that takes
+      // the maskable icon out; this is the half that keeps these two IN by name rather than by a
+      // wildcard, because what rests on them is an owner-facing behaviour: `src/audio/music.ts` hands
+      // exactly these two to the Media Session as the lock-screen artwork, on a phone that may never
+      // be online again. They are also swept by `globPatterns` today, and that is the point – the
+      // duplicate costs nothing (workbox writes one cache key per url+revision pair) and it means a
+      // narrowed glob cannot silently take the artwork off the lock screen.
+      includeAssets: ['ball.svg', 'pwa-apple-180.png', 'favicon.png', 'pwa-192.png', 'pwa-512.png'],
+      // ⚠⚠ OFF, AND IT IS THE SECOND OF TWO DOORS – T3.12, and the first attempt shipped with only
+      // the other one and freed NOTHING.
+      //
+      // vite-plugin-pwa pushes every `manifest.icons[].src` into the precache by default
+      // (`includeIcons` → `additionalManifestEntries`), and `globIgnores` cannot reach that path: it
+      // filters the glob over the build directory, not the entries the plugin appends by hand. So
+      // `pwa-maskable-512.png` went on being precached through the manifest even after the glob
+      // stopped sweeping it – the built worker still listed it, and `install-size.mjs` still read
+      // 16,320 KiB. Measured, not reasoned: 368 listed entries → 367, 362 UNIQUE → 362, install
+      // unchanged.
+      //
+      // With this off, the icons reach the precache only through the two mechanisms above: the
+      // `includeAssets` line (`pwa-192`, `pwa-512`, `pwa-apple-180`) and `globPatterns`, which
+      // `globIgnores` now subtracts the maskable icon from. `manifest.icons` below is untouched and
+      // still lists all three, so nothing about the installed app's icons changes.
+      includeManifestIcons: false,
       manifest: {
         name: 'Ties Break: Ace Parent',
         short_name: 'Ties Break',
@@ -189,9 +213,20 @@ export default defineConfig({
         //     after         313 entries   12256 KiB
         //
         // ⚠ ~9.6 MB IS A ONE-TIME DOWNLOAD ON A PHONE AND IT IS THE HONEST PRICE OF HIS RULING.
-        // At a poor 3 Mbit/s that is ~35 s of install; on disk it is nothing against any modern
-        // origin quota. It is also the last big jump available: `public/` holds 14.6 MB in total
-        // and 12.3 of it is now in the install.
+        // On disk it is nothing against any modern origin quota, and it was the last big jump
+        // available.
+        //
+        // ⚠⚠ THE THREE NUMBERS ABOVE ARE DATED 29.08 AND ARE A RECORD OF THAT DECISION, NOT OF THIS
+        // BUILD – G-P3-03 of the 26.09 review, which found them quoted here as if they were current
+        // and 4 MB stale. They stay, because the ruling is what they document; what follows is the
+        // live figure, and the whole point of the line after it is that nobody has to maintain one:
+        //
+        //     26.09 measured    361 entries   16215 KiB   ≈45 s at 3 Mbit/s
+        //
+        // ⭐ AND THE LIVE NUMBER LIVES IN A SCRIPT, NEVER IN THIS COMMENT. `node
+        // scripts/install-size.mjs` prints it after every `vite build` and fails the gate on the
+        // owner's 16,384 KiB ceiling; a figure restated in prose here goes stale the way these did,
+        // because no test reads a comment. Run the script rather than trusting this paragraph.
         //
         // ⚠⚠ AND THE SECOND HALF OF HIS RULING IS THE HARDER HALF: an update must fetch what is new
         // or changed, NEVER the whole set. A 12 MB re-download per deploy would be worse than the
@@ -210,6 +245,30 @@ export default defineConfig({
         // update install, and counts the precache fetches the SECOND install makes at the server.
         // Measured: **1 of 313**. See the tool's header for the run and the numbers.
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,mp3}'],
+        // ⚠⚠ THE ONE FILE THE INSTALL DOES NOT NEED – 105.1 KiB, and not one pixel moves (T3.12 of
+        // the 26.09 principles fix; `docs/decisions.md` 26.09, «THE DELIVERY MEASURED»).
+        //
+        // `pwa-maskable-512.png` is read by the MANIFEST and by nothing else: the platform fetches
+        // it once, while the phone is online, at the moment the app is installed – which is the one
+        // moment a precache cannot be the thing that helps. It stays in `manifest.icons` above, so
+        // the adaptive launcher icon is unchanged; it simply stops being downloaded a second time
+        // and stored forever.
+        //
+        // ⚠⚠ `pwa-192.png` AND `pwa-512.png` STAY IN, AND THIS IS NOT AN OPTIMISATION TO EXTEND TO
+        // THEM. `src/audio/music.ts` hands those two to the Media Session as the lock-screen artwork
+        // (`MediaMetadata.artwork`), so they are read by RUNNING code on a phone that may never be
+        // online again. That is a recorded owner-facing behaviour, not a spare copy. The difference
+        // between the three icons is WHO READS THEM, and it is the whole of the reason this list has
+        // one entry rather than three.
+        //
+        // ⭐ WHY THIS IS THE LAST LEVER OF ITS KIND. Every image lever was measured on the 202
+        // master → shipped pairs on 26.09 under his «качество не должно просесть ни на миллиметр»:
+        // AVIF is ruled out on browser coverage, a stronger WebP encoder saves 0.4 %, and a lossless
+        // PNG re-encode of these icons is BIGGER than what is committed. So no byte of art moves, and
+        // what remained without touching a pixel was the engine corpus in the UI chunk (G-01) and
+        // this one file. After these, the ceiling is his own constraint and it rises when an art
+        // round needs it.
+        globIgnores: ['**/pwa-maskable-512.png'],
         // ⚠ RAISED FOR ONE FILE, AND ONLY JUST. Workbox refuses precache entries over 2 MiB by
         // default, and `music/theme.mp3` is 2.58 MB – his ruling above is precisely about that
         // file, so the cap moves to 3 MiB: enough for the theme, tight enough that the next

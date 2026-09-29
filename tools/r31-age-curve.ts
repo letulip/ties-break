@@ -48,14 +48,11 @@ import {
 import { weeksLostSoFar } from '../src/engine/ending'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean } from './econ-bench'
 import { drainLifeBeats } from './_lifeBeats'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule – see `tools/_args.ts`.
+import { finiteArgOf } from './_args'
 
-const argOf = (name: string, fallback: number): number => {
-  const next = process.argv[process.argv.indexOf(`--${name}`) + 1]
-  const n = Number(next)
-  return Number.isFinite(n) ? n : fallback
-}
-const SEEDS = argOf('seeds', 4000)
-const CAREERS = argOf('careers', 2)
+const SEEDS = finiteArgOf('seeds', 4000)
+const CAREERS = finiteArgOf('careers', 2)
 
 const rule = (s: string) => console.log(`\n${'='.repeat(96)}\n${s}\n${'='.repeat(96)}`)
 const f2 = (x: number) => x.toFixed(2)
@@ -239,9 +236,23 @@ for (let i = 0; i < CAREERS; i++) {
       // is an infinite loop the first time this bench meets one, which is exactly what it did. Four
       // years cost about eight presses with the birthday pauses; twelve is headroom, and a career
       // that has not cleared by then leaves the walk with its state named rather than hanging.
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3), AND THE WINDOW IT UNDER-WALKED IS NAMED RATHER THAN
+      // GUESSED. Ruling 2(a) made a blocking life beat pause the college year the way the birthday does
+      // – measured before the ruling at 23 of 217 year-calls ticking past an unanswered blocking row –
+      // and this walk answered the cake (and the reveals where it has them) but not her card, so the
+      // first beat of a degree stopped the years banking and the budget ran out against a career still
+      // standing at the latch. ⚠ ANY RUN OF THIS BENCH BETWEEN THAT RULING AND THIS REPAIR, both on
+      // 26.09, UNDER-WALKS THE DEGREE and its college figures are not comparable with anything. Figures
+      // published BEFORE 26.09 were measured on a tree that had no such pause, so their walks completed;
+      // what this repair adds on top of them is her card ANSWERED, and `drainLifeBeats` prices every
+      // option at ZERO – the before/after pair for this bench is recorded in the wave report and says
+      // exactly what moved. Same repair `tools/_reveals.ts` documents for the championship, one pause
+      // along. ⚠ The 24-press cap is
+      // left alone: it was already headroom for eight, and the beat adds at most one press a year.
       for (let press = 0; press < 24 && world.ending?.type === 'college'; press++) {
         resumeFromCollege(world, rng)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
         // ⚠ AND THE FRESHMAN CHAMPIONSHIP AND THE NATIONS CUP TIE COME DOWN THE TOUR'S OWN FLOW
         // (rounds 26 #6 / 27 #6). `resumeFromCollege` RETURNS on either – nothing mutated, the same
         // press works once it is answered – so a bench that never answers one presses for ever

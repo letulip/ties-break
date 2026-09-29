@@ -52,7 +52,7 @@ import { cancelEntry } from './entries'
 import { addEvent } from './ledger'
 import { adShootHolds } from './medical'
 import { mandatoryBinds } from './mandatory'
-import { guardNotEnded } from './constants'
+import { guardNotEnded, UNKNOWN_CHOICE_REFUSAL } from './constants'
 import type { WorldState } from '../world'
 
 /** THE WEEK THE QUESTION IS ABOUT – always the week ahead, or null when there is nothing to ask. */
@@ -68,8 +68,12 @@ export function shootClashWeek(world: WorldState): number | null {
 }
 
 /** The entry that collides with the shoot, or null. `isCompetitionWeek`'s own read of "she plays
- *  this week", asked of a week that has not arrived yet. */
-export function clashEvent(world: WorldState, week: number): SeasonEvent | null {
+ *  this week", asked of a week that has not arrived yet.
+ *
+ *  ⚠ THE `export` CAME OFF 26.09 (C-P05, the leaf-exports row: «drop `export` module by module when a
+ *  wave touches the file»). Four call sites, all in this file, none outside it, and the barrel never
+ *  carried the name – so the keyword granted reach that nothing asked for. */
+function clashEvent(world: WorldState, week: number): SeasonEvent | null {
   return world.season.find((e) => e.week === week && world.entries.includes(e.id)) ?? null
 }
 
@@ -189,6 +193,17 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
   }
 }
 
+/** THE FOUR ANSWERS THIS COMMAND OFFERS, derived from a TOTAL record rather than written out – so a
+ *  fifth `ShootClashChoice` is a compile error here instead of a legal answer this file silently
+ *  refuses. `FORK_STOP_DRIVERS`' own shape (world/lifeBeat.ts). */
+const CLASH_CHOICE_TOTAL: Record<ShootClashChoice, true> = {
+  withdraw: true,
+  'move-shoot': true,
+  'cancel-shoot': true,
+  'play-both': true,
+}
+const SHOOT_CLASH_CHOICES = Object.keys(CLASH_CHOICE_TOTAL) as readonly ShootClashChoice[]
+
 /** THE PARENT ANSWERS. One command, four arms, and every one of them either removes the collision or
  *  latches the week – so the question is asked once and time moves again.
  *
@@ -198,6 +213,13 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
  *  ZERO RNG draws on any stream, in every arm. */
 export function answerShootClash(world: WorldState, choice: ShootClashChoice): void {
   guardNotEnded(world)
+  // ⚠⚠ #9 (the principles review of 26.09) – THE ANSWER IS CHECKED AGAINST THE LIST THIS COMMAND
+  // OFFERS, and here the default arm is the dangerous one: the three `if`s below return, and anything
+  // they do not match FALLS OFF THE END into «play both» – the one arm that LATCHES the week, so the
+  // question is never asked again and the heavy week is charged. An unmatched payload therefore did
+  // not merely do the wrong thing, it made the right thing unreachable. `setPsychologistFocus`'s
+  // shape; the sentence is shared with `decideKnock` and `answerFork`.
+  if (!SHOOT_CLASH_CHOICES.includes(choice)) throw new Error(UNKNOWN_CHOICE_REFUSAL)
   const week = shootClashWeek(world)
   if (week === null || !shootClashOpen(world)) throw new Error('There is no shoot to decide about this week')
   const event = clashEvent(world, week)!

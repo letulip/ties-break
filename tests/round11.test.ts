@@ -1,11 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { worldFunction, worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 
 // Two of these replay whole careers (49 and 101 weeks, plus a 101-week bench career with a real
 // entry policy). Deterministic but slow, and the suite runs eight files in parallel – same
 // generous file-level timeout the econ/fatigue benches carry, same reason.
-vi.setConfig({ testTimeout: 240_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 240 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 3.72 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   createWorld,
@@ -312,7 +316,11 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
     expect(injury).not.toContain('tab.value')
     expect(summary).not.toContain('tab.value')
     // ...and the toast's own render is no longer Home-only either.
-    expect(APP).toContain('<div v-if="showStopToast" class="stop-toast">')
+    // ⚠ RE-AIMED 27.09 (T4.9 / E-10), NOT RELAXED. This pinned the whole opening tag, so it went red
+    // when the strip gained `role="status"` – an a11y ATTRIBUTE that says nothing about which tab is
+    // showing, which is the only thing this `it` is about. The claim is now the CONDITION: the toast
+    // renders on `showStopToast` and on nothing else, whatever else hangs off the element.
+    expect(APP).toMatch(/<div v-if="showStopToast" class="stop-toast"[^>]*>/)
   })
 
   it('both dialogs read the SET, and the wrap-up defers to the injury (one overlay, defined order)', () => {

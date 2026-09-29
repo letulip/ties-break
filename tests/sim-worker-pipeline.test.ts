@@ -9,6 +9,14 @@ import { commitAutosave } from '../src/db/saves'
 import { DEFAULT_PROFILE, type WorkerErrorCode } from '../src/shared/protocol'
 import { workerHarness } from './helpers/workerHarness'
 
+// ⚠⚠ THE SEVEN PER-TEST BUDGETS IN THIS FILE WERE REMOVED 27.09 (T5.3 · H-06). Each read 60 s, which
+// only restated the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where
+// it cannot follow its source means that if the ceiling ever moves, this file silently stays at 60.
+// ⚠ NO COST CLAIM IS MADE FOR THIS FILE: removing a declaration equal to the default is behaviour-neutral
+// by construction, so it needed no measurement, unlike the 31 files whose budgets were ABOVE the ceiling.
+// A budget BELOW the ceiling would have stayed – that one says something. The ceiling, the measured table
+// and why a hook keeps its own budget: tests/sim-serialisation.test.ts.
+
 // =================================================================================================
 // W1-INTEGRITY-A — THE WORKER PIPELINE (Codex TB-02 serialized/revisioned + TB-03 transactional
 // commit + TB-01 durable restore). The acceptance criteria of those sections, as tests:
@@ -121,7 +129,7 @@ describe('TB-02 — the FIFO is the correctness boundary', () => {
     expect(snap.ok).toBe(true)
     expect(snap.revision).toBe(rev + 2)
     expect(snap.snapshot!.week).toBe(week + 2)
-  }, 60_000)
+  })
 
   it('a double-tap (same baseRevision twice) applies ONCE: second gets typed STALE_REVISION', async () => {
     const imported = await importIntoWorker(quietCareer('pipe-stale'))
@@ -142,7 +150,7 @@ describe('TB-02 — the FIFO is the correctness boundary', () => {
     // One week moved, not two — the whole point of the token.
     const snap = await send({ type: 'getSnapshot' })
     expect(snap.snapshot!.week).toBe(week + 1)
-  }, 60_000)
+  })
 
   it('a failed command does not poison the queue: refusal, then the next command runs clean', async () => {
     const imported = await importIntoWorker(quietCareer('pipe-poison'))
@@ -158,7 +166,7 @@ describe('TB-02 — the FIFO is the correctness boundary', () => {
     // The refusal committed nothing, so the advance behind it was NOT stale at the same base.
     expect(good.ok, good.error).toBe(true)
     expect(good.revision).toBe(rev + 1)
-  }, 60_000)
+  })
 })
 
 describe('TB-03 — a failure commits nothing; a success is durable', () => {
@@ -187,7 +195,7 @@ describe('TB-03 — a failure commits nothing; a success is durable', () => {
     expect(retried.ok, retried.error).toBe(true)
     expect(retried.revision).toBe(rev + 1)
     expect(retried.snapshot!.week).toBe(week + 1)
-  }, 60_000)
+  })
 
   it('every committed mutation stamps a UNIQUE generation: the two newest revisions alternate a/b', async () => {
     const imported = await importIntoWorker(quietCareer('pipe-gens'))
@@ -209,7 +217,7 @@ describe('TB-03 — a failure commits nothing; a success is durable', () => {
       .map((s) => s.revision)
       .sort()
     expect(revisions).toEqual([rev - 1, rev])
-  }, 60_000)
+  })
 })
 
 describe('TB-01 — restore is a committed revision, proven through a relaunch', () => {
@@ -252,7 +260,7 @@ describe('TB-01 — restore is a committed revision, proven through a relaunch',
     // The named save was the SOURCE, not a casualty: still listed, still loadable.
     const slots = await send({ type: 'listSlots', careerId })
     expect((slots as unknown as { slots: { slot: string }[] }).slots.some((s) => s.slot === slot)).toBe(true)
-  }, 60_000)
+  })
 
   it('a failed restore leaves the active career untouched — in memory and across the relaunch', async () => {
     const imported = await importIntoWorker(quietCareer('pipe-restore-fail'))
@@ -287,5 +295,5 @@ describe('TB-01 — restore is a committed revision, proven through a relaunch',
     expect(reopened.ok, reopened.error).toBe(true)
     expect(reopened.snapshot!.week).toBe(week)
     expect(reopened.revision).toBe(rev)
-  }, 60_000)
+  })
 })

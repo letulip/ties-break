@@ -139,15 +139,13 @@ import MatchScene from './MatchScene.vue'
 import MatchViewer from './MatchViewer.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
-import { simulateMatch } from '../engine/match/engine'
-import { annotateMatch } from '../engine/match/rally'
-import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { replayMatch } from '../composables/annotatedMatch'
 import { stageLabel } from '../engine/world/labels'
 import { venueArtUrl } from '../art/venues'
 import { portraitStage, type PortraitStage } from '../shared/avatarEmotion'
 import { LOCAL_OPEN_COPY, localDrawLine } from '../prologue/cards'
 import { herMatches, LOCAL_POOL, type LocalOpen } from '../prologue/pool'
-import type { MatchOptions, MatchPlayer } from '../engine/match/types'
+import type { MatchPlayer } from '../engine/match/types'
 
 const props = defineProps<{
   /** the weekend, as `playLocalOpen` resolved it – the bracket is already decided */
@@ -189,17 +187,13 @@ const sides = computed<{ a: MatchPlayer; b: MatchPlayer } | null>(() => {
   return rec.aId === props.kid.id ? { a: props.kid, b: opponent } : { a: opponent, b: props.kid }
 })
 
-const options = computed<MatchOptions>(() => ({
-  surface: props.open.event.surface,
-  tour: JUNIOR_TOUR,
-  seed: record.value?.seed ?? '',
-}))
-
+// ⚠ ONE RECIPE, THE ENGINE'S OPTIONS (F-08, 27.09). The surface comes off the WEEKEND'S EVENT and
+// not off the record, because a prologue `MatchRecord` carries none – which is why
+// `recordedMatchOptions` takes the two fields rather than the row (see `match/engine.ts`).
 const annotated = computed(() => {
   const two = sides.value
   if (!two) return null
-  const opts = options.value
-  return annotateMatch(simulateMatch(two.a, two.b, opts), two.a, two.b, opts)
+  return replayMatch({ surface: props.open.event.surface, seed: record.value?.seed, a: two.a, b: two.b })
 })
 
 /** The round, in the draw sheet's own words – the engine's namer, so there is no second idea here of
@@ -313,7 +307,7 @@ function next(): void {
     <section v-if="beat === 'splash'" class="plo-splash">
       <div class="plo-hero">
         <img class="plo-hero-img" :src="venueUrl" alt="" />
-        <div class="plo-hero-fade"></div>
+        <div class="plo-hero-fade hero-fade"></div>
       </div>
       <!-- The two facts the prologue's weekend actually has, in the flow's own words: the surface
            and the size of the draw. No points, no cheque and no crowd - see the blockers in the
@@ -586,10 +580,9 @@ function next(): void {
 
 /* Home's `.diary-hero-fade`, ending in this takeover's own colour so the photograph has no bottom
    edge and the line under it reads as the page. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – the box is `.hero-fade` in src/style.css, carried beside this class; the
+   gradient stays because it ends in THIS takeover's own colour, which is what the note above says. */
 .plo-hero-fade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background: linear-gradient(180deg, rgba(9, 14, 19, 0) 52%, rgba(11, 17, 23, 0.55) 82%, var(--bg) 100%);
 }
 

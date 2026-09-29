@@ -128,7 +128,6 @@ import {
   decisionWeekOf,
   enterEvent,
   entryStatus,
-  kidAgeExact,
   kidPoints,
   pendingLifeBeat,
   pendingLifeBeatOptions,
@@ -146,8 +145,9 @@ import { advanceRefusal } from '../src/engine/world/multiWeek'
 import { rankIn } from '../src/engine/world/ladder'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
-import type { LoveEpisode } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { married } from './helpers/scenarios/love'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY` – wave 3's ARM 2 law.
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31, protectedEntries: 12 } as const
@@ -163,21 +163,6 @@ beforeEach(() => {
 // -------------------------------------------------------------------------------------------------
 // FIXTURES – T5's and half 1's own
 // -------------------------------------------------------------------------------------------------
-
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
-function married(sinceWeek: number, latchedWeek: number): LoveEpisode {
-  return {
-    id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',
-    partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null,
-    airedEndedWeek: null, latchedWeek, partnerName: 'Anton',
-  }
-}
 
 function wedded(seed: string, age = 28): WorldState {
   const world = createWorld(seed)
@@ -507,9 +492,13 @@ function firstFreezeEvent(world: WorldState): SeasonEvent {
 // D. ⚠⚠ THE TWO ARMS – the wrong ramp must measurably fail more often
 // =================================================================================================
 describe('wave 8 T6 D – the trap, measured', () => {
-  it('⭐⭐⭐ SMALL-FIRST vs STRAIGHT-BACK over twelve months, on the same careers', {
-    timeout: 900_000,
-  }, () => {
+  // ⚠⚠ THE `{ timeout }` OPTION OBJECT IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 900 s -> 60 s on a
+  // measurement, then DELETED with the object that carried it, because at 60 s it only restated
+  // `vite.config.ts`'s own unit `testTimeout` – and a restated constant cannot follow its source, so a
+  // ceiling moved to 90 s would leave this test at 60. 900 s was the largest budget in the corpus and
+  // the furthest from its own cost: SLOWEST TEST here, in the real bulk pool, 7.05 s – a factor of 128.
+  // Table: tests/sim-serialisation.test.ts.
+  it('⭐⭐⭐ SMALL-FIRST vs STRAIGHT-BACK over twelve months, on the same careers', () => {
     // ⚠⚠ THE TWO WORLDS DIFFER IN EXACTLY ONE FIELD: the answer to the beat. Everything else – the
     // seed, the week, the freeze, the calendar, the MAIN stream – is a `structuredClone` of one
     // career, which is CLAUDE.md's «name the commit each arm was built at» rule applied to a fixture

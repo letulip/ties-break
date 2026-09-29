@@ -91,11 +91,15 @@ describe('world (phase-3 living season)', () => {
     // The entered world commits to the earliest still-open event; the skipped world does not.
     //
     // ⚠ ...THAT SHE IS OLD ENOUGH FOR (task #17). The block below can grant her any book of results
-    // in any table, and no book of results makes a fourteen-year-old sixteen: W15/W35/W100 open at
-    // 16/16/17 and this seed's earliest still-open event is now one of them. The guard is about RNG
+    // in any table, and no book of results makes her older than she is: rungs open ABOVE her starting
+    // age (`TIERS[*].minAgeYears`, which `isTierAgeOpen` reads in the `find` below) and this seed's
+    // earliest still-open event can be one of them. The guard is about RNG
     // DISCIPLINE - that entering an event cannot move the main weekly stream - so WHICH event she
     // enters is scaffolding, and the filter keeps the scaffolding standing. It has to be `find`
     // rather than a hardcoded tier for the same reason it always was: the calendar decides.
+    // ⚠ «W15/W35/W100 open at 16/16/17» STOOD IN THAT SENTENCE UNTIL 27.09 (T5.4), and the digits are
+    // gone rather than advanced – the note below already records the 16.08 move that made them stale,
+    // one paragraph away from a sentence still quoting the old grid. The field carries the numbers now.
     // ⚠ RE-AIMED AT P2, AND IT RESTORES THIS FIXTURE'S PRE-RULING BEHAVIOUR RATHER THAN CHANGING IT.
     // Two things moved under it. (a) The age read was the BAND; `availabilityStatus` has asked her
     // real age since the one-clock ruling, and she is genuinely thirteen at week 0 on the shipped

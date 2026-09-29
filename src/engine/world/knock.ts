@@ -27,7 +27,7 @@ import { schoolIsOver } from '../kidLife'
 import type { KnockChoice } from '../../shared/protocol'
 import { axisConfidence, axisEvidence, shownSkill, type RadarWorldView } from '../radar'
 import { addEvent } from './ledger'
-import { KID_ID, knockRunning } from './constants'
+import { KID_ID, knockRunning, UNKNOWN_CHOICE_REFUSAL } from './constants'
 import { ageAtWeek } from './age'
 import { playedWeeksInTrailing4 } from './injury'
 import { retireKnock } from './knockHistory'
@@ -349,6 +349,12 @@ export function coachLoadViewOf(world: WorldState): CoachLoadView {
   }
 }
 
+/** THE TWO ANSWERS THIS COMMAND OFFERS, derived from a TOTAL record rather than written out – so a
+ *  third `KnockChoice` is a compile error here instead of a legal answer this file silently refuses.
+ *  `FORK_STOP_DRIVERS`' own shape (world/lifeBeat.ts). */
+const KNOCK_CHOICE_TOTAL: Record<KnockChoice, true> = { rest: true, push: true }
+const KNOCK_CHOICES = Object.keys(KNOCK_CHOICE_TOTAL) as readonly KnockChoice[]
+
 /** THE PARENT ANSWERS. The only way an undecided knock clears, and the only way time moves again.
  *
  *  Pure state: `untilWeek` is arithmetic and the consequences are read off it later (a rest week by
@@ -359,6 +365,13 @@ export function decideKnock(world: WorldState, choice: KnockChoice): void {
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
   // spend money for a girl who has retired.
   guardNotEnded(world)
+  // ⚠⚠ #9 (the principles review of 26.09) – THE ANSWER IS CHECKED AGAINST THE LIST THIS COMMAND
+  // OFFERS, and the reason it has to be is the shape of the body below rather than the type: every
+  // consequence is written as `choice === 'rest' ? … : …`, so ANY other value was a PUSH – the bond
+  // delta, the `untilWeek` arithmetic and the feed row all landed for a decision nobody made. A
+  // union is a compile-time promise and this command is reached from the worker's JSON dispatch,
+  // where the compiler has already been left behind. `setPsychologistFocus` is the house shape.
+  if (!KNOCK_CHOICES.includes(choice)) throw new Error(UNKNOWN_CHOICE_REFUSAL)
   const k = world.knock
   if (!k) throw new Error('Nothing to decide')
   if (k.choice !== null) throw new Error('That knock has already been answered')

@@ -43,6 +43,8 @@
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { onRadioGroupKey } from '../composables/radioGroupKeys'
+import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
 
@@ -93,20 +95,11 @@ async function confirm(): Promise<void> {
   }
 }
 
-/** ⭐ THE RADIO GROUP'S OWN KEYS – `LifeBeatDialog`'s handler and `KnockDialog`'s copy of it, with
- *  the same documented variation: the arrows move FOCUS and do not select, because selecting on
- *  focus would hand her a present with an arrow key. Space and Enter are the button's own. */
-function onGroupKey(event: KeyboardEvent): void {
-  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-  if (!forward && !back) return
-  const group = event.currentTarget as HTMLElement
-  const items = [...group.querySelectorAll<HTMLButtonElement>('button:not([disabled])')]
-  const at = items.indexOf(document.activeElement as HTMLButtonElement)
-  if (at < 0) return
-  event.preventDefault()
-  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
-}
+// ⭐ THE RADIO GROUP'S OWN KEYS ARE `composables/radioGroupKeys.ts`' SINCE F-10 / T4.10 (27.09) – this
+// was one of four byte-identical copies whose docstrings cited each other. The documented variation
+// that used to be argued here is argued there, this card's reason included: the arrows move FOCUS and
+// do not select, because selecting on focus would hand her a present with an arrow key. Space and
+// Enter are the button's own.
 
 // FOUR ROWS, IN A COLUMN – the owner, 11.08: «в колонку ставь, там хватит места». Four stacked rows
 // fit on a 375px screen where four side-by-side buttons would not, and it settles the layout question
@@ -139,6 +132,20 @@ useDialogFocus(card)
            three do not; the player reads. -->
       <p id="birthday-ask" class="birthday-ask">{{ prompt.ask }}</p>
 
+      <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE FOUR ROWS – ForkDialog's own arrangement and
+           its reason. This card has no dismiss BY RULING (the header: «nothing» must be an explicit
+           button, never a dismissal), so a refused Proceed left the player looking at four rows that
+           were all answers to a question already refused, with nothing said. Reached without any
+           engine bug by a second tab's SAVE_CONFLICT, whose sentence names the way out, and by B-02's
+           refused mutation.
+           ⚠ ABOVE `.birthday-choices`, so the rows and their Proceed stay last in the flow – which is
+           where `measureDialog` reads the way out off. The card is capped and scrolls, so a line that
+           appears only on a refusal cannot put the Proceed out of reach: measured with the line up at
+           375x667 and 320x568 in tests/component/principles-w2-blocking-card-refusal.test.ts.
+           ⚠ NO NEW WORDING, and nothing here marks an answer: `StoreError` renders whatever the store
+           already wrote (invariant 4) and carries no class the do-not-mark ruling could catch on. -->
+      <StoreError />
+
       <!-- FOUR ROWS IN A COLUMN, the owner's own ruling (quoted in full on the script side, where the
            house convention keeps his words and where the no-Cyrillic-in-a-template rule allows them).
            Four stacked rows fit on a 375px screen where four side-by-side buttons would not. The ORDER
@@ -150,7 +157,7 @@ useDialogFocus(card)
            screen) and only the Proceed below gives it. No positional selector and no marked default
            anywhere: the owner's do-not-mark ruling, quoted on the script side, binds the SELECTION
            idiom as strictly as it bound the old rows. -->
-      <div class="birthday-choices" role="radiogroup" aria-labelledby="birthday-ask" @keydown="onGroupKey">
+      <div class="birthday-choices" role="radiogroup" aria-labelledby="birthday-ask" @keydown="onRadioGroupKey">
         <button
           v-for="option in prompt.options"
           :key="option.id"
@@ -176,7 +183,7 @@ useDialogFocus(card)
            LAST element, which is what the phone-fit measurement reads the way out off. -->
       <button
         v-if="chosen !== null"
-        class="birthday-proceed"
+        class="birthday-proceed dialog-proceed"
         type="button"
         :disabled="sending"
         @click="confirm()"
@@ -306,23 +313,12 @@ useDialogFocus(card)
 /* ⭐ THE ADVANCE IDIOM for the one control that gives the present – the same declarations
    `.knock-proceed` and `.life-beat-proceed` carry, with the rows' own box metrics so the card does
    not jump when it appears. Every colour a declared token with no fallback (round-17 #3). */
+/* ⭐⭐ T6.4 · F-09 (28.09) – AND THE SENTENCE ABOVE IS A RULE NOW. «the same declarations
+   `.knock-proceed` and `.life-beat-proceed` carry» was a note describing an object that existed in
+   three places; it is `.dialog-proceed` in src/style.css, beside `.dialog-card`, and this button carries
+   both classes. The disabled pair went with it. What stays is the rows' own top rhythm, which the
+   detour's `done` in LifeBeatDialog deliberately does not have. */
 .birthday-proceed {
-  width: 100%;
   margin-top: 8px;
-  padding: 11px 13px;
-  text-align: center;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.35;
-  cursor: pointer;
-}
-
-.birthday-proceed:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 </style>

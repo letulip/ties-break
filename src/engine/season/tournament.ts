@@ -4,8 +4,8 @@
 // resolve from the closed-form win probability with a single RNG draw.
 
 import { rngFromSeed, type Rng } from '../rng'
-import type { MatchPlayer, Tour } from '../match/types'
-import { simulateMatch, fastMatchProbability } from '../match/engine'
+import type { MatchPlayer } from '../match/types'
+import { simulateMatch, fastMatchProbability, recordedMatchOptions, JUNIOR_TOUR } from '../match/engine'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from './calendar'
 import { NATION_POOL } from './cohort'
 import { ECONOMY } from '../economy'
@@ -13,7 +13,13 @@ import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, Tournament
 
 // Junior events run under WTA-average scoring (the project is WTA-first). Fixed so
 // stored kid-match seeds reproduce exactly.
-export const JUNIOR_TOUR: Tour = 'wta'
+//
+// ⚠ THE DECLARATION MOVED TO `match/engine.ts` ON 27.09 (C-04) AND THIS LINE IS ALL THAT IS LEFT OF
+// IT. `recordedMatchOptions` is the one owner of the options a recorded match was played under, it
+// lives beside `simulateMatch`, and it needs this constant – which this file could not lend it
+// without the match package importing the season package back. The name is re-exported here because
+// 31 call sites import it from this path and that public spelling must not move.
+export { JUNIOR_TOUR }
 
 // AI entry ambition, by standings PERCENTILE (`(position + 1) / fieldSize`, 0 = best).
 //
@@ -756,8 +762,62 @@ export function byAllocationPriority(a: SeasonEvent, b: SeasonEvent): number {
 // junior/domestic rungs are byte-identical - their universes are LIVE-only and the mixed-percentile
 // question there is phase 2 by name (docs/specs/living-field.md §8.3).
 
+// =================================================================================================
+// ⚠⚠ AND IT IS PAID FOR WHEN IT IS READ, NOT WHEN IT IS ASKED FOR – G-03 of the 26.09 performance
+// review, W3 T3.10.
+// =================================================================================================
+//
+// WHAT WAS HAPPENING. `toSnapshot` assembles a preview card's arguments once per event and spends
+// them twice (`world/snapshot.ts`, «ASSEMBLED ONCE PER EVENT AND SPENT TWICE»), and `excluded` was
+// one of them – so every W card in the window paid this function. But past `DRAW_LEAD_WEEKS`
+// **nothing reads it**: `firstRoundDraw` (season/preview.ts) returns null on its first line, before
+// `drawnField` and therefore before `selectEntrants`, and the far branch's own comment already says
+// the card reads «`ranking`, `standing`, `excluded` and `pinnedOpponentId` NOWHERE». Counted on
+// three careers at weeks 100–1,200, the first post-advance snapshot made **5–15 of these calls and
+// 4–16 `selectEntrants` runs** whose answer was thrown away, on the one command every week runs.
+//
+// ⭐ WHY LAZY AND NOT A SECOND ARGUMENT LIST. The obvious fix is a far-only assembly that leaves
+// `excluded` out, and that is the fix this file refused: two assemblies for one card is exactly what
+// the snapshot's ruling exists to prevent, because «the card and the fact behind it agree» then
+// decays into «two assemblies that happen to agree». A lazy set keeps ONE assembly and ONE caller
+// contract, and it is total rather than case-by-case – any reader that does not look pays nothing,
+// including `firstRound` on a week whose draw has not been made.
+//
+// ⚠ NOT A MEMO AND NOT A CACHE. Built at most once per returned value, from the same four inputs,
+// and nothing is stored beyond it; two calls with the same arguments still answer the same set (the
+// determinism case in `tests/season/tournament.test.ts` asserts exactly that).
+//
+// ⚠ RNG UNMOVED, AND THIS IS THE HALF WORTH BEING SURE OF. The streams derived below are
+// `seed:kidtour:<id>` SUB-streams, re-derived at the call site and persisting nothing (see the ⚠ RNG
+// note above). Deferring a derivation – or never making it, on a card that never looks – is
+// therefore invisible to the world: no MAIN draw is added, removed or reordered, and the frozen
+// capture 41550 / `e6b0c709` cannot see this function at all. The CALLER's own event draws off its
+// own stream from the first number, exactly as before.
+// -------------------------------------------------------------------------------------------------
+
+/** A set whose contents are computed on the first read of ANY member and never again. ⚠ The one
+ *  reason it exists is that `weekFieldExclusion` below is expensive and is handed to readers that
+ *  never look; keep it dumb – a lazy value is safe here only because the build is pure. */
+function lazySet(build: () => Set<string>): ReadonlySet<string> {
+  let inner: Set<string> | null = null
+  const of = (): Set<string> => (inner ??= build())
+  return {
+    get size(): number {
+      return of().size
+    },
+    has: (value: string) => of().has(value),
+    forEach: (fn, thisArg) => of().forEach(fn, thisArg),
+    keys: () => of().keys(),
+    values: () => of().values(),
+    entries: () => of().entries(),
+    [Symbol.iterator]: () => of()[Symbol.iterator](),
+  }
+}
+
 /** Everyone a HIGHER W rung of the same week has already drawn. Empty for a non-W event, for a week
- *  with a single W rung on it, and for any caller that does not pass a season. */
+ *  with a single W rung on it, and for any caller that does not pass a season.
+ *  ⚠ LAZY – the fields above are drawn on the first read, so a caller that never looks (a preview
+ *  card past `DRAW_LEAD_WEEKS`) pays nothing. See the block above. */
 export function weekFieldExclusion(
   event: SeasonEvent,
   season: readonly SeasonEvent[],
@@ -765,26 +825,31 @@ export function weekFieldExclusion(
   ranking: readonly RankingRow[],
   seed: string,
   conditions?: ReadonlyMap<string, number>,
-): Set<string> {
-  const booked = new Set<string>()
-  if (TIERS[event.tier].track !== 'wta') return booked
-  const rung = TIER_LADDER.indexOf(event.tier)
-  const above = season
-    .filter(
-      (e) =>
-        e.week === event.week &&
-        e.id !== event.id &&
-        TIERS[e.tier].track === 'wta' &&
-        TIER_LADDER.indexOf(e.tier) > rung,
-    )
-    .sort(byAllocationPriority)
-  for (const e of above) {
-    const rng = rngFromSeed(`${seed}:kidtour:${e.id}`)
-    for (const p of selectEntrants(e, universe, ranking as RankingRow[], rng, conditions, booked)) {
-      booked.add(p.id)
+): ReadonlySet<string> {
+  // ⚠ THE NON-W ANSWER STAYS EAGER, and it is the cheap one: an empty real `Set`, allocated and
+  // returned exactly as it always was, so the six junior/domestic rungs are byte-identical and no
+  // reader of theirs can even reach the lazy path.
+  if (TIERS[event.tier].track !== 'wta') return new Set<string>()
+  return lazySet(() => {
+    const booked = new Set<string>()
+    const rung = TIER_LADDER.indexOf(event.tier)
+    const above = season
+      .filter(
+        (e) =>
+          e.week === event.week &&
+          e.id !== event.id &&
+          TIERS[e.tier].track === 'wta' &&
+          TIER_LADDER.indexOf(e.tier) > rung,
+      )
+      .sort(byAllocationPriority)
+    for (const e of above) {
+      const rng = rngFromSeed(`${seed}:kidtour:${e.id}`)
+      for (const p of selectEntrants(e, universe, ranking as RankingRow[], rng, conditions, booked)) {
+        booked.add(p.id)
+      }
     }
-  }
-  return booked
+    return booked
+  })
 }
 
 // --- ONE BODY, ONE WEEK ------------------------------------------------------------------------
@@ -1033,7 +1098,7 @@ function playMatch(
   const kidPlays = kid !== null && (a.id === kid.id || b.id === kid.id)
   if (kidPlays) {
     const seed = `${worldSeed}:${event.id}:r${round}`
-    const res = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed })
+    const res = simulateMatch(a, b, recordedMatchOptions({ surface: event.surface, seed }))
     const winnerId = res.winner === 0 ? a.id : b.id
     const score = res.sets.map((s) => `${s.a}-${s.b}`).join(' ')
     // SHE (or her opponent) STOPPED. `simulateMatch` has already done the work: the loser is the

@@ -12,15 +12,12 @@
 
 import { createHash } from 'node:crypto'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek } from './econ-bench'
+// T5.12 · F-04, 27.09: `argOf` was one of six live copies of the FINITE rule – a non-numeric value
+// falls back rather than becoming NaN. Renamed at the call sites so which rule is read is visible.
+import { finiteArgOf } from './_args'
 
-const argOf = (name: string, fallback: number): number => {
-  const next = process.argv[process.argv.indexOf(`--${name}`) + 1]
-  const n = Number(next)
-  return Number.isFinite(n) ? n : fallback
-}
-
-const PRESET = argOf('preset', 0)
-const POLICY = argOf('policy', 1)
+const PRESET = finiteArgOf('preset', 0)
+const POLICY = finiteArgOf('policy', 1)
 const FREEZE_WEEKS = 156
 
 const { world, rng } = openCareer(PRESETS[PRESET], 0, POLICIES[POLICY])

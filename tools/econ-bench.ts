@@ -14,10 +14,38 @@
  * WHOLE HORIZON (Wave 1): instead of one 52-week season, run the SAME world forward to two career
  * milestones and report, per profile, the cumulative chance of surviving (not going bankrupt) and a
  * reach-rate proxy:
- *   14→16 = 104 weeks (2 seasons, the junior sink – no rung she can enter pays anything)
+ *   14→16 = 104 weeks (2 seasons, the junior sink – see `TierDef.prizeCents` for which rungs pay)
  *   14→18 = 208 weeks (4 seasons, "pro attempt" proxy)
- *   14→20 = 312 weeks (6 seasons, THE ADULT TOUR – W15 opens at 16, W100 at 17, so this is the
- *                      first horizon in which the prize-money question can be asked at all)
+ *   14→20 = 312 weeks (6 seasons, THE ADULT TOUR – the longest horizon; each rung's own age gate
+ *                      is its `minAgeYears` / `maxAgeYears` in `TIERS`)
+ *
+ * ⚠⚠ THE CLAUSE ABOVE USED TO RESTATE THE AGE GRID AND THE GRID HAD MOVED – corrected 27.09, the
+ * FIFTH copy (the other four – three test comments and a test title – went the same day). Verbatim:
+ * *"THE ADULT TOUR – W15 opens at 16, W100 at 17, so this is the first horizon in which the
+ * prize-money question can be asked at all"*. Against `TIERS` both open at **`minAgeYears: 14`**:
+ * w15, w35, w50, w75, w100 and slam are all 14, and only the four WTA rungs are 15. The sentence was
+ * the pre-16.08 chain the owner's ruling that evening replaced – `season/calendar.ts:1625` keeps that
+ * history beside the constants it moved. AND THE CONSEQUENCE ROTTED WITH IT: `w15.prizeCents` starts
+ * at $2,200 and w15 is open at 14, so the FIRST horizon (14→16) already reaches prize money.
+ *   ⚠ THE REPAIR IS TO REMOVE THE NUMBER, NOT TO ADVANCE IT. A sentence that points at `minAgeYears`
+ *   cannot go stale when `minAgeYears` moves; a sentence with a new digit in it resets the clock, and
+ *   every one of the six counts this wave has corrected had been advanced at least once before.
+ *   ⚠ «6 SEASONS» IS NOT A GRID CLAIM AND IT IS CORRECT: it is this bench's own span, 312 weeks ÷ 52,
+ *   and it moves only when the horizon on its own line moves. (`tools/pro-season-probe.ts:531`'s
+ *   «ages 16-18» is the same distinction from the other side – the probe's own season span, checked
+ *   and NOT a grid claim, so it is not a site.)
+ *   ⚠⚠ AND THE SAME FALSE CLAIM WAS A **PRINTED LEGEND** AT `HORIZONS[0]`, WHICH IS WHY IT MATTERED
+ *   MORE THAN THE COMMENT – corrected 28.09 with its own diff, on the architect's ruling. Verbatim:
+ *   `blurb: 'the junior sink – nothing she can enter pays a cent'`. `w15` opens at 14 and
+ *   `w15.prizeCents` starts at $2,200, so that legend contradicted the very table it prints beside –
+ *   and a false printed legend is worse than a false comment, because it is the thing somebody quotes
+ *   into a spec. It now points at `TierDef.prizeCents` instead of restating it.
+ *     ⚠ IT MOVED PRINTED OUTPUT, so it was NOT a comment-only change and it carries the proof every
+ *     other T5.12 change carries: `bench:econ` run before and after, and the diff shows the TWENTY
+ *     lines that interpolate that one string and NOTHING else – the legend block, the 14→16 horizon
+ *     header, and its eighteen `[target: …]` reach rows – nine presets × two policies. Every other byte of the
+ *     176 KB is unchanged, checksums and all.
+ *
  * State carries across seasons because we keep ONE createWorld + ONE rngFromSeed for the whole horizon
  * and just tick further – fundsCents, kidRank, the rolling results ledger, bestFinishByTier and
  * lastSeasonSummary all live on the world.
@@ -77,6 +105,9 @@ import { ECONOMY, recommendVacationPackage } from '../src/engine/economy'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+// T5.12 · F-04, 27.09: the three bodies moved to `_stats.ts` and are re-exported below under their
+// historical names – see the `--- stats ---` section for why the lift was byte-identical.
+import { mean, median, stddev } from './_stats'
 
 export { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -105,16 +136,22 @@ export interface Horizon {
 
 // Three horizons, all iterated in main. weeks = (targetAge - 14) * 52.
 //
-// ⚠ THE THIRD ONE EXISTS BECAUSE THE ADULT TOUR IS UNREACHABLE INSIDE THE OTHER TWO (task #17, A4).
-// W15 has `minAgeYears: 16`, which is week 104 – the exact last week of the 14→16 horizon – so the
-// junior horizon can never see a professional entry, and 14→18 leaves at most two seasons of it. The
-// A4 question ("in what week does prize money first exceed the week's costs?") needs the adult rungs
-// to have been played for long enough to answer honestly, and a horizon that reports "never" because
-// it stopped too early would be the same non-measurement REACH_TARGET_MONEY was before it was
-// re-based. Six seasons takes her to 20 – past the fork at 19 that §4 of
+// ⚠ THE THIRD ONE EXISTS BECAUSE THE A4 QUESTION NEEDS A LONG ENOUGH ADULT RUN (task #17, A4). It
+// asks "in what week does prize money first exceed the week's costs?", which needs the paying rungs to
+// have been played for long enough to answer honestly; a horizon that reports "never" because it
+// stopped too early would be the same non-measurement REACH_TARGET_MONEY was before it was
+// re-based.
+//
+// ⚠⚠ THE SEVENTH COPY OF THE AGE GRID WAS HERE, AND IT IS WHY THE 14→16 LEGEND LIED – corrected 28.09.
+// Verbatim: *"THE ADULT TOUR IS UNREACHABLE INSIDE THE OTHER TWO. W15 has `minAgeYears: 16`, which is
+// week 104 – the exact last week of the 14→16 horizon – so the junior horizon can never see a
+// professional entry, and 14→18 leaves at most two seasons of it."* Against `TIERS`, `w15.minAgeYears`
+// is **14**, so the junior horizon can see a professional entry from its first week. The premise here,
+// the derived claim, and the PRINTED legend below all rotted together off one restated constant – which
+// is the shape of this defect class, and the reason the repair names the field instead of the number. Six seasons takes her to 20 – past the fork at 19 that §4 of
 // docs/specs/adult-tour-and-endings.md will eventually make a decision rather than a birthday.
 export const HORIZONS: Horizon[] = [
-  { label: '14→16', weeks: 104, targetAge: 16, blurb: 'the junior sink – nothing she can enter pays a cent' },
+  { label: '14→16', weeks: 104, targetAge: 16, blurb: 'the junior sink – see TierDef.prizeCents for what pays' },
   { label: '14→18', weeks: 208, targetAge: 18, blurb: 'pro attempt proxy (top-50 once ranked, or 60 points)' },
   { label: '14→20', weeks: 312, targetAge: 20, blurb: 'the adult tour – can the tennis start paying for itself?' },
 ]
@@ -1066,25 +1103,21 @@ export function runCareer(
 }
 
 // --- stats -------------------------------------------------------------------
-
-export function mean(xs: number[]): number {
-  if (xs.length === 0) return 0
-  return xs.reduce((s, x) => s + x, 0) / xs.length
-}
-
-/** Population standard deviation (we have the whole 30-seed population, not a sample). */
-export function stddev(xs: number[]): number {
-  if (xs.length === 0) return 0
-  const m = mean(xs)
-  return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)))
-}
-
-export function median(xs: number[]): number {
-  if (xs.length === 0) return 0
-  const s = [...xs].sort((a, b) => a - b)
-  const mid = Math.floor(s.length / 2)
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
-}
+//
+// ⚠⚠ THE BODIES MOVED TO `tools/_stats.ts` ON 27.09 (T5.12 · F-04) AND THESE THREE NAMES DID NOT.
+// 120 files in `tools/` and 23 in `tests/` import SOMETHING from here, and **44 of them take `mean`,
+// `median` or `stddev`** – 43 tools (14 of them live) and one test. Counted by parsing whole
+// multi-line `import { … }` statements, because a line-wise grep undercounts a name on its own line;
+// that is what made econ-bench the benches' statistics home whether or not anybody named it one, and
+// it is why the review's fix was to LIFT these three bodies rather than write a better rule.
+//
+// The re-export keeps every one of those import paths exactly where it was, and `_stats.ts` records
+// the reference behaviour all 44 already print: empty array → 0, and an even-length median is the
+// average of the two middles.
+//
+// The doc comment that stood on `stddev` here, kept verbatim because it is this bench's own reason:
+// *"Population standard deviation (we have the whole 30-seed population, not a sample)."*
+export { mean, median, stddev }
 
 // --- formatting --------------------------------------------------------------
 

@@ -41,8 +41,6 @@ import {
 import { leavingView } from './helpers/leavingView'
 import {
   closeTournament,
-  callUpRevealOpen,
-  collegeLeagueRevealOpen,
   skipTournament,
   createWorld,
   advanceWeeks,
@@ -83,28 +81,7 @@ import { kidAgeExact, kidAgeYears } from '../src/engine/world'
 import { pendingLifeBeat } from '../src/engine/world'
 import { growAndLive } from '../src/engine/world/phaseGrowth'
 import { ageAtPhysicalShare } from '../src/engine/development'
-
-/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
- *  the year on the College League week the way it already pauses on her birthday, because the owner
- *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
- *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
- *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
- *  answers one more question and its press ceiling grows by one a year. The full note is in
- *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
-/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
- *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
- *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
- *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
- *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
- *  the championship, so a walk that answered only one of the two would hang on the other. The
- *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
- *  `skipTournament` / `closeTournament` are still the player's own two presses. */
-function answerCollegeReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
-  skipTournament(world)
-  closeTournament(world)
-}
-
+import { answerCollegeReveal, pressCollegeYear } from './helpers/scenarios/college'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
@@ -1142,10 +1119,15 @@ describe('#2 college – the only ending that resumes', () => {
     for (let year = 1; year <= ENDINGS.collegeYears; year++) {
       // ⚠ ROUND 24 («да, день рождения делай»): the year PAUSES on her birthday week now, so a year
       // is press-answer-press. Every original assertion is unchanged and asked at the same boundary.
-      for (let press = 0; press < 4 && world.college!.years.length < year; press++) {
+      // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+      // year the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered
+      // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
+      // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary.
+      for (let press = 0; press < 6 && world.college!.years.length < year; press++) {
         resumeFromCollege(world, rng)
         answerCollegeReveal(world)
         if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+        drainLifeBeats(world)
       }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
       expect(world.college!.years, `one row per year lived`).toHaveLength(year)
@@ -1156,7 +1138,12 @@ describe('#2 college – the only ending that resumes', () => {
     expect(world.week).toBe(from + ENDINGS.collegeYears * WEEKS_PER_YEAR)
     expect(inCollege(world)).toBe(false)
     expect(world.college?.doneWeek).toBe(world.week)
-  }, 90_000)
+  // ⚠⚠ EVERY PER-TEST BUDGET IN THIS FILE IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: the four over the
+  // ceiling went 90 s -> 60 s on a measurement and were then DELETED, and the one that already sat AT
+  // 60 s went with them – at 60 s all of them only restated `vite.config.ts`'s own unit `testTimeout`,
+  // and a restated constant cannot follow its source, so a ceiling moved to 90 s would leave this file
+  // at 60. SLOWEST TEST here, in the real bulk pool: 9.35 s. Table: tests/sim-serialisation.test.ts.
+  })
 
   it('⚠ she comes back with no ranking at all, and no rule was written for it', () => {
     // She entered nothing for 208 weeks, so every result she owned has aged out of the rolling
@@ -1167,14 +1154,16 @@ describe('#2 college – the only ending that resumes', () => {
     world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerCollegeAndDepart(world, rng)
     // Press-answer-press (round 24): each year pauses on her birthday week.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+    // year the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered
+    // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
+    // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      pressCollegeYear(world, rng)
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
-  }, 90_000)
+  })
 
   it('the family stops paying: no coaching is billed across the freeze', () => {
     const { world, rng } = freshWorld('college-money')
@@ -1184,10 +1173,13 @@ describe('#2 college – the only ending that resumes', () => {
     const from = world.week
     // Press-answer-press (round 24): each year pauses on her birthday week – and the gift charges
     // nothing, which is exactly what this case goes on to measure.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
-      resumeFromCollege(world, rng)
-      answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3): ruling 2(a) makes a blocking life beat pause the college
+    // year the way the birthday does (measured: 23 of 217 year-calls ticked past an unanswered
+    // blocking row), so the walk answers her card too – `drainLifeBeats`, bond-neutral and priced
+    // ZERO – and the budget gains a press a year. Every assertion is asked at the same boundary. Her card is priced ZERO too, so the bill this
+    // case measures is unmoved by the answer as well as by the pause.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      pressCollegeYear(world, rng)
     }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
@@ -1200,7 +1192,7 @@ describe('#2 college – the only ending that resumes', () => {
     // ...and the balance is HIGHER than it was, because the parent kept working.
     expect(world.careerTotals.earnedCents).toBeGreaterThan(0)
     expect(world.careerTotals.spentCents).toBeGreaterThanOrEqual(spentBefore)
-  }, 90_000)
+  })
 })
 
 describe('the break-even milestone – captured, never reconstructed', () => {
@@ -1355,18 +1347,22 @@ describe('⚠ input-independence survives college', () => {
     // ⚠ ROUND 24 – AND THE PROPERTY GETS STRONGER, NOT DIFFERENT: the years pause on her birthdays
     // and the gifts are answered mid-walk, so the arm now proves that pausing, answering and
     // resuming cost the MAIN stream not one draw either. The B arm never pauses at all.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
+    // ⚠⚠ RE-AIMED 26.09 (B-01 / T2.3) AND THE PROPERTY GETS STRONGER AGAIN, for the sentence above
+    // said a third time: ruling 2(a) makes her card pause the year, so this arm now also proves that
+    // pausing on a beat and ANSWERING it costs the MAIN stream not one draw. The B arm never pauses.
+    for (let press = 0; press < 6 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
       resumeFromCollege(a, rngA)
       // ⚠ ROUND 26 #6: and the championship's reveal is answered mid-walk too – the arm now proves
       // that watching a tournament costs the MAIN stream not one draw either.
       answerCollegeReveal(a)
       if (pendingBirthday(a) !== null) answerBirthdayNeutral(a)
+      drainLifeBeats(a)
     }
     while (b.week < a.week) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)
     expect(a.rngMain.s).toBe(b.rngMain.s)
-  }, 90_000)
+  })
 })
 
 // --- acceptance: a PRE-WAVE save opens, plays, and can reach an ending ----------------------------
@@ -1444,5 +1440,5 @@ describe('⚠ a career saved before this wave existed', () => {
     expect(view.album).toHaveLength(7)
     expect(view.album.every((p) => p.why.length > 0)).toBe(true)
     expect(view.totals.spentCents).toBeGreaterThan(0)
-  }, 60_000)
+  })
 })

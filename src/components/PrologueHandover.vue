@@ -108,8 +108,8 @@ useDialogFocus(cardEl)
       aria-labelledby="handover-kicker handover-title"
       tabindex="-1"
     >
-      <p id="handover-kicker" class="handover-kicker">{{ kicker }}</p>
-      <h2 id="handover-title" class="handover-title">{{ copy.title }}</h2>
+      <p id="handover-kicker" class="handover-kicker dialog-kicker">{{ kicker }}</p>
+      <h2 id="handover-title" class="handover-title dialog-title">{{ copy.title }}</h2>
 
       <!-- 1. THE FORMED ROSE, drawn by the shipped component off the snapshot's own axes. The
            picture's height is declared in the style block below rather than left to the layout -
@@ -150,10 +150,10 @@ useDialogFocus(cardEl)
            the whole subject of this screen is that the decision is yours. Same rule, and the same
            absence of a positional selector, as `.prologue-answer`. -->
       <div class="handover-answers">
-        <button class="handover-answer" type="button" :disabled="busy" @click="emit('go-on')">
+        <button class="handover-answer dialog-option-accent" type="button" :disabled="busy" @click="emit('go-on')">
           {{ copy.goOn }}
         </button>
-        <button class="handover-answer" type="button" :disabled="busy" @click="emit('start-again')">
+        <button class="handover-answer dialog-option-accent" type="button" :disabled="busy" @click="emit('start-again')">
           {{ copy.startAgain }}
         </button>
       </div>
@@ -185,20 +185,12 @@ useDialogFocus(cardEl)
   text-align: left;
 }
 
-.handover-kicker {
-  margin: 0 0 4px;
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
+/* ⭐⭐ T6.4 · F-09 (28.09) – `.dialog-kicker` and `.dialog-title` in src/style.css, carried beside
+   these two classes. The kicker's rule is gone whole; the title keeps ONE declaration, and it is a real
+   measurement rather than a leftover: this card has no art above the block, so the gap under its title
+   is 10px where the three dialogs with a picture use 8. A delta, not a drift. */
 .handover-title {
-  margin: 0 0 10px;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  line-height: 1.25;
-  color: var(--ink);
+  margin-bottom: 10px;
 }
 
 .handover-rose {
@@ -279,26 +271,14 @@ useDialogFocus(cardEl)
 /* ⚠ ONE RULE FOR BOTH ROWS AND NO POSITIONAL SELECTOR, for the reason `.prologue-answer` gives: a
    `:first-child` here would be the screen pointing at the answer it prefers, on the one screen whose
    entire subject is that the choice is the parent's. */
+/* ⭐⭐ T6.4 · F-09 (28.09) – eight of the eleven declarations, the hover and the disabled pair are
+   `.dialog-option-accent` in src/style.css; this element carries that class beside its own. What stays
+   is this card's own single-line row: a BLOCK at 15px/1.3, where `.prologue-answer` is a column of a
+   label and a note. See PrologueCard.vue for why the accent form is a sibling of `.dialog-option` rather
+   than a modifier layered on it. */
 .handover-answer {
   display: block;
-  width: 100%;
-  padding: 11px 13px;
-  text-align: left;
   font-size: 15px;
   line-height: 1.3;
-  border: var(--stroke-hair) solid var(--accent-soft);
-  border-radius: var(--radius-frame);
-  background: var(--accent-wash);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.handover-answer:hover:not(:disabled) {
-  background: var(--accent-fill);
-}
-
-.handover-answer:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 </style>

@@ -44,6 +44,10 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { careerKey, useCareerSync } from './inboxCue'
+import { readLocal, writeLocal } from './localStore'
+// ⭐⭐ T4.2 · E-07 – the engine's «is this letter still a decision», read rather than re-spelled. It is
+// a pure function of an offer and a week, so importing it here adds no world and no draw.
+import { isOfferLive } from '../engine/offers'
 import type { Offer } from '../shared/protocol'
 
 const READ_KEY = 'tb:inbox:read'
@@ -68,7 +72,12 @@ const BINNED_KEY = 'tb:inbox:binned'
  *  notices, a brand's goodbye), a signed deal that has run its course, and an `open` letter whose
  *  deadline has passed - that one already renders as "Expired" and is no longer a decision. */
 export function letterDeletable(offer: Offer, week: number): boolean {
-  if (offer.state === 'open') return week > offer.deadlineWeek
+  // ⚠⚠ THE OPEN ARM IS THE ENGINE'S ANSWER, INVERTED (T4.2 · E-07, 27.09). It spelled
+  // `week > offer.deadlineWeek` – `isOfferLive`'s second half written backwards, which is a copy
+  // however short it is, and the negation is the direction that MATTERS here: if the two ever drifted,
+  // the bin would offer to clear a letter the sheet was still calling a decision. One question, one
+  // function, and the answer is inverted at the point of use rather than re-derived.
+  if (offer.state === 'open') return !isOfferLive(offer, week)
   if (offer.state === 'signed') return week > (offer.untilWeek ?? -1)
   return true
 }
@@ -76,11 +85,19 @@ export function letterDeletable(offer: Offer, week: number): boolean {
 /** localStorage as a set of ids, per career. Storage failures claim NOTHING - an empty set means
  *  "nothing read" and "nothing binned", and both of those are the safe direction: an unread letter
  *  shown in bold costs a bold row, and a letter that refuses to stay hidden costs a second press.
- *  The opposite defaults would hide a live offer. */
+ *  The opposite defaults would hide a live offer.
+ *
+ *  ⚠⚠ THE ACCESS GUARD IS `composables/localStore.ts`' SINCE 27.09 (E-P14, «migrate on touch»), AND THE
+ *  HAZARD IT COVERS IS NOT THE ONE A HAND-ROLLED TRY USUALLY CATCHES. A browser that blocks site data
+ *  throws `SecurityError` on the PROPERTY ACCESS – `localStorage` itself, before `getItem` is reached –
+ *  which inside a composable's setup is a component that does not render at all. `readLocal` is the one
+ *  spelling of that guard; this module keeps the two things that ARE its own, the JSON shape and the
+ *  missing-key rule, and the parse keeps a `try` of its own because malformed stored text is a different
+ *  failure from unreachable storage and answers the same way for a different reason. */
 function readSet(key: string): Set<string> {
+  const raw = readLocal(key)
+  if (!raw) return new Set()
   try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return new Set()
     const parsed: unknown = JSON.parse(raw)
     return new Set(Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [])
   } catch {
@@ -89,11 +106,9 @@ function readSet(key: string): Set<string> {
 }
 
 function writeSet(key: string, value: Set<string>): void {
-  try {
-    localStorage.setItem(key, JSON.stringify([...value]))
-  } catch {
-    // storage unavailable: the list still behaves for this session, it just will not persist
-  }
+  // Silent when storage will not take it – the list still behaves for this session, it just will not
+  // persist. `writeLocal` owns that decision and states the argument for it.
+  writeLocal(key, JSON.stringify([...value]))
 }
 
 export interface InboxMail {
@@ -109,10 +124,23 @@ export interface InboxMail {
  * ⚠ THE STORED SETS ARE PRUNED TO THE LETTERS THAT STILL EXIST, on every write. `pruneEntryLetters`
  * drops tournament-desk receipts a year after they were filed, so an unpruned set grows for the whole
  * length of a career and is mostly ids of letters nobody can see. Pruning on write keeps it the size
- * of the inbox. It is also why the prune reads the SNAPSHOT rather than a stored count: the list is
+ * of the inbox. It is also why the prune reads the LIST rather than a stored count: the list is
  * the authority on what exists, and this module is only ever an annotation on it.
+ *
+ * ⚠⚠ AND THE LIST IS THE CALLER'S NOW, NOT `Snapshot.offers` (T6.2 · D-07, 28.09), BECAUSE A PARTIAL
+ * LIST TURNS THE PRUNE INTO A DESTRUCTOR. Since D-07 the weekly snapshot carries only the letters
+ * this week still needs, so pruning against it would delete the player's OWN annotations on every
+ * older letter the moment anything was read or binned – a binned letter would un-bin itself the week
+ * its offer expired, and the write is persisted, so it would not be recoverable. Binning one letter
+ * would in fact clear the bin marks of all the others, which is the defect in its purest form.
+ *
+ * `allLetters` is therefore the WHOLE post – `InboxSheet` passes the `inbox` query's answer, which it
+ * has in hand for as long as it is open, and this composable has no other caller. Its `null` means
+ * «I cannot say», and the answer to that is TO NOT PRUNE: a set that keeps a stale id costs a few
+ * bytes, and a set that lost a real one costs the player something he did. Safe by construction – the
+ * partial list is no longer reachable from here.
  */
-export function useInboxMail(): InboxMail {
+export function useInboxMail(allLetters: () => Offer[] | null): InboxMail {
   const game = useGameStore()
   const careerId = computed(() => game.snapshot?.careerId ?? '')
   const key = (prefix: string) => careerKey(prefix, careerId.value)
@@ -131,11 +159,15 @@ export function useInboxMail(): InboxMail {
 
   function persist(which: 'read' | 'binned'): void {
     if (!careerId.value) return
-    const live = new Set((game.snapshot?.offers ?? []).map((o) => o.id))
     const target = which === 'read' ? read : binned
-    const pruned = new Set([...target.value].filter((id) => live.has(id)))
-    target.value = pruned
-    writeSet(key(which === 'read' ? READ_KEY : BINNED_KEY), pruned)
+    const all = allLetters()
+    // ⚠ NO LIST, NO PRUNE – see the header. The annotation is still written, so the press the player
+    // just made survives a reload; what is skipped is the half that DELETES.
+    if (all !== null) {
+      const exists = new Set(all.map((o) => o.id))
+      target.value = new Set([...target.value].filter((id) => exists.has(id)))
+    }
+    writeSet(key(which === 'read' ? READ_KEY : BINNED_KEY), target.value)
   }
 
   return {

@@ -85,7 +85,6 @@ import {
   createWorld,
   drawConceptionWindow,
   endEpisode,
-  kidAgeExact,
   landPregnancyAnnouncement,
   lifeLogOf,
   motherhoodBandAt,
@@ -99,6 +98,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { pregnancyFaceAt } from '../src/shared/avatarEmotion'
 import type { LoveEpisode } from '../src/shared/protocol'
+import { weekAtAge } from './helpers/career'
 
 // ⚠⚠ THE WAVE-8 BRIEF'S OWN LITERALS, TRANSCRIBED AND NEVER READ OFF `ECONOMY.motherhood`
 // (tests/wave3-reaction.test.ts ARM 2's law, and tests/wave8-pregnancy.test.ts's own `BRIEF`). The
@@ -107,13 +107,6 @@ import type { LoveEpisode } from '../src/shared/protocol'
 const BRIEF = { playsOnWeeks: 8, termWeeks: 31 } as const
 
 /** The FIRST week she reads at or above `years`, on the engine's own clock. */
-function weekAtAge(world: WorldState, years: number): number {
-  for (let w = 0; w < 40 * 52; w++) {
-    if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
-  }
-  throw new Error(`no week reaches age ${years}`)
-}
-
 function married(latchedWeek: number, sinceWeek: number): LoveEpisode {
   return {
     id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek + 2, wants: 'open',

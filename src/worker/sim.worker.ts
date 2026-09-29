@@ -3,13 +3,13 @@ import {
   createWorld,
   tickWeek,
   advanceWeeks,
+  // ⭐⭐ A-01 = D-03 (26.09) – the engine's own «which questions stop time», asked by the `tick` case
+  // instead of re-spelled there. The four predicates that used to be imported for the hand copy
+  // (`pendingKnock`, `shootClashOpen`, `pendingBirthday`, `pendingLifeBeat`) left with it.
+  advanceRefusal,
   maxMainDraws,
-  pendingKnock,
-  shootClashOpen,
-  pendingBirthday,
   chooseGift,
   answerLifeBeat,
-  pendingLifeBeat,
   replayMainState,
   enterEvent,
   withdrawEvent,
@@ -51,6 +51,11 @@ import {
   guardNotEnded,
   type WorldState,
 } from '../engine/world'
+// ⭐⭐ T6.2 · D-07 – `assembleInbox` is imported from the module that OWNS it rather than through the
+// `engine/world` barrel. The barrel re-exports the engine's HISTORICAL public API – hundreds of files
+// import from it and none of their names may move (CLAUDE.md) – and a symbol born after A-03 freezes
+// that list does not join it. `assembleAlbum` above predates the freeze and keeps its barrel name.
+import { assembleInbox } from '../engine/world/snapshot'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
@@ -60,7 +65,7 @@ import {
   adoptAutosave,
   SaveConflictError,
   writeNamed,
-  readSlot,
+  readSlotRecord,
   readLatestAutosave,
   listSlots,
   deleteSlot,
@@ -68,7 +73,8 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
-import { CommandRefusedError, profileShapeError } from '../shared/protocol'
+// ⭐⭐ A-05 (26.09): three shape checks now, not one – the profile, the childhood and the inheritance.
+import { CommandRefusedError, dynastyShapeError, profileShapeError, prologueShapeError } from '../shared/protocol'
 import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
@@ -204,6 +210,44 @@ function ensureMainState(w: WorldState): boolean {
 }
 
 /**
+ * ⭐⭐ D-04 (principles review, 26.09) – THE IMPORT DOOR RENDERS **AND TICKS** THE CANDIDATE BEFORE IT
+ * ADOPTS ANYTHING, and both throws come back as the same typed refusal.
+ *
+ * E-02 moved `toSnapshot` in front of the adopt, which stopped a file that cannot RENDER from
+ * becoming a persisted career. The 26.09 sweep found the next step of the same hole: of the 16 top
+ * level fields that still passed the spine at v89, three (`knockHistory`, `children`, `dynasty`)
+ * rendered fine, were written as the newest autosave, and then threw on the first tick – a persisted
+ * career that cannot ADVANCE. Spine rows answer the three that are lists; this answers the rest, and
+ * every hole after them, WITHOUT enumerating anything: if the file cannot survive one week it does
+ * not come in.
+ *
+ * ⚠ THE TICK RUNS ON A CLONE THAT IS THROWN AWAY, so the committed RNG stream does not move a single
+ * draw: `resumeMain` mutates the pair it is handed, and the pair it is handed belongs to the discarded
+ * copy. The candidate this function returns a snapshot for is byte-for-byte the one that arrived.
+ *
+ * ⚠ AND THE SENTENCE IS `decodeExportFile`'s OWN, BYTE FOR BYTE – the same «damaged» line a file that
+ * will not parse already gets. No copy is written here: this is the import door reporting the same
+ * kind of news about the same file, and a new sentence would be the owner's to write. The code is
+ * `corrupted` for the same reason the codec wraps its own raw throws that way: «the player never sees
+ * a bare stack-trace message», which is exactly what the 13 snapshot-throwers used to produce.
+ *
+ * ⚠ IT COSTS ONE TICK (~7 ms) ON A PATH A PLAYER TAKES BY HAND, once per imported file. This is
+ * B-06's «normalise at the door, once» in concrete form – the door, not every reader, answers whether
+ * the world is usable.
+ */
+function importDryRun(candidate: WorldState): Snapshot {
+  try {
+    const snapshot = toSnapshot(candidate)
+    const rehearsal = structuredClone(candidate)
+    tickWeek(rehearsal, resumeMain(rehearsal.rngMain))
+    return snapshot
+  } catch (err) {
+    if (err instanceof SaveFileError) throw err
+    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+  }
+}
+
+/**
  * TB-03 — THE CANDIDATE-STATE COMMIT, the shape of every mutating command:
  *
  *     capture committed state            (`world`, `committedRevision`)
@@ -242,10 +286,23 @@ async function mutate(
   const rng = resumeMain(candidate.rngMain)
   const stopReasons = command(candidate, rng) ?? undefined
 
+  // ⭐⭐ B-02 (principles review, 26.09) – AND THE SNAPSHOT IS BUILT BEFORE ANYTHING IS COMMITTED,
+  // which is E-02's ordering rule finally reaching the everyday path. `new`, `restoreSlot` and
+  // `importSave` have built it first since E-02 ("the ordering is the property, and a lifecycle path
+  // that commits before it can render is the defect regardless of which of the three found it
+  // first"); all 41 `return mutate(` commands still ran `commitAutosave` → `world = candidate` →
+  // `snapshotMsg`, and `snapshotMsg` builds `toSnapshot` at reply time. So any engine bug that makes
+  // the snapshot throw turned a refused command into a career persisted in a state that cannot
+  // render – and that class has already bricked a save once (round 42 #15: `smallTalkOpener` threw
+  // inside the snapshot the whole app renders from, `world/lifeBeat.ts`).
+  // ⚠ IT COSTS NOTHING: every command built this snapshot anyway, one line later. `revision` is
+  // still read off `committedRevision` at reply time, inside `snapshotMsg`, so the reply reports the
+  // number this commit allocated and not the one it was based on.
+  const snapshot = toSnapshot(candidate, stopReasons)
   await commitAutosave(candidate, committedRevision + 1)
   world = candidate
   committedRevision += 1
-  return snapshotMsg(id, candidate, { stopReasons })
+  return snapshotMsg(id, candidate, { stopReasons, snapshot })
 }
 
 /** THE SPAN OF THE TWO COMMANDS THAT MOVE TIME (E-06, 05.09 engine review).
@@ -297,16 +354,38 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // for seven others.
       const badProfile = profileShapeError(msg.profile)
       if (badProfile) throw new CommandRefusedError(`New career: ${badProfile}`)
+      // ⭐⭐⭐ A-05 (the principles review, 26.09 – ruling 8a) – AND SO ARE THE OTHER TWO PAYLOADS, ON
+      // THE SAME LINE OF THE SAME COMMAND. What stood here from v84 to v86 was the note below, which
+      // said the fifth argument «RIDES THROUGH UNTOUCHED» and gave a reason for the dynasty that did
+      // not hold: `createWorld` REPLACES the accepted background with `dynasty.background`
+      // (`world.ts`), after `profileShapeError` has already run. So the field the note claimed was
+      // covered was the one field that was not. Measured at the baseline: `spentCents: NaN` births a
+      // career with `fundsCents = NaN` whose own export file the import gate then refuses;
+      // `years[0].practice: NaN` births five NaN skills and exports and re-imports cleanly;
+      // `years: null` births a career on a different coach rung than the profile chose; and
+      // `dynasty.background: 'bogus'` was a bare `TypeError`. All four are refused here now.
+      //
+      // ⚠⚠ BEFORE `createWorld`, WHICH IS THE WHOLE OF THE E-06 ARGUMENT REPEATED: past that line the
+      // career EXISTS, `adoptAutosave` has written it to the player's disk and the only exit is
+      // deleting it. A check after it would be a diagnosis, not a refusal.
+      //
+      // ⚠ THE SHAPE IS `profileShapeError`'s, BYTE FOR BYTE – one `New career: <sentence>` per
+      // payload, refused as `INVALID_COMMAND` by the same `CommandRefusedError`. Two DRAFT sentences
+      // for the owner's pass (invariant 4), tabled in docs/plans/principles-fix-strings-2026-09.md;
+      // nothing else on this path moved a character.
+      const badPrologue = prologueShapeError(msg.prologue)
+      if (badPrologue) throw new CommandRefusedError(`New career: ${badPrologue}`)
+      const badDynasty = dynastyShapeError(msg.dynasty)
+      if (badDynasty) throw new CommandRefusedError(`New career: ${badDynasty}`)
       const seed = msg.seed.trim() || 'wildcard'
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       // Candidate-first like every other path: the fresh world only becomes the active one after
       // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
-      // ⭐⭐ v86 – THE FIFTH ARGUMENT RIDES THROUGH UNTOUCHED, and there is still ONE call. The block is
-      // re-validated by the same line that validates everything else about a new career: `createWorld`
-      // reads `dynasty.background` through `profile` (which `profileShapeError` has just accepted) and
-      // copies every other field rather than aliasing the message's object.
-      // ⭐⭐⭐ v87 – AND THE SIXTH RIDES THROUGH UNTOUCHED TOO. It is a plain boolean answered by a
-      // card on the creation path, so there is nothing to validate beyond what the wire's type says;
+      // ⭐⭐ v86 – THE FIFTH ARGUMENT NO LONGER RIDES THROUGH UNTOUCHED (A-05, 26.09 – the block above
+      // has the measurement), and there is still ONE call. `createWorld` copies every field rather
+      // than aliasing the message's object, which is the half of the old note that was always true.
+      // ⭐⭐⭐ v87 – AND THE SIXTH DOES STILL RIDE THROUGH UNTOUCHED. It is a plain boolean answered by
+      // a card on the creation path, so there is nothing to validate beyond what the wire's type says;
       // `createWorld` reads `?? false`, which is the ruled meaning of a caller that did not ask.
       const candidate = createWorld(
         seed,
@@ -354,42 +433,30 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         // past the most expensive click in the game with nobody answering it, and a loop that outran
         // the LATCH would keep ticking a career that has ended. Same two positions as the pair above,
         // same reasoning: a refusal at entry, a stop mid-loop.
-        const decisionOpen = (w: WorldState): boolean =>
-          w.pendingTournament !== null ||
-          pendingKnock(w) ||
-          // ⭐ v48: ...AND THE BIRTHDAY, for the reason the whole list exists. The dev fast-forward
-          // ships in EVERY build (an owner ruling), so a `▶▶ 52` that outran an unanswered birthday
-          // would tick a year past the one popup the owner asked to fire ALWAYS, with nobody
-          // answering it – which is exactly the hole the knock and the fork are on this list to close.
-          pendingBirthday(w) !== null ||
-          // ⭐⭐⭐ v85 T11b: ...AND A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, which is the birthday's
-          // own argument in its strongest form. The birthday is on this list because a `▶▶ 52` that
-          // outran it would tick a year past the one popup the owner asked to fire ALWAYS; a blocking
-          // beat is HER SPEAKING, so a loop that outran one would answer her by walking away – and
-          // that is an answer nobody chose and nobody would ever be told about. `advanceRefusal`
-          // (world/multiWeek.ts) carries that sentence for the supervised path and the `'life'` stop
-          // in `advanceWeeks` (world.ts) is its other half; this is the third caller finally saying
-          // the same thing, and it is placed here rather than lower so the ORDER matches
-          // `advanceRefusal`'s own – birthday, then her card, then the fork.
-          //
-          // ⚠⚠ THE HOLE PREDATES THIS WAVE AND IS SAID OUT LOUD RATHER THAN FIXED QUIETLY: `'met'`,
-          // `'ended'`, `'engaged'` and `'fork-opinion'` have all been blocking since v73–v83, and the
-          // button could tick a year past every one of them. What makes it THIS wave's line is that
-          // wave 8 adds two more blocking kinds – `'expecting'`, the layer's biggest news, and
-          // `'return-plan'`, the beat the entries seam reads – and shipping them beside a button that
-          // can skip them is shipping a hole in the thing the wave is about. Nothing here is new
-          // design: it is a known-shape omission from a list that exists for exactly this.
-          pendingLifeBeat(w) !== null ||
-          w.ending !== null ||
-          (w.fork !== null && w.fork.answer === null) ||
-          w.retirementOffer !== null ||
-          // ⭐⭐ ROUND 29 #3: ...AND THE SHOOT/TOURNAMENT COLLISION, for the reason this whole list
-          // exists. The dev fast-forward ships in EVERY build (an owner ruling), so a `▶▶ 52` that
-          // outran this question would tick a year past a decision two of whose four answers stop
-          // being possible the moment the week starts – which is exactly the hole the knock and the
-          // fork are on this list to close, with the extra sharpness that it fires on the week BEFORE
-          // the one it is about.
-          shootClashOpen(w)
+        // ⭐⭐⭐ A-01 = D-03 (the principles review, 26.09) – AND IT NOW ASKS THE ENGINE RATHER THAN
+        // RE-SPELLING IT. This was an OR over the same eight predicates `advanceRefusal` asks, in the
+        // same order, with the reasoning for every clause copied beside it – and the copy had already
+        // lost a member: the life beat was missing HERE from v73 to v85 (`827efe6f`), so `▶▶ 52 (dev)`
+        // could tick a year of her life past her own card while both supervised paths refused it. The
+        // eight clauses and every word of their reasoning live ONCE now, in `openQuestions`
+        // (engine/world/multiWeek.ts) – the owner of «which questions stop time» – and this is the
+        // third reader finally asking it instead of answering for itself. Parity form A
+        // (docs/specs/engine-ui-parity-2026-09.md §1): the engine holds the predicate, the worker asks.
+        //
+        // ⚠ THE BEHAVIOUR IS BYTE-IDENTICAL, which is a measurement and not a hope: the two lists were
+        // identical by construction on the day this line changed – `world/state.ts` types every field
+        // it reads non-optional – so `advanceRefusal(w) !== null` is the same boolean in both
+        // positions. What changes is the FUTURE: a ninth blocking kind reaches this loop without
+        // anybody having to remember a second file.
+        //
+        // ⚠⚠ AND THE PIN THAT GUARDED IT MOVED WITH IT, because it was the weaker half. Seven
+        // `toContain` spellings in tests/dev-fast-forward.test.ts read this predicate's own SOURCE and
+        // could not see its eighth clause at all: replacing `shootClashOpen(w)` here with `false` left
+        // that file 5/5 green – measured three times in the review and a fourth time before this fix.
+        // It is one pin that this case calls `advanceRefusal` now, plus a table-driven behaviour case
+        // per member, and the mutation that proves them lives in the OWNER: drop a clause from
+        // `openQuestions` and the behaviour case for that member goes red.
+        const decisionOpen = (w: WorldState): boolean => advanceRefusal(w) !== null
         // ⚠ THE SHAPE AND THE WORDING ARE BOTH PINNED (tests/dev-fast-forward.test.ts): it matches
         // `if (decisionOpen(world)) {` followed immediately by the throw, and asserts the substring
         // "resolve the tournament or knock". So v48's birthday joins the parenthesis rather than
@@ -662,14 +729,33 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // about either through the one flag, because the message to them is the same: "this career
       // was repaired on the way in".
       const rngRecovered = ensureMainState(loaded)
+      // ⭐⭐ B-02's LAST LIFECYCLE PATH (principles review, 26.09) – THE SNAPSHOT IS BUILT BEFORE
+      // ANYTHING IS ADOPTED, which is the ordering E-02 gave `new` / `restoreSlot` / `importSave` and
+      // T1.4 gave all 41 mutations, arriving on the one path both of them left. `snapshotMsg` builds
+      // `toSnapshot` at reply time, so a newest generation that cannot render used to REPLACE the
+      // career the worker was holding: W1's own fuzz corpus measured the active career
+      // `{"careerId":"c-e2e-pro","week":413}` becoming a reply with no snapshot at all, after which
+      // every `getSnapshot` threw and the screen the player was on was gone until a reload. Nothing
+      // is written to the saves store on this path, so it is an IN-MEMORY loss – which is why no
+      // save-side gate could have caught it.
+      //
+      // ⚠ AFTER `ensureMainState` AND NOT BEFORE IT: the repair mutates `loaded` and the render must
+      // see the repaired world. On a refusal `loaded` is discarded whole, so that mutation reaches
+      // nothing.
+      const snapshot = toSnapshot(loaded)
       // Opening it counts as playing it, or the next boot ignores the choice - see touchCareer.
+      // ⚠ AND ONLY A LOAD THAT CAN RENDER COUNTS AS OPENING IT, which is the half that made the
+      // defect SELF-REPRODUCING. This mark is what the next boot sorts on, so touching before the
+      // render made the career that cannot render the first one the next boot opens: the player
+      // reloaded and landed on the same wall. A load that renders still touches, in this same place
+      // relative to the two assignments; a REFUSED load now touches nothing.
       await touchCareer(loaded.careerId)
       world = loaded
       // The disk's highest known revision, NOT the loaded record's own: after a generation
       // fallback the corpse generation still owns a higher number, and the next CAS commit must
       // clear it (readLatestAutosave documents the wedge this avoids).
       committedRevision = revision
-      return snapshotMsg(msg.id, loaded, { recovered: recovered || rngRecovered })
+      return snapshotMsg(msg.id, loaded, { recovered: recovered || rngRecovered, snapshot })
     }
     /**
      * TB-01 — RESTORE AS A COMMITTED REVISION. Restoring a slot IS a mutation of the career's
@@ -683,7 +769,22 @@ async function handle(msg: ToWorker): Promise<ToUI> {
      * Named saves are untouched by construction — this writes only the autosave rotation.
      */
     case 'restoreSlot': {
-      const candidate = await readSlot(msg.slot)
+      const { world: candidate, meta } = await readSlotRecord(msg.slot)
+      // ⭐⭐ D-01 (principles review, 26.09) – THE KEY WAS RE-VALIDATED FOR EXISTENCE AND NOTHING
+      // ELSE, which is invariant 1 with a hole in it: a screen holding a stale slot list names the
+      // generation that holds the CURRENT state, and the restore commits it over the only generation
+      // that still held the previous one. `baseRevision` protects every mutation from exactly this
+      // ("a command issued against a snapshot the worker has since moved past must not run at all")
+      // and a restore is a mutation of the career's timeline – it just measures the staleness
+      // against a different thing: the RECORD's revision versus the one the caller read off its
+      // SlotMeta. Refused with the same typed STALE_REVISION, carrying the committed revision so the
+      // caller refreshes and re-decides.
+      // ⚠ ONLY WHEN THE CALLER SAID SO. A pre-W1-INTEGRITY-A record has no revision and a caller
+      // that never read the list has no belief to state; neither may be locked out of a restore, so
+      // an absent `msg.revision` skips the comparison exactly as the wire's optional field promises.
+      if (msg.revision !== undefined && msg.revision !== (meta.revision ?? 0)) {
+        throw new StaleRevisionError(committedRevision, msg.revision)
+      }
       const rngRecovered = ensureMainState(candidate)
       // ⭐ E-02: after every repair, before any commit – see `snapshotMsg`. A slot that cannot render
       // must leave the world the player is playing exactly where it was.
@@ -719,7 +820,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // that can throw runs BEFORE the file becomes the active career and before it is written as
       // the newest autosave: a foreign file that cannot render is now a refused import rather than a
       // persisted career that renders nothing. See `snapshotMsg`.
-      const snapshot = toSnapshot(candidate)
+      const snapshot = importDryRun(candidate)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision
@@ -777,6 +878,18 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // anything: `committedRevision` is reported unchanged, which is what a query means here.
       if (!world) throw new Error('No active career')
       return { id: msg.id, ok: true, type: 'album', album: assembleAlbum(world), revision: committedRevision }
+    }
+    case 'inbox': {
+      // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the `album` case above, one surface over and
+      // for the same reason: the career's whole post was riding every weekly Snapshot (261 rows at
+      // week 1133, of which none were live; 45 % of the snapshot's bytes), and only the sheet that
+      // lists them ever reads them all. A query in the strict sense: `assembleInbox` is a pure read of
+      // the COMMITTED world that takes no draw, so it cannot move `world.rngMain` and cannot commit
+      // anything – `committedRevision` is reported unchanged, which is what a query means here.
+      // ⚠ NOTHING IS PRUNED BY THIS. The world keeps every letter for ever; the weekly wire carries
+      // what this week needs (`carriedOnTheWire`) and the sheet asks for the rest.
+      if (!world) throw new Error('No active career')
+      return { id: msg.id, ok: true, type: 'inbox', inbox: assembleInbox(world), revision: committedRevision }
     }
     case 'listSlots': {
       const careerId = msg.careerId ?? world?.careerId
@@ -876,9 +989,19 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   setPsychologistFocus mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setWeightEnabled   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerFork         mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerRetirement   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   resumeFromCollege  mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   endCollegeEarly    mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPlan            mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerShootClash   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   decideKnock        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   chooseGift         mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   answerLifeBeat     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   buyAsset           mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   sellAsset          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   signOffer          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   refuseOffer        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPhysio          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
@@ -891,6 +1014,8 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   importSave         lifecycle    replaces  autosave+meta (adopt)      allocates disk+1
 //   peekSave           query        none      none                       unchanged
 //   getSnapshot        query        reads     none                       unchanged
+//   album              query        reads     none                       unchanged
+//   inbox              query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged
 //   listCareers        query        none      reads                      unchanged
 //   exportSave         query        reads     none                       unchanged

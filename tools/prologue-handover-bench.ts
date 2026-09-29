@@ -21,6 +21,9 @@ import { ECONOMY, prologueFundsCents } from '../src/engine/economy'
 import { PROLOGUE_CARDS } from '../src/prologue/cards'
 import { EMPTY_RUN, cardFor, chosenYears, spentCents, withOrigin, withPick, type PrologueRun } from '../src/prologue/run'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
+// T5.12 · F-04, 27.09: `money` was one of six live copies of the unsigned console spelling – see
+// `tools/_fmt.ts`, including why a deficit still prints `$-1,234` here.
+import { money } from './_fmt'
 
 const BACKGROUNDS: readonly FamilyBackground[] = ['working', 'middle', 'wealthy']
 const DECISION_AGES = PROLOGUE_CARDS.filter((c) => c.options).map((c) => c.age)
@@ -43,7 +46,6 @@ function everyRun(origin: FamilyBackground = 'middle'): PrologueRun[] {
   return out
 }
 
-const money = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
 const runs = everyRun()
 const spends = runs.map(spentCents).sort((a, b) => a - b)
 const q = (p: number) => spends[Math.min(spends.length - 1, Math.floor(p * spends.length))]

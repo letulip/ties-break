@@ -63,10 +63,14 @@
 //      `bankSponsorCheque` -> §3's cameo test reddens ALONE. This is the mutation the negative half
 //      exists for: no rate change can produce it and no positive test can see it.
 //   4. `familyWeeklyIncomeCents` restored to quoting the GROSS retainer -> §4 alone reddens.
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // A real career to eighteen is ~210 ticks; the runner is shared with heavier suites.
-vi.setConfig({ testTimeout: 300_000 })
+// ⚠⚠ THE FILE-WIDE `vi.setConfig({ testTimeout })` IS GONE 27.09 (T5.3 · H-06), IN TWO STEPS: 300 s ->
+// 60 s on a measurement, then DELETED, because at 60 s it only restated `vite.config.ts`'s own unit
+// `testTimeout` – and a restated constant cannot follow its source, so a ceiling moved to 90 s would
+// leave this file at 60. SLOWEST TEST here, in the real bulk pool: 0.27 s. Table:
+// tests/sim-serialisation.test.ts.
 
 import {
   acceptOffer,

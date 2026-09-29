@@ -50,6 +50,11 @@ import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { MatchOptions, MatchPlayer, Tour } from '../src/engine/match/types'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
+// T5.12 · F-04, 27.09: `quantile` and `pct` were both copies – `quantile` byte-identical to
+// `form-bench.ts:68` (the nearest-rank `floor(q · n)` that sorts its own copy), `pct` one of ten
+// fraction spellings. See `tools/_stats.ts` and `tools/_fmt.ts`.
+import { quantile } from './_stats'
+import { pctOf } from './_fmt'
 
 const argv = process.argv.slice(2)
 const num = (flag: string, dflt: number): number => {
@@ -74,14 +79,8 @@ type MutableGain = { gain: number }
 const FORM_KNOB = ECONOMY.form as unknown as MutableGain
 const SHIPPED_GAIN = F.gain
 
-const pct = (x: number): string => `${(100 * x).toFixed(1)}%`
 const padL = (s: string | number, n: number): string => String(s).padStart(n)
 const padR = (s: string | number, n: number): string => String(s).padEnd(n)
-const quantile = (xs: number[], q: number): number => {
-  if (xs.length === 0) return 0
-  const s = [...xs].sort((a, b) => a - b)
-  return s[Math.min(s.length - 1, Math.max(0, Math.floor(q * s.length)))]
-}
 
 // =================================================================================================
 // THE CENSUS WALK – one arm, all careers, nobody hired
@@ -183,8 +182,8 @@ function main(): void {
   console.log('\n=== §0  THE ARM, PROVEN – if the census does not move, nothing below means anything ===')
   const ship = census(SHIPPED_GAIN)
   const absurd = census(SHIPPED_GAIN * 10)
-  console.log(`  G = ${padL(SHIPPED_GAIN, 5)}   lived [p5, p95] = [${ship.p5.toFixed(1)}, ${ship.p95.toFixed(1)}]   at a clamp ${pct(ship.atClamp)}`)
-  console.log(`  G = ${padL(SHIPPED_GAIN * 10, 5)}   lived [p5, p95] = [${absurd.p5.toFixed(1)}, ${absurd.p95.toFixed(1)}]   at a clamp ${pct(absurd.atClamp)}`)
+  console.log(`  G = ${padL(SHIPPED_GAIN, 5)}   lived [p5, p95] = [${ship.p5.toFixed(1)}, ${ship.p95.toFixed(1)}]   at a clamp ${pctOf(ship.atClamp)}`)
+  console.log(`  G = ${padL(SHIPPED_GAIN * 10, 5)}   lived [p5, p95] = [${absurd.p5.toFixed(1)}, ${absurd.p95.toFixed(1)}]   at a clamp ${pctOf(absurd.atClamp)}`)
   const moved = Math.abs(absurd.p95 - ship.p95) + Math.abs(absurd.p5 - ship.p5)
   console.log(`  => the absurd arm moves the lived band by ${moved.toFixed(1)} points${moved < 0.5 ? '   ⚠⚠ THE ARM IS INERT' : '   – the dial is live'}`)
 
@@ -201,7 +200,7 @@ function main(): void {
     console.log(
       `  ${padR(g.toFixed(2) + (g === SHIPPED_GAIN ? '*' : ''), 7)}${padL(quantile(c.all, 0.01).toFixed(1), 7)}${padL(c.p5.toFixed(1), 7)}` +
         `${padL(quantile(c.all, 0.5).toFixed(1), 8)}${padL(c.p95.toFixed(1), 7)}${padL(quantile(c.all, 0.99).toFixed(1), 7)}` +
-        `${padL(c.min.toFixed(1), 7)}${padL(c.max.toFixed(1), 7)}${padL(pct(c.nearClamp), 10)}${padL(pct(c.atClamp), 10)}` +
+        `${padL(c.min.toFixed(1), 7)}${padL(c.max.toFixed(1), 7)}${padL(pctOf(c.nearClamp), 10)}${padL(pctOf(c.atClamp), 10)}` +
         `${padL(`${c.clampCareers} of ${c.careers}`, 20)}`,
     )
   }
@@ -249,7 +248,7 @@ function main(): void {
     const pick = clean[clean.length - 1]
     const i = arms.indexOf(pick)
     console.log(`  G = ${pick.gain} – lived [${pick.p5.toFixed(1)}, ${pick.p95.toFixed(1)}], worst career ${pick.min.toFixed(1)}/${pick.max.toFixed(1)},`)
-    console.log(`  ${pct(pick.nearClamp)} of weeks within one point of a clamp, ${pick.clampCareers} of ${pick.careers} careers at one, lived swing ${(100 * swings[i]).toFixed(2)}pp.`)
+    console.log(`  ${pctOf(pick.nearClamp)} of weeks within one point of a clamp, ${pick.clampCareers} of ${pick.careers} careers at one, lived swing ${(100 * swings[i]).toFixed(2)}pp.`)
     const dirty = arms.filter((c) => c.clampCareers > 0)
     if (dirty.length > 0) console.log(`  (refused above it: ${dirty.map((c) => `G=${c.gain} (${c.clampCareers} careers at a clamp)`).join(', ')})`)
     else console.log('  (no swept arm reached a clamp – the ceiling of this sweep is not the ceiling of the rule)')

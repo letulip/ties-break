@@ -27,17 +27,16 @@ import { marketIndex } from './market'
 // `world/market.ts`'s own note about not spelling a date twice is the reason it is asked rather than
 // re-derived here.
 import { weekMonth, weekYear } from '../../shared/dates'
-import type { OwnedAsset, ShopPricePoint } from '../../shared/protocol'
+import type { OwnedAsset, ShopFamily, ShopPricePoint } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
 /** One rung of `ECONOMY.shop.catalogue`, with the constant's literal types widened back to the
  *  shapes the rest of the engine reasons in. */
 export interface ShopItem {
   id: string
-  /** ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g) – the two commissioned families
-   *  and the one thing on the shelf that is built in stages. ⭐ ROUND 29 PART FOUR P7 added
-   *  'business' – the rungs that EARN every week (the merch brand; see world/business.ts). */
-  family: 'investment' | 'car' | 'house' | 'business' | 'boat' | 'plane' | 'academy'
+  /** the shelf's own union, declared once on the wire (`ShopFamily`); both this declaration's note
+   *  and the row view's are kept verbatim there (F-06, 26.09). */
+  family: ShopFamily
   /** 'fixed' – one price. 'open' – the family chooses an amount, at least `entryCents` (§3a's
    *  minimums: a deposit is not a $1,000 thing you buy). */
   stake: 'fixed' | 'open'

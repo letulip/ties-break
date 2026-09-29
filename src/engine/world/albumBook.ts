@@ -312,7 +312,40 @@ interface AlbumCandidate {
 const TOP_RANK = 10
 const TOP_STREAK_YEARS = 4
 
-const OCCASION = new Map(ALBUM_CORPUS.map((o) => [o.id, o]))
+// ⚠⚠ THE WRAPPER IS DELIVERY, NOT SPEED, AND IT CHANGES NOTHING THAT RUNS – G-01 of the 26.09
+// performance review, W3 T3.1.
+//
+// THIS WAS A BARE `new Map(ALBUM_CORPUS.map(…))` AT MODULE SCOPE, and rollup cannot prove a
+// top-level `new Map(...)` free of side effects, so it kept the initialiser and everything it reads:
+// the whole of `albumCorpus.ts` rode in the **UI** chunk, which never calls one function in this
+// file. The only runtime path here is `BracketTabs.vue → engine/world.ts → world/albumBook.ts`, and
+// every UI import on it is a small symbol such as `KID_ID`. Measured on the build before the change:
+// two of the corpus' own sentences were in `dist/assets/index-*.js` as well as in
+// `dist/assets/sim.worker-*.js`, which is the only caller. After it, neither is in the UI chunk and
+// both are still in the worker's.
+//
+// ⚠⚠ THE TWO SENTENCES ARE DELIBERATELY NOT QUOTED HERE, AND THE GATE IS WHY (27.09).
+// `tests/component/album-mobile.test.ts` refuses any corpus string anywhere in `src/` outside
+// `albumCorpus.ts`, comments included, and it caught this note on the wave's own gate. It is RIGHT to:
+// a sentence quoted in a comment is a SECOND COPY of copy the corpus owns, and one day it will quote
+// a line the corpus no longer holds - which is the «a note restates a rule the code owns» class this
+// same wave spent a whole pass (T3.8, C-02) clearing out of nine other sites, one of which would have
+// had a builder break a correct shipped sentence. To re-take this measurement, grep the built chunks
+// for the sentences `ALBUM_CORPUS` holds rather than for a pair transcribed here: that is a count over
+// the whole corpus and strictly better evidence than two samples.
+//
+// ⚠ ONE ANNOTATED CALL, AND THAT IS WHY IT IS AN IIFE RATHER THAN A BARE `/*#__PURE__*/ new Map`.
+// The annotation is a promise about the call it precedes; the ARGUMENT `ALBUM_CORPUS.map(…)` is a
+// separate opaque member call, so annotating only the `new Map` would leave rollup holding the
+// argument's side effects – exactly the residue `WEEK_NOTES` was caught with in `diary/weekNotes.ts`.
+// Wrapping both in one call gives the bundler a single statement it may delete whole.
+//
+// ⚠ A LAZY ACCESSOR WAS THE OTHER ARM AND IT WAS MEASURED AND DROPPED (T3.1). `let OCCASION … |
+// null` built on the first `occasionOf` freed the SAME 49,042 B from the UI chunk and cost the
+// **worker** chunk 14 bytes and a new hash (664,405 → 664,419 B, `CVruQZj1` → `CDzw6KMU`), because
+// the guard ships in the worker's own code. This shape leaves the worker chunk byte-identical, which
+// is the proof G-01 asks for, so the cheaper arm won on the only axis that separated them.
+const OCCASION = /*#__PURE__*/ (() => new Map(ALBUM_CORPUS.map((o) => [o.id, o])))()
 function occasionOf(id: string): AlbumOccasion {
   const row = OCCASION.get(id)
   if (!row) throw new Error(`no occasion '${id}' in ALBUM_CORPUS – the selector and the corpus have drifted`)

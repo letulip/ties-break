@@ -49,6 +49,12 @@ import { engineModuleFunction, worldFunction } from './worldSource'
 import { lineAt, region } from './helpers/source'
 import type { WorldState } from '../src/engine/world'
 
+// ⚠⚠ THE PER-TEST BUDGET IN THIS FILE WAS REMOVED 27.09 (T5.3 · H-06). It read 60 s, which only restated
+// the unit project's own `testTimeout` (`vite.config.ts`) – and a constant restated where it cannot follow
+// its source means that if the ceiling ever moves, this file silently stays at 60. ⚠ No cost claim is made:
+// removing a declaration equal to the default is behaviour-neutral by construction. A budget BELOW the
+// ceiling would have stayed. The ceiling and the measured table: tests/sim-serialisation.test.ts.
+
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 
@@ -440,9 +446,91 @@ describe('bond – the standing, and the memory property', () => {
     expect(world.bond * 2).toBe(Math.round(world.bond * 2))
   })
 
+  it('⭐ C-05: the SHIPPED step reproduces the old hard-coded grid exactly, over the whole legal range', () => {
+    // WHY THIS EXISTS. Until 26.09 every bond write went through a module-private
+    // `roundHalf(x) = Math.round(x * 2) / 2` while `ECONOMY.bond.step` declared «the granularity
+    // every write rounds to» and NO engine write read it – so the dial said it did something and did
+    // not. `roundToStep` now reads it, and this case is the IDENTITY half of that change: at the
+    // shipped 0.5 the new spelling must produce the byte-identical number, because a bond value that
+    // moved would be a career that moved.
+    //
+    // ⚠⚠ THE HAZARD IS FLOATING POINT, NOT THE ARITHMETIC, so the identity is SWEPT rather than
+    // argued from IEEE-754 – «dividing by a power of two is exact» is a true sentence about a formula
+    // that is not the one running. The expectation below is TODAY'S formula spelled out, and it is
+    // compared against the engine's own writer at ~25,000 points: the legal range at 0.005, the whole
+    // delta table applied at every rung, and the values a float is most likely to disagree on.
+    // Measured 26.09 over 2,106,039 points (this range plus 2M seeded randoms plus the nextUp /
+    // nextDown neighbour of every quarter-point): 0 disagreements.
+    const world = probeWorld('sunny', 5)
+    const b = ECONOMY.bond
+    const roundHalf = (x: number): number => Math.round(x * 2) / 2
+    const clamp = (x: number): number => Math.min(b.max, Math.max(b.min, x))
+    const write = (from: number, delta: number): number => {
+      world.bond = from
+      applyBondDelta(world, delta)
+      return world.bond as number
+    }
+    for (let i = 0; i <= 20_000; i++) {
+      const x = i / 200
+      expect(write(x, 0), `bond ${x}`).toBe(roundHalf(clamp(x)))
+    }
+    for (const delta of Object.values(b.delta)) {
+      for (let g = 0; g <= 2 * b.max; g++) {
+        const x = g * 0.5
+        expect(write(x, delta), `bond ${x} + ${delta}`).toBe(roundHalf(clamp(x + delta)))
+      }
+    }
+    // ...and the values that break naive rounding: the double just below a half, both clamp edges,
+    // and a delta small enough to vanish.
+    for (const [from, delta] of [
+      [0, 0], [100, 0], [0.49999999999999994, 0], [49.999999999999996, 0], [70, 0.24], [70, -0.24],
+      [0, -1000], [100, 1000], [70, 0.25], [70, -0.25], [70, 0.75], [99.75, 0.3], [0.25, -0.3],
+    ] as const) {
+      expect(write(from, delta), `bond ${from} + ${delta}`).toBe(roundHalf(clamp(from + delta)))
+    }
+  })
+
+  it('⚠⚠ C-05: and `step` is a LIVE dial – a changed grid moves a real bond write', () => {
+    // ⭐ THIS IS THE HALF THE FINDING IS ABOUT. The identity case above would stay green on a
+    // `roundToStep` that ignored the constant and kept the literal `2`, so it proves nothing about the
+    // dial; this case is the one that reddens. ARM (run 26.09): point the function back at
+    // `Math.round(x * 2) / 2` → the three expectations inside the `try` go red («expected 70.5 to be
+    // 70») while the identity case above stays entirely green. That asymmetry is the finding.
+    //
+    // ⚠ THE DIAL IS TURNED IN PLACE AND RESTORED IN A `finally` – `ECONOMY` is `as const` and not
+    // frozen, and the restore is asserted after the block so a throw inside it cannot leak a mutated
+    // grid into the cases below.
+    const world = probeWorld('sunny', 5)
+    const dial = ECONOMY.bond as unknown as { step: number }
+    const shipped = dial.step
+    expect(shipped, 'the shipped grid, for the record').toBe(0.5)
+    const write = (from: number, delta: number): number => {
+      world.bond = from
+      applyBondDelta(world, delta)
+      return world.bond as number
+    }
+    expect(write(70, 0.3), 'shipped: a 0.3 delta is rounded UP onto the half-point').toBe(70.5)
+    expect(write(70, 0.24), 'shipped: ...and a 0.24 delta is swallowed whole').toBe(70)
+    try {
+      // A COARSER grid: the half-point stops existing, and both of the writes above move.
+      dial.step = 1
+      expect(write(70, 0.3), 'coarser: nothing below half a point survives at all').toBe(70)
+      expect(write(70, ECONOMY.bond.delta.giftAskedGranted), 'coarser: ...and 2.5 no longer lands on a rung').toBe(73)
+      // A FINER grid – the finding's own scenario. `economy.ts`' `regressionPerWeek` note and the
+      // case below both tell a future wave that slower healing needs a finer `step`; that
+      // instruction is only true if a tenth-point grid can HOLD a tenth of a point.
+      dial.step = 0.1
+      expect(write(70, 0.24), 'finer: a tenth-point grid keeps a tenth of a point').toBeCloseTo(70.2, 10)
+    } finally {
+      dial.step = shipped
+    }
+    expect(ECONOMY.bond.step, 'the dial is restored for every case after this one').toBe(shipped)
+    expect(write(70, 0.24), 'and the shipped half-point grid still swallows it').toBe(70)
+  })
+
   it('⚠⚠ regressionPerWeek is a MULTIPLE of the step, because the grid makes it a two-value dial', () => {
     // FOUND BY THE WAVE-1 SWEEP, and it is the reason this pin exists rather than a comment. The
-    // regression is quantised by the same `roundHalf` as every other bond write, so the constant
+    // regression is quantised by the same `roundToStep` as every other bond write, so the constant
     // does not mean what it says at most values: measured through the weekly rule itself, 0.5, 0.4,
     // 0.3 and 0.25 ALL move exactly half a point, and 0.24, 0.2 and 0.1 ALL move exactly nothing –
     // at which point a −25 season never heals at any horizon rather than healing slowly. A sweep
@@ -453,6 +541,14 @@ describe('bond – the standing, and the memory property', () => {
     // 0.5 is one step exactly, which is why today's 50-week heal is real.
     // ⚠ A later wave wanting slower healing changes the mechanism – a finer `step`, or a regression
     // that carries its remainder between weeks – and not this number.
+    // ⚠⚠ RE-AIMED 26.09 BY C-05, AND THE SENTENCE ABOVE IS NOW TRUE OF THE CODE AND NOT ONLY OF THE
+    // DESIGN – NEITHER DELETED NOR WEAKENED. When this note was written, «a finer `step`» was advice
+    // nobody could take: the rounding was a private `roundHalf(x) = Math.round(x * 2) / 2` and
+    // `ECONOMY.bond.step` was read by THIS FILE ALONE, so turning the dial changed no engine write.
+    // `roundToStep` reads it now, and the two cases above are the proof in both directions – the
+    // shipped 0.5 is byte-identical to the old grid, and a changed `step` moves a real write. The
+    // multiple rule this case pins is unchanged, and it is what makes the finer step SAFE to reach
+    // for: the legal set is still every positive multiple of `step`.
     const { regressionPerWeek, step } = ECONOMY.bond
     expect(regressionPerWeek).toBeGreaterThan(0)
     expect(regressionPerWeek / step).toBe(Math.round(regressionPerWeek / step))
@@ -640,7 +736,7 @@ describe('the v72 schema move', () => {
       expect(typeof migrated.bond, file).toBe('number')
       expect(TEMPERAMENTS, file).toContain(migrated.temperament)
     }
-  }, 60_000)
+  })
 })
 
 // =================================================================================================

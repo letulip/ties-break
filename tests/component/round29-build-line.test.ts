@@ -50,6 +50,9 @@ function expectedSha(): string {
 function mountMore() {
   const store = useGameStore()
   store.refreshCareers = async () => {}
+  // ⚠ 26.09 – AND `refreshSlots` JOINED IT (D-01): More is `game.slots`' one reader, so it
+  // became its one refresh too. Same stub, same reason – there is no worker in this runner.
+  store.refreshSlots = async () => {}
   return mount(MoreScreen, { global: { stubs: { teleport: true } } })
 }
 
