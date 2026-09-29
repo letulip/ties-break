@@ -43,7 +43,7 @@
 // prop is a SENTENCE to suppress, never a sentence to write: there is still no wording in this file and
 // there may never be one (CLAUDE.md invariant 4).
 import { computed } from 'vue'
-import { useGameStore } from '../../stores/game'
+import { SAVE_CONFLICT_RELOAD_LABEL, useGameStore } from '../../stores/game'
 
 const props = defineProps<{
   /** A sentence this surface has already said somewhere else, and must not say twice. */
@@ -53,8 +53,18 @@ const props = defineProps<{
 const game = useGameStore()
 
 const shown = computed(() => (game.error && game.error !== props.except ? game.error : ''))
+
+// T7.0: the Reload label is the STORE's (SAVE_CONFLICT_RELOAD_LABEL) – this file renders what the store owns, no wording of its own.
+// ⚠ A SENTENCE TOO, NOT THE KIND ALONE: round36-error-surfaces.test.ts clears `error` by assignment after a real conflict, which
+// leaves the kind behind, and a Reload with no sentence before it is an orphan (it stopped `.kid-hero` being the shell's first child).
+const offerReload = computed(() => game.errorKind === 'save-conflict' && game.error !== '')
+
+function reload(): void {
+  window.location.reload()
+}
 </script>
 
 <template>
   <p v-if="shown" class="error" role="status">{{ shown }}</p>
+  <button v-if="offerReload" type="button" @click="reload">{{ SAVE_CONFLICT_RELOAD_LABEL }}</button>
 </template>

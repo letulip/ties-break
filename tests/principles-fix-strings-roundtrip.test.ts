@@ -123,8 +123,9 @@ function joinedSource(path: string): string {
 
 const TABLE = 'docs/plans/principles-fix-strings-2026-09.md'
 /** ⚠ THE ONE STATEMENT OF THE COUNT. 3 -> 5 on 27.09 (W4 · T4.11 · E-01): the Season header's
- *  pro-budget line and its title, tabled as §3. No other number in this repo states it. */
-const EXPECTED_ROWS = 5
+ *  pro-budget line and its title, tabled as §3. No other number in this repo states it.
+ *  5 -> 6 on 29.09 (W7 · T7.0): the save-conflict card's Reload label, tabled as §3a. */
+const EXPECTED_ROWS = 6
 
 describe('the principles fix – the strings table IS the corpus', () => {
   const rows = parseTable(TABLE)
@@ -165,7 +166,7 @@ describe('the principles fix – the strings table IS the corpus', () => {
     }
   })
 
-  it('⚠ every home is a real file, and the three are the wire, the engine leaf and the screen', () => {
+  it('⚠ every home is a real file, and the four are the wire, the engine leaf, the screen and the store', () => {
     // Without this a typo in a home path is a `readFileSync` throw whose message is about a path
     // rather than about the row – and the second half states the claim the barrel note makes: the
     // engine leaf is the home, never `src/engine/world.ts`.
@@ -184,6 +185,8 @@ describe('the principles fix – the strings table IS the corpus', () => {
         'src/shared/protocol/profile.ts',
         'src/engine/world/constants.ts',
         'src/components/screens/SeasonScreen.vue',
+        // 29.09 (W7 · T7.0): PF6's word is the STORE's on purpose – StoreError.vue may hold no wording.
+        'src/stores/game.ts',
       ]),
     )
   })

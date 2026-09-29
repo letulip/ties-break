@@ -51,6 +51,17 @@ export class CommandRejected extends Error {
   }
 }
 
+// ⭐ T7.0 (29.09) – THE ONE CONTROL THE CROSS-TAB REFUSAL EARNS. `StoreError` draws a button carrying
+// this word whenever `errorKind === 'save-conflict'` and it does `window.location.reload()`. The owner
+// playtests the INSTALLED build – standalone, no browser chrome – so a blocking card whose sentence
+// says «reload» with nothing to press was a dead end on his own device (the ruling is §2a of
+// docs/plans/principles-fix-answers-2026-09.md). The sentence itself is `run`'s SAVE_CONFLICT branch.
+// ⚠ THE WORD LIVES HERE AND NOT IN THE COMPONENT ON PURPOSE: `StoreError.vue` may hold no wording (its
+// own header, CLAUDE.md invariant 4), so the store that owns the sentence owns the label on the control
+// that does what the sentence asks. Row PF6 of docs/plans/principles-fix-strings-2026-09.md.
+// DRAFT – the owner's wording pass at the PR (invariant 4); the word the sentence itself uses.
+export const SAVE_CONFLICT_RELOAD_LABEL = 'Reload'
+
 /**
  * R2-05 — the assertion the central appliers below are built on.
  *
@@ -170,6 +181,10 @@ export const useGameStore = defineStore('game', {
     revision: 0,
     busy: false,
     error: '',
+    // ⚠ WHICH SENTENCE `error` HOLDS, for the one that earns a control (T7.0): `'save-conflict'` makes
+    // `StoreError` draw the Reload. EVERY write to `error` below is paired with a write here – a stale
+    // kind would show Reload under an UNRELATED refusal, and that is the bug this pairing exists to prevent.
+    errorKind: '' as '' | 'save-conflict',
     ready: false,
     /** INIT IS A TOTAL TRANSITION (W1-INTEGRITY-B, TB-06): `loading -> ready | recovery`, no third
      *  exit. `ready` (above) stays as the legacy boolean every screen already reads; this field is
@@ -299,7 +314,10 @@ export const useGameStore = defineStore('game', {
      */
     async run<T>(fn: () => Promise<T>, options?: { keepError?: boolean }): Promise<T | undefined> {
       this.busy = true
-      if (!options?.keepError) this.error = ''
+      if (!options?.keepError) {
+        this.error = ''
+        this.errorKind = ''
+      }
       try {
         return await fn()
       } catch (err) {
@@ -326,9 +344,13 @@ export const useGameStore = defineStore('game', {
           // ownership (Web Locks lease, read-only secondary tabs) is deferred by the launch plan;
           // until then the honest move is to say it plainly and let the player reload by hand.
           this.error = 'Another tab has newer progress for this career – reload before continuing here.'
+          // T7.0: the kind rides with the sentence above – it is what earns `StoreError` its Reload control
+          // (`SAVE_CONFLICT_RELOAD_LABEL`, top of file). Every other write to `error` sets it back to ''.
+          this.errorKind = 'save-conflict'
           return undefined
         }
         this.error = err instanceof Error ? err.message : String(err)
+        this.errorKind = ''
       } finally {
         this.busy = false
       }
@@ -340,6 +362,7 @@ export const useGameStore = defineStore('game', {
       const careerId = this.snapshot?.careerId
       if (!careerId) {
         this.error = 'The simulation restarted. Try again.'
+        this.errorKind = ''
         return
       }
       try {
@@ -349,10 +372,12 @@ export const useGameStore = defineStore('game', {
         // The required copy (TB-05): the player is told whether unsaved work may have been lost —
         // under TB-03 nothing past the last ok response ever existed, and that is the saved week.
         this.error = 'Simulation restarted from the last saved week.'
+        this.errorKind = ''
       } catch {
         // Even the reload failed (storage denied, second crash): stay honest, stay recoverable —
         // the next tap retries through another fresh worker.
         this.error = 'The simulation crashed. Try again, or reopen the app to continue.'
+        this.errorKind = ''
       }
     },
     async refreshAfterStale(err: CommandRejected) {
@@ -386,6 +411,7 @@ export const useGameStore = defineStore('game', {
       // ⚠ NO SENTENCE MOVES: the line below is TB-02's and is untouched. The insurance is the net,
       // not the message.
       this.error = 'That action was based on an outdated screen – it was refreshed. Try again.'
+      this.errorKind = ''
     },
     /** `run`, plus a visible outcome (TB-19). Save-management actions route through this so the
      *  result – pending, then ok or a typed error – is STATE the More screen renders, instead of

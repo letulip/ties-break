@@ -103,6 +103,24 @@ crosses that gap.
 screen. ⚠ And the LABELS on that arm – «Year limit» and «Tour age rule» – did **not** move: neither
 of them names a date, so neither was stale.
 
+## 3a. The control the cross-tab refusal never had (W7 · T7.0, ruling 2a)
+
+`src/stores/game.ts` – `SAVE_CONFLICT_RELOAD_LABEL`, the one word on the button `StoreError` draws under
+the store's cross-tab sentence (the `SAVE_CONFLICT` branch of `run`) and under no other refusal. He
+playtests the installed build, standalone and with no browser chrome, so a blocking card that says
+«reload» had nothing to press: the ruling
+([principles-fix-answers-2026-09.md](principles-fix-answers-2026-09.md) §2a) is a control, labelled
+with the word the sentence already uses. ⚠ That is the whole argument for the label, and it is a
+DRAFT like every row in this block: the button is new copy, the sentence beside it is not.
+
+| id | home | text | status |
+| --- | --- | --- | --- |
+| PF6 | `src/stores/game.ts` | Reload | `DRAFT` |
+
+⚠ **The label lives in the store, and that is the row's home on purpose:** `StoreError.vue` may hold
+no wording (its own header, invariant 4), so the component renders what the store owns – the
+sentence, and now the word on the control that does what the sentence asks.
+
 ## 4. Engine sentences reaching a new surface (W4 · T4.13 · E-04, ruling 6a)
 
 Five surfaces, and **not one new word**: the tier chip stops composing its own refusals and prints the
