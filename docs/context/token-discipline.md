@@ -20,24 +20,30 @@ His measured numbers are kept in place: they are what made the rule, and they ke
    carries a dispatch table: step · session/agent model (sonnet by default; opus ONLY where a wrong
    judgment is expensive – ambiguous design seams, RNG-law adjacency; haiku for mechanical sweeps)
    · effort · a move budget. No step runs on an unchosen default.
-2. **One agent – one task with a defined output.** Three independent edits are THREE agents of
+2. **Code and development agents run SEQUENTIALLY – step by step, never in parallel** (the
+   owner, 29.09, «на всякий случай еще один пункт»). Parallelism in one checkout has already
+   produced false gate verdicts, swallowed commits and contention timeouts (CLAUDE.md's own
+   gotchas); it is also how budgets multiply unseen. One step lands, its report is read, the next
+   step starts. Parallel is allowed only for READ-ONLY fan-out (search/report agents that change
+   nothing).
+3. **One agent – one task with a defined output.** Three independent edits are THREE agents of
    ~60 moves (~$3 each), never one agent of 200 (~$30). If the brief lists deliverables joined by
    «and also», split it.
-3. **The brief is a self-contained excerpt, never a link.** Quote the ≤20 lines of spec the step
+4. **The brief is a self-contained excerpt, never a link.** Quote the ≤20 lines of spec the step
    needs; name files WITH line ranges (`sed -n '87,102p' CLAUDE.md`, not `Read CLAUDE.md`). A 7k
    brief that saves the agent a 9k document read pays for itself on the first turn.
-4. **Heavy gates never run inside a fat agent.** The agent edits, runs its own targeted tests,
+5. **Heavy gates never run inside a fat agent.** The agent edits, runs its own targeted tests,
    commits, reports, dies. `npm run check` / `test:sim` / `test:e2e` run in the parent session
    (whose cache is warm for an hour) or in a fresh THIN gate-agent – a re-read at 80k costs $0.50
    where the fat agent's rewrite costs $3.30. If a gate must run inside an agent anyway: background
    it and poll with short moves – five polls at $0.25 beat one $3.28 rewrite, and the cache stays
    warm.
-5. **Keep agents thin.** A rewrite at 100k is $0.63; at 700k it is $4.38. Thickness bills twice –
+6. **Keep agents thin.** A rewrite at 100k is $0.63; at 700k it is $4.38. Thickness bills twice –
    every move and every rewrite.
-6. **Never SendMessage into a fat agent.** An inserted message invalidates the cache from the
+7. **Never SendMessage into a fat agent.** An inserted message invalidates the cache from the
    insertion point: one measured follow-up into a 598k agent cost a $3.74 rewrite – fifteen normal
    moves. A follow-up is a NEW thin agent with a fresh excerpt.
-7. **Kill the agent the moment its report lands.** Nothing stays alive «на случай вопросов».
+8. **Kill the agent the moment its report lands.** Nothing stays alive «на случай вопросов».
 
 ## §2 · Inside the agent – the block every brief carries verbatim
 

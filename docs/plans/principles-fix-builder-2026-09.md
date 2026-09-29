@@ -58,6 +58,7 @@ you have already closed goes first into the next one. Every entry is dated.
 | added | task | wave |
 | --- | --- | --- |
 | 26.09 | T1.6 – the save doors in a real browser (e2e) | W1 |
+| 29.09 | **The six waves' questions are ANSWERED and W7 is GO** – docs/plans/principles-fix-answers-2026-09.md: PF/ES/AS approved as tabled, Reload = A (ships as **T7.0**, first commit of W7, label DRAFT `Reload`, mounted 375×667 test + mutation), 'Nine Bells' a slip, both wording declines stand, G-04 (b) declined, the 58-module row waits for its trigger. W7 order: T7.0 → T7.1 → … → T7.6, agents sequentially, gates at the boundary in the architect's session, close with docs/handoff/principles-w7.md. | W7 |
 | 29.09 | **The token law is in force for every remaining wave** – docs/context/token-discipline.md (the owner's ruling after this plan's own overrun). For you: §2's block governs every command you run (batch probes, read once, no wandering, trim output at source – `test:quiet`, `tail -40`, dot reporter); spawn ONE subagent per independent task and kill it on report; run only your wave's own named test files while building – the heavy gates run once at the wave boundary, in the architect's session, not inside your agents. | every open wave |
 | 26.09 | T1.7 – the save doors under hostile input (a seeded property test) | W1 |
 | 26.09 | W7 – the notes: chronicles move out of the code, verbatim, per module (T7.1–T7.5) | W7, after W6 |
