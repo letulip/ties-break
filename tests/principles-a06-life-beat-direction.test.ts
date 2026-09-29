@@ -311,7 +311,13 @@ function barrelSpecifiers(): Map<string, string[]> {
 // the delivery (§6) and the spouse's opinion surface (§12). Every one of those either IS the hub's job or
 // has inbound references from it – §3c-2 has eight, all from §3k's prompt assembly – which is P4's own rule
 // producing the right answer rather than a shortfall.
-const LINE_CEILING = 4850
+// ⚠ TIGHTENED AGAIN 29.09, AFTER W7 · T7.4b: the hub's chronicles – 156 comment runs, 2,706 lines –
+// moved VERBATIM to docs/notes/life-beats/hub.md, and `wc -l` on that commit prints **3,200 lines /
+// 129 declarations**. No code moved: the comment-stripped transpile is byte-identical before and
+// after (the wave's report carries both sha256 halves). So only the line ceiling comes down; the
+// slack stays the convention's own ~145 lines / 5 declarations and no more – 1,650 lines of slack
+// left standing would be an invitation to grow the hub back, which is the failure A-06 is about.
+const LINE_CEILING = 3345
 const DECL_CEILING = 134
 
 /** Top-level declarations in one file – column-0 `function` / `const` / `type` / `interface` …,
