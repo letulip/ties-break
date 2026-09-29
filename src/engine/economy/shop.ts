@@ -519,4 +519,64 @@ export const shop = {
      */
     minHalfLifeWeeks: 52,
   },
+  /** ⭐⭐⭐ THE SECONDARY MARKET – WHAT A BUYER OFFERS FOR A THING, AND HOW LONG THE BUYERS TAKE TO WRITE
+   *  (docs/specs/secondary-market-2026-09.md §2c–§2d; added 29–30.09 by the secondary-market wave, step S1).
+   *  Constants only: nothing here is save data, and the one reader is `engine/world/resale.ts`.
+   *
+   *  ⚠⚠ EVERY NUMBER IN THIS BLOCK IS A STARTING POINT AND NOT A MEASUREMENT. The spec proposes the six
+   *  columns («all six columns are to be measured by the probe, none is final») and the shared knobs are
+   *  the same kind of guess. Step S6's probe (`tools/sale-probe.ts`) replaces them with measured values,
+   *  predicted against measured, per invariant 5. ⚠ ONE GAP TO MEASURE FIRST: `medianWeeks` sets the PEAK
+   *  weekly chance (ln 2 / median) and the chance then decays with the ad's age, so the REALISED median
+   *  wait is longer than the column says.
+   *
+   *  ⚠ `investment` IS DELIBERATELY ABSENT FROM `byFamily`, AND THE ABSENCE IS THE PREDICATE – the shelf's
+   *  own idiom (`volBps?`, `buildWeeks?`, `requiresId?`: a rung's fields say what it is). Parked cash – the
+   *  deposit and the index fund – never lists (spec §2a): it is money and not a thing, and it keeps
+   *  today's instant partial sale. `secondaryOf(item)` reads `byFamily[item.family] ?? null`, so a family
+   *  added to the union tomorrow is not sold by letter until somebody gives it a row here.
+   */
+  secondary: {
+    /** ONE SHARED CAP, as a multiple of worth: «a lucky draw may land a touch ABOVE worth» (spec §2c) –
+     *  waiting is occasionally delicious – and no further, so no class ever lists above ~1.05. */
+    capX: 1.05,
+    /** HOW LONG A FRESH AD KEEPS ITS VIEWINGS, in class medians: the weekly chance decays from its peak to
+     *  `freshFloor` over this many medians (spec §2d says «~1–1.5×»; this is the upper end). */
+    decayMedians: 1.5,
+    /** THE THIN-MARKET DAMPENER, `(classEntry / worth) ** thinExponent` clamped to [thinFloor, 1]. Within
+     *  a class a dearer lot sits in a thinner market (his «элитный авто за 300к вполне может быть не очень
+     *  востребован»), as ONE continuous factor off worth against the family's cheapest rung – no per-rung
+     *  data. The exponent is soft on purpose: five times the entry price costs ~40% of the buyers. */
+    thinExponent: 0.3,
+    /** ...and the clamp's low end: the thinnest a market ever gets. A buyer for a very dear lot is rare and
+     *  never a third of nothing. Tunable. */
+    thinFloor: 0.35,
+    /** THE QUOTE'S «MAY NOT SELL AT ALL» LINE: the popup flags a lot whose dampener is at or below this
+     *  (spec §2i – the screen prints the engine's verdict and never derives it). */
+    thinQuoteAt: 0.5,
+    /** THE HANGOVER (his ruling §5.4, «может даже чуть ниже на какое-то время»): for this many weeks after a
+     *  crash arc CLOSES the class's price carries a small residual of the OPPOSITE sign to its crash
+     *  response, decaying linearly to zero – half a season. */
+    hangoverWeeks: 26,
+    /** ...and how big it opens: this share of the response the class showed at that crisis's trough. */
+    hangoverX: 0.25,
+    /** ONE ROW PER FAMILY THAT CAN LIST, cheapest first as on the shelf. The columns:
+     *  `medianWeeks` weeks to a first acceptable letter at the PEAK of an ad's freshness;
+     *  `base` / `spread` the corridor's centre and half-width as a share of worth (a house clusters near
+     *  its worth, a plane scatters low); `stalePerYear` the drift down as a listing ages, over a year;
+     *  `crashShift` the SIGNED response to the market's crash depth, read as a beta – planes −1.0 fall one
+     *  for one with the market, houses +0.2 gain a little from money fleeing to real assets (his «умеренно»);
+     *  `crashArrival` the multiplier on the weekly chance while a crash arc is open;
+     *  `fireX` the fire price as a share of worth – the corridor's own floor (spec §2f);
+     *  `freshFloor` the miracle-buyer floor: the least a stale ad's chance ever falls to, as a share of its
+     *  peak – never 0, houses keep real residual demand and a hung yacht almost none (spec §2d/§2i). */
+    byFamily: {
+      car: { medianWeeks: 4, base: 0.93, spread: 0.06, stalePerYear: 0.04, crashShift: -0.3, crashArrival: 0.8, fireX: 0.85, freshFloor: 0.1 },
+      house: { medianWeeks: 16, base: 0.97, spread: 0.05, stalePerYear: 0.03, crashShift: 0.2, crashArrival: 1.2, fireX: 0.8, freshFloor: 0.15 },
+      boat: { medianWeeks: 32, base: 0.88, spread: 0.1, stalePerYear: 0.06, crashShift: -0.8, crashArrival: 0.4, fireX: 0.65, freshFloor: 0.03 },
+      plane: { medianWeeks: 44, base: 0.85, spread: 0.12, stalePerYear: 0.06, crashShift: -1.0, crashArrival: 0.4, fireX: 0.6, freshFloor: 0.03 },
+      business: { medianWeeks: 52, base: 0.9, spread: 0.08, stalePerYear: 0.03, crashShift: -0.5, crashArrival: 0.6, fireX: 0.7, freshFloor: 0.05 },
+      academy: { medianWeeks: 65, base: 0.92, spread: 0.08, stalePerYear: 0.04, crashShift: -0.4, crashArrival: 0.7, fireX: 0.75, freshFloor: 0.05 },
+    },
+  },
 } as const
