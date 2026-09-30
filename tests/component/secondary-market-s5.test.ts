@@ -38,22 +38,13 @@ import '../../src/style.css'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
 import { shelfRow } from './shelf'
 import { mountInbox, withPost } from './inbox'
+import { installMemoryStorage } from './setup'
 
-// The inbox annotates letters with two per-device facts (read / binned), both in localStorage; this runner has none. The other mail suites' shim.
-const backing = new Map<string, string>()
-Object.defineProperty(globalThis, 'localStorage', {
-  configurable: true,
-  value: {
-    getItem: (k: string) => (backing.has(k) ? backing.get(k)! : null),
-    setItem: (k: string, v: string) => void backing.set(k, String(v)),
-    removeItem: (k: string) => void backing.delete(k),
-    clear: () => backing.clear(),
-    key: (i: number) => [...backing.keys()][i] ?? null,
-    get length() {
-      return backing.size
-    },
-  },
-})
+// The inbox annotates letters with two per-device facts (read / binned), both in localStorage; this
+// runner has none. ⚠ THE HELPER, NOT A HAND SHIM (caught 30.09 by principles-t514's RULE A ratchet
+// at the wave boundary: a NEW file may not spell the fourteen lines itself – T5.10's helper is the
+// one home). `backing` keeps the name the arms below already read.
+const { backing } = installMemoryStorage()
 
 const CAR = 'car-sensible'
 const HOUSE = 'house-first'

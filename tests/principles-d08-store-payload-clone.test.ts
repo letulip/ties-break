@@ -152,6 +152,10 @@ function driversFor(s: Store): Record<string, () => unknown> {
     cancelVacation: () => s.cancelVacation(30),
     buyAsset: () => s.buyAsset('asset-1', 100_00, 'The flat'),
     sellAsset: () => s.sellAsset('asset-1', 50_00),
+    // ⚠ S2 of the secondary market, 30.09 – the two listing senders, driven for the same both-ways
+    // equality reason as loadInbox above.
+    listAsset: () => s.listAsset('car-sensible'),
+    unlistAsset: () => s.unlistAsset('car-sensible'),
     bookPractice: () => s.bookPractice(11, true),
     hireCoach: () => s.hireCoach('coach-1'),
     hireMasseur: () => s.hireMasseur(true),

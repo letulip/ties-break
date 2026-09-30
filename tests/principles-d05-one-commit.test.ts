@@ -2,7 +2,7 @@
 // – ONE `commit(msg)` IN THE STORE, AND `listSlots` READS ITS OWN CAREER.
 //
 // THE TWO FACTS THIS FILE MEASURES, both of them baseline behaviour the review reproduced:
-//   1. THE ROUND TRIPS. Each of the 41 mutation actions was a hand-copied body, and 26 of them ended
+//   1. THE ROUND TRIPS. Each of the 43 mutation actions (41 at 28.09; +listAsset/+unlistAsset, the secondary market, 30.09) was a hand-copied body, and 26 of them ended
 //      in `refreshSlots()` while 15 did not, with no rule behind the split (`buyAsset`'s own comment
 //      said "refreshSlots because money moved", and `SlotMeta` carries no money). An `advance` was
 //      THREE round trips – advance, listSlots, listCareers – and a settings command two, every one of
@@ -66,13 +66,13 @@ const REPLY_BY_ARM: Record<(typeof REPLY_BY_COMMAND)[keyof typeof REPLY_BY_COMMA
   album: () => ({ id: 0, ok: true, type: 'album', album: {} as never, revision: 1 }),
   // ⚠ RE-AIMED, NOT WIDENED (T6.2 · D-07, 28.09): the record is TOTAL over the protocol's reply
   // arms, so the inbox query's arm had to join it the moment the arm existed – which is the record's
-  // job. Nothing about D-05's claim moves; a query was never one of the 41 mutations.
+  // job. Nothing about D-05's claim moves; a query was never one of the 43 mutations.
   inbox: () => ({ id: 0, ok: true, type: 'inbox', inbox: [], revision: 1 }),
   exported: () => ({ id: 0, ok: true, type: 'exported', bytes: new ArrayBuffer(8), filename: 'c.tsave', revision: 1 }),
   peek: () => ({ id: 0, ok: true, type: 'peek', peek: {} as never, revision: 1 }),
 }
 
-/** Every command the wire declares with a `baseRevision` – D-05's 41 mutations, read off the
+/** Every command the wire declares with a `baseRevision` – D-05's 43 mutations (dated above), read off the
  *  protocol source. `baseRevision` is the field that makes a command a mutation: the worker refuses
  *  one that does not match its committed revision (W1-INTEGRITY-A), and queries carry none. */
 function mutationCommands(): string[] {
@@ -94,7 +94,7 @@ describe('D-05 (1) – a mutation is ONE round trip', () => {
     // number a document states about itself survives a full gate (CLAUDE.md). D-05 counted 41 on
     // 26.09. A forty-second mutation moves this line – and has to be one round trip below, which is
     // the whole reason the number is checked at all.
-    expect(commands.length, 'the commands that carry a baseRevision').toBe(41)
+    expect(commands.length, 'the commands that carry a baseRevision').toBe(43) // 41 at 28.09; +2 30.09: listAsset, unlistAsset
     // ...and each one is reachable as a store action under its own name, which is what lets the
     // sweep drive them without a second table.
     const store = useGameStore() as unknown as Record<string, unknown>

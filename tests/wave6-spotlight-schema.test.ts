@@ -311,9 +311,11 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // version on, and this one is plainer still than v88's: v89's single field is NESTED inside
     // `dynasty`, which is `null` on every fixture here, so the serialised world gains NO KEY and the
     // file is the same length to the byte – v89.json is `migrateSave(v88.json)` with `schemaVersion`
+    // ⚠ RE-AIMED 30.09 BY v90 (the secondary market's listing fields): v90.json is migrateSave(v89.json),
+    // so it inherits the probe head's attachment like every migrated head before it.
     // the only line that moved, the same probe career, the same two episode rows. The claim is
     // unchanged: every fixture BELOW v83 still runs the per-row walks zero times.
-    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json', 'v89.json'])
+    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json', 'v89.json', 'v90.json'])
   })
 
   it('⭐⭐⭐ back-fills all four fields on EVERY row – a live one and an ended one, in one payload', () => {
