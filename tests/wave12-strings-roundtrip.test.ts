@@ -29,6 +29,16 @@
 // MUTATION-VERIFIED: one character changed in a doc row fails by id, and one character changed in
 // the shipped pool fails the same row with the arrow the other way. Both measured – see the wave's
 // report; re-measured 23.09 after the re-aim.
+//
+// ⭐ HARDENED 30.09 (S7 – THE OWNER FOLDED THE ROUND-TRIP CHIP INTO THE SECONDARY-MARKET WAVE): TWO MEASURED HOLES, ONE FIX. (1) THE SHIPPED SIDE IS A WHOLE STRING
+// LITERAL NOW, not a bare `includes`: a sentence that GREW past its row (an `s` appended in the source) kept the row as a substring and stayed green – S2's arm A13,
+// first measured on `tests/secondary-market-strings-roundtrip.test.ts`, whose `shipped` this file's now is. (2) THE HOME IS READ AS CODE: `codeOnly` strips its comments
+// before any row is matched, so the code's word changing while `// was 'Old'` sits beside it can no longer hold the pin up. Only the matching mechanism moved – no row,
+// no shipped string, no count and no assertion's direction – and every row of the real tree passed the stricter matcher on its first run, so nothing was loosened to get there.
+// THE BOOTH'S `${who}` ROWS ARE WHOLE TEMPLATE LITERALS IN THEIR HOME, so they pass as they stand: the placeholder is in the row exactly as it is in the source.
+// ⭐ S7'S ARMS, EACH ALONE, WATCHED AND RESTORED BYTE FOR BYTE (30.09), all RED by row id, on P1 (its words live in `divorcedCopy.ts`, reached through `homeSource`): a character appended, one
+// substituted, the word changed with a whole-line comment quoting the OLD one above it, the same with a trailing comment, and one character of the doc row. THE PRE-S7 PIN STAYED GREEN on the
+// appended character and on the comment arm – the measurement of the two holes.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -78,11 +88,36 @@ function parseTable(path: string): Row[] {
 // boundary. This wave's corpus is ALL bare paths, so the trade touches every row here and there is no
 // stricter half left standing beside it; the count, the status pin and the dash pin are untouched, and
 // for a module with no package directory `homeSource` is the old read byte for byte.
+/** ⭐ S7 (30.09) – THE HOME IS READ AS CODE, NOT AS TEXT: comments are stripped before any row is matched, so a comment that quotes a word can neither
+ *  hold a row up (the code's word changes, `// was 'Old'` stays beside it, and a whole-file containment stayed green – it cannot tell a comment from code)
+ *  nor pass for a second copy of it. Strip-only: it takes text away from what the pin sees and adds none, so it can only make a pin stricter.
+ *  ⚠⚠ LINE COMMENTS GO FIRST, AND THE ORDER IS MEASURED, NOT STYLE (copied from `codeOnly` in `tests/principles-a06-life-beat-direction.test.ts`, T6.10, 28.09):
+ *  a line comment that names a path glob puts a slash before a star, the block matcher reads it as an OPENER and runs to the next block close, and the real
+ *  code in between is deleted. The second line pass takes a TRAILING comment (a double slash after whitespace on a code line), for the reason the first takes a
+ *  whole-line one: `'Word', // was 'Old'` is the same hole from the other end of the line.
+ *  ⚠ A `.vue` home also loses its `<!-- -->` comments, first, because they are the outermost comment syntax in a template. */
+function codeOnly(text: string, path: string): string {
+  const html = path.endsWith('.vue') ? text.replace(/<!--[\s\S]*?-->/g, '') : text
+  return html
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+    .replace(/[ \t]\/\/.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
+/** ⭐ S7 (30.09) – THE ROW AS A WHOLE STRING LITERAL, ported from `tests/secondary-market-strings-roundtrip.test.ts`: it must be found between its own quote marks
+ *  (`'…'`, `"…"` or a template literal), never as a bare substring. A plain `includes` cannot see a shipped sentence that has GROWN past its row – the row is still
+ *  a substring of the longer sentence (S2's arm A13, 30.09: an `s` appended in the source stayed green) – so growth, shrinkage and substitution now fail the same row.
+ *  ⚠ THE ESCAPED SPELLING IS LOAD-BEARING, exactly as it was: the doc quotes the RUNTIME spelling, and a single-quoted source literal escapes its apostrophes. */
+function shipped(src: string, text: string): boolean {
+  const spellings = [text, text.replaceAll("'", "\\'")]
+  return spellings.some((t) => ["'", '"', '`'].some((q) => src.includes(q + t + q)))
+}
+
 const sourceCache = new Map<string, string>()
 function sourceOf(path: string): string {
   let src = sourceCache.get(path)
   if (src === undefined) {
-    src = homeSource(path)
+    src = codeOnly(homeSource(path), path)
     sourceCache.set(path, src)
   }
   return src
@@ -103,14 +138,10 @@ describe('wave 12 – the strings table IS the corpus', () => {
   it('every row matches the shipped string character for character', () => {
     for (const row of rows) {
       const src = sourceOf(row.home)
-      // ⚠ THE ESCAPED FALLBACK IS LOAD-BEARING: the doc quotes the RUNTIME spelling, and a source
+      // ⚠ THE ESCAPED FALLBACK IS LOAD-BEARING, AND LIVES IN `shipped` NOW (S7): the doc quotes the RUNTIME spelling, and a source
       // literal in single quotes escapes its apostrophes (`next week\'s dates`, every contracted
       // quote). Several rows of this table need it – the count is the corpus's, not this comment's.
-      const escaped = row.text.replaceAll("'", "\\'")
-      expect(
-        src.includes(row.text) || src.includes(escaped),
-        `${row.id}: ${row.home} does not contain the row's text`,
-      ).toBe(true)
+      expect(shipped(src, row.text), `${row.id}: ${row.home} does not ship the row's text as a whole string literal`).toBe(true)
     }
   })
 

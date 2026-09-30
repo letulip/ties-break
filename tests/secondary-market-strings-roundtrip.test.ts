@@ -34,6 +34,14 @@
 // ⚠ AND ONE CASE IT DOES NOT CLOSE, RECORDED RATHER THAN HIDDEN: the code's word changed while a comment quotes the OLD word exactly once (`// was
 // 'Withdraw'`) and the doc row is left as it was – both arms stay green, because a containment pin over a whole file cannot tell a comment from code.
 // Closing it means matching against comment-stripped source (`codeOf`), which changes this pin's design, so it is left for the wording pass's owner.
+// ⭐ CLOSED 30.09 (S7 – THE OWNER FOLDED THE ROUND-TRIP HARDENING INTO THIS WAVE) – BOTH CASES ABOVE. `codeOnly` below strips comments from every home before a row is
+// matched (line comments first, then block comments, and `<!-- -->` first in a `.vue`), so a comment that quotes a word is not in the text this pin sees at all:
+// the code's word changed with `// was 'Withdraw'` beside it and the row untouched is now RED by row id, and the «exactly once» arm has no comment left to be
+// fooled by (a duplicate CODE literal is still what it catches). The same two moves – the whole-literal matcher and comment-stripped code – were ported to the
+// older round-trip pins in the same step, each mutation-verified alone.
+// ⭐ S7'S ARMS, EACH ALONE, WATCHED AND RESTORED BYTE FOR BYTE (30.09), all RED by row id: on SM1 a character appended in `shop.ts`, one substituted, the word changed with a
+// whole-line comment quoting the OLD one above it (the pre-S7 pin stayed GREEN on that arm – measured), the same with a trailing `// was 'OLD'`, and one character of the DOC row; on SM20
+// the word changed in `OfferLetter.vue` with an HTML comment quoting the old one above it. Each one fails the row test and the «exactly once» test together.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 
@@ -57,11 +65,27 @@ function parseTable(path: string): Row[] {
   return rows
 }
 
+/** ⭐ S7 (30.09) – THE HOME IS READ AS CODE, NOT AS TEXT: comments are stripped before any row is matched, so a comment that quotes a word can neither
+ *  hold a row up (the code's word changes, `// was 'Old'` stays beside it, and a whole-file containment stayed green – it cannot tell a comment from code)
+ *  nor pass for a second copy of it. Strip-only: it takes text away from what the pin sees and adds none, so it can only make a pin stricter.
+ *  ⚠⚠ LINE COMMENTS GO FIRST, AND THE ORDER IS MEASURED, NOT STYLE (copied from `codeOnly` in `tests/principles-a06-life-beat-direction.test.ts`, T6.10, 28.09):
+ *  a line comment that names a path glob puts a slash before a star, the block matcher reads it as an OPENER and runs to the next block close, and the real
+ *  code in between is deleted. The second line pass takes a TRAILING comment (a double slash after whitespace on a code line), for the reason the first takes a
+ *  whole-line one: `'Word', // was 'Old'` is the same hole from the other end of the line.
+ *  ⚠ A `.vue` home also loses its `<!-- -->` comments, first, because they are the outermost comment syntax in a template. */
+function codeOnly(text: string, path: string): string {
+  const html = path.endsWith('.vue') ? text.replace(/<!--[\s\S]*?-->/g, '') : text
+  return html
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+    .replace(/[ \t]\/\/.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
 const sourceCache = new Map<string, string>()
 function sourceOf(path: string): string {
   let src = sourceCache.get(path)
   if (src === undefined) {
-    src = readFileSync(path, 'utf8')
+    src = codeOnly(readFileSync(path, 'utf8'), path)
     sourceCache.set(path, src)
   }
   return src
