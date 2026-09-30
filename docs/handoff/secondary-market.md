@@ -38,9 +38,9 @@ last-reviewed: 2026-09-30
   freshFloor per family, measured before moved.
 - The popup does not pre-empt a half-built academy (List/Sell now drawn; the ENGINE refuses with
   the shipped sentence). A pre-emptive line is a wording call.
-- The strings roundtrip pin cannot tell a comment quoting a word from code shipping it
-  (comment-stripped matching would close it) – same family as the pending chip on the old waves'
-  pins.
+- CLOSED in-wave (S7, `93710652`+`one-home`): all seven strings-roundtrip pins now match a whole
+  string literal in COMMENT-STRIPPED code – both measured holes (a grown sentence; a comment
+  quoting the old word) are red by 44 verified arms; wave12's P8 twin-copy residual got one home.
 - No e2e exercises the popup/letters yet; the component project covers them (246 files green).
 
 ## Gates (30.09, quiet machine, verdicts from files with fresh mtime)
