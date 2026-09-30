@@ -574,7 +574,8 @@ describe('S3 · WORTH READS THE CARD: an offer is priced on the row\'s stored va
   })
 
   it('and an OFFER moves with the card: a car whose card is three times the recomputation prices above anything the recomputation could', () => {
-    // a CAR here, deliberately: a brand's recomputation reads the row's own stored value (its floor), so it cannot tell the two worths apart
+    // a CAR here, deliberately: a brand's recomputation steps FROM the row's own stored value (`rampedWorthCents(owned.valueCents, …)`, the
+    // ramp's accumulator), so the two worths are never independent for a brand and this arm could not tell them apart
     const world = worldOwning('s3-parity-offer', [CAR])
     const row = rowOf(world, CAR)!
     const analytic = assetWorthCents(world, row, shopItem(CAR)!)
