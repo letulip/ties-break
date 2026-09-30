@@ -54,7 +54,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { assetWorthCents, ownedAssets, shopCatalogue, shopItem } from '../src/engine/world/assets'
-import { marketCrash, marketCrashLog } from '../src/engine/world/market'
+import { CRASH_EPOCH_WEEKS, marketCrash, marketCrashLog } from '../src/engine/world/market'
 import * as resale from '../src/engine/world/resale'
 import {
   QUOTE_HORIZON_WEEKS,
@@ -187,14 +187,19 @@ describe('the corridor table (spec §2d)', () => {
     expect(WEEKS_PER_YEAR).toBe(52)
   })
 
-  it('the epoch grid: every crisis starts in the first half of a 208-week epoch and ends inside it', () => {
-    // ⚠ `resale.ts` restates `market.ts`'s private epoch length for the hangover's look-back; this is what keeps the copy honest.
+  it('the epoch grid: every crisis starts in the first half of an epoch and ends inside it – off the ONE spelling, `market.ts`\'s own export', () => {
+    // ⚠ 30.09 (S2, the architect's «one spelling» ruling): `resale.ts` used to restate `market.ts`'s private epoch length for the
+    // hangover's look-back, and this arm kept the copy honest by pinning 208 from the outside. There is no copy any more – the
+    // hangover imports `CRASH_EPOCH_WEEKS` – so the grid is asserted off that same export, together with the premise the look-back
+    // rests on: a crisis's hangover may run past its own epoch's end but never past the next one's, or asking two epochs would not do.
+    const epoch = CRASH_EPOCH_WEEKS
+    expect(ECONOMY.shop.secondary.hangoverWeeks, 'two epochs are enough to look back').toBeLessThan(epoch)
     for (let i = 0; i < 40; i++) {
       for (let e = 0; e < 12; e++) {
         const c = marketCrash(`grid-${i}`, e)
-        expect(c.startWeek).toBeGreaterThanOrEqual(e * 208)
-        expect(c.startWeek).toBeLessThan(e * 208 + 104)
-        expect(c.endWeek).toBeLessThan((e + 1) * 208)
+        expect(c.startWeek).toBeGreaterThanOrEqual(e * epoch)
+        expect(c.startWeek).toBeLessThan(e * epoch + epoch / 2)
+        expect(c.endWeek).toBeLessThan((e + 1) * epoch)
       }
     }
   })
@@ -682,6 +687,9 @@ describe('reproducibility, arity and the MAIN stream (invariant 2)', () => {
       'buyerHazard',
       'buyerWritesThisWeek',
       'crashDepth',
+      // 30.09 (S2): the market's memory window, read in ONE place – `unlistAsset` asks it at the week an ad went up, S3's letter raiser
+      // will ask it the same way. A row and a week in, a number of weeks out: pure, and it takes no `Rng`.
+      'freshnessCarryOf',
       'saleFloorCents',
       'saleOfferPriceCents',
       'secondaryOf',
@@ -693,6 +701,7 @@ describe('reproducibility, arity and the MAIN stream (invariant 2)', () => {
     expect(resale.saleOfferPriceCents.length).toBe(4)
     expect(resale.buyerHazard.length).toBe(5)
     expect(resale.buyerWritesThisWeek.length).toBe(5)
+    expect(resale.freshnessCarryOf.length).toBe(2)
     expect(resale.staleAtWeeks.length).toBe(2)
     expect(resale.assetSaleQuote.length).toBe(2)
   })

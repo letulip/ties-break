@@ -564,6 +564,10 @@ export const shop = {
     /** ...and how big it opens: this share of the size of the response (|crashShift| × depth) the class showed at
      *  that crisis's trough. */
     hangoverX: 0.25,
+    /** THE MARKET'S MEMORY OF A WITHDRAWN AD (spec §2i: «the market remembers a withdrawn ad for ~12 weeks»): a family that
+     *  takes a lot off the market and lists it again within this many weeks RESUMES at the staleness it left; after that the
+     *  ad starts fresh. One reader – `freshnessCarryOf` (resale.ts). Added 30.09 by step S2. */
+    memoryWeeks: 12,
     /** ONE ROW PER FAMILY THAT CAN LIST, cheapest first as on the shelf. The columns:
      *  `medianWeeks` the median wait, in weeks, to a first acceptable letter for the family's ENTRY rung in a calm
      *  market – true by construction, the peak weekly chance is SOLVED from it (`peakChanceOf`, resale.ts);

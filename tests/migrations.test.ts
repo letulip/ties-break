@@ -664,7 +664,11 @@ describe('save migrations', () => {
     // checkable. v89 was moved with its full move, never by this line's item – and its step cannot
     // touch this walk at all, because it writes only inside a NON-NULL `dynasty` and every fixture in
     // the corpus carries `null`.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 89 – past the colliding 64, through 65').toBe(89)
+    // ⚠ RE-AIMED AT v90 (30.09, the secondary market S2 – the listing), NOT WEAKENED, for the reason every re-aim above it carries:
+    // this case is about the v63 -> v65 double step, and its last line simply follows the ladder's head so the sentence over it
+    // stays checkable. v90 was moved with its full move, and its step is the version step – it writes nothing, so it cannot touch
+    // this walk.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 90 – past the colliding 64, through 65').toBe(90)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

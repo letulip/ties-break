@@ -4,7 +4,7 @@
 // nothing calls it yet.
 //
 // ⚠⚠ THE `assets.ts` PATTERN, AND IT IS THE WHOLE POINT OF THIS FILE: IT ANSWERS QUESTIONS AND NEVER WRITES
-// THE WORLD. No listing exists yet (S2 adds `listedWeek`), no letter is raised (S3) and nothing settles
+// THE WORLD. A listing exists since S2 (`listedWeek`, `lastListing`) but nothing here reads it off the world, no letter is raised (S3) and nothing settles
 // (S3/S4). So the state a later step will keep – how long a thing has been listed, what the market remembers
 // of an earlier listing – arrives here as EXPLICIT PARAMETERS (`weeksListed`, `freshnessCarry`) and is never
 // a field read off the world. That is boring on purpose: every function below can be tested on a hand-built
@@ -27,7 +27,7 @@ import type { OwnedAsset, ShopFamily } from '../../shared/protocol'
 import type { WorldState } from '../world'
 import { assetDelivered, assetWorthCents, deliveredAssets, ownedAssets, shopCatalogue, shopItem } from './assets'
 import type { ShopItem } from './assets'
-import { marketCrash, marketCrashLog } from './market'
+import { CRASH_EPOCH_WEEKS, marketCrash, marketCrashLog } from './market'
 
 /** One family's row of `ECONOMY.shop.secondary.byFamily`, widened back to plain numbers. */
 export interface SecondaryRow {
@@ -63,11 +63,6 @@ export interface AssetSaleQuote {
  *  and a screen reads `weeksHi >= QUOTE_HORIZON_WEEKS` as «may not sell at all» rather than printing a number. */
 export const QUOTE_HORIZON_WEEKS = 520
 
-/** ⚠ `market.ts`'s private `CRASH_EPOCH_WEEKS`, restated because the hangover must ask the PREVIOUS epoch's arc
- *  too: an arc never crosses its own epoch, but the half-season after it can. A restated number is a number
- *  that can rot, so `tests/resale-quote.test.ts` pins the epoch grid from the outside («the epoch grid»). */
-const MARKET_EPOCH_WEEKS = 208
-
 /** ⭐ THE ROW OF THE CORRIDOR TABLE THAT PRICES THIS RUNG, or null for a rung that never lists. ⚠ THE ABSENCE
  *  IS THE PREDICATE: `investment` has no row (parked cash never lists, spec §2a), and a family added to the
  *  union tomorrow is not sold by letter until somebody gives it one. */
@@ -100,10 +95,14 @@ export function crashDepth(seed: string, week: number): number {
  *  either way.
  *
  *  ⚠ TWO EPOCHS ARE ASKED because the arc's half-season can run into the next epoch. Two arcs' terms would
- *  simply add, which is rare and harmless. Pure over (seed, week): the arc is READ, never drawn. */
+ *  simply add, which is rare and harmless. Pure over (seed, week): the arc is READ, never drawn.
+ *
+ *  ⚠ THE EPOCH LENGTH IS `market.ts`'s OWN `CRASH_EPOCH_WEEKS`, IMPORTED – ONE SPELLING (30.09, S2, the architect's
+ *  ruling). This file used to restate the number, and a restated number is a number that can rot; the epoch-grid arm of
+ *  `tests/resale-quote.test.ts` now asserts the grid off the same import. */
 function hangoverTerm(seed: string, row: SecondaryRow, week: number): number {
   const knobs = ECONOMY.shop.secondary
-  const epoch = Math.floor(week / MARKET_EPOCH_WEEKS)
+  const epoch = Math.floor(week / CRASH_EPOCH_WEEKS)
   let term = 0
   for (let e = Math.max(0, epoch - 1); e <= epoch; e++) {
     const arc = marketCrash(seed, e)
@@ -276,6 +275,21 @@ function marketOf(seed: string, lot: Lot, worthCents: number, week: number): Mar
 /** A week count that survives a stray NaN or a negative: the wire is not trusted (the plan's proof discipline). */
 function weeksOrZero(x: number): number {
   return Number.isFinite(x) && x > 0 ? x : 0
+}
+
+/** ⭐ §2i – THE MARKET'S MEMORY OF AN EARLIER AD, AS THE CARRY `buyerWritesThisWeek` TAKES: the weeks of exposure the row
+ *  banked when its last ad ended, IF that ad ended within `ECONOMY.shop.secondary.memoryWeeks` of `week` – and 0 once the
+ *  window has passed, or when the row never had an ad (the new ad starts fresh). INCLUSIVE: an ad withdrawn exactly
+ *  `memoryWeeks` ago is still remembered; one week later it is not.
+ *
+ *  ⚠ THE ONE PLACE THE WINDOW IS READ – two copies of `<= memoryWeeks` would be two windows. ⚠ AND ASK IT AT THE WEEK THE
+ *  AD WENT UP (`listedWeek`), NOT AT THE TICK: the window measures how long the family waited BEFORE re-listing, so a carry
+ *  asked at tick time would slide out of the window while the ad is still up and the staleness would snap back to fresh.
+ *  `unlistAsset` asks it that way (world/shop.ts). Pure over (row, week): the row is a PARAMETER, never read off a world,
+ *  and nothing is drawn. */
+export function freshnessCarryOf(owned: OwnedAsset, week: number): number {
+  const last = owned.lastListing
+  return last && week - last.endedWeek <= ECONOMY.shop.secondary.memoryWeeks ? last.exposedWeeks : 0
 }
 
 /** ⭐ THE WEEK THE AD'S FRESHNESS REACHES ITS FLOOR – the first whole week of exposure at which the weekly

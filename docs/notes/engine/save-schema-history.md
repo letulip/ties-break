@@ -1088,3 +1088,35 @@ The version-by-version chronicle that stood above `SAVE_SCHEMA_VERSION` in `src/
 // schema sentence, and the e2e fixtures. ⚠ NO PEEL RUNG – see the paragraph above; the rung would
 // have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V89` instead.
 ```
+
+## v90 – the listing
+
+```ts
+// ⭐⭐⭐ v90 – THE LISTING (THE SECONDARY MARKET, STEP S2; docs/specs/secondary-market-2026-09.md §2a and §2i).
+// **TWO OPTIONAL KEYS ON EVERY `OwnedAsset` ROW**: `listedWeek?` (the week the thing went on the market; absent = not
+// listed) and `lastListing?: { endedWeek, exposedWeeks }` (the market's memory of an ad that ended without a sale).
+//
+// ⚠⚠ BOTH ABSENT IS THE EXACT TRUTH, NOT A DEFAULT. Nothing was ever for sale by letter before this version, and a listing
+// is the family's own choice: a migration that stamped one would put somebody's car on the market without asking
+// (`prologueTrace`'s v84 refusal – never invent a fact the save never held). So the step is THE VERSION STEP AND NOTHING
+// ELSE, the second one with no body (v88's three union widenings were the first) – and it is a bump anyway, because two
+// persisted keys are a schema move whether or not the step has work to do (v88's rule: a version whose migration is a
+// comment must be reviewable).
+//
+// ⚠ THE MEMORY IS APPLIED ON READ, NEVER BY A SWEEP. `lastListing` keeps its value for ever; `freshnessCarryOf`
+// (world/resale.ts) is the one place the `ECONOMY.shop.secondary.memoryWeeks` window is read, and it is asked at the week an
+// ad WENT UP – so re-listing inside the window resumes the staleness the family left, and a later re-listing starts fresh.
+// ⚠ THE ACADEMY IS ONE LOT (§2e): its stages carry the same `listedWeek` together, and `lastListing` is written on every row
+// of the lot, so any stage's row can answer for it.
+//
+// ⚠ ZERO DRAWS: the migration writes nothing, and `listAsset` / `unlistAsset` write only these two keys and one amount-less
+// ledger row. No sub-stream is reached, so MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched.
+//
+// ⚠⚠ THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case): no frozen career lists anything, so the serialised world gains
+// no key and `careerHashAtSchema` needs NO new peel rung – its tail answers 87 through 90 alike – `PRE_V90` holds the
+// verbatim v89 constants, and the live registers still re-stamp because the version number is inside the hash.
+//
+// Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v89 -> v90 step in migrations.ts, tests/fixtures/saves/v90.json, its
+// row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e
+// fixtures. ⚠ NO PEEL RUNG – the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V90`.
+```

@@ -136,8 +136,13 @@ export function guardNotEnded(world: WorldState): void {
  *  a tap with `COLLEGE_FREEZE_REFUSAL` and taken a working control away. Measured before it shipped:
  *  `tests/principles-unknown-answers.test.ts` reddened on that exact sentence.
  *
+ *  ⭐ MEMBERS SEVEN AND EIGHT ARE `listAsset` AND `unlistAsset` (30.09, the secondary market, step S2) – the shop's own
+ *  ruling read once more: putting a thing the family OWNS on the market, or taking it off, is about the family's own
+ *  property, reaches no decision about the girl and opens nothing the freeze shut (the letters it will attract land in the
+ *  parent's inbox and are answered there).
+ *
  *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset,
- *  setWeightEnabled, and nothing else. */
+ *  setWeightEnabled, listAsset, unlistAsset, and nothing else. */
 export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }

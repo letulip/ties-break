@@ -40,10 +40,16 @@ import { ECONOMY } from '../src/engine/economy'
 // line exists for, spec §2i). Only the byte pins moved – 29,629 → 29,630 chars (one more digit), sha df4a7d51… → 261541d5… – and the
 // key-path pins did NOT (1,916 paths, sha 3cc2c7ae…, 44 top-level blocks): the tell that a value changed and nothing was added, removed or
 // reordered. Taken on 883dca64 plus the S1b commit of feat/secondary-market.
-const PIN_JSON_SHA256 = '261541d5cb3942d446a16b31129bdd33372aa229f898bc513974c3b6965bd8bf'
-const PIN_JSON_CHARS = 29_630
-const PIN_PATHS_SHA256 = '3cc2c7ae8c3062695f3296e34644fd323e13756ceb5baf1d2e285a0e3be29833'
-const PIN_PATH_COUNT = 1_916
+// RE-PINNED A THIRD TIME 30.09, S2 of the same wave (the listing, docs/specs/secondary-market-2026-09.md §2i): 30.09 S2 adds
+// shop.secondary.memoryWeeks – ONE key appended after `hangoverX`, the last of the shared knobs and just before `byFamily`, value 12
+// («the market remembers a withdrawn ad for ~12 weeks»), nothing reordered and nothing else tuned. This time the bytes AND the key
+// paths move, which is the tell of an ADDED key: 29,630 → 29,647 chars (+17, `"memoryWeeks":12,`), sha 261541d5… → 9145d9de…;
+// 1,916 → 1,917 paths (+1), sha 3cc2c7ae… → ac3ad65f…; the 44 top-level blocks did not move. Taken on 80c8f34c plus the S2 commit of
+// feat/secondary-market.
+const PIN_JSON_SHA256 = '9145d9de7be5428c7d1cdb12344637b2d6a1d079238eca6896a2fdee0c278168'
+const PIN_JSON_CHARS = 29_647
+const PIN_PATHS_SHA256 = 'ac3ad65f6573edd2581cb9190483a4141614087ba9b7232a3268c885b7507eda'
+const PIN_PATH_COUNT = 1_917
 const PIN_TOP_LEVEL_KEYS = 44
 
 const sha = (s: string): string => createHash('sha256').update(s).digest('hex')

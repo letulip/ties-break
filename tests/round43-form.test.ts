@@ -359,7 +359,9 @@ describe('§6 the schema move – v80', () => {
     // WEAKENED, for the reason this pin has always carried: it follows the LADDER'S HEAD so «v80 is
     // not the head any more» stays a checkable sentence rather than a stale one. The form half below
     // is untouched.
-    expect(SAVE_SCHEMA_VERSION).toBe(89)
+    // ⚠ AND AGAIN AT v90 (30.09, the secondary market S2 – `OwnedAsset.listedWeek` / `lastListing`), NOT WEAKENED: it follows the
+    // LADDER'S HEAD so «v80 is not the head any more» stays a checkable sentence. The form half below is untouched.
+    expect(SAVE_SCHEMA_VERSION).toBe(90)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

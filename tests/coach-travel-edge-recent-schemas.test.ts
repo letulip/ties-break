@@ -56,9 +56,27 @@ import {
   PRE_V87,
   PRE_V88,
   PRE_V89,
+  PRE_V90,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v90: rolling the schema back to 89 – with nothing to drop, because no frozen career can list anything – returns the v89 CAREER on all three', () => {
+    // ⭐⭐⭐ THE THIRD RUNG IN A ROW WHOSE PEEL DOES NOTHING, AND THE REASON IS ITS OWN. v88 appended no field; v89 appended one nested
+    // inside a NULL. v90 (the secondary market – S2) appends TWO optional keys to every `OwnedAsset` row – and a frozen career lists
+    // nothing (the only command that puts a thing on the market is born in this step), so neither key is ever written and the
+    // serialised world gains no key: `careerHashAtSchema`'s tail answers 87 through 90 alike, and only the version number the last
+    // line stamps in differs.
+    //
+    // ⚠⚠ SO THIS CASE PROVES A CLAIM ABOUT **WHERE** A SCHEMA MOVE LANDED: give a frozen career a listing, or write either key on every
+    // row, and all three lines go red at once – and neither change would fail anything else in this repo.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V90` in tests/coachTravelEdgeFixtures.ts: the three values below are the three
+    // `FROZEN` constants this branch held at v89, reproduced character for character.
+    expect(careerHashAtSchema(5, 0, 89), '25k · middle coach · grinder – the verbatim v89 value').toBe(PRE_V90.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 89), '120k · elite coach · grinder – the verbatim v89 value').toBe(PRE_V90.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 89), '8k · self-coached · player – the verbatim v89 value').toBe(PRE_V90.selfTravelling)
+  })
+
   it('⭐⭐⭐ v89: rolling the schema back to 88 – with nothing to drop, because the new field is inside a NULL – returns the v88 CAREER on all three', () => {
     // ⭐⭐⭐ THE SECOND RUNG IN A ROW WHOSE PEEL DOES NOTHING, AND THE REASON IS NOT v88's. v88 (the
     // parting) appended no field at all; v89 (the college scene – T4) appends a REAL one,

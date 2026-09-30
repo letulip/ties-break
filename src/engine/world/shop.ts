@@ -48,6 +48,11 @@ import { brandMultipleX, brandSignalsOf } from './brand'
 // ⚠ THE ONE THING THIS FILE ASKS THE MARKET DIRECTLY – the season line's crash predicate. Every
 // VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
 import { marketCrashFellIn } from './market'
+// ⭐ THE SECONDARY MARKET (S2) – the corridor table's predicate (parked cash has no row) and the ONE place the market's
+// memory window is read. ⚠ A LEAF EDGE, checked rather than assumed: `resale.ts` reaches only `./assets`, `./market`,
+// `../economy`, `../rng` and `../season/calendar` at runtime (its `../world` import is type-only) and none of those
+// imports this file.
+import { freshnessCarryOf, secondaryOf } from './resale'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 // ⭐ ROUND 43 #11 – the letter the delivery writes. One raiser, in the module that owns the inbox.
 // ⚠ NOT A CYCLE, and checked rather than assumed – `offers.ts`'s own `seasonIndexOf` import makes
@@ -696,6 +701,108 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     // against what it fetched – and the unrealised rest stays on the row upstairs.
     text: whole ? `Sold: ${label} – ${tail}` : `Sold ${formatCents(proceedsCents)} of: ${label} – ${tail}`,
     amountCents: proceedsCents,
+  })
+}
+
+/** ⚠ THE ONE SENTENCE BOTH LISTING COMMANDS REFUSE PARKED CASH WITH – a DRAFT, tabled as SM1 in
+ *  docs/plans/secondary-market-strings-2026-09.md. Declared once because two throw sites would be two spellings. */
+const LISTING_NOT_A_THING = 'That is money, not a thing – it cannot be put on the market'
+
+/** ⭐ THE ROWS ONE LISTING COVERS (spec §2e): the row itself, or – for the academy, which is ONE LOT – every academy
+ *  row the family holds, whichever stage was named. The lot's members are read off the catalogue's family, exactly as
+ *  `resale.ts`'s `lotOf` reads them, so a stage the family buys later joins the lot without a second rule. */
+function listingRows(world: WorldState, owned: OwnedAsset, item: ShopItem): OwnedAsset[] {
+  if (item.family !== 'academy') return [owned]
+  return (world.assets ?? []).filter((a) => shopItem(a.id)?.family === 'academy')
+}
+
+/** What the ledger calls the thing: the academy answers to the NAME THE FAMILY GAVE IT (`assetNameOf`, bounded on the
+ *  way out) and to its stage's own label when it never named one; every other rung is its label. */
+function listingLabel(world: WorldState, item: ShopItem): string {
+  return (item.family === 'academy' ? assetNameOf(world, 'academy') : null) ?? item.label
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S2 – PUT A THING ON THE MARKET (docs/specs/secondary-market-2026-09.md §2a, §2e, §2i).
+ *  A THING waits there for a buyer's letter (S3); parked cash never does – it is money, and it keeps today's instant
+ *  partial sale. This command writes ONLY `listedWeek` and one amount-less ledger row: no money moves, no letter is
+ *  raised and nothing is drawn.
+ *
+ *  ⚠⚠ THE GUARD IS `guardNotEndedForGood`, THE SHOP'S OWN, FOR THE REASON `buyAsset` CARRIES (read it there): a listing is
+ *  about the FAMILY'S OWN property, so it stays open inside the college freeze and refuses on a terminal latch with the
+ *  unchanged sentence. ⚠ EVERY REFUSAL IS RE-VALIDATED HERE, in the order a player meets them (CLAUDE.md invariant 1 –
+ *  the worker is not the gate): ended for good; not owned; not a thing; not delivered; already listed.
+ *
+ *  ⚠⚠ THE ACADEMY IS ONE LOT (§2e): whichever stage is named, the lot is every academy row the family holds. It refuses
+ *  while ANY stage is still being built (the popup warns; this enforces – nobody buys a construction site) and then marks
+ *  EVERY row in one loop, so the lot is listed together or not at all. */
+export function listAsset(world: WorldState, itemId: string): void {
+  guardNotEndedForGood(world)
+  world.assets ??= []
+  const owned = world.assets.find((a) => a.id === itemId)
+  if (!owned) throw new Error('The family does not own that')
+  const item = shopItem(itemId)
+  // ⚠ A THING, NOT MONEY (§2a): the corridor table's ABSENCE is the predicate – `investment` has no row, so the deposit and
+  // the fund refuse here and keep today's instant partial sale, untouched.
+  if (!item || !secondaryOf(item)) throw new Error(LISTING_NOT_A_THING)
+  const rows = listingRows(world, owned, item)
+  if (item.family === 'academy') {
+    if (!rows.every((a) => assetDelivered(a))) {
+      throw new Error('The academy cannot be put on the market while a stage is still being built')
+    }
+  } else if (!sellableAsset(world, owned)) {
+    // ⚠ `sellAsset`'s OWN SENTENCE, NOT A NEW ONE: a contract still in delivery is the same «cannot be sold yet» here.
+    throw new Error('That one cannot be sold right now')
+  }
+  if (rows.some((a) => a.listedWeek !== undefined)) throw new Error('That is already on the market')
+  for (const row of rows) row.listedWeek = world.week
+  const label = listingLabel(world, item)
+  addEvent(world, {
+    week: world.week,
+    // ⚠ AMOUNT-LESS, LIKE EVERY 'info' ROW: nothing moved. The `shop` category files it with the rest of the family's
+    // dealings; the Money breakdown sums `amountCents` and there is none.
+    type: 'info',
+    category: 'shop',
+    text: `Put on the market: ${label}`,
+  })
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S2 – TAKE A THING OFF THE MARKET, AND LET THE MARKET REMEMBER IT (§2i: «the market
+ *  remembers a withdrawn ad»). The mirror of `listAsset` with the same guards in the same order, minus «delivered» (a row
+ *  can only be listed once it is, and withdrawing is never blocked) and with «actually listed» where the other has «not
+ *  already listed». The academy's lot is cleared together.
+ *
+ *  ⭐ THE MEMORY: `lastListing = { endedWeek: now, exposedWeeks }` where `exposedWeeks` is the weeks this ad was up PLUS the
+ *  carry the ad itself RESUMED from (`freshnessCarryOf`, asked at the week the ad went UP – the row still holds the
+ *  earlier ad's memory until this write replaces it). So a family that withdraws and re-lists inside
+ *  `ECONOMY.shop.secondary.memoryWeeks` keeps ACCUMULATING exposure, and one that waits longer starts fresh. It is written
+ *  on EVERY row of the lot, so any stage's row can answer for it. ⚠ A settled sale deletes the row and needs none; this is
+ *  the withdrawn ad's memory only (S3's settle writes the expired ad's).
+ *
+ *  Same guard, same class, zero draws. */
+export function unlistAsset(world: WorldState, itemId: string): void {
+  guardNotEndedForGood(world)
+  world.assets ??= []
+  const owned = world.assets.find((a) => a.id === itemId)
+  if (!owned) throw new Error('The family does not own that')
+  const item = shopItem(itemId)
+  if (!item || !secondaryOf(item)) throw new Error(LISTING_NOT_A_THING)
+  const rows = listingRows(world, owned, item)
+  const listed = rows.filter((a) => a.listedWeek !== undefined)
+  const anchor = listed[0]
+  if (!anchor) throw new Error('That is not on the market')
+  // the lot goes up together, so every listed row carries one week; `min` keeps a hand-edited save from writing a negative.
+  const listedWeek = Math.min(...listed.map((a) => a.listedWeek ?? world.week))
+  const exposedWeeks = Math.max(0, world.week - listedWeek) + freshnessCarryOf(anchor, listedWeek)
+  for (const row of rows) {
+    delete row.listedWeek
+    row.lastListing = { endedWeek: world.week, exposedWeeks }
+  }
+  const label = listingLabel(world, item)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    category: 'shop',
+    text: `Taken off the market: ${label}`,
   })
 }
 
