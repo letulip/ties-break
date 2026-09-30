@@ -63,7 +63,10 @@ const COURTS = 'academy-courts'
 
 const assetsOf = (world: WorldState): OwnedAsset[] => world.assets ?? []
 const rowOf = (world: WorldState, id: string): OwnedAsset | undefined => assetsOf(world).find((a) => a.id === id)
-const salesOf = (world: WorldState): Offer[] => world.offers.filter((o) => o.kind === 'sale')
+// ⚠ RE-AIMED AT THE SECONDARY MARKET'S S5 (30.09), NEVER WEAKENED: `salesOf` means «the BUYERS wrote». The stale notice (spec §2i) is kind `'sale'` too, in the `info`
+// state – a paper with no price, no controls and no deadline, written at the lot's stale week – and it now lands in this file's walks. It is not a buyer's letter and has
+// its own arms (tests/secondary-market-s5.test.ts), so the helper that every arm here reads its letters through still returns exactly what it returned before.
+const salesOf = (world: WorldState): Offer[] => world.offers.filter((o) => o.kind === 'sale' && o.state !== 'info')
 const openSales = (world: WorldState): Offer[] => salesOf(world).filter((o) => o.state === 'open')
 const termsOf = (o: Offer): SaleOfferTerms => o.terms as SaleOfferTerms
 const lastEvent = (world: WorldState) => world.events[world.events.length - 1]
@@ -357,6 +360,9 @@ describe('S3 · the academy is ONE lot: one signing, every delivered stage, ONE 
     expect(lastEvent(world).amountCents).toBe(termsOf(first).priceCents)
     const delta = termsOf(first).priceCents - paid
     const tail = delta < 0 ? `${formatCents(-delta)} less than it cost` : delta > 0 ? `${formatCents(delta)} more than it cost` : 'exactly what it cost'
+    // ⚠ RE-AIMED AT S5.0 (30.09), NEVER LOOSENED: the lot's settle row names the academy by the name the family gave it (`assetNameOf`) and by the naming stage's own label
+    // when it never named one. This world never named its academy, so the FALLBACK is what this arm pins – the stage's label, exactly as before; the NAMED arm is
+    // tests/secondary-market-s5.test.ts's.
     expect(lastEvent(world).text, 'the tail is over the stages\' summed cost').toBe(`Sold: ${shopItem(LAND)!.label} – ${tail}`)
     expect(second.state).toBe('expired')
   })

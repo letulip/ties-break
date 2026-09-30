@@ -559,8 +559,18 @@ describe('§2e-3 – the frozen MAIN capture cannot see any of this', () => {
       // proves input-independence over the delivery and the bill as well as over buy/sell.
       // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1 + spec §2e), NEVER WEAKENED: the academy fire-sells as ONE LOT, so a stage that an earlier sale in this very loop already took
       // with it is no longer there to sell – the world is asked again for each row instead of trusting the list taken before the loop. Every rung is still swept.
+      // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S5.0 (30.09, spec §2e), NEVER WEAKENED: the academy's instant sale refuses while ANY of its stages is still in delivery («a lot with a
+      // live contract has no whole»), with the shipped sentence – and this sweep buys the whole shelf every week, so a later stage is often on order when an earlier one is asked.
+      // That refusal is the engine ANSWERING, not the sweep failing: it is tolerated by its ONE sentence and nothing else, so every other error still stops the arm and every rung
+      // is still swept.
       for (const owned of [...ownedAssets(w)]) {
-        if (ownedAssets(w).some((a) => a.id === owned.id) && sellableAsset(w, owned)) sellAsset(w, owned.id)
+        if (ownedAssets(w).some((a) => a.id === owned.id) && sellableAsset(w, owned)) {
+          try {
+            sellAsset(w, owned.id)
+          } catch (e) {
+            if ((e as Error).message !== 'That one cannot be sold right now') throw e
+          }
+        }
       }
     })
     expect(draws.length, 'the same number of MAIN draws').toBe(base.draws.length)

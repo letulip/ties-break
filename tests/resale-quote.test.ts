@@ -701,10 +701,16 @@ describe('reproducibility, arity and the MAIN stream (invariant 2)', () => {
       // 30.09 (S2): the market's memory window, read in ONE place – `unlistAsset` asks it at the week an ad went up, S3's letter raiser
       // will ask it the same way. A row and a week in, a number of weeks out: pure, and it takes no `Rng`.
       'freshnessCarryOf',
+      // 30.09 (S5): the ONE stale week, for the two readers that must agree to the week – the shelf's badge and the stale notice. Three integers
+      // in, one integer out: no world, no `Rng`.
+      'listingStaleWeek',
       // 30.09 (S3): the ONE lot definition, exported for the callers that WRITE – the letter raiser, the settle and the accept-time
       // re-validation. A world and an id in, the lot's key and rows out (or null): a read, no `Rng`.
       'saleFloorCents',
       'saleLotOf',
+      // 30.09 (S5): the lot's stale span, asked once a week per listed lot by the raiser and once per row by the snapshot – `staleAtWeeks` over
+      // the lot's own worth, the quote's `staleWeeks` without its 520-step wait loop. A world and an id in, weeks (or null) out: a read, no `Rng`.
+      'saleLotStaleWeeks',
       'saleOfferPriceCents',
       'secondaryOf',
       'staleAtWeeks',
@@ -719,5 +725,7 @@ describe('reproducibility, arity and the MAIN stream (invariant 2)', () => {
     expect(resale.freshnessCarryOf.length).toBe(2)
     expect(resale.staleAtWeeks.length).toBe(2)
     expect(resale.assetSaleQuote.length).toBe(2)
+    expect(resale.listingStaleWeek.length).toBe(3)
+    expect(resale.saleLotStaleWeeks.length).toBe(2)
   })
 })

@@ -43,9 +43,13 @@ import type {
   EntryLetterTerms,
   KitOfferTerms,
   Offer,
+  SaleOfferTerms,
   StaffLetterTerms,
   TourLetterTerms,
 } from '../shared/protocol'
+// ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5) – the two senders' words and the lot's label are shared with the paper (`OfferLetter`), so the
+// list row and the sheet it opens cannot name the same letter two ways.
+import { SALE_SENDER, saleLabelOf } from '../composables/saleLetter'
 // ⭐⭐ ROUND 42 #39a – `activeKitDeal` joins the same import, for the reason the four beside it are
 // here: it is the ENGINE's own predicate for «is she under contract this week» – the very function
 // the wear ceiling reads – so the line below cannot claim a deal the engine is not honouring. Pure:
@@ -250,7 +254,15 @@ function senderOf(o: Offer): string {
   // belongs to the two senders that are institutions rather than desks («The academy», «Her national
   // federation»). The letter's own signature moved with it.
   if (o.kind === 'build') return 'Order desk'
+  // ⭐⭐⭐ S5 – the buyer's letter signs with what it IS, like the desks do: a buyer, or – for the notice that an ad has gone quiet – the market.
+  // ⚠ DRAFT copy (SM18, SM19), and the words are `saleLetter.ts`'s, shared with the paper's own signature.
+  if (o.kind === 'sale') return o.state === 'info' ? SALE_SENDER.market : SALE_SENDER.buyer
   return (o.terms as KitOfferTerms).brand
+}
+
+/** ⭐⭐⭐ S5 – WHAT THE LOT IS CALLED ON A BUYER'S LETTER: the shelf's own row for `terms.itemId` (`saleLabelOf`), looked up rather than derived. */
+function saleLabelFor(o: Offer): string {
+  return saleLabelOf(game.snapshot?.shop?.rows ?? [], (o.terms as SaleOfferTerms).itemId)
 }
 
 /** WHAT IT IS ABOUT, in the words the paper itself uses. Every arm here has a matching arm in
@@ -318,6 +330,14 @@ function subjectOf(o: Offer): string {
   // the week it was written, never today's catalogue – see `BuildLetterTerms.label`.
   // ⭐ KEPT VERBATIM BY HIS 17.09 REVIEW, which rewrote the sheet under it and left this line alone.
   if (o.kind === 'build') return `${(o.terms as BuildLetterTerms).label} is ready`
+  // ⭐⭐⭐ S5 – the buyer's subject restates its own sheet's first sentence, this function's rule: the lot and the printed price for a proposal, and
+  // the quiet notice's opening words for the notice. ⚠ DRAFT copy (SM24, SM25).
+  if (o.kind === 'sale') {
+    const label = saleLabelFor(o)
+    if (o.state === 'info') return `Interest in ${label} has gone quiet`
+    const price = formatCents((o.terms as SaleOfferTerms).priceCents)
+    return `${label} – an offer of ${price}`
+  }
   // ⭐⭐⭐ ROUND 44 #7 – the staff's subject restates its own sheet's first sentence, this function's
   // rule, and it carries the YEAR because four seats write in ONE post and a career keeps every
   // year of them: an inbox holding six seasons is unreadable unless each line says which year it is
@@ -429,6 +449,13 @@ const pendingSign = ref<Offer | null>(null)
 const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
+  // ⭐⭐⭐ S5 – A BUYER'S SIGNATURE SELLS THE LOT, so it has its own question: every number below the ad arm is kit or campaign arithmetic. The price
+  // is the one PRINTED on the paper (`priceCents`, frozen at its arrival week) and the lot's name is the shelf's. ⚠ DRAFT copy (SM26).
+  if (pendingSign.value.kind === 'sale') {
+    const label = saleLabelFor(pendingSign.value)
+    const price = formatCents((pendingSign.value.terms as SaleOfferTerms).priceCents)
+    return `Sell ${label} for ${price}? The sale settles this week and cannot be undone.`
+  }
   // ⭐ ROUND 24 ITEM 2 – the endorsement's own confirm, because every number below this branch is
   // kit arithmetic (`dealUntilWeek` anchors on seasons; an ad term runs from the signature). The
   // last thing he reads restates the deal in the paper's own words – the fee, where it lands, how
@@ -603,6 +630,7 @@ async function doRefuse(id: string): Promise<void> {
           :offer="openLetter"
           :week="week"
           :offers="game.snapshot?.offers ?? []"
+          :sale-label="openLetter.kind === 'sale' ? saleLabelFor(openLetter) : undefined"
           @sign="askSign"
           @refuse="doRefuse"
         />

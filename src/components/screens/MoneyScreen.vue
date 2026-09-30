@@ -102,6 +102,8 @@ import { useAcademyCoverPct } from '../../composables/eventCard'
 // ("it comes with the Money screen in U1, where it has a real caller"), and the three rows below -
 // a category, the income line and a ledger entry - are what gave it its shape.
 import ConfirmDialog from '../ConfirmDialog.vue'
+// ⭐ THE SECONDARY MARKET, S5 – the popup a THING's Sell opens (List / Sell now / keep); it hands «Sell now» back to the confirm below.
+import SaleDialog from '../SaleDialog.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
@@ -1085,6 +1087,8 @@ const herPhoto = computed(() => cropUrl(portraitStage(game.snapshot?.ageYears ??
 // this screen's own clock rather than declaring a second one – see `useShop`'s header.
 const shop = useShop(week)
 const { pendingShop, shopConfirmMessage, confirmShop, openChapter } = shop
+// ⭐ THE SECONDARY MARKET, S5 – the popup's state and its three doors, all owned by the shop composable (the screen only draws the tag).
+const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, listOnMarket, sellNow } = shop
 </script>
 
 <template>
@@ -1751,6 +1755,18 @@ const { pendingShop, shopConfirmMessage, confirmShop, openChapter } = shop
       <!-- ⭐ ROUND 29 #5 – the verb on the control matches the verb in the question: a commissioned
            thing is ORDERED, and a button reading "Buy it" under a sentence about a three-year wait
            would be the two halves of one decision disagreeing. -->
+      <!-- ⭐⭐⭐ THE SECONDARY MARKET, S5 – A THING'S SELL OPENS THE MARKET FIRST (spec §2g): how long, at what price, what an instant sale pays.
+           The popup prints the engine's quote and derives nothing; «Sell now» goes on to the ordinary confirm just below, whose amount is the
+           quote's fire price. -->
+      <SaleDialog
+        v-if="saleDialogRow"
+        :heading="saleDialogHeading(saleDialogRow)"
+        :lines="saleDialogLines(saleDialogRow)"
+        :listable="saleDialogRow.listing === undefined"
+        @list="listOnMarket(saleDialogRow)"
+        @sell="sellNow(saleDialogRow)"
+        @cancel="closeSaleDialog"
+      />
       <ConfirmDialog
         v-if="pendingShop"
         :message="shopConfirmMessage"

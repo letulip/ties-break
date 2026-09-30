@@ -39,7 +39,9 @@ import { formatCents, formatCentsSigned } from '../shared/money'
 // ⭐ ROUND 30 #5 – one picture per card. `shelfArtUrl`'s header carries the whole contract: a key with
 // no painting yet returns null and the card simply draws without a band.
 import { shelfArtUrl } from '../art/shelf'
-import type { ShopState } from '../composables/shop'
+// ⭐ THE SECONDARY MARKET, S5 – the listed row's one control is a DRAFT word (SM10), declared beside the popup's three so the panel and the
+// popup cannot spell it two ways.
+import { SALE_LABELS, type ShopState } from '../composables/shop'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import ProgressRing from './ui/ProgressRing.vue'
@@ -100,6 +102,10 @@ const {
   askSell,
   nameDrafts,
   nameFor,
+  listingBadge,
+  listingIsStale,
+  withdrawListing,
+  canWithdraw,
 } = props.state
 
 // ⚠ A COMPUTED RATHER THAN THE DESTRUCTURED PROP: `const { screenTab } = props` reads the value once
@@ -508,6 +514,16 @@ const screenTab = computed(() => props.screenTab)
                  moved. ⚠ THE ROW IS DRAWN UNCONDITIONALLY, round 34 #20's own reason: a fixed
                  rung has no amount to type, so it holds the Sell button alone and lays out
                  exactly as the bare button did. -->
+            <!-- ⭐⭐⭐ THE SECONDARY MARKET, S5 – ON THE MARKET. Present only while the engine says the row (for the academy, the lot) is listed
+                 (`row.listing`), so a parked-cash row and an unlisted thing draw exactly what they always drew. The badge is the engine's own
+                 week arithmetic read (`listingBadge`), flipping to its quiet wording in the week the engine's stale letter arrives; Withdraw is
+                 one tap and no question, because taking an ad down is free. The Sell control below stays: the exit is never locked (spec §2i). -->
+            <div v-if="row.listing" class="shop-row-listing" :class="{ 'is-stale': listingIsStale(row) }">
+              <p class="shop-row-listing-badge">{{ listingBadge(row) }}</p>
+              <button class="shop-action" :disabled="!canWithdraw()" @click="withdrawListing(row)">
+                {{ SALE_LABELS.withdraw }}
+              </button>
+            </div>
             <div class="shop-stake-row">
               <!-- ⚠ `min` IS THE BUY FLOOR AND THERE IS DELIBERATELY NO `max`, which is the one
                    asymmetry a shared field creates and is left rather than "fixed". Both
@@ -1291,6 +1307,26 @@ const screenTab = computed(() => props.screenTab)
 }
 
 .shop-row-change.is-down {
+  color: var(--money-out);
+}
+
+/* THE SECONDARY MARKET, S5 – the listed row's badge and its Withdraw, one line that wraps rather than overflows. */
+.shop-row-listing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.shop-row-listing-badge {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.shop-row-listing.is-stale .shop-row-listing-badge {
   color: var(--money-out);
 }
 

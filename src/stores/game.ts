@@ -635,6 +635,15 @@ export const useGameStore = defineStore('game', {
     async sellAsset(itemId: string, amountCents?: number) {
       await this.commit({ type: 'sellAsset', itemId, amountCents })
     },
+    /** ⭐ THE SECONDARY MARKET, S5 – put a thing on the market, and take it off. Both are the engine's commands (`listAsset` / `unlistAsset`, which
+     *  re-validate ownership, that it is a thing and not parked cash, delivery and «already listed» / «actually listed»); this side sends the id and
+     *  nothing else, so no price or week can be smuggled in from the screen. */
+    async listAsset(itemId: string) {
+      await this.commit({ type: 'listAsset', itemId })
+    },
+    async unlistAsset(itemId: string) {
+      await this.commit({ type: 'unlistAsset', itemId })
+    },
     /** Book a practice match (watchable friendly) on an empty future week. */
     async bookPractice(week: number, withCoach: boolean) {
       await this.commit({ type: 'bookPractice', week, withCoach })

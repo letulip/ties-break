@@ -269,6 +269,9 @@ describe('S4 · the academy fire-sells as ONE LOT (spec §2e – «вряд ли
       expect(world.fundsCents - funds, `${named}: the lot's fire total, once`).toBe(lotFire)
       expect(soldRows(world) - rows, `${named}: ONE ledger row for the lot`).toBe(1)
       expect(lastEvent(world).amountCents).toBe(lotFire)
+      // ⚠ RE-AIMED AT S5.0 (30.09), NEVER LOOSENED: the lot's settle row names the academy by the name the family gave it (`assetNameOf`) and by the NAMED stage's own label
+      // when it never named one. This world never named its academy, so the FALLBACK is what this arm pins – the stage's label, exactly as before; the NAMED arm is
+      // tests/secondary-market-s5.test.ts's.
       expect(lastEvent(world).text, 'the tail is over the stages\' summed cost').toBe(`Sold: ${shopItem(named)!.label} – ${tailOf(lotFire - paid)}`)
     }
   })

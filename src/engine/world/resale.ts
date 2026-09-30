@@ -24,7 +24,9 @@ import { ECONOMY } from '../economy'
 import { rngFromSeed } from '../rng'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { OwnedAsset, ShopFamily } from '../../shared/protocol'
-import type { WorldState } from '../world'
+// ⚠ S5 (30.09): FROM THE MODULE THAT DECLARES IT. This read `from '../world'` (the barrel) since S1 – a NEW barrel type-import that
+// `tests/principles-a03-type-import-ratchet.test.ts` flags, red at dc4b6738 already and outside every S1–S4 verify list; `WorldState` is `./state`'s.
+import type { WorldState } from './state'
 import { assetDelivered, deliveredAssets, ownedAssets, shopCatalogue, shopItem } from './assets'
 import type { ShopItem } from './assets'
 import { CRASH_EPOCH_WEEKS, marketCrash, marketCrashLog } from './market'
@@ -319,6 +321,34 @@ export function staleAtWeeks(item: ShopItem, worthCents: number): number | null 
   const row = secondaryOf(item)
   if (!row) return null
   return Math.ceil(freshnessSpanWeeks(row, thinFactor(item.family, worthCents)))
+}
+
+/** ⭐ S5 – THE STALE SPAN OF THE LOT `itemId` NAMES, in weeks: `staleAtWeeks` asked of the lot's own worth (the members' stored `valueCents`,
+ *  summed – for the academy, every delivered stage). Null when the lot does not exist (an investment, a rung nobody owns, a contract in
+ *  delivery). ⚠ IT IS THE SAME NUMBER AS THE QUOTE'S `staleWeeks` and is asked separately on purpose: the raiser runs it once per listed lot
+ *  per WEEK, and the quote's 520-step wait loop is not needed to answer it. `tests/secondary-market-s5.test.ts` pins the two equal. */
+export function saleLotStaleWeeks(world: WorldState, itemId: string): number | null {
+  const lot = lotOf(world, itemId)
+  return lot ? staleAtWeeks(lot.item, lotWorthCents(lot)) : null
+}
+
+/** ⭐ S5 – THE ABSOLUTE WEEK A LISTING GOES STALE: `listedWeek` plus the weeks of freshness the ad still has, which is the quote's
+ *  `staleWeeks` (the lot's own span) LESS the `carry` the market remembered from an earlier ad (spec §2i: «with a market memory of `c`
+ *  weeks the listing goes stale `c` weeks sooner: the caller subtracts»). ONE function for the two readers that must agree to the week –
+ *  the shelf's badge (`shopView`'s `listing.staleAtWeek`) and the stale prompt (`raiseSaleOffers`) – so the badge cannot flip in one week
+ *  and the letter arrive in another.
+ *
+ *  ⚠ FLOORED AT ONE WEEK, AND THAT IS THE ONLY JUDGEMENT IN IT: an ad re-listed inside the memory window with more banked exposure than the
+ *  span is stale from its first day, and the raiser only runs on the ticks AFTER the listing (`weeksListed` >= 1) – so the badge is held to flip
+ *  in the first tick's week too, the week the notice can first be written, instead of in a listing week nobody is ticked through.
+ *
+ *  ⚠⚠ IT IS EVALUATED EVERY WEEK AT THE CURRENT WORTH, NEVER ONCE AT LISTING TIME – `staleWeeks` stretches with the lot's price (the thin-market
+ *  dampener, `freshnessSpanWeeks`) and a depreciating lot's span SHRINKS as it ages, which is why a reader tests `week >= this` rather than
+ *  `week === this`: an equality test misses the week when the span drops across it – measured at S5 on the dearest plane, which an `===` test
+ *  never caught on any of 200 seeds (world/shop.ts `raiseSaleOffers` carries the numbers; tests/secondary-market-s5.test.ts pins the premise).
+ *  A pure integer function: no world, no draws. */
+export function listingStaleWeek(listedWeek: number, staleWeeks: number, carryWeeks: number): number {
+  return listedWeek + Math.max(1, staleWeeks - carryWeeks)
 }
 
 /** ⭐ WHAT THE FAMILY WOULD GET FOR THE LOT BY SELLING AT ONCE AT `week`, and the floor no letter may read

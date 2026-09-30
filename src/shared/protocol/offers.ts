@@ -8,6 +8,7 @@
 
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { PsyFocus } from '../../engine/world/state'
+import type { AssetSaleQuote } from '../../engine/world/resale'
 import type { CoachTier, PlayStyle } from './profile'
 
 // --- THE INBOX (schema v32) --------------------------------------------------------------------
@@ -658,6 +659,20 @@ export interface ShopRowView {
   requiresId: string | null
   /** ...and whether that requirement is met. True on every rung that has none. */
   requirementMet: boolean
+  /** ⭐⭐⭐ THE SECONDARY MARKET, S5 (spec §2g) – THE ENGINE'S QUOTE FOR THIS ROW, verbatim, and ABSENT on everything that cannot be listed:
+   *  parked cash, a rung nobody owns and a contract still in delivery. ⚠ FOR THE ACADEMY IT IS THE LOT'S: every delivered stage's row carries
+   *  the same quote, because any stage's id names the lot. The popup PRINTS it and derives nothing (the parity law,
+   *  docs/specs/engine-ui-parity-2026-09.md): every week, price and the fire figure below is `assetSaleQuote`'s own number. */
+  quote?: AssetSaleQuote
+  /** ⭐ S5 – PRESENT ONLY WHILE THE ROW (FOR THE ACADEMY, THE LOT) IS ON THE MARKET: the week the ad went up and the ABSOLUTE week it goes
+   *  stale (`listingStaleWeek` – the quote's span less the market's memory of an earlier ad). The badge flips at that week and the stale letter
+   *  arrives in it, both off the one function. */
+  listing?: { sinceWeek: number; staleAtWeek: number }
+  /** ⭐ S5 – WHAT «SELL NOW» WILL WRITE IN THE LEDGER, asked of the engine rather than worked out on a screen: the name the ledger row carries
+   *  (`listingLabel` – the academy answers to the name the family gave it) and the SIGNED difference between the fire price and what the lot cost
+   *  (`saleTail`'s own number, summed over the stages for the academy). Present exactly when `quote` is. The confirm sentence prints both, so it
+   *  cannot say a different thing from the row the sale writes. */
+  fire?: { label: string; changeCents: number }
 }
 
 /** THE SHELF. Present on every snapshot, and OPEN on every snapshot since round 29 part two #6.

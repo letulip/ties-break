@@ -53,6 +53,18 @@ export interface PendingShop {
   name?: string
 }
 
+/** ⭐⭐⭐ THE SECONDARY MARKET, S5 – THE FOUR CONTROLS THE MARKET ADDS, AS WORDS. DRAFTS, tabled in docs/plans/secondary-market-strings-2026-09.md
+ *  (SM7–SM10) and pinned there letter for letter: List, Sell now and Keep it are the popup's three doors, Withdraw is the listed row's one tap. (⚠ THE WORDS ARE NOT QUOTED IN
+ *  THIS COMMENT ON PURPOSE: the round-trip test finds a row as a whole quoted literal anywhere in its home, so a quoted copy of a one-word row in a comment would
+ *  keep the pin green after the real literal changed – found by S5's own mutation run.)
+ *  Declared once, at module scope, because the popup component and the panel both print them and two spellings would be two wordings. */
+export const SALE_LABELS = {
+  list: 'List',
+  sellNow: 'Sell now',
+  keep: 'Keep it',
+  withdraw: 'Withdraw',
+} as const
+
 /** The shelf, for one mounted Money screen.
  *
  *  @param week the career's week, the screen's own reader – see the header.
@@ -535,6 +547,13 @@ export function useShop(week: ComputedRef<number>) {
   }
   function askSell(row: ShopRowView): void {
     if (!canSell(row) || row.valueCents === null) return
+    // ⭐⭐⭐ S5 – A THING ASKS THE MARKET BEFORE IT ASKS THE QUESTION. `quote` is the engine's «this row can be listed» (absent on parked cash, on
+    // a rung nobody owns and on a contract in delivery), so a row WITHOUT one falls straight through to the part-sale path below – the deposit's
+    // and the fund's Sell is byte for byte what it was. The dialog's «Sell now» comes back through `sellNow`, into the SAME confirm.
+    if (row.quote) {
+      saleDialogId.value = row.id
+      return
+    }
     // ⚠ THE PART IS ONLY OFFERED ON AN 'open' RUNG, which is `isTopUp`'s predicate read from the other
     // end – see `sellAsset`'s own header. A car is sold whole whatever is in any box.
     const part = isTopUp(row) ? sellCentsFor(row) : null
@@ -600,6 +619,86 @@ export function useShop(week: ComputedRef<number>) {
     // ⚠ `partCents` OR NOTHING: a whole sale sends no amount, which is the engine's «sell the lot» and
     // is byte for byte the call this screen made before part two #4.
     else void game.sellAsset(pending.id, pending.partCents)
+  }
+
+  // ⭐⭐⭐ THE SECONDARY MARKET, S5 (docs/specs/secondary-market-2026-09.md §2g, §2i) – A THING IS LISTED OR SOLD AT ONCE, AND THE SCREEN ONLY PRINTS.
+  // ⚠⚠ EVERY NUMBER BELOW IS THE ENGINE'S. The wait, the corridor and the fire price are `ShopRowView.quote`'s own fields; the badge's weeks are the
+  // career's week less `listing.sinceWeek`; the flip to «gone quiet» is `week >= listing.staleAtWeek`, a week the engine decided (`listingStaleWeek`)
+  // and writes its letter in; and the confirm's amount and tail are `quote.fireCents` and `fire.changeCents`. Nothing here prices a thing, draws a
+  // chance or subtracts two figures to find a loss (`tests/component/secondary-market-s5.test.ts` moves each engine value and watches the screen
+  // follow it). ⚠ EVERY SENTENCE IS A DRAFT: tabled in docs/plans/secondary-market-strings-2026-09.md and pinned there letter for letter by
+  // tests/secondary-market-strings-roundtrip.test.ts, so the wording pass can move any of them.
+  const saleDialogId = ref<string | null>(null)
+  /** The row whose market dialog is open. ⚠ A COMPUTED OFF THE SNAPSHOT AND NOT A COPY: the dialog closes by itself the moment the row stops having
+   *  a quote (sold, or gone) instead of printing a figure the engine no longer stands behind. */
+  const saleDialogRow = computed<ShopRowView | null>(() => {
+    const id = saleDialogId.value
+    return id === null ? null : (shopRows.value.find((r) => r.id === id && r.quote !== undefined) ?? null)
+  })
+  function closeSaleDialog(): void {
+    saleDialogId.value = null
+  }
+  /** What the popup calls the lot: the engine's own name for it (`fire.label`), the label the ledger row will carry. */
+  function saleDialogHeading(row: ShopRowView): string {
+    return row.fire?.label ?? row.label
+  }
+  /** The popup's lines, in the order he described them: how long, at what price, what an instant sale pays – and the two warnings the row's own
+   *  facts call for. ⚠ THE WARNINGS ARE THE ENGINE'S FACTS READ: `quote.thinMarket` is the engine's predicate, and the academy line is drawn on the
+   *  row's family (the one the engine sells as a single lot). */
+  function saleDialogLines(row: ShopRowView): string[] {
+    const quote = row.quote
+    if (!quote) return []
+    const weeksLo = quote.weeksLo
+    const weeksHi = quote.weeksHi
+    const priceLo = formatCents(quote.corridorLoCents)
+    const priceHi = formatCents(quote.corridorHiCents)
+    const fire = formatCents(quote.fireCents)
+    const lines = [
+      `It may take ${weeksLo} to ${weeksHi} weeks to sell.`,
+      `Offers may range from ${priceLo} to ${priceHi}.`,
+      `Selling now pays ${fire}, at once.`,
+    ]
+    if (quote.thinMarket) lines.push('Few buyers can pay this much – it may not sell at all.')
+    if (row.family === 'academy') lines.push('The academy sells as one lot – every stage goes together, not the courts alone.')
+    return lines
+  }
+  /** «List»: the ad goes up and the popup closes. Free and reversible (Withdraw), so no second question. `listAsset` re-derives every guard. */
+  function listOnMarket(row: ShopRowView): void {
+    saleDialogId.value = null
+    void game.listAsset(row.id)
+  }
+  /** «Sell now»: the SAME confirm every sale goes through, its amount the ENGINE'S fire price and its tail the ENGINE'S difference (`fire.changeCents`)
+   *  – the sentence prints what `sellAsset` will pay and write, and never `valueCents`, which is the card and not the price. */
+  function sellNow(row: ShopRowView): void {
+    const quote = row.quote
+    if (!quote || !row.fire) return
+    saleDialogId.value = null
+    pendingShop.value = {
+      kind: 'sell',
+      id: row.id,
+      label: row.fire.label,
+      amountCents: quote.fireCents,
+      changeCents: row.fire.changeCents,
+    }
+  }
+  /** «Withdraw»: one tap and no confirm – taking an ad down is free and the market remembers it (§2i), so there is nothing to undo. */
+  function withdrawListing(row: ShopRowView): void {
+    void game.unlistAsset(row.id)
+  }
+  function canWithdraw(): boolean {
+    return !game.busy
+  }
+  function listingIsStale(row: ShopRowView): boolean {
+    return row.listing !== undefined && week.value >= row.listing.staleAtWeek
+  }
+  /** The row's badge: how long the ad has been up, or – once the engine's stale week has come – that interest has gone quiet. */
+  function listingBadge(row: ShopRowView): string | null {
+    if (!row.listing) return null
+    const weeks = Math.max(0, week.value - row.listing.sinceWeek)
+    const unit = weeks === 1 ? 'week' : 'weeks'
+    return listingIsStale(row)
+      ? `Interest has gone quiet · ${weeks} ${unit} on the market`
+      : `On the market · ${weeks} ${unit}`
   }
 
   // ⭐⭐ ROUND 43 #5 – `shelfShareNote`, WHY THE BUSINESS TAB NOW NAMES THE SPLIT. Parked here for
@@ -809,5 +908,16 @@ export function useShop(week: ComputedRef<number>) {
     pendingShop,
     shopConfirmMessage,
     confirmShop,
+    // --- the secondary market (S5): the popup a thing's Sell opens, and the listed row's badge and Withdraw ---
+    saleDialogRow,
+    saleDialogHeading,
+    saleDialogLines,
+    closeSaleDialog,
+    listOnMarket,
+    sellNow,
+    withdrawListing,
+    canWithdraw,
+    listingBadge,
+    listingIsStale,
   }
 }

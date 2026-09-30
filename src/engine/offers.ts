@@ -1896,6 +1896,37 @@ export function raiseSaleLetter(offers: Offer[], week: number, terms: SaleOfferT
   return letter
 }
 
+/** ⭐ S5 (spec §2i) – ONE LISTING, ONE NOTICE: the idempotency key of the letter that says an ad has gone quiet, keyed on the lot and on the week the
+ *  AD WENT UP (`listedWeek`), not on the week the notice arrives. ⚠ THAT IS WHAT MAKES «ONCE» A PROPERTY OF THE ID RATHER THAN OF A FLAG OR OF A
+ *  COINCIDENCE OF WEEKS: the stale week moves with the lot's worth (see `listingStaleWeek`), so the raiser tests «stale yet?» every week and lets this id
+ *  say «already written». A re-listing has a new `listedWeek` and so may write its own. A DIFFERENT id from `saleOfferId`'s on purpose – a buyer may write for
+ *  the same lot in the same week, and the two papers must not collide. */
+export function saleStaleId(itemId: string, listedWeek: number): string {
+  return `sale-stale-${itemId}-w${listedWeek}`
+}
+
+/** ⭐ S5 (spec §2i) – THE MARKET SAYS THE AD HAS GONE QUIET. A NOTICE, the academy's and the build letter's shape: `state: 'info'`, so there is
+ *  nothing to sign, nothing to refuse and `expireOffers` has nothing to lapse, and `deadlineWeek` is the arrival week because an informational
+ *  letter has no window (see `raiseBuildLetter`). It reuses kind `'sale'` and `SaleOfferTerms` with `priceCents: 0` – NO price was quoted, and no
+ *  new kind or field means no schema move. ⚠ `expireSaleOffers` only ever touches `open` letters, so this one outlives the listing it is about
+ *  (a record, like every notice). `week` is the arrival week and `listedWeek` the week the ad went up (the id's key, `saleStaleId`). Idempotent on its
+ *  id, zero draws – the caller decided that the ad is stale (`raiseSaleOffers`). */
+export function raiseSaleStaleLetter(offers: Offer[], week: number, listedWeek: number, terms: SaleOfferTerms): Offer {
+  const id = saleStaleId(terms.itemId, listedWeek)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const notice: Offer = {
+    id,
+    kind: 'sale',
+    week,
+    deadlineWeek: week,
+    terms: { ...terms },
+    state: 'info',
+  }
+  offers.push(notice)
+  return notice
+}
+
 /** ⭐ THE BUYERS WALK: every OPEN buyer's letter written for one of `itemIds` lapses, with the ordinary `expired` state and the week it
  *  happened – the thing is sold (`settleAssetSale`) or off the market (`unlistAsset`, ruling §5.3), and the paper says so through the state
  *  the inbox already renders for a lapsed letter rather than a new one. Matched on the rungs the lot is made of, because the academy's
