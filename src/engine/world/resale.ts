@@ -90,13 +90,13 @@ export function crashDepth(seed: string, week: number): number {
 }
 
 /** ⭐ THE HANGOVER (his ruling §5.4, «может даже чуть ниже на какое-то время»): for `hangoverWeeks` after a
- *  crash arc CLOSES, a residual of the OPPOSITE sign to the class's crash response, opening at `hangoverX` of
- *  the response the class showed at that crisis's own trough and decaying linearly to zero. The refuge premium
- *  on houses unwinds (a touch BELOW base); a class that dived rebounds a touch above.
+ *  crash arc CLOSES, a residual BELOW base for EVERY class, opening at `hangoverX` of the size of the response the
+ *  class showed at that crisis's own trough (`|crashShift| × depth`) and decaying linearly to zero.
  *
- *  ⚠ SIGN, AS THE BRIEF WORDS IT: «opposite-sign». The spec's gloss on the yacht («the postponed sellers crowd
- *  the market») would want the boat's residual BELOW base too; if he wants every class to sag, the one-token
- *  change is `-Math.abs(row.crashShift)`. The house arm, which is what his words were said of, is the same
+ *  ⚠ 30.09 (S1b, the architect's ruling on S1's open question): every class sits a touch below its base after an
+ *  arc – the house's premium unwinds, the postponed sellers crowd the rest; magnitude by |crashShift|. S1 built the
+ *  brief's «opposite-sign» word for word, which sent a boat or a plane ABOVE base for half a season after a crash –
+ *  the reverse of the spec's own gloss (§2c: the postponed yacht sellers crowd the market). The house is the same
  *  either way.
  *
  *  ⚠ TWO EPOCHS ARE ASKED because the arc's half-season can run into the next epoch. Two arcs' terms would
@@ -110,7 +110,7 @@ function hangoverTerm(seed: string, row: SecondaryRow, week: number): number {
     const since = week - arc.endWeek
     if (since < 0 || since >= knobs.hangoverWeeks) continue
     const trough = 1 - Math.exp(arc.depthLog)
-    term += -row.crashShift * trough * knobs.hangoverX * (1 - since / knobs.hangoverWeeks)
+    term += -Math.abs(row.crashShift) * trough * knobs.hangoverX * (1 - since / knobs.hangoverWeeks)
   }
   return term
 }
@@ -169,13 +169,58 @@ interface MarketState {
   spanWeeks: number
 }
 
-/** ⭐ THE WEEKLY CHANCE AT ONE AGE OF THE AD (§2d): the peak `1 − e^(−ln 2 / medianWeeks)` – the class median
- *  at the FRESH end – falling LINEARLY over the span to `freshFloor` and then holding there, never 0; times the
- *  crash multiplier while an arc is open and the thin dampener. LINEAR SO THE FLOOR IS REACHED AT A WEEK (the
- *  stale badge needs one), not approached for ever. */
+/** ⚠ THE FRESHNESS SHARE OF THE PEAK AT ONE AGE OF THE AD (§2d): 1 fresh, falling LINEARLY over `spanWeeks` to
+ *  `freshFloor` and then holding there, never 0. LINEAR SO THE FLOOR IS REACHED AT A WEEK (the stale badge needs
+ *  one), not approached for ever. ONE FUNCTION because the hazard and the peak's solver must walk the SAME shape. */
+function freshShare(row: SecondaryRow, spanWeeks: number, ageWeeks: number): number {
+  return ageWeeks >= spanWeeks ? row.freshFloor : 1 - (1 - row.freshFloor) * (ageWeeks / spanWeeks)
+}
+
+/** The solve below, remembered. It reads only the row's `medianWeeks` and `freshFloor` and the shared
+ *  `decayMedians`, so it is a pure function of three numbers, and keying on them stays right if a knob is ever
+ *  re-tuned at runtime. */
+const PEAK_MEMO = new Map<string, number>()
+
+/** ⭐⭐ THE PEAK WEEKLY CHANCE, SOLVED SO THAT THE TABLE'S MEDIAN IS TRUE BY CONSTRUCTION (30.09, S1b – the
+ *  architect's ruling). S1 set the peak to `1 − e^(−ln 2 / median)`, which is the median of a hazard that NEVER
+ *  decays; this hazard decays, so the fresh window's cumulative fell short of a half and the realised median
+ *  landed on the floor's tail – 2–10× the column, for every class. The fix is in the SEMANTICS and not in the
+ *  column: the peak is BISECTED so that, at thin = 1 in a calm market, the chance that no buyer has written over
+ *  exactly `medianWeeks` weeks is one half, under the decay-to-floor shape the hazard itself walks (`freshShare`).
+ *  Deterministic, no draws.
+ *
+ *  ⚠ THE TABLE'S MEDIAN IS THE FAMILY'S ENTRY RUNG IN A CALM MARKET – the thin dampener then slows expensive rungs
+ *  on top, which is the design (his $300k car), and S6 measures the spread.
+ *
+ *  ⚠ THE SPAN THE SOLVE USES IS THE `thin = 1` ONE (`decayMedians × medianWeeks`), so it depends on the row and on
+ *  nothing about a lot – which is what lets it be remembered per row. The bracket [0, 1] always holds the root (at
+ *  a peak of 1 the first week's chance is 1) and the UPPER end is returned, so the cumulative at `medianWeeks` is
+ *  at least one half and never a hair under. */
+function peakChanceOf(row: SecondaryRow): number {
+  const decay = ECONOMY.shop.secondary.decayMedians
+  const key = `${row.medianWeeks}:${row.freshFloor}:${decay}`
+  const known = PEAK_MEMO.get(key)
+  if (known !== undefined) return known
+  const weeks = Math.max(1, Math.round(row.medianWeeks))
+  const span = decay * row.medianWeeks
+  let lo = 0
+  let hi = 1
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2
+    let survive = 1
+    for (let age = 0; age < weeks; age++) survive *= 1 - Math.min(1, mid * freshShare(row, span, age))
+    if (survive > 0.5) lo = mid
+    else hi = mid
+  }
+  PEAK_MEMO.set(key, hi)
+  return hi
+}
+
+/** ⭐ THE WEEKLY CHANCE AT ONE AGE OF THE AD (§2d): the family's solved peak (`peakChanceOf` – the class median
+ *  at the entry rung) times the freshness share, times the crash multiplier while an arc is open and the thin
+ *  dampener. */
 function chanceAt(row: SecondaryRow, market: MarketState, ageWeeks: number): number {
-  const fresh = ageWeeks >= market.spanWeeks ? row.freshFloor : 1 - (1 - row.freshFloor) * (ageWeeks / market.spanWeeks)
-  return Math.min(1, market.peak * fresh * market.arrival * market.thin)
+  return Math.min(1, market.peak * freshShare(row, market.spanWeeks, ageWeeks) * market.arrival * market.thin)
 }
 
 /** What sells together: one owned row – or, for the academy, EVERY DELIVERED STAGE (spec §2e: «one listing
@@ -219,7 +264,7 @@ function lotWorthCents(world: WorldState, lot: Lot, week: number): number {
 function marketOf(seed: string, lot: Lot, worthCents: number, week: number): MarketState {
   const thin = thinFactor(lot.item.family, worthCents)
   return {
-    peak: 1 - Math.exp(-Math.LN2 / lot.row.medianWeeks),
+    peak: peakChanceOf(lot.row),
     thin,
     // ⚠ «WHILE AN ARC IS OPEN» IS THE CRASH LAYER BEING OFF ZERO: it is exactly zero outside an arc and exactly
     // non-zero inside one, so this needs no calendar of its own.

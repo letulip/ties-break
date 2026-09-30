@@ -35,8 +35,13 @@ import { ECONOMY } from '../src/engine/economy'
 // pins moved – the bytes (28,643 → 29,629 chars, sha 1b5c4b0b… → df4a7d51…) and the key-path list (1,853 → 1,916 paths,
 // sha d0f80d19… → 3cc2c7ae…: 63 new paths, the block's 7 shared knobs, `byFamily`, six rows and their 48 columns) – and
 // the 44 top-level blocks did not, `shop` being one of them. Taken on ab6c8468 plus the S1 commit of feat/secondary-market.
-const PIN_JSON_SHA256 = 'df4a7d513eda46a59cef8bacfa451dea15c9440506c914d8a0036ac4f4f6964e'
-const PIN_JSON_CHARS = 29_629
+// RE-PINNED AGAIN 30.09, S1b of the same wave – and this time ONE VALUE moves and no key does: 30.09 S1b moves `thinQuoteAt` 0.5 → 0.65
+// in `shop.secondary` (the owner's «элитный авто за 300к» sits at a dampener of 0.62 and is the very lot the popup's "may not sell at all"
+// line exists for, spec §2i). Only the byte pins moved – 29,629 → 29,630 chars (one more digit), sha df4a7d51… → 261541d5… – and the
+// key-path pins did NOT (1,916 paths, sha 3cc2c7ae…, 44 top-level blocks): the tell that a value changed and nothing was added, removed or
+// reordered. Taken on 883dca64 plus the S1b commit of feat/secondary-market.
+const PIN_JSON_SHA256 = '261541d5cb3942d446a16b31129bdd33372aa229f898bc513974c3b6965bd8bf'
+const PIN_JSON_CHARS = 29_630
 const PIN_PATHS_SHA256 = '3cc2c7ae8c3062695f3296e34644fd323e13756ceb5baf1d2e285a0e3be29833'
 const PIN_PATH_COUNT = 1_916
 const PIN_TOP_LEVEL_KEYS = 44

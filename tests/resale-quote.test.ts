@@ -10,7 +10,8 @@
 //
 // ⚠ WHAT IS DELIBERATELY NOT HERE: any statement about how OFTEN a listing sells. The numbers in
 // `ECONOMY.shop.secondary` are starting points and step S6's probe measures them; this file pins the SHAPE (floor never
-// zero, thin lots dearer to sell, a hangover that decays) and never a measured rate.
+// zero, thin lots dearer to sell, a hangover that decays) and never a measured rate. ONE EXCEPTION, S1b (30.09): the table's own
+// median, which is true by construction and not measured, so the medians arm pins it.
 //
 // ⚠ MUTATION-VERIFIED (30.09), SIXTEEN ARMS, each applied ALONE to the source, watched, and restored byte-identical
 // (the files were hashed before and after). What went red, and how many:
@@ -36,6 +37,17 @@
 //     noise is not a check.
 //   * the restated epoch length 208 -> 104 (the hangover's look-back)          -> ONE: the hangover arm
 //   * and the identity pin (tests/principles-t73-economy-identity.test.ts): car `medianWeeks` 4 -> 5 -> the sha pin red, alone.
+//
+// ⚠ S1b (30.09, the architect's three rulings) ADDS FOUR ARMS – each applied ALONE to the source, watched, and restored byte-identical
+// (sha-256 of the three files compared before and after):
+//   * the hangover's `-Math.abs(row.crashShift)` -> `-row.crashShift` (the signed form)  -> TWO: the boat's hangover arm and the plane's
+//     (a class that dives now sags too, so the signed form sends both ABOVE base); the house, whose sign is the same either way, stays green
+//   * the same term's `Math.abs(row.crashShift)` -> a constant 0.5 (magnitude no longer by |crashShift|)  -> THREE: the house, boat and plane
+//     hangover arms, on the re-derived magnitude alone – the sign checks stay green, which is why the magnitude is asserted at all
+//   * the peak `peakChanceOf(lot.row)` -> `1 - Math.exp(-Math.LN2 / lot.row.medianWeeks)` (S1's level)  -> SEVEN: all six medians arms – the
+//     entry rung's realised median comes out at car 10 weeks against the table's 4, house 37 / 16, boat 280 / 32, plane 389 / 44, business
+//     293 / 52, academy 368 / 65 – and the freshness arm's «above the never-decaying rate»
+//   * `thinQuoteAt` 0.65 -> 0.5  -> ONE: the thin-market arm, on the $300k car's flag alone
 import { describe, expect, it } from 'vitest'
 import { createWorld, type WorldState } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
@@ -131,6 +143,28 @@ function thinOf(family: Family, worthCents: number): number {
   const entry = Math.min(...shopCatalogue().filter((r) => r.family === family).map((r) => r.entryCents))
   const k = ECONOMY.shop.secondary
   return Math.min(1, Math.max(k.thinFloor, Math.pow(entry / worthCents, k.thinExponent)))
+}
+
+/** ⭐ S1b – THE LOT THE TABLE'S MEDIAN IS TRUE FOR: the family's CHEAPEST rung, bought THIS week (worth = what was paid, so the thin dampener
+ *  is exactly 1) in a CALM week (no arc open and none closed within the hangover: the crash multiplier is 1). Nothing here reads the
+ *  module's peak – the arms walk `buyerHazard` and ask what the wait actually is. */
+function entryLotOf(family: Family): { world: WorldState; id: string; week: number } {
+  const rung = shopCatalogue()
+    .filter((r) => r.family === family)
+    .sort((a, b) => a.entryCents - b.entryCents)[0]!
+  const seed = `entry-${family}`
+  const world = worldOwning(seed, [])
+  const week = calmWeekOf(seed)
+  world.week = week
+  ownRow(world, rung.id, { boughtWeek: week })
+  return { world, id: rung.id, week }
+}
+
+/** a family's peak weekly chance as the module hands it out: its entry lot's hazard at age 0 – the freshest instant (share 1), no dampener,
+ *  no crash multiplier. Read here so a level can be asserted RELATIVE to it; the medians arm is what says it is the right level. */
+function entryPeakOf(family: Family): number {
+  const { world, id, week } = entryLotOf(family)
+  return buyerHazard(world, id, week, 0, 0)
 }
 
 describe('the corridor table (spec §2d)', () => {
@@ -241,41 +275,57 @@ describe('the price corridor (spec §2c)', () => {
     expect(CRASH_SIGN[family] * (mean(troughRatios) - mean(calmRatios))).toBeGreaterThan(0)
   })
 
-  it('the hangover: a touch OPPOSITE a class’s crash response for half a season after the arc closes, then nothing', () => {
+  it.each([['house-first', 'house'], ['boat-launch', 'boat'], ['plane-small', 'plane']] as [string, Family][])('the hangover: %s (%s) sits a touch BELOW its quiet price for half a season after the arc closes, then nothing', (id, family) => {
+    // ⚠ 30.09 S1b – THE ARCHITECT'S RULING ON S1's OPEN QUESTION. This arm used to say «opposite a class's crash response»: the house BELOW
+    // base and the plane REBOUNDING ABOVE it. The spec's own gloss (§2c: the postponed yacht sellers crowd the market) wants boats and planes
+    // below base too, so all three sag here, by |crashShift| – and the magnitude is re-derived below from the arc's own trough.
+    const hang = ECONOMY.shop.secondary.hangoverWeeks
     const seeds: { seed: string; end: number }[] = []
     for (let i = 0; seeds.length < 60 && i < 4000; i++) {
       const seed = `hang-${i}`
+      const c0 = marketCrash(seed, 0)
       const c1 = marketCrash(seed, 1)
-      // a window whose next crisis is far enough away that +40 weeks stay clean
-      if (marketCrash(seed, 2).startWeek > c1.endWeek + 45) seeds.push({ seed, end: c1.endWeek })
+      // a window whose next crisis is far enough away that +40 weeks stay clean – and whose PREVIOUS arc's hangover is over before this one
+      // starts, so the only term in the window is this arc's own (two arcs' terms would simply add, and the arm re-derives ONE)
+      if (marketCrash(seed, 2).startWeek > c1.endWeek + 45 && c0.endWeek + hang <= c1.startWeek) seeds.push({ seed, end: c1.endWeek })
     }
     expect(seeds).toHaveLength(60)
 
-    for (const [id, family] of [['house-first', 'house'], ['plane-small', 'plane']] as const) {
-      const world = worldOwning('hang', [id])
-      const row = rowOf(family)
-      for (const { seed, end } of seeds) {
-        world.seed = seed
-        const gap: number[] = []
-        for (let since = 0; since <= 40; since++) {
-          const week = end + since
-          world.week = week
-          const worth = worthOf(world, [id])
-          const price = saleOfferPriceCents(world, id, week, 0)
-          const quiet = Math.round(worth * (row.base + row.spread * drawU(seed, id, week)))
-          if (since < 26) {
-            // the house's refuge premium unwinds BELOW base; the plane rebounds ABOVE it
-            expect(CRASH_SIGN[family] * (price - quiet), `${id} ${seed} +${since}`).toBeLessThan(0)
-            gap.push(Math.abs(price - quiet) / worth)
-          } else {
-            expect(price, `${id} ${seed} +${since}`).toBe(quiet)
-          }
+    const world = worldOwning('hang', [id])
+    const row = rowOf(family)
+    const atTen: number[] = []
+    const late: number[] = []
+    for (const { seed, end } of seeds) {
+      world.seed = seed
+      const trough = 1 - Math.exp(marketCrash(seed, 1).depthLog)
+      const gap: number[] = []
+      for (let since = 0; since <= 40; since++) {
+        const week = end + since
+        world.week = week
+        const worth = worthOf(world, [id])
+        const price = saleOfferPriceCents(world, id, week, 0)
+        const quiet = Math.round(worth * (row.base + row.spread * drawU(seed, id, week)))
+        if (since < hang) {
+          // BELOW base whatever the class's sign: the house's refuge premium unwinds, the postponed sellers crowd the boat and the plane
+          expect(price - quiet, `${id} ${seed} +${since}`).toBeLessThan(0)
+          // by |crashShift| × the arc's own trough × hangoverX, falling linearly – the formula re-derived (± the two roundings, a cent each)
+          const expected = -worth * Math.abs(row.crashShift) * trough * ECONOMY.shop.secondary.hangoverX * (1 - since / hang)
+          expect(Math.abs(price - quiet - expected), `${id} ${seed} +${since} magnitude`).toBeLessThanOrEqual(1.0001)
+          gap.push(Math.abs(price - quiet) / worth)
+        } else {
+          expect(price, `${id} ${seed} +${since}`).toBe(quiet)
         }
-        // decaying: a fortnight after the close the residual is smaller than at the close
-        expect(gap[14]!).toBeLessThan(gap[0]!)
-        expect(gap[25]!).toBeLessThan(gap[14]!)
+        if (since === 10) atTen.push((price - quiet) / worth)
+        if (since >= 30) late.push((price - quiet) / worth)
       }
+      // decaying: a fortnight after the close the residual is smaller than at the close
+      expect(gap[14]!).toBeLessThan(gap[0]!)
+      expect(gap[25]!).toBeLessThan(gap[14]!)
     }
+    // …and in the MEAN, on the SAME draws (a mean against the table's `base` would be a coin: sixty draws' own scatter is as large as
+    // the hangover): ten weeks after the arc closes the family sits below its quiet price, thirty weeks after there is nothing
+    expect(mean(atTen), `${family} ten weeks after the close`).toBeLessThan(0)
+    expect(mean(late), `${family} thirty weeks after the close`).toBe(0)
   })
 
   it('the stale drift: the same draw fetches less the longer the ad has hung – stalePerYear over a year, and no further', () => {
@@ -333,8 +383,12 @@ describe('the buyer hazard (spec §2d)', () => {
 
   it('freshness decays from the class peak to a NON-ZERO floor: at 4× the median it is the floor, not zero', () => {
     const row = rowOf('car')
-    const peak = 1 - Math.exp(-Math.LN2 / row.medianWeeks) // ln 2 / median, as a weekly probability
+    // ⚠ S1b (30.09): THE LEVEL MOVED AND THE SHAPE DID NOT. The peak used to be `1 − e^(−ln 2 / median)`, the median of a hazard that never
+    // decays; it is now SOLVED so the table's median holds under the decay (the medians arm below is the proof), which puts it ABOVE that rate.
+    const peak = entryPeakOf('car')
     const m = row.medianWeeks
+    expect(peak).toBeGreaterThan(1 - Math.exp(-Math.LN2 / m))
+    expect(peak).toBeLessThan(1)
     expect(h('car-sensible', 0)).toBeCloseTo(peak, 12) // the entry rung, calm waters: no dampener, no crash multiplier
     expect(h('car-sensible', 0)).toBeGreaterThan(h('car-sensible', 2 * m))
     expect(h('car-sensible', 4 * m)).toBeGreaterThan(0)
@@ -375,8 +429,11 @@ describe('the buyer hazard (spec §2d)', () => {
     expect(factor).toBeGreaterThan(ECONOMY.shop.secondary.thinFloor)
     expect(h('car-unreasonable', 0)).toBeLessThan(h('car-sensible', 0))
     expect(h('car-unreasonable', 0) / h('car-sensible', 0)).toBeCloseTo(factor, 10)
-    // the quote's «may not sell at all» flag is the same dampener at or below `thinQuoteAt` – a yacht, not a Fiat
+    // the quote's «may not sell at all» flag is the same dampener at or below `thinQuoteAt` – a yacht, not a Fiat…
     expect(assetSaleQuote(world, 'yacht-big')!.thinMarket).toBe(true)
+    // ⚠ 30.09 S1b: …AND HIS OWN EXAMPLE, «элитный авто за 300к», whose dampener is 0.62: the popup's "may not sell at all" line is for exactly
+    // this car (spec §2i), and at the old 0.5 it was the one lot the line missed
+    expect(assetSaleQuote(world, 'car-unreasonable')!.thinMarket).toBe(true)
     expect(assetSaleQuote(world, 'car-sensible')!.thinMarket).toBe(false)
   })
 
@@ -385,7 +442,8 @@ describe('the buyer hazard (spec §2d)', () => {
     ownRow(rich, 'merch-brand', { paidCents: 2_500_000_000, valueCents: 2_500_000_000 }) // $25M against a $250k entry
     const w = calmWeekOf('thin-brand')
     rich.week = w
-    const peak = 1 - Math.exp(-Math.LN2 / rowOf('business').medianWeeks)
+    // ⚠ S1b (30.09): the peak is the SOLVED one now, read off the brand's own entry lot – the level moved, the ratio it is divided into did not
+    const peak = entryPeakOf('business')
     expect(buyerHazard(rich, 'merch-brand', w, 0, 0) / peak).toBeCloseTo(ECONOMY.shop.secondary.thinFloor, 12)
   })
 
@@ -418,6 +476,33 @@ describe('the buyer hazard (spec §2d)', () => {
       const thinRatio = thinOf(family, worthOf(owner, [id], inside)) / thinOf(family, worthOf(owner, [id], calm))
       expect(during / quiet, id).toBeCloseTo(rowOf(family).crashArrival * thinRatio, 9)
     }
+  })
+})
+
+describe('the table’s median is TRUE BY CONSTRUCTION (30.09, S1b)', () => {
+  // ⚠ WHY THIS ARM EXISTS: S1's peak was `1 − e^(−ln 2 / median)` – the median of a hazard that never decays – and the hazard DOES decay,
+  // so the fresh window's cumulative fell short of a half and the realised median landed on the floor's tail, 2–10× the column for
+  // every class. The column now means what it says for the FAMILY'S ENTRY RUNG in a calm market; the thin dampener slows dearer rungs
+  // on top (the design – his $300k car) and step S6 measures that spread.
+  it.each(FAMILIES)('%s: the entry rung’s first letter has crossed a half by medianWeeks – walked from the hazard, not read off the table', (family) => {
+    const { world, id, week } = entryLotOf(family)
+    const median = rowOf(family).medianWeeks
+    // the conditions the claim is made under are ASSERTED, not assumed: no dampener, no crisis, and so the un-stretched freshness span
+    expect(thinOf(family, worthOf(world, [id], week)), `${family} entry lot`).toBe(1)
+    expect(crashDepth(world.seed, week)).toBe(0)
+    expect(assetSaleQuote(world, id)!.staleWeeks).toBe(Math.ceil(ECONOMY.shop.secondary.decayMedians * median))
+
+    const cdf: number[] = [] // cdf[k − 1] = the chance a buyer has written within k weeks
+    let survive = 1
+    for (let k = 1; k <= QUOTE_HORIZON_WEEKS; k++) {
+      survive *= 1 - buyerHazard(world, id, week, k - 1, 0)
+      cdf.push(1 - survive)
+    }
+    const realised = cdf.findIndex((p) => p >= 0.5) + 1 || QUOTE_HORIZON_WEEKS
+    expect(realised, `${family}: the realised median is ${realised} weeks against the table's ${median}`).toBeGreaterThanOrEqual(median - 1)
+    expect(realised, `${family}: the realised median is ${realised} weeks against the table's ${median}`).toBeLessThanOrEqual(median + 1)
+    // …and the solve is exact, not merely close: one half, to nine places, at `median` weeks
+    expect(cdf[Math.round(median) - 1]!, `${family} cumulative at the median`).toBeCloseTo(0.5, 9)
   })
 })
 

@@ -526,9 +526,10 @@ export const shop = {
    *  ⚠⚠ EVERY NUMBER IN THIS BLOCK IS A STARTING POINT AND NOT A MEASUREMENT. The spec proposes the six
    *  columns («all six columns are to be measured by the probe, none is final») and the shared knobs are
    *  the same kind of guess. Step S6's probe (`tools/sale-probe.ts`) replaces them with measured values,
-   *  predicted against measured, per invariant 5. ⚠ ONE GAP TO MEASURE FIRST: `medianWeeks` sets the PEAK
-   *  weekly chance (ln 2 / median) and the chance then decays with the ad's age, so the REALISED median
-   *  wait is longer than the column says.
+   *  predicted against measured, per invariant 5. ⚠ `medianWeeks` IS THE ONE COLUMN THAT IS TRUE BY CONSTRUCTION
+   *  (30.09, S1b): the PEAK weekly chance is solved from it (`peakChanceOf`, resale.ts) so that a family's ENTRY
+   *  rung, in a calm market, has exactly that median wait under the decay – the thin dampener then slows the dearer
+   *  rungs on top, and S6 measures that spread.
    *
    *  ⚠ `investment` IS DELIBERATELY ABSENT FROM `byFamily`, AND THE ABSENCE IS THE PREDICATE – the shelf's
    *  own idiom (`volBps?`, `buildWeeks?`, `requiresId?`: a rung's fields say what it is). Parked cash – the
@@ -552,16 +553,20 @@ export const shop = {
      *  never a third of nothing. Tunable. */
     thinFloor: 0.35,
     /** THE QUOTE'S «MAY NOT SELL AT ALL» LINE: the popup flags a lot whose dampener is at or below this
-     *  (spec §2i – the screen prints the engine's verdict and never derives it). */
-    thinQuoteAt: 0.5,
+     *  (spec §2i – the screen prints the engine's verdict and never derives it). 0.65: measured – the $300k car
+     *  sits at 0.62 and is the example the rule exists for (spec §2i). */
+    thinQuoteAt: 0.65,
     /** THE HANGOVER (his ruling §5.4, «может даже чуть ниже на какое-то время»): for this many weeks after a
-     *  crash arc CLOSES the class's price carries a small residual of the OPPOSITE sign to its crash
-     *  response, decaying linearly to zero – half a season. */
+     *  crash arc CLOSES every class's price carries a small residual BELOW base – 30.09 S1b: not the opposite sign
+     *  of its crash response, because the postponed sellers crowd the market – decaying linearly to zero: half a
+     *  season. */
     hangoverWeeks: 26,
-    /** ...and how big it opens: this share of the response the class showed at that crisis's trough. */
+    /** ...and how big it opens: this share of the size of the response (|crashShift| × depth) the class showed at
+     *  that crisis's trough. */
     hangoverX: 0.25,
     /** ONE ROW PER FAMILY THAT CAN LIST, cheapest first as on the shelf. The columns:
-     *  `medianWeeks` weeks to a first acceptable letter at the PEAK of an ad's freshness;
+     *  `medianWeeks` the median wait, in weeks, to a first acceptable letter for the family's ENTRY rung in a calm
+     *  market – true by construction, the peak weekly chance is SOLVED from it (`peakChanceOf`, resale.ts);
      *  `base` / `spread` the corridor's centre and half-width as a share of worth (a house clusters near
      *  its worth, a plane scatters low); `stalePerYear` the drift down as a listing ages, over a year;
      *  `crashShift` the SIGNED response to the market's crash depth, read as a beta – planes −1.0 fall one
