@@ -48,6 +48,9 @@
 //     entry rung's realised median comes out at car 10 weeks against the table's 4, house 37 / 16, boat 280 / 32, plane 389 / 44, business
 //     293 / 52, academy 368 / 65 – and the freshness arm's «above the never-decaying rate»
 //   * `thinQuoteAt` 0.65 -> 0.5  -> ONE: the thin-market arm, on the $300k car's flag alone
+//
+// ⭐ S6 (30.09) ADDS ONE ARM – the horizon flag, applied ALONE to the source, watched and restored byte-identical:
+//   * `atHorizon: hi >= QUOTE_HORIZON_WEEKS` -> `hi >= QUOTE_HORIZON_WEEKS - 1`  -> ONE: the horizon arm, at the house whose p90 is 519 weeks
 import { describe, expect, it } from 'vitest'
 import { createWorld, type WorldState } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
@@ -561,6 +564,42 @@ describe('the quote (spec §2g)', () => {
     expect(assetSaleQuote(world, 'plane-small')!.weeksHi).toBe(QUOTE_HORIZON_WEEKS)
     expect(assetSaleQuote(world, 'boat-launch')!.weeksHi).toBe(QUOTE_HORIZON_WEEKS)
     expect(assetSaleQuote(world, 'car-sensible')!.weeksHi).toBeLessThan(QUOTE_HORIZON_WEEKS)
+  })
+
+  it('⭐ (S6) `atHorizon` is «the p90 IS the cap» – true for a hung yacht, false for a p90 of 519 weeks, and it is one decision with the clamped week', () => {
+    // the hung side: a yacht does not reach ninety per cent inside ten years; the ordinary side: a car's wait has a real upper end
+    const yacht = assetSaleQuote(worldOwning('horizon-1', ['yacht-big']), 'yacht-big')!
+    expect(yacht.weeksHi).toBe(QUOTE_HORIZON_WEEKS)
+    expect(yacht.atHorizon, 'a hung yacht sits at the horizon').toBe(true)
+    expect(assetSaleQuote(worldOwning('horizon-1', ['car-sensible']), 'car-sensible')!.atHorizon, 'a sensible car does not').toBe(false)
+
+    // …and the line between them is EXACT, not «near». A house's market thins as its card grows (the dampener, down to its floor), so its p90 walks up to the
+    // cap one week at a time: the smallest worth whose p90 has reached 519 is AT 519 and NOT at the horizon. ⚠ THIS IS THE ARM `>= cap - 1` FAILS: a p90 of 519
+    // weeks is a real wait, and the popup prints it as one.
+    const entry = shopItem('house-first')!.entryCents
+    const houseAt = (valueCents: number) => {
+      const w = worldOwning('horizon-edge', [])
+      w.week = 200
+      ownRow(w, 'house-first', { boughtWeek: 200, valueCents })
+      return assetSaleQuote(w, 'house-first')!
+    }
+    for (const mult of [1, 3, 10, 20, 30, 40, 50, 100]) {
+      const q = houseAt(entry * mult)
+      expect(q.atHorizon, `${mult}x the entry card: the flag is «the p90 is the cap»`).toBe(q.weeksHi >= QUOTE_HORIZON_WEEKS)
+    }
+    let lo = entry * 20
+    let hi = entry * 50
+    expect(houseAt(lo).weeksHi, 'premise: 20x the entry card still has a real upper end, below 519').toBeLessThan(QUOTE_HORIZON_WEEKS - 1)
+    expect(houseAt(hi).weeksHi, 'premise: 50x the entry card is at the cap').toBe(QUOTE_HORIZON_WEEKS)
+    while (hi - lo > 1) {
+      const mid = Math.floor((lo + hi) / 2)
+      if (houseAt(mid).weeksHi >= QUOTE_HORIZON_WEEKS - 1) hi = mid
+      else lo = mid
+    }
+    const edge = houseAt(hi)
+    expect(edge.weeksHi, 'the smallest worth whose p90 has reached 519 is at 519 – the walk does not skip the week').toBe(QUOTE_HORIZON_WEEKS - 1)
+    expect(edge.atHorizon, 'a p90 of 519 weeks is a wait, not the horizon').toBe(false)
+    expect(houseAt(hi + 1).weeksHi, 'and the next cent of worth is a week further or the same, never back under').toBeGreaterThanOrEqual(edge.weeksHi)
   })
 
   it('reads today’s crash and no further: in a crisis a plane’s fire price and corridor both fall, a house’s rise', () => {

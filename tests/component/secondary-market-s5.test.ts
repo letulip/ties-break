@@ -18,6 +18,7 @@
 //   * Withdraw calling `listAsset` instead of `unlistAsset`                                  -> ONE: the same badge arm (the spy)
 //   * the buyer's paper without its Sign / Refuse controls                                   -> ONE: the letter arm
 //   * the notice rendered as a proposal                                                      -> ONE: the notice arm
+//   * (S6, 30.09) the popup ignoring `quote.atHorizon` (always the range)                    -> ONE: the horizon arm
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -156,6 +157,28 @@ describe('the popup a thing\'s Sell opens', () => {
     expect(after).toContain('It may take 9 to 52 weeks to sell.')
     expect(after).toContain(`Offers may range from ${formatCents(2_222_00)} to ${formatCents(8_888_00)}.`)
     expect(after).toContain(`Selling now pays ${formatCents(1_111_00)}, at once.`)
+    wrapper.unmount()
+  })
+
+  it('⭐ (S6) a quote at the horizon prints «or more» – the popup follows the ENGINE\'S flag, never a range that ends in the engine\'s cap', async () => {
+    const BOAT = 'boat-launch'
+    const snapshot = toSnapshot(worldOwning('s6-horizon', [BOAT]))
+    const quote = rowOf(snapshot, BOAT).quote!
+    expect(quote.atHorizon, 'the premise: the engine says a launch may never sell').toBe(true)
+    const wrapper = await mountShop(snapshot)
+    await pressSell(wrapper, BOAT)
+    const text = popup(wrapper).text()
+    expect(text, 'the line that has no upper end, off the engine\'s own low end').toContain(`It may take ${quote.weeksLo} weeks or more to sell – there may be no buyer at all.`)
+    expect(text, 'and not a range that ends where the engine stopped counting').not.toContain(`It may take ${quote.weeksLo} to ${quote.weeksHi} weeks to sell.`)
+    // the same numbers with the flag off: the ordinary sentence – the screen reads the flag, and not the size of `weeksHi`
+    const next = toSnapshot(worldOwning('s6-horizon', [BOAT]))
+    const fed = rowOf(next, BOAT)
+    fed.quote = { ...fed.quote!, atHorizon: false }
+    useGameStore().snapshot = next
+    await nextTick()
+    const after = popup(wrapper).text()
+    expect(after).toContain(`It may take ${quote.weeksLo} to ${quote.weeksHi} weeks to sell.`)
+    expect(after).not.toContain('weeks or more')
     wrapper.unmount()
   })
 

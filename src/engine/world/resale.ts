@@ -49,6 +49,10 @@ export interface AssetSaleQuote {
   weeksLo: number
   /** p90 of the same wait – and `QUOTE_HORIZON_WEEKS` when the tail never gets there (a hung yacht). */
   weeksHi: number
+  /** ⭐ S6 (30.09) – `weeksHi` SITS AT THE HORIZON: the p90 search ran out of weeks, so the number above is the cap and not a wait. The popup reads THIS flag
+   *  and never re-tests `weeksHi` against the constant (the parity law: one engine verdict, one spelling) – it would otherwise print «It may take 12 to 520
+   *  weeks» for a yacht, a range whose upper end is only where the engine stopped counting. */
+  atHorizon: boolean
   /** the envelope of a fresh letter's price: base ∓ spread through the same crash and hangover terms. */
   corridorLoCents: number
   corridorHiCents: number
@@ -62,7 +66,7 @@ export interface AssetSaleQuote {
 
 /** ⚠ WHERE THE QUOTE'S WAIT GIVES UP: ten years. Because the freshness floor is never zero the chance of a
  *  sale never reaches it, but a hung yacht's p90 lies centuries out; the quote reports the horizon instead,
- *  and a screen reads `weeksHi >= QUOTE_HORIZON_WEEKS` as «may not sell at all» rather than printing a number. */
+ *  and a screen reads the quote's `atHorizon` (S6) as «may not sell at all» rather than printing a number. */
 export const QUOTE_HORIZON_WEEKS = 520
 
 /** ⭐ THE ROW OF THE CORRIDOR TABLE THAT PRICES THIS RUNG, or null for a rung that never lists. ⚠ THE ABSENCE
@@ -438,9 +442,13 @@ export function assetSaleQuote(world: WorldState, itemId: string): AssetSaleQuot
     if (weeksLo === 0 && sold >= 0.1) weeksLo = k
     if (sold >= 0.9) weeksHi = k
   }
+  // ⚠ S6: THE CLAMPED WEEK AND THE FLAG ARE ONE DECISION – `atHorizon` is «the p90 is the cap», true when the search never reached 90 % (`weeksHi` still 0)
+  // and, harmlessly, when it reached it exactly AT the cap. It is NOT «within a week of the cap»: a p90 of 519 weeks is a real wait and prints as one.
+  const hi = weeksHi || QUOTE_HORIZON_WEEKS
   return {
     weeksLo: weeksLo || QUOTE_HORIZON_WEEKS,
-    weeksHi: weeksHi || QUOTE_HORIZON_WEEKS,
+    weeksHi: hi,
+    atHorizon: hi >= QUOTE_HORIZON_WEEKS,
     corridorLoCents: envelope(-1),
     corridorHiCents: envelope(1),
     fireCents: floor,

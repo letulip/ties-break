@@ -139,6 +139,7 @@
     "tools/retired-college-rule.ts",
     "tools/retirement-rate.ts",
     "tools/runway-probe.ts",
+    "tools/sale-probe.ts",
     "tools/school-bench.ts",
     "tools/season-equation.ts",
     "tools/season-mirror.ts",

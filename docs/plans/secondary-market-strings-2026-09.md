@@ -98,3 +98,17 @@ academy's given name included); `${price}` is the figure printed on the paper; `
 - **SM23** – the record line once a buyer's letter has been signed.
 - **SM24 and SM25** – the inbox list's subject lines for those two letters.
 - **SM26** – the question asked before a buyer's letter is signed.
+
+## 3. Step S6 – when a sale may never come
+
+`src/composables/shop.ts`: one more line in the popup, for the things whose wait has no upper end the engine can name. `${weeksLo}` is the engine's
+own figure, the low end of the wait.
+
+| id | home | text | status |
+| --- | --- | --- | --- |
+| SM27 | `src/composables/shop.ts` | It may take ${weeksLo} weeks or more to sell – there may be no buyer at all. | `DRAFT` |
+
+- **SM27** – the popup's first line INSTEAD OF SM13, and only when the engine's quote reaches its horizon: ten years of weeks pass and the ninetieth-percentile
+  buyer still has not turned up (a yacht, a plane, the whole academy). SM13 is unchanged for every other thing. Without this line the popup would print a range
+  such as «12 to 520 weeks», whose upper end is only the number where the engine stopped counting.
+

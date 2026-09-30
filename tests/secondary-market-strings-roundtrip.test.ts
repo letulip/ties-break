@@ -92,8 +92,10 @@ function literalCount(src: string, text: string): number {
 /** ⚠ THE ONE STATEMENT OF THE COUNT. 6 on 30.09 (S2): four refusals (SM1–SM4) and the two Money-feed lines (SM5, SM6).
  *  ⭐ 26 ON 30.09 (S5): +20 – the popup and the listed row's controls and lines (SM7–SM17, home `src/composables/shop.ts`), the two senders (SM18, SM19,
  *  home `src/composables/saleLetter.ts`), the buyer's letter and the quiet notice (SM20–SM23, `OfferLetter.vue`) and the inbox list's two subjects and
- *  the sign question (SM24–SM26, `InboxSheet.vue`). */
-const EXPECTED_ROWS = 26
+ *  the sign question (SM24–SM26, `InboxSheet.vue`).
+ *  ⭐ 27 ON 30.09 (S6): +1 – SM27, the popup's first line when the quote sits at the horizon (home `src/composables/shop.ts`, an existing home: the five-home
+ *  enumeration below does not move). */
+const EXPECTED_ROWS = 27
 
 describe('the secondary market – the strings table IS the corpus', () => {
   const rows = parseTable(TABLE)

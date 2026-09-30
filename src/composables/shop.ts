@@ -654,7 +654,10 @@ export function useShop(week: ComputedRef<number>) {
     const priceHi = formatCents(quote.corridorHiCents)
     const fire = formatCents(quote.fireCents)
     const lines = [
-      `It may take ${weeksLo} to ${weeksHi} weeks to sell.`,
+      // ⭐ S6: a quote at the horizon has no upper end to print – `weeksHi` is only where the engine stopped counting (`quote.atHorizon`, the engine's own flag).
+      quote.atHorizon
+        ? `It may take ${weeksLo} weeks or more to sell – there may be no buyer at all.`
+        : `It may take ${weeksLo} to ${weeksHi} weeks to sell.`,
       `Offers may range from ${priceLo} to ${priceHi}.`,
       `Selling now pays ${fire}, at once.`,
     ]
