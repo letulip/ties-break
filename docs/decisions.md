@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 146 dated entries, newest 2026-09-29. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 147 dated entries, newest 2026-09-30. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
-| economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
+| economy-and-money | 16 | [THE SECONDARY MARKET BUILT: EIGHT STEPS, A DETERMINISTIC MEASUREMENT GATE, AND THE ART OF WAITING PRICED](#30092026--the-secondary-market-built-eight-steps-a-deterministic-measurement-gate-and-the-art-of-waiting-priced) | 2026-09-30 |
 | general | 27 | [AGENTS RUN SEQUENTIALLY, AND THE SIX WAVES' QUESTIONS ARE ANSWERED: W7 IS GO](#29092026--agents-run-sequentially-and-the-six-waves-questions-are-answered-w7-is-go) | 2026-09-29 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -5662,3 +5662,28 @@ control is a dead end – 'Nine Bells' was a slip, both wording declines stand u
 the wedding spec keeps walking the player's route (G-04 (b) declined), and the 58-module row waits
 for its recorded trigger. W7 runs under the token law, sequentially, and closes with the first
 physical handoff file.
+
+## 30.09.2026 – THE SECONDARY MARKET BUILT: EIGHT STEPS, A DETERMINISTIC MEASUREMENT GATE, AND THE ART OF WAITING PRICED
+
+The wave he commissioned on 26.09 is built end to end on `feat/secondary-market` – the corridor
+and the quote (S1), the schema v90 listing with its commands and the market's 12-week memory (S2),
+the accumulating buyer letters priced on the paper (S3), the fire sale as the only instant door
+(S4), the screens with 27 DRAFT strings for his pass (S5), and the probe that measured it all (S6).
+Four rulings fell during the build, each recorded at its site: the HANGOVER sags every class
+(|crashShift| as magnitude – the spec's own gloss about postponed yacht sellers beat its
+«opposite-sign» wording); the table's medians are TRUE BY CONSTRUCTION (a bisected peak, after the
+probe caught the realised p50 landing on the floor tail); the model runs on THE GAME'S OWN CLOCK
+(age 1 at the first tick – S6's probe caught the raiser and the solver one week apart, proven both
+ways on 20,000 seeds); and the measurement gate itself became DETERMINISTIC (the draw-free
+expectation of the raiser's own chances, after ±1-week sampling noise on the slow families failed a
+correct model – a gate on noise is a flaky gate). The fire door refuses a half-built academy with
+the shipped sentence – the lot sells whole, and a lot with a live contract has no whole.
+
+What the probe says the game now feels like: a crisis freezes the toys (the launch boat's median
+wait 387 weeks against 30 in calm, at 0.80 of worth) while the house sells FASTER and DEARER in one
+(13 weeks against 17, 0.973 against 0.961) – his own intuition, measured; and the market remembers
+– re-listing a boat five weeks after withdrawing waits 227 weeks where twenty weeks of patience
+buys a fresh ad that waits 32. Every gate green at the boundary (check, sim, e2e, component); five
+repository-wide enumeration ratchets met v90 there and one of them caught a real violation in the
+wave's own new file (a hand-spelled storage shim, replaced with the helper). The strings pass –
+SM1…SM27 – is his, at the PR.
