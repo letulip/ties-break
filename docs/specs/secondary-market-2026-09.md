@@ -77,9 +77,11 @@ quieter offers, which is the shelf's own «продавать пока о ней
   real assets). It multiplies the same crash depth the fund rides, read off the same path – one
   world, one crisis.
 - The hangover – his same ruling: «после кризиса возвращается к своей обычной динамике, может даже
-  чуть ниже на какое-то время». For about half a season after a crash arc closes, the class's
-  response decays through a SMALL opposite-sign residual before settling at zero – the refuge
-  premium on houses unwinds, the postponed yacht sellers crowd the market.
+  чуть ниже на какое-то время». For about half a season after a crash arc closes, EVERY class sits
+  a touch below its own base, decaying to zero, magnitude by |crashShift| – the refuge premium on
+  houses unwinds, and the postponed sellers crowd every other class. (Reworded 30.09 at S1b: the
+  earlier «opposite-sign residual» would have sent boats ABOVE base, against this paragraph's own
+  gloss about postponed yacht sellers.)
 - The brand rides the same corridor GENTLY – «подтверждаю … но не жести там сильно»: the business
   row's spread and stale drift sit at the soft end of the table, and its worth keeps the floor its
   own arithmetic already gives it in her quiet years.
