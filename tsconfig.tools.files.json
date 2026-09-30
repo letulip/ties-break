@@ -43,6 +43,7 @@
     "tools/college-talent-bands.ts",
     "tools/college-year-content.ts",
     "tools/composure-bench.ts",
+    "tools/copy-census.ts",
     "tools/dead-week-probe.ts",
     "tools/demo-save.ts",
     "tools/domestic-season-to-date.ts",
