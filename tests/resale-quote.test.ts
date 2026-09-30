@@ -53,7 +53,8 @@ import { createWorld, type WorldState } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { assetWorthCents, ownedAssets, shopCatalogue, shopItem } from '../src/engine/world/assets'
+import { ownedAssets, shopCatalogue, shopItem } from '../src/engine/world/assets'
+import { revalueAssets } from '../src/engine/world/shop'
 import { CRASH_EPOCH_WEEKS, marketCrash, marketCrashLog } from '../src/engine/world/market'
 import * as resale from '../src/engine/world/resale'
 import {
@@ -112,14 +113,21 @@ function ownRow(world: WorldState, id: string, extra: Partial<OwnedAsset> = {}):
   return row
 }
 
-/** the worth the module reads, recomputed here: `assetWorthCents` per row at `week`, summed (the academy's lot). */
-function worthOf(world: WorldState, ids: readonly string[], week = world.week): number {
+/** ⭐ S3 (30.09, the architect's parity ruling) – THE WORTH THE MODULE READS IS THE CARD'S NUMBER: the rows' stored `valueCents`, summed (the
+ *  academy's lot). It used to be `assetWorthCents` recomputed at an offset from the world's week; the two differ (the brand by a ramp step), and
+ *  the paper must print what the card shows (docs/specs/engine-ui-parity-2026-09.md). There is no offset any more: the week a price is asked at
+ *  is the week the card was last revalued at, and `atWeek` below is how a test moves both. */
+function worthOf(world: WorldState, ids: readonly string[]): number {
   let sum = 0
-  for (const id of ids) {
-    const owned = ownedAssets(world).find((a) => a.id === id)!
-    sum += assetWorthCents(world, owned, shopItem(id)!, week - world.week)
-  }
+  for (const id of ids) sum += ownedAssets(world).find((a) => a.id === id)!.valueCents
   return sum
+}
+
+/** Put the world at `week` with every card REVALUED there, exactly as the tick leaves it (`revalueAssets` runs before anything prices). The module
+ *  reads `valueCents`, so a test that moves the week has to move the card with it – or it is asking about a card from another week. */
+function atWeek(world: WorldState, week: number): void {
+  world.week = week
+  revalueAssets(world)
 }
 
 /** the price draw, re-derived from the documented key – the pin on the sub-stream contract. */
@@ -233,7 +241,7 @@ describe('the price corridor (spec §2c)', () => {
         const trough = marketCrash(seed, 1).troughWeek
         for (let d = -2; d <= 2; d++) {
           const week = trough + d
-          world.week = week
+          atWeek(world, week)
           // half the samples are fresh ads, half have hung anywhere up to 89 weeks – so the stale drift runs a whole year
           const listed = i % 2 === 0 ? 0 : (i * 7 + d * 13 + 200) % 90
           const price = saleOfferPriceCents(world, anchor, week, listed)
@@ -265,7 +273,7 @@ describe('the price corridor (spec §2c)', () => {
       const seed = `signs-${i}`
       world.seed = seed
       const trough = marketCrash(seed, 1).troughWeek
-      world.week = trough
+      atWeek(world, trough)
       const worth = worthOf(world, ids)
       const price = saleOfferPriceCents(world, anchor, trough, 0)
       const calmPriceOfSameDraw = Math.round(worth * (row.base + row.spread * drawU(seed, anchor, trough)))
@@ -273,7 +281,7 @@ describe('the price corridor (spec §2c)', () => {
       troughRatios.push(price / worth)
 
       const calm = calmWeekOf(seed)
-      world.week = calm
+      atWeek(world, calm)
       calmRatios.push(saleOfferPriceCents(world, anchor, calm, 0) / worthOf(world, ids))
     }
     // …and in the mean, which is the spec's own wording: a plane sits BELOW its quiet mean and a house ABOVE.
@@ -306,7 +314,7 @@ describe('the price corridor (spec §2c)', () => {
       const gap: number[] = []
       for (let since = 0; since <= 40; since++) {
         const week = end + since
-        world.week = week
+        atWeek(world, week)
         const worth = worthOf(world, [id])
         const price = saleOfferPriceCents(world, id, week, 0)
         const quiet = Math.round(worth * (row.base + row.spread * drawU(seed, id, week)))
@@ -338,7 +346,7 @@ describe('the price corridor (spec §2c)', () => {
       const seed = 'stale-1'
       const world = worldOwning(seed, [id])
       const week = calmWeekOf(seed)
-      world.week = week
+      atWeek(world, week)
       const row = rowOf(family)
       const worth = worthOf(world, [id])
       const u = drawU(seed, id, week)
@@ -383,7 +391,7 @@ describe('the buyer hazard (spec §2d)', () => {
   const seed = 'fresh-1'
   const world = worldOwning(seed, ['car-sensible', 'house-first', 'boat-launch', 'car-unreasonable', 'yacht-big'])
   const week = calmWeekOf(seed)
-  world.week = week
+  atWeek(world, week)
   const h = (id: string, age: number, carry = 0): number => buyerHazard(world, id, week, age, carry)
 
   it('freshness decays from the class peak to a NON-ZERO floor: at 4× the median it is the floor, not zero', () => {
@@ -412,7 +420,7 @@ describe('the buyer hazard (spec §2d)', () => {
   it('the stale week is the first whole week at the floor, and it is deterministic and price-dependent', () => {
     for (const [id, family] of [['car-sensible', 'car'], ['house-first', 'house']] as const) {
       const item = shopItem(id)!
-      const worth = worthOf(world, [id], week)
+      const worth = worthOf(world, [id])
       const stale = staleAtWeeks(item, worth)!
       // the span is `decayMedians` medians stretched by the dampener – recomputed here, not read off the module
       expect(stale).toBe(Math.ceil((ECONOMY.shop.secondary.decayMedians * rowOf(family).medianWeeks) / thinOf(family, worth)))
@@ -420,15 +428,15 @@ describe('the buyer hazard (spec §2d)', () => {
       expect(h(id, stale - 1)).toBeGreaterThan(h(id, stale)) // and not a week before
     }
     // a thin lot stays fresh longer: the same market in slow motion
-    const sensible = staleAtWeeks(shopItem('car-sensible')!, worthOf(world, ['car-sensible'], week))!
-    const elite = staleAtWeeks(shopItem('car-unreasonable')!, worthOf(world, ['car-unreasonable'], week))!
+    const sensible = staleAtWeeks(shopItem('car-sensible')!, worthOf(world, ['car-sensible']))!
+    const elite = staleAtWeeks(shopItem('car-unreasonable')!, worthOf(world, ['car-unreasonable']))!
     expect(elite).toBeGreaterThan(sensible)
     expect(staleAtWeeks(shopItem('deposit')!, 1_000_00)).toBeNull()
   })
 
   it('a thin market: the elite car’s hazard is below the sensible car’s at equal freshness, by the continuous factor', () => {
     const entry = Math.min(...shopCatalogue().filter((r) => r.family === 'car').map((r) => r.entryCents))
-    const worthElite = worthOf(world, ['car-unreasonable'], week)
+    const worthElite = worthOf(world, ['car-unreasonable'])
     const factor = Math.pow(entry / worthElite, ECONOMY.shop.secondary.thinExponent)
     expect(factor).toBeLessThan(1)
     expect(factor).toBeGreaterThan(ECONOMY.shop.secondary.thinFloor)
@@ -472,13 +480,14 @@ describe('the buyer hazard (spec §2d)', () => {
     const calm = calmWeekOf(seedX)
     const owner = worldOwning(seedX, ['boat-launch', 'house-first'])
     for (const [id, family] of [['boat-launch', 'boat'], ['house-first', 'house']] as const) {
-      owner.week = inside
+      atWeek(owner, inside)
       const during = buyerHazard(owner, id, inside, 0, 0)
-      owner.week = calm
+      const worthInside = worthOf(owner, [id])
+      atWeek(owner, calm)
       const quiet = buyerHazard(owner, id, calm, 0, 0)
       // the multiplier is the class's crashArrival – with the dampener divided out, because a house appreciates
       // between the two weeks and its worth (so its dampener) is not the same number at both
-      const thinRatio = thinOf(family, worthOf(owner, [id], inside)) / thinOf(family, worthOf(owner, [id], calm))
+      const thinRatio = thinOf(family, worthInside) / thinOf(family, worthOf(owner, [id]))
       expect(during / quiet, id).toBeCloseTo(rowOf(family).crashArrival * thinRatio, 9)
     }
   })
@@ -493,7 +502,7 @@ describe('the table’s median is TRUE BY CONSTRUCTION (30.09, S1b)', () => {
     const { world, id, week } = entryLotOf(family)
     const median = rowOf(family).medianWeeks
     // the conditions the claim is made under are ASSERTED, not assumed: no dampener, no crisis, and so the un-stretched freshness span
-    expect(thinOf(family, worthOf(world, [id], week)), `${family} entry lot`).toBe(1)
+    expect(thinOf(family, worthOf(world, [id])), `${family} entry lot`).toBe(1)
     expect(crashDepth(world.seed, week)).toBe(0)
     expect(assetSaleQuote(world, id)!.staleWeeks).toBe(Math.ceil(ECONOMY.shop.secondary.decayMedians * median))
 
@@ -517,7 +526,7 @@ describe('the quote (spec §2g)', () => {
     const ids = ['car-sensible', 'house-first', 'boat-launch', 'plane-small', 'merch-brand']
     const world = worldOwning(seed, ids)
     const week = calmWeekOf(seed)
-    world.week = week
+    atWeek(world, week)
 
     const los: number[] = []
     for (const [id, family] of [['car-sensible', 'car'], ['house-first', 'house'], ['boat-launch', 'boat'], ['plane-small', 'plane'], ['merch-brand', 'business']] as const) {
@@ -559,22 +568,24 @@ describe('the quote (spec §2g)', () => {
     const world = worldOwning(seed, ['plane-small', 'house-first'])
     const trough = marketCrash(seed, 1).troughWeek
     const calm = calmWeekOf(seed)
-    world.week = calm
+    atWeek(world, calm)
     const planeCalm = assetSaleQuote(world, 'plane-small')!
     const houseCalm = assetSaleQuote(world, 'house-first')!
-    world.week = trough
+    const worthAtCalm: Record<string, number> = { 'plane-small': worthOf(world, ['plane-small']), 'house-first': worthOf(world, ['house-first']) }
+    atWeek(world, trough)
     const planeCrash = assetSaleQuote(world, 'plane-small')!
     const houseCrash = assetSaleQuote(world, 'house-first')!
+    const worthAtTrough: Record<string, number> = { 'plane-small': worthOf(world, ['plane-small']), 'house-first': worthOf(world, ['house-first']) }
     // …as a share of worth, exactly: the corridor moves by crashShift × depth and the fire price – the corridor's own
     // floor – by fireX × crashShift × depth (a bare sign check would pass on rounding noise, which is how a mutation that
     // froze the floor once stayed green here)
     const depth = crashDepth(seed, trough)
     expect(depth).toBeGreaterThan(0.14)
-    const share = (cents: number, id: string, at: number): number => cents / worthOf(world, [id], at)
+    const share = (cents: number, worth: number): number => cents / worth
     for (const [id, family, crash, quiet] of [['plane-small', 'plane', planeCrash, planeCalm], ['house-first', 'house', houseCrash, houseCalm]] as const) {
       const row = rowOf(family)
-      expect(share(crash.fireCents, id, trough) - share(quiet.fireCents, id, calm), `${id} fire price`).toBeCloseTo(row.fireX * row.crashShift * depth, 6)
-      expect(share(crash.corridorLoCents, id, trough) - share(quiet.corridorLoCents, id, calm), `${id} corridor`).toBeCloseTo(row.crashShift * depth, 6)
+      expect(share(crash.fireCents, worthAtTrough[id]!) - share(quiet.fireCents, worthAtCalm[id]!), `${id} fire price`).toBeCloseTo(row.fireX * row.crashShift * depth, 6)
+      expect(share(crash.corridorLoCents, worthAtTrough[id]!) - share(quiet.corridorLoCents, worthAtCalm[id]!), `${id} corridor`).toBeCloseTo(row.crashShift * depth, 6)
     }
     // crashArrival at the trough: the wait a plane quotes is longer while buyers are away
     expect(planeCrash.weeksLo).toBeGreaterThan(planeCalm.weeksLo)
@@ -585,7 +596,7 @@ describe('the quote (spec §2g)', () => {
     const world = worldOwning(seed, ['academy-land', 'academy-courts'])
     const building = ownRow(world, 'academy-building', { readyWeek: 9_999 }) // still being built: nobody buys a construction site
     const week = calmWeekOf(seed)
-    world.week = week
+    atWeek(world, week)
     const row = rowOf('academy')
     const lotWorth = worthOf(world, ['academy-land', 'academy-courts'])
     const landAlone = worthOf(world, ['academy-land'])
@@ -690,7 +701,10 @@ describe('reproducibility, arity and the MAIN stream (invariant 2)', () => {
       // 30.09 (S2): the market's memory window, read in ONE place – `unlistAsset` asks it at the week an ad went up, S3's letter raiser
       // will ask it the same way. A row and a week in, a number of weeks out: pure, and it takes no `Rng`.
       'freshnessCarryOf',
+      // 30.09 (S3): the ONE lot definition, exported for the callers that WRITE – the letter raiser, the settle and the accept-time
+      // re-validation. A world and an id in, the lot's key and rows out (or null): a read, no `Rng`.
       'saleFloorCents',
+      'saleLotOf',
       'saleOfferPriceCents',
       'secondaryOf',
       'staleAtWeeks',
@@ -698,6 +712,7 @@ describe('reproducibility, arity and the MAIN stream (invariant 2)', () => {
     expect(resale.secondaryOf.length).toBe(1)
     expect(resale.crashDepth.length).toBe(2)
     expect(resale.saleFloorCents.length).toBe(3)
+    expect(resale.saleLotOf.length).toBe(2)
     expect(resale.saleOfferPriceCents.length).toBe(4)
     expect(resale.buyerHazard.length).toBe(5)
     expect(resale.buyerWritesThisWeek.length).toBe(5)

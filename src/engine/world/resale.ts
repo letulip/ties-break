@@ -25,7 +25,7 @@ import { rngFromSeed } from '../rng'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { OwnedAsset, ShopFamily } from '../../shared/protocol'
 import type { WorldState } from '../world'
-import { assetDelivered, assetWorthCents, deliveredAssets, ownedAssets, shopCatalogue, shopItem } from './assets'
+import { assetDelivered, deliveredAssets, ownedAssets, shopCatalogue, shopItem } from './assets'
 import type { ShopItem } from './assets'
 import { CRASH_EPOCH_WEEKS, marketCrash, marketCrashLog } from './market'
 
@@ -252,11 +252,29 @@ function lotOf(world: WorldState, itemId: string): Lot | null {
   return { item, row, keyId: itemId, members: [{ owned, item }] }
 }
 
-/** The lot's worth at `week` – `assetWorthCents` per member, summed, read against the week asked for. */
-function lotWorthCents(world: WorldState, lot: Lot, week: number): number {
-  const offset = week - world.week
+/** ⭐ S3 – THE LOT `itemId` NAMES, FOR THE CALLERS THAT WRITE: the id its sub-streams and its letters are keyed on (`keyId`, for the
+ *  academy its first delivered stage, whichever stage was named) and the rows that sell together. ONE lot definition – the letter raiser
+ *  (`raiseSaleOffers`), the settle (`settleAssetSale`) and the accept-time re-validation (`saleLotSettles`) all ask THIS, so a lot cannot
+ *  mean one thing to the paper and another to the till. Null for what is not sold this way: an investment, a rung nobody owns, a contract
+ *  still in delivery, an academy with no delivered stage. A read: it writes nothing and draws nothing. */
+export function saleLotOf(world: WorldState, itemId: string): { keyId: string; rows: OwnedAsset[] } | null {
+  const lot = lotOf(world, itemId)
+  return lot ? { keyId: lot.keyId, rows: lot.members.map((m) => m.owned) } : null
+}
+
+/** ⭐⭐ THE LOT'S WORTH IS THE NUMBER ON THE CARD (30.09, S3 – the architect's parity ruling): the members' stored `valueCents`, summed –
+ *  the revalued row `revalueAssets` writes every tick and every surface already shows (the shelf, the holdings card, the Money breakdown).
+ *  It used to be `assetWorthCents` recomputed here at an offset from the world's week, and the two differ – the brand by one ramp step,
+ *  under 1 % – so a paper priced off the recomputation could print a number the card beside it did not: the parity class
+ *  (docs/specs/engine-ui-parity-2026-09.md), one engine value in two spellings.
+ *
+ *  ⚠ THE WORTH IS A FACT OF THE ROW NOW, NOT OF THE WEEK ASKED: every production caller asks at the world's own week (the tick's raiser, the
+ *  popup's quote, the fire price), so nothing needs a non-now hypothetical, and the quote holds the market fixed anyway. The `week` the
+ *  functions below still take picks the market's WEATHER (crash, hangover) and the sub-stream key. ⚠ WHICH MAKES THE CALLER RESPONSIBLE
+ *  FOR A CURRENT ROW: the tick's raiser runs AFTER `revalueAssets` on purpose (world/phaseObligations.ts). */
+function lotWorthCents(lot: Lot): number {
   let sum = 0
-  for (const member of lot.members) sum += assetWorthCents(world, member.owned, member.item, offset)
+  for (const member of lot.members) sum += member.owned.valueCents
   return sum
 }
 
@@ -308,7 +326,7 @@ export function staleAtWeeks(item: ShopItem, worthCents: number): number | null 
 export function saleFloorCents(world: WorldState, itemId: string, week: number): number {
   const lot = lotOf(world, itemId)
   if (!lot || !Number.isFinite(week)) return 0
-  const worth = lotWorthCents(world, lot, week)
+  const worth = lotWorthCents(lot)
   return worth > 0 ? Math.round(worth * floorFraction(world.seed, lot.row, week)) : 0
 }
 
@@ -322,7 +340,7 @@ export function saleFloorCents(world: WorldState, itemId: string, week: number):
 export function saleOfferPriceCents(world: WorldState, itemId: string, week: number, weeksListed: number): number {
   const lot = lotOf(world, itemId)
   if (!lot || !Number.isFinite(week)) return 0
-  const worth = lotWorthCents(world, lot, week)
+  const worth = lotWorthCents(lot)
   if (!(worth > 0)) return 0
   const u = 2 * rngFromSeed(`${world.seed}:sale:${lot.keyId}:${week}:price`)() - 1
   const raw = Math.round(worth * corridorFactor(world.seed, lot.row, week, u, weeksOrZero(weeksListed)))
@@ -335,7 +353,7 @@ export function saleOfferPriceCents(world: WorldState, itemId: string, week: num
  *  exposure the market remembers from an earlier listing (§2i – `freshnessCarry` simply adds to the age). */
 function hazardOfLot(world: WorldState, lot: Lot, week: number, weeksListed: number, freshnessCarry: number): number {
   if (!Number.isFinite(week)) return 0
-  const worth = lotWorthCents(world, lot, week)
+  const worth = lotWorthCents(lot)
   if (!(worth > 0)) return 0
   const age = weeksOrZero(weeksListed) + weeksOrZero(freshnessCarry)
   return chanceAt(lot.row, marketOf(world.seed, lot, worth, week), age)
@@ -372,7 +390,7 @@ export function assetSaleQuote(world: WorldState, itemId: string): AssetSaleQuot
   const lot = lotOf(world, itemId)
   if (!lot) return null
   const week = world.week
-  const worth = lotWorthCents(world, lot, week)
+  const worth = lotWorthCents(lot)
   if (!(worth > 0)) return null
   const knobs = ECONOMY.shop.secondary
   const floor = Math.round(worth * floorFraction(world.seed, lot.row, week))

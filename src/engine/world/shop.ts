@@ -52,17 +52,17 @@ import { marketCrashFellIn } from './market'
 // memory window is read. ⚠ A LEAF EDGE, checked rather than assumed: `resale.ts` reaches only `./assets`, `./market`,
 // `../economy`, `../rng` and `../season/calendar` at runtime (its `../world` import is type-only) and none of those
 // imports this file.
-import { freshnessCarryOf, secondaryOf } from './resale'
+import { buyerWritesThisWeek, freshnessCarryOf, saleLotOf, saleOfferPriceCents, secondaryOf } from './resale'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 // ⭐ ROUND 43 #11 – the letter the delivery writes. One raiser, in the module that owns the inbox.
 // ⚠ NOT A CYCLE, and checked rather than assumed – `offers.ts`'s own `seasonIndexOf` import makes
 // the same note one level down. At runtime `offers.ts` reaches only `./economy`, `./rng`,
 // `./season/calendar` and `./world/ledger`, and not one of those imports this file; everything else
 // it takes from here is a type. So shop -> offers is a leaf edge in both directions that matters.
-import { raiseBuildLetter } from '../offers'
+import { expireSaleOffers, raiseBuildLetter, raiseSaleLetter, saleOfferId } from '../offers'
 import { formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
-import type { OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
+import type { Offer, OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
 // ⭐ ROUND 34 #19 – a VALUE import: the four chart windows, whose largest decides how long a series
 // `shopView` sends. Declared in the protocol so the engine and the screen read one table.
 import { SHOP_PRICE_RANGE_MONTHS } from '../../shared/protocol'
@@ -657,40 +657,38 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
   }
 
   const whole = asked === undefined || asked >= owned.valueCents
-  const proceedsCents = whole ? owned.valueCents : asked
+  // ⭐⭐⭐ S3 – A WHOLE SALE IS `settleAssetSale`'S BODY, AND THIS IS ONE OF ITS TWO DOORS (spec §2h: «the instant `sellAsset` path survives as
+  // the settle function the letters and the fire sale both call»). The price is the row's own value, exactly as before – step S4 re-prices
+  // it – and the wallet, the ledger sentence and the row removal are the shared body's. A PART sale (an 'open' rung only, refused above on a
+  // fixed one) is a different act and keeps its own arithmetic below, verbatim.
+  if (whole) {
+    settleAssetSale(world, itemId, owned.valueCents, [owned])
+    return
+  }
+  const proceedsCents = asked
   // ONE ROUNDING (see the header): the cost of the part that left. The part that stays is the
   // subtraction, so the two can never disagree with `paidCents` by a penny.
-  const costSoldCents = whole ? owned.paidCents : Math.round((owned.paidCents * proceedsCents) / owned.valueCents)
+  const costSoldCents = Math.round((owned.paidCents * proceedsCents) / owned.valueCents)
   const deltaCents = proceedsCents - costSoldCents
 
-  if (whole) {
-    world.assets = world.assets.filter((a) => a !== owned)
-  } else {
-    // ⭐ ROUND 30 #14 – THE UNITS GO WITH THE MONEY. `owned.units` is present on exactly the rungs a
-    // part sale is offered on (an 'open' rung carries `unitBaseCents`; a 'fixed' one refused the
-    // amount at the third guard above), so this is the only shape a partial row can be in.
-    if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
-    owned.paidCents -= costSoldCents
-    owned.valueCents -= proceedsCents
-    // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED, WHICH IS THE WHOLE ITEM. His words and the
-    // measured reproduction are on `OwnedAsset.realisedGainCents`. Both halves of the part that went
-    // are kept – the gain it had made and what it had cost – so the card can say what the holding
-    // has EARNED instead of what is left on it. ⚠ These are the two figures this function ALREADY
-    // computed for the ledger sentence three lines down; nothing new is derived and nothing is
-    // rounded a second time, so the realised and unrealised halves still re-add to the cent.
-    // ⚠ `??= 0` RATHER THAN A MIGRATION: a save from before this field means «none recorded», and
-    // the first withdrawal after the update is where the record starts.
-    owned.realisedGainCents = (owned.realisedGainCents ?? 0) + deltaCents
-    owned.realisedCostCents = (owned.realisedCostCents ?? 0) + costSoldCents
-  }
+  // ⭐ ROUND 30 #14 – THE UNITS GO WITH THE MONEY. `owned.units` is present on exactly the rungs a
+  // part sale is offered on (an 'open' rung carries `unitBaseCents`; a 'fixed' one refused the
+  // amount at the third guard above), so this is the only shape a partial row can be in.
+  if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
+  owned.paidCents -= costSoldCents
+  owned.valueCents -= proceedsCents
+  // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED, WHICH IS THE WHOLE ITEM. His words and the
+  // measured reproduction are on `OwnedAsset.realisedGainCents`. Both halves of the part that went
+  // are kept – the gain it had made and what it had cost – so the card can say what the holding
+  // has EARNED instead of what is left on it. ⚠ These are the two figures this function ALREADY
+  // computed for the ledger sentence three lines down; nothing new is derived and nothing is
+  // rounded a second time, so the realised and unrealised halves still re-add to the cent.
+  // ⚠ `??= 0` RATHER THAN A MIGRATION: a save from before this field means «none recorded», and
+  // the first withdrawal after the update is where the record starts.
+  owned.realisedGainCents = (owned.realisedGainCents ?? 0) + deltaCents
+  owned.realisedCostCents = (owned.realisedCostCents ?? 0) + costSoldCents
   world.fundsCents += proceedsCents
 
-  const tail =
-    deltaCents < 0
-      ? `${formatCents(-deltaCents)} less than it cost`
-      : deltaCents > 0
-        ? `${formatCents(deltaCents)} more than it cost`
-        : 'exactly what it cost'
   addEvent(world, {
     week: world.week,
     type: 'income',
@@ -698,10 +696,69 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     // ⚠ TWO VERBS, FOR `buyAsset`'s OWN REASON three functions up: the week a family closed a holding
     // is not the week it took some money out of one, and the ledger is read as a story. The
     // difference the sentence names is the REALISED half on a part sale – what the sold part cost
-    // against what it fetched – and the unrealised rest stays on the row upstairs.
-    text: whole ? `Sold: ${label} – ${tail}` : `Sold ${formatCents(proceedsCents)} of: ${label} – ${tail}`,
+    // against what it fetched – and the unrealised rest stays on the row upstairs. (The closing verb,
+    // `Sold: …`, is `settleAssetSale`'s; the tail is the one `saleTail` spells for both.)
+    text: `Sold ${formatCents(proceedsCents)} of: ${label} – ${saleTail(deltaCents)}`,
     amountCents: proceedsCents,
   })
+}
+
+/** ⭐ THE TAIL OF THE SALE SENTENCE, ONE SPELLING FOR THE WHOLE SALE (`settleAssetSale`) AND THE PART SALE (`sellAsset`): what the sale
+ *  realised against what it cost, to the cent – the difference the ledger names out loud (§3b: «THIS FAMILY EXISTS TO LOSE MONEY»). */
+function saleTail(deltaCents: number): string {
+  return deltaCents < 0
+    ? `${formatCents(-deltaCents)} less than it cost`
+    : deltaCents > 0
+      ? `${formatCents(deltaCents)} more than it cost`
+      : 'exactly what it cost'
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S3 – THE ONE BODY OF A COMPLETED SALE OF WHOLE ROWS, TWO DOORS (spec §2h). EXTRACTED from `sellAsset`
+ *  so that the wallet move, the ledger sentence («Sold: ${label} – …» with its three-way tail) and the row removal stay ONE body: the
+ *  instant sale calls it with `[owned]` at the row's own value, and a signed buyer's letter calls it with the price PRINTED ON THE PAPER.
+ *  The sentence is `sellAsset`'s shipped one byte for byte – no new string, and the strings table gains no row.
+ *
+ *  ⚠ `rows` DEFAULTS TO THE LOT `itemId` NAMES (`saleLotOf`): the row itself, or – for the academy, which sells as ONE lot (spec §2e) –
+ *  EVERY DELIVERED STAGE, settled in one signing under ONE ledger row for the lot's total, its cost being the stages' summed `paidCents`.
+ *  `sellAsset` passes its one row explicitly, which is how a stage sold on its own keeps today's semantics until S4 re-prices that door.
+ *
+ *  ⚠ THE ROWS LEAVE THE WORLD, and their `listedWeek` with them – a whole sale leaves nothing listed. ⚠ AND THE LOT'S OTHER OPEN LETTERS
+ *  LAPSE (`expireSaleOffers`): the thing is sold, and the paper says so through the state the inbox already renders. It lapses them for
+ *  EVERY row of the lot the sold row belongs to, not only the sold ones – an academy stage sold alone changes the lot a printed price was
+ *  quoted for, and a letter that survived it could be signed for stages that are no longer there, or for a price that no longer fits them.
+ *
+ *  Nothing to settle is a refusal in `sellAsset`'s own sentence. No guard of its own: the doors carry theirs (`guardNotEndedForGood`).
+ *  Integer cents, zero draws. */
+export function settleAssetSale(world: WorldState, itemId: string, priceCents: number, rows?: OwnedAsset[]): void {
+  world.assets ??= []
+  const sold = rows ?? saleLotOf(world, itemId)?.rows ?? []
+  const first = sold[0]
+  if (!first) throw new Error('The family does not own that')
+  const item = shopItem(itemId)
+  const label = item?.label ?? first.id
+  const costSoldCents = sold.reduce((sum, row) => sum + row.paidCents, 0)
+  // read BEFORE the rows leave: for the academy the lot is every academy row the family holds, whichever stage was sold
+  const lotIds = (item ? listingRows(world, first, item) : sold).map((row) => row.id)
+  world.assets = world.assets.filter((a) => !sold.includes(a))
+  expireSaleOffers(world.offers, lotIds, world.week)
+  world.fundsCents += priceCents
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'shop',
+    // ⚠ THE CLOSING VERB, `Sold:` – see `sellAsset` for why a part sale says `Sold X of:` instead. The tail is the difference between what
+    // the sale fetched and what the rows cost the family, to the cent.
+    text: `Sold: ${label} – ${saleTail(priceCents - costSoldCents)}`,
+    amountCents: priceCents,
+  })
+}
+
+/** ⭐ S3 – CAN A BUYER'S PAPER STILL BE HONOURED? The lot the letter names is still OWNED and DELIVERED (`saleLotOf` is null for a row
+ *  that is gone, a contract still in delivery, or money) and still LISTED. The accept door asks it before the paper moves (`acceptOffer`);
+ *  a read, zero draws. */
+export function saleLotSettles(world: WorldState, itemId: string): boolean {
+  const lot = saleLotOf(world, itemId)
+  return lot !== null && lot.rows.some((row) => row.listedWeek !== undefined)
 }
 
 /** ⚠ THE ONE SENTENCE BOTH LISTING COMMANDS REFUSE PARKED CASH WITH – a DRAFT, tabled as SM1 in
@@ -797,6 +854,9 @@ export function unlistAsset(world: WorldState, itemId: string): void {
     delete row.listedWeek
     row.lastListing = { endedWeek: world.week, exposedWeeks }
   }
+  // ⭐ S3 (ruling §5.3) – THE BUYERS WALK: an ad that is down has no viewers, so every open letter written for this lot lapses with it.
+  // The listing's memory is the row's (`lastListing`, above); the paper's is the ordinary `expired` state.
+  expireSaleOffers(world.offers, rows.map((row) => row.id), world.week)
   const label = listingLabel(world, item)
   addEvent(world, {
     week: world.week,
@@ -804,6 +864,46 @@ export function unlistAsset(world: WorldState, itemId: string): void {
     category: 'shop',
     text: `Taken off the market: ${label}`,
   })
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S3 – THE BUYERS WRITE (spec §2b, rulings §5.2). Once a week, for every LISTED lot, ONE draw
+ *  (`buyerWritesThisWeek`, the lot's own `:knock` sub-stream) and – when a buyer wrote – ONE open `'sale'` letter, priced at THIS week by
+ *  `saleOfferPriceCents` (the `:price` sub-stream) and printed on the paper. The academy is one lot and counts ONCE, under its naming stage.
+ *
+ *  ⚠⚠ LETTERS ACCUMULATE (ruling §5.2 – he struck the one-open-letter guard: «может же 2 и больше людей написать … выбор за игроком»): there
+ *  is deliberately NO check for an earlier open letter, and the two-week life of a letter is the only bound. ⚠ THE ONLY GUARD IS THE
+ *  LETTER'S OWN ID – a lot writes once a week, so a replayed week cannot write twice.
+ *
+ *  ⚠⚠ THE CARRY IS ASKED AT THE WEEK THE AD WENT UP, NEVER AT THE TICK (`freshnessCarryOf`'s own warning): the memory window measures how long
+ *  the family waited BEFORE re-listing, so a carry asked at tick time would slide out of the window while the ad is still up and the
+ *  staleness would snap back to fresh mid-listing. The stale drift of the price reads `weeksListed + carry`, the hazard reads them apart.
+ *
+ *  ⚠ WHERE IT LIVES: here, not in engine/offers.ts beside the paper's factory (`raiseSaleLetter`) – see the note there; `raiseBuildLetter` /
+ *  `deliverAssets` is the same split. ⚠ IT READS THE CARD'S NUMBER (`owned.valueCents`, via resale.ts), so the tick calls it AFTER
+ *  `revalueAssets`. ZERO MAIN DRAWS, and nothing to draw for a career that lists nothing. Returns the letters raised THIS call. */
+export function raiseSaleOffers(world: WorldState): Offer[] {
+  const raised: Offer[] = []
+  const week = world.week
+  const named = new Set<string>()
+  for (const row of ownedAssets(world)) {
+    if (row.listedWeek === undefined) continue
+    const own = row.listedWeek
+    const lot = saleLotOf(world, row.id)
+    if (!lot || named.has(lot.keyId)) continue
+    named.add(lot.keyId)
+    // the lot goes up together, so its rows carry one week; `min` keeps a hand-edited save honest (`unlistAsset` reads it the same way).
+    // `row` is a LISTED row, hence a member of the lot (S2 lists only delivered rows) and the natural anchor for the market's memory,
+    // which `unlistAsset` writes on every row of the lot.
+    const listedWeek = Math.min(own, ...lot.rows.map((a) => a.listedWeek ?? own))
+    const weeksListed = week - listedWeek
+    const carry = freshnessCarryOf(row, listedWeek)
+    if (world.offers.some((o) => o.id === saleOfferId(lot.keyId, week))) continue
+    if (!buyerWritesThisWeek(world, lot.keyId, week, weeksListed, carry)) continue
+    const priceCents = saleOfferPriceCents(world, lot.keyId, week, weeksListed + carry)
+    if (!(priceCents > 0)) continue
+    raised.push(raiseSaleLetter(world.offers, week, { itemId: lot.keyId, priceCents }))
+  }
+  return raised
 }
 
 /** Round the display, never the logic – `avgUnitPriceCents` answers in fractional cents or in null,

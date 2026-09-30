@@ -52,13 +52,18 @@ import type { CoachTier, PlayStyle } from './profile'
  *  wrap-up has just banked. See `StaffLetterTerms` for what each seat may state and – the harder
  *  half – for what the world does not retain and so no seat may claim.
  *
+ *  ⭐⭐⭐ `sale` IS THE SECONDARY MARKET'S BUYER (docs/specs/secondary-market-2026-09.md §2b, S3): a thing the family has LISTED attracts
+ *  letters, and each is a DECISION – `open`, with a price printed on it and a window of arrival week + 2, refused or signed or lapsed like
+ *  a kit proposal. Letters ACCUMULATE (the owner's ruling §5.2: «может же 2 и больше людей написать … выбор за игроком»). See
+ *  `SaleOfferTerms`.
+ *
  *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
  *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
  *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
  *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
  *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
  *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
-export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up' | 'build' | 'staff'
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up' | 'build' | 'staff' | 'sale'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -1334,6 +1339,21 @@ export interface StaffLetterTerms {
   composureBonus?: number
 }
 
+/** ⭐⭐⭐ A BUYER'S LETTER (the secondary market, S3; spec §2b): what a buyer offers for a thing the family has listed.
+ *
+ *  ⚠⚠ THE PRICE IS PRINTED ON THE PAPER AT ITS ARRIVAL WEEK AND IS NEVER RECOMPUTED AT SIGNATURE – the offers-and-the-inbox law that
+ *  terms are frozen when the letter is written (`KitOfferTerms` keeps it too). The market may crash, the family's row may be revalued, the
+ *  brand may go quiet between the arrival and the pen: the sale settles at THIS number or not at all. That is what makes waiting a real
+ *  gamble and what lets a screen quote the paper without re-deriving anything.
+ *
+ *  ⚠ `itemId` NAMES THE LOT: the row itself for a car, a house, a boat, a plane or the brand, and for the academy – which sells as ONE lot,
+ *  every delivered stage – its NAMING STAGE, the first delivered one (any stage id names the lot; `saleLotOf`, world/resale.ts). The
+ *  price is the LOT's, summed over the stages. Cents, like every price in the engine. */
+export interface SaleOfferTerms {
+  itemId: string
+  priceCents: number
+}
+
 export type OfferTerms =
   | KitOfferTerms
   | EntryLetterTerms
@@ -1343,6 +1363,7 @@ export type OfferTerms =
   | CallUpLetterTerms
   | BuildLetterTerms
   | StaffLetterTerms
+  | SaleOfferTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

@@ -23,19 +23,22 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, isOfferLive, activeAdDealIn, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
-import { LADDER_LABEL, type AdCategory, type AdOfferTerms, type AdPortfolioRow, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
+import { LADDER_LABEL, type AdCategory, type AdOfferTerms, type AdPortfolioRow, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type SaleOfferTerms, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
 // ⚠ ROUND 29 #5 – the leaf, never `./shop`: `shop.ts` imports `./endings`, `endings` imports
 // `./entries` and `entries` imports `./medical`, which is a real cycle. `world/assets.ts` imports
 // the catalogue and a type and nothing else.
 import { ownsDeliveredOfFamily } from './assets'
+// ⭐ THE SECONDARY MARKET (S3) – the settle a buyer's signature ends in, and the re-validation in front of it. ⚠ NOT A CYCLE, and
+// checked rather than assumed: world/shop.ts reaches neither this file nor anything that imports it at runtime.
+import { saleLotSettles, settleAssetSale } from './shop'
 import { KID_ID } from './constants'
 import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
-import { guardNotEnded } from './endings'
+import { guardNotEnded, guardNotEndedForGood } from './endings'
 
 // --- the sponsors decide, in the off-season -----------------------------------
 // Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
@@ -1131,9 +1134,29 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
   // spend money for a girl who has retired.
-  guardNotEnded(world)
+  // ⭐⭐⭐ THE SECONDARY MARKET, S3 – A BUYER'S LETTER IS ANSWERED ON THE SHOP'S GUARD, NOT THE TOUR'S: the paper is about the family's OWN
+  // property, so it stays answerable inside the college freeze exactly as `listAsset` / `sellAsset` stay usable there (the S2 ruling on
+  // `guardNotEndedForGood`: «the letters it will attract land in the parent's inbox and are answered there»). Every other letter keeps
+  // `guardNotEnded` and its freeze sentence.
+  const sale = world.offers.find((o) => o.id === offerId && o.kind === 'sale')
+  if (sale) guardNotEndedForGood(world)
+  else guardNotEnded(world)
+  // ⚠ RE-VALIDATED AGAINST THE WORLD BEFORE THE PAPER MOVES (CLAUDE.md invariant 1 – the worker is not the gate): a live letter whose lot
+  // is no longer owned, no longer listed or no longer delivered is refused with the sentence a gone letter already gets, and NOTHING is
+  // written – the worker commits a command only if it returns, so a refusal that half-wrote would be rolled back anyway.
+  if (sale && isOfferLive(sale, world.week) && !saleLotSettles(world, (sale.terms as SaleOfferTerms).itemId)) {
+    throw new Error(offerAnswerErrorFor(world, offerId))
+  }
   const signed = signOfferIn(world.offers, offerId, world.week)
   if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
+  // ⭐ THE MONEY MOVES HERE, AT THE PRICE PRINTED ON THE PAPER – `t.priceCents`, never a number asked of the market now (offers-and-the-
+  // inbox law). ONE body, two doors: the wallet, the ledger sentence and the row removal are `settleAssetSale`'s, the very body
+  // `sellAsset` ends in, and it also lapses the lot's other open letters (the thing is sold). Zero draws.
+  if (signed.kind === 'sale') {
+    const t = signed.terms as SaleOfferTerms
+    settleAssetSale(world, t.itemId, t.priceCents)
+    return signed
+  }
   // ⭐ THE ADVERTISING FEE IS PAID HERE, THE WEEK THE PAPER IS SIGNED (plan §6 step 1: «cash only…
   // done when it arrives, it can be signed, and the ledger shows it»). Signature-time and not
   // settled weekly, because that is what the letter promises – one fee, once – and the till and the
@@ -1184,7 +1207,10 @@ export function declineOffer(world: WorldState, offerId: string): Offer {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
   // spend money for a girl who has retired.
-  guardNotEnded(world)
+  // ⭐ S3 – the same guard split as `acceptOffer`: a buyer's letter is the family's own business and answers inside the freeze.
+  // Refusing one writes nothing beyond the paper's own state – the listing simply continues.
+  if (world.offers.some((o) => o.id === offerId && o.kind === 'sale')) guardNotEndedForGood(world)
+  else guardNotEnded(world)
   const refused = refuseOfferIn(world.offers, offerId, world.week)
   if (!refused) throw new Error(offerAnswerErrorFor(world, offerId))
   return refused
