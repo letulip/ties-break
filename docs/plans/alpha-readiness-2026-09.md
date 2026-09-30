@@ -39,10 +39,13 @@ one evening on any iPhone: install to home screen → offline relaunch → music
 (Media Session artwork) → a match with the screen staying awake (wakeLock) → export a save,
 reimport it → the blocking dialogs on the smallest screen. No code to write unless it fails.
 
-### A3 · Round 44 – the corpus verified by count, not by ledger
-The live wave's own claim: the small-talk pool grows to 51 situations off the 43/172/516
-document. The copy census (§C) counts the LIVE pool and compares; a shortfall is a finding, a
-match closes the row.
+### A3 · Round 44 – ✅ CLOSED 30.09 by the census's count
+The LIVE pool (imported `SMALL_TALK_SITUATIONS`) is **51 situations / 204 openers / 612 replies,
+all four voices in all 51, zero duplicate ids** – the wave's own claim exact. The 43/172/516
+figures are the OLDER document, stale by +8/+32/+96; one line of that doc wants the new numbers
+(a follow-up ride-along, not a blocker). ⚠ One real finding beside it: **30 registered rows of
+life-wave-6's «noise» pool exist in no `src` literal** – never shipped, reworded, or composed at
+runtime; worth one look before beta (§B).
 
 ### A4 · Slam – one word from him
 The architect's recommendation, 30.09: **keep `'Slam'`**. It is the sport's generic vocabulary
@@ -65,7 +68,21 @@ CERTAIN player-facing (copy pools, ECONOMY `label`/`blurb`, letters, refusal sen
 template text and title/aria attributes), LIKELY, and EXCLUDED (ids, keys, paths, seeds), and
 prints words + strings per area (diary, beats, letters, shop, album, screens…). Two headline
 numbers: the whole player-facing corpus in words, and the live small-talk pool vs the 43/172/516
-document (§A3). The census is the denominator for the RU/ES conversation: RU first (the owner
+document (§A3).
+
+**Measured 30.09** (`tools/copy-census.ts`, commit 1f5d0b7b; deterministic, byte-identical runs):
+- **CERTAIN player-facing: 3,709 strings / 34,724 words** (3,097 unique – what a translator
+  bills once); LIKELY (sampled 20/20 clean player copy): 1,684 / 16,838; grand total **51,562
+  words**, plus `src/prologue` (1,968 words of narration) and `src/viz` (966) measured outside
+  the totals – the honest full corpus is ≈ **55k words / ≈5k unique strings**.
+- Biggest homes: the small-talk corpus 13.5k words, album 4.2k, life-beat pools 2.8k, diary 2.7k.
+- **Interpolation load is SMALL and concentrated**: only 10.1% of CERTAIN strings carry `${…}`,
+  and the copy pools carry none – the RU plural/case work lives almost entirely in ledger
+  sentences (24%) and screen text (30%), a few hundred strings, not thousands.
+- Recall measured against the wave string tables: 225 of 404 registered rows found CERTAIN, 102
+  LIKELY, 40 not found in source at all (30 = the life-wave-6 noise pool, §A3's finding).
+
+The census is the denominator for the RU/ES conversation: RU first (the owner
 authors, invariant 4 survives), ES only through a trusted human translator, both AFTER a key
 extraction wave – and none of it gates the alpha.
 
