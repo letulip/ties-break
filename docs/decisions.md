@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 147 dated entries, newest 2026-09-30. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 150 dated entries, newest 2026-09-30. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,16 +35,16 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 16 | [THE SECONDARY MARKET BUILT: EIGHT STEPS, A DETERMINISTIC MEASUREMENT GATE, AND THE ART OF WAITING PRICED](#30092026--the-secondary-market-built-eight-steps-a-deterministic-measurement-gate-and-the-art-of-waiting-priced) | 2026-09-30 |
-| general | 27 | [AGENTS RUN SEQUENTIALLY, AND THE SIX WAVES' QUESTIONS ARE ANSWERED: W7 IS GO](#29092026--agents-run-sequentially-and-the-six-waves-questions-are-answered-w7-is-go) | 2026-09-29 |
+| general | 28 | [THE LAUNCH RIG RULED: SLAM STAYS, THE ADDRESS, THREE SHELLS, THE RU FONTS](#30092026--the-launch-rig-ruled-slam-stays-the-address-three-shells-the-ru-fonts) | 2026-09-30 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 21 | [THE PRINCIPLES REVIEW RECEIVED: TWO P0s CONFIRMED, SIX WAVES PROPOSED, NOTHING LAUNCHED](#26092026--the-principles-review-received-two-p0s-confirmed-six-waves-proposed-nothing-launched) | 2026-09-26 |
+| process-and-git | 22 | [THE CORPUS COUNTED, ROUND 44 CLOSED BY THE COUNT](#30092026--the-corpus-counted-round-44-closed-by-the-count) | 2026-09-30 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
-| simulation-and-balance | 7 | [THE DELIVERY MEASURED: THE ART STAYS BYTE-IDENTICAL, THE CEILING RISES WHEN IT MUST](#26092026--the-delivery-measured-the-art-stays-byte-identical-the-ceiling-rises-when-it-must) | 2026-09-26 |
+| simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -5687,3 +5687,46 @@ buys a fresh ad that waits 32. Every gate green at the boundary (check, sim, e2e
 repository-wide enumeration ratchets met v90 there and one of them caught a real violation in the
 wave's own new file (a hand-spelled storage shim, replaced with the helper). The strings pass –
 SM1…SM27 – is his, at the PR.
+
+## 30.09.2026 – THE CORPUS COUNTED, ROUND 44 CLOSED BY THE COUNT
+
+`tools/copy-census.ts` (deterministic, byte-identical runs): the player-facing corpus is
+**3,709 CERTAIN strings / 34,724 words** (3,097 unique), plus 1,684 LIKELY / 16,838 and the
+prologue's 1,968 – the honest whole ≈ **55k words, ≈5k unique strings**. The interpolation load
+is small and concentrated: 10.1% of CERTAIN strings carry `${…}`, none of them in the prose
+pools – the RU plural/case work is a few hundred ledger and screen sentences, not thousands.
+And the census closed round 44 the way this house closes things: the LIVE small-talk pool is
+**51 / 204 / 612, all four voices, zero duplicate ids** – the wave's claim exact; the 43/172/516
+document is stale by +8/+32/+96. One finding beside it: 30 registered rows of life-wave-6's
+«noise» pool exist in no `src` literal – a look before beta.
+
+## 30.09.2026 – THE LAUNCH RIG RULED: SLAM STAYS, THE ADDRESS, THREE SHELLS, THE RU FONTS
+
+Four rulings in one message. **Slam stays** («оставляем») – generic sports vocabulary, not a
+name; awaiting-his-word row 1 closes after 43 days. **The feedback address** is
+feedback@ties-brake.com – ruled as written, the architect's brAke/brEak flag standing beside it,
+provisional until the domain registers; the save rides the report via Web Share API with files,
+with a wrapper bridge slot and a desktop fallback (the spec answers his standalone question per
+platform). **The three shells are commissioned** – «надо делать 3 обвязки… скриптом… пока это на
+локале из терминала»: Android TWA, Windows/Steam Electron, iOS Capacitor, one orchestrator,
+local-first. **RU is his to translate** («мы её переведем, не переживай»); what engineering owes
+is TYPE – Sora carries no Cyrillic, Manrope's and Caveat's families do, our shipped subsets get
+a cmap probe and the headings get a rendered A/B for his eye. Specs written in priority order:
+feedback-channel (P1, the alpha blocker), app-shells (P2), ru-typography (P3, gated on the RU
+go). The umbrella is docs/plans/alpha-readiness-2026-09.md.
+
+## 30.09.2026 – THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED
+
+P1 of the launch ladder, two steps and a boundary on `feat/feedback-channel` (stacked on the
+alpha-readiness docs). F1: a 20-row in-memory error ring (no storage, no network – a spy asserts
+fetch/XHR/sendBeacon never fire), the report assembly reusing the Saves strip's own worker bytes
+and the app's own build line, and `shareReport()` with three backends – Web Share with the file,
+the shells' bridge slot, and the download+mailto fallback with an honest 1,800-character cut.
+F2: the «Send feedback» control on More's Saves tab, the dialog that says exactly what it sends
+(assembled at OPEN so iOS sees no await between the tap and the share), the store's failures
+feeding the ring, and sixteen DRAFT rows (FB1–FB16) under the wave's own whole-literal
+comment-stripped pin. The measured verdict that shaped it: `encodeExportFile` is BINARY (a
+44-byte header, then gzip), so the shared File stays `application/octet-stream` – Android Chrome
+will likely refuse the file share and land on the fallback, and the two-tap path is now a smoke
+row on his Motorola, not an assumption in the code. Gates at the boundary: check, sim (13/448s),
+e2e (139), component 247/247 – all first-run green.

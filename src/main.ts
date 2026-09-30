@@ -1,11 +1,15 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { initPwa } from './pwa'
+import { installErrorBuffer } from './errorBuffer'
 import { installGlobalSfx } from './audio/sfx'
 import { startArtPreloader } from './art/autoPreload'
 import App from './App.vue'
 import './style.css'
 
+// The feedback report's error ring (src/errorBuffer.ts) starts before anything else, so a boot
+// failure is in the tail too. Memory only: no storage, no network.
+installErrorBuffer()
 initPwa()
 // Enable audio on the first user gesture anywhere + a quiet click cue on primary controls.
 installGlobalSfx()
