@@ -52,7 +52,8 @@ import { marketCrashFellIn } from './market'
 // memory window is read. ⚠ A LEAF EDGE, checked rather than assumed: `resale.ts` reaches only `./assets`, `./market`,
 // `../economy`, `../rng` and `../season/calendar` at runtime (its `../world` import is type-only) and none of those
 // imports this file.
-import { buyerWritesThisWeek, freshnessCarryOf, saleLotOf, saleOfferPriceCents, secondaryOf } from './resale'
+// ⭐ S4 ADDS `saleFloorCents` – the fire price the instant door pays for a THING (`sellAsset`); parked cash never calls it.
+import { buyerWritesThisWeek, freshnessCarryOf, saleFloorCents, saleLotOf, saleOfferPriceCents, secondaryOf } from './resale'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 // ⭐ ROUND 43 #11 – the letter the delivery writes. One raiser, in the module that owns the inbox.
 // ⚠ NOT A CYCLE, and checked rather than assumed – `offers.ts`'s own `seasonIndexOf` import makes
@@ -626,6 +627,15 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
  *  ⚠ ITS `boughtWeek` IS NOT TOUCHED: they have owned this holding since they opened it, and selling
  *  part of it does not change when that was.
  *
+ *  ⭐⭐⭐ THE SECONDARY MARKET, STEP S4 – A THING NO LONGER TURNS INTO ITS CARD'S NUMBER ON THE SPOT (spec §2f, ruling §5.1 «да»: the fire sale «replaces the
+ *  instant full-value sale for things; parked cash keeps today's path»). Everything above this paragraph is PARKED CASH's law – the deposit and the fund, the two
+ *  'open' rungs – and is untouched, bit for bit. A whole sale of anything else (the corridor table prices it: `secondaryOf`) settles at `saleFloorCents`, the
+ *  corridor's own floor at THIS week – the class's `fireX` of worth, moved by its crash response – through `settleAssetSale`, the one body a signed buyer's letter
+ *  also ends in. The ledger sentence is the shipped one and its tail names the loss; no listing, letter or staleness is asked, so the exit is never locked.
+ *
+ *  ⚠⚠ AND THE ACADEMY FIRE-SELLS AS ONE LOT (spec §2e, his «вряд ли мы в реальности можем только корты продать»): any stage's id settles EVERY delivered stage
+ *  under ONE ledger row at the LOT's fire price. Per-stage instant sale is gone with the ruling.
+ *
  *  Same guard, same class, zero draws. Every figure is integer cents; nothing here rounds for
  *  display. */
 export function sellAsset(world: WorldState, itemId: string, amountCents?: number): void {
@@ -658,11 +668,20 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
 
   const whole = asked === undefined || asked >= owned.valueCents
   // ⭐⭐⭐ S3 – A WHOLE SALE IS `settleAssetSale`'S BODY, AND THIS IS ONE OF ITS TWO DOORS (spec §2h: «the instant `sellAsset` path survives as
-  // the settle function the letters and the fire sale both call»). The price is the row's own value, exactly as before – step S4 re-prices
-  // it – and the wallet, the ledger sentence and the row removal are the shared body's. A PART sale (an 'open' rung only, refused above on a
-  // fixed one) is a different act and keeps its own arithmetic below, verbatim.
+  // the settle function the letters and the fire sale both call»). The wallet, the ledger sentence and the row removal are the shared body's. A PART sale
+  // (an 'open' rung only, refused above on a fixed one) is a different act and keeps its own arithmetic below, verbatim.
   if (whole) {
-    settleAssetSale(world, itemId, owned.valueCents, [owned])
+    // ⭐⭐⭐ S4 – THE PRICE THIS DOOR PAYS DEPENDS ON WHAT IS BEING SOLD (ruling §5.1). A THING is paid the corridor's floor at this week and settles as a LOT:
+    // `settleAssetSale` is handed NO rows, so it takes the lot `itemId` names (`saleLotOf`) – the row itself, or for the academy every delivered stage under
+    // ONE ledger row at the lot's fire price. ⚠ THE PRICE IS ASKED BEFORE THE ROWS LEAVE (`saleFloorCents` reads them). Parked cash is paid the row's own
+    // value, exactly as before, for the ONE row.
+    //
+    // ⚠⚠ THE CONDITION SHORT-CIRCUITS ON `stake` BEFORE IT ASKS THE CORRIDOR, so the deposit and the fund never READ resale.ts on the way through: 'open' is
+    // exactly the two money rungs, whose absence from the corridor table (`secondaryOf` is null for `investment`) would answer the same – the short-circuit is
+    // what lets tests/secondary-market-s4.test.ts COUNT the reads instead of trusting the table. A rung with no corridor row falls through to today's path.
+    const thing = item !== undefined && item.stake !== 'open' && secondaryOf(item) !== null
+    if (thing) settleAssetSale(world, itemId, saleFloorCents(world, itemId, world.week))
+    else settleAssetSale(world, itemId, owned.valueCents, [owned])
     return
   }
   const proceedsCents = asked
@@ -720,7 +739,8 @@ function saleTail(deltaCents: number): string {
  *
  *  ⚠ `rows` DEFAULTS TO THE LOT `itemId` NAMES (`saleLotOf`): the row itself, or – for the academy, which sells as ONE lot (spec §2e) –
  *  EVERY DELIVERED STAGE, settled in one signing under ONE ledger row for the lot's total, its cost being the stages' summed `paidCents`.
- *  `sellAsset` passes its one row explicitly, which is how a stage sold on its own keeps today's semantics until S4 re-prices that door.
+ *  `sellAsset` passes its one row explicitly ONLY for parked cash (the money rungs' whole sale, at the row's own value); a THING's instant sale hands it none
+ *  (S4, ruling §5.1) and so settles the whole lot at the fire price – the same lot the letters settle.
  *
  *  ⚠ THE ROWS LEAVE THE WORLD, and their `listedWeek` with them – a whole sale leaves nothing listed. ⚠ AND THE LOT'S OTHER OPEN LETTERS
  *  LAPSE (`expireSaleOffers`): the thing is sold, and the paper says so through the state the inbox already renders. It lapses them for

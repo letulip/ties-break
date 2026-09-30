@@ -361,13 +361,21 @@ describe('S3 · the academy is ONE lot: one signing, every delivered stage, ONE 
     expect(second.state).toBe('expired')
   })
 
-  it('a stage sold ON ITS OWN through the instant door changes the lot, so the lot\'s open letters lapse', () => {
+  it('a stage settled ON ITS OWN changes the lot, so the lot\'s open letters lapse – and the instant door now sells the lot whole (S4)', () => {
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED (ruling §5.1 + spec §2e): `sellAsset` no longer sells one academy stage on its own – the instant door sells the LOT at its fire
+    // price – so the settle body's own sibling-lapse law is pinned where it still lives (`settleAssetSale` handed ONE row explicitly) and the instant door's new behaviour beside it.
     const world = worldOwning('s3-academy-stage', [LAND, COURTS])
     listAll(world, [LAND, COURTS])
     const letter = raiseSaleLetter(world.offers, world.week, { itemId: LAND, priceCents: 9_000_000_00 })
-    sellAsset(world, COURTS)
+    settleAssetSale(world, COURTS, 1_000_000_00, [rowOf(world, COURTS)!])
     expect(letter.state, 'a printed price for the whole lot cannot outlive a change to it').toBe('expired')
     expect(rowOf(world, LAND), 'and the other stage is still there').toBeDefined()
+    const whole = worldOwning('s3-academy-stage-instant', [LAND, COURTS])
+    listAll(whole, [LAND, COURTS])
+    const lotLetter = raiseSaleLetter(whole.offers, whole.week, { itemId: LAND, priceCents: 9_000_000_00 })
+    sellAsset(whole, COURTS)
+    expect(lotLetter.state, 'and the instant door, which sells the whole lot, lapses it too').toBe('expired')
+    expect(assetsOf(whole), 'the courts took the land with them – one lot').toHaveLength(0)
   })
 })
 
@@ -516,10 +524,12 @@ describe('S3 · invariant 2: the world\'s dice never learn what the family did a
 })
 
 describe('S3 · ONE body, two doors: the settle\'s sentence is sellAsset\'s, byte for byte', () => {
-  it('a letter priced at the row\'s own value writes the very row the instant sale writes', () => {
+  it('a letter priced at the FIRE price writes the very row the instant sale writes (S4: the instant door pays the corridor\'s floor)', () => {
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED (ruling §5.1): the instant door no longer pays the row's own value, so the letter that must write the SAME row is the one printed at
+    // the instant door's own price – the fire price, asked before the row leaves. Same body, same sentence, same wallet, same rows: this arm's claim, unchanged.
     const a = worldOwning('s3-sentence', [CAR])
     const b = worldOwning('s3-sentence', [CAR])
-    const value = rowOf(a, CAR)!.valueCents
+    const value = saleFloorCents(a, CAR, a.week)
     sellAsset(a, CAR)
     listAsset(b, CAR)
     const letter = raiseSaleLetter(b.offers, b.week, { itemId: CAR, priceCents: value })

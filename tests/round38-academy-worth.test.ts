@@ -65,6 +65,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { academyPremiumX, rampedWorthCents, worthRampHalfLife } from '../src/engine/world/assets'
+import { saleFloorCents } from '../src/engine/world/resale'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type OwnedAsset, type SeasonHistoryEntry } from '../src/shared/protocol'
@@ -339,10 +340,17 @@ describe('§3 the floor – the cost is a floor and that is the whole of option 
     const w = built('r38-8-sale', ['academy-land', 'academy-courts'], 6 * WEEKS_PER_YEAR)
     const before = w.fundsCents
     const held = ownedOf(w, 'academy-land')!.valueCents + ownedOf(w, 'academy-courts')!.valueCents
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED IN WHAT IT PINS – TWO THINGS MOVED AND BOTH ARE NAMED:
+    //   * THE ACADEMY FIRE-SELLS AS ONE LOT (spec §2e, his «вряд ли мы в реальности можем только корты продать»): ONE command sells every delivered stage under ONE ledger row,
+    //     so the second `sellAsset` this test used to make would refuse – there is nothing left to sell.
+    //   * THE INSTANT DOOR PAYS THE FIRE PRICE, so «more than the five million that went in» is now a fact about the CARD the sale is priced off (`held`) – the floor this file
+    //     exists to protect, asserted below unchanged – and the sale itself is the exact corridor floor of it. A family that wants the card's figure or better lists the lot.
+    const fire = saleFloorCents(w, 'academy-land', w.week)
     sellAsset(w, 'academy-courts')
-    sellAsset(w, 'academy-land')
-    expect(w.fundsCents - before, 'the sale is whole and at the row figure').toBe(held)
-    expect(w.fundsCents - before, 'and it is more than the five million that went in')
+    expect(ownedOf(w, 'academy-land'), 'the land went with the courts – one lot').toBeUndefined()
+    expect(w.fundsCents - before, 'the sale is the whole lot, at the FIRE price of the row figures').toBe(fire)
+    expect(fire, 'which is under the figures it is priced off').toBeLessThan(held)
+    expect(held, 'and the floor still holds on the card: the row figures are more than the five million that went in')
       .toBeGreaterThan(5_000_000_00)
   })
 })
