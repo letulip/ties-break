@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 149 dated entries, newest 2026-09-30. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 150 dated entries, newest 2026-09-30. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -44,7 +44,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
-| simulation-and-balance | 7 | [THE DELIVERY MEASURED: THE ART STAYS BYTE-IDENTICAL, THE CEILING RISES WHEN IT MUST](#26092026--the-delivery-measured-the-art-stays-byte-identical-the-ceiling-rises-when-it-must) | 2026-09-26 |
+| simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -5714,3 +5714,19 @@ is TYPE – Sora carries no Cyrillic, Manrope's and Caveat's families do, our sh
 a cmap probe and the headings get a rendered A/B for his eye. Specs written in priority order:
 feedback-channel (P1, the alpha blocker), app-shells (P2), ru-typography (P3, gated on the RU
 go). The umbrella is docs/plans/alpha-readiness-2026-09.md.
+
+## 30.09.2026 – THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED
+
+P1 of the launch ladder, two steps and a boundary on `feat/feedback-channel` (stacked on the
+alpha-readiness docs). F1: a 20-row in-memory error ring (no storage, no network – a spy asserts
+fetch/XHR/sendBeacon never fire), the report assembly reusing the Saves strip's own worker bytes
+and the app's own build line, and `shareReport()` with three backends – Web Share with the file,
+the shells' bridge slot, and the download+mailto fallback with an honest 1,800-character cut.
+F2: the «Send feedback» control on More's Saves tab, the dialog that says exactly what it sends
+(assembled at OPEN so iOS sees no await between the tap and the share), the store's failures
+feeding the ring, and sixteen DRAFT rows (FB1–FB16) under the wave's own whole-literal
+comment-stripped pin. The measured verdict that shaped it: `encodeExportFile` is BINARY (a
+44-byte header, then gzip), so the shared File stays `application/octet-stream` – Android Chrome
+will likely refuse the file share and land on the fallback, and the two-tap path is now a smoke
+row on his Motorola, not an assumption in the code. Gates at the boundary: check, sim (13/448s),
+e2e (139), component 247/247 – all first-run green.
