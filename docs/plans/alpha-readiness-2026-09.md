@@ -31,6 +31,10 @@ source-available client – inherent to any mailto/share target, flagged, accept
   telemetry – privacy by construction), and the export of the ACTIVE career.
 - Every sentence is a DRAFT row in a strings table (invariant 4).
 - Size: one small wave (engine untouched; UI + pwa glue + mounted tests incl. 375×667).
+- ⚠ The full design moved to its own spec 30.09: [feedback-channel-2026-09.md](../specs/feedback-channel-2026-09.md)
+  – incl. the ruled address (feedback@ties-brake.com, the brAke/brEak flag standing) and the
+  answer to «а в standalone это будет работать?»: Android/TWA yes natively, iOS wrapper via a
+  bridge slot, desktop by fallback.
 
 ### A2 · The device smoke matrix – ONE hole left
 Measured by the owner 30.09: Motorola G8 Plus (2019) – «всё работает корректно»; macOS in
@@ -47,12 +51,11 @@ figures are the OLDER document, stale by +8/+32/+96; one line of that doc wants 
 life-wave-6's «noise» pool exist in no `src` literal** – never shipped, reworded, or composed at
 runtime; worth one look before beta (§B).
 
-### A4 · Slam – one word from him
+### A4 · Slam – ✅ CLOSED 30.09: «оставляем»
 The architect's recommendation, 30.09: **keep `'Slam'`**. It is the sport's generic vocabulary
 (like «ace» or «break point»), not a tournament's name; the trademark risk lives in the majors'
 proper names (Wimbledon, US Open, Roland Garros, Australian Open) and the bodies (ITF/WTA/ATP) –
-none of which the game uses. The code already argues this at `season/calendar.ts:1612`. One word
-(«оставляем») closes awaiting-his-word row 1.
+none of which the game uses. The code already argues this at `season/calendar.ts:1612`. His word landed 30.09; awaiting-his-word row 1 is closed.
 
 ## B · Beta list (does not gate alpha)
 - Round 8 #1 – the in-tournament player card (open since 25.07, the oldest item).
@@ -85,6 +88,14 @@ document (§A3).
 The census is the denominator for the RU/ES conversation: RU first (the owner
 authors, invariant 4 survives), ES only through a trusted human translator, both AFTER a key
 extraction wave – and none of it gates the alpha.
+
+## E · The launch ladder beyond alpha (his 30.09 commissions, in priority order)
+1. **P1 – the feedback channel** ([feedback-channel-2026-09.md](../specs/feedback-channel-2026-09.md)) – the alpha blocker.
+2. **P2 – the three shells** ([app-shells-2026-10.md](../specs/app-shells-2026-10.md)) – Android
+   TWA → Windows/Steam Electron → iOS Capacitor, local terminal scripts, one orchestrator.
+3. **P3 – RU typography** ([ru-typography-2026-09.md](../specs/ru-typography-2026-09.md)) – the
+   cmap probe, the headings decision (Sora has no Cyrillic; Manrope and Caveat's families do),
+   lang-scoped subsets. Gated on the RU go, not on alpha; the translation itself is his side.
 
 ## D · Deliberately NOT for alpha
 Monetisation, accounts/cloud saves (file export is honest and shipped), store wrappers (the PWA
