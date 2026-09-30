@@ -141,8 +141,13 @@ export function guardNotEnded(world: WorldState): void {
  *  property, reaches no decision about the girl and opens nothing the freeze shut (the letters it will attract land in the
  *  parent's inbox and are answered there).
  *
+ *  ⭐ MEMBERS NINE AND TEN ARE THE TWO ANSWERS TO A BUYER'S LETTER (30.09, the secondary market, step S3): `acceptOffer` and `declineOffer`, on a
+ *  `'sale'` letter ONLY – the family's own property again, reached through the inbox the note above promised («answered there»). Every other
+ *  letter keeps `guardNotEnded` and its freeze sentence: the branch is on the letter's kind, not on the command (world/sponsors.ts).
+ *
  *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset,
- *  setWeightEnabled, listAsset, unlistAsset, and nothing else. */
+ *  setWeightEnabled, listAsset, unlistAsset, and the answers to a `'sale'` letter (`acceptOffer`, `declineOffer` – that one kind),
+ *  and nothing else. */
 export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }
