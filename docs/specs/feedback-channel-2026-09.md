@@ -9,9 +9,8 @@ last-reviewed: 2026-09-30
 
 One prominent control that sends a report WITH the save attached. Rulings: prominent (More /
 settings – the exact spot is his at the strings pass); reports go to `FEEDBACK_ADDRESS` – ruled
-30.09 as **feedback@ties-brake.com** ⚠ AS WRITTEN, with the architect's flag standing: the game
-is «Ties Break», the ruled domain spells «ties-brAke» – confirmed or corrected in one word, and
-it is ONE constant either way (provisional until the domain registers, his note).
+30.09 as **feedback@ties-break.com** (the brAke spelling was his typo, corrected by his own word
+the same day; provisional until the domain registers).
 
 ## The report
 - the build line (`scripts/build-stamp.mjs`'s baked value – the app already renders it);

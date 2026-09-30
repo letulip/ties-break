@@ -27,7 +27,8 @@ the verdict decides whether T3 adds subsets or swaps files.
 - **Option B – Manrope for headings too**: one family, zero new latin bytes, the app's look
   tightens rather than changes.
 Deliverable: one HTML sample sheet, both options over real screens' headings in EN and RU, his
-one-word pick. (Golos Text and Rubik stay named as reserves.)
+one-word pick. His 30.09 direction stands either way: the Cyrillic heading face loads ONLY under
+the RU locale (lang-scoped, T3) – EN ships exactly today's bytes. (Golos Text and Rubik stay named as reserves.)
 
 ## T3 · The wiring
 `lang`-scoped `@font-face` with `unicode-range` subsets: latin serves exactly today's bytes;
