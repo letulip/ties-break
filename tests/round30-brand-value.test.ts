@@ -62,6 +62,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import type { ShopItem } from '../src/engine/world/assets'
+import { saleFloorCents } from '../src/engine/world/resale'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -591,15 +592,18 @@ describe('round 30 #9 §5 – bought and sold at the number on the row', () => {
     expect(assetWorthCents(w, held, item, 3 * WEEKS_PER_YEAR)).toBeLessThan(nextWeek)
   })
 
-  it('⚠ the sale hands back exactly the row\'s figure', () => {
+  it('⚠ the instant sale hands back the FIRE price of the row\'s figure (it used to be the figure itself – S4, ruling §5.1)', () => {
     const w = shopper('r30-9-sale')
     winTitles(w, 'wta1000', [2, 4])
     buyAsset(w, MERCH)
     walk(w, 8, true)
     const worth = ownedOf(w, MERCH)!.valueCents
     const before = w.fundsCents
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the brand sells at the soft end of the corridor (ruling §5.5), an exact figure under the row's own.
+    const fire = saleFloorCents(w, MERCH, w.week)
+    expect(fire, 'under the row figure').toBeLessThan(worth)
     sellAsset(w, MERCH)
-    expect(w.fundsCents - before).toBe(worth)
+    expect(w.fundsCents - before).toBe(fire)
     expect(ownedOf(w, MERCH)).toBeUndefined()
   })
 })
@@ -656,8 +660,12 @@ describe('round 30 #11 – what the engine does to the rungs that say they neith
     walk(w, 4 * WEEKS_PER_YEAR, true)
     const before = w.fundsCents
     const held = ownedOf(w, 'academy-land')!.valueCents
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the academy fire-sells as ONE LOT (here a lot of one stage) at the corridor's floor, so the wallet moves by the
+    // FIRE price of the row figure. The pins on `held` below – the drift arithmetic itself – are untouched.
+    const fire = saleFloorCents(w, 'academy-land', w.week)
+    expect(fire, 'under the row figure').toBeLessThan(held)
     sellAsset(w, 'academy-land')
-    expect(w.fundsCents - before, 'the sale still hands back the row figure, whole').toBe(held)
+    expect(w.fundsCents - before, 'the sale hands back the FIRE price of the row figure, whole').toBe(fire)
     expect(held, 'four seasons of the houses drift, and no premium on a career with no seasons')
       .toBe(assetValueCents(shopItem('academy-land')!, 2_000_000_00, 4 * WEEKS_PER_YEAR))
     // ⚠ AND IT REALLY GREW – the mutation guard. At rate 0 this equals the price and cannot fail.

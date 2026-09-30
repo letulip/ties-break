@@ -46,6 +46,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { worthRampHalfLife } from '../src/engine/world/assets'
+import { saleFloorCents } from '../src/engine/world/resale'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
@@ -138,8 +139,13 @@ describe('round 39 #5 §2 – a REPEAT founding is priced at the market, and the
     for (let i = 0; i < heldWeeks; i++) revalueAssets(w)
     const proceeds = ownedOf(w, MERCH)!.valueCents
     const before = w.fundsCents
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the instant door of a THING pays the corridor's floor, not the row's figure, so the wallet moves by the FIRE
+    // price – an exact figure (`saleFloorCents`, whose formula tests/secondary-market-s4.test.ts pins on its own). `proceeds` below stays the row's figure ON PURPOSE: it is the
+    // reference the CARD cycle (sell at the worth, re-buy at the worth) is measured against, which is this test's whole claim – and the family that fire-sells loses strictly more.
+    const fire = saleFloorCents(w, MERCH, w.week)
+    expect(fire, 'the fire price is under the row figure').toBeLessThan(proceeds)
     sellAsset(w, MERCH)
-    expect(w.fundsCents - before, 'the sale pays the row figure').toBe(proceeds)
+    expect(w.fundsCents - before, 'the sale pays the FIRE price of the row figure').toBe(fire)
     // ⚠ the founding survives the sale – the row is gone, the fact is not.
     expect(ownedOf(w, MERCH)).toBeUndefined()
     expect(w.brandFounded).toBe(true)

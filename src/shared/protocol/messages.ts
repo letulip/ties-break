@@ -222,6 +222,11 @@ export type ToWorker =
   // what every caller written before it meant. The 'open'-only rule, the floor, the ceiling and the
   // zero-op are all re-derived in `sellAsset`, so a stale tab cannot sell what is not there.
   | { id: number; type: 'sellAsset'; itemId: string; amountCents?: number; baseRevision: number }
+  // ⭐⭐ THE SECONDARY MARKET (v90, step S2) – put a THING on the market, and take it off again. Both are re-derived in
+  // `listAsset` / `unlistAsset` (owned, a thing and not parked cash, delivered, not already listed / actually listed, the
+  // academy as ONE lot), so a stale tab cannot list what is not there. Zero draws on any stream.
+  | { id: number; type: 'listAsset'; itemId: string; baseRevision: number }
+  | { id: number; type: 'unlistAsset'; itemId: string; baseRevision: number }
   // THE INBOX (v32): answer a letter. Both are refused past the deadline – the window is the
   // feature, not a courtesy – and `signOffer` is irreversible by design, which is why the UI puts a
   // ConfirmDialog in front of it and the engine puts nothing in front of the confirm.
@@ -443,6 +448,8 @@ export const REPLY_BY_COMMAND = {
   answerShootClash: 'snapshot',
   buyAsset: 'snapshot',
   sellAsset: 'snapshot',
+  listAsset: 'snapshot',
+  unlistAsset: 'snapshot',
   signOffer: 'snapshot',
   refuseOffer: 'snapshot',
   setPhysio: 'snapshot',

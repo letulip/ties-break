@@ -49,6 +49,7 @@ import type {
   EntryLetterTerms,
   KitOfferTerms,
   Offer,
+  SaleOfferTerms,
   StaffLetterTerms,
   TourLetterTerms,
 } from '../shared/protocol'
@@ -59,6 +60,10 @@ import { WEEKS_IN_SEASON, weekLabel, weekRange } from '../shared/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
 import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand } from '../engine/offers'
+// ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5): the memory window the stale notice quotes is the ENGINE's constant, imported rather than
+// retyped (a retune of `memoryWeeks` moves the sentence with it), and the two senders' words are the ones the inbox LIST prints too.
+import { ECONOMY } from '../engine/economy'
+import { SALE_SENDER } from '../composables/saleLetter'
 import PaperNote from './ui/PaperNote.vue'
 
 // ⭐⭐ ROUND 39 #17 – `offers` IS THE WHOLE INBOX AND IT IS OPTIONAL. One clause on a rival house's
@@ -67,8 +72,12 @@ import PaperNote from './ui/PaperNote.vue'
 // Optional because every existing caller hands one letter and a week; a caller that does not pass
 // the inbox simply gets the letter it always got, which is what keeps the fixtures and the older
 // mounted tests reading unchanged.
-const props = withDefaults(defineProps<{ offer: Offer; week: number; offers?: Offer[] }>(), {
+// ⭐⭐⭐ THE BUYER'S LETTER (S5) – `saleLabel` IS OPTIONAL FOR THE SAME REASON: a buyer's paper carries an id and a price and no label (a letter is
+// numbers and ids), so the one caller that mounts it (`InboxSheet`) looks the lot's name up on the shelf and hands it in. Every other kind ignores
+// it, which is what keeps every existing fixture and mounted test reading unchanged.
+const props = withDefaults(defineProps<{ offer: Offer; week: number; offers?: Offer[]; saleLabel?: string }>(), {
   offers: () => [],
+  saleLabel: undefined,
 })
 const emit = defineEmits<{ sign: [string]; refuse: [string] }>()
 
@@ -641,6 +650,38 @@ const settled = computed(() => {
       return props.week > props.offer.deadlineWeek ? 'Expired – they needed an answer.' : ''
   }
 })
+
+// ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5; spec §2b, §2i) – A PROPOSAL from a buyer, or the market's NOTICE that an ad has gone quiet.
+// docs/specs/offers-and-the-inbox.md's law holds: the price is PRINTED ON THE PAPER at its arrival week and this sheet only quotes it – it derives no
+// number (`priceCents` is the engine's, `deadlineWeek` is the letter's own, the memory window is `ECONOMY`'s). The proposal keeps the foot every proposal
+// has – the weeks left and the two controls, gated on the engine's own `isOfferLive` – and the notice keeps the record's foot (`Filed …`, no controls),
+// exactly as the academy's and the build's notices do: it is `state: 'info'`, so nothing on it can be signed or refused.
+// ⚠ EVERY SENTENCE BELOW IS A DRAFT: tabled as SM20–SM23 in docs/plans/secondary-market-strings-2026-09.md and pinned there letter for letter by
+// tests/secondary-market-strings-roundtrip.test.ts.
+const isSale = computed(() => props.offer.kind === 'sale')
+const saleTerms = computed(() => props.offer.terms as SaleOfferTerms)
+/** The quiet-ad notice is the `info` state; a buyer's proposal is every other state. */
+const saleIsNotice = computed(() => props.offer.state === 'info')
+/** What the lot is called: the label the inbox looked up, and the rung's own id when nothing was handed in (a mount that has no shelf to ask). */
+const saleName = computed(() => props.saleLabel ?? saleTerms.value.itemId)
+const saleSender = computed(() => (saleIsNotice.value ? SALE_SENDER.market : SALE_SENDER.buyer))
+const saleOffer = computed(() => {
+  const label = saleName.value
+  const price = formatCents(saleTerms.value.priceCents)
+  return `A buyer offers ${price} for ${label}.`
+})
+const saleStands = computed(() => {
+  const week = weekLabel(props.offer.deadlineWeek)
+  return `The offer stands until ${week}. Refusing it leaves the listing up.`
+})
+const saleQuiet = computed(() => {
+  const label = saleName.value
+  const weeks = ECONOMY.shop.secondary.memoryWeeks
+  return `Interest in ${label} has gone quiet. You can wait it out, or withdraw it and try again later – but buyers remember an ad for about ${weeks} weeks, so a quick re-list starts where this one left off.`
+})
+/** ⚠ ONLY THE SIGNED RECORD IS ITS OWN: `settled` above reads kit terms for a signature, and a buyer's paper has none of them. A refusal and a lapse
+ *  are the same words for every proposal (`settled`'s own arms), so they are reused rather than reworded. */
+const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at that price.' : settled.value))
 </script>
 
 <template>
@@ -1038,6 +1079,37 @@ const settled = computed(() => {
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5) – a PROPOSAL for what the family has listed, or the market's NOTICE that the ad has
+       gone quiet. No letterhead (a buyer has no brand, the desks' rule). The proposal quotes the price PRINTED on the paper and the week it
+       stands to, and keeps the foot every proposal keeps: the weeks left and Sign / Refuse, gated on `live`. The notice has no window and no
+       controls – its foot only says when it was filed, the build's shape. The signature stays, for the build letter's reason: on this surface
+       the paper alone is on screen, so the signature is the only thing that says who wrote. -->
+  <article v-else-if="isSale" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <template v-if="saleIsNotice">
+        <p class="offer-body">{{ saleQuiet }}</p>
+      </template>
+      <template v-else>
+        <p class="offer-body">{{ saleOffer }}</p>
+        <p class="offer-body">{{ saleStands }}</p>
+      </template>
+      <p class="offer-sign-off">– {{ saleSender }}</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p v-if="saleIsNotice" class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <template v-else>
+        <p v-if="live" class="offer-window">
+          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        </p>
+        <p v-else class="offer-window settled">{{ saleSettled }}</p>
+        <div v-if="live" class="offer-actions">
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+        </div>
+      </template>
     </div>
   </article>
 

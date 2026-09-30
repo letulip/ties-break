@@ -34,6 +34,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
+import { saleFloorCents } from '../src/engine/world/resale'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -238,9 +239,13 @@ describe('round 30 #15 §4 – the cap, and nothing can strand a family', () => 
     const before = w.fundsCents
     const worth = ownedOf(w, 'car-unreasonable')!.valueCents
     w.fundsCents = before
-    // sold whole, at the stored value, and the bill goes with it
+    // sold whole, at the corridor's floor, and the bill goes with it
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the instant door of a THING pays the FIRE price, an exact figure – a car can STILL always be sold, so no family
+    // is locked under a rising bill; it is only paid a class share of the stored value for the speed.
+    const fire = saleFloorCents(w, 'car-unreasonable', w.week)
+    expect(fire, 'a class share of the stored value').toBeLessThan(worth)
     sellAsset(w, 'car-unreasonable')
-    expect(w.fundsCents).toBe(before + worth)
+    expect(w.fundsCents).toBe(before + fire)
     expect(weeklyAssetUpkeepCents(w), 'the bill ended with the car').toBe(0)
   })
 })

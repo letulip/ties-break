@@ -220,7 +220,10 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // WEAKENED: one field, nested two deep inside a nullable record, with its own full move. 89 was
     // moved by that wave, never by this line's item, and the cell is re-stamped in the schema's own
     // commit as the note below asks.
-    expect(SAVE_SCHEMA_VERSION).toBe(89)
+    // ⚠ AND AGAIN AT v90 (30.09, the secondary market S2 – `OwnedAsset.listedWeek` / `lastListing`), NOT WEAKENED: two optional keys
+    // with their own full move. 90 was moved by that wave, never by this line's item, and the cell is re-stamped in the schema's
+    // own commit as the note below asks.
+    expect(SAVE_SCHEMA_VERSION).toBe(90)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

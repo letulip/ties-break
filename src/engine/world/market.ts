@@ -150,8 +150,10 @@ export function marketWave(seed: string, week: number): number {
 // way editing `mulberry32` would, so it is named here the way `conveyor.ts` names its own draw
 // order. Nothing is persisted; the crash is a fact about the seed, like the weather.
 
-/** Four years. The epoch grid the crash calendar lives on. */
-const CRASH_EPOCH_WEEKS = 208
+/** Four years. The epoch grid the crash calendar lives on. ⚠ EXPORTED (30.09, secondary-market S2 – the architect's «one
+ *  spelling» ruling): `resale.ts`'s hangover asks the PREVIOUS epoch's arc too and used to restate this number, and a
+ *  restated number is a number that can rot. */
+export const CRASH_EPOCH_WEEKS = 208
 /** How far into its epoch a crash may start, exclusive. HALF the epoch, so gaps stay in (104, 312). */
 const CRASH_JITTER_WEEKS = 104
 /** The fall, in weeks – sharp on purpose (2020 was five; 2008 was ~26). */

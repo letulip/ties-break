@@ -15,6 +15,11 @@
 //
 // MUTATION-VERIFIED 22.09: changing one character in the Markdown fails by row id; changing one
 // character in `MOTHERHOOD_WORDS` fails the same case with the arrow the other way.
+//
+// ⭐ AUDITED 30.09 (S7 – THE ROUND-TRIP HARDENING PASS) AND LEFT AS IT IS, ON PURPOSE. This is the one pin of the family that never matches the source at all: it compares the document's row with the
+// LIVE `MOTHERHOOD_WORDS` value under strict equality, so it has neither of the two holes the others were hardened against – a sentence that GREW fails the `toBe`, and a comment quoting a word is not in a
+// runtime value. Measured rather than argued: on M1 a character appended to the shipped string, one substituted, the word changed with a whole-line comment quoting the OLD one above it, the same with a
+// trailing comment, and one character of the doc row – five arms, each alone, each RED by row id, restored byte for byte.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'

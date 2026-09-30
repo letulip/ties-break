@@ -352,7 +352,10 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // no key at all and the file is the same length TO THE BYTE with `schemaVersion` the only line
     // that moved (measured per key: 104 keys before, 104 after, added [], removed [], order
     // identical). Nothing in the student cabinet touches a curve, or could. Re-aimed 24.09.
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json') {
+    // ⚠ AND v90.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v89.json)`, the secondary market's own README row – and it
+    // is the plainest rung yet: v90's two keys are OPTIONAL and absent on every fixture, so the file is the same length TO THE BYTE with
+    // `schemaVersion` the only line that moved. Nothing in a listing touches a curve, or could. Added 30.09.
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

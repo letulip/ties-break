@@ -60,6 +60,17 @@
 // PF5's escaped fallback crosses (the doc quotes the runtime spelling; the source escapes its
 // apostrophes), and it is sound in one direction only: a `` ` + ` `` seam in a source file IS runtime
 // concatenation, so joining it cannot invent a string the program does not build.
+//
+// ⭐ HARDENED 30.09 (S7 – THE OWNER FOLDED THE ROUND-TRIP CHIP INTO THE SECONDARY-MARKET WAVE): TWO MEASURED HOLES, ONE FIX. (1) THE SHIPPED SIDE IS A WHOLE STRING
+// LITERAL NOW, not a bare `includes`: a sentence that GREW past its row (an `s` appended in the source) kept the row as a substring and stayed green – S2's arm A13,
+// first measured on `tests/secondary-market-strings-roundtrip.test.ts`, whose `shipped` this file's now is. (2) THE HOME IS READ AS CODE: `codeOnly` strips its comments
+// before any row is matched, so the code's word changing while `// was 'Old'` sits beside it can no longer hold the pin up. Only the matching mechanism moved – no row,
+// no shipped string, no count and no assertion's direction – and every row of the real tree passed the stricter matcher on its first run, so nothing was loosened to get there.
+// ALL THREE CORPORA (§1-§3, §4, §5) USE THE ONE `shipped` NOW: §5 already carried an inline form of it, and the §1-§4 exemption its note used to make is closed at that block.
+// ⭐ S7'S ARMS, EACH ALONE, WATCHED AND RESTORED BYTE FOR BYTE (30.09), all RED by row id in the block they belong to: on PF1 (`profile.ts`) a character appended, one substituted, the word changed
+// with a whole-line comment quoting the OLD one above it, the same with a trailing comment, and one character of the doc row; on ES3 (`medical.ts`, a concatenated literal) a character appended and
+// one substituted; on AS1 the word changed in `MoneyScreen.vue` under an HTML comment quoting the old one, and on AS7 a character appended and one character of the doc row. THE PRE-S7 PIN STAYED GREEN on
+// the appended character (PF1, ES3) and on the comment arm (PF1) – the measurement of both holes – and was already RED on AS7's appended character, the one block that had the whole-literal form.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -83,11 +94,36 @@ function parseTable(path: string): Row[] {
   return rows
 }
 
+/** ⭐ S7 (30.09) – THE HOME IS READ AS CODE, NOT AS TEXT: comments are stripped before any row is matched, so a comment that quotes a word can neither
+ *  hold a row up (the code's word changes, `// was 'Old'` stays beside it, and a whole-file containment stayed green – it cannot tell a comment from code)
+ *  nor pass for a second copy of it. Strip-only: it takes text away from what the pin sees and adds none, so it can only make a pin stricter.
+ *  ⚠⚠ LINE COMMENTS GO FIRST, AND THE ORDER IS MEASURED, NOT STYLE (copied from `codeOnly` in `tests/principles-a06-life-beat-direction.test.ts`, T6.10, 28.09):
+ *  a line comment that names a path glob puts a slash before a star, the block matcher reads it as an OPENER and runs to the next block close, and the real
+ *  code in between is deleted. The second line pass takes a TRAILING comment (a double slash after whitespace on a code line), for the reason the first takes a
+ *  whole-line one: `'Word', // was 'Old'` is the same hole from the other end of the line.
+ *  ⚠ A `.vue` home also loses its `<!-- -->` comments, first, because they are the outermost comment syntax in a template. */
+function codeOnly(text: string, path: string): string {
+  const html = path.endsWith('.vue') ? text.replace(/<!--[\s\S]*?-->/g, '') : text
+  return html
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+    .replace(/[ \t]\/\/.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
+/** ⭐ S7 (30.09) – THE ROW AS A WHOLE STRING LITERAL, ported from `tests/secondary-market-strings-roundtrip.test.ts`: it must be found between its own quote marks
+ *  (`'…'`, `"…"` or a template literal), never as a bare substring. A plain `includes` cannot see a shipped sentence that has GROWN past its row – the row is still
+ *  a substring of the longer sentence (S2's arm A13, 30.09: an `s` appended in the source stayed green) – so growth, shrinkage and substitution now fail the same row.
+ *  ⚠ THE ESCAPED SPELLING IS LOAD-BEARING, exactly as it was: the doc quotes the RUNTIME spelling, and a single-quoted source literal escapes its apostrophes. */
+function shipped(src: string, text: string): boolean {
+  const spellings = [text, text.replaceAll("'", "\\'")]
+  return spellings.some((t) => ["'", '"', '`'].some((q) => src.includes(q + t + q)))
+}
+
 const sourceCache = new Map<string, string>()
 function sourceOf(path: string): string {
   let src = sourceCache.get(path)
   if (src === undefined) {
-    src = readFileSync(path, 'utf8')
+    src = codeOnly(readFileSync(path, 'utf8'), path)
     sourceCache.set(path, src)
   }
   return src
@@ -139,14 +175,10 @@ describe('the principles fix – the strings table IS the corpus', () => {
   it('every row matches the shipped string character for character', () => {
     for (const row of rows) {
       const src = sourceOf(row.home)
-      // ⚠ THE ESCAPED FALLBACK IS LOAD-BEARING: the doc quotes the RUNTIME spelling, and a source
-      // literal in single quotes escapes its apostrophes – `The mother\'s story` is the shipped
+      // ⚠ THE ESCAPED FALLBACK IS LOAD-BEARING, AND LIVES IN `shipped` NOW (S7): the doc quotes the RUNTIME spelling, and a
+      // source literal in single quotes escapes its apostrophes – `The mother\'s story` is the shipped
       // spelling of a row this table reads as `The mother's story`.
-      const escaped = row.text.replaceAll("'", "\\'")
-      expect(
-        src.includes(row.text) || src.includes(escaped),
-        `${row.id}: ${row.home} does not contain the row's text`,
-      ).toBe(true)
+      expect(shipped(src, row.text), `${row.id}: ${row.home} does not ship the row's text as a whole string literal`).toBe(true)
     }
   })
 
@@ -211,12 +243,8 @@ describe('the principles fix – engine sentences on new surfaces (§4)', () => 
     // engine. A row whose text has drifted from its home fails by id here; a home whose sentence has
     // been reworded fails the same row from the other side, which is what makes this a round trip.
     for (const row of rows) {
-      const escaped = row.text.replaceAll("'", "\\'")
       const src = joinedSource(row.home)
-      expect(
-        src.includes(row.text) || src.includes(escaped),
-        `${row.id}: ${row.home} does not contain the row's text`,
-      ).toBe(true)
+      expect(shipped(src, row.text), `${row.id}: ${row.home} does not ship the row's text as a whole string literal`).toBe(true)
     }
   })
 
@@ -320,14 +348,12 @@ describe('the principles fix – existing title sentences on a spoken surface (�
     // literals in the source (PF4 is tabled as `${cap.used}`, three §4 rows are concatenated across two
     // literals), so the same tightening would be false there. The weakness is named in the wave's report
     // for the architect rather than papered over here.
+    // ⭐ CLOSED 30.09 (S7) – THAT PREDICTION WAS MEASURED FALSE, AND IT IS KEPT HERE BECAUSE A PREDICTION THAT QUIETLY FAILED IS WORSE THAN ONE THAT SAYS SO.
+    // Every §1-§4 row, PF4's `${cap.used}` line included, is a whole string literal in its home on the real tree (the three concatenated §4 rows once
+    // `joinedSource` has closed the seam), so §1-§4 use `shipped` as well: one matcher for all three blocks, and this one is where it was first written inline.
     for (const row of rows) {
       const src = joinedSource(row.home)
-      const escaped = row.text.replaceAll("'", "\\'")
-      const delimited = [row.text, escaped].flatMap((t) => [`'${t}'`, `"${t}"`, `\`${t}\``])
-      expect(
-        delimited.some((form) => src.includes(form)),
-        `${row.id}: ${row.home} does not hold the row's text as a whole literal`,
-      ).toBe(true)
+      expect(shipped(src, row.text), `${row.id}: ${row.home} does not hold the row's text as a whole literal`).toBe(true)
     }
   })
 

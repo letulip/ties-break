@@ -34,6 +34,8 @@ import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { financeWindow } from '../src/engine/world/ledger'
+import { saleFloorCents } from '../src/engine/world/resale'
+import { formatCents } from '../src/shared/money'
 import { fnv1aHex } from './helpers/hash'
 
 /** ⚠ THE PROFESSIONAL MARK, SET THE WAY THE ENGINE SETS IT. `activeLadderOf`'s professional arm
@@ -367,20 +369,24 @@ describe('buying and selling', () => {
     expect(ownedAssets(world)[0].valueCents).toBe(twice)
   })
 
-  it('selling returns the STORED value and books it as income under the same category', () => {
+  it('selling returns the FIRE price of the STORED value and books it as income under the same category', () => {
     const world = shoppableCareer('shop-sell-till')
     buyAsset(world, 'car-good')
     world.assets[0].valueCents = 91_091_00
     const before = world.fundsCents
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the instant door of a THING pays the corridor's floor of the stored value – an exact figure (`saleFloorCents`, whose
+    // formula tests/secondary-market-s4.test.ts pins on its own). Every other line here is unchanged: the same category, the same row, the same shape.
+    const fire = saleFloorCents(world, 'car-good', world.week)
+    expect(fire, 'under the stored value').toBeLessThan(91_091_00)
     sellAsset(world, 'car-good')
-    expect(world.fundsCents).toBe(before + 91_091_00)
+    expect(world.fundsCents).toBe(before + fire)
     expect(ownedAssets(world)).toEqual([])
     const row = world.events[world.events.length - 1]
     expect(row.type).toBe('income')
     expect(row.category).toBe('shop')
-    expect(row.amountCents).toBe(91_091_00)
+    expect(row.amountCents).toBe(fire)
     // ⭐ THE SENTENCE NAMES THE LOSS, to the cent, so a player is shown a loss rather than two prices.
-    expect(row.text).toContain('$18,909 less than it cost')
+    expect(row.text).toContain(`${formatCents(110_000_00 - fire)} less than it cost`)
     expect(() => sellAsset(world, 'car-good')).toThrow('does not own')
   })
 
@@ -398,10 +404,15 @@ describe('buying and selling', () => {
     const worth = ownedAssets(world)[0].valueCents
     expect(worth, 'two full seasons of 9%').toBe(Math.round(110_000_00 * 0.91 * 0.91))
     expect(worth).toBe(91_091_00)
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the card still says two full seasons of 9% (above, to the cent) – the SALE is what moved. The instant door pays the
+    // corridor's floor of that card, so the loss the ledger must show to the cent is the cost against the FIRE price, pinned here as an exact figure (7,706,006 is the floor at
+    // this career's own sale week, captured 30.09: a class share of the card, moved a little by the crash layer).
+    const fire = saleFloorCents(world, 'car-good', world.week)
+    expect(fire, 'the corridor floor at the sale week, to the cent').toBe(7_706_006)
     sellAsset(world, 'car-good')
 
-    const loss = 110_000_00 - 91_091_00
-    expect(loss).toBe(18_909_00)
+    const loss = 110_000_00 - fire
+    expect(loss).toBe(3_293_994)
 
     // ⚠⚠ AND HERE IS THE THING THE ACCEPTANCE DOES NOT SAY, FOUND BY WRITING IT: AT TWO SEASONS THE
     // PURCHASE HAS LEFT THE LEDGER. `financeWeeks` keeps a SIXTY-WEEK window (`FINANCE_WEEKS`) and
@@ -437,8 +448,8 @@ describe('buying and selling', () => {
     // describing a car he did not draw («надо и описания поправить немного с названиями»). The rung,
     // the price, the rate and every cent below are the same; only the noun in the sentence moved.
     const sale = world.events.filter((e) => e.category === 'shop').at(-1)!
-    expect(sale.amountCents).toBe(91_091_00)
-    expect(sale.text).toBe('Sold: The luxury four-by-four – $18,909 less than it cost')
+    expect(sale.amountCents).toBe(fire)
+    expect(sale.text).toBe(`Sold: The luxury four-by-four – ${formatCents(loss)} less than it cost`)
 
     // ...and inside the window the netting works too, which is what the breakdown shows a player who
     // sells sooner: one line whose size IS the loss.
@@ -446,12 +457,14 @@ describe('buying and selling', () => {
     const quickFundsBefore = quick.fundsCents
     buyAsset(quick, 'car-good')
     quick.assets[0].valueCents = 91_091_00
+    // ⚠ THE QUICK CAREER'S OWN FIRE PRICE (its own week, its own crash state), asked before the row leaves: the loss it books is ITS cost against ITS fire price.
+    const quickLoss = 110_000_00 - saleFloorCents(quick, 'car-good', quick.week)
     sellAsset(quick, 'car-good')
-    expect(financeWindow(quick.financeWeeks, 0).byCategory.shop, 'bought and sold inside one window').toBe(-loss)
+    expect(financeWindow(quick.financeWeeks, 0).byCategory.shop, 'bought and sold inside one window').toBe(-quickLoss)
 
     // ⚠ AND THE WALLET AGREES ON THE QUICK CAREER, where nothing else has had time to happen: the
     // money that left and came back differs by exactly the loss and by nothing else.
-    expect(quick.fundsCents).toBe(quickFundsBefore - loss)
+    expect(quick.fundsCents).toBe(quickFundsBefore - quickLoss)
   })
 
   it('⚠ an id retired from the catalogue is still sellable and stops being re-priced', () => {
@@ -495,8 +508,10 @@ describe('§2e-2 – careerTotals grows by nothing, and nothing else moves', () 
     expect(world.careerTotals.spentCents).toBe(before.spentCents + 110_000_00)
     expect(world.careerTotals.prizeCents, 'a car is not prize money').toBe(before.prizeCents)
     world.assets[0].valueCents = 91_091_00
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the sale still counts as earnings, at the price it actually fetched – the FIRE price.
+    const fire = saleFloorCents(world, 'car-good', world.week)
     sellAsset(world, 'car-good')
-    expect(world.careerTotals.earnedCents).toBe(before.earnedCents + 91_091_00)
+    expect(world.careerTotals.earnedCents).toBe(before.earnedCents + fire)
   })
 })
 
@@ -542,7 +557,21 @@ describe('§2e-3 – the frozen MAIN capture cannot see any of this', () => {
       // sweep and makes it STRICTER than it was: the contracts stay on the books, `deliverAssets`
       // fires on the week each one lands, and the weekly upkeep runs from there – so this now
       // proves input-independence over the delivery and the bill as well as over buy/sell.
-      for (const owned of [...ownedAssets(w)]) if (sellableAsset(w, owned)) sellAsset(w, owned.id)
+      // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1 + spec §2e), NEVER WEAKENED: the academy fire-sells as ONE LOT, so a stage that an earlier sale in this very loop already took
+      // with it is no longer there to sell – the world is asked again for each row instead of trusting the list taken before the loop. Every rung is still swept.
+      // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S5.0 (30.09, spec §2e), NEVER WEAKENED: the academy's instant sale refuses while ANY of its stages is still in delivery («a lot with a
+      // live contract has no whole»), with the shipped sentence – and this sweep buys the whole shelf every week, so a later stage is often on order when an earlier one is asked.
+      // That refusal is the engine ANSWERING, not the sweep failing: it is tolerated by its ONE sentence and nothing else, so every other error still stops the arm and every rung
+      // is still swept.
+      for (const owned of [...ownedAssets(w)]) {
+        if (ownedAssets(w).some((a) => a.id === owned.id) && sellableAsset(w, owned)) {
+          try {
+            sellAsset(w, owned.id)
+          } catch (e) {
+            if ((e as Error).message !== 'That one cannot be sold right now') throw e
+          }
+        }
+      }
     })
     expect(draws.length, 'the same number of MAIN draws').toBe(base.draws.length)
     expect(fnv1aHex(draws.join(',')), 'and the same sequence').toBe(fnv1aHex(base.draws.join(',')))

@@ -35,7 +35,7 @@ import { fireMilestone } from './milestones'
 import { inCollege } from './college'
 import { announceFieldFarewells, announceFieldIntake, isFieldFarewellWeek } from './fieldNews'
 import { expireKnock } from './knock'
-import { deliverAssets, reportMarketSeason, revalueAssets } from './shop'
+import { deliverAssets, raiseSaleOffers, reportMarketSeason, revalueAssets } from './shop'
 import {
   settleMandatoryDeadlines,
   settleMandatoryMisses,
@@ -408,6 +408,15 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         charged. ⚠ ZERO DRAWS: it removes one optional key and writes one `entry` row.
   deliverAssets(world)
   revalueAssets(world)
+  // ⭐⭐⭐ THE SECONDARY MARKET, S3 – ...AND A BUYER MAY WRITE FOR WHAT THE FAMILY HAS LISTED. One draw a week per listed lot, on the lot's
+  //         own sub-stream (`seed:sale:<lot>:<week>:knock`), and a letter is priced at THIS week and printed on the paper. ⚠ IT RUNS
+  //         AFTER `revalueAssets` ON PURPOSE: the worth a letter is priced on is the row's stored `valueCents` – the number the
+  //         card shows (the parity ruling) – and this is the line that has just written it for the week. It is not gated on
+  //         `inCollege`, because a listing is about the family's own property and stays open through the freeze (S2). Beside
+  //         the sponsor letters in spirit (accumulating, answered in the inbox) but not in place: `raiseKitOffers` is window-gated
+  //         inside `reviewSponsors`, and a buyer can write on any week. ZERO MAIN draws, so the frozen capture (41550 / e6b0c709)
+  //         cannot see it; and a career that lists nothing never reaches a draw at all.
+  raiseSaleOffers(world)
   // ⭐⭐⭐ ROUND 29 PART THREE #16 – ...AND ONCE A YEAR THE MARKET SAYS WHAT IT DID.
   //
   //         «A season summary line – "the fund this year: −8%". Without it the player sees a smaller

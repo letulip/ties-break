@@ -47,6 +47,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { householdWeekly } from '../src/engine/world/coachMarket'
+import { saleFloorCents } from '../src/engine/world/resale'
 import { vacationPriceCents } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -669,11 +670,15 @@ describe('§7 – ⭐ round 29 part four P10: the long-range plane leaves the sh
     const owned = ownedAssets(w).find((a) => a.id === 'plane-long')!
     expect(owned.valueCents, 'a year of -6% really priced in').toBeLessThan(38_000_000_00)
     expect(owned.valueCents, 'and it is a value, not a write-off').toBeGreaterThan(30_000_000_00)
-    // ...and the way out is open: sold at the stored value, money in the wallet, row off the shelf.
+    // ...and the way out is open: sold at the corridor's floor, money in the wallet, row off the shelf.
+    // ⚠ RE-AIMED AT THE SECONDARY MARKET'S S4 (ruling §5.1, «да»), NEVER LOOSENED: the instant door of a THING pays the FIRE price, not the stored value – still an exact figure, and the exit is as
+    // open as it was (it is never locked; it just costs what the spec says it costs).
     const funds = w.fundsCents
     const worth = owned.valueCents
+    const fire = saleFloorCents(w, 'plane-long', w.week)
+    expect(fire, 'a plane fire-sells for a class share of its stored value').toBeLessThan(worth)
     sellAsset(w, 'plane-long')
-    expect(w.fundsCents).toBe(funds + worth)
+    expect(w.fundsCents).toBe(funds + fire)
     expect(shopView(w).rows.some((r) => r.id === 'plane-long'), 'gone from the view once sold').toBe(false)
   })
 })

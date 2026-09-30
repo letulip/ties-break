@@ -11,8 +11,8 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-270 TRACKED TypeScript files: **58 live**, **212 archival**
-(of which **113 frozen** out of `check:tools` and **99 still swept**).
+271 TRACKED TypeScript files: **58 live**, **213 archival**
+(of which **113 frozen** out of `check:tools` and **100 still swept**).
 
 ## Why the split exists
 
@@ -123,9 +123,9 @@ compiling reddens a pull request instead of rotting.
 - `r42-cameo-gap-closer.ts` · `r42-ceiling-clock.ts` · `r42-coach-every-cheque.ts` · `r42-composure-bonus.ts`
 - `r42-elite-retainer.ts` · `r42-junior-coverage.ts` · `r42-kid-share-ramp.ts` · `r42-personality-read.ts`
 - `r42-sparring-price.ts` · `r42-team-budget-cap.ts` · `real-vs-bench.ts` · `runway-probe.ts`
-- `school-bench.ts` · `seed-vs-model.ts` · `sponsor-cadence.ts` · `sponsor-ladder-reach.ts`
-- `sponsor-silence-probe.ts` · `summer-bench.ts` · `top50-season-probe.ts` · `wall-l1-bench.ts`
-- `week-story-trace.ts` · `what-money-buys.ts` · `winrate-read.ts`
+- `sale-probe.ts` · `school-bench.ts` · `seed-vs-model.ts` · `sponsor-cadence.ts`
+- `sponsor-ladder-reach.ts` · `sponsor-silence-probe.ts` · `summer-bench.ts` · `top50-season-probe.ts`
+- `wall-l1-bench.ts` · `week-story-trace.ts` · `what-money-buys.ts` · `winrate-read.ts`
 
 ## Archival – frozen at their blob id
 

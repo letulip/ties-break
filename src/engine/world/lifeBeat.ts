@@ -1297,6 +1297,11 @@ export interface LifeBeatAnswer {
  *  ⚠ LIFE_BEAT_OPTIONS: THE `'met'` LABELS NAME NO GENDER, and that is the schema being obeyed rather than a style choice…
  *  → docs/notes/life-beats/hub.md#life_beat_options--what-the-parent-may-say-back-per-beat-kind
  */
+/** ⚠ ONE HOME for the sentence the `ended` (v75) and `divorced` (v88) pools deliberately share –
+ *  the two lists sit on the same axis and part at the THIRD label, their own doc's claim. S7
+ *  (30.09) measured the cost of two copies: a drift in one stayed green under every pin. */
+const GIVE_HER_ROOM = 'Give her room, and say we are here'
+
 export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> = {
   /** ⚠ THE FORK'S THREE, BYTE-IDENTICAL AND IN THEIR ORIGINAL ORDER (invariant 4 – a shipped string
    *  is not an agent's to change, and this restructure touched none of them). The labels name no
@@ -1368,7 +1373,7 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    *  → docs/notes/life-beats/hub.md#life_beat_options--v75-t4--the-four-the-ending-offers
    */
   ended: [
-    { id: 'space', label: 'Give her room, and say we are here', bond: ECONOMY.bond.delta.endedMatched },
+    { id: 'space', label: GIVE_HER_ROOM, bond: ECONOMY.bond.delta.endedMatched },
     { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.bond.delta.endedMismatched },
     { id: 'fix-it', label: 'Offer to help put it right', bond: ECONOMY.bond.delta.endedFixIt },
     { id: 'blame', label: 'Say they were never worth it', bond: ECONOMY.bond.delta.endedBlame },
@@ -1389,7 +1394,7 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    */
   divorced: [
     // ⚠ DRAFT
-    { id: 'space', label: 'Give her room, and say we are here', bond: ECONOMY.divorce.matched },
+    { id: 'space', label: GIVE_HER_ROOM, bond: ECONOMY.divorce.matched },
     // ⚠ HIS REVIEW APPLIED 23.09 – the tautology («keep her company, and stay close») collapsed to
     // the half that says something, and the closeness now names its own restraint.
     { id: 'company', label: 'Stay close, without asking for the whole story', bond: ECONOMY.divorce.mismatched },

@@ -240,6 +240,7 @@ export type {
   ShootClashPrompt,
   CallUpLetterTerms,
   BuildLetterTerms,
+  SaleOfferTerms,
   StaffSeat,
   StaffLetterTerms,
   OfferTerms,

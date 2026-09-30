@@ -90,7 +90,7 @@ import type {
   // ⚠ `AdTier` left this list with `AD_TIERS` (E-08) – the type is still live and still exported by
   // shared/protocol; this module simply has nothing left that names it.
   AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, BuildLetterTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
-  KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, StaffLetterTerms, StaffSeat, TourLetterTerms,
+  KitLine, KitOfferTerms, Offer, PenaltyReason, SaleOfferTerms, SponsorTier, StaffLetterTerms, StaffSeat, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -1135,6 +1135,15 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
   const err = offerAnswerError(offers, offerId, week)
   if (err) return null
   const offer = offers.find((o) => o.id === offerId)!
+  // ⭐⭐⭐ A BUYER'S LETTER SIGNS ON ITS OWN ARM (the secondary market, S3), because everything below the ad arm is KIT arithmetic: a
+  // signature there queues a contract, ENDS a running deal (`superseded`) and refuses the window's rival brands. None of it is true of a
+  // buyer – signing one must never end the sponsor deal she is wearing. It marks the paper and nothing else: the world re-validates the
+  // lot BEFORE it calls this and moves the money AFTER (`acceptOffer`, world/sponsors.ts) – the split the advertising arm keeps.
+  if (offer.kind === 'sale') {
+    offer.state = 'signed'
+    offer.decidedWeek = week
+    return offer
+  }
   // ⭐ THE ADVERTISING DEAL SIGNS ON ITS OWN ARM (the-face-and-the-court.md §6 step 1), because every
   // number below this branch is KIT arithmetic: `dealStartsAt` queues a new contract behind the
   // signed KIT deal (an ad deal coexists with the kit ladder – different category, different gate),
@@ -1841,6 +1850,98 @@ export function raiseBuildLetter(
   }
   offers.push(notice)
   return notice
+}
+
+// --- the buyer's letter (the secondary market, S3) -----------------------------------------------------
+// docs/specs/secondary-market-2026-09.md §2b, rulings §5.2/§5.3. A thing the family has LISTED (`OwnedAsset.listedWeek`) attracts letters
+// from buyers, and the PAPER is this file's: the id, the window, the signature and the lapse. WRITING one (which lots, which week, at what
+// price) is `raiseSaleOffers` in world/shop.ts and the money is `settleAssetSale`'s – the world owns the wallet, this file owns the paper.
+//
+// ⚠⚠ WHY THE LOOP IS NOT IN THIS FILE, THOUGH THE PLAN SAID «BESIDE ITS SIBLINGS»: this module is a CHECKED LEAF – at runtime it reaches only
+// `./economy`, `./rng`, `./season/calendar` and `./world/ledger`, and world/shop.ts's own import note relies on it. The loop needs the
+// corridor's reads (`world/resale.ts`), and `resale.ts` reaches `world/assets.ts` -> `brand.ts` -> `fame.ts`, which imports THIS file, so a
+// value import back would close offers -> resale -> assets -> brand -> fame -> offers (measured 30.09 with a value-import walk). The build
+// letter already splits the same two jobs the same way: `raiseBuildLetter` here, its caller in `deliverAssets`.
+
+/** ⭐ HOW LONG A BUYER'S LETTER STANDS: arrival week + 2 (ruling §5.2), so it can be answered on three weeks – the week it lands and the
+ *  two after – and lapses on the sweep of the fourth (`expireOffers` lapses `week > deadlineWeek`). ⚠ A constant and not an `ECONOMY`
+ *  knob on purpose: it is a ruling about how a letter BEHAVES, not a tunable price, and the table's identity hash
+ *  (`tests/principles-t73-economy-identity.test.ts`) would move with a knob. */
+export const SALE_LETTER_WEEKS = 2
+
+/** ONE LOT, ONE WEEK, ONE LETTER – the idempotency key. ⚠ Keyed on the lot's naming id and the ARRIVAL week: a lot draws once a week
+ *  (`raiseSaleOffers`), so two letters of one lot can never share a week and a replayed week can never write twice, while letters of
+ *  DIFFERENT weeks are different papers – which is what lets them accumulate (ruling §5.2). */
+export function saleOfferId(itemId: string, week: number): string {
+  return `sale-${itemId}-w${week}`
+}
+
+/** ⭐⭐ THE BUYER WRITES. An `open` letter with the price PRINTED on it: the number is fixed here and never recomputed at signature
+ *  (offers-and-the-inbox law, `SaleOfferTerms`). Idempotent on its id, like every other `raise*` in this file. Zero draws – the caller
+ *  drew, on the lot's own sub-stream, and passes the result in. ⚠ NOTHING HERE STOPS A SECOND OPEN LETTER FOR THE SAME LOT: letters
+ *  accumulate by ruling, and their two-week life is the only bound. */
+export function raiseSaleLetter(offers: Offer[], week: number, terms: SaleOfferTerms): Offer {
+  const id = saleOfferId(terms.itemId, week)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const letter: Offer = {
+    id,
+    kind: 'sale',
+    week,
+    deadlineWeek: week + SALE_LETTER_WEEKS,
+    terms: { ...terms },
+    state: 'open',
+  }
+  offers.push(letter)
+  return letter
+}
+
+/** ⭐ S5 (spec §2i) – ONE LISTING, ONE NOTICE: the idempotency key of the letter that says an ad has gone quiet, keyed on the lot and on the week the
+ *  AD WENT UP (`listedWeek`), not on the week the notice arrives. ⚠ THAT IS WHAT MAKES «ONCE» A PROPERTY OF THE ID RATHER THAN OF A FLAG OR OF A
+ *  COINCIDENCE OF WEEKS: the stale week moves with the lot's worth (see `listingStaleWeek`), so the raiser tests «stale yet?» every week and lets this id
+ *  say «already written». A re-listing has a new `listedWeek` and so may write its own. A DIFFERENT id from `saleOfferId`'s on purpose – a buyer may write for
+ *  the same lot in the same week, and the two papers must not collide. */
+export function saleStaleId(itemId: string, listedWeek: number): string {
+  return `sale-stale-${itemId}-w${listedWeek}`
+}
+
+/** ⭐ S5 (spec §2i) – THE MARKET SAYS THE AD HAS GONE QUIET. A NOTICE, the academy's and the build letter's shape: `state: 'info'`, so there is
+ *  nothing to sign, nothing to refuse and `expireOffers` has nothing to lapse, and `deadlineWeek` is the arrival week because an informational
+ *  letter has no window (see `raiseBuildLetter`). It reuses kind `'sale'` and `SaleOfferTerms` with `priceCents: 0` – NO price was quoted, and no
+ *  new kind or field means no schema move. ⚠ `expireSaleOffers` only ever touches `open` letters, so this one outlives the listing it is about
+ *  (a record, like every notice). `week` is the arrival week and `listedWeek` the week the ad went up (the id's key, `saleStaleId`). Idempotent on its
+ *  id, zero draws – the caller decided that the ad is stale (`raiseSaleOffers`). */
+export function raiseSaleStaleLetter(offers: Offer[], week: number, listedWeek: number, terms: SaleOfferTerms): Offer {
+  const id = saleStaleId(terms.itemId, listedWeek)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const notice: Offer = {
+    id,
+    kind: 'sale',
+    week,
+    deadlineWeek: week,
+    terms: { ...terms },
+    state: 'info',
+  }
+  offers.push(notice)
+  return notice
+}
+
+/** ⭐ THE BUYERS WALK: every OPEN buyer's letter written for one of `itemIds` lapses, with the ordinary `expired` state and the week it
+ *  happened – the thing is sold (`settleAssetSale`) or off the market (`unlistAsset`, ruling §5.3), and the paper says so through the state
+ *  the inbox already renders for a lapsed letter rather than a new one. Matched on the rungs the lot is made of, because the academy's
+ *  naming stage is only a name: a letter written under one stage must still fall when another stage's sale changes the lot. Returns the
+ *  letters just closed. Pure state, ZERO draws, idempotent (a closed letter is no longer `open`). */
+export function expireSaleOffers(offers: Offer[], itemIds: readonly string[], week: number): Offer[] {
+  const gone: Offer[] = []
+  for (const o of offers) {
+    if (o.kind !== 'sale' || o.state !== 'open') continue
+    if (!itemIds.includes((o.terms as SaleOfferTerms).itemId)) continue
+    o.state = 'expired'
+    o.decidedWeek = week
+    gone.push(o)
+  }
+  return gone
 }
 
 // --- the national squad's invitation (round 27 #6) ----------------------------------------------

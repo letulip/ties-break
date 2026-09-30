@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-537 exported names across 68 owning modules.
+539 exported names across 68 owning modules.
 
 ## Areas
 
@@ -35,6 +35,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/tick.ts` | ⭐⭐ THE WEEK ITSELF – the tick, the multi-week advance, and the two exits that spend weeks through them (A-04 (a) / T6.5, the last of P4's span-moves; docs/review/proposals/P4-world-decomposition.md) | 9 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
+| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 8 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 7 |
 | `src/engine/world/create.ts` | ⭐⭐ THE BIRTH OF A CAREER – `createWorld`, the prologue handover it applies, and the one hydration a pre-v6 save still needs (A-04 (a) / T6.5; docs/review/proposals/P4-world-decomposition.md) | 7 |
@@ -42,7 +43,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 7 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 7 |
 | `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 7 |
-| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 6 |
 | `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 5 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 5 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 5 |
@@ -551,6 +551,19 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `radarViewOf` – `src/engine/world/knock.ts`
 - `rollKnock` – `src/engine/world/knock.ts`
 
+### `src/engine/world/shop.ts`
+
+⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+
+- `buyAsset` – `src/engine/world/shop.ts`
+- `deliverAssets` – `src/engine/world/shop.ts`
+- `listAsset` – `src/engine/world/shop.ts`
+- `revalueAssets` – `src/engine/world/shop.ts`
+- `sellableAsset` – `src/engine/world/shop.ts`
+- `sellAsset` – `src/engine/world/shop.ts`
+- `shopView` – `src/engine/world/shop.ts`
+- `unlistAsset` – `src/engine/world/shop.ts`
+
 ### `src/engine/world/brand.ts`
 
 ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
@@ -634,17 +647,6 @@ THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen read
 - `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
 - `NewsStanding` *(type)* – `src/engine/world/spotlight.ts`
 - `newsStandingOf` – `src/engine/world/spotlight.ts`
-
-### `src/engine/world/shop.ts`
-
-⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
-
-- `buyAsset` – `src/engine/world/shop.ts`
-- `deliverAssets` – `src/engine/world/shop.ts`
-- `revalueAssets` – `src/engine/world/shop.ts`
-- `sellableAsset` – `src/engine/world/shop.ts`
-- `sellAsset` – `src/engine/world/shop.ts`
-- `shopView` – `src/engine/world/shop.ts`
 
 ### `src/engine/spirit.ts`
 

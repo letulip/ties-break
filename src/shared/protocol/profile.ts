@@ -832,6 +832,22 @@ export interface OwnedAsset {
    *  ⚠ SAME OPTIONALITY, SAME REASON: absent is a save that never recorded one, and the fallback is
    *  the shipped arithmetic. */
   realisedCostCents?: number
+  /** ⭐⭐⭐ THE SECONDARY MARKET (v90; docs/specs/secondary-market-2026-09.md §2a and §2i) – THE WEEK THE THING WENT ON
+   *  THE MARKET. Absent = not listed: every row a save from before this version holds, and every row the family has
+   *  never offered. A listing is the family's own choice, so no migration ever writes one. Set by `listAsset`, cleared
+   *  by `unlistAsset`.
+   *
+   *  ⚠ THE ACADEMY IS ONE LOT (§2e): its stages carry the same `listedWeek` together, set and cleared in one command,
+   *  so a screen may read any stage's row for «is the lot on the market». ⚠ OPTIONAL, AND A SCHEMA MOVE ANYWAY – the
+   *  version step is what makes «this key may exist» a fact a loader can rely on. */
+  listedWeek?: number
+  /** ⭐ THE MARKET'S MEMORY OF AN AD THAT ENDED WITHOUT A SALE (§2i): the week it ended and how many weeks of exposure it
+   *  had banked, INCLUDING what an earlier ad's memory carried in – so a family that withdraws and re-lists inside
+   *  `ECONOMY.shop.secondary.memoryWeeks` RESUMES at the staleness it left rather than starting fresh. Written by
+   *  `unlistAsset` (and by S3's settle when an ad ends unsold); read ONLY through `freshnessCarryOf` (world/resale.ts),
+   *  the one place the window is applied. Absent = never listed, or an ad the family has since let the market forget
+   *  (the row keeps the value; the window is applied on READ, never by a sweep). */
+  lastListing?: { endedWeek: number; exposedWeeks: number }
   /** ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THE FAMILY CALLED IT. Present on the FIRST row of a nameable
    *  family the household bought (the merch brand; the academy's land) and absent on every other row
    *  – including the academy's three later stages, which read the land's name rather than carrying

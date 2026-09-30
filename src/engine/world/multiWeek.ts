@@ -430,8 +430,12 @@ export function advanceRefusal(world: WorldState): StopReason | null {
  * the entry receipts and cancellations, the tour's due / penalty / suspension / season notices, the
  * academy's three letters, a brand's goodbye – and none of it is worth four weeks of a career: a
  * notice read four weeks late is the same notice, and it is still in the inbox a decade later. The
- * letters that are NOT the same four weeks late are the three that can be gone: a kit proposal
- * (`raiseKitOffers`), its renewal (`raiseKitRenewal`) and the advertising deal (`raiseAdOffer`).
+ * letters that are NOT the same four weeks late are the ones that can be gone: a kit proposal
+ * (`raiseKitOffers`), its renewal (`raiseKitRenewal`), the advertising deal (`raiseAdOffer`) and – since the
+ * secondary market's S3 – a buyer's letter (`raiseSaleLetter`, kind `'sale'`), whose window is the shortest of them
+ * (arrival week + `SALE_LETTER_WEEKS`, two weeks): a pill that outran it would burn the buyer silently. None of them
+ * has a clause of its own – this rule reads `state` and the arrival week and never `kind` – and
+ * tests/secondary-market-s4.test.ts pins the sale kind into that guarantee.
  *
  * ⚠⚠ 2. ON THE WEEK IT ARRIVED, ONCE (`o.week === world.week`). Without this clause the stop would
  * read "there is a live offer", and a sponsor window is FIVE weeks wide – so one unanswered letter

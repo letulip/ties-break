@@ -48,16 +48,33 @@ import { brandMultipleX, brandSignalsOf } from './brand'
 // ⚠ THE ONE THING THIS FILE ASKS THE MARKET DIRECTLY – the season line's crash predicate. Every
 // VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
 import { marketCrashFellIn } from './market'
+// ⭐ THE SECONDARY MARKET (S2) – the corridor table's predicate (parked cash has no row) and the ONE place the market's
+// memory window is read. ⚠ A LEAF EDGE, checked rather than assumed: `resale.ts` reaches only `./assets`, `./market`,
+// `../economy`, `../rng` and `../season/calendar` at runtime (its `../world` import is type-only) and none of those
+// imports this file.
+// ⭐ S4 ADDS `saleFloorCents` – the fire price the instant door pays for a THING (`sellAsset`); parked cash never calls it.
+// ⭐ S5 ADDS `assetSaleQuote` AND `listingStaleWeek` – the two reads the snapshot's `quote` / `listing` and the stale prompt are made of.
+import {
+  assetSaleQuote,
+  buyerWritesThisWeek,
+  freshnessCarryOf,
+  listingStaleWeek,
+  saleFloorCents,
+  saleLotOf,
+  saleLotStaleWeeks,
+  saleOfferPriceCents,
+  secondaryOf,
+} from './resale'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 // ⭐ ROUND 43 #11 – the letter the delivery writes. One raiser, in the module that owns the inbox.
 // ⚠ NOT A CYCLE, and checked rather than assumed – `offers.ts`'s own `seasonIndexOf` import makes
 // the same note one level down. At runtime `offers.ts` reaches only `./economy`, `./rng`,
 // `./season/calendar` and `./world/ledger`, and not one of those imports this file; everything else
 // it takes from here is a type. So shop -> offers is a leaf edge in both directions that matters.
-import { raiseBuildLetter } from '../offers'
+import { expireSaleOffers, raiseBuildLetter, raiseSaleLetter, raiseSaleStaleLetter, saleOfferId, saleStaleId } from '../offers'
 import { formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
-import type { OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
+import type { Offer, OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
 // ⭐ ROUND 34 #19 – a VALUE import: the four chart windows, whose largest decides how long a series
 // `shopView` sends. Declared in the protocol so the engine and the screen read one table.
 import { SHOP_PRICE_RANGE_MONTHS } from '../../shared/protocol'
@@ -621,6 +638,15 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
  *  ⚠ ITS `boughtWeek` IS NOT TOUCHED: they have owned this holding since they opened it, and selling
  *  part of it does not change when that was.
  *
+ *  ⭐⭐⭐ THE SECONDARY MARKET, STEP S4 – A THING NO LONGER TURNS INTO ITS CARD'S NUMBER ON THE SPOT (spec §2f, ruling §5.1 «да»: the fire sale «replaces the
+ *  instant full-value sale for things; parked cash keeps today's path»). Everything above this paragraph is PARKED CASH's law – the deposit and the fund, the two
+ *  'open' rungs – and is untouched, bit for bit. A whole sale of anything else (the corridor table prices it: `secondaryOf`) settles at `saleFloorCents`, the
+ *  corridor's own floor at THIS week – the class's `fireX` of worth, moved by its crash response – through `settleAssetSale`, the one body a signed buyer's letter
+ *  also ends in. The ledger sentence is the shipped one and its tail names the loss; no listing, letter or staleness is asked, so the exit is never locked.
+ *
+ *  ⚠⚠ AND THE ACADEMY FIRE-SELLS AS ONE LOT (spec §2e, his «вряд ли мы в реальности можем только корты продать»): any stage's id settles EVERY delivered stage
+ *  under ONE ledger row at the LOT's fire price. Per-stage instant sale is gone with the ruling.
+ *
  *  Same guard, same class, zero draws. Every figure is integer cents; nothing here rounds for
  *  display. */
 export function sellAsset(world: WorldState, itemId: string, amountCents?: number): void {
@@ -652,40 +678,57 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
   }
 
   const whole = asked === undefined || asked >= owned.valueCents
-  const proceedsCents = whole ? owned.valueCents : asked
+  // ⭐⭐⭐ S3 – A WHOLE SALE IS `settleAssetSale`'S BODY, AND THIS IS ONE OF ITS TWO DOORS (spec §2h: «the instant `sellAsset` path survives as
+  // the settle function the letters and the fire sale both call»). The wallet, the ledger sentence and the row removal are the shared body's. A PART sale
+  // (an 'open' rung only, refused above on a fixed one) is a different act and keeps its own arithmetic below, verbatim.
+  if (whole) {
+    // ⭐⭐⭐ S4 – THE PRICE THIS DOOR PAYS DEPENDS ON WHAT IS BEING SOLD (ruling §5.1). A THING is paid the corridor's floor at this week and settles as a LOT:
+    // `settleAssetSale` is handed NO rows, so it takes the lot `itemId` names (`saleLotOf`) – the row itself, or for the academy every delivered stage under
+    // ONE ledger row at the lot's fire price. ⚠ THE PRICE IS ASKED BEFORE THE ROWS LEAVE (`saleFloorCents` reads them). Parked cash is paid the row's own
+    // value, exactly as before, for the ONE row.
+    //
+    // ⚠⚠ THE CONDITION SHORT-CIRCUITS ON `stake` BEFORE IT ASKS THE CORRIDOR, so the deposit and the fund never READ resale.ts on the way through: 'open' is
+    // exactly the two money rungs, whose absence from the corridor table (`secondaryOf` is null for `investment`) would answer the same – the short-circuit is
+    // what lets tests/secondary-market-s4.test.ts COUNT the reads instead of trusting the table. A rung with no corridor row falls through to today's path.
+    const thing = item !== undefined && item.stake !== 'open' && secondaryOf(item) !== null
+    if (thing) {
+      // ⭐⭐⭐ S5.0 (the architect's ruling on S4's finding, spec §2e) – THE ACADEMY'S FIRE SALE REFUSES WHILE ANY STAGE IS IN DELIVERY. The lot
+      // sells WHOLE, and a lot with a live contract on one of its stages has no whole – nobody buys a construction site with someone else's
+      // contract on it (the same sentence `listAsset` gives, for the same lot). The sentence is the SHIPPED one `sellableAsset`'s callers already
+      // use, not a new string. ⚠ THE NAMED ROW'S OWN DELIVERY IS ASKED ABOVE (`sellableAsset`); THIS IS THE OTHER STAGES', which that guard never
+      // saw – a delivered stage named while a later one is still on order would otherwise have sold the delivered ones and stranded the contract.
+      // The exit is not locked by it: the build lands in weeks, and costs nothing meanwhile.
+      if (item !== undefined && item.family === 'academy' && !listingRows(world, owned, item).every((a) => assetDelivered(a))) {
+        throw new Error('That one cannot be sold right now')
+      }
+      settleAssetSale(world, itemId, saleFloorCents(world, itemId, world.week))
+    } else settleAssetSale(world, itemId, owned.valueCents, [owned])
+    return
+  }
+  const proceedsCents = asked
   // ONE ROUNDING (see the header): the cost of the part that left. The part that stays is the
   // subtraction, so the two can never disagree with `paidCents` by a penny.
-  const costSoldCents = whole ? owned.paidCents : Math.round((owned.paidCents * proceedsCents) / owned.valueCents)
+  const costSoldCents = Math.round((owned.paidCents * proceedsCents) / owned.valueCents)
   const deltaCents = proceedsCents - costSoldCents
 
-  if (whole) {
-    world.assets = world.assets.filter((a) => a !== owned)
-  } else {
-    // ⭐ ROUND 30 #14 – THE UNITS GO WITH THE MONEY. `owned.units` is present on exactly the rungs a
-    // part sale is offered on (an 'open' rung carries `unitBaseCents`; a 'fixed' one refused the
-    // amount at the third guard above), so this is the only shape a partial row can be in.
-    if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
-    owned.paidCents -= costSoldCents
-    owned.valueCents -= proceedsCents
-    // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED, WHICH IS THE WHOLE ITEM. His words and the
-    // measured reproduction are on `OwnedAsset.realisedGainCents`. Both halves of the part that went
-    // are kept – the gain it had made and what it had cost – so the card can say what the holding
-    // has EARNED instead of what is left on it. ⚠ These are the two figures this function ALREADY
-    // computed for the ledger sentence three lines down; nothing new is derived and nothing is
-    // rounded a second time, so the realised and unrealised halves still re-add to the cent.
-    // ⚠ `??= 0` RATHER THAN A MIGRATION: a save from before this field means «none recorded», and
-    // the first withdrawal after the update is where the record starts.
-    owned.realisedGainCents = (owned.realisedGainCents ?? 0) + deltaCents
-    owned.realisedCostCents = (owned.realisedCostCents ?? 0) + costSoldCents
-  }
+  // ⭐ ROUND 30 #14 – THE UNITS GO WITH THE MONEY. `owned.units` is present on exactly the rungs a
+  // part sale is offered on (an 'open' rung carries `unitBaseCents`; a 'fixed' one refused the
+  // amount at the third guard above), so this is the only shape a partial row can be in.
+  if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
+  owned.paidCents -= costSoldCents
+  owned.valueCents -= proceedsCents
+  // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED, WHICH IS THE WHOLE ITEM. His words and the
+  // measured reproduction are on `OwnedAsset.realisedGainCents`. Both halves of the part that went
+  // are kept – the gain it had made and what it had cost – so the card can say what the holding
+  // has EARNED instead of what is left on it. ⚠ These are the two figures this function ALREADY
+  // computed for the ledger sentence three lines down; nothing new is derived and nothing is
+  // rounded a second time, so the realised and unrealised halves still re-add to the cent.
+  // ⚠ `??= 0` RATHER THAN A MIGRATION: a save from before this field means «none recorded», and
+  // the first withdrawal after the update is where the record starts.
+  owned.realisedGainCents = (owned.realisedGainCents ?? 0) + deltaCents
+  owned.realisedCostCents = (owned.realisedCostCents ?? 0) + costSoldCents
   world.fundsCents += proceedsCents
 
-  const tail =
-    deltaCents < 0
-      ? `${formatCents(-deltaCents)} less than it cost`
-      : deltaCents > 0
-        ? `${formatCents(deltaCents)} more than it cost`
-        : 'exactly what it cost'
   addEvent(world, {
     week: world.week,
     type: 'income',
@@ -693,10 +736,238 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     // ⚠ TWO VERBS, FOR `buyAsset`'s OWN REASON three functions up: the week a family closed a holding
     // is not the week it took some money out of one, and the ledger is read as a story. The
     // difference the sentence names is the REALISED half on a part sale – what the sold part cost
-    // against what it fetched – and the unrealised rest stays on the row upstairs.
-    text: whole ? `Sold: ${label} – ${tail}` : `Sold ${formatCents(proceedsCents)} of: ${label} – ${tail}`,
+    // against what it fetched – and the unrealised rest stays on the row upstairs. (The closing verb,
+    // `Sold: …`, is `settleAssetSale`'s; the tail is the one `saleTail` spells for both.)
+    text: `Sold ${formatCents(proceedsCents)} of: ${label} – ${saleTail(deltaCents)}`,
     amountCents: proceedsCents,
   })
+}
+
+/** ⭐ THE TAIL OF THE SALE SENTENCE, ONE SPELLING FOR THE WHOLE SALE (`settleAssetSale`) AND THE PART SALE (`sellAsset`): what the sale
+ *  realised against what it cost, to the cent – the difference the ledger names out loud (§3b: «THIS FAMILY EXISTS TO LOSE MONEY»). */
+function saleTail(deltaCents: number): string {
+  return deltaCents < 0
+    ? `${formatCents(-deltaCents)} less than it cost`
+    : deltaCents > 0
+      ? `${formatCents(deltaCents)} more than it cost`
+      : 'exactly what it cost'
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S3 – THE ONE BODY OF A COMPLETED SALE OF WHOLE ROWS, TWO DOORS (spec §2h). EXTRACTED from `sellAsset`
+ *  so that the wallet move, the ledger sentence («Sold: ${label} – …» with its three-way tail) and the row removal stay ONE body: the
+ *  instant sale calls it with `[owned]` at the row's own value, and a signed buyer's letter calls it with the price PRINTED ON THE PAPER.
+ *  The sentence is `sellAsset`'s shipped one byte for byte – no new string, and the strings table gains no row.
+ *
+ *  ⚠ `rows` DEFAULTS TO THE LOT `itemId` NAMES (`saleLotOf`): the row itself, or – for the academy, which sells as ONE lot (spec §2e) –
+ *  EVERY DELIVERED STAGE, settled in one signing under ONE ledger row for the lot's total, its cost being the stages' summed `paidCents`.
+ *  `sellAsset` passes its one row explicitly ONLY for parked cash (the money rungs' whole sale, at the row's own value); a THING's instant sale hands it none
+ *  (S4, ruling §5.1) and so settles the whole lot at the fire price – the same lot the letters settle.
+ *
+ *  ⚠ THE ROWS LEAVE THE WORLD, and their `listedWeek` with them – a whole sale leaves nothing listed. ⚠ AND THE LOT'S OTHER OPEN LETTERS
+ *  LAPSE (`expireSaleOffers`): the thing is sold, and the paper says so through the state the inbox already renders. It lapses them for
+ *  EVERY row of the lot the sold row belongs to, not only the sold ones – an academy stage sold alone changes the lot a printed price was
+ *  quoted for, and a letter that survived it could be signed for stages that are no longer there, or for a price that no longer fits them.
+ *
+ *  Nothing to settle is a refusal in `sellAsset`'s own sentence. No guard of its own: the doors carry theirs (`guardNotEndedForGood`).
+ *  Integer cents, zero draws. */
+export function settleAssetSale(world: WorldState, itemId: string, priceCents: number, rows?: OwnedAsset[]): void {
+  world.assets ??= []
+  const sold = rows ?? saleLotOf(world, itemId)?.rows ?? []
+  const first = sold[0]
+  if (!first) throw new Error('The family does not own that')
+  const item = shopItem(itemId)
+  // ⭐ S5.0 – THE LOT NAMES ITSELF THE WAY THE LISTING ROWS DO (`listingLabel`, S2's precedent): the academy answers to the name the family gave it
+  // and to the stage's own label when it never named one, every other rung to its label – and `first.id` for a row the catalogue no longer knows,
+  // exactly as before. Asked HERE, before the rows leave, for the reason `lotIds` below is. NO NEW LITERAL: the fallback is the catalogue's label.
+  const label = item ? listingLabel(world, item) : first.id
+  const costSoldCents = sold.reduce((sum, row) => sum + row.paidCents, 0)
+  // read BEFORE the rows leave: for the academy the lot is every academy row the family holds, whichever stage was sold
+  const lotIds = (item ? listingRows(world, first, item) : sold).map((row) => row.id)
+  world.assets = world.assets.filter((a) => !sold.includes(a))
+  expireSaleOffers(world.offers, lotIds, world.week)
+  world.fundsCents += priceCents
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'shop',
+    // ⚠ THE CLOSING VERB, `Sold:` – see `sellAsset` for why a part sale says `Sold X of:` instead. The tail is the difference between what
+    // the sale fetched and what the rows cost the family, to the cent.
+    text: `Sold: ${label} – ${saleTail(priceCents - costSoldCents)}`,
+    amountCents: priceCents,
+  })
+}
+
+/** ⭐ S3 – CAN A BUYER'S PAPER STILL BE HONOURED? The lot the letter names is still OWNED and DELIVERED (`saleLotOf` is null for a row
+ *  that is gone, a contract still in delivery, or money) and still LISTED. The accept door asks it before the paper moves (`acceptOffer`);
+ *  a read, zero draws. */
+export function saleLotSettles(world: WorldState, itemId: string): boolean {
+  const lot = saleLotOf(world, itemId)
+  return lot !== null && lot.rows.some((row) => row.listedWeek !== undefined)
+}
+
+/** ⚠ THE ONE SENTENCE BOTH LISTING COMMANDS REFUSE PARKED CASH WITH – a DRAFT, tabled as SM1 in
+ *  docs/plans/secondary-market-strings-2026-09.md. Declared once because two throw sites would be two spellings. */
+const LISTING_NOT_A_THING = 'That is money, not a thing – it cannot be put on the market'
+
+/** ⭐ THE ROWS ONE LISTING COVERS (spec §2e): the row itself, or – for the academy, which is ONE LOT – every academy
+ *  row the family holds, whichever stage was named. The lot's members are read off the catalogue's family, exactly as
+ *  `resale.ts`'s `lotOf` reads them, so a stage the family buys later joins the lot without a second rule. */
+function listingRows(world: WorldState, owned: OwnedAsset, item: ShopItem): OwnedAsset[] {
+  if (item.family !== 'academy') return [owned]
+  return (world.assets ?? []).filter((a) => shopItem(a.id)?.family === 'academy')
+}
+
+/** What the ledger calls the thing: the academy answers to the NAME THE FAMILY GAVE IT (`assetNameOf`, bounded on the
+ *  way out) and to its stage's own label when it never named one; every other rung is its label. */
+function listingLabel(world: WorldState, item: ShopItem): string {
+  return (item.family === 'academy' ? assetNameOf(world, 'academy') : null) ?? item.label
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S2 – PUT A THING ON THE MARKET (docs/specs/secondary-market-2026-09.md §2a, §2e, §2i).
+ *  A THING waits there for a buyer's letter (S3); parked cash never does – it is money, and it keeps today's instant
+ *  partial sale. This command writes ONLY `listedWeek` and one amount-less ledger row: no money moves, no letter is
+ *  raised and nothing is drawn.
+ *
+ *  ⚠⚠ THE GUARD IS `guardNotEndedForGood`, THE SHOP'S OWN, FOR THE REASON `buyAsset` CARRIES (read it there): a listing is
+ *  about the FAMILY'S OWN property, so it stays open inside the college freeze and refuses on a terminal latch with the
+ *  unchanged sentence. ⚠ EVERY REFUSAL IS RE-VALIDATED HERE, in the order a player meets them (CLAUDE.md invariant 1 –
+ *  the worker is not the gate): ended for good; not owned; not a thing; not delivered; already listed.
+ *
+ *  ⚠⚠ THE ACADEMY IS ONE LOT (§2e): whichever stage is named, the lot is every academy row the family holds. It refuses
+ *  while ANY stage is still being built (the popup warns; this enforces – nobody buys a construction site) and then marks
+ *  EVERY row in one loop, so the lot is listed together or not at all. */
+export function listAsset(world: WorldState, itemId: string): void {
+  guardNotEndedForGood(world)
+  world.assets ??= []
+  const owned = world.assets.find((a) => a.id === itemId)
+  if (!owned) throw new Error('The family does not own that')
+  const item = shopItem(itemId)
+  // ⚠ A THING, NOT MONEY (§2a): the corridor table's ABSENCE is the predicate – `investment` has no row, so the deposit and
+  // the fund refuse here and keep today's instant partial sale, untouched.
+  if (!item || !secondaryOf(item)) throw new Error(LISTING_NOT_A_THING)
+  const rows = listingRows(world, owned, item)
+  if (item.family === 'academy') {
+    if (!rows.every((a) => assetDelivered(a))) {
+      throw new Error('The academy cannot be put on the market while a stage is still being built')
+    }
+  } else if (!sellableAsset(world, owned)) {
+    // ⚠ `sellAsset`'s OWN SENTENCE, NOT A NEW ONE: a contract still in delivery is the same «cannot be sold yet» here.
+    throw new Error('That one cannot be sold right now')
+  }
+  if (rows.some((a) => a.listedWeek !== undefined)) throw new Error('That is already on the market')
+  for (const row of rows) row.listedWeek = world.week
+  const label = listingLabel(world, item)
+  addEvent(world, {
+    week: world.week,
+    // ⚠ AMOUNT-LESS, LIKE EVERY 'info' ROW: nothing moved. The `shop` category files it with the rest of the family's
+    // dealings; the Money breakdown sums `amountCents` and there is none.
+    type: 'info',
+    category: 'shop',
+    text: `Put on the market: ${label}`,
+  })
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S2 – TAKE A THING OFF THE MARKET, AND LET THE MARKET REMEMBER IT (§2i: «the market
+ *  remembers a withdrawn ad»). The mirror of `listAsset` with the same guards in the same order, minus «delivered» (a row
+ *  can only be listed once it is, and withdrawing is never blocked) and with «actually listed» where the other has «not
+ *  already listed». The academy's lot is cleared together.
+ *
+ *  ⭐ THE MEMORY: `lastListing = { endedWeek: now, exposedWeeks }` where `exposedWeeks` is the weeks this ad was up PLUS the
+ *  carry the ad itself RESUMED from (`freshnessCarryOf`, asked at the week the ad went UP – the row still holds the
+ *  earlier ad's memory until this write replaces it). So a family that withdraws and re-lists inside
+ *  `ECONOMY.shop.secondary.memoryWeeks` keeps ACCUMULATING exposure, and one that waits longer starts fresh. It is written
+ *  on EVERY row of the lot, so any stage's row can answer for it. ⚠ A settled sale deletes the row and needs none; this is
+ *  the withdrawn ad's memory only (S3's settle writes the expired ad's).
+ *
+ *  Same guard, same class, zero draws. */
+export function unlistAsset(world: WorldState, itemId: string): void {
+  guardNotEndedForGood(world)
+  world.assets ??= []
+  const owned = world.assets.find((a) => a.id === itemId)
+  if (!owned) throw new Error('The family does not own that')
+  const item = shopItem(itemId)
+  if (!item || !secondaryOf(item)) throw new Error(LISTING_NOT_A_THING)
+  const rows = listingRows(world, owned, item)
+  const listed = rows.filter((a) => a.listedWeek !== undefined)
+  const anchor = listed[0]
+  if (!anchor) throw new Error('That is not on the market')
+  // the lot goes up together, so every listed row carries one week; `min` keeps a hand-edited save from writing a negative.
+  const listedWeek = Math.min(...listed.map((a) => a.listedWeek ?? world.week))
+  const exposedWeeks = Math.max(0, world.week - listedWeek) + freshnessCarryOf(anchor, listedWeek)
+  for (const row of rows) {
+    delete row.listedWeek
+    row.lastListing = { endedWeek: world.week, exposedWeeks }
+  }
+  // ⭐ S3 (ruling §5.3) – THE BUYERS WALK: an ad that is down has no viewers, so every open letter written for this lot lapses with it.
+  // The listing's memory is the row's (`lastListing`, above); the paper's is the ordinary `expired` state.
+  expireSaleOffers(world.offers, rows.map((row) => row.id), world.week)
+  const label = listingLabel(world, item)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    category: 'shop',
+    text: `Taken off the market: ${label}`,
+  })
+}
+
+/** ⭐⭐⭐ THE SECONDARY MARKET, STEP S3 – THE BUYERS WRITE (spec §2b, rulings §5.2). Once a week, for every LISTED lot, ONE draw
+ *  (`buyerWritesThisWeek`, the lot's own `:knock` sub-stream) and – when a buyer wrote – ONE open `'sale'` letter, priced at THIS week by
+ *  `saleOfferPriceCents` (the `:price` sub-stream) and printed on the paper. The academy is one lot and counts ONCE, under its naming stage.
+ *
+ *  ⚠⚠ LETTERS ACCUMULATE (ruling §5.2 – he struck the one-open-letter guard: «может же 2 и больше людей написать … выбор за игроком»): there
+ *  is deliberately NO check for an earlier open letter, and the two-week life of a letter is the only bound. ⚠ THE ONLY GUARD IS THE
+ *  LETTER'S OWN ID – a lot writes once a week, so a replayed week cannot write twice.
+ *
+ *  ⚠⚠ THE CARRY IS ASKED AT THE WEEK THE AD WENT UP, NEVER AT THE TICK (`freshnessCarryOf`'s own warning): the memory window measures how long
+ *  the family waited BEFORE re-listing, so a carry asked at tick time would slide out of the window while the ad is still up and the
+ *  staleness would snap back to fresh mid-listing. The stale drift of the price reads `weeksListed + carry`, the hazard reads them apart.
+ *
+ *  ⚠ WHERE IT LIVES: here, not in engine/offers.ts beside the paper's factory (`raiseSaleLetter`) – see the note there; `raiseBuildLetter` /
+ *  `deliverAssets` is the same split. ⚠ IT READS THE CARD'S NUMBER (`owned.valueCents`, via resale.ts), so the tick calls it AFTER
+ *  `revalueAssets`. ZERO MAIN DRAWS, and nothing to draw for a career that lists nothing. Returns the letters raised THIS call. */
+export function raiseSaleOffers(world: WorldState): Offer[] {
+  const raised: Offer[] = []
+  const week = world.week
+  const named = new Set<string>()
+  for (const row of ownedAssets(world)) {
+    if (row.listedWeek === undefined) continue
+    const own = row.listedWeek
+    const lot = saleLotOf(world, row.id)
+    if (!lot || named.has(lot.keyId)) continue
+    named.add(lot.keyId)
+    // the lot goes up together, so its rows carry one week; `min` keeps a hand-edited save honest (`unlistAsset` reads it the same way).
+    // `row` is a LISTED row, hence a member of the lot (S2 lists only delivered rows) and the natural anchor for the market's memory,
+    // which `unlistAsset` writes on every row of the lot.
+    const listedWeek = Math.min(own, ...lot.rows.map((a) => a.listedWeek ?? own))
+    const weeksListed = week - listedWeek
+    const carry = freshnessCarryOf(row, listedWeek)
+    // ⭐⭐⭐ S5.4 (spec §2i, deferred from S3 for its string) – THE STALE PROMPT. The first week a LIVE listing's freshness has reached its floor, ONE
+    // `'info'` letter says so: interest has gone quiet, wait it out or withdraw and try later. NO FLAG IS STORED: the week is a deterministic function
+    // (`listingStaleWeek` – the SAME one `shopView`'s badge flips on, so the badge and the letter cannot disagree by a week), the loop only visits rows
+    // still listed (a sold lot has no row, a withdrawn one no `listedWeek`), and the notice's own id (`saleStaleId`, keyed on THIS listing's week) is the
+    // dedupe – a replayed week cannot write it twice and no later week ever writes a second one.
+    // ⚠⚠ THE TEST IS `>=` AND THE ID SAYS «ONCE», NOT `===` – THE ONE DEPARTURE FROM THE PLAN'S «raise exactly when `week` equals it», AND IT IS MEASURED.
+    // The span is asked at TODAY's worth every week (the thin-market dampener stretches it with the price, and it falls as the lot ages), so the stale
+    // week MOVES during a listing and an equality test can step over it. Scratch scan at S5, 200 seeds per rung: the two dearest cars, the two dearest
+    // houses and the dearest yacht were exact; THE DEAREST PLANE WROTE NO NOTICE ON ANY OF THE 200 (its span drops 103 -> 102 in the very week the
+    // target is reached, so the target slides from 203 to 202 as week 203 arrives). `>=` plus the id writes in the first week the ad is stale, once.
+    // tests/secondary-market-s5.test.ts pins the premise and the behaviour. It sits BEFORE the buyer's draw on purpose: a week whose buyer already
+    // wrote (the `continue` below) is still the stale week. ZERO draws.
+    const staleWeeks = saleLotStaleWeeks(world, lot.keyId)
+    if (
+      staleWeeks !== null &&
+      week >= listingStaleWeek(listedWeek, staleWeeks, carry) &&
+      !world.offers.some((o) => o.id === saleStaleId(lot.keyId, listedWeek))
+    ) {
+      raised.push(raiseSaleStaleLetter(world.offers, week, listedWeek, { itemId: lot.keyId, priceCents: 0 }))
+    }
+    if (world.offers.some((o) => o.id === saleOfferId(lot.keyId, week))) continue
+    if (!buyerWritesThisWeek(world, lot.keyId, week, weeksListed, carry)) continue
+    const priceCents = saleOfferPriceCents(world, lot.keyId, week, weeksListed + carry)
+    if (!(priceCents > 0)) continue
+    raised.push(raiseSaleLetter(world.offers, week, { itemId: lot.keyId, priceCents }))
+  }
+  return raised
 }
 
 /** Round the display, never the logic – `avgUnitPriceCents` answers in fractional cents or in null,
@@ -755,6 +1026,18 @@ export function shopView(world: WorldState): ShopView {
     // price it would actually cost – round 38 #14's defect was exactly a door price the card never
     // stated. For every rung and every career that is not a repeat founding this IS `item.entryCents`.
     const entryCents = assetEntryPriceCents(world, item)
+    // ⭐⭐⭐ S5.1 – THE SECONDARY MARKET'S FACTS ABOUT THIS ROW, ASKED OF THE ENGINE'S OWN PRIMITIVES (the parity law: the screen prints, never derives).
+    // `quote` is `assetSaleQuote` verbatim and exists only for a row the family OWNS and has TAKEN DELIVERY of – ⚠ that guard is what keeps the
+    // academy's three unowned stages (whose `lotOf` would otherwise answer with the lot the family DOES hold) and a stage still on order from
+    // carrying a lot's quote; parked cash has no corridor row, so the quote is null and the keys stay absent (null → absent, never `undefined`).
+    // ⚠ THE ACADEMY'S ROWS ALL CARRY THE LOT'S: `assetSaleQuote`, `saleLotOf` and `saleLotStaleWeeks` all take the lot any stage's id names.
+    const quote = mine && assetDelivered(mine) ? assetSaleQuote(world, item.id) : null
+    const lot = quote ? saleLotOf(world, item.id) : null
+    const listedRows = lot ? lot.rows.filter((r) => r.listedWeek !== undefined) : []
+    const listedAnchor = listedRows[0]
+    const lotStaleWeeks = listedAnchor ? saleLotStaleWeeks(world, item.id) : null
+    // the lot goes up together, so its rows carry one week; `min` keeps a hand-edited save honest (`unlistAsset` and the raiser read it the same way)
+    const sinceWeek = Math.min(...listedRows.map((r) => r.listedWeek ?? world.week))
     return {
       id: item.id,
       family: item.family,
@@ -885,6 +1168,27 @@ export function shopView(world: WorldState): ShopView {
       // §3g – the stage under it, answered here rather than on screen: a shelf that worked out its
       // own chain would be a second copy of `buyAsset`'s refusal.
       requirementMet,
+      ...(quote ? { quote } : {}),
+      // ⚠ THE STALE WEEK IS THE RAISER'S FUNCTION, HANDED THE SAME SPAN AND THE SAME CARRY (asked at the week the ad went UP, as `freshnessCarryOf`
+      // demands): the badge flips in the very week the stale letter arrives.
+      ...(listedAnchor && lotStaleWeeks !== null
+        ? {
+            listing: {
+              sinceWeek,
+              staleAtWeek: listingStaleWeek(sinceWeek, lotStaleWeeks, freshnessCarryOf(listedAnchor, sinceWeek)),
+            },
+          }
+        : {}),
+      // ⚠ THE LEDGER'S OWN NAME AND THE LEDGER'S OWN TAIL: `listingLabel` is the name `settleAssetSale` writes, and the difference is the fire price
+      // less the lot's summed cost – exactly `saleTail`'s argument (`priceCents - costSoldCents`, cost over the same `saleLotOf` rows).
+      ...(quote && lot
+        ? {
+            fire: {
+              label: listingLabel(world, item),
+              changeCents: quote.fireCents - lot.rows.reduce((sum, r) => sum + r.paidCents, 0),
+            },
+          }
+        : {}),
     }
   })
   const cheapest = rows.reduce<ShopRowView | null>((best, r) => (!best || r.entryCents < best.entryCents ? r : best), null)

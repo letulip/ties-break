@@ -3300,6 +3300,29 @@ export function migrateSave(raw: unknown): WorldState {
     v = 89
   }
 
+  // ⭐⭐⭐ v89 -> v90 – THE LISTING (the secondary market, S2; docs/specs/secondary-market-2026-09.md §2a and §2i).
+  // TWO OPTIONAL FIELDS ON `OwnedAsset` – `listedWeek?` and `lastListing?: { endedWeek, exposedWeeks }` – AND **THIS STEP
+  // WRITES NOTHING: IT IS THE VERSION STEP, THE SECOND ONE WITH NO BODY** (v88's three union widenings were the first;
+  // v89 at least had a `??=` to run). Here the fields are OPTIONAL and their absence is the exact truth.
+  //
+  // ⚠⚠ THERE IS NO BACK-FILL BECAUSE THERE IS NOTHING TRUE TO BACK-FILL. Before this version nothing in the world was for
+  // sale by letter, so an absent `listedWeek` says «not on the market» and an absent `lastListing` says «no ad has ended»,
+  // and both were exactly so for every save written earlier. A listing is the family's own choice: a migration that
+  // stamped one would put somebody's car on the market without asking (`prologueTrace`'s v84 refusal – never invent a
+  // fact the save never held).
+  // ⚠ WHY A BUMP AT ALL, WITH NO BODY: two persisted keys are a schema move whether or not the step has work to do (v88's
+  // rule – «a version whose migration is a comment must be reviewable»). It is what makes «this key may exist» a fact a
+  // loader can rely on, and what a save from the future is refused by.
+  // ⚠ ZERO DRAWS, AND NO SUB-STREAM IS REACHED: MAIN cannot move; the frozen capture (41550 / e6b0c709) is untouched.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v90.json, its row in
+  // tests/fixtures/saves/README.md, the e2e fixtures, and docs/context/saves-and-worker.md's mechanically-checked schema
+  // sentence. ⚠ NO PEEL RUNG in tests/coachTravelEdgeFixtures.ts – no frozen career lists anything, so the serialised
+  // world gains no key and `PRE_V90` records that as a measured identity instead.
+  if (v === 89) {
+    v = 90
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -20,6 +20,8 @@ import {
   bookPractice,
   buyAsset,
   sellAsset,
+  listAsset,
+  unlistAsset,
   hireCoach,
   hireMasseur,
   setMasseurSessions,
@@ -670,6 +672,17 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'sellAsset': {
       return mutate(msg.id, msg.baseRevision, (world) => sellAsset(world, msg.itemId, msg.amountCents))
     }
+    // ⭐⭐ THE SECONDARY MARKET (v90, step S2): put a thing on the market and take it off again. Nothing here is a gate –
+    // `listAsset` re-derives ownership, that the rung is a THING (parked cash refuses), delivery, the academy's
+    // one-lot rule and «already listed», and `unlistAsset` re-derives «actually listed» – so a stale tab cannot list what
+    // is not there. Zero draws on any stream: both write `listedWeek` / `lastListing` and one ledger row, which is why a
+    // listing cannot move the world's dice (CLAUDE.md invariant 2).
+    case 'listAsset': {
+      return mutate(msg.id, msg.baseRevision, (world) => listAsset(world, msg.itemId))
+    }
+    case 'unlistAsset': {
+      return mutate(msg.id, msg.baseRevision, (world) => unlistAsset(world, msg.itemId))
+    }
     // THE INBOX (v32): the parent answers a letter. Both handlers go through the engine, which
     // re-checks the deadline - the UI's disabled button is a courtesy and the engine's refusal is the
     // rule, so a stale screen on a reloaded save cannot sign something that has already gone.
@@ -1002,6 +1015,8 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   answerLifeBeat     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   buyAsset           mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   sellAsset          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   listAsset          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   unlistAsset        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   signOffer          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   refuseOffer        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPhysio          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision

@@ -327,7 +327,15 @@ import type { AcademySupport } from '../academy'
 // ⚠ v89: ZERO DRAWS: one `??=` inside a nullable record, gated on `v === 88`; the frozen MAIN capture (41550 / e6b0c709) is untouched.
 // ⚠⚠ v89: FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case, MEASURED): `dynasty: null` in every one – no key gained, no peel rung.
 // ⚠ v89: NO PEEL RUNG: the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V89` instead.
-export const SAVE_SCHEMA_VERSION = 89
+//
+// v90 → docs/notes/engine/save-schema-history.md#v90--the-listing
+// v90 – THE LISTING (THE SECONDARY MARKET, S2): TWO OPTIONAL KEYS ON EVERY `OwnedAsset` ROW – `listedWeek?` and `lastListing?: { endedWeek, exposedWeeks }`.
+// ⚠⚠ v90: BOTH ABSENT IS THE EXACT TRUTH, NOT A DEFAULT: nothing was ever for sale by letter before – a listing is the family's own choice and no migration invents one.
+// ⚠ v90: THE MIGRATION IS THE VERSION STEP AND NOTHING ELSE (v88's rule: a version whose migration is a comment must be reviewable).
+// ⚠ v90: ZERO DRAWS IN THE MOVE AND IN BOTH COMMANDS (`listAsset`, `unlistAsset`): the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+// ⚠⚠ v90: FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case): no frozen career lists anything, so no key is gained – `schemaVersion` alone moves (`PRE_V90`).
+// ⚠ v90: NO PEEL RUNG: the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V90` instead.
+export const SAVE_SCHEMA_VERSION = 90
 
 
 

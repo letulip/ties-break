@@ -177,6 +177,8 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       // and a refusal IS a legitimate answer for this suite (it correlates the reply, not the verb).
       buyAsset: { type: 'buyAsset', itemId: 'no-such-item', baseRevision: 0 },
       sellAsset: { type: 'sellAsset', itemId: 'no-such-item', baseRevision: 0 },
+      listAsset: { type: 'listAsset', itemId: 'no-such-item', baseRevision: 0 },
+      unlistAsset: { type: 'unlistAsset', itemId: 'no-such-item', baseRevision: 0 },
       signOffer: { type: 'signOffer', offerId: 'no-such-offer', baseRevision: 0 },
       refuseOffer: { type: 'refuseOffer', offerId: 'no-such-offer', baseRevision: 0 },
       answerFork: { type: 'answerFork', answer: 'continue', baseRevision: 0 },
