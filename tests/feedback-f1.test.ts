@@ -18,6 +18,8 @@
 //   the `reportBridge !== null` arm   -> never taken               "(b) the bridge ..."
 //   a `fetch` call added to (c)       -> present                   "touches no network door ..."
 //   an import from ./engine/world     -> present                   "imports nothing from src/engine ..."
+//   (F2, 30.09) the `tail.length === 0` branch of assembleReport -> the heading always   "an EMPTY ring says so ..."
+//   (F2, 30.09) `SAVE_FILE_TYPE`      -> 'text/plain'                "the share-type verdict ..." and "attaches the Saves strip own bytes"
 //
 // ⚠ THE RING IS MODULE-SCOPE AND SHARED BY THE TESTS IN THIS FILE, so no test assumes it is empty:
 // each pushes its own uniquely-marked rows and reads only what it pushed.
@@ -32,6 +34,7 @@ import {
   MAILTO_BODY_MAX,
   REPORT_ATTACH_LINE,
   REPORT_NO_CAREER_LINE,
+  REPORT_NO_ERRORS_LINE,
   REPORT_SUBJECT,
   REPORT_TAIL_HEADING,
   REPORT_TRUNCATED_LINE,
@@ -42,6 +45,9 @@ import {
   type Report,
 } from '../src/feedback'
 import { request } from '../src/worker/client'
+import { createWorld } from '../src/engine/world'
+import { encodeExportFile } from '../src/engine/saveCodec'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
 vi.mock('../src/worker/client', () => ({ request: vi.fn() }))
 
@@ -212,6 +218,31 @@ describe('the report (assembleReport)', () => {
     expect(mine).toContain("request({ type: 'exportSave' })")
     expect(store).toContain("new Blob([res.bytes], { type: 'application/octet-stream' })")
     expect(mine).toContain("const SAVE_FILE_TYPE = 'application/octet-stream'")
+  })
+
+  it('⭐ the share-type verdict (F2): the REAL export is binary, so the shared file stays application/octet-stream under the store\'s own name', async () => {
+    // ⚠ THE PREMISE OF THE VERDICT, MEASURED ON THE REAL ENCODER and not on prose: Chrome\'s `canShare` allowlist has no octet-stream,
+    // and the only honest way round it would be a text type – which is a lie unless the bytes are text. They are a 44-byte header (an
+    // 8-byte magic, a big-endian uint32 schema version, a 32-byte digest) and a gzip stream, so they are not UTF-8 at all.
+    const bytes = await encodeExportFile(createWorld('feedback-binary-verdict', DEFAULT_PROFILE))
+    expect(() => new TextDecoder('utf-8', { fatal: true }).decode(bytes), 'valid UTF-8 would be text').toThrow()
+    expect(bytes[8], 'the schema-version field carries NUL bytes').toBe(0)
+    expect([bytes[44], bytes[45]], 'a gzip stream follows the 44-byte header').toEqual([0x1f, 0x8b])
+
+    const { file } = await assembleReport()
+    const attached = file as File
+    expect(attached.type).toBe('application/octet-stream')
+    expect(attached.name, 'the store\'s own name – not a `.txt` one').toBe(FILENAME)
+  })
+
+  it('an EMPTY ring says so – the one-line tail, and no heading over nothing', async () => {
+    // The ring is module-scope and every test above pushes rows into it, so a FRESH copy of both modules is the only empty one.
+    // (The fresh worker-client mock answers nothing, which `activeCareerFile` reads as «no career» – irrelevant to the tail.)
+    vi.resetModules()
+    const fresh = await import('../src/feedback')
+    const lines = (await fresh.assembleReport()).text.split('\n')
+    expect(lines.at(-1)).toBe(REPORT_NO_ERRORS_LINE)
+    expect(lines).not.toContain(REPORT_TAIL_HEADING)
   })
 
   it('says so when there is no career – a null file, never a throw', async () => {

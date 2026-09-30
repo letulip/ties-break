@@ -15,6 +15,8 @@ import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
 import StoreError from '../ui/StoreError.vue'
+import FeedbackDialog from '../FeedbackDialog.vue'
+import { FEEDBACK_LABEL } from '../../feedback'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { AUDIO_COPY } from '../../composables/audioCopy'
@@ -63,6 +65,9 @@ const game = useGameStore()
 const buildStampLine = appBuildLine()
 const fileInput = ref<HTMLInputElement | null>(null)
 const confirmingNewCareer = ref(false)
+// F2 (feedback channel): the report dialog's flag. The dialog prepares the report the moment it
+// mounts (FeedbackDialog.vue), so this flag turning true IS the tap that starts `assembleReport()`.
+const feedbackOpen = ref(false)
 
 // P6 (c) landed a DEV-only gate on the ▶▶ 52 fast-forward here, and the owner reversed it the
 // same day - «у нас не прод и нет игроков. Если нужна для разработки - можно вернуть» - because
@@ -712,6 +717,14 @@ const TAB_OPTIONS = [
     </p>
   </section>
 
+  <!-- F2 (feedback channel, docs/specs/feedback-channel-2026-09.md): the control sits BESIDE the Saves
+       strip, in a section of its own so it is reachable with no career open too – the strip above needs
+       a snapshot and the report has a sentence for «no career». The exact spot is the owner's, at his
+       strings pass. -->
+  <section v-if="screenTab === 'saves'">
+    <button class="primary" @click="feedbackOpen = true">{{ FEEDBACK_LABEL }}</button>
+  </section>
+
   <section v-if="screenTab === 'saves'">
     <h2>Danger zone</h2>
     <button v-if="!confirmingNewCareer" class="danger" @click="askNewCareer">New career</button>
@@ -1042,6 +1055,9 @@ const TAB_OPTIONS = [
     @confirm="runConfirm"
     @cancel="pendingConfirm = null"
   />
+  <!-- F2: mounted only while open, and it prepares the report on mount. AFTER the ConfirmDialog so the
+       build line stays the last element in flow while it is closed. -->
+  <FeedbackDialog v-if="feedbackOpen" @close="feedbackOpen = false" />
 </template>
 
 <style scoped>

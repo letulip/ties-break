@@ -30,12 +30,20 @@
 // so `shareReport` takes an optional PREPARED report: F2 can assemble when its dialog opens and hand
 // the result to the button, leaving no `await` between the tap and the share call.
 //
-// ⚠ AND A PLATFORM RISK THAT IS NOT THIS FILE'S TO FIX, NOTED WHERE IT WILL BE FOUND. Chrome only
-// lets a fixed list of file types through `canShare` (audio, image, pdf, video, text – see
-// https://web.dev/articles/web-share), and a `.tsave` typed `application/octet-stream` is probably
-// not on it. Then (a) is skipped on Chrome and the player lands on (c) – graceful, and still works,
-// but not the two-tap path the spec promises for Android. UNVERIFIED on a device. The remedy is one
-// decision about the shared file's type/name (`SAVE_FILE_TYPE` below), and it is the owner's.
+// ⭐ THE SHARE-TYPE VERDICT (F2, 30.09) – DECIDED HERE, AND THE ANSWER IS "LEAVE IT". Chrome only lets a
+// fixed list of file types through `canShare` (audio, image, pdf, video, text – see
+// https://web.dev/articles/web-share) and `application/octet-stream` is not on it, so the question was
+// whether to retype the shared File. That depends on what the bytes ARE, and they are BINARY: the
+// worker's `encodeExportFile` writes a 44-byte header (an 8-byte text magic, a big-endian uint32 schema
+// version – NUL bytes among them – and a 32-byte digest) and then a gzip stream, so the file is not
+// valid UTF-8 at all (tests/feedback-f1.test.ts decodes the REAL bytes and asserts exactly that). A
+// `text/plain` File around them would be a false label that the receiving mail app then acts on, so the
+// type STAYS `application/octet-stream` and the name STAYS the store's own. Consequence on a device: on
+// Android Chrome `canShare` says no, (a) is skipped and the player lands on (c) – the download plus the
+// prefilled mail, still working, not the two-tap path the spec promises; what iOS Safari answers is its
+// own question. NEITHER HAS BEEN MEASURED ON HARDWARE: that check (the owner's phone) is a smoke row of
+// the wave's gate, not code. (The import door reads the bytes and checks the 8-byte magic – it never
+// looks at a name or a type – and the file pickers' `accept=".tsave"` only filters the picker.)
 
 import { appBuildLine } from './composables/buildInfo'
 import { errorTail, type ErrorEntry } from './errorBuffer'
@@ -63,12 +71,44 @@ export const REPORT_NO_ERRORS_LINE = 'No errors were recorded in this session.'
 /** Closes an email body that had to be cut to fit `mailto:`. DRAFT. */
 export const REPORT_TRUNCATED_LINE = '[The rest was cut to fit an email link.]'
 
+// ── F2's DRAFT SENTENCES – the control and the dialog (docs/plans/feedback-strings-2026-09.md) ──────
+// ⚠ ONE HOME FOR ALL OF THEM, HERE, on purpose: the owner's wording pass edits one file, the two Vue
+// files carry no literal of these, and tests/feedback-strings-roundtrip.test.ts holds every row to the
+// shipped string as a whole literal. The two functions below exist because two lines carry a number or
+// the address – their template literals are rows of their own, placeholder and all.
+
+/** The More screen's control AND the dialog's title – one label in two places. DRAFT. */
+export const FEEDBACK_LABEL = 'Send feedback'
+/** Over the dialog's list of what the report holds. DRAFT. */
+export const FEEDBACK_HOLDS_LINE = 'The report contains:'
+/** The list's save line when the report carries a career's file. DRAFT. */
+export const FEEDBACK_SAVE_LINE = 'The save of the active career'
+/** The save line for the moment before the report is prepared. DRAFT. */
+export const FEEDBACK_SAVE_PENDING_LINE = 'Checking for a save…'
+/** Under the list: the player's own last tap, in another app, is what sends. DRAFT. */
+export const FEEDBACK_PRIVACY_LINE = 'Nothing is sent until you choose where to send it.'
+/** The dialog's two buttons. DRAFT. */
+export const FEEDBACK_SEND_LABEL = 'Send'
+export const FEEDBACK_CLOSE_LABEL = 'Close'
+
+/** The dialog's error line: `REPORT_NO_ERRORS_LINE` for an empty ring, else the count. DRAFT. */
+export function errorCountLine(n: number): string {
+  if (n === 0) return REPORT_NO_ERRORS_LINE
+  if (n === 1) return '1 recent error'
+  return `${n} recent errors`
+}
+
+/** Where the report goes. Shown because a share sheet cannot address the mail – the player types it. DRAFT. */
+export function feedbackAddressLine(): string {
+  return `Send it to ${FEEDBACK_ADDRESS}`
+}
+
 /** `mailto:` bodies are safe to about 2 KB. This bounds the ENCODED body, so the whole link – address,
  *  subject and the rest – stays under that with room to spare. */
 export const MAILTO_BODY_MAX = 1800
 
-/** The type the Saves strip gives its Blob (game.exportSave) – same file, same type. See the header
- *  for why this is the one line the owner may want to change. */
+/** The type the Saves strip gives its Blob (game.exportSave) – same file, same type. The header's
+ *  share-type verdict says why it stays: the bytes are binary, and a text type would be a lie. */
 const SAVE_FILE_TYPE = 'application/octet-stream'
 
 export interface Report {

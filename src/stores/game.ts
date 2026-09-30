@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { request, WorkerRestartError, type WorkerRequest } from '../worker/client'
+import { recordError } from '../errorBuffer'
 import {
   DEFAULT_PROFILE,
   type AlbumBook,
@@ -245,6 +246,9 @@ export const useGameStore = defineStore('game', {
         // `recovery` with the actual error, and every path out of it is explicit.
         const res = await request({ type: 'listCareers' })
         if (!res.ok) {
+          // F2: a refused probe is a boot failure – the player sees the recovery screen, the ring keeps the
+          // cause for a report sent from More afterwards.
+          recordError('error', res.error)
           this.initError = res.error
           this.phase = 'recovery'
           return
@@ -284,6 +288,9 @@ export const useGameStore = defineStore('game', {
       } catch (err) {
         // A crashed worker rejects every pending request (client.ts) – without this catch that
         // rejection would fly out of onMounted unhandled and the splash would spin forever.
+        // F2: the same for a worker that crashed or threw during boot – the recovery screen shows the
+        // message, the ring keeps it (and the stack) for the report.
+        recordError('error', err)
         this.initError = err instanceof Error ? err.message : String(err)
         this.phase = 'recovery'
       }
@@ -321,6 +328,11 @@ export const useGameStore = defineStore('game', {
       try {
         return await fn()
       } catch (err) {
+        // F2 (feedback channel): the ONE line that feeds the error ring (src/errorBuffer.ts) for EVERY
+        // branch below – the restart, the stale screen, the save conflict and the plain refusal all end in a
+        // sentence for the player, and the report should say what that sentence was standing in for. The
+        // thrown value, not the sentence: it carries the cause and a stack, and the ring never throws.
+        recordError('error', err)
         // TB-05: the worker died (crash / undeliverable message / timeout) and was torn down.
         // TB-03 makes the recovery unambiguous — every ok response was durable, so the last
         // committed autosave IS the last state the player was truthfully shown as saved. Reload
