@@ -53,7 +53,7 @@ export interface AssetSaleQuote {
    *  and never re-tests `weeksHi` against the constant (the parity law: one engine verdict, one spelling) – it would otherwise print «It may take 12 to 520
    *  weeks» for a yacht, a range whose upper end is only where the engine stopped counting. */
   atHorizon: boolean
-  /** the envelope of a fresh letter's price: base ∓ spread through the same crash and hangover terms. */
+  /** the envelope of the FIRST letter's price: base ∓ spread, less one week of stale drift (the first tick's own age – S6b), through the same crash and hangover terms. */
   corridorLoCents: number
   corridorHiCents: number
   /** «Sell now» (spec §2f): the corridor's own floor. */
@@ -157,6 +157,9 @@ function thinFactor(family: ShopFamily, worthCents: number): number {
   return Math.min(1, Math.max(knobs.thinFloor, Math.pow(entry / worthCents, knobs.thinExponent)))
 }
 
+// ⚠ THE AGE CONVENTION OF THIS WHOLE BLOCK (30.09, the architect's ruling after S6): age 1 at the first tick – the raiser's own clock. An ad listed in week W
+// meets its first tick at W+1, one week on the market (`raiseSaleOffers` passes `week − listedWeek`), so the solve, the quote's walk and the stale span all count
+// from 1. S6's probe measured the 0-based solve missing every family's median: the raiser's cumulative over `medianWeeks` ticks ran one decayed week behind it.
 /** ⚠ HOW LONG A FRESH AD KEEPS ITS VIEWINGS, in weeks: `decayMedians` class medians, STRETCHED BY THE THIN
  *  DAMPENER. That stretch is what makes the stale week price-dependent (spec §2i: «class- and price-dependent»)
  *  and it is coherent: the dampener slows the market's clock – fewer buyers arrive and fewer see the ad – so a
@@ -198,9 +201,13 @@ const PEAK_MEMO = new Map<string, number>()
  *  on top, which is the design (his $300k car), and S6 measures the spread.
  *
  *  ⚠ THE SPAN THE SOLVE USES IS THE `thin = 1` ONE (`decayMedians × medianWeeks`), so it depends on the row and on
- *  nothing about a lot – which is what lets it be remembered per row. The bracket [0, 1] always holds the root (at
- *  a peak of 1 the first week's chance is 1) and the UPPER end is returned, so the cumulative at `medianWeeks` is
- *  at least one half and never a hair under. */
+ *  nothing about a lot – which is what lets it be remembered per row. The bracket [0, 1] holds the root (at a peak of
+ *  1 the first tick's chance is the age-1 share, 1 − (1 − floor)/span – over a half for any span past two weeks, and
+ *  every row's is far past that) and the UPPER end is returned, so the cumulative at `medianWeeks` is at least one
+ *  half and never a hair under.
+ *
+ *  ⚠ THE SOLVE WALKS AGES 1 … `medianWeeks` (S6b, 30.09 – the convention note above): the first tick is age 1, so the peak is the level of an age no tick ever
+ *  asks (a virtual age 0) and the FIRST tick already carries one step of decay. The 0-based walk (ages 0 … `medianWeeks` − 1) put the peak too low by that step. */
 function peakChanceOf(row: SecondaryRow): number {
   const decay = ECONOMY.shop.secondary.decayMedians
   const key = `${row.medianWeeks}:${row.freshFloor}:${decay}`
@@ -213,7 +220,7 @@ function peakChanceOf(row: SecondaryRow): number {
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2
     let survive = 1
-    for (let age = 0; age < weeks; age++) survive *= 1 - Math.min(1, mid * freshShare(row, span, age))
+    for (let age = 1; age <= weeks; age++) survive *= 1 - Math.min(1, mid * freshShare(row, span, age))
     if (survive > 0.5) lo = mid
     else hi = mid
   }
@@ -320,7 +327,11 @@ export function freshnessCarryOf(owned: OwnedAsset, week: number): number {
  *  chance sits at `freshFloor × peak`, and null for a rung that never lists (§2i's stale flip and its one
  *  info letter key on it; the quote knows it in advance). Deterministic, and price-dependent through the thin
  *  dampener (`freshnessSpanWeeks`). With a market memory of `c` weeks (§2i) the listing goes stale `c` weeks
- *  sooner: the caller subtracts, this stays a property of the lot. */
+ *  sooner: the caller subtracts, this stays a property of the lot.
+ *
+ *  ⚠ COUNTED ON THE SAME CLOCK AS THE WALK (S6b, 30.09): the tick of week k asks age k, so the first tick at the floor is week `ceil(span)` – and the quote's own
+ *  wait loop now reaches the floor at that same week (asking k − 1 it reached it one week later). No code moved here: `listingStaleWeek` and `saleLotStaleWeeks` read
+ *  this through the shared span helper too. */
 export function staleAtWeeks(item: ShopItem, worthCents: number): number | null {
   const row = secondaryOf(item)
   if (!row) return null
@@ -416,10 +427,11 @@ export function buyerWritesThisWeek(world: WorldState, itemId: string, week: num
  *  delivery). The popup prints it and the letter raiser draws from it; a screen never re-derives a number here.
  *
  *  ⚠ THE WAIT IS NUMERIC, NOT A DRAW: `weeksLo`/`weeksHi` are the p10 and p90 of the first week a buyer writes,
- *  taken from the weekly chances themselves (`1 − Π(1 − p)`), ages 0, 1, 2 …, with TODAY's crash state and
+ *  taken from the weekly chances themselves (`1 − Π(1 − p)`), week k asking age k – the age the raiser hands its k-th tick (S6b, 30.09: it used to ask k − 1) – with TODAY's crash state and
  *  today's worth held fixed – the quote does not peek at a crisis that has not begun, so it cannot leak one.
- *  ⚠ THE CORRIDOR IS THE PRICE FORMULA'S ENVELOPE at zero weeks listed: `u = ∓1`, the crash and hangover terms at
- *  today's depth, clamped to the same floor and cap as a real letter. */
+ *  ⚠ THE CORRIDOR IS THE PRICE FORMULA'S ENVELOPE at ONE week listed – the first possible letter's own age: `u = ∓1`, the crash and
+ *  hangover terms at today's depth, clamped to the same floor and cap as a real letter. (S6b, 30.09: it asked zero weeks while the raiser prices the first tick
+ *  at `weeksListed = 1`, so a stale-heavy family's lowest draws printed `stalePerYear / 52` of worth – a boat's 0.12 % – under the low end the popup had printed.) */
 export function assetSaleQuote(world: WorldState, itemId: string): AssetSaleQuote | null {
   const lot = lotOf(world, itemId)
   if (!lot) return null
@@ -429,15 +441,17 @@ export function assetSaleQuote(world: WorldState, itemId: string): AssetSaleQuot
   const knobs = ECONOMY.shop.secondary
   const floor = Math.round(worth * floorFraction(world.seed, lot.row, week))
   const cap = Math.round(worth * knobs.capX)
+  // ⚠ ONE WEEK LISTED, NOT ZERO: the first letter is drawn at tick 1 and priced at `weeksListed = 1` (the age the hazard walk starts at) – the popup's low end must cover it.
   const envelope = (u: number): number =>
-    Math.min(cap, Math.max(floor, Math.round(worth * corridorFactor(world.seed, lot.row, week, u, 0))))
+    Math.min(cap, Math.max(floor, Math.round(worth * corridorFactor(world.seed, lot.row, week, u, 1))))
 
   const market = marketOf(world.seed, lot, worth, week)
   let survive = 1
   let weeksLo = 0
   let weeksHi = 0
+  // ⚠ AGE k AT WEEK k – the raiser's clock (the convention note above the span helper); this asked k - 1 until S6b.
   for (let k = 1; k <= QUOTE_HORIZON_WEEKS && weeksHi === 0; k++) {
-    survive *= 1 - chanceAt(lot.row, market, k - 1)
+    survive *= 1 - chanceAt(lot.row, market, k)
     const sold = 1 - survive
     if (weeksLo === 0 && sold >= 0.1) weeksLo = k
     if (sold >= 0.9) weeksHi = k

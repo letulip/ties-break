@@ -104,14 +104,16 @@ more terms, from his 26.09 follow-up («шанс на то, что объект 
 
 Proposed starting numbers – **all six columns are to be measured by the probe (§6), none is final**:
 
-| class    | median weeks | base | spread | stale/yr | crashShift | crash arrival |
-|----------|--------------|------|--------|----------|------------|---------------|
-| car      | 4            | 0.93 | ±0.06  | −0.04    | −0.3       | ×0.8          |
-| house    | 16           | 0.97 | ±0.05  | −0.03    | **+0.2**   | ×1.2          |
-| boat     | 32           | 0.88 | ±0.10  | −0.06    | −0.8       | ×0.4          |
-| plane    | 44           | 0.85 | ±0.12  | −0.06    | −1.0       | ×0.4          |
-| business | 52           | 0.90 | ±0.08  | −0.03    | −0.5       | ×0.6          |
-| academy  | 65           | 0.92 | ±0.08  | −0.04    | −0.4       | ×0.7          |
+| class    | median weeks | base | spread | stale/yr | crashShift | crash arrival | measured p50 (entry, calm) |
+|----------|--------------|------|--------|----------|------------|---------------|----------------------------|
+| car      | 4            | 0.93 | ±0.06  | −0.04    | −0.3       | ×0.8          | 4                          |
+| house    | 16           | 0.97 | ±0.05  | −0.03    | **+0.2**   | ×1.2          | 17                         |
+| boat     | 32           | 0.88 | ±0.10  | −0.06    | −0.8       | ×0.4          | 32                         |
+| plane    | 44           | 0.85 | ±0.12  | −0.06    | −1.0       | ×0.4          | 44                         |
+| business | 52           | 0.90 | ±0.08  | −0.03    | −0.5       | ×0.6          | 52                         |
+| academy  | 65           | 0.92 | ±0.08  | −0.04    | −0.4       | ×0.7          | 66                         |
+
+*The last column is the draw-free expectation of the raiser's own per-tick chances for the family's entry rung bought in a calm week; the sampled p50 and its SE are §6's.*
 
 **2e · The academy sells as one lot** – his ruling, quoted in §0. One listing covers every delivered
 stage; one letter prices the lot (the sum of the stages' worths through the corridor); the popup
@@ -197,6 +199,62 @@ mean price/worth, in and out of crash arcs; the share UNSOLD at 2× median per c
 (the elite car and the yacht must show real dead listings, the first house must not); and the
 re-list effect – inside the memory window against after it. The table in §2d gets a measured column per class
 before the wave ships; predicted vs measured, and the misses explained, per the house rule.
+
+*Re-aimed 30.09 (S6b): the unsold share at 2× the median came out between 37 and 65 per cent for every one of the twenty lots, so it cannot tell a dead listing from a slow one. The test is the tail: a dead listing is one the horizon never reaches. Cars and houses sit at 0% quote-at-horizon, every boat, plane, the brand and the academy at 100%; the p90s are the spread (car 72–107 weeks, house 179–380, the rest beyond 520).*
+
+**Results, 30.09 (S6b).** `tools/sale-probe.ts`, default run: 200 seeds × 126 listing weeks × 20 lots for the windows, and 20000 seeds with one calm listing each for the median. Each lot is bought the week it is listed and the first letter is accepted; a wait is capped at 520 weeks (">520" means the cap came first); a price is price ÷ worth at the first letter.
+
+*The median, by dice.* §2d's last column is the exact expectation; this is the same claim sampled, with the standard error the sampling carries:
+
+| class    | table median | sampled p50 | SE of that p50 | sold by the median | z     |
+|----------|--------------|-------------|----------------|--------------------|-------|
+| car      | 4            | 4           | 0.06           | 50.5%              | +1.44 |
+| house    | 16           | 17          | 0.26           | 49.6%              | −0.99 |
+| boat     | 32           | 32          | 0.62           | 50.1%              | +0.18 |
+| plane    | 44           | 43          | 0.85           | 50.4%              | +1.23 |
+| business | 52           | 54          | 0.98           | 49.4%              | −1.82 |
+| academy  | 65           | 67          | 1.22           | 49.7%              | −0.79 |
+
+Half of every class sells by the table's median week, within sampling noise (no z past 2; the gate is 2.5). The sampled p50 itself scatters by a week or two for the slow classes – the brand 54 against the exact 52, the academy 67 against 66 – because only 0.3–0.4% of their ads sell in the median week, which is what the SE column says. Predicted: every class at its column. Measured, exactly: four of six; the house (17 for 16) and the academy (66 for 65) sit a week over, because both appreciate and their card outgrows the entry price the median was solved for, so the thin-market dampener takes a hair off the chance.
+
+*Three windows*, entry rung of each class (the dearer rungs are in the probe's output). A crisis is a crash arc open at the listing week; "after" is the half year after one closes. These p50s come from a different sample than the median table's, so they can differ from it by a week (the car's is 5 here and 4 there):
+
+| class (rung)   | p50 wait: calm | in a crisis | after one | price ÷ worth: calm | in a crisis | after one |
+|----------------|----------------|-------------|-----------|---------------------|-------------|-----------|
+| car (sensible) | 5              | 10          | 5         | 0.913               | 0.891       | 0.912     |
+| house (first)  | 17             | 13          | 16        | 0.961               | 0.973       | 0.958     |
+| boat (launch)  | 30             | 387         | 31        | 0.852               | 0.796       | 0.844     |
+| plane (small)  | 48             | 461         | 49        | 0.817               | 0.765       | 0.813     |
+| brand          | 53             | 210         | 57        | 0.879               | 0.854       | 0.873     |
+| academy (land) | 69             | 148         | 77        | 0.893               | 0.870       | 0.890     |
+
+Listed while a crisis is open, boats and planes barely sell – a median wait of 387 weeks for the launch boat and 461 for the small plane, against 30 and 48 in calm waters, at about 0.80 and 0.77 of worth. Houses go the other way, 13 weeks against 17, at 0.973 against 0.961; cars wait twice as long, at 0.891 against 0.913. Listed in the half year after a crisis closes, every class is back within eight weeks and a hundredth of worth of its calm figure.
+
+*Re-listing.* Withdrawn after 8 weeks up, then re-listed 5 weeks later (inside the 12-week memory, so the old staleness resumes) or 20 weeks later (outside it, so a fresh ad):
+
+| class    | p50 wait: inside | outside | price ÷ worth: inside | outside |
+|----------|------------------|---------|-----------------------|---------|
+| car      | 28               | 4       | 0.895                 | 0.913   |
+| house    | 47               | 17      | 0.955                 | 0.959   |
+| boat     | 227              | 32      | 0.839                 | 0.850   |
+| plane    | 211              | 43      | 0.808                 | 0.817   |
+| business | 141              | 54      | 0.875                 | 0.880   |
+| academy  | 120              | 67      | 0.889                 | 0.894   |
+
+Inside the memory the ad comes back with its eight weeks already spent, and the median wait grows roughly two to seven times – 4 to 28 weeks for the car, 32 to 227 for the boat – while the price moves by two per cent of worth at most. Waiting twenty weeks gives a fresh ad at the cost of twenty weeks of upkeep: the reset is earned, as intended.
+
+*The tail.* How often the quote has no upper end (its p90 reaches the 520-week cap), and the calm p90 across each class's rungs:
+
+| class    | quotes with no upper end | calm p90, weeks |
+|----------|--------------------------|-----------------|
+| car      | 0%                       | 72–107          |
+| house    | 0%                       | 179–380         |
+| boat     | 100%                     | beyond 520      |
+| plane    | 100%                     | beyond 520      |
+| business | 100%                     | beyond 520      |
+| academy  | 100%                     | beyond 520      |
+
+The quote's own flag and its capped week agreed in all 116000 quotes sampled. For scale, the elite car's calm p90 is 107 weeks and the first house's 179.
 
 ## 7 · Left for a later slice, deliberately
 

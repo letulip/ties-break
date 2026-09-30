@@ -8,15 +8,19 @@
 //   4. the re-list effect: withdrawn after 8 weeks, re-listed 5 weeks later (inside the market's 12-week memory) against 20 weeks later (outside);
 //   5. THE TABLE'S OWN PROMISE, END TO END – spec §2d's median for each family's ENTRY rung in a calm market, through the same corridor the game
 //      runs, on a large seed set (`--calib`). S1b made the medians exact by construction; this is the run that proves it survives the raiser's call.
+//      ⚠ THE GATE IS DETERMINISTIC (S6b, the architect's ruling): the EXACT p50 – the draw-free expectation of the raiser's own per-tick chances on the probe's own seeds and quiet
+//      windows (exact cumulative at the median, exact integer p50 with the interpolated one beside it, the per-week density, SE(p50) at the calib N) – must sit within ±1 week of the
+//      table; the sampled sold@med (the dice on the same seeds) corroborates within |z| < 2.5. Two verdict columns, because a 20000-seed p50 has a standard error of about a week at
+//      the slow families (0.3–0.4 % of the ads sell in the median week) and ±1 on that integer fails by chance for a correct model.
 //
 // ⚠⚠ SCOPE, AND IT IS STATED HERE BECAUSE IT DECIDES WHAT THE NUMBERS MEAN: it drives the RESALE MODEL directly – `buyerWritesThisWeek` +
 // `saleOfferPriceCents` + `assetSaleQuote` (world/resale.ts) over seeded week grids with REAL market paths (`marketCrash`, the crisis calendar the
 // fund rides) – and NOT full world ticks. The tick wiring is S3's tested seam (`raiseSaleOffers`, world/shop.ts); the MODEL is what is measured here.
 // The call is COPIED from the raiser, not improvised: an ad listed at week L is first drawn at the NEXT tick, week L+1, with `weeksListed = 1`; tick k
 // asks `buyerWritesThisWeek(world, id, L+k, k, carry)` and, when a buyer wrote, `saleOfferPriceCents(world, id, L+k, k + carry)`, after
-// `revalueAssets` has moved the card to that week (the tick's own order). ⚠ THE QUOTE READS AN AD ONE STEP FRESHER (its week k asks age k−1) and so does
-// the solve behind the table's medians – the calibration block prints BOTH calls side by side, so a gap between the table and the raiser is a number
-// on the page and not an argument.
+// `revalueAssets` has moved the card to that week (the tick's own order). ⚠ SINCE S6b (30.09) THE QUOTE AND THE SOLVE BEHIND THE TABLE'S MEDIANS COUNT THE SAME CLOCK
+// (age k at tick k). S6 found them one step fresher (k−1) and printed both calls side by side, so the gap was a number on the page; that second call is retired with the
+// convention it measured – the diagnosis lives in world/resale.ts's ⚠ note and in tests/resale-quote.test.ts's header.
 //
 // ⚠ POLICY: ACCEPT THE FIRST LETTER – that is what the medians were solved for («a first acceptable letter»). A family that waits for a better one
 // would measure a different, longer thing; the corridor's own width (price/worth) is reported so the size of that choice is visible.
@@ -50,6 +54,7 @@ import type { MarketCrash } from '../src/engine/world/market'
 import {
   QUOTE_HORIZON_WEEKS,
   assetSaleQuote,
+  buyerHazard,
   buyerWritesThisWeek,
   freshnessCarryOf,
   saleOfferPriceCents,
@@ -149,14 +154,14 @@ function worthCents(): number {
 }
 
 /** ⭐ THE RAISER'S CALL, WALKED: the first tick k (1, 2, …) at which a buyer writes, and the letter's price over the card's worth that week. `carry` is
- *  the market's memory of an earlier ad; `ageShift` 1 reads the ad one step fresher, which is how the QUOTE (and the table's solve) count it. */
-function firstLetter(lot: Lot, listWeek: number, carry: number, ageShift: number): { k: number; ratio: number } | null {
+ *  the market's memory of an earlier ad. Age k at tick k is the raiser's own clock – the one the solve and the quote count too since S6b. */
+function firstLetter(lot: Lot, listWeek: number, carry: number): { k: number; ratio: number } | null {
   for (let k = 1; k <= HORIZON; k++) {
     const week = listWeek + k
     world.week = week
     revalueAssets(world)
-    if (!buyerWritesThisWeek(world, lot.keyId, week, k - ageShift, carry)) continue
-    const price = saleOfferPriceCents(world, lot.keyId, week, k - ageShift + carry)
+    if (!buyerWritesThisWeek(world, lot.keyId, week, k, carry)) continue
+    const price = saleOfferPriceCents(world, lot.keyId, week, k + carry)
     return { k, ratio: price / worthCents() }
   }
   return null
@@ -266,7 +271,7 @@ for (let s = 0; s < SEEDS; s++) {
     for (const lot of lots) {
       const window = windowOf(arcs, week, lot.medianWeeks)
       buy(lot, week)
-      const hit = firstLetter(lot, week, 0, 0)
+      const hit = firstLetter(lot, week, 0)
       const st = stats.get(lot.name)!
       st.byWindow[window].add(hit)
       st.all.add(hit)
@@ -294,20 +299,55 @@ for (let s = 0; s < SEEDS; s++) {
 }
 
 // --- THE CALIBRATION: the table's median, end to end, on a large seed set --------------------------------------------------------------------
+/** ⭐ THE DRAW-FREE WALK (S6b's gate): the raiser's own per-tick chances for the lot – age k at tick k, the card revalued each tick, walked exactly as `firstLetter` walks it –
+ *  multiplied out into the cumulative chance a buyer has written by tick k. No dice: it is the expectation of what `firstLetter` samples, on the same listing week. */
+function exactCumulative(lot: Lot, listWeek: number, ticks: number): Float64Array {
+  const cum = new Float64Array(ticks + 1)
+  let survive = 1
+  for (let k = 1; k <= ticks; k++) {
+    const week = listWeek + k
+    world.week = week
+    revalueAssets(world)
+    survive *= 1 - buyerHazard(world, lot.keyId, week, k, 0)
+    cum[k] = 1 - survive
+  }
+  return cum
+}
+/** the exact walk runs this many weeks past the table's median – the p50 sits within a few weeks of it */
+const EXACT_TAIL = 24
+/** the sampled sold@med is corroboration: it passes inside this many standard errors of the exact cumulative */
+const Z_GATE = 2.5
 interface Calibration {
   lot: Lot
   seeds: number
   skipped: number
   tick: Acc
-  quote: Acc
   soon: Acc
   late: Acc
   carrySoon: number
   carryLate: number
+  /** the sum over seeds of the exact cumulative by tick k (k = 0 … median + EXACT_TAIL) – divide by `seeds` for the mean */
+  exactSum: Float64Array
+  /** the smallest and largest exact cumulative AT THE MEDIAN over the seeds – the proof that the expectation does not depend on which seed it is asked of */
+  exactLo: number
+  exactHi: number
 }
 const calibrations: Calibration[] = []
 for (const lot of lots.filter((l) => l.tag === 'E')) {
-  const c: Calibration = { lot, seeds: 0, skipped: 0, tick: new Acc(), quote: new Acc(), soon: new Acc(), late: new Acc(), carrySoon: -1, carryLate: -1 }
+  const ticks = lot.medianWeeks + EXACT_TAIL
+  const c: Calibration = {
+    lot,
+    seeds: 0,
+    skipped: 0,
+    tick: new Acc(),
+    soon: new Acc(),
+    late: new Acc(),
+    carrySoon: -1,
+    carryLate: -1,
+    exactSum: new Float64Array(ticks + 1),
+    exactLo: 1,
+    exactHi: 0,
+  }
   for (let i = 0; i < CALIB; i++) {
     const seed = `sale-calib-${i}`
     world.seed = seed
@@ -324,20 +364,23 @@ for (const lot of lots.filter((l) => l.tag === 'E')) {
       continue
     }
     c.seeds++
-    // the median claim: the raiser's own call, and the same walk read one step fresher (the quote's and the solve's count)
+    // the median claim: the raiser's own call (the dice) and, on the same listing week, the draw-free walk of the same chances (the expectation the dice scatter around)
     buy(lot, week)
-    c.tick.add(firstLetter(lot, week, 0, 0))
+    c.tick.add(firstLetter(lot, week, 0))
     buy(lot, week)
-    c.quote.add(firstLetter(lot, week, 0, 1))
+    const exact = exactCumulative(lot, week, ticks)
+    for (let k = 1; k <= ticks; k++) c.exactSum[k] = (c.exactSum[k] ?? 0) + exact[k]!
+    c.exactLo = Math.min(c.exactLo, exact[lot.medianWeeks]!)
+    c.exactHi = Math.max(c.exactHi, exact[lot.medianWeeks]!)
     // the re-list pair: the carry is the ENGINE's own reader, asked at the week the new ad goes up; both arms share every draw, so the gap is the memory alone
     const soonRow = ownedRow(lot.keyId, week, { lastListing: { endedWeek: week - RELIST_SOON, exposedWeeks: WITHDRAWN_AFTER } })
     const lateRow = ownedRow(lot.keyId, week, { lastListing: { endedWeek: week - RELIST_LATE, exposedWeeks: WITHDRAWN_AFTER } })
     c.carrySoon = freshnessCarryOf(soonRow, week)
     c.carryLate = freshnessCarryOf(lateRow, week)
     buy(lot, week)
-    c.soon.add(firstLetter(lot, week, c.carrySoon, 0))
+    c.soon.add(firstLetter(lot, week, c.carrySoon))
     buy(lot, week)
-    c.late.add(firstLetter(lot, week, c.carryLate, 0))
+    c.late.add(firstLetter(lot, week, c.carryLate))
   }
   calibrations.push(c)
 }
@@ -387,16 +430,34 @@ const disagreements = [...horizon.values()].reduce((sum, h) => sum + h.disagree,
 console.log(`  (the quote's atHorizon flag against its clamped weeksHi: ${disagreements} disagreements in ${[...horizon.values()].reduce((sum, h) => sum + h.n, 0)} quotes)`)
 
 console.log(`\nCALM ENTRY MEDIAN – spec §2d's table against the game (entry rung bought in a calm week, one listing per seed)`)
+console.log(`  GATE (S6b): the EXACT p50 – the draw-free expectation of the raiser's own per-tick chances on these very seeds – within ±1 week of the table.`)
+console.log(`  CORROBORATION: the SAMPLED sold@med against the exact cumulative at the median, |z| < ${Z_GATE}; the sampled p50's own standard error is printed beside it.`)
 console.log(
-  `${padR('family', 9)} ${padL('table', 5)} ${padL('seeds', 6)} | ${padL('raiser p50', 10)} ${padL('sold@med %', 10)} | ${padL('quote-age p50', 13)} ${padL('sold@med %', 10)} | ${padL('gap', 4)}  verdict (±1 week)`,
+  `${padR('family', 9)} ${padL('table', 5)} ${padL('seeds', 6)} | ${padL('exact cum@m', 11)} ${padL('seed spread', 11)} ${padL('exact p50', 9)} ${padL('interp', 6)} ${padL('dens %/wk', 9)} ${padL('verdict', 7)} | ` +
+    `${padL('sampled p50', 11)} ${padL('SE(p50)', 7)} ${padL('sold@med %', 10)} ${padL('z', 5)} ${padL('verdict', 7)}`,
 )
 for (const c of calibrations) {
   const m = c.lot.medianWeeks
-  const p50 = c.tick.wait(0.5)
-  const gap = p50 === null ? Number.NaN : p50 - m
-  const verdict = p50 !== null && Math.abs(gap) <= 1 ? 'ok' : 'MISS'
+  const ticks = m + EXACT_TAIL
+  const mean = (k: number): number => (c.seeds > 0 ? (c.exactSum[k] ?? 0) / c.seeds : Number.NaN)
+  let exactP50: number | null = null
+  for (let k = 1; k <= ticks; k++) {
+    if (mean(k) >= 0.5) {
+      exactP50 = k
+      break
+    }
+  }
+  const interp = exactP50 !== null && exactP50 > 1 ? exactP50 - 1 + (0.5 - mean(exactP50 - 1)) / (mean(exactP50) - mean(exactP50 - 1)) : Number.NaN
+  const cumAtMedian = mean(m)
+  const density = mean(m) - mean(m - 1)
+  const se = Math.sqrt(0.25 / c.seeds) / density
+  const sold = c.tick.soldBy(m)
+  const z = (sold - cumAtMedian) / Math.sqrt((cumAtMedian * (1 - cumAtMedian)) / c.seeds)
+  const exactVerdict = exactP50 !== null && Math.abs(exactP50 - m) <= 1 ? 'ok' : 'MISS'
+  const sampledVerdict = Math.abs(z) < Z_GATE ? 'ok' : 'MISS'
   console.log(
-    `${padR(c.lot.family, 9)} ${padL(m, 5)} ${padL(c.seeds, 6)} | ${padL(wk(p50), 10)} ${padL(pct(c.tick.soldBy(m)), 10)} | ${padL(wk(c.quote.wait(0.5)), 13)} ${padL(pct(c.quote.soldBy(m)), 10)} | ${padL(Number.isNaN(gap) ? '-' : gap > 0 ? `+${gap}` : gap, 4)}  ${verdict}`,
+    `${padR(c.lot.family, 9)} ${padL(m, 5)} ${padL(c.seeds, 6)} | ${padL(Number.isNaN(cumAtMedian) ? '-' : cumAtMedian.toFixed(4), 11)} ${padL((c.exactHi - c.exactLo).toExponential(1), 11)} ${padL(exactP50 ?? '-', 9)} ${padL(Number.isNaN(interp) ? '-' : interp.toFixed(2), 6)} ${padL(Number.isNaN(density) ? '-' : (density * 100).toFixed(3), 9)} ${padL(exactVerdict, 7)} | ` +
+      `${padL(wk(c.tick.wait(0.5)), 11)} ${padL(Number.isNaN(se) ? '-' : se.toFixed(2), 7)} ${padL(pct(sold), 10)} ${padL(Number.isNaN(z) ? '-' : z.toFixed(2), 5)} ${padL(sampledVerdict, 7)}`,
   )
 }
 

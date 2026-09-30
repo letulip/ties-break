@@ -51,6 +51,18 @@
 //
 // ⭐ S6 (30.09) ADDS ONE ARM – the horizon flag, applied ALONE to the source, watched and restored byte-identical:
 //   * `atHorizon: hi >= QUOTE_HORIZON_WEEKS` -> `hi >= QUOTE_HORIZON_WEEKS - 1`  -> ONE: the horizon arm, at the house whose p90 is 519 weeks
+//
+// ⭐ S6b (30.09, the architect's ruling: the model adopts the game's clock – age 1 at the first tick) RE-AIMS THE MEDIANS ARM (it walks ages 1 … m now) and the quote arm's mirror walk, and
+// ADDS TWO ARMS – the clock and the first letter (item b, below). Each mutation applied ALONE to `world/resale.ts`, watched, and restored byte-identical (sha-256 of the source and of this file, before and after):
+//   * the quote's walk `chanceAt(…, k)` -> `k - 1` (the old clock)                      -> TWO: the quote arm's mirror walk and the clock arm
+//   * the same walk -> `k + 1`                                                          -> TWO: the same two
+//     ⚠ THE MEDIANS ARM STAYS GREEN UNDER BOTH – it walks `buyerHazard`, so it reads the SOLVE and never the quote's own walk. That gap is why the clock arm exists
+//   * the solve's ages `1 … medianWeeks` -> `0 … medianWeeks − 1` (S6's 0-based solve)  -> SIX: the medians arms, one per family
+//   * the raiser's side, `hazardOfLot`'s age `+ 1`                                      -> FOURTEEN: six hazard-shape arms, the quote arm, the clock arm, six medians arms
+//   * the same age `− 1`                                                                -> NINE: the stale-week arm, the quote arm, the clock arm, six medians arms
+//   * (item b) the quote's envelope asked at `0` weeks listed, not `1` (`corridorFactor(…, u, 1)` -> `0`) -> THREE: the quote arm, the academy arm and the first-letter arm – a boat's letter
+//     `week 189: expected 66385630 to be greater than or equal to 66388557`, under the old low end by the stale step
+//   * the same envelope at `2`                                                         -> THREE: the same three, the first-letter arm now on the HIGH end (`week 448: expected 83262750 to be less than or equal to 83214847`)
 import { describe, expect, it } from 'vitest'
 import { createWorld, type WorldState } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
@@ -511,14 +523,17 @@ describe('the table’s median is TRUE BY CONSTRUCTION (30.09, S1b)', () => {
 
     const cdf: number[] = [] // cdf[k − 1] = the chance a buyer has written within k weeks
     let survive = 1
+    // ⚠ S6b (30.09): AGE k AT TICK k – the raiser's own clock. An ad listed in week W meets its first tick at W+1 with `weeksListed = 1`. This walk asked age k − 1 (the
+    // solve's old count), and S6's probe measured that missing every family's median at the raiser's call: the level moved, the arm's shape did not.
     for (let k = 1; k <= QUOTE_HORIZON_WEEKS; k++) {
-      survive *= 1 - buyerHazard(world, id, week, k - 1, 0)
+      survive *= 1 - buyerHazard(world, id, week, k, 0)
       cdf.push(1 - survive)
     }
     const realised = cdf.findIndex((p) => p >= 0.5) + 1 || QUOTE_HORIZON_WEEKS
     expect(realised, `${family}: the realised median is ${realised} weeks against the table's ${median}`).toBeGreaterThanOrEqual(median - 1)
     expect(realised, `${family}: the realised median is ${realised} weeks against the table's ${median}`).toBeLessThanOrEqual(median + 1)
     // …and the solve is exact, not merely close: one half, to nine places, at `median` weeks
+    expect(cdf[Math.round(median) - 1]!, `${family} cumulative at the median`).toBeGreaterThanOrEqual(0.5) // the solve returns the bracket's UPPER end: never a hair under
     expect(cdf[Math.round(median) - 1]!, `${family} cumulative at the median`).toBeCloseTo(0.5, 9)
   })
 })
@@ -536,8 +551,10 @@ describe('the quote (spec §2g)', () => {
       const q = assetSaleQuote(world, id)!
       const row = rowOf(family)
       const worth = worthOf(world, [id])
-      expect(q.corridorLoCents, id).toBe(Math.round(worth * (row.base - row.spread)))
-      expect(q.corridorHiCents, id).toBe(Math.round(worth * (row.base + row.spread)))
+      // ⚠ S6b (30.09): THE LEVEL MOVED AND THE SHAPE DID NOT – the envelope is asked at ONE week listed (the first letter's own age), so both ends carry one week of stale drift
+      const staleStep = row.stalePerYear * Math.min(1 / WEEKS_PER_YEAR, 1)
+      expect(q.corridorLoCents, id).toBe(Math.round(worth * (row.base - row.spread - staleStep)))
+      expect(q.corridorHiCents, id).toBe(Math.round(worth * (row.base + row.spread - staleStep)))
       expect(q.fireCents, id).toBe(Math.round(worth * row.fireX))
       expect(q.fireCents).toBe(saleFloorCents(world, id, week)) // the fire price IS the corridor's floor
       expect(q.fireCents).toBeLessThan(q.corridorLoCents)
@@ -548,8 +565,9 @@ describe('the quote (spec §2g)', () => {
       let survive = 1
       let lo = 0
       let hi = 0
+      // ⚠ S6b (30.09): the quote's week k asks age k – mirrored here (it was k − 1); the arm keeps its shape and its level expectations, only the clock moved.
       for (let k = 1; k <= QUOTE_HORIZON_WEEKS && hi === 0; k++) {
-        survive *= 1 - buyerHazard(world, id, week, k - 1, 0)
+        survive *= 1 - buyerHazard(world, id, week, k, 0)
         if (lo === 0 && 1 - survive >= 0.1) lo = k
         if (1 - survive >= 0.9) hi = k
       }
@@ -564,6 +582,70 @@ describe('the quote (spec §2g)', () => {
     expect(assetSaleQuote(world, 'plane-small')!.weeksHi).toBe(QUOTE_HORIZON_WEEKS)
     expect(assetSaleQuote(world, 'boat-launch')!.weeksHi).toBe(QUOTE_HORIZON_WEEKS)
     expect(assetSaleQuote(world, 'car-sensible')!.weeksHi).toBeLessThan(QUOTE_HORIZON_WEEKS)
+  })
+
+  it('⭐ (S6b) ONE CLOCK: the quote calls a car’s wait «one week» at exactly the worth where the raiser’s first tick – `buyerHazard` at week + 1, age 1 – reaches a tenth', () => {
+    // ⚠ WHY THIS ARM AND NOT THE MEDIANS ARM: the medians arm walks `buyerHazard` and so reads the SOLVE; nothing in it calls the quote's own walk, so a quote that asked
+    // age k − 1 again would sail through it. The quote's p10 is «the first week the cumulative reaches a tenth», so `weeksLo === 1` says exactly «the walk's FIRST-week chance is
+    // at least a tenth» – and that flips at ONE worth, because the dampener thins the chance continuously as the card grows. The raiser's first tick (an ad listed in week L is drawn
+    // at L + 1 with `weeksListed = 1`) is `buyerHazard(world, id, L + 1, 1, 0)`. On one clock the two cross a tenth at the same cent; a step of age either way moves the crossing
+    // by whole per cent of the worth, which is what this arm sees and the rounding of a cent cannot hide.
+    const seed = 'clock-1'
+    const listedWeek = calmWeekOf(seed)
+    expect(isCalm(seed, listedWeek + 1), 'premise: the first tick’s week is calm too, so the quote and the raiser read one market').toBe(true)
+    const rung = shopCatalogue()
+      .filter((r) => r.family === 'car')
+      .sort((a, b) => a.entryCents - b.entryCents)[0]!
+    const holding = (valueCents: number): WorldState => {
+      const w = worldOwning(seed, [])
+      w.week = listedWeek
+      ownRow(w, rung.id, { boughtWeek: listedWeek, valueCents })
+      return w
+    }
+    const quoteSaysOneWeek = (valueCents: number): boolean => assetSaleQuote(holding(valueCents), rung.id)!.weeksLo === 1
+    const firstTick = (valueCents: number): number => buyerHazard(holding(valueCents), rung.id, listedWeek + 1, 1, 0)
+
+    let lo = rung.entryCents
+    let hi = rung.entryCents * 60
+    expect(quoteSaysOneWeek(lo), 'premise: an entry-priced car’s first-week chance is over a tenth').toBe(true)
+    expect(quoteSaysOneWeek(hi), 'premise: sixty times the entry price sits on the dampener’s floor, under a tenth').toBe(false)
+    while (hi - lo > 1) {
+      const mid = Math.floor((lo + hi) / 2)
+      if (quoteSaysOneWeek(mid)) lo = mid
+      else hi = mid
+    }
+    // `lo` is the dearest card the quote still calls «one week», `hi` the next cent up, which it does not: the raiser's first tick straddles a tenth exactly there
+    expect(firstTick(lo), 'the raiser’s first tick at the last worth the quote calls one week').toBeGreaterThanOrEqual(0.1)
+    expect(firstTick(hi), 'and at the next cent up').toBeLessThan(0.1)
+    expect(firstTick(lo)).toBeCloseTo(0.1, 6)
+    expect(firstTick(hi)).toBeCloseTo(0.1, 6)
+  })
+
+  it('⭐ (S6b) THE POPUP’S LOW END COVERS THE FIRST LETTER IT PROMISES: a boat’s first letter, priced at one week listed, never prints under the quote’s corridor – and the sweep really reaches the gap', () => {
+    // ⚠ The envelope used to be asked at ZERO weeks listed while the raiser prices the first tick at `weeksListed = 1`, so the lowest draws of a stale-heavy family printed `stalePerYear / 52`
+    // of worth (a boat's 0.12 %) UNDER the low end the popup had just printed. The card is held where the quote read it (no revalue between), so cents compare with cents – one week of
+    // depreciation is not what is asked here. Calm weeks only: the quote holds today's weather, and so must the letters it covers.
+    const seed = 'first-letter-1'
+    const id = 'boat-launch'
+    const row = rowOf('boat')
+    const world = worldOwning(seed, [id])
+    const listed = calmWeekOf(seed)
+    atWeek(world, listed)
+    const q = assetSaleQuote(world, id)!
+    const worth = worthOf(world, [id])
+    const zeroWeekLo = Math.round(worth * (row.base - row.spread)) // the OLD envelope's low end, re-derived from the table
+    let checked = 0
+    let underTheOldEnvelope = 0
+    for (let w = listed; w < listed + 6000; w++) {
+      if (!isCalm(seed, w)) continue
+      const price = saleOfferPriceCents(world, id, w, 1)
+      expect(price, `week ${w}`).toBeGreaterThanOrEqual(q.corridorLoCents)
+      expect(price, `week ${w}`).toBeLessThanOrEqual(q.corridorHiCents)
+      if (price < zeroWeekLo) underTheOldEnvelope++
+      checked++
+    }
+    expect(checked, 'premise: a long sweep of calm weeks').toBeGreaterThan(1500)
+    expect(underTheOldEnvelope, 'premise: some first letters sit inside the drift gap the old envelope missed').toBeGreaterThan(0)
   })
 
   it('⭐ (S6) `atHorizon` is «the p90 IS the cap» – true for a hung yacht, false for a p90 of 519 weeks, and it is one decision with the clamped week', () => {
@@ -642,8 +724,9 @@ describe('the quote (spec §2g)', () => {
     expect(lotWorth).toBeGreaterThan(landAlone)
 
     const q = assetSaleQuote(world, 'academy-land')!
-    expect(q.corridorLoCents).toBe(Math.round(lotWorth * (row.base - row.spread)))
-    expect(q.corridorHiCents).toBe(Math.round(lotWorth * (row.base + row.spread)))
+    const staleStep = row.stalePerYear * Math.min(1 / WEEKS_PER_YEAR, 1) // ⚠ S6b (30.09): the envelope is asked at one week listed – the level moved, the shape did not
+    expect(q.corridorLoCents).toBe(Math.round(lotWorth * (row.base - row.spread - staleStep)))
+    expect(q.corridorHiCents).toBe(Math.round(lotWorth * (row.base + row.spread - staleStep)))
     expect(q.fireCents).toBe(Math.round(lotWorth * row.fireX))
     // every stage names the lot – even the one still in delivery – and the lot has ONE draw a week
     expect(assetSaleQuote(world, 'academy-courts')).toEqual(q)
@@ -657,7 +740,7 @@ describe('the quote (spec §2g)', () => {
     // once the building lands the lot grows by exactly that stage
     delete building.readyWeek
     const grown = assetSaleQuote(world, 'academy-land')!
-    expect(grown.corridorHiCents).toBe(Math.round(worthOf(world, ['academy-land', 'academy-courts', 'academy-building']) * (row.base + row.spread)))
+    expect(grown.corridorHiCents).toBe(Math.round(worthOf(world, ['academy-land', 'academy-courts', 'academy-building']) * (row.base + row.spread - staleStep)))
     expect(grown.corridorHiCents).toBeGreaterThan(q.corridorHiCents)
 
     // and a family with no delivered stage has no lot at all
