@@ -23,8 +23,8 @@ not translation failures; an untranslated accessible label, country name or save
 | --- | --- | --- | --- | --- |
 | RU02A-S01 | `src/components/SplashScreen.vue:30` | `Tap to start` | `Нажмите, чтобы начать` | accessible name; must match the visible instruction |
 | RU02A-S02 | `src/components/SplashScreen.vue:39` | `Tap to start` | `Нажмите, чтобы начать` | works for touch, mouse and keyboard without naming one device |
-| RU02A-S03 | `src/components/SplashScreen.vue:35` | `Ties Break` | `Ties Break` | product mark; final title ruling remains open |
-| RU02A-S04 | `src/components/SplashScreen.vue:36` | `Ace Parent` | `Ace Parent` | product mark; final title ruling remains open |
+| RU02A-S03 | `src/components/SplashScreen.vue:35` | `Ties Break` | `Ties Break` | `APPROVED` product mark |
+| RU02A-S04 | `src/components/SplashScreen.vue:36` | `Ace Parent` | `Ace Parent` | `APPROVED` product mark |
 
 ## 2. Wizard progress, headings and opening
 
@@ -42,8 +42,8 @@ not translation failures; an untranslated accessible label, country name or save
 | RU02A-H10 | `OnboardingWizard.vue:202` | `Choose Play Style` | `Выберите стиль игры` | tennis term, not visual style |
 | RU02A-H11 | `OnboardingWizard.vue:202` | `This shapes strengths and training focus.` | `От него зависят сильные стороны и направление тренировок.` | states the mechanical consequence |
 | RU02A-H12 | `OnboardingWizard.vue:203` | `All Set!` | `Всё готово` | owner-approved `ё` rule applied |
-| RU02A-H13 | `OnboardingWizard.vue:203` | `Here she is. The rest is the two of you.` | `Вот она. Дальше – вы вдвоём.` | warm without promising an outcome; direct-address ruling still affects `вы` |
-| RU02A-H14 | `OnboardingWizard.vue:390` | `You're the parent now – every choice, every dollar, every away tournament is yours to carry.` | `Теперь вы – родитель. Решения, расходы и каждый выездной турнир ложатся на вас.` | product premise; `вы` is provisional until address ruling |
+| RU02A-H13 | `OnboardingWizard.vue:203` | `Here she is. The rest is the two of you.` | `Вот она. Дальше – вы вдвоём.` | warm without promising an outcome; `вы` is owner-approved |
+| RU02A-H14 | `OnboardingWizard.vue:390` | `You're the parent now – every choice, every dollar, every away tournament is yours to carry.` | `Теперь вы – родитель. Решения, расходы и каждый выездной турнир ложатся на вас.` | product premise; interface `вы` is owner-approved |
 | RU02A-H15 | `OnboardingWizard.vue:392` | `Rackets, coaches, flights, hotels – the costs are honest, and they don't wait for a breakthrough.` | `Ракетки, тренеры, перелёты, отели – расходы здесь честные и не ждут первого прорыва.` | keeps the economic warning, not advertising copy |
 
 ### Opening promise pool
@@ -244,14 +244,10 @@ owner-approved and therefore appear here as settled terminology.
    `aria-label` fails the no-mixed-language ruling.
 6. Measure at 375 px and with text zoom: the family labels, play-style labels, weight lead, tour cards
    and `Начать карьеру` are the likely pressure points.
-7. The splash logo remains English only if the owner confirms that it is the product mark. This is
-   not permission for any other English fallback.
+7. The owner confirmed that the splash logo is the English product mark. This is not permission for
+   any other English fallback.
 
 ## 11. Owner reads still needed
 
-1. Confirm the direct-address register. This draft uses conventional neutral/formal `вы` in the few
-   onboarding lines that cannot stay impersonal. Daughter dialogue can be decided separately as
-   intimate `ты` if that is the relationship voice.
-2. Confirm that **Ties Break: Ace Parent** remains untranslated as the product mark.
-3. Read the three economic labels together: `Обеспеченная семья` / `Средний достаток` / `Скромный
+Read the three economic labels together: `Обеспеченная семья` / `Средний достаток` / `Скромный
    бюджет`. They are intentionally about playable means, not a literal Russian class taxonomy.

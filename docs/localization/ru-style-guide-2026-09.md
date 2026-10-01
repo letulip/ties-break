@@ -44,6 +44,10 @@ as repeated passive voice in English. Pronouns may be dropped when the subject r
   address merely because English `you` is present.
 - System UI avoids both `ты` and formal `вы` when a clean infinitive works: `Загрузить`,
   `Продолжить`, `Открыть письмо`.
+- When direct address cannot be avoided, system and interface copy uses neutral/formal `вы`.
+  Possessives and past-tense constructions must still avoid assigning gender to the player.
+- The daughter uses intimate family `ты` with the parent. This is relationship voice, not permission
+  for the system UI to become casual.
 - The parent shapes circumstances. Russian copy must not turn her into inventory: prefer
   `она решила`, `её неделя`, `её матч` over ownership language such as `ваша спортсменка`.
 
@@ -183,6 +187,8 @@ aphorisms, inverted word order and abstract nouns. A full stop is usually enough
 - A string used visibly and as an accessible name may share a key only when the wording genuinely
   should be identical in both contexts.
 - English tier codes (`J30`, `W15`, `WT250`) and the product name remain unchanged.
+- The owner confirmed the product mark as **Ties Break: Ace Parent**. It stays English on the splash
+  and in brand metadata; this exception does not extend to taglines, controls or descriptions.
 - Names are data. Their transliteration policy belongs to the names batch, not to incidental UI
   messages.
 

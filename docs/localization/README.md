@@ -27,6 +27,7 @@ last-reviewed: 2026-10-01
 | [Source inventory and sequence](ru-source-inventory-2026-09.md) | Every player-facing surface, grouped into reviewable editorial batches | first draft |
 | [Batch 01 – shell and system](ru-ui-shell-2026-09.md) | Post-by-post replacement table for navigation, recovery, notices and the week control | drafted |
 | [Batch 02A – entry and onboarding](ru-onboarding-2026-10.md) | Splash, career wizard, shared identity copy and interface tour | drafted |
+| [Batch 02B – childhood, ages five to seven](ru-childhood-prologue-2026-10.md) | Prologue walk controls and the first three childhood cards | drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
@@ -67,12 +68,12 @@ diary corpora → endings → metadata and final LQA.
    mixes Russian controls with English story, history, accessibility text or metadata is unfinished.
    In particular, legacy English stored in `WorldEvent.text` may be retained internally for save
    compatibility, but it is not an acceptable visible fallback in Russian mode. `APPROVED`.
+5. **Ties Break: Ace Parent** remains in English as the product mark. Its presence on the splash is
+   not an untranslated fallback. `APPROVED`.
+6. The interface addresses the player with neutral/formal **`вы`** where direct address is needed.
+   The daughter addresses the parent with intimate family **`ты`**. `APPROVED`.
 
-## Questions still open
+## Open editorial reads
 
-1. **Title:** I recommend keeping **Ties Break: Ace Parent** as the product mark. A Russian subtitle
-   can be written for store pages later; silently translating the logo inside the game would create
-   a second brand.
-2. **Address:** interface copy stays impersonal wherever possible. The remaining choice is how direct
-   onboarding and the daughter's own speech address the parent: neutral/formal `вы`, or intimate
-   family `ты`. The ruling about `ё` did not decide this separately.
+The current open editorial read is the three family-resource labels in RU-02A. Later batches may add
+questions where a product term or a character relationship genuinely has more than one reading.
