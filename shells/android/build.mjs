@@ -18,6 +18,26 @@
 // first run is done the whole chain asks nothing.
 //
 // SHELL_SKIP_DIST (the orchestrator sets it for the win shell) is not read here: there is no dist/ to reuse.
+// ⚠ NODE 22, RE-EXECED, AND THE REASON IS MEASURED (01.10): under this machine's default Node 26,
+// Bubblewrap 1.25.0's JDK unzip (extract-zip@1.7.0) stalls silently at file 287 of 64,940 and the
+// CLI exits 0 with a half-born toolchain – the owner's first setup died exactly there. Under the
+// repo's own pinned Node 22 the same zip extracts whole in 20s (A/B, same bytes, denominator on
+// both arms). So: if this process runs on a major newer than 22 and Homebrew's keg-only node@22
+// exists, re-exec ourselves under it; otherwise warn, naming this cause and the exact command.
+const NODE22 = '/opt/homebrew/opt/node@22/bin/node'
+if (Number(process.versions.node.split('.')[0]) > 22 && !process.env.TB_SHELL_REEXEC) {
+  const { existsSync: has } = await import('node:fs')
+  if (has(NODE22)) {
+    const { spawnSync } = await import('node:child_process')
+    const r = spawnSync(NODE22, [new URL(import.meta.url).pathname, ...process.argv.slice(2)],
+      { stdio: 'inherit', env: { ...process.env, TB_SHELL_REEXEC: '1' } })
+    process.exit(r.status ?? 1)
+  }
+  console.warn('[shell:android] WARNING: Node ' + process.versions.node + ' – Bubblewrap\'s JDK unzip '
+    + 'stalls silently on Node >22 (measured 01.10). Install node@22 (brew install node@22) or run: '
+    + 'PATH="/opt/homebrew/opt/node@22/bin:$PATH" npm --prefix shells/android run <cmd>')
+}
+
 import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
