@@ -1,0 +1,11 @@
+{
+  "//": "The one place every shell takes its names and ids from (docs/specs/app-shells-2026-10.md). shells/win reads it today; S1 (Android) and S3 (iOS) read the same file.",
+  "productName": "Ties Break",
+  "appId": "com.tiesbreak.aceparent",
+  "//appId": "Reverse-domain id. Permanent once a store has seen it (Play uses it as the Android package name): confirm it before the first upload.",
+  "deployOrigin": "",
+  "//deployOrigin": "S1's ONE required fill: the https origin the PWA is deployed at, scheme and host only (no path). The Android TWA wraps the deployment, never the local dist, so S1 cannot build while this is empty. Windows ignores it.",
+  "steamAppId": "",
+  "steamDepotId": "",
+  "//steam": "Both come from the Steamworks partner site. Empty is fine until the first upload: shell:win renders the depot scripts with 0 and says so."
+}

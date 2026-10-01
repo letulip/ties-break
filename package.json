@@ -73,6 +73,8 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "graph": "node scripts/graph.mjs",
     "graph:check": "node scripts/graph.mjs --check",
+    "shell:win": "npm --prefix shells/win run build",
+    "shell:all": "npm run shell:win",
     "bench:masseurraise": "vite-node tools/masseur-raise-bench.ts",
     "bench:coachraise": "vite-node tools/coach-raise-bench.ts",
     "bench:form": "vite-node tools/form-bench.ts",

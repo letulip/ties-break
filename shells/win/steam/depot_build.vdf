@@ -1,0 +1,11 @@
+"DepotBuildConfig"
+{
+	"DepotID" "@STEAM_DEPOT_ID@"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+	"FileExclusion" "*.pdb"
+}

@@ -1,0 +1,2 @@
+# A nested ignore file cannot name its parent: shells/out/ (every artifact) is ignored by the ROOT .gitignore.
+node_modules/
