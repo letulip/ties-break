@@ -1,3 +1,10 @@
+---
+type: spec
+status: draft
+area: delivery
+last-reviewed: 2026-10-01
+---
+
 # The payment gate – one purchase, four doors
 
 Status: DRAFT spec (M0), 01.10.2026. Owner rulings pending – §8.
