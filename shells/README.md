@@ -12,7 +12,7 @@ artifact lands in `shells/out/`, which is git-ignored. Spec: `docs/specs/app-she
 | `shells/win/` | S2, Windows/Steam. Electron loads the local `dist/` through an `app://` scheme – offline by construction, no service worker. `steamworks.js` is optional and only started by `--steam` / `STEAM_SHELL=1` (or when Steam itself launches it) |
 | `shells/android/` | S1, Android. A Trusted Web Activity built with Bubblewrap (pinned exactly): Chrome renders the **deployed** PWA full-screen inside a thin signed Android app. It wraps the deployment, never the local `dist/`, and takes its name, colours, start URL and icons from the manifest that deployment serves |
 | `shells/config.json` | the one place names and ids live; every shell reads it |
-| S3 iOS (Capacitor) | not built yet – it appends to `shell:all` |
+| `shells/ios/` | S3, iOS. Capacitor (WKWebView, Swift Package Manager, pinned exactly) loading the local `dist/` from inside the app bundle – offline by construction. The report bridge is injected into the synced copy only; `dist/` and `src/` are never written to |
 
 ## The commands
 
@@ -20,7 +20,8 @@ artifact lands in `shells/out/`, which is git-ignored. Spec: `docs/specs/app-she
 |---|---|---|
 | `npm run shell:win` | `npx vite build`, then electron-builder (NSIS installer + unpacked dir), then renders the Steam depot scripts | `shells/out/win/`: `Ties Break Setup <version>.exe`, `win-unpacked/` (what the Steam depot ships), `steam/*.vdf` |
 | `npm run shell:android` | probes the deployment, renders `twa/` from its live manifest, builds and signs | `shells/out/android/`: `ties-break-<version>.apk` (universal, for side-loading and testing), `ties-break-<version>.aab` (what Play takes), `assetlinks.json` |
-| `npm run shell:all` | builds `dist/` once (`npx vite build`), then `shell:win` and `shell:android` with `SHELL_SKIP_DIST=1` – a plain `&&` chain in the root `package.json` | everything under `shells/out/` |
+| `npm run shell:ios` | checks Xcode is ready, `npx vite build`, `cap sync ios`, injects the report bridge into the synced copy, then `xcodebuild` for the iOS Simulator (Debug, unsigned – no Apple account) | `shells/out/ios/App.app` (the simulator build; also left in place under `shells/ios/build/`) |
+| `npm run shell:all` | builds `dist/` once (`npx vite build`), then `shell:win`, `shell:android` and `shell:ios` with `SHELL_SKIP_DIST=1` – a plain `&&` chain in the root `package.json` | everything under `shells/out/` |
 | `SHELL_SMOKE=1 npm --prefix shells/win start` | opens the app hidden, waits for it to mount, checks `mailto:` and https links leave through the OS while the window stays in the app, quits | `SHELL_SMOKE_OK title=Ties Break` and exit 0; otherwise `SHELL_SMOKE_FAIL reason=…` and exit 1 |
 
 First time only: `npm --prefix shells/win ci` (`shell:win` stops and says so when it is missing).
@@ -95,10 +96,96 @@ re-signs every upload with its own key: after the first upload add that key's SH
 integrity) to the same file's `sha256_cert_fingerprints` list. Host and repo come from `deployOrigin`;
 moving the domain means a rebuild (the host is baked into the app) and an assetlinks.json on the new host.
 
+## shells/ios – the iOS shell (S3)
+
+First time only, in a terminal:
+
+```bash
+npm --prefix shells/ios ci
+sudo xcodebuild -runFirstLaunch   # only on an Xcode that was just installed or updated
+```
+
+`-runFirstLaunch` installs the system components Xcode needs before it will build anything. It needs an
+administrator, so it is yours to run – the script never does. `shell:ios` asks
+`xcodebuild -checkFirstLaunchStatus` up front and stops saying so; without that check the build fails a
+minute in with "failed to load a required plug-in".
+
+One run does, in order:
+
+1. the Xcode check above (`--sync-only` skips it);
+2. `npx vite build` – a stale `dist/` in an app is worse than a slow build, and the wiring in
+   `src/main.ts` is only in a `dist/` built after it (`SHELL_SKIP_DIST=1` reuses the one on disk);
+3. `cap sync ios` – Capacitor copies `dist/` into `ios/App/App/public/` and writes the SwiftPM manifest
+   for the two plugins (`@capacitor/share`, `@capacitor/filesystem`);
+4. injects `<script src="shell-bridge.js">` before the app's module script in that **copy** and puts
+   `bridge/shell-bridge.js` beside it. `dist/` and `src/` are never written to – the script stops if
+   `dist/index.html` changes while it runs;
+5. `xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator
+   -derivedDataPath build CODE_SIGNING_ALLOWED=NO` – no Apple account, no signing;
+6. copies the `.app` to `shells/out/ios/App.app` and prints its size and bundle id.
+
+`npm --prefix shells/ios run build -- --sync-only` does 2–4 and stops: no Xcode needed, and the synced
+copy under `ios/App/App/public/` is what to look at. To run the simulator build by hand:
+`xcrun simctl boot <device>`, `xcrun simctl install booted shells/out/ios/App.app`,
+`xcrun simctl launch booted com.tiesbreak.aceparent`.
+
+**Swift Package Manager, not CocoaPods.** Capacitor 8 manages the native side with SwiftPM: `cap add ios`
+wrote `App.xcodeproj` and a `CapApp-SPM` package, there is no Podfile and no workspace, and CocoaPods is
+not needed. The first build resolves `capacitor-swift-pm` from GitHub, so it needs the network once.
+
+**What is committed.** `shells/ios/ios/` is Capacitor's generated Xcode project: its text is the shell's
+source, reviewable in a diff, and `cap sync` rewrites its generated parts the same way every run. The
+synced copy (`ios/App/App/public/`), build output (`build/`, DerivedData) and per-user Xcode state are not
+(`shells/ios/.gitignore`). ⚠ The icon and launch-image PNGs that `cap add ios` generated are Capacitor's
+placeholders, and the repo-wide `*.png` rule keeps them out of git: a fresh clone builds without them
+(Xcode warns), and a store build needs the game's own 1024 px app icon and launch image put into
+`ios/App/App/Assets.xcassets` first.
+
+### The report bridge
+
+`bridge/shell-bridge.js` defines `window.__TIES_SHELL_BRIDGE__` – the one contact `src/` has with any
+shell. `src/main.ts` hands that global, when a wrapper defined one before the bundle ran, to the report
+slot in `src/feedback.ts`; no shell is named in `src/`. The contract is the feedback spec's F1:
+
+- it resolves `true` when the shell took the report: the share sheet completed, **or the player
+  cancelled it** (so he is not handed a download he just declined);
+- it resolves `false` when this shell has no way to send (no share plugin, or a save file it cannot
+  attach) and throws on any other failure (a sheet error, a failed write) – the app then falls through to
+  its own download and mail path;
+- the save file is written base64 into the cache directory and its file URI goes to
+  `Share.share({ title, text, files })`, where `title` is the first line of the report text; with no file it
+  shares the text alone.
+
+`tests/shell-bridge-wiring.test.ts` pins both halves – the wiring in `main.ts` and this contract – against
+stand-in plugins.
+
+### The App Store route (`--archive`)
+
+```bash
+APPLE_TEAM_ID=<your 10-character team id> npm --prefix shells/ios run build -- --archive
+```
+
+That is the same sync and injection, then `xcodebuild archive` (Release, `generic/platform=iOS`, signed
+by your team through Xcode's automatic signing) and `xcodebuild -exportArchive` with an
+`exportOptions.plist` it writes (`app-store-connect`, export only – nothing is uploaded for you): the
+`.ipa` lands in `shells/out/ios/export/`, and Transporter or `xcrun altool` takes it from there. Without
+`APPLE_TEAM_ID` it stops before doing anything. It needs what only you have: an Apple Developer Program
+membership, your team's id, and an Xcode signed in to that account (Settings, Accounts) so signing can
+create the distribution certificate and profile. Every upload needs a higher build number –
+`CURRENT_PROJECT_VERSION` (and `MARKETING_VERSION`, the visible one) in
+`ios/App/App.xcodeproj/project.pbxproj`; Capacitor's defaults are 1 and 1.0, and nothing here bumps them.
+
+⚠ The bundle id is `appId` from `shells/config.json` (`com.tiesbreak.aceparent`, the same placeholder as
+everywhere): permanent once App Store Connect has seen it, so confirm it before creating the app record.
+
+⚠ **App Store review.** Apple dislikes bare web wrappers – the offline engine, saves and media session make
+a substantive case, but plan a review argument, not a rubber stamp.
+
 ## shells/config.json – what is yours to fill
 
 - `productName`, `appId` – set. ⚠ `appId` is permanent once a store has seen it (Play uses it as the
-  Android package name): confirm it before the first upload.
+  Android package name, App Store Connect as the iOS bundle identifier): confirm it before the first
+  upload. iOS reads these two and nothing else from this file.
 - `deployOrigin` – set (owner ruling 01.10, «пока этот»): `https://letulip.github.io/ties-break/` –
   scheme, host and the base path the PWA is served under. Android takes its host, start URL and icons
   from the manifest that URL serves. Windows ignores it. The domain moves later: change it here and
@@ -123,3 +210,14 @@ a stand-in `keytool`, not the real one – the keystore flow: file modes, the se
 environment, a keystore never replaced, a missing password file refused. Still to be seen on a real run:
 the real `keytool`, the signed `.apk` / `.aab`, `apksigner verify`, and that the SHA-256 in
 `assetlinks.json` is the one the signed apk carries.
+
+⚠ iOS, not exercised yet: `xcodebuild` and the simulator. On the machine this was built on, Xcode 26.2's
+system components were not installed (`xcodebuild -checkFirstLaunchStatus` exits 69, and `-runFirstLaunch`
+waits for an administrator), so no `.app` has been built from this rig and nothing has run in a simulator.
+What is proven: `cap add ios` (Capacitor 8.5.2, SwiftPM) produced the project; `cap sync` and the injection
+(`--sync-only`) run with `dist/` and `src/` untouched; the wiring in `src/main.ts` and the bridge's return
+values, against stand-in plugins (`tests/shell-bridge-wiring.test.ts`); and the Xcode preflight and
+`--archive` guard messages. Still to be seen on a real run: `xcodebuild` building the project, the app
+booting in a simulator with the game on screen, `window.Capacitor.Plugins.Share` and `.Filesystem` being
+there for a script with no bundler, and the share sheet appearing from the report control. `--archive`
+needs your team and has not been run at all.

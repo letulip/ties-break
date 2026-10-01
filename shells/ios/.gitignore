@@ -1,0 +1,17 @@
+# A nested ignore file cannot name its parent: shells/out/ (every artifact) is ignored by the ROOT .gitignore.
+node_modules/
+
+# ios/ is Capacitor's generated Xcode project. Its TEXT is this shell's source – reproducible with
+# `cap add ios` + `cap sync` and reviewable in a diff. What `cap sync` copies in, and what Xcode and
+# CocoaPods produce, is not, and stays out:
+#
+# the synced web app: a COPY of dist/ with the bridge injected by build.mjs, regenerated every run.
+# The bridge's own source lives in bridge/ and is committed.
+App/public/
+Pods/
+build/
+DerivedData/
+xcuserdata/
+# SwiftPM's local build state, should the project resolve packages in-tree
+.build/
+.swiftpm/
