@@ -81,7 +81,8 @@
     "bench:coachraise": "vite-node tools/coach-raise-bench.ts",
     "bench:form": "vite-node tools/form-bench.ts",
     "bench:gsweep": "vite-node tools/form-g-sweep.ts",
-    "bench:dynasty": "vite-node tools/dynasty-bench.ts"
+    "bench:dynasty": "vite-node tools/dynasty-bench.ts",
+    "shell:backup": "node shells/backup.mjs"
   },
   "engines": {
     "node": ">=22"

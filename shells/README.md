@@ -32,6 +32,13 @@ rewriting them needs wine – so the window icon is set at runtime. No signing c
 configured (set `CSC_LINK` / `CSC_KEY_PASSWORD` to sign); an unsigned installer shows SmartScreen's
 warning, and Steam does not need a signature.
 
+## Backing up the signing key
+
+`npm run shell:backup` – one tar.gz of `~/.tiesbreak` (key + password file) to your Desktop (or
+`node shells/backup.mjs /path/to/file.tar.gz`). Move the archive into a password manager or
+encrypted storage. ⚠ Never `gzip -r` the directory itself – gzip compresses files IN PLACE and
+deletes the originals (measured 01.10, recovered same day).
+
 ## shells/android – the Android TWA (S1)
 
 ⚠ The rig re-execs itself under Node 22 (Homebrew node@22): Bubblewrap 1.25.0's JDK unzip
