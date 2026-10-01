@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 150 dated entries, newest 2026-09-30. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 151 dated entries, newest 2026-10-01. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 16 | [THE SECONDARY MARKET BUILT: EIGHT STEPS, A DETERMINISTIC MEASUREMENT GATE, AND THE ART OF WAITING PRICED](#30092026--the-secondary-market-built-eight-steps-a-deterministic-measurement-gate-and-the-art-of-waiting-priced) | 2026-09-30 |
-| general | 28 | [THE LAUNCH RIG RULED: SLAM STAYS, THE ADDRESS, THREE SHELLS, THE RU FONTS](#30092026--the-launch-rig-ruled-slam-stays-the-address-three-shells-the-ru-fonts) | 2026-09-30 |
+| general | 29 | [THE THREE SHELLS BUILT: AN EXE, AN APP AND A 4-MEGABYTE APK, ALL FROM THE TERMINAL](#01102026--the-three-shells-built-an-exe-an-app-and-a-4-megabyte-apk-all-from-the-terminal) | 2026-10-01 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5730,3 +5730,21 @@ comment-stripped pin. The measured verdict that shaped it: `encodeExportFile` is
 will likely refuse the file share and land on the fallback, and the two-tap path is now a smoke
 row on his Motorola, not an assumption in the code. Gates at the boundary: check, sim (13/448s),
 e2e (139), component 247/247 – all first-run green.
+
+## 01.10.2026 – THE THREE SHELLS BUILT: AN EXE, AN APP AND A 4-MEGABYTE APK, ALL FROM THE TERMINAL
+
+P2 of the launch ladder, on `feat/app-shells`, his commission «скриптом… пока это на локале из
+терминала» delivered whole. Windows: Electron over the local dist on a measured `app://` scheme
+(file:// lost the A/B with mounted=0), mailto routed out, a single-instance lock, NSIS cross-built
+on the mac – a 123 MB installer plus the Steam depot layout. iOS: Capacitor on SwiftPM (no
+CocoaPods at all), the ONE sanctioned src contact – four lines in main.ts reading the shells'
+bridge off a window global – and the game photographed running on an iPhone 17 simulator, six
+background pixels exactly #0a0e13. Android: a Trusted Web Activity wrapping his deployed
+letulip.github.io/ties-break – a signed, byte-reproducible 4.2 MB apk plus the Play aab, the
+signing key born OUTSIDE the repo in ~/.tiesbreak with the loud back-it-up sentence, and the cert
+fingerprint proven equal to the rendered assetlinks.json with a negative control. The road there
+took three human gates he walked himself – Xcode's admin password, the iOS platform download, and
+Google's SDK licence – and one measured tooling defect: Bubblewrap's JDK unzip stalls SILENTLY on
+Node 26 (286 of 64,940 files, exit 0; whole in 20s under the repo's own Node 22), which cost his
+first two setup runs until the rig learned to re-exec itself AND its children under 22. Boundary
+gates: check, sim, e2e, component 247/247 – green first run.
