@@ -55,6 +55,11 @@ if (archive && !process.env.APPLE_TEAM_ID) {
   fail('--archive signs for the App Store and needs your Apple Developer team: set APPLE_TEAM_ID=<10-character team id> (README, "The App Store route")')
 }
 
+// SwiftPM project: Capacitor 8 writes App.xcodeproj and no workspace. A CocoaPods project would carry
+// App.xcworkspace; whichever exists is what xcodebuild must be pointed at.
+const workspace = path.join(here, 'ios', 'App', 'App.xcworkspace')
+const project = existsSync(workspace) ? ['-workspace', workspace] : ['-project', path.join(here, 'ios', 'App', 'App.xcodeproj')]
+
 // 0b. Xcode's system components. A fresh Xcode (or one that was just updated) refuses to build anything
 //     until `xcodebuild -runFirstLaunch` has installed them, with "failed to load a required plug-in" –
 //     after the dist build, a minute in. -checkFirstLaunchStatus says so up front: exit 0 when ready.
@@ -65,6 +70,22 @@ if (!syncOnly) {
     fail(
       `Xcode's system components are not installed (xcodebuild -checkFirstLaunchStatus exit ${check.status}). ` +
         'Run `sudo xcodebuild -runFirstLaunch` once – it needs an administrator and is not something this script does for you – then run this again. ' +
+        '(`--sync-only` needs no Xcode.)',
+    )
+  }
+
+  // 0c. The iOS platform. Xcode 26 ships without it, and until it is downloaded xcodebuild refuses every iOS
+  //     build with «no destinations» or "iOS 26.x is not installed" and a bare exit 70 – at the build step,
+  //     minutes in. -showdestinations says the same up front. Only xcodebuild's own wording stops the run:
+  //     any other failure of the probe (an offline package resolve, a timeout) is left for the build to
+  //     report. It takes the build's -derivedDataPath, so the packages it resolves are the build's too.
+  const probe = spawnSync('xcodebuild', [...project, '-scheme', 'App', '-derivedDataPath', path.join(here, 'build'), '-showdestinations'], { encoding: 'utf8', timeout: 120000 })
+  const evidence = `${probe.stdout ?? ''}\n${probe.stderr ?? ''}`.split('\n').find((line) => /no destinations|is not installed|download and install the platform/i.test(line))
+  if (evidence) {
+    console.error(`  xcodebuild says: ${evidence.trim()}`)
+    fail(
+      'xcodebuild reports no usable iOS destination – most likely the iOS platform is not installed. ' +
+        'Run `xcodebuild -downloadPlatform iOS` once (several GB; Xcode > Settings > Components does the same), then run this again. ' +
         '(`--sync-only` needs no Xcode.)',
     )
   }
@@ -105,11 +126,6 @@ if (syncOnly) {
   console.log('\n[shell:ios] --sync-only: stopping before Xcode. Synced app: shells/ios/ios/App/App/public/')
   process.exit(0)
 }
-
-// SwiftPM project: Capacitor 8 writes App.xcodeproj and no workspace. A CocoaPods project would carry
-// App.xcworkspace; whichever exists is what xcodebuild must be pointed at.
-const workspace = path.join(here, 'ios', 'App', 'App.xcworkspace')
-const project = existsSync(workspace) ? ['-workspace', workspace] : ['-project', path.join(here, 'ios', 'App', 'App.xcodeproj')]
 
 if (archive) {
   // 4b. The App Store route. NOT exercised: it needs the owner's Apple Developer team.

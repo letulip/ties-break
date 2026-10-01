@@ -107,6 +107,7 @@ First time only, in a terminal:
 ```bash
 npm --prefix shells/ios ci
 sudo xcodebuild -runFirstLaunch   # only on an Xcode that was just installed or updated
+xcodebuild -downloadPlatform iOS  # Xcode 26 ships without the iOS platform; several GB
 ```
 
 `-runFirstLaunch` installs the system components Xcode needs before it will build anything. It needs an
@@ -114,9 +115,16 @@ administrator, so it is yours to run – the script never does. `shell:ios` asks
 `xcodebuild -checkFirstLaunchStatus` up front and stops saying so; without that check the build fails a
 minute in with "failed to load a required plug-in".
 
+`-downloadPlatform iOS` fetches the iOS platform (Xcode > Settings > Components does the same). Without it
+xcodebuild refuses the build with «no destinations» or "iOS 26.x is not installed" and a bare exit 70, at the
+build step, minutes in; `shell:ios` runs `xcodebuild -showdestinations` up front and stops with this hint when
+it hears either wording. Any other failure of that probe (an offline package resolve, a timeout) is left for
+the build to report. The probe was exercised on the real tool only where it passes – the refusal wordings it
+stops on were tested against stand-in output.
+
 One run does, in order:
 
-1. the Xcode check above (`--sync-only` skips it);
+1. the two Xcode checks above, first-launch components and the iOS platform (`--sync-only` skips them);
 2. `npx vite build` – a stale `dist/` in an app is worse than a slow build, and the wiring in
    `src/main.ts` is only in a `dist/` built after it (`SHELL_SKIP_DIST=1` reuses the one on disk);
 3. `cap sync ios` – Capacitor copies `dist/` into `ios/App/App/public/` and writes the SwiftPM manifest
@@ -140,7 +148,10 @@ not needed. The first build resolves `capacitor-swift-pm` from GitHub, so it nee
 **What is committed.** `shells/ios/ios/` is Capacitor's generated Xcode project: its text is the shell's
 source, reviewable in a diff, and `cap sync` rewrites its generated parts the same way every run. The
 synced copy (`ios/App/App/public/`), build output (`build/`, DerivedData) and per-user Xcode state are not
-(`shells/ios/.gitignore`). ⚠ The icon and launch-image PNGs that `cap add ios` generated are Capacitor's
+(`shells/ios/.gitignore`). `App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` is
+committed on purpose: it pins every package SwiftPM resolved – `capacitor-swift-pm` 8.5.2 and, transitively,
+the filesystem plugin's `ion-ios-filesystem` 1.1.4 – so a later build resolves the same revisions.
+⚠ The icon and launch-image PNGs that `cap add ios` generated are Capacitor's
 placeholders, and the repo-wide `*.png` rule keeps them out of git: a fresh clone builds without them
 (Xcode warns), and a store build needs the game's own 1024 px app icon and launch image put into
 `ios/App/App/Assets.xcassets` first.
@@ -215,13 +226,20 @@ environment, a keystore never replaced, a missing password file refused. Still t
 the real `keytool`, the signed `.apk` / `.aab`, `apksigner verify`, and that the SHA-256 in
 `assetlinks.json` is the one the signed apk carries.
 
-⚠ iOS, not exercised yet: `xcodebuild` and the simulator. On the machine this was built on, Xcode 26.2's
-system components were not installed (`xcodebuild -checkFirstLaunchStatus` exits 69, and `-runFirstLaunch`
-waits for an administrator), so no `.app` has been built from this rig and nothing has run in a simulator.
-What is proven: `cap add ios` (Capacitor 8.5.2, SwiftPM) produced the project; `cap sync` and the injection
-(`--sync-only`) run with `dist/` and `src/` untouched; the wiring in `src/main.ts` and the bridge's return
-values, against stand-in plugins (`tests/shell-bridge-wiring.test.ts`); and the Xcode preflight and
-`--archive` guard messages. Still to be seen on a real run: `xcodebuild` building the project, the app
-booting in a simulator with the game on screen, `window.Capacitor.Plugins.Share` and `.Filesystem` being
-there for a script with no bundler, and the share sheet appearing from the report control. `--archive`
-needs your team and has not been run at all.
+iOS, measured on a simulator (01.10). On Xcode 26.2 (17C52), with its first-launch components and the iOS
+platform installed, `npm run shell:ios` ends in `** BUILD SUCCEEDED **` and `shells/out/ios/App.app` –
+22.1 MB, Debug, unsigned, bundle id `com.tiesbreak.aceparent`. That `.app` was installed and launched on an
+iPhone 17 simulator running iOS 26.3.1 (cold boot about 30 s): `simctl launch` returned a pid, the process
+was still running two minutes later, and a screenshot shows the game's own title screen – «Ties Break» with
+its lime ball dot, «Ace Parent» and a faint «Tap to start» – on `#0a0e13` (six background pixels sampled
+across the frame, all exactly that), not a white or an error page. Proven before and still standing: `cap add
+ios` (Capacitor 8.5.2, SwiftPM) produced the project; `cap sync` and the injection (`--sync-only`) run with
+`dist/` and `src/` untouched; the wiring in `src/main.ts` and the bridge's return values, against stand-in
+plugins (`tests/shell-bridge-wiring.test.ts`); and the Xcode preflight and `--archive` guard messages.
+
+⚠ iOS, not exercised yet: (1) the report bridge in a real WKWebView – nothing drove the UI, so
+`window.Capacitor.Plugins.Share` and `.Filesystem` being there for a script with no bundler, and the share
+sheet opening from the report control under a human tap, are unseen; (2) `--archive`, which needs your team
+and has not been run at all; (3) the store icon – the game's own 1024 px app icon and launch image are not
+in `ios/App/App/Assets.xcassets` yet (see "What is committed"), so the home-screen icon and the store
+listing icon have not been looked at.
