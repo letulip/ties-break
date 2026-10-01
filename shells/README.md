@@ -34,6 +34,10 @@ warning, and Steam does not need a signature.
 
 ## shells/android – the Android TWA (S1)
 
+⚠ The rig re-execs itself under Node 22 (Homebrew node@22): Bubblewrap 1.25.0's JDK unzip
+stalls silently on newer majors (measured 01.10 – 286 of 64,940 files, exit 0; the A/B is in
+build.mjs's header). No PATH juggling is needed in your commands.
+
 First time only, in a terminal, both steps:
 
 ```bash
