@@ -1,0 +1,16 @@
+# A nested ignore file cannot name its parent: shells/out/ (every artifact) is ignored by the ROOT .gitignore.
+node_modules/
+
+# twa/ is Bubblewrap's generated Android project. Its TEXT is this shell's source – reproducible from
+# shells/config.json plus the live manifest (`npm run generate`), and reviewable. Build outputs, caches
+# and generated binaries are not, and stay out:
+twa/.gradle/
+twa/build/
+twa/app/build/
+twa/local.properties
+twa/*.apk
+twa/*.aab
+twa/*.idsig
+twa/store_icon.png
+twa/app/src/main/res/**/*.png
+twa/gradle/wrapper/gradle-wrapper.jar

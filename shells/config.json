@@ -3,8 +3,16 @@
   "productName": "Ties Break",
   "appId": "com.tiesbreak.aceparent",
   "//appId": "Reverse-domain id. Permanent once a store has seen it (Play uses it as the Android package name): confirm it before the first upload.",
-  "deployOrigin": "",
-  "//deployOrigin": "S1's ONE required fill: the https origin the PWA is deployed at, scheme and host only (no path). The Android TWA wraps the deployment, never the local dist, so S1 cannot build while this is empty. Windows ignores it.",
+  "deployOrigin": "https://letulip.github.io/ties-break/",
+  "//deployOrigin": "The URL the PWA is deployed at: scheme, host and the base path it is served under (owner ruling 01.10: this one for now, the domain moves later – so every shell reads it from here and nothing else spells it). The Android TWA wraps the deployment, never the local dist, and takes its host, start URL, name, colours and icons from the manifest this URL serves. Windows ignores it.",
+  "android": {
+    "packageId": "com.tiesbreak.aceparent",
+    "versionCode": 1,
+    "versionName": "0.1.0",
+    "keystorePath": "~/.tiesbreak/android.keystore",
+    "keystoreAlias": "tiesbreak"
+  },
+  "//android": "S1 (shells/android). ⚠ packageId is PERMANENT once any store has seen it (Play keys the whole app listing on it): the owner blesses it before the first upload. versionCode must rise with every Play upload. keystorePath is OUTSIDE the repo on purpose – losing that keystore loses the app's store identity, so back up ~/.tiesbreak/ (the keystore and android-keystore.txt beside it).",
   "steamAppId": "",
   "steamDepotId": "",
   "//steam": "Both come from the Steamworks partner site. Empty is fine until the first upload: shell:win renders the depot scripts with 0 and says so."
