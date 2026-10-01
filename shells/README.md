@@ -47,10 +47,10 @@ npm --prefix shells/android run setup
 
 `setup` is the one interactive moment, and it is yours. Bubblewrap asks whether to download its own
 JDK 17 and Android SDK into `~/.bubblewrap`, and Google's Android SDK licence has to be read and
-accepted by a person: the script shows those prompts and never answers one. **Disk: several GB** across
-`~/.bubblewrap` (JDK, SDK) and `~/.gradle` (Gradle and the AndroidX libraries the first build pulls) –
-the exact figure is not measured. After that `npm run shell:android` asks nothing; run without `setup`
-it stops and says so.
+accepted by a person: the script shows those prompts and never answers one. **Disk: about 2.3 GB**
+(measured 01.10, after the first build): `~/.bubblewrap` 1.6 GB (JDK 17, Android SDK) and `~/.gradle`
+671 MB (Gradle and the AndroidX libraries the first build pulls). After that `npm run shell:android` asks
+nothing; run without `setup` it stops and says so.
 
 One run does, in order:
 
@@ -75,7 +75,11 @@ written (measured: with only `appVersionName` the generated project got `version
 **What is committed.** `shells/android/twa/` is Bubblewrap's generated Android project. Its text is the
 shell's source – reproducible with `generate` and reviewable in a diff. The generated binaries (launcher
 and splash PNGs, `gradle-wrapper.jar`) and build output are not committed (`shells/android/.gitignore`);
-the PNGs are cut from the deployment's own icons every time.
+the PNGs are cut from the deployment's own icons every time. ⚠ One file has two writers that disagree
+(measured 01.10): `app/src/main/res/xml/shortcuts.xml`. `generate` writes the template's 15-line licence
+header above the `<shortcuts/>` element (704 bytes); the Gradle task `generateShorcutsFile`, which
+`bubblewrap build` runs, rewrites it as the bare element (73 bytes). The committed copy is the bare one, so
+a full `shell:android` leaves the tree clean and a lone `generate` shows the header as a diff.
 
 ### The signing key
 
@@ -216,15 +220,44 @@ overlay, and the Steam redistributable files that steamworks.js's own README ask
 the build. What is proven is the other direction – with no Steam present, `--steam` logs
 `STEAM_UNAVAILABLE …` and the shell runs on.
 
-⚠ Android, not exercised yet: `setup` and `bubblewrap build`. The first run needs a person at a terminal
-(Bubblewrap's JDK and SDK offer, Google's Android SDK licence), so no `.apk` / `.aab` has been built from
-this rig yet. What is proven is the half that needs no toolchain: the live-origin probe, the rendered
-`twa-manifest.json`, `bubblewrap update` producing the project (regenerating it over the committed copy
-changes nothing), the pure helpers (manifest link, icons, SHA-256 parse, assetlinks shape) and – against
-a stand-in `keytool`, not the real one – the keystore flow: file modes, the secret only ever in the
-environment, a keystore never replaced, a missing password file refused. Still to be seen on a real run:
-the real `keytool`, the signed `.apk` / `.aab`, `apksigner verify`, and that the SHA-256 in
-`assetlinks.json` is the one the signed apk carries.
+Android, measured with the real toolchain (01.10). On a cold machine (no `~/.gradle`, an SDK holding only
+`licenses/` and `tools/`) `npm run shell:android` ran end to end in about 1 min 40 s and exited 0, with stdin
+closed so that it could ask nothing: it prints «Installing Android Build Tools. Please, read and accept the
+license agreement.» and carries on, `setup` having accepted the licences already. It generated the signing
+key, pulled `build-tools` 35.0.0 and 36.1.0, `platforms/android-36` and `platform-tools` into the SDK, and
+left `shells/out/android/ties-break-0.1.0.apk` (signed, universal, 4.24 MB), `ties-break-0.1.0.aab` (4.37 MB)
+and `assetlinks.json`. Two checks on that apk, with the tools in `~/.bubblewrap/android_sdk/build-tools/36.1.0`:
+
+- `apksigner verify --verbose --print-certs` prints `Verifies` (v1, v2 and v3 signatures; one signer,
+  `CN=Ties Break`, RSA 2048) and exits 0, and the SHA-256 it prints is digit for digit the fingerprint in
+  `assetlinks.json` – and the one the rig read out of the keystore before the build. (The same grep with one
+  digit flipped finds nothing, so the comparison can fail.) It also prints 35 `WARNING: META-INF/… not
+  protected by signature` lines: Gradle's androidx and kotlinx `.version` files and build metadata, which the
+  v1 JAR signature does not cover and the whole-file v2 and v3 signatures do. The exit status stays 0.
+- `aapt dump badging` reads `package: name='com.tiesbreak.aceparent' versionCode='1' versionName='0.1.0'`,
+  `sdkVersion:'21'`, `targetSdkVersion:'36'` and
+  `launchable-activity: name='com.tiesbreak.aceparent.LauncherActivity'  label='Ties Break'` – the
+  `shells/config.json` values, not a default.
+
+A second run, warm and over the key that now existed, took about 20 s and exited 0: no keystore was generated,
+the SHA-256 it printed was the same, the apk came out byte-identical (same checksum) and the tree ended as the
+first run had left it. The `.aab` is not reproducible – 4,578,417 and 4,578,419 bytes on the two runs – so
+compare the apk's checksum, not the bundle's.
+
+The SDK Bubblewrap installs is the older layout – `tools/bin/sdkmanager`, no `cmdline-tools/` – and
+`toolchain()` in `build.mjs` already lists `tools/bin` among the places it looks, so nothing there needed
+changing.
+
+The keystore came into being on the first run: `~/.tiesbreak/android.keystore` and its password in
+`~/.tiesbreak/android-keystore.txt`, outside the repo (directory mode 700, both files 600). ⚠⚠ **BACK UP
+`~/.tiesbreak/` NOW – the keystore and the password file together. Losing either loses the app's store
+identity, and nothing in this repo can recreate it.**
+
+⚠ Android, still unseen: (1) the apk installed and launched on a device or an emulator – nothing here has run
+it; (2) the `.aab` beyond its size – built by the same run, not inspected, nothing uploaded; (3) the URL bar
+going away, which needs `assetlinks.json` live at `https://letulip.github.io/.well-known/assetlinks.json`
+(see above) – your upload; (4) the keystore's refusals (a keystore without its password file) – still tested
+only against a stand-in `keytool`.
 
 iOS, measured on a simulator (01.10). On Xcode 26.2 (17C52), with its first-launch components and the iOS
 platform installed, `npm run shell:ios` ends in `** BUILD SUCCEEDED **` and `shells/out/ios/App.app` –
