@@ -23,14 +23,16 @@
 // CLI exits 0 with a half-born toolchain – the owner's first setup died exactly there. Under the
 // repo's own pinned Node 22 the same zip extracts whole in 20s (A/B, same bytes, denominator on
 // both arms). So: if this process runs on a major newer than 22 and Homebrew's keg-only node@22
-// exists, re-exec ourselves under it; otherwise warn, naming this cause and the exact command.
+// exists, re-exec ourselves under it – WITH node@22 prepended to PATH, because Bubblewrap is
+// spawned through its .bin shim (#!/usr/bin/env node) and children resolve node off PATH, not off
+// our execPath: the owner's second setup stalled identically until this line (01.10, take 2).
 const NODE22 = '/opt/homebrew/opt/node@22/bin/node'
 if (Number(process.versions.node.split('.')[0]) > 22 && !process.env.TB_SHELL_REEXEC) {
   const { existsSync: has } = await import('node:fs')
   if (has(NODE22)) {
     const { spawnSync } = await import('node:child_process')
     const r = spawnSync(NODE22, [new URL(import.meta.url).pathname, ...process.argv.slice(2)],
-      { stdio: 'inherit', env: { ...process.env, TB_SHELL_REEXEC: '1' } })
+      { stdio: 'inherit', env: { ...process.env, TB_SHELL_REEXEC: '1', PATH: '/opt/homebrew/opt/node@22/bin:' + process.env.PATH } })
     process.exit(r.status ?? 1)
   }
   console.warn('[shell:android] WARNING: Node ' + process.versions.node + ' – Bubblewrap\'s JDK unzip '
