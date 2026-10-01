@@ -3,7 +3,7 @@ type: plan
 status: current
 area: localization
 canonical: true
-last-reviewed: 2026-09-30
+last-reviewed: 2026-10-01
 ---
 
 # Russian localization editorial stack
@@ -26,6 +26,7 @@ last-reviewed: 2026-09-30
 | [Russian voice and terminology](ru-style-guide-2026-09.md) | Tone, address, punctuation, morphology and the shared tennis/product glossary | first draft |
 | [Source inventory and sequence](ru-source-inventory-2026-09.md) | Every player-facing surface, grouped into reviewable editorial batches | first draft |
 | [Batch 01 – shell and system](ru-ui-shell-2026-09.md) | Post-by-post replacement table for navigation, recovery, notices and the week control | drafted |
+| [Batch 02A – entry and onboarding](ru-onboarding-2026-10.md) | Splash, career wizard, shared identity copy and interface tour | drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
@@ -56,21 +57,22 @@ diary corpora → endings → metadata and final LQA.
 - `APPROVED` – owner-approved wording, ready to become a runtime catalogue entry.
 - `LANDED` – wired in code and checked in the Russian build.
 
-## Questions that do not block Batch 01
+## Owner rulings – 01.10.2026
 
-1. **`Home`: `Дом` or `Главная`?** I recommend **`Дом`**. It preserves the game's family viewpoint
-   and the English word's deliberate double meaning. `Главная` is conventional app chrome but loses
-   the product voice.
-2. **Title:** I recommend keeping **Ties Break: Ace Parent** as the product mark. A Russian subtitle
+1. The navigation label is **`Дом`**, not `Главная`. `APPROVED`.
+2. The compact statistics/navigation label is **`Рейтинг`**. `APPROVED`.
+3. Russian copy writes **`ё`** wherever it belongs. It is a useful distinguishing letter, not an
+   optional typographic variant. `APPROVED`.
+4. The Russian mode covers **all current player-facing content**. A screen or loaded career that
+   mixes Russian controls with English story, history, accessibility text or metadata is unfinished.
+   In particular, legacy English stored in `WorldEvent.text` may be retained internally for save
+   compatibility, but it is not an acceptable visible fallback in Russian mode. `APPROVED`.
+
+## Questions still open
+
+1. **Title:** I recommend keeping **Ties Break: Ace Parent** as the product mark. A Russian subtitle
    can be written for store pages later; silently translating the logo inside the game would create
    a second brand.
-3. **Address:** interface copy should stay impersonal wherever possible. When the daughter speaks
-   directly to the parent, the relationship is naturally **`ты`**, never formal `вы`.
-4. **`ё`:** I recommend writing it where it belongs (`ещё`, `её`, `всё`). This is narrative prose,
-   not a wire-service feed, and removing it makes short lines needlessly flatter and occasionally
-   ambiguous.
-5. **Old careers:** `WorldEvent.text` is persisted as finished prose today. I recommend that new
-   events gradually persist a semantic copy key plus typed arguments while retaining the old text as
-   a compatibility fallback. Old saves whose history contains only English should remain readable in
-   English rather than receive a guessed machine migration. This needs the technical branch's answer
-   before “switch language at any moment” can be promised honestly.
+2. **Address:** interface copy stays impersonal wherever possible. The remaining choice is how direct
+   onboarding and the daughter's own speech address the parent: neutral/formal `вы`, or intimate
+   family `ты`. The ruling about `ё` did not decide this separately.

@@ -3,7 +3,7 @@ type: plan
 status: current
 area: localization
 canonical: false
-last-reviewed: 2026-09-30
+last-reviewed: 2026-10-01
 ---
 
 # Russian localization source inventory and sequence
@@ -16,7 +16,7 @@ player-facing. Each batch must verify its candidates against runtime code and mo
 | Batch | Surfaces | Primary source | Output | State |
 | --- | --- | --- | --- | --- |
 | RU-01 | App shell, recovery, notices, navigation, shared verbs, week CTA | `src/App.vue`, `src/composables/weekAhead.ts`, `weekAction.ts`, `softLeave.ts`, shared controls | `ru-ui-shell-2026-09.md` | drafted |
-| RU-02 | Splash, childhood prologue, onboarding wizard and coach marks | `SplashScreen.vue`, `ChildhoodPrologue.vue`, `Prologue*.vue`, `OnboardingWizard.vue`, `coachTour.ts` | planned | open |
+| RU-02 | Splash, childhood prologue, onboarding wizard and coach marks | `SplashScreen.vue`, `ChildhoodPrologue.vue`, `Prologue*.vue`, `OnboardingWizard.vue`, `OnboardingTour.vue` | `ru-onboarding-2026-10.md` (entry/wizard/tour); prologue follows | part A drafted |
 | RU-03 | Home, identity rail, news feed, weekly story, calendar days | `HomeScreen.vue`, `ThisWeekScreen.vue`, `CalendarScreen.vue`, `RailIdentity.vue`, diary presentation composables | planned | open |
 | RU-04 | Season planner, entries, tournament preview and tournament flow | `SeasonScreen.vue`, `NextTournamentPanel.vue`, `TournamentFlow.vue`, `TierGuide.vue`, season label modules | planned | open |
 | RU-05 | Profile, skills, coach market, training plan and knocks | `KidScreen.vue`, `CoachMarketScreen.vue`, `PlanWeekSheet.vue`, `KnockDialog.vue`, `InjuryStopDialog.vue` | planned | open |
@@ -98,15 +98,21 @@ This editorial stack is implementation-neutral, but a viable localization layer 
 - no locale-dependent data in saves and no locale influence on RNG or simulation outcomes;
 - locale switching or reload behaviour defined explicitly, rather than emerging from cached
   snapshots containing already-rendered English prose.
+- no visible English fallback in Russian mode, including events loaded from an existing career;
+  missing Russian copy is a release/LQA failure rather than an acceptable mixed-language state.
 
 The last point is architectural, not hypothetical: `WorldState.events` persists `WorldEvent[]`, and
 `WorldEvent.text` is a finished `string` (`src/engine/world/state.ts`,
 `src/shared/protocol/events.ts`). `fireMilestone` and many other writers put English prose directly
 into that field. Each technical batch must classify whether a string is rendered at write time,
 snapshot time or UI time. A locale switch cannot retranslate historical text that was saved only as
-English; that trade-off must be intentional. The recommended forward shape is a semantic key plus
-typed arguments and a legacy-text fallback, not an attempt to parse old English sentences during a
-migration.
+English. The owner ruled on 01.10 that Russian mode may not expose that English as a compatibility
+fallback. The recommended forward shape is a semantic key plus typed arguments; the legacy string
+may remain in the save for compatibility or diagnostics, but the Russian renderer must receive a
+Russian event representation. Existing saves therefore need a versioned, tested conversion of all
+known event shapes, or another deterministic reconstruction from saved facts. If a legacy shape
+cannot be converted honestly, implementation must surface that gap during migration/LQA and resolve
+it explicitly – it must not silently display an English island.
 
 ## 5. Review rhythm
 

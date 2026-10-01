@@ -3,7 +3,7 @@ type: corpus
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-09-30
+last-reviewed: 2026-10-01
 ---
 
 # RU-01 – shell, system messages and the week control
@@ -17,8 +17,8 @@ semantic IDs are editorial IDs, not a demand that the technical branch use the s
 | --- | --- | --- | --- | --- | --- |
 | RU01-N01 | `src/App.vue:351` | `Season` | `Сезон` | | `DRAFT` |
 | RU01-N02 | `src/App.vue:352` | `Calendar` | `Календарь` | | `DRAFT` |
-| RU01-N03 | `src/App.vue:353` | `Home` | `Дом` | `QUESTION`; preferred over generic `Главная` | `DRAFT` |
-| RU01-N04 | `src/App.vue:354` | `Stats` | `Рейтинг` | compact tab label; screen heading may remain `Статистика` | `DRAFT` |
+| RU01-N03 | `src/App.vue:353` | `Home` | `Дом` | owner ruling 01.10; not generic `Главная` | `APPROVED` |
+| RU01-N04 | `src/App.vue:354` | `Stats` | `Рейтинг` | owner ruling 01.10; screen heading may remain `Статистика` where it names more than ranking | `APPROVED` |
 | RU01-N05 | `src/App.vue:355` | `Trophies` | `Трофеи` | | `DRAFT` |
 | RU01-N06 | `src/App.vue:1819` | `Main` | `Основная навигация` | accessible landmark, not visible | `DRAFT` |
 | RU01-N07 | `src/App.vue:725` | `New on the season calendar` | `Новое в календаре сезона` | accessible description | `DRAFT` |

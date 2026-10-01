@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-09-30
+last-reviewed: 2026-10-01
 ---
 
 # Russian voice and terminology
@@ -52,7 +52,8 @@ as repeated passive voice in English. Pronouns may be dropped when the subject r
 - Use the short dash `–`, never the em dash `—`, matching the project law.
 - Use Russian quotation marks in narrative output: outer `«…»`, inner `„…“` if nesting is ever
   unavoidable. The catalogue may store plain text; the renderer must not force English smart quotes.
-- Use `ё` consistently.
+- Use `ё` consistently. This is owner-approved: `её`, `ещё`, `всё`, `счёт`, `приём`, never their
+  flattened variants in Russian player copy.
 - Use a non-breaking space between a number and its unit in rendered copy where the UI permits it:
   `12 недель`, `53 очка`, `$120` remains without a space because the game formats dollars that way.
 - Avoid English title case. Russian headings use sentence case: `Семейный бюджет`, not
@@ -101,10 +102,10 @@ These are preferred meanings, not a ban on natural grammar around them.
 
 | English concept | Preferred Russian | Notes |
 | --- | --- | --- |
-| Home | `Дом` | `QUESTION`, recommended; section name and family place |
+| Home | `Дом` | `APPROVED`; section name and family place |
 | Season | `Сезон` | Navigation and season planning |
 | Calendar | `Календарь` | The day-by-day week surface |
-| Stats | `Статистика` / nav `Рейтинг` | Full heading / compact navigation label |
+| Stats | `Статистика` / nav `Рейтинг` | `Рейтинг` is `APPROVED` for compact navigation; full heading remains contextual |
 | Trophies | `Трофеи` | The cabinet may be `витрина`, never literal `кабинет` |
 | This week | `Эта неделя` | Use `На этой неделе` inside a sentence |
 | week story / recap | `итоги недели` | Not literal `история недели` in system UI |
