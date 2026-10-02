@@ -15,7 +15,7 @@ law), each owns only its own lines.
 ⚠ Invariant 4: every NEW player-facing string an item needs goes in the DRAFT table at the bottom,
 never straight into the owner's voice. His sketches (item 4) are the draft, still his to bless.
 
-- [ ] **1. «2 матча Шлема снимают 8% кондиции, а 2 матча 250 - 10%. У нас всё ещё перерасход
+- [?] **1. «2 матча Шлема снимают 8% кондиции, а 2 матча 250 - 10%. У нас всё ещё перерасход
   кондиции присутствует. 3 игры на 1000 снимают 15%. 24% за 5 игр 500 и 26% за 6 игр 1000. Давай
   проверим что там вообще, мы хотели немного подкорректировать начальные матчи по-моему.»**
   – Reading: per-match condition drain looks tier-blind (≈4–5%/match everywhere: Slam 4.0, 250 5.0,
@@ -25,6 +25,19 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   Evidence: a deterministic probe table (tier × round → drain) from real engine draws, the prior
   intent found in docs (or stated absent), and – if changed – the same table after, with the pin
   updated and the frozen-capture verdict stated.
+  **B1 outcome (02.10) – `[?]`: measured, NO code change, options for the owner.**
+  `tools/condition-drain-probe.ts` (real matches, 140k fixed-seed runs) reproduces all five of his
+  figures as NET of the travelling masseur (3 per night between rounds, 19.09): each sits between the
+  all-straight-sets floor and the all-hard ceiling – Slam 2 → 8 and 250 2 → 10 ARE the floors – and
+  every gross floor (11 · 13 · 18 · 34 · 39) is above his number, so none can be a gross figure. The
+  drain is tier-blind BY DESIGN: the scoreline part averages 2.6 at every tier and round, and every
+  top rung plateaus at 7 per straight-sets match from round 3 (250/500: surcharge 4 + ladder 1;
+  1000/Slam: 5 + 0). Only the openers differ: the Slam's first two (5, 6) are 1 cheaper than a 250's
+  (6, 7) – his own 14.08 ramp `[-2,-1,0]` meeting the 01.08 W ladder. Intent in the docs: the 14.08
+  ramp is shipped as he wrote it; the 19.09 «уменьшить усталость на глубоких турнирах» shipped as
+  masseur relief 2 → 3 and its concave-tail half is HELD for his ruling (the-season-equation §10f; it
+  does not touch openers); a ruling to soften the 250/500 openers is ABSENT. Options A–D with
+  predicted tables are in the B1 report – his pick, one sentence.
 
 - [ ] **2. «Сверху интерфейса периодически появляется горизонтальная полоса в 1 пиксель на всю
   ширину экрана»** – Reading: an intermittent 1px full-width line at the very top of the UI –
