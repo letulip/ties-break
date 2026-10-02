@@ -395,7 +395,7 @@ describe('round 45 #6b · the hand a note is written in', () => {
     const c = sweep('after', TUNING)
     expect(c.badStep, `steps used: ${JSON.stringify(c.atStep)}`).toBe(0)
     expect(Object.keys(c.atStep).length, 'the sweep uses every step, or the ladder is dead').toBe(3)
-  }, 120_000)
+  }, 60_000)
 
   it("C's note slot is the strip under the hero and left of the second photograph – wide and low, not narrow and tall", () => {
     const slot = LAYOUTS.C.note
@@ -412,29 +412,29 @@ describe('round 45 #6b · the hero stays clear and the windows are spared – ov
     const b = sweep('b6', B6)
     expect(b.heroCovered, `B6's knobs: ${b.heroCovered} of ${b.sheets.C} C sheets cover the hero`).toBeGreaterThan(0)
     expect(b.shrunk.B, `B6's knobs: ${b.shrunk.B} of ${b.sheets.B} B sheets at a shrunk rung`).toBeGreaterThanOrEqual(40)
-  }, 120_000)
+  }, 60_000)
 
   it('⭐ the hero picture is covered by no note and no loose line on ANY C sheet (B6 measured 52 of 121)', () => {
     const c = sweep('after', TUNING)
     expect(c.sheets.C).toBeGreaterThan(100)
     expect(c.heroCovered, `${c.heroCovered} of ${c.sheets.C} C sheets still cover the hero`).toBe(0)
-  }, 120_000)
+  }, 60_000)
 
   it('⭐ photograph windows are at a shrunk rung on far fewer sheets: B at most 22 of 67 (B6 measured 45), C 35 of 121 (59), A 10 of 147 (26)', () => {
     const c = sweep('after', TUNING)
     expect(c.shrunk.B, `B: ${c.shrunk.B} of ${c.sheets.B} at a shrunk rung`).toBeLessThanOrEqual(22)
     expect(c.shrunk.C, `C: ${c.shrunk.C} of ${c.sheets.C}`).toBeLessThanOrEqual(35)
     expect(c.shrunk.A, `A: ${c.shrunk.A} of ${c.sheets.A}`).toBeLessThanOrEqual(10)
-  }, 120_000)
+  }, 60_000)
 
   it('the step-down is what spares the windows: with the notes written at full size B is back to shrinking on 38+ sheets', () => {
     const c = sweep('no-step', { ...TUNING, steps: OFF })
     expect(c.shrunk.B, `no step-down: B ${c.shrunk.B}, C ${c.shrunk.C}`).toBeGreaterThanOrEqual(38)
     expect(c.shrunk.C).toBeGreaterThanOrEqual(60)
-  }, 120_000)
+  }, 60_000)
 
   it('the hero protection is what keeps the hero clear: switched off, the hero is covered again', () => {
     const c = sweep('no-hero', { ...TUNING, protectHero: false })
     expect(c.heroCovered, `hero protection off: ${c.heroCovered} of ${c.sheets.C}`).toBeGreaterThan(0)
-  }, 120_000)
+  }, 60_000)
 })

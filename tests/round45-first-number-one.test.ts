@@ -397,5 +397,5 @@ describe('D · as played – careers walked through the public commands, nothing
     }
     expect(expectedTotal, 'the walk produced at least one #1 page – otherwise this case proves nothing').toBeGreaterThan(0)
     expect(absorbed, 'and the walk met the same-week coincidence at least once, which is what the paragraph above reports').toBeGreaterThan(0)
-  }, 240_000)
+  }, 60_000)
 })
