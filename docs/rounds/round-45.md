@@ -413,3 +413,4 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 - 6b: «я посмотрю потом глазами и скажу» – the 0.82 floor waits for his pass.
 - The emitter fix (the pending chip's scope) folds into this wave as B16 – discovered in-wave,
   pays its tax in-wave (three hand-splices today); the chip comes down when B16 lands.
+- B16: the emitter is idempotent (--write twice = zero diff), hand blocks and voice order preserved, pinned by test.

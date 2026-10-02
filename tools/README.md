@@ -44,7 +44,7 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `_spotlight.ts` | imported by a live tool |
 | `_stats.ts` | imported by a live tool |
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
-| `album-corpus-emit.ts` | writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album's 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec |
+| `album-corpus-emit.ts` | writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album's 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec; idempotent – a re-run over a correct module changes nothing, and the hand-written comment block above an occasion and its voice order are carried, not dropped (--out <path> is the temp mode) |
 | `album-corpus-parse.ts` | imported by the test suite |
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
