@@ -133,12 +133,37 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   mutation arms measured red); frozen capture unmoved. Open: his 150M+ is beyond this sample's tail
   (max $36.7M) – the same mechanism on a richer career.
 
-- [ ] **10. «Бренд жёстко приносит 13800 и ни центом больше, независимо ни от чего, даже при
+- [?] **10. «Бренд жёстко приносит 13800 и ни центом больше, независимо ни от чего, даже при
   стоимости 35 млн»** – Reading: the brand asset pays a flat weekly income regardless of its
   worth – at 35M worth it still pays 13,800. Wanted: income that scales with the asset's value,
   measured (invariant 5). Class: **measure → build**. Bundle **B4** (economy/ownables income).
   Evidence: the current formula quoted from source with the flat constant named, the new curve
   with a predicted-vs-measured table over worth tiers (incl. 35M), bench arm run.
+
+  **B4 outcome (02.10) – `[?]`: measured, NO code change – the reading above is wrong, the rule
+  decided on it is not safe as briefed, and the real lever is his to name.**
+  The income is not a flat constant and not independent of the worth – the worth is derived FROM
+  it. `assetEarningsRateCents` → `brandWeeklyGrossCents` = `perFamePointCents 3_000 × reach² ÷
+  famePivot 10 × crowdMult`, reach clamped at `ECONOMY.fame.cap` 100, crowdMult at 1.15: $300 a
+  week at the day-one fame 10 (6.24% a year on the $250,000), $30,000 at the cap, $34,500 with the
+  room maxed; worth = `gross × 52 × multiple` (multiple ≤ 20). **His 13,800 is that corner to the
+  cent: $34,500 × (1 − 60%)**, the family's 40% once her share has reached `kidShare.capBps` at 23.
+  The corner is also where a $35M worth lives (ceiling $35.88M; a derived worth ≥ $35M needs reach
+  ≥ 98.8): at $35M the formula pays $33,677–$34,500 gross, $13,471–$13,800 to the family, a ×1.02
+  band – against ×2.30 at a $250,000 worth. Each clamp on the way is a standing ruling (fame cap
+  and crowd clamp, rounds 32/34 «the top of the shelf does not move»; her 60%, 35 #9 and 42 #25).
+  No screen holds the constant (grep of components/stores: none).
+  The decided rule (income ∝ current worth, rate calibrated at the entry) fails twice: «today's
+  flat figure ÷ entry price» is 13,800 ÷ 250,000 = 5.5% a WEEK; and at the real entry yield
+  (0.12% a week) a pure proportional income CUTS today's by 26–77% at reach 10–20, 19–63% at 30,
+  5–49% at 50 (range = no career premium … all of it) and lifts only the best-multiple careers
+  above reach ~70 (+10% … +25%) – not backward-neutral for any career below the top. The cheap
+  variant, a floor `max(today's, 0.12% × worth)`, is byte-identical below reach ~57 and lifts the
+  top: +9.5% at reach 70, +23.9% at 90, +24.8% at the cap ($13,800 → $17,222 to the family) –
+  still a ceiling, since the worth tops out in the same corner. Bench (`tools/r35-brand-share.ts`,
+  780 weeks × 2 seeds): its careers peak at $96 a week and a $35k worth, so the corner is a
+  top-career state the bench never visits. HELD for his one-sentence pick: lift the ceiling (what
+  grows past the fame cap?), the worth-linked floor, or leave it as designed.
 
 ## Bundles → dispatch (sequential, sonnet, budgets are STOP conditions)
 
