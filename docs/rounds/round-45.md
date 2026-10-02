@@ -85,12 +85,37 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   prints no such line. Proof: `tests/round45-staff-ask.test.ts` «round 45 #4» (a real `tickWeek`
   walk, both arms) and the mounted pair in `tests/component/round45-staff-ask-letter.test.ts`.
 
-- [ ] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
+- [?] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
   выходит, даже если в моменте, а не по итогам года, это значимый момент»** – Reading: the album
   gets a dedicated page the first time she touches world #1, mid-season counts – not only the
   year-end review. Class: **build**. Bundle **B5** (album engine/composition).
   Evidence: a career that reaches #1 mid-season produces the page (read from the composed album
   state), a career that never reaches #1 produces none; deterministic; page copy → DRAFT rows.
+
+  **B5 outcome (02.10) – `[?]`: STOPPED at the schema move, nothing built, his pick needed.**
+  The first-#1 week is NOT derivable from a save. What persists is the year-end close per table
+  (`seasonHistory[].byTrack.wta.endRank`, and the ITF-only `season-rank` milestone), the live
+  `kidRankWta`, and `prevKidRankWta` (one week back); `world.results` is a 52-week window and the
+  field it was ranked against is not kept. `bestRankOn` in `world/ladder.ts` says it in its own
+  words: no rank history exists. So a mid-season touch needs ONE new persisted fact – a first-touch
+  latch (`kidRankWta === 1` with WTA points held, written in `recomputeKidRank` beside
+  `peakDomesticPoints`) – and that is the three-part move at v91. Cost, measured on the last one
+  (v90, `6b8cdb0b`): 43 files – migration, a 32,000-line golden fixture, `e2e/fixtures/unheard.tsave`,
+  the barrel and economy pins, the generated symbol map – plus a new corpus occasion (4 voices × 3
+  registers = 12 DRAFT strings in `docs/specs/album-corpus-2026-09.md`, re-emitted by
+  `tools/album-corpus-emit.ts --write`) and the composition (a `rare` occasion between
+  `top-tier-title` 100 and `years-at-the-top` 98; a truly separate page needs a solo-frame flag in
+  `sheetsOf` / `chapterSheetPlan`, engine side, no component change – single-frame A and C sheets
+  already render). Over this bundle's budget, so it stops here.
+  ⚠ **For his one-sentence pick – it touches a ruling.** `docs/specs/the-reckoning-2026-09.md` §4a
+  (18.09): he REFUSED a persisted running minimum («достаточно лучшего ранга по итогам сезона») and
+  the section says it is not to be re-proposed. His 02.10 sentence asks for the mid-season moment
+  explicitly, and a first-touch latch is narrower than a running minimum – but whether the newer ask
+  supersedes the refusal for this one fact is his to say, not an agent's. Options: (A) the v91 latch
+  plus a `first-number-one` page, as its own bundle (~60 moves); (B) a year-end-only page now, zero
+  schema, from `seasonHistory` – which is the reading he said is NOT enough; (C) leave the album as
+  it is. One more question for him: «#1 в мире» is the Professional table only (the draft's reading)
+  or the junior International table too? No copy was written, so no DRAFT row was added.
 
 - [ ] **6. «Расположение фото в альбоме конфликтуют с надписями в самом альбоме и с некоторыми
   записками, которые перекрывают надписи на фото, надо подумать как лучше сделать»** – Reading:
@@ -105,11 +130,23 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   Evidence: the measured object-position/crop rule before and after, asserted in the mounted
   album test (red on revert).
 
-- [ ] **8. «Постараться сделать, чтобы одинаковых фоточек не было на одной странице»** – Reading:
+- [x] **8. «Постараться сделать, чтобы одинаковых фоточек не было на одной странице»** – Reading:
   de-duplicate photo picks within one album page (deterministically – sub-stream law, MAIN
   untouched). Class: **build**. Bundle **B5** (same files as 5).
   Evidence: a sweep over many seeded careers asserting no page holds duplicate photo ids, and the
   frozen-capture verdict stated (should be unmoved – sub-streams only).
+
+  **B5 outcome (02.10) – `[x]`.** There was no draw to repeat: a frame's picture is a TABLE (mood from
+  the occasion, one band portrait per face), so two same-mood frames of one chapter were the same
+  file by construction. `pickDistinct` (`world/albumBook.ts`) now assigns a page's pictures together –
+  a search: fewest repeats first, earliest frames on their earliest choices, so a page that already
+  differed is byte-identical – and the ladder offers stand-ins: the other three journey scenes of the
+  same mood, and neighbouring faces on the calm side (`PORTRAIT_STAND_INS`; the ruled `rehab` never
+  becomes `injury` or `sad`, a lost final never smiles). One-moment paintings never move. No MAIN, no
+  sub-stream, no schema, no wording. A pool smaller than the page is answered (the repeat is shown),
+  not refused. Proof: `tests/round45-album-distinct-frames.test.ts` – a 48-career posed sweep, zero
+  pages with a repeated picture; with the de-duplication mutated out the same sweep reds with 24
+  pages. Frozen capture unmoved (`tests/condition.test.ts`, 51 green).
 
 - [x] **9. «Deposit towards her own place случился после того, как она пару лет назад принесла
   свой spare key. И мне кажется этот депозит вполне можно где-то на более ранних периодах делать,
