@@ -37,6 +37,15 @@ const inline = (el: Element): Box => {
   return { x: num(st.left), y: num(st.top), w: num(st.width), h: 0 }
 }
 
+/** ⭐ #6b: a note drawn smaller is laid out 1/step wide and scaled from its corner, so what it occupies on the
+ *  page is the inline width TIMES the scale – read off the rendered style, never off the resolver. */
+const scaleOf = (el: Element): number => Number(/scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)?.[1] ?? 1)
+const noteInline = (el: Element): Box & { step: number } => {
+  const b = inline(el)
+  const step = scaleOf(el)
+  return { x: b.x, y: b.y, w: b.w * step, h: 0, step }
+}
+
 /** The caption band of each rendered photograph, from the rendered numbers only. */
 function bandsFromDom(root: ReturnType<typeof mount>): Box[] {
   return root.findAll('.album-photo').map((p) => {
@@ -64,8 +73,8 @@ describe.each(['A', 'B', 'C'] as const)('round 45 #6 · layout %s on the longest
     return { ...b, h: wrapLines(sheet.line, b.w, def.line.font) * def.line.lh }
   }
   const noteBox = (): Box => {
-    const b = inline(w.find(noteSel).element)
-    return { ...b, h: noteHeight(sheet, b.w) }
+    const b = noteInline(w.find(noteSel).element)
+    return { ...b, h: noteHeight(sheet, b.w, b.step) }
   }
 
   it('is not vacuous: the layout\'s own drawing puts a note or a line on a caption of this very sheet', () => {
@@ -84,10 +93,22 @@ describe.each(['A', 'B', 'C'] as const)('round 45 #6 · layout %s on the longest
 
   it('renders through the resolver: the inline positions ARE its answer', () => {
     const p = placeSheet(sheet)
-    expect(inline(w.find(noteSel).element)).toMatchObject({ x: p.note?.x, y: p.note?.y, w: p.note?.w })
+    const n = noteInline(w.find(noteSel).element)
+    expect([n.x, n.y, n.step]).toEqual([p.note?.x, p.note?.y, p.note?.step])
+    expect(n.w, 'the page occupies the width the resolver reserved').toBeCloseTo(p.note?.w ?? 0, 1)
     expect(inline(w.find(lineSel).element)).toMatchObject({ x: p.line?.x, y: p.line?.y, w: p.line?.w })
     const imgs = w.findAll('img').map((i) => num((i.element as HTMLImageElement).style.height))
     expect(imgs).toEqual(p.photos.map((x) => x.photoH))
+  })
+
+  it('⭐ #6b: the long note is DRAWN SMALLER – the layout binds the resolver\'s step with its position', () => {
+    const p = placeSheet(sheet)
+    expect(p.note?.step, 'a 127-character note is written below full size').toBeLessThan(1)
+    const el = w.find(noteSel).element as HTMLElement
+    expect(scaleOf(el)).toBe(p.note?.step)
+    expect(el.getAttribute('style') ?? '').toMatch(/transform-origin:\s*0(px)? 0(px)?/)
+    // it was laid out wider, so the same scrap drawn at `step` is as wide as the resolver reserved
+    expect(Number.parseFloat(el.style.width)).toBeGreaterThan(p.note?.w ?? 0)
   })
 
   it('⭐ #7: every picture window anchors its crop 10% from the top, not the centre', () => {
@@ -97,32 +118,22 @@ describe.each(['A', 'B', 'C'] as const)('round 45 #6 · layout %s on the longest
   })
 })
 
-describe('round 45 #6 · crowded pages give the photographs a rung', () => {
-  it('a real layout B page that cannot clear its captions at full size draws smaller windows – and still clears them', () => {
-    // A SHAPE THE ENGINE ACTUALLY ASSEMBLED (one of the 31 of 67 layout B sheets over 48 posed careers that
-    // needed a smaller window): two frames, no pass, a 109-character note. Data for the geometry, not a claim
-    // about copy. The sheet is found by the resolver's own verdict first, so the test cannot go idle.
-    const base = crowded('B')
-    const sheet: AlbumSheetModel = {
-      ...base,
-      chapterTitle: 'The final chapter',
-      frames: base.frames.slice(0, 2).map((f, k) => ({ ...f, caption: ['Nothing said. A new schedule.', 'Dates on the calendar, in pen.'][k] ?? '' })),
-      note: {
-        text: "A year that went back up. You did not mention it at all, and next season's schedule arrived in the same week.",
-        dateLabel: 'Dec 19 – Dec 25',
-        ageLabel: 'Age 33',
-        lines: [],
-      },
-      line: 'Straight back to the planning.',
-      ticket: null,
-    }
-    expect(placeSheet(sheet).scale, 'this shape needs a smaller window, or the ladder is dead code').toBeLessThan(1)
+describe('round 45 #6b · beside the hero, not on it – the windows give a rung first', () => {
+  it('the longest note on layout C: the hero window draws smaller, and the rendered note stands clear of the rendered hero PICTURE', () => {
+    // The crowded sheet is the shape the strip under the hero cannot hold at full size (a 127-character note and
+    // two 45-character captions): the resolver must spend rungs, or this test is idle and says so.
+    const sheet = crowded('C')
+    expect(placeSheet(sheet).scale, 'the longest note needs the hero window to give, or the ladder is dead code').toBeLessThan(1)
     const w = mount(AlbumSheet, { props: { sheet }, attachTo: document.body })
-    const drawn = LAYOUTS.B.photos.map((p) => p.photoH)
-    const got = w.findAll('img').map((i) => num((i.element as HTMLImageElement).style.height))
-    expect(got.some((h, k) => h < (drawn[k] ?? 0)), `windows ${got} against drawn ${drawn}`).toBe(true)
-    const bands = bandsFromDom(w)
-    const b = inline(w.find('.album-b-note').element)
-    expect(bands.filter((x) => touches({ ...b, h: noteHeight(sheet, b.w) }, x))).toEqual([])
+    const hero = w.find('.album-c-hero')
+    const at = inline(hero.element)
+    const drawn = LAYOUTS.C.photos[0]?.photoH ?? 0
+    const windowH = num((hero.find('img').element as HTMLImageElement).style.height)
+    expect(windowH, `hero window ${windowH} against drawn ${drawn}`).toBeLessThan(drawn)
+    const picture: Box = { x: at.x, y: at.y + POLAROID.top, w: at.w, h: windowH }
+    const n = noteInline(w.find('.album-c-note').element)
+    const note: Box = { ...n, h: noteHeight(sheet, n.w, n.step) }
+    expect(touches(note, picture), `the note at ${note.x},${note.y} ${note.w}x${note.h} touches the hero picture`).toBe(false)
+    expect(bandsFromDom(w).filter((x) => touches(note, x))).toEqual([])
   })
 })

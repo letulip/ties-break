@@ -21,7 +21,7 @@ import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumPatch from './AlbumPatch.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import AlbumSheetTitle from './AlbumSheetTitle.vue'
-import { placeSheet, spot } from './albumPlacement'
+import { noteSpot, placeSheet, spot } from './albumPlacement'
 import type { AlbumSheetModel } from '../../shared/protocol'
 
 const props = defineProps<{ sheet: AlbumSheetModel }>()
@@ -54,7 +54,7 @@ const placed = computed(() => placeSheet(props.sheet))
     <AlbumNoteCard
       v-if="sheet.note && placed.note"
       class="album-a-note"
-      :style="spot(placed.note)"
+      :style="noteSpot(placed.note)"
       :note="sheet.note"
       torn="right"
       :tilt="1.4"

@@ -24,16 +24,25 @@ import {
   HAND_EM,
   LAYOUTS,
   NOTE,
+  NOTE_STEPS,
   POLAROID,
   SCALES,
+  TUNING,
   drawnPlacement,
+  noteHands,
+  noteHeight,
+  noteSpot,
+  noteStep,
   placeSheet,
+  spot,
   touches,
   wrapLines,
   type Box,
+  type NoteBox,
+  type Tuning,
 } from '../src/components/album/albumPlacement'
 import { componentFile } from './worldSource'
-import type { AlbumSheetModel } from '../src/shared/protocol'
+import type { AlbumLayout, AlbumSheetModel } from '../src/shared/protocol'
 
 // ---------------------------------------------------------------------------------------------------
 // 1. THE ESTIMATE, AGAINST REAL CHROMIUM.
@@ -128,7 +137,7 @@ describe('round 45 #6 · the model is the components\' own numbers', () => {
   it('the layouts own no coordinate of the things the resolver places', () => {
     for (const [name, src] of [['A', layoutA], ['B', layoutB], ['C', layoutC]] as const) {
       expect(src, `layout ${name} calls the resolver`).toMatch(/placeSheet\(props\.sheet\)/)
-      expect(src, `layout ${name} binds the note and the line from it`).toMatch(/:style="spot\(placed\.note\)"/)
+      expect(src, `layout ${name} binds the note from it, by its own spot (position AND the size it is drawn at)`).toMatch(/:style="noteSpot\(placed\.note\)"/)
       expect(src).toMatch(/:style="spot\(placed\.line\)"/)
       expect(src).toMatch(/:style="spot\(placed\.photos\[0\]\)"/)
     }
@@ -267,4 +276,165 @@ describe('round 45 #6 · the sweep – no note and no loose line touches a capti
       expect(placeSheet(s)).toEqual(placeSheet(s))
     }
   })
+})
+
+// ---------------------------------------------------------------------------------------------------
+// 5. ROUND 45 #6b – THE NOTE DRAWN SMALLER, THE HERO KEPT CLEAR, THE WINDOWS SPARED (the owner, 02.10: «может
+// быть пересмотреть размер самих записочек, может быть расположение в местах пересечения букв»).
+//
+// ⚠ THE «BEFORE» IS A MEASUREMENT AND AN ARM. MEASURED on 19a5748b (B6's resolver) over THIS sweep, 335 sheets:
+// 52 of 121 layout C sheets put a note on the hero PICTURE (1,405,540 px² in all), and photograph windows were
+// at a shrunk rung on 26 of 147 A, 45 of 67 B and 59 of 121 C sheets. `B6` below is that resolver's knobs as
+// DATA – no step, windows at 15 a percent, no hero kept, no border tier – so the sweep reproduces the «before»
+// live and cannot go idle. (It runs on today's slots, so it is the same knobs, not a byte-for-byte replay.)
+const OFF = [{ upTo: Infinity, step: 1 }]
+// (the loose line's widths and the six-spot note search are today's: same knobs, not a byte-for-byte replay)
+const B6: Tuning = {
+  steps: OFF,
+  shrinkCost: 15,
+  widenCost: 20,
+  coverCost: 0.02,
+  stepCost: 0,
+  borderCost: Infinity,
+  protectHero: false,
+  // the C note slot B6 shipped: 156/220/290 wide, bottom at 434 – the strip under the hero never had those widths
+  slots: { C: { x: 28, y: 434, anchor: 'bottom', widths: [156, 220, 290] } },
+}
+
+type Placed = ReturnType<typeof placeSheet>
+const overlap = (a: Box, b: Box): number =>
+  Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y))
+const heroPicture = (p: Placed): Box | null => {
+  const h = p.photos[0]
+  return h ? { x: h.x, y: h.y + POLAROID.top, w: h.w, h: h.photoH } : null
+}
+
+interface Counters {
+  sheets: Record<AlbumLayout, number>
+  /** sheets whose photograph windows were drawn at a rung below the layout's own height */
+  shrunk: Record<AlbumLayout, number>
+  /** C sheets on which the resolved note or loose line touches the hero picture */
+  heroCovered: number
+  /** notes drawn smaller than what their length earned, or under the floor – must be 0 */
+  badStep: number
+  /** resolved notes by the size they are drawn at */
+  atStep: Record<string, number>
+}
+const memo = new Map<string, Counters>()
+function sweep(name: string, tuning: Tuning): Counters {
+  const hit = memo.get(name)
+  if (hit) return hit
+  const c: Counters = { sheets: { A: 0, B: 0, C: 0 }, shrunk: { A: 0, B: 0, C: 0 }, heroCovered: 0, badStep: 0, atStep: {} }
+  const floor = Math.min(...NOTE_STEPS.map((x) => x.step))
+  for (const s of sheets) {
+    const p = placeSheet(s, tuning)
+    c.sheets[s.layout]++
+    if (p.scale < 1) c.shrunk[s.layout]++
+    const hero = heroPicture(p)
+    if (s.layout === 'C' && hero && [p.note, p.line].some((m) => m && overlap(m, hero) > 0)) c.heroCovered++
+    if (p.note) {
+      c.atStep[p.note.step] = (c.atStep[p.note.step] ?? 0) + 1
+      if (p.note.step < Math.min(floor, ...tuning.steps.map((x) => x.step)) || p.note.step > noteStep(s.note, tuning.steps)) c.badStep++
+    }
+  }
+  memo.set(name, c)
+  return c
+}
+
+describe('round 45 #6b · the hand a note is written in', () => {
+  it('steps by length: up to 72 characters as drawn, up to 100 at 0.9, longer at 0.82 – two steps and a floor', () => {
+    expect(NOTE_STEPS.map((x) => x.step)).toEqual([1, 0.9, 0.82])
+    expect(NOTE_STEPS.map((x) => x.upTo)).toEqual([72, 100, Infinity])
+    const text = (n: number): { text: string; lines: string[]; dateLabel: string; ageLabel: string } => ({ text: 'a'.repeat(n), lines: [], dateLabel: '', ageLabel: '' })
+    expect([72, 73, 100, 101, 127].map((n) => noteStep(text(n)))).toEqual([1, 0.9, 0.9, 0.82, 0.82])
+    // the checklist form is its lines read as one
+    expect(noteStep({ text: '', lines: ['a'.repeat(40), 'b'.repeat(40)], dateLabel: '', ageLabel: '' })).toBe(0.9)
+    expect(noteStep(null)).toBe(1)
+  })
+
+  it('a sheet may spend the hands from the one its note earned DOWN to the floor, never up', () => {
+    const text = (n: number): { text: string; lines: string[]; dateLabel: string; ageLabel: string } => ({ text: 'a'.repeat(n), lines: [], dateLabel: '', ageLabel: '' })
+    expect(noteHands(text(40))).toEqual([1, 0.9, 0.82])
+    expect(noteHands(text(90))).toEqual([0.9, 0.82])
+    expect(noteHands(text(120))).toEqual([0.82])
+    expect(noteHands(text(120), OFF)).toEqual([1])
+  })
+
+  it('similitude: the 11 real 17px rows carry over to every step – laid out at full size in a wider box, drawn small', () => {
+    // Chromium measured these at 17px; a note drawn at `step` is that layout scaled, so its wrap IS the measured one.
+    // The estimate is held to the real line counts at each step, and goes red if the step is not what scales it.
+    const rows = REAL.filter((r) => r.font === 17)
+    expect(rows.length).toBe(11)
+    for (const r of rows) {
+      const sheet = { note: { text: r.text, lines: [], dateLabel: '', ageLabel: '' } } as unknown as AlbumSheetModel
+      const w = r.width + 2 * NOTE.padSide
+      const full = noteHeight(sheet, w, 1)
+      expect(full, `«${r.text}»: at least the ${r.lines} real lines`).toBeGreaterThanOrEqual(NOTE.padTop + NOTE.padBottom + r.lines * NOTE.rule)
+      expect(full, `«${r.text}»: at most one line over`).toBeLessThanOrEqual(NOTE.padTop + NOTE.padBottom + (r.lines + 1) * NOTE.rule)
+      for (const step of [0.9, 0.82]) {
+        expect(noteHeight(sheet, w * step, step), `«${r.text}» at ${step}`).toBe(Math.ceil(full * step))
+      }
+    }
+  })
+
+  it('a smaller note is a shorter note: the longest in the corpus at its width is far under the full-size one', () => {
+    const long = 'You came back up the table this year and you talked about the two weeks in the middle where it turned, not about the end of it.'
+    const sheet = { note: { text: long, lines: [], dateLabel: 'Nov 10 – Nov 16', ageLabel: 'Age 14' } } as unknown as AlbumSheetModel
+    expect(noteHeight(sheet, 186, 0.82)).toBeLessThan(noteHeight(sheet, 186, 1) * 0.8)
+    expect(noteHeight(sheet, 186, 0.9)).toBeLessThan(noteHeight(sheet, 186, 1))
+  })
+
+  it('noteSpot: a full-size note is the plain spot, a smaller one is laid out 1/step wide and scaled from its corner', () => {
+    const full: NoteBox = { x: 12, y: 300, w: 186, h: 120, step: 1 }
+    expect(noteSpot(full)).toEqual(spot(full))
+    const small: NoteBox = { x: 12, y: 300, w: 186, h: 98, step: 0.82 }
+    expect(noteSpot(small)).toEqual({ left: '12px', top: '300px', width: '226.83px', transform: 'scale(0.82)', transformOrigin: '0 0' })
+  })
+
+  it('every resolved note is drawn at a step of the ladder – never above what its length earned, never under the floor', () => {
+    const c = sweep('after', TUNING)
+    expect(c.badStep, `steps used: ${JSON.stringify(c.atStep)}`).toBe(0)
+    expect(Object.keys(c.atStep).length, 'the sweep uses every step, or the ladder is dead').toBe(3)
+  }, 120_000)
+
+  it("C's note slot is the strip under the hero and left of the second photograph – wide and low, not narrow and tall", () => {
+    const slot = LAYOUTS.C.note
+    expect(LAYOUTS.C.hero, 'the hero is the first photograph').toBe(0)
+    expect(slot.anchor).toBe('bottom')
+    expect(slot.y, 'a lower page margin than the 434 it was').toBeGreaterThanOrEqual(450)
+    expect(slot.x + Math.max(...slot.widths), 'the widest option ends before the second photograph begins').toBeLessThanOrEqual(LAYOUTS.C.photos[1]?.x ?? 0)
+    expect(Math.max(...slot.widths), 'wider than the 156 it was – the strip is wide and short').toBeGreaterThan(156)
+  })
+})
+
+describe('round 45 #6b · the hero stays clear and the windows are spared – over the 335-sheet sweep', () => {
+  it('is not vacuous: B6\'s knobs put a note or a line on the hero picture of N > 0 C sheets and shrink windows on most B sheets', () => {
+    const b = sweep('b6', B6)
+    expect(b.heroCovered, `B6's knobs: ${b.heroCovered} of ${b.sheets.C} C sheets cover the hero`).toBeGreaterThan(0)
+    expect(b.shrunk.B, `B6's knobs: ${b.shrunk.B} of ${b.sheets.B} B sheets at a shrunk rung`).toBeGreaterThanOrEqual(40)
+  }, 120_000)
+
+  it('⭐ the hero picture is covered by no note and no loose line on ANY C sheet (B6 measured 52 of 121)', () => {
+    const c = sweep('after', TUNING)
+    expect(c.sheets.C).toBeGreaterThan(100)
+    expect(c.heroCovered, `${c.heroCovered} of ${c.sheets.C} C sheets still cover the hero`).toBe(0)
+  }, 120_000)
+
+  it('⭐ photograph windows are at a shrunk rung on far fewer sheets: B at most 22 of 67 (B6 measured 45), C 35 of 121 (59), A 10 of 147 (26)', () => {
+    const c = sweep('after', TUNING)
+    expect(c.shrunk.B, `B: ${c.shrunk.B} of ${c.sheets.B} at a shrunk rung`).toBeLessThanOrEqual(22)
+    expect(c.shrunk.C, `C: ${c.shrunk.C} of ${c.sheets.C}`).toBeLessThanOrEqual(35)
+    expect(c.shrunk.A, `A: ${c.shrunk.A} of ${c.sheets.A}`).toBeLessThanOrEqual(10)
+  }, 120_000)
+
+  it('the step-down is what spares the windows: with the notes written at full size B is back to shrinking on 38+ sheets', () => {
+    const c = sweep('no-step', { ...TUNING, steps: OFF })
+    expect(c.shrunk.B, `no step-down: B ${c.shrunk.B}, C ${c.shrunk.C}`).toBeGreaterThanOrEqual(38)
+    expect(c.shrunk.C).toBeGreaterThanOrEqual(60)
+  }, 120_000)
+
+  it('the hero protection is what keeps the hero clear: switched off, the hero is covered again', () => {
+    const c = sweep('no-hero', { ...TUNING, protectHero: false })
+    expect(c.heroCovered, `hero protection off: ${c.heroCovered} of ${c.sheets.C}`).toBeGreaterThan(0)
+  }, 120_000)
 })

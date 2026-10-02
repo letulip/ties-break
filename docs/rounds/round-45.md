@@ -352,5 +352,12 @@ architect's session after the last agent, verdicts from files.
   baseline. The coach's own 5–15% corridor over his progress score was ALREADY the floating fork, so his size is
   unchanged: his rise is a letter now (accept re-strikes the one stored `coachDeal` fee, decline or lapse leaves
   it), the automatic rise and its feed row are retired. Repeated refusals keep the 17.09 «no third branch».
-- [>] **6b.** note sizing/density so notes stop covering the hero picture in C and stop shrinking
-  photo windows so hard in B – B10.
+- [x] **6b.** note sizing/density so notes stop covering the hero picture in C and stop shrinking
+  photo windows so hard in B – B10. BUILT (the owner's own idea, sized): a long note is DRAWN SMALLER – the whole
+  scrap, laid out at full size and scaled, 1 / 0.9 / 0.82 by 72 / 100 characters, and the resolver may spend smaller
+  steps before it shrinks a window; C's hero picture is kept clear (the note slot is the wide strip under it); a
+  window rung costs 40 a percent, not 15; the loose line sets in 2-3 widths. Over the 335-sheet sweep: hero
+  picture covered 52 -> 0 of 121 C sheets (1.41M px² -> 0), sheets at a shrunk rung A 26 -> 0 of 147, B 45 -> 18 of
+  67 (the 0.68 rung 13 -> 1), C 59 -> 29 of 121; captions touched stay 0 of 335. Residual: 52% of notes end at
+  the 0.82 floor, and C's hero still gives up to 24% of its window on 21 sheets – the owner's per-page list takes
+  what remains.

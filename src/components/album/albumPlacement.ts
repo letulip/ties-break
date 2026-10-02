@@ -23,13 +23,21 @@
 // furniture too (title, patch, pass, tag), then one that may cover a doodle, and the furniture is given
 // up in that order before a caption is.
 //
+// ⭐ ROUND 45 #6b – THE OWNER'S OWN IDEA, 02.10 («может быть пересмотреть размер самих записочек»): a LONG
+// NOTE IS WRITTEN SMALLER. Three things changed and nothing else: (1) a long note is DRAWN SMALLER – the
+// whole scrap, hand and ruling and margins together (`NOTE_STEPS`: 1, 0.9, 0.82) – chosen HERE, from its
+// text's length, so the page and the model agree; (2) layout C's hero picture is something a note never covers while any other spot exists – the
+// windows give way first, and only the last tier (captions kept, nothing else) may cover it; (3) a rung of
+// shrunk photograph windows costs 40 a percent now, not 15 – with a smaller note the kindest tier is
+// reachable at a larger rung, and the price keeps it that way. B6's before/after is in the test.
+//
 // ⚠ IT IS PURE ON PURPOSE: no DOM, no clock, no random, nothing but the sheet it is handed. That is
 // what lets a sweep over hundreds of real sheets be the evidence – happy-dom does not lay boxes out, so
 // a mounted test cannot measure an overlap and this can. The heights it works with are an ESTIMATE of
 // how Caveat wraps (`HAND_EM`), and `tests/round45-album-placement.test.ts` pins that estimate against
 // the real Chromium measurements it was taken from: it may over-count a line, it may never under-count.
 import { SHEET_PX } from '../../shared/protocol'
-import type { AlbumFrame, AlbumLayout, AlbumSheetModel } from '../../shared/protocol'
+import type { AlbumFrame, AlbumLayout, AlbumNote, AlbumSheetModel } from '../../shared/protocol'
 
 export interface Box {
   x: number
@@ -53,7 +61,7 @@ export interface PhotoPlacement {
 
 export interface SheetPlacement {
   photos: PhotoPlacement[]
-  note: Box | null
+  note: NoteBox | null
   line: Box | null
   /** The photograph windows were drawn at this fraction of the layout's own height (1 = as drawn). */
   scale: number
@@ -72,6 +80,69 @@ export const POLAROID = { top: 4, side: 4, bottom: 12, capGap: 8, capSide: 4, ca
 
 /** `AlbumNoteCard.vue` + `PaperNote.vue`: padding 10/13/12 and a 26px ruling that the text sits on. */
 export const NOTE = { padTop: 10, padBottom: 12, padSide: 13, rule: 26, font: 17, whenFont: 15, whenGap: 14 }
+
+/** ⭐ A LONG NOTE IS DRAWN SMALLER: a text of up to `upTo` characters is drawn at `step` of its size. Two
+ *  steps, 0.9 and 0.82 (the 17px hand reads as 15.3px and 13.9px) – the floor is where Caveat still reads on
+ *  a phone-sized page, not a measured limit. ⚠ THE WHOLE SCRAP STEPS, NOT ONLY THE LETTERS: it is laid out at
+ *  its full 17px in a box 1/step wider and drawn at `step` from its corner (`noteSpot`), so the 26px
+ *  ruling, the margins and the wrap are the calibrated ones, in proportion. The first cut stepped the font
+ *  alone on the same 26px ruling and measured nothing (B: 45 sheets shrunk -> 44): a note's height comes in
+ *  whole rows of 26px and the free strip under B's photographs holds three or four of them. */
+export interface NoteStep {
+  upTo: number
+  step: number
+}
+export const NOTE_STEPS: readonly NoteStep[] = [
+  { upTo: 72, step: 1 },
+  { upTo: 100, step: 0.9 },
+  { upTo: Infinity, step: 0.82 },
+]
+
+/** The characters a note carries – its sentence, or the checklist's lines read as one. */
+export function noteLength(note: AlbumNote): number {
+  return note.text ? note.text.length : note.lines.join(' ').length
+}
+
+/** The hand a note is written in, as a fraction of 17px. */
+export function noteStep(note: AlbumNote | null | undefined, steps: readonly NoteStep[] = NOTE_STEPS): number {
+  if (!note) return 1
+  const len = noteLength(note)
+  return (steps.find((s) => len <= s.upTo) ?? steps[steps.length - 1])?.step ?? 1
+}
+
+/** ⭐ THE HANDS A NOTE MAY BE WRITTEN IN ON A SHEET: the one its length earned, then every smaller step down
+ *  to the floor. The first is what it is written in when the page has room; the others are what the
+ *  resolver may spend – at `stepCost` each, far under a rung of photograph window – BEFORE it shrinks any
+ *  window, so the windows give way only when even the smallest honest note cannot fit. */
+export function noteHands(note: AlbumNote | null | undefined, steps: readonly NoteStep[] = NOTE_STEPS): number[] {
+  const base = noteStep(note, steps)
+  return [...new Set(steps.map((s) => s.step))].filter((st) => st <= base).sort((a, b) => b - a)
+}
+
+/** The resolver's prices, as DATA so a before-arm can be run (round 45 #6b's sweep runs B6's knobs beside
+ *  these). Units are pixels walked: a picture's hidden pixel² costs `coverCost`, a rung of shrunk windows
+ *  costs `shrinkCost` a percent (a rung is 8%), a wider note costs `widenCost` a step. */
+export interface Tuning {
+  steps: readonly NoteStep[]
+  shrinkCost: number
+  widenCost: number
+  coverCost: number
+  /** One step smaller than the hand the note's length earned (`noteHands`). */
+  stepCost: number
+  /** Letting a note rest on a polaroid's white BORDER – the frame round the picture, with no picture and no
+   *  caption under it. B6 made that impossible (`Infinity`) and shrank windows to get 3px of clearance. */
+  borderCost: number
+  /** When true a layout's hero picture (`LayoutDef.hero`) is kept clear in every tier but the last. */
+  protectHero: boolean
+  /** A layout's note slot, replaced – the page never sets it; the sweep runs B6's old C slot beside today's. */
+  slots?: Partial<Record<AlbumLayout, NoteSlot>>
+}
+export const TUNING: Tuning = { steps: NOTE_STEPS, shrinkCost: 40, widenCost: 20, coverCost: 0.02, stepCost: 30, borderCost: 150, protectHero: true }
+
+/** A pasted note is a box that also says the hand it is written in. */
+export interface NoteBox extends Box {
+  step: number
+}
 
 /** The photograph windows are tried at these fractions of their drawn height, widest first. */
 export const SCALES: readonly number[] = [1, 0.92, 0.84, 0.76, 0.68]
@@ -103,11 +174,14 @@ export function wrapLines(text: string, width: number, fontPx: number): number {
 }
 
 /** The height of a pasted note `w` wide: padding, the date row (one row, or two when the two labels
- *  do not fit side by side – measured wrapping at 125px and 130px of content), and the ruled text. */
-export function noteHeight(sheet: AlbumSheetModel, w: number): number {
+ *  do not fit side by side – measured wrapping at 125px and 130px of content), and the ruled text.
+ *  ⭐ `step` is the size it is drawn at (`noteStep`): the scrap is laid out at its full size in a box
+ *  `w / step` wide – so the wrap is the CALIBRATED one, nothing is re-measured – and every pixel of it is
+ *  scaled by `step`, rounded UP. */
+export function noteHeight(sheet: AlbumSheetModel, w: number, step = 1): number {
   const note = sheet.note
   if (!note) return 0
-  const inner = w - 2 * NOTE.padSide
+  const inner = w / step - 2 * NOTE.padSide
   let rows = 0
   if (note.dateLabel || note.ageLabel) {
     const a = note.dateLabel?.length ?? 0
@@ -118,7 +192,7 @@ export function noteHeight(sheet: AlbumSheetModel, w: number): number {
   rows += note.text
     ? wrapLines(note.text, inner, NOTE.font)
     : note.lines.reduce((n, l) => n + wrapLines(l, inner, NOTE.font), 0)
-  return NOTE.padTop + NOTE.padBottom + rows * NOTE.rule
+  return Math.ceil((NOTE.padTop + NOTE.padBottom + rows * NOTE.rule) * step)
 }
 
 interface PhotoSlot {
@@ -129,12 +203,25 @@ interface PhotoSlot {
   tilt: number
 }
 
+/** Where a layout draws its pasted note: the corner it is anchored by, and the widths it may be set in. */
+export interface NoteSlot {
+  x: number
+  y: number
+  anchor: 'top' | 'bottom'
+  widths: readonly number[]
+  right?: boolean
+}
+
 interface LayoutDef {
   photos: readonly PhotoSlot[]
   /** Note widths, as drawn first and then wider – a wider note is a shorter one. `right` pins the
    *  note's right edge to the page edge (layout A's note runs to it). */
-  note: { x: number; y: number; anchor: 'top' | 'bottom'; widths: readonly number[]; right?: boolean }
-  line: { x: number; y: number; w: number; font: number; lh: number }
+  note: NoteSlot
+  /** The loose line as drawn (`w`) and the other widths it may be set in – narrower is taller, wider is shorter. */
+  line: { x: number; y: number; w: number; alt?: readonly number[]; font: number; lh: number }
+  /** The photograph whose PICTURE a note or a line must not cover (layout C's hero – «the one picture that
+   *  earned the whole page»), as an index into `photos`. */
+  hero?: number
   fixed(sheet: AlbumSheetModel): Box[]
 }
 
@@ -161,7 +248,7 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
       { x: 256, y: 275, w: 200, photoH: 130, tilt: 2.2 },
     ],
     note: { x: SHEET_PX, y: 92, anchor: 'top', widths: [176, 200, 230], right: true },
-    line: { x: 120, y: 422, w: 200, font: 21, lh: 26.25 },
+    line: { x: 120, y: 422, w: 200, alt: [150, 110], font: 21, lh: 26.25 },
     fixed: (s) => [
       headBox(34, s),
       { x: 28, y: 368, w: 96, h: 83 },
@@ -175,7 +262,7 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
       { x: 339, y: 123, w: 123, photoH: 140, tilt: 1.6 },
     ],
     note: { x: 167, y: 275, anchor: 'bottom', widths: [151, 220, 300] },
-    line: { x: 26, y: 250, w: 132, font: 20, lh: 26 },
+    line: { x: 26, y: 250, w: 132, alt: [200, 270], font: 20, lh: 26 },
     fixed: (s) => [passBox(s), { x: 131, y: 268, w: 24, h: 24 }],
   },
   C: {
@@ -183,8 +270,13 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
       { x: 26, y: 100, w: 276, photoH: 196, tilt: -0.8 },
       { x: 204, y: 332, w: 138, photoH: 100, tilt: 1.8 },
     ],
-    note: { x: 28, y: 434, anchor: 'bottom', widths: [156, 220, 290] },
-    line: { x: 388, y: 368, w: 74, font: 19, lh: 23.75 },
+    // ⭐ ROUND 45 #6b: the only paper that is free in C is the strip UNDER the hero and LEFT of the second
+    // photograph (x 12..198, about 120px tall at the hero's drawn height), so the slot is as WIDE as that
+    // strip and sits at the page's lower margin – 156/220/290 offered widths the strip never had, and a
+    // narrower, taller note (the first guess) is exactly the shape that does not fit a wide, short strip.
+    note: { x: 12, y: 462, anchor: 'bottom', widths: [150, 186] },
+    hero: 0,
+    line: { x: 388, y: 368, w: 74, alt: [110], font: 19, lh: 23.75 },
     fixed: (s) => [headBox(33, s), { x: 327, y: 77, w: 110, h: 271 }, { x: 368, y: 401, w: 24, h: 24 }],
   },
 }
@@ -219,7 +311,13 @@ export function touches(a: Box, b: Box): boolean {
  *  an obstacle (or the page, or its own start) is a candidate, and the cheapest by pixels moved wins –
  *  vertical moves before horizontal ones, down before up, right before left, so the answer never
  *  depends on the order the obstacles were listed in. */
-function freeSpot(m: Box, obstacles: readonly Box[], soft: readonly Box[] = []): { box: Box; cost: number } | null {
+function freeSpots(
+  m: Box,
+  obstacles: readonly Box[],
+  soft: readonly Box[],
+  coverCost: number,
+  limit: number,
+): { box: Box; cost: number }[] {
   const xs = new Set<number>([m.x, 0, PAGE - m.w])
   const ys = new Set<number>([m.y, 0, PAGE - m.h])
   for (const o of obstacles) {
@@ -235,26 +333,37 @@ function freeSpot(m: Box, obstacles: readonly Box[], soft: readonly Box[] = []):
       const rank = (x === m.x ? 0 : 4) + (y === m.y ? 0 : 2) + (y >= m.y ? 0 : 1)
       const at = { x, y, w: m.w, h: m.h }
       const cover = soft.reduce((n, o) => n + overlapArea(at, o), 0)
-      spots.push({ x, y, cost: Math.abs(x - m.x) + Math.abs(y - m.y) + COVER_COST * cover, rank })
+      spots.push({ x, y, cost: Math.abs(x - m.x) + Math.abs(y - m.y) + coverCost * cover, rank })
     }
   }
   spots.sort((p, q) => p.cost - q.cost || p.rank - q.rank || p.x - q.x || p.y - q.y)
+  const out: { box: Box; cost: number }[] = []
   for (const s of spots) {
     const at = { x: s.x, y: s.y, w: m.w, h: m.h }
-    if (!obstacles.some((o) => touches(at, o))) return { box: at, cost: s.cost }
+    if (obstacles.some((o) => touches(at, o))) continue
+    out.push({ box: at, cost: s.cost })
+    if (out.length >= limit) break
   }
-  return null
+  return out
 }
 
-function noteDrawnAt(def: LayoutDef, sheet: AlbumSheetModel, w: number): Box {
-  const h = noteHeight(sheet, w)
+function freeSpot(m: Box, obstacles: readonly Box[], soft: readonly Box[] = [], coverCost = TUNING.coverCost): { box: Box; cost: number } | null {
+  return freeSpots(m, obstacles, soft, coverCost, 1)[0] ?? null
+}
+
+/** How many of the note's nearest free spots are tried before the loose line gives up: the nearest one can be
+ *  the very spot the line needed, and a window shrinks to make room for a line the note could have left room for. */
+const NOTE_SPOTS = 6
+
+function noteDrawnAt(def: LayoutDef, sheet: AlbumSheetModel, w: number, step = 1): Box {
+  const h = noteHeight(sheet, w, step)
   const { x, y, anchor, right } = def.note
   return { x: right ? x - w : x, y: anchor === 'bottom' ? y - h : y, w, h }
 }
 
-function lineDrawnAt(def: LayoutDef, sheet: AlbumSheetModel): Box | null {
+function lineDrawnAt(def: LayoutDef, sheet: AlbumSheetModel, w = def.line.w): Box | null {
   if (!sheet.line) return null
-  const { x, y, w, font, lh } = def.line
+  const { x, y, font, lh } = def.line
   return { x, y, w, h: wrapLines(sheet.line, w, font) * lh }
 }
 
@@ -265,15 +374,30 @@ function settle(
   sheet: AlbumSheetModel,
   obstacles: readonly Box[],
   noteW: number,
+  step: number,
   soft: readonly Box[],
-): { note: Box | null; line: Box | null; cost: number } | null {
-  const noteAt = sheet.note ? noteDrawnAt(def, sheet, noteW) : null
-  const n = noteAt ? freeSpot(noteAt, obstacles, soft) : null
-  if (noteAt && !n) return null
-  const lineAt = lineDrawnAt(def, sheet)
-  const l = lineAt ? freeSpot(lineAt, n ? [...obstacles, n.box] : obstacles, soft) : null
-  if (lineAt && !l) return null
-  return { note: n?.box ?? null, line: l?.box ?? null, cost: (n?.cost ?? 0) + (l?.cost ?? 0) }
+  tuning: Tuning,
+): { note: NoteBox | null; line: Box | null; cost: number } | null {
+  const noteAt = sheet.note ? noteDrawnAt(def, sheet, noteW, step) : null
+  const notes = noteAt ? freeSpots(noteAt, obstacles, soft, tuning.coverCost, NOTE_SPOTS) : [null]
+  const widths = [def.line.w, ...(def.line.alt ?? [])]
+  let best: { note: NoteBox | null; line: Box | null; cost: number } | null = null
+  for (const n of notes) {
+    if (best && (n?.cost ?? 0) >= best.cost) break
+    // the loose line is set at the width that costs least: its drawn one, or a narrower/wider one at `widenCost`
+    let l: { box: Box; cost: number } | null = null
+    if (sheet.line) {
+      for (let li = 0; li < widths.length; li++) {
+        const at = lineDrawnAt(def, sheet, widths[li] as number)
+        const f = at ? freeSpot(at, n ? [...obstacles, n.box] : obstacles, soft, tuning.coverCost) : null
+        if (f && (!l || f.cost + tuning.widenCost * li < l.cost)) l = { box: f.box, cost: f.cost + tuning.widenCost * li }
+      }
+      if (!l) continue
+    }
+    const cost = (n?.cost ?? 0) + (l?.cost ?? 0)
+    if (!best || cost < best.cost) best = { note: n ? { ...n.box, step } : null, line: l?.box ?? null, cost }
+  }
+  return best
 }
 
 /** Where the note and the line would be with NO resolving at all – the layout's own drawing. The
@@ -296,37 +420,59 @@ function bandsOf(def: LayoutDef, sheet: AlbumSheetModel, scale: number): Box[] {
   return photosOf(def, sheet, scale).flatMap((p) => (p.band ? [p.band] : []))
 }
 
-/** ⭐ THE RESOLVER. A sheet in, the positions out. See the header for the rule. */
-export function placeSheet(sheet: AlbumSheetModel): SheetPlacement {
-  const def = LAYOUTS[sheet.layout]
+/** ⭐ THE RESOLVER. A sheet in, the positions out. See the header for the rule. `tuning` is the prices and
+ *  the hand's steps: the page always passes the default, the sweep passes B6's beside it to measure «before». */
+export function placeSheet(sheet: AlbumSheetModel, tuning: Tuning = TUNING): SheetPlacement {
+  const slot = tuning.slots?.[sheet.layout]
+  const def = slot ? { ...LAYOUTS[sheet.layout], note: slot } : LAYOUTS[sheet.layout]
+  const hands = noteHands(sheet.note, tuning.steps)
   // 1. THE KINDEST ARRANGEMENT FIRST, and each tier gives up one more thing than the one before it: bare
   //    paper (the note and the line touch no photograph at all) -> captions and every piece of furniture
   //    kept clear -> a sticker (a doodle) may be covered -> only the captions are kept. Inside a tier the
   //    photograph windows are tried at the widest rung that allows it and the note at its drawn width
   //    before a wider one – a smaller photograph is a smaller price than a note over somebody's face.
+  //    ⭐ #6b: a layout's HERO picture is kept clear through the fourth tier too, and the fifth (captions
+  //    only) is the one place a note may cover it – the windows give way, and the furniture, before it does.
   const furniture = def.fixed(sheet)
   const solid = furniture.filter((x) => !isSticker(x))
-  const tiers: ((k: { photos: PhotoPlacement[]; bands: Box[] }) => Box[])[] = [
-    ({ photos, bands }) => [...bands, ...photos.map((p) => padded(p.box)), ...furniture],
-    ({ bands }) => [...bands, ...furniture],
-    ({ bands }) => [...bands, ...solid],
-    ({ bands }) => bands,
+  const hero = tuning.protectHero && def.hero !== undefined ? def.hero : null
+  const kept = (photos: PhotoPlacement[]): Box[] => {
+    const h = hero === null ? undefined : photos[hero]
+    return h ? [pictureOf(h)] : []
+  }
+  type Tier = (k: { photos: PhotoPlacement[]; bands: Box[] }) => Box[]
+  // The first tier is two kinds of bare paper priced against each other: clear of every CARD, and – at
+  // `borderCost` – clear of every PICTURE and caption but resting on a white border.
+  const bare: { tier: Tier; price: number }[] = [
+    { tier: ({ photos, bands }) => [...bands, ...photos.map((p) => padded(p.box)), ...furniture], price: 0 },
+    { tier: ({ photos, bands }) => [...bands, ...photos.map((p) => padded(pictureOf(p))), ...furniture], price: tuning.borderCost },
   ]
+  const tiers: Tier[] = [
+    ({ photos, bands }) => [...bands, ...furniture, ...kept(photos)],
+    ({ photos, bands }) => [...bands, ...solid, ...kept(photos)],
+    ({ photos, bands }) => [...bands, ...kept(photos)],
+  ]
+  if (hero !== null) tiers.push(({ bands }) => bands)
   // Within a tier EVERY rung is tried and the cheapest wins – pixels walked, plus a price for each picture
   // covered, plus a price for each step the photographs were shrunk and for a wider note – because the first
-  // rung that merely has room is not the best one: at full size a long note's only spot can be on top of the
-  // big photograph, while one rung down it fits below it.
-  for (const tier of tiers) {
+  // rung that merely has room is not the best one: at full size a long note's only spot can be on top of
+  // the big photograph, while one rung down it fits below it.
+  for (const group of [bare, ...tiers.map((tier) => [{ tier, price: 0 }])]) {
     let best: { score: number; out: SheetPlacement } | null = null
-    for (const scale of SCALES) {
-      const photos = photosOf(def, sheet, scale)
-      const bands = photos.flatMap((p) => (p.band ? [p.band] : []))
-      const soft = photos.map(pictureOf)
-      for (let wi = 0; wi < def.note.widths.length; wi++) {
-        const got = settle(def, sheet, tier({ photos, bands }), def.note.widths[wi] as number, soft)
-        if (!got) continue
-        const score = got.cost + SHRINK_COST * Math.round((1 - scale) * 100) + WIDEN_COST * wi
-        if (!best || score < best.score) best = { score, out: { photos, note: got.note, line: got.line, scale, clear: true } }
+    for (const { tier, price } of group) {
+      if (!Number.isFinite(price)) continue
+      for (const scale of SCALES) {
+        const photos = photosOf(def, sheet, scale)
+        const bands = photos.flatMap((p) => (p.band ? [p.band] : []))
+        const soft = photos.map(pictureOf)
+        for (let hi = 0; hi < hands.length; hi++) {
+          for (let wi = 0; wi < def.note.widths.length; wi++) {
+            const got = settle(def, sheet, tier({ photos, bands }), def.note.widths[wi] as number, hands[hi] as number, soft, tuning)
+            if (!got) continue
+            const score = got.cost + price + tuning.shrinkCost * Math.round((1 - scale) * 100) + tuning.widenCost * wi + tuning.stepCost * hi
+            if (!best || score < best.score) best = { score, out: { photos, note: got.note, line: got.line, scale, clear: true } }
+          }
+        }
       }
     }
     if (best) return best.out
@@ -337,12 +483,13 @@ export function placeSheet(sheet: AlbumSheetModel): SheetPlacement {
   const photos = photosOf(def, sheet, scale)
   const bands = photos.flatMap((p) => (p.band ? [p.band] : []))
   const w = def.note.widths[def.note.widths.length - 1] as number
-  const drawn = sheet.note ? noteDrawnAt(def, sheet, w) : null
-  let note: Box | null = null
+  const step = hands[hands.length - 1] as number
+  const drawn = sheet.note ? noteDrawnAt(def, sheet, w, step) : null
+  let note: NoteBox | null = null
   if (drawn) {
     const above = bands.filter((b) => b.x < drawn.x + drawn.w && drawn.x < b.x + b.w)
     const floor = above.reduce((y, b) => Math.max(y, Math.ceil(b.y + b.h + GAP)), 0)
-    note = { ...drawn, y: Math.min(Math.max(drawn.y, floor), PAGE - drawn.h) }
+    note = { ...drawn, y: Math.min(Math.max(drawn.y, floor), PAGE - drawn.h), step }
   }
   const lineAt = lineDrawnAt(def, sheet)
   const line = lineAt ? (freeSpot(lineAt, bands)?.box ?? lineAt) : null
@@ -359,13 +506,10 @@ function overlapArea(a: Box, b: Box): number {
   return Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y))
 }
 
-/** Pixels of travel one pixel² of a covered picture is worth: a note that must cover a 20,000px² picture
- *  would rather walk 400px, so it walks to bare paper whenever bare paper is anywhere near. */
-const COVER_COST = 0.02
-
-/** Pixels of travel one percent of photograph window is worth (a rung is 8%), and one step wider for a note. */
-const SHRINK_COST = 15
-const WIDEN_COST = 20
+// THE PRICES ARE `TUNING`'s (above). `coverCost` 0.02: a note that must cover a 20,000px² picture would
+// rather walk 400px, so it walks to bare paper whenever bare paper is anywhere near. `shrinkCost` was 15 a
+// percent in B6 and is 40 since #6b – a rung is 8%, so a rung is 320 of walking now, and a note walks
+// (or widens) before the windows give way.
 
 /** A doodle is the one furniture that is only a sticker: 24-26px a side. */
 function isSticker(b: Box): boolean {
@@ -380,6 +524,14 @@ function padded(b: Box): Box {
 /** `px()` for an inline style. */
 export function px(n: number): string {
   return `${n}px`
+}
+
+/** The inline style that puts a pasted note where the resolver said – and, when it is drawn smaller, as a
+ *  scrap laid out at full size in a box `1/step` wider and scaled by `step` from its top-left corner, which is
+ *  where the resolver put it. */
+export function noteSpot(b: NoteBox): Record<string, string> {
+  if (b.step === 1) return spot(b)
+  return { left: px(b.x), top: px(b.y), width: px(Math.round((b.w / b.step) * 100) / 100), transform: `scale(${b.step})`, transformOrigin: '0 0' }
 }
 
 /** The inline style that puts a box where the resolver said. */
