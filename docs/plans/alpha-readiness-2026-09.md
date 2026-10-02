@@ -96,6 +96,15 @@ extraction wave – and none of it gates the alpha.
 3. **P3 – RU typography** ([ru-typography-2026-09.md](../specs/ru-typography-2026-09.md)) – the
    cmap probe, the headings decision (Sora has no Cyrillic; Manrope and Caveat's families do),
    lang-scoped subsets. Gated on the RU go, not on alpha; the translation itself is his side.
+4. **P4 – the localization rig** ([i18n-2026-10.md](../specs/i18n-2026-10.md), commissioned
+   01.10) – the technical rails under the owner's editorial stack (`codex/localization-ru`):
+   catalog, importer, formatters, the stored-prose refactor, the overflow/coverage gates.
+   P3 executes inside its L4. RU first, ES later on the same rails.
+5. **P5 – the payment gate** ([payment-gate-2026-10.md](../specs/payment-gate-2026-10.md),
+   commissioned 01.10, «нужно решить до запуска») – free prologue + first junior season, one
+   non-consumable unlock, four doors (Steam entitled by build; web key; Play DGA; iOS StoreKit),
+   client-side entitlement, no backend. Supersedes the «deliberately NOT for alpha» line below
+   for monetisation – it is still not for ALPHA, but it is for launch.
 
 ## D · Deliberately NOT for alpha
 Monetisation, accounts/cloud saves (file export is honest and shipped), store wrappers (the PWA

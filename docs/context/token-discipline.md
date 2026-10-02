@@ -19,7 +19,10 @@ His measured numbers are kept in place: they are what made the rule, and they ke
 1. **The model and the effort are chosen consciously, per step, in the plan.** Every wave plan
    carries a dispatch table: step · session/agent model (sonnet by default; opus ONLY where a wrong
    judgment is expensive – ambiguous design seams, RNG-law adjacency; haiku for mechanical sweeps)
-   · effort · a move budget. No step runs on an unchosen default.
+   · effort · a move budget. No step runs on an unchosen default. ⚠ **The budget is a STOP
+   condition in the brief, not a wish** (measured 29.09: a ~40-move task ran to 112 uses and 372k
+   tokens before the architect killed it): on reaching it the agent commits what is green, reports
+   what is left, and stops – the remainder is a fresh thin agent's task.
 2. **Code and development agents run SEQUENTIALLY – step by step, never in parallel** (the
    owner, 29.09, «на всякий случай еще один пункт»). Parallelism in one checkout has already
    produced false gate verdicts, swallowed commits and contention timeouts (CLAUDE.md's own
