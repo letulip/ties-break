@@ -117,18 +117,39 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   it is. One more question for him: «#1 в мире» is the Professional table only (the draft's reading)
   or the junior International table too? No copy was written, so no DRAFT row was added.
 
-- [ ] **6. «Расположение фото в альбоме конфликтуют с надписями в самом альбоме и с некоторыми
+- [x] **6. «Расположение фото в альбоме конфликтуют с надписями в самом альбоме и с некоторыми
   записками, которые перекрывают надписи на фото, надо подумать как лучше сделать»** – Reading:
   album layout collisions – photos vs album captions, notes overlapping photo labels. He asks for
   a thought-through layout, not a nudge. Class: **build**. Bundle **B6** (album UI).
   Evidence: a mounted test measuring bounding boxes of photo labels vs notes/captions on the
   offending page shapes – zero intersection, red on revert; before/after reasoning in the report.
 
-- [ ] **7. «Кроп фото в альбоме берёт среднюю часть фото, на некоторых обрезается голова»** –
+  **B6 outcome (02.10) – `[x]`.** Nothing on a sheet is engine-composed: every coordinate is a pixel
+  number in `AlbumLayoutA/B/C.vue`, drawn for short words, so the cause was text length – layout B's
+  bottom-anchored note grew up over both top-row captions, C's over the hero's, A's loose line ran under
+  the second photograph's caption, C's second photograph hung off the page. Fix: `album/albumPlacement.ts`,
+  a pure resolver the three layouts render through (a note or line stays where it was drawn only if no
+  caption band touches it, else the cheapest free spot; photo windows shrink one 8% rung and the note
+  widens before it may cover a picture). **Before/after, 48 posed careers, 335 sheets: 303 had a note or a
+  line on a caption (A 115, B 67, C 121); 0 after**, none needing the stack-below fallback; real Chromium on
+  the seeded `pro` career: 6 of 6 sheets before, 0 of 6 after. Red on revert: the resolver replaced by the
+  layout's own drawing gives «303 of 335 sheets still put a note or a line on a caption» and 4 mounted reds.
+  Not solved, said plainly: on about half of layout C's pages the note still sits over part of the hero's
+  *picture* (same area as before, the caption is now free); B's long notes shrink the photographs on 45 of
+  67 sheets; 16 B and 13 C sheets touch furniture; 24 C sheets keep a three-line second caption past the
+  page edge. Those are the layouts being over-full, and the answer is a composition, not a nudge – his call.
+
+- [x] **7. «Кроп фото в альбоме берёт среднюю часть фото, на некоторых обрезается голова»** –
   Reading: album photo crop anchors to center; portraits lose heads – anchor should favour the
   top. Class: **build**. Bundle **B6** (same files as 6).
   Evidence: the measured object-position/crop rule before and after, asserted in the mounted
   album test (red on revert).
+
+  **B6 outcome (02.10) – `[x]`.** The mechanism is `object-fit: cover` at the default centre in
+  `ui/Polaroid.vue` (untouched). `AlbumPhoto` now hands it `object-position: 50% 10%`. A crop ANCHOR, not
+  face detection: a head within the top few percent of a painting can still lose a sliver. Pinned by a
+  source pin on `AlbumPhoto.vue` and a mounted `img.style.objectPosition` on all three layouts; both
+  red with the style removed.
 
 - [x] **8. «Постараться сделать, чтобы одинаковых фоточек не было на одной странице»** – Reading:
   de-duplicate photo picks within one album page (deterministically – sub-stream law, MAIN

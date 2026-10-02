@@ -44,6 +44,21 @@ const props = withDefaults(
  * already has.
  */
 const src = computed(() => `${import.meta.env.BASE_URL}${props.frame.art}`)
+
+/**
+ * ⭐ THE CROP ANCHORS NEAR THE TOP (round 45 #7, owner 02.10: «Кроп фото в альбоме берёт среднюю часть
+ * фото, на некоторых обрезается голова»). `Polaroid`'s picture is `object-fit: cover` and its default
+ * `object-position` is the centre, so a window shorter than the painting is square-cut equally at the
+ * top and the bottom – and a head that starts a few percent below the top edge goes with it. The
+ * paintings are 512x512 portraits whose subject's head lives in the upper third, so the window is
+ * pinned 10% of the way down instead of 50%: the top 3% of a 170px window over a 245px picture is
+ * all that can be lost, and what is cut goes from the bottom, where the shoulders are.
+ *
+ * ⚠ IT IS A CROP ANCHOR AND NOT FACE DETECTION – no per-image data, no new engine field. A painting
+ * whose head sits within the top few percent can still lose a sliver of hair, and a narrow tall window
+ * (which crops the sides, not the top) keeps the centred 50% horizontally as before.
+ */
+const ALBUM_CROP = { objectPosition: '50% 10%' } as const
 </script>
 
 <template>
@@ -55,6 +70,7 @@ const src = computed(() => `${import.meta.env.BASE_URL}${props.frame.art}`)
       :tape="tape"
       :tilt="tilt"
       :photo-height="photoHeight"
+      :photo-style="ALBUM_CROP"
     />
     <span v-if="clip" class="album-clip" aria-hidden="true"></span>
   </div>

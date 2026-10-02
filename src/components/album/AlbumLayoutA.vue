@@ -15,14 +15,21 @@
 // ⚠ EVERY SENTENCE HERE ARRIVES ON THE MODEL. The caption under a photograph, the writing on the
 // note and the loose line are `albumCorpus.ts`'s three registers – about her, to her, and to nobody.
 // This template contains no sentence of its own and must not grow one (invariant 4).
+import { computed } from 'vue'
 import AlbumPhoto from './AlbumPhoto.vue'
 import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumPatch from './AlbumPatch.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import AlbumSheetTitle from './AlbumSheetTitle.vue'
+import { placeSheet, spot } from './albumPlacement'
 import type { AlbumSheetModel } from '../../shared/protocol'
 
-defineProps<{ sheet: AlbumSheetModel }>()
+const props = defineProps<{ sheet: AlbumSheetModel }>()
+
+// ⭐ WHERE THE PHOTOGRAPHS, THE NOTE AND THE LOOSE LINE STAND IS ONE PURE FUNCTION'S ANSWER (round 45 #6,
+// `albumPlacement.ts`): the drawing's own numbers live in its table and a note or a line that would sit
+// on a photograph's caption is moved off it. This file binds the answer and owns no coordinate of them.
+const placed = computed(() => placeSheet(props.sheet))
 </script>
 
 <template>
@@ -35,29 +42,32 @@ defineProps<{ sheet: AlbumSheetModel }>()
     />
 
     <AlbumPhoto
-      v-if="sheet.frames[0]"
+      v-if="sheet.frames[0] && placed.photos[0]"
       class="album-a-hero"
+      :style="spot(placed.photos[0])"
       :frame="sheet.frames[0]"
       tape
-      :tilt="-1.2"
-      :photo-height="170"
+      :tilt="placed.photos[0].tilt"
+      :photo-height="placed.photos[0].photoH"
     />
 
     <AlbumNoteCard
-      v-if="sheet.note"
+      v-if="sheet.note && placed.note"
       class="album-a-note"
+      :style="spot(placed.note)"
       :note="sheet.note"
       torn="right"
       :tilt="1.4"
     />
 
     <AlbumPhoto
-      v-if="sheet.frames[1]"
+      v-if="sheet.frames[1] && placed.photos[1]"
       class="album-a-second"
+      :style="spot(placed.photos[1])"
       :frame="sheet.frames[1]"
       clip
-      :tilt="2.2"
-      :photo-height="130"
+      :tilt="placed.photos[1].tilt"
+      :photo-height="placed.photos[1].photoH"
     />
 
     <AlbumPatch v-if="sheet.patch" class="album-a-patch" :name="sheet.patch" />
@@ -69,7 +79,7 @@ defineProps<{ sheet: AlbumSheetModel }>()
       :size="26"
     />
 
-    <p v-if="sheet.line" class="album-a-line">{{ sheet.line }}</p>
+    <p v-if="sheet.line && placed.line" class="album-a-line" :style="spot(placed.line)">{{ sheet.line }}</p>
   </div>
 </template>
 
@@ -87,9 +97,6 @@ defineProps<{ sheet: AlbumSheetModel }>()
 
 .album-a-hero {
   position: absolute;
-  left: 24px;
-  top: 126px;
-  width: 245px;
 }
 
 /* ⚠ IT RUNS OFF THE RIGHT EDGE ON PURPOSE. 342px of a 390 phone shows the picture and the first
@@ -105,16 +112,10 @@ defineProps<{ sheet: AlbumSheetModel }>()
  * is also the mockup's own proportion (AW puts the note's left edge at 63.3% of the page). */
 .album-a-note {
   position: absolute;
-  left: 294px;
-  top: 92px;
-  width: 176px;
 }
 
 .album-a-second {
   position: absolute;
-  left: 256px;
-  top: 275px;
-  width: 200px;
 }
 
 .album-a-patch {
@@ -131,9 +132,6 @@ defineProps<{ sheet: AlbumSheetModel }>()
 
 .album-a-line {
   position: absolute;
-  left: 120px;
-  top: 422px;
-  width: 200px;
   margin: 0;
   font-size: 21px;
   line-height: 1.25;
