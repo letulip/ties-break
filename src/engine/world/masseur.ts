@@ -34,8 +34,9 @@
 // importing it here would close a runtime cycle through endings → entries → medical → this file.
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { addEvent, seasonIndexOf } from './ledger'
-import { raiseStaffAsk, staffAskId, staffAsksWithheld } from '../offers'
+import { addEvent } from './ledger'
+import { staffAsks } from '../offers'
+import { staffFeeCents, writeStaffRaise } from './staffRaise'
 import { guardNotEnded } from './constants'
 import { activeLadderOf } from './ladder'
 import { inCollege } from './college'
@@ -206,12 +207,14 @@ export function masseurYearsServed(world: WorldState): number {
  *
  *  Pure integer arithmetic over the ledger, zero draws on any stream. */
 export function masseurSessionCents(world: WorldState): number {
-  // ⭐⭐⭐ ROUND 45 #3 – THE EXPONENT IS THE YEARS HE HAS SERVED MINUS THE ASKS THE FAMILY HAS NOT
-  // GRANTED (`staffAsksWithheld`). The rate no longer rises on its own: each anniversary writes a
-  // request letter, and the year is only counted once somebody said yes. ⚠ A career with no request
-  // papers at all – every save from before this round – withholds nothing and keeps every raise it
-  // was already paying, which is why this needs no migration.
-  return masseurRateAfter(masseurYearsServed(world) - staffAsksWithheld(world.offers ?? [], 'masseur'))
+  // ⭐⭐⭐ ROUND 45 #3 / #3b – THE FEE IS THE CHAIN OF THE PAPERS HE WAS GRANTED (`staffFeeCents`): the rate
+  // he was paid before his first request, moved by every request the family SIGNED, in order, each one by
+  // the two figures its paper printed – so with a step that floats with the year (02.10), what the letter
+  // said IS what is billed. The rate no longer rises on its own: each anniversary writes a request letter,
+  // and nothing moves until somebody says yes. ⚠ A career with no request papers at all – every save from
+  // before this round – is the baseline alone (the exponent over the years he served), so it keeps every
+  // raise it was already paying, which is why this needs no migration.
+  return staffFeeCents(world.offers ?? [], 'masseur', masseurRateAfter(masseurBaselineYears(world)))
 }
 
 /** WHAT ONE SESSION COSTS AFTER `grants` GRANTED RAISES – the compounding and the whole-dollar
@@ -220,6 +223,25 @@ export function masseurSessionCents(world: WorldState): number {
 function masseurRateAfter(grants: number): number {
   const drifted = ECONOMY.masseur.perSessionCents * (1 + ECONOMY.masseur.raisePerYear) ** Math.max(0, grants)
   return Math.round(drifted / 100) * 100
+}
+
+/** ⭐⭐ HOW MANY OF THE SILENT ERA'S RAISES HE ALREADY HAD WHEN THE CHAIN OF PAPERS BEGAN – the exponent of
+ *  the baseline `masseurRateAfter` prices. Before round 45 his rate rose by itself on every anniversary, so
+ *  a save that predates the letters is already paying `years served` of them and must keep paying them: the
+ *  rate the exponent gives at the moment his FIRST request is written becomes that request's `fromCents`.
+ *   · once a request exists, the chain starts at the year BEFORE the first one (the year is on the paper:
+ *     its `weeksServed` is a whole number of years by construction), so declining it moves nothing and a
+ *     later paper chains from where the baseline left off;
+ *   · before any request, it is the years he has served – except on the anniversary the writer is
+ *     pricing (`asking`), whose own raise is exactly what the first request is ABOUT and is not yet agreed.
+ *  ⚠ Derived from the papers and the service ledger, so nothing is persisted. Pure, zero draws. */
+function masseurBaselineYears(world: WorldState, asking?: number): number {
+  const papers = staffAsks(world.offers ?? [], 'masseur')
+  if (papers.length > 0) {
+    const first = Math.min(...papers.map((o) => (o.terms as { weeksServed: number }).weeksServed))
+    return Math.max(0, Math.round(first / WEEKS_PER_YEAR) - 1)
+  }
+  return asking !== undefined ? Math.max(0, asking - 1) : masseurYearsServed(world)
 }
 
 /** IS THIS THE WEEK HE ASKS – the week his service count crosses a whole year.
@@ -248,7 +270,7 @@ export function masseurRaiseDue(world: WorldState): boolean {
  *  (the standing «мы ни за что не наказываем» – no mood, no firing, no extra bill), and the rung dial
  *  (2 / 4 / 7) stays what it always was, available whatever the family answered.
  *
- *  ⚠ THE FIGURES ARE THE ORIGINAL ONES: the same `raisePerYear` and the same whole-dollar rounding,
+ *  ⚠ THE FIGURES FLOAT WITH THE YEAR (02.10, `staffRaiseStep`: 6% / 4% / 2% by default) and keep the whole-dollar rounding,
  *  compounding on what is GRANTED – so a declined year is forgone rather than banked, and the next
  *  request is one step above the rate he actually has. ⚠ One request per year of service, idempotent
  *  on `staffAskId`, so a re-hire week that already sits on a year cannot write a second one.
@@ -258,24 +280,17 @@ export function masseurRaiseDue(world: WorldState): boolean {
  *  Called from `world/phaseHerWeek.ts` immediately BEFORE `resolveMasseur`, as it always was. */
 export function resolveMasseurRaise(world: WorldState): void {
   if (!masseurRaiseDue(world)) return
-  const year = masseurYearsServed(world)
-  if (world.offers.some((o) => o.id === staffAskId('masseur', year))) return
-  // `year` already COUNTS this anniversary, so the raises granted BEFORE it are `year - 1` minus the
-  // ones the family withheld – the rate he has today is `fromCents`, and the one he asks for is one
-  // step above it. (A first draft read `year - withheld` and priced the ask one year too high.)
-  const granted = year - 1 - staffAsksWithheld(world.offers, 'masseur')
-  const fromCents = masseurRateAfter(granted)
-  const toCents = masseurRateAfter(granted + 1)
-  // An ask that would not move the rate is no ask – the identity case, unreachable on the shipped
-  // 4% and the shipped $75 opening, and guarded so a retune cannot write a letter about nothing.
-  if (toCents <= fromCents) return
-  raiseStaffAsk(world.offers, world.week, year, {
-    seat: 'masseur',
-    seasonIndex: seasonIndexOf(world.week),
-    // The total weeks on the payroll at the anniversary – a whole number of years by construction.
-    weeksServed: masseurWeeksServed(world),
-    ask: { fromCents, toCents },
-  })
+  // ⭐ THE SHARED WRITER OWNS THE REST (world/staffRaise.ts): the due-week clock, the one-letter-per-year id
+  // and the FLOATING step. `year` already COUNTS this anniversary, so the silent-era raises he had BEFORE it
+  // are `year - 1` – unless an earlier request already fixed where his chain starts (`masseurBaselineYears`).
+  // The letter's `fromCents` is therefore the rate he is paid today, and its `toCents` one step above it.
+  writeStaffRaise(
+    world,
+    'masseur',
+    MASSEUR_CHANGE_KEY,
+    world.masseurHired ?? false,
+    masseurRateAfter(masseurBaselineYears(world, masseurYearsServed(world))),
+  )
 }
 
 /** Whole dollars for the one row that quotes his rate. ⚠ NOT a formatter import: `shared/money.ts`

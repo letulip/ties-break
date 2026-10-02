@@ -39,6 +39,7 @@ import { KID_ID } from './constants'
 import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
 import { guardNotEnded, guardNotEndedForGood } from './endings'
+import { coachRaiseStands, settleCoachRaise } from './coachDeal'
 
 // --- the sponsors decide, in the off-season -----------------------------------
 // Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
@@ -1161,7 +1162,12 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
           ? (world.psychologistHired ?? false)
           : seat === 'sparring'
             ? (world.sparringHired ?? false)
-            : false
+            : seat === 'coach'
+              ? // ⭐ ROUND 45 #3b – THE COACH'S PAPER STANDS ONLY WHILE ITS ARRIVAL WEEK IS AN ANNIVERSARY OF THE
+                // CONTRACT THAT STANDS NOW: a coach released (and perhaps replaced) inside the window leaves a
+                // paper that cannot raise anybody's fee. `coachRaiseStands`, world/coachDeal.ts.
+                coachRaiseStands(world, askLetter)
+              : false
     if (!stands) throw new Error(offerAnswerErrorFor(world, offerId))
   }
   const signed = signOfferIn(world.offers, offerId, world.week)
@@ -1215,6 +1221,11 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
       text: `${t.brand} endorsement – the campaign fee, on signing`,
     })
   }
+  // ⭐⭐⭐ ROUND 45 #3b – THE COACH'S SIGNATURE MOVES HIS ONE STORED FEE. The three derived seats' fee is read
+  // off their signed papers, so the paper IS the write; his is a stored deal (`WorldState.coachDeal`), so the
+  // signed paper re-strikes it here, in the same command that signed it (`settleCoachRaise`, which has
+  // already been told by `coachRaiseStands` above that the paper stands). Zero draws, no cash moves.
+  if (signed.kind === 'staff' && (signed.terms as { seat?: string }).seat === 'coach') settleCoachRaise(world, signed)
   return signed
 }
 

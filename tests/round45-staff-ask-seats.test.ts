@@ -10,7 +10,14 @@
 // ⚠ WHAT IS DIFFERENT FROM THE MASSEUR AND IS TESTED ON PURPOSE: a career that predates the papers
 // – years served, no request on file – must pay exactly the opening price. The masseur's rule
 // (`years − withheld`) would have raised these two seats' bills on the day this shipped, with no
-// letter; their exponent is the number of requests the family SIGNED (world/staffRaise.ts head note).
+// letter; their baseline is the catalogue price, moved only by the papers the family SIGNED
+// (world/staffRaise.ts head note).
+//
+// ⚠ RE-AIMED 02.10 (ROUND 45 #3b – the owner's «плавающая вилка»). The 4% below is the FLAT-year step: the
+// step floats with the year now (good 6% / flat 4% / bad 2%, defaulted) and the fee is the chain of signed
+// papers, not an exponent. These worlds bank no season and no season is a flat verdict, so every literal
+// anchor is unchanged; the three places that spoke the exponent's language (`staffRateAfter`) are re-aimed
+// and say so. The floating arms live in tests/round45-staff-ask-floating.test.ts.
 //
 // ⚠ ALL COPY UNDER TEST IS DRAFT (invariant 4, docs/rounds/round-45.md «R45 – DRAFT strings»). The 4% is
 // a DEFAULTED parameter (the masseur's own `ECONOMY.masseur.raisePerYear`, lent until the owner picks
@@ -18,8 +25,8 @@
 //
 // ⚠ MUTATION-VERIFIED – each arm is listed in the hand-back and was run against this file and the
 // component file next door (tests/component/round45-staff-ask-card.test.ts):
-//   M1  `staffRateAfter` ignores the grants (accepting moves nothing).
-//   M2  `staffRaisesGranted` counts every request, not only the signed (an OPEN letter moves the bill).
+//   M1  `staffFeeCents` ignores the chain (accepting moves nothing).
+//   M2  `staffSignedAsks` counts every request, not only the signed (an OPEN letter moves the bill).
 //   M3  the psychologist's fee counts the YEARS served (the masseur's legacy rule) instead of the signed asks.
 //   M4  the phase never calls `resolvePsychologistRaise` / `resolveSparringRaise` (only the REAL walk sees it).
 //   M5  `acceptOffer`'s staff arm has no sparring door (a hitting partner's request cannot be signed).
@@ -52,7 +59,7 @@ import {
   resolvePsychologistRaise,
 } from '../src/engine/world/psychologist'
 import { SPARRING_CHANGE_KEY, resolveSparringRaise, sparringRungWeeklyCents } from '../src/engine/world/sparring'
-import { staffRaiseDue, staffRateAfter } from '../src/engine/world/staffRaise'
+import { staffFeeCents, staffRaiseDue } from '../src/engine/world/staffRaise'
 import {
   expireOffers,
   isOfferLive,
@@ -144,9 +151,11 @@ describe.each(KITS)('round 45 #3 – the $seat asks, on the masseur`s pattern', 
   const rate = (y: number): number => rateAfter(open, y)
   const asksOf = (world: WorldState) => staffAsks(world.offers, kit.seat)
 
-  it('premise – the shipped 4% on the default rung produces the literal anchors', () => {
+  it('premise – the shipped FLAT-year 4% on the default rung produces the literal anchors', () => {
     expect([rate(0), rate(1), rate(2)]).toEqual(kit.literal)
-    expect(staffRateAfter(open, 1)).toBe(kit.literal[1])
+    // ⚠ RE-AIMED 02.10 (#3b): was `staffRateAfter(open, 1) === literal[1]`, the leaf's exponent. A seat with
+    // no signed paper pays its BASELINE untouched – the identity the legacy saves rely on.
+    expect(staffFeeCents([], kit.seat, open), 'no papers, no drift').toBe(open)
   })
 
   it('⭐⭐⭐ the anniversary writes ONE open letter with both prices on it, and the BILL does not move until yes', () => {
@@ -329,13 +338,23 @@ describe('round 45 #3 – the leaf is the masseur`s own arithmetic, not a second
     return world
   }
 
-  it('⭐⭐ staffRateAfter(opening, y) IS masseurSessionCents after y granted raises, for every y a career reaches', () => {
+  it('⭐⭐ the masseur`s fee after y granted raises IS the last signed paper`s toCents, and each paper quotes what he is paid – for every y a career reaches', () => {
+    // ⚠ RE-AIMED 02.10 (#3b). This was `staffRateAfter(opening, y)`: the exponent, rounded ONCE from the
+    // unrounded power. With a step that can differ every year there is no power – the fee is the CHAIN of the
+    // papers the family signed, each printing its own whole-dollar figures, so the paper IS the fee. (On a
+    // flat-year chain at $75 that reads $87 in year 4 where the exponent said $88: the price of «what the
+    // letter says is what is billed».)
     const world = masseurWorld()
+    let paid: number = ECONOMY.masseur.perSessionCents
     for (let y = 0; y <= 6; y++) {
-      expect(masseurSessionCents(world), `after ${y} granted`).toBe(staffRateAfter(ECONOMY.masseur.perSessionCents, y))
+      expect(masseurSessionCents(world), `after ${y} granted`).toBe(paid)
       world.week = 100 + (y + 1) * WEEKS_PER_YEAR
       resolveMasseurRaise(world)
-      acceptOffer(world, staffAskId('masseur', y + 1))
+      const paper = staffAsks(world.offers, 'masseur').find((o) => o.id === staffAskId('masseur', y + 1))!
+      const ask = (paper.terms as StaffLetterTerms).ask!
+      expect(ask.fromCents, `paper ${y + 1} quotes what he is paid`).toBe(paid)
+      acceptOffer(world, paper.id)
+      paid = ask.toCents
     }
   })
 
@@ -355,5 +374,7 @@ describe('round 45 #3 – the leaf is the masseur`s own arithmetic, not a second
     expect(staffAskUnit('masseur')).toBe('session')
     expect(staffAskUnit('psychologist')).toBe('week')
     expect(staffAskUnit('sparring')).toBe('week')
+    // ⭐ ROUND 45 #3b – the coach is quoted by the HOUR, the rate his bill is built from.
+    expect(staffAskUnit('coach')).toBe('hour')
   })
 })

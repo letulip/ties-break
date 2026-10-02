@@ -1107,6 +1107,11 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   //
   // ⚠ ZERO DRAWS on any stream – a weighted mean over state the tick has already written, a clamp
   // and an integer multiply. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
+  //
+  // ⭐⭐⭐ ROUND 45 #3b (owner, 02.10) – IT WRITES A LETTER NOW, NOT THE RISE. The anniversary this call used to
+  // apply on its own is a two-door staff letter, answered through `acceptOffer` (which re-strikes his stored
+  // fee) or `declineOffer` / a lapse (which leave it). The automatic rise and its feed row are retired – see
+  // the supersession note on `resolveCoachRaise`. The week's bill below is therefore still at the old rate.
   resolveCoachRaise(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first

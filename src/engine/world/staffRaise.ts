@@ -1,58 +1,174 @@
-// ROUND 45 #3 – THE RAISE REQUEST, THE SEATS' COMMON HALF.
+// ROUND 45 #3 – THE RAISE REQUEST, THE SEATS' COMMON HALF; ROUND 45 #3b – AND ITS SIZE FLOATS WITH THE YEAR.
 //
 // THE OWNER: «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
 // массажист растёт сам по себе тихо ежегодно». B2 turned the masseur's silent yearly index into an OPEN
-// staff letter (`raiseStaffAsk` in offers.ts, written from `resolveMasseurRaise`). This file is the SAME
-// mechanism asked of the two seats that bill by the WEEK – the psychologist and the hitting partner – so
-// a seat's service clock, its anniversary, its request and the drift of its fee are ONE spelling here
-// rather than three.
+// staff letter (`raiseStaffAsk` in offers.ts). This file is the SAME mechanism asked of the two seats that
+// bill by the WEEK – the psychologist and the hitting partner – so a seat's service clock, its anniversary,
+// its request and the drift of its fee are ONE spelling here rather than three.
 //
-// ⚠ A LEAF ON PURPOSE. It reaches `economy`, `offers`, `season/calendar` and `world/ledger`, and NO seat
-// module: each seat module imports THIS, so a seat that bills through it can never close a cycle
-// (`tests/import-cycles.test.ts`). The hire / release tag a seat's clock reads is therefore an ARGUMENT
-// (`PSYCHOLOGIST_CHANGE_KEY`, `SPARRING_CHANGE_KEY`), handed over by the seat that owns it.
+// ⭐⭐⭐ 02.10, THE OWNER'S SECOND WORD: «мы обсуждали, что там может быть плавающая вилка. тренер тоже
+// вполне может просить повышения – с удачных лет по-больше, с неудачных по-меньше, как и все остальные».
+// So the step a request asks for is no longer one fixed 4%: a GOOD year asks for more, a BAD one for less,
+// a flat one for the base. `staffYearVerdict` is the ONE answer to «was her year good» for the three seats
+// that sit here, and `staffRaiseStep` maps it to the figure. The coach's own step is HIS corridor
+// (`coachAskFraction(coachProgressScore)` – already a floating fork, round 44) and lives beside his score,
+// because his module reaches `sponsors.ts` and this leaf may not reach it back.
 //
-// ⭐⭐ THE ONE DIFFERENCE FROM THE MASSEUR'S FEE, AND WHY IT IS NOT A SECOND RULE. His rate is
-// `opening × (1+step)^(yearsServed − asksWithheld)`: before round 45 it rose silently every year, so a
-// save with no request papers had to keep every raise it was already paying – the exponent counts the
-// years and subtracts the ones the family refused. These two seats NEVER rose: a save with no papers
-// paid the opening price and has to go on paying it, so their exponent is the number of requests the
-// family SIGNED. On a career that has had every anniversary's request the two are the same number
-// (tests/round45-staff-ask-seats.test.ts pins that against the masseur); they part only on a save that
-// predates the papers, which is exactly where counting the years would have raised a bill on the day
-// this shipped, with no letter – the very thing the owner objected to.
+// ⚠ A LEAF ON PURPOSE. It reaches `economy`, `offers`, `season/calendar`, `world/ledger` and the season-facts
+// leaf, and NO seat module: each seat module imports THIS, so a seat that bills through it can never close
+// a cycle (`tests/import-cycles.test.ts`). The hire / release tag a seat's clock reads is therefore an
+// ARGUMENT (`PSYCHOLOGIST_CHANGE_KEY`, `SPARRING_CHANGE_KEY`), handed over by the seat that owns it.
 //
-// ⚠⚠ NOTHING IS PERSISTED AND NOTHING DRAWS. The fee is derived from the signed papers and the hire
-// ledger, so there is no save-schema move, and the writer below reads state only – no stream, no
-// `Math.random`, no wall clock.
+// ⭐⭐⭐ THE FEE IS THE CHAIN OF SIGNED PAPERS (02.10, replacing B2's exponent). With a step that differs
+// every year there is no `(1+step)^n`: what a seat is paid is its BASELINE moved by every request the family
+// SIGNED, in order, each paper printing the two figures it moved between. So a seat's fee is the baseline
+// times the product of its signed papers' ratios (`staffFeeCents`) – and because each paper's `fromCents`
+// is the fee at its own arrival, that product telescopes: on one rung the fee IS the latest signed paper's
+// `toCents`, exactly what the letter said, and across a rung switch the same multiplier lifts the new rung's
+// catalogue price (a rung is who takes the call; the drift belongs to the SEAT, B2b's ruling).
+//   · the masseur's baseline is his opening price drifted by the years he served BEFORE his first paper
+//     (`world/masseur.ts`) – the silent era's raises are already being paid and stay paid;
+//   · the two weekly seats' baseline is the rung's catalogue price – they never rose, so a save with no
+//     papers pays the opening price and goes on paying it.
+// A refused or lapsed paper is not in the chain, so Decline leaves the fee and the NEXT request is one
+// step above what the seat is paid now (a forgone year is not banked).
+//
+// ⚠⚠ NOTHING IS PERSISTED AND NOTHING DRAWS. The fee is derived from the signed papers, the verdict reads
+// banked season rows, and the writer reads state only – no stream, no `Math.random`, no wall clock. No
+// save-schema move.
 
 import { ECONOMY } from '../economy'
 import { raiseStaffAsk, staffAskId, staffAsks } from '../offers'
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import type { Offer, StaffSeat } from '../../shared/protocol'
+import type { Offer, StaffLetterTerms, StaffSeat } from '../../shared/protocol'
 import { seasonIndexOf } from './ledger'
+import { SEASON_PLAYED_WEEKS, seasonRankOf, titlesInSeason } from './seasonFacts'
 import type { WorldState } from './state'
 
-/** ⚠ A DEFAULTED PARAMETER, FLAGGED AS ONE. The step a granted raise adds is the MASSEUR'S own
- *  `ECONOMY.masseur.raisePerYear` (4%, ruled and benched in round 43), lent to the two weekly seats
- *  because the owner's ask named «the specialists» and gave no figure for them. It is read at call
- *  time, so a bench that moves the masseur's knob moves the others with it, and it is the ONE seam
- *  where a seat gets its own number the day the owner picks one. It is deliberately NOT a new
- *  `ECONOMY` key: that table is hash-pinned (`tests/principles-t73-economy-identity.test.ts`) and a
- *  knob nobody has ruled on should not be dressed as one. */
-export function staffRaisePerYear(): number {
+/** The seats whose request is sized HERE – every seat but the coach (see the head note). */
+export type StaffRaiseSeat = Exclude<StaffSeat, 'coach'>
+
+/** HOW HER LAST FINISHED YEAR WENT, in the only three words the request needs. */
+export type StaffYearVerdict = 'good' | 'flat' | 'bad'
+
+/** ⚠⚠ DEFAULTED PARAMETERS, FLAGGED AS SUCH – the owner picks the numbers later (02.10: he named the shape,
+ *  «плавающая вилка», and no figure). A GOOD year asks for 6%, a BAD one for 2%; the FLAT year's base is
+ *  the masseur's own `ECONOMY.masseur.raisePerYear` (4%, ruled and benched in round 43), read at call time
+ *  so a bench that moves that knob moves the base with it. Held PER SEAT so the day the owner gives one
+ *  seat its own number it is one line, and deliberately NOT new `ECONOMY` keys: that table is hash-pinned
+ *  (`tests/principles-t73-economy-identity.test.ts`) and a knob nobody has ruled on should not be dressed
+ *  as one. ⚠ The masseur's «не так интенсивно как тренер» (round 43) now holds against the coach's
+ *  CORRIDOR (5–15%) as a whole and no longer at its floor: a good year's 6% sits above the coach's 5%. */
+export const STAFF_RAISE_STEPS: Record<StaffRaiseSeat, { good: number; bad: number }> = {
+  masseur: { good: 0.06, bad: 0.02 },
+  psychologist: { good: 0.06, bad: 0.02 },
+  sparring: { good: 0.06, bad: 0.02 },
+}
+
+type SeasonRow = WorldState['seasonHistory'][number]
+
+/** Did her ranking move between two banked seasons – +1 she finished the year better placed, -1 worse, 0
+ *  neither or unknown. Read on the TABLE the year just finished was played on (`seasonRankOf`, the very
+ *  rule the coach's year-end letter prints its rank by), against the same table a year earlier.
+ *  ⚠ UNKNOWN IS NEVER A MOVE: a row banked before v46 carries no per-table ranks, and a first season has
+ *  nothing before it; both read 0 and the verdict falls back to the titles alone. ⚠ `null` IS NOT A ZERO ON
+ *  EITHER SIDE – the coach's own reading (`coachProgressScore`'s rank component): unranked → ranked is a
+ *  move up, and a girl who held a place a year ago and holds none now has slipped. */
+function rankMoved(prev: SeasonRow | undefined, last: SeasonRow): -1 | 0 | 1 {
+  if (!prev?.byTrack || !last.byTrack) return 0
+  const now = seasonRankOf(last)
+  if (now.rankTrack === undefined || now.endRank === undefined) {
+    return Object.values(prev.byTrack).some((t) => t.endRank !== undefined) ? -1 : 0
+  }
+  const before = prev.byTrack[now.rankTrack]?.endRank
+  if (before === undefined) return 1
+  return now.endRank < before ? 1 : now.endRank > before ? -1 : 0
+}
+
+/** ⭐⭐⭐ WAS HER LAST YEAR A GOOD ONE – the ONE answer, read by every seat that is sized here.
+ *
+ *  DERIVED FROM THE BANKED SEASON ROWS, and not from the coach's `coachProgressScore`: that score is
+ *  measured against the marks stored ON HIS CONTRACT (the rank, the skills and the residual since his fee
+ *  was agreed), so it belongs to HIS clock – it does not exist for a self-coached family and it covers a
+ *  different stretch of weeks from the masseur's anniversary. The facts used here are the two the staff's
+ *  own year-end letters already print about her year – where she finished and what she won
+ *  (`world/seasonFacts.ts`, shared with `staffLetters.ts`) – so a letter that REPORTS the season and a
+ *  request SIZED by it cannot tell two stories.
+ *
+ *  THE RULE, deliberately the smallest one (the owner will rule on what counts as good):
+ *    GOOD  – she finished the year better placed than the year before, OR she won a title and did not slip;
+ *    BAD   – she finished it worse placed and won nothing;
+ *    FLAT  – anything else, including a first season, a season with no banked row, and a year she both
+ *            slipped in and won a title in.
+ *  ⚠ NO THRESHOLD IS INVENTED: rank movement is the sign of the change, so there is no «how much better».
+ *
+ *  Which year: the LATEST row banked (the wrap-up writes it on the first off-season week), against the row
+ *  one season before. Pure, zero draws. */
+export function staffYearVerdict(world: WorldState): StaffYearVerdict {
+  const rows = world.seasonHistory ?? []
+  let last: SeasonRow | null = null
+  for (const h of rows) if (last === null || h.seasonIndex > last.seasonIndex) last = h
+  if (last === null) return 'flat'
+  const prev = rows.find((h) => h.seasonIndex === last.seasonIndex - 1)
+  const yearStart = last.seasonIndex * WEEKS_PER_YEAR
+  const titles = titlesInSeason(world, yearStart, yearStart + SEASON_PLAYED_WEEKS)
+  const moved = rankMoved(prev, last)
+  if (moved > 0 || (titles > 0 && moved >= 0)) return 'good'
+  if (moved < 0 && titles === 0) return 'bad'
+  return 'flat'
+}
+
+/** ⭐⭐⭐ THE STEP A REQUEST ASKS FOR THIS YEAR – the verdict mapped to a fraction. One place, so the
+ *  masseur, the psychologist and the hitting partner can never read the year three ways. Pure, zero draws. */
+export function staffRaiseStep(seat: StaffRaiseSeat, world: WorldState): number {
+  const verdict = staffYearVerdict(world)
+  if (verdict === 'good') return STAFF_RAISE_STEPS[seat].good
+  if (verdict === 'bad') return STAFF_RAISE_STEPS[seat].bad
   return ECONOMY.masseur.raisePerYear
 }
 
-/** WHAT A RATE COSTS AFTER `grants` GRANTED RAISES – compounding, because that is what a rise IS (each
- *  year's ask is against what the seat is paid now), rounded to WHOLE DOLLARS from the UNROUNDED power
- *  and never year-on-year from the rounded one: the house prices these seats in whole dollars, and
- *  rounding once keeps the quote, the ledger row and the arithmetic a player can do in his head one
- *  number. The masseur's `masseurRateAfter` is the same line; the parity test pins them together.
- *  A floor of zero: a negative count has no meaning and the opening price is the identity element. */
-export function staffRateAfter(baseCents: number, grants: number): number {
-  const drifted = baseCents * (1 + staffRaisePerYear()) ** Math.max(0, grants)
-  return Math.round(drifted / 100) * 100
+/** A SEAT'S SIGNED PAPERS, OLDEST FIRST – the chain. An open, refused or lapsed request is not in it, so
+ *  Decline and a lapse leave the fee where it was. `offers` may be absent on a hand-built probe world: no
+ *  papers, no raise. */
+export function staffSignedAsks(offers: Offer[] | undefined, seat: StaffSeat): Offer[] {
+  return staffAsks(offers ?? [], seat)
+    .filter((o) => o.state === 'signed')
+    .sort((a, b) => a.week - b.week || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+}
+
+/** THE SEAT'S DRIFT SO FAR – the product of the ratios its signed papers moved by. 1 for a seat with no
+ *  signed paper. */
+export function staffDriftFactor(offers: Offer[] | undefined, seat: StaffSeat): number {
+  let factor = 1
+  for (const o of staffSignedAsks(offers, seat)) {
+    const ask = (o.terms as StaffLetterTerms).ask
+    if (ask && ask.fromCents > 0) factor *= ask.toCents / ask.fromCents
+  }
+  return factor
+}
+
+/** ⭐⭐⭐ WHAT A SEAT IS PAID NOW AT A RUNG WHOSE BASELINE PRICE IS `baseCents` – the baseline moved by the
+ *  chain of signed papers, whole dollars (the house prices these seats in whole dollars, and the paper IS
+ *  the fee, so each paper's own rounding stands – on one rung this is the latest signed `toCents` exactly).
+ *  ⚠ A seat with no signed paper pays the baseline UNTOUCHED – the identity, which is what keeps every
+ *  save from before the papers paying exactly what it paid. Pure, zero draws. */
+export function staffFeeCents(offers: Offer[] | undefined, seat: StaffSeat, baseCents: number): number {
+  const factor = staffDriftFactor(offers, seat)
+  if (factor === 1) return baseCents
+  return Math.round((baseCents * factor) / 100) * 100
+}
+
+/** THE TWO FIGURES A REQUEST PRINTS: what the seat is paid now, and one FLOATING step above it. `null` for
+ *  an ask that would not move the rate – unreachable on the shipped prices and the shipped steps, guarded so
+ *  a retune cannot write a letter about nothing. */
+export function staffRaiseQuote(
+  world: WorldState,
+  seat: StaffRaiseSeat,
+  baseCents: number,
+): { fromCents: number; toCents: number } | null {
+  const fromCents = staffFeeCents(world.offers, seat, baseCents)
+  const toCents = Math.round((fromCents * (1 + staffRaiseStep(seat, world))) / 100) * 100
+  return toCents > fromCents ? { fromCents, toCents } : null
 }
 
 /** EVERY WEEK A SEAT WAS ON THE PAYROLL, up to and including `week` – the sum of the hired spans the
@@ -93,28 +209,20 @@ export function staffRaiseDue(world: WorldState, hired: boolean, changeKey: stri
   return staffWeeksServedAt(world, changeKey, world.week - 1) === served - 1
 }
 
-/** HOW MANY OF A SEAT'S REQUESTS THE FAMILY SIGNED – the exponent of the weekly seats' fee (see the head
- *  of this file for why it is not the masseur's `years − withheld`). An open, refused or lapsed request
- *  counts for nothing, so Decline and a lapse leave the fee where it was and the forgone year is not
- *  banked. `offers` may be absent on a hand-built probe world: no papers, no raise. */
-export function staffRaisesGranted(offers: Offer[] | undefined, seat: StaffSeat): number {
-  return staffAsks(offers ?? [], seat).filter((o) => o.state === 'signed').length
-}
-
 /** ⭐⭐⭐ THE ANNIVERSARY WRITES THE REQUEST. On the week a seat's service count crosses a whole year this
  *  writes ONE open staff letter (`raiseStaffAsk`: the sponsor letters' four-week window, answered through
- *  `acceptOffer` / `declineOffer`) quoting what the seat is paid now and one step above it, both at the
- *  rung the family is on. `baseCents` is that rung's OPENING price; the two figures are frozen on the
- *  paper (a rung switched inside the window moves the bill, not the paper).
+ *  `acceptOffer` / `declineOffer`) quoting what the seat is paid now and one FLOATING step above it
+ *  (`staffRaiseQuote`), both at the rung the family is on. `baseCents` is that rung's BASELINE price – the
+ *  catalogue price for the weekly seats, the silent-era rate for the masseur; the two figures are frozen on
+ *  the paper (a rung switched inside the window moves the bill, not the paper).
  *
  *  ⚠ ONE REQUEST PER YEAR OF SERVICE, idempotent on `staffAskId`, so a re-hire week already sitting on a
- *  year cannot write a second. ⚠ An ask that would not move the rate is no ask – unreachable on the
- *  shipped prices and 4%, guarded so a retune cannot write a letter about nothing. ⚠ NO CASH MOVES here:
+ *  year cannot write a second. ⚠ An ask that would not move the rate is no ask. ⚠ NO CASH MOVES here:
  *  the letter is paper, and the bill that follows is the seat's own `resolve*`, at whatever the derived
  *  fee then is. */
 export function writeStaffRaise(
   world: WorldState,
-  seat: StaffSeat,
+  seat: StaffRaiseSeat,
   changeKey: string,
   hired: boolean,
   baseCents: number,
@@ -122,15 +230,13 @@ export function writeStaffRaise(
   if (!staffRaiseDue(world, hired, changeKey)) return
   const year = staffYearsServed(world, changeKey)
   if (world.offers.some((o) => o.id === staffAskId(seat, year))) return
-  const granted = staffRaisesGranted(world.offers, seat)
-  const fromCents = staffRateAfter(baseCents, granted)
-  const toCents = staffRateAfter(baseCents, granted + 1)
-  if (toCents <= fromCents) return
+  const quote = staffRaiseQuote(world, seat, baseCents)
+  if (!quote) return
   raiseStaffAsk(world.offers, world.week, year, {
     seat,
     seasonIndex: seasonIndexOf(world.week),
     // The total weeks on the payroll at the anniversary – a whole number of years by construction.
     weeksServed: staffWeeksServedAt(world, changeKey, world.week),
-    ask: { fromCents, toCents },
+    ask: quote,
   })
 }

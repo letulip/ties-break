@@ -58,7 +58,7 @@ import { SALE_SENDER, saleLabelOf } from '../composables/saleLetter'
 // `activeKitDeal`: it is the ENGINE's own predicate for «is this letter still a decision», the very
 // function the inbox dot and the worker's refusal read, so the list below cannot answer it
 // differently. Pure: no world in it and no draw behind it.
-import { SPONSOR_TIERS, activeKitDeal, adUntilWeek, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive, staffAskUnit } from '../engine/offers'
+import { SPONSOR_TIERS, activeKitDeal, adUntilWeek, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive, staffAskPer } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { seasonYear, weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -458,7 +458,7 @@ const confirmMessage = computed(() => {
   if (pendingSign.value.kind === 'staff') {
     const ask = (pendingSign.value.terms as StaffLetterTerms).ask
     if (ask) {
-      return `Accept the raise? The rate goes from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} a ${staffAskUnit((pendingSign.value.terms as StaffLetterTerms).seat)}. This cannot be undone.`
+      return `Accept the raise? The rate goes from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} ${staffAskPer((pendingSign.value.terms as StaffLetterTerms).seat)}. This cannot be undone.`
     }
   }
   // ⭐⭐⭐ S5 – A BUYER'S SIGNATURE SELLS THE LOT, so it has its own question: every number below the ad arm is kit or campaign arithmetic. The price

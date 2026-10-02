@@ -37,20 +37,20 @@
 
 import { chemistryReading } from '../chemistry'
 import { raiseStaffLetter } from '../offers'
-import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../season/calendar'
-import type { LadderTrack } from '../season/types'
+import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { StaffLetterTerms, StaffSeat } from '../../shared/protocol'
 import { COACH_CHANGE_KEY, coachSinceWeek } from './coachMarket'
 import { seasonIndexOf } from './ledger'
+import { SEASON_PLAYED_WEEKS, seasonRankOf, titlesInSeason } from './seasonFacts'
 import { MASSEUR_CHANGE_KEY } from './masseur'
 import { PSYCHOLOGIST_CHANGE_KEY } from './psychologist'
 import { SPARRING_CHANGE_KEY } from './sparring'
 import type { WorldState } from '../world'
 
-/** The weeks a season is actually PLAYED in – the window the wrap-up itself folds over
- *  (`[yearStart, wrapWeek)`, and `wrapWeek` is the first off-season week). Not 52: the three quiet
- *  weeks carry no tournament and no ranking, and a seat cannot be judged on them. */
-const PLAYED_WEEKS = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+/** The weeks a season is actually PLAYED in – the window the wrap-up itself folds over. ⭐ ROUND 45 #3b:
+ *  the figure, and the two readers of «her year» below (`titlesInSeason`, `seasonRankOf`), moved to the
+ *  leaf `world/seasonFacts.ts`, so the raise request's verdict reads the SAME year this letter reports. */
+const PLAYED_WEEKS = SEASON_PLAYED_WEEKS
 
 /** ⭐⭐ HOW MUCH OF ONE SEASON A SEAT HAS TO HAVE WORKED BEFORE IT MAY WRITE ABOUT IT – HALF.
  *
@@ -112,18 +112,6 @@ function coachWeeksServedIn(world: WorldState, fromWeek: number, untilWeek: numb
   const hasMark = world.events.some((e) => e.milestoneKey?.startsWith(COACH_CHANGE_KEY))
   const since = hasMark ? coachSinceWeek(world) : 0
   return Math.max(0, untilWeek - Math.max(since, fromWeek))
-}
-
-/** HER TITLES INSIDE ONE SEASON, counted off `trophiesByTier` – which stores absolute WEEKS and is
- *  never pruned, so a season's tally is exact however old it is. (The event feed is not: it caps at
- *  400 rows by COUNT, which is how the wrap-up once reported «no tournaments played» over a 44-19
- *  year. `seasonBestFinish` made the same move for the same reason.) */
-function titlesInSeason(world: WorldState, fromWeek: number, untilWeek: number): number {
-  let titles = 0
-  for (const tier of Object.values(world.trophiesByTier ?? {})) {
-    for (const w of tier?.titles ?? []) if (w >= fromWeek && w < untilWeek) titles += 1
-  }
-  return titles
 }
 
 /** ⭐⭐⭐ THE STAFF WRITE. Called on the wrap week, immediately after `maybeFireSeasonWrapUp` has
@@ -259,27 +247,4 @@ export function settleStaffLetters(world: WorldState): void {
   // is a schema move and this item does not own one, so the seat writes the shortest letter of the
   // four and claims nothing it cannot show.
   write('sparring', world.sparringHired, seatWeeksServedIn(world, SPARRING_CHANGE_KEY, yearStart, wrapWeek), {})
-}
-
-/** WHERE SHE FINISHED THE YEAR AND WHICH TABLE THAT IS A RANK ON.
- *
- *  ⚠ `SeasonHistoryEntry.endRank` IS THE ITF ALIAS, ALWAYS, and printing it unqualified over a
- *  twenty-one-year-old professional is the defect the wrap-up's own rank line had to fix («Unranked
- *  internationally – she has not played a Junior Tour event yet», shown to a WTA player). `byTrack`
- *  is what tells the three tables apart, so the track carrying the most points that season is the
- *  one the letter names.
- *
- *  ⚠ ABSENT TOGETHER ON A PRE-v46 ROW, which carries no `byTrack` at all. Absent is «not recorded»
- *  and never zero – `SeasonTrackRow`'s own rule, and the season mirror's: a figure printed over a
- *  season nobody counted is the class of defect that reported «no tournaments played» over 44-19. */
-function seasonRankOf(row: { endRank: number; byTrack?: Record<LadderTrack, { endRank?: number; points: number }> }) {
-  if (!row.byTrack) return {}
-  let best: { track: LadderTrack; points: number } | null = null
-  for (const track of ['domestic', 'itf', 'wta'] as LadderTrack[]) {
-    const r = row.byTrack[track]
-    if (!r || r.endRank === undefined) continue
-    if (!best || r.points > best.points) best = { track, points: r.points }
-  }
-  if (!best) return {}
-  return { endRank: row.byTrack[best.track].endRank, rankTrack: best.track }
 }

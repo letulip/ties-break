@@ -1,3 +1,9 @@
+// ⚠⚠ RE-PINNED 02.10 (ROUND 45 #3b – the owner's «тренер тоже вполне может просить повышения»). Every COACHED career's
+// hash below moved: the coach's annual raise no longer applies itself – it is a two-door LETTER the parent answers
+// (world/coachMarket.ts `resolveCoachRaise`) – and these frozen walks never answer one, so his fee stays where it was
+// agreed, the bills that follow differ, and the unanswered letter sits in the inbox. The values were MEASURED, not
+// computed (a harness replaced each pinned hash with the received one, three rounds, 82 literals). ⚠ THE PROOF THAT
+// ONLY THE COACH'S RAISE MOVED: not one SELF-COACHED career was re-pinned – those hashes are byte-identical.
 // THE FROZEN-CAREER APPARATUS – the eighteen constants, the walk that produces them, and the
 // per-key protocol that governs both.
 //
@@ -3454,7 +3460,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '608748cb2c3d660f46e1993fe8d5abd2e5497d55fbcfa2b85e42caa5b0021eab',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '4965bb3c1a2e906143f224f593141f2126292a5731cc6cf7b12ab42acc4c693d',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -3583,7 +3589,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: '3fe835fc17001ace95f6134d1a2d9873dc8bc7d508712f3bd3cb44c0bc39ee10',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '8f36e77d211d10c315fa06ffd7a78e71dca24c5b0e3e8e80c06536ae48b18e8c',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -3935,8 +3941,8 @@ export const FROZEN = {
  *  `FROZEN.eliteGrinder` and `PRE_R28B.eliteGrinder` have been THE SAME STRING since v73 and this file
  *  has already lost that cell once to a positional pass (the T3 note at the head of this file). */
 export const PRE_V77 = {
-  middleGrinder: '96bb0d41406d87600861ec1994eb04250f97cf1d250bb0591fbaf4678ea43a5c',
-  eliteGrinder: '837751408deefb78e16150707a915cb60fb58bdace626dcfc8c781b5a51d07a0',
+  middleGrinder: 'a164bdcab3718d1bd9d09c1aaca65b95bd185c34f6e7cd72dfce8c6cb876466d',
+  eliteGrinder: '7a2c040483c90c05029ab6354070883df7166bb776a2983c7ba2a8f7f5369c3a',
   selfTravelling: '1e716fbdacc119295142ee8a79cfc3b934fd0011d4a37626603eabd4b34570cd',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v77 – the identity the v78 bundle rests on, and
@@ -4000,8 +4006,8 @@ export const PRE_V77 = {
  *  new value printed – `FROZEN.eliteGrinder` and `PRE_R28B.eliteGrinder` have been THE SAME STRING
  *  since v73 and this file has already lost that cell once to a positional pass. */
 export const PRE_V78 = {
-  middleGrinder: '906adacf96f50b1203bc8fda0d5168c71e3fc2fe56cee49c83f5d1390fdda8f9',
-  eliteGrinder: 'df3a54b4eced31f47df2fd59b929cb57089bdbd16f69a3c1a2e9e325cdc4fcc6',
+  middleGrinder: '475bf02c5a3a8476343292b3c910cbd80f01f932c65ea35157dd5754267f135a',
+  eliteGrinder: 'c526b086ca96eade1ad867b678a64e8d78d0d5ee1a364b636918888387853523',
   selfTravelling: '62c6ddff10ad96179e9a71d00c6e0b6b1f33660743fc135a113c409ae4c0d59b',
 }
 
@@ -4054,8 +4060,8 @@ export const PRE_V78 = {
  *  same split v78 and v79 named for their own inert keys, and the reason this block only talks about
  *  form. */
 export const PRE_V80 = {
-  middleGrinder: 'f408fb6a064927bd918700d9379101d5320538866d1b0d1353b06ec8ae85f8ca',
-  eliteGrinder: 'f3e9fb3627afa0bfd7c219102e09cced13fc50d53c3fa8d43729ab2ffbe6038f',
+  middleGrinder: 'b63dba7da6c15b5bb64e8272bad3472e9f14c938d88b3e99b3bd96ad8bc593ba',
+  eliteGrinder: '779380a05450594fe94d0b65d442a52771481b9ff6c97719af40200309cca382',
   selfTravelling: 'd0dccf61b07f11cdf5f97a2582ceea9349a56c961e1ae88c700c0e67c771965f',
 }
 
@@ -4081,8 +4087,8 @@ export const PRE_V80 = {
  *  hash a LIVE-shaped world moved – `FROZEN`, `PRE_R28B` and `PRE_NAME_VERA` – because those carry the
  *  new key and the new `schemaVersion`. Every `PRE_V*` rung peels both away and holds. */
 export const PRE_V81 = {
-  middleGrinder: 'b292ff55070fdf7cfc5f8befb01c27e27c118861e237c4c4d2e1cb83ca079c51',
-  eliteGrinder: 'e9ad4533fc3dfe035df3fb62d6e8a0b96282c133c10b71c21f25763438bb10e2',
+  middleGrinder: 'bdb255aa0f3146256f0660f1cf499698807591c6fcca7fb391aaebf46914be91',
+  eliteGrinder: '72475b17bd583d15b576cce01ee670f47482d8278980792b70a9c9d2cf0d968a',
   selfTravelling: 'b0590b1b4cbe3aa59594642a20d41e3bbe8431c9181f30c99e61c2c845200550',
 }
 
@@ -4119,8 +4125,8 @@ export const PRE_V81 = {
  *  integer arithmetic: **neither can take a draw**, so MAIN cannot have moved and the frozen capture
  *  (41550 / e6b0c709) is untouched. The per-key diff says so from the other side. */
 export const PRE_V82 = {
-  middleGrinder: '8bdf38c8c22d441e1fdd6763f1e9ebd44cc31b907ace77386d2787266c6f2b66',
-  eliteGrinder: 'dff045cde0cf2758c8fc4df00f6bd3961f31ef17f6bff8bf637fda29ec243640',
+  middleGrinder: 'be914225f89e305273cf7508ce3b474335735a72ea65aed81e4021f908b26420',
+  eliteGrinder: '5cdd3c1028594b3067b366767aa0777946ae71a408adf68d73ac9d5e4727e54e',
   selfTravelling: 'dbd997b419dbbb8f92f5baab1132e7add9e1d513d0f2c28fc6c0a26795a5ce12',
 }
 
@@ -4150,8 +4156,8 @@ export const PRE_V82 = {
  *  draws anywhere in the wave (the hazard and the name are purpose-scoped sub-streams, and neither
  *  exists on the T1 tree), so the frozen capture (41550 / e6b0c709) is untouched by construction. */
 export const PRE_V83 = {
-  middleGrinder: '2e51267e06dd930d033b73ab0f9197e506df1c6d1c1e1b324acc194c3779af35',
-  eliteGrinder: '4d83fd8634077f7050d506e15752d6aebf11000fc15f34b3143ea64d14357aa7',
+  middleGrinder: '976f6c592029f4ce9d29424c4fec2ba5200f837b064ff152f23e29ed291c0d5a',
+  eliteGrinder: '6e4264f85dd3312cdc0b3ed3dc5596c6618d926feac4f89fef1294686c8eeb77',
   selfTravelling: '4972007161bfc0609f2038ce7aa6438e3306bfa6eb8de1f1bfe9468c5c3d5e75',
 }
 
@@ -4173,8 +4179,8 @@ export const PRE_V83 = {
  *  `seed:album:flavour:<sheet>` sub-stream at assembly time – so the frozen MAIN capture
  *  (41550 / e6b0c709) is untouched, and the three canonical fingerprints stand un-re-pinned. */
 export const PRE_V84 = {
-  middleGrinder: 'bea1a88f041db5bdcc28b83fa6f066922e1e439c52bb227ea9b49244575d1a2e',
-  eliteGrinder: 'd394d0f19c48b92a284307d5b1b2f1b6807cc8102d8d7bff0742e29941fe3c3b',
+  middleGrinder: 'ed913e216289d3c9bd1d746051111fb1a7ffe49c313ad6e6679938c41161e199',
+  eliteGrinder: '2fa8cf2e967ad33c4ffdf7c0422db523fbca16cf4c2649393bfbbbb2c40c1010',
   selfTravelling: '559cea50fc7cbb817cb9b8481cdb9df29f9d0b62e10c7c352bff05480f2cf700',
 }
 
@@ -4223,8 +4229,8 @@ export const PRE_V84 = {
  *  never reaches 23, and in any case T6 is the only writer `comeback` will ever have – is a
  *  MEASUREMENT here and not an assumption, which is what this paragraph exists to say. */
 export const PRE_V85 = {
-  middleGrinder: '176e3b5a5cefb425bf3ff543164308d31ca143aa055c887874f29a0d063b8b1c',
-  eliteGrinder: '89224cccdaf9122d56b169b7478a8c29ca5af7cb0403a57a081858f7eebc37af',
+  middleGrinder: '01789040636508fd14c11f503413c88ab5a635b965c747038cdc46a29aca71bf',
+  eliteGrinder: '791d90103d7168e7164c3cb89e0662ae35f13dc0f702544b1fb3dbf528baa7ee',
   selfTravelling: 'a043d4250f771d1177ce5a26c31e4c42264c933acea2f59b223f50b9abaaa90f',
 }
 
@@ -4313,8 +4319,8 @@ export const PRE_V85 = {
  *  `FROZEN`'s three, `PRE_R28B`'s five (its trio shares these cells, the shared-cell rule) and `PRE_NAME_VERA`'s three all move while the
  *  world under them does not. */
 export const PRE_V91 = {
-  middleGrinder: 'b8b22fa8a371ef956228781360827bd30ef87603d867acaed3aa20ce2bb29ef4',
-  eliteGrinder: 'cd92e00e92b851cb8a684b05b372b45aa9c647dd608289248a1fe515d116a2eb',
+  middleGrinder: '49fbbb03503ef463d88e772755cb0bd8ec2555d155a69ccbb0b687c811e57718',
+  eliteGrinder: '49b515c9a1aa3fbd66db91e0dc0c165b8d8ae67c79c498020043883b8de328a5',
   selfTravelling: 'cc23f72cdcb4a388622078e7c037929ff9b5cb48e676571fad96d2303a73347b',
 }
 
@@ -4335,8 +4341,8 @@ export const PRE_V91 = {
  *  `FROZEN`'s three, `PRE_R28B`'s five (its trio shares these cells, the shared-cell rule) and `PRE_NAME_VERA`'s three all move while
  *  the world under them does not. */
 export const PRE_V90 = {
-  middleGrinder: 'b6bf76ff59428128abf3ebc82cc3819dc4d643f17edc6da431a8254ca424fc66',
-  eliteGrinder: '8265ea35f677d0e3dea5155fda2783681f283feb2396d6223a60e48aff93526f',
+  middleGrinder: 'd91623a6632c6fc6a936ed62f7dd5b0f597004033c541c2a985bb8369590ffa9',
+  eliteGrinder: '123e620c6c753c9153ba8dbd7ace39b59971f8f88e19dd12699bb92402825413',
   selfTravelling: '6415b20a2076d6ecb470608cc84729ad6924ffafbcb93783c5c7a8cbb308b008',
 }
 
@@ -4369,26 +4375,26 @@ export const PRE_V90 = {
  *  cells, the shared-cell rule, and the two witnesses move with them) and `PRE_NAME_VERA`'s three all
  *  moved while the world under them did not. Eleven cells, EIGHT distinct values. */
 export const PRE_V89 = {
-  middleGrinder: 'e53c99ebc110ccaa97539d6e7530499d5b9273e5e910e57368bacc26bb292e49',
-  eliteGrinder: 'b44e1d914994de508fdd1e5b7e1ed91abbeb991a7c8256f7238195c105894e7d',
+  middleGrinder: '45c816875d7c875d7edc9f8f4054e5eed3406f4fa63aea07c1826a5ac04cdc9f',
+  eliteGrinder: '27ef890eaf90c17639752d769a95f9887dd81402ee97d82e49be3ce196dfd08a',
   selfTravelling: '86b7d6d7fa5b60146dea1870d7f854d557ff05db2f5c10a971510b1f01c435ed',
 }
 
 export const PRE_V88 = {
-  middleGrinder: 'a16c424f5286a5b59b75569a5c15e919feb96cd9e0df89c9d5cf658260382e51',
-  eliteGrinder: 'fb041465f33ca9770b113e527f829e04ba8a839c4bd3a6091e678cc9af5d4810',
+  middleGrinder: '146cb219364879709b033b7d8c5573375df51aa26030db5eeec92ba3c9557e39',
+  eliteGrinder: '46d78ca3686a67a07a4b015039f27c8abd4b029e1fc20344f90cc4bc25bca407',
   selfTravelling: '783263b17ea53cf04acdf6c3d8f83be1937688b365400e547d8fd5c5261fed1c',
 }
 
 export const PRE_V87 = {
-  middleGrinder: 'ced28dbd72d07c0551351bd513ee2ad6358acbfc53f10a90d0f18f279c2801ff',
-  eliteGrinder: '48922b0fc81845af24923b963ab026f06418b2346613a5d8063a90fc016f6f73',
+  middleGrinder: '2e69d42dfd91072c111577eb014ff2501fb866c9111c650a9613742ced09888a',
+  eliteGrinder: '2a99efaae39c139ffa3990b093cb3a393c871c08a7412632eddfc6ce27e75dc0',
   selfTravelling: '58701fef40a58808fe468dd7522683ddde0f69ba0583d43e9a3a78b16881c8b1',
 }
 
 export const PRE_V86 = {
-  middleGrinder: 'cd5f9e0a15101b34cf80b93bfd0be4d7bef0448d089f930c525712523584af3a',
-  eliteGrinder: '3b9d1bed7b3254dad727fbaee79c662979d610b25d51404c1011a85fd6d91bcb',
+  middleGrinder: '7534f8c6edc2d396a49d19559a8cfb11cee5be70a3b0dea8b04c39d20f11b82c',
+  eliteGrinder: '944a93ecf95e74cab9bace03287f6bd8843b2976820e61291134685e9626fc08',
   selfTravelling: 'af93ff21073b9fc080ff00ef9d407ab0cfebed56a621c715228f1de6f80c89dd',
 }
 
@@ -4439,8 +4445,8 @@ export const PRE_V86 = {
  *  and the roster's one new draw is on the existing `seed:coaches` sub-stream, placed after every
  *  legacy draw so coach NAMES and `rateCents` are byte-identical on all five careers. */
 export const PRE_V79 = {
-  middleGrinder: '5030ae7bc8af5e8da65b51a6cf922e98bb5a96ca3c7387e287794415b4215d4a',
-  eliteGrinder: '513eb1b9f7ebb7517e04571087033772538c4b28995e29483f1916d94e9a0db8',
+  middleGrinder: '53d33059768dfca4d2523cd00e494bf35b90122eed5114bef03dc23b3392b802',
+  eliteGrinder: '087e2f39b76d295c2788f82ba95d9f04b383149a193fa912f4c0bce518c6fb2b',
   /** ⭐⭐ THE VERBATIM v78 VALUE, and the only cell in this rung that is one. See the block above: no
    *  coach, no relationship, so the whole version is a key append for her and the peel is exact. */
   selfTravelling: 'f2c1b4d72a433033ded307e34ef47436ab7dc9f4a4bc665d3eaa66c85c8c43dc',
@@ -4521,8 +4527,8 @@ export const PRE_V79 = {
  *  exactly what the union merge restored them for – and their two values differ from every other
  *  constant in this file, on this tree as on the last. */
 export const PRE_V76 = {
-  middleGrinder: 'deec369c4a19fb534904522b9156023769133541245aed903eef27a0c3a1d892',
-  eliteGrinder: '9ac21cd5302a5d7bde8f054d59326ab1b8ed40a8a1e8ae7837f01f4a38d1bbab',
+  middleGrinder: 'a21decdd247f7756a1206188bf2f86d284b4f24db6b6594f66eb871979c2deb6',
+  eliteGrinder: '059a07889c24aae25d4d690fdc5f4d1ce52ccb22e9f72a6f4849800de15ab5c4',
   selfTravelling: '20b0c13513c88f86309947c8fe53c8cc400a8998cdd7ee276cba56172c6ae3d1',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v74 – the identity the v75 re-freeze rests on,
@@ -4575,8 +4581,8 @@ export const PRE_V76 = {
  *  from the LETTER rule, which is the thing it was written to prove. That predates this wave, is
  *  nothing T1 may repair under its own brief, and belongs to whoever re-reads that case. */
 export const PRE_V75 = {
-  middleGrinder: '9a3a95b84515ee744560e722efe0cc6f305d046e319c1c8d6635f321c6307f81',
-  eliteGrinder: '4a208ac5f17a1918186e78497d6b2165a8863cbad2ef4a091e30d75dee5c4946',
+  middleGrinder: '14887d53fabf4adca51288a94812849ae3b90ebf72d432c6a034a6f392fc6f7e',
+  eliteGrinder: '0e28508051a2b8d1a06b1dced5114fa6e02703696be5183e0af5294d004a6d72',
   selfTravelling: '7f196071a5649c91b195388b872930688f5902dc0cb11ee1338e3cf102ef589b',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v73 – the identity the v74 re-freeze rests on,
@@ -4619,8 +4625,8 @@ export const PRE_V75 = {
  *  ⚠ Per-key diff first, control = the lift reverted in place: 1 key of 79 on 8/0 (`spirit`), 0 keys
  *  on the other two. Value computed by RUNNING `careerHashAtSchema(8, 0, 73)`. */
 export const PRE_V74 = {
-  middleGrinder: 'fdd34b1a2a4b4ea85ff879271643f74576361ea90a3c76036611b24a97c12501',
-  eliteGrinder: 'e0c7a31d6d6d92a3195070da2d803905966af1418bad23938176cc109f1f4a27',
+  middleGrinder: '535a9dfcc8533cd32caf24949a27948222cb6e071086bd2f38e828fc3fa38e62',
+  eliteGrinder: 'abdd247a6267da7f5f8e728ad3a3b41a45361c07a03e7a5f05b23e137b9e7182',
   selfTravelling: 'c8e6352f53f9ae9d7cb5a9be82894f094083724728221b66f11ccbb575dbb918',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v72 – the identity the v73 re-freeze rests on,
@@ -4652,8 +4658,8 @@ export const PRE_V74 = {
  *  ⭐ `PRE_V72` below is where the peel finally catches it – it drops `spirit` itself – and it
  *  reproduces on all three careers, unchanged. */
 export const PRE_V73 = {
-  middleGrinder: 'f0dd0b776252c3cd82c10ae9c456424a41b3ff11575c5a7db3619d60aa158bb5',
-  eliteGrinder: '619d23fcd23ce6f0dbf122ff9bacade0026de207dac3472bb92ef76365156841',
+  middleGrinder: 'c713469f96a52a322e55db2fafb0ac52648e2c5f45dc5c5453c8df159ace8fed',
+  eliteGrinder: 'e6c96db2a694016f75ba1240e2088a0bdb1b36791a04741a2b729f5d7af1cb2a',
   selfTravelling: '603c1c66df95aedbc3cff5b278d4aafc9a2958b7b7a863c59d878f503171cb2d',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v71 – and this rung is not merely another one in
@@ -4683,8 +4689,8 @@ export const PRE_V73 = {
  *  reports `results` byte-identical directly, and the paragraph above is why: the lift moves her
  *  UPWARD from 70 and `spiritMatchFactor` is flat 1.0 from 60 up, so no week of hers changed a match. */
 export const PRE_V72 = {
-  middleGrinder: 'cb5167578e5986ac129c98a0d1c9536f6902cda5d96c05dafd2120b009c2e3b8',
-  eliteGrinder: '5b30f7014c694241c78ca57b7480e8c0525b9fc9e0c696f468b062263c706edd',
+  middleGrinder: '027d2bd79e782469644199717e59b959647f5780a31d6e2257cab274b8e97bd5',
+  eliteGrinder: '7e86d92d15e8c9e1f7025d41d72df38574a9d571a4778f84c1219561bb9a954d',
   selfTravelling: 'f835f5adbec4d55c59c39dc2b7e669b76535ddc7d38b4763520e7d06f63b5b75',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v70 – the identity that proves the v71 re-freeze
@@ -4697,13 +4703,13 @@ export const PRE_V72 = {
  *  migration only where a merch brand is OWNED, never by `createWorld`. So there is nothing to peel:
  *  a v70 serialisation of this world is exactly this world with the number moved back. */
 export const PRE_V71 = {
-  middleGrinder: '20f28ef8cc50422154d82e4a92b49326c38afcd68ff3143138de229487b71f33',
-  eliteGrinder: 'b78ca3e2d05a3990a62b6fdad272d95ac83734e5b6dd909572be46f17e395502',
+  middleGrinder: '767ce0216efbb4a90200f5b5c345101479cf83c093b600122ae9ccc3375752fa',
+  eliteGrinder: 'b3bd2ac21306f6af5245c289e179f74b5b756b1b9a5d3ebe9635ecbc0daac9fa',
   selfTravelling: '1ad6274578556160179a56f7b9dc08c74b58633fac753dfdc5bafac1ecff746c',}
 
 export const PRE_V69 = {
-  middleGrinder: 'b1bd8a01c6db63de5c799bbd9b8e1856a11e1501fa73a714c3e33f94502d9f50',
-  eliteGrinder: '9dd34a06ad58aaf95ee1b6c18b8ac43c6030c17a46dfa88412f3880144a5c932',
+  middleGrinder: 'c9e5e5a0ac995c3e9b969d32bf971d8caf6f6489cf44b0aca3dbbb215b38d120',
+  eliteGrinder: 'e07af7103c6c57759268542d4d23674ee565740a1e79800128b0c6a216b89820',
   selfTravelling: '63e58b5767b3fcce32ed2abaf8e1eb68e53cfcd8901a6583a827f3462c02f1de',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED WHEN THE DEFAULT GIRL WAS CALLED `Vera` – the identity
@@ -4740,8 +4746,8 @@ export const PRE_V69 = {
  *  birth and the old-name career still comes back exactly, on the new world as on the old. The
  *  02.09 identity is about a name, and no part of v79 touches one. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'f30f07d07bebf206fe2200899423db55cea54755b916c8effe097945ed768bb4',
-  eliteGrinder: '6c6a3682335f2ef3c72b27f7f944229050fde3cf47ddbe503c36734c3ef4b9c9',
+  middleGrinder: '6f3ff42363d4a4da0eec572d38cd9937c2a49a4fb5e7eee869566fad5346abfa',
+  eliteGrinder: 'a21b132ea242b97d1c0627117f3dfeed3a0ba81c1ab31c44c773499cafe25691',
   selfTravelling: '4bc53c6873b49952f7f1cfab5c5db48795fbbbfb19174b67775d27104d99922c',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
@@ -4766,13 +4772,13 @@ export const PRE_NAME_VERA = {
  *  order, so the frozen capture (41550 / e6b0c709) is untouched and `rngMain` is byte-identical on all
  *  three careers. */
 export const PRE_V68 = {
-  middleGrinder: 'f3a95ec759e879bfcd90f96ac22e205f405360c2ffda22404acda5ecb650c413',
-  eliteGrinder: '952283e635d87c3732b9fa85380468fc3ee851405947b130bacb4a0d05effe1c',
+  middleGrinder: 'daa07a98b615afcc403fee3536649baadfc54689668ad35f5e50ab008e886aab',
+  eliteGrinder: '608c96b1699b4c2d94ad28af1b11b22fa7adf0cc2e930b8714499bc9e14b3b0a',
   selfTravelling: '286720c7d5ea1572ef8829d6c58b47e4f0d83a691b3b0978d57b7387c8b44396',}
 
 export const PRE_V67 = {
-  middleGrinder: '84f80234bcf5ec8c16bc2c80666d5c63cf016780c587dd24685600c693c476f4',
-  eliteGrinder: '8f9fa33543c4a0790210e7f8886bfd198b0c19eb0e823155081be65a4370ff5a',
+  middleGrinder: '5d7f2ab9017d214d881f392428d091d8a07a5d4bf7c20c4d4e626822c5528bb8',
+  eliteGrinder: 'e37814e4e6433a28ab1163bf00763cbdaf715fa0f0032e3d0d04b48ace61c16d',
   selfTravelling: '4a562fb0f0dbb4cbbecc19ab433f987e210bbc5f6628911bc3bcb6a8663f0c70',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v65 – the identity that proves the v66 re-freeze
@@ -4787,8 +4793,8 @@ export const PRE_V67 = {
  *  number changed – reproduces all three v65 constants byte for byte, and these ARE those
  *  constants, verbatim. */
 export const PRE_V66 = {
-  middleGrinder: 'b368d181948f0377eadff5dfb3a76bfedb01ee0f6b6c989879630b45a44cfde8',
-  eliteGrinder: '87f1591241138182c4be327603f5042b6473de75f0720895d4c70cb06c2866d0',
+  middleGrinder: 'e37d087304efa3a67a40eb3c98c7f2a659386f3468c0c320767e64df62fb36e9',
+  eliteGrinder: '2f2d5a5a0cdeb679d8a7c385ce92ee4bd06474eaf08812ab657c0afffda776f2',
   selfTravelling: 'abe1f3cdb77a9f3afc329ba8089cd3176a7010f0fdfdc06fdc690e2dc6f8a126',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED BEFORE ROUND 28 #17-b – the identity that proves the
@@ -5085,8 +5091,8 @@ export const PRE_V66 = {
  *  differs from `live` on 6/1. The rule this constant exists for is untouched by the wave; only the
  *  careers under it moved. */
 export const PRE_R28B = {
-  middleGrinder: '608748cb2c3d660f46e1993fe8d5abd2e5497d55fbcfa2b85e42caa5b0021eab',
-  eliteGrinder: '3fe835fc17001ace95f6134d1a2d9873dc8bc7d508712f3bd3cb44c0bc39ee10',
+  middleGrinder: '4965bb3c1a2e906143f224f593141f2126292a5731cc6cf7b12ab42acc4c693d',
+  eliteGrinder: '8f36e77d211d10c315fa06ffd7a78e71dca24c5b0e3e8e80c06536ae48b18e8c',
   selfTravelling: '7627f11ddaae08aeb486fbbb77e251609b0402ecab3a9b501b2f927d51bad933',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to
@@ -5127,8 +5133,8 @@ export const PRE_R28B = {
  *  is a break in a loop, the guard is a read, and the gift's offer lives on `seed:birthday:<age>` –
  *  none of it is a draw. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
 export const PRE_V57 = {
-  middleGrinder: 'b77baba52671b85100bfa64cfd076e0ab20950d140ed51a7c8a614870d32df5b',
-  eliteGrinder: 'b0fe800bf32e331367cd269ca674f4b323e40ff367fc942f285ca2bf2c7d4d69',
+  middleGrinder: '702f1deb97a9bc0137149ec4d1b5a4da080921e644111ff7ac43b531bd319d0b',
+  eliteGrinder: '73ffbbad01fc9826990e2a4c38b33b320d4f45525ed8bcdf4e364d8ee9765667',
   selfTravelling: 'c6713ac491a3f0a7ec821f40fa8916b020fec979150bbf04dbae0d361ba18906',
 }
 
@@ -5150,8 +5156,8 @@ export const PRE_V57 = {
  *  became a week comparison, the reservation is pure state, and `resolveCollegeDeparture` draws
  *  nothing on any stream. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
 export const PRE_V58 = {
-  middleGrinder: '530ea053fac219e033b27ff72a7c72f67695943f41953ce9bbae2f075fba6579',
-  eliteGrinder: '86558f03e6c73852970e95f29e5a6d6c0ba0c999f97a27eca699b61012ca8233',
+  middleGrinder: 'a7ec85c7612d636aec62bcdd40e8dcdba61b0fb5147eaefbd0876ae5ba8af460',
+  eliteGrinder: 'f962e5aa6dcf04567b3eb1202a2038a886a07a6753d97265f2866372b4559a26',
   selfTravelling: '79909507afa1341e4c9bf1647aa36c1e52eb7a657b6b9c91dc23fc7b665dec2a',
 }
 
@@ -5160,8 +5166,8 @@ export const PRE_V58 = {
  *  nothing else. These are the v58-era `FROZEN` values verbatim; `careerHashAtSchema(…, 58)` drops
  *  the key v59 added before hashing, because a v58 serialisation never held it. */
 export const PRE_V59 = {
-  middleGrinder: '02a8d2d540a93e12d440b7b971f77f7c344bb03256ba42b15fb5efd31f1bee38',
-  eliteGrinder: '80529ba3b0c1c5ec365ea8ef229e9fd2bd2dbe2abf1552de25a338705d5f55b3',
+  middleGrinder: '367f1111ed240432add6eced51d8cc4f56b09cefd7ec226c7aaf8ef573644f33',
+  eliteGrinder: '8accb73970645e76e501d7b80a9a56d5ff22413ee3ed9dc617d07c7f30142aa8',
   selfTravelling: 'b68beb2356d9276a4320fd74426ec0a99c3468f9ece1c40344851e4a537c948c',
 }
 
@@ -5184,8 +5190,8 @@ export const PRE_V59 = {
  *  The frozen MAIN capture is untouched: count 41550, hash e6b0c709, re-run green beside this
  *  re-freeze. */
 export const PRE_V61 = {
-  middleGrinder: 'fb75fbe3ad36e4e32a11de1c84f6b71f0073a601715724aa22d4bfc86547f9c6',
-  eliteGrinder: 'af74da8488af6c2d2a18d416a0e301e8f8b60f0ded12d223904ed36ba08b5111',
+  middleGrinder: '367084a01cdaa97c30ed0d13355e64b6e54bb85adc87b2c2cb409e4880cf5e75',
+  eliteGrinder: '6dbd71ecf7b19ff3b9b7e1c23a9b3e2a7a4f498aed11341c42cee7d21924ff3e',
   selfTravelling: 'f99ff92255ae4ea60b2c196bfa3b75983365a3635209d3eb7def6cd3033622b4',
 }
 
@@ -5210,8 +5216,8 @@ export const PRE_V61 = {
  *  a comparison, not a roll, and this wave adds no draw to any stream. The frozen MAIN capture is
  *  untouched: count 41550, hash e6b0c709, re-run green beside this re-freeze. */
 export const PRE_V62 = {
-  middleGrinder: '43b863edbcb6ab242fa473aaefbea71ddb2bd7d39ccba3b92cab7588e13cfd50',
-  eliteGrinder: '2fe5e6e69ba1074a35da37452e274ec4d522ee62f5e7eec700aa54157677abc2',
+  middleGrinder: 'd0e5064190f112f137f5f3964bfb287eceb46880900b9d344225709fb5f7ed10',
+  eliteGrinder: '345e3a85c4db5e4b5b5a5feb9976152a2b2383aa6c78b498e3cc8a73da6621e3',
   selfTravelling: 'fd4110a8e38c9141439b99140975b4cfd7258318376e3a0c27642b188fdc5d4b',
 }
 
@@ -5274,14 +5280,14 @@ export const PRE_V62 = {
  *  attribution: round 28 #17-b reached the 120k career alone. Two constants of three holding is what
  *  a one-career change is supposed to look like here. */
 export const PRE_V64 = {
-  middleGrinder: '069c3b11e0f9ed595576ec99c44de71c26722daf2848d2ca208ad305e0740624',
-  eliteGrinder: '09734eaf26a068d8e9b165ac3ef7562279620f050696c1011bbeb5fb5a54437d',
+  middleGrinder: '3022ba3415d39c26d0eef415da4be33e295143021427f7476f8618aac331afbc',
+  eliteGrinder: '60a01759e36cccd1b1d172eb61b71ae4bee80a134b0e83b8e2bde15bc4b025c9',
   selfTravelling: '81d75532a50cd9fc5ba0ef7744caadc1ece821bf9cfad6f5ace0c4d45630e3ab',
 }
 
 export const PRE_V63 = {
-  middleGrinder: 'c8c54746c85e47c7090061f9ab94afb4478b833cc19dc7b9baa1dcee81a6b913',
-  eliteGrinder: '0821f61985fcecd86b99fd737f94c513214809ad96776298fe7033d2ba9656bb',
+  middleGrinder: '767c8f2d48f295f7caed03f7bb7c95ee043d1cfaf55fe2999b39e5785f6ed6b4',
+  eliteGrinder: '8d932075753ac63052f42c4ebf4b864e8a507e55559fae5c620887ab0a7871ae',
   selfTravelling: '0c7c26f08fcd0b00838db1350fe4b41a9c25f687216ccb3a3a9e8893a0a9ad26',
 }
 
@@ -5309,8 +5315,8 @@ export const PRE_V63 = {
  *  reproduces the v63 era underneath, which is what makes this an append-only chain rather than two
  *  unrelated pins. */
 export const PRE_V65 = {
-  middleGrinder: '34632fbfdbd64425efaaa78f81bb3658d31be3cf261507c2326cf4e49425ae2f',
-  eliteGrinder: '16efc516c6709d391506164082453fe86749ce789387955d988af5d98e5dca4d',
+  middleGrinder: 'f953c221f0a61ec445109a45dae0f13f5eba2e15df2cf5d199f59519a6d4ecac',
+  eliteGrinder: '6d1613c7d9b64fa0cd71ea4f7f558d920ff521e6f7fd53949b2ffb16b3134c3a',
   selfTravelling: '92d72bb33fa545acd7a590c535b4af973ac88dca9e50044df50a93f1d7b8182f',
 }
 
@@ -5321,8 +5327,8 @@ export const PRE_V65 = {
  *  `CollegeState` that is null in every one of these careers, so their top-level serialisation is
  *  the same 69 keys it was. */
 export const PRE_V60 = {
-  middleGrinder: 'eeca05bcd79d46c65010c8a865c0daa568c9637fd5ad86dd595fcd954552ed88',
-  eliteGrinder: '7cc75c05d708f53cf615a10f42c21436c6eea806d3a79132ca959934accea41a',
+  middleGrinder: 'dc4fbaaf123fbd68f1adaf75e848c444e48d7a232c2a1cf175a67411fe24dccf',
+  eliteGrinder: 'fd446bc1a814193025611c2d6ad42cb0cd81c781b02cd8a7fd93403105326589',
   selfTravelling: '596df973026016498e7d235d2cd5c16a654afb73a61ce3ba6aadfbc848b01b5d',
 }
 
@@ -5345,8 +5351,8 @@ export const PRE_V60 = {
  *  byte-identical – only the threshold the first one is compared against moved. The frozen MAIN
  *  capture is untouched: count 41550, hash e6b0c709. */
 export const PRE_V56 = {
-  middleGrinder: '84062ddedb76eecdd027542004dc984e0b23372f92da49ad4be3bc173511f551',
-  eliteGrinder: '90dd740ff8491deeff79e8f31940b98797bd757100cbbaaf51c177a884ba6947',
+  middleGrinder: '6b5814b02b59e1728b887ef6f335a2c4826b64ed5014983edb61095c1b57e37e',
+  eliteGrinder: 'e9bec5653c85d86068326c63333c834107b28f3650e9baedf6ba64eb87038158',
   selfTravelling: 'c87dda7a379bfdff3f47f3fece3b9260cc834d6c2005f858e799531bd4d73aa3',
 }
 
@@ -5359,8 +5365,8 @@ export const PRE_V56 = {
  *  control built as this branch with the wave's own commit reverted, never the previous commit –
  *  named `schemaVersion` and no other key, on all three. */
 export const PRE_V55 = {
-  middleGrinder: '13623feeb3c12e595e52777a8360001f91679fa695f6c982e9ac399032daf486',
-  eliteGrinder: 'c37ed4877744c0fab2524928c8253b0836c819ff984f49227d29cd529e9c9bb7',
+  middleGrinder: 'ee00e075a8f0ad8c4aedb2de6b2d95330fe2c5e33e1d2aa45eb8f37c3849264e',
+  eliteGrinder: 'b8b678ca4da1ca4073a4a0e2625f6b9d72d9611bda046cfa6cccb66761f2c8e7',
   selfTravelling: '8d320236347effea76a702a04340ded99b5300b9edaf19b67c95efdb54fa0281',
 }
 
@@ -5400,16 +5406,16 @@ export const PRE_V55 = {
  *  moves one of these careers through anything but `SAVE_SCHEMA_VERSION` still goes red here beside
  *  a red freeze, and the pair is what says which kind of change it was. */
 export const PRE_V52 = {
-  middleGrinder: '02a4240ef97ceee9e2c3b39ababf8ac17fb671fb462341422d95cfb94dda9fb3',
-  eliteGrinder: '52e6403ee75aef9c8d031fac31e115a9d6cbbe5c804cd7c0ad09a7064a20c8be',
+  middleGrinder: '44c236d242f544d12d7747811fa4e0ee962bac3805521d76eda55b887a216fe2',
+  eliteGrinder: '90858f2ca4eacd48961d9524ac9c0dcb41b5d2cfce48c4c88c611776546882ff',
   selfTravelling: '9d8b42a6b55297a96f2bd04530a81de508df1ff99e58b8c81f38825da3e68d0a',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 export const PRE_V51 = {
-  middleGrinder: 'f080b69494e451053fa3613dcb72d0b4679065580317861f5de9952540beac32',
-  eliteGrinder: '73e0a123b9bca515ca0bd6f3be8dbeaa4861bf68b8963c69616ebf851e6a5d20',
+  middleGrinder: '01ffd34ece9c04a03ee85b279218f0f4eb91e4087da37b4df411d80ea7fd2946',
+  eliteGrinder: '31717f4f8780289cf9c04015491ab02436a0d12aa8a813eb58e33e31e7b79ddc',
   /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
    *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
    *  for the two grinders it still does, untouched. For THIS career it no longer can, because the
@@ -5428,8 +5434,8 @@ export const PRE_V50 = {
    *  full: the WTA 250's field changed, so the tour NEWS in `events` changed, and `events` is inside
    *  the hash. The rollback identity itself is untouched in meaning – swapping only `schemaVersion`
    *  on the new world still reproduces exactly this, which is what these three lines are for. */
-  middleGrinder: '5c3dbc07d10693b948c2e7ade67f8b06a9a2fee9efd41abbdbc102e03efb25de',
-  eliteGrinder: '2e86042e8887527902490fe43c2afa6b19154b1c50183a3d6a711361b24d7ea4',
+  middleGrinder: '2bb491a172e46b0677c4e850fa63115d15257452fe63f0e00c25709ccf7ce95a',
+  eliteGrinder: '7745be91666cd3c2bd6606adc77c1ac375c3df4cc90933ab7788e8d521c5f870',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and

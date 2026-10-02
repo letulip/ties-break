@@ -315,6 +315,11 @@ architect's session after the last agent, verdicts from files.
 | R45-S20 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `fiery` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You said it was about time, and then asked what the next one was.` / `About time, she says.` / `Already asking what comes next.` | «можно и на других уровнях тоже показывать» | draft |
 | R45-S21 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `deep` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You said it was odd to be first at something and not know what to do with your hands.` / `First, and not sure what to do with her hands.` / `First on a list, and fidgeting.` | «можно и на других уровнях тоже показывать» | draft |
 | R45-S22 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `quiet` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You sent it as one line at the bottom of a message about something else.` / `She put it at the bottom of the message.` / `Bottom of the message. Top of the list.` | «можно и на других уровнях тоже показывать» | draft |
+| R45-S23 | item 3b – the coach's raise letter, body (`OfferLetter.vue`): R45-S2 with the unit `an hour`, because the coach's bill is built from an hourly rate (R45-S1 subject, S3 window and S4 doors are shared by every seat, unchanged) | `I have now worked a full year with her, so I am asking for a raise: my rate would go from {from} to {to} an hour.` | «тренер тоже вполне может просить повышения» | draft |
+| R45-S24 | item 3b – the coach's foot once signed (R45-S5 with `an hour`) | `Accepted – the rate is {to} an hour.` | – | draft |
+| R45-S25 | item 3b – the coach's foot once refused (R45-S6 with `an hour`) | `Declined – the rate stays at {from} an hour.` | – | draft |
+| R45-S26 | item 3b – the coach's foot once lapsed unanswered (R45-S7 with `an hour`) | `Lapsed – the rate stays at {from} an hour.` | – | draft |
+| R45-S27 | item 3b – the coach's confirm before Accept (`InboxSheet.vue` `confirmMessage`; R45-S8 with `an hour`) | `Accept the raise? The rate goes from {from} to {to} an hour. This cannot be undone.` | – | draft |
 
 ## Owner answers, 02.10 (his numbering = the question batch)
 
@@ -337,6 +342,15 @@ architect's session after the last agent, verdicts from files.
    букв»; his per-page list is the fallback if we fail. → B10: note sizing/density pass over the
    tight slots (font step-down on long notes, narrower C slots, hero-coverage → 0 in the sweep).
 
-- [>] **3b.** floating ask size for every seat + the coach converts to the two-door letter – B9.
+- [x] **3b.** floating ask size for every seat + the coach converts to the two-door letter – B9. BUILT: «was her
+  year good» is ONE verdict (`staffYearVerdict`, world/staffRaise.ts) read off the banked season rows – rank
+  movement on her main table and titles, the very facts the staff's year-end letters print (shared leaf
+  `world/seasonFacts.ts`); the coach's `coachProgressScore` was NOT reused for the three seats because it is
+  measured against marks stored on HIS contract (no deal for a self-coached family, a different stretch of weeks
+  from another seat's anniversary). DEFAULTED, the owner picks the figures: good 6% / flat 4% / bad 2%. The fee
+  is the chain of signed papers (`staffFeeCents`); the masseur keeps his silent-era raises as the chain's
+  baseline. The coach's own 5–15% corridor over his progress score was ALREADY the floating fork, so his size is
+  unchanged: his rise is a letter now (accept re-strikes the one stored `coachDeal` fee, decline or lapse leaves
+  it), the automatic rise and its feed row are retired. Repeated refusals keep the 17.09 «no third branch».
 - [>] **6b.** note sizing/density so notes stop covering the hero picture in C and stop shrinking
   photo windows so hard in B – B10.

@@ -3,8 +3,16 @@
 // #3, the owner: «Письма с прогрессом от специалистов приходят, а повышение они так и не просят,
 // только массажист растёт сам по себе тихо ежегодно». The masseur's rate used to rise on its own on
 // the anniversary, with a feed notice. It is an OPEN LETTER now – the sponsor letters' window and two
-// doors – and the rate is DERIVED from the papers the family signed (`staffAsksWithheld`), so a
+// doors – and the rate is DERIVED from the papers the family signed (the chain, `staffFeeCents`), so a
 // declined or lapsed request leaves the fee where it was and nothing is persisted for the answer.
+//
+// ⚠ RE-AIMED 02.10 (ROUND 45 #3b – the owner's «плавающая вилка»). This file was written against B2's
+// exponent, `years served − asksWithheld`, at a flat 4%. The step FLOATS with the year now (good 6% / flat 4%
+// / bad 2%, defaulted) and the fee is the chain of the signed papers, so the two assertions that spoke the
+// exponent's language (`staffAsksWithheld`) ask the chain's question instead. ⚠ Every figure below is the
+// FLAT-year 4%: these worlds bank no season, and no season is a flat verdict (`staffYearVerdict`). The
+// floating arms – a good year asks for more than a bad one, the chain, the legacy baseline, the coach's
+// letter – are tests/round45-staff-ask-floating.test.ts.
 //
 // #4, the owner: «если игрок забыл выбрать направление, то оставалось предыдущее. А в письме
 // следующего года писать "мы не выбрали новое, поэтому работали по предыдущему"». The engine never
@@ -14,8 +22,8 @@
 // assertions are about structure and figures, never a whole sentence.
 //
 // ⚠ MUTATION-VERIFIED – the arms are listed in the hand-back and run against this file:
-//   M1  `masseurSessionCents` ignores the withheld asks (exponent = years served, the OLD silent rise).
-//   M2  `staffAsksWithheld` counts signed asks too (accepting moves nothing).
+//   M1  `masseurSessionCents` ignores the signed papers (the baseline alone: the OLD silent rise's exponent).
+//   M2  `staffSignedAsks` drops the signed ones (accepting moves nothing).
 //   M3  the carry-over stamp test is `<=` (an ANSWERED year reads as carried).
 //   M4  the carry-over fact is never written (the letter goes quiet again).
 import { describe, expect, it } from 'vitest'
@@ -40,9 +48,9 @@ import {
   STAFF_ASK_WINDOW_WEEKS,
   staffAskId,
   staffAsks,
-  staffAsksWithheld,
   staffLetters,
 } from '../src/engine/offers'
+import { staffSignedAsks } from '../src/engine/world/staffRaise'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -106,7 +114,11 @@ describe('round 45 #3 A – the anniversary writes a LETTER and the rate waits f
     expect(signed.state).toBe('signed')
     expect(masseurSessionCents(world)).toBe(rateAfter(1))
     expect(masseurWeeklyCents(world)).toBe(SESSIONS * rateAfter(1))
-    expect(staffAsksWithheld(world.offers, 'masseur')).toBe(0)
+    // ⚠ RE-AIMED 02.10 (#3b): was `staffAsksWithheld(...) === 0`, the exponent's count of un-granted asks. The
+    // fee is the chain of signed papers now, so the question is whether this paper ENTERED the chain – and
+    // that what it printed is what is billed.
+    expect(staffSignedAsks(world.offers, 'masseur').map((o) => o.id)).toEqual([letter.id])
+    expect((signed.terms as StaffLetterTerms).ask!.toCents, 'the paper IS the fee').toBe(masseurSessionCents(world))
     expect(() => acceptOffer(world, letter.id), 'a signed paper cannot be signed twice').toThrow()
   })
 
@@ -178,7 +190,9 @@ describe('round 45 #3 A – the anniversary writes a LETTER and the rate waits f
 
   it('⚠ a career with NO request papers keeps every raise it was already paying (no migration needed)', () => {
     const world = masseurAt(100, 100 + 3 * WEEKS_PER_YEAR)
-    expect(staffAsksWithheld(world.offers, 'masseur')).toBe(0)
+    // ⚠ RE-AIMED 02.10 (#3b): was `staffAsksWithheld(...) === 0`. No papers is no chain, and no chain is the
+    // baseline untouched – the exponent over the years he has served, exactly what he was paying.
+    expect(askOf(world), 'no request papers on file').toHaveLength(0)
     expect(masseurSessionCents(world), 'three silent raises, as shipped before this round').toBe(rateAfter(3))
   })
 })

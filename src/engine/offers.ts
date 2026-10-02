@@ -1148,7 +1148,8 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
   // everything below is KIT arithmetic and signing a masseur's request must never end the sponsor deal
   // she is wearing. Only an OPEN staff letter can reach here (`offerAnswerError` has already refused
   // the year-end notices, which are `info`), and it marks the paper and nothing else – the fee is
-  // derived from the signed papers (`staffAsksWithheld`), so there is no wallet to move.
+  // derived from the signed papers (`staffFeeCents`) for the three derived seats, so there is no wallet to move;
+  // the coach's stored fee is re-struck by `acceptOffer` right after this returns (`settleCoachRaise`).
   if (offer.kind === 'staff') {
     offer.state = 'signed'
     offer.decidedWeek = week
@@ -1821,11 +1822,13 @@ export function raiseStaffLetter(offers: Offer[], week: number, terms: StaffLett
 // one is the owner's «мы ни за что не наказываем»: a declined or lapsed request leaves the fee
 // exactly where it was and writes nothing else.
 //
-// ⚠⚠ NOTHING IS PERSISTED FOR THE ANSWER – the fee is DERIVED from the papers. `staffAsksWithheld`
-// counts the requests the family has NOT granted (open, refused or lapsed), and a seat's fee is its
-// opening price drifted by the years served MINUS those – so a career with no request papers at all
-// (every save from before this round) keeps every raise it was already paying, and the three-part
-// schema move is not needed.
+// ⚠⚠ NOTHING IS PERSISTED FOR THE ANSWER – the three seats' fee is DERIVED from the papers (round 45 #3b,
+// 02.10, replacing the exponent): a seat is paid its BASELINE moved by the chain of the requests the family
+// SIGNED, each paper printing the two figures it moved between (`staffFeeCents`, world/staffRaise.ts). A
+// refused or lapsed paper is not in the chain, so a career with no request papers at all (every save from
+// before this round) keeps every raise it was already paying, and the three-part schema move is not
+// needed. ⭐ THE COACH'S fee is a STORED deal (`WorldState.coachDeal`), so his signature re-strikes it
+// (`settleCoachRaise`, world/coachDeal.ts) – the paper stays the same shape.
 
 /** HOW LONG A RAISE REQUEST STAYS ON THE TABLE – THE SPONSOR LETTERS' OWN WINDOW (four weeks), the
  *  closest existing proposal this mirrors, and not a number picked here. A DEFAULTED parameter,
@@ -1847,19 +1850,21 @@ export function staffAsks(offers: Offer[], seat: StaffSeat): Offer[] {
   })
 }
 
-/** HOW MANY OF A SEAT'S REQUESTS THE FAMILY HAS NOT GRANTED – everything that is not `signed`: still
- *  on the table (the rate does not move until yes), refused, or lapsed. Pure read, zero draws. */
-export function staffAsksWithheld(offers: Offer[], seat: StaffSeat): number {
-  return staffAsks(offers, seat).filter((o) => o.state !== 'signed').length
+/** THE UNIT A SEAT'S RATE IS QUOTED IN ON ITS RAISE REQUEST – the masseur by the SESSION (his rate is per
+ *  session), the psychologist and the hitting partner by the WEEK (a flat weekly retainer), the coach by
+ *  the HOUR (the hourly rate his bill is built from – round 45 #3b). The letter, the confirm and the
+ *  settled foot all spell the unit from this one answer, so they can never disagree about it. ⚠ DRAFT
+ *  words (R45-S10..S14 and, for the coach, R45-S23..S27 in docs/rounds/round-45.md); the masseur's own
+ *  sentences (R45-S2, S5-S8) are byte-for-byte what they were. */
+export function staffAskUnit(seat: StaffSeat): 'session' | 'week' | 'hour' {
+  return seat === 'masseur' ? 'session' : seat === 'coach' ? 'hour' : 'week'
 }
 
-/** THE UNIT A SEAT'S RATE IS QUOTED IN ON ITS RAISE REQUEST – the masseur by the SESSION (his rate is per
- *  session), the psychologist and the hitting partner by the WEEK (a flat weekly retainer). The letter,
- *  the confirm and the settled foot all spell the unit from this one answer, so the three can never
- *  disagree about it. ⚠ DRAFT words (R45-S10..S14 in docs/rounds/round-45.md); the masseur's own
- *  sentences (R45-S2, S5-S8) are byte-for-byte what they were. */
-export function staffAskUnit(seat: StaffSeat): 'session' | 'week' {
-  return seat === 'masseur' ? 'session' : 'week'
+/** THE UNIT WITH ITS ARTICLE – «a session», «a week», «an hour» – the one phrase the three raise-request
+ *  surfaces (the letter body, the settled foot, the confirm) put after a figure. A function and not
+ *  «a ${unit}» at each site, because «a hour» is the sentence that would otherwise ship for the coach. */
+export function staffAskPer(seat: StaffSeat): string {
+  return seat === 'coach' ? 'an hour' : `a ${staffAskUnit(seat)}`
 }
 
 /** A SEAT ASKS. An OPEN letter with the sponsor letters' window; idempotent on its id; nothing

@@ -1366,7 +1366,7 @@ export interface StaffLetterTerms {
    *  to be paid `toCents` where it is paid `fromCents` today – per SESSION for the masseur, which is the
    *  unit his rate is quoted in. The letter is `state: 'open'` with a real deadline, the sponsor
    *  letters' two doors (`acceptOffer` / `declineOffer`), and NOTHING is persisted for the answer
-   *  beyond the paper's own state: the rate is DERIVED from the signed asks (`staffAsksWithheld`).
+   *  beyond the paper's own state: the rate is DERIVED from the signed asks (`staffFeeCents`); the coach's stored fee is re-struck on signing.
    *  ⚠ Both figures are frozen on the paper at its arrival week and never recomputed at signature. */
   ask?: { fromCents: number; toCents: number }
 }

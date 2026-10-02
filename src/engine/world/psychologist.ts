@@ -49,7 +49,7 @@
 // exactly what O1 forbids. The window is the TRUE off-season and nothing else, which also retires
 // the `schoolIsOver` plumbing the wider predicate needed: this file no longer imports `../kidLife`
 // at all.
-import { staffRaisesGranted, staffRateAfter, writeStaffRaise } from './staffRaise'
+import { staffFeeCents, writeStaffRaise } from './staffRaise'
 import { ECONOMY } from '../economy'
 import { addEvent, seasonIndexOf } from './ledger'
 import { guardNotEnded } from './constants'
@@ -148,9 +148,9 @@ export function psychologistRungOf(world: WorldState) {
  *  card's quote is this ledger row. Zero draws. */
 export function psychologistWeeklyCents(world: WorldState): number {
   // ⭐⭐⭐ ROUND 45 #3 – FLAT WITHIN A YEAR, NOT FLAT FOR EVER. The rung's catalogue price is the OPENING
-  // price; each yearly raise request the family SIGNED drifts it (`staffRateAfter`). A career with no
+  // price; each yearly raise request the family SIGNED drifts it (`staffFeeCents`, the chain of signed papers). A career with no
   // signed request pays exactly the catalogue price – which is every career that predates the letters.
-  return staffRateAfter(psychologistRungOf(world).salaryCents, staffRaisesGranted(world.offers, 'psychologist'))
+  return staffFeeCents(world.offers, 'psychologist', psychologistRungOf(world).salaryCents)
 }
 
 /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, index = rung. The
@@ -159,8 +159,7 @@ export function psychologistWeeklyCents(world: WorldState): number {
  *  takes. ⚠ The row for the rung she is on IS `psychologistWeeklyCents` (one drift, one rounding).
  *  Pure, zero draws. */
 export function psychologistRungWeeklyCents(world: WorldState): number[] {
-  const granted = staffRaisesGranted(world.offers, 'psychologist')
-  return ECONOMY.psychologist.rungs.map((r) => staffRateAfter(r.salaryCents, granted))
+  return ECONOMY.psychologist.rungs.map((r) => staffFeeCents(world.offers, 'psychologist', r.salaryCents))
 }
 
 /** ⭐⭐⭐ ROUND 45 #3 – THE ANNIVERSARY WRITES HER REQUEST (`writeStaffRaise`, the masseur's own letter

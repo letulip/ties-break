@@ -37,7 +37,7 @@
 // HANDED DOWN as a boolean by the caller that already holds it (`resolveBodyAndPlanner` computes it
 // once as `playedThisWeek` and threads it), which is the dependency inversion `accrueSpirit`'s
 // `psychologistWorks` argument established.
-import { staffRaisesGranted, staffRateAfter, writeStaffRaise } from './staffRaise'
+import { staffFeeCents, writeStaffRaise } from './staffRaise'
 import { ECONOMY } from '../economy'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
@@ -245,9 +245,9 @@ export function sparringRustCut(world: WorldState, matchlessWeeks: number, away:
  *  ledger row's amount, one derivation. Pure, zero draws. */
 export function sparringWeeklyCents(world: WorldState): number {
   // ⭐⭐⭐ ROUND 45 #3 – THE RUNG'S CATALOGUE PRICE IS THE OPENING PRICE; each yearly raise request the
-  // family SIGNED drifts it (`staffRateAfter`). A career with no signed request pays exactly the
+  // family SIGNED drifts it (`staffFeeCents`, the chain of signed papers). A career with no signed request pays exactly the
   // catalogue price – which is every career that predates the letters.
-  return staffRateAfter(sparringRungOf(world).weeklyCents, staffRaisesGranted(world.offers, 'sparring'))
+  return staffFeeCents(world.offers, 'sparring', sparringRungOf(world).weeklyCents)
 }
 
 /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, index = rung: the
@@ -255,8 +255,7 @@ export function sparringWeeklyCents(world: WorldState): number {
  *  and the flat catalogue would quote a price the ledger no longer takes. The row for the rung he is
  *  on IS `sparringWeeklyCents`. Pure, zero draws. */
 export function sparringRungWeeklyCents(world: WorldState): number[] {
-  const granted = staffRaisesGranted(world.offers, 'sparring')
-  return ECONOMY.sparring.rungs.map((r) => staffRateAfter(r.weeklyCents, granted))
+  return ECONOMY.sparring.rungs.map((r) => staffFeeCents(world.offers, 'sparring', r.weeklyCents))
 }
 
 /** ⭐⭐⭐ ROUND 45 #3 – THE ANNIVERSARY WRITES HIS REQUEST (`writeStaffRaise`, the masseur's own letter
