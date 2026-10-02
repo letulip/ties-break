@@ -20,7 +20,7 @@
 //   G. THE BANK (B17, 02.10 fourth batch) – «можно принцип сделать похожим, но размер немного изменить для
 //      supportов»: a refused year is not forgotten in the price. The next ask quotes the product of every year
 //      since the fee last moved, each year's step from ITS OWN verdict, at the seat's own 2/4/6% scale; a family
-//      that signs every year is quoted the single steps it always was; a re-hire resets the bank; the masseur's
+//      that signs every year is quoted the single steps it always was; the bank survives a re-hire (02.10 architect correction); the masseur's
 //      silent-era years never enter it.
 //
 // ⚠ RE-AIMED 02.10 (B17): the two arms of C/D and E that said «a refused year is forgone, not banked» (the next ask
@@ -734,7 +734,13 @@ describe.each(KITS)('round 45 B17 – the $seat: a refused year is not forgotten
     }
   })
 
-  it('⭐⭐ A RE-HIRE RESETS THE BANK: a year refused under an earlier arrangement is not carried into the new one', () => {
+  it('⭐⭐ THE BANK SURVIVES A RE-HIRE: a year refused under an earlier arrangement still counts in the new one', () => {
+    // ⚠ RE-AIMED THE SAME DAY IT WAS BORN (02.10, the architect's correction of B17's brief). The seats' own
+    // law is that a release RESUMES the service clock (round 43; M10 in round45-staff-ask-seats), and the
+    // fourth-batch ruling is «отказ не забывается в цене» – so an anchor on the latest hire would hand the
+    // family a flush: fire, re-hire a week later, and the banked paper burns. That is the third branch through
+    // the back door. The bank therefore survives; the old paper prices at the span's consecutive recent
+    // seasons (the documented approximation – across the gap it reads season 2, not the paper's own year 1).
     // CONTROL – nobody leaves: the second ask banks the refused first year.
     const kept = hiredWorld(kit, `r45-bank-kept-${kit.seat}`)
     askAt(kit, kept, 1)
@@ -744,7 +750,7 @@ describe.each(KITS)('round 45 B17 – the $seat: a refused year is not forgotten
       toCents: bankedAbove(kit.base, [2, 1]),
     })
     // THE ARM – the same refusal, then a release at 160 and a re-hire at 170. The service clock RESUMES (60 weeks
-    // served, so the next anniversary is 44 weeks after the re-hire, week 214); the bank does not.
+    // served, so the next anniversary is 44 weeks after the re-hire, week 214) – and so does the bank.
     const world = hiredWorld(kit, `r45-bank-rehired-${kit.seat}`)
     askAt(kit, world, 1)
     declineOffer(world, staffAskId(kit.seat, 1))
@@ -755,9 +761,9 @@ describe.each(KITS)('round 45 B17 – the $seat: a refused year is not forgotten
     bankThrough(world, 3)
     world.week = 214
     kit.resolve(world)
-    expect((askOf(world, kit.seat, 2)!.terms as StaffLetterTerms).ask, 'the new arrangement starts clean: ONE step').toEqual({
+    expect((askOf(world, kit.seat, 2)!.terms as StaffLetterTerms).ask, 'the old paper still banks: TWO years').toEqual({
       fromCents: kit.base,
-      toCents: bankedAbove(kit.base, [3]),
+      toCents: bankedAbove(kit.base, [3, 2]),
     })
   })
 

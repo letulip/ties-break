@@ -226,40 +226,39 @@ export function staffFeeCents(offers: Offer[] | undefined, seat: StaffSeat, base
 // ledger rows) and the banked season rows with `trophiesByTier` (never pruned); no stream, no clock, no schema
 // move. «Nobody leaves, nobody punishes» stands: the refusal lives ONLY in the figure of the next ask.
 
-/** THE LATEST HIRE OF THE SEAT – the week its current arrangement began; -Infinity for a probe world with the
- *  flag set and no tagged row. The ledger rows alternate hire / release by construction, so the hires are the
- *  even-indexed marks. */
-function staffLatestHireWeek(world: WorldState, changeKey: string): number {
-  const marks = staffChangeMarks(world, changeKey, world.week)
-  let latest = -Infinity
-  for (let i = 0; i < marks.length; i += 2) latest = marks[i]
-  return latest
-}
-
 /** HOW MANY REQUESTS HAVE GONE UNSIGNED SINCE THE FEE LAST MOVED – each one a year the family let go by, and
- *  the bank's whole size. 0 for a career that signs every year, for a career with no paper at all, and right
- *  after a re-hire. ⚠ Every paper written after the anchor is UNSIGNED by construction – the last signature IS
- *  the anchor – so there is no state test here, and none is wanted: it would only hide a wrong anchor. */
-export function staffBankedYears(world: WorldState, seat: StaffRaiseSeat, changeKey: string): number {
+ *  the bank's whole size. 0 for a career that signs every year and for a career with no paper at all.
+ *  ⚠ Every paper written after the anchor is UNSIGNED by construction – the last signature IS the anchor – so
+ *  there is no state test here, and none is wanted: it would only hide a wrong anchor.
+ *  ⚠⚠ THE BANK SURVIVES A RE-HIRE (the architect's 02.10 correction of B17's brief, same day). The seats' own
+ *  law is that a release RESUMES the service clock rather than resetting it (round 43, pinned in
+ *  round45-staff-ask-seats M10), and the owner's fourth-batch principle is «отказ не забывается в цене» – so an
+ *  anchor on the latest hire would have handed the family a flush: fire the seat, re-hire a week later, and the
+ *  banked papers burn. That is the third branch through the back door, and it is exactly what this anchor must
+ *  not allow. Papers from an earlier arrangement therefore still count; their growth prices at the most recent
+ *  banked seasons (the span's consecutive shape, see `staffRaiseYears`), which across a release gap reads the
+ *  gap seasons rather than each paper's own – the documented approximation, acceptable because a gap can only
+ *  exist под an already-refused paper. The COACH is different by his own law: his re-hire is a NEW arrangement
+ *  (`coachRaiseStands`), and nothing here reads his papers. */
+export function staffBankedYears(world: WorldState, seat: StaffRaiseSeat): number {
   const signed = staffSignedAsks(world.offers, seat)
   const lastSigned = signed.length > 0 ? signed[signed.length - 1].week : -Infinity
-  const anchor = Math.max(staffLatestHireWeek(world, changeKey), lastSigned)
-  return staffAsks(world.offers ?? [], seat).filter((o) => o.week > anchor).length
+  return staffAsks(world.offers ?? [], seat).filter((o) => o.week > lastSigned).length
 }
 
 /** THE SEASONS THE NEXT REQUEST IS ABOUT, newest first – the latest banked season, then one season further back
  *  for every year the family let go by. */
-export function staffRaiseYears(world: WorldState, seat: StaffRaiseSeat, changeKey: string): number[] {
+export function staffRaiseYears(world: WorldState, seat: StaffRaiseSeat): number[] {
   const latest = latestBankedSeason(world)
-  const span = 1 + staffBankedYears(world, seat, changeKey)
+  const span = 1 + staffBankedYears(world, seat)
   return Array.from({ length: span }, (_, i) => latest - i)
 }
 
 /** THE GROWTH THE NEXT REQUEST ASKS FOR – the product of (1 + step) over its years, each year's step from ITS OWN
  *  verdict. Unrounded: the one rounding belongs to the figure it multiplies (`staffRaiseQuote`). Pure. */
-export function staffRaiseGrowth(world: WorldState, seat: StaffRaiseSeat, changeKey: string): number {
+export function staffRaiseGrowth(world: WorldState, seat: StaffRaiseSeat): number {
   let growth = 1
-  for (const y of staffRaiseYears(world, seat, changeKey)) growth *= 1 + stepOfVerdict(seat, staffYearVerdictAt(world, y))
+  for (const y of staffRaiseYears(world, seat)) growth *= 1 + stepOfVerdict(seat, staffYearVerdictAt(world, y))
   return growth
 }
 
@@ -270,16 +269,15 @@ export function staffRaiseGrowth(world: WorldState, seat: StaffRaiseSeat, change
 export function staffRaiseQuote(
   world: WorldState,
   seat: StaffRaiseSeat,
-  changeKey: string,
   baseCents: number,
 ): { fromCents: number; toCents: number } | null {
   const fromCents = staffFeeCents(world.offers, seat, baseCents)
-  const toCents = Math.round((fromCents * staffRaiseGrowth(world, seat, changeKey)) / 100) * 100
+  const toCents = Math.round((fromCents * staffRaiseGrowth(world, seat)) / 100) * 100
   return toCents > fromCents ? { fromCents, toCents } : null
 }
 
 /** THE LEDGER'S HIRE / RELEASE MARKS FOR ONE SEAT up to and including `week`, oldest first – the one read the
- *  service clock and the bank's anchor (`staffLatestHireWeek`) both stand on. */
+ *  service clock stands on. */
 function staffChangeMarks(world: WorldState, changeKey: string, week: number): number[] {
   const marks: number[] = []
   for (const e of world.events) {
@@ -343,7 +341,7 @@ export function writeStaffRaise(
   if (!staffRaiseDue(world, hired, changeKey)) return
   const year = staffYearsServed(world, changeKey)
   if (world.offers.some((o) => o.id === staffAskId(seat, year))) return
-  const quote = staffRaiseQuote(world, seat, changeKey, baseCents)
+  const quote = staffRaiseQuote(world, seat, baseCents)
   if (!quote) return
   raiseStaffAsk(world.offers, world.week, year, {
     seat,

@@ -416,3 +416,7 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
   pays its tax in-wave (three hand-splices today); the chip comes down when B16 lands.
 - B16: the emitter is idempotent (--write twice = zero diff), hand blocks and voice order preserved, pinned by test.
 - B17: the supports' refusals bank (compound of per-year verdict steps since the fee last moved), no-refusal path byte-neutral.
+- B17 correction (architect, same day): the bank SURVIVES a re-hire – the brief's reset premise
+  contradicted the seats' resume-clock law (round 43, M10) and handed the family a fire-and-rehire
+  flush (the third branch through the back door). Anchor = the last signature alone; mutation arm
+  red on all three seats, 143/143 green after.
