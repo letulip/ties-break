@@ -39,12 +39,29 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   does not touch openers); a ruling to soften the 250/500 openers is ABSENT. Options A–D with
   predicted tables are in the B1 report – his pick, one sentence.
 
-- [ ] **2. «Сверху интерфейса периодически появляется горизонтальная полоса в 1 пиксель на всю
+- [?] **2. «Сверху интерфейса периодически появляется горизонтальная полоса в 1 пиксель на всю
   ширину экрана»** – Reading: an intermittent 1px full-width line at the very top of the UI –
   a border/edge of some top-chrome element (notice bar, update toast, safe-area filler) that shows
   while its body is hidden. Class: **build** (bug hunt). Bundle **B7** (App.vue top chrome).
   Evidence: the exact element named with the mechanism of «периодически», the CSS/markup fix, and
   a mounted assertion that the collapsed state renders 0px tall (goes red on revert).
+  **B7 result – NOT reproduced, so NOT fixed (nothing in `src/` moved).** The shell's top chrome
+  cannot be the strip: `.update-banner`, `.recovered-banner` and `.stop-toast` are each `v-if`'d,
+  carry 10–12px of padding and a content row, and nothing in `App.vue` renders an always-present
+  top element. Measured row by row on a production build (service worker off) over the top 8 css
+  px: the Moto G8 Plus profile (411x869, DPR 2.625) on Season, Calendar, Home, Stats and Trophies,
+  and desktop 1280x800 at DPR 1 and 2 on Home with and without the Tour Office card up – no
+  uniform full-width row, no element 4px or thinner within 3px of the top. Also excluded: every
+  hero portrait (rows 0–9 are a smooth gradient, no edge line), `theme_color` / `background_color`
+  / `--bg` (all `#0a0e13`, so no status-bar seam), the confetti (absolute inside a card). Ranked,
+  still open: (1) platform overscroll – `html` and `body` set no `overscroll-behavior-y` (only `-x`
+  on three scrolling rows), so Android Chrome paints its edge glow / pull-to-refresh at scrollTop 0
+  on a top-edge fling: periodic, device-only, full width, invisible to headless desktop; the fix
+  would be one declaration. (2) a transient frame of a mounting `.dialog-overlay` or tour
+  spotlight (both `position: fixed`, full viewport) – steady states were scanned, mount frames
+  were not. (3) the update banner after a deploy – but that is 40px of text, not 1px.
+  **Asks him:** what colour is the line, and what had he just done (pulled the page down, closed
+  a card, a week ticked)? Grey-white points at (1), page-dark at a seam, green at our own accent.
 
 - [?] **3. «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
   массажист растёт сам по себе тихо ежегодно»** – Reading: specialists (physio, psychologist,
