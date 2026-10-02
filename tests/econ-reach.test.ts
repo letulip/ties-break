@@ -330,18 +330,33 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // 02.10), careers of 30, as charged / with float / SOLVENCY: 8k working self 15/17/2 · working budget 15/27/12 · working middle 2/25/23 ·
     // 25k middle self 19/19/0 · middle budget 25/27/2 · middle middle 16/27/11 · middle high 3/25/22 · 120k wealthy high 28/28/0 · wealthy elite
     // 29/29/0. The only other cell inside [3, 18] with SOLVENCY under 3 is working·self-coached (15/17/2), which is also this file's `working`.
+    //
+    // ⚠⚠ A TWELFTH READING – THE ARCHITECT'S RE-PIN, 02.10, same day, on the note above. The
+    // eleventh reading's own precedent governs: an owner-ruled balance commit moved the
+    // distribution on the cell, the cell still splits and SOLVENCY is still 0, so «the cell
+    // stays, the band moves». The ruling this time is the 02.10 tariff («…и тогда мы как раз
+    // можем довольно хорошо отбалансировать эту историю… попробовать как будет», docs/decisions.md
+    // THE TARIFF IS HIS LEVER), and the move is UP: 6 -> 19 of 30. That direction REVERSES the
+    // 22.08 sentence quoted above – «ручной режим должен быть сложнее» – and the reversal is NOT
+    // resolved here: it is reported to the owner in round 45's own report as the thing to feel in
+    // play, exactly as his «попробовать как будет» asks. If manual must stay harder, that is a
+    // lever of its own, not this band. THE BAND, by the standing rule (half the distance to each
+    // degenerate answer): 19 − 9.5 = 9.5 and 19 + 5.5 = 24.5, rounded INWARD per the tenth
+    // reading's precedent: **[10, 24] around 19 of 30.** The knife-edge neighbourhood check the
+    // prior readings ran was NOT re-run this time; the margin below the ceiling is 5 and above
+    // the floor is 9, and the next firing re-reads this stack as always.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleSelf, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH18, '14→18 saturated - re-read the notes above').toBeLessThan(proH18.length)
     expect(
       reachedH18,
-      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-pin, measured ${reachedH18}) - re-read the notes above`,
-    ).toBeGreaterThanOrEqual(3)
+      `14→18 drifted (19 of 30 on middle·self-coached at the 02.10 re-pin, measured ${reachedH18}) - re-read the notes above`,
+    ).toBeGreaterThanOrEqual(10)
     expect(
       reachedH18,
-      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-pin, measured ${reachedH18}) - re-read the notes above`,
-    ).toBeLessThanOrEqual(18)
+      `14→18 drifted (19 of 30 on middle·self-coached at the 02.10 re-pin, measured ${reachedH18}) - re-read the notes above`,
+    ).toBeLessThanOrEqual(24)
     for (const r of proH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)
