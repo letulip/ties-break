@@ -195,5 +195,5 @@ describe('the album emitter is a fixed point of the module it wrote (B16, 02.10)
     }
     expect(readFileSync(ALBUM_DOC, 'utf8') === docBefore, 'the document is read, never written').toBe(true)
     expect(readFileSync(MODULE, 'utf8') === COMMITTED, 'and the real module was not touched by a temp-mode run').toBe(true)
-  }, 120_000)
+  }, 60_000)
 })
