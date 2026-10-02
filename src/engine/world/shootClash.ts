@@ -188,7 +188,8 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
       return to === null ? null : weekLabel(to)
     })(),
     cancelShootCents: shootCancelCents(terms),
-    // ⭐ 02.10 (round 45 #1b): PER SHOOTING DAY – the days the entered event runs. The same function the
+    // ⭐ 02.10 (round 45 #1b): PER SHOOTING DAY – and the shoot is two days at every rung (third batch: «съемочных
+    // дней всего 2…», `CLASH_SHOOT_DAYS`; the first build read the event's match days). The same function the
     // charge in `accrueCondition` multiplies by, so the card prints the engine's number.
     conditionCost: ECONOMY.advertising.clashConditionPerDay * clashShootDays(world, week),
   }

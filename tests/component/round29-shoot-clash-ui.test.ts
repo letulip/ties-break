@@ -48,6 +48,7 @@ import {
   type WorldState,
 } from '../../src/engine/world'
 import { ECONOMY } from '../../src/engine/economy'
+import { clashShootDays } from '../../src/engine/world/medical'
 import { tripRoundsFor } from '../../src/composables/weekDays'
 import { tripArcFor } from '../../src/composables/weekGrid'
 import { type ShootClashChoice } from '../../src/shared/protocol'
@@ -143,18 +144,25 @@ describe('round 29 #3 – the collision raises a card the parent has to answer',
     const text = w.find('.shoot-clash-dialog').text()
     expect(game.snapshot?.shootClash, 'the prompt is missing – the card is drawing from nothing').toBeTruthy()
     // The condition price, spelled on the card, rebuilt from the catalogue rather than read back.
-    // ⚠ 02.10 (round 45 #1b): PER SHOOTING DAY – the local rung (an 8-draw) runs 3 days, so the card prints 3,
-    // the engine's own number (never a template's 7), and the schedule draws the Shoot block on exactly
-    // that many days of the «do both» week: the picture and the charge are one sentence.
-    const days = tripRoundsFor('local')
-    expect(days).toBe(3)
+    // ⚠ 02.10 (round 45 #1b, THIRD BATCH): THE SHOOT IS TWO DAYS AT THREE EACH – «съемочных дней всего 2…» – so the card
+    // prints 6 at every rung (this fixture's local priced 3 under the first build, one point a match day), the engine's own
+    // number (never a template's 7), and the schedule draws the Shoot block on exactly those two days of the «do both» week:
+    // the picture and the charge are one sentence. The day count is the engine's own `clashShootDays` for THIS world and is
+    // typed here too – a count derived only from the thing under test would agree with it however it moved.
+    const days = clashShootDays(world, CLASH)
+    expect(days).toBe(2)
     expect(game.snapshot!.shootClash!.conditionCost, 'the card is not drawing the engine\'s number').toBe(
       AD.clashConditionPerDay * days,
     )
+    expect(game.snapshot!.shootClash!.conditionCost, 'two days at three').toBe(6)
     expect(text).toContain(`${AD.clashConditionPerDay * days} condition`)
-    const drawn = tripArcFor({ rounds: days, masseur: false, press: false, shoot: true }).filter((d) =>
-      d.some((b) => b.label === 'Shoot'),
-    ).length
+    // THE SCHEDULE – the local's whole arc (three match days) drawn with the shoot on; only two of them may carry it.
+    const arc = tripArcFor({ rounds: tripRoundsFor('local'), masseur: false, press: false, shoot: true })
+    expect(
+      arc.filter((d) => d.some((b) => b.kind === 'tournament')).length,
+      'the fixture is not a three-day draw, so the count below would prove less',
+    ).toBe(3)
+    const drawn = arc.filter((d) => d.some((b) => b.label === 'Shoot')).length
     expect(drawn, 'the schedule and the charge name different numbers of days').toBe(days)
     // ...and the cancellation's share of the fee, formatted from CENTS.
     // ⚠ $100,000 since round 34 #7/#11/#12/#13 (03.09): the ≤200 watches cell went $20,000 ->

@@ -375,12 +375,12 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 → 3), his first shape (uniform −1, Slam 4) is measured beside it; «А остальное пока оставить как
 есть и попробовать как будет». → B11 `[>]`.
 
-- [>] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
-  справедливо» – the clash's flat 7 becomes per-shooting-day. → B12. BUILT: the days are the entered
-  event's match days (`log2(drawSize)` – the very days the «do both» schedule already draws the Shoot block
-  on), so the clash week costs 3 local / 4 regional / 5 (every 32-draw: juniors, W series, national, WTA
-  250/500) / 6 (1000) / 7 (Slam) instead of a flat 7; the card and the charge read one function
-  (`clashShootDays`, world/medical.ts), the rate stays 1, no draw, no schema, ECONOMY bytes unmoved.
+- [x] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
+  справедливо» – the clash's flat 7 becomes per-shooting-day. → B12, REFINED by B14 (third batch, below).
+  FIRST BUILD (history): the days were the entered event's match days (`log2(drawSize)`), so the clash cost
+  3 local / 4 regional / 5 / 6 (1000) / 7 (Slam), rate 1. FINAL: **2 days × 3 = 6 flat; schedule draws two Shoot
+  blocks** – `CLASH_SHOOT_DAYS` = 2 (world/medical.ts, card and charge still one function), rate 3, the grid's
+  first two match days (`TRIP_SHOOT_DAYS`); no draw, no schema, one ECONOMY digit (the t73 byte-sha only).
 - [?] **3c.** the third branch for repeated refusals: «вот хотелось бы, но пока не придумал
   ничего. Мы вроде думали… "если не готовы повышать цену, то работаю меньше дней в неделю"» –
   a design seed, parked; his own 17.09 masseur wording («…or book fewer sessions») is the
@@ -391,7 +391,7 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 ## Owner answers, 02.10, third batch (off the round report)
 
 - 1b REOPENS as a refine, not a miss: his fiction is «съемочных дней всего 2» and the load is
-  doubled – 2 days × 3 = 6 flat, schedule redraws two Shoot blocks. → B14 `[>]`.
+  doubled – 2 days × 3 = 6 flat, schedule redraws two Shoot blocks. → B14 `[x]`.
 - [>] **5b.** the same-week collision: a combined world-table occasion (title + №1 in one page),
   priority above `top-tier-title`; junior keeps absorb. → B15.
 - 3b: the 6% > 5% ordering confirmed ок. The banked-vs-forgiven question is explained and waits.

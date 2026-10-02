@@ -782,9 +782,10 @@ describe('step 2.2 – a shoot week recovers like a travel week, not a rest week
   // moves: the two arms must differ by EXACTLY his figure and by nothing else.
   it('a tournament on the shoot week costs the owner\'s figure, and exactly that (round 29 #3)', () => {
     // ⚠ 02.10 (round 45 #1b): THE FIGURE IS PER SHOOTING DAY, so the probe has to be ENTERED in something – the
-    // flat seven this asserted needed no event, and the price is now the days the entered event runs. A LOCAL
-    // is an 8-draw: three days (the owner's «на локалах 3 дня»). Both arms carry the same entry, so the only
-    // difference between them is still the shoot.
+    // flat seven this asserted needed no event, and `clashShootDays` is zero for a week she is entered in nothing.
+    // ⚠ THIRD BATCH (02.10): the shoot is TWO days at every rung («съемочных дней всего 2…», three condition each, six per
+    // clash), so the local the probe enters is incidental – this said «an 8-draw: three days» under the first build, which
+    // priced the event's match days. Both arms carry the same entry, so the only difference between them is still the shoot.
     const enterLocal = (w: WorldState): void => {
       const event = { ...w.season[0], id: 'probe-local', week: w.week, tier: 'local' as const }
       w.season = [event]
@@ -796,7 +797,7 @@ describe('step 2.2 – a shoot week recovers like a travel week, not a rest week
     const plain = shootProbe([], WEEK)
     enterLocal(plain)
     accrueCondition(plain, true)
-    const price = ECONOMY.advertising.clashConditionPerDay * 3
+    const price = ECONOMY.advertising.clashConditionPerDay * 2
     expect(plain.condition - shoot.condition, 'the week did not cost what he priced it at').toBe(price)
     expect(plain.condition, 'the plain playing week moved – the difference is not the shoot').toBe(
       50 + ECONOMY.condition.matchWeekRecoveryBase,

@@ -1593,7 +1593,8 @@ export interface ShootClashPrompt {
   moveToLabel: string | null
   /** what cancelling the shoot hands back to the brand, in cents – the shoot's own share of the fee */
   cancelShootCents: number
-  /** what doing both costs her in condition – the owner's «+1 в день», one point per day the event runs
-   *  (02.10: «по 1 за каждый съемочный день»); the engine's own number, never rebuilt on the screen */
+  /** what doing both costs her in condition – the owner's «+1 в день», priced per SHOOTING day (02.10:
+   *  «по 1 за каждый съемочный день»; third batch: two days, three points each, six at every rung);
+   *  the engine's own number, never rebuilt on the screen */
   conditionCost: number
 }

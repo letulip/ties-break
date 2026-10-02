@@ -208,9 +208,11 @@ export const advertising = {
    *  ⚠ advertising.clashConditionPerDay: PER DAY, MULTIPLIED BY THE WEEK'S DAYS AT THE ONE SITE THAT CHARGES IT (`accrueCondition`).
    *  owner 02.10 (advertising.clashConditionPerDay): «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо»
    *  ⚠⚠ advertising.clashConditionPerDay: ROUND 45 #1b – THE DAYS ARE THE SHOOTING DAYS (THE ENTERED EVENT'S MATCH DAYS, `clashShootDays`), NOT THE WEEK'S SEVEN.
+   *  owner 02.10, third batch (advertising.clashConditionPerDay): «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?»
+   *  ⚠⚠ advertising.clashConditionPerDay: ROUND 45 #1b REFINED – ONE BECAME THREE, ON TWO SHOOTING DAYS (`CLASH_SHOOT_DAYS`, world/medical.ts): SIX PER CLASH AT EVERY RUNG. THE LINE ABOVE IS THE FIRST BUILD'S HISTORY.
    *  → docs/notes/economy/advertising.md#advertisingclashconditionperday
    */
-  clashConditionPerDay: 1,
+  clashConditionPerDay: 3,
   /** The weekly chance a qualifying week produces the letter, on its own sub-stream
    *  (`seed:ad:<week>`, never MAIN). 5% a week puts the median arrival ~13 weeks after she
    *  crosses the bar and the mean ~20 – the plan's §2 row «when it arrives: after results, and it

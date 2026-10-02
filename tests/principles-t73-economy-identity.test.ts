@@ -52,7 +52,12 @@ import { ECONOMY } from '../src/engine/economy'
 // and national stay 1 / 2 / 3). Only the byte-sha pin moved – 9145d9de… → 72a1461f…; every moved value is one digit for one digit, so the CHARS pin (29,647) did NOT
 // move, nor did the key paths (1,917, sha ac3ad65f…) nor the 44 top-level blocks – the tell, as on 30.09 S1b, that a value changed and nothing was added, removed or reordered.
 // Taken on 49b06e83 plus the round-45 #1 tariff commit.
-const PIN_JSON_SHA256 = '72a1461f7b15cd4c677d6fe3461fffa7dc014cd6a01ef86ac4b33dbe85a4c097'
+// RE-PINNED A FIFTH TIME 02.10, ROUND 45 #1b REFINED – THE OWNER'S THIRD-BATCH RULING (docs/decisions.md «THIRD BATCH: THE CLASH IS TWO HEAVY DAYS»):
+// «… съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать». ONE VALUE moves and no key does:
+// advertising.clashConditionPerDay 1 → 3 (two shooting days × 3 = 6 per clash; the day count is `CLASH_SHOOT_DAYS` in world/medical.ts and is NOT an ECONOMY key).
+// Only the byte-sha pin moved – 72a1461f… → 406b41b1…; one digit for one digit, so the CHARS pin (29,647) did NOT move, nor did the key paths
+// (1,917, sha ac3ad65f…) nor the 44 top-level blocks – the same tell as the 02.10 tariff re-pin just above. Taken on 5a987a8d plus the B14 commit.
+const PIN_JSON_SHA256 = '406b41b1eda831eaf799dd03ec6bbfc99cc96058cc29a909d88bead5a43f93eb'
 const PIN_JSON_CHARS = 29_647
 const PIN_PATHS_SHA256 = 'ac3ad65f6573edd2581cb9190483a4141614087ba9b7232a3268c885b7507eda'
 const PIN_PATH_COUNT = 1_917
