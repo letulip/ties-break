@@ -404,3 +404,12 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 - Self-coached 6→19 of 30: cause named (juniors/early-W cheapened most, fewer injuries compound
   over the junior era; budget-coach cells still clear more than self – the 22.08 property partly
   stands). Ruled for now: feel it in play, no rollback lever built.
+
+## Owner answers, 02.10, fourth batch
+
+- 3b addendum: the supports' refusals BANK (the coach's principle at their own 2/4/6% scale) –
+  «можно принцип сделать похожим, но размер немного изменить для supportов». → B17 `[>]` after
+  B16. If «размер» also meant new numbers, that is a named-constants flip on his word.
+- 6b: «я посмотрю потом глазами и скажу» – the 0.82 floor waits for his pass.
+- The emitter fix (the pending chip's scope) folds into this wave as B16 – discovered in-wave,
+  pays its tax in-wave (three hand-splices today); the chip comes down when B16 lands.

@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 154 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 155 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -32,7 +32,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | --- | ---: | --- | --- |
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
-| coach-and-staff | 6 | [ROUND 45 ANSWERED: THE FLOATING ASK, THE COACH'S LETTER, THE №1 PAGE, THE BRAND STAYS](#02102026--round-45-answered-the-floating-ask-the-coachs-letter-the-1-page-the-brand-stays) | 2026-10-02 |
+| coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
 | general | 30 | [THIRD BATCH: THE CLASH IS TWO HEAVY DAYS, AND THE SLAM-WEEK №1 SHARES THE PAGE](#02102026--third-batch-the-clash-is-two-heavy-days-and-the-slam-week-1-shares-the-page) | 2026-10-02 |
@@ -5804,3 +5804,12 @@ above the title's page; the plain first-№1 page remains for quieter weeks; the
 the absorb rule for now, stated). **The masseur's good-year 6% above the coach's 5% floor is
 confirmed ок.** Still his to rule: the coach's banked refusals vs the three seats' forgiven ones
 (explained to him this session), and the 0.82 note floor – his eye at the merge.
+
+## 02.10.2026 – FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE
+
+«можно принцип сделать похожим, но размер немного изменить для supportов» – the three seats adopt
+the coach's PRINCIPLE (a refused year is not forgotten in the price: the next ask quotes the
+accumulated growth over every year since the fee last moved, the per-year steps recomputed from the
+banked season verdicts), while the SIZE stays their own smaller 2/4/6% a year against his 5–15%
+corridor. No third branch still: nobody leaves, nobody punishes – the refusal lives only in the
+figure of the next ask. The 0.82 note floor and the letter texts wait for his eyes in play.
