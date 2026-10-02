@@ -111,7 +111,7 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   Evidence: a sweep over many seeded careers asserting no page holds duplicate photo ids, and the
   frozen-capture verdict stated (should be unmoved – sub-streams only).
 
-- [ ] **9. «Deposit towards her own place случился после того, как она пару лет назад принесла
+- [x] **9. «Deposit towards her own place случился после того, как она пару лет назад принесла
   свой spare key. И мне кажется этот депозит вполне можно где-то на более ранних периодах делать,
   а не когда у неё на счёту уже 150+ млн»** – Reading: narrative inversion – the own-place deposit
   fired years AFTER the spare-key beat, and only at absurd wealth. Wanted: the deposit eligible
@@ -119,6 +119,19 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   Class: **build** (corridor tuning – measured). Bundle **B3** (kidLife/life-beat gating).
   Evidence: a before/after distribution over seeded careers (ages + bank at deposit; % of careers
   where deposit precedes key), corridors stated in the report.
+
+  **B3 outcome (02.10) – `[x]`.** Measured first: the deposit's gate holds no money or age corridor –
+  it is a row of the 19-21 birthday band and her bank is read by nothing there. What put it after the
+  key was round 42 #26's refill (a given durable leaves the card, the shortfall is topped up from the
+  neighbour bands, the independence band first). On 72 walked careers the deposit stood on a card
+  AFTER the key in 29 of 69 for a parent who grants every ask (49 cards at 26-34, her bank median
+  $9.9M, p90 $15.9M) and in 61 of 69 for one who declines it (166 cards, median $9.5M, max $36.7M).
+  Two rules, no new draw, no schema: the own-key receipt makes the deposit moot (retired like a given
+  durable, the card refills to four rows), and her nineteenth birthday carries it and asks for it.
+  After: first ask median 20 → 19, p75 27 → 19, p90 31 → 19; cards after the key 49 → 0 and 166 → 0;
+  her bank at the first ask p90 $14.5M → $0.29M. `tests/round45-deposit-before-key.test.ts` (three
+  mutation arms measured red); frozen capture unmoved. Open: his 150M+ is beyond this sample's tail
+  (max $36.7M) – the same mechanism on a richer career.
 
 - [ ] **10. «Бренд жёстко приносит 13800 и ни центом больше, независимо ни от чего, даже при
   стоимости 35 млн»** – Reading: the brand asset pays a flat weekly income regardless of its

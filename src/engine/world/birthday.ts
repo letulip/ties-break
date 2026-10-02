@@ -828,6 +828,48 @@ const MATERIAL_OPTIONS = 3
  *  them. */
 const FIRST_COLLEGE_ASK_ID = 'campusbike'
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 45 #9 – THE DEPOSIT BELONGS TO THE YEARS BEFORE HER OWN DOOR, AND NOT ONE BIRTHDAY AFTER IT
+// =================================================================================================
+//
+// THE OWNER, round 45 #9: «Deposit towards her own place случился после того, как она пару лет назад
+// принесла свой spare key. И мне кажется этот депозит вполне можно где-то на более ранних периодах
+// делать, а не когда у неё на счёту уже 150+ млн». Two beats of ONE arc – the deposit towards the
+// place, the spare key from the place – met in the wrong order.
+//
+// ⚠ THERE IS NO CORRIDOR OF MONEY OR AGE IN THE GATE, AND THE FIRST HALF OF THE DIAGNOSIS IS THAT.
+// The deposit is a birthday row of the 19-21 band and the catalogue is deliberately ONE LIST FOR EVERY
+// BACKGROUND (round 26 #4's note over `meansLicenses`): her bank is read by nothing here. What put it
+// on a card AFTER the key was round 42 #26 – a GIVEN durable leaves the card and `materialFor` REFILLS
+// the shortfall from the neighbour bands, nearest first, and the independence band's first row is the
+// deposit. A parent who grants every ask (his own log: all 13 grant) retires the late bands' gifts one
+// by one, and from about twenty-six the refill reaches back for the deposit. Measured on 72 walked
+// careers with that parent: 29 of the 69 that reached the key met the deposit on a card AFTER it –
+// 49 cards, ages 26 to 34, her bank at them median $9.9M and p90 $15.9M. The parent who never grants
+// (the day, every year) never met it after the key: the refill is what moves it.
+//
+// ⚠ TWO RULES, AND NEITHER IS A NEW DRAW. Both read state the offer already reads and both act on the
+// POOL and the RESULT, never on the stream – `seed:birthday:<age>` is still drawn four times and the
+// cycle is still `seed:birthday:cycle:<band>`; MAIN is not reached (input-independence stands).
+//   1. MOOT ONCE HER DOOR HAS OPENED. The own-key beat's receipt – its row in the life log, the same
+//      receipt `ownKeyDue` reads – retires the deposit exactly as a GIVEN durable is retired (it is
+//      handed to `birthdayOffer` as `moot` and joins `spent`), so the card refills to four rows by
+//      round 42 #26's own order and the deposit is not queued for later, it is gone. No schema: the
+//      row has been on every save since the beat shipped.
+//   2. NINETEEN, NOT «SOMETIME IN 19-21». The first birthday of her independence band carries the row
+//      (a swap in `materialFor`) and asks for it (the override at the foot of `birthdayOffer`, the
+//      bicycle's own shape, one band up): three years before the key, which fires the week she turns
+//      twenty-two. Before this a 19-21 card held it for 6 of the 10 possible dialogs, so a few careers
+//      never saw it at all (4 of 72 measured) and the ask landed anywhere from 18 to 34.
+// ⚠ IT MOVES WHEN THE COPY FIRES, NEVER WHAT IT SAYS: not one word of the row's label, note, ask or
+// `again` line is touched (his wording rule), and the bands still hold the same rows.
+const OWN_PLACE_DEPOSIT_ID = 'deposit'
+
+/** The band that holds the deposit, found by its own span – the spelling `borrowFrom` already uses. */
+function isIndependenceBand(band: Band): boolean {
+  return band.from === 19 && band.to === 21
+}
+
 /** The band this birthday draws from.
  *
  *  ⚠ COLLEGE OUTRANKS THE AGE, and that is the whole of R2-18's gift half – see `COLLEGE_BAND`.
@@ -1044,6 +1086,34 @@ function materialFor(
   }
   // The index advances by exactly one per birthday, which is the whole of what it needs. The modulo
   // is written defensively for a poked save with a negative age.
+  // ⭐⭐⭐ ROUND 45 #9 – THE DEPOSIT IS ON HER NINETEENTH BIRTHDAY'S CARD, EVERY CAREER. See the block
+  // over `OWN_PLACE_DEPOSIT_ID`. A SWAP and not a rotation, on purpose: the cycle is still a
+  // permutation (three different dialogs across 19-21, which is round 26 #9b's whole arithmetic) and
+  // only the one card that lacked the row – and the one that held it – trade places, so a career
+  // whose nineteenth card already carried the deposit walks the identical cycle it always did.
+  // ⚠ IT IS APPLIED TO THE WHOLE BAND'S ORDER AND NOT ONLY AT NINETEEN, because every birthday
+  // re-derives the order from the stream: swapping at nineteen alone left twenty reading the
+  // UNSWAPPED order, and the card the swap had moved to nineteen came round again at twenty or
+  // twenty-one (six seeds, caught by tests/birthday-ask.test.ts «a birthday repeated last year's
+  // dialog»). ⚠ AND THE CARD TRADED IN COMES FROM OUTSIDE THE BAND'S OWN THREE POSITIONS WHEN IT CAN:
+  // taking the first deposit-holding combination would, six times in ten, be the one twenty reads, so
+  // nineteen and twenty would merely have swapped cards. Looking past the next two positions leaves
+  // twenty's and twenty-one's dialogs EXACTLY what they were before this item – only the nineteenth's
+  // card ever differs from the shipped cycle, and for the six careers in ten whose nineteenth already
+  // held the row, not even that. `at` is -1 only when no combination holds the row (a pool that
+  // retired it), and a -1 leaves the order untouched rather than crash – the same total the college
+  // rotation is written to.
+  if (band !== COLLEGE_BAND && isIndependenceBand(band)) {
+    const n = order.length
+    const first = ((band.from % n) + n) % n
+    if (!order[first].some((g) => g.id === OWN_PLACE_DEPOSIT_ID)) {
+      const holds = (combo: BirthdayGift[]): boolean => combo.some((g) => g.id === OWN_PLACE_DEPOSIT_ID)
+      const spare = (i: number): boolean => i !== (first + 1) % n && i !== (first + 2) % n
+      const at = order.findIndex((combo, i) => holds(combo) && spare(i))
+      const anywhere = at >= 0 ? at : order.findIndex(holds)
+      if (anywhere >= 0) [order[first], order[anywhere]] = [order[anywhere], order[first]]
+    }
+  }
   return order[((index % order.length) + order.length) % order.length]
 }
 
@@ -1250,6 +1320,12 @@ export function birthdayOffer(
    *  still drawn exactly four times, because the weights are applied to the POOL and never to the
    *  draw – the identical discipline `alreadyGiven` has been under since round-17 #18. */
   temperament: Temperament | null = null,
+  /** ⭐⭐⭐ ROUND 45 #9 – THE ROWS THAT ARE MOOT FOR HER, though nobody gave them: the deposit once the
+   *  own-key beat has fired (see the block over `OWN_PLACE_DEPOSIT_ID`). They join `spent`, so a durable
+   *  among them is RETIRED and the card refills by round 42 #26's order. Empty – the default – for
+   *  every caller with no world, which is why every catalogue sweep still asks the question it always
+   *  did. It is a pool input and never part of any RNG key. */
+  moot: readonly string[] = [],
 ): { options: BirthdayGift[]; askedId: string; eased: 'gap' | 'cap' | null } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
@@ -1271,7 +1347,7 @@ export function birthdayOffer(
   // only by the ASK; the OFFER now reads it too, because a durable already in the house leaves the
   // card (see `materialFor`). Nothing about the set changed – it is still `given`, still derived
   // before this birthday's own row exists, still immutable across a reload.
-  const spent = new Set(alreadyGiven)
+  const spent = new Set([...alreadyGiven, ...moot])
   const material = materialFor(
     seed,
     band,
@@ -1385,7 +1461,17 @@ export function birthdayOffer(
     band === COLLEGE_BAND && collegeIndex === 0
       ? (pool.find((g) => g.id === FIRST_COLLEGE_ASK_ID)?.id ?? null)
       : null
-  return { options, askedId: first ?? drawn, eased }
+  // ⭐⭐⭐ ROUND 45 #9 – HER NINETEENTH BIRTHDAY ASKS FOR THE DEPOSIT. The bicycle's shape one band up,
+  // and for the same reason: it is an override of the RESULT and never of the properties §2ab rests on
+  // – the row is in `pool`, so the ask is one of the four on screen (`materialFor`'s swap is what makes
+  // that certain at nineteen) and it is a row she has not been asked for (`count === 0`, so a deposit
+  // she was already given – retired, off the card – or already asked about falls through to the drawn
+  // ask). The draw above happened either way; the stream's position is the same for every girl.
+  const firstDeposit =
+    band !== COLLEGE_BAND && isIndependenceBand(band) && age === band.from && useOf(OWN_PLACE_DEPOSIT_ID).count === 0
+      ? (pool.find((g) => g.id === OWN_PLACE_DEPOSIT_ID)?.id ?? null)
+      : null
+  return { options, askedId: first ?? firstDeposit ?? drawn, eased }
 }
 
 /** What she has already been given, across every birthday on the record – the input to the ask above.
@@ -1395,6 +1481,15 @@ export function birthdayOffer(
  *  for a birthday nobody was asked about (spec §5.5), and null is not a gift. */
 function giftsAlreadyGiven(world: WorldState): string[] {
   return (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null)
+}
+
+/** ⭐⭐⭐ ROUND 45 #9 – WHAT IS MOOT FOR HER, which is not the same as what she has been given: the
+ *  deposit once her own door has opened. The receipt is the own-key row in the life log – the one
+ *  `ownKeyDue` reads (`lifeLogOf` is `world.lifeLog ?? []`; read here as the field, so this file gains no
+ *  import of the life-beat hub). Derived before this birthday's own row exists, like
+ *  `giftsAlreadyGiven`, so the offer cannot move across a reload. */
+function mootGiftsOf(world: WorldState): string[] {
+  return (world.lifeLog ?? []).some((row) => row.kind === 'own-key') ? [OWN_PLACE_DEPOSIT_ID] : []
 }
 
 /** ⭐⭐⭐ ROUND 27 #7 – WHAT SHE ASKED FOR AT HER LAST BIRTHDAY. Null before her first.
@@ -1479,6 +1574,8 @@ export function birthdayOfferFor(
     // from the seed hands them the SAME girl rather than a uniform stranger – so a bench arm cannot
     // measure a lean that is silently switched off in it.
     world.temperament ?? temperamentFor(world.seed),
+    // ⭐⭐⭐ ROUND 45 #9 – the ninth argument: the rows her own door has made moot. See `mootGiftsOf`.
+    mootGiftsOf(world),
   )
 }
 
