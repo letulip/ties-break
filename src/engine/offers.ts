@@ -1144,6 +1144,16 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
     offer.decidedWeek = week
     return offer
   }
+  // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST SIGNS ON ITS OWN ARM, for the buyer's letter's reason:
+  // everything below is KIT arithmetic and signing a masseur's request must never end the sponsor deal
+  // she is wearing. Only an OPEN staff letter can reach here (`offerAnswerError` has already refused
+  // the year-end notices, which are `info`), and it marks the paper and nothing else – the fee is
+  // derived from the signed papers (`staffAsksWithheld`), so there is no wallet to move.
+  if (offer.kind === 'staff') {
+    offer.state = 'signed'
+    offer.decidedWeek = week
+    return offer
+  }
   // ⭐ THE ADVERTISING DEAL SIGNS ON ITS OWN ARM (the-face-and-the-court.md §6 step 1), because every
   // number below this branch is KIT arithmetic: `dealStartsAt` queues a new contract behind the
   // signed KIT deal (an ad deal coexists with the kit ladder – different category, different gate),
@@ -1759,7 +1769,10 @@ export function staffLetterId(seat: StaffSeat, seasonIndex: number): string {
 export function staffLetters(offers: Offer[]): Offer[] {
   const order: StaffSeat[] = ['coach', 'masseur', 'psychologist', 'sparring']
   return offers
-    .filter((o) => o.kind === 'staff')
+    // ⚠ ROUND 45 #3 – A RAISE REQUEST IS NOT A YEAR-END REPORT, and this is the year's POST (see
+    // `staffAsks` for the requests). Both ride `kind: 'staff'`, which keeps the sender, the subject
+    // ladder and the sheet's `v-if` arm in one place; the `ask` field is what tells them apart.
+    .filter((o) => o.kind === 'staff' && (o.terms as StaffLetterTerms).ask === undefined)
     .sort((a, b) => {
       const ta = a.terms as StaffLetterTerms
       const tb = b.terms as StaffLetterTerms
@@ -1792,6 +1805,76 @@ export function raiseStaffLetter(offers: Offer[], week: number, terms: StaffLett
   }
   offers.push(notice)
   return notice
+}
+
+// --- the staff's raise request (round 45 #3) ---------------------------------------------------
+//
+// THE OWNER, round 45: «Письма с прогрессом от специалистов приходят, а повышение они так и не
+// просят, только массажист растёт сам по себе тихо ежегодно».
+//
+// ⭐⭐ THE MASSEUR'S RATE USED TO RISE ON ITS OWN, ONCE A YEAR, WITH A FEED NOTICE – a fee that moved
+// with nobody's yes. It is a LETTER now, the sponsor letters' shape: `state: 'open'`, a window, two
+// doors, and the same `expireOffers` that lapses a brand's letter lapses this one.
+//
+// ⚠⚠ NO NEW PUNISHMENT, AND THE LAW IS NAMED. No existing law governs a declined staff paper (the
+// 16.09 masseur ruling had «no third refuse branch» because it had no refusal at all). The standing
+// one is the owner's «мы ни за что не наказываем»: a declined or lapsed request leaves the fee
+// exactly where it was and writes nothing else.
+//
+// ⚠⚠ NOTHING IS PERSISTED FOR THE ANSWER – the fee is DERIVED from the papers. `staffAsksWithheld`
+// counts the requests the family has NOT granted (open, refused or lapsed), and a seat's fee is its
+// opening price drifted by the years served MINUS those – so a career with no request papers at all
+// (every save from before this round) keeps every raise it was already paying, and the three-part
+// schema move is not needed.
+
+/** HOW LONG A RAISE REQUEST STAYS ON THE TABLE – THE SPONSOR LETTERS' OWN WINDOW (four weeks), the
+ *  closest existing proposal this mirrors, and not a number picked here. A DEFAULTED parameter,
+ *  reported as such. */
+export const STAFF_ASK_WINDOW_WEEKS = SPONSOR_LETTER_WEEKS
+
+/** ONE SEAT, ONE YEAR OF SERVICE, ONE REQUEST – the idempotency key. `year` is the count of completed
+ *  years of service at the anniversary, never the arrival week, for `buildLetterId`'s reason. */
+export function staffAskId(seat: StaffSeat, year: number): string {
+  return `staff-ask-${seat}-${year}`
+}
+
+/** Every raise request a seat has written, whatever became of it. */
+export function staffAsks(offers: Offer[], seat: StaffSeat): Offer[] {
+  return offers.filter((o) => {
+    if (o.kind !== 'staff') return false
+    const t = o.terms as StaffLetterTerms
+    return t.ask !== undefined && t.seat === seat
+  })
+}
+
+/** HOW MANY OF A SEAT'S REQUESTS THE FAMILY HAS NOT GRANTED – everything that is not `signed`: still
+ *  on the table (the rate does not move until yes), refused, or lapsed. Pure read, zero draws. */
+export function staffAsksWithheld(offers: Offer[], seat: StaffSeat): number {
+  return staffAsks(offers, seat).filter((o) => o.state !== 'signed').length
+}
+
+/** A SEAT ASKS. An OPEN letter with the sponsor letters' window; idempotent on its id; nothing
+ *  draws and no cash moves. Never pruned (`pruneEntryLetters` touches only entry and tour papers),
+ *  so the derivation above can read every request the career ever made. */
+export function raiseStaffAsk(
+  offers: Offer[],
+  week: number,
+  year: number,
+  terms: StaffLetterTerms & { ask: NonNullable<StaffLetterTerms['ask']> },
+): Offer {
+  const id = staffAskId(terms.seat, year)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const offer: Offer = {
+    id,
+    kind: 'staff',
+    week,
+    deadlineWeek: week + STAFF_ASK_WINDOW_WEEKS - 1,
+    terms: { ...terms, ask: { ...terms.ask } },
+    state: 'open',
+  }
+  offers.push(offer)
+  return offer
 }
 
 // --- the build that finished (round 43 #11) -----------------------------------------------------

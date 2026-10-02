@@ -27,7 +27,8 @@
 //   ARM 3  `masseurWeeksServedAt` takes the LAST mark (`week - marks[marks.length - 1]`), i.e. a
 //          re-hire resets the clock – the free third branch. → 2 red (A4, C1).
 //   ARM 4  `masseurRaiseDue` drops the «did the counter increment» clause. → 1 red (D3).
-//   ARM 5  `resolveMasseurRaise` always uses the two-branch sentence. → 1 red (D5).
+//   ARM 5  RETIRED, round 45 #3: the two-branch FEED sentence is gone (the ask is a letter now) – see
+//          tests/round45-staff-ask.test.ts for the letter, the doors and their mutation arms.
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -48,8 +49,10 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
+import { staffAsks } from '../src/engine/offers'
+import { declineOffer } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type StaffLetterTerms } from '../src/shared/protocol'
 
 /** A career already through the professional door – `masseur.test.ts`'s own fixture, and for its own
  *  reason: the gate is a one-way latch off a counting W-series result. */
@@ -237,7 +240,7 @@ describe('round 43 #4 D – the week he asks', () => {
   it('⭐⭐ and it does NOT fire twice on a re-hire week whose running total already sits on a year', () => {
     // ⚠ THE CASE THE SECOND READ EXISTS FOR. Serve exactly one year, take the anniversary, release,
     // and re-hire later: the counter does not move on the week a span opens, so «divisible by 52»
-    // alone is true again on that week and the ask would be announced a second time.
+    // alone is true again on that week and the ask would be written a second time.
     const world = servedFrom(100, 100 + WEEKS_PER_YEAR)
     expect(masseurRaiseDue(world), 'the real anniversary').toBe(true)
     resolveMasseurRaise(world)
@@ -246,54 +249,32 @@ describe('round 43 #4 D – the week he asks', () => {
     hireMasseur(world, true)
     expect(masseurRaiseDue(world), 'the re-hire week is not a second anniversary').toBe(false)
     resolveMasseurRaise(world)
-    expect(raiseRows(world), 'one ask, one row').toHaveLength(1)
+    expect(staffAsks(world.offers, 'masseur'), 'one ask, one letter').toHaveLength(1)
   })
 
-  it('⭐ the row names the new price and both of his answers', () => {
+  it('⭐⭐⭐ ROUND 45 #3 – the ask is a LETTER carrying both rates, and the old feed notice is DEAD', () => {
+    // Superseded here: this group used to assert a feed row («The masseur`s rate rises to …») and a
+    // rate that was already live. The row and the silent rise are gone; the letter, its two doors
+    // and the derived fee are in tests/round45-staff-ask.test.ts.
+    const world = servedFrom(100, 100 + WEEKS_PER_YEAR)
+    resolveMasseurRaise(world)
+    const [letter] = staffAsks(world.offers, 'masseur')
+    expect(letter.state).toBe('open')
+    expect((letter.terms as StaffLetterTerms).ask).toEqual({ fromCents: expectedRate(0), toCents: expectedRate(1) })
+    expect(raiseRows(world), 'no feed notice any more').toHaveLength(0)
+    expect(masseurSessionCents(world), 'and the live rate waits for the answer').toBe(expectedRate(0))
+  })
+
+  it('⚠ writing the request moves no money and never touches the rung dial – the dial stays the family`s own', () => {
     const world = servedFrom(100, 100 + WEEKS_PER_YEAR)
     setMasseurSessions(world, TOP)
-    resolveMasseurRaise(world)
-    const rows = raiseRows(world)
-    expect(rows).toHaveLength(1)
-    expect(rows[0], 'the figure is the one the bill now uses').toContain(
-      `$${Math.round(masseurSessionCents(world) / 100)} a session`,
-    )
-    // ⚠ THE MARKERS MOVED WITH HIS 17.09 REWRITE. «The same hands at a higher bill» became «Keep the
-    // current schedule at the higher rate» – he struck «the same hands» for reducing a person to a
-    // pair of hands – and «fewer visits» became «book fewer sessions», which is the terminology the
-    // dial itself uses. The two answers the row must offer are unchanged.
-    expect(rows[0], 'pay more, same schedule').toContain('Keep the current schedule at the higher rate')
-    expect(rows[0], '...or hold the bill and drop a rung').toContain('book fewer sessions')
-  })
-
-  it('⚠⚠ ...and at the BOTTOM rung it does not offer a rung that is not there', () => {
-    const world = servedFrom(100, 100 + WEEKS_PER_YEAR)
-    setMasseurSessions(world, ENTRY)
-    expect(masseurRungOf(world).sessions).toBe(ENTRY)
-    resolveMasseurRaise(world)
-    const rows = raiseRows(world)
-    expect(rows).toHaveLength(1)
-    expect(rows[0], 'a screen that offers a choice nobody has is this round`s own #5 defect').toContain(
-      'no shorter schedule to choose',
-    )
-    expect(rows[0]).not.toContain('book fewer sessions')
-    // ⚠⚠ AND IT NAMES THE REAL FLOOR. His review's own bottom-rung line said «She is already down to
-    // one session a week»; this dial opens at TWO and its label is «Twice a week», so the sentence
-    // was corrected rather than shipped. This is the assertion that would have caught it: the row
-    // must name the rung the family is actually on, and the rung's own label is where it gets it.
-    expect(rows[0], 'the schedule it names is the one the card names').toContain(
-      ECONOMY.masseur.rungs[0].label.toLowerCase(),
-    )
-    expect(rows[0], 'and it never invents a rung below the floor').not.toMatch(/one session a week/)
-  })
-
-  it('⚠ the row moves no money – it is a notice, and the bill it describes is charged by `resolveMasseur`', () => {
-    const world = servedFrom(100, 100 + WEEKS_PER_YEAR)
     const funds = world.fundsCents
     resolveMasseurRaise(world)
     expect(world.fundsCents).toBe(funds)
-    const row = world.events.find((e) => e.text.startsWith(RAISE_OPENER))
-    expect(row?.amountCents, 'no figure on the ledger, only in the sentence').toBeUndefined()
+    expect(masseurRungOf(world).sessions, 'the schedule is not part of the ask').toBe(TOP)
+    const [letter] = staffAsks(world.offers, 'masseur')
+    declineOffer(world, letter.id)
+    expect(masseurRungOf(world).sessions, 'nor of the answer').toBe(TOP)
   })
 })
 

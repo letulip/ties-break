@@ -353,6 +353,10 @@ function subjectOf(o: Offer): string {
   if (o.kind === 'staff') {
     const t = o.terms as StaffLetterTerms
     const year = seasonYear(t.seasonIndex)
+    // ⭐⭐⭐ ROUND 45 #3 – a raise request has its own subject: it arrives on a seat's anniversary, so
+    // it can share a season with that seat's year-end report, and two letters wearing one title is the
+    // round-29 #16 defect. DRAFT copy.
+    if (t.ask) return `A raise request – ${year}`
     if (t.seat === 'coach') return `The season on court – ${year}`
     if (t.seat === 'masseur') return `The season on the table – ${year}`
     if (t.seat === 'psychologist') return `The season's work in the room – ${year}`
@@ -449,6 +453,14 @@ const pendingSign = ref<Offer | null>(null)
 const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
+  // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST: the two figures printed on the paper, and that the
+  // signature is final like every other one. Every branch below is kit or campaign arithmetic. DRAFT copy.
+  if (pendingSign.value.kind === 'staff') {
+    const ask = (pendingSign.value.terms as StaffLetterTerms).ask
+    if (ask) {
+      return `Accept the raise? The rate goes from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} a session. This cannot be undone.`
+    }
+  }
   // ⭐⭐⭐ S5 – A BUYER'S SIGNATURE SELLS THE LOT, so it has its own question: every number below the ad arm is kit or campaign arithmetic. The price
   // is the one PRINTED on the paper (`priceCents`, frozen at its arrival week) and the lot's name is the shelf's. ⚠ DRAFT copy (SM26).
   if (pendingSign.value.kind === 'sale') {

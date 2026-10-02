@@ -33,9 +33,9 @@
 // leaves – ledger, ladder, college, bookings, constants. Deliberately NOT from coachMarket.ts:
 // importing it here would close a runtime cycle through endings → entries → medical → this file.
 import { ECONOMY } from '../economy'
-import { formatCents } from '../../shared/money'
 import { clamp } from '../condition'
-import { addEvent } from './ledger'
+import { addEvent, seasonIndexOf } from './ledger'
+import { raiseStaffAsk, staffAskId, staffAsksWithheld } from '../offers'
 import { guardNotEnded } from './constants'
 import { activeLadderOf } from './ladder'
 import { inCollege } from './college'
@@ -206,7 +206,19 @@ export function masseurYearsServed(world: WorldState): number {
  *
  *  Pure integer arithmetic over the ledger, zero draws on any stream. */
 export function masseurSessionCents(world: WorldState): number {
-  const drifted = ECONOMY.masseur.perSessionCents * (1 + ECONOMY.masseur.raisePerYear) ** masseurYearsServed(world)
+  // ⭐⭐⭐ ROUND 45 #3 – THE EXPONENT IS THE YEARS HE HAS SERVED MINUS THE ASKS THE FAMILY HAS NOT
+  // GRANTED (`staffAsksWithheld`). The rate no longer rises on its own: each anniversary writes a
+  // request letter, and the year is only counted once somebody said yes. ⚠ A career with no request
+  // papers at all – every save from before this round – withholds nothing and keeps every raise it
+  // was already paying, which is why this needs no migration.
+  return masseurRateAfter(masseurYearsServed(world) - staffAsksWithheld(world.offers ?? [], 'masseur'))
+}
+
+/** WHAT ONE SESSION COSTS AFTER `grants` GRANTED RAISES – the compounding and the whole-dollar
+ *  rounding `masseurSessionCents` documents, taken from the UNROUNDED power. A floor of zero: a
+ *  negative count has no meaning and the opening price is the identity element. */
+function masseurRateAfter(grants: number): number {
+  const drifted = ECONOMY.masseur.perSessionCents * (1 + ECONOMY.masseur.raisePerYear) ** Math.max(0, grants)
   return Math.round(drifted / 100) * 100
 }
 
@@ -224,57 +236,45 @@ export function masseurRaiseDue(world: WorldState): boolean {
   return masseurWeeksServedAt(world, world.week - 1) === served - 1
 }
 
-/** ⭐ THE ASK ITSELF – one kept-free `info` row on the anniversary week, and nothing else moves.
- *  The new rate is already live (`masseurSessionCents` reads the same counter), so the row is a
- *  NOTICE of a bill that has changed rather than an offer the player has to accept: the decision he
- *  is being handed is the rung dial, which is where it already lives.
+/** ⭐⭐⭐ ROUND 45 #3 – THE ASK IS A LETTER NOW, AND THE RATE DOES NOT MOVE UNTIL THE FAMILY SAYS YES.
+ *  The owner: «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
+ *  массажист растёт сам по себе тихо ежегодно». On the anniversary week this writes ONE open letter
+ *  (`raiseStaffAsk`, the sponsor letters' two doors and four-week window) naming the rate he has now
+ *  and the rate he is asking for; `acceptOffer` signs it and the derived rate (`masseurSessionCents`)
+ *  moves, `declineOffer` or a lapse leaves it where it was.
  *
- *  ⭐⭐ THE TWO SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW, AND THEY REPLACE THE BUILD'S DRAFTS.
- *  His faults on what stood here, kept because they are the rule for the next line rather than a
- *  list of typos: «asks for more» first reads as more SESSIONS rather than more money, which is
- *  precisely the wrong idea on a row whose whole subject is the rate; and «the same hands» reduces a
- *  person to a pair of hands. ⭐ The voice of this surface is a FEED ENTRY – a compact consequence –
- *  which is why neither line is atmospheric: it states the new rate and the two answers.
+ *  ⚠⚠ THE 16.09 RULING'S «NO THIRD REFUSE BRANCH» IS SUPERSEDED BY THIS ASK, NOT BROKEN BY IT: that
+ *  sentence existed because there was no refusal at all. A declined or lapsed request is NOT punished
+ *  (the standing «мы ни за что не наказываем» – no mood, no firing, no extra bill), and the rung dial
+ *  (2 / 4 / 7) stays what it always was, available whatever the family answered.
  *
- *  ⚠⚠ AND ONE FACT IN HIS BOTTOM-RUNG SENTENCE WAS WRONG AND IS CORRECTED RATHER THAN SHIPPED. He
- *  wrote «She is already down to one session a week»; `ECONOMY.masseur.rungs` opens at **2** and its
- *  label is «Twice a week», so there is no one-session rung on this dial and never has been. The
- *  sentence keeps his shape and his second clause exactly and names the real floor – a line that
- *  told a family she was on one session while the card beside it said two would be the same class of
- *  defect as offering a rung that is not there, which is what this branch exists to avoid. Reported
- *  in the hand-back.
- *  ⚠ IT MAY CARRY THE FIGURE, unlike `masseurRoomNote`: this is the row whose whole job is the new
- *  price, and `setMasseurSessions` records the same split («the price change is on the next weekly
- *  bill, which is the row that may carry figures»).
- *  ⚠ NO MASCULINE PRONOUN IN EITHER LINE, which is R15-7's standing order and NOT covered by this
- *  file's «the pronoun is safe here» note beside `hireMasseur`: that note is about the NOUN, and
- *  `tests/coach-voice.test.ts` bans `he`/`his`/`him` from every engine literal a player can read.
- *  The first draft of the bottom-rung line said «to drop him to» and went red there, which is the
- *  guard doing exactly its job.
+ *  ⚠ THE FIGURES ARE THE ORIGINAL ONES: the same `raisePerYear` and the same whole-dollar rounding,
+ *  compounding on what is GRANTED – so a declined year is forgone rather than banked, and the next
+ *  request is one step above the rate he actually has. ⚠ One request per year of service, idempotent
+ *  on `staffAskId`, so a re-hire week that already sits on a year cannot write a second one.
  *
- *  ⚠ AND THE SECOND SENTENCE TELLS THE TRUTH AT THE BOTTOM RUNG. A family already on two sessions a
- *  week has no rung to drop to, and a line offering one would be the screen lying about a choice –
- *  this round's own #5 is about exactly that failure one tab over.
- *
- *  Called from `world/phaseHerWeek.ts` immediately BEFORE `resolveMasseur`, so the week the ask
- *  lands is the week the new bill is charged and the ledger reads in the order it happened.
- *  ZERO draws on any stream. */
+ *  ⚠ NOTHING DRAWS ON ANY STREAM and no cash moves: the letter is paper, and the bill that follows is
+ *  `resolveMasseur`'s, one call later in the same week, at whatever the derived rate then is.
+ *  Called from `world/phaseHerWeek.ts` immediately BEFORE `resolveMasseur`, as it always was. */
 export function resolveMasseurRaise(world: WorldState): void {
   if (!masseurRaiseDue(world)) return
-  const rate = masseurSessionCents(world)
-  const rung = masseurRungOf(world)
-  const bottom = rung.sessions === ECONOMY.masseur.rungs[0].sessions
-  // ⚠⚠ THE FLOOR IS NAMED BY THE RUNG'S OWN LABEL AND NEVER BY A LITERAL, which is the whole lesson
-  // of the fact this sentence got wrong. «Twice a week» is what the card beside this row says, so
-  // the two can never disagree – and a wave that retunes `rungs[0]` moves the sentence with it
-  // instead of leaving a line that describes a schedule the dial no longer offers.
-  const lead = `The masseur's rate rises to ${formatCents(rate)} a session starting this week.`
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text: bottom
-      ? `${lead} She is already down to ${rung.label.toLowerCase()}, so there is no shorter schedule to choose.`
-      : `${lead} Keep the current schedule at the higher rate, or book fewer sessions.`,
+  const year = masseurYearsServed(world)
+  if (world.offers.some((o) => o.id === staffAskId('masseur', year))) return
+  // `year` already COUNTS this anniversary, so the raises granted BEFORE it are `year - 1` minus the
+  // ones the family withheld – the rate he has today is `fromCents`, and the one he asks for is one
+  // step above it. (A first draft read `year - withheld` and priced the ask one year too high.)
+  const granted = year - 1 - staffAsksWithheld(world.offers, 'masseur')
+  const fromCents = masseurRateAfter(granted)
+  const toCents = masseurRateAfter(granted + 1)
+  // An ask that would not move the rate is no ask – the identity case, unreachable on the shipped
+  // 4% and the shipped $75 opening, and guarded so a retune cannot write a letter about nothing.
+  if (toCents <= fromCents) return
+  raiseStaffAsk(world.offers, world.week, year, {
+    seat: 'masseur',
+    seasonIndex: seasonIndexOf(world.week),
+    // The total weeks on the payroll at the anniversary – a whole number of years by construction.
+    weeksServed: masseurWeeksServed(world),
+    ask: { fromCents, toCents },
   })
 }
 

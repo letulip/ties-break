@@ -46,7 +46,7 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   Evidence: the exact element named with the mechanism of «периодически», the CSS/markup fix, and
   a mounted assertion that the collapsed state renders 0px tall (goes red on revert).
 
-- [ ] **3. «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
+- [?] **3. «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
   массажист растёт сам по себе тихо ежегодно»** – Reading: specialists (physio, psychologist,
   masseur…) send progress letters but no raise requests; the masseur's fee indexes silently
   yearly – inconsistent. Wanted: raise-request letters with accept/decline, masseur included
@@ -56,13 +56,34 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   test (accept → fee moves, decline → consequence per existing law), masseur's silent index shown
   replaced by the same letter flow. New copy → DRAFT rows.
 
-- [ ] **4. «Для психолога мне кажется нужно сделать чтобы если игрок забыл выбрать направление, то
+  **B2 outcome (02.10) – `[?]`: the masseur's letter is built, the other seats' are NOT.** The
+  anniversary tick that used to raise his rate silently now writes ONE open letter (`kind: 'staff'`
+  with `terms.ask`, the sponsor letters' four-week window, Decline / Accept through the existing
+  `declineOffer` / `acceptOffer`); the fee is derived from the signed papers
+  (`staffAsksWithheld`), so Decline and a lapse leave it where it was, nothing is punished, and a
+  save with no such papers keeps every raise it already pays – no schema move. Proof:
+  `tests/round45-staff-ask.test.ts` A+B (both doors, lapse, a real `tickWeek`, the old feed row
+  dead) and `tests/component/round45-staff-ask-letter.test.ts`. **Open, his ruling or the
+  architect's:** the psychologist and the hitting partner do not ask yet (their cards quote flat
+  per-rung prices, so a raise needs the card and the snapshot to carry the scaled price first), and
+  the coach keeps his own 2026-09 ask (a notice, rate applied) – see the B2 report.
+
+- [x] **4. «Для психолога мне кажется нужно сделать чтобы если игрок забыл выбрать направление, то
   оставалось предыдущее. А в письме следующего года писать "мы не выбрали новое, поэтому работали
   по предыдущему" вроде того»** – Reading: unanswered yearly psychologist direction ⇒ carry the
   previous one; next year's letter says so (his sketch is the draft wording). Class: **build**.
   Bundle **B2** (same files as 3).
   Evidence: a test career with the choice ignored – direction persists, the next letter carries
   the carry-over line (rendered, with real data), DRAFT row for the line.
+
+  **B2 outcome (02.10) – `[x]`.** Measured first: nothing ever cleared `psychologistFocus` and the
+  seat's work never read the season stamp, so a forgotten off-season already left the previous
+  direction working and never blocked a week – what was missing was the SAYING (a stale stamp made
+  the year-end letter go quiet about the direction). The letter now carries
+  `focusCarriedFrom` (the season the carried pick was last chosen for) and prints the carry-over
+  line with that year (DRAFT R45-S9); an answered year – including re-choosing the same direction –
+  prints no such line. Proof: `tests/round45-staff-ask.test.ts` «round 45 #4» (a real `tickWeek`
+  walk, both arms) and the mounted pair in `tests/component/round45-staff-ask-letter.test.ts`.
 
 - [ ] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
   выходит, даже если в моменте, а не по итогам года, это значимый момент»** – Reading: the album
@@ -125,4 +146,13 @@ architect's session after the last agent, verdicts from files.
 
 | id | surface | EN draft | его слова/замечание | status |
 | --- | --- | --- | --- | --- |
-| (agents append rows here for items 3, 4, 5) | | | | |
+| R45-S1 | item 3 – inbox subject line of a raise request (`InboxSheet.vue`, staff arm) | `A raise request – {year}` | «повышение они так и не просят» | draft |
+| R45-S2 | item 3 – the masseur's raise letter, body (`OfferLetter.vue`) | `I have now worked a full year with her, so I am asking for a raise: my rate would go from {from} to {to} a session.` | «повышение они так и не просят, только массажист растёт сам по себе тихо ежегодно» | draft |
+| R45-S3 | item 3 – raise letter foot, while open (the buyer's letter's own sentence, reused word for word) | `{n} weeks to decide. The terms will not change.` | – | draft |
+| R45-S4 | item 3 – the two doors | `Decline` / `Accept` | – (the ledger's reading: accept/decline) | draft |
+| R45-S5 | item 3 – foot once signed | `Accepted – the rate is {to} a session.` | – | draft |
+| R45-S6 | item 3 – foot once refused | `Declined – the rate stays at {from} a session.` | – | draft |
+| R45-S7 | item 3 – foot once lapsed unanswered | `Lapsed – the rate stays at {from} a session.` | – | draft |
+| R45-S8 | item 3 – the confirm before Accept (`InboxSheet.vue` `confirmMessage`) | `Accept the raise? The rate goes from {from} to {to} a session. This cannot be undone.` | – | draft |
+| R45-S9 | item 4 – the psychologist's year-end letter, carry-over line (`OfferLetter.vue`) | `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for {year}.` | «мы не выбрали новое, поэтому работали по предыдущему» | draft |
+| (agents append rows here for item 5) | | | | |

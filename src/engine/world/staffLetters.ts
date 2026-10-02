@@ -224,13 +224,26 @@ export function settleStaffLetters(world: WorldState): void {
   // above her own nature» is exactly what it holds. The other four focuses retain nothing at all and
   // their letters therefore report the year's subject and no outcome.
   const focusIsThisSeason = world.psychologistFocus !== null && world.psychologistFocusSeason === seasonIndex
+  //
+  // ⭐⭐ ROUND 45 #4 – AN UNANSWERED YEAR CARRIES THE PREVIOUS DIRECTION, AND THE LETTER SAYS SO. The
+  // owner: «если игрок забыл выбрать направление, то оставалось предыдущее. А в письме следующего
+  // года писать "мы не выбрали новое, поэтому работали по предыдущему"». The engine half needs no
+  // write: nothing ever clears `psychologistFocus` and `psychologistWorkingRung` never reads the
+  // season stamp, so a forgotten off-season already leaves the previous direction working – and the
+  // choice is never a gate on the week (it is the «забыл» case by his own words). What was missing was
+  // the SAYING: a stale stamp used to make the letter go quiet about the direction altogether. The
+  // stamp OLDER than the season being reported is exactly «not chosen for this year», and its value
+  // is the real datum the line prints (the season the carried pick was last bought for).
+  const stamp = world.psychologistFocusSeason ?? -1
+  const focusCarriedFrom = world.psychologistFocus !== null && stamp >= 0 && stamp < seasonIndex ? stamp : undefined
   write(
     'psychologist',
     world.psychologistHired,
     seatWeeksServedIn(world, PSYCHOLOGIST_CHANGE_KEY, yearStart, wrapWeek),
-    focusIsThisSeason
+    focusIsThisSeason || focusCarriedFrom !== undefined
       ? {
           focus: world.psychologistFocus ?? undefined,
+          ...(focusCarriedFrom !== undefined ? { focusCarriedFrom } : {}),
           ...(world.psychologistFocus === 'coolhead' ? { composureBonus: world.composureBonus } : {}),
         }
       : {},

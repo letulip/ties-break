@@ -1147,6 +1147,17 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   if (sale && isOfferLive(sale, world.week) && !saleLotSettles(world, (sale.terms as SaleOfferTerms).itemId)) {
     throw new Error(offerAnswerErrorFor(world, offerId))
   }
+  // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST IS RE-VALIDATED AGAINST THE WORLD TOO (invariant 1): a live
+  // request whose seat has left the payroll since the letter was written is refused with the sentence
+  // a gone letter already gets, and NOTHING is written. Declining needs no such check – a refusal is
+  // always allowed to say no.
+  const askLetter = world.offers.find((o) => o.id === offerId && o.kind === 'staff')
+  if (askLetter && isOfferLive(askLetter, world.week)) {
+    const seat = (askLetter.terms as { seat?: string }).seat
+    const stands =
+      seat === 'masseur' ? (world.masseurHired ?? false) : seat === 'psychologist' ? (world.psychologistHired ?? false) : false
+    if (!stands) throw new Error(offerAnswerErrorFor(world, offerId))
+  }
   const signed = signOfferIn(world.offers, offerId, world.week)
   if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
   // ⭐ THE MONEY MOVES HERE, AT THE PRICE PRINTED ON THE PAPER – `t.priceCents`, never a number asked of the market now (offers-and-the-
