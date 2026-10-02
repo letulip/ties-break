@@ -121,7 +121,7 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   prints no such line. Proof: `tests/round45-staff-ask.test.ts` «round 45 #4» (a real `tickWeek`
   walk, both arms) and the mounted pair in `tests/component/round45-staff-ask-letter.test.ts`.
 
-- [?] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
+- [>] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
   выходит, даже если в моменте, а не по итогам года, это значимый момент»** – Reading: the album
   gets a dedicated page the first time she touches world #1, mid-season counts – not only the
   year-end review. Class: **build**. Bundle **B5** (album engine/composition).
@@ -227,7 +227,7 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   mutation arms measured red); frozen capture unmoved. Open: his 150M+ is beyond this sample's tail
   (max $36.7M) – the same mechanism on a richer career.
 
-- [?] **10. «Бренд жёстко приносит 13800 и ни центом больше, независимо ни от чего, даже при
+- [~] **10. «Бренд жёстко приносит 13800 и ни центом больше, независимо ни от чего, даже при
   стоимости 35 млн»** – Reading: the brand asset pays a flat weekly income regardless of its
   worth – at 35M worth it still pays 13,800. Wanted: income that scales with the asset's value,
   measured (invariant 5). Class: **measure → build**. Bundle **B4** (economy/ownables income).
@@ -293,3 +293,28 @@ architect's session after the last agent, verdicts from files.
 | R45-S13 | item 3 – their foot once lapsed unanswered (R45-S7 with `a week`) | `Lapsed – the rate stays at {from} a week.` | – | draft |
 | R45-S14 | item 3 – their confirm before Accept (`InboxSheet.vue` `confirmMessage`; R45-S8 with `a week`) | `Accept the raise? The rate goes from {from} to {to} a week. This cannot be undone.` | – | draft |
 | (agents append rows here for item 5) | | | | |
+
+## Owner answers, 02.10 (his numbering = the question batch)
+
+1. Condition – the full in/out table was handed to him in chat (drain per tier/round, masseur
+   home rungs +1/+2/+3, tour relief 3/night, return session, recovery 8 junior / 5 pro × age,
+   rest-slider +1/+2, blackout +1, shoot week −7); he thinks separately. Item 1 stays `[?]`.
+2. The strip was LIGHT-coloured; he will try to reproduce. Pull-to-refresh STAYS – he uses it to
+   recover hangs; the speculative overscroll kill is off the table. Item 2 stays `[?]`.
+3. (his Q3 = item 5) Build the first-touch latch – «а и б – да, вполне можно сделать», and
+   year-end-only misses a June touch that ends the season №3, failing his original «даже если в
+   моменте». Other tables page too. → B8 `[>]`, v91 three-part move, decisions 02.10.
+4. (his Q4 = item 10) Brand: his reframe – 20-year payback counting family + her share – blessed
+   by the architect (~5%/yr on a resellable worth is an honest boring yield; sub-cap income
+   already scales). `[~]` – nothing moves.
+5. (his Q5 = item 3b, NEW) «плавающая вилка… тренер тоже вполне может просить повышения – с
+   удачных лет по-больше, с неудачных по-меньше, как и все остальные». Repeated refusals: the
+   17.09 «no third branch» ruling stands (quoted to him; change needs his explicit word). → B9.
+6. (his Q6 = item 6b, NEW) His concern restated: note/caption/photo-label collisions remain in
+   places; «может быть пересмотреть размер самих записочек… расположение в местах пересечения
+   букв»; his per-page list is the fallback if we fail. → B10: note sizing/density pass over the
+   tight slots (font step-down on long notes, narrower C slots, hero-coverage → 0 in the sweep).
+
+- [>] **3b.** floating ask size for every seat + the coach converts to the two-door letter – B9.
+- [>] **6b.** note sizing/density so notes stop covering the hero picture in C and stop shrinking
+  photo windows so hard in B – B10.

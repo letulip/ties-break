@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 151 dated entries, newest 2026-10-01. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 152 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -32,7 +32,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | --- | ---: | --- | --- |
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
-| coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
+| coach-and-staff | 6 | [ROUND 45 ANSWERED: THE FLOATING ASK, THE COACH'S LETTER, THE №1 PAGE, THE BRAND STAYS](#02102026--round-45-answered-the-floating-ask-the-coachs-letter-the-1-page-the-brand-stays) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 16 | [THE SECONDARY MARKET BUILT: EIGHT STEPS, A DETERMINISTIC MEASUREMENT GATE, AND THE ART OF WAITING PRICED](#30092026--the-secondary-market-built-eight-steps-a-deterministic-measurement-gate-and-the-art-of-waiting-priced) | 2026-09-30 |
 | general | 29 | [THE THREE SHELLS BUILT: AN EXE, AN APP AND A 4-MEGABYTE APK, ALL FROM THE TERMINAL](#01102026--the-three-shells-built-an-exe-an-app-and-a-4-megabyte-apk-all-from-the-terminal) | 2026-10-01 |
@@ -5748,3 +5748,24 @@ Google's SDK licence – and one measured tooling defect: Bubblewrap's JDK unzip
 Node 26 (286 of 64,940 files, exit 0; whole in 20s under the repo's own Node 22), which cost his
 first two setup runs until the rig learned to re-exec itself AND its children under 22. Boundary
 gates: check, sim, e2e, component 247/247 – green first run.
+
+## 02.10.2026 – ROUND 45 ANSWERED: THE FLOATING ASK, THE COACH'S LETTER, THE №1 PAGE, THE BRAND STAYS
+
+His answers to the round-45 question batch, each a ruling. **Staff raises float with the year**:
+«мы обсуждали, что там может быть плавающая вилка. тренер тоже вполне может просить повышения –
+с удачных лет по-больше, с неудачных по-меньше, как и все остальные» – so the ask size rides the
+season's result for every seat, and the coach's round-43 automatic rise converts to the same
+two-door letter. No prior spec held the вилка – it was spoken, and this entry is where it lands.
+Repeated refusals keep the 17.09 masseur ruling («no third branch» – nobody leaves, nobody
+punishes) until he says otherwise. **The first-№1 album page is built in the moment**: «а и б – да,
+вполне можно сделать… не знаю насколько это "жизненно"» – and the year-end-only version misses a
+June touch that ends the season at №3, which is exactly the case his original sentence named
+(«даже если в моменте»), so the narrow first-touch latch ships (v91) – a deliberate, single-fact
+carve-out from 18.09's «no persisted rank history», which otherwise stands. Other tables may page
+too: «можно и на других уровнях тоже, в принципе, не вижу ничего противоречащего». **The brand
+stays as designed**: his reframe – «у нас сейчас "срок окупаемости" бренда 20 лет… это нормальная
+сумма?» – and the architect's verdict is yes: ~5%/year on a worth the secondary market returns at
+sale is an honest boring yield, P/E 20 is where real steady businesses trade, and the income below
+the cap already scales. Nothing moves. **Pull-to-refresh stays**: he uses it to recover hangs
+(«мне помогало иногда, когда что-то подвисало»), so the speculative overscroll kill is off the
+table; the light 1px strip waits for his reproduction.
