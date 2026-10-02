@@ -42,6 +42,13 @@
 // silent on the second-order effects (a fresher kid plays a little better; the rivals' shared ladder moves
 // their fatigue and, with it, every frozen career – the 19.09 pass measured 38-44 of ~94 keys for a ladder
 // change and 0 for the masseur dial). MEASUREMENT ONLY: no engine number is written from here.
+//
+// ⚠ 02.10 – THE THREE TARIFFS ARE ABSOLUTE SCENARIOS (`T0-pre`, `T1-first`, `T2-second`): the table as it stood until the
+// owner's «J тоже 1-2-3, а W по стадиям» ruling, his FIRST shape (measured, not shipped) and his SECOND shape (SHIPPED). They are
+// whole 16-row tables rather than deltas on purpose – a delta means something different once the baseline has moved, which is what
+// happened to `B-plateau` the day the second shape shipped – and `printAllRungs` prices EVERY rung draw-free under all three, so the
+// junior and domestic rows are on the page too. Once the ruling is shipped `baseline` and `T2-second` are the SAME row: that is the
+// check that the constants were typed once and are read once. A–D are B1's options and are priced on the tariff of the day.
 
 import { writeFileSync } from 'node:fs'
 import { createWorld, inTrack, KID_ID, seasonIndexOf } from '../src/engine/world'
@@ -321,8 +328,41 @@ const patchRelief = (value: number): (() => void) => {
   }
 }
 
+/** The whole 16-row table, as it stood until 02.10 (ECONOMY.condition.tierMatchFatigue before the owner's ruling). */
+const TARIFF_PRE_0210: Record<TierId, number> = {
+  local: 1, regional: 2, national: 3,
+  j30: 3, j60: 4, j300: 5,
+  w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
+  wta250: 4, wta500: 4, wta1000: 5, slam: 5,
+}
+/** HIS FIRST SHAPE (02.10), measured beside the shipped one and NOT shipped: juniors 1/2/3, W15-50 1, W75-125 2, 250/500 3, 1000/Slam 4. */
+const TARIFF_FIRST: Record<TierId, number> = {
+  local: 1, regional: 2, national: 3,
+  j30: 1, j60: 2, j300: 3,
+  w15: 1, w35: 1, w50: 1, w75: 2, w100: 2, wta125: 2,
+  wta250: 3, wta500: 3, wta1000: 4, slam: 4,
+}
+/** HIS SECOND SHAPE (02.10), SHIPPED: juniors 1/2/3, and the W family by STAGE – 1 for 15-75, 2 for 100-250, 3 for 500+. */
+const TARIFF_SECOND: Record<TierId, number> = {
+  local: 1, regional: 2, national: 3,
+  j30: 1, j60: 2, j300: 3,
+  w15: 1, w35: 1, w50: 1, w75: 1, w100: 2, wta125: 2,
+  wta250: 2, wta500: 3, wta1000: 3, slam: 3,
+}
+const patchTariff = (rows: Record<TierId, number>): (() => void) => {
+  const t = ECONOMY.condition.tierMatchFatigue as Record<TierId, number>
+  const old = { ...t }
+  for (const k of Object.keys(rows) as TierId[]) t[k] = rows[k]
+  return () => {
+    for (const k of Object.keys(old) as TierId[]) t[k] = old[k]
+  }
+}
+
 const SCENARIOS: { id: string; what: string; patch: Patch }[] = [
   { id: 'baseline', what: 'as shipped', patch: () => () => {} },
+  { id: 'T0-pre', what: 'THE TABLE AS IT STOOD UNTIL 02.10: J 3/4/5 · W15-50 2 · W75-125 3 · 250/500 4 · 1000/Slam 5', patch: () => patchTariff(TARIFF_PRE_0210) },
+  { id: 'T1-first', what: 'HIS FIRST SHAPE, NOT shipped: J 1/2/3 · W15-50 1 · W75-125 2 · 250/500 3 · 1000/Slam 4', patch: () => patchTariff(TARIFF_FIRST) },
+  { id: 'T2-second', what: 'HIS SECOND SHAPE, SHIPPED 02.10: J 1/2/3 · W15-75 1 · W100-250 2 · 500/1000/Slam 3', patch: () => patchTariff(TARIFF_SECOND) },
   {
     id: 'A-openers',
     what: 'runFatigueLadderWta [0,1,1,1,1] -> [-1,0,1,1,1]: the 32-draws open on the same 5-6-7 ramp the 1000 and the Slam have',
@@ -383,6 +423,34 @@ function printScenarios(): void {
   }
 }
 
+/** Every rung, draw-free: the NET toll of an all-straight-sets run that ended after k matches, under the three tariffs. */
+function printAllRungs(): void {
+  const tariffs: { id: string; table: Record<TierId, number> }[] = [
+    { id: 'pre-02.10', table: TARIFF_PRE_0210 },
+    { id: 'first', table: TARIFF_FIRST },
+    { id: 'SHIPPED', table: TARIFF_SECOND },
+  ]
+  console.log('\n  EVERY RUNG, DRAW-FREE – the NET toll of an all-straight-sets run that ended after k matches (masseur travelling), as  pre-02.10 / first / SHIPPED')
+  console.log('  (exact for the tariff: no dice, priced through matchDrain + runFatigueExtra + masseurTourRelief; domestic rows are here so a reader sees they did not move)')
+  console.log('  tier      draw  surcharge     k=1       k=2       k=3       k=4       k=5       k=6       k=7')
+  for (const tier of Object.keys(TIERS) as TierId[]) {
+    const kMax = Math.min(7, Math.ceil(rounds(tier)))
+    const sur: number[] = []
+    const cells: string[][] = []
+    for (const t of tariffs) {
+      const undo = patchTariff(t.table)
+      sur.push(surcharge(tier))
+      const row: string[] = []
+      for (let k = 1; k <= kMax; k++) row.push(String(synth(tier, k, STRAIGHT).net))
+      cells.push(row)
+      undo()
+    }
+    const cols: string[] = []
+    for (let k = 0; k < 7; k++) cols.push(pad(k < kMax ? cells.map((c) => c[k]).join('/') : '', 8))
+    console.log(`  ${TIER_SHORT[tier].padEnd(8)}  ${pad(TIERS[tier].drawSize, 4)}  ${pad(sur.join('/'), 9)}  ${cols.join(' ')}`)
+  }
+}
+
 // ---- output ----------------------------------------------------------------------------------------------------------------
 
 console.log(
@@ -399,6 +467,7 @@ printRounds()
 printRuns()
 printOwner()
 printScenarios()
+printAllRungs()
 
 if (CSV) {
   writeFileSync(CSV, csvRows().join('\n') + '\n')

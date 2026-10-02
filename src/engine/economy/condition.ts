@@ -54,9 +54,16 @@ export const condition = {
   // ⚠ condition.matchFatigue: AND THE FRIENDLY NO LONGER READS LOCAL'S SURCHARGE AT ALL (W2-WINDOW)
   // → docs/notes/economy/condition.md#conditionmatchfatigue
   matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
-  // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
-  // (ladder-up): international travel, time-zone changes and a fortnight away from home make
-  // them the most draining weeks she plays.
+  // Tier surcharge PER MATCH – what the WEEK AWAY costs, not the prestige. SINCE 02.10 the whole table
+  // speaks one three-step language, 1 / 2 / 3, and a rung's step is its STAGE: local, j30 and the W rungs
+  // up to W75 take 1; regional, j60 and W100 to WTA 250 take 2; national, j300 and WTA 500 up take 3.
+  // (Until 02.10 the J levels sat ABOVE national at 3/4/5 and the W family between 2 and 5 – the ⚠ lines
+  // below are the history of those tables and stay as written.)
+  //
+  // ⚠⚠⚠⚠ condition.tierMatchFatigue: 02.10 – THE TABLE IS HIS LEVER, AND IT IS NOW 1-2-3 BY STAGE (round 45 #1)
+  // owner (condition.tierMatchFatigue), 02.10: «может быть сделать J тоже 1-2-3, а W 1-2-3-4 или тоже 1 для 15-75, 2 для 100-250, а 3 для 500+? и тогда мы как раз можем довольно хорошо отбалансировать эту историю, как мне кажется. А остальное пока оставить как есть и попробовать как будет.»
+  // ⚠ condition.tierMatchFatigue: «THE REST STAYS AS IT IS» IS PART OF THE RULING – the ladders, the masseur's 3 a night and matchFatigue (2/3/+1) did not move
+  // ⚠ condition.tierMatchFatigue: IT IS A SHARED-WITH-RIVALS TARIFF, so every rival's ledger and every frozen career moved with it
   //
   // ⚠ condition.tierMatchFatigue: THE W FAMILY IS REPRICED ONE STEP OVER THE J FAMILY
   // ⚠ condition.tierMatchFatigue: PRICED FOR TODAY'S SOFT FIELDS, ON PURPOSE, AND THAT IS A DATED DECISION
@@ -71,15 +78,17 @@ export const condition = {
   // → docs/notes/economy/condition.md#conditiontiermatchfatigue
   tierMatchFatigue: {
     local: 1, regional: 2, national: 3,
-    j30: 3, j60: 4, j300: 5,
-    w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
-    // W3-ACT2. The family's own step continues rather than a new scale being invented: the top
-    // half of the W family sits at 3, so the 250/500 pair takes 4 and the 1000/Slam pair takes 5 -
-    // which lands the biggest week in the game on exactly J300's number, the most expensive match
-    // anywhere else on the ladder. What it prices is the WEEK, not the prestige: a major is a
-    // fortnight's trip across a time zone against the strongest field that exists, and every match
-    // in it is played after one of those.
-    wta250: 4, wta500: 4, wta1000: 5, slam: 5,
+    // 02.10: the J levels on the same 1-2-3 as the domestic ladder, the W family by STAGE – 15 to 75 one,
+    // 100 to 250 two, 500 and up three. (HIS FIRST SHAPE, measured beside this one and NOT shipped:
+    // W15-50 1, W75-125 2, 250/500 3, 1000/Slam 4, juniors 1/2/3 – tools/condition-drain-probe.ts, T1-first.)
+    j30: 1, j60: 2, j300: 3,
+    w15: 1, w35: 1, w50: 1, w75: 1, w100: 2, wta125: 2,
+    // W3-ACT2 priced these four rungs 4/4/5/5 – "the family's own step continues" – which landed the biggest
+    // week in the game on exactly J300's number. 02.10 re-priced them with the rest of the table: what it
+    // prices is still the WEEK, not the prestige (a major is a fortnight's trip across a time zone against the
+    // strongest field that exists), but the scale now stops at 3 – the 250 sits with the 100 and the 125 at 2,
+    // and the 500, the 1000 and the Slam share the top step with National and J300.
+    wta250: 2, wta500: 3, wta1000: 3, slam: 3,
   } as Record<TierId, number>,
   // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
   // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own

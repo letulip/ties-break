@@ -503,7 +503,10 @@ const REF = {
 // byte and are asserted BEFORE this constant is read. #34 adds NO draw to any stream - it changes
 // what a drawn point is worth, never how many are drawn - which is why the hash could not move
 // and did not, and why planner.test.ts's input-independence halves still pass unchanged.
-  kidRank: 90,
+  // ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): kidRank 90 -> 89 – a VALUE moving and NO DRAW. The capture itself – count 41550, hash e6b0c709, head and tail – is asserted BEFORE this constant is read and reproduces byte for byte,
+  // and tools/frozen-key-diff.ts shows rngMain identical on all three canonical careers. tierMatchFatigue is shared with the rivals, so a cheaper tariff gives a fresher kid AND a fresher
+  // cohort, and the 52-week year ends one place higher; nothing was added to or removed from any stream. (planner.test.ts and injuries.test.ts carry the same companion value.)
+  kidRank: 89,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

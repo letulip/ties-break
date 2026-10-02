@@ -15,7 +15,7 @@ law), each owns only its own lines.
 ⚠ Invariant 4: every NEW player-facing string an item needs goes in the DRAFT table at the bottom,
 never straight into the owner's voice. His sketches (item 4) are the draft, still his to bless.
 
-- [>] **1. «2 матча Шлема снимают 8% кондиции, а 2 матча 250 - 10%. У нас всё ещё перерасход
+- [x] **1. «2 матча Шлема снимают 8% кондиции, а 2 матча 250 - 10%. У нас всё ещё перерасход
   кондиции присутствует. 3 игры на 1000 снимают 15%. 24% за 5 игр 500 и 26% за 6 игр 1000. Давай
   проверим что там вообще, мы хотели немного подкорректировать начальные матчи по-моему.»**
   – Reading: per-match condition drain looks tier-blind (≈4–5%/match everywhere: Slam 4.0, 250 5.0,
@@ -38,6 +38,10 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   masseur relief 2 → 3 and its concave-tail half is HELD for his ruling (the-season-equation §10f; it
   does not touch openers); a ruling to soften the 250/500 openers is ABSENT. Options A–D with
   predicted tables are in the B1 report – his pick, one sentence.
+  **B11 outcome (02.10) – `[x]`: BUILT, his second shape («J тоже 1-2-3, а W … 1 для 15-75, 2 для 100-250, а 3 для 500+»).**
+  `tierMatchFatigue`: J30/J60/J300 3/4/5 → 1/2/3 · W15–W75 2/2/2/3 → 1 · W100/WTA125/WTA250 3/3/4 → 2 · WTA500/1000/Slam 4/5/5 → 3; the rest untouched. Net per visit (140k runs,
+  masseur travelling): WTA250 11.2 → 7.2 · WTA500 11.0 → 9.0 · WTA1000 9.4 → 5.5 · Slam 9.5 → 5.6; his first shape (not shipped) 9.2 / 9.0 / 7.4 / 7.5. Holidays a season 7.2 → 4.8 (12 careers x 2 presets,
+  control cell). Predicted == measured to the digit; frozen keys 45/39/38 of ~102, 128/128 hash literals re-pinned, rngMain and the 41550-draw capture unmoved. Spec §11 of the-season-equation.
 
 - [?] **2. «Сверху интерфейса периодически появляется горизонтальная полоса в 1 пиксель на всю
   ширину экрана»** – Reading: an intermittent 1px full-width line at the very top of the UI –

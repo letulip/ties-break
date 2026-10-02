@@ -24,8 +24,9 @@ export function clamp(x: number, lo: number, hi: number): number {
  *  plus the tier's per-match surcharge (BASE RAISED 1 → 2, owner 26.07):
  *    straight sets, no tiebreak → 2;  a 3-setter OR a tiebreak in a 2-setter → 3;
  *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 4;
- *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
- *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 6. Pure state, zero
+ *    + tierMatchFatigue[tier] – three steps, 1 / 2 / 3, by STAGE (owner, 02.10): local, j30 and W15-W75 take 1;
+ *      regional, j60 and W100-WTA 250 take 2; national, j300 and WTA 500 up take 3.
+ *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest match anywhere = 7. Pure state, zero
  *  draws; a record without a score (defensive) counts as straight sets – which is also the
  *  branch every RIVAL match takes, since AI-vs-AI results carry no scoreline (rival-life). */
 export function matchDrain(tier: TierId, score: string | undefined): number {
@@ -81,6 +82,11 @@ export function runFatigueExtra(matchIndex: number, tier: TierId): number {
  *  2+3, 2+4, 2+5, 2+5 … So the ladder for a deep rung is `[-2, -1, 0]`, and the ZEROES ARE THE
  *  POINT – the plateau is the tier's own surcharge, untouched, so this cannot drift away from
  *  `tierMatchFatigue` if that is ever retuned.
+ *
+ *  ⚠ 02.10: THE SURCHARGE THE CURVE RAMPS TO IS 3 NOW, AND THE ROWS ABOVE ARE HISTORY, NOT A TARGET. They were
+ *  priced at a surcharge of 5; the owner's 02.10 ruling put the 1000 and the Slam on the table's top step, 3
+ *  (round 45 #1), and because the ladder is an OFFSET it followed without being touched: a Slam straight-sets
+ *  match now reads 3, 4, 5, 5, 5, 5, 5. «The rest stays as it is» was the ruling – the ladder was not re-cut.
  *
  *  ⚠ A NEGATIVE "EXTRA" IS A DISCOUNT AND IT IS DELIBERATE. The flat surcharge prices *"international
  *  travel, time zones and a fortnight from home"*, and it was calibrated when every draw in the game
