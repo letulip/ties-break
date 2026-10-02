@@ -42,6 +42,8 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   `tierMatchFatigue`: J30/J60/J300 3/4/5 → 1/2/3 · W15–W75 2/2/2/3 → 1 · W100/WTA125/WTA250 3/3/4 → 2 · WTA500/1000/Slam 4/5/5 → 3; the rest untouched. Net per visit (140k runs,
   masseur travelling): WTA250 11.2 → 7.2 · WTA500 11.0 → 9.0 · WTA1000 9.4 → 5.5 · Slam 9.5 → 5.6; his first shape (not shipped) 9.2 / 9.0 / 7.4 / 7.5. Holidays a season 7.2 → 4.8 (12 careers x 2 presets,
   control cell). Predicted == measured to the digit; frozen keys 45/39/38 of ~102, 128/128 hash literals re-pinned, rngMain and the 41550-draw capture unmoved. Spec §11 of the-season-equation.
+  B13 (02.10): 7 walked-career fixtures re-aimed to the new trajectories, claims unchanged (round23-kid-share, round45-first-number-one D1, season-mirror, wave10-handover,
+  wave10-walker-retirement, ladder-floor, wave5-elite-gate); `econ-reach` NOT re-aimed – its 14→18 band tripwire fired (19 of 30 against a ceiling of 18), left red for the owner, note in the file.
 
 - [?] **2. «Сверху интерфейса периодически появляется горизонтальная полоса в 1 пиксель на всю
   ширину экрана»** – Reading: an intermittent 1px full-width line at the very top of the UI –

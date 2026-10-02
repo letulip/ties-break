@@ -320,6 +320,16 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // points-rich and rank-poor, exactly the revival condition the removal note above names. One
     // career on one preset is a specimen, not a case; it is reported to the owner rather than
     // acted on here.
+    // ⚠⚠ 02.10 – NOT RE-AIMED, AND RED ON PURPOSE: THIS IS THIS FILE'S OWN TRIPWIRE FIRING, NOT A DEAD SEED. B11 (the tariff: a junior match 1/2/3,
+    // W15–75 1, W100–250 2, 500+ 3; holidays 7.2 -> 4.8) moved the DISTRIBUTION on this cell rather than an instance: 14→18 on middle·self-coached
+    // measures 19 of 30 as charged (6 at the 22.08 re-pin) and 19 of 30 with a wallet that cannot empty – SOLVENCY 0, TENNIS 11 – so it is still
+    // the cell the 10.08 rule picked and it still splits, one over the pinned band's ceiling of 18. By this file's own rule that is «the cell
+    // stays, the band moves»: a tuning re-pin, and one that reverses the owner's 22.08 ruling above (the self-coached path being harder is
+    // INTENDED) – it is 19 of 30 now, not 6. A cleanup that hunts fixtures may not relax an assertion, and re-pointing the cell would hide that
+    // signal, so the lines below are left exactly as they were. For whoever decides, the same sweep (`tools/reach-sweep.ts --float=100000000`,
+    // 02.10), careers of 30, as charged / with float / SOLVENCY: 8k working self 15/17/2 · working budget 15/27/12 · working middle 2/25/23 ·
+    // 25k middle self 19/19/0 · middle budget 25/27/2 · middle middle 16/27/11 · middle high 3/25/22 · 120k wealthy high 28/28/0 · wealthy elite
+    // 29/29/0. The only other cell inside [3, 18] with SOLVENCY under 3 is working·self-coached (15/17/2), which is also this file's `working`.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleSelf, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)

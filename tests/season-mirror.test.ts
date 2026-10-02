@@ -235,7 +235,18 @@ describe('the season mirror – captured at entry, never reconstructed', () => {
     // out loud: the seeds are not decaying one wave at a time, they are moving around a mechanism
     // that is still there. ⭐ AND THE EVERY-SEED-ZERO CASE THE PARAGRAPH ABOVE SAYS TO READ AS A
     // DEFECT DID NOT HAPPEN.
-    const { world, committed } = walk(102, 'mirror-real')
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED, 'mirror-real' -> 'mirror-c', BY THIS BLOCK'S OWN
+    // PROCEDURE FOR THE THIRD TIME. B11 re-priced what a match costs her (a junior 1/2/3, a W15–75 week 1; holidays 7.2 -> 4.8), so each of
+    // these careers again wins and loses different draws and enters different rungs, and 'mirror-real' fell to ZERO entries the ladder
+    // could not pay (0/91). Re-scanned by REPLICATING THIS TEST EXACTLY – `walk(102, seed)`, `entryCouldNotMove` against the summary's
+    // `trackOf` read once after the walk – on the historical eight plus twenty-four more (32 seeds, 22 alive):
+    //
+    //     ALIVE   **mirror-c 24/106** · mirror-x 17/95 · mirror-y 13/99 · mirror-real-2 8/102 · golden-v45 7/103 · mirror-d 6/104
+    //     ZERO    mirror-real 0/91 · mirror-b 0/103
+    //
+    // 'mirror-c' is taken by the block's own rule – the STRONGEST of the eight on this tree – and it is a seed this file carried before
+    // round 42 moved it away: the same observation as last time, that the seeds move around a mechanism which is still there.
+    const { world, committed } = walk(102, 'mirror-c')
     expect(committed.length).toBeGreaterThan(20)
     const summary = world.lastSeasonSummary
     expect(summary?.entryMirror).toBeDefined()

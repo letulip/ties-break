@@ -306,6 +306,21 @@ describe('B · the page – once per latched table, never otherwise', () => {
     world.trophiesByTier[top] = { titles: [week], finals: [] }
     expect(pages(world), 'the biggest trophy there is outranks even the first number one').toEqual(['top-tier-title'])
   })
+
+  it('B10 · ⭐ …and the walked set\'s own property reads that week as ABSORBED, not as a missing page – the coincidence D1 can no longer find on a walk', () => {
+    // ⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED. D1's «the walk met the same-week coincidence» arm lived on
+    // one walked career (first #1 and the biggest title in week 294) that the retuned trajectories no longer produce – 0 of 36 walked careers
+    // have it. The claim is about the priority rule, which a posed week tests honestly: the same latch-and-title week as B9, read through
+    // D1's own property so that its «absorbed» accounting is exercised and not just the page list.
+    const { world, week } = colliding()
+    const top = TIER_LADDER[TIER_LADDER.length - 1]
+    world.week = week
+    world.bestFinishByTier[top] = 0
+    world.trophiesByTier[top] = { titles: [week], finals: [] }
+    const read = expectBookNamesItsLatches(world)
+    expect(read.absorbed, 'the one latch shares its week with the top-tier title – absorbed, and the property says so').toBe(1)
+    expect(read.live, 'and no #1 page is expected for it').toBe(0)
+  })
 })
 
 describe('C · the migration – a latch only where the cached rank is 1 as the save is written', () => {
@@ -339,6 +354,28 @@ describe('C · the migration – a latch only where the cached rank is 1 as the 
     expect(out.firstNo1).toEqual({ wta: 5 })
   })
 })
+
+/** THE PROPERTY D1 READS OFF EVERY CAREER IT IS HANDED – and B10 reads off a posed one, which is why it lives at module scope. The book names
+ *  exactly the pages its latches name: one #1 page per latched table that no bigger moment shares a week with, none for an unlatched one, never
+ *  the same page twice, and a latch week that holds the top-tier title names THAT page instead (the one-frame-per-week rule, priority 100 over
+ *  this page's 99). Returns how many latches stayed live and how many were absorbed by a same-week top-tier title. */
+function expectBookNamesItsLatches(world: WorldState): { live: number; absorbed: number } {
+  const top = TIER_LADDER[TIER_LADDER.length - 1]
+  const printed = pages(world)
+  const printedNo1 = printed.filter((p) => NO1.includes(p))
+  const slamWeeks = world.bestFinishByTier[top] === 0 ? (world.trophiesByTier[top]?.titles ?? []) : []
+  const latches = Object.entries(world.firstNo1 ?? {}) as ['wta' | 'junior', number][]
+  const live = latches.filter(([, week]) => !slamWeeks.includes(week))
+  for (const [, week] of latches.filter(([, w]) => slamWeeks.includes(w))) {
+    expect(printed, `week ${week}: the biggest title and the first #1 fell in one week, and the title names it`).toContain('top-tier-title')
+  }
+  expect(printedNo1.length, 'one page per latched table that no bigger moment shares a week with, and none for an unlatched one').toBe(live.length)
+  expect(new Set(printedNo1).size, 'and never the same page twice').toBe(printedNo1.length)
+  for (const [table] of live) expect(printedNo1).toContain(table === 'wta' ? 'first-number-one' : 'first-number-one-junior')
+  if (world.firstNo1?.wta !== undefined) expect(world.firstNo1.wta, 'the latch names a week the career has lived through').toBeLessThanOrEqual(world.week)
+  expect(JSON.stringify(assembleAlbum(world)), 'byte-stable on a real career too').toBe(JSON.stringify(assembleAlbum(world)))
+  return { live: live.length, absorbed: latches.length - live.length }
+}
 
 describe('D · as played – careers walked through the public commands, nothing posed', () => {
   /** `tools/album-spread-probe.ts`' drain: a career stalls at every pending decision. */
@@ -374,28 +411,16 @@ describe('D · as played – careers walked through the public commands, nothing
     // higher priority, the top-tier title (100 over this page's 99), and the first-#1 page is absorbed into it. That is the rule working as
     // written (B9 pins it on a posed week) and not a missing page – but it is the owner's to confirm, and the property below carries it
     // explicitly so it cannot be mistaken for one: a latch week that holds a top-tier title expects THAT page and no #1 page.
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED – AND THE COINCIDENCE ARM MOVED TO A POSED WORLD (B10), WHICH
+    // IS WHAT A HUNT THAT FOUND NOTHING LICENSES. B11 (a match costs a junior 1/2/3, a W15–75 week 1, W100–250 2, 500+ 3) re-timed every walk: the
+    // first career below still touches world #1 in week 294, but it no longer WINS that week's final – it is a finalist (best finish 1), so the
+    // title that used to share the week is gone. Hunted for a walk that has it again: presets 0–8 x indices 3–6, 340 weeks, 36 careers –
+    // 2 latch a world #1 at all (weeks 294 and 299), 2 more win a top-tier title with no latch (weeks 210 and 234), and NONE has the two in
+    // one week. So the coincidence is no longer asserted off a walk: the priority rule it reports is B9's rule, and B10 runs THIS property
+    // (`expectBookNamesItsLatches`, the same code as below) over a posed week that holds both. The walked set keeps every other claim.
     const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(4, 3, 340)]
-    const top = TIER_LADDER[TIER_LADDER.length - 1]
     let expectedTotal = 0
-    let absorbed = 0
-    for (const world of careers) {
-      const printed = pages(world)
-      const printedNo1 = printed.filter((p) => NO1.includes(p))
-      const slamWeeks = world.bestFinishByTier[top] === 0 ? (world.trophiesByTier[top]?.titles ?? []) : []
-      const latches = Object.entries(world.firstNo1 ?? {}) as ['wta' | 'junior', number][]
-      const live = latches.filter(([, week]) => !slamWeeks.includes(week))
-      absorbed += latches.length - live.length
-      for (const [, week] of latches.filter(([, w]) => slamWeeks.includes(w))) {
-        expect(printed, `week ${week}: the biggest title and the first #1 fell in one week, and the title names it`).toContain('top-tier-title')
-      }
-      expect(printedNo1.length, 'one page per latched table that no bigger moment shares a week with, and none for an unlatched one').toBe(live.length)
-      expect(new Set(printedNo1).size, 'and never the same page twice').toBe(printedNo1.length)
-      for (const [table] of live) expect(printedNo1).toContain(table === 'wta' ? 'first-number-one' : 'first-number-one-junior')
-      if (world.firstNo1?.wta !== undefined) expect(world.firstNo1.wta, 'the latch names a week the career has lived through').toBeLessThanOrEqual(world.week)
-      expect(JSON.stringify(assembleAlbum(world)), 'byte-stable on a real career too').toBe(JSON.stringify(assembleAlbum(world)))
-      expectedTotal += live.length
-    }
+    for (const world of careers) expectedTotal += expectBookNamesItsLatches(world).live
     expect(expectedTotal, 'the walk produced at least one #1 page – otherwise this case proves nothing').toBeGreaterThan(0)
-    expect(absorbed, 'and the walk met the same-week coincidence at least once, which is what the paragraph above reports').toBeGreaterThan(0)
   }, 60_000)
 })

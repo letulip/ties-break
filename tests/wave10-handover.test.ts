@@ -242,7 +242,14 @@ describe('wave 10 T1 B – the band a career really hands over', () => {
   })
 
   it('⭐⭐⭐ a career that banked millions hands over the WEALTHY corridor', () => {
-    const { world, weeks } = walkToEnding(0, 1, 0)
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED (0,1,0) -> (1,1,2), CLAIM UNCHANGED. B11 made a match cheaper in condition
+    // and the injury share fell 49% -> 42%, so the star this cell lives (preset 0, player policy, seed 0: $15.0M banked, 63 pro titles) no longer
+    // breaks inside the belt – she walks all 1,600 weeks with no ending, and «the walk has to reach an ending» is the red line. The belt stays a
+    // belt: the cell moves, the horizon does not. Hunted by walking the PLAIN bench walker to an ending or to 1,600 weeks over presets 0–8 x
+    // both policies x seeds 0–3 (72 careers): 33 end inside the belt (injury or bankruptcy – that walker never answers the retirement offer),
+    // 7 of those carry a wealthy reserve, four bank MILLIONS and all four are the player policy. (1,1,2) is the earliest of the four: an
+    // injury at week 1,056, $12.3M, best rank 8, 30 pro titles – 544 weeks of margin, where the other three end at week 1,545 of 1,600.
+    const { world, weeks } = walkToEnding(1, 1, 2)
     expect(world.ending, `the walk has to reach an ending (${weeks} weeks)`).not.toBe(null)
     expect(world.kidFundsCents, 'a star with a cabinet retires wealthy').toBeGreaterThanOrEqual(
       ECONOMY.startingFundsCents.wealthy,

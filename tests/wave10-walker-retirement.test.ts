@@ -39,7 +39,14 @@ describe('wave 10 – the walker takes the door the engine was holding open', ()
     // p5/i1 under the managed policy is the probe's stuck career: junior rungs only, $0, no ending
     // in 1600 weeks. With the offer answered she gets the same door as everyone – age asks from 29,
     // «one more year» while it is a question, the final offer taken.
-    const { world, weeks } = walk(5, 1, ANSWERING)
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED p5/i1 -> p1/i1, CLAIM UNCHANGED. B11 (cheaper matches) took p5/i1 OUT of the
+    // junior rungs: answered, she still ends naturally (week 1506, count 13) but as a professional – best rank 17, 43 pro titles, $9.9M – so
+    // «a junior rank is not a WTA rank» had nothing to be true of. The eternal junior is a shape and not a seed, and it was hunted: 9 presets x
+    // seeds 0–3 under the answering walker (36 careers), 33 end naturally, and exactly 1 is a junior-only career whose natural ending falls
+    // inside the cap, past the first ask, with no pro claim and a working home – p1/i1 (8k working, budget coach): $0 banked, 23 junior titles,
+    // no WTA rank, the ending at week 1,558 of 1,600 after 17 «one more year» answers. The plain walker still never closes her (1,600 weeks, no
+    // ending – the finding's own shape), which §B pins on the same cell.
+    const { world, weeks } = walk(1, 1, ANSWERING)
     expect(world.ending, `she has an ending now (${weeks} weeks)`).not.toBe(null)
     expect(weeks, 'inside the cap the probe could not close her under').toBeLessThan(CAP)
     expect(world.ending!.type, 'the natural machinery, not a crash').toBe('natural')
@@ -70,7 +77,9 @@ describe('wave 10 – the walker takes the door the engine was holding open', ()
     // policy the same cell reaches offer age with the offer PENDING and no ending – which is
     // exactly the pre-fix behaviour every published bench number was measured under. 900 weeks is
     // age ~30: past `askFromAgeYears`, one ask at least, nowhere near the cap.
-    const { world } = walk(5, 1, POLICIES[1], 900)
+    // ⚠ 02.10 – RE-AIMED WITH THE CELL ABOVE (p5/i1 -> p1/i1), CLAIM UNCHANGED: «the same cell» is the finding's cell, and on p1/i1 the plain walker
+    // reaches 900 weeks with no ending and the offer pending, exactly as it did on p5/i1 (measured, and every one of the 36 of 36 hunted cells holds it).
+    const { world } = walk(1, 1, POLICIES[1], 900)
     expect(world.ending, 'no ending – the belt is doing the ending\'s job').toBe(null)
     expect(world.retirementOffer, 'the offer sits unanswered, as it always has on this arm').not.toBe(null)
   })
