@@ -30,8 +30,10 @@
 //     (`world/masseur.ts`) – the silent era's raises are already being paid and stay paid;
 //   · the two weekly seats' baseline is the rung's catalogue price – they never rose, so a save with no
 //     papers pays the opening price and goes on paying it.
-// A refused or lapsed paper is not in the chain, so Decline leaves the fee and the NEXT request is one
-// step above what the seat is paid now (a forgone year is not banked).
+// A refused or lapsed paper is not in the chain, so Decline leaves the fee where it is – ⚠ AND SINCE B17
+// (02.10, fourth batch: «можно принцип сделать похожим, но размер немного изменить для supportов») THE NEXT
+// REQUEST CARRIES THE REFUSED YEAR in its figure, at the seat's own smaller scale: see «THE BANK» below.
+// (Before B17 a refused year was FORGONE – the next ask was one step above what the seat is paid now.)
 //
 // ⚠⚠ NOTHING IS PERSISTED AND NOTHING DRAWS. The fee is derived from the signed papers, the verdict reads
 // banked season rows, and the writer reads state only – no stream, no `Math.random`, no wall clock. No
@@ -102,29 +104,54 @@ function rankMoved(prev: SeasonRow | undefined, last: SeasonRow): -1 | 0 | 1 {
  *            slipped in and won a title in.
  *  ⚠ NO THRESHOLD IS INVENTED: rank movement is the sign of the change, so there is no «how much better».
  *
- *  Which year: the LATEST row banked (the wrap-up writes it on the first off-season week), against the row
- *  one season before. Pure, zero draws. */
-export function staffYearVerdict(world: WorldState): StaffYearVerdict {
+ *  Which year: the one ASKED FOR (`staffYearVerdictAt`) – its banked row against the row one season before it,
+ *  its titles counted off `trophiesByTier` – and `staffYearVerdict` is the LATEST banked season, the special
+ *  case this function used to be alone (the wrap-up writes a row on the first off-season week). ⭐ B17
+ *  (02.10, fourth batch) is why the year is an ARGUMENT: a request that carries its refused years in its figure
+ *  has to read each of THEIR years, not only the latest. ⚠ A season with no banked row (not finished yet, or
+ *  older than the history's cap) reads FLAT: nothing can be said about a year nobody counted.
+ *  Pure, zero draws. */
+export function staffYearVerdictAt(world: WorldState, seasonIndex: number): StaffYearVerdict {
   const rows = world.seasonHistory ?? []
-  let last: SeasonRow | null = null
-  for (const h of rows) if (last === null || h.seasonIndex > last.seasonIndex) last = h
-  if (last === null) return 'flat'
-  const prev = rows.find((h) => h.seasonIndex === last.seasonIndex - 1)
-  const yearStart = last.seasonIndex * WEEKS_PER_YEAR
+  const row = rows.find((h) => h.seasonIndex === seasonIndex)
+  if (row === undefined) return 'flat'
+  const prev = rows.find((h) => h.seasonIndex === seasonIndex - 1)
+  const yearStart = seasonIndex * WEEKS_PER_YEAR
   const titles = titlesInSeason(world, yearStart, yearStart + SEASON_PLAYED_WEEKS)
-  const moved = rankMoved(prev, last)
+  const moved = rankMoved(prev, row)
   if (moved > 0 || (titles > 0 && moved >= 0)) return 'good'
   if (moved < 0 && titles === 0) return 'bad'
   return 'flat'
 }
 
-/** ⭐⭐⭐ THE STEP A REQUEST ASKS FOR THIS YEAR – the verdict mapped to a fraction. One place, so the
- *  masseur, the psychologist and the hitting partner can never read the year three ways. Pure, zero draws. */
-export function staffRaiseStep(seat: StaffRaiseSeat, world: WorldState): number {
-  const verdict = staffYearVerdict(world)
+/** THE LATEST SEASON THE WRAP-UP HAS BANKED – -1 for a career with no banked row at all (every verdict then
+ *  reads FLAT). On an anniversary this is the season the request is about. Pure. */
+export function latestBankedSeason(world: WorldState): number {
+  let latest = -1
+  for (const h of world.seasonHistory ?? []) if (h.seasonIndex > latest) latest = h.seasonIndex
+  return latest
+}
+
+/** ⭐⭐⭐ WAS HER LAST YEAR A GOOD ONE – the latest-year special case of `staffYearVerdictAt`, ONE
+ *  implementation and no second spelling. */
+export function staffYearVerdict(world: WorldState): StaffYearVerdict {
+  return staffYearVerdictAt(world, latestBankedSeason(world))
+}
+
+/** THE STEP ONE VERDICT ASKS FOR – the verdict mapped to a fraction. One place, so the masseur, the
+ *  psychologist and the hitting partner can never read a year three ways, and so a banked request reads
+ *  every year it carries through the same table as a single one. Pure, zero draws. */
+function stepOfVerdict(seat: StaffRaiseSeat, verdict: StaffYearVerdict): number {
   if (verdict === 'good') return STAFF_RAISE_STEPS[seat].good
   if (verdict === 'bad') return STAFF_RAISE_STEPS[seat].bad
   return ECONOMY.masseur.raisePerYear
+}
+
+/** ⭐⭐⭐ THE STEP A REQUEST ASKS FOR THIS YEAR – the latest year's verdict mapped to a fraction. ⚠ Since B17 it
+ *  is ONE factor of a request's growth (`staffRaiseGrowth`), the whole of it only when no year was refused.
+ *  Pure, zero draws. */
+export function staffRaiseStep(seat: StaffRaiseSeat, world: WorldState): number {
+  return stepOfVerdict(seat, staffYearVerdict(world))
 }
 
 /** A SEAT'S SIGNED PAPERS, OLDEST FIRST – the chain. An open, refused or lapsed request is not in it, so
@@ -158,17 +185,107 @@ export function staffFeeCents(offers: Offer[] | undefined, seat: StaffSeat, base
   return Math.round((baseCents * factor) / 100) * 100
 }
 
-/** THE TWO FIGURES A REQUEST PRINTS: what the seat is paid now, and one FLOATING step above it. `null` for
- *  an ask that would not move the rate – unreachable on the shipped prices and the shipped steps, guarded so
- *  a retune cannot write a letter about nothing. */
+// --- ⭐⭐⭐ THE BANK (B17, 02.10 fourth batch) --------------------------------------------------------------
+//
+// THE OWNER: «можно принцип сделать похожим, но размер немного изменить для supportов». The coach's principle is
+// that a refused year is not forgotten in the price (his corridor reads the score SINCE his fee was agreed, so a
+// refusal banks by construction). These three seats had been asked «one step above what you are paid now»
+// whatever the family had refused; they now bank THE SAME WAY and keep their OWN scale:
+//
+//   next ask = fee × Π (1 + step(verdict of y))   over every year y since the fee last moved,
+//
+// each year's verdict recomputed from the banked season facts FOR THAT YEAR (`staffYearVerdictAt`: rank movement
+// y against y-1 on her main table, titles in y – the same facts, the same three words) and each step the seat's
+// own 2 / 4 / 6% (`STAFF_RAISE_STEPS`), NOT the coach's 5–15% corridor.
+//
+// ⚠ «SINCE THE FEE LAST MOVED» IS COUNTED IN REQUESTS, NOT IN CALENDAR YEARS. Every anniversary writes one paper,
+// and a paper the family let go by (refused, lapsed or still open) is one withheld year, so the next ask spans
+// 1 + the unsigned papers written after the ANCHOR – the LATER of
+//   · the last SIGNED paper (the fee moved there: a signature banks everything in ONE jump, and the bank is
+//     spent), and
+//   · the latest HIRE of the seat (a re-hire is a new arrangement, so the refusals of an earlier one are not
+//     carried into it – the bank resets, the fee chain does not).
+// ⭐ That makes every legacy career neutral WITHOUT a special case: the masseur's silent-era raises are priced into
+// his baseline exponent (`masseurBaselineYears`) and are not papers, and a weekly seat that was already on the
+// payroll before the papers existed has no refused paper to bank – nobody was ever asked, so nobody refused.
+// Its first request is one step, exactly as before.
+//
+// ⭐ THE YEARS, newest first, are the latest banked season and the seasons just before it, one per request in the
+// span: consecutive requests of one arrangement are 52 weeks apart, so each reads the season after the one
+// before it (`staffRaiseYears`).
+//
+// ⭐⭐ BACKWARD-NEUTRAL BY CONSTRUCTION. A family that signs every year has a span of exactly one, so the growth is
+// `1 * (1 + step)` – multiplying by 1 is exact in floating point – the very number the single step was, and the
+// same whole-dollar rounding follows. Only a refusal moves a figure.
+//
+// ⭐ ONE ROUNDING, AT THE END. The product is rounded to whole dollars once, after the last year (the paper IS the
+// fee, and the house prices these seats in whole dollars) – never year by year, which would let a three-year
+// bank drift by cents against the same three steps compounded.
+//
+// ⚠ NOTHING IS PERSISTED AND NOTHING DRAWS. The span reads the papers (never pruned), the hire marks (kept
+// ledger rows) and the banked season rows with `trophiesByTier` (never pruned); no stream, no clock, no schema
+// move. «Nobody leaves, nobody punishes» stands: the refusal lives ONLY in the figure of the next ask.
+
+/** THE LATEST HIRE OF THE SEAT – the week its current arrangement began; -Infinity for a probe world with the
+ *  flag set and no tagged row. The ledger rows alternate hire / release by construction, so the hires are the
+ *  even-indexed marks. */
+function staffLatestHireWeek(world: WorldState, changeKey: string): number {
+  const marks = staffChangeMarks(world, changeKey, world.week)
+  let latest = -Infinity
+  for (let i = 0; i < marks.length; i += 2) latest = marks[i]
+  return latest
+}
+
+/** HOW MANY REQUESTS HAVE GONE UNSIGNED SINCE THE FEE LAST MOVED – each one a year the family let go by, and
+ *  the bank's whole size. 0 for a career that signs every year, for a career with no paper at all, and right
+ *  after a re-hire. ⚠ Every paper written after the anchor is UNSIGNED by construction – the last signature IS
+ *  the anchor – so there is no state test here, and none is wanted: it would only hide a wrong anchor. */
+export function staffBankedYears(world: WorldState, seat: StaffRaiseSeat, changeKey: string): number {
+  const signed = staffSignedAsks(world.offers, seat)
+  const lastSigned = signed.length > 0 ? signed[signed.length - 1].week : -Infinity
+  const anchor = Math.max(staffLatestHireWeek(world, changeKey), lastSigned)
+  return staffAsks(world.offers ?? [], seat).filter((o) => o.week > anchor).length
+}
+
+/** THE SEASONS THE NEXT REQUEST IS ABOUT, newest first – the latest banked season, then one season further back
+ *  for every year the family let go by. */
+export function staffRaiseYears(world: WorldState, seat: StaffRaiseSeat, changeKey: string): number[] {
+  const latest = latestBankedSeason(world)
+  const span = 1 + staffBankedYears(world, seat, changeKey)
+  return Array.from({ length: span }, (_, i) => latest - i)
+}
+
+/** THE GROWTH THE NEXT REQUEST ASKS FOR – the product of (1 + step) over its years, each year's step from ITS OWN
+ *  verdict. Unrounded: the one rounding belongs to the figure it multiplies (`staffRaiseQuote`). Pure. */
+export function staffRaiseGrowth(world: WorldState, seat: StaffRaiseSeat, changeKey: string): number {
+  let growth = 1
+  for (const y of staffRaiseYears(world, seat, changeKey)) growth *= 1 + stepOfVerdict(seat, staffYearVerdictAt(world, y))
+  return growth
+}
+
+/** THE TWO FIGURES A REQUEST PRINTS: what the seat is paid now, and that figure grown by the BANK
+ *  (`staffRaiseGrowth`: one FLOATING step when nothing was refused), whole dollars, rounded ONCE. `null` for an
+ *  ask that would not move the rate – unreachable on the shipped prices and the shipped steps, guarded so a
+ *  retune cannot write a letter about nothing. */
 export function staffRaiseQuote(
   world: WorldState,
   seat: StaffRaiseSeat,
+  changeKey: string,
   baseCents: number,
 ): { fromCents: number; toCents: number } | null {
   const fromCents = staffFeeCents(world.offers, seat, baseCents)
-  const toCents = Math.round((fromCents * (1 + staffRaiseStep(seat, world))) / 100) * 100
+  const toCents = Math.round((fromCents * staffRaiseGrowth(world, seat, changeKey)) / 100) * 100
   return toCents > fromCents ? { fromCents, toCents } : null
+}
+
+/** THE LEDGER'S HIRE / RELEASE MARKS FOR ONE SEAT up to and including `week`, oldest first – the one read the
+ *  service clock and the bank's anchor (`staffLatestHireWeek`) both stand on. */
+function staffChangeMarks(world: WorldState, changeKey: string, week: number): number[] {
+  const marks: number[] = []
+  for (const e of world.events) {
+    if (e.milestoneKey?.startsWith(changeKey) && e.week <= week) marks.push(e.week)
+  }
+  return marks.sort((a, b) => a - b)
 }
 
 /** EVERY WEEK A SEAT WAS ON THE PAYROLL, up to and including `week` – the sum of the hired spans the
@@ -179,11 +296,7 @@ export function staffRaiseQuote(
  *  with the flag set and no tagged row: ZERO weeks, the identity element, rather than a crash.
  *  Pure read, zero draws. */
 export function staffWeeksServedAt(world: WorldState, changeKey: string, week: number): number {
-  const marks: number[] = []
-  for (const e of world.events) {
-    if (e.milestoneKey?.startsWith(changeKey) && e.week <= week) marks.push(e.week)
-  }
-  marks.sort((a, b) => a - b)
+  const marks = staffChangeMarks(world, changeKey, week)
   let served = 0
   for (let i = 0; i < marks.length; i += 2) {
     // An odd tail is the span still running – it closes at the week being asked about.
@@ -211,8 +324,8 @@ export function staffRaiseDue(world: WorldState, hired: boolean, changeKey: stri
 
 /** ⭐⭐⭐ THE ANNIVERSARY WRITES THE REQUEST. On the week a seat's service count crosses a whole year this
  *  writes ONE open staff letter (`raiseStaffAsk`: the sponsor letters' four-week window, answered through
- *  `acceptOffer` / `declineOffer`) quoting what the seat is paid now and one FLOATING step above it
- *  (`staffRaiseQuote`), both at the rung the family is on. `baseCents` is that rung's BASELINE price – the
+ *  `acceptOffer` / `declineOffer`) quoting what the seat is paid now and the BANKED growth above it
+ *  (`staffRaiseQuote`: one FLOATING step when no year was refused), both at the rung the family is on. `baseCents` is that rung's BASELINE price – the
  *  catalogue price for the weekly seats, the silent-era rate for the masseur; the two figures are frozen on
  *  the paper (a rung switched inside the window moves the bill, not the paper).
  *
@@ -230,7 +343,7 @@ export function writeStaffRaise(
   if (!staffRaiseDue(world, hired, changeKey)) return
   const year = staffYearsServed(world, changeKey)
   if (world.offers.some((o) => o.id === staffAskId(seat, year))) return
-  const quote = staffRaiseQuote(world, seat, baseCents)
+  const quote = staffRaiseQuote(world, seat, changeKey, baseCents)
   if (!quote) return
   raiseStaffAsk(world.offers, world.week, year, {
     seat,

@@ -95,7 +95,8 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   schema move – with the sponsor letters' four-week window and the same two doors; `acceptOffer`
   re-validates that the seat is still hired. The fee is DERIVED: the rung's catalogue price ×
   1.04^(requests the family SIGNED), whole dollars. So Decline and a lapse leave the fee, the
-  forgone year is not banked, the next request is one step above what the seat is paid now, and a
+  forgone year is not banked, the next request is one step above what the seat is paid now (⚠ SUPERSEDED 02.10, B17:
+  the refused year IS banked, see «Owner answers, 02.10, fourth batch» below), and a
   save that predates the letters pays exactly what it paid (these two seats never rose, so the
   exponent counts signed papers where the masseur's legacy rule counts years). The snapshot now
   carries what each rung costs this career (`psychologistRungSalaryCents`,
@@ -414,3 +415,4 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 - The emitter fix (the pending chip's scope) folds into this wave as B16 – discovered in-wave,
   pays its tax in-wave (three hand-splices today); the chip comes down when B16 lands.
 - B16: the emitter is idempotent (--write twice = zero diff), hand blocks and voice order preserved, pinned by test.
+- B17: the supports' refusals bank (compound of per-year verdict steps since the fee last moved), no-refusal path byte-neutral.

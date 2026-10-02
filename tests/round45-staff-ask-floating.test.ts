@@ -17,6 +17,15 @@
 //   F. THE COACH CONVERTS – a letter on his own cadence, Accept moves the ONE stored fee (and the bill, the
 //      card and the market's own row read it), Decline and a lapse leave it, a paper cannot outlive the
 //      arrangement, and the AUTOMATIC rise of round 42 is dead.
+//   G. THE BANK (B17, 02.10 fourth batch) – «можно принцип сделать похожим, но размер немного изменить для
+//      supportов»: a refused year is not forgotten in the price. The next ask quotes the product of every year
+//      since the fee last moved, each year's step from ITS OWN verdict, at the seat's own 2/4/6% scale; a family
+//      that signs every year is quoted the single steps it always was; a re-hire resets the bank; the masseur's
+//      silent-era years never enter it.
+//
+// ⚠ RE-AIMED 02.10 (B17): the two arms of C/D and E that said «a refused year is forgone, not banked» (the next ask
+// one step above what the seat is paid) now say what the fourth batch ruled – the next ask CARRIES the refused
+// year. Their old single-step figures live on as the nothing-refused arm of G.
 //
 // ⚠ ALL COPY UNDER TEST IS DRAFT (invariant 4, docs/rounds/round-45.md «R45 – DRAFT strings»); the
 // assertions are about structure and figures, never a whole sentence.
@@ -30,6 +39,9 @@
 //   M6  `settleCoachRaise` writes nothing (Accept signs the paper and the fee does not move).
 //   M7  the masseur's baseline reads `asking` instead of `asking − 1` (the first paper prices his own
 //       anniversary into the rate he is paid before it is agreed).
+//   M8  (B17 a) banking off: the span is always one year (`staffRaiseYears` – the single step again).
+//   M9  (B17 b) the verdict of EVERY year in the span is the latest year's (`staffYearVerdictAt` ignored).
+//   M10 (B17 c) the anchor ignores the signed papers (the bank counts from the hire, always).
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -46,6 +58,7 @@ import {
   hirePsychologist,
   hireSparring,
   masseurSessionCents,
+  masseurWeeklyCents,
   psychologistWeeklyCents,
   resolveCoachRaise,
   resolveMasseurRaise,
@@ -56,7 +69,7 @@ import {
 } from '../src/engine/world'
 import { resolvePsychologistRaise, psychologistRungWeeklyCents } from '../src/engine/world/psychologist'
 import { resolveSparringRaise, sparringRungWeeklyCents } from '../src/engine/world/sparring'
-import { STAFF_RAISE_STEPS, staffRaiseStep, staffYearVerdict, type StaffYearVerdict } from '../src/engine/world/staffRaise'
+import { STAFF_RAISE_STEPS, staffRaiseStep, staffYearVerdict, staffYearVerdictAt, type StaffYearVerdict } from '../src/engine/world/staffRaise'
 import { coachById } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
 import { expireOffers, staffAskId, staffAsks } from '../src/engine/offers'
@@ -199,6 +212,8 @@ interface SeatKit {
   hire: (w: WorldState, on: boolean) => void
   resolve: (w: WorldState) => void
   fee: (w: WorldState) => number
+  /** what the seat BILLS in a week at the rung the family is on (the masseur's fee is per session) */
+  bill: (w: WorldState) => number
   /** every rung's price, where the seat has a dial of them */
   rungs?: (w: WorldState) => number[]
   catalogue?: number[]
@@ -211,6 +226,7 @@ const KITS: SeatKit[] = [
     hire: hireMasseur,
     resolve: resolveMasseurRaise,
     fee: masseurSessionCents,
+    bill: masseurWeeklyCents,
   },
   {
     seat: 'psychologist',
@@ -218,6 +234,7 @@ const KITS: SeatKit[] = [
     hire: hirePsychologist,
     resolve: resolvePsychologistRaise,
     fee: psychologistWeeklyCents,
+    bill: psychologistWeeklyCents,
     rungs: psychologistRungWeeklyCents,
     catalogue: ECONOMY.psychologist.rungs.map((r) => r.salaryCents),
   },
@@ -227,6 +244,7 @@ const KITS: SeatKit[] = [
     hire: hireSparring,
     resolve: resolveSparringRaise,
     fee: sparringWeeklyCents,
+    bill: sparringWeeklyCents,
     rungs: sparringRungWeeklyCents,
     catalogue: ECONOMY.sparring.rungs.map((r) => r.weeklyCents),
   },
@@ -297,18 +315,21 @@ describe.each(KITS)('round 45 #3b C/D – the $seat: a good year asks for more t
     expect(second.toCents - second.fromCents, 'and the two steps really differed').toBeGreaterThan(first.toCents - first.fromCents)
   })
 
-  it('⭐⭐ A REFUSED paper is not in the chain: the fee stays and the NEXT request is one step above what he is paid now', () => {
+  it('⭐⭐ A REFUSED paper is not in the chain: the fee stays – and ⚠ 02.10 fourth batch (B17): the NEXT request CARRIES the refused year', () => {
+    // It was «the declined year is forgone – the next request is one step above what he is paid now». The fourth
+    // batch ruled the coach's principle for the seats, at their own scale. The refused year here was GOOD (6%) and the
+    // new one is FLAT (4%): the next ask quotes both, from what he is paid now.
     const world = onAnniversary(kit, 1, 'good')
     kit.resolve(world)
     declineOffer(world, staffAskId(kit.seat, 1))
     expect(kit.fee(world), 'the fee stays').toBe(kit.base)
     world.week = year(2)
-    books(world, 'flat')
+    world.seasonHistory = [season(0, 100), season(1, 60), season(2, 60)] // the next year's books: she held her place
     kit.resolve(world)
     const next = (askOf(world, kit.seat, 2)!.terms as StaffLetterTerms).ask!
-    expect(next, 'the declined year is forgone, not banked – and the new year`s own step applies').toEqual({
+    expect(next, 'the declined year is BANKED – the new year`s own step stacks on it, from the fee he is paid now').toEqual({
       fromCents: kit.base,
-      toCents: above(kit.base, FLAT),
+      toCents: Math.round((kit.base * ((1 + FLAT) * (1 + GOOD))) / 100) * 100,
     })
   })
 
@@ -370,7 +391,7 @@ describe('round 45 #3b E – the masseur`s silent-era raises are kept: the expon
     expect(masseurSessionCents(world)).toBe(ask.toCents)
   })
 
-  it('⭐⭐ a REFUSED first paper leaves him on the baseline, and the second chains from there – nothing is lost, nothing is banked', () => {
+  it('⭐⭐ a REFUSED first paper leaves him on the baseline, and the second chains from there – nothing is lost; ⚠ 02.10 (B17) the refused year is BANKED, the silent ones are not', () => {
     const world = legacy()
     world.week = year(4)
     books(world, 'bad')
@@ -378,11 +399,14 @@ describe('round 45 #3b E – the masseur`s silent-era raises are kept: the expon
     declineOffer(world, staffAskId('masseur', 4))
     expect(masseurSessionCents(world), 'the refused year is not paid, and the silent raises are').toBe(silent(3))
     world.week = year(5)
-    books(world, 'flat')
+    world.seasonHistory = [season(0, 60), season(1, 100), season(2, 100)] // the next year's books: she held her place
     resolveMasseurRaise(world)
-    expect((askOf(world, 'masseur', 5)!.terms as StaffLetterTerms).ask).toEqual({
+    expect(
+      (askOf(world, 'masseur', 5)!.terms as StaffLetterTerms).ask,
+      'the flat year and the refused bad one – two years, never the three silent ones as well',
+    ).toEqual({
       fromCents: silent(3),
-      toCents: above(silent(3), FLAT),
+      toCents: Math.round((silent(3) * ((1 + FLAT) * (1 + BAD))) / 100) * 100,
     })
   })
 
@@ -571,5 +595,214 @@ describe('round 45 #3b F – the coach asks with a LETTER, on his own cadence, a
     resolveCoachRaise(world)
     acceptOffer(world, staffAskId('coach', 1))
     expect(world.rngMain).toEqual(before)
+  })
+})
+
+// ------------------------------------------------------------------------------------------------ G. the bank
+
+// ⭐⭐⭐ B17, 02.10 FOURTH BATCH – «можно принцип сделать похожим, но размер немного изменить для supportов». The
+// coach's principle is that a refused year is not forgotten in the price; the three seats adopt it at THEIR OWN
+// scale (2 / 4 / 6% a year – his is a 5–15% corridor). The next ask quotes the product of (1 + step) over every
+// year since the fee last moved, each year's step from the verdict of THAT year. «No third branch» is untouched:
+// nobody leaves, nobody is punished – the refusal lives only in the figure of the next ask.
+
+/** Her WTA year-end rank, one per season, and the verdict each season's row gives (no titles unless an arm adds one):
+ *    s0 100 – the first season, nothing before it          FLAT
+ *    s1 100 – held                                          FLAT
+ *    s2 150 – slipped, nothing won                          BAD
+ *    s3  90 – rose                                          GOOD
+ *    s4 150 – slipped, nothing won                          BAD
+ *    s5 150 – held                                          FLAT
+ *    s6 150 – held                                          FLAT
+ *    s7  90 – rose                                          GOOD
+ *  ⚠ The verdicts are spelled out by hand and then checked against the engine's own reading (the first arm), so a
+ *  script that stopped saying what it says fails loudly instead of quietly moving every figure below. */
+const RANKS = [100, 100, 150, 90, 150, 150, 150, 90]
+const VERDICTS: StaffYearVerdict[] = ['flat', 'flat', 'bad', 'good', 'bad', 'flat', 'flat', 'good']
+const stepOf = (verdict: StaffYearVerdict): number => (verdict === 'good' ? GOOD : verdict === 'bad' ? BAD : FLAT)
+
+/** The books as the wrap-up leaves them when anniversary `n`'s request is written: seasons 0..n banked and nothing
+ *  after (a seat hired at week 100 asks on week 48 of season n+1, a week before that season's own wrap-up). */
+function bankThrough(world: WorldState, through: number): void {
+  world.seasonHistory = RANKS.slice(0, through + 1).map((rank, i) => season(i, rank))
+  world.trophiesByTier = {} as never
+}
+
+/** What a request carrying `years` (newest first) asks for, SPELLED OUT HERE and not taken from the engine: the
+ *  product of the years' steps, rounded to whole dollars ONCE. */
+const bankedAbove = (from: number, years: number[]): number =>
+  Math.round((from * years.reduce((growth, y) => growth * (1 + stepOf(VERDICTS[y])), 1)) / 100) * 100
+
+function hiredWorld(kit: SeatKit, seed: string): WorldState {
+  const world = bareWorld(seed)
+  world.week = HIRED_AT
+  kit.hire(world, true)
+  return world
+}
+
+/** Anniversary `n`'s request, written on books banked through season `n` – the two figures it prints. */
+function askAt(kit: SeatKit, world: WorldState, n: number): { fromCents: number; toCents: number } {
+  bankThrough(world, n)
+  world.week = year(n)
+  kit.resolve(world)
+  return (askOf(world, kit.seat, n)!.terms as StaffLetterTerms).ask!
+}
+
+describe.each(KITS)('round 45 B17 – the $seat: a refused year is not forgotten in the price', (kit) => {
+  it('⭐ the staged books say what the arms below are computed from', () => {
+    const world = bareWorld('r45-bank-fixture')
+    bankThrough(world, RANKS.length - 1)
+    expect(RANKS.map((_, y) => staffYearVerdictAt(world, y))).toEqual(VERDICTS)
+    expect(staffYearVerdict(world), 'the latest-year special case reads the latest season').toBe(VERDICTS[RANKS.length - 1])
+  })
+
+  it('⭐⭐⭐ REFUSED TWO YEARS RUNNING: the third ask quotes fee × (1+s1)(1+s2)(1+s3), each step from ITS OWN year`s verdict', () => {
+    const world = hiredWorld(kit, `r45-bank-twice-${kit.seat}`)
+    const mainBefore = { ...world.rngMain }
+    expect(askAt(kit, world, 1), 'nothing refused yet: the single step, as always').toEqual({
+      fromCents: kit.base,
+      toCents: bankedAbove(kit.base, [1]),
+    })
+    declineOffer(world, staffAskId(kit.seat, 1))
+    expect(askAt(kit, world, 2), 'one year refused: this year`s step and the refused one`s, from what the seat is paid now').toEqual({
+      fromCents: kit.base,
+      toCents: bankedAbove(kit.base, [2, 1]),
+    })
+    // ...and a LAPSED year banks exactly like a refused one.
+    const lapsing = askOf(world, kit.seat, 2)!
+    expireOffers(world.offers, lapsing.deadlineWeek + 1)
+    expect(lapsing.state).toBe('expired')
+    expect(kit.fee(world), 'two years not signed, and not a cent more is paid').toBe(kit.base)
+    const third = askAt(kit, world, 3)
+    expect(third.fromCents).toBe(kit.base)
+    expect(third.toCents, 'three years, three steps').toBe(bankedAbove(kit.base, [3, 2, 1]))
+    expect([3, 2, 1].map((y) => staffYearVerdictAt(world, y)), 'and the three verdicts really are three different ones').toEqual([
+      'good',
+      'bad',
+      'flat',
+    ])
+    expect(third.toCents, 'more than the latest year`s single step').not.toBe(above(kit.base, GOOD))
+    expect(third.toCents, 'and not the latest verdict read three times').not.toBe(Math.round((kit.base * (1 + GOOD) ** 3) / 100) * 100)
+    expect(world.rngMain, 'nothing here draws on the MAIN stream').toEqual(mainBefore)
+  })
+
+  it('⭐⭐⭐ ACCEPT AFTER BANKED YEARS: the fee jumps the whole product in ONE signature, the bill follows, and the bank is spent', () => {
+    const world = hiredWorld(kit, `r45-bank-accept-${kit.seat}`)
+    askAt(kit, world, 1)
+    declineOffer(world, staffAskId(kit.seat, 1))
+    askAt(kit, world, 2)
+    declineOffer(world, staffAskId(kit.seat, 2))
+    const third = askAt(kit, world, 3)
+    const billBefore = kit.bill(world)
+    expect(kit.fee(world), 'the open paper moves nothing').toBe(kit.base)
+    acceptOffer(world, staffAskId(kit.seat, 3))
+    expect(kit.fee(world), 'one signature, the whole product').toBe(bankedAbove(kit.base, [3, 2, 1]))
+    expect(kit.fee(world)).toBe(third.toCents)
+    expect(kit.bill(world) * third.fromCents, 'and the bill follows the fee by exactly the paper`s own ratio').toBe(billBefore * third.toCents)
+    expect(askAt(kit, world, 4), 'a signature empties the bank: ONE step above what he is paid now').toEqual({
+      fromCents: third.toCents,
+      toCents: above(third.toCents, BAD),
+    })
+  })
+
+  it('⭐⭐ THE ANCHOR IS THE LAST SIGNATURE: sign one year, refuse two, and the next ask banks exactly those two – and itself', () => {
+    const world = hiredWorld(kit, `r45-bank-anchor-${kit.seat}`)
+    const first = askAt(kit, world, 1)
+    acceptOffer(world, staffAskId(kit.seat, 1))
+    askAt(kit, world, 2)
+    declineOffer(world, staffAskId(kit.seat, 2))
+    askAt(kit, world, 3)
+    declineOffer(world, staffAskId(kit.seat, 3))
+    expect(kit.fee(world), 'the fee stands on the signed paper').toBe(first.toCents)
+    expect(askAt(kit, world, 4), 'years 2, 3 and 4 – never the signed year 1 again').toEqual({
+      fromCents: first.toCents,
+      toCents: bankedAbove(first.toCents, [4, 3, 2]),
+    })
+  })
+
+  it('⭐⭐⭐ BACKWARD-NEUTRAL: a family that signs every year is quoted exactly the single steps it always was', () => {
+    const world = hiredWorld(kit, `r45-bank-neutral-${kit.seat}`)
+    let fee = kit.base
+    for (let n = 1; n <= 7; n++) {
+      const ask = askAt(kit, world, n)
+      // The PRE-bank formula, spelled out: one step above what the seat is paid, from the latest year's verdict
+      // (the seven years carry all three verdicts).
+      expect(ask, `year ${n}`).toEqual({ fromCents: fee, toCents: above(fee, stepOf(VERDICTS[n])) })
+      acceptOffer(world, staffAskId(kit.seat, n))
+      fee = ask.toCents
+      expect(kit.fee(world), `year ${n} paid`).toBe(fee)
+    }
+  })
+
+  it('⭐⭐ A RE-HIRE RESETS THE BANK: a year refused under an earlier arrangement is not carried into the new one', () => {
+    // CONTROL – nobody leaves: the second ask banks the refused first year.
+    const kept = hiredWorld(kit, `r45-bank-kept-${kit.seat}`)
+    askAt(kit, kept, 1)
+    declineOffer(kept, staffAskId(kit.seat, 1))
+    expect(askAt(kit, kept, 2), 'control: no release, the bank stands').toEqual({
+      fromCents: kit.base,
+      toCents: bankedAbove(kit.base, [2, 1]),
+    })
+    // THE ARM – the same refusal, then a release at 160 and a re-hire at 170. The service clock RESUMES (60 weeks
+    // served, so the next anniversary is 44 weeks after the re-hire, week 214); the bank does not.
+    const world = hiredWorld(kit, `r45-bank-rehired-${kit.seat}`)
+    askAt(kit, world, 1)
+    declineOffer(world, staffAskId(kit.seat, 1))
+    world.week = 160
+    kit.hire(world, false)
+    world.week = 170
+    kit.hire(world, true)
+    bankThrough(world, 3)
+    world.week = 214
+    kit.resolve(world)
+    expect((askOf(world, kit.seat, 2)!.terms as StaffLetterTerms).ask, 'the new arrangement starts clean: ONE step').toEqual({
+      fromCents: kit.base,
+      toCents: bankedAbove(kit.base, [3]),
+    })
+  })
+
+  it('⭐⭐ a title in a REFUSED year counts for THAT year – each year`s verdict is recomputed from its own facts', () => {
+    const world = hiredWorld(kit, `r45-bank-title-${kit.seat}`)
+    bankThrough(world, 1)
+    titleIn(world, 1) // season 1: she held her place AND won a title – a GOOD year, where the bare rank reads flat
+    world.week = year(1)
+    kit.resolve(world)
+    expect((askOf(world, kit.seat, 1)!.terms as StaffLetterTerms).ask).toEqual({ fromCents: kit.base, toCents: above(kit.base, GOOD) })
+    declineOffer(world, staffAskId(kit.seat, 1))
+    bankThrough(world, 2)
+    titleIn(world, 1)
+    world.week = year(2)
+    kit.resolve(world)
+    expect((askOf(world, kit.seat, 2)!.terms as StaffLetterTerms).ask, 'year 2 (bad) with the refused year 1 (good, by its title)').toEqual({
+      fromCents: kit.base,
+      toCents: Math.round((kit.base * ((1 + BAD) * (1 + GOOD))) / 100) * 100,
+    })
+  })
+})
+
+describe('round 45 B17 – the masseur`s silent-era years never enter the bank', () => {
+  const OPENING = ECONOMY.masseur.perSessionCents
+  const silent3 = Math.round((OPENING * (1 + FLAT) ** 3) / 100) * 100
+
+  it('⭐⭐⭐ a legacy career: the exponent baseline, then the letters` own years – and no silent year counted twice', () => {
+    const kit = KITS[0]
+    const world = bareWorld('r45-bank-legacy')
+    world.week = HIRED_AT
+    hireMasseur(world, true)
+    // Hired at 100 and standing on his FOURTH anniversary with no paper on file: three silent raises behind him.
+    expect(askAt(kit, world, 4), 'his first letter spans ONE year – the silent three are in the rate he is paid').toEqual({
+      fromCents: silent3,
+      toCents: bankedAbove(silent3, [4]),
+    })
+    declineOffer(world, staffAskId('masseur', 4))
+    expect(masseurSessionCents(world), 'the refused year is not paid, and the silent raises still are').toBe(silent3)
+    expect(askAt(kit, world, 5), 'the second letter banks the refused year: two years, never five').toEqual({
+      fromCents: silent3,
+      toCents: bankedAbove(silent3, [5, 4]),
+    })
+    acceptOffer(world, staffAskId('masseur', 5))
+    const paid = masseurSessionCents(world)
+    expect(paid).toBe(bankedAbove(silent3, [5, 4]))
+    expect(askAt(kit, world, 6), 'and after the signature, one step again').toEqual({ fromCents: paid, toCents: above(paid, FLAT) })
   })
 })

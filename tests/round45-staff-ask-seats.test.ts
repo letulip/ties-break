@@ -5,7 +5,9 @@
 // (tests/round45-staff-ask.test.ts is its pattern and stays the masseur's net). This file asks the SAME
 // mechanism of the two seats that bill by the WEEK: the anniversary writes ONE open letter, Accept
 // moves the derived weekly price (and all three rungs of the dial), Decline and a lapse leave it and
-// the forgone year is not banked, and the NEXT request is one step above what the seat is paid NOW.
+// ⚠ 02.10 FOURTH BATCH (B17): the refused year is BANKED, so the NEXT request carries it – it was «the forgone
+// year is not banked, and the NEXT request is one step above what the seat is paid NOW». The coach's principle,
+// at the seats' own 2/4/6% scale; the arms of the bank are in tests/round45-staff-ask-floating.test.ts §G.
 //
 // ⚠ WHAT IS DIFFERENT FROM THE MASSEUR AND IS TESTED ON PURPOSE: a career that predates the papers
 // – years served, no request on file – must pay exactly the opening price. The masseur's rule
@@ -199,7 +201,7 @@ describe.each(KITS)('round 45 #3 – the $seat asks, on the masseur`s pattern', 
     expect((second!.terms as StaffLetterTerms).ask).toEqual({ fromCents: rate(1), toCents: rate(2) })
   })
 
-  it('⭐⭐ DECLINE leaves the price, pays and writes nothing, and the forgone year is not banked', () => {
+  it('⭐⭐ DECLINE leaves the price, pays and writes nothing – ⚠ 02.10 (B17): the declined year is BANKED in the next request', () => {
     const world = seatAt(kit, 100, ANNIVERSARY)
     kit.resolve(world)
     const [first] = asksOf(world)
@@ -213,16 +215,18 @@ describe.each(KITS)('round 45 #3 – the $seat asks, on the masseur`s pattern', 
       world.events.slice(events).filter((e) => e.type === 'expense'),
       'and nothing was charged for saying no',
     ).toHaveLength(0)
-    // The next year: the request is one step above what the seat is paid NOW, not two above the opening.
+    // The next year: ⚠ 02.10 fourth batch (B17) – the request carries the declined year, quoted from what the seat is
+    // paid NOW (these worlds bank no season, so both years are the flat 4%). It WAS «one step above what the seat is
+    // paid NOW, not two above the opening».
     world.week = 100 + 2 * WEEKS_PER_YEAR
     kit.resolve(world)
     const second = asksOf(world).find((o) => o.id === staffAskId(kit.seat, 2))
-    expect((second!.terms as StaffLetterTerms).ask, 'a refused year is forgone, not banked').toEqual({
+    expect((second!.terms as StaffLetterTerms).ask, 'a refused year is BANKED – two steps, from the price he is paid now').toEqual({
       fromCents: rate(0),
-      toCents: rate(1),
+      toCents: rate(2),
     })
     acceptOffer(world, second!.id)
-    expect(kit.weekly(world), 'one step above the opening – the declined year did not count').toBe(rate(1))
+    expect(kit.weekly(world), 'one signature pays the declined year as well').toBe(rate(2))
   })
 
   it('⭐ an unanswered request lapses on the ordinary clock, leaves the price, and cannot be signed late', () => {

@@ -14,6 +14,11 @@
 // floating arms – a good year asks for more than a bad one, the chain, the legacy baseline, the coach's
 // letter – are tests/round45-staff-ask-floating.test.ts.
 //
+// ⚠ RE-AIMED AGAIN 02.10 (B17, the FOURTH BATCH: «можно принцип сделать похожим, но размер немного изменить для
+// supportов»). The DECLINE arm said the declined year was forgone – the next request one step above what he is paid.
+// The seats adopted the coach's principle at their own scale: a refused year is BANKED in the next ask. The
+// arms of the bank are in the floating file's §G; this file keeps the one-year figures.
+//
 // #4, the owner: «если игрок забыл выбрать направление, то оставалось предыдущее. А в письме
 // следующего года писать "мы не выбрали новое, поэтому работали по предыдущему"». The engine never
 // cleared the direction; what was missing was the letter SAYING so.
@@ -145,7 +150,7 @@ describe('round 45 #3 A – the anniversary writes a LETTER and the rate waits f
     expect(world.offers.some((o) => o.id.startsWith('kit-end-')), 'and nobody wrote its goodbye').toBe(false)
   })
 
-  it('⭐⭐ DECLINE leaves the fee, writes nothing else, and the forgone year is not banked', () => {
+  it('⭐⭐ DECLINE leaves the fee, writes nothing else – ⚠ 02.10 (B17): the declined year is BANKED in the next ask, not forgone', () => {
     const world = masseurAt(100, ANNIVERSARY)
     resolveMasseurRaise(world)
     const [first] = askOf(world)
@@ -156,13 +161,15 @@ describe('round 45 #3 A – the anniversary writes a LETTER and the rate waits f
     expect(masseurSessionCents(world), 'the fee stays').toBe(rateAfter(0))
     expect(world.fundsCents, 'no punishment: no money moved').toBe(funds)
     expect(world.events.length, 'and no feed row, no mood, nothing').toBe(events)
-    // A year later he asks again – ONE step above what he actually has, never two.
+    // A year later he asks again – ⚠ 02.10 fourth batch (B17): the declined year is BANKED, so the request is both
+    // years' steps above what he actually has (these worlds bank no season, so each is the flat 4%). It WAS «one
+    // step above what he actually has, never two»; the coach's principle, adopted at the seats' own scale, ruled otherwise.
     world.week = 100 + 2 * WEEKS_PER_YEAR
     resolveMasseurRaise(world)
     const second = askOf(world).find((o) => o.id === staffAskId('masseur', 2))!
-    expect((second.terms as StaffLetterTerms).ask).toEqual({ fromCents: rateAfter(0), toCents: rateAfter(1) })
+    expect((second.terms as StaffLetterTerms).ask).toEqual({ fromCents: rateAfter(0), toCents: rateAfter(2) })
     acceptOffer(world, second.id)
-    expect(masseurSessionCents(world), 'the declined year was forgone').toBe(rateAfter(1))
+    expect(masseurSessionCents(world), 'one signature pays the declined year as well').toBe(rateAfter(2))
   })
 
   it('⭐ an unanswered request lapses on the ordinary clock, leaves the fee, and cannot be signed late', () => {

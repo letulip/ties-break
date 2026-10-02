@@ -271,8 +271,9 @@ export function masseurRaiseDue(world: WorldState): boolean {
  *  (2 / 4 / 7) stays what it always was, available whatever the family answered.
  *
  *  ⚠ THE FIGURES FLOAT WITH THE YEAR (02.10, `staffRaiseStep`: 6% / 4% / 2% by default) and keep the whole-dollar rounding,
- *  compounding on what is GRANTED – so a declined year is forgone rather than banked, and the next
- *  request is one step above the rate he actually has. ⚠ One request per year of service, idempotent
+ *  compounding on what is GRANTED – ⚠ AND SINCE B17 (02.10, fourth batch) A DECLINED YEAR IS BANKED: the next
+ *  request is the rate he actually has grown by every year since it last moved (`staffRaiseQuote`, one step
+ *  when no year was refused). ⚠ One request per year of service, idempotent
  *  on `staffAskId`, so a re-hire week that already sits on a year cannot write a second one.
  *
  *  ⚠ NOTHING DRAWS ON ANY STREAM and no cash moves: the letter is paper, and the bill that follows is
@@ -283,7 +284,7 @@ export function resolveMasseurRaise(world: WorldState): void {
   // ⭐ THE SHARED WRITER OWNS THE REST (world/staffRaise.ts): the due-week clock, the one-letter-per-year id
   // and the FLOATING step. `year` already COUNTS this anniversary, so the silent-era raises he had BEFORE it
   // are `year - 1` – unless an earlier request already fixed where his chain starts (`masseurBaselineYears`).
-  // The letter's `fromCents` is therefore the rate he is paid today, and its `toCents` one step above it.
+  // The letter's `fromCents` is therefore the rate he is paid today, and its `toCents` the banked growth above it.
   writeStaffRaise(
     world,
     'masseur',
