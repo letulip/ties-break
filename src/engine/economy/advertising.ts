@@ -206,6 +206,8 @@ export const advertising = {
    *  owner (advertising.clashConditionPerDay): «+1 в день, т.к. съемка занимает не один час, то нагрузка будет мощной на всю неделю»
    *  ⚠ advertising.clashConditionPerDay: IT IS A PRICE AND NOT A REFUSAL.
    *  ⚠ advertising.clashConditionPerDay: PER DAY, MULTIPLIED BY THE WEEK'S DAYS AT THE ONE SITE THAT CHARGES IT (`accrueCondition`).
+   *  owner 02.10 (advertising.clashConditionPerDay): «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо»
+   *  ⚠⚠ advertising.clashConditionPerDay: ROUND 45 #1b – THE DAYS ARE THE SHOOTING DAYS (THE ENTERED EVENT'S MATCH DAYS, `clashShootDays`), NOT THE WEEK'S SEVEN.
    *  → docs/notes/economy/advertising.md#advertisingclashconditionperday
    */
   clashConditionPerDay: 1,

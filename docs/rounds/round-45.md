@@ -373,8 +373,12 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 → 3), his first shape (uniform −1, Slam 4) is measured beside it; «А остальное пока оставить как
 есть и попробовать как будет». → B11 `[>]`.
 
-- [>] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
-  справедливо» – the clash's flat 7 becomes per-shooting-day. → B12.
+- [x] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
+  справедливо» – the clash's flat 7 becomes per-shooting-day. → B12. BUILT: the days are the entered
+  event's match days (`log2(drawSize)` – the very days the «do both» schedule already draws the Shoot block
+  on), so the clash week costs 3 local / 4 regional / 5 (every 32-draw: juniors, W series, national, WTA
+  250/500) / 6 (1000) / 7 (Slam) instead of a flat 7; the card and the charge read one function
+  (`clashShootDays`, world/medical.ts), the rate stays 1, no draw, no schema, ECONOMY bytes unmoved.
 - [?] **3c.** the third branch for repeated refusals: «вот хотелось бы, но пока не придумал
   ничего. Мы вроде думали… "если не готовы повышать цену, то работаю меньше дней в неделю"» –
   a design seed, parked; his own 17.09 masseur wording («…or book fewer sessions») is the

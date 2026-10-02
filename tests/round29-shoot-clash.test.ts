@@ -41,11 +41,14 @@ import { adShootWeek } from '../src/engine/offers'
 import { clashWorld, WATCH, CLASH, AT } from './helpers/scenarios/clash'
 import { resumeMain } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
-import { PLAN_DAYS } from '../src/engine/plan'
 import { TIERS, isOffSeasonWeek } from '../src/engine/season/calendar'
 import { type AdOfferTerms } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠ 02.10 (ROUND 45 #1b): THE CLASH WEEK IS PRICED PER SHOOTING DAY, AND THE FIXTURE'S EVENT IS A LOCAL – an
+ *  8-draw, three days («на локалах 3 дня», his own table). These cases asserted the flat seven (`PLAN_DAYS`)
+ *  until the owner re-ruled it; the per-rung table lives in tests/round45-clash-per-shooting-day.test.ts. */
+const LOCAL_SHOOT_DAYS = 3
 /** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
  *  P6/§8). Every claim in this file is about the shipped watch deal's SHAPE – a watchmaker,
  *  $20,000, two shoot weeks over a one-year term – and papers exactly like it are persisted in
@@ -95,7 +98,7 @@ describe('round 29 #3 – the week raises the choice', () => {
     expect(snap.shootClash!.week).toBe(CLASH)
     expect(snap.shootClash!.brand).toBe(WATCH.brand)
     expect(snap.shootClash!.eventLabel).toBe(TIERS.local.label)
-    expect(snap.shootClash!.conditionCost).toBe(AD.clashConditionPerDay * PLAN_DAYS)
+    expect(snap.shootClash!.conditionCost).toBe(AD.clashConditionPerDay * LOCAL_SHOOT_DAYS)
   })
 
   it('⚠ a shoot week with no tournament in it asks NOTHING – the round 28 week is untouched', () => {
@@ -219,10 +222,10 @@ describe('round 29 #3 – the four answers, and each costs something different',
     }
     const withBoth = conditionAfter(both)
     const withoutShoot = conditionAfter(control)
-    expect(withoutShoot - withBoth, 'the week did not cost what he priced it at').toBe(AD.clashConditionPerDay * PLAN_DAYS)
-    // ...and the figure is his: one point per day of the week.
+    expect(withoutShoot - withBoth, 'the week did not cost what he priced it at').toBe(AD.clashConditionPerDay * LOCAL_SHOOT_DAYS)
+    // ...and the figure is his: one point per SHOOTING day (⚠ 02.10 – this said «per day of the week» and
+    // asserted PLAN_DAYS = 7; he re-ruled it per shooting day, and the local rung runs three).
     expect(AD.clashConditionPerDay).toBe(1)
-    expect(PLAN_DAYS).toBe(7)
   })
 
   it('⭐⭐ ...and the price lands through the REAL TICK, not only through the accumulator', () => {
@@ -245,7 +248,7 @@ describe('round 29 #3 – the four answers, and each costs something different',
     const withBoth = spend(both)
     const withoutShoot = spend(control)
     expect(both.week, 'the tick did not reach the collision week').toBe(CLASH)
-    expect(withoutShoot - withBoth, 'the shoot cost nothing through the real tick').toBe(AD.clashConditionPerDay * PLAN_DAYS)
+    expect(withoutShoot - withBoth, 'the shoot cost nothing through the real tick').toBe(AD.clashConditionPerDay * LOCAL_SHOOT_DAYS)
   })
 })
 

@@ -72,11 +72,6 @@ import { ownsDeliveredOfFamily } from './assets'
 // shoot week? `offers.ts` is an engine LEAF (it reaches only economy/rng/calendar/world-ledger), so
 // the edge runs the same direction as every other import in this file.
 import { adShootWeek } from '../offers'
-// ⭐ ROUND 29 #3: the week's own length, for the clash price the owner named per DAY. `plan.ts` is a
-// leaf below this one (it reaches only shared/protocol), so the edge runs the same direction as the
-// import above it – and the alternative was a literal 7 beside a rate, which is the shape a retune
-// walks past.
-import { PLAN_DAYS } from '../plan'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
@@ -189,6 +184,35 @@ export function adShootHolds(world: WorldState, week: number = world.week): bool
   return !atCollege && adShootWeek(world.offers, week)
 }
 
+/** ⭐⭐ ROUND 45 #1b (owner 02.10) – THE DAYS A SHOOT-AND-TOURNAMENT WEEK IS PRICED OVER: the days the
+ *  entered event RUNS, one condition point each (`ECONOMY.advertising.clashConditionPerDay`).
+ *
+ *  «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо» – and the
+ *  flat week of seven this replaces (`PLAN_DAYS`, round 29 #3's reading of «+1 в день») was never a
+ *  shoot's length. On a week she is also playing, the schedule draws the shoot on the MATCH DAYS
+ *  (`TRIP_SHOOT`, hung on every match day by `tripMatchDay` in composables/weekGrid.ts since round 30
+ *  #2), and the match days are the draw's own rounds – `Math.log2(TIERS[tier].drawSize)`, the same
+ *  arithmetic `tripRoundsFor` asks for the picture and `runTournament` for the draw. So his own table,
+ *  «на локалах 3 дня, National 4 (вроде), основная масса 5, а на 1000 вообще 6 (Шлем 7)», is also what
+ *  the clash costs: 3 / 4 / 5 / 6 / 7, and the old seven is the Slam's price only.
+ *
+ *  ⚠ THE EVENT'S LENGTH AND NOT HER RUN. It is the draw's rounds, never the rounds she survives: the
+ *  price is named in a dialog the week BEFORE, so it has to exist before a ball is hit – and the
+ *  schedule draws every match day for the same reason (`TripFacts.rounds`).
+ *
+ *  ⚠ ZERO WHEN SHE IS ENTERED IN NOTHING THAT WEEK: no event, no collision, nothing to price. Both
+ *  callers (the accumulator below and `buildShootClashPrompt`) already know an entry exists, so this is
+ *  the answer for a hand-built world and never one a live career reaches.
+ *
+ *  ⚠ ONE FUNCTION FOR BOTH SITES – the charge and the card – which is what keeps them from ever
+ *  naming different numbers (the parity class, docs/specs/engine-ui-parity-2026-09.md). It takes a week
+ *  the way `adShootHolds` does, for the same reason: the collision is raised the week BEFORE it lands.
+ *  Pure read, zero draws – the frozen MAIN capture cannot see it. */
+export function clashShootDays(world: WorldState, week: number = world.week): number {
+  const event = world.season.find((e) => e.week === week && world.entries.includes(e.id))
+  return event ? Math.log2(TIERS[event.tier].drawSize) : 0
+}
+
 /** THE WITHHELD RECOVERY, OWED WHEN A "PLAYING" WEEK ENDS MATCH-FREE – the one oracle behind the
  *  three refund sites (the medical withdrawal and `skipEvent` in world.ts, the practice medical
  *  cancellation in planner.ts). `accrueCondition` pays a week believing she will play; when the
@@ -275,6 +299,14 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   // «+1 в день, т.к. съемка занимает не один час, то нагрузка будет мощной на всю неделю». One
   // point per day of the week, taken off the week's recovery.
   //
+  // ⭐⭐ ROUND 45 #1b (02.10) – ...AND «THE WEEK'S DAYS» ARE THE SHOOTING DAYS NOW, NOT SEVEN. Shown the
+  // condition table's «shoot week −7», the owner: «неделя съёмок… давай по 1 за каждый съемочный
+  // день, это может быть вполне справедливо». The shoot was never seven days long – on a week she is
+  // also playing, the schedule draws it on the event's match days – so the multiplier is the days the
+  // entered event RUNS (`clashShootDays`: the draw's rounds, 3 local / 4 regional / 5 / 6 / 7 Slam),
+  // and the flat `PLAN_DAYS` that stood here is the Slam's price only. One function for this charge
+  // and for the card, so the two cannot name different numbers.
+  //
   // ⚠⚠ IT IS CHARGED OFF THE FACT AND NEVER OFF THE ANSWER. Round 28's note two paragraphs up says
   // «NO STACKING on a played week ... she simply recovers worse, no rule needed» – that was true for
   // as long as the collision was nobody's decision, and the owner has now made it one: «жарить прямо
@@ -286,7 +318,7 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   //
   // ⚠ NOT A SECOND SPELLING OF EITHER PREDICATE: `adShootHolds` is the one shoot-week oracle this
   // file already reads, and `playedThisWeek` is `isCompetitionWeek`, handed in by the caller.
-  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS
+  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * clashShootDays(world)
   // ⭐⭐ ROUND 29 #5 – ...AND THE FAMILY'S OWN PLANE MAKES THE ROAD ONE POINT KINDER.
   // docs/specs/the-shop-2026-08.md §3f, the owner: «Самолёт не её, а родителей =) ... По усталости
   // по аналогии с кортом может 1 накинуть, не вижу причин не делать, не такая большая величина».

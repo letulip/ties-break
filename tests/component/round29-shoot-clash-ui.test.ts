@@ -48,7 +48,8 @@ import {
   type WorldState,
 } from '../../src/engine/world'
 import { ECONOMY } from '../../src/engine/economy'
-import { PLAN_DAYS } from '../../src/engine/plan'
+import { tripRoundsFor } from '../../src/composables/weekDays'
+import { tripArcFor } from '../../src/composables/weekGrid'
 import { type ShootClashChoice } from '../../src/shared/protocol'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND THE SHELL'S WATERMARKS ARE localStorage. Same shim as
@@ -142,7 +143,19 @@ describe('round 29 #3 – the collision raises a card the parent has to answer',
     const text = w.find('.shoot-clash-dialog').text()
     expect(game.snapshot?.shootClash, 'the prompt is missing – the card is drawing from nothing').toBeTruthy()
     // The condition price, spelled on the card, rebuilt from the catalogue rather than read back.
-    expect(text).toContain(String(AD.clashConditionPerDay * PLAN_DAYS))
+    // ⚠ 02.10 (round 45 #1b): PER SHOOTING DAY – the local rung (an 8-draw) runs 3 days, so the card prints 3,
+    // the engine's own number (never a template's 7), and the schedule draws the Shoot block on exactly
+    // that many days of the «do both» week: the picture and the charge are one sentence.
+    const days = tripRoundsFor('local')
+    expect(days).toBe(3)
+    expect(game.snapshot!.shootClash!.conditionCost, 'the card is not drawing the engine\'s number').toBe(
+      AD.clashConditionPerDay * days,
+    )
+    expect(text).toContain(`${AD.clashConditionPerDay * days} condition`)
+    const drawn = tripArcFor({ rounds: days, masseur: false, press: false, shoot: true }).filter((d) =>
+      d.some((b) => b.label === 'Shoot'),
+    ).length
+    expect(drawn, 'the schedule and the charge name different numbers of days').toBe(days)
     // ...and the cancellation's share of the fee, formatted from CENTS.
     // ⚠ $100,000 since round 34 #7/#11/#12/#13 (03.09): the ≤200 watches cell went $20,000 ->
     // $200,000 and the card still shows one of the letter's two shoots' share of it.

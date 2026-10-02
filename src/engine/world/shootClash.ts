@@ -47,10 +47,9 @@ import { TIERS } from '../season/calendar'
 import type { SeasonEvent } from '../season/types'
 import type { AdOfferTerms, Offer, ShootClashChoice, ShootClashPrompt } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
-import { PLAN_DAYS } from '../plan'
 import { cancelEntry } from './entries'
 import { addEvent } from './ledger'
-import { adShootHolds } from './medical'
+import { adShootHolds, clashShootDays } from './medical'
 import { mandatoryBinds } from './mandatory'
 import { guardNotEnded, UNKNOWN_CHOICE_REFUSAL } from './constants'
 import type { WorldState } from '../world'
@@ -189,7 +188,9 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
       return to === null ? null : weekLabel(to)
     })(),
     cancelShootCents: shootCancelCents(terms),
-    conditionCost: ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS,
+    // ⭐ 02.10 (round 45 #1b): PER SHOOTING DAY – the days the entered event runs. The same function the
+    // charge in `accrueCondition` multiplies by, so the card prints the engine's number.
+    conditionCost: ECONOMY.advertising.clashConditionPerDay * clashShootDays(world, week),
   }
 }
 

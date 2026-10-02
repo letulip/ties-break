@@ -400,7 +400,17 @@ The comment essays that stood above the `advertising` constants in `src/engine/e
      *  ⚠ PER DAY, MULTIPLIED BY THE WEEK'S DAYS AT THE ONE SITE THAT CHARGES IT
      *  (`accrueCondition`). Written as a rate rather than as a total because that is the shape he
      *  named it in, and because a week is seven days everywhere in this engine – the plan matrix,
-     *  `planWeek`, the calendar grid – so the multiplication has one honest reading. */
+     *  `planWeek`, the calendar grid – so the multiplication has one honest reading.
+     *
+     *  ⭐⭐ ROUND 45 #1b, 02.10 – THE DAYS BECAME THE SHOOTING DAYS, and the paragraph above is now the
+     *  history of why it was seven. Shown the condition table's «shoot week −7», the owner: «неделя
+     *  съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо». The multiplier
+     *  is `clashShootDays(world)` (`world/medical.ts`): the days the entered event RUNS, `log2(drawSize)`
+     *  – 3 local, 4 regional, 5 for every 32-draw, 6 the 1000, 7 the Slam – which is also how many days
+     *  the schedule draws the Shoot block on a «do both» week (`tripMatchDay` hangs `TRIP_SHOOT` on
+     *  every match day), so the picture and the charge are one sentence again. The rate stays 1; the
+     *  clash card (`buildShootClashPrompt`) multiplies by the same function, so it prints the engine's
+     *  number. Seven survives as the Slam's price and nothing else's. */
 ```
 
 ## `advertising.decideWeeks`
