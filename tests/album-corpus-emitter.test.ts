@@ -184,7 +184,7 @@ describe('the album emitter is a fixed point of the module it wrote (B16, 02.10)
         cwd: ROOT,
         env,
         encoding: 'utf8',
-        timeout: 100_000,
+        timeout: 30_000,
       })
       expect(said, 'main() ran and wrote').toContain('wrote ')
       const written = readFileSync(target, 'utf8')
