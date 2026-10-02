@@ -37,6 +37,7 @@
 // HANDED DOWN as a boolean by the caller that already holds it (`resolveBodyAndPlanner` computes it
 // once as `playedThisWeek` and threads it), which is the dependency inversion `accrueSpirit`'s
 // `psychologistWorks` argument established.
+import { staffRaisesGranted, staffRateAfter, writeStaffRaise } from './staffRaise'
 import { ECONOMY } from '../economy'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
@@ -243,7 +244,26 @@ export function sparringRustCut(world: WorldState, matchlessWeeks: number, away:
 /** What the seat costs a week at the rung the family is on – the card's headline figure and the
  *  ledger row's amount, one derivation. Pure, zero draws. */
 export function sparringWeeklyCents(world: WorldState): number {
-  return sparringRungOf(world).weeklyCents
+  // ⭐⭐⭐ ROUND 45 #3 – THE RUNG'S CATALOGUE PRICE IS THE OPENING PRICE; each yearly raise request the
+  // family SIGNED drifts it (`staffRateAfter`). A career with no signed request pays exactly the
+  // catalogue price – which is every career that predates the letters.
+  return staffRateAfter(sparringRungOf(world).weeklyCents, staffRaisesGranted(world.offers, 'sparring'))
+}
+
+/** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, index = rung: the
+ *  card's dial quotes it (the snapshot carries it), because a granted raise drifts all three together
+ *  and the flat catalogue would quote a price the ledger no longer takes. The row for the rung he is
+ *  on IS `sparringWeeklyCents`. Pure, zero draws. */
+export function sparringRungWeeklyCents(world: WorldState): number[] {
+  const granted = staffRaisesGranted(world.offers, 'sparring')
+  return ECONOMY.sparring.rungs.map((r) => staffRateAfter(r.weeklyCents, granted))
+}
+
+/** ⭐⭐⭐ ROUND 45 #3 – THE ANNIVERSARY WRITES HIS REQUEST (`writeStaffRaise`, the masseur's own letter
+ *  shape, quoting the rung he is on). Called from `world/phaseHerWeek.ts` just BEFORE `resolveSparring`;
+ *  the letter is paper, so that week's bill is still at the price he had. Zero draws. */
+export function resolveSparringRaise(world: WorldState): void {
+  writeStaffRaise(world, 'sparring', SPARRING_CHANGE_KEY, world.sparringHired ?? false, sparringRungOf(world).weeklyCents)
 }
 
 /** THE WEEKLY BILL. `resolveMasseur`'s shape, one seat over: the predicate that decides the money is

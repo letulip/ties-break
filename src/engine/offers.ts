@@ -1853,6 +1853,15 @@ export function staffAsksWithheld(offers: Offer[], seat: StaffSeat): number {
   return staffAsks(offers, seat).filter((o) => o.state !== 'signed').length
 }
 
+/** THE UNIT A SEAT'S RATE IS QUOTED IN ON ITS RAISE REQUEST – the masseur by the SESSION (his rate is per
+ *  session), the psychologist and the hitting partner by the WEEK (a flat weekly retainer). The letter,
+ *  the confirm and the settled foot all spell the unit from this one answer, so the three can never
+ *  disagree about it. ⚠ DRAFT words (R45-S10..S14 in docs/rounds/round-45.md); the masseur's own
+ *  sentences (R45-S2, S5-S8) are byte-for-byte what they were. */
+export function staffAskUnit(seat: StaffSeat): 'session' | 'week' {
+  return seat === 'masseur' ? 'session' : 'week'
+}
+
 /** A SEAT ASKS. An OPEN letter with the sponsor letters' window; idempotent on its id; nothing
  *  draws and no cash moves. Never pruned (`pruneEntryLetters` touches only entry and tour papers),
  *  so the derivation above can read every request the career ever made. */

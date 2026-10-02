@@ -284,6 +284,15 @@ export interface Snapshot {
   /** ...the weekly bill at the family's chosen rung, in cents – a FLAT contract per rung, no
    *  corridor, no jitter, no draw, so the card's quote IS the ledger's row. */
   sparringSalaryCents: number
+  /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, in cents, index = rung (the
+   *  index `sparringRung` holds). `ECONOMY.sparring.rungs[n].weeklyCents` is the OPENING price now and no
+   *  longer the price: once the family has granted the hitting partner's yearly raise request all three rungs
+   *  drift together, and the dial must quote what choosing each would bill – never the flat constant.
+   *
+   *  ⚠ DERIVED BY THE BILL'S OWN FUNCTION (`sparringRungWeeklyCents`, which `sparringWeeklyCents` shares),
+   *  so the row for the rung he is on is the headline above and both are the ledger's row. A screen that
+   *  re-derived the drift would be the parity class. */
+  sparringRungSalaryCents: number[]
   /** ⭐ THE ROSTER DIAL – which of the three hits with her: an INDEX into `ECONOMY.sparring.rungs`
    *  (0 a college hitter · 1 a journeyman pro · 2 a top-100 partner), the psychologist's kind of dial
    *  and not the masseur's count. */
@@ -311,6 +320,15 @@ export interface Snapshot {
    *  multiply it by: one session a week at every rung, so the person's retainer IS the week (the
    *  spec's «the rung buys WHO comes to the call»). The card's quote IS the ledger's row. */
   psychologistSalaryCents: number
+  /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, in cents, index = rung (the
+   *  index `psychologistRung` holds). `ECONOMY.psychologist.rungs[n].salaryCents` is the OPENING price now
+   *  and no longer the price: once the family has granted the psychologist's yearly raise request all three
+   *  rungs drift together, and the dial must quote what choosing each would bill – never the flat constant.
+   *
+   *  ⚠ DERIVED BY THE BILL'S OWN FUNCTION (`psychologistRungWeeklyCents`, which `psychologistWeeklyCents`
+   *  shares), so the row for the rung she is on is the headline above and both are the ledger's row. A
+   *  screen that re-derived the drift would be the parity class. */
+  psychologistRungSalaryCents: number[]
   /** ⭐ THE ROSTER DIAL – which of the three takes the call: an INDEX into
    *  `ECONOMY.psychologist.rungs` (0 counsellor · 1 sport psychologist · 2 tour-grade), NOT a
    *  quantity. That is the whole difference from `masseurSessionsPerWeek` above, which is a count. */

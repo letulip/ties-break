@@ -63,7 +63,7 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   **Asks him:** what colour is the line, and what had he just done (pulled the page down, closed
   a card, a week ticked)? Grey-white points at (1), page-dark at a seam, green at our own accent.
 
-- [?] **3. «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
+- [x] **3. «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
   массажист растёт сам по себе тихо ежегодно»** – Reading: specialists (physio, psychologist,
   masseur…) send progress letters but no raise requests; the masseur's fee indexes silently
   yearly – inconsistent. Wanted: raise-request letters with accept/decline, masseur included
@@ -80,10 +80,29 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   (`staffAsksWithheld`), so Decline and a lapse leave it where it was, nothing is punished, and a
   save with no such papers keeps every raise it already pays – no schema move. Proof:
   `tests/round45-staff-ask.test.ts` A+B (both doors, lapse, a real `tickWeek`, the old feed row
-  dead) and `tests/component/round45-staff-ask-letter.test.ts`. **Open, his ruling or the
-  architect's:** the psychologist and the hitting partner do not ask yet (their cards quote flat
-  per-rung prices, so a raise needs the card and the snapshot to carry the scaled price first), and
-  the coach keeps his own 2026-09 ask (a notice, rate applied) – see the B2 report.
+  dead) and `tests/component/round45-staff-ask-letter.test.ts`. **Open at B2, closed by B2b below:**
+  the psychologist and the hitting partner did not ask yet (their cards quoted flat per-rung prices).
+
+  **B2b outcome (02.10) – `[x]`: the psychologist and the hitting partner ask too, and their cards
+  tell the truth.** The same open staff letter on each seat's own anniversary – the hire ledger
+  already tags both seats (`psychologist-since-`, `sparring-since-`), so no persisted field and no
+  schema move – with the sponsor letters' four-week window and the same two doors; `acceptOffer`
+  re-validates that the seat is still hired. The fee is DERIVED: the rung's catalogue price ×
+  1.04^(requests the family SIGNED), whole dollars. So Decline and a lapse leave the fee, the
+  forgone year is not banked, the next request is one step above what the seat is paid now, and a
+  save that predates the letters pays exactly what it paid (these two seats never rose, so the
+  exponent counts signed papers where the masseur's legacy rule counts years). The snapshot now
+  carries what each rung costs this career (`psychologistRungSalaryCents`,
+  `sparringRungSalaryCents`; the headline `*SalaryCents` fields were already the bill's) and the
+  dial reads them, never the catalogue. Proof: `tests/round45-staff-ask-seats.test.ts` (both seats:
+  letter, accept, decline, lapse, a real `tickWeek` walk, re-hire clock, snapshot, masseur parity)
+  and `tests/component/round45-staff-ask-card.test.ts` (the dial off an engine-built and a doctored
+  snapshot; the letter's unit); mutations M1–M10 each turn a test red. Frozen MAIN capture
+  unmoved (no draw), save untouched. ⚠ **4% IS A DEFAULTED PARAMETER awaiting the owner** – the
+  masseur's own `raisePerYear`, lent to both seats (`staffRaisePerYear()` in `world/staffRaise.ts`
+  is the one seam to give a seat its own); the four-week window is the sponsor letters' (also
+  defaulted, B2). **Open for the owner:** the coach keeps his own ruled round-43 auto-raise (a
+  notice, rate applied) – converting him to a letter is his call and was not touched.
 
 - [x] **4. «Для психолога мне кажется нужно сделать чтобы если игрок забыл выбрать направление, то
   оставалось предыдущее. А в письме следующего года писать "мы не выбрали новое, поэтому работали
@@ -268,4 +287,9 @@ architect's session after the last agent, verdicts from files.
 | R45-S7 | item 3 – foot once lapsed unanswered | `Lapsed – the rate stays at {from} a session.` | – | draft |
 | R45-S8 | item 3 – the confirm before Accept (`InboxSheet.vue` `confirmMessage`) | `Accept the raise? The rate goes from {from} to {to} a session. This cannot be undone.` | – | draft |
 | R45-S9 | item 4 – the psychologist's year-end letter, carry-over line (`OfferLetter.vue`) | `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for {year}.` | «мы не выбрали новое, поэтому работали по предыдущему» | draft |
+| R45-S10 | item 3 – the psychologist's and the hitting partner's raise letter, body (`OfferLetter.vue`): R45-S2 with the unit `a week`, because these two seats bill by the week (R45-S1 subject, S3 window and S4 doors are shared by all three seats, unchanged) | `I have now worked a full year with her, so I am asking for a raise: my rate would go from {from} to {to} a week.` | «повышение они так и не просят» | draft |
+| R45-S11 | item 3 – their foot once signed (R45-S5 with `a week`) | `Accepted – the rate is {to} a week.` | – | draft |
+| R45-S12 | item 3 – their foot once refused (R45-S6 with `a week`) | `Declined – the rate stays at {from} a week.` | – | draft |
+| R45-S13 | item 3 – their foot once lapsed unanswered (R45-S7 with `a week`) | `Lapsed – the rate stays at {from} a week.` | – | draft |
+| R45-S14 | item 3 – their confirm before Accept (`InboxSheet.vue` `confirmMessage`; R45-S8 with `a week`) | `Accept the raise? The rate goes from {from} to {to} a week. This cannot be undone.` | – | draft |
 | (agents append rows here for item 5) | | | | |

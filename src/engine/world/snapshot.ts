@@ -126,8 +126,8 @@ import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
-import { sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
-import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
+import { sparringRungWeeklyCents, sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
+import { psychologistRungWeeklyCents, psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView, reachableFundsCents } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
@@ -2006,6 +2006,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // so a screen saying «no salary is charged» on a week the bill was taken is unspellable.
     sparringStoodDown: sparringStoodDown(world),
     sparringSalaryCents: sparringWeeklyCents(world),
+    // ⭐⭐⭐ ROUND 45 #3 – what each rung costs THIS career, off the same derivation the bill uses.
+    sparringRungSalaryCents: sparringRungWeeklyCents(world),
     sparringRung: world.sparringRung ?? ECONOMY.sparring.defaultRung,
     sparringTravels: world.sparringTravels ?? false,
     ...(() => {
@@ -2052,6 +2054,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     psychologistHired: world.psychologistHired ?? false,
     psychologistUnlocked: psychologistUnlocked(world),
     psychologistSalaryCents: psychologistWeeklyCents(world),
+    // ⭐⭐⭐ ROUND 45 #3 – what each rung costs THIS career, off the same derivation the bill uses.
+    psychologistRungSalaryCents: psychologistRungWeeklyCents(world),
     psychologistRung: world.psychologistRung ?? ECONOMY.psychologist.defaultRung,
     psychologistFocus: world.psychologistFocus ?? null,
     psychologistFocusOpen: psychologistFocusOpen(world),

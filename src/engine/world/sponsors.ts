@@ -1155,7 +1155,13 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   if (askLetter && isOfferLive(askLetter, world.week)) {
     const seat = (askLetter.terms as { seat?: string }).seat
     const stands =
-      seat === 'masseur' ? (world.masseurHired ?? false) : seat === 'psychologist' ? (world.psychologistHired ?? false) : false
+      seat === 'masseur'
+        ? (world.masseurHired ?? false)
+        : seat === 'psychologist'
+          ? (world.psychologistHired ?? false)
+          : seat === 'sparring'
+            ? (world.sparringHired ?? false)
+            : false
     if (!stands) throw new Error(offerAnswerErrorFor(world, offerId))
   }
   const signed = signOfferIn(world.offers, offerId, world.week)

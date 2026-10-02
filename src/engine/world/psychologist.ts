@@ -49,6 +49,7 @@
 // exactly what O1 forbids. The window is the TRUE off-season and nothing else, which also retires
 // the `schoolIsOver` plumbing the wider predicate needed: this file no longer imports `../kidLife`
 // at all.
+import { staffRaisesGranted, staffRateAfter, writeStaffRaise } from './staffRaise'
 import { ECONOMY } from '../economy'
 import { addEvent, seasonIndexOf } from './ledger'
 import { guardNotEnded } from './constants'
@@ -146,7 +147,33 @@ export function psychologistRungOf(world: WorldState) {
  *  WEEK AT EVERY RUNG and the rung buys who takes it, so the person's retainer IS the week. The
  *  card's quote is this ledger row. Zero draws. */
 export function psychologistWeeklyCents(world: WorldState): number {
-  return psychologistRungOf(world).salaryCents
+  // ⭐⭐⭐ ROUND 45 #3 – FLAT WITHIN A YEAR, NOT FLAT FOR EVER. The rung's catalogue price is the OPENING
+  // price; each yearly raise request the family SIGNED drifts it (`staffRateAfter`). A career with no
+  // signed request pays exactly the catalogue price – which is every career that predates the letters.
+  return staffRateAfter(psychologistRungOf(world).salaryCents, staffRaisesGranted(world.offers, 'psychologist'))
+}
+
+/** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, index = rung. The
+ *  snapshot carries it so the card's dial quotes what choosing each rung would bill – a granted raise
+ *  drifts all three together, and the flat catalogue would tell the player a price the ledger no longer
+ *  takes. ⚠ The row for the rung she is on IS `psychologistWeeklyCents` (one drift, one rounding).
+ *  Pure, zero draws. */
+export function psychologistRungWeeklyCents(world: WorldState): number[] {
+  const granted = staffRaisesGranted(world.offers, 'psychologist')
+  return ECONOMY.psychologist.rungs.map((r) => staffRateAfter(r.salaryCents, granted))
+}
+
+/** ⭐⭐⭐ ROUND 45 #3 – THE ANNIVERSARY WRITES HER REQUEST (`writeStaffRaise`, the masseur's own letter
+ *  shape, quoting the rung she is on). Called from `world/phaseHerWeek.ts` just BEFORE `resolvePsychologist`;
+ *  the letter is paper, so that week's bill is still at the price she had. Zero draws. */
+export function resolvePsychologistRaise(world: WorldState): void {
+  writeStaffRaise(
+    world,
+    'psychologist',
+    PSYCHOLOGIST_CHANGE_KEY,
+    world.psychologistHired ?? false,
+    psychologistRungOf(world).salaryCents,
+  )
 }
 
 /** THE ROSTER DIAL – which of the three comes to the call. The engine re-validates against

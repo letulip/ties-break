@@ -59,7 +59,7 @@ import { formatCents } from '../shared/money'
 import { WEEKS_IN_SEASON, seasonYear, weekLabel, weekRange } from '../shared/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
-import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand } from '../engine/offers'
+import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskUnit } from '../engine/offers'
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5): the memory window the stale notice quotes is the ENGINE's constant, imported rather than
 // retyped (a retune of `memoryWeeks` moves the sentence with it), and the two senders' words are the ones the inbox LIST prints too.
 import { ECONOMY } from '../engine/economy'
@@ -258,18 +258,21 @@ const staffCarriedLine = computed(() => {
 /** ⭐⭐⭐ ROUND 45 #3 – A RAISE REQUEST, DRAFT copy. The figures are the two the engine froze on the
  *  paper (`terms.ask`); nothing here is computed from the world. */
 const staffAsk = computed(() => (isStaff.value ? (staffTerms.value.ask ?? null) : null))
+/** The unit the seat is paid in – a session for the masseur, a week for the two retainers (`staffAskUnit`).
+ *  DRAFT copy: the masseur's sentences are unchanged, the other two are R45-S10..S13. */
+const staffAskUnitWord = computed(() => staffAskUnit(staffTerms.value.seat))
 const staffAskLead = computed(() => {
   const ask = staffAsk.value
   if (!ask) return ''
-  return `I have now worked a full year with her, so I am asking for a raise: my rate would go from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} a session.`
+  return `I have now worked a full year with her, so I am asking for a raise: my rate would go from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} a ${staffAskUnitWord.value}.`
 })
 /** What the foot says once the window is shut – one sentence per way a request can end. */
 const staffAskSettled = computed(() => {
   const ask = staffAsk.value
   if (!ask) return ''
-  if (props.offer.state === 'signed') return `Accepted – the rate is ${formatCents(ask.toCents)} a session.`
-  if (props.offer.state === 'refused') return `Declined – the rate stays at ${formatCents(ask.fromCents)} a session.`
-  return `Lapsed – the rate stays at ${formatCents(ask.fromCents)} a session.`
+  if (props.offer.state === 'signed') return `Accepted – the rate is ${formatCents(ask.toCents)} a ${staffAskUnitWord.value}.`
+  if (props.offer.state === 'refused') return `Declined – the rate stays at ${formatCents(ask.fromCents)} a ${staffAskUnitWord.value}.`
+  return `Lapsed – the rate stays at ${formatCents(ask.fromCents)} a ${staffAskUnitWord.value}.`
 })
 
 // ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 steps 1-2). The other
