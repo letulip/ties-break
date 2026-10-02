@@ -668,7 +668,9 @@ describe('save migrations', () => {
     // this case is about the v63 -> v65 double step, and its last line simply follows the ladder's head so the sentence over it
     // stays checkable. v90 was moved with its full move, and its step is the version step – it writes nothing, so it cannot touch
     // this walk.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 90 – past the colliding 64, through 65').toBe(90)
+    // ⚠ AND AGAIN AT v91 (02.10, round 45 #5 – the first-touch latch), NOT WEAKENED: same reason, same line. v91 was moved with its full
+    // move and its step writes `firstNo1` only where a cached rank is 1 – it cannot touch the v63 -> v65 walk this case is about.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 91 – past the colliding 64, through 65').toBe(91)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

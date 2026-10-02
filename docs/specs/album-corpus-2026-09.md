@@ -344,13 +344,17 @@ the commit»), and the anti-vacuity half, because a comparison of two empty list
 
 | written | count |
 | --- | ---: |
-| occasions | **34** |
-| notes (34 × 4 voices) | **136** |
-| captions (34 × 4 voices) | **136** |
-| lines (34 × 4 voices) | **136** |
+| occasions | **37** |
+| notes (37 × 4 voices) | **148** |
+| captions (37 × 4 voices) | **148** |
+| lines (37 × 4 voices) | **148** |
 | arc cells (2 directions × 4 voices) | **8** |
 | arc strings (8 × note + line) | **16** |
-| ⭐ authored strings in total | **424** |
+| ⭐ authored strings in total | **460** |
+
+⚠ **THE TABLE ABOVE IS RE-DERIVED AT ROUND 45 #5** – it had stood at 34 / 424 since wave 8b and had not followed
+the heirloom (`A-L1`, wave 10 T6a) or the two first-number-one occasions (`A35`, `A36`, 24 strings, all DRAFT).
+Every figure is the parser's own count of this file (`albumCounts`), asserted by the round-trip test.
 
 ⚠ **THE COUNTS MOVED AT WAVE 8b T6 AND THE TWELVE NEW STRINGS ARE THE ONLY ONES ON THE PAGE THAT ARE
 NOT WAVE 7's.** A34 (`birth`) is the thirty-fourth occasion, ruled 21.09; every string of it is a
@@ -1270,6 +1274,71 @@ is the engine's.
 | `fiery` | `Nobody argued.` |
 | `deep` | `Then she noticed that.` |
 | `quiet` | `I hear about the next one first. Always have.` |
+
+## The first time at number one – round 45 #5, the owner's 02.10 ruling, written once per table
+
+⭐ «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире выходит, даже если в
+моменте, а не по итогам года, это значимый момент» – and, asked about the other levels, «можно и на других
+уровнях тоже показывать, в принципе, не вижу ничего противоречащего». ⚠⚠ **ALL TWENTY-FOUR STRINGS OF `A35` AND
+`A36` ARE DRAFTS** an agent wrote to a brief, in the repo's own register rules, for his pass (invariant 4).
+⚠ **TWO OCCASIONS AND NOT ONE WITH A TABLE PARAMETER, AND THE REASON IS THE CORPUS'S OWN LAW:** §3.2 – no
+placeholder, no token, no interpolation in any string – so «number one in the world» and «top of the junior
+list» cannot be one sentence with a noun filled in; the page for each table is its own twelve strings.
+⚠ **No date and no duration is written** (§3.1): the page marks the FIRST week she touched number one and the
+sheet dates it – whether she held it for a week or a season is not the corpus's to say, which is the whole of
+«даже если в моменте». Each fires once, at the week the touch was first seen (`world.firstNo1`, v91).
+
+### A35 · `first-number-one` · rare · teen, adult, lateCareer · **gate: `first-time-at-the-top-of-the-world-list`**
+**The occasion:** the first time her name stood at the top of the professional world list.
+**Where it comes from:** `world.firstNo1.wta` – the first-touch latch, written once in `recomputeKidRank` (v91).
+⚠ **The table is never named** (§3.3) – our ranks are ours and the real ones are trademarks.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `Number one in the world. You rang to read me the list down the phone, and then you read it again to be sure.` |
+| `fiery` | `Number one in the world. You said you had never doubted it, and dared me to say that I had.` |
+| `deep` | `Number one in the world. You said you kept waiting to feel different, and that you mostly felt the same.` |
+| `quiet` | `Number one in the world. You mentioned it after the practical things, and only because I asked.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `She read us the list, and then read it again.` |
+| `fiery` | `She never doubted it, she says.` |
+| `deep` | `She waited to feel different.` |
+| `quiet` | `She mentioned it last, and only when asked.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `Top of the list, and she still checked.` |
+| `fiery` | `She never doubted it. She will say so.` |
+| `deep` | `Mostly the same, she said.` |
+| `quiet` | `After the practical things.` |
+
+### A36 · `first-number-one-junior` · rare · young, teen · **gate: `first-time-at-the-top-of-the-junior-list`**
+**The occasion:** the first time her name stood at the top of the international junior list.
+**Where it comes from:** `world.firstNo1.junior` – the first-touch latch, written once in `recomputeKidRank` (v91).
+⚠ **The domestic table is not latched** – a national number one is not a page.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `Top of the junior list. You rang to tell me, and I could hear you smiling the whole way through.` |
+| `fiery` | `Top of the junior list. You said it was about time, and then asked what the next one was.` |
+| `deep` | `Top of the junior list. You said it was odd to be first at something and not know what to do with your hands.` |
+| `quiet` | `Top of the junior list. You sent it as one line at the bottom of a message about something else.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `First on the junior list, and smiling.` |
+| `fiery` | `About time, she says.` |
+| `deep` | `First, and not sure what to do with her hands.` |
+| `quiet` | `She put it at the bottom of the message.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `I heard the smile before the news.` |
+| `fiery` | `Already asking what comes next.` |
+| `deep` | `First on a list, and fidgeting.` |
+| `quiet` | `Bottom of the message. Top of the list.` |
 
 ## The closing three
 

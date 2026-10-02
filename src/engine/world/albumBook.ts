@@ -145,6 +145,10 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   'lifetime-sponsor': 'happy',
   'top-tier-title': 'happy',
   'years-at-the-top': 'happy',
+  // ⭐ round 45 #5 – the first time at number one, one row per table. `happy` for the rare family's own reason (a thing that HAPPENED);
+  // a DRAFT pick like the other rare rows, cheap to move, and not a word on a screen.
+  'first-number-one': 'happy',
+  'first-number-one-junior': 'happy',
   graduated: 'happy',
   farewell: 'serious',
   'career-ended': 'happy',
@@ -631,6 +635,16 @@ function rareCandidates(world: WorldState): AlbumCandidate[] {
     }
   }
   if (streakEnd !== null) out.push(candidate(world, 'years-at-the-top', wrapWeekOf(streakEnd), 98))
+  // ⭐⭐ ROUND 45 #5 – THE FIRST TIME AT NUMBER ONE (the owner, 02.10: «даже если в моменте, а не по итогам года, это значимый момент»,
+  // and «можно и на других уровнях тоже»). ONE page per table, DATED AT THE WEEK THE LIVE FOLD FIRST SAID #1 – `world.firstNo1`, the v91
+  // latch `recomputeKidRank` writes once. Priority 99: between the top-tier title (100) and the years at the top (98), so the first
+  // touch outranks the run it begins and yields only to the biggest trophy there is.
+  // ⚠ NOT DERIVED FROM `seasonHistory`, and that is the whole reason for the latch: a year-end row would miss a June touch that ends the
+  // season at #3, and no save held the week otherwise. ⚠ TWO OCCASIONS AND NOT ONE WITH A TABLE PARAMETER – the corpus forbids
+  // interpolation (corpus doc §3.2), so each table's page has its own twelve strings. ⚠ THE DOMESTIC TABLE IS NOT LATCHED: no page.
+  // A career whose latch is absent (never touched #1, or an older save that had not at migration time) simply has no such page.
+  if (world.firstNo1?.wta !== undefined) out.push(candidate(world, 'first-number-one', world.firstNo1.wta, 99))
+  if (world.firstNo1?.junior !== undefined) out.push(candidate(world, 'first-number-one-junior', world.firstNo1.junior, 99))
   for (const o of world.offers) {
     if (o.state !== 'signed') continue
     if ('lifetime' in o.terms && o.terms.lifetime === true) {

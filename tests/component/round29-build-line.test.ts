@@ -223,7 +223,9 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // ⚠ AND AGAIN AT v90 (30.09, the secondary market S2 – `OwnedAsset.listedWeek` / `lastListing`), NOT WEAKENED: two optional keys
     // with their own full move. 90 was moved by that wave, never by this line's item, and the cell is re-stamped in the schema's
     // own commit as the note below asks.
-    expect(SAVE_SCHEMA_VERSION).toBe(90)
+    // ⚠ AND AGAIN AT v91 (02.10, round 45 #5 – the first-touch latch `firstNo1`), NOT WEAKENED: one optional world key with its own full
+    // move. 91 was moved by that item, never by this line's, and the cell is re-stamped in the schema's own commit as the note below asks.
+    expect(SAVE_SCHEMA_VERSION).toBe(91)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

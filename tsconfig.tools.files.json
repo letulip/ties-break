@@ -59,6 +59,7 @@
     "tools/fade-read.ts",
     "tools/fatigue-bench.ts",
     "tools/feed-audit.ts",
+    "tools/first-number-one-probe.ts",
     "tools/first-pair-replay.ts",
     "tools/fork-birthday-probe.ts",
     "tools/form-bench.ts",

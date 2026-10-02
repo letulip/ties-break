@@ -121,7 +121,7 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   prints no such line. Proof: `tests/round45-staff-ask.test.ts` «round 45 #4» (a real `tickWeek`
   walk, both arms) and the mounted pair in `tests/component/round45-staff-ask-letter.test.ts`.
 
-- [>] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
+- [x] **5. «В альбоме вполне можно сделать чуть ли не отельную страницу, если она на #1 в мире
   выходит, даже если в моменте, а не по итогам года, это значимый момент»** – Reading: the album
   gets a dedicated page the first time she touches world #1, mid-season counts – not only the
   year-end review. Class: **build**. Bundle **B5** (album engine/composition).
@@ -152,6 +152,21 @@ never straight into the owner's voice. His sketches (item 4) are the draft, stil
   schema, from `seasonHistory` – which is the reading he said is NOT enough; (C) leave the album as
   it is. One more question for him: «#1 в мире» is the Professional table only (the draft's reading)
   or the junior International table too? No copy was written, so no DRAFT row was added.
+
+  **B8 outcome (02.10) – `[x]`: BUILT, v91 (the three-part move).** The latch is `world.firstNo1 = { wta?, junior? }` –
+  the first week the live fold said #1 on the professional world table (`kidRankWta`) and on the international junior one
+  (`kidRank`); the domestic table is not latched (a national #1 is not a page). It is written ONCE per key in
+  `recomputeKidRank` (`latchFirstNo1`, `world/ladder.ts`) on `rank === 1` with points held, created lazily, never rewritten –
+  so a June touch that ends the season at №3 keeps its page, which is exactly his «даже если в моменте». Zero draws.
+  **Migration backfill:** v90 -> v91 sets a latch to the CURRENT week only where the cached rank is 1 as the save is written,
+  otherwise leaves the key absent – a past touch is unknowable and the step may not invent one (the comment says so).
+  **The page:** two `rare` occasions at priority 99 – `first-number-one` (A35, the world list) and `first-number-one-junior`
+  (A36, the junior list) – TWO and not one with a table parameter, because the corpus forbids interpolation (corpus §3.2);
+  24 DRAFT strings, R45-S15 – S22 below, also in `docs/specs/album-corpus-2026-09.md`, re-emitted with the emitter against the
+  round-trip pin. No component change: the page is a frame the existing single-frame A/C sheets already render.
+  **Measured** (`tools/first-number-one-probe.ts`, 18 walked careers): the junior #1 latched on 2 (ages 15 and 16, earliest
+  week 122), the world #1 on 3 (ages 18, 19 and 25); every career whose best rank was 1 carries the latch and no other does –
+  no early-field artefact. Proof: `tests/round45-first-number-one.test.ts` (23 cases, ten mutation arms, ledger in its head).
 
 - [x] **6. «Расположение фото в альбоме конфликтуют с надписями в самом альбоме и с некоторыми
   записками, которые перекрывают надписи на фото, надо подумать как лучше сделать»** – Reading:
@@ -292,7 +307,14 @@ architect's session after the last agent, verdicts from files.
 | R45-S12 | item 3 – their foot once refused (R45-S6 with `a week`) | `Declined – the rate stays at {from} a week.` | – | draft |
 | R45-S13 | item 3 – their foot once lapsed unanswered (R45-S7 with `a week`) | `Lapsed – the rate stays at {from} a week.` | – | draft |
 | R45-S14 | item 3 – their confirm before Accept (`InboxSheet.vue` `confirmMessage`; R45-S8 with `a week`) | `Accept the raise? The rate goes from {from} to {to} a week. This cannot be undone.` | – | draft |
-| (agents append rows here for item 5) | | | | |
+| R45-S15 | item 5 – album occasion `first-number-one` (A35; the first time at the top of the world list), `sunny` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Number one in the world. You rang to read me the list down the phone, and then you read it again to be sure.` / `She read us the list, and then read it again.` / `Top of the list, and she still checked.` | «если она на #1 в мире выходит, даже если в моменте» | draft |
+| R45-S16 | item 5 – album occasion `first-number-one` (A35; the first time at the top of the world list), `fiery` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Number one in the world. You said you had never doubted it, and dared me to say that I had.` / `She never doubted it, she says.` / `She never doubted it. She will say so.` | «если она на #1 в мире выходит, даже если в моменте» | draft |
+| R45-S17 | item 5 – album occasion `first-number-one` (A35; the first time at the top of the world list), `deep` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Number one in the world. You said you kept waiting to feel different, and that you mostly felt the same.` / `She waited to feel different.` / `Mostly the same, she said.` | «если она на #1 в мире выходит, даже если в моменте» | draft |
+| R45-S18 | item 5 – album occasion `first-number-one` (A35; the first time at the top of the world list), `quiet` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Number one in the world. You mentioned it after the practical things, and only because I asked.` / `She mentioned it last, and only when asked.` / `After the practical things.` | «если она на #1 в мире выходит, даже если в моменте» | draft |
+| R45-S19 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `sunny` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You rang to tell me, and I could hear you smiling the whole way through.` / `First on the junior list, and smiling.` / `I heard the smile before the news.` | «можно и на других уровнях тоже показывать» | draft |
+| R45-S20 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `fiery` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You said it was about time, and then asked what the next one was.` / `About time, she says.` / `Already asking what comes next.` | «можно и на других уровнях тоже показывать» | draft |
+| R45-S21 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `deep` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You said it was odd to be first at something and not know what to do with your hands.` / `First, and not sure what to do with her hands.` / `First on a list, and fidgeting.` | «можно и на других уровнях тоже показывать» | draft |
+| R45-S22 | item 5 – album occasion `first-number-one-junior` (A36; the first time at the top of the junior list), `quiet` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `Top of the junior list. You sent it as one line at the bottom of a message about something else.` / `She put it at the bottom of the message.` / `Bottom of the message. Top of the list.` | «можно и на других уровнях тоже показывать» | draft |
 
 ## Owner answers, 02.10 (his numbering = the question batch)
 

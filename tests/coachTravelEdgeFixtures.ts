@@ -3454,7 +3454,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: 'b8b22fa8a371ef956228781360827bd30ef87603d867acaed3aa20ce2bb29ef4',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '608748cb2c3d660f46e1993fe8d5abd2e5497d55fbcfa2b85e42caa5b0021eab',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -3583,7 +3583,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: 'cd92e00e92b851cb8a684b05b372b45aa9c647dd608289248a1fe515d116a2eb',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '3fe835fc17001ace95f6134d1a2d9873dc8bc7d508712f3bd3cb44c0bc39ee10',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -3823,7 +3823,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: 'cc23f72cdcb4a388622078e7c037929ff9b5cb48e676571fad96d2303a73347b',}
+  selfTravelling: '7627f11ddaae08aeb486fbbb77e251609b0402ecab3a9b501b2f927d51bad933',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -4297,6 +4297,27 @@ export const PRE_V85 = {
  *  them does not. v85's third-key rung is the mirror of this one – there `schemaVersion` was the
  *  ONE line that did NOT move, and the reason was the same: the hash sees the version and the shape
  *  separately. */
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v90 – AND THE FOURTH RUNG IN A ROW WHOSE PEEL DOES NOTHING. v91 (round 45 #5, the
+ *  first-touch latch) adds ONE optional key to the world, `firstNo1?`, and it is created LAZILY – only the week `recomputeKidRank` first sees
+ *  her number one on a table – so a career that never reaches #1 serialises exactly as before. None of the three frozen careers does inside
+ *  its walk, so the key exists in the schema and the serialised world gains no key: `careerHashAtSchema`'s ternary chain gains no rung – its
+ *  tail (`schemaVersion < 87 ? preWeight : world`) answers 87 through 91 alike – and the only thing that differs between the two hashes is the
+ *  version number the last line stamps in.
+ *
+ *  ⭐⭐ THE CLAIM THIS RUNG MAKES is a claim about WHERE a schema move landed: one optional key that no frozen career can carry. Give a frozen
+ *  career a rank-1 week, or write the key on every world, and all three cells below go red at once with no comment able to explain it away.
+ *
+ *  ⚠ MEASURED, NOT PREDICTED: the three values below are the three `FROZEN` constants this branch held at v90 (7ea15e4b), copied verbatim
+ *  BEFORE the bump, and `careerHashAtSchema(·, ·, 90)` returns them character for character on the tree WITH the bump.
+ *  ⚠ AND THE LIVE CELLS RE-STAMP ANYWAY, which is the arithmetic and not a contradiction: the version number is inside the hash, so
+ *  `FROZEN`'s three, `PRE_R28B`'s five (its trio shares these cells, the shared-cell rule) and `PRE_NAME_VERA`'s three all move while the
+ *  world under them does not. */
+export const PRE_V91 = {
+  middleGrinder: 'b8b22fa8a371ef956228781360827bd30ef87603d867acaed3aa20ce2bb29ef4',
+  eliteGrinder: 'cd92e00e92b851cb8a684b05b372b45aa9c647dd608289248a1fe515d116a2eb',
+  selfTravelling: 'cc23f72cdcb4a388622078e7c037929ff9b5cb48e676571fad96d2303a73347b',
+}
+
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v89 – AND THE THIRD RUNG IN A ROW WHOSE PEEL DOES NOTHING, for a reason of its
  *  own. v88 added no FIELD at all (three union widenings); v89 added one nested inside a NULL that every frozen career carries; v90
  *  (the secondary market – S2) adds two OPTIONAL keys on every `OwnedAsset` row, `listedWeek?` and `lastListing?`, and a frozen career
@@ -4719,9 +4740,9 @@ export const PRE_V69 = {
  *  birth and the old-name career still comes back exactly, on the new world as on the old. The
  *  02.09 identity is about a name, and no part of v79 touches one. */
 export const PRE_NAME_VERA = {
-  middleGrinder: '75f85be1850b43cc09d62b8189cf9ccd652af631010910a2fadb46018e45a5c3',
-  eliteGrinder: 'c9be5c887230415b226ea5bd666712918b4fc32fc2e2ffb20fc68f3076c08677',
-  selfTravelling: '6467ae927306d3a8713ff8f8b3ca72f95afecea6575c4a3adf63e4b65aded8ae',}
+  middleGrinder: 'f30f07d07bebf206fe2200899423db55cea54755b916c8effe097945ed768bb4',
+  eliteGrinder: '6c6a3682335f2ef3c72b27f7f944229050fde3cf47ddbe503c36734c3ef4b9c9',
+  selfTravelling: '4bc53c6873b49952f7f1cfab5c5db48795fbbbfb19174b67775d27104d99922c',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -5064,9 +5085,9 @@ export const PRE_V66 = {
  *  differs from `live` on 6/1. The rule this constant exists for is untouched by the wave; only the
  *  careers under it moved. */
 export const PRE_R28B = {
-  middleGrinder: 'b8b22fa8a371ef956228781360827bd30ef87603d867acaed3aa20ce2bb29ef4',
-  eliteGrinder: 'cd92e00e92b851cb8a684b05b372b45aa9c647dd608289248a1fe515d116a2eb',
-  selfTravelling: 'cc23f72cdcb4a388622078e7c037929ff9b5cb48e676571fad96d2303a73347b',
+  middleGrinder: '608748cb2c3d660f46e1993fe8d5abd2e5497d55fbcfa2b85e42caa5b0021eab',
+  eliteGrinder: '3fe835fc17001ace95f6134d1a2d9873dc8bc7d508712f3bd3cb44c0bc39ee10',
+  selfTravelling: '7627f11ddaae08aeb486fbbb77e251609b0402ecab3a9b501b2f927d51bad933',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to
    *  `bea3d58e` and bisects it). The one career in this file whose inbox the window rule actually
@@ -5074,7 +5095,7 @@ export const PRE_R28B = {
    *  155 by the window, and it is still `open` at the 156-week horizon instead of expired. MEASURED on
    *  a tree that ran the old rule (offers.ts:965 and :1059 reverted in a copy of this mid-merge tree),
    *  not produced by the helper it is asserted against. */
-  highPlayer: '459dfa867ee62fbc7fa221d67ba473d640beb458c9e5c8a9877297d67bddcbcd',
+  highPlayer: 'cb7419a3b885f5ae7380b21cea542a9faeffa327147c78651adc158d5d58221e',
   /** ⭐ PRESETS[5] · 25k middle · middle coach · PLAYER policy – THE EXPIRED-LETTER WITNESS, and the
    *  only career here that exercises the `decidedWeek` rewind. `kit-100` lands on window week 49 and
    *  has ALREADY lapsed by the horizon, on 105 under the letter rule and on 104 under the window rule;
@@ -5082,7 +5103,7 @@ export const PRE_R28B = {
    *  code. ⚠ ITS LETTER DID NOT MOVE IN THE UNION MERGE – week, slot and both deadlines are character
    *  for character what T1b measured; only the hash moved, with the rest of the tree. Same provenance:
    *  the engine-toggled copy, not the helper. */
-  middlePlayer: 'eded6a893c1b5249589c51df8666e5588a7e296031727e735a799b45b713e31f',}
+  middlePlayer: 'c40c33f98335756eeedea58f62290845204d659c849066ee6baef3923f9fd773',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
