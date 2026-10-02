@@ -16,6 +16,9 @@
 //                      leaves the key absent; the golden fixture is the real migration's own output.
 //   D. AS PLAYED     – careers WALKED through the public engine commands: the latch the engine writes on its own is the
 //                      page the book prints, and a career that never touched #1 has none.
+//   E. THE SHARED WEEK – 5b, his 02.10 third batch («а они обе не могут на одной странице жить?…»): when the first world #1 and the first title at the highest step fall in
+//                      ONE week the book prints ONE combined page (`first-number-one-title`, priority 101) and neither plain page; every other week is exactly what it
+//                      was. B7b, B9 – B16 – and B9/B10 are the two cases whose CLAIM moved with the ruling (each says so where it stands).
 //
 // ⚠ POSED LEDGERS, AND WHY THAT IS HONEST HERE: the latch's input is a RANKING ROW, so the cases give the
 // kid a result worth more than the field on the table under test and let the REAL `recomputeKidRank` fold it
@@ -38,6 +41,22 @@
 //   M9  `recomputeKidRank` no longer calls the latch (the tick/load paths go quiet)   RED  A2 A3 A4 A5 A8 A9 B5     (7)
 //   Ten arms, ten reds, and the three source files restored byte-identical after the run (sha-256 compared). The two the ruling's own
 //   words depend on are M1 («даже если в моменте»: no latch, no page) and M4 («the FIRST week»: a latch that moves is a page on the wrong day).
+//
+//   ⭐ 5b – THE COMBINED PAGE'S OWN ARMS, run against `albumBook.ts`, `tests/round45-first-number-one.test.ts` alone (+ the album test for M17). The unmutated run printed
+//   «Tests 32 passed (32)» on that command, so no arm below ran empty; the source was restored byte-identical after each (sha-256 compared).
+//   M10 the combined trigger off (`wta === titleWeek` -> `false`: the collision falls back to the absorbed title)  RED  B9 B10 B13 B15 B16   (5)
+//   M11 the one-frame-per-week rule off (`selectRepresentatives` keeps every candidate)                           RED  B16                 (1)
+//         ⭐ THE FIRST RUN OF THIS ARM WENT RED NOWHERE: in a chapter of nothing but rare pages the thirds rule trims the kind to one frame anyway, so the
+//         double print hid behind a SECOND rule. B16 was written for exactly that – a chapter full of other kinds, the cap on rare at two – and is the page-count arm.
+//   M12 priority 99 – the title (100) wins the week and the combined page is absorbed                            RED  B9 B10 B13 B15 B16   (5)
+//   M12b priority 100 – a tie, and the title is seated first                                                      RED  B9 B10 B13 B15 B16   (5)
+//   M13 the trigger ignores the title: a combined page on EVERY first world #1 (the other direction)             RED  B2 B4 B8 B12 D1      (5)
+//   M14 the trigger accepts ANY highest-title week and not the first one's (the title page's own reading)         RED  B12                 (1)
+//   M15 the shared reading names the LAST title's week, not the first's                                           RED  B12                 (1)
+//   M16 the combined page drops its tier and finish (the sheet's tag loses the tournament fact)                   RED  B15                 (1)
+//   M17 the mood row removed                                                                                      RED  tests/albumBook.test.ts (a row for every non-closing occasion)
+//   M10, M11 and M12 are the three the brief names: the trigger, the suppression (which IS the one-frame rule plus the priority – there is no second mechanism, see `rareCandidates`),
+//   and the priority. M13 – M16 are the arms the other direction and the title's own week needed.
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -103,6 +122,8 @@ function pages(world: WorldState, book: AlbumBook = assembleAlbum(world)): strin
 }
 
 const NO1 = ['first-number-one', 'first-number-one-junior']
+/** The combined page (round 45 #5b): the world latch's page when it shares its week with the first title at the highest step. */
+const COMBINED = 'first-number-one-title'
 const weekAtAge = (world: WorldState, age: number): number => {
   for (let w = 0; w < 2000; w++) if (kidAgeAt(world, w) === age) return w
   throw new Error(`no week reaches age ${age}`)
@@ -283,6 +304,24 @@ describe('B · the page – once per latched table, never otherwise', () => {
     expect([...world.bands], 'a world #1 is never a thirteen-year-old\'s').not.toContain('young')
   })
 
+  it('B7b · the combined occasion is rare, in the bands of BOTH pages it replaces, with words of its own in every voice', () => {
+    const combined = ALBUM_CORPUS.find((o) => o.id === COMBINED)!
+    const title = ALBUM_CORPUS.find((o) => o.id === 'top-tier-title')!
+    const world = ALBUM_CORPUS.find((o) => o.id === 'first-number-one')!
+    expect(combined.kind).toBe('rare')
+    // ⚠ THE BANDS ARE THE PAIR'S, BOTH OF THEM: the band filter runs BEFORE the one-frame-per-week rule, so a combined page that missed a band its two plain pages
+    // are in would be dropped THERE and the title's page would print, silently – the collision falling back to the old absorb with every other check green.
+    expect([...combined.bands], 'the first #1 page\'s bands').toEqual([...world.bands])
+    expect([...combined.bands], 'and the title page\'s bands').toEqual([...title.bands])
+    for (const voice of Object.keys(combined.voices) as Array<keyof typeof combined.voices>) {
+      for (const plain of [title, world]) {
+        expect(combined.voices[voice].note, voice + ': the combined note is not the note of ' + plain.id).not.toBe(plain.voices[voice].note)
+        expect(combined.voices[voice].caption, voice + ': nor its caption').not.toBe(plain.voices[voice].caption)
+        expect(combined.voices[voice].line, voice + ': nor its line').not.toBe(plain.voices[voice].line)
+      }
+    }
+  })
+
   /** A world whose chapter for the adult years holds ONLY the colliding candidates, so «who won the week» is the whole question. */
   function colliding(): { world: WorldState; week: number } {
     const world = createWorld(SEED)
@@ -299,27 +338,136 @@ describe('B · the page – once per latched table, never otherwise', () => {
     expect(pages(world), 'the first touch names the week, and the run it began yields it').toEqual(['first-number-one'])
   })
 
-  it('B9 · …and yields to the top-tier title (100) for the same week', () => {
-    const { world, week } = colliding()
-    const top = TIER_LADDER[TIER_LADDER.length - 1]
-    world.bestFinishByTier[top] = 0
-    world.trophiesByTier[top] = { titles: [week], finals: [] }
-    expect(pages(world), 'the biggest trophy there is outranks even the first number one').toEqual(['top-tier-title'])
-  })
-
-  it('B10 · ⭐ …and the walked set\'s own property reads that week as ABSORBED, not as a missing page – the coincidence D1 can no longer find on a walk', () => {
-    // ⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED. D1's «the walk met the same-week coincidence» arm lived on
-    // one walked career (first #1 and the biggest title in week 294) that the retuned trajectories no longer produce – 0 of 36 walked careers
-    // have it. The claim is about the priority rule, which a posed week tests honestly: the same latch-and-title week as B9, read through
-    // D1's own property so that its «absorbed» accounting is exercised and not just the page list.
+  /** The collision as the 02.10 ruling frames it: the first #1 AND the first title at the highest step in ONE week – with the streak's page in that week too,
+   *  so three plain rivals share its one frame. */
+  function collidingWithTitle(): { world: WorldState; week: number } {
     const { world, week } = colliding()
     const top = TIER_LADDER[TIER_LADDER.length - 1]
     world.week = week
     world.bestFinishByTier[top] = 0
     world.trophiesByTier[top] = { titles: [week], finals: [] }
+    return { world, week }
+  }
+
+  it('B9 · ⭐⭐ …and the highest title in that SAME week no longer absorbs it: ONE combined page prints (101 over the title\'s 100, the first #1\'s 99 and the streak\'s 98), and neither plain page beside it', () => {
+    // ⚠⚠ 02.10, THIRD BATCH – THE OWNER'S RULING, NOT DRIFT. This case used to read «…and yields to the top-tier title (100) for the same week» and expected the
+    // title's page ALONE: the first #1 was absorbed. He ruled otherwise («а они обе не могут на одной странице жить?… она же стала №1 потому что выиграла шлем,
+    // без него никак. Это тоже как-то надо научиться показывать» – docs/decisions.md, THIRD BATCH): the pair shares ONE page. The claim that moved is exactly
+    // «the title absorbs the first #1»; what did not move is that a same-week contest has ONE winner, by priority – it is the combined page's 101 now.
+    const { world, week } = collidingWithTitle()
+    const book = assembleAlbum(world)
+    expect(book.sheets.flatMap((s) => s.frames).length, 'ONE frame in the whole book – the week is not printed twice').toBe(1)
+    expect(pages(world, book), 'and it is the combined page, with neither the title\'s page nor the first #1\'s beside it').toEqual([COMBINED])
+    const sheet = book.sheets[0]
+    expect(sheet.note?.text, 'the note is the combined occasion\'s, in her voice').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(world)].note)
+    expect(sheet.note?.dateLabel, 'dated at the one week the two share').toBe(weekSpan(week))
+  })
+
+  it('B10 · ⭐ …and the walked set\'s own property reads that week as ONE combined page – printed once, nothing absorbed, no plain page expected for it', () => {
+    // ⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED. D1's «the walk met the same-week coincidence» arm lived on
+    // one walked career (first #1 and the biggest title in week 294) that the retuned trajectories no longer produce – 0 of 36 walked careers
+    // have it. The claim is about the priority rule, which a posed week tests honestly: the same latch-and-title week as B9, read through
+    // D1's own property so that its accounting is exercised and not just the page list.
+    // ⚠⚠ 02.10, THIRD BATCH – AND THEN THE CLAIM ITSELF MOVED, ON HIS RULING (see B9). This case read «absorbed === 1, live === 0» – the first #1 swallowed by the
+    // title's page. It reads «combined === 1, absorbed === 0, live === 0» now: the latch week is a page of its own, so nothing is absorbed and no plain #1 page is
+    // expected for it. The re-aim is the ruling's, the old numbers are kept here so the move is visible and not silent.
+    const { world } = collidingWithTitle()
     const read = expectBookNamesItsLatches(world)
-    expect(read.absorbed, 'the one latch shares its week with the top-tier title – absorbed, and the property says so').toBe(1)
-    expect(read.live, 'and no #1 page is expected for it').toBe(0)
+    expect(read.combined, 'the one latch shares its week with the highest title – ONE combined page, and the property says so').toBe(1)
+    expect(read.absorbed, 'and nothing is absorbed any more').toBe(0)
+    expect(read.live, 'and no plain #1 page is expected for that week').toBe(0)
+  })
+
+  it('B11 · ⭐ the other direction – a title with NO first #1 in its week is still the title\'s page, and nothing else', () => {
+    const { world, week } = colliding()
+    const top = TIER_LADDER[TIER_LADDER.length - 1]
+    delete world.firstNo1
+    world.week = week
+    world.bestFinishByTier[top] = 0
+    world.trophiesByTier[top] = { titles: [week], finals: [] }
+    expect(pages(world), 'the highest title alone is exactly the page it always was – the combined page needs BOTH facts').toEqual(['top-tier-title'])
+  })
+
+  it('B12 · ⭐ a LATER highest title in the latch week is not a collision – the title\'s page is the FIRST title\'s, and the latch week stays the plain first #1', () => {
+    // ⚠ «ONE QUESTION, TWO SIDES»: the combined page is asked of the title page's OWN week – the first title at the highest step. A second one in the latch week is
+    // not that page's week, so there is no pair to combine: the career already has its title page (earlier, in her teens) and the latch week is the quiet one.
+    const { world, week } = colliding()
+    const top = TIER_LADDER[TIER_LADDER.length - 1]
+    const first = weekAtAge(world, 17) + 5
+    world.week = week
+    world.bestFinishByTier[top] = 0
+    world.trophiesByTier[top] = { titles: [first, week], finals: [] }
+    expect(kidAgeAt(world, first), 'the first title is a teenager\'s – a chapter of its own, so the thirds rule is not what is being read').toBeLessThan(20)
+    expect(pages(world), 'the title\'s page at the FIRST title, the plain first #1 at the latch week, and no combined page').toEqual(['top-tier-title', 'first-number-one'])
+  })
+
+  it('B13 · nothing double-prints: the junior table keeps the absorb rule – a junior latch in the same teen week is swallowed by the combined page, which prints once', () => {
+    const world = createWorld(SEED)
+    const week = weekAtAge(world, 17) + 9
+    const top = TIER_LADDER[TIER_LADDER.length - 1]
+    world.week = week
+    world.firstNo1 = { junior: week }
+    expect(pages(world), 'the premise: on its own the junior latch has a page in that very week').toEqual(['first-number-one-junior'])
+    world.bestFinishByTier[top] = 0
+    world.trophiesByTier[top] = { titles: [week], finals: [] }
+    world.firstNo1 = { wta: week, junior: week }
+    expect(pages(world), 'one frame – the combined page; the junior #1 page (99) has no twin and is absorbed, exactly as before').toEqual([COMBINED])
+    expect(expectBookNamesItsLatches(world), 'and the walked set\'s property reads it so').toEqual({ live: 0, combined: 1, absorbed: 1 })
+  })
+
+  it('B14 · deterministic and read-only on the collision too: the same state gives the byte-same book – twice, and from a clone – and the world is not touched', () => {
+    const { world } = collidingWithTitle()
+    const before = JSON.stringify(world)
+    const a = JSON.stringify(assembleAlbum(world))
+    const b = JSON.stringify(assembleAlbum(world))
+    expect(a, 'two assemblies of one state').toBe(b)
+    expect(JSON.stringify(assembleAlbum(structuredClone(world))), 'and of a clone of it').toBe(a)
+    expect(JSON.stringify(world), 'assembling the album writes nothing').toBe(before)
+  })
+
+  it('B15 · ⭐ the combined page REPLACES the title\'s page on its sheet and loses nothing but the words – same layout, same tournament fact (the tag), same date', () => {
+    // ⚠ TWO CHAPTERS ON PURPOSE: a junior page first, so the adult sheet is not the book's first and the rotation puts it on layout C – the layout that carries the
+    // TAG, which is where the tournament fact (the tier and the champion's stage) is visible. On layout A there is nothing to read it off, and a combined page that
+    // dropped its tier and finish would pass every other check here.
+    const build = (collision: boolean): WorldState => {
+      const { world, week } = colliding()
+      const top = TIER_LADDER[TIER_LADDER.length - 1]
+      world.week = week
+      world.bestFinishByTier[top] = 0
+      world.trophiesByTier[top] = { titles: [week], finals: [] }
+      world.firstNo1 = collision ? { junior: weekAtAge(world, 15) + 9, wta: week } : { junior: weekAtAge(world, 15) + 9 }
+      return world
+    }
+    const adultSheet = (world: WorldState) => assembleAlbum(world).sheets.at(-1)!
+    const titleOnly = adultSheet(build(false))
+    const combined = adultSheet(build(true))
+    expect(titleOnly.layout, 'the premise: the adult chapter opens on layout C, the one that carries the tag').toBe('C')
+    expect(titleOnly.tag, 'and the title\'s sheet has its tag').not.toBeNull()
+    type Sheet = AlbumBook['sheets'][number]
+    const wordless = (s: Sheet) => ({ ...s, note: s.note ? { ...s.note, text: '' } : s.note, line: '', frames: s.frames.map((f) => ({ ...f, caption: '' })) })
+    expect(wordless(combined), 'everything but the words is the title\'s sheet\'s: layout, tag, date, age, art').toEqual(wordless(titleOnly))
+    expect(combined.note?.text, 'and the words are the combined occasion\'s').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(build(true))].note)
+    expect(combined.note?.text).not.toBe(titleOnly.note?.text)
+  })
+
+  it('B16 · ⭐ ONE page even where the chapter has room for several rare ones – the one-frame-per-week rule keeps the week single, not the thirds cap', () => {
+    // ⚠ WHY THIS CASE EXISTS – IT IS MUTATION M-b'S OWN RESULT (the ledger at the head of this file). In a chapter that holds NOTHING BUT rare pages the thirds rule (no kind above
+    // a third of the frames) trims the rare kind to ONE frame anyway, so every posed world above stays single even with the one-frame-per-week rule switched OFF: that arm's first
+    // run went red NOWHERE – a double print was invisible to every page-count arm. Here the chapter is FULL of other kinds, the cap on rare is two, and a week printed twice shows.
+    const { world, week } = collidingWithTitle()
+    world.milestones.push({ type: 'title', week: week - 90, tier: 'w15' })
+    world.milestones.push({ type: 'title', week: week - 82, tier: 'w35' })
+    world.milestones.push({ type: 'final', week: week - 70, tier: 'w75' })
+    world.milestones.push({ type: 'break-even', week: week - 62, kind: 'career' })
+    world.milestones.push({ type: 'wedding', week: week - 54, kind: 'p:1' })
+    world.assets.push({ id: 'house-first', boughtWeek: week - 46, paidCents: 0, valueCents: 0, entries: [] })
+    world.assets.push({ id: 'merch-brand', boughtWeek: week - 38, paidCents: 0, valueCents: 0, entries: [] })
+    const printed = pages(world)
+    expect(printed.length, 'the premise: the chapter is full of other kinds, so the thirds cap lets TWO rare frames through').toBeGreaterThanOrEqual(6)
+    expect(
+      printed.filter((p) => [COMBINED, 'top-tier-title', 'first-number-one', 'years-at-the-top'].includes(p)),
+      'the collision week is printed ONCE – as the combined page – with the title\'s page, the plain #1 page and the streak\'s page all gone',
+    ).toEqual([COMBINED])
   })
 })
 
@@ -355,26 +503,32 @@ describe('C · the migration – a latch only where the cached rank is 1 as the 
   })
 })
 
-/** THE PROPERTY D1 READS OFF EVERY CAREER IT IS HANDED – and B10 reads off a posed one, which is why it lives at module scope. The book names
- *  exactly the pages its latches name: one #1 page per latched table that no bigger moment shares a week with, none for an unlatched one, never
- *  the same page twice, and a latch week that holds the top-tier title names THAT page instead (the one-frame-per-week rule, priority 100 over
- *  this page's 99). Returns how many latches stayed live and how many were absorbed by a same-week top-tier title. */
-function expectBookNamesItsLatches(world: WorldState): { live: number; absorbed: number } {
+/** THE PROPERTY D1 READS OFF EVERY CAREER IT IS HANDED – and B10 and B13 read off a posed one, which is why it lives at module scope. The book names exactly the pages
+ *  its latches name: one plain #1 page per latched table that no title shares a week with, none for an unlatched one, never the same page twice. A latch week that holds the
+ *  FIRST title at the highest step is a SHARED week (the title's page is dated at that title – stated here from the ledger, not asked of the engine): the world latch there is
+ *  ONE combined page (5b, the 02.10 third batch – the title's page and the plain #1 page both give way to it), and the junior latch there keeps the absorb rule. Returns how many
+ *  latches stayed live (plain pages), how many became the combined page, and how many were absorbed. */
+function expectBookNamesItsLatches(world: WorldState): { live: number; combined: number; absorbed: number } {
   const top = TIER_LADDER[TIER_LADDER.length - 1]
   const printed = pages(world)
   const printedNo1 = printed.filter((p) => NO1.includes(p))
-  const slamWeeks = world.bestFinishByTier[top] === 0 ? (world.trophiesByTier[top]?.titles ?? []) : []
+  const titleWeek = world.bestFinishByTier[top] === 0 ? (world.trophiesByTier[top]?.titles ?? [])[0] : undefined
   const latches = Object.entries(world.firstNo1 ?? {}) as ['wta' | 'junior', number][]
-  const live = latches.filter(([, week]) => !slamWeeks.includes(week))
-  for (const [, week] of latches.filter(([, w]) => slamWeeks.includes(w))) {
-    expect(printed, `week ${week}: the biggest title and the first #1 fell in one week, and the title names it`).toContain('top-tier-title')
+  const shared = latches.filter(([, week]) => week === titleWeek)
+  const combined = shared.filter(([table]) => table === 'wta')
+  const absorbed = shared.filter(([table]) => table === 'junior')
+  const live = latches.filter(([, week]) => week !== titleWeek)
+  expect(printed.filter((p) => p === COMBINED).length, 'the combined page prints once where the world latch shares the title\'s week, and nowhere else').toBe(combined.length)
+  if (shared.length > 0) {
+    expect(printed, 'week ' + titleWeek + ': the highest title is in the book – as the combined page where the world latch shares its week, as its own page otherwise').toContain(combined.length > 0 ? COMBINED : 'top-tier-title')
   }
-  expect(printedNo1.length, 'one page per latched table that no bigger moment shares a week with, and none for an unlatched one').toBe(live.length)
+  if (combined.length > 0) expect(printed, 'and the title\'s own page is not printed beside the combined one').not.toContain('top-tier-title')
+  expect(printedNo1.length, 'one plain page per latched table that no title shares a week with, and none for an unlatched one').toBe(live.length)
   expect(new Set(printedNo1).size, 'and never the same page twice').toBe(printedNo1.length)
   for (const [table] of live) expect(printedNo1).toContain(table === 'wta' ? 'first-number-one' : 'first-number-one-junior')
   if (world.firstNo1?.wta !== undefined) expect(world.firstNo1.wta, 'the latch names a week the career has lived through').toBeLessThanOrEqual(world.week)
   expect(JSON.stringify(assembleAlbum(world)), 'byte-stable on a real career too').toBe(JSON.stringify(assembleAlbum(world)))
-  return { live: live.length, absorbed: latches.length - live.length }
+  return { live: live.length, combined: combined.length, absorbed: absorbed.length }
 }
 
 describe('D · as played – careers walked through the public commands, nothing posed', () => {
@@ -418,6 +572,8 @@ describe('D · as played – careers walked through the public commands, nothing
     // 2 latch a world #1 at all (weeks 294 and 299), 2 more win a top-tier title with no latch (weeks 210 and 234), and NONE has the two in
     // one week. So the coincidence is no longer asserted off a walk: the priority rule it reports is B9's rule, and B10 runs THIS property
     // (`expectBookNamesItsLatches`, the same code as below) over a posed week that holds both. The walked set keeps every other claim.
+    // ⚠⚠ 02.10, THIRD BATCH – THE RULE THESE PARAGRAPHS REPORT HAS SINCE MOVED, ON HIS RULING: that coincidence week now prints ONE combined page instead of the title's
+    // page alone (B9, B10 and the property below). The paragraphs above are the history of how the coincidence was found; the walked set's own claims are untouched.
     const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(4, 3, 340)]
     let expectedTotal = 0
     for (const world of careers) expectedTotal += expectBookNamesItsLatches(world).live

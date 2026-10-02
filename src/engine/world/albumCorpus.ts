@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
-// RETYPED.** 37 occasions × 4 voices × 3 registers = 444 strings, plus the arc's 16 across
-// 8 cells: **460 authored strings in total.**
+// RETYPED.** 38 occasions × 4 voices × 3 registers = 456 strings, plus the arc's 16 across
+// 8 cells: **472 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 460 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 472 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -1088,6 +1088,35 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'Top of the junior list. You sent it as one line at the bottom of a message about something else.',
         caption: 'She put it at the bottom of the message.',
         line: 'Bottom of the message. Top of the list.',
+      },
+    },
+  },
+  // A37 · first-number-one-title
+  {
+    id: 'first-number-one-title',
+    kind: 'rare',
+    bands: ['teen', 'adult', 'lateCareer'],
+    gate: 'highest-title-and-first-time-at-the-top-of-the-world-list-in-one-week',
+    voices: {
+      sunny: {
+        note: 'The big one, and number one in the world with it. You rang with both at once, and laughed at how it sounded.',
+        caption: 'She told us both at once, and laughed.',
+        line: 'One would have been plenty. She brought both.',
+      },
+      fiery: {
+        note: 'The big one, and number one in the world with it. You said both had always been the plan, and asked who wanted to argue now.',
+        caption: 'Both were the plan, she says.',
+        line: 'A title and a list. Not much left to argue with.',
+      },
+      deep: {
+        note: 'The big one, and number one in the world with it. You said it felt like a single thing, and you couldn\'t tell which part was louder.',
+        caption: 'She said it felt like a single thing.',
+        line: 'I heard the title and the list. She heard one thing.',
+      },
+      quiet: {
+        note: 'The big one, and number one in the world with it. You asked whether we had eaten, and told us the news afterwards, almost in passing.',
+        caption: 'She asked if we had eaten, then told us.',
+        line: 'Both of them, and her first question was about us.',
       },
     },
   },

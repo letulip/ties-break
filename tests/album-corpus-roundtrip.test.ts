@@ -3,7 +3,7 @@
 // (`tests/round44-corpus-roundtrip.test.ts`) pointed at the album spec's §8 step 2.
 //
 // ⚠⚠ THE FAILURE IT EXISTS TO STOP IS NOT A BUG, IT IS A TYPO NOBODY CAN SEE. The corpus document
-// holds **460 authored strings** – 148 notes, 148 captions, 148 loose lines and 16 arc strings. An
+// holds **472 authored strings** – 152 notes, 152 captions, 152 loose lines and 16 arc strings. An
 // agent retyping them produces typos, and **no test written by that agent can catch them, because the
 // test compares against what was typed.** So `tools/album-corpus-emit.ts` wrote
 // `src/engine/world/albumCorpus.ts` out of `docs/specs/album-corpus-2026-09.md` once; the output is
@@ -14,7 +14,7 @@
 // reaches a string.
 //
 // ⚠⚠ AND THE COPY IS HIS. Invariant 4: «USER-FACING WORDING IS NOT AN AGENT'S TO CHANGE». Every one of
-// the 460 is a DRAFT until he has read it, and when he edits one he edits the DOCUMENT and the
+// the 472 is a DRAFT until he has read it, and when he edits one he edits the DOCUMENT and the
 // emitter is re-run. This pin is the thing that makes «the document is the source of truth» a fact
 // about the repository rather than a habit.
 //
@@ -147,23 +147,26 @@ describe('the committed album corpus IS the document', () => {
     // career that continues a line – so the catalogue, the document and these five counts move
     // together by one occasion and its twelve strings. NOT WEAKENED: every count is still exact and
     // still the document's own arithmetic.
-    expect(counts, 'the document parses completely – 37 occasions, 148 notes, 148 captions, 148 lines, 8 arc cells, 16 arc strings').toEqual({
-      occasions: 37,
-      notes: 148,
-      captions: 148,
-      lines: 148,
+    // ⚠ RE-AIMED AT ROUND 45 #5b (02.10, his third batch): A37 `first-number-one-title` is the thirty-eighth occasion – the one page a first world number one and the title at the
+    // highest step share when they fall in one week – so the catalogue, the document and these counts move together by one occasion and its twelve strings (all DRAFT).
+    // NOT WEAKENED: every count is still exact and still the document's own arithmetic.
+    expect(counts, 'the document parses completely – 38 occasions, 152 notes, 152 captions, 152 lines, 8 arc cells, 16 arc strings').toEqual({
+      occasions: 38,
+      notes: 152,
+      captions: 152,
+      lines: 152,
       arcCells: 8,
       arcStrings: 16,
     })
-    expect(counts.notes + counts.captions + counts.lines + counts.arcStrings, '460 authored strings').toBe(460)
-    expect(ALBUM_CORPUS.length, 'and the committed catalogue holds the same 37').toBe(37)
+    expect(counts.notes + counts.captions + counts.lines + counts.arcStrings, '472 authored strings').toBe(472)
+    expect(ALBUM_CORPUS.length, 'and the committed catalogue holds the same 38').toBe(38)
     expect(DOC.arc.length, 'the arc has two directions and no third').toBe(2)
     expect(Object.keys(ALBUM_ARC).sort(), 'and the committed arc has the same two').toEqual([...ALBUM_ARC_DIRECTIONS].sort())
     expect(ALBUM_VOICES.length, 'four voices').toBe(4)
     expect(ALBUM_REGISTERS.length, 'three registers').toBe(3)
   })
 
-  it('⭐ the committed catalogue holds exactly the document\'s 37 occasions, by id and in the document\'s order', () => {
+  it('⭐ the committed catalogue holds exactly the document\'s 38 occasions, by id and in the document\'s order', () => {
     // ⚠ THE ORDER IS THE DOCUMENT'S because a diff of the generated file should read down the page
     // the document does – the same reason round 44 kept its own. An id is a machine key the selector
     // names and the sheet reads back, so a rename is a real event, not a tidy-up.
@@ -182,7 +185,7 @@ describe('the committed album corpus IS the document', () => {
     }
   })
 
-  it('⭐⭐⭐ every one of the 148 notes is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 152 notes is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC.occasions) {
       const o = builtFor(row)
@@ -192,10 +195,10 @@ describe('the committed album corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 148 notes were compared, not a subset').toBe(148)
+    expect(compared, 'all 152 notes were compared, not a subset').toBe(152)
   })
 
-  it('⭐⭐⭐ every one of the 148 captions is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 152 captions is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC.occasions) {
       const o = builtFor(row)
@@ -204,10 +207,10 @@ describe('the committed album corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 148 captions were compared, not a subset').toBe(148)
+    expect(compared, 'all 152 captions were compared, not a subset').toBe(152)
   })
 
-  it('⭐⭐⭐ every one of the 148 loose lines is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 152 loose lines is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC.occasions) {
       const o = builtFor(row)
@@ -216,7 +219,7 @@ describe('the committed album corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 148 loose lines were compared, not a subset').toBe(148)
+    expect(compared, 'all 152 loose lines were compared, not a subset').toBe(152)
   })
 
   it('⭐⭐ the arc is the document\'s too, in both directions and all four voices', () => {
@@ -310,8 +313,8 @@ describe('the committed album corpus IS the document', () => {
         others++
       }
     }
-    expect(notes, 'all 156 notes were checked').toBe(156)
-    expect(others, 'and all 304 captions and lines').toBe(304)
+    expect(notes, 'all 160 notes were checked').toBe(160)
+    expect(others, 'and all 312 captions and lines').toBe(312)
   })
 
   it('⭐ a caption is the photograph\'s lip: short, and shorter than its own note', () => {
@@ -343,8 +346,8 @@ describe('the committed album corpus IS the document', () => {
       expect(written, `Cyrillic on a screen: ${written}`).not.toMatch(/[Ѐ-ӿ]/)
       swept++
     }
-    expect(swept, 'all 460 strings were swept, not a subset').toBe(460)
-    expect(new Set(every).size, 'no two of the 460 are the same string – an album that repeats itself reads as a copy-paste').toBe(460)
+    expect(swept, 'all 472 strings were swept, not a subset').toBe(472)
+    expect(new Set(every).size, 'no two of the 472 are the same string – an album that repeats itself reads as a copy-paste').toBe(472)
   })
 
   it('⚠ no occasion names the `jun` band – chapter 1 is the prologue, measured at 0 of 9', () => {

@@ -149,6 +149,9 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   // a DRAFT pick like the other rare rows, cheap to move, and not a word on a screen.
   'first-number-one': 'happy',
   'first-number-one-junior': 'happy',
+  // ⭐ round 45 #5b – the page the first #1 and the highest title share when they fall in one week. `happy` is BOTH its neighbours' mood (the title's and the
+  // first #1's), so the pair cannot disagree about her face; a DRAFT pick like the rows above it, cheap to move, and not a word on a screen.
+  'first-number-one-title': 'happy',
   graduated: 'happy',
   farewell: 'serious',
   'career-ended': 'happy',
@@ -607,6 +610,17 @@ function assetCandidates(world: WorldState): AlbumCandidate[] {
   return out
 }
 
+/** ⭐ THE WEEK OF THE FIRST TITLE AT THE HIGHEST STEP – `top-tier-title`'s own date, null where she has not won one. Gated, as it always was, on the
+ *  high-water mark (`bestFinishByTier` holds a finish and NO week) and dated off the titles ledger (`trophiesByTier`, v31), which keeps the weeks.
+ *
+ *  ⚠ ONE FUNCTION BOTH PAGES ASK (round 45 #5b): the title's page is composed at this week and the first-#1 collision below is read against it, so the two
+ *  sides of «the same week» cannot come from two readings of one ledger. A pure read of the world – no draw, no write, and no field of its own. */
+function topTierTitleWeek(world: WorldState): number | null {
+  const topTier = TIER_LADDER[TIER_LADDER.length - 1]
+  const weeks = world.trophiesByTier[topTier]?.titles ?? []
+  return world.bestFinishByTier[topTier] === 0 && weeks.length > 0 ? weeks[0] : null
+}
+
 /** ⭐ THE SUPER-RARES – his 19.09 addition. Each DISPLACES an ordinary representative rather than
  *  raising the cap: they enter the same fixed budget at the top of the priority order.
  *
@@ -619,9 +633,9 @@ function assetCandidates(world: WorldState): AlbumCandidate[] {
 function rareCandidates(world: WorldState): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
   const topTier = TIER_LADDER[TIER_LADDER.length - 1]
-  const slamWeeks = world.trophiesByTier[topTier]?.titles ?? []
-  if (world.bestFinishByTier[topTier] === 0 && slamWeeks.length > 0) {
-    out.push(candidate(world, 'top-tier-title', slamWeeks[0], 100, { tier: topTier, finish: 0 }))
+  const titleWeek = topTierTitleWeek(world)
+  if (titleWeek !== null) {
+    out.push(candidate(world, 'top-tier-title', titleWeek, 100, { tier: topTier, finish: 0 }))
   }
   let streak = 0
   let streakEnd: number | null = null
@@ -643,7 +657,20 @@ function rareCandidates(world: WorldState): AlbumCandidate[] {
   // season at #3, and no save held the week otherwise. ⚠ TWO OCCASIONS AND NOT ONE WITH A TABLE PARAMETER – the corpus forbids
   // interpolation (corpus doc §3.2), so each table's page has its own twelve strings. ⚠ THE DOMESTIC TABLE IS NOT LATCHED: no page.
   // A career whose latch is absent (never touched #1, or an older save that had not at migration time) simply has no such page.
-  if (world.firstNo1?.wta !== undefined) out.push(candidate(world, 'first-number-one', world.firstNo1.wta, 99))
+  if (world.firstNo1?.wta !== undefined) {
+    out.push(candidate(world, 'first-number-one', world.firstNo1.wta, 99))
+    // ⭐⭐ ROUND 45 #5b – THE WEEK THE FIRST #1 AND THE HIGHEST TITLE SHARE (the owner, 02.10, third batch: «а они обе не могут на одной странице
+    // жить?… она же стала №1 потому что выиграла шлем, без него никак. Это тоже как-то надо научиться показывать»). Round 45 #5 let the title's page take
+    // such a week and absorb the first #1; now ONE page carries both, composed AT 101 – above the title's 100 and the first-#1 page's 99 – so the book's
+    // one-frame-per-week rule (`selectRepresentatives`) gives the week to it and NEITHER plain page prints.
+    // ⚠ THERE IS DELIBERATELY NO SECOND MECHANISM: the plain pair is not omitted here, because priority under that one rule already is the suppression and a belt
+    // on top of it could not be told from the braces by any test – the mutations (the trigger, the rule, the priority) each go red on their own.
+    // ⚠ THE QUESTION IS PUT TO THE TITLE'S OWN WEEK (`topTierTitleWeek`), never to the raw ledger: a LATER top-tier title that shares the latch week is not a
+    // collision, because the title's page is dated at the FIRST one – that week stays the plain first-#1 page, exactly as before. ⚠ THE JUNIOR TABLE KEEPS THE
+    // ABSORB RULE: no junior twin was asked for. ⚠ IT CARRIES THE TITLE'S TIER AND FINISH, because it REPLACES the title's page on its sheet and the ticket and
+    // the tag read them – a page without them would drop the tournament fact a title-only week keeps on the B and C layouts.
+    if (world.firstNo1.wta === titleWeek) out.push(candidate(world, 'first-number-one-title', titleWeek, 101, { tier: topTier, finish: 0 }))
+  }
   if (world.firstNo1?.junior !== undefined) out.push(candidate(world, 'first-number-one-junior', world.firstNo1.junior, 99))
   for (const o of world.offers) {
     if (o.state !== 'signed') continue

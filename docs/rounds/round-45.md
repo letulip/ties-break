@@ -326,6 +326,10 @@ architect's session after the last agent, verdicts from files.
 | R45-S25 | item 3b – the coach's foot once refused (R45-S6 with `an hour`) | `Declined – the rate stays at {from} an hour.` | – | draft |
 | R45-S26 | item 3b – the coach's foot once lapsed unanswered (R45-S7 with `an hour`) | `Lapsed – the rate stays at {from} an hour.` | – | draft |
 | R45-S27 | item 3b – the coach's confirm before Accept (`InboxSheet.vue` `confirmMessage`; R45-S8 with `an hour`) | `Accept the raise? The rate goes from {from} to {to} an hour. This cannot be undone.` | – | draft |
+| R45-S28 | item 5b – album occasion `first-number-one-title` (A37; the first time at the top of the world list in the week of the title at the highest step), `sunny` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `The big one, and number one in the world with it. You rang with both at once, and laughed at how it sounded.` / `She told us both at once, and laughed.` / `One would have been plenty. She brought both.` | «а они обе не могут на одной странице жить?… она же стала №1 потому что выиграла шлем, без него никак» | draft |
+| R45-S29 | item 5b – album occasion `first-number-one-title` (A37; the first time at the top of the world list in the week of the title at the highest step), `fiery` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `The big one, and number one in the world with it. You said both had always been the plan, and asked who wanted to argue now.` / `Both were the plan, she says.` / `A title and a list. Not much left to argue with.` | «а они обе не могут на одной странице жить?… она же стала №1 потому что выиграла шлем, без него никак» | draft |
+| R45-S30 | item 5b – album occasion `first-number-one-title` (A37; the first time at the top of the world list in the week of the title at the highest step), `deep` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `The big one, and number one in the world with it. You said it felt like a single thing, and you couldn't tell which part was louder.` / `She said it felt like a single thing.` / `I heard the title and the list. She heard one thing.` | «а они обе не могут на одной странице жить?… она же стала №1 потому что выиграла шлем, без него никак» | draft |
+| R45-S31 | item 5b – album occasion `first-number-one-title` (A37; the first time at the top of the world list in the week of the title at the highest step), `quiet` voice: note / caption / line (`docs/specs/album-corpus-2026-09.md`, emitted into `albumCorpus.ts`) | `The big one, and number one in the world with it. You asked whether we had eaten, and told us the news afterwards, almost in passing.` / `She asked if we had eaten, then told us.` / `Both of them, and her first question was about us.` | «а они обе не могут на одной странице жить?… она же стала №1 потому что выиграла шлем, без него никак» | draft |
 
 ## Owner answers, 02.10 (his numbering = the question batch)
 
@@ -392,8 +396,8 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 
 - 1b REOPENS as a refine, not a miss: his fiction is «съемочных дней всего 2» and the load is
   doubled – 2 days × 3 = 6 flat, schedule redraws two Shoot blocks. → B14 `[x]`.
-- [>] **5b.** the same-week collision: a combined world-table occasion (title + №1 in one page),
-  priority above `top-tier-title`; junior keeps absorb. → B15.
+- [x] **5b.** the same-week collision: a combined world-table occasion (title + №1 in one page),
+  priority above `top-tier-title`; junior keeps absorb. → B15. Shipped: `A37 first-number-one-title` (101, bands as A35) on the title page's own week, 12 DRAFT strings R45-S28 – S31 below.
 - 3b: the 6% > 5% ordering confirmed ок. The banked-vs-forgiven question is explained and waits.
 - 6b: the ×0.82 floor explained (longest notes draw as a smaller scrap, ~11px on a phone) – his
   eye at the merge decides; raising the floor to 0.9 is measured and costs B 35/67 shrunk sheets.

@@ -344,17 +344,20 @@ the commit»), and the anti-vacuity half, because a comparison of two empty list
 
 | written | count |
 | --- | ---: |
-| occasions | **37** |
-| notes (37 × 4 voices) | **148** |
-| captions (37 × 4 voices) | **148** |
-| lines (37 × 4 voices) | **148** |
+| occasions | **38** |
+| notes (38 × 4 voices) | **152** |
+| captions (38 × 4 voices) | **152** |
+| lines (38 × 4 voices) | **152** |
 | arc cells (2 directions × 4 voices) | **8** |
 | arc strings (8 × note + line) | **16** |
-| ⭐ authored strings in total | **460** |
+| ⭐ authored strings in total | **472** |
 
 ⚠ **THE TABLE ABOVE IS RE-DERIVED AT ROUND 45 #5** – it had stood at 34 / 424 since wave 8b and had not followed
 the heirloom (`A-L1`, wave 10 T6a) or the two first-number-one occasions (`A35`, `A36`, 24 strings, all DRAFT).
 Every figure is the parser's own count of this file (`albumCounts`), asserted by the round-trip test.
+⚠ **IT MOVED ONCE MORE AT ROUND 45 #5b** (02.10, his third batch): `A37` `first-number-one-title` is the thirty-eighth occasion –
+the page a first number one and the highest title share when they fall in one week – and its twelve strings are DRAFT too
+(38 / 152 / 472).
 
 ⚠ **THE COUNTS MOVED AT WAVE 8b T6 AND THE TWELVE NEW STRINGS ARE THE ONLY ONES ON THE PAGE THAT ARE
 NOT WAVE 7's.** A34 (`birth`) is the thirty-fourth occasion, ruled 21.09; every string of it is a
@@ -1339,6 +1342,38 @@ sheet dates it – whether she held it for a week or a season is not the corpus'
 | `fiery` | `Already asking what comes next.` |
 | `deep` | `First on a list, and fidgeting.` |
 | `quiet` | `Bottom of the message. Top of the list.` |
+
+⭐ **A THIRD PAGE, ADDED ON HIS 02.10 THIRD-BATCH RULING** – «а они обе не могут на одной странице жить?… она же стала №1
+потому что выиграла шлем, без него никак. Это тоже как-то надо научиться показывать». Until then a first number one that fell
+in the week of the highest title was ABSORBED: `A28` and `A35` shared one week, the book keeps one frame per week, and the
+title's page took it. Now the two live on ONE page, `A37`. ⚠⚠ **ALL TWELVE STRINGS OF `A37` ARE DRAFTS** an agent wrote to a
+brief, in the register rules of §1 and §3, for his pass (invariant 4).
+
+### A37 · `first-number-one-title` · rare · teen, adult, lateCareer · **gate: `highest-title-and-first-time-at-the-top-of-the-world-list-in-one-week`**
+**The occasion:** the week her name first stood at the top of the professional world list IS the week she won the title at the highest step – the two facts on one page.
+**Where it comes from:** `world.firstNo1.wta` (the v91 latch) equal to the week `A28` itself is dated at – the week of the FIRST title at the highest step, read through the one function both pages ask. It REPLACES the pair on that week and nowhere else: priority 101 over `A28`'s 100 and `A35`'s 99, so the book's one-frame-per-week rule gives the week to it and neither plain page prints. A first number one in a quieter week stays `A35`; a title with no number one in its week stays `A28`.
+⚠ **Nothing here says one caused the other** (§3.3) – «with it» is accompaniment, and the order inside a week is not a thing the save holds. ⚠ **The junior table keeps the absorb rule**: a junior latch that shares a week with the highest title is absorbed as before; no junior twin was asked for.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `The big one, and number one in the world with it. You rang with both at once, and laughed at how it sounded.` |
+| `fiery` | `The big one, and number one in the world with it. You said both had always been the plan, and asked who wanted to argue now.` |
+| `deep` | `The big one, and number one in the world with it. You said it felt like a single thing, and you couldn't tell which part was louder.` |
+| `quiet` | `The big one, and number one in the world with it. You asked whether we had eaten, and told us the news afterwards, almost in passing.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `She told us both at once, and laughed.` |
+| `fiery` | `Both were the plan, she says.` |
+| `deep` | `She said it felt like a single thing.` |
+| `quiet` | `She asked if we had eaten, then told us.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `One would have been plenty. She brought both.` |
+| `fiery` | `A title and a list. Not much left to argue with.` |
+| `deep` | `I heard the title and the list. She heard one thing.` |
+| `quiet` | `Both of them, and her first question was about us.` |
 
 ## The closing three
 
