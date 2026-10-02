@@ -194,5 +194,5 @@ describe('⭐⭐ §D A WALKED CAREER that failed before the change', () => {
     expect(nineteen.asked, 'and it is what she asked for').toBe(DEPOSIT)
     const after = cards.filter((c) => c.week > key!.week && c.ids.includes(DEPOSIT))
     expect(after.map((c) => c.age), 'no card after the key holds the deposit').toEqual([])
-  }, 120_000)
+  }, 60_000)
 })
