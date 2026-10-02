@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 152 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 153 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 6 | [ROUND 45 ANSWERED: THE FLOATING ASK, THE COACH'S LETTER, THE №1 PAGE, THE BRAND STAYS](#02102026--round-45-answered-the-floating-ask-the-coachs-letter-the-1-page-the-brand-stays) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
-| economy-and-money | 16 | [THE SECONDARY MARKET BUILT: EIGHT STEPS, A DETERMINISTIC MEASUREMENT GATE, AND THE ART OF WAITING PRICED](#30092026--the-secondary-market-built-eight-steps-a-deterministic-measurement-gate-and-the-art-of-waiting-priced) | 2026-09-30 |
+| economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
 | general | 29 | [THE THREE SHELLS BUILT: AN EXE, AN APP AND A 4-MEGABYTE APK, ALL FROM THE TERMINAL](#01102026--the-three-shells-built-an-exe-an-app-and-a-4-megabyte-apk-all-from-the-terminal) | 2026-10-01 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -5769,3 +5769,21 @@ sale is an honest boring yield, P/E 20 is where real steady businesses trade, an
 the cap already scales. Nothing moves. **Pull-to-refresh stays**: he uses it to recover hangs
 («мне помогало иногда, когда что-то подвисало»), so the speculative overscroll kill is off the
 table; the light 1px strip waits for his reproduction.
+
+## 02.10.2026 – THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY
+
+Second batch of the day, off the condition table itself. **The tier surcharge retunes** – his own
+pick, not one of the architect's lettered options: «может быть сделать J тоже 1-2-3, а W 1-2-3-4
+или тоже 1 для 15-75, 2 для 100-250, а 3 для 500+? и тогда мы как раз можем довольно хорошо
+отбалансировать эту историю… А остальное пока оставить как есть и попробовать как будет». The
+build ships his second shape (ITF W15–W75 1 · W100–250 2 · 500+ 3 · juniors 1-2-3), with the first
+(uniform −1, Slam at 4) measured beside it in the probe so the counterfactual is on the table;
+ladders, masseur and scorelines stay. Rivals share the tariff by construction, so the frozen keys
+re-pin with the dated note, the holiday bench runs, and the spec note lands – invariant 5 in full.
+**The shoot clash pays per shooting day** – «давай по 1 за каждый съемочный день, это может быть
+вполне справедливо» – replacing the flat week of 7. **The third branch is WANTED but not designed**:
+«вот хотелось бы, но пока не придумал ничего. Мы вроде думали… "если не готовы повышать цену, то
+работаю меньше дней в неделю"» – parked as a seed, and the seed already half-exists in his own
+ruled 17.09 masseur line («Keep the current schedule at the higher rate, or book fewer sessions»):
+the decline door becoming «работаем реже за старую цену» is the natural shape when he rules it.
+Nothing builds until then. The album he will judge by eye once the round lands.

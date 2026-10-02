@@ -15,7 +15,7 @@ law), each owns only its own lines.
 ⚠ Invariant 4: every NEW player-facing string an item needs goes in the DRAFT table at the bottom,
 never straight into the owner's voice. His sketches (item 4) are the draft, still his to bless.
 
-- [?] **1. «2 матча Шлема снимают 8% кондиции, а 2 матча 250 - 10%. У нас всё ещё перерасход
+- [>] **1. «2 матча Шлема снимают 8% кондиции, а 2 матча 250 - 10%. У нас всё ещё перерасход
   кондиции присутствует. 3 игры на 1000 снимают 15%. 24% за 5 игр 500 и 26% за 6 игр 1000. Давай
   проверим что там вообще, мы хотели немного подкорректировать начальные матчи по-моему.»**
   – Reading: per-match condition drain looks tier-blind (≈4–5%/match everywhere: Slam 4.0, 250 5.0,
@@ -361,3 +361,19 @@ architect's session after the last agent, verdicts from files.
   67 (the 0.68 rung 13 -> 1), C 59 -> 29 of 121; captions touched stay 0 of 335. Residual: 52% of notes end at
   the 0.82 floor, and C's hero still gives up to 24% of its window on 21 sheets – the owner's per-page list takes
   what remains.
+
+## Owner answers, 02.10, second batch (off the condition table)
+
+Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered options: J30/60/300 →
+1/2/3; the W family by stage – his second shape ships (W15–W75 → 1, W100/125/250 → 2, 500/1000/Slam
+→ 3), his first shape (uniform −1, Slam 4) is measured beside it; «А остальное пока оставить как
+есть и попробовать как будет». → B11 `[>]`.
+
+- [>] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
+  справедливо» – the clash's flat 7 becomes per-shooting-day. → B12.
+- [?] **3c.** the third branch for repeated refusals: «вот хотелось бы, но пока не придумал
+  ничего. Мы вроде думали… "если не готовы повышать цену, то работаю меньше дней в неделю"» –
+  a design seed, parked; his own 17.09 masseur wording («…or book fewer sessions») is the
+  half-made shape. No build until he rules it.
+- item 6/6b: «альбом глазами посмотрю когда доделаешь» – his eyeball pass comes at the merge;
+  the 0.82-floor readability question rides along.
