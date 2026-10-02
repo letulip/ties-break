@@ -375,7 +375,7 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
 → 3), his first shape (uniform −1, Slam 4) is measured beside it; «А остальное пока оставить как
 есть и попробовать как будет». → B11 `[>]`.
 
-- [x] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
+- [>] **1b.** «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне
   справедливо» – the clash's flat 7 becomes per-shooting-day. → B12. BUILT: the days are the entered
   event's match days (`log2(drawSize)` – the very days the «do both» schedule already draws the Shoot block
   on), so the clash week costs 3 local / 4 regional / 5 (every 32-draw: juniors, W series, national, WTA
@@ -387,3 +387,16 @@ Item 1 goes to BUILD on his own lever – the tier surcharge, not the lettered o
   half-made shape. No build until he rules it.
 - item 6/6b: «альбом глазами посмотрю когда доделаешь» – his eyeball pass comes at the merge;
   the 0.82-floor readability question rides along.
+
+## Owner answers, 02.10, third batch (off the round report)
+
+- 1b REOPENS as a refine, not a miss: his fiction is «съемочных дней всего 2» and the load is
+  doubled – 2 days × 3 = 6 flat, schedule redraws two Shoot blocks. → B14 `[>]`.
+- [>] **5b.** the same-week collision: a combined world-table occasion (title + №1 in one page),
+  priority above `top-tier-title`; junior keeps absorb. → B15.
+- 3b: the 6% > 5% ordering confirmed ок. The banked-vs-forgiven question is explained and waits.
+- 6b: the ×0.82 floor explained (longest notes draw as a smaller scrap, ~11px on a phone) – his
+  eye at the merge decides; raising the floor to 0.9 is measured and costs B 35/67 shrunk sheets.
+- Self-coached 6→19 of 30: cause named (juniors/early-W cheapened most, fewer injuries compound
+  over the junior era; budget-coach cells still clear more than self – the 22.08 property partly
+  stands). Ruled for now: feel it in play, no rollback lever built.

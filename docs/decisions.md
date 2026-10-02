@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 153 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 154 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 6 | [ROUND 45 ANSWERED: THE FLOATING ASK, THE COACH'S LETTER, THE №1 PAGE, THE BRAND STAYS](#02102026--round-45-answered-the-floating-ask-the-coachs-letter-the-1-page-the-brand-stays) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 29 | [THE THREE SHELLS BUILT: AN EXE, AN APP AND A 4-MEGABYTE APK, ALL FROM THE TERMINAL](#01102026--the-three-shells-built-an-exe-an-app-and-a-4-megabyte-apk-all-from-the-terminal) | 2026-10-01 |
+| general | 30 | [THIRD BATCH: THE CLASH IS TWO HEAVY DAYS, AND THE SLAM-WEEK №1 SHARES THE PAGE](#02102026--third-batch-the-clash-is-two-heavy-days-and-the-slam-week-1-shares-the-page) | 2026-10-02 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5787,3 +5787,20 @@ re-pin with the dated note, the holiday bench runs, and the spec note lands – 
 ruled 17.09 masseur line («Keep the current schedule at the higher rate, or book fewer sessions»):
 the decline door becoming «работаем реже за старую цену» is the natural shape when he rules it.
 Nothing builds until then. The album he will judge by eye once the round lands.
+
+## 02.10.2026 – THIRD BATCH: THE CLASH IS TWO HEAVY DAYS, AND THE SLAM-WEEK №1 SHARES THE PAGE
+
+Off the round-45 report, three more. **The clash shoot is two days, each heavy**: «у нас же там
+когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день
+по 2 или даже по 3 кондишна снимать. Что думаешь?» – the architect's take, built: 2 days × 3 = 6
+per clash, flat across tiers (near the historical 7, and a clash day at 3 is properly heavier than
+a calm shoot day, which stays unpriced; his «одна из последних игр сезона» is the point – 6 lands
+on an end-of-season tank, as intended). The schedule redraws the Shoot block on exactly two trip
+days to match the fiction – the per-match-day drawing was round 30's agent choice, never his.
+**The same-week №1 is not absorbed**: «а они обе не могут на одной странице жить?… она же стала
+№1 потому что выиграла шлем, без него никак. Это тоже как-то надо научиться показывать» – a
+combined album occasion for the world table (the title AND the №1 in one page's own copy, priority
+above the title's page; the plain first-№1 page remains for quieter weeks; the junior table keeps
+the absorb rule for now, stated). **The masseur's good-year 6% above the coach's 5% floor is
+confirmed ок.** Still his to rule: the coach's banked refusals vs the three seats' forgiven ones
+(explained to him this session), and the 0.82 note floor – his eye at the merge.
