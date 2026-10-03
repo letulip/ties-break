@@ -11,8 +11,8 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-272 TRACKED TypeScript files: **58 live**, **214 archival**
-(of which **113 frozen** out of `check:tools` and **101 still swept**).
+274 TRACKED TypeScript files: **58 live**, **216 archival**
+(of which **113 frozen** out of `check:tools` and **103 still swept**).
 
 ## Why the split exists
 
@@ -44,7 +44,7 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `_spotlight.ts` | imported by a live tool |
 | `_stats.ts` | imported by a live tool |
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
-| `album-corpus-emit.ts` | writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album's 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec |
+| `album-corpus-emit.ts` | writes src/engine/world/albumCorpus.ts out of docs/specs/album-corpus-2026-09.md – the ONLY legitimate way to change the album's 400 handwritten strings, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec; idempotent – a re-run over a correct module changes nothing, and the hand-written comment block above an occasion and its voice order are carried, not dropped (--out <path> is the temp mode) |
 | `album-corpus-parse.ts` | imported by the test suite |
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
@@ -106,27 +106,27 @@ compiling reddens a pull request instead of rotting.
 - `cancel-share-bench.ts` · `coach-court-price.ts` · `coach-eye-bench.ts` · `coach-travel-bench.ts`
 - `college-choice-probe.ts` · `college-freeze-probe.ts` · `college-home-place.ts` · `college-news-probe.ts`
 - `college-price-probe.ts` · `college-return-probe.ts` · `college-scene-bench.ts` · `college-talent-bands.ts`
-- `college-year-content.ts` · `composure-bench.ts` · `copy-census.ts` · `domestic-season-to-date.ts`
-- `drought-probe.ts` · `empty-week-census.ts` · `fade-read.ts` · `feed-audit.ts`
-- `first-pair-replay.ts` · `fork-birthday-probe.ts` · `growth-age-sweep.ts` · `growth-pace-probe.ts`
-- `his-careers-dose.ts` · `injury-audit.ts` · `kid-share-audit.ts` · `ladder-vs-targets.ts`
-- `load-and-injury.ts` · `motherhood-bench.ts` · `one-clock.ts` · `pause-brand-probe.ts`
-- `potential-band-sweep.ts` · `pressure-set-census.ts` · `probe-favorite-curve.ts` · `r34-calendar-tiers.ts`
-- `r34-domestic-reset.ts` · `r34-field-chance.ts` · `r34-zero-lock.ts` · `r38-academy-worth.ts`
-- `r38-ceiling-dials.ts` · `r38-closed-form-residual.ts` · `r38-decline-cliff.ts` · `r38-decline-read.ts`
-- `r38-decline-shape.ts` · `r38-fame-presence-sweep.ts` · `r38-field-read.ts` · `r38-save-read.ts`
-- `r39-apparel-bond.ts` · `r39-body-seasons.ts` · `r39-brand-loop.ts` · `r39-decline-rotation.ts`
-- `r39-save-read.ts` · `r39-tenure-reach.ts` · `r39-terms-walk.ts` · `r40-age-branch.ts`
-- `r40-childhood-career-blast.ts` · `r40-childhood-compounding.ts` · `r40-handover-realisation-cuts.ts` · `r40-last-winter.ts`
-- `r40-retire-trigger.ts` · `r40-span-and-realisation.ts` · `r41-ad-gate-16.ts` · `r41-alice-save.ts`
-- `r41-brand-history.ts` · `r41-brand-ramp.ts` · `r41-kid-share-early.ts` · `r41-one-market.ts`
-- `r41-winrate-2036.ts` · `r42-cameo-gap-closer.ts` · `r42-ceiling-clock.ts` · `r42-coach-every-cheque.ts`
-- `r42-composure-bonus.ts` · `r42-elite-retainer.ts` · `r42-junior-coverage.ts` · `r42-kid-share-ramp.ts`
-- `r42-personality-read.ts` · `r42-sparring-price.ts` · `r42-team-budget-cap.ts` · `real-vs-bench.ts`
-- `runway-probe.ts` · `sale-probe.ts` · `school-bench.ts` · `seed-vs-model.ts`
-- `sponsor-cadence.ts` · `sponsor-ladder-reach.ts` · `sponsor-silence-probe.ts` · `summer-bench.ts`
-- `top50-season-probe.ts` · `wall-l1-bench.ts` · `week-story-trace.ts` · `what-money-buys.ts`
-- `winrate-read.ts`
+- `college-year-content.ts` · `composure-bench.ts` · `condition-drain-probe.ts` · `copy-census.ts`
+- `domestic-season-to-date.ts` · `drought-probe.ts` · `empty-week-census.ts` · `fade-read.ts`
+- `feed-audit.ts` · `first-number-one-probe.ts` · `first-pair-replay.ts` · `fork-birthday-probe.ts`
+- `growth-age-sweep.ts` · `growth-pace-probe.ts` · `his-careers-dose.ts` · `injury-audit.ts`
+- `kid-share-audit.ts` · `ladder-vs-targets.ts` · `load-and-injury.ts` · `motherhood-bench.ts`
+- `one-clock.ts` · `pause-brand-probe.ts` · `potential-band-sweep.ts` · `pressure-set-census.ts`
+- `probe-favorite-curve.ts` · `r34-calendar-tiers.ts` · `r34-domestic-reset.ts` · `r34-field-chance.ts`
+- `r34-zero-lock.ts` · `r38-academy-worth.ts` · `r38-ceiling-dials.ts` · `r38-closed-form-residual.ts`
+- `r38-decline-cliff.ts` · `r38-decline-read.ts` · `r38-decline-shape.ts` · `r38-fame-presence-sweep.ts`
+- `r38-field-read.ts` · `r38-save-read.ts` · `r39-apparel-bond.ts` · `r39-body-seasons.ts`
+- `r39-brand-loop.ts` · `r39-decline-rotation.ts` · `r39-save-read.ts` · `r39-tenure-reach.ts`
+- `r39-terms-walk.ts` · `r40-age-branch.ts` · `r40-childhood-career-blast.ts` · `r40-childhood-compounding.ts`
+- `r40-handover-realisation-cuts.ts` · `r40-last-winter.ts` · `r40-retire-trigger.ts` · `r40-span-and-realisation.ts`
+- `r41-ad-gate-16.ts` · `r41-alice-save.ts` · `r41-brand-history.ts` · `r41-brand-ramp.ts`
+- `r41-kid-share-early.ts` · `r41-one-market.ts` · `r41-winrate-2036.ts` · `r42-cameo-gap-closer.ts`
+- `r42-ceiling-clock.ts` · `r42-coach-every-cheque.ts` · `r42-composure-bonus.ts` · `r42-elite-retainer.ts`
+- `r42-junior-coverage.ts` · `r42-kid-share-ramp.ts` · `r42-personality-read.ts` · `r42-sparring-price.ts`
+- `r42-team-budget-cap.ts` · `real-vs-bench.ts` · `runway-probe.ts` · `sale-probe.ts`
+- `school-bench.ts` · `seed-vs-model.ts` · `sponsor-cadence.ts` · `sponsor-ladder-reach.ts`
+- `sponsor-silence-probe.ts` · `summer-bench.ts` · `top50-season-probe.ts` · `wall-l1-bench.ts`
+- `week-story-trace.ts` · `what-money-buys.ts` · `winrate-read.ts`
 
 ## Archival – frozen at their blob id
 

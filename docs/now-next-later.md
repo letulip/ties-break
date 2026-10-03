@@ -29,8 +29,14 @@ last-reviewed: 2026-09-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 44 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 45 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 45 is a 10-item playtest round** ([round-45.md](rounds/round-45.md), 02.10) – condition
+drain measured (no bug – his numbers are the net-of-masseur floors; four tuning options await his
+pick), specialist raise letters, the psychologist's carry-over, three album fixes, the own-place
+beat's corridor, the brand's flat income, and a 1px top-bar hunt. Seven sequential bundles under
+the 29.09 token law.
 
 **Round 44 makes the corpus the game** ([round-44.md](rounds/round-44.md), 17.09) – opened the day
 round 43 merged. Round 43 shipped the small-talk corpus as a DOCUMENT (43 situations, 172 voiced

@@ -56,10 +56,10 @@ import type {
 import { LADDER_LABEL } from '../shared/protocol'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
-import { WEEKS_IN_SEASON, weekLabel, weekRange } from '../shared/dates'
+import { WEEKS_IN_SEASON, seasonYear, weekLabel, weekRange } from '../shared/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
-import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand } from '../engine/offers'
+import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskPer } from '../engine/offers'
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5): the memory window the stale notice quotes is the ENGINE's constant, imported rather than
 // retyped (a retune of `memoryWeeks` moves the sentence with it), and the two senders' words are the ones the inbox LIST prints too.
 import { ECONOMY } from '../engine/economy'
@@ -245,6 +245,35 @@ const PSY_FOCUS_LINE: Record<NonNullable<StaffLetterTerms['focus']>, string> = {
 const staffFocusLine = computed(() => {
   const focus = staffTerms.value.focus
   return focus ? PSY_FOCUS_LINE[focus] : ''
+})
+/** ⭐⭐ ROUND 45 #4 – THE CARRY-OVER LINE, DRAFT. Printed only when the engine says the direction was
+ *  never chosen for this season (`focusCarriedFrom`, the season the carried pick was last bought
+ *  for) – the owner's own sketch is «мы не выбрали новое, поэтому работали по предыдущему». The
+ *  year is the real datum, built off the terms on every read like every other sentence here. */
+const staffCarriedLine = computed(() => {
+  const from = staffTerms.value.focusCarriedFrom
+  if (from === undefined || !staffTerms.value.focus) return ''
+  return `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for ${seasonYear(from)}.`
+})
+/** ⭐⭐⭐ ROUND 45 #3 – A RAISE REQUEST, DRAFT copy. The figures are the two the engine froze on the
+ *  paper (`terms.ask`); nothing here is computed from the world. */
+const staffAsk = computed(() => (isStaff.value ? (staffTerms.value.ask ?? null) : null))
+/** The unit the seat is paid in, WITH its article – «a session» for the masseur, «a week» for the two
+ *  retainers, «an hour» for the coach (`staffAskPer`). DRAFT copy: the masseur's sentences are unchanged, the
+ *  other two are R45-S10..S13 and the coach's are R45-S23..S27. */
+const staffAskPerWord = computed(() => staffAskPer(staffTerms.value.seat))
+const staffAskLead = computed(() => {
+  const ask = staffAsk.value
+  if (!ask) return ''
+  return `I have now worked a full year with her, so I am asking for a raise: my rate would go from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} ${staffAskPerWord.value}.`
+})
+/** What the foot says once the window is shut – one sentence per way a request can end. */
+const staffAskSettled = computed(() => {
+  const ask = staffAsk.value
+  if (!ask) return ''
+  if (props.offer.state === 'signed') return `Accepted – the rate is ${formatCents(ask.toCents)} ${staffAskPerWord.value}.`
+  if (props.offer.state === 'refused') return `Declined – the rate stays at ${formatCents(ask.fromCents)} ${staffAskPerWord.value}.`
+  return `Lapsed – the rate stays at ${formatCents(ask.fromCents)} ${staffAskPerWord.value}.`
 })
 
 // ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 steps 1-2). The other
@@ -902,10 +931,16 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
        ⚠ ALL COPY HERE IS DRAFT, awaiting the owner's pass (invariant 4). -->
   <article v-else-if="isStaff" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <!-- ⭐⭐⭐ ROUND 45 #3 – A RAISE REQUEST. Not a report: one open letter with the sponsor letters'
+           two doors (see the foot). ⚠ ALL COPY HERE IS DRAFT (invariant 4). -->
+      <template v-if="staffAsk">
+        <p class="offer-body">{{ staffAskLead }}</p>
+      </template>
+
       <!-- THE COACH. The year's record first, because it is the thing he was hired to move, then the
            runs, then the table she ends on – and the pair LAST, because it is the only line that is
            about the two of them rather than about her. -->
-      <template v-if="staffTerms.seat === 'coach'">
+      <template v-else-if="staffTerms.seat === 'coach'">
         <p class="offer-body">
           That is the season done. I have been with her {{ staffTerms.weeksServed }} of its weeks, and this is
           what I have to say about them before we start the next one.
@@ -958,6 +993,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           weeks of this season together.
         </p>
         <ul class="offer-terms">
+          <li v-if="staffCarriedLine">{{ staffCarriedLine }}</li>
           <li v-if="staffFocusLine">{{ staffFocusLine }}</li>
           <li v-else>
             We have worked the season through without settling on one thing to carry, which happens and is
@@ -997,7 +1033,19 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">{{ staffSignOff }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <!-- A REQUEST keeps the buyer's letter's foot (the window, the two doors, the settled line); a
+           report only says when it was filed. -->
+      <template v-if="staffAsk">
+        <p v-if="live" class="offer-window">
+          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        </p>
+        <p v-else class="offer-window settled">{{ staffAskSettled }}</p>
+        <div v-if="live" class="offer-actions">
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">Decline</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">Accept</button>
+        </div>
+      </template>
+      <p v-else class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
     </div>
   </article>
 

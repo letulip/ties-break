@@ -587,7 +587,14 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
     // reads the rung three above through HER age, so j30 only goes behind her once W15's door is one
     // she could walk through - and at SIXTEEN the same world has `national` outgrown too, which
     // would have removed the precondition this case is entirely about. Bisected, not assumed.
-    const world = createWorld('coach-owner-card')
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED, 'coach-owner-card' -> 'coach-owner-card-12'. This world is TICKED to
+    // seventeen with nobody at the wheel, so the cohort table she is judged against is whatever B11's cheaper matches made of it, and at seventeen
+    // the sliding window's term (`tierOutgrown`) now fires for `national` on 38 of the 41 seeds scanned – the band and play-down terms are
+    // false on every one. The age stays the fixture's contract (above); the SEED carries the knife-edge, and it was re-found the way the original
+    // was, by RUNNING the preconditions below: 3 of 41 candidate seeds ('coach-owner-card' and '-2' … '-41') hold every one of them – j30 behind her,
+    // national open and NOT behind her, the book open, four silences – and the first is taken. The professional arm below ('coach-owner-card-pro')
+    // still holds on 41 of 41 candidates, so it is untouched.
+    const world = createWorld('coach-owner-card-12')
     const rng = resumeMain(world.rngMain)
     while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < 17) tickWeek(world, rng)
     world.condition = 100

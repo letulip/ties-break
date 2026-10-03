@@ -288,7 +288,17 @@ describe('#18 – the transfer, on a career that is really played', () => {
     // rather than four weeks from a known break, which is what stops the next balance change
     // re-breaking this test for a third time. It costs no coverage: she is still paid real cheques
     // on it ($2,158 of her own money against $6,021 at two years), which is all the claim needs.
-    const HORIZON = WEEKS_PER_YEAR + 26
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED. B11 (a match costs a junior 1/2/3 and a W15–75
+    // week 1; holidays 7.2 -> 4.8) re-timed this career's calendar, so at 78 weeks her first W-series cheque has not landed yet:
+    // `kidFundsCents` is 0 and «she has really been paid something» is the one red line – every comparability guard above it still
+    // green. The lever is the horizon, the one the notes above already name, scanned on the retuned tree the same way (seed 1, both
+    // arms walked, every even horizon 40..140):
+    //   78 -> nothing paid yet ✗ (her first cheque lands at week 82)
+    //   82 · 84 · 86 … 138 · 140 -> the same results on both arms AND she is paid, every one of the 30 horizons
+    // 104 – two years, the file's own `WEEKS_PER_YEAR * 2` idiom – sits in the middle of that run rather than at its edge, which is what
+    // stops the next balance change re-breaking this test a fourth time. She is paid real cheques on it ($1,265 of her own money on a
+    // $12,650 gross, 2,206 results on each arm). The claim, the guards and the seed are untouched.
+    const HORIZON = WEEKS_PER_YEAR * 2
     const on = walk(1, HORIZON)
     const off = walk(1, HORIZON, true)
 

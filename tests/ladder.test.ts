@@ -1033,7 +1033,17 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
       // what `>=` still refuses. The FLOOR table keeps the strict step and is asserted separately
       // below (45 to enter a J30 against 40 for a National): how fresh she must ARRIVE is the
       // different question W2-FATIGUE already separated out from what a week COSTS.
-      expect(table.j30).toBeGreaterThanOrEqual(table.national)
+      // ⚠⚠ RE-AIMED 02.10 (ROUND 45 #1, the owner's tariff ruling «J тоже 1-2-3 … W … 1 для 15-75, 2 для 100-250, а 3 для 500+»), AND ONLY THE SURCHARGE TABLE'S SEAM MOVES: the J family repeats the domestic steps rung for
+      // rung now (j30 = local, j60 = regional, j300 = national), so the seam into the junior tour is a DROP of two in what a week COSTS and not a flat or rising one – which
+      // is the ruling, and what is pinned is that it is exactly the repeat, so a hand that re-extrapolates J above national meets this test and the knob's comment together.
+      // The FLOOR table (how fresh she must ARRIVE) is the different question and keeps its `>=` seam untouched.
+      if (table === (ECONOMY.condition.tierMatchFatigue as Record<TierId, number>)) {
+        expect(table.j30).toBe(table.local)
+        expect(table.j60).toBe(table.regional)
+        expect(table.j300).toBe(table.national)
+      } else {
+        expect(table.j30).toBeGreaterThanOrEqual(table.national)
+      }
       expect(table.w15).toBeLessThan(table.j300)
     }
     // ...and the FLOOR seam is still strict, which is the half the `>=` above deliberately keeps.
@@ -1049,13 +1059,18 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
     // (2 vs 3 - the professional week costs her less per match, which is the whole re-price). One
     // formula could not hold both, which is exactly why the pairing was retired.
     expect(ECONOMY.availability.minConditionToEnter.w15).toBeGreaterThan(ECONOMY.availability.minConditionToEnter.j30)
-    expect(ECONOMY.condition.tierMatchFatigue.w15).toBeLessThan(ECONOMY.condition.tierMatchFatigue.j30)
+    // ⚠ RE-AIMED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): the SURCHARGE is EQUAL at the two entry rungs now (1 and 1) – the juniors went onto the domestic 1-2-3 and the W family onto
+    // its stages, so a W15 week and a J30 week cost the same per match; the "2 vs 3" above narrates the table this replaced. The FLOOR line above is untouched: she still must ARRIVE fresher.
+    expect(ECONOMY.condition.tierMatchFatigue.w15).toBe(ECONOMY.condition.tierMatchFatigue.j30)
     // THE TWO TABLES, PINNED RUNG BY RUNG on their own terms (the pairing that used to do this in
     // one line is retired - see the note above). Written out so a re-tune of either is a deliberate
     // edit to this file rather than a silent consequence of touching the other.
     // ⚠ WIDENED BY W3-ACT2, NOT WEAKENED: ten rungs, pinned cell by cell. The six below are
     // W2-FATIGUE's numbers unmoved; the four above continue the family's own step (3 -> 4 -> 5).
-    expect(rungsOf('wta').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([2, 2, 2, 3, 3, 3, 4, 4, 5, 5])
+    // ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's tariff ruling «J тоже 1-2-3 … W … 1 для 15-75, 2 для 100-250, а 3 для 500+»): the ten W rungs by STAGE – 15 to 75 one, 100 to 250 two, 500 and up three – and (new here) the J family beside
+    // them on the domestic 1 / 2 / 3, pinned rung by rung like the others.
+    expect(rungsOf('wta').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([1, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    expect(rungsOf('itf').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([1, 2, 3])
     // ⚠ WIDENED BY W3-ACT2 AND THE CEILING DELIBERATELY DOES NOT MOVE: the act-3 rungs keep 60.
     // This table is ARRIVAL SAFETY, and from here up she is not free to decline - §6's mandatory
     // regime obliges a top-50 player to turn up. A floor that refused her entry to an event she is
@@ -1074,7 +1089,9 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
     }
   })
 
-  it('matchDrain extrapolates above national for the J levels', () => {
+  // ⚠⚠ RE-AIMED 02.10 (ROUND 45 #1, the owner's tariff ruling «J тоже 1-2-3 … W … 1 для 15-75, 2 для 100-250, а 3 для 500+»): the title's claim is REVERSED BY THE RULING, not weakened – the J levels no longer extrapolate above
+  // national, they repeat the domestic 1 / 2 / 3 (j30 3, j60 4, j300 5 straight-sets, i.e. national's 5 at the top). The +1-per-rung shape INSIDE the J family is kept.
+  it('matchDrain repeats the domestic steps for the J levels (02.10 – until then it extrapolated above national)', () => {
     // ⚠ RE-PINNED +1 each 26.07 (MATCH BASE RAISE, straightSets 1 → 2): the J extrapolation itself
     // is untouched – tierMatchFatigue is unchanged and the +1-per-rung shape is what this test is
     // about. Only the base under it moved, so every cell went up by exactly one.
@@ -1082,9 +1099,9 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
     // are byte-identical and the seam from National into J30 is now flat. The +1-per-rung shape
     // INSIDE the J family - the actual subject - is untouched.
     expect(matchDrain('national', '6-4 6-2')).toBe(5) // 2 + 3
-    expect(matchDrain('j30', '6-4 6-2')).toBe(5) // 2 + 3 (was the itf pin)
-    expect(matchDrain('j60', '6-4 6-2')).toBe(6)
-    expect(matchDrain('j300', '6-4 6-2')).toBe(7)
+    expect(matchDrain('j30', '6-4 6-2')).toBe(3) // 2 + 1 (was 5)
+    expect(matchDrain('j60', '6-4 6-2')).toBe(4) // 2 + 2 (was 6)
+    expect(matchDrain('j300', '6-4 6-2')).toBe(5) // 2 + 3 (was 7) – level with national
   })
 
   it('WIN_IMMUNITY_WEEKS covers every tier (avatar emotion)', () => {

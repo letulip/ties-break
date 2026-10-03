@@ -283,9 +283,12 @@ describe('S2 · schema v90 – the migration writes nothing (spec §2i)', () => 
   const FIX = 'tests/fixtures/saves'
   const read = (v: number): Parameters<typeof migrateSave>[0] => JSON.parse(readFileSync(`${FIX}/v${v}.json`, 'utf8'))
 
-  it('the head is v90, and the golden fixture is the real migration\'s own output on v89.json', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(90)
-    expect(migrateSave(read(89)), 'the recipe every fixture since v25 uses').toEqual(read(90))
+  it('v90 is in the ladder, and its golden fixture is the real migration\'s own output on v89.json', () => {
+    // ⚠ RE-AIMED AT v91 (02.10, round 45 #5 – the first-touch latch), NOT WEAKENED: v90 is no longer the head, so the head half follows the
+    // ladder (`>=`) and the recipe half compares v89's load against v90.json with ONLY the head's version number moved – which is the claim
+    // v90 made («the step writes nothing»), now carried through v91's step, which writes nothing on a save whose cached ranks are not 1.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(90)
+    expect(migrateSave(read(89)), 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION })
   })
 
   it('a v89 save loads with BOTH fields absent and nothing invented on any row', () => {
@@ -296,7 +299,7 @@ describe('S2 · schema v90 – the migration writes nothing (spec §2i)', () => 
     ]
     save.assets = structuredClone(rows)
     const out = migrateSave(save as never)
-    expect(out.schemaVersion).toBe(90)
+    expect(out.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     for (const a of out.assets ?? []) {
       expect('listedWeek' in a, `${a.id}: no listing invented`).toBe(false)
       expect('lastListing' in a, `${a.id}: no memory invented`).toBe(false)

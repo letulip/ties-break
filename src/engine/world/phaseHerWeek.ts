@@ -75,13 +75,13 @@ import { accrueCondition, arrivalStatus, medicalClearance, withheldFreeWeekRecov
 import { summerConditionCost } from './summer'
 import { inCollege } from './college'
 import { resolveMasseur, resolveMasseurRaise, resolveMasseurReturn } from './masseur'
-import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
+import { psychologistWorksThisWeek, resolvePsychologist, resolvePsychologistRaise } from './psychologist'
 // ⭐⭐⭐ v80, WAVE F1 + F2 – the form pass and the third salaried seat. Both are LEAVES in the sense
 // this phase needs (`world/form.ts` imports the model, the closed form and `world/sparring.ts`;
 // `world/sparring.ts` imports the same five siblings `masseur.ts` does), so neither arrow closes a
 // runtime cycle – the same measurement `./masseur` and `./psychologist` carry one line up.
 import { accrueFormWeek } from './form'
-import { resolveSparring } from './sparring'
+import { resolveSparring, resolveSparringRaise } from './sparring'
 // ⭐⭐⭐ v82, ROUND 42 #51 – the coach's annual ask, beside the masseur's. ⚠ ONE-WAY ARROW, and
 // measured the same way the two above were: `world/coachMarket.ts` imports no phase at all
 // (`coachWorksThisWeek` deliberately lives in `phaseFinance.ts`, with the bill that is its first
@@ -1107,6 +1107,11 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   //
   // ⚠ ZERO DRAWS on any stream – a weighted mean over state the tick has already written, a clamp
   // and an integer multiply. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
+  //
+  // ⭐⭐⭐ ROUND 45 #3b (owner, 02.10) – IT WRITES A LETTER NOW, NOT THE RISE. The anniversary this call used to
+  // apply on its own is a two-door staff letter, answered through `acceptOffer` (which re-strikes his stored
+  // fee) or `declineOffer` / a lapse (which leave it). The automatic rise and its feed row are retired – see
+  // the supersession note on `resolveCoachRaise`. The week's bill below is therefore still at the old rate.
   resolveCoachRaise(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
@@ -1131,6 +1136,9 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // that the money and the stand-downs are already honest, because a seat whose bill and whose weeks
   // disagree is the «вы заплатили и не можете этого заметить» failure the travelling-team plan bans
   // specialists for.
+  // ⭐⭐⭐ ROUND 45 #3 – the anniversary writes the psychologist's raise REQUEST (a paper, no cash) just
+  // before the bill, as the masseur's does above; the fee only moves when the family signs it.
+  resolvePsychologistRaise(world)
   resolvePsychologist(world)
   // 1c-sparring (v80, wave F2). THE THIRD SALARIED SEAT, settled beside the other two and for the
   // same reasons: a flat weekly contract per rung on the family payroll, zero draws on any stream,
@@ -1147,5 +1155,7 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // Nothing between the two calls writes `sparringHired`, `inCollege` or the week's booking, so the
   // week he is PAID for and the week he CUTS the drift of are one week by construction – «pay
   // nothing and receive nothing», ruling J, taken as an identity rather than as a pair of rules.
+  // ⭐⭐⭐ ROUND 45 #3 – and the hitting partner's, the same way (see `resolvePsychologistRaise`).
+  resolveSparringRaise(world)
   resolveSparring(world, playedThisWeek)
 }

@@ -72,11 +72,6 @@ import { ownsDeliveredOfFamily } from './assets'
 // shoot week? `offers.ts` is an engine LEAF (it reaches only economy/rng/calendar/world-ledger), so
 // the edge runs the same direction as every other import in this file.
 import { adShootWeek } from '../offers'
-// ⭐ ROUND 29 #3: the week's own length, for the clash price the owner named per DAY. `plan.ts` is a
-// leaf below this one (it reaches only shared/protocol), so the edge runs the same direction as the
-// import above it – and the alternative was a literal 7 beside a rate, which is the shape a retune
-// walks past.
-import { PLAN_DAYS } from '../plan'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
@@ -189,6 +184,59 @@ export function adShootHolds(world: WorldState, week: number = world.week): bool
   return !atCollege && adShootWeek(world.offers, week)
 }
 
+/** ⭐⭐ ROUND 45 #1b, REFINED 02.10 (THIRD BATCH) – THE CLASH SHOOT IS TWO DAYS LONG, AND TWO AT EVERY RUNG.
+ *
+ *  owner (02.10, third batch): «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?»
+ *  – ruled with the architect's concurrence: the clash shoot is 2 days, each costing 3 (`ECONOMY.advertising.clashConditionPerDay`),
+ *  so 6 per clash, flat across tiers; and the schedule «redraws the Shoot block on exactly two trip days to match the fiction –
+ *  the per-match-day drawing was round 30's agent choice, never his» (docs/decisions.md 02.10, «THIRD BATCH»).
+ *
+ *  ⚠ A CONSTANT, WHERE THE FIRST BUILD HAD A FUNCTION OF THE EVENT. Round 45 #1b's first build (B12, the same day) read «за каждый
+ *  съемочный день» as the entered event's MATCH DAYS – `Math.log2(TIERS[tier].drawSize)`, 3 local / 4 regional / 5 / 6 / 7 Slam – because
+ *  the schedule drew the Shoot block on every match day (`TRIP_SHOOT`, hung by `tripMatchDay` in composables/weekGrid.ts since
+ *  round 30 #2). That drawing was an agent's choice and never his; his fiction is a shoot of two days, so the count came off the
+ *  tier and the drawing came with it. Before B12 the multiplier was the week's seven (`PLAN_DAYS`, round 29 #3's reading of
+ *  «+1 в день»); both earlier readings are kept below as the history they are.
+ *
+ *  ⚠ THE SCREEN'S HALF IS `TRIP_SHOOT_DAYS` (composables/weekGrid.ts), which draws the Shoot block on the trip's first two match days
+ *  and may not import this module (the grid takes no value from the engine). The two numbers are pinned equal by the mounted
+ *  file tests/component/round29-shoot-clash-ui.test.ts, over this module's own `clashShootDays`, so a day-count that drifted on one
+ *  side would redden there. Pure constant, zero draws – the frozen MAIN capture cannot see it. */
+export const CLASH_SHOOT_DAYS = 2
+
+/** ⭐⭐ ROUND 45 #1b (owner 02.10) – THE DAYS A SHOOT-AND-TOURNAMENT WEEK IS PRICED OVER: the days the
+ *  entered event RUNS, one condition point each (`ECONOMY.advertising.clashConditionPerDay`).
+ *
+ *  ⚠⚠ THE FIRST BUILD, KEPT VERBATIM BELOW AS HISTORY – REFINED THE SAME DAY (see `CLASH_SHOOT_DAYS` above): the function no
+ *  longer reads the event's tier. What survives unchanged is the zero when she is entered in nothing and the ONE function
+ *  behind both sites.
+ *
+ *  «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо» – and the
+ *  flat week of seven this replaces (`PLAN_DAYS`, round 29 #3's reading of «+1 в день») was never a
+ *  shoot's length. On a week she is also playing, the schedule draws the shoot on the MATCH DAYS
+ *  (`TRIP_SHOOT`, hung on every match day by `tripMatchDay` in composables/weekGrid.ts since round 30
+ *  #2), and the match days are the draw's own rounds – `Math.log2(TIERS[tier].drawSize)`, the same
+ *  arithmetic `tripRoundsFor` asks for the picture and `runTournament` for the draw. So his own table,
+ *  «на локалах 3 дня, National 4 (вроде), основная масса 5, а на 1000 вообще 6 (Шлем 7)», is also what
+ *  the clash costs: 3 / 4 / 5 / 6 / 7, and the old seven is the Slam's price only.
+ *
+ *  ⚠ THE EVENT'S LENGTH AND NOT HER RUN. It is the draw's rounds, never the rounds she survives: the
+ *  price is named in a dialog the week BEFORE, so it has to exist before a ball is hit – and the
+ *  schedule draws every match day for the same reason (`TripFacts.rounds`).
+ *
+ *  ⚠ ZERO WHEN SHE IS ENTERED IN NOTHING THAT WEEK: no event, no collision, nothing to price. Both
+ *  callers (the accumulator below and `buildShootClashPrompt`) already know an entry exists, so this is
+ *  the answer for a hand-built world and never one a live career reaches.
+ *
+ *  ⚠ ONE FUNCTION FOR BOTH SITES – the charge and the card – which is what keeps them from ever
+ *  naming different numbers (the parity class, docs/specs/engine-ui-parity-2026-09.md). It takes a week
+ *  the way `adShootHolds` does, for the same reason: the collision is raised the week BEFORE it lands.
+ *  Pure read, zero draws – the frozen MAIN capture cannot see it. */
+export function clashShootDays(world: WorldState, week: number = world.week): number {
+  const entered = world.season.some((e) => e.week === week && world.entries.includes(e.id))
+  return entered ? CLASH_SHOOT_DAYS : 0
+}
+
 /** THE WITHHELD RECOVERY, OWED WHEN A "PLAYING" WEEK ENDS MATCH-FREE – the one oracle behind the
  *  three refund sites (the medical withdrawal and `skipEvent` in world.ts, the practice medical
  *  cancellation in planner.ts). `accrueCondition` pays a week believing she will play; when the
@@ -275,6 +323,20 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   // «+1 в день, т.к. съемка занимает не один час, то нагрузка будет мощной на всю неделю». One
   // point per day of the week, taken off the week's recovery.
   //
+  // ⭐⭐ ROUND 45 #1b (02.10) – ...AND «THE WEEK'S DAYS» ARE THE SHOOTING DAYS NOW, NOT SEVEN. Shown the
+  // condition table's «shoot week −7», the owner: «неделя съёмок… давай по 1 за каждый съемочный
+  // день, это может быть вполне справедливо». The shoot was never seven days long – on a week she is
+  // also playing, the schedule draws it on the event's match days – so the multiplier is the days the
+  // entered event RUNS (`clashShootDays`: the draw's rounds, 3 local / 4 regional / 5 / 6 / 7 Slam),
+  // and the flat `PLAN_DAYS` that stood here is the Slam's price only. One function for this charge
+  // and for the card, so the two cannot name different numbers.
+  //
+  // ⭐⭐ ROUND 45 #1b, REFINED (02.10, THIRD BATCH) – ...AND THE SHOOTING DAYS ARE TWO, NOT THE EVENT'S. Shown the
+  // per-match-day table above, the owner: «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?» – ruled, 2 days × 3 = 6
+  // per clash. `clashShootDays` is now the flat `CLASH_SHOOT_DAYS` and the rate `clashConditionPerDay` is 3, so
+  // this line charges 6 at every rung; the paragraph above is the first build's reasoning, kept as the
+  // history it is.
+  //
   // ⚠⚠ IT IS CHARGED OFF THE FACT AND NEVER OFF THE ANSWER. Round 28's note two paragraphs up says
   // «NO STACKING on a played week ... she simply recovers worse, no rule needed» – that was true for
   // as long as the collision was nobody's decision, and the owner has now made it one: «жарить прямо
@@ -286,7 +348,7 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   //
   // ⚠ NOT A SECOND SPELLING OF EITHER PREDICATE: `adShootHolds` is the one shoot-week oracle this
   // file already reads, and `playedThisWeek` is `isCompetitionWeek`, handed in by the caller.
-  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS
+  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * clashShootDays(world)
   // ⭐⭐ ROUND 29 #5 – ...AND THE FAMILY'S OWN PLANE MAKES THE ROAD ONE POINT KINDER.
   // docs/specs/the-shop-2026-08.md §3f, the owner: «Самолёт не её, а родителей =) ... По усталости
   // по аналогии с кортом может 1 накинуть, не вижу причин не делать, не такая большая величина».

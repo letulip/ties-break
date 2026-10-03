@@ -405,8 +405,22 @@ describe('T13 §C – the frozen corpus, and what its zero is worth', () => {
   it('...and the corpus COULD have reached an elite hire – it is the horizon, not the mechanic', () => {
     // 1 – the corpus, as frozen: no cell ever calls the command with an ELITE coach on the other end.
     const everyHire: string[] = []
-    for (const [preset, policy, label] of CELLS) {
-      const { world, rng } = openCareer(PRESETS[preset], 0, POLICIES[policy])
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED, CLAIM UNCHANGED, BY EXTENDING THE SEED SET AND NOT THE CLAIM. B11 (a match
+    // costs a junior 1/2/3, a W15–75 week 1, W100–250 2, 500+ 3; holidays 7.2 -> 4.8) re-timed the whole bench calendar: at seed 0 the two player
+    // cells still RELEASE their coach (w63 and w82) but no longer take one back inside the 156-week freeze – they re-hire at w206 – so the
+    // discriminator below («no cell hired at all») went red on the frozen corpus as such. That is a finding about the corpus and it is
+    // recorded rather than hidden: the five cells at seed 0 now reach NO hire decision before the freeze ends, so the key-by-key zero above is
+    // a zero over a walk that never hires. What the discriminator protects is the HARNESS – a walker cut short prints [] for both lines – so
+    // the cells are walked at one more seed and EVERY line below, the no-elite assertion included, is asserted over all ten careers. Hunted:
+    // the two player cells x seeds 0–29 (60 careers), 156 weeks – 22 take a coach on inside the freeze (14 of the 30 seeds), NONE an elite
+    // one, and the hires sit on the yearly re-hire window the old note's w102/w154 already show. Seed 1 is the first where both cells hire
+    // (w154). The ARM below is untouched and still green on its own seed: an elite hire at week 258, at 0 live points, gate off and on.
+    const CORPUS_SEEDS = [0, 1]
+    const WALKED = CORPUS_SEEDS.flatMap((seedIx) =>
+      CELLS.map(([preset, policy, cellLabel]) => [preset, policy, `${cellLabel}/seed${seedIx}`, seedIx] as const),
+    )
+    for (const [preset, policy, label, seedIx] of WALKED) {
+      const { world, rng } = openCareer(PRESETS[preset], seedIx, POLICIES[policy])
       let prev = world.coachId
       const takenOn: string[] = []
       for (let w = 0; w < FREEZE_WEEKS; w++) {

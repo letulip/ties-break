@@ -932,3 +932,148 @@ behaviour rather than an engine constant, and the trade is real: a lower prompt 
 nearer the strength knee (70), which is the one place condition starts costing her matches. Measuring
 it is not proposing it. But under the new bar it is the honest answer to «отпуска реже», and he should
 see the number before he decides the four levers were not enough.
+
+## 11. The tariff is his lever – the 02.10.2026 ruling (round 45 #1)
+
+### 11a. What he asked, what the first measurement found, what he ruled
+
+His report, playing: two Slam matches took 8% of her condition, two at a 250 took 10%, three at a 1000 took 15%, five at a 500 took 24% and six at a 1000 took 26% – «у нас всё ещё перерасход кондиции присутствует… мы хотели немного подкорректировать начальные матчи по-моему». The first measurement (`tools/condition-drain-probe.ts`, 140k fixed-seed runs) found all five figures inside the band between the cheapest and the dearest run the rules allow after the travelling masseur's relief, and found the drain tier-blind by design: the scoreline part of a match averages 2.6 at every rung and every round, so what separates the rungs is only the per-match surcharge and the three ladders. Four options (A–D) were priced and he picked none of them. He answered with a different lever, the tariff itself:
+
+> «может быть сделать J тоже 1-2-3, а W 1-2-3-4 или тоже 1 для 15-75, 2 для 100-250, а 3 для 500+? и тогда мы как раз можем довольно хорошо отбалансировать эту историю, как мне кажется. А остальное пока оставить как есть и попробовать как будет.»
+
+He gave two shapes with an «или» between them. The second one shipped; the first is kept below as a measured counterfactual. «The rest stays as it is» is read literally: the three run-fatigue ladders, the masseur's 3 a night, `matchFatigue` (2 / 3 / +1) and the domestic 1 / 2 / 3 did not move.
+
+### 11b. The two tables
+
+`ECONOMY.condition.tierMatchFatigue`, per match, on top of the scoreline's 2 (straight sets) / 3 (a third set or a tiebreak) / 4 (a third tiebreak set):
+
+| rung | until 02.10 | shipped (his second shape) | his first shape (not shipped) |
+|---|---|---|---|
+| Local / Regional / National | 1 / 2 / 3 | 1 / 2 / 3 | 1 / 2 / 3 |
+| J30 / J60 / J300 | 3 / 4 / 5 | 1 / 2 / 3 | 1 / 2 / 3 |
+| W15 / W35 / W50 | 2 | 1 | 1 |
+| W75 | 3 | 1 | 2 |
+| W100 / WTA 125 | 3 | 2 | 2 |
+| WTA 250 | 4 | 2 | 3 |
+| WTA 500 | 4 | 3 | 3 |
+| WTA 1000 / Slam | 5 | 3 | 4 |
+
+Thirteen values moved. The one tariff is read by the kid and by every rival's ledger (`tournamentRunStrain`), so the rivals moved with her.
+
+### 11c. Predicted against measured
+
+The prediction was made on the unchanged tree: the probe prices the same collected scorelines under each table (exact for the tariff, silent on second-order effects), through the engine's own functions. The tables were added to the probe as whole, absolute scenarios (`T0-pre`, `T1-first`, `T2-second`) so they stay reproducible after the ruling shipped; once it shipped `baseline` and `T2-second` are the same row. After the constants were typed the probe was run again on the changed tree. **The new baseline equals the old tree's `T2-second` row to the printed digit in both arms** – 140,000 runs for an ordinary entrant (10 worlds x 4 tiers x 5 quantiles x 700 reps) and 84,000 for a contender (quantiles 0.01 / 0.03 / 0.06). That is the check that the constants were typed once and are read once, and it says the scorelines she plays do not depend on the tariff in the first week of a run, so the whole second-order effect lives in the careers (11e), not in this table.
+
+**Net toll per visit** (the mean over every run, masseur travelling; matches per visit is 1.9–2.0 at every rung):
+
+| rung | until 02.10 | his first shape | shipped | per match, before → shipped |
+|---|---|---|---|---|
+| WTA 250 | 11.2 | 9.2 | **7.2** | 5.6 → 3.6 |
+| WTA 500 | 11.0 | 9.0 | **9.0** | 5.6 → 4.6 |
+| WTA 1000 | 9.4 | 7.4 | **5.5** | 4.9 → 2.9 |
+| Slam | 9.5 | 7.5 | **5.6** | 4.8 → 2.8 |
+
+His five readings, as the net toll of the run he described (before → shipped): two at the Slam 9.1 → 5.1 (he read 8), two at a 250 11.2 → 7.2 (10), three at a 1000 13.8 → 7.8 (15), five at a 500 25.0 → 20.0 (24), six at a 1000 27.6 → 15.6 (26).
+
+The same dice, by matches played k – the old tree's three tariffs, then the changed tree's measured baseline (ordinary entrant, 140k runs; the title column is an all-straight-sets run, no dice):
+
+```
+BEFORE (unchanged tree):  T0-pre = as it stood · T1-first = his first shape · T2-second = shipped
+  scenario    tier       k=1    k=2    k=3    k=4    k=5    k=6    k=7    mean-net/run  mean-net/match  straight-title-net
+  T0-pre      WT250       6.6   11.2   15.9   20.4   25.0                         11.2             5.6                  22
+  T0-pre      WT500       6.6   11.2   15.8   20.4   25.0                         11.0             5.6                  22
+  T0-pre      WT1000      5.6    9.2   13.8   18.4   23.0   27.6                   9.4             4.9                  24
+  T0-pre      Slam        5.6    9.1   13.7   18.2   22.8   27.3   31.6            9.5             4.8                  28
+  T1-first    WT250       5.6    9.2   12.9   16.4   20.0                          9.2             4.6                  17
+  T1-first    WT500       5.6    9.2   12.8   16.4   20.0                          9.0             4.6                  17
+  T1-first    WT1000      4.6    7.2   10.8   14.4   18.0   21.6                   7.4             3.9                  18
+  T1-first    Slam        4.6    7.1   10.7   14.2   17.8   21.3   24.6            7.5             3.8                  21
+  T2-second   WT250       4.6    7.2    9.9   12.4   15.0                          7.2             3.6                  12
+  T2-second   WT500       5.6    9.2   12.8   16.4   20.0                          9.0             4.6                  17
+  T2-second   WT1000      3.6    5.2    7.8   10.4   13.0   15.6                   5.5             2.9                  12
+  T2-second   Slam        3.6    5.1    7.7   10.2   12.8   15.3   17.6            5.6             2.8                  14
+AFTER (changed tree):  baseline = the shipped constants, measured
+  scenario    tier       k=1    k=2    k=3    k=4    k=5    k=6    k=7    mean-net/run  mean-net/match  straight-title-net
+  baseline    WT250       4.6    7.2    9.9   12.4   15.0                          7.2             3.6                  12
+  baseline    WT500       5.6    9.2   12.8   16.4   20.0                          9.0             4.6                  17
+  baseline    WT1000      3.6    5.2    7.8   10.4   13.0   15.6                   5.5             2.9                  12
+  baseline    Slam        3.6    5.1    7.7   10.2   12.8   15.3   17.6            5.6             2.8                  14
+```
+
+Contenders (the top of the field, quantiles 0.01 / 0.03 / 0.06 – the ones who play the deep rounds), same layout:
+
+```
+BEFORE
+  scenario    tier       k=1    k=2    k=3    k=4    k=5    k=6    k=7    mean-net/run  mean-net/match  straight-title-net
+  T0-pre      WT250       6.6   11.2   15.8   20.4   25.0                         11.7             5.6                  22
+  T0-pre      WT500       6.6   11.3   15.8   20.4   25.0                         11.2             5.6                  22
+  T0-pre      WT1000      5.7    9.2   13.7   18.3   22.8   27.3                  13.4             4.7                  24
+  T0-pre      Slam        5.7    9.1   13.6   18.0   22.5   27.0   31.4           17.3             4.6                  28
+  T1-first    WT250       5.6    9.2   12.8   16.4   20.0                          9.6             4.6                  17
+  T1-first    WT500       5.6    9.3   12.8   16.4   20.0                          9.2             4.6                  17
+  T1-first    WT1000      4.7    7.2   10.7   14.3   17.8   21.3                  10.5             3.7                  18
+  T1-first    Slam        4.7    7.1   10.6   14.0   17.5   21.0   24.4           13.5             3.6                  21
+  T2-second   WT250       4.6    7.2    9.8   12.4   15.0                          7.5             3.6                  12
+  T2-second   WT500       5.6    9.3   12.8   16.4   20.0                          9.2             4.6                  17
+  T2-second   WT1000      3.7    5.2    7.7   10.3   12.8   15.3                   7.7             2.7                  12
+  T2-second   Slam        3.7    5.1    7.6   10.0   12.5   15.0   17.4            9.7             2.6                  14
+AFTER
+  scenario    tier       k=1    k=2    k=3    k=4    k=5    k=6    k=7    mean-net/run  mean-net/match  straight-title-net
+  baseline    WT250       4.6    7.2    9.8   12.4   15.0                          7.5             3.6                  12
+  baseline    WT500       5.6    9.3   12.8   16.4   20.0                          9.2             4.6                  17
+  baseline    WT1000      3.7    5.2    7.7   10.3   12.8   15.3                   7.7             2.7                  12
+  baseline    Slam        3.7    5.1    7.6   10.0   12.5   15.0   17.4            9.7             2.6                  14
+```
+
+Every rung, draw-free: the net toll of an all-straight-sets run that ended after k matches, shown as until-02.10 / first shape / shipped (the domestic rows are there to show they did not move):
+
+```
+  tier      draw  surcharge     k=1       k=2       k=3       k=4       k=5       k=6       k=7
+  Local        8      1/1/1     3/3/3    4/4/4    5/5/5
+  Regional    16      2/2/2     4/4/4    6/6/6    8/8/8 11/11/11
+  National    32      3/3/3     5/5/5    8/8/8 11/11/11 15/15/15 19/19/19
+  J30         32      3/1/1     5/3/3    8/4/4   11/5/5   15/7/7   19/9/9
+  J60         32      4/2/2     6/4/4   10/6/6   14/8/8 19/11/11 24/14/14
+  J300        32      5/3/3     7/5/5   12/8/8 17/11/11 23/15/15 29/19/19
+  W15         32      2/1/1     4/3/3    6/4/4    8/5/5   10/6/6   12/7/7
+  W35         32      2/1/1     4/3/3    6/4/4    8/5/5   10/6/6   12/7/7
+  W50         32      2/1/1     4/3/3    6/4/4    8/5/5   10/6/6   12/7/7
+  W75         32      3/2/1     5/4/3    8/6/4   11/8/5  14/10/6  17/12/7
+  W100        32      3/2/2     5/4/4    8/6/6   11/8/8 14/10/10 17/12/12
+  WT125       32      3/2/2     5/4/4    8/6/6   11/8/8 14/10/10 17/12/12
+  WT250       32      4/3/2     6/5/4   10/8/6  14/11/8 18/14/10 22/17/12
+  WT500       32      4/3/3     6/5/5   10/8/8 14/11/11 18/14/14 22/17/17
+  WT1000      64      5/4/3     5/4/3    8/6/4   12/9/6  16/12/8 20/15/10 24/18/12
+  Slam       128      5/4/3     5/4/3    8/6/4   12/9/6  16/12/8 20/15/10 24/18/12 28/21/14
+```
+
+### 11d. The holiday bench
+
+The bench B1 said any tariff change owes: `npm run bench:season-eq -- --levers --seeds 12 --toAge 27`, **the control cell only** (the arm's first row, then the run was stopped – the other seventeen cells are the 19.09 levers and would take about twenty minutes a side). 12 careers x 2 presets (120k wealthy elite, 25k middle high), walked to age 27 under the player policy, same seeds both sides:
+
+| | before | after |
+|---|---|---|
+| holidays a season, mean / median | 7.2 / 7.0 | **4.8 / 5.0** |
+| seasons with 2 or fewer / 3–4 / 5 or more | 1% / 8% / 91% | 12% / 33% / 54% |
+| `never` (the only family week is the compulsory off-season one) | 0% | 4% |
+| off-season arrival (`door49`, reported and not constrained since 19.09) | 99 | 100 |
+| weeks under 50 condition a season | 2.1 | 0.7 |
+| condition median / minimum | 92 / 42 | 94 / 58 |
+| injury prevalence / onsets a season | 49% / 0.68 | 42% / 0.57 |
+| knocks a season | 1.2 | 1.5 |
+| events a season / depth / best place (median) | 21.4 / 2.89 / 11 | 21.4 / 2.88 / 11 |
+
+Holidays fall by a third (7.2 → 4.8) and the 19.09 bar was «отпуска реже». She plays the same number of events to the same depth and her best place does not move. The `never` share is the watch item: 4% of seasons now carry only the compulsory family week.
+
+### 11e. What it costs elsewhere
+
+- **Frozen careers.** `tools/frozen-key-diff.ts` on the three canonical careers, control = the untouched head (`49b06e83`, clean `src/`) captured before the constants were typed: **5/0 45 of 102 keys moved, 8/0 39 of 101, 0/1 38 of 102** (the 19.09 ladder pass measured 38–44 of ~94). `rngMain` is byte-identical on all three (`1dbff28caca2`, `aebc8101d6df`, `d84bcbf0c481`): no draw was added or removed. Every hash in `tests/coachTravelEdgeFixtures.ts` moved – **128 of 128 literal sites (125 distinct values)** – and was re-pinned from the helpers' own output in four harness rounds.
+- **The capture.** `tests/condition.test.ts`: 41550 draws, hash `e6b0c709`, head and tail reproduce byte for byte (they are asserted before the last line is read). What moved is the companion value `kidRank` of the 52-week baseline year, 90 → 89, re-pinned in `condition.test.ts`, `injuries.test.ts` and `planner.test.ts`. A value moved, no draw did.
+- **Tests re-aimed**, each with a dated note: `fatigueReference` (the three tables regenerated; the ceiling comes down 9 → 7 and is shared by five rungs; the seam pin is rewritten to the new design), `principles-t73-economy-identity` (sha only: thirteen single-digit values, so the character count and the key paths held), `round9`, `ladder` (J repeats the domestic steps; W15 and J30 are equal), `rivals` (a J300 title costs 31, not 41; the claim «one deep run costs a fresh champion strength» reverts to «condition only» because 77 is above the knee of 70; the cheapest reading of an ambiguous 30-point legacy row flips from the Local title to a WTA 250 last-16, which touches only pre-rival-life saves), `season/wOnRamp` (a fresher cohort puts a third live player into the seeded W15 draw; the on-ramp cap is now measured on the on-ramp's own entrants).
+- **Not run here:** the sim-project files that read the tariff (`fatigue-bench*`, `fatigueBenchPolicyFixtures`) and anything else outside the subset – the architect's gate.
+
+### 11f. Open questions for him
+
+1. **The Slam and the 1000 are now the cheapest big weeks, per match, on the tour.** The 14.08 ramp [-2, -1, 0] was written against a surcharge of 5 and was left alone as the ruling says; with a plateau of 3 it makes a Slam straight-sets match cost 3, 4, 5, 5, 5, 5, 5 against 5, 6, 6, 6, 6 at a 500. A first-round Slam match costs what a W15 match costs. Keep the ramp, or cut it to the new plateau?
+2. **The shape of the two top steps.** His first shape kept 1000 and Slam one step above 250 and 500 (4 against 3); the shipped one puts the 500, the 1000 and the Slam on one step. At the 500 the two shapes are the same table.
+3. Holidays came down by a third; if he wants them rarer still, the levers B1 priced in §5 (the masseur's relief, the concave depth curve) are untouched and still available.

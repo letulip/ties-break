@@ -1120,3 +1120,37 @@ The version-by-version chronicle that stood above `SAVE_SCHEMA_VERSION` in `src/
 // row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e
 // fixtures. ⚠ NO PEEL RUNG – the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V90`.
 ```
+
+## v91 – the first-touch latch
+
+```ts
+// ⭐⭐⭐ v91 – THE FIRST-TOUCH LATCH (ROUND 45 #5; the owner's 02.10 ruling, docs/decisions.md «ROUND 45 ANSWERED»).
+// **ONE OPTIONAL KEY ON THE WORLD**: `firstNo1?: { wta?: number; junior?: number }` – the first week the live fold said she was
+// number one on the professional world table (`wta`, `kidRankWta`) or the international junior one (`junior`, `kidRank`). Written
+// ONCE per key in `recomputeKidRank` (world/ladder.ts, `latchFirstNo1`) beside `peakDomesticPoints`; read by the album's two
+// `first-number-one` occasions (world/albumBook.ts, `rareCandidates`) and by nothing else. The domestic table is NOT latched.
+//
+// ⚠⚠ A DELIBERATE, SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY», WHICH OTHERWISE STANDS. One week per table, never a
+// year-by-year ledger. It exists because no save held the fact: `seasonHistory` is year-end only, `results` is a 52-week window and
+// `bestRankOn` documents that no history exists – so the year-end-only version of the page misses a June touch that ends the season at
+// #3, which is precisely the case his sentence named («даже если в моменте»).
+//
+// ⚠⚠ THE BACKFILL IS THE HONEST APPROXIMATION, NOT A RECONSTRUCTION. The true first touch of an older career is unknowable, so the
+// step sets the latch to the CURRENT week only where the CACHED rank is 1 as the save is written, and otherwise leaves the key ABSENT –
+// for a career that never reached #1 that is exactly right, and for one that touched it earlier and has since fallen it is an honest
+// «not known» that costs one page and writes no lie (`prologueTrace`'s v84 refusal: never invent a fact the save never held). The key is
+// created lazily, so a save with nothing to say gains no key at all.
+//
+// ⚠ THE GUARD IS THE TABLE'S OWN ROW – `rank === 1 && points > 0` – and not a special case of her number: `recomputeKidRank`'s own
+// warning is that the cache may not disagree with the fold, and on an all-zero table the fold already puts everyone at the bottom.
+//
+// ⚠ ZERO DRAWS: pure state over the fold `recomputeKidRank` already paid for. No sub-stream is reached, MAIN cannot move, and the frozen
+// capture (41550 / e6b0c709) is untouched. Input-independence is untouched too: the latch READS the world's table and writes only itself.
+//
+// ⚠⚠ THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case): no frozen career touches #1 in its walk, so the serialised world gains no
+// key and `careerHashAtSchema` needs NO new peel rung – its tail answers 87 through 91 alike – `PRE_V91` holds the verbatim v90 constants,
+// and the live registers still re-stamp because the version number is inside the hash.
+//
+// Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v90 -> v91 step in migrations.ts, tests/fixtures/saves/v91.json, its row in
+// tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e fixtures.
+```

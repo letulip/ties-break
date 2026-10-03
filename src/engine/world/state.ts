@@ -335,7 +335,13 @@ import type { AcademySupport } from '../academy'
 // ⚠ v90: ZERO DRAWS IN THE MOVE AND IN BOTH COMMANDS (`listAsset`, `unlistAsset`): the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
 // ⚠⚠ v90: FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case): no frozen career lists anything, so no key is gained – `schemaVersion` alone moves (`PRE_V90`).
 // ⚠ v90: NO PEEL RUNG: the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V90` instead.
-export const SAVE_SCHEMA_VERSION = 90
+//
+// v91 → docs/notes/engine/save-schema-history.md#v91--the-first-touch-latch
+// v91 – THE FIRST-TOUCH LATCH (ROUND 45 #5): ONE OPTIONAL KEY ON THE WORLD – `firstNo1?: { wta?: number; junior?: number }`, the first week she was #1 on a table.
+// ⚠⚠ v91: A DELIBERATE SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY» (owner, 02.10: «даже если в моменте»); the rule otherwise stands.
+// ⚠ v91: THE BACKFILL IS HONEST, NOT RECONSTRUCTED: set to the CURRENT week only where the cached rank is 1 at migration time, else left absent.
+// ⚠ v91: ZERO DRAWS – pure state arithmetic over the fold `recomputeKidRank` already paid for; the frozen MAIN capture (41550 / e6b0c709) is untouched.
+export const SAVE_SCHEMA_VERSION = 91
 
 
 
@@ -574,6 +580,24 @@ export interface WorldState {
    *  Backfills 0: an old save's pruned past cannot be invented (the v46 byTrack doctrine) – the
    *  W-professional arm covers migrated pros, and a live junior re-earns it on her next fold. */
   peakDomesticPoints: number
+  /** ⭐⭐ v91 – THE FIRST-TOUCH LATCH (round 45 #5, the owner's 02.10 ruling): the first week the live
+   *  fold said she was NUMBER ONE on a table, per table – `wta` is the professional world table
+   *  (`kidRankWta`), `junior` the international junior one (`kidRank`). Written ONCE per key, in
+   *  `recomputeKidRank` beside `peakDomesticPoints`, never rewritten and never cleared; read by the
+   *  album's `first-number-one` pages and by nothing else.
+   *
+   *  ⚠⚠ THIS IS A DELIBERATE, SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY», WHICH
+   *  OTHERWISE STANDS. The ruling is about a year-by-year ledger of ranks; this is ONE number per table,
+   *  and the only fact a year-end row cannot carry – a June touch of #1 that ends the season at #3 is
+   *  exactly the case his sentence named («даже если в моменте»), and no save held it (`seasonHistory`
+   *  is year-end only, `results` is a 52-week window, `bestRankOn` documents that no history exists).
+   *
+   *  ⚠ OPTIONAL, AND ABSENT UNTIL THE FIRST TOUCH – absence is the exact truth for every career that
+   *  never reached #1, and the key itself is created lazily so such a career's serialised world gains
+   *  nothing. Backfill rule for older saves (v90 -> v91): the latch is set to the CURRENT week only when
+   *  the cached rank is 1 at migration time, else left absent – a true first touch in the past is
+   *  unknowable and the migration may not invent one. */
+  firstNo1?: { wta?: number; junior?: number }
   /** THE TITLES LEDGER (v31): every title and every LOST final of her career, per tier, as the
    *  absolute weeks they happened in. Written beside `bestFinishByTier` at tournament finalize;
    *  behind the Trophy Cabinet. Full shape and the `finals` warning: `TierTrophies` in protocol.ts.

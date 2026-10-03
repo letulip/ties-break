@@ -9,14 +9,21 @@
 // ⚠ A and C ALTERNATE AND NEVER REPEAT BACK TO BACK (spec §3) – but that is the ENGINE's choice,
 // made when it assembles the book. This component renders the layout it is handed and knows nothing
 // about the one before it.
+import { computed } from 'vue'
 import AlbumPhoto from './AlbumPhoto.vue'
 import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumTagCard from './AlbumTagCard.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import AlbumSheetTitle from './AlbumSheetTitle.vue'
+import { noteSpot, placeSheet, spot } from './albumPlacement'
 import type { AlbumSheetModel } from '../../shared/protocol'
 
-defineProps<{ sheet: AlbumSheetModel }>()
+const props = defineProps<{ sheet: AlbumSheetModel }>()
+
+// ⭐ WHERE THE PHOTOGRAPHS, THE NOTE AND THE LOOSE LINE STAND IS ONE PURE FUNCTION'S ANSWER (round 45 #6,
+// `albumPlacement.ts`): the drawing's own numbers live in its table and a note or a line that would sit
+// on a photograph's caption is moved off it. This file binds the answer and owns no coordinate of them.
+const placed = computed(() => placeSheet(props.sheet))
 </script>
 
 <template>
@@ -29,25 +36,33 @@ defineProps<{ sheet: AlbumSheetModel }>()
     />
 
     <AlbumPhoto
-      v-if="sheet.frames[0]"
+      v-if="sheet.frames[0] && placed.photos[0]"
       class="album-c-hero"
+      :style="spot(placed.photos[0])"
       :frame="sheet.frames[0]"
       tape
-      :tilt="-0.8"
-      :photo-height="196"
+      :tilt="placed.photos[0].tilt"
+      :photo-height="placed.photos[0].photoH"
     />
 
     <AlbumTagCard v-if="sheet.tag" class="album-c-tag" :tag="sheet.tag" />
 
-    <AlbumNoteCard v-if="sheet.note" class="album-c-note" :note="sheet.note" :tilt="-1.1" />
+    <AlbumNoteCard
+      v-if="sheet.note && placed.note"
+      class="album-c-note"
+      :style="noteSpot(placed.note)"
+      :note="sheet.note"
+      :tilt="-1.1"
+    />
 
     <AlbumPhoto
-      v-if="sheet.frames[1]"
+      v-if="sheet.frames[1] && placed.photos[1]"
       class="album-c-second"
+      :style="spot(placed.photos[1])"
       :frame="sheet.frames[1]"
       clip
-      :tilt="1.8"
-      :photo-height="100"
+      :tilt="placed.photos[1].tilt"
+      :photo-height="placed.photos[1].photoH"
     />
 
     <AlbumDoodleMark
@@ -57,7 +72,7 @@ defineProps<{ sheet: AlbumSheetModel }>()
       :size="24"
     />
 
-    <p v-if="sheet.line" class="album-c-line">{{ sheet.line }}</p>
+    <p v-if="sheet.line && placed.line" class="album-c-line" :style="spot(placed.line)">{{ sheet.line }}</p>
   </div>
 </template>
 
@@ -75,9 +90,6 @@ defineProps<{ sheet: AlbumSheetModel }>()
 
 .album-c-hero {
   position: absolute;
-  left: 26px;
-  top: 100px;
-  width: 276px;
 }
 
 /* The tag hangs from the same line the hero's tape sits on, which is what makes the string read as
@@ -97,16 +109,10 @@ defineProps<{ sheet: AlbumSheetModel }>()
    UPWARDS into the empty middle of the page and the parent's last line is always readable. */
 .album-c-note {
   position: absolute;
-  left: 28px;
-  bottom: 36px;
-  width: 156px;
 }
 
 .album-c-second {
   position: absolute;
-  left: 204px;
-  top: 332px;
-  width: 138px;
 }
 
 .album-c-doodle {
@@ -117,9 +123,6 @@ defineProps<{ sheet: AlbumSheetModel }>()
 
 .album-c-line {
   position: absolute;
-  left: 388px;
-  top: 368px;
-  width: 74px;
   margin: 0;
   font-size: 19px;
   line-height: 1.25;

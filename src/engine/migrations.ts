@@ -3323,6 +3323,40 @@ export function migrateSave(raw: unknown): WorldState {
     v = 90
   }
 
+  // ⭐⭐⭐ v90 -> v91 – THE FIRST-TOUCH LATCH (round 45 #5, the owner's 02.10 ruling; docs/decisions.md «ROUND 45
+  // ANSWERED»). ONE OPTIONAL KEY ON THE WORLD – `firstNo1?: { wta?: number; junior?: number }` – the first week she was
+  // number one on the professional world table (`wta`) or the international junior one (`junior`). A DELIBERATE,
+  // SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY», which otherwise stands.
+  //
+  // ⚠⚠ THE BACKFILL IS THE HONEST APPROXIMATION AND NOT A RECONSTRUCTION. The true first touch of an older career is
+  // UNKNOWABLE: `seasonHistory` holds year-end ranks only, `results` is a 52-week window, and no save ever kept a rank
+  // history (`bestRankOn`'s own docblock says so) – so a past touch cannot be found, and inventing one is the refusal
+  // `prologueTrace`'s v84 step makes: never write a fact the save never held. What a save DOES hold is the cached rank
+  // of the week it was written (`kidRankWta`, `kidRank` – the one writer is `recomputeKidRank`, and a rank of 1 there
+  // already implies points held, because the fold puts an all-zero table at the bottom). So:
+  //   * the cached rank is 1 TODAY on a table -> that table's latch is set to the CURRENT week – she IS number one as
+  //     this save is written, so «a touch no later than now» is true, and it is the earliest week the save can prove;
+  //   * otherwise the key is LEFT ABSENT – for a career that never reached #1 this is exactly right, and for one that
+  //     touched it earlier and has since fallen it is an honest «not known», which costs one page the book would
+  //     have printed and writes no lie. The first touch AFTER the migration is caught by `recomputeKidRank` as ever.
+  // The key itself is created only when a latch is set, so a save with nothing to say gains no key at all.
+  // ⚠ Defensive for the append-only reason v30 states: an existing object is left alone (`??=`), and a non-number week
+  // is skipped rather than assumed – the corruption check below is what refuses that save, not this step.
+  // ⚠ ZERO DRAWS, no sub-stream: pure state, the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v91.json, its row in
+  // tests/fixtures/saves/README.md, the e2e fixtures, docs/context/saves-and-worker.md's mechanically-checked schema
+  // sentence and `tests/coachTravelEdgeFixtures.ts`' `PRE_V91`.
+  if (v === 90) {
+    if (typeof save.week === 'number') {
+      const touched: { wta?: number; junior?: number } = {}
+      if (save.kidRankWta === 1) touched.wta = save.week
+      if (save.kidRank === 1) touched.junior = save.week
+      if (touched.wta !== undefined || touched.junior !== undefined) save.firstNo1 ??= touched
+    }
+    v = 91
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

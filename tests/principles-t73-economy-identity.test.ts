@@ -46,7 +46,18 @@ import { ECONOMY } from '../src/engine/economy'
 // paths move, which is the tell of an ADDED key: 29,630 → 29,647 chars (+17, `"memoryWeeks":12,`), sha 261541d5… → 9145d9de…;
 // 1,916 → 1,917 paths (+1), sha 3cc2c7ae… → ac3ad65f…; the 44 top-level blocks did not move. Taken on 80c8f34c plus the S2 commit of
 // feat/secondary-market.
-const PIN_JSON_SHA256 = '9145d9de7be5428c7d1cdb12344637b2d6a1d079238eca6896a2fdee0c278168'
+// RE-PINNED A FOURTH TIME 02.10, ROUND 45 #1 – THE OWNER'S TARIFF RULING (docs/specs/the-season-equation-2026-09.md §11, docs/decisions.md «THE TARIFF IS HIS LEVER»):
+// «может быть сделать J тоже 1-2-3, а W … 1 для 15-75, 2 для 100-250, а 3 для 500+? … А остальное пока оставить как есть». THIRTEEN VALUES move and no key does:
+// condition.tierMatchFatigue j30 3 → 1, j60 4 → 2, j300 5 → 3, w15 / w35 / w50 2 → 1, w75 3 → 1, w100 / wta125 3 → 2, wta250 4 → 2, wta500 4 → 3, wta1000 / slam 5 → 3 (local, regional
+// and national stay 1 / 2 / 3). Only the byte-sha pin moved – 9145d9de… → 72a1461f…; every moved value is one digit for one digit, so the CHARS pin (29,647) did NOT
+// move, nor did the key paths (1,917, sha ac3ad65f…) nor the 44 top-level blocks – the tell, as on 30.09 S1b, that a value changed and nothing was added, removed or reordered.
+// Taken on 49b06e83 plus the round-45 #1 tariff commit.
+// RE-PINNED A FIFTH TIME 02.10, ROUND 45 #1b REFINED – THE OWNER'S THIRD-BATCH RULING (docs/decisions.md «THIRD BATCH: THE CLASH IS TWO HEAVY DAYS»):
+// «… съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать». ONE VALUE moves and no key does:
+// advertising.clashConditionPerDay 1 → 3 (two shooting days × 3 = 6 per clash; the day count is `CLASH_SHOOT_DAYS` in world/medical.ts and is NOT an ECONOMY key).
+// Only the byte-sha pin moved – 72a1461f… → 406b41b1…; one digit for one digit, so the CHARS pin (29,647) did NOT move, nor did the key paths
+// (1,917, sha ac3ad65f…) nor the 44 top-level blocks – the same tell as the 02.10 tariff re-pin just above. Taken on 5a987a8d plus the B14 commit.
+const PIN_JSON_SHA256 = '406b41b1eda831eaf799dd03ec6bbfc99cc96058cc29a909d88bead5a43f93eb'
 const PIN_JSON_CHARS = 29_647
 const PIN_PATHS_SHA256 = 'ac3ad65f6573edd2581cb9190483a4141614087ba9b7232a3268c885b7507eda'
 const PIN_PATH_COUNT = 1_917

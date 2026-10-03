@@ -232,12 +232,17 @@ describe('the held slots take the last acceptances and nothing else', () => {
   it('a W draw keeps its size, and at most ON_RAMP.slots of it are LIVE on-ramp entrants', () => {
     const world = ticked('onramp-share', 45)
     for (const tier of ['w15', 'w35', 'w50', 'w75'] as TierId[]) {
-      const { withOnRamp } = arms(world, tier, ON_RAMP.slots)
+      const { withOnRamp, withoutOnRamp } = arms(world, tier, ON_RAMP.slots)
       expect(withOnRamp.length, tier).toBe(TIERS[tier].drawSize)
       const live = withOnRamp.filter((p) => !isFieldProId(p.id))
-      expect(live.length, tier).toBeLessThanOrEqual(ON_RAMP.slots)
+      // ⚠ RE-AIMED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): a cheaper tariff gives the live cohort fresher legs, so ONE MORE live player is accepted DIRECTLY into the seeded w15 draw
+      // at week 45 (3 live where the old tariff left 2). The contract this test is named for is the ON-RAMP's cap, so it is now measured on the on-ramp's own entrants – the live players in the
+      // draw WITH the on-ramp that were not in it WITHOUT it – and asserted exactly as before; the direct live acceptances are counted in the second claim's allowance instead of assumed away.
+      const direct = new Set(withoutOnRamp.map((p) => p.id))
+      const onRampLive = live.filter((p) => !direct.has(p.id))
+      expect(onRampLive.length, tier).toBeLessThanOrEqual(ON_RAMP.slots)
       // ...so the draw is still overwhelmingly professional, which is what W3-FIELD3 bought.
-      expect(withOnRamp.length - live.length, tier).toBeGreaterThanOrEqual(TIERS[tier].drawSize - ON_RAMP.slots)
+      expect(withOnRamp.length - live.length, tier).toBeGreaterThanOrEqual(TIERS[tier].drawSize - ON_RAMP.slots - (live.length - onRampLive.length))
     }
   })
 
