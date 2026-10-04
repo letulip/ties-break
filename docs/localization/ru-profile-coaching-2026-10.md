@@ -499,11 +499,9 @@ coach route renders the shared blocks.
 | `Masseur` | `Массажист` |
 | `Psychologist` | `Психолог` |
 | `Hitting partner` | `Спарринг-партнёр` |
-| `Household, every week` | `Семейный бюджет за неделю` |
-| `{money} in` | `Доходы: {money}` |
-| `{money} out` | `Расходы: {money}` |
-| `{money} left over` | `Остаётся: {money}` |
-| `{money} short` | `Не хватает: {money}` |
+| `Household, every week` | `Семья за неделю` |
+| `{in} in – {out} out – {net} left over` | `доход {in} – расход {out} – остаётся {net}` |
+| `{in} in – {out} out – {net} short` | `доход {in} – расход {out} – не хватает {net}` |
 
 Shelf, upkeep and business-income explanations reuse RU-06's semantic messages; this route must not
 keep a private translation just because it mounts the component.

@@ -427,7 +427,256 @@ logic into the catalogue:
 - Screen-reader pass: chapter controls, period controls, kit rungs and transaction rows must remain
   meaningful without layout or colour.
 
-The remaining sections of RU-06 will extend this file with support staff, shop/assets, inbox and
-all offer-letter corpora. This first slice is complete for `MoneyScreen.vue` and
-`HouseholdStrip.vue`; shared dialogs and event writers are completed with their owning later
-sections rather than duplicated here.
+## 16. Specialists chapter
+
+The parent tab label is RU-05's **`Специалисты`**. The shared household strip above it reuses §5
+without a second wording. The three seats keep distinct jobs:
+
+- the massage therapist helps the body recover and may travel;
+- the psychologist works by weekly call, never needs a travel fare and receives one yearly focus;
+- the hitting partner protects match timing during gaps and may extend that work to tour weeks.
+
+| English | Russian |
+| --- | --- |
+| `Masseur` | `Массажист` |
+| `Psychologist` | `Психолог` |
+| `Hitting partner` | `Спарринг-партнёр` |
+| `{money} /wk` | `{money} в неделю` |
+| `Locked` | `Закрыто` |
+| `Hire` | `Нанять` |
+| `Let go` | `Уволить` |
+| confirm `Set it` | `Выбрать` |
+
+`Массажист` follows the established product term even though the work described includes broader
+recovery. Do not alternate it with `массажистка` based on portrait art: the engine stores a seat,
+not a character identity or grammatical gender.
+
+Shared professional gate:
+
+| seat | Russian locked detail |
+| --- | --- |
+| massage therapist | `Первый зачётный результат в серии W откроет место для массажиста.` |
+| psychologist | `Первый зачётный результат в серии W откроет место для психолога.` |
+| hitting partner | `Первый зачётный результат в серии W откроет место для спарринг-партнёра.` |
+
+`Зачётный результат` reuses the ranking vocabulary that Stats teaches. `Серия W` retains the
+product's tier mark rather than expanding it into an invented tour name.
+
+## 17. Massage therapist
+
+### 17.1 Card states and schedule
+
+| state | English | Russian |
+| --- | --- | --- |
+| available, not hired | `Table work at home every week, and a hand on every rehab – layoffs end sooner.` | `Работа за массажным столом дома каждую неделю и помощь при восстановлении – паузы после травм становятся короче.` |
+| active injury, time saved | `Working the rehab – her return is closer than the clinic promised.` | `Помогает с восстановлением – она вернётся раньше первоначального срока.` |
+| active injury, no save yet | `On the table through the layoff – the rehab is in professional hands.` | `Работает с ней всю паузу – восстановлением занимается специалист.` |
+| recent saved weeks | `Weeks bought back – the last layoff ended sooner than it should have.` | `Удалось вернуть несколько недель – последняя пауза закончилась раньше первоначального срока.` |
+| ordinary hired week | `Fresh legs – the weekly table work keeps her body ahead of the grind.` | `Ноги успевают восстановиться – еженедельный массаж помогает телу выдерживать нагрузку.` |
+
+`Клиника обещала` is rejected for the first line: a clinic does not make a personal promise, and the
+saved fact is the original medical return date. `Несколько недель` deliberately carries no exact
+number, matching the room-note fog law.
+
+Schedule control:
+
+| English | Russian |
+| --- | --- |
+| group aria `Masseur sessions per week` | `Сеансы массажа в неделю` |
+| `Twice a week` | `Дважды в неделю` |
+| `Every other day` | `Через день` |
+| `Daily` | `Каждый день` |
+| invalid choice | `Такого расписания нет: доступны сеансы дважды в неделю, через день или каждый день.` |
+
+Hire confirmation:
+
+> `Нанять массажиста за {salary} в неделю ({schedule})? Договор можно прекратить в любую неделю, как и договор с тренером.`
+
+Release confirmation:
+
+> `Уволить массажиста? Еженедельные выплаты прекратятся, а восстановлением снова будет заниматься только клиника.`
+
+The schedule in parentheses is a localized grammatical fragment already suited to that position;
+never lowercase or inflect a display label mechanically.
+
+### 17.2 Tournament travel
+
+| English | Russian |
+| --- | --- |
+| heading | `Массажист ездит на турниры` |
+| no booked trips | `Массаж между матчами. Каждая поездка добавляет ещё один билет, а турнирная неделя оплачивается по числу сыгранных матчей – {sessionPrice} за сеанс – вместо обычной недельной ставки.` |
+| booked trips suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
+| travel on aria | `Поездки массажиста включены. Нажмите, чтобы массажист оставался дома.` |
+| travel off aria | `Поездки массажиста выключены. Нажмите, чтобы добавить массаж между матчами; каждая поездка потребует ещё одного билета.` |
+| on benefit | `Ездит с ней: массаж между матчами. Чем дальше она проходит, тем больше пользы; после поражения в первом круге дополнительных сеансов нет.` |
+| off benefit | `Остаётся дома в турнирные недели. На каждой поездке семья экономит один билет.` |
+
+`{trips}` is a complete counted form (`1 заявленной поездке`, `2 заявленным поездкам`). The fare is
+the total over those trips, not a per-trip value.
+
+### 17.3 Raises, changes and receipts
+
+These strings are feed or ledger events and need semantic ids for old-save conversion:
+
+| source event | Russian |
+| --- | --- |
+| hired | `Массажист присоединяется к команде – еженедельная работа дома.` |
+| released | `Массажист покидает команду – восстановлением снова занимается только клиника.` |
+| rate raise, can reduce | `С этой недели сеанс массажа стоит {rate}. Можно сохранить нынешнее расписание по новой цене или сократить число сеансов.` |
+| rate raise, bottom rung | `С этой недели сеанс массажа стоит {rate}. Уже выбрано минимальное расписание – {schedule}; сократить его нельзя.` |
+| schedule changed | `Расписание массажиста изменено – {schedule} начиная со следующего счёта.` |
+| travel enabled | `Теперь массажист ездит на турниры – ещё один билет на поездку и массаж между матчами.` |
+| travel disabled | `В турнирные недели массажист остаётся дома – работа продолжится после её возвращения.` |
+| weekly expense | `Массажист – сеансы на этой неделе` |
+| return receipt | `Вернулась из поездки – дополнительный сеанс помогает снять накопившуюся нагрузку с ног.` |
+
+The raise notice is two different message ids because the available decision differs. Localizing a
+single English lead and appending conditional prose would again encourage invalid string assembly.
+
+## 18. Psychologist
+
+### 18.1 Roster and card
+
+| English | Russian |
+| --- | --- |
+| group aria `Psychologist – who takes the weekly call` | `Психолог – кто проводит еженедельную сессию` |
+| `Counsellor` | `Консультант` |
+| `Sport psychologist` | `Спортивный психолог` |
+| `Tour-grade specialist` | `Специалист уровня тура` |
+| not hired | `Еженедельная сессия для психологической подготовки. Направление работы выбирается на год.` |
+| hired, no focus | `На контракте – одна дистанционная сессия в неделю, где бы она ни находилась.` |
+| no travel fare | `Дополнительный билет не нужен: сессии проходят дистанционно – дома, в поездках и во время восстановления.` |
+| invalid roster choice | `Такого варианта нет: доступны консультант, спортивный психолог и специалист уровня тура.` |
+
+Hire confirmation:
+
+> `Нанять психолога за {salary} в неделю ({rung})? Договор можно прекратить в любую неделю, как и договор с тренером.`
+
+Release confirmation:
+
+> `Уволить психолога? Еженедельные выплаты прекратятся, а последняя сессия пройдёт на этой неделе.`
+
+The English line says the calls end “with the week”; `последняя сессия пройдёт на этой неделе`
+makes that boundary legible instead of sounding as though a call is currently being disconnected.
+
+### 18.2 The year's work
+
+Group aria: **`Направление работы с психологом на этот год`**.
+
+| focus id | English label | Russian label | Russian explanation |
+| --- | --- | --- | --- |
+| coolhead | `Cool head` | `Хладнокровие` | `В этом году работа сосредоточена на решающих розыгрышах – и на том, с какой головой она к ним подходит.` |
+| recovery | `Back on her feet` | `Вернуться в форму` | `В этом году работа сосредоточена на возвращении после тяжёлых недель и срывов.` |
+| listen | `Learning to listen` | `Учиться слышать её` | `В этом году работа помогает вам лучше слышать её. Содержание сессий остаётся её личным делом.` |
+| herself | `Working on herself` | `Работа над собой` | `В этом году работа касается того, о чём она не говорит вслух. Но этого должна хотеть она сама.` |
+| publicLife | `The public life` | `Публичная жизнь` | `В этом году работа касается жизни под камерами – и того, сколько сил у неё отнимает чужое внимание.` |
+
+Do not recreate the English lowercased splice. The hired card can render two complete Russian
+sentences: `На контракте. {focusExplanation}`. Each explanation remains valid by itself under the
+choice card, which removes a locale-specific first-letter mutation.
+
+Focus confirmation:
+
+> `Выбрать направление «{focus}» на этот сезон? Направление выбирается один раз на сезон; следующий выбор откроется в следующее межсезонье.`
+
+Refusals:
+
+| source fact | Russian |
+| --- | --- |
+| nobody hired | `Еженедельную сессию пока никто не проводит. Сначала наймите психолога.` |
+| unknown internal id | `Такого направления работы нет.` |
+| already chosen | `Направление на этот сезон уже выбрано. Следующий выбор откроется в межсезонье.` |
+| adult joint decision declined | `Теперь это её решение не меньше, чем ваше – и она не согласна.` |
+| herself not ready | `К этому она пока не готова – такого решения прежде всего должна хотеть она сама.` |
+
+The adult decline is daughter agency, not a system failure. It stays direct and does not expose the
+hidden relationship band. The invalid-id refusal is unreachable UI diagnostics and need not carry
+the English conversational `that is not one of them` flourish.
+
+### 18.3 Psychologist events
+
+| source event | Russian |
+| --- | --- |
+| hired | `Психолог присоединяется к команде – одна дистанционная сессия в неделю.` |
+| released | `Психолог покидает команду – сессии заканчиваются на этой неделе.` |
+| roster changed | `Еженедельные сессии теперь проводит {rung}; новая ставка начнёт действовать со следующего счёта.` |
+| weekly expense | `Психолог – еженедельная оплата` |
+
+Focus-effect observations that fire in other engine modules belong to RU-11's generated-feed pass;
+their semantic ids must still reference the focus ids above rather than duplicate the labels.
+
+## 19. Hitting partner
+
+### 19.1 Card and experience ladder
+
+| English | Russian |
+| --- | --- |
+| active | `Помогает сохранять чувство мяча в недели без матчей.` |
+| available, not hired | `Постоянный соперник для игровых тренировок в недели без турниров.` |
+| stood down | `Спарринг-партнёр остаётся в команде, но на этой неделе не работает. Оплата не списывается.` |
+| group aria | `Уровень спарринг-партнёра` |
+| `A college hitter` | `Игрок студенческой лиги` |
+| `A journeyman pro` | `Опытный профессионал` |
+| `A top-100 partner` | `Партнёр из топ-100` |
+| first rung note | `На четверть сокращает потерю игрового ритма за неделю без матча.` |
+| second rung note | `Вдвое сокращает потерю игрового ритма за неделю без матча.` |
+| third rung note | `На три четверти сокращает потерю игрового ритма за неделю без матча.` |
+
+`Чувство мяча` is natural tennis speech for timing in the compact card. The rung explanations use
+the more explicit `игровой ритм`, because they describe a measured mechanic and must distinguish a
+quarter **removed** from a quarter **remaining**.
+
+Hire confirmation:
+
+> `Нанять спарринг-партнёра за {salary} в неделю ({rung})? Договор можно прекратить в любую неделю, как и договор с тренером.`
+
+Release confirmation:
+
+> `Уволить спарринг-партнёра? Еженедельные выплаты прекратятся, и регулярных игровых тренировок между турнирами больше не будет.`
+
+### 19.2 Tournament travel
+
+| English | Russian |
+| --- | --- |
+| heading | `Поездки на турниры` |
+| base rule | `Взять спарринг-партнёра в тур – ещё один билет на каждую поездку. Домашние тренировки уже включены; эта настройка добавляет работу в турнирные недели.` |
+| booked suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
+| on aria | `Поездки спарринг-партнёра включены. Нажмите, чтобы спарринг-партнёр оставался в домашнем клубе.` |
+| off aria | `Поездки спарринг-партнёра выключены. Нажмите, чтобы брать спарринг-партнёра в тур; каждая поездка добавит один билет.` |
+
+### 19.3 Hitting-partner events
+
+| source event | Russian |
+| --- | --- |
+| hired | `Спарринг-партнёр присоединяется к команде – регулярные игровые тренировки в недели без матчей.` |
+| released | `Спарринг-партнёр покидает команду – регулярные игровые тренировки между турнирами заканчиваются.` |
+| rung changed | `Уровень работы со спарринг-партнёром изменится со следующего счёта – {rung}.` |
+| travel enabled | `Теперь спарринг-партнёр ездит с ней – ещё один билет на поездку и постоянный соперник для тренировок в туре.` |
+| travel disabled | `Спарринг-партнёр остаётся в домашнем клубе – без дополнительного билета и без постоянного соперника для тренировок в туре.` |
+| weekly expense | `Спарринг-партнёр – еженедельная оплата` |
+| first-match-back receipt | `Первый матч после паузы не выглядел первым матчем после паузы.` |
+
+The repetition in the receipt is intentional and survives Russian. `Не был похож` would be smoother
+but turns the line into a detached comparison; `не выглядел` keeps the parent's observed verdict.
+
+## 20. Specialists implementation and LQA
+
+- Seat ids, rung indices and psychologist focus ids remain internal and locale-independent.
+- Every card line/refusal from the engine becomes a semantic message, not a finished string on the
+  snapshot. The command and disabled card must resolve the same message id.
+- Rung changes pass a rung id to the renderer. Do not lowercase English labels or persist Russian
+  labels in history.
+- Hire/release/travel/salary events need typed legacy conversion so an old save shows Russian feed
+  and ledger rows.
+- At 320 px, inspect the three rung controls, psychologist five-focus grid, fare copy and the longest
+  `Специалист уровня тура` label.
+- Exercise every seat locked, available, hired, stood down and released; for the masseur also every
+  injury-room note and zero/one/many booked trips.
+- Exercise psychologist focus at ages below and above the joint-choice boundary and all relationship
+  refusals without exposing a hidden bond number.
+- Verify that toggling travel or a rung changes the household strip by the exact same cents as before
+  localization.
+
+The remaining sections of RU-06 extend this file with shop/assets, inbox and all offer-letter
+corpora. `MoneyScreen.vue`, `HouseholdStrip.vue` and `SupportStaffTab.vue` are now drafted end to end;
+generated observations owned by other batches are explicitly routed rather than copied.
