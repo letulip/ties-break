@@ -1115,6 +1115,24 @@ capitalization at the rendering boundary, not capitalization stored in the diagn
 5. At 320/375 px and 200% text, the mandatory knock choices and Proceed must stay reachable; the
    injury report may scroll, and its Continue button must remain the last focusable control.
 
-Batch status: **in progress**. The profile, life-stage language, full radar corpus, coach market and
-weekly training matrix, future-week planner, knocks and injury-stop copy are drafted. A final source
-coverage pass follows before RU-05 closes.
+## 21. Final source-coverage boundary
+
+The closing pass rechecked all five primary surfaces named by RU-05 and their direct string
+producers. The remaining visible dependencies are assigned rather than silently omitted:
+
+- `CountingResultsTable.vue`, country names and shared date/number formatting are completed with
+  RU-07/RU-13; RU-05 owns the profile heading and explanatory sentence around that table;
+- `SupportStaffTab.vue` and `HouseholdStrip.vue` are RU-06, even though Coach Market mounts them;
+- private-life `moodWord` and saved weekly prose are RU-09; the eight ordinary profile mood labels
+  are complete here;
+- shared `StoreError`, confirm-dialog cancellation and takeover-shell mechanics use RU-01;
+- ladder, tier, round and tournament labels reuse RU-04 and may not grow profile-only translations.
+
+Source-side hazards found in this pass are now explicit implementation tasks: English prose crossing
+the worker in `KidLife`, radar notes and `KnockPrompt`; English body regions and injury kinds stored
+as strings; English-only week/date/money composition; and saved event rows whose translation cannot
+be recovered from a generic literal after the fact.
+
+Batch status: **drafted end to end**. The profile, life-stage language, full radar corpus, coach
+market, weekly training matrix, future-week planner, knocks and injury-stop copy have all received a
+source-coverage pass. Every Russian line remains `DRAFT` pending the owner's read.
