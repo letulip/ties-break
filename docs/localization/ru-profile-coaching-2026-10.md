@@ -713,6 +713,152 @@ Self-coach footer:
 - self: `Вы тренируете её самостоятельно. В еженедельном счёте только аренда корта.`
 - action: `Тренировать её самостоятельно`.
 
+## 18. Plan a future week
+
+This takeover is not another version of the weekly training matrix. It commits a future empty week
+to either a watchable practice match or a family vacation. The Russian title is therefore
+`План на {week}`, not the imperative `Спланировать {week}`.
+
+### 18.1 Frame and an already-booked vacation
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU05-W01 | `Plan {week}` | `План на {week}` |
+| RU05-W02 | `Close planner` | `Закрыть план недели` |
+| RU05-W03 | header | `{dates} · condition {condition}/100` | `{dates} · форма {condition}/100` |
+| RU05-W04 | `Practice` | `Матч` |
+| RU05-W05 | `Vacation` | `Отпуск` |
+| RU05-W06 | booked lead | `{label} – booked, {price}. She plays no tournament while she is away.` | `{label} – забронировано за {price}. На этой неделе она не играет на турнирах.` |
+| RU05-W07 | paid cancellation | `Cancel any time before the week starts and the money comes back in full.` | `До начала недели бронь можно отменить с полным возвратом.` |
+| RU05-W08 | free cancellation | `Cancel any time before the week starts and nothing is owed either way.` | `До начала недели бронь можно отменить: платить всё равно не за что.` |
+| RU05-W09 | `Keep it` | `Оставить` |
+| RU05-W10 | `Cancel the trip` | `Отменить поездку` |
+
+`{price}` is either localized money or `бесплатно`. It must not become `за бесплатно`. For zero-price
+bookings W06 therefore has a separate grammatical message: `{label} – забронировано бесплатно.`
+The table shows the compact semantic target; implementation must select the paid/free variant.
+
+### 18.2 Practice match
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU05-W11 | off-season | `Off-season – family time, no matches. Try the Vacation tab.` | `Межсезонье – время для семьи, без матчей. Выберите вкладку «Отпуск».` |
+| RU05-W12 | lead | `A friendly at the club – watchable, no ranking points. One notch of fatigue, and she keeps her base recovery but loses the rest bonus for the week.` | `Тренировочный матч в клубе можно посмотреть, но рейтинговых очков за него нет. Он добавит немного усталости: обычное восстановление сохранится, а бонус за неделю отдыха – нет.` |
+| RU05-W13 | `Court rental` | `Аренда корта` |
+| RU05-W14 | `+ coach for the match ({fee} – the other half is on the opponent's family)` | `+ тренер на матч ({fee}; вторую половину оплачивает семья соперницы)` |
+| RU05-W15 | `Total` | `Итого` |
+| RU05-W16 | injured refusal tail | `A friendly is still a match, so the week books nothing until she is back – leave it to rest.` | `Тренировочный матч всё равно остаётся матчем, поэтому до её возвращения забронировать его нельзя. Оставьте эту неделю для отдыха.` |
+| RU05-W17 | medical refusal tail | `A friendly is still a match, so it is out too at condition {condition} – try the Vacation tab, or leave the week to training.` | `Тренировочный матч тоже требует допуска, а при форме {condition}/100 его нет. Выберите отпуск или оставьте неделю для обычных тренировок.` |
+| RU05-W18 | `Cancel` | `Отмена` |
+| RU05-W19 | `Injured` | `Травма` |
+| RU05-W20 | `Not cleared to play` | `Нет допуска` |
+| RU05-W21 | `Book anyway` | `Всё равно забронировать` |
+| RU05-W22 | `Book the match` | `Забронировать матч` |
+| RU05-W23 | `Not enough funds` | `Недостаточно денег` |
+
+Shared refusal heads:
+
+- medical: `Нет допуска к игре – ей нужен отдых.`;
+- layoff: `Травма – вернётся {week}.`;
+- tired caution: `Она уже вымотана – ещё один матч?`;
+- streak caution: `{weeks} подряд с матчами – так организм и ломается.`
+
+`{weeks}` is a complete phrase (`3 недели`, `4 недели`), not `{n} матч-недель`. If both caution
+reasons apply, preserve their present order: body first, streak second.
+
+Practice confirmation:
+
+| condition | Russian message | action |
+| --- | --- | --- |
+| ordinary | `Тренировочный матч в {week} – {price}. Рейтинговых очков нет.` | `Забронировать` |
+| with coach | `Тренировочный матч с тренером в {week} – {price}. Рейтинговых очков нет.` | `Забронировать` |
+| caution | `{caution} Тренировочный матч{coach} в {week} – {price}. Рейтинговых очков нет.` | `Всё равно играть` |
+
+The current `in {weekLabel}` composition assumes an English week label. Russian needs the whole
+prepositional phrase from the date formatter (`на неделе {week}` or a compact neutral week label),
+not a preposition glued to a locale-independent display string.
+
+### 18.3 Vacation catalogue
+
+| package id | English label | Russian label | Russian description |
+| --- | --- | --- | --- |
+| staycation | `Staycation with friends` | `Неделя дома с друзьями` | `Никуда не ехать, никаких тренировок – своя кровать и свои люди.` |
+| grandma | `Grandma's village` | `К бабушке в деревню` | `Два поезда и автобус – неспешная еда, неспешные дни.` |
+| camping | `Camping road-trip` | `Поездка с палаткой` | `Палатка, озеро, а ракетка остаётся дома.` |
+| seaside | `Seaside family hotel` | `Семейный отель у моря` | `Настоящий отпуск – море, сон и солнце.` |
+| resort | `Sports recovery resort` | `Спортивный восстановительный центр` | `Бассейн, физиотерапия и массаж – отдых по программе.` |
+| elite | `Elite recovery programme` | `Элитная программа восстановления` | `Клиника, которой пользуются профессионалы: вернётся как новая.` |
+| yacht-week | `A week on the yacht` | `Неделя на яхте` | `Никуда не нужно спешить – только море и целая неделя.` |
+
+The yacht rewrite removes the English wordplay that cannot survive naturally in Russian; it keeps
+the same unhurried promise without sounding translated.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU05-W24 | vacation lead | `A week away – no tournaments that week, and she comes back fresher. Cancel any time before the week starts for a full refund.` | `Неделя отдыха без турниров – она вернётся свежее. До начала недели бронь можно отменить с полным возвратом.` |
+| RU05-W25 | layoff note tail | `A week away is still hers to book – the trip is rest, not tennis.` | `Отпуск всё равно можно забронировать: поездка – это отдых, а не теннис.` |
+| RU05-W26 | effect, no buff | `+{gain} condition → {condition}/100` | `Форма +{gain} → {condition}/100` |
+| RU05-W27 | effect with buff | `· injury risk −{pct}% for {weeks}` | `· риск травмы −{pct}% на {weeks}` |
+| RU05-W28 | `Recommended` | `Рекомендуем` |
+| RU05-W29 | `Out of reach` | `Не по бюджету` |
+| RU05-W30 | `free – their own boat` | `бесплатно – своя яхта` |
+| RU05-W31 | `Book` | `Забронировать` |
+
+The buff duration is a counted phrase: `на 1 неделю`, `на 2 недели`, `на 5 недель`.
+
+Rest-cost warnings:
+
+- `На этой неделе она защищает {points}; отпуск не принесёт очков взамен.`
+- level with a cut: `Сейчас она №{rank} – ровно на границе {tier}, №{cut}. Если уровень закроется,
+  его турниры исчезнут из календаря.`
+- inside a cut: `Сейчас она №{rank} – на {places} внутри границы {tier}, №{cut}. Если уровень
+  закроется, его турниры исчезнут из календаря.`
+
+`{points}` is `1 очко`, `2 очка`, `5 очков`; `{places}` is `1 позицию`, `2 позиции`, `5 позиций`.
+The tier must arrive in a locative-ready display form, or the message must use a syntax that accepts
+its nominative label. Do not lowercase a localized tier and hope it declines itself.
+
+Vacation confirmations:
+
+- book: `{label}, {week}: {price}; форма +{gain}. На этой неделе турниров не будет.`;
+- paid cancel: `Отменить «{label}» ({week})? {refund} вернутся полностью.`;
+- free cancel: `Отменить «{label}» ({week})? За поездку ничего не платили.`;
+- action: `Забронировать` / `Отменить поездку`.
+
+For paid refunds, money is grammatically plural in this sentence (`$300 вернутся` is awkward even
+though the symbol hides the noun). Prefer the invariant construction `Полный возврат: {refund}.`
+Final paid copy: `Отменить «{label}» ({week})? Полный возврат: {refund}.`
+
+### 18.4 Planner-generated history
+
+These strings are persisted events, not harmless debug messages. Russian mode must render them from
+semantic booking/cancellation facts, including old saves:
+
+| English event | Russian |
+| --- | --- |
+| `Booked: {label} – {week}` | `Забронировано: {label} – {week}` |
+| `Family vacation booked – {week} ({label})` | `Семейный отпуск забронирован – {week} ({label})` |
+| `Cancelled the family vacation – {week}` | `Семейный отпуск отменён – {week}` |
+| `Family vacation – {label}: +{gain} condition.` | `Семейный отпуск – {label}: форма +{gain}.` |
+| `Family vacation – {label}: +{gain} condition, and the recovery holds for {weeks}.` | `Семейный отпуск – {label}: форма +{gain}, сниженный риск травмы действует {weeks}.` |
+
+The paid expense row, informational booking row and resolved-week row are three distinct events.
+Migration must not infer one from another or collapse them; history order and amounts stay intact.
+
+### 18.5 Implementation and LQA contract
+
+1. Vacation packages require stable ids plus localized label/blurb lookup. Persist the id, never the
+   Russian label; migrate legacy history from known English labels to ids where possible.
+2. `PracticeCaution.detail`, `MedicalBlock.detail`, `layoffNoteFor` and `restCostLines` currently
+   return finished English strings. They need semantic results or locale-aware presentation; a Vue
+   template cannot reliably translate a sentence received from the engine.
+3. Money, week labels, points, places and durations use shared locale formatters. No English
+   singular ternary or hard-coded `free` survives behind the Russian surface.
+4. Test both tabs at 320/375 px and 200% text; all seven vacation cards, the longest warning, free
+   yacht, negative funds with free staycation, paid/free cancellation and the two medical blocks.
+5. Verify keyboard and screen-reader traversal after the longer Russian labels; the tab names and
+   disabled primary action must still expose the reason immediately beside the control.
+
 Batch status: **in progress**. The profile, life-stage language, full radar corpus, coach market and
-weekly training matrix are drafted. Future-week planning, knocks and injury-stop copy follow in this
-document.
+weekly training matrix and future-week planner are drafted. Knocks and injury-stop copy follow in
+this document.
