@@ -677,6 +677,336 @@ but turns the line into a detached comparison; `не выглядел` keeps the
 - Verify that toggling travel or a rung changes the household strip by the exact same cents as before
   localization.
 
-The remaining sections of RU-06 extend this file with shop/assets, inbox and all offer-letter
-corpora. `MoneyScreen.vue`, `HouseholdStrip.vue` and `SupportStaffTab.vue` are now drafted end to end;
-generated observations owned by other batches are explicitly routed rather than copied.
+## 21. Family assets – front door
+
+`The shelf` is a useful English metaphor but a literal `Полка` makes the Russian screen sound like
+an inventory puzzle. The chapter contains deposits, property, businesses and commissioned builds,
+so its Russian product name is **`Семейные активы`**. Individual copy may say `актив`, `вложение`,
+`машина` or `дом` when the object is known; it must not force every possession into financial
+jargon.
+
+| id | source meaning | English | Russian |
+| --- | --- | --- | --- |
+| RU06-S01 | shop home heading | `The shelf` | `Семейные активы` |
+| RU06-S02 | category group aria | `Which part of the shelf` | `Раздел семейных активов` |
+| RU06-S03 | owned summary label | `What you own` | `В собственности` |
+| RU06-S04 | owned count | `{count} thing / things` | `{count, plural, one {# актив} few {# актива} many {# активов} other {# актива}}` |
+
+Intro:
+
+> `Это собственные деньги семьи, и ни одна сумма здесь не принадлежит ей. Ничто из этого не сделает её сильнее, быстрее или выносливее: здесь видно, во что превращаются деньги, когда теннису они больше не нужны.`
+
+Empty state:
+
+> `У вас пока ничего нет. Самый доступный вариант – {label}, от {money}.`
+
+The first sentence describes ownership, not moral entitlement: her business share is already
+removed before these family figures are shown. Keep `ни одна сумма здесь не принадлежит ей`; do not
+soften it into `это не её деньги`, which can read like a parental reprimand.
+
+## 22. Category cards and family introductions
+
+### 22.1 Six category cards
+
+| key | label | accessible title |
+| --- | --- | --- |
+| `invest` | `Вложения` | `Деньги, которые остаются деньгами` |
+| `business` | `Бизнес` | `То, чем владеет и на чём зарабатывает семья, включая академию` |
+| `cars` | `Машины` | `Семейный гараж` |
+| `property` | `Жильё` | `Свой дом` |
+| `water` | `На воде` | `Лодки и яхты, которые строятся на заказ` |
+| `air` | `В воздухе` | `Семейный самолёт` |
+
+The short labels are shared by the illustrated front door and the inner segmented row. The academy
+remains inside `Бизнес`; it does not become a seventh category in Russian.
+
+### 22.2 Family headings and notes
+
+| family | heading | note |
+| --- | --- | --- |
+| investment | `Вложения` | `Деньги, которые остаются деньгами. Указанная сумма – минимум, а не цена: можно вложить больше.` |
+| car | `Машины` | `В следующем сезоне каждая из них будет стоить меньше, чем сегодня. Так устроены машины.` |
+| house | `Недвижимость` | `Крупная и неспешная покупка, после которой больше не нужно платить за чужое жильё.` |
+| business | `Собственный бизнес` | `Первый актив здесь, который приносит доход. Он зависит от того, насколько она известна – от съёмок и титулов, а не от места в рейтинге.` |
+| boat | `На воде` | `Их не покупают готовыми, а заказывают: деньги уходят сейчас, лодка приходит через годы. Содержание каждой стоит одной зарплаты в неделю.` |
+| plane | `В воздухе` | `Семейный самолёт вдвое сокращает стоимость перелёта на каждый турнир, но и содержать его приходится как самолёт.` |
+| academy | `Её академия` | `Четыре последовательных этапа, и каждый – отдельное решение. После завершения каждый этап приносит доход: чем выше и дольше она держалась в рейтинге, тем больше. Академия останется после завершения карьеры.` |
+
+Business-share explanation:
+
+> `Она получает {kidPct}% дохода; ниже показаны семейные {familyPct}%. Стоимость актива – это стоимость всего бизнеса.`
+
+The sentence is hidden at a zero daughter share exactly as it is today. `Дохода`, not `прибыли`, is
+deliberate: the engine splits the incoming amount and does not model company costs before that split.
+
+## 23. Asset catalogue
+
+These are display resources keyed by the existing stable item ids. The retired long-range plane is
+included because an old save may still own and render it.
+
+| asset | Russian label | Russian description |
+| --- | --- | --- |
+| savings deposit | `Сберегательный вклад` | `Самый спокойный вариант: деньги не пропадут, но и большого дохода не принесут.` |
+| index fund | `Индексный фонд` | `Доля всего рынка. Плохие годы у него бывают; плохого десятилетия ещё не было.` |
+| sensible estate | `Практичный универсал` | `Пять дверей и багажник для сумок с экипировкой. Никто не обернётся вслед.` |
+| luxury four-by-four | `Роскошный внедорожник` | `Высокий, тихий – и ни разу не съедет с асфальта.` |
+| poster sports car | `Тот самый с плаката` | `Два места, никакого багажника – тот самый, что висел на стене.` |
+| unreasonable convertible | `Совершенно неразумный` | `Четыре места, никакой крыши и ни одного разумного оправдания.` |
+| first house | `Своё жильё` | `Больше никакой аренды. Небольшое, их по документам, и стены можно красить как хочется.` |
+| garden house | `Дом с садом` | `Места хватит всем, а сад больше не нужно ни с кем делить.` |
+| villa | `Вилла с бассейном` | `Стекло, тёплый камень и собственный бассейн.` |
+| headland house | `Дом на мысе` | `Над морем, с бассейном, который будто переливается прямо в него.` |
+| merchandise brand | `Собственный бренд` | `Её имя на футболках и сумках. Пока о ней говорят, всё это продаётся.` |
+| sailing boat | `Парусная лодка` | `Две каюты, мачта и выходные, которыми распоряжается ветер.` |
+| small yacht | `Небольшая яхта` | `Флайбридж, четыре спальных места и бухта, где можно встать на якорь.` |
+| yacht | `Яхта` | `Команда из шести человек и неделя, за которую до них никто не доберётся.` |
+| big yacht | `Большая яхта` | `Та самая, ради которой в гавани освобождают место.` |
+| small plane | `Небольшой самолёт` | `Семь мест, короткие полосы и возможность вернуться домой в тот же день.` |
+| plane | `Самолёт` | `Десять мест и ни одного аэропорта, который заставит их ждать.` |
+| retired long-range plane | `Дальнемагистральный самолёт` | `До Мельбурна без посадки и с кроватью на обратном пути.` |
+| academy land | `Земля` | `Двенадцать гектаров за городом и имя в документах на собственность.` |
+| academy courts | `Корты` | `Шестнадцать кортов и освещение, с которым можно играть до девяти.` |
+| academy clubhouse | `Клубный дом` | `Зал, кухня, сорок мест и комната для домашних заданий.` |
+| academy staff | `Команда академии` | `Тренеры, физиотерапевты и человек, который отвечает на звонки.` |
+
+`Флайбридж` is accepted Russian yachting vocabulary; replacing it with a long explanation would
+flatten the one place where the purchase is allowed to sound knowingly luxurious. `До девяти`
+retains the human clubhouse image without inventing whether that means morning or evening.
+
+## 24. Price, ownership, build and chart copy
+
+### 24.1 Rates, upkeep and dependencies
+
+| source shape | Russian |
+| --- | --- |
+| `Worth {x} years of what it sells` | `Оценивается в {x} годовых выручки` |
+| `Loses {pct}% a season` | `Теряет {pct}% за сезон` |
+| `Neither gains nor loses` | `Стоимость не меняется` |
+| `Gains about {pct}% a season` | `Растёт примерно на {pct}% за сезон` |
+| `{money} a week to keep` | `Содержание – {money} в неделю` |
+| `Brings in {money} a week right now` | `Сейчас приносит {money} в неделю` |
+| `{prior} has to come first.` | `Сначала нужен предыдущий этап: {prior}.` |
+
+`{x}` is a valuation multiple, not a count of calendar years. Keep this message separately keyed
+from ordinary year pluralization even though the visible noun is `годовых`.
+
+### 24.2 Commissioned builds
+
+| source meaning | Russian |
+| --- | --- |
+| progress-ring aria | `Готово {pct}% · завершение: {week}` |
+| build wait | `Изготовление на заказ займёт около {duration}.` |
+| ordered status | `В заказе` |
+| ordered explanation | `До доставки продать нельзя. До этого момента расходов на содержание не будет.` |
+
+`{duration}` uses the normal Russian week/month/year plural rules. Do not build it by concatenating
+a number with one English-style unit branch. The due week remains the row value beside `В заказе`.
+
+### 24.3 Owned value and units
+
+| source meaning | Russian |
+| --- | --- |
+| current-value label | `Текущая стоимость` |
+| paid meta | `вложено {money}` |
+| units held | `Долей: {units} · средняя цена покупки {average} · сейчас {current}` |
+| unowned unit price | `Цена одной доли на этой неделе – {money}` |
+| chosen business name | `Работает под названием {name}` |
+| change with percentage | `{signedMoney} с момента покупки ({signedPct}%)` |
+| change without percentage | `{signedMoney} с момента покупки` |
+
+`formatUnits` must use the active locale, so `1.25` becomes `1,25`. Leading with `Долей:` avoids
+trying to inflect a noun after an arbitrary fractional value. The selected name is player-authored
+content and is rendered unchanged.
+
+### 24.4 Fund chart
+
+| source meaning | Russian |
+| --- | --- |
+| range group aria | `Период графика` |
+| ranges | `6 месяцев / 1 год / 2 года / 5 лет` |
+| empty plot | `Пока есть цены только за один месяц – график появится в следующем.` |
+| unavailable summary | `Пока недостаточно месяцев, чтобы построить график` |
+| chart summary | `Одна доля, помесячно: с {from} по {to}; минимум {low}, максимум {high}` |
+| purchase-mark aria | `Покупка: {month}, {money}` |
+| purchase bubble | `{month} – {money}` |
+| purchase bubble detail | `Долей: {units} · цена доли: {unitPrice}` |
+
+Month labels, money and decimal units come from locale-aware formatters. The visible plot, its
+screen-reader summary and its popup must consume the same formatted values rather than implementing
+three miniature date or number formatters.
+
+## 25. Buying, naming and selling directly
+
+### 25.1 Inputs and compact actions
+
+| source meaning | Russian |
+| --- | --- |
+| open stake label | `Сумма, от {minimum}` |
+| shared holding field aria | `Сумма, от {minimum} · оставьте поле пустым, чтобы продать всё ({value})` |
+| add more | `Пополнить` |
+| sell | `Продать` |
+| put it in | `Вложить` |
+| order it | `Заказать` |
+| buy it | `Купить` |
+| naming label / aria | `Как это будет называться` |
+| naming placeholder | `или введите своё название` |
+
+### 25.2 Name suggestions
+
+The typed value and any already-saved asset name remain unchanged in every locale. Russian affects
+only newly generated suggestions and the fallback:
+
+- brand: `{initials}`, `{surname}`, `{fullName}`, `Дом «{surname}»`;
+- academy: the existing brand name first, then `Академия «{surname}»`,
+  `Академия «{fullName}»`, `Академия {initials}`;
+- empty-profile fallbacks: `Бренд` and `Академия`.
+
+Generate the localized suggestion before applying the existing 24-code-point cap and de-duplicate
+afterward. A migration must never rewrite an English suggestion the player already accepted: once
+saved, it is their proper name, not interface copy.
+
+### 25.3 Purchase confirmations
+
+| purchase kind | Russian question |
+| --- | --- |
+| top-up | `Вложить ещё {amount} в {label}? Сумма спишется со счёта семьи на этой неделе.` |
+| commissioned build, no upkeep | `Заказать {label} за {amount}? Деньги спишутся на этой неделе, заказ будет готов через {duration}.` |
+| commissioned build, with upkeep | `Заказать {label} за {amount}? Деньги спишутся на этой неделе, заказ будет готов через {duration}. После доставки содержание будет стоить {upkeep} в неделю.` |
+| ordinary purchase | `Купить {label} за {amount}? Сумма спишется со счёта семьи на этой неделе.` |
+
+The renderer receives `duration` as a typed count, not the current prebuilt `N weeks`. This is
+required for Russian plural forms and also removes an English-only fragment from the confirmation.
+
+### 25.4 Direct-sale confirmations
+
+The three semantic outcome tails are:
+
+| result | Russian tail |
+| --- | --- |
+| zero | `по цене покупки` |
+| loss | `на {money} меньше цены покупки` |
+| gain | `на {money} больше цены покупки` |
+
+Whole sale:
+
+> `Продать {label} за {amount}? Это {tail}.`
+
+Partial withdrawal:
+
+> `Вывести {part} из {label}? Эта часть продаётся {tail}, остальное останется вложено.`
+
+Do not interpolate the English tail into a Russian shell. `result = zero | loss | gain` and the
+absolute cent difference are separate typed arguments.
+
+## 26. Secondary market
+
+### 26.1 Controls, quote and status
+
+| id | English | Russian |
+| --- | --- | --- |
+| SM7 | `List` | `Выставить` |
+| SM8 | `Sell now` | `Продать сейчас` |
+| SM9 | `Keep it` | `Оставить` |
+| SM10 | `Withdraw` | `Снять с продажи` |
+| SM11 | `On the market · {weeks} ...` | `В продаже · {weeks, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}` |
+| SM12 | `Interest has gone quiet · {weeks} ...` | `Интерес угас · в продаже {weeks, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}` |
+| SM13 | bounded wait | `Продажа может занять от {weeksLo} до {weeksHi} недель.` |
+| SM14 | offer corridor | `Предложения могут быть от {priceLo} до {priceHi}.` |
+| SM15 | immediate exit | `Продать сразу можно за {fire}.` |
+| SM16 | thin-market warning | `Покупателей с такой суммой мало – актив может не продаться.` |
+| SM17 | academy lot warning | `Академия продаётся единым активом: все завершённые этапы уходят вместе, не только корты.` |
+| SM27 | open-ended wait | `Продажа займёт не меньше {weeksLo} недель; покупатель может так и не найтись.` |
+
+`Оставить` means close the quote without selling or listing; it does not withdraw an existing ad.
+The separate `Снять с продажи` action keeps those two decisions distinct.
+
+### 26.2 Listing events and refusals
+
+| source meaning | Russian |
+| --- | --- |
+| listed event | `Выставлено на продажу: {label}` |
+| withdrawn event | `Снято с продажи: {label}` |
+| parked cash refusal | `Это вложение, а не вещь: выставить его на вторичный рынок нельзя.` |
+| academy under construction | `Академию нельзя выставить на продажу, пока один из этапов ещё строится.` |
+| duplicate listing | `Этот актив уже выставлен на продажу.` |
+| missing listing | `Этот актив не выставлен на продажу.` |
+
+Buyer offers, quiet-market letters, their subjects and signing confirmation are owned by the inbox
+section below. They reuse the same semantic lot label and quote cents; the inbox must not parse a
+shop event string to recover them.
+
+## 27. Shop events, market reports and refusals
+
+### 27.1 Events and completed history
+
+| source event | Russian |
+| --- | --- |
+| holding topped up | `Пополнено: {label}` |
+| build ordered | `Заказано: {label}` |
+| ordinary purchase | `Куплено: {label}` |
+| order receipt | `{label} в заказе · готово: {week}` |
+| delivered | `Готово: {label}` |
+| part sold | `Из актива «{label}» выведено {money} – {tail}.` |
+| whole sold | `Продано: {label} – {tail}.` |
+
+For event rows the sale tail is a statement, not the question fragment from section 25:
+`по цене покупки`, `на {money} дешевле цены покупки`, `на {money} дороже цены покупки`.
+The message id carries the result kind so question and event renderers can choose their own grammar.
+
+Market-season report:
+
+- unchanged: `Рынок за сезон – {label}: без изменений.`;
+- up: `Рынок за сезон – {label}: +{pct}%.`;
+- down: `Рынок за сезон – {label}: −{pct}%.`;
+- crash: `Рынок за сезон – год обвала: {label}, −{pct}%.`.
+
+This numerical form avoids grammatical gender being inferred from a translated label and keeps a
+top-up late in the season from being mistaken for the family's personal return.
+
+### 27.2 Command refusals
+
+| English meaning | Russian |
+| --- | --- |
+| no catalogue item | `Такого объекта нет в каталоге.` |
+| retired item | `Этот объект больше не продаётся.` |
+| fixed item already held | `Семья уже владеет этим активом.` |
+| prerequisite | `Сначала нужен предыдущий этап: {prior}.` |
+| below minimum | `Минимальная сумма – {money}.` |
+| insufficient funds | `На счёте недостаточно денег.` |
+| not owned | `Этого актива нет в собственности семьи.` |
+| temporarily unsellable | `Сейчас этот актив продать нельзя.` |
+| whole only | `{label} можно продать только целиком.` |
+| invalid sale amount | `Укажите сумму больше нуля.` |
+| exceeds holding | `В этом активе у семьи только {money}.` |
+
+These are semantic errors returned through the command boundary. Do not translate thrown English
+text in the UI and do not use the English message as a catalogue key.
+
+## 28. Shop implementation and LQA
+
+- Stable asset ids, family ids, stake types, academy prerequisites and secondary-market states stay
+  locale-independent. `label` and `blurb` become locale resources selected at presentation edges.
+- Shop snapshots must carry facts (`messageId`, cents, weeks, result kind, item id), never a
+  localized sentence that another component later has to dissect.
+- Existing `WorldEvent.text` entries need typed legacy conversion for purchases, builds, deliveries,
+  market summaries, listings and sales. Known old English rows render in Russian; unknown rows are
+  surfaced in development rather than silently leaking English into a Russian save.
+- `formatUnits`, percentages, month labels, week labels and all wait durations use the active locale.
+  No `toFixed(2)` result may be printed directly in Russian mode.
+- The catalogue includes the retired long-range plane for old-save rendering. A row being absent
+  from today's shop does not make its saved history safe to leave untranslated.
+- Player-authored brand and academy names are never translated. Locale-specific suggestions apply
+  only before a name is accepted.
+- At 320 px, inspect the six category cards, the longest academy family note, `Снять с продажи`, the
+  shared amount field, every purchase question and the four chart range controls.
+- Exercise zero/one/many owned assets, all three change outcomes, fractional units, a one-month
+  chart, old purchases without marks, every commissioned build state and the retired-plane old-save
+  case.
+- Exercise a normal listing, thin market, horizon quote, stale listing, academy lot, academy build
+  refusal, instant sale, partial fund withdrawal and old English sale events.
+- Verify that localization changes no price, cent delta, market draw, ready week, listing week,
+  offer corridor, RNG state or academy lot membership.
+
+The remaining RU-06 sections cover inbox, sponsorship, build and secondary-market letters, then the
+cross-surface implementation checklist. Money, staff and the full shop/assets surface are now
+drafted end to end; generated observations owned by later batches remain routed rather than copied.
