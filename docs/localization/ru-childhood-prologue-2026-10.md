@@ -285,7 +285,125 @@ It must remain a shared catalogue unit with the wizard and settings.
 8. `Not this year` is not a permanent refusal. Russian must retain that temporal boundary because
    the tournament question returns in later years.
 
-## 12. Next slice
+## 12. The childhood tournament flow
 
-The next pass covers the complete childhood tournament flow: opening screen, match transitions,
-skip controls, retirement reassurance, all result faces and the counter-aware coach reactions.
+The same flow can appear after several childhood cards. It therefore receives one translation
+unit, not a separate set of words at every age. The tournament name remains the term established at
+age ten: `местный открытый турнир`.
+
+### 12.1 Shared screen and match controls
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-LO-01 | `cards.ts:877` | `The Local Open` | `Местный открытый турнир` | descriptive event name, not a protected title |
+| RU02B-LO-02 | `cards.ts:881` | `Go on` | `Дальше` | after one match and on ordinary result cards |
+| RU02B-LO-03 | `cards.ts:894` | `Begin` | `Начать` | starts the tournament flow |
+| RU02B-LO-04 | `cards.ts:895` | `Watch match` | `Смотреть матч` | consistent with the main tournament flow |
+| RU02B-LO-05 | `cards.ts:901` | `Skip the rest of the weekend` | `Пропустить оставшиеся матчи` | says exactly what the control skips; `выходные` is atmosphere, not the object |
+| RU02B-LO-06 | `cards.ts:918` | reassurance after retirement | `С ней всё в порядке – просто вымоталась. Всю дорогу домой она спит, а через несколько дней снова просится на корт.` | this is true only in the prologue; it must not leak into career injuries |
+| RU02B-LO-07 | `PrologueLocalOpen.vue:325,370` | `vs` | `–` | visual separator; accessible wording should expose `{name} против {name}` |
+
+`Пропустить оставшиеся матчи` is intentionally more concrete than the English line. The action does
+not skip a real weekend in the calendar; it skips the rest of this tournament presentation. It also
+stays truthful when only one match remains.
+
+### 12.2 Draw size and round labels
+
+These are shared tournament formatters, not prologue-only literals. They should be translated once
+and reused by the childhood and career flows.
+
+| id | source shape | English example | Russian rule |
+| --- | --- | --- | --- |
+| RU02B-LO-F1 | `localDrawLine(drawSize)` | `8-player draw` | `Сетка на {n} участниц` |
+| RU02B-LO-F2 | `stageLabel` | `Final` | `Финал` |
+| RU02B-LO-F3 | `stageLabel` | `Semifinal` | `Полуфинал` |
+| RU02B-LO-F4 | `stageLabel` | `Quarterfinal` | `Четвертьфинал` |
+| RU02B-LO-F5 | `stageLabel` | `Round of 16` | `1/8 финала` |
+| RU02B-LO-F6 | `stageLabel` | `Round of 32` | `1/16 финала` |
+
+The general `Round of {remaining}` rule is `1/{remaining / 2} финала`. It must be a formatter rather
+than a catalogue with only 16 and 32: a larger draw should not fall back to English. In this game
+the entrants are girls and women, hence `участниц`. If the same formatter later labels a genuinely
+mixed field, it needs a domain argument rather than a grammatically false neutralization.
+
+### 12.3 She wins the tournament
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-LO-W1 | `cards.ts:940` | `She won it.` | `Она выиграла турнир.` | names the object naturally in Russian |
+| RU02B-LO-W2 | `cards.ts:941` | `Three matches on one weekend, and she is the last one still on the court.` | `Три матча за одни выходные – и на корте осталась только она.` | keeps the compact culmination |
+| RU02B-LO-W3 | `cards.ts:942` | `She has not put the cup down since.` | `С тех пор она не выпускает кубок из рук.` | child-scale detail, not résumé language |
+| RU02B-LO-W4 | `cards.ts:943` | `The coach says the draw was small and she still had to win it.` | `Тренер говорит: сетка была небольшой, но выиграть её всё равно надо было.` | praise remains measured |
+
+### 12.4 She loses the final
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-LO-FN1 | `cards.ts:948` | `She got to the final.` | `Она дошла до финала.` | |
+| RU02B-LO-FN2 | `cards.ts:949` | `Saturday, then Sunday morning, then one more match she did not win.` | `Суббота, воскресное утро – и ещё один матч, который она не выиграла.` | does not turn runner-up into failure copy |
+| RU02B-LO-FN3 | `cards.ts:950` | `She wants to know when the next one is.` | `Она спрашивает, когда будет следующий турнир.` | restores the Russian referent |
+| RU02B-LO-FN4 | `cards.ts:951` | `The coach says the last one is the hard one.` | `Тренер говорит, что последний матч всегда самый трудный.` | `всегда` expresses the coach's general reading |
+
+### 12.5 She goes out before the final
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-LO-L1 | `cards.ts:956` | `She went out before the final.` | `Она выбыла до финала.` | standard draw language |
+| RU02B-LO-L2 | `cards.ts:957` | `A long drive, a court she had never seen, and it was over sooner than the journey.` | `Долгая дорога, незнакомый корт – и всё закончилось быстрее, чем поездка сюда.` | the trip and abrupt ending stay in the frame |
+| RU02B-LO-L3 | `cards.ts:958` | `She watched the girls who were still in it.` | `Она смотрела матчи девочек, которые остались в сетке.` | `в ней` would have a weak referent in Russian |
+| RU02B-LO-L4 | `cards.ts:959` | `The coach says the first one is never the one that counts.` | `Тренер говорит, что первый турнир ещё ничего не решает.` | translates the reassurance, not the idiom |
+
+### 12.6 She cannot finish the match
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-LO-H1 | `cards.ts:987` | `You walk out to her.` | `Вы выходите к ней.` | the parent acts immediately |
+| RU02B-LO-H2 | `cards.ts:988` | retirement scene | `Она просто вымоталась – ничего хуже. Когда вы доходите до неё, это уже видно. Турнир продолжается без вас, но сейчас это не важно.` | reassurance without inventing an injury |
+| RU02B-LO-H3 | `cards.ts:991` | `She is asleep before you reach the motorway.` | `Она засыпает ещё до выезда на трассу.` | `трасса` travels better than a country-specific road class |
+| RU02B-LO-H4 | `cards.ts:992` | `The coach says a quiet week is all this needs.` | `Тренер говорит, что ей нужна только спокойная неделя.` | no treatment or diagnosis the model does not hold |
+| RU02B-LO-H5 | `cards.ts:993` | `Hold her` | `Обнять её` | the only control is an act of care, not an abstract continuation |
+
+The short reassurance in RU02B-LO-06 appears at the retirement moment; the full scene then gives the
+parent an action and closes the weekend. The deliberate repetition is functional, but the two lines
+must not repeat the same sentence word for word.
+
+### 12.7 Counter-aware coach reactions
+
+These lines read the shape of this and earlier weekends. Russian must preserve each condition; a
+generic consolation line would recreate the repetition defect the counter was built to remove.
+
+| id | condition | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-LO-C1 | first title, not first weekend | `The coach says the first one she wins is the one she will remember.` | `Тренер говорит, что первую победу на турнире она запомнит навсегда.` |
+| RU02B-LO-C2 | she has won before | `The coach says that is not the first cup she has carried home.` | `Тренер напоминает: это уже не первый кубок, который она везёт домой.` |
+| RU02B-LO-C3 | another lost final | `The coach says she knows these weekends now – the last match is still the hard one.` | `Тренер говорит, что такие выходные ей уже знакомы – последний матч всё равно самый трудный.` |
+| RU02B-LO-C4 | consecutive opening losses | `The coach says this is the part nobody tells you about, and that it passes.` | `Тренер говорит, что об этой части никто не предупреждает. Но и она проходит.` |
+| RU02B-LO-C5 | opening loss after a better weekend | `The coach says she has had better weekends than this one, and will again.` | `Тренер говорит, что у неё уже бывали выходные лучше – и ещё будут.` |
+| RU02B-LO-C6 | first weekend, at least one win | `The coach says she got past the first one, and that is where it starts.` | `Тренер говорит, что первый матч она прошла. С этого всё и начинается.` |
+| RU02B-LO-C7 | later weekend, at least one win | `The coach says she is winning matches at these weekends now, not just turning up.` | `Тренер говорит, что теперь она приезжает сюда не просто участвовать – она выигрывает матчи.` |
+
+`Первая победа на турнире` in C1 means the first tournament title, not her first match win. The noun
+is necessary because bare `первая победа` would be contradicted by the matches she won on the way to
+an earlier final.
+
+## 13. Tournament-flow implementation notes
+
+1. `vs` is currently literal template text, not copy-table data. Localization must remove both
+   visible English instances and provide a Russian accessible comparison, not merely hide them.
+2. `stageLabel` is presently an English string generated in the engine. The long-term catalogue
+   should carry a semantic round identifier or localize at projection time; parsing `Final` and
+   `Round of 16` back out of display strings in Vue would make English the hidden data model.
+3. `localDrawLine` needs Russian plural handling even though the current prologue draw is eight.
+   The safe surface form is `Сетка на {n} участниц`, whose noun stays genitive plural after every
+   numeral in this construction.
+4. The hurt reassurance is prologue-only by design. Reusing it as generic MatchViewer Russian copy
+   would falsely promise a quick return after real career injuries.
+5. Every result card reuses `Дальше`; it should refer to the shared control key rather than carry
+   four separately editable translations.
+6. Phone LQA must cover the long retirement paragraph, `Пропустить оставшиеся матчи`, and round
+   labels at both 375 × 667 and the widest supported draw.
+
+## 14. Next slice
+
+The next pass closes the prologue with the handover: the coach's two readings, age-aware heading,
+nine-year cost, tournament summary and the two ways out into the career or a new childhood.
