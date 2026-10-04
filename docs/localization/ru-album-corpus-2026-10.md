@@ -61,8 +61,8 @@ not read as four different narrators.
 | prologue and childhood | A34, A1–A4 | drafted |
 | titles and finals | A5–A10 | drafted |
 | seasons | A11–A14, A33 | drafted |
-| injury, international and money | A15–A22 | open |
-| school, college and relationships | A23–A28 | open |
+| body, money, road and first adult thresholds | A15–A22, birth | drafted |
+| assets and rare career moments | A23–A28 | open |
 | closing life and career | A29–A32 | open |
 | closing arc | 8 direction × voice cells | open |
 
@@ -321,3 +321,127 @@ narrow held band; a real climb belongs to A33.
 - Render the longest sunny A33 and deep A12 notes on a ruled scrap with date and age metadata.
 - Verify the quiet rows preserve omission as character but do not collapse into the same
   `расписание → следующий сезон` sentence twice.
+
+## 13. The body
+
+### A15 · `injury` · the week play stopped
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Неделя, когда всё остановилось. Ты сразу заговорила о том, что ещё можешь делать. Меня это напугало больше, чем испугали бы слёзы.` | `Сразу – к тому, что она ещё может.` | `Я бы предпочёл слёзы.` |
+| `fiery` | `Неделя, когда всё остановилось. Ты злилась на пол, кроссовки, расписание и меня. Именно в таком порядке.` | `Сначала она разозлилась на пол.` | `Кроссовкам досталось больше всех.` |
+| `deep` | `Неделя, когда всё остановилось. Ты спросила, надолго ли. Я ответил, что не знаю, и ты надолго замолчала.` | `Она спросила, надолго ли.` | `Спросила один раз – и больше не спрашивала.` |
+| `quiet` | `Неделя, когда всё остановилось. Ты попросила ручку и записала даты в календарь.` | `Даты в календаре, ручкой.` | `На этот раз ручкой.` |
+
+No line names the injured body part, diagnosis or duration. `Всё остановилось` describes the tennis
+week, not a permanent end to her career.
+
+### A16 · `injury-return` · first week back
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Первая неделя после возвращения. Ты сказала, что мяч летит быстрее, чем тебе помнилось, – и рассмеялась.` | `Мяч летел быстрее, чем она помнила.` | `Она над этим рассмеялась. Помогло.` |
+| `fiery` | `Первая неделя после возвращения. Ты хотела всё и сразу, тебе сказали «нет», и я услышал об этом во всех подробностях.` | `Всё и сразу, пожалуйста.` | `Тебе сказали «нет». Я в курсе.` |
+| `deep` | `Первая неделя после возвращения. Ты сказала, что боялась её сильнее, чем самой травмы.` | `Этого она боялась сильнее, чем травмы.` | `Она не сразу сказала самое важное.` |
+| `quiet` | `Первая неделя после возвращения. Первым сообщением ты прислала время тренировки.` | `Она сообщила время тренировки.` | `Сначала – время.` |
+
+## 14. First prize and first trip abroad
+
+### A17 · `first-prize` · first prize-money week
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Первый раз теннис заплатил. Ты хотела потратить всё на нас, и нам пришлось тебя отговаривать.` | `Она хотела потратить всё на нас.` | `Мы её отговорили.` |
+| `fiery` | `Первый раз теннис заплатил. Ты сказала, что сумма совсем небольшая, а потом повторяла её снова и снова.` | `Совсем немного, говорила она. Не один раз.` | `Сумму она повторила много раз.` |
+| `deep` | `Ты сказала, что деньги сделали всё настоящим так, как результаты не смогли. Первый раз теннис заплатил.` | `Деньги сделали это реальнее, чем результаты, сказала она.` | `Настоящим всё сделали деньги. Не победы.` |
+| `quiet` | `Первый раз теннис заплатил. Ты спросила, какой с этого налог.` | `Она спросила про налог.` | `Сразу к налогу.` |
+
+No amount appears in handwriting. `Сумма` in the fiery row refers to the real cheque without
+guessing its value.
+
+### A18 · `first-international` · first tournament abroad
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Твой первый турнир за границей. Из всего вокруг ты прислала фотографию потолка, под которым ждала.` | `Потолок над местом, где она ждала.` | `Потолок. Не корт.` |
+| `fiery` | `Ты ещё не распаковала вещи, а мнение о месте уже составила. Твой первый турнир за границей.` | `Сначала мнение, потом чемодан.` | `Всё решила, не успев открыть чемодан.` |
+| `deep` | `Твой первый турнир за границей. Ты написала, что там всё звучит иначе и тебе это нравится. Вот и всё сообщение.` | `Там всё звучало иначе.` | `Ей понравилось, как там всё звучит.` |
+| `quiet` | `Твой первый турнир за границей. Ты прислала время прибытия.` | `Только время прибытия.` | `Приехала. Вот и всё сообщение.` |
+
+Country, city and travel mode remain unstated. The seeded ticket can therefore name any fictional
+venue without contradicting the handwriting.
+
+## 15. The week tennis paid for itself
+
+### A19 · `break-even` · career break-even crossing
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Неделя, когда теннис себя окупил. Ты сказала, что теперь можно перестать считать на кухонном столе. Я ответил: посмотрим.` | `Больше никаких расчётов на кухонном столе.` | `Посмотрим, сказал я.` |
+| `fiery` | `Теннис себя окупил, и ты сказала, что всегда это знала. И правда говорила – не раз.` | `Она предупреждала. И напомнила нам.` | `Она говорила. Не один раз.` |
+| `deep` | `Неделя, когда теннис себя окупил. Ты знала, во что всё это обошлось. Всегда знала.` | `Она ни разу не спросила, во что всё это обошлось.` | `Всё это время она молча знала цену.` |
+| `quiet` | `Ты издалека спросила, всё ли у нас теперь в порядке. Это была неделя, когда теннис себя окупил.` | `Она по-своему спросила, всё ли у нас в порядке.` | `Она не сразу решилась спросить.` |
+
+This is the cumulative career crossing, not a claim that every later week or season is profitable.
+`Сумму` is intentionally unnumbered.
+
+## 16. School, wedding and birth
+
+### A20 · `school-done` · school ended
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Школа закончилась. Ты пришла домой и сначала рассказала о планах всех остальных. О своих – потом.` | `Сначала планы всех остальных.` | `Её собственные планы были последними.` |
+| `fiery` | `Школа закончилась. Ты сказала, что ждала этого годами, – и всё стояла в прихожей, никуда не уходя.` | `Она ещё долго стояла в прихожей.` | `Столько лет ждала – а потом ещё постояла.` |
+| `deep` | `Школа закончилась. Ты сказала, что будешь скучать по утрам. Никто этого не ожидал, ты меньше всех.` | `Она будет скучать по утрам.` | `Вот уж чего никто не ждал – так это утра.` |
+| `quiet` | `Школа закончилась. В тот же вечер ты освободила стол и больше об этом не говорила.` | `Вечером стол уже был пуст.` | `Убрано. И больше ни слова.` |
+
+### A21 · `wedding` · the week she married
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Ты поговорила со всеми. Ты всегда говорила со всеми – и это был именно такой день.` | `Она поговорила со всеми.` | `Подходящий для этого день.` |
+| `fiery` | `Ты расплакалась не в тот момент и потом сердилась из-за этого.` | `Позже она сердилась из-за слёз.` | `Не тот момент, говорит она.` |
+| `deep` | `Перед началом ты сказала мне одну фразу. Я до сих пор никому её не повторил.` | `Одна фраза перед началом.` | `Эту я оставлю себе.` |
+| `quiet` | `Ты проверила время всего, что было запланировано, а потом позволила дню идти своим ходом.` | `Она позволила заняться всем кому-то другому.` | `Она перестала смотреть на часы.` |
+
+No spouse name, pronoun, personality or continued presence is implied. The same Russian occasion
+therefore remains true for a later marriage.
+
+### A34 · `birth` · the week her daughter came home
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Мы ещё не успели войти, а ты уже говорила. И ни слова о теннисе.` | `Она заговорила, ещё не войдя в дом.` | `Ни слова о теннисе.` |
+| `fiery` | `У тебя был список. На второй день он уже лежал где-то под коляской.` | `Список не продержался и двух дней.` | `Где-то под коляской.` |
+| `deep` | `Целую неделю ты почти ничего не говорила. И никогда ещё я не видел тебя такой уверенной.` | `Почти ни слова за всю неделю.` | `Никогда ещё я не видел её такой уверенной.` |
+| `quiet` | `Ты позволила дому наполниться людьми и ни разу не посмотрела на часы.` | `Она ни разу не посмотрела на часы.` | `Часы могли подождать.` |
+
+The art and saved milestone establish that the child is a daughter, but these particular lines do
+not need to name her. They also make no claim about a spouse being present.
+
+## 17. First home
+
+### A22 · `first-house` · her own front door
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Твоя собственная входная дверь. Ты позвонила из пустого коридора, чтобы я услышал эхо.` | `Она позвонила из пустого коридора.` | `Я услышал эхо.` |
+| `fiery` | `Твоя собственная входная дверь. Ты уже решила, что именно не так с кухней.` | `Кухня уже была неправильной.` | `Не та кухня. Тот самый дом.` |
+| `deep` | `Твоя собственная входная дверь. Ты сказала: странно, что один ключ может столько изменить.` | `Странно, сколько может изменить ключ.` | `Один ключ – и другая жизнь.` |
+| `quiet` | `Твоя собственная входная дверь. Ты прислала одну фотографию – самой двери.` | `Одна фотография. Дверь.` | `Только дверь.` |
+
+The asset proves a bought home and its week, not its size, city, mortgage, house type or who shares
+it. Russian adds none of those facts.
+
+## 18. Body-to-first-home LQA
+
+- Probe every injury kind and duration against A15/A16; the rendered Russian must remain true for
+  all of them.
+- Confirm A17 and A19 contain no amount and cannot be mistaken for the same event: first cheque is
+  one paid result, break-even is the cumulative career crossing.
+- Confirm A18 names no place or travel mode and agrees with every seeded ticket.
+- Render the long sunny A15, deep A17 and quiet A21 notes with metadata on the smallest album.
+- Verify the wedding and birth rows remain true without any spouse in the current family state.
+- Verify school, wedding, birth and home can each occur at their engine-provided age; no Russian
+  string hard-codes a life-stage expectation.
