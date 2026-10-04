@@ -29,6 +29,7 @@ last-reviewed: 2026-10-04
 | [Batch 02A – entry and onboarding](ru-onboarding-2026-10.md) | Splash, career wizard, shared identity copy and interface tour | drafted |
 | [Batch 02B – childhood and handover](ru-childhood-prologue-2026-10.md) | Ages five to thirteen, childhood tournaments, coach readings and the handover into the career | drafted |
 | [Batch 03 – Home and the weekly story](ru-home-weekly-2026-10.md) | Home, identity, dashboard cards, season strip, news, Calendar, This Week and the weekly recap | drafted |
+| [Batch 04 – Season and tournaments](ru-season-tournaments-2026-10.md) | Season planner, tour guide, shared tournament cards and tournament flow | in progress |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
