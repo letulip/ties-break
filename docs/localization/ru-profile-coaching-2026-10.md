@@ -447,6 +447,272 @@ prepositional forms; lowercasing a localized display label is not grammar.
 - own account before 18, after first W-series cheque, at the cap and with/without a brand;
 - screen reader traversal of country flag, coach door and complete five-axis chart.
 
-Batch status: **in progress**. The profile frame, life-stage language and complete radar/training
-observation corpora are drafted. Coach market, week planner, knock and injury-stop copy follow in
-this document.
+## 13. Coach market frame
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU05-C01 | `Back` | `Назад` |
+| RU05-C02 | `Coach Market` | `Рынок тренеров` |
+| RU05-C03 | `{name} · {style} · {n} coaches` | `{name} · {style} · {coaches}` |
+| RU05-C04 | `Her week` | `Её неделя` |
+| RU05-C05 | `Coaches` | `Тренеры` |
+| RU05-C06 | `Support staff` | `Специалисты` |
+| RU05-C07 | group aria `What this screen is about` | `Раздел рынка тренеров` |
+| RU05-C08 | `Style` | `Стиль` |
+| RU05-C09 | `Sort` | `Сортировка` |
+| RU05-C10 | `Best fit` | `Сначала подходящие` |
+| RU05-C11 | `Price` | `Сначала дешевле` |
+| RU05-C12 | style lens | `Показано соответствие стилю «{style}», а не её нынешней игре.` |
+
+`{coaches}` is `1 тренер`, `2 тренера`, `5 тренеров`. The style catalogue is RU-02A's; no shortened
+market-only copy.
+
+Coach tiers and fit:
+
+| semantic value | English | Russian |
+| --- | --- | --- |
+| self | `Self-coached` | `Тренирует семья` |
+| budget | `Budget` | `Бюджетный` |
+| middle | `Middle` | `Средний` |
+| high | `High` | `Высокий` |
+| elite | `Elite` | `Элитный` |
+| great fit | `Great fit` | `Отлично подходит` |
+| good fit | `Good fit` | `Подходит` |
+| off-style | `Off-style` | `Другой стиль` |
+
+The section header is `{tier} уровень · {coaches} · {lo}–{hi} в неделю`. Russian decimals and ranges
+use comma and an en dash: `+0,3–0,6% за сезон`, `+0,1–0,3% за матч`,
+`+0,2–0,6% в поездках с ней`.
+
+## 14. Team budget shown on the coach route
+
+The household details are formally owned by RU-06, but these bindings are required here because the
+coach route renders the shared blocks.
+
+| English | Russian |
+| --- | --- |
+| `Team budget` | `Бюджет команды` |
+| `{money} /week free` | `Свободно: {money} в неделю` |
+| `{money} committed` | `Обязательства: {money}` |
+| `{money} weekly cap` | `Лимит на неделю: {money}` |
+| `Coach` | `Тренер` |
+| `Masseur` | `Массажист` |
+| `Psychologist` | `Психолог` |
+| `Hitting partner` | `Спарринг-партнёр` |
+| `Household, every week` | `Семейный бюджет за неделю` |
+| `{money} in` | `Доходы: {money}` |
+| `{money} out` | `Расходы: {money}` |
+| `{money} left over` | `Остаётся: {money}` |
+| `{money} short` | `Не хватает: {money}` |
+
+Shelf, upkeep and business-income explanations reuse RU-06's semantic messages; this route must not
+keep a private translation just because it mounts the component.
+
+## 15. Training regulator and travel choices
+
+Preset controls reuse the RU-03 terms: `Легко`, `Баланс`, `Интенсивно`. On this screen each adds its
+real billed time: `Легко · {hours} ч/нед.`, and so on.
+
+| id | meaning | English | Russian |
+| --- | --- | --- | --- |
+| RU05-C13 | price context | `Every price below is {n} sessions a week – more sessions, more money.` | `Все цены ниже рассчитаны на {sessions} в неделю: больше тренировок – выше оплата.` |
+| RU05-C14 | travel heading | `Coach travels to tournaments` | `Тренер ездит на турниры` |
+| RU05-C15 | self-coached | `You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.` | `Вы тренируете её сами – отправлять пока некого. Настройку можно включить заранее: она заработает после найма тренера.` |
+| RU05-C16 | sponsor cover | `Your sponsor pays {pct}% of the second seat at the events that pay prize money – the rest is yours.` | `На турнирах с призовыми спонсор оплачивает {pct}% второго билета, остальное платит семья.` |
+| RU05-C17 | scholarship | `The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.` | `Поддержка снижает стоимость её билета, но не второго: поездка тренера оплачивается полностью.` |
+| RU05-C18 | ordinary fare | `One additional fare per trip – a second seat beside hers.` | `Один дополнительный билет на каждую поездку – место рядом с ней.` |
+| RU05-C19 | priced covered trips | `{rule} Her seats cost {herFare} over the {trips} ahead; the second seat adds {coachFare}.` | `В следующих {trips} её билеты стоят {herFare}; место тренера добавит ещё {coachFare}.` |
+| RU05-C20 | priced ordinary trips | `{rule} {coachFare} over the {trips} she has booked this season.` | `По заявленным на сезон {trips} поездка тренера добавит {coachFare}.` |
+
+The English implementation currently assembles C19–C20 inside a computed string. `{trips}` is a
+counted phrase (`1 поездке`, `2 поездках`, `5 поездках`), not a number plus English noun.
+
+Travel switch names:
+
+- on: `Тренер ездит с ней на турниры. Включено. Нажмите, чтобы оставлять тренера дома в соревновательные недели.`
+- off: `Тренер ездит с ней на турниры. Выключено. Нажмите, чтобы оплачивать ещё один билет на каждую поездку.`
+
+Nested junior option:
+
+| English | Russian |
+| --- | --- |
+| `...and to junior events too` | `…и на юниорские турниры тоже` |
+| base note | `Юниорские и национальные турниры не платят призовых: билет покупает присутствие, но не приносит дохода.` |
+| priced tail | `В этом сезоне на карточке ещё {trips}; их общая стоимость – {money}.` |
+| confirm | `Отправлять тренера ещё и на юниорские и национальные турниры? На этих уровнях нет призовых, поэтому второй билет оплачивается из доходов, которых теннис пока не приносит. В замере по 30 карьер в каждой группе неограниченные юниорские поездки привели к банкротству 8 из 30 обеспеченных и 15 из 30 семей со средним достатком – во всех случаях до её двадцатилетия. Деньги ваши, решение тоже.` |
+| confirm action | `Отправлять тренера` |
+| cancel | `Пока нет` |
+
+Junior switch names state `Включено`/`Выключено` and describe either stopping or adding the extra fare
+on trips without prize money. The warning is intentionally candid and does not disable the choice.
+
+Current bill and universal share:
+
+- `{weekly} в неделю при нынешнем плане – {season} за {weeks}.`
+- `Кроме того, любой тренер здесь получает {pct}% от каждого её призового чека.`
+
+## 16. Coach cards
+
+### 16.1 Actions and accessibility
+
+| English | Russian |
+| --- | --- |
+| `/wk` | `/нед.` |
+| `Current` | `Работает с ней` |
+| `{n} pts short` | `Не хватает {points}` |
+| `Hire ›` | `Нанять ›` |
+| unknown chemistry | `Взаимопонимание с ней: пока неизвестно` |
+| known chemistry | `Взаимопонимание с ней: {signedPct}` |
+
+The row's accessible pattern is:
+
+> `{name}; {tier} уровень; {fit}; {weekly} в неделю{chemistry}; {state}.`
+
+States are `сейчас её тренер`, `недоступно – не хватает {points}` and `нанять`. Positive chemistry
+is spoken without `+`, negative with a minus, matching the approved visible rule.
+
+Hire confirmation avoids declining generated international names:
+
+> `Новый тренер – {name}, {weekly} в неделю. Подтвердить найм? {billChange}`
+
+`{billChange}` is `Расходы на тренера не изменятся.`, `Расходы на тренера вырастут на {delta}.` or
+`Расходы на тренера снизятся на {delta}.` Confirm action: `Нанять`.
+
+Release confirmation:
+
+> `Прекратить сотрудничество: {name}? С этой недели вы снова тренируете её сами: в счёте останется только аренда корта, а профессиональная оценка, за которую вы платили, исчезнет.`
+
+Confirm action: `Тренировать её самостоятельно`. The fallback name is `нынешний тренер`; no Russian
+sentence should require guessing a generated coach's gender or name case.
+
+### 16.2 Individual coach descriptions
+
+| id | English | Russian |
+| --- | --- | --- |
+| budget-1 | `A club-court lifer – patience first, power much later.` | `Вся жизнь на клубном корте: сначала терпение, сила потом.` |
+| budget-2 | `Teaches the basics, and drills them until they hold.` | `Ставит базу и повторяет, пока она не закрепится.` |
+| budget-3 | `An ex-satellite hitter who still swings for the lines.` | `За плечами сателлиты; до сих пор целится в линии.` |
+| middle-4 | `Cheap, blunt, and obsessed with a repeatable toss.` | `Недорого и без церемоний; главное – повторяемый подброс.` |
+| middle-1 | `Builds a whole game slowly, one shot at a time.` | `Собирает всю игру медленно, по одному удару.` |
+| middle-2 | `Keeps a notebook on every opponent in the region.` | `Ведёт тетрадь на каждую соперницу в регионе.` |
+| middle-3 | `Serve and forehand first – the rest can wait.` | `Сначала подача и форхенд, остальное подождёт.` |
+| middle-5 | `Drills the first strike until it lands more often.` | `Ставит первый удар, пока тот не начнёт попадать.` |
+| high-1 | `Has taken pupils onto the tour – thinks in seasons.` | `Есть опыт вывода учениц в тур – мыслит сезонами.` |
+| high-2 | `Believes the extra ball back wins more than the winner.` | `Верит: ещё один возвращённый мяч важнее виннера.` |
+| high-3 | `Short points, high risk – coaches the way the tour plays.` | `Короткие розыгрыши, высокий риск – так играет тур.` |
+| high-4 | `Rebuilt a serve from scratch once, and teaches it that way.` | `Умеет перестроить подачу с нуля – и так её преподаёт.` |
+| elit-1 | `A tour-bench veteran with a plan for every draw.` | `Ветеран тренерской скамейки тура, с планом на любую сетку.` |
+| elit-2 | `A Grand Slam quarter-final on the CV, and no time to waste.` | `В резюме – четвертьфинал Большого шлема. Времени зря не тратит.` |
+| elit-3 | `Built two tour serves, and prices the third accordingly.` | `В портфолио – две подачи уровня тура. Цена за третью соответствующая.` |
+| elit-4 | `A chess player – will make a pupil think a set ahead.` | `Теннис как шахматы: ученица будет думать на сет вперёд.` |
+
+These lines remain attached to portrait ids, not randomized names. The Russian variants avoid past
+verbs and personal pronouns whose gender could contradict a later portrait swap.
+
+### 16.3 What the tier and style buy
+
+| band | Russian full line |
+| --- | --- |
+| above | `Выше уровня – сочетание стилей даёт больше, чем одна цена.` |
+| level | `Темп уровня – стиль ничего не добавляет и ничего не отнимает.` |
+| under | `Ниже уровня – из-за стиля теряется многое из того, что покупает цена.` |
+| under-self | `Медленнее ваших тренировок – для её игры этот тренер развивает навыки медленнее вас.` |
+
+Medical/load lines:
+
+| tier | Russian |
+| --- | --- |
+| self | `Вы сами следите за нагрузкой: каждое решение за вами, и кроме вас её никто не наблюдает.` |
+| budget | `Базовая физиотерапия: простые решения принимают без вас, остальные оставляют вам.` |
+| middle | `Полноценная физиотерапия: большинство недель обходится без вашего решения.` |
+| high | `Хорошая медицинская команда: к вам обращаются редко.` |
+| elite | `Лучшая медицинская команда, которую можно купить: о её теле заботятся, а вы узнаёте уже о результате.` |
+
+### 16.4 Growth room and the learned-coach plaque
+
+| band | Russian label | Russian explanation | short Home form |
+| --- | --- | --- | --- |
+| 0 | `Огромный потенциал` | `большая часть её игры ещё впереди, и здесь тренер даёт больше всего.` | `Большая часть игры впереди` |
+| 1 | `Ещё есть куда расти` | `в её игре остаётся заметный запас, и раскрыть его помогает тренер.` | `Ещё есть куда расти` |
+| 2 | `Близко к потолку` | `запас заканчивается, и каждый следующий уровень даёт меньше прежнего.` | `Близко к потолку` |
+| 3 | `У своего потолка` | `сейчас ни один тренер, независимо от цены, не добавит многого.` | `У своего потолка` |
+
+Before the coach can be read:
+
+- same-season reveal: `Её прогресс – в межсезонье будет понятнее.`
+- delayed reveal: `Её прогресс – времени прошло мало, вернёмся к этому в следующее межсезонье.`
+
+Placement fragments are `выше моих ожиданий`, `примерно такой, как ожидалось`, `ниже моих
+ожиданий`. Complete tenure lines:
+
+- `После первого сезона похоже, что темп {placement}.`
+- `После двух сезонов оценка держится: темп {placement}.`
+- `Сезон за сезоном: темп {placement}.`
+- travel edge: `На турнирах, куда едет тренер, эффект вдвое выше.`
+
+The first-person fragments work for a coach of any gender. They state expectation, not praise or
+blame, and reveal no individual numeric edge.
+
+### 16.5 Decline note on the current coach
+
+Label: `Пик позади`.
+
+Semantic clauses:
+
+- yearly drop: `за год опустилась на {places}`;
+- below best: `на {places} ниже своего лучшего сезона`;
+- ordinary body clock: `у организма осталось около {seasons}`;
+- next last winter: `следующее межсезонье станет последним`;
+- later last winter: `до последнего межсезонья – {seasons}`;
+- no recovery by hiring: `и никакой тренер этого не вернёт.`
+
+`{places}` and `{seasons}` are complete counted phrases. The short Home variants remain RU-03's
+responsibility but must consume this same decline descriptor.
+
+## 17. Her Week training matrix
+
+| English | Russian |
+| --- | --- |
+| `General practice` | `Общая тренировка` |
+| `Serve & return` | `Подача и приём` |
+| `Rally` | `Розыгрыши` |
+| `Fitness` | `Физподготовка` |
+| `Match play` | `Игровая тренировка` |
+| `Light` | `Легко` |
+| `Balanced` | `Баланс` |
+| `Grind` | `Интенсивно` |
+| `I coach her myself` | `Тренирую её самостоятельно` |
+| week grid aria | `Неделя по дням` |
+| `Next week – {note}` | `На следующей неделе – {note}` |
+
+Capacity and lock copy:
+
+- double days: `На этой неделе школы нет: при желании в один день поместятся две тренировки.`
+- school single days: `Пока идёт школа – одна тренировка в день. Точки показывают, сколько места осталось.`
+- other single days: `На этой неделе – одна тренировка в день. Точки показывают, сколько места осталось.`
+- hired lock: `{coachName} составляет её неделю.`
+- hired lock help: `Отметьте «Тренирую её самостоятельно», чтобы снова планировать неделю. Это завершит работу с тренером.`
+- maximum: `Её максимум – {sessions}. Снимите одну отметку, чтобы перенести тренировку.`
+- minimum: `Её минимум – {sessions}. Сначала добавьте другую тренировку, затем снимите эту.`
+
+Accessible day head: `{day}: занято {used} из {capacity}`. Checkbox: `{session} в {dayAccusative}`.
+Russian day data therefore needs at least nominative and accusative (`понедельник` / `понедельник`;
+`среда` / `среду`), rather than interpolating a display label after `в`.
+
+Weekly readout:
+
+> `{sessions}, {hours}{doubleDays} – {daysOff}.{bill}`
+
+Examples: `5 тренировок, 5 часов – 2 дня отдыха. На этой неделе – $240.`;
+`6 тренировок, 6 часов, в 2 дня по две – 3 дня отдыха.` Counted phrases must be built by the
+locale, not English singular ternaries.
+
+Self-coach footer:
+
+- hired: `Вы всегда можете снова тренировать её самостоятельно. В еженедельном счёте останется только аренда корта.`
+- self: `Вы тренируете её самостоятельно. В еженедельном счёте только аренда корта.`
+- action: `Тренировать её самостоятельно`.
+
+Batch status: **in progress**. The profile, life-stage language, full radar corpus, coach market and
+weekly training matrix are drafted. Future-week planning, knocks and injury-stop copy follow in this
+document.
