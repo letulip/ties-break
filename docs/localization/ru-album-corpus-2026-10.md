@@ -60,7 +60,7 @@ not read as four different narrators.
 | --- | --- | --- |
 | prologue and childhood | A34, A1–A4 | drafted |
 | titles and finals | A5–A10 | drafted |
-| seasons | A11–A14, A33 | open |
+| seasons | A11–A14, A33 | drafted |
 | injury, international and money | A15–A22 | open |
 | school, college and relationships | A23–A28 | open |
 | closing life and career | A29–A32 | open |
@@ -250,3 +250,74 @@ All four rows remain result-neutral: reaching this final may also have produced 
 - Render the longest A9 notes and the A6 ticket together at every album width.
 - Verify `первый` on A7 always has the title context on its assembled sheet; otherwise expand it to
   `первый титул после возвращения` in the runtime resource.
+
+## 11. Seasons
+
+Season handwriting names the lived shape of a year. The sheet metadata and ranking tables carry the
+actual year and rank; these lines must not interpolate either.
+
+### A11 · `season-first` · first ranked season closed
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Первый сезон позади. Ты хотела понять, хорошее ли это место, а я и сам не знал.` | `Никто из нас не знал, хорошее ли это место.` | `Место, которое пока не с чем сравнить.` |
+| `fiery` | `Первый сезон закончился на месте, которое ты назвала неправильным и пообещала исправить.` | `Она собирается его исправить.` | `Неправильное, оказывается.` |
+| `deep` | `Первый сезон позади. Ты долго смотрела на своё место в рейтинге, а потом положила трубку.` | `Она долго сидела с этим местом.` | `Она перечитала его не раз.` |
+| `quiet` | `Ты карандашом записала своё место в календаре. Первый сезон позади.` | `В календаре, карандашом.` | `Карандашом. Чтобы потом исправить.` |
+
+`Место` replaces literal `число` because the stored fact is a ranking position. The line remains
+about uncertainty, not about arithmetic.
+
+### A12 · `season-best` · new best year-end rank
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Пока лучший сезон. Ты перечислила все его недели, а потом сказала, что устала.` | `Усталая, потом довольная. Именно в таком порядке.` | `Про усталость было правдивее всего.` |
+| `fiery` | `Пока лучший сезон – и весь разговор ты потратила на недели, которые пошли не так.` | `Она говорила только о плохих неделях.` | `Плохие недели – вот и весь разговор.` |
+| `deep` | `Пока лучший сезон. Ты сказала, что он ощущался одной длинной неделей. Кажется, это и был весь отчёт.` | `Одна длинная неделя, сказала она.` | `Одна длинная неделя. Вот и весь отчёт.` |
+| `quiet` | `Пока лучший сезон. Ты спросила, приедем ли мы на Рождество.` | `Она спросила про Рождество.` | `Рождество было важнее.` |
+
+### A33 · `season-recovery` · climb from last year, still short of her best
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `В этом году ты снова поднялась в рейтинге, но говорила не об итоге, а о двух неделях в середине, когда всё повернулось.` | `Она говорила о середине сезона.` | `Поворот случился где-то посередине.` |
+| `fiery` | `Лучше прошлого года – и ты сказала, что меньше быть и не могло. Ты всё равно была довольна, только не призналась.` | `Меньше быть и не могло, сказала она.` | `Довольна. И не признаётся.` |
+| `deep` | `Ты дождалась конца сезона, прежде чем назвать это возвращением. И уложила всё в одну фразу.` | `Одна фраза – только после конца сезона.` | `Сначала она дождалась конца.` |
+| `quiet` | `Год снова пошёл вверх. Ты этого даже не упомянула, а в ту же неделю пришло расписание следующего сезона.` | `Ни слова. Новое расписание.` | `Сразу обратно к планам.` |
+
+`Возвращение` here is a return up the ranking, not a return from injury. The occasion id and family
+must remain distinct from A7 and A16 in localization keys.
+
+### A13 · `season-held` · rank held inside the narrow band
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Год на месте. Ты сказала, что его середина слилась в одно, и я прекрасно понимаю.` | `Середина слилась в одно.` | `Год, который она не вполне помнит.` |
+| `fiery` | `Год на месте. Ты хотела рывка, его не случилось, и ты долго об этом говорила.` | `Она хотела рывка.` | `Удержаться было не по плану.` |
+| `deep` | `Год на месте. Ты сказала, что остаться там же труднее, чем кажется.` | `Стоять на месте тоже чего-то стоит, сказала она.` | `И она права.` |
+| `quiet` | `Год на месте. Вскоре ты прислала расписание следующего сезона.` | `Вскоре – расписание следующего сезона.` | `Сразу к следующему.` |
+
+`Год на месте` is deliberately neither praise nor failure. This row may only receive the engine's
+narrow held band; a real climb belongs to A33.
+
+### A14 · `season-down` · year-end rank moved the wrong way
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Год пошёл не туда. Ты сказала это вслух.` | `Она сказала это вслух.` | `Назвать – уже почти справиться.` |
+| `fiery` | `Год пошёл не туда, и у тебя была причина для каждой его недели. В каждую ты верила.` | `По причине на каждую неделю.` | `Наверное, все настоящие.` |
+| `deep` | `Год пошёл не туда. Только в январе ты рассказала, что, по-твоему, случилось.` | `Она дождалась января.` | `Сначала ей нужно было от него отойти.` |
+| `quiet` | `Весь год ты рассказывала мне о расписаниях и отелях – и ни разу о самом годе.` | `Расписания, отели – только не сам год.` | `Всё, кроме самого года.` |
+
+## 12. Seasons LQA
+
+- Probe five synthetic rank histories so every gate lands on its own Russian family: first, new
+  best, recovery below the old best, held inside the band and down outside it.
+- Read the five season rows per voice in chronological order. Repeated anchors (`Пока лучший`, `Год
+  на месте`, `Год пошёл не туда`) should orient the page without making the corpus sound templated.
+- Verify neither the rank nor year is baked into handwriting; both remain independent sheet facts.
+- Confirm A33's `возвращение` is never used as an injury-return localization key.
+- Render the longest sunny A33 and deep A12 notes on a ruled scrap with date and age metadata.
+- Verify the quiet rows preserve omission as character but do not collapse into the same
+  `расписание → следующий сезон` sentence twice.
