@@ -62,7 +62,7 @@ not read as four different narrators.
 | titles and finals | A5–A10 | drafted |
 | seasons | A11–A14, A33 | drafted |
 | body, money, road and first adult thresholds | A15–A22, birth | drafted |
-| assets and rare career moments | A23–A28 | open |
+| assets and rare career moments | A23–A29 | drafted |
 | closing life and career | A29–A32 | open |
 | closing arc | 8 direction × voice cells | open |
 
@@ -445,3 +445,96 @@ it. Russian adds none of those facts.
 - Verify the wedding and birth rows remain true without any spouse in the current family state.
 - Verify school, wedding, birth and home can each occur at their engine-provided age; no Russian
   string hard-codes a life-stage expectation.
+
+## 19. Her name and the academy
+
+### A23 · `brand` · first branded sample
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Пришёл первый образец с твоим именем на этикетке. Ты рассмеялась, увидев размер коробки.` | `Её рассмешила эта коробка.` | `Смешно. И огромная.` |
+| `fiery` | `Прислали первый образец с твоим именем на этикетке, и ты велела сменить цвет. Конечно, велела.` | `Она велела сменить цвет.` | `Цвет поменяли.` |
+| `deep` | `Твоё имя напечатали на этикетке первого образца. Ты сказала, что вещь пока не кажется твоей.` | `Пока не её, сказала она.` | `Пока не её.` |
+| `quiet` | `Пришёл первый образец. Ты прислала одну фотографию – этикетка в фокусе – и больше ничего о нём не сказала.` | `Только этикетка в фокусе.` | `Этикетка, а не сама вещь.` |
+
+The generated brand name never enters these strings. `Твоё имя` is the stable fact the occasion
+proves.
+
+### A24 · `academy-land` · the field before the academy
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Пока просто поле. Ты провела нас по нему кругом, показывая корты, которых ещё не было.` | `Она показывала нам ещё не построенные корты.` | `Всё поле. Два круга.` |
+| `fiery` | `Пока просто поле, а ты уже злилась, сколько времени всё займёт.` | `Уже слишком медленно.` | `Для неё всё движется слишком медленно.` |
+| `deep` | `Пока просто поле. Ты долго стояла у одного края и не говорила, что видишь.` | `Она стояла у самого края.` | `Так долго, что мы перестали спрашивать.` |
+| `quiet` | `Пока просто поле. Ты измерила его раньше, чем рассказала нам.` | `Сначала она всё измерила.` | `Измерила. Потом упомянула.` |
+
+### A25 · `academy-courts` · academy courts completed
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Корты появились. Ты сказала, что вышла на первый ещё до того, как высохли линии. Я верю.` | `Она сразу вышла на первый корт.` | `Линии ещё не высохли.` |
+| `fiery` | `Корты появились. В первый же день ты нашла изъян в покрытии и заставила всё переделать.` | `Они вернулись и переделали.` | `Она заставила их вернуться.` |
+| `deep` | `Корты появились. Сначала ты сказала, что звук неправильный, а через неделю – что теперь правильный.` | `Сначала звук был неправильным. Потом – правильным.` | `Она слушала корт.` |
+| `quiet` | `Корты появились. Ты прислала фотографию, на которой никого не было.` | `Фотография, на которой никого нет.` | `Пустые корты. Намеренно.` |
+
+`Покрытие` is licensed by the completed-courts occasion; its exact surface remains unstated.
+
+### A26 · `academy-built` · academy building completed
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Здание готово. Ты дважды провела нас по нему и рассказала, что будет в каждой комнате.` | `Две экскурсии, комната за комнатой.` | `Для всего своя комната.` |
+| `fiery` | `Здание готово. Ты сказала, что вывеска слишком маленькая, и заказала побольше.` | `Вывеска была слишком маленькой.` | `Значит, вывеску побольше.` |
+| `deep` | `Здание готово. Ты сказала, что твоё имя на фасаде выглядит слишком большим.` | `Её имя казалось слишком большим.` | `Слишком большое, сказала она. Ничего подобного.` |
+| `quiet` | `Здание готово. Ты уже решила, где будут ждать дети.` | `Она знала, где они будут ждать.` | `Она подумала об ожидании.` |
+
+No coach, employee or membership model is implied. The sunny room tour describes intended uses,
+not people already hired.
+
+## 20. Rare career pages
+
+### A27 · `lifetime-sponsor` · lifetime contract
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Тот самый бессрочный контракт. Ты сказала, что теперь наконец перестанешь нервничать каждую зиму. И всё равно нервничала.` | `Всё равно нервничала. Каждую зиму.` | `У тревоги свои привычки.` |
+| `fiery` | `Тебе предложили бессрочный контракт. Ты сказала, что он должен был прийти гораздо раньше, – и подписала без колебаний.` | `Давно пора. Подписала сразу.` | `Опоздал. Она всё равно подписала.` |
+| `deep` | `Тот самый бессрочный контракт. Ты сказала, что странно: кто-то рассчитывает на тебя настолько далеко вперёд.` | `Странно, когда на тебя рассчитывают так надолго.` | `Кто-то рассчитывал на неё так надолго.` |
+| `quiet` | `Ты прочла его целиком и только потом кому-то сказала. Тот самый бессрочный контракт.` | `Сначала она прочла всё.` | `Всё до конца. Потом – первое слово.` |
+
+### A28 · `top-tier-title` · title at the highest tier
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Самый большой титул. Ты позвонила и не могла закончить ни одной фразы. Я тоже.` | `Ни один из нас не закончил фразу.` | `Ни одной целой фразы с обеих сторон.` |
+| `fiery` | `Самый большой титул. Ты сказала, что годами всем об этом твердила, а никто не слушал.` | `Она говорила это годами.` | `Никто не слушал. Теперь слушают.` |
+| `deep` | `Самый большой титул. Ты сказала, что последний гейм будто сыграл кто-то другой.` | `Последний гейм принадлежал кому-то другому.` | `Только об этом она и сказала.` |
+| `quiet` | `Самый большой титул. Ты спросила, видели ли мы. Мы видели.` | `Она спросила, видели ли мы.` | `Мы видели.` |
+
+The tier is deliberately unnamed in handwriting. The ticket and tag may show its localized game
+label; the emotional line remains true if the ladder vocabulary changes.
+
+### A29 · `years-at-the-top` · sustained run near the top
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Уже столько лет наверху. А ты всё так же звонишь рассказать про еду, корты и зрителей – как в первый раз.` | `Те же звонки, что в первый год.` | `Сам звонок она не изменила.` |
+| `fiery` | `Уже столько лет наверху. Ты сказала, что удержаться там труднее, чем добраться, – и предложила кому-нибудь поспорить.` | `Удержаться труднее, говорит она.` | `Никто не спорил.` |
+| `deep` | `Уже столько лет наверху. Ты сказала, что перестала это замечать, – и тут же заметила, что перестала.` | `Она перестала замечать.` | `А потом заметила это.` |
+| `quiet` | `Уже столько лет наверху. Ты по-прежнему сначала присылаешь следующую неделю и только потом говоришь об этой.` | `Сначала следующая неделя. Эта – потом.` | `О следующей я узнаю первым. Так было всегда.` |
+
+`Столько лет` preserves duration without claiming the engine's threshold count.
+
+## 21. Assets-and-rare-pages LQA
+
+- Render every asset row without the actual generated brand name; no line may contradict it or
+  duplicate it.
+- Probe academy land, courts and building separately. Russian must not describe a later build on an
+  earlier page or imply staff that the career does not have.
+- Confirm `покрытие` on A25 names no surface and that no coach appears in A26.
+- Confirm A27 is reachable only for the lifetime term, not merely a long fixed contract.
+- Confirm A28 takes only the highest ladder step and does not hard-code a trademark or game tier.
+- Confirm A29 writes no exact year count, even if the threshold later changes.
+- Read the three academy pages per voice as a progression: imagined space, playable courts, then a
+  functioning building. Each should add a new observation rather than retell ownership.
