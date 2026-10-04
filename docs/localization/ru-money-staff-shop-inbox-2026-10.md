@@ -1244,6 +1244,175 @@ will remain English.
 All tour-regulation arms sign `– Администрация тура` and close with `Получено {week}.` The copy
 states the rule and its price without telling the player they made a bad decision.
 
-The remaining RU-06 sections cover academy, national-team and staff reports, advertising and kit
-contracts, then inbox-specific implementation and LQA. Money, staff controls, shop/assets, the inbox
-shell, build and market mail, tournament receipts and tour regulation letters are drafted end to end.
+## 34. Academy support letters
+
+### 34.1 Support begins
+
+Subject: `Стипендия · {sharePct}% расходов на поездки`.
+
+> `Мы следили за её игрой и хотим принять её в программу. С этого момента мы берём на себя {sharePct}% расходов на турниры – билеты и ночёвки в каждой поездке.`
+
+- `{sharePct}% вычитаются из каждого счёта за поездку сразу, поэтому ничего не нужно возмещать задним числом.`
+- when a grant exists: `В программу входит грант на экипировку – {grant}: ракетки, струны и обувь на сезон.`
+- `В конце каждого сезона мы пересматриваем поддержку; её доля меняется вместе с тем, как прошёл год.`
+
+### 34.2 Annual review
+
+Subject: `Пересмотр поддержки · {sharePct}% расходов на поездки`.
+
+Use separate rise and fall variants rather than inserting a verb fragment into one sentence:
+
+> `Мы подвели итоги её сезона. С этого года мы увеличиваем свою долю расходов на поездки с {wasPct}% до {sharePct}%.`
+
+or:
+
+> `Мы подвели итоги её сезона. С этого года мы уменьшаем свою долю расходов на поездки с {wasPct}% до {sharePct}%.`
+
+- `Мы поддерживаем её с {sinceWeek}, и программа продолжается.`
+- when a grant exists: `Грант на экипировку в этом году – {grant}.`
+- `Следующий пересмотр – в конце нового сезона.`
+
+### 34.3 Support ends
+
+Subject: `Поддержка академии завершена`.
+
+Reason paragraph:
+
+| reason | Russian |
+| --- | --- |
+| aged out | `Наша программа – юниорская, а она вышла из возраста, который мы можем финансировать. Здесь заканчивается наша часть её пути. Мы были рядом довольно долго.` |
+| stopped competing | `Мы поддерживаем тех, кто регулярно играет турниры. В этом году их оказалось слишком мало, чтобы мы могли продолжить программу.` |
+| programme decision | `Мы подвели итоги сезона и не сможем продолжить поддержку в следующем. Это решение о нашем списке, не о ней.` |
+
+- `Мы поддерживали её с {sinceWeek} до {filedWeek}.`
+- `Экипировка остаётся у неё; с этого момента семья снова полностью оплачивает поездки.`
+- `Если её теннис снова приведёт её к нам, список открывается каждое межсезонье.`
+
+Every academy letter signs `– Академия` and closes with `Получено {week}.` `Стипендия` is retained
+in the subject because it distinguishes this programme from later commercial sponsorship; the body
+uses the warmer and less bureaucratic `поддержка`.
+
+## 35. Annual staff letters
+
+All four letters are first-person reports. Russian must not infer the coach's gender: prefer
+`мы с ней`, `нам` and present-tense judgements over gendered past-tense forms such as `работал`.
+Counts below use Russian plural categories.
+
+### 35.1 Coach
+
+Subject: `Сезон на корте · {year}`.
+
+> `Сезон закончен. Мы провели вместе {weeksServed, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}; вот что важно сказать перед следующим.`
+
+- when the record exists: `За сезон – {matches, plural, one {# матч} few {# матча} many {# матчей} other {# матча}}: {wins} побед и {losses} поражений.`
+- when a scored finish exists: `Лучший результат года – {localizedFinish}.` Add
+  `Титулов – {titles}.` as a second sentence when the count is non-zero.
+- when no scored finish exists: `В этом году она ни разу не дошла до зачётной стадии. Это не только о ней, но и о сетках.`
+- when a finishing rank exists: `Год она заканчивает так: {localizedLadder} · №{endRank}.`
+- readable positive chemistry: `К концу сезона нам стало проще работать вместе. Говорю это как человек, который уже ошибался в подобных вещах.`
+- readable negative chemistry: `Скажу и другое: лёгкого рабочего ритма мы пока не нашли, и за длинный сезон это стало заметно.`
+
+`localizedFinish` consumes the same finish-index formatter as RU-04: `Победительница`,
+`Финалистка`, `Полуфиналистка`, `Четвертьфиналистка`, then a localized stage. Ladder labels reuse
+RU-03's `Национальный рейтинг`, `Международный рейтинг` and `Профессиональный рейтинг`.
+
+Signature: `– Её тренер`.
+
+### 35.2 Masseur
+
+Subject: `Сезон на массажном столе · {year}`.
+
+> `Заметка о сезоне с массажного стола. В этом году мы работали вместе {weeksServed, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}.`
+
+When layoffs exist:
+
+> `За сезон она {layoffs, plural, one {# раз пришла} few {# раза пришла} many {# раз пришла} other {# раза пришла}} ко мне с травмой; вместе мы сократили эти паузы на {weeksSaved, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}.`
+
+When none exists:
+
+> `В этом году она не потеряла ни одной недели из-за травмы, после которой мне пришлось бы возвращать её на корт. Именно такой год я бы и выбрал – и это не значит, что работы в нём не было.`
+
+Closing observation:
+
+> `Отдых – та половина этой работы, за которую никто не выставляет счёт. Он нужен и в те недели, когда всё в порядке.`
+
+Signature: `– Её массажист`.
+
+### 35.3 Psychologist
+
+Subject: `Сезон в кабинете · {year}`.
+
+> `Год закончился, и вот как я вижу нашу работу. В этом сезоне у нас было {weeksServed, plural, one {# неделя} few {# недели} many {# недель} other {# недели}} вместе.`
+
+Focus line:
+
+| focus | Russian |
+| --- | --- |
+| cool head | `В этом году мы работали над тем, что происходит у неё в голове в плотных геймах: очко после обратного брейка, вторая подача при 4:5.` |
+| recovery | `В этом году мы работали над возвращением после недель, которые сбивали её с ног, – чтобы они оставались неделями и не превращались в сезон.` |
+| listening | `В этом году работа была столько же вашей, сколько её: услышать, что она пытается сказать, прежде чем у неё появятся слова.` |
+| herself | `В этом году мы работали над тем, что в ней зависит от неё самой, а не от врождённого характера: над осознанной работой под тем, что дано с рождения.` |
+| public life | `В этом году мы работали с чужими взглядами: с весом камер и незнакомых людей и с тем, как оставлять его между матчами.` |
+
+No recorded focus:
+
+> `Мы прошли сезон, не выбирая одну тему, которую нужно нести через весь год. Так бывает; это стоит назвать, а не делать вид, будто всё уложилось само.`
+
+When the standing composure bonus exists:
+
+> `Под давлением она теперь немного устойчивее, чем была бы только по природе. Это накапливается медленно и уходит, если остановиться – так честнее всего это описать.`
+
+Closing observation:
+
+> `Что бы мы ни выбрали на следующий год, тема должна быть одна. Это год, не список.`
+
+Signature: `– Её психолог`.
+
+### 35.4 Hitting partner
+
+Subject: `Сезон тренировок · {year}`.
+
+> `Сезон закончен, поэтому скажу своё – короче остальных. В этом году мы работали вместе {weeksServed, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}.`
+
+- `Моя работа начинается в недели без турниров: игровые тренировки не дают паузам остаться в её руках, когда следующий матч снова будет что-то значить.`
+- `Никто не ведёт этому счёт, и придумывать его для письма я не стану. Она знает. Я знаю.`
+
+Signature: `– Её спарринг-партнёр`.
+
+The second sentence deliberately keeps the short human cadence of the source. Do not expand it into
+a mechanical explanation of rust; the card and staff screen already own that explanation.
+
+## 36. National-team call-up
+
+Subject: `В составе сборной · {label}, {tieWeek}`.
+
+Optional reason lead:
+
+| college result | Russian |
+| --- | --- |
+| watched, no round won | `Мы следили за ней на студенческом чемпионате` |
+| semifinal | `Она дошла до полуфинала студенческого чемпионата` |
+| final | `Она сыграла в финале студенческого чемпионата` |
+| champion | `Она выиграла студенческий чемпионат` |
+
+With a reason:
+
+> `{because}, и селекционеры это заметили. Она включена в состав на {label}; её ждут на корте {tieWeekRange}.`
+
+Without one:
+
+> `Она включена в состав на {label}; её ждут на корте {tieWeekRange}.`
+
+- `В состав вошли {squadSize, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}, а на неделе пройдут {tiesInWeek, plural, one {# встреча} few {# встречи} many {# встреч} other {# встречи}}. Капитан выбирает состав на каждую: она может попасть в заявку и не выйти на корт.`
+- `На этом уровне играют {nationsAtLevel, plural, one {# сборная} few {# сборные} many {# сборных} other {# сборной}}. Итоговое место страны – результат команды, не её личный.`
+- `Здесь нет ни рейтинговых очков, ни призовых – турнир не даёт ни того ни другого никому. Представлять страну значит выходить играть, когда вызывает сборная.`
+
+Signature: `– Её национальная федерация`. Foot: `Получено {week}.`
+
+`OfferLetter.vue` currently contains the last half of the third bullet twice in succession. That is
+an English-surface rendering defect, not text to preserve or translate twice; the localized message
+contains the sentence once and the implementation should remove the duplicate node.
+
+The remaining RU-06 sections cover advertising and kit contracts, their signature confirmations,
+then inbox-specific implementation and LQA. Money, staff controls, shop/assets and every
+non-commercial letter family are now drafted end to end.
