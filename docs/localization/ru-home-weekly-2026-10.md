@@ -258,7 +258,199 @@ the college card and can remain shorter.
 8. LQA cases: 375 × 667; 200% text; `Профессиональный рейтинг`; negative five-digit funds; long
    tournament name; five season chips; eight hidden levels; longest coach line; news and inbox dots.
 
-## 12. Next slice
+## 12. Calendar frame
 
-The next pass extends this file with the Calendar screen: day names, schedule blocks, fridge note,
-look-ahead rows, tournament marker and the week action. After that comes This Week and its recap.
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU03-CA01 | heading | `Calendar` | `Календарь` |
+| RU03-CA02 | injury chip | `injury` | `травма` |
+| RU03-CA03 | grid group | `The seven days of {dateLine}` | `Семь дней: {dateLine}` |
+| RU03-CA04 | paper label | `Notes` | `Заметки` |
+| RU03-CA05 | look-ahead heading | `Weeks after that` | `Следующие недели` |
+| RU03-CA06 | marker accessible suffix | `open this tournament` | `открыть турнир` |
+| RU03-CA07 | entered chip | `Entered` | `Заявлена` |
+| RU03-CA08 | look-ahead footnote | suitable-event explanation | `Здесь отмечены только турниры, на которые она может заявиться. Полный календарь и все заявки – на экране «Сезон».` |
+| RU03-CA09 | sweep hint | `Tap anywhere to skip` | `Нажмите в любом месте, чтобы пропустить` |
+
+The look-ahead marker name is assembled from event label, week and dates. All three parts must be
+localized before composition; punctuation belongs to the localized template.
+
+## 13. Days and day kinds
+
+| index | short | long |
+| ---: | --- | --- |
+| 0 | `ПН` | `Понедельник` |
+| 1 | `ВТ` | `Вторник` |
+| 2 | `СР` | `Среда` |
+| 3 | `ЧТ` | `Четверг` |
+| 4 | `ПТ` | `Пятница` |
+| 5 | `СБ` | `Суббота` |
+| 6 | `ВС` | `Воскресенье` |
+
+| kind | English accessible phrase | Russian accessible phrase |
+| --- | --- | --- |
+| court | `on court` | `на корте` |
+| gym | `in the gym` | `в зале` |
+| rest | `rest day` | `день отдыха` |
+| match | `practice match` | `тренировочный матч` |
+| away | `away at the tournament` | `на выезде, на турнире` |
+| off | `no tennis` | `без тенниса` |
+| school | `school exams` | `школьные экзамены` |
+| rehab | `rehab` | `восстановление` |
+| shoot | `at the shoot` | `на съёмке` |
+
+The full accessible template is `{day} – {kind}`, for example `Среда – в зале`. Visible short day
+names remain two letters and must be checked with the existing seven-column phone grid.
+
+## 14. Calendar week identities and readouts
+
+| id | condition | English | Russian |
+| --- | --- | --- | --- |
+| RU03-CW01 | layoff title | `On the bench` | `Вне игры` |
+| RU03-CW02 | layoff, no return | `She is out – no training this week.` | `Она вне игры – на этой неделе тренировок не будет.` |
+| RU03-CW03 | layoff with return | `Out with the {injury} – back {week}.` | `Из-за травмы она не играет – вернётся {week}.` |
+| RU03-CW04 | trip title | `Tournament week` | `Турнирная неделя` |
+| RU03-CW05 | named trip | `She is away at {event} – the draw owns the week.` | `{event}: она уехала на турнир, и всю неделю решает сетка.` |
+| RU03-CW06 | unnamed trip | `She is away at a tournament – the draw owns the week.` | `Она уехала на турнир – всю неделю решает сетка.` |
+| RU03-CW07 | vacation title | `Family week` | `Неделя с семьёй` |
+| RU03-CW08 | vacation fallback | `{label} – no tennis at all this week.` | `{label}. На этой неделе тенниса не будет.` |
+| RU03-CW09 | off-season title | `Off-season` | `Межсезонье` |
+| RU03-CW10 | off-season readout | `The tour is closed – this is the block where next year gets built.` | `Тур закрыт – в эти недели строится следующий сезон.` |
+| RU03-CW11 | exam title | `Exams` | `Экзамены` |
+| RU03-CW12 | exams, no sessions | `Exams this week – no tournaments, and no sessions booked either.` | `На этой неделе экзамены: без турниров и без запланированных тренировок.` |
+| RU03-CW13 | exams with sessions | `Exams this week – no tournaments, but her {n} sessions stand.` | `На этой неделе экзамены: турниров нет, но {sessions} остаются в расписании.` |
+| RU03-CW14 | shoot title | `Shooting week` | `Неделя съёмок` |
+| RU03-CW15 | summer title | `Summer block` | `Летний блок` |
+| RU03-CW16 | ordinary title | `Training week` | `Неделя тренировок` |
+
+CW03 avoids inflecting an English body-part label that the current protocol cannot supply in the
+required genitive. Specificity can return when RU-05 gives body parts locale-owned cases. CW05 puts
+the event name before a colon so a tournament title needs no prepositional form.
+
+### 14.1 Training readout templates
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU03-CR01 | `No sessions – a full week off court.` | `Тренировок нет – целая неделя вне корта.` |
+| RU03-CR02 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions} за {days}; в {doubledDays} – по две тренировки.` |
+| RU03-CR03 | `{sessions} sessions, one a day – no school, so there is room to double up.` | `{sessions}, по одной в день. Школы нет – можно поставить по две.` |
+| RU03-CR04 | `{sessions} sessions, all of them on court.` | `{sessions}, все на корте.` |
+| RU03-CR05 | `{sessions} sessions – {court} on court, {gym} in the gym.` | `{sessions}: {courtSessions} на корте, {gymSessions} в зале.` |
+| RU03-CR06 | `Practice match on {day}.` | `Тренировочный матч – {dayAccusative}.` |
+| RU03-CR07 | `She is training on a sore {part}.` | `Она тренируется, несмотря на ушиб.` |
+| RU03-CR08 | one-day shoot | `{brand} shoot on {day}.` | `Съёмка для {brand} – {dayAccusative}.` |
+| RU03-CR09 | multi-day shoot | `{brand} shoot takes {n} of her free days.` | `Съёмка для {brand} займёт {freeDays}.` |
+| RU03-CR10 | masseur | `Masseur in {n} day(s) of the week.` | `Массажист придёт в {sessionDays}.` |
+| RU03-CR11 | rested knock | `Resting the {part} – off the training court all week.` | `Из-за ушиба она всю неделю отдыхает от тренировок.` |
+| RU03-CR12 | booked match survives | `The booked match on {day} still stands.` | `Запланированный матч в {dayAccusative} остаётся.` |
+
+Every placeholder ending in `Sessions`, `Days` or `dayAccusative` is a complete, correctly declined
+phrase. Required examples include `1 тренировка`, `2 тренировки`, `5 тренировок`; `за 1 день`, `за
+2 дня`, `за 5 дней`; `в понедельник`, `во вторник`, `в воскресенье`. Concatenating translated nouns
+to raw integers will fail here in several different cases.
+
+## 15. Schedule-block lexicon
+
+`weekGrid.ts` contains a finite set of compact labels. The following table covers every unique
+literal currently found in its block definitions; repeated English labels share one key.
+
+| English | Russian | English | Russian |
+| --- | --- | --- | --- |
+| Aboard | На борту | Ashore | На берегу |
+| Body work | Массаж | Call | Созвон |
+| Camp day | День в лагере | Cardio | Кардио |
+| Check-up | Осмотр | Court hit | Разминка на корте |
+| Court work | Корт | Day off | Выходной |
+| Day out | День вне дома | Draw day | Матчи |
+| Early hit | Ранняя тренировка | Exam | Экзамен |
+| Family time | Время с семьёй | Final review | Итоговый осмотр |
+| Flight home | Перелёт домой | Flight out | Перелёт туда |
+| Free time | Свободное время | Gym | Зал |
+| Her pals | С друзьями | Home day | День дома |
+| Home | Домой | Last day | Последний день |
+| Last one | Последний приём | Last swim | Последнее купание |
+| Lie-in | Выспаться | Long lunch | Долгий обед |
+| Long way home | Долгая дорога домой | Match play | Игровая тренировка |
+| Moving | Лёгкая нагрузка | No plans | Без планов |
+| Out all day | Весь день вне дома | Physio | Физиотерапия |
+| Pool | Бассейн | Pre-season | Предсезонная подготовка |
+| Press | Пресса | Rest day | День отдыха |
+| Rest | Отдых | Road-trip home | Дорога домой |
+| Road-trip out | Дорога туда | Rub-down | Массаж |
+| School | Школа | Shoot | Съёмка |
+| Slow day | Спокойный день | Study | Учёба |
+| Swim | Купание | Tennis drills | Теннисная тренировка |
+| Tests | Обследования | The garden | Сад |
+| The lake | Озеро | The pool | Бассейн |
+| The river | Река | The sea | Море |
+| Travel home | Дорога домой | Travel out | Дорога туда |
+| Two trains | Два поезда | Walk | Прогулка |
+
+The runtime also draws rotating tennis and gym session labels (`Serve work`, `Return work`, `Rally
+work`, `Point play`, `Speed work`, `Volley work`, `Net play`, `Core work`, `Leg work`, `Gym drills`).
+Their Russian set is: `Подача`, `Приём`, `Розыгрыши`, `Игра на счёт`, `Скорость`, `Удары с лёта`,
+`Игра у сетки`, `Корпус`, `Ноги`, `Упражнения в зале`. Short labels matter here: the grid column is
+only one seventh of a phone.
+
+## 16. Look-ahead rows
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU03-L01 | `Practice match` | `Тренировочный матч` |
+| RU03-L02 | `Practice match + coach` | `Тренировочный матч + тренер` |
+| RU03-L03 | `Leaves for college` | `Уезжает в колледж` |
+| RU03-L04 | `{brand} shoot` | `Съёмка для {brand}` |
+| RU03-L05 | `Exams` | `Экзамены` |
+| RU03-L06 | `Off-season` | `Межсезонье` |
+| RU03-L07 | `Training week` | `Неделя тренировок` |
+
+Vacation package names and blurbs are source data, not Calendar chrome. They must be localized with
+the package catalogue in RU-06; the Calendar must not receive an English finished label.
+
+## 17. Tournament marker takeover
+
+These rows cross-reference RU-04, which will own the shared event-card wording. They are recorded
+here because the Calendar renders a complete copy of that card.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU03-M01 | `Close this tournament` | `Закрыть турнир` |
+| RU03-M02 | `Close` | `Закрыть` |
+| RU03-M03 | `Travel budget` | `Бюджет поездки` |
+| RU03-M04 | `academy covers {n}%` | `академия оплачивает {n} %` |
+| RU03-M05 | `closes {week}` | `заявки до {week}` |
+| RU03-M06 | `Entered` | `Заявлена` |
+| RU03-M07 | `wild card` | `уайлд-кард` |
+| RU03-M08 | wild-card tooltip | held host-nation places explanation | `Одно из {places}, которые турнир оставляет игрокам страны-хозяйки: в обычный список участниц она не проходит.` |
+| RU03-M09 | `First round vs {opponent}` | `Первый круг: {opponent}` |
+| RU03-M10 | exhaustion fallback | `Exhausted – racing risks injury.` | `Вымоталась – плотный график повышает риск травмы.` |
+| RU03-M11 | entered state | `She is in. Withdrawing lives on the Season tab.` | `Она заявлена. Сняться можно на экране «Сезон».` |
+| RU03-M12 | `Enter` | `Подать заявку` |
+| RU03-M13 | `Not enough funds` | `Недостаточно средств` |
+
+M09 does not use `против`: the opponent is the value after a round label, so a colon is shorter and
+more natural. Match rows still use an accessible `{name} против {name}` sentence.
+
+## 18. Calendar implementation notes
+
+1. `DAY_SHORT`, `DAY_LONG`, `KIND_WORD`, week titles, readouts and every grid-block label are
+   finished English strings. The localized projection needs semantic day/block keys; passing a
+   translated label into simulation state is unnecessary and would make locale affect snapshots.
+2. Russian weekday insertion needs case. `on Monday` cannot be built from the visible nominative
+   `Понедельник`; pass a day index to the catalogue and render `в понедельник`.
+3. Training readouts need several plural and case forms in one sentence. Treat them as full ICU-like
+   messages, not fragments joined in `trainingReadout`.
+4. The injury-specific calendar sentence currently interpolates `injury.kind`. Until body parts
+   carry Russian cases, use the honest generic RU03-CW03 instead of producing malformed text.
+5. The fridge-note corpora are deliberately deferred to RU-09, where roof/away stage and bond-band
+   voice can be reviewed together. The frame label `Заметки` is complete here; no Russian build may
+   expose the English note pool while waiting for RU-09.
+6. Event-card fields and surface verdicts are shared with Season. RU-04 must provide one localized
+   source rather than let Calendar and Season translate the same card independently.
+7. LQA must include all seven columns at 320 and 375 px, the longest block labels, 200% text, a
+   cross-month week, five-week injury, academy percentage, and both pre-draw probability states.
+
+## 19. Next slice
+
+The next pass completes RU-03 with This Week: current status, training-plan summary, planned spend,
+the recap frame and its route back Home.
