@@ -59,7 +59,7 @@ not read as four different narrators.
 | block | occasions | state |
 | --- | --- | --- |
 | prologue and childhood | A34, A1–A4 | drafted |
-| titles and finals | A5–A10 | open |
+| titles and finals | A5–A10 | drafted |
 | seasons | A11–A14, A33 | open |
 | injury, international and money | A15–A22 | open |
 | school, college and relationships | A23–A28 | open |
@@ -163,3 +163,90 @@ the childhood page remembers the physical thing.
 - Verify `всё`, `ещё` and `её` retain `ё` in the runtime catalogue and in snapshot tests.
 - Verify the English corpus, Russian corpus and runtime registry contain exactly the same five ids
   and four complete voice rows; locale selection changes no occasion or voice key.
+
+## 8. Titles
+
+### A5 · `first-title` · first career title
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Первый титул. Ты позвонила прямо с корта – я не разобрал ни слова.` | `Она позвонила с корта.` | `Сначала я услышал трибуны, и только потом её.` |
+| `fiery` | `Первый титул. Ты сказала, что он тебе давно причитался.` | `Она сказала: этот титул ей задолжали.` | `У неё всё случается позже, чем должно.` |
+| `deep` | `Первый титул. Ты позвонила поздно и первым делом заговорила о втором сете.` | `Она позвонила после полуночи.` | `Поздно. Точно. Как всегда.` |
+| `quiet` | `Первый титул. Сначала ты сказала, когда будешь дома, и только под конец – всё остальное.` | `О титуле она упомянула последним.` | `Сначала план, потом новость.` |
+
+The parent is male in this corpus, hence `не разобрал`. The inherited A34 page is the documented
+exception with a mother's feminine first person.
+
+### A6 · `title-step-up` · title at a new highest tier
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Новый уровень – и ты сразу позвонила рассказать про корт, шум и еду.` | `Корт больше, и она заметила всё.` | `Про еду она тоже рассказала.` |
+| `fiery` | `Новый уровень. Ты сказала, что сетка была сложнее, и велела это записать.` | `Ей было важно, чтобы про сетку не забыли.` | `Для протокола.` |
+| `deep` | `Новый уровень. Ты сказала: игра та же, просто зрителей больше. А потом замолчала.` | `Та же игра, сказала она.` | `Зрителей больше. Девочка та же.` |
+| `quiet` | `Новый уровень. Ты прислала счёт – и больше ничего.` | `Только счёт.` | `За неё всё сказал счёт.` |
+
+`Новый уровень` describes the lived step without exposing an internal tier id. The ticket on the
+same sheet supplies the exact tournament tier.
+
+### A7 · `title-after-injury` · first title after a layoff
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Первый после возвращения. Ты сказала, что забыла, сколько там просто стоишь и ждёшь.` | `Она забыла про ожидание.` | `Сколько же там приходится ждать.` |
+| `fiery` | `Первый после возвращения. Ты сказала: когда выигрываешь, никто не спрашивает, сколько тебя не было.` | `Теперь никто не спрашивает, сказала она.` | `Спрашивают только после поражений.` |
+| `deep` | `Ты сказала, что боялась первой подачи, – а потом уже нет. Первый после возвращения.` | `Сначала боялась первой подачи. Потом перестала.` | `О страхе она сказала, когда всё уже кончилось.` |
+| `quiet` | `Первый после возвращения. Ты сказала, что всё нормально. Дважды.` | `Она сказала это дважды.` | `По второму «всё нормально» я и понял.` |
+
+No body part, diagnosis or exact absence is introduced. `Первый` agrees with the understood
+masculine `титул`; the surrounding chapter and ticket make that referent available.
+
+### A8 · `title-last` · last career title, known only after retirement
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Никто не сказал нам, что он последний. Мы бы отметили его как следует – оба.` | `Никто не знал, что он последний.` | `Мы бы отметили его как следует.` |
+| `fiery` | `Никто не сказал нам, что он последний. У тебя нашлось бы что сказать по этому поводу.` | `Ей было бы что сказать.` | `Без речей. Она бы их не вынесла.` |
+| `deep` | `Ты всегда знала, какие из них важны. Мне кажется, ты поняла, что этот последний, раньше меня.` | `Возможно, она знала.` | `Она знала, какие из них важны.` |
+| `quiet` | `Он был последним, и никто этого не знал. Ты собрала сумку как всегда.` | `Она собралась как всегда.` | `Та же сумка, те же складки.` |
+
+The page may exist only for a finished career. No Russian line is allowed to leak this retrospective
+knowledge into a live career merely because its newest title is currently the last one in storage.
+
+## 9. Finals
+
+### A9 · `first-final` · first final reached
+
+All four rows remain result-neutral: reaching this final may also have produced a title.
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Твой первый финал. Ты рассказала, кто сидел на трибунах и как вы вышли на корт. Про счёт пришлось спросить мне.` | `Про счёт пришлось спросить мне.` | `Сначала – трибуны.` |
+| `fiery` | `Твой первый финал. Ты уже хотела вернуться туда через неделю и сказала об этом, ещё не успев сесть.` | `Через неделю снова, сказала она.` | `Уже назначает следующий.` |
+| `deep` | `Твой первый финал. Ты сказала, что выход на корт оказался длиннее, чем ты ожидала.` | `Выход на корт оказался длиннее, чем она думала.` | `Она считала шаги до корта.` |
+| `quiet` | `Твой первый финал. Ты рассказала мне про часы у корта.` | `Она заметила часы.` | `Из всего – часы.` |
+
+### A10 · `final-lost` · a final lost
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Ты проиграла финал и всё равно хотела говорить.` | `Она всё равно хотела поговорить.` | `Она позвонила. Вот что важно.` |
+| `fiery` | `Ты проиграла финал и к моменту звонка уже решила почему.` | `Причина у неё была готова.` | `Сначала был вердикт.` |
+| `deep` | `Ты проиграла финал, а потом рассказала мне про один розыгрыш, на котором всё повернулось.` | `Сначала пауза. Потом – один розыгрыш.` | `Она долго носила в себе тот розыгрыш.` |
+| `quiet` | `Ты проиграла финал. И спросила, что там в саду.` | `Она спросила про сад.` | `Мы говорили о саде.` |
+
+`Проиграла финал` is explicit because this gate proves the loss. It must not be reused for A9.
+
+## 10. Titles-and-finals LQA
+
+- Verify A9 against both a title week and a lost-final week; none of its Russian lines may imply
+  either result.
+- Verify A8 cannot appear before the career ends.
+- Read `fiery` A5–A10 for verdict fatigue: only the occasions that license a judgement use one, and
+  the syntax varies between debt, record, absence and cause.
+- Read `deep` A5–A10 for delayed precision without making every row `сначала… потом…`; A8 and A10
+  carry the pattern differently.
+- Render the longest A9 notes and the A6 ticket together at every album width.
+- Verify `первый` on A7 always has the title context on its assembled sheet; otherwise expand it to
+  `первый титул после возвращения` in the runtime resource.
