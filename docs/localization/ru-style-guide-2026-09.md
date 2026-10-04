@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-01
+last-reviewed: 2026-10-04
 ---
 
 # Russian voice and terminology
@@ -135,6 +135,7 @@ These are preferred meanings, not a ban on natural grammar around them.
 | ranking points | `рейтинговые очки` | Short table header may stay `Очки` |
 | counting result | `результат в зачёте` | Avoid literal `считающийся результат` |
 | best-N window | `зачёт N лучших результатов` | Explain once; compact views may say `лучшие N` |
+| Local Open | `местный открытый турнир` | `DRAFT`; never `локальный опен` in player copy |
 | surface | `покрытие` | |
 | hard / clay / grass | `хард` / `грунт` / `трава` | Familiar tennis vocabulary |
 | condition | `форма` | Physical readiness; avoid `состояние` when it can sound medical |

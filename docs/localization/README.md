@@ -3,7 +3,7 @@ type: plan
 status: current
 area: localization
 canonical: true
-last-reviewed: 2026-10-01
+last-reviewed: 2026-10-04
 ---
 
 # Russian localization editorial stack
@@ -27,7 +27,7 @@ last-reviewed: 2026-10-01
 | [Source inventory and sequence](ru-source-inventory-2026-09.md) | Every player-facing surface, grouped into reviewable editorial batches | first draft |
 | [Batch 01 – shell and system](ru-ui-shell-2026-09.md) | Post-by-post replacement table for navigation, recovery, notices and the week control | drafted |
 | [Batch 02A – entry and onboarding](ru-onboarding-2026-10.md) | Splash, career wizard, shared identity copy and interface tour | drafted |
-| [Batch 02B – childhood, ages five to seven](ru-childhood-prologue-2026-10.md) | Prologue walk controls and the first three childhood cards | drafted |
+| [Batch 02B – childhood, ages five to ten](ru-childhood-prologue-2026-10.md) | Prologue walk controls and the first six childhood cards | drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
