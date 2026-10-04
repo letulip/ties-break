@@ -379,7 +379,230 @@ The visible dash needs the accessible sentence `{player} против перво
    draw absent/present; `Без рейтинга`; long opponent surname; pro and junior counters; zero fee;
    five-digit travel; self-coached and hired-coach pools.
 
-## 12. Next slice
+## 12. Tournament-flow stage grammar
 
-The next pass completes RU-04 with the full `TournamentFlow.vue`: splash, bracket walk, pre-match,
-match controls, result card, spectator path, champion/runner-up posters, skip confirmation and exit.
+Round names are facts, not free copy. The worker should expose a stage kind plus the draw remainder;
+the locale owns both the full label and its compact tab. Do not translate a finished `roundLabel` or
+derive behaviour by comparing its text.
+
+| semantic stage | English full | Russian full | Russian compact |
+| --- | --- | --- | --- |
+| final | `Final` | `Финал` | `Ф` |
+| semifinal | `Semifinal` | `Полуфинал` | `ПФ` |
+| quarterfinal | `Quarterfinal` | `Четвертьфинал` | `ЧФ` |
+| round of 16 | `Round of 16` | `1/8 финала` | `1/8` |
+| round of 32 | `Round of 32` | `1/16 финала` | `1/16` |
+| round of 64 | `Round of 64` | `1/32 финала` | `1/32` |
+| round of 128 | `Round of 128` | `1/64 финала` | `1/64` |
+
+`ПФ` and `ЧФ` are used only where the tab width demands them. Full headings remain unabbreviated.
+The compact path result uses `В` for `выиграла` and `П` for `проиграла`; its accessible label must
+say the whole result, because two isolated letters are not enough for a screen reader.
+
+Finish labels use the same semantic source:
+
+| finish index | English | Russian |
+| --- | --- | --- |
+| 0 | `Champion` | `Победительница` |
+| 1 | `Runner-up` | `Финалистка` |
+| 2 | `Semifinalist` | `Полуфиналистка` |
+| 3 | `Quarterfinalist` | `Четвертьфиналистка` |
+| 4+ | `Round of {2^finish}` | `Выбыла в {localized stage}` |
+
+On a poster the early-exit form is a sentence, for example `Аня – выбыла в 1/8 финала`, rather than
+the unnatural noun `участница 1/8 финала`. In tables that need a compact value, render the stage
+alone: `1/8 финала`. Those are two projections of the same finish index, not two stored strings.
+
+The Nations Cup has no knockout finish. Its three `Rubber` labels become `Матч 1`, `Матч 2 из 3`,
+and so on; the final placing is `{place}-е место из {n} сборных`. Do not call a rubber `раундом` or
+feed a national placing through the knockout formatter.
+
+## 13. Tournament splash and header exits
+
+| id | surface | English | Russian |
+| --- | --- | --- | --- |
+| RU04-T01 | hero back, accessible | `Back` | `Назад` |
+| RU04-T02 | match-view exit | `To result` | `К результату` |
+| RU04-T03 | unresolved-draw exit | `Skip all rounds` | `Пропустить все раунды` |
+| RU04-T04 | fact | `Surface` | `Покрытие` |
+| RU04-T05 | fact | `Prize money` | `Призовые` |
+| RU04-T06 | fact | `Winner` | `Победительнице` |
+| RU04-T07 | fact | `Spectators` | `Зрители` |
+| RU04-T08 | winner cheque title | `The winner's cheque at this tier` | `Приз победительнице на этом уровне` |
+| RU04-T09 | junior zero-prize title | `The junior tour pays no prize money at any level` | `На юниорском туре призовых нет ни на одном уровне` |
+| RU04-T10 | student zero-points title | `A student field awards no ranking points` | `Студенческий турнир не даёт рейтинговых очков` |
+| RU04-T11 | crowd title | `About {n} people around the courts – atmosphere, not a factor in play` | `Около {people} у кортов – это атмосфера, а не фактор матча` |
+| RU04-T12 | draw size | `{n}-player draw` | `Сетка на {players}` |
+| RU04-T13 | age | `Age {n}` | `{age}` |
+| RU04-T14 | versus, visible | `VS` / `vs` | `–` |
+| RU04-T15 | versus, accessible | `{a} vs {b}` | `{a} против {b}` |
+| RU04-T16 | rank | `Unranked` | `Без рейтинга` |
+| RU04-T17 | ladder caption | `{ladder} ranking` | `{ladder}` |
+
+`{players}` is `8 участниц`, `16 участниц`, never the mechanical `8-игроковая сетка`. `{age}` is
+the shared counted age (`17 лет`, `21 год`). Crowd figures use Russian grouping (`1 750`), not the
+current forced `en-US` comma. The visible dash is typographic; the accessible comparison says
+`против` in full.
+
+The no-ladder explanations are competition-owned messages:
+
+| fixture | Russian |
+| --- | --- |
+| College League | `Без рейтинговых очков и призовых – студенческий турнир не даёт ни того ни другого.` |
+| Nations Cup | `Без рейтинговых очков и призовых – в этом турнире их не получает никто.` |
+
+They must be selected by a competition message key. A single generic `любительский турнир` sentence
+would erase why the two competitions differ.
+
+## 14. Coach brief and beginning the event
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-T18 | `Coach prediction` | `Оценка тренера` |
+| RU04-T19 | fit | `The court suits her game.` | `Это покрытие подходит под её игру.` |
+| RU04-T20 | mismatch | `The court is not her surface.` | `Это не её покрытие.` |
+| RU04-T21 | title price | `{n} wins for the title.` | `До титула – {wins}.` |
+| RU04-T22 | travelled | `At the tournament with her this week – one additional fare on this trip.` | `На этой неделе тренер с ней на турнире – ещё один билет в расходах поездки.` |
+| RU04-T23 | `Her condition` | `Её форма` |
+| RU04-T24 | condition aria | `Her condition going into this tournament: {n} percent` | `Форма перед турниром: {n} процентов` |
+| RU04-T25 | `Begin` | `Начать` |
+| RU04-T26 | `Skip this event – withdraw` | `Пропустить турнир – сняться` |
+
+`{wins}` is a counted phrase: `1 победа`, `2 победы`, `5 побед`. When the fixture has no title, the
+whole title-price clause is absent. The fit line must be rendered from affinity and surface meaning;
+the current English implementation slices text after `– ` and cannot be localized safely.
+
+The withdrawal confirmation is:
+
+> `Пропустить турнир «{event}»? Взнос не вернётся: приём заявок уже закрылся, когда она оставалась в списке. Расходы на поездку вернутся, а неделя пройдёт без матча.`
+
+Confirm: `Пропустить турнир`. Cancel uses the shared `Отмена`. This is deliberately different from
+`Пропустить все раунды`: withdrawal erases her run and forfeits the entry fee; skipping rounds only
+fast-forwards presentation of a run already under way.
+
+## 15. Walk through the draw
+
+The path strip is compact but still localized:
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-T27 | win marker | `W` | `В` |
+| RU04-T28 | loss marker | `L` | `П` |
+| RU04-T29 | section | `Draw` | `Сетка` |
+| RU04-T30 | tab group aria | `Draw rounds` | `Раунды турнирной сетки` |
+| RU04-T31 | final heading | `The Final` | `Финал` |
+| RU04-T32 | final aria | `The final – {a} vs {b}` | `Финал: {a} против {b}` |
+| RU04-T33 | her match aria | `Her match – {a} vs {b}` | `Её матч: {a} против {b}` |
+| RU04-T34 | semifinal trail | `Semifinals: def. {a} · def. {b}` | `В полуфиналах: обыграла {a} · обыграла {b}` |
+
+The semifinal trail describes each finalist's route; the repeated feminine verb is therefore
+correct for this all-women field. If mixed fields ever become possible, the result should carry a
+winner relation rather than relying on this grammar.
+
+Pre-match:
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-T35 | `Skip` | `Пропустить` |
+| RU04-T36 | `Watch match` | `Смотреть матч` |
+
+Here `Пропустить` means skip the replay and reveal this one result. It must never reuse the command
+or confirmation for withdrawing from the event.
+
+## 16. Match result and shared box score
+
+The box score is shared with the practice match and is formally owned by RU-08. These bindings are
+fixed here because the table is part of the tournament route; RU-08 must reuse them rather than
+write a second set.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-T37 | `Win` | `Победа` |
+| RU04-T38 | `Loss` | `Поражение` |
+| RU04-T39 | result pair | `{kid} vs {opponent}` | `{kid} – {opponent}` |
+| RU04-T40 | `Aces` | `Эйсы` |
+| RU04-T41 | `Double faults` | `Двойные ошибки` |
+| RU04-T42 | `Winners` | `Виннеры` |
+| RU04-T43 | `Unforced errors` | `Невынужденные ошибки` |
+| RU04-T44 | `Max serve` | `Макс. скорость подачи` |
+| RU04-T45 | `km/h` | `км/ч` |
+| RU04-T46 | metadata | `Avg rally {n} shots · ~{duration}` | `В среднем {shots} за розыгрыш · около {duration}` |
+| RU04-T47 | `Watch again` | `Посмотреть ещё раз` |
+| RU04-T48 | `Next` | `Дальше` |
+| RU04-T49 | viewer proceed | `To the result` | `К результату` |
+
+`Виннеры` is established Russian tennis language and avoids the ambiguous `победные удары`.
+`{shots}` is a locale-formatted decimal phrase such as `3,4 удара`; the decimal separator changes
+to a comma. Match duration needs a semantic duration formatter (`1 ч 24 мин`), not localization of
+an already assembled English value. Ranking caption after the player pair uses exactly the ladder
+label from section 2, with no extra `рейтинг`: `· Международный рейтинг`.
+
+## 17. Watching after her exit
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-T50 | `{kid} – {finish}` | `{kid} – {finish sentence}` |
+| RU04-T51 | `She's out – see how the draw finishes.` | `Она выбыла – посмотрим, чем закончится сетка.` |
+| RU04-T52 | `Next round` | `Следующий раунд` |
+| RU04-T53 | `Continue` | `Продолжить` |
+
+The first line needs the sentence projection described in section 12: `Аня – выбыла в четвертьфинале`,
+not `Аня – четвертьфиналистка`. The latter reads like an accolade while the screen is following the
+rest of the field.
+
+## 18. Finale posters
+
+| id | surface | English | Russian |
+| --- | --- | --- | --- |
+| RU04-T54 | champion status | `Champion` | `Победительница` |
+| RU04-T55 | runner-up status | `Runner-up` | `Финалистка` |
+| RU04-T56 | champion line | `def. {opponent} in the Final` | `Обыграла {opponent} в финале` |
+| RU04-T57 | runner-up line | `lost to {opponent} in the Final` | `Уступила {opponent} в финале` |
+| RU04-T58 | points | `+{n} pts` | `+{points}` |
+| RU04-T59 | path win | `def. {opponent}` | `обыграла {opponent}` |
+| RU04-T60 | path loss | `lost to {opponent}` | `уступила {opponent}` |
+| RU04-T61 | `Continue` | `Продолжить` |
+
+`{points}` is `1 очко`, `2 очка`, `5 очков`. The poster deliberately says `Финалистка`, not
+`Вице-чемпионка`: it is standard tennis wording, modest enough for every tier and does not imply a
+league title. In the early-exit poster, another player's status is `Победительница`; the heroine's
+line below uses `выбыла в …`. A college or Nations Cup poster never invents a trophy, champion,
+ranking gain or prize line when the engine has none.
+
+## 19. Implementation contract
+
+1. Add semantic tournament stage and finish descriptors to the worker snapshot. Retain the numeric
+   facts already used for behaviour; do not make Russian or English display labels authoritative.
+2. Represent rungless competition explanations by message id and typed arguments. This is required
+   for old saves too: stored or reconstructed English `ladderNote`, `roundLabel` and `finishLabel`
+   must not cross into the Russian UI.
+3. Move `shortStage`, full stage rendering, finish rendering and counted title wins behind shared
+   locale-aware formatters. `TournamentFlow`, `BracketTabs`, history and albums consume the same
+   semantic values.
+4. Move `matchStatRows` labels and the match metadata line into the shared message catalogue. Keep
+   match arithmetic untouched.
+5. Format crowd, decimal rally length, duration, age, participants, wins and points with Russian
+   plural rules. Do not use `toLocaleString('en-US')` in a Russian route.
+6. Preserve the resolved match record, reveal order, bracket cap and every command. Localization is
+   presentation only and consumes no RNG.
+7. Correct the stale English Tour Guide paragraph identified in section 4 during implementation;
+   otherwise locale parity would preserve a known factual error.
+
+## 20. LQA matrix and completion status
+
+Test at 320 and 375 px, at 100% and 200% text, across:
+
+- 8-, 16-, 32-, 64- and 128-player draws, including all compact tabs;
+- Local, National, J30, W15 and Grand Slam events on every surface;
+- ranked and unranked players, both ages present and legacy saves where both are absent;
+- self-coached, non-travelling coach and travelling coach;
+- watched match, skipped match, replay, skip all rounds and confirmed withdrawal;
+- win, ordinary loss, retirement, champion, finalist and every earlier exit;
+- College League and Nations Cup, proving neither leaks professional ranking language;
+- long Cyrillic player and tournament names, four three-set score columns and 1 000+ spectators;
+- keyboard focus, screen-reader comparisons, reduced motion and confetti disabled;
+- English and Russian careers loaded from both new and old save fixtures.
+
+Batch status: **drafted end to end**. Every current Season, tournament-card and tournament-flow
+surface has a proposed Russian binding; cross-screen match commentary remains RU-08, historical
+records RU-07 and worker-event history RU-11.
