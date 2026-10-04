@@ -1007,6 +1007,243 @@ text in the UI and do not use the English message as a catalogue key.
 - Verify that localization changes no price, cent delta, market draw, ready week, listing week,
   offer corridor, RNG state or academy lot membership.
 
-The remaining RU-06 sections cover inbox, sponsorship, build and secondary-market letters, then the
-cross-surface implementation checklist. Money, staff and the full shop/assets surface are now
-drafted end to end; generated observations owned by later batches remain routed rather than copied.
+## 29. Inbox shell
+
+### 29.1 Screen, states and controls
+
+| id | source meaning | English | Russian |
+| --- | --- | --- | --- |
+| RU06-I01 | title | `Inbox` | `Входящие` |
+| RU06-I02 | close | `Close` | `Закрыть` |
+| RU06-I03 | return from letter | `Back to all letters` | `Ко всем письмам` |
+| RU06-I04 | live badge | `Needs an answer` | `Нужен ответ` |
+| RU06-I05 | no post | `Nothing yet...` | `Пока писем нет. Спонсоры пишут игрокам, за которыми следили хотя бы сезон.` |
+| RU06-I06 | all rows hidden locally | `Your inbox is clear...` | `Во входящих пусто. Все убранные письма по-прежнему хранятся в истории карьеры.` |
+| RU06-I07 | no live decisions | `Nothing waiting on an answer.` | `Ни одно письмо не ждёт ответа.` |
+| RU06-I08 | refuse | `Refuse` | `Отказаться` |
+| RU06-I09 | sign | `Sign` | `Подписать` |
+| RU06-I10 | confirm signature | `Sign it` | `Подписать договор` |
+
+Running kit contract above the list:
+
+> `Экипировку до {untilWeek} предоставляет {brand}. Пока договор действует, написать может только более крупный бренд.`
+
+The current English `Her kit is {brand}'s` is compact but possessive. Russian names the service,
+not ownership of her or her belongings.
+
+### 29.2 Arrival and decision window
+
+| source meaning | Russian |
+| --- | --- |
+| informational foot | `Получено {week}.` |
+| live list meta | `{filedWeek} · {weeksLeft, plural, one {на решение осталась # неделя} few {на решение осталось # недели} many {на решение осталось # недель} other {на решение осталось # недели}}` |
+| live paper foot | `{weeksLeft, plural, one {На решение осталась # неделя.} few {На решение осталось # недели.} many {На решение осталось # недель.} other {На решение осталось # недели.}} Условия не изменятся.` |
+| refused state | `Предложение отклонено.` |
+| expired state | `Срок ответа истёк.` |
+
+`Получено` is better than the archival `Подшито`: this is a family inbox, not a court registry. The
+week in the list and on the paper uses the same localized week formatter.
+
+### 29.3 Removing a letter from the local list
+
+Accessible name:
+
+> `Убрать письмо: {sender} – {subject}`
+
+Confirmation:
+
+> `Убрать письмо от {sender} из списка? Ничего из произошедшего не отменится: письмо останется в истории карьеры и лишь перестанет показываться здесь.`
+
+Buttons are `Убрать` and `Оставить`. Do not call the action `Удалить`: it changes only this device's
+mail view and neither destroys the persisted offer nor reverses its outcome.
+
+## 30. Senders and list subjects
+
+### 30.1 Sender names
+
+| sender meaning | Russian |
+| --- | --- |
+| Tournament desk | `Турнирный отдел` |
+| Tour office | `Администрация тура` |
+| The academy | `Академия` |
+| Her coach | `Её тренер` |
+| Her masseur | `Её массажист` |
+| Her psychologist | `Её психолог` |
+| Her hitting partner | `Её спарринг-партнёр` |
+| Her national federation | `Её национальная федерация` |
+| Order desk | `Отдел заказов` |
+| A buyer | `Покупатель` |
+| The market | `Рынок` |
+| named kit or advertising house | `{brand}` unchanged |
+
+These same resources sign the opened paper. Do not maintain a second list of Russian signatures in
+`OfferLetter.vue`.
+
+### 30.2 Subject lines
+
+| letter | condition | Russian subject |
+| --- | --- | --- |
+| entry | entered | `Заявка подтверждена · {label}` |
+| entry | parent withdrew | `Снятие подтверждено · {label}` |
+| entry | desk released | `Снято турнирным отделом · {label}` |
+| tour | event due | `Обязательный турнир · {label}` |
+| tour | penalty | `Начислены штрафные очки` |
+| tour | season, rank known | `Обязательный сезон · топ-{maxRank}` |
+| tour | season, legacy rank absent | `Обязательный сезон` |
+| tour | suspension | `Заявки приостановлены` |
+| academy | arrived | `Стипендия · {sharePct}% расходов на поездки` |
+| academy | reviewed | `Пересмотр поддержки · {sharePct}% расходов на поездки` |
+| academy | ended | `Поддержка академии завершена` |
+| national call-up | any | `В составе сборной · {label}, {tieWeek}` |
+| advertising | any | `Её лицо в рекламе · {cash}` |
+| build | delivered | `Заказ выполнен · {label}` |
+| sale | buyer | `Предложение: {label} · {price}` |
+| sale | interest stale | `Интерес угас · {label}` |
+| staff | coach | `Сезон на корте · {year}` |
+| staff | masseur | `Сезон на массажном столе · {year}` |
+| staff | psychologist | `Сезон в кабинете · {year}` |
+| staff | hitting partner | `Сезон тренировок · {year}` |
+| kit | deal ended | `Договор на экипировку завершён` |
+| kit | apparel-house continuation | `Продлим договор на экипировку` |
+| kit | renewal | `Ещё один сезон в нашей экипировке` |
+| kit | new offer | `Предложение по экипировке для вашей дочери` |
+
+Punctuation replaces grammatical case around dynamic labels. For example, `Заявка подтверждена ·
+{label}` works for every tournament name without asking the localization layer to decline a proper
+name it may not understand.
+
+## 31. Build and secondary-market letters
+
+### 31.1 Completed build
+
+Sender: `Отдел заказов`. Subject: `Заказ выполнен · {label}`.
+
+> `{label}: заказ выполнен.`
+>
+> `Заказ был оформлен на неделе {orderedWeek}. Срок ожидания – {duration}; с этой недели заказ считается выполненным.`
+>
+> `При получении платить не нужно: полная стоимость была внесена при оформлении. С этой недели начнут списываться расходы на содержание; они появятся в семейном бюджете.`
+>
+> `– Отдел заказов`
+
+`{duration}` is a typed week/year count. Below one exact 52-week multiple it stays in weeks; exact
+multiples become years. It follows Russian plural categories and never emits a fabricated month or
+decimal year. The wording uses `заказ выполнен` instead of `{label} готов/готова/готово`, because
+catalogue labels have different grammatical genders and may be player-authored.
+
+### 31.2 Buyer proposal
+
+Sender: `Покупатель`. Subject: `Предложение: {label} · {price}`.
+
+> `Покупатель предлагает {price} за {label}.`
+>
+> `Предложение действует до {deadlineWeek}. Отказ не снимает объявление.`
+>
+> `– Покупатель`
+
+Signed state: `Продано по предложенной цене.`
+
+Signature confirmation:
+
+> `Продать {label} за {price}? Сделка будет завершена на этой неделе, отменить её нельзя.`
+
+### 31.3 Interest has gone quiet
+
+Sender: `Рынок`. Subject: `Интерес угас · {label}`.
+
+> `Интерес к объявлению «{label}» угас. Можно подождать или снять его с продажи и попробовать позже. Покупатели помнят объявление примерно {memoryWeeks, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}, поэтому быстрое повторное размещение начнётся не с нуля.`
+>
+> `– Рынок`
+
+This notice is informational: it has `Получено {week}.` and no decision buttons. The quotes belong
+only to this sentence; do not bake them into the underlying player-authored asset name.
+
+## 32. Tournament entry letters
+
+### 32.1 Entry confirmed
+
+> `Заявка подтверждена: {label}. Она в сетке на {eventWeekRange}.`
+
+- `На этой неделе она должна быть готова выйти на корт.`
+- `Сняться бесплатно можно до конца {freeUntilWeek}: взнос вернётся, а заявка не будет считаться использованной.`
+- `После этого действуют правила турнира: тур учитывает позднее снятие и неявку.`
+
+### 32.2 Parent withdrew in time
+
+> `Снятие подтверждено: {label} ({eventWeekRange}). Срок соблюдён, платить ничего не нужно, в её турнирную запись это не попадёт. Взнос будет возвращён.`
+
+### 32.3 Desk release for injury
+
+> `Мы сняли её с турнира: {label} ({eventWeekRange}). Она не успеет восстановиться к этой неделе, а список закрывается раньше её возвращения на корт. Поэтому мы не стали оставлять её в сетке, в которой она не сможет сыграть.`
+
+- `Взнос возвращается полностью, а заявка не будет считаться использованной.`
+- `Это решение турнирного отдела, не её: в турнирную запись ничего не попадёт.`
+- `Место перейдёт следующей участнице в списке. Надеемся скоро увидеть её на корте.`
+
+### 32.4 Desk release for college
+
+> `Мы сняли её с турнира: {label} ({eventWeekRange}). Она приняла предложение колледжа и на несколько лет уходит из тура. Чтобы не удерживать место, до которого она не сможет доехать, мы освободили его сами.`
+
+- `Взнос возвращается полностью, а заявка не будет считаться использованной.`
+- `Это не снятие по её инициативе: в турнирную запись ничего не попадёт и платить не нужно.`
+- `Когда она решит вернуться, её имя снова появится в списках. Удачи в колледже.`
+
+Generic future desk-side release:
+
+> `Мы сняли её с турнира: {label} ({eventWeekRange}). Это решение турнирного отдела, не её; взнос возвращается полностью.`
+
+Every arm signs `– Турнирный отдел` and closes with `Получено {week}.` The generic arm deliberately
+says less; it must never borrow the parent's voluntary wording for a reason the renderer does not
+yet understand.
+
+## 33. Tour regulation letters
+
+### 33.1 Required event is due
+
+> `{label} ({eventWeekRange}) – обязательный турнир при её нынешнем рейтинге. Приём заявок закрывается в конце {freeUntilWeek}.`
+
+- `Для топ-50 обязательны мэйджоры, турниры категории 1000 и шесть турниров категории 500.`
+- `За отсутствие заявки начисляется {points, plural, one {# штрафное очко} few {# штрафных очка} many {# штрафных очков} other {# штрафного очка}}, а один зачётный результат становится нулевым.`
+- `Позднее снятие после закрытия списка стоит дороже; неявка – дороже всего.`
+
+The first bullet should ultimately be generated from the same requirement rows as the season
+letter. The prose above is the current top-50 rule, not permission to freeze those counts in a
+translation resource.
+
+### 33.2 Penalty recorded
+
+> `Начислено {points, plural, one {# штрафное очко} few {# штрафных очка} many {# штрафных очков} other {# штрафного очка}}{eventClause}.`
+
+`{eventClause}` is either ` за турнир {label}` or ` за обязательные турниры категории 500 в этом
+сезоне`; it is a semantic variant, not an optional English substring.
+
+- `За последние 52 недели у неё {runningPoints} из {suspensionAt} штрафных очков.`
+- `По мере движения сезона старые очки сами выходят из этого окна.`
+- `При {suspensionAt} очках тур приостанавливает заявки на четыре недели.`
+
+### 33.3 Required-season briefing
+
+> `Она входит в топ-{maxRank}, поэтому сезон впереди проходит по обязательному регламенту. Вот какие турниры требует тур.`
+
+- `{requirement}` for every typed requirement row;
+- `За пропуск начисляется {points, plural, one {# штрафное очко} few {# штрафных очка} many {# штрафных очков} other {# штрафного очка}}, а один из {countingSlots} зачётных результатов становится нулевым.`
+- `{suspensionAt} очков за {windowWeeks, plural, one {# неделю} few {# недели} many {# недель} other {# недели}} приостанавливают заявки на {suspensionWeeks, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}. За неделю, когда она не могла играть, ничего не начисляется.`
+
+`TourLetterTerms.requirements?: string[]` is currently persisted display prose. New letters need
+typed requirement rows (`tier id`, count and counting mode), while a legacy adapter maps every known
+English row from old saves. Otherwise the surrounding paper will be Russian and its central list
+will remain English.
+
+### 33.4 Suspension
+
+> `Заявки приостановлены до конца {untilWeek}: за последние 52 недели набрано {runningPoints} штрафных очков.`
+
+- `Она может тренироваться и ездить, но не может заявляться на турниры, пока эта неделя не закончится.`
+- `Её рейтинг, очки и места в списках остаются там, где были. Цена – только эти недели; дополнительного штрафа нет.`
+
+All tour-regulation arms sign `– Администрация тура` and close with `Получено {week}.` The copy
+states the rule and its price without telling the player they made a bad decision.
+
+The remaining RU-06 sections cover academy, national-team and staff reports, advertising and kit
+contracts, then inbox-specific implementation and LQA. Money, staff controls, shop/assets, the inbox
+shell, build and market mail, tournament receipts and tour regulation letters are drafted end to end.
