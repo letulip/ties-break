@@ -859,6 +859,262 @@ Migration must not infer one from another or collapse them; history order and am
 5. Verify keyboard and screen-reader traversal after the longer Russian labels; the tab names and
    disabled primary action must still expose the reason immediately beside the control.
 
+## 19. The knock: a sore place, not yet an injury
+
+The knock dialog speaks as a parent thinking about a week that just happened. It must not sound like
+a diagnosis. The coach offers a reading, not certainty. The two choices remain equally selectable;
+only the consequences differ.
+
+### 19.1 Shared body lexicon
+
+Never localize a persisted English body-part string by displaying it. Resolve it as a stable region
+id and ask for the grammatical form the message needs.
+
+| region id | nominative | accusative | location |
+| --- | --- | --- | --- |
+| ankle | `голеностоп` | `голеностоп` | `в голеностопе` |
+| knee | `колено` | `колено` | `в колене` |
+| hamstring | `задняя мышца бедра` | `заднюю мышцу бедра` | `в задней мышце бедра` |
+| calf | `икроножная мышца` | `икроножную мышцу` | `в икроножной мышце` |
+| foot | `стопа` | `стопу` | `в стопе` |
+| hip | `тазобедренный сустав` | `тазобедренный сустав` | `в тазобедренном суставе` |
+| wrist | `запястье` | `запястье` | `в запястье` |
+| shoulder | `плечо` | `плечо` | `в плече` |
+| elbow | `локоть` | `локоть` | `в локте` |
+| forearm | `предплечье` | `предплечье` | `в предплечье` |
+| lower-back | `поясница` | `поясницу` | `в пояснице` |
+| abdominal | `мышцы живота` | `мышцы живота` | `в мышцах живота` |
+
+The knock uses eight of these today; injury uses all twelve. One catalogue prevents `lower back`
+from becoming `низ спины` on one screen and `поясница` on another. Save migration must recognize the
+known English values but persist/use region ids going forward.
+
+### 19.2 Frame and choices
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU05-K01 | `A knock – {week}` | `Что-то побаливает – {week}` |
+| RU05-K02 | `The same knock again – {week}` | `Снова то же место – {week}` |
+| RU05-K03 | `Her {part}.` | `Беспокоит {partNom}.` |
+| RU05-K04 | `Rest it` | `Дать отдохнуть` |
+| RU05-K05 | `Train through it` | `Продолжить тренировки` |
+| RU05-K06 | `Proceed` | `Продолжить` |
+
+`Небольшая травма` is deliberately not used for *knock*: the mechanic has not diagnosed an injury.
+`Что-то побаливает` keeps the uncertainty and is quiet enough not to compete with the injury stop.
+
+### 19.3 What the parent noticed
+
+Fresh pool, with `{partAcc}`:
+
+1. `После тренировки в пятницу она придерживала {partAcc}.`
+2. `Всю неделю жаловалась на {partAcc}. Рассказала только в воскресенье.`
+3. `После четверга – лёд на {partLocation}. Говорит, всё в порядке.`
+4. `С середины недели бережёт {partAcc}.`
+
+Repeat pool:
+
+1. `Снова жалуется на {partAcc}. Сказала об этом в машине, а потом отмахнулась: ничего страшного.`
+2. `Всё то же место – {partNom}. Разминала на кухонном полу и не поднимала глаз.`
+3. `Опять {partLocation}. Она понимает: мы заметили.`
+
+These are seven semantic variants, selected exactly as today on the purpose-scoped wording stream.
+Locale changes words after the variant is chosen; they do not draw again or change `pick % length`.
+
+### 19.4 The coach's read
+
+Repeat:
+
+1. `На этот раз тренер говорит жёстче: такое уже было, и это не нравится.`
+2. `Тренер помнит прошлый раз и дважды повторяет: ей нужно пропустить неделю.`
+3. `Первый вопрос тренера – как давно это продолжается. Ответ явно не понравился.`
+
+Condition below 50:
+
+1. `По мнению тренера, она работает на пустом баке – организм даёт об этом знать.`
+2. `Тренер уже не первую неделю видит её уставшей и советует пропустить эту.`
+3. `Тренер говорит: у вымотанного организма всё начинает болеть. Лучше не проверять, чем это кончится.`
+
+Ordinary condition:
+
+1. `Тренер не тревожится, но и игнорировать это не советует.`
+2. `Тренер предлагает оставить тренировки и просто наблюдать.`
+3. `Тренер говорит, что, скорее всего, ничего серьёзного. Но «скорее всего» – не наша уверенность.`
+4. `Тренер говорит, что в её возрасте такое приходит и уходит, а решение оставляет нам.`
+
+No sentence inflects or genders the generated coach. The Russian lines preserve the three evidence
+bands and do not strengthen opinion into medical fact.
+
+### 19.5 Why it may have happened
+
+| condition | English | Russian |
+| --- | --- | --- |
+| same place previously pushed | `We sent her back out with a knock to her {part} before. Now the same place is troubling her again.` | `Раньше мы уже отправили её тренироваться с этой болью – {partLocation}. Теперь беспокоит то же место.` |
+| no single player-caused factor | `No single choice explains this one. We had been careful. Bodies still have bad weeks.` | `Одним решением это не объяснить. Мы были осторожны, но у организма всё равно бывают плохие недели.` |
+| fatigue dominates | `She began the week already tired. Her body had less room for the work we asked of it.` | `Она начала неделю уже уставшей. На заданную нами работу у организма осталось меньше запаса.` |
+| load dominates | `We set a hard week. It asked more of her body than an ordinary one.` | `Мы задали тяжёлую неделю. Она потребовала от организма больше обычного.` |
+
+The repeat line technically needs a Russian instrumental construction if it mirrors English. The
+draft intentionally avoids it and uses nominative `{partNom}`; this keeps the body catalogue small
+without making the sentence vague.
+
+### 19.6 Costs and selection
+
+| branch | Russian cost |
+| --- | --- |
+| rest | `Обнять, уложить на диван и почти неделю не вспоминать о теннисе. Работа этой недели пропадёт.` |
+| first push | `Она тренируется по плану, а следующие три недели риск будет выше.` |
+| repeat push | `Она тренируется по плану. Если теперь станет хуже, то всерьёз – и в том же месте: {partLocation}.` |
+
+The first tap only selects a radio option; `Продолжить` records it. Nothing is preselected, Escape
+does not dismiss, and focus lands on the card. Russian copy must not smuggle in a recommendation via
+`безопасно`, `разумно` or coloured praise.
+
+### 19.7 Coach routing and persisted feed rows
+
+The coach can decide, or return the choice to the parent. These lines are part of the saved story:
+
+| semantic event | Russian |
+| --- | --- |
+| first arrival | `Она натрудила {partAcc}. Пока не травма.` |
+| repeat arrival | `Снова болит {partNom} – то же место.` |
+| coach asks on warn week | `Тренер не берётся решать в одиночку – только не на такой неделе. Беспокоит {partNom}.` |
+| coach asks on repeat | `Тренер хочет обсудить {partAcc}, прежде чем принимать решение.` |
+| coach is unsure | `Тренер сомневается, стоит ли тренироваться: беспокоит {partNom}. Решение оставляет нам.` |
+| coach rests her | `Тренер оставляет её вне корта на эту неделю. Беспокоит {partNom}.` |
+| coach lets her train | `Тренер разрешает продолжить тренировки, несмотря на боль: {partLocation}.` |
+| parent rests | `Даём отдохнуть: беспокоит {partNom}. Неделя без тренировочного корта.` |
+| parent pushes | `Продолжаем тренировки, несмотря на боль: {partLocation}. Тренер в курсе.` |
+
+The unsure line is deliberately revoiced around `{partNom}`. It is clearer than adding a genitive
+form needed by this line alone, and keeps the body catalogue to forms with demonstrated reuse.
+
+## 20. Injury stop
+
+This is a report after the fact, not a choice. Its voice may be clinical in the table, but the close
+returns to the family. It must say the moment, the expected absence, the masseur-adjusted forecast
+when present, and the exact tournament consequences.
+
+### 20.1 Injury name and severity
+
+Severity labels:
+
+| semantic value | Russian |
+| --- | --- |
+| minor | `Лёгкая` |
+| moderate | `Средняя` |
+| major | `Серьёзная` |
+| severe | `Тяжёлая` |
+
+The present injury `kind` is an English concatenation of region plus descriptor. Russian needs a
+semantic formatter:
+
+| descriptor | Russian diagnosis pattern |
+| --- | --- |
+| niggle | `Лёгкий дискомфорт – {partLocation}` |
+| soreness | `Боль – {partLocation}` |
+| strain | `Растяжение – {partLocation}` |
+| stress reaction | `Стрессовая реакция – {partLocation}` |
+| tear | `Разрыв – {partLocation}` |
+
+This restrained pattern avoids medically dubious constructions such as `разрыв колена`: the model
+knows the region, not the exact tissue. It also covers all 12 × 5 combinations without 60 duplicate
+strings. Legacy `kind` values can be deterministically split by the known descriptor suffix and the
+longest known region prefix; unknown legacy values are a migration/LQA error in Russian mode, not an
+English fallback.
+
+### 20.2 Dialog frame and circumstance
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU05-I01 | `Injury – {week}` | `Травма – {week}` |
+| RU05-I02 | `She had to stop.` | `Она не смогла продолжить.` |
+| RU05-I03 | `She's hurt.` | `Она получила травму.` |
+| RU05-I04 | `Injury` | `Травма` |
+| RU05-I05 | `Severity` | `Тяжесть` |
+| RU05-I06 | `How` | `Как это произошло` |
+| RU05-I07 | `Out for` | `Пропустит` |
+| RU05-I08 | `Cancelled` | `Отменено` |
+| RU05-I09 | `Continue` | `Продолжить` |
+
+Circumstance is assembled from independent facts, never from optional English fragments:
+
+- off court: `Вне корта – проявилось между матчами.`;
+- retired friendly: `На корте – пришлось остановиться во время тренировочного матча.`;
+- retired tournament match: `На корте – пришлось остановиться по ходу матча.`;
+- optional opponent sentence: `Соперница: {name}.`;
+- optional stage sentence: `Стадия: {stage}.`;
+- tournament close: `Достигнутый раунд остаётся за ней.`
+
+This avoids declining a generated opponent name and an arbitrary stage label after `в`. `Стадия`
+uses the same localized round catalogue as RU-04.
+
+### 20.3 Absence and the masseur forecast
+
+- clinic line: `Около {weeks}; вернётся примерно {week}.`;
+- projected line: `С массажистом – скорее {weeks}; вернётся примерно {week}.`
+
+`{weeks}` is a complete accusative duration: `1 неделю`, `2 недели`, `5 недель`. The tilde is removed
+because `около` already marks an estimate and reads better aloud. Keep the two numbers when they
+differ: the first is the dealt clinical layoff, the second the current service projection.
+
+### 20.4 Entries lost, saved and still standing
+
+| condition | Russian |
+| --- | --- |
+| each refundable entry | `Снята: {event} – {week}` |
+| refund total | `Взносы возвращены: +{money}` |
+| no withdrawal, closed lists | `Снять её не удалось – приём заявок уже закрыт.` |
+| each forfeited entry | `Пропустит без возврата: {event} – {week}` |
+| layoff reaches no held entry | `Ничего – травма не затрагивает её заявки.` |
+| surviving future entries | `Отменены только турниры на время восстановления. Все заявки начиная с {week} остаются в силе.` |
+
+`Снята` agrees with the daughter, not with the tournament. The forfeited line says both losses: she
+will not appear and the fee does not return. The fallback no longer says merely `Nothing`, which in
+Russian would obscure whether nothing was cancelled or nothing was lost.
+
+Warm close:
+
+> `Она вернётся после этой травмы. Сейчас – отдых и восстановление; за прогрессом можно следить в ленте.`
+
+The promise is licensed because the table gives a finite return window. Do not reuse it on a
+career-ending injury or any ending path without that fact.
+
+### 20.5 Injury events and costs
+
+The stop dialog reads structured facts, but the feed and financial history also need Russian
+semantic forms:
+
+| semantic event | Russian |
+| --- | --- |
+| medical expense | `Медицина – обследование и лечение` |
+| ordinary injury | `Травма: {kind}; пропустит около {weeks}.` |
+| ordinary injury after pushed knock | `Травма: {kind}; пропустит около {weeks}. То самое место, с которым мы продолжили тренировки.` |
+| severe ordinary injury | `Плохие новости из клиники: {kind}; пропустит около {weeks}. Это удар по мечте.` |
+| match retirement | `Она не смогла продолжить: {kind}; пропустит около {weeks}.` |
+| match retirement after pushed knock | `Она не смогла продолжить: {kind}; пропустит около {weeks}. То самое место, с которым мы продолжили тренировки, – на глазах у всех.` |
+| severe match retirement | `Она остановилась, и на этот раз всё серьёзно: {kind}; пропустит около {weeks}. Это удар по мечте.` |
+
+`{kind}` is already a capitalized diagnosis string only when it opens a sentence. Here it follows a
+colon and should begin lowercase; the formatter needs sentence-position awareness or separate
+capitalization at the rendering boundary, not capitalization stored in the diagnosis data.
+
+### 20.6 Implementation and LQA contract
+
+1. The snapshot should carry region/descriptor ids for injury and region id for a knock. Retaining
+   legacy `kind`/`part` strings for save compatibility is fine; making Russian parse arbitrary prose
+   at render time is not.
+2. `KnockPrompt` currently contains five finished English sentences. Prefer semantic variant ids and
+   parameters in the snapshot. Draw the variant engine-side on the existing keyed sub-stream, then
+   localize it UI-side; never reroll per locale.
+3. `circumstance` is already derived from typed report facts and is the right architectural model.
+   Move its wording into localized semantic messages while keeping the DTO unchanged.
+4. Exercise every body region, five diagnosis descriptors, four knock cause branches, three coach
+   evidence bands, coach/parent routing, first/repeat push, all three injury circumstances,
+   paid/zero refunds, closed lists, no affected entry and masseur forecast present/absent.
+5. At 320/375 px and 200% text, the mandatory knock choices and Proceed must stay reachable; the
+   injury report may scroll, and its Continue button must remain the last focusable control.
+
 Batch status: **in progress**. The profile, life-stage language, full radar corpus, coach market and
-weekly training matrix and future-week planner are drafted. Knocks and injury-stop copy follow in
-this document.
+weekly training matrix, future-week planner, knocks and injury-stop copy are drafted. A final source
+coverage pass follows before RU-05 closes.
