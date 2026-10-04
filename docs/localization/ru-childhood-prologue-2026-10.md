@@ -403,7 +403,117 @@ an earlier final.
 6. Phone LQA must cover the long retirement paragraph, `Пропустить оставшиеся матчи`, and round
    labels at both 375 × 667 and the widest supported draw.
 
-## 14. Next slice
+## 14. The handover into the career
 
-The next pass closes the prologue with the handover: the coach's two readings, age-aware heading,
-nine-year cost, tournament summary and the two ways out into the career or a new childhood.
+This screen says two different things in the coach's voice. The first judges what the nine childhood
+years built; the second judges how much room she was born with. Their order and distinction must
+survive localization. Russian must not combine them into one smoother paragraph and thereby make
+the player's choices appear to have changed her potential.
+
+### 14.1 Screen frame and ways out
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-HO-01 | `handoverKicker(ageWord)` | `She is {age}` | `Ей {возраст прописью}` | reads the world's actual age |
+| RU02B-HO-02 | `HANDOVER_COPY.title` | `This is the girl you raised.` | `Вот какой она стала рядом с вами.` | keeps the parent's place without sounding like ownership |
+| RU02B-HO-03 | `handoverRoseTitle(ageWord)` | `Where she is at {age}` | `Её навыки в {возраст}` | accessible title for the radar, not a visible ceiling claim |
+| RU02B-HO-04 | `HANDOVER_COPY.coachLabel` | `The coach who has watched her` | `Мнение тренера` | avoids inventing a named or gendered biography |
+| RU02B-HO-05 | `HANDOVER_COPY.goOn` | `Go on with her` | `Идти с ней дальше` | continues this girl's career |
+| RU02B-HO-06 | `HANDOVER_COPY.startAgain` | `Start again` | `Начать сначала` | says nothing about rerolls, odds or seeds |
+
+`Вот какой она стала рядом с вами` is less accusatory than literal `Вот девочка, которую вы
+вырастили`, but it still places the player inside those nine years. The screen immediately follows
+with the coach's explicit account of what the years did, so the title does not need to carry that
+entire argument alone.
+
+### 14.2 What the childhood built
+
+| id | band | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-HO-B1 | ahead | `The years added to what she was born with. Somebody did the work.` | `Годы прибавили к тому, с чем она родилась. Без работы этого бы не было.` | credits work without assigning it solely to the parent |
+| RU02B-HO-B2 | ahead | `She brings more than she started with – the childhood built it.` | `Она пришла сюда не только с тем, что было дано от рождения. Остальное дали годы детства.` | current base, not potential |
+| RU02B-HO-B3 | level | `She comes with what she was born with. The years neither added nor took.` | `Она пришла с тем, с чем родилась. Эти годы ничего не прибавили и не отняли.` | deliberately plain assessment |
+| RU02B-HO-B4 | level | `The childhood held her level with what she brought.` | `Детство сохранило то, что было в ней с самого начала.` | avoids the finance-like calque `удержало на уровне` |
+| RU02B-HO-B5 | behind | `Most of what she has, she was born with. The years added little to it.` | `Почти всё, что у неё есть, было с ней с рождения. Годы добавили немного.` | honest without comparison to other girls |
+| RU02B-HO-B6 | behind | `She comes with what she started with – the work has not reached it yet.` | `Она начинает карьеру примерно с того же, с чего начинала детство: работа пока не раскрыла её основу.` | `пока` keeps the door open |
+
+### 14.3 How much room the coach thinks remains
+
+The internal English band keys are model values and may remain stable in saves and protocol. The
+screen receives a localized sentence selected from the corresponding pool; it should not expose the
+English band label.
+
+| id | band | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-HO-R1 | huge | `I do not say this often. There is a great deal more in there.` | `Я нечасто такое говорю. В ней ещё очень многое.` |
+| RU02B-HO-R2 | huge | `Whatever she is now, she is nowhere near the end of it.` | `Какой бы она ни была сейчас, до конца её развития ещё очень далеко.` |
+| RU02B-HO-R3 | room | `There is more in there. How much, I could not tell you yet.` | `В ней есть ещё. Сколько именно – пока не скажу.` |
+| RU02B-HO-R4 | room | `She is not finished. The next three years will say how far.` | `Она ещё не закончила расти. Следующие три года покажут, как далеко она сможет зайти.` |
+| RU02B-HO-R5 | near | `She is near what she has. I have been wrong before – but not often about this.` | `Она уже близко к тому, что в ней заложено. Я и раньше ошибался – но в таком ошибаюсь редко.` |
+| RU02B-HO-R6 | near | `What you see is close to what you get. Some find another gear at seventeen. Most do not.` | `Почти всё, что у неё есть, уже видно. Некоторые в семнадцать делают ещё один скачок. Большинство – нет.` |
+| RU02B-HO-R7 | near | `There is not much more in there. She can have a good life in this sport. She will not have a famous one.` | `Большого запаса уже нет. У неё может быть хорошая жизнь в этом спорте. Знаменитой она не станет.` |
+
+R5–R7 are intentionally hard lines, not general interface terminology. They preserve the coach's
+fallibility and the fog around the actual ceiling, but R7 still lands as a near-final verdict about a
+thirteen- or fourteen-year-old. That severity belongs to the source design and should receive a
+Russian playtest read; localization must not secretly soften it into a different mechanic.
+
+### 14.4 The nine-year cost
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-HO-M1 | `spentLine(cents)` | `Nine years of it cost you {amount}.` | `Девять лет обошлись вам в {amount}.` |
+| RU02B-HO-M2 | `weeklySpentLine(cents)` | `That is about {amount} a week, every week of it.` | `В среднем это около {amount} в неделю – каждую неделю этих девяти лет.` |
+
+The amount must go through the locale-aware shared money formatter. Translating the surrounding
+sentence while leaving an English decimal or currency order would still be a mixed-language line.
+
+### 14.5 What she played
+
+The whole line is absent when she entered no tournament. For one to eight entries it uses the
+existing count table, translated as complete prepositional phrases:
+
+| count | Russian phrase |
+| ---: | --- |
+| 1 | `на одном местном турнире` |
+| 2 | `на двух местных турнирах` |
+| 3 | `на трёх местных турнирах` |
+| 4 | `на четырёх местных турнирах` |
+| 5 | `на пяти местных турнирах` |
+| 6 | `на шести местных турнирах` |
+| 7 | `на семи местных турнирах` |
+| 8 | `на восьми местных турнирах` |
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-HO-P1 | `PLAYED_COPY.sentence` | `She played {n}, and {best}.` | `За эти годы она сыграла {n}; {best}.` |
+| RU02B-HO-P2 | best: won | `she has won one` | `хотя бы один из них выиграла` |
+| RU02B-HO-P3 | best: final | `she has been in a final` | `хотя бы раз дошла до финала` |
+| RU02B-HO-P4 | best: lost | `she has not been past a semifinal yet` | `пока ни разу не прошла дальше полуфинала` |
+
+The semicolon prevents a clumsy repeated `и`, and `хотя бы` makes the folded nature of the history
+honest: the line reports her best result, not the exact number of titles or finals.
+
+## 15. Handover implementation notes
+
+1. The component currently receives `ageWord`, already spelled in English, and interpolates it into
+   two sentences. The localized boundary must receive `ageYears` or a locale-owned age token. A
+   Russian catalogue cannot safely recover a number from `thirteen` or `fourteen`.
+2. Russian age spelling belongs in one shared formatter. The prologue cards, birthday copy, Home and
+   this handover must not grow separate number-word tables.
+3. Coach band keys (`Huge potential`, `Still room to grow`, and the others) are internal identifiers.
+   Do not translate the keys in persisted or protocol state; localize the display payload selected
+   from them.
+4. `PLAYED_COPY.counts` works today only because the English noun is embedded in each count. Keep the
+   same full-phrase technique for one through eight, then use a real Russian count formatter for a
+   future fallback rather than appending a bare digit.
+5. The two coach readings must remain separate DOM lines and in base-before-room order. A translator
+   joining them for flow would erase a product distinction.
+6. The handover is the prologue's phone-fit worst case. Test every coach-line variant, the longest
+   money value, eight tournaments and both controls together at 375 × 667.
+
+## 16. Batch status and next slice
+
+RU-02 is now covered end to end: entry, onboarding, ages five through thirteen, every childhood
+tournament face and the handover into the weekly career. The next document begins RU-03: Home,
+weekly state, family presence and the ordinary notes through the school and after-school stages.
