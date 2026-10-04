@@ -31,7 +31,7 @@ last-reviewed: 2026-10-04
 | [Batch 03 – Home and the weekly story](ru-home-weekly-2026-10.md) | Home, identity, dashboard cards, season strip, news, Calendar, This Week and the weekly recap | drafted |
 | [Batch 04 – Season and tournaments](ru-season-tournaments-2026-10.md) | Season planner, tour guide, shared tournament cards and tournament flow | drafted |
 | [Batch 05 – Profile, coaching and injuries](ru-profile-coaching-2026-10.md) | Daughter profile, life stages, skills radar, coach market, week planning, knocks and injury stops | drafted |
-| [Batch 06 – Money, staff, shop and inbox](ru-money-staff-shop-inbox-2026-10.md) | Family budget, kit, staff, shop, sponsorship, academy and correspondence | money, staff, shop and non-commercial mail drafted; sponsorship mail open |
+| [Batch 06 – Money, staff, shop and inbox](ru-money-staff-shop-inbox-2026-10.md) | Family budget, kit, staff, shop, sponsorship, academy and correspondence | drafted end to end |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

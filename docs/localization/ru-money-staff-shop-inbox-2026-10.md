@@ -1413,6 +1413,274 @@ Signature: `– Её национальная федерация`. Foot: `Пол
 an English-surface rendering defect, not text to preserve or translate twice; the localized message
 contains the sentence once and the implementation should remove the duplicate node.
 
-The remaining RU-06 sections cover advertising and kit contracts, their signature confirmations,
-then inbox-specific implementation and LQA. Money, staff controls, shop/assets and every
-non-commercial letter family are now drafted end to end.
+## 37. Advertising contracts
+
+Advertising houses pay her for her name and face; they do not supply tennis equipment. Every letter
+must keep that distinction explicit. Brand names stay unchanged proper names.
+
+### 37.1 House introductions
+
+`AdOfferTerms.trade` is currently persisted English prose. New letters should persist a category id
+and resolve the introduction at read time; legacy values map through this finite table:
+
+| category / legacy trade | Russian introduction |
+| --- | --- |
+| watches / `We make watches` | `Мы делаем часы` |
+| cars / `We make cars` | `Мы делаем автомобили` |
+| drinks / `We make drinks` | `Мы выпускаем напитки` |
+| clothing / `We make her kit` | `Мы отвечаем за её экипировку` |
+| airline / `We fly people across the world` | `Мы перевозим людей по всему миру` |
+| fragrance / `We make perfume` | `Мы выпускаем парфюм` |
+
+Opening paragraph:
+
+> `{trade}, и мы следим за её результатами. Мы хотим видеть её лицо в нашей кампании – её фотографию рядом с нашим именем. Весь указанный ниже гонорар предназначен ей.`
+
+This is intentionally a commercial voice, not the narrator's. It is direct about buying an image
+without implying that the house owns the person.
+
+### 37.2 Fee
+
+| contract | Russian term |
+| --- | --- |
+| one year | `Разовый гонорар {fee} выплачивается в день подписания. Это деньги, а не экипировка: мы не теннисный бренд.` |
+| multiple years | `{fee} за каждый год договора. Первая выплата – в день подписания, следующие – в каждую годовщину. Это плата за её лицо и больше ни за что.` |
+| lifetime | `{fee} каждый год до конца её жизни. Первая выплата – в день подписания, следующие – в каждую годовщину, без последней. Это плата за её имя и больше ни за что.` |
+
+The one-year fee remains a single payment, not an annual rate displayed as though a second payment
+might follow.
+
+### 37.3 Term and exclusivity
+
+Term labels use normal Russian duration grammar: `12 месяцев`, `2 года`, `5 лет`, `8 лет`.
+
+| contract | Russian clause |
+| --- | --- |
+| legacy, no category | `{duration} со дня подписания её лицо связано с нами; пока договор действует, других рекламных кампаний быть не может.` |
+| ordinary category | `{duration} со дня подписания её лицо связано с нами; пока договор действует, она не участвует в рекламе других брендов {categoryGenitive}.` |
+| capstone | `{duration} со дня подписания её лицо связано с нами. Это главный контракт её карьеры, и другого такого не будет.` |
+| lifetime | `С момента подписания её имя связано с нами пожизненно. Такое предложение бывает только одно и не заканчивается.` |
+
+`{categoryGenitive}` is a dedicated grammatical resource: `часов`, `автомобилей`, `напитков`,
+`одежды`, `авиакомпаний`, `парфюмерии`. Do not lowercase or decline the nominative portfolio label
+at runtime.
+
+### 37.4 Shoot weeks and the limit of the deal
+
+When the contract has shoot weeks:
+
+> `Съёмочные недели в каждом году договора: {shootCount}. Сначала мы бронируем межсезонье – это главное время для съёмок. То, что туда не помещается, распределяем по сезону и называем все даты в день подписания, чтобы семья могла их учесть. Съёмка – рабочая неделя: отдыха будет меньше, как в любой поездке.`
+
+> `За пределами этих недель она ничего не должна: ни турниров, ни результатов, ни возврата денег – что бы ни принёс сезон.`
+
+Lifetime paper with no shoots:
+
+> `Она ничего и никогда не должна: ни съёмок, ни турниров, ни результатов. Всё, что требуется, – имя, которое она уже создала.`
+
+The first sentence uses a labelled count instead of branching between `неделя принадлежит` and
+`недели принадлежат`; it is shorter and survives every plural category.
+
+### 37.5 Advertising signature confirmation
+
+Lifetime:
+
+> `Подписать договор с {brand}? {fee} в год пожизненно, с ежегодной выплатой ей; съёмочных недель и даты окончания нет. Отменить договор нельзя.`
+
+Finite term:
+
+> `Подписать договор с {brand}? {feeClause}; её лицо участвует в кампании до {untilWeek}{shootClause}. Отменить договор нельзя.`
+
+Fee clauses:
+
+- one year: `разовый гонорар {fee}, выплата ей сейчас`;
+- multiple years: `{fee} в год в течение {years}; первая выплата ей сейчас, остальные – в каждую годовщину`.
+
+`{shootClause}` is empty when there are no scheduled shoots. Otherwise it is
+`; съёмочные недели: {upToSixLocalizedWeeks}{moreClause}. Это рабочие недели, отдыха в них меньше`,
+where `{moreClause}` is `; ещё {n} в течение договора` with Russian plural grammar. The named dates
+come from the exact deterministic function used by signing; localization must not draw or schedule
+them again.
+
+### 37.6 Advertising record states
+
+| state | Russian |
+| --- | --- |
+| lifetime signed | `Подписано. Первая выплата зачислена; следующие будут приходить каждый год пожизненно.` |
+| finite signed and running, no shoots | `Подписано. Выплата зачислена; кампания идёт до {untilWeek}.` |
+| finite signed and running, shoots | `Подписано. Выплата зачислена; кампания идёт до {untilWeek}. Съёмочные недели: {shootWeeks}.` |
+| completed normally | `Подписано. Выплата зачислена, кампания завершилась в свой срок.` |
+| ended by another apparel house | `Подписано. Полученные выплаты остаются у неё; кампания завершилась, когда она подписала договор с другим брендом.` |
+| refused | `Предложение отклонено.` |
+| expired | `Срок ответа истёк.` |
+
+Every paper signs `– {brand}`. The inbox subject is `Её лицо в рекламе · {fee}` and the common live
+window/actions from section 29 sit below it.
+
+## 38. Equipment-contract letters
+
+### 38.1 Opening by relationship
+
+New offer:
+
+> `Мы весь сезон следили за игрой вашей дочери и хотим предоставить ей нашу экипировку.`
+
+Renewal of the same finished deal:
+
+> `Весь сезон она играла в нашей экипировке, и мы рады продолжить. Предлагаем оставить всё как есть ещё на год.`
+
+Continuation from the house already using her in an apparel campaign:
+
+> `Её лицо уже на наших плакатах, и мы хотим, чтобы там она была в нашей экипировке. Предыдущий договор на экипировку закончился; мы предлагаем продлить его на условиях, которые соответствуют её нынешнему рейтингу.`
+
+The last arm is not called `тот же договор`: unlike the ordinary renewal, its terms come from the
+rung she clears now and may have changed.
+
+### 38.2 Coverage and freshness
+
+Covered kit:
+
+> `Её {coveredItems} – за наш счёт, до {allowance} за сезон.{uncoveredClause}`
+
+`{uncoveredClause}` is empty when all three lines are covered, otherwise
+` За {uncoveredItems} по-прежнему платит семья.`
+
+Freshness:
+
+> `Мы вовремя заменяем всё, что предоставляем. На матч с изношенными струнами она не выйдет.`
+
+Every current coverage rung contains strings, so the second sentence is true today. If a future rung
+can cover rackets or shoes without strings, this copy must become a per-line semantic variant rather
+than silently keeping the claim.
+
+### 38.3 Travel, visibility and exclusivity
+
+When the travel share is non-zero:
+
+> `Мы оплачиваем {travelPct}% её дорожных расходов и столько же от билета тренера на турниры с призовыми.`
+
+Minimum appearances:
+
+> `В ответ она играет не менее чем на {events, plural, one {# турнире} few {# турнирах} many {# турнирах} other {# турнира}} за сезон: мы платим за то, чтобы нас видели.`
+
+Kit exclusivity:
+
+> `Пока она играет в нашей экипировке, экипировки другого бренда на ней не будет.`
+
+When signing would end another apparel campaign:
+
+> `Пока она представляет нас, она не участвует в другой рекламе одежды; её кампания с {campaignBrand} завершится в день подписания.`
+
+The rival house's exact remaining fees stay off the paper. They appear only in the confirmation,
+where the engine can state the consequence without pretending the new brand knows a competitor's
+accounts.
+
+### 38.4 Term and domestic-standing clause
+
+> `{seasons}, начиная с предстоящего: договор действует до {untilWeek}.`
+
+When the domestic-ranking condition exists:
+
+> `Мы поддерживаем игрока, которого знают дома, поэтому на всём сроке она должна оставаться в национальном топ-{keepDomesticRank}.`
+
+Closing term paragraph:
+
+> `Если условия выполнены, мы напишем снова. Если нет, по окончании сезона пожмём руки и разойдёмся без обид. В любом случае экипировка остаётся у неё и возвращать деньги не придётся.`
+
+`{seasons}` is `1 сезон`, `2 сезона`, `5 сезонов`; do not lowercase an English word-form constant.
+
+## 39. Equipment-contract outcomes and confirmation
+
+### 39.1 Signature confirmation
+
+> `Подписать договор с {brand}? Бренд предоставляет {coveredItems} на {seasons} – лимит до {allowance}, срок до {untilWeek}; она обязуется играть не менее чем на {events} за сезон.{bondClause} Отменить договор нельзя.`
+
+`{bondClause}` variants:
+
+- future fees remain: ` Подписание завершит её рекламную кампанию с {campaignBrand}; по ней ещё осталось {fees} будущих выплат.`;
+- every fee already banked: ` Подписание завершит её рекламную кампанию с {campaignBrand}. Все положенные выплаты уже зачислены и останутся у неё.`;
+- no affected campaign: empty.
+
+The count inside `{events}` uses `1 турнире / 2 турнирах / 5 турнирах`. The confirmation deliberately
+restates the irreversible commitment but must use the same terms object as the paper.
+
+### 39.2 Signed record
+
+| state | Russian |
+| --- | --- |
+| signed, no season review yet, running | `Подписано. Бренд предоставляет ей экипировку.` |
+| signed, no season review, ended | `Подписано.` |
+| running after review | `Подписано. Бренд предоставляет ей экипировку. В прошлом сезоне она сыграла {played} из {asked} нужных турниров.` |
+| completed after meeting ask | `Подписано. Она сыграла {played} из {asked} нужных турниров, и договор завершился в свой срок.` |
+| ended below ask | `Подписано. Она сыграла {played} из {asked} нужных турниров, поэтому договор завершился. Возвращать ничего не пришлось.` |
+| signed interval | `В их экипировке: {fromWeek} – {untilWeek} · {seasons}` |
+
+Refused and expired states use section 29's shared `Предложение отклонено.` and `Срок ответа
+истёк.` rather than sponsor-specific copies.
+
+### 39.3 Brand goodbye
+
+| reason | Russian opening |
+| --- | --- |
+| appearance count | `Мы весь сезон предоставляли ей экипировку и рады, что делали это. Мы просили сыграть {asked} турниров, она сыграла {played}; на этом наша часть договора заканчивается.` |
+| domestic standing | `Мы весь сезон предоставляли ей экипировку и рады, что делали это. Мы поддерживаем игрока, заметного дома, а за время в туре она вышла из этого диапазона. Здесь мы пожмём руки.` |
+| stronger house | `Мы слышали, что она переходит к более крупному бренду, и, честно говоря, не удивлены. Наш договор заканчивается с этим сезоном; предупреждений и дополнительных расчётов не требуется. Было приятно видеть её в нашей экипировке.` |
+| term served | `Срок договора закончился, и она выполнила всё, о чём мы просили: {played} турниров в нашей экипировке за этот сезон. Пока остановимся здесь. Спасибо.` |
+
+Shared closing:
+
+> `Экипировка остаётся у неё: ничего не нужно возвращать или оплачивать. Со следующего сезона расходы на {coveredItems} снова переходят к семье.`
+
+The notice has no signature decision; it signs `– {brand}` and closes with `Получено {week}.`
+
+## 40. Inbox and sponsorship implementation
+
+- `Offer.kind`, state, sender kind, staff seat, reason, category, tier and asset id remain stable
+  locale-independent values. Rendering selects Russian resources from those values.
+- Proper brand names and player-authored asset names remain unchanged. Tournament, tier, asset and
+  kit catalogue labels resolve through their ids in the active locale.
+- New letters persist facts, never `trade`, `requirements`, `label`, `ask` or `detail` as assembled
+  English prose. Where changing a persisted shape is required, follow the save-schema three-part
+  rule: migration, new golden fixture and regression coverage for older fixtures.
+- Legacy adapters must cover known English `AdOfferTerms.trade`, tour requirement rows, build labels,
+  entry labels and other frozen display values already present in saves. Unknown legacy prose is a
+  development LQA failure, not a permitted English island.
+- Sender and subject builders are shared by the list and paper. The same letter may not be
+  `Отдел заказов` in the list and sign `Order desk` when opened.
+- Common actions, windows and terminal states are one message family across kit, advertising and
+  buyer offers. Do not copy `Подписать`, `Отказаться`, `Срок ответа истёк` into three components.
+- All plural-sensitive counts are typed numbers. Do not persist `a season`, `3 years`, `week` or an
+  already-joined English list inside the letter.
+- The deterministic advertising schedule is untouched: localization formats the exact shoot weeks
+  returned by the engine and never draws a second sequence.
+- The national-team paper renders its final bullet once; remove the duplicated English template
+  fragment rather than reproducing it in the Russian resource.
+- The existing kit paper does not visibly print `retainerCents`, appearance fees or bonus terms even
+  when professional `KitOfferTerms` carry them. That is a product-legibility issue, not something a
+  translator should silently invent. Resolve it in the technical localization implementation or a
+  dedicated sponsor-copy spec before claiming every signed term is on the paper.
+
+## 41. RU-06 LQA gate
+
+- Inspect the Inbox list and every opened letter at 320 × 568, 375 × 667 and 200% text. Long Russian
+  subjects must truncate only in the list; the opened paper remains complete.
+- Probe every `OfferKind` and every state: open, signed, refused, expired and informational.
+- Probe one/few/many counts for weeks, seasons, years, tournaments, matches, titles, injuries,
+  squad size, ties and nations, including 11–14 and 21–24.
+- Open a pre-localization save containing every legacy letter family. No known sender, subject,
+  requirement, trade, catalogue label, status or body fragment may remain English.
+- Verify unread and locally removed state across two careers and a reload; locale switching must not
+  change stable letter ids or resurrect hidden rows.
+- Sign and refuse on the deadline week and the following week. Buttons and engine acceptance must
+  close on the same boundary in both locales.
+- Sign an advertising deal and compare every named shoot week with the resulting saved deal. Sign a
+  rival clothing deal with fees remaining and with all fees banked.
+- Exercise new, renewed and apparel-bond kit letters at every coverage rung, with and without travel,
+  domestic-rank condition and a conflicting clothing campaign.
+- Exercise all academy ending reasons, all four staff seats, both chemistry signs, every psychology
+  focus, all call-up college results and the call-up without a recorded result.
+- Verify that locale changes move no money, offer week, deadline, term, allowance, travel share,
+  shoot week, market price, contract state, RNG state or save identity.
+
+RU-06 is now drafted end to end: family budget, equipment, sponsorship surfaces, specialists,
+assets, the inbox shell and all nine current letter families. Every Russian line remains `DRAFT`
+until owner read-through and in-game LQA.
