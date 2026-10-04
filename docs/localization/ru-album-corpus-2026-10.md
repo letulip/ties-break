@@ -63,8 +63,8 @@ not read as four different narrators.
 | seasons | A11–A14, A33 | drafted |
 | body, money, road and first adult thresholds | A15–A22, birth | drafted |
 | assets and rare career moments | A23–A29 | drafted |
-| closing life and career | A29–A32 | open |
-| closing arc | 8 direction × voice cells | open |
+| closing life and career | A30–A32 | drafted |
+| closing arc | 8 direction × voice cells | drafted |
 
 Each completed block will include the source occasion id and three Russian tables in the source's
 fixed voice order: `sunny`, `fiery`, `deep`, `quiet`.
@@ -538,3 +538,97 @@ label; the emotional line remains true if the ladder vocabulary changes.
 - Confirm A29 writes no exact year count, even if the threshold later changes.
 - Read the three academy pages per voice as a progression: imagined space, playable courts, then a
   functioning building. Each should add a new observation rather than retell ownership.
+
+## 22. Closing pages
+
+### A30 · `graduated` · completed college degree
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Ты закончила. Сказала, что эта шапочка нелепая, – и не снимала её весь день.` | `Шапочка была нелепой. Она её не сняла.` | `Весь день в этой шапочке.` |
+| `fiery` | `Ты закончила. Сказала, что никто не верил, будто ты справишься и с учёбой, и с теннисом. Ты была права: мы тоже сомневались.` | `Никто не верил, что она справится с обоими.` | `Мы тоже были среди сомневающихся.` |
+| `deep` | `Ты закончила. Сказала, что последняя неделя учёбы была самой трудной неделей года. А недели у тебя бывали разные.` | `Самая трудная неделя года.` | `А уж недель у неё было немало.` |
+| `quiet` | `Ты закончила. Сначала назвала дату, потом время и только после этого – что всё сдала.` | `Дата, время, потом новость.` | `Новость была третьей.` |
+
+The page appears only after the full course. A college departure without a degree must not receive
+these lines. Its championship checklist uses the localized factual form in RU-07 §21.
+
+### A31 · `farewell` · last match the save can prove
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Последний матч. Ты ушла с корта, рассказывая про жару, еду и долгую дорогу обратно. Про теннис – ни слова.` | `Она говорила обо всём, кроме тенниса.` | `Кажется, эту часть она оставила на потом.` |
+| `fiery` | `Последний матч. Мнение у тебя сложилось раньше, чем собрали сумки, и тем же вечером я выслушал его целиком.` | `Мнение было готово до того, как собрали сумки.` | `Последнее слово всегда оставалось за ней.` |
+| `deep` | `Последний матч. Ты осталась на корте, когда все ушли, а я не стал тебя торопить.` | `Она осталась после того, как все ушли.` | `Я дал ей побыть на корте.` |
+| `quiet` | `Последний матч. Ты сложила всё в сумку точно так же, как всегда.` | `Сумка собрана как обычно.` | `Те же складки. Последний раз.` |
+
+No applause, speech, thanks or conscious goodbye is invented. This page remains true for a forced
+ending whose participants did not know the match was the last.
+
+### A32 · `career-ended` · final album page
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Вот и весь альбом. Ты расскажешь эту историю лучше, чем я её написал. И громче.` | `Она расскажет громче.` | `Её версия лучше.` |
+| `fiery` | `С чем-то здесь ты не согласишься. Я оставил место для возражений. Вот и весь альбом.` | `С чем-то она не согласится.` | `Для спора я оставил место.` |
+| `deep` | `Вот и весь альбом. Ты найдёшь ту единственную неделю, в которой я ошибся. И будешь права.` | `Она найдёт неделю, в которой я ошибся.` | `И она тоже будет права.` |
+| `quiet` | `Ты прочтёшь всё до конца и почти ничего не скажешь. А я пойму. Вот и весь альбом.` | `Она прочтёт всё и скажет немного.` | `Я пойму, что это значило.` |
+
+`Вот и весь альбом` hands over the book; it does not console, summarize the ending cause or assume
+retirement. The same rows remain valid for all three closing families unless a later authored wave
+adds family-specific alternatives.
+
+## 23. Expression arc
+
+These cells replace A32's note and loose line only when the stored psychological lean moved. They
+describe how expression changed, never a new personality or a parent finally possessing the truth
+of his daughter.
+
+### Arc towards `open`
+
+| birth voice | note | line |
+| --- | --- | --- |
+| `sunny` | `С тобой всегда было легко говорить. Теперь я лучше знаю: твоя лёгкость – ещё не вся ты.` | `Светлая сторона – ещё не вся она.` |
+| `fiery` | `Ты всегда говорила нам, что думаешь. Где-то на этих страницах ты начала говорить и о том, что чувствуешь.` | `С вердиктами как раз было легко.` |
+| `deep` | `Раньше тебе требовалась неделя, чтобы сказать мне одну правдивую фразу. Теперь ты говоришь её в тот же день. Фраза всё ещё одна. И всё ещё правдивая.` | `Та же фраза – только без недели ожидания.` |
+| `quiet` | `Много лет на вопрос «как ты?» я получал расписание. В этом году получил ответ.` | `Расписание всё равно было первым. Но теперь вместе с ним приходил и ответ.` |
+
+### Arc towards `reserved`
+
+| birth voice | note | line |
+| --- | --- | --- |
+| `sunny` | `Раньше ты рассказывала мне обо всём в ту же неделю. Теперь кое-что остаётся твоим, и мне пришлось понять: это не закрытая дверь.` | `Не закрытая дверь. Мне пришлось этому научиться.` |
+| `fiery` | `Раньше ты успевала решить всё ещё до конца фразы. Теперь сначала берёшь себе вечер. Мне немного не хватает шума.` | `Огонь остался. Она научилась выбирать ему место.` |
+| `deep` | `Ты всегда говорила точно – и всегда не сразу. Теперь ещё точнее и ещё позже. А я перестал тебя торопить.` | `Я перестал её торопить.` |
+| `quiet` | `Ты всегда многое оставляла при себе. Теперь ещё больше. Зато сказанное стало весомее, и я слушаю внимательнее.` | `Слов меньше. Веса больше.` |
+
+## 24. Closing and arc LQA
+
+- Probe a completed degree, an incomplete college branch, a provable last match and an ending with
+  no provable match independently. Each page appears only on its own fact.
+- Run A31 against bankruptcy, injury, college departure and ordinary retirement endings. None of
+  its Russian lines may imply a planned farewell ceremony.
+- Run A32 against stopped, was-stopped and left-the-game closing families. `Вот и весь альбом`
+  remains a handover in all three.
+- Compare all eight arc cells with the birth voice bible. Opening changes access to feeling;
+  reserving changes timing and ownership. Neither changes temperament.
+- Verify no-drift careers keep A32 and never receive an arc cell.
+- Render the longest deep/open and sunny/reserved notes with the closing art at every album width.
+- Verify the Russian corpus contains all 34 occasion ids, four voices and three registers, plus all
+  eight arc cells, with no English runtime fallback.
+
+## 25. Runtime integration contract for the corpus
+
+- Keep the English canonical corpus and this Russian corpus keyed by stable occasion id, voice and
+  register. Never use the English sentence itself as a key.
+- Add a completeness test that compares locale key sets to `ALBUM_CORPUS`: 34 occasions × four
+  voices × `note/caption/line`, plus two arc directions × four voices × `note/line`.
+- The Russian catalogue is presentation data. Gate resolution, representative selection, voice
+  selection, chapter assignment, layout and keyed flavour draws stay locale-independent.
+- Legacy saves contain the facts from which the album is assembled, not these corpus strings, so
+  they need no prose migration. Opening the same save in Russian must rebuild every album word in
+  Russian from the stable ids.
+- Preserve the parent's masculine first person throughout A1–A32 and both arcs. A34 `the-line` is
+  the sole documented mother-written page and keeps feminine first person.
+- Add rendered phone fixtures for the longest note in every block, plus an automated Cyrillic-mode
+  sweep that fails on any English album control, alt, chapter, ticket word, checklist or corpus row.
