@@ -6,12 +6,11 @@ canonical: false
 last-reviewed: 2026-10-04
 ---
 
-# RU-02B – childhood prologue, walk and ages five to ten
+# RU-02B – childhood prologue, walk and ages five to thirteen
 
-This is the first narrative slice of the childhood prologue. It covers the shared walk controls and
-the first six cards: the quiet opening years, the first training choices and the decision whether to
-enter her first tournament. Ages eleven to thirteen, tournament scenes and the handover will follow
-as separate readable sections in this same document.
+This is the childhood-card corpus: shared walk controls, all nine ages, the first training choices,
+the age-twelve fork and every repeated question about entering a tournament. Tournament scenes and
+the handover follow as separate readable sections in this same document.
 
 The direct-address ruling is settled: system and interface copy uses `вы`; the daughter's future
 spoken lines use family `ты`. These first three cards contain narration rather than dialogue.
@@ -142,7 +141,130 @@ reassurance and one of four result scenes. That flow repeats at later ages and h
 rules. It will be localized as one unit in the next tournament section rather than translating only
 the age-ten instance and creating a second wording for the same screens.
 
-## 8. Voice and structural notes
+## 8. Age eleven – school becomes a tennis decision
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-11-01 | `cards.ts:538` | `She is eleven` | `Ей одиннадцать` | |
+| RU02B-11-02 | `cards.ts:539` | `The sports school takes children at eleven.` | `В спортивную школу берут с одиннадцати.` | familiar Russian institution wording |
+| RU02B-11-03 | `cards.ts:540` | sports-school setup | `Утром – корт, потом уроки. Здесь так живут все. Тем, кто остановится в четырнадцать, возвращаться в обычную школу уже некуда. Все это знают – и всё равно приводят детей.` | keeps the institutional risk explicit |
+| RU02B-11-04 | `cards.ts:544` | `She plays when it is on the timetable.` | `Она играет, когда теннис стоит в расписании.` | cool path; follows structure rather than asking for more |
+| RU02B-11-05 | `cards.ts:545` | `She has asked whether she can go more often.` | `Она спросила, можно ли приходить чаще.` | warm path; her first direct request for more time |
+| RU02B-11-06 | `cards.ts:548` | `The coach says she has kept up, and nothing more than that.` | `Тренер говорит, что она не отстаёт. И больше ничего.` | deliberately restrained assessment |
+| RU02B-11-07 | `cards.ts:549` | `The coach says the limit on this is her week, not her hands.` | `Тренер говорит, что предел сейчас ставят часы в неделе, а не её руки.` | time, not ability, is the stated constraint |
+| RU02B-11-A1 | `cards.ts:555` | `Ordinary school` | `Обычная школа` | |
+| RU02B-11-A2 | `cards.ts:556` | `No change to what you pay. Her afternoons stay hers.` | `Расходы не меняются. Время после школы остаётся её.` | preserves time as the benefit |
+| RU02B-11-B1 | `cards.ts:564` | `The sports school` | `Спортивная школа` | |
+| RU02B-11-B2 | `cards.ts:566` | `About twice the club, and it takes most of her week with it.` | `Примерно вдвое дороже клуба – и забирает почти всю её неделю.` | the two-times comparison matches the stored costs |
+
+### The tournament question returns
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-11-T1 | `cards.ts:576` | coach mentions the spring Local Open twice | `Весной будет местный открытый турнир. Тренер уже дважды его упомянул – сначала ей, потом вам.` |
+| RU02B-11-T2 | `cards.ts:579` | `Put her name down` | `Подать заявку` |
+| RU02B-11-T3 | `cards.ts:580` | `An entry and a weekend, on top of the year.` | `Взнос и поездка на выходные – сверх расходов за год.` |
+| RU02B-11-T4 | `cards.ts:581` | `Not this year` | `В этом году не ехать` |
+| RU02B-11-T5 | `cards.ts:582` | `Nothing extra. She practises that weekend like any other.` | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
+
+The action labels remain the same as at ten. The escalation belongs in who asks and how often, not
+in a button that pressures the player toward one answer.
+
+## 9. Age twelve – the derived fork
+
+The game derives one of two faces from the years already lived. Neither face is random, and the
+Russian copy must not imply diagnosis, fate or a permanent personality trait.
+
+### 9A. She has gone quiet
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-12Q-01 | `cards.ts:594` | `She is twelve` | `Ей двенадцать` | |
+| RU02B-12Q-02 | `cards.ts:595` | `She does not want to go on Thursday.` | `В четверг она не хочет идти на тренировку.` | restores the destination explicitly |
+| RU02B-12Q-03 | `cards.ts:600` | three quiet weeks | `Так уже три недели. Ни сцены, ни объяснений. Просто к шести часам у неё каждый раз находится другое дело.` | quiet avoidance, not melodrama |
+| RU02B-12Q-04 | `cards.ts:603` | `She has stopped talking about it at dinner.` | `За ужином она больше не говорит о теннисе.` | names the subject instead of leaving a Russian pronoun hanging |
+| RU02B-12Q-05 | `cards.ts:604` | `She is not tired of tennis. She is tired of this week.` | `Она устала не от тенниса. Она устала от такого расписания.` | clarifies that the repeating week is the problem |
+| RU02B-12Q-06 | `cards.ts:607` | `The coach has seen it before and is not surprised by it.` | `Тренер видел такое раньше и не удивляется.` | no diagnosis |
+| RU02B-12Q-07 | `cards.ts:608` | `The coach says she is not the first to go quiet at twelve.` | `Тренер говорит, что в двенадцать так замолкают многие.` | normalizes without dismissing her |
+| RU02B-12Q-A1 | `cards.ts:614` | `Let her stop for a season` | `Дать ей отдохнуть сезон` | a pause, not retirement |
+| RU02B-12Q-A2 | `cards.ts:615` | `A quarter of what this year was going to cost. She keeps her Thursdays.` | `Четверть от запланированной стоимости года. Четверги снова её.` | the one-quarter comparison matches the stored costs |
+| RU02B-12Q-B1 | `cards.ts:623` | `Ask her to finish the year` | `Попросить её закончить год` | asks; does not order |
+| RU02B-12Q-B2 | `cards.ts:624` | `What you are paying now, for one more year of it.` | `Текущие расходы ещё на один такой год.` | concise cost consequence |
+
+The coach asks again on this face:
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-12Q-T1 | `cards.ts:636` | coach asks again and asks for thought | `Тренер снова спросил про местный открытый турнир и на этот раз попросил не отвечать сразу.` |
+| RU02B-12Q-T2 | `cards.ts:639–642` | repeated answer pair | `Подать заявку` / `В этом году не ехать` |
+| RU02B-12Q-T3 | `cards.ts:640` | entry note | `Взнос и поездка на выходные – сверх расходов за год.` |
+| RU02B-12Q-T4 | `cards.ts:642` | decline note | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
+
+### 9B. She asks for more
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-12M-01 | `cards.ts:696` | `She is twelve` | `Ей двенадцать` | same age, same kicker |
+| RU02B-12M-02 | `cards.ts:701` | `She has asked you for more than she is getting.` | `Она попросила больше тенниса, чем у неё есть сейчас.` | states the request before the answers |
+| RU02B-12M-03 | `cards.ts:702` | girls-on-the-board scene | `Она стала расспрашивать о девочках с клубной доски: куда они уехали и в каком возрасте. Потом попросила то же, что было у них: больше часов, тренера получше и год, построенный вокруг тенниса.` | concrete ambition, not a destiny claim |
+| RU02B-12M-04 | `cards.ts:709` | `She is asking for a year bigger than any she has had.` | `Она просит, чтобы следующий год вместил больше тенниса, чем любой прежний.` | cool path; scale rather than certainty |
+| RU02B-12M-05 | `cards.ts:710` | `She has worked out what the next step is and she wants it.` | `Она поняла, каким будет следующий шаг, и хочет его сделать.` | warm path |
+| RU02B-12M-06 | `cards.ts:713` | `The coach says she is asking the right question a little early.` | `Тренер говорит, что вопрос правильный – просто задан чуть рано.` | candid, not discouraging |
+| RU02B-12M-07 | `cards.ts:714` | `The coach has been waiting for her to ask.` | `Тренер только и ждал этого вопроса.` | role only; no invented name |
+| RU02B-12M-A1 | `cards.ts:720` | `Keep it the size it is` | `Оставить всё как есть` | refers to the year, not to her ambition |
+| RU02B-12M-A2 | `cards.ts:721` | `What you are paying now. She stays where she is for a year.` | `Текущие расходы. Ещё год на том же уровне.` | says what remains unchanged |
+| RU02B-12M-B1 | `cards.ts:729` | `Give her the year she is asking for` | `Дать ей год, о котором она просит` | meets her explicit ask |
+| RU02B-12M-B2 | `cards.ts:731` | `About two and a half times what you pay now, for as long as it lasts.` | `Примерно в два с половиной раза дороже нынешнего – на всё время, пока этот путь продлится.` | the 2.5-times comparison matches the stored costs |
+
+On this face she asks for the tournament herself:
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU02B-12M-T1 | `cards.ts:743` | she asks twice on different days | `Она хочет заявиться на весенний местный открытый турнир. Просила дважды, в разные дни.` |
+| RU02B-12M-T2 | `cards.ts:744–747` | repeated answer pair | `Подать заявку` / `В этом году не ехать` |
+| RU02B-12M-T3 | `cards.ts:745` | entry note | `Взнос и поездка на выходные – сверх расходов за год.` |
+| RU02B-12M-T4 | `cards.ts:747` | decline note | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
+
+### What the fork says it read
+
+The three branches below are fixed categories, not arbitrary counted nouns. Russian can therefore
+store complete clauses and avoid runtime case assembly.
+
+| key | English | Russian |
+| --- | --- | --- |
+| sentence | `The years behind it: {a}, {b}, {c}.` | `Вот из чего сложились эти годы: {a}; {b}; {c}.` |
+| one-to-one.none | `never a coach to herself` | `ни одного года с индивидуальными занятиями` |
+| one-to-one.some | `some of it one to one` | `иногда – индивидуально с тренером` |
+| one-to-one.most | `most of it with somebody to herself` | `большую часть времени – индивидуально с тренером` |
+| tournaments.none | `nothing entered` | `ни одной турнирной заявки` |
+| tournaments.some | `one draw sheet with her name on it` | `хотя бы одна сетка с её именем` |
+| light.none | `and no year left to look after itself` | `ни одного года полегче` |
+| light.some | `and one year you kept light` | `один год вы оставили лёгким` |
+| light.many | `and more than one year you kept light` | `несколько лет вы оставили лёгкими` |
+
+The English `one draw sheet` is unsafe when the category means one or more entered tournaments.
+`Хотя бы одна` states the actual branch without inventing a count.
+
+## 10. Age thirteen – the junior tour is one year away
+
+| id | source | English | Russian | note |
+| --- | --- | --- | --- | --- |
+| RU02B-13-01 | `cards.ts:648` | `She is thirteen` | `Ей тринадцать` | |
+| RU02B-13-02 | `cards.ts:649` | `The junior tour opens at fourteen.` | `В четырнадцать ей откроется юниорский тур.` | personal eligibility, not an abstract opening date |
+| RU02B-13-03 | `cards.ts:650` | calendar-on-the-wall scene | `В январе клуб вывешивает календарь. Списки участников, рейтинговые очки, целый год турниров. Она читает его как расписание. Ехать или нет, решать ещё не в этом году.` | the professional decision remains ahead |
+| RU02B-13-04 | `cards.ts:654` | `She knows which of the girls on the board are going.` | `Она знает, кто из девочек на доске поедет.` | cool path |
+| RU02B-13-05 | `cards.ts:655` | `She knows which of the girls on the board are going, and when.` | `Она знает, кто из девочек на доске поедет и когда.` | warm path carries one more detail |
+| RU02B-13-06 | `cards.ts:658` | `The coach will tell you what it looks like in the spring.` | `Весной тренер скажет, как это выглядит со стороны.` | same on both derived paths |
+| RU02B-13-07 | `cards.ts:661` | `Wait for the coach` | `Дождаться мнения тренера` | says what the wait is for |
+| RU02B-13-T1 | `cards.ts:682` | she writes the Local Open date herself | `Она сама вписала дату местного открытого турнира в кухонный календарь.` | final step of the asking escalation |
+| RU02B-13-T2 | `cards.ts:683–686` | repeated answer pair | `Подать заявку` / `В этом году не ехать` |
+| RU02B-13-T3 | `cards.ts:684` | entry note | `Взнос и поездка на выходные – сверх расходов за год.` |
+| RU02B-13-T4 | `cards.ts:686` | decline note | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
+
+The heavy-theme switch on this final card uses the already drafted RU-02A `Тяжёлые темы` block.
+It must remain a shared catalogue unit with the wizard and settings.
+
+## 11. Voice and structural notes
 
 1. `Ей пять / шесть / семь / восемь / девять / десять` is the canonical Russian kicker shape.
    Later ages must follow it.
@@ -163,8 +285,7 @@ the age-ten instance and creating a second wording for the same screens.
 8. `Not this year` is not a permanent refusal. Russian must retain that temporal boundary because
    the tournament question returns in later years.
 
-## 9. Next slice
+## 12. Next slice
 
-The next pass covers ages eleven to thirteen: ordinary school versus sports school, the age-twelve
-burnout fork and the junior tour opening. The repeated tournament question is translated with them
-because its speaker and pressure change from year to year.
+The next pass covers the complete childhood tournament flow: opening screen, match transitions,
+skip controls, retirement reassurance, all result faces and the counter-aware coach reactions.
