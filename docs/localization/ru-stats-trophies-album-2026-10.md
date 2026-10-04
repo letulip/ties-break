@@ -216,4 +216,96 @@ Funds explanation:
 - Verify locale switching changes no active ladder, standings order, competition rank, points,
   counted rows, expiry week, season fold or RNG state.
 
-The next RU-07 sections cover the trophy cabinet, then the album shell and the full voice corpus.
+## 11. Trophy cabinet shell
+
+The screen is a record, not a congratulatory popup. It keeps all eighteen places visible from the
+start: winner and runner-up for each of the nine tournament tiers. Russian therefore stays brief
+enough to repeat eighteen times without making the cabinet sound like a results table.
+
+| source meaning | Russian |
+| --- | --- |
+| navigation and screen title | `Трофеи` |
+| empty summary | `Пока пусто: первый финал поставит сюда первый трофей.` |
+| winner cell | `Победительница` |
+| runner-up cell | `Финалистка` |
+| locked cell | `Ещё нет` |
+
+`Победительница` and `Финалистка` deliberately reuse RU-04's finish vocabulary. `Чемпионка` and
+`Серебро` would be plausible in isolation but would create a second name for the same career fact.
+The cabinet has no bronze cell because the simulation has no third-place match; localization must
+not imply one.
+
+The empty summary says `первый финал`, not `первая победа`: both a title and a lost final put an
+object on the shelf.
+
+## 12. Cabinet summary and Russian plurals
+
+When the cabinet is not empty, omit any zero-valued part and join the remaining parts with ` · `:
+
+| fact | ICU-style Russian resource |
+| --- | --- |
+| titles | `{count, plural, one {# титул} few {# титула} many {# титулов} other {# титула}}` |
+| lost finals | `{count, plural, one {# проигранный финал} few {# проигранных финала} many {# проигранных финалов} other {# проигранного финала}}` |
+
+Examples: `1 титул`, `2 титула · 1 проигранный финал`, `5 титулов · 12 проигранных финалов`.
+The second count cannot be shortened to `финалистка × 3`: the summary counts career results, while
+the label under one silver trophy names the finish represented by that object.
+
+## 13. Shelves, counts and season chips
+
+- Shelf headings use RU-04's compact tier labels: `Местный`, `Региональный`, `Национальный`,
+  `J30`, `J60`, `J300`, `W{n}` and `Большой шлем`. They are looked up by `TierId`; translated full
+  names are never shortened mechanically.
+- The total badge remains compact, but uses the multiplication sign: `×{count}` rather than Latin
+  `x{count}`.
+- A season chip is **`{count}×’{yy}`**, for example `3×’31`. The typographic apostrophe marks the
+  omitted century and the multiplication sign prevents the count from reading like a variable.
+- Chips remain newest first. A folded cell shows three season groups and `+{hiddenCount}`; the tap
+  reveals every group. These are data and interaction contracts, not locale-dependent choices.
+- `seasonYear(floor(week / 52))` remains the source of the year. A Russian date formatter must not
+  replace it with the calendar year of the stored week.
+
+The dense chip notation is visual only. It must never be passed to speech output and expected to
+sound intelligible.
+
+## 14. Trophy accessibility copy
+
+Every cell needs a name, including a locked non-button and a won cell whose three or fewer season
+groups do not make it foldable.
+
+| state | Russian accessible name |
+| --- | --- |
+| locked | `{fullTier} · {finish}: ещё нет` |
+| won | `{fullTier} · {finish}: {countTimes}. По сезонам: {spokenYears}.` |
+
+`{finish}` is `Победительница` or `Финалистка`. `{countTimes}` uses `1 раз`, `2 раза`, `5 раз`.
+`{spokenYears}` is generated separately from the visual chips: `1 раз в 2031 году, 3 раза в 2030
+году`. It preserves the same newest-first order while speaking both the count and full year.
+
+For a foldable cell, the existing `aria-expanded` state remains authoritative. A locked cell and a
+non-foldable won cell remain `role="img"`; a cell with hidden years remains a button. Do not put
+`Развернуть` into the shared name, because the same sentence describes the object in both folded
+and expanded states and `aria-expanded` already communicates the action state.
+
+## 15. Trophy implementation and LQA
+
+- Trophy ledger data remains `TierId`, metal and career-week arrays. Locale selection changes no
+  week, count, fold threshold, trophy ownership or ordering.
+- Build visible and spoken year projections from the same grouped `{ year, count }[]`. The present
+  `chipsOf()` returns pre-rendered English strings and cannot safely serve Russian accessibility.
+- The trophy summary uses the shared Russian plural formatter. Hand-written `count === 1` branches
+  do not cover `2–4`, `5–20` and the `11–14` exception.
+- Winner and runner-up labels come from the same localized finish resource as tournament results;
+  trophy cells must not own a duplicate translation map.
+- At 320 px, inspect `Победительница`, `Финалистка`, `Большой шлем`, three visible year chips and
+  the `+N` chip together. The resting two-column shelf must not become horizontally scrollable.
+- Exercise an empty cabinet, one title, only lost finals, both counts, one/few/many forms, multiple
+  wins in one season, more than three season groups, expand/collapse, and a season beyond 2099.
+- With a screen reader, verify all eighteen locked cells are discoverable and won non-foldable
+  cells do not disappear merely because they are not buttons.
+- Verify a locale switch changes no ledger entry and that the Russian spoken year never exposes the
+  compact `3×’31` token.
+
+The next RU-07 sections cover the album shell. Because its parent-written corpus is much larger
+than the surrounding interface, the full post-by-post translation will live in a linked companion
+document split by life stage and voice rather than turning this file into an unreviewable table.
