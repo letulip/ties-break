@@ -450,7 +450,169 @@ more natural. Match rows still use an accessible `{name} против {name}` se
 7. LQA must include all seven columns at 320 and 375 px, the longest block labels, 200% text, a
    cross-month week, five-week injury, academy percentage, and both pre-draw probability states.
 
-## 19. Next slice
+## 19. This Week frame
 
-The next pass completes RU-03 with This Week: current status, training-plan summary, planned spend,
-the recap frame and its route back Home.
+The screen has two distinct arrivals: the ordinary weekly story and the tournament-only preview.
+The shared date heading uses RU03-F01–F03. The tournament card itself remains owned by RU-04.
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU03-W01 | tournament-only back control | `Back to Home` | `Домой` |
+| RU03-W02 | recap close name and tooltip | `Close the week's story` | `Закрыть итоги недели` |
+| RU03-W03 | section heading | `This week` | `Эта неделя` |
+| RU03-W04 | empty status | `No event – training week` | `Без турнира – неделя тренировок` |
+| RU03-W05 | played-score prefix | `Latest match: {score}` | `Последний матч: {score}` |
+| RU03-W06 | plan heading and group name | `Training plan` | `План тренировок` |
+| RU03-W07 | `grind` preset | `Grind 85/15` | `Интенсивно 85/15` |
+| RU03-W08 | `balanced` preset | `Balanced 75/25` | `Баланс 75/25` |
+| RU03-W09 | `light` preset | `Light 60/40` | `Легко 60/40` |
+| RU03-W10 | plan summary | `Training {train}% · Rest {rest}%` | `Тренировки {train} % · Отдых {rest} %` |
+| RU03-W11 | spend label | `Planned spend` | `Плановые расходы` |
+| RU03-W12 | story exit | `Proceed to Home` | `Домой` |
+
+W01 and W12 intentionally collapse to the same Russian word. Their icons and placement already
+distinguish back-navigation from finishing the story; `Продолжить на экран «Дом»` would explain the
+component rather than speak like the interface. W07–W09 are the shared Russian preset vocabulary
+for RU-05 too; the percentages make the compact adverbs unambiguous.
+
+The status pill interpolates a tournament label, surface and week. All three must already be
+localized. W10 may append `· {event} – {week}` without changing the event title. W11 currently
+formats its range as raw dollars in the component. It must move through the locale-aware money
+formatter before Russian ships; neither the currency sign nor its position belongs in this view.
+
+## 20. Weekly Story – scene and frame
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU03-RC01 | section aria-label | `Week story, {week}` | `Итоги недели · {week}` |
+| RU03-RC02 | travel mood `sleepy` | `Asleep` | `Спит` |
+| RU03-RC03 | travel mood `happy` | `Smiling` | `Улыбается` |
+| RU03-RC04 | travel mood `sad` | `Quiet` | `Притихла` |
+| RU03-RC05 | travel scene `airport` | `in the airport on the way home` | `в аэропорту по дороге домой` |
+| RU03-RC06 | travel scene `plane` | `on the plane home` | `в самолёте по дороге домой` |
+| RU03-RC07 | travel scene `bus` | `on the bus home` | `в автобусе по дороге домой` |
+| RU03-RC08 | travel scene `car` | `in the car on the way home` | `в машине по дороге домой` |
+| RU03-RC09 | vacation alt | `The family week away – {package}` | `Семейная поездка – {package}` |
+| RU03-RC10 | rehab alt | `On the bench, working her way back` | `На скамейке, шаг за шагом возвращается в игру` |
+| RU03-RC11 | exam alt | `Revising at home – exams this week` | `Готовится к экзаменам дома` |
+| RU03-RC12 | knock alt | `At home, off the court for the week` | `Дома, всю неделю вне корта` |
+
+The travel alt is composed as `{mood} {scene}`: `Спит в самолёте по дороге домой`, `Притихла в
+машине по дороге домой`. These are descriptions of the image, not diary prose. The generic week
+paintings remain decorative with an empty alt because the handwritten note immediately below tells
+their story. Vacation package names are localized once in RU-06 and inserted unchanged.
+
+The handwritten `noteText` and the optional `coachNote` are not frame copy. They arrive as finished
+engine prose and belong to RU-09. The expense fallback also arrives as `WorldEvent.text` and belongs
+to RU-11. Russian mode must select a localized semantic message before applying the current
+travel-note → week-note → expense fallback order; translating only the card headings is not enough.
+
+## 21. Weekly Story – finances
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU03-RF01 | tile eyebrow | `Finances` | `Финансы` |
+| RU03-RF02 | tournament cheque | `Income` | `Призовые` |
+| RU03-RF03 | other family income | `Family income` | `Доход семьи` |
+| RU03-RF04 | outgoing total | `Spent` | `Расходы` |
+| RU03-RF05 | net result | `Balance` | `Итог` |
+| RU03-RF06 | daughter's share memo | `Her cut {pct}% – {amount} into her own account.` | `Её доля {pct} % – {amount} на её личный счёт.` |
+| RU03-RF07 | legacy-save foot | `The income above is what the family kept.` | `Выше указан доход, оставшийся семье.` |
+| RU03-RF08 | coach share memo | `Coach's cut {pct}% – {amount}, inside Spent above.` | `Доля тренера {pct} % – {amount}; она уже входит в расходы выше.` |
+
+`Призовые` is deliberately more specific than a literal `Доход`: the row is
+`prizeIncomeCents`, while all other positive money is the next row. The four visible figures retain
+their current arithmetic: `Призовые + Доход семьи − Расходы = Итог`. The daughter's and coach's
+shares remain explanatory memos, not extra arithmetic rows.
+
+Money signs and separators come only from the shared Russian money formatter. The memo messages
+take a formatted `{amount}` and an integer `{pct}`; they must not rebuild either from strings.
+
+## 22. Weekly Story – training and mood
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU03-RT01 | tile eyebrow | `Training` | `Тренировки` |
+| RU03-RT02 | plan row and dot tooltip | `On court` / `Training` | `На корте` / `Тренировка` |
+| RU03-RT03 | plan row and dot tooltip | `Rest` | `Отдых` |
+| RU03-RT04 | day-row aria-label | `{n} of 7 days training` | `Тренировки: {trainingDays} из 7 дней` |
+| RU03-RM01 | tile eyebrow | `Mood` | `Настроение` |
+| RU03-RM02 | energy label | `Energy` | `Силы` |
+
+The day initials use the same `ПН ВТ СР ЧТ ПТ СБ ВС` set as Calendar, not a second one-letter
+Russian table. RT04 is a complete message, so it needs no pluralized noun beside the number.
+
+The portrait's fallback words are compact states rather than diagnoses:
+
+| emotion | English | Russian |
+| --- | --- | --- |
+| norm | `Steady` | `Ровная` |
+| happy | `Happy` | `Радостная` |
+| sad | `Low` | `Не в духе` |
+| serious | `Focused` | `Собранная` |
+| tired | `Tired` | `Уставшая` |
+| injury | `Hurt` | `Травмирована` |
+| rehab | `On the mend` | `Восстанавливается` |
+| angry | `Frustrated` | `Раздражена` |
+
+On life-beat weeks, `diary.facts.moodWord` overrides this table with one of the five authored Mood
+words. Those words are voice corpus, not UI enum labels, and are translated in RU-09. The component
+must receive a mood semantic key rather than assume that an English override is safe to display.
+
+`trainingRead.label` and `trainingRead.text` are likewise finished engine strings. RU-05 owns the
+radar-axis labels and coach readings; the recap should receive their localized projection without
+duplicating a translation table in this card.
+
+## 23. Weekly Story – highlights, replay and goal
+
+| id | source | English | Russian |
+| --- | --- | --- | --- |
+| RU03-RH01 | tile eyebrow | `Highlights` | `Главное` |
+| RU03-RH02 | empty state | `A quiet week.` | `Спокойная неделя.` |
+| RU03-RH03 | rank rose | `{ladder} rank up {n} – now #{rank}` | `{ladder}: поднялась на {places}; теперь №{rank}` |
+| RU03-RH04 | rank fell | `{ladder} rank down {n} – now #{rank}` | `{ladder}: опустилась на {places}; теперь №{rank}` |
+| RU03-RH05 | practice-match note | `She played her practice match` | `Она сыграла тренировочный матч` |
+| RU03-RH06 | replay control | `Watch the replay` | `Смотреть повтор` |
+| RU03-RH07 | goal label | `Next goal` | `Следующая цель` |
+| RU03-RH08 | first rung | `Win one match at the {event}` | `Выиграть один матч на турнире «{event}»` |
+| RU03-RH09 | title rung | `Win the {event}` | `Выиграть турнир «{event}»` |
+| RU03-RH10 | round rung | `Reach the {round} at the {event}` | `Дойти до {roundGenitive} на турнире «{event}»` |
+| RU03-RH11 | skill rung | `Work on her {axis}` | `Поработать над {axisInstrumental}` |
+
+`{places}` is a counted phrase: `1 место`, `2 места`, `5 мест`. `{roundGenitive}` is a localized
+case-bearing phrase such as `четвертьфинала`, `полуфинала` or `финала`; `{axisInstrumental}` is
+`подачей`, `приёмом`, `игрой у сетки`, and so on. Neither can be produced by lowercasing a Russian
+display label, which is what the English helper currently does.
+
+The highlight list is built from stored `WorldEvent.text`; the rank movement line and every goal
+sentence are also rendered as English before the template sees them. RU-11 must make event
+highlights semantic and RU-04/RU-05 must expose localized tier, round and radar-axis terms. The goal
+helper should return `{kind, eventOrTier, finishOrAxis}` and let the locale render RH08–RH11. This
+keeps progression arithmetic in `nextGoalFor` while removing English grammar from it.
+
+## 24. RU-03 implementation boundary and LQA
+
+1. Keep the current screen composition and decision logic. This batch changes wording and the data
+   boundary, not recap visibility, arithmetic, training plans or tournament entry behavior.
+2. `weekDateLine`, `weekLabel`, tournament labels, surfaces, money and ranks must be locale-owned
+   formatters or semantic values. Do not parse their English output in Vue.
+3. Replace local English composition in `financeRows`, `rankMoveLine`, `artAlt`, `moodWord` and the
+   next-goal helper with message keys plus typed arguments. A single reusable message catalogue is
+   sufficient; no narrative framework is required.
+4. Preserve the existing deterministic selection and saved event history. Localization selects a
+   representation of an already-decided fact; it must not consume RNG or change the snapshot.
+5. Old saves need a Russian visible projection for retained events. Keeping legacy English text in
+   the save is compatible; showing it as the Russian fallback is not.
+6. LQA cases: both This Week arrivals; recap present and dismissed; 320/375 px; 200% text; zero and
+   five-digit finance values; daughter and coach share memos; each scene kind; all eight emotions;
+   one through six training days; rank up/down with 1/2/5 places; practice replay; every goal arm;
+   English-origin legacy save with an ordinary expense and a match highlight.
+
+## 25. Batch status
+
+RU-03 is drafted end to end: Home, identity, dashboard cards, season strip, news, Calendar, This
+Week and the weekly recap. Diary corpora, event prose and shared tournament content are explicitly
+routed to RU-09, RU-11 and RU-04 rather than silently treated as translated.
+
+The next editorial batch is RU-04: Season planner, tournament cards, eligibility and the complete
+tournament flow.
