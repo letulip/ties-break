@@ -398,7 +398,7 @@ only one seventh of a phone.
 | --- | --- | --- |
 | RU03-L01 | `Practice match` | `Тренировочный матч` |
 | RU03-L02 | `Practice match + coach` | `Тренировочный матч + тренер` |
-| RU03-L03 | `Leaves for college` | `Уезжает в колледж` |
+| RU03-L03 | `Leaves for college` | `Уезжает учиться в университет` |
 | RU03-L04 | `{brand} shoot` | `Съёмка для {brand}` |
 | RU03-L05 | `Exams` | `Экзамены` |
 | RU03-L06 | `Off-season` | `Межсезонье` |
