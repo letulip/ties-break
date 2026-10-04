@@ -309,3 +309,161 @@ and expanded states and `aria-expanded` already communicates the action state.
 The next RU-07 sections cover the album shell. Because its parent-written corpus is much larger
 than the surrounding interface, the full post-by-post translation will live in a linked companion
 document split by life stage and voice rather than turning this file into an unreviewable table.
+
+## 16. Album object and chapter names
+
+The screen is **`Альбом`**. It is a physical family book in its own language: `страница`, `разворот`,
+`заметка`, `подпись`, not a feed, gallery or career log.
+
+| band | English draft | Russian draft |
+| --- | --- | --- |
+| `prologue` | `The beginning` | `Начало` |
+| `young` | `Growing up` | `Как она росла` |
+| `teen` | `The breakthrough` | `Прорыв` |
+| `adult` | `The tour` | `В туре` |
+| `lateCareer` | `The final chapter` | `Последняя глава` |
+
+`Как она росла` is warmer than the catalogue noun `Взросление`; this is the parent's chapter tab,
+not a life-stage enum. `В туре` describes her lived stretch of years, while bare `Тур` can read as
+one tournament trip.
+
+The age line uses the shared counted-age formatter: `13 лет`, `21 год`, `22 года`; a range is
+`13–16 лет`. Never render `Возраст 21` or append invariant `лет` to every number.
+
+## 17. Album header, page and chapter navigation
+
+| source | Russian |
+| --- | --- |
+| `Back to Home` | `Вернуться в раздел «Дом»` |
+| `Chapter {n} of {total}` | `Глава {n} из {total}` |
+| `– Chapter {n}` on a sheet | `– Глава {n}` |
+| `Left half` | `Левая страница` |
+| `Right half` | `Правая страница` |
+| `Next half` | `Следующая страница` |
+| `Previous sheet` | `Предыдущая страница` |
+| `Next sheet` | `Следующая страница` |
+| pager dot `Sheet {n}` | `Страница {n}` |
+| `Sheet {n} of {total}` | `Страница {n} из {total}` |
+| `Chapters` | `Главы` |
+| `Close` | `Закрыть` |
+
+The underlying paging unit may remain `AlbumSheetModel`; player-facing Russian calls one visible
+half of a spread a `страница`. `Левая половина` is literally close to the implementation comment but
+sounds like half an image. `Левая страница` immediately tells the player how to read and pan the
+book.
+
+The wide chapter rail and the phone sheet share accessible landmark name **`Главы`**. A phone
+chapter row needs one composed accessible name:
+
+> `{chapterTitle}. {ageLabel}. {sheetCount, plural, one {# страница} few {# страницы} many {# страниц} other {# страницы}}.`
+
+The visible count badge may remain only the number. Today its bare `3` is read after the title with
+no unit; localization should repair that in the accessible projection rather than lengthening every
+row.
+
+## 18. Dates, ages and tournament facts on paper
+
+Album dates reuse the Russian range formatter established in RU-03: `3–9 июня`, `27 января – 2
+февраля`. A pasted note already sits inside a dated career chapter, so it keeps the current no-year
+shape unless the product later adds a year to every locale.
+
+Tickets and luggage tags use RU-04's localized tier and finish projections. Examples:
+
+- `Юниорский тур 60 · Победительница`;
+- `Мировой тур 100 · Финалистка`;
+- an early exit uses the compact stage `1/8 финала`, not the sentence `Выбыла в…`;
+- a tag age is `17 лет`, not `Возраст 17`.
+
+The model must carry semantic tier and finish ids through the worker boundary. `tier`, `stage`,
+`dateLabel`, `gate`, `seat`, `row`, `ageLabel` and `chapterTitle` are currently finished English
+strings; translating them after assembly would be brittle and would leave old English inside a
+Russian book.
+
+## 19. Ticket vocabulary and fictional places
+
+| English | Russian |
+| --- | --- |
+| `Gate {n}` | `Вход {n}` |
+| `Seat {n}{letter}` | `Место {n}{letter}` |
+| `Row {n}` | `Ряд {n}` |
+| `Age {n}` | use counted age, for example `21 год` |
+
+Seat letters `A–F` remain Latin because they are an invented ticket coordinate, not prose.
+
+The seeded fictional names need locale resources too. Their selected index remains deterministic;
+only its displayed name changes.
+
+| English venue | Russian venue |
+| --- | --- |
+| `Centre Court` | `Центральный корт` |
+| `Court One` | `Корт № 1` |
+| `The River Court` | `Речной корт` |
+| `Garden Arena` | `Садовая арена` |
+| `Harbour Stadium` | `Стадион у гавани` |
+| `The Old Clay` | `Старый грунт` |
+
+The embroidered childhood patch has very little width. Use compact fictional proper names rather
+than squeezing translated organisation types onto it:
+
+| English seed entry | Russian patch |
+| --- | --- |
+| `Rivermouth Tennis` | `Ривермут` |
+| `Northfield Club` | `Нортфилд` |
+| `Harbour Lane Tennis` | `Харбор-Лейн` |
+| `Old Mill Courts` | `Олд-Милл` |
+| `Cedar Park Tennis` | `Сидар-Парк` |
+| `Whitegate Club` | `Уайтгейт` |
+
+These are localized forms of invented ambience, not real clubs. The locale must never change which
+pool index the seed selected.
+
+## 20. Image alternatives
+
+| art meaning | Russian alt |
+| --- | --- |
+| portrait | `Она в ту неделю` |
+| journey home | `Дорога домой` |
+| first days on court | `Её первые дни на корте` |
+| wedding | `День её свадьбы` |
+| baby home | `Неделя, когда малыша привезли домой` |
+| graduation | `День выпуска` |
+| farewell match | `Её прощальный матч` |
+| day after last match | `День после последнего матча` |
+
+`Малыша` preserves the current child-sex-neutral contract. The alt follows the art actually drawn:
+if an occasion falls back to a generic age portrait, it uses `Она в ту неделю`, never the unseen
+event's description.
+
+## 21. Graduation checklist
+
+The graduation note's factual lines become:
+
+- title year: `Курс {year}, Студенческая лига: победа`;
+- exit year: `Курс {year}, Студенческая лига: выбыла в {roundPrepositional}`.
+
+Examples: `Курс 1, Студенческая лига: победа`; `Курс 2, Студенческая лига: выбыла в полуфинале`.
+This uses the same fictional league name and round morphology as the college screen. It states a
+result without praising or grading it and emits no row when the save contains no championship run.
+
+## 22. Album-shell implementation and LQA
+
+- Build `AlbumBook` from semantic facts plus locale resources, or carry ids to the UI. Do not use
+  finished English wire strings as localization keys.
+- Locale-aware formatting must cover chapter titles, ages and age ranges, week spans, tiers,
+  finishes, ticket words, fictional place names, image alternatives and college checklist lines.
+- Keep the seeded flavour draws and draw order unchanged. Choosing Russian `Садовая арена` for
+  English `Garden Arena` must consume no RNG and must not select another venue.
+- At 320 and 390 px, inspect the back-button accessible name, chapter header, `Левая/Правая
+  страница`, page counter, phone chapter rows, longest chapter title and translated patch names.
+- At 768 and 1024 px, inspect the complete chapter rail and ensure `Как она росла` plus an age range
+  does not force illegible plates.
+- Exercise one/few/many page counts, ages 21/22/25, a cross-month week, all ticket coordinate words,
+  every finish depth, generic portrait fallbacks, graduation with mixed results and a null league
+  year.
+- Verify keyboard access to the horizontal film, localized pager-dot names, chapter-current state,
+  focus return after the phone chapter dialog, and that no English accessible label survives.
+- Verify locale switching changes no chapter membership, sheet count, candidate choice, layout,
+  image path, flavour value or deterministic career state.
+
+The parent-written `note`, `caption` and loose `line` corpus is drafted separately in
+[`ru-album-corpus-2026-10.md`](ru-album-corpus-2026-10.md).
