@@ -580,8 +580,95 @@ The deep guess stays explicitly marked `мне кажется`. The quiet fridge
 story, not a claim that the parent and adult daughter share a kitchen. Replies avoid assigning a
 grammatical gender to the player-parent.
 
-## 16. Situation-corpus progress
+## 16. Situation R3 – `the-strangers-sock`
+
+Subject `story`; stages `after-school`, `college`, `independent`; no fact gate. The lost sock is a
+small inconvenience, with four distinct readings of the same mistake.
+
+### 16.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The laundry gave me back a sock that isn't mine and now I feel responsible for it."` | `«После стирки у меня оказался чужой носок. Теперь я почему-то за него отвечаю».` |
+| fiery | `"Someone out there has my sock. They know they have it. That's the part I can't let go of."` | `«У кого-то теперь мой носок. И этот кто-то знает. Вот что меня не отпускает».` |
+| deep | `"There's a stranger's sock in my bag. I still haven't thrown it away."` | `«У меня в сумке чужой носок. Я всё никак его не выброшу».` |
+| quiet | `"Laundry came back one short and one over. I kept the spare."` | `«После стирки одного носка не хватало, зато появился чужой. Оставила его».` |
+
+### 16.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the sock looks like` | `Спросить, как выглядит носок` |
+| respond | `Say it's yours now` | `Сказать, что теперь он её` |
+| space | `Say you have three of those at home` | `Сказать, что у вас дома три таких` |
+
+### 16.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Grey, a bit bobbly, definitely not mine. It's nicer than my ones, which is annoying."` | `«Серый, в катышках, точно не мой. Но лучше моих, что немного обидно».` |
+| sunny | respond | `"I don't think it works like that. Although I have started thinking of it as mine."` | `«Не думаю, что так можно. Хотя я уже начинаю считать его своим».` |
+| sunny | space | `"Do you? Then it's a family problem and I feel much better about it."` | `«Да? Значит, это семейная беда. Мне сразу полегчало».` |
+| fiery | invite | `"Grey. Plain. Honestly a downgrade on the one I lost, which is about right."` | `«Серый. Самый обычный. И хуже моего потерянного – ну конечно».` |
+| fiery | respond | `"It is not mine. I'm keeping it, but it isn't mine. There's a difference."` | `«Он не мой. Я его оставлю, но моим он от этого не станет. Есть разница».` |
+| fiery | space | `"Then why am I the one carrying a stranger's sock around?"` | `«Тогда почему чужой носок таскаю именно я?»` |
+| deep | invite | `"Grey, with a worn heel. Somebody's been running in it."` | `«Серый, пятка протёрта. Кто-то в нём бегал».` |
+| deep | respond | `"I know. I still haven't put it with my own ones."` | `«Знаю. Но к своим я его так и не положила».` |
+| deep | space | `"Everyone has one. I'd still like to know whose this is."` | `«У каждого такой найдётся. А я всё равно хотела бы знать, чей он».` |
+| quiet | invite | `"Grey. Bit longer than mine. It's in the side pocket."` | `«Серый. Чуть длиннее моих. Лежит в боковом кармане».` |
+| quiet | respond | `"Maybe. I haven't worn it."` | `«Может быть. Я его пока не надевала».` |
+| quiet | space | `"Right. I'll stop mentioning it."` | `«Понятно. Больше не буду о нём говорить».` |
+
+The fiery lost sock and the returned sock are deliberately different objects; the wording keeps
+that distinction. The daughter's `Да?` responds to the parent's domestic detail without inventing
+who owns the other three socks.
+
+## 17. Situation R4 – `the-announcement`
+
+Subject `story`; stages `college`, `independent`; no fact gate. The setting is an airport gate,
+which the story itself establishes. The quiet English line says the announcement was not in
+English; the Russian draft says she did not understand the language, preserving her experience
+without assigning a default language to the player family.
+
+### 17.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"They said something over the speaker, nobody understood a word, and the entire gate stood up together. Herd instinct!"` | `«Что-то объявили по громкой связи, никто ни слова не понял – и все у выхода разом встали. Стадный инстинкт!»` |
+| fiery | `"Not one person knew what was said. Not one. And we all stood up like sheep, me included, which is the bit that bothers me."` | `«Никто не понял объявление. Никто. А мы все встали как овцы. Я тоже. Вот что бесит».` |
+| deep | `"An announcement went out that nobody understood, and the whole room stood. I've been thinking about how easily that worked."` | `«Объявили что-то непонятное, и весь зал встал. Думаю о том, как легко это сработало».` |
+| quiet | `"The gate announcement wasn't in English. Everyone stood, so I did. We boarded fine."` | `«У выхода объявили на языке, которого я не понимала. Все встали, и я тоже. Потом спокойно сели в самолёт».` |
+
+### 17.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether it was even the right flight` | `Спросить, тот ли это был рейс` |
+| respond | `Say you'd have stood up too` | `Сказать, что вы бы тоже встали` |
+| space | `Say she got there, which is the main thing` | `Сказать, что главное – она добралась` |
+
+### 17.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"It was, in the end. We all stood there for ages before anything actually happened."` | `«Тот самый. Только мы потом ещё целую вечность стояли, прежде чем что-то началось».` |
+| sunny | respond | `"Everybody would. That's what was so good about it."` | `«Все бы встали! В том и вся прелесть».` |
+| sunny | space | `"I did get there. I'll stop picking at it."` | `«Добралась. Ладно, перестану к этому возвращаться».` |
+| fiery | invite | `"It was the right one. That's not the point. Nobody checked."` | `«Да, тот. Но дело не в этом. Никто ведь не проверил».` |
+| fiery | respond | `"Everyone would. That's exactly what bothers me about it."` | `«Все бы встали. Вот именно это меня и бесит».` |
+| fiery | space | `"I got there. I'd still like to know what she actually said."` | `«Добралась. Но мне всё равно хочется узнать, что она там сказала».` |
+| deep | invite | `"It was. I only know that because it was, not because anybody checked."` | `«Тот. Но я знаю это только потому, что мы улетели. Никто не проверял».` |
+| deep | respond | `"You would. So would I. I did."` | `«Верю. Я бы тоже встала. Так и сделала».` |
+| deep | space | `"I got there. I'm still thinking about how fast we all moved."` | `«Добралась. Но всё думаю, как быстро мы все поднялись».` |
+| quiet | invite | `"It was the right gate. We boarded a while after that."` | `«Выход был тот. Через какое-то время нас посадили».` |
+| quiet | respond | `"So did I. It seemed easier than sitting."` | `«Я так и сделала. Показалось проще, чем сидеть».` |
+| quiet | space | `"I got there. That's the whole of it."` | `«Добралась. Вот и всё».` |
+
+The deep response accepts what the parent says without assigning the player-parent a grammatical
+gender. The daughter uses feminine past tense only for herself.
+
+## 18. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 10 / 51 | 190 / 969 | 4 / 4 | R45–R52 and R1–R2 complete as DRAFT |
+| 12 / 51 | 228 / 969 | 4 / 4 | R45–R52 and R1–R4 complete as DRAFT |
