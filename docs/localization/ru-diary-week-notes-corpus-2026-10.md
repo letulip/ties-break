@@ -320,3 +320,79 @@ could look portable.
 
 The second line deliberately does not say what the family cut: the economy model does not hold that
 fact. Both lines retain the `fundsPressure === 'tight'` licence and print no amount.
+
+## 18. Flat pool B – calendar-owned weeks (13 lines)
+
+### 18.1 Exams – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F034 | `Exams. She trained early and revised late, and looked tired both ways.` | `Экзамены. Рано тренировалась, поздно готовилась. Оба раза выглядела уставшей.` |
+| RU09D-F035 | `Revision at the kitchen table until eleven. Tennis got the mornings.` | `До одиннадцати готовилась за кухонным столом. Теннису достались утра.` |
+| RU09D-F036 | `She revised with the television on and somehow it worked.` | `Готовилась при включённом телевизоре. Каким-то образом это работало.` |
+| RU09D-F037 | `Two sessions all week instead of five. The rest of it was papers.` | `Две тренировки вместо пяти. Всё остальное – экзамены.` |
+
+The Russian uses `готовилась`, not `повторяла`: this is exam preparation, not a second occurrence.
+F035–F036 retain the same-roof licence.
+
+### 18.2 Vacation – three
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F038 | `A week away as a family. Nobody mentioned rankings once.` | `Неделя семейной поездки. Никто ни разу не вспомнил о рейтинге.` |
+| RU09D-F039 | `A week off the court. She came back browner, and louder at dinner.` | `Неделя без корта. Вернулась загорелее и громче за ужином.` |
+| RU09D-F040 | `Seven days, no drills. She did not ask about the calendar once.` | `Семь дней без упражнений. Ни разу не спросила о календаре.` |
+
+F039 must stay package-agnostic despite `загорелее`: it claims only the visible result already in
+the approved source, never water, beach, hotel or another destination.
+
+### 18.3 Off-season – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F041 | `The season is over. She slept until nine and it was glorious.` | `Сезон закончился. Она спала до девяти, и это было прекрасно.` |
+| RU09D-F042 | `Off-season. The bag is in the cupboard and the house is louder.` | `Межсезонье. Сумка в шкафу, а дома стало громче.` |
+| RU09D-F043 | `December. She is teaching her cousin to serve, badly.` | `Декабрь. Учит кого-то из родни подавать. Плохо.` |
+| RU09D-F044 | `Off-season. She came over without the racquet bag. We noticed.` | `Межсезонье. Пришла без сумки с ракетками. Мы заметили.` |
+
+`Кого-то из родни` avoids inventing a cousin's grammatical gender; the runtime holds neither a
+named cousin nor that person's gender. F042 is same-roof, while F044 is explicitly an away-stage
+visit.
+
+### 18.4 Practice match – two
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F045 | `A hit-out at the club. She played the whole thing like it counted.` | `Поиграла в клубе. Провела всё так, будто матч шёл в зачёт.` |
+| RU09D-F046 | `A practice match, and she still shook hands like it was a final.` | `Тренировочный матч. А руку пожала так, будто это был финал.` |
+
+These are `playedPractice` weeks. Use the established `тренировочный матч`; do not call either one
+an exhibition or ranking match.
+
+## 19. Flat pool C – the week under a knock (nine lines)
+
+### 19.1 Rested knock – five
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F047 | `A week off the {knockPart}. She was bored by Tuesday and said so by Wednesday.` | `Неделя отдыха для {knockPart.gen}. Во вторник заскучала, в среду сказала.` |
+| RU09D-F048 | `Rest week – doctor's orders, and ours. She watched the others hit.` | `Врач велел отдыхать, мы тоже. Она смотрела, как играют другие.` |
+| RU09D-F049 | `Ice, stretching, no court. The {knockPart} is quieter than it was.` | `Лёд, растяжка, без корта. {knockPart.nomCap} беспокоит меньше.` |
+| RU09D-F050 | `She asked twice if she could go in for an hour. Twice we said no.` | `Дважды просила час на корте. Дважды мы отказали.` |
+| RU09D-F051 | `Rest week. She asked the physio twice. The answer stayed no.` | `Неделя отдыха. Дважды спросила физиотерапевта. Ответ – нет.` |
+
+### 19.2 Pushed knock – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F052 | `She trained on the {knockPart} all week and did not mention it once.` | `Всю неделю тренировалась с повреждением {knockPart.gen}. Ни слова.` |
+| RU09D-F053 | `Full week on court. She strapped it up herself before every session.` | `Полная неделя на корте. Перед каждым занятием сама накладывала тейп.` |
+| RU09D-F054 | `The {knockPart} held. We watched her serve more closely than usual.` | `С {knockPart.ins} всё обошлось. За подачей следили внимательнее.` |
+| RU09D-F055 | `She trained through it. The coach said nothing and watched everything.` | `Тренировалась через боль. Тренер молчал и следил за всем.` |
+
+`{knockPart.gen}`, `.ins` and `.nomCap` are localization requirements, not suggested text to show
+the player. The Russian body-part catalogue needs genitive, instrumental and a sentence-initial
+nominative form. F054 deliberately avoids a gendered past-tense verb such as
+`выдержал/выдержала`: the body-part noun can be masculine, feminine or neuter. If localization uses
+ICU/select instead, it must provide the same grammatical result without changing the deterministic
+row selection.
