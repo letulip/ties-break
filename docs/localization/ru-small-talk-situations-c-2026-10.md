@@ -267,8 +267,93 @@ three staff herself.
 The sunny joke addresses the parent without grammatical gender. No reply asserts a romance,
 dependency or staff hire.
 
-## 7. Corpus progress
+## 7. Situation R36 – `the-long-match-on-court-one`
+
+Subject `observation`; stages `college`, `independent`; no fact gate. The daughter watches a
+long match. The observed players' stamina is her impression, not a reading of her own condition
+or a medical claim.
+
+### 7.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"There was a match on court one that went on forever and they were both still fine when I left."` | `«На первом корте матч тянулся бесконечно, а когда я ушла, обе ещё держались отлично».` |
+| fiery | `"Hours of it, and neither of them was limping. I'd have been on the floor."` | `«Часами играли, и ни одна даже не хромала. Я бы уже лежала на корте».` |
+| deep | `"It went far longer than anything else out there. They were both still moving properly when I left."` | `«Он длился куда дольше остальных. Когда я уходила, обе ещё двигались уверенно».` |
+| quiet | `"One of the matches ran very long. I watched some of it."` | `«Один матч сильно затянулся. Я немного посмотрела».` |
+
+### 7.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how much of it she saw` | `Спросить, сколько она посмотрела` |
+| respond | `Say that is a different kind of fitness` | `Сказать, что это особая выносливость` |
+| space | `Say she does not have to measure herself against it` | `Сказать, что ей не надо сравнивать себя с ними` |
+
+### 7.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"A good chunk of it. I kept meaning to leave and then not leaving."` | `«Прилично. Всё собиралась уйти и каждый раз оставалась».` |
+| sunny | respond | `"It really is. They were still running when I gave up watching."` | `«Точно. Когда я сдалась и ушла, они ещё бегали».` |
+| sunny | space | `"I know. I did a bit anyway, standing there."` | `«Знаю. Но пока стояла, всё-таки немного сравнивала».` |
+| fiery | invite | `"Enough of it. And then I left in the middle, which I'm annoyed about."` | `«Достаточно. Потом ушла посреди матча и теперь злюсь на себя».` |
+| fiery | respond | `"It is. I'd have been sitting down long before that."` | `«Ещё какая. Я бы давно уже села».` |
+| fiery | space | `"I already did. That's what watching it was."` | `«Уже сравнила. Я потому и смотрела».` |
+| deep | invite | `"The middle of it. I left before the end and I have thought about that since."` | `«Середину. Ушла до конца, и с тех пор об этом думаю».` |
+| deep | respond | `"It is. Neither of them looked like they were surviving it."` | `«Да. Ни одна не выглядела так, будто просто терпит».` |
+| deep | space | `"No. I'd still like to know what that feels like."` | `«Не надо. Но мне всё же интересно, каково это».` |
+| quiet | invite | `"Some of the middle. I left before it finished."` | `«Часть середины. До конца не осталась».` |
+| quiet | respond | `"It is. Neither of them had slowed down when I went."` | `«Да. Когда я ушла, ни одна не замедлилась».` |
+| quiet | space | `"No. I was only watching."` | `«Не надо. Я просто смотрела».` |
+
+No answer says who won or what the final score was. The parent does not turn observation into a
+training command.
+
+## 8. Situation R37 – `what-they-do-after`
+
+Subject `observation`; stages `college`, `independent`; no fact gate. She watches how players
+behave after matches. This is her private comparison, not a statement about an actual loss.
+
+### 8.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've started watching what people do AFTER. It tells you more than the match does."` | `«Я стала смотреть, что игроки делают ПОСЛЕ. Иногда это говорит больше самого матча».` |
+| fiery | `"Some of them are fine in ten minutes. Ten. I'm not built like that and I'm not sure I want to be."` | `«Некоторые уже через десять минут как ни в чём не бывало. Десять. Я так не устроена и не уверена, что хочу».` |
+| deep | `"The ten minutes after is where the real thing is. I've started staying to watch it."` | `«Настоящее видно в десять минут после матча. Я стала оставаться и смотреть».` |
+| quiet | `"I've been staying a bit longer after matches. Watching."` | `«После матчей я теперь задерживаюсь. Смотрю».` |
+
+### 8.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she has seen` | `Спросить, что она заметила` |
+| respond | `Say you'd never thought to watch that` | `Сказать, что вам не приходило в голову смотреть после матча` |
+| space | `Say she can leave when the match ends` | `Сказать, что после матча она может уходить` |
+
+### 8.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"All sorts. Some of them are laughing by the time they reach the gate."` | `«Всякое. Некоторые уже смеются, когда доходят до выхода».` |
+| sunny | respond | `"Nor had I. I only noticed because I was waiting for somebody."` | `«Мне тоже. Просто однажды я ждала кое-кого и заметила».` |
+| sunny | space | `"I could. I'd rather stay, now that I've started."` | `«Могу. Но раз уж начала смотреть, лучше останусь».` |
+| fiery | invite | `"Some of them are fine straight away. Some of them aren't fine at all."` | `«Некоторые сразу в порядке. Другим совсем не по себе».` |
+| fiery | respond | `"Nobody does. Everyone watches the match and then leaves."` | `«Никому не приходит. Все смотрят матч и уходят».` |
+| fiery | space | `"I could leave. I'd rather know what happens next."` | `«Могла бы уйти. Но я хочу видеть, что будет потом».` |
+| deep | invite | `"Nobody does the same thing. That's what I keep noticing."` | `«Никто не делает одного и того же. Вот что я замечаю».` |
+| deep | respond | `"Nor had I. It's the ten minutes nobody films."` | `«Мне тоже не приходило. Эти десять минут ведь никто не снимает».` |
+| deep | space | `"I could. I've started staying and I'm not sure I want to stop."` | `«Могла бы. Но я начала оставаться и не уверена, что хочу перестать».` |
+| quiet | invite | `"Some pack up fast. Some sit for a while."` | `«Кто-то быстро собирает вещи. Кто-то сидит».` |
+| quiet | respond | `"Neither had I. I just started staying."` | `«Мне тоже не приходило. Просто стала задерживаться».` |
+| quiet | space | `"I know. I'll stay a bit anyway."` | `«Знаю. Всё же ещё немного побуду».` |
+
+`Десять минут` is an authored observation, not a recovery timer. The parent may offer to leave;
+she decides whether to stay.
+
+## 9. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 42 / 51 | 798 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R35 complete as DRAFT |
+| 44 / 51 | 836 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R37 complete as DRAFT |
