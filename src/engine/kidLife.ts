@@ -35,6 +35,11 @@ import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from './economy'
 import { COLLEGE_TIER_NAME } from './collegeOffer'
 import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './season/calendar'
 import { kidBirthYear } from './world/age'
+// ⭐⭐ ROUND 46 #9 – THE SPAN WORDS, imported rather than re-spelled: the wedding announcement and the
+// personal page's relationship line count a relationship in the SAME words, and one function is what keeps
+// the two from drifting apart. `weddingCopy` is a copy leaf (it imports a type and nothing else), so no
+// import cycle can form through it.
+import { togetherSpan } from './world/lifeBeat/weddingCopy'
 import { seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
 // ⭐ ROUND 42 #6 – TYPE-ONLY, so this leaf stays a leaf. `engine/spirit.ts` owns the union and the
@@ -425,6 +430,35 @@ export function collegeNote(view: KidLifeWorldView): string {
   }
   const years = college.yearsDone === 1 ? '1 year' : `${college.yearsDone} years`
   return `${place} – ${years} of the ${college.totalYears}, and she left before the course ended.`
+}
+
+/** ⭐⭐ ROUND 46 #9 – THE RELATIONSHIP LINE, said under the grid on the page that is about her.
+ *
+ *  The owner, 05.10: «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может
+ *  сделать что-то на личной странице или заменить after school, например, когда он станет
+ *  неактуальным? С подсчётом сколько они уже вместе например или ещё что-то?»
+ *
+ *  ⚠ ⚠ DRAFT – every form below is the BUILDER'S DRAFT for the owner's blessing (invariant 4):
+ *  docs/rounds/round-46.md, `## DRAFT strings (R46-S…)`, rows S10 (wired) and S11 (the alternate). Only the
+ *  words around the span are new; the span's own words are S2's (`togetherSpan`).
+ *
+ *  ⚠ A SENTENCE UNDER THE GRID, AND NOT THE AFTER-SCHOOL CELL'S SEAT. That cell does go quiet – the top of
+ *  its ladder is `Grown up` / `Her own life now` – but two things keep this line out of it: a name and
+ *  `1 year and 6 months` do not fit a `nowrap` tile line (`collegeNote`'s reason), and the line has to
+ *  stand while the cell is still current, which is most of the years she can be with somebody.
+ *
+ *  ⚠ NO NAME IS A FACT, NOT A GAP. The name is written once, at the engagement, so for most of a
+ *  relationship the honest line has none; it never prints «null» and never invents one.
+ *
+ *  Pure: the view's three facts. Zero draws, nothing persisted. */
+export function togetherNote(view: KidLifeWorldView): string {
+  const together = view.together
+  if (!together) return ''
+  const span = togetherSpan(together.weeks)
+  if (together.married) {
+    return together.name === null ? `Married – together for ${span}` : `Married to ${together.name} – together for ${span}`
+  }
+  return together.name === null ? `Together for ${span}` : `Together with ${together.name} for ${span}`
 }
 
 /** ⭐⭐ ROUND-23 #18 – HER OWN ACCOUNT, said on the page that is about her.
@@ -932,6 +966,25 @@ export interface KidLifeWorldView {
    *  money, so what it needs to know is whether the rule applies at all. Composed at snapshot time
    *  off the till's own ownership guard, never re-derived here. */
   ownsBrand: boolean
+  /** ⭐⭐ ROUND 46 #9 – THE ATTACHMENT THE PARENT HAS BEEN TOLD ABOUT, or null.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS NULL: a view that says nothing about love is a view with nobody in it,
+   *  so the hand-built views in the tests (and any future probe) need no edit and cannot grow a line by
+   *  accident. `toSnapshot` always passes it, and `tests/component/round23-kid-page.test.ts` pins that it
+   *  does. */
+  together?: KidLifeTogetherView | null
+}
+
+/** ⭐⭐ ROUND 46 #9 – HER ATTACHMENT AS THE PERSONAL PAGE MAY SEE IT: three facts and no episode (no id, no
+ *  week of anything, no `wants`), so the line can say what the parent knows and nothing the fog law keeps. */
+export interface KidLifeTogetherView {
+  /** his first name, or null until the engagement writes it (`LoveEpisode.partnerName`) – for most of a
+   *  relationship there is none, and that is a fact rather than a gap */
+  name: string | null
+  /** whole weeks together – `relationshipDurationWeeks`, the count the wedding announcement prints too */
+  weeks: number
+  /** married and not over – `latchedEpisode(world) !== null`, the one spelling of «is she married» */
+  married: boolean
 }
 
 /** Her four years, as the personal page is allowed to see them (round 23 #6b). */
@@ -957,6 +1010,9 @@ export function buildKidLife(view: KidLifeWorldView): KidLife {
     schoolLabel: stageLabelOf(view),
     schoolWhy: schoolCutOffNote(view),
     collegeNote: collegeNote(view),
+    // ⭐⭐ ROUND 46 #9 – whether she is with somebody and for how long, off the same view as every note
+    // above it; '' unless the parent has been told of somebody and it is not over.
+    togetherNote: togetherNote(view),
     ownAccount: ownAccountNote(view),
     // ⭐⭐ ROUND 42 #10 – the same facts as rows, for her own page. The Money screen keeps the
     // sentence above; this is the card that replaces the hint paragraph on screen C.

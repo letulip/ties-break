@@ -41,6 +41,10 @@ import { COLLEGE_TIER_NAME } from '../../src/engine/collegeOffer'
 import { rngFromSeed } from '../../src/engine/rng'
 import { seasonYear } from '../../src/shared/dates'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
+import type { LoveEpisode } from '../../src/shared/protocol/narrative'
+import { relationshipDurationWeeks } from '../../src/engine/world/loveEpisodes'
+import { partnerNameFor, PARTNER_NAME_POOL } from '../../src/engine/world/lifeBeat/wedding'
+import { togetherSpan } from '../../src/engine/world/lifeBeat/weddingCopy'
 
 /** A REAL career ticked to `week`, held solvent so an arm is decided by the calendar rather than by
  *  a bankruptcy. The same harness tests/component/round21-school-cutoff.test.ts uses. */
@@ -229,6 +233,177 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       expect(getComputedStyle(el).whiteSpace, `${n.text().slice(0, 30)}: must be allowed to wrap`).not.toBe('nowrap')
       expect(n.text().length, 'and no note is a paragraph in disguise').toBeLessThan(220)
     }
+    w.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 46 #9 – THE RELATIONSHIP LINE ON HER PAGE.
+//
+// THE OWNER, 05.10:
+//   «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может сделать что-то на
+//    личной странице или заменить after school, например, когда он станет неактуальным? С подсчётом
+//    сколько они уже вместе например или ещё что-то?»
+// (The quote lives here and not in the template: tests/round13-nav.test.ts bans Cyrillic in one.)
+//
+// WHERE IT LIVES, AND WHY NOT IN THE AFTER-SCHOOL CELL. That cell goes quiet at the top of its own ladder
+// (`Grown up` / `Her own life now`, from 22), so «replace it once it is stale» was a fair thought – but the
+// line has to stand BEFORE that too (a girl of nineteen on `Tennis full-time` can be with somebody), and a
+// name plus `1 year and 6 months` does not fit a `nowrap` tile line. So it takes the seat the school and
+// college sentences already take, UNDER THE GRID, and the cell is untouched: the school-seat arm pins that.
+//
+// ⚠ EVERY SNAPSHOT HERE IS THE REAL `toSnapshot` OF A REAL CAREER. The attachment is written onto the world
+// before the snapshot is taken and every expected span is built from the engine's own primitives
+// (`relationshipDurationWeeks`, `togetherSpan`, `partnerNameFor`) – the test never types a span the engine
+// should have computed. The words AROUND the span are the draft (docs/rounds/round-46.md, R46-S10), so
+// they ARE typed: that is the one claim about wording, and it moves with the owner's ruling.
+//
+// ⚠ MUTATION-VERIFIED (each alone, restored byte for byte) – see the round-46 ledger, item 9, for the run.
+//   * `weeks` in snapshot.ts's `together` becomes 0               -> the named and married arms.
+//   * the `v-if="life?.togetherNote"` paragraph is removed        -> the named, married, seat and phone arms.
+//   * `married: latchedEpisode(world) !== null` becomes `false`   -> the married arm, alone.
+//   * `knownPartner(world, world.week)` asks `Infinity` instead   -> the not-told-yet arm, alone.
+// =================================================================================================
+
+/** A REAL career ticked to `week` through the harness above, but handing back the WORLD, so an attachment
+ *  can be written onto it before the snapshot is taken. */
+function worldAt(week: number, seed = 'round23-page') {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 6 })
+  const rng = rngFromSeed(world.seed)
+  while (world.week < week) {
+    world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    const age = pendingBirthday(world)
+    if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
+    tickWeek(world, rng)
+    if (world.pendingTournament) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+  }
+  return world
+}
+type CareerWorld = ReturnType<typeof worldAt>
+
+/** One attachment a year and a half old (78 weeks = 52 + 26), built by hand the way
+ *  tests/life-moment-engine.test.ts builds its own. `partnerName` is null until a test names him. */
+function attachment(world: CareerWorld, over: Partial<LoveEpisode> = {}): LoveEpisode {
+  const sinceWeek = world.week - 78
+  return {
+    id: `p:${sinceWeek}`,
+    sinceWeek,
+    endedWeek: null,
+    knownWeek: sinceWeek + 3,
+    wants: 'open',
+    partnerId: `p:${sinceWeek}`,
+    publicWeek: null,
+    publicWrong: false,
+    airedMetWeek: null,
+    airedEndedWeek: null,
+    latchedWeek: null,
+    partnerName: null,
+    ...over,
+  }
+}
+
+/** The real snapshot of `world` with `row` as her only attachment, or with none at all. */
+function snapshotWith(world: CareerWorld, row: LoveEpisode | null): Snapshot {
+  world.loveEpisodes = row === null ? [] : [row]
+  return toSnapshot(world)
+}
+
+describe('⭐⭐ ROUND 46 #9 – the relationship line on her page', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('⭐⭐ A STANDING ATTACHMENT IS ON THE PAGE – his name, and the span the engine counted', () => {
+    const world = worldAt(90)
+    const row = attachment(world)
+    const name = partnerNameFor(world.seed, row.id)
+    const named = snapshotWith(world, { ...row, partnerName: name })
+    const weeks = relationshipDurationWeeks(world)
+    expect(weeks, 'THE FIXTURE: a year and a half, as the primitive counts it').toBe(78)
+    const span = togetherSpan(weeks!)
+    expect(span).toBe('1 year and 6 months')
+
+    const w = mountKid(named)
+    const line = w.find('.kid-note-together')
+    expect(line.exists(), 'the line is on the screen').toBe(true)
+    expect(line.text()).toBe(`Together with ${name} for ${span}`)
+    expect(line.text(), 'and it is the engine sentence, not one the screen wrote').toBe(named.life.togetherNote)
+    w.unmount()
+
+    // Before the engagement writes a name there is none to print, and the line stays short and honest.
+    const w2 = mountKid(snapshotWith(world, row))
+    expect(w2.find('.kid-note-together').text()).toBe(`Together for ${span}`)
+    w2.unmount()
+  })
+
+  it('⭐⭐ MARRIED SAYS SO – and the span still counts from the day they got together', () => {
+    const world = worldAt(90)
+    const row = attachment(world)
+    const name = partnerNameFor(world.seed, row.id)
+    const married = snapshotWith(world, { ...row, partnerName: name, latchedWeek: world.week - 10 })
+    const span = togetherSpan(relationshipDurationWeeks(world)!)
+    expect(span, 'a wedding ten weeks ago moves nothing: it is still the year and a half').toBe('1 year and 6 months')
+    const w = mountKid(married)
+    expect(w.find('.kid-note-together').text()).toBe(`Married to ${name} – together for ${span}`)
+    w.unmount()
+
+    // A married row with no name is hand-built (the engine writes the name at the engagement, before any
+    // wedding) – but the line must not print «null» for it.
+    const w2 = mountKid(snapshotWith(world, { ...row, latchedWeek: world.week - 10 }))
+    expect(w2.find('.kid-note-together').text()).toBe(`Married – together for ${span}`)
+    w2.unmount()
+  })
+
+  it('⭐ NOBODY STANDING, NO LINE – never met, over, or not told to him yet', () => {
+    const world = worldAt(90)
+    const cases: Array<[string, LoveEpisode | null]> = [
+      ['no attachment at all', null],
+      ['one that has ended', attachment(world, { endedWeek: world.week - 5 })],
+      ['one she has not told him about yet (the fog law)', attachment(world, { knownWeek: world.week + 4 })],
+    ]
+    for (const [why, row] of cases) {
+      const snap = snapshotWith(world, row)
+      expect(snap.life.togetherNote, why).toBe('')
+      const w = mountKid(snap)
+      expect(w.find('.kid-note-together').exists(), why).toBe(false)
+      w.unmount()
+    }
+  })
+
+  it('⭐⭐ THE SCHOOL CELL KEEPS ITS SEAT – with after school current, the line stands beside it', () => {
+    const world = worldAt(300)
+    const alone = mountKid(snapshotWith(world, null))
+    const before = tileWithLabel(alone, STAGE_LABEL.after)
+    expect(before, 'a June girl at 300 is past the last bell').toBeTruthy()
+    const linesBefore = before!.findAll('.kid-tile-line').map((l) => l.text())
+    expect(linesBefore).toEqual(['Tennis full-time', 'No more classes'])
+    expect(alone.find('.kid-note-together').exists()).toBe(false)
+    alone.unmount()
+
+    const row = attachment(world)
+    const withLine = mountKid(snapshotWith(world, { ...row, partnerName: partnerNameFor(world.seed, row.id) }))
+    const cell = tileWithLabel(withLine, STAGE_LABEL.after)
+    expect(cell, 'still headed for the stage she is at').toBeTruthy()
+    expect(cell!.findAll('.kid-tile-line').map((l) => l.text()), 'and says exactly what it said').toEqual(linesBefore)
+    expect(withLine.find('.kid-note-together').exists(), 'while the line is up beside it').toBe(true)
+    withLine.unmount()
+  })
+
+  it('⚠ THE LINE IS A WRAPPING BLOCK IN THE NOTES STACK, in its longest form', () => {
+    // The same layout claim the college note is held to above: happy-dom reports 0-width boxes, so what
+    // can be asserted is that the paragraph is a normal block in the notes stack (it carries
+    // `kid-grid-note`, which is what the desktop media block places) and is allowed to wrap.
+    const world = worldAt(90)
+    const row = attachment(world)
+    const longest = [...PARTNER_NAME_POOL].sort((x, y) => y.length - x.length)[0]
+    const w = mountKid(snapshotWith(world, { ...row, partnerName: longest, latchedWeek: world.week - 10 }))
+    const line = w.find('.kid-note-together')
+    expect(line.exists(), 'the married form, the longest, is up').toBe(true)
+    expect(line.classes(), 'it is in the notes stack').toContain('kid-grid-note')
+    expect(getComputedStyle(line.element as HTMLElement).whiteSpace, 'and may wrap').not.toBe('nowrap')
+    expect(line.text().length, 'and is no paragraph in disguise').toBeLessThan(220)
     w.unmount()
   })
 })

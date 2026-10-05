@@ -99,7 +99,7 @@ import { careerMoney } from './reckoning'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, latchedEpisode, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
 // imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
@@ -109,7 +109,7 @@ import { upcomingWeddingWeek } from './lifeBeat/wedding'
 import { lifeMomentOf } from './lifeMoment'
 import { lifeEventBoostOn } from './lifeBoost'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
-import { knownPartner } from './loveEpisodes'
+import { knownPartner, relationshipDurationWeeks } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
@@ -2422,6 +2422,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // the split starts. ⚠ `> 0` and not `>= 0` – a delivered brand at fame zero earns nothing and
       // has nothing to split, and a sentence about a share of zero is the noise this guard refuses.
       ownsBrand: merchWeeklyIncomeCents(world) > 0,
+      // ⭐⭐ ROUND 46 #9 – THE ATTACHMENT THE PARENT HAS BEEN TOLD ABOUT, as the three facts her page's
+      // relationship line is made of. ⚠ `knownPartner` AND NOT `activeEpisode`: «is someone there» is the
+      // world's question and «does he know» is the one a page may answer (`knownPartner`'s own ⚠⚠), so a
+      // girl who has not told him yet shows no line. ⚠ The span is `relationshipDurationWeeks`, the count
+      // the wedding announcement prints, and `married` is `latchedEpisode`, the one spelling of «is she
+      // married». Derived at snapshot time: no draw, no save key, no schema move.
+      together: (() => {
+        const partner = knownPartner(world, world.week)
+        const weeks = relationshipDurationWeeks(world, partner)
+        if (partner === null || weeks === null) return null
+        return { name: partner.partnerName ?? null, weeks, married: latchedEpisode(world) !== null }
+      })(),
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by

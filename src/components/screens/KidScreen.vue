@@ -525,6 +525,18 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            moment she is out of school. -->
       <p v-if="life?.collegeNote" class="hint kid-grid-note kid-note-college">College – {{ life.collegeNote }}</p>
 
+      <!-- ⭐⭐ ROUND 46 #9 - THE RELATIONSHIP LINE: whether she is with somebody, and for how long.
+           The owner asked for an indicator on her page and floated the School cell's seat once that
+           cell has gone stale. It sits HERE, under the grid, for the reasons the two notes above give:
+           the span is words (a year and six months), longer than a tile's nowrap line, and the line has
+           to stand while the cell is still current too, not only after it has gone quiet. The School
+           cell is untouched.
+           ENGINE-COMPOSED (`kidLife.togetherNote`), name, span and married form alike: this screen
+           derives no fact. Empty unless the parent has been told of somebody and it is not over, so a
+           private girl shows nothing until she has said. The wording is a draft for the owner, in the
+           round 46 ledger. -->
+      <p v-if="life?.togetherNote" class="hint kid-grid-note kid-note-together">{{ life.togetherNote }}</p>
+
       <!-- ========================== 3. THE SKILLS RADAR ==========================
            decisions.md #11, finally built. No numbers anywhere on it, ever.
            ⭐ ROUND 41 #5 – `kid-panel-radar` IS THE DESKTOP HOOK ONLY. All three panels on this

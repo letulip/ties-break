@@ -1374,6 +1374,21 @@ export interface KidLife {
    *  `nowrap` cell, so the tile carries the year and this carries the place. The two notes are
    *  mutually exclusive by construction (one speaks only at school, the other only once she is out). */
   collegeNote: string
+  /** ⭐⭐ ROUND 46 #9 – THE RELATIONSHIP LINE, or '' when the parent has been told of nobody standing.
+   *
+   *  The owner, 05.10: «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может
+   *  сделать что-то на личной странице или заменить after school, например, когда он станет
+   *  неактуальным? С подсчётом сколько они уже вместе например или ещё что-то?»
+   *
+   *  ⚠ A SENTENCE UNDER THE GRID, `schoolWhy`'s and `collegeNote`'s reason: it names a person and a span in
+   *  words, which a `nowrap` tile line cannot hold – and it has to stand while the School cell is still
+   *  current as well as after that cell has gone quiet, so it has a seat of its own and the cell is
+   *  untouched.
+   *  ⚠ THE PARENT'S ATTACHMENT AND NEVER THE WORLD'S: the engine asks `knownPartner`, so a girl who has not
+   *  told him yet shows no line, and one that has ended shows none either – «standing» is the question.
+   *  ⚠ DERIVED AT SNAPSHOT TIME, persisted nowhere (no schema move): the span is `relationshipDurationWeeks`,
+   *  the count the wedding announcement prints, in `togetherSpan`'s words; «married» is `latchedEpisode`. */
+  togetherNote: string
   /** ⭐⭐ ROUND-23 #18 – HER OWN BANK BALANCE and the share that fills it, or '' before eighteen.
    *
    *  The only surface that tells a player the ramp exists: what the account holds, what she keeps of

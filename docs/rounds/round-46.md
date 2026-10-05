@@ -94,12 +94,36 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   growth. Engine-UI parity class: find what the popup sums vs what the engine's own ledgers say.
   Class: **build**.
 
-- [ ] **9. «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может сделать
+- [x] **9. «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может сделать
   что-то на личной странице или заменить after school, например, когда он станет неактуальным?
   С подсчётом сколько они уже вместе например или ещё что-то?»** – no current-relationship indicator
   exists(?); add one on the personal page – e.g. replace the stale «after school» block once it is no
   longer relevant, showing the partner and how long they have been together. He gave design latitude
   («или ещё что-то»). New strings = DRAFT rows. Class: **build**.
+  - **B4 · 9 SHIPPED – a relationship line on her personal page, UNDER the tile grid beside the school and
+    college sentences; the After-school cell is untouched.** While it stands: `Together with {name} for {span}`;
+    once married: `Married to {name} – together for {span}`; while she has not given a name: `Together for {span}`
+    (the engine writes the name at the engagement, so for most of a relationship there is none). The screen
+    prints `snapshot.life.togetherNote` and derives nothing.
+    **The «replace after school» call.** That cell does go quiet – its ladder ends at `Grown up` / `Her own life
+    now` from 22 – but it cannot honestly host the line. A name plus `1 year and 6 months` does not fit a `nowrap`
+    tile line (the reason the school and college sentences already sit under the grid), and the line has to stand
+    while the cell is still current (a girl of 19 on `Tennis full-time`), so a swap would show it in two different
+    places depending on her age. The owner's idea stays open as a later move; nothing here blocks it.
+    **Laws kept.** It is the PARENT'S attachment – `knownPartner`, never `activeEpisode` – so a girl who has not
+    told him shows nothing, and an ended one shows nothing. The span is B1's `relationshipDurationWeeks` in
+    `togetherSpan`'s words (one count with the wedding card); «married» is `latchedEpisode`. Snapshot: ONE derived
+    field, `life.togetherNote`, fed by an optional `together` fact on `KidLifeWorldView` (optional so the
+    hand-built views in six test files need no edit); persisted nowhere, no schema move, zero draws.
+    DRAFT: R46-S10 (wired), R46-S11 (alternate).
+    **Tests** – `tests/component/round23-kid-page.test.ts`, extended (5 new arms, 10/10 green): standing and
+    named, unnamed, married (and a nameless married row), nobody / ended / not told yet, the school cell reading the
+    same beside the line, and the notes-stack wrap check. Every expected span is built from the real primitives
+    off the same world, never typed. **Mutations**, each alone and restored byte for byte (`cmp`): span source set
+    to 0 reddens the named and married arms; the paragraph removed reddens named, married, seat and phone; `married`
+    forced false reddens the married arm alone; the fog gate dropped (`knownPartner(world, Infinity)`) reddens the
+    not-told-yet arm alone. Also green: the 18 component files that mount KidScreen (202 tests) and 38 unit files
+    around `kidLife`, the template rules, import cycles and the barrel pins (839 tests); `vue-tsc -b --force` clean.
 
 - [ ] **10. «На экране между матчами с большой картинкой немного съехала вёрстка в ширину и есть
   горизонтальный скрол, надо проверить и починить»** – the between-matches screen with the big
@@ -402,3 +426,5 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S7 | 12 – the spouse beat's heading, **WIRED** (`spouseViewCopy.ts` `SPOUSE_VIEW_HEADING`; the dialog's frame over the line; was `The one she married has something to say about this season`, which opened with the same four words as the line under it) | `Her spouse has something to say about this season` |
 | R46-S8 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `Her husband has something to say about this season` – gendered: the partner's name pool is 28 male first names, so it never contradicts a name on screen, but the schema holds no gender and the pool's «no gender» law stands until he rules |
 | R46-S9 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `He has something to say about this season` – his own «он» and the shortest; the Home card above it (`The one she married wants a word.`, unchanged) is its only antecedent; also gendered |
+| R46-S10 | 9 – the personal page's relationship line, **WIRED** (`kidLife.ts` `togetherNote`, one function; the sentence sits under the tile grid on `KidScreen`, beside the school and college notes; the span words are S2's and are not repeated here) | `Together with {name} for {span}` – e.g. `Together with Anton for 1 year and 6 months` · married: `Married to {name} – together for {span}` · before the engagement has written a name: `Together for {span}` · married with no name (hand-built rows only – the engine names him at the engagement, before any wedding): `Married – together for {span}` |
+| R46-S11 | 9 – ALTERNATE for S10, NOT wired (the same one function) | name-first and shorter: `{name} – together for {span}` · `Together for {span}` · `Married to {name} – together for {span}`; the cost is that the unnamed form reads as a fragment with no subject, which is why S10 keeps «with» in the named form |
