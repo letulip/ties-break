@@ -442,3 +442,5 @@ repeatable item or laundry mechanic.
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
 | 36 / 51 | 684 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R29 complete as DRAFT |
+
+The remaining runtime rows continue in [RU-10C](ru-small-talk-situations-c-2026-10.md).
