@@ -73,7 +73,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   new wording – and «развернуть» = it may grow a few words of explanation). New string = DRAFT row
   for his blessing. Class: **build**.
 
-- [ ] **3. «Похоже у нас такой же небольшой гринд на недвижимости есть: я только что продал первый
+- [x] **3. «Похоже у нас такой же небольшой гринд на недвижимости есть: я только что продал первый
   дом за 332к, и мне предлагаю купить новый за 240к. На счёт инфляции на дома я ещё думаю, кстати,
   что ты думаешь на эту тему?»** – split:
   - **3a** – the housing grind: sell a house at 332k, be offered the next at 240k – the same class
@@ -89,6 +89,33 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     **+2 %/yr, strictly below the family's +3 % appreciation**: a quick flip goes negative (−$2.7k
     at year 2), the 12-year churn shrinks to ~$28k (noise), the holder keeps beating the late
     buyer. Class: **build** → bundle **B14**.
+  - **B14 · 3 SHIPPED (06.10) – THE HOUSE'S ENTRY PRICE INDEXES +2 %/YR FROM THE CAREER'S FIRST WEEK, STRICTLY BELOW ITS +3 %: THE 12-YEAR CHURN IS +$27,539, NOT +$91,917, AND A FLIP AT YEAR 2 LOSES $2,718.**
+    **PREDICTED → MEASURED** (the engine's own functions; `tests/round46-house-entry-index.test.ts` pins every digit): the flip at year 2, −$2.7k → **−$2,718.48** (0.97 × $254,616.00 against the $249,696.00 quote);
+    the 12-year churn, ~$28k → **+$27,539.13**; the old churn, ~$92k → **+$91,917.13** (0.97 × $342,182.61 = $331,917.13 – his «332к», to the digit); house-first at year 12 → **$304,378.00**
+    (garden $748,263, villa $1,775,539, headland $3,804,725; week 0 is the catalogue to the cent on all four).
+    **THE QUOTE PATH IS ONE FUNCTION, so the card, the gate and the till cannot disagree:** `assetEntryPriceCents` (`world/assets.ts`). `shopView` asks it for the card's `entryCents` AND for `affordable`
+    (`fundsCents >= entryCents`), `buyAsset` asks it for `paidCents` and refuses on `fundsCents < paidCents`, and the composable and `ShopPanel` read the row's `entryCents`, never the catalogue. Arm 6 drives all three at year 12.
+    **THE BUILD:** an OPTIONAL catalogue field `entryIndexBps: 200` beside `annualRateBps: 300` on the four house rungs (`economy/shop.ts`: his quote and the churn arithmetic on `house-first`, a pointer on the other three),
+    declared on `ShopItem`. `assetEntryPriceCents` quotes `round(price × 1.02^(week / 52) / 100) × 100` for `family === 'house'` with the field: the holding's OWN continuous weekly clock (`assetValueCents`'s), NOT annual steps
+    (a step leaves a sawtooth – a flip in the weeks before each step meets a quote a year stale – and mutation M5 below shows nothing else sees it), whole dollars in this ONE place (the `masseur` / `staffRaise` idiom),
+    `world.week` as the career clock. Zero draws, zero strings, no schema, no stored state, no new exported symbol. `classEntryCents` (resale's thin-market reference rung) still reads the catalogue ON PURPOSE – the ruling is about the QUOTE.
+    **HIS CONSTRAINT, MEASURED – it is still an investment, a small one:** the real return is 1.03 / 1.02, about +0.98 %/yr. After the corridor's 3 % haircut a held house is BEHIND inflation until **year 3.1** (flip −$5,016.00 at year 1,
+    −$2,718.48 at year 2, −$303.15 at year 3) and AHEAD of it from then on (+$2,234.45 at year 4, +$4,900.01 at year 5, +$27,539.13 at year 12, +$130,339.70 at year 30): a quick flip loses, a long hold earns, and there is no instant cycle left.
+    The knob is the index, and this is arithmetic from the same closed form, NOT an engine run: +2.5 % would cross at ~6.3 years and make the 12-year cycle ~+$9.1k. His word was «обгонять инфляцию», so +2 % stands unless he says otherwise.
+    **ECONOMY PIN (t73) RE-PINNED, the 7th time:** 29,707 → 29,787 chars (+80, four × `,"entryIndexBps":200`), 1,923 → 1,927 paths (+4), sha e2acf0a0… → 714bcb87…, paths sha d32bf1f8… → 301bbd43…; the 44 top-level blocks did not move.
+    The live-ECONOMY reader was run on the UNPATCHED tree first and reproduced the old pin to the digit, so both arms of the measurement hold the change and its reader.
+    **TWO EXISTING PINS MOVED BY THE RULING, BOTH VERIFIED RATHER THAN SWEPT:** (1) `tests/r39-brand-rebuy.test.ts` «every other rung answers the catalogue price whatever the career remembers» hard-coded `house-first` at the catalogue figure
+    in a week-12 world ($241,099 now). Its real claim – the brand's memory moves no other rung – is kept for the house by comparing against the same world with `brandFounded: false`; the car and the academy stay exact.
+    (2) `tests/component/principles-e11-shop-identity.test.ts`'s frozen render record (careers at weeks 412 and 1133) was regenerated with its own `TB_WRITE_SHOP_IDENTITY=1` and DIFFED LEAF BY LEAF: of 700 leaves exactly 9 changed – the 4 hashes,
+    the 4 Property texts (whose only differing tokens are the four house prices, each equal to the engine's rule at that week) and ONE control, the `pro-bought` villa's Buy gaining `disabled` (the arm's wallet sits between $1,400,000 and $1,637,826).
+    Everything else is identical; the dated finding is in that test's header, as the 28.09 precedent asks.
+    **VERIFIED:** `tests/round46-house-entry-index.test.ts` 30/30 over six arms; MUTATION-VERIFIED seven ways, each restored byte-identical (`cmp`, both files), the verdicts differing from one another – index everything → 3 red (arm 5), drop the indexation → 13 red,
+    drop only the family filter → 1 red, no whole-dollar rounding → 8 red, annual steps → 3 red, the gate reading the catalogue → 2 red, the charge reading the catalogue → 3 red. A pin query over every test that names `entryCents`, `buyAsset`,
+    `shopView`, `assetEntryPriceCents` or a house id, plus every `principles-*` guard: 19 component files 172/172 green; 63 unit files 746 of 754 – **THE 8 RED ARE NOT B14'S, MEASURED:** the same three files (`coach-travel-edge-prior-schemas` ×6 hash goldens,
+    `principles-d07-inbox-bound` D-P8's 113-key set, `principles-d08-store-payload-clone`'s sender list) fail with the IDENTICAL eight names at the unchanged HEAD 96dda9fa in a worktree. `vue-tsc -b --force` exit 0.
+    **NOT RUN, per the brief:** `npm run check`, `test:sim`, `test:e2e`, `check:tools`. No economy bench buys a house (`git grep "house-" tools` hits only the two album probes).
+    **FOR THE ARCHITECT:** (a) a career that already OWNS a house keeps its recorded `paidCents`; only the next quote differs, nothing migrates. (b) Invariant 5 asks for a spec: predicted vs measured is recorded here and no `docs/specs/` file
+    was written – say if you want one. (c) The control worktree `../tb-b14-control` is de-registered from git but a leftover directory (only `graphify-out/`) remains: deleting it was denied to me, so it needs one `rm -r`.
 
 - [x] **4. «Альбом стал лучше, а давай ещё повернём немного вот этот цветной горизонтальный билет на
   на 5 градусов по часовой стрелке?»** – the coloured horizontal TICKET scrap in the album rotates

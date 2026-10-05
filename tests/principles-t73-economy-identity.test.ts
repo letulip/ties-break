@@ -64,10 +64,14 @@ import { ECONOMY } from '../src/engine/economy'
 // the object at fb7087d5 reads 29,701 chars / 1,919 paths against the 29,647 / 1,917 pinned just above – +54 chars and +2 paths from the two commits that touched
 // src/engine/economy* after the 02.10 pin (c397187e, ca9adca5) and did not re-pin, so this test was RED at HEAD before B13 changed a digit. The numbers below are
 // the WHOLE object, so they carry both; the 44 top-level blocks did not move. Taken on fb7087d5 plus the round-46 B13 commit.
-const PIN_JSON_SHA256 = 'e2acf0a01215b830f237775264ff51beff4efff469b82e544f19d6e65debd8c3'
-const PIN_JSON_CHARS = 29_707
-const PIN_PATHS_SHA256 = 'd32bf1f83b524ffa05a017decf16f3c6881efde19b02a70f3169a3ecb8d716f4'
-const PIN_PATH_COUNT = 1_923
+// RE-PINNED A SEVENTH TIME 06.10, ROUND 46 #3 – THE OWNER'S HOUSE-PRICE RULING (05.10; ledger item 3 in docs/rounds/round-46.md): «Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест активом,
+// пусть и небольшим, т.е. его рост должен обгонять инфляцию.» A KEY IS ADDED ON EACH OF THE FOUR HOUSE RUNGS AND NO VALUE MOVES: shop.catalogue[6..9].entryIndexBps = 200 (the +2 %/yr entry-price index, beside each
+// rung's `annualRateBps: 300`), read by `assetEntryPriceCents`. The tell of an ADDED key, as on 30.09 S2: bytes AND key paths move – 29,707 → 29,787 chars (+80, four × `,"entryIndexBps":200`), sha e2acf0a0… → 714bcb87…;
+// 1,923 → 1,927 paths (+4), sha d32bf1f8… → 301bbd43…; the 44 top-level blocks did not. Taken on 96dda9fa plus the round-46 B14 commit.
+const PIN_JSON_SHA256 = '714bcb873b31f56494e2e1b81fbadfe1435792833cea37c1d76d0d310b0d2435'
+const PIN_JSON_CHARS = 29_787
+const PIN_PATHS_SHA256 = '301bbd4393b1b4877c1e369a1a55e138c7acb1c24e408332b1dae42c8cf4a9a5'
+const PIN_PATH_COUNT = 1_927
 const PIN_TOP_LEVEL_KEYS = 44
 
 const sha = (s: string): string => createHash('sha256').update(s).digest('hex')
