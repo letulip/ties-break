@@ -100,6 +100,9 @@ import { flagEmoji } from '../../composables/countries'
 // ⭐ T9 – the feed's life-row glyph column, empty until the owner's picks (who-she-is §5a).
 // ⭐ v75 T5 – and `lifeRowGlyph`, the per-KIND storey over it (`WorldEvent.lifeKind`, T1's field).
 import { LIFE_ROW_EMOJI, lifeRowGlyph } from './lifeRowGlyphs'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
@@ -419,7 +422,7 @@ const strainNote = computed<string | null>(() => {
 // where the plan presets, the planned spend and the week recap live (they left the bottom bar with
 // that tab – see App.vue's TABS comment).
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
-const nextDates = computed(() => (nearestEntered.value ? weekRange(nearestEntered.value.week) : ''))
+const nextDates = computed(() => (nearestEntered.value ? weekRange(nearestEntered.value.week, startYear.value) : ''))
 // A COST, printed plain (owner, 28.07). The minus sign belongs to the ledger, where a number can
 // go either way; here the label already says "Travel budget" and nothing about it is ever positive,
 // so the sign only made it look like a balance in trouble.
@@ -1905,12 +1908,12 @@ async function leaveCollege(): Promise<void> {
         <div class="log">
           <p v-if="!newsGroups.length" class="hint" style="margin: 0">No news yet.</p>
           <div v-for="group in newsGroups" :key="group.week" class="news-week">
-            <p class="news-week-label">{{ weekLabel(group.week) }}</p>
+            <p class="news-week-label">{{ weekLabel(group.week, startYear) }}</p>
             <!-- D8: one table PER WEEK, so an unnamed one is not merely anonymous - a reader landing
                  on it cannot tell which week's it is, and `getByRole('table', { name })` had a dozen
                  identical candidates. The name is the label already printed above it, plus the noun,
                  because "W12 2032" on its own does not say what the table holds. -->
-            <table :aria-label="`News – ${weekLabel(group.week)}`">
+            <table :aria-label="`News – ${weekLabel(group.week, startYear)}`">
               <tbody>
                 <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
                   <td v-if="e.type === 'match' && e.match" class="news-match-cell">

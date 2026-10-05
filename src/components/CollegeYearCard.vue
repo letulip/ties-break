@@ -51,6 +51,9 @@ import type { WorldMatch } from '../shared/protocol'
 import MatchReplay from './MatchReplay.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 
@@ -471,7 +474,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
         <p class="college-calendar-head">The year ahead</p>
         <ul>
           <li v-for="row in collegeCalendar" :key="row.week">
-            <span class="college-week">{{ weekLabel(row.week) }}</span>
+            <span class="college-week">{{ weekLabel(row.week, startYear) }}</span>
             <span class="college-week-label">{{ row.label }}</span>
             <span class="college-week-what">{{ row.what }}</span>
           </li>

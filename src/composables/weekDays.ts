@@ -334,7 +334,9 @@ export type CalendarWeekFacts = Pick<
   Snapshot,
   'week' | 'plan' | 'profile' | 'injury' | 'knock' | 'vacations' | 'practices' | 'upcoming' | 'arrival' | 'pending'
 > &
-  Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>> &
+  // SUCCESSION S2e (06.10): the career's start year, for every date the grid and the look-ahead print. Optional like its neighbours –
+  // a hand-built fixture omits it and gets 2031, which is what every one was written about.
+  Partial<Pick<Snapshot, 'tierOpen' | 'ageYears' | 'startYear'>> &
   // round-21 #5: WHICH TABLE IS HERS, so the look-ahead can drop the rungs that pay into one she has
   // left. Optional for the same reason as its two neighbours above - absence means "do not judge the
   // table", which is how every fixture written before it already read.
@@ -450,9 +452,9 @@ export function layoffHoldsWeek(snap: Pick<Snapshot, 'week' | 'injury'>, week: n
  * `row.injured` on the two grids), so it stays at the call sites – this only puts the words in one
  * place. Empty string when she is healthy, which is what a `title` binding and a `{{ }}` both want.
  */
-export function layoffNoteFor(snap: Pick<Snapshot, 'week' | 'injury'> | null | undefined): string {
+export function layoffNoteFor(snap: (Pick<Snapshot, 'week' | 'injury'> & Partial<Pick<Snapshot, 'startYear'>>) | null | undefined): string {
   const back = snap ? layoffReturnWeek(snap) : null
-  return back === null ? '' : `Injured – back ${weekLabel(back)}`
+  return back === null ? '' : `Injured – back ${weekLabel(back, snap?.startYear)}`
 }
 
 /** ⭐ ROUND 28 #1 – WHICH DAYS THE MASSEUR'S TABLE LANDS ON, given how many sessions the rung buys.
@@ -674,7 +676,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     // Asked once, here, and carried on the week - see the field's note on CalendarWeek for why the
     // grid may not ask it itself. Summer travels the same way (R15-8).
     offSeason: isOffSeasonWeek(week),
-    summer: isSummerWeek(week),
+    summer: isSummerWeek(week, snap.startYear),
     // ⚠ THE DRAWN WEEK, NOT `snap.week`. A calendar showing the first week of September in the year
     // she leaves has one week of school and one without, and the grid has to draw the right one.
     schoolOver: snap.schoolEndsWeek !== undefined && week >= snap.schoolEndsWeek,
@@ -700,7 +702,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       // and a 6px chip has not.
       readout: back === null
         ? 'She is out – no training this week.'
-        : `Out with the ${snap.injury?.kind ?? 'injury'} – back ${weekLabel(back)}.`,
+        : `Out with the ${snap.injury?.kind ?? 'injury'} – back ${weekLabel(back, snap.startYear)}.`,
       animates: base.animates,
     }
   }
@@ -1147,8 +1149,8 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
                   : 'Training week'
     rows.push({
       week: w,
-      label: weekLabel(w),
-      dates: weekSpan(w),
+      label: weekLabel(w, snap.startYear),
+      dates: weekSpan(w, snap.startYear),
       kind,
       event,
       injured: layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, w),
@@ -1192,10 +1194,10 @@ export interface WeddingMark {
   weeksAway: number
 }
 
-export function weddingMarkFor(snap: { week: number; weddingWeek?: number | null }): WeddingMark | null {
+export function weddingMarkFor(snap: { week: number; weddingWeek?: number | null; startYear?: number }): WeddingMark | null {
   const w = snap.weddingWeek
   if (w == null || w <= snap.week) return null
-  return { week: w, label: weekLabel(w), dates: weekSpan(w), weeksAway: w - snap.week }
+  return { week: w, label: weekLabel(w, snap.startYear), dates: weekSpan(w, snap.startYear), weeksAway: w - snap.week }
 }
 
 /** The mark, off the live snapshot. */

@@ -144,6 +144,9 @@ import Card from './ui/Card.vue'
 import ProgressRing from './ui/ProgressRing.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
 import WeatherPlate from './ui/WeatherPlate.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const props = defineProps<{ event: UpcomingEvent }>()
 
@@ -151,7 +154,7 @@ const game = useGameStore()
 const { venueUrl, surfaceVerdict } = useEventCard()
 
 const spec = computed(() => TIERS[props.event.tier])
-const dates = computed(() => weekRange(props.event.week))
+const dates = computed(() => weekRange(props.event.week, startYear.value))
 /** The winner's cheque, through `prizeCentsFor` - types.ts names it the payout table's ONLY reader
  *  and this screen must not become a second one. Zero on the junior tour, where the dash is true. */
 const winnerPrizeCents = computed(() => prizeCentsFor(props.event.tier, 0))

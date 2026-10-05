@@ -10,7 +10,9 @@
 //       pre-history table) are the same world around a later date.
 //   C · THE SCHEMA ARM – the migration's default, the fixtures, the creation guard and the declared `legacy` shape.
 //   D · THE RATCHET – `startYear` is an OPTIONAL last argument on every year-dependent date/age call, which makes an OMISSION silent: this walks src/engine and
-//       refuses a call that forgets it. (The UI's own call sites are the follow-up, fed by `Snapshot.startYear`; migrations are frozen history and default to 2031.)
+//       refuses a call that forgets it. (Migrations are frozen history and default to 2031.)
+//   E · THE UI RATCHET (S2e, 06.10) – the same walk over src/components and src/composables, `.vue` templates included: 135 bare calls before, none after. The proof that
+//       the thread is LIVE – a 2048 career printing '48 on three mounted screens, the default printing '31 – is tests/component/succession-s2e-start-year.test.ts.
 
 import { describe, it, expect } from 'vitest'
 import { createHash } from 'node:crypto'
@@ -252,11 +254,13 @@ const YEAR_DEPENDENT = [
   'forkDue', 'isSummerWeek', 'unitPriceHistory',
 ] as const
 
-/** Every call of a year-dependent function whose ARGUMENT LIST does not mention `startYear`. Comments and the definitions themselves are skipped. */
-function bareCalls(text: string): { line: number; code: string }[] {
-  const call = new RegExp(`(?<![A-Za-z0-9_.])(${YEAR_DEPENDENT.join('|')})\\(`, 'g')
+/** Every call of a year-dependent function in `text`, and whether its ARGUMENT LIST mentions `startYear`. Comments and the definitions themselves are skipped.
+ *  ⭐ S2e (06.10): `names` is a parameter and the walk reads a Vue template exactly as it reads a script – `{{ weekLabel(w, startYear) }}` and
+ *  `weekLabel(w, startYear.value)` both carry the word, and `src/components` is mostly templates. */
+function scanCalls(text: string, names: readonly string[] = YEAR_DEPENDENT): { line: number; code: string; threaded: boolean }[] {
+  const call = new RegExp(`(?<![A-Za-z0-9_.])(${names.join('|')})\\(`, 'g')
   const lines = text.split('\n')
-  const out: { line: number; code: string }[] = []
+  const out: { line: number; code: string; threaded: boolean }[] = []
   let m: RegExpExecArray | null
   while ((m = call.exec(text)) !== null) {
     const line = text.slice(0, m.index).split('\n').length
@@ -271,17 +275,24 @@ function bareCalls(text: string): { line: number; code: string }[] {
       else if (text[i] === ')') depth--
       i++
     }
-    if (!text.slice(argsFrom, i - 1).includes('startYear')) out.push({ line, code: code.trim().slice(0, 140) })
+    out.push({ line, code: code.trim().slice(0, 140), threaded: text.slice(argsFrom, i - 1).includes('startYear') })
   }
   return out
 }
 
-function sourceFiles(dir: string): string[] {
+/** Every call whose argument list does not mention `startYear` – S1's original arm-D walk, now a filter over `scanCalls`. */
+function bareCalls(text: string, names: readonly string[] = YEAR_DEPENDENT): { line: number; code: string }[] {
+  return scanCalls(text, names)
+    .filter((c) => !c.threaded)
+    .map(({ line, code }) => ({ line, code }))
+}
+
+function sourceFiles(dir: string, exts: readonly string[] = ['.ts']): string[] {
   const found: string[] = []
   for (const name of readdirSync(dir)) {
     const path = join(dir, name)
-    if (statSync(path).isDirectory()) found.push(...sourceFiles(path))
-    else if (name.endsWith('.ts')) found.push(path)
+    if (statSync(path).isDirectory()) found.push(...sourceFiles(path, exts))
+    else if (exts.some((e) => name.endsWith(e))) found.push(path)
   }
   return found
 }
@@ -303,5 +314,75 @@ describe('S1 · D – no engine call forgets the career’s start year', () => {
       for (const hit of bareCalls(readFileSync(file, 'utf8'))) bare.push(`${file.slice(root.length + 1)}:${hit.line}  ${hit.code}`)
     }
     expect(bare, 'an engine call that omits startYear prints 2031 for a 2048 career without a sound').toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
+// E · the UI ratchet (S2e, 06.10)
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
+// S1 measured 135 date-formatting calls in src/components + src/composables still on the default (the walk above, pointed at the UI and at `.vue` files).
+// S2e threaded them all from `Snapshot.startYear` (composables/startYear.ts for a screen, the snapshot or the input object for a pure helper); this is the
+// one-way ratchet behind it: a NEW bare call is red the day it is written. The proof that the thread is live, and not merely present, is mounted –
+// tests/component/succession-s2e-start-year.test.ts.
+
+/** S1's list plus the one UI-side wrapper whose own output is a date: `enterActionName` prints `weekRange`, so a call that omits its year argument is as silent as any. */
+const UI_YEAR_DEPENDENT = [...YEAR_DEPENDENT, 'enterActionName'] as const
+
+/** EXEMPTIONS – `<path under src/>:<the call's source line, trimmed to 140>` -> the DATED reason this call is genuinely independent of the career's calendar
+ *  (a duration, say, and never a year). ⚠ NOT FOR A CALL THAT IS MERELY HARD TO THREAD: S2e threaded every one it found, including a pure helper three
+ *  callers deep and a list row that prints another career's week (see the S2e line of the spec's §8 ledger for the one honest limit that leaves).
+ *  Empty on 06.10 – and `staleExemptions` makes an entry that outlives its call a failure, so the table cannot rot into a list of things nobody remembers. */
+const UI_EXEMPT: Record<string, string> = {}
+
+type Hit = { file: string; line: number; code: string }
+const keyOf = (h: Hit): string => `${h.file}:${h.code}`
+function unexempted(hits: Hit[], table: Record<string, string>): Hit[] {
+  return hits.filter((h) => !(keyOf(h) in table))
+}
+function staleExemptions(hits: Hit[], table: Record<string, string>): string[] {
+  const live = new Set(hits.map(keyOf))
+  return Object.keys(table).filter((k) => !live.has(k))
+}
+
+describe('S2e · E – no UI call forgets the career’s start year', () => {
+  it('the scanner can fail: a bare template call, a bare script call and a bare wrapper call are caught, a threaded one is not, and an exemption silences exactly its own line', () => {
+    const ui = UI_YEAR_DEPENDENT
+    expect(bareCalls('<p>{{ weekLabel(row.week) }}</p>\n', ui), 'a template call').toHaveLength(1)
+    expect(bareCalls('<p>{{ weekLabel(row.week, startYear) }}</p>\n', ui), 'its threaded twin').toHaveLength(0)
+    expect(bareCalls('const l = computed(() => weekLabel(w.value))\n', ui), 'a script call').toHaveLength(1)
+    expect(bareCalls('const l = computed(() => weekLabel(w.value, startYear.value))\n', ui), 'its threaded twin').toHaveLength(0)
+    expect(bareCalls('<b :aria-label="enterActionName(ev)">x</b>\n', ui), 'the wrapper is on the list').toHaveLength(1)
+    expect(bareCalls('<b :aria-label="enterActionName(ev, startYear)">x</b>\n', ui)).toHaveLength(0)
+    expect(bareCalls('<p>{{ weekLabel(\n  row.week,\n  startYear,\n) }}</p>\n', ui), 'a multi-line call').toHaveLength(0)
+    expect(bareCalls('<p>{{ weekLabel(a, startYear) }} {{ weekRange(b) }}</p>\n', ui), 'the second call on a line is judged on its own arguments').toHaveLength(1)
+    expect(bareCalls('<p>{{ weekLabel(a) }}</p>\n'), 'S1’s own list, untouched, still sees a template call').toHaveLength(1)
+    const hit: Hit = { file: 'components/X.vue', line: 3, code: '{{ weekLabel(c.week) }}' }
+    const table = { [keyOf(hit)]: '06.10 – a duration, not a calendar year' }
+    expect(unexempted([hit], {})).toEqual([hit])
+    expect(unexempted([hit], table), 'an exemption removes exactly its own hit').toEqual([])
+    expect(unexempted([{ ...hit, code: '{{ weekLabel(d.week) }}' }], table), 'and not its neighbour').toHaveLength(1)
+    expect(staleExemptions([], table), 'an exemption whose call is gone is stale').toEqual([keyOf(hit)])
+    expect(staleExemptions([hit], table)).toEqual([])
+  })
+
+  it('src/components + src/composables, .ts and .vue: every year-dependent call passes the career’s start year, bar the dated exemptions', () => {
+    const root = resolve(__dirname, '../src')
+    const hits: Hit[] = []
+    let seen = 0
+    for (const dir of ['components', 'composables']) {
+      for (const file of sourceFiles(join(root, dir), ['.ts', '.vue'])) {
+        for (const c of scanCalls(readFileSync(file, 'utf8'), UI_YEAR_DEPENDENT)) {
+          seen++
+          if (!c.threaded) hits.push({ file: file.slice(root.length + 1), line: c.line, code: c.code })
+        }
+      }
+    }
+    expect(seen, 'the sweep is not vacuous – S2e threaded 137 calls (120 in .vue files, 17 in composables)').toBeGreaterThanOrEqual(130)
+    expect(
+      unexempted(hits, UI_EXEMPT).map((h) => `${h.file}:${h.line}  ${h.code}`),
+      'a UI call that omits startYear prints 2031 for a 2048 career without a sound',
+    ).toEqual([])
+    expect(staleExemptions(hits, UI_EXEMPT), 'an exemption whose call is gone, or now threaded, is a lie in the table').toEqual([])
+    for (const [key, reason] of Object.entries(UI_EXEMPT)) expect(reason, `${key}: an exemption carries a dated reason`).toMatch(/^\d\d\.\d\d\b/)
   })
 })

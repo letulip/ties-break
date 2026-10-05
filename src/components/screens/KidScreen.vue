@@ -85,6 +85,9 @@ import StatRow from '../ui/StatRow.vue'
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
 import { COUNTRY_NAMES, flagEmoji } from '../../composables/countries'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 // THE DOOR TO THE COACH MARKET (screen T). It lives on the Coach TILE rather than on Home for two
@@ -316,16 +319,16 @@ const moments = computed<Moment[]>(() => {
     fired.push({
       key: `${m.type}:${m.tier ?? ''}:${m.week}`,
       label,
-      when: weekLabel(m.week),
+      when: weekLabel(m.week, startYear.value),
       icon: m.type === 'title' ? 'title' : 'mark',
     })
   }
   // Four columns, as the export draws: her first week, the two most recent firsts, and today.
   const recent = fired.slice(-2)
   return [
-    { key: 'career-start', label: 'Career start', when: weekLabel(0), icon: 'start' as const },
+    { key: 'career-start', label: 'Career start', when: weekLabel(0, startYear.value), icon: 'start' as const },
     ...recent,
-    { key: 'today', label: 'Today', when: weekLabel(snap.week), icon: 'today' as const, now: true },
+    { key: 'today', label: 'Today', when: weekLabel(snap.week, startYear.value), icon: 'today' as const, now: true },
   ]
 })
 

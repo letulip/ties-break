@@ -62,6 +62,9 @@ import type { WorldMatch } from '../shared/protocol'
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
 import { flagEmoji } from '../composables/countries'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // R9-9a: the splash's "← Back" returns to the shell WITHOUT resolving anything – App.vue
 // hides the overlay and offers a Resume affordance while the week stays paused.
@@ -137,12 +140,12 @@ const oppAge = computed<number | null>(() => pending.value?.opponent.ageYears ??
 const showAges = computed(() => kidAge.value !== null && oppAge.value !== null)
 // Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
 // advances again while paused), so this doubles as the tournament's real date range.
-const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
+const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0, startYear.value))
 /** THE SAME WEEK, IN THE GAME'S OWN SHORT FORM: "W36 '35" (owner, R17 #9). `weekLabel` is where that
  *  format is spelled and it already ships on Home and in the practice header - the header line has
  *  room for a week, not for "Sep 1-7, 2035", and re-spelling it here is how two screens come to name
  *  the same week two ways (shared/dates.ts says so at the top of `weekLabel`). */
-const weekShort = computed(() => weekLabel(game.snapshot?.week ?? 0))
+const weekShort = computed(() => weekLabel(game.snapshot?.week ?? 0, startYear.value))
 
 // --- Round 5 item 6: pre-tournament splash ------------------------------------
 const tier = computed(() => (pending.value?.tier ? TIERS[pending.value.tier] : null))
