@@ -40,10 +40,10 @@ last-reviewed: 2026-10-05
 | [Batch 09B – Journey-home corpus](ru-diary-travel-corpus-2026-10.md) | Parent-written scraps after tournament travel, including result, body, distance and coach branches | drafted end to end |
 | [Batch 09C – Photo and condition corpus](ru-diary-photo-condition-corpus-2026-10.md) | Home photograph and condition-card captions with stage, result and body licences | drafted end to end |
 | [Batch 09D – Weekly voice-note corpus](ru-diary-week-notes-corpus-2026-10.md) | Four temperaments across life stages, special states and every explicit week-note row | all 324 current authored cells drafted end to end |
-| [Batch 10 – Life beats and small talk](ru-life-beats-small-talk-2026-10.md) | Life-beat dialogue plus the 51-situation generated small-talk corpus | shared and legacy small-talk frame drafted; situation corpus open |
+| [Batch 10 – Life beats and small talk](ru-life-beats-small-talk-2026-10.md) | Life-beat dialogue plus the 51-situation generated small-talk corpus | shared and legacy frame drafted; situation corpus complete across linked volumes; other life beats open |
 | [Batch 10A – Small-talk situations](ru-small-talk-situations-2026-10.md) | Continuation of the generated situation corpus after R1–R6 | R7–R18 drafted; later rows open |
 | [Batch 10B – Small-talk situations](ru-small-talk-situations-b-2026-10.md) | Continuation of the generated situation corpus after R18 | R19–R25 and R27–R29 drafted; later rows open |
-| [Batch 10C – Small-talk situations](ru-small-talk-situations-c-2026-10.md) | Final generated situation rows, starting at R30 | R30–R43 drafted; R44 open |
+| [Batch 10C – Small-talk situations](ru-small-talk-situations-c-2026-10.md) | Final generated situation rows, starting at R30 | R30–R44 drafted; 51/51 situation rows complete |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

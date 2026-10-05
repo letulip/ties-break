@@ -608,8 +608,51 @@ performance improvement.
 The shared respond label explicitly names the racket so `проба` cannot be confused with a
 permanent switch. No line asserts the current season is at a particular week.
 
-## 15. Corpus progress
+## 15. Situation R44 – `the-two-quiet-days`
+
+Subject `decision`; stages `college`, `independent`; fact gate `clear-next-week`. The gate proves
+no entered tournament next week, not two mechanically free days. Russian frames two quiet days
+as something she hopes to reserve, so training or ordinary obligations are not denied.
+
+### 15.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've got two quiet days and I can't work out whether to do something with them."` | `«На следующей неделе нет турнира. Думаю, оставить два дня спокойными или чем-нибудь их занять».` |
+| fiery | `"Two days. I'll either do something stupid with them or waste them entirely."` | `«Хочу выкроить два дня. Или натворю что-нибудь, или потрачу их впустую».` |
+| deep | `"Two quiet days. I've been deciding what to do with them for longer than they'll last."` | `«Пытаюсь выкроить два спокойных дня. На раздумья о них уйдёт больше времени, чем на сами дни».` |
+| quiet | `"A couple of quiet days coming. Nothing planned."` | `«На следующей неделе нет турнира. Может, оставлю пару дней без планов».` |
+
+### 15.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she'd like to do` | `Спросить, чем ей хотелось бы заняться` |
+| respond | `Say quiet days are allowed to stay quiet` | `Сказать, что спокойные дни можно оставить спокойными` |
+| space | `Say she can decide on the day` | `Сказать, что решать можно по ходу дела` |
+
+### 15.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Nothing. Genuinely nothing. And then I'll feel guilty about the nothing."` | `«Ничем. Совсем ничем. А потом буду чувствовать вину за это „ничего“».` |
+| sunny | respond | `"They are. I'm terrible at letting them, though. I always find something."` | `«Можно. Только я плохо умею их такими оставлять. Всегда что-нибудь нахожу».` |
+| sunny | space | `"I will, then. That's easier than working it out in advance."` | `«Тогда так и решу. Это проще, чем всё продумывать заранее».` |
+| fiery | invite | `"Something. I don't know what. That's the whole problem with two days."` | `«Чем-нибудь. Не знаю чем. В том и проблема с двумя днями».` |
+| fiery | respond | `"Allowed. Everyone keeps saying allowed. I still can't sit down."` | `«Можно, можно. Все так говорят. А я всё равно не могу усидеть».` |
+| fiery | space | `"I'll have decided by then. I always decide early and then change it."` | `«К тому времени уже решу. Я всегда решаю заранее, а потом передумываю».` |
+| deep | invite | `"Sleep. And then I'd want the two days back to do properly."` | `«Спать. А потом захотела бы вернуть эти два дня и провести их „как следует“».` |
+| deep | respond | `"They are. I'm not good at leaving a day alone."` | `«Можно. Но я не умею оставлять день в покое».` |
+| deep | space | `"All right. I'd rather know now, but all right."` | `«Хорошо. Хотелось бы знать сейчас, но хорошо».` |
+| quiet | invite | `"Not much. Wash things. Read a bit."` | `«Немногое. Постирать. Почитать».` |
+| quiet | respond | `"That's true. I'll see how they go."` | `«Верно. Посмотрю, как пройдут».` |
+| quiet | space | `"Fine. I'll leave it until then."` | `«Ладно. Пока не буду решать».` |
+
+The author's `two days` survives as her own plan rather than a schedule guarantee. No branch
+assigns fatigue, training or bond effects to resting.
+
+## 16. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 50 / 51 | 950 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R43 complete as DRAFT |
+| 51 / 51 | 969 / 969 | 4 / 4 | all current generated situations complete as DRAFT |
