@@ -162,6 +162,41 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ---
 
+## The plan – bundles by collision surface, sequential dispatch (token law 29.09)
+
+Orientation facts the bundles are built on: spouse heading = `spouseViewCopy.ts:29` (header and the
+`distant-swing` line both open «The one she married»); the bank-account ask is a birthday-gift row in
+`birthday.ts:534` with no age gate visible; `lifeBeat/wedding.ts` is 121 lines and no wedding appears
+in `LifeBeatDialog.vue`'s painting table (the funeral painting IS wired there, v87); the sell/withdraw
+cards live in `ShopPanel.vue` + `MoneyScreen.vue`; the year summary is `SeasonSummaryDialog.vue` and
+the spent-totals surface was already worked in round 31 (#19 is a REOPEN candidate – audit first);
+«Is there another year in this?» = `RetirementDialog.vue`; «A daughter came later» = `EndingScreen.vue`;
+the album ticket = `AlbumTicketPass.vue`; no −15% injury modifier surfaced for ANY asset in the first
+grep – B9 confirms what «тоже» refers to before copying it.
+
+| Step | Items | Surface owned (no two bundles share a file) | Model · budget |
+| --- | --- | --- | --- |
+| A0 (architect) | 7 probe, 3a probe | tools/ probes, read-only | – |
+| B1 | 11a 11b 11c 11d 22 | `lifeBeat/wedding*`, `pregnancy.ts`, `LifeBeatDialog.vue`, calendar wiring, worker dev command | sonnet · 70 |
+| B2 | 16 | engine entry/injury law, sim repro (read + fix if found) | sonnet · 50 |
+| B3 | 12 15 | `spouseViewCopy.ts`, `weekNotes.ts`, no-repeat memory | sonnet · 55 |
+| B4 | 9 | personal page (`KidScreen.vue`), consumes B1's duration primitive | sonnet · 40 |
+| B5 | 8 19 | `SeasonSummaryDialog.vue` + the engine ledger it reads | sonnet · 55 |
+| B6 | 13 18 20 21 | `RetirementDialog.vue`, `EndingScreen.vue` | sonnet · 60 |
+| B7 | 1a 1b | `ShopPanel.vue`, `MoneyScreen.vue` asset cards | sonnet · 45 |
+| B8 | 5 | `birthday.ts` age gate | sonnet · 30 |
+| B9 | 14 | index-fund cost basis (economy module + tests) | sonnet · 45 |
+| B10 | 6 | yacht injury modifier + bench/spec note | sonnet · 40 |
+| B11 | 10 | between-matches screen overflow (`MatchScene.vue` candidate) | sonnet · 35 |
+| B12 | 4 | `AlbumTicketPass.vue` rotation | sonnet · 25 |
+| Architect | 3b, 17, gates, report | – | – |
+
+Sequencing notes: B1 first (biggest, and #22's hazard multiplier shares its files); B2 early so a
+found defect leaves room for a follow-up fix agent; B4 after B1 (the «how long together» primitive
+is built once, in B1). Schema: any bundle that cannot derive its state does the FULL four-part move
+(v92+, append-only), and says so in its report – B3's lines-said memory is the likely candidate, the
+brief's preference is derivation from the diary.
+
 ## Cross-references
 
 - #3a is the round-45 #10 class (the brand grind) on a new asset class.
