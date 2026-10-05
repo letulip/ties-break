@@ -3181,7 +3181,19 @@ export function spouseViewEligible(world: WorldState): boolean {
  */
 export function rollSpouseView(world: WorldState): void {
   if (!spouseViewEligible(world)) return
-  const occasions = spouseViewOccasionsAt(world)
+  // ⭐ ROUND 46 #15 – THE OCCASIONS HE HAS NOT JUST SAID (owner, 05.10: the same line twice, a month or
+  // two apart, «часто повторяется»). The memory is DERIVED from the log – every raised row carries its
+  // occasion as `detail`, answered or not, the cooldown's own counting – so nothing is saved and the
+  // schema does not move. ⚠ THE FILTER RUNS BEFORE THE STREAM EXISTS: the pick below is still ONE draw on
+  // the same purpose key, only over the fresh occasions, and a week whose every true occasion is stale
+  // derives no key at all (a spouse with nothing NEW to say says nothing – §B's law). Where nothing was
+  // said inside the window the filter removes nothing and the pick is byte-identical to before.
+  const said = new Set(
+    lifeLogOf(world)
+      .filter((row) => row.kind === 'spouse-view' && world.week - row.week < ECONOMY.wedding.spouseViewNoRepeatWeeks)
+      .map((row) => row.detail),
+  )
+  const occasions = spouseViewOccasionsAt(world).filter((occasion) => !said.has(occasion))
   if (occasions.length === 0) return
   const at = pickInt(rngFromSeed(`${world.seed}:life:spouse-view:${world.week}`), 0, occasions.length - 1)
   raiseLifeBeat(world, 'spouse-view', occasions[at])

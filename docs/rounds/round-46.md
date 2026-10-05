@@ -182,13 +182,25 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       months.` – `engagedWithTogether` / `togetherSpan` in weddingCopy.ts); the pool lines are byte-untouched.
       DRAFT: R46-S1, R46-S2. Tests: `tests/life-moment-engine.test.ts` (11d block).
 
-- [ ] **12. «Надо проверить наш вординг на предмет дублей: "The one she married has something to say
+- [x] **12. «Надо проверить наш вординг на предмет дублей: "The one she married has something to say
   about this season / The one she married stayed back after the plates were cleared." The one she
   married повторяется дважды, давай может всё-таки напишем он, супруг, или вроде того. Мы за здоровые
   отношения.»** – the spouse feed card repeats «The one she married» in header AND first line.
   De-duplicate: pronoun / «her husband» forms. ⚠ Check first whether the phrase is deliberately
   gender-neutral (can she marry a woman?) – the replacement must survive the actual spouse model.
   New wording = DRAFT rows, his blessing. Class: **build**.
+  - **B3 · 12 DONE – the heading no longer opens «The one she married»; the pool is untouched.** The dialog's
+    heading and every pool line opened with the same four words, so the card said them twice in two lines.
+    **Gender verdict:** the spouse model holds NO gender – `LoveEpisode.partnerName` is a first name drawn from
+    `PARTNER_NAME_POOL` (28 fictional MALE names) and the copy law is «no gender anywhere in the pool» until he
+    rules – so the form that survives any partner is his own «супруг»: **WIRED (R46-S7)** `Her spouse has something
+    to say about this season` (one constant, `SPOUSE_VIEW_HEADING`). Alternates, not wired: S8 `Her husband has …`,
+    S9 `He has …` (both gendered). **Left alone, listed so he can ask:** the Home card `The one she married wants a
+    word.`, the four pool lines and two diary notes (`weekNotes.ts`) still carry the phrase – none is a repeat on
+    one screen and the ask named the heading. Test: `tests/wave7-spouse-view.test.ts` §G – the heading and every
+    pool line open on different three words, on the constants and on the card the engine assembles; heading
+    reverted → 3 RED. The one literal pin that moved with the string is §C's heading assertion. DRAFT: R46-S7,
+    R46-S8, R46-S9.
 
 - [ ] **13. «Is there another year in this? - картинка съехала и голову обрезает»** – the
   season-decision screen's picture crops the head – same class as round 45 #7 (crop anchored too
@@ -201,11 +213,28 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   still claims +49.6M (33%). The basis must recompute on the re-entry (or the sell must realise the
   gain). Engine economy defect + tests over his exact scenario. Class: **build**.
 
-- [ ] **15. «Эта фраза вылезла 2 раза с разницей в месяц или два (и вообще он очень разговорчивый и
+- [x] **15. «Эта фраза вылезла 2 раза с разницей в месяц или два (и вообще он очень разговорчивый и
   часто повторяется): "…The next tournament is half a world away. I knew the life I married into.
   Some weeks I would just like it nearer."»** – the same spouse line verbatim twice within a month or
   two, and the spouse talks too often overall. Add a no-repeat memory (and look at the overall
   chattiness rate). ⚠ Likely touches the save schema if lines-said must persist. Class: **build**.
+  - **B3 · 15 DONE – a no-repeat memory, DERIVED (no schema), and the chattiness measured: 5.18 → 2.92 per latched
+    season.** **The road: derivation.** The save already keeps what is needed – every `'spouse-view'` row in the
+    append-only, never-pruned `lifeLog` carries its week and its occasion (`detail`) – so `rollSpouseView` drops the
+    occasions raised inside the last `ECONOMY.wedding.spouseViewNoRepeatWeeks` (52, a season) weeks and picks among
+    the rest; none left = a silent week. **No schema bump, no migration, no golden fixture, no `e2e:fixtures`
+    regeneration – and nothing new is saved** (H5 round-trips a world through JSON half way and the continuation is
+    identical). **RNG:** the pick was already a purpose-scoped sub-stream (`<seed>:life:spouse-view:<week>`, never
+    MAIN); it is still ONE draw on that key over fewer candidates, and a stale-only week derives no key. The frozen
+    MAIN capture (`tests/condition.test.ts`) is green and the bench's input-independence arm (g) holds. **What he
+    saw:** the pool is ONE line per occasion and the pick is uniform over the occasions true this week; three are
+    true on most weeks, the 10-week cooldown was the only brake and the surface sat on it (spec §4: 5.13 of 5.2), so
+    the line he had just heard came back with probability 1/2 to 1/3. **Chattiness, measured** (`bench:wedding
+    --seeds 20`, 60 careers, one walk, 117.2 latched seasons in both arms): **5.18 → 2.92 beats per latched season**
+    (predicted 2.5–3.0), mix within 2 points, every other bench line byte-identical. His cooldown of 10 is untouched;
+    the one further knob is the window (78 → about 2.0, 104 → about 1.5, predicted) – his call. Tests:
+    `tests/wave7-spouse-view.test.ts` §H (H1–H5 plus the old-roll control) – mutations: filter removed → 3 RED, window
+    off by one → 2 RED, stream hoisted above the empty check → 2 RED. Spec: `the-wedding-2026-09.md` §6.
 
 - [x] **16. «W11 2049 в календаре показали injured, на home injured walkover, но при этом пустили
   играть на w500 и далее выиграли 2 мачта, что-то странное было. Сейв во вложении»** – calendar said
@@ -353,7 +382,7 @@ brief's preference is derivation from the diary.
 Every PLAYER-FACING string a builder adds this round lands here as a draft for the owner's blessing (invariant 4:
 a label, tab, button or sentence on screen changes only when the task asked, and these are the new ones the asks
 required). Rows are appended in the order they are written; ids continue where the last builder stopped (B1 holds
-S1–S6). A row the owner rewords changes ONE constant, named in the second column.
+S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named in the second column.
 
 | id | where | the line |
 |---|---|---|
@@ -363,3 +392,6 @@ S1–S6). A row the owner rewords changes ONE constant, named in the second colu
 | R46-S4 | 11c – NOT new: the lines the moment shows are the feed's EXISTING kept lines, unchanged (listed so he knows what the new screen will say) | wedding: `Her wedding day. The family was there, whatever had been said about it.` · birth: `Her daughter was born this week. The family has somebody new in it.` |
 | R46-S5 | 11b – the calendar band (`CalendarScreen.vue`), the shared week label and dates beside it | `Her wedding` |
 | R46-S6 | 22 – dev-only label in More (not player copy; listed for completeness) | `▶ life events ×8 (dev)` |
+| R46-S7 | 12 – the spouse beat's heading, **WIRED** (`spouseViewCopy.ts` `SPOUSE_VIEW_HEADING`; the dialog's frame over the line; was `The one she married has something to say about this season`, which opened with the same four words as the line under it) | `Her spouse has something to say about this season` |
+| R46-S8 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `Her husband has something to say about this season` – gendered: the partner's name pool is 28 male first names, so it never contradicts a name on screen, but the schema holds no gender and the pool's «no gender» law stands until he rules |
+| R46-S9 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `He has something to say about this season` – his own «он» and the shortest; the Home card above it (`The one she married wants a word.`, unchanged) is its only antecedent; also gendered |

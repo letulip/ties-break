@@ -482,7 +482,7 @@ function main(): void {
   console.log(
     `  bond deltas: engaged +${wed.blessBond}/${wed.distanceBond}/${wed.opposeBond} · ` +
       `spouse-view +${wed.spouseViewHearBond}/${wed.spouseViewLevelBond}/${wed.spouseViewBrushBond} · ` +
-      `spouse cooldown ${wed.spouseViewCooldownWeeks} wks · money line ${money(wed.spouseViewSpendCents)}`,
+      `spouse cooldown ${wed.spouseViewCooldownWeeks} wks · no-repeat ${wed.spouseViewNoRepeatWeeks} wks · money line ${money(wed.spouseViewSpendCents)}`,
   )
   console.log('')
 

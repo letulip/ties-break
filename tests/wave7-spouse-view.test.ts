@@ -67,6 +67,8 @@ import { drainCostOf } from '../tools/_lifeBeats'
 import type { LoveEpisode } from '../src/shared/protocol'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { weekAtAge } from './helpers/career'
+import { pickInt, rngFromSeed } from '../src/engine/rng'
+import { SPOUSE_VIEW_HEADING, SPOUSE_VIEW_SAID } from '../src/engine/world/lifeBeat/spouseViewCopy'
 
 const WEDDING = ECONOMY.wedding
 
@@ -225,7 +227,7 @@ describe('wave 7 T5 C – a `spouse-view` row is SOFT and speaks through the sta
     expect(invite, 'the invite exists while the row is live').not.toBeNull()
     // ⚠ DRAFT PINS – they assert what the strings ARE and move with the owner's pass (T7).
     expect(invite!.card).toBe('The one she married wants a word.')
-    expect(invite!.prompt.heading).toBe('The one she married has something to say about this season')
+    expect(invite!.prompt.heading).toBe('Her spouse has something to say about this season')
     expect(invite!.prompt.said).toContain('The next tournament is half a world away.')
     expect(invite!.prompt.options.map((o) => o.id)).toEqual(['hear', 'level', 'brush'])
     // ⚠ the wire carries ids and labels and never a bond – the fence, unchanged for this kind.
@@ -375,5 +377,173 @@ describe('wave 7 T5 F – at most once per `spouseViewCooldownWeeks`', () => {
     expect(spouseViewEligible(world), 'one week short of the window refuses').toBe(false)
     world.week += 1
     expect(spouseViewEligible(world), 'the boundary week itself clears').toBe(true)
+  })
+})
+
+// =================================================================================================
+// G. ROUND 46 #12 – THE HEADING DOES NOT OPEN THE WAY THE LINE UNDER IT DOES
+// =================================================================================================
+// The owner, 05.10: «The one she married» twice in two lines – the dialog's heading and the first
+// line of the card. The property is the PAIR's and not one string's, so it survives whichever side is
+// reworded next: no pool line may open on the heading's first three words. DRAFT R46-S7.
+describe('round 46 #12 – the spouse card does not open the same way twice in a row', () => {
+  const opening = (text: string): string => text.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase()
+
+  it('⭐ the heading and every pool line open on different three words', () => {
+    expect(SPOUSE_VIEW_OCCASIONS.length, 'the loop is not vacuous').toBeGreaterThan(0)
+    for (const occasion of SPOUSE_VIEW_OCCASIONS) {
+      expect(opening(SPOUSE_VIEW_HEADING), `the heading against «${occasion}»`).not.toBe(opening(SPOUSE_VIEW_SAID[occasion]))
+    }
+  })
+
+  it('⭐ and on the card the engine assembles – heading above, line below – for every occasion', () => {
+    for (const occasion of SPOUSE_VIEW_OCCASIONS) {
+      const world = married(`w7s-g-${occasion}`)
+      raiseLifeBeat(world, 'spouse-view', occasion)
+      const prompt = buildSoftBeatInvite(world)!.prompt
+      expect(opening(prompt.heading), `the assembled card for «${occasion}»`).not.toBe(opening(prompt.said ?? ''))
+    }
+  })
+})
+
+// =================================================================================================
+// H. ROUND 46 #15 – HE DOES NOT RAISE THE SAME WORRY TWICE INSIDE A SEASON
+// =================================================================================================
+// The owner, 05.10: the same line, verbatim, twice a month or two apart – «и вообще он очень
+// разговорчивый и часто повторяется». THE MEMORY IS THE LOG (every raised row carries its occasion as
+// `detail`, and the log is never pruned), so no arm here touches a schema: H5 round-trips a world
+// through JSON to prove it.
+//
+// ⚠ THE CONTROL ARM IS THE ROLL AS IT STOOD BEFORE ROUND 46, replicated below line for line. It is what
+// the new roll must EQUAL wherever the memory binds nothing (H2), and what must REPEAT where it does
+// (H1's control) – a property whose control cannot fail is not a property.
+const NO_REPEAT = WEDDING.spouseViewNoRepeatWeeks
+
+function rollBeforeRound46(world: WorldState): void {
+  if (!spouseViewEligible(world)) return
+  const occasions = spouseViewOccasionsAt(world)
+  if (occasions.length === 0) return
+  const at = pickInt(rngFromSeed(`${world.seed}:life:spouse-view:${world.week}`), 0, occasions.length - 1)
+  raiseLifeBeat(world, 'spouse-view', occasions[at])
+}
+
+/** `distant-swing`, `road-stretch` and `money` all true at once, this week – a marriage with three things
+ *  to say, which is what saturated the cooldown in the wedding bench (5.13 of a possible 5.2 a season). */
+function holdThreeTrue(world: WorldState): void {
+  enter(world, 2, 'w35')
+  roadWeeks(world, 4)
+  world.kidFundsCents = 5_000_000
+  world.fundsCents = 2_000_000
+  world.financeWeeks.push({ week: world.week - 1, byCategory: { gear: -WEDDING.spouseViewSpendCents } })
+}
+
+/** One week of a posed marriage: pose the three occasions, roll, and let the parent answer whatever was
+ *  raised so a live soft row never holds the surface shut. */
+function marriageWeek(world: WorldState, week: number, roll: (w: WorldState) => void): void {
+  world.week = week
+  holdThreeTrue(world)
+  roll(world)
+  if (liveSoftBeat(world) !== null) answerLifeBeat(world, 'hear')
+}
+
+type Said = { week: number; detail: string }
+const saidOf = (world: WorldState, since: number): Said[] =>
+  lifeLogOf(world)
+    .filter((r) => r.kind === 'spouse-view')
+    .map((r) => ({ week: r.week - since, detail: r.detail }))
+const spouseRows = (world: WorldState) => lifeLogOf(world).filter((r) => r.kind === 'spouse-view')
+
+/** Pairs of rows that say the same occasion closer together than `window` weeks. */
+function repeatsInside(rows: Said[], window: number): number {
+  let n = 0
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = i + 1; j < rows.length; j++) {
+      if (rows[i].detail === rows[j].detail && rows[j].week - rows[i].week < window) n++
+    }
+  }
+  return n
+}
+
+describe('round 46 #15 – he does not raise the same worry twice inside a season', () => {
+  const HORIZON = 2 * 52 + 6
+
+  it('⭐ H1 a marriage with three things to say says each once a season: no line repeats inside the window, and the first season still holds three', () => {
+    const world = married('w7s-h1', 6)
+    const start = world.week
+    for (let i = 0; i < HORIZON; i++) marriageWeek(world, start + i, rollSpouseView)
+    const rows = saidOf(world, start)
+    expect(rows.filter((r) => r.week < 52).length, 'three or more in the first season – the property is not vacuous').toBeGreaterThanOrEqual(3)
+    expect(repeatsInside(rows, NO_REPEAT), `no line twice inside ${NO_REPEAT} weeks: ${JSON.stringify(rows)}`).toBe(0)
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i].week - rows[i - 1].week, 'the cooldown still spaces every pair').toBeGreaterThanOrEqual(WEDDING.spouseViewCooldownWeeks)
+    }
+  })
+
+  it('⚠ H1 CONTROL: the same marriage under the roll as it stood before round 46 repeats a line inside the window', () => {
+    const world = married('w7s-h1', 6)
+    const start = world.week
+    for (let i = 0; i < HORIZON; i++) marriageWeek(world, start + i, rollBeforeRound46)
+    const rows = saidOf(world, start)
+    expect(rows.filter((r) => r.week < 52).length, 'the old roll fills the cooldown: six in the first season').toBeGreaterThanOrEqual(5)
+    expect(repeatsInside(rows, NO_REPEAT), 'the old roll repeats – so the property above can fail').toBeGreaterThan(0)
+  })
+
+  it('⭐ H2 where the memory binds nothing the roll is byte-identical to the one before it – no history, and history exactly one window old', () => {
+    for (let k = 0; k < 24; k++) {
+      for (const age of [null, NO_REPEAT]) {
+        const world = married(`w7s-h2-${k}`)
+        enter(world, 2, 'w35')
+        roadWeeks(world, 4)
+        if (age !== null) world.lifeLog = [{ week: world.week - age, kind: 'spouse-view', detail: 'distant-swing', answer: 'hear' }]
+        const twin = structuredClone(world)
+        rollSpouseView(world)
+        rollBeforeRound46(twin)
+        expect(world, `${world.seed}, history ${age}`).toEqual(twin)
+        expect(spouseRows(world).length, 'it fired – the arm is not vacuous').toBe(age === null ? 1 : 2)
+      }
+    }
+  })
+
+  it('⚠ H3 a worry said 51 weeks ago is still stale, the 52nd week reopens it, and a week of nothing but stale worries derives no stream', () => {
+    const world = married('w7s-h3')
+    enter(world, 2, 'w35')
+    world.lifeLog = [{ week: world.week - (NO_REPEAT - 1), kind: 'spouse-view', detail: 'distant-swing', answer: 'hear' }]
+    expect(spouseViewEligible(world), 'the gate is open – the cooldown ended long ago').toBe(true)
+    expect(spouseViewOccasionsAt(world), 'and the occasion is TRUE').toEqual(['distant-swing'])
+    rollSpouseView(world)
+    expect(spouseRows(world), 'nothing new: he said it lately').toHaveLength(1)
+    expect(spouseKeys(), 'a stale-only week derives no stream').toEqual([])
+    world.week += 1
+    rollSpouseView(world)
+    expect(spouseRows(world).map((r) => r.detail), 'one window on it is news again').toEqual(['distant-swing', 'distant-swing'])
+    expect(spouseKeys(), 'and the reopened week derives exactly its own key').toEqual([`${world.seed}:life:spouse-view:${world.week}`])
+  })
+
+  it('⭐ H4 the pick is still ONE draw on the one purpose key, over the fresh occasions alone', () => {
+    for (let k = 0; k < 24; k++) {
+      rngKeys.length = 0
+      const world = married(`w7s-h4-${k}`)
+      enter(world, 2, 'w35')
+      roadWeeks(world, 4)
+      world.lifeLog = [{ week: world.week - 20, kind: 'spouse-view', detail: 'distant-swing', answer: 'hear' }]
+      expect(spouseViewOccasionsAt(world)).toEqual(['distant-swing', 'road-stretch'])
+      rollSpouseView(world)
+      expect(spouseRows(world).map((r) => r.detail), `${world.seed}: the one fresh occasion`).toEqual(['distant-swing', 'road-stretch'])
+      expect(spouseKeys()).toEqual([`${world.seed}:life:spouse-view:${world.week}`])
+    }
+  })
+
+  it('⭐ H5 nothing new is saved: a marriage round-tripped through JSON half way remembers exactly what an unbroken one does', () => {
+    const world = married('w7s-h5', 6)
+    const start = world.week
+    for (let i = 0; i < 40; i++) marriageWeek(world, start + i, rollSpouseView)
+    const reloaded: WorldState = JSON.parse(JSON.stringify(world))
+    for (let i = 40; i < HORIZON; i++) {
+      marriageWeek(world, start + i, rollSpouseView)
+      marriageWeek(reloaded, start + i, rollSpouseView)
+    }
+    const rows = saidOf(world, start)
+    expect(rows.filter((r) => r.week >= 40).length, 'it speaks after the reload – the arm is not vacuous').toBeGreaterThan(0)
+    expect(saidOf(reloaded, start)).toEqual(rows)
   })
 })

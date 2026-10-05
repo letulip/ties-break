@@ -25,8 +25,15 @@ export const SPOUSE_VIEW_SAID: Record<SpouseViewOccasion, string> = {
 
 /** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `COUNSEL_HEADING`'s
  *  shape and its reason: this card is a word from a third person, and neither the week's weather nor
- *  the parent-daughter distance is a fact about it. ⚠ It recommends none of the three answers. */
-export const SPOUSE_VIEW_HEADING = 'The one she married has something to say about this season'
+ *  the parent-daughter distance is a fact about it. ⚠ It recommends none of the three answers.
+ *
+ *  ⭐ ROUND 46 #12 – IT NO LONGER OPENS «THE ONE SHE MARRIED». The heading and the line under it said
+ *  the same four words one after the other (owner, 05.10: «The one she married повторяется дважды,
+ *  давай может всё-таки напишем он, супруг, или вроде того»). «Her spouse» is his own word, and it is
+ *  the form that survives any partner: the schema holds no gender, and the name pool being male first
+ *  names does not lift the pool's standing «no gender» law – only his ruling does. DRAFT R46-S7 in
+ *  docs/rounds/round-46.md; the property (no shared opening) is tests/wave7-spouse-view.test.ts §G. */
+export const SPOUSE_VIEW_HEADING = 'Her spouse has something to say about this season'
 
 /** ⚠ ⚠ DRAFT – the Home card's invitation, `SMALL_TALK_CARD`'s twin for this kind: one short line
  *  saying a word is waiting, never what the word is (the card is only the invitation). */
