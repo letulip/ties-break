@@ -494,8 +494,94 @@ win against that opponent. The Russian number and first-win claim are therefore 
 The quiet reply adapts `take upstairs` into a private moment because the roof frame does not
 establish stairs. No stance grades how the parent receives the win.
 
-## 14. Situation-corpus progress
+## 14. Situation R1 – `the-kettle`
+
+Subject `story`; stages `after-school`, `college`, `independent`; no fact gate. The story's
+four-minute wait is an authored incident; it is not a timer or mechanical claim.
+
+### 14.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"You have to HOLD the kettle down in this place. For four minutes. Someone else came in and did exactly the same thing and we just stood there."` | `«Тут надо держать кнопку чайника. Четыре минуты! Зашла ещё одна девушка, сделала то же самое, и мы так и стояли».` |
+| fiery | `"The kettle doesn't stay on. You hold it. Four minutes of my life. Then another girl came in and held hers too, so at least I'm not the idiot."` | `«У чайника не держится кнопка. Жми её четыре минуты. Потом зашла другая девушка и тоже стояла со своим. Хоть не одна я дура».` |
+| deep | `"I stood holding a kettle switch for four minutes. Someone came in and did the same. Neither of us said a word."` | `«Четыре минуты держала кнопку чайника. Кто-то вошёл и сделал то же самое. Мы не сказали друг другу ни слова».` |
+| quiet | `"The kettle in the room needs holding down. Takes about four minutes. Someone else came in and waited as well."` | `«У чайника в комнате надо держать кнопку. Минуты четыре. Ещё кто-то вошёл и тоже ждал».` |
+
+### 14.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask who else was standing there` | `Спросить, кто ещё там стоял` |
+| respond | `Say you'd have given up at two minutes` | `Сказать, что вы сдались бы через две минуты` |
+| space | `Laugh and let it go` | `Посмеяться и оставить это` |
+
+### 14.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"I've no idea who she was. We just stood there like two people waiting for a bus."` | `«Понятия не имею. Стояли рядом, как две незнакомки на остановке».` |
+| sunny | respond | `"I nearly did. And then I'd have had no tea and nothing to show for it."` | `«Я тоже чуть не сдалась. Тогда бы осталась без чая и без истории».` |
+| sunny | space | `"It was quite funny. You had to be there, holding a kettle."` | `«Смешно было. Но это надо было видеть. И держать чайник».` |
+| fiery | invite | `"No idea who she was. She didn't speak, I didn't speak, and we stood there anyway."` | `«Без понятия. Она молчала, я молчала, но мы всё равно стояли рядом».` |
+| fiery | respond | `"You'd have given up at two and had no tea. I had tea."` | `«Через две минуты у тебя бы чая не было. А у меня был».` |
+| fiery | space | `"Fine. Laugh. I'm still holding that kettle somewhere in my head."` | `«Ладно, смейся. А я в голове до сих пор держу эту кнопку».` |
+| deep | invite | `"I don't know her name. I've thought about that more than I've thought about the kettle."` | `«Не знаю, как её зовут. Об этом я думала больше, чем о самом чайнике».` |
+| deep | respond | `"You'd have put it down. I thought about putting it down."` | `«На твоём месте я бы отпустила кнопку. Сама об этом думала».` |
+| deep | space | `"Mm. I liked that she didn't say anything either."` | `«Угу. Мне понравилось, что она тоже ничего не сказала».` |
+| quiet | invite | `"Didn't catch her name. She was gone before the tea was."` | `«Имени не узнала. Она ушла раньше, чем заварился чай».` |
+| quiet | respond | `"Probably. I'd already started, so I stayed with it."` | `«Наверное. А я уже начала, вот и дождалась».` |
+| quiet | space | `"It's only a kettle. I've got tea now."` | `«Это всего лишь чайник. Чай у меня теперь есть».` |
+
+The daughter addresses the parent as `ты`; the parent option uses formal `вы` and leaves the
+player-parent's gender unstated. The quiet reply keeps the English `before the tea was` as the tea
+being ready, rather than assigning a duration to its brewing.
+
+## 15. Situation R2 – `the-labelled-fruit`
+
+Subject `story`; stages `after-school`, `college`, `independent`; no fact gate. The daughter may
+speculate about why somebody labels fruit; that speculation is never presented as known history.
+
+### 15.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Someone writes her NAME on bananas. On every single one. Who is taking the bananas?"` | `«Кто-то пишет своё ИМЯ на бананах. На каждом. Кто вообще забирает чужие бананы?»` |
+| fiery | `"She labels her fruit. Her fruit. I've said nothing about it and I am running out of nothing."` | `«Она подписывает фрукты. Фрукты! Я пока молчу, но скоро не выдержу».` |
+| deep | `"There's a woman who writes her name on bananas. I've decided not to ask why, because I think the answer might be sad."` | `«Там одна женщина пишет своё имя на бананах. Я решила не спрашивать зачем. Боюсь, ответ будет грустный».` |
+| quiet | `"There's a system in the fridge now. Names on things."` | `«В холодильнике теперь свой порядок. На продуктах имена».` |
+
+### 15.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether anyone has ever taken one` | `Спросить, забирал ли кто-нибудь банан` |
+| respond | `Say you'd have eaten one by now` | `Сказать, что вы бы уже съели один` |
+| space | `Change the subject entirely` | `Совсем сменить тему` |
+
+### 15.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Not once. Nobody's ever taken one. That's the part I keep getting stuck on."` | `«Ни разу. Никто ни одного не взял. Вот на этом я и застряла».` |
+| sunny | respond | `"I know you would. I'd never dare. I'd just stand there looking at them."` | `«Знаю, тебе бы хватило смелости. А я бы только стояла и смотрела».` |
+| sunny | space | `"Fine, fine. Ask me something else. I'm still thinking about the bananas."` | `«Ладно, ладно. Спроси о другом. Но я всё ещё думаю о бананах».` |
+| fiery | invite | `"Never. Not one. She's protecting fruit from a thief who doesn't exist."` | `«Никогда. Ни одного. Она защищает фрукты от вора, которого нет».` |
+| fiery | respond | `"That's what I keep telling myself. And then I don't."` | `«Я себе то же самое говорю. А потом не беру».` |
+| fiery | space | `"No. We're not moving on. Somebody has to acknowledge the bananas."` | `«Нет. Тему не меняем. Кто-то должен признать, что эти бананы существуют».` |
+| deep | invite | `"No one has. I think somebody took something from her once, somewhere else."` | `«Никто не брал. Мне кажется, когда-то у неё забрали что-то другое. В другом месте».` |
+| deep | respond | `"You would. I've thought about it and I've never once put my hand in."` | `«Ты – да. Я тоже думала об этом, но ни разу не протянула руку».` |
+| deep | space | `"All right. I brought it up for a reason and I've lost what it was."` | `«Хорошо. Я зачем-то об этом заговорила, а теперь забыла зачем».` |
+| quiet | invite | `"Not that I know of. They're all still in there."` | `«Насколько знаю, нет. Они всё ещё там».` |
+| quiet | respond | `"You would, yes. I bring my own."` | `«Верю. А я приношу свои».` |
+| quiet | space | `"Sure. What else is happening?"` | `«Хорошо. Что ещё происходит?»` |
+
+The deep guess stays explicitly marked `мне кажется`. The quiet fridge is a setting within the
+story, not a claim that the parent and adult daughter share a kitchen. Replies avoid assigning a
+grammatical gender to the player-parent.
+
+## 16. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 8 / 51 | 152 / 969 | 4 / 4 | R45–R52 complete as DRAFT |
+| 10 / 51 | 190 / 969 | 4 / 4 | R45–R52 and R1–R2 complete as DRAFT |
