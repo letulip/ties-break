@@ -353,8 +353,92 @@ three people are authored particulars, not derived from travel or residence stat
 The two strangers' genders are not known. No line requires a specific dorm, apartment or hotel for
 the elevator to exist.
 
-## 9. Corpus progress
+## 9. Situation R28 – `the-wrong-order`
+
+Subject `story`; stages `college`, `independent`; no fact gate. The wrong lunch is an authored
+small story. The three parent stances do not turn speaking up into the morally correct branch.
+
+### 9.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"They brought me the wrong lunch and I just ate it. It was quite good!"` | `«Мне принесли не тот обед, а я просто съела. Было вкусно!»` |
+| fiery | `"Wrong order. I ate it anyway. I'm still annoyed at myself about that."` | `«Принесли не то. Я всё равно съела. До сих пор злюсь на себя».` |
+| deep | `"It wasn't what I ordered and I said nothing, which tells me something I'm not sure I like."` | `«Принесли не то, что я заказала, а я промолчала. Похоже, я кое-что о себе узнала, и мне это не очень нравится».` |
+| quiet | `"Lunch wasn't what I ordered. It was fine."` | `«На обед принесли не то, что я заказала. Ничего страшного».` |
+
+### 9.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she actually got` | `Спросить, что ей принесли` |
+| respond | `Say you do the same thing` | `Сказать, что вы тоже так поступаете` |
+| space | `Say she is allowed to send food back` | `Сказать, что она вправе вернуть блюдо` |
+
+### 9.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"A toasted sandwich. I'd ordered soup. The sandwich was better, so, fine."` | `«Поджаренный сэндвич. Я заказывала суп. Сэндвич оказался вкуснее, так что ладно».` |
+| sunny | respond | `"Do you? Then I know exactly where I get it from."` | `«Да? Теперь понятно, откуда у меня эта привычка».` |
+| sunny | space | `"I know I am. I'm never going to, though."` | `«Знаю, что вправе. Но вряд ли когда-нибудь верну».` |
+| fiery | invite | `"A toasted sandwich. I ordered soup. I ate the sandwich like a coward."` | `«Поджаренный сэндвич. Заказывала суп, а съела сэндвич, как трусиха».` |
+| fiery | respond | `"I know you do. I'd rather not have got it from you."` | `«Знаю. Лучше бы эта привычка не от тебя досталась».` |
+| fiery | space | `"Allowed isn't the problem. I had the words and I ate the sandwich."` | `«Дело не в том, что можно. Я знала, что сказать, и всё равно съела сэндвич».` |
+| deep | invite | `"A toasted sandwich instead of soup. I ate all of it without saying anything."` | `«Поджаренный сэндвич вместо супа. Съела целиком и ни слова не сказала».` |
+| deep | respond | `"You do. I've watched you do it and I still did it."` | `«Да. Я видела, как ты так поступаешь, и сама сделала то же».` |
+| deep | space | `"I am allowed. I'd still rather eat the wrong thing."` | `«Вправе. И всё же мне проще съесть не то блюдо».` |
+| quiet | invite | `"A sandwich. I'd asked for soup. It was fine."` | `«Сэндвич. Я просила суп. Ничего страшного».` |
+| quiet | respond | `"I know. I've seen you."` | `«Знаю. Я видела».` |
+| quiet | space | `"I know. I'll say something next time."` | `«Знаю. В следующий раз скажу».` |
+
+The fiery daughter's `трусиха` is her own judgment about herself. The parent choice stays neutral
+and does not prescribe a graded behavior.
+
+## 10. Situation R29 – `the-borrowed-thing`
+
+Subject `story`; stages `after-school`, `college`, `independent`; no fact gate. The borrowed
+object is a towel; it is revealed by the invite branch, so openers keep it unnamed.
+
+### 10.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"She gave it back CLEANER than I lent it. Who does that?"` | `«Она вернула мне это ЧИЩЕ, чем брала. Кто так делает?»` |
+| fiery | `"She cleaned it before giving it back. Now I feel like a slob and I did nothing wrong."` | `«Она всё почистила перед тем, как вернуть. Теперь я чувствую себя неряхой, хотя ничего плохого не сделала».` |
+| deep | `"It came back in better condition than it left. I've been thinking about what that says about her."` | `«Она вернула это в лучшем состоянии, чем взяла. Думаю, что это говорит о ней».` |
+| quiet | `"I got it back. Better than it was, actually."` | `«Мне это вернули. Даже лучше, чем было».` |
+
+### 10.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what it was` | `Спросить, что это была за вещь` |
+| respond | `Say that is somebody worth knowing` | `Сказать, что с ней стоит общаться` |
+| space | `Say she should lend her more things` | `Сказать, что этой девушке можно одолжить ещё что-нибудь` |
+
+### 10.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"A towel. Just a towel. It came back washed and folded like a hotel."` | `«Полотенце. Обычное полотенце. Вернулось выстиранным и сложенным, как в отеле».` |
+| sunny | respond | `"She is. I didn't really know her before this."` | `«Стоит. До этого я её почти не знала».` |
+| sunny | space | `"I might. I've got a whole bag of things that need washing."` | `«Может быть. У меня целая сумка вещей, которые надо постирать».` |
+| fiery | invite | `"A towel. That's all. And she washed it and folded it into a square."` | `«Полотенце. Всего-то. А она постирала и сложила ровным квадратом».` |
+| fiery | respond | `"She is. It's still a lot of effort for a towel."` | `«Стоит. Но для полотенца это всё же слишком много стараний».` |
+| fiery | space | `"I'm not running a laundry service in reverse."` | `«Не буду устраивать прачечную наоборот».` |
+| deep | invite | `"A towel. She washed it. I haven't used it since she gave it back."` | `«Полотенце. Она его выстирала. С тех пор я им не пользовалась».` |
+| deep | respond | `"I think so. It took her longer than borrowing it was worth."` | `«Думаю, да. Она потратила на него больше времени, чем оно ей пригодилось».` |
+| deep | space | `"Maybe. I'd rather work out what I can do back."` | `«Может быть. Лучше подумаю, чем могу ответить ей».` |
+| quiet | invite | `"A towel. It came back cleaner than it went."` | `«Полотенце. Вернулось чище, чем было».` |
+| quiet | respond | `"She might be. I said thank you and that was that."` | `«Возможно. Я поблагодарила её, и на этом всё».` |
+| quiet | space | `"Maybe. She can have the towel."` | `«Может быть. Могу и полотенце ей оставить».` |
+
+The parent suggestion to lend more things is intentionally playful. It is not a cue to create a
+repeatable item or laundry mechanic.
+
+## 11. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 34 / 51 | 646 / 969 | 4 / 4 | R45–R52, R1–R25 and R27 complete as DRAFT |
+| 36 / 51 | 684 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R29 complete as DRAFT |
