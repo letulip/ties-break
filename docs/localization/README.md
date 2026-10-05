@@ -34,7 +34,7 @@ last-reviewed: 2026-10-05
 | [Batch 06 – Money, staff, shop and inbox](ru-money-staff-shop-inbox-2026-10.md) | Family budget, kit, staff, shop, sponsorship, academy and correspondence | drafted end to end |
 | [Batch 07 – Rankings, trophies and album](ru-stats-trophies-album-2026-10.md) | Ranking tables, season statistics, trophy cabinet and the career album interface | drafted end to end |
 | [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 34 occasions and four daughter voices | drafted end to end |
-| [Batch 08 – Match viewer and commentary](ru-match-viewer-commentary-2026-10.md) | Live/replay controls, court readouts, preview booth and deterministic commentary | viewer shell and practice/replay flow drafted; corpora open |
+| [Batch 08 – Match viewer and commentary](ru-match-viewer-commentary-2026-10.md) | Live/replay controls, court readouts, preview booth and deterministic commentary | viewer shell and preview drafted; point commentary open |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

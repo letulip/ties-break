@@ -199,3 +199,129 @@ it must not retain an English `vs` island.
 
 The next sections localize `src/viz/preview.ts`, then the complete deterministic corpus in
 `src/viz/commentary.ts`.
+
+## 11. Pre-match preview ladder
+
+The four preview storeys remain monotone: each higher tournament family says everything below it
+and adds facts. Russian changes syntax, not which facts a storey receives.
+
+### 11.1 Occasion, surface and temperature
+
+| fact | Russian form |
+| --- | --- |
+| tournament match | `{round} · {fullTier}. {surface}{temperatureClause}.` |
+| no event behind the match | `Тренировочный матч, ничего не разыгрывается. {surface}{temperatureClause}.` |
+| hard | `Хард` |
+| clay | `Грунт` |
+| grass | `Трава` |
+| temperature present | `, {temperature} °C` |
+
+Examples: `Полуфинал · Юниорский тур 300. Грунт, 18 °C.`; `Тренировочный матч, ничего
+не разыгрывается. Хард.` The degree symbol and `C` remove Russian plural problems and match the
+weather plate.
+
+`{round}` and `{fullTier}` come from RU-04's semantic catalogues. `remainingIn()` must stop parsing
+their English display labels; it should receive the round size or stable stage id directly.
+
+### 11.2 Conditions bands
+
+| temperature gate | Russian line |
+| --- | --- |
+| `≤ 14` | `Холодно: мяч почти не летит, а руки на ракетке будут мёрзнуть весь матч.` |
+| `15–18` | `Прохладно. Обеим понадобится время, чтобы почувствовать мяч.` |
+| `19–24` | `Комфортная погода для матча – на воздух сослаться не получится.` |
+| `25–27` | `На корте тепло; полотенце понадобится между розыгрышами.` |
+| `≥ 28` | `Жарко: все вспотеют ещё до конца первого гейма.` |
+
+The number has already appeared in the occasion line. These sentences describe its effect and do
+not repeat the temperature.
+
+### 11.3 Opponent
+
+> `На другой стороне корта – {opponent}{ageClause}{rankClause}.`
+
+- no metadata: `На другой стороне корта – Анна.`;
+- age only: `На другой стороне корта – Анна, 17 лет.`;
+- age and rank: `На другой стороне корта – Анна, 17 лет, №42 в рейтинге.`
+
+Age is the shared counted phrase. Rank enters only from storey 2 and uses the ranking table relevant
+to this match; the sentence never compares positions from different ladders.
+
+### 11.4 Officials by storey
+
+| case | Russian line |
+| --- | --- |
+| storey 1, clay | `Судьи на вышке нет. Линии определяют сами, а спор решает след на грунте.` |
+| storey 1, other surface | `Судьи на вышке нет. Линии определяют сами, и ошибка на линии – часть такого дня.` |
+| storey 2, late round | `На этом матче есть судья на вышке, счёт обновляется в реальном времени.` |
+| storey 2, before J30/J60 late round | `До финала судьи на вышке не будет. Сегодня линии определяют сами.` |
+| storey 2, before J300 late round | `До полуфинала судьи на вышке не будет. Сегодня линии определяют сами.` |
+| storey 3 | `Судья на вышке; после матча статистика войдёт в протокол.` |
+| storey 4 | `Судья на вышке, видеопросмотр, каждый розыгрыш публикуется в реальном времени.` |
+
+These are competition facts, not atmosphere. The localized late-round test reads a stage id, never
+the translated words `Финал` or `Полуфинал`.
+
+## 12. Stakes, chance and standings
+
+### 12.1 What winning earns
+
+| current round | Russian clause |
+| --- | --- |
+| final | `Победа принесёт {firstName} титул` |
+| semifinal | `Победа выведет {firstName} в финал` |
+| quarterfinal | `Победа выведет {firstName} в полуфинал` |
+| round of 16 | `Победа выведет {firstName} в четвертьфинал` |
+| earlier round of `{remaining}` | `Победа выведет {firstName} в 1/{remaining / 4} финала` |
+
+From storey 3, append **`За победу в этом матче – {points}.`**, where `{points}` is a counted
+phrase (`1 очко`, `2 очка`, `30 очков`). This is clearer in Russian than making an abstract round
+the grammatical payer.
+
+### 12.2 Match chance
+
+> `Шанс {firstName} выиграть матч – {chance}%.`
+
+The percentage is the same closed-form probability that the English preview reads, rounded only at
+the display boundary. It is not a prediction generated from the already-resolved point record.
+
+### 12.3 Professional standing comparisons
+
+| state | Russian template |
+| --- | --- |
+| both unranked | `И {hero}, и {opponent} подходят к матчу без рейтинга на этом уровне.` |
+| hero unranked | `{hero} здесь без рейтинга; {opponent} – №{oppRank}.` |
+| opponent unranked | `{hero} – №{heroRank}; у {opponent} рейтинга пока нет.` |
+| equal | `{hero} и {opponent} занимают одно место – №{rank}.` |
+| gap one | `№{heroRank} против №{oppRank}: между ними одно место, выше {ahead}.` |
+| larger gap | `№{heroRank} против №{oppRank}: {ahead} выше на {gapPlaces}.` |
+
+`{gapPlaces}` is `2 места`, `5 мест`, `21 место`; never append invariant `мест` to a number.
+Names stay nominative by choosing a sentence that does not require automatic genitive inflection.
+
+## 13. Top-storey surface notes
+
+| surface | Russian line |
+| --- | --- |
+| hard | `Отскок будет ровным весь день – без сюрпризов.` |
+| clay | `Грунт замедлит мяч и поднимет отскок.` |
+| grass | `Мяч пойдёт низко и проскользит; розыгрыши будут короткими.` |
+
+The occasion already names the surface, so these lines do not repeat `Хард`, `Грунт` or `Трава`.
+They are surface-compatible statements, not tactical instructions to the daughter.
+
+## 14. Preview implementation and LQA
+
+- Preserve `rungOf`/`storeyOf` and the ordered entry table. Locale selection cannot add, remove or
+  reorder preview facts.
+- Pass semantic `TierId`, stage id/remaining draw size, surface id, ages, ranks and numeric chance
+  into locale renderers. Do not parse localized stage text to recover draw arithmetic.
+- Preserve first-name handling through the shared locale-aware name formatter. A fictional role
+  such as `Первый номер посева` is not a personal name to shorten.
+- Exercise null event, null temperature, all three surfaces, five temperature bands, opponent
+  metadata combinations, J30/J60/J300 early and late rounds, every stake depth, zero-point round,
+  chance boundaries and every standings branch.
+- Assert strict preview-line counts by storey after localization, not just snapshot wording.
+- At 320 px, inspect the longest officials and standings lines in the scrollable commentary log.
+- Verify the same stored match produces identical preview key order in English and Russian and no
+  new RNG read.
