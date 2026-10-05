@@ -159,6 +159,20 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       `adult-pregnant-last.webp`, `adult-funeral.webp` (wired v87, weight mode only). B1 shipped
       bride + birth; **B1b** wires the `'expecting'` card's early face and verifies the portrait
       serves `pregnant-last` late in term (else adds the late moment).
+    - **B1b · SHIPPED (the agent built it, the architect finished it).** The `'expecting'` card wears
+      `adult-pregnant-early` through `BEAT_FACE` + the stage-free `pregnantUrl` road – B1b correctly
+      REFUSED the brief's «widen MemoryFace» (the pregnancy pair is no band face; a `FACE_BANDS` row
+      would have broken the 11.09 lateCareer ruling) and typed the row as a local union instead. Its
+      census test pins ALL 13 beat kinds (exactly two draw a painting: funeral, expecting) and the
+      painting's band-independence at ages 12/19/25/33. The agent then hung waiting on its own test
+      run and died unreported; the architect verified the diff by hand: the run was HONESTLY RED –
+      the painting pushed the expecting card's unaided content to 681.2px against the v85 T10 phone
+      floor of 635 (the TourBriefingDialog class). Fix: the expecting card wears the art as a 2:1
+      band (`life-beat-art-compact`), the funeral keeps its v87 3:2 byte-untouched; file green 65/65
+      (`B1B_TEST2_EXIT=0` from the log). **`pregnant-last` verdict**: served by the engine –
+      `pregnancyFaceAt` (shared/avatarEmotion.ts:871) returns it for the final `PREGNANT_LAST_WEEKS`
+      before the due week on the portrait, `pregnant-early` from the announcement; nothing more to
+      add. No strings changed.
   - **11d** – the announcement can also carry «сколько они вместе» (how long together) – shares the
     duration primitive with #9. Class: **build**, DRAFT strings.
     - **B1 · 11d SHIPPED.** Primitive `relationshipDurationWeeks(world, episode?)` in `engine/world/loveEpisodes.ts`:

@@ -100,6 +100,9 @@ import {
   type Temperament,
 } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type LifeBeatPrompt, type Snapshot } from '../../src/shared/protocol'
+import { pregnantUrl } from '../../src/art/preload'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
 /** A fixture prompt. ⚠ NOT COPY – see the header. Built off the type so this file compiles against
  *  the contract rather than against the engine half's progress. */
@@ -1411,5 +1414,89 @@ describe('⚠⚠⚠ v85 T10 – `expecting` and `return-plan` fit a phone, askin
     const { w, card } = mountAttached(expectingCard(dry))
     assertDismissReachable(card, card.querySelector('.life-beat-choices')!.lastElementChild!, PHONE, 'expecting (dry)')
     w.unmount()
+  })
+})
+
+// ROUND 46 B1b (05.10) – THE EARLY-PREGNANCY PAINTING ON THE ANNOUNCEMENT CARD. The owner's ruling,
+// «картинка для родов есть и для беременности две разных, проверь и добавляй»: the two paintings were
+// in every install and the `'expecting'` card – a words-only object – drew neither. `BEAT_FACE` has its row.
+//
+// THE PROMPT IS THE FILE'S FIXTURE WITH ONLY ITS KIND CHANGED, on purpose: the table is keyed on the kind
+// alone, so the kind is the one thing these cases vary, and every string stays the fixture it is
+// everywhere else in this file (the words-only claim is «the rendered text is EXACTLY the prompt»).
+//
+// MUTATION ARMS, each run against the real component and put back byte-identical:
+//   * the `expecting` row dropped from `BEAT_FACE` -> RED [3]: the headline, the band-free arm and the
+//     census. The funeral's own case (wave11-weight-ui) stays green, which says the ROW is the thing.
+//   * a catch-all (`BEAT_FACE[kind] ?? 'pregnant-early'`) -> RED [1]: the census alone – the one arm that
+//     holds the other half, «a kind with no row draws nothing».
+describe('round 46 B1b – the early-pregnancy painting rides the `expecting` card, and no other beat does', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  /** The card for one kind at one age. The age is the portrait band's input: 25 is `adult`, where the
+   *  funeral resolves to its own file; 33 is `lateCareer`, where a band-routed painting would fall back. */
+  function cardFor(kind: LifeBeatPrompt['kind'], ageYears = 25) {
+    useGameStore().snapshot = { ...snapshotWith({ ...BEAT, kind }), ageYears }
+    const w = mount(LifeBeatDialog, { global: { stubs: { teleport: true } } })
+    return { w, art: w.find('img.life-beat-art') }
+  }
+
+  it('the announcement draws `adult-pregnant-early` – the real file, decorative, and the only picture on the card', () => {
+    const { w, art } = cardFor('expecting')
+    expect(art.exists(), 'the `expecting` card carries a painting').toBe(true)
+    const src = art.attributes('src')!
+    expect(src, 'it is the early painting, built by the portrait\'s own stage-free road').toBe(pregnantUrl('pregnant-early'))
+    expect(src, 'and the late one stays the portrait\'s – this card is the announcement').not.toContain('pregnant-last')
+    expect(art.attributes('alt'), 'atmosphere beside a heading that already says what has happened').toBe('')
+    expect(w.findAll('img'), 'one picture, not two').toHaveLength(1)
+    // A URL that names no file is a broken frame on a BLOCKING card, so the name is checked against the disk.
+    const file = join(process.cwd(), 'public', src.replace(/^.*?\/images\//, 'images/'))
+    expect(existsSync(file), `${file} is on disk`).toBe(true)
+    w.unmount()
+  })
+
+  it('the painting is the SAME in every band – the pair has no stage, so a thirty-three-year-old\'s card is no band fallback', () => {
+    // `lateCareer` is the band that matters: a `FACE_BANDS` row would have sent it to `lateCareer-norm`, the
+    // opposite of the 11.09 ruling that a pregnancy at thirty-two reuses the adult pair.
+    for (const age of [12, 19, 25, 33]) {
+      const { w, art } = cardFor('expecting', age)
+      expect(art.attributes('src'), `at ${age}`).toBe(pregnantUrl('pregnant-early'))
+      w.unmount()
+    }
+  })
+
+  /** WHICH KIND DRAWS WHICH FILE, typed against the whole union – a fourteenth kind cannot be added to the
+   *  protocol without somebody deciding in THIS table whether it carries a painting. */
+  const PAINTING: Record<LifeBeatPrompt['kind'], string | null> = {
+    'fork-opinion': null,
+    met: null,
+    'small-talk': null,
+    'fork-counsel': null,
+    ended: null,
+    'fork-psy': null,
+    engaged: null,
+    'spouse-view': null,
+    'own-key': null,
+    expecting: 'adult-pregnant-early',
+    'return-plan': null,
+    bereavement: 'adult-funeral',
+    divorced: null,
+  }
+
+  it('only the kinds the census names draw a picture, and every other beat stays the words-only card', () => {
+    for (const kind of Object.keys(PAINTING) as LifeBeatPrompt['kind'][]) {
+      const { w, art } = cardFor(kind)
+      const want = PAINTING[kind]
+      if (want === null) {
+        expect(art.exists(), `${kind} draws nothing`).toBe(false)
+      } else {
+        expect(art.exists(), `${kind} draws its painting`).toBe(true)
+        expect(art.attributes('src'), `${kind} draws ${want}`).toContain(want)
+      }
+      w.unmount()
+    }
   })
 })
