@@ -314,8 +314,102 @@ kindness is also good coaching; no branch declares the coach good or bad.
 The sunny `у тебя` is a generic way of asking the parent how one can know, not a claim that the
 parent has a coach. No Russian reply inflects or genders the generated coach.
 
-## 10. Situation-corpus progress
+## 10. Situation R49 – `watching-players`
+
+Subject `observation`; stages `college`, `independent`; no fact gate. The daughter describes a
+pattern she has noticed, without claiming that all players behave alike.
+
+### 10.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The players I've been watching hardly mention winning. I keep waiting for it and it never comes."` | `«Я наблюдаю за игроками, и они почти не говорят о победах. Всё жду, когда заговорят, но нет».` |
+| fiery | `"Nobody I've been watching talks about winning. Not one of them. I find that genuinely annoying."` | `«Никто из тех, за кем я слежу, не говорит о победах. Ни одна. Меня это жутко раздражает».` |
+| deep | `"The players I've been watching barely talk about winning."` | `«Игроки, за которыми я наблюдаю, почти не говорят о победах».` |
+| quiet | `"The players I've been watching talk about other things. Not winning."` | `«Те, за кем я наблюдаю, говорят о другом. Не о победах».` |
+
+### 10.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask her to go on` | `Попросить рассказать ещё` |
+| respond | `Say we've noticed it too` | `Сказать, что мы тоже это заметили` |
+| space | `Let the thought settle` | `Дать мысли улечься` |
+
+### 10.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"They talk about what they're working on. Never the result. It's so odd once you hear it."` | `«Говорят о том, над чем работают. О результате – никогда. Как услышишь, сразу кажется странным».` |
+| sunny | respond | `"Have you? Good. I'd started to think I was inventing the whole thing."` | `«Ты тоже? Хорошо. А то я уже думала, что всё это придумала».` |
+| sunny | space | `"I will. I'll probably still be watching for it next week."` | `«Пусть. Наверное, и на следующей неделе буду за этим следить».` |
+| fiery | invite | `"They talk about drills. Drills! Not one of them mentions the scoreboard."` | `«Говорят об упражнениях. Об упражнениях! Ни одна даже счёт не упоминает».` |
+| fiery | respond | `"Then why does nobody say it out loud? Everyone acts like the score is the point."` | `«Тогда почему никто не говорит об этом вслух? Все ведут себя так, будто главное – счёт».` |
+| fiery | space | `"It's settled. I've decided they're right and everyone else has it backwards."` | `«Уже улеглась. Я решила, что они правы, а остальные всё поняли наоборот».` |
+| deep | invite | `"They talk about Tuesday. What they're working on next. I've started noticing that."` | `«Говорят про вторник. Про то, над чем будут работать дальше. Я стала это замечать».` |
+| deep | respond | `"You have? I thought I might be reading too much into it."` | `«Ты тоже? А я думала, что придаю этому слишком много значения».` |
+| deep | space | `"Mm. I'll keep watching."` | `«Угу. Продолжу наблюдать».` |
+| quiet | invite | `"Mostly what's next. What they're fixing. That sort of thing."` | `«В основном о том, что дальше. Что исправляют. Примерно так».` |
+| quiet | respond | `"You have? I wasn't sure it was a real thing."` | `«Ты тоже? Я не была уверена, что это правда заметно».` |
+| quiet | space | `"All right. I'll keep an eye on it."` | `«Хорошо. Ещё понаблюдаю».` |
+
+The fiery `ни одна` follows the female players in the situation. The parent-facing `ты` in two
+responses keeps the daughter's direct address; the UI labels keep the established neutral voice.
+
+## 11. Situation R50 – `court-four`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. This row contains four voice-specific
+shared second beats after the opener, before the parent's stance. They are counted separately from
+the 19 ordinary strings.
+
+### 11.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"You have to hear what happened on court four."` | `«Ты только послушай, что было на четвёртом корте».` |
+| fiery | `"You won't believe what happened on court four."` | `«Ты не поверишь, что было на четвёртом корте».` |
+| deep | `"The best thing today had nothing to do with tennis."` | `«Лучшее за сегодня вообще не про теннис».` |
+| quiet | `"Something happened on court four today."` | `«Сегодня на четвёртом корте кое-что случилось».` |
+
+### 11.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Someone's serve clipped the net cord and went straight into a dad's coffee. A full one. He just sat there holding it."` | `«Чья-то подача задела трос сетки – и мяч угодил прямо в кофе одного папы. Полный стакан. А он так и сидел с ним в руке».` |
+| fiery | `"She serves, the ball catches the net cord – and lands in a dad's coffee. Full cup. He just looked at it."` | `«Она подаёт, мяч задевает трос сетки – и падает в кофе одного папы. Полный стакан! А он только смотрит».` |
+| deep | `"A serve clipped the net cord and went into a dad's coffee. Full cup. He looked at it for a long time."` | `«Подача задела трос сетки, и мяч попал в кофе одного папы. Полный стакан. Он долго на него смотрел».` |
+| quiet | `"A serve caught the net cord and landed in someone's dad's coffee. A whole cup of it."` | `«Подача задела трос сетки, и мяч попал в кофе чьего-то папы. Целый стакан».` |
+
+### 11.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what he did` | `Спросить, что он сделал` |
+| respond | `Laugh with her` | `Посмеяться вместе с ней` |
+| space | `Let her finish` | `Дать ей закончить` |
+
+### 11.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Put the lid back on. Very carefully. Like the lid was the problem."` | `«Накрыл стакан крышкой. Очень аккуратно. Будто дело было в крышке».` |
+| sunny | respond | `"I know! And I had to serve after that. I was still going."` | `«Вот именно! А мне после этого надо было подавать. Я всё ещё хихикала».` |
+| sunny | space | `"Anyway. Nobody asked for the ball back. That's my favourite part."` | `«В общем, никто не попросил мяч обратно. Вот это мне больше всего нравится».` |
+| fiery | invite | `"Took the ball out. Put the lid on. Like that would stop the next one."` | `«Вынул мяч. Закрыл стакан крышкой. Будто это спасёт от следующего».` |
+| fiery | respond | `"Exactly! And then I had to serve. I couldn't look at him."` | `«Вот! А потом мне пришлось подавать. Я на него смотреть не могла».` |
+| fiery | space | `"Anyway, nobody wanted the ball back. That's the important part."` | `«Короче, мяч никто не захотел забирать. Вот что главное».` |
+| deep | invite | `"Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."` | `«Закрыл стакан крышкой. Наверное, хотел вернуть себе утро, а под рукой была только крышка».` |
+| deep | respond | `"I didn't laugh then. I had to serve next. I have been laughing about it since."` | `«Тогда я не смеялась. Следующей подавать было мне. Зато с тех пор смеюсь».` |
+| deep | space | `"That's the whole of it. The ball is probably still there."` | `«Вот и вся история. Мяч, наверное, до сих пор там».` |
+| quiet | invite | `"He put the lid back on. Then he moved his chair. That was all."` | `«Накрыл стакан крышкой. Потом отодвинул стул. И всё».` |
+| quiet | respond | `"It was quite funny. I didn't laugh at the time. I had to serve."` | `«Было смешно. Тогда я не засмеялась – надо было подавать».` |
+| quiet | space | `"That's it, really. Nobody went to get the ball."` | `«Вот и всё. За мячом так никто и не пошёл».` |
+
+`Трос сетки` keeps the tennis cause of the joke, while the four tellings keep each voice's rhythm.
+The beat names no match result or score.
+
+## 12. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 4 / 51 | 76 / 969 | 0 / 4 | R45–R48 complete as DRAFT |
+| 6 / 51 | 114 / 969 | 4 / 4 | R45–R50 complete as DRAFT |
