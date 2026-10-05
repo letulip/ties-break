@@ -436,8 +436,94 @@ draw. The daughter does not know why, and the Russian lines do not settle that m
 `Уходят` retains the parent's gentle possibility; the daughter has no evidence whether the absent
 player left the sport, skipped an event or had another reason. No answer makes that reason a fact.
 
-## 11. Corpus progress
+## 11. Situation R17 – `the-week-with-nothing-in-it`
+
+Subject `worry`; stages `college`, `independent`; fact gate `clear-next-week`. Runtime confirms
+there is a season week ahead and no entered tournament that week. It does not certify that training,
+work or domestic obligations are absent. The English says `empty week`; the Russian draft narrows
+the factual claim to a week without a tournament while preserving her reaction to open time.
+
+### 11.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've got a completely empty week and I don't know what to do with myself."` | `«На следующей неделе нет турнира, и я не знаю, куда себя деть».` |
+| fiery | `"An empty week. I'll go mad. I already know I'll go mad."` | `«Неделя без турнира. Я с ума сойду. Уже чувствую».` |
+| deep | `"There's nothing in next week. I keep looking at it and I can't tell if I'm relieved."` | `«В календаре на следующей неделе нет турнира. Смотрю и не понимаю, рада ли».` |
+| quiet | `"Next week's clear. I might catch up on some things."` | `«На следующей неделе нет турнира. Может, займусь тем, что откладывала».` |
+
+### 11.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she would do with it` | `Спросить, чем она хотела бы заняться` |
+| respond | `Say an empty week is allowed to be empty` | `Сказать, что неделю без турнира можно оставить спокойной` |
+| space | `Say she can have it as an empty week` | `Сказать, что не обязательно заполнять её ещё чем-то` |
+
+### 11.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Sleep, mostly. And then panic halfway through it and go and find a court."` | `«В основном спать. А потом среди недели запаниковать и побежать искать корт».` |
+| sunny | respond | `"It is. I'll try to let it be one. I'm not promising."` | `«Можно. Попробую так и оставить. Не обещаю».` |
+| sunny | space | `"Then I'll have it. I might even enjoy it."` | `«Тогда так и сделаю. Может, даже понравится».` |
+| fiery | invite | `"Train. Obviously train. That's the problem with giving me an empty week."` | `«Тренироваться. Конечно, тренироваться. Вот что со мной бывает без турнира».` |
+| fiery | respond | `"Allowed by who? I'm the one who has to sit in it."` | `«Кто разрешил? Мне же потом сидеть и ждать».` |
+| fiery | space | `"Fine. Ask me at the end of it how empty it stayed."` | `«Ладно. В конце недели спроси, насколько она осталась свободной».` |
+| deep | invite | `"I don't know. That's what's bothering me, not the week itself."` | `«Не знаю. Меня тревожит именно это, а не сама неделя».` |
+| deep | respond | `"It's allowed. I'm not sure I know how to have one."` | `«Можно. Только я не уверена, что умею так проводить неделю».` |
+| deep | space | `"All right. I'll try it as rest and see what it turns into."` | `«Хорошо. Попробую считать её отдыхом и посмотрю, что получится».` |
+| quiet | invite | `"Laundry. Sleep. The things that don't fit anywhere else."` | `«Стирка. Сон. Всё, для чего обычно не находится места».` |
+| quiet | respond | `"That's true. I'll find something quiet to do."` | `«Верно. Найду себе что-нибудь спокойное».` |
+| quiet | space | `"All right. Nothing in it, then."` | `«Ладно. Ничего лишнего на эту неделю».` |
+
+This is a deliberate fidelity correction relative to the English. Any future implementation of RU
+must preserve the `clear-next-week` gate and should consider narrowing the English claim as well.
+
+## 12. Situation R18 – `the-match-she-is-still-carrying`
+
+Subject `worry`; stages `after-school`, `college`, `independent`; fact gate `played-recently`.
+The gate proves a recent match, but not its result. All Russian lines remain result-neutral.
+
+### 12.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I'm still thinking about that match and I can't work out which bit."` | `«Я всё ещё думаю о том матче, но даже не пойму, о каком моменте».` |
+| fiery | `"That match is still in my head. I want it out."` | `«Тот матч всё ещё в голове. Хочу, чтобы он оттуда ушёл».` |
+| deep | `"It isn't one point I'm stuck on. It's the shape of the whole thing."` | `«Я застряла не на одном розыгрыше. Меня держит весь матч целиком».` |
+| quiet | `"I keep coming back to the last match. It's fine."` | `«Всё возвращаюсь к последнему матчу. Всё нормально».` |
+
+### 12.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask which part she keeps returning to` | `Спросить, к какому моменту она возвращается` |
+| respond | `Say some matches take a week to put down` | `Сказать, что от некоторых матчей отходят неделю` |
+| space | `Say you can talk about something else` | `Предложить поговорить о чём-нибудь другом` |
+
+### 12.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"That's the thing – I can't find a part. It's all of it, just sitting there."` | `«В том-то и дело: не нахожу такого момента. В голове сидит весь матч».` |
+| sunny | respond | `"Do they? Then I'm not behind. That's quite a relief, actually."` | `«Правда? Значит, ничего страшного, что я ещё думаю о нём. Даже легче стало».` |
+| sunny | space | `"Can we? Yes. Tell me something that isn't a match."` | `«Можно? Да. Расскажи что-нибудь совсем не про матч».` |
+| fiery | invite | `"I can't pick one. If I could pick one I'd have dealt with it by now."` | `«Не могу выбрать один. Если бы могла, давно бы с ним разобралась».` |
+| fiery | respond | `"I don't want to give it a week. I want it gone."` | `«Не хочу давать ему неделю. Хочу, чтобы он исчез сейчас».` |
+| fiery | space | `"No. I brought it up, so I'd rather finish it."` | `«Нет. Раз я начала, хочу договорить».` |
+| deep | invite | `"There isn't a part. I've gone looking for one and there isn't."` | `«Нет одного момента. Я искала – не нашла».` |
+| deep | respond | `"Some do. This one hasn't started going anywhere yet."` | `«Бывает. Только этот пока никуда не уходит».` |
+| deep | space | `"Not yet. I haven't got anything else in my head."` | `«Пока нет. У меня в голове сейчас ничего другого».` |
+| quiet | invite | `"Not one bit in particular. The whole thing, I suppose."` | `«Не к одному моменту. Наверное, ко всему матчу».` |
+| quiet | respond | `"Maybe. I'll give it a bit longer, then."` | `«Может быть. Тогда дам себе ещё немного времени».` |
+| quiet | space | `"Yes. What's been happening with you?"` | `«Да. Что у тебя нового?»` |
+
+The parent can offer another topic; the daughter may take it or decline. The fiery and deep lines
+do not assign a loss to the recent match.
+
+## 13. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 24 / 51 | 456 / 969 | 4 / 4 | R45–R52 and R1–R16 complete as DRAFT |
+| 26 / 51 | 494 / 969 | 4 / 4 | R45–R52 and R1–R18 complete as DRAFT |
