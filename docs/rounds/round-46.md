@@ -385,11 +385,17 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     `$999,999.60` is «$1.0M» and no «$1,000,000» ever stands in an M column. It is the one place a decimal point appears on money, and the
     abbreviation is his ruling. **THE LAYOUT:** the Money tile is one two-column grid (`.season-money`) – labels in the left track, every figure
     in the right, rows `display: contents`, hairlines spanning both, figures `nowrap` in tabular numerals – instead of wrapping flex rows with the
-    bottom line set a point larger. The half-width Ranking / Matches tiles keep their wrapping rows on purpose (a value dropping under its label
-    is the right answer in a 150px column). **PHONE:** the card with the shelf and both wealth rows is mounted at 375×667 with the global sheet
+    bottom line set a point larger. **PHONE:** the card with the shelf and both wealth rows is mounted at 375×667 with the global sheet
     loaded and `setViewport` BEFORE the mount, the dismiss control is reachable, and uncapping the card turns the arm red.
-    ⚠ **NOT SEEN BY EYE:** the layout is proven by computed styles and the `fits.ts` model in happy-dom, not in a browser – his glance is the
-    real check.
+    **SEEN IN A REAL BROWSER** (the Vite dev server and a throwaway page mounting the real component over the real wrap-up of the scenario,
+    since deleted): 375×812, 375×667 and 320×568 – the Money tile is one right-aligned column that does not wrap, the figures read «-$1.0M» /
+    «+$3.9M» / «$10.4M» beside «+$42,000», the card scrolls inside its height cap on the phones, no console errors; a modest family's card is the
+    card it always was (full dollars, no shelf, no wealth rows).
+    ⚠ **WHAT THE EYE ALSO SHOWED, AND I DID NOT TOUCH:** the half-width Ranking / Matches tiles keep their wrapping flex rows by design (the
+    capture-pass rule: a value drops under its label rather than the card scrolling sideways), and in the browser they visibly ALTERNATE – some
+    values sit beside their label (Record, Lost to injury), others drop under it (Best result, Tournaments entered), and WHICH rows do changes with
+    the width (320 against 375). If THAT is also his «пляшет», it is one rule (`.season-row` stacked in the half tiles, or a two-column grid with
+    the figures right-aligned) and his call – a card he has seen for many rounds is not redesigned on a guess.
 
 - [ ] **20. «Не могу сейв выгрузить кажется теперь никак из-за последнего экрана, у меня там много
   вопросов было на проверить. Может для служебных целей сделать там отдельную кнопку для сейва? Тогда
