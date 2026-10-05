@@ -207,7 +207,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   two, and the spouse talks too often overall. Add a no-repeat memory (and look at the overall
   chattiness rate). ⚠ Likely touches the save schema if lines-said must persist. Class: **build**.
 
-- [ ] **16. «W11 2049 в календаре показали injured, на home injured walkover, но при этом пустили
+- [x] **16. «W11 2049 в календаре показали injured, на home injured walkover, но при этом пустили
   играть на w500 и далее выиграли 2 мачта, что-то странное было. Сейв во вложении»** – calendar said
   injured, home said injured walkover, yet she PLAYED the W500 and won 2 matches. ⚠ **The save did
   not reach this session** (and #20 says he currently cannot export saves at all). Hunt the
