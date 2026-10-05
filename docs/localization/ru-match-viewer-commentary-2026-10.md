@@ -325,3 +325,255 @@ They are surface-compatible statements, not tactical instructions to the daughte
 - At 320 px, inspect the longest officials and standings lines in the scrollable commentary log.
 - Verify the same stored match produces identical preview key order in English and Russian and no
   new RNG read.
+
+## 15. Point-commentary grammar
+
+The English builder composes many lines from sentence fragments. Russian must preserve the same
+facts and variant selection, but it cannot reuse the same grammatical seams. In particular, a
+player display name is not safe to decline automatically: the roster contains Russian and foreign
+names, initials, fictional labels and potentially indeclinable surnames. Every Russian mould below
+keeps `{who}` in the nominative.
+
+Counted tennis terms use locale helpers rather than translated English plurals:
+
+| value | break point | set point | match point |
+| --- | --- | --- | --- |
+| 1 | `один брейк-пойнт` | `один сетбол` | `один матчбол` |
+| 2 | `два брейк-пойнта` | `два сетбола` | `два матчбола` |
+| 5 | `пять брейк-пойнтов` | `пять сетболов` | `пять матчболов` |
+
+The formatter must expose the grammatical role it needs. `Отыгрывает два брейк-пойнта` and
+`Отыграно два брейк-пойнта` happen to share the visible counted phrase, but their surrounding verb
+does not. Do not build Russian by appending `-ы`, `-а` or `-ов` to a localized noun.
+
+Numbers that deliberately open a run line are written as words through twenty (`Шесть`,
+`Четырнадцать`, `Двадцать`), then as digits. The tests that currently read an English number word
+must become locale-aware; the invariant is **the claimed count opens the line**, not that the first
+token belongs to the English `NUMBER_WORD` table.
+
+## 16. Tennis placement and point endings
+
+### 16.1 Placement vocabulary
+
+| source fact | Russian phrase |
+| --- | --- |
+| serve `down the T` | `по центру` |
+| serve `out wide` | `по диагонали` |
+| serve `into the body` | `в корпус` |
+| rally `down the line` | `по линии` |
+| rally `through the middle` | `по центру` |
+| rally `cross-court` | `кроссом` |
+| miss `net` | `отправляет мяч в сетку` |
+| miss `long` | `бьёт за заднюю линию` |
+| miss `wide` | `бьёт в аут по ширине` |
+
+`По диагонали` here describes the wide serve, while `кроссом` describes a rally ball. Keeping two
+terms prevents the feed from pretending the engine knows a precise serve target or a forehand wing.
+
+### 16.2 Compact manner mould
+
+| source branch | Russian draft |
+| --- | --- |
+| ace, closing | `Эйс {servePlacement} ставит точку.` |
+| ace, sealing | `Эйс {servePlacement} решает гейм.` |
+| double fault | `Всё заканчивается двойной ошибкой.` |
+| hero winner, 8+ shots | `{Shots} ударов – и в конце удар навылет {rallyPlacement}.` |
+| hero winner, short | `Удар навылет {rallyPlacement} ставит точку.` |
+| other winner, 8+ shots | `{Shots} ударов, и {who} завершает розыгрыш {rallyPlacement}.` |
+| other winner, short | `{who} завершает всё ударом навылет {rallyPlacement}.` |
+| error after 8+ shots | `Долгий обмен, и {who} {missPhrase}.` |
+| short error | `{who} {missPhrase}.` |
+
+`{Shots}` is the sentence-opening counted word. `Обмен` is used only for the engine's generic long
+rally; the copy does not invent a baseline exchange, volley or wing.
+
+### 16.3 Feed mould
+
+The second English mould is currently assembled as `{player} wins/loses the {unit} with
+{descriptor}`. Russian receives one semantic renderer with inputs `actor`, `won`, `unit`, `manner`
+and `hero`, not translated fragments. Its output families are:
+
+| fact | hero just named | other player must be named |
+| --- | --- | --- |
+| ace | `Она выигрывает этот розыгрыш эйсом {placement}.` | `{who} выигрывает {unit} эйсом {placement}.` |
+| winner | `Она выигрывает этот розыгрыш ударом навылет {placement}.` | `{who} выигрывает {unit} ударом навылет {placement}.` |
+| double fault | `Она проигрывает этот розыгрыш двойной ошибкой.` | `{who} проигрывает {unit} двойной ошибкой.` |
+| net error | `Она проигрывает этот розыгрыш, отправив мяч в сетку.` | `{who} проигрывает {unit}, отправив мяч в сетку.` |
+| long error | `Она проигрывает этот розыгрыш ударом за заднюю линию.` | `{who} проигрывает {unit} ударом за заднюю линию.` |
+| wide error | `Она проигрывает этот розыгрыш ударом в аут по ширине.` | `{who} проигрывает {unit} ударом в аут по ширине.` |
+
+`{unit}` is `гейм` or `сет`. A return error remains a data distinction for future wording, but the
+first Russian pass does not force the clumsy `ошибка на приёме` into every row; both return and
+groundstroke are truthfully covered by the observed result. The second-serve ace may be surfaced as
+`эйсом со второй подачи` in this mould because the shot kind proves it.
+
+## 17. Breaks and meaningful holds
+
+### 17.1 Routine break pool
+
+The pool grows additively with the same storeys as English:
+
+| availability | Russian variant |
+| --- | --- |
+| base | `{who} делает брейк.` |
+| base | `{who} берёт чужую подачу.` |
+| base | `Подача соперницы проиграна. Брейк делает {who}.` |
+| from storey 3 | `Брейк – и его делает {who}.` |
+| from storey 3 | `Этот гейм на приёме берёт {who}.` |
+| from storey 4 | `{who} всё-таки находит путь к брейку.` |
+| from storey 4 | `Подача проиграна. Брейк делает {who}.` |
+
+### 17.2 Break back to level
+
+| availability | Russian variant |
+| --- | --- |
+| base | `{who} делает обратный брейк. Снова ровно.` |
+| base | `{who} возвращает брейк, и счёт в сете снова равный.` |
+| from storey 3 | `{who} отвечает обратным брейком. Снова ровно.` |
+| from storey 4 | `{who} сразу возвращает брейк – счёт равный.` |
+
+The score-earned branches stay outside the pool:
+
+| fact | Russian line |
+| --- | --- |
+| broke back after facing match point | `{who} отыгрывает матчбол и возвращает брейк.` |
+| broke back after facing set point | `{who} отыгрывает сетбол и возвращает брейк.` |
+| broke from love-forty down | `{who} делает брейк со счёта 0:40 на приёме.` |
+| will serve for set, flat register only | `Теперь она подаёт на сет.` |
+
+The last sentence is still dropped at peak importance. `На матч` is not inferred: the existing
+condition licenses only the next game being for the set.
+
+### 17.3 Holds that deserve a row
+
+| fact | Russian line |
+| --- | --- |
+| saved match points | `{who} отыгрывает {nMatchPoints} и берёт свою подачу.` |
+| saved set points | `{who} отыгрывает {nSetPoints} и берёт свою подачу.` |
+| held from love-forty | `{who} выбирается с 0:40 и берёт свою подачу.` |
+| base counted pool | `{who} отыгрывает {nBreakPoints} и удерживает подачу.` |
+| from storey 3 | `Отыграно {nBreakPoints}. {who} всё-таки берёт свою подачу.` |
+| from storey 4 | `{who} удерживает подачу, отыграв {nBreakPoints}.` |
+
+The lead labels are `Брейк!` and `Подача взята.`. `Гейм.` would lose the distinction the English
+log deliberately makes between a break and a meaningful hold.
+
+## 18. Sets, tiebreaks and match completion
+
+### 18.1 Opening and set rows
+
+| source | Russian draft |
+| --- | --- |
+| `{name} serves first.` | `Первой подаёт {name}.` |
+| tiebreak set | `{who} берёт {ordinal} сет на тай-брейке.` |
+| break to take set | `{who} делает брейк и берёт {ordinal} сет.` |
+| serve out set | `{who} подаёт на {ordinal} сет и берёт его.` |
+| second set levels match | `Счёт по сетам равный.` |
+| breaks back at 6-all | `{who} возвращает брейк – 6:6.` |
+| holds at 6-all | `{who} берёт свою подачу – 6:6.` |
+| tiebreak follows | `Сет решит тай-брейк.` |
+
+`{ordinal}` is generated as an agreeing Russian ordinal (`первый`, `второй`), never by translating
+an English suffix. The corresponding leads are `Сет.` and `Тай-брейк.`.
+
+### 18.2 Stakes won
+
+The stake is rendered as its own sentence, because Russian punctuation is cleaner than gluing an
+English-style `, and …` tail to every winning mould:
+
+| remaining before the match | Russian sentence |
+| --- | --- |
+| 2 | `А вместе с матчем – и титул.` |
+| 4 | `И место в финале.` |
+| 8 | `И место в полуфинале.` |
+| 16 | `И место в четвертьфинале.` |
+| larger draw | `И место в 1/{remaining / 4} финала.` |
+
+The stage still comes from semantic draw size. Do not parse `Финал`, `Полуфинал` or a translated
+round label inside commentary.
+
+### 18.3 Normal finish
+
+| source | Russian draft |
+| --- | --- |
+| `takes it in three` | `{winner} побеждает в трёх сетах.` |
+| `takes it in straight sets` | `{winner} побеждает в двух сетах.` |
+| lead `Match.` | `Матч.` |
+
+Append the licensed stake sentence, then a point-ending sentence from §16 and the room line from
+§20. The same clause budget may remove colour, but never the victory or stake.
+
+### 18.4 Retirement finish
+
+| source fact | Russian draft |
+| --- | --- |
+| cannot continue and opponent advances | `{retired} не может продолжать. В следующий круг выходит {winner}.` |
+| body explanation | `Долгий матч на уставших ногах.` |
+| handshake, not winner | `Вместо удара навылет – рукопожатие.` |
+| lead `Retired.` | `Снялась.` |
+
+If a stake sentence is licensed, place it after `В следующий круг выходит {winner}.` The room stays
+silent on a retirement, exactly as in English. This commentary wording and the alert in §6 describe
+the same event at different densities; neither names an injury the model does not know.
+
+## 19. Counted runs and long points
+
+### 19.1 Point streaks
+
+| availability | Russian variant |
+| --- | --- |
+| base | `{N} очков подряд выигрывает {who}.` |
+| from storey 3 | `{N} очков без ответа берёт {who}.` |
+| from storey 4 | `{N} очков подряд. Их все выигрывает {who}.` |
+
+Lead: `Серия.`
+
+### 19.2 Game runs
+
+| availability | Russian variant |
+| --- | --- |
+| base | `{N} гейма подряд выигрывает {who}.` |
+| from storey 3 | `{N} гейма без ответа берёт {who}.` |
+| from storey 4 | `{N} гейма подряд. Все они остаются за {who}.` |
+
+`{N} гейма` stands for a fully counted phrase (`Четыре гейма`, `Пять геймов`). The last form would
+require a declined name after `за` in ordinary prose, so the runtime renderer
+must instead emit **`{N} гейма подряд. Каждый из них выигрывает {who}.`**. The rejected draft is kept
+here to record why a superficially shorter translation is unsafe. Lead: `Серия.`
+
+### 19.3 Long deuce game
+
+| variant | Russian draft |
+| --- | --- |
+| 1 | `{N} раз счёт доходил до «ровно». {who} всё ещё подаёт.` |
+| 2 | `{N} раз «ровно», а гейм всё не окончен. {who} подаёт снова.` |
+| 3 | `{N} раз «ровно». {who} всё ещё не взяла свою подачу.` |
+
+Lead: `Ровно.` The first token remains the count. Quotation marks distinguish the score call
+`«ровно»` from the ordinary adverb.
+
+### 19.4 Long winning rally
+
+> `{Shots} ударов, и {who} завершает розыгрыш {placement}.`
+
+Lead: `Розыгрыш.` This row is licensed only when the final shot is a winner, so `завершает` never
+turns an error into a winner.
+
+## 20. The room
+
+The room appears only from storey 3 and remains the first clause cut under pressure.
+
+| moment | availability | Russian variant |
+| --- | --- | --- |
+| match | storey 3 | `Трибуны встают.` |
+| match | storey 3 | `У сетки аплодируют обеим.` |
+| match | storey 4 | `Стадион встаёт и ещё долго не стихает.` |
+| set | storey 3 | `Аплодируют со всех сторон корта.` |
+| set | storey 3 | `Аплодисменты ещё не стихают.` |
+| set | storey 4 | `С дальней трибуны накатывает гул.` |
+| tiebreak | storey 3 | `Перед ним корт затихает.` |
+| tiebreak | storey 3 | `Теперь никто не встаёт со своего места.` |
+| tiebreak | storey 4 | `Весь стадион встречает его стоя.` |
+
+`Перед ним` and `его` refer to masculine `тай-брейк`; these variants cannot be shared with another
+beat kind. None claims whom the crowd supports or what either player feels.
