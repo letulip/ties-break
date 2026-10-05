@@ -228,8 +228,51 @@ a line decision was wrong, but it may not invent a chair umpire, line judge or e
 references to a next match are conversational readings of `the next one`; they make no schedule,
 entry or date claim.
 
-## 8. Situation-corpus progress
+## 8. Situation R47 – `march-entry`
+
+Subject `decision`; stages `school`, `after-school`; fact gate `march-entry-open`. The gate already
+proves that a decision is still possible; the copy must not promise time after the entry deadline.
+
+### 8.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I'm not sure about the March tournament. Can we talk about it now, before I forget?"` | `«Я не уверена насчёт мартовского турнира. Обсудим сейчас, пока я не забыла?»` |
+| fiery | `"I don't think I want to do the March tournament. Ask me again in an hour, obviously."` | `«Кажется, я не хочу играть мартовский турнир. Разумеется, через час спроси снова».` |
+| deep | `"I've been turning the March tournament over and I still cannot get to an answer."` | `«Я всё возвращаюсь к мартовскому турниру и никак не могу решить».` |
+| quiet | `"I'm not sure about the March tournament."` | `«Я не уверена насчёт мартовского турнира».` |
+
+### 8.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she's weighing` | `Спросить, между чем она выбирает` |
+| respond | `Say the travelling matters too` | `Сказать, что дорогу тоже надо учитывать` |
+| space | `Say there's time to decide` | `Сказать, что время на решение ещё есть` |
+
+### 8.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"The travelling, mostly. And whether I'd rather be at training. It's not more complicated than that."` | `«В основном дорогу. И не лучше ли остаться на тренировках. Всё не сложнее».` |
+| sunny | respond | `"That helps, actually. I was only counting what I'd lose by going."` | `«Вообще-то помогает. Я считала только, что потеряю, если поеду».` |
+| sunny | space | `"There is. I'll stop bringing it up at dinner, I promise."` | `«Есть. Обещаю больше не заводить этот разговор за ужином».` |
+| fiery | invite | `"The trip. The training I'd miss. And everybody asking me what I've decided."` | `«Поездку. Пропущенные тренировки. И всех, кто спрашивает, что я решила».` |
+| fiery | respond | `"Fine. Then it's the travelling against the training and I still have to pick one."` | `«Ладно. Значит, дорога или тренировки, а выбирать всё равно мне».` |
+| fiery | space | `"There's time. I'd rather decide now and be wrong than carry it about."` | `«Время есть. Лучше решу сейчас и ошибусь, чем буду таскать это с собой».` |
+| deep | invite | `"The trip against the training, and the part where I don't know which answer I'd regret."` | `«Дорога или тренировки – и неизвестно, о каком выборе я пожалею».` |
+| deep | respond | `"I hadn't put it on that side of the list. It changes the shape of it."` | `«Я не учитывала это с этой стороны. Теперь всё выглядит иначе».` |
+| deep | space | `"There is. I'm not sure more time makes it a different question."` | `«Есть. Не уверена, что от лишнего времени вопрос станет другим».` |
+| quiet | invite | `"It's a long trip. I'd miss Tuesday training. I'm not sure it's worth it."` | `«Дорога длинная. Пропущу тренировку во вторник. Не уверена, что турнир того стоит».` |
+| quiet | respond | `"That's the bit I keep coming back to."` | `«К этому я всё время и возвращаюсь».` |
+| quiet | space | `"I'll look at it again on Sunday."` | `«В воскресенье посмотрю ещё раз».` |
+
+The fiery opener's `спроси` is intimate daughter-to-parent address. No branch says which choice is
+correct; all three remain zero-bond texture and the actual tournament decision stays on its existing
+mechanical surface.
+
+## 9. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 2 / 51 | 38 / 969 | 0 / 4 | R45–R46 complete as DRAFT |
+| 3 / 51 | 57 / 969 | 0 / 4 | R45–R47 complete as DRAFT |
