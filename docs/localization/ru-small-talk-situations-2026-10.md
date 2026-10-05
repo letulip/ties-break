@@ -183,8 +183,92 @@ position; the writer does not certify that the stranger's technical suggestion i
 `Приём подачи` is the tennis action in this exchange. The Russian does not turn the stranger into
 her coach or present the advice as a verified correction.
 
-## 5. Corpus progress
+## 5. Situation R11 – `five-coffees`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. Five orders are the story's
+own count, not a reading of current friendships or travel companions.
+
+### 5.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I remembered five coffee orders. FIVE. Including the complicated one."` | `«Я запомнила пять заказов кофе. ПЯТЬ. Даже тот, сложный».` |
+| fiery | `"Got every coffee right. Every one. Somebody should have been filming."` | `«Ни один кофе не перепутала. Ни один. Кто-нибудь мог бы это снять».` |
+| deep | `"I remembered all five without writing them down. It is a stupid thing to be pleased about and I am pleased about it."` | `«Запомнила все пять, даже не записала. Глупая причина радоваться, а я радуюсь».` |
+| quiet | `"I did the coffee run. Got them all right."` | `«Сходила за кофе для всех. Ничего не перепутала».` |
+
+### 5.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the complicated one was` | `Спросить, какой заказ был сложным` |
+| respond | `Say that's a useful kind of memory` | `Сказать, что такая память пригодится` |
+| space | `Laugh and say nothing else` | `Посмеяться и ничего не добавлять` |
+
+### 5.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Oat flat white, extra shot, and please don't stir it. I got it right."` | `«Флэт уайт на овсяном, ещё один шот и, пожалуйста, не размешивать. Я всё запомнила».` |
+| sunny | respond | `"Is it? I can't remember where I put my keys, so it's a mixed gift."` | `«Правда? Ключи я вечно теряю, так что дар сомнительный».` |
+| sunny | space | `"You're laughing. Good. That's exactly what it deserved."` | `«Ты смеёшься. Отлично. Именно этого история и заслуживает».` |
+| fiery | invite | `"Oat flat white, extra shot, unstirred. Who orders that? I remembered it anyway."` | `«Флэт уайт на овсяном, лишний шот, не размешивать. Кто такое заказывает? А я запомнила».` |
+| fiery | respond | `"It's useful for coffee. Nothing else has ever stayed in there."` | `«Для кофе пригодится. Больше у меня в голове ничего так не задерживается».` |
+| fiery | space | `"Laugh away. I'd have been furious if I'd got one wrong."` | `«Смейся. Если бы хоть один перепутала, я бы взбесилась».` |
+| deep | invite | `"Oat milk, extra shot, not stirred. I repeated it the whole way there."` | `«Овсяное молоко, лишний шот, не размешивать. Повторяла всю дорогу».` |
+| deep | respond | `"For coffee, apparently. I've lost whole conversations this week."` | `«Для кофе – похоже. А разговоры на этой неделе вылетали из головы целиком».` |
+| deep | space | `"Mm. I'll take the laugh."` | `«Угу. Пусть будет смех».` |
+| quiet | invite | `"Oat flat white, extra shot. She didn't want it stirred."` | `«Флэт уайт на овсяном, дополнительный шот. Она просила не размешивать».` |
+| quiet | respond | `"Sometimes. It works better for other people's things."` | `«Иногда. Чужие просьбы я запоминаю лучше».` |
+| quiet | space | `"That's fair. It's only coffee."` | `«Справедливо. Это всего лишь кофе».` |
+
+`Флэт уайт` and `шот` are contemporary coffee words; the quiet voice uses the fuller
+`дополнительный шот`. The same unusual order remains recognizable in all four voices.
+
+## 6. Situation R12 – `the-grip-she-did-herself`
+
+Subject `good-news`; stages `after-school`, `college`, `independent`; no fact gate. The established
+RU kit term is `обмотка`. Her achievement is doing the small repair herself.
+
+### 6.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"My grip came off and I just... did it. Myself. Badly, but myself."` | `«Обмотка слетела, и я просто... намотала её заново. Криво, но сама».` |
+| fiery | `"I re-gripped it myself. Didn't ask, didn't need to, and it held."` | `«Сама перемотала ручку ракетки. Не просила помощи, не понадобилось. И держится».` |
+| deep | `"The grip went halfway through. I sat down and did it myself."` | `«Обмотка начала отходить. Я села и перемотала ручку сама».` |
+| quiet | `"Re-wrapped a grip this week. It held."` | `«На этой неделе сменила обмотку. Держится».` |
+
+### 6.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how bad it looks` | `Спросить, сильно ли неровно получилось` |
+| respond | `Say that's one less thing she needs anyone for` | `Сказать, что теперь и с этим она справляется сама` |
+| space | `Say you still can't do it either` | `Сказать, что вы до сих пор этого не умеете` |
+
+### 6.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Bad. There's a lump near the bottom. But it's my lump."` | `«Сильно. Внизу бугорок. Зато мой бугорок».` |
+| sunny | respond | `"I suppose so. Mostly I just didn't want to interrupt anybody."` | `«Наверное. Просто не хотелось никого отвлекать».` |
+| sunny | space | `"You can't. I've watched you. It's the one thing I'm ahead on."` | `«Да, ты не умеешь. Я видела. Хоть в чём-то я впереди».` |
+| fiery | invite | `"It's lumpy at the end. I'm not redoing it. It held, didn't it?"` | `«На конце бугры. Переделывать не буду. Держится же?»` |
+| fiery | respond | `"It's one. I'd like the rest of the list as well."` | `«С одним разобралась. Теперь бы весь остальной список».` |
+| fiery | space | `"You've never tried. That's not the same as can't."` | `«А пробовать доводилось? Не уметь – другое дело».` |
+| deep | invite | `"There's a ridge near the bottom. I can feel it every time."` | `«Внизу складка. Чувствую её каждый раз».` |
+| deep | respond | `"Maybe. I did it because asking felt like more effort than doing it."` | `«Может быть. Просто попросить казалось труднее, чем сделать самой».` |
+| deep | space | `"You've never had to. That's the difference."` | `«Тебе просто не приходилось. Вот в чём разница».` |
+| quiet | invite | `"Uneven at the bottom. You wouldn't notice from across a court."` | `«Снизу неровно. С другой стороны корта не заметишь».` |
+| quiet | respond | `"Suppose so. It wasn't a big thing."` | `«Наверное. Ничего сложного».` |
+| quiet | space | `"It's not hard. I'll show you sometime."` | `«Это не трудно. Как-нибудь покажу».` |
+
+The parent replies and daughter answers do not assign a gender to the player-parent. `Обмотка`
+matches the RU diary and birthday drafts; no separate tennis synonym is introduced here.
+
+## 7. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 18 / 51 | 342 / 969 | 4 / 4 | R45–R52 and R1–R10 complete as DRAFT |
+| 20 / 51 | 380 / 969 | 4 / 4 | R45–R52 and R1–R12 complete as DRAFT |
