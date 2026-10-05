@@ -1,3 +1,10 @@
+---
+type: round
+status: current
+area: delivery
+last-reviewed: 2026-10-05
+---
+
 # Round 46 – the owner's playtest after round 45 merged, 22 items (05.10)
 
 He played the merged build (round/45 went in as PR #164 the same day). The list mixes asset-card
