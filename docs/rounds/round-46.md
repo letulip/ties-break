@@ -286,10 +286,44 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     not-told-yet arm alone. Also green: the 18 component files that mount KidScreen (202 tests) and 38 unit files
     around `kidLife`, the template rules, import cycles and the barrel pins (839 tests); `vue-tsc -b --force` clean.
 
-- [ ] **10. «На экране между матчами с большой картинкой немного съехала вёрстка в ширину и есть
+- [x] **10. «На экране между матчами с большой картинкой немного съехала вёрстка в ширину и есть
   горизонтальный скрол, надо проверить и починить»** – the between-matches screen with the big
   picture overflows horizontally (horizontal scroll exists). Fix + a mounted no-overflow assertion at
   phone width. Class: **build**.
+  - **B11 · 10 SHIPPED – ONE STALE NUMBER: THE FULL-BLEED CARD QUOTED THE OLD 24px GUTTER, AND THE SCROLLER HAD BEEN 16px SINCE R17 #8.**
+    **THE SCREEN** – TournamentFlow's `pre` phase, the "Match Day" card between rounds: `MatchScene` with `fill` (the painted
+    portrait `img.scene-art`, its scrim and the glass plate), placed by `.tf-scene.tf-scene`. The friendly's card (`PracticeFlow`,
+    `.pf-scene`) is the same component but not `fill` and carries no negative margin (grep over `src/components`: the only `-24px`
+    bleed is this one), so it cannot overshoot by this cause – read, not measured in the browser.
+    **THE OFFENDER AND THE CAUSE** – `.tf-scene.tf-scene { margin: 0 -24px }` cancelled a gutter `.tf-body` no longer has: R17 #8
+    moved it to `padding-inline: var(--app-pad-x)` (16px) and this margin kept the old figure. So the card, its `img` and its scrim
+    were **16px wider than the screen (left −8, right +8)**; `.tf-body` is the takeover's own scroller, `.tf-fit` gives it
+    `overflow-y: hidden`, which makes its `overflow-x` compute to `auto`, and it scrolled the 8px sideways; the glass plate and the
+    round pill sat **4px from the edge where MatchScene gives them 12**. ⚠ `documentElement.scrollWidth` equalled the viewport at
+    every width (the takeover is `position: fixed`), so a page-level "no horizontal scroll" check reads green over this bug –
+    measure `.tf-body`.
+    **MEASURED** in real Chromium on a production build (the e2e `careerAt('junior')` fixture -> splash -> Begin -> "Watch match" on
+    screen), `.tf-body` scrollWidth / clientWidth. BEFORE: 320: 328/320 · 360: 368/360 · 375: 383/375 · 390: 398/390 · 430: 438/430
+    (always +8, `maxScrollLeft` 8), scene box −8 … viewport+8, plate and pill 4px from the edge, three offenders (`div.scene`,
+    `img.scene-art`, `span.scene-scrim`). AFTER, the same five plus 768 and 1280: scrollWidth = clientWidth at all seven (1280:
+    880/880, the column), `maxScrollLeft` 0, scene box 0 … viewport (1280: 200 … 1080, exactly the 880 column), plate and pill 12px
+    from the edge, zero offenders. Screenshots before/after at 375 and after at 320: the painting is the screen's width, the plate
+    and pill are back at their 12px, names, ranks, flags and both buttons whole at 320.
+    **THE FIX** – one declaration: `margin: 0 calc(-1 * var(--app-pad-x))` – the cancellation written as the relationship it always
+    was (Home's `.diary-hero` and NextTournamentPanel's hero already spell it so), so the next change to the gutter cannot leave it
+    behind again. ⚠ NO `overflow-x: clip` ADDED to the fitted body: with the offender gone it would only mask the next drift – if a
+    belt is wanted it is one line on `.tf-fit :deep(.tf-body)`. Zero strings touched.
+    **TEST** – `tests/component/round46-prematch-bleed.test.ts`, 5 tests. Arm 1, mounted at 375 / 320 / 768 / 1280: the card's margin is
+    `calc(-1 * 16px)` on both sides, the token read off `:root`. Arm 2: `.tf-body` pads its sides by the same token. ⚠ **Arm 2 reads the
+    sheet on purpose** – happy-dom computes `.tf-body`'s padding as 24px (the physical shorthand) and ignores the logical
+    `padding-inline` override Chromium applies, so a computed "margin + padding closes to 0" arm came out RED on the fixed card
+    (−16 + 24) and would have been GREEN on the broken one (−24 + 24): the first draft asserted the bug and refused the fix.
+    **Mutation, each alone:** margin back to `-24px` -> arm 1 red ×4 (`expected '-24px' to be 'calc(-1 * 16px)'`), arm 2 green;
+    `.tf-body`'s gutter in `src/style.css` back to a literal 24px -> arm 2 red (`expected false to be true`), arm 1 green; both files
+    restored byte-identical (`cmp`), `style.css` has no diff against HEAD.
+    **GREEN** (verdicts read from files with exit sentinels): the 21 component files that mount or pin `TournamentFlow` / `MatchScene`
+    (262 tests); the 68 unit files that reference them or sweep `src/components` (1828 tests); `vue-tsc -b --force` exit 0. The probe
+    was a throwaway Playwright spec on its own port and build dir, deleted; no process left.
 
 - [x] **11. «И кстати, она объявит о свадьбе заранее (увидел, объявила, можно там тоже писать сколько
   они вместе, кстати, как вариант)? Или это от отношений и темперамента зависит? И поставим ли мы

@@ -1876,13 +1876,28 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
    at any height. The spare band goes ABOVE the art (`.scene--fill .scene-art` anchors it to the
    foot), so the plate still rides the painting - the exact complaint R15-3 had about the stretch.
 
-   FULL-BLEED, as the design's F draws its art slot: the negative margins cancel `.tf-body`'s 24px
+   FULL-BLEED, as the design's F draws its art slot: the negative margins cancel `.tf-body`'s side
    gutters, and the corner/border come off with them - a card edge makes no sense on a surface that
    touches the screen edge. Doubled class beats `Card`'s scoped `.tb-card` radius/border at
    (0,3,0) vs (0,2,0) - the same tie `.back-link.tf-hero-back` documents; a single scoped class
-   only ties it and injection order decides. */
+   only ties it and injection order decides.
+
+   ⭐⭐⭐ ROUND 46 #10 – THE MARGIN READS THE GUTTER'S OWN TOKEN, NOT A NUMBER THAT USED TO EQUAL IT
+   (owner, 05.10: «на экране между матчами с большой картинкой немного съехала вёрстка в ширину и
+   есть горизонтальный скрол»). This rule said `-24px` because the gutter WAS 24px. R17 #8 then
+   moved `.tf-body`'s gutter to `--app-pad-x` (16px) and nothing said this margin had been quoting
+   the old figure, so from that round on the card overshot the column by 8px on each side. Measured
+   in Chromium on the shipped build at 320 / 360 / 375 / 390 / 430: the scene was 16px wider than the
+   screen (left -8, right +8), `.tf-body` – `overflow-y: hidden` makes its `overflow-x` compute to
+   `auto` – scrolled those 8px sideways (scrollWidth = clientWidth + 8), and the glass plate and the
+   round pill sat 4px from the edge where the design gives them 12. ⚠ `documentElement.scrollWidth`
+   equalled the viewport the whole time: the takeover is `position: fixed` and the scroll lived in
+   its own scroller, so a page-level check can never see this one – measure `.tf-body`.
+   `calc(-1 * var(--app-pad-x))` is the cancellation written as the relationship it always was, so
+   the next change to the gutter cannot leave it behind again;
+   tests/component/round46-prematch-bleed.test.ts pins the pair. */
 .tf-scene.tf-scene {
-  margin: 0 -24px;
+  margin: 0 calc(-1 * var(--app-pad-x));
   border: none;
   border-radius: 0;
 }
