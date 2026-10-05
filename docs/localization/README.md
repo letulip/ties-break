@@ -36,7 +36,7 @@ last-reviewed: 2026-10-05
 | [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 34 occasions and four daughter voices | drafted end to end |
 | [Batch 08 – Match viewer and commentary](ru-match-viewer-commentary-2026-10.md) | Live/replay controls, court readouts, preview booth and deterministic commentary | drafted end to end |
 | [Batch 09 – Diary and birthdays](ru-diary-birthday-2026-10.md) | Diary chrome and memories, birthday headings, travel and weekly observations | shared diary and birthday frame drafted; corpora in progress |
-| [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | through age eighteen drafted |
+| [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | drafted end to end |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

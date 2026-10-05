@@ -276,3 +276,261 @@ context in the label or use `ракетка` if playtesting shows the isolated t
   the requested gift.
 - Event text comes from gift id, not from inserting a localized label or showing saved English.
 
+## 9. Ages nineteen to twenty-one
+
+This is the source's `independence` gift band, but a non-college career can still be in the
+`after-school` life stage and the state does not prove a separate flat. Two source rows (`home` and
+`storage`) currently overclaim it. Their Russian drafts below preserve the gift idea without
+inventing residence; the English source should receive the same factual correction before the
+catalogue lands.
+
+### `deposit`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Первоначальный взнос за собственное жильё` |
+| note | `Такой подарок не развернёшь, и она прекрасно понимает, что это.` |
+| again | `Один взнос от нас уже ушёл в дело. Этот будет на следующее жильё.` |
+| ask | `Она присылает нам объявления и говорит, что просто смотрит. Слово «взнос» пока никто не произнёс.` |
+| short | `взнос за жильё` |
+| event | `Её день рождения. Подарили первоначальный взнос за собственное жильё.` |
+
+### `car`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Машина` |
+| note | `Чтобы ездить наконец не на нашей.` |
+| again | `Одна машина от нас уже стоит снаружи. Эта будет второй.` |
+| ask | `С февраля наша машина фактически её – кроме документов. Она хотела бы исправить документы.` |
+| short | `машина` |
+| event | `Её день рождения. Подарили машину; ключи отдали ещё до торта.` |
+
+### `home` – residence-safe correction
+
+| field | Russian draft |
+| --- | --- |
+| label | `Кухонный стол для её будущего дома` |
+| note | `Первая вещь для места, которое однажды будет только её.` |
+| again | `Один стол от нас у неё уже есть. Теперь к нему нужны стулья.` |
+| ask | `Она сохраняет фотографии кухонных столов и говорит, что это на будущее. Похоже, будущее уже выбрано.` |
+| short | `кухонный стол` |
+| event | `Её день рождения. Подарили кухонный стол для её будущего дома.` |
+
+This replaces the unsupported current claims `for her flat`, `life we do not live in` and `what she
+eats off is still a box`. If a future state records an actual flat, a residence-specific variant
+may return under that explicit licence.
+
+### `languages`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Уроки языка, за который она всё время извиняется` |
+| note | `Четыре сезона пресс-конференций, а отвечает она каждый раз по-английски.` |
+| again | `Один язык мы ей уже дарили. Теперь будет следующий.` |
+| ask | `Она научилась извиняться на трёх языках и ни на одном не умеет закончить фразу.` |
+| short | `уроки языка` |
+| event | `Её день рождения. Подарили курс языка, которого ей не хватало.` |
+
+### `storage` – residence-safe correction
+
+| field | Russian draft |
+| --- | --- |
+| label | `Кладовая для коробок из нашего гаража` |
+| note | `Шестнадцать лет её жизни стоят там штабелями. Всё сразу не разберёшь.` |
+| again | `Одну кладовую мы уже дарили, и она заполнена. Теперь нужна побольше.` |
+| ask | `Она приехала за своими коробками, посмотрела, сколько их, и забрала две.` |
+| short | `кладовая` |
+| event | `Её день рождения. Подарили отдельную кладовую для всех этих коробок.` |
+
+## 10. Ages twenty-two to twenty-eight
+
+### `familyweek`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Неделя с семьёй между сезонами` |
+| note | `Семь утр подряд: без кортов, перелётов и посторонних в доме.` |
+| again | `В прошлый раз у нас уже была такая неделя, и она снова просит о том же.` |
+| ask | `Между сезонами ей нужна неделя дома. Не день, не поездка – целая неделя, все вместе, ничего не запланировано.` |
+| short | `неделя дома` |
+| event | `Её день рождения. Подарили целую неделю дома – только для семьи.` |
+
+### `jewellery`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Украшение` |
+| note | `Маленькое, в коробочке. Все блестящие вещи, которые у неё есть, пришлось выиграть.` |
+| again | `Одно украшение для той коробочки мы уже дарили. Это ляжет рядом.` |
+| ask | `Она всё говорит про коробочку на полке: всё, что там блестит, ей пришлось выиграть.` |
+| short | `украшение` |
+| event | `Её день рождения. Подарили украшение; открыли ещё до торта.` |
+
+### `neverbuy`
+
+| field | licensed/plenty | unlicensed means |
+| --- | --- | --- |
+| label | `Картина из окна галереи` | same |
+| note | `Деньги на неё у героини есть уже много лет – и всё равно она её не купит.` | `Она годами стоит у этого окна и ни разу не спросила цену.` |
+| again | `Одна такая картина от нас уже висит у неё на стене. Эта будет второй.` | same |
+| ask | `В полночь она прислала нам фотографию витрины галереи, а потом сказала, что это глупость.` | same |
+| short | `картина` | same |
+| event | `Её день рождения. Подарили ту самую картину из окна галереи.` | same |
+
+The licensed note should use her display name or `у неё`, not the placeholder word `героиня` in
+runtime. A safe final mould is **`На эту картину у неё давно есть деньги – и всё равно она её не
+купит.`**.
+
+### `dog`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Собака – а мы присмотрим за ней, пока она в поездках` |
+| note | `Она хотела собаку с детства, но теперь две ночи подряд не проводит в одном городе.` |
+| again | `Одна собака от нас уже спит на нашем диване.` |
+| ask | `Почти в каждом её видео есть чья-то чужая собака. Сама она об этом ни слова.` |
+| short | `собака` |
+| event | `Её день рождения. Подарили собаку – и место на нашем диване.` |
+
+### `oldclub`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Новое покрытие для корта в её первом клубе` |
+| note | `Там она училась. Линии не красили с тех пор, как она ушла.` |
+| again | `Один корт там уже наш. Теперь будет второй – и забор.` |
+| ask | `Весной она проехала мимо первого клуба и потом целый час говорила о линиях.` |
+| short | `корт в первом клубе` |
+| event | `Её день рождения. Оплатили новое покрытие для корта в её первом клубе.` |
+
+### `recipes`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Семейные рецепты, собранные в одну книгу` |
+| note | `Три поколения, переписанные одной рукой. Теперь книга её.` |
+| again | `Книга от нас у неё уже есть – и по пятнам видно, что ею пользуются.` |
+| ask | `Она стала просить старые рецепты по одному блюду за раз – из трёх разных часовых поясов.` |
+| short | `книга рецептов` |
+| event | `Её день рождения. Подарили книгу семейных рецептов.` |
+
+### `guitar`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Гитара для поездок` |
+| note | `Уменьшенная, в жёстком футляре, помещается на верхнюю полку. Она напевает чаще, чем признаётся.` |
+| again | `Одна гитара от нас у неё уже есть. Эта хотя бы будет держать строй.` |
+| ask | `Весь сезон за кулисами находилась чья-нибудь одолженная гитара, и руки у неё каждый раз тянулись к ней.` |
+| short | `гитара` |
+| event | `Её день рождения. Подарили дорожную гитару; футляр открыли ещё до торта.` |
+
+## 11. Age twenty-nine and later
+
+The seven peak gifts remain eligible with the exact wording in §10. The late band adds three
+age-specific rows.
+
+### `album`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Альбом всей её карьеры` |
+| note | `Все годы по порядку, начиная с первой сетки, в которую она попала.` |
+| again | `Один альбом от нас у неё уже есть. В этом будут годы после него.` |
+| ask | `Кто-нибудь сохранил фотографии и старые сетки? Она думает, что нет. Альбом докажет обратное.` |
+| short | `альбом` |
+| event | `Её день рождения. Подарили альбом всей карьеры.` |
+
+### `olives`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Оливковые деревья, посаженные в её честь` |
+| note | `Тёплый склон, где они растут себе дальше – смотрит кто-нибудь или нет.` |
+| again | `Одна роща с её именем уже есть. Теперь будет следующая терраса деревьев.` |
+| ask | `Она прочла, что оливковые деревья переживают всех, кто их сажает, – и замолчала.` |
+| short | `оливковые деревья` |
+| event | `Её день рождения. Посадили оливковые деревья в её честь.` |
+
+### `firstracquet`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Её первая ракетка – с новой натяжкой и под стеклом` |
+| note | `Та самая, с замотанной ручкой: достали с чердака и убрали под стекло.` |
+| again | `Первая ракетка от нас уже под стеклом. Теперь нужен футляр для остальных.` |
+| ask | `Ни с того ни с сего она спросила, сохранилась ли у нас ракетка с замотанной ручкой.` |
+| short | `первая ракетка в раме` |
+| event | `Её день рождения. Вернули к жизни первую ракетку и убрали её под стекло.` |
+
+## 12. College birthday band
+
+College outranks age. These four rows replace the ordinary band; they are not merged with car,
+deposit or flat copy.
+
+### `roomkit`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Лампа и чайник для её комнаты` |
+| note | `В комнате были кровать, стол и окно. Больше ничего.` |
+| again | `Одна лампа от нас в той комнате уже есть. Эта будет для следующей.` |
+| ask | `Она дважды описывала нам свою комнату, и оба раза в основном получался потолок.` |
+| short | `лампа и чайник` |
+| event | `Её день рождения. Подарили лампу и чайник для комнаты.` |
+
+### `flighthome`
+
+| field | hardship wording | other means |
+| --- | --- | --- |
+| label | `Дорога домой в любую выбранную ею дату` | same |
+| note | `Открытая бронь. Дату выбирает она, цену мы ей не показываем.` | same |
+| again | `Одна такая дорога домой от нас уже была, и она использовала каждый отрезок пути.` | same |
+| ask | `В два часа ночи она смотрит билеты домой – и ничего не бронирует.` | `До дома четыреста миль, и она ни разу не попросила нас купить билет.` |
+| short | `дорога домой` | same |
+| event | `Её день рождения. Подарили дорогу домой на любую выбранную ею дату.` | same |
+
+### `books`
+
+| field | hardship wording | other means |
+| --- | --- | --- |
+| label | `Весь список литературы – купить целиком` | same |
+| note | `Там никто не покупает весь список. Она прочла бы каждую страницу.` | same |
+| again | `Один список мы ей уже покупали. Теперь будет следующий учебный год.` | same |
+| ask | `Рядом с каждой книгой в списке стояла цена, и сначала она прочла цены.` | `Список литературы висит у неё по порядку, и она собирается прочесть всё до одной книги.` |
+| short | `книги` | same |
+| event | `Её день рождения. Купили весь список литературы целиком.` | same |
+
+### `campusbike`
+
+| field | Russian draft |
+| --- | --- |
+| label | `Велосипед, чтобы ездить там между корпусами` |
+| note | `От любого места до любого другого пятнадцать минут, и она всё проходит пешком.` |
+| again | `Один велосипед от нас уже пристёгнут там. Этот будет ему на замену.` |
+| ask | `Там у всех есть велосипед. Она ходит пешком – и уже дважды это упомянула.` |
+| short | `велосипед` |
+| event | `Её день рождения. Подарили велосипед для дороги между корпусами.` |
+
+`campusbike` remains a distinct id from the childhood bicycle and is the deterministic ask on the
+first college birthday. Russian wording changes neither placement nor draw.
+
+## 13. Full-corpus implementation and LQA
+
+- A locale catalogue is keyed by gift id plus field and optional means arm. English copy is never a
+  runtime key.
+- `event` is a full sentence per id. The UI does not derive it from `label`, and history does not
+  display persisted English.
+- Durable/repeatable, career cap, repeat gap, band borrowing, refill and first-college placement
+  remain engine facts outside localization.
+- The Russian ask-hook audit must normalize case and `ё`/`е` only for comparison diagnostics; it
+  must not rewrite authored output or treat substring overlap as proof of a good clue.
+- Render every band with its three material rows plus `day`, including both means arms and every
+  repeat line. Longest candidates include `notennis`, `tickets`, `neverbuy`, `guitar`, `flighthome`
+  and `books`.
+- Run a birthday from fourteen through the last supported age in both tour and college careers;
+  compare option ids/order, asked id, bond delta and RNG counters across locales.
+
+With §§2–12, every current birthday gift id now has Russian label, note, repeat, clue, history noun
+and event wording. The catalogue is `DRAFT` pending the owner's read.
