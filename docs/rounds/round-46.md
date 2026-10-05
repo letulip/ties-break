@@ -557,7 +557,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     `bandFacePoint` is swept over every painting in `CROPS`. **Mutated:** `bandFacePoint` returning the old anchor → 2 red; `ART_BAND_RATIO`
     0.5 → 0.3 → 2 red; each restored byte-identical.
 
-- [ ] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
+- [?] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
   "8131.90 units – bought at $9,969 each, $10,212 now / +$49,610,632 since you bought it (33%)" - я
   только пару недель назад зашёл на 80млн, они ещё не могли дать такой прирост»** – the index-fund
   cost basis survives a near-total withdrawal: after re-entering with 80M, «since you bought it»
