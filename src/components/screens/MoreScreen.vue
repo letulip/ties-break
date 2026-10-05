@@ -864,12 +864,18 @@ const TAB_OPTIONS = [
   <!-- ⭐⭐⭐ v87 - THE WEIGHT, THE ONE DOOR THE 22.09 RULING PUT IN SETTINGS. Its own section for the
        reason the script side gives: it is a fact about a CAREER, not a device preference, so it is
        absent when no career is loaded rather than pretending to be settable from nowhere.
-       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read. -->
+       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read.
+       ⚠ ROUND 46 #2: THE HEADING AND THE LABEL ARE TWO DIFFERENT WORDS ON PURPOSE. The `<h2>` is the
+       question's name (`title`, the same on both creation cards) and keeps it; the row under it used
+       to print `title` a second time as its label, and the owner read «The weight» twice in two
+       lines. The label is `settingsLabel` now – what the switch gates – and ⚠ it is also the
+       switch's accessible name (`aria-labelledby` below), so it is pinned in a11y-sweep.test.ts and
+       transcribed in two e2e files. -->
   <section v-if="screenTab === 'play' && game.snapshot">
     <h2>{{ WEIGHT_COPY.title }}</h2>
     <div class="career-row">
       <div>
-        <span id="more-weight-label">{{ WEIGHT_COPY.title }}</span>
+        <span id="more-weight-label">{{ WEIGHT_COPY.settingsLabel }}</span>
         <!-- `display: block` for the Week-story hint's own measured reason: `.hint` is styled for a
              <p>, and at 375 a <span> runs on from the label and reads as one line of nonsense. -->
         <span class="hint" style="display: block; margin: 2px 0 0">{{ WEIGHT_COPY.settingsHint }}</span>

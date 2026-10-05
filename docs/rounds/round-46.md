@@ -68,10 +68,36 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       and `border-color` all come back `''` on a plain `.shop-action` – so `assertLegible` there would pass on anything. Only the Sell
       control is yellow; Withdraw keeps the outlined pill.
 
-- [ ] **2. «the weight дублирует the weight в настройках, надо второе переписать и может немного
+- [x] **2. «the weight дублирует the weight в настройках, надо второе переписать и может немного
   развернуть»** – two settings rows both read «the weight»; rewrite the SECOND one (he delegates the
   new wording – and «развернуть» = it may grow a few words of explanation). New string = DRAFT row
   for his blessing. Class: **build**.
+  - **B15 · SHIPPED – the wording is a DRAFT for his blessing: R46-S23 is wired, S24 and S25 are alternates.**
+    **Diagnosis.** Not two settings: one section whose heading and whose row label are the same constant.
+    `MoreScreen.vue` printed `WEIGHT_COPY.title` twice – in the `<h2>` (line 869, the FIRST «the weight») and in
+    `#more-weight-label` (line 872, the SECOND, which is also the switch's accessible name through
+    `aria-labelledby`). **Fix.** The heading is untouched. The label now reads a new `WEIGHT_COPY.settingsLabel`
+    (`composables/identityCopy.ts`), so the two creation cards, which read `title`, did not move; the hint under the
+    row and every other settings string are byte-identical (the whole diff to `MoreScreen.vue` is the label
+    expression and its comment, and none of B1's dev rows is touched).
+    **The wording, read off the mechanic.** The switch is `world.weightEnabled`, and exactly two hazard gates read it –
+    `pregnancyLossEligible` and `bereavementEligible` – so the row says what it gates: **`Pregnancy loss and
+    bereavement`**. It also tells a player what the hint under it means by «loss» (in a tennis game a bare «loss» could
+    read as a lost match). «Развернуть» became the two nouns and not a paragraph; S25 is the version with one more clause.
+    **Went wider than the brief, for one reason.** The label is the switch's accessible name, and three files pinned the
+    old words: `tests/component/a11y-sweep.test.ts` (the name list, moved) and `e2e/weight.spec.ts` plus
+    `e2e/save-safety.spec.ts` (both find the switch by that name; their transcriptions moved). ⚠ The two e2e files were
+    NOT run (no `test:e2e` in this brief), so those two edits are transcribed strings, unproven in a browser.
+    **Evidence.** The mounted test `wave 11 T7 – the settings row > round 46 #2 – «The weight» is said ONCE on the settings
+    surface` (`tests/component/wave11-weight-ui.test.ts`) counts `the weight` over the whole rendered screen (one – the
+    heading), reads the label as `WEIGHT_COPY.settingsLabel` and not `title`, and keeps the switch named by it. Three
+    mutations, each red and each restored byte-identical (`cmp`): the template label back to `title` (new test red:
+    two matches, not one; the a11y name list red); the constant's value back to `'The weight'` (the same two red); and the
+    WRONG target, the heading rewritten (new test red at «the section heading still says it»; the a11y list stays green, so
+    only the new test guards the target). Green: 20 files / 232 tests (the new test, `a11y-sweep`, every component file
+    that mounts MoreScreen, the files that name the `(dev)` rows, every test that reads `identityCopy`), plus
+    `life-moment-boost` and `worker-reply-correlation` (B1's dev life-boost row) 2 files / 19 tests; `vue-tsc -b --force`
+    exit 0.
 
 - [x] **3. «Похоже у нас такой же небольшой гринд на недвижимости есть: я только что продал первый
   дом за 332к, и мне предлагаю купить новый за 240к. На счёт инфляции на дома я ещё думаю, кстати,
@@ -867,3 +893,6 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S20 | 18 – ALTERNATE for the record page's existing link, NOT wired (`Back to the album` now returns to the last page, not to a reel) | `Back to the last page` |
 | R46-S21 | 18 – ALTERNATE for S17, NOT wired (the one `PrimaryPill` in the footer) | `Open the whole album` |
 | R46-S22 | 1b – the listed card's Sell control, **WIRED – his words, wired** (`ShopPanel.vue`, the `row.listing` branch prints `SALE_LABELS.sellNow`; no new constant – the popup's second door already carries it; the yellow fill is `--warning`) | `Sell now` – his «sell now», in the app's sentence case (the unlisted control still reads `Sell` and Withdraw still `Withdraw`, both untouched) |
+| R46-S23 | 2 – the settings row's own label, under the `The weight` heading, **WIRED** (`WEIGHT_COPY.settingsLabel` in `composables/identityCopy.ts`, read by `MoreScreen.vue`'s `#more-weight-label` – which is also the switch's accessible name; the `<h2>` and both creation cards keep `WEIGHT_COPY.title`, and the hint under the row is untouched) | `Pregnancy loss and bereavement` – names the two things the switch gates, in the spec's own nouns; 30 characters, one short of the neighbouring label «The coach marks for new players» (31) |
+| R46-S24 | 2 – ALTERNATE for S23, NOT wired (same constant: `WEIGHT_COPY.settingsLabel`) | `A pregnancy that ends, a death in the family` – the creation card's own two scenes (`WEIGHT_COPY.lead`), gentler than S23 and without echoing the hint's «loss or bereavement»; 44 characters, longer than the 31-character «The coach marks for new players», so it will likely take two lines on a phone (not measured) |
+| R46-S25 | 2 – ALTERNATE for S23, NOT wired (same constant: `WEIGHT_COPY.settingsLabel`) | `Pregnancy loss and bereavement in this career` – S23 plus the one clause «развернуть» invites: it is the only switch on the screen that belongs to a career and not to the device; 45 characters, so it also likely wraps (not measured) |

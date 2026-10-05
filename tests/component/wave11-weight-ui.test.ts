@@ -157,6 +157,37 @@ describe('wave 11 T7 – the settings row', () => {
     wrapper.unmount()
   })
 
+  it('⭐⭐ round 46 #2 – «The weight» is said ONCE on the settings surface: the heading keeps it, the row has words of its own', () => {
+    const store = useGameStore()
+    store.snapshot = toSnapshot(weightWorld())
+    // ⚠ The same two stubs the test above carries, for the same reason: there is no worker in this runner.
+    store.refreshCareers = async () => {}
+    store.refreshSlots = async () => {}
+    const wrapper = mount(MoreScreen, { global: { stubs: { teleport: true } } })
+
+    // ⭐ THE FIRST OCCURRENCE IS THE SECTION HEADING AND IT IS UNTOUCHED – the question's own name, once.
+    const headings = wrapper.findAll('h2').filter((h) => h.text() === WEIGHT_COPY.title)
+    expect(headings, 'the section heading still says it').toHaveLength(1)
+    // ⚠⚠ AND IT IS THE ONLY ONE, counted over the whole rendered surface rather than over the two
+    // elements the owner pointed at: a count of two named elements cannot see a third. The second
+    // occurrence was the row's label, which printed the very same constant.
+    const said = wrapper.text().match(/the weight/gi) ?? []
+    expect(said, 'the settings surface says «the weight» exactly once').toHaveLength(1)
+
+    // ⭐ THE SECOND ONE IS REWRITTEN: the label reads its own constant, the constant is not the
+    // heading's words, and the label still names the switch (`aria-labelledby` – a11y-sweep reads
+    // it as the accessible name).
+    const label = wrapper.find('#more-weight-label')
+    expect(label.exists(), 'the row still has its label').toBe(true)
+    expect(label.text(), 'the row says its own words').toBe(WEIGHT_COPY.settingsLabel)
+    expect(label.text(), 'and they are not the heading text').not.toBe(WEIGHT_COPY.title)
+    const row = wrapper.findAll('[role="switch"]').find((s) => s.attributes('aria-labelledby') === 'more-weight-label')
+    expect(row, 'the switch is still named by that label').toBeDefined()
+    // ⚠ THE HINT UNDER THE ROW IS NOT PART OF THIS ASK and stays as it was.
+    expect(wrapper.text()).toContain(WEIGHT_COPY.settingsHint)
+    wrapper.unmount()
+  })
+
   it('⚠ and it is ABSENT with no career – it is a fact about a career, not a device preference', () => {
     const store = useGameStore()
     store.snapshot = null
