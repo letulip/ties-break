@@ -366,8 +366,8 @@ describe('⚠⚠ a REAL ending still gets the epilogue, album and all', () => {
       const { w, game } = await openShell(world)
       expect(game.snapshot?.ending?.ending.type, 'the fixture really carries this ending').toBe(ending.type)
       expect(w.findComponent(EndingScreen).exists(), 'the epilogue is the screen').toBe(true)
-      // THE ALBUM ITSELF, not merely the component: seven polaroid slots and their paging dots.
-      expect(w.findAll('.album-dots i'), 'seven pages, turned one at a time').toHaveLength(7)
+      // THE LAST PAGE ITSELF, not merely the component: its photograph and its hand-off (the reel's other six pages left in round 46 #18).
+      expect(w.find('.ending-foot').exists(), 'and the hand-off under it').toBe(true)
       expect(w.find('.album-photo').exists(), 'and a photograph on the page').toBe(true)
       // ⚠ AND THE TAB SHELL IS GONE. An epilogue that merely painted OVER Home would be the same
       // defect from the other side – the story has no next week and there is nothing behind it.
@@ -384,10 +384,10 @@ describe('⚠⚠ a REAL ending still gets the epilogue, album and all', () => {
     // absent, and the assertion those tests make is exactly about the album.
     const world = endedWith('r24-real-mutant', REAL_ENDINGS[0])
     const { w } = await openShell(world)
-    expect(w.findAll('.album-dots i')).toHaveLength(7)
+    expect(w.findAll('.album-photo')).toHaveLength(1)
     // Simulate the broken build by removing what the mutation would remove.
     w.findComponent(EndingScreen).element.remove()
-    expect(document.querySelectorAll('.album-dots i')).toHaveLength(0)
+    expect(document.querySelectorAll('.album-photo')).toHaveLength(0)
     w.unmount()
   })
 

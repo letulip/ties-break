@@ -156,7 +156,6 @@ describe('EndingScreen – the lifetime deal survives into the epilogue', () => 
       ending: endingView('natural', { lifetimeDeal: { brand: 'Baseline Athletic', cashCents: AD.lifetime.cashCents } }),
     })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.text()).toContain('The Baseline Athletic deal never ran out – $2,500,000 a year, for life.')
     w.unmount()
   })
@@ -164,7 +163,6 @@ describe('EndingScreen – the lifetime deal survives into the epilogue', () => 
   it('⚠ and no deal is NO line – the null arm every other epilogue fixture already carries', async () => {
     patchSnapshot({ ending: endingView('natural') })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.text()).not.toContain('never ran out')
     expect(w.text()).not.toContain('for life')
     w.unmount()

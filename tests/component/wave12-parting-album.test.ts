@@ -79,7 +79,6 @@ async function mountWith(scroll: ScrollSeason[]) {
   // record's link lives on the foot of the seventh. `tests/component/endings-ui.test.ts` walks it
   // the same way; measured rather than assumed, because the first draft looked for the button on
   // page one and found nothing.
-  for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
   const open = w.findAll('.ending-link').find((b) => b.text() === 'The whole record')
   expect(open, 'the door to the record is on the last page').toBeDefined()
   await open!.trigger('click')

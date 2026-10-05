@@ -221,3 +221,33 @@ export function facePoint(stem: string): { x: number; y: number } {
   const clampPct = (v: number) => Math.min(100, Math.max(0, (v / PAINTING_SIDE) * 100))
   return { x: clampPct(rect[0]), y: clampPct(rect[1]) }
 }
+
+/** ⭐⭐ ROUND 46 #13 – `facePoint`'s SIBLING FOR A SHORT BAND, and the reason it is not `facePoint`.
+ *
+ *  `facePoint` aligns the face CENTRE at the same relative height in the box that it has in the
+ *  painting. In a box about as tall as the painting that frames the face; in a BAND (a card header
+ *  much wider than it is tall) it does not, because the window then shows only a slice of the
+ *  painting and a centre placed at «35% of the way down the window» sits where the head's TOP is
+ *  already above the window's top. Measured on the retirement card at its widest, with the old
+ *  140px band: the 31+ portrait lost the top ~32px of the head and the 25–30 one ~10px – the owner's
+ *  «the picture slid and cuts the head off».
+ *
+ *  So this one solves for the head. With `object-fit: cover` on a SQUARE painting scaled to the box's
+ *  width the window is `bandRatio` (height over width) of the painting tall, and `object-position:
+ *  Q%` puts the window's top at `Q × (1 − bandRatio)` painting-heights. Centring the face in the
+ *  window is therefore `Q = (faceY − bandRatio/2) / (1 − bandRatio)`, clamped into [0, 1] – which
+ *  pins the window to the painting's TOP for a face that is high in it (the round-45 anchor idiom,
+ *  derived per painting instead of guessed) and can never slide past an edge. It depends on the
+ *  RATIO and nothing else, so it holds at every width – the box must declare that ratio (an
+ *  `aspect-ratio`, not a pixel height), which is what the caller does.
+ *
+ *  `x` is `facePoint`'s: a square painting scaled to the box's width has no horizontal overflow to
+ *  steer. Total, like `facePoint`: an unknown stem centres the frame. */
+export function bandFacePoint(stem: string, bandRatio: number): { x: number; y: number } {
+  const rect = CROPS[stem]
+  if (!rect) return { x: 50, y: 50 }
+  const r = Math.min(0.99, Math.max(0.01, bandRatio))
+  const top = rect[1] / PAINTING_SIDE - r / 2
+  const y = Math.min(1, Math.max(0, top / (1 - r))) * 100
+  return { x: facePoint(stem).x, y }
+}

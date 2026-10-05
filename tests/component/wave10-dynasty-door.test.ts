@@ -100,17 +100,11 @@ function mountEpilogue(view: EndingView) {
   return mount(EndingScreen, { attachTo: document.body })
 }
 
-/** The footer only exists on the LAST album page – the hand-off is an offer, not a credits roll. */
-async function toLastPage(w: ReturnType<typeof mountEpilogue>): Promise<void> {
-  for (let i = 0; i < 6; i += 1) await w.findAll('.album-arrow')[1].trigger('click')
-}
-
 describe('wave 10 T4 – the door never closes', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('⭐⭐⭐ renders on an ending with NO child – the epilogue variant, and the door is still open', async () => {
     const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour: false }) }))
-    await toLastPage(w)
     const line = w.find('.ending-line')
     expect(line.exists(), 'his 20.09 ruling: a player who had no luck still gets the door').toBe(true)
     expect(line.text()).toBe('A daughter came later')
@@ -121,7 +115,6 @@ describe('wave 10 T4 – the door never closes', () => {
 
   it('⭐⭐⭐ ...and the LIVED variant on an ending that had one', async () => {
     const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour: true }) }))
-    await toLastPage(w)
     expect(w.find('.ending-line').text()).toBe('Raise her daughter')
     w.unmount()
   })
@@ -132,7 +125,6 @@ describe('wave 10 T4 – the door never closes', () => {
     // architect rather than papered over with a number.
     for (const raisedOnTour of [true, false]) {
       const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour }) }))
-      await toLastPage(w)
       const label = w.find('.ending-line').text()
       expect(label, 'no first name').not.toMatch(/Alice|Martin/)
       expect(label, 'no age, no number at all').not.toMatch(/\d/)
@@ -143,7 +135,6 @@ describe('wave 10 T4 – the door never closes', () => {
   it('⭐⭐ the press emits the BLOCK, because the shell has no world to build one from', async () => {
     const block = dynastyOf({ raisedOnTour: true, generation: 3 })
     const w = mountEpilogue(endingView({ dynasty: block }))
-    await toLastPage(w)
     await w.find('.ending-line').trigger('click')
     const emitted = w.emitted('continueLine')
     expect(emitted, 'the shell is handed the line it has to carry').toBeTruthy()
@@ -162,7 +153,6 @@ describe('wave 10 T4 – the door never closes', () => {
         handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 508, resumesAgeYears: 23 },
       }),
     )
-    await toLastPage(w)
     expect(w.find('.ending-line').exists(), 'no line while there is still a season to play').toBe(false)
     expect(w.text()).toContain('Another year')
     w.unmount()
@@ -191,11 +181,10 @@ describe('wave 10 T4 – the door never closes', () => {
     for (const vp of [PHONE, NARROW_PHONE]) {
       setViewport(vp)
       const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour: true }) }))
-      await toLastPage(w)
       const takeover = w.find('.ending').element
       const card = w.find('.ending-album').element
       const room = availableWidth(takeover, vp)
-      const fits = ['.ending-foot .tb-pill--cta', '.ending-line'].map((sel) => {
+      const fits = ['.ending-foot .tb-pill--cta:not(.ending-door-album)', '.ending-line'].map((sel) => {
         const control = w.find(sel)
         expect(control.exists(), `${sel} is on the last page`).toBe(true)
         const fit = assertDismissReachable(card, control.element, vp, `epilogue ${sel}`)

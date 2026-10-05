@@ -272,9 +272,24 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     reverted → 3 RED. The one literal pin that moved with the string is §C's heading assertion. DRAFT: R46-S7,
     R46-S8, R46-S9.
 
-- [ ] **13. «Is there another year in this? - картинка съехала и голову обрезает»** – the
+- [x] **13. «Is there another year in this? - картинка съехала и голову обрезает»** – the
   season-decision screen's picture crops the head – same class as round 45 #7 (crop anchored too
   low). Find the screen, anchor the crop, pin it. Class: **build**.
+  - **B6 · 13 SHIPPED – the head was cut by the ANCHOR and by the BAND, and an anchor alone could not fix both.**
+    **The defect, measured:** `RetirementDialog.vue` steered a fixed 140px band with `facePoint` – the face CENTRE at the same relative
+    height in the box as in the painting. On a band that short that is wrong: at the card's widest (372px of picture) the 31+ portrait lost
+    about 32px off the top of the head and the 25–30 one about 10px (the face table's own head box, `CROPS`). The round-45 idiom alone
+    (`object-position: 50% 10%`) would have traded the cut for a cut CHIN on the 25–30 painting – the head (up to 36% of the painting) is
+    almost as tall as the 140px band (38% of a 372px picture).
+    **The fix:** the band declares a RATIO (inline `aspect-ratio: 2 / 1`, one constant `ART_BAND_RATIO`) instead of 140px, and the anchor is
+    solved for the head at that ratio – `bandFacePoint(stem, ratio)` in `art/faceRects.ts`, `Y = (faceY − ratio/2) / (1 − ratio)` clamped
+    to [0, 1] – so the whole head sits inside the window at EVERY width, and a face that is high in its painting (the 31+ one) pins to the
+    top (the round-45 anchor, derived per painting). ⚠ THE ONE VISIBLE SIDE EFFECT: the picture is 2:1, so +11px tall on a 375px phone and
+    +46px on the desktop card.
+    **Evidence:** `tests/component/round46-b6-ending-and-retirement.test.ts` – mounted at ages 30 and 41, the inline ratio and position keep
+    the head box inside the window at 240 / 303 / 372 / 420px; a control proves the OLD anchor cut it (>8px and >25px at 372px); and
+    `bandFacePoint` is swept over every painting in `CROPS`. **Mutated:** `bandFacePoint` returning the old anchor → 2 red; `ART_BAND_RATIO`
+    0.5 → 0.3 → 2 red; each restored byte-identical.
 
 - [ ] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
   "8131.90 units – bought at $9,969 each, $10,212 now / +$49,610,632 since you bought it (33%)" - я
@@ -356,11 +371,40 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     diary callbacks. **Smalltalk-corpus expansion goes to the NEXT round's list.** Full entry:
     decisions.md 05.10.
 
-- [ ] **18. «Я нажал that's enough и снова увидел не наш красивый альбом, а набор детских фото и в
+- [x] **18. «Я нажал that's enough и снова увидел не наш красивый альбом, а набор детских фото и в
   конце 1 взрослую. Надо исправить, давать возможность посмотреть весь альбом и подумать какой вообще
   там флоу.»** – pressing «that's enough» (retirement) shows a legacy reel of childhood photos + one
   adult shot instead of the real album book. Route the epilogue to the full album and propose the
   flow. Class: **build** (+ the flow proposal in the report).
+  - **B6 · 18 SHIPPED – the real album is one tap from the last page, and the seven-polaroid reel left the screen. FLOW PROPOSAL BELOW.**
+    **Diagnosis:** `EndingScreen.vue` is the epilogue of career-contract-v1 §9 – seven polaroids, each the portrait of the life STAGE the
+    engine picked a moment from (`EndingView.album`, `AlbumPage`), so a career that lived mostly in its early years drew mostly children
+    and one adult. It predates the album book (rounds 44–45: `AlbumScreen` + `assembleAlbum` over the milestone ledger), and its own eyebrow
+    said «The album» – two things called THE ALBUM on one career was the defect; the reel's selection was only its visible half.
+    **Shipped:** the reel's first six pages, its pager (Back / Next), its dots and «n / 7» are gone. What stayed is the reel's LAST page exactly
+    as it was – the photograph, the ending's own title (`caption`) and lines, then the figures – because it carries HOW the career ended
+    (the nine titles); its eyebrow («The last page») is unchanged. A new lead control on it, `View the album` (DRAFT R46-S17), lays the REAL book
+    over the takeover: the same `AlbumScreen`, the same worker query (`game.loadAlbum`) the Home door uses, every sheet, the chapter rail and the
+    pager. Its Back arrow returns to the card where it was left (the book opens at its own top; the card's scroll is restored); a refused fetch
+    cannot trap the player (empty chrome, Back still works); a late answer from a closed layer is dropped (the ticket, App.vue's own rule).
+    **⚠ Strings that LEFT the screen (invariant 4 – listed so he can veto):** the eyebrow «The album», the reel's «Back» / «Next», «n / 7», and
+    the engine-authored lines of pages 1–6 (`EndingView.album` is still on the wire; only its last page is read). **Unchanged:** everything else –
+    including «Back to the album» on the record page, which now returns to the last page (ALTERNATE R46-S20 is his call).
+    **FLOW – shipped:** «That is enough» → the last page (the photograph and how it ended) → `View the album` (every sheet) → Back → the figures,
+    `The whole record`, the two doors, the service export. **PROPOSED, NOT SHIPPED – his taste calls:** (1) open the book AUTOMATICALLY the first
+    time the ending is shown, so «that's enough» lands on the album itself and the card is its Back destination – a per-career «seen» flag if it must
+    not reopen on every reload (a schema move), a transient one if it may; (2) retire `EndingView.album` pages 1–6 from the wire once he has confirmed
+    the reel stays gone (engine + wire change, so not done here); (3) an ending-aware label on the album's Back arrow (R46-S19 – it is announced
+    «Back to Home» inside the ending; it is an icon button, so the words are the screen-reader's).
+    **Evidence (mounted):** the door is first in the footer and the pager is gone; pressing it renders `AlbumScreen` over a REAL book (the engine's own
+    `assembleAlbum` over a posed `createWorld` world – the dense-period recipe `albumBook.test.ts` pins at three sheets – a dot per sheet, «Sheet 1 of
+    N», the first sheet's own chapter title); Back returns; the book opens at its top and the card's scroll is restored; a null book cannot trap; a stale
+    answer cannot paint the next layer; phone fit at 375×667 and 320×568, `setViewport` BEFORE the mount (the takeover scrolls, the Back arrow is the first
+    control, the door is on the first screen, the export control is reachable and every control fits the width).
+    **Mutated:** the door's click dead → 6 red; `@back` dead → 4 red; `.ending` `overflow-y: auto` → `visible` → 5 red (this file's phone cases and
+    wave10's fit case); each restored byte-identical. **Pins repointed, never weakened (7 existing files):** `endings-ui`, `wave8-family-ending`,
+    `wave10-dynasty-door`, `wave12-parting-album`, `r39-lifetime-letter`, `round46-the-reckoning`, `round24-college-shell` – the reel's own claims
+    (page turning, dots, «n / 7», an empty page 3) became the last page's, and the «Next ×6» walks to the last page are gone.
 
 - [x] **19. «Потраченные суммы на итогах снова не соответствуют действительности. А ещё там верстка
   пляшет. Можно миллионы сокращать до М, например и красиво все выстроить.»** – the summary's SPENT
@@ -397,15 +441,44 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     the width (320 against 375). If THAT is also his «пляшет», it is one rule (`.season-row` stacked in the half tiles, or a two-column grid with
     the figures right-aligned) and his call – a card he has seen for many rounds is not redesigned on a guess.
 
-- [ ] **20. «Не могу сейв выгрузить кажется теперь никак из-за последнего экрана, у меня там много
+- [x] **20. «Не могу сейв выгрузить кажется теперь никак из-за последнего экрана, у меня там много
   вопросов было на проверить. Может для служебных целей сделать там отдельную кнопку для сейва? Тогда
   я его смогу выгрузить на анализ»** – the final screen blocks reaching the save export; add a
   service export-save control reachable there (the ▶▶ 52 precedent: dev controls ship in every build
   by his ruling). Unblocks #16's save. Class: **build**.
+  - **B6 · 20 SHIPPED – `Export save (dev)` on the last page, the SAME call as More's «Export to file».**
+    **Why he could not:** the epilogue is a takeover over the tab shell, so More's Saves strip was unreachable from the one screen where a finished
+    career's questions live, and «Raise another» drops the career. **What:** a small link at the foot of the last page, after the two doors, running
+    `game.exportSave()` – the very store action More's button runs (worker `exportSave` query → `encodeExportFile` → the same blob/anchor download).
+    Zero new serialisation, and an export is a read, so the career is untouched. It follows the `▶▶ 52 (dev)` precedent (ships in every build, tagged
+    `(dev)`); the label is a DRAFT (R46-S18).
+    **Evidence (mounted):** the control exists and runs the store's export path once; and the SAME bytes – with the worker stubbed, `game.exportSave()`
+    (More's path) and the control produce the identical request (`{ type: 'exportSave' }`), file name and Blob (size and type), asserted equal.
+    Phone fit at 375×667 and 320×568 (`assertDismissReachable` + width). **Mutated:** the click dead → 2 red; the handler calling another store
+    action → 2 red; restored byte-identical.
 
-- [ ] **21. «Если выбираем A daughter came later то имя точно не как у мамы должно быть мне
+- [x] **21. «Если выбираем A daughter came later то имя точно не как у мамы должно быть мне
   кажется»** – in the epilogue's «A daughter came later» the daughter's name must never equal her
   mother's (the played kid's) name. Exclude it in the pick + test. Class: **build**.
+  - **B6 · 21 SHIPPED – the daughter's card never proposes or rolls her mother's name. STREAM VERDICT: no MAIN and no engine stream – the name is not drawn in the engine at all.**
+    **What he met:** the name is not picked in `endings.ts`; it is the identity card of the dynasty childhood (`ChildhoodPrologue`; the wizard on skip).
+    That card OPENS on `OPENING_IDENTITY.kidName` = `DEFAULT_PROFILE.kidName` («Alice»), and a mother who never touched her name field IS «Alice» –
+    so the daughter was proposed under her mother's own name; the first-name die (`randomName`, 24 names) could also roll it.
+    **The fix** (`composables/identityDice.ts`): `sameFirstName` (case, spacing, accents), `namePoolWithout` (the menu LESS her name – FILTERED BEFORE
+    the draw: one draw, no re-roll loop), `randomName(exclude)` (still ONE `Math.random`, which that file's header explains is legal pre-world) and
+    `dynastyOpeningName(childSeed, motherFirst, standing)` – the default stands unless it is the mother's, and only then is ONE name picked, on the
+    purpose-scoped sub-stream keyed `childSeed:daughter-name` (derived at the call site, persists nothing, reproducible; the daughter's world is born
+    on that very seed). The wizard's first roll and reroll and the prologue card's die (`line.motherFirst`) pass the mother's name. ⚠ The parent may
+    still TYPE any name (his 20.09 ruling stands) – the card only stops proposing the one that cannot be right.
+    **Stream verdict, stated:** the die is `Math.random` (unchanged, pre-world, never persisted); the new opening pick is a sub-stream; MAIN is not
+    touched anywhere. No engine file was edited, so the frozen MAIN capture was not re-run – nothing here could move it.
+    **Evidence:** `tests/dynasty-daughter-name.test.ts` (unit, 9): 200 seeds × the default and all 24 pool names – never the mother's; the default stands
+    when it is not hers (control); 200 daughters of one mother cover >15 distinct pool names (control); reproducible; the pick equals the first value of
+    that sub-stream over the filtered menu with ZERO `Math.random` calls; case and accent; the die swept over the whole unit interval never lands on her
+    name and still reaches the other 23; ONE `Math.random` per roll even on the roll that would have hit her name; and 200 REAL `createWorld` worlds with
+    kids named off the pool → `dynastyHandoverOf` → never shared. Mounted (3): the prologue opens on a pool name when the mother kept the default;
+    control – another mother leaves the default alone; the die pressed at every index never rolls hers. **Mutated:** the default always standing → 6 red;
+    the pool unfiltered → 4 red (+ the mounted die case); restored byte-identical.
 
 - [x] **22. «хотел дождаться, чтобы она родила, но так и не случилось - может быть в целях разработки
   можно в найстройках сделать переключатель, поднимающий шансы наступления этих событий в разы для
@@ -500,3 +573,8 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S14 | 8 + 19 – NOT new: the wealth row's label is the EPILOGUE'S OWN for the same figure (`EndingScreen.vue`, `careerMoney.portfolioCents`), now also on the year-end card under its own hairline – listed so he knows the card will say it | `Family's portfolio` |
 | R46-S15 | 8 + 19 – ALTERNATE for S12, NOT wired (the one `season-key` in the template) | `Put into holdings` when the shelf's net is out, `Taken out of holdings` when it is in – plainer, but two lines, and «upkeep» (a boat's crew) is not «put into» anything |
 | R46-S16 | 8 + 19 – ALTERNATE for S13, NOT wired (the one `season-key` in the template) | `Up on last season` / `Down on last season` – the year-on-year reading in his words; the wired label is neutral for either sign |
+| R46-S17 | 18 – the lead control on the epilogue's last page, **WIRED** (`EndingScreen.vue`, the first child of `.ending-foot`; lays the real album book over the takeover) | `View the album` |
+| R46-S18 | 20 – the service export on the same page, **WIRED** (`EndingScreen.vue`, the last child of `.ending-foot`; the SAME call as More's «Export to file» – a dev control on the `▶▶ 52 (dev)` precedent) | `Export save (dev)` |
+| R46-S19 | 18 – ALTERNATE for the album's Back arrow inside the ending, NOT wired (`AlbumScreen.vue` announces `Back to Home` – an `aria-label` on an icon button; there is no Home behind the ending, and a label prop on `AlbumScreen` would be the move) | `Back to the last page` |
+| R46-S20 | 18 – ALTERNATE for the record page's existing link, NOT wired (`Back to the album` now returns to the last page, not to a reel) | `Back to the last page` |
+| R46-S21 | 18 – ALTERNATE for S17, NOT wired (the one `PrimaryPill` in the footer) | `Open the whole album` |
