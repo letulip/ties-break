@@ -141,3 +141,52 @@ the eight rows deliberately placed first in the runtime draw. For every row pres
 
 Each completed row therefore has 4 openers + 3 labels + 12 replies = 19 ordinary authored strings,
 plus a shared second beat only where the row defines one.
+
+## 6. Situation R45 – `practice-clicked`
+
+Subject `good-news`; stages `school`, `after-school`, `college`, `independent`; no fact gate. This is
+the first runtime row and must remain first in the localized catalogue.
+
+### 6.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Practice was easy today. Properly easy. I've no idea why and I don't want to jinx it."` | `«Сегодня на тренировке всё было легко. По-настоящему. Не знаю, почему, и боюсь сглазить».` |
+| fiery | `"Practice was easy today and I'd like to know who to thank, because it wasn't me."` | `«Сегодня тренировка далась легко. Хочу знать, кого благодарить. Себя точно не за что».` |
+| deep | `"Practice finally felt easy today."` | `«Сегодня тренировка наконец далась легко».` |
+| quiet | `"Practice was easy today. I thought I'd mention it."` | `«Сегодня тренировка далась легко. Решила упомянуть».` |
+
+### 6.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what made it good` | `Спросить, что именно получилось` |
+| respond | `Tell her we're glad` | `Сказать, что мы рады` |
+| space | `Let her enjoy it` | `Дать ей порадоваться` |
+
+### 6.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Nothing! That's the best part. It just went, and I'm not going to interrogate it."` | `«Ничего! В этом и прелесть. Просто пошло – и я не стану разбирать, почему».` |
+| sunny | respond | `"I knew you would be. I wanted to say it before it wore off."` | `«Я знала, что ты порадуешься. Хотела сказать, пока это чувство не прошло».` |
+| sunny | space | `"Don't worry. I'm keeping this one for a rainy day."` | `«Не переживай. Я оставлю это про запас – на трудный день».` |
+| fiery | invite | `"Nothing changed. Same drills, same court, and this time it felt easy. I'd like to know why."` | `«Ничего не изменилось. Те же упражнения, тот же корт – а было легко. Почему?»` |
+| fiery | respond | `"Good. Somebody should be, because tomorrow it'll probably be awful again."` | `«Хорошо. Кто-то же должен радоваться: завтра всё наверняка снова будет ужасно».` |
+| fiery | space | `"I intend to. And I'm writing down what I did, in case."` | `«Ещё как. И на всякий случай запишу всё, что делала».` |
+| deep | invite | `"Nothing I can name. I just stopped fighting it. I wanted to tell someone who'd know that's rare."` | `«Ничего, что можно назвать. Просто перестала бороться. Хотела рассказать тому, кто знает, как редко так бывает».` |
+| deep | respond | `"Maybe it doesn't sound like much. It felt like a lot."` | `«Может, звучит как мелочь. Для меня – нет».` |
+| deep | space | `"I will. I only wanted to say it out loud once."` | `«Порадуюсь. Просто хотела один раз сказать это вслух».` |
+| quiet | invite | `"Nothing in particular. It just felt easier than usual."` | `«Ничего особенного. Просто было легче обычного».` |
+| quiet | respond | `"Thanks. It was a good one."` | `«Спасибо. Хорошая была тренировка».` |
+| quiet | space | `"I will. It'll do for the week."` | `«Порадуюсь. На эту неделю хватит».` |
+
+The sunny response uses intimate `ты` because she directly addresses the parent. `Про запас – на
+трудный день` keeps the source image without predicting a specific bad event. No reply changes bond
+or another mechanic.
+
+## 7. Situation-corpus progress
+
+| rows | ordinary authored strings | shared second beats | state |
+| ---: | ---: | ---: | --- |
+| 1 / 51 | 19 / 969 | 0 / 4 | R45 complete as DRAFT |
