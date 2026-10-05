@@ -102,6 +102,8 @@ const REPLY_BY_ARM: Record<(typeof REPLY_BY_COMMAND)[keyof typeof REPLY_BY_COMMA
   // `inbox` carries a LIST OUT of the worker, which is the direction D-08 is not about – the finding is
   // about objects the store sends IN – but the arm still has to exist for the sweep to run.
   inbox: () => ({ id: 0, ok: true, type: 'inbox', inbox: [], revision: 1 }),
+  // ⚠ RE-AIMED, NOT WIDENED (SUCCESSION S2c, 06.10): total over the reply arms, and `legacyInput` is a query that sends nothing but its type.
+  legacyInput: () => ({ id: 0, ok: true, type: 'legacyInput', legacy: {} as never, revision: 1 }),
   exported: () => ({ id: 0, ok: true, type: 'exported', bytes: new ArrayBuffer(8), filename: 'c.tsave', revision: 1 }),
   peek: () => ({ id: 0, ok: true, type: 'peek', peek: {} as SavePeek, revision: 1 }),
 }
@@ -113,6 +115,10 @@ const plainPrologue = (): PrologueHandover => ({ years: [], spentCents: 0 })
 /** ⚠ REACTIVE ON PURPOSE. The inheritance block starts life on `Snapshot.ending.dynasty`, which
  *  Pinia has made reactive; `plainDynasty` is what makes it crossable. This IS the real call site. */
 const liveDynasty = () => reactive(dynastyOf())
+/** ⭐⭐⭐ SUCCESSION S2c – the dynasty door's inheritance as its real call site hands it: the worker's own plain answer, held RAW by the shell's
+ *  `shallowRef` and passed through the store with no copy. ⚠ PLAIN ON PURPOSE – it is the one payload the store does NOT copy, so what makes it
+ *  crossable is upstream (App.vue's `pendingLegacy`), and tests/component/wave10-dynasty-door.test.ts is the arm that breaks THAT. */
+const plainLegacy = () => ({ surname: 'Okonkwo', heirloomAlbum: { pages: [] } }) as never
 /** Something the door can read twice; the bytes' CONTENT is the worker's business, not this file's. */
 const tsaveFile = () => new File(['d08-export-bytes'], 'career.tsave')
 
@@ -125,13 +131,15 @@ function driversFor(s: Store): Record<string, () => unknown> {
     init: () => s.init(),
     reloadAfterRestart: () => s.reloadAfterRestart(),
     refreshAfterStale: () => s.refreshAfterStale(new CommandRejected('stale', 'STALE_REVISION', 3)),
-    newCareer: () => s.newCareer('d08-seed', plainProfile(), plainPrologue(), liveDynasty(), true),
+    newCareer: () => s.newCareer('d08-seed', plainProfile(), plainPrologue(), liveDynasty(), true, plainLegacy()),
     // ⭐ D-05 (28.09): the one body every mutation goes through, driven DIRECTLY as well as through
     // its 41 callers – because `commit` is what spreads the caller's message, so it is the step that
     // could stop the copy being crossable. Driven with the one mutation payload that carries an
     // object, so the carriers table below is asked the same question about the same type either way.
     commit: () => s.commit({ type: 'setPlan', plan: WEEK_PLAN_PRESETS.balanced }),
     loadAlbum: () => s.loadAlbum(),
+    // ⚠ SUCCESSION S2c (06.10) – the dynasty door's query, driven for the same equality reason as `loadInbox`: it sends only its type.
+    loadLegacyInput: () => s.loadLegacyInput(),
     // ⚠ T6.2 · D-07, 28.09 – the new sending action, driven because the enumeration below is EQUALITY
     // in both directions: a sender left undriven is exactly the defect D-08 describes coming back.
     loadInbox: () => s.loadInbox(),
@@ -276,11 +284,12 @@ describe('D-08 – every object the store posts to the worker is structured-clon
     //   new.profile      – the wizard's spread and `settleIdentity` build it fresh
     //   new.prologue     – `traceOf` / `chosenYears` build it fresh
     //   new.dynasty      – `plainDynasty`, THE STORE'S OWN copy (the arm the mutation below breaks)
+    //   new.legacy       – SUCCESSION S2c: the worker computed it as plain data and the shell's `shallowRef` hands it back raw (no store copy)
     //   setPlan.plan     – `planFromWeek` copies the days, or a `WEEK_PLAN_PRESETS` constant
     //   peekSave.bytes   – an `ArrayBuffer` off the `File`, and `request` transfers it
     //   importSave.bytes – the same, its own read (a File can be read twice)
     expect(carriers).toEqual({
-      new: ['profile', 'prologue', 'dynasty'],
+      new: ['profile', 'prologue', 'dynasty', 'legacy'],
       setPlan: ['plan'],
       peekSave: ['bytes'],
       importSave: ['bytes'],

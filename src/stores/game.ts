@@ -30,6 +30,8 @@ import {
 // protocol barrel does not re-export it – `Temperament`'s own arrangement, where the wire carries the
 // type and consumers import it from where it lives.
 import type { PsyFocus } from '../engine/world/state'
+// ⭐⭐⭐ SUCCESSION S2c – the dynasty door's inheritance, type-only and from the module that declares it, for the same reason.
+import type { LegacyInput } from '../engine/world/succession'
 
 // W1-INTEGRITY-A: the store is the worker pipeline's UI-side ledger. It tracks the committed
 // `revision` off every response and hands it back as `baseRevision` on every mutation, so a
@@ -486,6 +488,11 @@ export const useGameStore = defineStore('game', {
        *  arithmetic on it either – `createWorld` reads `?? false`, which is the ruled meaning of a
        *  caller that did not ask. */
       weightEnabled?: boolean,
+      /** ⭐⭐⭐ SUCCESSION S2c – the dynasty door's inheritance, as `loadLegacyInput` answered it (the succession spec §8). Optional through the
+       *  whole wire like the three above, and this store does no arithmetic on it either: the worker's `createLegacyWorld` owns every consequence.
+       *  ⚠ IT IS PASSED AS IT WAS HANDED, with no `plain…` copy, and that is safe only because the shell holds it in a `shallowRef` – a reactive
+       *  proxy here would be a `DataCloneError` at the `postMessage` (the note on `plainDynasty` has the history). */
+      legacy?: LegacyInput,
     ) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
@@ -499,11 +506,27 @@ export const useGameStore = defineStore('game', {
             prologue,
             dynasty: plainDynasty(dynasty),
             weightEnabled,
+            legacy,
           }),
         )
         this.applySnapshot(res)
         this.recovered = false
       })
+    },
+    /** ⭐⭐⭐ SUCCESSION S2c – THE LEGACY, ON DEMAND at the dynasty door: `loadAlbum`'s own shape, one query over. A read-only query against the
+     *  COMMITTED world answering with `legacyInputOf`'s object, computed worker-side so the blob crosses the wire once as plain data; or null on
+     *  a refusal (no active career, a restarted worker). The store HOLDS nothing: the shell keeps the answer for the length of the walk, exactly
+     *  as it keeps the line.
+     *
+     *  ⚠ NULL IS «THERE IS NO INHERITANCE TO CARRY», AND THE DOOR STILL WORKS: the caller continues the line without a legacy, which is the career
+     *  wave 10 has always created. A press that dead-ended on a refused query would strand the player on a screen with no way forward. */
+    async loadLegacyInput(): Promise<LegacyInput | null> {
+      return (
+        (await this.run(async () => {
+          const res = this.takeOk(await request({ type: 'legacyInput' }))
+          return expectArm(res, 'legacyInput').legacy
+        })) ?? null
+      )
     },
     /** ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по
      *  требованию, не в недельном снимке»). A read-only query against the committed world –

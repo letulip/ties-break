@@ -47,6 +47,11 @@ import type {
   Snapshot,
 } from '../../src/shared/protocol'
 import '../../src/style.css'
+import App from '../../src/App.vue'
+import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
+import { legacyInputOf, type LegacyInput } from '../../src/engine/world/succession'
+import { PROFILE_NAME_MAX_CHARS } from '../../src/shared/protocol'
+import { completeRun } from '../helpers/completeRun'
 
 function albumPage(slot: number): AlbumPage {
   return {
@@ -305,5 +310,250 @@ describe('wave 10 T4 – a dynasty childhood', () => {
     expect(w.findAll('.prologue-picks button').length).toBe(3)
     expect(w.find('.prologue-line-note').exists()).toBe(false)
     w.unmount()
+  })
+})
+
+
+// =================================================================================================
+// ⭐⭐⭐ SUCCESSION S2c – THE DOOR CARRIES THE LEGACY (docs/specs/succession-2026-10.md §8, S2c).
+//
+// The dynasty door already existed (wave 10): the ending's SECOND button – the one beside «Raise another» – emits `continueLine`, the shell holds
+// the line and opens the prologue, and the ninth card creates the career. S2c puts the inheritance on that road: the shell asks the worker for it
+// ONCE at the press (`game.loadLegacyInput`), holds it beside the line, hands it to the prologue and to the wizard (the skip), and they send it
+// back on the create command. «Raise another» is a DIFFERENT door – an unrelated story – and never asks.
+//
+// ⚠ THE SHELL IS MOUNTED, NOT THE SCREEN ALONE: the claim is about where the answer ENDS UP (the prologue's prop), and a test of EndingScreen by
+// itself sees none of it – r47-raise-another-route's own reasoning, and this is its harness. ⚠ `shallow: true` stubs the children, so the branch
+// that won and the props it was handed are readable off the stub.
+// ⚠ NOTHING HERE ASSERTS WORDING. Every label on these screens is the one that was already there, untouched (invariant 4).
+// ⚠ THE CREATE CALL IS REACHED THROUGH THE COMPONENT'S OWN `begin()` / `start()` / `skipToDefaults()` with a finished run injected, because walking
+// nine cards through a screen is a different test (prologue-walk) and the claim here is only what the ninth card SENDS.
+//
+// MUTATION-VERIFIED 06.10, each applied, this file run, and the source restored byte-identical (sha256 before = after):
+//   · App's `pendingLegacy` as a `ref` instead of a `shallowRef`   -> 1 red: the shell arm (identity and the structured clone – the proxy that would
+//                                                                     be a DataCloneError at the postMessage)
+//   · App's door not asking (`loadLegacyInput` skipped)            -> 2 red: the shell arm and the refused-query arm
+//   · the prologue's ninth card dropping `props.legacy`            -> 1 red: the sixth-argument arm
+//   · the wizard's `start()` / `skipToDefaults()` dropping it      -> 1 red each: the skip arm, which asserts both calls
+// =================================================================================================
+describe('SUCCESSION S2c – the dynasty door carries the legacy', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  const MOTHER = { ...DEFAULT_PROFILE, kidName: 'Vera', kidLastName: 'Kowalski' }
+
+  /** A real inheritance read off a real career by the engine's own reader: the blob has every field the wire really carries. */
+  function legacyOf(over: Partial<LegacyInput> = {}): LegacyInput {
+    return { ...legacyInputOf(createWorld('s2c-door-mother', MOTHER, 'c-s2c-mother')), ...over }
+  }
+
+  function lineOf(legacy: LegacyInput, over: Partial<DynastyHandover> = {}): DynastyHandover {
+    return dynastyOf({
+      generation: 2,
+      childSeed: 's2c-door-mother:dynasty:2',
+      background: 'wealthy',
+      raisedOnTour: true,
+      motherName: { first: legacy.motherName, last: legacy.surname },
+      ...over,
+    })
+  }
+
+  /** The shell on a finished career whose epilogue carries `line`, with the legacy query stubbed to answer `answer`.
+   *  `seen` records whether the finished career was still the loaded one at the moment the query ran. */
+  function mountShellOnEnding(line: DynastyHandover, answer: LegacyInput | null) {
+    const game = useGameStore()
+    game.init = vi.fn(async () => {})
+    const seen: boolean[] = []
+    const loadLegacyInput = vi.fn(async () => {
+      seen.push(game.snapshot !== null)
+      return answer
+    })
+    game.loadLegacyInput = loadLegacyInput
+    const newCareer = vi.fn(async () => {})
+    game.newCareer = newCareer
+    const totals = { earnedCents: 0, spentCents: 0, prizeCents: 0 }
+    game.$patch({
+      ready: true,
+      phase: 'ready',
+      snapshot: {
+        ageYears: 31,
+        week: 900,
+        kidRank: 11,
+        fundsCents: 1234_00,
+        careerId: 'career-s2c',
+        profile: DEFAULT_PROFILE,
+        careerTotals: totals,
+        careerMoney: moneyOf({ ...totals, weeksLostToInjury: 0 }),
+        ending: endingView({ dynasty: line }),
+      } as unknown as Snapshot,
+    })
+    const wrapper = mount(App, {
+      shallow: true,
+      global: { stubs: { EndingScreen: false, PrimaryPill: false, Polaroid: false, Eyebrow: false } },
+      attachTo: document.body,
+    })
+    wrapper.findComponent({ name: 'SplashScreen' }).vm.$emit('done')
+    return { wrapper, loadLegacyInput, newCareer, seen }
+  }
+
+  async function settle(wrapper: ReturnType<typeof mount>): Promise<void> {
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+  }
+
+  it('⭐⭐⭐ the press asks the worker ONCE, while the finished career is still loaded, and the prologue is handed what it answered', async () => {
+    const legacy = legacyOf()
+    const line = lineOf(legacy)
+    const { wrapper, loadLegacyInput, newCareer, seen } = mountShellOnEnding(line, legacy)
+    await settle(wrapper)
+    expect(wrapper.findComponent({ name: 'EndingScreen' }).exists(), 'the epilogue is up').toBe(true)
+
+    await wrapper.find('.ending-line').trigger('click')
+    await settle(wrapper)
+
+    expect(loadLegacyInput, 'one query at the press').toHaveBeenCalledTimes(1)
+    expect(seen, 'asked after the finished career had been dropped – nothing would be left to read it from').toEqual([true])
+    const prologue = wrapper.findComponent({ name: 'ChildhoodPrologue' })
+    expect(prologue.exists(), 'the door leads to the childhood').toBe(true)
+    expect(prologue.props('dynasty'), 'the line still travels').toEqual(line)
+    // THE SAME OBJECT, NOT A COPY AND NOT A PROXY: the shell holds it in a `shallowRef`.
+    expect(prologue.props('legacy'), 'the prologue was handed the answer').toBe(legacy)
+    expect(() => structuredClone(prologue.props('legacy')), 'a reactive proxy cannot cross postMessage').not.toThrow()
+    // ...and nothing was created at the press: the career is made on the ninth card.
+    expect(newCareer, 'the door creates nothing').not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ a refused query is a door without an inheritance – wave 10\'s line, unchanged, and never a dead end', async () => {
+    const legacy = legacyOf()
+    const line = lineOf(legacy)
+    const { wrapper, loadLegacyInput } = mountShellOnEnding(line, null)
+    await settle(wrapper)
+
+    await wrapper.find('.ending-line').trigger('click')
+    await settle(wrapper)
+
+    expect(loadLegacyInput).toHaveBeenCalledTimes(1)
+    const prologue = wrapper.findComponent({ name: 'ChildhoodPrologue' })
+    expect(prologue.exists(), 'the press still reaches the childhood').toBe(true)
+    expect(prologue.props('dynasty'), 'with the line').toEqual(line)
+    expect(prologue.props('legacy'), 'and no inheritance').toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ «Raise another» is a different door: it never asks and it carries nothing', async () => {
+    const legacy = legacyOf()
+    const { wrapper, loadLegacyInput } = mountShellOnEnding(lineOf(legacy), legacy)
+    await settle(wrapper)
+
+    const pill = wrapper.findAll('button').find((b) => b.text().includes('Raise another'))
+    expect(pill, 'the unrelated-story door is still on the epilogue').toBeTruthy()
+    await pill!.trigger('click')
+    await settle(wrapper)
+
+    const prologue = wrapper.findComponent({ name: 'ChildhoodPrologue' })
+    expect(prologue.exists()).toBe(true)
+    expect(loadLegacyInput, 'a fresh story inherits nothing, so nothing is asked').not.toHaveBeenCalled()
+    expect(prologue.props('legacy')).toBeUndefined()
+    expect(prologue.props('dynasty')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  /** A store whose `newCareer` records its arguments and, like the real action on a refusal, publishes nothing. */
+  function recordingStore() {
+    const game = useGameStore()
+    const calls: unknown[][] = []
+    game.newCareer = vi.fn(async (...args: unknown[]) => {
+      calls.push(args)
+    }) as unknown as typeof game.newCareer
+    return calls
+  }
+
+  it('⭐⭐ the childhood opens on her mother\'s surname, locked, and the surname the legacy carries is that very name', () => {
+    recordingStore()
+    const legacy = legacyOf()
+    const w = mount(ChildhoodPrologue, { props: { dynasty: lineOf(legacy), legacy }, attachTo: document.body })
+    const last = w.find('#prologue-last').element as HTMLInputElement
+    expect(last.value, 'the field is pre-filled with the family name').toBe(legacy.surname)
+    expect(last.readOnly, 'and it is the line\'s, not the player\'s').toBe(true)
+    w.unmount()
+  })
+
+  it('⭐⭐ an over-long inherited surname does not crash the card – it is shown whole, locked, and the create attempt leaves the card standing', async () => {
+    const calls = recordingStore()
+    const tooLong = 'K'.repeat(PROFILE_NAME_MAX_CHARS + 10)
+    const legacy = legacyOf({ surname: tooLong })
+    let w!: ReturnType<typeof mount>
+    expect(() => {
+      w = mount(ChildhoodPrologue, { props: { dynasty: lineOf(legacy), legacy }, attachTo: document.body })
+    }, 'the card must mount').not.toThrow()
+    const last = w.find('#prologue-last').element as HTMLInputElement
+    expect(last.value, 'the whole name is shown').toBe(tooLong)
+    expect(last.readOnly, 'the field stays the line\'s – nothing here edits it').toBe(true)
+    expect(last.maxLength, 'the card\'s own cap is the profile\'s').toBe(PROFILE_NAME_MAX_CHARS)
+
+    // The ninth card's press: the worker is the judge of the name (tests/succession-s2c-door.test.ts measures its refusal), the store swallows a refusal
+    // into `store.error` and publishes nothing – so the card must be where the player left it, not stuck creating and not on a handover.
+    const vm = w.vm as unknown as { run: unknown; begin(): Promise<void>; creating: boolean; handoverOpen: boolean }
+    vm.run = completeRun('wealthy')
+    await vm.begin()
+    expect(calls, 'the create command was sent exactly once').toHaveLength(1)
+    expect(vm.creating, 'a refused career does not strand the card on an empty ground').toBe(false)
+    expect(vm.handoverOpen, 'and no handover is opened for a career that was not made').toBe(false)
+    expect(w.find('.prologue-card').exists(), 'the card is still there').toBe(true)
+    w.unmount()
+  })
+
+  it('⭐⭐⭐ the ninth card sends the legacy as the sixth argument – and nothing when the door had none', async () => {
+    const calls = recordingStore()
+    const legacy = legacyOf()
+    const line = lineOf(legacy)
+
+    const withLegacy = mount(ChildhoodPrologue, { props: { dynasty: line, legacy }, attachTo: document.body })
+    const vm = withLegacy.vm as unknown as { run: unknown; begin(): Promise<void> }
+    vm.run = completeRun('wealthy')
+    await vm.begin()
+    expect(calls, 'one create command').toHaveLength(1)
+    expect(calls[0][0], 'on the line\'s own seed').toBe(line.childSeed)
+    expect(calls[0][3], 'with the line').toEqual(line)
+    // EQUALITY, NOT IDENTITY, in the direct-mount arms: VTU wraps a mounted component's props in a `reactive`, so `props.legacy` is a proxy of what was
+    // passed. IDENTITY is the shell arm's claim (App's `shallowRef` hands the stub the raw object) and it is asserted there.
+    expect(calls[0][5], 'and the inheritance, untouched').toEqual(legacy)
+    withLegacy.unmount()
+
+    const without = mount(ChildhoodPrologue, { props: { dynasty: line }, attachTo: document.body })
+    const vm2 = without.vm as unknown as { run: unknown; begin(): Promise<void> }
+    vm2.run = completeRun('wealthy')
+    await vm2.begin()
+    expect(calls, 'a second create command').toHaveLength(2)
+    expect(calls[1][3], 'the line, as wave 10 sends it').toEqual(line)
+    expect(calls[1][5], 'and no inheritance').toBeUndefined()
+    without.unmount()
+  })
+
+  it('⭐⭐ the skip carries it too: both of the wizard\'s create calls send the legacy, so skipping the walk does not drop the inheritance', async () => {
+    const calls = recordingStore()
+    const legacy = legacyOf()
+    const line = lineOf(legacy)
+    const w = mount(OnboardingWizard, { props: { dynasty: line, legacy }, attachTo: document.body })
+    const vm = w.vm as unknown as { start(): void; skipToDefaults(): void }
+    vm.start()
+    vm.skipToDefaults()
+    expect(calls, 'two create commands').toHaveLength(2)
+    for (const call of calls) {
+      expect(call[3], 'the line rides').toEqual(line)
+      expect(call[5], 'and so does the inheritance').toEqual(legacy)
+    }
+    w.unmount()
+
+    const plain = mount(OnboardingWizard, { props: { dynasty: line }, attachTo: document.body })
+    const vm2 = plain.vm as unknown as { start(): void }
+    vm2.start()
+    expect(calls[2][5], 'a line continued without one sends none').toBeUndefined()
+    plain.unmount()
   })
 })

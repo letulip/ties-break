@@ -30,7 +30,7 @@
 // for the money is the FLOOR (1.0 – an ordinary start), never a guess upward.
 import { weekYear } from '../../shared/dates'
 import { DEFAULT_PROFILE, profileShapeError } from '../../shared/protocol'
-import type { AlbumBook, CareerEndingType, OwnedAsset, PlayerProfile } from '../../shared/protocol'
+import type { AlbumBook, CareerEndingType, DynastyHandover, FamilyBackground, OwnedAsset, PlayerProfile, PrologueHandover } from '../../shared/protocol'
 import { START_AGE_YEARS } from './age'
 import { assembleAlbum } from './albumBook'
 import { assetEntryPriceCents, assetWorthCents, deliveredAssets, shopItem } from './assets'
@@ -309,6 +309,41 @@ function arriveOwned(world: WorldState, id: string): void {
   world.assets.push(row)
 }
 
+/** ⭐⭐⭐ S2c – THE ARCHITECT'S ORIGINS RULING (S2b finding 1): A LEGACY CREATION IGNORES THE ORIGINS CARD, and this is the band it sets in its
+ *  place. The family's circumstance is §4's multiplier and nothing else – the owner's «просто новая карьера с небольшими бенефитами в начале» –
+ *  so the door forces the ONE field every origin is read from, `profile.background`, to the ordinary family. That is what keeps a wealthy-origin
+ *  daughter of a held champion from stacking 3.0 on $120,000.
+ *
+ *  ⚠ WHAT THAT FIELD CONTROLS IS WIDER THAN THE OPENING WALLET, and forcing it moves all of it: the wallet (`STARTING_FUNDS_CENTS`), the coach
+ *  rung she arrives on (`prologueCoachTier`), the parents' weekly money, the coach, vacation, practice, kit and treatment price corridors, the
+ *  season's build and a college's aid read. It is one field with readers across the engine, so «only the budget band» is not a thing the engine
+ *  can express and the narrowest TRUE version is the field itself. What survives is everything that is not the field: the nine years as lived
+ *  (cards, costs, picks and the trace they leave), her name, birthday and country, the line's generation and temperament, and the weight ask.
+ *
+ *  ⚠ THE DOOR APPLIES IT AND `createLegacyWorld` DOES NOT. That function takes the profile's background as given – S2b's twelve-cell arm
+ *  measures all three – so the ruling is one line in the one place that is the door (the worker's `new`), not a second spelling inside the
+ *  builder. */
+export const LEGACY_FAMILY_BACKGROUND: FamilyBackground = 'middle'
+
+/** ⭐⭐⭐ S2c – WHAT RIDES BESIDE THE LEGACY WHEN THE DOOR CREATES THE CAREER: the three arguments `createWorld` takes after the career id and the
+ *  ordinary `new` command already carries, each optional and each handed through untouched.
+ *
+ *    `prologue`       the nine years she just lived – skills, style, the rung, the trace. WITHOUT IT the childhood the player walked would be
+ *                     discarded at the last card; with it a legacy career is the same childhood plus the inheritance.
+ *    `dynasty`        wave 10's line record (generation, ancestor root, the mother's temperament and career), which `createWorld` persists as
+ *                     `world.dynasty`. ⚠ THIS IS THE DECISION S2b LEFT TO THE DOOR («the door decides if that ever changes»), AND IT IS YES:
+ *                     that record is what makes a generation-2 career a link in the chain – her own ending reads `generation` and `ancestorSeed`
+ *                     to build her daughter's seed, and §7's temperament lean reads the mother's – so a door that dropped it would break the line
+ *                     to add the money. The two blocks are written in the same instant off the same finished world (`legacyInputOf` reads
+ *                     `dynastyHandoverOf`), so they cannot disagree at creation. `createWorld` also forces `profile.background` to the
+ *                     handover's own `background`, so the door passes it already set to `LEGACY_FAMILY_BACKGROUND`.
+ *    `weightEnabled`  the creation ask's answer. */
+export interface LegacyCreation {
+  prologue?: PrologueHandover
+  dynasty?: DynastyHandover
+  weightEnabled?: boolean
+}
+
 /** ⭐⭐⭐ S2b – THE GENERATION-2 CREATION: her career, built FROM what the finished one left (docs/specs/succession-2026-10.md §1, §3-§5).
  *
  *  ONE call to `createWorld` and four things laid over it, each a fact the input already holds and none of them a draw – so the new
@@ -333,7 +368,7 @@ function arriveOwned(world: WorldState, id: string): void {
  *  over an ordinary start. At the 1.0 floor the two differ by exactly B; a display that wants «what her mother's career added»
  *  subtracts `STARTING_FUNDS_CENTS[profile.background]`.
  *  ⚠ NO `dynasty` HANDOVER IS PASSED to `createWorld`: wave 10's block and this one both carry «who the mother was», and a world holding
- *  both would hold two spellings of one fact. The input has no such block; the door decides if that ever changes.
+ *  both would hold two spellings of one fact. By default none is, and the input carries none; S2c's door hands one through `creation.dynasty` (see `LegacyCreation` for why it must).
  *  ⚠ `profileShapeError` JUDGES THE FINAL PROFILE, so the creation cap on names binds an INHERITED surname too: a family name longer than
  *  `PROFILE_NAME_MAX_CHARS`, possible only on a career opened before 06.09, is refused rather than carried. The door should pre-check, or
  *  the cap should be waived for inherited names – S2c's call. */
@@ -343,6 +378,7 @@ export function createLegacyWorld(
   daughterName: string,
   profile: PlayerProfile = DEFAULT_PROFILE,
   careerId?: string,
+  creation: LegacyCreation = {},
 ): WorldState {
   refuseIllegalLegacy(legacy)
   const daughter: PlayerProfile = { ...profile, kidName: daughterName, kidLastName: legacy.surname }
@@ -350,8 +386,12 @@ export function createLegacyWorld(
   if (illegalProfile !== null) throw new RangeError(`createLegacyWorld: ${illegalProfile}`)
 
   const startYear = legacy.daughterBirthYear + START_AGE_YEARS
-  const grantCents = Math.round(STARTING_FUNDS_CENTS[daughter.background] * legacy.savingsMultiplier)
-  const world = createWorld(seed, daughter, careerId, undefined, undefined, undefined, startYear, grantCents)
+  // ⭐ S2c: THE BAND `createWorld` WILL APPLY – the handover's own answer when one rides along (create.ts: `if (dynasty) profile = { ...profile,
+  // background: dynasty.background }`) and the profile's otherwise. The grant is priced against THAT, so the wallet and the world's
+  // `profile.background` can never name two families. With no `creation.dynasty` it is `daughter.background`, exactly S2b's line.
+  const background = creation.dynasty?.background ?? daughter.background
+  const grantCents = Math.round(STARTING_FUNDS_CENTS[background] * legacy.savingsMultiplier)
+  const world = createWorld(seed, daughter, careerId, creation.prologue, creation.dynasty, creation.weightEnabled, startYear, grantCents)
 
   world.legacy = {
     motherName: legacy.motherName,

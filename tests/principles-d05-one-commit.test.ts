@@ -68,6 +68,9 @@ const REPLY_BY_ARM: Record<(typeof REPLY_BY_COMMAND)[keyof typeof REPLY_BY_COMMA
   // arms, so the inbox query's arm had to join it the moment the arm existed – which is the record's
   // job. Nothing about D-05's claim moves; a query was never one of the 43 mutations.
   inbox: () => ({ id: 0, ok: true, type: 'inbox', inbox: [], revision: 1 }),
+  // ⚠ RE-AIMED, NOT WIDENED (SUCCESSION S2c, 06.10): the record is TOTAL over the reply arms, so the dynasty door's query arm joins it. A query is
+  // not one of the 43 mutations and D-05's claim does not move.
+  legacyInput: () => ({ id: 0, ok: true, type: 'legacyInput', legacy: {} as never, revision: 1 }),
   exported: () => ({ id: 0, ok: true, type: 'exported', bytes: new ArrayBuffer(8), filename: 'c.tsave', revision: 1 }),
   peek: () => ({ id: 0, ok: true, type: 'peek', peek: {} as never, revision: 1 }),
 }

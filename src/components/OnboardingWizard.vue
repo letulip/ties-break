@@ -29,6 +29,7 @@ import { useGameStore } from '../stores/game'
 // in shared/protocol/profile.ts for why the import gate deliberately stayed at 200.
 import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type DynastyHandover, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { daysInBirthMonth } from '../shared/dates'
+import type { LegacyInput } from '../engine/world/succession'
 import { onboardingHeroUrl, portraitUrl } from '../art/preload'
 import ScreenShell from './ui/ScreenShell.vue'
 import StoreError from './ui/StoreError.vue'
@@ -222,7 +223,9 @@ const weight = ref(false)
  *  already carries – the surname locked, the origins answered by the block, the recorded birthday –
  *  so skipping the childhood no longer abandons the line; what it skips is the walk, which is what
  *  skip has always meant. */
-const props = defineProps<{ dynasty?: DynastyHandover }>()
+// ⭐⭐⭐ SUCCESSION S2c – `legacy` is the dynasty door's inheritance, carried through the skip exactly as the line is: the walk is what skip skips, and a
+// player who skips it still continues the line WITH what it left. Absent on every ordinary career.
+const props = defineProps<{ dynasty?: DynastyHandover; legacy?: LegacyInput }>()
 
 /** The recorded births, in birth order – empty on the epilogue variant and on every ordinary run. */
 const recordedBirthdays = computed(() => props.dynasty?.childBirthdays ?? [])
@@ -336,6 +339,8 @@ function skipToDefaults(): void {
       : DEFAULT_PROFILE,
     undefined,
     props.dynasty,
+    undefined,
+    props.legacy,
   )
 }
 function start(): void {
@@ -350,7 +355,7 @@ function start(): void {
   // ⭐⭐⭐ v87 – AND THE SWITCH RIDES AS THE SIXTH ARGUMENT, exactly as the prologue's ninth card
   // sends it. `skipToDefaults` above sends nothing, which the wire reads as the same `false` this
   // ref holds until somebody flips it – «absent means the ask's default, never silently on».
-  game.newCareer(props.dynasty?.childSeed ?? '', finalProfile, undefined, props.dynasty, weight.value)
+  game.newCareer(props.dynasty?.childSeed ?? '', finalProfile, undefined, props.dynasty, weight.value, props.legacy)
 }
 </script>
 
