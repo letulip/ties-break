@@ -34,6 +34,14 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     houses is profitable grind. Class: **measure**.
   - **3b** – house-price inflation: he is still thinking and asks the architect's opinion. Class:
     **answer** (architect's recommendation, his decision).
+  - **A0 · 3a MEASURED to the digit**: house-first `entryCents` $240k × 1.03¹² years × 0.97 resale
+    basis ≈ **$332k – his number**; the catalogue's entry prices never move, so the same rung is
+    re-offered at $240k and the churn pockets ~$92k per cycle, repeatable forever.
+  - **OWNER RULED (05.10)**: «Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест
+    активом, пусть и небольшим, т.е. его рост должен обгонять инфляцию.» → entry prices index at
+    **+2 %/yr, strictly below the family's +3 % appreciation**: a quick flip goes negative (−$2.7k
+    at year 2), the 12-year churn shrinks to ~$28k (noise), the holder keeps beating the late
+    buyer. Class: **build** → bundle **B14**.
 
 - [ ] **4. «Альбом стал лучше, а давай ещё повернём немного вот этот цветной горизонтальный билет на
   на 5 градусов по часовой стрелке?»** – the coloured horizontal TICKET scrap in the album rotates
@@ -57,6 +65,21 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   WON 500 seems to drain MORE – an inversion if true. Probe both with the drain probe; if confirmed,
   diagnose (draw sizes? match counts? run ladder?) and propose. Class: **measure**, then his word or
   an obvious fix.
+  - **A0 · MEASURED** (tools/condition-drain-probe.ts, no dice, SHIPPED column): net straight-sets
+    title runs with the travelling masseur – 250:**12**, 500:**17**, 1000:**12** (his «12» to the
+    digit), Slam:**14**. A won 500 outprices a Slam. Cause: the deep-draw run-ladder discount
+    `[-2,-1,0]` (R64/R128 open at 3–4 per match against the 500's flat 5) compounding with the
+    masseur's per-match tour relief.
+  - **OWNER RULED (05.10)**: «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18,
+    шлем-21… посчитай по нашей математике… в 1000 на 1 матч больше, чем в 500, а в шлеме на 2. Мне
+    кажется это справедливая логика.» The computed shape that lands his four numbers EXACTLY: the
+    run ladder for 500/1000/Slam becomes `[0,0,0,1,1,1,1]` (first three matches free of run
+    surcharge, +1 from the fourth) and the deep-draw discount is DELETED; his 02.10 tier
+    surcharges, the W15–250 ladder, juniors and domestic do not move a digit. Predicted nets
+    12/15/18/21, spacing +3 per extra match (6 gross − 3 relief). Early exits at 1000/Slam rise
+    3–4 → 5 per short visit (the discount's death – big sheets stop being cheap trips). Corridors
+    (econ-reach, injury %, holiday bench) re-pin after the build, round-45 style. Class: **build**
+    → bundle **B13**.
 
 - [ ] **8. «В попапе итогов года что-то странное с доход-расход, в расходы явно что-то лишнее
   попадает, а в доходах общее состояние и прирост не учитываются, надо исправить»** – the year-summary
@@ -130,6 +153,12 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       `tests/life-moment-engine.test.ts`. DRAFT: R46-S3, R46-S4.
       **LEFT (art call, not a moment):** the `'expecting'` announcement card has no painting – one row in
       `LifeBeatDialog`'s `BEAT_FACE` plus widening `MemoryFace` to the pregnancy faces would add it.
+    - **OWNER RULED (05.10)**: «картинка для родов есть и для беременности две разных, проверь и
+      добавляй» – the full set found and named: `adult-bride.webp` (named *bride*, which is why the
+      first grep missed it), `adult-birth.webp`, `adult-pregnant-early.webp` /
+      `adult-pregnant-last.webp`, `adult-funeral.webp` (wired v87, weight mode only). B1 shipped
+      bride + birth; **B1b** wires the `'expecting'` card's early face and verifies the portrait
+      serves `pregnant-last` late in term (else adds the late moment).
   - **11d** – the announcement can also carry «сколько они вместе» (how long together) – shares the
     duration primitive with #9. Class: **build**, DRAFT strings.
     - **B1 · 11d SHIPPED.** Primitive `relationshipDurationWeeks(world, episode?)` in `engine/world/loveEpisodes.ts`:
@@ -171,12 +200,19 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   injured-entry/walkover law in code + sim reproduction; ask him to re-send the save once #20 ships.
   Class: **measure/hunt**, honest status if not reproducible blind.
 
-- [ ] **17. «А может быть нам какую-то микро языковую модель подключить для этих всех смолл токов
+- [~] **17. «А может быть нам какую-то микро языковую модель подключить для этих всех смолл токов
   можно (я знаю такие есть крохотные) и запускать прямо в браузере внутри приложения для генерации
   фраз и ответов? Это вообще возможно? Мне кажется это дало бы нам очень мощный буст вариативности на
   основе всех наших существующих фраз и всей истории уже сказанного ранее.»** – an in-browser micro
   LLM for smalltalk variability. Class: **answer** (the architect's feasibility analysis: size,
   offline-first, determinism law, voice control – with a recommendation and alternatives).
+  - **ANSWERED IN CHAT, OWNER CLOSED IT: «уговорил.»** (05.10). The case: +100–350 MB before the
+    prologue against the offline-first funnel; cross-device float nondeterminism against his own
+    reproducible-variability law; a 135M–500M model against the wording law (unblessed strings,
+    off his voice, hallucinating against the career). The path taken instead: build-time LLM
+    generation he blesses in DRAFT batches + combinatorial slots + the #15 no-repeat memory +
+    diary callbacks. **Smalltalk-corpus expansion goes to the NEXT round's list.** Full entry:
+    decisions.md 05.10.
 
 - [ ] **18. «Я нажал that's enough и снова увидел не наш красивый альбом, а набор детских фото и в
   конце 1 взрослую. Надо исправить, давать возможность посмотреть весь альбом и подумать какой вообще
@@ -248,7 +284,10 @@ grep – B9 confirms what «тоже» refers to before copying it.
 | B10 | 6 | yacht injury modifier + bench/spec note | sonnet · 40 |
 | B11 | 10 | between-matches screen overflow (`MatchScene.vue` candidate) | sonnet · 35 |
 | B12 | 4 | `AlbumTicketPass.vue` rotation | sonnet · 25 |
-| Architect | 3b, 17, gates, report | – | – |
+| B1b | 11c art follow-up | `LifeBeatDialog.vue` BEAT_FACE + MemoryFace (pregnancy faces) | sonnet · 20 |
+| B13 | 7 (ruled 05.10) | run ladders in `engine/economy/condition.ts` + probe + corridor re-pins | sonnet · 55 |
+| B14 | 3 (ruled 05.10) | house entry-price indexation (shop quote path) + tests | sonnet · 35 |
+| Architect | 3b ✓, 17 ✓, succession spec (ruled: Александра-мать · дом+машина+слайс через мультипликатор финиша · спека сейчас, стройка пост-лонч), gates, report | – | – |
 
 Sequencing notes: B1 first (biggest, and #22's hazard multiplier shares its files); B2 early so a
 found defect leaves room for a follow-up fix agent; B4 after B1 (the «how long together» primitive

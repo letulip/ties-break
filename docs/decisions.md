@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 155 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 156 dated entries, newest 2026-10-05. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -42,7 +42,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 22 | [THE CORPUS COUNTED, ROUND 44 CLOSED BY THE COUNT](#30092026--the-corpus-counted-round-44-closed-by-the-count) | 2026-09-30 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
-| ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
+| ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
 | simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
@@ -5813,3 +5813,54 @@ accumulated growth over every year since the fee last moved, the per-year steps 
 banked season verdicts), while the SIZE stays their own smaller 2/4/6% a year against his 5–15%
 corridor. No third branch still: nobody leaves, nobody punishes – the refusal lives only in the
 figure of the next ask. The 0.82 note floor and the letter texts wait for his eyes in play.
+
+## 05.10.2026 – ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED
+
+Round 45 merged in the morning (PR #164) and the same day he played it and sent 22 items –
+[round-46.md](rounds/round-46.md). Five rulings landed in the opening conversation, while B1 built
+the life-event screens:
+
+**The drain ladder gets his targets.** The probe confirmed his #7 to the digit (net title runs with
+the travelling masseur: 250:12, 500:17, 1000:12, Slam:14 – a won 500 outprices a Slam, the deep-draw
+discount `[-2,-1,0]` is the cause). His ruling: «по 7 надо сделать разумно, например: 250-12,
+500-15, 1000-18, шлем-21… посчитай по нашей математике… в 1000 на 1 матч больше, чем в 500, а в
+шлеме на 2. Мне кажется это справедливая логика.» The computed shape that lands EXACTLY 12/15/18/21:
+the 500+/Slam run ladder becomes `[0,0,0,1,1,1,1]` (no run surcharge for the first three matches,
++1 from the fourth), the deep-draw discount is deleted; tiers 15–250, juniors and domestic do not
+move a digit. His 02.10 tier surcharges (the lever) are untouched. Corridors re-pin after the build.
+
+**House entry prices inflate at +2 %/yr – below the family's +3 % growth.** On the #3 churn (sell
+the first house at 332k = 240k × 1.03^12 × 0.97, be re-offered the same rung at the frozen 240k,
+pocket 92k, repeat): «Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест активом,
+пусть и небольшим, т.е. его рост должен обгонять инфляцию.» So the indexation sits BELOW the
+appreciation: a quick flip goes negative (−$2.7k at year 2), the long churn shrinks to ~$28k over
+12 years (noise, not a grind), and the holder keeps beating the late buyer.
+
+**No in-browser micro LLM for the small talks (#17): «уговорил.»** The architect's case he accepted:
++100–350 MB before the prologue against an offline-first PWA funnel, cross-device float
+nondeterminism against his own reproducible-variability law, and a 135M–500M model against the
+wording law (it IS a machine for unblessed strings, off his voice, hallucinating against the
+career). The path instead: the corpus – build-time generation he blesses in batches, combinatorial
+slots, the #15 no-repeat memory, and callbacks to the career's own diary. Smalltalk-corpus
+expansion goes to the next round's list.
+
+**Every big life event gets its picture: «картинка для родов есть и для беременности две разных,
+проверь и добавляй».** Found and named: `adult-bride.webp` (the wedding – why the first grep
+missed it), `adult-birth.webp`, `adult-pregnant-early.webp` / `adult-pregnant-last.webp` (the two
+stages), `adult-funeral.webp` (wired since v87, weight mode only). B1 shipped the wedding and
+birth moments with bride/birth; the `'expecting'` card's early-pregnancy face and the late-stage
+check are B1b's one-row follow-up.
+
+**The succession seed – and he ruled its three forks the same hour.** His idea: «может быть нам в
+свежей карьере после преемственности и год делать соответствующий, а не снова 31? Можно как-то
+этот механизм передачи сделать вообще?» – a gen-2 career (her daughter) continuing the calendar
+instead of resetting to 2031. The forks, ruled: **(а)** the gen-2 player is «Александра-мать
+конечно» – the ex-star herself as the new parent. **(б)** what inherits: «символы да, но мы
+обсуждали, что она по умолчанию в богатой карьере стартует вроде, может быть разве что можно
+какой-то мультипликатор на начальные деньги делать в зависимости от того, как закончилась
+предыдущая картера, ну и дом, машину и может быть какие-то накопления тоже можно оставить, не все
+миллионы» – so: the house, the car, a SLICE of savings through a starting-money multiplier keyed
+to how the previous career ended – never the whole fortune. **(в)** «спека сейчас, стройка
+пост-лонч» – `docs/specs/succession-2026-10.md` is commissioned now (the architect writes it
+inside round 46), the build waits for after launch; the start-year parameterisation may come
+earlier, while fixtures are few.
