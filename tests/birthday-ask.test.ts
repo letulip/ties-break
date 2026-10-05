@@ -505,10 +505,17 @@ describe('⚠ the copy work costs the stream nothing', () => {
       const askedId = options[Math.floor(counted() * options.length)].id
       expect(draws, `${bandName(band)}: three to order the four rows, one for the ask`).toBe(4)
       const real = birthdayOffer('draws', age, [], atCollege)
+      // ⚠ ROUND 46 #5 – RE-AIMED, NOT WEAKENED. A fresh career's eighteenth asks for the bank account by
+      // ruling (his «жёстко к 18»): an override of the RESULT after the draw, the deposit's own shape. The
+      // band is one age wide, so there is no neighbouring birthday to mirror it at (the independence band
+      // is replayed at twenty for nineteen's deposit) and the exemption is on the ASK ALONE: the four
+      // rows' ORDER, which the three shuffle draws decide, is still replayed for this band, the replay
+      // still counts four draws, and the override is pinned in tests/birthday-own-account.test.ts.
+      const anchored = band.from === 18 && band.to === 18
       expect(
         [real.options.map((o) => o.id), real.askedId],
         `${bandName(band)}: the real offer and the counted replay must be the same draw`,
-      ).toEqual([options.map((o) => o.id), askedId])
+      ).toEqual([options.map((o) => o.id), anchored ? 'bankcard' : askedId])
     }
   })
 
@@ -1159,8 +1166,12 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
           const onCard = options.filter((g) => g.id !== DAY)
           const askAgain = onCard.filter((g) => g.repeat === 'repeatable')
           const pool = wanted.length ? wanted : askAgain.length ? askAgain : onCard.length ? onCard : options
+          // ⚠ ROUND 46 #5 – RE-AIMED, NOT WEAKENED. With nothing given, the eighteenth's ask is the bank
+          // account by ruling – an override of the RESULT, so the fourth draw is not what it reads. The
+          // cases that already hold the account (`given` = every row) are unchanged and still replay it.
+          const anchored = band.from === 18 && band.to === 18 && !spent.has('bankcard')
           expect(
-            pool[Math.floor(fourthDraw(seed, age) * pool.length)].id,
+            anchored ? 'bankcard' : pool[Math.floor(fourthDraw(seed, age) * pool.length)].id,
             `${bandName(band)} seed ${s}: the ask is not the fourth draw off its own stream`,
           ).toBe(askedId)
         }

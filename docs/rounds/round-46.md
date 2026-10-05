@@ -95,12 +95,34 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   +5° clockwise. Class: **build** (identify the exact scrap asset, rotate in the placement resolver,
   pin the value).
 
-- [ ] **5. «На 29й день рождения она просила свой счёт в банке - это смешно. Давай наверное сделаем,
+- [x] **5. «На 29й день рождения она просила свой счёт в банке - это смешно. Давай наверное сделаем,
   что она будет где-то в адекватном возрасте и обстоятельствах его спрашивать? Может жёстко к 18
   привязать, например. Или, если можно раньше, то в коридоре 16-18»** – the own-bank-account birthday
   ask fired at 29. Gate it to an adequate age: his preference = hard 18, or a 16–18 corridor if the
   beat can naturally fire earlier. Class: **build** (find why it fired at 29 first – the fix must name
   the cause, not just clamp).
+  - **B8 · 5 SHIPPED – IT WAS THE REFILL LENDING A ROW, NOT A MISSING AGE TERM.** `bankcard` is a row of the 18 band and of no other, so it can
+    reach any other card only by being LENT: round 42 #26's refill (`materialFor`) tops a short pool up from the neighbour bands, and a parent who
+    grants every ask retires the late bands' rows until the walk reaches the 18 band for a row she was never given – the hand round 45 #9 found
+    taking the deposit. It lands as the ASK because the career-scope ladder prefers the least-used row and an unasked row is the least used there is.
+    Measured on the code as shipped (`tests/birthday-own-account.test.ts` (c), sixty seeds): 282 birthdays from 19 to 45 carried the account, and walked
+    from fourteen with a parent who grants everything the first ask for it came at 33 on the first seed tried.
+    **THE GATE** (`world/birthday.ts`, block over `OWN_ACCOUNT_ID`; three rules, none of them a draw): (1) never lent – `lendable` drops the row from every
+    neighbour a short pool borrows from, which closes every other age in one filter (under sixteen included); (2) eighteen, whatever the balance, is the
+    hard anchor – the row is the 18 card's own and the ask is overridden to it after the draw (the bicycle's and the deposit's shape); (3) sixteen or
+    seventeen, once money has reached her own account (`world.kidFundsCents > 0`, the balance `ownAccountNote` already gates on), the row is swapped in
+    for the card's last material row BEFORE the shuffle and is the ask. Once only: a row she was asked about or given is not asked again, and nothing lends it after.
+    **HIS SAVE (29, no account) sees nothing** – the rule reads her age at the birthday and the row is lent to no card, so there is no migration and no state.
+    The account itself is not tied to the gift: it is the kid-share ramp (`kidShare`, `ownAccountNote`, `ownAccountCard`), which never waited for a birthday,
+    so the family loses only the ask. **RESIDUAL, FLAGGED:** a girl in college on her 18th birthday keeps the college card (the bicycle is its ask by his
+    earlier ruling) and is asked at 16 or 17 if money had reached her, otherwise not at all.
+    **Wording:** none of the row's strings moved (diff checked; the card carries the 18 band's own object, asserted by identity). **RNG:** MAIN gains no draw –
+    `tests/condition.test.ts` 51 passed (frozen capture); the swap keeps the shuffle's permutation (exactly one slot differs, never the day).
+    **Tests:** 10 new in `tests/birthday-own-account.test.ts` ((a) sixteen and seventeen, (b) never earning → eighteen, (c) walked 19–45 and 14–40, (d) the
+    `again` line and object identity, the permutation pin, college outranks the anchor, the engine seam). Two band-18 replicas in `tests/birthday-ask.test.ts`
+    RE-AIMED, not weakened (the ask only, the anchored case only). Birthday family green: 9 files, 191 tests. **MUTATED, each arm went red and was restored
+    byte-identical (`cmp`):** drop the 18 anchor → 3 red ((b), the once-only walk, the seam); lend the row again → 2 red ((b) at 17, (c) 282).
+    `vue-tsc -b --force` green.
 
 - [ ] **6. «Может для своей яхты тоже поставим -15% вероятности травмы?»** – «тоже» = something
   already grants −15% injury (find the existing owner of that bonus – presumably the own plane);
