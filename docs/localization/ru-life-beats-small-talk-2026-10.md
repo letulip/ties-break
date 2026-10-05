@@ -271,8 +271,51 @@ The fiery opener's `спроси` is intimate daughter-to-parent address. No bra
 correct; all three remain zero-bond texture and the actual tournament decision stays on its existing
 mechanical surface.
 
-## 9. Situation-corpus progress
+## 9. Situation R48 – `coach-real`
+
+Subject `curiosity`; stages `school`, `after-school`; fact gate `coach-employed`. A hired coach
+exists, but the generated coach's gender is not available to the copy. The daughter asks whether
+kindness is also good coaching; no branch declares the coach good or bad.
+
+### 9.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"How do you know when you've got a real coach and not just a nice one?"` | `«Как понять, у тебя хороший тренер или просто приятный человек?»` |
+| fiery | `"I want to know whether my coach is actually good, and nobody will give me a straight answer."` | `«Хочу понять, действительно ли мой тренер хорош, а прямого ответа никто не даёт».` |
+| deep | `"I've been working out the difference between a coach who is kind and one who is good."` | `«Я пытаюсь понять разницу между добротой тренера и умением тренировать».` |
+| quiet | `"How does anyone tell a good coach from a nice one?"` | `«Как вообще отличить хорошего тренера от приятного человека?»` |
+
+### 9.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what made her wonder` | `Спросить, почему она об этом задумалась` |
+| respond | `Say a good coach explains what they're changing` | `Сказать, что хороший тренер объясняет, что меняет` |
+| space | `Say she doesn't have to work it out now` | `Сказать, что сейчас не обязательно разбираться` |
+
+### 9.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Mine's lovely. Everyone's lovely. I can't tell if that's the same as good."` | `«Со мной все такие милые. Только я не понимаю, значит ли это, что меня хорошо тренируют».` |
+| sunny | respond | `"Okay. I'll ask why next time, not just what."` | `«Хорошо. В следующий раз спрошу не только что, но и почему».` |
+| sunny | space | `"All right. I'll go back to enjoying the nice one for a bit."` | `«Ладно. Пока просто порадуюсь, что со мной по-доброму».` |
+| fiery | invite | `"Everybody's nice. Nice is easy. I'd like to know what I'm actually being taught."` | `«Все милые. Быть милым легко. Я хочу понимать, чему меня на самом деле учат».` |
+| fiery | respond | `"Right. Then I'm asking why on Tuesday and I'm not letting it go."` | `«Хорошо. Во вторник спрошу почему и не отстану».` |
+| fiery | space | `"Fine. But I'm coming back to this one."` | `«Ладно. Но я к этому ещё вернусь».` |
+| deep | invite | `"Nothing happened. I noticed I have no way of telling, and that bothered me."` | `«Ничего не случилось. Просто поняла, что не умею это различать. Теперь не выходит из головы».` |
+| deep | respond | `"That's something I can actually check. I hadn't thought of it as checkable."` | `«Вот это уже можно проверить. Я не думала, что здесь есть что проверять».` |
+| deep | space | `"No. I'd still like to know, and I think I'll keep asking myself."` | `«Нет. Я всё равно хочу знать. Наверное, буду ещё об этом думать».` |
+| quiet | invite | `"No reason. It came up and stayed."` | `«Без причины. Вопрос появился и остался».` |
+| quiet | respond | `"That's useful. I'll listen for it."` | `«Полезно. Буду слушать, что мне объясняют».` |
+| quiet | space | `"No. I'll see what happens at the next session."` | `«Нет. Посмотрю, что будет на следующем занятии».` |
+
+The sunny `у тебя` is a generic way of asking the parent how one can know, not a claim that the
+parent has a coach. No Russian reply inflects or genders the generated coach.
+
+## 10. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 3 / 51 | 57 / 969 | 0 / 4 | R45–R47 complete as DRAFT |
+| 4 / 51 | 76 / 969 | 0 / 4 | R45–R48 complete as DRAFT |
