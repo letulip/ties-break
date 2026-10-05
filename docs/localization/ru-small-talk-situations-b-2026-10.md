@@ -183,8 +183,93 @@ between matches and how other people fill them. It has no employment or residenc
 No Russian line asserts that a particular tournament is currently running; `здесь` belongs to
 the daughter's telling of her own ordinary time away.
 
-## 5. Corpus progress
+## 5. Situation R23 – `the-word-she-keeps-hearing`
+
+Subject `curiosity`; stages `after-school`, `college`, `independent`; no fact gate. The English
+`flat` can describe play and, loosely, a person's energy. Russian uses `плоский`/`плоско`, with
+quotation marks to keep the daughter's uncertainty about how people mean it.
+
+### 5.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Everybody keeps saying a word and I've been nodding along without knowing it."` | `«Все повторяют одно слово, а я киваю, хотя не понимаю его».` |
+| fiery | `"I'm going to ask what it means. I've decided. Probably."` | `«Я спрошу, что это значит. Решила. Наверное».` |
+| deep | `"There's a word they all use. I've guessed at it and I'm still guessing."` | `«Они все употребляют одно слово. Я угадывала смысл и до сих пор угадываю».` |
+| quiet | `"I heard that word again. I looked it up this time."` | `«Снова услышала то слово. На этот раз посмотрела в словаре».` |
+
+### 5.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the word is` | `Спросить, что за слово` |
+| respond | `Say asking is faster than guessing` | `Сказать, что спросить быстрее, чем гадать` |
+| space | `Say she will pick it up` | `Сказать, что со временем она разберётся` |
+
+### 5.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Flat. Everyone was flat, she played flat. I've been nodding along at it."` | `«„Плоско“. То все какие-то „плоские“, то она играла „плоско“. А я всё киваю».` |
+| sunny | respond | `"It is. I'll ask the next person who says it."` | `«Быстрее. Спрошу у следующего, кто так скажет».` |
+| sunny | space | `"I will. I've nearly got it, I think."` | `«Разберусь. Кажется, уже почти поняла».` |
+| fiery | invite | `"Flat. That's it. Flat. And nobody will say what it actually means."` | `«„Плоско“. Вот и всё. „Плоско“. И никто толком не объяснит».` |
+| fiery | respond | `"I know it is. I've had the question ready and said nothing."` | `«Знаю. Вопрос давно готов, а я всё молчу».` |
+| fiery | space | `"I don't want to pick it up. I want somebody to say it."` | `«Не хочу догадываться. Хочу, чтобы кто-нибудь объяснил».` |
+| deep | invite | `"Flat. They use it about matches and I don't think they all mean the same thing."` | `«„Плоско“. Говорят так о матчах, но, кажется, каждый имеет в виду своё».` |
+| deep | respond | `"It is faster. I've worked out that I'd rather guess."` | `«Быстрее. Но я поняла, что предпочитаю угадывать».` |
+| deep | space | `"I might. I'd rather be told than work it out from tone."` | `«Может быть. Лучше бы кто-нибудь сказал прямо, чем разбирать по интонации».` |
+| quiet | invite | `"Flat. It isn't in the dictionary the way they use it."` | `«„Плоский“. В словаре есть, но не в том смысле, в каком говорят они».` |
+| quiet | respond | `"Probably. I'd rather look it up."` | `«Наверное. Я лучше посмотрю в словаре».` |
+| quiet | space | `"Probably. Everyone else did."` | `«Наверное. Остальные ведь разобрались».` |
+
+`Плоско` needs a final owner playtest: it preserves the tennis term and the awkward general use,
+but may read too odd in Russian. This is an editorial choice, not a new English literal in RU mode.
+
+## 6. Situation R24 – `why-anyone-watches`
+
+Subject `curiosity`; stages `college`, `independent`; no fact gate. The observed match was still
+in progress even after the daughter felt its result had become obvious.
+
+### 6.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"People stayed to the end of a match that was already over. Why would you?"` | `«Люди досидели до конца матча, хотя исход уже казался ясным. Зачем?»` |
+| fiery | `"People sat through that to the end. I wouldn't have."` | `«Люди досидели тот матч до конца. Я бы не стала».` |
+| deep | `"It stopped being a contest long before it finished. They stayed anyway."` | `«Он перестал быть борьбой задолго до конца. А они всё равно остались».` |
+| quiet | `"There were still people there at the end. Not many."` | `«К концу там ещё были зрители. Немного».` |
+
+### 6.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask if she would have stayed` | `Спросить, осталась бы она сама` |
+| respond | `Say some people just like tennis` | `Сказать, что некоторые просто любят теннис` |
+| space | `Say she does not have to explain a crowd` | `Сказать, что ей не обязательно понимать зрителей` |
+
+### 6.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"No. I'd have gone and found lunch, which is probably not a great look."` | `«Нет. Я бы пошла искать обед. Со стороны выглядело бы так себе».` |
+| sunny | respond | `"They must. I'd never thought of it as a reason on its own."` | `«Наверное. Я никогда не думала, что этого достаточно».` |
+| sunny | space | `"I don't. I'm still going to wonder about it."` | `«Не обязательно. Но я всё равно буду об этом думать».` |
+| fiery | invite | `"No. I left. I came back at the end to see who was still there."` | `«Нет. Я ушла. Вернулась к концу посмотреть, кто ещё сидит».` |
+| fiery | respond | `"Liking it isn't the same as sitting through that."` | `«Любить теннис – не значит досиживать такое до конца».` |
+| fiery | space | `"I don't have to. I'd like to know anyway."` | `«Не обязательно. А я всё равно хочу знать».` |
+| deep | invite | `"I stayed. I've been telling it like I didn't."` | `«Я осталась. Хотя рассказываю так, будто ушла».` |
+| deep | respond | `"Some do. Nobody looked like they were enjoying it, though."` | `«Некоторые любят. Только никто там, кажется, не получал удовольствия».` |
+| deep | space | `"No. I'd like to have asked one of them."` | `«Не обязательно. Но я бы спросила кого-нибудь из них».` |
+| quiet | invite | `"No. I had things to do."` | `«Нет. У меня были дела».` |
+| quiet | respond | `"That's probably it. It was a nice afternoon."` | `«Наверное, поэтому. День был хороший».` |
+| quiet | space | `"No. It was only a crowd."` | `«Не обязательно. Это просто зрители».` |
+
+The quiet `afternoon` becomes `день` so the dialogue does not require a specific time of day from
+the current game clock. No line gives the score or winner of the observed match.
+
+## 7. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 30 / 51 | 570 / 969 | 4 / 4 | R45–R52 and R1–R22 complete as DRAFT |
+| 32 / 51 | 608 / 969 | 4 / 4 | R45–R52 and R1–R24 complete as DRAFT |
