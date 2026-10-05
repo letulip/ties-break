@@ -219,7 +219,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     mounted test asserts the rendered text. `docs/decisions.md` is not touched (the owner-log entry and its index regen
     are the architect's).
 
-- [ ] **7. «Выигранный 1000 снимает сейчас 12 кондишина, и кажется, что 500 снимает ощутимо больше.
+- [x] **7. «Выигранный 1000 снимает сейчас 12 кондишина, и кажется, что 500 снимает ощутимо больше.
   Проверь пожалуйста»** – under the 02.10 tariff (500/1000/Slam all = 3) a WON 1000 drains 12 and a
   WON 500 seems to drain MORE – an inversion if true. Probe both with the drain probe; if confirmed,
   diagnose (draw sizes? match counts? run ladder?) and propose. Class: **measure**, then his word or
@@ -239,6 +239,33 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     3–4 → 5 per short visit (the discount's death – big sheets stop being cheap trips). Corridors
     (econ-reach, injury %, holiday bench) re-pin after the build, round-45 style. Class: **build**
     → bundle **B13**.
+  - **B13 · 7 SHIPPED – THE RUN LADDER IS HIS NUMBERS, BY TIER.** `ECONOMY.condition.runFatigueLadderDeep` `[-2,-1,0]` → `[0,0,0,1,1,1,1]`, and
+    `ladderFor` (engine/condition.ts) now keys it on the TIER – `MAJOR_RUNGS` = the 500, the 1000 and the Slam – instead of on `drawSize > 32`: the 500 is a
+    32-draw, so a draw test could not have said his ruling. The discount is deleted. The key keeps its old name (the rival memo key, four benches, two tests and
+    a notes anchor read it). Nothing else moved: the 02.10 surcharges, the W-32 ladder `[0,1,1,1,1]` for 15-250, the junior and domestic ladders. No schema, no new
+    ECONOMY key, no player-facing string, no draw.
+    * **THE PROBE, no dice, SHIPPED column** (`npx vite-node tools/condition-drain-probe.ts`, the «EVERY RUNG, DRAW-FREE» table, cells read pre-02.10 / first / SHIPPED):
+      `WT250 k=5  22/17/12` · `WT500 k=5  20/15/15` · `WT1000 k=6  30/24/18` · `Slam k=7  35/28/21` – shipped **12 / 15 / 18 / 21**, his four numbers to the digit. The probe now ends with
+      them read off the live ladder (target / shipped: 12/12 ok, 15/15 ok, 18/18 ok, 21/21 ok); its header and banner describe the shipped law, and the option rows that were priced on the
+      discounted baseline are marked HISTORY. Was 12 / 17 / 12 / 14 (A0); predicted 12 / 15 / 18 / 21.
+    * **THE FROZEN CAPTURE:** `tests/condition.test.ts` 51 passed with its pins untouched (41550 draws, hash `e6b0c709`) – no MAIN draw added or removed, the tuning clause.
+    * **MUTATION:** HEAD's two source files (draw key + `[-2,-1,0]`) copied over mine – the new net test reds on exactly the three majors (`wta500` expected 17 to be 15, `wta1000` 12 to be 18,
+      `slam` 14 to be 21, which are the A0 «before» figures to the digit) and stays green on the 250; restored, `cmp` byte-identical (sha256 prefixes `658e3532…` and `186fd4ed…` before and after).
+    * **TESTS RE-AIMED, each with a dated ⚠ note, claim unchanged:** `fatigueReference` (the first match costs 0 at every rung; the three reference rows are one row, 5/10/15/21/27; the shipped-ladder
+      claim is stated rung by rung from outside `ladderFor`; the additive sign half is back to one answer; NEW describe – his four nets through `tournamentRunStrain` minus `masseurTourRelief`, one case per
+      rung, the +3 spacing, the early exit at 5); `principles-t73-economy-identity` (re-pinned to 29,707 chars / 1,923 paths – ⚠ it was ALREADY RED at HEAD, 29,701 / 1,919 against the 29,647 / 1,917 pin,
+      from the two commits that touched `src/engine/economy*` after it, c397187e and ca9adca5; B13's own share is +6 chars and +4 paths); `wave10-handover` (cell (1,1,2) → (2,1,2), 72 careers re-hunted,
+      12 wealthy of 39 that end inside the belt); `round45-first-number-one` D1 (third career p4/i3 → p6/i3 – 63 careers hunted, exactly one latches a #1, the junior table in week 171);
+      `wave10-walker-retirement` (p1/i1 → p1/i4 – the old 36 careers hold 0 junior-only endings now, so the hunt went wider: 108 careers, 7 found, all of which also hold §B); `long-career-ledgers`
+      (the WITNESS only – the three W seasons now keep ITF points, so the old line prints an ITF number instead of «Unranked»; the claim, a professional rank for a professional season, is asserted as before).
+    * **THE UNIT SWEEP (`npm run test:quiet`, once): 14 files red, and 10 of them are NOT B13's** – the identical counts are red on my commit with my two source files reverted (the control, run with
+      `--no-file-parallelism`): the seven `coach-travel-edge*` files (43 tests – the frozen-career hashes, already stale at HEAD, so they need the gate's re-freeze whatever this change does),
+      `principles-d07-inbox-bound` (the wire's top-level keys: 116 against a pinned 113), `principles-d08-store-payload-clone` (the store's senders no longer match the file's enumeration) and
+      `sim-serialisation` (a bulk-pool file declares a per-test budget above birpc's window). B13 touched none of them; re-pinning them here would have baked other builders' drift into the pins.
+      The four B13 reds are the re-aims above; the nine files touched were re-run green together (166 tests), with `preview` and `principles-c01-rival-memo` beside them.
+    * **NOT RUN, THE ARCHITECT'S GATE:** `test:sim` and the corridors it pins (econ-reach, the injury percentage, the holiday bench), `npm run check`, `test:e2e`, and the per-key frozen-career
+      diff. The rivals share the ladder through `tournamentRunStrain`, so the cohort's fatigue moves with the kid's – expect the sim corridors to move.
+    * Spec: docs/specs/the-season-equation-2026-09.md §11g (the 05.10 supersession, predicted against measured; it answers §11f question 1). Notes: docs/notes/economy/condition.md, under the constant's heading.
 
 - [x] **8. «В попапе итогов года что-то странное с доход-расход, в расходы явно что-то лишнее
   попадает, а в доходах общее состояние и прирост не учитываются, надо исправить»** – the year-summary

@@ -11,7 +11,7 @@
 // THE FORMULA UNDER TEST (engine/condition.ts, applied at `finalizeTournament`, nothing restated here):
 //   run strain = Σ over the matches she PLAYED of  matchDrain(tier, score) + runFatigueExtra(i, tier)
 //   matchDrain = (2 straight sets | 3 a three-setter or any tiebreak | +1 for a third tiebreak set) + tierMatchFatigue[tier]
-//   the ladder is keyed on the DRAW (> 32 ⇒ [-2, -1, 0], the owner's 14.08 curve) else on the track
+//   the ladder is keyed on the TIER since 05.10: 500 / 1000 / Slam ⇒ [0, 0, 0, 1, 1, 1, 1] (the owner's 05.10 ruling), else on the track
 //   NET toll   = strain − masseurTourRelief(matches, strain, true)   (3 per night between rounds, owner 19.09)
 // So per-match cost is a function of (scoreline class, tier, index-in-run) and nothing else: no opponent
 // strength, no round-of-draw, no prestige. The only dice in it are the scoreline class, which is why the
@@ -49,6 +49,14 @@
 // happened to `B-plateau` the day the second shape shipped – and `printAllRungs` prices EVERY rung draw-free under all three, so the
 // junior and domestic rows are on the page too. Once the ruling is shipped `baseline` and `T2-second` are the SAME row: that is the
 // check that the constants were typed once and are read once. A–D are B1's options and are priced on the tariff of the day.
+//
+// ⚠⚠ 05.10 – THE LADDER IS NOT A SCENARIO ANY MORE, IT IS THE LAW (round 46 #7, owner: «по 7 надо сделать разумно, например: 250-12,
+// 500-15, 1000-18, шлем-21 … посчитай по нашей математике»): the 500, the 1000 and the Slam run on `runFatigueLadderDeep` =
+// [0, 0, 0, 1, 1, 1, 1] BY TIER, the deep-draw discount [-2, -1, 0] is deleted, and `printAllRungs` ends with the owner's four numbers read
+// off the LIVE ladder (target / shipped). Every option row below that quotes a ladder or a net was priced on the DISCOUNTED baseline and is
+// HISTORY: a scenario is a delta on whatever ladder is live, so the 19.09 concave tail, A–D and `B-plateau` describe a baseline that no
+// longer exists. The `pre-02.10` and `first` columns of the last table are the OLD TARIFFS priced on TODAY'S ladder – the tariff is what
+// they vary, the ladder is the live one.
 
 import { writeFileSync } from 'node:fs'
 import { createWorld, inTrack, KID_ID, seasonIndexOf } from '../src/engine/world'
@@ -203,7 +211,7 @@ function csvRows(): string[] {
 function printTariff(label: string): void {
   console.log(`\n  ${label}`)
   console.log('  per-match cost by round, STRAIGHT SETS / HARD (3 sets or a tiebreak) / EPIC (a third tiebreak set) – draw-free, priced through matchDrain + runFatigueExtra')
-  console.log("  (the owner's own 14.08 rows for the two deep draws were  min 5 6 7 7 7 7 7  max 7 8 9 9 9 9 9 – the first and last column below, round by round)")
+  console.log("  (the owner's own 14.08 rows for the two deep draws were  min 5 6 7 7 7 7 7  max 7 8 9 9 9 9 9 – RETIRED 05.10 with the discount that made them; the shipped ladder is [0,0,0,1,1,1,1])")
   for (const tier of TOP) {
     const r = rounds(tier)
     const cells: string[] = []
@@ -449,6 +457,18 @@ function printAllRungs(): void {
     for (let k = 0; k < 7; k++) cols.push(pad(k < kMax ? cells.map((c) => c[k]).join('/') : '', 8))
     console.log(`  ${TIER_SHORT[tier].padEnd(8)}  ${pad(TIERS[tier].drawSize, 4)}  ${pad(sur.join('/'), 9)}  ${cols.join(' ')}`)
   }
+  // 05.10 – THE OWNER'S FOUR NUMBERS (round 46 #7), read off the LIVE ladder: a straight-sets TITLE run, masseur travelling.
+  const OWNER_0510: { tier: TierId; k: number; want: number }[] = [
+    { tier: 'wta250', k: 5, want: 12 },
+    { tier: 'wta500', k: 5, want: 15 },
+    { tier: 'wta1000', k: 6, want: 18 },
+    { tier: 'slam', k: 7, want: 21 },
+  ]
+  console.log("\n  05.10 – THE OWNER'S FOUR NUMBERS, a straight-sets TITLE run with the travelling masseur (live ladder + live tariff):  target / shipped")
+  for (const o of OWNER_0510) {
+    const got = synth(o.tier, o.k, STRAIGHT).net
+    console.log(`  ${TIER_SHORT[o.tier].padEnd(8)}  k=${o.k}   ${pad(o.want, 3)} / ${pad(got, 3)}  ${got === o.want ? 'ok' : 'MISS'}`)
+  }
 }
 
 // ---- output ----------------------------------------------------------------------------------------------------------------
@@ -460,7 +480,7 @@ console.log(
 console.log(
   `  tariff: straightSets ${ECONOMY.condition.matchFatigue.straightSets}, hardMatch ${ECONOMY.condition.matchFatigue.hardMatch}, ` +
     `+${ECONOMY.condition.matchFatigue.extraTiebreaks} for a third tiebreak · masseur relief ${ECONOMY.masseur.tourRecoveryPerRound}/night · ` +
-    `ladders: deep ${JSON.stringify(ECONOMY.condition.runFatigueLadderDeep)} (draw > 32), W ${JSON.stringify(ECONOMY.condition.runFatigueLadderWta)}`,
+    `ladders: majors 500/1000/Slam ${JSON.stringify(ECONOMY.condition.runFatigueLadderDeep)}, W 15-250 ${JSON.stringify(ECONOMY.condition.runFatigueLadderWta)}`,
 )
 printTariff('TABLE 0 – THE TARIFF (no dice)')
 printRounds()
