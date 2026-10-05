@@ -1712,7 +1712,7 @@ export function pendingBirthday(world: WorldState): number | null {
     const resumable = world.ending.type === 'college' && world.college !== null && world.college.doneWeek === null
     if (!resumable) return null
   }
-  const age = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age === null) return null
   // ⭐⭐⭐ ROUND 39 #9c – AN AGE IS ANSWERED ONCE, NOT A WEEK. The owner's save holds `day` at week
   // 569 and `dog` at week 570, BOTH age 24, born 21 December. Round 34 #3 moved the marked week for

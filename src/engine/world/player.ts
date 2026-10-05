@@ -243,6 +243,8 @@ export function kidMatchPlayerFor(
     profile: PlayerProfile
     condition: number
     week: number
+    /** v92 (SUCCESSION S1): the career's epoch year for her age clock. Optional so a hand-built slice means 2031. */
+    startYear?: number
     offers?: Offer[]
     /** W3-KIT (v37): the rung she is on per line. Optional for the same reason `offers` is - a pure
      *  caller that builds a player without a full world gets the shipped rung, byte-identical. */
@@ -391,7 +393,7 @@ export function kidMatchPlayerFor(
     applySurfaceStyle(
       {
         ...raw,
-        age: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
+        age: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
         // ⭐ AND THE CONDITION ITSELF, beside the factor it produced (27.08). `factor` is the
         // STRENGTH half of condition and it is already inside the five attributes below; this is the
         // BREAKABILITY half, which `retireHazard` reads through `retireDurability` and which nothing

@@ -96,7 +96,7 @@ export function assertPlannable(world: WorldState, week: number, kind: 'vacation
     const layoff = layoffCovering(world, week) // the shared R10-17 window
     if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
   }
-  if (isExamWeek(week, schoolIsOver(week, world.profile.birthMonth))) {
+  if (isExamWeek(week, schoolIsOver(week, world.profile.birthMonth, world.startYear))) {
     throw new Error('School exams that week – no matches, no trips')
   }
   if (kind === 'practice' && isOffSeasonWeek(week)) throw new Error('Off-season – family time, no matches')
@@ -156,11 +156,11 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
       week: world.week,
       type: 'expense',
       category: 'vacation',
-      text: `Booked: ${pkg.label} – ${weekLabel(week)}`,
+      text: `Booked: ${pkg.label} – ${weekLabel(week, world.startYear)}`,
       amountCents: -priceCents,
     })
   }
-  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – ${weekLabel(week)} (${pkg.label})` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – ${weekLabel(week, world.startYear)} (${pkg.label})` })
 }
 
 /** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
@@ -202,7 +202,7 @@ export function cancelVacation(world: WorldState, week: number): void {
       amountCents: booking.paidCents,
     })
   }
-  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – ${weekLabel(week)}` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – ${weekLabel(week, world.startYear)}` })
 }
 
 /** Book a practice match (a watchable friendly) on an empty future week: charges the court
@@ -230,10 +230,10 @@ export function bookPractice(world: WorldState, week: number, withCoach: boolean
     week: world.week,
     type: 'expense',
     category: 'practice',
-    text: withCoach ? `Court rental + coach – practice match ${weekLabel(week)}` : `Court rental – practice match ${weekLabel(week)}`,
+    text: withCoach ? `Court rental + coach – practice match ${weekLabel(week, world.startYear)}` : `Court rental – practice match ${weekLabel(week, world.startYear)}`,
     amountCents: -paidCents,
   })
-  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – ${weekLabel(week)}` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – ${weekLabel(week, world.startYear)}` })
 }
 
 /** Cancel a booked practice before its week starts: full refund of the rental. */

@@ -317,7 +317,7 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // moved, so it inherits the same attachment – the claim about every fixture BELOW v83 is untouched.
     // the only line that moved, the same probe career, the same two episode rows. The claim is
     // unchanged: every fixture BELOW v83 still runs the per-row walks zero times.
-    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json', 'v89.json', 'v90.json', 'v91.json'])
+    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json', 'v89.json', 'v90.json', 'v91.json', 'v92.json'])
   })
 
   it('⭐⭐⭐ back-fills all four fields on EVERY row – a live one and an ended one, in one payload', () => {

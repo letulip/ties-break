@@ -199,7 +199,7 @@ export function recurrenceTauFactor(world: WorldState): number {
  */
 export function severityEscalation(world: WorldState): number {
   const a = ECONOMY.availability
-  const age = a.severityAgeFactor[kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)]
+  const age = a.severityAgeFactor[kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)]
   const byAge = age ?? a.severityAgeFactor.default
   return Math.min(byAge * (1 + a.recurrence.severityBump * recurrenceLoad(world)), a.recurrence.severityFactorCap)
 }
@@ -266,7 +266,7 @@ export function injuryTau(world: WorldState): number {
   // fourteen-year-old's - so this is one of the places the girl and her age group genuinely differ, and a
   // December girl spends her first season on the 13 row. Contrast `entryCapUsage`, which correctly keys
   // off the BAND: the ITF's annual entry limit is a birth-year rule, and its own note says so.
-  tau *= ageInjuryFactor(kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay))
+  tau *= ageInjuryFactor(kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear))
   tau *= consecutivePlayFactor(playedWeeksInTrailing4(world))
   if (enteredScheduledThisWeek(world)) tau *= a.injuryPlayingMultiplier
   // R12-4/11: a booked family week is the opposite pole of the load axis above – she is not

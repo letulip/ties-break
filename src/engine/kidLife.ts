@@ -40,7 +40,7 @@ import { kidBirthYear } from './world/age'
 // the two from drifting apart. `weddingCopy` is a copy leaf (it imports a type and nothing else), so no
 // import cycle can form through it.
 import { togetherSpan } from './world/lifeBeat/weddingCopy'
-import { seasonYear } from '../shared/dates'
+import { DEFAULT_START_YEAR, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
 // ⭐ ROUND 42 #6 – TYPE-ONLY, so this leaf stays a leaf. `engine/spirit.ts` owns the union and the
 // two axis projections; nothing of its runtime comes here, and the arrow is erased at compile time
@@ -171,11 +171,11 @@ export function gradeOf(birthYear: number, birthMonth: number, schoolYearStart: 
  *  `gradeOf`'s own arithmetic solved for the year instead of the grade. Grade G runs from the
  *  September of `cohort + G + 6`, so the year after the last one is `cohort + lastGrade + 7`, and
  *  the career week of that September is `SCHOOL_YEAR_TURNS_AT` plus whole seasons since the epoch. */
-export function schoolEndWeek(birthMonth: number): number {
-  const cohort = schoolCohortYear(kidBirthYear(), birthMonth)
+export function schoolEndWeek(birthMonth: number, startYear: number = DEFAULT_START_YEAR): number {
+  const cohort = schoolCohortYear(kidBirthYear(startYear), birthMonth)
   // `seasonYear(0)` is the epoch year, so this is its inverse and there is no second definition of
   // what year a season is (shared/dates.ts owns that, here as everywhere else).
-  const seasonIndex = cohort + ECONOMY.school.lastGrade + 7 - seasonYear(0)
+  const seasonIndex = cohort + ECONOMY.school.lastGrade + 7 - seasonYear(0, startYear)
   return seasonIndex * WEEKS_PER_YEAR + SCHOOL_YEAR_TURNS_AT
 }
 
@@ -184,8 +184,8 @@ export function schoolEndWeek(birthMonth: number): number {
  *  ⚠ TAKES THE WEEK IT IS ASKED ABOUT, not "now". The calendar's look-ahead, the Season screen's
  *  rows and the planner all ask about FUTURE weeks, and a boolean captured at the current week would
  *  quietly paint a lesson block on a week she will not be at school in. */
-export function schoolIsOver(week: number, birthMonth: number): boolean {
-  return week >= schoolEndWeek(birthMonth)
+export function schoolIsOver(week: number, birthMonth: number, startYear: number = DEFAULT_START_YEAR): boolean {
+  return week >= schoolEndWeek(birthMonth, startYear)
 }
 
 /** ⭐⭐ THE NEXT 1 SEPTEMBER STRICTLY AFTER `week` – the week the next academic year opens on
@@ -216,8 +216,8 @@ export function nextAcademicYearStart(week: number): number {
  *  September, and 6 is that whole half of the band rather than one girl in it. It matters for one
  *  thing only: the extra recovery a blackout week pays, which the rivals must stop being paid at
  *  roughly the same time she does or the tour would quietly favour them for two weeks a year. */
-export function schoolIsOverForBand(week: number): boolean {
-  return schoolIsOver(week, 6)
+export function schoolIsOverForBand(week: number, startYear: number = DEFAULT_START_YEAR): boolean {
+  return schoolIsOver(week, 6, startYear)
 }
 
 /** Where she sits in her CLASS by age, 1 = the oldest. September-born first, August-born last -
@@ -320,7 +320,7 @@ export function lifeStageTile(view: KidLifeWorldView): KidLifeTile {
   // `kidBirthYear()` is the career constant `schoolEndWeek` already reads, which is what makes this
   // literally «the SAME arithmetic» as `schoolIsOver` rather than merely a similar one - the claim
   // the note on this tile's `note` branch depends on.
-  const birthYear = kidBirthYear()
+  const birthYear = kidBirthYear(view.startYear)
   // Which September the school year running NOW began in: this season's, once it has passed.
   const schoolYearStart = view.seasonYear - (pastSeptember(view.week) ? 0 : 1)
   const grade = gradeOf(birthYear, view.birthMonth, schoolYearStart)
@@ -338,9 +338,9 @@ export function lifeStageTile(view: KidLifeWorldView): KidLifeTile {
     // expressions agree on every (week, birthMonth) the game can produce - measured over all twelve
     // months and eight seasons in tests/school-ends.test.ts - so this costs nothing today and cannot
     // drift tomorrow.
-    note: isExamWeek(view.week, schoolIsOver(view.week, view.birthMonth))
+    note: isExamWeek(view.week, schoolIsOver(view.week, view.birthMonth, view.startYear))
       ? 'Exams this week'
-      : isSummerWeek(view.week)
+      : isSummerWeek(view.week, view.startYear)
         ? 'Summer break'
         : classStanding(view.birthMonth),
   }
@@ -349,7 +349,7 @@ export function lifeStageTile(view: KidLifeWorldView): KidLifeTile {
 /** WHICH RUNG THE TILE IS ON, as the heading above it. The one place the three stages are told
  *  apart, so the label, the tile and the sentence under the grid cannot disagree about her life. */
 export function stageLabelOf(view: KidLifeWorldView): string {
-  if (!schoolIsOver(view.week, view.birthMonth)) return STAGE_LABEL.school
+  if (!schoolIsOver(view.week, view.birthMonth, view.startYear)) return STAGE_LABEL.school
   return view.college?.studying ? STAGE_LABEL.college : STAGE_LABEL.after
 }
 
@@ -382,7 +382,7 @@ function afterSchoolTile(view: KidLifeWorldView): KidLifeTile {
   // THE YEAR SHE LEFT. `schoolEndWeek` is the September she would have started a thirteenth grade,
   // so this window is her first twelve months out - the one stretch in which the classroom is still
   // the most recent thing that happened to her.
-  if (view.week < schoolEndWeek(view.birthMonth) + WEEKS_PER_YEAR) {
+  if (view.week < schoolEndWeek(view.birthMonth, view.startYear) + WEEKS_PER_YEAR) {
     return { lead: 'The last bell', note: `${ECONOMY.school.lastGrade} years done` }
   }
   // 19 to 21: school is behind her and nothing has replaced it, which is the fact - `ECONOMY.school`
@@ -609,7 +609,7 @@ export function ownAccountCard(view: KidLifeWorldView): KidAccountView | null {
 export function schoolCutOffNote(view: KidLifeWorldView): string {
   if (view.birthMonth < SCHOOL_CUTOFF_MONTH) return ''
   const schoolYearStart = view.seasonYear - (pastSeptember(view.week) ? 0 : 1)
-  if (gradeOf(kidBirthYear(), view.birthMonth, schoolYearStart) === null) return ''
+  if (gradeOf(kidBirthYear(view.startYear), view.birthMonth, schoolYearStart) === null) return ''
   return (
     'School runs on a 1 September cut-off and her birthday falls after it – so her last school year ' +
     'ends the summer after she turns 18, a year later than girls born earlier in the same tennis year.'
@@ -871,7 +871,7 @@ export function friendsTile(view: KidLifeWorldView): KidLifeTile {
   const shapeRng = rngFromSeed(`${seedSafe(view.seed)}:friends:shape:${index}`)
   const lead = FRIEND_SHAPES[Math.floor(shapeRng() * FRIEND_SHAPES.length)](name)
 
-  const schoolOver = schoolIsOver(view.week, view.birthMonth)
+  const schoolOver = schoolIsOver(view.week, view.birthMonth, view.startYear)
   const facts: FriendFacts = {
     injured: view.injured,
     schoolOver,
@@ -904,6 +904,9 @@ function seedSafe(seed: string): string {
 export interface KidLifeWorldView {
   seed: string
   week: number
+  /** ⭐ v92 (SUCCESSION S1) – the career's epoch year (`world.startYear`). OPTIONAL so a view built by hand keeps
+   *  compiling and means 2031, which is what every view built before the wave meant. */
+  startYear?: number
   /** HER age in whole years, off her own birth date (`kidAgeAt`) - not the 14 + season-index band it
    *  used to be (one-clock ruling, 09.08).
    *

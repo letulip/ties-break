@@ -3357,6 +3357,25 @@ export function migrateSave(raw: unknown): WorldState {
     v = 91
   }
 
+  // ⭐⭐⭐ v91 -> v92 – THE SUCCESSION BLOCK (SUCCESSION S1, 06.10; docs/specs/succession-2026-10.md §2 and §5). ONE
+  // REQUIRED KEY ON THE WORLD – `startYear`, the calendar year season 0 opens in – AND ONE OPTIONAL BLOCK, `legacy?`,
+  // declared TOGETHER so the later steps of the wave add no second bump. Only `startYear` is written here.
+  //
+  // ⚠⚠ THE BACKFILL IS EXACT AND NOTHING IS RECONSTRUCTED. Until this version the epoch was a CONSTANT in
+  // shared/dates.ts, so every career ever saved began in January 2031 by construction – there is nothing to infer,
+  // no field to read it from and no way for it to have been anything else. ⚠ THE LITERAL IS DELIBERATE: a shipped
+  // migration states the year it means instead of following `DEFAULT_START_YEAR`, because a constant that can move
+  // would silently re-date every old career the day it did.
+  // ⚠ `legacy` IS LEFT ABSENT, which is what a generation-1 career is: the block exists only on a career born from a
+  // finished one (S2), and a save with no mother's career behind it has nothing to say.
+  // ⚠ Defensive for the append-only reason v30 states: an existing key is left alone (`??=`).
+  // ⚠ ZERO DRAWS, no sub-stream: a calendar fact and not a roll – the frozen MAIN capture (41550 / e6b0c709) is
+  // untouched by construction.
+  if (v === 91) {
+    save.startYear ??= 2031
+    v = 92
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -517,14 +517,14 @@ export function seasonWrapsWithNoVacation(world: WorldState): boolean {
  */
 function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): number {
   const p = ECONOMY.spirit.perturb
-  const schoolOver = schoolIsOver(world.week, world.profile.birthMonth)
+  const schoolOver = schoolIsOver(world.week, world.profile.birthMonth, world.startYear)
   let d = 0
   if (world.injury !== null) {
     d += world.injury.sinceWeek === world.week ? p.injuryOnset : p.laidUpWeek
   }
   if (knockGoverns(world.knock, world.week) && world.knock?.choice === 'push') d += p.knockPushedWeek
   if (vacationForWeek(world, world.week) !== undefined) d += p.vacationResolved
-  if (birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay) !== null) {
+  if (birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear) !== null) {
     d += p.birthdayWeek
   }
   if (isExamWeek(world.week, schoolOver) && world.plan.train >= ECONOMY.spirit.examTrainFloor) {

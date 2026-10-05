@@ -4,7 +4,7 @@
 // imports these values with no runtime cycle. Only `markBirthday` touches the world; everything else
 // is pure arithmetic over (week, birthMonth, birthDay) and draws on no RNG stream at all.
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { daysInBirthMonth, weekMonth, weekOfDate, weekStartDay, weekYear } from '../../shared/dates'
+import { DEFAULT_START_YEAR, daysInBirthMonth, weekMonth, weekOfDate, weekStartDay, weekYear } from '../../shared/dates'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 
@@ -69,9 +69,12 @@ export function ageAtWeek(week: number): number {
 }
 
 /** Her BIRTH YEAR: the band's year, which is the same for every girl in it. The career opens in the
- *  January of `seasonYear(0)`, so a girl in the START_AGE band was born START_AGE years before it. */
-export function kidBirthYear(): number {
-  return weekYear(0) - START_AGE_YEARS
+ *  January of `seasonYear(0)`, so a girl in the START_AGE band was born START_AGE years before it.
+ *
+ *  ⭐ S1 (06.10): `startYear` is the CAREER'S epoch year (`world.startYear`) – 2034 for a 2048 career. Omitted, it
+ *  is 2031 and the answer is the 2017 every shipped career has always had. */
+export function kidBirthYear(startYear: number = DEFAULT_START_YEAR): number {
+  return weekYear(0, startYear) - START_AGE_YEARS
 }
 
 /** HER REAL AGE in `week`, fractional, off the game's own calendar.
@@ -79,14 +82,14 @@ export function kidBirthYear(): number {
  *  A January girl is 14.0 at week 0; a December girl is 13.08 and does not turn 14 until week ~48. Feeds
  *  development (`growWeek`), her eligibility allowance, the injury table and every surface that prints an
  *  age - everything, in short, that is about the GIRL rather than about her age group. */
-export function kidAgeExact(week: number, birthMonth: number, birthDay: number): number {
+export function kidAgeExact(week: number, birthMonth: number, birthDay: number, startYear: number = DEFAULT_START_YEAR): number {
   const { month, day } = birthDate(birthMonth, birthDay)
-  const year = weekYear(week)
-  const m = weekMonth(week)
-  const d = weekStartDay(week)
+  const year = weekYear(week, startYear)
+  const m = weekMonth(week, startYear)
+  const d = weekStartDay(week, startYear)
   // Has her birthday in THIS calendar year already arrived, by the Monday this week starts on?
   const turned = m > month || (m === month && d >= day)
-  const whole = year - kidBirthYear() - (turned ? 0 : 1)
+  const whole = year - kidBirthYear(startYear) - (turned ? 0 : 1)
   // Months elapsed since that birthday, with the day carried as a fraction of the current month, so
   // the answer rises smoothly inside the year and crosses New Year without a step.
   // ⚠⚠ THE WHOLE YEAR COMES FROM THE DATE TEST ALONE, AND THE FRACTION MAY NEVER MOVE IT. Both drafts
@@ -106,8 +109,8 @@ export function kidAgeExact(week: number, birthMonth: number, birthDay: number):
 }
 
 /** ...and the whole-years version, which is what the age-keyed tables want. */
-export function kidAgeYears(week: number, birthMonth: number, birthDay: number): number {
-  return Math.floor(kidAgeExact(week, birthMonth, birthDay))
+export function kidAgeYears(week: number, birthMonth: number, birthDay: number, startYear: number = DEFAULT_START_YEAR): number {
+  return Math.floor(kidAgeExact(week, birthMonth, birthDay, startYear))
 }
 
 /** HER AGE IN `week`, whole years, read off the world's own profile - the ONE clock, at the call sites
@@ -119,7 +122,7 @@ export function kidAgeYears(week: number, birthMonth: number, birthDay: number):
  *  world.profile.birthMonth)`. One name means a later question about which age a rule reads has one
  *  place to be answered, and it is why `git grep kidAgeAt` is the audit of the ruling. */
 export function kidAgeAt(world: WorldState, week: number): number {
-  return kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay)
+  return kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
 }
 
 /** THE FIRST WEEK OF THE AGE-YEAR CONTAINING `week` – the opening of her birthday-to-birthday window
@@ -146,7 +149,7 @@ const WINDOW_START_MEMO = new Map<string, number>()
 
 export function ageWindowStartWeek(world: WorldState, week: number): number {
   const birthMonth = world.profile.birthMonth
-  const key = `${birthMonth}:${Math.floor(week)}`
+  const key = `${world.startYear}:${birthMonth}:${Math.floor(week)}`
   const hit = WINDOW_START_MEMO.get(key)
   if (hit !== undefined) return hit
   const age = kidAgeAt(world, week)
@@ -220,12 +223,12 @@ function birthDate(birthMonth: number, birthDay: number): { month: number; day: 
  *  marked birthday is her fifteenth. The six dates 7-12 January used to be announced AT week 0 as
  *  «turning 14» while Home printed 13 – the owner's own complaint, in the first week of the game –
  *  and are marked in week 1 now, where the two agree. */
-function birthdayYearIn(week: number, birthMonth: number, birthDay: number): number | null {
+function birthdayYearIn(week: number, birthMonth: number, birthDay: number, startYear: number): number | null {
   const { month, day } = birthDate(birthMonth, birthDay)
-  const monday = weekYear(week)
+  const monday = weekYear(week, startYear)
   if (week <= 0) return null
   for (const year of [monday - 1, monday, monday + 1]) {
-    if (mondayOnOrAfter(week, month, day, year) && !mondayOnOrAfter(week - 1, month, day, year)) {
+    if (mondayOnOrAfter(week, month, day, year, startYear) && !mondayOnOrAfter(week - 1, month, day, year, startYear)) {
       return year
     }
   }
@@ -234,12 +237,12 @@ function birthdayYearIn(week: number, birthMonth: number, birthDay: number): num
 
 /** Is the Monday that opens `week` on or after (`month`, `day`) of `year`? The three scalar readers
  *  composed into one date comparison – see `weekStartDay` in shared/dates.ts for why they are scalars. */
-function mondayOnOrAfter(week: number, month: number, day: number, year: number): boolean {
+function mondayOnOrAfter(week: number, month: number, day: number, year: number, startYear: number): boolean {
   if (week < 0) return false
-  const wy = weekYear(week)
+  const wy = weekYear(week, startYear)
   if (wy !== year) return wy > year
-  const wm = weekMonth(week)
-  return wm > month || (wm === month && weekStartDay(week) >= day)
+  const wm = weekMonth(week, startYear)
+  return wm > month || (wm === month && weekStartDay(week, startYear) >= day)
 }
 
 /** The career week that MARKS her birthday for the calendar year containing `week`, or null if the
@@ -259,17 +262,17 @@ function mondayOnOrAfter(week: number, month: number, day: number, year: number)
  *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had
  *  her birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
  *  compares against the current week, so that resolves itself. */
-export function birthdayWeek(week: number, birthMonth: number, birthDay: number): number | null {
-  if (birthdayYearIn(week, birthMonth, birthDay) !== null) return week
+export function birthdayWeek(week: number, birthMonth: number, birthDay: number, startYear: number = DEFAULT_START_YEAR): number | null {
+  if (birthdayYearIn(week, birthMonth, birthDay, startYear) !== null) return week
   const { month, day } = birthDate(birthMonth, birthDay)
-  const year = weekYear(week)
-  const at = weekOfDate(month, day, year)
+  const year = weekYear(week, startYear)
+  const at = weekOfDate(month, day, year, startYear)
   // A date the calendar has no career week for has no week CONTAINING it either, and that is the one
   // honest absence here (see `weekOfDate`). Otherwise the mark is that week when its Monday has already
   // reached the date, and the next one when it has not – the Monday after `at` is always past a date
   // inside `at`, whatever the season re-anchor does to the gap between them.
   if (at === null) return null
-  return mondayOnOrAfter(at, month, day, year) ? at : at + 1
+  return mondayOnOrAfter(at, month, day, year, startYear) ? at : at + 1
 }
 
 /** Is `week` her birthday week, and if so what age does she turn? Null on every other week.
@@ -296,9 +299,9 @@ export function birthdayWeek(week: number, birthMonth: number, birthDay: number)
  *  said fourteen – and the licence is withdrawn: this fires in the week her age CHANGES, so the two
  *  agree everywhere. See `birthdayYearIn` for his words, the fix he chose and the measurement. Still no
  *  age-keyed gate moves – `kidAgeExact` is untouched, which is the whole point of moving this instead. */
-export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
-  const year = birthdayYearIn(week, birthMonth, birthDay)
-  return year === null ? null : year - kidBirthYear()
+export function birthdayTurning(week: number, birthMonth: number, birthDay: number, startYear: number = DEFAULT_START_YEAR): number | null {
+  const year = birthdayYearIn(week, birthMonth, birthDay, startYear)
+  return year === null ? null : year - kidBirthYear(startYear)
 }
 
 /** ⭐⭐ THE AGE SHE REACHES BY THE END OF `week` – her age, plus a birthday that lands INSIDE it.
@@ -322,7 +325,7 @@ export function birthdayTurning(week: number, birthMonth: number, birthDay: numb
  *  ask off her birthday to school's end («пункт 5 запускай как обсудили» – `forkDue` reads
  *  `schoolIsOver` now, docs/specs/college-departure-2026-08.md). */
 export function kidAgeThroughWeek(world: WorldState, week: number): number {
-  const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay)
+  const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   return Math.max(kidAgeAt(world, week), turning ?? -1)
 }
 
@@ -369,7 +372,7 @@ const AGE_WORDS: Record<number, string> = {
  *  contradicted by a gift dialog asked THAT week. One sentence for every birthday of her life; where
  *  she is that week is told by the shell around it and by the gift she is asked about. */
 export function markBirthday(world: WorldState): void {
-  const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (turning === null) return
   const words = ageInWords(turning)
   addEvent(world, {

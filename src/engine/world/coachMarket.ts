@@ -1900,7 +1900,7 @@ function askWeekAtOrAfter(week: number): number {
  *  Null while the save carries no peak, while she is further out than the window, and on any world
  *  whose body never reaches the band inside the walk's forty-year cap. */
 export function lastWinterIn(world: WorldState): number | null {
-  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age < ENDINGS.askFromAgeYears) return null
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const years = seasonsOfBodyLeft(world, bounds, age, ENDINGS.lastOfferPeakShare)
@@ -1978,7 +1978,7 @@ type DeclineRead = { seasons: number; yearMove: number | null; belowBest: number
 
 function declineRead(world: WorldState): DeclineRead | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
-  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age < bounds.declineStart) return null
   const years = seasonsOfBodyLeft(world, bounds, age)
   if (years === null) return null

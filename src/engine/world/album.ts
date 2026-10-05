@@ -306,7 +306,7 @@ export function slotBestWeek(world: WorldState): AlbumPage {
       4,
       'She never won a title – this is the highest she ever stood',
       'Number ' + closed.rank,
-      `#${closed.rank} at the close of ${seasonYear(closed.seasonIndex)}`,
+      `#${closed.rank} at the close of ${seasonYear(closed.seasonIndex, world.startYear)}`,
       closed.week,
       'serious',
     )
@@ -357,7 +357,7 @@ export function slotWorstWeek(world: WorldState): AlbumPage {
       5,
       `The season the table took ${worst.fall} places off her`,
       'Nobody said much that winter',
-      `Closed ${seasonYear(worst.seasonIndex)} at #${worst.endRank}`,
+      `Closed ${seasonYear(worst.seasonIndex, world.startYear)} at #${worst.endRank}`,
       worst.week,
       'sad',
     )
@@ -525,7 +525,7 @@ export function buildScroll(world: WorldState): ScrollSeason[] {
     if (!season) {
       season = {
         seasonIndex,
-        year: seasonYear(seasonIndex),
+        year: seasonYear(seasonIndex, world.startYear),
         ageYears: ageAt(world, seasonIndex * WEEKS_PER_YEAR),
         rows: [],
       }

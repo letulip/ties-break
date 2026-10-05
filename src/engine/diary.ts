@@ -52,7 +52,7 @@ import {
   type SpiritBand,
 } from './spirit'
 import { rngFromSeed } from './rng'
-import { seasonYear, weekLabel } from '../shared/dates'
+import { DEFAULT_START_YEAR, seasonYear, weekLabel } from '../shared/dates'
 // W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
 // note at the top of body.ts for why the twelve parts do not live in world.ts any more.
 import {
@@ -515,7 +515,7 @@ export function greetingFor(facts: DiaryFacts, photoLine: string | null, seed: s
  *  and the honesty pin holds each line's template to its milestone's own payload). */
 export interface MemoryLine {
   type: MilestoneType
-  text: (m: Milestone) => string
+  text: (m: Milestone, startYear?: number) => string
 }
 
 /** How long a memory line may be. The Memory polaroid is a `card-short` (138px) in Home's 2x2 grid,
@@ -550,8 +550,8 @@ export const MEMORY_LINES: readonly MemoryLine[] = [
   // lying: every `season-rank` milestone ever written holds the international number, so naming
   // that table is simply saying what the field already means. What a track WOULD buy is printing
   // the professional rank for an adult, which is a different and larger change - reported, not made.
-  { type: 'season-rank', text: (m) => `Season ${seasonYear(m.seasonIndex ?? 0)}: #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
-  { type: 'season-rank', text: (m) => `She ended ${seasonYear(m.seasonIndex ?? 0)} #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
+  { type: 'season-rank', text: (m, startYear) => `Season ${seasonYear(m.seasonIndex ?? 0, startYear)}: #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
+  { type: 'season-rank', text: (m, startYear) => `She ended ${seasonYear(m.seasonIndex ?? 0, startYear)} #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
 ]
 
 /** How old a MILESTONE has to be before she remembers it rather than just having done it.
@@ -596,12 +596,12 @@ const DEBUT_LINES: readonly string[] = [
   'The first walk through those gates.',
 ]
 
-function debutMemory(week: number, seed: string, kidAgeAt: (week: number) => number): MemoryCard {
+function debutMemory(week: number, seed: string, kidAgeAt: (week: number) => number, startYear: number): MemoryCard {
   const rng = rngFromSeed(`${seed}:memory:debut:${week}`)
   return {
     kind: 'debut',
     milestone: null,
-    whenLabel: weekLabel(0),
+    whenLabel: weekLabel(0, startYear),
     // D-01: her age IN WEEK 0, not the band's opening number. They differ by a year for every girl
     // whose birthday has not come round yet when the career opens.
     stage: portraitStage(kidAgeAt(0)),
@@ -636,12 +636,13 @@ export function selectMemory(
   week: number,
   seed: string,
   kidAgeAt: (week: number) => number,
+  startYear: number = DEFAULT_START_YEAR,
 ): MemoryCard | null {
   if (week < MEMORY_DEBUT_WEEKS) return null
   const aged = milestones.filter((m) => week - m.week >= MEMORY_MIN_WEEKS)
   // An anniversary is the one thing loud enough to interrupt the rotation.
   const anniversary = aged.find((m) => Math.abs(week - 52 - m.week) <= MEMORY_ANNIVERSARY_TOLERANCE)
-  const debut = debutMemory(week, seed, kidAgeAt)
+  const debut = debutMemory(week, seed, kidAgeAt, startYear)
   if (!anniversary && aged.length === 0) return debut
   // The album, oldest first: the opening week, then the milestones in capture order.
   const pick = anniversary ?? (week % (aged.length + 1) === 0 ? null : aged[(week % (aged.length + 1)) - 1])
@@ -649,11 +650,11 @@ export function selectMemory(
   const lines = MEMORY_LINES.filter((l) => l.type === pick.type)
   if (lines.length === 0) return debut
   const lineRng = rngFromSeed(`${seed}:diary:${week}:memory`)
-  const line = lines[Math.floor(lineRng() * lines.length)].text(pick)
+  const line = lines[Math.floor(lineRng() * lines.length)].text(pick, startYear)
   return {
     kind: anniversary ? 'anniversary' : pick === aged[aged.length - 1] ? 'recent' : 'echo',
     milestone: pick,
-    whenLabel: anniversary ? 'one year ago' : weekLabel(pick.week),
+    whenLabel: anniversary ? 'one year ago' : weekLabel(pick.week, startYear),
     // ⭐ D-01: HER AGE AT THE MILESTONE'S WEEK, off the one clock. This read
     // `startAgeYears + Math.floor(pick.week / 52)` – the band clock – which paints a girl born late
     // in the year as the next stage up for most of the year the boundary falls in. The card's own
@@ -721,6 +722,6 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
     conditionNote: diaryLine('condition', facts, view.seed) ?? 'The week went by.',
-    memory: selectMemory(view.milestones, view.week, view.seed, view.kidAgeAt),
+    memory: selectMemory(view.milestones, view.week, view.seed, view.kidAgeAt, view.startYear),
   }
 }

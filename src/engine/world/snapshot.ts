@@ -1696,7 +1696,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // Keep this structural instead of importing `inCollege`: college.ts already depends on this
     // projection module for ladder presentation, and the diary must not create a runtime cycle.
     inCollege: world.college !== null && world.week < world.college.untilWeek,
-    schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
+    schoolOver: schoolIsOver(world.week, world.profile.birthMonth, world.startYear),
     kidId: KID_ID,
     // ⭐⭐ D-01 (05.09 review) – THE CLOCK ITSELF, NOT ITS STARTING NUMBER. This handed the diary
     // `START_AGE_YEARS` and the diary rebuilt every age from it by adding completed seasons; that
@@ -1705,6 +1705,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // keeps the 09.08 one-clock ruling's single spelling and lets the Memory card ask about the week
     // a milestone happened in, which is what it paints.
     kidAgeAt: (week: number) => kidAgeAt(world, week),
+    startYear: world.startYear,
     condition: shownCondition,
     // ⭐⭐ v72 – HER TWO NUMBERS AND WHO SHE IS, handed to the diary RAW and banded there (the one
     // reading, beside the one emotion decision). ⚠ THEY GO NO FURTHER: `Snapshot` itself carries no
@@ -1860,7 +1861,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // actually charges (see its note: growWeek at 3b, rollKnock at 3c), so the frame and the words now
     // agree with the arithmetic instead of with each other.
     // ...and the one week a year that is about HER rather than about tennis.
-    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay),
+    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     // ⭐ v48: ...AND WHAT HE GAVE HER FOR IT. Folded here rather than in the diary because the diary
     // is a reporter and owns no catalogue: it is handed a NOUN and a pair of booleans, and prints them.
     //
@@ -1892,7 +1893,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // said «She is sixteen this week» at week 154: fifty weeks apart, both from the engine, and it was
     // the first thing the owner saw. One clock now, and `birthdayTurning` below reads the same one.
     ageYears: kidAgeAt(world, world.week),
-    schoolEndsWeek: schoolEndWeek(world.profile.birthMonth),
+    schoolEndsWeek: schoolEndWeek(world.profile.birthMonth, world.startYear),
     // ⭐⭐⭐ ROUND 24 #5 – the week she leaves for college, in its two live states (see the field's
     // own doc in protocol.ts): the OPEN fork shows the prospective September the college answer
     // would book; the HOLD shows the booked one. Null everywhere else – enrolled, terminal ending
@@ -2114,6 +2115,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // announced wedding's week, and the dev boost's state (the worker's own flag, in no save).
     lifeMoment: lifeMomentOf(world),
     weddingWeek: upcomingWeddingWeek(world),
+    startYear: world.startYear,
     devLifeBoost: lifeEventBoostOn(),
     // ⭐⭐⭐ v85 T10 – WHICH PREGNANCY PAINTING THE WEEK WEARS, and the ONE fact of `world.pregnancy`
     // that crosses to the UI. The record itself stays engine-side (T1's own ruling); the window is
@@ -2348,6 +2350,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // draws. Same discipline as the diary - derived at SNAPSHOT time off `seed:friends:*`
     // sub-streams, zero MAIN draws, so the frozen capture (41550 / e6b0c709) cannot move.
     life: buildKidLife({
+      startYear: world.startYear,
       seed: world.seed,
       week: world.week,
       // HER age, the same one the header prints – the School tile already takes `birthMonth` below,
@@ -2355,7 +2358,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       ageYears: kidAgeAt(world, world.week),
       // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
       // arithmetic can never disagree with the year the rest of the game prints.
-      seasonYear: seasonYear(seasonIndexOf(world.week)),
+      seasonYear: seasonYear(seasonIndexOf(world.week), world.startYear),
       // ⭐⭐ ROUND 42 #6 – WHO SHE WAS BORN AS, and the Personality tile's only input.
       //
       // ⚠⚠ `world.temperament` AND NEVER `expressedTemperamentOf(world)`. The tile is a VOICE site,
@@ -2468,7 +2471,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     fork: world.fork && world.fork.answer === null
       ? {
           askedWeek: world.fork.askedWeek,
-          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth, world.profile.birthDay),
+          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth, world.profile.birthDay, world.startYear),
           // ⭐⭐ THE OFFER, STRAIGHT OFF PERSISTED STATE (v51). It is measured once, the week the fork
           // is raised, and it is not recomputed here – a snapshot that re-derived it would answer a
           // different question on the week a constant moved, and this one is money.

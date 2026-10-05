@@ -205,8 +205,8 @@ export function collegePausedShareYears(world: WorldState): number {
   const lastInside = Math.min(world.week, college.untilWeek - 1)
   if (lastInside < college.fromWeek) return 0
   const { birthMonth, birthDay } = world.profile
-  const enter = kidAgeYears(college.fromWeek, birthMonth, birthDay)
-  const leave = kidAgeYears(lastInside, birthMonth, birthDay)
+  const enter = kidAgeYears(college.fromWeek, birthMonth, birthDay, world.startYear)
+  const leave = kidAgeYears(lastInside, birthMonth, birthDay, world.startYear)
   return Math.max(0, leave - Math.max(enter, ECONOMY.kidShare.fromAgeYears))
 }
 
@@ -306,7 +306,7 @@ export function callUpLetterWeek(world: WorldState): boolean {
 export function callUpFor(world: WorldState, week: number): CallUp | null {
   return rollCallUp(
     {
-      ageYears: kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay),
+      ageYears: kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
       skillMean: skillMeanOf(world.skills),
       // ⭐⭐⭐ ROUND 24 – THE LETTER IS EARNED NOW. The owner, 21.08: «вызов в сборную можно будет
       // опереть на результаты студенческого». `lastLeagueRun` is the championship the selectors have
@@ -712,7 +712,7 @@ export function collegeNextStop(world: WorldState): CollegeStop {
     // ...and her birthday gets there first. The same two conditions `pendingBirthday` asks – the
     // date, and that this one has not already been answered – because it is the same pause.
     if (
-      birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay) !== null &&
+      birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay, world.startYear) !== null &&
       !world.birthdays.some((b) => b.week === week)
     ) {
       return null
@@ -1213,7 +1213,7 @@ export function collegeEpilogueLine(world: WorldState): string {
   const banked = college.years.reduce((sum, y) => sum + y.fundsDeltaCents, 0)
   const calls = college.years.filter((y) => y.callUp !== null).length
   const rank = kidLadderRank(world, 'wta')
-  const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   const played =
     calls === 0
       ? 'Her country never called'

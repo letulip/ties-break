@@ -35,7 +35,7 @@
 // layer's spelling to, which is what keeps the two spellings from drifting apart.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import type { TierId } from '../season/types'
-import { weekSpan } from '../../shared/dates'
+import { DEFAULT_START_YEAR, weekSpan } from '../../shared/dates'
 import { paintedStemFor, portraitStage } from '../../shared/avatarEmotion'
 import { finishedTheCourse } from '../../shared/avatarEmotion'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
@@ -1372,13 +1372,13 @@ export const ALBUM_TIER_STEP: Record<TierId, AlbumTierStep> = {
   slam: 'elite',
 }
 
-function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): AlbumTicket {
+function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>, startYear: number = DEFAULT_START_YEAR): AlbumTicket {
   return {
     tier: TIERS[c.tier!].label,
     step: ALBUM_TIER_STEP[c.tier!],
     stage: c.finish === undefined ? '' : finishLabel(c.finish),
     venue: flavour.venue,
-    dateLabel: c.week === null ? '' : weekSpan(c.week),
+    dateLabel: c.week === null ? '' : weekSpan(c.week, startYear),
     gate: flavour.gate,
     seat: flavour.seat,
     row: flavour.row,
@@ -1400,10 +1400,10 @@ function tagOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): Album
 // §7 SHEETS AND CHAPTERS
 // =================================================================================================
 
-function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate[] = [c]): AlbumNote {
+function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate[] = [c], startYear: number = DEFAULT_START_YEAR): AlbumNote {
   return {
     text: hand.note,
-    dateLabel: c.week === null ? null : weekSpan(c.week),
+    dateLabel: c.week === null ? null : weekSpan(c.week, startYear),
     ageLabel: ageLabelOf(c.ageYears),
     // ⭐ v86 – `[]` on every candidate that carries no checklist, which is almost all of them: the
     // ruled form exists in the shape and had no writer until the dynasty needed to print numbers a
@@ -1476,9 +1476,9 @@ function sheetsOf(
       chapterTitle: title,
       ageLabel: chapterAgeLabel,
       frames: distinctFramesOf(world, own, voice),
-      note: noteOf(lead, hand, own),
+      note: noteOf(lead, hand, own, world.startYear),
       line: hand.line,
-      ticket: layout === 'B' && tournament ? ticketOf(tournament, flavour) : null,
+      ticket: layout === 'B' && tournament ? ticketOf(tournament, flavour, world.startYear) : null,
       tag: layout === 'C' && tournament ? tagOf(tournament, flavour) : null,
       patch: layout === 'A' ? patch : null,
       doodles: [DOODLE_BY_KIND[lead.occasion.kind] ?? DOODLES[flavour.doodle]],

@@ -42,7 +42,7 @@ import type { WorldState } from '../world'
 
 /** Is she out of school this week? The world's own answer, so no caller re-derives it. */
 export function pastSchool(world: WorldState): boolean {
-  return schoolIsOver(world.week, world.profile.birthMonth)
+  return schoolIsOver(world.week, world.profile.birthMonth, world.startYear)
 }
 
 /**
@@ -62,7 +62,7 @@ export function pastSchool(world: WorldState): boolean {
  *     would otherwise multiply into something that is neither.
  */
 export function summerBlockWeek(world: WorldState): boolean {
-  if (!isSummerWeek(world.week) && !pastSchool(world)) return false
+  if (!isSummerWeek(world.week, world.startYear) && !pastSchool(world)) return false
   if (world.injury !== null) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
   if (isCompetitionWeek(world)) return false

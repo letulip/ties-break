@@ -3033,6 +3033,7 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // The wave adds no MAIN draw anywhere (the spec's §8 row 8 predicts it), so a red freeze beside this
 // re-stamp would mean something other than the weight moved.
 export const FROZEN = {
+  // ⭐ RE-STAMPED 06.10.2026 (SUCCESSION S1, v92) – THE ELEVEN LIVE CELLS moved for the version number AND the new key `startYear`; `PRE_V92` holds the v91 values and `careerHashAtSchema(·, ·, 91)` returns them, so the careers under them did not move.
   /** ⭐⭐⭐ RE-STAMPED 14.09.2026 – THE ELEVEN LIVE CONSTANTS, FOR THE SEVENTH v76 KEY (the owner's
    *  elite-gate ruling; state.ts's amendment note carries why the unshipped step could take it).
    *  `peakDomesticPoints` joins the live serialisation, so every register that hashes the live
@@ -3493,7 +3494,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '74536331e5703ddbe42d80d2a091d14cfa848b43747fa0d6a6a62f65e9daa8ad',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: 'e4006d546193214d6be068223de2e283faca59bfe0597de32cbed9ebf567248d',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -3622,7 +3623,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: '6bab256fca7fcd2bc748cc6a52d32a200f1c74cf03a3747b384a4959d901d46a',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '5b1a68c1582ee7b6c716b1b3778ae1abd86d6c17c64d0d23ab4a60aa57375ade',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -3862,7 +3863,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: '9f51d942c6437dbdb69ec1b96222099dfe852bdeadb0d4ae461152d08f9f3157',}
+  selfTravelling: '8f8e2f95df855b63804c0ec8e6426986b18cc0108a1bb51b565b0edac80b7024',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -4336,6 +4337,21 @@ export const PRE_V85 = {
  *  them does not. v85's third-key rung is the mirror of this one – there `schemaVersion` was the
  *  ONE line that did NOT move, and the reason was the same: the hash sees the version and the shape
  *  separately. */
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v91 – AND THE RUNG WHOSE PEEL REALLY REMOVES A KEY FROM EVERY CAREER. v92 (SUCCESSION S1, 06.10) writes
+ *  `startYear` on EVERY world, right after `week`, so `careerHashAtSchema` gains a rung that DROPS it for every rollback below 92 – unlike v88 to v91, whose
+ *  peels removed nothing from a frozen career. The rollback to 91 returns the v91 CAREER on all three, character for character: that is the byte-identity claim
+ *  «a default-2031 career is its v91 self minus the one new key», MEASURED over three 156-week careers instead of argued.
+ *
+ *  ⚠ MEASURED, NOT PREDICTED: the three values below are the three `FROZEN` constants this branch held at v91 (7df39c35), read out of this file BEFORE the
+ *  re-stamp, and `careerHashAtSchema(·, ·, 91)` returns them on the tree WITH the bump – the stage that wrote this block refused to continue otherwise.
+ *  ⚠ AND THE ELEVEN LIVE CELLS RE-STAMP, as at every bump: the version number is inside the hash and this time the key is too – `FROZEN`'s three,
+ *  `PRE_R28B`'s five (its trio shares these cells) and `PRE_NAME_VERA`'s three all moved while the career under them did not. */
+export const PRE_V92 = {
+  middleGrinder: '74536331e5703ddbe42d80d2a091d14cfa848b43747fa0d6a6a62f65e9daa8ad',
+  eliteGrinder: '6bab256fca7fcd2bc748cc6a52d32a200f1c74cf03a3747b384a4959d901d46a',
+  selfTravelling: '9f51d942c6437dbdb69ec1b96222099dfe852bdeadb0d4ae461152d08f9f3157',
+}
+
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v90 – AND THE FOURTH RUNG IN A ROW WHOSE PEEL DOES NOTHING. v91 (round 45 #5, the
  *  first-touch latch) adds ONE optional key to the world, `firstNo1?`, and it is created LAZILY – only the week `recomputeKidRank` first sees
  *  her number one on a table – so a career that never reaches #1 serialises exactly as before. None of the three frozen careers does inside
@@ -4779,9 +4795,9 @@ export const PRE_V69 = {
  *  birth and the old-name career still comes back exactly, on the new world as on the old. The
  *  02.09 identity is about a name, and no part of v79 touches one. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'a988cc2e4ab1a0c6430da12e2cec3a34f357e9daa0442f2a69e60a90b61c7337',
-  eliteGrinder: 'd23c97872a8f57b9c3266df4e0e5843ed9002ab15b82a529a77754f193b3b151',
-  selfTravelling: '7da0459b41ce5fc44321595e2c1710156dd0969e278678cbc4892451855db0c7',}
+  middleGrinder: '18bc91be5fdf1bc0e4b2be36d4ea966db3871a897725de66970b85a1f71d24d7',
+  eliteGrinder: '809a181fe952ea12fd66ebedef9672bbb0ca77a7b1c63bad18fc53a2e2c4f2ce',
+  selfTravelling: 'b342379d688051d3c3b073ab37d35372d8d2d76182ce9895070328bf95d160fd',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -5124,9 +5140,9 @@ export const PRE_V66 = {
  *  differs from `live` on 6/1. The rule this constant exists for is untouched by the wave; only the
  *  careers under it moved. */
 export const PRE_R28B = {
-  middleGrinder: '74536331e5703ddbe42d80d2a091d14cfa848b43747fa0d6a6a62f65e9daa8ad',
-  eliteGrinder: '6bab256fca7fcd2bc748cc6a52d32a200f1c74cf03a3747b384a4959d901d46a',
-  selfTravelling: '9f51d942c6437dbdb69ec1b96222099dfe852bdeadb0d4ae461152d08f9f3157',
+  middleGrinder: 'e4006d546193214d6be068223de2e283faca59bfe0597de32cbed9ebf567248d',
+  eliteGrinder: '5b1a68c1582ee7b6c716b1b3778ae1abd86d6c17c64d0d23ab4a60aa57375ade',
+  selfTravelling: '8f8e2f95df855b63804c0ec8e6426986b18cc0108a1bb51b565b0edac80b7024',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to
    *  `bea3d58e` and bisects it). The one career in this file whose inbox the window rule actually
@@ -5134,7 +5150,7 @@ export const PRE_R28B = {
    *  155 by the window, and it is still `open` at the 156-week horizon instead of expired. MEASURED on
    *  a tree that ran the old rule (offers.ts:965 and :1059 reverted in a copy of this mid-merge tree),
    *  not produced by the helper it is asserted against. */
-  highPlayer: '1631247cdc72133cbd9b3d42baca8cb89bd806248e7556af9be1d51c1b1c1e82',
+  highPlayer: '287f28259277d0fc95c2e0d4202ed1295e30b71e297082d02f0b27e3b18aed50',
   /** ⭐ PRESETS[5] · 25k middle · middle coach · PLAYER policy – THE EXPIRED-LETTER WITNESS, and the
    *  only career here that exercises the `decidedWeek` rewind. `kit-100` lands on window week 49 and
    *  has ALREADY lapsed by the horizon, on 105 under the letter rule and on 104 under the window rule;
@@ -5142,7 +5158,7 @@ export const PRE_R28B = {
    *  code. ⚠ ITS LETTER DID NOT MOVE IN THE UNION MERGE – week, slot and both deadlines are character
    *  for character what T1b measured; only the hash moved, with the rest of the tree. Same provenance:
    *  the engine-toggled copy, not the helper. */
-  middlePlayer: '2dea78f4e0d7f484798065150b75d2ed8726eb61ab6470062b561c12a5095609',}
+  middlePlayer: '3a549bea922d2af36bc91d3cf4456a61ca8f02ba9d85b67511debead5e76544c',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -5696,7 +5712,15 @@ export function careerHash(presetIndex: number, policyIndex: number, force?: Par
  *  each older shape exactly: a rollback to 61 is the v61 world, and a rollback below 59 is that minus
  *  the masseur's three. Every one of the older constants below is unchanged and still reproduces. */
 export function careerHashAtSchema(presetIndex: number, policyIndex: number, schemaVersion: number): string {
-  const world = walkFrozenCareer(presetIndex, policyIndex)
+  // ⭐⭐ RE-AIMED FOR v92 (SUCCESSION S1, 06.10), NOT WEAKENED, AND IT PEELS AHEAD OF EVERYTHING BELOW because `startYear` is the newest key
+  // and the peel order is reverse order of arrival. ⭐⭐ IT IS THE FIRST KEY IN THIS CHAIN SINCE v86 THAT `createWorld` WRITES ON **EVERY** WORLD
+  // (right after `week`), so – unlike the four rungs before it, whose peels removed nothing from a frozen career – every rollback below 92 really
+  // drops something here, and the rollback to 91 is the identity «a default-2031 career is its v91 self minus the one new key», MEASURED over
+  // three 156-week careers (`PRE_V92`). Object rest keeps the RELATIVE order of everything it retains, so dropping the key alone restores the
+  // v91 serialisation wherever the key sits. The live shape (`schemaVersion >= 92`) keeps it.
+  const walked = walkFrozenCareer(presetIndex, policyIndex)
+  const { startYear: _startYear, ...preStartYear } = walked
+  const world = schemaVersion < 92 ? preStartYear : walked
   // ⚠ RE-AIMED FOR v63, NOT WEAKENED, AND FOR EXACTLY THE REASON v62's NOTE ABOVE GIVES ONE LAYER
   // DOWN. v63 appends `assets` AFTER `peakPhysical`, so `peakPhysical` stopped being the last key of
   // `createWorld`'s literal. The keys are therefore peeled in reverse order of when they were

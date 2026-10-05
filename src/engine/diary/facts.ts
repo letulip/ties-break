@@ -311,6 +311,8 @@ export interface DiaryWorldView
    *  milestone's week, which may be seasons back, so this is asked about arbitrary past weeks and
    *  not only about `week`. */
   kidAgeAt: (week: number) => number
+  /** ⭐ v92 (SUCCESSION S1) – the career's epoch year (`world.startYear`); OPTIONAL so a view built by hand keeps meaning 2031. */
+  startYear?: number
   /** ⭐ v72 – HER TWO NUMBERS, RAW, AND THIS IS THE LAST PLACE THEY ARE NUMBERS. `assembleDiaryFacts`
    *  bands both on the way in (`spiritBandOf` / `bondBandOf`) and `DiaryFacts` carries no figure for
    *  either: the fog law is enforced by the shape of the object the UI actually receives.

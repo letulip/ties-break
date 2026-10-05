@@ -473,9 +473,16 @@ describe('B · the page – once per latched table, never otherwise', () => {
 
 describe('C · the migration – a latch only where the cached rank is 1 as the save is written', () => {
   it('C1 · the head is v91 and the golden fixture is the real migration\'s own output on v90.json', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(91)
+    expect(SAVE_SCHEMA_VERSION).toBe(92)
     expect((read(91) as { schemaVersion: number }).schemaVersion).toBe(91)
-    expect(migrateSave(read(90)), 'the recipe every fixture since v25 uses').toEqual(read(91))
+    // ⚠ RE-AIMED 06.10 BY v92 (SUCCESSION S1, the calendar's start year): the head moved, so migrating v90.json now arrives at v92 – the recipe is unchanged.
+    // v91.json is its output MINUS the two things the later step adds (`startYear` and the version number), and v92.json is the whole of it.
+    const stripped = (w: unknown): Record<string, unknown> => {
+      const { startYear: _startYear, schemaVersion: _schemaVersion, ...rest } = w as Record<string, unknown>
+      return rest
+    }
+    expect(stripped(migrateSave(read(90))), 'the recipe every fixture since v25 uses – v91.json is its output minus what v92 adds').toEqual(stripped(read(91)))
+    expect(migrateSave(read(90)), 'and the head fixture is the same recipe one rung up').toEqual(read(92))
     expect('firstNo1' in migrateSave(read(90)), 'a save whose cached ranks are not 1 gains no key').toBe(false)
   })
 

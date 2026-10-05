@@ -229,7 +229,7 @@ function finalizeTournament(world: WorldState): void {
     // ONE derivation of that count and the rate below, the sentence in the ledger row and the memo
     // on the recap all go through this one `pausedShare` – two reads of it here would be two
     // percentages on one cheque, which is the defect round 30 #21 exists to have ended.
-    const ageNow = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
+    const ageNow = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
     const pausedShare = collegePausedShareYears(world)
     const herShare = kidPrizeShareCents(prize, ageNow, pausedShare)
     const familyShare = prize - herShare
@@ -531,7 +531,7 @@ function finalizeTournament(world: WorldState): void {
     week: world.week,
     type: 'tournament',
     text:
-      `${tier.label} (${event.surface}, ${weekLabel(event.week)}): ${world.profile.kidName} – ` +
+      `${tier.label} (${event.surface}, ${weekLabel(event.week, world.startYear)}): ${world.profile.kidName} – ` +
       // ⚠ A CLAUSE ON THE END, NOT A REPLACEMENT FOR THE FINISH. `finishLabel` is a NOUN – she is the
       // Semifinalist, and she still is: that is the owner's ruling («защитываем поражение в текущей
       // ступени») and it must be the first thing the line says, unqualified and with the points
