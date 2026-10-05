@@ -6,10 +6,11 @@
 // being the precedent (§5): the finished save is read here and never written, and after creation the
 // new world owes the old one nothing.
 //
-// ⚠⚠ IT HAS NO CONSUMER ON THIS TREE. S2b wires creation; this module only READS and CLASSIFIES, so
-// nothing in `createWorld`, the worker or the snapshot imports it and a career that never touches the
-// door behaves byte for byte as before. It is deliberately NOT on the `engine/world` barrel – the
-// barrel is a frozen surface (A-03), and a symbol born here is imported from its owning module.
+// ⚠⚠ THE WORKER HAS NO CONSUMER OF IT ON THIS TREE. S2a wrote the reader; S2b added `createLegacyWorld` at the
+// foot of this file – generation 2's creation, the reader's first consumer. Nothing in `createWorld`, the
+// worker or the snapshot imports this module (the door and the worker command are S2c), so a career that
+// never touches the door behaves byte for byte as before. It is deliberately NOT on the `engine/world`
+// barrel – the barrel is a frozen surface (A-03), and a symbol born here is imported from its owning module.
 //
 // ⚠⚠ IT EXTENDS THE DOOR THAT EXISTS, IT IS NOT A SECOND ONE. `dynastyHandoverOf` (world/endings.ts) is
 // wave 10's inheritance block and already answers «who was she and what did she win» – her name, her
@@ -28,9 +29,12 @@
 // ending at all is a legal input: every missing piece becomes a null or a default, and the default
 // for the money is the FLOOR (1.0 – an ordinary start), never a guess upward.
 import { weekYear } from '../../shared/dates'
-import type { AlbumBook, CareerEndingType } from '../../shared/protocol'
+import { DEFAULT_PROFILE, profileShapeError } from '../../shared/protocol'
+import type { AlbumBook, CareerEndingType, OwnedAsset, PlayerProfile } from '../../shared/protocol'
+import { START_AGE_YEARS } from './age'
 import { assembleAlbum } from './albumBook'
-import { deliveredAssets } from './assets'
+import { assetEntryPriceCents, assetWorthCents, deliveredAssets, shopItem } from './assets'
+import { createWorld, STARTING_FUNDS_CENTS } from './create'
 import { dynastyHandoverOf } from './endings'
 import type { WorldState } from './state'
 
@@ -253,4 +257,112 @@ export function legacyInputOf(world: WorldState): LegacyInput {
     daughterBirthYear: daughterBirthYearOf(world, career.endedWeek),
     heirloomAlbum: assembleAlbum(world),
   }
+}
+
+// --- the generation-2 creation (S2b) --------------------------------------------------------------
+
+/** ⭐⭐ THE MULTIPLIER'S CORRIDOR IS THE TABLE'S OWN, not a second pair of literals: `createLegacyWorld` refuses an input whose
+ *  multiplier no finished career can produce, and «can produce» is what `LEGACY_SAVINGS_MULTIPLIER` says – so a retuned table (§4 calls
+ *  its values a sketch) moves the guard with it instead of leaving a stale 3.0 behind. §4's two corridor-intent rules, «never POORER
+ *  than an ordinary start» and «never so rich that the junior-years budget tension disappears», are the floor and the ceiling of it. */
+const LEGACY_MULTIPLIER_FLOOR = Math.min(...Object.values(LEGACY_SAVINGS_MULTIPLIER))
+const LEGACY_MULTIPLIER_CEILING = Math.max(...Object.values(LEGACY_SAVINGS_MULTIPLIER))
+
+/** ⭐ ENGINE-SIDE RE-VALIDATION OF WHAT ONLY THIS FUNCTION KNOWS (invariant 1): the multiplier's corridor, and which rungs are a house
+ *  and a car. The profile's law is `profileShapeError`'s and the calendar's is `createWorld`'s – neither is restated here. A thrown
+ *  `RangeError` and not a clamp, `createWorld`'s own idiom for `startYear`: a guess on a missing fact is the one mistake this module's
+ *  header forbids. */
+function refuseIllegalLegacy(legacy: LegacyInput): void {
+  const m = legacy.savingsMultiplier
+  if (!Number.isFinite(m) || m < LEGACY_MULTIPLIER_FLOOR || m > LEGACY_MULTIPLIER_CEILING) {
+    throw new RangeError(
+      `createLegacyWorld: savingsMultiplier must lie between ${LEGACY_MULTIPLIER_FLOOR} and ${LEGACY_MULTIPLIER_CEILING}, got ${m}`,
+    )
+  }
+  for (const [family, id] of [['house', legacy.houseId], ['car', legacy.carId]] as const) {
+    if (id !== null && shopItem(id)?.family !== family) {
+      throw new RangeError(`createLegacyWorld: ${family}Id must name a ${family} on the shelf, got ${id}`)
+    }
+  }
+}
+
+/** ⭐⭐ A HOLDING THAT ARRIVES OWNED: the row `buyAsset` writes for a car or a house (the plain branch of world/shop.ts), minus the
+ *  purchase. NO FUNDS MOVE, there is no listing, no feed line and no milestone – the family bought nothing, and a «bought» mark for a
+ *  house the mother left would be a sentence nobody lived.
+ *
+ *  ⚠ `paidCents` IS THE WEEK-0 QUOTE OF THE GENERATION-2 SHELF (`assetEntryPriceCents`, the one function the shop's own till reads), NOT
+ *  the figure generation 1 paid and not an aged one. A house's quote indexes from the CAREER'S first week (round 46 #3), so at week 0 it
+ *  is the catalogue figure, and every later resale, upkeep and appreciation calculation – all of which read `paidCents` and
+ *  `boughtWeek` – starts from a market price on a clock that starts now. A row claiming twenty years of age would need a negative
+ *  `boughtWeek` that the rest of the shop was never written for.
+ *  ⚠ SPEC §3 SAYS «AT THEIR AGED VALUE»; this is the one place the build departs from that sentence, on the architect's S2b brief, and it
+ *  is the thing to rule on if the owner wants a visibly older car.
+ *  ⚠ `entries` IS EMPTY – the v77 -> v78 migration's own value for «no purchase marks recorded». The list is «what the family DID», and
+ *  nothing left the wallet. */
+function arriveOwned(world: WorldState, id: string): void {
+  const item = shopItem(id)
+  if (item === undefined) throw new RangeError(`createLegacyWorld: nothing on the shelf is called ${id}`)
+  const paidCents = assetEntryPriceCents(world, item)
+  const row: OwnedAsset = { id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents, entries: [] }
+  // priced by the same function `revalueAssets` asks next week, so the row opens at exactly what was «paid», to the cent
+  row.valueCents = assetWorthCents(world, row, item)
+  world.assets.push(row)
+}
+
+/** ⭐⭐⭐ S2b – THE GENERATION-2 CREATION: her career, built FROM what the finished one left (docs/specs/succession-2026-10.md §1, §3-§5).
+ *
+ *  ONE call to `createWorld` and four things laid over it, each a fact the input already holds and none of them a draw – so the new
+ *  world has its own fresh `rngMain`, the very stream a plain `createWorld` of the same seed and year has, and «same seed + same legacy
+ *  blob = the same generation-2 world, byte for byte» (§5) holds by construction. The finished save is never touched: the input is
+ *  data, and the album is COPIED in (`structuredClone`) so the running career keeps it with no live link.
+ *
+ *    THE CALENDAR  `startYear = daughterBirthYear + START_AGE_YEARS`. `START_AGE_YEARS` (14, world/age.ts) is the age every career opens
+ *                  a girl at – the childhood prologue's nine years (5 to 13) end exactly there, `CHILDHOOD.endAge` being that same
+ *                  constant – and `kidBirthYear(startYear)` is its inverse, so she is born in the year the legacy says.
+ *    THE NAME      her GIVEN name is the caller's (the door takes it from the identity card, B6's `dynastyOpeningName`); the family name
+ *                  is generation 1's (§1.4). `profile` is the base the rest of her comes from, the game's default girl unless the door
+ *                  passes one.
+ *    THE MONEY     B x multiplier, ONE multiply, whole cents. B is `STARTING_FUNDS_CENTS` for the profile's background – what
+ *                  `createWorld` seeds today. It goes to `createWorld` as the opening wallet (its eighth argument – the feed's first line
+ *                  states it) and into `legacy.savingsSliceCents` as the amount GRANTED, so a later screen quotes the number the career
+ *                  really got and not a recomputation off a table that may have been retuned since.
+ *    THE ASSETS    the house and the car arrive owned (`arriveOwned`), each null-safe, house first.
+ *    THE BLOCK     `world.legacy`, persisted, in the shape S1 declared – nothing is added to it.
+ *
+ *  ⚠ `savingsSliceCents` IS THE WHOLE OPENING WALLET (B x multiplier) – the architect's S2b brief, «write the result» – and not the extra
+ *  over an ordinary start. At the 1.0 floor the two differ by exactly B; a display that wants «what her mother's career added»
+ *  subtracts `STARTING_FUNDS_CENTS[profile.background]`.
+ *  ⚠ NO `dynasty` HANDOVER IS PASSED to `createWorld`: wave 10's block and this one both carry «who the mother was», and a world holding
+ *  both would hold two spellings of one fact. The input has no such block; the door decides if that ever changes.
+ *  ⚠ `profileShapeError` JUDGES THE FINAL PROFILE, so the creation cap on names binds an INHERITED surname too: a family name longer than
+ *  `PROFILE_NAME_MAX_CHARS`, possible only on a career opened before 06.09, is refused rather than carried. The door should pre-check, or
+ *  the cap should be waived for inherited names – S2c's call. */
+export function createLegacyWorld(
+  legacy: LegacyInput,
+  seed: string,
+  daughterName: string,
+  profile: PlayerProfile = DEFAULT_PROFILE,
+  careerId?: string,
+): WorldState {
+  refuseIllegalLegacy(legacy)
+  const daughter: PlayerProfile = { ...profile, kidName: daughterName, kidLastName: legacy.surname }
+  const illegalProfile = profileShapeError(daughter)
+  if (illegalProfile !== null) throw new RangeError(`createLegacyWorld: ${illegalProfile}`)
+
+  const startYear = legacy.daughterBirthYear + START_AGE_YEARS
+  const grantCents = Math.round(STARTING_FUNDS_CENTS[daughter.background] * legacy.savingsMultiplier)
+  const world = createWorld(seed, daughter, careerId, undefined, undefined, undefined, startYear, grantCents)
+
+  world.legacy = {
+    motherName: legacy.motherName,
+    motherPeakRank: legacy.motherPeakRank,
+    motherSlamTitles: legacy.motherSlamTitles,
+    surname: legacy.surname,
+    endingKind: legacy.endingKind,
+    savingsSliceCents: grantCents,
+    heirloomAlbum: structuredClone(legacy.heirloomAlbum),
+  }
+  if (legacy.houseId !== null) arriveOwned(world, legacy.houseId)
+  if (legacy.carId !== null) arriveOwned(world, legacy.carId)
+  return world
 }

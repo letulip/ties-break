@@ -235,9 +235,24 @@ export function createWorld(
    *  ⚠ A CREATION INPUT AND NOT A DRAW: it touches no stream, so the MAIN sequence of a 2048 career is the MAIN
    *  sequence of a 2031 one under the same seed – input-independence is permanent law. */
   startYear: number = DEFAULT_START_YEAR,
+  /** ⭐⭐⭐ SUCCESSION S2b – THE EIGHTH ARGUMENT, AND IT IS `startYear`'s PRECEDENT: absent means the wallet this function has always
+   *  opened with (`STARTING_FUNDS_CENTS[background]`, or the prologue's reserve), so every bench, probe, fixture and sim career is
+   *  byte-identical to what it was – `tests/succession-s2b-create.test.ts` re-measures that against S1's pristine digests. Present, it
+   *  IS the opening wallet, whole cents, and nothing else about the career moves.
+   *
+   *  ⚠ WHY IT IS AN ARGUMENT AND NOT A LINE WRITTEN AFTER THE CALL: the week-0 feed line below states «Family budget: …» from this very
+   *  number. A generation-2 grant applied to `world.fundsCents` afterwards would leave the first sentence of the career naming the
+   *  ORDINARY budget beside a wallet up to three times its size – a screen restating a verdict the engine no longer holds, this repo's
+   *  parity class – and patching the sentence from outside would make a second writer of it. One writer, one number.
+   *
+   *  ⚠ A CREATION INPUT AND NOT A DRAW: it touches no stream. `world/succession.ts`'s `createLegacyWorld` is its only caller. */
+  openingFundsCents?: number,
 ): WorldState {
   if (!Number.isInteger(startYear) || startYear < 1900 || startYear > 2400) {
     throw new RangeError(`createWorld: startYear must be a whole calendar year between 1900 and 2400, got ${startYear}`)
+  }
+  if (openingFundsCents !== undefined && (!Number.isInteger(openingFundsCents) || openingFundsCents < 0)) {
+    throw new RangeError(`createWorld: openingFundsCents must be a whole number of cents, zero or more, got ${openingFundsCents}`)
   }
   // ⭐ THE NINE YEARS, SPENT. Everything below reads `arrival` and `profile`; when there is no
   // prologue both are what they have always been, so there is ONE code path and not two.
@@ -269,9 +284,11 @@ export function createWorld(
       coachTier: prologueCoachTier(profile.background, years),
     }
   }
-  const fundsCents = prologue
-    ? prologueFundsCents(profile.background, prologue.spentCents)
-    : STARTING_FUNDS_CENTS[profile.background]
+  // ⭐ S2b: a grant, when one stands behind this career, REPLACES the ordinary budget (it is the multiplied budget, so it already
+  // contains it) – `??` and not `||`, because a legal grant of zero cents is a wallet and not an absence.
+  const fundsCents =
+    openingFundsCents ??
+    (prologue ? prologueFundsCents(profile.background, prologue.spentCents) : STARTING_FUNDS_CENTS[profile.background])
   const cohort = generateCohort(seed)
   // Ladder-up Part A: the cohort arrives with a season already behind it (season/prehistory.ts),
   // so week-1 entrant fields are ranking-MEANINGFUL and the standings are not a 199-way tie at 0.
