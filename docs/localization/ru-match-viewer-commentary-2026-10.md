@@ -577,3 +577,163 @@ The room appears only from storey 3 and remains the first clause cut under press
 
 `Перед ним` and `его` refer to masculine `тай-брейк`; these variants cannot be shared with another
 beat kind. None claims whom the crowd supports or what either player feels.
+
+## 21. Coach at the changeover
+
+The coach lines report presence only. `Тренер` is grammatically masculine as a role noun but does
+not assert the person's gender; avoid `он`, `она`, `его` and `её` when referring to the coach.
+
+| set just ended | Russian variant |
+| --- | --- |
+| daughter lost | `{who} садится на скамейку, и тренер рядом с ней.` |
+| daughter lost | `{who} в кресле. Перед следующим сетом тренер рядом.` |
+| daughter won | `{who} садится рядом с тренером, ведя по сетам.` |
+| daughter won | `На смене сторон {who} перекидывается парой слов с тренером.` |
+
+Lead: `У скамейки.` The English source's `her coach has a word` proves a brief exchange, but not its
+content or effect. The Russian variants likewise name neither advice nor mood.
+
+## 22. Public private-life mentions
+
+Lead for every booth row: `Вне корта.` These are broadcast lines, not the family's diary voice.
+They state only the public packet and what the English pool already licenses. `«Таинственный
+мужчина»` appears only in the deliberately wrong newspaper story; true relationship lines remain
+gender-neutral.
+
+### 22.1 A relationship, reported correctly
+
+> `{who} вышла на этот матч, а в её ложе – новое лицо. Газеты написали об этом раньше жеребьёвки.`
+
+> `{who} снова на корте. В её ложе – новое лицо, которое всю неделю было на первых полосах.`
+
+`Новое лицо` is intentionally impersonal. The game has no partner name, pronouns or gender to
+localize.
+
+### 22.2 A relationship, reported wrongly
+
+> `{who} и «таинственный мужчина» – одна и та же фотография во всех газетах этой недели.`
+
+> `На каждой первой полосе – {who} рядом с «таинственным мужчиной». Версии ни у кого не сходятся.`
+
+The booth repeats the false public story as a statement because that sting is the mechanic. It does
+not add `возможно`, correct the papers or imply that the fabricated man is real.
+
+### 22.3 A relationship ended, reported correctly
+
+> `Газеты пишут, что всё закончилось. {who} выходит на этот матч одна.`
+
+> `В ложе на одно место меньше. {who} снова на первых полосах – газеты уже объяснили почему.`
+
+`Одна` belongs to the player, who is known to be a woman. It does not gender the former partner.
+
+### 22.4 A relationship ended, reported wrongly
+
+> `Газеты пишут о расставании. {who} – в центре истории, но версии не сходятся.`
+
+> `На каждой первой полосе – история о расставании и {who}. Ни одна версия не похожа на другую.`
+
+Both keep `{who}` nominative. A tempting `у {who} всё закончилось` is rejected because arbitrary
+display names cannot safely be put into the genitive.
+
+### 22.5 A divorce, reported correctly
+
+> `Газеты пишут: брак распался. {who} здесь, чтобы играть.`
+
+> `На каждой первой полосе – развод. {who} всё равно предстоит матч.`
+
+### 22.6 A divorce, reported wrongly
+
+> `Газеты пишут о разводе. {who} – в центре истории, но версии не сходятся.`
+
+> `На первых полосах – развод. От газеты к газете история меняется.`
+
+No divorce line assigns blame, cost, emotion or a named spouse. The second wrong variant remains
+nameless just like its English source.
+
+## 23. Family lineage in the booth
+
+### 23.1 Mother with professional titles
+
+> `Эта фамилия уже была на табло. {who} продолжает семейную линию: её мать здесь побеждала.`
+
+> `{who} знает эти коридоры с детства. Трофеи с той же фамилией принадлежат её матери.`
+
+These are translations of the current titled pool, including its `won here`/corridor claim. Before
+runtime integration, the owner should decide whether the underlying packet truly licenses venue-
+specific `здесь`: `proTitles > 0` proves a professional title, not visibly a title at this event.
+If it does not, the safe replacements are `её мать тоже побеждала в туре` and `профессиональные
+трофеи с той же фамилией принадлежат её матери`. This is a source-honesty issue exposed by
+localization, not permission to silently change English behavior.
+
+### 23.2 Mother known on tour, without a professional cabinet
+
+> `Эта фамилия уже была в заявочных листах. {who} – вторая в семье, кто вышла на этот уровень.`
+
+> `{who} не первая в семье на этом корте: сначала сюда вышла её мать.`
+
+Keep feminine `кто вышла`: the generic masculine `кто вышел` would clash with both women named by
+the packet.
+
+### 23.3 Mother with a student championship inside an existing licence
+
+> `Мать выиграла студенческий чемпионат прежде, чем эта фамилия добралась сюда. Теперь здесь играет {who}.`
+
+> `{who} не первая в семье на этом корте. Её мать пришла через студенческий теннис и по пути стала чемпионкой.`
+
+`Студенческий`, never `университетский`, matches the already chosen competition vocabulary and
+does not turn a college title into a professional one. No line invents the mother's first name.
+
+## 24. Commentary rails, budgets and deterministic parity
+
+| source | Russian |
+| --- | --- |
+| compact rail `S{set}` | visible `1-й`, `2-й`, `3-й`; accessible `{ordinal} сет` |
+| `Corner.` | `У скамейки.` |
+| `Off court.` | `Вне корта.` |
+
+Do not use Cyrillic `С1`: it resembles Latin `C1`, does not read naturally as `сет 1` and gives a
+screen reader no useful word. If the existing rail cannot fit `1-й`, widen only the rail token, not
+the commentary body.
+
+Russian text must be remeasured rather than forced through English's raw `120`/`88` UTF-16 character
+budgets as if equal character counts meant equal phone width. The semantic degradation order stays:
+claim first, forward consequence second, manner/room colour last. The implementation should either
+measure the rendered row at the supported phone width or establish Russian-specific limits from a
+representative fixture corpus. It must never cut inside a phrase or drop the first claim.
+
+Locale selection changes strings only. For the same stored match, both locales must preserve:
+
+- the same beat kinds, anchors, scores and set numbers;
+- the same full/key membership and priority collision winners;
+- the same storey/rung additions and deterministic variant indexes;
+- zero RNG reads and no change to the persisted main stream;
+- the same public/private-life and lineage licences.
+
+## 25. RU-08 verification matrix
+
+The technical localization wave should add semantic parity tests rather than one giant Russian
+snapshot:
+
+1. Every source phrase pool has the same number of Russian entries, including additive storey 3/4
+   pools and all true/wrong booth crossings.
+2. Names remain byte-identical substrings of Russian output; fixtures include a Russian full name,
+   a hyphenated foreign surname, an initial and an indeclinable surname.
+3. Count fixtures cover 1, 2, 4, 5, 11, 21 and the upper digit fallback for points, shots, games,
+   places and temperatures.
+4. A second-serve ace, double fault, winner in each direction, return miss and each error direction
+   exercise both manner moulds.
+5. Every score-earned break/hold branch, set ending, 6:6 row, normal match finish and retirement
+   finish appears once in a focused fixture.
+6. W15, WTA 250, WTA 500, WTA 1000 and Slam logs retain the measured detail ladder; Russian does
+   not flatten it by omitting a pool or a counted family.
+7. Coach, every private-life packet and all three lineage pools render without invented names,
+   gender or emotion.
+8. Full and key modes, replay, skip, practice and retirement alert contain no visible English,
+   including accessibility names and old stored match history.
+9. Render the longest preview, retirement, deuce, lineage and booth rows at 320, 390 and 430 px;
+   inspect wrapping, rail width, score collision and focus order.
+10. Replay the same match twice and compare Russian beats byte for byte; then compare its semantic
+    beat projection with English.
+
+With §§1–25, RU-08 now covers the match viewer, practice/replay shell, preview and every current
+commentary family. All wording remains `DRAFT` pending the owner's read.
