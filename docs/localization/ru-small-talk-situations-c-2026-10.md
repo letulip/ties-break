@@ -97,8 +97,92 @@ child's celebration stays hers; the daughter does not take it as a sign about he
 The quiet response to the parent avoids gendering the player-parent. `Форхенд` follows tennis
 usage, and the child's one clean ball is not turned into a match result.
 
-## 3. Corpus progress
+## 3. Situation R32 – `the-song-in-the-gym`
+
+Subject `story`; stages `college`, `independent`; no fact gate. The song is a shared childhood
+memory, without a title, artist or lyric. Russian keeps it unnamed in every branch.
+
+### 3.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"They played a song I haven't heard since I was about six and I completely stopped."` | `«В зале включили песню, которую я не слышала лет с шести. Я прямо замерла».` |
+| fiery | `"They put that song on in the gym and it ruined my whole session."` | `«В зале включили ту песню, и вся тренировка пошла насмарку».` |
+| deep | `"A song came on that I had not heard since I was small, and I stood there until it finished."` | `«Заиграла песня, которую я не слышала с детства. Я стояла, пока она не закончилась».` |
+| quiet | `"They were playing old music in the gym. I stayed a bit longer."` | `«В зале играла старая музыка. Я задержалась немного».` |
+
+### 3.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask which song` | `Спросить, что за песня` |
+| respond | `Say you remember it` | `Сказать, что вы её помните` |
+| space | `Say nothing and let her have it` | `Ничего не говорить, дать ей побыть с воспоминанием` |
+
+### 3.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"The one that was always on in the car. You know the one. That one."` | `«Та, что всё время играла у нас в машине. Ты знаешь. Та самая».` |
+| sunny | respond | `"Of course you do. It was always on. I'd forgotten it completely."` | `«Конечно, помнишь. Она же постоянно играла. А я совсем забыла».` |
+| sunny | space | `"Thank you. I'm going to find it and play it properly."` | `«Спасибо. Найду её и послушаю как следует».` |
+| fiery | invite | `"The car one. The one you played until we all hated it."` | `«Ту, из машины. С твоей подачи она играла, пока всем не надоела».` |
+| fiery | respond | `"You'd better remember it. You're the reason it's in my head."` | `«Ещё бы тебе не помнить. Она у меня в голове из-за тебя».` |
+| fiery | space | `"I'm still annoyed about the session. And I'm going to play it again."` | `«За тренировку всё ещё обидно. А песню всё равно снова включу».` |
+| deep | invite | `"The one from the car. I knew it before I knew what it was."` | `«Ту, из машины. Я узнала её раньше, чем поняла, что слышу».` |
+| deep | respond | `"You would. I didn't think I did until it started."` | `«Конечно, помнишь. А я думала, что забыла, пока она не заиграла».` |
+| deep | space | `"Thanks. I'd rather not explain it."` | `«Спасибо. Не хочу это объяснять».` |
+| quiet | invite | `"The car one. You'd know it if I hummed it."` | `«Ту, что играла в машине. Если напою, сразу вспомнишь».` |
+| quiet | respond | `"I thought you might. It's been a long time."` | `«Я так и думала. Столько времени прошло».` |
+| quiet | space | `"It was nice. That's all it was."` | `«Было приятно. Вот и всё».` |
+
+The parent is grammatically ungendered in every reply. This row should never acquire a real
+recording title or quoted lyric merely to make the shared memory concrete.
+
+## 4. Situation R33 – `the-one-who-never-sits`
+
+Subject `observation`; stages `college`, `independent`; no fact gate. The other player stands
+at changeovers; the daughter does not know whether this helps, and Russian preserves that doubt.
+
+### 4.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"There's a girl who never sits down at changeovers. Not once, the whole match."` | `«Одна девушка ни разу не села на сменах сторон. За весь матч ни разу».` |
+| fiery | `"She doesn't sit down. Ever. It's either brilliant or a pose and I can't decide which."` | `«Она вообще не садится. Никогда. То ли гениально, то ли поза – не пойму».` |
+| deep | `"She stood through every changeover. I don't think it was for show."` | `«Она простояла каждую смену сторон. Не думаю, что напоказ».` |
+| quiet | `"One of them doesn't sit at the changeovers. I noticed it early on."` | `«Одна из них не садится на сменах сторон. Я заметила довольно рано».` |
+
+### 4.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she did instead of sitting` | `Спросить, что она делала вместо отдыха на скамейке` |
+| respond | `Say players find odd things that work` | `Сказать, что игроки находят странные, но полезные привычки` |
+| space | `Say she does not have to copy anyone` | `Сказать, что ей не обязательно копировать других` |
+
+### 4.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Stood there. Bounced about a bit. Looked completely normal about the whole thing."` | `«Стояла. Чуть подпрыгивала. И выглядела так, будто это совершенно обычно».` |
+| sunny | respond | `"They do. I'd like one of my own, honestly."` | `«Находят. Мне бы тоже такую, честно говоря».` |
+| sunny | space | `"I'm not going to. I did think about it, though."` | `«Не собираюсь. Хотя мысль была».` |
+| fiery | invite | `"Stood. Faced the back fence. Like the chair had personally offended her."` | `«Стояла лицом к ограде за кортом. Будто стул лично её обидел».` |
+| fiery | respond | `"Then I want an odd thing. Mine are all completely ordinary."` | `«Тогда мне тоже нужна странная привычка. Мои все до обидного обычные».` |
+| fiery | space | `"I'm not copying her. I'd just like to know what it's for."` | `«Не копирую. Просто хочу понять, зачем она так делает».` |
+| deep | invite | `"She stood with her back to the court and looked at her strings. Every single time."` | `«Стояла спиной к корту и смотрела на струны. Каждый раз».` |
+| deep | respond | `"They do. Hers didn't look odd from where I was sitting."` | `«Находят. С моего места её привычка не выглядела странной».` |
+| deep | space | `"No. I'd still like to try it."` | `«Не обязательно. Но попробовать всё равно хочется».` |
+| quiet | invite | `"Stood at the back. Same spot each time."` | `«Стояла сзади. В одном и том же месте».` |
+| quiet | respond | `"I know. Most of them have something."` | `«Знаю. У многих есть своя привычка».` |
+| quiet | space | `"No. I only noticed it, that's all."` | `«Не обязательно. Я просто заметила».` |
+
+`Смена сторон` is the tennis term; the source's seat is a court bench. The parent's response
+remains an observation, not a claim that this habit improves results.
+
+## 5. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 38 / 51 | 722 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R31 complete as DRAFT |
+| 40 / 51 | 760 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R33 complete as DRAFT |
