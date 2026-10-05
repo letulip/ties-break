@@ -185,8 +185,51 @@ The sunny response uses intimate `ты` because she directly addresses the paren
 трудный день` keeps the source image without predicting a specific bad event. No reply changes bond
 or another mechanic.
 
-## 7. Situation-corpus progress
+## 7. Situation R46 – `line-call`
+
+Subject `worry`; stages `school`, `after-school`; fact gate `played-recently`. The copy may say that
+a line decision was wrong, but it may not invent a chair umpire, line judge or electronic system.
+
+### 7.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"There was a call today that was wrong and I can't seem to put it down."` | `«Сегодня мяч на линии засчитали неправильно, и я никак не могу это отпустить».` |
+| fiery | `"There was a call today that was just wrong."` | `«Сегодня мяч на линии засчитали неправильно. Просто неправильно».` |
+| deep | `"One call today was wrong, and I have replayed it more than anything else that happened."` | `«Сегодня мяч на линии засчитали неправильно. Его я прокручиваю чаще, чем всё остальное за день».` |
+| quiet | `"There was a call today I didn't agree with. It's still there."` | `«Сегодня я не согласилась с решением на линии. Оно всё ещё со мной».` |
+
+### 7.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Let her keep going` | `Дать ей продолжить` |
+| respond | `Tell her what worries us` | `Сказать, что нас тревожит` |
+| space | `Say she needn't solve it tonight` | `Сказать, что сегодня это можно не решать` |
+
+### 7.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"It was in. I saw it. Everyone near it saw it. And that's that, apparently."` | `«Мяч был в корте. Я видела. Все рядом видели. Но, видимо, на этом всё».` |
+| sunny | respond | `"That's fair. I don't want to be the one who's still on about it next week."` | `«Справедливо. Не хочу на следующей неделе всё ещё говорить об этом».` |
+| sunny | space | `"Good. I'll be annoyed about it in the morning instead."` | `«Хорошо. Тогда позлюсь из-за этого утром».` |
+| fiery | invite | `"And I know I'm supposed to move on. I replayed it the whole way home instead."` | `«Знаю, надо идти дальше. А я всю дорогу домой прокручивала это».` |
+| fiery | respond | `"I hear you. I don't want it in my head for the next one either."` | `«Понимаю. Мне тоже не нужно это в голове перед следующим матчем».` |
+| fiery | space | `"Yeah. Okay. Tomorrow."` | `«Да. Ладно. Завтра».` |
+| deep | invite | `"I keep going back to the same second of it. Not the point. The second."` | `«Возвращаюсь к одной секунде. Не к розыгрышу. К секунде».` |
+| deep | respond | `"You're right, and knowing you're right is not the same as being able to stop."` | `«Да, это верно. Но знать это – не значит уметь остановиться».` |
+| deep | space | `"No. I'd only take it apart again and find the same thing in it."` | `«Нет. Я только снова разберу это по частям и найду то же самое».` |
+| quiet | invite | `"It was in. I've stopped saying so out loud."` | `«Мяч был в корте. Я уже перестала говорить это вслух».` |
+| quiet | respond | `"I know. I'll put it down before the next one."` | `«Знаю. Отпущу до следующего матча».` |
+| quiet | space | `"All right. I'll leave it where it is."` | `«Хорошо. Оставлю как есть».` |
+
+`Да, это верно` translates `You're right` without assigning a gender to the player-parent. The two
+references to a next match are conversational readings of `the next one`; they make no schedule,
+entry or date claim.
+
+## 8. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 1 / 51 | 19 / 969 | 0 / 4 | R45 complete as DRAFT |
+| 2 / 51 | 38 / 969 | 0 / 4 | R45–R46 complete as DRAFT |
