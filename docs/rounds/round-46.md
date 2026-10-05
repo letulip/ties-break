@@ -557,7 +557,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     `bandFacePoint` is swept over every painting in `CROPS`. **Mutated:** `bandFacePoint` returning the old anchor → 2 red; `ART_BAND_RATIO`
     0.5 → 0.3 → 2 red; each restored byte-identical.
 
-- [?] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
+- [x] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
   "8131.90 units – bought at $9,969 each, $10,212 now / +$49,610,632 since you bought it (33%)" - я
   только пару недель назад зашёл на 80млн, они ещё не могли дать такой прирост»** – the index-fund
   cost basis survives a near-total withdrawal: after re-entering with 80M, «since you bought it»
@@ -812,6 +812,47 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     so no spec. DRAFT: R46-S6 (dev label).
 
 ---
+
+- [ ] **23. (06.10, morning – the owner pulled the spawned fixture-generator task INTO the round:
+  «давай вот это в раунд добавим?»)** – tools/e2e-fixtures.ts drifted against the engine since
+  rounds 45/46 (S1's control: a true regeneration picks different seeds for 9 of 13; the
+  `expecting` recipe yields dueWeek−pausesWeek = 26 against the spec's 31, the `parting` recipe
+  yields exactly 200 letters against d07's >200). Work: (1) the two missing recipe clauses;
+  (2) the bare no-env invocation fails loudly instead of silently doing nothing; (3) regenerate
+  for real, `npm run test:e2e` green. Secondary if cheap: `ageWindowStartWeek`'s memo is keyed by
+  birth month+week, not day – verify and fix or document. Class: **build** → **R2**.
+
+## Morning answers (06.10) – his word on the night's question pile, decoded
+
+1. **№16 tails**: forecast rows stay («прогнозные ладно ещё»); **BUT showing injured when she is
+   already healthy is NOT ok** («вводит в заблуждение») – the entry lock / planner surfaces that
+   read the clinic window for a week the replay clears must follow the replay. Build → **R1**.
+   The save arrives after the merge.
+2. **Spouse card**: the heading change is fine, but the TAUTOLOGY he meant remains – the heading
+   says he has something to say, the first line of the card re-introduces him saying it («слова
+   ради слов»). And «в) давай драфт» – the corpus batch is ordered: the architect writes new
+   lines per occasion (and de-tautologized openings for the four existing ones) as DRAFT rows for
+   his blessing; the picker learns multiple lines per occasion. Build → **R3**.
+3. **№9 re-aimed at the SCHOOL TILE**: he meant the dead tile («плашка про школу… после
+   школы/колледжа место занимает») – it becomes the relationships cell at its terminal rung:
+   known → «Together for {span}» (his «очень хорошо»), unknown → a «кажется одинока»-class line,
+   evolving with engagement/marriage. B4's under-grid line retires in its favour. Build → **R4**.
+4. **Year summary**: (а) «инвестиция это не совсем расход, только если мы не в минусе
+   зафиксировались» – a REALISED LOSS is a real expense: the window's realised-loss figure joins
+   the expense side (its own labeled row); principal transfers stay the shelf's. (б) mixed History
+   accepted («ранние не страшно»). (в) «давай 2 колонки попробуем» – the Ranking/Matches
+   half-tiles become a two-column grid. Build → **R5**.
+5. **Epilogue**: (а/б) his flow = the totals page with a button to the whole album and a return –
+   which IS the shipped shape; no auto-open; DRAFT alternates for the button in his «посмотреть
+   весь путь» spirit. (в) «снимаем, да» – the dead `EndingView.album` pages 1–6 leave the wire.
+   (г) departed strings – his eyes later. Build (в + DRAFT rows) → **R6**.
+6. **The watch**: «наверное да» – the 18 band lends nothing; the leak closes with a measured
+   note. Build → **R6**.
+7. **№14**: «без миграции ок» – option Б; the live row heals on the next dominating top-up.
+   CLOSED.
+8. **Yacht vs Elite**: «ок, на неё сначала надо заработать» – stands as built. CLOSED.
+9. **Ticket overlap**: scrapbook overlap accepted, his eyes later. CLOSED.
+10. **Tone of the PR bodies**: confirmed house tone, «пока ок». CLOSED.
 
 ## The plan – bundles by collision surface, sequential dispatch (token law 29.09)
 

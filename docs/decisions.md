@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 157 dated entries, newest 2026-10-05. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 158 dated entries, newest 2026-10-06. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 22 | [THE CORPUS COUNTED, ROUND 44 CLOSED BY THE COUNT](#30092026--the-corpus-counted-round-44-closed-by-the-count) | 2026-09-30 |
+| process-and-git | 23 | [THE MORNING BATCH: ROUND 46'S PILE RULED, THE WAVE'S FOUR REFINED](#06102026--the-morning-batch-round-46s-pile-ruled-the-waves-four-refined) | 2026-10-06 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -5887,3 +5887,30 @@ colliding). Spec §7's step 1 (start-year parameterisation) goes first, step 2 (
 path) follows as the night allows; round questions collect separately. The earlier «стройка
 пост-лонч» now reads: the BUILD runs now, the SHIPPING decision (into launch or after) stays his
 at merge time.
+
+## 06.10.2026 – THE MORNING BATCH: ROUND 46'S PILE RULED, THE WAVE'S FOUR REFINED
+
+Off the overnight report, he answered the whole pile at once. **The misleading injured lock goes**
+(«показывать injured когда уже здорова - это не ок и вводит в заблуждение» – the entry/planner
+surfaces follow the masseur replay; forecast rows stay by round 34's rule). **The spouse card's
+real tautology named**: the heading says he has something to say, the first line says it again –
+«это слова ради слов»; and the corpus batch is ordered («давай драфт»). **№9 was about the dead
+school tile**: «мы можем в ней писать "Отношения"… либо ставить "кажется одинока"… Потом меняет с
+помолвкой, свадьбой и т.д. "Together for {span}" - очень хорошо». **The year summary**: a
+realised LOSS is a real expense («инвестиция это не совсем расход, только если мы не в минусе
+зафиксировались»); two-column half-tiles («давай 2 колонки попробуем»); mixed history accepted.
+**The epilogue**: his flow is the totals page + a whole-album button + return («посмотреть весь
+путь»), the dead wire pages 1–6 leave («снимаем, да»). **The watch joins the bank-account fix**
+(«наверное да»). **№14 closes without a migration** («без миграции ок»). **The yacht stands**
+(«на нее сначала надо заработать, так что элитный не сильно пострадает»). **The ticket overlap is
+scrapbook** («посмотрю глазами»). **The fixture generator moves INTO the round** as item 23.
+
+**The wave's four**: the ending-kind CEILING on the multiplier dies – «если у нее на момент
+травмы на счету было много денег, то почему 1.0? я не вижу связи здесь особой» – achievement
+decides the band, the exit reason stops capping it. **The childhood deduction returns on legacy
+careers** – «мне кажется нормальной логика вычета… отличается только начальная сумма для сида по
+сути». **The 20-char surname cap stands** («лишь бы верстка нигде не сыпалась»). **The
+inheritance line is approved**: «да, звучит хорошо» – «Her mother's career leaves her a head
+start.», conditional on a band above 1.0.
+
+Merge order he named: «я буду мержить начиная с раунда по готовности».
