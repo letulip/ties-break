@@ -288,7 +288,9 @@ describe('S2 · schema v90 – the migration writes nothing (spec §2i)', () => 
     // ladder (`>=`) and the recipe half compares v89's load against v90.json with ONLY the head's version number moved – which is the claim
     // v90 made («the step writes nothing»), now carried through v91's step, which writes nothing on a save whose cached ranks are not 1.
     expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(90)
-    expect(migrateSave(read(89)), 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION })
+    // ⚠ RE-AIMED AGAIN AT v92 (06.10, succession S1): the v92 step writes `startYear: 2031` on every
+    // older save, so the carried-recipe expectation names it beside the moved head number.
+    expect(migrateSave(read(89)), 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION, startYear: 2031 })
   })
 
   it('a v89 save loads with BOTH fields absent and nothing invented on any row', () => {
