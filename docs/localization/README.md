@@ -35,11 +35,11 @@ last-reviewed: 2026-10-05
 | [Batch 07 – Rankings, trophies and album](ru-stats-trophies-album-2026-10.md) | Ranking tables, season statistics, trophy cabinet and the career album interface | drafted end to end |
 | [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 34 occasions and four daughter voices | drafted end to end |
 | [Batch 08 – Match viewer and commentary](ru-match-viewer-commentary-2026-10.md) | Live/replay controls, court readouts, preview booth and deterministic commentary | drafted end to end |
-| [Batch 09 – Diary and birthdays](ru-diary-birthday-2026-10.md) | Diary chrome and memories, birthday headings, travel and weekly observations | shared diary and birthday frame drafted; corpora in progress |
+| [Batch 09 – Diary and birthdays](ru-diary-birthday-2026-10.md) | Diary chrome and memories, birthday headings, travel and weekly observations | shared frame and all four linked corpora drafted end to end |
 | [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | drafted end to end |
 | [Batch 09B – Journey-home corpus](ru-diary-travel-corpus-2026-10.md) | Parent-written scraps after tournament travel, including result, body, distance and coach branches | drafted end to end |
 | [Batch 09C – Photo and condition corpus](ru-diary-photo-condition-corpus-2026-10.md) | Home photograph and condition-card captions with stage, result and body licences | drafted end to end |
-| [Batch 09D – Weekly voice-note corpus](ru-diary-week-notes-corpus-2026-10.md) | Four temperaments across eight moments and four life stages, plus scoped weeks | core 148-line voice matrix drafted; special states and flat legacy pool open |
+| [Batch 09D – Weekly voice-note corpus](ru-diary-week-notes-corpus-2026-10.md) | Four temperaments across life stages, special states and every explicit week-note row | all 324 current authored cells drafted end to end |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

@@ -15,9 +15,10 @@ The corpus is a compile-time cross: four voices × (eight moments × four life s
 same rectangle. Missing cells must fail catalogue construction; locale cannot fall back to another
 voice or stage.
 
-All lines are `DRAFT`. This pass completes all four core voices: 148 of 148 cells. The remaining
-work in `weekNotes.ts` is the aftermath/special-state layer and the older flat note pool; those are
-tracked separately below rather than being mistaken for holes in this matrix.
+All lines are `DRAFT`. This document now covers the complete current authored surface: the 148-cell
+core voice matrix, 44 generated special-state cells and all 132 explicit `WEEK_NOTES` rows – 324
+source cells in total. The layers remain separate below because their types, licences and review
+risks are different.
 
 ## 2. Sunny voice – rectangular moments
 
@@ -561,3 +562,72 @@ the parent's `Дом` navigation label.
 
 This is licensed only on `ownKeyWeek`; it must appear once and must not become generic evidence that
 every independent-stage residence is owned rather than rented.
+
+## 24. Flat pool H – the mother in a new career (eight lines)
+
+| id | stroke | English source | Russian draft |
+| --- | --- | --- | --- |
+| RU09D-F109 | habit, private | `She still strings her own rackets, on the kitchen floor, for an hour.` | `Она до сих пор сама натягивает струны: час на кухонном полу.` |
+| RU09D-F110 | habit, open | `She was up before the house again, walking her old pre-match loop.` | `Снова встала раньше всех и прошла старый предматчевый маршрут.` |
+| RU09D-F111 | eye, open | `She watched one service game and said the ball toss had moved.` | `Посмотрела один гейм на подаче и сказала, что подброс изменился.` |
+| RU09D-F112 | eye, private | `She said nothing all session, then re-taped a grip out by the car.` | `Всё занятие молчала, потом у машины перемотала обмотку.` |
+| RU09D-F113 | scar, private | `She stood up off the bench too fast and put a hand on the fence.` | `Слишком быстро встала со скамейки и схватилась за ограду.` |
+| RU09D-F114 | scar, open | `She told the club which season it went, and that she played on anyway.` | `Сказала в клубе, в каком сезоне это случилось и что всё равно играла.` |
+| RU09D-F115 | name, private | `Two parents asked her to sign something. She signed and said nothing.` | `Двое родителей попросили автограф. Она расписалась и промолчала.` |
+| RU09D-F116 | name, open | `The coach used her whole name, and the court went quiet, then loud.` | `Тренер назвал её полным именем. Корт затих, потом зашумел.` |
+
+These lines describe the previous heroine as the mother inside the next career; they are not a fifth
+daughter temperament. F113–F114 retain the hurt-ending gate, and F115–F116 retain the positive
+title-count gate. Russian must not let a famous-name line imply a title when `lineageTitles === 0`.
+
+## 25. Flat pool I – shared motherhood scenes (eight lines)
+
+| id | band | English source | Russian draft |
+| --- | --- | --- | --- |
+| RU09D-F117 | announced | `She said it plainly, over breakfast, and the kitchen went quiet in the good way.` | `За завтраком сказала прямо. Кухня затихла – в хорошем смысле.` |
+| RU09D-F118 | early | `The rackets are still by the door. Nobody has moved them, and nobody says why.` | `Ракетки всё ещё у двери. Никто не убирает и не говорит, почему.` |
+| RU09D-F119 | mid | `She walks the long way to the market now and counts the weeks out loud.` | `Теперь ходит к магазину длинной дорогой и вслух считает недели.` |
+| RU09D-F120 | last | `She stopped at the court by the school today and watched a whole set through the fence.` | `Сегодня остановилась у школьного корта и смотрела сет через ограду.` |
+| RU09D-F121 | birth | `The house is louder and quieter at once. I have not slept and I do not mind.` | `Дома сразу громче и тише. Я не сплю и не против.` |
+| RU09D-F122 | postpartum | `Some mornings she is at the window before the baby wakes, looking at nothing we can see.` | `Иногда стоит у окна ещё до того, как проснётся малышка, и смотрит мимо нас.` |
+| RU09D-F123 | postpartum, warm | `She asked me to hold the little one while she stretched. Ten minutes, an old routine, and she was humming.` | `Попросила подержать малышку и десять минут тянулась по старой схеме, напевая.` |
+| RU09D-F124 | returned | `The bag is packed again. Smaller than it used to be, and there are two of everything now.` | `Сумка снова собрана. Меньше прежней, зато теперь всего по два.` |
+
+F123 retains the separate `warmSupport` gate and cannot be folded into the ordinary postpartum
+line. The baby is canonically a girl in this dynasty path, so `малышка` is licensed rather than an
+invented gender. These eight shared parent scenes coexist with §12's 28 temperament lines.
+
+## 26. Flat pool J – strained/cold replies (eight lines)
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F125 | `"Fine," she said. Nothing else, all week.` | `«Нормально», – сказала она. И больше ничего за всю неделю.` |
+| RU09D-F126 | `"It was okay," she said. That was all of it.` | `«Всё было нормально», – сказала она. Это всё.` |
+| RU09D-F127 | `Asked about training, she said: "Same." Nothing after it.` | `На вопрос о тренировках ответила: «Всё так же». И больше ничего.` |
+| RU09D-F128 | `Asked how the week went, she said only: "Fine."` | `На вопрос о неделе ответила только: «Нормально».` |
+| RU09D-F129 | `"Nothing to report," she said, and that was the report.` | `«Нечего рассказывать», – сказала она. Это и был весь рассказ.` |
+| RU09D-F130 | `"All right," she said. Two words, and no opening in them.` | `«Всё нормально», – сказала она. Два слова – и никакого продолжения.` |
+| RU09D-F131 | `"It is healing," she said. Nothing about pain.` | `«Всё заживает», – сказала она. О боли – ничего.` |
+| RU09D-F132 | `"On schedule," she said. That was the whole of the update.` | `«Всё по плану», – сказала она. На этом весь отчёт.` |
+
+Rows F125–F130 are ordinary strained/cold training weeks. F131–F132 are layoff-only and retain the
+`injured` claim. This is not a fifth voice: repetition and a small vocabulary are the relationship
+signal, so localization must not vary the replies merely to make the pool sound richer.
+
+## 27. End-to-end completion ledger
+
+| authored layer | English source cells | Russian drafts | state |
+| --- | ---: | ---: | --- |
+| core temperament/stage matrix | 148 | 148 | complete as DRAFT |
+| motherhood temperament matrix | 28 | 28 | complete as DRAFT |
+| bereavement | 4 | 4 | complete as DRAFT |
+| divorce | 4 | 4 | complete as DRAFT |
+| fork aftermath | 8 | 8 | complete as DRAFT |
+| explicit `WEEK_NOTES` rows | 132 | 132 | complete as DRAFT |
+| **total** | **324** | **324** | **complete as DRAFT** |
+
+The 132-row count is anchored to current source, not its stale 113-row comment. Before
+implementation, add catalogue parity tests that compare these stable ids/semantic keys rather than
+English sentence text, render every body-part and birthday-gift variant, enforce the 80-character
+budget on rendered Russian, and confirm the same seeded row index in both locales. No Russian line
+may change claims, licences, chance gates or the persisted main RNG state.
