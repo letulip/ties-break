@@ -18,15 +18,55 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ---
 
-- [ ] **1. «Когда выбрали залистить айтем на продажу появляется кнопка withdraw выше sell на карточке
+- [x] **1. «Когда выбрали залистить айтем на продажу появляется кнопка withdraw выше sell на карточке
   машин. Предлагаю в один ряд сделать, а ещё, если случился list, то sell заменять на sell now и
   жёлтую. На карточке домов кнопки лежат одна сверху другой. Надо проверить во всех разделах и
   сделать одинаково.»** – split:
   - **1a** – listed-item cards stack `withdraw` above `sell`; put the two in ONE ROW, and make the
     layout identical across EVERY asset section (cars, houses, and whatever else sells: check the
     whole market surface). Class: **build**.
+    - **B7 · 1a SHIPPED.** Both buttons are now ONE row on every card that can list. The engine's own `listAsset` took six families
+      (car, house, business – the merch brand –, boat, plane, and the academy lot; measured by listing one rung of each in one world), and
+      all six render through the ONE `Card v-for` in `ShopPanel.vue` (`MoneyScreen` only hosts it): `git grep` over `src/` finds
+      `withdrawListing` / `askSell` in `ShopPanel.vue` and `composables/shop.ts` alone, so no other screen draws a sell or withdraw control.
+      The uniformity map is therefore one component, one row class (`.shop-stake-row.is-listed`) and one markup order (Withdraw, Sell now).
+      **Cause – two symptoms of one thing:** Withdraw had a block of its own (`.shop-row-listing`) ABOVE the row. On the cars (`--art-left`)
+      that block stacked in flow – «withdraw выше sell». On houses, boats and planes (`--art-right`) the existing rule
+      `.shop-row--art-right .shop-action { position: absolute; right: 10px; bottom: 10px }` hits EVERY `.shop-action` in the card, so the two
+      buttons were two absolute boxes on one spot: his «одна сверху другой» was literal. **Fix:** Withdraw moved into the one
+      `.shop-stake-row` every owned card already draws (before Sell); the badge keeps its own line and no button lives in it any more. Each
+      family keeps the pair WHERE ITS OWN SELL STOOD, so no earlier ruling about a corner moved: cars and academy at the bottom-right corner
+      (`justify-content: flex-end` on the listed row, the lone pill's `margin-left: auto` cleared), houses/boats/planes on the painting as ONE
+      absolute row (the row is absolute now, no longer each pill), the merch brand at the left of its row. **Unlisted cards are
+      byte-identical:** the Sell button's own lines are untouched (`v-else` added) and `tests/component/principles-e11-shop-identity.test.ts`
+      – golden `render.json` NOT re-recorded – is green. (A first shape, one button with an inline `{{ }}` label, moved the whitespace
+      around the text node – ` Sell ` became `Sell` – and that golden caught it.)
+      **Seen in a real browser** (the repo's `tb-endings` dev-server config, the real `MoneyScreen` and stylesheet fed an engine-built
+      snapshot with all six families listed; scratch harness `tools/_b7_*`, deleted after): at 375px and at 360px every owned card of every
+      family draws the pair on ONE line, 149px wide (Withdraw 74 + 6 + Sell now 69), overlapping no text; cars/academy 13px from the corner,
+      painted families 11px. At 320px the pair wraps but stays right-aligned inside the card and nothing overflows. My first bound for the
+      painted families (`50% - 20px`) fitted at 375px and WRAPPED at 360px, hence `50% - 12px`; the pills are 9px a side (a lone pill is
+      12px) so that two of them fit the ~165px the painting leaves the controls. **Not looked at:** a real save, the stale state's two-line
+      badge, a desktop-width card.
+      Tests: `tests/component/round46-b7-sale-row.test.ts` (12) – the structure per family, data-driven over every family the engine lets
+      list. ONE existing helper changed: `pressSell` in `secondary-market-s5.test.ts` now also finds `Sell now`, because the card's control
+      reads that once listed (1b). Mutations, each restored byte for byte (`cmp` clean): Withdraw put back in the badge block → 6 red (one
+      per family); `shop-action--sell-now` taken off → 1 red; the fill made `transparent` → 1 red.
   - **1b** – once an item is listed, the `sell` button becomes **`sell now`** and turns **yellow**
     (his own copy and colour – the wording is his ruling, verbatim). Class: **build**.
+    - **B7 · 1b SHIPPED.** A listed card's Sell control reads `Sell now` and is yellow. The words are his, wired as given; the string is
+      the EXISTING `SALE_LABELS.sellNow` (the popup's second door), so the verb has one spelling and there is no new constant – on screen it
+      is in the app's sentence case, as he types `withdraw` and `sell` for the buttons that read `Withdraw` and `Sell`. His message is quoted
+      on `shopSellRowNote` in `composables/shop.ts`; DRAFT row R46-S22. The predicate is `row.listing` – the engine's own, the one that
+      already draws the badge – and nothing else: an unlisted card, a deposit and a fund read what they always read. Behaviour is untouched:
+      the button is still `askSell`, which opens the market popup, and the popup already offers no List for an ad that is up (`Keep it` and
+      `Sell now`). **Yellow:** the design system's own token – `background: var(--warning)` (an alias of `--amber`, #f5b942; its documented
+      job is «this is a risk, and you may still take it», which an instant sale at the fire price is) with `color: var(--on-lime)`
+      (#111a10, the app's ink for a bright fill). No new variable. **Contrast 10.09:1** (WCAG 2.1 relative luminance of those two tokens;
+      AA needs 4.5). ⚠ The test reads the COMPILED SHEET and the root tokens and asserts the rule declares the two tokens; it does not use
+      `getComputedStyle(button)`, because happy-dom does not match an SFC's scoped `[data-v-…]` selectors – measured: `color`, `background`
+      and `border-color` all come back `''` on a plain `.shop-action` – so `assertLegible` there would pass on anything. Only the Sell
+      control is yellow; Withdraw keeps the outlined pill.
 
 - [ ] **2. «the weight дублирует the weight в настройках, надо второе переписать и может немного
   развернуть»** – two settings rows both read «the weight»; rewrite the SECOND one (he delegates the
@@ -585,3 +625,4 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S19 | 18 – ALTERNATE for the album's Back arrow inside the ending, NOT wired (`AlbumScreen.vue` announces `Back to Home` – an `aria-label` on an icon button; there is no Home behind the ending, and a label prop on `AlbumScreen` would be the move) | `Back to the last page` |
 | R46-S20 | 18 – ALTERNATE for the record page's existing link, NOT wired (`Back to the album` now returns to the last page, not to a reel) | `Back to the last page` |
 | R46-S21 | 18 – ALTERNATE for S17, NOT wired (the one `PrimaryPill` in the footer) | `Open the whole album` |
+| R46-S22 | 1b – the listed card's Sell control, **WIRED – his words, wired** (`ShopPanel.vue`, the `row.listing` branch prints `SALE_LABELS.sellNow`; no new constant – the popup's second door already carries it; the yellow fill is `--warning`) | `Sell now` – his «sell now», in the app's sentence case (the unlisted control still reads `Sell` and Withdraw still `Withdraw`, both untouched) |

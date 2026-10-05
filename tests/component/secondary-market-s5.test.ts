@@ -91,7 +91,8 @@ async function mountShop(snapshot: Snapshot, attach = false) {
 /** Press a thing's Sell and return what the popup says. */
 async function pressSell(wrapper: Awaited<ReturnType<typeof mountShop>>, id: string): Promise<void> {
   const row = await shelfRow(wrapper, shopItem(id)!.label)
-  const sell = row.findAll('button.shop-action').find((b) => b.text() === 'Sell')
+  // ⭐ ROUND 46 #1b: on a LISTED card the same control reads «Sell now» (his words) – it is still the card's one Sell.
+  const sell = row.findAll('button.shop-action').find((b) => b.text() === 'Sell' || b.text() === 'Sell now')
   expect(sell, `${id}: the Sell control`).toBeTruthy()
   await sell!.trigger('click')
 }

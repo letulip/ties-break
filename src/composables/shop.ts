@@ -65,6 +65,14 @@ export const SALE_LABELS = {
   withdraw: 'Withdraw',
 } as const
 
+// ⭐⭐ ROUND 46 #1 – THE LISTED CARD'S TWO BUTTONS AND THE SECOND WORD ON THE SELL ONE (`shopSellRowNote`; the template's comment names this).
+// owner (shopSellRowNote), 05.10: «Когда выбрали залистить айтем на продажу появляется кнопка withdraw выше sell на карточке машин. Предлагаю в один ряд сделать, а ещё, если случился list, то sell заменять на sell now и жёлтую. На карточке домов кнопки лежат одна сверху другой. Надо проверить во всех разделах и сделать одинаково.»
+// ⚠ shopSellRowNote: «SELL NOW» IS NOT A NEW STRING. It is the constant above that the popup's second door already prints, so the verb has ONE spelling:
+// once the engine says the row is listed (`row.listing`, the predicate that already draws the badge) the card's Sell control prints it, and under
+// no other condition – an unlisted card, a deposit and a fund read what they always read. DRAFT R46-S22 in docs/rounds/round-46.md, «his words, wired».
+// ⚠ shopSellRowNote: WITHDRAW AND SELL ARE ONE ROW (`.shop-stake-row.is-listed` in ShopPanel.vue), the same row every owned card already draws – the
+// two stacked on the cars and lay on top of each other on the painted families, and both were one cause (the Withdraw had a block of its own).
+
 /** The shelf, for one mounted Money screen.
  *
  *  @param week the career's week, the screen's own reader – see the header.
