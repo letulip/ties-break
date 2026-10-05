@@ -436,8 +436,93 @@ shoelace repair is story texture and does not replace, buy or repair a game inve
 The parent option mentions buying a bag but does not incur a cost. Daughter responses avoid
 assigning the player-parent a grammatical gender.
 
-## 11. Corpus progress
+## 11. Situation R40 – `the-junior-who-copied-her`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. A younger player copies
+her warm-up. The daughter may enjoy it or feel uneasy; no line makes her a coach or mentor.
+
+### 11.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A younger girl was doing MY warm-up. Badly! But mine!"` | `«Девочка помладше делала МОЮ разминку. Криво! Но мою!»` |
+| fiery | `"She was copying me. I nearly went over and fixed her elbow, and then I thought better of it."` | `«Она меня копировала. Я чуть не подошла поправить ей положение локтя, но передумала».` |
+| deep | `"She was doing my warm-up two courts away and getting it wrong, and I didn't know where to put that."` | `«Через два корта от меня она повторяла мою разминку – с ошибками. Я даже не знала, как к этому отнестись».` |
+| quiet | `"One of the juniors has picked up my warm-up. Roughly."` | `«Одна юниорка переняла мою разминку. Примерно».` |
+
+### 11.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether she said anything` | `Спросить, сказала ли она что-нибудь` |
+| respond | `Say that is what being watched looks like` | `Сказать, что за ней тоже наблюдают` |
+| space | `Say she does not owe her a lesson` | `Сказать, что она не обязана давать ей урок` |
+
+### 11.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"No. I pretended I hadn't seen. I didn't want to embarrass her."` | `«Нет. Сделала вид, что не заметила. Не хотела её смущать».` |
+| sunny | respond | `"I suppose it is. It hadn't occurred to me that anybody was."` | `«Наверное. Мне и в голову не приходило, что кто-то смотрит».` |
+| sunny | space | `"I don't. I might still show her the first bit."` | `«Не обязана. Но, может, покажу ей самое начало».` |
+| fiery | invite | `"No. I got as far as standing up and then sat down again."` | `«Нет. Я уже встала – и снова села».` |
+| fiery | respond | `"Then I'd like to be watched by somebody doing it properly."` | `«Тогда хочу, чтобы за мной повторяли правильно».` |
+| fiery | space | `"I don't owe her anything. That elbow is still going to bother me."` | `«Ничего я ей не должна. Но этот локоть меня ещё долго будет бесить».` |
+| deep | invite | `"No. I watched her get it wrong and said nothing."` | `«Нет. Смотрела, как она ошибается, и молчала».` |
+| deep | respond | `"Is it? I've only ever been the one watching."` | `«Правда? Я ведь всегда была той, кто смотрит».` |
+| deep | space | `"No. I keep thinking about who I copied it from."` | `«Не обязана. А я всё думаю, у кого сама этому научилась».` |
+| quiet | invite | `"No. She'd have stopped doing it."` | `«Нет. Тогда она бы перестала».` |
+| quiet | respond | `"Maybe. It was only a warm-up."` | `«Может быть. Это всего лишь разминка».` |
+| quiet | space | `"No. I'll leave her to it."` | `«Не обязана. Пусть сама делает».` |
+
+The fiery elbow observation stays about technique; Russian does not suggest she touched the
+younger player. `Юниорка` is the tennis context, not a new named character.
+
+## 12. Situation R41 – `the-language-she-managed`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. The other language is
+unnamed. The English mentions switching to English; Russian says `наш язык` so RU mode does not
+claim the family speaks English or change the fact that she managed the other language.
+
+### 12.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"We had a whole conversation and she never switched to English. Never!"` | `«Мы весь разговор говорили на её языке, и она ни разу не перешла на наш. Ни разу!»` |
+| fiery | `"She didn't switch. Most of them switch. That felt like a win."` | `«Она не перешла на наш язык. Обычно переходят. А тут – будто победа».` |
+| deep | `"She let me be bad at it rather than making it easy. I think that was kind."` | `«Она не переходила на наш язык, пока я спотыкалась. Мне кажется, это было по-доброму».` |
+| quiet | `"I managed a conversation this week. In theirs, not ours."` | `«На этой неделе у меня получился разговор. На их языке, не на нашем».` |
+
+### 12.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what it was about` | `Спросить, о чём говорили` |
+| respond | `Say people notice the trying` | `Сказать, что старание заметно` |
+| space | `Say well done and change the subject` | `Похвалить её и сменить тему` |
+
+### 12.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"The weather, mostly. And her dog. I know a lot about her dog now."` | `«В основном о погоде. И о её собаке. Теперь я много про эту собаку знаю».` |
+| sunny | respond | `"Do they? I hope so. I was trying very obviously."` | `«Правда? Надеюсь. Я старалась очень заметно».` |
+| sunny | space | `"Thanks. I'll stop going on about it. Probably not immediately."` | `«Спасибо. Перестану об этом говорить. Но, наверное, не сразу».` |
+| fiery | invite | `"Nothing. The weather. And I was proud of every word of it."` | `«Ни о чём. О погоде. Но я гордилась каждым своим словом».` |
+| fiery | respond | `"She noticed. She just didn't make it easy, and I'm glad."` | `«Заметила. Просто не стала мне облегчать задачу, и я рада».` |
+| fiery | space | `"Not yet. I haven't finished being pleased about it."` | `«Нет, ещё рано менять тему. Я ещё не нарадовалась».` |
+| deep | invite | `"Her dog, mostly. It took us a long time to get there."` | `«В основном о её собаке. Мы долго до неё добирались».` |
+| deep | respond | `"She noticed. She let me finish the sentences badly."` | `«Заметила. Но дала мне самой договорить, пусть и с ошибками».` |
+| deep | space | `"Thank you. I'd like to sit with it a bit longer."` | `«Спасибо. Хочу ещё немного побыть с этим».` |
+| quiet | invite | `"Weather. Her dog. Nothing complicated."` | `«О погоде. О её собаке. Ничего сложного».` |
+| quiet | respond | `"Maybe. She didn't say."` | `«Может быть. Она не сказала».` |
+| quiet | space | `"Thanks. What's your news?"` | `«Спасибо. А у тебя что нового?»` |
+
+The source does not specify the foreign language. No Russian line names a country, city or
+language, and nothing implies a fluency score or new ability in mechanics.
+
+## 13. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 46 / 51 | 874 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R39 complete as DRAFT |
+| 48 / 51 | 912 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R41 complete as DRAFT |
