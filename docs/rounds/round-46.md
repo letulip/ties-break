@@ -404,7 +404,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     **Mutated:** the door's click dead → 6 red; `@back` dead → 4 red; `.ending` `overflow-y: auto` → `visible` → 5 red (this file's phone cases and
     wave10's fit case); each restored byte-identical. **Pins repointed, never weakened (7 existing files):** `endings-ui`, `wave8-family-ending`,
     `wave10-dynasty-door`, `wave12-parting-album`, `r39-lifetime-letter`, `round46-the-reckoning`, `round24-college-shell` – the reel's own claims
-    (page turning, dots, «n / 7», an empty page 3) became the last page's, and the «Next ×6» walks to the last page are gone.
+    (page turning, dots, «n / 7», an empty page 3) became the last page's, and the «Next ×6» walks to the last page are gone. One e2e spec walked the reel as well – `e2e/dynasty.spec.ts` clicked Next ×6 before the door – and the walk is removed there; ⚠ e2e was NOT run (outside this brief's gates), so that spec is one of the things the pre-push gate has to confirm.
 
 - [x] **19. «Потраченные суммы на итогах снова не соответствуют действительности. А ещё там верстка
   пляшет. Можно миллионы сокращать до М, например и красиво все выстроить.»** – the summary's SPENT
