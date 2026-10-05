@@ -396,3 +396,105 @@ nominative form. F054 deliberately avoids a gendered past-tense verb such as
 `выдержал/выдержала`: the body-part noun can be masculine, feminine or neuter. If localization uses
 ICU/select instead, it must provide the same grammatical result without changing the deterministic
 row selection.
+
+## 20. Flat pool D – birthdays (11 lines)
+
+### 20.1 Before the gift choice – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F056 | `{AgeWord} today. She cut the first slice too large.` | `{ageWord} сегодня. Первый кусок отрезала слишком большим.` |
+| RU09D-F057 | `{AgeWord} today. She says nothing feels different.` | `{ageWord} сегодня. Говорит, ничего не изменилось.` |
+| RU09D-F058 | `{AgeWord} today. We worked around her calendar for once.` | `{ageWord} сегодня. На этот раз мы подстроились под её календарь.` |
+| RU09D-F059 | `Her birthday. She chose the time; we kept the cake ready.` | `Её день рождения. Время выбрала она; мы приготовили торт.` |
+
+`{ageWord}` uses the same standalone Russian age form as RU-09's diary headings. F056–F057 are
+family-home lines; F058–F059 are away-stage coordination and must not imply that she lives under the
+parent's roof.
+
+### 20.2 After the gift choice – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F060 | `{AgeWord}. {Gift}, and a smile she tried to hide.` | `{ageWord}. {birthdayGift.nomCap} – и улыбка, которую пыталась спрятать.` |
+| RU09D-F061 | `{AgeWord}. {Gift}. A pause, then a very good thank-you.` | `{ageWord}. {birthdayGift.nomCap}. Пауза, потом старательное «спасибо».` |
+| RU09D-F062 | `{AgeWord} today. She left the day blank, so we took it slowly.` | `{ageWord} сегодня. Оставила день пустым, и мы никуда не спешили.` |
+| RU09D-F063 | `{AgeWord}. {Gift} again – a tradition since {repeatAge}.` | `{ageWord}. Снова {birthdayGift.nom} – традиция с {repeatAge}-летия.` |
+
+`birthdayGift.nom` comes from the localized short/history noun catalogue, never the English saved
+noun. `.nomCap` is its sentence-initial form. `{repeatAge}-летия` expects the persisted numeric age;
+do not feed it the English `ageWord`. The visible string remains derived from the same saved gift id
+and repeat age, so old careers localize at read time.
+
+### 20.3 Birthday during a layoff – three
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F064 | `{AgeWord} today. Candles, a brace, and very bad timing.` | `{ageWord} сегодня. Свечи, фиксатор и ужасный выбор времени.` |
+| RU09D-F065 | `{AgeWord} today. The physio got the first call; we got the second.` | `{ageWord} сегодня. Сначала позвонила физиотерапевту, потом нам.` |
+| RU09D-F066 | `Her birthday. She blew out the candles and asked the physio how long.` | `Её день рождения. Задула свечи и спросила физиотерапевта: «Надолго?»` |
+
+All three retain both `birthday` and `injured` claims. `Фиксатор` matches the journey-home injury
+caption and stays body-part-neutral.
+
+## 21. Flat pool E – generic layoff and exam fortnight (11 lines)
+
+### 21.1 Generic layoff – six
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F067 | `Rehab, three times this week. She counts the sessions down out loud.` | `Три занятия по восстановлению. Вслух считает, сколько осталось.` |
+| RU09D-F068 | `She reports in after every session. Short messages, and all of them fine.` | `Пишет после каждого занятия. Сообщения короткие: всё хорошо.` |
+| RU09D-F069 | `The layoff has a routine now, and she keeps to it better than we would.` | `У паузы уже есть распорядок. Она соблюдает его лучше нас.` |
+| RU09D-F070 | `She sat by the court with her homework and watched the others hit.` | `Сидела у корта с домашней работой и смотрела, как играют другие.` |
+| RU09D-F071 | `The physio says it is going well. She wanted a second opinion.` | `Физиотерапевт говорит, всё идёт хорошо. Она захотела ещё одно мнение.` |
+| RU09D-F072 | `A photo from rehab: three bands, one coffee, no patience.` | `Фото с восстановления: три эспандера, один кофе, никакого терпения.` |
+
+F067 and F070 are same-roof observations; F068–F069 and F071 are stage-neutral; F072 is an
+away-stage photo. Russian must preserve those licences even where a sentence could be reused.
+
+### 21.2 Exams inside the layoff – five
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F073 | `Exams, and rehab between the papers. She said the timing was almost funny.` | `Экзамены, между ними – восстановление. По её словам, почти смешно.` |
+| RU09D-F074 | `A week of papers and physio. The one fortnight she is not missing anything.` | `Экзамены и физиотерапия. Те самые две недели, когда ничего не упускает.` |
+| RU09D-F075 | `She revised with her leg up on a chair. Nobody had to tell her to sit still.` | `Готовилась, положив ногу на стул. Просить посидеть спокойно не пришлось.` |
+| RU09D-F076 | `She revised one-handed, the {injuredPart} strapped up beside her on the table.` | `Готовилась одной рукой; {injuredPart.acc} в фиксаторе держала на столе.` |
+| RU09D-F077 | `She revised standing up half the time. Sitting is what it likes least.` | `Половину времени готовилась стоя: сидя повреждение беспокоило сильнее.` |
+
+F075 is leg-only, F076 arm-only and F077 trunk-only. The Russian wording must remain keyed to that
+body group; a generic injury fallback would recreate the source bug these rows were split to fix.
+
+## 22. Flat pool F – body-group layoff texture (11 lines)
+
+### 22.1 Leg group – three
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F078 | `Ice on the {injuredPart}, twice a day. She times it herself.` | `Лёд {injuredPart.loc} дважды в день. Время засекает сама.` |
+| RU09D-F079 | `She is walking almost normally now. The limp only shows when she is tired.` | `Ходит уже почти нормально. Хромота заметна, только когда устаёт.` |
+| RU09D-F080 | `Stairs, then flat ground, then corners. The order is not negotiable.` | `Ступени, ровная земля, повороты. Порядок обсуждению не подлежит.` |
+
+### 22.2 Arm group – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F081 | `Band exercises for the {injuredPart}, in front of the hall mirror.` | `Упражнения с эспандером для {injuredPart.gen} у зеркала в прихожей.` |
+| RU09D-F082 | `She has been doing everything one-handed and finding it funnier than we do.` | `Всё делает одной рукой, и её это смешит сильнее, чем нас.` |
+| RU09D-F083 | `Everything is one-handed for now. The {injuredPart} sets the terms.` | `Пока всё одной рукой. Условия задаёт {injuredPart.nom}.` |
+| RU09D-F084 | `She has learned which everyday things need two hands. There are many.` | `Узнала, для скольких обычных дел нужны две руки. Таких много.` |
+
+### 22.3 Trunk group – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F085 | `Ten minutes of core work on a mat in the hall, three times a day.` | `Трижды в день по десять минут укрепляет корпус на коврике в прихожей.` |
+| RU09D-F086 | `She has stopped picking things up off the floor without thinking about it first.` | `Теперь думает, прежде чем поднять что-то с пола.` |
+| RU09D-F087 | `Nothing heavy, nothing twisted, nothing sudden. Three rules, all week.` | `Ничего тяжёлого, никаких скручиваний и резких движений. Три правила.` |
+| RU09D-F088 | `The {injuredPart} decides how she sits, stands and sleeps this week.` | `{injuredPart.nomCap} решает, как она сидит, стоит и спит на этой неделе.` |
+
+The injury catalogue now needs `.loc` and `.acc` in addition to the forms listed in §19. `.loc`
+includes the required preposition because Russian may need `на колене` for one location and `в`
+for another; do not mechanically prepend one universal preposition. F083 and F088 use
+present-tense verbs so the noun's grammatical gender cannot break agreement.
