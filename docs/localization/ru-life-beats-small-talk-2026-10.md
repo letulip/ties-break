@@ -408,8 +408,94 @@ the 19 ordinary strings.
 `Трос сетки` keeps the tennis cause of the joke, while the four tellings keep each voice's rhythm.
 The beat names no match result or score.
 
-## 12. Situation-corpus progress
+## 12. Situation R51 – `new-place`
+
+Subject `worry`; stages `college`, `independent`; no fact gate. `Новое место` works for both a
+college residence and an independent home. The sunny English reply says `flat`, but Russian does
+not assert a flat where the college stage may mean a dorm.
+
+### 12.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I don't think I like the new place much. There, I've said it out loud."` | `«По-моему, мне не очень нравится новое место. Вот, я это сказала».` |
+| fiery | `"I don't like the new place. I've been trying to and I've stopped trying."` | `«Мне не нравится новое место. Я старалась, чтобы понравилось, но хватит».` |
+| deep | `"I've worked out that I don't like the new place. It took me a week to notice."` | `«Я поняла, что мне не нравится новое место. Мне понадобилась неделя, чтобы это заметить».` |
+| quiet | `"I don't think I like the new place much."` | `«Кажется, мне не очень нравится новое место».` |
+
+### 12.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Let her keep going` | `Дать ей продолжить` |
+| respond | `Ask whether she's been eating properly` | `Спросить, нормально ли она ест` |
+| space | `Say she needn't solve it tonight` | `Сказать, что сегодня можно ничего не решать` |
+
+### 12.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"It's fine! It's clean, it's warm, and I've not once sat down to eat in it."` | `«Да всё нормально! Чисто, тепло. Только я там ни разу не поела сидя».` |
+| sunny | respond | `"I have! Just never sitting down. I'm starting to think the flat has no chairs."` | `«Ем! Просто всё время стоя. Уже думаю, что там стульев нет».` |
+| sunny | space | `"I know. I'll like it better once there's something of mine in it."` | `«Знаю. Мне там больше понравится, когда появится что-то своё».` |
+| fiery | invite | `"It's clean. It's fine. And I've eaten standing up every night I've been here."` | `«Там чисто. Всё нормально. Только с тех пор, как я здесь, каждый вечер ем стоя».` |
+| fiery | respond | `"I've been eating. Standing at a counter like a horse, but eating."` | `«Ем. Стоя у столешницы, как лошадь, но ем».` |
+| fiery | space | `"I'm not solving it tonight. I'm not pretending it's lovely either."` | `«Сегодня ничего решать не буду. Но и делать вид, что там чудесно, тоже».` |
+| deep | invite | `"Nothing is wrong with it. I have been eating standing up and calling that settling in."` | `«С ним всё в порядке. Просто я ем стоя и называю это „обживаюсь“».` |
+| deep | respond | `"I have. It turns out that where you eat counts for more than I expected."` | `«Ем. Оказалось, место, где ешь, значит для меня больше, чем я думала».` |
+| deep | space | `"No. I'd rather sit with not liking it than talk myself out of it."` | `«Нет. Лучше побуду с этим чувством, чем уговорю себя, будто мне там нравится».` |
+| quiet | invite | `"It's fine. It's clean. I've been eating standing up for a week. I only noticed tonight."` | `«Всё нормально. Чисто. Неделю ела стоя и только сегодня заметила».` |
+| quiet | respond | `"I have. Just not sitting down, apparently."` | `«Ем. Только, видимо, не садясь».` |
+| quiet | space | `"Good. Tomorrow, then. Not tonight."` | `«Хорошо. Тогда завтра. Не сегодня».` |
+
+The daughter may be away in college or living independently. The wording never asserts a dorm,
+apartment, roommate or tournament hotel.
+
+## 13. Situation R52 – `beat-her-conqueror`
+
+Subject `good-news`; stages `school`, `after-school`; fact gate `beat-her-conqueror`. The fact
+requires a recent win over an opponent who beat her exactly four times beforehand, with no earlier
+win against that opponent. The Russian number and first-win claim are therefore licensed by runtime.
+
+### 13.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I beat someone I've never beaten."` | `«Я обыграла соперницу, которую раньше ни разу не побеждала».` |
+| fiery | `"I beat her. I have never beaten her and today I beat her."` | `«Я её обыграла. Никогда раньше не могла, а сегодня – обыграла».` |
+| deep | `"I beat someone who has always beaten me, and I am still working out how I feel."` | `«Я обыграла ту, кому всегда проигрывала, и ещё не поняла, что чувствую».` |
+| quiet | `"I won today. Against someone I've never won against."` | `«Сегодня я выиграла у той, кого раньше не могла обыграть».` |
+
+### 13.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what made it good` | `Спросить, что в этом было самым приятным` |
+| respond | `Tell her we're glad` | `Сказать, что мы рады` |
+| space | `Let her enjoy it` | `Дать ей порадоваться` |
+
+### 13.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"She's beaten me four times. Four! Today I got nervous – and kept playing."` | `«Она обыграла меня четыре раза. Четыре! А сегодня я занервничала – и всё равно продолжила играть».` |
+| sunny | respond | `"I can tell. You're doing the face."` | `«Вижу. У тебя опять то самое лицо».` |
+| sunny | space | `"Oh, I'm going to. All evening."` | `«Ещё как. Буду радоваться весь вечер».` |
+| fiery | invite | `"Four times she's beaten me. Four. I was nervous the whole way and it didn't matter."` | `«Четыре раза она меня обыграла. Четыре. Я нервничала весь матч, но всё равно выиграла».` |
+| fiery | respond | `"You should be! I'm going to be glad about this for a week."` | `«А то! Я сама буду этому радоваться неделю».` |
+| fiery | space | `"I am enjoying it. I'll enjoy it again tomorrow, and probably on Friday."` | `«Уже радуюсь. Завтра ещё порадуюсь. И в пятницу, наверное».` |
+| deep | invite | `"She has beaten me four times. The good part was noticing the nerves and going anyway."` | `«Она обыграла меня четыре раза. А сегодня я заметила, что нервничаю, и всё равно продолжила играть».` |
+| deep | respond | `"I know. I wanted to say it to someone who knew how many times it was."` | `«Знаю. Хотела сказать тому, кто помнит, сколько раз она меня обыгрывала».` |
+| deep | space | `"I will. I'd like to keep this one somewhere I can find it again."` | `«Порадуюсь. Хочу сохранить этот день так, чтобы потом к нему вернуться».` |
+| quiet | invite | `"She'd beaten me four times before. I didn't stop this time."` | `«Раньше она обыграла меня четыре раза. Сегодня я не остановилась».` |
+| quiet | respond | `"Thanks. I'm still a bit surprised, honestly."` | `«Спасибо. Я, честно, всё ещё немного удивлена».` |
+| quiet | space | `"I will. It's a nice thing to take upstairs."` | `«Порадуюсь. Хочется побыть с этим ещё немного».` |
+
+The quiet reply adapts `take upstairs` into a private moment because the roof frame does not
+establish stairs. No stance grades how the parent receives the win.
+
+## 14. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 6 / 51 | 114 / 969 | 4 / 4 | R45–R50 complete as DRAFT |
+| 8 / 51 | 152 / 969 | 4 / 4 | R45–R52 complete as DRAFT |
