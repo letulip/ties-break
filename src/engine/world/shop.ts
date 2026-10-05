@@ -475,6 +475,34 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     // a mark on that week can honestly carry. See `AssetEntry` in shared/protocol/profile.ts.
     const entry = { week: world.week, cents: paidCents, units: paidCents / price }
     if (held) {
+      // ⭐⭐⭐ ROUND 46 #14 – A RE-ENTRY THAT OUTWEIGHS WHAT IS LEFT STARTS THE CARD OVER.
+      //
+      // THE OWNER: «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
+      // "8131.90 units – bought at $9,969 each, $10,212 now / +$49,610,632 since you bought it (33%)" –
+      // я только пару недель назад зашёл на 80млн, они ещё не могли дать такой прирост»
+      //
+      // ⚠⚠ THE BASIS WAS NEVER THE DEFECT, and the line above the gain on his own card is the proof:
+      // 8131.90 units at $9,969 is $81.07M – the $80M he put in plus a small residue – and $10,212
+      // against it is +2.4%. `sellAsset` releases `paidCents` and `units` by the SAME fraction, so the
+      // average is honest across any withdrawal. What was wrong is the figure UNDER it. Round 34 #15
+      // made «since you bought it» the holding's LIFETIME gain (`shopView` adds `realisedGainCents`
+      // to the unrealised half, on his ruling that the sum must not fall when money is taken out),
+      // and only a WHOLE sale deletes the row – so «almost everything» left the row alive with every
+      // cent of realised history on it, and the $80M arrived beside +$47.6M of an earlier stint.
+      //
+      // ⭐ THE RULE IS ONE COMPARISON: money going in that is at least what is already held means more
+      // than half of the new holding is money that has earned nothing yet, and the card is about THAT
+      // holding. The realised memory leaves the row here – it happened, and the ledger keeps it in the
+      // `Sold …` rows, it is just no longer «since you bought it». A smaller top-up (a family adding
+      // to a holding it is still mostly in) keeps the memory, so round 34's ruling is untouched.
+      // ⚠ NO NEW STATE AND NO SCHEMA MOVE: this clears two OPTIONAL fields `shopView` already reads
+      // as «none recorded» when absent, so no save needs anything and no card's arithmetic changed.
+      // A row without `units` is not a unit holding at all, so there is nothing to compare – it
+      // keeps its memory. Zero draws; integer cents throughout.
+      if (held.units !== undefined && paidCents >= Math.round(held.units * price)) {
+        delete held.realisedGainCents
+        delete held.realisedCostCents
+      }
       held.units = units
       held.paidCents += paidCents
       held.valueCents = Math.round(units * price)

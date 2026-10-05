@@ -359,6 +359,46 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   cost basis survives a near-total withdrawal: after re-entering with 80M, «since you bought it»
   still claims +49.6M (33%). The basis must recompute on the re-entry (or the sell must realise the
   gain). Engine economy defect + tests over his exact scenario. Class: **build**.
+  - **B9 · 14 MECHANISM SHIPPED, CHECKBOX LEFT OPEN – the basis was never the defect: the card's gain carried round 34 #15's
+    realised memory across a near-total withdrawal, and a re-entry that outweighs what is held now retires it. His LIVE row is
+    not repaired (last paragraphs). NO SCHEMA, NO WORDING, ZERO DRAWS.**
+    **The broken line:** `shopView` in `src/engine/world/shop.ts` – `changeCents = mine.valueCents - mine.paidCents +
+    realisedGainCents` (and the `lifetimeCostCents` denominator under it; both were at :1015/:1020 before this commit) – round 34
+    #15's lifetime fold. NOT the basis: `sellAsset` releases `paidCents` and `units` by ONE fraction and `avgUnitPriceCents` is
+    `paidCents / units`, so «bought at» is honest across any withdrawal – his own line proves it (8131.90 × $9,969 = $81.07M, the
+    $80M plus a small residue; $10,212 against it is +2.4%). Only a WHOLE sale deletes the row, so «almost everything» left it
+    alive with its realised history, and the $80M arrived beside +$47.6M of the earlier stint.
+    **The fix:** `buyAsset`'s top-up branch – new money `>=` what is held (`paidCents >= round(held.units × price)`, i.e. more
+    than half of the new holding has earned nothing yet) deletes `realisedGainCents` and `realisedCostCents` from the row. A
+    SMALLER top-up keeps them and a part sale still carries them, so round 34 #15's ruling (his 02.09: the sum must not fall when
+    money is taken out; `round34-savings-income.test.ts`) is untouched. ⚠ **NOT WHAT THE BRIEF SPELT** («the realised gain LEAVES
+    the card» on every sale): that is the second alternative in this item's own text, and it would put round 34's defect back –
+    the dollar sum would halve on every withdrawal, and round 34's own header records four figure arms plus the mounted arm in
+    `round34-money-shelf.test.ts` going RED when `changeCents` is put back to `valueCents - paidCents`. The first alternative
+    («recompute on the re-entry») is what shipped; the other is one line in `shopView` and the owner's call.
+    **No schema:** the two fields are the optional ones `shopView` already reads as «none recorded» when absent. **No wording:** no
+    `.vue` touched, and the 17 mounted files that print the card (152 tests) are green. **RNG:** zero draws, the frozen capture
+    untouched.
+    **His card, from the walked scenario** ($70M in at year 3, ten years held, 98.5% out, six weeks, $80M in, two weeks on):
+    `9352.89 units – bought at $8,666 each, $8,843 now / +$59,858,752 since you bought it (40%)` → `+$1,659,352 since you bought it
+    (2%)`. The seed's own walk, so the digits are not his; the class is (his +$49.6M / 33% → the +$1.9M / 2% class).
+    **Evidence:** `tests/round46-fund-reentry.test.ts`, 7 arms – his scenario; round 34 kept (a smaller top-up and a part sale
+    keep the memory); the boundary at half; a walked conservation sequence (the basis is only ever moved, and the memory a
+    re-entry retires re-adds with what is left to the realised total); proportional release (half out = half the cost, the same
+    average); a live-shape save through `migrateSave` (loads unchanged, heals on its re-entry); a pre-round-34 shape.
+    **Mutated:** the comparison made `false` (= the unfixed tree) → 4 RED; the basis release in `sellAsset` deleted → 9 RED (4
+    here, 5 in round 34 / part-sale); reset on EVERY top-up → 1 RED (round 34's arm, alone); each restored byte-identical (cmp).
+    `round34-savings-income`, `round29p2-part-sale`, `secondary-market-s4`, B5's `round46-season-money` and `round46-career-money`
+    green; `vue-tsc -b --force` exit 0 (read from the log's sentinel, not the wrapper).
+    ⚠ **NOT REPAIRED, AND SAID:** a LIVE save whose row already carries the memory (his own career, re-entered before this change)
+    keeps it until its next dominating top-up. The row alone cannot say whether its last sale came before or after its last
+    entry, so a retroactive repair is a HEURISTIC migration – a schema move (v92, golden fixture, `e2e:fixtures`): retire the
+    memory when the last `entries` mark is >= 90% of `paidCents` and `paidCents` >= that mark (his row: $80M of $81.07M). Its only
+    error is a small sale AFTER such an entry, which loses that sale's own gain from the card. Not built – the architect's call
+    (about ten moves); no DRAFT strings row, since no wording moved.
+    ⚠ **TWO RED UNIT FILES ON `round/46` THAT ARE NOT THIS ITEM'S** (control: `shop.ts` at HEAD fails them identically, 7 arms):
+    `tests/coach-travel-edge-prior-schemas.test.ts` (the v71-v76 rollback hashes) and
+    `tests/principles-d08-store-payload-clone.test.ts` (the store's sender set no longer matches the one the file drives).
 
 - [x] **15. «Эта фраза вылезла 2 раза с разницей в месяц или два (и вообще он очень разговорчивый и
   часто повторяется): "…The next tournament is half a world away. I knew the life I married into.
