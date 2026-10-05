@@ -498,3 +498,66 @@ The injury catalogue now needs `.loc` and `.acc` in addition to the forms listed
 includes the required preposition because Russian may need `на колене` for one location and `в`
 for another; do not mechanically prepend one universal preposition. F083 and F088 use
 present-tense verbs so the noun's grammatical gender cannot break agreement.
+
+## 23. Flat pool G – parent and relationships (20 lines)
+
+### 23.1 The fallible parent – six
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F089 | `We said the part would hold. The wanting was most of it. She said nothing.` | `Мы сказали: выдержит. Нам просто хотелось верить. Она молчала.` |
+| RU09D-F090 | `We asked about the court first, the papers second. The order was ours.` | `Сначала спросили о корте, потом об экзаменах. Порядок выбрали мы.` |
+| RU09D-F091 | `We called it a good sign that she was quiet. It was not that kind of quiet.` | `Её молчание мы приняли за хороший знак. Это было другое молчание.` |
+| RU09D-F092 | `We planned her week off for her. She was not asked. We noticed too late.` | `Мы распланировали её отдых сами. Её не спросили. Поняли слишком поздно.` |
+| RU09D-F093 | `We kept the day the shape it had last year. She may have wanted a new shape.` | `Мы повторили прошлогодний день. Возможно, ей хотелось другого.` |
+| RU09D-F094 | `We filled her free morning with an errand. It had been free for a reason.` | `Заняли её свободное утро поручением. А оно было свободным не зря.` |
+
+The Russian keeps the miss unresolved. It never upgrades `may`, silence or late doubt into knowledge
+of what she wanted or felt.
+
+### 23.2 Someone matters to her – five
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F095 | `There is someone in her life. We are managing not to ask about it.` | `В её жизни кто-то есть. Мы стараемся не расспрашивать.` |
+| RU09D-F096 | `Someone matters to her now. We are being careful with that.` | `Теперь ей кто-то важен. Мы осторожны с этой новостью.` |
+| RU09D-F097 | `We asked her one careful question. There may have been a better one.` | `Мы задали один осторожный вопрос. Возможно, был вопрос получше.` |
+| RU09D-F098 | `She is lighter this week, and we did nothing to deserve the credit.` | `На этой неделе в ней больше лёгкости. Нашей заслуги в этом нет.` |
+| RU09D-F099 | `She is brighter than the week explains. We think we know why now.` | `Она светлее, чем объясняет эта неделя. Кажется, теперь мы знаем, почему.` |
+
+These lines know only `partnerKnown`. They do not say that she told the parent, name the person or
+assign that person a gender. F098–F099 retain the source's bright-register gate.
+
+### 23.3 Something ended – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F100 | `We were careful with her all week, and never asked the question.` | `Всю неделю были с ней осторожны и так и не задали вопрос.` |
+| RU09D-F101 | `We put it down to the schedule. We may have had that wrong.` | `Мы решили, что дело в расписании. Возможно, ошиблись.` |
+| RU09D-F102 | `She did the week and said very little about any of it.` | `Неделю прожила и почти ничего о ней не сказала.` |
+| RU09D-F103 | `She was flat all week, and the training does not explain it.` | `Всю неделю была потухшей. Одними тренировками это не объяснить.` |
+
+The parent may not know that a relationship ended, so none of the four Russian lines names a
+break-up. F103 alone claims the low register, matching its source licence.
+
+### 23.4 The spouse spoke – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F104 | `The one she married would like the season nearer home. We heard it.` | `Дома попросили, чтобы сезон проходил ближе к дому. Мы услышали.` |
+| RU09D-F105 | `A word at home about the weeks on the road. It was not unfair.` | `Дома заговорили о неделях в дороге. Не без оснований.` |
+| RU09D-F106 | `The one she married asked for one week of the year. That was all.` | `На весь год у неё попросили одну неделю. Только одну.` |
+| RU09D-F107 | `A careful question at home about a large bill. Nobody raised a voice.` | `Дома осторожно спросили о большом счёте. Голоса никто не повысил.` |
+
+Impersonal plural is deliberate. The save does not store a spouse gender, so `муж`, `жена`,
+`супруг` and gendered past tense would all invent data. `Дома` is her marital household here, not
+the parent's `Дом` navigation label.
+
+### 23.5 Her own key – one
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F108 | `She has her own front door now. The spare key went onto our hook.` | `Теперь у неё своя входная дверь. Запасной ключ повесили на наш крючок.` |
+
+This is licensed only on `ownKeyWeek`; it must appear once and must not become generic evidence that
+every independent-stage residence is owned rather than rented.
