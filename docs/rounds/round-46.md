@@ -405,6 +405,13 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     wave10's fit case); each restored byte-identical. **Pins repointed, never weakened (7 existing files):** `endings-ui`, `wave8-family-ending`,
     `wave10-dynasty-door`, `wave12-parting-album`, `r39-lifetime-letter`, `round46-the-reckoning`, `round24-college-shell` – the reel's own claims
     (page turning, dots, «n / 7», an empty page 3) became the last page's, and the «Next ×6» walks to the last page are gone. One e2e spec walked the reel as well – `e2e/dynasty.spec.ts` clicked Next ×6 before the door – and the walk is removed there; ⚠ e2e was NOT run (outside this brief's gates), so that spec is one of the things the pre-push gate has to confirm.
+  - **B6 · 13 + 18 SEEN IN A REAL BROWSER** (the Vite dev server and a throwaway page mounting the real `RetirementDialog` and `EndingScreen`, since deleted – the B5 precedent), at 375×667 and 1280×800.
+    **13:** the 31+ and the 25–30 portraits show the whole head with room above it, on the 2:1 band – no cut hair, no cut chin. **18:** at 375×667 the last
+    page shows the photograph, the ending's title and lines, and `View the album` on the first screen, above the figures; pressing it lays the real book over
+    the takeover (chapter header, the sheet, the film with its «Left half» marker, the pager dots and arrows) with the Back arrow top-left. At 1280×800 the
+    book sits in the 480px column and the sheet bleeds past it by the app gutter – `AlbumScreen`'s own side-gutter cancel, as it documents.
+    ⚠ NOT LOOKED AT: the real `App.vue` shell around the two screens (the harness mounts the components, not the app), the browser console, and the e2e route
+    (`e2e/dynasty.spec.ts` was repointed, not run).
 
 - [x] **19. «Потраченные суммы на итогах снова не соответствуют действительности. А ещё там верстка
   пляшет. Можно миллионы сокращать до М, например и красиво все выстроить.»** – the summary's SPENT
