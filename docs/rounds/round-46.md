@@ -852,6 +852,8 @@ is built once, in B1). Schema: any bundle that cannot derive its state does the 
 (v92+, append-only), and says so in its report – B3's lines-said memory is the likely candidate, the
 brief's preference is derivation from the diary.
 
+**RF (gate) ·** 06.10 – the frozen-career hash family is re-frozen in `tests/coachTravelEdgeFixtures.ts`: all 128 of 128 frozen cells (125 distinct values, 42 constants) moved, coached 86 of 86 and self-coached 42 of 42 alike. Cause: B5's `f77a5402` (#8/#19) banks a `wealth` block onto the stored season summary, which is the one key that moved on every canonical career (`lastSeasonSummary`, per-key diff on 5/0, 8/0, 0/1, 6/1 and 5/1) with `rngMain` byte-identical – an intended behaviour change, not a defect. Control: HEAD with `milestones.ts` + `ledger.ts` put back to `b2abd0e8` reproduced all 125 pinned values (128 comparisons, 0 differed), so B5 is the whole of it. Before: 7 of 10 `coach-travel-edge*` files red (43 of 73 tests); after: 10 of 10 files, 73 of 73 tests green.
+
 ## Cross-references
 
 - #3a is the round-45 #10 class (the brand grind) on a new asset class.
