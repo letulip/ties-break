@@ -39,7 +39,7 @@ last-reviewed: 2026-10-05
 | [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | drafted end to end |
 | [Batch 09B – Journey-home corpus](ru-diary-travel-corpus-2026-10.md) | Parent-written scraps after tournament travel, including result, body, distance and coach branches | drafted end to end |
 | [Batch 09C – Photo and condition corpus](ru-diary-photo-condition-corpus-2026-10.md) | Home photograph and condition-card captions with stage, result and body licences | drafted end to end |
-| [Batch 09D – Weekly voice-note corpus](ru-diary-week-notes-corpus-2026-10.md) | Four temperaments across eight moments and four life stages, plus scoped weeks | sunny voice drafted; fiery, quiet and deep open |
+| [Batch 09D – Weekly voice-note corpus](ru-diary-week-notes-corpus-2026-10.md) | Four temperaments across eight moments and four life stages, plus scoped weeks | core 148-line voice matrix drafted; special states and flat legacy pool open |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

@@ -15,8 +15,9 @@ The corpus is a compile-time cross: four voices × (eight moments × four life s
 same rectangle. Missing cells must fail catalogue construction; locale cannot fall back to another
 voice or stage.
 
-All lines are `DRAFT`. This pass completes the sunny, fiery and quiet voices (111 cells). Deep
-follows last.
+All lines are `DRAFT`. This pass completes all four core voices: 148 of 148 cells. The remaining
+work in `weekNotes.ts` is the aftermath/special-state layer and the older flat note pool; those are
+tracked separately below rather than being mistaken for holes in this matrix.
 
 ## 2. Sunny voice – rectangular moments
 
@@ -108,3 +109,45 @@ to an unnamed person.
 | birthday, after-school | `{N} сегодня. «Ужина дома вполне хватит», – сказала она, накрывая на стол.` |
 | off-season, college | `В семейном чате появилась одна строка: «Сезон закончился. Теперь отдыхаю».` |
 | off-season, independent | `Пришла с пустыми руками. «До нового года теперь тихо».` |
+
+## 9. Deep voice – rectangular moments
+
+| moment | school | after-school | college | independent |
+| --- | --- | --- | --- | --- |
+| grind | `Сказала уже в машине, когда двигатель был выключен: «Много. Но я этого хотела».` | `Вернулась поздно и сказала с лестницы: «Сезон берёт своё».` | `Позвонила поздно, когда неделя осталась позади. «Было тяжело. И я рада, что так».` | `Ответила через несколько дней: «Работа требует многого. Я всё равно говорю ей да».` |
+| light | `Сказала в дверях, ещё не войдя до конца: «Воскресенье было моим».` | `Сказала поздно, когда дом уже спал: «Эту неделю я вернула себе».` | `Ответила через два дня: «В пустых днях и был смысл».` | `Позвонила поздно. «Я позволила неделе затихнуть. Я это заслужила».` |
+| fresh body | `«Готова», – сказала она перед первым мячом. Так и выглядела.` | `«Я забыла, что бывает так». Она сказала это поздно вечером в воскресенье.` | `В полночь написала: «Я снова чувствую своё тело. Скучала по этому».` | `Поздно оставила голосовое: «Тело как новое. Теперь такое редко».` |
+| vacation | `Сказала в последний вечер: «Я снова чувствую себя собой».` | `Сказала, только когда неделя закончилась: «Мне нужно было остановиться. Я не знала, как сильно».` | `Позвонила в конце, не во время. «Помогло. Не думала, что поможет».` | `Ответила к концу недели: «Я остановилась. Уже забыла, как это».` |
+| resting knock | `Сказала с дивана: «Пусть подождёт. Я тоже подожду».` | `Сказала один раз, в самом начале, и не отступила: «Пропустить неделю – тоже цена. Я её заплачу».` | `Поздно оставила голосовое: «Повреждению – неделя. Мне – терпение».` | `Позвонила поздно вечером: «Либо оно отдыхает, либо потом я потеряю больше».` |
+| pushing knock | `Сказала один раз, в понедельник, и ушла тренироваться: «Держится».` | `Сказала, ещё не сняв форму: «Держится. Я не стану из-за этого останавливаться».` | `Ответила через день: «Держится. Больше ничего обещать не буду».` | `Написала за полночь: «Держится. Я знаю, чем рискую».` |
+| injured | `«Надолго?» – спросила она за кухонным столом.` | `Дождалась, пока все соберутся. «Что есть, то есть. Буду делать всё, что нужно».` | `Сама позвонила с диагнозом. «Это всерьёз. Притворяться не буду».` | `Ответила на день позже: «Вот цена этой работы. Я её знала».` |
+| tired | `«Больше ничего». Она сказала это в дверях, уже собираясь уйти.` | `Сказала и сразу ушла наверх. «Сезон забрал всё. Всё».` | `В ту ночь оставила голосовое: «Ничего не осталось. Ещё будет».` | `Написала за полночь: «Сегодня я расплатилась за эту неделю. Силы вернутся».` |
+
+The deep voice can carry a metaphor, but Russian still needs a speakable sentence. `Сезон берёт
+своё` and `расплатилась за эту неделю` preserve the source's cost language without translating its
+English syntax. `Повреждению – неделя` remains body-part-neutral for the same runtime reason as the
+other voices.
+
+## 10. Deep voice – scoped moments
+
+| moment/stage | Russian draft |
+| --- | --- |
+| exams, school | `Сказала, сдав последнюю работу: «Всё. Хочу обратно на корт».` |
+| birthday, school | `{N} сегодня. «Без шума», – сказала она и не спешила к торту.` |
+| birthday, after-school | `{N} сегодня. «Старше – и ещё дальше по этому пути», – сказала она, вернувшись поздно.` |
+| off-season, college | `Уже уходя, сказала: «Сезон закончился. Мне было нужно, чтобы он закончился».` |
+| off-season, independent | `Позвонила, когда всё наконец осталось позади. «Пока всё. Спроси меня в январе».` |
+
+## 11. Core-matrix completion ledger
+
+| voice | rectangular cells | scoped cells | total | state |
+| --- | ---: | ---: | ---: | --- |
+| sunny | 32 | 5 | 37 | drafted |
+| fiery | 32 | 5 | 37 | drafted |
+| quiet | 32 | 5 | 37 | drafted |
+| deep | 32 | 5 | 37 | drafted |
+| **total** | **128** | **20** | **148** | **complete as DRAFT** |
+
+This ledger closes only the typed voice cross. It does not claim that all player-facing strings in
+`weekNotes.ts` are localized. Motherhood, bereavement, divorce, fork aftermath and the flat legacy
+pool remain distinct authored surfaces and must receive their own exact-source inventories.
