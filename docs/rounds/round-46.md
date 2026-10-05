@@ -88,11 +88,50 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     (econ-reach, injury %, holiday bench) re-pin after the build, round-45 style. Class: **build**
     → bundle **B13**.
 
-- [ ] **8. «В попапе итогов года что-то странное с доход-расход, в расходы явно что-то лишнее
+- [x] **8. «В попапе итогов года что-то странное с доход-расход, в расходы явно что-то лишнее
   попадает, а в доходах общее состояние и прирост не учитываются, надо исправить»** – the year-summary
   popup's income/expense split: something extra lands in expenses; income ignores net worth and its
   growth. Engine-UI parity class: find what the popup sums vs what the engine's own ledgers say.
   Class: **build**.
+  - **B5 · 8 SHIPPED – IT WAS THE ENGINE'S SEASON FOLD, NOT THE CARD.** The popup printed what `maybeFireSeasonWrapUp` banked, and that
+    was the wallet's GROSS fold: `lastSeasonSummary.spentCents/earnedCents` came off `financeWindow(world.financeWeeks, seasonStartWeek)`
+    whole. It now banks consumption and income apart from what only MOVED, and shows the family's portfolio and its growth.
+    **THE COMPOSITION, line by line.** Window = the ledger rows from the season's first week through the wrap week inclusive; a category
+    is classified by its NET over the window.
+    * BEFORE – «Spent» = the sum of every category that nets negative: coaching, facility, travel, entry, gear, stringing, tuition, physio,
+      staff, vacation, practice, other **and `shop`** (a house, an academy stage, the brand, a fund deposit – money MOVED onto `world.assets` –
+      plus the cars', boats' and planes' weekly upkeep, net of any sale or withdrawal proceeds). «Earned» = the sum of every category that
+      nets positive: prize (the family's half – her share never enters the ledger), sponsor, academy, business, income, interest **and a
+      positive `shop` net** (a year of sales read as INCOME).
+    * AFTER – the same twelve consumption categories are «Spent», the same six income categories «Earned»; `shop` leaves BOTH and is its own
+      signed figure (`wealth.shelfNetCents`). `fundsDeltaCents` – the wallet's change – is untouched, so `earned − spent + shelf = funds`
+      closes to the cent (pinned).
+    **(a) THE «ЛИШНЕЕ»:** the whole `shop` category – on his scenario class (a fund deposit that gained, a berth bill) $4.02M of a $5.02M «spent»
+    against $1.0M of real consumption. **(b) WHAT THE INCOME SIDE IGNORED:** the family's overall worth and its growth. The ledger cannot say
+    either – a fund's appreciation is written onto `valueCents` by `revalueAssets` and never booked, and a deposit is a transfer. Now
+    `summary.wealth` carries the portfolio (wallet + holdings at worth = `careerMoney.portfolioCents`, the epilogue's «Family's portfolio»),
+    the holdings, the shelf net, and the growth wrap to wrap – exactly one season, against the figure on LAST year's card (season 0 reads from
+    the opening wallet). **No baseline means no growth row**: the first wrap after this ships on a career already under way shows the portfolio
+    and no growth, rather than a guess.
+    **ENGINE-WRONG vs POPUP-WRONG – ENGINE, LOUDLY.** `financeWindow` read whole is the wallet's meaning of «spent»; the 18.09 reckoning taught
+    the CAREER totals the holding rule (`careerMoney`, `isHoldingCategory`) and left the season fold alone. The fix is a SECOND reading of the
+    same window (`seasonMoneyOf`, `world/ledger.ts`) beside the untouched `financeWindow`; the wallet's own fold and the Money screen's «This
+    season» donut (which still sums «The shop» as a slice – B7's file, not edited) stay gross, so spent + the shelf's outflow is the donut's
+    centre to the cent. The history row banked beside the summary is fed by the same locals, so Money → History («what the year cost») now
+    reads consumption too; rows banked earlier keep the gross figure they were written with (nothing can split the shelf back out of them –
+    a mixed column across the update, flagged).
+    ⚠ **PERSISTENCE, FLAGGED:** one OPTIONAL key (`wealth?`) on the banked `SeasonSummary` – the `rankTrack?` / `entryMirror?` precedent, NO
+    schema bump. If the architect reads the v88 rule («two persisted keys are a schema move») as covering a summary key, it is a comment-only
+    v92 step + `v92.json` + README row + e2e fixtures + the docs sentence + `PRE_V92`; not spent here, and v92 is a shared hot spot this round.
+    ⚠ **UPKEEP:** it rides with the shelf (`resolveAssetUpkeep` books it under `shop`; ruling 5 of 18.09 says it is not tennis), so a family with
+    a yacht and no purchase this year sees a «Holdings and upkeep» row – the ledger has no category of its own to split it out.
+    **Tests** (18/18 new green; 452/452 over the 19 money / history / wrap-up / golden-save files; `vue-tsc -b --force` exit 0):
+    `tests/round46-season-money.test.ts` (the composition table over all 19 categories as cost and as income; the excluded set is exactly
+    `['shop']`; the identity; his scenario through `buyAsset` + the real `maybeFireSeasonWrapUp`; history parity; the chain and no-baseline; a
+    shelf-less career is gross-identical; the M-form) and `tests/component/round46-season-summary-money.test.ts` (6 mounted arms).
+    **MUTATED, each arm went red and was restored byte-identical (`cmp`):** the fold ignores the holding rule → 7 red; pre-fix gross banking
+    (his scenario: «spent» $5.02M) → 4 red; any previous summary as baseline → 1 red; wealth rows always shown → 1 red; compact form off → 2 red;
+    card uncapped → the phone arm red. DRAFT: R46-S12, R46-S13 (wired), R46-S14 (reused label, NOT new), R46-S15, R46-S16 (alternates).
 
 - [x] **9. «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может сделать
   что-то на личной странице или заменить after school, например, когда он станет неактуальным?
@@ -323,12 +362,34 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   adult shot instead of the real album book. Route the epilogue to the full album and propose the
   flow. Class: **build** (+ the flow proposal in the report).
 
-- [ ] **19. «Потраченные суммы на итогах снова не соответствуют действительности. А ещё там верстка
+- [x] **19. «Потраченные суммы на итогах снова не соответствуют действительности. А ещё там верстка
   пляшет. Можно миллионы сокращать до М, например и красиво все выстроить.»** – the summary's SPENT
   amounts are wrong **again** («снова» – check earlier rounds' ledgers; if a prior round reported
   this fixed, mark `[!]` REOPENED with what the first fix aimed at). Plus the layout dances; his
   formatting ruling: abbreviate millions to «M» and align. Same surface as #8 – one bundle. Class:
   **build**.
+  - **B5 · 19 REOPENED → SHIPPED – the spent total of THIS surface had been «fixed» twice, each time on a different axis; this one fixes the
+    DEFINITION (the fix is #8's).** ⚠ **THE REOPEN STORY** – the sentence that stops a third miss:
+    **(1) R11-12a (round 11)** – he compared the popup's spend with the wallet's «This season» (his $59,740 against $95,507). That fix
+    reconciled the WINDOW (it now ends on the wrap week, like the wallet's) and the CATEGORY COVERAGE (the 400-row event feed → the pruning-proof
+    `financeWeeks` ledger), and banked spend and income apart. It aimed at «the popup agrees with the wallet» and got there by making the popup
+    the wallet's GROSS fold – which is exactly why it could not see that a deposit is not «spent». **(2) the 18.09 reckoning**
+    (`docs/specs/the-reckoning-2026-09.md`, headed «round 46 items 9 and 10» there and in the code comments – an EARLIER numbering than this
+    round's #9/#10) asked precisely that question of the CAREER totals (album, epilogue, break-even: `careerMoney`, `isHoldingCategory`) and
+    left the season accumulators alone, so the career page and the year card told two stories about one family. **Not this surface:** round 31
+    #2 (the audit this ledger named) was the WEEK-ENTRY card (Income / Other income / Spent / Balance), and round 34's «earned / spent (family
+    side)» line is a measurement table, not a fix. **WHY «СНОВА»:** every prior fix reconciled the card to a FIGURE; none reconciled it to a
+    DEFINITION. It re-opens whenever a family buys an asset – his own finished career (house, fund, academy, boats).
+    **THE «М»:** `formatCentsCompact` / `formatCentsSignedCompact` (`shared/money.ts`, the one money module): from $1M up a figure is «$12.4M» /
+    «+$2.1M»; below that it is EXACTLY what the full forms print (pinned across a spread); the boundary is read off the ROUNDED dollars, so
+    `$999,999.60` is «$1.0M» and no «$1,000,000» ever stands in an M column. It is the one place a decimal point appears on money, and the
+    abbreviation is his ruling. **THE LAYOUT:** the Money tile is one two-column grid (`.season-money`) – labels in the left track, every figure
+    in the right, rows `display: contents`, hairlines spanning both, figures `nowrap` in tabular numerals – instead of wrapping flex rows with the
+    bottom line set a point larger. The half-width Ranking / Matches tiles keep their wrapping rows on purpose (a value dropping under its label
+    is the right answer in a 150px column). **PHONE:** the card with the shelf and both wealth rows is mounted at 375×667 with the global sheet
+    loaded and `setViewport` BEFORE the mount, the dismiss control is reachable, and uncapping the card turns the arm red.
+    ⚠ **NOT SEEN BY EYE:** the layout is proven by computed styles and the `fits.ts` model in happy-dom, not in a browser – his glance is the
+    real check.
 
 - [ ] **20. «Не могу сейв выгрузить кажется теперь никак из-за последнего экрана, у меня там много
   вопросов было на проверить. Может для служебных целей сделать там отдельную кнопку для сейва? Тогда
@@ -428,3 +489,8 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S9 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `He has something to say about this season` – his own «он» and the shortest; the Home card above it (`The one she married wants a word.`, unchanged) is its only antecedent; also gendered |
 | R46-S10 | 9 – the personal page's relationship line, **WIRED** (`kidLife.ts` `togetherNote`, one function; the sentence sits under the tile grid on `KidScreen`, beside the school and college notes; the span words are S2's and are not repeated here) | `Together with {name} for {span}` – e.g. `Together with Anton for 1 year and 6 months` · married: `Married to {name} – together for {span}` · before the engagement has written a name: `Together for {span}` · married with no name (hand-built rows only – the engine names him at the engagement, before any wedding): `Married – together for {span}` |
 | R46-S11 | 9 – ALTERNATE for S10, NOT wired (the same one function) | name-first and shorter: `{name} – together for {span}` · `Together for {span}` · `Married to {name} – together for {span}`; the cost is that the unnamed form reads as a fragment with no subject, which is why S10 keeps «with» in the named form |
+| R46-S12 | 8 + 19 – the year-end Money tile's shelf row, **WIRED** (`SeasonSummaryDialog.vue`, the `season-key` between «Earned this season» and the hairline; hidden at zero; it carries the whole `'shop'` category's net – purchases, the cars' upkeep and sale proceeds – because the ledger has no category of its own for upkeep) | `Holdings and upkeep` |
+| R46-S13 | 8 + 19 – the growth row under «Family's portfolio», **WIRED** (same file; absent when there is no previous wrap-up to subtract from) | `Portfolio growth` |
+| R46-S14 | 8 + 19 – NOT new: the wealth row's label is the EPILOGUE'S OWN for the same figure (`EndingScreen.vue`, `careerMoney.portfolioCents`), now also on the year-end card under its own hairline – listed so he knows the card will say it | `Family's portfolio` |
+| R46-S15 | 8 + 19 – ALTERNATE for S12, NOT wired (the one `season-key` in the template) | `Put into holdings` when the shelf's net is out, `Taken out of holdings` when it is in – plainer, but two lines, and «upkeep» (a boat's crew) is not «put into» anything |
+| R46-S16 | 8 + 19 – ALTERNATE for S13, NOT wired (the one `season-key` in the template) | `Up on last season` / `Down on last season` – the year-on-year reading in his words; the wired label is neutral for either sign |

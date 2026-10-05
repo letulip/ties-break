@@ -269,6 +269,63 @@ export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): Fi
   return { startWeek: fromWeek, byCategory, incomeCents, expenseCents, netCents: incomeCents - expenseCents, coachCutCents }
 }
 
+/** ⭐⭐⭐ ROUND 46 #8 + #19 – A WINDOW READ A SECOND WAY: WHAT WAS CONSUMED, WHAT CAME IN, AND WHAT ONLY MOVED.
+ *  See `seasonMoneyOf` below for the argument; the three figures are what the year-end card banks. */
+export interface SeasonMoney {
+  /** consumption only: every category except the holding one whose net over the window is negative (positive cents). */
+  spentCents: number
+  /** income only: every category except the holding one whose net over the window is positive (positive cents). */
+  earnedCents: number
+  /** the holding category's net over the window, signed as the wallet felt it (negative = cash went out to the shelf). */
+  shelfNetCents: number
+}
+
+/** ⭐⭐⭐ ROUND 46 #8 + #19 – THE SEASON'S MONEY, TOLD APART THE WAY THE RECKONING ALREADY TELLS IT.
+ *
+ *  THE OWNER, 05.10: «В попапе итогов года что-то странное с доход-расход, в расходы явно что-то
+ *  лишнее попадает, а в доходах общее состояние и прирост не учитываются» and, on the same card,
+ *  «Потраченные суммы на итогах снова не соответствуют действительности».
+ *
+ *  ⚠⚠ THE DEFECT WAS IN THE ENGINE'S SEASON FOLD AND NOT IN THE CARD. `maybeFireSeasonWrapUp` banked
+ *  `financeWindow`'s `expenseCents` and `incomeCents` whole – the wallet's own GROSS arithmetic, which
+ *  sums every category – so «Spent this season» carried the entire `'shop'` row: the house, the academy
+ *  stage and the fund deposit (money that MOVED onto `world.assets` and did not leave the family), the
+ *  weekly upkeep of the cars and boats and, because a category is classified by its NET over the window,
+ *  a year of asset sales read as «Earned». The card printed exactly what it was handed.
+ *
+ *  ⚠ WHY IT WAS SUCH A SLOW MISS. R11-12a (the first time this card disagreed about spend) was about the
+ *  WINDOW and the CATEGORY COVERAGE – popup against wallet, cent for cent – and it was fixed; it never
+ *  asked whether a deposit is «spent». Round 46 #9 (18.09) asked exactly that of the CAREER-level
+ *  reckoning (`careerMoney`; the break-even week arm reads `isHoldingCategory` too) and left the season
+ *  fold alone, so the album and the year-end card told two stories about one family. This is the season
+ *  fold finally using the same rule.
+ *
+ *  ⚠ THE WALLET'S OWN FOLD IS NOT TOUCHED. `financeWindow` stays gross – the Money screen's donut sums its
+ *  slices and «The shop» is one of them – so this is a SECOND reading of the same window and never an
+ *  edit to the first. `shelfNetCents` carries the row that was taken out, which is what makes
+ *  `earnedCents - spentCents + shelfNetCents === window.netCents` hold to the cent: the card can show all
+ *  three and its rows still add up to the bottom line.
+ *
+ *  ⚠ THE UPKEEP RIDES WITH THE SHELF, NOT WITH «SPENT» – ruling 5 of 18.09 («вообще не про теннис, мимо
+ *  (машины, дома, яхты, самолеты)»). `resolveAssetUpkeep` books it under `'shop'` and `captureBreakEven`'s
+ *  week arm already excuses it together with the purchase. The ledger has no category of its own for it, so
+ *  it cannot be split back out of the row exactly: this is the engine's own rule applied to a window, not a
+ *  second approximation of it.
+ *
+ *  Pure integer arithmetic on a window already folded: no draw, no clock, no world. */
+export function seasonMoneyOf(window: FinanceWindow): SeasonMoney {
+  let spentCents = 0
+  let earnedCents = 0
+  let shelfNetCents = 0
+  for (const [cat, amt] of Object.entries(window.byCategory) as [WorldEventCategory, number | undefined][]) {
+    const cents = amt ?? 0
+    if (isHoldingCategory(cat)) shelfNetCents += cents
+    else if (cents > 0) earnedCents += cents
+    else spentCents += -cents
+  }
+  return { spentCents, earnedCents, shelfNetCents }
+}
+
 /** DENSE per-week income/expense over `[fromWeek, toWeek]` – the Home budget card's chart series.
  *
  *  Dense is the whole point, and the reason this is not a `.map` over `financeWeeks`: that ledger

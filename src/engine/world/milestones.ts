@@ -25,7 +25,7 @@ import {
   type TierTrophies,
   type WorldEventCategory,
 } from '../../shared/protocol'
-import { addEvent, financeWindow, isHoldingCategory, seasonIndexOf, seasonStartWeek } from './ledger'
+import { addEvent, financeWindow, isHoldingCategory, seasonIndexOf, seasonMoneyOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
 // ⚠ `enterprisePaidInWeekCents` was imported here for ruling 6's week arm and is not any more –
 // ruling A of 18.09 superseded it (see `captureBreakEven`). The import goes with the call: an unused
@@ -420,10 +420,37 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // this moment, so the popup and the wallet agree by construction. The two remaining off-season
   // weeks (50, 51) still spend money and the wallet keeps counting them into the same 52-block –
   // a figure computed HERE cannot know them, and it should not: it describes the season played.
-  const seasonMoney = financeWindow(world.financeWeeks, yearStart)
-  const spentCents = seasonMoney.expenseCents
-  const earnedCents = seasonMoney.incomeCents
-  const fundsDeltaCents = seasonMoney.netCents
+  //
+  // ⭐⭐⭐ ROUND 46 #8 + #19 – BUT «SPENT» AND «EARNED» ARE CONSUMPTION AND INCOME, NOT THE WALLET'S GROSS.
+  // `financeWindow` is the wallet's own fold and stays gross (the Money screen sums its slices); what this
+  // card and the history row banked beside it call spend now leaves out the `'shop'` category – a house, an
+  // academy stage, a fund deposit, the cars' upkeep, a sale's proceeds – which moved between the wallet and
+  // the shelf and rides in `shelfNetCents`. The window and the net are untouched, so `fundsDeltaCents` is
+  // still the change in the wallet and `earnedCents - spentCents + shelfNetCents === fundsDeltaCents` closes
+  // to the cent (tests/round46-season-money.test.ts). `seasonMoneyOf` (world/ledger.ts) carries the argument.
+  const seasonWindow = financeWindow(world.financeWeeks, yearStart)
+  const { spentCents, earnedCents, shelfNetCents } = seasonMoneyOf(seasonWindow)
+  const fundsDeltaCents = seasonWindow.netCents
+
+  // ⭐⭐⭐ ROUND 46 #8 + #19 – AND THE INCOME SIDE'S MISSING HALF: WHAT SHE HOLDS AND HOW MUCH RICHER THE YEAR
+  // MADE THE FAMILY («общее состояние и прирост»). The cash ledger cannot say it – a fund's appreciation is
+  // written onto `valueCents` by the tick and never booked – so it is read off `careerMoney`, the same
+  // fold the epilogue's «Family's portfolio» reads, and banked.
+  // ⚠ GROWTH IS WRAP TO WRAP, exactly one season, and the baseline is a thing the player has already been
+  // shown: LAST year's banked portfolio. Season 0 has its baseline in the ledger – the shelf started empty,
+  // so the opening portfolio is the wallet the window started from. Anything else has none (the first wrap
+  // after this shipped, a skipped season) and `growthCents` is left ABSENT rather than guessed.
+  const heldNow = careerMoney(world)
+  const prior = world.lastSeasonSummary ?? null
+  const priorPortfolioCents =
+    prior !== null && prior.seasonYear === displayYear - 1 ? prior.wealth?.portfolioCents : undefined
+  const openingPortfolioCents = seasonIndex === 0 ? world.fundsCents - fundsDeltaCents : priorPortfolioCents
+  const wealth = {
+    portfolioCents: heldNow.portfolioCents,
+    holdingsCents: heldNow.holdingsCents,
+    shelfNetCents,
+    ...(openingPortfolioCents === undefined ? {} : { growthCents: heldNow.portfolioCents - openingPortfolioCents }),
+  }
 
   // Season-Life slice C: weeks lost to injury inside [yearStart, wrapWeek). Derived from
   // injuryHistory (each entry spans [week - weeksOut, week)) + the current injury if she is
@@ -592,6 +619,8 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     rankInTrack,
     // v45: what the season could NOT do – omitted entirely when the ledger did not cover the season.
     ...(entryMirror === null ? {} : { entryMirror }),
+    // ROUND 46 #8 + #19: what she holds and how the year moved it – see the fold above.
+    wealth,
   }
   // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
   // every year). Guarded on the season INDEX, so a re-entry for a season already banked is a no-op –

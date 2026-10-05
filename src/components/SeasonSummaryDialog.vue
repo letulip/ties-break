@@ -41,7 +41,7 @@ import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { herDeclineLine, seasonLastWinterLine } from '../composables/declineVoice'
-import { formatCentsSigned } from '../shared/money'
+import { formatCentsCompact, formatCentsSignedCompact } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -79,6 +79,22 @@ const closingScrap = computed(() => {
 // before R11-12a, in which case only the net row shows, exactly as before.
 const spentCents = computed(() => summary.value?.spentCents)
 const earnedCents = computed(() => summary.value?.earnedCents)
+
+// ⭐⭐⭐ ROUND 46 #8 + #19 – AND «THE SAME FINANCEWINDOW FOLD» ABOVE IS NOW TRUE OF THE WINDOW ONLY, NOT OF THE
+// FIGURES. The owner, 05.10: «в расходы явно что-то лишнее попадает, а в доходах общее состояние и прирост не
+// учитываются» / «Потраченные суммы на итогах снова не соответствуют действительности». The card printed exactly
+// what the engine banked, and the engine banked the wallet's GROSS fold – a house, a fund deposit and the cars'
+// upkeep were «spent». The wrap-up now banks consumption and income apart from what moved to and from the shelf
+// (`seasonMoneyOf`, engine/world/ledger.ts), and the holdings and their growth as `summary.wealth`.
+// ⚠ NOTHING IS DERIVED HERE: every figure is a field the engine banked, and the only decision this file takes is
+// «hide at zero» – the one the Academy row below already takes.
+const shelfNetCents = computed(() => summary.value?.wealth?.shelfNetCents ?? 0)
+/** The family's wealth, or null when it has none to speak of: nothing held and nothing through the shelf this
+ *  season, which is every career until its first purchase – the card is then what it always was. */
+const wealthRows = computed(() => {
+  const w = summary.value?.wealth
+  return w && (w.holdingsCents > 0 || w.shelfNetCents !== 0) ? w : null
+})
 
 // ⚠⚠ WHICH TABLE THIS SEASON WAS PLAYED ON (fix/wallet-and-wrapup, 05.08). The owner, at
 // twenty-one, on the W tour: «итоговый рейтинг сломался... и на том же экране всегда показывается
@@ -253,30 +269,59 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
         <!-- WHAT IT COST -->
         <Card class="season-tile season-tile-wide" pad="12px 13px">
           <Eyebrow>Money</Eyebrow>
-          <div class="season-rows">
+          <!-- ⭐ ROUND 46 #19 – ONE TWO-COLUMN GRID FOR THE WHOLE TILE, rows and hairlines together. It was a
+               column of wrapping flex rows with the bottom line set a point larger than the rest, which is how
+               the figures came to dance: a long one dropped under its label, a short one sat beside it, and no
+               two shared a right edge or a digit width. Every figure is now one right-aligned column of tabular
+               numerals that cannot wrap, and a million or more is written in M (`formatCentsSignedCompact`) so
+               even a rich family's column stays narrow. -->
+          <div class="season-money">
             <div v-if="spentCents !== undefined" class="season-row">
               <span class="season-key">Spent this season</span>
-              <span class="season-val num negative">{{ formatCentsSigned(-spentCents) }}</span>
+              <span class="season-val num negative">{{ formatCentsSignedCompact(-spentCents) }}</span>
             </div>
             <div v-if="earnedCents !== undefined" class="season-row">
               <span class="season-key">Earned this season</span>
-              <span class="season-val num positive">{{ formatCentsSigned(earnedCents) }}</span>
+              <span class="season-val num positive">{{ formatCentsSignedCompact(earnedCents) }}</span>
             </div>
             <!-- v21: the scholarship never shows up in "Earned" – its travel half is a discount on
                  the travel line, not income – so this is the only place the year's help is a number.
                  Hidden at zero: a family nobody backed should not read a row of dashes. -->
             <div v-if="(summary.academyCoveredCents ?? 0) > 0" class="season-row">
               <span class="season-key">Academy covered</span>
-              <span class="season-val num positive">{{ formatCentsSigned(summary.academyCoveredCents ?? 0) }}</span>
+              <span class="season-val num positive">{{ formatCentsSignedCompact(summary.academyCoveredCents ?? 0) }}</span>
             </div>
-          </div>
-          <span class="season-hairline"></span>
-          <div class="season-row">
-            <span class="season-key">Funds this season</span>
-            <span
-              class="season-net num"
-              :class="{ negative: summary.fundsDeltaCents < 0, positive: summary.fundsDeltaCents >= 0 }"
-            >{{ formatCentsSigned(summary.fundsDeltaCents) }}</span>
+            <!-- ⭐⭐⭐ ROUND 46 #8 + #19 – WHAT MOVED TO AND FROM THE SHELF, between «Earned» and the bottom line
+                 so the rows add up on the card: earned - spent + this = funds. It is where a house, a fund
+                 deposit and the cars' upkeep went when they stopped being «spent». Hidden at zero. DRAFT
+                 R46-S12 (docs/rounds/round-46.md). -->
+            <div v-if="shelfNetCents !== 0" class="season-row">
+              <span class="season-key">Holdings and upkeep</span>
+              <span class="season-val num" :class="shelfNetCents < 0 ? 'negative' : 'positive'">{{ formatCentsSignedCompact(shelfNetCents) }}</span>
+            </div>
+            <span class="season-hairline"></span>
+            <div class="season-row">
+              <span class="season-key">Funds this season</span>
+              <span
+                class="season-net num"
+                :class="{ negative: summary.fundsDeltaCents < 0, positive: summary.fundsDeltaCents >= 0 }"
+              >{{ formatCentsSignedCompact(summary.fundsDeltaCents) }}</span>
+            </div>
+            <!-- ⭐⭐⭐ ROUND 46 #8 + #19 – THE FAMILY'S WEALTH AND ITS GROWTH, under its own hairline because they
+                 are a standing fact and a year-on-year change, not part of the cash arithmetic above. «Family's
+                 portfolio» is the epilogue's own label for the same figure (`careerMoney.portfolioCents`), not a
+                 new line; the growth label is DRAFT R46-S13. Both absent for a family that holds nothing. -->
+            <template v-if="wealthRows">
+              <span class="season-hairline"></span>
+              <div class="season-row">
+                <span class="season-key">Family's portfolio</span>
+                <span class="season-val num">{{ formatCentsCompact(wealthRows.portfolioCents) }}</span>
+              </div>
+              <div v-if="wealthRows.growthCents !== undefined" class="season-row">
+                <span class="season-key">Portfolio growth</span>
+                <span class="season-val num" :class="wealthRows.growthCents < 0 ? 'negative' : 'positive'">{{ formatCentsSignedCompact(wealthRows.growthCents) }}</span>
+              </div>
+            </template>
           </div>
         </Card>
       </div>
@@ -382,6 +427,36 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
 .season-net {
   font-size: 16px;
   font-weight: 800;
+}
+
+/* ⭐ ROUND 46 #19 – THE LAYOUT THAT DANCED (his word), ANSWERED IN THE GRID AND NOT BY NUDGING A MARGIN. The Money tile is one
+   two-column grid: the row stops being a box of its own (`display: contents`), so every label sits in the left
+   track and every figure in the right one, and the hairlines span both. The figures cannot wrap, are
+   right-aligned on one edge and are set in tabular numerals, so the digits of one row stand over the digits of
+   the next. The half-width tiles above keep their wrapping rows on purpose (a value dropping under its label
+   is the right answer in a 150px column); only this full-width tile is a column of numbers. */
+.season-money {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 8px 10px;
+  margin-top: 11px;
+}
+
+.season-money .season-row {
+  display: contents;
+}
+
+.season-money .season-val,
+.season-money .season-net {
+  justify-self: end;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.season-money .season-hairline {
+  grid-column: 1 / -1;
+  margin: 2px 0;
 }
 
 /* ROUND 31 #9 – her line. It sits between the tiles and the parent's scrap and is set apart from
