@@ -284,8 +284,8 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     **The fix:** the band declares a RATIO (inline `aspect-ratio: 2 / 1`, one constant `ART_BAND_RATIO`) instead of 140px, and the anchor is
     solved for the head at that ratio – `bandFacePoint(stem, ratio)` in `art/faceRects.ts`, `Y = (faceY − ratio/2) / (1 − ratio)` clamped
     to [0, 1] – so the whole head sits inside the window at EVERY width, and a face that is high in its painting (the 31+ one) pins to the
-    top (the round-45 anchor, derived per painting). ⚠ THE ONE VISIBLE SIDE EFFECT: the picture is 2:1, so +11px tall on a 375px phone and
-    +46px on the desktop card.
+    top (the round-45 anchor, derived per painting). ⚠ THE ONE VISIBLE SIDE EFFECT: the picture is 2:1, so about +14px tall on a 375px phone (a
+    ~308px picture, measured in the browser) and +46px on the desktop card (372px).
     **Evidence:** `tests/component/round46-b6-ending-and-retirement.test.ts` – mounted at ages 30 and 41, the inline ratio and position keep
     the head box inside the window at 240 / 303 / 372 / 420px; a control proves the OLD anchor cut it (>8px and >25px at 372px); and
     `bandFacePoint` is swept over every painting in `CROPS`. **Mutated:** `bandFacePoint` returning the old anchor → 2 red; `ART_BAND_RATIO`
