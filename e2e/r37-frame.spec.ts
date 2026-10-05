@@ -197,7 +197,10 @@ test('item 13 – the lone Next round control stops at 500 and is centred', asyn
   const pair = page.locator('.tf-actions button')
   await expect(pair).toHaveCount(2)
   const pairWidths = await pair.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)))
-  expect(pairWidths, 'the pre-match pair is unchanged and never met the cap').toEqual([418, 418])
+  // ⚠ RE-PINNED 418 → 410 ROUND 46 #10 (06.10): the Match Day card's stale `-24px` bleed became
+  // the app's own 16px gutter, so the card – and the pair that lives in its width – narrowed by
+  // 16px, 8 per half. The CLAIM is unchanged: equal halves, both far under the 500 cap.
+  expect(pairWidths, 'the pre-match pair is unchanged and never met the cap').toEqual([410, 410])
 
   // Walk her run out: skip each round's match, take the box score's Next, until she is beaten before
   // the Final and the flow offers the spectate card – the one action row in the app with a single
