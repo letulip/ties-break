@@ -352,8 +352,92 @@ or lost that week.
 The daughter reads the other player's composure differently in each voice. Russian keeps that
 reading subjective, with no moral for the player to choose.
 
-## 9. Corpus progress
+## 9. Situation R15 – `the-bag-she-repacked`
+
+Subject `worry`; stages `after-school`, `college`, `independent`; no fact gate. Three repacks
+belong to the authored scene. The line never claims that a game inventory item is missing.
+
+### 9.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've packed this bag three times and I still think I've forgotten something."` | `«Я три раза собрала сумку и всё равно думаю, что что-то забыла».` |
+| fiery | `"Three times. I've packed it three times and it's still wrong somehow."` | `«Три раза. Три раза собрала сумку, а всё равно что-то не так».` |
+| deep | `"I keep repacking. I don't think it's about the bag."` | `«Всё перекладываю вещи. Кажется, дело не в сумке».` |
+| quiet | `"I've repacked it three times. It's fine now."` | `«Три раза переложила вещи. Теперь нормально».` |
+
+### 9.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she thinks is missing` | `Спросить, чего, по её мнению, не хватает` |
+| respond | `Say you do that before trips too` | `Сказать, что вы тоже так делаете перед поездками` |
+| space | `Say the bag is packed and she can stop` | `Сказать, что сумка собрана и можно остановиться` |
+
+### 9.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"I don't know. That's the whole problem. Everything's in there and it still feels wrong."` | `«Не знаю. В этом вся беда. Всё на месте, а мне всё равно кажется, что нет».` |
+| sunny | respond | `"Do you? That helps, weirdly. I thought it was only me."` | `«Да? Как ни странно, мне легче. Думала, это только у меня».` |
+| sunny | space | `"It is packed. I'll leave it alone. Probably."` | `«Собрана. Больше не трону. Наверное».` |
+| fiery | invite | `"Nothing. I know nothing's missing. I'm going to open it again anyway."` | `«Ничего. Я знаю, что всё там. И всё равно снова открою».` |
+| fiery | respond | `"You do it once. I've done it three times. It's not the same thing."` | `«Ты делаешь это один раз. Я – три. Это совсем другое».` |
+| fiery | space | `"I'll stop when I'm out of the door and not before."` | `«Остановлюсь, когда выйду за дверь. Не раньше».` |
+| deep | invite | `"Nothing is missing. I've checked three times and I'm still going to check."` | `«Ничего не забыто. Я проверила три раза и всё равно проверю ещё».` |
+| deep | respond | `"You do. You don't do it three times."` | `«Делаешь. Но не три раза».` |
+| deep | space | `"It's packed. I'm going to open it once more."` | `«Собрана. Я всё равно ещё раз открою».` |
+| quiet | invite | `"Couldn't tell you. Everything's on the list."` | `«Не скажу. По списку всё на месте».` |
+| quiet | respond | `"I know. I've watched you do it."` | `«Знаю. Я видела, как ты собираешься».` |
+| quiet | space | `"It's packed. I'll leave it by the door."` | `«Собрана. Оставлю её у двери».` |
+
+The parent's shared habit may comfort one daughter and irritate another. No line diagnoses anxiety
+or asserts an actual forgotten object.
+
+## 10. Situation R16 – `the-one-who-stopped`
+
+Subject `worry`; stages `college`, `independent`; no fact gate. A familiar name is absent from a
+draw. The daughter does not know why, and the Russian lines do not settle that mystery.
+
+### 10.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"There's a name I expected to see in the draw and it isn't there."` | `«Я думала, увижу в сетке одну фамилию. А её нет».` |
+| fiery | `"She's not in the draw. Nobody will say why, and I hate that."` | `«Её нет в сетке. Никто не говорит почему, и меня это бесит».` |
+| deep | `"A name I looked for isn't there. Nobody has mentioned it."` | `«Искала в сетке одно имя. Не нашла. И никто об этом не говорит».` |
+| quiet | `"There's a name missing from the draw."` | `«В сетке не хватает одной фамилии».` |
+
+### 10.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether she knew her well` | `Спросить, хорошо ли она её знала` |
+| respond | `Say people leave for ordinary reasons too` | `Сказать, что люди уходят и по обычным причинам` |
+| space | `Say she does not have to find out` | `Сказать, что ей не обязательно выяснять причину` |
+
+### 10.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Not really. I'd know her to look at and that's honestly the whole of it."` | `«Не очень. Узнала бы в лицо, и, честно говоря, это всё».` |
+| sunny | respond | `"They do. I'd just like one of the ordinary reasons to be the reason."` | `«Уходят. Я бы хотела, чтобы и здесь причина была обычной».` |
+| sunny | space | `"I don't. I'll probably look at the next draw anyway."` | `«Не обязательно. Но следующую сетку я, наверное, всё равно посмотрю».` |
+| fiery | invite | `"Not well. Well enough to notice she's gone, which is apparently not the same."` | `«Не близко. Но достаточно, чтобы заметить её отсутствие. Оказывается, это не одно и то же».` |
+| fiery | respond | `"Then somebody could say which ordinary reason. That's all I want."` | `«Тогда кто-нибудь мог бы сказать, какая именно причина. Мне больше ничего не нужно».` |
+| fiery | space | `"I don't have to. I'm going to ask somebody."` | `«Не обязательно. Но я всё равно кого-нибудь спрошу».` |
+| deep | invite | `"Not well. I'd have said hello. I don't think I ever did."` | `«Не близко. Я могла бы с ней поздороваться. Кажется, так ни разу и не сделала».` |
+| deep | respond | `"They do. I'd still like to know which one it was."` | `«Уходят. И всё же мне хочется знать причину».` |
+| deep | space | `"No. I'll keep looking for her name, though."` | `«Не обязательно. Но я всё равно буду искать её имя».` |
+| quiet | invite | `"Enough to say hello. Not much past that."` | `«Могла поздороваться. Не больше».` |
+| quiet | respond | `"Probably. It isn't my business."` | `«Наверное. Это не моё дело».` |
+| quiet | space | `"No. I'll notice if she's not in the next one."` | `«Не обязательно. Но замечу, если её не будет и в следующей сетке».` |
+
+`Уходят` retains the parent's gentle possibility; the daughter has no evidence whether the absent
+player left the sport, skipped an event or had another reason. No answer makes that reason a fact.
+
+## 11. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 22 / 51 | 418 / 969 | 4 / 4 | R45–R52 and R1–R14 complete as DRAFT |
+| 24 / 51 | 456 / 969 | 4 / 4 | R45–R52 and R1–R16 complete as DRAFT |
