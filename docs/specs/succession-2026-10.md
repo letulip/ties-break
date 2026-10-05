@@ -162,6 +162,7 @@ player-facing string lands in this wave's own DRAFT table below for the owner's 
 | S2b | Creation consumes the legacy input: start year = birth year + prologue age; house and car arrive owned at aged value; the §4 multiplier with its bench (predicted vs measured against the ordinary start budget); the mother as the named parent | sonnet · 60 |
 | S2c | The door: the ending screen offers her career when the epilogue has the daughter; flows into creation; mounted tests, dismiss/controls inside 375×667 (the popup law); strings → DRAFT | sonnet · 45 |
 | S2d | The heirloom: generation 1's album openable read-only from generation 2; entry point + mounted test; strings → DRAFT | sonnet · 40 |
+| S2e | The UI year sweep: S1 measured 135 date-formatting call sites in components/composables still on the default year – correct for every gen-1 career, WRONG on a 2048 world; thread `snapshot.startYear` through them before the door ships | sonnet · 45 |
 | S3 | Content (rival daughters in the conveyor, press/fame lines) – PLANNED, not tonight: corpus-heavy, needs his blessing batches by daylight | next wave |
 | Close | Gates (check / component / capture verdict / sim / e2e) from files on a quiet machine; push; PR body by the pull-request skill | architect |
 
