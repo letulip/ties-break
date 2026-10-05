@@ -99,8 +99,92 @@ not imply the conversation fires during an active college program.
 `Приём заявок` follows the RU season terminology. The deep opener omits `been open a while` because
 the runtime gate verifies only that the window is open now. No Russian answer invents a fee.
 
-## 3. Corpus progress
+## 3. Situation R21 – `what-the-good-ones-do-first`
+
+Subject `curiosity`; stages `college`, `independent`; no fact gate. The daughter observes other
+players' warm-ups and interprets what she sees; these are her judgments, not a coaching rule.
+
+### 3.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've started watching what people do before the match instead of during it. It's fascinating."` | `«Я теперь смотрю, что игроки делают до матча, а не только во время. Ужасно интересно».` |
+| fiery | `"The good ones all do something in the first ten minutes. I want to know what it is."` | `«Сильные игроки в первые десять минут делают что-то особенное. Хочу понять что».` |
+| deep | `"I stopped watching the points and started watching the warm-ups. There's more in them."` | `«Я перестала следить за розыгрышами и стала смотреть разминки. В них больше видно».` |
+| quiet | `"I've been getting to the courts earlier. You see different things."` | `«Теперь прихожу на корты раньше. Замечаешь другое».` |
+
+### 3.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what they do` | `Спросить, что они делают` |
+| respond | `Say she is watching like a coach now` | `Сказать, что теперь она смотрит как тренер` |
+| space | `Say she can just watch the tennis` | `Сказать, что можно просто смотреть теннис` |
+
+### 3.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"They're slower. All of them. They take the whole ten minutes and nobody rushes."` | `«Не торопятся. Все. Используют все десять минут, никто не спешит».` |
+| sunny | respond | `"Am I? I only got bored of watching the points."` | `«Правда? Мне просто надоело смотреть одни розыгрыши».` |
+| sunny | space | `"I do watch the tennis. I watch the other bit as well now."` | `«Я и смотрю теннис. Только теперь ещё и то, что до него».` |
+| fiery | invite | `"Nothing fast. They walk. They take every second of the ten minutes."` | `«Ничего быстрого. Ходят. Не отдают ни секунды из этих десяти минут».` |
+| fiery | respond | `"I'm watching because I want what they've got. That isn't coaching."` | `«Я смотрю, потому что хочу то, что есть у них. Это не тренерский взгляд».` |
+| fiery | space | `"I could. I won't."` | `«Могла бы. Не буду».` |
+| deep | invite | `"They finish settling before the first point. I've started copying the walking."` | `«К первому розыгрышу они уже успевают освоиться. Я стала повторять, как они ходят».` |
+| deep | respond | `"Maybe. I started doing it because I got there early once."` | `«Может быть. Просто однажды пришла рано и начала смотреть».` |
+| deep | space | `"I could. The first ten minutes is the part I want."` | `«Могла бы. Но мне интереснее первые десять минут».` |
+| quiet | invite | `"They're unhurried. Same routine every time, as far as I can tell."` | `«Не спешат. Насколько я вижу, каждый раз делают одно и то же».` |
+| quiet | respond | `"I don't know about that. I just get there earlier."` | `«Не знаю. Я просто раньше прихожу».` |
+| quiet | space | `"I still do. This is only extra."` | `«Я и смотрю. Это просто добавилось».` |
+
+`Десять минут` is her observed window, not a statement about an official warm-up rule. The
+parent's coach comparison remains a suggestion, which she can accept or refuse.
+
+## 4. Situation R22 – `how-they-live`
+
+Subject `curiosity`; stages `college`, `independent`; no fact gate. The story is about the hours
+between matches and how other people fill them. It has no employment or residence assertion.
+
+### 4.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"What does everybody DO all day? I genuinely don't know."` | `«Чем вообще все ЗАНЯТЫ целыми днями? Правда не понимаю».` |
+| fiery | `"I've been here a week and I still don't know how anybody spends their afternoons."` | `«Я здесь неделю, а до сих пор не понимаю, чем все заняты после обеда».` |
+| deep | `"There are hours here I can't account for in anybody's day, including mine."` | `«Не понимаю, куда здесь уходят часы. Ни у других, ни у меня самой».` |
+| quiet | `"The days are long between matches. I've been reading."` | `«Между матчами дни тянутся долго. Я читаю».` |
+
+### 4.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she does with hers` | `Спросить, чем занята она сама` |
+| respond | `Say the waiting is most of it` | `Сказать, что большая часть – ожидание` |
+| space | `Say the boring hours are part of it` | `Сказать, что скучные часы тоже часть дела` |
+
+### 4.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Nap. Message people. Walk to the same café and back. It isn't exciting."` | `«Сплю. Пишу людям. Хожу в одно и то же кафе и обратно. Ничего захватывающего».` |
+| sunny | respond | `"Is it? Nobody said that to me before I started doing it."` | `«Правда? Никто не сказал мне об этом до того, как я сама начала ждать».` |
+| sunny | space | `"They are. I'd still love to know what everybody else is doing."` | `«Конечно. Но мне всё равно любопытно, чем заняты остальные».` |
+| fiery | invite | `"Nothing useful. I wait, I check my phone, I get annoyed about waiting."` | `«Ничем полезным. Жду, смотрю в телефон, злюсь, что жду».` |
+| fiery | respond | `"Then somebody should have warned me. I'd have brought more to do."` | `«Тогда надо было предупредить. Я бы взяла с собой что-нибудь ещё».` |
+| fiery | space | `"Part of it, fine. I'd still like to be better at them."` | `«Пусть часть. Но я бы хотела научиться проводить их лучше».` |
+| deep | invite | `"I wait. I've got better at waiting and I'm not sure that's good."` | `«Жду. Научилась ждать лучше и не уверена, что это хорошо».` |
+| deep | respond | `"It is. Nobody looks like they're waiting, though. That's the bit."` | `«Да. Только никто не выглядит так, будто ждёт. Вот что странно».` |
+| deep | space | `"They are. I keep thinking somebody's found a better way to spend them."` | `«Часть. Но мне всё кажется, что кто-то придумал, как проводить их лучше».` |
+| quiet | invite | `"Read, mostly. Wash things. The day goes."` | `«Читаю в основном. Стираю. День проходит».` |
+| quiet | respond | `"It is. I'd not thought of it as most of it."` | `«Да. Не думала, что ожидание занимает большую часть».` |
+| quiet | space | `"I know. I don't mind them much."` | `«Знаю. Мне они почти не мешают».` |
+
+No Russian line asserts that a particular tournament is currently running; `здесь` belongs to
+the daughter's telling of her own ordinary time away.
+
+## 5. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 28 / 51 | 532 / 969 | 4 / 4 | R45–R52 and R1–R20 complete as DRAFT |
+| 30 / 51 | 570 / 969 | 4 / 4 | R45–R52 and R1–R22 complete as DRAFT |
