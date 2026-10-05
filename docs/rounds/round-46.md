@@ -90,10 +90,40 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     at year 2), the 12-year churn shrinks to ~$28k (noise), the holder keeps beating the late
     buyer. Class: **build** → bundle **B14**.
 
-- [ ] **4. «Альбом стал лучше, а давай ещё повернём немного вот этот цветной горизонтальный билет на
+- [x] **4. «Альбом стал лучше, а давай ещё повернём немного вот этот цветной горизонтальный билет на
   на 5 градусов по часовой стрелке?»** – the coloured horizontal TICKET scrap in the album rotates
   +5° clockwise. Class: **build** (identify the exact scrap asset, rotate in the placement resolver,
   pin the value).
+  - **B12 · 4 SHIPPED (06.10) – THE TICKET LIES 5° CLOCKWISE; ONE DESIGN QUESTION FOR THE ARCHITECT BELOW.** The scrap is the boarding pass
+    (`AlbumTicketPass.vue`, laid by layout B as `.album-b-pass`, four tier steps `album-pass-<step>`). **BEFORE:** no transform at all – 0°, square.
+    **NOW:** `transform: rotate(5deg)` on `.album-b-pass` in `AlbumLayoutB.vue` – one declaration, about its centre, CSS's positive is clockwise;
+    «ещё» on a ticket that lay square is 5°, not a tilt plus five. It lives on the LAYOUT's class because that class already owns the pass's
+    placement (left 22 / right 48 / bottom 48): the component carries no transform, `albumPlacement.ts` assigns the pass no rotation (it only holds its
+    square frame, `passBox`), and no scale composes with it (the pass is not one of round 45 #6b's scaled scraps) – a later scale rides INTO this
+    declaration, never a second site.
+    **CLIPPING AT 375x667: NONE.** The sheet is 470px and never scaled below 768, so the 470-space is the phone's own and `.album-paper` clips at it;
+    a 400px strip turned 5° lifts its left end and drops its right one by ~17.9px, and its four corners stay ≥ 17px from the left edge, ≥ 43px from
+    the right and ≥ 30px from the bottom (high / elite are the tight steps; the page margin elsewhere on B is 15).
+    **⚠ THE OPEN QUESTION (a real design one, as the brief allowed): THE RESOLVER STILL KEEPS CLEAR OF THE SQUARE FRAME.** The lifted left end rises ~17px above
+    `passBox`, into the strip the loose line is drawn in, and the pass paints over whatever is there (it is last in the DOM). I tried teaching the resolver the
+    turn three ways and measured each on the 335-sheet sweep against a control (this tree with my change reverted: `tests/round45-album-placement.test.ts`
+    24/24 green). ONE BOUNDING BOX (408x133 / 410x157): B's photograph windows at a shrunk rung on 40 of 67 sheets where the pin allows 22, and the two
+    non-vacuity guards read 31 and 31. The EXACT STAIRCASE of the outline (8 strips), and that staircase joined to the frame: the 22-pin passes, but the two
+    guards that keep the round-45 tuning non-vacuous read 32 (floor 40) and 30 (floor 38), identically for both – so it is the lifted left end that moves
+    them, not the freed right half. None shipped: those are pinned round-45 numbers and loosening them is not a builder's move. What is on the page is
+    therefore a turned corner that CAN touch the last row of a long loose line on a busy sheet (how often is unmeasured – the sweep has no polygon arm);
+    on high / elite the lifted edge also passes 0.8px under the 24px doodle at (131, 268) – tangent, no overlap. The options are the architect's and the
+    owner's: accept it; spend a measured resolver wave on it (spec first, `docs/specs/rank-plateau.md` is the model); or move the pass's anchor / origin so the
+    swing is spent below the frame instead of above it. The numbers are on `passBox` and in `AlbumLayoutB.vue`'s CSS comment, where the next person edits.
+    **Wording:** none – zero strings (diff: one CSS declaration, comments, one test file). **RNG / engine:** untouched.
+    **Tests:** 8 new mounted in `tests/component/round46-album-pass-tilt.test.ts` (4 tier steps × { the computed `transform` is exactly one `rotate(5deg)`, positive;
+    the turned corners, built from the rendered `left/right/bottom` and the resolver's own frame, stay ≥ 15px inside the sheet at 375x667 }).
+    **Mutation, on the real CSS, restored byte-identical (`cmp`):** `rotate(0deg)` and `rotate(-5deg)` → the attitude arm red 4/4 each (the clip arm correctly stays green –
+    a square or anticlockwise 5° pass clips nothing); `rotate(25deg)` → both arms red 8/8, so the clip arm can fail on its own; the re-run after restore is 8/8 green.
+    **Pin query** (`AlbumTicketPass|album-pass|AlbumLayoutB|album-b-pass|albumPlacement|passBox` over `tests/ e2e tools`): four test files, zero e2e / tools hits; all green –
+    unit `round45-album-placement` 24/24, component `album-mobile` + `album-rank-ink` + `round45-album-placement` + `album-wide` + the new file 74/74; `vue-tsc -b --force` exit 0.
+    **Not run:** `npm run check`, `test:sim` (brief); no browser look at a real B page (no seeded career within the move budget) – his eye on a B sheet is the visual verdict.
+    **Files:** `src/components/album/AlbumLayoutB.vue`, `src/components/album/albumPlacement.ts` (a comment on `passBox`, no code), `tests/component/round46-album-pass-tilt.test.ts`, this ledger.
 
 - [x] **5. «На 29й день рождения она просила свой счёт в банке - это смешно. Давай наверное сделаем,
   что она будет где-то в адекватном возрасте и обстоятельствах его спрашивать? Может жёстко к 18

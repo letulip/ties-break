@@ -124,5 +124,15 @@ const placed = computed(() => placeSheet(props.sheet))
   left: 22px;
   right: 48px;
   bottom: 48px;
+  /* ⭐ ROUND 46 #4 – «повернём немного вот этот цветной горизонтальный билет на на 5 градусов по часовой
+     стрелке». It lay square (0°) before, so the turn is 5°, and CSS's positive rotate is clockwise. ONE
+     transform, about the centre (the default origin), so the frame above is still the frame it hangs
+     from; anything that later scales or lifts the pass composes INTO this declaration instead of adding a
+     second one. ⚠ THE RESOLVER DOES NOT KNOW THE TURN: `passBox` in `albumPlacement.ts` is still the square
+     frame, and the left end now lifts about 17px above it (the right end drops as far). Teaching it was
+     tried, measured, and moved round-45 guards – the numbers and the open question are on `passBox` and in
+     the round-46 ledger, item 4. `tests/component/round46-album-pass-tilt.test.ts` reads this off the
+     mounted page. */
+  transform: rotate(5deg);
 }
 </style>

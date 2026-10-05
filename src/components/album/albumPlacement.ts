@@ -232,7 +232,19 @@ function headBox(x: number, sheet: AlbumSheetModel): Box {
 }
 
 /** The boarding pass is bottom-anchored at 48px; its height follows the tier step (97 and 121
- *  measured on `middle` and `high`). */
+ *  measured on `middle` and `high`).
+ *
+ *  ⚠ ROUND 46 #4 – THIS IS THE SQUARE FRAME, AND THE PASS IS NO LONGER SQUARE. `.album-b-pass` is turned 5°
+ *  clockwise about its centre now (the owner's «повернём … на 5 градусов по часовой стрелке»), so its left end
+ *  lifts about 17px above this box and its right end drops as far below it; nothing leaves the 470px page (17px
+ *  of room is the least, `tests/component/round46-album-pass-tilt.test.ts`). THE RESOLVER WAS NOT TAUGHT THE TURN,
+ *  BECAUSE EVERY WAY OF DOING IT MOVED A ROUND-45 GUARD (measured on the 335-sheet sweep): the one bounding box of
+ *  the turned pass (408x133 and 410x157) puts B's photograph windows at a shrunk rung on 40 of 67 sheets, where
+ *  the pin allows 22; the exact staircase of its outline, and that staircase joined to this frame, pass that pin
+ *  but read 32 and 30 on the two guards that keep the round-45 tuning non-vacuous (floors 40 and 38) – the control,
+ *  this file at HEAD, is green on all three. What a lift takes is about 17px of the room above the pass at its
+ *  left end, the strip the loose line is drawn in. So whether a turned corner may touch that line's last row, or a
+ *  measured resolver wave is spent on it, is the owner's and the architect's call and is NOT settled here. */
 function passBox(sheet: AlbumSheetModel): Box {
   const h = sheet.ticket && (sheet.ticket.step === 'high' || sheet.ticket.step === 'elite') ? 121 : 97
   return { x: 22, y: PAGE - 48 - h, w: 400, h }
