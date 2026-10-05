@@ -527,3 +527,6 @@ do not assign a loss to the recent match.
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
 | 26 / 51 | 494 / 969 | 4 / 4 | R45–R52 and R1–R18 complete as DRAFT |
+
+The next rows continue in [RU-10B](ru-small-talk-situations-b-2026-10.md). This volume ends at
+R18 so the situation corpus stays reviewable in bounded slices.
