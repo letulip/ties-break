@@ -43,7 +43,7 @@ last-reviewed: 2026-10-05
 | [Batch 10 – Life beats and small talk](ru-life-beats-small-talk-2026-10.md) | Life-beat dialogue plus the 51-situation generated small-talk corpus | shared and legacy small-talk frame drafted; situation corpus open |
 | [Batch 10A – Small-talk situations](ru-small-talk-situations-2026-10.md) | Continuation of the generated situation corpus after R1–R6 | R7–R18 drafted; later rows open |
 | [Batch 10B – Small-talk situations](ru-small-talk-situations-b-2026-10.md) | Continuation of the generated situation corpus after R18 | R19–R25 and R27–R29 drafted; later rows open |
-| [Batch 10C – Small-talk situations](ru-small-talk-situations-c-2026-10.md) | Final generated situation rows, starting at R30 | R30–R33 drafted; later rows open |
+| [Batch 10C – Small-talk situations](ru-small-talk-situations-c-2026-10.md) | Final generated situation rows, starting at R30 | R30–R35 drafted; later rows open |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

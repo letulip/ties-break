@@ -181,8 +181,94 @@ at changeovers; the daughter does not know whether this helps, and Russian prese
 `Смена сторон` is the tennis term; the source's seat is a court bench. The parent's response
 remains an observation, not a claim that this habit improves results.
 
-## 5. Corpus progress
+## 5. Situation R34 – `the-second-serve-everyone-attacks`
+
+Subject `observation`; stages `college`, `independent`; fact gate `played-recently`. The gate
+licenses recent match experience, not a result or a measured weakness in her second serve. These
+are her observations of other players' return position.
+
+### 5.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The good ones just step in on a second serve. They don't even think about it."` | `«Сильные игроки на второй подаче просто делают шаг вперёд. Даже не задумываются».` |
+| fiery | `"They walk in on the second serve like it's owed to them. I want to do that."` | `«На второй подаче они идут вперёд так, будто это их право. Я тоже так хочу».` |
+| deep | `"Nobody decides to step in. It's already decided before the ball is tossed, and that's the part I'm missing."` | `«Никто не решает сделать шаг вперёд в последний момент. Они знают это ещё до подброса мяча. Мне как раз этого не хватает».` |
+| quiet | `"They stand closer on the second serve. All of them."` | `«На второй подаче они стоят ближе. Все».` |
+
+### 5.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she notices just before they move` | `Спросить, что она замечает перед их шагом` |
+| respond | `Say that is a decision made in practice, not in a match` | `Сказать, что такой шаг отрабатывают на тренировке` |
+| space | `Say she is watching well` | `Сказать, что она хорошо наблюдает` |
+
+### 5.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"They're leaning in while the ball's still going up. Every one of them does it."` | `«Они уже подаются вперёд, пока мяч ещё летит вверх. Все до одной».` |
+| sunny | respond | `"That makes sense. I'd never have got there on my own."` | `«Логично. Сама я бы до этого не додумалась».` |
+| sunny | space | `"Thank you. I'd rather be doing it than watching it, mind."` | `«Спасибо. Хотя я бы предпочла так делать, а не смотреть».` |
+| fiery | invite | `"They move before the toss comes down. That's the whole trick and nobody hides it."` | `«Они двигаются ещё до того, как мяч опустится после подброса. Вот и весь секрет, никто его не прячет».` |
+| fiery | respond | `"Then I'll do it in practice until I stop thinking about it."` | `«Тогда буду делать это на тренировке, пока перестану задумываться».` |
+| fiery | space | `"Watching isn't the thing I want to be good at."` | `«Спасибо, но мне важнее самой это делать».` |
+| deep | invite | `"Nothing changes in their feet. They are already there before the ball is."` | `«Положение ног не меняется. Они занимают место ещё до подброса».` |
+| deep | respond | `"That's probably right. It is not a thing to work out mid-point."` | `«Пожалуй. Посреди розыгрыша с этим не разберёшься».` |
+| deep | space | `"Thanks. I've been watching it instead of practising it."` | `«Спасибо. Пока я больше смотрю, чем пробую сама».` |
+| quiet | invite | `"They take a step in while she's still tossing it."` | `«Делают шаг вперёд, пока соперница ещё подбрасывает мяч».` |
+| quiet | respond | `"I'd not thought of it that way. It's practice, then."` | `«Так не думала. Значит, сначала тренировка».` |
+| quiet | space | `"Thanks. I've been paying attention, at least."` | `«Спасибо. По крайней мере, я смотрела внимательно».` |
+
+The parent thought about practice does not silently change training settings. The Russian second
+serve vocabulary describes return positioning, not an actual match outcome.
+
+## 6. Situation R35 – `the-team-that-eats-together`
+
+Subject `observation`; stages `college`, `independent`; no fact gate. The other player's
+three-person entourage is an authored observation. No line implies the daughter can hire or pay
+three staff herself.
+
+### 6.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"One girl has THREE people with her and they all eat together every night. It looks lovely."` | `«С одной девушкой ездят ТРОЕ, и каждый вечер они ужинают вместе. Выглядит чудесно».` |
+| fiery | `"Three people. For one player. I don't know whether to be jealous or appalled."` | `«Три человека. Для одной теннисистки. Не знаю, завидовать или ужасаться».` |
+| deep | `"She has a table of her own people every evening. I've been sitting with that longer than I expected to."` | `«У неё каждый вечер за столом свои люди. Я думаю об этом дольше, чем ожидала».` |
+| quiet | `"Some of them travel with a group. They have dinner together."` | `«Некоторые ездят с командой. Ужинают вместе».` |
+
+### 6.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether she would want that` | `Спросить, хотела бы она так` |
+| respond | `Say a big team is not the same as a good one` | `Сказать, что большая команда не обязательно хорошая` |
+| space | `Say you'd not want three people at your dinner either` | `Сказать, что вам тоже не нужны трое за ужином` |
+
+### 6.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Some of it. Not three people. Maybe one, at dinner."` | `«Отчасти. Не троих. Может, одного человека за ужином».` |
+| sunny | respond | `"That's true. It did look like a good one, though."` | `«Верно. Но та выглядела хорошей».` |
+| sunny | space | `"You wouldn't. You'd be under the table by the pudding."` | `«Тебе бы не понравилось. К десерту пришлось бы искать тебя под столом».` |
+| fiery | invite | `"Not three. I'd want one person who actually knew me."` | `«Не троих. Мне нужен один человек, который правда меня знает».` |
+| fiery | respond | `"I know. It still looked better than eating on my own."` | `«Знаю. Но всё равно выглядит лучше, чем есть одной».` |
+| fiery | space | `"You wouldn't. I think I might, some nights."` | `«Тебе – нет. А мне в некоторые вечера, может, и понравилось бы».` |
+| deep | invite | `"Not the three. The table, maybe. I'd want the table."` | `«Не троих. Может, сам стол. Мне бы хотелось, чтобы было с кем сесть».` |
+| deep | respond | `"No. I'd not thought about whether hers is good. Only that it's there."` | `«Не обязательно. Я даже не думала, хорошая ли у неё команда. Только о том, что она рядом».` |
+| deep | space | `"You wouldn't. I've been eating alone and telling myself I prefer it."` | `«Тебе бы не понравилось. А я ем одна и убеждаю себя, что мне так лучше».` |
+| quiet | invite | `"I don't know. It looks tiring as well as nice."` | `«Не знаю. Выглядит и приятно, и утомительно».` |
+| quiet | respond | `"Probably not. They seemed to get on."` | `«Наверное. Они, похоже, ладили».` |
+| quiet | space | `"You wouldn't, no. I don't mind either way."` | `«Тебе – нет. А мне всё равно».` |
+
+The sunny joke addresses the parent without grammatical gender. No reply asserts a romance,
+dependency or staff hire.
+
+## 7. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 40 / 51 | 760 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R33 complete as DRAFT |
+| 42 / 51 | 798 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R35 complete as DRAFT |
