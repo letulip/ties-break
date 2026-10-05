@@ -130,3 +130,93 @@ after she got in, not what kind of residence she entered.
 
 None names hours, a motorway or an airport. The local tier is a real journey but not a long one.
 
+## 10. The first trip abroad
+
+| source | Russian draft | additional licence |
+| --- | --- | --- |
+| `Her first time through an airport with a racquet bag. She kept the ticket.` | `Первый аэропорт с сумкой для ракеток. Билет она сохранила.` | air |
+| `The furthest she has ever been from this kitchen. She came back somehow taller.` | `Дальше всего от этой кухни за всю её жизнь. Вернулась будто немного выше.` | any vehicle |
+| `Her first one in another country. She wanted to know when the next one is.` | `Её первый турнир в другой стране. Она хотела знать, когда следующий.` | any vehicle |
+| `First trip abroad. She slept through the landing and half the drive back.` | `Первая поездка за границу. Она проспала посадку и половину дороги после неё.` | air, asleep |
+| `She listed everyone she met, the whole flight home.` | `Весь полёт домой она перечисляла всех, с кем познакомилась.` | air, awake |
+| `Her first border, and she watched the signs change the whole way.` | `Её первая граница, и всю дорогу она смотрела, как меняются указатели.` | road |
+| `Two countries in one week, and she never left the ground.` | `Две страны за одну неделю – и ни разу не оторвалась от земли.` | road |
+
+The kitchen line is licensed by the once-per-career distance fact, not by current residence. It
+points back to the family kitchen without claiming that she still lives there.
+
+## 11. She came back hurt
+
+| source | Russian draft | additional licence |
+| --- | --- | --- |
+| `The bag has not been unpacked. She is not allowed to lift it anyway.` | `Сумка так и не разобрана. Ей всё равно нельзя её поднимать.` | any injury |
+| `We watched something stupid on television and did not mention tennis once.` | `Мы посмотрели по телевизору какую-то ерунду и ни разу не упомянули теннис.` | under one roof |
+| `She keeps saying it is nothing. We are getting it looked at anyway.` | `Она всё твердит, что ничего страшного. Мы всё равно покажем врачу.` | layoff up to three weeks |
+| `A long time to be off it. She has already asked what she can still do.` | `Долго без корта. Она уже спросила, что ей всё-таки можно.` | layoff at least six weeks |
+| `She has the calendar out, counting. We took it off her and made tea.` | `Она достала календарь и считает. Мы забрали его и поставили чайник.` | under one roof, long layoff |
+| `She is on the sofa with the ice on, working out who she would have played next.` | `Она лежит на диване со льдом и выясняет, с кем играла бы дальше.` | under one roof |
+| `She is worried about the wrong thing. She asked if the entry fee comes back.` | `Она беспокоится совсем не о том. Спросила, вернут ли взнос за участие.` | not a retirement |
+| `She called from the clinic and spent half of it apologising for worrying us.` | `Она позвонила из клиники и половину разговора извинялась, что заставила нас волноваться.` | independent |
+| `A photo of the ice, the brace and a mug. No explanation needed.` | `Фотография льда, фиксатора и кружки. Объяснений не понадобилось.` | independent |
+
+`Покажем врачу` is the natural Russian action behind `getting it looked at`; it does not assert a
+diagnosis. `Фиксатор` stays generic because the travel fact carries no body part.
+
+## 12. She retired mid-match
+
+| source | Russian draft | additional licence |
+| --- | --- | --- |
+| `She shook the umpire's hand and did not look at anybody on the way out.` | `Она пожала руку судье и по дороге с корта ни на кого не смотрела.` | retired |
+| `She keeps saying she could have finished it. She could not.` | `Она всё повторяет, что могла доиграть. Не могла.` | retired |
+| `Somebody clapped her off. She has not mentioned that part.` | `Кто-то проводил её аплодисментами. Об этом она не упомянула.` | retired |
+| `Her racquet went in the bag mid-match. That is the bit she keeps coming back to.` | `Ракетка оказалась в сумке посреди матча. Именно к этому она всё возвращается.` | retired |
+| `Out of a match and into the car. She was fine by the services, or said so.` | `С корта – сразу в машину. К первой остановке всё уже было нормально. По её словам.` | retired, layoff up to three weeks |
+| `She asked whether stopping counts as losing. We said it counts as sensible.` | `Она спросила, считается ли остановиться поражением. Мы сказали: это считается разумным.` | retired, layoff at least six weeks |
+
+The final line answers the daughter's question without turning safety into praise. No row names a
+body part, score, diagnosis or recovery promise.
+
+## 13. Guaranteed fallbacks
+
+| presence | source | Russian draft |
+| --- | --- | --- |
+| independent | `There and back. A message when she got in, then silence.` | `Туда и обратно. Сообщение, когда добралась, потом тишина.` |
+| family home | `There and back, and the bag is by the door again.` | `Туда и обратно, и сумка снова стоит у двери.` |
+
+The fallback claims only that a journey ended. It never upgrades a Local trip into a long road.
+
+## 14. Coach travelled too
+
+These lines are additive presence, not competitors in the journey pool. Russian uses the role noun
+`тренер` and no gendered pronoun.
+
+| source | Russian draft |
+| --- | --- |
+| `Her coach came with us, and she looked over at the chair after every game.` | `Тренер ехал с нами, а она после каждого гейма смотрела в сторону кресла.` |
+| `Her coach was there all week, and she came off court to somebody waiting.` | `Тренер был рядом всю неделю, и после корта её всегда кто-то ждал.` |
+| `We paid for the second seat and she used it – a word at every change of ends.` | `Мы оплатили второе место, и она им воспользовалась – несколько слов на каждой смене сторон.` |
+| `Her coach travelled down with the bags and stayed to the last match.` | `Тренер ехал вместе с сумками и остался до последнего матча.` |
+| `The coach was in the row behind us all week, and she knew it without looking.` | `Тренер всю неделю сидел в ряду за нами, а она знала это, не оборачиваясь.` |
+
+The second variant's `кто-то` is licensed by the coach-presence packet and does not introduce a new
+person. The strings say nothing about advice, effect or the coach's gender.
+
+## 15. Implementation and LQA
+
+- Keep one Russian entry for every English `TRAVEL_NOTES` entry, in the same source order, with the
+  same claims and licence predicate. Locale selection happens only after eligibility is known.
+- Preserve the birthday-priority pool, guaranteed fallback, coach addendum and purpose-scoped
+  `travelnote`/`coachtrip` streams. Locale changes no draw count or selected index.
+- Exercise car versus bus, airport versus plane, short versus long road, awake versus asleep,
+  family-home versus independent, title, final, exactly one/two wins, first-round loss, first
+  abroad, every injury-length boundary and both retirement bands.
+- Render every selected line under all four journey paintings. A truthful sentence under the wrong
+  vehicle image is still a localization failure if the source licence was not preserved.
+- Load legacy journeys in Russian and verify that neither a persisted English event nor an English
+  gift/tier label leaks into the scrap.
+- Inspect the longest lines at 320 px. Do not abbreviate away the concrete observation merely to
+  match an English character count.
+
+With §§2–14, all current journey-home and coach-trip strings have a Russian draft. The corpus is
+complete and awaits the owner's read.
+
