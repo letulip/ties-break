@@ -521,8 +521,95 @@ claim the family speaks English or change the fact that she managed the other la
 The source does not specify the foreign language. No Russian line names a country, city or
 language, and nothing implies a fluency score or new ability in mechanics.
 
-## 13. Corpus progress
+## 13. Situation R42 – `the-invitation`
+
+Subject `decision`; stages `college`, `independent`; no fact gate. A social invitation falls
+before practice. The row does not require a calendar entry, a named event or a training penalty.
+The quiet English opener names Friday; Russian keeps the evening relative to practice so it can
+appear in any calendar week.
+
+### 13.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've been invited to a thing the night before practice and I haven't replied."` | `«Меня позвали кое-куда вечером перед тренировкой, а я до сих пор не ответила».` |
+| fiery | `"I want to go. I shouldn't go. I've been arguing with myself about it."` | `«Хочу пойти. Не стоит идти. Я сама с собой об этом спорю».` |
+| deep | `"I've left it so long that the silence is starting to answer for me."` | `«Я так долго молчу, что молчание уже начинает отвечать за меня».` |
+| quiet | `"There's something on Friday. I haven't said either way."` | `«Меня зовут на вечер перед тренировкой. Я пока ни да ни нет».` |
+
+### 13.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether she wants to go` | `Спросить, хочет ли она пойти` |
+| respond | `Say one late evening is not a career` | `Сказать, что один поздний вечер не решает карьеру` |
+| space | `Say she can say no without a reason` | `Сказать, что можно отказаться без объяснений` |
+
+### 13.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"I do. That's the annoying bit. If I didn't want to go it'd be easy."` | `«Хочу. Вот что обидно. Если бы не хотела, было бы просто».` |
+| sunny | respond | `"It isn't. I keep making it into one, though."` | `«Не решает. Но я всё превращаю в вопрос всей карьеры».` |
+| sunny | space | `"I know. I'd still want to give them one."` | `«Знаю. Но мне всё равно хочется объяснить».` |
+| fiery | invite | `"Yes. Obviously yes. That's why I haven't answered."` | `«Да. Конечно, да. Потому и молчу».` |
+| fiery | respond | `"It isn't. Try telling me that at the start of practice."` | `«Не решает. Попробуй сказать мне это в начале тренировки».` |
+| fiery | space | `"I can. I'm not saying no, I'm just not saying yes."` | `«Могу отказаться. Но я не говорю „нет“ – я просто не говорю „да“».` |
+| deep | invite | `"I want to go. I've known that since they asked."` | `«Хочу. Знала это с той минуты, как позвали».` |
+| deep | respond | `"No. I've been treating it like one all the same."` | `«Нет. Но веду себя так, будто решает».` |
+| deep | space | `"I could. I'd rather say something than let it run out."` | `«Могу. Но лучше отвечу словами, чем позволю времени решить за меня».` |
+| quiet | invite | `"I think so. It's the morning after I'm thinking about."` | `«Кажется, да. Думаю о следующем утре».` |
+| quiet | respond | `"That's true. I'll probably go."` | `«Верно. Наверное, пойду».` |
+| quiet | space | `"I know. I'll answer them properly."` | `«Знаю. Отвечу им нормально».` |
+
+No parent response declares the invitation irresponsible or assigns an actual fatigue effect.
+`Вечер перед тренировкой` preserves the decision without relying on a fixed weekday.
+
+## 14. Situation R43 – `the-racket-she-is-not-sure-about`
+
+Subject `decision`; stages `after-school`, `college`, `independent`; no fact gate. The offer to
+alter racket balance is authored talk, not an available kit action. The text never promises a
+performance improvement.
+
+### 14.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Someone offered to set my racket up differently and now I can't stop thinking about it."` | `«Мне предложили иначе настроить ракетку, и теперь я не могу перестать об этом думать».` |
+| fiery | `"I'm not changing anything mid-season. Probably."` | `«По ходу сезона ничего менять не буду. Наверное».` |
+| deep | `"It might be better. It might stop feeling like mine. That's the part I can't get past."` | `«Может стать лучше. А может перестать ощущаться моей. Вот на этом я застряла».` |
+| quiet | `"There's a different setup I could try. I haven't."` | `«Можно попробовать другую настройку ракетки. Пока не стала».` |
+
+### 14.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what would change` | `Спросить, что именно изменится` |
+| respond | `Say trying is not the same as switching` | `Сказать, что проба не обязывает менять ракетку` |
+| space | `Say if it works, leave it` | `Сказать, что если ракетка работает, можно оставить как есть` |
+
+### 14.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"More weight in the handle, apparently. It's meant to feel steadier."` | `«Кажется, добавят вес в ручку. Говорят, ракетка станет устойчивее».` |
+| sunny | respond | `"That's a good point. I'd been treating them as the same thing."` | `«Хорошая мысль. А я считала, что это одно и то же».` |
+| sunny | space | `"That's probably right. I'll leave it and stop thinking about it."` | `«Наверное. Оставлю как есть и перестану думать».` |
+| fiery | invite | `"Weight in the handle. That's it. That's the whole offer."` | `«Вес в ручку. Всё. В этом и всё предложение».` |
+| fiery | respond | `"It is if I like it. Then I've got a problem."` | `«Если понравится – значит, придётся менять. Вот тогда и будет проблема».` |
+| fiery | space | `"It works. That's not the same as it being the best one."` | `«Работает. Но это не значит, что лучше уже не бывает».` |
+| deep | invite | `"Weight in the handle. It's a small change and I still can't decide."` | `«Добавить вес в ручку. Мелочь, а я всё равно не могу решить».` |
+| deep | respond | `"It isn't. I'd still know what the other one felt like."` | `«Не значит. Но я уже буду знать, как ощущается другой вариант».` |
+| deep | space | `"I know. I'd still like to have tried it once."` | `«Знаю. И всё-таки хотелось бы раз попробовать».` |
+| quiet | invite | `"A bit more weight in the handle. Nothing else."` | `«Немного больше веса в ручке. Больше ничего».` |
+| quiet | respond | `"I suppose not. I could try it once."` | `«Наверное, нет. Один раз попробовать можно».` |
+| quiet | space | `"Probably. I'll leave it as it is."` | `«Наверное. Оставлю как есть».` |
+
+The shared respond label explicitly names the racket so `проба` cannot be confused with a
+permanent switch. No line asserts the current season is at a particular week.
+
+## 15. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 48 / 51 | 912 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R41 complete as DRAFT |
+| 50 / 51 | 950 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R43 complete as DRAFT |
