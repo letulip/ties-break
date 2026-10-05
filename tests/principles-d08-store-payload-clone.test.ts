@@ -104,6 +104,8 @@ const REPLY_BY_ARM: Record<(typeof REPLY_BY_COMMAND)[keyof typeof REPLY_BY_COMMA
   inbox: () => ({ id: 0, ok: true, type: 'inbox', inbox: [], revision: 1 }),
   // ⚠ RE-AIMED, NOT WIDENED (SUCCESSION S2c, 06.10): total over the reply arms, and `legacyInput` is a query that sends nothing but its type.
   legacyInput: () => ({ id: 0, ok: true, type: 'legacyInput', legacy: {} as never, revision: 1 }),
+  // ⚠ RE-AIMED, NOT WIDENED AGAIN (SUCCESSION S2d, 06.10): total over the reply arms, and `heirloomAlbum` is a query that sends nothing but its type.
+  heirloomAlbum: () => ({ id: 0, ok: true, type: 'heirloomAlbum', book: null, revision: 1 }),
   exported: () => ({ id: 0, ok: true, type: 'exported', bytes: new ArrayBuffer(8), filename: 'c.tsave', revision: 1 }),
   peek: () => ({ id: 0, ok: true, type: 'peek', peek: {} as SavePeek, revision: 1 }),
 }
@@ -140,6 +142,8 @@ function driversFor(s: Store): Record<string, () => unknown> {
     loadAlbum: () => s.loadAlbum(),
     // ⚠ SUCCESSION S2c (06.10) – the dynasty door's query, driven for the same equality reason as `loadInbox`: it sends only its type.
     loadLegacyInput: () => s.loadLegacyInput(),
+    // ⚠ SUCCESSION S2d (06.10) – the mother's album's query, driven for the same equality reason: it sends only its type.
+    loadHeirloomAlbum: () => s.loadHeirloomAlbum(),
     // ⚠ T6.2 · D-07, 28.09 – the new sending action, driven because the enumeration below is EQUALITY
     // in both directions: a sender left undriven is exactly the defect D-08 describes coming back.
     loadInbox: () => s.loadInbox(),

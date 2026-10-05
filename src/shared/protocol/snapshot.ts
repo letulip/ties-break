@@ -412,6 +412,11 @@ export interface Snapshot {
    *  and this is its one reading. The UI's own call sites still format against the default and are the follow-up;
    *  this field is what they will be fed. */
   startYear: number
+  /** ⭐ SUCCESSION S2d – DOES THIS CAREER CARRY A MOTHER'S ALBUM: true on a generation-2 world whose `legacy` block holds the finished book, false on every
+   *  other career (every career the game created before the succession wave included). DERIVED off `engine/world/heirloom.ts`'s one reading – the world
+   *  owns the book and this is its ONE-BIT view, so the book itself (1 to 9 KB) never rides the weekly snapshot: the album screen draws its control off
+   *  this flag and asks for the book once, with the `heirloomAlbum` query, when that control is pressed. */
+  hasHeirloom: boolean
   /** ⭐ ROUND 46 #22 – IS THE DEV LIFE-EVENT BOOST ON in the worker right now. Transient, never saved: the More
    *  screen's switch shows the worker's own state rather than a belief of its own. */
   devLifeBoost: boolean

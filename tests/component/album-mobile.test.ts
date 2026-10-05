@@ -10,8 +10,8 @@
 //
 // ⚠⚠ MUTATION-VERIFIED. Every `it` below was watched failing before it was believed. The measured
 // reds are recorded against each block in this file's own ledger, at the bottom.
-import { describe, it, expect, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { readFileSync, readdirSync } from 'node:fs'
 // ⚠ `resolve(__dirname, …)` AND NOT `new URL(…, import.meta.url)`. In the component project a test
@@ -28,11 +28,17 @@ import '../../src/style.css'
 
 import AlbumScreen from '../../src/components/screens/AlbumScreen.vue'
 import AlbumSheet from '../../src/components/album/AlbumSheet.vue'
-import { SHEET_PX, SHEET_STEP_PX } from '../../src/shared/protocol'
+import { DEFAULT_PROFILE, SHEET_PX, SHEET_STEP_PX, type AlbumBook } from '../../src/shared/protocol'
 import { ALBUM_CORPUS } from '../../src/engine/world/albumCorpus'
 import { region } from '../helpers/source'
 import { PHONE, assertDismissReachable, setViewport } from './fits'
 import { bookOf, chapterOf, hand, sheetOf } from './albumFixture'
+// ⭐⭐⭐ SUCCESSION S2d – the mother's-album block at the foot of this file reads the engine's own flag and reader, and the store's one new query.
+import { createWorld, type WorldState } from '../../src/engine/world'
+import { heirloomBookOf } from '../../src/engine/world/heirloom'
+import { toSnapshot } from '../../src/engine/world/snapshot'
+import { createLegacyWorld, legacyInputOf } from '../../src/engine/world/succession'
+import { useGameStore } from '../../src/stores/game'
 
 /** One `.vue` file, read whole.
  *
@@ -588,3 +594,160 @@ describe('every sentence on a sheet comes from the corpus', () => {
 //     ⭐ AND THE PAIR IS THE POINT: the no-sentence scan AND the no-corpus-string-in-src scan both
 //     fire. Either alone has a hole – the first would miss a paraphrase pasted into an attribute,
 //     the second would miss an invented sentence that is not in the corpus at all.
+
+// =====================================================================================================================================
+// ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, OPENABLE FROM HER DAUGHTER'S OWN (docs/specs/succession-2026-10.md §3, §8 S2d)
+// =====================================================================================================================================
+//
+// ONE secondary control on this screen, drawn only when the career's snapshot says a legacy exists (`Snapshot.hasHeirloom`, the engine's own bit) – and
+// pressing it swaps the rendered book to the mother's, fetched ONCE through the read-only `heirloomAlbum` query and cached for the mount, and back.
+//
+// ⚠ THE FLAG AND THE BOOK COME FROM THE ENGINE, NOT FROM THIS FILE: every snapshot below is `toSnapshot` over a world `createWorld` / `createLegacyWorld`
+// built, and the mother's book the stubbed loader answers is `heirloomBookOf(world)` – the worker's own reader – so these arms measure the screen against
+// the real bit and the real book, and only the transport (the store's RPC) is stubbed.
+// ⚠ THE MOTHER'S BOOK IS POSED WITH A DISTINCTIVE CHAPTER TITLE AND A DIFFERENT SHEET COUNT (2 against her own 3), so «IT renders» is a claim about WHOSE
+// book is on the page and not about whether some book is.
+// ⚠ THE LABEL IS NOT RESTATED HERE: the one arm that names it reads the spec's DRAFT table and compares, so the screen and the table cannot drift apart.
+//
+// MUTATION-VERIFIED 06.10, each applied, this block run (`-t "SUCCESSION S2d"`), and `AlbumScreen.vue` / `snapshot.ts` restored byte-identical (cmp):
+//   · the flag gate always true (`computed(() => true)`)               -> 2 red: «a career with no heirloom NEVER shows the control» and the career-change arm
+//   · the swap broken (`shown` always her own book)                    -> 3 red: the swap-and-back arm, the first-sheet arm and the career-change arm
+//   · the cache broken (asks on every opening)                         -> 1 red: the swap-and-back arm's «asked once»
+//   · the career-change reset removed                                  -> 1 red: the career-change arm
+//   · the pager not reset on a swap                                    -> 1 red: the first-sheet arm
+//   · the label moved away from the spec's W-S1 row (`Mother’s album`) -> 1 red: the arm that reads the table
+//   · the engine's flag hard-coded false (`snapshot.ts`)               -> 6 red here (every arm that needs the bit) AND 1 red in tests/succession-s2d-heirloom.test.ts
+describe('SUCCESSION S2d – the mother’s album: one control, drawn only when the engine says there is a book', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  const MOTHER_TITLE = 'The Mother Who Went First'
+  const MOTHERS: AlbumBook = {
+    ...bookOf(2, { chapterTitle: MOTHER_TITLE }),
+    chapters: [{ ...chapterOf(1, 0, 2), title: MOTHER_TITLE }],
+  }
+  const MOTHER_PROFILE = { ...DEFAULT_PROFILE, kidName: 'Mira', kidLastName: 'Okonkwo' }
+
+  /** A generation-2 world over the posed book – the career whose snapshot carries the bit. */
+  function legacyWorld(): WorldState {
+    const input = legacyInputOf(createWorld('s2d-mother', MOTHER_PROFILE))
+    return createLegacyWorld({ ...input, heirloomAlbum: MOTHERS }, 's2d-gen2', 'Ilka', { ...DEFAULT_PROFILE, kidName: 'Ilka', kidLastName: input.surname }, 'c-s2d-gen2')
+  }
+  const plainWorld = (): WorldState => createWorld('s2d-plain', MOTHER_PROFILE, 'c-s2d-plain')
+
+  /** The screen on a career: the engine's snapshot in the store, the worker's reader behind the stubbed query, HER OWN book (3 sheets) in the prop. */
+  function mountOn(world: WorldState) {
+    const game = useGameStore()
+    game.snapshot = toSnapshot(world)
+    const loadHeirloomAlbum = vi.fn(async () => heirloomBookOf(world))
+    game.loadHeirloomAlbum = loadHeirloomAlbum
+    const own = bookOf(3)
+    setViewport(MOBILE)
+    const w = mount(AlbumScreen, { props: { book: own }, attachTo: document.body })
+    return { w, game, own, loadHeirloomAlbum }
+  }
+
+  const heading = (w: ReturnType<typeof mount>): string => said(w.find('.album-head-title').text())
+  const counter = (w: ReturnType<typeof mount>): string => said(w.find('.album-count').text())
+  async function press(w: ReturnType<typeof mount>): Promise<void> {
+    await w.find('.album-heirloom').trigger('click')
+    await flushPromises()
+  }
+
+  it('⭐⭐⭐ a career with no heirloom NEVER shows the control – and never asks', () => {
+    const { w, game, loadHeirloomAlbum } = mountOn(plainWorld())
+    expect(game.snapshot!.hasHeirloom, 'the engine says there is no book').toBe(false)
+    expect(w.find('.album-heirloom').exists(), 'no control on a first-generation career').toBe(false)
+    expect(heading(w), 'her own book is the whole screen').toBe('The Beginning')
+    expect(loadHeirloomAlbum).not.toHaveBeenCalled()
+  })
+
+  it('⭐⭐⭐ the control is drawn when the snapshot says a legacy exists – un-pressed, over HER OWN book – and carries the spec’s WIRED string word for word', () => {
+    const { w, own } = mountOn(legacyWorld())
+    const button = w.find('.album-heirloom')
+    expect(button.exists(), 'the engine says there is a book, so the control is there').toBe(true)
+    expect(button.attributes('aria-pressed')).toBe('false')
+    expect(heading(w), 'the screen opens on her own book').toBe('The Beginning')
+    expect(counter(w)).toBe(`Sheet 1 of ${own.sheets.length}`)
+
+    // The label is the table's: the W-S1 row, marked wired, whose third cell is the line.
+    const table = readFileSync(resolve(__dirname, '../../docs/specs/succession-2026-10.md'), 'utf8')
+    const row = table.split('\n').find((line) => line.startsWith('| W-S1 |'))
+    expect(row, 'the spec’s DRAFT table carries W-S1').toBeTruthy()
+    const cells = row!.split('|').map((cell) => cell.trim())
+    expect(cells[2], 'W-S1 is the WIRED candidate').toMatch(/wired/i)
+    expect(said(button.text()), 'the screen says what the table says').toBe(cells[3])
+  })
+
+  it('⭐⭐⭐ pressing it swaps to HER MOTHER’S book – IT renders – and pressing again returns to hers; the book is fetched ONCE', async () => {
+    const { w, own, loadHeirloomAlbum } = mountOn(legacyWorld())
+
+    await press(w)
+    expect(heading(w), 'the mother’s distinctive chapter title is on the page').toBe(MOTHER_TITLE)
+    expect(counter(w), 'and it is HER count, not her daughter’s').toBe(`Sheet 1 of ${MOTHERS.sheets.length}`)
+    expect(w.findAllComponents(AlbumSheet)).toHaveLength(MOTHERS.sheets.length)
+    expect(w.find('.album-heirloom').attributes('aria-pressed')).toBe('true')
+    expect(w.find('.album-heirloom').classes()).toContain('is-on')
+
+    await press(w)
+    expect(heading(w), 'back to her own').toBe('The Beginning')
+    expect(counter(w)).toBe(`Sheet 1 of ${own.sheets.length}`)
+    expect(w.findAllComponents(AlbumSheet)).toHaveLength(own.sheets.length)
+    expect(w.find('.album-heirloom').attributes('aria-pressed')).toBe('false')
+
+    await press(w)
+    expect(heading(w), 'and to her mother’s again, from the cache').toBe(MOTHER_TITLE)
+    expect(loadHeirloomAlbum, 'asked once and cached for the mount').toHaveBeenCalledTimes(1)
+  })
+
+  it('a swap opens the other book on its FIRST sheet, whatever sheet the pager stood on', async () => {
+    const { w } = mountOn(legacyWorld())
+    await panTo(w, SHEET_STEP_PX * 2)
+    expect(counter(w)).toBe('Sheet 3 of 3')
+
+    await press(w)
+    expect(counter(w), 'the mother’s book opens on its first sheet').toBe('Sheet 1 of 2')
+    await press(w)
+    expect(counter(w), 'and hers on hers').toBe('Sheet 1 of 3')
+  })
+
+  it('a refused or empty answer keeps hers – the control is not a promise the worker has to keep', async () => {
+    const { w, loadHeirloomAlbum } = mountOn(legacyWorld())
+    loadHeirloomAlbum.mockResolvedValueOnce(null)
+
+    await press(w)
+    expect(heading(w), 'still her own book').toBe('The Beginning')
+    expect(w.find('.album-heirloom').attributes('aria-pressed')).toBe('false')
+    expect(w.find('.album-heirloom').attributes('disabled'), 'and the control is usable again').toBeUndefined()
+  })
+
+  it('a career change drops what was cached and returns the screen to hers', async () => {
+    const { w, game } = mountOn(legacyWorld())
+    await press(w)
+    expect(heading(w)).toBe(MOTHER_TITLE)
+
+    game.snapshot = toSnapshot(plainWorld())
+    await flushPromises()
+    expect(w.find('.album-heirloom').exists(), 'the other career has no book').toBe(false)
+    expect(heading(w), 'career B never opens on career A’s heirloom').toBe('The Beginning')
+  })
+
+  it('⭐ the screen only renders: no command is sent, and neither book is written to', async () => {
+    const { w, game, own } = mountOn(legacyWorld())
+    const commit = vi.spyOn(game, 'commit')
+    const newCareer = vi.spyOn(game, 'newCareer')
+    const ownBefore = JSON.stringify(own)
+    const mothersBefore = JSON.stringify(MOTHERS)
+
+    await press(w)
+    await press(w)
+    await press(w)
+
+    expect(commit).not.toHaveBeenCalled()
+    expect(newCareer).not.toHaveBeenCalled()
+    expect(JSON.stringify(own), 'her own book is as it was').toBe(ownBefore)
+    expect(JSON.stringify(MOTHERS), 'and so is the posed heirloom').toBe(mothersBefore)
+  })
+})

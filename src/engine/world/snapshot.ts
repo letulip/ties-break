@@ -152,6 +152,7 @@ import { boothLineageAt, boothPrivateLifeAt } from './spotlight'
 // it is asked rather than re-spelled.
 import { temperamentOpenness } from '../spirit'
 import { summerDayCapacity } from './summer'
+import { hasHeirloom } from './heirloom'
 import type { WorldState } from '../world'
 
 // --- snapshot ----------------------------------------------------------------
@@ -2116,6 +2117,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     lifeMoment: lifeMomentOf(world),
     weddingWeek: upcomingWeddingWeek(world),
     startYear: world.startYear,
+    // ⭐ SUCCESSION S2d – one bit of the mother's album, never the book (`Snapshot.hasHeirloom`).
+    hasHeirloom: hasHeirloom(world),
     devLifeBoost: lifeEventBoostOn(),
     // ⭐⭐⭐ v85 T10 – WHICH PREGNANCY PAINTING THE WEEK WEARS, and the ONE fact of `world.pregnancy`
     // that crosses to the UI. The record itself stays engine-side (T1's own ruling); the window is

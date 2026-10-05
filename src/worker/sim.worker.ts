@@ -60,6 +60,7 @@ import {
 // that list does not join it. `assembleAlbum` above predates the freeze and keeps its barrel name.
 import { assembleInbox } from '../engine/world/snapshot'
 import { createLegacyWorld, legacyInputOf, LEGACY_FAMILY_BACKGROUND } from '../engine/world/succession'
+import { heirloomBookOf } from '../engine/world/heirloom'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
@@ -926,6 +927,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       if (!world) throw new Error('No active career')
       return { id: msg.id, ok: true, type: 'legacyInput', legacy: legacyInputOf(world), revision: committedRevision }
     }
+    case 'heirloomAlbum': {
+      // ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, ON DEMAND from the new career's own album screen: `album`'s shape one query over, and for the same
+      // reason (the book is 1 to 9 KB and the weekly snapshot carries ONE BIT of it, `hasHeirloom`). Read-only against the COMMITTED world: `heirloomBookOf`
+      // is a pure read that hands back a COPY, nothing is drawn, and `committedRevision` is reported unchanged, which is what a query means here.
+      // A career with no heirloom answers `book: null` – a legal question with a plain answer, not a refusal.
+      if (!world) throw new Error('No active career')
+      return { id: msg.id, ok: true, type: 'heirloomAlbum', book: heirloomBookOf(world), revision: committedRevision }
+    }
     case 'inbox': {
       // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the `album` case above, one surface over and
       // for the same reason: the career's whole post was riding every weekly Snapshot (261 rows at
@@ -1066,6 +1075,7 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   devLifeBoost       query        reads     none                       unchanged
 //   album              query        reads     none                       unchanged
 //   legacyInput        query        reads     none                       unchanged
+//   heirloomAlbum      query        reads     none                       unchanged
 //   inbox              query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged
 //   listCareers        query        none      reads                      unchanged

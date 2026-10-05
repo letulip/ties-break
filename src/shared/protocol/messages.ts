@@ -329,6 +329,10 @@ export type ToWorker =
   // ⭐⭐⭐ SUCCESSION S2c – THE LEGACY, ON DEMAND at the dynasty door: `album`'s own shape (a read of the COMMITTED world, no baseRevision, nothing
   // committed and nothing drawn) answering with `legacyInputOf`'s own object. Asked once, at the press, while the finished career is still loaded.
   | { id: number; type: 'legacyInput' }
+  // ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, ON DEMAND from the new career's own album screen: `album`'s shape one query over – a read of the COMMITTED
+  // world (no baseRevision, nothing committed, nothing drawn) answering with the heirloom a generation-2 world carries, or null on a career that has none.
+  // Asked ONCE per opening of the screen, when the player presses the control `Snapshot.hasHeirloom` draws; the weekly snapshot never carries the book.
+  | { id: number; type: 'heirloomAlbum' }
   // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the album's precedent, one surface over. The
   // weekly Snapshot carries the letters this week still needs; the career's whole post – 261 rows at
   // week 1133, of which none were live – is asked for when `InboxSheet` opens and dropped when it
@@ -366,6 +370,9 @@ export type ToUI =
   | { id: number; ok: true; type: 'peek'; peek: SavePeek; revision: number }
   | { id: number; ok: true; type: 'album'; album: AlbumBook; revision: number }
   | { id: number; ok: true; type: 'legacyInput'; legacy: LegacyInput; revision: number }
+  // ⭐⭐⭐ SUCCESSION S2d – the mother's book, or null when the career carries none: `album`'s own shape with the book optional, because «no heirloom» is an
+  // ANSWER here and not a refusal (a first-generation career asking is a legal question with a plain `null`).
+  | { id: number; ok: true; type: 'heirloomAlbum'; book: AlbumBook | null; revision: number }
   // ⭐⭐ T6.2 · D-07 – the whole post, `album`'s own shape. `Offer[]` and not an envelope: the
   // list IS the answer, and the sheet reads nothing else off it.
   | { id: number; ok: true; type: 'inbox'; inbox: Offer[]; revision: number }
@@ -486,6 +493,7 @@ export const REPLY_BY_COMMAND = {
   devLifeBoost: 'snapshot',
   album: 'album',
   legacyInput: 'legacyInput',
+  heirloomAlbum: 'heirloomAlbum',
   inbox: 'inbox',
   listSlots: 'slots',
   listCareers: 'careers',

@@ -528,6 +528,18 @@ export const useGameStore = defineStore('game', {
         })) ?? null
       )
     },
+    /** ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, ON DEMAND from the album screen: `loadAlbum`'s own shape, one query over. A read-only query against the
+     *  COMMITTED world answering with the heirloom a generation-2 career carries, computed worker-side so the book crosses the wire once as plain data; or
+     *  null when the career has none OR the query was refused (no active career, a restarted worker) – and the screen then simply keeps the book it has.
+     *  The store HOLDS nothing: the album screen caches the answer for the length of its own mount, as App.vue holds the career's own book. */
+    async loadHeirloomAlbum(): Promise<AlbumBook | null> {
+      return (
+        (await this.run(async () => {
+          const res = this.takeOk(await request({ type: 'heirloomAlbum' }))
+          return expectArm(res, 'heirloomAlbum').book
+        })) ?? null
+      )
+    },
     /** ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по
      *  требованию, не в недельном снимке»). A read-only query against the committed world –
      *  `getSnapshot`'s own shape – returning the assembled book, or null on a refusal (no active

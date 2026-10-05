@@ -296,7 +296,7 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
   // band's feed) and `devLifeBoost` (the ×8 dev switch's state echoed back to the More screen). All
   // three are derived per snapshot and persisted nowhere; nothing reordered or removed.
   // -----------------------------------------------------------------------------------------------
-  it('⭐ D-P8 – 117 top-level keys, the same set in the same order on every committed career', async () => {
+  it('⭐ D-P8 – 118 top-level keys, the same set in the same order on every committed career', async () => {
     const manifest = JSON.parse(readFileSync(resolve(CAREERS, 'manifest.json'), 'utf8')) as {
       fixtures: { name: string }[]
     }
@@ -312,7 +312,8 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     const reference = keysByCareer[names[0]]
     // (b) THE COUNT, and (c) the keys it is about – both against the list rather than against prose.
     // SUCCESSION S1 (06.10): 116 -> 117, the one new key `startYear` – derived per snapshot straight off `world.startYear`, persisted on the snapshot nowhere; nothing reordered or removed.
-    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(117)
+    // SUCCESSION S2d (06.10): 117 -> 118, the one new key `hasHeirloom` – ONE derived bit per snapshot (the mother's book rides the `heirloomAlbum` query, never the weekly wire); nothing reordered or removed.
+    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(118)
     for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
       expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)
     }
