@@ -553,6 +553,14 @@ export const useGameStore = defineStore('game', {
     async tick(weeks: number) {
       await this.commit({ type: 'tick', weeks })
     },
+    // ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST, the `tick(52)` button's sibling. A transient worker flag, so
+    // it is NOT a mutation: no `baseRevision`, nothing committed or saved. The reply is the snapshot, whose
+    // `devLifeBoost` is the state the More screen's switch shows.
+    async setLifeBoost(on: boolean) {
+      await this.run(async () => {
+        this.applySnapshot(this.takeOk(await request({ type: 'devLifeBoost', on })))
+      })
+    },
     // ⚠ ROUND 29 #6: `1 | 4` widened to a plain count – the span the pill offers is now the length
     // of the actual quiet slot (`spanWeeksFor`), not the engine's historical step.
     // ⭐⭐⭐ ROUND 42 #17(a) – THE IN-FLIGHT LATCH, at the narrowest honest point. The owner:

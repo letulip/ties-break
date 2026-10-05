@@ -1476,3 +1476,19 @@ export interface TrainingRead {
   /** the coach's sentence – words only, never a digit and never an arrow with a value */
   text: string
 }
+
+/** ⭐⭐ ROUND 46 #11c – A BIG DAY THE WEEK HOLDS, as the full-screen moment is handed it (`lifeMomentOf`).
+ *  Derived per snapshot from the milestone ledger and persisted nowhere. */
+export interface LifeMoment {
+  kind: 'wedding' | 'birth'
+  /** the career week it landed in – and the view's dismissal key, so a moment is shown once per week and is
+   *  never carried into the next */
+  week: number
+  /** which painting: the KIND crosses the wire and the view resolves the band (`portraitUrl`), the seam
+   *  `LifeBeatDialog`'s `BEAT_FACE` documents (the engine may not name a file – invariant 1) */
+  face: MemoryFace
+  /** the ONE line – the feed's own kept text for the day, engine-assembled and never the view's */
+  line: string
+  /** the one control's label, engine-side for the same reason */
+  confirm: string
+}

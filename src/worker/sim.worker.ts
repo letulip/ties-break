@@ -1,3 +1,4 @@
+import { setLifeEventBoost } from '../engine/world/lifeBoost'
 import {
   assembleAlbum,
   createWorld,
@@ -882,6 +883,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       if (!world) throw new Error('No active career')
       return snapshotMsg(msg.id, world)
     }
+    case 'devLifeBoost': {
+      // ⭐ ROUND 46 #22 – a QUERY-SHAPED dev command, `getSnapshot`'s own: it sets the worker's transient flag and
+      // answers with the COMMITTED world's snapshot (whose `devLifeBoost` is the new state). Nothing is cloned,
+      // committed or saved – the flag is in no save – and no rng is touched.
+      if (!world) throw new Error('No active career')
+      setLifeEventBoost(msg.on)
+      return snapshotMsg(msg.id, world)
+    }
     case 'album': {
       // ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b) – a query in the strict sense,
       // `getSnapshot`'s own shape: read-only against the COMMITTED world (never a candidate – no
@@ -1029,6 +1038,7 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   importSave         lifecycle    replaces  autosave+meta (adopt)      allocates disk+1
 //   peekSave           query        none      none                       unchanged
 //   getSnapshot        query        reads     none                       unchanged
+//   devLifeBoost       query        reads     none                       unchanged
 //   album              query        reads     none                       unchanged
 //   inbox              query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged

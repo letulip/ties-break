@@ -175,6 +175,8 @@ export type Popup =
   | 'injury'
   | 'season-summary'
   | 'tour-briefing'
+  // ⭐ ROUND 46 #11c – the full-screen wedding/birth moment: a report, so it waits behind a tournament takeover.
+  | 'life-moment'
   | 'onboarding-tour'
   | 'college-graduation'
   | 'week-span'

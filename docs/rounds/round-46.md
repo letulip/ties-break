@@ -76,21 +76,68 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   picture overflows horizontally (horizontal scroll exists). Fix + a mounted no-overflow assertion at
   phone width. Class: **build**.
 
-- [ ] **11. «И кстати, она объявит о свадьбе заранее (увидел, объявила, можно там тоже писать сколько
+- [x] **11. «И кстати, она объявит о свадьбе заранее (увидел, объявила, можно там тоже писать сколько
   они вместе, кстати, как вариант)? Или это от отношений и темперамента зависит? И поставим ли мы
   свадьбу в календарь? Картинка есть. Я дождался свадьбы, но самого экрана этого события не было!
   Подозреваю, что с похоронами то же самое и, возможно, с беременностью и родами тоже. Можно делать
   оверлей на весь экран, например.»** – split:
   - **11a** – does the advance wedding announcement depend on relationship/temperament, or always?
     Class: **answer** (read the code, tell him the actual law).
+    - **B1 · 11a ANSWER** (read from `src/engine/world/lifeBeat/wedding.ts`): the announcement is
+      **unconditional once the roll fires – it depends on neither the quality of the relationship nor on
+      temperament.** The gate is `weddingEligible` (wedding.ts:36-44): age ≥ 23 (`ECONOMY.wedding.ageGate`),
+      a standing love episode, ≥ 52 weeks together (`minEpisodeWeeks`), no earlier `'engaged'` beat. The roll is
+      ONE flat uniform per eligible week against `ECONOMY.wedding.perWeek` = 0.6 % (wedding.ts:56), and the
+      header says so plainly: «NO TEMPERAMENT TERM, AND THAT IS THE DRAFTED SHAPE RATHER THAN AN OVERSIGHT»
+      (wedding.ts:50). The announcement IS the blocking `'engaged'` card, raised in the week the roll fires
+      (wedding.ts:68, the one raise site). The day itself lands `weeksAfterEngagement` = 8 weeks later on **any**
+      answer – opposing does not stop it (wedding.ts:99, 108). What the relationship DOES change is only the
+      card's WORDING (her own voice by temperament, or the dry card when the bond is low: `ENGAGED_HER_LINE` /
+      `ENGAGED_DRY`), never whether it happens. The one way it fails to land: the episode ENDS inside the 8 weeks
+      (wedding.ts:110) – and the calendar mark and the screen both follow that.
   - **11b** – put the wedding into the CALENDAR (the art exists). Class: **build** unless the answer
     to 11a changes the shape – the calendar entry follows the announcement.
+    - **B1 · 11b SHIPPED.** A band «Her wedding» (bride painting, week label, dates) on `CalendarScreen`, from the
+      week she is announced until the day lands. Feed: `upcomingWeddingWeek(world)` (wedding.ts – `landWedding`'s
+      own predicate read forward) → `snapshot.weddingWeek` → `weddingMarkFor` (`composables/weekDays.ts`) → band.
+      Parity with the day itself is a test: it drives the real `landWedding` week by week and demands the same
+      week. Tests: `tests/life-moment-engine.test.ts` (11b block), `tests/component/calendar-wedding-mark.test.ts`.
+      DRAFT: R46-S5.
   - **11c** – ⚠ THE DEFECT: he waited for the wedding and **no event screen appeared** despite the
     art existing. Audit ALL big life events – wedding, funerals, pregnancy, birth – which have art
     and which have a presentation moment; wire the missing ones as a full-screen overlay (his
     suggestion). Class: **build** (the round's biggest item).
+    - **B1 · 11c AUDIT** (each row read in code, not assumed):
+
+      | moment | what resolves it today | presentation before this round |
+      |---|---|---|
+      | wedding ANNOUNCEMENT | blocking `'engaged'` beat | `LifeBeatDialog` card, words only (no painting) |
+      | wedding DAY | `landWedding` | feed line + album milestone ONLY – **no screen (the defect)** |
+      | funeral | blocking `'bereavement'` beat (only on careers with the weight mode on, `weightEnabled`, bereavement.ts) | `LifeBeatDialog` card WITH the funeral painting (`BEAT_FACE`) – it has its moment; he has likely never met one |
+      | pregnancy NEWS | blocking `'expecting'` beat | `LifeBeatDialog` card, words only (the pregnancy art rides the portrait via `pregnancyFace`, not the card) |
+      | birth DAY | `landBirth` | feed line + album milestone ONLY – **no screen (same defect)** |
+
+    - **B1 · 11c SHIPPED – the wedding DAY and the birth DAY, one mechanism.** `lifeMomentOf(world)` (new,
+      `engine/world/lifeMoment.ts`) derives the moment from the milestone ledger: the week a wedding/birth landed IS
+      the current week – so no new state and no schema move. Payload `snapshot.lifeMoment` = {kind, week, face, line,
+      confirm}; the LINE is the feed's own kept row (no new sentence), the painting is the album's table
+      (`MEMORY_EMOTION`: bride / birth). `LifeMomentOverlay.vue`: the shared dialog-card, one Continue control,
+      Escape dismisses, owns no sentence; gated behind every blocking question (`lifeMomentMayShow` – deliberately NOT
+      in `blockingOverlay`'s list, the engine waits on nothing) and shown once per week (in-memory dismissal – a
+      reload inside the same week shows it once more). Tests: `tests/component/life-moment-overlay.test.ts` (renders
+      for a resolved wedding and not otherwise · Continue dismisses · the gate · the control inside 375x667 and
+      320x568, with DOM arms that go red on a too-tall mutation AND a source mutation that drops the shared card),
+      `tests/life-moment-engine.test.ts`. DRAFT: R46-S3, R46-S4.
+      **LEFT (art call, not a moment):** the `'expecting'` announcement card has no painting – one row in
+      `LifeBeatDialog`'s `BEAT_FACE` plus widening `MemoryFace` to the pregnancy faces would add it.
   - **11d** – the announcement can also carry «сколько они вместе» (how long together) – shares the
     duration primitive with #9. Class: **build**, DRAFT strings.
+    - **B1 · 11d SHIPPED.** Primitive `relationshipDurationWeeks(world, episode?)` in `engine/world/loveEpisodes.ts`:
+      the start is `episode.sinceWeek`, ALREADY in state – **no schema move**; null with no partner; a past
+      attachment stops counting at `endedWeek`. **#9's personal page (B4) reads this same function.** Threaded into
+      the `'engaged'` card: its `said` gets ONE appended sentence (`They have been together for 1 year and 6
+      months.` – `engagedWithTogether` / `togetherSpan` in weddingCopy.ts); the pool lines are byte-untouched.
+      DRAFT: R46-S1, R46-S2. Tests: `tests/life-moment-engine.test.ts` (11d block).
 
 - [ ] **12. «Надо проверить наш вординг на предмет дублей: "The one she married has something to say
   about this season / The one she married stayed back after the plates were cleared." The one she
@@ -154,11 +201,23 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   кажется»** – in the epilogue's «A daughter came later» the daughter's name must never equal her
   mother's (the played kid's) name. Exclude it in the pick + test. Class: **build**.
 
-- [ ] **22. «хотел дождаться, чтобы она родила, но так и не случилось - может быть в целях разработки
+- [x] **22. «хотел дождаться, чтобы она родила, но так и не случилось - может быть в целях разработки
   можно в найстройках сделать переключатель, поднимающий шансы наступления этих событий в разы для
   отладки?»** – a dev settings toggle multiplying life-event hazard rates (pregnancy/birth and kin)
   for debugging. ⚠ Design with the RNG law in hand: sub-stream hazards only, MAIN untouched, dev-only
   surface. Class: **build**.
+  - **B1 · 22 SHIPPED.** A dev switch `▶ life events ×8 (dev)` in More beside `▶▶ 52 (dev)`. A TRANSIENT worker
+    flag (`engine/world/lifeBoost.ts`), set by the new `devLifeBoost` command through the existing RPC (reply = the
+    snapshot, whose `devLifeBoost` is the switch's state), on no `WorldState` – so in no save. It multiplies the
+    probability at the four compares where a rolled uniform meets a chance (wedding, pregnancy, partner arrival,
+    bereavement); `rollEnds` and every gate are untouched, so she still cannot marry before 23. **MEASURED** (30
+    seeds, posed worlds, `tests/life-moment-boost.test.ts`): wedding first-fire mean OFF 208.3 weeks → ON 22.5
+    weeks (185.7 weeks, 3.6 years, earlier); pregnancy arrives inside her window on 10/30 seeds OFF vs 26/30 ON;
+    ON ≤ OFF on EVERY seed for all four hazards (the uniform per week is the same, `u < p` ⇒ `u < 8p`). OFF is
+    `p * 1`, bit-identical: the byte-identity case, MAIN untouched, the frozen capture (`tests/condition.test.ts`) and
+    the ten wedding/pregnancy/bereavement/birth wave files all green. ⚠ A save made UNDER the boost carries the
+    boosted outcomes (an early wedding is a real wedding), never the switch. A dev surface, not a balance change –
+    so no spec. DRAFT: R46-S6 (dev label).
 
 ---
 
@@ -206,3 +265,19 @@ brief's preference is derivation from the diary.
 - #16 is blocked on a save that #20 unblocks – ship #20, then ask for the save again.
 - #17 answers feed #15's design (the no-repeat memory is the non-LLM half of his variability ask).
 - #18 + #20 + #21 live on the epilogue surface – one bundle.
+
+## DRAFT strings (R46-S…)
+
+Every PLAYER-FACING string a builder adds this round lands here as a draft for the owner's blessing (invariant 4:
+a label, tab, button or sentence on screen changes only when the task asked, and these are the new ones the asks
+required). Rows are appended in the order they are written; ids continue where the last builder stopped (B1 holds
+S1–S6). A row the owner rewords changes ONE constant, named in the second column.
+
+| id | where | the line |
+|---|---|---|
+| R46-S1 | 11d – the `'engaged'` announcement card, appended after her line (`weddingCopy.ts` `engagedWithTogether`) | `They have been together for {span}.` – e.g. `They have been together for 1 year and 6 months.` |
+| R46-S2 | 11d – the span words (`weddingCopy.ts` `togetherSpan`; #9's page may reuse them) | `1 year` · `{N} years` · `1 month` · `{N} months` · `{N} years and {M} months` · `less than a month` |
+| R46-S3 | 11c – the one control on the full-screen wedding / birth moment (`lifeMomentCopy.ts` `LIFE_MOMENT_CONFIRM`) | `Continue` |
+| R46-S4 | 11c – NOT new: the lines the moment shows are the feed's EXISTING kept lines, unchanged (listed so he knows what the new screen will say) | wedding: `Her wedding day. The family was there, whatever had been said about it.` · birth: `Her daughter was born this week. The family has somebody new in it.` |
+| R46-S5 | 11b – the calendar band (`CalendarScreen.vue`), the shared week label and dates beside it | `Her wedding` |
+| R46-S6 | 22 – dev-only label in More (not player copy; listed for completeness) | `▶ life events ×8 (dev)` |

@@ -40,3 +40,31 @@ export const ENGAGED_DRY = 'She is getting married. The news reached this house 
  *  answers – «she has made up her mind» is what the parent can see, and which of the three things
  *  to say about it is his. */
 export const ENGAGED_HEADING = 'A wedding is coming, and she has made up her mind'
+
+// ⭐⭐ ROUND 46 #11d – «HOW LONG THEY HAVE BEEN TOGETHER», ADDED AFTER HER ANNOUNCEMENT.
+// The owner, round 46 #11 (05.10): «она объявит о свадьбе заранее (увидел, объявила, можно там тоже писать
+// сколько они вместе, кстати, как вариант)». ⚠ ⚠ DRAFT – the sentence below is the BUILDER'S DRAFT for the
+// owner's blessing (invariant 4): docs/rounds/round-46.md, `## DRAFT strings (R46-S…)`.
+// ⚠ It is APPENDED to the pool line at assembly (`lifeBeatPromptFor`) rather than written into the four voices
+// and the dry card, so not one surviving byte of `ENGAGED_HER_LINE` / `ENGAGED_DRY` moved, and the one fact is
+// said once for every voice and every distance – `ENGAGED_HEADING`'s own reason for being keyed on nothing.
+// It names NO name and NO gender, the pool's own fence.
+
+/** ⚠ ⚠ DRAFT – the span as words: whole years and the months over (a 52-week year, the game's own). The
+ *  wedding gate is a year together (`ECONOMY.wedding.minEpisodeWeeks`, 52), so an announcement always has at
+ *  least a year to say; the under-a-year arms are for a hand-built row and for #9's page, which has no such gate. */
+export function togetherSpan(weeks: number): string {
+  const years = Math.floor(weeks / 52)
+  const months = Math.floor((weeks % 52) / (52 / 12))
+  const y = years === 1 ? '1 year' : `${years} years`
+  const m = months === 1 ? '1 month' : `${months} months`
+  if (years === 0) return months === 0 ? 'less than a month' : m
+  return months === 0 ? y : `${y} and ${m}`
+}
+
+/** ⚠ ⚠ DRAFT – the pool line, then how long they have been together. `weeks === null` is «nothing to add» and
+ *  returns the line untouched, so every other kind and every row without an episode renders exactly what it
+ *  always did. */
+export function engagedWithTogether(said: string, weeks: number | null): string {
+  return weeks === null ? said : `${said} They have been together for ${togetherSpan(weeks)}.`
+}

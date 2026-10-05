@@ -153,3 +153,23 @@ export function knownPartner(world: WorldState, week: number): LoveEpisode | nul
   if (open === null || open.knownWeek === null) return null
   return open.knownWeek <= week ? open : null
 }
+
+/** ⭐⭐ ROUND 46 #11d / #9 – HOW LONG THEY HAVE BEEN TOGETHER, in weeks: ONE derivation for both readers (the
+ *  wedding announcement's line and the personal page's «how long together»), so the two surfaces cannot count
+ *  differently.
+ *
+ *  The owner, round 46 #11 (05.10): «можно там тоже писать сколько они вместе, кстати, как вариант».
+ *
+ *  ⚠ NO NEW STATE AND NO SCHEMA MOVE: the start is `episode.sinceWeek`, already persisted, and it is
+ *  `weddingEligible`'s own measure – «how long THEY have been together, not how long the parent has known»,
+ *  so never `knownWeek`. An episode that has ENDED stops counting at `endedWeek`: a past attachment reports the
+ *  length it actually had instead of growing for ever.
+ *  ⚠ NULL when there is no episode to measure – no partner is a fact, not a zero, and a reader must not print
+ *  «0 weeks» for an empty slot. Pure: zero draws, no writes. */
+export function relationshipDurationWeeks(
+  world: WorldState,
+  episode: LoveEpisode | null = activeEpisode(world),
+): number | null {
+  if (episode === null) return null
+  return Math.max(0, (episode.endedWeek ?? world.week) - episode.sinceWeek)
+}

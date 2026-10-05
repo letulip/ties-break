@@ -740,6 +740,8 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
       'birthday', 'injury', 'medical', 'walkover', 'academy', 'offer', 'knock',
       'tournament', 'deadline', 'funds', 'season-end', 'fork', 'retirement', 'ending',
       'shoot-clash', 'life',
+      // ⚠ 'life-moment' JOINED IT AT ROUND 46 #11c – its cases are tests/life-moment-span.test.ts's (the REAL weekly step: a span ends ON the day).
+      'life-moment',
     ]
     const advanceCannotRaise: StopReason[] = ['call-up', 'college-league']
     // ⚠⚠ WIRED BUT NOT YET RAISABLE – A THIRD LIST, AND IT IS A DEBT RATHER THAN A REASON. The two

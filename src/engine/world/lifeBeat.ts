@@ -30,7 +30,9 @@ import { addEvent } from './ledger'
 //
 // ⚠⚠ hub: AND v75 T4 TOOK IT BACK OFF THIS LINE, WHICH IS RECORDED RATHER THAN QUIETLY DELETED (ruling B).
 // → docs/notes/life-beats/hub.md#the-loveepisodes-import--a-cycle-fix-not-a-preference
-import { activeEpisode, loveEpisodesOf } from './loveEpisodes'
+import { activeEpisode, loveEpisodesOf, relationshipDurationWeeks } from './loveEpisodes'
+// ⭐ ROUND 46 #22 – the dev life-event boost, a leaf the arrival's compare reads through.
+import { boostedChance } from './lifeBoost'
 // ⚠ FROM ./constants, NOT ./endings, AND IT IS A CYCLE FIX RATHER THAN A PREFERENCE – the same
 // swap `world/entries.ts` records at its own import. `endings.ts` imports THIS module (it
 // raises the fork-opinion row and asks `pendingLifeBeat` before it will answer the fork), so
@@ -1208,7 +1210,7 @@ function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: Hear
 //
 // ⚠ §11, the wedding's HAZARD half, is still in this file: it calls back into the hub and its names reach `world.ts` through the hub's…
 // → docs/notes/life-beats/hub.md#lifebeatts-3g--engaged--the-copy-moved
-import { ENGAGED_DRY, ENGAGED_HEADING, ENGAGED_HER_LINE } from './lifeBeat/weddingCopy'
+import { ENGAGED_DRY, ENGAGED_HEADING, ENGAGED_HER_LINE, engagedWithTogether } from './lifeBeat/weddingCopy'
 
 // 3h. `'spouse-view'` – THE COPY MOVED TO `world/lifeBeat/spouseViewCopy.ts` (A-06 / T6.8,
 // 28.09) – A pure leaf: only the dispatcher hub below read it, so it left whole and the hub
@@ -2407,7 +2409,11 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // ⚠ IT IS DERIVED FROM THE WORLD'S OWN NUMBERS, not from the band and the register the two lines
     // above read: those are ladders, and the driver is a distance. `forkStopDriverOf` is the one
     // spelling of it and `forkWantWeights` reads the same two roots through the same helper.
-    said: lifeBeatSaid(
+    // ⭐⭐ ROUND 46 #11d – THE ENGAGED CARD ALSO SAYS HOW LONG THEY HAVE BEEN TOGETHER (the owner, 05.10:
+    // «можно там тоже писать сколько они вместе»). The pool line is untouched; `engagedWithTogether` appends ONE
+    // sentence for this kind and returns every other kind's line as it was (`null` weeks). The count is
+    // `relationshipDurationWeeks`, the primitive #9's personal page reads too, off the row's own episode.
+    said: engagedWithTogether(lifeBeatSaid(
       row.kind,
       row.detail,
       voice,
@@ -2433,7 +2439,7 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       // stored id survives the third. `undefined` on a pre-v81 row, which renders the first line of
       // the presence's pool: the sentence that row has already shown him.
       row.frame,
-    ),
+    ), row.kind === 'engaged' ? relationshipDurationWeeks(world, loveEpisodesOf(world).find((e) => e.id === row.detail) ?? null) : null),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
@@ -2776,7 +2782,8 @@ export function rollArrival(world: WorldState): void {
   const hazard = arrivalHazardFor(kidAgeNow(world), temperament)
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY. `<` and not `<=`: a hazard of 0 must be impossible rather
   // than merely unlikely, and `rngFromSeed` can return exactly 0.
-  if (rngFromSeed(`${world.seed}:life:arrival:${world.week}`)() >= hazard) return
+  // ⭐ ROUND 46 #22 – the wedding and the birth both start with a partner, so the arrival rolls through the same switch (OFF is `hazard * 1`).
+  if (rngFromSeed(`${world.seed}:life:arrival:${world.week}`)() >= boostedChance(hazard)) return
   const sinceWeek = world.week
   const wants = drawPartnerWants(world.seed, sinceWeek, temperament)
   const raw = drawRawLag(world.seed, sinceWeek, temperamentOpenness(temperament))

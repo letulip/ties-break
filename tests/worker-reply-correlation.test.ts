@@ -102,6 +102,10 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     return {
       // -- queries and persistence, against the imported career -----------------------------
       getSnapshot: { type: 'getSnapshot' },
+      // ⭐ ROUND 46 #22 – the dev life-event boost, `getSnapshot`'s own shape (read-only against the committed world,
+      // answers with the snapshot). `on: false` ON PURPOSE: this driver runs the real switch in-process, and the flag it
+      // sets is module state – `true` here would leave the boost on for every later case in this file.
+      devLifeBoost: { type: 'devLifeBoost', on: false },
       // ⭐ the album, on demand (docs/specs/the-album-2026-09.md §8b) – a query against the imported
       // career, `getSnapshot`'s own shape: read-only, no baseRevision, answered with its own arm.
       album: { type: 'album' },

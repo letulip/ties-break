@@ -1148,3 +1148,29 @@ export function useLookAhead(): ComputedRef<LookAheadRow[]> {
   const game = useGameStore()
   return computed(() => (game.snapshot ? lookAheadFor(game.snapshot) : []))
 }
+
+/** ⭐⭐ ROUND 46 #11b – THE ANNOUNCED WEDDING'S MARK on the calendar (the owner, 05.10: «поставим ли мы свадьбу в
+ *  календарь? Картинка есть»). The WEEK is the engine's (`snapshot.weddingWeek`, `upcomingWeddingWeek` – the
+ *  parent has answered the announcement card and the day has not come); this adds the dates and the label the
+ *  other rows wear, and decides nothing – CLAUDE.md's parity class: a screen that restates an engine verdict
+ *  is how the screen and the engine come to disagree. Null on every world with no announced wedding. */
+export interface WeddingMark {
+  week: number
+  /** the shared formatter's short label */
+  label: string
+  /** the week's real days, already formatted */
+  dates: string
+  weeksAway: number
+}
+
+export function weddingMarkFor(snap: { week: number; weddingWeek?: number | null }): WeddingMark | null {
+  const w = snap.weddingWeek
+  if (w == null || w <= snap.week) return null
+  return { week: w, label: weekLabel(w), dates: weekSpan(w), weeksAway: w - snap.week }
+}
+
+/** The mark, off the live snapshot. */
+export function useWeddingMark(): ComputedRef<WeddingMark | null> {
+  const game = useGameStore()
+  return computed(() => (game.snapshot ? weddingMarkFor(game.snapshot) : null))
+}

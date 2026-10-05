@@ -307,6 +307,10 @@ export type ToWorker =
   | { id: number; type: 'restoreSlot'; slot: string; revision?: number }
   // W1-INTEGRITY-A: read-only snapshot of the committed world – the stale-revision refresh path.
   | { id: number; type: 'getSnapshot' }
+  // ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST: a TRANSIENT worker-session flag (`engine/world/lifeBoost.ts`),
+  // never in a save, so it carries no `baseRevision` and commits nothing. It answers with the snapshot, whose
+  // `devLifeBoost` is the switch's state.
+  | { id: number; type: 'devLifeBoost'; on: boolean }
   // ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по требованию,
   // не в недельном снимке» – fifteen sheets of facts in every weekly Snapshot would bloat every
   // tick). A QUERY in the strict sense, `getSnapshot`'s own shape: read-only against the committed
@@ -465,6 +469,7 @@ export const REPLY_BY_COMMAND = {
   deleteCareer: 'careers',
   // queries
   getSnapshot: 'snapshot',
+  devLifeBoost: 'snapshot',
   album: 'album',
   inbox: 'inbox',
   listSlots: 'slots',

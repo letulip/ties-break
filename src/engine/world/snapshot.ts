@@ -105,6 +105,9 @@ import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, spouseViewOccasio
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
 import { ownKeyThisWeek } from './lifeBeat/ownKey'
 import { motherhoodBandAt } from './lifeBeat/pregnancy'
+import { upcomingWeddingWeek } from './lifeBeat/wedding'
+import { lifeMomentOf } from './lifeMoment'
+import { lifeEventBoostOn } from './lifeBoost'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -2085,6 +2088,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // FOR OPPOSITE REASONS: `lifeBeatPrompt` is non-null exactly when the week is refused, this one
     // on a week that ticks on regardless – so `blockingOverlay` reads the first and never this.
     softBeat: buildSoftBeatInvite(world),
+    // ⭐⭐ ROUND 46 #11c / #11b / #22 – three derived reads, none persisted: the day that landed this week, the
+    // announced wedding's week, and the dev boost's state (the worker's own flag, in no save).
+    lifeMoment: lifeMomentOf(world),
+    weddingWeek: upcomingWeddingWeek(world),
+    devLifeBoost: lifeEventBoostOn(),
     // ⭐⭐⭐ v85 T10 – WHICH PREGNANCY PAINTING THE WEEK WEARS, and the ONE fact of `world.pregnancy`
     // that crosses to the UI. The record itself stays engine-side (T1's own ruling); the window is
     // `pregnancyFaceAt`'s, shared with the tests so «which week wears which» has one spelling.

@@ -591,6 +591,9 @@ export type StopReason =
    *  Good news rather than a cost, so it sits low in the precedence below; but it landed on the one
    *  week a player stepping by four can never see, and passed in silence for a whole career. */
   | 'academy'
+  // ⭐ ROUND 46 #11c – the wedding day or the birth landed THIS week: a span ends ON it (`advanceWeeks`), so the day is seen
+  // instead of buried. No toast copy (App's `STOP_REASON_TEXT` has none, so no toast) – the full-screen moment is its surface.
+  | 'life-moment'
   /** ⭐ A LETTER SHE CAN STILL ANSWER LANDED THIS WEEK – R2-13's own item text lists «offers» among
    *  the events the span must stop before, and phase 1 shipped without one: offers reached the
    *  player through the span digest and the inbox dot only, which is the surface round-23 #16 proved
@@ -832,6 +835,8 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   'season-end',
   'deadline',
   'funds',
+  // ⭐ ROUND 46 #11c – LAST: a day that has already happened and costs her nothing waits behind every reason that does.
+  'life-moment',
 ]
 
 /** CAREER-TOTAL MONEY, and it is a NEW FACT rather than a view of an old one – the same argument

@@ -6,6 +6,7 @@
 // copy changed) since it doesn't touch any stored data.
 // ⚠ `onMounted` IS GONE FROM THIS LIST (D-05, 28.09) – the careers refresh it carried is a
 // `watch(…, { immediate: true })` now, and `immediate` IS the mount half. Nothing else here mounts.
+import { LIFE_EVENT_BOOST_FACTOR } from '../../engine/world/lifeBoost'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
@@ -745,6 +746,19 @@ const TAB_OPTIONS = [
          documents both halves of that bargain. -->
     <hr class="card-divider" />
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+    <!-- ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST (the owner, 05.10: «wanted to wait for her to give birth, but it never
+         happened - … a switch that raises the chances of these events many times over, for debugging»; verbatim in docs/rounds/round-46.md). Same
+         bargain as the fast-forward above: ships in every build, dev-only LABEL (not player copy). It is a
+         TRANSIENT worker flag, never in a save; the checkbox shows the worker's own state off the snapshot. -->
+    <label class="dev-life-boost">
+      <input
+        type="checkbox"
+        :checked="game.snapshot?.devLifeBoost === true"
+        :disabled="game.busy || !game.snapshot"
+        @change="game.setLifeBoost(($event.target as HTMLInputElement).checked)"
+      />
+      ▶ life events ×{{ LIFE_EVENT_BOOST_FACTOR }} (dev)
+    </label>
     <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
          line catches everything else (the fast-forward refusing over an open knock/reveal), which
          previously failed silently here – More never rendered `game.error` at all.

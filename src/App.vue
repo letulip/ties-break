@@ -72,6 +72,7 @@ import { SOFT_LEAVE_LINE, useSoftLeaveGuard } from './composables/softLeave'
 import { useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
 import { blockingOverlay, popupMayShow, visibleOverlay } from './composables/blockingOverlay'
+import { lifeMomentMayShow } from './composables/lifeMoment'
 import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -86,6 +87,7 @@ import ShootClashDialog from './components/ShootClashDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
 // ⭐⭐ v73 – the private life's wave 2: the beat where she says something and the parent answers.
 import LifeBeatDialog from './components/LifeBeatDialog.vue'
+import LifeMomentOverlay from './components/LifeMomentOverlay.vue'
 import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
 // ⭐⭐ ROUND 24 #4 – the last college screen. See `showCollegeDone` for why it reads `world.college`
@@ -1468,6 +1470,18 @@ const showTourBriefing = computed(
     !!game.snapshot?.tourBriefing &&
     !tourBriefingSeen.value,
 )
+// ⭐⭐ ROUND 46 #11c – THE FULL-SCREEN WEDDING / BIRTH MOMENT (the owner, 05.10: «Я дождался свадьбы, но самого
+// экрана этого события не было!»). Behind every blocking question and the two report popups that are this file's
+// locals, and behind the tournament takeover through the shared rule – `lifeMomentMayShow` holds the rest
+// (not already dismissed, nothing queued). NOT in `blockingOverlay`'s list: the engine waits on nothing here.
+const showLifeMoment = computed(
+  () =>
+    lifeMomentMayShow(game.snapshot ?? null, liveSequence.value) &&
+    !showInjuryStop.value &&
+    !showSeasonSummary.value &&
+    // a span that ENDED on the day also raises the span report; the report is read first and the day follows it
+    !showWeekSpan.value,
+)
 
 // =================================================================================================
 // ⭐ 16.08 – THE COACH-MARK TOUR REACHES A PLAYER WHO HAS NEVER ANSWERED IT (item 10, re-gated)
@@ -1920,6 +1934,9 @@ function reopenTour(): void {
          career (a per-career watermark, see the script side), behind every blocking question, and
          quietly restated by one letter a season thereafter rather than by this popup again. -->
     <TourBriefingDialog v-if="showTourBriefing" @continue="dismissTourBriefing" />
+    <!-- ⭐ ROUND 46 #11c – painted BEFORE the blocking dialogs below, so any of them that ever lands over it
+         paints on top; `lifeMomentMayShow` already keeps the two apart. -->
+    <LifeMomentOverlay v-if="showLifeMoment" />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
