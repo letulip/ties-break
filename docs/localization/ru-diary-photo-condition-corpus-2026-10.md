@@ -136,3 +136,116 @@ appear on the first injury week.
 The licence already establishes exams and a normal, non-result week. The line does not need to say
 `экзамены` twice.
 
+## 13. Vacation and practice photo
+
+| package/fact | Russian draft |
+| --- | --- |
+| generic aged-off package | `Неделя в отъезде. Ракетка осталась дома.` |
+| staycation | `Всю неделю в своей кровати. На кухне – половина улицы.` |
+| grandmother | `Два поезда и автобус. В обоих поездах она спала.` |
+| camping | `Ракетка не поехала. Палатка поехала.` |
+| seaside | `Море, сон, солнце – именно в таком порядке, каждый день.` |
+| resort | `Неделя бассейнов и массажных столов.` |
+| elite clinic | `Целая клиника людей, для которых это работа.` |
+| yacht week | `Семь дней – кругом вода, и ни один звонок не стоит ответа.` |
+| practice match | `Тренировочный матч в клубе – ничего не разыгрывается.` |
+| tight funds, family home | `О деньгах мы говорим после того, как она ложится.` |
+| tight funds, away | `О деньгах мы говорим после того, как заканчивается звонок.` |
+
+The staycation line is valid only where `her own bed` means the family-home bed. If the current
+package licence can reach an away stage, key this Russian and English line by presence before
+implementation; vacation id alone does not prove which bed the parent sees.
+
+## 14. Ordinary life photo
+
+| licence | Russian draft |
+| --- | --- |
+| any quiet week | `Кажется, она спокойна.` |
+| school | `Обычная неделя – школа, тренировка, паста.` |
+| after-school | `Обычная неделя – тренировка, паста, ранний сон.` |
+| independent | `Обычная неделя – тренировка, дела, ранний сон.` |
+| any | `Нечего записать. Это тоже по-своему хорошо.` |
+| school | `Домашняя работа на кухонном столе, ракетка у двери.` |
+| school | `Опоздала на автобус и бежала за ним, смеясь.` |
+| family home | `Снова паста. Никто не возражал.` |
+| any | `Почти всю неделю дождь – тренировку перенесли в зал.` |
+| school | `Телефон жужжал весь вечер. Домашняя работа всё равно сделана.` |
+| school not over | `Школьный проект занял все вечера – клей повсюду.` |
+| family home | `В субботу вместе за продуктами. Тележку везла она.` |
+| family home | `Новый месяц на кухонном календаре. Распорядок тот же.` |
+| family home | `Тёплые вечера – ужин на балконе затянулся.` |
+| independent | `Голосовое из магазина: молока нет, струн полно.` |
+| independent | `Позвонила, пока готовила. Что-то сгорело; история уцелела.` |
+| independent | `Стиральная машина проиграла красному грунту.` |
+| freshly independent, 22–24 | `Запасной ключ на её собственной связке. Мы всё ещё привыкаем.` |
+| settled adult, 25+ | `Воскресный звонок затянулся. Никто не возражал.` |
+| independent | `Зашла на двадцать минут и осталась на ужин.` |
+| independent | `В семейный чат пришла одна фотография: ракетка, кофе, дождь.` |
+| independent | `Забыла позвонить. Потом в воскресенье позвонила дважды.` |
+| independent | `В календаре стоял отдых. Она сказала, что дела тоже считаются.` |
+
+Keep the four deliberate `null` entries untranslated and in the pool. Silence is selected content,
+not a missing key.
+
+## 15. Condition – travel, injury and exams
+
+| source fact | Russian draft |
+| --- | --- |
+| still tired from tier trip | `Всё ещё устала после поездки на {tierTripPrepositional}.` |
+| match week | `Матчевая неделя – и дорога, и теннис взяли своё.` |
+| tournament travel before reveal | `На этой неделе она в дороге.` |
+| injury with weeks left | `{InjuryName}: вне игры ещё {weeksRemaining}.` |
+| rehab | `На этой неделе темп задаёт восстановление.` |
+| exams | `Экзамены забрали неделю.` |
+| school week | `Учебная неделя – корт подождал.` |
+
+`{weeksRemaining}` is a complete counted phrase (`1 неделю`, `2 недели`, `5 недель`), and
+`{InjuryName}` comes from the localized semantic injury id. Never pass English `kind` into Russian.
+
+## 16. Condition – vacation ladder
+
+| package | Russian draft |
+| --- | --- |
+| generic aged-off | `Неделя с семьёй вдали от дома – вернулась легче.` |
+| staycation | `Неделя дома – ничего особенного, и это сработало.` |
+| grandmother | `Неделя у бабушки – медленная еда, медленные дни. Это заметно.` |
+| camping | `Неделя на воздухе – ноги устали, голова ясная.` |
+| seaside | `Неделя у моря, и большую её часть она проспала.` |
+| resort | `Отдых по программе – вернулась и снова двигается как надо.` |
+| elite clinic | `Полная программа сработала – вернулась как новая.` |
+| yacht week | `Неделя, когда до неё ничего не могло добраться. Первым это заметили ноги.` |
+
+The order still follows measured condition gain. Russian does not make the cheaper week sound more
+restorative than a higher package.
+
+## 17. Condition – off-season and quiet training
+
+| licence | Russian draft |
+| --- | --- |
+| off-season, school | `Межсезонье – отдых, школа, семья.` |
+| off-season, after-school | `Межсезонье – отдых, семья и блок, на котором строится следующий год.` |
+| off-season, independent | `Межсезонье – отдых, дела и блок, на котором строится следующий год.` |
+| practice | `Тренировочный матч и обычная тренировка.` |
+| generic quiet | `Тихая тренировочная неделя.` |
+| quiet, school | `Тренировка, школа, снова сначала.` |
+| quiet, after-school | `Тренировка, сон, снова сначала.` |
+| quiet, independent | `Тренировка, стирка, сон, снова сначала.` |
+| fresh body | `Свежая – отдых окупается.` |
+| drained body | `Сил не осталось – неделя отдыха не помешала бы.` |
+
+## 18. Implementation and LQA
+
+- The Russian catalogue has one entry for every non-null English entry and four deliberate photo
+  silences. Surface, order, claims and licence predicates stay identical.
+- Tier, injury and week-count phrases are semantic locale renderers, not interpolated translated
+  fragments.
+- Exercise all four life stages, both result freshness states, every emotion, vacation package,
+  funds band, school boundary and condition band. College must hit every `awayVoice` arm.
+- Compare selected entry indexes across locales for the same seed/week; no locale may draw again
+  after selecting an entry.
+- Render photo and condition cards at 320, 390 and 430 px, including longest adult and vacation
+  lines. Silence must render as silence, not a missing-key diagnostic.
+
+With §§2–17, every current photo and condition pool entry has a Russian draft. RU-09C is complete
+pending the owner's read.
+
