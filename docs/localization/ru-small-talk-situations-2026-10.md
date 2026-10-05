@@ -99,8 +99,92 @@ No line promises a price or a booked seat.
 The three parent stances remain zero-bond. Their replies differ because she may accept, resist or
 quietly use the parent's thought; none of them scores the parent's answer.
 
-## 3. Corpus progress
+## 3. Situation R9 – `the-routine-she-dropped`
+
+Subject `decision`; stages `after-school`, `college`, `independent`; no fact gate. The water
+bottle's former ritual stays unspecified. Dropping it does not change any actual match mechanic.
+
+### 3.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've stopped doing the thing with the water bottle. I only just noticed I'd stopped!"` | `«Я больше не делаю ту штуку с бутылкой. Только сейчас заметила, что перестала!»` |
+| fiery | `"I dropped the bottle thing. It was superstition and I'm not superstitious. I think."` | `«Я бросила эту штуку с бутылкой. Это же суеверие, а я не суеверная. Кажется».` |
+| deep | `"There was a thing I did before matches. I stopped weeks ago and only worked out this week that I'd stopped."` | `«Раньше я кое-что делала перед матчами. Перестала несколько недель назад, а заметила только сейчас».` |
+| quiet | `"I don't do the bottle thing any more. No particular reason."` | `«Я больше не делаю ту штуку с бутылкой. Без особой причины».` |
+
+### 3.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask when she thinks she stopped` | `Спросить, когда она перестала` |
+| respond | `Say she can start again if she misses it` | `Сказать, что она может вернуться к этому, если захочет` |
+| space | `Say it clearly wasn't load-bearing` | `Сказать, что без этого ничего не рухнуло` |
+
+### 3.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"No idea. That's the strange bit. I can't find the day I stopped."` | `«Понятия не имею. В этом и странность: не могу вспомнить день, когда перестала».` |
+| sunny | respond | `"I could. I'm not sure I do miss it, which surprised me."` | `«Могу. Только я, кажется, и не скучаю по этому. Сама удивилась».` |
+| sunny | space | `"Apparently not. It held nothing up at all."` | `«Похоже, нет. Ничего и правда не рухнуло».` |
+| fiery | invite | `"I don't know. That's what's annoying. It just went and I didn't notice."` | `«Не знаю. Вот что бесит: ритуал исчез, а я даже не заметила».` |
+| fiery | respond | `"I could. I'd feel ridiculous starting it again now."` | `«Могу. Но сейчас начать снова было бы ужасно глупо».` |
+| fiery | space | `"Then why did I do it for so long?"` | `«Тогда зачем я столько времени это делала?»` |
+| deep | invite | `"I can't find the day. I've gone back through the weeks and it isn't there."` | `«Не могу найти тот день. Мысленно перебрала недели – нигде его нет».` |
+| deep | respond | `"I could. I've reached for it since and stopped myself."` | `«Могу. Несколько раз рука уже тянулась, но я себя останавливала».` |
+| deep | space | `"No. I'd still like to know why I started."` | `«Нет. Но мне всё равно интересно, почему я когда-то начала».` |
+| quiet | invite | `"Couldn't say. Sometime before this week."` | `«Не скажу. Где-то до этой недели».` |
+| quiet | respond | `"I might. It's not really a decision."` | `«Может быть. Это ведь не такое уж решение».` |
+| quiet | space | `"Seems not. I've been fine without it."` | `«Похоже, нет. И без этого всё нормально».` |
+
+The `nothing collapsed` parent reply is deliberately light, not a claim that the old habit was
+pointless. Deep and fiery are allowed to care about why it mattered.
+
+## 4. Situation R10 – `advice-she-did-not-ask-for`
+
+Subject `decision`; stages `college`, `independent`; no fact gate. The advice concerns return
+position; the writer does not certify that the stranger's technical suggestion is correct.
+
+### 4.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Someone I've never spoken to told me to change how I stand to return. Do I... do that?"` | `«Незнакомая женщина сказала мне иначе вставать на приёме подачи. Мне... попробовать?»` |
+| fiery | `"A woman I don't know told me how to return. I haven't decided whether that was kind or rude and I've had all week."` | `«Незнакомка объяснила мне, как принимать подачу. Всю неделю думаю: это было по-доброму или нагло?»` |
+| deep | `"Unasked-for advice, from someone with no reason to help me. I've been trying to work out what she wanted from it."` | `«Совет, которого я не просила, от женщины, которой незачем мне помогать. Пытаюсь понять, чего она хотела».` |
+| quiet | `"Somebody said something about my return. I wrote it down."` | `«Мне кое-что сказали про приём подачи. Я записала».` |
+
+### 4.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what exactly she said` | `Спросить, что именно она сказала` |
+| respond | `Say she can try it and drop it` | `Сказать, что можно попробовать и отказаться` |
+| space | `Say she doesn't owe a stranger a change` | `Сказать, что она не обязана менять стойку ради незнакомки` |
+
+### 4.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"That I stand too square. She showed me, then walked off. Very brisk."` | `«Что я стою слишком прямо. Показала, как развернуться, и быстро ушла».` |
+| sunny | respond | `"That's what I'll do. Try it once and see if I hate it."` | `«Так и сделаю. Раз попробую и пойму, бесит меня это или нет».` |
+| sunny | space | `"I know. I'd quite like to try it anyway."` | `«Знаю. Но мне всё равно хочется попробовать».` |
+| fiery | invite | `"That I'm square to the net when I should be turned. Then she left."` | `«Что я стою лицом к сетке, а надо развернуться. И ушла».` |
+| fiery | respond | `"I'll try it. If it's wrong, I'll know straight away."` | `«Попробую. Если ерунда, сразу почувствую».` |
+| fiery | space | `"I don't owe her anything. I still can't stop thinking about it."` | `«Ничего я ей не должна. Но из головы это всё равно не выходит».` |
+| deep | invite | `"That I stand square. She said it, showed me once, and went."` | `«Сказала, что я стою слишком прямо. Один раз показала и ушла».` |
+| deep | respond | `"I can. I keep wondering why she bothered telling me at all."` | `«Могу. Только всё думаю, зачем она вообще решила мне сказать».` |
+| deep | space | `"No. It's sitting there whether I owe her or not."` | `«Не обязана. Но мысль никуда не девается».` |
+| quiet | invite | `"Something about being too square. It's in my phone."` | `«Что-то про то, что стою слишком прямо. У меня в телефоне записано».` |
+| quiet | respond | `"I might try it in practice."` | `«Может, попробую на тренировке».` |
+| quiet | space | `"No. I'll leave it for now."` | `«Не обязана. Пока оставлю как есть».` |
+
+`Приём подачи` is the tennis action in this exchange. The Russian does not turn the stranger into
+her coach or present the advice as a verified correction.
+
+## 5. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 16 / 51 | 304 / 969 | 4 / 4 | R45–R52 and R1–R8 complete as DRAFT |
+| 18 / 51 | 342 / 969 | 4 / 4 | R45–R52 and R1–R10 complete as DRAFT |
