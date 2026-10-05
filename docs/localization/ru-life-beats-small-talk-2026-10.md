@@ -667,8 +667,92 @@ without assigning a default language to the player family.
 The deep response accepts what the parent says without assigning the player-parent a grammatical
 gender. The daughter uses feminine past tense only for herself.
 
-## 18. Situation-corpus progress
+## 18. Situation R5 – `the-autograph-that-left`
+
+Subject `story`; stages `college`, `independent`; no fact gate. The daughter's experience with a
+child asking for an autograph is played small; no line treats it as proof of fame.
+
+### 18.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A little kid asked me to sign something and then panicked and ran off. I'm still holding the pen."` | `«Девочка попросила автограф, потом испугалась и убежала. А я так и стою с ручкой».` |
+| fiery | `"I got asked for an autograph! And then she LEFT. I had already started writing."` | `«У меня попросили автограф! А потом она УШЛА. Я уже начала писать».` |
+| deep | `"A child asked me to sign something and changed her mind halfway. I think she'd been sent, and I think she worked that out."` | `«Девочка попросила что-то подписать, а потом передумала. Похоже, её послали ко мне, и она сама это поняла».` |
+| quiet | `"Someone asked for a signature after the match. It didn't happen in the end."` | `«После матча у меня попросили автограф. В итоге я ничего не подписала».` |
+
+### 18.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she was going to write` | `Спросить, что она хотела написать` |
+| respond | `Say the kid will tell that story for years` | `Сказать, что девочка ещё долго будет это рассказывать` |
+| space | `Say it's a strange thing to get used to` | `Сказать, что к такому непросто привыкнуть` |
+
+### 18.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"My name. That's all I've got. I hadn't thought past my own name."` | `«Своё имя. Больше ничего не придумала. Я даже дальше имени не успела подумать».` |
+| sunny | respond | `"Do you think? I hope she does. I'd like her version better than mine."` | `«Думаешь? Надеюсь. Её версия мне, наверное, понравилась бы больше моей».` |
+| sunny | space | `"It is. I'm not used to it at all. I'm quite glad about that."` | `«Да. Я совсем не привыкла. И, знаешь, рада этому».` |
+| fiery | invite | `"My name, obviously. I'd already started. The pen was moving."` | `«Своё имя, конечно. Я уже начала. Ручка уже двигалась!»` |
+| fiery | respond | `"She won't. She ran off. I'm the one who'll be telling it."` | `«Не будет. Она убежала. Это я теперь всем рассказывать буду».` |
+| fiery | space | `"I don't want to get used to it. That's the bit I'd keep."` | `«Не хочу привыкать. В этом и есть самое интересное».` |
+| deep | invite | `"My name. I'd have written it badly. I was more nervous than she was."` | `«Своё имя. Наверняка написала бы криво. Я нервничала сильнее неё».` |
+| deep | respond | `"Maybe. She didn't look like somebody making a memory. She looked caught."` | `«Может быть. Но в тот момент она скорее выглядела застигнутой врасплох».` |
+| deep | space | `"I don't think I want to. Not yet, anyway."` | `«Пожалуй, не хочу. Во всяком случае, пока».` |
+| quiet | invite | `"Just my name. I'd started it."` | `«Просто своё имя. Уже начала писать».` |
+| quiet | respond | `"Maybe. She didn't take it with her."` | `«Может быть. Но автограф она так и не забрала».` |
+| quiet | space | `"It is, a bit. I didn't mind it."` | `«Немного странно. Но мне не было неприятно».` |
+
+The deep `похоже` marks her reading of the girl's motive as inference. The quiet opener's match
+setting comes from the authored anecdote, not from a current-week match fact.
+
+## 19. Situation R6 – `the-saved-seat`
+
+Subject `story`; stages `college`, `independent`; no fact gate. The emotional event is somebody
+making room for her; the text leaves the relationship open.
+
+### 19.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"There was a seat free next to someone I've spoken to maybe twice, and she moved her bag for me."` | `«За столом было свободное место рядом с девушкой, с которой я разговаривала раза два. Она убрала сумку, чтобы я села».` |
+| fiery | `"She moved her bag so I could sit down. I barely know her and I don't know what to do with that."` | `«Она убрала сумку, чтобы я села. Я её почти не знаю и не понимаю, куда теперь это девать».` |
+| deep | `"There was a bag on the chair beside hers. She moved it when I came in."` | `«На стуле рядом с ней лежала сумка. Когда я вошла, она её убрала».` |
+| quiet | `"I sat with someone at dinner. The seat was free."` | `«За ужином села рядом с одной девушкой. Место было свободно».` |
+
+### 19.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what they talked about` | `Спросить, о чём они говорили` |
+| respond | `Say somebody noticed her` | `Сказать, что её заметили` |
+| space | `Say dinner is just dinner` | `Сказать, что ужин – просто ужин` |
+
+### 19.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Nothing much. The food, mostly. It was easy, which I wasn't expecting."` | `«Ни о чём особенном. В основном о еде. Было легко, а я такого не ждала».` |
+| sunny | respond | `"She did, didn't she? I keep coming back to that."` | `«Заметила, да? Я всё об этом думаю».` |
+| sunny | space | `"It is. It was a nice one, though."` | `«Конечно. Но ужин был хороший».` |
+| fiery | invite | `"Not much. The food. I spent the whole meal waiting for it to get awkward."` | `«Почти ни о чём. О еде. Я весь ужин ждала, когда станет неловко».` |
+| fiery | respond | `"She moved a bag. I'm trying not to make it into more than that."` | `«Она просто убрала сумку. Я стараюсь не придавать этому лишнего значения».` |
+| fiery | space | `"It isn't, though. You know it isn't."` | `«Но это не просто ужин. Ты же знаешь».` |
+| deep | invite | `"Not a lot. We ate. It was the first quiet meal I've had in a while."` | `«Мало. Просто ели. Давно у меня не было такого спокойного ужина».` |
+| deep | respond | `"She did. That's the part I've kept."` | `«Да. Именно это я и запомнила».` |
+| deep | space | `"Usually. That one wasn't."` | `«Обычно да. Но тот был другим».` |
+| quiet | invite | `"The food. Where she's staying. Nothing you'd write down."` | `«О еде. Где она остановилась. Ничего такого, что стоило бы записать».` |
+| quiet | respond | `"Somebody did. It was a good dinner."` | `«Кто-то заметил. Хороший был ужин».` |
+| quiet | space | `"Probably. I'll sit there again."` | `«Наверное. Ещё там сяду».` |
+
+No response names this person as a friend or romantic interest. The space choice can be gently
+dismissive; the daughter is allowed to disagree without a bond penalty.
+
+## 20. Situation-corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 12 / 51 | 228 / 969 | 4 / 4 | R45–R52 and R1–R4 complete as DRAFT |
+| 14 / 51 | 266 / 969 | 4 / 4 | R45–R52 and R1–R6 complete as DRAFT |
