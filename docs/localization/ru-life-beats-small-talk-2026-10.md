@@ -756,3 +756,6 @@ dismissive; the daughter is allowed to disagree without a bond penalty.
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
 | 14 / 51 | 266 / 969 | 4 / 4 | R45–R52 and R1–R6 complete as DRAFT |
+
+The remaining situation rows continue in [RU-10A](ru-small-talk-situations-2026-10.md). This
+volume stops here to keep the editorial review slice bounded.
