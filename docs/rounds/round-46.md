@@ -817,6 +817,7 @@ grep – B9 confirms what «тоже» refers to before copying it.
 | B1b | 11c art follow-up | `LifeBeatDialog.vue` BEAT_FACE + MemoryFace (pregnancy faces) | sonnet · 20 |
 | B13 | 7 (ruled 05.10) | run ladders in `engine/economy/condition.ts` + probe + corridor re-pins | sonnet · 55 |
 | B14 | 3 (ruled 05.10) | house entry-price indexation (shop quote path) + tests | sonnet · 35 |
+| B15 | 2 | the «the weight» duplicate in settings (More), DRAFT rewrite | sonnet · 25 |
 | Architect | 3b ✓, 17 ✓, succession spec (ruled: Александра-мать · дом+машина+слайс через мультипликатор финиша · спека сейчас, стройка пост-лонч), gates, report | – | – |
 
 Sequencing notes: B1 first (biggest, and #22's hazard multiplier shares its files); B2 early so a
