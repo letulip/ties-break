@@ -145,3 +145,32 @@ Three steps, each its own wave-sized slice:
    and album. The core of the feature; one schema bump together with step 1 if they ship together.
 3. **The fame content** – press lines, brand doors, rival daughters, the mother's record visible
    in the world. Pure content on top; can trickle in over rounds.
+
+## 8. The night build plan (05–06.10, ruled: the wave starts when round 46 closes)
+
+Branch `wave/succession`, cut from `round/46`'s final head (the round is unmerged until morning;
+cutting from it keeps the round's possible schema bump and this wave's from colliding – this wave
+takes the NEXT version number after whatever the round shipped). Sequential dispatch under the
+29.09 token law; the architect runs the gates between steps and at the close; every new
+player-facing string lands in this wave's own DRAFT table below for the owner's blessing.
+
+| Step | What | Who · budget |
+| --- | --- | --- |
+| W0 | The 2031 census: `git grep -n "2031" -- src tests e2e tools` read and sorted into «reads the world after S1» vs «genuinely constant, dated note» – the input to S1's brief | architect, read-only |
+| S1 | `startYear` into `WorldState` + creation input, defaulted 2031; ONE schema bump carrying ALL succession fields (startYear + the optional legacy block, declared up front so later steps add no second bump); append-only migration, golden fixture, `npm run e2e:fixtures`; regression arm: a default-2031 career is byte-identical (rngMain untouched, frozen capture green); a 2048-born world runs a season with consistent years | sonnet · 60 |
+| S2a | `legacyInputOf(finishedSave)` – the pure reader: surname, mother + her peak, daughter's name and birth year, ending kind, the house, the car, the savings slice, the album blob; tests over a walked finished-career fixture | sonnet · 50 |
+| S2b | Creation consumes the legacy input: start year = birth year + prologue age; house and car arrive owned at aged value; the §4 multiplier with its bench (predicted vs measured against the ordinary start budget); the mother as the named parent | sonnet · 60 |
+| S2c | The door: the ending screen offers her career when the epilogue has the daughter; flows into creation; mounted tests, dismiss/controls inside 375×667 (the popup law); strings → DRAFT | sonnet · 45 |
+| S2d | The heirloom: generation 1's album openable read-only from generation 2; entry point + mounted test; strings → DRAFT | sonnet · 40 |
+| S3 | Content (rival daughters in the conveyor, press/fame lines) – PLANNED, not tonight: corpus-heavy, needs his blessing batches by daylight | next wave |
+| Close | Gates (check / component / capture verdict / sim / e2e) from files on a quiet machine; push; PR body by the pull-request skill | architect |
+
+Honest night scope: S1–S2b are the engine spine and must land whole or not at all (schema moves do
+not ship half-done); S2c/S2d are each severable. If the night runs short, the branch stops at the
+last green gate and the morning report says exactly where.
+
+### DRAFT strings (W-S…)
+
+| id | where | the line |
+| --- | --- | --- |
+| – | appended by the wave's builders as they add player-facing words | – |
