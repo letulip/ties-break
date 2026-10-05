@@ -26,9 +26,12 @@ He ruled the three big forks the same hour (decisions.md, 05.10):
   by how the previous career ended. Never the whole fortune.
 - **(в) When**: «спека сейчас, стройка пост-лонч» – this document now, the build after launch.
 
-Build target: post-launch wave(s). One piece – the start-year parameterisation – is worth pulling
-earlier if a convenient wave appears, because every passing month adds fixtures that silently
-assume 2031.
+Build timing (re-ruled 05.10, evening): the wave STARTS the night round 46 closes – «поставь себе
+задачу начать эту волну сразу после окончания раунда 46 в отдельной ветке от самого раунда… будешь
+шаг за шагом всю ночь работать». Its branch cuts from the round's head (unmerged until morning, so
+a round-46 schema bump and the wave's own cannot collide), §7 step 1 first. The SHIPPING decision
+– into the launch build or after it – stays his at merge time; nothing in the feature leaks before
+a career finishes, so carrying it pre-launch is safe by construction.
 
 ## 1. The loop
 
@@ -77,7 +80,11 @@ Does not carry:
 - **The fortune.** His words: «не все миллионы». The slice is the multiplier's, the rest is the
   retired star's own life, off screen.
 - **Staff.** Twenty years pass; her coaches retired. Chemistry starts clean.
-- Everything else by default. Two open rows for him sit in §6.
+- **The brand** (ruled 05.10): «новая карьера - это карьера дочки, просто новая карьера с
+  небольшими бенефитами в начале, больше ничего».
+- **The academy** (ruled 05.10): «она не продана, а не основана» – in generation 2 it simply was
+  never founded; nothing to inherit, nothing sold off screen.
+- Everything else by default.
 
 ## 4. The ending multiplier
 
@@ -111,17 +118,22 @@ and values are the build wave's bench work (predicted vs measured, as always).
 - The finished generation-1 save is read, never written. If it is deleted later, the running
   generation-2 career keeps everything it copied (album blob included) – no live link.
 
-## 6. Still his to rule (small forks, any time before the build wave)
+## 6. The small forks – all four ruled the same day (05.10)
 
-1. **The brand**: does a generation-1 clothing brand survive into generation 2 (as the mother's
-   brand the girl can later join), or does it close with the career?
-2. **The academy**: if generation 1 owned the academy stage, does it exist in the world of
-   generation 2 (a place, maybe a training option), or is it sold off screen?
-3. **The door's condition**: is succession offered after EVERY ending with the daughter, or only
-   when the epilogue's circumstances allow (he may want some hard endings to stay final)?
-4. **Steam/payment**: generation 2 sits in the paid version (the free segment ends at the first
-   junior year – presumably moot, since succession needs a finished career; stated to be checked
-   against the payment-gate spec when both build).
+1. **The brand**: does not carry – «просто новая карьера с небольшими бенефитами в начале, больше
+   ничего» (§3).
+2. **The academy**: does not exist in generation 2 – «не продана, а не основана» (§3).
+3. **The door**: not gated by the ending. His answer reframed the question as the dynasty loop:
+   «У нас там когда-то позже мальчики появятся, будет больше вариативности. Но по сути,
+   околобесконечный процесс, разве что может средненькая рождаться или вообще "не про теннис"» –
+   succession is a near-infinite process; the variability lives in the CHILD, not the door. Boys
+   arrive in a later iteration. The child's draw varies by generation: sometimes a modest talent,
+   sometimes a girl who is not about tennis at all – the talent/inclination draw is build-wave
+   design (what a «не про теннис» generation means for play – a hard start, or the line pausing –
+   goes back to him with measurements when the creation path builds).
+4. **Payment**: no interaction – the paywall is ONE-TIME, after the first prologue and the first
+   junior year («Он единоразовый»); a succession career sits behind no second gate by
+   construction.
 
 ## 7. Build shape (post-launch)
 

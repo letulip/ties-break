@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 156 dated entries, newest 2026-10-05. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 157 dated entries, newest 2026-10-05. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 30 | [THIRD BATCH: THE CLASH IS TWO HEAVY DAYS, AND THE SLAM-WEEK №1 SHARES THE PAGE](#02102026--third-batch-the-clash-is-two-heavy-days-and-the-slam-week-1-shares-the-page) | 2026-10-02 |
+| general | 31 | [SUCCESSION: THE SMALL FORKS CLOSED, AND THE NIGHT ORDER](#05102026--succession-the-small-forks-closed-and-the-night-order) | 2026-10-05 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -5864,3 +5864,26 @@ to how the previous career ended – never the whole fortune. **(в)** «спе�
 пост-лонч» – `docs/specs/succession-2026-10.md` is commissioned now (the architect writes it
 inside round 46), the build waits for after launch; the start-year parameterisation may come
 earlier, while fixtures are few.
+
+## 05.10.2026 – SUCCESSION: THE SMALL FORKS CLOSED, AND THE NIGHT ORDER
+
+The four §6 forks of [succession-2026-10](specs/succession-2026-10.md), answered within the hour:
+**the brand does not carry** («новая карьера - это карьера дочки, просто новая карьера с небольшими
+бенефитами в начале, больше ничего»); **the academy does not exist in generation 2** («она не
+продана, а не основана» – not sold off screen, simply never founded in the new world); **the door
+is not gated by the ending** – his answer reframes it as the dynasty loop: «У нас там когда-то
+позже мальчики появятся, будет больше вариативности. Но по сути, околобесконечный процесс, разве
+что может средненькая рождаться или вообще "не про теннис"» – a near-infinite process where the
+child herself varies (boys later; some generations modest, some not about tennis at all – the
+talent draw is the variability, not the door); **the paywall is one-time** («пейвол у нас 1 раз
+после первого пролога и первого года был запланирован… Он единоразовый») – succession sits behind
+no second payment by construction.
+
+And the order: «поставь себе задачу начать эту волну сразу после окончания раунда 46 в отдельной
+ветке от самого раунда… будешь шаг за шагом всю ночь работать» – the succession wave STARTS the
+night round 46 closes, on its own branch cut from the round's head (the round is unmerged until his
+morning; branching from it keeps a possible round-46 schema bump and the wave's own bump from
+colliding). Spec §7's step 1 (start-year parameterisation) goes first, step 2 (the legacy creation
+path) follows as the night allows; round questions collect separately. The earlier «стройка
+пост-лонч» now reads: the BUILD runs now, the SHIPPING decision (into launch or after) stays his
+at merge time.
