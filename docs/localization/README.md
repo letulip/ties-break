@@ -38,6 +38,7 @@ last-reviewed: 2026-10-05
 | [Batch 09 – Diary and birthdays](ru-diary-birthday-2026-10.md) | Diary chrome and memories, birthday headings, travel and weekly observations | shared diary and birthday frame drafted; corpora in progress |
 | [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | drafted end to end |
 | [Batch 09B – Journey-home corpus](ru-diary-travel-corpus-2026-10.md) | Parent-written scraps after tournament travel, including result, body, distance and coach branches | drafted end to end |
+| [Batch 09C – Photo and condition corpus](ru-diary-photo-condition-corpus-2026-10.md) | Home photograph and condition-card captions with stage, result and body licences | result/body photo bands drafted; vacation, ordinary life and condition open |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
