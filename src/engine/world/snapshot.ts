@@ -122,7 +122,7 @@ import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
+import { arrivalStatus, entryStatus, layoffCovering, layoffCoversWeek, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
@@ -747,14 +747,36 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
  *  `matchWeekRecoveryBase` = 0, plus the physio and blackout bonuses, and nothing subtracts before
  *  step 2), so a 'medical' preview can be false by a point or two. Announcing a withdrawal that
  *  then does not happen would replace the old lie with a new one; the medical stop + toast already
- *  make the real thing loud. The layoff and the point band are pure state and cannot move, so those
- *  two ARE previewed. */
+ *  make the real thing loud. The point band is pure state and cannot move, so it IS previewed.
+ *
+ *  ⭐⭐ ROUND 46 #16 – AND THE LAYOFF IS PREVIEWED THROUGH THE ONE THING THAT CAN MOVE IT BEFORE THE
+ *  PLAY WEEK: THE MASSEUR'S REHAB WEEK. This paragraph used to say the layoff «cannot move», which
+ *  stopped being true at v59: `rollInjury` takes ONE extra week off the countdown inside the very
+ *  tick this button runs, and `arrivalStatus` reads the clinic's `weeksRemaining` from the state
+ *  BEFORE it. So on the snapshot where the clinic said two weeks and his cadence landed on the next
+ *  tick, home said «injured walkover» for a week the tick then cleared her for – the owner's W500,
+ *  played and won twice under a verdict that said she would not appear (the Calendar's grid read
+ *  the same clinic number and said «injury» beside it).
+ *
+ *  ⚠ THE FIX IS A READ, NOT A RULE. `arrivalStatus` is untouched – at the tick it runs AFTER the
+ *  decrement and is exact, and replaying the cadence there would count his week twice. The preview
+ *  asks `layoffCoversWeek` against `weeksRemaining − masseurRehabWeeksAhead`, the replay
+ *  `injury.expectedWeeks` already puts on the wire (round 41 #19). For THIS tick that replay is not
+ *  a forecast but the arithmetic the tick will run, exact whenever nothing moves between the
+ *  snapshot and the click – and every command that could (firing him, changing his rung, booking a
+ *  holiday) returns a fresh snapshot. The clinic's number on the plaque, the entry gate and the
+ *  planner are NOT touched (round 34, R10-17). Byte-identical for every career without a masseur
+ *  (the replay is 0). Pure state, ZERO draws, no wording. */
 export function arrivalPreview(world: WorldState): ArrivalPreview | null {
   const next = world.week + 1
   const event = world.season.find((e) => e.week === next && world.entries.includes(e.id))
   if (!event) return null
   const status = arrivalStatus(world, event)
-  const injured = status.verdict === 'injured'
+  const layoff = world.injury
+  const injured =
+    status.verdict === 'injured' &&
+    layoff !== null &&
+    layoffCoversWeek(world.week, layoff.weeksRemaining - masseurRehabWeeksAhead(world), event.week)
   return {
     eventId: event.id,
     tier: event.tier,

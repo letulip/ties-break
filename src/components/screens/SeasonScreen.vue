@@ -92,7 +92,7 @@ import { readingColor } from '../../composables/readingColor'
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
-import { layoffNoteFor } from '../../composables/weekDays'
+import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { rankLabel } from '../../shared/format'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -680,8 +680,11 @@ interface CalendarRow {
 // window carries a small red "injury" chip, so "why can't I plan anything" is answerable at a
 // glance instead of one lock label at a time.
 function layoffCovers(w: number): boolean {
+  // ⭐ ROUND 46 #16: through `layoffHoldsWeek`, so the played week's chip agrees with the grid and
+  // the home verdict (the masseur's rehab week is paid inside the tick); every other week is still
+  // the clinic's window, exactly as above.
   const s = game.snapshot
-  return s?.injury != null && w < s.week + s.injury.weeksRemaining
+  return s?.injury != null && layoffHoldsWeek(s, w)
 }
 /** The chip's tooltip – the same words the tournament card's injured lock uses, and since 06.09 the
  *  same STRING: `layoffNoteFor` (composables/weekDays.ts). `lockLabel`'s own `'injured'` arm below

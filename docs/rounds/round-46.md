@@ -213,6 +213,35 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   not reach this session** (and #20 says he currently cannot export saves at all). Hunt the
   injured-entry/walkover law in code + sim reproduction; ask him to re-send the save once #20 ships.
   Class: **measure/hunt**, honest status if not reproducible blind.
+  - **B2 · 16 DIAGNOSED, REPRODUCED, FIXED** (the save never arrived – found in code, then reproduced on the
+    unmodified build). **The engine is right and two screens lied.** The law: the surfaces he names – home's
+    `snap.arrival` (`arrivalPreview`, snapshot.ts) and the Calendar grid (`calendarWeekFor` → `injuredNow`,
+    weekDays.ts) – ask the CLINIC's `weeksRemaining` whether the layoff covers next week (`arrivalStatus` →
+    `layoffCovering`); the tick asks what is left after `rollInjury` has ALSO paid the masseur's rehab week
+    (injury.ts:395 and :419, `tickWeek` increments the week first, tick.ts:206). Clinic = 2 weeks left and his
+    cadence landing on the next tick ⇒ screens «injured / walkover», tick 2 − 1 − 1 = 0 ⇒ cleared, the entered
+    W500 is PLAYED (the walkover arm, phaseHerWeek.ts ~944-956, only fires on a still-injured arrival). One week
+    wide per layoff and only on the cadence's parity – hence «что-то странное». Round 34 #21 closed this gap for
+    the onset sweep and round 41 #19 for the dialog; the preview never got it and its own doc claimed «the layoff
+    cannot move».
+    **Killed:** walkover-then-play in one week (one if/else-if chain on one `enteredThisWeek`; the walkover arm
+    stashes nothing); a play-time hole in the entry law (the verdict is re-read on the play week; the test asserts
+    «plays ⇔ layoff over» in every sweep cell; the dev ▶▶ and `advanceWeeks` both run `tickWeek`); a pre-injury
+    entry never re-validated (it is, on arrival).
+    **Reproduced** (`tests/round46-arrival-masseur-parity.test.ts`, red before the fix): his state gave home
+    `injured`, grid `injured`, tick `play`; the 54-cell sweep (3 rungs × layoff 1–6 × 3 cadence phases) disagreed
+    in exactly 10 cells, every one «clinic has 2, cadence lands on the next tick». **Fix – a parity read, no
+    wording, no RNG, no schema:** `arrivalPreview` asks `layoffCoversWeek(week, weeksRemaining −
+    masseurRehabWeeksAhead, eventWeek)`; the Calendar grid and the Season chips go through the new
+    `layoffHoldsWeek` (weekDays.ts), which reads the wire's `expectedWeeks` for the PLAYED week only. Byte-identical
+    for every career without a masseur. One source pin re-aimed (`round12-view.test.ts:203`).
+    **NOT touched – the architect's / owner's calls:** (a) the look-ahead rows (they start at week + 2) and the
+    Season rows past next week still draw the clinic's window, so a calendar glanced at earlier can still say
+    «injury» on a week the masseur then clears – widening it breaks round 34's «the countdown is not rewritten»;
+    (b) the ENTRY GATE and the planner (`layoffCovering`, the clinic's window) still refuse a NEW entry or booking
+    in a week the replay says she is back – the same class one gate over, and making `layoffCovering` masseur-aware
+    is the entry law itself. **Still wanted:** his save once #20 ships, to confirm it was the masseur case
+    (a masseur hired and two weeks left on the clinic's clock at W10).
 
 - [~] **17. «А может быть нам какую-то микро языковую модель подключить для этих всех смолл токов
   можно (я знаю такие есть крохотные) и запускать прямо в браузере внутри приложения для генерации
