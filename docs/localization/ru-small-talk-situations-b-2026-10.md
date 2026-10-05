@@ -268,8 +268,93 @@ in progress even after the daughter felt its result had become obvious.
 The quiet `afternoon` becomes `день` so the dialogue does not require a specific time of day from
 the current game clock. No line gives the score or winner of the observed match.
 
-## 7. Corpus progress
+## 7. Situation R25 – `the-coach-she-watched`
+
+Subject `curiosity`; stages `college`, `independent`; fact gate `coach-employed`. Her own coach
+exists, allowing a comparison with another session. The observed coach's gender and quality are
+unknown. The four words are counted in Russian too: `Снова` · `Обе` · `ноги` · `Хорошо`.
+
+### 7.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I watched somebody else's coach for an hour and they said about four words."` | `«Час смотрела чужую тренировку. За всё время от тренера услышала слова четыре».` |
+| fiery | `"Four words. All session. I'd like to know which four."` | `«Четыре слова. За всю тренировку. Хотела бы знать какие».` |
+| deep | `"They barely spoke. I can't tell if that's confidence or if it was all said already."` | `«Они почти не говорили. Не пойму, это уверенность или всё уже сказали раньше».` |
+| quiet | `"I watched another session for a bit. Quieter than ours."` | `«Немного посмотрела чужую тренировку. Тише, чем у нас».` |
+
+### 7.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the four words were` | `Спросить, что это были за четыре слова` |
+| respond | `Say the talking is not the coaching` | `Сказать, что работа тренера не сводится к словам` |
+| space | `Say every pair finds its own way` | `Сказать, что у каждой пары свой способ работать` |
+
+### 7.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Again. Both feet. Good. That was it, the whole session, four words."` | `«Снова. Обе ноги. Хорошо. Вот и вся тренировка – четыре слова».` |
+| sunny | respond | `"That's what I'm starting to think. It looked like a lot was happening."` | `«Я тоже начинаю так думать. Со стороны там много всего происходило».` |
+| sunny | space | `"They must. I'd still like to try a session of four words."` | `«Наверное. А я бы всё равно хотела попробовать тренировку из четырёх слов».` |
+| fiery | invite | `"Again. Both feet. Good. Four words, and she got on with it."` | `«Снова. Обе ноги. Хорошо. Четыре слова – и она продолжила работать».` |
+| fiery | respond | `"Then what is? I'd like to know what I'm missing."` | `«А в чём тогда работа? Хочу понять, чего я не вижу».` |
+| fiery | space | `"Maybe. I'd go mad in a silence like that."` | `«Может быть. Я бы от такой тишины с ума сошла».` |
+| deep | invite | `"Again. Both feet. Good. I counted them because I couldn't believe it."` | `«Снова. Обе ноги. Хорошо. Я сосчитала – не могла поверить».` |
+| deep | respond | `"No. Something was going on and none of it was out loud."` | `«Не сводится. Там что-то происходило, но вслух – почти ничего».` |
+| deep | space | `"They do. I'd like to know how long theirs took to find."` | `«Так и есть. Интересно, сколько времени им понадобилось найти свой».` |
+| quiet | invite | `"Again. Both feet. Good. That's all I heard."` | `«Снова. Обе ноги. Хорошо. Больше ничего не слышала».` |
+| quiet | respond | `"Maybe not. It looked like they'd done it before."` | `«Возможно. Похоже, они не впервые так работали».` |
+| quiet | space | `"I suppose so. Ours is louder."` | `«Пожалуй. У нас разговоров больше».` |
+
+The Russian four-word payload remains identical across voices, as the observed event demands. No
+line assigns a gender to either coach.
+
+## 8. Situation R27 – `the-lift-that-stopped`
+
+Subject `story`; stages `college`, `independent`; no fact gate. The elevator, ten minutes and
+three people are authored particulars, not derived from travel or residence state.
+
+### 8.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The lift stopped. Ten minutes. Three of us. We know each other very well now."` | `«Лифт застрял. Десять минут. Нас трое. Теперь мы друг друга прекрасно знаем».` |
+| fiery | `"Stuck in a lift. Ten minutes. With two people who wouldn't stop talking."` | `«Застряла в лифте на десять минут. С двумя людьми, которые ни на секунду не замолчали».` |
+| deep | `"Ten minutes in a stopped lift with two strangers. Nobody panicked and I found that oddly reassuring."` | `«Десять минут в застрявшем лифте с двумя незнакомыми людьми. Никто не запаниковал, и мне почему-то стало спокойнее».` |
+| quiet | `"The lift stopped for a while. It started again."` | `«Лифт ненадолго остановился. Потом поехал».` |
+
+### 8.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what they talked about` | `Спросить, о чём они говорили` |
+| respond | `Say you would have hated that` | `Сказать, что вам бы это не понравилось` |
+| space | `Laugh and move on` | `Посмеяться и сменить тему` |
+
+### 8.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Everything. Where we're from, what we eat, the lift. Ten minutes goes fast."` | `«Обо всём. Откуда мы, что едим, про лифт. Десять минут пролетели».` |
+| sunny | respond | `"You'd have hated it. I quite liked it, which surprised me."` | `«Тебе бы не понравилось. А мне понравилось, чего я сама не ожидала».` |
+| sunny | space | `"Ten minutes and now I know their whole lives. Worth it."` | `«Десять минут – и я знаю про них всё. Не зря застряли».` |
+| fiery | invite | `"They talked. I listened. I know an alarming amount about both of them now."` | `«Они говорили. Я слушала. Теперь я пугающе много знаю об обоих».` |
+| fiery | respond | `"You'd have hated it less than I did. They didn't stop talking."` | `«Тебе бы не понравилось, но мне было ещё хуже. Они не замолкали».` |
+| fiery | space | `"Laugh. I'm taking the stairs for the rest of the week."` | `«Смейся. А я до конца недели – по лестнице».` |
+| deep | invite | `"Food, mostly. Nobody mentioned the lift once we knew it would move."` | `«В основном о еде. Когда поняли, что лифт скоро поедет, о нём уже не говорили».` |
+| deep | respond | `"You would. I kept waiting to mind it and I didn't."` | `«Тебе бы не понравилось. А я ждала, что мне станет неприятно, но нет».` |
+| deep | space | `"Mm. Three of us and nobody panicked."` | `«Угу. Нас было трое, и никто не запаниковал».` |
+| quiet | invite | `"Not much. Where everyone was from. Then it moved."` | `«Немного. Откуда кто приехал. Потом лифт поехал».` |
+| quiet | respond | `"You would have. It wasn't that bad."` | `«Тебе бы не понравилось. Было не так страшно».` |
+| quiet | space | `"It started again. That's the end of it."` | `«Потом лифт поехал. Вот и вся история».` |
+
+The two strangers' genders are not known. No line requires a specific dorm, apartment or hotel for
+the elevator to exist.
+
+## 9. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 32 / 51 | 608 / 969 | 4 / 4 | R45–R52 and R1–R24 complete as DRAFT |
+| 34 / 51 | 646 / 969 | 4 / 4 | R45–R52, R1–R25 and R27 complete as DRAFT |
