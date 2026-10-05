@@ -177,7 +177,7 @@ describe('round 46 #16 – the week the button plays is previewed with the rule 
     expect(plays, 'the play arm ran').toBeGreaterThan(0)
     expect(masseurSavedTheWeek, 'cells where the clinic says out and the tick says play').toBeGreaterThan(0)
     expect(disagreements).toEqual([])
-  }, 90_000)
+  }, 60_000)
 
   it('⚠ SCOPE FENCE – only the played week is previewed from the replay; the look-ahead keeps the clinic\'s countdown (round 34)', () => {
     // Daily rung, six weeks left: the clinic window is [10, 16); his replay clears her at the top of

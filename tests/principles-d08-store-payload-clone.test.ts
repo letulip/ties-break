@@ -168,6 +168,9 @@ function driversFor(s: Store): Record<string, () => unknown> {
     setPsychologistRung: () => s.setPsychologistRung(1),
     setPsychologistFocus: () => s.setPsychologistFocus('coolhead'),
     setCoachOnEventWeeks: () => s.setCoachOnEventWeeks(true),
+    // ⚠ ROUND 46 #22 (06.10, B1) – the dev life-event boost sender, driven for the same both-ways
+    // equality reason as the listing senders above.
+    setLifeBoost: () => s.setLifeBoost(true),
     setWeightEnabled: () => s.setWeightEnabled(true),
     setCoachOnJuniorEvents: () => s.setCoachOnJuniorEvents(false),
     cancelPractice: () => s.cancelPractice(11),

@@ -137,5 +137,5 @@ describe('round 46 #21 – over a real world', () => {
       checked += 1
     }
     expect(checked).toBe(200)
-  }, 240_000)
+  }, 60_000)
 })
