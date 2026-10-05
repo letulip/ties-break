@@ -267,8 +267,93 @@ RU kit term is `обмотка`. Her achievement is doing the small repair herse
 The parent replies and daughter answers do not assign a gender to the player-parent. `Обмотка`
 matches the RU diary and birthday drafts; no separate tennis synonym is introduced here.
 
-## 7. Corpus progress
+## 7. Situation R13 – `the-call-she-made`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. The booking and call are an
+authored everyday story, not a mutation of the game's tournament entry or travel state.
+
+### 7.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I made a phone call. In an actual other language. And the person understood me!"` | `«Я позвонила. На другом языке. И меня поняли!»` |
+| fiery | `"I made the call myself. I'd been putting it off for a week and it took four minutes, which is the annoying part."` | `«Сама позвонила. Неделю откладывала, а заняло четыре минуты. Вот что бесит».` |
+| deep | `"I rang them and did it in their language. Badly. It worked, and I've been quietly pleased about it since."` | `«Позвонила им и говорила на их языке. Плохо. Но меня поняли, и я с тех пор тихо этому радуюсь».` |
+| quiet | `"The booking's changed. I called."` | `«Бронь поменяли. Я позвонила».` |
+
+### 7.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how much of it she understood` | `Спросить, сколько она поняла` |
+| respond | `Say the week of dreading it was the hard part` | `Сказать, что труднее всего было неделю бояться звонка` |
+| space | `Say well done and leave it` | `Похвалить её и не расспрашивать дальше` |
+
+### 7.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"About half? I understood the important half. The booking's changed, so something worked."` | `«Половину? Главное я поняла. Бронь изменили – значит, сработало».` |
+| sunny | respond | `"It really was. The call was nothing. The dreading took everything."` | `«Точно. Сам звонок – ерунда. А ожидание съело все силы».` |
+| sunny | space | `"Thank you. I'm going to be smug about this for a bit."` | `«Спасибо. Я теперь немного погоржусь собой».` |
+| fiery | invite | `"Enough. I understood enough, and she understood me, which is all it needed."` | `«Достаточно. Я поняла её, она поняла меня. Больше и не требовалось».` |
+| fiery | respond | `"That's the annoying part. All that dread for something that short."` | `«Вот именно. Столько боялась ради четырёх минут».` |
+| fiery | space | `"I'll leave it. I'm making the next one straight away, though."` | `«Ладно. Зато следующий звонок сделаю сразу».` |
+| deep | invite | `"Less than she thought I did. I said yes to things I'm not certain about."` | `«Меньше, чем ей показалось. Я на что-то согласилась и теперь не уверена, на что».` |
+| deep | respond | `"It was. I'd rather have made the call the day I started dreading it."` | `«Так и было. Лучше бы позвонила в тот же день, когда начала бояться».` |
+| deep | space | `"Thank you. That's all I wanted to do with it."` | `«Спасибо. Мне и хотелось только сказать об этом».` |
+| quiet | invite | `"Most of it. Enough to answer."` | `«Большую часть. Ответить смогла».` |
+| quiet | respond | `"Probably. I kept meaning to do it."` | `«Наверное. Всё собиралась позвонить».` |
+| quiet | space | `"Thanks. It's done now."` | `«Спасибо. Теперь это сделано».` |
+
+The `бронь` story remains outside the actual travel economy. The deep answer keeps her uncertainty
+about what she agreed to; the Russian draft does not declare the changed booking safe or final.
+
+## 8. Situation R14 – `the-calm-loss`
+
+Subject `observation`; stages `after-school`, `college`, `independent`; fact gate
+`played-recently`. The daughter saw another player's loss. Nothing says the daughter herself won
+or lost that week.
+
+### 8.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A girl lost and was genuinely fine about it. Shook hands, packed up, left. Is that something you learn?"` | `«Одна девушка проиграла и правда спокойно это приняла. Пожала руку, собрала вещи и ушла. Этому учатся?»` |
+| fiery | `"She lost and just walked off. No argument, nothing. How?"` | `«Она проиграла и просто ушла. Без спора, без всего. Как?»` |
+| deep | `"She shook hands like losing was only Tuesday. I watched her pack, and I still don't understand it."` | `«Она пожала руку так, будто поражение – просто вторник. Я смотрела, как она собирается, и до сих пор не понимаю».` |
+| quiet | `"She shook hands, packed her bag and left. I stayed and watched the next one."` | `«Она пожала руку, собрала сумку и ушла. А я осталась смотреть следующий матч».` |
+
+### 8.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she'd have done` | `Спросить, что бы она сделала` |
+| respond | `Say losing might get easier to carry` | `Сказать, что со временем поражения, возможно, переживаются легче` |
+| space | `Say she doesn't have to have a view on it` | `Сказать, что ей не обязательно об этом судить` |
+
+### 8.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Not that. I'd have sat there for ages. I'd probably still be sitting there."` | `«Точно не так. Я бы сидела там вечность. Наверное, до сих пор сидела бы».` |
+| sunny | respond | `"Does it? I'd like that. I'd also like to know when it starts."` | `«Правда? Хотелось бы. Ещё бы знать, когда это начинается».` |
+| sunny | space | `"I know. I've got one anyway."` | `«Знаю. Но мнение у меня всё равно есть».` |
+| fiery | invite | `"Sat down. Said something I'd regret. Definitely not packed my bag neatly."` | `«Села бы. Сказала что-нибудь, о чём потом пожалела бы. Сумку точно не стала бы аккуратно собирать».` |
+| fiery | respond | `"I don't want it easier. I want to know how she does it."` | `«Не хочу, чтобы было легче. Хочу понять, как ей это удаётся».` |
+| fiery | space | `"I've got a view. I've had one since I watched her walk off."` | `«У меня есть мнение. С той самой минуты, как увидела, как она ушла».` |
+| deep | invite | `"I'd have stayed in the chair a long time. I know that much."` | `«Я бы ещё долго сидела на стуле. Это я точно знаю».` |
+| deep | respond | `"Might. She didn't look like somebody carrying anything."` | `«Может быть. Только она выглядела так, будто ей и не пришлось ничего переживать».` |
+| deep | space | `"No. I keep seeing her zip the bag."` | `«Не обязательно. Но у меня перед глазами, как она застёгивает сумку».` |
+| quiet | invite | `"Taken longer. I'd have packed slowly."` | `«Дольше собиралась бы. Не торопясь».` |
+| quiet | respond | `"Maybe. She made it look ordinary."` | `«Может быть. У неё это выглядело обычно».` |
+| quiet | space | `"No. It was only something I noticed."` | `«Не обязательно. Просто заметила».` |
+
+The daughter reads the other player's composure differently in each voice. Russian keeps that
+reading subjective, with no moral for the player to choose.
+
+## 9. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 20 / 51 | 380 / 969 | 4 / 4 | R45–R52 and R1–R12 complete as DRAFT |
+| 22 / 51 | 418 / 969 | 4 / 4 | R45–R52 and R1–R14 complete as DRAFT |
