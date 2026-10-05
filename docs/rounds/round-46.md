@@ -124,10 +124,70 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     byte-identical (`cmp`):** drop the 18 anchor → 3 red ((b), the once-only walk, the seam); lend the row again → 2 red ((b) at 17, (c) 282).
     `vue-tsc -b --force` green.
 
-- [ ] **6. «Может для своей яхты тоже поставим -15% вероятности травмы?»** – «тоже» = something
+- [x] **6. «Может для своей яхты тоже поставим -15% вероятности травмы?»** – «тоже» = something
   already grants −15% injury (find the existing owner of that bonus – presumably the own plane);
   mirror it for the OWN YACHT. Tuning change → measured, not guessed (invariant 5): bench arm or
   probe + spec note. Class: **build + measure**.
+  - **B10 · BUILT (05.10), with ONE FLAG for the owner below.**
+    **THE REFERENT HUNT** – «тоже» is **not the plane** (nothing on the plane touches the injury threshold: it cuts
+    fares and adds a travelling-week bonus). It is the **Elite recovery programme**: `ECONOMY.vacation.packages[elite]
+    .buffFactor` **0.85** (`economy/vacation.ts:95`; the resort is 0.9) → `resolveVacation` stores `world.recoveryBuff =
+    {untilWeek: week + 4, factor}` (`world/planner.ts`) → `injuryTau` multiplies the weekly threshold by it, ONE post-draw
+    multiply (`world/injury.ts:285`) – and the vacation sheet already **prints** it under the row, «injury risk −15% for
+    4 weeks» (`PlanWeekSheet.vue`, `row.buffFactor < 1`). The own-yacht week (`yacht-week`) was the only top rung with
+    `buffFactor: 1`, so what he sees is a line under Elite and none under the yacht. **Every injury multiplier today**
+    (all post-draw on `injuryTau`, then `min(…, 0.12)`): base 0.003 + 0.00015 per fatigue point · age table · consecutive
+    play [1, 1, 1.2, 1.5, 1.8] · playing week ×1.4 · booked vacation week ×0.25 · physio rung (budget 0.76, the rungs above
+    lower) · recovery buff (resort 0.9, **elite 0.85**) · shoes (`kitInjuryFactor`) · knock push ×2.2 / ×3.0 · recurrence.
+    **BUILT – the narrow reading of «своей»:** `grantedBuffFactor: 0.85` on the `yacht-week` row + ONE pure rule
+    `vacationBuffFactor(pkg, grantedIds)` (`economy.ts`, beside `vacationPriceCents`), asked by BOTH `resolveVacation` (the
+    booking) and the sheet's row (the parity class: one function, two surfaces). «Своя» is what the shelf already means by
+    it (`grantedVacationIds`: a DELIVERED `yacht` / `yacht-big`, §13c), so the owner's FREE week carries −15% for the 4 weeks
+    after it, down Elite's own pathway – the same `recoveryBuff`, the same single multiply, **zero new draws, no schema
+    change**. The CHARTER keeps `buffFactor` 1 (§13g's «weaker after-effect») and every other package × grant pairing
+    answers its shipped `buffFactor`, so a world with no delivered yacht is byte-identical to before. The choice, stated:
+    the owner's own week only, not the charter – his word was «для СВОЕЙ яхты».
+    **PREDICTED → MEASURED (invariant 5):** predicted tau × 0.85 on the four buffed weeks, hits −15% in expectation. The
+    instrument is the compare itself – a played season diverges after the first injury either arm takes, so a full-tick
+    count would measure the path, not the multiplier (and was not run). `tests/yacht-own-buff.test.ts` (d): 40 seeds × 1,040
+    weeks of tired-end states, the real `resolveVacation` seam once per seed, the real first draw of `seed:injury:<week>`:
+    **Σtau ratio 0.850000 (exact), hits 204 vs 235 → 0.868** (0.8 sampling errors off 0.85; the owner's hits are a subset
+    of the charter's), max tau 0.0170 so the 0.12 cap never binds. Small in absolute terms: baseline ≈0.6 % a week on that
+    sample, so a booked yacht week avoids ≈ 0.003 injuries.
+    ⚠⚠ **FLAG – IT RETIRES §3f's VETO ON THE OWNER'S SIDE, and he should hear it once.** The spec's «the yacht must NOT be
+    the strictly best rest week available» (the 26.08 spec's own reasoning, not an owner quote) held because Elite kept the
+    injury buff, «a currency a boat cannot pay in». The owner's week is now **free · +48 · −15% for 4 weeks = Elite with the
+    bill removed**: a family with a delivered yacht has no reason left to book Elite. The charter is untouched (1.4× Elite's
+    price, no buff – still strictly worse). If he wants the veto back it is ONE knob: delete `grantedBuffFactor` and the
+    helper answers `buffFactor` everywhere (byte-identical to before, which test (f) proves by doing exactly that). Spec:
+    `docs/specs/the-shop-2026-08.md` §13h (+ dated pointers on §3f's item 4 and §13g) and a line under `vacation.packages[6]`
+    in the notes.
+    ⚠ **WORDING – none written; two EXISTING strings are newly reachable on the yacht row, both chosen by the live buff:**
+    (1) the sheet's «injury risk −15% for 4 weeks» line now shows under the owner's yacht row (never under a charter);
+    (2) the log's «…, and the recovery holds for 4 weeks.» template is selected by the buff actually live, so the owner's
+    yacht-week log line carries it. No string was edited or added; the shop card's blurb is untouched (his to write if he
+    wants the perk named there).
+    **Tests:** `tests/yacht-own-buff.test.ts` 6 new – (a) the row, and the one rule over every package × grant pairing,
+    (b)+(c) the real tick seam, owner vs charter on one seed: `recoveryBuff` {untilWeek: w+4, factor: 0.85} vs null,
+    `injuryTau` = unbuffed × 0.85 to 1e-12, the charter's tau = the owner's unbuffed tau (ownership leaks through the buff
+    and through nothing else), the log line follows the live buff, (e) a yacht owner booking Elite gets 0.85, the resort
+    0.9, the seaside none, (f) **byte-identity with a positive control** – six non-owner worlds hash identically with and
+    without the knob, the owner's yacht week hashes differently, (d) the measurement above.
+    `tests/component/round29-shop-elite.test.ts` +1 mounted arm (the sheet's half: the owner's row shows the clinic's own
+    injury line, a charter none, the clinic as the control so a line missing from both cannot compare equal);
+    `tests/planner.test.ts`: one dated comment, no assertion touched. **Verdicts:** new file 6/6; component file 14/14;
+    27 tracked test files name vacations, the planner, the economy module or the sheet – 26 ran in the unit project, 806
+    tests green; the 27th, `tests/fatigue-bench.test.ts`, belongs to the sim project (not run – the PR step) and never
+    mentions a yacht, an asset or the grant list; **frozen capture `tests/condition.test.ts` 51/51, EXIT 0** (zero draws,
+    MAIN untouched); `pins:check` ok (my first draft of the component arm used a raw `slice(indexOf())` and the ratchet
+    caught it – rewritten); `doc-facts` ok, `notes-pointers` 603 resolve; `vue-tsc -b --force` green on the final tree
+    (sentinel read from its own log).
+    **MUTATED, each arm went red and was restored byte-identical (`cmp`):** the helper drops the owner's factor → unit 3
+    red + component 1 red; the booking ignores the helper → unit 2 red; the sheet reads the row → component 1 red; the
+    multiplier at `injury.ts:285` dropped (`tau *= 1`) → unit 2 red; the grant check dropped (the buff leaks to the
+    charter) → unit 3 red, including (f). Not looked at in a browser: the row needs a delivered-yacht career and the
+    mounted test asserts the rendered text. `docs/decisions.md` is not touched (the owner-log entry and its index regen
+    are the architect's).
 
 - [ ] **7. «Выигранный 1000 снимает сейчас 12 кондишина, и кажется, что 500 снимает ощутимо больше.
   Проверь пожалуйста»** – under the 02.10 tariff (500/1000/Slam all = 3) a WON 1000 drains 12 and a

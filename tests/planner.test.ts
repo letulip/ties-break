@@ -545,6 +545,9 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     expect(yachtWeek.priceCents).toEqual([5600_00, 9800_00])
     expect(yachtWeek.conditionGain).toBe(vacationPackage('elite')!.conditionGain)
     expect(yachtWeek.buffFactor).toBeGreaterThan(vacationPackage('elite')!.buffFactor)
+    // ⚙ AMENDED 05.10 (round 46 #6, the owner's «для своей яхты тоже -15%»): this arm still describes the
+    // CHARTER row, which is unchanged. The OWNER's week carries `grantedBuffFactor` 0.85 now – the veto no
+    // longer holds on that side, by his word – and `tests/yacht-own-buff.test.ts` holds that half.
     // The unit the table is written in (spec §4): every rung is denominated in rest weeks at the
     // repriced base, which is why the two knobs may never be re-tuned apart. ⚠ 12.08: the bottom
     // two moved with the owner's re-step (18/22 -> 10/18), so the free week is now worth 1.25 rest

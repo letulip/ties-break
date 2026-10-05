@@ -14,7 +14,7 @@
 //
 // ⚠ RNG: the practice resolution draws on the PURPOSE-SCOPED `seed:practice:<week>` sub-stream and
 // the vacation on its own – never MAIN. A plan change must never alter the weekly draw count.
-import { ECONOMY, practiceFeeCents, vacationPackage, vacationPriceCents } from '../economy'
+import { ECONOMY, practiceFeeCents, vacationBuffFactor, vacationPackage, vacationPriceCents } from '../economy'
 import { pickInt, rngFromSeed, type Rng } from '../rng'
 import { isExamWeek, isOffSeasonWeek } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
@@ -319,14 +319,20 @@ export function resolveVacation(world: WorldState): void {
   // same `vacationForWeek` booking this function opened with (engine/spirit.ts explains why).
   // Zero draws; no string on the event below moves (invariant 4).
   applyBondDelta(world, ECONOMY.bond.delta.vacationResolved)
-  if (pkg.buffFactor < 1) {
-    world.recoveryBuff = { untilWeek: world.week + ECONOMY.vacation.buffWeeks, factor: pkg.buffFactor }
+  // ⭐⭐ ROUND 46 #6 – THE BUFF IS ASKED OF `vacationBuffFactor`, not read off the row: the owner's own yacht
+  // week carries the −15% Elite does («для своей яхты тоже»), and the sheet's «injury risk −N%» line asks
+  // the same function, so the line and this booking cannot disagree. It is still the one `recoveryBuff` and
+  // still the single post-draw multiply in `injuryTau`; zero draws. For every package, and for every family
+  // without a DELIVERED yacht, the answer is exactly `pkg.buffFactor` – the shipped table, unchanged.
+  const buffFactor = vacationBuffFactor(pkg, grantedVacationIds(world))
+  if (buffFactor < 1) {
+    world.recoveryBuff = { untilWeek: world.week + ECONOMY.vacation.buffWeeks, factor: buffFactor }
   }
   addEvent(world, {
     week: world.week,
     type: 'info',
     text:
-      pkg.buffFactor < 1
+      buffFactor < 1
         ? `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition, and the recovery holds for ${ECONOMY.vacation.buffWeeks} weeks.`
         : `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition.`,
   })
