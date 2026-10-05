@@ -221,3 +221,102 @@ rendered narrow-screen check because equal character counts do not imply equal g
 Next inventory boundary: the `WEEK_NOTES` flat pool after these generated spreads. Count and group
 that pool from source before translating; do not infer its size from the historical comment above
 it, because later waves may have changed the rows without revising prose.
+
+## 16. Explicit `WEEK_NOTES` inventory
+
+The current source contains **132 explicit `text:` rows** inside `WEEK_NOTES`, excluding generated
+spreads. The nearby historical comment still says 113; it is stale evidence, not the translation
+target. Exact current grouping:
+
+| group | rows |
+| --- | ---: |
+| grind | 8 |
+| light | 7 |
+| ordinary middle | 12 |
+| body | 4 |
+| money | 2 |
+| calendar-owned weeks | 13 |
+| knock | 9 |
+| birthday | 11 |
+| generic layoff | 6 |
+| exam inside layoff | 5 |
+| body-group layoff | 11 |
+| fallible parent | 6 |
+| partner known | 5 |
+| fresh breakup | 4 |
+| spouse spoke | 4 |
+| own key | 1 |
+| lineage/mother in a new career | 8 |
+| shared motherhood | 8 |
+| strained/cold flat pool | 8 |
+| **total** | **132** |
+
+## 17. Flat pool A – ordinary training weeks (33 lines)
+
+### 17.1 Grind – eight
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F001 | `Six days on court. She ate like someone twice her size.` | `Шесть дней на корте. Ела будто была вдвое крупнее.` |
+| RU09D-F002 | `Out before we were up, back after dark. All week.` | `Уходила до нашего подъёма, возвращалась затемно. Всю неделю.` |
+| RU09D-F003 | `She fell asleep on the sofa with her shoes on. Twice.` | `Дважды уснула на диване, не сняв обуви.` |
+| RU09D-F004 | `Three shirts a day this week. The machine has not stopped.` | `По три футболки в день. Машинка всю неделю не останавливалась.` |
+| RU09D-F005 | `She asked for an extra hour on Sunday. We said no. She went anyway.` | `В воскресенье попросила ещё час. Мы отказали. Она всё равно пошла на корт.` |
+| RU09D-F006 | `A blister on her serving hand. She taped it and said nothing.` | `Мозоль на руке, которой подаёт. Заклеила и промолчала.` |
+| RU09D-F007 | `Three voice notes this week, all sent after dark.` | `За неделю – три голосовых. Все после темноты.` |
+| RU09D-F008 | `She asked about Sunday. By the time we replied, she had booked the court.` | `Спросила про воскресенье. Пока мы ответили, уже забронировала корт.` |
+
+F002–F005 retain the source's same-roof licence; F007–F008 remain away-stage contact. Russian must
+not flatten them into one stage-neutral pool.
+
+### 17.2 Light – seven
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F009 | `Two mornings off. She spent both of them at the courts anyway.` | `Два свободных утра. Оба всё равно провела на кортах.` |
+| RU09D-F010 | `A slow week. She baked something and it was mostly edible.` | `Тихая неделя. Что-то испекла, и это почти можно было есть.` |
+| RU09D-F011 | `A light week, and she filled the gaps with things that are not tennis.` | `Лёгкая неделя. Пустоты заполнила чем-то, кроме тенниса.` |
+| RU09D-F012 | `She had time to be fifteen this week. It suited her.` | `В эту неделю она успела побыть просто пятнадцатилетней. Ей шло.` |
+| RU09D-F013 | `Light week. She and the neighbour argued about a film for an hour.` | `Лёгкая неделя. Целый час спорила о фильме с кем-то по соседству.` |
+| RU09D-F014 | `Rest days, and she was restless by the second one.` | `Дни отдыха. На второй она уже не находила себе места.` |
+| RU09D-F015 | `A light week. She called before nine, which is how we knew she was bored.` | `В лёгкую неделю позвонила до девяти. Так мы поняли, что ей скучно.` |
+
+### 17.3 The ordinary middle – twelve
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F016 | `Drills, school, dinner, bed. She did not complain once.` | `Упражнения, школа, ужин, сон. Ни одной жалобы.` |
+| RU09D-F017 | `Drills, dinner, bed. She did not complain once.` | `Упражнения, ужин, сон. Ни одной жалобы.` |
+| RU09D-F018 | `Training, physio, groceries, sleep. Her own little circuit.` | `Тренировка, физиотерапевт, магазин, сон. Её маленький круг.` |
+| RU09D-F019 | `Same courts, same hours. She is getting quietly better at this.` | `Те же корты, те же часы. И у неё всё лучше получается.` |
+| RU09D-F020 | `She practised her toss against the garage door until it got dark.` | `До темноты отрабатывала подброс у двери гаража.` |
+| RU09D-F021 | `A week of nothing much. She read a whole book on the bus.` | `Неделя без особых событий. В автобусе прочитала целую книгу.` |
+| RU09D-F022 | `She has started keeping a notebook of what the coach says.` | `Начала записывать слова тренера в отдельную тетрадь.` |
+| RU09D-F023 | `New strings, an old grip she refuses to change. Superstition.` | `Новые струны, старая обмотка, которую не даёт сменить. Суеверие.` |
+| RU09D-F024 | `She watched a match on her phone at the table and forgot to eat.` | `За столом смотрела матч в телефоне и забыла поесть.` |
+| RU09D-F025 | `Rain all week. She hit against the wall in the car park instead.` | `Всю неделю дождь. Вместо корта била о стену на парковке.` |
+| RU09D-F026 | `A photo of the new strings. No caption; apparently none was needed.` | `Фотография новых струн. Без подписи – видимо, она не нужна.` |
+| RU09D-F027 | `She called after practice and talked about everything except practice.` | `Позвонила после тренировки и говорила обо всём, только не о ней.` |
+
+F016 is school-only; F017 is after-school-only; F018, F026 and F027 are away-stage lines. Those
+licences carry narrative information and are part of the key even when the Russian wording itself
+could look portable.
+
+### 17.4 Body – four
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F028 | `She is running on empty and pretending she is not.` | `Сил уже нет, а она делает вид, что есть.` |
+| RU09D-F029 | `Ice on her knee in front of the television. Not a word about it.` | `Лёд на колене перед телевизором. И ни слова об этом.` |
+| RU09D-F030 | `She is answering in single words this week. That is the tell.` | `На этой неделе отвечает односложно. Это её выдаёт.` |
+| RU09D-F031 | `She has her legs back. It shows in the way she walks.` | `Ноги снова её слушаются. Это видно по походке.` |
+
+### 17.5 Money – two
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| RU09D-F032 | `We went through the coaching bill twice. It said the same thing both times.` | `Дважды проверили счёт тренера. Сумма не изменилась.` |
+| RU09D-F033 | `She offered to drop a session. We found something else to cut.` | `Предложила убрать занятие. Мы нашли, на чём сэкономить вместо этого.` |
+
+The second line deliberately does not say what the family cut: the economy model does not hold that
+fact. Both lines retain the `fundsPressure === 'tight'` licence and print no amount.
