@@ -352,8 +352,92 @@ behave after matches. This is her private comparison, not a statement about an a
 `Десять минут` is an authored observation, not a recovery timer. The parent may offer to leave;
 she decides whether to stay.
 
-## 9. Corpus progress
+## 9. Situation R38 – `the-warm-up-she-runs`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. She begins a group warm-up;
+the moment says something small about initiative, without promoting her to a formal leader.
+
+### 9.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Nobody started the warm-up so I did. And everybody just... followed me?"` | `«Никто не начинал разминку, и я начала. А остальные просто... пошли за мной?»` |
+| fiery | `"I ran the warm-up. Somebody had to and nobody was moving."` | `«Я провела разминку. Кому-то надо было, а остальные стояли».` |
+| deep | `"I started it because the silence was getting long, and then everybody did what I said."` | `«Я начала, потому что молчание затянулось. А потом все делали то, что я говорила».` |
+| quiet | `"I started the warm-up this week. It went fine."` | `«На этой неделе я начала разминку. Всё прошло нормально».` |
+
+### 9.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how it felt` | `Спросить, каково это было` |
+| respond | `Say somebody had to, and it was her` | `Сказать, что кто-то должен был начать, и начала она` |
+| space | `Say well done and leave it` | `Похвалить её и не расспрашивать дальше` |
+
+### 9.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Strange. Good strange. I kept waiting for somebody to take it off me."` | `«Странно. Но приятно. Всё ждала, что кто-нибудь перехватит».` |
+| sunny | respond | `"It was me. I still don't quite know why it was me."` | `«Начала я. До сих пор не понимаю, почему именно я».` |
+| sunny | space | `"Thanks. I'll probably do it again next time, actually."` | `«Спасибо. Вообще-то, может, и в следующий раз проведу».` |
+| fiery | invite | `"Good. Better than standing about waiting for somebody else to start."` | `«Хорошо. Лучше, чем стоять и ждать, пока начнёт кто-то другой».` |
+| fiery | respond | `"Somebody had to. I'd been waiting long enough to be annoyed."` | `«Кому-то надо было. Я уже успела разозлиться от ожидания».` |
+| fiery | space | `"I'll leave it. I'm doing it again, though."` | `«Ладно. Но в следующий раз опять я».` |
+| deep | invite | `"Frightening at the start. Then it was only a warm-up."` | `«Сначала страшно. А потом это оказалась просто разминка».` |
+| deep | respond | `"It was. I'd been waiting for somebody else to be the somebody."` | `«Да. Я всё ждала, что этим кем-то станет другой человек».` |
+| deep | space | `"Thank you. I'd not have told anybody else."` | `«Спасибо. Больше я бы никому об этом не рассказала».` |
+| quiet | invite | `"Fine. Nobody made anything of it."` | `«Нормально. Никто не придал этому значения».` |
+| quiet | respond | `"Somebody did. It happened to be me."` | `«Кто-то начал. Так вышло, что я».` |
+| quiet | space | `"Thanks. It was only a warm-up."` | `«Спасибо. Это всего лишь разминка».` |
+
+Her voice changes the importance of the same group moment. No response adds status, reputation or
+bond.
+
+## 10. Situation R39 – `the-thing-she-fixed`
+
+Subject `good-news`; stages `after-school`, `college`, `independent`; no fact gate. The
+shoelace repair is story texture and does not replace, buy or repair a game inventory item.
+
+### 10.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"My bag strap went and I fixed it with a shoelace. It's holding!"` | `«У сумки оторвалась лямка, я привязала её шнурком. Держится!»` |
+| fiery | `"It broke, I fixed it, and it's better than it was. That's the whole story."` | `«Сломалось, я починила, и теперь лучше прежнего. Вот и вся история».` |
+| deep | `"I mended it with what was in the bag. It's ugly and it works and I've been quietly pleased all day."` | `«Починила тем, что нашлось в сумке. Некрасиво, зато держится. Весь день тихо радуюсь».` |
+| quiet | `"Bag strap went. It's sorted."` | `«Лямка у сумки оторвалась. Я починила».` |
+
+### 10.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how bad it looks` | `Спросить, сильно ли это заметно` |
+| respond | `Say that is a useful kind of stubborn` | `Сказать, что такое упрямство полезно` |
+| space | `Say you would have bought a new one` | `Сказать, что вы бы купили новую сумку` |
+
+### 10.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Terrible. There's a shoelace holding my bag together. It isn't subtle."` | `«Очень. Сумку держит шнурок. Такое не спрячешь».` |
+| sunny | respond | `"Is that what it is? I only didn't want to carry it home in pieces."` | `«Это упрямство? Просто не хотелось нести домой сумку по частям».` |
+| sunny | space | `"You would have. I like this one, though."` | `«У тебя сразу была бы новая. А мне нравится эта».` |
+| fiery | invite | `"It looks like a shoelace holding a bag together, because that's what it is."` | `«Как сумка, которую держит шнурок. Так оно и есть».` |
+| fiery | respond | `"It's stubborn. I'd have been annoyed all day carrying a broken bag."` | `«Упрямство. Но носить весь день сломанную сумку бесило бы сильнее».` |
+| fiery | space | `"You would. I didn't want a new one, I wanted this one working."` | `«Знаю. Но мне нужна была не новая, а эта – целая».` |
+| deep | invite | `"Bad. You can see the lace from across a room."` | `«Сильно. Шнурок видно через всю комнату».` |
+| deep | respond | `"Maybe. I didn't feel stubborn. I felt like somebody with a shoelace."` | `«Может быть. Я не чувствовала себя упрямой. Просто у меня был шнурок».` |
+| deep | space | `"You would. I'd rather it stayed the bag I've had."` | `«Верю. А я хотела оставить сумку, которая у меня уже была».` |
+| quiet | invite | `"You'd see it. The lace doesn't match anything."` | `«Заметно. Шнурок ни к чему не подходит».` |
+| quiet | respond | `"Suppose so. It was quicker than the alternative."` | `«Наверное. Так было быстрее».` |
+| quiet | space | `"You would, yes. This one's fine now."` | `«Пожалуй. А моя теперь в порядке».` |
+
+The parent option mentions buying a bag but does not incur a cost. Daughter responses avoid
+assigning the player-parent a grammatical gender.
+
+## 11. Corpus progress
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 44 / 51 | 836 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R37 complete as DRAFT |
+| 46 / 51 | 874 / 969 | 4 / 4 | R45–R52, R1–R25 and R27–R39 complete as DRAFT |
