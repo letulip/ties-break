@@ -923,6 +923,69 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
    ради слов»). And «в) давай драфт» – the corpus batch is ordered: the architect writes new
    lines per occasion (and de-tautologized openings for the four existing ones) as DRAFT rows for
    his blessing; the picker learns multiple lines per occasion. Build → **R3**.
+   - **R3 · THE SPOUSE CARD'S LINES NO LONGER INTRODUCE THEIR SPEAKER, AND EACH OCCASION NOW HOLDS SEVERAL LINES**
+     (the architect's batch, wired verbatim; DRAFT rows **R46-S26–S38**, 4 re-opened + 9 new; the HEADING and the Home
+     card's «The one she married wants a word.» are untouched). **Lines wired per occasion:** `distant-swing` 4
+     (entry 0 re-opened + 3 new), `road-stretch` 3 (1 + 2), `money` 3 (1 + 2), `no-vacation` 3 (1 + 2) = 13 lines,
+     **0 dropped for collisions**. Every NEW line was read against its occasion's existing line first; the two closest
+     calls were kept because the scenes differ – S29's «three thumbs of ocean» sits beside «half a world away» (a
+     measured distance against an idiom for one) and S34's «in this house» rhymes with the existing «how this house
+     plans» (a phrase, not a scene). The architect gave the rule but not the text for three of the four re-openings, so
+     **S30, S33 and S36 are the builder's** (subject stripped, scene and every quoted word kept, each marked in its row
+     with before -> after); S33's old line had no scene but its tone, so the tone is what stays («Without an edge:»).
+     **The pick:** ONE key, TWO taps. `rollSpouseView` derives `<seed>:life:spouse-view:<week>` once; tap one is the
+     occasion exactly as #15 left it (same stream, same draw, same range), tap two is the line inside it, over the
+     occasion's pool minus the line he said LAST for that occasion – read off the most recent row of it, however old
+     (it can only bind past the 52-week occasion window, since inside it the occasion itself is stale). A pool the
+     memory would empty falls back to the whole pool (`drawSmallTalkFrame`'s «never emptied»), still one draw.
+     **The detail-persistence road – a NEW OPTIONAL KEY, `LifeBeatRecord.line?: number`, not a longer `detail`.**
+     `lifeLog` IS persisted state (the save carries the log whole; nothing in `src/db` or the loaders names a row key),
+     so the stamped line is a new key on a saved row – `frame?`'s precedent on the very same record, and for `frame`'s
+     reason: a line drawn on a stream survives a save and a reload and cannot survive the pool growing, and the memory
+     is a fact about rows already written. `detail` stays the occasion, so every reader of it (the 52-week window,
+     `spouseViewOccasionThisWeek`, the diary, the bench's mix) is byte-untouched; a longer `detail` would have made all
+     four learn to parse. **Absent reads as entry 0, which is TRUE:** every pre-R3 row was told its occasion's one line,
+     and entry 0 of each pool is that line with its opening re-written (a test pins that entry 0 ends on every quoted
+     word it always had). Nothing is back-filled; an index the pool does not hold reads as entry 0 rather than
+     throwing; pool order is append-only once shipped. **No `SAVE_SCHEMA_VERSION` move (stays 91), no migration, no
+     golden** – `heard?`'s house rule (an optional key never back-filled whose absence is a true statement; nothing in
+     `migrations.ts` or the goldens reads a `lifeLog` row's shape; `doc-facts` green at v91). ⚠ **The call he should
+     know I made:** `frame?` took v81 for the same kind of state («a frame may not change … OR THE POOL GROWING»), so by
+     that criterion `line?` is version-worthy. I did not bump because the brief pointed at the `rankTrack?` precedent and
+     the asymmetry is one-sided – a bump is a no-op step by construction and can be added any time before ship (v92:
+     the migrations step, `tests/fixtures/saves/v92.json`, the e2e fixtures, the peel rung in
+     `tests/coachTravelEdgeFixtures.ts`, the doc-facts schema sentence), while a shipped one can never be taken back.
+     **RNG law:** the second tap is on the SAME purpose-scoped stream, never MAIN; a week that fires derives exactly one
+     key (B's positive control and mutation ARM 9 count it) and a week that does not fire derives none. Worlds where the
+     beat never fires are byte-identical to themselves (H2b: no latch, inside the cooldown, nothing true, everything true
+     stale – each `toEqual` its pre-roll clone, zero keys); worlds where it fires pick the same OCCASION as the roll a
+     round ago and differ from that roll's world by the stamped `line` key alone (H2, 48 worlds). Frozen capture
+     (tests/condition.test.ts, 41550 draws / hash e6b0c709 – the roll never touches MAIN): **51/51 green**.
+     **Evidence:** tests/wave7-spouse-view.test.ts 30 -> 41 tests, all green. §G is rebuilt as a property over EVERY line
+     of EVERY occasion: the heading and every line open on different three words; **no line introduces its speaker** –
+     the narration around the quotation names no spouse, husband, wife, partner, he, she or «the one she married» – with
+     the four pre-R3 openings transcribed as its control; entry 0 ends on every quoted word of the line it replaces; no
+     two lines of an occasion open alike; the short dash and no figure; and the card the engine assembles, for every
+     line. New §I: I1 the same seed tells the same line and the line is tap TWO of the one stream (replayed by hand), I2
+     every line of every occasion is reachable, I3 the line he said last is never the next one – for every last line of
+     every occasion and for a legacy row – with every OTHER line still reachable, I4 a six-season posed marriage never
+     repeats a line twice running for any occasion and uses more than one, I5 a legacy row (no key) reads as entry 0 and
+     a stale index never throws, I6 the line is on the row (JSON round trip; the card is read off the row, not the seed
+     or the week). **Re-aimed:** C.1 (the row is the v83 shape plus `line`), C.3 (the card says the stamped line), H2
+     (re-stated honestly – a fired world is the old roll's plus one key; H2b holds the byte-identity that survives whole,
+     for the worlds that never fire), H4 (one key, two taps), H5 (the memory is the log – lines included).
+     **Mutations**, each restored and `cmp`-checked (sha before == after): second draw dropped (always line 0) -> 4 red
+     (I1–I4); line memory deleted -> 2 red (I3, I4); second draw on a fresh stream -> 4 red (B's positive control, H3,
+     H4, I1); entry 0 of every pool swapped back for its pre-R3 opening -> 2 red (§G's no-introduction property and the
+     assembled-card arm) – while §G's old three-word property stays GREEN on that pool, which is the owner's complaint in
+     one line. **Neighbours:** 34 unit files / 807 tests (every test that names `lifeBeatSaid`, `raiseLifeBeat`,
+     `LifeBeatRecord` or the spouse kind, plus the barrel, hub-direction, cycle, pin-hygiene, fixtures, week-notes and
+     capture pins), the mounted life-beat dialog (65), `vue-tsc -b --force` exit 0, `check:tools` exit 0, and the
+     four cheap doc gates (doc-facts, notes-pointers, engine-purity, pin-ratchet) exit 0.
+     **Bench** (`npm run bench:wedding -- --seeds 20`; the header prints `no-repeat 52 wks`): 366 spouse-view beats over 125.2 latched seasons = **2.92 per latched season** (the spec's recorded AFTER, tree afa650e5: 342 / 117.2 / 2.92 – predicted unchanged, since the occasion layer is the same code on the same first tap); occasion mix 36.6 / 35.8 / 27.6 / 0.0 % (distant-swing / road-stretch / money / no-vacation; recorded 37.4 / 35.7 / 26.9 / 0.0). The line layer, new in section (f) of the bench – beats on entries 0, 1, 2… – `distant-swing` 33 / 37 / 29 / 35, `road-stretch` 48 / 41 / 42, `money` 36 / 35 / 30, `no-vacation` 0 / 0 / 0 (the bench's policy books a family week every season, so that occasion never fires there; its three lines are the tests' business, I2 and I3) – roughly even, as predicted; **the same occasion told twice running on the same line: 0 of 280 pairs** (predicted 0). **Drift:** the cadence is 2.92 against 2.92; the beat and season totals differ from the recorded 342 / 117.2 because the walk itself moved after that table was taken (other round-46 work), and the mix wobble of at most 0.8 of a point rides on that – not on this change, whose occasion layer H2 pins world by world and whose stamped line feeds nothing back into a walk (the bench never answers a soft row). I built no A arm on this tree (one run was asked for); it is one `git revert --no-commit` away if he wants the byte comparison. (g) the input-independence arm: THE LAW HOLDS over 912 weeks.
+     **Noted, not touched (invariant 4):** the diary's week notes (`weekNotes.ts`, three lines keyed on the spouse's
+     occasion) still open «The one she married…» – a different surface, not under this heading; and S27, S28 and S31
+     speak to «you», which reads right only if the spouse is talking to the parent as the one on the road – his to confirm.
 3. **№9 re-aimed at the SCHOOL TILE**: he meant the dead tile («плашка про школу… после
    школы/колледжа место занимает») – it becomes the relationships cell at its terminal rung:
    known → «Together for {span}» (his «очень хорошо»), unknown → a «кажется одинока»-class line,
@@ -1029,3 +1092,16 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S23 | 2 – the settings row's own label, under the `The weight` heading, **WIRED** (`WEIGHT_COPY.settingsLabel` in `composables/identityCopy.ts`, read by `MoreScreen.vue`'s `#more-weight-label` – which is also the switch's accessible name; the `<h2>` and both creation cards keep `WEIGHT_COPY.title`, and the hint under the row is untouched) | `Pregnancy loss and bereavement` – names the two things the switch gates, in the spec's own nouns; 30 characters, one short of the neighbouring label «The coach marks for new players» (31) |
 | R46-S24 | 2 – ALTERNATE for S23, NOT wired (same constant: `WEIGHT_COPY.settingsLabel`) | `A pregnancy that ends, a death in the family` – the creation card's own two scenes (`WEIGHT_COPY.lead`), gentler than S23 and without echoing the hint's «loss or bereavement»; 44 characters, longer than the 31-character «The coach marks for new players», so it will likely take two lines on a phone (not measured) |
 | R46-S25 | 2 – ALTERNATE for S23, NOT wired (same constant: `WEIGHT_COPY.settingsLabel`) | `Pregnancy loss and bereavement in this career` – S23 plus the one clause «развернуть» invites: it is the only switch on the screen that belongs to a career and not to the device; 45 characters, so it also likely wraps (not measured) |
+| R46-S26 | 12 + morning 2 – the spouse card, `distant-swing`, entry 0 (`SPOUSE_VIEW_SAID['distant-swing'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the architect's own re-opening, verbatim; every quoted word kept | before: `The one she married stayed back after the plates were cleared. "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."` -> after: `After the plates were cleared: "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."` |
+| R46-S27 | 12 + morning 2 – the spouse card, `distant-swing`, entry 1 (`SPOUSE_VIEW_SAID['distant-swing'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `Two suitcases stood by the door a week early. "I keep packing in my head long before you do. It is not a complaint. It is just where my evenings go."` |
+| R46-S28 | 12 + morning 2 – the spouse card, `distant-swing`, entry 2 (`SPOUSE_VIEW_SAID['distant-swing'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The call ended past midnight, cheerful to the last minute. "Those time zones are yours now. I am learning which hours of my day still reach you."` |
+| R46-S29 | 12 + morning 2 – the spouse card, `distant-swing`, entry 3 (`SPOUSE_VIEW_SAID['distant-swing'][3]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `A map stayed open on the kitchen table all week. "I measured it with my thumb. Three thumbs of ocean. Nobody tells you marriage involves this much geography."` |
+| R46-S30 | 12 + morning 2 – the spouse card, `road-stretch`, entry 0 (`SPOUSE_VIEW_SAID['road-stretch'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule (subject stripped, scene and every quoted word kept) – the architect gave the rule for this one, not the text | before: `The one she married said it plainly, on a quiet evening. "The family has been on the road for weeks now. The house does not really get lived in between the trips."` -> after: `On a quiet evening, plainly: "The family has been on the road for weeks now. The house does not really get lived in between the trips."` |
+| R46-S31 | 12 + morning 2 – the spouse card, `road-stretch`, entry 1 (`SPOUSE_VIEW_SAID['road-stretch'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The fridge note said back Thursday, then said nothing for a while. "I have stopped counting weeks and started counting airports. It comes to the same number, but it sounds more like your life."` |
+| R46-S32 | 12 + morning 2 – the spouse card, `road-stretch`, entry 2 (`SPOUSE_VIEW_SAID['road-stretch'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The neighbours asked when the family would next be under one roof. "I said soon, with the confidence of somebody who has learned not to check the calendar first."` |
+| R46-S33 | 12 + morning 2 – the spouse card, `money`, entry 0 (`SPOUSE_VIEW_SAID['money'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule – the only scene this line had was its tone, so the tone is what stays | before: `The one she married asked it without an edge. "That was a large bill, and the season sits in her account now. I am not counting anybody's money. I am asking how this house plans."` -> after: `Without an edge: "That was a large bill, and the season sits in her account now. I am not counting anybody's money. I am asking how this house plans."` |
+| R46-S34 | 12 + morning 2 – the spouse card, `money`, entry 1 (`SPOUSE_VIEW_SAID['money'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The bank letter lay opened beside the fruit bowl. "I grew up thinking a good month meant nothing broke. I am still translating what a good month means in this house."` |
+| R46-S35 | 12 + morning 2 – the spouse card, `money`, entry 2 (`SPOUSE_VIEW_SAID['money'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `"I paid for dinner and it felt like a historical reenactment. Let me have that one. Some things should still be mine to buy."` |
+| R46-S36 | 12 + morning 2 – the spouse card, `no-vacation`, entry 0 (`SPOUSE_VIEW_SAID['no-vacation'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule | before: `The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` -> after: `As the season closed: "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` |
+| R46-S37 | 12 + morning 2 – the spouse card, `no-vacation`, entry 1 (`SPOUSE_VIEW_SAID['no-vacation'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The brochure stayed on the shelf from last winter. "I am not asking for the sea. I am asking for one week where nobody's racket comes with us."` |
+| R46-S38 | 12 + morning 2 – the spouse card, `no-vacation`, entry 2 (`SPOUSE_VIEW_SAID['no-vacation'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `"People think being married into tennis means holidays. I showed them a photo of a car park in the rain. They stopped asking."` |

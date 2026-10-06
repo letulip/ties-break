@@ -560,6 +560,25 @@ export interface LifeBeatRecord {
    *  (`MET_HER_LINE`, `ENDED_HER_LINE`, the fork's registers), so the key is absent on all of them by
    *  construction – the same shape `heard` has, one field over, for the mirror-image reason. */
   frame?: string
+  /** ⭐⭐ ROUND 46 R3 – WHICH LINE OF ITS OCCASION'S POOL a `'spouse-view'` row was raised with, on that kind and
+   *  on no other: an INDEX into `SPOUSE_VIEW_SAID[detail]`. `detail` stays the occasion – so every reader of the
+   *  occasion (the no-repeat window, the diary's derivation, the bench's mix) reads what it always read.
+   *
+   *  ⚠⚠ IT IS PERSISTED RATHER THAN DERIVED, for `frame`'s reason one field up: a line drawn on a purpose stream
+   *  survives a save and a reload and CANNOT survive the pool growing (floor(u * 5) is not floor(u * 4)), so a
+   *  card already on screen would re-word itself; and the line memory («never the line he said last for this
+   *  occasion») is a fact about rows already written, so the rows have to hold it.
+   *
+   *  ⭐ OPTIONAL, AND ABSENT IS TRUE: every row raised before this round was told its occasion's one line, which is
+   *  entry 0 of that occasion's pool today (the same scene, its opening re-written), so a row with no `line` reads
+   *  as 0 and nothing is back-filled. ⚠ THE POOL'S ORDER IS APPEND-ONLY once shipped – a saved index names a
+   *  position – and an index the pool does not hold reads as 0 rather than throwing.
+   *
+   *  ⚠ NO VERSION IS TAKEN, on `heard`'s house rule: an optional key never back-filled, whose absence is a true
+   *  statement about every older row, and nothing in `migrations.ts` or the goldens reads a `lifeLog` row's shape.
+   *  `frame` took v81 for the same kind of state, so the call is on record in docs/rounds/round-46.md (R3) – and a
+   *  bump later is a no-op step by construction, where an un-shipped one cannot be undone. */
+  line?: number
 }
 
 /** ⭐⭐⭐ v74 – SOMEONE EXISTS. One row per attachment this career has lived, append-only and never
