@@ -369,7 +369,9 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
 </template>
 
 <style scoped>
-/* ⭐ ROUND 46, MORNING ITEM 4 (06.10) – «давай 2 колонки попробуем», AND THE THREE TILES ARE NOW ONE COLUMN. They were two short cards side by side with the money
+/* ⭐ ROUND 46, MORNING ITEM 4 (06.10) – the owner's two-columns ask (quoted verbatim in the script
+   header above; this block stays Cyrillic-free because the round11 copy pin sweeps everything after
+   the template tag, style included), AND THE THREE TILES ARE NOW ONE COLUMN. They were two short cards side by side with the money
    card under them. The half-width pair is gone for a reason that was measured, not guessed: the dialog is 360px at most, so a half tile holds 96px of content at 320
    and 132px at its widest, and a label|value grid needs the label's longest word («Tournaments», about 74px) AND the value's longest («Quarterfinalist», about 110px)
    side by side – 190px. Nothing narrower can put every value beside its label, so at half width some rows dropped under theirs and WHICH ones changed with the
