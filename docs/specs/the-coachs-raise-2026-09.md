@@ -3,7 +3,7 @@ type: spec
 status: current
 area: engine/coach
 canonical: false
-last-reviewed: 2026-09-17
+last-reviewed: 2026-10-02
 ---
 
 # The coach's fee is fixed at hire, and he asks – round 42 #51
@@ -319,3 +319,18 @@ is itself a check on the gate.
 | the anniversary, and the residual bank | `src/engine/world/phaseHerWeek.ts`, beside the masseur's |
 | the pins | `tests/round42-coach-raise.test.ts` (25 cases, six mutation arms) |
 | the bench | `npm run bench:coachraise` (`tools/coach-raise-bench.ts`) |
+
+## 02.10.2026 – the ask became a LETTER (round 45 · 3b), the size did not move
+
+The owner's ruling («тренер тоже вполне может просить повышения… как и все остальные»): the yearly
+restamp-with-a-notice above is retired. The anniversary now writes an open `staff` letter with the
+same two doors every other seat got in round 45 – Accept moves `coachDeal.labourCents` (the one
+persisted number the bill, the budget meter and the market row all read) and re-dates the deal to
+the paper's week; Decline or a lapse moves nothing and nobody leaves (the 17.09 «no third branch»
+law, unchanged). His SIZE is exactly this spec's corridor – `coachAskFraction` over the progress
+score, 5–15% with the 5% floor – so the conversion is value-neutral on an accepted year. A refused
+year stays banked in the score, which is this spec's own residual law doing its work. The paper
+stands only on an anniversary of the deal that stands now (`coachRaiseStands`,
+`src/engine/world/coachDeal.ts`); the frozen coach-travel careers never answer letters, so their
+fees now hold at the hire price – `tests/coachTravelEdgeFixtures.ts` re-pinned with the ⚠ note.
+Pins: `tests/round45-staff-ask-floating.test.ts` and the re-aimed `round42-coach-raise.test.ts`.

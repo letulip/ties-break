@@ -71,11 +71,12 @@
 // sections and the same product lockup and tagline, and they are deferred at all three widths for the
 // one reason: of the four, `Career Summary` does not exist as a screen at all, so three quarters of a
 // shell is not a smaller version of it. The album keeps its own header until that section is built.
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import IconButton from '../ui/IconButton.vue'
 import AlbumSheet from '../album/AlbumSheet.vue'
 import AlbumChapterRail from '../album/AlbumChapterRail.vue'
 import AlbumChaptersSheet from '../album/AlbumChaptersSheet.vue'
+import { useGameStore } from '../../stores/game'
 import { SHEET_GAP_PX, SHEET_STEP_PX } from '../../shared/protocol'
 import type { AlbumBook } from '../../shared/protocol'
 
@@ -88,14 +89,31 @@ import type { AlbumBook } from '../../shared/protocol'
 const props = defineProps<{ book: AlbumBook | null }>()
 const emit = defineEmits<{ back: [] }>()
 
+// ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, OPENABLE FROM HER DAUGHTER'S (docs/specs/succession-2026-10.md §3). A generation-2 career carries the finished
+// book of the generation before it as an heirloom, and THIS screen is where it is read: ONE small secondary control, drawn only when the engine says there
+// is a book to open (`Snapshot.hasHeirloom` – the screen restates no verdict, it reads the flag), swaps the rendered book to her mother's and back.
+//
+// ⚠ THE SCREEN STILL ONLY RENDERS. The mother's book arrives through the read-only `heirloomAlbum` query, once, at the first press, and is cached for the
+// length of this mount; it then goes through the very same `sheets` and `chapters` below, so the same AlbumSheet, rail and pager draw it – the heirloom is
+// one more `AlbumBook` and nothing downstream knows whose it is. No command is sent and nothing is written.
+// ⚠ THE CACHE BELONGS TO ONE CAREER. `loadAlbum`'s hazard in App.vue's own words (career A's book on career B's screen) applies one level down, so a
+// snapshot of another career drops it, and an answer that lands after the career changed is discarded.
+const game = useGameStore()
+const hasHeirloom = computed(() => game.snapshot?.hasHeirloom === true)
+const heirloom = ref<AlbumBook | null>(null)
+const showingHeirloom = ref(false)
+const heirloomLoading = ref(false)
+/** The book on the page: hers, or – once it has been fetched and asked for – her mother's. */
+const shown = computed<AlbumBook | null>(() => (showingHeirloom.value && heirloom.value ? heirloom.value : props.book))
+
 const pan = ref<HTMLElement | null>(null)
 const scrolled = ref(0)
 /** No width to read (happy-dom, or a first paint) means "the page continues" – the safe direction
  *  for an affordance: a gradient that should not be there is a smudge, a missing one is a dead end. */
 const atFilmEnd = ref(false)
 
-const sheets = computed(() => props.book?.sheets ?? [])
-const chapters = computed(() => props.book?.chapters ?? [])
+const sheets = computed(() => shown.value?.sheets ?? [])
+const chapters = computed(() => shown.value?.chapters ?? [])
 
 /** The film's pitch – one page plus the gutter between two of them – as the STYLESHEET laid it out.
  *
@@ -156,6 +174,42 @@ function pickChapter(firstSheet: number): void {
   chaptersOpen.value = false
   goTo(firstSheet)
 }
+
+/** The control is a TOGGLE with ONE label (the spec's DRAFT table, W-S1): pressed shows her mother's book, pressed again returns to hers.
+ *  ⚠ A SWAP RESETS THE PAGER TO THE FIRST SHEET, because the two books are different films and `scrollLeft` is the one source of truth about where the
+ *  pager is – a book swapped under a pan left at sheet 5 would open the mother's at sheet 5, or at its end. */
+async function toggleHeirloom(): Promise<void> {
+  if (showingHeirloom.value) {
+    showingHeirloom.value = false
+  } else {
+    if (heirloomLoading.value) return
+    if (!heirloom.value) {
+      const asked = game.snapshot?.careerId
+      heirloomLoading.value = true
+      try {
+        const book = await game.loadHeirloomAlbum()
+        if (game.snapshot?.careerId !== asked) return
+        heirloom.value = book
+      } finally {
+        heirloomLoading.value = false
+      }
+    }
+    // A refused query, or a career that has no book after all: stay on hers. The control is not a promise the worker has to keep.
+    if (!heirloom.value) return
+    showingHeirloom.value = true
+  }
+  chaptersOpen.value = false
+  await nextTick()
+  goTo(0)
+}
+
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    heirloom.value = null
+    showingHeirloom.value = false
+  },
+)
 </script>
 
 <template>
@@ -276,6 +330,22 @@ function pickChapter(firstSheet: number): void {
         </button>
       </div>
     </footer>
+
+    <!-- ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, one secondary toggle (see the script). OUTSIDE the `sheets.length` footer on purpose: this control is the
+         only way back from her mother's book, so it must not vanish with a book that happens to have no sheets. ONE label for both directions, W-S1 in the
+         spec's DRAFT table – the state is `aria-pressed` and the outline, never a second sentence (invariant 4: one new string, and it is his to bless).
+         Absent on every career without a book: a first-generation player never sees it. -->
+    <button
+      v-if="hasHeirloom"
+      type="button"
+      class="album-heirloom"
+      :class="{ 'is-on': showingHeirloom }"
+      :aria-pressed="showingHeirloom ? 'true' : 'false'"
+      :disabled="heirloomLoading"
+      @click="toggleHeirloom"
+    >
+      Her mother’s album
+    </button>
 
     <AlbumChaptersSheet
       v-if="chaptersOpen"
@@ -510,6 +580,33 @@ function pickChapter(firstSheet: number): void {
   cursor: pointer;
 }
 
+/* ⭐⭐⭐ SUCCESSION S2d – the heirloom toggle. SECONDARY ON PURPOSE: the girl's own book is the screen and her mother's is a door off it, so it is a quiet
+   outlined pill – the muted ink of the counter above it, the accent only while it is ON (the pressed state IS the state; there is no second label to say
+   so). The box is `.album-chapters-btn`'s, so the two read as one family. */
+.album-heirloom {
+  align-self: center;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.album-heirloom.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.album-heirloom:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* =================================================================================================
    ⭐⭐⭐ 768 AND UP – THE PAGE FITS, SO THE WINDOW STOPS BEING A KEYHOLE (mockups AX and AW)
    =================================================================================================
@@ -634,6 +731,13 @@ function pickChapter(firstSheet: number): void {
      the one the README gives a reason for is the phone's: «рейл занял бы полэкрана». */
   .album-chapters-btn {
     display: none;
+  }
+
+  /* ⭐⭐⭐ SUCCESSION S2d – the heirloom toggle is a row of its own under the foot, centred; `1 / -1` because the five named areas above are the whole
+     template and this is a sixth thing. It exists only on a generation-2 career, so no other career's grid gains a row. */
+  .album-heirloom {
+    grid-column: 1 / -1;
+    justify-self: center;
   }
 }
 </style>

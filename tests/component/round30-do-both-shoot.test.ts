@@ -36,6 +36,13 @@
 //   * `TRIP_SHOOT`'s span 2 -> 5 (the Slam's Sunday overruns the grid)       -> the fits arm.
 //   * the shoot hung on every day of the arc instead of the match days       -> the «match days and
 //     nowhere else» arm.
+//
+// ⚠⚠ RE-AIMED 02.10 (ROUND 45 #1b, THIRD BATCH) – THE SHOOT IS TWO DAYS, NOT EVERY MATCH DAY. The owner: «съемочных дней всего 2…»
+// (docs/decisions.md 02.10): the schedule now draws the block on the trip's FIRST TWO MATCH DAYS only (`TRIP_SHOOT_DAYS`), so the
+// arms that asserted «one block per match day» – §1's match-days arm, the «arc lengths really differ» sweep, the Slam's four-block
+// Sunday and §2's «do both» – are re-aimed to «two, the first two». Their claims about ORDER, FIT and the DRIVEN CHAIN are unchanged.
+// Mutation, watched: the shoot hung on every match day again (`matchDay < TRIP_SHOOT_DAYS` dropped from `tripMatchDay`) turns the
+// first-two arm, the flat-two sweep, the Sunday arm and §2's «do both» red.
 import { describe, it, expect } from 'vitest'
 import {
   calendarWeekFor,
@@ -165,24 +172,29 @@ describe('round 30 #2 §1 – a shoot on a tournament week is drawn', () => {
     ).toEqual(daysWith(without, 'tournament'))
   })
 
-  it('⚠ on the MATCH DAYS and nowhere else – the same days the press hour and the table hang on', () => {
-    // ⚠ MUTATION: hang the shoot on every day of the arc and this reddens on the travel and practice
-    // days. The rule is one sentence – it goes where the tennis is – and that is also the only rule
+  it('⚠ on the FIRST TWO MATCH DAYS and nowhere else – match days, the same ones the press hour and the table hang on', () => {
+    // ⚠ MUTATION: hang the shoot on every day of the arc and this reddens on the travel and practice days; hang it on every
+    // match day (the rule before 02.10) and it reddens on every rung, none having fewer than three. The rule is two sentences –
+    // it goes where the tennis is, and only on rounds 1 and 2 (`TRIP_SHOOT_DAYS`) – and the first half is also the only rule
     // that always draws SOMETHING: from five rounds up a trip has no practice day left to give.
     for (const tier of RUNGS) {
       const grid = gridOf(trip(tier, true))
-      expect(daysWithShoot(grid), `${tier}: the shoot is not on the match days`).toEqual(
-        daysWith(grid, 'tournament'),
+      expect(daysWithShoot(grid), `${tier}: the shoot is not on the first two match days`).toEqual(
+        daysWith(grid, 'tournament').slice(0, 2),
       )
-      expect(shootBlocks(grid).length, `${tier}: one shoot block per match day`).toBe(tripRoundsFor(tier))
+      expect(shootBlocks(grid).length, `${tier}: two shoot blocks, whatever the draw's length`).toBe(2)
     }
   })
 
-  it('⚠ the sweep is not satisfied by "every rung is the same" – the arc lengths really differ', () => {
-    // A sixteen-rung sweep whose rows all read one number is satisfied by a constant. `tripRoundsFor`
-    // is the thing under test on the line above, so this asserts the ladder is not flat.
+  it('⚠ the sweep is not vacuous – the draws really differ in length while the shoot does not (02.10: flat two)', () => {
+    // A sixteen-rung sweep whose rows all read one number is satisfied by a constant, so the number that SHOULD be constant is
+    // asserted beside the ones that are not: the draws run three to seven rounds (`tripRoundsFor`, and the match days the grid
+    // really draws), the shoot is two blocks at every one of them.
+    expect(new Set(RUNGS.map((t) => tripRoundsFor(t))).size, 'the catalogue itself is flat').toBeGreaterThan(1)
+    const lengths = new Set(RUNGS.map((t) => daysWith(gridOf(trip(t, true)), 'tournament').length))
+    expect(lengths.size, 'every rung draws the same number of match days').toBeGreaterThan(1)
     const counts = new Set(RUNGS.map((t) => shootBlocks(gridOf(trip(t, true))).length))
-    expect(counts.size, 'every rung draws the same number of shoot hours').toBeGreaterThan(1)
+    expect([...counts], 'the shoot is not two blocks at every rung').toEqual([2])
   })
 
   it('⚠ LAST in the day, behind the order he ruled in round 30 #17', () => {
@@ -233,16 +245,27 @@ describe('round 30 #2 §1 – a shoot on a tournament week is drawn', () => {
     }
   })
 
-  it('⚠ the Slam still comes home on its own Sunday, behind all four blocks', () => {
-    // Round 29 P16's rule, re-asked with the shoot in the day: the flight takes the evening that is
-    // LEFT and takes an hour from nobody. 10-14 draw, 14-15 press, 15-16 table, 16-18 shoot, 18-19 home.
-    const sunday = gridOf(
-      trip('slam', true, { masseurHired: true, masseurSessionsPerWeek: 7, masseurTravels: true }),
-    )[6].blocks
-    expect(sunday.map((b) => b.label)).toEqual(['Draw day', 'Press', 'Body work', 'Shoot', 'Travel home'])
+  it('⚠ the Slam still comes home on its own Sunday, and the two shoot days sit inside the grid before it', () => {
+    // Round 29 P16's rule: the flight takes the evening that is LEFT and takes an hour from nobody. ⚠ 02.10 (round 45 #1b): the
+    // shoot is on the first two match days, so the Sunday is the plain draw -> press -> table day with the flight behind it
+    // (10-14, 14-15, 15-16, 16-19) – the four-block Sunday this arm used to read cannot be reached any more – and the days that DO
+    // carry the shoot end at 18, inside the grid, with no flight to find room for.
+    const grid = gridOf(trip('slam', true, { masseurHired: true, masseurSessionsPerWeek: 7, masseurTravels: true }))
+    const sunday = grid[6].blocks
+    expect(sunday.map((b) => b.label)).toEqual(['Draw day', 'Press', 'Body work', 'Travel home'])
     const flight = sunday.find((b) => b.label === 'Travel home')!
-    expect(flight.start, 'the flight starts when the shoot finishes').toBe(18)
+    expect(flight.start, 'the flight starts when the table finishes').toBe(16)
     expect(flight.start + flight.span, 'and it runs to the end of the evening').toBe(GRID_END)
+    for (const day of grid.slice(0, 2)) {
+      expect(day.blocks.map((b) => b.label).slice(0, 4), `${day.short}: a shoot day`).toEqual([
+        'Draw day',
+        'Press',
+        'Body work',
+        'Shoot',
+      ])
+      const shoot = day.blocks.find((b) => b.label === 'Shoot')!
+      expect(shoot.start + shoot.span, `${day.short}: the shoot ends inside the grid`).toBe(18)
+    }
   })
 })
 
@@ -262,8 +285,8 @@ describe('round 30 #2 §2 – driven through `answerShootClash`', () => {
 
     const grid = drawnClashWeek(world)
     expect(daysWith(grid, 'tournament').length, 'she is still playing the tournament').toBeGreaterThan(0)
-    expect(shootBlocks(grid).length, 'and the hours the week charged 7 condition for are on it').toBeGreaterThan(0)
-    expect(daysWithShoot(grid), 'on the match days').toEqual(daysWith(grid, 'tournament'))
+    expect(shootBlocks(grid).length, 'and the two shooting days the week charged 6 condition for are on it').toBe(2)
+    expect(daysWithShoot(grid), 'on the first two match days').toEqual(daysWith(grid, 'tournament').slice(0, 2))
   })
 
   it('⚠ «move the shoot» – the tournament week stands and draws NO shoot', () => {

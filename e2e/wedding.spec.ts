@@ -172,6 +172,9 @@ const WEEKS_AFTER_ENGAGEMENT = 8
 async function reload(page: Page): Promise<void> {
   await page.reload()
   await page.getByRole('button', { name: 'Tap to start' }).click()
+  // ROUND 46 #11c – a cold boot inside the wedding week shows the moment once more (dismissal is
+  // in-memory by design), and its scrim owns every pixel; close it the way a player would.
+  await passLifeMoment(page)
 }
 
 /**
@@ -214,11 +217,25 @@ async function passSeasonWrapUp(page: Page): Promise<void> {
  * can still arrive at the wrong week if one of them was a resume rather than an advance; naming the
  * destination makes every press say where it landed.
  */
+/** ROUND 46 #11c (06.10) – the wedding and birth DAYS now raise a full-screen moment over the
+ *  week's story (`LifeMomentOverlay`, the owner's «я дождался свадьбы, но самого экрана этого
+ *  события не было!»), and its scrim owns every pixel until the one Continue control is pressed –
+ *  which is exactly how this walk met it: the `Proceed to Home` click sat under
+ *  `.life-moment-scrim` until the 60 s budget ran out. The moment rides the same snapshot as the
+ *  story, so by the time the story region is visible the overlay, when due, is already in the DOM –
+ *  no wait is needed, only the look. Scoped to the overlay's own control class because the
+ *  `'engaged'` CARD also has a «Continue» answer and a bare role query would be ambiguous. */
+async function passLifeMoment(page: Page): Promise<void> {
+  const go = page.locator('.life-moment-go')
+  if (await go.isVisible().catch(() => false)) await go.click()
+}
+
 async function advanceOneWeek(page: Page, to: number): Promise<void> {
   await expect(weekButton(page)).toBeEnabled()
   await weekButton(page).click()
   await expect(page.getByRole('region', { name: /^Week story/ })).toBeVisible()
   await passSeasonWrapUp(page)
+  await passLifeMoment(page)
   await page.getByRole('button', { name: 'Proceed to Home' }).click()
   await expect(page.getByText(onScreenWeek(to))).toBeVisible()
 }
@@ -456,6 +473,9 @@ test.describe('the wedding', () => {
 
     await openSaves(page)
     await importFile(page, download.suggestedFilename(), exported)
+    // The imported world is the wedding week again, so the moment is due again (same in-memory
+    // dismissal law as the cold boot above) – close it before the next navigation.
+    await passLifeMoment(page)
     await goHome(page)
     await expect(page.getByText(onScreenWeek(weddingWeek))).toBeVisible()
     await expect(

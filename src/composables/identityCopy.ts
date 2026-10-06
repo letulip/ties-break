@@ -81,6 +81,17 @@ export const DYNASTY_COPY = {
   familyNote: 'The means she starts with are her mother\'s story, not a choice.',
 } as const
 
+/** ⭐⭐⭐ SUCCESSION W1 (06.10, his ruling 14: «да, звучит хорошо») – THE ONE LINE AN INHERITANCE ADDS TO THE PROLOGUE'S IDENTITY CARD. It sits beside
+ *  `DYNASTY_COPY` and not in it: it is this wave's string (W-S4, docs/specs/succession-2026-10.md §8) and not wave 10's, and wave 10's round-trip pin
+ *  counts wave 10's table.
+ *
+ *  ⚠ IT SPEAKS OF A HEAD START AND NAMES NO NUMBER: the multiplier is a sketch the bench retunes, and a sentence that quoted it would be the first
+ *  thing to go stale. It is drawn only when the start really is richer than an ordinary one (`ChildhoodPrologue.vue`'s `line`). */
+export const LEGACY_COPY = {
+  /** under the lock sentence, on a legacy career whose wallet starts above an ordinary one */
+  headStart: 'Her mother\'s career leaves her a head start.',
+} as const
+
 /** ⭐⭐⭐ v87 (wave 11 T1, his ruling of 22.09) – THE WORDS THE ONE SWITCH IN THE GAME IS ASKED AND
  *  SET IN, declared once for the reason everything above is: TWO surfaces ask it (the prologue's
  *  opening card and the wizard, which is the skip branch) and a THIRD sets it (the settings row), so
@@ -115,6 +126,18 @@ export const WEIGHT_COPY = {
   note: 'You can change this later in More. Turning it off stops what has not happened yet – it never erases what a career has already lived.',
   /** the screen-reader name for the pair, which is one question and not two controls */
   groupLabel: 'The weight',
+  /** ⭐ ROUND 46 #2 – THE SETTINGS ROW'S OWN LABEL (owner: «the weight дублирует the weight в
+   *  настройках, надо второе переписать и может немного развернуть»). The row sits under an `<h2>`
+   *  that already says `title` and used to print `title` again as its label – the same two words
+   *  twice in two lines. The heading KEEPS `title` (it is the question's name on all three
+   *  surfaces); the row now says WHAT THE SWITCH GATES, in the spec's own nouns: pregnancy loss and
+   *  bereavement are the two hazards that read `world.weightEnabled` (`pregnancyLossEligible`,
+   *  `bereavementEligible`). It also names what the hint under it calls «loss» – in a tennis game a
+   *  bare «loss» could read as a lost match.
+   *  ⚠ A DRAFT FOR HIS BLESSING (R46-S23 in docs/rounds/round-46.md, with two alternates).
+   *  ⚠ IT IS ALSO THE SWITCH'S ACCESSIBLE NAME (`aria-labelledby` on the row), so a re-word moves
+   *  the name list in `tests/component/a11y-sweep.test.ts` and the two e2e transcriptions with it. */
+  settingsLabel: 'Pregnancy loss and bereavement',
   /** the settings row's own second line. ⚠ It is the SAME promise as `note` in the shape that row's
    *  neighbours use (Week story's «Off: …»), because a settings hint that said something different
    *  from the creation card would be two answers to one question. */

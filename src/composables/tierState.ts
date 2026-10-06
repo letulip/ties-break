@@ -691,6 +691,9 @@ export interface TierState {
  *  the Snapshot itself) so the rule is a pure function a test can call with three numbers. */
 export interface TierStateInput {
   ageYears: number
+  /** SUCCESSION S2e (06.10): the career's start year, so the dates a rung's readout prints are the career's own. Optional – a fixture that
+   *  omits it prints 2031, which is what every one was written about. */
+  startYear?: number
   /** HER NATIONAL POINTS - her windowed best-6 in the DOMESTIC table, and nothing else.
    *
    *  ⚠ THE BUG THIS COMMENT EXISTS FOR (30.07, fix/ranking-truth). `useTierStates` fed this from
@@ -1128,8 +1131,8 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // The DATE, not the week number: R11-6 owns week-number rendering, and a date needs no
       // in-season/absolute decision to be correct.
       title: outgrown
-        ? `${tier.label} – she is past this level, and it is still hers to enter: next one ${weekRange(nextWeek)}. The stronger rung on a week takes the card.`
-        : `${tier.label} – open to her, next one ${weekRange(nextWeek)}`,
+        ? `${tier.label} – she is past this level, and it is still hers to enter: next one ${weekRange(nextWeek, input.startYear)}. The stronger rung on a week takes the card.`
+        : `${tier.label} – open to her, next one ${weekRange(nextWeek, input.startYear)}`,
     }
   }
   return {
@@ -1173,6 +1176,7 @@ export function useTierStates(): ComputedRef<TierState[]> {
       // No snapshot yet = nothing spent and nothing to say; the age gate/point band answer first.
       entryCap: snap?.entryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
       proEntryCap: snap?.proEntryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
+      startYear: snap?.startYear,
     }
     // ...plus the engine's own verdict per rung, so the readout cannot invite her into an event
     // `enterEvent` will refuse (see `engineOpen`), and the engine's own acceptance cut for the rungs

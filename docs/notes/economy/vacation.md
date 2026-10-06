@@ -175,3 +175,5 @@ The comment essays that stood above the `vacation` constants in `src/engine/econ
       // DEARER price and a weaker after-effect, so the clinic keeps its reason on both sides of the
       // grant and the six packages survive the row appearing everywhere.
 ```
+
+⚙ **AMENDED 05.10 – round 46 #6.** The owner's own (granted) week now carries `grantedBuffFactor` 0.85, Elite's own factor, by his word «Может для своей яхты тоже поставим -15% вероятности травмы?». The charter keeps `buffFactor` 1, and the veto paragraph above holds for the charter only. See docs/specs/the-shop-2026-08.md §13h.

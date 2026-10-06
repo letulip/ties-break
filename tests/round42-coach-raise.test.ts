@@ -33,6 +33,15 @@
 //   ARM 5  `coachProgressScore` returns 1 for any title (the trigger #51 refused). → 2 red: E2, E3.
 //   ARM 6  `settleCoachDeal` keeps the old contract on a release. → 1 red: B3.
 //
+// ⚠⚠ RE-AIMED 02.10 (ROUND 45 #3b – the owner's «тренер тоже вполне может просить повышения»). The anniversary
+// no longer APPLIES the rise: `resolveCoachRaise` writes a two-door LETTER and the fee moves when the parent
+// signs it (`acceptOffer` → `settleCoachRaise`). The SIZE of the ask is unchanged – the 5–15% corridor over
+// the progress score was already a floating fork – so every arithmetic claim below (the floor, the ceiling,
+// the market clamp, the corridor on both ends) still stands and is now read AFTER the parent answers: the
+// sites that watched the fee move on `resolveCoachRaise` alone call `raiseAndSign`, which says so. §F3 is
+// rewritten (the automatic rise and its feed row are retired – asserted dead); the arms of the new letter
+// (cadence, accept, decline, lapse, the dead rise) are tests/round45-staff-ask-floating.test.ts.
+//
 // ⚠ AND ARM 4 CAUGHT A HOLE IN THIS FILE RATHER THAN IN THE ENGINE, which is why C3 exists. Deleting
 // the ceiling clamp left C2 GREEN – a deal struck at a quarter of the market cannot overshoot it with
 // a 15% ask however good the season, so the case that tests a clamp has to stand where the clamp
@@ -40,6 +49,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  acceptOffer,
   ageAtWeek,
   coachBilling,
   coachMarket,
@@ -62,6 +72,7 @@ import {
   facilityRateCents,
 } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
+import { staffAsks } from '../src/engine/offers'
 import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
 // ⚠ `CoachTier` LIVES IN THE PROTOCOL – it is the rung the PROFILE chooses, declared beside it.
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
@@ -79,6 +90,16 @@ function coachedWorld(tier: CoachTier = 'middle', seed = 'r42-51'): WorldState {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: tier })
   settleCoachDeal(world)
   return world
+}
+
+/** ⚠ RE-AIMED 02.10 (#3b): the anniversary writes a LETTER, so a test that watched the fee move on
+ *  `resolveCoachRaise` alone answers it the way the parent would – Accept – and reports whether there was
+ *  anything to answer. The arithmetic under test is the ask's, which the letter carries unchanged. */
+function raiseAndSign(world: WorldState): boolean {
+  resolveCoachRaise(world)
+  const open = staffAsks(world.offers, 'coach').filter((o) => o.state === 'open')
+  for (const o of open) acceptOffer(world, o.id)
+  return open.length > 0
 }
 
 function heldCoach(world: WorldState) {
@@ -197,7 +218,7 @@ describe('§C the ceiling is the rank band', () => {
     // Strike the deal well UNDER the ceiling and give her a year worth asking about.
     world.coachDeal = { ...world.coachDeal!, labourCents: Math.round(ceiling / 4), agreedWeek: 0 }
     world.week = WEEKS_PER_YEAR
-    resolveCoachRaise(world)
+    raiseAndSign(world)
     expect(world.coachDeal!.labourCents, 'the ask took what the corridor allows').toBeLessThanOrEqual(
       Math.round(Math.round(ceiling / 4) * (1 + CEIL)),
     )
@@ -243,9 +264,9 @@ describe('§D he never asks for less', () => {
     world.coachDeal = { ...world.coachDeal!, markWtaRank: 40, agreedWeek: 0 }
     world.kidRankWta = 800
     world.week = WEEKS_PER_YEAR
-    resolveCoachRaise(world)
+    raiseAndSign(world)
     expect(world.coachDeal!.labourCents, 'the fee did not move down').toBeGreaterThanOrEqual(agreed)
-    expect(world.events.some((e) => e.text.includes(ASK_OPENER)), 'and no letter claimed a raise').toBe(false)
+    expect(world.events.some((e) => e.text.includes(ASK_OPENER)), 'and no feed row claimed a raise').toBe(false)
     void coach
   })
 
@@ -260,6 +281,7 @@ describe('§D he never asks for less', () => {
     resolveCoachRaise(world)
     expect(world.coachDeal!.labourCents, 'nothing was taken').toBe(ceiling - 1)
     expect(world.events.length, 'and nothing was written').toBe(before)
+    expect(staffAsks(world.offers, 'coach'), '⭐ 02.10: no room means NO LETTER either').toHaveLength(0)
   })
 })
 
@@ -373,7 +395,10 @@ describe('§F the ask', () => {
     expect(coachRaiseDue(world), 'she has not had him for a year on the week he was hired').toBe(false)
   })
 
-  it('F3 ⭐ the ask fires, moves the fee and writes exactly one row that names the new figure', () => {
+  it('F3 ⭐ the ask fires as ONE open LETTER that names both hourly rates, and the fee moves only when the parent signs', () => {
+    // ⚠ RE-AIMED 02.10 (#3b). This was «the ask fires, moves the fee and writes exactly one FEED ROW». The
+    // owner ruled the coach asks like every other seat – a letter with two doors – so the automatic rise and
+    // its notice are RETIRED (asserted dead below) and what the anniversary writes is paper.
     const world = coachedWorld('elite')
     const coach = heldCoach(world)
     const ceiling = coachMarketLabourCents(world, coach)
@@ -382,16 +407,21 @@ describe('§F the ask', () => {
     const before = world.coachDeal.labourCents
     const rateBefore = coachRateCents(world, coach)
     resolveCoachRaise(world)
-    const after = world.coachDeal!.labourCents
-    expect(after, 'the fee moved up').toBeGreaterThan(before)
-    const rows = world.events.filter((e) => e.text.includes(ASK_OPENER))
-    expect(rows, 'exactly one row').toHaveLength(1)
-    // ⚠ THE ROW NAMES THE RATE THE BILL IS BUILT FROM, so the sentence and the ledger cannot disagree.
+    const [letter, ...rest] = staffAsks(world.offers, 'coach')
+    expect(rest, 'exactly one request').toHaveLength(0)
+    expect(letter.state, 'a proposal and not a notice').toBe('open')
+    // THE FIGURES ARE THE HOURLY RATE THE BILL IS BUILT FROM, so the paper and the ledger cannot disagree.
+    const ask = (letter.terms as { ask: { fromCents: number; toCents: number } }).ask
+    expect(ask.fromCents, 'the paper quotes what she is billed now').toBe(rateBefore)
+    expect(world.coachDeal!.labourCents, 'and NOTHING MOVED on its own').toBe(before)
+    expect(coachRateCents(world, coach), 'the bill is still the old rate').toBe(rateBefore)
+    expect(world.events.some((e) => e.text.includes(ASK_OPENER)), 'the automatic feed row is DEAD').toBe(false)
+    acceptOffer(world, letter.id)
     const rateAfter = coachRateCents(world, coach)
-    expect(rows[0].text).toContain(coach.name)
-    expect(rateAfter, 'and the new rate is live from this week').toBeGreaterThan(rateBefore)
+    expect(rateAfter, 'Accept moves the one stored fee, and the bill reads it').toBe(ask.toCents)
+    expect(world.coachDeal!.labourCents, 'by exactly the labour the paper asked for').toBe(before + (ask.toCents - ask.fromCents))
     // ⚠ THE MARKS ARE RE-TAKEN, or the next ask would be measured against a year already paid for.
-    expect(world.coachDeal!.agreedWeek, 'the clock restarts at the new handshake').toBe(WEEKS_PER_YEAR)
+    expect(world.coachDeal!.agreedWeek, 'the clock restarts at the new handshake – the paper`s own week').toBe(WEEKS_PER_YEAR)
     expect(world.coachDeal!.residualSince, 'and the banked residual with it').toBe(0)
   })
 
@@ -404,8 +434,12 @@ describe('§F the ask', () => {
     for (const share of [0.2, 0.5, 0.8, 0.9, 0.95, 0.99, 1]) {
       world.coachDeal = { ...world.coachDeal!, labourCents: Math.round(market * share), agreedWeek: 0 }
       world.week = WEEKS_PER_YEAR
+      // ⚠ RE-AIMED 02.10 (#3b): the letter is idempotent on its id (one per season), so each share starts on a
+      // clean inbox – otherwise the first iteration's paper would swallow the rest and the loop would pass
+      // without testing them.
+      world.offers.length = 0
       const before = world.coachDeal.labourCents
-      resolveCoachRaise(world)
+      raiseAndSign(world)
       const after = world.coachDeal!.labourCents
       if (after === before) continue
       const fraction = after / before - 1
@@ -420,8 +454,8 @@ describe('§F the ask', () => {
     world.coachDeal = { ...world.coachDeal!, labourCents: Math.round(coachMarketLabourCents(world, coach) / 2), agreedWeek: 0 }
     world.week = WEEKS_PER_YEAR
     const before = { ...world.rngMain }
-    resolveCoachRaise(world)
-    expect(world.rngMain, 'the MAIN position is where it was').toEqual(before)
+    raiseAndSign(world)
+    expect(world.rngMain, 'the MAIN position is where it was – the letter AND the signature draw nothing').toEqual(before)
   })
 })
 

@@ -98,3 +98,8 @@ ms-playwright/
 # leading slash pins the pattern to the repository root, which is where the promo workspace actually
 # lives. Found by a builder that hit the warning rather than by anything failing.
 /art/
+
+# The app shells (docs/specs/app-shells-2026-10.md): every shell lands its artifacts in shells/out/ and
+# is its own npm project with its own install. Neither is ever a commit.
+shells/out/
+shells/**/node_modules/

@@ -47,10 +47,9 @@ import { TIERS } from '../season/calendar'
 import type { SeasonEvent } from '../season/types'
 import type { AdOfferTerms, Offer, ShootClashChoice, ShootClashPrompt } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
-import { PLAN_DAYS } from '../plan'
 import { cancelEntry } from './entries'
 import { addEvent } from './ledger'
-import { adShootHolds } from './medical'
+import { adShootHolds, clashShootDays } from './medical'
 import { mandatoryBinds } from './mandatory'
 import { guardNotEnded, UNKNOWN_CHOICE_REFUSAL } from './constants'
 import type { WorldState } from '../world'
@@ -175,7 +174,7 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
   const terms = deal.terms as AdOfferTerms
   return {
     week,
-    weekLabel: weekLabel(week),
+    weekLabel: weekLabel(week, world.startYear),
     brand: terms.brand,
     eventLabel: TIERS[event.tier].label,
     entryFeeCents: TIERS[event.tier].entryFeeCents,
@@ -186,10 +185,13 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
     moveToWeek: shootMoveTarget(world, week),
     moveToLabel: (() => {
       const to = shootMoveTarget(world, week)
-      return to === null ? null : weekLabel(to)
+      return to === null ? null : weekLabel(to, world.startYear)
     })(),
     cancelShootCents: shootCancelCents(terms),
-    conditionCost: ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS,
+    // ⭐ 02.10 (round 45 #1b): PER SHOOTING DAY – and the shoot is two days at every rung (third batch: «съемочных
+    // дней всего 2…», `CLASH_SHOOT_DAYS`; the first build read the event's match days). The same function the
+    // charge in `accrueCondition` multiplies by, so the card prints the engine's number.
+    conditionCost: ECONOMY.advertising.clashConditionPerDay * clashShootDays(world, week),
   }
 }
 
@@ -244,7 +246,7 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
     addEvent(world, {
       week: world.week,
       type: 'info',
-      text: `${terms.brand} shoot moved to ${weekLabel(to)} – the ${TIERS[event.tier].label} week stands.`,
+      text: `${terms.brand} shoot moved to ${weekLabel(to, world.startYear)} – the ${TIERS[event.tier].label} week stands.`,
     })
     return
   }

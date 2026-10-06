@@ -291,7 +291,9 @@ describe('D2 - every settings switch is called what its row says', () => {
       'Music',
       'Haptics',
       'Open at the end of a week',
-      'The weight',
+      // ⚠ ROUND 46 #2: the sixth row's OWN words (`WEIGHT_COPY.settingsLabel`). The `<h2>` over it keeps
+      // «The weight»; the same two words twice in two lines is what the owner asked to end.
+      'Pregnancy loss and bereavement',
       'Cross out the days',
     ])
     // ...and the state is still on the control, where a name cannot carry it.

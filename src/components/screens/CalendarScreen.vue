@@ -62,9 +62,11 @@
 // buttons: Home's floating pill and this screen's CTA read the same label, the same mode and the same
 // blocked state, and the press routes into the shell's one handler. See that file for the whole
 // argument and for the arrival-gate bug it is written against.
+import { useKidEmotion } from '../../composables/kidEmotion'
+import { portraitUrl } from '../../art/preload'
 import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { useCalendarWeek, useLookAhead, layoffNoteFor, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
+import { useCalendarWeek, useLookAhead, useWeddingMark, layoffNoteFor, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 // The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
 // like across a morning and an afternoon is a rule with content in it, so it lives in a pure module
 // beside the day layout rather than in this template - see composables/weekGrid.ts for the owner's
@@ -110,6 +112,9 @@ import PrimaryPill from '../ui/PrimaryPill.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
 import type { UpcomingEvent } from '../../shared/protocol'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // THE SCREEN ASKS, THE SHELL ACTS - the idiom Home and Kid already use for `navigate`, and the reason
 // it matters more here than there: advancing a week is the one irreversible act in this game, so there
@@ -134,11 +139,16 @@ const game = useGameStore()
 
 const calendar = useCalendarWeek()
 const lookAhead = useLookAhead()
+// ⭐ ROUND 46 #11b – the announced wedding's mark: the week is the engine's (`snapshot.weddingWeek`), the picture is the
+// bride painting `portraitUrl` resolves to the one band it is painted in.
+const weddingMark = useWeddingMark()
+const { stage: kidStage } = useKidEmotion()
+const brideArt = computed(() => portraitUrl(kidStage.value, 'bride'))
 const action = useWeekAction()
 
 const week = computed(() => game.snapshot?.week ?? 0)
 /** The header's line, for the week the grid is about. One formatter, shared with Home's hero. */
-const dateLine = computed(() => weekDateLine(week.value + 1))
+const dateLine = computed(() => weekDateLine(week.value + 1, startYear.value))
 
 /** She is laid up across the week the grid shows – the red chip on the grid's own head. Read off the
  *  layout rather than re-derived: `calendarWeekFor` has already asked the engine's window predicate. */
@@ -198,7 +208,7 @@ function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
 const grid = computed(() => {
   const week = calendar.value
   const snap = game.snapshot
-  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week), snap.seed) : null
+  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week, startYear.value), snap.seed) : null
 })
 
 /** WHICH POOL THE SCRAP COMES FROM. The domestic pool is the default and stays unlicensed (the
@@ -491,6 +501,16 @@ const showGo = computed(() => !game.snapshot?.pending)
            the sim has no day resolution past the plan - see composables/weekDays.ts. A row
            carrying a tournament she can act on is a button; every other row is a statement.
            ============================================================================ -->
+      <!-- ⭐ ROUND 46 #11b – THE ANNOUNCED WEDDING (the owner, 05.10: «do we put the wedding in the calendar? There is a
+           picture»; verbatim in docs/rounds/round-46.md). One band above the look-ahead, shown from the week she is announced until the day lands – the
+           week is the engine's (`weddingWeek`), so it is also right on the week the grid itself plays. -->
+      <section v-if="weddingMark" class="bare cal-wedding">
+        <img v-if="brideArt" class="cal-wedding-art" :src="brideArt" alt="" />
+        <p class="cal-wedding-body">
+          <span class="cal-wedding-name">Her wedding</span>
+          <span class="hint">{{ weddingMark.label }}, {{ weddingMark.dates }}</span>
+        </p>
+      </section>
       <section class="bare cal-ahead-block">
         <h2>Weeks after that</h2>
         <ul class="cal-ahead">
@@ -567,7 +587,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              two screens now draw it - and that is written down in the report rather than smuggled into
              the global sheet by a screen that only needs one of it.) -->
         <span class="cal-card-sep"></span>
-        <span class="hint cal-card-when">{{ weekLabel(marker.week) }}</span>
+        <span class="hint cal-card-when">{{ weekLabel(marker.week, startYear) }}</span>
       </template>
       <template #exit>
         <IconButton icon="close" label="Close this tournament" title="Close" @click="closeMarker" />
@@ -583,7 +603,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              something a family has to book time off for, so the card spells the actual dates out.
              `weekRange` is the shared formatter's self-contained shape (it names the year, because
              nothing else on this card does). -->
-        <p class="cal-card-days">{{ weekRange(marker.week) }}</p>
+        <p class="cal-card-days">{{ weekRange(marker.week, startYear) }}</p>
 
         <p v-if="surfaceVerdict(marker.surface)" class="cal-card-fit">{{ surfaceVerdict(marker.surface) }}</p>
 
@@ -596,7 +616,7 @@ const showGo = computed(() => !game.snapshot?.pending)
         <div class="controls cal-card-chips">
           <!-- ⭐ #28: see SeasonScreen - "no entry fee" is a fact, "$0" is a hole. -->
           <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
-          <span class="pill">closes {{ weekLabel(marker.deadlineWeek) }}</span>
+          <span class="pill">closes {{ weekLabel(marker.deadlineWeek, startYear) }}</span>
           <span v-if="marker.entered" class="pill ok">Entered</span>
           <!-- ⭐ ROUND 41 #16 – THE WILD CARD, ON THIS SCREEN'S OWN COPY OF THE SAME CARD. Round 21
                #2b put this exact chip (flag, tooltip and words) on Season's event card; this marker
@@ -687,7 +707,7 @@ const showGo = computed(() => !game.snapshot?.pending)
             <PrimaryPill
               :risky="marker.cautionReason === 'fatigued'"
               :disabled="fundsShort(marker) || game.busy"
-              :aria-label="enterActionName(marker)"
+              :aria-label="enterActionName(marker, startYear)"
               @click="enterMarker(marker)"
             >
               Enter
@@ -1417,5 +1437,30 @@ const showGo = computed(() => !game.snapshot?.pending)
 .cal-card-broke,
 .cal-card-done {
   margin: 0;
+}
+/* ⭐ ROUND 46 #11b – the announced wedding's band. */
+.cal-wedding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.cal-wedding-art {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 22%;
+}
+.cal-wedding-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+}
+.cal-wedding-name {
+  font-weight: 600;
 }
 </style>

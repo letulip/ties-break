@@ -163,29 +163,26 @@ async function mountHurt(hurtNote?: string): Promise<VueWrapper> {
 }
 
 /** ⚠ THE EPILOGUE'S FIXTURE IS `wave10-dynasty-door.test.ts`'S, WHICH IS THE HOUSE SHAPE FOR THIS
- *  SCREEN, and the keys are why it is borrowed rather than written: the album is `view.album` and the
+ *  SCREEN, and the keys are why it is borrowed rather than written: the last page is `view.closing` (it was `view.album`) and the
  *  resume week is `view.handoff.resumesWeek`, so an invented `pages` or `resumes` draws an epilogue
- *  with no album and no footer while every root-level assertion below still passes. Seven pages, which
+ *  with no album and no footer while every root-level assertion below still passes. One page (R6, 06.10 – seven until the wire narrowed), which
  *  is what the engine hands, so «the first focusable is an album ARROW» is measured on the screen a
  *  player gets. */
 function endingView(): EndingView {
   const totals = { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
   return {
     ending: { type: 'natural', week: 900, ageYears: 31, detail: 'she stopped at thirty-one', resumesWeek: null },
-    album: [0, 1, 2, 3, 4, 5, 6].map(
-      (slot) =>
-        ({
-          slot,
-          why: `why ${slot}`,
-          caption: `caption ${slot}`,
-          fact: `fact ${slot}`,
-          week: 52 * slot,
-          seasonIndex: slot,
-          stage: 'teen',
-          emotion: 'norm',
-          empty: false,
-        }) as AlbumPage,
-    ),
+    closing: {
+      slot: 6,
+      why: 'why 6',
+      caption: 'caption 6',
+      fact: 'fact 6',
+      week: 52 * 6,
+      seasonIndex: 6,
+      stage: 'teen',
+      emotion: 'norm',
+      empty: false,
+    } as AlbumPage,
     scroll: [],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals,

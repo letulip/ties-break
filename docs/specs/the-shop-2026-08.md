@@ -612,7 +612,7 @@ is four figures and the aircraft costs $27,692 a week to keep.
 not price.» Built on the **first** arm: `conditionGain: 48`, the same as elite, free, and
 `buffFactor: 1` against elite's `0.85`. So the yacht wins on price and elite keeps the injury buff,
 which is a currency a boat cannot pay in – and §3f's veto («the yacht must NOT be the strictly best
-rest week available») holds. ⚠ A gain above 48 would break it, and `tests/planner.test.ts` says so.
+rest week available») holds. ⚠ A gain above 48 would break it, and `tests/planner.test.ts` says so. ⚙ **AMENDED 05.10 (round 46 #6, see §13h): the owner's own week now carries the buff too, so on the owner's side the veto no longer holds – by his word.**
 
 ### 13c. ⚠ WHICH RUNGS GRANT THE WEEK, and it is the narrow reading
 
@@ -724,7 +724,7 @@ elite's band is pinned beside the literal, so neither can be retuned alone).
 ⚠ **§3f's veto survives on both sides of the grant, for free.** The owner's family still ties elite
 at 48 and wins on being free; the boatless family sees the same 48 at a **dearer** price with a
 weaker after-effect, so elite keeps its reason everywhere and the six packages survive the row
-appearing on every sheet.
+appearing on every sheet. ⚙ **AMENDED 05.10 (round 46 #6, §13h): true for the boatless family only; the owner's week carries the buff now.**
 
 ⚠ **His art for the row is coming** («я могу сделать для нее отдельный арт»); until it lands the
 sheet draws the row artless through `vacationArtUrl`'s documented null fallback – a catalogue entry
@@ -735,6 +735,46 @@ may exist before its frame does, and a missing picture must not cost the row.
 yacht-week sentences (ownership-neutral, they fit a charter), and the week's calendar arc. Zero
 MAIN draws anywhere in this: the charter quote is the same purpose-scoped
 `seed:vacation:week:packageId` sub-stream every package has always used.
+
+### 13h. ⚙ 05.10 – round 46 #6: the owner's own yacht week carries the same −15% the clinic does
+
+> «Может для своей яхты тоже поставим -15% вероятности травмы?»
+
+**What «тоже» points at.** The Elite recovery programme. Its `buffFactor` is 0.85; booking it stores a
+`recoveryBuff` for `buffWeeks` (4) weeks; `injuryTau` multiplies the weekly injury threshold by it; and the
+vacation sheet prints it under the row as «injury risk −15% for 4 weeks». The yacht row was the only top rung
+without that line. Nothing else in the shop touches the injury threshold: the plane cuts fares and adds a
+travelling-week bonus, and neither is a tau term.
+
+**What was built.** The `yacht-week` row gained `grantedBuffFactor: 0.85`, and one pure function,
+`vacationBuffFactor(pkg, grantedIds)`, says which factor a booked week carries: the granted one when the shelf
+has made the week free, the row's own `buffFactor` otherwise. The booking (`resolveVacation`) and the sheet's
+line both ask it with the same granted list the price already uses, so the line and the booking cannot
+disagree. «Своей» is read the way the shelf already reads ownership (§13c: a delivered `yacht` or
+`yacht-big`), which leaves the charter at `buffFactor` 1 and every career without a delivered yacht
+byte-identical to before. The pathway is the clinic's own: the same `recoveryBuff`, the same single multiply
+at the same comparison, no new draw and no schema change (the stored `recoveryBuff.factor` simply reads 0.85).
+
+**Predicted and measured.** The prediction was tau × 0.85 on each of the four buffed weeks, so the weekly
+chance falls by exactly fifteen per cent and the injuries by fifteen per cent in expectation.
+`tests/yacht-own-buff.test.ts` measures it at the comparison itself, because a played season diverges after the
+first injury either arm takes and would measure the path rather than the multiplier: 40 seeds × 1,040 weeks of
+tired-end states, the real booking seam once per seed, and the real first draw of the private injury stream.
+The sum of tau came out at 0.850000 of the charter's (exact; the 0.12 cap never binds, the largest tau sampled
+is 0.017), and the hits at 204 against 235, a ratio of 0.868, which is 0.8 sampling errors from the
+prediction. The owner's hits are a subset of the charter's by construction. The effect is small in absolute
+terms: the baseline weekly chance on that sample is about 0.6%, so a booked yacht week avoids roughly 0.003
+injuries.
+
+**What it costs the design.** §3f's veto says the yacht must not be the strictly best rest week, and the reason
+it held was that Elite kept the injury buff, which a boat could not pay in. With the buff the owner's week is
+free, +48 and −15% for four weeks, which is the clinic with the bill removed: it ties on everything and wins on
+price, so a family with a delivered yacht has no reason left to book Elite. That veto was the spec's own
+reasoning, not an owner quote, and his word of 05.10 comes after it. The charter side is unchanged and the veto
+still holds there: a boatless family pays 1.4 times Elite's price for the same gain and no buff.
+
+**One knob back.** Deleting `grantedBuffFactor` from the row makes the helper answer `buffFactor` everywhere,
+which restores the table to what it was, byte for byte.
 
 ---
 

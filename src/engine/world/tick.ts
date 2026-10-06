@@ -30,6 +30,7 @@
 // header below says it again in the shape a reader needs). Not one statement moved inside any body
 // here, so the per-week draw count and its order are what they were: the frozen capture (41550 draws
 // / hash e6b0c709) reproduces byte-for-byte, and `MAIN_DRAWS_PER_WEEK_MAX` still bounds it.
+import { lifeMomentOf } from './lifeMoment'
 import { type Rng, type MainRngState, initMainState, resumeMain } from '../rng'
 import { STOP_PRECEDENCE, type PlayerProfile, type StopReason } from '../../shared/protocol'
 import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
@@ -483,6 +484,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // a click, which is exactly what a stop is for. What it may not do is pass in silence, which is
     // the same complaint R12-15's walkover answered.
     if (academySpokeThisWeek(world)) stops.add('academy')
+    // ⭐⭐ ROUND 46 #11c – A SPAN ENDS ON THE DAY SHE MARRIES OR THE CHILD IS BORN (the owner, 05.10: «Я дождался свадьбы, но
+    // самого экрана этого события не было!»). `lifeMomentOf` is non-null exactly on the week a wedding or birth landed, and this
+    // loop collects-then-breaks, so a four-week span that would have run THROUGH that day – and handed back a snapshot where the
+    // moment is already gone – stops on it instead, the way the academy's verdict and an offer do. A one-week press is unchanged
+    // (the loop runs once). RNG-safe: fewer ticks than asked, never different ones.
+    if (lifeMomentOf(world) !== null) stops.add('life-moment')
     // ⭐ R2-13's OWN ITEM TEXT LISTS «OFFERS» AND PHASE 1 DID NOT STOP FOR ONE. The digest reported
     // the letter and the inbox dot lit, which is exactly the pair of surfaces round-23 #16 proved
     // insufficient for the academy's verdict: the parent has no reason to open an inbox he was not
@@ -825,7 +832,7 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     world.ending = {
       type: 'college',
       week: world.week,
-      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
       detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
       resumesWeek: yearEnds,
     }
@@ -861,7 +868,7 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   latchEnding(world, {
     type: 'college',
     week: world.week,
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
     resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
   })

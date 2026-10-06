@@ -1,11 +1,19 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { initPwa } from './pwa'
+import { installErrorBuffer } from './errorBuffer'
+import { setReportBridge, type ReportBridge } from './feedback'
 import { installGlobalSfx } from './audio/sfx'
 import { startArtPreloader } from './art/autoPreload'
 import App from './App.vue'
 import './style.css'
 
+// The feedback report's error ring (src/errorBuffer.ts) starts before anything else, so a boot
+// failure is in the tail too. Memory only: no storage, no network.
+installErrorBuffer()
+// ⚠ The shells' one contact with src (app-shells spec §S3): a wrapper defines window.__TIES_SHELL_BRIDGE__ before the bundle runs; no shell is named here.
+const shellBridge: unknown = Reflect.get(window, '__TIES_SHELL_BRIDGE__')
+if (typeof shellBridge === 'function') setReportBridge(shellBridge as ReportBridge)
 initPwa()
 // Enable audio on the first user gesture anywhere + a quiet click cue on primary controls.
 installGlobalSfx()

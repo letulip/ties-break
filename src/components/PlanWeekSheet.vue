@@ -23,7 +23,14 @@
 // `assertPlannable`'s "That week is already a family vacation".
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPackage, vacationPriceCents } from '../engine/economy'
+import {
+  ECONOMY,
+  practiceFeeCents,
+  recommendVacationPackage,
+  vacationBuffFactor,
+  vacationPackage,
+  vacationPriceCents,
+} from '../engine/economy'
 import { practiceCoachRateCents } from '../engine/coach'
 import { formatCents } from '../shared/money'
 import { ageAtWeek } from '../engine/world'
@@ -36,6 +43,9 @@ import { layoffNoteFor } from '../composables/weekDays'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 import StoreError from './ui/StoreError.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const props = defineProps<{
   week: number
@@ -65,7 +75,7 @@ const seed = computed(() => game.snapshot?.seed ?? '')
 const background = computed(() => game.snapshot?.profile.background ?? 'middle')
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
-const dates = computed(() => weekRange(props.week))
+const dates = computed(() => weekRange(props.week, startYear.value))
 const offSeason = computed(() => isOffSeasonWeek(props.week))
 
 // --- an ALREADY BOOKED family week (R14-1) ------------------------------------------------
@@ -237,7 +247,10 @@ const packageRows = computed<PackageRow[]>(() =>
       // says so instead of a bare «free» that would read like the staycation's.
       grantedFree: priceCents === 0 && !!p.freeOnceGranted,
       gain: p.conditionGain,
-      buffFactor: p.buffFactor,
+      // ROUND 46 #6 – the engine's own answer (`vacationBuffFactor`, the rule the booking applies) with the
+      // shelf's grant in hand: the owner's yacht week shows the same injury line the clinic does and a
+      // charter shows none. This sheet never decides what a boat protects – same stance as the price above.
+      buffFactor: vacationBuffFactor(p, grantedVacationIds.value),
       returnsTo: Math.min(ECONOMY.condition.max, condition.value + p.conditionGain),
       // R13-7a: a zero-price package is ALWAYS affordable – the bare `funds >= price` disabled
       // the free staycation's Book at negative funds (the same predicate bookVacation fixed).
@@ -288,7 +301,7 @@ function askVacation(row: PackageRow): void {
        ⚠ `:screen` IS THE SCROLL RESET, and the tabs are exactly what it is for: Practice and
        Vacation are two screens in one scroller, so switching to Vacation from the bottom of the
        Practice tab used to arrive already scrolled past the first package. -->
-  <TakeoverShell :title="`Plan ${weekLabel(week)}`" :screen="tab">
+  <TakeoverShell :title="`Plan ${weekLabel(week, startYear)}`" :screen="tab">
     <template #exit>
       <IconButton icon="close" label="Close planner" title="Close" @click="emit('close')" />
     </template>

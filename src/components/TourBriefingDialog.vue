@@ -52,6 +52,9 @@ import { useWatermark } from '../composables/inboxCue'
 import { TOUR_BRIEFED_PREFIX } from '../composables/tourBriefing'
 import Eyebrow from './ui/Eyebrow.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const emit = defineEmits<{ (e: 'continue'): void }>()
 
@@ -123,7 +126,7 @@ useDialogFocus(card)
       tabindex="-1"
     >
       <p id="tour-briefing-kicker" class="season-summary-kicker">
-        Tour office · {{ weekLabel(briefing.week) }}
+        Tour office · {{ weekLabel(briefing.week, startYear) }}
       </p>
       <h2 id="tour-briefing-title" class="season-summary-title">The commitment rules now apply.</h2>
 

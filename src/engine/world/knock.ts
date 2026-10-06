@@ -92,7 +92,7 @@ export function ordinaryTrainingWeek(world: WorldState): boolean {
     world.injury === null &&
     world.pendingTournament === null &&
     !isCompetitionWeek(world) &&
-    !isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth)) &&
+    !isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth, world.startYear)) &&
     vacationForWeek(world, world.week) === undefined &&
     practiceForWeek(world, world.week) === undefined
   )

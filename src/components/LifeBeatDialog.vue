@@ -59,9 +59,9 @@ import type { LifeBeatFollowUp, LifeBeatKind } from '../shared/protocol'
 // argues for: the engine may not name a painting (invariant 1), so the KIND crosses the wire and the
 // view resolves the band. `portraitUrl` takes the widest union and resolves the band before it
 // builds the name, which is what makes a bereavement in `lateCareer` a fallback and never a 404.
-import { portraitUrl } from '../art/preload'
+import { PREGNANT_ART_STEM, portraitUrl, pregnantUrl } from '../art/preload'
 import { useKidEmotion } from '../composables/kidEmotion'
-import type { MemoryFace } from '../shared/avatarEmotion'
+import type { MemoryFace, PregnancyFace } from '../shared/avatarEmotion'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { onRadioGroupKey } from '../composables/radioGroupKeys'
@@ -127,16 +127,47 @@ function followUpFor(optionId: string): LifeBeatFollowUp | undefined {
 // the store's own in-flight flag, so a command started anywhere else disables these too. A set of
 // ids latched at mount would go stale the moment either moved.
 /** ⭐⭐⭐ v87 (the weight, wave 11 – T5) – WHICH BEATS CARRY A PAINTING, as a table. Today exactly
- *  one does. `FACE_BANDS`' own rule, applied one layer up: the next kind that wants a picture adds a
+ *  two do – the funeral's, and (round 46 B1b) the announcement's. `FACE_BANDS`' own rule,
+ *  applied one layer up: the next kind that wants a picture adds a
  *  row here rather than editing a branch, and a kind with no row draws nothing – which is every
  *  other beat in the game and is what keeps this card the words-only object it has always been. */
-const BEAT_FACE: Partial<Record<LifeBeatKind, MemoryFace>> = { bereavement: 'funeral' }
+const BEAT_FACE: Partial<Record<LifeBeatKind, MemoryFace | PregnancyFace>> = {
+  bereavement: 'funeral',
+  // ROUND 46 B1b (owner, 05.10: «картинка для родов есть и для беременности две разных, проверь и
+  // добавляй») – THE ANNOUNCEMENT WEARS THE EARLY-PREGNANCY PAINTING. `adult-pregnant-early.webp` has
+  // been in every install since the art set and on this card never. Only the EARLY face is asked for
+  // here: this card is the announcement, and the late one is the portrait's (`useKidEmotion`'s
+  // `portraitUrl`, the final twelve weeks before the due week).
+  // WARNING – `MemoryFace` IS NOT WIDENED FOR THIS ROW, which is why the value type above is a local
+  // union. `shared/avatarEmotion.ts` argues at length that the pair is no band face – one file apiece,
+  // no stage in the name, and the 11.09 ruling that a `lateCareer` pregnancy reuses them – and
+  // `MemoryFace` exists so that an ENGINE-filled card can name its face across the wire, which this
+  // card never does: the beat's kind is what crosses it. A `FACE_BANDS` row would have drawn a
+  // thirty-two-year-old's announcement as `lateCareer-norm`. The row is resolved by `pregnantUrl`,
+  // which takes no stage.
+  expecting: 'pregnant-early',
+}
+
+/** WHICH ROAD A ROW'S FACE RIDES. A band face goes through `portraitUrl`, which resolves its band;
+ *  a pregnancy face has no band and goes through `pregnantUrl`. `PREGNANT_ART_STEM` is keyed by the
+ *  union itself (`Record<PregnancyFace, string>`), so membership in it IS membership in the union and
+ *  moves with it. */
+function isPregnancyFace(face: MemoryFace | PregnancyFace): face is PregnancyFace {
+  return face in PREGNANT_ART_STEM
+}
 
 const { stage } = useKidEmotion()
 const beatArt = computed(() => {
   const face = prompt.value === null ? undefined : BEAT_FACE[prompt.value.kind]
-  return face === undefined ? null : portraitUrl(stage.value, face)
+  if (face === undefined) return null
+  return isPregnancyFace(face) ? pregnantUrl(face) : portraitUrl(stage.value, face)
 })
+// THE EXPECTING CARD WEARS ITS PAINTING AS A 2:1 BAND, NOT THE FUNERAL'S 3:2. The v85 T10 guard
+// (life-beat-dialog.test.ts, «fits a phone, asking AND recording») measured the full-height art on
+// this card at 681.2px of unaided content against the 635px phone floor – the announcement asks AND
+// records, so its copy is taller than the funeral's, and the two cards cannot share one art height.
+// The funeral keeps the 3:2 it has worn since v87, byte-untouched.
+const beatArtCompact = computed(() => prompt.value?.kind === 'expecting')
 
 const sending = ref(false)
 const busy = computed(() => sending.value || game.busy)
@@ -251,8 +282,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            ⚠ THE BAND IS RESOLVED BEFORE THE NAME IS BUILT (`portraitUrl` -> `paintedStemFor`), so a
            career that meets one in `lateCareer` draws that band's own `norm` rather than a file
            that is not on disk. ⚠ `alt=""` - it is atmosphere beside a heading that already says
-           what has happened, and a screen reader that read it twice would say it twice. -->
-      <img v-if="beatArt" class="life-beat-art" :src="beatArt" alt="" />
+           what has happened, and a screen reader that read it twice would say it twice.
+           ROUND 46 B1b - THE SAME IMG ALSO CARRIES THE ANNOUNCEMENT'S EARLY-PREGNANCY PAINTING
+           (`BEAT_FACE`'s `expecting` row, built by `pregnantUrl`, which has no band), and the
+           sentence above holds for it unchanged. -->
+      <img v-if="beatArt" class="life-beat-art" :class="{ 'life-beat-art-compact': beatArtCompact }" :src="beatArt" alt="" />
 
       <!-- HER LINE. Written against the four voice bibles engine-side and printed as it was
            written – this template may not touch it, shorten it or wrap it in anything. -->
@@ -372,6 +406,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   object-position: 50% 30%;
   border-radius: 10px;
   margin: 0 0 12px;
+}
+/* The expecting card's band (see `beatArtCompact`): the same painting, a flatter window, so the
+ * card's asking-and-recording copy still fits a phone unaided. */
+.life-beat-art-compact {
+  aspect-ratio: 2 / 1;
 }
 
 /* Shares `dialog-overlay` / `dialog-card` / `season-summary-title` with the other blocking popups,

@@ -151,7 +151,8 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
     const run = reconstructRun(row('j300', 0, 4))
     expect(run.matches).toBe(5)
     expect(run.strain).toBe(5 * matchDrain('j300', undefined) + LADDER5)
-    expect(run.strain).toBe(41) // 5 × (2 straight-sets + 5 j300 surcharge) = 35, + 6 ladder
+    // *** RE-PINNED AGAIN 41 -> 31 (02.10, ROUND 45 #1 – the owner's 1-2-3 tariff): j300's surcharge went 5 -> 3; the ladder half (LADDER5 = 6) and the sharing property are untouched. ***
+    expect(run.strain).toBe(31) // 5 × (2 straight-sets + 3 j300 surcharge) = 25, + 6 ladder
     // THE point of routing through the shared helper: the rival's number IS the kid's number for the
     // same five score-less wins at that tier, ladder included.
     expect(run.strain).toBe(tournamentRunStrain('j300', new Array(5).fill({})))
@@ -243,8 +244,12 @@ describe('A2 — a tier-less row (legacy saves / pre-history) is handled explici
     // FLAGGED FOR THE OWNER exactly as the 26.07 note flagged the previous flip, and it only ever
     // touches pre-rival-life legacy rows, which carry no `tier` field. ***
     const run = reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })
-    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 11 })
-    expect(run.strain).toBe(tournamentRunStrain('local', new Array(3).fill({}))) // the shared helper
+    // *** RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff), AND THIS TIME THE WINNING READING MOVED. The tariff made a WTA 250 a cheaper week than a Local title for the SAME
+    // points: the cheapest reading of 30 points is now a WTA 250 last-16 (2 matches x (2 + 2) = 8, + ladder(0,1) = 1 -> 9) and no longer the Local title (3 x 3 = 9, + 2 -> 11).
+    // It only ever touches pre-rival-life legacy rows, which carry no `tier` field – FLAGGED FOR THE OWNER exactly as the earlier flips were. The rule under test is unchanged:
+    // the cheapest reading wins, deterministically, through the shared helper. ***
+    expect(run).toMatchObject({ tier: 'wta250', matches: 2, strain: 9 })
+    expect(run.strain).toBe(tournamentRunStrain('wta250', new Array(2).fill({}))) // the shared helper
     // ...and it is a pure function: same row, same answer, every time.
     expect(reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })).toEqual(run)
   })
@@ -275,7 +280,10 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
     // A tournament week earns matchWeekRecoveryBase (0 shipped); every quiet week earns
     // recoveryBase, +blackoutBonus on an off-season/exam week. Weeks 11-14 are all plain.
     expect(rivalCondition(ledger, 'ai-x', 11)).toBe(R.max - drain + R.recoveryBase) // 60
-    expect(rivalCondition(ledger, 'ai-x', 14)).toBe(R.max - drain + 4 * R.recoveryBase) // 63
+    // ⚠ RE-AIMED 02.10 (ROUND 45 #1): the J300 title is a 31 hole now (it was 41), and four quiet weeks at recoveryBase 8 = 32 would climb OUT of it into the cap, so the closing
+    // arithmetic reads three weeks – and the guard on the next line says out loud that the clamp is not flattering it.
+    expect(R.max - drain + 3 * R.recoveryBase).toBeLessThanOrEqual(R.max)
+    expect(rivalCondition(ledger, 'ai-x', 13)).toBe(R.max - drain + 3 * R.recoveryBase)
   })
 
   it('rivals get NO plan slider, NO physio and NO vacation – that asymmetry is the player edge', () => {
@@ -284,9 +292,11 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
     // of a deep enough hole (a J300 title: 41 at base 2 under the shared ladder) that the clamp cannot
     // flatter the reading.
     const deep = [row('j300', 0, 10)]
-    const gained = rivalCondition(deep, 'ai-x', 14) - rivalCondition(deep, 'ai-x', 10)
-    expect(gained).toBe(4 * R.recoveryBase)
-    expect(gained).toBeLessThan(4 * (R.recoveryBase + 2)) // strictly worse than the careful kid
+    // ⚠ RE-AIMED 02.10 (ROUND 45 #1): THREE quiet weeks, not four – a J300 title is a 31 hole under the 1-2-3 tariff and 4 x recoveryBase would climb out of it into the cap, which
+    // is the very flattery the sentence above says this hole is for. The asymmetry itself (the base alone, no slider, no physio) is asserted exactly as before.
+    const gained = rivalCondition(deep, 'ai-x', 13) - rivalCondition(deep, 'ai-x', 10)
+    expect(gained).toBe(3 * R.recoveryBase)
+    expect(gained).toBeLessThan(3 * (R.recoveryBase + 2)) // strictly worse than the careful kid
   })
 
   it('clamps to the same [min, max] bounds', () => {
@@ -368,7 +378,7 @@ describe('A4 — a deep run leaves a soft week behind her, and it heals', () => 
     expect(conditionMatchFactor(cRun)).toBeLessThan(conditionMatchFactor(cRest))
   })
 
-  it('the CLAIM CHANGED: one deep run now costs a fresh champion a shade of strength too', () => {
+  it('the CLAIM CHANGED BACK (02.10): one deep run costs a fresh champion condition again, not strength', () => {
     // *** RE-PINNED AND RE-CLAIMED (wave-3, the SHARED ladder). This test used to assert "a fresh
     // rival pays condition for one deep run, not strength": pre-ladder a J300 title cost 30, so she
     // landed on 100 − 30 = 70 = matchStrengthKnee EXACTLY and the strength curve was still a no-op.
@@ -393,10 +403,13 @@ describe('A4 — a deep run leaves a soft week behind her, and it heals', () => 
     expect(fresh).toBe(R.max - (5 * matchDrain('j300', undefined) + LADDER5) + R.recoveryBase) // 60
     expect(fresh).toBeLessThan(R.max)
     // she has crossed the knee, but only just: a few percent, nowhere near the floor
-    expect(fresh).toBeLessThan(R.matchStrengthKnee)
+    // ⚠⚠ RE-AIMED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff) – THE CLAIM IS THE ONE THIS TEST CARRIED BEFORE THE LADDER, AND THE TARIFF RESTORED IT. J300 sits on the table's top
+    // step (3) now, so the title costs 31 and not 41: the fresh champion is on 69 the run week and 77 the week after – ABOVE the knee (70) – and the strength curve reads exactly 1.
+    // One deep run costs condition, not strength. The notes above narrate the dent it replaced (0.968, then 0.936); the knee was never touched, and the question they flagged
+    // for the owner ("widen the knee to 65") is answered by the price instead. What ACCUMULATED load does is still asserted below.
+    expect(fresh).toBeGreaterThanOrEqual(R.matchStrengthKnee)
     const factor = conditionMatchFactor(fresh)
-    expect(factor).toBeLessThan(1)
-    expect(factor).toBeGreaterThan(0.9) // ~0.936 shipped: a shade, not a cliff
+    expect(factor).toBe(1)
     // ...and the cliff is still reserved for accumulated load – the A4 runner above, who arrives at
     // the same J300 already carrying three recent draws, is far weaker than this fresh champion.
     expect(conditionMatchFactor(rivalCondition(runner, 'ai-run', 13))).toBeLessThan(factor)

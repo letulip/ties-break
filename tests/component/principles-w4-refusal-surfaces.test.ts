@@ -98,7 +98,7 @@ async function refusalSentence(): Promise<string> {
 
 /** ⚠ THE EPILOGUE'S FIXTURE IS `wave10-dynasty-door.test.ts`'S, WHICH IS THE HOUSE SHAPE FOR THIS
  *  SCREEN – and it is that file's rather than a fresh one because the keys matter: the album is
- *  `view.album` and the resume week is `view.handoff.resumesWeek`, so a hand-invented `pages` or
+ *  `view.closing` (it was `view.album`) and the resume week is `view.handoff.resumesWeek`, so a hand-invented `pages` or
  *  `resumes` renders an epilogue with no album and no footer while every root-level assertion passes.
  *  ONE page, deliberately: the footer exists on the LAST page only, and with one page the first IS the
  *  last, so the refusal line's own section is on screen without a walk. */
@@ -106,19 +106,17 @@ function endingView(): EndingView {
   const totals = { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
   return {
     ending: { type: 'natural', week: 900, ageYears: 31, detail: 'she stopped at thirty-one', resumesWeek: null },
-    album: [
-      {
-        slot: 0,
-        why: 'why 0',
-        caption: 'caption 0',
-        fact: 'fact 0',
-        week: 0,
-        seasonIndex: 0,
-        stage: 'teen',
-        emotion: 'norm',
-        empty: false,
-      } as AlbumPage,
-    ],
+    closing: {
+      slot: 0,
+      why: 'why 0',
+      caption: 'caption 0',
+      fact: 'fact 0',
+      week: 0,
+      seasonIndex: 0,
+      stage: 'teen',
+      emotion: 'norm',
+      empty: false,
+    } as AlbumPage,
     scroll: [],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals,

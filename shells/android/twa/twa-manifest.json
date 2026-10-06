@@ -1,0 +1,41 @@
+{
+  "packageId": "com.tiesbreak.aceparent",
+  "host": "letulip.github.io",
+  "name": "Ties Break: Ace Parent",
+  "launcherName": "Ties Break",
+  "display": "standalone",
+  "themeColor": "#0a0e13",
+  "themeColorDark": "#0a0e13",
+  "navigationColor": "#0a0e13",
+  "navigationColorDark": "#0a0e13",
+  "navigationDividerColor": "#0a0e13",
+  "navigationDividerColorDark": "#0a0e13",
+  "backgroundColor": "#0a0e13",
+  "enableNotifications": false,
+  "startUrl": "/ties-break/",
+  "iconUrl": "https://letulip.github.io/ties-break/pwa-512.png",
+  "maskableIconUrl": "https://letulip.github.io/ties-break/pwa-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "~/.tiesbreak/android.keystore",
+    "alias": "tiesbreak"
+  },
+  "appVersion": "0.1.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://letulip.github.io/ties-break/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://letulip.github.io/ties-break/",
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

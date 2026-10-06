@@ -645,7 +645,7 @@ describe('wave 8 T5 D – the ninth ending latches through the ONE seam every ot
     expect(view, 'the epilogue built').not.toBeNull()
     expect(view!.ending.type).toBe('family')
     expect(view!.handoff.resumesWeek, 'nothing on the other side of this one').toBeNull()
-    expect(view!.album, 'and the album came with it').toHaveLength(7)
+    expect(view!.closing.slot, 'and the last page came with it').toBe(7)
 
     // ⭐⭐⭐ AND HERE IS THE TOTALITY CLAIM MEASURED RATHER THAN ASSERTED. The SAME world is read once
     // as `'family'` and once as `'stopped'` – the other `decision` ending – and the two epilogues
@@ -659,12 +659,14 @@ describe('wave 8 T5 D – the ninth ending latches through the ONE seam every ot
     })
     const swap = (pages: AlbumPage[], title: string) =>
       pages.map((p) => (p.why === title ? { ...p, why: '<the title>' } : p))
-    expect(swap(view!.album, ENDING_TITLE.family), 'page for page').toEqual(
-      swap(control!.album, ENDING_TITLE.stopped),
+    // ⭐ ROUND 46 · R6 (06.10): the wire carries ONE page now (`EndingView.closing`), the only page that ever named
+    // the ending – pages 1–6 left it, so «page for page» is the last page; the engine's own album tests hold the six.
+    expect(swap([view!.closing], ENDING_TITLE.family), 'the last page, the one page the view carries').toEqual(
+      swap([control!.closing], ENDING_TITLE.stopped),
     )
     // ...including HER FACE, which is the one of the four records this comparison would otherwise
     // hide: both take `serious`, and that is the drafted answer rather than an accident.
-    expect(view!.album[6].emotion, 'the last week\'s face').toBe(control!.album[6].emotion)
+    expect(view!.closing.emotion, 'the last week\'s face').toBe(control!.closing.emotion)
 
     // ⚠ THE SCROLL AND THE BOOK ASSEMBLE TOO, and the scroll is EMPTY here for a reason that is not
     // about the ending: this probe has never banked a season (`world.seasonHistory` is []), so it has

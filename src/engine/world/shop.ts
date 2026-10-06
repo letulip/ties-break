@@ -36,7 +36,7 @@
 // a getter would have to be given a stream, and a stream on a read path is how a purchase moves the
 // world's dice.
 import { guardNotEndedForGood } from './endings'
-import { addEvent } from './ledger'
+import { accrueRealised, addEvent } from './ledger'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
 import { assetWeeklyFamilyIncomeCents } from './business'
 import { kidAgeYears } from './age'
@@ -475,6 +475,34 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     // a mark on that week can honestly carry. See `AssetEntry` in shared/protocol/profile.ts.
     const entry = { week: world.week, cents: paidCents, units: paidCents / price }
     if (held) {
+      // ⭐⭐⭐ ROUND 46 #14 – A RE-ENTRY THAT OUTWEIGHS WHAT IS LEFT STARTS THE CARD OVER.
+      //
+      // THE OWNER: «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
+      // "8131.90 units – bought at $9,969 each, $10,212 now / +$49,610,632 since you bought it (33%)" –
+      // я только пару недель назад зашёл на 80млн, они ещё не могли дать такой прирост»
+      //
+      // ⚠⚠ THE BASIS WAS NEVER THE DEFECT, and the line above the gain on his own card is the proof:
+      // 8131.90 units at $9,969 is $81.07M – the $80M he put in plus a small residue – and $10,212
+      // against it is +2.4%. `sellAsset` releases `paidCents` and `units` by the SAME fraction, so the
+      // average is honest across any withdrawal. What was wrong is the figure UNDER it. Round 34 #15
+      // made «since you bought it» the holding's LIFETIME gain (`shopView` adds `realisedGainCents`
+      // to the unrealised half, on his ruling that the sum must not fall when money is taken out),
+      // and only a WHOLE sale deletes the row – so «almost everything» left the row alive with every
+      // cent of realised history on it, and the $80M arrived beside +$47.6M of an earlier stint.
+      //
+      // ⭐ THE RULE IS ONE COMPARISON: money going in that is at least what is already held means more
+      // than half of the new holding is money that has earned nothing yet, and the card is about THAT
+      // holding. The realised memory leaves the row here – it happened, and the ledger keeps it in the
+      // `Sold …` rows, it is just no longer «since you bought it». A smaller top-up (a family adding
+      // to a holding it is still mostly in) keeps the memory, so round 34's ruling is untouched.
+      // ⚠ NO NEW STATE AND NO SCHEMA MOVE: this clears two OPTIONAL fields `shopView` already reads
+      // as «none recorded» when absent, so no save needs anything and no card's arithmetic changed.
+      // A row without `units` is not a unit holding at all, so there is nothing to compare – it
+      // keeps its memory. Zero draws; integer cents throughout.
+      if (held.units !== undefined && paidCents >= Math.round(held.units * price)) {
+        delete held.realisedGainCents
+        delete held.realisedCostCents
+      }
       held.units = units
       held.paidCents += paidCents
       held.valueCents = Math.round(units * price)
@@ -583,7 +611,7 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     addEvent(world, {
       week: world.week,
       type: 'entry',
-      text: `${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks)}`,
+      text: `${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks, world.startYear)}`,
     })
   }
 }
@@ -741,6 +769,9 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     text: `Sold ${formatCents(proceedsCents)} of: ${label} – ${saleTail(deltaCents)}`,
     amountCents: proceedsCents,
   })
+  // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – AND WHAT THIS SALE REALISED IS CARRIED TO THE LEDGER'S MEMO: the very `deltaCents` the sentence above names, so the year-end
+  // card can read the season's realised loss back (`realisedLossOf`, ledger.ts). A memo and not a booking – the proceeds are already the `+shop` row above.
+  accrueRealised(world, world.week, deltaCents)
 }
 
 /** ⭐ THE TAIL OF THE SALE SENTENCE, ONE SPELLING FOR THE WHOLE SALE (`settleAssetSale`) AND THE PART SALE (`sellAsset`): what the sale
@@ -795,6 +826,9 @@ export function settleAssetSale(world: WorldState, itemId: string, priceCents: n
     text: `Sold: ${label} – ${saleTail(priceCents - costSoldCents)}`,
     amountCents: priceCents,
   })
+  // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – THE SAME TAIL, CARRIED TO THE LEDGER'S MEMO (see `sellAsset`'s part path): what the rows fetched against what they cost.
+  // This body is the one a whole sale ends in whichever door it came through – the instant sale, a signed letter, the fire sale – so one line covers all three.
+  accrueRealised(world, world.week, priceCents - costSoldCents)
 }
 
 /** ⭐ S3 – CAN A BUYER'S PAPER STILL BE HONOURED? The lot the letter names is still OWNED and DELIVERED (`saleLotOf` is null for a row
@@ -1105,7 +1139,7 @@ export function shopView(world: WorldState): ShopView {
       // deposit's dead-flat exponential does not, and a wilder fund added tomorrow gets one because
       // of what it IS. The longest window decides the length; the picker slices it on screen.
       priceHistory: item.volBps
-        ? unitPriceHistory(world.seed, world.week, item, Math.max(...SHOP_PRICE_RANGE_MONTHS))
+        ? unitPriceHistory(world.seed, world.week, item, Math.max(...SHOP_PRICE_RANGE_MONTHS), world.startYear)
         : null,
       // ⭐⭐⭐ v78, ROUND 41 #22 – AND WHERE THE FAMILY BOUGHT. The row's own `entries`, copied onto
       // the wire so the chart can put a mark on each one. `[]` on every rung nobody owns and on every
@@ -1207,7 +1241,7 @@ export function shopView(world: WorldState): ShopView {
     // this asks the same function `assetKidShareCents` asks rather than a second copy of the ladder.
     kidBusinessSharePct: Math.round(
       kidPrizeShareBps(
-        kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+        kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
         collegePausedShareYears(world),
       ) / 100,
     ),

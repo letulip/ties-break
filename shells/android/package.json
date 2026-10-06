@@ -1,0 +1,16 @@
+{
+  "name": "ties-break-shell-android",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ties Break: Ace Parent – the Android shell (a Trusted Web Activity, built with Bubblewrap). Tooling, not product: see ../README.md.",
+  "author": "Igor Vladimirskiy",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "scripts": {
+    "setup": "node build.mjs setup",
+    "generate": "node build.mjs generate",
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@bubblewrap/cli": "1.25.0"
+  }
+}

@@ -400,7 +400,26 @@ The comment essays that stood above the `advertising` constants in `src/engine/e
      *  ⚠ PER DAY, MULTIPLIED BY THE WEEK'S DAYS AT THE ONE SITE THAT CHARGES IT
      *  (`accrueCondition`). Written as a rate rather than as a total because that is the shape he
      *  named it in, and because a week is seven days everywhere in this engine – the plan matrix,
-     *  `planWeek`, the calendar grid – so the multiplication has one honest reading. */
+     *  `planWeek`, the calendar grid – so the multiplication has one honest reading.
+     *
+     *  ⭐⭐ ROUND 45 #1b, 02.10 – THE DAYS BECAME THE SHOOTING DAYS, and the paragraph above is now the
+     *  history of why it was seven. Shown the condition table's «shoot week −7», the owner: «неделя
+     *  съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо». The multiplier
+     *  is `clashShootDays(world)` (`world/medical.ts`): the days the entered event RUNS, `log2(drawSize)`
+     *  – 3 local, 4 regional, 5 for every 32-draw, 6 the 1000, 7 the Slam – which is also how many days
+     *  the schedule draws the Shoot block on a «do both» week (`tripMatchDay` hangs `TRIP_SHOOT` on
+     *  every match day), so the picture and the charge are one sentence again. The rate stays 1; the
+     *  clash card (`buildShootClashPrompt`) multiplies by the same function, so it prints the engine's
+     *  number. Seven survives as the Slam's price and nothing else's.
+     *
+     *  ⭐⭐ ROUND 45 #1b REFINED, 02.10 (THIRD BATCH) – THE SHOOT IS TWO DAYS, THREE EACH, SIX AT EVERY RUNG. The paragraph
+     *  above is the first build's history. Shown it, the owner: «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?» – ruled with the architect's
+     *  concurrence: the clash shoot is 2 days, each costing 3, so 6 per clash, flat across tiers (near the historical 7; a clash
+     *  day at 3 is properly heavier than a calm shoot day, which stays unpriced). `clashConditionPerDay` is 3 and `clashShootDays`
+     *  is the constant `CLASH_SHOOT_DAYS` = 2 (`world/medical.ts`), no longer `log2(drawSize)`; the charge and the card still
+     *  multiply by the one function. The schedule «redraws the Shoot block on exactly two trip days» – `tripMatchDay` hangs
+     *  `TRIP_SHOOT` on the trip's first two match days only (`TRIP_SHOOT_DAYS`, composables/weekGrid.ts); the per-match-day
+     *  drawing was round 30's agent choice, never his. */
 ```
 
 ## `advertising.decideWeeks`

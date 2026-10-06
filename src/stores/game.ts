@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { request, WorkerRestartError, type WorkerRequest } from '../worker/client'
+import { recordError } from '../errorBuffer'
 import {
   DEFAULT_PROFILE,
   type AlbumBook,
@@ -29,6 +30,8 @@ import {
 // protocol barrel does not re-export it – `Temperament`'s own arrangement, where the wire carries the
 // type and consumers import it from where it lives.
 import type { PsyFocus } from '../engine/world/state'
+// ⭐⭐⭐ SUCCESSION S2c – the dynasty door's inheritance, type-only and from the module that declares it, for the same reason.
+import type { LegacyInput } from '../engine/world/succession'
 
 // W1-INTEGRITY-A: the store is the worker pipeline's UI-side ledger. It tracks the committed
 // `revision` off every response and hands it back as `baseRevision` on every mutation, so a
@@ -245,6 +248,9 @@ export const useGameStore = defineStore('game', {
         // `recovery` with the actual error, and every path out of it is explicit.
         const res = await request({ type: 'listCareers' })
         if (!res.ok) {
+          // F2: a refused probe is a boot failure – the player sees the recovery screen, the ring keeps the
+          // cause for a report sent from More afterwards.
+          recordError('error', res.error)
           this.initError = res.error
           this.phase = 'recovery'
           return
@@ -284,6 +290,9 @@ export const useGameStore = defineStore('game', {
       } catch (err) {
         // A crashed worker rejects every pending request (client.ts) – without this catch that
         // rejection would fly out of onMounted unhandled and the splash would spin forever.
+        // F2: the same for a worker that crashed or threw during boot – the recovery screen shows the
+        // message, the ring keeps it (and the stack) for the report.
+        recordError('error', err)
         this.initError = err instanceof Error ? err.message : String(err)
         this.phase = 'recovery'
       }
@@ -321,6 +330,11 @@ export const useGameStore = defineStore('game', {
       try {
         return await fn()
       } catch (err) {
+        // F2 (feedback channel): the ONE line that feeds the error ring (src/errorBuffer.ts) for EVERY
+        // branch below – the restart, the stale screen, the save conflict and the plain refusal all end in a
+        // sentence for the player, and the report should say what that sentence was standing in for. The
+        // thrown value, not the sentence: it carries the cause and a stack, and the ring never throws.
+        recordError('error', err)
         // TB-05: the worker died (crash / undeliverable message / timeout) and was torn down.
         // TB-03 makes the recovery unambiguous — every ok response was durable, so the last
         // committed autosave IS the last state the player was truthfully shown as saved. Reload
@@ -474,6 +488,11 @@ export const useGameStore = defineStore('game', {
        *  arithmetic on it either – `createWorld` reads `?? false`, which is the ruled meaning of a
        *  caller that did not ask. */
       weightEnabled?: boolean,
+      /** ⭐⭐⭐ SUCCESSION S2c – the dynasty door's inheritance, as `loadLegacyInput` answered it (the succession spec §8). Optional through the
+       *  whole wire like the three above, and this store does no arithmetic on it either: the worker's `createLegacyWorld` owns every consequence.
+       *  ⚠ IT IS PASSED AS IT WAS HANDED, with no `plain…` copy, and that is safe only because the shell holds it in a `shallowRef` – a reactive
+       *  proxy here would be a `DataCloneError` at the `postMessage` (the note on `plainDynasty` has the history). */
+      legacy?: LegacyInput,
     ) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
@@ -487,11 +506,39 @@ export const useGameStore = defineStore('game', {
             prologue,
             dynasty: plainDynasty(dynasty),
             weightEnabled,
+            legacy,
           }),
         )
         this.applySnapshot(res)
         this.recovered = false
       })
+    },
+    /** ⭐⭐⭐ SUCCESSION S2c – THE LEGACY, ON DEMAND at the dynasty door: `loadAlbum`'s own shape, one query over. A read-only query against the
+     *  COMMITTED world answering with `legacyInputOf`'s object, computed worker-side so the blob crosses the wire once as plain data; or null on
+     *  a refusal (no active career, a restarted worker). The store HOLDS nothing: the shell keeps the answer for the length of the walk, exactly
+     *  as it keeps the line.
+     *
+     *  ⚠ NULL IS «THERE IS NO INHERITANCE TO CARRY», AND THE DOOR STILL WORKS: the caller continues the line without a legacy, which is the career
+     *  wave 10 has always created. A press that dead-ended on a refused query would strand the player on a screen with no way forward. */
+    async loadLegacyInput(): Promise<LegacyInput | null> {
+      return (
+        (await this.run(async () => {
+          const res = this.takeOk(await request({ type: 'legacyInput' }))
+          return expectArm(res, 'legacyInput').legacy
+        })) ?? null
+      )
+    },
+    /** ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, ON DEMAND from the album screen: `loadAlbum`'s own shape, one query over. A read-only query against the
+     *  COMMITTED world answering with the heirloom a generation-2 career carries, computed worker-side so the book crosses the wire once as plain data; or
+     *  null when the career has none OR the query was refused (no active career, a restarted worker) – and the screen then simply keeps the book it has.
+     *  The store HOLDS nothing: the album screen caches the answer for the length of its own mount, as App.vue holds the career's own book. */
+    async loadHeirloomAlbum(): Promise<AlbumBook | null> {
+      return (
+        (await this.run(async () => {
+          const res = this.takeOk(await request({ type: 'heirloomAlbum' }))
+          return expectArm(res, 'heirloomAlbum').book
+        })) ?? null
+      )
     },
     /** ⭐ THE ALBUM, ON DEMAND (docs/specs/the-album-2026-09.md §8b: «Сборка альбома – по
      *  требованию, не в недельном снимке»). A read-only query against the committed world –
@@ -540,6 +587,14 @@ export const useGameStore = defineStore('game', {
     },
     async tick(weeks: number) {
       await this.commit({ type: 'tick', weeks })
+    },
+    // ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST, the `tick(52)` button's sibling. A transient worker flag, so
+    // it is NOT a mutation: no `baseRevision`, nothing committed or saved. The reply is the snapshot, whose
+    // `devLifeBoost` is the state the More screen's switch shows.
+    async setLifeBoost(on: boolean) {
+      await this.run(async () => {
+        this.applySnapshot(this.takeOk(await request({ type: 'devLifeBoost', on })))
+      })
     },
     // ⚠ ROUND 29 #6: `1 | 4` widened to a plain count – the span the pill offers is now the length
     // of the actual quiet slot (`spanWeeksFor`), not the engine's historical step.

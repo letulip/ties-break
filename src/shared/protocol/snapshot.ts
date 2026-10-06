@@ -6,6 +6,7 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+import type { LifeMoment } from './narrative'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 // ⭐ v85 T10: which pregnancy painting the week wears. Declared beside the two paintings it names,
 // in the module that already owns every «which picture is this» union the wire carries.
@@ -284,6 +285,15 @@ export interface Snapshot {
   /** ...the weekly bill at the family's chosen rung, in cents – a FLAT contract per rung, no
    *  corridor, no jitter, no draw, so the card's quote IS the ledger's row. */
   sparringSalaryCents: number
+  /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, in cents, index = rung (the
+   *  index `sparringRung` holds). `ECONOMY.sparring.rungs[n].weeklyCents` is the OPENING price now and no
+   *  longer the price: once the family has granted the hitting partner's yearly raise request all three rungs
+   *  drift together, and the dial must quote what choosing each would bill – never the flat constant.
+   *
+   *  ⚠ DERIVED BY THE BILL'S OWN FUNCTION (`sparringRungWeeklyCents`, which `sparringWeeklyCents` shares),
+   *  so the row for the rung he is on is the headline above and both are the ledger's row. A screen that
+   *  re-derived the drift would be the parity class. */
+  sparringRungSalaryCents: number[]
   /** ⭐ THE ROSTER DIAL – which of the three hits with her: an INDEX into `ECONOMY.sparring.rungs`
    *  (0 a college hitter · 1 a journeyman pro · 2 a top-100 partner), the psychologist's kind of dial
    *  and not the masseur's count. */
@@ -311,6 +321,15 @@ export interface Snapshot {
    *  multiply it by: one session a week at every rung, so the person's retainer IS the week (the
    *  spec's «the rung buys WHO comes to the call»). The card's quote IS the ledger's row. */
   psychologistSalaryCents: number
+  /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, in cents, index = rung (the
+   *  index `psychologistRung` holds). `ECONOMY.psychologist.rungs[n].salaryCents` is the OPENING price now
+   *  and no longer the price: once the family has granted the psychologist's yearly raise request all three
+   *  rungs drift together, and the dial must quote what choosing each would bill – never the flat constant.
+   *
+   *  ⚠ DERIVED BY THE BILL'S OWN FUNCTION (`psychologistRungWeeklyCents`, which `psychologistWeeklyCents`
+   *  shares), so the row for the rung she is on is the headline above and both are the ledger's row. A
+   *  screen that re-derived the drift would be the parity class. */
+  psychologistRungSalaryCents: number[]
   /** ⭐ THE ROSTER DIAL – which of the three takes the call: an INDEX into
    *  `ECONOMY.psychologist.rungs` (0 counsellor · 1 sport psychologist · 2 tour-grade), NOT a
    *  quantity. That is the whole difference from `masseurSessionsPerWeek` above, which is a count. */
@@ -381,6 +400,26 @@ export interface Snapshot {
    *  the window this goes null and the ROW stays – answered, or the honest record that she came and
    *  it went unasked. */
   softBeat: SoftBeatInvite | null
+  /** ⭐⭐ ROUND 46 #11c – THE WEDDING OR THE BIRTH THAT LANDED THIS WEEK, as the full-screen moment's own
+   *  payload, or null on every other week. Derived (`lifeMomentOf`), never stored. */
+  lifeMoment: LifeMoment | null
+  /** ⭐ ROUND 46 #11b – THE WEEK AN ANNOUNCED WEDDING LANDS (`upcomingWeddingWeek`), or null: the calendar's
+   *  mark reads this and restates nothing. */
+  weddingWeek: number | null
+  /** ⭐ v92 (SUCCESSION S1) – THE CALENDAR YEAR SEASON 0 OPENED IN: `world.startYear`, handed over as a plain number
+   *  so a screen can ask `shared/dates` the same question the engine does (every formatter there takes it as its
+   *  optional last argument). 2031 for every career born before the succession wave. DERIVED – the world owns it
+   *  and this is its one reading. The UI's own call sites still format against the default and are the follow-up;
+   *  this field is what they will be fed. */
+  startYear: number
+  /** ⭐ SUCCESSION S2d – DOES THIS CAREER CARRY A MOTHER'S ALBUM: true on a generation-2 world whose `legacy` block holds the finished book, false on every
+   *  other career (every career the game created before the succession wave included). DERIVED off `engine/world/heirloom.ts`'s one reading – the world
+   *  owns the book and this is its ONE-BIT view, so the book itself (1 to 9 KB) never rides the weekly snapshot: the album screen draws its control off
+   *  this flag and asks for the book once, with the `heirloomAlbum` query, when that control is pressed. */
+  hasHeirloom: boolean
+  /** ⭐ ROUND 46 #22 – IS THE DEV LIFE-EVENT BOOST ON in the worker right now. Transient, never saved: the More
+   *  screen's switch shows the worker's own state rather than a belief of its own. */
+  devLifeBoost: boolean
   /** ⭐⭐⭐ v85 T10 – **WHICH PREGNANCY PAINTING HER PORTRAIT WEARS THIS WEEK**, or null on every
    *  week of every career that is not inside one. The two portrait surfaces (`useKidEmotion`) read
    *  it; nothing else does.

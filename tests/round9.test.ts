@@ -284,7 +284,9 @@ describe('R9-7 — match-based fatigue', () => {
     expect(matchDrain('national', '7-6 6-7 7-6')).toBe(7) // 4 + 3
     // RE-PINNED by ladder-up Part B: the inert `itf` placeholder became the J family, and its
     // +3 surcharge carried over to j30 unchanged (j60 +4, j300 +5 extrapolate above it).
-    expect(matchDrain('j30', '6-4 6-2')).toBe(5) // 2 + 3
+    // ⚠ RE-PINNED AGAIN 02.10 (ROUND 45 #1, the owner's tariff ruling «J тоже 1-2-3 … W … 1 для 15-75, 2 для 100-250, а 3 для 500+»): j30's surcharge is 1 now, so a straight-sets J30 match costs 3 (was 5) –
+    // the J family repeats the domestic steps (1 / 2 / 3) instead of extrapolating above national. Unchanged: national (5 / 7 above) and the base 2 under it.
+    expect(matchDrain('j30', '6-4 6-2')).toBe(3) // 2 + 1
     // a record without a score (defensive) counts as straight sets
     expect(matchDrain('national', undefined)).toBe(5)
   })

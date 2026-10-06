@@ -62,6 +62,9 @@ import type { WorldMatch } from '../shared/protocol'
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
 import { flagEmoji } from '../composables/countries'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // R9-9a: the splash's "← Back" returns to the shell WITHOUT resolving anything – App.vue
 // hides the overlay and offers a Resume affordance while the week stays paused.
@@ -137,12 +140,12 @@ const oppAge = computed<number | null>(() => pending.value?.opponent.ageYears ??
 const showAges = computed(() => kidAge.value !== null && oppAge.value !== null)
 // Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
 // advances again while paused), so this doubles as the tournament's real date range.
-const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
+const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0, startYear.value))
 /** THE SAME WEEK, IN THE GAME'S OWN SHORT FORM: "W36 '35" (owner, R17 #9). `weekLabel` is where that
  *  format is spelled and it already ships on Home and in the practice header - the header line has
  *  room for a week, not for "Sep 1-7, 2035", and re-spelling it here is how two screens come to name
  *  the same week two ways (shared/dates.ts says so at the top of `weekLabel`). */
-const weekShort = computed(() => weekLabel(game.snapshot?.week ?? 0))
+const weekShort = computed(() => weekLabel(game.snapshot?.week ?? 0, startYear.value))
 
 // --- Round 5 item 6: pre-tournament splash ------------------------------------
 const tier = computed(() => (pending.value?.tier ? TIERS[pending.value.tier] : null))
@@ -1876,13 +1879,28 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
    at any height. The spare band goes ABOVE the art (`.scene--fill .scene-art` anchors it to the
    foot), so the plate still rides the painting - the exact complaint R15-3 had about the stretch.
 
-   FULL-BLEED, as the design's F draws its art slot: the negative margins cancel `.tf-body`'s 24px
+   FULL-BLEED, as the design's F draws its art slot: the negative margins cancel `.tf-body`'s side
    gutters, and the corner/border come off with them - a card edge makes no sense on a surface that
    touches the screen edge. Doubled class beats `Card`'s scoped `.tb-card` radius/border at
    (0,3,0) vs (0,2,0) - the same tie `.back-link.tf-hero-back` documents; a single scoped class
-   only ties it and injection order decides. */
+   only ties it and injection order decides.
+
+   ⭐⭐⭐ ROUND 46 #10 – THE MARGIN READS THE GUTTER'S OWN TOKEN, NOT A NUMBER THAT USED TO EQUAL IT
+   (owner, 05.10: «на экране между матчами с большой картинкой немного съехала вёрстка в ширину и
+   есть горизонтальный скрол»). This rule said `-24px` because the gutter WAS 24px. R17 #8 then
+   moved `.tf-body`'s gutter to `--app-pad-x` (16px) and nothing said this margin had been quoting
+   the old figure, so from that round on the card overshot the column by 8px on each side. Measured
+   in Chromium on the shipped build at 320 / 360 / 375 / 390 / 430: the scene was 16px wider than the
+   screen (left -8, right +8), `.tf-body` – `overflow-y: hidden` makes its `overflow-x` compute to
+   `auto` – scrolled those 8px sideways (scrollWidth = clientWidth + 8), and the glass plate and the
+   round pill sat 4px from the edge where the design gives them 12. ⚠ `documentElement.scrollWidth`
+   equalled the viewport the whole time: the takeover is `position: fixed` and the scroll lived in
+   its own scroller, so a page-level check can never see this one – measure `.tf-body`.
+   `calc(-1 * var(--app-pad-x))` is the cancellation written as the relationship it always was, so
+   the next change to the gutter cannot leave it behind again;
+   tests/component/round46-prematch-bleed.test.ts pins the pair. */
 .tf-scene.tf-scene {
-  margin: 0 -24px;
+  margin: 0 calc(-1 * var(--app-pad-x));
   border: none;
   border-radius: 0;
 }

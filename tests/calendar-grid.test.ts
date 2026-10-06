@@ -782,7 +782,7 @@ describe('the calendar renders the grid it is handed', () => {
     // court and gym sessions so two consecutive weeks do not read as a photocopy. The rule this pins
     // is that the screen COMPOSES and does not decide, so it matches the call's opening rather than
     // its full arity, which would have to be re-typed every time the composable earns a parameter.
-    expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)')
+    expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week, startYear.value)')
     expect(screen).not.toContain('isOrdinaryWeek')
   })
 

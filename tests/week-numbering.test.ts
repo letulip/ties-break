@@ -298,25 +298,25 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
     // SFC plus its composables, which is what a POSITIVE claim about a surface's logic must read if
     // it is to survive an extraction. The guard is unchanged: nothing hand-rolls a week.
     const home = componentLogic('components/screens/HomeScreen.vue')
-    expect(home).toContain('weekDateLine(week.value)')
+    expect(home).toContain('weekDateLine(week.value, game.snapshot?.startYear)')
     expect(read('App.vue')).not.toContain('weekLabel(week)')
   })
 
   it('the news feed groups under a formatted week', () => {
     expect(read('components/screens/HomeScreen.vue')).toMatch(
-      /class="news-week-label">\{\{ weekLabel\(group\.week\) \}\}/,
+      /class="news-week-label">\{\{ weekLabel\(group\.week, startYear\) \}\}/,
     )
   })
 
   it('the money ledger groups under a formatted week', () => {
     expect(read('components/screens/MoneyScreen.vue')).toMatch(
-      /class="ledger-week-label">\{\{ weekLabel\(group\.week\) \}\}/,
+      /class="ledger-week-label">\{\{ weekLabel\(group\.week, startYear\) \}\}/,
     )
   })
 
   it('the best-6 table dates every counting result – two seasons share the 52-week window', () => {
     // Without the year, a result from W12 last season and one from W12 this season read alike.
-    expect(read('components/CountingResultsTable.vue')).toMatch(/\{\{ weekLabel\(c\.week\) \}\}/)
+    expect(read('components/CountingResultsTable.vue')).toMatch(/\{\{ weekLabel\(c\.week, startYear\) \}\}/)
   })
 })
 

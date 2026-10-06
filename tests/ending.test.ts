@@ -1296,7 +1296,10 @@ describe('the album – seven pages, every career', () => {
     latchEnding(world, { type: 'plateau', week: 700, ageYears: 27, detail: 'x', resumesWeek: null })
     const snap = toSnapshot(world)
     expect(snap.ending).not.toBeNull()
-    expect(snap.ending!.album).toHaveLength(7)
+    // ⭐ ROUND 46 · R6 (06.10) – THE WIRE CARRIES ONE PAGE, the reel's last (`closing`); pages 1–6 are not on it.
+    expect(snap.ending!.closing.slot, 'the last page of the old reel – the one the screen reads').toBe(7)
+    expect(snap.ending!.closing, 'the same page the engine builds as slot 7').toEqual(buildAlbum(world)[6])
+    expect(Object.keys(snap.ending!), 'pages 1-6 left the wire').not.toContain('album')
     expect(snap.stopReasons).toBeUndefined()
   })
 })
@@ -1437,8 +1440,8 @@ describe('⚠ a career saved before this wave existed', () => {
     expect(world.ending).not.toBeNull()
     // ...and the epilogue it lands on is a real one, built from a career that predates it.
     const view = buildEndingView(world)!
-    expect(view.album).toHaveLength(7)
-    expect(view.album.every((p) => p.why.length > 0)).toBe(true)
+    expect(view.closing.slot).toBe(7)
+    expect(view.closing.why.length > 0).toBe(true)
     expect(view.totals.spentCents).toBeGreaterThan(0)
   })
 })

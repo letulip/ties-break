@@ -24,8 +24,9 @@ export function clamp(x: number, lo: number, hi: number): number {
  *  plus the tier's per-match surcharge (BASE RAISED 1 → 2, owner 26.07):
  *    straight sets, no tiebreak → 2;  a 3-setter OR a tiebreak in a 2-setter → 3;
  *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 4;
- *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
- *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 6. Pure state, zero
+ *    + tierMatchFatigue[tier] – three steps, 1 / 2 / 3, by STAGE (owner, 02.10): local, j30 and W15-W75 take 1;
+ *      regional, j60 and W100-WTA 250 take 2; national, j300 and WTA 500 up take 3.
+ *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest match anywhere = 7. Pure state, zero
  *  draws; a record without a score (defensive) counts as straight sets – which is also the
  *  branch every RIVAL match takes, since AI-vs-AI results carry no scoreline (rival-life). */
 export function matchDrain(tier: TierId, score: string | undefined): number {
@@ -68,8 +69,29 @@ export function runFatigueExtra(matchIndex: number, tier: TierId): number {
   return ladder[Math.max(0, Math.min(matchIndex, ladder.length - 1))]
 }
 
-/** WHICH LADDER A RUNG RUNS ON – three of them now, and the third is keyed on the DRAW rather than
- *  on the track, because it is about how many matches a week can hold.
+/** THE RUNGS THAT RUN ON THE THIRD LADDER, NAMED BY TIER (05.10, round 46 #7). Until then the third ladder belonged to «a draw over
+ *  32», which is a statement about the BRACKET; the owner's ruling below is a statement about three RUNGS – the 500, the 1000 and the
+ *  Slam – and the 500 is not over 32, so a draw test could never have said it. A rung joins the third ladder by being added HERE, on
+ *  purpose, rather than by crossing a threshold. */
+const MAJOR_RUNGS: ReadonlySet<TierId> = new Set<TierId>(['wta500', 'wta1000', 'slam'])
+
+/** WHICH LADDER A RUNG RUNS ON – three of them, and the third is keyed on the TIER (it was keyed on the DRAW until 05.10).
+ *
+ *  ⚠⚠ 05.10 – THE THIRD LADDER IS `[0, 0, 0, 1, 1, 1, 1]` AND THE DISCOUNT IT CARRIED IS DELETED (round 46 #7). The owner:
+ *  «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18, шлем-21 что скажешь? это примерные цифры, посчитай по нашей математике
+ *  пожалуйста. в 1000 на 1 матч больше, чем в 500, а в шлеме на 2. Мне кажется это справедливая логика.» The first three matches of a
+ *  run carry no run surcharge and every match from the fourth carries +1, on the 500, the 1000 and the Slam alike. Through the masseur's
+ *  relief (3 a night between rounds) that lands his four numbers to the digit for a straight-sets TITLE run: 250 → 12 (the W ladder,
+ *  untouched), 500 → 15, 1000 → 18, Slam → 21 – a match nets +3 (a gross 6 less the relief), the 1000 plays one match more than the
+ *  500 and the Slam two. Before it the 1000 netted 12 and the Slam 14 against a 500 at 17: `[-2, -1, 0]` opened R128/R64 at 3-4 a
+ *  match against the 500's flat 5 and the relief compounded it. Early exits at the 1000 and the Slam rise from 3-4 to 5 a short visit –
+ *  the discount's death, predicted. NOTHING ELSE MOVED: the tier surcharges (02.10), the W-32 ladder `[0, 1, 1, 1, 1]` for 15-250 and
+ *  the junior and domestic ladders are byte-identical.
+ *  The NAME `runFatigueLadderDeep` is history (it meant «a draw over 32»). It stays because the rival memo key, four benches and a notes
+ *  anchor read it; it now means «the third ladder – the three majors».
+ *
+ *  ⚠ EVERYTHING BELOW IS THE 14.08–02.10 CHRONICLE, KEPT AS HISTORY: the `[-2, -1, 0]` it argues for, the draw key and the
+ *  «behaviour-neutral on every other rung» claim are retired by the ruling above, and the rows it quotes were never a target after 02.10.
  *
  *  ⚠⚠ THE THIRD IS THE OWNER'S OWN CURVE, GIVEN AS TWO ROWS OF NUMBERS ON 14.08 – the cheapest and
  *  dearest a match may cost at a Slam and a 1000, round by round:
@@ -81,6 +103,11 @@ export function runFatigueExtra(matchIndex: number, tier: TierId): number {
  *  2+3, 2+4, 2+5, 2+5 … So the ladder for a deep rung is `[-2, -1, 0]`, and the ZEROES ARE THE
  *  POINT – the plateau is the tier's own surcharge, untouched, so this cannot drift away from
  *  `tierMatchFatigue` if that is ever retuned.
+ *
+ *  ⚠ 02.10: THE SURCHARGE THE CURVE RAMPS TO IS 3 NOW, AND THE ROWS ABOVE ARE HISTORY, NOT A TARGET. They were
+ *  priced at a surcharge of 5; the owner's 02.10 ruling put the 1000 and the Slam on the table's top step, 3
+ *  (round 45 #1), and because the ladder is an OFFSET it followed without being touched: a Slam straight-sets
+ *  match now reads 3, 4, 5, 5, 5, 5, 5. «The rest stays as it is» was the ruling – the ladder was not re-cut.
  *
  *  ⚠ A NEGATIVE "EXTRA" IS A DISCOUNT AND IT IS DELIBERATE. The flat surcharge prices *"international
  *  travel, time zones and a fortnight from home"*, and it was calibrated when every draw in the game
@@ -98,7 +125,7 @@ export function runFatigueExtra(matchIndex: number, tier: TierId): number {
  *  named. */
 function ladderFor(tier: TierId): number[] {
   const c = ECONOMY.condition
-  if (TIERS[tier].drawSize > 32) return c.runFatigueLadderDeep
+  if (MAJOR_RUNGS.has(tier)) return c.runFatigueLadderDeep
   return TIERS[tier].track === 'wta' ? c.runFatigueLadderWta : c.runFatigueLadder
 }
 

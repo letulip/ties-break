@@ -47,6 +47,9 @@ import PlanPresetRow from '../ui/PlanPresetRow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
 import { planWeek, presetOf } from '../../engine/plan'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // W1: THE × IS A CLOSE NOW. The story opens itself when a week resolves (App.vue's `week` watcher –
 // the design's «Конец недели (игровой тик) → D. Weekly Story ... × возвращает на Home»), so the
@@ -76,7 +79,7 @@ const week = computed(() => game.snapshot?.week ?? 0)
 // our week number, the year in full, then the week's real days. It replaces the bare `weekRange`
 // this screen printed under its heading: the header now says WHICH week as well as which days, so
 // the section below it does not have to repeat either.
-const dateLine = computed(() => weekDateLine(week.value))
+const dateLine = computed(() => weekDateLine(week.value, startYear.value))
 
 // --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
 // "sometimes"): the card shows after EVERY RESOLVED week – including multi-week
@@ -328,7 +331,7 @@ const spendRange = computed<[number, number]>(() => {
       <h2 v-if="!tournamentOnly">This week</h2>
       <div v-if="!tournamentOnly" class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
-          {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week) }}
+          {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week, startYear) }}
         </span>
         <span v-else class="hint" style="margin: 0">No event – training week</span>
         <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
@@ -380,7 +383,7 @@ const spendRange = computed<[number, number]>(() => {
            tournament name when one is entered (the pill frame is gone). -->
       <p class="this-week-plan">
         Training {{ plan.train }}% · Rest {{ plan.rest }}%<template v-if="nearestEntered">
-          · {{ nearestEntered.label }} – {{ weekLabel(nearestEntered.week) }}</template>
+          · {{ nearestEntered.label }} – {{ weekLabel(nearestEntered.week, startYear) }}</template>
       </p>
       <div class="spend-row">
         <span class="hint">Planned spend</span>

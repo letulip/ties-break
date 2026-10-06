@@ -92,7 +92,7 @@ import { readingColor } from '../../composables/readingColor'
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
-import { layoffNoteFor } from '../../composables/weekDays'
+import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { rankLabel } from '../../shared/format'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -102,6 +102,9 @@ import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
 import { activeLadderOfSnapshot, DEFAULT_PROFILE } from '../../shared/protocol'
 import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 // The upcoming-event card's shared parts, in one read of the snapshot. `surfaceVerdict` is what this
@@ -280,7 +283,7 @@ function weekTitle(row: CalendarRow): string {
  *  print it a second time as "'38". Sliced off the shared formatter rather than re-derived, so the
  *  two can never disagree about which week it is. */
 function weekOnly(w: number): string {
-  return weekLabel(w).split(' ')[0]
+  return weekLabel(w, startYear.value).split(' ')[0]
 }
 
 // ⚠ `dominantSurface()` MOVED TO engine/season/calendar.ts, next to the SURFACE_BLOCKS table it
@@ -290,7 +293,7 @@ function weekOnly(w: number): string {
 /** The season's own year, the same one weekLabel prints – never the calendar year (they diverge at
  *  season 5, which is what week-numbering.test.ts exists to remember). */
 const seasonYearLabel = computed(() => {
-  const short = weekLabel(week.value).match(/'(\d{2})$/)?.[1] ?? ''
+  const short = weekLabel(week.value, startYear.value).match(/'(\d{2})$/)?.[1] ?? ''
   return short ? `20${short}` : ''
 })
 
@@ -680,8 +683,11 @@ interface CalendarRow {
 // window carries a small red "injury" chip, so "why can't I plan anything" is answerable at a
 // glance instead of one lock label at a time.
 function layoffCovers(w: number): boolean {
+  // ⭐ ROUND 46 #16: through `layoffHoldsWeek`, so the played week's chip agrees with the grid and
+  // the home verdict (the masseur's rehab week is paid inside the tick); every other week is still
+  // the clinic's window, exactly as above.
   const s = game.snapshot
-  return s?.injury != null && w < s.week + s.injury.weeksRemaining
+  return s?.injury != null && layoffHoldsWeek(s, w)
 }
 /** The chip's tooltip – the same words the tournament card's injured lock uses, and since 06.09 the
  *  same STRING: `layoffNoteFor` (composables/weekDays.ts). `lockLabel`'s own `'injured'` arm below
@@ -747,7 +753,7 @@ const calendarRows = computed<CalendarRow[]>(() => {
               : 'training'
     rows.push({
       week: w,
-      dates: weekRange(w),
+      dates: weekRange(w, startYear.value),
       kind,
       event: e,
       events: stack,
@@ -1088,8 +1094,8 @@ function askEnter(e: UpcomingEvent): void {
   pendingConfirm.value = {
     message: fatigued
       ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
-        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? ${feeSentence(e.entryFeeCents)}`
-      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? ${feeSentence(e.entryFeeCents)}`,
+        `Enter ${e.label} (${weekLabel(e.week, startYear.value)}, ${e.surface}) anyway? ${feeSentence(e.entryFeeCents)}`
+      : `${said}Enter ${e.label} (${weekLabel(e.week, startYear.value)}, ${e.surface})? ${feeSentence(e.entryFeeCents)}`,
     // ⚠ TWO VERBS FOR TWO KINDS OF ADVICE (08.08). "Push through" is a BODY word – it is what you do
     // to tiredness – and since the coach also has an opinion about the SCHEDULE now, it would have
     // been the wrong verb on half the cautions he raises: there is nothing to push through about a
@@ -1102,7 +1108,7 @@ function askEnter(e: UpcomingEvent): void {
 }
 function askWithdraw(e: UpcomingEvent): void {
   pendingConfirm.value = {
-    message: `Withdraw from ${e.label} (${weekLabel(e.week)})? Entry fee ${formatCents(e.entryFeeCents)} will be refunded.`,
+    message: `Withdraw from ${e.label} (${weekLabel(e.week, startYear.value)})? Entry fee ${formatCents(e.entryFeeCents)} will be refunded.`,
     confirmLabel: 'Withdraw',
     onConfirm: () => game.withdrawEvent(e.id),
   }
@@ -1114,7 +1120,7 @@ function askWithdraw(e: UpcomingEvent): void {
 function askCancelEntry(e: UpcomingEvent): void {
   pendingConfirm.value = {
     message:
-      `Cancel her entry to ${e.label} (${weekLabel(e.week)})? Entries closed on ${weekLabel(e.deadlineWeek)}, so the ` +
+      `Cancel her entry to ${e.label} (${weekLabel(e.week, startYear.value)})? Entries closed on ${weekLabel(e.deadlineWeek, startYear.value)}, so the ` +
       `${formatCents(e.entryFeeCents)} entry fee is NOT refunded. The week frees up for a practice ` +
       `match or a family week.`,
     confirmLabel: 'Cancel the entry',
@@ -1148,7 +1154,7 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
   pendingConfirm.value = {
     message:
       (p.caution.level === 'caution' ? `${p.caution.detail} ` : '') +
-      `${what} in ${weekLabel(p.week)} – ${formatCents(p.feeCents)}. No ranking points.`,
+      `${what} in ${weekLabel(p.week, startYear.value)} – ${formatCents(p.feeCents)}. No ranking points.`,
     confirmLabel: p.caution.level === 'caution' ? 'Push through' : 'Book it',
     onConfirm: () => game.bookPractice(p.week, p.withCoach),
   }
@@ -1158,7 +1164,7 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
 function confirmVacation(v: { week: number; packageId: string; label: string; priceCents: number; gain: number }): void {
   pendingConfirm.value = {
     message:
-      `${v.label} in ${weekLabel(v.week)} – ${v.priceCents === 0 ? 'free' : formatCents(v.priceCents)}, ` +
+      `${v.label} in ${weekLabel(v.week, startYear.value)} – ${v.priceCents === 0 ? 'free' : formatCents(v.priceCents)}, ` +
       `+${v.gain} condition. No tournaments that week.`,
     confirmLabel: 'Book it',
     onConfirm: () => game.bookVacation(v.week, v.packageId),
@@ -1172,7 +1178,7 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
  *  sheet has no row. */
 function askCancelVacation(week: number, booking: VacationBooking): void {
   pendingConfirm.value = {
-    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(week)}? ${
+    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(week, startYear.value)}? ${
       booking.paidCents > 0 ? `${formatCents(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
     }`,
     confirmLabel: 'Cancel the trip',
@@ -1189,7 +1195,7 @@ function cancelVacationFromPlanner(v: { week: number; packageId: string; label: 
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
   pendingConfirm.value = {
-    message: `Cancel the practice match in ${weekLabel(row.week)}? ${formatCents(booking.paidCents)} comes back in full.`,
+    message: `Cancel the practice match in ${weekLabel(row.week, startYear.value)}? ${formatCents(booking.paidCents)} comes back in full.`,
     confirmLabel: 'Cancel the match',
     onConfirm: () => game.cancelPractice(row.week),
   }
@@ -1226,7 +1232,7 @@ const rescuePackageId = computed<string | null>(() => {
 })
 /** The rescue week as the player reads it. Empty string is unreachable: the card is gated on
  *  `showRescue`, which requires a plannable week. */
-const rescueWeekLabel = computed(() => (rescueWeek.value === null ? '' : weekLabel(rescueWeek.value)))
+const rescueWeekLabel = computed(() => (rescueWeek.value === null ? '' : weekLabel(rescueWeek.value, startYear.value)))
 const showRescue = computed(
   () =>
     !!game.snapshot &&
@@ -1544,7 +1550,7 @@ function closeExhibition(): void {
     <section v-if="myEntries.length" class="bare">
       <h2>My entries</h2>
       <div class="entries-strip">
-        <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · {{ weekLabel(e.week) }}</span>
+        <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · {{ weekLabel(e.week, startYear) }}</span>
       </div>
     </section>
 
@@ -1682,7 +1688,7 @@ function closeExhibition(): void {
                    card is the kind of pair that drifts the day the rule grows an `!ev.entered` or a
                    freeze clause. Both words and both classes are byte-identical. -->
               <span class="pill" :class="{ negative: entriesClosed(ev) && !ev.entered }">
-                {{ entriesClosed(ev) ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek) }}
+                {{ entriesClosed(ev) ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek, startYear) }}
               </span>
               <span v-if="ev.entered" class="pill ok">Entered</span>
               <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
@@ -1816,7 +1822,7 @@ function closeExhibition(): void {
               </button>
               <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
               <span v-else-if="entriesClosed(ev)" class="pill muted lock">
-                Entries closed {{ weekLabel(ev.deadlineWeek) }}
+                Entries closed {{ weekLabel(ev.deadlineWeek, startYear) }}
               </span>
               <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
                    school exams / a booked family vacation / the doctor's veto under the medical
@@ -1851,7 +1857,7 @@ function closeExhibition(): void {
                 <PrimaryPill
                   :risky="ev.cautionReason === 'fatigued'"
                   :disabled="fundsShort(ev) || game.busy || frozenForCollege || entryTaken(row)"
-                  :aria-label="enterActionName(ev)"
+                  :aria-label="enterActionName(ev, startYear)"
                   @click="askEnter(ev)"
                 >
                   Enter
@@ -1977,7 +1983,7 @@ function closeExhibition(): void {
             class="week-card vacation"
             role="button"
             tabindex="0"
-            :aria-label="`${packageLabel(row.vacation.packageId)}, ${weekLabel(row.week)} - open the planner`"
+            :aria-label="`${packageLabel(row.vacation.packageId)}, ${weekLabel(row.week, startYear)} - open the planner`"
             :aria-describedby="vacationDescribedBy(row)"
             @click="openPlanner(row)"
             @keydown.enter.prevent="openPlanner(row)"
@@ -2007,7 +2013,7 @@ function closeExhibition(): void {
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="planned-lines">
               <span class="planned-when">
-                {{ weekLabel(row.week) }} · {{ row.dates }}
+                {{ weekLabel(row.week, startYear) }} · {{ row.dates }}
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
                 <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               </span>
@@ -2026,7 +2032,7 @@ function closeExhibition(): void {
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
             <span class="planned-lines">
               <span class="planned-when">
-                {{ weekLabel(row.week) }} · {{ row.dates }}
+                {{ weekLabel(row.week, startYear) }} · {{ row.dates }}
                 <!-- R12-8b: the engine refunds these on injury, so the chip here is a belt-and-braces
                      read of the same window, never a promise the match survives the layoff. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>

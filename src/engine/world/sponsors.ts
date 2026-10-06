@@ -39,6 +39,7 @@ import { KID_ID } from './constants'
 import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
 import { guardNotEnded, guardNotEndedForGood } from './endings'
+import { coachRaiseStands, settleCoachRaise } from './coachDeal'
 
 // --- the sponsors decide, in the off-season -----------------------------------
 // Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
@@ -1147,6 +1148,28 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   if (sale && isOfferLive(sale, world.week) && !saleLotSettles(world, (sale.terms as SaleOfferTerms).itemId)) {
     throw new Error(offerAnswerErrorFor(world, offerId))
   }
+  // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST IS RE-VALIDATED AGAINST THE WORLD TOO (invariant 1): a live
+  // request whose seat has left the payroll since the letter was written is refused with the sentence
+  // a gone letter already gets, and NOTHING is written. Declining needs no such check – a refusal is
+  // always allowed to say no.
+  const askLetter = world.offers.find((o) => o.id === offerId && o.kind === 'staff')
+  if (askLetter && isOfferLive(askLetter, world.week)) {
+    const seat = (askLetter.terms as { seat?: string }).seat
+    const stands =
+      seat === 'masseur'
+        ? (world.masseurHired ?? false)
+        : seat === 'psychologist'
+          ? (world.psychologistHired ?? false)
+          : seat === 'sparring'
+            ? (world.sparringHired ?? false)
+            : seat === 'coach'
+              ? // ⭐ ROUND 45 #3b – THE COACH'S PAPER STANDS ONLY WHILE ITS ARRIVAL WEEK IS AN ANNIVERSARY OF THE
+                // CONTRACT THAT STANDS NOW: a coach released (and perhaps replaced) inside the window leaves a
+                // paper that cannot raise anybody's fee. `coachRaiseStands`, world/coachDeal.ts.
+                coachRaiseStands(world, askLetter)
+              : false
+    if (!stands) throw new Error(offerAnswerErrorFor(world, offerId))
+  }
   const signed = signOfferIn(world.offers, offerId, world.week)
   if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
   // ⭐ THE MONEY MOVES HERE, AT THE PRICE PRINTED ON THE PAPER – `t.priceCents`, never a number asked of the market now (offers-and-the-
@@ -1198,6 +1221,11 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
       text: `${t.brand} endorsement – the campaign fee, on signing`,
     })
   }
+  // ⭐⭐⭐ ROUND 45 #3b – THE COACH'S SIGNATURE MOVES HIS ONE STORED FEE. The three derived seats' fee is read
+  // off their signed papers, so the paper IS the write; his is a stored deal (`WorldState.coachDeal`), so the
+  // signed paper re-strikes it here, in the same command that signed it (`settleCoachRaise`, which has
+  // already been told by `coachRaiseStands` above that the paper stands). Zero draws, no cash moves.
+  if (signed.kind === 'staff' && (signed.terms as { seat?: string }).seat === 'coach') settleCoachRaise(world, signed)
   return signed
 }
 

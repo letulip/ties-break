@@ -60,6 +60,16 @@ export const wedding = {
    *  stands, and in play fewer, because the beat also needs a TRUE occasion and a free soft
    *  surface. T8's bench measures the realised rate. */
   spouseViewCooldownWeeks: 10,
+  /** ⭐ ROUND 46 #15 – HE DOES NOT RAISE THE SAME WORRY TWICE INSIDE THIS MANY WEEKS (owner, 05.10:
+   *  «он очень разговорчивый и часто повторяется»). The memory is the `lifeLog` itself, the cooldown's
+   *  own doctrine: every `'spouse-view'` row carries its occasion as `detail` and the log is never
+   *  pruned, so «what he said lately» is DERIVED and the save schema does not move. 52 = one season –
+   *  the lines are about the season («the next tournament», «a whole season»), so a season is the
+   *  longest a worry can wait before it is news again. ⚠ IT BRAKES THE CADENCE TOO, BY CONSTRUCTION: a
+   *  week whose only true occasions he has just said raises nothing. The bench had measured 5.13 per
+   *  latched season against the cooldown's 5.2 ceiling – the deterministic occasions refilled every
+   *  slot with the same two or three lines. Predicted vs measured: docs/specs/the-wedding-2026-09.md. */
+  spouseViewNoRepeatWeeks: 52,
   /** ⭐ THE `'money'` OCCASION'S «LARGE» LINE, in cents – the ONE money fact the surface reads
    *  (brief T5's own boundary: «beats about money, never accounting»). A financeWeeks category
    *  at or under −this inside the marriage's own trailing window counts as a spend the spouse

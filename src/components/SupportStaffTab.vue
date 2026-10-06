@@ -368,6 +368,13 @@ const PSYCHOLOGIST_RUNGS = ECONOMY.psychologist.rungs
 const psychologistRung = computed(
   () => game.snapshot?.psychologistRung ?? ECONOMY.psychologist.defaultRung,
 )
+// ⭐⭐⭐ ROUND 45 #3 – THE LABELS ARE STATIC AND THE PRICES ARE NOT ANY MORE (the note above predates the
+// yearly raise request). Each rung's price is what the ENGINE says it costs this career – a granted raise
+// drifts all three – so the dial reads the snapshot and never the catalogue's opening price. The fallback is
+// the catalogue only for the instant before the first snapshot, `masseurRateCents`' own courtesy.
+const psychologistRungPrices = computed(
+  () => game.snapshot?.psychologistRungSalaryCents ?? PSYCHOLOGIST_RUNGS.map((r) => r.salaryCents),
+)
 async function setPsychologistRungIndex(rung: number): Promise<void> {
   if (rung === psychologistRung.value) return
   await game.setPsychologistRung(rung)
@@ -466,7 +473,7 @@ const psychologist = computed<StaffMember>(() => ({
     rungs: PSYCHOLOGIST_RUNGS.map((r, i) => ({
       value: i,
       label: r.label,
-      priceLabel: formatCents(r.salaryCents),
+      priceLabel: formatCents(psychologistRungPrices.value[i] ?? 0),
     })),
     set: setPsychologistRungIndex,
   },
@@ -523,6 +530,10 @@ const sparringSalary = computed(() => formatCents(game.snapshot?.sparringSalaryC
 // snapshot's.
 const SPARRING_RUNGS = ECONOMY.sparring.rungs
 const sparringRung = computed(() => game.snapshot?.sparringRung ?? ECONOMY.sparring.defaultRung)
+// ⭐⭐⭐ ROUND 45 #3 – THE PRICES ARE THE SNAPSHOT'S, NOT THE CATALOGUE'S (see `psychologistRungPrices`).
+const sparringRungPrices = computed(
+  () => game.snapshot?.sparringRungSalaryCents ?? SPARRING_RUNGS.map((r) => r.weeklyCents),
+)
 async function setSparringRungIndex(rung: number): Promise<void> {
   if (rung === sparringRung.value) return
   await game.setSparringRung(rung)
@@ -603,7 +614,7 @@ const sparring = computed<StaffMember>(() => ({
     rungs: SPARRING_RUNGS.map((r, i) => ({
       value: i,
       label: r.label,
-      priceLabel: formatCents(r.weeklyCents),
+      priceLabel: formatCents(sparringRungPrices.value[i] ?? 0),
       // ⭐⭐ 17.09 – HIS RUNG SET A, and the sentence is the CATALOGUE's rather than this file's, the
       // rule every other string on this tab already obeys: `ECONOMY.sparring.rungs` owns the cut and
       // now owns the sentence that describes it, so a re-fit moves both in one edit and the card can

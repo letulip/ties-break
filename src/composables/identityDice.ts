@@ -38,6 +38,7 @@
 // This is PRESENTATION and invariant 1 is intact: the UI reads the engine's vocabulary, the engine
 // never reads this file.
 import { SURNAMES } from '../engine/season/names'
+import { rngFromSeed } from '../engine/rng'
 
 /** The first names the die can land on – the wizard's own list, moved verbatim from its private
  *  `const NAMES` and unchanged by the move.
@@ -59,10 +60,55 @@ export const NAME_POOL: readonly string[] = [
  *  rather than a copy, on purpose: see the ⭐ in the header. */
 export const SURNAME_POOL: readonly string[] = SURNAMES
 
-/** One first name off the pool. Named as the wizard named it, so the move cost that file two
- *  deletions and an import. */
-export function randomName(): string {
-  return NAME_POOL[Math.floor(Math.random() * NAME_POOL.length)]
+/** ⭐⭐ ROUND 46 #21 – ONE NAME, AS TWO PEOPLE READ IT. The owner, 05.10 (translated; a `.ts` file in
+ *  this layer keeps to English): if «A daughter came later» is chosen, the daughter's name must surely
+ *  not be her mother's. The card opened on it.
+ *
+ *  Two names are the same name here when they differ only in case, spacing or an accent – `Amelie` and
+ *  ` AMÉLIE ` are one girl – because the question is whether a parent would read two of them on one
+ *  family tree and stop, not whether two strings are equal. An empty name is nobody's, so it is never
+ *  «the same» as another empty one. */
+export function sameFirstName(a: string, b: string): boolean {
+  const fold = (s: string): string => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase()
+  return fold(a) !== '' && fold(a) === fold(b)
+}
+
+/** The menu the die may land on, LESS one name – FILTERED BEFORE THE DRAW, never re-rolled after it.
+ *  A re-roll is a loop with no fixed number of draws and a bias towards whatever the first miss would
+ *  have been; a filter is one draw over a shorter list, which is also what makes the claim «never
+ *  her mother's» a statement about the list and not about luck.
+ *
+ *  ⚠ A pool the exclusion would EMPTY is not a pool, so it falls back to the whole menu. With 24 names
+ *  that is unreachable; the branch exists so a future one-name menu cannot index past its end. */
+export function namePoolWithout(exclude?: string): readonly string[] {
+  if (!exclude) return NAME_POOL
+  const rest = NAME_POOL.filter((n) => !sameFirstName(n, exclude))
+  return rest.length > 0 ? rest : NAME_POOL
+}
+
+/** One first name off the pool – and, on a dynasty run, off the pool LESS HER MOTHER'S NAME (round 46
+ *  #21: pass `motherName.first`). Named as the wizard named it, so the move cost that file two
+ *  deletions and an import. Still exactly ONE `Math.random` draw, over the filtered list. */
+export function randomName(exclude?: string): string {
+  const pool = namePoolWithout(exclude)
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+/** ⭐⭐ ROUND 46 #21 – THE FIRST NAME A DYNASTY CARD OPENS ON. `standing` is the default every prologue
+ *  career opens on (`OPENING_IDENTITY.kidName`, «Alice»), and a mother who never touched that field
+ *  is exactly the common case: the daughter's card then opened on her mother's name, which is what
+ *  the owner met. So the default stands UNLESS it is the mother's, and only then is a name picked.
+ *
+ *  ⚠ THE PICK IS ONE DRAW ON A PURPOSE-SCOPED SUB-STREAM, `${childSeed}:daughter-name`, derived here and
+ *  persisted nowhere – the CLAUDE.md RNG law's own shape (never MAIN; there is no world yet to have a
+ *  MAIN, and the daughter's world will be born on this very seed). Reproducible by construction: the
+ *  same line, taken through the same rulings, opens on the same name, which is his variation law;
+ *  and the parent still types over it («the parent chooses the name» stands – this only stops the
+ *  card from proposing the mother's own). The pool is filtered first, so the draw count is one. */
+export function dynastyOpeningName(childSeed: string, motherFirst: string, standing: string): string {
+  if (!sameFirstName(standing, motherFirst)) return standing
+  const pool = namePoolWithout(motherFirst)
+  return pool[Math.floor(rngFromSeed(`${childSeed}:daughter-name`)() * pool.length)]
 }
 
 /** One surname off the pool – the wizard's second die, and its `start()` fallback for a career

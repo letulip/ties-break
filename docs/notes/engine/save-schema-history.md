@@ -1120,3 +1120,67 @@ The version-by-version chronicle that stood above `SAVE_SCHEMA_VERSION` in `src/
 // row in tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e
 // fixtures. ⚠ NO PEEL RUNG – the rung would have no key to remove, and `tests/coachTravelEdgeFixtures.ts` gains `PRE_V90`.
 ```
+
+## v91 – the first-touch latch
+
+```ts
+// ⭐⭐⭐ v91 – THE FIRST-TOUCH LATCH (ROUND 45 #5; the owner's 02.10 ruling, docs/decisions.md «ROUND 45 ANSWERED»).
+// **ONE OPTIONAL KEY ON THE WORLD**: `firstNo1?: { wta?: number; junior?: number }` – the first week the live fold said she was
+// number one on the professional world table (`wta`, `kidRankWta`) or the international junior one (`junior`, `kidRank`). Written
+// ONCE per key in `recomputeKidRank` (world/ladder.ts, `latchFirstNo1`) beside `peakDomesticPoints`; read by the album's two
+// `first-number-one` occasions (world/albumBook.ts, `rareCandidates`) and by nothing else. The domestic table is NOT latched.
+//
+// ⚠⚠ A DELIBERATE, SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY», WHICH OTHERWISE STANDS. One week per table, never a
+// year-by-year ledger. It exists because no save held the fact: `seasonHistory` is year-end only, `results` is a 52-week window and
+// `bestRankOn` documents that no history exists – so the year-end-only version of the page misses a June touch that ends the season at
+// #3, which is precisely the case his sentence named («даже если в моменте»).
+//
+// ⚠⚠ THE BACKFILL IS THE HONEST APPROXIMATION, NOT A RECONSTRUCTION. The true first touch of an older career is unknowable, so the
+// step sets the latch to the CURRENT week only where the CACHED rank is 1 as the save is written, and otherwise leaves the key ABSENT –
+// for a career that never reached #1 that is exactly right, and for one that touched it earlier and has since fallen it is an honest
+// «not known» that costs one page and writes no lie (`prologueTrace`'s v84 refusal: never invent a fact the save never held). The key is
+// created lazily, so a save with nothing to say gains no key at all.
+//
+// ⚠ THE GUARD IS THE TABLE'S OWN ROW – `rank === 1 && points > 0` – and not a special case of her number: `recomputeKidRank`'s own
+// warning is that the cache may not disagree with the fold, and on an all-zero table the fold already puts everyone at the bottom.
+//
+// ⚠ ZERO DRAWS: pure state over the fold `recomputeKidRank` already paid for. No sub-stream is reached, MAIN cannot move, and the frozen
+// capture (41550 / e6b0c709) is untouched. Input-independence is untouched too: the latch READS the world's table and writes only itself.
+//
+// ⚠⚠ THE FROZEN CAREERS ARE AN IDENTITY IN SHAPE (v88's case): no frozen career touches #1 in its walk, so the serialised world gains no
+// key and `careerHashAtSchema` needs NO new peel rung – its tail answers 87 through 91 alike – `PRE_V91` holds the verbatim v90 constants,
+// and the live registers still re-stamp because the version number is inside the hash.
+//
+// Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v90 -> v91 step in migrations.ts, tests/fixtures/saves/v91.json, its row in
+// tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e fixtures.
+```
+
+## v92 – the succession block
+
+```ts
+// ⭐⭐⭐ v92 – THE SUCCESSION BLOCK (SUCCESSION S1, 06.10; docs/specs/succession-2026-10.md §2 «The calendar» and §5 «Saves and determinism»).
+// **ONE REQUIRED KEY AND ONE OPTIONAL BLOCK ON THE WORLD**: `startYear: number` – the calendar year season 0 opens in – and `legacy?: { motherName,
+// motherPeakRank, motherSlamTitles, surname, endingKind, savingsSliceCents, heirloomAlbum }`, DECLARED TOGETHER so the later steps of the wave add no
+// second bump. Only `startYear` is written; nothing reads `legacy` yet.
+//
+// ⚠⚠ THE BACKFILL IS EXACT, NOT RECONSTRUCTED: until this version the epoch was a CONSTANT in shared/dates.ts, so every career ever saved began in
+// January 2031 by construction – the step states the LITERAL `2031` (a shipped migration must not follow `DEFAULT_START_YEAR`, because a constant that
+// can move would silently re-date every old career the day it did) and leaves `legacy` absent, which is what a generation-1 career is.
+//
+// ⚠⚠ THE YEAR IS A CREATION INPUT AND NOT A DRAW: `createWorld`'s seventh argument, default 2031. ZERO DRAWS, no sub-stream – the frozen MAIN capture
+// (41550 / e6b0c709) is untouched, and tests/succession-s1-start-year.test.ts measures «a default career is its v91 self minus the one new key» on nine
+// careers against digests taken from the pristine tree, before any S1 edit.
+//
+// ⭐⭐ UNLIKE v88 TO v91 THIS BUMP TOUCHES EVERY FROZEN CAREER: `startYear` is written on every world, right after `week`, so `careerHashAtSchema` gains a
+// rung that DROPS it for every rollback below 92 (reverse order of arrival, ahead of everything below it) and `PRE_V92` holds the verbatim v91 constants –
+// the rollback to 91 returns the v91 career on all three, character for character, which is the byte-identity claim measured over 156 weeks each. The
+// eleven live cells re-stamp (the version number AND the key): `FROZEN`'s three, `PRE_R28B`'s five and `PRE_NAME_VERA`'s three.
+//
+// ⚠ `shared/dates.ts` takes `startYear` as an OPTIONAL LAST argument on every year-dependent function, so every caller that never heard of the wave –
+// tests, the UI's formatters, migrations' frozen history – keeps byte-identical output; the cost is a SILENT omission, which the engine ratchet in the
+// S1 test refuses (src/engine only). The UI's own call sites are the follow-up, fed by `Snapshot.startYear`.
+//
+// Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v91 -> v92 step in migrations.ts, tests/fixtures/saves/v92.json, its row in
+// tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the frozen-career
+// family: `careerHashAtSchema`'s rung, `PRE_V92`, the eleven re-stamped cells and the v92 case in tests/coach-travel-edge-recent-schemas.test.ts.
+```

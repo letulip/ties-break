@@ -828,6 +828,136 @@ const MATERIAL_OPTIONS = 3
  *  them. */
 const FIRST_COLLEGE_ASK_ID = 'campusbike'
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 45 #9 – THE DEPOSIT BELONGS TO THE YEARS BEFORE HER OWN DOOR, AND NOT ONE BIRTHDAY AFTER IT
+// =================================================================================================
+//
+// THE OWNER, round 45 #9: «Deposit towards her own place случился после того, как она пару лет назад
+// принесла свой spare key. И мне кажется этот депозит вполне можно где-то на более ранних периодах
+// делать, а не когда у неё на счёту уже 150+ млн». Two beats of ONE arc – the deposit towards the
+// place, the spare key from the place – met in the wrong order.
+//
+// ⚠ THERE IS NO CORRIDOR OF MONEY OR AGE IN THE GATE, AND THE FIRST HALF OF THE DIAGNOSIS IS THAT.
+// The deposit is a birthday row of the 19-21 band and the catalogue is deliberately ONE LIST FOR EVERY
+// BACKGROUND (round 26 #4's note over `meansLicenses`): her bank is read by nothing here. What put it
+// on a card AFTER the key was round 42 #26 – a GIVEN durable leaves the card and `materialFor` REFILLS
+// the shortfall from the neighbour bands, nearest first, and the independence band's first row is the
+// deposit. A parent who grants every ask (his own log: all 13 grant) retires the late bands' gifts one
+// by one, and from about twenty-six the refill reaches back for the deposit. Measured on 72 walked
+// careers with that parent: 29 of the 69 that reached the key met the deposit on a card AFTER it –
+// 49 cards, ages 26 to 34, her bank at them median $9.9M and p90 $15.9M. The parent who never grants
+// (the day, every year) never met it after the key: the refill is what moves it.
+//
+// ⚠ TWO RULES, AND NEITHER IS A NEW DRAW. Both read state the offer already reads and both act on the
+// POOL and the RESULT, never on the stream – `seed:birthday:<age>` is still drawn four times and the
+// cycle is still `seed:birthday:cycle:<band>`; MAIN is not reached (input-independence stands).
+//   1. MOOT ONCE HER DOOR HAS OPENED. The own-key beat's receipt – its row in the life log, the same
+//      receipt `ownKeyDue` reads – retires the deposit exactly as a GIVEN durable is retired (it is
+//      handed to `birthdayOffer` as `moot` and joins `spent`), so the card refills to four rows by
+//      round 42 #26's own order and the deposit is not queued for later, it is gone. No schema: the
+//      row has been on every save since the beat shipped.
+//   2. NINETEEN, NOT «SOMETIME IN 19-21». The first birthday of her independence band carries the row
+//      (a swap in `materialFor`) and asks for it (the override at the foot of `birthdayOffer`, the
+//      bicycle's own shape, one band up): three years before the key, which fires the week she turns
+//      twenty-two. Before this a 19-21 card held it for 6 of the 10 possible dialogs, so a few careers
+//      never saw it at all (4 of 72 measured) and the ask landed anywhere from 18 to 34.
+// ⚠ IT MOVES WHEN THE COPY FIRES, NEVER WHAT IT SAYS: not one word of the row's label, note, ask or
+// `again` line is touched (his wording rule), and the bands still hold the same rows.
+const OWN_PLACE_DEPOSIT_ID = 'deposit'
+
+/** The band that holds the deposit, found by its own span – the spelling `borrowFrom` already uses. */
+function isIndependenceBand(band: Band): boolean {
+  return band.from === 19 && band.to === 21
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 46 #5 – HER OWN BANK ACCOUNT IS A SIXTEEN-TO-EIGHTEEN ASK, AND IS NEVER LENT TO A CARD
+// =================================================================================================
+//
+// THE OWNER, round 46: «На 29й день рождения она просила свой счёт в банке - это смешно. Давай
+// наверное сделаем, что она будет где-то в адекватном возрасте и обстоятельствах его спрашивать?
+// Может жёстко к 18 привязать, например. Или, если можно раньше, то в коридоре 16-18»
+//
+// ⚠ THE CAUSE IS THE REFILL AGAIN – round 45 #9's diagnosis of the deposit, one band further back.
+// `bankcard` is a row of the 18 band and of no other, so it can be on a card at any other age only by
+// being LENT: round 42 #26's refill tops a short pool up from the neighbour bands, nearest first, and a
+// parent who grants every ask retires the late bands' rows one by one until the walk reaches the 18
+// band for a row she was never given. ⚠ AND IT LANDS AS THE ASK, NOT ONLY AS A ROW: the career-scope
+// ladder prefers the least-used row and a row with no appearances yet is the least used there is. The
+// 18 band's own card shows it too, but at eighteen it was one of four rows drawn for (one in four before
+// the temperament's lean), so a career the draw missed met the account for the first time when the
+// refill got there. Walked
+// from fourteen with a parent who grants everything, the first ask came at 33 for the first seed tried;
+// tests/birthday-own-account.test.ts (c) counts 282 birthdays across its sweep, nineteen to forty-five.
+//
+// ⚠ THE GATE – THREE RULES AND NONE OF THEM IS A DRAW. Each acts on the POOL or on the RESULT, so
+// `seed:birthday:<age>` is still drawn four times, `seed:birthday:cycle:<band>` is untouched, MAIN is
+// not reached (input-independence stands), and no save field is added: a career already past eighteen
+// simply never sees the row again, because the rule reads her age at the birthday.
+//   1. NEVER LENT (`lendable`). A short pool borrows every neighbour's rows EXCEPT this one, so it is on
+//      a card in exactly two ways – as the 18 band's own row, or by rule 3. That one filter closes every
+//      other age, under sixteen included, and it is the whole of the cause.
+//   2. EIGHTEEN, WHATEVER THE BALANCE – his «жёстко к 18». The row is already on the 18 card, and the
+//      override at the foot of `birthdayOffer` makes it THE ask, the bicycle's and the deposit's own
+//      shape: an override of the RESULT after the draw has happened, so the stream does not move.
+//   3. SIXTEEN OR SEVENTEEN, ONCE MONEY HAS REACHED HER – his «в адекватном возрасте и обстоятельствах».
+//      The circumstance is the account's own: `ownAccountNote` speaks before eighteen only once her
+//      balance is above zero, and `birthdayOfferFor` reads that same balance. The row is SWAPPED in for
+//      the card's last material row BEFORE the shuffle, so the shuffle sees the same number of rows and
+//      draws the same number of times; every other row keeps its place.
+// ⚠ ONCE. The row goes to a card only while the record holds no appearance of it (asked, or given, which
+// reads as one), so a girl asked at sixteen is not asked again at eighteen – and never after, because
+// nothing lends it. A parent who ignored the ask has not lost anything mechanical: the account is the
+// kid-share ramp (`kidShare`), which does not wait for a gift.
+// ⚠ A COLLEGE BIRTHDAY KEEPS THE COLLEGE CARD. At eighteen in a dorm the card is `COLLEGE_BAND`'s and
+// its first ask is the bicycle, by his own earlier ruling – the anchor does not override another
+// ruling, and a girl in that spot is asked at sixteen or seventeen if money had reached her by then.
+// ⚠ NOT A WORD OF THE ROW IS TOUCHED (his wording rule): `OWN_ACCOUNT_GIFT` is the 18 band's own object,
+// found by id, so no string on it exists twice.
+const OWN_ACCOUNT_ID = 'bankcard'
+/** The first birthday the account may be asked for – and only once money has reached her. */
+const OWN_ACCOUNT_FIRST_AGE = 16
+/** The birthday it is asked for whatever the balance, and the last one it is ever asked on. */
+const OWN_ACCOUNT_ANCHOR_AGE = 18
+const OWN_ACCOUNT_GIFT: BirthdayGift | undefined = BANDS.find(
+  (b) => b.from === OWN_ACCOUNT_ANCHOR_AGE && b.to === OWN_ACCOUNT_ANCHOR_AGE,
+)?.gifts.find((g) => g.id === OWN_ACCOUNT_ID)
+
+// =================================================================================================
+// ⭐⭐ ROUND 46 · R6 (06.10) – THE WATCH JOINS THE ACCOUNT: THE 18 BAND LENDS NOTHING AT ALL
+// =================================================================================================
+//
+// THE OWNER, 06.10, asked whether the account's door should close for the whole band rather than for one row:
+// «наверное да». B8 (above) had closed ONE row and measured the next one through the same door: the 18 band's
+// `watch`, «The eighteenth watch» – 59 of 60 careers met it on 145 cards from nineteen to forty-five, 55 of them
+// as the ask (tests/birthday-own-account.test.ts, the every-ask walk).
+// ⚠ IT IS THE WHOLE BAND AND NOT THE WATCH, AND THE MEASUREMENT IS WHY: the same walk carried 429 cards with a row
+// of the 18 band – the watch's 145 and 284 more that carried only `trip` – and the full sweep of that file's (c)
+// (sixty seeds, both grants, both balances) 858 cards, 220 of them as the ask. After: zero of each. The owner ruled
+// the band, so `lendsNothing` is the band's one-line spelling and `lendable` (in `materialFor`) reads it.
+// ⚠ WHAT IT TOUCHES AND WHAT IT DOES NOT. Eligibility only: the filter acts on the POOL before the shuffle, so
+// `seed:birthday:<age>` is still drawn four times, `seed:birthday:cycle:<band>` is untouched and MAIN is not reached
+// (the frozen capture stays as pinned). What DOES move – and is the intent – is which row a late card's refill
+// takes: it skips the 18 band now, so the next neighbour's row stands in. The card at eighteen is untouched (a
+// band's OWN rows are never filtered), the account's corridor (rules 2 and 3 above) is untouched, and every other
+// band lends exactly as before.
+// ⚠ THE ACCOUNT'S OWN CLAUSE STAYS in `lendable`, redundant while the row lives only in the 18 band: it keeps B8's
+// guarantee from depending on the band-wide ruling, so an owner who later lets the 18 band lend `trip` again does
+// not re-open the account.
+
+/** The 18 band lends nothing – found by its own span, the spelling `isIndependenceBand` and `OWN_ACCOUNT_GIFT` use. */
+function lendsNothing(band: Band): boolean {
+  return band.from === OWN_ACCOUNT_ANCHOR_AGE && band.to === OWN_ACCOUNT_ANCHOR_AGE
+}
+
+/** Is the account's ask due at this birthday? `appearances` is the record's count for the row: zero means
+ *  she has neither been asked about it nor been given it. Total: a catalogue without the row answers no. */
+function ownAccountDue(age: number, earning: boolean, atCollegeBand: boolean, appearances: number): boolean {
+  if (OWN_ACCOUNT_GIFT === undefined || atCollegeBand || appearances > 0) return false
+  if (age === OWN_ACCOUNT_ANCHOR_AGE) return true
+  return earning && age >= OWN_ACCOUNT_FIRST_AGE && age < OWN_ACCOUNT_ANCHOR_AGE
+}
+
 /** The band this birthday draws from.
  *
  *  ⚠ COLLEGE OUTRANKS THE AGE, and that is the whole of R2-18's gift half – see `COLLEGE_BAND`.
@@ -1001,11 +1131,20 @@ function materialFor(
   // ⭐ ROUND 42 #26 – the retirement, and the refill that keeps the card four rows tall. See the
   // block above. ⚠ When nothing is retired this whole branch is skipped and `pool` IS `band.gifts`,
   // so a career that has been given no durable walks a byte-identical cycle to the shipped one.
+  // ⭐⭐⭐ ROUND 46 #5 – WHAT A NEIGHBOUR LENDS. Every row of it, except her own bank account: that row is
+  // the 18 band's own and is lent to no other card (see the block over `OWN_ACCOUNT_ID` – this filter is
+  // the cause of a 29-year-old asking for it). The band's OWN rows are never filtered, so at eighteen the
+  // card still holds it.
+  // ⭐⭐ ROUND 46 · R6 (06.10) – AND THE 18 BAND LENDS NOTHING: `lendsNothing` (the note under `OWN_ACCOUNT_GIFT`)
+  // widens the filter from the account's one row to the whole band, on the owner's «наверное да». The account's
+  // clause below stays on purpose – see that note.
+  const lendable = (from: Band): BirthdayGift[] =>
+    from === band ? from.gifts : lendsNothing(from) ? [] : from.gifts.filter((g) => g.id !== OWN_ACCOUNT_ID)
   let pool = band.gifts.filter((g) => !retiredGift(g, given))
   if (pool.length < band.gifts.length) {
     const held = new Set(pool.map((g) => g.id))
     for (const other of borrowFrom(band)) {
-      for (const g of other.gifts) {
+      for (const g of lendable(other)) {
         if (pool.length >= band.gifts.length) break
         if (held.has(g.id) || retiredGift(g, given)) continue
         held.add(g.id)
@@ -1015,7 +1154,7 @@ function materialFor(
     }
     // ⚠ STEP 2 – the never-short guard. A retired row is better than a missing one; see the block.
     if (pool.length < rows) {
-      for (const g of [band, ...borrowFrom(band)].flatMap((b) => b.gifts)) {
+      for (const g of [band, ...borrowFrom(band)].flatMap(lendable)) {
         if (pool.length >= rows) break
         if (held.has(g.id)) continue
         held.add(g.id)
@@ -1044,6 +1183,34 @@ function materialFor(
   }
   // The index advances by exactly one per birthday, which is the whole of what it needs. The modulo
   // is written defensively for a poked save with a negative age.
+  // ⭐⭐⭐ ROUND 45 #9 – THE DEPOSIT IS ON HER NINETEENTH BIRTHDAY'S CARD, EVERY CAREER. See the block
+  // over `OWN_PLACE_DEPOSIT_ID`. A SWAP and not a rotation, on purpose: the cycle is still a
+  // permutation (three different dialogs across 19-21, which is round 26 #9b's whole arithmetic) and
+  // only the one card that lacked the row – and the one that held it – trade places, so a career
+  // whose nineteenth card already carried the deposit walks the identical cycle it always did.
+  // ⚠ IT IS APPLIED TO THE WHOLE BAND'S ORDER AND NOT ONLY AT NINETEEN, because every birthday
+  // re-derives the order from the stream: swapping at nineteen alone left twenty reading the
+  // UNSWAPPED order, and the card the swap had moved to nineteen came round again at twenty or
+  // twenty-one (six seeds, caught by tests/birthday-ask.test.ts «a birthday repeated last year's
+  // dialog»). ⚠ AND THE CARD TRADED IN COMES FROM OUTSIDE THE BAND'S OWN THREE POSITIONS WHEN IT CAN:
+  // taking the first deposit-holding combination would, six times in ten, be the one twenty reads, so
+  // nineteen and twenty would merely have swapped cards. Looking past the next two positions leaves
+  // twenty's and twenty-one's dialogs EXACTLY what they were before this item – only the nineteenth's
+  // card ever differs from the shipped cycle, and for the six careers in ten whose nineteenth already
+  // held the row, not even that. `at` is -1 only when no combination holds the row (a pool that
+  // retired it), and a -1 leaves the order untouched rather than crash – the same total the college
+  // rotation is written to.
+  if (band !== COLLEGE_BAND && isIndependenceBand(band)) {
+    const n = order.length
+    const first = ((band.from % n) + n) % n
+    if (!order[first].some((g) => g.id === OWN_PLACE_DEPOSIT_ID)) {
+      const holds = (combo: BirthdayGift[]): boolean => combo.some((g) => g.id === OWN_PLACE_DEPOSIT_ID)
+      const spare = (i: number): boolean => i !== (first + 1) % n && i !== (first + 2) % n
+      const at = order.findIndex((combo, i) => holds(combo) && spare(i))
+      const anywhere = at >= 0 ? at : order.findIndex(holds)
+      if (anywhere >= 0) [order[first], order[anywhere]] = [order[anywhere], order[first]]
+    }
+  }
   return order[((index % order.length) + order.length) % order.length]
 }
 
@@ -1250,6 +1417,17 @@ export function birthdayOffer(
    *  still drawn exactly four times, because the weights are applied to the POOL and never to the
    *  draw – the identical discipline `alreadyGiven` has been under since round-17 #18. */
   temperament: Temperament | null = null,
+  /** ⭐⭐⭐ ROUND 45 #9 – THE ROWS THAT ARE MOOT FOR HER, though nobody gave them: the deposit once the
+   *  own-key beat has fired (see the block over `OWN_PLACE_DEPOSIT_ID`). They join `spent`, so a durable
+   *  among them is RETIRED and the card refills by round 42 #26's order. Empty – the default – for
+   *  every caller with no world, which is why every catalogue sweep still asks the question it always
+   *  did. It is a pool input and never part of any RNG key. */
+  moot: readonly string[] = [],
+  /** ⭐⭐⭐ ROUND 46 #5 – HAS MONEY REACHED HER OWN ACCOUNT, the circumstance her bank-account ask waits for
+   *  at sixteen and seventeen (see the block over `OWN_ACCOUNT_ID`). `false` – the default – for every
+   *  caller with no world, so every catalogue sweep still asks the question it always did; the engine's
+   *  one seam passes `world.kidFundsCents > 0`. A pool and result input and never part of any RNG key. */
+  earning = false,
 ): { options: BirthdayGift[]; askedId: string; eased: 'gap' | 'cap' | null } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
@@ -1271,14 +1449,29 @@ export function birthdayOffer(
   // only by the ASK; the OFFER now reads it too, because a durable already in the house leaves the
   // card (see `materialFor`). Nothing about the set changed – it is still `given`, still derived
   // before this birthday's own row exists, still immutable across a reload.
-  const spent = new Set(alreadyGiven)
-  const material = materialFor(
+  const spent = new Set([...alreadyGiven, ...moot])
+  const dealt = materialFor(
     seed,
     band,
     walkIndex,
     dayOffered ? MATERIAL_OPTIONS : MATERIAL_OPTIONS + 1,
     spent,
   )
+  // ⭐⭐⭐ ROUND 46 #5 – HER BANK ACCOUNT, DUE OR NOT. When it is due at sixteen or seventeen the card's
+  // last material row makes room for it HERE, before the shuffle: the shuffle then sees the same number
+  // of rows and draws the same number of times, and every other row keeps its place (pinned in
+  // tests/birthday-own-account.test.ts, «the same permutation»). At eighteen the 18 card already holds it.
+  // `giftUse` is read a second time further down for the ladder; it is a pure function of the record.
+  const accountDue = ownAccountDue(
+    age,
+    earning,
+    band === COLLEGE_BAND,
+    giftUse(record, alreadyGiven).get(OWN_ACCOUNT_ID)?.count ?? 0,
+  )
+  const material =
+    accountDue && OWN_ACCOUNT_GIFT !== undefined && !dealt.some((g) => g.id === OWN_ACCOUNT_ID)
+      ? [...dealt.slice(0, -1), OWN_ACCOUNT_GIFT]
+      : dealt
   const rng = rngFromSeed(`${seed}:birthday:${age}`)
   const options = shuffled(dayOffered ? [...material, DAY_TOGETHER] : [...material], rng)
   // ===============================================================================================
@@ -1385,7 +1578,24 @@ export function birthdayOffer(
     band === COLLEGE_BAND && collegeIndex === 0
       ? (pool.find((g) => g.id === FIRST_COLLEGE_ASK_ID)?.id ?? null)
       : null
-  return { options, askedId: first ?? drawn, eased }
+  // ⭐⭐⭐ ROUND 45 #9 – HER NINETEENTH BIRTHDAY ASKS FOR THE DEPOSIT. The bicycle's shape one band up,
+  // and for the same reason: it is an override of the RESULT and never of the properties §2ab rests on
+  // – the row is in `pool`, so the ask is one of the four on screen (`materialFor`'s swap is what makes
+  // that certain at nineteen) and it is a row she has not been asked for (`count === 0`, so a deposit
+  // she was already given – retired, off the card – or already asked about falls through to the drawn
+  // ask). The draw above happened either way; the stream's position is the same for every girl.
+  const firstDeposit =
+    band !== COLLEGE_BAND && isIndependenceBand(band) && age === band.from && useOf(OWN_PLACE_DEPOSIT_ID).count === 0
+      ? (pool.find((g) => g.id === OWN_PLACE_DEPOSIT_ID)?.id ?? null)
+      : null
+  // ⭐⭐⭐ ROUND 46 #5 – HER OWN BANK ACCOUNT IS THE ASK WHEN IT IS DUE: at eighteen whatever the balance (his
+  // «жёстко к 18»), and at sixteen or seventeen once money has reached her. The same shape as the two
+  // above – an override of the RESULT, after the draw – and the row is in `pool` (it is on the card and
+  // has no appearance yet, so the ladder's least-used layer holds it), so it is still one of the four on
+  // screen and still a row she has not been asked about. A first college birthday is not here: see
+  // `ownAccountDue`, which leaves the bicycle's ruling alone.
+  const ownAccount = accountDue ? (pool.find((g) => g.id === OWN_ACCOUNT_ID)?.id ?? null) : null
+  return { options, askedId: first ?? firstDeposit ?? ownAccount ?? drawn, eased }
 }
 
 /** What she has already been given, across every birthday on the record – the input to the ask above.
@@ -1395,6 +1605,15 @@ export function birthdayOffer(
  *  for a birthday nobody was asked about (spec §5.5), and null is not a gift. */
 function giftsAlreadyGiven(world: WorldState): string[] {
   return (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null)
+}
+
+/** ⭐⭐⭐ ROUND 45 #9 – WHAT IS MOOT FOR HER, which is not the same as what she has been given: the
+ *  deposit once her own door has opened. The receipt is the own-key row in the life log – the one
+ *  `ownKeyDue` reads (`lifeLogOf` is `world.lifeLog ?? []`; read here as the field, so this file gains no
+ *  import of the life-beat hub). Derived before this birthday's own row exists, like
+ *  `giftsAlreadyGiven`, so the offer cannot move across a reload. */
+function mootGiftsOf(world: WorldState): string[] {
+  return (world.lifeLog ?? []).some((row) => row.kind === 'own-key') ? [OWN_PLACE_DEPOSIT_ID] : []
 }
 
 /** ⭐⭐⭐ ROUND 27 #7 – WHAT SHE ASKED FOR AT HER LAST BIRTHDAY. Null before her first.
@@ -1479,6 +1698,11 @@ export function birthdayOfferFor(
     // from the seed hands them the SAME girl rather than a uniform stranger – so a bench arm cannot
     // measure a lean that is silently switched off in it.
     world.temperament ?? temperamentFor(world.seed),
+    // ⭐⭐⭐ ROUND 45 #9 – the ninth argument: the rows her own door has made moot. See `mootGiftsOf`.
+    mootGiftsOf(world),
+    // ⭐⭐⭐ ROUND 46 #5 – the tenth argument: has money reached her own account? It is the circumstance her
+    // bank-account ask waits for at sixteen and seventeen, and the same balance `ownAccountNote` reads.
+    world.kidFundsCents > 0,
   )
 }
 
@@ -1518,7 +1742,7 @@ export function pendingBirthday(world: WorldState): number | null {
     const resumable = world.ending.type === 'college' && world.college !== null && world.college.doneWeek === null
     if (!resumable) return null
   }
-  const age = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age === null) return null
   // ⭐⭐⭐ ROUND 39 #9c – AN AGE IS ANSWERED ONCE, NOT A WEEK. The owner's save holds `day` at week
   // 569 and `dog` at week 570, BOTH age 24, born 21 December. Round 34 #3 moved the marked week for

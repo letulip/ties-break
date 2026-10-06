@@ -781,3 +781,16 @@ new-rule one, and they overlap at exactly one birthday.
 record (the week half survives for poked saves), so no future move of the marked week – calendar
 re-anchor, rule change, anything – can double-ask a birthday. Reproduced with his exact shape and
 pinned in `tests/birthday-career.test.ts` («ROUND 39 #9c»).
+
+**ROUND 46 #5 (06.10) – the own-account ask lives in 16–18 and nowhere else.** The owner met the
+bank-account ask at her 29th birthday («это смешно»); the cause was the pool refill LENDING the
+18 band's row to any short later card (round 42 #26's mechanism) while the round-39 ladder prefers
+a never-asked row. The rule now: the row is lent to no card; it is the ask at the first birthday in
+16–17 once money has reached her own account, and at 18 whatever the balance; once only, and never
+after 18 (a career already past 18 simply never meets it – the account itself still arrives through
+the kid-share ramp as before). Measured: 282 late carriings over 60 seeds before, zero after.
+`tests/birthday-own-account.test.ts` holds the corridor; the adjacent «eighteenth watch» leak
+through the same lending door (145 cards and 59 of 60 careers on one every-ask walk) was closed on
+06.10 by the owner's «наверное да» – the 18 band now lends nothing to any other card, so the watch
+and the trip stay on the card at eighteen and are met nowhere else (858 cards in the full sweep
+carried a row of that band before, none do now).

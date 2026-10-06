@@ -245,7 +245,35 @@ export function recomputeKidRank(world: WorldState): void {
   // and on the weeks nothing moved the window can only shrink, which a max ignores. Zero draws,
   // pure arithmetic over the same memoised fold the rank above already paid for.
   world.peakDomesticPoints = Math.max(world.peakDomesticPoints ?? 0, kidDomesticPoints(world))
+  latchFirstNo1(world, row, wta)
   latchOnRamps(world)
+}
+
+/** ⭐⭐ v91 – THE FIRST-TOUCH LATCH (round 45 #5; the owner, 02.10: «даже если в моменте, а не по итогам
+ *  года, это значимый момент», and «можно и на других уровнях тоже»). The first week the live fold says
+ *  she is NUMBER ONE on a table is written ONCE into `world.firstNo1` – `wta` for the professional world
+ *  table, `junior` for the international junior one (`kidRank`, the ITF table) – and never rewritten.
+ *  The domestic table is NOT latched: a national #1 is not a page.
+ *
+ *  ⚠⚠ A DELIBERATE, SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY», WHICH OTHERWISE
+ *  STANDS: one week per table, nothing year by year. It exists because no save held the fact – the
+ *  year-end close misses a June touch that ends the season lower, and `results` is a 52-week window.
+ *
+ *  ⚠ THE GUARD IS THE TABLE'S OWN ROW – `rank === 1` AND `points > 0` – and not a special case of her
+ *  number (see `recomputeKidRank`'s warning: the cache may not disagree with the fold). On a table where
+ *  nobody has scored the fold already puts everyone at the bottom, so «unranked is not rank one» holds
+ *  by construction; `points > 0` is the belt, the same one every other reader of a rank here wears.
+ *
+ *  ⚠ THE KEY IS CREATED LAZILY, so a career that never touches #1 serialises exactly as before. Zero draws,
+ *  no stream touched: the frozen MAIN capture cannot see this function. It is `recomputeKidRank`'s write
+ *  and rides every tick and every load, so a rank-1 week cannot pass without being seen. */
+export function latchFirstNo1(world: WorldState, itf: RankingRow | undefined, wta: RankingRow | undefined): void {
+  const junior = itf !== undefined && itf.rank === 1 && itf.points > 0 && world.firstNo1?.junior === undefined
+  const pro = wta !== undefined && wta.rank === 1 && wta.points > 0 && world.firstNo1?.wta === undefined
+  if (!junior && !pro) return
+  const latch = (world.firstNo1 ??= {})
+  if (junior) latch.junior = world.week
+  if (pro) latch.wta = world.week
 }
 
 /** THE ADOPTION-TIME CACHE REFRESH (wave/pro-prep, 02.08). The three rank caches are persisted

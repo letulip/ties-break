@@ -511,8 +511,13 @@ describe('(C) the season wrap-up - the rank line follows where she plays', () =>
       expect(w.summary.rankInTrack, `season ${w.seasonIndex}`).not.toBeNull()
       expect(typeof w.summary.rankInTrack).toBe('number')
     }
-    // ...and the witness: at least one of those seasons is one the old ITF-only line called unranked.
-    expect(pro.some((w) => w.legacyRankText === 'Unranked internationally')).toBe(true)
+    // ...and the witness: at least one of those seasons is one the old ITF-only line got wrong.
+    // ⚠⚠ 05.10 – WITNESS RE-AIMED, CLAIM UNCHANGED (round 46 #7, the run-ladder ruling: 250-12 / 500-15 / 1000-18 / Slam-21). The bot enters the strongest event it may, so the drain re-timed this career: the
+    // W-dominant seasons are THREE now (seasons 3, 4 and 5, W #282, #302 and #296) and she keeps ITF points in every one (11, 14 and 2 ITF matches), so the old line no longer says «Unranked» on any of them –
+    // it prints the ITF table's number, «International #63», «#46», «#45», for a season played on the W tour. That is the same defect from the other side (the old line had no way to name her professional
+    // rank), and the witness now asserts exactly that: the old line was either «Unranked» or a number that is NOT her professional rank. A seed that still reads «Unranked» was not hunted for: SEED is the wallet
+    // probe's own career (above) and every other case in this file lives on it.
+    expect(pro.some((w) => w.legacyRankText === 'Unranked internationally' || w.legacyRankText !== `International #${w.summary.rankInTrack}`)).toBe(true)
   })
 
   it('still names a NON-professional table while she is still on one', () => {

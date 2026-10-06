@@ -25,6 +25,9 @@ import { formatShortName } from '../shared/format'
 import { weekLabel, weekRange } from '../shared/dates'
 import type { Side } from '../engine/match/types'
 import type { WorldMatch } from '../shared/protocol'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const props = withDefaults(
   defineProps<{
@@ -92,7 +95,7 @@ const oppShort = computed(() => formatShortName(oppPlayer.value.name))
 const kidWon = computed(() => props.match.winnerId === KID_ID)
 // Her-perspective scoreline (the stored score is written a-vs-b).
 const kidScore = computed(() => (props.match.bId === KID_ID ? flipScore(props.match.score ?? '') : (props.match.score ?? '')))
-const weekDates = computed(() => weekRange(props.week))
+const weekDates = computed(() => weekRange(props.week, startYear.value))
 const viewerRankA = computed<number | null>(() => (kidSide.value === 0 ? props.kidRank : null))
 const viewerRankB = computed<number | null>(() => (kidSide.value === 0 ? null : props.kidRank))
 
@@ -131,7 +134,7 @@ function close(): void {
   <TakeoverShell title="Practice match" :screen="phase">
     <template #sub>
       <SurfaceMark :surface="match.surface" size="sm" />
-      <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
+      <span class="hint tf-week-dates">{{ weekLabel(week, startYear) }} · {{ weekDates }}</span>
     </template>
     <template #exit>
       <!-- ⚠ THE HEADER'S ONE SLOT, AND IT USED TO SAY "Close ✕" ON ALL THREE PHASES (owner, 30.07:

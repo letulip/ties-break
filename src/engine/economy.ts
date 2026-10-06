@@ -154,6 +154,20 @@ export interface VacationPackage {
    *  in hand, so a screen and the engine cannot price the same week two ways. A screen that forgot
    *  the list can only OVERSTATE a price; the booking itself always re-prices off the world. */
   freeOnceGranted?: boolean
+  /** ⭐⭐ ROUND 46 #6 – THE INJURY BUFF THE OWNER'S OWN WEEK CARRIES, `buffFactor`'s twin for a package the
+   *  shelf has made FREE. His 05.10 word: «Может для своей яхты тоже поставим -15% вероятности травмы?» –
+   *  «тоже» = the Elite recovery programme's `buffFactor` 0.85 on this same sheet («injury risk −15% for 4
+   *  weeks»), which the yacht row did not have.
+   *
+   *  ⚠ ON THE GRANTED WEEK ONLY, which is «своей» read literally: the charter every other family books
+   *  keeps `buffFactor` (1 on the yacht row), so a career that owns no delivered yacht is byte-identical to
+   *  before this field existed. Same pathway as every other rung – the booking's `recoveryBuff.factor` and
+   *  the ONE post-draw multiply in `injuryTau` – only the SOURCE of the factor is ownership-aware, and
+   *  `vacationBuffFactor` is the one function that says which: the booking and the sheet's «injury risk
+   *  −N%» line both ask it, with the granted list in hand.
+   *
+   *  Optional rather than `1` everywhere, so the six rungs that never had one say so by silence. */
+  grantedBuffFactor?: number
 }
 
 /** ⭐⭐⭐ ONE MARKET, DIFFERENT BASKETS – HOW A GEAR LINE IS PRICED (round 41 P1, the owner 12.09:
@@ -389,6 +403,24 @@ export function vacationPriceCents(
   )
 }
 
+/** ⭐⭐ ROUND 46 #6 – THE INJURY BUFF A BOOKED WEEK CARRIES, as ONE pure rule. `grantedIds` is the shelf's
+ *  grant exactly as `vacationPriceCents` takes it (`Snapshot.shop.vacationIds` on a screen,
+ *  `grantedVacationIds(world)` in the engine): a `freeOnceGranted` package that carries a
+ *  `grantedBuffFactor` hands it over once the family has earned the week – the owner's own boat, not a
+ *  charter. Every other package, granted or not, answers its `buffFactor`, so nothing but the yacht week
+ *  can differ from the shipped table.
+ *
+ *  ⚠ THE DEFAULT IS THE CONSERVATIVE ARM, on `vacationPriceCents`' own argument: a caller that does not
+ *  know about the shelf is told the factor every family gets, so a forgetful screen can only UNDERSTATE
+ *  the buff, never promise one the booking will not pay – and the booking itself always passes the
+ *  world's own list. Pure, zero draws. */
+export function vacationBuffFactor(pkg: VacationPackage, grantedIds: readonly string[] = []): number {
+  if (pkg.freeOnceGranted && pkg.grantedBuffFactor !== undefined && grantedIds.includes(pkg.id)) {
+    return pkg.grantedBuffFactor
+  }
+  return pkg.buffFactor
+}
+
 /** THE vacation pre-highlight, as ONE pure rule (Wave-2 tuning, fatigue bench 26.07).
  *
  *  Before this pass the rule lived in three places (the rescue card, the planner sheet, the
@@ -611,10 +643,25 @@ export function parentIncomeForWeekCents(seedStr: string, background: FamilyBack
  *
  *  ⚠ NO DRAW, NO STATE, NO SCHEMA. Integer cents out, rounded once. */
 export function prologueFundsCents(background: FamilyBackground, spentCents: number): number {
-  const base = ECONOMY.startingFundsCents[background]
+  return prologueFundsOnBaseCents(ECONOMY.startingFundsCents[background], spentCents)
+}
+
+/** ⭐⭐⭐ SUCCESSION W1 (06.10, THE OWNER'S RULING 12) – THE PROLOGUE'S WALLET ARITHMETIC ON A BASE THE CALLER NAMES. `prologueFundsCents` is this
+ *  function with the base read off `ECONOMY.startingFundsCents[background]`, and it now CALLS it: ONE implementation of «the nine years move the
+ *  reserve by a share of it», so an ordinary prologue career and a generation-2 career cannot come to hold two spellings of one rule.
+ *
+ *  WHY IT EXISTS: a generation-2 career opens on a MULTIPLIED reserve (`world/succession.ts`: §4's band times B) and the owner ruled that the
+ *  childhood's deduction applies to it too – «мне кажется нормальной логика вычета, не вижу проблем использовать ее и здесь, отличается только
+ *  начальная сумма для сида по сути, ну и дом, машина и некоторые сбережения на счете». Only the starting sum differs, so the base is the one
+ *  thing that became an argument, and the swing stays a SHARE of whatever base it is handed: a share of the multiplied reserve, not a flat sum.
+ *
+ *  ⚠ BYTE-IDENTICAL FOR EVERY ORDINARY CALLER: `prologueFundsCents(background, spentCents)` runs the same floating-point operations in the same order
+ *  as before the split (`tests/prologue-handover.test.ts` pins its figures for every background). `baseCents` may be a product that is not a whole
+ *  number of cents (B x 1.3): the rounding happens once, at the end. NO DRAW, NO STATE, NO SCHEMA. Integer cents out. */
+export function prologueFundsOnBaseCents(baseCents: number, spentCents: number): number {
   const { referenceSpendCents, spendSwingCents, reserveSwingShare } = ECONOMY.prologue
   const moved = Math.max(-1, Math.min(1, (referenceSpendCents - spentCents) / spendSwingCents))
-  return Math.round(base * (1 + reserveSwingShare * moved))
+  return Math.round(baseCents * (1 + reserveSwingShare * moved))
 }
 
 /** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.

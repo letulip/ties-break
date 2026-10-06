@@ -1352,6 +1352,23 @@ export interface StaffLetterTerms {
    *  «this year bought you N» is a claim the number cannot support. «She stands N above» is what it
    *  says, and is all it says. */
   composureBonus?: number
+  /** ⭐⭐ ROUND 45 #4 – PSYCHOLOGIST ONLY: THE YEAR'S DIRECTION WAS NEVER CHOSEN FOR THIS SEASON AND THE
+   *  PICK BEFORE IT CARRIED. Holds the SEASON INDEX that pick was last bought for
+   *  (`psychologistFocusSeason`), because that is the real datum the carry-over line prints («the one
+   *  chosen for 2026») and the owner's own sketch of it was «мы не выбрали новое, поэтому работали по
+   *  предыдущему».
+   *
+   *  ⚠ PRESENT ONLY TOGETHER WITH `focus`, and only when the stamp is OLDER than the season being
+   *  reported – a stamp that names the season itself is an ordinary chosen year and carries nothing.
+   *  A NUMBER AND NEVER A SENTENCE, `AcademyLetterTerms`' rule: `OfferLetter.vue` rebuilds the line. */
+  focusCarriedFrom?: number
+  /** ⭐⭐⭐ ROUND 45 #3 – THIS LETTER IS A RAISE REQUEST, NOT A REPORT. The seat asks, once a year of service,
+   *  to be paid `toCents` where it is paid `fromCents` today – per SESSION for the masseur, which is the
+   *  unit his rate is quoted in. The letter is `state: 'open'` with a real deadline, the sponsor
+   *  letters' two doors (`acceptOffer` / `declineOffer`), and NOTHING is persisted for the answer
+   *  beyond the paper's own state: the rate is DERIVED from the signed asks (`staffFeeCents`); the coach's stored fee is re-struck on signing.
+   *  ⚠ Both figures are frozen on the paper at its arrival week and never recomputed at signature. */
+  ask?: { fromCents: number; toCents: number }
 }
 
 /** ⭐⭐⭐ A BUYER'S LETTER (the secondary market, S3; spec §2b): what a buyer offers for a thing the family has listed.
@@ -1576,6 +1593,8 @@ export interface ShootClashPrompt {
   moveToLabel: string | null
   /** what cancelling the shoot hands back to the brand, in cents – the shoot's own share of the fee */
   cancelShootCents: number
-  /** what doing both costs her in condition – the owner's «+1 в день», across the week */
+  /** what doing both costs her in condition – the owner's «+1 в день», priced per SHOOTING day (02.10:
+   *  «по 1 за каждый съемочный день»; third batch: two days, three points each, six at every rung);
+   *  the engine's own number, never rebuilt on the screen */
   conditionCost: number
 }

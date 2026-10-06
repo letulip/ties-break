@@ -256,10 +256,10 @@ test('«Restore previous» after a non-refreshing action gives back the previous
   // takes one correct refresh and then one missing one; with a single generation on disk More draws
   // no «Restore previous» at all. `setWeightEnabled` is chosen because it refreshes (game.ts) and
   // because it moves nothing else – no tick, no draw, no dialog - so the walk stays deterministic.
-  // Its row's name is transcribed by e2e/weight.spec.ts off `WEIGHT_COPY.title`; the state is asserted
+  // Its row's name is transcribed by e2e/weight.spec.ts off `WEIGHT_COPY.settingsLabel`; the state is asserted
   // on `aria-checked` for that file's reason (the state is on the control, the word beside it is copy).
   await openMore(page)
-  const weight = page.getByRole('switch', { name: 'The weight' })
+  const weight = page.getByRole('switch', { name: 'Pregnancy loss and bereavement' })
   await expect(weight).toHaveAttribute('aria-checked', 'false')
   await weight.click()
   await expect(weight, 'the press round-tripped through the worker').toHaveAttribute('aria-checked', 'true')

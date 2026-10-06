@@ -35,7 +35,7 @@
 // layer's spelling to, which is what keeps the two spellings from drifting apart.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import type { TierId } from '../season/types'
-import { weekSpan } from '../../shared/dates'
+import { DEFAULT_START_YEAR, weekSpan } from '../../shared/dates'
 import { paintedStemFor, portraitStage } from '../../shared/avatarEmotion'
 import { finishedTheCourse } from '../../shared/avatarEmotion'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
@@ -145,6 +145,13 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   'lifetime-sponsor': 'happy',
   'top-tier-title': 'happy',
   'years-at-the-top': 'happy',
+  // ⭐ round 45 #5 – the first time at number one, one row per table. `happy` for the rare family's own reason (a thing that HAPPENED);
+  // a DRAFT pick like the other rare rows, cheap to move, and not a word on a screen.
+  'first-number-one': 'happy',
+  'first-number-one-junior': 'happy',
+  // ⭐ round 45 #5b – the page the first #1 and the highest title share when they fall in one week. `happy` is BOTH its neighbours' mood (the title's and the
+  // first #1's), so the pair cannot disagree about her face; a DRAFT pick like the rows above it, cheap to move, and not a word on a screen.
+  'first-number-one-title': 'happy',
   graduated: 'happy',
   farewell: 'serious',
   'career-ended': 'happy',
@@ -215,6 +222,32 @@ function travelMoodOf(mood: PortraitEmotion): TravelHomeMood | null {
 /** The journey's mode – антураж, not a fact, and NOT a draw: the week number picks one of the four
  *  painted scenes, so the same frame reopens on the same picture without touching any stream. */
 const TRAVEL_SCENES: readonly TravelHomeScene[] = ['airport', 'plane', 'bus', 'car']
+
+/** ⭐⭐ ROUND 45 #8 – WHO MAY STAND IN FOR A FACE when two frames of one page would be the same
+ *  picture. His 02.10 sentence: «Постараться сделать, чтобы одинаковых фоточек не было на одной
+ *  странице».
+ *
+ *  ⚠ THERE WAS NO DRAW TO REPEAT, AND THAT IS THE FINDING. The ladder is a TABLE: a frame's mood is a
+ *  function of its occasion (§1) and the band portrait is ONE painting per (band, face), so two
+ *  `happy` frames of one chapter are the same file by construction – which is what he saw. The only
+ *  honest way to two pictures is a second FACE, and this table says which faces are close enough in
+ *  meaning to be asked: ordered, nearest first, and never a face that says the opposite.
+ *
+ *  ⚠ THE RULED ROWS STAY RULED. `rehab` never stands in as `injury` or `sad` (his «альбом помнит, как
+ *  она вставала, а не как падала», §1), a `sad` year never turns `happy`, and a lost final never
+ *  smiles: the stand-ins of a face are its neighbours on the calm side. `angry`, `tired` and `injury`
+ *  are on disk and are in no row here – the album never asked for them and this does not start.
+ *
+ *  ⚠ A PAGE CAN STILL EXHAUST THE LIST (three `serious` frames against two faces) and then it shows
+ *  the repeat rather than a face that lies – `pickDistinct` counts it. The journey rung needs none of
+ *  this: it has twelve painted scenes and rotates through the four of its own mood. */
+const PORTRAIT_STAND_INS: Partial<Record<PortraitEmotion, readonly PortraitEmotion[]>> = {
+  happy: ['norm', 'serious'],
+  serious: ['norm'],
+  norm: ['serious', 'happy'],
+  sad: ['serious', 'norm'],
+  rehab: ['serious', 'norm'],
+}
 
 // =================================================================================================
 // §2 THE FILE's OWN WORDS – all ⚠ DRAFT, tabled for his pass (invariant 4)
@@ -577,6 +610,17 @@ function assetCandidates(world: WorldState): AlbumCandidate[] {
   return out
 }
 
+/** ⭐ THE WEEK OF THE FIRST TITLE AT THE HIGHEST STEP – `top-tier-title`'s own date, null where she has not won one. Gated, as it always was, on the
+ *  high-water mark (`bestFinishByTier` holds a finish and NO week) and dated off the titles ledger (`trophiesByTier`, v31), which keeps the weeks.
+ *
+ *  ⚠ ONE FUNCTION BOTH PAGES ASK (round 45 #5b): the title's page is composed at this week and the first-#1 collision below is read against it, so the two
+ *  sides of «the same week» cannot come from two readings of one ledger. A pure read of the world – no draw, no write, and no field of its own. */
+function topTierTitleWeek(world: WorldState): number | null {
+  const topTier = TIER_LADDER[TIER_LADDER.length - 1]
+  const weeks = world.trophiesByTier[topTier]?.titles ?? []
+  return world.bestFinishByTier[topTier] === 0 && weeks.length > 0 ? weeks[0] : null
+}
+
 /** ⭐ THE SUPER-RARES – his 19.09 addition. Each DISPLACES an ordinary representative rather than
  *  raising the cap: they enter the same fixed budget at the top of the priority order.
  *
@@ -589,9 +633,9 @@ function assetCandidates(world: WorldState): AlbumCandidate[] {
 function rareCandidates(world: WorldState): AlbumCandidate[] {
   const out: AlbumCandidate[] = []
   const topTier = TIER_LADDER[TIER_LADDER.length - 1]
-  const slamWeeks = world.trophiesByTier[topTier]?.titles ?? []
-  if (world.bestFinishByTier[topTier] === 0 && slamWeeks.length > 0) {
-    out.push(candidate(world, 'top-tier-title', slamWeeks[0], 100, { tier: topTier, finish: 0 }))
+  const titleWeek = topTierTitleWeek(world)
+  if (titleWeek !== null) {
+    out.push(candidate(world, 'top-tier-title', titleWeek, 100, { tier: topTier, finish: 0 }))
   }
   let streak = 0
   let streakEnd: number | null = null
@@ -605,6 +649,29 @@ function rareCandidates(world: WorldState): AlbumCandidate[] {
     }
   }
   if (streakEnd !== null) out.push(candidate(world, 'years-at-the-top', wrapWeekOf(streakEnd), 98))
+  // ⭐⭐ ROUND 45 #5 – THE FIRST TIME AT NUMBER ONE (the owner, 02.10: «даже если в моменте, а не по итогам года, это значимый момент»,
+  // and «можно и на других уровнях тоже»). ONE page per table, DATED AT THE WEEK THE LIVE FOLD FIRST SAID #1 – `world.firstNo1`, the v91
+  // latch `recomputeKidRank` writes once. Priority 99: between the top-tier title (100) and the years at the top (98), so the first
+  // touch outranks the run it begins and yields only to the biggest trophy there is.
+  // ⚠ NOT DERIVED FROM `seasonHistory`, and that is the whole reason for the latch: a year-end row would miss a June touch that ends the
+  // season at #3, and no save held the week otherwise. ⚠ TWO OCCASIONS AND NOT ONE WITH A TABLE PARAMETER – the corpus forbids
+  // interpolation (corpus doc §3.2), so each table's page has its own twelve strings. ⚠ THE DOMESTIC TABLE IS NOT LATCHED: no page.
+  // A career whose latch is absent (never touched #1, or an older save that had not at migration time) simply has no such page.
+  if (world.firstNo1?.wta !== undefined) {
+    out.push(candidate(world, 'first-number-one', world.firstNo1.wta, 99))
+    // ⭐⭐ ROUND 45 #5b – THE WEEK THE FIRST #1 AND THE HIGHEST TITLE SHARE (the owner, 02.10, third batch: «а они обе не могут на одной странице
+    // жить?… она же стала №1 потому что выиграла шлем, без него никак. Это тоже как-то надо научиться показывать»). Round 45 #5 let the title's page take
+    // such a week and absorb the first #1; now ONE page carries both, composed AT 101 – above the title's 100 and the first-#1 page's 99 – so the book's
+    // one-frame-per-week rule (`selectRepresentatives`) gives the week to it and NEITHER plain page prints.
+    // ⚠ THERE IS DELIBERATELY NO SECOND MECHANISM: the plain pair is not omitted here, because priority under that one rule already is the suppression and a belt
+    // on top of it could not be told from the braces by any test – the mutations (the trigger, the rule, the priority) each go red on their own.
+    // ⚠ THE QUESTION IS PUT TO THE TITLE'S OWN WEEK (`topTierTitleWeek`), never to the raw ledger: a LATER top-tier title that shares the latch week is not a
+    // collision, because the title's page is dated at the FIRST one – that week stays the plain first-#1 page, exactly as before. ⚠ THE JUNIOR TABLE KEEPS THE
+    // ABSORB RULE: no junior twin was asked for. ⚠ IT CARRIES THE TITLE'S TIER AND FINISH, because it REPLACES the title's page on its sheet and the ticket and
+    // the tag read them – a page without them would drop the tournament fact a title-only week keeps on the B and C layouts.
+    if (world.firstNo1.wta === titleWeek) out.push(candidate(world, 'first-number-one-title', titleWeek, 101, { tier: topTier, finish: 0 }))
+  }
+  if (world.firstNo1?.junior !== undefined) out.push(candidate(world, 'first-number-one-junior', world.firstNo1.junior, 99))
   for (const o of world.offers) {
     if (o.state !== 'signed') continue
     if ('lifetime' in o.terms && o.terms.lifetime === true) {
@@ -1123,7 +1190,15 @@ function awayWeek(world: WorldState, week: number): boolean {
   return false
 }
 
-function frameArtFor(world: WorldState, c: AlbumCandidate): { art: string; alt: string } {
+/** ⭐⭐ ROUND 45 #8 – THE LADDER'S PICTURES FOR ONE FRAME, FIRST CHOICE FIRST. `[0]` is exactly what
+ *  this function returned before the round (the rung 1 painting, else the journey, else the band
+ *  portrait in the ruled mood), so a page whose frames already differ is byte-identical to the old
+ *  one; the rest are the stand-ins `pickDistinct` may ask for, nearest first:
+ *    rung 1 – none. A one-moment painting belongs to its occasion and no other face may wear it.
+ *    rung 2 – the other three journey scenes of the SAME mood, rotating from the week's own scene.
+ *    rung 3 – the faces of `PORTRAIT_STAND_INS` at the same band.
+ *  ⚠ NO DRAW, NO STREAM: the rotation is the week number's, like the scene it rotates from. */
+function frameArtOptions(world: WorldState, c: AlbumCandidate): { art: string; alt: string }[] {
   const stage = portraitStage(c.ageYears)
   // rung 1 – the event painting, where the occasion has one. The bride resolves through
   // `paintedStemFor` (the wave-7 wiring): band fallback, never a 404.
@@ -1134,28 +1209,79 @@ function frameArtFor(world: WorldState, c: AlbumCandidate): { art: string; alt: 
     // DRAWS `lateCareer-norm`, so calling it «the week the baby came home» would describe a picture
     // that is not on screen. One reading, two consumers – the wave-7 wiring, generalised.
     const own = MOMENT_ALT[moment]
-    return { art: paintingPath(stem), alt: stem.endsWith(moment) ? own : ALT_DRAFT.portrait }
+    return [{ art: paintingPath(stem), alt: stem.endsWith(moment) ? own : ALT_DRAFT.portrait }]
   }
   const eventStem = EVENT_STEM[c.occasion.id]
   if (eventStem) {
-    return { art: paintingPath(eventStem), alt: ALT_DRAFT[eventStem as keyof typeof ALT_DRAFT] ?? ALT_DRAFT.portrait }
+    return [
+      { art: paintingPath(eventStem), alt: ALT_DRAFT[eventStem as keyof typeof ALT_DRAFT] ?? ALT_DRAFT.portrait },
+    ]
   }
   const mood = ALBUM_MOOD[c.occasion.id] ?? 'norm'
   // rung 2 – the journey, on an away week whose mood has a journey face
   if (c.week !== null && awayWeek(world, c.week)) {
     const travelMood = travelMoodOf(mood)
     if (travelMood) {
-      const scene = TRAVEL_SCENES[c.week % TRAVEL_SCENES.length]
-      return { art: paintingPath(`travel-${travelMood}-${scene}`), alt: ALT_DRAFT.travel }
+      const week = c.week
+      return TRAVEL_SCENES.map((_, k) => ({
+        art: paintingPath(`travel-${travelMood}-${TRAVEL_SCENES[(week + k) % TRAVEL_SCENES.length]}`),
+        alt: ALT_DRAFT.travel,
+      }))
     }
   }
   // rung 3 – the band portrait at her age that week, in the ruled mood
-  return { art: paintingPath(paintedStemFor(stage, mood)), alt: ALT_DRAFT.portrait }
+  return [mood, ...(PORTRAIT_STAND_INS[mood] ?? [])].map((face) => ({
+    art: paintingPath(paintedStemFor(stage, face)),
+    alt: ALT_DRAFT.portrait,
+  }))
 }
 
-function frameOf(world: WorldState, c: AlbumCandidate, voice: Temperament): AlbumFrame {
-  const { art, alt } = frameArtFor(world, c)
-  return { art, alt, caption: c.occasion.voices[voice].caption }
+/** ⭐⭐ ROUND 45 #8 – ONE PICTURE PER FRAME OF A PAGE, ASSIGNED TOGETHER. `options[i]` is frame i's
+ *  pictures, first choice first; the answer is the index each frame takes and how many frames are
+ *  left showing a picture an earlier one on the page already shows.
+ *
+ *  ⚠ IT IS A SEARCH AND NOT A «TAKE THE FIRST FREE ONE», because the greedy form is wrong exactly
+ *  where it matters: a `happy` frame that took `norm` first would leave the `norm` frame after it no
+ *  honest picture while a distinct assignment existed. Frames are at most three and options at most
+ *  four, so every assignment is a handful; the winner is the one with the FEWEST repeats, and among
+ *  those the one that keeps the EARLIEST frames on their earliest choices – so a page that already
+ *  has three different pictures changes nothing, which `tests/round45-album-distinct-frames.test.ts`
+ *  holds as the property that makes the whole change safe to ship.
+ *
+ *  ⚠ A POOL SMALLER THAN THE PAGE IS ANSWERED, NOT REFUSED: `clashes` is above zero, the frames that
+ *  cannot be told apart keep their first choice, and nothing throws. Pure arithmetic over the lists
+ *  it is given – no draw, no clock – so MAIN and every sub-stream are untouched. */
+export function pickDistinct(options: readonly (readonly string[])[]): { picks: number[]; clashes: number } {
+  let best: { picks: number[]; clashes: number } | null = null
+  const picks: number[] = []
+  const shown = new Map<string, number>()
+  const walk = (i: number, clashes: number): void => {
+    if (best !== null && clashes >= best.clashes) return
+    if (i === options.length) {
+      best = { picks: [...picks], clashes }
+      return
+    }
+    for (let k = 0; k < options[i].length; k++) {
+      const art = options[i][k]
+      const held = shown.get(art) ?? 0
+      picks[i] = k
+      shown.set(art, held + 1)
+      walk(i + 1, clashes + (held > 0 ? 1 : 0))
+      shown.set(art, held)
+    }
+  }
+  walk(0, 0)
+  return best ?? { picks: options.map(() => 0), clashes: 0 }
+}
+
+/** The frames of ONE page, no two of them the same picture where the ladder has a way to say so. */
+function distinctFramesOf(world: WorldState, own: readonly AlbumCandidate[], voice: Temperament): AlbumFrame[] {
+  const options = own.map((c) => frameArtOptions(world, c))
+  const { picks } = pickDistinct(options.map((row) => row.map((o) => o.art)))
+  return own.map((c, i) => {
+    const { art, alt } = options[i][picks[i]]
+    return { art, alt, caption: c.occasion.voices[voice].caption }
+  })
 }
 
 // =================================================================================================
@@ -1246,13 +1372,13 @@ export const ALBUM_TIER_STEP: Record<TierId, AlbumTierStep> = {
   slam: 'elite',
 }
 
-function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): AlbumTicket {
+function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>, startYear: number = DEFAULT_START_YEAR): AlbumTicket {
   return {
     tier: TIERS[c.tier!].label,
     step: ALBUM_TIER_STEP[c.tier!],
     stage: c.finish === undefined ? '' : finishLabel(c.finish),
     venue: flavour.venue,
-    dateLabel: c.week === null ? '' : weekSpan(c.week),
+    dateLabel: c.week === null ? '' : weekSpan(c.week, startYear),
     gate: flavour.gate,
     seat: flavour.seat,
     row: flavour.row,
@@ -1274,10 +1400,10 @@ function tagOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): Album
 // §7 SHEETS AND CHAPTERS
 // =================================================================================================
 
-function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate[] = [c]): AlbumNote {
+function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate[] = [c], startYear: number = DEFAULT_START_YEAR): AlbumNote {
   return {
     text: hand.note,
-    dateLabel: c.week === null ? null : weekSpan(c.week),
+    dateLabel: c.week === null ? null : weekSpan(c.week, startYear),
     ageLabel: ageLabelOf(c.ageYears),
     // ⭐ v86 – `[]` on every candidate that carries no checklist, which is almost all of them: the
     // ruled form exists in the shape and had no writer until the dynasty needed to print numbers a
@@ -1349,10 +1475,10 @@ function sheetsOf(
       chapterIndex,
       chapterTitle: title,
       ageLabel: chapterAgeLabel,
-      frames: own.map((c) => frameOf(world, c, voice)),
-      note: noteOf(lead, hand, own),
+      frames: distinctFramesOf(world, own, voice),
+      note: noteOf(lead, hand, own, world.startYear),
       line: hand.line,
-      ticket: layout === 'B' && tournament ? ticketOf(tournament, flavour) : null,
+      ticket: layout === 'B' && tournament ? ticketOf(tournament, flavour, world.startYear) : null,
       tag: layout === 'C' && tournament ? tagOf(tournament, flavour) : null,
       patch: layout === 'A' ? patch : null,
       doodles: [DOODLE_BY_KIND[lead.occasion.kind] ?? DOODLES[flavour.doodle]],

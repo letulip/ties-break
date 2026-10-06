@@ -36,9 +36,7 @@ function albumPage(slot: number, over: Partial<AlbumPage> = {}): AlbumPage {
 function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView> = {}): EndingView {
   return {
     ending: { type, week: 265, ageYears: 19, detail: 'she stopped at nineteen', resumesWeek: null },
-    album: [1, 2, 3, 4, 5, 6, 7].map((s) =>
-      s === 3 ? albumPage(3, { empty: true, fact: null, week: null, why: 'The first cheque – there was never one' }) : albumPage(s),
-    ),
+    closing: albumPage(7),
     scroll: [
       { seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] },
     ],
@@ -76,15 +74,16 @@ function patchSnapshot(fields: Record<string, unknown>): void {
 describe('the album', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('shows ONE page at a time, and turns', async () => {
+  // ROUND 46 #18 – THE REEL LEFT, THE LAST PAGE STAYED. This case was «shows ONE page at a time, and turns»;
+  // the six pages before the last and the pager that turned them are gone, so it now says what is drawn.
+  it('shows the LAST page only, with no pager and no «n / 7»', async () => {
     patchSnapshot({ ending: endingView() })
     const w = mount(EndingScreen)
     expect(w.findAll('.album-page')).toHaveLength(1)
-    expect(w.text()).toContain('why 1')
-    expect(w.text()).toContain('1 / 7')
-    await w.findAll('.album-arrow')[1].trigger('click')
-    expect(w.text()).toContain('why 2')
+    expect(w.text()).toContain('why 7')
     expect(w.text()).not.toContain('why 1')
+    expect(w.text()).not.toMatch(/\d \/ 7/)
+    expect(w.findAll('.album-arrow'), 'no Back / Next').toHaveLength(0)
     w.unmount()
   })
 
@@ -93,26 +92,31 @@ describe('the album', () => {
     const w = mount(EndingScreen)
     const caption = w.find('.tb-polaroid .tb-polaroid-caption')
     expect(caption.exists()).toBe(true)
-    expect(caption.text()).toBe('caption 1')
+    expect(caption.text()).toBe('caption 7')
     w.unmount()
   })
 
-  it('⚠ the selection rule is on EVERY page, empty ones included', async () => {
-    patchSnapshot({ ending: endingView() })
-    const w = mount(EndingScreen)
-    for (let i = 0; i < 7; i++) {
+  it('⚠ the selection rule is on the last page, empty or not', async () => {
+    for (const empty of [false, true]) {
+      patchSnapshot({
+        ending: endingView('stopped', {
+          closing: empty ? albumPage(7, { empty: true, fact: null, week: null }) : albumPage(7),
+        }),
+      })
+      const w = mount(EndingScreen)
       expect(w.find('.album-why').text().length).toBeGreaterThan(0)
-      if (i < 6) await w.findAll('.album-arrow')[1].trigger('click')
+      w.unmount()
     }
-    w.unmount()
   })
 
-  it('⚠ slot 3 can be EMPTY, and it says so with no fact and no consolation', async () => {
-    patchSnapshot({ ending: endingView() })
+  it('⚠ an EMPTY last slot says so with no fact and no consolation', async () => {
+    patchSnapshot({
+      ending: endingView('stopped', {
+        closing: albumPage(7, { empty: true, fact: null, week: null }),
+      }),
+    })
     const w = mount(EndingScreen)
-    await w.findAll('.album-arrow')[1].trigger('click')
-    await w.findAll('.album-arrow')[1].trigger('click')
-    expect(w.text()).toContain('there was never one')
+    expect(w.text()).toContain('why 7')
     expect(w.find('.album-fact').exists()).toBe(false)
     expect(w.find('.album-when').exists()).toBe(false)
     w.unmount()
@@ -121,7 +125,6 @@ describe('the album', () => {
   it('the hand-off is an OFFER on the last page, and the record is reachable from it', async () => {
     patchSnapshot({ ending: endingView() })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.find('.ending-foot').exists()).toBe(true)
     expect(w.text()).toContain('Raise another')
     await w.find('.ending-link').trigger('click')
@@ -144,7 +147,6 @@ describe('the album', () => {
       }),
     })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     const text = w.text()
     expect(text).toContain('Her academy stands – 4 of 4 stages built – and it earns $29,000 a week.')
     w.unmount()
@@ -157,7 +159,6 @@ describe('the album', () => {
       }),
     })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.text()).toContain('Her academy is begun – 1 of 4 stages built.')
     expect(w.text()).not.toContain('a week.')
     w.unmount()
@@ -165,7 +166,6 @@ describe('the album', () => {
     // ...and the family that never built one reads nothing about academies at all.
     patchSnapshot({ ending: endingView('natural') })
     const bare = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await bare.findAll('.album-arrow')[1].trigger('click')
     expect(bare.text()).not.toContain('academy')
     bare.unmount()
   })
@@ -186,8 +186,9 @@ describe('the album', () => {
     const game = useGameStore()
     const spy = vi.spyOn(game, 'newCareer').mockResolvedValue(undefined)
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
-    await w.findAll('.tb-pill')[0].trigger('click')
+    // ROUND 46 #18: the footer LEADS with «View the album» now, so «the first pill» is no longer the
+    // hand-off – the hand-off's control is found by what it says, which is what this case is about.
+    await w.findAll('.tb-pill').find((b) => b.text() === 'Raise another')!.trigger('click')
     expect(w.findAll('.ending-fork-option'), 'the capital fork is back').toHaveLength(0)
     expect(w.emitted('newCareer')?.length, 'one press, one event').toBe(1)
     expect(spy, 'the epilogue created a career of its own').not.toHaveBeenCalled()
@@ -216,7 +217,6 @@ describe('the album', () => {
       }),
     })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.text()).toContain('Another year')
     expect(w.text()).not.toContain('Raise another')
     w.unmount()
@@ -251,7 +251,6 @@ describe('the album', () => {
       })
       const w = mount(EndingScreen)
       expect(w.findAll('.album-page'), `${type}: no page rendered`).toHaveLength(1)
-      for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
       // The hand-off foot is the last page's own block, and it is the half a mount alone would miss.
       expect(w.text(), `${type}: the record never opened`).toContain('The whole record')
       expect(w.text(), `${type}: the count on the foot is not hers`).toContain('She said one more year 4 times')
@@ -259,18 +258,17 @@ describe('the album', () => {
     }
   })
 
-  it('renders for the nineteen-year-old who never turned pro – seven pages, two of them empty', () => {
+  it('renders for the nineteen-year-old who never turned pro – nothing earned, and the last page is drawn', () => {
     patchSnapshot({
       ending: endingView('stopped', {
-        album: [1, 2, 3, 4, 5, 6, 7].map((s) =>
-          s === 3 || s === 6 ? albumPage(s, { empty: true, fact: null, week: null }) : albumPage(s),
-        ),
+        closing: albumPage(7),
         totals: { earnedCents: 0, spentCents: 41_000_00, prizeCents: 0, weeksLostToInjury: 0 },
       }),
     })
     const w = mount(EndingScreen)
-    expect(w.findAll('.album-dots i')).toHaveLength(7)
-    expect(w.findAll('.album-dots i.off')).toHaveLength(2)
+    expect(w.findAll('.album-page'), 'the last page, alone').toHaveLength(1)
+    expect(w.findAll('.album-dots'), 'no dots – the reel left in round 46 #18').toHaveLength(0)
+    expect(w.find('.ending-foot').exists(), 'and the figures and the doors are there').toBe(true)
     w.unmount()
   })
 })

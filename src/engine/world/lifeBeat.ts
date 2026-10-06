@@ -30,7 +30,9 @@ import { addEvent } from './ledger'
 //
 // ⚠⚠ hub: AND v75 T4 TOOK IT BACK OFF THIS LINE, WHICH IS RECORDED RATHER THAN QUIETLY DELETED (ruling B).
 // → docs/notes/life-beats/hub.md#the-loveepisodes-import--a-cycle-fix-not-a-preference
-import { activeEpisode, loveEpisodesOf } from './loveEpisodes'
+import { activeEpisode, loveEpisodesOf, relationshipDurationWeeks } from './loveEpisodes'
+// ⭐ ROUND 46 #22 – the dev life-event boost, a leaf the arrival's compare reads through.
+import { boostedChance } from './lifeBoost'
 // ⚠ FROM ./constants, NOT ./endings, AND IT IS A CYCLE FIX RATHER THAN A PREFERENCE – the same
 // swap `world/entries.ts` records at its own import. `endings.ts` imports THIS module (it
 // raises the fork-opinion row and asks `pendingLifeBeat` before it will answer the fork), so
@@ -733,7 +735,7 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
     !inCollege(world) &&
     world.season.some(
       (e) =>
-        weekMonth(e.week) === MARCH &&
+        weekMonth(e.week, world.startYear) === MARCH &&
         e.week > world.week &&
         !world.entries.includes(e.id) &&
         world.week < e.deadlineWeek &&
@@ -1208,7 +1210,7 @@ function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: Hear
 //
 // ⚠ §11, the wedding's HAZARD half, is still in this file: it calls back into the hub and its names reach `world.ts` through the hub's…
 // → docs/notes/life-beats/hub.md#lifebeatts-3g--engaged--the-copy-moved
-import { ENGAGED_DRY, ENGAGED_HEADING, ENGAGED_HER_LINE } from './lifeBeat/weddingCopy'
+import { ENGAGED_DRY, ENGAGED_HEADING, ENGAGED_HER_LINE, engagedWithTogether } from './lifeBeat/weddingCopy'
 
 // 3h. `'spouse-view'` – THE COPY MOVED TO `world/lifeBeat/spouseViewCopy.ts` (A-06 / T6.8,
 // 28.09) – A pure leaf: only the dispatcher hub below read it, so it left whole and the hub
@@ -1791,8 +1793,8 @@ export function lifeStageOf(world: WorldState): DiaryLifeStage {
  */
 function lifeStageAt(world: WorldState, week: number): DiaryLifeStage {
   return diaryLifeStageFor(
-    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay),
-    schoolIsOver(week, world.profile.birthMonth),
+    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
+    schoolIsOver(week, world.profile.birthMonth, world.startYear),
     world.college !== null && week >= world.college.fromWeek && week < world.college.untilWeek,
   )
 }
@@ -1825,6 +1827,7 @@ export function lifeBeatSaid(
   driver: ForkStopDriver = 'own',
   endsRegister: EndsRegister = 'told-now',
   frame: string | undefined = undefined,
+  spouseLine: number | undefined = undefined,
 ): string {
   const presence = presenceOf(stage)
   // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
@@ -1942,7 +1945,12 @@ export function lifeBeatSaid(
     case 'spouse-view': {
       const occasion = SPOUSE_VIEW_OCCASIONS.find((o) => o === detail)
       if (occasion === undefined) throw new Error(`A spouse-view row carries no occasion: ${detail}`)
-      return SPOUSE_VIEW_SAID[occasion]
+      // ⭐ ROUND 46 R3 – THE LINE IS THE ROW'S OWN, stamped at the raise beside the occasion and never re-drawn:
+      // this runs on every snapshot, and a stream-derived pick would re-word a card already on screen the day
+      // the pool grows. A row with no `line` (raised before the pools had one) reads as entry 0, which is what
+      // it was told; an index the pool does not hold reads as 0 as well – a card never throws for a stale stamp.
+      const pool = SPOUSE_VIEW_SAID[occasion]
+      return pool[spouseLine ?? 0] ?? pool[0]
     }
     // ⭐ v83 (wave 7 – T10) – THE NINTH KIND, AND THE ONE-CELL POOL IS ARGUED AT ITS BANNER (§3i):
     // the card quotes nobody, so no voice, no bond, no register, no presence and no detail reach it.
@@ -2407,7 +2415,11 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // ⚠ IT IS DERIVED FROM THE WORLD'S OWN NUMBERS, not from the band and the register the two lines
     // above read: those are ladders, and the driver is a distance. `forkStopDriverOf` is the one
     // spelling of it and `forkWantWeights` reads the same two roots through the same helper.
-    said: lifeBeatSaid(
+    // ⭐⭐ ROUND 46 #11d – THE ENGAGED CARD ALSO SAYS HOW LONG THEY HAVE BEEN TOGETHER (the owner, 05.10:
+    // «можно там тоже писать сколько они вместе»). The pool line is untouched; `engagedWithTogether` appends ONE
+    // sentence for this kind and returns every other kind's line as it was (`null` weeks). The count is
+    // `relationshipDurationWeeks`, the primitive #9's personal page reads too, off the row's own episode.
+    said: engagedWithTogether(lifeBeatSaid(
       row.kind,
       row.detail,
       voice,
@@ -2433,7 +2445,10 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       // stored id survives the third. `undefined` on a pre-v81 row, which renders the first line of
       // the presence's pool: the sentence that row has already shown him.
       row.frame,
-    ),
+      // ⭐ ROUND 46 R3 – THE ELEVENTH IS READ OFF THE ROW TOO, the frame's own reason: the spouse's line is stamped
+      // at the raise and `undefined` on every older row, which reads as the occasion's first line.
+      row.line,
+    ), row.kind === 'engaged' ? relationshipDurationWeeks(world, loveEpisodesOf(world).find((e) => e.id === row.detail) ?? null) : null),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
@@ -2510,7 +2525,7 @@ export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
  *
  *  ⚠ IT TAKES THE DETAIL RATHER THAN COMPUTING IT, so every beat kind's own trigger owns its own
  *  draw and this stays the plumbing. `raiseForkOpinion` (world/endings.ts's caller) is the first. */
-export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: string, heard?: boolean, frame?: string): void {
+export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: string, heard?: boolean, frame?: string, line?: number): void {
   world.lifeLog ??= []
   const row: LifeBeatRecord = { week: world.week, kind, detail, answer: null }
   // ⭐⭐⭐ v76 T6 – THE STAMP, AND THE KEY IS WRITTEN ONLY WHEN SOMEBODY WAS ACTUALLY TEACHING HIM
@@ -2524,6 +2539,9 @@ export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: str
   // ⚠⚠ raiseLifeBeat: AND IT IS PERSISTED RATHER THAN DERIVED FOR ONE REASON ONLY…
   // → docs/notes/life-beats/hub.md#raiselifebeat--round-44--v81--the-frame-stamped-once-and-never-re-derived
   if (frame !== undefined) row.frame = frame
+  // ⭐ ROUND 46 R3 – THE SPOUSE'S LINE, written only by `rollSpouseView` and only on a `'spouse-view'` row
+  // (`LifeBeatRecord.line`): an index into that occasion's pool, stamped once and read back, never re-derived.
+  if (line !== undefined) row.line = line
   world.lifeLog.push(row)
 }
 
@@ -2659,7 +2677,7 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
  *  → docs/notes/life-beats/hub.md#kidagenow--her-age-this-week-fractional
  */
 export function kidAgeNow(world: WorldState): number {
-  return kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  return kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
 }
 
 /** WHO SHE IS, with `accrueSpirit`'s own courtesy for probe worlds hand-built in tests and
@@ -2776,7 +2794,8 @@ export function rollArrival(world: WorldState): void {
   const hazard = arrivalHazardFor(kidAgeNow(world), temperament)
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY. `<` and not `<=`: a hazard of 0 must be impossible rather
   // than merely unlikely, and `rngFromSeed` can return exactly 0.
-  if (rngFromSeed(`${world.seed}:life:arrival:${world.week}`)() >= hazard) return
+  // ⭐ ROUND 46 #22 – the wedding and the birth both start with a partner, so the arrival rolls through the same switch (OFF is `hazard * 1`).
+  if (rngFromSeed(`${world.seed}:life:arrival:${world.week}`)() >= boostedChance(hazard)) return
   const sinceWeek = world.week
   const wants = drawPartnerWants(world.seed, sinceWeek, temperament)
   const raw = drawRawLag(world.seed, sinceWeek, temperamentOpenness(temperament))
@@ -3174,10 +3193,39 @@ export function spouseViewEligible(world: WorldState): boolean {
  */
 export function rollSpouseView(world: WorldState): void {
   if (!spouseViewEligible(world)) return
-  const occasions = spouseViewOccasionsAt(world)
+  // ⭐ ROUND 46 #15 – THE OCCASIONS HE HAS NOT JUST SAID (owner, 05.10: the same line twice, a month or
+  // two apart, «часто повторяется»). The memory is DERIVED from the log – every raised row carries its
+  // occasion as `detail`, answered or not, the cooldown's own counting – so nothing is saved and the
+  // schema does not move. ⚠ THE FILTER RUNS BEFORE THE STREAM EXISTS: the OCCASION pick below is still
+  // its one draw on the same purpose key, only over the fresh occasions, and a week whose every true occasion is
+  // stale derives no key at all (a spouse with nothing NEW to say says nothing – §B's law). Where nothing was
+  // said inside the window the filter removes nothing and the occasion is the one it picked before.
+  const said = new Set(
+    lifeLogOf(world)
+      .filter((row) => row.kind === 'spouse-view' && world.week - row.week < ECONOMY.wedding.spouseViewNoRepeatWeeks)
+      .map((row) => row.detail),
+  )
+  const occasions = spouseViewOccasionsAt(world).filter((occasion) => !said.has(occasion))
   if (occasions.length === 0) return
-  const at = pickInt(rngFromSeed(`${world.seed}:life:spouse-view:${world.week}`), 0, occasions.length - 1)
-  raiseLifeBeat(world, 'spouse-view', occasions[at])
+  // ⭐ ROUND 46 R3 – ONE KEY, TWO TAPS (owner, 06.10: the occasions now hold several lines each). The first tap
+  // is the occasion, EXACTLY as before – the same stream, the same draw, the same range – so a world picks the
+  // occasion it picked a round ago; the second is the line inside it, on the SAME stream object (one derivation,
+  // not a second key), so a week that fires still derives exactly one key and a week that does not still derives
+  // none. ⚠ THE LINE MEMORY: never the line he said LAST for this occasion, read off the most recent row of it
+  // however old (a row with no `line` stood on entry 0 – `LifeBeatRecord.line`). It can only bind past the
+  // occasion window above, since inside it the occasion itself is stale. The pool is never emptied: a pool of one
+  // line, or a memory that excludes all of it, falls back to the whole pool, still one draw.
+  const rng = rngFromSeed(`${world.seed}:life:spouse-view:${world.week}`)
+  const occasion = occasions[pickInt(rng, 0, occasions.length - 1)]
+  const log = lifeLogOf(world)
+  let lastLine: number | null = null
+  for (let i = log.length - 1; i >= 0 && lastLine === null; i--) {
+    if (log[i].kind === 'spouse-view' && log[i].detail === occasion) lastLine = log[i].line ?? 0
+  }
+  const all = SPOUSE_VIEW_SAID[occasion].map((_, i) => i)
+  const fresh = all.filter((i) => i !== lastLine)
+  const live = fresh.length > 0 ? fresh : all
+  raiseLifeBeat(world, 'spouse-view', occasion, undefined, undefined, live[pickInt(rng, 0, live.length - 1)])
 }
 
 /** ⭐ THE WEEK'S OWN OCCASION, FOR THE DIARY ALONE – the `'spouse-view'` row raised THIS week, or

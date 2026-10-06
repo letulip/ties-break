@@ -13,8 +13,40 @@
 // ⚠ RE-RUNNING IT IS THE ONLY LEGITIMATE WAY TO CHANGE THE 400. When the owner edits a line in
 // `docs/specs/album-corpus-2026-09.md`, run this with `--write` and commit the result; do not touch
 // the generated module by hand. **The copy is his** (invariant 4) and the document is where it lives.
+//
+// ⭐⭐⭐ IT IS IDEMPOTENT: `--write` OVER A MODULE THAT IS ALREADY RIGHT CHANGES NOT ONE BYTE (B16, round 45,
+// 02.10 – found in-wave by B8 and folded into the wave, which had paid for it three times by hand first:
+// B8 spliced the pre-emit body back after a `--write`, and B15 did it twice over). Until then this was a
+// whole-file generator with two hard-coded choices, and the module holds two things that are NOT the
+// document's, so there was nothing in the document to regenerate them from:
+//   (1) THE HAND-WRITTEN COMMENT BLOCK ABOVE AN OCCASION – `the-line`'s nineteen-line heirloom block (A-L1,
+//       v86, wave 10 T6a), which `emitOccasion` replaced with a one-line `// A34 · the-line` stub;
+//   (2) THE ORDER OF AN OCCASION'S VOICE COLUMNS – `the-line` stands `sunny, fiery, quiet, deep`
+//       (`TEMPERAMENTS`' order) and the loop over `ALBUM_VOICES` re-wrote it `sunny, fiery, deep, quiet`.
+//       A `Record` has no order, so no string moved – and a diff that reads as a reshuffle is one nobody trusts.
+// ⚠⚠ BOTH WERE SILENT. The round-trip pin compares STRINGS and a comment is not one, so a builder who forgot
+// the splice would have shipped a module without its heirloom and a green gate.
+//
+// ⭐ THE SHAPE: READ THE COMMITTED MODULE, CARRY THOSE TWO THINGS FORWARD BY OCCASION ID, RE-WRITE EVERYTHING
+// ELSE. Not a patch over byte ranges – that has to say which bytes the emitter owns, and it owns all of them
+// but these two. Re-serialising keeps the DOCUMENT the only source of every string, id, kind, band and gate (a
+// hand-edit of a string in the module is overwritten, which is invariant 4's direction), and it makes
+// idempotence a one-line induction: an emitted block is [carried comment | stub from the document] + a fixed
+// skeleton + [voices in the carried order | the document's], and reading that block back returns exactly the
+// comment and the order it was written with – so a second pass reproduces the first.
+// `tests/album-corpus-roundtrip.test.ts` runs that from the committed module, from a cold start, and through
+// this CLI over a temp copy, so the claim is a test and not a comment.
+//   · A GENERATED STUB IS RE-DERIVED, NOT CARRIED: a lone `// A<n> · <id>` is the emitter's own and takes the
+//     document's CURRENT ref, so a renumbering lands. Anything else above the `{` is hand-written, verbatim.
+//   · THE CONTRACT HAS ONE SLOT: hand-written comments live in the run directly above an occasion's `{`. A
+//     comment INSIDE a block has nowhere to be carried to, so it is REFUSED loudly – the way the parser
+//     refuses a row it cannot read – rather than dropped silently by the next `--write`.
+//
+//     npx vite-node tools/album-corpus-emit.ts --write --out <path>   # the temp mode: <path> is read AND written
 
-import { writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import {
   readAlbumCorpus,
   albumCounts,
@@ -23,9 +55,73 @@ import {
   ALBUM_KINDS,
   ALBUM_VOICES,
 } from './album-corpus-parse'
-import type { AlbumCorpus, AlbumRow, AlbumArcRow } from './album-corpus-parse'
+import type { AlbumCorpus, AlbumRow, AlbumArcRow, AlbumVoice } from './album-corpus-parse'
 
-const OUT = new URL('../src/engine/world/albumCorpus.ts', import.meta.url)
+const ALBUM_MODULE = new URL('../src/engine/world/albumCorpus.ts', import.meta.url)
+
+/** The module as it stands – or the empty string on a cold start, when there is no file to carry from. */
+function readModule(at: URL = ALBUM_MODULE): string {
+  return existsSync(at) ? readFileSync(at, 'utf8') : ''
+}
+
+/** What the committed module holds for ONE occasion that the document does not. */
+interface Carried {
+  /** the hand-written `//` run directly above the block's `{`, verbatim; `null` where that run is only the generated stub, or absent */
+  comment: string[] | null
+  /** the voice columns in the order the module has them – the document's order is the default, not the law */
+  voices: AlbumVoice[]
+  /** comment lines found INSIDE the block, which cannot be carried and so make `emitOccasion` refuse */
+  inside: string[]
+}
+
+const ARRAY_OPEN = 'export const ALBUM_CORPUS: readonly AlbumOccasion[] = ['
+/** The emitter's own one-line comment: written when nothing is carried, so it is re-derived and never carried. */
+const GENERATED_STUB = /^ {2}\/\/ A\d+ · [a-z][a-z0-9-]*$/
+const ID_LINE = /^ {4}id: '([^']*)',$/
+const VOICE_LINE = /^ {6}(sunny|fiery|deep|quiet): \{$/
+
+/** ⭐ THE COMMITTED MODULE, READ FOR THE TWO THINGS IT HOLDS THAT THE DOCUMENT DOES NOT, keyed by occasion id.
+ *  ⚠ It throws on a shape it does not recognise, for the parser's reason: a module the emitter cannot read is
+ *  REPORTED, never patched around – the alternative is a `--write` that discards whatever it failed to
+ *  understand, which is the defect this exists to end. */
+function carriedFrom(existing: string): Map<string, Carried> {
+  const found = new Map<string, Carried>()
+  if (existing.trim() === '') return found
+  const lines = existing.split('\n')
+  const open = lines.indexOf(ARRAY_OPEN)
+  if (open === -1) throw new Error(`album module: no \`${ARRAY_OPEN}\` line – the emitter will not guess at a file it cannot read`)
+  let run: string[] = []
+  for (let i = open + 1; i < lines.length && lines[i] !== ']'; i++) {
+    if (lines[i].startsWith('  //')) {
+      run.push(lines[i])
+      continue
+    }
+    if (lines[i] !== '  {') throw new Error(`album module, line ${i + 1}: neither a line the emitter writes nor a carried comment: ${lines[i]}`)
+    let id: string | null = null
+    const voices: AlbumVoice[] = []
+    const inside: string[] = []
+    let end = i + 1
+    for (; end < lines.length && lines[end] !== '  },'; end++) {
+      const idHere = ID_LINE.exec(lines[end])
+      if (idHere !== null && id === null) id = idHere[1]
+      const voiceHere = VOICE_LINE.exec(lines[end])
+      if (voiceHere !== null) voices.push(voiceHere[1] as AlbumVoice)
+      if (lines[end].trimStart().startsWith('//')) inside.push(`line ${end + 1}: ${lines[end].trim()}`)
+    }
+    if (end >= lines.length) throw new Error(`album module, line ${i + 1}: a block that never closes`)
+    if (id === null) throw new Error(`album module, line ${i + 1}: a block with no id`)
+    if (found.has(id)) throw new Error(`album module, line ${i + 1}: ${id} appears twice`)
+    if (voices.length !== ALBUM_VOICES.length || !ALBUM_VOICES.every((v) => voices.includes(v))) {
+      throw new Error(`album module, line ${i + 1}: ${id}'s columns are ${voices.join(', ')}, not the four voices once each`)
+    }
+    const stubOnly = run.length === 0 || (run.length === 1 && GENERATED_STUB.test(run[0]))
+    found.set(id, { comment: stubOnly ? null : run, voices, inside })
+    run = []
+    i = end
+  }
+  if (run.length > 0) throw new Error(`album module: a comment run after the last block, which has no occasion to ride with: ${run[0]}`)
+  return found
+}
 
 /** ⚠ SINGLE-QUOTED, AND THE ESCAPES ARE THE ONLY TWO THAT MATTER: the backslash first (or it would
  *  escape the escapes that follow it) and the quote. The handwriting is full of apostrophes –
@@ -38,16 +134,23 @@ function union(values: readonly string[]): string {
   return values.map((v) => `'${v}'`).join(' | ')
 }
 
-function emitOccasion(row: AlbumRow): string[] {
+function emitOccasion(row: AlbumRow, carried: Carried | undefined): string[] {
+  if (carried !== undefined && carried.inside.length > 0) {
+    throw new Error(
+      `${row.ref} · ${row.id}: the committed module holds a comment INSIDE its block (${carried.inside[0]}). ` +
+        `Only the comment run directly above an occasion's '{' is carried, so the next --write would drop this one – ` +
+        `move it above the '{'.`,
+    )
+  }
   const out: string[] = []
-  out.push(`  // ${row.ref} · ${row.id}`)
+  out.push(...(carried?.comment ?? [`  // ${row.ref} · ${row.id}`]))
   out.push('  {')
   out.push(`    id: ${q(row.id)},`)
   out.push(`    kind: ${q(row.kind)},`)
   out.push(`    bands: [${row.bands.map(q).join(', ')}],`)
   out.push(`    gate: ${row.gate === null ? 'null' : q(row.gate)},`)
   out.push('    voices: {')
-  for (const voice of ALBUM_VOICES) {
+  for (const voice of carried?.voices ?? ALBUM_VOICES) {
     const hand = row.voices[voice]
     out.push(`      ${voice}: {`)
     out.push(`        note: ${q(hand.note)},`)
@@ -75,7 +178,10 @@ function emitArc(row: AlbumArcRow): string[] {
   return out
 }
 
-export function emit(corpus: AlbumCorpus = readAlbumCorpus()): string {
+/** ⭐ THE MODULE'S TEXT AS A PURE FUNCTION OF THE DOCUMENT AND OF THE MODULE IT IS ABOUT TO REPLACE – so the
+ *  round-trip pin can run it without touching a file, and `emit(doc, emit(doc, m)) === emit(doc, m)` is a
+ *  property of this code that a test states, not a habit of whoever last ran it. */
+export function emit(corpus: AlbumCorpus = readAlbumCorpus(), existing: string = readModule()): string {
   const counts = albumCounts(corpus)
   const authored = counts.notes + counts.captions + counts.lines + counts.arcStrings
   const head = `// ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM \`docs/specs/album-corpus-2026-09.md\`, NEVER
@@ -168,7 +274,8 @@ export interface AlbumArcHand {
 
 export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
 `
-  const body = corpus.occasions.flatMap(emitOccasion).join('\n')
+  const carried = carriedFrom(existing)
+  const body = corpus.occasions.flatMap((row) => emitOccasion(row, carried.get(row.id))).join('\n')
   const arcHead = `
 export const ALBUM_ARC: Record<AlbumArcDirection, Record<Temperament, AlbumArcHand>> = {
 `
@@ -176,14 +283,29 @@ export const ALBUM_ARC: Record<AlbumArcDirection, Record<Temperament, AlbumArcHa
   return `${head}${body}\n]\n${arcHead}${arcBody}\n}\n`
 }
 
-const text = emit()
-if (process.argv.includes('--write')) {
-  writeFileSync(OUT, text)
-  const counts = albumCounts(readAlbumCorpus())
-  console.log(
-    `wrote ${OUT.pathname}: ${counts.occasions} occasions, ${counts.notes} notes, ${counts.captions} captions, ` +
-      `${counts.lines} lines, ${counts.arcCells} arc cells, ${counts.arcStrings} arc strings`,
-  )
-} else {
-  console.log(text)
+function main(): void {
+  const at = process.argv.indexOf('--out')
+  const given = at === -1 ? undefined : process.argv[at + 1]
+  if (at !== -1 && (given === undefined || given.startsWith('--'))) throw new Error('--out needs a path')
+  const target = given === undefined ? ALBUM_MODULE : pathToFileURL(resolve(given))
+  const corpus = readAlbumCorpus()
+  const text = emit(corpus, readModule(target))
+  if (process.argv.includes('--write')) {
+    writeFileSync(target, text)
+    const counts = albumCounts(corpus)
+    console.log(
+      `wrote ${target.pathname}: ${counts.occasions} occasions, ${counts.notes} notes, ${counts.captions} captions, ` +
+        `${counts.lines} lines, ${counts.arcCells} arc cells, ${counts.arcStrings} arc strings`,
+    )
+  } else {
+    console.log(text)
+  }
 }
+
+// ⚠ `main()` RUNS UNLESS VITEST IS LOADING THIS FILE. The round-trip pin imports `emit` from here, and an
+// import must not print forty-eight thousand characters of module (or, with `--write` on a stray command
+// line, write one). The guard is an environment check and not the argv name check `tools/econ-bench.ts` uses:
+// the installed vite-node strips the entry file from `process.argv`, so a name check is false on every run –
+// and a CLI that prints nothing and exits 0 is the failure that matters, which is why the pin's CLI case
+// asserts that «wrote» was actually said.
+if (!process.env.VITEST) main()

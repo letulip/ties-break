@@ -33,9 +33,10 @@
 // leaves – ledger, ladder, college, bookings, constants. Deliberately NOT from coachMarket.ts:
 // importing it here would close a runtime cycle through endings → entries → medical → this file.
 import { ECONOMY } from '../economy'
-import { formatCents } from '../../shared/money'
 import { clamp } from '../condition'
 import { addEvent } from './ledger'
+import { staffAsks } from '../offers'
+import { staffFeeCents, writeStaffRaise } from './staffRaise'
 import { guardNotEnded } from './constants'
 import { activeLadderOf } from './ladder'
 import { inCollege } from './college'
@@ -206,8 +207,41 @@ export function masseurYearsServed(world: WorldState): number {
  *
  *  Pure integer arithmetic over the ledger, zero draws on any stream. */
 export function masseurSessionCents(world: WorldState): number {
-  const drifted = ECONOMY.masseur.perSessionCents * (1 + ECONOMY.masseur.raisePerYear) ** masseurYearsServed(world)
+  // ⭐⭐⭐ ROUND 45 #3 / #3b – THE FEE IS THE CHAIN OF THE PAPERS HE WAS GRANTED (`staffFeeCents`): the rate
+  // he was paid before his first request, moved by every request the family SIGNED, in order, each one by
+  // the two figures its paper printed – so with a step that floats with the year (02.10), what the letter
+  // said IS what is billed. The rate no longer rises on its own: each anniversary writes a request letter,
+  // and nothing moves until somebody says yes. ⚠ A career with no request papers at all – every save from
+  // before this round – is the baseline alone (the exponent over the years he served), so it keeps every
+  // raise it was already paying, which is why this needs no migration.
+  return staffFeeCents(world.offers ?? [], 'masseur', masseurRateAfter(masseurBaselineYears(world)))
+}
+
+/** WHAT ONE SESSION COSTS AFTER `grants` GRANTED RAISES – the compounding and the whole-dollar
+ *  rounding `masseurSessionCents` documents, taken from the UNROUNDED power. A floor of zero: a
+ *  negative count has no meaning and the opening price is the identity element. */
+function masseurRateAfter(grants: number): number {
+  const drifted = ECONOMY.masseur.perSessionCents * (1 + ECONOMY.masseur.raisePerYear) ** Math.max(0, grants)
   return Math.round(drifted / 100) * 100
+}
+
+/** ⭐⭐ HOW MANY OF THE SILENT ERA'S RAISES HE ALREADY HAD WHEN THE CHAIN OF PAPERS BEGAN – the exponent of
+ *  the baseline `masseurRateAfter` prices. Before round 45 his rate rose by itself on every anniversary, so
+ *  a save that predates the letters is already paying `years served` of them and must keep paying them: the
+ *  rate the exponent gives at the moment his FIRST request is written becomes that request's `fromCents`.
+ *   · once a request exists, the chain starts at the year BEFORE the first one (the year is on the paper:
+ *     its `weeksServed` is a whole number of years by construction), so declining it moves nothing and a
+ *     later paper chains from where the baseline left off;
+ *   · before any request, it is the years he has served – except on the anniversary the writer is
+ *     pricing (`asking`), whose own raise is exactly what the first request is ABOUT and is not yet agreed.
+ *  ⚠ Derived from the papers and the service ledger, so nothing is persisted. Pure, zero draws. */
+function masseurBaselineYears(world: WorldState, asking?: number): number {
+  const papers = staffAsks(world.offers ?? [], 'masseur')
+  if (papers.length > 0) {
+    const first = Math.min(...papers.map((o) => (o.terms as { weeksServed: number }).weeksServed))
+    return Math.max(0, Math.round(first / WEEKS_PER_YEAR) - 1)
+  }
+  return asking !== undefined ? Math.max(0, asking - 1) : masseurYearsServed(world)
 }
 
 /** IS THIS THE WEEK HE ASKS – the week his service count crosses a whole year.
@@ -224,58 +258,40 @@ export function masseurRaiseDue(world: WorldState): boolean {
   return masseurWeeksServedAt(world, world.week - 1) === served - 1
 }
 
-/** ⭐ THE ASK ITSELF – one kept-free `info` row on the anniversary week, and nothing else moves.
- *  The new rate is already live (`masseurSessionCents` reads the same counter), so the row is a
- *  NOTICE of a bill that has changed rather than an offer the player has to accept: the decision he
- *  is being handed is the rung dial, which is where it already lives.
+/** ⭐⭐⭐ ROUND 45 #3 – THE ASK IS A LETTER NOW, AND THE RATE DOES NOT MOVE UNTIL THE FAMILY SAYS YES.
+ *  The owner: «Письма с прогрессом от специалистов приходят, а повышение они так и не просят, только
+ *  массажист растёт сам по себе тихо ежегодно». On the anniversary week this writes ONE open letter
+ *  (`raiseStaffAsk`, the sponsor letters' two doors and four-week window) naming the rate he has now
+ *  and the rate he is asking for; `acceptOffer` signs it and the derived rate (`masseurSessionCents`)
+ *  moves, `declineOffer` or a lapse leaves it where it was.
  *
- *  ⭐⭐ THE TWO SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW, AND THEY REPLACE THE BUILD'S DRAFTS.
- *  His faults on what stood here, kept because they are the rule for the next line rather than a
- *  list of typos: «asks for more» first reads as more SESSIONS rather than more money, which is
- *  precisely the wrong idea on a row whose whole subject is the rate; and «the same hands» reduces a
- *  person to a pair of hands. ⭐ The voice of this surface is a FEED ENTRY – a compact consequence –
- *  which is why neither line is atmospheric: it states the new rate and the two answers.
+ *  ⚠⚠ THE 16.09 RULING'S «NO THIRD REFUSE BRANCH» IS SUPERSEDED BY THIS ASK, NOT BROKEN BY IT: that
+ *  sentence existed because there was no refusal at all. A declined or lapsed request is NOT punished
+ *  (the standing «мы ни за что не наказываем» – no mood, no firing, no extra bill), and the rung dial
+ *  (2 / 4 / 7) stays what it always was, available whatever the family answered.
  *
- *  ⚠⚠ AND ONE FACT IN HIS BOTTOM-RUNG SENTENCE WAS WRONG AND IS CORRECTED RATHER THAN SHIPPED. He
- *  wrote «She is already down to one session a week»; `ECONOMY.masseur.rungs` opens at **2** and its
- *  label is «Twice a week», so there is no one-session rung on this dial and never has been. The
- *  sentence keeps his shape and his second clause exactly and names the real floor – a line that
- *  told a family she was on one session while the card beside it said two would be the same class of
- *  defect as offering a rung that is not there, which is what this branch exists to avoid. Reported
- *  in the hand-back.
- *  ⚠ IT MAY CARRY THE FIGURE, unlike `masseurRoomNote`: this is the row whose whole job is the new
- *  price, and `setMasseurSessions` records the same split («the price change is on the next weekly
- *  bill, which is the row that may carry figures»).
- *  ⚠ NO MASCULINE PRONOUN IN EITHER LINE, which is R15-7's standing order and NOT covered by this
- *  file's «the pronoun is safe here» note beside `hireMasseur`: that note is about the NOUN, and
- *  `tests/coach-voice.test.ts` bans `he`/`his`/`him` from every engine literal a player can read.
- *  The first draft of the bottom-rung line said «to drop him to» and went red there, which is the
- *  guard doing exactly its job.
+ *  ⚠ THE FIGURES FLOAT WITH THE YEAR (02.10, `staffRaiseStep`: 6% / 4% / 2% by default) and keep the whole-dollar rounding,
+ *  compounding on what is GRANTED – ⚠ AND SINCE B17 (02.10, fourth batch) A DECLINED YEAR IS BANKED: the next
+ *  request is the rate he actually has grown by every year since it last moved (`staffRaiseQuote`, one step
+ *  when no year was refused). ⚠ One request per year of service, idempotent
+ *  on `staffAskId`, so a re-hire week that already sits on a year cannot write a second one.
  *
- *  ⚠ AND THE SECOND SENTENCE TELLS THE TRUTH AT THE BOTTOM RUNG. A family already on two sessions a
- *  week has no rung to drop to, and a line offering one would be the screen lying about a choice –
- *  this round's own #5 is about exactly that failure one tab over.
- *
- *  Called from `world/phaseHerWeek.ts` immediately BEFORE `resolveMasseur`, so the week the ask
- *  lands is the week the new bill is charged and the ledger reads in the order it happened.
- *  ZERO draws on any stream. */
+ *  ⚠ NOTHING DRAWS ON ANY STREAM and no cash moves: the letter is paper, and the bill that follows is
+ *  `resolveMasseur`'s, one call later in the same week, at whatever the derived rate then is.
+ *  Called from `world/phaseHerWeek.ts` immediately BEFORE `resolveMasseur`, as it always was. */
 export function resolveMasseurRaise(world: WorldState): void {
   if (!masseurRaiseDue(world)) return
-  const rate = masseurSessionCents(world)
-  const rung = masseurRungOf(world)
-  const bottom = rung.sessions === ECONOMY.masseur.rungs[0].sessions
-  // ⚠⚠ THE FLOOR IS NAMED BY THE RUNG'S OWN LABEL AND NEVER BY A LITERAL, which is the whole lesson
-  // of the fact this sentence got wrong. «Twice a week» is what the card beside this row says, so
-  // the two can never disagree – and a wave that retunes `rungs[0]` moves the sentence with it
-  // instead of leaving a line that describes a schedule the dial no longer offers.
-  const lead = `The masseur's rate rises to ${formatCents(rate)} a session starting this week.`
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text: bottom
-      ? `${lead} She is already down to ${rung.label.toLowerCase()}, so there is no shorter schedule to choose.`
-      : `${lead} Keep the current schedule at the higher rate, or book fewer sessions.`,
-  })
+  // ⭐ THE SHARED WRITER OWNS THE REST (world/staffRaise.ts): the due-week clock, the one-letter-per-year id
+  // and the FLOATING step. `year` already COUNTS this anniversary, so the silent-era raises he had BEFORE it
+  // are `year - 1` – unless an earlier request already fixed where his chain starts (`masseurBaselineYears`).
+  // The letter's `fromCents` is therefore the rate he is paid today, and its `toCents` the banked growth above it.
+  writeStaffRaise(
+    world,
+    'masseur',
+    MASSEUR_CHANGE_KEY,
+    world.masseurHired ?? false,
+    masseurRateAfter(masseurBaselineYears(world, masseurYearsServed(world))),
+  )
 }
 
 /** Whole dollars for the one row that quotes his rate. ⚠ NOT a formatter import: `shared/money.ts`

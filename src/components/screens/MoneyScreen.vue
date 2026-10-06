@@ -119,6 +119,9 @@ import StatRow from '../ui/StatRow.vue'
 // `composables/shop.ts`'s header is the whole argument.
 import ShopPanel from '../ShopPanel.vue'
 import { useShop } from '../../composables/shop'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 // The shell owns `tab`; this screen only asks. Money is a tabless CONTENT state reached from Home's
@@ -641,7 +644,7 @@ const seasonRows = computed(() => {
       const recorded = typeof r.spentCents === 'number'
       return {
         seasonIndex: r.seasonIndex,
-        yearLabel: `Season ${r.seasonIndex + 1} – ${seasonYear(r.seasonIndex)}`,
+        yearLabel: `Season ${r.seasonIndex + 1} – ${seasonYear(r.seasonIndex, startYear.value)}`,
         recorded,
         // ⭐ ROUND-17 #13 – TWO FIGURES ABOUT ONE YEAR, and the third one is gone rather than joined
         // by a fourth. The owner, 12.08: «там некуда добавлять, и так же на "кашу" похоже, надо
@@ -839,7 +842,7 @@ const dealTerm = computed(() => {
   const d = kitDeal.value
   if (!d) return ''
   const seasons = SEASON_WORDS[d.seasons] ?? `${d.seasons} seasons`
-  return `${seasons} · ${weekLabel(d.fromWeek)} – ${weekLabel(d.untilWeek)}`
+  return `${seasons} · ${weekLabel(d.fromWeek, startYear.value)} – ${weekLabel(d.untilWeek, startYear.value)}`
 })
 /** ⭐⭐ ROUND 41 #14 – THE BRACKET. His ask, 12.09: «На Bills на все выбранные позиции добавить в
  *  скобках сколько недель осталось». One function for both surfaces below that carry a REAL term
@@ -1117,7 +1120,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         <div class="money-head-id">
           <h2 class="money-title">Family Budget</h2>
           <p class="money-sub" :class="{ negative: fundsCents < 0 }">
-            {{ funds }} in the account &middot; {{ weekLabel(week) }}
+            {{ funds }} in the account &middot; {{ weekLabel(week, startYear) }}
           </p>
         </div>
       </div>
@@ -1261,7 +1264,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         <div class="money-artefacts" aria-hidden="true">
           <PaperNote v-if="receipt" class="money-receipt" tilt="2deg" ruled torn>
             <span class="money-receipt-line">{{ receipt.text }}</span>
-            <span class="money-receipt-line">{{ weekLabel(receipt.week) }}</span>
+            <span class="money-receipt-line">{{ weekLabel(receipt.week, startYear) }}</span>
             <span class="money-receipt-line money-receipt-sum">
               {{ formatCents(receipt.amountCents ?? 0) }}
             </span>
@@ -1411,7 +1414,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
                read, the projection still inside it); mutually exclusive with the spent-out note
                below by construction (one wants `remainingCents > 0`, the other `=== 0`). -->
           <p v-if="kitAllowanceProjectedEmptyWeek !== null" class="kit-deal-note is-projected">
-            At this pace it runs out around {{ weekLabel(kitAllowanceProjectedEmptyWeek) }}.
+            At this pace it runs out around {{ weekLabel(kitAllowanceProjectedEmptyWeek, startYear) }}.
           </p>
           <p v-if="kitDeal.remainingCents === 0" class="kit-deal-note is-spent">
             The season's allowance is spent. Her {{ dealCovers }} are billed to the family at full
@@ -1572,7 +1575,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
             <!-- ⭐⭐ ROUND 41 #14 – the same bracket the kit deal carries, off the same function
                  (`weeksLeftBracket`, script block). The lifetime row above has no `untilWeek` at
                  all and takes the other branch, so it is never asked for one. -->
-            {{ weekLabel(row.untilWeek ?? 0) }} {{ weeksLeftBracket(row.untilWeek ?? 0, week) }}
+            {{ weekLabel(row.untilWeek ?? 0, startYear) }} {{ weeksLeftBracket(row.untilWeek ?? 0, week) }}
           </p>
           <p v-else-if="row.state === 'open'" class="ad-slot-note">
             A letter here writes about {{ formatCents(row.openCashCents ?? 0) }} a year at her
@@ -1613,7 +1616,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           :value="formatCents(academy.coveredCents)"
           tone="positive"
         />
-        <p class="money-panel-note">With them since {{ weekLabel(academy.sinceWeek) }}.</p>
+        <p class="money-panel-note">With them since {{ weekLabel(academy.sinceWeek, startYear) }}.</p>
       </Card>
 
       <!-- ============================== 6. THE CAREER, BY YEAR ======================
@@ -1651,7 +1654,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           <Eyebrow as="h2">All transactions</Eyebrow>
           <p v-if="!ledgerGroups.length" class="money-panel-note">No transactions yet.</p>
           <div v-for="group in ledgerGroups" :key="group.week" class="ledger-week">
-            <p class="ledger-week-label">{{ weekLabel(group.week) }}</p>
+            <p class="ledger-week-label">{{ weekLabel(group.week, startYear) }}</p>
             <StatRow
               v-for="row in group.rows"
               :key="row.event.id"

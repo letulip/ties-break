@@ -242,7 +242,19 @@ describe('wave 10 T1 B – the band a career really hands over', () => {
   })
 
   it('⭐⭐⭐ a career that banked millions hands over the WEALTHY corridor', () => {
-    const { world, weeks } = walkToEnding(0, 1, 0)
+    // ⚠⚠ 02.10 – THE TARIFF RETUNE MOVED WALKED CAREERS; FIXTURE RE-AIMED (0,1,0) -> (1,1,2), CLAIM UNCHANGED. B11 made a match cheaper in condition
+    // and the injury share fell 49% -> 42%, so the star this cell lives (preset 0, player policy, seed 0: $15.0M banked, 63 pro titles) no longer
+    // breaks inside the belt – she walks all 1,600 weeks with no ending, and «the walk has to reach an ending» is the red line. The belt stays a
+    // belt: the cell moves, the horizon does not. Hunted by walking the PLAIN bench walker to an ending or to 1,600 weeks over presets 0–8 x
+    // both policies x seeds 0–3 (72 careers): 33 end inside the belt (injury or bankruptcy – that walker never answers the retirement offer),
+    // 7 of those carry a wealthy reserve, four bank MILLIONS and all four are the player policy. (1,1,2) is the earliest of the four: an
+    // injury at week 1,056, $12.3M, best rank 8, 30 pro titles – 544 weeks of margin, where the other three end at week 1,545 of 1,600.
+    // ⚠⚠ 05.10 – THE RUN-LADDER RULING (round 46 #7: 250-12, 500-15, 1000-18, Slam-21) MOVED WALKED CAREERS AGAIN; FIXTURE RE-AIMED (1,1,2) -> (2,1,2), CLAIM UNCHANGED. The 500, the 1000 and the Slam
+    // are priced by tier now, and the star this cell lived (preset 1, player policy, seed 2) walks all 1,600 weeks with no ending – $19.6M banked and she never broke. The belt stays a belt: the cell
+    // moves, the horizon does not. Re-hunted over the same grid with the PLAIN bench walker – presets 0–8 x both policies x seeds 0–3 (72 careers): 39 end inside the belt, 12 of those carry a wealthy
+    // reserve, eight bank MILLIONS and all eight are the player policy. (2,1,2) is the earliest of the eight: an injury at week 1,056, $13.3M, best rank 6, 53 pro titles – 544 weeks of margin, where the
+    // other seven end between week 1,139 and 1,545 of 1,600.
+    const { world, weeks } = walkToEnding(2, 1, 2)
     expect(world.ending, `the walk has to reach an ending (${weeks} weeks)`).not.toBe(null)
     expect(world.kidFundsCents, 'a star with a cabinet retires wealthy').toBeGreaterThanOrEqual(
       ECONOMY.startingFundsCents.wealthy,

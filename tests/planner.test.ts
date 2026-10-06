@@ -320,7 +320,8 @@ function hashOf(draws: number[]): string {
 // byte and are asserted BEFORE this constant is read. #34 adds NO draw to any stream - it changes
 // what a drawn point is worth, never how many are drawn - which is why the hash could not move
 // and did not, and why planner.test.ts's input-independence halves still pass unchanged.
-const REF = { kidRank: 90 }
+// ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): kidRank 90 -> 89 – a VALUE moving and NO DRAW. Same companion value as tests/condition.test.ts (full reasoning at its REF declaration): the draws are unmoved, the year-end rank is not.
+const REF = { kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -544,6 +545,9 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     expect(yachtWeek.priceCents).toEqual([5600_00, 9800_00])
     expect(yachtWeek.conditionGain).toBe(vacationPackage('elite')!.conditionGain)
     expect(yachtWeek.buffFactor).toBeGreaterThan(vacationPackage('elite')!.buffFactor)
+    // ⚙ AMENDED 05.10 (round 46 #6, the owner's «для своей яхты тоже -15%»): this arm still describes the
+    // CHARTER row, which is unchanged. The OWNER's week carries `grantedBuffFactor` 0.85 now – the veto no
+    // longer holds on that side, by his word – and `tests/yacht-own-buff.test.ts` holds that half.
     // The unit the table is written in (spec §4): every rung is denominated in rest weeks at the
     // repriced base, which is why the two knobs may never be re-tuned apart. ⚠ 12.08: the bottom
     // two moved with the owner's re-step (18/22 -> 10/18), so the free week is now worth 1.25 rest

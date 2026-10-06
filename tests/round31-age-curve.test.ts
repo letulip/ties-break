@@ -355,7 +355,12 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // ⚠ AND v90.json IS THAT SAME PROBE ONE VERSION FURTHER UP – `migrateSave(v89.json)`, the secondary market's own README row – and it
     // is the plainest rung yet: v90's two keys are OPTIONAL and absent on every fixture, so the file is the same length TO THE BYTE with
     // `schemaVersion` the only line that moved. Nothing in a listing touches a curve, or could. Added 30.09.
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json') {
+    // ⚠ AND v91.json IS THE SAME PROBE ONE MORE VERSION UP – `migrateSave(v90.json)`, the first-touch latch's own README row: `firstNo1` is
+    // optional and the fixture's cached ranks are not 1, so the file is the same length TO THE BYTE with `schemaVersion` the only line that
+    // moved. Nothing in a rank latch touches a curve, or could. Added 02.10.
+    // ⚠ AND v92.json IS THE SAME PROBE ONE MORE VERSION UP – `migrateSave(v91.json)`: `startYear` is one more key, written right after `week`, and nothing in a calendar year
+    // touches a curve, or could. Added 06.10 (SUCCESSION S1).
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json' || file === 'v91.json' || file === 'v92.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

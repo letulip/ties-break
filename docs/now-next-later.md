@@ -29,8 +29,23 @@ last-reviewed: 2026-09-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 44 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 46 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 46 is a 22-item playtest round** ([round-46.md](rounds/round-46.md), 05.10) – off the
+merged round-45 build, the same day. Life events get their screens (the wedding and birth moments,
+the calendar wedding band, a ×8 dev hazard switch), the year summary's arithmetic, the index-fund
+cost basis, the asset-card buttons, the epilogue's album flow + a dev save export, the drain
+ladder re-targeted 12/15/18/21 on his word, house entry-price inflation, and – answered, not
+built – no in-browser LLM for the small talks: the corpus path. The succession idea (gen-2
+careers continuing the calendar) is parked for its own spec. Sequential bundles under the 29.09
+token law.
+
+**Round 45 shipped and merged 05.10 as PR #164** ([round-45.md](rounds/round-45.md), 02.10) – the
+tier tariff retuned on his own lever, specialist raise letters with the floating step and the
+banked refusals (the bank survives a re-hire), the psychologist's carry-over, the album's
+notes/crop/dedup and the first-№1 latch (v91), the own-place deposit corridor, the two-day clash
+shoot, and the brand's 13,800 confirmed as the designed top corner.
 
 **Round 44 makes the corpus the game** ([round-44.md](rounds/round-44.md), 17.09) – opened the day
 round 43 merged. Round 43 shipped the small-talk corpus as a DOCUMENT (43 situations, 172 voiced

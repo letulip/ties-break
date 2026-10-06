@@ -7,6 +7,8 @@
 import { rngFromSeed } from '../../rng'
 import { ECONOMY } from '../../economy'
 import { kidAgeNow, raiseLifeBeat } from '../lifeBeat'
+// ⭐ ROUND 46 #22 – the dev life-event boost (a leaf).
+import { boostedChance } from '../lifeBoost'
 import type { WorldState } from '../state'
 
 // 16. A DEATH IN THE FAMILY – ⚠⚠ THE WORLD'S DICE, NEVER HER PERSONALITY'S (the weight, wave
@@ -60,7 +62,8 @@ export function rollBereavement(world: WorldState): void {
   if (!bereavementEligible(world)) return
   const chance = bereavementChanceAt()
   if (chance === 0) return
-  if (rngFromSeed(`${world.seed}:life:loss:${world.week}`)() >= chance) return
+  // ⭐ ROUND 46 #22 – the ledger's «kin»: a funeral is a life beat he could not wait for either.
+  if (rngFromSeed(`${world.seed}:life:loss:${world.week}`)() >= boostedChance(chance)) return
   world.bereavementWeeks.push(world.week)
   world.spiritShock = { week: world.week, kind: 'bereavement' }
   raiseLifeBeat(world, 'bereavement', String(world.week))

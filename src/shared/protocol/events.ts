@@ -363,6 +363,31 @@ export interface FinanceWeek {
    *  paid a share this week»), which is also true of most weeks in every career, so no migration is
    *  owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move. */
   coachCut?: FinanceWeekCoachCut
+
+  /** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 (06.10) – WHAT THE WEEK'S ASSET SALES REALISED AGAINST WHAT THE PART THAT LEFT HAD COST, in signed
+   *  cents: positive = the sales fetched more than the family had put into what was sold, negative = less. A memo, a sibling of
+   *  `byCategory` and never a key inside it – `kidShare` and `coachCut` above are its two precedents.
+   *
+   *  THE OWNER, 06.10: «а) мне нужно видеть реальные расходы и доходы, мы это уже обсуждали. Инвестиция это не совсем расход,
+   *  только если мы не в минусе зафиксировались». A deposit is not a cost, but a sale that FIXED a loss is one, and the year-end
+   *  card has to be able to say so. This is the figure it says it with.
+   *
+   *  ⚠⚠ THE CENTS ARE ALREADY COUNTED – `coachCut`'s reason, not `kidShare`'s. A sale writes its whole proceeds as a `+shop` row, so
+   *  the proceeds are inside `byCategory.shop`, inside the season's shelf figure and inside the wallet's net; this carries the part of
+   *  those proceeds that was a gain or a loss against cost. A screen may NAME it. A fold that added it to a column has counted one
+   *  sale twice.
+   *
+   *  ⚠ NOT DERIVABLE FROM ANYTHING ELSE, which is why it is carried and not reconstructed. `byCategory.shop` nets purchases, sales
+   *  and the cars' upkeep into one number; a WHOLE sale deletes the row it sold; and `OwnedAsset.realisedGainCents` is lifetime,
+   *  part-sale-only and dies with its row – none of them can answer «what did THIS season's sales realise». Written by the two sites
+   *  that settle a sale (`sellAsset`'s part path and `settleAssetSale`), from the very `delta` they already print in the ledger
+   *  sentence («– $X less than it cost»), at the same commit point.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `coachCut`'s own reasoning, verbatim in its situation: absent is exactly what every save
+   *  written before this means («none recorded») and what every week without a sale means, so no migration is owed, no golden
+   *  fixture is added and `SAVE_SCHEMA_VERSION` does not move. A season already under way when this ships has no memo for the sales it
+   *  had made – «ранние не страшно», his word on the earlier years. A zero delta is not written. */
+  realisedCents?: number
 }
 
 /** What the coach was paid out of one week's prize cheques. Both numbers are the engine's own at the
@@ -591,6 +616,9 @@ export type StopReason =
    *  Good news rather than a cost, so it sits low in the precedence below; but it landed on the one
    *  week a player stepping by four can never see, and passed in silence for a whole career. */
   | 'academy'
+  // ⭐ ROUND 46 #11c – the wedding day or the birth landed THIS week: a span ends ON it (`advanceWeeks`), so the day is seen
+  // instead of buried. No toast copy (App's `STOP_REASON_TEXT` has none, so no toast) – the full-screen moment is its surface.
+  | 'life-moment'
   /** ⭐ A LETTER SHE CAN STILL ANSWER LANDED THIS WEEK – R2-13's own item text lists «offers» among
    *  the events the span must stop before, and phase 1 shipped without one: offers reached the
    *  player through the span digest and the inbox dot only, which is the surface round-23 #16 proved
@@ -832,6 +860,8 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   'season-end',
   'deadline',
   'funds',
+  // ⭐ ROUND 46 #11c – LAST: a day that has already happened and costs her nothing waits behind every reason that does.
+  'life-moment',
 ]
 
 /** CAREER-TOTAL MONEY, and it is a NEW FACT rather than a view of an old one – the same argument

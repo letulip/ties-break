@@ -65,6 +65,14 @@ export const SALE_LABELS = {
   withdraw: 'Withdraw',
 } as const
 
+// ⭐⭐ ROUND 46 #1 – THE LISTED CARD'S TWO BUTTONS AND THE SECOND WORD ON THE SELL ONE (`shopSellRowNote`; the template's comment names this).
+// owner (shopSellRowNote), 05.10: «Когда выбрали залистить айтем на продажу появляется кнопка withdraw выше sell на карточке машин. Предлагаю в один ряд сделать, а ещё, если случился list, то sell заменять на sell now и жёлтую. На карточке домов кнопки лежат одна сверху другой. Надо проверить во всех разделах и сделать одинаково.»
+// ⚠ shopSellRowNote: «SELL NOW» IS NOT A NEW STRING. It is the constant above that the popup's second door already prints, so the verb has ONE spelling:
+// once the engine says the row is listed (`row.listing`, the predicate that already draws the badge) the card's Sell control prints it, and under
+// no other condition – an unlisted card, a deposit and a fund read what they always read. DRAFT R46-S22 in docs/rounds/round-46.md, «his words, wired».
+// ⚠ shopSellRowNote: WITHDRAW AND SELL ARE ONE ROW (`.shop-stake-row.is-listed` in ShopPanel.vue), the same row every owned card already draws – the
+// two stacked on the cars and lay on top of each other on the painted families, and both were one cause (the Withdraw had a block of its own).
+
 /** The shelf, for one mounted Money screen.
  *
  *  @param week the career's week, the screen's own reader – see the header.
@@ -251,7 +259,7 @@ export function useShop(week: ComputedRef<number>) {
   /** The ring's spoken sentence – the visible figure is the ring's own default slot (N%). DRAFT for
    *  the owner's read, listed on the ledger item. Week through `weekLabel`, per R11-6. */
   function buildRingLabel(row: ShopRowView): string {
-    return `${Math.round(buildProgress(row) * 100)}% built – ready ${weekLabel(row.readyWeek ?? 0)}`
+    return `${Math.round(buildProgress(row) * 100)}% built – ready ${weekLabel(row.readyWeek ?? 0, game.snapshot?.startYear)}`
   }
   /** The stage this rung is waiting on, by NAME – the label off the row it names, never an id on
    *  screen. Empty when the requirement is met or there is none. */
@@ -422,7 +430,7 @@ export function useShop(week: ComputedRef<number>) {
    *  («с суммой и датой») and the month is the chart's OWN axis spelling (`monthLabel`), so the bubble
    *  and the strip under it cannot name a week two different ways. */
   function markLabel(buy: ShopPurchaseView): string {
-    return `Bought in ${monthLabel(buy.week)}, ${formatCents(buy.cents)}`
+    return `Bought in ${monthLabel(buy.week, game.snapshot?.startYear)}, ${formatCents(buy.cents)}`
   }
 
   /** WHICH WAY THE BUBBLE LEANS – the left third of the plot pushes it right, the right third
@@ -454,7 +462,7 @@ export function useShop(week: ComputedRef<number>) {
     const plot = chartPlot(row)
     if (!plot || points.length === 0) return 'Not enough months to draw yet'
     return (
-      `One unit, monthly, from ${monthLabel(points[0].week)} to ${monthLabel(points[points.length - 1].week)}: ` +
+      `One unit, monthly, from ${monthLabel(points[0].week, game.snapshot?.startYear)} to ${monthLabel(points[points.length - 1].week, game.snapshot?.startYear)}: ` +
       `${formatCents(plot.low)} to ${formatCents(plot.high)}`
     )
   }

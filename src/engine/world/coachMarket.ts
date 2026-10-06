@@ -22,7 +22,6 @@ import { coachAskFraction, coachLabourCents } from '../coach'
 // already cross: `shared/money` is a pure function of cents and reaches for nothing in the UI, so
 // invariant 1 is untouched. A hand-rolled `$` here would print `$1234` where the game prints
 // `$1,234` – the masseur's own 17.09 correction, kept rather than repeated.
-import { formatCents } from '../../shared/money'
 // ⭐⭐ ROUND 44 – THE WIRE FOR THE CHEMISTRY (spec §8b). A leaf import of the one derivation, exactly
 // as `coachEdgeCorridorPp` above is imported rather than re-implemented here: the card must paint the
 // same number `growWeek` grows her on, and one function is how that stays true.
@@ -52,7 +51,8 @@ import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 // added once. Type-only, erased at build; the protocol imports nothing back.
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile, Snapshot } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
-import { activeKitDeal, kitTravelShare } from '../offers'
+import { activeKitDeal, kitTravelShare, raiseStaffAsk, staffAskId } from '../offers'
+import { restampCoachDeal, skillSum } from './coachDeal'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
 // runs one way exactly as `../offers` above does.
@@ -255,13 +255,6 @@ export function coachSinceWeek(world: WorldState): number {
 // and `coachMarket`'s `current: true` row reads the deal for exactly that reason: the card for the
 // man she has must not contradict the bill she is charged for him.
 
-/** THE SUM OF HER ATTRIBUTES, and of her ceilings – the two marks the development component measures
- *  between. `SKILL_KEYS` and not `Object.values`, so a sixth attribute joins both sides at once or
- *  neither. */
-function skillSum(of: Record<(typeof SKILL_KEYS)[number], number>): number {
-  return SKILL_KEYS.reduce((sum, k) => sum + of[k], 0)
-}
-
 /** WHAT HIS LABOUR WOULD COST TODAY IF SHE WERE HIRING HIM NOW – the market's own quote, and the
  *  CEILING an ask may climb to.
  *
@@ -328,22 +321,7 @@ export function settleCoachDeal(world: WorldState): void {
     return
   }
   if (world.coachDeal?.coachId === coach.id) return
-  restampCoachDeal(world, coach, coachMarketLabourCents(world, coach), coachSinceWeek(world))
-}
-
-/** The write itself – the contract and the marks, together, because a fee agreed against last year's
- *  marks would price the next ask on a year it was already paid for. Exported for the ask, which
- *  re-strikes the same deal at a new figure. */
-function restampCoachDeal(world: WorldState, coach: Coach, labourCents: number, agreedWeek: number): void {
-  world.coachDeal = {
-    coachId: coach.id,
-    labourCents,
-    agreedWeek,
-    markWtaRank: kidLadderRank(world, 'wta'),
-    markSkills: skillSum(world.skills),
-    markPotential: skillSum(world.potential),
-    residualSince: 0,
-  }
+  restampCoachDeal(world, coach.id, coachMarketLabourCents(world, coach), coachSinceWeek(world))
 }
 
 /** ⭐ THE RESULTS CHANNEL, BANKED – wave F1's own per-match residual against the odds ring, summed
@@ -458,25 +436,36 @@ export function coachRaiseDue(world: WorldState): boolean {
   return served > 0 && served % WEEKS_PER_YEAR === 0
 }
 
-/** ⭐⭐ THE ASK ITSELF – one `info` row on the anniversary week, and the fee it names is live from the
- *  same week (`resolveBaseCosts` bills after this runs, exactly as `resolveMasseurRaise` sits on the
- *  billing side of `resolveMasseur`).
+/** ⭐⭐⭐ THE ASK, AS A LETTER (ROUND 45 #3b, owner 02.10) – on the anniversary week this writes ONE open staff
+ *  letter (`raiseStaffAsk`: the sponsor letters' four-week window, two doors) quoting the hourly rate she is
+ *  billed now and the one he asks for. NOTHING MOVES UNTIL THE PARENT SIGNS: `acceptOffer` re-strikes the
+ *  deal (`settleCoachRaise`, world/coachDeal.ts – the same single stored fee `coachRateCents` bills and the
+ *  card quotes), and a decline or a lapse leaves the fee exactly where it was and writes nothing else.
+ *  Nobody leaves and nobody is punished: the 17.09 «no third branch» ruling, kept by the owner on 02.10.
+ *
+ *  ⚠⚠ SUPERSESSION NOTE – THE 02.10 RULING OVER ROUND 42 / 43. Until round 45 this applied ITSELF: it
+ *  re-struck the deal at the asked figure and wrote one `info` feed row («… has asked for more after a
+ *  year together – $X an hour becomes $Y»). That AUTOMATIC rise and its notice are RETIRED. The owner:
+ *  «тренер тоже вполне может просить повышения – с удачных лет по-больше, с неудачных по-меньше, как и все
+ *  остальные». ⚠ THE SIZE IS UNCHANGED, which is what makes the conversion value-neutral on a year the
+ *  parent accepts: the corridor below (`coachAskFraction` over `coachProgressScore`, 5–15%) was ALREADY the
+ *  floating fork – a better year asks for more, a flat one for the floor – so the coach keeps his own
+ *  step, and the three seats that had a flat 4% get theirs from `staffRaiseStep` (world/staffRaise.ts).
  *
  *  ⚠⚠ HE NEVER ASKS FOR LESS, AND THIS FUNCTION IS WHERE THAT IS TRUE. `coachAskFraction` has a
- *  FLOOR of 5% and no negative arm at all, and the write below is gated on `next > deal.labourCents`
+ *  FLOOR of 5% and no negative arm at all, and the write below is gated on `next` clearing that floor
  *  – so the two ways a fee could fall (a bad year, and a ceiling that has dropped because she left a
  *  band) both resolve to «nothing happens». The downward half of the old silent re-price is deleted
  *  rather than lettered, which is the owner's ruling: a contract that falls because she had a quiet
  *  season is the thing he called incorrect.
  *
  *  ⚠ NO ROOM MEANS NO LETTER. When the market's own quote for the same man has not moved, there is
- *  nothing to ask for and nothing is written – no row, no state, no re-stamp. A feed row that
+ *  nothing to ask for and nothing is written – no letter, no state, no re-stamp. A paper that
  *  announced a raise of zero would be the screen inventing an event, and the anniversary simply comes
  *  round again next year.
  *
- *  ⚠⚠ THE SENTENCE IS A **DRAFT** (invariant 4). The masseur's ask is the model for its SHAPE – a
- *  compact feed consequence that states the new figure and the family's answer – and never for its
- *  words. It carries no masculine pronoun, which is R15-7's standing order and what
+ *  ⚠ THE LETTER'S WORDS ARE **DRAFTS** (invariant 4): R45-S23..S27 in docs/rounds/round-45.md, the staff
+ *  letter's shape with the unit «an hour». They carry no masculine pronoun – R15-7's standing order, which
  *  `tests/coach-voice.test.ts` enforces on every engine literal a player can read.
  *
  *  ZERO DRAWS on any stream. */
@@ -484,6 +473,13 @@ export function resolveCoachRaise(world: WorldState): void {
   if (!coachRaiseDue(world)) return
   const deal = world.coachDeal
   if (!deal) return
+  // ⭐ ONE LETTER PER SEASON, idempotent on its id – and the key is the SEASON OF THE ANNIVERSARY, never
+  // «years since the deal»: a signed raise re-dates the deal (`settleCoachRaise`), so a years-served count
+  // restarts at 1 every time and `staff-ask-coach-1` would collide with last year's paper, which is never
+  // pruned. Two anniversaries of one contract are 52 weeks apart, so they always fall in different seasons,
+  // and one coach's second anniversary can never reach a season a previous coach's already used.
+  const year = seasonIndexOf(world.week)
+  if (world.offers.some((o) => o.id === staffAskId('coach', year))) return
   const coach = coachById(world.seed, ageAtWeek(world.week), deal.coachId)
   if (!coach) return
   const ceiling = coachMarketLabourCents(world, coach)
@@ -507,17 +503,17 @@ export function resolveCoachRaise(world: WorldState): void {
   // the smallest integer that is genuinely at or above 5%, so the corridor holds on the cents rather
   // than approximately. `tests/round42-coach-raise.test.ts` §F4 is the case that caught it.
   if (next < Math.ceil(deal.labourCents * (1 + ECONOMY.coach.raise.askFloor))) return
+  // ⚠ THE FIGURES ARE THE HOURLY RATE THE BILL IS BUILT FROM, not a weekly quote, because the weekly
+  // number depends on the training dial and would go stale the moment the parent moved it. The court's
+  // share is the same on both, so `toCents` is the rate she is billed now plus exactly the labour he asks
+  // for (`before` is `court + labour`: the gate above guarantees the ceiling clears the labour, so the
+  // billed rate is not clamped). Frozen on the paper at its arrival week.
   const before = coachRateCents(world, coach)
-  restampCoachDeal(world, coach, next, world.week)
-  const after = coachRateCents(world, coach)
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    // ⚠ THE FIGURE IS THE HOURLY RATE THE BILL IS BUILT FROM, not a weekly quote, because the weekly
-    // number depends on the training dial and would go stale the moment the parent moved it. Through
-    // `formatCents` – the one formatter (the masseur's own 17.09 correction: a hand-rolled `$` prints
-    // `$1234` where the rest of the game prints `$1,234`).
-    text: `${coach.name} has asked for more after a year together – ${formatCents(before)} an hour becomes ${formatCents(after)}. The rate stands until the next time it is agreed.`,
+  raiseStaffAsk(world.offers, world.week, year, {
+    seat: 'coach',
+    seasonIndex: year,
+    weeksServed: world.week - deal.agreedWeek,
+    ask: { fromCents: before, toCents: before + (next - deal.labourCents) },
   })
 }
 
@@ -1904,7 +1900,7 @@ function askWeekAtOrAfter(week: number): number {
  *  Null while the save carries no peak, while she is further out than the window, and on any world
  *  whose body never reaches the band inside the walk's forty-year cap. */
 export function lastWinterIn(world: WorldState): number | null {
-  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age < ENDINGS.askFromAgeYears) return null
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const years = seasonsOfBodyLeft(world, bounds, age, ENDINGS.lastOfferPeakShare)
@@ -1982,7 +1978,7 @@ type DeclineRead = { seasons: number; yearMove: number | null; belowBest: number
 
 function declineRead(world: WorldState): DeclineRead | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
-  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age < bounds.declineStart) return null
   const years = seasonsOfBodyLeft(world, bounds, age)
   if (years === null) return null

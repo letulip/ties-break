@@ -99,14 +99,17 @@ import { careerMoney } from './reckoning'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, latchedEpisode, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
 // imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
 import { ownKeyThisWeek } from './lifeBeat/ownKey'
 import { motherhoodBandAt } from './lifeBeat/pregnancy'
+import { upcomingWeddingWeek } from './lifeBeat/wedding'
+import { lifeMomentOf } from './lifeMoment'
+import { lifeEventBoostOn } from './lifeBoost'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
-import { knownPartner } from './loveEpisodes'
+import { knownPartner, relationshipDurationWeeks } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
@@ -119,15 +122,15 @@ import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
+import { arrivalStatus, entryStatus, layoffCoveringAsPlayed, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
-import { sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
-import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
+import { sparringRungWeeklyCents, sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
+import { psychologistRungWeeklyCents, psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView, reachableFundsCents } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
@@ -149,6 +152,7 @@ import { boothLineageAt, boothPrivateLifeAt } from './spotlight'
 // it is asked rather than re-spelled.
 import { temperamentOpenness } from '../spirit'
 import { summerDayCapacity } from './summer'
+import { hasHeirloom } from './heirloom'
 import type { WorldState } from '../world'
 
 // --- snapshot ----------------------------------------------------------------
@@ -262,9 +266,13 @@ export function buildInjuryReport(world: WorldState): InjuryReport | null {
   // HOLDS against the engine's own window – not off `upcoming`, which the dialog used to read and
   // which stops at UPCOMING_WEEKS, so a layoff longer than the horizon hid its own last forfeits.
   const stranded: InjuryEntryRow[] = []
+  // ⭐ ROUND 46 R1 – THESE ROWS ARE ALMOST ALWAYS THE PLAYED WEEK'S (a held entry is one whose list has
+  // closed, i.e. week + 1 or sooner), so they read the window as the tick will find it: an entry the
+  // masseur's cadence clears her for is PLAYED, and listing it as forfeited would be the same
+  // injured-when-fit lie the home preview had (owner, 06.10).
   for (const id of world.entries) {
     const e = eventById(world, id)
-    if (!e || e.week < world.week || layoffCovering(world, e.week) === null) continue
+    if (!e || e.week < world.week || layoffCoveringAsPlayed(world, e.week) === null) continue
     stranded.push({ id: e.id, label: TIERS[e.tier].label, week: e.week })
   }
   stranded.sort((a, b) => a.week - b.week)
@@ -744,14 +752,37 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
  *  `matchWeekRecoveryBase` = 0, plus the physio and blackout bonuses, and nothing subtracts before
  *  step 2), so a 'medical' preview can be false by a point or two. Announcing a withdrawal that
  *  then does not happen would replace the old lie with a new one; the medical stop + toast already
- *  make the real thing loud. The layoff and the point band are pure state and cannot move, so those
- *  two ARE previewed. */
+ *  make the real thing loud. The point band is pure state and cannot move, so it IS previewed.
+ *
+ *  ⭐⭐ ROUND 46 #16 – AND THE LAYOFF IS PREVIEWED THROUGH THE ONE THING THAT CAN MOVE IT BEFORE THE
+ *  PLAY WEEK: THE MASSEUR'S REHAB WEEK. This paragraph used to say the layoff «cannot move», which
+ *  stopped being true at v59: `rollInjury` takes ONE extra week off the countdown inside the very
+ *  tick this button runs, and `arrivalStatus` reads the clinic's `weeksRemaining` from the state
+ *  BEFORE it. So on the snapshot where the clinic said two weeks and his cadence landed on the next
+ *  tick, home said «injured walkover» for a week the tick then cleared her for – the owner's W500,
+ *  played and won twice under a verdict that said she would not appear (the Calendar's grid read
+ *  the same clinic number and said «injury» beside it).
+ *
+ *  ⚠ THE FIX IS A READ, NOT A RULE. `arrivalStatus` is untouched – at the tick it runs AFTER the
+ *  decrement and is exact, and replaying the cadence there would count his week twice. The preview
+ *  asks `layoffCoversWeek` against `weeksRemaining − masseurRehabWeeksAhead`, the replay
+ *  `injury.expectedWeeks` already puts on the wire (round 41 #19). For THIS tick that replay is not
+ *  a forecast but the arithmetic the tick will run, exact whenever nothing moves between the
+ *  snapshot and the click – and every command that could (firing him, changing his rung, booking a
+ *  holiday) returns a fresh snapshot. The clinic's number on the plaque is NOT touched (round 34).
+ *  Byte-identical for every career without a masseur (the replay is 0). Pure state, ZERO draws, no
+ *  wording.
+ *
+ *  ⭐ ROUND 46 R1: THAT READ IS NOW `layoffCoveringAsPlayed` (world/medical.ts) – the one function the
+ *  entry gate's display, the planner and the injury report ask as well, so the played week has one
+ *  spelling instead of this one and a second. The entry gate and the planner follow the replay for
+ *  THIS week only; every later week keeps the clinic's window (a forecast). */
 export function arrivalPreview(world: WorldState): ArrivalPreview | null {
   const next = world.week + 1
   const event = world.season.find((e) => e.week === next && world.entries.includes(e.id))
   if (!event) return null
   const status = arrivalStatus(world, event)
-  const injured = status.verdict === 'injured'
+  const injured = status.verdict === 'injured' && layoffCoveringAsPlayed(world, event.week) !== null
   return {
     eventId: event.id,
     tier: event.tier,
@@ -1671,7 +1702,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // Keep this structural instead of importing `inCollege`: college.ts already depends on this
     // projection module for ladder presentation, and the diary must not create a runtime cycle.
     inCollege: world.college !== null && world.week < world.college.untilWeek,
-    schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
+    schoolOver: schoolIsOver(world.week, world.profile.birthMonth, world.startYear),
     kidId: KID_ID,
     // ⭐⭐ D-01 (05.09 review) – THE CLOCK ITSELF, NOT ITS STARTING NUMBER. This handed the diary
     // `START_AGE_YEARS` and the diary rebuilt every age from it by adding completed seasons; that
@@ -1680,6 +1711,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // keeps the 09.08 one-clock ruling's single spelling and lets the Memory card ask about the week
     // a milestone happened in, which is what it paints.
     kidAgeAt: (week: number) => kidAgeAt(world, week),
+    startYear: world.startYear,
     condition: shownCondition,
     // ⭐⭐ v72 – HER TWO NUMBERS AND WHO SHE IS, handed to the diary RAW and banded there (the one
     // reading, beside the one emotion decision). ⚠ THEY GO NO FURTHER: `Snapshot` itself carries no
@@ -1835,7 +1867,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // actually charges (see its note: growWeek at 3b, rollKnock at 3c), so the frame and the words now
     // agree with the arithmetic instead of with each other.
     // ...and the one week a year that is about HER rather than about tennis.
-    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay),
+    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     // ⭐ v48: ...AND WHAT HE GAVE HER FOR IT. Folded here rather than in the diary because the diary
     // is a reporter and owns no catalogue: it is handed a NOUN and a pair of booleans, and prints them.
     //
@@ -1867,7 +1899,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // said «She is sixteen this week» at week 154: fifty weeks apart, both from the engine, and it was
     // the first thing the owner saw. One clock now, and `birthdayTurning` below reads the same one.
     ageYears: kidAgeAt(world, world.week),
-    schoolEndsWeek: schoolEndWeek(world.profile.birthMonth),
+    schoolEndsWeek: schoolEndWeek(world.profile.birthMonth, world.startYear),
     // ⭐⭐⭐ ROUND 24 #5 – the week she leaves for college, in its two live states (see the field's
     // own doc in protocol.ts): the OPEN fork shows the prospective September the college answer
     // would book; the HOLD shows the booked one. Null everywhere else – enrolled, terminal ending
@@ -2006,6 +2038,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // so a screen saying «no salary is charged» on a week the bill was taken is unspellable.
     sparringStoodDown: sparringStoodDown(world),
     sparringSalaryCents: sparringWeeklyCents(world),
+    // ⭐⭐⭐ ROUND 45 #3 – what each rung costs THIS career, off the same derivation the bill uses.
+    sparringRungSalaryCents: sparringRungWeeklyCents(world),
     sparringRung: world.sparringRung ?? ECONOMY.sparring.defaultRung,
     sparringTravels: world.sparringTravels ?? false,
     ...(() => {
@@ -2052,6 +2086,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     psychologistHired: world.psychologistHired ?? false,
     psychologistUnlocked: psychologistUnlocked(world),
     psychologistSalaryCents: psychologistWeeklyCents(world),
+    // ⭐⭐⭐ ROUND 45 #3 – what each rung costs THIS career, off the same derivation the bill uses.
+    psychologistRungSalaryCents: psychologistRungWeeklyCents(world),
     psychologistRung: world.psychologistRung ?? ECONOMY.psychologist.defaultRung,
     psychologistFocus: world.psychologistFocus ?? null,
     psychologistFocusOpen: psychologistFocusOpen(world),
@@ -2081,6 +2117,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // FOR OPPOSITE REASONS: `lifeBeatPrompt` is non-null exactly when the week is refused, this one
     // on a week that ticks on regardless – so `blockingOverlay` reads the first and never this.
     softBeat: buildSoftBeatInvite(world),
+    // ⭐⭐ ROUND 46 #11c / #11b / #22 – three derived reads, none persisted: the day that landed this week, the
+    // announced wedding's week, and the dev boost's state (the worker's own flag, in no save).
+    lifeMoment: lifeMomentOf(world),
+    weddingWeek: upcomingWeddingWeek(world),
+    startYear: world.startYear,
+    // ⭐ SUCCESSION S2d – one bit of the mother's album, never the book (`Snapshot.hasHeirloom`).
+    hasHeirloom: hasHeirloom(world),
+    devLifeBoost: lifeEventBoostOn(),
     // ⭐⭐⭐ v85 T10 – WHICH PREGNANCY PAINTING THE WEEK WEARS, and the ONE fact of `world.pregnancy`
     // that crosses to the UI. The record itself stays engine-side (T1's own ruling); the window is
     // `pregnancyFaceAt`'s, shared with the tests so «which week wears which» has one spelling.
@@ -2314,6 +2358,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // draws. Same discipline as the diary - derived at SNAPSHOT time off `seed:friends:*`
     // sub-streams, zero MAIN draws, so the frozen capture (41550 / e6b0c709) cannot move.
     life: buildKidLife({
+      startYear: world.startYear,
       seed: world.seed,
       week: world.week,
       // HER age, the same one the header prints – the School tile already takes `birthMonth` below,
@@ -2321,7 +2366,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       ageYears: kidAgeAt(world, world.week),
       // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
       // arithmetic can never disagree with the year the rest of the game prints.
-      seasonYear: seasonYear(seasonIndexOf(world.week)),
+      seasonYear: seasonYear(seasonIndexOf(world.week), world.startYear),
       // ⭐⭐ ROUND 42 #6 – WHO SHE WAS BORN AS, and the Personality tile's only input.
       //
       // ⚠⚠ `world.temperament` AND NEVER `expressedTemperamentOf(world)`. The tile is a VOICE site,
@@ -2388,6 +2433,20 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // the split starts. ⚠ `> 0` and not `>= 0` – a delivered brand at fame zero earns nothing and
       // has nothing to split, and a sentence about a share of zero is the noise this guard refuses.
       ownsBrand: merchWeeklyIncomeCents(world) > 0,
+      // ⭐⭐ ROUND 46 #9 – THE ATTACHMENT THE PARENT HAS BEEN TOLD ABOUT, as the three facts her page's
+      // relationships cell is made of (round 46, morning 3: it began as a line under the grid). ⚠ `knownPartner` AND NOT `activeEpisode`: «is someone there» is the
+      // world's question and «does he know» is the one a page may answer (`knownPartner`'s own ⚠⚠), so a
+      // girl who has not told him yet reads «it seems» on the cell. ⚠ The span is `relationshipDurationWeeks`, the count
+      // the wedding announcement prints, and `married` is `latchedEpisode`, the one spelling of «is she
+      // married». Derived at snapshot time: no draw, no save key, no schema move.
+      together: (() => {
+        const partner = knownPartner(world, world.week)
+        const weeks = relationshipDurationWeeks(world, partner)
+        if (partner === null || weeks === null) return null
+        // ⚠ `engaged` is the calendar's own question (`upcomingWeddingWeek`): the same answered 'engaged' row, read
+        // forward – so the cell and the calendar's wedding mark cannot disagree about whether she is engaged.
+        return { weeks, married: latchedEpisode(world) !== null, engaged: upcomingWeddingWeek(world) !== null }
+      })(),
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
@@ -2422,7 +2481,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     fork: world.fork && world.fork.answer === null
       ? {
           askedWeek: world.fork.askedWeek,
-          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth, world.profile.birthDay),
+          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth, world.profile.birthDay, world.startYear),
           // ⭐⭐ THE OFFER, STRAIGHT OFF PERSISTED STATE (v51). It is measured once, the week the fork
           // is raised, and it is not recomputed here – a snapshot that re-derived it would answer a
           // different question on the week a constant moved, and this one is money.

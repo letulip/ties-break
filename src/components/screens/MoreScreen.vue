@@ -6,6 +6,7 @@
 // copy changed) since it doesn't touch any stored data.
 // ⚠ `onMounted` IS GONE FROM THIS LIST (D-05, 28.09) – the careers refresh it carried is a
 // `watch(…, { immediate: true })` now, and `immediate` IS the mount half. Nothing else here mounts.
+import { LIFE_EVENT_BOOST_FACTOR } from '../../engine/world/lifeBoost'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
@@ -15,6 +16,8 @@ import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
 import StoreError from '../ui/StoreError.vue'
+import FeedbackDialog from '../FeedbackDialog.vue'
+import { FEEDBACK_LABEL } from '../../feedback'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { AUDIO_COPY } from '../../composables/audioCopy'
@@ -58,11 +61,17 @@ import { flagEmoji } from '../../composables/countries'
 // composable from constants the bundler baked in; there is nothing reactive about it, so it is a
 // plain string rather than a `computed`.
 import { appBuildLine } from '../../composables/buildInfo'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const buildStampLine = appBuildLine()
 const fileInput = ref<HTMLInputElement | null>(null)
 const confirmingNewCareer = ref(false)
+// F2 (feedback channel): the report dialog's flag. The dialog prepares the report the moment it
+// mounts (FeedbackDialog.vue), so this flag turning true IS the tap that starts `assembleReport()`.
+const feedbackOpen = ref(false)
 
 // P6 (c) landed a DEV-only gate on the ▶▶ 52 fast-forward here, and the owner reversed it the
 // same day - «у нас не прод и нет игроков. Если нужна для разработки - можно вернуть» - because
@@ -205,7 +214,7 @@ function fmtDate(ts: number) {
  *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
  *  band is the honest best guess rather than an invented one. One autosave replaces it. */
 function careerAge(c: CareerMeta): number {
-  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1)
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1, startYear.value)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.
@@ -344,11 +353,11 @@ function importConfirmMessage(peek: SavePeek | null, existing: CareerMeta | unde
   }
   if (existing) {
     return (
-      `Overwrite ${existing.kidName}'s career? You have her at ${weekLabel(existing.week)} and this file is ` +
-      `${weekLabel(peek.week)}. The file becomes the career you play from now on – there is no undo.`
+      `Overwrite ${existing.kidName}'s career? You have her at ${weekLabel(existing.week, startYear.value)} and this file is ` +
+      `${weekLabel(peek.week, startYear.value)}. The file becomes the career you play from now on – there is no undo.`
     )
   }
-  return `Import ${peek.kidName}'s career at ${weekLabel(peek.week)}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.`
+  return `Import ${peek.kidName}'s career at ${weekLabel(peek.week, startYear.value)}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.`
 }
 
 async function onImportPicked(e: Event) {
@@ -579,7 +588,7 @@ const TAB_OPTIONS = [
           <span v-if="c.careerId === activeCareerId" class="pill ok">Active</span>
         </div>
         <div class="hint">
-          {{ weekLabel(c.week) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
+          {{ weekLabel(c.week, startYear) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
         </div>
       </div>
       <!-- D11 – TWO CONTROLS CALLED `Load` COEXIST ON THIS SCREEN, and two called `Delete`: one pair
@@ -631,7 +640,7 @@ const TAB_OPTIONS = [
         <tr v-for="s in namedSlots" :key="s.slot">
           <td>{{ s.name }}</td>
           <td>{{ fmtDate(s.savedAt) }}</td>
-          <td class="num">{{ weekLabel(s.week) }}</td>
+          <td class="num">{{ weekLabel(s.week, startYear) }}</td>
           <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
           <td>
             <!-- W1-INTEGRITY-A (TB-01): loading a named save makes it the ACTIVE state, so it
@@ -712,6 +721,14 @@ const TAB_OPTIONS = [
     </p>
   </section>
 
+  <!-- F2 (feedback channel, docs/specs/feedback-channel-2026-09.md): the control sits BESIDE the Saves
+       strip, in a section of its own so it is reachable with no career open too – the strip above needs
+       a snapshot and the report has a sentence for «no career». The exact spot is the owner's, at his
+       strings pass. -->
+  <section v-if="screenTab === 'saves'">
+    <button class="primary" @click="feedbackOpen = true">{{ FEEDBACK_LABEL }}</button>
+  </section>
+
   <section v-if="screenTab === 'saves'">
     <h2>Danger zone</h2>
     <button v-if="!confirmingNewCareer" class="danger" @click="askNewCareer">New career</button>
@@ -732,6 +749,19 @@ const TAB_OPTIONS = [
          documents both halves of that bargain. -->
     <hr class="card-divider" />
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+    <!-- ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST (the owner, 05.10: «wanted to wait for her to give birth, but it never
+         happened - … a switch that raises the chances of these events many times over, for debugging»; verbatim in docs/rounds/round-46.md). Same
+         bargain as the fast-forward above: ships in every build, dev-only LABEL (not player copy). It is a
+         TRANSIENT worker flag, never in a save; the checkbox shows the worker's own state off the snapshot. -->
+    <label class="dev-life-boost">
+      <input
+        type="checkbox"
+        :checked="game.snapshot?.devLifeBoost === true"
+        :disabled="game.busy || !game.snapshot"
+        @change="game.setLifeBoost(($event.target as HTMLInputElement).checked)"
+      />
+      ▶ life events ×{{ LIFE_EVENT_BOOST_FACTOR }} (dev)
+    </label>
     <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
          line catches everything else (the fast-forward refusing over an open knock/reveal), which
          previously failed silently here – More never rendered `game.error` at all.
@@ -837,12 +867,18 @@ const TAB_OPTIONS = [
   <!-- ⭐⭐⭐ v87 - THE WEIGHT, THE ONE DOOR THE 22.09 RULING PUT IN SETTINGS. Its own section for the
        reason the script side gives: it is a fact about a CAREER, not a device preference, so it is
        absent when no career is loaded rather than pretending to be settable from nowhere.
-       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read. -->
+       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read.
+       ⚠ ROUND 46 #2: THE HEADING AND THE LABEL ARE TWO DIFFERENT WORDS ON PURPOSE. The `<h2>` is the
+       question's name (`title`, the same on both creation cards) and keeps it; the row under it used
+       to print `title` a second time as its label, and the owner read «The weight» twice in two
+       lines. The label is `settingsLabel` now – what the switch gates – and ⚠ it is also the
+       switch's accessible name (`aria-labelledby` below), so it is pinned in a11y-sweep.test.ts and
+       transcribed in two e2e files. -->
   <section v-if="screenTab === 'play' && game.snapshot">
     <h2>{{ WEIGHT_COPY.title }}</h2>
     <div class="career-row">
       <div>
-        <span id="more-weight-label">{{ WEIGHT_COPY.title }}</span>
+        <span id="more-weight-label">{{ WEIGHT_COPY.settingsLabel }}</span>
         <!-- `display: block` for the Week-story hint's own measured reason: `.hint` is styled for a
              <p>, and at 375 a <span> runs on from the label and reads as one line of nonsense. -->
         <span class="hint" style="display: block; margin: 2px 0 0">{{ WEIGHT_COPY.settingsHint }}</span>
@@ -1042,6 +1078,9 @@ const TAB_OPTIONS = [
     @confirm="runConfirm"
     @cancel="pendingConfirm = null"
   />
+  <!-- F2: mounted only while open, and it prepares the report on mount. AFTER the ConfirmDialog so the
+       build line stays the last element in flow while it is closed. -->
+  <FeedbackDialog v-if="feedbackOpen" @close="feedbackOpen = false" />
 </template>
 
 <style scoped>

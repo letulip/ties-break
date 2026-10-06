@@ -286,8 +286,17 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
   //
   // ⚠ ARMED, NOT ASSERTED. Mutation arm K1: delete the `newestLetterId` line from `toSnapshot` – the
   // count goes 111 → 110 and (c) names the missing key. Both outputs are in T6.2's report.
+  //
+  // ⭐ RE-PINNED 111 → 113, ROUND 45 #3 (the psychologist and the hitting partner ask for a raise): the
+  // snapshot gained `psychologistRungSalaryCents` and `sparringRungSalaryCents` – what each rung of those
+  // two dials costs THIS career, so the card quotes the engine's drifted price rather than the catalogue's
+  // opening one. Two keys added and nothing reordered or removed; the set/order half below is unchanged.
+  // ⭐ RE-PINNED 113 → 116, ROUND 46 #11c/#22 (06.10, B1): the snapshot gained `lifeMoment` (the
+  // wedding/birth full-screen moment, derived from the milestone ledger), `weddingWeek` (the calendar
+  // band's feed) and `devLifeBoost` (the ×8 dev switch's state echoed back to the More screen). All
+  // three are derived per snapshot and persisted nowhere; nothing reordered or removed.
   // -----------------------------------------------------------------------------------------------
-  it('⭐ D-P8 – 111 top-level keys, the same set in the same order on every committed career', async () => {
+  it('⭐ D-P8 – 118 top-level keys, the same set in the same order on every committed career', async () => {
     const manifest = JSON.parse(readFileSync(resolve(CAREERS, 'manifest.json'), 'utf8')) as {
       fixtures: { name: string }[]
     }
@@ -302,7 +311,9 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
 
     const reference = keysByCareer[names[0]]
     // (b) THE COUNT, and (c) the keys it is about – both against the list rather than against prose.
-    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(111)
+    // SUCCESSION S1 (06.10): 116 -> 117, the one new key `startYear` – derived per snapshot straight off `world.startYear`, persisted on the snapshot nowhere; nothing reordered or removed.
+    // SUCCESSION S2d (06.10): 117 -> 118, the one new key `hasHeirloom` – ONE derived bit per snapshot (the mother's book rides the `heirloomAlbum` query, never the weekly wire); nothing reordered or removed.
+    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(118)
     for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
       expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)
     }

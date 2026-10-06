@@ -537,8 +537,30 @@ const TRIP_TABLE: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'B
  *  ⚠ IT WEARS `travel` FOR `SHOOT_DAY`'s REASON, restated because it matters more here: «lights,
  *  flights and a working day» is what `accrueCondition` charges the week at, so the hour that is not
  *  hers reads in the palette the app uses for an hour spent getting somewhere. No new colour, and no
- *  new `--cat-*` row – the round 29 P14 rule for `press` applies unchanged. */
+ *  new `--cat-*` row – the round 29 P14 rule for `press` applies unchanged.
+ *
+ *  ⭐⭐ ROUND 45 #1b, REFINED 02.10 (THIRD BATCH) – AND IT IS DRAWN ON TWO DAYS, NOT ON EVERY MATCH DAY.
+ *  «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?» – ruled: the clash shoot is two days, each
+ *  three condition, six per clash; and the schedule «redraws the Shoot block on exactly two trip days to match the fiction –
+ *  the per-match-day drawing was round 30's agent choice, never his» (docs/decisions.md 02.10, «THIRD BATCH»). The block still
+ *  lives on a match day, behind the table, for the reasons above; `TRIP_SHOOT_DAYS` says WHICH two. */
 const TRIP_SHOOT: Omit<DayBlock, 'start'> = { span: 2, kind: 'travel', label: 'Shoot' }
+
+/** ⭐⭐ ROUND 45 #1b (02.10, THIRD BATCH) – HOW MANY DAYS THE SHOOT BLOCK IS DRAWN ON, AND WHICH: exactly TWO, the trip's
+ *  FIRST TWO MATCH DAYS (rounds 1 and 2 of the draw), at every rung.
+ *
+ *  ⚠ THE RULE IS «THE FIRST TWO MATCH DAYS» AND NOT «THE ARC'S FIRST TWO DAYS» – a choice, named because the owner's words leave
+ *  it open («съемочных дней всего 2»; the architect's «exactly two trip days»). The arc's first days are a travel-out day and court
+ *  hits on the short rungs and match days on the long ones, so «the arc's first two» would hang the shoot on a flight at one rung
+ *  and on a match at another. The block is a match day's last hour (`tripMatchDay`: draw -> press -> table -> shoot, round 30
+ *  #17/#2) and every rung has at least three match days, so «the first two match days» draws two blocks at every rung with no
+ *  rung special-cased and no day shaped differently from its own week.
+ *
+ *  ⚠ A CONSTANT IN THE SCREEN'S FILE BECAUSE THIS MODULE MAY NOT IMPORT FROM `../engine/` (a guard enforces it; the facts it needs
+ *  arrive as data). It is the screen's half of the engine's `CLASH_SHOOT_DAYS` (world/medical.ts), the number the charge and the
+ *  clash card multiply by, and the two are pinned equal by the mounted file tests/component/round29-shoot-clash-ui.test.ts, over the
+ *  engine's own `clashShootDays`. */
+const TRIP_SHOOT_DAYS = 2
 
 /** ⭐ P15 – ONE MATCH DAY, with whatever the rung hangs on it, in the order he named them.
  *
@@ -568,12 +590,16 @@ const TRIP_SHOOT: Omit<DayBlock, 'start'> = { span: 2, kind: 'travel', label: 'S
  *  ⚠ EACH BLOCK SITS DIRECTLY BEHIND THE ONE BEFORE IT – no gaps to reason about, and the day's end
  *  is `dayEnd` below, which is what the journey home is placed against. The Slam's Sunday still ends
  *  exactly on the grid's last row after the swap (10-14 draw, 14-15 press, 15-16 table, 16-19 home);
- *  the arithmetic is unchanged because the two swapped blocks are one hour each. */
-function tripMatchDay(trip: TripFacts): DayBlock[] {
+ *  the arithmetic is unchanged because the two swapped blocks are one hour each.
+ *
+ *  ⭐⭐ ROUND 45 #1b (02.10, THIRD BATCH) – THE SPONSOR'S HOURS GO ON THE FIRST TWO MATCH DAYS ONLY. `matchDay` is the day's place
+ *  in the draw (0 is round 1) and the shoot hangs on the first `TRIP_SHOOT_DAYS` of them; every later match day is the plain
+ *  draw -> press -> table. */
+function tripMatchDay(trip: TripFacts, matchDay: number): DayBlock[] {
   const day: DayBlock[] = [{ ...TRIP_DRAW_DAY }]
   if (trip.press) day.push({ ...TRIP_PRESS, start: dayEnd(day) })
   if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
-  if (trip.shoot) day.push({ ...TRIP_SHOOT, start: dayEnd(day) })
+  if (trip.shoot && matchDay < TRIP_SHOOT_DAYS) day.push({ ...TRIP_SHOOT, start: dayEnd(day) })
   return day
 }
 
@@ -637,7 +663,7 @@ export function tripArcFor(trip: TripFacts): readonly (readonly DayBlock[])[] {
   if (tripKeepsDeparture(rounds)) out.push([{ ...TRIP_TRAVEL_OUT }])
   const hits = WEEK_DAYS - out.length - rounds - (tripKeepsReturn(rounds) ? 1 : 0)
   for (let i = 0; i < hits; i++) out.push([{ ...TRIP_COURT_HIT }])
-  for (let i = 0; i < rounds; i++) out.push(tripMatchDay(trip))
+  for (let i = 0; i < rounds; i++) out.push(tripMatchDay(trip, i))
   // ⭐ P16 – SHE COMES HOME EITHER WAY, and the only question is whether the journey gets a day or an
   // evening. Both arms are his: «либо снова в Вс (если был 1000)» is the day, «в Вс после матчей,
   // массажа и конференций» is the evening. So no trip of any length now ends without a way home.
@@ -952,8 +978,8 @@ function summerOrdinary(blocks: readonly DayBlock[], kind: OrdinaryKind, index: 
  *  draws `travel` too and the two can never share a column: an entered tournament outranks the
  *  shoot, and `calendarWeekFor` returns before it.» That WAS true and it was also the bug: the trip
  *  branch returning before the shoot is exactly why «do both» drew nothing. The two DO share a week
- *  now - not this shape, though. A trip week draws `TRIP_SHOOT`, two hours on the end of each match
- *  day; this whole-day shape stays what an ordinary shoot week looks like, where the call sheet owns
+ *  now - not this shape, though. A trip week draws `TRIP_SHOOT`, two hours on the end of each of the first
+ *  two match days (round 45 #1b: the shoot is two days); this whole-day shape stays what an ordinary shoot week looks like, where the call sheet owns
  *  the day.
  *
  *  ⚠ AND IT CARRIES NO SCHOOL BLOCK, deliberately. A call sheet takes the day it is on; the

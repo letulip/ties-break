@@ -193,6 +193,18 @@ export const shop = {
       blurb: 'The end of renting. Small, theirs on paper, and hers to paint.',
       entryCents: 240_000_00,
       annualRateBps: 300,
+      // ⭐⭐ ROUND 46 #3 (05.10) – THE HOUSE'S ENTRY PRICE INDEXES AT +2 % A YEAR FROM THE CAREER'S FIRST WEEK, STRICTLY BELOW ITS OWN +3 %.
+      // The owner sold his first house for 332k and was offered the same rung again at the frozen 240k: «Похоже у нас такой же небольшой гринд на недвижимости есть: я только что продал первый
+      // дом за 332к, и мне предлагаю купить новый за 240к.» – and, asked what he thought of house inflation, he ruled: «Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест активом,
+      // пусть и небольшим, т.е. его рост должен обгонять инфляцию.»
+      // ⚠ THE CHURN, TO THE DIGIT (tests/round46-house-entry-index.test.ts pins every figure below): twelve years at +3 % make $240,000 worth $342,182.61; the corridor's calm-water centre pays
+      // 0.97 of that, $331,917.13 – his «332к» – and the shelf re-sold the rung at the frozen $240,000: +$91,917.13 a cycle, nothing at risk. Indexed at +2 % the same rung quotes $304,378.00
+      // at year 12, so the same cycle pockets +$27,539.13 – twelve years of the house's real return, not a grind – and a flip at year 2 (0.97 × $254,616.00 against $249,696.00) LOSES $2,718.48.
+      // ⚠ WHY +2 AND NOT +3, WHICH WOULD ALSO HAVE CLOSED IT: at 3 the entry price tracks the holding to the cent, the house only keeps pace with inflation and stops being the asset he asked it to stay –
+      // «пусть и небольшим». At 2 the holding gains about 1 % a year on the index (1.03 / 1.02) and, after the corridor's 3 % haircut, beats it from the fourth year on (3.1 years): a quick flip loses, a long hold earns.
+      // ⚠ ONE RATE FOR THE FAMILY, as the four rungs carry one `annualRateBps`: the test holds the four equal and every other family without the field. The price is quoted by `assetEntryPriceCents`
+      // (world/assets.ts), the one function `shopView` (the card, `affordable`) and `buyAsset` (the charge) all call – same clock as the holding, whole dollars, no stored state.
+      entryIndexBps: 200,
     },
     {
       id: 'house-garden',
@@ -211,6 +223,8 @@ export const shop = {
       // → docs/notes/economy/shop.md#shopcatalogue7entrycents
       entryCents: 590_000_00,
       annualRateBps: 300,
+      // ⭐ ROUND 46 #3 – the family's own +2 % entry index, the same 200 `house-first` carries (the ruling and its arithmetic are on that row).
+      entryIndexBps: 200,
     },
     // ⭐⭐ ROUND 35 #7 – THE LADDER GETS ITS TOP TWO RUNGS, and the ask is one clause: «Добавится 2
     // тира домов еще: за 1.4м и за 3м». Both prices are HIS, to the digit, which is the whole
@@ -229,6 +243,8 @@ export const shop = {
       blurb: 'Glass, warm stone, and water that belongs to the family.',
       entryCents: 1_400_000_00,
       annualRateBps: 300,
+      // ⭐ ROUND 46 #3 – the family's own +2 % entry index, the same 200 `house-first` carries (the ruling and its arithmetic are on that row).
+      entryIndexBps: 200,
     },
     {
       id: 'house-headland',
@@ -238,6 +254,8 @@ export const shop = {
       blurb: 'Above the sea, with a pool that looks as though it falls into it.',
       entryCents: 3_000_000_00,
       annualRateBps: 300,
+      // ⭐ ROUND 46 #3 – the family's own +2 % entry index, the same 200 `house-first` carries (the ruling and its arithmetic are on that row).
+      entryIndexBps: 200,
     },
     // ⭐⭐ ROUND 29 #5 – THE ELITE (§3f), AND THEY ARE NOT BOUGHT, THEY ARE COMMISSIONED.
     //

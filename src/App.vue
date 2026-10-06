@@ -2,9 +2,10 @@
 // Package I – app shell: slim header + 5-tab bottom bar, or the full-screen
 // onboarding wizard when there is no active career. No router – a plain ref
 // switch, per spec.
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { activeLadderOfSnapshot } from './shared/protocol'
 import type { DynastyHandover, StopReason, WorldMatch } from './shared/protocol'
+import type { LegacyInput } from './engine/world/succession'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 // R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
@@ -72,6 +73,7 @@ import { SOFT_LEAVE_LINE, useSoftLeaveGuard } from './composables/softLeave'
 import { useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
 import { blockingOverlay, popupMayShow, visibleOverlay } from './composables/blockingOverlay'
+import { lifeMomentMayShow } from './composables/lifeMoment'
 import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -86,6 +88,7 @@ import ShootClashDialog from './components/ShootClashDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
 // ⭐⭐ v73 – the private life's wave 2: the beat where she says something and the parent answers.
 import LifeBeatDialog from './components/LifeBeatDialog.vue'
+import LifeMomentOverlay from './components/LifeMomentOverlay.vue'
 import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
 // ⭐⭐ ROUND 24 #4 – the last college screen. See `showCollegeDone` for why it reads `world.college`
@@ -442,6 +445,7 @@ function raiseAnother(): void {
   // opened the epilogue, considered the dynasty and then chose «Raise another» would get an unrelated
   // girl carrying somebody's surname – see `continueTheLine` below for what the field is.
   pendingDynasty.value = null
+  pendingLegacy.value = null
   newGameRoute.value = 'prologue'
   // The in-memory career only – nothing is deleted. This is More's own «New career» seam
   // (`confirmNewCareer`), which has landed on the childhood since the prologue shipped.
@@ -464,6 +468,18 @@ function raiseAnother(): void {
 // both takeovers; the watcher below is the one place it is spent.
 const pendingDynasty = ref<DynastyHandover | null>(null)
 
+// ⭐⭐⭐ SUCCESSION S2c – THE INHERITANCE THAT TRAVELS WITH THE LINE, held beside it and spent with it. The door asks the worker for it ONCE, at
+// the press, while the finished career is still the loaded one (`continueTheLine`); the prologue and the wizard hand it back on the create
+// command, where the worker builds the world from it.
+//
+// ⚠⚠ A `shallowRef` AND NOT A `ref`, AND THAT IS LOAD-BEARING. The blob is plain data the worker computed (the heirloom album inside it is a
+// whole book) and it goes back over `postMessage`, which cannot clone a reactive proxy – `plainDynasty`'s whole history in the store is that
+// error. A `ref` wraps it deeply on first read; a `shallowRef` hands the same raw object back every time, so nothing here can reach the wire as
+// a proxy.
+//
+// ⚠ NULL IS A LEGITIMATE VALUE: a refused or missing answer continues the line exactly as wave 10 always did.
+const pendingLegacy = shallowRef<LegacyInput | null>(null)
+
 // ⚠⚠ SPENT WHEN A CAREER EXISTS, in ONE place for BOTH routes. `createWorld` has persisted the
 // block as `world.dynasty` by the time a snapshot arrives (the ninth card and the wizard's two
 // create calls all pass it), so holding it longer would let a SECOND career be born from the same
@@ -471,11 +487,20 @@ const pendingDynasty = ref<DynastyHandover | null>(null)
 // a second spelling, so the clear moved here and fires on the career itself rather than on the
 // route that made it.
 watch(() => game.snapshot, (s) => {
-  if (s) pendingDynasty.value = null
+  if (s) {
+    pendingDynasty.value = null
+    pendingLegacy.value = null
+  }
 })
 
-function continueTheLine(block: DynastyHandover): void {
+async function continueTheLine(block: DynastyHandover): Promise<void> {
+  // ⭐⭐⭐ SUCCESSION S2c – THE LEGACY IS ASKED FOR FIRST, while the finished career is still the one loaded: the store's snapshot is dropped three
+  // lines down, and nothing after that has a world to read an inheritance from. A refused or missing answer is null and the door goes on
+  // without one – wave 10's line, unchanged – because a press that dead-ended on a query would strand the player on this screen.
+  // ⚠ «Raise another» NEVER ASKS: it starts an unrelated story, so nothing is inherited there (see `raiseAnother`).
+  const legacy = await game.loadLegacyInput()
   pendingDynasty.value = block
+  pendingLegacy.value = legacy
   newGameRoute.value = 'prologue'
   game.$patch({ snapshot: null })
 }
@@ -1468,6 +1493,18 @@ const showTourBriefing = computed(
     !!game.snapshot?.tourBriefing &&
     !tourBriefingSeen.value,
 )
+// ⭐⭐ ROUND 46 #11c – THE FULL-SCREEN WEDDING / BIRTH MOMENT (the owner, 05.10: «Я дождался свадьбы, но самого
+// экрана этого события не было!»). Behind every blocking question and the two report popups that are this file's
+// locals, and behind the tournament takeover through the shared rule – `lifeMomentMayShow` holds the rest
+// (not already dismissed, nothing queued). NOT in `blockingOverlay`'s list: the engine waits on nothing here.
+const showLifeMoment = computed(
+  () =>
+    lifeMomentMayShow(game.snapshot ?? null, liveSequence.value) &&
+    !showInjuryStop.value &&
+    !showSeasonSummary.value &&
+    // a span that ENDED on the day also raises the span report; the report is read first and the day follows it
+    !showWeekSpan.value,
+)
 
 // =================================================================================================
 // ⭐ 16.08 – THE COACH-MARK TOUR REACHES A PLAYER WHO HAS NEVER ANSWERED IT (item 10, re-gated)
@@ -1586,12 +1623,13 @@ function reopenTour(): void {
   <ChildhoodPrologue
     v-else-if="showPrologue"
     :dynasty="pendingDynasty ?? undefined"
+    :legacy="pendingLegacy ?? undefined"
     @skip="newGameRoute = 'wizard'"
     @done="finishPrologue"
   />
 
   <!-- ⭐ T10 – the skip branch carries the line now: same block, same deviations, no walk. -->
-  <OnboardingWizard v-else-if="showOnboarding" :dynasty="pendingDynasty ?? undefined" />
+  <OnboardingWizard v-else-if="showOnboarding" :dynasty="pendingDynasty ?? undefined" :legacy="pendingLegacy ?? undefined" />
 
   <!-- W2-ENDINGS: THE EPILOGUE REPLACES THE APP SHELL. Branched here, beside the wizard, and not laid
        over the tab shell like the four overlays below - the story has no next week, so there is
@@ -1920,6 +1958,9 @@ function reopenTour(): void {
          career (a per-career watermark, see the script side), behind every blocking question, and
          quietly restated by one letter a season thereafter rather than by this popup again. -->
     <TourBriefingDialog v-if="showTourBriefing" @continue="dismissTourBriefing" />
+    <!-- ⭐ ROUND 46 #11c – painted BEFORE the blocking dialogs below, so any of them that ever lands over it
+         paints on top; `lifeMomentMayShow` already keeps the two apart. -->
+    <LifeMomentOverlay v-if="showLifeMoment" />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />

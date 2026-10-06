@@ -58,7 +58,7 @@ import { SALE_SENDER, saleLabelOf } from '../composables/saleLetter'
 // `activeKitDeal`: it is the ENGINE's own predicate for «is this letter still a decision», the very
 // function the inbox dot and the worker's refusal read, so the list below cannot answer it
 // differently. Pure: no world in it and no draw behind it.
-import { SPONSOR_TIERS, activeKitDeal, adUntilWeek, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive } from '../engine/offers'
+import { SPONSOR_TIERS, activeKitDeal, adUntilWeek, apparelBondCost, chooseShootWeeks, dealUntilWeek, isOfferLive, staffAskPer } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { seasonYear, weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -69,6 +69,9 @@ import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 defineEmits<{ close: [] }>()
 
@@ -204,7 +207,7 @@ const contractNote = computed(() => {
   const deal = activeKitDeal(game.snapshot?.offers ?? [], week.value)
   if (!deal) return ''
   const terms = deal.terms as KitOfferTerms
-  return `Her kit is ${terms.brand}'s until ${weekLabel(deal.untilWeek ?? week.value)} – while it runs, only a bigger name can write.`
+  return `Her kit is ${terms.brand}'s until ${weekLabel(deal.untilWeek ?? week.value, startYear.value)} – while it runs, only a bigger name can write.`
 })
 
 // --- the list ------------------------------------------------------------------------------
@@ -320,7 +323,7 @@ function subjectOf(o: Offer): string {
   // fixture that has not happened yet is only useful if it says when.
   if (o.kind === 'call-up') {
     const t = o.terms as CallUpLetterTerms
-    return `Named in the squad – ${t.label}, ${weekLabel(t.tieWeek)}`
+    return `Named in the squad – ${t.label}, ${weekLabel(t.tieWeek, startYear.value)}`
   }
   if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
   // ⭐⭐ ROUND 43 #11 – and the build's subject restates its own sheet's first sentence, this
@@ -352,7 +355,11 @@ function subjectOf(o: Offer): string {
   // for. ⚠ DRAFT copy.
   if (o.kind === 'staff') {
     const t = o.terms as StaffLetterTerms
-    const year = seasonYear(t.seasonIndex)
+    const year = seasonYear(t.seasonIndex, startYear.value)
+    // ⭐⭐⭐ ROUND 45 #3 – a raise request has its own subject: it arrives on a seat's anniversary, so
+    // it can share a season with that seat's year-end report, and two letters wearing one title is the
+    // round-29 #16 defect. DRAFT copy.
+    if (t.ask) return `A raise request – ${year}`
     if (t.seat === 'coach') return `The season on court – ${year}`
     if (t.seat === 'masseur') return `The season on the table – ${year}`
     if (t.seat === 'psychologist') return `The season's work in the room – ${year}`
@@ -374,7 +381,7 @@ function subjectOf(o: Offer): string {
 /** The quiet second line: when it arrived, and whether it is still waiting on him. The weeks-left
  *  count is the same one the paper prints under itself. */
 function metaOf(o: Offer): string {
-  const filed = weekLabel(o.week)
+  const filed = weekLabel(o.week, startYear.value)
   if (!live(o)) return filed
   const weeksLeft = Math.max(0, o.deadlineWeek - week.value + 1)
   return `${filed} · ${weeksLeft} ${weeksLeft === 1 ? 'week' : 'weeks'} to decide`
@@ -449,6 +456,14 @@ const pendingSign = ref<Offer | null>(null)
 const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
+  // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST: the two figures printed on the paper, and that the
+  // signature is final like every other one. Every branch below is kit or campaign arithmetic. DRAFT copy.
+  if (pendingSign.value.kind === 'staff') {
+    const ask = (pendingSign.value.terms as StaffLetterTerms).ask
+    if (ask) {
+      return `Accept the raise? The rate goes from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} ${staffAskPer((pendingSign.value.terms as StaffLetterTerms).seat)}. This cannot be undone.`
+    }
+  }
   // ⭐⭐⭐ S5 – A BUYER'S SIGNATURE SELLS THE LOT, so it has its own question: every number below the ad arm is kit or campaign arithmetic. The price
   // is the one PRINTED on the paper (`priceCents`, frozen at its arrival week) and the lot's name is the shelf's. ⚠ DRAFT copy (SM26).
   if (pendingSign.value.kind === 'sale') {
@@ -482,7 +497,7 @@ const confirmMessage = computed(() => {
     // `- 1` itself; `adUntilWeek` is the function `signOffer` uses, so the confirm cannot promise an end
     // date the signature does not produce – `dealUntilWeek`'s rule for the kit confirm, one letter
     // family over, and the same-code rule the shoot-week preview above already follows.
-    const until = weekLabel(adUntilWeek(t, week.value))
+    const until = weekLabel(adUntilWeek(t, week.value), startYear.value)
     const years = Math.max(1, t.termYears ?? 1)
     // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
     // rest of it arrives; a one-year letter keeps its original sentence to the word.
@@ -506,7 +521,7 @@ const confirmMessage = computed(() => {
     // ⚠ THE PHONE RULE (round-20 #3, CLAUDE.md): the capstone names 16 weeks over eight years, and
     // sixteen dates is a dialog taller than a phone. Six are named – more than any single year
     // books – and the rest are counted, so the sentence grows by one clause however long the term.
-    const named = shoots.slice(0, 6).map((w) => weekLabel(w))
+    const named = shoots.slice(0, 6).map((w) => weekLabel(w, startYear.value))
     const more = shoots.length - named.length
     const shootLine =
       named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named[named.length - 1]}` : (named[0] ?? '')
@@ -527,7 +542,7 @@ const confirmMessage = computed(() => {
   // thing a parent reads before an irreversible signature should also say WHEN, and `dealUntilWeek`
   // is the engine function `signOffer` is about to write onto the offer - so the confirm quotes the
   // week the contract will actually carry rather than a number this sheet worked out.
-  const until = weekLabel(dealUntilWeek(pendingSign.value))
+  const until = weekLabel(dealUntilWeek(pendingSign.value), startYear.value)
   // ⭐⭐⭐ ROUND 39 #17, WAVE G3 – AND THE OTHER THING THE LETTER CANNOT SAY: WHAT THIS SIGNATURE
   // COSTS HER SOMEWHERE ELSE, WITH THE MONEY ON IT. A clothing campaign is written by the house that
   // dresses her, so signing a different house ends it – and wave G printed the remaining fees on the

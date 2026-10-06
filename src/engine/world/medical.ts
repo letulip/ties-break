@@ -63,7 +63,7 @@ import {
   yearEndJuniorRank,
 } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
-import { masseurRungOf, masseurWorksThisWeek } from './masseur'
+import { masseurRehabWeeksAhead, masseurRungOf, masseurWorksThisWeek } from './masseur'
 // ⚠ ROUND 29 #5 – the LEAF and never `./shop`: this file is imported by `./entries`, `entries` by
 // `./endings` and `endings` by `world/shop.ts`, so a value import of the shop from here would close
 // a cycle. `world/assets.ts` exists for exactly this and imports nothing from this package.
@@ -72,11 +72,6 @@ import { ownsDeliveredOfFamily } from './assets'
 // shoot week? `offers.ts` is an engine LEAF (it reaches only economy/rng/calendar/world-ledger), so
 // the edge runs the same direction as every other import in this file.
 import { adShootWeek } from '../offers'
-// ⭐ ROUND 29 #3: the week's own length, for the clash price the owner named per DAY. `plan.ts` is a
-// leaf below this one (it reaches only shared/protocol), so the edge runs the same direction as the
-// import above it – and the alternative was a literal 7 beside a rate, which is the shape a retune
-// walks past.
-import { PLAN_DAYS } from '../plan'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
@@ -156,7 +151,7 @@ export function recoveryBaseFor(world: WorldState): number {
  *  Exported because the fade is a claim about a career and the tests have to be able to state it at
  *  an age without walking `accrueCondition` a thousand times to infer it. Pure read, zero draws. */
 export function recoveryAgeFade(world: WorldState): number {
-  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   // ⭐⭐ ROUND 31 #10/#13 – THIS GATE FOLLOWS HER OWN DECLINE AGE, NOT THE CONSTANT, AND THE DECISION
   // IS THE PARAGRAPH FOUR LINES UP. That note already says two clocks here «would open a gap of up to
   // a year in which her body is falling and her recovery is not»; a per-career curve makes that gap a
@@ -187,6 +182,59 @@ export function recoveryAgeFade(world: WorldState): number {
 export function adShootHolds(world: WorldState, week: number = world.week): boolean {
   const atCollege = world.college !== null && week < world.college.untilWeek
   return !atCollege && adShootWeek(world.offers, week)
+}
+
+/** ⭐⭐ ROUND 45 #1b, REFINED 02.10 (THIRD BATCH) – THE CLASH SHOOT IS TWO DAYS LONG, AND TWO AT EVERY RUNG.
+ *
+ *  owner (02.10, third batch): «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?»
+ *  – ruled with the architect's concurrence: the clash shoot is 2 days, each costing 3 (`ECONOMY.advertising.clashConditionPerDay`),
+ *  so 6 per clash, flat across tiers; and the schedule «redraws the Shoot block on exactly two trip days to match the fiction –
+ *  the per-match-day drawing was round 30's agent choice, never his» (docs/decisions.md 02.10, «THIRD BATCH»).
+ *
+ *  ⚠ A CONSTANT, WHERE THE FIRST BUILD HAD A FUNCTION OF THE EVENT. Round 45 #1b's first build (B12, the same day) read «за каждый
+ *  съемочный день» as the entered event's MATCH DAYS – `Math.log2(TIERS[tier].drawSize)`, 3 local / 4 regional / 5 / 6 / 7 Slam – because
+ *  the schedule drew the Shoot block on every match day (`TRIP_SHOOT`, hung by `tripMatchDay` in composables/weekGrid.ts since
+ *  round 30 #2). That drawing was an agent's choice and never his; his fiction is a shoot of two days, so the count came off the
+ *  tier and the drawing came with it. Before B12 the multiplier was the week's seven (`PLAN_DAYS`, round 29 #3's reading of
+ *  «+1 в день»); both earlier readings are kept below as the history they are.
+ *
+ *  ⚠ THE SCREEN'S HALF IS `TRIP_SHOOT_DAYS` (composables/weekGrid.ts), which draws the Shoot block on the trip's first two match days
+ *  and may not import this module (the grid takes no value from the engine). The two numbers are pinned equal by the mounted
+ *  file tests/component/round29-shoot-clash-ui.test.ts, over this module's own `clashShootDays`, so a day-count that drifted on one
+ *  side would redden there. Pure constant, zero draws – the frozen MAIN capture cannot see it. */
+export const CLASH_SHOOT_DAYS = 2
+
+/** ⭐⭐ ROUND 45 #1b (owner 02.10) – THE DAYS A SHOOT-AND-TOURNAMENT WEEK IS PRICED OVER: the days the
+ *  entered event RUNS, one condition point each (`ECONOMY.advertising.clashConditionPerDay`).
+ *
+ *  ⚠⚠ THE FIRST BUILD, KEPT VERBATIM BELOW AS HISTORY – REFINED THE SAME DAY (see `CLASH_SHOOT_DAYS` above): the function no
+ *  longer reads the event's tier. What survives unchanged is the zero when she is entered in nothing and the ONE function
+ *  behind both sites.
+ *
+ *  «неделя съёмок… давай по 1 за каждый съемочный день, это может быть вполне справедливо» – and the
+ *  flat week of seven this replaces (`PLAN_DAYS`, round 29 #3's reading of «+1 в день») was never a
+ *  shoot's length. On a week she is also playing, the schedule draws the shoot on the MATCH DAYS
+ *  (`TRIP_SHOOT`, hung on every match day by `tripMatchDay` in composables/weekGrid.ts since round 30
+ *  #2), and the match days are the draw's own rounds – `Math.log2(TIERS[tier].drawSize)`, the same
+ *  arithmetic `tripRoundsFor` asks for the picture and `runTournament` for the draw. So his own table,
+ *  «на локалах 3 дня, National 4 (вроде), основная масса 5, а на 1000 вообще 6 (Шлем 7)», is also what
+ *  the clash costs: 3 / 4 / 5 / 6 / 7, and the old seven is the Slam's price only.
+ *
+ *  ⚠ THE EVENT'S LENGTH AND NOT HER RUN. It is the draw's rounds, never the rounds she survives: the
+ *  price is named in a dialog the week BEFORE, so it has to exist before a ball is hit – and the
+ *  schedule draws every match day for the same reason (`TripFacts.rounds`).
+ *
+ *  ⚠ ZERO WHEN SHE IS ENTERED IN NOTHING THAT WEEK: no event, no collision, nothing to price. Both
+ *  callers (the accumulator below and `buildShootClashPrompt`) already know an entry exists, so this is
+ *  the answer for a hand-built world and never one a live career reaches.
+ *
+ *  ⚠ ONE FUNCTION FOR BOTH SITES – the charge and the card – which is what keeps them from ever
+ *  naming different numbers (the parity class, docs/specs/engine-ui-parity-2026-09.md). It takes a week
+ *  the way `adShootHolds` does, for the same reason: the collision is raised the week BEFORE it lands.
+ *  Pure read, zero draws – the frozen MAIN capture cannot see it. */
+export function clashShootDays(world: WorldState, week: number = world.week): number {
+  const entered = world.season.some((e) => e.week === week && world.entries.includes(e.id))
+  return entered ? CLASH_SHOOT_DAYS : 0
 }
 
 /** THE WITHHELD RECOVERY, OWED WHEN A "PLAYING" WEEK ENDS MATCH-FREE – the one oracle behind the
@@ -268,12 +316,26 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   // ⚠ ...NOR ON A SHOOT WEEK (round-25 collect): lights and flights, not his table – the same
   // reason the week recovers at the travel figure at all.
   if (!playedThisWeek && !shooting && masseurWorksThisWeek(world)) recovery += masseurRungOf(world).conditionBonusPerWeek
-  if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
+  if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth, world.startYear))) {
     recovery += c.blackoutBonus
   }
   // ⭐⭐ ROUND 29 #3 – SHE SHOT AND SHE PLAYED IN THE SAME WEEK, and the owner priced it himself:
   // «+1 в день, т.к. съемка занимает не один час, то нагрузка будет мощной на всю неделю». One
   // point per day of the week, taken off the week's recovery.
+  //
+  // ⭐⭐ ROUND 45 #1b (02.10) – ...AND «THE WEEK'S DAYS» ARE THE SHOOTING DAYS NOW, NOT SEVEN. Shown the
+  // condition table's «shoot week −7», the owner: «неделя съёмок… давай по 1 за каждый съемочный
+  // день, это может быть вполне справедливо». The shoot was never seven days long – on a week she is
+  // also playing, the schedule draws it on the event's match days – so the multiplier is the days the
+  // entered event RUNS (`clashShootDays`: the draw's rounds, 3 local / 4 regional / 5 / 6 / 7 Slam),
+  // and the flat `PLAN_DAYS` that stood here is the Slam's price only. One function for this charge
+  // and for the card, so the two cannot name different numbers.
+  //
+  // ⭐⭐ ROUND 45 #1b, REFINED (02.10, THIRD BATCH) – ...AND THE SHOOTING DAYS ARE TWO, NOT THE EVENT'S. Shown the
+  // per-match-day table above, the owner: «у нас же там когда съемки + турнир нагрузка сильнее, но съемочных дней всего 2… можно за каждый съемочный день по 2 или даже по 3 кондишна снимать. Что думаешь?» – ruled, 2 days × 3 = 6
+  // per clash. `clashShootDays` is now the flat `CLASH_SHOOT_DAYS` and the rate `clashConditionPerDay` is 3, so
+  // this line charges 6 at every rung; the paragraph above is the first build's reasoning, kept as the
+  // history it is.
   //
   // ⚠⚠ IT IS CHARGED OFF THE FACT AND NEVER OFF THE ANSWER. Round 28's note two paragraphs up says
   // «NO STACKING on a played week ... she simply recovers worse, no rule needed» – that was true for
@@ -286,7 +348,7 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   //
   // ⚠ NOT A SECOND SPELLING OF EITHER PREDICATE: `adShootHolds` is the one shoot-week oracle this
   // file already reads, and `playedThisWeek` is `isCompetitionWeek`, handed in by the caller.
-  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS
+  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * clashShootDays(world)
   // ⭐⭐ ROUND 29 #5 – ...AND THE FAMILY'S OWN PLANE MAKES THE ROAD ONE POINT KINDER.
   // docs/specs/the-shop-2026-08.md §3f, the owner: «Самолёт не её, а родителей =) ... По усталости
   // по аналогии с кортом может 1 накинуть, не вижу причин не делать, не такая большая величина».
@@ -431,6 +493,50 @@ export function layoffCoversWeek(
   return weeksRemaining !== null && weeksRemaining !== undefined && weeksRemaining > 0 && week < currentWeek + weeksRemaining
 }
 
+/** ⭐⭐ ROUND 46 R1 (owner, 06.10: «показывать injured когда уже здорова – это не ок и вводит в
+ *  заблуждение») – `layoffCoversWeek` FOR THE ONE WEEK THE MAIN BUTTON PLAYS, as the tick will find it.
+ *
+ *  The clinic's number (`weeksRemaining`) is what the plaque counts down and round 34 keeps it so: the
+ *  masseur's weeks arrive one receipt at a time. But `rollInjury` pays his week INSIDE the tick, so
+ *  for the NEXT tick – and only the next – the figure that decides whether she is still out is
+ *  `expectedWeeks` (`weeksRemaining − masseurRehabWeeksAhead`, the replay the wire has carried since
+ *  round 41 #19). There it is not a forecast but the arithmetic the tick is about to run. B2 gave the
+ *  home preview and the Calendar that read (round 46 #16); this is the SAME read for the surfaces that
+ *  GATE or LABEL that week – the entry gate's display, the planner's friendly, the planner sheet's lock
+ *  and the injury report's «stranded» rows – so none of them says injured for a week the tick clears
+ *  her for.
+ *
+ *  ⚠ THE PLAYED WEEK IS `currentWeek + 1`, the week `advance(1)` resolves (`tickWeek` increments first
+ *  and rolls the injury before anything else reads it). ⚠ EVERY OTHER WEEK KEEPS THE CLINIC'S WINDOW,
+ *  which is what makes this a fence and not a rewrite: a week two or more ticks away is a FORECAST (the
+ *  parent can fire him, drop a rung or book a holiday before it comes), and the owner's own word on
+ *  those is «прогнозные ладно ещё».
+ *
+ *  `expectedWeeks` is nullable so a caller can pass `snapshot.injury?.expectedWeeks` straight in: absent
+ *  means «no masseur, or a layoff too short for his cadence», where the clinic's number is already
+ *  the truth and this is byte-identical to `layoffCoversWeek`. Pure integer comparison, zero RNG. */
+export function layoffCoversWeekAsPlayed(
+  currentWeek: number,
+  weeksRemaining: number | null | undefined,
+  expectedWeeks: number | null | undefined,
+  week: number,
+): boolean {
+  const asTheTickPays = week === currentWeek + 1 && expectedWeeks !== null && expectedWeeks !== undefined
+  return layoffCoversWeek(currentWeek, asTheTickPays ? expectedWeeks : weeksRemaining, week)
+}
+
+/** `layoffCovering`'s twin for the WORLD, the played week read as the tick will find it (see
+ *  `layoffCoversWeekAsPlayed`). ⚠ It DELEGATES to `layoffCovering` for every other week, so the clinic's
+ *  window still has exactly one spelling and the replay is the single exception to it. The onset
+ *  sweep over practices (`rollInjury`, a cancellation and not a label) and the forecast rows stay on
+ *  `layoffCovering` itself, on purpose – round 34's asymmetry. Pure state, zero draws. */
+export function layoffCoveringAsPlayed(world: WorldState, week: number): WorldState['injury'] {
+  const injury = world.injury
+  if (injury === null || week !== world.week + 1) return layoffCovering(world, week)
+  const expectedWeeks = injury.weeksRemaining - masseurRehabWeeksAhead(world)
+  return layoffCoversWeekAsPlayed(world.week, injury.weeksRemaining, expectedWeeks, week) ? injury : null
+}
+
 /** THE LAYOFF SENTENCE, written once. Four surfaces refuse a week because she is laid up – the
  *  entry gate, the planner's `assertPlannable` throw, the arrival gate and (since R12-5b) the
  *  planner SHEET's disabled Practice button – and a disabled button whose reason differs from the
@@ -458,13 +564,17 @@ export interface LayoffBlock {
 export function layoffBlock(input: {
   /** the snapshot's current week */
   currentWeek: number
-  /** the snapshot's active injury, or null when healthy */
-  injury: { weeksRemaining: number } | null
+  /** the snapshot's active injury, or null when healthy. `expectedWeeks` is the wire's masseur replay
+   *  (`InjuryView.expectedWeeks`) and is optional so a bare `{ weeksRemaining }` keeps working. */
+  injury: { weeksRemaining: number; expectedWeeks?: number } | null
   /** the week being planned */
   week: number
 }): LayoffBlock | null {
   const weeksRemaining = input.injury?.weeksRemaining
-  if (!layoffCoversWeek(input.currentWeek, weeksRemaining, input.week)) return null
+  // ⭐ ROUND 46 R1 – the played week reads the replay, every other week the clinic's window (see
+  // `layoffCoversWeekAsPlayed`). The SENTENCE below still quotes the clinic's number: the countdown on
+  // screen is not rewritten (round 34) and no string moved.
+  if (!layoffCoversWeekAsPlayed(input.currentWeek, weeksRemaining, input.injury?.expectedWeeks, input.week)) return null
   return { level: 'blocked', reason: 'injured', detail: injuredDetail(weeksRemaining!) }
 }
 
@@ -744,7 +854,14 @@ export function availabilityStatus(
   // The injury window is read against the EVENT's week, never today's (R10-17 – see layoffCovering).
   // Note the CONDITION-driven branches below stay current-week reads: her condition in a future week
   // is unknowable, which is why the doctor re-checks her on arrival.
-  const layoff = layoffCovering(world, event.week)
+  //
+  // ⭐ ROUND 46 R1 – AND THE WEEK THE BUTTON PLAYS IS READ AS THE TICK WILL FIND IT (`layoffCoveringAsPlayed`),
+  // so this verdict and the arrival verdict at the tick are one law and a card never reads injured for
+  // a week the tick clears her for (owner, 06.10). ⚠ IN THE SHIPPED CALENDAR THAT WEEK ADMITS NO NEW ENTRY
+  // (a list closes at week − 2 and `enterEvent` refuses on the deadline before it asks this), so there
+  // it is the display and the consistency of the gate, not a door. Every week from week + 2 on is a
+  // forecast and keeps the clinic's window.
+  const layoff = layoffCoveringAsPlayed(world, event.week)
   if (layoff !== null) {
     return { level: 'blocked', reason: 'injured', detail: injuredDetail(layoff.weeksRemaining) }
   }
@@ -908,7 +1025,7 @@ export function availabilityStatus(
   // ⚠ THE WEEK'S OWN ANSWER, NOT THIS WEEK'S (W4-SCHOOL). Entries commit weeks ahead, so a girl
   // entering in August for a June that falls after her last school year must not be refused for an
   // exam she will never sit.
-  if (isBlackoutWeek(event.week, schoolIsOver(event.week, world.profile.birthMonth))) {
+  if (isBlackoutWeek(event.week, schoolIsOver(event.week, world.profile.birthMonth, world.startYear))) {
     return {
       level: 'blocked',
       reason: 'unavailable',

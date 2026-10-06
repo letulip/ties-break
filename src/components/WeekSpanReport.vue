@@ -44,6 +44,9 @@ import type { SpanWeek } from '../engine/world/multiWeek'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { weekLabel } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const props = defineProps<{
   /** the week the player pressed on – EXCLUSIVE, so the heading names the first week that happened */
@@ -61,7 +64,7 @@ const titleId = `week-span-title-${++spanSeq}`
 /** "W12 '31 – W15 '31". Short dash, the app's own week label, both ends named: a span whose heading
  *  said only "4 weeks" would be the one fact the player can already see on the button. */
 const heading = computed(() =>
-  props.to > props.from + 1 ? `${weekLabel(props.from + 1)} – ${weekLabel(props.to)}` : weekLabel(props.to),
+  props.to > props.from + 1 ? `${weekLabel(props.from + 1, startYear.value)} – ${weekLabel(props.to, startYear.value)}` : weekLabel(props.to, startYear.value),
 )
 
 /** How many weeks actually happened. It is NOT always the span: the engine stops early on every
@@ -84,7 +87,7 @@ useDialogFocus(card, () => emit('close'))
            empty-popup bug, so the empty case says what it means instead of rendering a blank. -->
       <p v-if="digest.length === 0" class="week-span-empty">Nothing was raised in that time.</p>
       <section v-for="w in digest" :key="w.week" class="week-span-week">
-        <h3 class="week-span-week-head">{{ weekLabel(w.week) }}</h3>
+        <h3 class="week-span-week-head">{{ weekLabel(w.week, startYear) }}</h3>
         <ul class="week-span-rows">
           <li v-for="row in w.rows" :key="row.id" class="week-span-row">
             <span class="week-span-text">{{ row.text }}</span>

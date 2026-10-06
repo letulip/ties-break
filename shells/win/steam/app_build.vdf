@@ -1,0 +1,13 @@
+"AppBuild"
+{
+	"AppID" "@STEAM_APP_ID@"
+	"Desc" "@PRODUCT_NAME@ Windows build @VERSION@"
+	"Preview" "0"
+	"SetLive" ""
+	"ContentRoot" "../win-unpacked/"
+	"BuildOutput" "./logs/"
+	"Depots"
+	{
+		"@STEAM_DEPOT_ID@" "depot_build.vdf"
+	}
+}

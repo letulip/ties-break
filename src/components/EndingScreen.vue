@@ -1,6 +1,8 @@
 <script setup lang="ts">
-// THE EPILOGUE – THE ALBUM. Seven polaroids, turned one at a time, then the record underneath and
-// an offer at the end (career-contract-v1.md §9, the owner's own page).
+// THE EPILOGUE – THE LAST PAGE. The closing card of a finished career: the way to THE ALBUM (the real
+// book, `screens/AlbumScreen.vue`), the figures, the record underneath and the offer at the end
+// (career-contract-v1.md §9, the owner's own page). It used to be seven polaroids turned one at a time –
+// see ROUND 46 #18 below for why that left.
 //
 // It is a TAKEOVER rather than a screen: the tab shell is over. The gate is the SNAPSHOT FIELD
 // `ending`, never a stop reason, for exactly the reason App.vue gives for the knock prompt - a stop
@@ -10,21 +12,25 @@
 // WHAT THIS FILE MAY NOT DO: choose. Every word on a page comes from the engine (`AlbumPage`), the
 // selection rule included, because §6 promises the game never grades her and a UI that picked the
 // adjectives would be the game grading her in a different font.
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
-import type { DynastyHandover } from '../shared/protocol'
+import type { AlbumBook, DynastyHandover } from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
    `NATIONAL_TEAM`, `KID_ID`, `formatShortName`, `WorldMatch` and `MatchReplay` were all the year
    card's, and they are `CollegeYearCard.vue`'s now. The epilogue watches no matches. */
+import AlbumScreen from './screens/AlbumScreen.vue'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import StoreError from './ui/StoreError.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const emit = defineEmits<{
@@ -72,20 +78,93 @@ function raiseAnother(): void {
 }
 
 const view = computed(() => game.snapshot?.ending ?? null)
-const pages = computed(() => view.value?.album ?? [])
 
-const page = ref(0)
-/** false = the album, true = the record underneath (§9.3). */
+/** false = the last page, true = the record underneath (§9.3). */
 const scrollOpen = ref(false)
 
-const current = computed(() => pages.value[page.value] ?? null)
-const isLast = computed(() => page.value === pages.value.length - 1)
+/** ⭐ ROUND 46 #18 – THE ONE REEL PAGE THAT STAYED: the LAST of the engine's seven. It is the page that carries
+ *  the ending's own title and its lines (`AlbumPage` slot 7 – «whichever of the nine it was»), so dropping the
+ *  reel with it would have dropped how the career ended. Null on a view with no pages (a shape no live path
+ *  produces): the card then renders its figures and doors without a photograph, where the pager used to
+ *  leave a footer that never appeared.
+ *
+ *  ⭐ ROUND 46 · R6 (06.10) – IT IS THE WHOLE FIELD NOW: the engine sends this page alone as `EndingView.closing`
+ *  (pages 1–6 left the wire on his word – translated, «take them off, yes»), so there is no list to take the
+ *  last of, and the «no pages» case above can no longer be built: `closing` is null here only while `view` is. */
+const closing = computed(() => view.value?.closing ?? null)
 
-function next(): void {
-  if (!isLast.value) page.value += 1
+// --- ⭐⭐⭐ ROUND 46 #18 – THE ALBUM IS THE REAL ONE NOW, AND THE SEVEN-POLAROID REEL IS GONE ---------
+//
+// THE OWNER, 05.10 (translated; a `.vue` file carries no Cyrillic): «I pressed "that's enough" and again
+// saw not our beautiful album but a set of childhood photos and, at the end, one adult one. Fix it: let
+// me look through the whole album, and think about what the flow is there at all.»
+//
+// ⚠ WHAT WAS WRONG, AND IT WAS NOT A BUG IN THE REEL. This screen was written (career-contract-v1 §9)
+// before the album book existed: seven pages, each the portrait of the life STAGE the engine had picked a
+// moment from, so a career that lived mostly in its early years drew mostly children – and the screen's
+// own eyebrow said «The album», so the player was told he was looking at the album while the book he has
+// had since round 44 (`screens/AlbumScreen.vue`, composed by `assembleAlbum` over the milestone ledger)
+// was nowhere on the way out. Two things called THE ALBUM on one career is the defect; the reel's
+// selection was only its visible half.
+//
+// ⚠ WHAT IT IS NOW. The reel – its first six pages, its pager, its dots, its «n / 7» – left this screen; the
+// engine's `EndingView.album` was still on the wire when this was written and only its LAST page was read here
+// (R6, 06.10: pages 1–6 left the wire on his word – translated, «take them off, yes» – and that last page is
+// `EndingView.closing` now). The card that remains
+// is the reel's last page as it stood – the photograph, the ending's own title and lines, the figures and the
+// two doors, under the eyebrow it already had – with ONE new control at the head of the figures: «View the album» lays the book itself over this takeover – every sheet, the same
+// chapter rail and pager as mid-career – and its Back arrow returns to the card as it was left (scroll
+// included). ⚠ NOTHING OF THE BOOK IS REBUILT HERE: the same component, the same worker query
+// (`game.loadAlbum`) the Home door uses; this file only holds the book for as long as it is open.
+//
+// ⚠ THE BOOK IS FETCHED WHEN THE LAYER OPENS AND DROPPED WHEN IT CLOSES, for the reason App.vue gives at
+// its own `albumBook`: a ref that outlived the layer could show one career's childhood to the next, and
+// the TICKET is for the late answer – only the newest request may write, and only while the layer is open.
+// ⚠ AND A REFUSED FETCH CANNOT TRAP THE PLAYER: `book` stays null, the book draws its own empty chrome, and its
+// Back arrow is the same one that works with a book. There is deliberately NO Escape handler (this takeover
+// has none, see `useDialogFocus` below): the arrow is the way back.
+/** true while THE ALBUM (the real book) is laid over this takeover. */
+const albumOpen = ref(false)
+const book = ref<AlbumBook | null>(null)
+let bookRequest = 0
+/** Where the card was scrolled to when the book was opened – the book opens at ITS top (owner, 31.07: a
+ *  screen opens at its top) and the card comes back exactly where it was left. */
+let leftAt = 0
+
+async function openAlbum(): Promise<void> {
+  leftAt = card.value?.scrollTop ?? 0
+  albumOpen.value = true
+  void nextTick(() => {
+    if (card.value) card.value.scrollTop = 0
+  })
+  const ticket = ++bookRequest
+  const loaded = await game.loadAlbum()
+  if (ticket === bookRequest && albumOpen.value) book.value = loaded
 }
-function prev(): void {
-  if (page.value > 0) page.value -= 1
+
+function closeAlbum(): void {
+  bookRequest += 1
+  albumOpen.value = false
+  book.value = null
+  void nextTick(() => {
+    if (card.value) card.value.scrollTop = leftAt
+  })
+}
+
+// --- ⭐⭐⭐ ROUND 46 #20 – THE SERVICE EXPORT, ON THE ONE SCREEN THAT COVERS THE WAY TO THE SAVE ---------
+//
+// THE OWNER, 05.10 (translated): he could not get the save out any more, it seemed because of the last
+// screen, where he had a lot of questions to check; could there be a separate button for the save here, for
+// service purposes, so he can upload it for analysis. This takeover covers the tab shell, so More's
+// «Export to file» is unreachable from here, and «Raise another» DROPS the finished career.
+//
+// ⚠ IT IS THE SAME CALL AS MORE'S, NOT A COPY OF IT: `game.exportSave()` asks the worker's `exportSave` query,
+// which runs `encodeExportFile` over the committed world – the one file format, the one set of bytes, and no
+// second serialiser. It follows the `▶▶ 52 (dev)` precedent (a dev control that ships in every build, because the
+// deployed build is the playtest device) and carries the same `(dev)` tag so nobody mistakes it for a
+// player's feature. The label is a DRAFT (R46-S18) – invariant 4.
+async function exportSave(): Promise<void> {
+  await game.exportSave()
 }
 
 const resumes = computed(() => view.value?.handoff.resumesWeek ?? null)
@@ -188,17 +267,24 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   >
     <!-- THE RECORD (section 9.3): every milestone in order, paged by season. The floor under the
          album, for the player who wants the record rather than the story. -->
-    <section v-if="scrollOpen" class="ending-scroll">
+    <!-- ⭐⭐⭐ ROUND 46 #18 – THE REAL ALBUM, laid over this takeover. The `section` is what puts it in the
+         same column as everything else here on a wide screen (`.ending > section`). Its Back arrow is the
+         book's own control and returns to the last page; nothing is rebuilt. -->
+    <section v-if="albumOpen" class="ending-book">
+      <AlbumScreen :book="book" @back="closeAlbum" />
+    </section>
+
+    <section v-else-if="scrollOpen" class="ending-scroll">
       <header class="ending-head">
         <Eyebrow as="h2">The whole record</Eyebrow>
         <button class="ending-link" type="button" @click="scrollOpen = false">Back to the album</button>
       </header>
       <div class="ending-scroll-body">
         <section v-for="s in view.scroll" :key="s.seasonIndex" class="scroll-season">
-          <h3 class="scroll-year">{{ seasonYear(s.seasonIndex) }} <span>she was {{ s.ageYears }}</span></h3>
+          <h3 class="scroll-year">{{ seasonYear(s.seasonIndex, startYear) }} <span>she was {{ s.ageYears }}</span></h3>
           <ul class="scroll-rows">
             <li v-for="r in s.rows" :key="`${r.week}-${r.label}`">
-              <span class="scroll-week">{{ weekLabel(r.week) }}</span>
+              <span class="scroll-week">{{ weekLabel(r.week, startYear) }}</span>
               <span class="scroll-label">{{ r.label }}</span>
               <span v-if="r.detail" class="scroll-detail">{{ r.detail }}</span>
             </li>
@@ -210,44 +296,43 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
       </div>
     </section>
 
-    <!-- THE ALBUM -->
+    <!-- THE LAST PAGE. ⚠ `ending-album` IS THE CLASS THE REEL'S SECTION WORE, KEPT ON PURPOSE: this section is
+         still the card the fit tests measure, and a rename would be a diff with no behaviour in it. -->
     <section v-else class="ending-album">
       <header class="ending-head">
-        <Eyebrow as="h2">{{ isLast ? 'The last page' : 'The album' }}</Eyebrow>
-        <p class="ending-count">{{ page + 1 }} / {{ pages.length }}</p>
+        <Eyebrow as="h2">The last page</Eyebrow>
       </header>
 
-      <div v-if="current" class="album-page">
+      <div v-if="closing" class="album-page">
         <!-- POINT 1 + POINT 2: the photograph, and the week in her own hand ON THE CARD. -->
         <Polaroid
           class="album-photo"
-          :src="portraitUrl(current.stage, current.emotion)"
-          :alt="`Aged ${current.stage}`"
-          :tilt="page % 2 === 0 ? 'var(--tilt-1)' : 'var(--tilt-2)'"
+          :src="portraitUrl(closing.stage, closing.emotion)"
+          :alt="`Aged ${closing.stage}`"
+          tilt="var(--tilt-1)"
           :photo-height="228"
-          :caption="current.caption"
+          :caption="closing.caption"
           tape
         />
 
         <!-- POINT 4: WHY this week is in the album. Always visible, empty page or not - the owner's
              visible selection rule, and what keeps section 6's promise. -->
-        <p class="album-why">{{ current.why }}</p>
+        <p class="album-why">{{ closing.why }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
-        <p v-if="current.fact" class="album-fact">{{ current.fact }}</p>
-        <p v-if="current.week !== null" class="album-when">{{ weekLabel(current.week) }}</p>
+        <p v-if="closing.fact" class="album-fact">{{ closing.fact }}</p>
+        <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week, startYear) }}</p>
       </div>
 
-      <nav class="album-nav">
-        <button class="album-arrow" type="button" :disabled="page === 0" @click="prev">Back</button>
-        <span class="album-dots" aria-hidden="true">
-          <i v-for="(p, i) in pages" :key="p.slot" :class="{ on: i === page, off: p.empty }"></i>
-        </span>
-        <button class="album-arrow" type="button" :disabled="isLast" @click="next">Next</button>
-      </nav>
+      <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. -->
+      <footer class="ending-foot">
+        <!-- ⭐⭐⭐ ROUND 46 #18 – «VIEW THE ALBUM» IS FIRST ON THE LAST PAGE, because it is the thing this
+             screen is for: the whole book, every sheet, before the figures and before the two doors.
+             ⚠ THE LABEL IS A DRAFT (R46-S17) – invariant 4; an alternate is in the round ledger. -->
+        <PrimaryPill class="ending-door-album" variant="cta" :disabled="game.busy" @click="openAlbum">
+          View the album
+        </PrimaryPill>
 
-      <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. Only on the last page. -->
-      <footer v-if="isLast" class="ending-foot">
         <!-- ⭐⭐⭐ ROUND 46 #9 – THE SAME FIVE LABELS, TWO OF THE FIGURES REPAIRED, AND TWO NEW ROWS
              THAT ONLY APPEAR WHEN THERE IS SOMETHING TO SAY. The owner read «$13M won against $83M
              spent» off a career that ended holding a fund, houses and an academy (his words are on
@@ -403,6 +488,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         >
           {{ continueLabel }}
         </PrimaryPill>
+
+        <!-- ⭐⭐⭐ ROUND 46 #20 – THE SERVICE EXPORT (see the script block). Last, small, a link: it is a tool for
+             the person testing the build, and it must be reachable BEFORE «Raise another» drops the career.
+             ⚠ THE LABEL IS A DRAFT (R46-S18) – invariant 4. -->
+        <button class="ending-link ending-dev" type="button" :disabled="game.busy" @click="exportSave">
+          Export save (dev)
+        </button>
       </footer>
     </section>
 
@@ -460,14 +552,12 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   margin-bottom: 18px;
 }
 
-.ending-count {
-  margin: 0;
-  font-size: 13px;
-  color: var(--ink-dim);
-  font-variant-numeric: tabular-nums;
-}
+/* ⭐ ROUND 46 #18 – THE PAGER'S RULES LEFT WITH THE PAGER: `.ending-count`, `.album-nav`, `.album-arrow` and
+   `.album-dots` styled the reel's «n / 7», its Back / Next and its dots, none of which is drawn now. The
+   page's own five rules below are unchanged – that page is the one that stayed. The real album brings
+   its own sheet (`screens/AlbumScreen.vue`). */
 
-/* A page you TURN, not a feed you flick: one polaroid, centred, with the reason under it. */
+/* The last page: one polaroid, centred, with the reason under it. */
 .album-page {
   display: flex;
   flex-direction: column;
@@ -505,53 +595,6 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-dim);
-}
-
-.album-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 22px 0 8px;
-}
-
-.album-arrow {
-  background: none;
-  border: 0;
-  padding: 8px 4px;
-  font: inherit;
-  font-size: 14px;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-
-.album-arrow:disabled {
-  color: var(--ink-dim);
-  opacity: 0.4;
-  cursor: default;
-}
-
-.album-dots {
-  display: flex;
-  gap: 7px;
-}
-
-.album-dots i {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-pill);
-  background: var(--ring-track);
-}
-
-/* An EMPTY page is dotted rather than filled - the album says at a glance that a page has no week
-   behind it, which is the same honesty the page itself carries in words. */
-.album-dots i.off {
-  box-shadow: inset 0 0 0 1px var(--ink-dim);
-  background: transparent;
-}
-
-.album-dots i.on {
-  background: var(--ink);
 }
 
 .ending-foot {

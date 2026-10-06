@@ -1,0 +1,20 @@
+{
+  "name": "ties-break-shell-win",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ties Break: Ace Parent – the Windows/Steam shell (Electron). Tooling, not product: see ../README.md.",
+  "author": "Igor Vladimirskiy",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "optionalDependencies": {
+    "steamworks.js": "0.4.0"
+  }
+}

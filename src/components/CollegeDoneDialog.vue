@@ -48,6 +48,9 @@ import { GRADUATED_ART_STEM, graduatedUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
 import { useDialogFocus } from '../composables/dialogFocus'
 import PrimaryPill from './ui/PrimaryPill.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const emit = defineEmits<{ (e: 'continue'): void }>()
@@ -113,7 +116,7 @@ function rankMark(rank: number | null): string {
       <!-- The graduate's picture, and hers alone – see the header. A leaver's card opens on the
            kicker, exactly as every card here did before T14. -->
       <img v-if="graduated" class="college-done-art" :src="artUrl" :style="artStyle" alt="" />
-      <p id="college-done-kicker" class="season-summary-kicker">College · {{ weekLabel(college.doneWeek ?? 0) }}</p>
+      <p id="college-done-kicker" class="season-summary-kicker">College · {{ weekLabel(college.doneWeek ?? 0, startYear) }}</p>
       <h2 id="college-done-title" class="season-summary-title">{{ title }}</h2>
 
       <!-- THE YEARS, AS THE ENGINE BANKED THEM. One row each, and the two ends of each year are the

@@ -73,11 +73,16 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "graph": "node scripts/graph.mjs",
     "graph:check": "node scripts/graph.mjs --check",
+    "shell:win": "npm --prefix shells/win run build",
+    "shell:android": "npm --prefix shells/android run build",
+    "shell:ios": "npm --prefix shells/ios run build",
+    "shell:all": "npx vite build && SHELL_SKIP_DIST=1 npm run shell:win && SHELL_SKIP_DIST=1 npm run shell:android && SHELL_SKIP_DIST=1 npm run shell:ios",
     "bench:masseurraise": "vite-node tools/masseur-raise-bench.ts",
     "bench:coachraise": "vite-node tools/coach-raise-bench.ts",
     "bench:form": "vite-node tools/form-bench.ts",
     "bench:gsweep": "vite-node tools/form-g-sweep.ts",
-    "bench:dynasty": "vite-node tools/dynasty-bench.ts"
+    "bench:dynasty": "vite-node tools/dynasty-bench.ts",
+    "shell:backup": "node shells/backup.mjs"
   },
   "engines": {
     "node": ">=22"

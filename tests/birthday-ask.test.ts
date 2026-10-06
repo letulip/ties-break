@@ -382,6 +382,15 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
     }
     expect(pendingBirthday(world), 'the fixture has to reach the independence band').toBeGreaterThanOrEqual(19)
 
+    // ⚠ ROUND 45 #9 – RE-AIMED, NOT WEAKENED. Her nineteenth card now always carries the deposit (a
+    // swap that may move the car off it for a given seed), so the fixture walks to the first
+    // independence-band birthday whose card holds the car instead of assuming it is the first one.
+    for (let year = 0; year < 3; year++) {
+      if (toSnapshot(world).birthdayPrompt!.options.some((o) => o.id === 'car')) break
+      answerBirthdayNeutral(world)
+      tickWeek(world, rng)
+      expect(runToBirthday(), 'and she has another birthday inside the band').toBeGreaterThan(0)
+    }
     // The car, given once...
     const first = toSnapshot(world).birthdayPrompt!
     const carFirst = first.options.find((o) => o.id === 'car')!
@@ -461,7 +470,11 @@ describe('⚠ the copy work costs the stream nothing', () => {
       // checking the wrong list. The flag is passed through here, which is also what makes the
       // college band's own draw count load-bearing.
       const atCollege = band === BIRTHDAY_COLLEGE_BAND
-      const age = Math.max(band.from, 14)
+      // ⚠ ROUND 45 #9 – THE INDEPENDENCE BAND IS MIRRORED AT TWENTY, the bicycle's exemption again:
+      // nineteen swaps its card to hold the deposit and overrides the ask, so a hand-written replay of
+      // the plain cycle and the plain fourth draw would be checking a branch that ignores both. Twenty
+      // is the same band, the same stream and the same four draws, and is untouched by the swap.
+      const age = band.from === 19 && band.to === 21 ? band.from + 1 : Math.max(band.from, 14)
       // ROUND 42 #1: under sixteen the card is FOUR material rows and no day, so the mirror walks
       // C(n,4); from sixteen it is the shipped C(n,3) + the day. Both arms still shuffle four rows
       // and draw the ask, so the age stream's exactly-four law below holds at every age.
@@ -492,10 +505,17 @@ describe('⚠ the copy work costs the stream nothing', () => {
       const askedId = options[Math.floor(counted() * options.length)].id
       expect(draws, `${bandName(band)}: three to order the four rows, one for the ask`).toBe(4)
       const real = birthdayOffer('draws', age, [], atCollege)
+      // ⚠ ROUND 46 #5 – RE-AIMED, NOT WEAKENED. A fresh career's eighteenth asks for the bank account by
+      // ruling (his «жёстко к 18»): an override of the RESULT after the draw, the deposit's own shape. The
+      // band is one age wide, so there is no neighbouring birthday to mirror it at (the independence band
+      // is replayed at twenty for nineteen's deposit) and the exemption is on the ASK ALONE: the four
+      // rows' ORDER, which the three shuffle draws decide, is still replayed for this band, the replay
+      // still counts four draws, and the override is pinned in tests/birthday-own-account.test.ts.
+      const anchored = band.from === 18 && band.to === 18
       expect(
         [real.options.map((o) => o.id), real.askedId],
         `${bandName(band)}: the real offer and the counted replay must be the same draw`,
-      ).toEqual([options.map((o) => o.id), askedId])
+      ).toEqual([options.map((o) => o.id), anchored ? 'bankcard' : askedId])
     }
   })
 
@@ -1122,7 +1142,12 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
     }
     for (const band of BIRTHDAY_BANDS) {
       const atCollege = band === BIRTHDAY_COLLEGE_BAND
-      const age = Math.max(band.from, 14)
+      // ⚠ ROUND 45 #9 – THE INDEPENDENCE BAND'S FIRST BIRTHDAY JOINS THE BICYCLE'S EXEMPTION, FOR THE
+      // BICYCLE'S REASON: nineteen OVERRIDES the drawn ask with the deposit by ruling, so checking it
+      // would be checking a branch that ignores the draw. Twenty is the band's next birthday and walks
+      // the drawn ask exactly as before; the nineteenth's own override is pinned, draw count included,
+      // in tests/round45-deposit-before-key.test.ts.
+      const age = band.from === 19 && band.to === 21 ? band.from + 1 : Math.max(band.from, 14)
       const every = band.gifts.map((g) => g.id)
       for (let s = 0; s < 40; s++) {
         const seed = `draw-count-27-${s}`
@@ -1141,8 +1166,12 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
           const onCard = options.filter((g) => g.id !== DAY)
           const askAgain = onCard.filter((g) => g.repeat === 'repeatable')
           const pool = wanted.length ? wanted : askAgain.length ? askAgain : onCard.length ? onCard : options
+          // ⚠ ROUND 46 #5 – RE-AIMED, NOT WEAKENED. With nothing given, the eighteenth's ask is the bank
+          // account by ruling – an override of the RESULT, so the fourth draw is not what it reads. The
+          // cases that already hold the account (`given` = every row) are unchanged and still replay it.
+          const anchored = band.from === 18 && band.to === 18 && !spent.has('bankcard')
           expect(
-            pool[Math.floor(fourthDraw(seed, age) * pool.length)].id,
+            anchored ? 'bankcard' : pool[Math.floor(fourthDraw(seed, age) * pool.length)].id,
             `${bandName(band)} seed ${s}: the ask is not the fourth draw off its own stream`,
           ).toBe(askedId)
         }

@@ -40,7 +40,8 @@
 import { test, expect } from './careerAt'
 import { dismissTourBriefing, goHome, openMore } from './journey'
 
-/** ⚠ THE ROW'S OWN NAME, TRANSCRIBED – `WEIGHT_COPY.title` (src/composables/identityCopy.ts), which
+/** ⚠ THE ROW'S OWN NAME, TRANSCRIBED – `WEIGHT_COPY.settingsLabel` (src/composables/identityCopy.ts; it was `title` until round 46 #2
+ *  gave the row words of its own – the heading over the row keeps `title`), which
  *  `tsconfig.e2e.json` forbids this project from importing (e2e/expecting.spec.ts writes the pause's
  *  refusal longhand for the same reason and says so).
  *
@@ -48,7 +49,7 @@ import { dismissTourBriefing, goHome, openMore } from './journey'
  *  re-words it – and it rots LOUDLY, by failing to find a switch, rather than quietly. The component
  *  test reads the constant; only one side is a transcription, which is the property wave 10's own
  *  notes name. */
-const WEIGHT_ROW = 'The weight'
+const WEIGHT_ROW = 'Pregnancy loss and bereavement'
 
 test.describe('the weight switch', () => {
   test('turns on in settings, survives a reload, and turned off no weight beat arrives', async ({

@@ -9,7 +9,7 @@ import type { FamilyBackground } from '../../shared/protocol'
 // is the CEILING of the summer window (see `isSummerWeek`) – pure arithmetic over the fixed epoch,
 // no engine state. `WEEKS_IN_SEASON` is the season length, and it is now the SOLE owner of the 52
 // (TB-02): `WEEKS_PER_YEAR` below is an alias of it rather than a second literal.
-import { weekMonth, WEEKS_IN_SEASON } from '../../shared/dates'
+import { DEFAULT_START_YEAR, weekMonth, WEEKS_IN_SEASON } from '../../shared/dates'
 import { ECONOMY } from '../economy'
 import type { SeasonEvent, TierDef, TierId } from './types'
 
@@ -1807,10 +1807,10 @@ const SUMMER_LAST_MONTH = 8
  *  is still AUGUST in nine seasons out of twelve (s1-s4, s6-s9 above and below), so this line is what
  *  keeps school out of it, exactly as it was. Belt and braces, and both are load-bearing:
  *  docs/specs/season-anchor.md §3d has the measured table. DO NOT revert this as "fixed upstream". */
-export function isSummerWeek(week: number): boolean {
+export function isSummerWeek(week: number, startYear: number = DEFAULT_START_YEAR): boolean {
   const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
   if (offset < SUMMER_WEEKS[0]) return false
-  return offset <= SUMMER_WEEKS[1] || weekMonth(week) === SUMMER_LAST_MONTH
+  return offset <= SUMMER_WEEKS[1] || weekMonth(week, startYear) === SUMMER_LAST_MONTH
 }
 
 // --- SEASON STRUCTURE BY SURFACE (owner approved 26.07: "звучит круто") ---------------------

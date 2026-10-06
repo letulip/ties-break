@@ -75,8 +75,8 @@ test('the line continues: the door, the locked name, and a career that carries i
   // ===============================================================================================
   const epilogue = page.getByRole('dialog', { name: 'Epilogue' })
   await expect(epilogue).toBeVisible()
-  // The hand-off is an offer on the LAST page, so the album has to be turned to reach it.
-  for (let i = 0; i < 6; i += 1) await epilogue.getByRole('button', { name: 'Next' }).click()
+  // ROUND 46 #18: the epilogue OPENS on its last page now – the seven-page reel and its Next button are gone –
+  // so the hand-off is already on screen and there is nothing to turn.
 
   const line = epilogue.locator('.ending-line')
   await expect(line, 'his 20.09 ruling: the door renders on EVERY ending').toHaveCount(1)
@@ -99,7 +99,15 @@ test('the line continues: the door, the locked name, and a career that carries i
     'she carries her mother\'s name, and the fixture is the mother',
   ).toHaveValue(ENDING.profile.kidLastName)
   await expect(card.locator('#prologue-last'), 'and the field cannot be typed over').toHaveAttribute('readonly', '')
-  await expect(card.locator('.prologue-line-note'), 'the one sentence that explains the lock').toHaveCount(1)
+  // ⚠ RE-AIMED 06.10 (succession W1, ruling 14): a SECOND line-note is lawful now – the owner's
+  // approved «Her mother's career leaves her a head start.» (W-S4) renders whenever the legacy
+  // start is richer than an ordinary one, which this fixture's finished career is. The lock's own
+  // sentence is still first; both are asserted, so a third stray note still fails.
+  await expect(card.locator('.prologue-line-note'), 'the lock sentence and the head start, nothing else').toHaveCount(2)
+  await expect(
+    card.locator('.prologue-line-note').nth(1),
+    'the second note is the owner-approved inheritance line, word for word',
+  ).toHaveText("Her mother's career leaves her a head start.")
   // §6.3 – the origins are not a question on a dynasty run: the band arrived on the block.
   await expect(card.locator('.prologue-picks button'), 'nothing to choose about where she is from').toHaveCount(0)
 

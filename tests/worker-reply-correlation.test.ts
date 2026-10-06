@@ -102,6 +102,10 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     return {
       // -- queries and persistence, against the imported career -----------------------------
       getSnapshot: { type: 'getSnapshot' },
+      // ⭐ ROUND 46 #22 – the dev life-event boost, `getSnapshot`'s own shape (read-only against the committed world,
+      // answers with the snapshot). `on: false` ON PURPOSE: this driver runs the real switch in-process, and the flag it
+      // sets is module state – `true` here would leave the boost on for every later case in this file.
+      devLifeBoost: { type: 'devLifeBoost', on: false },
       // ⭐ the album, on demand (docs/specs/the-album-2026-09.md §8b) – a query against the imported
       // career, `getSnapshot`'s own shape: read-only, no baseRevision, answered with its own arm.
       album: { type: 'album' },
@@ -109,6 +113,12 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       // same three properties. The roster is TOTAL over the command union by type, so this row was a
       // compile error the moment the command existed, which is the roster's job.
       inbox: { type: 'inbox' },
+      // ⭐⭐⭐ SUCCESSION S2c (06.10) – the legacy, on demand at the dynasty door: `album`'s own shape one query over, answered against the
+      // imported career with its own arm.
+      legacyInput: { type: 'legacyInput' },
+      // ⭐⭐⭐ SUCCESSION S2d (06.10) – the mother's album, on demand: `album`'s own shape one query over, answered against the imported career with its
+      // own arm (a plain career answers `book: null`, and the arm is what this roster is about).
+      heirloomAlbum: { type: 'heirloomAlbum' },
       listSlots: { type: 'listSlots' },
       listCareers: { type: 'listCareers' },
       exportSave: { type: 'exportSave' },
@@ -246,10 +256,12 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
     // ⚠ RE-AIMED, NOT WIDENED (T6.2 · D-07, 28.09): `inbox` is the SEVENTH ok arm and it joins the
     // literal for the reason the album joined it – this guard's whole point is that a new ok arm may
     // not ship unexercised, so the list grows by exactly the arm that was added and stays an equality.
-    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'inbox', 'peek', 'slots', 'snapshot'])
+    // ⚠ RE-AIMED, NOT WIDENED AGAIN (SUCCESSION S2c, 06.10): `legacyInput` is the EIGHTH ok arm, joined for the same reason.
+    // ⚠ RE-AIMED, NOT WIDENED ONCE MORE (SUCCESSION S2d, 06.10): `heirloomAlbum` is the NINTH ok arm, joined for the same reason.
+    expect([...seen].sort()).toEqual(['album', 'careers', 'exported', 'heirloomAlbum', 'inbox', 'legacyInput', 'peek', 'slots', 'snapshot'])
     // ...and these eight in particular must have COMMITTED, one per arm plus the two mutation
     // paths, so a future refusal creeping into a load-bearing command cannot hide inside the set.
-    for (const command of ['getSnapshot', 'album', 'inbox', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
+    for (const command of ['getSnapshot', 'album', 'inbox', 'legacyInput', 'heirloomAlbum', 'listSlots', 'listCareers', 'exportSave', 'peekSave', 'advance', 'saveNamed'] as const) {
       expect(arms.get(command), `'${command}' must succeed on a quiet career`).toBe(REPLY_BY_COMMAND[command])
     }
   })

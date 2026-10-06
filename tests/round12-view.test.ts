@@ -199,8 +199,14 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     // She is back at the TOP of week `week + weeksRemaining`. The sheet no longer mirrors the
     // inequality by hand - the R12-5b seam replaced the copy with the engine's own `layoffBlock`
     // (one comparison, `layoffCoversWeek`, for the sheet, the throw and the tournament lock).
-    // SeasonScreen still mirrors it on snapshot facts; the sheet is pinned to the shared predicate.
-    expect(seasonScreen).toContain('w < s.week + s.injury.weeksRemaining')
+    // SeasonScreen reads it on snapshot facts THROUGH `layoffHoldsWeek` (composables/weekDays.ts,
+    // round 46 #16): the engine's own `layoffCoversWeek`, with the played week's masseur-aware
+    // figure. ⚠ RE-AIMED, not weakened: the pin used to assert the inline copy of the inequality;
+    // it now asserts the call AND that the inline copy is gone, so a re-spelling still fails here.
+    // The exclusive-of-the-return-week arithmetic itself is `layoffCoversWeek`'s, pinned by its own
+    // table in round12.test.ts and by tests/round46-arrival-masseur-parity.test.ts.
+    expect(seasonScreen).toContain('layoffHoldsWeek(s, w)')
+    expect(seasonScreen).not.toContain('w < s.week + s.injury.weeksRemaining')
     expect(planSheet).toContain('layoffBlock({ currentWeek:')
     expect(planSheet).not.toMatch(/props\.week < s\.week \+ s\.injury\.weeksRemaining/)
   })

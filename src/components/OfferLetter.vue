@@ -56,15 +56,18 @@ import type {
 import { LADDER_LABEL } from '../shared/protocol'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
-import { WEEKS_IN_SEASON, weekLabel, weekRange } from '../shared/dates'
+import { WEEKS_IN_SEASON, seasonYear, weekLabel, weekRange } from '../shared/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
-import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand } from '../engine/offers'
+import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskPer } from '../engine/offers'
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5): the memory window the stale notice quotes is the ENGINE's constant, imported rather than
 // retyped (a retune of `memoryWeeks` moves the sentence with it), and the two senders' words are the ones the inbox LIST prints too.
 import { ECONOMY } from '../engine/economy'
 import { SALE_SENDER } from '../composables/saleLetter'
 import PaperNote from './ui/PaperNote.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // ⭐⭐ ROUND 39 #17 – `offers` IS THE WHOLE INBOX AND IT IS OPTIONAL. One clause on a rival house's
 // kit letter needs a fact that is not on its own paper – whether a clothing campaign is running, and
@@ -246,6 +249,35 @@ const staffFocusLine = computed(() => {
   const focus = staffTerms.value.focus
   return focus ? PSY_FOCUS_LINE[focus] : ''
 })
+/** ⭐⭐ ROUND 45 #4 – THE CARRY-OVER LINE, DRAFT. Printed only when the engine says the direction was
+ *  never chosen for this season (`focusCarriedFrom`, the season the carried pick was last bought
+ *  for) – the owner's own sketch is «мы не выбрали новое, поэтому работали по предыдущему». The
+ *  year is the real datum, built off the terms on every read like every other sentence here. */
+const staffCarriedLine = computed(() => {
+  const from = staffTerms.value.focusCarriedFrom
+  if (from === undefined || !staffTerms.value.focus) return ''
+  return `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for ${seasonYear(from, startYear.value)}.`
+})
+/** ⭐⭐⭐ ROUND 45 #3 – A RAISE REQUEST, DRAFT copy. The figures are the two the engine froze on the
+ *  paper (`terms.ask`); nothing here is computed from the world. */
+const staffAsk = computed(() => (isStaff.value ? (staffTerms.value.ask ?? null) : null))
+/** The unit the seat is paid in, WITH its article – «a session» for the masseur, «a week» for the two
+ *  retainers, «an hour» for the coach (`staffAskPer`). DRAFT copy: the masseur's sentences are unchanged, the
+ *  other two are R45-S10..S13 and the coach's are R45-S23..S27. */
+const staffAskPerWord = computed(() => staffAskPer(staffTerms.value.seat))
+const staffAskLead = computed(() => {
+  const ask = staffAsk.value
+  if (!ask) return ''
+  return `I have now worked a full year with her, so I am asking for a raise: my rate would go from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} ${staffAskPerWord.value}.`
+})
+/** What the foot says once the window is shut – one sentence per way a request can end. */
+const staffAskSettled = computed(() => {
+  const ask = staffAsk.value
+  if (!ask) return ''
+  if (props.offer.state === 'signed') return `Accepted – the rate is ${formatCents(ask.toCents)} ${staffAskPerWord.value}.`
+  if (props.offer.state === 'refused') return `Declined – the rate stays at ${formatCents(ask.fromCents)} ${staffAskPerWord.value}.`
+  return `Lapsed – the rate stays at ${formatCents(ask.fromCents)} ${staffAskPerWord.value}.`
+})
 
 // ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 steps 1-2). The other
 // kind of sponsor entirely: a non-endemic house – a watchmaker – paying cash for her FACE, not kit
@@ -423,7 +455,7 @@ const adShootCountWord = computed(() => {
  *  ("W14 '31 and W38 '31") – `weekLabel` is the unit every surface speaks. Empty until signed. */
 const adShootWeekLine = computed(() => {
   const weeks = adTerms.value.shootWeeks ?? []
-  const labels = weeks.map((w) => weekLabel(w))
+  const labels = weeks.map((w) => weekLabel(w, startYear.value))
   if (labels.length <= 1) return labels[0] ?? ''
   return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
 })
@@ -439,7 +471,7 @@ const adSettled = computed(() => {
       const running = props.week <= (o.untilWeek ?? -1)
       const shoots = adShootWeekLine.value
       if (running) {
-        return `Signed – the fee is banked, the campaign runs to ${weekLabel(o.untilWeek ?? o.week)}${shoots ? `, and her shoot weeks are ${shoots}` : ''}.`
+        return `Signed – the fee is banked, the campaign runs to ${weekLabel(o.untilWeek ?? o.week, startYear.value)}${shoots ? `, and her shoot weeks are ${shoots}` : ''}.`
       }
       // ⭐⭐ ROUND 39 #17 – A CAMPAIGN THAT WAS ENDED DID NOT RUN ITS COURSE, and the record may not
       // say it did. `adCampaignCutShort` reads the shortened span off the paper's own frozen term –
@@ -602,7 +634,7 @@ const runsToWeek = computed(() => props.offer.untilWeek ?? dealUntilWeek(props.o
 const signedRun = computed(() => {
   const o = props.offer
   if (o.state !== 'signed' || o.fromWeek === undefined || o.untilWeek === undefined) return ''
-  return `In their kit ${weekLabel(o.fromWeek)} – ${weekLabel(o.untilWeek)} · ${seasonWord.value.toLowerCase()}`
+  return `In their kit ${weekLabel(o.fromWeek, startYear.value)} – ${weekLabel(o.untilWeek, startYear.value)} · ${seasonWord.value.toLowerCase()}`
 })
 
 /** IS THIS PAPER STILL A DECISION – the ENGINE's own question, asked (T4.2 · E-07, 27.09).
@@ -671,7 +703,7 @@ const saleOffer = computed(() => {
   return `A buyer offers ${price} for ${label}.`
 })
 const saleStands = computed(() => {
-  const week = weekLabel(props.offer.deadlineWeek)
+  const week = weekLabel(props.offer.deadlineWeek, startYear.value)
   return `The offer stands until ${week}. Refusing it leaves the listing up.`
 })
 const saleQuiet = computed(() => {
@@ -700,12 +732,12 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <template v-if="!entryTerms.cancelled">
         <p class="offer-body">
           Your entry for the {{ entryTerms.label }} is confirmed – she is in the draw for
-          {{ weekRange(entryTerms.eventWeek) }}.
+          {{ weekRange(entryTerms.eventWeek, startYear) }}.
         </p>
         <ul class="offer-terms">
           <li>She is expected on court that week.</li>
           <li>
-            Withdrawal is free until the end of {{ weekLabel(entryTerms.freeUntilWeek) }} – the
+            Withdrawal is free until the end of {{ weekLabel(entryTerms.freeUntilWeek, startYear) }} – the
             entry fee comes back and the year's entry is returned.
           </li>
           <li>After that the tournament's rules apply – the tour records late withdrawals and absences.</li>
@@ -713,7 +745,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       </template>
       <template v-else-if="entryWithdrew">
         <p class="offer-body">
-          Your withdrawal from the {{ entryTerms.label }} ({{ weekRange(entryTerms.eventWeek) }})
+          Your withdrawal from the {{ entryTerms.label }} ({{ weekRange(entryTerms.eventWeek, startYear) }})
           is confirmed – in time, free of charge, and nothing is recorded against her. The entry
           fee is on its way back.
         </p>
@@ -721,7 +753,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <template v-else-if="entryTerms.releasedBy === 'injury'">
         <p class="offer-body">
           We have taken her name off the entry list for the {{ entryTerms.label }}
-          ({{ weekRange(entryTerms.eventWeek) }}). She is not fit to play that week, and our list
+          ({{ weekRange(entryTerms.eventWeek, startYear) }}). She is not fit to play that week, and our list
           closes before she is due back on court – so rather than leave her in a draw she cannot
           make, we have withdrawn her ourselves.
         </p>
@@ -740,7 +772,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <template v-else-if="entryTerms.releasedBy === 'college'">
         <p class="offer-body">
           We have taken her name off the entry list for the {{ entryTerms.label }}
-          ({{ weekRange(entryTerms.eventWeek) }}). She has accepted a college place, so she is off the
+          ({{ weekRange(entryTerms.eventWeek, startYear) }}). She has accepted a college place, so she is off the
           tour for the next few years – rather than hold a spot she cannot travel to, we have released
           her ourselves.
         </p>
@@ -760,14 +792,14 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <template v-else>
         <p class="offer-body">
           We have taken her name off the entry list for the {{ entryTerms.label }}
-          ({{ weekRange(entryTerms.eventWeek) }}). This is our decision, not hers, and the entry fee
+          ({{ weekRange(entryTerms.eventWeek, startYear) }}). This is our decision, not hers, and the entry fee
           is refunded in full.
         </p>
       </template>
       <p class="offer-sign-off">– Tournament desk</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -777,9 +809,9 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <template v-if="tourTerms.notice === 'due'">
         <p class="offer-body">
-          The {{ tourTerms.label }} ({{ weekRange(tourTerms.eventWeek ?? 0) }}) is a required event
+          The {{ tourTerms.label }} ({{ weekRange(tourTerms.eventWeek ?? 0, startYear) }}) is a required event
           at her current ranking, and entries close at the end of
-          {{ weekLabel(tourTerms.freeUntilWeek ?? 0) }}.
+          {{ weekLabel(tourTerms.freeUntilWeek ?? 0, startYear) }}.
         </p>
         <ul class="offer-terms">
           <li>She is on the required list for this one – the top 50 play the majors, the 1000s and six 500s.</li>
@@ -823,7 +855,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       </template>
       <template v-else>
         <p class="offer-body">
-          Entries are suspended through {{ weekLabel(tourTerms.untilWeek ?? 0) }} –
+          Entries are suspended through {{ weekLabel(tourTerms.untilWeek ?? 0, startYear) }} –
           {{ tourTerms.runningPoints }} penalty points inside 52 weeks.
         </p>
         <ul class="offer-terms">
@@ -840,7 +872,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– Tour office</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -872,7 +904,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           {{ academyTerms.wasPct }}%.
         </p>
         <ul class="offer-terms">
-          <li>We have backed her since {{ weekLabel(academyTerms.sinceWeek) }}, and this carries that on.</li>
+          <li>We have backed her since {{ weekLabel(academyTerms.sinceWeek, startYear) }}, and this carries that on.</li>
           <li v-if="academyTerms.grantCents">
             This year's kit grant is {{ formatCents(academyTerms.grantCents) }}.
           </li>
@@ -883,7 +915,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <template v-else>
         <p class="offer-body">{{ academyEndBody }}</p>
         <ul class="offer-terms">
-          <li>We backed her from {{ weekLabel(academyTerms.sinceWeek) }} to {{ weekLabel(offer.week) }}.</li>
+          <li>We backed her from {{ weekLabel(academyTerms.sinceWeek, startYear) }} to {{ weekLabel(offer.week, startYear) }}.</li>
           <li>The kit she has is hers, and from here her travel is the family's again.</li>
           <li>If her tennis brings her back to us, our list is open every off-season.</li>
         </ul>
@@ -891,7 +923,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– The academy</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -902,10 +934,16 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
        ⚠ ALL COPY HERE IS DRAFT, awaiting the owner's pass (invariant 4). -->
   <article v-else-if="isStaff" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <!-- ⭐⭐⭐ ROUND 45 #3 – A RAISE REQUEST. Not a report: one open letter with the sponsor letters'
+           two doors (see the foot). ⚠ ALL COPY HERE IS DRAFT (invariant 4). -->
+      <template v-if="staffAsk">
+        <p class="offer-body">{{ staffAskLead }}</p>
+      </template>
+
       <!-- THE COACH. The year's record first, because it is the thing he was hired to move, then the
            runs, then the table she ends on – and the pair LAST, because it is the only line that is
            about the two of them rather than about her. -->
-      <template v-if="staffTerms.seat === 'coach'">
+      <template v-else-if="staffTerms.seat === 'coach'">
         <p class="offer-body">
           That is the season done. I have been with her {{ staffTerms.weeksServed }} of its weeks, and this is
           what I have to say about them before we start the next one.
@@ -958,6 +996,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           weeks of this season together.
         </p>
         <ul class="offer-terms">
+          <li v-if="staffCarriedLine">{{ staffCarriedLine }}</li>
           <li v-if="staffFocusLine">{{ staffFocusLine }}</li>
           <li v-else>
             We have worked the season through without settling on one thing to carry, which happens and is
@@ -997,7 +1036,19 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">{{ staffSignOff }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <!-- A REQUEST keeps the buyer's letter's foot (the window, the two doors, the settled line); a
+           report only says when it was filed. -->
+      <template v-if="staffAsk">
+        <p v-if="live" class="offer-window">
+          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        </p>
+        <p v-else class="offer-window settled">{{ staffAskSettled }}</p>
+        <div v-if="live" class="offer-actions">
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">Decline</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">Accept</button>
+        </div>
+      </template>
+      <p v-else class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -1011,7 +1062,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-body">
         <template v-if="callUpBecause">{{ callUpBecause }}, and the selectors have read it.</template>
         She is named in the squad for {{ callUpTerms.label }} – she is expected on court for
-        {{ weekRange(callUpTerms.tieWeek) }}.
+        {{ weekRange(callUpTerms.tieWeek, startYear) }}.
       </p>
       <ul class="offer-terms">
         <!-- THE WEEK IS STATED AS A RANGE, exactly as the tournament desk's own entry letter states
@@ -1033,7 +1084,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– Her national federation</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -1063,7 +1114,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
         {{ buildTerms.label }} is ready.
       </p>
       <p class="offer-body">
-        The order was placed in {{ weekLabel(buildTerms.orderedWeek) }}. After {{ buildWaitWord }},
+        The order was placed in {{ weekLabel(buildTerms.orderedWeek, startYear) }}. After {{ buildWaitWord }},
         it now belongs to the family.
       </p>
       <p class="offer-body">
@@ -1078,7 +1129,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– Order desk</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -1099,7 +1150,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– {{ saleSender }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p v-if="saleIsNotice" class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p v-if="saleIsNotice" class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
       <template v-else>
         <p v-if="live" class="offer-window">
           {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
@@ -1192,7 +1243,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– {{ terms.brand }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
     </div>
   </article>
 
@@ -1275,7 +1326,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
                off a calendar he cannot see, and the end week was persisted on the offer all along -
                see `runsToWeek` in the script for why the letter may not compute it itself. -->
           {{ seasonWord }}, starting with the one ahead – she is in our kit to
-          {{ weekLabel(runsToWeek) }}.
+          {{ weekLabel(runsToWeek, startYear) }}.
           <template v-if="terms.keepDomesticRank">
             We back a girl who is somebody at home, so she stays inside the national top
             {{ terms.keepDomesticRank }} while we are with her.

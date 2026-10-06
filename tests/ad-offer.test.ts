@@ -61,7 +61,6 @@ import { activeAdDealIn, adBandFor, adCategoryOf, adLetterRng, adOfferId, adShoo
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY, managerCommissionCents } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
-import { PLAN_DAYS } from '../src/engine/plan'
 import { weekLabel } from '../src/shared/dates'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
@@ -782,11 +781,23 @@ describe('step 2.2 – a shoot week recovers like a travel week, not a rest week
   // answers he can give – the other three remove the collision. The guard's real content therefore
   // moves: the two arms must differ by EXACTLY his figure and by nothing else.
   it('a tournament on the shoot week costs the owner\'s figure, and exactly that (round 29 #3)', () => {
+    // ⚠ 02.10 (round 45 #1b): THE FIGURE IS PER SHOOTING DAY, so the probe has to be ENTERED in something – the
+    // flat seven this asserted needed no event, and `clashShootDays` is zero for a week she is entered in nothing.
+    // ⚠ THIRD BATCH (02.10): the shoot is TWO days at every rung («съемочных дней всего 2…», three condition each, six per
+    // clash), so the local the probe enters is incidental – this said «an 8-draw: three days» under the first build, which
+    // priced the event's match days. Both arms carry the same entry, so the only difference between them is still the shoot.
+    const enterLocal = (w: WorldState): void => {
+      const event = { ...w.season[0], id: 'probe-local', week: w.week, tier: 'local' as const }
+      w.season = [event]
+      w.entries = [event.id]
+    }
     const shoot = shootProbe([WEEK], WEEK)
+    enterLocal(shoot)
     accrueCondition(shoot, true)
     const plain = shootProbe([], WEEK)
+    enterLocal(plain)
     accrueCondition(plain, true)
-    const price = ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS
+    const price = ECONOMY.advertising.clashConditionPerDay * 2
     expect(plain.condition - shoot.condition, 'the week did not cost what he priced it at').toBe(price)
     expect(plain.condition, 'the plain playing week moved – the difference is not the shoot').toBe(
       50 + ECONOMY.condition.matchWeekRecoveryBase,

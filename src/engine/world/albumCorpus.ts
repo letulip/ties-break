@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
-// RETYPED.** 34 occasions × 4 voices × 3 registers = 408 strings, plus the arc's 16 across
-// 8 cells: **424 authored strings in total.**
+// RETYPED.** 38 occasions × 4 voices × 3 registers = 456 strings, plus the arc's 16 across
+// 8 cells: **472 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 424 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 472 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -1030,6 +1030,93 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'Years of it now. You still send next week before you mention this one.',
         caption: 'Next week first, this week later.',
         line: 'I hear about the next one first. Always have.',
+      },
+    },
+  },
+  // A35 · first-number-one
+  {
+    id: 'first-number-one',
+    kind: 'rare',
+    bands: ['teen', 'adult', 'lateCareer'],
+    gate: 'first-time-at-the-top-of-the-world-list',
+    voices: {
+      sunny: {
+        note: 'Number one in the world. You rang to read me the list down the phone, and then you read it again to be sure.',
+        caption: 'She read us the list, and then read it again.',
+        line: 'Top of the list, and she still checked.',
+      },
+      fiery: {
+        note: 'Number one in the world. You said you had never doubted it, and dared me to say that I had.',
+        caption: 'She never doubted it, she says.',
+        line: 'She never doubted it. She will say so.',
+      },
+      deep: {
+        note: 'Number one in the world. You said you kept waiting to feel different, and that you mostly felt the same.',
+        caption: 'She waited to feel different.',
+        line: 'Mostly the same, she said.',
+      },
+      quiet: {
+        note: 'Number one in the world. You mentioned it after the practical things, and only because I asked.',
+        caption: 'She mentioned it last, and only when asked.',
+        line: 'After the practical things.',
+      },
+    },
+  },
+  // A36 · first-number-one-junior
+  {
+    id: 'first-number-one-junior',
+    kind: 'rare',
+    bands: ['young', 'teen'],
+    gate: 'first-time-at-the-top-of-the-junior-list',
+    voices: {
+      sunny: {
+        note: 'Top of the junior list. You rang to tell me, and I could hear you smiling the whole way through.',
+        caption: 'First on the junior list, and smiling.',
+        line: 'I heard the smile before the news.',
+      },
+      fiery: {
+        note: 'Top of the junior list. You said it was about time, and then asked what the next one was.',
+        caption: 'About time, she says.',
+        line: 'Already asking what comes next.',
+      },
+      deep: {
+        note: 'Top of the junior list. You said it was odd to be first at something and not know what to do with your hands.',
+        caption: 'First, and not sure what to do with her hands.',
+        line: 'First on a list, and fidgeting.',
+      },
+      quiet: {
+        note: 'Top of the junior list. You sent it as one line at the bottom of a message about something else.',
+        caption: 'She put it at the bottom of the message.',
+        line: 'Bottom of the message. Top of the list.',
+      },
+    },
+  },
+  // A37 · first-number-one-title
+  {
+    id: 'first-number-one-title',
+    kind: 'rare',
+    bands: ['teen', 'adult', 'lateCareer'],
+    gate: 'highest-title-and-first-time-at-the-top-of-the-world-list-in-one-week',
+    voices: {
+      sunny: {
+        note: 'The big one, and number one in the world with it. You rang with both at once, and laughed at how it sounded.',
+        caption: 'She told us both at once, and laughed.',
+        line: 'One would have been plenty. She brought both.',
+      },
+      fiery: {
+        note: 'The big one, and number one in the world with it. You said both had always been the plan, and asked who wanted to argue now.',
+        caption: 'Both were the plan, she says.',
+        line: 'A title and a list. Not much left to argue with.',
+      },
+      deep: {
+        note: 'The big one, and number one in the world with it. You said it felt like a single thing, and you couldn\'t tell which part was louder.',
+        caption: 'She said it felt like a single thing.',
+        line: 'I heard the title and the list. She heard one thing.',
+      },
+      quiet: {
+        note: 'The big one, and number one in the world with it. You asked whether we had eaten, and told us the news afterwards, almost in passing.',
+        caption: 'She asked if we had eaten, then told us.',
+        line: 'Both of them, and her first question was about us.',
       },
     },
   },

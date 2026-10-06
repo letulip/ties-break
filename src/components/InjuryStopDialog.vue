@@ -54,6 +54,9 @@ import { portraitUrl } from '../art/preload'
 import { weekLabel } from '../shared/dates'
 import { formatCents } from '../shared/money'
 import { facePoint } from '../art/faceRects'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const emit = defineEmits<{ continue: [] }>()
 
@@ -129,7 +132,7 @@ const artStyle = computed(() => {
  *  as a NUMBER and this is the only place it becomes words – the engine's own release line spells
  *  the same pair, and the two agreeing is now a property of `weekLabel`, not of a shared prefix. */
 function entryLine(row: { label: string; week: number }): string {
-  return `${row.label} – ${weekLabel(row.week)}`
+  return `${row.label} – ${weekLabel(row.week, startYear.value)}`
 }
 
 // F45-2: `rollInjury` no longer cancels every open entry – only the ones the LAYOFF SWALLOWS, so
@@ -185,7 +188,7 @@ useDialogFocus(card, () => emit('continue'))
       <!-- BOTH LINES ARE THE NAME, in the order they are read: which week it happened, then whether
            she went down on court. Either alone would name the card worse than it names itself to
            somebody looking at it. -->
-      <p id="injury-stop-kicker" class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek) }}</p>
+      <p id="injury-stop-kicker" class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek, startYear) }}</p>
       <h2 id="injury-stop-title" class="season-summary-title">{{ retired ? 'She had to stop.' : "She's hurt." }}</h2>
       <table class="season-summary-table">
         <tbody>
@@ -205,12 +208,12 @@ useDialogFocus(card, () => emit('continue'))
             <th>Out for</th>
             <td>
               ~{{ injury.totalWeeks }} wk{{ injury.totalWeeks === 1 ? '' : 's' }} – back around
-              {{ weekLabel(backWeek) }}
+              {{ weekLabel(backWeek, startYear) }}
               <!-- ROUND 41 #19: the masseur's own forecast, beside the clinic's number rather than
                    instead of it. Rendered only when the engine sent one – see `expectedWeeks`. -->
               <div v-if="expectedWeeks !== null" class="hint injury-stop-projection">
                 With the masseur – more like {{ expectedWeeks }} wk{{ expectedWeeks === 1 ? '' : 's' }}, back around
-                {{ weekLabel(expectedBackWeek) }}.
+                {{ weekLabel(expectedBackWeek, startYear) }}.
               </div>
             </td>
           </tr>
@@ -234,7 +237,7 @@ useDialogFocus(card, () => emit('continue'))
         </tbody>
       </table>
       <p class="hint season-summary-note">
-        Only the weeks she is out are cancelled – anything from {{ weekLabel(backWeek) }} on is still booked.
+        Only the weeks she is out are cancelled – anything from {{ weekLabel(backWeek, startYear) }} on is still booked.
       </p>
       <!-- ROUND 39 #15a, wave D2 - the warm opening ON TOP OF the clinical close, exactly as wave D
            drafted it and the owner approved it (his words are in docs/rounds/round-39.md under 15a;
