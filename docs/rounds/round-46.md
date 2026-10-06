@@ -813,7 +813,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ---
 
-- [ ] **23. (06.10, morning – the owner pulled the spawned fixture-generator task INTO the round:
+- [x] **23. (06.10, morning – the owner pulled the spawned fixture-generator task INTO the round:
   «давай вот это в раунд добавим?»)** – tools/e2e-fixtures.ts drifted against the engine since
   rounds 45/46 (S1's control: a true regeneration picks different seeds for 9 of 13; the
   `expecting` recipe yields dueWeek−pausesWeek = 26 against the spec's 31, the `parting` recipe
@@ -821,6 +821,49 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   (2) the bare no-env invocation fails loudly instead of silently doing nothing; (3) regenerate
   for real, `npm run test:e2e` green. Secondary if cheap: `ageWindowStartWeek`'s memo is keyed by
   birth month+week, not day – verify and fix or document. Class: **build** → **R2**.
+  - **R2 · THE FIXTURE GENERATOR REGENERATED FOR REAL – 139 OF 139 e2e GREEN ON THE NEW SET** (06.10, schema v91, on top of `f65f41f7`).
+    **(1) The two clauses, copied from what the specs assert and never invented.** `expecting`: a pregnancy record is
+    accepted only if `pausesWeek - announcedWeek === ECONOMY.motherhood.playsOnWeeks` AND `dueWeek - pausesWeek ===
+    ECONOMY.motherhood.termWeeks` – the two exact assertions of the rot alarm (`tests/e2e-fixtures.test.ts`, «expecting is
+    parked inside the pause»; `e2e/expecting.spec.ts` itself only says «31 weeks» in prose). The 26 is wave 11's trimester
+    cap: `pausesWeek = min(announced + 8, conceived + 13)` and `dueWeek = conceived + 39`, so 31 holds only for a ZERO window.
+    The clause skips the WEEK, not the seed; `e2e-expecting-1` (S1's pick) was a capped window, and the first whole one is
+    `e2e-expecting-20`, which is also the committed seed. `parting`: a firing week is accepted only with
+    `world.offers.length > 200` (`tests/principles-d07-inbox-bound.test.ts`: «parting must hold a career of letters twenty
+    seasons long»); S1's `e2e-parting-11` held exactly 200. Result `e2e-parting-55`, w1175, 266 letters, 56 seeds, ~7 min.
+    There is NO cap on stored letters: the rejected firing weeks held 47 / 102 / 105 / 134 / 155 / 200 / 200.
+    **(2) The loud no-op.** A bare `npx vite-node tools/e2e-fixtures.ts` (nothing names the file, no `TB_FIXTURES_RUN=1`) now
+    prints `e2e-fixtures: REFUSED TO RUN – nothing was generated and nothing was written.` plus the two ways to run it, on
+    stderr, and exits **2** instead of 0 (`process.exitCode`, so stderr flushes). It fires only outside VITEST, and the only
+    importer is the rot alarm. Nothing in `package.json`, `scripts/` or `.github/` calls it bare. Verified by hand
+    (`BARE_EXIT=2`); NO test spawns it – a cheap unit net if the architect wants one.
+    **(3) The regeneration** – `npm run e2e:fixtures`, full single-process run: **7 of 13 seeds changed** (junior 19 to 28,
+    pro 18 to 77, unheard 13 to 41, soft 1 to 0, breakup 52 to 7, belated 37 to 182, parting 10 to 55); fresh, sinking, broke,
+    ending, engaged and expecting kept theirs. 12 of 13 `.tsave` files differ byte-wise from HEAD all the same
+    (the saves carry the engine's newer fields). About 25 minutes on 10 cores.
+    **(4) Three more things the TRUE regeneration found – each a fixture-side clause or a re-freeze, no spec was re-aimed.**
+    (a) `pro` now needs a wallet of at least $1,255,000, the E-11 shop script's outlay: the regenerated `e2e-pro-57` held
+    $896,938 and `buyAsset` threw «Not enough funds for that» in two component cases; `pro` is `e2e-pro-77`, $6,216,050.
+    (b) `sinking` now rejects a standing blocking or soft beat at boot: the regenerated `e2e-sinking-1` booted with the
+    small-talk card on the hub and was the ONLY red of 139 (`week-advance.spec.ts:196`, the Week story never opened);
+    `sinking` is `e2e-sinking-2` again. (c) The two RECORD-REPLAY tests over `pro` and `parting`
+    (`principles-d07-inbox-identity`, `principles-e11-shop-identity`) hold hashes of those specific careers, so they were
+    RE-FROZEN with their own switches (`TB_WRITE_INBOX_IDENTITY=1`, `TB_WRITE_SHOP_IDENTITY=1`) on the new pair – the identity
+    they proved was proved at the extraction, and they are render snapshots of the new careers now. `pro` and `sinking` were
+    regenerated with `--only` after their clauses landed; the other eleven come from the full run. ⚠ NOT DONE: a second full
+    `npm run e2e:fixtures` as a fixed-point check (`git diff --stat e2e/fixtures` should then stay empty) – one command for the architect.
+    **(5) The acceptance, read out of the files:** `npm run test:e2e` gave `138 passed, 1 failed` (`E2E_EXIT=1`) before the
+    sinking clause and `139 passed` (`E2E2_EXIT=0`) after it. The fixture-reading unit and component files vitest picks up all pass
+    (7 files, 107 tests), the rot alarm and d07's bound pass (87 tests), `check:tools` exit 0. NOT run: `npm run check`, `test:sim`.
+    **(6) The secondary item – REAL, FIXED.** `ageWindowStartWeek`'s memo was keyed `birthMonth:week`, on the stated ground that
+    `kidAgeAt` «reads nothing else off the world»; it reads `birthDay` too (the birthday-to-birthday clock), so a second
+    same-month career in one process was handed the first one's window (3 weeks off at week 60 on the test's pair, and by
+    construction a whole age-year off on the weeks between two birthdays). The key is now `birthMonth:birthDay:week`;
+    `tests/age-window-memo.test.ts` is the two-career net, **red against the old key** (expected 35 to be 38; expected 16 to be 13)
+    and green on the new. MEASURED NOT TO MATTER FOR THE FIXTURES: all 13 regenerated files were byte-identical with and without it.
+    **Frozen capture untouched:** `tests/condition.test.ts` (41550 draws / hash `e6b0c709`) is green with the fix, with 23 further
+    files (age-caps, the coach-travel-edge hash families and schemas, planner, injuries, migrations – 480 tests). No RNG draw,
+    no string, no schema move.
 
 ## Morning answers (06.10) – his word on the night's question pile, decoded
 
