@@ -22,7 +22,6 @@ function dollars(cents: number): string {
   if (abs >= 100_000_000) return `${sign}$${(abs / 100_000_000).toFixed(1)}M`
   return `${sign}$${Math.round(abs / 100).toLocaleString('en-US')}`
 }
-const pct = (a: number, b: number) => (b === 0 ? '–' : `${Math.round((a / b) * 100)}%`)
 
 async function main() {
   const path = process.argv[process.argv.length - 1]
