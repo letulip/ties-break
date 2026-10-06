@@ -84,6 +84,9 @@ import type { TierId } from '../../engine/season/types'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 
@@ -95,7 +98,7 @@ const YEARS_SHOWN = 3
  *  ⚠ `seasonYear(index)`, never `weekYear(week)` – see the header. `WEEKS_IN_SEASON` is the shared
  *  52 rather than a literal so this cannot drift from the engine's own season length. */
 function yearOf(week: number): number {
-  return seasonYear(Math.floor(week / WEEKS_IN_SEASON))
+  return seasonYear(Math.floor(week / WEEKS_IN_SEASON), startYear.value)
 }
 
 /** The owner's format: `3x'31`. Two-digit year, because it sits three-to-a-line under a 128px plate

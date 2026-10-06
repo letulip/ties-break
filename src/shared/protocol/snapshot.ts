@@ -406,6 +406,17 @@ export interface Snapshot {
   /** ⭐ ROUND 46 #11b – THE WEEK AN ANNOUNCED WEDDING LANDS (`upcomingWeddingWeek`), or null: the calendar's
    *  mark reads this and restates nothing. */
   weddingWeek: number | null
+  /** ⭐ v92 (SUCCESSION S1) – THE CALENDAR YEAR SEASON 0 OPENED IN: `world.startYear`, handed over as a plain number
+   *  so a screen can ask `shared/dates` the same question the engine does (every formatter there takes it as its
+   *  optional last argument). 2031 for every career born before the succession wave. DERIVED – the world owns it
+   *  and this is its one reading. The UI's own call sites still format against the default and are the follow-up;
+   *  this field is what they will be fed. */
+  startYear: number
+  /** ⭐ SUCCESSION S2d – DOES THIS CAREER CARRY A MOTHER'S ALBUM: true on a generation-2 world whose `legacy` block holds the finished book, false on every
+   *  other career (every career the game created before the succession wave included). DERIVED off `engine/world/heirloom.ts`'s one reading – the world
+   *  owns the book and this is its ONE-BIT view, so the book itself (1 to 9 KB) never rides the weekly snapshot: the album screen draws its control off
+   *  this flag and asks for the book once, with the `heirloomAlbum` query, when that control is pressed. */
+  hasHeirloom: boolean
   /** ⭐ ROUND 46 #22 – IS THE DEV LIFE-EVENT BOOST ON in the worker right now. Transient, never saved: the More
    *  screen's switch shows the worker's own state rather than a belief of its own. */
   devLifeBoost: boolean

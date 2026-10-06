@@ -15,6 +15,9 @@ import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, Offer, ShootClashChoice } from './offers'
 import type { DynastyHandover, PlayerProfile, PrologueHandover, WeekPlan } from './profile'
+// ⭐⭐⭐ SUCCESSION S2c – TYPE-ONLY, and from the engine module that declares it: `PsyFocus`'s own arrangement (stores/game.ts), where the wire
+// carries the type and the consumer imports it from where it lives. The reader of the finished world is `engine/world/succession.ts`.
+import type { LegacyInput } from '../../engine/world/succession'
 import type { AlbumBook } from './album'
 import type { Snapshot } from './snapshot'
 
@@ -155,6 +158,13 @@ export type ToWorker =
       prologue?: PrologueHandover
       dynasty?: DynastyHandover
       weightEnabled?: boolean
+      /** ⭐⭐⭐ SUCCESSION S2c – THE INHERITANCE THE DYNASTY DOOR CARRIES, optional through the whole wire on `prologue`'s, `dynasty`'s and
+       *  `weightEnabled`'s precedent: absent is every career the game has ever created, byte for byte. Present, the worker builds the world with
+       *  `createLegacyWorld` instead of `createWorld` (another calendar year, the multiplied wallet, the house and the car arriving owned, the
+       *  heirloom album) and sets the origins card aside – see `LEGACY_FAMILY_BACKGROUND`.
+       *  ⚠ IT IS THE BLOB `legacyInput` ANSWERED AT THE DOOR, sent back whole, and the worker never trusts the wire for what only it knows: the
+       *  multiplier's corridor, which rungs are a house and a car, and the profile's own law are re-validated engine-side. */
+      legacy?: LegacyInput
     }
   | { id: number; type: 'tick'; weeks: number; baseRevision: number }
   // ⚠ `weeks` WAS `1 | 4` UNTIL ROUND 29 #6. The literal union was the engine's historical step
@@ -316,6 +326,13 @@ export type ToWorker =
   // tick). A QUERY in the strict sense, `getSnapshot`'s own shape: read-only against the committed
   // world, no `baseRevision`, assembled fresh on every ask and persisted nowhere.
   | { id: number; type: 'album' }
+  // ⭐⭐⭐ SUCCESSION S2c – THE LEGACY, ON DEMAND at the dynasty door: `album`'s own shape (a read of the COMMITTED world, no baseRevision, nothing
+  // committed and nothing drawn) answering with `legacyInputOf`'s own object. Asked once, at the press, while the finished career is still loaded.
+  | { id: number; type: 'legacyInput' }
+  // ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, ON DEMAND from the new career's own album screen: `album`'s shape one query over – a read of the COMMITTED
+  // world (no baseRevision, nothing committed, nothing drawn) answering with the heirloom a generation-2 world carries, or null on a career that has none.
+  // Asked ONCE per opening of the screen, when the player presses the control `Snapshot.hasHeirloom` draws; the weekly snapshot never carries the book.
+  | { id: number; type: 'heirloomAlbum' }
   // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the album's precedent, one surface over. The
   // weekly Snapshot carries the letters this week still needs; the career's whole post – 261 rows at
   // week 1133, of which none were live – is asked for when `InboxSheet` opens and dropped when it
@@ -352,6 +369,10 @@ export type ToUI =
   | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string; revision: number }
   | { id: number; ok: true; type: 'peek'; peek: SavePeek; revision: number }
   | { id: number; ok: true; type: 'album'; album: AlbumBook; revision: number }
+  | { id: number; ok: true; type: 'legacyInput'; legacy: LegacyInput; revision: number }
+  // ⭐⭐⭐ SUCCESSION S2d – the mother's book, or null when the career carries none: `album`'s own shape with the book optional, because «no heirloom» is an
+  // ANSWER here and not a refusal (a first-generation career asking is a legal question with a plain `null`).
+  | { id: number; ok: true; type: 'heirloomAlbum'; book: AlbumBook | null; revision: number }
   // ⭐⭐ T6.2 · D-07 – the whole post, `album`'s own shape. `Offer[]` and not an envelope: the
   // list IS the answer, and the sheet reads nothing else off it.
   | { id: number; ok: true; type: 'inbox'; inbox: Offer[]; revision: number }
@@ -471,6 +492,8 @@ export const REPLY_BY_COMMAND = {
   getSnapshot: 'snapshot',
   devLifeBoost: 'snapshot',
   album: 'album',
+  legacyInput: 'legacyInput',
+  heirloomAlbum: 'heirloomAlbum',
   inbox: 'inbox',
   listSlots: 'slots',
   listCareers: 'careers',

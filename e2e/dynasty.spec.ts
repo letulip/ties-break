@@ -99,7 +99,15 @@ test('the line continues: the door, the locked name, and a career that carries i
     'she carries her mother\'s name, and the fixture is the mother',
   ).toHaveValue(ENDING.profile.kidLastName)
   await expect(card.locator('#prologue-last'), 'and the field cannot be typed over').toHaveAttribute('readonly', '')
-  await expect(card.locator('.prologue-line-note'), 'the one sentence that explains the lock').toHaveCount(1)
+  // ⚠ RE-AIMED 06.10 (succession W1, ruling 14): a SECOND line-note is lawful now – the owner's
+  // approved «Her mother's career leaves her a head start.» (W-S4) renders whenever the legacy
+  // start is richer than an ordinary one, which this fixture's finished career is. The lock's own
+  // sentence is still first; both are asserted, so a third stray note still fails.
+  await expect(card.locator('.prologue-line-note'), 'the lock sentence and the head start, nothing else').toHaveCount(2)
+  await expect(
+    card.locator('.prologue-line-note').nth(1),
+    'the second note is the owner-approved inheritance line, word for word',
+  ).toHaveText("Her mother's career leaves her a head start.")
   // §6.3 – the origins are not a question on a dynasty run: the band arrived on the block.
   await expect(card.locator('.prologue-picks button'), 'nothing to choose about where she is from').toHaveCount(0)
 

@@ -43,6 +43,9 @@ import { seasonYear } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
 import { LADDER_LABEL, type SeasonHistoryEntry } from '../shared/protocol'
 import type { LadderTrack } from '../engine/season/types'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // ⚠ IT FOLLOWS THE TABLE PICKER NOW (v46, R14 group E). The owner, twice, most recently 09.08:
 // «Season by season в stats в разных вкладках всё ещё одно и то же показывает.»
@@ -177,7 +180,7 @@ const cells = computed(() =>
                  what dropped season 5 from this table; see SeasonHistoryEntry.seasonIndex. -->
             <tr v-for="c in cells" :key="c.row.seasonIndex">
               <th>
-                <span class="ph-name">{{ seasonYear(c.row.seasonIndex) }}</span>
+                <span class="ph-name">{{ seasonYear(c.row.seasonIndex, startYear) }}</span>
                 <!-- Best result of that season, in the same wording the finale card uses. Absent on
                      a season with no tournaments, and on rows the v14 migration backfilled. -->
                 <span v-if="c.row.bestFinish !== undefined" class="ph-rank">{{ finishLabel(c.row.bestFinish) }}</span>

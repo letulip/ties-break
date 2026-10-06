@@ -58,9 +58,25 @@ import {
   PRE_V89,
   PRE_V90,
   PRE_V91,
+  PRE_V92,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v92: rolling the schema back to 91 – dropping `startYear` – returns the v91 CAREER on all three', () => {
+    // ⭐⭐⭐ THE RUNG WHOSE PEEL REALLY REMOVES A KEY. v92 (SUCCESSION S1 – the calendar's start year) writes `startYear` on EVERY world, so unlike the
+    // four rungs before it this one is not an identity in shape: `careerHashAtSchema` drops the key for every rollback below 92, and what is left
+    // must be the v91 career exactly – the same 156 weeks, the same draws, the same bytes, minus the one new line and the version number.
+    //
+    // ⚠⚠ SO THIS CASE PROVES THE REGRESSION ARM OF THE WAVE ON THREE FROZEN CAREERS: change a default career in ANY way that is not the new key – a
+    // label that now reads another year, a draw the new argument moved, an age computed off the wrong epoch – and all three lines go red at once.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V92` in tests/coachTravelEdgeFixtures.ts: the three values below are the three `FROZEN` constants
+    // this branch held at v91, reproduced character for character.
+    expect(careerHashAtSchema(5, 0, 91), '25k · middle coach · grinder – the verbatim v91 value').toBe(PRE_V92.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 91), '120k · elite coach · grinder – the verbatim v91 value').toBe(PRE_V92.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 91), '8k · self-coached · player – the verbatim v91 value').toBe(PRE_V92.selfTravelling)
+  })
+
   it('⭐⭐⭐ v91: rolling the schema back to 90 – with nothing to drop, because no frozen career touches number one – returns the v90 CAREER on all three', () => {
     // ⭐⭐⭐ THE FOURTH RUNG IN A ROW WHOSE PEEL DOES NOTHING, AND THE REASON IS ITS OWN. v91 (round 45 #5 – the first-touch latch) appends ONE
     // optional key to the world, `firstNo1?`, created LAZILY by `recomputeKidRank` the first week she is number one on a table. A frozen career

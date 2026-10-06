@@ -117,7 +117,7 @@ describe('weekDateLine – the header date line, in one place', () => {
     // the shell's rail draws the same week on every page from 1024 and one computation is the whole
     // point. So the POSITIVE claim reads the widened source (the SFC plus the composables it
     // imports, tests/pin-hygiene.test.ts) and the NEGATIVE one still reads HomeScreen.vue alone.
-    expect(homeLogic).toContain('weekDateLine(week.value)')
+    expect(homeLogic).toContain('weekDateLine(week.value, game.snapshot?.startYear)')
     expect(home).not.toMatch(/`W\$\{/)
   })
 
@@ -131,8 +131,8 @@ describe('weekDateLine – the header date line, in one place', () => {
     expect(rail).toContain('{{ weekLabelLine }}')
     expect(rail).toContain('{{ weekRangeLine }}')
     const owner = read('../src/composables/kidIdentity.ts')
-    expect(owner).toContain('weekLabelLine: computed(() => weekYearLabel(week.value))')
-    expect(owner).toContain('weekRangeLine: computed(() => weekSpan(week.value))')
+    expect(owner).toContain('weekLabelLine: computed(() => weekYearLabel(week.value, game.snapshot?.startYear))')
+    expect(owner).toContain('weekRangeLine: computed(() => weekSpan(week.value, game.snapshot?.startYear))')
   })
 })
 

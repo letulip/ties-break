@@ -383,7 +383,7 @@ function resolveBusinessIncome(world: WorldState): void {
     // applies. The rate printed on the row and the cents actually moved must come from one reading
     // of one ramp, so both sides take `collegePausedShareYears`.
     const herBps = kidPrizeShareBps(
-      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
       collegePausedShareYears(world),
     )
     const herCents = assetKidShareCents(world, 'merch-brand')
@@ -521,7 +521,7 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   })
   const expense = works ? split.totalCents : 0
   world.fundsCents -= expense
-  const schoolOver = schoolIsOver(world.week, world.profile.birthMonth)
+  const schoolOver = schoolIsOver(world.week, world.profile.birthMonth, world.startYear)
   const flavors =
     world.plan.train >= 70
       ? trainFlavors(world.profile.background)

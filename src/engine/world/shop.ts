@@ -611,7 +611,7 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     addEvent(world, {
       week: world.week,
       type: 'entry',
-      text: `${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks)}`,
+      text: `${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks, world.startYear)}`,
     })
   }
 }
@@ -1139,7 +1139,7 @@ export function shopView(world: WorldState): ShopView {
       // deposit's dead-flat exponential does not, and a wilder fund added tomorrow gets one because
       // of what it IS. The longest window decides the length; the picker slices it on screen.
       priceHistory: item.volBps
-        ? unitPriceHistory(world.seed, world.week, item, Math.max(...SHOP_PRICE_RANGE_MONTHS))
+        ? unitPriceHistory(world.seed, world.week, item, Math.max(...SHOP_PRICE_RANGE_MONTHS), world.startYear)
         : null,
       // ⭐⭐⭐ v78, ROUND 41 #22 – AND WHERE THE FAMILY BOUGHT. The row's own `entries`, copied onto
       // the wire so the chart can put a mark on each one. `[]` on every rung nobody owns and on every
@@ -1241,7 +1241,7 @@ export function shopView(world: WorldState): ShopView {
     // this asks the same function `assetKidShareCents` asks rather than a second copy of the ladder.
     kidBusinessSharePct: Math.round(
       kidPrizeShareBps(
-        kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+        kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
         collegePausedShareYears(world),
       ) / 100,
     ),

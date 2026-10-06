@@ -62,6 +62,9 @@ import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import { TEAM_BUDGET_LABEL, useCoachingBudget } from '../composables/coachingBudget'
 import { enteredEvents } from '../composables/seasonEntries'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 
@@ -140,7 +143,7 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
     <Card v-if="entries.length" as="article" class="rail-dash-card">
       <Eyebrow as="h2" class="rail-dash-title">My entries</Eyebrow>
       <p v-for="e in entries" :key="e.id" class="rail-dash-figure rail-dash-entry">
-        {{ e.label }} · {{ weekLabel(e.week) }}
+        {{ e.label }} · {{ weekLabel(e.week, startYear) }}
       </p>
     </Card>
   </div>

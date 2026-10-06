@@ -55,6 +55,9 @@ import { facePoint } from '../art/faceRects'
 import { formatCents } from '../shared/money'
 import { weekLabel } from '../shared/dates'
 import { activeLadderOfSnapshot, type CollegeTier, type ForkAnswer } from '../shared/protocol'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const fork = computed(() => game.snapshot?.fork ?? null)
@@ -265,7 +268,7 @@ function pick(row: TierRow): void {
  *  it should read as the season fact rather than crash the lede. */
 const departsLabel = computed(() => {
   const w = snap.value?.collegeDepartsWeek ?? null
-  return w === null ? 'next September' : weekLabel(w)
+  return w === null ? 'next September' : weekLabel(w, startYear.value)
 })
 
 /** ⚠ A FACT, NOT A REFUSAL. She may take a place the family cannot pay for – it goes into debt, not

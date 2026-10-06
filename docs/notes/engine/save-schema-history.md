@@ -1154,3 +1154,33 @@ The version-by-version chronicle that stood above `SAVE_SCHEMA_VERSION` in `src/
 // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v90 -> v91 step in migrations.ts, tests/fixtures/saves/v91.json, its row in
 // tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e fixtures.
 ```
+
+## v92 – the succession block
+
+```ts
+// ⭐⭐⭐ v92 – THE SUCCESSION BLOCK (SUCCESSION S1, 06.10; docs/specs/succession-2026-10.md §2 «The calendar» and §5 «Saves and determinism»).
+// **ONE REQUIRED KEY AND ONE OPTIONAL BLOCK ON THE WORLD**: `startYear: number` – the calendar year season 0 opens in – and `legacy?: { motherName,
+// motherPeakRank, motherSlamTitles, surname, endingKind, savingsSliceCents, heirloomAlbum }`, DECLARED TOGETHER so the later steps of the wave add no
+// second bump. Only `startYear` is written; nothing reads `legacy` yet.
+//
+// ⚠⚠ THE BACKFILL IS EXACT, NOT RECONSTRUCTED: until this version the epoch was a CONSTANT in shared/dates.ts, so every career ever saved began in
+// January 2031 by construction – the step states the LITERAL `2031` (a shipped migration must not follow `DEFAULT_START_YEAR`, because a constant that
+// can move would silently re-date every old career the day it did) and leaves `legacy` absent, which is what a generation-1 career is.
+//
+// ⚠⚠ THE YEAR IS A CREATION INPUT AND NOT A DRAW: `createWorld`'s seventh argument, default 2031. ZERO DRAWS, no sub-stream – the frozen MAIN capture
+// (41550 / e6b0c709) is untouched, and tests/succession-s1-start-year.test.ts measures «a default career is its v91 self minus the one new key» on nine
+// careers against digests taken from the pristine tree, before any S1 edit.
+//
+// ⭐⭐ UNLIKE v88 TO v91 THIS BUMP TOUCHES EVERY FROZEN CAREER: `startYear` is written on every world, right after `week`, so `careerHashAtSchema` gains a
+// rung that DROPS it for every rollback below 92 (reverse order of arrival, ahead of everything below it) and `PRE_V92` holds the verbatim v91 constants –
+// the rollback to 91 returns the v91 career on all three, character for character, which is the byte-identity claim measured over 156 weeks each. The
+// eleven live cells re-stamp (the version number AND the key): `FROZEN`'s three, `PRE_R28B`'s five and `PRE_NAME_VERA`'s three.
+//
+// ⚠ `shared/dates.ts` takes `startYear` as an OPTIONAL LAST argument on every year-dependent function, so every caller that never heard of the wave –
+// tests, the UI's formatters, migrations' frozen history – keeps byte-identical output; the cost is a SILENT omission, which the engine ratchet in the
+// S1 test refuses (src/engine only). The UI's own call sites are the follow-up, fed by `Snapshot.startYear`.
+//
+// Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v91 -> v92 step in migrations.ts, tests/fixtures/saves/v92.json, its row in
+// tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the frozen-career
+// family: `careerHashAtSchema`'s rung, `PRE_V92`, the eleven re-stamped cells and the v92 case in tests/coach-travel-edge-recent-schemas.test.ts.
+```

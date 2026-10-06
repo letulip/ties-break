@@ -151,7 +151,7 @@ export function recoveryBaseFor(world: WorldState): number {
  *  Exported because the fade is a claim about a career and the tests have to be able to state it at
  *  an age without walking `accrueCondition` a thousand times to infer it. Pure read, zero draws. */
 export function recoveryAgeFade(world: WorldState): number {
-  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   // ⭐⭐ ROUND 31 #10/#13 – THIS GATE FOLLOWS HER OWN DECLINE AGE, NOT THE CONSTANT, AND THE DECISION
   // IS THE PARAGRAPH FOUR LINES UP. That note already says two clocks here «would open a gap of up to
   // a year in which her body is falling and her recovery is not»; a per-career curve makes that gap a
@@ -316,7 +316,7 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   // ⚠ ...NOR ON A SHOOT WEEK (round-25 collect): lights and flights, not his table – the same
   // reason the week recovers at the travel figure at all.
   if (!playedThisWeek && !shooting && masseurWorksThisWeek(world)) recovery += masseurRungOf(world).conditionBonusPerWeek
-  if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
+  if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth, world.startYear))) {
     recovery += c.blackoutBonus
   }
   // ⭐⭐ ROUND 29 #3 – SHE SHOT AND SHE PLAYED IN THE SAME WEEK, and the owner priced it himself:
@@ -1025,7 +1025,7 @@ export function availabilityStatus(
   // ⚠ THE WEEK'S OWN ANSWER, NOT THIS WEEK'S (W4-SCHOOL). Entries commit weeks ahead, so a girl
   // entering in August for a June that falls after her last school year must not be refused for an
   // exam she will never sit.
-  if (isBlackoutWeek(event.week, schoolIsOver(event.week, world.profile.birthMonth))) {
+  if (isBlackoutWeek(event.week, schoolIsOver(event.week, world.profile.birthMonth, world.startYear))) {
     return {
       level: 'blocked',
       reason: 'unavailable',

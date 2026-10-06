@@ -59,6 +59,8 @@ import {
 // import from it and none of their names may move (CLAUDE.md) – and a symbol born after A-03 freezes
 // that list does not join it. `assembleAlbum` above predates the freeze and keeps its barrel name.
 import { assembleInbox } from '../engine/world/snapshot'
+import { createLegacyWorld, legacyInputOf, LEGACY_FAMILY_BACKGROUND } from '../engine/world/succession'
+import { heirloomBookOf } from '../engine/world/heirloom'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
@@ -390,14 +392,30 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // ⭐⭐⭐ v87 – AND THE SIXTH DOES STILL RIDE THROUGH UNTOUCHED. It is a plain boolean answered by
       // a card on the creation path, so there is nothing to validate beyond what the wire's type says;
       // `createWorld` reads `?? false`, which is the ruled meaning of a caller that did not ask.
-      const candidate = createWorld(
-        seed,
-        msg.profile,
-        makeCareerId(seed),
-        msg.prologue,
-        msg.dynasty,
-        msg.weightEnabled,
-      )
+      // ⭐⭐⭐ SUCCESSION S2c – THE DYNASTY DOOR'S OWN CREATION. A `legacy` on the command means the career continues a finished one: the world is
+      // built by `createLegacyWorld` (the calendar, the multiplied wallet, the arriving house and car, the heirloom) and still takes everything
+      // every other creation takes – the childhood, the line's record and the weight ask – so the nine years she walked are not thrown away at
+      // the last card.
+      // ⚠ THE ORIGINS CARD IS SET ASIDE HERE AND NOT IN THE BUILDER: the family's circumstance is the multiplier (the architect's ruling,
+      // `LEGACY_FAMILY_BACKGROUND`), so both places the band can arrive from – the profile and the line's handover – are forced to it BEFORE the
+      // call. `createWorld` applies the handover's band over the profile's, which is why forcing one alone would not hold.
+      // ⚠ ABSENT `legacy` IS THE CAREER THE WORKER HAS ALWAYS CREATED, argument for argument: the same single `createWorld` call, with the career
+      // id computed once instead of inline.
+      const careerId = makeCareerId(seed)
+      const candidate = msg.legacy
+        ? createLegacyWorld(
+            msg.legacy,
+            seed,
+            msg.profile.kidName,
+            { ...msg.profile, background: LEGACY_FAMILY_BACKGROUND },
+            careerId,
+            {
+              prologue: msg.prologue,
+              dynasty: msg.dynasty && { ...msg.dynasty, background: LEGACY_FAMILY_BACKGROUND },
+              weightEnabled: msg.weightEnabled,
+            },
+          )
+        : createWorld(seed, msg.profile, careerId, msg.prologue, msg.dynasty, msg.weightEnabled)
       // ⭐ E-02: the reply is BUILT before the career is adopted – see `snapshotMsg`. `createWorld`
       // writes every required field itself, so this cannot throw today; it is here because the
       // ordering is the property, and a lifecycle path that commits before it can render is the
@@ -901,6 +919,22 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       if (!world) throw new Error('No active career')
       return { id: msg.id, ok: true, type: 'album', album: assembleAlbum(world), revision: committedRevision }
     }
+    case 'legacyInput': {
+      // ⭐⭐⭐ SUCCESSION S2c – THE LEGACY, ON DEMAND at the dynasty door: `album`'s own shape one query over – read-only against the COMMITTED
+      // world (the finished career, still the active one when the door is pressed), computed here and crossing the wire once as plain data
+      // (1 to 9 KB measured, S2a). `legacyInputOf` is a pure read: its album is assembled on the purpose-scoped `seed:album:flavour:*`
+      // sub-stream, so it cannot move `world.rngMain`, and `committedRevision` is reported unchanged, which is what a query means here.
+      if (!world) throw new Error('No active career')
+      return { id: msg.id, ok: true, type: 'legacyInput', legacy: legacyInputOf(world), revision: committedRevision }
+    }
+    case 'heirloomAlbum': {
+      // ⭐⭐⭐ SUCCESSION S2d – THE MOTHER'S ALBUM, ON DEMAND from the new career's own album screen: `album`'s shape one query over, and for the same
+      // reason (the book is 1 to 9 KB and the weekly snapshot carries ONE BIT of it, `hasHeirloom`). Read-only against the COMMITTED world: `heirloomBookOf`
+      // is a pure read that hands back a COPY, nothing is drawn, and `committedRevision` is reported unchanged, which is what a query means here.
+      // A career with no heirloom answers `book: null` – a legal question with a plain answer, not a refusal.
+      if (!world) throw new Error('No active career')
+      return { id: msg.id, ok: true, type: 'heirloomAlbum', book: heirloomBookOf(world), revision: committedRevision }
+    }
     case 'inbox': {
       // ⭐⭐ THE INBOX, ON DEMAND (T6.2 · D-07, 28.09) – the `album` case above, one surface over and
       // for the same reason: the career's whole post was riding every weekly Snapshot (261 rows at
@@ -1040,6 +1074,8 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   getSnapshot        query        reads     none                       unchanged
 //   devLifeBoost       query        reads     none                       unchanged
 //   album              query        reads     none                       unchanged
+//   legacyInput        query        reads     none                       unchanged
+//   heirloomAlbum      query        reads     none                       unchanged
 //   inbox              query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged
 //   listCareers        query        none      reads                      unchanged

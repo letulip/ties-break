@@ -40,7 +40,7 @@ export function refundPractice(world: WorldState, booking: PracticeBooking, reas
     week: world.week,
     type: 'income',
     category: 'practice',
-    text: `Court rental refunded – ${weekLabel(booking.week)}`,
+    text: `Court rental refunded – ${weekLabel(booking.week, world.startYear)}`,
     amountCents: booking.paidCents,
   })
   addEvent(world, {
@@ -48,9 +48,9 @@ export function refundPractice(world: WorldState, booking: PracticeBooking, reas
     type: 'entry',
     text:
       reason === 'Injured'
-        ? `Practice match called off – ${weekLabel(booking.week)} (she is hurt)`
+        ? `Practice match called off – ${weekLabel(booking.week, world.startYear)} (she is hurt)`
         : reason === 'Medical'
-          ? `Practice match called off – ${weekLabel(booking.week)} (not cleared to play)`
-          : `Cancelled the practice match – ${weekLabel(booking.week)}`,
+          ? `Practice match called off – ${weekLabel(booking.week, world.startYear)} (not cleared to play)`
+          : `Cancelled the practice match – ${weekLabel(booking.week, world.startYear)}`,
   })
 }

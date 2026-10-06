@@ -28,6 +28,9 @@ import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import StoreError from './ui/StoreError.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const emit = defineEmits<{
@@ -278,10 +281,10 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
       </header>
       <div class="ending-scroll-body">
         <section v-for="s in view.scroll" :key="s.seasonIndex" class="scroll-season">
-          <h3 class="scroll-year">{{ seasonYear(s.seasonIndex) }} <span>she was {{ s.ageYears }}</span></h3>
+          <h3 class="scroll-year">{{ seasonYear(s.seasonIndex, startYear) }} <span>she was {{ s.ageYears }}</span></h3>
           <ul class="scroll-rows">
             <li v-for="r in s.rows" :key="`${r.week}-${r.label}`">
-              <span class="scroll-week">{{ weekLabel(r.week) }}</span>
+              <span class="scroll-week">{{ weekLabel(r.week, startYear) }}</span>
               <span class="scroll-label">{{ r.label }}</span>
               <span v-if="r.detail" class="scroll-detail">{{ r.detail }}</span>
             </li>
@@ -318,7 +321,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
         <p v-if="closing.fact" class="album-fact">{{ closing.fact }}</p>
-        <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week) }}</p>
+        <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week, startYear) }}</p>
       </div>
 
       <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. -->

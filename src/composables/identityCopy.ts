@@ -81,6 +81,17 @@ export const DYNASTY_COPY = {
   familyNote: 'The means she starts with are her mother\'s story, not a choice.',
 } as const
 
+/** ⭐⭐⭐ SUCCESSION W1 (06.10, his ruling 14: «да, звучит хорошо») – THE ONE LINE AN INHERITANCE ADDS TO THE PROLOGUE'S IDENTITY CARD. It sits beside
+ *  `DYNASTY_COPY` and not in it: it is this wave's string (W-S4, docs/specs/succession-2026-10.md §8) and not wave 10's, and wave 10's round-trip pin
+ *  counts wave 10's table.
+ *
+ *  ⚠ IT SPEAKS OF A HEAD START AND NAMES NO NUMBER: the multiplier is a sketch the bench retunes, and a sentence that quoted it would be the first
+ *  thing to go stale. It is drawn only when the start really is richer than an ordinary one (`ChildhoodPrologue.vue`'s `line`). */
+export const LEGACY_COPY = {
+  /** under the lock sentence, on a legacy career whose wallet starts above an ordinary one */
+  headStart: 'Her mother\'s career leaves her a head start.',
+} as const
+
 /** ⭐⭐⭐ v87 (wave 11 T1, his ruling of 22.09) – THE WORDS THE ONE SWITCH IN THE GAME IS ASKED AND
  *  SET IN, declared once for the reason everything above is: TWO surfaces ask it (the prologue's
  *  opening card and the wizard, which is the skip branch) and a THIRD sets it (the settings row), so

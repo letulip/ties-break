@@ -341,7 +341,11 @@ import type { AcademySupport } from '../academy'
 // ⚠⚠ v91: A DELIBERATE SINGLE-FACT CARVE-OUT FROM 18.09's «NO PERSISTED RANK HISTORY» (owner, 02.10: «даже если в моменте»); the rule otherwise stands.
 // ⚠ v91: THE BACKFILL IS HONEST, NOT RECONSTRUCTED: set to the CURRENT week only where the cached rank is 1 at migration time, else left absent.
 // ⚠ v91: ZERO DRAWS – pure state arithmetic over the fold `recomputeKidRank` already paid for; the frozen MAIN capture (41550 / e6b0c709) is untouched.
-export const SAVE_SCHEMA_VERSION = 91
+// v92 → docs/notes/engine/save-schema-history.md#v92--the-succession-block
+// v92 – THE SUCCESSION BLOCK (SUCCESSION S1, 06.10): `startYear: number` (the calendar year season 0 opens in) AND the OPTIONAL `legacy?` block, declared TOGETHER so no later step of the wave adds a second bump.
+// ⚠⚠ v92: THE BACKFILL IS EXACT, NOT RECONSTRUCTED: every pre-v92 career began in 2031 by construction (the epoch was a constant), so `startYear` is 2031 on every old save; `legacy` stays absent – absent is what a generation-1 career is.
+// ⚠ v92: ZERO DRAWS, no sub-stream: `startYear` is a creation INPUT, not a roll; the frozen MAIN capture (41550 / e6b0c709) is untouched and a default career is byte-identical to its v91 self minus the one new key.
+export const SAVE_SCHEMA_VERSION = 92
 
 
 
@@ -448,6 +452,12 @@ export interface WorldState {
   careerId: string
   seed: string
   week: number
+  /** ⭐⭐ v92 (SUCCESSION S1) – THE CALENDAR YEAR SEASON 0 OPENS IN. 2031 on every career born before the
+   *  wave (the migration states it as a literal) and by default on every new one; a generation-2 career opens
+   *  in a later year (docs/specs/succession-2026-10.md §2). Read by every engine call that prints or computes a
+   *  year – `shared/dates.ts` takes it as its optional last argument – and handed to the screens as
+   *  `Snapshot.startYear`. A creation INPUT and never a draw: it cannot move the MAIN stream. */
+  startYear: number
   /** THE PERSISTED MAIN POSITION (v35): mulberry32's register + the cumulative draw count. The
    *  worker draws through `resumeMain(world.rngMain)`, which mutates this pair in place — so every
    *  autosave carries the live position by construction and a load RESUMES instead of replaying
@@ -598,6 +608,16 @@ export interface WorldState {
    *  the cached rank is 1 at migration time, else left absent – a true first touch in the past is
    *  unknowable and the migration may not invent one. */
   firstNo1?: { wta?: number; junior?: number }
+  /** Succession (gen-2) – spec docs/specs/succession-2026-10.md §3-§5. Absent on every gen-1 career. */
+  legacy?: {
+    motherName: string
+    motherPeakRank: number | null
+    motherSlamTitles: number
+    surname: string
+    endingKind: string
+    savingsSliceCents: number
+    heirloomAlbum: unknown | null
+  }
   /** THE TITLES LEDGER (v31): every title and every LOST final of her career, per tier, as the
    *  absolute weeks they happened in. Written beside `bestFinishByTier` at tournament finalize;
    *  behind the Trophy Cabinet. Full shape and the `finals` warning: `TierTrophies` in protocol.ts.

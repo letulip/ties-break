@@ -8,6 +8,9 @@ import { TIERS } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
 import type { CountingResult } from '../shared/protocol'
 import { weekLabel } from '../shared/dates'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const props = defineProps<{
   results: CountingResult[]
@@ -47,7 +50,7 @@ function tierLabel(tier?: TierId): string {
     </thead>
     <tbody>
       <tr v-for="(c, i) in results" :key="i">
-        <td class="num">{{ weekLabel(c.week) }}</td>
+        <td class="num">{{ weekLabel(c.week, startYear) }}</td>
         <td>{{ tierLabel(c.tier) }}</td>
         <td class="num">{{ c.points }}</td>
       </tr>

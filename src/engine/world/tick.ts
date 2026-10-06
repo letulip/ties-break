@@ -832,7 +832,7 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     world.ending = {
       type: 'college',
       week: world.week,
-      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
       detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
       resumesWeek: yearEnds,
     }
@@ -868,7 +868,7 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   latchEnding(world, {
     type: 'college',
     week: world.week,
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
     resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
   })

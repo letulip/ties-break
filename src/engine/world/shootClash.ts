@@ -174,7 +174,7 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
   const terms = deal.terms as AdOfferTerms
   return {
     week,
-    weekLabel: weekLabel(week),
+    weekLabel: weekLabel(week, world.startYear),
     brand: terms.brand,
     eventLabel: TIERS[event.tier].label,
     entryFeeCents: TIERS[event.tier].entryFeeCents,
@@ -185,7 +185,7 @@ export function buildShootClashPrompt(world: WorldState): ShootClashPrompt | nul
     moveToWeek: shootMoveTarget(world, week),
     moveToLabel: (() => {
       const to = shootMoveTarget(world, week)
-      return to === null ? null : weekLabel(to)
+      return to === null ? null : weekLabel(to, world.startYear)
     })(),
     cancelShootCents: shootCancelCents(terms),
     // ⭐ 02.10 (round 45 #1b): PER SHOOTING DAY – and the shoot is two days at every rung (third batch: «съемочных
@@ -246,7 +246,7 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
     addEvent(world, {
       week: world.week,
       type: 'info',
-      text: `${terms.brand} shoot moved to ${weekLabel(to)} – the ${TIERS[event.tier].label} week stands.`,
+      text: `${terms.brand} shoot moved to ${weekLabel(to, world.startYear)} – the ${TIERS[event.tier].label} week stands.`,
     })
     return
   }

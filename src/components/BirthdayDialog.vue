@@ -47,6 +47,9 @@ import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const prompt = computed(() => game.snapshot?.birthdayPrompt ?? null)
@@ -124,7 +127,7 @@ useDialogFocus(card)
       tabindex="-1"
     >
       <p id="birthday-dialog-kicker" class="season-summary-kicker">
-        Her birthday – {{ weekLabel(prompt.week) }}
+        Her birthday – {{ weekLabel(prompt.week, startYear) }}
       </p>
       <h2 id="birthday-dialog-title" class="season-summary-title">{{ prompt.heading }}</h2>
 

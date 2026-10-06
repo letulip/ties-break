@@ -417,6 +417,7 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
         'sparringRung',
         'sparringTravels',
         'spotlightHabituation',
+        'startYear',
         'weightEnabled',
       ])
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)

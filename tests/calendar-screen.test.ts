@@ -711,8 +711,8 @@ describe('ONE week button, two projections', () => {
     // would break silently. All four read `calendar.week`, which is `snapshot.week + 1`: the week the
     // button plays. A screen where the paper and the picture beside it are about different sevens of
     // days is exactly the bug the fridge note's own comment was written against.
-    expect(screen).toContain('const dateLine = computed(() => weekDateLine(week.value + 1))')
-    expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)')
+    expect(screen).toContain('const dateLine = computed(() => weekDateLine(week.value + 1, startYear.value))')
+    expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week, startYear.value)')
     expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
     expect(screen).toContain('snap.diary.facts.lifeStage')
     // ...and the button is the same composable Home's is, which reads the week ahead and nothing else
@@ -806,7 +806,7 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     // fee - the real rule, and the one genuinely-zero fee in the tier table - and `formatCents(0)`
     // rendered it as "$0", which reads as a number nobody filled in rather than as a fact. The claim
     // is unchanged: this card prints all three facts, so it can be its own confirmation.
-    for (const fact of ['{{ entryFeeLabel(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek) }}']) {
+    for (const fact of ['{{ entryFeeLabel(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek, startYear) }}']) {
       expect(template, `the card must print ${fact}`).toContain(fact)
     }
     // ...and both cautions are the ENGINE's own sentences, never re-worded here

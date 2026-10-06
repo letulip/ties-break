@@ -643,10 +643,25 @@ export function parentIncomeForWeekCents(seedStr: string, background: FamilyBack
  *
  *  ⚠ NO DRAW, NO STATE, NO SCHEMA. Integer cents out, rounded once. */
 export function prologueFundsCents(background: FamilyBackground, spentCents: number): number {
-  const base = ECONOMY.startingFundsCents[background]
+  return prologueFundsOnBaseCents(ECONOMY.startingFundsCents[background], spentCents)
+}
+
+/** ⭐⭐⭐ SUCCESSION W1 (06.10, THE OWNER'S RULING 12) – THE PROLOGUE'S WALLET ARITHMETIC ON A BASE THE CALLER NAMES. `prologueFundsCents` is this
+ *  function with the base read off `ECONOMY.startingFundsCents[background]`, and it now CALLS it: ONE implementation of «the nine years move the
+ *  reserve by a share of it», so an ordinary prologue career and a generation-2 career cannot come to hold two spellings of one rule.
+ *
+ *  WHY IT EXISTS: a generation-2 career opens on a MULTIPLIED reserve (`world/succession.ts`: §4's band times B) and the owner ruled that the
+ *  childhood's deduction applies to it too – «мне кажется нормальной логика вычета, не вижу проблем использовать ее и здесь, отличается только
+ *  начальная сумма для сида по сути, ну и дом, машина и некоторые сбережения на счете». Only the starting sum differs, so the base is the one
+ *  thing that became an argument, and the swing stays a SHARE of whatever base it is handed: a share of the multiplied reserve, not a flat sum.
+ *
+ *  ⚠ BYTE-IDENTICAL FOR EVERY ORDINARY CALLER: `prologueFundsCents(background, spentCents)` runs the same floating-point operations in the same order
+ *  as before the split (`tests/prologue-handover.test.ts` pins its figures for every background). `baseCents` may be a product that is not a whole
+ *  number of cents (B x 1.3): the rounding happens once, at the end. NO DRAW, NO STATE, NO SCHEMA. Integer cents out. */
+export function prologueFundsOnBaseCents(baseCents: number, spentCents: number): number {
   const { referenceSpendCents, spendSwingCents, reserveSwingShare } = ECONOMY.prologue
   const moved = Math.max(-1, Math.min(1, (referenceSpendCents - spentCents) / spendSwingCents))
-  return Math.round(base * (1 + reserveSwingShare * moved))
+  return Math.round(baseCents * (1 + reserveSwingShare * moved))
 }
 
 /** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.

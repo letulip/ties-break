@@ -61,6 +61,9 @@ import { flagEmoji } from '../../composables/countries'
 // composable from constants the bundler baked in; there is nothing reactive about it, so it is a
 // plain string rather than a `computed`.
 import { appBuildLine } from '../../composables/buildInfo'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const buildStampLine = appBuildLine()
@@ -211,7 +214,7 @@ function fmtDate(ts: number) {
  *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
  *  band is the honest best guess rather than an invented one. One autosave replaces it. */
 function careerAge(c: CareerMeta): number {
-  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1)
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1, startYear.value)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.
@@ -350,11 +353,11 @@ function importConfirmMessage(peek: SavePeek | null, existing: CareerMeta | unde
   }
   if (existing) {
     return (
-      `Overwrite ${existing.kidName}'s career? You have her at ${weekLabel(existing.week)} and this file is ` +
-      `${weekLabel(peek.week)}. The file becomes the career you play from now on – there is no undo.`
+      `Overwrite ${existing.kidName}'s career? You have her at ${weekLabel(existing.week, startYear.value)} and this file is ` +
+      `${weekLabel(peek.week, startYear.value)}. The file becomes the career you play from now on – there is no undo.`
     )
   }
-  return `Import ${peek.kidName}'s career at ${weekLabel(peek.week)}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.`
+  return `Import ${peek.kidName}'s career at ${weekLabel(peek.week, startYear.value)}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.`
 }
 
 async function onImportPicked(e: Event) {
@@ -585,7 +588,7 @@ const TAB_OPTIONS = [
           <span v-if="c.careerId === activeCareerId" class="pill ok">Active</span>
         </div>
         <div class="hint">
-          {{ weekLabel(c.week) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
+          {{ weekLabel(c.week, startYear) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
         </div>
       </div>
       <!-- D11 – TWO CONTROLS CALLED `Load` COEXIST ON THIS SCREEN, and two called `Delete`: one pair
@@ -637,7 +640,7 @@ const TAB_OPTIONS = [
         <tr v-for="s in namedSlots" :key="s.slot">
           <td>{{ s.name }}</td>
           <td>{{ fmtDate(s.savedAt) }}</td>
-          <td class="num">{{ weekLabel(s.week) }}</td>
+          <td class="num">{{ weekLabel(s.week, startYear) }}</td>
           <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
           <td>
             <!-- W1-INTEGRITY-A (TB-01): loading a named save makes it the ACTIVE state, so it

@@ -43,6 +43,9 @@ import { layoffNoteFor } from '../composables/weekDays'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 import StoreError from './ui/StoreError.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const props = defineProps<{
   week: number
@@ -72,7 +75,7 @@ const seed = computed(() => game.snapshot?.seed ?? '')
 const background = computed(() => game.snapshot?.profile.background ?? 'middle')
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
-const dates = computed(() => weekRange(props.week))
+const dates = computed(() => weekRange(props.week, startYear.value))
 const offSeason = computed(() => isOffSeasonWeek(props.week))
 
 // --- an ALREADY BOOKED family week (R14-1) ------------------------------------------------
@@ -298,7 +301,7 @@ function askVacation(row: PackageRow): void {
        ⚠ `:screen` IS THE SCROLL RESET, and the tabs are exactly what it is for: Practice and
        Vacation are two screens in one scroller, so switching to Vacation from the bottom of the
        Practice tab used to arrive already scrolled past the first package. -->
-  <TakeoverShell :title="`Plan ${weekLabel(week)}`" :screen="tab">
+  <TakeoverShell :title="`Plan ${weekLabel(week, startYear)}`" :screen="tab">
     <template #exit>
       <IconButton icon="close" label="Close planner" title="Close" @click="emit('close')" />
     </template>

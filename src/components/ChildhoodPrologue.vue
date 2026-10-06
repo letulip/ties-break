@@ -82,8 +82,9 @@ import {
   type PrologueRun,
 } from '../prologue/run'
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
-import { DYNASTY_COPY } from '../composables/identityCopy'
+import { DYNASTY_COPY, LEGACY_COPY } from '../composables/identityCopy'
 import { dynastyOpeningName } from '../composables/identityDice'
+import type { LegacyInput } from '../engine/world/succession'
 import type { DynastyHandover } from '../shared/protocol'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
 
@@ -123,6 +124,15 @@ const props = withDefaults(
      *  cards, the same costs, the same weekends. What the block changes is what the walk opens on and
      *  what it hands `createWorld` at the end. */
     dynasty?: DynastyHandover
+    /** ⭐⭐⭐ SUCCESSION S2c – THE INHERITANCE THIS CHILDHOOD CARRIES, or nothing: what the dynasty door asked the worker for at the press
+     *  (`legacyInputOf`), held by the shell for the length of the walk. Absent on every career the game has ever started and on a line
+     *  continued without one. Present, it changes NOTHING the player does in the nine years and ONE thing the identity card says (W1, his ruling
+     *  14): the head-start sentence under the lock note, when the start is richer than an ordinary one. The cards, the name and the rest of that
+     *  card are exactly what `dynasty` already made them. It rides to the worker on the create command, where `createLegacyWorld` applies it (the
+     *  calendar, the wallet, the house and car, the heirloom) and sets the origins card aside.
+     *  ⚠ THE SURNAME FIELD IS NOT READ FROM IT: the field is the line's, locked, and the handover block already carries the same name – both
+     *  come off one `dynastyHandoverOf`. */
+    legacy?: LegacyInput
   }>(),
   { seed: '' },
 )
@@ -478,6 +488,10 @@ const line = computed(() =>
         motherFirst: props.dynasty.motherName.first,
         note: DYNASTY_COPY.lineNote,
         birthdays: props.dynasty.childBirthdays,
+        // ⭐⭐ SUCCESSION W1 (his ruling 14, 06.10) – THE HEAD-START SENTENCE, under the lock note, on a legacy career whose start is RICHER than an
+        // ordinary one (`savingsMultiplier` above the 1.0 floor: the early band IS an ordinary start and says nothing) and nowhere else – absent on
+        // an ordinary dynasty run, which carries no `legacy`. The predicate is the wallet's («richer than ordinary»), never a band's name.
+        inheritance: props.legacy !== undefined && props.legacy.savingsMultiplier > 1 ? LEGACY_COPY.headStart : undefined,
       }
     : undefined,
 )
@@ -716,6 +730,9 @@ async function begin(): Promise<void> {
       // `createWorld` persists it as `world.weightEnabled`, and from that moment the settings row is
       // the only thing that can move it.
       weight.value,
+      // ⭐⭐⭐ SUCCESSION S2c – AND THE INHERITANCE RIDES BESIDE THEM AS THE SIXTH, or nothing: the worker builds the world with `createLegacyWorld`
+      // when this is present and with `createWorld` when it is not. It was handed in by the shell and is passed through untouched.
+      props.legacy,
     )
   } finally {
     // ⚠ IN A `finally`, so a refused career does not strand the player on an empty ground with no

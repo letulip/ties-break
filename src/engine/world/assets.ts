@@ -26,7 +26,7 @@ import { marketIndex } from './market'
 // ⭐ ROUND 34 #19 – the ONE calendar. `shared/dates.ts` imports nothing, so this closes no cycle;
 // `world/market.ts`'s own note about not spelling a date twice is the reason it is asked rather than
 // re-derived here.
-import { weekMonth, weekYear } from '../../shared/dates'
+import { DEFAULT_START_YEAR, weekMonth, weekYear } from '../../shared/dates'
 import type { OwnedAsset, ShopFamily, ShopPricePoint } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
@@ -411,7 +411,7 @@ export function unitPriceCents(seed: string, week: number, item: ShopItem): numb
  *  the right-hand end of the chart is now rather than last month.
  *
  *  Pure: seed, week, rung, length. No world, no MAIN draw, no clock, nothing stored. */
-export function unitPriceHistory(seed: string, week: number, item: ShopItem, months: number): ShopPricePoint[] {
+export function unitPriceHistory(seed: string, week: number, item: ShopItem, months: number, startYear: number = DEFAULT_START_YEAR): ShopPricePoint[] {
   if (item.unitBaseCents === undefined || months <= 0) return []
   const now = Math.max(0, Math.floor(week))
   // Walk BACKWARDS a week at a time, closing a bucket whenever the calendar month changes, and stop
@@ -421,12 +421,12 @@ export function unitPriceHistory(seed: string, week: number, item: ShopItem, mon
   const out: ShopPricePoint[] = []
   let w = now
   while (w >= 0 && out.length < months) {
-    const month = weekMonth(w)
-    const year = weekYear(w)
+    const month = weekMonth(w, startYear)
+    const year = weekYear(w, startYear)
     let sum = 0
     let count = 0
     let first = w
-    while (w >= 0 && weekMonth(w) === month && weekYear(w) === year) {
+    while (w >= 0 && weekMonth(w, startYear) === month && weekYear(w, startYear) === year) {
       sum += unitPriceCents(seed, w, item)
       count++
       first = w

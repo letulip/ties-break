@@ -237,7 +237,7 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
     // now a fact rather than a correction - and a December girl develops at 13 because she IS 13, which is
     // the owner's point. Same magnitude, one concept instead of two. No new draw: `growWeek` keeps
     // `seed:growth:<week>`.
-    ageYears: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ageYears: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     plan: world.plan,
     // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR, and since 08.08 that is every week except college
     //     and a booked family holiday. The pairing is the invariant, not the list: a week the family

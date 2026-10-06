@@ -122,7 +122,7 @@ export function assetKidShareCents(world: WorldState, id: string): number {
   if (!item || item.family !== 'business') return 0
   return kidPrizeShareCents(
     assetWeeklyIncomeCents(world, id),
-    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     // ⭐ ROUND 42 #25 – «как с призовых» includes the college pause, for the same reason it includes
     // the rate: this is the prize ramp, read whole, not a brand ramp that happens to resemble it.
     collegePausedShareYears(world),

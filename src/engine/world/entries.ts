@@ -119,13 +119,13 @@ export function enterEvent(world: WorldState, eventId: string): void {
     week: world.week,
     type: 'expense',
     category: 'entry',
-    text: `Entry fee: ${TIERS[event.tier].label} (${weekLabel(event.week)})`,
+    text: `Entry fee: ${TIERS[event.tier].label} (${weekLabel(event.week, world.startYear)})`,
     amountCents: -fee,
   })
   addEvent(world, {
     week: world.week,
     type: 'entry',
-    text: `Entered ${TIERS[event.tier].label} – ${weekLabel(event.week)} (${event.surface})`,
+    text: `Entered ${TIERS[event.tier].label} – ${weekLabel(event.week, world.startYear)} (${event.surface})`,
   })
 }
 
@@ -302,17 +302,17 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
   let line: string
   switch (releasedBy) {
     case 'parent':
-      line = `${RELEASE_LINE_PREFIX.parent}${label} – ${weekLabel(event.week)}`
+      line = `${RELEASE_LINE_PREFIX.parent}${label} – ${weekLabel(event.week, world.startYear)}`
       break
     case 'injury':
-      line = `${RELEASE_LINE_PREFIX.injury}${label} – ${weekLabel(event.week)}${INJURY_RELEASE_SUFFIX}`
+      line = `${RELEASE_LINE_PREFIX.injury}${label} – ${weekLabel(event.week, world.startYear)}${INJURY_RELEASE_SUFFIX}`
       break
     case 'college':
       // ⚠ NOT "Withdrew", FOR THE REASON THE WHOLE SWITCH EXISTS: he answered a question about her
       // future, not this tournament, and a feed row telling him he pulled her out of a World Tour
       // 500 would be the 05.08 bug in college colours. And no apology and no price in the sentence –
       // the fee is back, and the release is the game's own housekeeping.
-      line = `${RELEASE_LINE_PREFIX.college}${label} – ${weekLabel(event.week)}, she is taking the scholarship.`
+      line = `${RELEASE_LINE_PREFIX.college}${label} – ${weekLabel(event.week, world.startYear)}, she is taking the scholarship.`
       break
   }
   addEvent(world, { week: world.week, type: 'entry', text: line, entryRef })
@@ -360,7 +360,7 @@ export function cancelEntry(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'info',
-    text: `Cancelled ${TIERS[event.tier].label} – ${weekLabel(event.week)}, entry fee forfeited.`,
+    text: `Cancelled ${TIERS[event.tier].label} – ${weekLabel(event.week, world.startYear)}, entry fee forfeited.`,
   })
   // ⚠ THE LATE WITHDRAWAL, AND THIS IS THE ONE PLACE IT CAN BE CHARGED (W3-ACT2 §6). Past the
   // deadline the entry list has CLOSED and the draw is published with her name in it, so the tour

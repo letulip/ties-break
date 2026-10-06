@@ -152,7 +152,7 @@ export function cheapestEntryFeeCents(world: WorldState): number {
 export function autoEndingViewOf(world: WorldState): AutoEndingView {
   return {
     week: world.week,
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     // ⭐ D7 (14.09): the ending judges the money she can REACH – the same fact the spell above
     // latches on, so the view and the latch cannot disagree about what «broke» means.
     fundsCents: reachableFundsCents(world),
@@ -299,7 +299,7 @@ export function plateauViewOf(world: WorldState): PlateauView {
     if (endRank !== undefined) seasonEndRanks.push({ seasonIndex: season.seasonIndex, endRank })
   }
   return {
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     seasonIndex: seasonIndexOf(world.week),
     seasonEndRanks,
     // ...and the OTHER half of the rule is asked of the same table, by construction rather than by
@@ -354,7 +354,7 @@ export function leavingViewOf(world: WorldState): LeavingView {
   return {
     temperament: world.temperament ?? temperamentFor(world.seed),
     seasonIndex,
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     professional: track === 'wta',
     endRank: now?.endRank ?? null,
     prevEndRank: before?.endRank ?? null,
@@ -482,7 +482,7 @@ export function resolveEndings(world: WorldState): void {
   // below, on the next academic year's own September. The year in between is her last junior season,
   // played. The birthday machinery this line used to ride (`kidAgeThroughWeek`) stays in `world/age.ts`
   // for the next birthday-prompted question; this is no longer one.
-  if (world.fork === null && forkDue(world.week, world.profile.birthMonth, false)) {
+  if (world.fork === null && forkDue(world.week, world.profile.birthMonth, false, world.startYear)) {
     // ⭐⭐ THE OFFER IS MEASURED HERE, ONCE, AND PERSISTED (v51,
     // docs/specs/what-the-college-place-costs-2026-08.md). Before this line the third answer was
     // offered unconditionally AND FREE in 100% of careers; now it is offered with a price on it.
@@ -661,7 +661,7 @@ export function resolveReturnDecision(world: WorldState): void {
   // the number the epilogue prints cannot be a birthday apart. ⚠ `??` on the two meters is the
   // defensive read every hand-built probe world in this repo gets (`raiseForkOpinion`, two functions
   // down); every real world, created or migrated, carries both.
-  const ageYears = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const ageYears = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   const chance = returnChanceFor(
     pregnancy.support,
     world.spirit ?? ECONOMY.spirit.baseline,
@@ -1021,7 +1021,7 @@ export function resolveCollegeDeparture(world: WorldState): void {
   const ending = endingForForkAnswer(
     'college',
     world.week,
-    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     ENDINGS.collegeYears,
     WEEKS_PER_YEAR,
   )
@@ -1163,14 +1163,14 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
       week: world.week,
       type: 'milestone',
       keep: true,
-      text: `A college place is reserved. She leaves when the academic year starts – ${weekLabel(departsWeek)} – and plays until then.`,
+      text: `A college place is reserved. She leaves when the academic year starts – ${weekLabel(departsWeek, world.startYear)} – and plays until then.`,
     })
     return
   }
   const ending = endingForForkAnswer(
     answer,
     world.week,
-    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     ENDINGS.collegeYears,
     WEEKS_PER_YEAR,
   )
@@ -1242,7 +1242,7 @@ export function answerRetirement(world: WorldState, retire: boolean): void {
     endingForRetirement(
       offer,
       world.week,
-      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
       world.oneMoreYearCount,
     ),
   )
@@ -1280,7 +1280,7 @@ export function buildEndingView(world: WorldState): EndingView | null {
       freshCapitalFork: true,
       resumesWeek: ending.resumesWeek,
       resumesAgeYears:
-        ending.resumesWeek === null ? null : kidAgeYears(ending.resumesWeek, world.profile.birthMonth, world.profile.birthDay),
+        ending.resumesWeek === null ? null : kidAgeYears(ending.resumesWeek, world.profile.birthMonth, world.profile.birthDay, world.startYear),
     },
     totals: world.careerTotals,
     // ⭐ ROUND 46 #9 – the honest reading of the same three counters, folded once (world/ledger.ts).
@@ -1515,7 +1515,7 @@ export function dynastyHandoverOf(world: WorldState): DynastyHandover {
     // T10 (his 22.09 ruling) – the real birth dates, derived from the recorded weeks through the ONE
     // calendar (`weekMonth`/`weekStartDay`): the date of the Monday her birth week started on. The
     // epilogue variant maps an empty array, which is the field's own «no recorded birth» state.
-    childBirthdays: world.children.map((c) => ({ month: weekMonth(c.bornWeek), day: weekStartDay(c.bornWeek) })),
+    childBirthdays: world.children.map((c) => ({ month: weekMonth(c.bornWeek, world.startYear), day: weekStartDay(c.bornWeek, world.startYear) })),
     motherTemperament: world.temperament ?? temperamentFor(world.seed),
     motherCareer: {
       titles,

@@ -38,6 +38,9 @@ import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 const prompt = computed(() => game.snapshot?.knockPrompt ?? null)
@@ -110,7 +113,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            and whether it has happened before, the title says which part of her. Either one alone
            would name the dialog worse than the card names itself to somebody looking at it. -->
       <p id="knock-dialog-kicker" class="season-summary-kicker">
-        {{ prompt.repeat ? 'The same knock again' : 'A knock' }} – {{ weekLabel(week) }}
+        {{ prompt.repeat ? 'The same knock again' : 'A knock' }} – {{ weekLabel(week, startYear) }}
       </p>
       <h2 id="knock-dialog-title" class="season-summary-title">Her {{ prompt.part }}.</h2>
       <p class="knock-line">{{ prompt.line }}</p>

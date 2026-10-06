@@ -112,6 +112,9 @@ import PrimaryPill from '../ui/PrimaryPill.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
 import type { UpcomingEvent } from '../../shared/protocol'
+import { useStartYear } from '../../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // THE SCREEN ASKS, THE SHELL ACTS - the idiom Home and Kid already use for `navigate`, and the reason
 // it matters more here than there: advancing a week is the one irreversible act in this game, so there
@@ -145,7 +148,7 @@ const action = useWeekAction()
 
 const week = computed(() => game.snapshot?.week ?? 0)
 /** The header's line, for the week the grid is about. One formatter, shared with Home's hero. */
-const dateLine = computed(() => weekDateLine(week.value + 1))
+const dateLine = computed(() => weekDateLine(week.value + 1, startYear.value))
 
 /** She is laid up across the week the grid shows – the red chip on the grid's own head. Read off the
  *  layout rather than re-derived: `calendarWeekFor` has already asked the engine's window predicate. */
@@ -205,7 +208,7 @@ function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
 const grid = computed(() => {
   const week = calendar.value
   const snap = game.snapshot
-  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week), snap.seed) : null
+  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week, startYear.value), snap.seed) : null
 })
 
 /** WHICH POOL THE SCRAP COMES FROM. The domestic pool is the default and stays unlicensed (the
@@ -584,7 +587,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              two screens now draw it - and that is written down in the report rather than smuggled into
              the global sheet by a screen that only needs one of it.) -->
         <span class="cal-card-sep"></span>
-        <span class="hint cal-card-when">{{ weekLabel(marker.week) }}</span>
+        <span class="hint cal-card-when">{{ weekLabel(marker.week, startYear) }}</span>
       </template>
       <template #exit>
         <IconButton icon="close" label="Close this tournament" title="Close" @click="closeMarker" />
@@ -600,7 +603,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              something a family has to book time off for, so the card spells the actual dates out.
              `weekRange` is the shared formatter's self-contained shape (it names the year, because
              nothing else on this card does). -->
-        <p class="cal-card-days">{{ weekRange(marker.week) }}</p>
+        <p class="cal-card-days">{{ weekRange(marker.week, startYear) }}</p>
 
         <p v-if="surfaceVerdict(marker.surface)" class="cal-card-fit">{{ surfaceVerdict(marker.surface) }}</p>
 
@@ -613,7 +616,7 @@ const showGo = computed(() => !game.snapshot?.pending)
         <div class="controls cal-card-chips">
           <!-- ⭐ #28: see SeasonScreen - "no entry fee" is a fact, "$0" is a hole. -->
           <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
-          <span class="pill">closes {{ weekLabel(marker.deadlineWeek) }}</span>
+          <span class="pill">closes {{ weekLabel(marker.deadlineWeek, startYear) }}</span>
           <span v-if="marker.entered" class="pill ok">Entered</span>
           <!-- ⭐ ROUND 41 #16 – THE WILD CARD, ON THIS SCREEN'S OWN COPY OF THE SAME CARD. Round 21
                #2b put this exact chip (flag, tooltip and words) on Season's event card; this marker
@@ -704,7 +707,7 @@ const showGo = computed(() => !game.snapshot?.pending)
             <PrimaryPill
               :risky="marker.cautionReason === 'fatigued'"
               :disabled="fundsShort(marker) || game.busy"
-              :aria-label="enterActionName(marker)"
+              :aria-label="enterActionName(marker, startYear)"
               @click="enterMarker(marker)"
             >
               Enter

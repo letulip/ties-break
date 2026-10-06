@@ -22,6 +22,7 @@
 //
 // ⚠ SAVE SCHEMA: NOTHING MOVED. `SAVE_SCHEMA_VERSION` still lives in `world/state.ts` and is still
 // re-exported by the barrel; this module is one more READER of it.
+import { DEFAULT_START_YEAR } from '../../shared/dates'
 import { initMainState } from '../rng'
 import {
   DEFAULT_PROFILE,
@@ -225,7 +226,34 @@ export function createWorld(
    *  `world.profile`, so a field there plus `world.weightEnabled` would be two spellings of one fact
    *  – this repo's most-caught defect class – and the settings row writes only one of them. */
   weightEnabled?: boolean,
+  /** ⭐⭐⭐ v92 (SUCCESSION S1) – THE SEVENTH ARGUMENT, AND IT IS `weightEnabled`'s PRECEDENT: absent means 2031, the
+   *  year every career has always opened in, so every bench, probe, fixture and sim career this function has ever
+   *  created is byte-identical to what it was – `tests/succession-s1-start-year.test.ts` measures that against
+   *  digests taken BEFORE the change. Present, it is stored on the world as `startYear` and read by every engine
+   *  call that prints or computes a year (shared/dates.ts).
+   *
+   *  ⚠ A CREATION INPUT AND NOT A DRAW: it touches no stream, so the MAIN sequence of a 2048 career is the MAIN
+   *  sequence of a 2031 one under the same seed – input-independence is permanent law. */
+  startYear: number = DEFAULT_START_YEAR,
+  /** ⭐⭐⭐ SUCCESSION S2b – THE EIGHTH ARGUMENT, AND IT IS `startYear`'s PRECEDENT: absent means the wallet this function has always
+   *  opened with (`STARTING_FUNDS_CENTS[background]`, or the prologue's reserve), so every bench, probe, fixture and sim career is
+   *  byte-identical to what it was – `tests/succession-s2b-create.test.ts` re-measures that against S1's pristine digests. Present, it
+   *  IS the opening wallet, whole cents, and nothing else about the career moves.
+   *
+   *  ⚠ WHY IT IS AN ARGUMENT AND NOT A LINE WRITTEN AFTER THE CALL: the week-0 feed line below states «Family budget: …» from this very
+   *  number. A generation-2 grant applied to `world.fundsCents` afterwards would leave the first sentence of the career naming the
+   *  ORDINARY budget beside a wallet up to three times its size – a screen restating a verdict the engine no longer holds, this repo's
+   *  parity class – and patching the sentence from outside would make a second writer of it. One writer, one number.
+   *
+   *  ⚠ A CREATION INPUT AND NOT A DRAW: it touches no stream. `world/succession.ts`'s `createLegacyWorld` is its only caller. */
+  openingFundsCents?: number,
 ): WorldState {
+  if (!Number.isInteger(startYear) || startYear < 1900 || startYear > 2400) {
+    throw new RangeError(`createWorld: startYear must be a whole calendar year between 1900 and 2400, got ${startYear}`)
+  }
+  if (openingFundsCents !== undefined && (!Number.isInteger(openingFundsCents) || openingFundsCents < 0)) {
+    throw new RangeError(`createWorld: openingFundsCents must be a whole number of cents, zero or more, got ${openingFundsCents}`)
+  }
   // ⭐ THE NINE YEARS, SPENT. Everything below reads `arrival` and `profile`; when there is no
   // prologue both are what they have always been, so there is ONE code path and not two.
   const years: readonly ChildhoodYear[] = prologue?.years ?? []
@@ -256,9 +284,11 @@ export function createWorld(
       coachTier: prologueCoachTier(profile.background, years),
     }
   }
-  const fundsCents = prologue
-    ? prologueFundsCents(profile.background, prologue.spentCents)
-    : STARTING_FUNDS_CENTS[profile.background]
+  // ⭐ S2b: a grant, when one stands behind this career, REPLACES the ordinary budget (it is the multiplied budget, so it already
+  // contains it) – `??` and not `||`, because a legal grant of zero cents is a wallet and not an absence.
+  const fundsCents =
+    openingFundsCents ??
+    (prologue ? prologueFundsCents(profile.background, prologue.spentCents) : STARTING_FUNDS_CENTS[profile.background])
   const cohort = generateCohort(seed)
   // Ladder-up Part A: the cohort arrives with a season already behind it (season/prehistory.ts),
   // so week-1 entrant fields are ranking-MEANINGFUL and the standings are not a 199-way tie at 0.
@@ -276,6 +306,8 @@ export function createWorld(
     careerId,
     seed,
     week: 0,
+    // v92: the calendar year season 0 opens in – an input, stored so every later year question reads the world.
+    startYear,
     // v35: the MAIN stream is born at position zero, ON the world. From here on the position and
     // the career are one object — the worker resumes from this pair and its draws advance it.
     rngMain: initMainState(seed),

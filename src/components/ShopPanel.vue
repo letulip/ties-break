@@ -47,6 +47,9 @@ import Eyebrow from './ui/Eyebrow.vue'
 import ProgressRing from './ui/ProgressRing.vue'
 import SegmentedRow from './ui/SegmentedRow.vue'
 import StatRow from './ui/StatRow.vue'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 // ⚠ `screenTab` IS A `string` AND NOT MoneyScreen's `MoneyTab`, because a `<script setup>` block
 // exports no types: the union is declared in that screen's own script and cannot be imported from it.
@@ -393,7 +396,7 @@ const screenTab = computed(() => props.screenTab)
               >
               <div class="fund-chart-pop" role="status">
                 <span class="fund-chart-pop-top">
-                  {{ monthLabel(openMarkOf(row)!.buy.week) }} &ndash; {{ formatCents(openMarkOf(row)!.buy.cents) }}
+                  {{ monthLabel(openMarkOf(row)!.buy.week, startYear) }} &ndash; {{ formatCents(openMarkOf(row)!.buy.cents) }}
                 </span>
                 <span
                   v-if="openMarkOf(row)!.buy.units !== null && openMarkOf(row)!.buy.unitPriceCents !== null"
@@ -407,11 +410,11 @@ const screenTab = computed(() => props.screenTab)
             </div>
             <p v-else class="fund-chart-empty">One month of prices so far &ndash; the chart starts next month.</p>
             <div v-if="chartPlot(row)" class="fund-chart-axis">
-              <span>{{ monthLabel(chartPoints(row)[0].week) }}</span>
+              <span>{{ monthLabel(chartPoints(row)[0].week, startYear) }}</span>
               <span class="fund-chart-span">
                 {{ formatCents(chartPlot(row)!.low) }} &ndash; {{ formatCents(chartPlot(row)!.high) }}
               </span>
-              <span>{{ monthLabel(chartPoints(row)[chartPoints(row).length - 1].week) }}</span>
+              <span>{{ monthLabel(chartPoints(row)[chartPoints(row).length - 1].week, startYear) }}</span>
             </div>
           </div>
           <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
@@ -461,7 +464,7 @@ const screenTab = computed(() => props.screenTab)
             <StatRow
               class="money-row"
               label="On order"
-              :value="weekLabel(row.readyWeek ?? 0)"
+              :value="weekLabel(row.readyWeek ?? 0, startYear)"
               tone="plain"
             />
             <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>

@@ -36,6 +36,6 @@ export interface NameableEvent {
  * feed. The week is what makes it an identity, and `weekRange` is the app's one date formatter, so
  * this name and the dates printed on the card cannot drift apart.
  */
-export function enterActionName(event: NameableEvent): string {
-  return `Enter the ${event.label}, ${weekRange(event.week)}`
+export function enterActionName(event: NameableEvent, startYear?: number): string {
+  return `Enter the ${event.label}, ${weekRange(event.week, startYear)}`
 }

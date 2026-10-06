@@ -28,6 +28,7 @@
 // `world/endings.ts`'s `resolveReturnDecision`, and the CHANCE it is compared against is
 // `returnChanceFor` in `world/lifeBeat.ts` §14, where the pregnancy's own arithmetic already lives.
 // So this leaf still draws nothing at all, and the sentence above is extended rather than weakened.
+import { DEFAULT_START_YEAR } from '../shared/dates'
 import { schoolIsOver } from './kidLife'
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
 // ⚠ A TYPE-ONLY IMPORT, ERASED AT COMPILE TIME, so the leaf stays a leaf at runtime – the same
@@ -441,8 +442,8 @@ export function detectEnding(view: AutoEndingView, graceWeeks: number = ENDINGS.
  *  ⚠ A WEEK PREDICATE NOW, NOT AN AGE ONE, because school's end is a September fact and not a
  *  birthday fact – `ENDINGS.forkAgeYears` below keeps naming the age the junior story runs out on,
  *  which is now a fact about the GAP rather than the trigger. */
-export function forkDue(week: number, birthMonth: number, alreadyAsked: boolean): boolean {
-  return !alreadyAsked && schoolIsOver(week, birthMonth)
+export function forkDue(week: number, birthMonth: number, alreadyAsked: boolean, startYear: number = DEFAULT_START_YEAR): boolean {
+  return !alreadyAsked && schoolIsOver(week, birthMonth, startYear)
 }
 
 /* ⭐⭐ `CollegeResultView` AND `collegeDoorOpen` WERE HERE, AND THEY GO WITH THE CONSTANT THEY READ

@@ -55,6 +55,9 @@ import PrimaryPill from './ui/PrimaryPill.vue'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
 import { LADDER_LABEL, activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
+import { useStartYear } from '../composables/startYear'
+// SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
+const startYear = useStartYear()
 
 const game = useGameStore()
 
@@ -772,7 +775,7 @@ const activeRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
 // ⚠ `weekLabel` is imported and used for the practice flow's own header, which needs to name the
 // week it is replaying. The week the STORY covers is printed once, by the screen's header
 // (ThisWeekScreen), because D puts it there – see the note in tests/week-numbering.test.ts.
-const practiceWeekLabel = computed(() => weekLabel(week.value))
+const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
 </script>
 
 <template>

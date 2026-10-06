@@ -503,7 +503,7 @@ function bondWithholdsConsent(world: WorldState): boolean {
 export function psychologistFocusRefusal(world: WorldState, focus: PsyFocus): string | null {
   if (!(world.psychologistHired ?? false)) return PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL
   const withheld = bondWithholdsConsent(world)
-  if (withheld && kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) >= 18) {
+  if (withheld && kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear) >= 18) {
     return PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL
   }
   if (withheld && focus === 'herself') return PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL

@@ -2,6 +2,19 @@
 // The career's week 0 always starts Monday, Jan 6, 2031 (a fixed fictional epoch), and every
 // week spans a Monday..Sunday of the real calendar.
 //
+// ⭐ SUCCESSION S1 (06.10, docs/specs/succession-2026-10.md §2): «ALWAYS» NOW MEANS «BY DEFAULT». The epoch year is
+// a PER-CAREER INPUT (`WorldState.startYear`, v92) – 2031 unless the career was born with another, which is how a
+// generation-2 career opens in a later year. Every function below that depends on it takes `startYear` as an
+// OPTIONAL LAST argument defaulting to `DEFAULT_START_YEAR`, so the hundreds of callers that never heard of the
+// wave (tests, the UI's formatters, migrations' frozen history) keep byte-identical output. `EPOCH_YEAR` in the
+// notes below is that default's old name.
+//   * ⚠ THE COST OF OPTIONAL IS A SILENT OMISSION: an engine call that forgets the argument prints 2031 for a
+//     2048 career without a sound. `tests/succession-s1-start-year.test.ts` is the net – a source ratchet over
+//     src/engine plus a 2048 season walk. The UI's own call sites are the follow-up, fed by `Snapshot.startYear`.
+//   * ⚠ NEVER A MODULE GLOBAL: two careers in one process (a test, a bench, the finished save beside the new one)
+//     would read each other's epoch.
+//   * Week 0 is the first Monday of `startYear` – Monday 6 January for 2031 only; the weekday of 1 January moves.
+//
 // Dash style (owner instruction): en dash "–" only, never an em dash, in all display text.
 //
 // =================================================================================================
@@ -45,12 +58,17 @@
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-/** The calendar year season 0 opens in – Monday 6 Jan 2031 is still week 0.
+/** The calendar year season 0 opens in BY DEFAULT – Monday 6 Jan 2031 is still week 0 for every career that
+ *  does not carry its own `startYear`.
  *
  *  ⚠ A LITERAL, where it used to be `weekYear(0)`. `weekYear` now anchors on the season, so deriving
  *  the epoch year from it would be circular (and a temporal-dead-zone crash at module load). This is
- *  the ONE place the epoch year is stated; `weekYear(0)` still returns it, and tests pin that. */
-const EPOCH_YEAR = 2031
+ *  the ONE place the DEFAULT epoch year is stated; `weekYear(0)` still returns it, and tests pin that.
+ *
+ *  ⭐ EXPORTED SINCE SUCCESSION S1 (06.10): `createWorld` defaults its `startYear` to it. The v91 -> v92
+ *  migration states 2031 as its OWN literal on purpose – a shipped migration must not follow a constant that
+ *  can move. */
+export const DEFAULT_START_YEAR = 2031
 
 /** A season is exactly 52 career weeks – THE ONLY 52 IN THE ENGINE since TB-02. Declared up here
  *  because `weekStart` is now a function OF the season index. `WEEKS_PER_YEAR` in
@@ -83,11 +101,11 @@ function firstMondayUtc(year: number): number {
  *
  *  Total for negative weeks too, and it has to be: entry deadlines and `weekOfDate` both reach
  *  behind week 0. Week -1 is season -1's offset 51, i.e. the Monday before the career opened. */
-function weekStartUtc(week: number): number {
+function weekStartUtc(week: number, startYear: number): number {
   const w = Math.floor(week)
   const seasonIndex = Math.floor(w / WEEKS_IN_SEASON)
   const offset = w - seasonIndex * WEEKS_IN_SEASON // 0..51 for every integer, negatives included
-  return firstMondayUtc(EPOCH_YEAR + seasonIndex) + offset * 7 * MS_PER_DAY
+  return firstMondayUtc(startYear + seasonIndex) + offset * 7 * MS_PER_DAY
 }
 
 function ymdAt(utc: number): Ymd {
@@ -114,22 +132,31 @@ function ymdAt(utc: number): Ymd {
  *  reads nothing but constants. FROZEN because the value is now SHARED - every caller in this file
  *  reads fields off it and none mutates, and freezing is what makes that a guarantee rather than a
  *  habit for the next reader. The map is bounded by the weeks a session actually asks about
- *  (a career is ~700; a bench sweep re-asks the same ones), so it does not grow with time. */
-const WEEK_START_MEMO = new Map<number, Ymd>()
+ *  (a career is ~700; a bench sweep re-asks the same ones), so it does not grow with time.
+ *
+ *  ⭐ S1 (06.10): TWO LEVELS NOW – `startYear` first, then the week – so a 2048 career and a 2031 one in the same
+ *  process (a test, a bench) can never read each other's rows. A pure function of two integers, so the memo
+ *  still cannot be wrong. */
+const WEEK_START_MEMO = new Map<number, Map<number, Ymd>>()
 
 /** First day (Monday) of the given career week, as {month, day, year}. */
-function weekStart(week: number): Ymd {
+function weekStart(week: number, startYear: number): Ymd {
   const key = Math.floor(week)
-  const hit = WEEK_START_MEMO.get(key)
+  let memo = WEEK_START_MEMO.get(startYear)
+  if (memo === undefined) {
+    memo = new Map<number, Ymd>()
+    WEEK_START_MEMO.set(startYear, memo)
+  }
+  const hit = memo.get(key)
   if (hit !== undefined) return hit
-  const value = Object.freeze(ymdAt(weekStartUtc(key)))
-  WEEK_START_MEMO.set(key, value)
+  const value = Object.freeze(ymdAt(weekStartUtc(key, startYear)))
+  memo.set(key, value)
   return value
 }
 
 /** Last day (Sunday) of the given career week, as {month, day, year}. */
-function weekEnd(week: number): Ymd {
-  return ymdAt(weekStartUtc(week) + 6 * MS_PER_DAY)
+function weekEnd(week: number, startYear: number): Ymd {
+  return ymdAt(weekStartUtc(week, startYear) + 6 * MS_PER_DAY)
 }
 
 /** THE CALENDAR MONTH the week's Monday falls in, 1-12.
@@ -144,8 +171,8 @@ function weekEnd(week: number): Ymd {
  *  January - it used to be true of the early seasons and to walk off with the drift. What did NOT become
  *  a guarantee is any later offset: offset 34, the school-year turn, still lands in August most seasons
  *  (docs/specs/season-anchor.md §3d). A season-week offset is not a month. */
-export function weekMonth(week: number): number {
-  return weekStart(week).month + 1
+export function weekMonth(week: number, startYear: number = DEFAULT_START_YEAR): number {
+  return weekStart(week, startYear).month + 1
 }
 
 /** THE DAY OF THE MONTH the week's Monday falls on, 1-31 – the third of the three numbers that make
@@ -162,8 +189,8 @@ export function weekMonth(week: number): number {
  *  between every formatter in this file; handing it out would make the module's public surface a
  *  struct that callers could come to depend on the layout of. Three scalar readers compose into a
  *  date wherever one is genuinely needed, and nowhere else has needed one in eleven waves. */
-export function weekStartDay(week: number): number {
-  return weekStart(week).day
+export function weekStartDay(week: number, startYear: number = DEFAULT_START_YEAR): number {
+  return weekStart(week, startYear).day
 }
 
 /** Month names in full, for the ONE label that is about a person rather than about a week. */
@@ -199,7 +226,11 @@ export function birthDateLabel(birthMonth: number, birthDay: number): string {
  *  ⚠ FEBRUARY IS 28, NOT 29, AND THAT IS PRINCIPLED RATHER THAN LAZY. Her birth year is the band's year -
  *  2017 for a career opening in 2031 - which is not a leap year, so 29 February is not a date she can have
  *  been born on. Offering it would mean either a girl with a birthday every four years or a silent clamp,
- *  and both are worse than not offering it. */
+ *  and both are worse than not offering it.
+ *
+ *  ⭐ S1 (06.10), A DATED NOTE AND NOT A CHANGE: the band's year is `startYear - 14`, so a 2048 career's is
+ *  2034 – not a leap year either, and 28 stands. A start year whose band year IS a leap year (2046 -> 2032)
+ *  leaves 29 February undated here, which is still honest: the picker never offers it. */
 export function daysInBirthMonth(month: number): number {
   const m = Math.max(1, Math.min(12, Math.round(month)))
   return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]
@@ -228,14 +259,14 @@ export function daysInBirthMonth(month: number): number {
  *  compares against the current week and already treats "no birthday this year" as a real answer, for
  *  the reason above. docs/specs/season-anchor.md §3e; whether she should be given it early is a policy
  *  question and the owner's. */
-export function weekOfDate(month: number, day: number, year: number): number | null {
+export function weekOfDate(month: number, day: number, year: number, startYear: number = DEFAULT_START_YEAR): number | null {
   const target = Date.UTC(year, Math.max(1, Math.min(12, Math.round(month))) - 1, Math.max(1, day))
   if (!Number.isFinite(target)) return null
-  const seasonIndex = year - EPOCH_YEAR
+  const seasonIndex = year - startYear
   // A date in `year` sits either inside that year's own season or in the December tail of the season
   // before it (whose offset-51 Monday is always in December). Two candidates, both verified.
   for (const s of [seasonIndex, seasonIndex - 1]) {
-    const offset = Math.floor((target - firstMondayUtc(EPOCH_YEAR + s)) / (7 * MS_PER_DAY))
+    const offset = Math.floor((target - firstMondayUtc(startYear + s)) / (7 * MS_PER_DAY))
     if (offset >= 0 && offset < WEEKS_IN_SEASON) return s * WEEKS_IN_SEASON + offset
   }
   return null
@@ -263,8 +294,8 @@ export function weekOfDate(month: number, day: number, year: number): number | n
  *  January (a southern-hemisphere calendar, a split year) would part them again, and every call site
  *  that had quietly started meaning "season" would break at once. `tests/round13-nav.test.ts` still
  *  refuses `weekYear(` in the trophy cabinet for exactly this reason. */
-export function weekYear(week: number): number {
-  return weekStart(week).year
+export function weekYear(week: number, startYear: number = DEFAULT_START_YEAR): number {
+  return weekStart(week, startYear).year
 }
 
 // --- R11-6: the ONE week label ------------------------------------------------------------
@@ -308,8 +339,8 @@ export function weekYear(week: number): number {
  *  arithmetic to be right. Reading a season's year off a week's date would be correct by coincidence.
  *
  *  Total and strictly increasing by construction – two different seasons can never print alike. */
-export function seasonYear(seasonIndex: number): number {
-  return EPOCH_YEAR + seasonIndex
+export function seasonYear(seasonIndex: number, startYear: number = DEFAULT_START_YEAR): number {
+  return startYear + seasonIndex
 }
 
 /** The two facts EVERY week label is built from: the in-season week (1..52) and the SEASON year.
@@ -318,16 +349,16 @@ export function seasonYear(seasonIndex: number): number {
  *  in full ("W27 2033"). Both labels now read this one derivation instead of each running the
  *  modulo/`seasonYear` pair themselves – the short and the long form cannot name different weeks.
  *  Total: defined for every integer, including the negative weeks entry deadlines can reach. */
-function weekParts(week: number): { inSeason: number; year: number } {
+function weekParts(week: number, startYear: number): { inSeason: number; year: number } {
   const w = Math.floor(week)
   const offset = ((w % WEEKS_IN_SEASON) + WEEKS_IN_SEASON) % WEEKS_IN_SEASON
-  return { inSeason: offset + 1, year: seasonYear(Math.floor(w / WEEKS_IN_SEASON)) }
+  return { inSeason: offset + 1, year: seasonYear(Math.floor(w / WEEKS_IN_SEASON), startYear) }
 }
 
 /** "W14 '31" – an absolute career week as the in-season week (1..52) + its season year.
  *  Total: defined for every integer, including the negative weeks entry deadlines can reach. */
-export function weekLabel(week: number): string {
-  const { inSeason, year } = weekParts(week)
+export function weekLabel(week: number, startYear: number = DEFAULT_START_YEAR): string {
+  const { inSeason, year } = weekParts(week, startYear)
   return `W${inSeason} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
 }
 
@@ -341,8 +372,8 @@ export function weekLabel(week: number): string {
  *  a component spells a date itself, two components spell it two ways. ⚠ AND IT NAMES THE MONTH THE
  *  WEEK'S MONDAY FALLS IN – the same `weekMonth`/`weekYear` pair the chart's own buckets are cut on,
  *  so a point and its label can never name different months. */
-export function monthLabel(week: number): string {
-  const d = weekStart(week)
+export function monthLabel(week: number, startYear: number = DEFAULT_START_YEAR): string {
+  const d = weekStart(week, startYear)
   return `${MONTHS[d.month]} '${String(((d.year % 100) + 100) % 100).padStart(2, '0')}`
 }
 
@@ -370,9 +401,9 @@ export function weeksLeftBracket(untilWeek: number, atWeek: number): string {
  *  `weekDateLine`), where repeating it reads as a stutter – and it names both months every time
  *  rather than contracting to "Jun 3–9", because the redesigned header is a fixed-width row and a
  *  span that changes shape mid-month made the line jump. */
-export function weekSpan(week: number): string {
-  const start = weekStart(week)
-  const end = weekEnd(week)
+export function weekSpan(week: number, startYear: number = DEFAULT_START_YEAR): string {
+  const start = weekStart(week, startYear)
+  const end = weekEnd(week, startYear)
   return `${MONTHS[start.month]} ${start.day} – ${MONTHS[end.month]} ${end.day}`
 }
 
@@ -383,8 +414,8 @@ export function weekSpan(week: number): string {
  *  does: `weekStart` is the one place a week's days are counted from, so the heads over the grid and
  *  the span printed in the header above them cannot disagree about which Monday this is. A month
  *  boundary needs no special case - the numbers come from real dates, one day apart. */
-export function weekDayNumbers(week: number): number[] {
-  return [0, 1, 2, 3, 4, 5, 6].map((d) => ymdAt(weekStartUtc(week) + d * MS_PER_DAY).day)
+export function weekDayNumbers(week: number, startYear: number = DEFAULT_START_YEAR): number[] {
+  return [0, 1, 2, 3, 4, 5, 6].map((d) => ymdAt(weekStartUtc(week, startYear) + d * MS_PER_DAY).day)
 }
 
 /** "W27 2033" – the FIRST half of the date line below, on its own.
@@ -401,8 +432,8 @@ export function weekDayNumbers(week: number): number[] {
  *  different place: "W27 '33", two digits, for rows where a full year beside a date range reads as a
  *  typo. Using that one here would have changed what he reads, which invariant 4 forbids.
  *  `tests/dates.test.ts` pins the join, so the two can never drift apart. */
-export function weekYearLabel(week: number): string {
-  const { inSeason, year } = weekParts(week)
+export function weekYearLabel(week: number, startYear: number = DEFAULT_START_YEAR): string {
+  const { inSeason, year } = weekParts(week, startYear)
   return `W${inSeason} ${year}`
 }
 
@@ -412,8 +443,8 @@ export function weekYearLabel(week: number): string {
  *  game speaks in) with the year written out IN FULL – the header has room the 30px status pill
  *  does not, and "'33" beside a real date range reads as a typo – then the week's actual calendar
  *  days. Every surface that wants this line calls this function; nothing re-composes it. */
-export function weekDateLine(week: number): string {
-  return `${weekYearLabel(week)} · ${weekSpan(week)}`
+export function weekDateLine(week: number, startYear: number = DEFAULT_START_YEAR): string {
+  return `${weekYearLabel(week, startYear)} · ${weekSpan(week, startYear)}`
 }
 
 /** "Jan 6–12, 2031" – a human date range for one career week (Monday..Sunday).
@@ -421,9 +452,9 @@ export function weekDateLine(week: number): string {
  *  same month:      "Jan 6–12, 2031"
  *  crosses months:  "Jan 27 – Feb 2, 2031"
  *  crosses years:   "Dec 29, 2031 – Jan 4, 2032" */
-export function weekRange(week: number): string {
-  const start = weekStart(week)
-  const end = weekEnd(week)
+export function weekRange(week: number, startYear: number = DEFAULT_START_YEAR): string {
+  const start = weekStart(week, startYear)
+  const end = weekEnd(week, startYear)
   if (start.year !== end.year) {
     return `${MONTHS[start.month]} ${start.day}, ${start.year} – ${MONTHS[end.month]} ${end.day}, ${end.year}`
   }

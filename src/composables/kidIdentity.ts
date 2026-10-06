@@ -174,9 +174,9 @@ export function useKidIdentity(): KidIdentity {
     headerAvatarUrl,
     // OWNER'S RULING over the export, which prints a plain calendar date: our week label with the
     // year in full, then the week's real days. `shared/dates.ts` owns both halves and the join.
-    dateLine: computed(() => weekDateLine(week.value)),
-    weekLabelLine: computed(() => weekYearLabel(week.value)),
-    weekRangeLine: computed(() => weekSpan(week.value)),
+    dateLine: computed(() => weekDateLine(week.value, game.snapshot?.startYear)),
+    weekLabelLine: computed(() => weekYearLabel(week.value, game.snapshot?.startYear)),
+    weekRangeLine: computed(() => weekSpan(week.value, game.snapshot?.startYear)),
     chipTrack,
     ladderLabel,
     rankText,

@@ -735,7 +735,7 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
     !inCollege(world) &&
     world.season.some(
       (e) =>
-        weekMonth(e.week) === MARCH &&
+        weekMonth(e.week, world.startYear) === MARCH &&
         e.week > world.week &&
         !world.entries.includes(e.id) &&
         world.week < e.deadlineWeek &&
@@ -1793,8 +1793,8 @@ export function lifeStageOf(world: WorldState): DiaryLifeStage {
  */
 function lifeStageAt(world: WorldState, week: number): DiaryLifeStage {
   return diaryLifeStageFor(
-    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay),
-    schoolIsOver(week, world.profile.birthMonth),
+    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay, world.startYear),
+    schoolIsOver(week, world.profile.birthMonth, world.startYear),
     world.college !== null && week >= world.college.fromWeek && week < world.college.untilWeek,
   )
 }
@@ -2677,7 +2677,7 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
  *  → docs/notes/life-beats/hub.md#kidagenow--her-age-this-week-fractional
  */
 export function kidAgeNow(world: WorldState): number {
-  return kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  return kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
 }
 
 /** WHO SHE IS, with `accrueSpirit`'s own courtesy for probe worlds hand-built in tests and

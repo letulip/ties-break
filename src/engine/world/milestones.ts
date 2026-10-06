@@ -68,7 +68,7 @@ export function captureMilestone(world: WorldState, m: Milestone): void {
  *  ZERO DRAWS on any stream: a comparison of two integers and two idempotent writes. The frozen MAIN
  *  capture (41550 / e6b0c709) cannot see it. */
 export function markSchoolEnd(world: WorldState): void {
-  if (world.week !== schoolEndWeek(world.profile.birthMonth)) return
+  if (world.week !== schoolEndWeek(world.profile.birthMonth, world.startYear)) return
   fireMilestone(world, 'school', 'Last bell. From Monday the mornings are hers.')
   captureMilestone(world, { type: 'school', week: world.week })
 }
@@ -395,7 +395,7 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // should be keyed on whatever the calendar underneath is doing. The paragraph above is now history
   // rather than a live hazard; it stays because it is why these two lines are two lines.
   const seasonIndex = seasonIndexOf(world.week)
-  const displayYear = seasonYear(seasonIndex)
+  const displayYear = seasonYear(seasonIndex, world.startYear)
   const yearStart = seasonStartWeek(world.week)
   const wrapWeek = world.week
 
@@ -596,7 +596,7 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   addEvent(world, {
     week: world.week,
     type: 'info',
-    text: schoolIsOver(world.week, world.profile.birthMonth)
+    text: schoolIsOver(world.week, world.profile.birthMonth, world.startYear)
       ? 'Off-season: rest, family time, and the block where next year gets built.'
       : 'Off-season: rest, school, family time.',
   })
@@ -750,7 +750,7 @@ export function seasonWrapDue(world: WorldState): number | null {
   const summary = world.lastSeasonSummary
   if (summary === null) return null
   const seasonIndex = seasonIndexOf(world.week)
-  return summary.seasonYear === seasonYear(seasonIndex) ? seasonIndex : null
+  return summary.seasonYear === seasonYear(seasonIndex, world.startYear) ? seasonIndex : null
 }
 
 /** A zeroed entry ledger, opened at a stated week. Three callers, exactly as `emptySeasonRecord` has:
