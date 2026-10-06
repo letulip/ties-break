@@ -46,6 +46,7 @@ last-reviewed: 2026-10-06
 | [Batch 10C – Small-talk situations](ru-small-talk-situations-c-2026-10.md) | Final generated situation rows, starting at R30 | R30–R44 drafted; 51/51 situation rows complete |
 | [Batch 10D – Family life beats](ru-life-beats-family-2026-10.md) | Her own key, engagement, pregnancy, bereavement and spouse's view | five typed copy modules drafted |
 | [Batch 10E – Relationships and parting](ru-life-beats-relationships-2026-10.md) | Someone new, relationship ending and marriage ending | `metCopy`, `endedCopy` and `divorcedCopy` drafted |
+| [Batch 10F – Counsel](ru-life-beats-counsel-2026-10.md) | Coach and psychologist lines after she says she wants to stop | both reachable counsel pools and headings drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
