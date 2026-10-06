@@ -19,33 +19,21 @@ its body-region lexicon is reused here. All Russian wording remains `DRAFT`.
 | masseur shortens rehab | `Rehab ahead of schedule – the masseur bought a week back.` | `Восстановление идёт быстрее: благодаря массажу срок сократился на неделю.` |
 | recovered early | `Back on court – cleared to play, ahead of schedule.` | `Она вернулась на корт: допуск к игре получен раньше ожидаемого срока.` |
 | recovered on ordinary schedule | `Back on court – cleared to play.` | `Она вернулась на корт: допуск к игре получен.` |
-| onset bill | `Medical – scans and treatment` | `Медицинская помощь — обследование и лечение` |
+| onset bill | `Medical – scans and treatment` | `Медицина – обследование и лечение` (RU-05 §20.5) |
 | ongoing bill | `Physio / recovery session` | `Физиотерапия — сеанс восстановления` |
 
 The early-return receipt means exactly one week is saved by the masseur's service cadence, not
 that a doctor has changed the clinical diagnosis. `weeksRemaining` stays the source number;
 RU-05 §20.3 separately explains the estimated recovery time shown in the injury stop.
 
-## Six onset paths
+## Six onset paths – owned by RU-05
 
-`{diagnosis}` is the localized combination of body region and descriptor from RU-05 §20.1,
-**not** the persisted English `world.injury.kind`. `{weeksOut}` is an approximate duration in
-Russian (`около 1 недели`, `около 2 недель`, `около 5 недель`). The source has three mid-match
-retirement paths and three off-court paths:
-
-| Moment / severity | English source | Russian draft |
-| --- | --- | --- |
-| match retirement, severe | `She stopped, and this time it is serious: {kind} – out ~{wks}. The dream takes a hit.` | `Ей пришлось остановить матч. На этот раз травма серьёзная: {diagnosis}. Вне корта — {weeksOut}. Это удар по её мечте.` |
-| match retirement, trained through knock | `She had to stop: {kind} – out ~{wks}. The knock we trained through, in front of everybody.` | `Ей пришлось остановить матч: {diagnosis}. Вне корта — {weeksOut}. То самое место, с болью в котором мы решили продолжить тренировки.` |
-| match retirement, ordinary | `She had to stop: {kind} – out ~{wks}.` | `Ей пришлось остановить матч: {diagnosis}. Вне корта — {weeksOut}.` |
-| off-court, severe | `Bad news from the clinic: {kind} – out ~{wks}. The dream takes a hit.` | `Из клиники пришли тяжёлые новости: {diagnosis}. Вне корта — {weeksOut}. Это удар по её мечте.` |
-| off-court, trained through knock | `Injury: {kind} – out ~{wks}. The knock we trained through.` | `Травма: {diagnosis}. Вне корта — {weeksOut}. То самое место, с болью в котором мы решили продолжить тренировки.` |
-| off-court, ordinary | `Injury: {kind} – out ~{wks}.` | `Травма: {diagnosis}. Вне корта — {weeksOut}.` |
-
-The English severe line says *dream*; Russian keeps that stake, but does not announce a career
-ending. The `pushing` line is licensed by the recorded knock choice, not inferred from the injury
-itself. The two moments must not collapse into one generic injury template: a mid-match stop also
-has a retirement result in the tournament feed.
+RU-05 §20.5 already maps all six `injury.ts` onset branches: three mid-match retirement paths
+(severe, trained-through knock, ordinary) and three off-court paths with the same split. Use
+those exact drafts here; do not create a second wording table. RU-05 §20.1 also owns the
+localized combination of body region and descriptor. The persisted English
+`world.injury.kind` must never be displayed raw in Russian. A mid-match onset also has a
+retirement result in the tournament feed; the two moments must not collapse into one template.
 
 ## Tournament arrival and warning
 
@@ -65,7 +53,7 @@ source does. Dynamic `tier` labels need a localized display form and nominative 
 
 An old save may contain `kind` as English `<region> <descriptor>` and these English feed rows.
 Implement a semantic classifier or migration for known templates, with a regression fixture for
-every onset path. Translating only future `addEvent` strings would leave existing careers visibly
+every onset path in RU-05 §20.5. Translating only future `addEvent` strings would leave existing careers visibly
 bilingual. Event type, week, expense category `physio`, amount in integer cents and match-retirement
 state must remain unchanged. RU-05 already owns the knock choice/history rows; do not duplicate
 their catalogue with competing phrasing.

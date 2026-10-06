@@ -91,12 +91,21 @@ does not claim she will keep playing tennis after the career ends.
 | retirement offer deferred | `One more year, she said. Same as last time.` | `«Ещё один год», — сказала она. Как и в прошлый раз.` |
 | after child, she returns | `She has decided to go back. From this week she can enter tournaments again.` | `Она решила вернуться. С этой недели снова может подавать заявки на турниры.` |
 | school-end milestone | `School is over. The junior ladder closes at nineteen, and the next one has to be paid for.` | `Школа закончилась. Юниорский тур закроется для неё в девятнадцать; следующий уровень придётся оплачивать семье.` |
+| natural retirement offer, first ask | `Another off-season, and the same question: is there another year in this?` | `Снова межсезонье и тот же вопрос: будет ли ещё один год?` |
+| plateau retirement offer | `She said it out loud in the car – if she cannot reach the top, she would rather go.` | `Она сказала это в машине: если вершины не достичь, лучше уйти.` |
+| final offer, no prior year refrain | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. This season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: этот сезон был последним.` |
+| final offer, prior refrains | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. She has said one more year {count} time/times, and this season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: «Ещё один год» прозвучало уже {count} {раз/раза/раз}, но этот сезон был последним.` |
 
 The reserved place is **not departure**; the final junior season still runs before the academic
 year. The professional row does not promise every entry pays a cheque. The return row grants the
 right to enter again, not a guaranteed ranking or match. Error paths such as
 `LAST_OFFER_NOT_A_QUESTION` need the same localization boundary as `StoreError`; they are not
 normal beat dialogue.
+
+`lastWordLine` is shared by the final offer's feed row and `RetirementDialog.vue`; runtime
+localization must not fork those into two independently edited sentences. The final line is
+her statement, never an invitation for the parent to overrule it. The plateau offer is a
+spoken position, not a diagnosis that she objectively lacks talent.
 
 ## Not-currently-rendered copy
 
