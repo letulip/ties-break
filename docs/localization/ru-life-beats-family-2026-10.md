@@ -79,3 +79,26 @@ keeps the parent-child distance without judging her grief.
 
 The quiet `arrangements` stays deliberately unspecified; the daughter does not name who died or
 what exactly she must arrange.
+
+## 5. A spouse's view – `spouseViewCopy.ts`
+
+The simulation records that she married, but not her spouse's gender. The English source uses
+`the one she married` to avoid inventing it. Russian has no equally natural short noun phrase:
+`муж`, `жена` and even a singular past-tense first-person verb would assert a gender. The drafts
+therefore place the speaker in **their household** (`у них дома`) and let the first-person quote
+identify this as that person's view. This is not an anonymous remark by a stranger. The UI must
+keep the heading/card next to the quote so the speaker remains legible.
+
+| occasion/surface | English source | Russian draft |
+| --- | --- | --- |
+| `distant-swing` | `The one she married stayed back after the plates were cleared. "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."` | `У них дома убрали тарелки, и разговор вернулся к поездке. «Следующий турнир на другом конце света. Я знаю, какая у нас жизнь. Но иногда хочется, чтобы она была немного ближе».` |
+| `road-stretch` | `The one she married said it plainly, on a quiet evening. "The family has been on the road for weeks now. The house does not really get lived in between the trips."` | `Тихим вечером у них дома сказали без обиняков: «Мы неделями в разъездах. Между поездками дома толком никто не живёт».` |
+| `no-vacation` | `The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` | `Под конец сезона у них дома заговорили о календаре: «Целый сезон прошёл, а ни одной недели для нас не нашлось. В следующем году хочется отметить хотя бы одну заранее, пока теннис не занял всё».` |
+| `money` | `The one she married asked it without an edge. "That was a large bill, and the season sits in her account now. I am not counting anybody's money. I am asking how this house plans."` | `У них дома спросили без упрёка: «Счёт вышел большой. Я не считаю чужие деньги. Просто хочу понять, как мы будем планировать расходы».` |
+| `SPOUSE_VIEW_HEADING` | `The one she married has something to say about this season` | `У них дома хотят поговорить об этом сезоне` |
+| `SPOUSE_VIEW_CARD` | `The one she married wants a word.` | `У них дома хотят поговорить.` |
+
+`money` deliberately drops the English claim that the season now sits in her account. The gate
+checks a large outgoing item and her greater account balance; it does **not** establish a formal
+transfer of family finances. Keeping that claim in Russian would turn a vague source line into a
+false rule. The question about planning preserves the actual tension.
