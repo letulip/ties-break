@@ -40,12 +40,12 @@ checked state; `ВКЛ/ВЫКЛ` must not become the only accessible indication.
 | --- | --- | --- |
 | section | `Interface tour` | `Знакомство с интерфейсом` |
 | tour row | `The coach marks for new players` | `Подсказки тренера для новых игроков` |
-| tour hint | `Walks the header, the cards and every tab, one tap at a time` | `Покажет верхнюю панель, карточки и каждую вкладку — шаг за шагом.` |
+| tour hint | `Walks the header, the cards and every tab, one tap at a time` | `Покажет верхнюю панель, карточки и каждую вкладку – шаг за шагом.` |
 | tour action | `Show the tour` | `Показать подсказки` |
 | section | `Calendar animation` | `Анимация календаря` |
 | switch | `Cross out the days` | `Зачёркивать прошедшие дни` |
 | off hint | `Off: the week plays straight through, as before` | `Если выключить, неделя будет проходить сразу, как раньше.` |
-| reduced-motion hint | `Your device asks for reduced motion – the sweep stays off` | `На устройстве включено уменьшение движения — анимация зачёркивания отключена.` |
+| reduced-motion hint | `Your device asks for reduced motion – the sweep stays off` | `На устройстве включено уменьшение движения – анимация зачёркивания отключена.` |
 | pace label | `Pace` | `Темп` |
 | brisk pace | `Brisk 3s` | `Быстро · 3 с` |
 | gentle pace | `Gentle 5s` | `Спокойно · 5 с` |
@@ -66,7 +66,7 @@ changing a control inside one match does not write back here.
 | speed hint | `How fast a match plays when it opens` | `С какой скоростью матч начнёт воспроизводиться` |
 | speed pills | `1×` / `2×` / `4×` | `1×` / `2×` / `4×` |
 | amount label | `How much to watch` | `Что показывать` |
-| amount hint | `Full: every point · Key: key points only · Skip: straight to the result` | `Все — каждый розыгрыш · Ключевые — только важные розыгрыши · Итог — сразу результат` |
+| amount hint | `Full: every point · Key: key points only · Skip: straight to the result` | `Все – каждый розыгрыш · Ключевые – только важные розыгрыши · Итог – сразу результат` |
 | amount pills | `Full` / `Key` / `Skip` | `Все` / `Ключевые` / `Итог` |
 | pill titles | `Every point` / `Key points only` / `Skip to the result` | `Все розыгрыши` / `Только ключевые розыгрыши` / `Сразу к результату` (RU-08) |
 

@@ -37,8 +37,8 @@ buttons recommending a matching response.
 
 | voice/register/read | English source | Russian draft |
 | --- | --- | --- |
-| sunny/told-now/space | `It is over. Being alright comes first with her, and the asking after – she wants the room to herself` | `Всё закончилось. Она обычно сначала говорит, что справится, а потом уже просит места для себя — сейчас ей хочется побыть одной` |
-| sunny/told-now/company | `It is over. Being alright comes first with her, and the asking after – she does not want to be on her own with it` | `Всё закончилось. Она обычно сначала говорит, что справится, а потом уже просит о близости — сейчас ей не хочется быть с этим одной` |
+| sunny/told-now/space | `It is over. Being alright comes first with her, and the asking after – she wants the room to herself` | `Всё закончилось. Она обычно сначала говорит, что справится, а потом уже просит места для себя – сейчас ей хочется побыть одной` |
+| sunny/told-now/company | `It is over. Being alright comes first with her, and the asking after – she does not want to be on her own with it` | `Всё закончилось. Она обычно сначала говорит, что справится, а потом уже просит о близости – сейчас ей не хочется быть с этим одной` |
 | sunny/told-late/space | `There was someone and it is already over. With her the alright comes first – she wants the room to herself` | `В её жизни кое-кто был, но теперь всё закончилось. Её привычное «я справлюсь» не отменяет того, что сейчас ей хочется побыть одной` |
 | sunny/told-late/company | `There was someone and it is already over. With her the alright comes first – she does not want to be on her own with it` | `В её жизни кое-кто был, но теперь всё закончилось. Её привычное «я справлюсь» не отменяет того, что сейчас ей не хочется быть с этим одной` |
 | fiery/told-now/space | `It is over. A subject shut fast is shut with her – she wants the room to herself` | `Всё закончилось. Если она закрыла тему, то закрыла: сейчас ей хочется побыть одной` |

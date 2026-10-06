@@ -17,8 +17,8 @@ need to be true, brief and varied where the source is varied. Every line below i
 | Source | English source | Russian draft |
 | --- | --- | --- |
 | parent income | `Parents' contribution` | `Вклад семьи` |
-| college coaching not billed | `At college – the programme coaches her, not us` | `Университетская программа занимается её подготовкой — семья не платит за тренера` |
-| family vacation coaching not billed | `A week away as a family – no coaching billed` | `Семейная неделя отдыха — тренировки не оплачиваются` |
+| college coaching not billed | `At college – the programme coaches her, not us` | `Университетская программа занимается её подготовкой – семья не платит за тренера` |
+| family vacation coaching not billed | `A week away as a family – no coaching billed` | `Семейная неделя отдыха – тренировки не оплачиваются` |
 | local sponsor cameo | `A local sponsor chipped in!` | `Местный спонсор помог с расходами.` |
 | delivered asset upkeep | `Upkeep: {item.label}` | `Содержание актива: {item.label}` |
 | covered gear suffix | `{gearFlavor} – on {brand}` | `{localizedGearFlavor}; оплачено брендом «{brand}»` |
@@ -77,7 +77,7 @@ and one localized time/price clause.
 | middle | `Аренда корта` | `Корты академии` | `Тренировочный центр` | `Главные корты` |
 | wealthy | `Корты академии` | `Тренировочный центр` | `Главные корты` | `Центральный корт` |
 
-Full row shape: `{venue} — {hours} ч, {clause}`. Keep the numeric hours and one decimal only for
+Full row shape: `{venue} – {hours} ч, {clause}`. Keep the numeric hours and one decimal only for
 non-whole custom splits. `Главные корты` is a venue tier, not a tournament stage; this is the
 closest neutral Russian for *show courts*. The venue label must track the actual court price rung.
 
@@ -102,10 +102,10 @@ its quality.
 
 | Gear | Working | Middle | Wealthy |
 | --- | --- | --- | --- |
-| racket | `Новая ракетка — подержанная, по объявлению` | `Новая ракетка — модель из магазина` | `Новая ракетка — изготовлена для игрока` |
-| restringing | `Перетяжка — недорогая синтетика` | `Перетяжка — мультифиламентная струна` | `Перетяжка — натуральная струна` |
-| shoes | `Новая обувь — прошлогодняя модель` | `Новая обувь — модель для тренировок и матчей` | `Новая обувь — подогнана по ноге` |
-| apparel | `Обновление формы — базовый клубный комплект` | `Обновление формы — комплект бренда` | `Обновление формы — дизайнерский комплект` |
+| racket | `Новая ракетка – подержанная, по объявлению` | `Новая ракетка – модель из магазина` | `Новая ракетка – изготовлена для игрока` |
+| restringing | `Перетяжка – недорогая синтетика` | `Перетяжка – мультифиламентная струна` | `Перетяжка – натуральная струна` |
+| shoes | `Новая обувь – прошлогодняя модель` | `Новая обувь – модель для тренировок и матчей` | `Новая обувь – подогнана по ноге` |
+| apparel | `Обновление формы – базовый клубный комплект` | `Обновление формы – комплект бренда` | `Обновление формы – дизайнерский комплект` |
 
 The source strings, in table order, are `New racket – used, off the classifieds` /
 `New racket – current retail model` / `New racket – custom pro stock`; `Restring – budget

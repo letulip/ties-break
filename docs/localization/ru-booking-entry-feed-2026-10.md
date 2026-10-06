@@ -19,12 +19,12 @@ The additional lines below are `DRAFT` and must also render in old saved histori
 | source / reason | English source | Russian draft |
 | --- | --- | --- |
 | entry fee | `Entry fee: {tier} ({week})` | `Заявочный взнос: турнир «{tier}» ({неделя})` |
-| entry recorded | `Entered {tier} – {week} ({surface})` | `Заявка на турнир «{tier}» — {неделя} ({покрытие})` |
+| entry recorded | `Entered {tier} – {week} ({surface})` | `Заявка на турнир «{tier}» – {неделя} ({покрытие})` |
 | entry refunded | `Entry refunded: {tier}` | `Заявочный взнос возвращён: турнир «{tier}»` |
-| parent withdrawal | `Withdrew from {tier} – {week}` | `Мы сняли её заявку на турнир «{tier}» — {неделя}` |
-| injury release | `Taken out of {tier} – {week}, she is not fit for that week.` | `Заявку на турнир «{tier}» сняли — {неделя}; к тому времени она не будет готова играть.` |
-| college release | `Released from {tier} – {week}, she is taking the scholarship.` | `Заявку на турнир «{tier}» сняли — {неделя}: она уезжает учиться в университет.` |
-| late cancellation | `Cancelled {tier} – {week}, entry fee forfeited.` | `Заявку на турнир «{tier}» отменили — {неделя}; заявочный взнос не вернут.` |
+| parent withdrawal | `Withdrew from {tier} – {week}` | `Мы сняли её заявку на турнир «{tier}» – {неделя}` |
+| injury release | `Taken out of {tier} – {week}, she is not fit for that week.` | `Заявку на турнир «{tier}» сняли – {неделя}; к тому времени она не будет готова играть.` |
+| college release | `Released from {tier} – {week}, she is taking the scholarship.` | `Заявку на турнир «{tier}» сняли – {неделя}: она уезжает учиться в университет.` |
+| late cancellation | `Cancelled {tier} – {week}, entry fee forfeited.` | `Заявку на турнир «{tier}» отменили – {неделя}; заявочный взнос не вернут.` |
 
 `RELEASE_LINE_PREFIX` currently serves another component that detects the injury row by its
 English prefix; the technical localization cannot simply translate those three prefixes in
@@ -37,14 +37,14 @@ does forfeit the fee. Display names and surfaces must use RU-04 terminology.
 
 | source / case | English source | Russian draft |
 | --- | --- | --- |
-| court refunded | `Court rental refunded – {week}` | `Возврат платы за аренду корта — {неделя}` |
-| practice called off: injury | `Practice match called off – {week} (she is hurt)` | `Тренировочный матч отменён — {неделя} (из-за травмы)` |
-| practice called off: medical | `Practice match called off – {week} (not cleared to play)` | `Тренировочный матч отменён — {неделя} (нет допуска к игре)` |
-| player cancelled practice | `Cancelled the practice match – {week}` | `Мы отменили тренировочный матч — {неделя}` |
+| court refunded | `Court rental refunded – {week}` | `Возврат платы за аренду корта – {неделя}` |
+| practice called off: injury | `Practice match called off – {week} (she is hurt)` | `Тренировочный матч отменён – {неделя} (из-за травмы)` |
+| practice called off: medical | `Practice match called off – {week} (not cleared to play)` | `Тренировочный матч отменён – {неделя} (нет допуска к игре)` |
+| player cancelled practice | `Cancelled the practice match – {week}` | `Мы отменили тренировочный матч – {неделя}` |
 | vacation refunded | `Vacation refunded: {label}` | `Возврат стоимости отпуска: {название}` |
-| practice cost, with coach | `Court rental + coach – practice match {week}` | `Аренда корта и работа тренера — тренировочный матч {неделя}` |
-| practice cost, no coach | `Court rental – practice match {week}` | `Аренда корта — тренировочный матч {неделя}` |
-| practice booked | `Practice match booked – {week}` | `Тренировочный матч назначен — {неделя}` |
+| practice cost, with coach | `Court rental + coach – practice match {week}` | `Аренда корта и работа тренера – тренировочный матч {неделя}` |
+| practice cost, no coach | `Court rental – practice match {week}` | `Аренда корта – тренировочный матч {неделя}` |
+| practice booked | `Practice match booked – {week}` | `Тренировочный матч назначен – {неделя}` |
 
 The `refundPractice` money row and cancellation row are separate events; translating both as
 `матч отменён` would hide the refunded court money. The third cancellation says `нами` only
@@ -58,10 +58,10 @@ The friendly awards no ranking points even when the match has a winner.
 
 | result | English source | Russian draft |
 | --- | --- | --- |
-| ordinary win | `Practice match: {kid} beat {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} — {соперница}, {счёт}; победа нашей героини. Рейтинговых очков нет.` |
-| ordinary loss | `Practice match: {kid} lost to {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} — {соперница}, {счёт}; поражение нашей героини. Рейтинговых очков нет.` |
-| daughter retired | `Practice match: {kid} had to stop against {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} — {соперница}, {счёт}; наша героиня снялась из-за травмы. Рейтинговых очков нет.` |
-| opponent retired | `Practice match: {kid} was playing a retiring {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} — {соперница}, {счёт}; соперница снялась из-за травмы. Рейтинговых очков нет.` |
+| ordinary win | `Practice match: {kid} beat {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} – {соперница}, {счёт}; победа нашей героини. Рейтинговых очков нет.` |
+| ordinary loss | `Practice match: {kid} lost to {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} – {соперница}, {счёт}; поражение нашей героини. Рейтинговых очков нет.` |
+| daughter retired | `Practice match: {kid} had to stop against {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} – {соперница}, {счёт}; наша героиня снялась из-за травмы. Рейтинговых очков нет.` |
+| opponent retired | `Practice match: {kid} was playing a retiring {opponent} {score} – no ranking points` | `Тренировочный матч: {kid} – {соперница}, {счёт}; соперница снялась из-за травмы. Рейтинговых очков нет.` |
 
 The source uses the match record's `retiredId`, not a guessed score pattern. A friendly
 retirement triggers the same physical injury consequence as a tournament retirement, while a

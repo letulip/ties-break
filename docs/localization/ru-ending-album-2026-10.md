@@ -16,9 +16,9 @@ engine-authored `AlbumPage.{why,caption,fact}` and `ScrollSeason.rows`. Every Ru
 
 | Field / branch | English | Russian draft |
 | --- | --- | --- |
-| why | `Where it started – every album opens on the same page` | `С чего всё началось — первая страница любого альбома` |
+| why | `Where it started – every album opens on the same page` | `С чего всё началось – первая страница любого альбома` |
 | caption | `{age} years old, and we said yes` | `Ей было {age} {год/года/лет}, а мы сказали «да»` |
-| fact, first international entry exists | `Her first trip abroad came in {week}, at the {tier}` | `Первая поездка за границу — {week}, турнир «{tier}»` |
+| fact, first international entry exists | `Her first trip abroad came in {week}, at the {tier}` | `Первая поездка за границу – {week}, турнир «{tier}»` |
 | fact, no international entry | `{outlay} went out before anybody knew the answer` | `Семья потратила {outlay}, ещё не зная, чем всё обернётся` |
 
 This page is week zero, **not** a fabricated first tournament entry. `{age}` is her actual age
@@ -29,12 +29,12 @@ not money still held in assets.
 
 | Branch / field | English | Russian draft |
 | --- | --- | --- |
-| title why | `Her first title – the earliest one she ever won` | `Её первый титул — самый ранний в её истории` |
+| title why | `Her first title – the earliest one she ever won` | `Её первый титул – самый ранний в её истории` |
 | title caption | `We kept the draw sheet` | `Турнирную сетку мы сохранили` |
-| title fact | `{tier} – champion, {week}` | `Турнир «{tier}» — чемпионка, {week}` |
+| title fact | `{tier} – champion, {week}` | `Турнир «{tier}» – чемпионка, {week}` |
 | final why | `She never won one – this is the first final she reached` | `Титула не было; это её первый финал` |
 | final caption | `So close, and she knew it` | `Совсем рядом. Она это знала` |
-| final fact | `{tier} – {finish}, {week}` | `Турнир «{tier}» — {localizedFinish}, {week}` |
+| final fact | `{tier} – {finish}, {week}` | `Турнир «{tier}» – {localizedFinish}, {week}` |
 | empty why | `She never reached a final` | `Она ни разу не дошла до финала` |
 | empty caption | `The draw sheets, all of them` | `Все турнирные сетки` |
 
@@ -48,7 +48,7 @@ shared localized finish catalogue, never a raw English phrase.
 | --- | --- | --- |
 | prize why | `The first time the tennis paid her` | `Первый раз, когда теннис принёс ей деньги` |
 | prize caption | `The first one we did not pay for` | `Первый турнир, за который заплатили ей` |
-| prize fact | `{tier}, {week} – {careerPrizeTotal} in the end` | `Турнир «{tier}», {week}. Всего за карьеру — {careerPrizeTotal} призовых` |
+| prize fact | `{tier}, {week} – {careerPrizeTotal} in the end` | `Турнир «{tier}», {week}. Всего за карьеру – {careerPrizeTotal} призовых` |
 | empty why | `The first cheque – there was never one` | `Первого чека так и не было` |
 | empty caption | `No junior tournament has ever paid anybody` | `На юниорских турнирах призовых не платят` |
 
@@ -62,7 +62,7 @@ junior career without cheques was a failure.
 | --- | --- | --- |
 | highest title why | `The highest rung she ever won on` | `Самый высокий уровень, на котором она победила` |
 | highest title caption | `The best week of the lot` | `Лучшая неделя` |
-| highest title fact | `{tier} – champion, {week}` | `Турнир «{tier}» — чемпионка, {week}` |
+| highest title fact | `{tier} – champion, {week}` | `Турнир «{tier}» – чемпионка, {week}` |
 | no title, season close why | `She never won a title – this is the highest she ever stood` | `Титулов не было. Это её лучший итог сезона на высшем достигнутом уровне` |
 | no title, season close caption | `Number {rank}` | `Номер {rank}` |
 | no title, season close fact | `#{rank} at the close of {year}` | `№{rank} по итогам сезона {year}` |
@@ -79,7 +79,7 @@ claim a transient mid-season rank. `Номер {rank}` should be phone-checked a
 | --- | --- | --- |
 | longest injury why | `The one that took {weeks} weeks` | `Травма, которая забрала {weeks} {неделю/недели/недель}` |
 | longest injury caption | `We stopped counting the appointments` | `Мы перестали считать приёмы` |
-| longest injury fact | `{kind} – {week}, {weeks} weeks out` | `{localizedDiagnosis} — {week}; вне корта {weeks} {неделю/недели/недель}` |
+| longest injury fact | `{kind} – {week}, {weeks} weeks out` | `{localizedDiagnosis} – {week}; вне корта {weeks} {неделю/недели/недель}` |
 | rank fall why | `The season the table took {fall} places off her` | `Сезон, за который она потеряла {fall} {место/места/мест} в рейтинге` |
 | rank fall caption | `Nobody said much that winter` | `Той зимой мы говорили мало` |
 | rank fall fact | `Closed {year} at #{endRank}` | `Закончила сезон {year} на месте №{endRank}` |
@@ -96,14 +96,14 @@ formatter, not raw `kind`. The fall is a **difference between season-end ranks**
 | --- | --- | --- |
 | career crossing why | `The week the money turned – prize money past everything the family had ever spent` | `Неделя, когда призовые впервые покрыли все безвозвратные расходы семьи` |
 | career crossing caption | `It paid for itself` | `Теннис окупился` |
-| career crossing fact | `{week} – {prizes} won against {outlay} spent` | `{week}: призовые — {prizes}, безвозвратные расходы — {outlay}` |
+| career crossing fact | `{week} – {prizes} won against {outlay} spent` | `{week}: призовые – {prizes}, безвозвратные расходы – {outlay}` |
 | no career crossing why, both empty branches | `The week the money turned – it never came, and for almost nobody does it` | `Недели полной окупаемости не случилось. У большинства семей её тоже нет` |
 | one profitable week caption | `One week, it paid for itself` | `Одна неделя окупилась` |
-| one profitable week fact | `{week} – and in the end {prizes} won against {outlay} spent` | `{week}. А за всю карьеру: призовые — {prizes}, безвозвратные расходы — {outlay}` |
+| one profitable week fact | `{week} – and in the end {prizes} won against {outlay} spent` | `{week}. А за всю карьеру: призовые – {prizes}, безвозвратные расходы – {outlay}` |
 | some prize, no profitable week caption | `It paid for some of it` | `Часть расходов вернулась` |
 | no prize caption | `It never paid for any of it` | `Призовых не было` |
-| some prize, no profitable week fact | `{prizes} won against {outlay} spent – not one week of it covered itself` | `Призовые — {prizes}, безвозвратные расходы — {outlay}. Не было ни одной окупившейся недели` |
-| no prize fact | `{outlay} spent, and the tennis never sent a cheque` | `Безвозвратные расходы — {outlay}; призовых теннис так и не принёс` |
+| some prize, no profitable week fact | `{prizes} won against {outlay} spent – not one week of it covered itself` | `Призовые – {prizes}, безвозвратные расходы – {outlay}. Не было ни одной окупившейся недели` |
+| no prize fact | `{outlay} spent, and the tennis never sent a cheque` | `Безвозвратные расходы – {outlay}; призовых теннис так и не принёс` |
 
 The caption `Теннис окупился` may sound too absolute beside a finite crossing that later reversed;
 the code captures a historical crossing, not guaranteed ending profitability. Safer final read:
@@ -117,7 +117,7 @@ holdings. The one-week branch is not the same as career break-even; no consoling
 | --- | --- | --- |
 | no ending (defensive) why | `The story has not stopped yet` | `История ещё продолжается` |
 | no ending caption | `Still going` | `Она всё ещё играет` |
-| ended why | `ENDING_TITLE[ending.type]` | `{localizedEndingTitle}` — RU-12C |
+| ended why | `ENDING_TITLE[ending.type]` | `{localizedEndingTitle}` – RU-12C |
 | college caption | `See you in four years` | `Увидимся через четыре года` |
 | other ending caption | `The last week` | `Последняя неделя` |
 | ended fact | `{week}, aged {age} – {ending.detail}` | `{week}; ей было {age} {год/года/лет}. {localizedEndingDetail}` |

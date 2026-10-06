@@ -24,7 +24,7 @@ line, with no new value inferred in translation.
 | signed a kit deal | `She is in {brand}'s kit for next season.` | `В следующем сезоне она будет играть в экипировке бренда «{brand}».` |
 | one new offer | `A letter from {brand} – they want to put her in their kit ({ladder} #{rank}). It is in the inbox.` | `Письмо от бренда «{brand}»: предлагают ей экипировку ({полное название рейтинга}: №{rank}). Письмо во входящих.` |
 | several new offers | `Letters from {brand list} – they all want to put her in their kit ({ladder} #{rank}). They are in the inbox.` | `Письма от брендов {список брендов}: каждый предлагает ей экипировку ({полное название рейтинга}: №{rank}). Письма во входящих.` |
-| apparel-bond notice | `{brand} already have her on their posters and would like her back in their kit – their renewal is in the inbox.` | `Бренд «{brand}» уже размещает её на рекламных плакатах и предлагает снова играть в своей экипировке. Уведомление о продлении — во входящих.` |
+| apparel-bond notice | `{brand} already have her on their posters and would like her back in their kit – their renewal is in the inbox.` | `Бренд «{brand}» уже размещает её на рекламных плакатах и предлагает снова играть в своей экипировке. Уведомление о продлении – во входящих.` |
 | incumbent renewal | `{brand} would like another season on the same terms – their letter is in the inbox, and it goes when the season opens.` | `Бренд «{brand}» предлагает ещё один сезон на прежних условиях. Письмо во входящих; с началом сезона оно исчезнет.` |
 
 The first two endings say **why** the deal stopped; the neutral third line does not invent a

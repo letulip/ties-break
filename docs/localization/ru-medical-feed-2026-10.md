@@ -20,7 +20,7 @@ its body-region lexicon is reused here. All Russian wording remains `DRAFT`.
 | recovered early | `Back on court – cleared to play, ahead of schedule.` | `Она вернулась на корт: допуск к игре получен раньше ожидаемого срока.` |
 | recovered on ordinary schedule | `Back on court – cleared to play.` | `Она вернулась на корт: допуск к игре получен.` |
 | onset bill | `Medical – scans and treatment` | `Медицина – обследование и лечение` (RU-05 §20.5) |
-| ongoing bill | `Physio / recovery session` | `Физиотерапия — сеанс восстановления` |
+| ongoing bill | `Physio / recovery session` | `Физиотерапия – сеанс восстановления` |
 
 The early-return receipt means exactly one week is saved by the masseur's service cadence, not
 that a doctor has changed the clinical diagnosis. `weeksRemaining` stays the source number;
@@ -39,9 +39,9 @@ retirement result in the tournament feed; the two moments must not collapse into
 
 | Source condition | English source | Russian draft |
 | --- | --- | --- |
-| walkover while still injured | `Walkover: too injured to play the {tier} – 0 pts, entry fee forfeited.` | `Поражение без игры: из-за травмы она не может выступить на турнире «{tier}». Очков — 0, заявочный взнос не возвращается.` |
-| withdrawn on medical grounds | `Withdrawn from the {tier} – not cleared to play on medical advice. 0 pts, entry fee forfeited.` | `Её сняли с турнира «{tier}» по медицинским показаниям: допуска к игре нет. Очков — 0, заявочный взнос не возвращается.` |
-| cleared only just | `Doctor's warning – she is cleared for the {tier}, but only just. A warning is all it is; nobody can forbid it.` | `Предупреждение врача: она допущена к турниру «{tier}», но едва. Это только предупреждение — запретить ей играть никто не может.` |
+| walkover while still injured | `Walkover: too injured to play the {tier} – 0 pts, entry fee forfeited.` | `Поражение без игры: из-за травмы она не может выступить на турнире «{tier}». Очков – 0, заявочный взнос не возвращается.` |
+| withdrawn on medical grounds | `Withdrawn from the {tier} – not cleared to play on medical advice. 0 pts, entry fee forfeited.` | `Её сняли с турнира «{tier}» по медицинским показаниям: допуска к игре нет. Очков – 0, заявочный взнос не возвращается.` |
+| cleared only just | `Doctor's warning – she is cleared for the {tier}, but only just. A warning is all it is; nobody can forbid it.` | `Предупреждение врача: она допущена к турниру «{tier}», но едва. Это только предупреждение – запретить ей играть никто не может.` |
 
 The first two lines are **not** equivalent: in the walkover she remains injured; in the medical
 withdrawal she fails the arrival clearance. Neither line invents a travel charge, points, refund

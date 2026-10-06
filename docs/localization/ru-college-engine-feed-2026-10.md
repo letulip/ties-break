@@ -17,7 +17,7 @@ saves need a localized rendering of these rows too.
 
 | Source | English | Russian draft |
 | --- | --- | --- |
-| weekly tuition ledger | `The family's share of the college year` | `Университет — доля семьи за эту неделю` |
+| weekly tuition ledger | `The family's share of the college year` | `Университет – доля семьи за эту неделю` |
 | league title | `the College League: she won it – {played} matches, {won} wins. No prize money and no ranking points – a student field awards neither.` | `Студенческая лига: она выиграла турнир. {played} {матч/матча/матчей}, {won} {победа/победы/побед}. Призовых и рейтинговых очков здесь нет.` |
 | league exit | `the College League: she went out in the {stage} – {played} matches, {won} wins. No prize money and no ranking points – a student field awards neither.` | `Студенческая лига: выбыла на стадии «{stage}». {played} {матч/матча/матчей}, {won} {победа/победы/побед}. Призовых и рейтинговых очков здесь нет.` |
 | nation call, named but benched | `the Nations Cup: her country called and there was no declining it. She was named in the squad and never took the court; the nation finished {place} of {nations}. No prize money and no ranking points – there are none to award.` | `Кубок наций: её вызвали в сборную, отказаться было нельзя. Она вошла в состав, но на корт не вышла; сборная заняла {place}-е место из {nations}. Призовых и рейтинговых очков здесь нет.` |
@@ -37,9 +37,9 @@ score. Russian should select by the frozen result/retired id, not parse the Engl
 
 | Result | League row | National-team row |
 | --- | --- | --- |
-| she won normally | `Студенческая лига: победа. {herShort} — {opponentShort}. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: победа. {herShort} — {opponentShort} ({nation}). Счёт {score}; рейтинговых очков нет.` |
-| she lost normally | `Студенческая лига: поражение. {herShort} — {opponentShort}. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: поражение. {herShort} — {opponentShort} ({nation}). Счёт {score}; рейтинговых очков нет.` |
-| she retired | `Студенческая лига: {herShort} снялась; соперница — {opponentShort}. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: {herShort} снялась; соперница — {opponentShort} ({nation}). Счёт {score}; рейтинговых очков нет.` |
+| she won normally | `Студенческая лига: победа. {herShort} – {opponentShort}. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: победа. {herShort} – {opponentShort} ({nation}). Счёт {score}; рейтинговых очков нет.` |
+| she lost normally | `Студенческая лига: поражение. {herShort} – {opponentShort}. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: поражение. {herShort} – {opponentShort} ({nation}). Счёт {score}; рейтинговых очков нет.` |
+| she retired | `Студенческая лига: {herShort} снялась; соперница – {opponentShort}. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: {herShort} снялась; соперница – {opponentShort} ({nation}). Счёт {score}; рейтинговых очков нет.` |
 | opponent retired | `Студенческая лига: {opponentShort} снялась; {herShort} выиграла. Счёт {score}; рейтинговых очков нет.` | `Кубок наций: {opponentShort} ({nation}) снялась; {herShort} выиграла. Счёт {score}; рейтинговых очков нет.` |
 
 The table's original English templates are `{competition}: {kidShort} {verb}
@@ -56,7 +56,7 @@ on a subsequent path. Compose it from these semantic pieces:
 
 | Piece | English | Russian draft |
 | --- | --- | --- |
-| years | `{years} year/years of student tennis, lived one season at a time.` | `{years} {год/года/лет} студенческого тенниса — год за годом.` |
+| years | `{years} year/years of student tennis, lived one season at a time.` | `{years} {год/года/лет} студенческого тенниса – год за годом.` |
 | zero calls | `Her country never called` | `В сборную её не вызывали` |
 | one call | `Her country called once, and paid her nothing, which is what it pays everybody` | `В сборную её вызвали один раз; призовых там не платят никому` |
 | multiple calls | `Her country called {calls} times, and paid her nothing, which is what it pays everybody` | `В сборную её вызывали {calls} {раз/раза/раз}; призовых там не платят никому` |

@@ -21,7 +21,7 @@ infinitives, not gendered past tense. All lines remain `DRAFT` pending owner rea
 | `fork-opinion.listen` | `Say nothing, and let her talk` | `Промолчать и дать ей высказаться` |
 | `met.warm` | `Tell her we are glad` | `Сказать, что мы рады за неё` |
 | `met.wary` | `Ask the coach to watch her schedule` | `Попросить тренера присмотреть за её расписанием` |
-| `met.meet` | `Say we want to meet them, now` | `Попросить познакомить нас — прямо сейчас` |
+| `met.meet` | `Say we want to meet them, now` | `Попросить познакомить нас – прямо сейчас` |
 | `met.silent` | `Say nothing about it` | `Ничего об этом не говорить` |
 | `small-talk.more` | `Ask her to say more` | `Попросить её рассказать подробнее` |
 | `small-talk.view` | `Tell her what we think` | `Сказать, что мы об этом думаем` |
@@ -46,7 +46,7 @@ infinitives, not gendered past tense. All lines remain `DRAFT` pending owner rea
 | `spouse-view.brush` | `Say there is nothing to worry about` | `Сказать, что беспокоиться не о чем` |
 | `own-key.keep` | `Put the key on the hook` | `Повесить ключ на крючок` |
 | `expecting.joy` | `Tell her it is the best news in the house` | `Сказать, что в семье не могло быть новости лучше` |
-| `expecting.worry` | `Say we are glad – and start counting the weeks.` | `Сказать, что мы рады, — и тут же начать считать недели` |
+| `expecting.worry` | `Say we are glad – and start counting the weeks.` | `Сказать, что мы рады, – и тут же начать считать недели` |
 | `expecting.career-first` | `Say it is too early – look where she is` | `Сказать, что сейчас рано: у неё важный момент в карьере` |
 | `bereavement.come` | `Say you will come` | `Сказать, что мы приедем` |
 | `return-plan.small-first` | `Small events first – the big draws when she is ready` | `Сначала небольшие турниры, к крупным вернуться, когда она будет готова` |

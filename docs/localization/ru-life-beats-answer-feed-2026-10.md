@@ -22,7 +22,7 @@ invented feed line.
 | `fork-opinion.listen` | `She said what she wants after school. We listened all the way to the end.` | `Когда школа закончилась, она сказала, чего хочет. Мы дослушали её до конца.` |
 | `met.warm` | `There is someone in her life. We told her we are glad about it.` | `В её жизни кое-кто появился. Мы сказали, что рады за неё.` |
 | `met.wary` | `There is someone in her life. We asked her coach to keep an eye on the weeks.` | `В её жизни кое-кто появился. Мы попросили тренера присмотреть за её расписанием.` |
-| `met.meet` | `There is someone in her life. We asked to meet them, and asked this week.` | `В её жизни кое-кто появился. Мы попросили познакомить нас — причём на этой неделе.` |
+| `met.meet` | `There is someone in her life. We asked to meet them, and asked this week.` | `В её жизни кое-кто появился. Мы попросили познакомить нас – причём на этой неделе.` |
 | `met.silent` | `There is someone in her life. We left it where she put it.` | `В её жизни кое-кто появился. Мы не стали развивать разговор.` |
 | `fork-counsel.heard` | `Her coach called about her wanting to stop. We said thank you for the plain answer.` | `Тренер позвонил из-за её желания закончить с теннисом. Мы поблагодарили за прямой разговор.` |
 | `fork-counsel.weigh` | `Her coach called about her wanting to stop. We said we would sit with it.` | `Тренер позвонил из-за её желания закончить с теннисом. Мы сказали, что нам нужно всё обдумать.` |

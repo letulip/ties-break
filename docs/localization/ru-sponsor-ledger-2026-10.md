@@ -17,15 +17,15 @@ formatted by the shared money layer; translation must not recompute the charge o
 
 | source | English | Russian draft |
 | --- | --- | --- |
-| ad contract signed | `{brand} endorsement – the campaign fee, on signing` | `Рекламный контракт с брендом «{brand}» — оплата кампании при подписании` |
+| ad contract signed | `{brand} endorsement – the campaign fee, on signing` | `Рекламный контракт с брендом «{brand}» – оплата кампании при подписании` |
 | missing offer error | `That letter is not in the inbox.` | `Этого письма нет во входящих.` |
 | signed offer error | `That deal is already signed.` | `Этот контракт уже подписан.` |
 | unavailable offer error | `That offer has already gone.` | `Этого предложения уже нет.` |
-| commission suffix, only if nonzero | `{receipt}, the manager's {rate}% of {gross}` | `{квитанция}; комиссия менеджера — {rate}% от {gross}` |
-| daughter's sponsor share | `{kidName}'s share of the sponsor money – {herAmount} into her own account` | `{kidName}: доля спонсорского платежа — {herAmount} на личный счёт` |
+| commission suffix, only if nonzero | `{receipt}, the manager's {rate}% of {gross}` | `{квитанция}; комиссия менеджера – {rate}% от {gross}` |
+| daughter's sponsor share | `{kidName}'s share of the sponsor money – {herAmount} into her own account` | `{kidName}: доля спонсорского платежа – {herAmount} на личный счёт` |
 | quarterly retainer | `{brand} retainer – quarterly` | `Квартальная выплата от бренда «{brand}»` |
-| lifetime ad anniversary | `{brand} endorsement – year {index}, for life` | `Рекламный контракт с брендом «{brand}» — год {index}, пожизненный договор` |
-| fixed-term ad anniversary | `{brand} endorsement – year {index} of {total}` | `Рекламный контракт с брендом «{brand}» — год {index} из {total}` |
+| lifetime ad anniversary | `{brand} endorsement – year {index}, for life` | `Рекламный контракт с брендом «{brand}» – год {index}, пожизненный договор` |
+| fixed-term ad anniversary | `{brand} endorsement – year {index} of {total}` | `Рекламный контракт с брендом «{brand}» – год {index} из {total}` |
 
 `{kidName}` is placed before a colon in nominative form, not after a Russian preposition or
 possessive requiring name declension. The commission suffix is conditional on a nonzero parent
@@ -40,14 +40,14 @@ contract or academy actually covered part of the fare.
 
 | source / case | English | Russian draft |
 | --- | --- | --- |
-| coach extra fare | `Coach travel to {tier} – one additional fare{payer}` | `Поездка тренера на турнир «{tier}» — ещё один билет{плательщик}` |
-| masseur extra fare | `Masseur travel to {tier} – one additional fare{payer}` | `Поездка массажиста на турнир «{tier}» — ещё один билет{плательщик}` |
-| hitting-partner extra fare | `Hitting partner travel to {tier} – one additional fare{payer}` | `Поездка спарринг-партнёра на турнир «{tier}» — ещё один билет{плательщик}` |
+| coach extra fare | `Coach travel to {tier} – one additional fare{payer}` | `Поездка тренера на турнир «{tier}» – ещё один билет{плательщик}` |
+| masseur extra fare | `Masseur travel to {tier} – one additional fare{payer}` | `Поездка массажиста на турнир «{tier}» – ещё один билет{плательщик}` |
+| hitting-partner extra fare | `Hitting partner travel to {tier} – one additional fare{payer}` | `Поездка спарринг-партнёра на турнир «{tier}» – ещё один билет{плательщик}` |
 | staff fare, brand partly pays | ` ({brand} covers {share}%)` | ` (бренд «{brand}» покрывает {share}%)` |
 | base travel, no support | `Travel to {tier}` | `Поездка на турнир «{tier}»` |
-| base travel, academy only | `Travel to {tier} – academy covers {academyShare}%` | `Поездка на турнир «{tier}» — академия покрывает {academyShare}%` |
-| base travel, brand only | `Travel to {tier} – {brand} covers {brandShare}%` | `Поездка на турнир «{tier}» — бренд «{brand}» покрывает {brandShare}%` |
-| base travel, academy + brand | `Travel to {tier} – academy {academyShare}% + {brand} {brandShare}%` | `Поездка на турнир «{tier}» — академия покрывает {academyShare}%, бренд «{brand}» — {brandShare}%` |
+| base travel, academy only | `Travel to {tier} – academy covers {academyShare}%` | `Поездка на турнир «{tier}» – академия покрывает {academyShare}%` |
+| base travel, brand only | `Travel to {tier} – {brand} covers {brandShare}%` | `Поездка на турнир «{tier}» – бренд «{brand}» покрывает {brandShare}%` |
+| base travel, academy + brand | `Travel to {tier} – academy {academyShare}% + {brand} {brandShare}%` | `Поездка на турнир «{tier}» – академия покрывает {academyShare}%, бренд «{brand}» – {brandShare}%` |
 
 `{tier}` is a localized tournament name kept inside quotes; no generic English tier label
 should leak into the receipt. The one-additional-fare text is not a second copy of the base

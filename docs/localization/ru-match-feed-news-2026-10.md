@@ -23,10 +23,10 @@ from the same match record as English.
 
 | result | English verb/template | Russian draft |
 | --- | --- | --- |
-| she won normally | `{stage}: {kidShort} beat {oppShort} {score}` | `{этап}: {kidShort} — {oppShort}; победа нашей героини {score}` |
-| she lost normally | `{stage}: {kidShort} lost to {oppShort} {score}` | `{этап}: {kidShort} — {oppShort}; поражение нашей героини {score}` |
-| she retired | `{stage}: {kidShort} retired against {oppShort} {score}` | `{этап}: {kidShort} — {oppShort}; наша героиня снялась из-за травмы {score}` |
-| opponent retired | `{stage}: {kidShort} beat a retiring {oppShort} {score}` | `{этап}: {kidShort} — {oppShort}; соперница снялась из-за травмы, победа нашей героини {score}` |
+| she won normally | `{stage}: {kidShort} beat {oppShort} {score}` | `{этап}: {kidShort} – {oppShort}; победа нашей героини {score}` |
+| she lost normally | `{stage}: {kidShort} lost to {oppShort} {score}` | `{этап}: {kidShort} – {oppShort}; поражение нашей героини {score}` |
+| she retired | `{stage}: {kidShort} retired against {oppShort} {score}` | `{этап}: {kidShort} – {oppShort}; наша героиня снялась из-за травмы {score}` |
+| opponent retired | `{stage}: {kidShort} beat a retiring {oppShort} {score}` | `{этап}: {kidShort} – {oppShort}; соперница снялась из-за травмы, победа нашей героини {score}` |
 
 The repeated `нашей героини` is deliberate clarity in a string with two proper names; it
 avoids the false implication that a retirement win counts less than any other win. The score
@@ -42,9 +42,9 @@ own match. The opponent, never the daughter, is the person who retired in this f
 | branch | English source | Russian draft |
 | --- | --- | --- |
 | world-news event | `🩹 {rivalName} retired hurt at the {tier}{when}.` | `🩹 {rivalName} снялась из-за травмы на турнире «{tier}»{когда}.` |
-| her lower-tier match | `🩹 {rivalName} retired hurt against {kidShort}{when}.` | `🩹 В матче {kidShort} — {rivalName} соперница снялась из-за травмы{когда}.` |
-| completed set | ` – she went off after the {ordinal} set` | ` — после {ordinal-gen} сета` |
-| incomplete set | ` – she went off in the {ordinal} set` | ` — в {ordinal-prep} сете` |
+| her lower-tier match | `🩹 {rivalName} retired hurt against {kidShort}{when}.` | `🩹 В матче {kidShort} – {rivalName} соперница снялась из-за травмы{когда}.` |
+| completed set | ` – she went off after the {ordinal} set` | ` – после {ordinal-gen} сета` |
+| incomplete set | ` – she went off in the {ordinal} set` | ` – в {ordinal-prep} сете` |
 | set unknown | empty suffix | empty suffix |
 
 | set index | after: genitive | in: prepositional |

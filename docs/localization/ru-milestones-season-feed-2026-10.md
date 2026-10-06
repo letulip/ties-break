@@ -18,7 +18,7 @@ renderer or a safe typed reconstruction, not a new English sentence appended to 
 | source | English | Russian draft |
 | --- | --- | --- |
 | school-end milestone | `Last bell. From Monday the mornings are hers.` | `Последний звонок. С понедельника утро принадлежит ей.` |
-| coach travel opened | `Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs one additional fare.` | `Теперь тренер может ездить с ней на турниры. Переключатель — в разделе тренера; в каждой такой поездке понадобится ещё один билет.` |
+| coach travel opened | `Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs one additional fare.` | `Теперь тренер может ездить с ней на турниры. Переключатель – в разделе тренера; в каждой такой поездке понадобится ещё один билет.` |
 | off-season, school over | `Off-season: rest, family time, and the block where next year gets built.` | `Межсезонье: отдых, время с семьёй и работа над планом на следующий год.` |
 | off-season, still at school | `Off-season: rest, school, family time.` | `Межсезонье: отдых, школа, время с семьёй.` |
 

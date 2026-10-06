@@ -13,11 +13,11 @@ Russian lines remain `DRAFT`; this is not a runtime change.
 
 | Source / case | English source | Russian draft |
 | --- | --- | --- |
-| `create.ts`, first kept row | `{kidName}'s career started (seed "{seed}"). Family budget: {funds}.` | `{kidName}: карьера началась. Стартовый бюджет семьи — {funds}. Код карьеры: {seed}.` |
+| `create.ts`, first kept row | `{kidName}'s career started (seed "{seed}"). Family budget: {funds}.` | `{kidName}: карьера началась. Стартовый бюджет семьи – {funds}. Код карьеры: {seed}.` |
 | `bookkeeping.ts`, season calendar expands | `New events on the calendar` | `В календаре появились новые турниры` |
 | `age.ts`, birthday age row | `She is {ageWords} this week.` | `На этой неделе ей исполнилось {age} {год/года/лет}.` |
 | `tick.ts`, no-show travel unwind | `Travel refunded: {tier}` | `Возврат дорожных расходов: турнир «{tier}»` |
-| `tick.ts`, no-show entry | `Skipped {tier} – entry fee forfeited.` | `Турнир «{tier}» пропущен — заявочный взнос не возвращается.` |
+| `tick.ts`, no-show entry | `Skipped {tier} – entry fee forfeited.` | `Турнир «{tier}» пропущен – заявочный взнос не возвращается.` |
 | `kit.ts`, paid kit purchase | `Bought: {gradeLabel}` | `Куплено: {gradeLabel}` |
 | `kit.ts`, brand-covered kit purchase | `Bought: {gradeLabel} – on {brand}` | `Куплено: {gradeLabel}; за счёт бренда «{brand}»` |
 

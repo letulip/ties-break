@@ -18,7 +18,7 @@ lines are `DRAFT`; the shared university names are RU-05/RU-12D.
 | --- | --- | --- |
 | age kicker | `She is {age}` | `Ей {age} {год/года/лет}` |
 | title | `School is over.` | `Школа позади.` |
-| timing lead | `The junior rungs close on age at nineteen – the season ahead is the last of them. A college place is reserved today and taken up when the academic year starts ({departsLabel}); the other two roads begin now. Nobody has to keep going.` | `В девятнадцать юниорский тур для неё закроется — впереди последний сезон. Место в университете можно закрепить сейчас: учёба начнётся {departsLabel}, а до неё она продолжит играть. Два других пути начинаются сразу. Продолжать теннис она не обязана.` |
+| timing lead | `The junior rungs close on age at nineteen – the season ahead is the last of them. A college place is reserved today and taken up when the academic year starts ({departsLabel}); the other two roads begin now. Nobody has to keep going.` | `В девятнадцать юниорский тур для неё закроется – впереди последний сезон. Место в университете можно закрепить сейчас: учёба начнётся {departsLabel}, а до неё она продолжит играть. Два других пути начинаются сразу. Продолжать теннис она не обязана.` |
 | departure fallback | `next September` | `в следующем сентябре` |
 | available cash | `The family has` | `На счёте семьи` |
 | rank heading | `Her {ladder} rank` | `Её место в рейтинге {localizedLadder}` |
@@ -26,7 +26,7 @@ lines are `DRAFT`; the shared university names are RU-05/RU-12D.
 | rank value | `#{rank}` | `№{rank}` |
 | permanent outlay | `Spent so far` | `Безвозвратные расходы` |
 | family prize receipts | `The tennis has paid` | `Призовые семьи` |
-| tour entry cutoff | `{tier} admits down to` | `Допуск в {tier} — до места` |
+| tour entry cutoff | `{tier} admits down to` | `Допуск в {tier} – до места` |
 
 `departsLabel` is a **week label** on a live career; the September fallback is only for a
 hand-built/migrated fixture. Check case in the rendered lead: `начнётся {weekLabel}` must read
@@ -56,7 +56,7 @@ names that place in its summary.
 | no coverage band | `Nothing at all` | `Без покрытия` |
 | percentage after band | `({pct}%)` | `({pct}%)` |
 | fully funded weekly bill | `Family pays nothing` | `Семья не платит` |
-| family payment | `Family pays {weekly} a week – {annual} a year` | `Семья платит {weekly} в неделю — {annual} в год` |
+| family payment | `Family pays {weekly} a week – {annual} a year` | `Семья платит {weekly} в неделю – {annual} в год` |
 | cannot currently afford | `Beyond what the family has` | `Сейчас на счёте семьи этой суммы нет` |
 | measurement caption | `Four years after she leaves, over 53 careers.` | `Достижение первой сотни в течение четырёх лет после учёбы; замер по 53 карьерам.` |
 
@@ -72,8 +72,8 @@ real-world university outcomes. An LQA pass must check the long Russian odds sen
 | Source branch | English | Russian draft |
 | --- | --- | --- |
 | selected/fallback, fully funded | `{place}. Nothing to pay, and no ranking points.` | `{place}. Семья не платит за программу; рейтинговых очков не будет.` |
-| selected/fallback, family pays | `{place}. {total} over {years} years, and no ranking points.` | `{place}. Доля семьи за {years} {год/года/лет} — {total}; рейтинговых очков не будет.` |
-| migrated offer missing | `Four years of student tennis on a college scholarship, from the next academic year. No ranking points.` | `С нового учебного года — четыре года студенческого тенниса со стипендией. Рейтинговых очков не будет.` |
+| selected/fallback, family pays | `{place}. {total} over {years} years, and no ranking points.` | `{place}. Доля семьи за {years} {год/года/лет} – {total}; рейтинговых очков не будет.` |
+| migrated offer missing | `Four years of student tennis on a college scholarship, from the next academic year. No ranking points.` | `С нового учебного года – четыре года студенческого тенниса со стипендией. Рейтинговых очков не будет.` |
 
 `{total}` is `familyPerYearCents × ENDINGS.collegeYears`, not the list-price tuition. The
 no-offer fallback must not invent a dollar figure. This summary appears under the answer
@@ -84,7 +84,7 @@ that commits her; the quote rows appear **above** all three answers.
 | Road | English | Russian draft |
 | --- | --- | --- |
 | professional title | `Turn professional` | `Перейти в профессиональный тур` |
-| professional description | `W15 and up. Real cheques, real bills, and the family keeps paying.` | `Турниры от W15. Появятся призовые, но расходы останутся — семья продолжит платить.` |
+| professional description | `W15 and up. Real cheques, real bills, and the family keeps paying.` | `Турниры от W15. Появятся призовые, но расходы останутся – семья продолжит платить.` |
 | university title | `Reserve the college place` | `Закрепить место в университете` |
 | stop title | `Stop here` | `Остановиться здесь` |
 | stop description | `She had a childhood in the sport. That is a whole thing to have had.` | `Теннис был частью её детства. Это никуда не денется.` |

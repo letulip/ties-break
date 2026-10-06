@@ -36,11 +36,11 @@ fictional, so `Кубок наций` names this game's competition, not a real-
 | current year in progress | `Year {next} of {total} under way – {spent} spent` | `Идёт {next}-й год из {total}; завершено {done} {год/года/лет}` |
 | next year waiting | `Year {next} of {total} is next – {spent} spent` | `Впереди {next}-й год из {total}; завершено {done} {год/года/лет}` |
 | no completed years phrase | `none spent` | `пока ни одного` |
-| report heading | `Year {index}, as it happened` | `{index}-й год — как он прошёл` |
+| report heading | `Year {index}, as it happened` | `{index}-й год – как он прошёл` |
 | first-year lead | `{place}. A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.` | `{place}. У неё стипендия; всё, что она не покрывает, оплачивает семья. После любого учебного года она может уйти.` |
 | final year ahead | `One year of the scholarship left. After it she is out either way.` | `Остался один год стипендии. После него программа в любом случае закончится.` |
 | ordinary years ahead | `{done} year/years spent, {left} left on the scholarship.` | `Позади {done} {год/года/лет}; стипендии осталось на {left} {год/года/лет}.` |
-| annual family bill | `{money} for the year, charged weekly` | `Доля семьи за год — {money}; списывается еженедельно` |
+| annual family bill | `{money} for the year, charged weekly` | `Доля семьи за год – {money}; списывается еженедельно` |
 | next year fully covered | `Student tennis again, and the award covers the whole year.` | `Впереди ещё год студенческого тенниса; стипендия покрывает его полностью.` |
 | next year costs family | `Student tennis again – {annualBill}.` | `Впереди ещё год студенческого тенниса. {annualBill}.` |
 
@@ -59,7 +59,7 @@ describe it as one lump sum.
 | tuition fact | `Tuition` | `Обучение` |
 | rank fact | `Rank` | `Рейтинг` |
 | rank span | `#{start} to #{end}` | `№{start} → №{end}` |
-| absent rank | `–` | `—` |
+| absent rank | `–` | `–` |
 | league fact, title | `Won it` | `Победа` |
 | league fact, exit | `{leagueExitLabel}` | `{localizedStage}` |
 
@@ -79,8 +79,8 @@ below should not repeat it. Rank `null` must not become №1 or №0.
 | named but did not play | `named in the squad, never on court` | `вошла в состав, но на корт не вышла` |
 | rubbers won | `{won} of {played} rubbers won` | `выиграла {won} из {played} матчей за сборную` |
 | national finish | `Her country called – {court}, and the nation finished {place}th.` | `Её вызвали в сборную: {court}. Сборная заняла {place}-е место.` |
-| league match label | `{stage} – {opponent}` | `{stage} — {opponent}` |
-| national match label | `Rubber {n} – {opponent}` | `Матч {n} — {opponent}` |
+| league match label | `{stage} – {opponent}` | `{stage} – {opponent}` |
+| national match label | `Rubber {n} – {opponent}` | `Матч {n} – {opponent}` |
 | replay affordance | `Watch` | `Смотреть` |
 
 `{stage}` needs the shared round formatter with the persisted draw depth, not today's retuned
@@ -94,8 +94,8 @@ line says no call, not that she lacked ability.
 | --- | --- | --- |
 | won, ordinary | `Won {score}` | `Победа {score}` |
 | lost, ordinary | `Lost {score}` | `Поражение {score}` |
-| won, other player retired | `Won {score} ret` | `Победа {score} — соперница снялась` |
-| lost, daughter retired | `Lost {score} ret` | `Поражение {score} — она снялась` |
+| won, other player retired | `Won {score} ret` | `Победа {score} – соперница снялась` |
+| lost, daughter retired | `Lost {score} ret` | `Поражение {score} – она снялась` |
 
 The retiring player is the loser in the frozen match record. An English `ret` suffix inside a
 Russian sentence would be an untranslated island. The explicit Russian suffix is longer; phone
@@ -107,7 +107,7 @@ accessible label rather than an unexplained abbreviation.
 | Source | English | Russian draft |
 | --- | --- | --- |
 | heading | `The year ahead` | `Предстоящий учебный год` |
-| annual league event | `A draw of {size}, every year – her matches can be watched` | `Каждый год — сетка на {size} участниц. Её матчи можно посмотреть.` |
+| annual league event | `A draw of {size}, every year – her matches can be watched` | `Каждый год – сетка на {size} участниц. Её матчи можно посмотреть.` |
 | conditional national team event | `If the selectors call her off the championship, the rubbers can be watched` | `Если после чемпионата её вызовут в сборную, матчи можно будет посмотреть.` |
 | ordinary squad trip label | `Squad trip` | `Поездка команды` |
 | known number of duals | `{n} dual matches for the programme` | `{n} {матч/матча/матчей} между командами университетов` |
@@ -133,7 +133,7 @@ stray tap on the scrim.
 | total balance delta | `Banked` | `Изменение баланса семьи` |
 | no national call | `Her country never called.` | `В сборную её так и не вызвали.` |
 | called in some years | `Her country called in {n} of them, and paid her nothing, which is what it pays everybody.` | `Её вызывали в сборную в {n} {году/годах}. Призовых там не платят никому.` |
-| next path | `Qualifying is the way forward again. Her week is on the home screen.` | `Дальше снова квалификация. Её неделя — на экране «Дом».` |
+| next path | `Qualifying is the way forward again. Her week is on the home screen.` | `Дальше снова квалификация. Её неделя – на экране «Дом».` |
 | continue | `Continue` | `Продолжить` |
 
 The current `Banked` English label is used for a **signed** sum of `fundsDeltaCents`; unlike the

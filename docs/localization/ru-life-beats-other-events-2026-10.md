@@ -17,7 +17,7 @@ Russian mode. All Russian lines are `DRAFT`.
 
 | source symbol / file | English source | Russian draft |
 | --- | --- | --- |
-| divorce milestone · `ended.ts` | `The marriage ended. We had no say in it, only in what we said next.` | `Их брак закончился. Мы не могли решить за них — только выбрать, что сказать после.` |
+| divorce milestone · `ended.ts` | `The marriage ended. We had no say in it, only in what we said next.` | `Их брак закончился. Мы не могли решить за них – только выбрать, что сказать после.` |
 | `LEAK_EVENT.true` · `leak.ts` | `It is in the papers – there is someone in her life, and they have it right.` | `Об этом написали в прессе: в её жизни кое-кто есть, и на этот раз они не ошиблись.` |
 | `LEAK_EVENT.wrong` · `leak.ts` | `It is in the papers – a mystery man, and none of it is what happened.` | `В прессе пишут о «таинственном мужчине». Но это совсем не то, что произошло.` |
 | wedding milestone · `wedding.ts` | `Her wedding day. The family was there, whatever had been said about it.` | `День её свадьбы. Семья была рядом, что бы ни говорили до этого.` |

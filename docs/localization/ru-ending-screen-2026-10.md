@@ -31,8 +31,8 @@ Russian lines are `DRAFT`, except established shared terms `Дом` and `Рей�
 | seasons | `Seasons` | `Сезонов` |
 | best rank | `Best rank` | `Высшее место в рейтинге` |
 | titles | `Titles` | `Титулов` |
-| one-more-year refrain | `She said one more year {count} time/times.` | `«Ещё один год», — говорила она. Так было {count} {раз/раза/раз}.` |
-| resume college fallback | `Another year –` | `Ещё один год —` |
+| one-more-year refrain | `She said one more year {count} time/times.` | `«Ещё один год», – говорила она. Так было {count} {раз/раза/раз}.` |
+| resume college fallback | `Another year –` | `Ещё один год –` |
 | new unrelated childhood | `Raise another` | `Вырастить другую` |
 | dynasty, daughter lived during tour | `Raise her daughter` | `Вырастить её дочь` |
 | dynasty, daughter born after career | `A daughter came later` | `Позже у неё родилась дочь` |
@@ -54,7 +54,7 @@ the always-visible portfolio. Display ranks as `№{rank}`, but keep a distinct 
 
 | Condition | English | Russian draft |
 | --- | --- | --- |
-| completed academy earns | `Her academy stands – {built} of {total} stages built – and it earns {money} a week.` | `Её академия работает: построено {built} из {total} этапов, доход — {money} в неделю.` |
+| completed academy earns | `Her academy stands – {built} of {total} stages built – and it earns {money} a week.` | `Её академия работает: построено {built} из {total} этапов, доход – {money} в неделю.` |
 | academy begun, no earnings | `Her academy is begun – {built} of {total} stages built.` | `Строительство её академии началось: построено {built} из {total} этапов.` |
 | lifetime advertising deal | `The {brand} deal never ran out – {money} a year, for life.` | `Договор с брендом «{brand}» не закончился вместе с карьерой: {money} в год пожизненно.` |
 

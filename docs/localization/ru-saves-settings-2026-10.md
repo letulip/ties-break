@@ -24,8 +24,8 @@ destructive confirmations. All Russian copy is `DRAFT`; user-entered names remai
 | `No careers yet.` | `Пока нет ни одной карьеры.` |
 | `Active` | `Текущая` |
 | `{week} · age {age} · last played {date}` | `{week} · возраст: {age} {год/года/лет} · последняя игра: {date}` |
-| `Load` / `Load career – {kidName}` | `Загрузить` / `Загрузить карьеру — {kidName}` |
-| `Delete` / `Delete career – {kidName}` | `Удалить` / `Удалить карьеру — {kidName}` |
+| `Load` / `Load career – {kidName}` | `Загрузить` / `Загрузить карьеру – {kidName}` |
+| `Delete` / `Delete career – {kidName}` | `Удалить` / `Удалить карьеру – {kidName}` |
 
 `{kidName}` is a nominative label after an em dash, never forced into the English possessive.
 `careerAge` already respects the stored birthday where known; localization must not derive
@@ -66,7 +66,7 @@ persistence, not a guarantee against device loss or manual deletion.
 | --- | --- |
 | `Save` / `Load` / `Delete save` / `Delete career` / `Export` / `Import` (`OP_LABEL`) | `Сохранение` / `Загрузка` / `Удаление сохранения` / `Удаление карьеры` / `Экспорт` / `Импорт` |
 | `{operation}…` | `{operation}…` |
-| `{operation} – done` | `{operation} — готово` |
+| `{operation} – done` | `{operation} – готово` |
 | `{operation} failed – {message}` | `{operation}: не удалось завершить. {localizedMessage}` |
 | `Retry` | `Повторить` |
 | `Your browser may clear saves under storage pressure – export a backup file now and then.` | `При нехватке места браузер может очистить сохранения. Время от времени экспортируйте резервную копию.` |
@@ -82,13 +82,13 @@ that failed, as the current implementation intends.
 | Action | English | Russian draft |
 | --- | --- | --- |
 | load another career | `Load {kidName}'s career? Your currently active career stays saved.` | `Загрузить карьеру «{kidName}»? Текущая карьера останется сохранённой.` |
-| delete career | `Delete {kidName}'s career? This removes ALL of its saves – autosave and named – for good.` | `Удалить карьеру «{kidName}»? Все её сохранения — автоматические и именные — будут удалены без возможности восстановления.` |
+| delete career | `Delete {kidName}'s career? This removes ALL of its saves – autosave and named – for good.` | `Удалить карьеру «{kidName}»? Все её сохранения – автоматические и именные – будут удалены без возможности восстановления.` |
 | delete one named slot | `Delete the save "{name}"? There is no undo.` | `Удалить сохранение «{name}»? Отменить удаление нельзя.` |
 | restore previous autosave | `Restore the previous autosave? This replaces your current progress with the earlier generation.` | `Восстановить предыдущее автосохранение? Текущий прогресс будет заменён более ранней копией.` |
 | overwrite same named slot | `A save named "{name}" already exists. Overwrite it?` | `Сохранение «{name}» уже существует. Перезаписать его?` |
 | overwrite action label | `Overwrite` | `Перезаписать` |
 | unreadable import | `This file could not be read here. Import it anyway? If it holds a career you already have, importing replaces it – there is no undo.` | `Проверить содержимое файла не удалось. Всё равно импортировать? Если в нём уже существующая на устройстве карьера, она будет заменена без возможности отмены.` |
-| import replaces known career | `Overwrite {kidName}'s career? You have her at {existingWeek} and this file is {fileWeek}. The file becomes the career you play from now on – there is no undo.` | `Заменить карьеру «{kidName}»? На устройстве она сохранена на неделе {existingWeek}, в файле — на неделе {fileWeek}. После импорта активной станет версия из файла; отменить замену нельзя.` |
+| import replaces known career | `Overwrite {kidName}'s career? You have her at {existingWeek} and this file is {fileWeek}. The file becomes the career you play from now on – there is no undo.` | `Заменить карьеру «{kidName}»? На устройстве она сохранена на неделе {existingWeek}, в файле – на неделе {fileWeek}. После импорта активной станет версия из файла; отменить замену нельзя.` |
 | import adds new career | `Import {kidName}'s career at {fileWeek}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.` | `Импортировать карьеру «{kidName}» с недели {fileWeek}? На устройстве её пока нет: другие карьеры не заменятся, а импортированная станет активной. Текущая останется сохранённой.` |
 
 The import peek is advisory. The unreadable branch must **not** promise the file is safe; the

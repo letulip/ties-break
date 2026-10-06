@@ -26,7 +26,7 @@ coverage for old saved careers as for new ones. All Russian lines are `DRAFT`. T
 | fiery/open | `There is someone in her life. No line drawn round it, and we took it as it came.` | `В её жизни кое-кто появился. Она не поставила вокруг этого границу, и мы приняли новость как есть.` |
 | fiery/private | `There is someone in her life. She drew a line round it, and we read the line.` | `В её жизни кое-кто появился. Она обозначила границу, и мы её поняли.` |
 | quiet/open | `There is someone in her life, and it was never a thing she was keeping. That was understood.` | `В её жизни кое-кто появился. Это не было тайной, и мы это поняли.` |
-| quiet/private | `There is someone in her life, and it is to go no further than us. That was understood.` | `В её жизни кое-кто появился. Дальше нас эту новость не передавать — это мы поняли.` |
+| quiet/private | `There is someone in her life, and it is to go no further than us. That was understood.` | `В её жизни кое-кто появился. Дальше нас эту новость не передавать – это мы поняли.` |
 | deep/open | `There is someone in her life. She asks nothing of us about it, and nothing needed adding.` | `В её жизни кое-кто появился. Она ни о чём нас не просила, и добавлять было нечего.` |
 | deep/private | `There is someone in her life. It is hers to keep, and we knew it without being asked.` | `В её жизни кое-кто появился. Это её новость, не наша для пересказа. Мы поняли без просьбы.` |
 
