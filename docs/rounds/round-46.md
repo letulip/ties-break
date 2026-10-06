@@ -387,6 +387,10 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     field, `life.togetherNote`, fed by an optional `together` fact on `KidLifeWorldView` (optional so the
     hand-built views in six test files need no edit); persisted nowhere, no schema move, zero draws.
     DRAFT: R46-S10 (wired), R46-S11 (alternate).
+    **06.10 – RETIRED by morning item 3 (R4):** the sentence under the grid, `life.togetherNote`, the engine's `togetherNote` and the view's
+    `name` are gone; the same facts (known, engaged, married, and for how long) now sit in the School cell's last rung, `life.relationships`,
+    in the compact span. S10 and S11 are retired with them; the long span words (S2) are unchanged. Everything above is the record of what
+    shipped in b2abd0e8 and stays as written.
     **Tests** – `tests/component/round23-kid-page.test.ts`, extended (5 new arms, 10/10 green): standing and
     named, unnamed, married (and a nameless married row), nobody / ended / not told yet, the school cell reading the
     same beside the line, and the notes-stack wrap check. Every expected span is built from the real primitives
@@ -990,6 +994,49 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
    школы/колледжа место занимает») – it becomes the relationships cell at its terminal rung:
    known → «Together for {span}» (his «очень хорошо»), unknown → a «кажется одинока»-class line,
    evolving with engagement/marriage. B4's under-grid line retires in its favour. Build → **R4**.
+   - **R4 · THE SCHOOL CELL IS THE RELATIONSHIPS CELL ONCE IT HAS NOTHING LEFT TO SAY – B4's SENTENCE UNDER THE GRID IS RETIRED**
+     (06.10, DRAFT rows **R46-S39–S45**; `Together for` is his own phrase, every other string is a draft, and the existing school
+     strings are byte for byte what they were).
+     **When it opens** – `relationshipsTileOpen` (`kidLife.ts`): the heading ladder says «After school» (`stageLabelOf`, so out of
+     school and not studying – the ladder's own predicate, restated nowhere) AND she is 22 (`GROWN_UP_AGE_YEARS`, the age the
+     ladder's last rung opens on). For a girl who never went to college that is exactly the rung called `Grown up` (a sweep over 4
+     birth months × 25 seasons in `tests/round23-kid-life.test.ts` holds the two together); for one who finished a course or left it,
+     it is the same age – `Graduate` / `Left college` are as dead from 22, and he said «школы/колледжа». Before it
+     `life.relationships` is null and the cell is the School cell, string for string.
+     **What it says** (wired · alternate): heading `Relationships` · `Love life` (S39, S40). Nobody the parent knows of:
+     `On her own` / `it seems` · `Seems to be` / `on her own` (S41, S42 – «it seems» is exactly right under the fog law, he may
+     simply not know; an ended relationship reads the same). Together: `Together for` / `1y 6m` – his shape. Engaged:
+     `Engaged` / `together 1y 6m`. Married: `Married` / `together 1y 6m` (S43). The compact span: `1y 6m`, `3y`, `7m`, `<1m` (S44).
+     Alternate for S43 + S44, not wired: the words span (`1 yr 6 mo`) with `Engaged` / `1 yr 6 mo` and `Married` / `1 yr 6 mo` (S45) –
+     the cost is that without the word «together» the number under «Married» reads as the marriage's age, and it counts the
+     relationship's.
+     **Why two short lines:** both lines of the cell are `nowrap` on a 16-character budget; `together {span}` is 8 + 1 + 7 at the
+     worst (`99y 11m`), exactly the budget, while the words span is 28 characters at a year and a half. No name rides on the cell
+     (the paragraph carried one) – it would not fit, and his shape has none.
+     **Retired:** the `<p class="kid-note-together">`, the engine's `togetherNote`, `life.togetherNote` on the wire, and the view's
+     `name`. (The `kid-note-together` CSS the brief expected to remove never existed – the paragraph reused `kid-grid-note`.)
+     **d07 stays at 116:** it counts the snapshot's TOP-LEVEL keys; `togetherNote` was nested in `life` and so is `relationships`, so
+     no re-pin. One new fact on the engine view, `together.engaged` = `upcomingWeddingWeek(world) !== null`, the calendar mark's own
+     question. No engine draw, no save key, no schema move: the capture (41550 / `e6b0c709`) is untouched.
+     **Two things for him to rule on:** (1) below 22 nothing shows about relationships anywhere now – the paragraph was what showed it
+     to a girl of 19–21 on `Tennis full-time`. Handing the cell over at the end of school instead is one condition (drop the age clause
+     in `relationshipsTileOpen`), but it would retire `The last bell` and `Tennis full-time`, so it is his. (2) The partner's name left
+     the screen with the paragraph; the wedding cards still carry it.
+     **Tests** – `tests/component/round23-kid-page.test.ts`, B4's five arms re-aimed as tile arms (11/11): before the last rung the School
+     cell reads string for string with or without somebody (weeks 120 and 300) and no cell is headed Relationships; nobody known; known
+     (`Together for` / the span `relationshipDurationWeeks` counted); engaged (a real answered `'engaged'` row, the calendar's
+     `weddingWeek` set) and married (latched ten weeks ago – the span does not move); the fog arm (never met, ended, not told yet – all
+     «it seems»); the nowrap arm (two `kid-tile-line`s, none the wrapping `kid-tile-personality`, each within `TILE_LINE_MAX`, and the words
+     form would not be). The sentence's absence is asserted in every state. `tests/round23-kid-life.test.ts` +5 (20/20): the predicate
+     against the ladder's own last rung, the college path, the state ladder string for string, the compact span against the words' own
+     count for 2,081 weeks, and every line within 16 characters to a hundred years together.
+     **Mutations**, each alone and `cmp`-restored: the ladder always «it seems» -> the together and engaged/married arms red (2 of 11), the
+     fog and School arms green; the cell stops printing the field -> the five terminal arms red (5 of 11), the School arm green; the span
+     hands back the words -> the together, engaged/married and nowrap arms red (3 of 11).
+     **Gates:** `vue-tsc -b --force` and `check:tools` exit 0; 37 neighbour files – every test that mounts or names KidScreen, plus the
+     kidLife, wedding-span, d07, import-cycle and nav files – 580 tests, green.
+     **Files:** `src/engine/kidLife.ts`, `src/engine/world/lifeBeat/weddingCopy.ts`, `src/engine/world/snapshot.ts`,
+     `src/shared/protocol/narrative.ts`, `src/components/screens/KidScreen.vue`, the two test files, this ledger.
 4. **Year summary**: (а) «инвестиция это не совсем расход, только если мы не в минусе
    зафиксировались» – a REALISED LOSS is a real expense: the window's realised-loss figure joins
    the expense side (its own labeled row); principal transfers stay the shelf's. (б) mixed History
@@ -1076,8 +1123,8 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S7 | 12 – the spouse beat's heading, **WIRED** (`spouseViewCopy.ts` `SPOUSE_VIEW_HEADING`; the dialog's frame over the line; was `The one she married has something to say about this season`, which opened with the same four words as the line under it) | `Her spouse has something to say about this season` |
 | R46-S8 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `Her husband has something to say about this season` – gendered: the partner's name pool is 28 male first names, so it never contradicts a name on screen, but the schema holds no gender and the pool's «no gender» law stands until he rules |
 | R46-S9 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `He has something to say about this season` – his own «он» and the shortest; the Home card above it (`The one she married wants a word.`, unchanged) is its only antecedent; also gendered |
-| R46-S10 | 9 – the personal page's relationship line, **WIRED** (`kidLife.ts` `togetherNote`, one function; the sentence sits under the tile grid on `KidScreen`, beside the school and college notes; the span words are S2's and are not repeated here) | `Together with {name} for {span}` – e.g. `Together with Anton for 1 year and 6 months` · married: `Married to {name} – together for {span}` · before the engagement has written a name: `Together for {span}` · married with no name (hand-built rows only – the engine names him at the engagement, before any wedding): `Married – together for {span}` |
-| R46-S11 | 9 – ALTERNATE for S10, NOT wired (the same one function) | name-first and shorter: `{name} – together for {span}` · `Together for {span}` · `Married to {name} – together for {span}`; the cost is that the unnamed form reads as a fragment with no subject, which is why S10 keeps «with» in the named form |
+| R46-S10 | **RETIRED 06.10 (R4, morning 3) – this sentence left the screen; S39–S45 replace it.** 9 – the personal page's relationship line, **WIRED** (`kidLife.ts` `togetherNote`, one function; the sentence sits under the tile grid on `KidScreen`, beside the school and college notes; the span words are S2's and are not repeated here) | `Together with {name} for {span}` – e.g. `Together with Anton for 1 year and 6 months` · married: `Married to {name} – together for {span}` · before the engagement has written a name: `Together for {span}` · married with no name (hand-built rows only – the engine names him at the engagement, before any wedding): `Married – together for {span}` |
+| R46-S11 | **RETIRED with S10 (06.10).** 9 – ALTERNATE for S10, NOT wired (the same one function) | name-first and shorter: `{name} – together for {span}` · `Together for {span}` · `Married to {name} – together for {span}`; the cost is that the unnamed form reads as a fragment with no subject, which is why S10 keeps «with» in the named form |
 | R46-S12 | 8 + 19 – the year-end Money tile's shelf row, **WIRED** (`SeasonSummaryDialog.vue`, the `season-key` between «Earned this season» and the hairline; hidden at zero; it carries the whole `'shop'` category's net – purchases, the cars' upkeep and sale proceeds – because the ledger has no category of its own for upkeep) | `Holdings and upkeep` |
 | R46-S13 | 8 + 19 – the growth row under «Family's portfolio», **WIRED** (same file; absent when there is no previous wrap-up to subtract from) | `Portfolio growth` |
 | R46-S14 | 8 + 19 – NOT new: the wealth row's label is the EPILOGUE'S OWN for the same figure (`EndingScreen.vue`, `careerMoney.portfolioCents`), now also on the year-end card under its own hairline – listed so he knows the card will say it | `Family's portfolio` |
@@ -1105,3 +1152,10 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S36 | 12 + morning 2 – the spouse card, `no-vacation`, entry 0 (`SPOUSE_VIEW_SAID['no-vacation'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule | before: `The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` -> after: `As the season closed: "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` |
 | R46-S37 | 12 + morning 2 – the spouse card, `no-vacation`, entry 1 (`SPOUSE_VIEW_SAID['no-vacation'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The brochure stayed on the shelf from last winter. "I am not asking for the sea. I am asking for one week where nobody's racket comes with us."` |
 | R46-S38 | 12 + morning 2 – the spouse card, `no-vacation`, entry 2 (`SPOUSE_VIEW_SAID['no-vacation'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `"People think being married into tennis means holidays. I showed them a photo of a car park in the rain. They stopped asking."` |
+| R46-S39 | morning 3 – the School cell's heading once it is her relationships, **WIRED** (`kidLife.ts` `RELATIONSHIPS_LABEL`; the cell changes over when she is out of school and 22) | `Relationships` – his «Отношения» |
+| R46-S40 | morning 3 – ALTERNATE for S39, NOT wired | `Love life` – warmer and shorter, and it says less about what is in the cell |
+| R46-S41 | morning 3 – the cell when the parent knows of nobody, **WIRED** (`kidLife.ts` `relationshipsTile`; two lines, each 16 characters at most) | line one `On her own`, line two `it seems` – his «кажется одинока»; «it seems» is on the cell because the parent may simply not know, and a relationship that has ended reads the same |
+| R46-S42 | morning 3 – ALTERNATE for S41, NOT wired | `Seems to be` / `on her own` – the hedge first; the cost is that the stronger line then carries the guess |
+| R46-S43 | morning 3 – the cell when the parent knows, **WIRED** (the same one function) | together: `Together for` / `1y 6m` (his own shape) · engaged: `Engaged` / `together 1y 6m` · married: `Married` / `together 1y 6m` – the span counts from the day they got together in all three, which is why «together» stays on the second line of the last two |
+| R46-S44 | morning 3 – the compact span, **WIRED** (`weddingCopy.ts` `togetherSpanShort`, the same count as S2's words) | `1y 6m` · `3y` · `7m` · `<1m` before the first whole month; the longest it can be, `99y 11m`, is what lets «together» fit in front of it |
+| R46-S45 | morning 3 – ALTERNATE for S43 + S44, NOT wired | the words form: `Together for` / `1 yr 6 mo`, `Engaged` / `1 yr 6 mo`, `Married` / `1 yr 6 mo`; the cost is that without the word «together» the number under «Married» reads as how long they have been married, which is not what it counts |

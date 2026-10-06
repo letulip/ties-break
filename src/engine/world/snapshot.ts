@@ -2428,16 +2428,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // has nothing to split, and a sentence about a share of zero is the noise this guard refuses.
       ownsBrand: merchWeeklyIncomeCents(world) > 0,
       // ⭐⭐ ROUND 46 #9 – THE ATTACHMENT THE PARENT HAS BEEN TOLD ABOUT, as the three facts her page's
-      // relationship line is made of. ⚠ `knownPartner` AND NOT `activeEpisode`: «is someone there» is the
+      // relationships cell is made of (round 46, morning 3: it began as a line under the grid). ⚠ `knownPartner` AND NOT `activeEpisode`: «is someone there» is the
       // world's question and «does he know» is the one a page may answer (`knownPartner`'s own ⚠⚠), so a
-      // girl who has not told him yet shows no line. ⚠ The span is `relationshipDurationWeeks`, the count
+      // girl who has not told him yet reads «it seems» on the cell. ⚠ The span is `relationshipDurationWeeks`, the count
       // the wedding announcement prints, and `married` is `latchedEpisode`, the one spelling of «is she
       // married». Derived at snapshot time: no draw, no save key, no schema move.
       together: (() => {
         const partner = knownPartner(world, world.week)
         const weeks = relationshipDurationWeeks(world, partner)
         if (partner === null || weeks === null) return null
-        return { name: partner.partnerName ?? null, weeks, married: latchedEpisode(world) !== null }
+        // ⚠ `engaged` is the calendar's own question (`upcomingWeddingWeek`): the same answered 'engaged' row, read
+        // forward – so the cell and the calendar's wedding mark cannot disagree about whether she is engaged.
+        return { weeks, married: latchedEpisode(world) !== null, engaged: upcomingWeddingWeek(world) !== null }
       })(),
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams

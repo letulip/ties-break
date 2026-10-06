@@ -470,10 +470,17 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              school", and it comes from the engine for this screen's own standing rule: screen C
              derives no fact of its own. A cell hard-coded "School" above "Year 2 of 4" would be the
              frozen tense the tile itself just lost, one line higher up. -->
+        <!-- ⭐⭐ ROUND 46 MORNING #3 – THE CELL'S LAST RUNG. Once school and college are behind her and she is the
+             age the ladder above ends on, the engine hands this cell a SECOND field, `life.relationships` (a
+             heading and the same two lines), and the cell prints that in place of the three above; until then it
+             is null and every word above is exactly what it was.
+             ⚠ THE SCREEN CHOOSES NOTHING: both lines are the engine's (`kidLife.relationshipsTile`), and they are
+             the same `kid-tile-line` pair, so the `nowrap` rule and the 16-character budget below hold for them
+             unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template. -->
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">{{ life?.schoolLabel ?? 'School' }}</p>
-          <p class="kid-tile-line">{{ life?.school.lead }}</p>
-          <p class="kid-tile-line kid-tile-line-soft">{{ life?.school.note }}</p>
+          <p class="kid-tile-label">{{ life?.relationships?.label ?? life?.schoolLabel ?? 'School' }}</p>
+          <p class="kid-tile-line">{{ life?.relationships?.lead ?? life?.school.lead }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ life?.relationships?.note ?? life?.school.note }}</p>
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">
@@ -524,18 +531,6 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            took a place - and it can never collide with the note above it, which is silent from the
            moment she is out of school. -->
       <p v-if="life?.collegeNote" class="hint kid-grid-note kid-note-college">College – {{ life.collegeNote }}</p>
-
-      <!-- ⭐⭐ ROUND 46 #9 - THE RELATIONSHIP LINE: whether she is with somebody, and for how long.
-           The owner asked for an indicator on her page and floated the School cell's seat once that
-           cell has gone stale. It sits HERE, under the grid, for the reasons the two notes above give:
-           the span is words (a year and six months), longer than a tile's nowrap line, and the line has
-           to stand while the cell is still current too, not only after it has gone quiet. The School
-           cell is untouched.
-           ENGINE-COMPOSED (`kidLife.togetherNote`), name, span and married form alike: this screen
-           derives no fact. Empty unless the parent has been told of somebody and it is not over, so a
-           private girl shows nothing until she has said. The wording is a draft for the owner, in the
-           round 46 ledger. -->
-      <p v-if="life?.togetherNote" class="hint kid-grid-note kid-note-together">{{ life.togetherNote }}</p>
 
       <!-- ========================== 3. THE SKILLS RADAR ==========================
            decisions.md #11, finally built. No numbers anywhere on it, ever.

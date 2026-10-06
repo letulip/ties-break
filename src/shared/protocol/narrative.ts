@@ -1341,6 +1341,13 @@ export interface KidLifeTile {
   note: string
 }
 
+/** ⭐⭐ ROUND 46 MORNING #3 – THE SCHOOL CELL WHEN IT HAS BECOME HER RELATIONSHIPS: the same two lines, and the heading
+ *  that goes above them in place of `KidLife.schoolLabel`. */
+export interface KidLifeRelationshipsTile extends KidLifeTile {
+  /** the cell's heading – a fact about her life, as `schoolLabel` is */
+  label: string
+}
+
 export interface KidLife {
   /** ⭐⭐⭐ ROUND 42 #37 – WHO SHE IS, in one line of two adjectives: «Patient and stubborn»,
    *  «Unshakeable and single-minded», «Hot-headed and easy-going». Sixteen readings, and neither
@@ -1393,21 +1400,19 @@ export interface KidLife {
    *  `nowrap` cell, so the tile carries the year and this carries the place. The two notes are
    *  mutually exclusive by construction (one speaks only at school, the other only once she is out). */
   collegeNote: string
-  /** ⭐⭐ ROUND 46 #9 – THE RELATIONSHIP LINE, or '' when the parent has been told of nobody standing.
+  /** ⭐⭐ ROUND 46 MORNING #3 – THE SCHOOL CELL'S LAST RUNG: her relationships, or null before it.
    *
-   *  The owner, 05.10: «А у нас где-то есть индикатор, что у неё есть отношения в данный момент? Может
-   *  сделать что-то на личной странице или заменить after school, например, когда он станет
-   *  неактуальным? С подсчётом сколько они уже вместе например или ещё что-то?»
-   *
-   *  ⚠ A SENTENCE UNDER THE GRID, `schoolWhy`'s and `collegeNote`'s reason: it names a person and a span in
-   *  words, which a `nowrap` tile line cannot hold – and it has to stand while the School cell is still
-   *  current as well as after that cell has gone quiet, so it has a seat of its own and the cell is
-   *  untouched.
-   *  ⚠ THE PARENT'S ATTACHMENT AND NEVER THE WORLD'S: the engine asks `knownPartner`, so a girl who has not
-   *  told him yet shows no line, and one that has ended shows none either – «standing» is the question.
-   *  ⚠ DERIVED AT SNAPSHOT TIME, persisted nowhere (no schema move): the span is `relationshipDurationWeeks`,
-   *  the count the wedding announcement prints, in `togetherSpan`'s words; «married» is `latchedEpisode`. */
-  togetherNote: string
+   *  The owner, 06.10: «… плашка про школу … не используется после школы/колледжа примерно никак и просто место
+   *  занимает. Мы можем в ней писать "Отношения" …» – so once school and college are behind her and she is 22
+   *  (`engine/kidLife.ts relationshipsTileOpen`) the engine hands the cell THIS and the screen prints it in place of
+   *  `schoolLabel` / `school`; before that it is null and the school ladder reads exactly as it did. It replaces
+   *  round 46 #9's `togetherNote`, the sentence under the grid, which left the wire with it.
+   *  ⚠ THE PARENT'S ATTACHMENT AND NEVER THE WORLD'S: the engine asks `knownPartner`, so a girl who has not told him
+   *  reads «it seems» – he may simply not know – and an ended one reads the same.
+   *  ⚠ TWO `nowrap` LINES, each held to `TILE_LINE_MAX` by a test, because this IS the School cell's own pair; the
+   *  span is `togetherSpanShort`, and no name rides on it (it will not fit).
+   *  ⚠ DERIVED AT SNAPSHOT TIME, persisted nowhere (no schema move, no draw). */
+  relationships: KidLifeRelationshipsTile | null
   /** ⭐⭐ ROUND-23 #18 – HER OWN BANK BALANCE and the share that fills it, or '' before eighteen.
    *
    *  The only surface that tells a player the ramp exists: what the account holds, what she keeps of
