@@ -56,6 +56,8 @@ last-reviewed: 2026-10-06
 | [Batch 11A – Milestones and wrap-up](ru-milestones-season-feed-2026-10.md) | School end, coach travel, off-season and season summary formatter | current `milestones.ts` player prose drafted |
 | [Batch 11B – Professional field news](ru-field-news-2026-10.md) | Retirements, debuts and college-time tour digest | all current `fieldNews.ts` news templates drafted |
 | [Batch 11C – Match feed news](ru-match-feed-news-2026-10.md) | Result rows and opponent retirement rows | current `matchNews.ts` templates drafted; score-tail contract recorded |
+| [Batch 11D – Sponsor feed](ru-sponsor-feed-2026-10.md) | Kit season recap, new offer letters and renewals | current winter kit-news clauses drafted |
+| [Batch 11E – Sponsor ledger](ru-sponsor-ledger-2026-10.md) | Endorsement receipts, manager split, travel and payer lines | current `sponsors.ts` financial/feed receipts drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
