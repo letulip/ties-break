@@ -189,6 +189,7 @@ export type {
   AlbumTierStep,
   AlbumTicket,
   AlbumTag,
+  AlbumClubPatch,
   AlbumSheetModel,
   AlbumChapter,
   AlbumBook,

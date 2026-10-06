@@ -48,6 +48,7 @@ import type {
   AlbumNote,
   AlbumSheetModel,
   AlbumTag,
+  AlbumClubPatch,
   AlbumTicket,
   AlbumTierStep,
   BuildLetterTerms,
@@ -292,13 +293,21 @@ const VENUE_POOL: readonly string[] = [
   'Harbour Stadium',
   'The Old Clay',
 ] as const
-const PATCH_POOL: readonly string[] = [
+/** ⭐ ROUND 47 #16 – TEN CLUBS, NOT SIX. The first six are the §8b pool as it shipped (`Whitegate Club` is the one he
+ *  named); the last four are new and wired – R47-S7 … R47-S10 in docs/rounds/round-47.md. Every name is two or three
+ *  plain words that fit the patch in TWO lines (measured in Chromium, 96px cloth); none is a real club, a
+ *  tournament or a trademark (`tests/albumBook.test.ts` holds the pool against that list). */
+export const ALBUM_PATCH_POOL: readonly string[] = [
   'Rivermouth Tennis',
   'Northfield Club',
   'Harbour Lane Tennis',
   'Old Mill Courts',
   'Cedar Park Tennis',
   'Whitegate Club',
+  'Larkfield Tennis',
+  'Fairhaven Club',
+  'Elmwood Courts',
+  'Stoneleigh Tennis',
 ] as const
 
 /** ⚠ DRAFT – the alt each moment-face wears when its OWN painting is the one drawn; the band
@@ -1303,12 +1312,33 @@ function flavourFor(seed: string, sheetId: string) {
   return { seat, gate, row, venue, bars, doodle }
 }
 
-/** The childhood club's fictional name – §8b's pool, drawn ONCE per career on the flavour family's
- *  own key so every opener wears the same patch («стабилен при перечитывании, товарных знаков не
- *  задевает»). */
-function patchFor(seed: string): string {
+/** The ramp's four steps in order, lowest first – the one list `chapterStepOf` ranks by. */
+const STEP_ORDER: readonly AlbumTierStep[] = ['budget', 'middle', 'high', 'elite']
+
+/** ⭐ ROUND 47 #16 – THE STEP A CHAPTER'S CLUB PATCH IS SEWN IN (`albumChapterStep`): the highest step any tournament on the chapter's
+ *  own pages sits on, read through the SAME `ALBUM_TIER_STEP` table the pass and the tag use. A chapter with no
+ *  tournament in it (the childhood) is the first step – the domestic years, where every career starts. */
+export function albumChapterStep(candidates: readonly { tier?: TierId }[]): AlbumTierStep {
+  let best = 0
+  for (const c of candidates) {
+    if (c.tier !== undefined) best = Math.max(best, STEP_ORDER.indexOf(ALBUM_TIER_STEP[c.tier]))
+  }
+  return STEP_ORDER[best]
+}
+
+/** ⭐⭐ ROUND 47 #16 – THE CLUB PATCH GOES THE TICKET'S WAY («по аналогии с билетом разными цветами и с разными
+ *  названиями вымышленными»): a name that VARIES and a colour that carries the rank. Both are DERIVED – nothing
+ *  is rolled that was not rolled before:
+ *    * THE NAME walks the pool by chapter. The career's ONE patch draw (`${seed}:album:flavour:patch`, the same
+ *      key and the same single draw it has always made) gives the start, and chapter N wears the name N places
+ *      on – so the openers of one book never repeat a club until the pool runs out (a per-sheet roll off six
+ *      names repeated one in roughly three books of four), and it is still a pure function of (seed, chapter):
+ *      re-opening the album reshuffles nothing, MAIN is untouched (invariant 2), no stream is new.
+ *    * THE STEP is `albumChapterStep` – the rank the chapter reached, on the pass's own ramp. */
+export function albumPatchFor(seed: string, chapterIndex: number, step: AlbumTierStep): AlbumClubPatch {
   const rng = rngFromSeed(`${seed}:album:flavour:patch`)
-  return PATCH_POOL[pickInt(rng, 0, PATCH_POOL.length - 1)]
+  const start = pickInt(rng, 0, ALBUM_PATCH_POOL.length - 1)
+  return { name: ALBUM_PATCH_POOL[(start + chapterIndex) % ALBUM_PATCH_POOL.length], step }
 }
 
 const DOODLES: readonly AlbumDoodle[] = ['trophy', 'heart', 'sun', 'smile', 'globe', 'plane']
@@ -1450,7 +1480,7 @@ function sheetsOf(
   const ageTo = Math.max(...ages)
   const chapterAgeLabel =
     ageFrom === ageTo ? ageLabelOf(ageFrom) : `${TICKET_WORDS.age} ${ageFrom} – ${ageTo}`
-  const patch = patchFor(world.seed)
+  const patch = albumPatchFor(world.seed, chapterIndex, albumChapterStep(candidates))
   const sheets: AlbumSheetModel[] = []
   let at = 0
   for (const [index, take] of plan.takes.entries()) {

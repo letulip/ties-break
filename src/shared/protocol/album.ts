@@ -105,6 +105,16 @@ export interface AlbumTag {
   ageLabel: string
 }
 
+/** ⭐ ROUND 47 #16 – THE CLUB PATCH GOES THE TICKET'S WAY: a fictional club name that VARIES from chapter to
+ *  chapter and a cloth that carries the rank (`step`, the same `ALBUM_TIER_STEP` ramp as the pass and the tag –
+ *  «по аналогии с билетом разными цветами и с разными названиями вымышленными»). ⚠ The name is one of OUR
+ *  fictional clubs, never a real one. */
+export interface AlbumClubPatch {
+  name: string
+  /** The ramp step of the highest rung the chapter's pages show – the cloth's ink. */
+  step: AlbumTierStep
+}
+
 /** One sheet – the unit of paging, and the unit the pager counts. */
 export interface AlbumSheetModel {
   id: string
@@ -120,8 +130,9 @@ export interface AlbumSheetModel {
   line: string
   ticket: AlbumTicket | null
   tag: AlbumTag | null
-  /** The club patch's fictional name, pulled from the seed (spec §8b). */
-  patch: string | null
+  /** The club patch – its fictional name, pulled from the seed (spec §8b), and the rank step it is sewn in
+   *  (round 47 #16, the pass's own ramp). */
+  patch: AlbumClubPatch | null
   doodles: readonly AlbumDoodle[]
 }
 

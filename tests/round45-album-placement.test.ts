@@ -124,10 +124,13 @@ describe('round 45 #6 · the model is the components\' own numbers', () => {
     expect([at(layoutA, 'album-a-head').x, at(layoutA, 'album-a-head').y]).toEqual([headA?.x, headA?.y])
     expect([at(layoutA, 'album-a-patch').x, at(layoutA, 'album-a-patch').y]).toEqual([patchA?.x, patchA?.y])
     expect([at(layoutA, 'album-a-doodle').x, at(layoutA, 'album-a-doodle').y]).toEqual([doodleA?.x, doodleA?.y])
-    const [pass, doodleB] = LAYOUTS.B.fixed(sheet)
+    // ⭐ ROUND 47 #8: the pass is only drawn WITH a ticket, so its frame is read off a ticketed sheet – a ticketless one keeps
+    // the 97px bottom edge round 45 tuned the resolver against (`passBox`). The height is the page's `min-height` now.
+    const [pass, doodleB] = LAYOUTS.B.fixed({ ...sheet, ticket: { step: 'elite' } } as unknown as AlbumSheetModel)
     expect([at(layoutB, 'album-b-doodle').x, at(layoutB, 'album-b-doodle').y]).toEqual([doodleB?.x, doodleB?.y])
     const passRule = rule(layoutB, '.album-b-pass')
     expect([px(passRule, 'left'), 470 - px(passRule, 'bottom') - (pass?.h ?? 0)]).toEqual([pass?.x, pass?.y])
+    expect(px(passRule, 'min-height'), 'the pass is one height: the page and the table agree').toBe(pass?.h)
     const [headC, tagC, doodleC] = LAYOUTS.C.fixed(sheet)
     expect([at(layoutC, 'album-c-head').x, at(layoutC, 'album-c-head').y]).toEqual([headC?.x, headC?.y])
     expect([at(layoutC, 'album-c-tag').x, at(layoutC, 'album-c-tag').y]).toEqual([tagC?.x, tagC?.y])

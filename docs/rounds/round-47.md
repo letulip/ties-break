@@ -110,13 +110,51 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     text is byte-identical – `She said one more year 5 times.` is asserted verbatim). One `.ending-fig` rule carries face, weight and tabular
     figures. Test: `r47-b1-ending-figures` #7 (ten figures at once). Mutation: body face → RED.
 
-- [ ] **8. «в альбоме горизонтальный билет повернулся - ок, но надо его ниже опустить, он на
+- [x] **8. «в альбоме горизонтальный билет повернулся - ок, но надо его ниже опустить, он на
   некоторых страницах перекрывает много букв наверху. И давай его на 10% меньше сделаем заодно.
   Еще на этом билете дублируется Champion, давай только рукописный оставим. И еще на нем Row, Gate
   давай везде в одну строку писать, а то где-то в две получается»** – four ticket asks: (a) lower
   it (it covers top-of-page letters on some sheets – the exact overlap B12 measured and parked;
   his eye has now ruled); (b) −10 % size; (c) the duplicated «Champion» – keep only the
   HANDWRITTEN one; (d) «Row …, Gate …» always ONE line. Class: **build**.
+  - **B2 · SHIPPED – 8a + 8b: the pass is drawn at ×0.9, hangs from its TOP-LEFT corner, and sits lower.** `AlbumLayoutB.vue`:
+    `transform-origin: 0 0; transform: translateX(4px) rotate(5deg) scale(0.9)`, `bottom: 34px` (was 48), `min-height: 121px`. The +5° is
+    round 46's, untouched. THE ARITHMETIC (400px frame, h = 121, θ = 5°): turned about the centre, the top-left corner lifts
+    (w/2)·sin θ − (h/2)(1 − cos θ) = 17.43 − 0.23 = **17.2px** above the frame (Chromium: 16.84 – AABB top 284.16 against a box top of
+    301); at −10 % and the same centre origin it would still have lifted (360/2)·sin θ − … = 15.7 − 0.2 = 15.5px. About the TOP-LEFT corner
+    the lift is **0.00**: the highest corner IS the frame's top-left and the rest of the pass turns DOWN – the right end drops 360·sin θ =
+    31.4px, the leaning foot goes out 0.9·121·sin θ = 9.5px (hence the 4px `translateX`: 16.5px from the page edge, round 46's ≥ 15px margin
+    kept). Chromium on the real layout-B sheet, all four steps: AABB top **315.00** = the frame's y, bottom 454.86 (15.1px from the page
+    edge – 34px is the lowest anchor that keeps round 46's margin for the tallest pass), left 16.5, right 384.6.
+  - **B2 · FOUND – the overlap was not only the lift: `passBox`'s height table was STALE.** It held 97 (lower steps) / 121 (upper); the real
+    pass measured **115 / 121 / 134px** in Chromium over all 16 rungs × 6 stages with the widest row and seat (Row/Seat broke in two on every
+    one, a long stage broke in the stub, a long title broke). On the lower steps the box stood 18–37px ABOVE the resolver's frame before it
+    was even turned. Now the pass is ONE height (natural 100.8–120.6px, `min-height` 121) and `passBox` says so: frame y 315 / h 121 for
+    every ticketed sheet; a ticketless sheet draws no pass and keeps round 45's 97px edge (reserving the new frame there shrank windows for a
+    pass nobody draws: 25 of 67, over the guard).
+  - **B2 · THE RESOLVER'S SWEEP, MEASURED** (335 sheets, `tests/round45-album-placement.test.ts`; the control is HEAD's `albumPlacement.ts`
+    through the SAME test body): photograph windows at a shrunk rung – B **18 → 22 of 67** (the guard's ceiling is 22: green AT the ceiling,
+    zero slack, thresholds untouched), C 29 → 29 of 121, A 0 → 0 of 147; hero covered 0 → 0; the B6-knob floor (≥ 40) 42 → 46. The four extra
+    B sheets are the honest price of a frame that is finally the pass's size. 24 of 24 green; the unit mirror test now reads a ticketed
+    sheet and holds the page's `min-height` against `PASS_H`.
+  - **B2 · SHIPPED – 8c: «Champion» printed twice because the template printed `ticket.stage` TWICE** – the title
+    (`{{ ticket.tier }} {{ ticket.stage }}`, display face) AND the stub (`.album-pass-stage`, `--font-hand`) – for EVERY stage, not only the
+    champion's. WORDING, before → after, exactly: title `World Tour 1000 Champion` → `World Tour 1000`; the stub's handwritten `Champion` is
+    unchanged. The removal applies to every other stage (`Final`, `Semifinalist`, `Round of 16` …): the duplication was structural and
+    «Champion» is the one he saw – ⚠ if he wants the display-face stage back on the non-champion tickets that is one line in the template.
+  - **B2 · SHIPPED – 8d: «Row …» is ONE line, and the stub grew 116 → 134px so it can be.** Measured in Chromium: the stub's Row/Seat line
+    (flex, 90.5px text box) broke in two on ALL 96 passes of the survey («ROW / 30», «SEAT / 30D»); the Date/Gate line never broke (101px
+    spare). The widest pair the engine can deal («Row 30» 45.25 + «Seat 30D» 55.95 + the gap) is **105.2px**, so `white-space: nowrap` ALONE
+    would have run it off the ticket's edge: the stub is 134px (3.8px spare) and the gap 4px (was 8). Re-measured: 0 of 96 wrap, 0px overflow.
+    Both lines are `nowrap` on the element and on its spans.
+  - **B2 · FOUND, NOT TOUCHED (not asked):** the handwritten stage is wider than the stub for the longest words. At the old 116px `Semifinalist`
+    ran 18px past its box (6px beyond the ticket's edge, clipped) and `Quarterfinalist` 38px (26 clipped); at 134px `Semifinalist` fits (0) and
+    `Quarterfinalist` is 20px over – **8px of its last letters still clipped**. A smaller hand size or a longer stub for that one word is a design call.
+  - **B2 · TESTS (all green):** `round46-album-pass-tilt` (rewritten, 24: +5°, ×0.9, TOP CLEARANCE, its own non-vacuity check, ≥ 15px page margin, the
+    page/table mirror – each × 4 steps), `r47-b2-album-ticket-patch` 16 (8c × 6, 8d × 5, 16 × 5), the 335-sheet sweep 24, `albumBook` +5. Mutations
+    (applied, run, restored byte-identical): rotate 0° → 4 red, −5° → 8, 25° → 8; scale(1) → 8; centre origin → 4 (the clearance arm, on all four steps);
+    min-height 118 → 8 + the unit mirror 1; **the pre-fix geometry** (`bottom: 48px`, `rotate(5deg)` about the centre, no scale) → 12 red; title back
+    to tier + stage → 6; nowrap removed → 4; stub 116 → 1.
 
 - [ ] **9. «в альбоме очень крупные заголовки на страницах, можно чуть уменьшить, а еще иногда у
   этих заголовков оверлап с написанным на странице случается, что тоже странновато, вроде место
@@ -180,12 +218,32 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   trophies surface) and swap it for the good existing cup icon. Class: **build** (locate both
   first; name them in the ledger).
 
-- [ ] **16. «whitegate club и саму бирку тоже можно сделать по аналогии с билетом разными цветами и
+- [x] **16. «whitegate club и саму бирку тоже можно сделать по аналогии с билетом разными цветами и
   с разными названиями вымышленными, иконка на эту бирку со скрещенными ракетками во вложении, или
   можно еще иконку мячика использовать, тоже во вложении»** – the album's side TAG goes the
   ticket's way: colour steps + FICTIONAL club names (new strings → DRAFT rows; the fictional-names
   law holds – nothing real constructible), with his attached crossed-racquets icon (or the ball)
   on the tag. Both SVGs enter the repo with this build. Class: **build**.
+  - **B2 · SHIPPED – 16: THE CLUB PATCH IS A STEPPED FAMILY.** ⚠ WHICH OBJECT: «Whitegate Club» is the club **PATCH** – `AlbumPatch.vue`, the crest on
+    layout A's opener, `sheet.patch`; its name was one of six in `PATCH_POOL`, drawn ONCE per career, so every opener wore the same cloth and the same
+    club – and NOT the baggage tag (`AlbumTagCard.vue`, layout C), which already has colour steps and the tournament's name. The patch already carried two
+    CSS-ellipse racquets; his icon replaces them. `AlbumSheetModel.patch` is `{ name, step }` now (`AlbumClubPatch`, protocol/album.ts).
+    * THE NAME is derived, not rolled: the career's ONE existing draw (`${seed}:album:flavour:patch`, same key, same single draw) gives the start and chapter N
+      wears the name N places on (`albumPatchFor`) – a pure function of (seed, chapter), so the openers of one book never repeat a club until the pool
+      runs out (ten; a per-sheet roll off six repeated one in roughly three books of four), re-opening reshuffles nothing, MAIN untouched, no stream is new.
+    * THE POOL is ten: the six that shipped (`Whitegate Club` among them, unchanged) + R47-S7…S10 below. All are two or three plain words that fit the 96px
+      cloth in two lines (measured in Chromium: 10 of 10 two lines, patch 83px as `albumPlacement` holds it), none a club, tournament or trademark.
+    * THE STEP is the highest step of any tournament on the chapter's own pages through the SAME `ALBUM_TIER_STEP` (`albumChapterStep`); a chapter with no
+      tournament (the childhood) is the first step. THE CLOTH is the pass's own four pairs (`--tier-<step>` ×0.38 / ×0.27 – no colour added; legibility
+      ≥ 4.5:1 held), `album-patch-<step>`.
+    * THE ICON: his crossed racquets, INLINE (`fill="currentColor"`, 22px – the thread tints it; inline like the baggage tag's cord, not a CSS mask, which a
+      raster export would leave empty), his «Uploaded to: SVG Repo» provenance kept in the template. Both files are in the repo as received:
+      `public/icons/tennis-svgrepo-com.svg` (used) and `public/icons/tennis-ball-2-svgrepo-com.svg` (his alternative, unused – one swap: replace the
+      two `<path d>` in `AlbumPatch.vue` with its paths and its `.st0` fill with `currentColor`).
+    * TESTS: `r47-b2-album-ticket-patch` (step class, four cloths = token pairs, pool name + inline icon + tint, legibility, layout-A binding), `albumBook`
+      (pool: ten, distinct, fictional, `Whitegate Club` kept; the ladder is total through the shared table; the walk never repeats and wraps; forty seeds
+      reach ≥ 6 of 10 clubs; the assembled book). Mutations: step class removed → 2 red, svg deleted → 1, `fill` → `#000000` → 1, name ignores the
+      chapter → 2, step always budget → 1, last rung not highest → 1, trademark in the pool → 1.
 
 ---
 
@@ -230,6 +288,18 @@ B3 starts), never side by side. The architect's probe rides tools/ + scratchpad 
 | R47-S4 | 11 – the one-more-year note on the last page (`EndingScreen.vue`, `.ending-note`; today «She said one more year N times.»), alternate A – his own reading. `time` / `times` as today | `You said one more year N times.` |
 | R47-S5 | 11 – same slot, alternate B – the agency framing (the parent gives, she receives) | `You gave her one more year N times.` |
 | R47-S6 | 11 – same slot, alternate C – impersonal, leaves the speaker out | `One more year was said N times.` |
+
+## DRAFT strings – B2 (WIRED – these four ARE in the build; his veto removes a row from the pool)
+
+| id | item – where | string |
+| --- | --- | --- |
+| R47-S7 | 16 – WIRED: club-patch pool row 7 (`ALBUM_PATCH_POOL`, engine/world/albumBook.ts) – a fictional club, two lines on the 96px cloth | `Larkfield Tennis` |
+| R47-S8 | 16 – WIRED: pool row 8 | `Fairhaven Club` |
+| R47-S9 | 16 – WIRED: pool row 9 | `Elmwood Courts` |
+| R47-S10 | 16 – WIRED: pool row 10 | `Stoneleigh Tennis` |
+
+The first six rows (`Rivermouth Tennis`, `Northfield Club`, `Harbour Lane Tennis`, `Old Mill Courts`, `Cedar Park Tennis`, `Whitegate Club`) shipped
+with §8b and are unchanged.
 
 - **A13 · 13 MEASURED AND DELIVERED (the architect).** `tools/career-dossier.ts` (committed,
   registry regenerated) decodes any .tsave through the app's own import door; his w1037 save
