@@ -547,8 +547,14 @@ export interface AcademyEpilogue {
  *  any fresh snapshot (the same argument App.vue makes for the knock). */
 export interface EndingView {
   ending: CareerEnding
-  /** exactly seven pages, in slot order */
-  album: AlbumPage[]
+  /** ⭐ ROUND 46 · R6 (06.10) – ONE PAGE, THE LAST OF THE OLD REEL, AND THE ONLY ONE THE SCREEN READS. This field
+   *  was `album: AlbumPage[]` – «exactly seven pages, in slot order» – until round 46 #18 (B6) put the real album
+   *  book on the epilogue's way and kept only the reel's last page on the card: that page carries the ending's
+   *  own title (`caption`) and its lines, so it is how the career ended. Pages 1–6 then rode every snapshot
+   *  unread, and the owner ruled they leave («снимаем, да», 06.10). ⚠ ONLY THE WIRE NARROWED: `engine/world/album.ts`
+   *  still builds all seven slots (`buildAlbum`, for its own tests and probes), nothing is saved, and no
+   *  player-visible string moved – the screen never drew the six. Slot 7 is `slotLastWeek`. */
+  closing: AlbumPage
   scroll: ScrollSeason[]
   handoff: HandoffView
   /** the career's money, whole – not a score, just the two numbers the ledger kept */

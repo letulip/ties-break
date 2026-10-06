@@ -1100,6 +1100,27 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
    which IS the shipped shape; no auto-open; DRAFT alternates for the button in his «посмотреть
    весь путь» spirit. (в) «снимаем, да» – the dead `EndingView.album` pages 1–6 leave the wire.
    (г) departed strings – his eyes later. Build (в + DRAFT rows) → **R6**.
+   - **R6 · 5(в) SHIPPED – THE SIX DEAD PAGES LEFT THE WIRE: `EndingView.album` (seven `AlbumPage`s) is `EndingView.closing` (the last one), and nothing else moved** (06.10, DRAFT rows **R46-S48, S49**).
+     **What left, measured** (a fresh career with the ending latched, `buildEndingView`, JSON length – a LOWER bound, because a played career's pages 1–6 carry facts the empty ones do not): the page list went from seven pages / 1422 bytes
+     to one page / 191, the whole view from 2367 to 1136 bytes (1231 fewer, about half), and 54 fields (six pages × nine) are gone from every snapshot while the ending is latched. One field changed shape
+     (`album: AlbumPage[]` → `closing: AlbumPage`); nothing is saved, so no schema move and no migration.
+     **Mapped once:** ONE producer (`buildEndingView`, `world/endings.ts`: `album: buildAlbum(world)` → `closing: slotLastWeek(world)`) and ONE reader (`EndingScreen.vue`: `closing` took the last of the list, it takes the field).
+     `vue-tsc -b --force` exits 0, and the pre-change PCRE grep for `album:` / `.album` over `src tests e2e tools scripts` found these readers and no others – `e2e/` carries none (the brief's guess `e2e/dynasty.spec.ts` included).
+     ⚠ THE PIN QUERIES MISSED THE FIELD: `git grep -l "EndingView\|endings.ts" -- tests/` lists files that mention the TYPE, and `'endings.ts'` matched nothing; the readers were found by grepping the FIELD, which is the query a field removal needs.
+     **Pins re-aimed – thirteen test files, every one a fixture or a direct reader of the removed field (so the diff was wider than «seven»):** ten mounted-component files built `album: [...]` literals (`endings-ui`, `principles-w4-dialog-focus`,
+     `principles-w4-refusal-surfaces`, `r39-lifetime-letter`, `r47-raise-another-route`, `round36-phase4`, `round46-b6-ending-and-retirement`, `round46-the-reckoning`, `wave10-dynasty-door`, `wave12-parting-album`) – each now hands `closing:` the page
+     it used to hand LAST, so the card renders exactly what it rendered; three engine files read the view (`ending.test.ts`, `two-doors.test.ts`, `wave8-return-decision.test.ts`). The wire pin is in `ending.test.ts` («the snapshot carries the epilogue
+     as a FIELD»): `closing` is slot 7, equals the page `buildAlbum` builds as slot 7, and `album` is not among the view's keys. In `wave8-return-decision.test.ts` the claim «the family ending reads page for page like a stopped one, but for the title»
+     is now about the one page the view carries; the other six belong to the engine's own album tests.
+     **⚠ WORDING: zero strings.** The screen drew only the last page before and after, and that page's `why` / `caption` / `fact` are the engine's, untouched – the pages' copy left the WIRE, not the screen. (One test TITLE said «two empty slots»
+     and now says «nothing earned»: a title, not a surface.)
+     **Evidence:** `vue-tsc -b --force` exit 0; `vitest run` over the three engine files and the eleven component files that build or mount the epilogue (those ten plus `wave8-family-ending`): 14 files, 238 tests, all green (15 s).
+     **⚠ RESIDUAL, FLAGGED, NOT DONE – the architect's call:** `buildAlbum` and the six slot builders (`slotBeginning` … `slotTheTurn`) have **no production caller any more**. What still reads them: `tests/ending.test.ts` (the slot arms),
+     `tests/relative-age.test.ts`, `tests/round46-best-rank.test.ts` (`slotBestWeek`) and `tests/round46-career-money.test.ts` (`slotTheTurn`) – the last two pin round 46 #9/#10 figures – both `tools/album-money-probe.ts` and
+     `tools/album-spread-probe.ts`, and the frozen barrel name (`principles-a03-barrel-surface.test.ts` lists `buildAlbum`). The brief's «delete what nothing reads» is not met by that list, since tests and probes do read them, so I narrowed the wire
+     and stopped there; deleting them is a second, wider change (retire the arms, move the barrel pin, regenerate `world-symbol-map`).
+     **DRAFT alternates, NOT wired:** S48 `The whole road`, S49 `Her whole road, page by page` – both for the wired S17 `View the album`, his pick.
+     **Files:** `src/shared/protocol/career.ts`, `src/engine/world/endings.ts`, `src/components/EndingScreen.vue`, the thirteen test files above, this ledger.
 6. **The watch**: «наверное да» – the 18 band lends nothing; the leak closes with a measured
    note. Build → **R6**.
 7. **№14**: «без миграции ок» – option Б; the live row heals on the next dominating top-up.
@@ -1215,3 +1236,5 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S45 | morning 3 – ALTERNATE for S43 + S44, NOT wired | the words form: `Together for` / `1 yr 6 mo`, `Engaged` / `1 yr 6 mo`, `Married` / `1 yr 6 mo`; the cost is that without the word «together» the number under «Married» reads as how long they have been married, which is not what it counts |
 | R46-S46 | morning 4 – the year-end Money tile's realised-loss row, **WIRED** (`SeasonSummaryDialog.vue`, the `season-key` directly under «Spent this season»; hidden at zero; the engine's `realisedLossOf`, banked as `wealth.realisedLossCents`; the shelf row S12 now prints without it, so the rows add up once) | `Sold at a loss` |
 | R46-S47 | morning 4 – ALTERNATE for S46, NOT wired | `Realised loss` – the accounting word, shorter and exact; the cost is that «realised» is a finance term a parent may not use, where the ledger's own sentences already say «Sold: … less than it cost» |
+| R46-S48 | morning 5 – ALTERNATE for S17, NOT wired (the lead control on the epilogue's last page; his «посмотреть весь путь» spirit) | `The whole road` – names what the book is rather than what it is called; the cost is that «road» is a figure of speech where `View the album` says what the control opens |
+| R46-S49 | morning 5 – ALTERNATE for S17, NOT wired | `Her whole road, page by page` – the same spirit, and it says the book is paged and hers; the cost is length – 28 characters against S17's 14, on a `PrimaryPill` sized for the short one; not measured at 320 wide, because it is not wired |
