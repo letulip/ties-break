@@ -161,7 +161,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     and 320×568 – `assertDismissReachable`, `setViewport` before the mount). Mutations: link back above the doors → RED; `.ending` no longer
     the scroller → RED ×2.
 
-- [ ] **13. «и вот весь сейв, разбирай. меня интересует всё: травмы, перформанс, как отработали
+- [x] **13. «и вот весь сейв, разбирай. меня интересует всё: травмы, перформанс, как отработали
   помогающие специалисты, как и с какой скоростью она деградировала и т.д.»** – the full-career
   deep read: injuries (count, severity, timing, cost), performance arc, what each support seat
   actually delivered over its tenure, the decline curve and its speed, plus whatever the data
@@ -230,3 +230,15 @@ B3 starts), never side by side. The architect's probe rides tools/ + scratchpad 
 | R47-S4 | 11 – the one-more-year note on the last page (`EndingScreen.vue`, `.ending-note`; today «She said one more year N times.»), alternate A – his own reading. `time` / `times` as today | `You said one more year N times.` |
 | R47-S5 | 11 – same slot, alternate B – the agency framing (the parent gives, she receives) | `You gave her one more year N times.` |
 | R47-S6 | 11 – same slot, alternate C – impersonal, leaves the speaker out | `One more year was said N times.` |
+
+- **A13 · 13 MEASURED AND DELIVERED (the architect).** `tools/career-dossier.ts` (committed,
+  registry regenerated) decodes any .tsave through the app's own import door; his w1037 save
+  opened clean at v92 (the night's migration validated on a live career). The dossier file went to
+  him mid-round. Headlines: the lived decline matched the drawn curve to the half-season
+  (declineStart 28.48 vs the S15 dip and the S20 fall); 9 injuries / 18 weeks lost in 20 years
+  with the masseur saving 8 of them; 15 of 16 knocks played through («push») with the ankle as
+  the late-era chronic; composure 57.8 ABOVE its 52.7 potential – the psychologist's +5 is the
+  career's only above-ceiling skill; the academy at 4/4 is the best deal ($12M → $42.9M + weekly
+  income); «Family's share» on the last page = prizeCents to the cent. Honest holes stated:
+  financeWeeks keep 60 weeks, results keep the running season – the early-era per-tier splits are
+  not reconstructable from a save.
