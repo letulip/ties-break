@@ -374,3 +374,18 @@ with §8b and are unchanged.
   income); «Family's share» on the last page = prizeCents to the cent. Honest holes stated:
   financeWeeks keep 60 weeks, results keep the running season – the early-era per-tier splits are
   not reconstructable from a save.
+
+---
+
+- [ ] **17. (06.10, вечер – the owner pulled the spawned walk-slowdown hunt INTO the round:
+  «давай в этот раунд докинем?»)** – the walked-career fixtures grew ~3–4× across the morning's
+  double merge (college-league's four-year walk: «4.7 s quiet» when its budget was written →
+  20.7 s solo on main tonight; the round/47 branch already ~24 % faster at 15.8 s). The symptom
+  is closed (three files promoted to HEAVY_UNIT_FILES, the dated 06.10 entry); THIS item is the
+  CAUSE: profile `stepCareerWeek`/tick on a walked college career, name which merged additions
+  grew the hot path (candidates: the life-moment derivation, lifeBeat additions, the masseur
+  replay, snapshot work leaking into walks, the reckoning fold), optimize the honest way or
+  document the growth as the price of shipped features – and re-measure the three promoted
+  walkers (back under ~8 s solo → they return to the bulk pool). ⚠ Any optimization keeps worlds
+  BYTE-IDENTICAL: same-seed walks equal before/after, `rngMain` untouched, the frozen capture
+  green. Class: **measure → build** → **B4**.
