@@ -122,7 +122,7 @@ function albumPage(slot: number, over: Partial<AlbumPage> = {}): AlbumPage {
 function endingView(type: CareerEndingType = 'natural', over: Partial<EndingView> = {}): EndingView {
   return {
     ending: { type, week: 900, ageYears: 31, detail: 'she stopped at thirty-one', resumesWeek: null },
-    album: [1, 2, 3, 4, 5, 6, 7].map((s) => albumPage(s)),
+    closing: albumPage(7),
     scroll: [{ seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] }],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },

@@ -218,6 +218,21 @@ export function accrueCoachCut(world: WorldState, week: number, cents: number, b
   entry.coachCut = { cents: (entry.coachCut?.cents ?? 0) + cents, bps }
 }
 
+/** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – WHAT A SALE REALISED, PARKED BESIDE THE ARITHMETIC AND NOT IN IT (`FinanceWeek.realisedCents`).
+ *
+ *  ⚠⚠ THIS IS NOT `accrueFinance` AND MUST NEVER BECOME IT, `accrueCoachCut`'s warning in its situation. The sale's whole proceeds
+ *  were already booked as a `+shop` row by the same `addEvent`; the cents handed in here are only the part of them that was a gain or a
+ *  loss against cost, so booking them through `accrueFinance` would count one sale twice – in `byCategory`, in the wallet's net and in
+ *  `careerTotals`. This writes the memo and touches none of them.
+ *
+ *  Signed and ACCUMULATING (a week may settle two sales); a zero delta writes nothing, so a week that sold something at exactly its
+ *  cost is a week like any other. A pure state write on an integer already decided: no draw, no clock. */
+export function accrueRealised(world: WorldState, week: number, deltaCents: number): void {
+  if (deltaCents === 0) return
+  const entry = financeWeekEntry(world, week)
+  entry.realisedCents = (entry.realisedCents ?? 0) + deltaCents
+}
+
 /** THE SEASON'S IDENTITY: the 0-based index of the 52-week block a week belongs to.
  *
  *  Pure integer arithmetic on the absolute week – no calendar, no date, nothing that can drift.
@@ -324,6 +339,37 @@ export function seasonMoneyOf(window: FinanceWindow): SeasonMoney {
     else spentCents += -cents
   }
   return { spentCents, earnedCents, shelfNetCents }
+}
+
+/** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – THE YEAR'S REALISED LOSS: THE ONE PART OF THE SHELF THAT IS A REAL EXPENSE.
+ *
+ *  THE OWNER, 06.10: «а) мне нужно видеть реальные расходы и доходы, мы это уже обсуждали. Инвестиция это не совсем расход, только
+ *  если мы не в минусе зафиксировались». `seasonMoneyOf` took the whole `'shop'` category out of «spent» (round 46 #8: a deposit
+ *  moved, it did not leave) and put its net on the shelf. A sale that fixed a loss is the exception his sentence names: the family got
+ *  back less than it had put into what it sold, and that difference is gone.
+ *
+ *  THE FIGURE: the window's NET realised result (`Σ FinanceWeek.realisedCents`) read as a loss only when it is negative, so a net
+ *  realised GAIN is 0 here on purpose – it does not join income, the card's «Portfolio growth» row already tells that story – and a
+ *  gain on one sale hides a loss on another inside the same year: a family that fixed +$5M on its fund and -$1M on a boat has not fixed a
+ *  loss. Positive cents, 0 when there is none.
+ *
+ *  ⚠⚠ HOW IT RELATES TO `seasonMoneyOf`'S `shelfNetCents` – NAMED INSIDE IT, NEVER ADDED TO IT. The shelf is the `'shop'` net as the
+ *  wallet felt it: -purchases + proceeds - upkeep. A sale's proceeds are the cost basis it released plus what it realised, so
+ *      shelfNetCents = -(purchases - basis released) + realised result - upkeep
+ *  – principal that moved, plus the result, minus the upkeep. The loss is the negative of the middle term, which makes it ALREADY
+ *  INSIDE `shelfNetCents`, and `earnedCents - spentCents + shelfNetCents === window.netCents` is untouched by this function. A card that
+ *  prints the loss as an expense row keeps its rows adding up to the bottom line by printing the shelf row WITHOUT it:
+ *  `shelfNetCents + realisedLossCents`. Display decomposition – one loss, counted once. (tests/round46-season-money.test.ts pins the
+ *  relation on a real sale, from the wallet and the sold row's own basis rather than from this memo.)
+ *
+ *  The window is `financeWindow`'s own (`week >= fromWeek`, no upper bound), so the two cannot disagree about which sales were this
+ *  year's. Pure integer arithmetic over rows already written: no draw, no clock, no world. */
+export function realisedLossOf(financeWeeks: FinanceWeek[], fromWeek: number): number {
+  let netCents = 0
+  for (const w of financeWeeks) {
+    if (w.week >= fromWeek) netCents += w.realisedCents ?? 0
+  }
+  return netCents < 0 ? -netCents : 0
 }
 
 /** DENSE per-week income/expense over `[fromWeek, toWeek]` – the Home budget card's chart series.

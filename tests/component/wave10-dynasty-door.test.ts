@@ -71,7 +71,7 @@ function endingView(over: Partial<EndingView> = {}): EndingView {
   const totals = { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
   return {
     ending: { type: 'natural', week: 900, ageYears: 31, detail: 'she stopped at thirty-one', resumesWeek: null },
-    album: [1, 2, 3, 4, 5, 6, 7].map(albumPage),
+    closing: albumPage(7),
     scroll: [],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals,

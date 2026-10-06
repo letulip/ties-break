@@ -321,3 +321,18 @@ per season – 78 weeks gives about 2.0, 104 about 1.5 (predicted, not measured;
 cooldown would not lower the count, which the window already caps; it would only spread the beats. In a marriage
 where all three occasions stay true (`tests/wave7-spouse-view.test.ts` H1) the three beats of a year fall at weeks
 0, 10 and 20 and then it is silent until the window reopens; real careers are less regular, which is unmeasured.
+
+**Round 46 R3 – the line within the occasion (06.10).** The pool is no longer one line per occasion: `distant-swing` holds
+four lines, `road-stretch`, `money` and `no-vacation` three each, and entry 0 of every pool is the line the occasion had
+before with its opening re-written (the owner's tautology ruling: the heading introduces the speaker, so no line does; the
+thirteen strings are DRAFT rows R46-S26–S38 in `docs/rounds/round-46.md`). The pick is now TWO taps on the same purpose
+stream – the occasion exactly as above, then the line inside it, never the line he said last for that occasion – so «NO new
+draw» above is true of the OCCASION layer and no longer of the beat: a beat that fires takes one more tap on
+`<seed>:life:spouse-view:<week>` (still ONE key), and a week that does not fire takes none. The line is stamped on the row
+(`LifeBeatRecord.line?`, optional, absent reads as entry 0, no schema version) because a stream-derived line cannot survive
+the pool growing – `frame`'s argument.
+
+**Predicted – written before the AFTER numbers were read.** The occasion layer is untouched, so every beat keeps its week
+and its occasion: the cadence and the mix are the table above's AFTER column (342 beats, 2.92 per latched season,
+37.4 / 35.7 / 26.9 / 0.0 %), no occasion is ever told twice running on the same line (0 repeats), and each pool spreads close
+to evenly over its lines. **Measured – `npm run bench:wedding -- --seeds 20`:** 366 beats over 125.2 latched seasons = 2.92 per latched season; mix 36.6 / 35.8 / 27.6 / 0.0 %; beats on entries 0, 1, 2… – `distant-swing` 33 / 37 / 29 / 35, `road-stretch` 48 / 41 / 42, `money` 36 / 35 / 30 (`no-vacation` 0: the bench's policy books a family week every season); the same occasion twice running on the same line: 0 of 280 pairs (the bench's section (f) now prints the line spread and that count). The occasion layer is the same code on the same first tap, so the cadence holds (2.92 = 2.92); the beat and season totals differ from the AFTER column's (366 / 125.2 against 342 / 117.2) because the walk itself moved after that table was taken, and the mix wobbles by under a point with it. The prediction held.

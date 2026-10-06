@@ -36,7 +36,7 @@
 // a getter would have to be given a stream, and a stream on a read path is how a purchase moves the
 // world's dice.
 import { guardNotEndedForGood } from './endings'
-import { addEvent } from './ledger'
+import { accrueRealised, addEvent } from './ledger'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
 import { assetWeeklyFamilyIncomeCents } from './business'
 import { kidAgeYears } from './age'
@@ -769,6 +769,9 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     text: `Sold ${formatCents(proceedsCents)} of: ${label} – ${saleTail(deltaCents)}`,
     amountCents: proceedsCents,
   })
+  // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – AND WHAT THIS SALE REALISED IS CARRIED TO THE LEDGER'S MEMO: the very `deltaCents` the sentence above names, so the year-end
+  // card can read the season's realised loss back (`realisedLossOf`, ledger.ts). A memo and not a booking – the proceeds are already the `+shop` row above.
+  accrueRealised(world, world.week, deltaCents)
 }
 
 /** ⭐ THE TAIL OF THE SALE SENTENCE, ONE SPELLING FOR THE WHOLE SALE (`settleAssetSale`) AND THE PART SALE (`sellAsset`): what the sale
@@ -823,6 +826,9 @@ export function settleAssetSale(world: WorldState, itemId: string, priceCents: n
     text: `Sold: ${label} – ${saleTail(priceCents - costSoldCents)}`,
     amountCents: priceCents,
   })
+  // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – THE SAME TAIL, CARRIED TO THE LEDGER'S MEMO (see `sellAsset`'s part path): what the rows fetched against what they cost.
+  // This body is the one a whole sale ends in whichever door it came through – the instant sale, a signed letter, the fire sale – so one line covers all three.
+  accrueRealised(world, world.week, priceCents - costSoldCents)
 }
 
 /** ⭐ S3 – CAN A BUYER'S PAPER STILL BE HONOURED? The lot the letter names is still OWNED and DELIVERED (`saleLotOf` is null for a row

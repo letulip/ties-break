@@ -143,13 +143,22 @@ export function kidAgeAt(world: WorldState, week: number): number {
  *  ⚠ AND MEMOISED, FOR THE MEASURED REASON `weekStart` IS (16.08). The scan is exact and cheap per
  *  step, but it is up to 52 steps and it sits under both merit arms, which sit under both entry
  *  allowances, which are asked for every event on every card of every week. Pure function of
- *  (`birthMonth`, `week`) – `kidAgeAt` reads nothing else off the world – so the key is both, and a
- *  second career with a different birth month gets its own answers rather than the first one's. */
+ *  (`birthMonth`, `birthDay`, `week`) – `kidAgeAt` reads exactly those three off the world – so the
+ *  key is all three, and a second career born on a different day gets its own answers rather than
+ *  the first one's.
+ *
+ *  ⚠ THE KEY WAS `birthMonth:week` UNTIL ROUND 46 R2 (ledger 23), on the ground that `kidAgeAt` «reads
+ *  nothing else off the world». It had read `birthDay` since the birthday-to-birthday clock, so two
+ *  same-month careers of one process shared an entry and the second was handed the first's window –
+ *  up to four weeks off, and a whole year off on the weeks between the two birthdays.
+ *  tests/age-window-memo.test.ts is the two-career net, red against the old key. */
 const WINDOW_START_MEMO = new Map<string, number>()
 
 export function ageWindowStartWeek(world: WorldState, week: number): number {
-  const birthMonth = world.profile.birthMonth
-  const key = `${world.startYear}:${birthMonth}:${Math.floor(week)}`
+  // MERGED 06.10: S1 added startYear and R2 added birthDay to this key the same morning - the
+  // memo needs all three discriminators (two same-month careers AND two start-years in one process).
+  const { birthMonth, birthDay } = world.profile
+  const key = `${world.startYear}:${birthMonth}:${birthDay}:${Math.floor(week)}`
   const hit = WINDOW_START_MEMO.get(key)
   if (hit !== undefined) return hit
   const age = kidAgeAt(world, week)

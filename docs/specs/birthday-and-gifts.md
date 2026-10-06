@@ -790,4 +790,7 @@ a never-asked row. The rule now: the row is lent to no card; it is the ask at th
 after 18 (a career already past 18 simply never meets it – the account itself still arrives through
 the kid-share ramp as before). Measured: 282 late carriings over 60 seeds before, zero after.
 `tests/birthday-own-account.test.ts` holds the corridor; the adjacent «eighteenth watch» leak
-through the same lending door is measured there too and awaits the owner's word.
+through the same lending door (145 cards and 59 of 60 careers on one every-ask walk) was closed on
+06.10 by the owner's «наверное да» – the 18 band now lends nothing to any other card, so the watch
+and the trip stay on the card at eighteen and are met nowhere else (858 cards in the full sweep
+carried a row of that band before, none do now).

@@ -78,12 +78,10 @@ function endedSnapshot(): Snapshot {
     careerMoney: moneyOf({ earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }),
     ending: {
       ending: { type: 'stopped', week: 265, ageYears: 19, detail: 'she stopped', resumesWeek: null },
-      album: [
-        {
-          slot: 1, why: 'why 1', caption: 'caption 1', fact: 'fact 1', week: 0, seasonIndex: 0,
-          stage: 'teen', emotion: 'norm', empty: false,
-        },
-      ],
+      closing: {
+        slot: 1, why: 'why 1', caption: 'caption 1', fact: 'fact 1', week: 0, seasonIndex: 0,
+        stage: 'teen', emotion: 'norm', empty: false,
+      },
       scroll: [],
       handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
       totals: { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },

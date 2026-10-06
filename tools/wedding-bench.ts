@@ -77,6 +77,7 @@ import {
 } from '../src/engine/world'
 import { createHash } from 'node:crypto'
 import { ECONOMY } from '../src/engine/economy'
+import { SPOUSE_VIEW_SAID } from '../src/engine/world/lifeBeat/spouseViewCopy'
 import { resumeMain } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { temperamentOpenness, type Temperament } from '../src/engine/spirit'
@@ -132,7 +133,7 @@ interface WeddingOutcome {
   latches: LatchMark[]
   /** weeks `weddingEligible` answered true, counted post-tick – the hazard's own denominator. */
   eligibleWeeks: number
-  spouseRows: { week: number; occasion: string }[]
+  spouseRows: { week: number; occasion: string; line: number }[]
   byKind: Record<LifeBeatKind, number>
   /** ⭐ v88 (wave 12 T6) – one mark per marriage that ENDED inside the walk. Every field is a pure
    *  read of a row the engine already wrote, except the trough, which is sampled week by week
@@ -277,7 +278,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): WeddingOutcom
   }
   out.spouseRows = lifeLogOf(world)
     .filter((r) => r.kind === 'spouse-view')
-    .map((r) => ({ week: r.week, occasion: r.detail }))
+    .map((r) => ({ week: r.week, occasion: r.detail, line: r.line ?? 0 }))
   // the week she turns 23 – the gate's own reading, scanned rather than derived twice
   let w23 = 0
   while (kidAgeExact(w23, world.profile.birthMonth, world.profile.birthDay) < ECONOMY.wedding.ageGate) w23++
@@ -671,6 +672,24 @@ function main(): void {
     const n = spouseRows.filter((r) => r.occasion === occ).length
     console.log(`    ${pad(occ, 16)}${padL(String(n), 6)}${padL(pct(n, spouseRows.length), 9)}`)
   }
+  // ROUND 46 R3 – the LINE layer under each occasion: how the beats spread over its pool (entry 0 is the line the
+  // occasion always had), and how often one occasion was told twice running on the same line (predicted 0).
+  let linePairs = 0
+  let lineRepeats = 0
+  for (const o of census) {
+    for (const occ of SPOUSE_VIEW_OCCASIONS) {
+      const told = o.spouseRows.filter((r) => r.occasion === occ)
+      for (let i = 1; i < told.length; i++) {
+        linePairs++
+        if (told[i].line === told[i - 1].line) lineRepeats++
+      }
+    }
+  }
+  for (const occ of SPOUSE_VIEW_OCCASIONS) {
+    const per = SPOUSE_VIEW_SAID[occ].map((_, i) => spouseRows.filter((r) => r.occasion === occ && r.line === i).length)
+    console.log(`    lines of ${pad(occ, 14)}${per.map((n) => padL(String(n), 5)).join('')}   (beats on line 0, 1, 2…)`)
+  }
+  console.log(`    the same occasion told twice running on the same line: ${lineRepeats} of ${linePairs} pairs`)
   console.log('')
 
   // ===============================================================================================

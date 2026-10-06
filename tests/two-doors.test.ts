@@ -543,8 +543,9 @@ describe('E. her eight exits, and what none of them may say', () => {
       expect(view!.ending.type).toBe(type)
       expect(ENDING_BLURB[type].length, type).toBeGreaterThan(40)
       expect(ENDING_TITLE[type].length, type).toBeGreaterThan(8)
-      // Her face comes off the album, which is the third total record the widening went red in.
-      expect(view!.album.length).toBeGreaterThan(0)
+      // Her face comes off the album, which is the third total record the widening went red in. ⭐ ROUND 46 · R6
+      // (06.10): the view carries the last page only now, and that page's face is the one this record holds.
+      expect(view!.closing.emotion, type).toEqual(expect.any(String))
     }
   })
 })

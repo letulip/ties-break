@@ -36,9 +36,7 @@ function albumPage(slot: number, over: Partial<AlbumPage> = {}): AlbumPage {
 function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView> = {}): EndingView {
   return {
     ending: { type, week: 265, ageYears: 19, detail: 'she stopped at nineteen', resumesWeek: null },
-    album: [1, 2, 3, 4, 5, 6, 7].map((s) =>
-      s === 3 ? albumPage(3, { empty: true, fact: null, week: null, why: 'The first cheque – there was never one' }) : albumPage(s),
-    ),
+    closing: albumPage(7),
     scroll: [
       { seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] },
     ],
@@ -102,7 +100,7 @@ describe('the album', () => {
     for (const empty of [false, true]) {
       patchSnapshot({
         ending: endingView('stopped', {
-          album: [1, 2, 3, 4, 5, 6, 7].map((s) => (s === 7 && empty ? albumPage(s, { empty: true, fact: null, week: null }) : albumPage(s))),
+          closing: empty ? albumPage(7, { empty: true, fact: null, week: null }) : albumPage(7),
         }),
       })
       const w = mount(EndingScreen)
@@ -114,7 +112,7 @@ describe('the album', () => {
   it('⚠ an EMPTY last slot says so with no fact and no consolation', async () => {
     patchSnapshot({
       ending: endingView('stopped', {
-        album: [1, 2, 3, 4, 5, 6, 7].map((s) => (s === 7 ? albumPage(s, { empty: true, fact: null, week: null }) : albumPage(s))),
+        closing: albumPage(7, { empty: true, fact: null, week: null }),
       }),
     })
     const w = mount(EndingScreen)
@@ -260,12 +258,10 @@ describe('the album', () => {
     }
   })
 
-  it('renders for the nineteen-year-old who never turned pro – two empty slots, and the last page is drawn', () => {
+  it('renders for the nineteen-year-old who never turned pro – nothing earned, and the last page is drawn', () => {
     patchSnapshot({
       ending: endingView('stopped', {
-        album: [1, 2, 3, 4, 5, 6, 7].map((s) =>
-          s === 3 || s === 6 ? albumPage(s, { empty: true, fact: null, week: null }) : albumPage(s),
-        ),
+        closing: albumPage(7),
         totals: { earnedCents: 0, spentCents: 41_000_00, prizeCents: 0, weeksLostToInjury: 0 },
       }),
     })

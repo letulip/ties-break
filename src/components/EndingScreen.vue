@@ -86,11 +86,12 @@ const scrollOpen = ref(false)
  *  the ending's own title and its lines (`AlbumPage` slot 7 – «whichever of the nine it was»), so dropping the
  *  reel with it would have dropped how the career ended. Null on a view with no pages (a shape no live path
  *  produces): the card then renders its figures and doors without a photograph, where the pager used to
- *  leave a footer that never appeared. */
-const closing = computed(() => {
-  const all = view.value?.album ?? []
-  return all[all.length - 1] ?? null
-})
+ *  leave a footer that never appeared.
+ *
+ *  ⭐ ROUND 46 · R6 (06.10) – IT IS THE WHOLE FIELD NOW: the engine sends this page alone as `EndingView.closing`
+ *  (pages 1–6 left the wire on his word – translated, «take them off, yes»), so there is no list to take the
+ *  last of, and the «no pages» case above can no longer be built: `closing` is null here only while `view` is. */
+const closing = computed(() => view.value?.closing ?? null)
 
 // --- ⭐⭐⭐ ROUND 46 #18 – THE ALBUM IS THE REAL ONE NOW, AND THE SEVEN-POLAROID REEL IS GONE ---------
 //
@@ -107,7 +108,9 @@ const closing = computed(() => {
 // selection was only its visible half.
 //
 // ⚠ WHAT IT IS NOW. The reel – its first six pages, its pager, its dots, its «n / 7» – left this screen; the
-// engine's `EndingView.album` is still on the wire and only its LAST page is read here. The card that remains
+// engine's `EndingView.album` was still on the wire when this was written and only its LAST page was read here
+// (R6, 06.10: pages 1–6 left the wire on his word – translated, «take them off, yes» – and that last page is
+// `EndingView.closing` now). The card that remains
 // is the reel's last page as it stood – the photograph, the ending's own title and lines, the figures and the
 // two doors, under the eyebrow it already had – with ONE new control at the head of the figures: «View the album» lays the book itself over this takeover – every sheet, the same
 // chapter rail and pager as mid-career – and its Back arrow returns to the card as it was left (scroll

@@ -72,6 +72,8 @@ import { DEFAULT_PROFILE, type CollegeTier } from '../src/shared/protocol'
 // `drainLifeBeats`.
 import { drainLifeBeats } from './helpers/career'
 import { answerCollegeReveal } from './helpers/scenarios/college'
+import { relationshipsTile, relationshipsTileOpen } from '../src/engine/kidLife'
+import { togetherSpan, togetherSpanShort } from '../src/engine/world/lifeBeat/weddingCopy'
 
 /** A view for one week of one career. Her age is HER OWN (`kidAgeExact`), never the band's – the
  *  one-clock ruling – because the after-school ladder's last rung is an age comparison. */
@@ -452,5 +454,109 @@ describe('#6b – on a career that really went', () => {
     expect(life.school.lead).toBe('Graduate')
     expect(life.collegeNote).toMatch(/finished the course/)
     expect(life.collegeNote).not.toMatch(/left before/)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 46 MORNING #3 – THE SCHOOL CELL'S LAST RUNG IS HER RELATIONSHIPS.
+//
+// The owner, 06.10: «… плашка про школу … не используется после школы/колледжа примерно никак … Мы можем в ней
+// писать "Отношения" … "Together for {span}" - очень хорошо.» The page-level arms are in
+// tests/component/round23-kid-page.test.ts; THIS block holds the pure ones: WHERE the cell opens (against the
+// ladder's own last rung, so the two cannot drift), the state ladder string for string, the compact span, and
+// the 16-character budget the whole module is written to.
+// ⚠ ⚠ DRAFT strings – docs/rounds/round-46.md, R46-S39–S45. The words are typed here on purpose, so a ruling moves
+// them deliberately.
+// =================================================================================================
+describe('⭐⭐ ROUND 46 MORNING #3 – the school cell hands over to her relationships', () => {
+  type Together = NonNullable<KidLifeWorldView['together']>
+  const fact = (weeks: number, over: Partial<Together> = {}): Together => ({ weeks, married: false, engaged: false, ...over })
+  /** a grown woman – 24, school and college long behind her – whose only attachment is `together` */
+  const grown = (together: Together | null) => view(WEEKS_PER_YEAR * 9, { ageYears: 24, together })
+  const cell = (lead: string, note: string) => ({ label: 'Relationships', lead, note })
+
+  it('the cell opens exactly where the ladder\'s last rung does, and nowhere before it', () => {
+    let opened = 0
+    let closed = 0
+    for (const bm of [1, 6, 9, 12]) {
+      for (let week = 0; week < WEEKS_PER_YEAR * 25; week += 5) {
+        const v = view(week, { birthMonth: bm })
+        const lastRung = lifeStageTile(v).lead === 'Grown up'
+        expect(relationshipsTileOpen(v), `week ${week}, born in month ${bm}`).toBe(lastRung)
+        expect(relationshipsTile(v) !== null, `week ${week}, born in month ${bm}: the field follows the predicate`).toBe(lastRung)
+        if (lastRung) opened++
+        else closed++
+      }
+    }
+    expect(opened, 'THE SWEEP IS NOT VACUOUS: it reaches the last rung').toBeGreaterThan(0)
+    expect(closed, '...and it has rungs below it').toBeGreaterThan(0)
+  })
+
+  it('a college place does not keep the cell: the course holds it, a finished or abandoned one hands it over at 22', () => {
+    const studying = view(400, { ageYears: 23, college: collegeView({ studying: true, yearsDone: 3 }) })
+    expect(relationshipsTileOpen(studying), 'still on the course at 23: the College rung is alive').toBe(false)
+    expect(relationshipsTile(studying)).toBeNull()
+    for (const [what, yearsDone, lead] of [['finished', 4, 'Graduate'], ['left early', 1, 'Left college']] as const) {
+      const young = view(400, { ageYears: GROWN_UP_AGE_YEARS - 1, college: collegeView({ studying: false, yearsDone }) })
+      expect(lifeStageTile(young).lead, `${what}: the school ladder is untouched`).toBe(lead)
+      expect(relationshipsTileOpen(young), `${what}, but not yet 22`).toBe(false)
+      const adult = view(400, { ageYears: GROWN_UP_AGE_YEARS, college: collegeView({ studying: false, yearsDone }) })
+      expect(lifeStageTile(adult).lead, `${what}: the ladder still says so at 22 – it is the screen that hands over`).toBe(lead)
+      expect(relationshipsTileOpen(adult), `${what}, at 22`).toBe(true)
+      expect(relationshipsTile(adult)).toEqual(cell('On her own', 'it seems'))
+    }
+  })
+
+  it('the state ladder, string for string – and only what the parent knows', () => {
+    expect(relationshipsTile(grown(null))).toEqual(cell('On her own', 'it seems'))
+    expect(relationshipsTile(grown(fact(78)))).toEqual(cell('Together for', '1y 6m'))
+    expect(relationshipsTile(grown(fact(78, { engaged: true })))).toEqual(cell('Engaged', 'together 1y 6m'))
+    expect(relationshipsTile(grown(fact(78, { married: true })))).toEqual(cell('Married', 'together 1y 6m'))
+    // Married outranks engaged. A real snapshot cannot say both (`upcomingWeddingWeek` skips a latched episode),
+    // but the cell must not lean on that.
+    expect(relationshipsTile(grown(fact(78, { married: true, engaged: true })))?.lead).toBe('Married')
+    // Whatever she is told, the cell stays the school's until the last rung.
+    expect(relationshipsTile(view(WEEKS_PER_YEAR * 8, { ageYears: GROWN_UP_AGE_YEARS - 1, together: fact(78) }))).toBeNull()
+  })
+
+  it('the compact span: its forms, and the same count as the words it stands in for', () => {
+    expect([0, 3, 4, 5, 30, 51, 52, 78, 104, 672, 99 * WEEKS_PER_YEAR + 48].map(togetherSpanShort)).toEqual([
+      '<1m', '<1m', '<1m', '1m', '6m', '11m', '1y', '1y 6m', '2y', '12y 11m', '99y 11m',
+    ])
+    const numbers = (s: string) => ({
+      y: Number(/(\d+) years?/.exec(s)?.[1] ?? 0),
+      m: Number(/(\d+) months?/.exec(s)?.[1] ?? 0),
+    })
+    for (let weeks = 0; weeks <= WEEKS_PER_YEAR * 40; weeks++) {
+      const { y, m } = numbers(togetherSpan(weeks))
+      const expected = y === 0 && m === 0 ? '<1m' : y === 0 ? `${m}m` : m === 0 ? `${y}y` : `${y}y ${m}m`
+      expect(togetherSpanShort(weeks), `week ${weeks}: counted as the words count it`).toBe(expected)
+    }
+  })
+
+  it('every line the cell can print fits the 16-character nowrap budget – to a hundred years together', () => {
+    const lines = new Set<string>()
+    const states: Array<Partial<Together>> = [{}, { engaged: true }, { married: true }]
+    for (const flags of states) {
+      for (let weeks = 0; weeks <= 99 * WEEKS_PER_YEAR + 51; weeks++) {
+        const tile = relationshipsTile(grown(fact(weeks, flags)))!
+        lines.add(tile.lead)
+        lines.add(tile.note)
+      }
+    }
+    const alone = relationshipsTile(grown(null))!
+    lines.add(alone.lead)
+    lines.add(alone.note)
+    for (const l of lines) {
+      expect(l.length, `"${l}" is ${l.length} characters`).toBeLessThanOrEqual(TILE_LINE_MAX)
+      expect(l.length, 'and no line is ever blank').toBeGreaterThan(0)
+      expect(l, 'player copy: short dash only').not.toContain('—')
+    }
+    // The worst case fills the line exactly, which is the whole case for the compact form...
+    const worst = relationshipsTile(grown(fact(99 * WEEKS_PER_YEAR + 48, { married: true })))!
+    expect(worst.note).toBe('together 99y 11m')
+    expect(worst.note.length).toBe(TILE_LINE_MAX)
+    // ...and the words form would not have fitted even at a year and a half.
+    expect(`together ${togetherSpan(78)}`.length, 'the words form is over budget').toBeGreaterThan(TILE_LINE_MAX)
   })
 })

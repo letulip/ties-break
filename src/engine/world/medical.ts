@@ -63,7 +63,7 @@ import {
   yearEndJuniorRank,
 } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
-import { masseurRungOf, masseurWorksThisWeek } from './masseur'
+import { masseurRehabWeeksAhead, masseurRungOf, masseurWorksThisWeek } from './masseur'
 // ⚠ ROUND 29 #5 – the LEAF and never `./shop`: this file is imported by `./entries`, `entries` by
 // `./endings` and `endings` by `world/shop.ts`, so a value import of the shop from here would close
 // a cycle. `world/assets.ts` exists for exactly this and imports nothing from this package.
@@ -493,6 +493,50 @@ export function layoffCoversWeek(
   return weeksRemaining !== null && weeksRemaining !== undefined && weeksRemaining > 0 && week < currentWeek + weeksRemaining
 }
 
+/** ⭐⭐ ROUND 46 R1 (owner, 06.10: «показывать injured когда уже здорова – это не ок и вводит в
+ *  заблуждение») – `layoffCoversWeek` FOR THE ONE WEEK THE MAIN BUTTON PLAYS, as the tick will find it.
+ *
+ *  The clinic's number (`weeksRemaining`) is what the plaque counts down and round 34 keeps it so: the
+ *  masseur's weeks arrive one receipt at a time. But `rollInjury` pays his week INSIDE the tick, so
+ *  for the NEXT tick – and only the next – the figure that decides whether she is still out is
+ *  `expectedWeeks` (`weeksRemaining − masseurRehabWeeksAhead`, the replay the wire has carried since
+ *  round 41 #19). There it is not a forecast but the arithmetic the tick is about to run. B2 gave the
+ *  home preview and the Calendar that read (round 46 #16); this is the SAME read for the surfaces that
+ *  GATE or LABEL that week – the entry gate's display, the planner's friendly, the planner sheet's lock
+ *  and the injury report's «stranded» rows – so none of them says injured for a week the tick clears
+ *  her for.
+ *
+ *  ⚠ THE PLAYED WEEK IS `currentWeek + 1`, the week `advance(1)` resolves (`tickWeek` increments first
+ *  and rolls the injury before anything else reads it). ⚠ EVERY OTHER WEEK KEEPS THE CLINIC'S WINDOW,
+ *  which is what makes this a fence and not a rewrite: a week two or more ticks away is a FORECAST (the
+ *  parent can fire him, drop a rung or book a holiday before it comes), and the owner's own word on
+ *  those is «прогнозные ладно ещё».
+ *
+ *  `expectedWeeks` is nullable so a caller can pass `snapshot.injury?.expectedWeeks` straight in: absent
+ *  means «no masseur, or a layoff too short for his cadence», where the clinic's number is already
+ *  the truth and this is byte-identical to `layoffCoversWeek`. Pure integer comparison, zero RNG. */
+export function layoffCoversWeekAsPlayed(
+  currentWeek: number,
+  weeksRemaining: number | null | undefined,
+  expectedWeeks: number | null | undefined,
+  week: number,
+): boolean {
+  const asTheTickPays = week === currentWeek + 1 && expectedWeeks !== null && expectedWeeks !== undefined
+  return layoffCoversWeek(currentWeek, asTheTickPays ? expectedWeeks : weeksRemaining, week)
+}
+
+/** `layoffCovering`'s twin for the WORLD, the played week read as the tick will find it (see
+ *  `layoffCoversWeekAsPlayed`). ⚠ It DELEGATES to `layoffCovering` for every other week, so the clinic's
+ *  window still has exactly one spelling and the replay is the single exception to it. The onset
+ *  sweep over practices (`rollInjury`, a cancellation and not a label) and the forecast rows stay on
+ *  `layoffCovering` itself, on purpose – round 34's asymmetry. Pure state, zero draws. */
+export function layoffCoveringAsPlayed(world: WorldState, week: number): WorldState['injury'] {
+  const injury = world.injury
+  if (injury === null || week !== world.week + 1) return layoffCovering(world, week)
+  const expectedWeeks = injury.weeksRemaining - masseurRehabWeeksAhead(world)
+  return layoffCoversWeekAsPlayed(world.week, injury.weeksRemaining, expectedWeeks, week) ? injury : null
+}
+
 /** THE LAYOFF SENTENCE, written once. Four surfaces refuse a week because she is laid up – the
  *  entry gate, the planner's `assertPlannable` throw, the arrival gate and (since R12-5b) the
  *  planner SHEET's disabled Practice button – and a disabled button whose reason differs from the
@@ -520,13 +564,17 @@ export interface LayoffBlock {
 export function layoffBlock(input: {
   /** the snapshot's current week */
   currentWeek: number
-  /** the snapshot's active injury, or null when healthy */
-  injury: { weeksRemaining: number } | null
+  /** the snapshot's active injury, or null when healthy. `expectedWeeks` is the wire's masseur replay
+   *  (`InjuryView.expectedWeeks`) and is optional so a bare `{ weeksRemaining }` keeps working. */
+  injury: { weeksRemaining: number; expectedWeeks?: number } | null
   /** the week being planned */
   week: number
 }): LayoffBlock | null {
   const weeksRemaining = input.injury?.weeksRemaining
-  if (!layoffCoversWeek(input.currentWeek, weeksRemaining, input.week)) return null
+  // ⭐ ROUND 46 R1 – the played week reads the replay, every other week the clinic's window (see
+  // `layoffCoversWeekAsPlayed`). The SENTENCE below still quotes the clinic's number: the countdown on
+  // screen is not rewritten (round 34) and no string moved.
+  if (!layoffCoversWeekAsPlayed(input.currentWeek, weeksRemaining, input.injury?.expectedWeeks, input.week)) return null
   return { level: 'blocked', reason: 'injured', detail: injuredDetail(weeksRemaining!) }
 }
 
@@ -806,7 +854,14 @@ export function availabilityStatus(
   // The injury window is read against the EVENT's week, never today's (R10-17 – see layoffCovering).
   // Note the CONDITION-driven branches below stay current-week reads: her condition in a future week
   // is unknowable, which is why the doctor re-checks her on arrival.
-  const layoff = layoffCovering(world, event.week)
+  //
+  // ⭐ ROUND 46 R1 – AND THE WEEK THE BUTTON PLAYS IS READ AS THE TICK WILL FIND IT (`layoffCoveringAsPlayed`),
+  // so this verdict and the arrival verdict at the tick are one law and a card never reads injured for
+  // a week the tick clears her for (owner, 06.10). ⚠ IN THE SHIPPED CALENDAR THAT WEEK ADMITS NO NEW ENTRY
+  // (a list closes at week − 2 and `enterEvent` refuses on the deadline before it asks this), so there
+  // it is the display and the consistency of the gate, not a door. Every week from week + 2 on is a
+  // forecast and keeps the clinic's window.
+  const layoff = layoffCoveringAsPlayed(world, event.week)
   if (layoff !== null) {
     return { level: 'blocked', reason: 'injured', detail: injuredDetail(layoff.weeksRemaining) }
   }

@@ -387,6 +387,10 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     field, `life.togetherNote`, fed by an optional `together` fact on `KidLifeWorldView` (optional so the
     hand-built views in six test files need no edit); persisted nowhere, no schema move, zero draws.
     DRAFT: R46-S10 (wired), R46-S11 (alternate).
+    **06.10 – RETIRED by morning item 3 (R4):** the sentence under the grid, `life.togetherNote`, the engine's `togetherNote` and the view's
+    `name` are gone; the same facts (known, engaged, married, and for how long) now sit in the School cell's last rung, `life.relationships`,
+    in the compact span. S10 and S11 are retired with them; the long span words (S2) are unchanged. Everything above is the record of what
+    shipped in b2abd0e8 and stays as written.
     **Tests** – `tests/component/round23-kid-page.test.ts`, extended (5 new arms, 10/10 green): standing and
     named, unnamed, married (and a nameless married row), nobody / ended / not told yet, the school cell reading the
     same beside the line, and the notes-stack wrap check. Every expected span is built from the real primitives
@@ -557,7 +561,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     `bandFacePoint` is swept over every painting in `CROPS`. **Mutated:** `bandFacePoint` returning the old anchor → 2 red; `ART_BAND_RATIO`
     0.5 → 0.3 → 2 red; each restored byte-identical.
 
-- [?] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
+- [x] **14. «Индексный фонд не пересчитывается после изъятия почти всех денег и захода снова:
   "8131.90 units – bought at $9,969 each, $10,212 now / +$49,610,632 since you bought it (33%)" - я
   только пару недель назад зашёл на 80млн, они ещё не могли дать такой прирост»** – the index-fund
   cost basis survives a near-total withdrawal: after re-entering with 80M, «since you bought it»
@@ -813,6 +817,336 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ---
 
+- [x] **23. (06.10, morning – the owner pulled the spawned fixture-generator task INTO the round:
+  «давай вот это в раунд добавим?»)** – tools/e2e-fixtures.ts drifted against the engine since
+  rounds 45/46 (S1's control: a true regeneration picks different seeds for 9 of 13; the
+  `expecting` recipe yields dueWeek−pausesWeek = 26 against the spec's 31, the `parting` recipe
+  yields exactly 200 letters against d07's >200). Work: (1) the two missing recipe clauses;
+  (2) the bare no-env invocation fails loudly instead of silently doing nothing; (3) regenerate
+  for real, `npm run test:e2e` green. Secondary if cheap: `ageWindowStartWeek`'s memo is keyed by
+  birth month+week, not day – verify and fix or document. Class: **build** → **R2**.
+  - **R2 · THE FIXTURE GENERATOR REGENERATED FOR REAL – 139 OF 139 e2e GREEN ON THE NEW SET** (06.10, schema v91, on top of `f65f41f7`).
+    **(1) The two clauses, copied from what the specs assert and never invented.** `expecting`: a pregnancy record is
+    accepted only if `pausesWeek - announcedWeek === ECONOMY.motherhood.playsOnWeeks` AND `dueWeek - pausesWeek ===
+    ECONOMY.motherhood.termWeeks` – the two exact assertions of the rot alarm (`tests/e2e-fixtures.test.ts`, «expecting is
+    parked inside the pause»; `e2e/expecting.spec.ts` itself only says «31 weeks» in prose). The 26 is wave 11's trimester
+    cap: `pausesWeek = min(announced + 8, conceived + 13)` and `dueWeek = conceived + 39`, so 31 holds only for a ZERO window.
+    The clause skips the WEEK, not the seed; `e2e-expecting-1` (S1's pick) was a capped window, and the first whole one is
+    `e2e-expecting-20`, which is also the committed seed. `parting`: a firing week is accepted only with
+    `world.offers.length > 200` (`tests/principles-d07-inbox-bound.test.ts`: «parting must hold a career of letters twenty
+    seasons long»); S1's `e2e-parting-11` held exactly 200. Result `e2e-parting-55`, w1175, 266 letters, 56 seeds, ~7 min.
+    There is NO cap on stored letters: the rejected firing weeks held 47 / 102 / 105 / 134 / 155 / 200 / 200.
+    **(2) The loud no-op.** A bare `npx vite-node tools/e2e-fixtures.ts` (nothing names the file, no `TB_FIXTURES_RUN=1`) now
+    prints `e2e-fixtures: REFUSED TO RUN – nothing was generated and nothing was written.` plus the two ways to run it, on
+    stderr, and exits **2** instead of 0 (`process.exitCode`, so stderr flushes). It fires only outside VITEST, and the only
+    importer is the rot alarm. Nothing in `package.json`, `scripts/` or `.github/` calls it bare. Verified by hand
+    (`BARE_EXIT=2`); NO test spawns it – a cheap unit net if the architect wants one.
+    **(3) The regeneration** – `npm run e2e:fixtures`, full single-process run: **7 of 13 seeds changed** (junior 19 to 28,
+    pro 18 to 77, unheard 13 to 41, soft 1 to 0, breakup 52 to 7, belated 37 to 182, parting 10 to 55); fresh, sinking, broke,
+    ending, engaged and expecting kept theirs. 12 of 13 `.tsave` files differ byte-wise from HEAD all the same
+    (the saves carry the engine's newer fields). About 25 minutes on 10 cores.
+    **(4) Three more things the TRUE regeneration found – each a fixture-side clause or a re-freeze, no spec was re-aimed.**
+    (a) `pro` now needs a wallet of at least $1,255,000, the E-11 shop script's outlay: the regenerated `e2e-pro-57` held
+    $896,938 and `buyAsset` threw «Not enough funds for that» in two component cases; `pro` is `e2e-pro-77`, $6,216,050.
+    (b) `sinking` now rejects a standing blocking or soft beat at boot: the regenerated `e2e-sinking-1` booted with the
+    small-talk card on the hub and was the ONLY red of 139 (`week-advance.spec.ts:196`, the Week story never opened);
+    `sinking` is `e2e-sinking-2` again. (c) The two RECORD-REPLAY tests over `pro` and `parting`
+    (`principles-d07-inbox-identity`, `principles-e11-shop-identity`) hold hashes of those specific careers, so they were
+    RE-FROZEN with their own switches (`TB_WRITE_INBOX_IDENTITY=1`, `TB_WRITE_SHOP_IDENTITY=1`) on the new pair – the identity
+    they proved was proved at the extraction, and they are render snapshots of the new careers now. `pro` and `sinking` were
+    regenerated with `--only` after their clauses landed; the other eleven come from the full run. ⚠ NOT DONE: a second full
+    `npm run e2e:fixtures` as a fixed-point check (`git diff --stat e2e/fixtures` should then stay empty) – one command for the architect.
+    **(5) The acceptance, read out of the files:** `npm run test:e2e` gave `138 passed, 1 failed` (`E2E_EXIT=1`) before the
+    sinking clause and `139 passed` (`E2E2_EXIT=0`) after it. The fixture-reading unit and component files vitest picks up all pass
+    (7 files, 107 tests), the rot alarm and d07's bound pass (87 tests), `check:tools` exit 0. NOT run: `npm run check`, `test:sim`.
+    **(6) The secondary item – REAL, FIXED.** `ageWindowStartWeek`'s memo was keyed `birthMonth:week`, on the stated ground that
+    `kidAgeAt` «reads nothing else off the world»; it reads `birthDay` too (the birthday-to-birthday clock), so a second
+    same-month career in one process was handed the first one's window (3 weeks off at week 60 on the test's pair, and by
+    construction a whole age-year off on the weeks between two birthdays). The key is now `birthMonth:birthDay:week`;
+    `tests/age-window-memo.test.ts` is the two-career net, **red against the old key** (expected 35 to be 38; expected 16 to be 13)
+    and green on the new. MEASURED NOT TO MATTER FOR THE FIXTURES: all 13 regenerated files were byte-identical with and without it.
+    **Frozen capture untouched:** `tests/condition.test.ts` (41550 draws / hash `e6b0c709`) is green with the fix, with 23 further
+    files (age-caps, the coach-travel-edge hash families and schemas, planner, injuries, migrations – 480 tests). No RNG draw,
+    no string, no schema move.
+
+## Morning answers (06.10) – his word on the night's question pile, decoded
+
+1. **№16 tails**: forecast rows stay («прогнозные ладно ещё»); **BUT showing injured when she is
+   already healthy is NOT ok** («вводит в заблуждение») – the entry lock / planner surfaces that
+   read the clinic window for a week the replay clears must follow the replay. Build → **R1**.
+   The save arrives after the merge.
+   - **R1 · THE PLAYED WEEK'S GATES AND LABELS NOW FOLLOW THE REPLAY** (forecast rows untouched, as he said).
+     **Caller split** – `layoffCovering` / `layoffCoversWeek` mapped once. (a) The played week, a gate or a
+     label: `availabilityStatus` (the entry gate's display), `assertPlannable`'s practice arm (planner.ts),
+     `layoffBlock` (the planner sheet's Practice lock), `buildInjuryReport`'s `stranded` rows (a held entry is one
+     whose list has closed, so they are almost always week + 1) and B2's inline arithmetic in `arrivalPreview`.
+     (b) Forecasts and actions, UNTOUCHED: every week from week + 2 on through those same readers,
+     `lookAheadFor`'s rows, the onset sweep over practices (`rollInjury`, a cancellation – round 34's
+     asymmetry), the entries sweep (already the replay since round 34 #21) and `arrivalStatus` at the tick
+     (post-roll, so already exact).
+     **What follows the replay now:** one pure function, `layoffCoversWeekAsPlayed`, and its world twin
+     `layoffCoveringAsPlayed`, beside `layoffCovering` in world/medical.ts. The twin DELEGATES to `layoffCovering`
+     for every week but `world.week + 1`, so the clinic window keeps one spelling and the replay is the single
+     exception. `layoffBlock` takes an optional `expectedWeeks`, so the PlanWeekSheet call line is unchanged.
+     ⚠ **A finding that shapes the question:** the shipped calendar admits NO NEW ENTRY in the played week. A
+     list closes at week − 2 (calendar.ts:2072), `enterEvent` refuses on the deadline BEFORE it asks the gate,
+     and the Season card draws «Entries closed» ahead of the lock pill. So every entry lock a parent can
+     actually see on a not-yet-entered tournament sits on week + 2 or later – a row he just called forecast –
+     and the gate's played-week read is a display and a consistency guarantee, not a door. The surfaces that
+     really said injured for a fit week were the planner and the dialog's forfeit rows (plus B2's two).
+     **Needs his eye:** if «показывать injured» also covers that week + 2 lock (the LAST chance to enter before
+     the list closes), widening is two lines – but there the replay is a FORECAST, and an entry made on it is
+     non-refundable if he then fires the masseur or drops a rung (a walkover and the fee gone). Not done.
+     **Knock-on, stated:** new entries – none possible there (above). A friendly at week + 1 is bookable where
+     the replay clears her; if he then breaks the replay (fires the masseur, drops a rung, books a holiday inside
+     the layoff) `resolvePractice` re-reads `world.injury` at the tick and refunds in full – a click, not money.
+     Left as found: that injury branch does not top up the free-week recovery `accrueCondition` withheld for a
+     booked friendly (the medical branch does) – reachable only through that invalidation. The onset sweep still
+     refunds a friendly at week + 1 on the clinic window and the planner now lets her re-book it, so round 34's
+     «costs a click» is literally true. Committed entries and the tick's arrival verdict are unchanged – the
+     final gate. Careers with no masseur, or a layoff of two weeks or less: byte-identical (the replay is 0;
+     pinned). RNG: zero draws. WORDING: zero strings (the diff adds no literal; `injuredDetail` and the clinic's
+     countdown are as they were).
+     **Evidence:** tests/round46-arrival-masseur-parity.test.ts 5 → 11 tests – a 54-cell sweep of the gate, the
+     planner, the sheet and the injury report against the tick (MEASURED: 5 disagreement cells where the clinic
+     says out and the tick plays – the «10» in the brief is these five × home + grid – and with the replay off
+     the sweep lists 20 disagreeing readings, now 0), the no-masseur control, the calendar finding, a hand-built
+     late list (`enterEvent` refuses «Injured – back in 2 weeks.» without the masseur and accepts with him, then
+     the tick clears her and she plays), the fence (weeks 12–15 stay on the clinic window on the gate, the
+     planner, the sheet and the twin) and 720 comparisons of the three spellings (the twin, `layoffBlock`, B2's
+     `layoffHoldsWeek`). New mounted file tests/component/round46-planner-masseur-replay.test.ts (3 arms: the
+     owner's state reads «Book the match» with no layoff paragraph; the control and forecast week 14 keep
+     «Injured», disabled). **Mutations**, each restored (checksum + `cmp` identical): replay off in the shared
+     core → 5 red (B2's owner-state and sweep too, since the preview now shares the function); widened to every
+     week → the fence and the parity red; the report back on the clinic window → the sweep red on its `report`
+     arm; mounted: replay off → the owner arm red, widened → the fence arm red. **Neighbours:** 29 unit files /
+     865 tests and 3 component files / 19 tests green, `vue-tsc -b --force` exit 0, the frozen capture
+     (tests/condition.test.ts, 41550 draws / hash e6b0c709 – nothing draws, so unmoved) 51/51.
+2. **Spouse card**: the heading change is fine, but the TAUTOLOGY he meant remains – the heading
+   says he has something to say, the first line of the card re-introduces him saying it («слова
+   ради слов»). And «в) давай драфт» – the corpus batch is ordered: the architect writes new
+   lines per occasion (and de-tautologized openings for the four existing ones) as DRAFT rows for
+   his blessing; the picker learns multiple lines per occasion. Build → **R3**.
+   - **R3 · THE SPOUSE CARD'S LINES NO LONGER INTRODUCE THEIR SPEAKER, AND EACH OCCASION NOW HOLDS SEVERAL LINES**
+     (the architect's batch, wired verbatim; DRAFT rows **R46-S26–S38**, 4 re-opened + 9 new; the HEADING and the Home
+     card's «The one she married wants a word.» are untouched). **Lines wired per occasion:** `distant-swing` 4
+     (entry 0 re-opened + 3 new), `road-stretch` 3 (1 + 2), `money` 3 (1 + 2), `no-vacation` 3 (1 + 2) = 13 lines,
+     **0 dropped for collisions**. Every NEW line was read against its occasion's existing line first; the two closest
+     calls were kept because the scenes differ – S29's «three thumbs of ocean» sits beside «half a world away» (a
+     measured distance against an idiom for one) and S34's «in this house» rhymes with the existing «how this house
+     plans» (a phrase, not a scene). The architect gave the rule but not the text for three of the four re-openings, so
+     **S30, S33 and S36 are the builder's** (subject stripped, scene and every quoted word kept, each marked in its row
+     with before -> after); S33's old line had no scene but its tone, so the tone is what stays («Without an edge:»).
+     **The pick:** ONE key, TWO taps. `rollSpouseView` derives `<seed>:life:spouse-view:<week>` once; tap one is the
+     occasion exactly as #15 left it (same stream, same draw, same range), tap two is the line inside it, over the
+     occasion's pool minus the line he said LAST for that occasion – read off the most recent row of it, however old
+     (it can only bind past the 52-week occasion window, since inside it the occasion itself is stale). A pool the
+     memory would empty falls back to the whole pool (`drawSmallTalkFrame`'s «never emptied»), still one draw.
+     **The detail-persistence road – a NEW OPTIONAL KEY, `LifeBeatRecord.line?: number`, not a longer `detail`.**
+     `lifeLog` IS persisted state (the save carries the log whole; nothing in `src/db` or the loaders names a row key),
+     so the stamped line is a new key on a saved row – `frame?`'s precedent on the very same record, and for `frame`'s
+     reason: a line drawn on a stream survives a save and a reload and cannot survive the pool growing, and the memory
+     is a fact about rows already written. `detail` stays the occasion, so every reader of it (the 52-week window,
+     `spouseViewOccasionThisWeek`, the diary, the bench's mix) is byte-untouched; a longer `detail` would have made all
+     four learn to parse. **Absent reads as entry 0, which is TRUE:** every pre-R3 row was told its occasion's one line,
+     and entry 0 of each pool is that line with its opening re-written (a test pins that entry 0 ends on every quoted
+     word it always had). Nothing is back-filled; an index the pool does not hold reads as entry 0 rather than
+     throwing; pool order is append-only once shipped. **No `SAVE_SCHEMA_VERSION` move (stays 91), no migration, no
+     golden** – `heard?`'s house rule (an optional key never back-filled whose absence is a true statement; nothing in
+     `migrations.ts` or the goldens reads a `lifeLog` row's shape; `doc-facts` green at v91). ⚠ **The call he should
+     know I made:** `frame?` took v81 for the same kind of state («a frame may not change … OR THE POOL GROWING»), so by
+     that criterion `line?` is version-worthy. I did not bump because the brief pointed at the `rankTrack?` precedent and
+     the asymmetry is one-sided – a bump is a no-op step by construction and can be added any time before ship (v92:
+     the migrations step, `tests/fixtures/saves/v92.json`, the e2e fixtures, the peel rung in
+     `tests/coachTravelEdgeFixtures.ts`, the doc-facts schema sentence), while a shipped one can never be taken back.
+     **RNG law:** the second tap is on the SAME purpose-scoped stream, never MAIN; a week that fires derives exactly one
+     key (B's positive control and mutation ARM 9 count it) and a week that does not fire derives none. Worlds where the
+     beat never fires are byte-identical to themselves (H2b: no latch, inside the cooldown, nothing true, everything true
+     stale – each `toEqual` its pre-roll clone, zero keys); worlds where it fires pick the same OCCASION as the roll a
+     round ago and differ from that roll's world by the stamped `line` key alone (H2, 48 worlds). Frozen capture
+     (tests/condition.test.ts, 41550 draws / hash e6b0c709 – the roll never touches MAIN): **51/51 green**.
+     **Evidence:** tests/wave7-spouse-view.test.ts 30 -> 41 tests, all green. §G is rebuilt as a property over EVERY line
+     of EVERY occasion: the heading and every line open on different three words; **no line introduces its speaker** –
+     the narration around the quotation names no spouse, husband, wife, partner, he, she or «the one she married» – with
+     the four pre-R3 openings transcribed as its control; entry 0 ends on every quoted word of the line it replaces; no
+     two lines of an occasion open alike; the short dash and no figure; and the card the engine assembles, for every
+     line. New §I: I1 the same seed tells the same line and the line is tap TWO of the one stream (replayed by hand), I2
+     every line of every occasion is reachable, I3 the line he said last is never the next one – for every last line of
+     every occasion and for a legacy row – with every OTHER line still reachable, I4 a six-season posed marriage never
+     repeats a line twice running for any occasion and uses more than one, I5 a legacy row (no key) reads as entry 0 and
+     a stale index never throws, I6 the line is on the row (JSON round trip; the card is read off the row, not the seed
+     or the week). **Re-aimed:** C.1 (the row is the v83 shape plus `line`), C.3 (the card says the stamped line), H2
+     (re-stated honestly – a fired world is the old roll's plus one key; H2b holds the byte-identity that survives whole,
+     for the worlds that never fire), H4 (one key, two taps), H5 (the memory is the log – lines included).
+     **Mutations**, each restored and `cmp`-checked (sha before == after): second draw dropped (always line 0) -> 4 red
+     (I1–I4); line memory deleted -> 2 red (I3, I4); second draw on a fresh stream -> 4 red (B's positive control, H3,
+     H4, I1); entry 0 of every pool swapped back for its pre-R3 opening -> 2 red (§G's no-introduction property and the
+     assembled-card arm) – while §G's old three-word property stays GREEN on that pool, which is the owner's complaint in
+     one line. **Neighbours:** 34 unit files / 807 tests (every test that names `lifeBeatSaid`, `raiseLifeBeat`,
+     `LifeBeatRecord` or the spouse kind, plus the barrel, hub-direction, cycle, pin-hygiene, fixtures, week-notes and
+     capture pins), the mounted life-beat dialog (65), `vue-tsc -b --force` exit 0, `check:tools` exit 0, and the
+     four cheap doc gates (doc-facts, notes-pointers, engine-purity, pin-ratchet) exit 0.
+     **Bench** (`npm run bench:wedding -- --seeds 20`; the header prints `no-repeat 52 wks`): 366 spouse-view beats over 125.2 latched seasons = **2.92 per latched season** (the spec's recorded AFTER, tree afa650e5: 342 / 117.2 / 2.92 – predicted unchanged, since the occasion layer is the same code on the same first tap); occasion mix 36.6 / 35.8 / 27.6 / 0.0 % (distant-swing / road-stretch / money / no-vacation; recorded 37.4 / 35.7 / 26.9 / 0.0). The line layer, new in section (f) of the bench – beats on entries 0, 1, 2… – `distant-swing` 33 / 37 / 29 / 35, `road-stretch` 48 / 41 / 42, `money` 36 / 35 / 30, `no-vacation` 0 / 0 / 0 (the bench's policy books a family week every season, so that occasion never fires there; its three lines are the tests' business, I2 and I3) – roughly even, as predicted; **the same occasion told twice running on the same line: 0 of 280 pairs** (predicted 0). **Drift:** the cadence is 2.92 against 2.92; the beat and season totals differ from the recorded 342 / 117.2 because the walk itself moved after that table was taken (other round-46 work), and the mix wobble of at most 0.8 of a point rides on that – not on this change, whose occasion layer H2 pins world by world and whose stamped line feeds nothing back into a walk (the bench never answers a soft row). I built no A arm on this tree (one run was asked for); it is one `git revert --no-commit` away if he wants the byte comparison. (g) the input-independence arm: THE LAW HOLDS over 912 weeks.
+     **Noted, not touched (invariant 4):** the diary's week notes (`weekNotes.ts`, three lines keyed on the spouse's
+     occasion) still open «The one she married…» – a different surface, not under this heading; and S27, S28 and S31
+     speak to «you», which reads right only if the spouse is talking to the parent as the one on the road – his to confirm.
+3. **№9 re-aimed at the SCHOOL TILE**: he meant the dead tile («плашка про школу… после
+   школы/колледжа место занимает») – it becomes the relationships cell at its terminal rung:
+   known → «Together for {span}» (his «очень хорошо»), unknown → a «кажется одинока»-class line,
+   evolving with engagement/marriage. B4's under-grid line retires in its favour. Build → **R4**.
+   - **R4 · THE SCHOOL CELL IS THE RELATIONSHIPS CELL ONCE IT HAS NOTHING LEFT TO SAY – B4's SENTENCE UNDER THE GRID IS RETIRED**
+     (06.10, DRAFT rows **R46-S39–S45**; `Together for` is his own phrase, every other string is a draft, and the existing school
+     strings are byte for byte what they were).
+     **When it opens** – `relationshipsTileOpen` (`kidLife.ts`): the heading ladder says «After school» (`stageLabelOf`, so out of
+     school and not studying – the ladder's own predicate, restated nowhere) AND she is 22 (`GROWN_UP_AGE_YEARS`, the age the
+     ladder's last rung opens on). For a girl who never went to college that is exactly the rung called `Grown up` (a sweep over 4
+     birth months × 25 seasons in `tests/round23-kid-life.test.ts` holds the two together); for one who finished a course or left it,
+     it is the same age – `Graduate` / `Left college` are as dead from 22, and he said «школы/колледжа». Before it
+     `life.relationships` is null and the cell is the School cell, string for string.
+     **What it says** (wired · alternate): heading `Relationships` · `Love life` (S39, S40). Nobody the parent knows of:
+     `On her own` / `it seems` · `Seems to be` / `on her own` (S41, S42 – «it seems» is exactly right under the fog law, he may
+     simply not know; an ended relationship reads the same). Together: `Together for` / `1y 6m` – his shape. Engaged:
+     `Engaged` / `together 1y 6m`. Married: `Married` / `together 1y 6m` (S43). The compact span: `1y 6m`, `3y`, `7m`, `<1m` (S44).
+     Alternate for S43 + S44, not wired: the words span (`1 yr 6 mo`) with `Engaged` / `1 yr 6 mo` and `Married` / `1 yr 6 mo` (S45) –
+     the cost is that without the word «together» the number under «Married» reads as the marriage's age, and it counts the
+     relationship's.
+     **Why two short lines:** both lines of the cell are `nowrap` on a 16-character budget; `together {span}` is 8 + 1 + 7 at the
+     worst (`99y 11m`), exactly the budget, while the words span is 28 characters at a year and a half. No name rides on the cell
+     (the paragraph carried one) – it would not fit, and his shape has none.
+     **Retired:** the `<p class="kid-note-together">`, the engine's `togetherNote`, `life.togetherNote` on the wire, and the view's
+     `name`. (The `kid-note-together` CSS the brief expected to remove never existed – the paragraph reused `kid-grid-note`.)
+     **d07 stays at 116:** it counts the snapshot's TOP-LEVEL keys; `togetherNote` was nested in `life` and so is `relationships`, so
+     no re-pin. One new fact on the engine view, `together.engaged` = `upcomingWeddingWeek(world) !== null`, the calendar mark's own
+     question. No engine draw, no save key, no schema move: the capture (41550 / `e6b0c709`) is untouched.
+     **Two things for him to rule on:** (1) below 22 nothing shows about relationships anywhere now – the paragraph was what showed it
+     to a girl of 19–21 on `Tennis full-time`. Handing the cell over at the end of school instead is one condition (drop the age clause
+     in `relationshipsTileOpen`), but it would retire `The last bell` and `Tennis full-time`, so it is his. (2) The partner's name left
+     the screen with the paragraph; the wedding cards still carry it.
+     **Tests** – `tests/component/round23-kid-page.test.ts`, B4's five arms re-aimed as tile arms (11/11): before the last rung the School
+     cell reads string for string with or without somebody (weeks 120 and 300) and no cell is headed Relationships; nobody known; known
+     (`Together for` / the span `relationshipDurationWeeks` counted); engaged (a real answered `'engaged'` row, the calendar's
+     `weddingWeek` set) and married (latched ten weeks ago – the span does not move); the fog arm (never met, ended, not told yet – all
+     «it seems»); the nowrap arm (two `kid-tile-line`s, none the wrapping `kid-tile-personality`, each within `TILE_LINE_MAX`, and the words
+     form would not be). The sentence's absence is asserted in every state. `tests/round23-kid-life.test.ts` +5 (20/20): the predicate
+     against the ladder's own last rung, the college path, the state ladder string for string, the compact span against the words' own
+     count for 2,081 weeks, and every line within 16 characters to a hundred years together.
+     **Mutations**, each alone and `cmp`-restored: the ladder always «it seems» -> the together and engaged/married arms red (2 of 11), the
+     fog and School arms green; the cell stops printing the field -> the five terminal arms red (5 of 11), the School arm green; the span
+     hands back the words -> the together, engaged/married and nowrap arms red (3 of 11).
+     **Gates:** `vue-tsc -b --force` and `check:tools` exit 0; 37 neighbour files – every test that mounts or names KidScreen, plus the
+     kidLife, wedding-span, d07, import-cycle and nav files – 580 tests, green.
+     **Files:** `src/engine/kidLife.ts`, `src/engine/world/lifeBeat/weddingCopy.ts`, `src/engine/world/snapshot.ts`,
+     `src/shared/protocol/narrative.ts`, `src/components/screens/KidScreen.vue`, the two test files, this ledger.
+4. **Year summary**: (а) «инвестиция это не совсем расход, только если мы не в минусе
+   зафиксировались» – a REALISED LOSS is a real expense: the window's realised-loss figure joins
+   the expense side (its own labeled row); principal transfers stay the shelf's. (б) mixed History
+   accepted («ранние не страшно»). (в) «давай 2 колонки попробуем» – the Ranking/Matches
+   half-tiles become a two-column grid. Build → **R5**.
+   - **R5 · A SALE THAT FIXED A LOSS IS A REAL EXPENSE, AND ALL THREE TILES ARE ONE LABEL|FIGURE GRID** (06.10, DRAFT rows **R46-S46, S47**; the
+     label is a draft and every other string on the card is byte for byte what it was).
+     **(а) WHERE THE LOSS COMES FROM.** Neither source the brief named can say it. The ledger's `'shop'` row nets purchases, sales and the cars'
+     upkeep into one number; a WHOLE sale deletes the row it sold; and `OwnedAsset.realisedGainCents` / `realisedCostCents` (B9) are lifetime,
+     part-sale-only and die with the row – none can answer «what did THIS season's sales realise». The honest source is one optional memo on the
+     ledger row that already exists, `FinanceWeek.realisedCents`, written by the two sites that settle a sale (`sellAsset`'s part path and
+     `settleAssetSale` – the one body the instant sale, a signed letter and the fire sale all end in) from the very delta their ledger sentence
+     already prints («– $X less than it cost»). It is the `coachCut` precedent exactly: a sibling of `byCategory`, never a key inside it, outside
+     every arithmetic (the proceeds are already the `+shop` row), optional, **no schema move** – absent means «none recorded», so a season already
+     under way has no memo for the sales it had made (his «ранние не страшно»). `realisedLossOf(financeWeeks, fromWeek)` (`world/ledger.ts`, beside
+     `seasonMoneyOf`, which is untouched – its three-key shape and B5's composition table stand) folds the memo over `financeWindow`'s own window
+     and returns the NET realised result as a loss in positive cents, 0 when the sales fixed a gain: a net gain does not join income («Portfolio
+     growth» already tells that story) and a gain on one sale hides a loss on another.
+     **THE RELATION.** The shelf is the `'shop'` net as the wallet felt it, `-purchases + proceeds - upkeep`. A sale's proceeds are the basis it
+     released plus what it realised, so `shelf = -(purchases - basis released) + realised result - upkeep`: the loss is the negative of the middle
+     term and is **already inside** `shelfNetCents`. B5's identity `earned - spent + shelf = funds` is therefore exactly as it was, and the card –
+     which now prints the loss as its own row – prints the shelf row **without** it (`shelfNetCents + realisedLossCents`), so
+     `earned - spent - loss + shelf row = funds` and the loss is counted once. Pinned on real sales from the wallet and the sold row's own basis,
+     never from the memo: a car bought and sold (whole basis released, so shelf + loss = 0) and a fund part-sold after it fell 10% (loss 11,111,111
+     cents; shelf + loss = −(4,000,000 − 1,111,111.11)); and adding the loss to the identity as it stands is shown to miss the bottom line by exactly
+     the loss. The mounted arm sums what the card PRINTS, in a whole-dollar year (earned +60,000, spent −33,000, loss −25,000, shelf row −275,000,
+     funds −273,000).
+     **BANKED, NOT RECOMPUTED.** The shelf nets four things into one number, so the loss cannot be rebuilt from the banked figures:
+     `SeasonWealth.realisedLossCents?` carries it beside the `shelfNetCents` it is named inside – B5's optional-key precedent (`wealth?`,
+     `growthCents?`). **Absent at zero** and on every summary banked before this, so a year without a loss banks byte for byte what it banked
+     yesterday. The history row is not touched: its Spent stays consumption and the loss is the card's own row. (б) is nothing to build.
+     **THE ROW.** `Sold at a loss`, on the expense side directly under «Spent this season», negative and red, hidden at zero – DRAFT **R46-S46**,
+     alternate `Realised loss` **R46-S47**.
+     **(в) «2 КОЛОНКИ» – WHAT WAS MEASURED, AND THE ONE DEPARTURE FROM THE LITERAL READING.** The literal reading (Ranking and Matches stay half
+     tiles side by side, each a label|figure grid) was built first and measured in Chromium – the dialog's own stylesheet extracted from the SFC, the
+     markup replicated, 320 / 360 / 375 / 393 / 430 – and it fails: the labels overflow their column at every width («Tournaments entered» by 52 to
+     78px at all five; five of the six rows at 375). The dialog is 360px at most, so a half tile holds 96px of content at 320 and 132px at its widest,
+     and a label|figure grid needs the longest label word («Tournaments», about 74px) and the longest value («Quarterfinalist», about 110px) side by
+     side: about 190px. So the rule is the layout the Money tile already has, for all three: the tiles are one column at full width, and every row of
+     every tile is `display: contents` in one `minmax(0, 1fr) fit-content(60%)` grid – label on the left, figure right-aligned on one edge, a note
+     under a row spanning both (`.season-summary-from`, `.season-mirror-note`). Measured the same way: no row under its label, no label or figure
+     overflowing, no page overflow, at all five widths, for `Quarterfinalist` and for `No tournaments played`. **THE COST, SAID PLAINLY:** the card is
+     about 48px taller at 375 than the (broken) side-by-side build, and the Ranking and Matches pair no longer sits side by side; he said
+     «попробуем», and the revert is one commit. At 320 «Tournaments entered» wraps to two lines inside its own column with its figure still beside
+     it. **Not seen:** the mounted component itself in a browser – the check above is the real stylesheet over replicated markup.
+     **Evidence.** Unit `tests/round46-season-money.test.ts` 19 (B5's 12 + 7: whole sale, the relation, part sale at a loss, gain year = 0 and
+     absent, NET over the window, window / zero delta / memo-outside-arithmetic, banked absent-at-zero + history row untouched); mounted
+     `tests/component/round46-season-summary-money.test.ts` 11 (B5's 6 + 5: the row and the shelf row without it, the PRINTED sum, hidden at zero,
+     the half tiles' grid, the phone with the loss row – 8 rows, still inside 375×667). **Mutations, each alone, restored byte-identical (sha-256 of
+     the four touched sources before and after; control 30 of 30):** `realisedLossOf` always 0 → 8 red; the memo write dropped from
+     `settleAssetSale` → 2, from `sellAsset`'s part path → 5; the banking spread dropped → 4; the shelf row printing the raw shelf (the double
+     count) → 2; the loss row hidden → 3; Ranking/Matches out of the grid rule → 1 (only the new arm – B5's Money arm stays green); grid → flex on
+     both kinds → 2; rows back to flex → 2; tiles back to two columns → 1. **Gates:** `vue-tsc -b --force` exit 0; 43 neighbour files (every test
+     that names `sellAsset` / `settleAssetSale` or the dialog, the barrel and import ratchets, the strings roundtrip, the golden saves, the
+     import-cycle pin) 666 tests green. No `npm run check`, no `test:sim` (brief). **RNG / schema:** zero draws (a pure integer write after a sale
+     the engine had already priced); no schema move, no migration, no golden fixture; the capture (41550 / `e6b0c709`) is untouched.
+     **Files:** `src/shared/protocol/events.ts` (`FinanceWeek.realisedCents?`), `src/shared/protocol/competition.ts`
+     (`SeasonWealth.realisedLossCents?`), `src/engine/world/ledger.ts` (`accrueRealised`, `realisedLossOf`), `src/engine/world/shop.ts` (the two sale
+     sites), `src/engine/world/milestones.ts` (the banking), `src/components/SeasonSummaryDialog.vue`, the two test files, this ledger.
+5. **Epilogue**: (а/б) his flow = the totals page with a button to the whole album and a return –
+   which IS the shipped shape; no auto-open; DRAFT alternates for the button in his «посмотреть
+   весь путь» spirit. (в) «снимаем, да» – the dead `EndingView.album` pages 1–6 leave the wire.
+   (г) departed strings – his eyes later. Build (в + DRAFT rows) → **R6**.
+   - **R6 · 5(в) SHIPPED – THE SIX DEAD PAGES LEFT THE WIRE: `EndingView.album` (seven `AlbumPage`s) is `EndingView.closing` (the last one), and nothing else moved** (06.10, DRAFT rows **R46-S48, S49**).
+     **What left, measured** (a fresh career with the ending latched, `buildEndingView`, JSON length – a LOWER bound, because a played career's pages 1–6 carry facts the empty ones do not): the page list went from seven pages / 1422 bytes
+     to one page / 191, the whole view from 2367 to 1136 bytes (1231 fewer, about half), and 54 fields (six pages × nine) are gone from every snapshot while the ending is latched. One field changed shape
+     (`album: AlbumPage[]` → `closing: AlbumPage`); nothing is saved, so no schema move and no migration.
+     **Mapped once:** ONE producer (`buildEndingView`, `world/endings.ts`: `album: buildAlbum(world)` → `closing: slotLastWeek(world)`) and ONE reader (`EndingScreen.vue`: `closing` took the last of the list, it takes the field).
+     `vue-tsc -b --force` exits 0, and the pre-change PCRE grep for `album:` / `.album` over `src tests e2e tools scripts` found these readers and no others – `e2e/` carries none (the brief's guess `e2e/dynasty.spec.ts` included).
+     ⚠ THE PIN QUERIES MISSED THE FIELD: `git grep -l "EndingView\|endings.ts" -- tests/` lists files that mention the TYPE, and `'endings.ts'` matched nothing; the readers were found by grepping the FIELD, which is the query a field removal needs.
+     **Pins re-aimed – thirteen test files, every one a fixture or a direct reader of the removed field (so the diff was wider than «seven»):** ten mounted-component files built `album: [...]` literals (`endings-ui`, `principles-w4-dialog-focus`,
+     `principles-w4-refusal-surfaces`, `r39-lifetime-letter`, `r47-raise-another-route`, `round36-phase4`, `round46-b6-ending-and-retirement`, `round46-the-reckoning`, `wave10-dynasty-door`, `wave12-parting-album`) – each now hands `closing:` the page
+     it used to hand LAST, so the card renders exactly what it rendered; three engine files read the view (`ending.test.ts`, `two-doors.test.ts`, `wave8-return-decision.test.ts`). The wire pin is in `ending.test.ts` («the snapshot carries the epilogue
+     as a FIELD»): `closing` is slot 7, equals the page `buildAlbum` builds as slot 7, and `album` is not among the view's keys. In `wave8-return-decision.test.ts` the claim «the family ending reads page for page like a stopped one, but for the title»
+     is now about the one page the view carries; the other six belong to the engine's own album tests.
+     **⚠ WORDING: zero strings.** The screen drew only the last page before and after, and that page's `why` / `caption` / `fact` are the engine's, untouched – the pages' copy left the WIRE, not the screen. (One test TITLE said «two empty slots»
+     and now says «nothing earned»: a title, not a surface.)
+     **Evidence:** `vue-tsc -b --force` exit 0; `vitest run` over the three engine files and the eleven component files that build or mount the epilogue (those ten plus `wave8-family-ending`): 14 files, 238 tests, all green (15 s).
+     **⚠ RESIDUAL, FLAGGED, NOT DONE – the architect's call:** `buildAlbum` and the six slot builders (`slotBeginning` … `slotTheTurn`) have **no production caller any more**. What still reads them: `tests/ending.test.ts` (the slot arms),
+     `tests/relative-age.test.ts`, `tests/round46-best-rank.test.ts` (`slotBestWeek`) and `tests/round46-career-money.test.ts` (`slotTheTurn`) – the last two pin round 46 #9/#10 figures – both `tools/album-money-probe.ts` and
+     `tools/album-spread-probe.ts`, and the frozen barrel name (`principles-a03-barrel-surface.test.ts` lists `buildAlbum`). The brief's «delete what nothing reads» is not met by that list, since tests and probes do read them, so I narrowed the wire
+     and stopped there; deleting them is a second, wider change (retire the arms, move the barrel pin, regenerate `world-symbol-map`).
+     **DRAFT alternates, NOT wired:** S48 `The whole road`, S49 `Her whole road, page by page` – both for the wired S17 `View the album`, his pick.
+     **Files:** `src/shared/protocol/career.ts`, `src/engine/world/endings.ts`, `src/components/EndingScreen.vue`, the thirteen test files above, this ledger.
+6. **The watch**: «наверное да» – the 18 band lends nothing; the leak closes with a measured
+   note. Build → **R6**.
+   - **R6 · 6 SHIPPED – THE 18 BAND LENDS NOTHING: THE WATCH JOINS THE ACCOUNT, MEASURED BEFORE AND AFTER** (06.10). B8 withheld one row (`lendable` dropped `bankcard`); the filter now withholds the WHOLE band –
+     `lendsNothing(from) ? []` in `materialFor` (`world/birthday.ts`), the account's own clause left in place and the corridor logic (rule 2, the anchor at eighteen; rule 3, the sixteen/seventeen swap) untouched. Eligibility, not draws:
+     `seed:birthday:<age>` is still drawn four times, the cycle streams are untouched, MAIN is not reached. The dated note sits beside B8's in `birthday.ts`.
+     **Measured** (sixty seeds × both grants × both balances, nineteen to forty-five – the sweep of `birthday-own-account.test.ts` (c) – counted by OBJECT IDENTITY by a throwaway probe, because `watch` is an id in the 17 band AND the 18 band):
+     the every-ask walk, B8's one configuration, reproduced to the card: the watch on **145 cards, 59 of 60 careers, 55 asks** before, **0 / 0 / 0** after; ANY row of the 18 band on **429 cards, 60 of 60 careers, 110 asks** before, **0 / 0 / 0** after.
+     The full 240-walk sweep: 858 cards with a row of the 18 band (220 as the ask) before, **0** after; the watch alone 290 cards (110 asks) before, **0** after.
+     **⚠ A FINDING THE BRIEF DID NOT NAME:** the leak was wider than the watch – `trip` («A trip that is not a tournament») rode the same door on 284 further cards of that walk. «The 18 band lends nothing» closes it too, which is what the one-line widening does;
+     if he meant the watch ONLY, the filter would be per-row and `trip` would keep lending. Flagged as the one consequence of his ruling he may not have pictured.
+     **The card at eighteen is untouched:** the eighteenth watch is on it for 60 of 60 seeds before and after, and after the account was asked at sixteen it is still THE ask on 15 of 60 – the same 15. **Other bands:** the RULE is untouched; their VOLUMES move
+     where they stand in for the 18 band's slots – lendings to cards 19–45 over the sweep, before → after: 17 band 504 → 794, 16 band 872 → 988, 15 band 646 → 796, 0–14 band 586 → 836, 19–21 band 740 → 806, 22–28 band 6018 → 6042, 29+ 500 → 500; the 18 band 916 → 0.
+     That is the intended swap: late cards draw different ROWS now (which rows, never which draws).
+     **Tests** – six arms appended to `tests/birthday-own-account.test.ts`: the premise (the watch is two objects), (e) no 18-band row on any card of the sweep, (f) the watch alone, cards and asks, (g) the card at eighteen carries every row of the band and the
+     watch is still asked there, (h) the control – the 17 band and the 22–28 band still lend and the 18 band lends 0, (i) no late card short or doubled. **On the unfixed source they redden with the BEFORE counts:** (e) 858 cards, (f) 290 cards, (h) 916 lendings.
+     **Mutation:** un-widen (B8's filter back) → (e), (f) and (h) red with those counts; over-widen (no band lends) → (h)'s control line red (the 17 band lent 0) and B8's own (a) red (with nobody lending, the retired account row comes back on the card at eighteen).
+     Restored byte-identical – `cmp` exit 0 against a copy taken before the first mutation.
+     **Neighbours:** the birthday family (`birthday-announce`, `-ask`, `-career`, `-gifts`, `-own-account`, `college-birthday`, `college-birthday-wish`, `round42-birthday-durables`): 8 files, 138 tests green. **Capture:** `tests/condition.test.ts` 51 tests green –
+     **the frozen capture holds, 41550 draws / hash `e6b0c709`.** `vue-tsc -b --force` exit 0. **⚠ WORDING:** no string touched – the 18 band's rows are the same objects; what changed is that two of them (`The eighteenth watch`, `A trip that is not a tournament`) stop appearing on cards after eighteen.
+     **Spec:** `docs/specs/birthday-and-gifts.md` closes the watch paragraph with one dated sentence. **Files:** `src/engine/world/birthday.ts`, `tests/birthday-own-account.test.ts`, `docs/specs/birthday-and-gifts.md`, this ledger.
+7. **№14**: «без миграции ок» – option Б; the live row heals on the next dominating top-up.
+   CLOSED.
+8. **Yacht vs Elite**: «ок, на неё сначала надо заработать» – stands as built. CLOSED.
+9. **Ticket overlap**: scrapbook overlap accepted, his eyes later. CLOSED.
+10. **Tone of the PR bodies**: confirmed house tone, «пока ок». CLOSED.
+
 ## The plan – bundles by collision surface, sequential dispatch (token law 29.09)
 
 Orientation facts the bundles are built on: spouse heading = `spouseViewCopy.ts:29` (header and the
@@ -882,8 +1216,8 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S7 | 12 – the spouse beat's heading, **WIRED** (`spouseViewCopy.ts` `SPOUSE_VIEW_HEADING`; the dialog's frame over the line; was `The one she married has something to say about this season`, which opened with the same four words as the line under it) | `Her spouse has something to say about this season` |
 | R46-S8 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `Her husband has something to say about this season` – gendered: the partner's name pool is 28 male first names, so it never contradicts a name on screen, but the schema holds no gender and the pool's «no gender» law stands until he rules |
 | R46-S9 | 12 – ALTERNATE for S7, NOT wired (the same one constant) | `He has something to say about this season` – his own «он» and the shortest; the Home card above it (`The one she married wants a word.`, unchanged) is its only antecedent; also gendered |
-| R46-S10 | 9 – the personal page's relationship line, **WIRED** (`kidLife.ts` `togetherNote`, one function; the sentence sits under the tile grid on `KidScreen`, beside the school and college notes; the span words are S2's and are not repeated here) | `Together with {name} for {span}` – e.g. `Together with Anton for 1 year and 6 months` · married: `Married to {name} – together for {span}` · before the engagement has written a name: `Together for {span}` · married with no name (hand-built rows only – the engine names him at the engagement, before any wedding): `Married – together for {span}` |
-| R46-S11 | 9 – ALTERNATE for S10, NOT wired (the same one function) | name-first and shorter: `{name} – together for {span}` · `Together for {span}` · `Married to {name} – together for {span}`; the cost is that the unnamed form reads as a fragment with no subject, which is why S10 keeps «with» in the named form |
+| R46-S10 | **RETIRED 06.10 (R4, morning 3) – this sentence left the screen; S39–S45 replace it.** 9 – the personal page's relationship line, **WIRED** (`kidLife.ts` `togetherNote`, one function; the sentence sits under the tile grid on `KidScreen`, beside the school and college notes; the span words are S2's and are not repeated here) | `Together with {name} for {span}` – e.g. `Together with Anton for 1 year and 6 months` · married: `Married to {name} – together for {span}` · before the engagement has written a name: `Together for {span}` · married with no name (hand-built rows only – the engine names him at the engagement, before any wedding): `Married – together for {span}` |
+| R46-S11 | **RETIRED with S10 (06.10).** 9 – ALTERNATE for S10, NOT wired (the same one function) | name-first and shorter: `{name} – together for {span}` · `Together for {span}` · `Married to {name} – together for {span}`; the cost is that the unnamed form reads as a fragment with no subject, which is why S10 keeps «with» in the named form |
 | R46-S12 | 8 + 19 – the year-end Money tile's shelf row, **WIRED** (`SeasonSummaryDialog.vue`, the `season-key` between «Earned this season» and the hairline; hidden at zero; it carries the whole `'shop'` category's net – purchases, the cars' upkeep and sale proceeds – because the ledger has no category of its own for upkeep) | `Holdings and upkeep` |
 | R46-S13 | 8 + 19 – the growth row under «Family's portfolio», **WIRED** (same file; absent when there is no previous wrap-up to subtract from) | `Portfolio growth` |
 | R46-S14 | 8 + 19 – NOT new: the wealth row's label is the EPILOGUE'S OWN for the same figure (`EndingScreen.vue`, `careerMoney.portfolioCents`), now also on the year-end card under its own hairline – listed so he knows the card will say it | `Family's portfolio` |
@@ -898,3 +1232,27 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S23 | 2 – the settings row's own label, under the `The weight` heading, **WIRED** (`WEIGHT_COPY.settingsLabel` in `composables/identityCopy.ts`, read by `MoreScreen.vue`'s `#more-weight-label` – which is also the switch's accessible name; the `<h2>` and both creation cards keep `WEIGHT_COPY.title`, and the hint under the row is untouched) | `Pregnancy loss and bereavement` – names the two things the switch gates, in the spec's own nouns; 30 characters, one short of the neighbouring label «The coach marks for new players» (31) |
 | R46-S24 | 2 – ALTERNATE for S23, NOT wired (same constant: `WEIGHT_COPY.settingsLabel`) | `A pregnancy that ends, a death in the family` – the creation card's own two scenes (`WEIGHT_COPY.lead`), gentler than S23 and without echoing the hint's «loss or bereavement»; 44 characters, longer than the 31-character «The coach marks for new players», so it will likely take two lines on a phone (not measured) |
 | R46-S25 | 2 – ALTERNATE for S23, NOT wired (same constant: `WEIGHT_COPY.settingsLabel`) | `Pregnancy loss and bereavement in this career` – S23 plus the one clause «развернуть» invites: it is the only switch on the screen that belongs to a career and not to the device; 45 characters, so it also likely wraps (not measured) |
+| R46-S26 | 12 + morning 2 – the spouse card, `distant-swing`, entry 0 (`SPOUSE_VIEW_SAID['distant-swing'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the architect's own re-opening, verbatim; every quoted word kept | before: `The one she married stayed back after the plates were cleared. "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."` -> after: `After the plates were cleared: "The next tournament is half a world away. I knew the life I married into. Some weeks I would just like it nearer."` |
+| R46-S27 | 12 + morning 2 – the spouse card, `distant-swing`, entry 1 (`SPOUSE_VIEW_SAID['distant-swing'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `Two suitcases stood by the door a week early. "I keep packing in my head long before you do. It is not a complaint. It is just where my evenings go."` |
+| R46-S28 | 12 + morning 2 – the spouse card, `distant-swing`, entry 2 (`SPOUSE_VIEW_SAID['distant-swing'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The call ended past midnight, cheerful to the last minute. "Those time zones are yours now. I am learning which hours of my day still reach you."` |
+| R46-S29 | 12 + morning 2 – the spouse card, `distant-swing`, entry 3 (`SPOUSE_VIEW_SAID['distant-swing'][3]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `A map stayed open on the kitchen table all week. "I measured it with my thumb. Three thumbs of ocean. Nobody tells you marriage involves this much geography."` |
+| R46-S30 | 12 + morning 2 – the spouse card, `road-stretch`, entry 0 (`SPOUSE_VIEW_SAID['road-stretch'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule (subject stripped, scene and every quoted word kept) – the architect gave the rule for this one, not the text | before: `The one she married said it plainly, on a quiet evening. "The family has been on the road for weeks now. The house does not really get lived in between the trips."` -> after: `On a quiet evening, plainly: "The family has been on the road for weeks now. The house does not really get lived in between the trips."` |
+| R46-S31 | 12 + morning 2 – the spouse card, `road-stretch`, entry 1 (`SPOUSE_VIEW_SAID['road-stretch'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The fridge note said back Thursday, then said nothing for a while. "I have stopped counting weeks and started counting airports. It comes to the same number, but it sounds more like your life."` |
+| R46-S32 | 12 + morning 2 – the spouse card, `road-stretch`, entry 2 (`SPOUSE_VIEW_SAID['road-stretch'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The neighbours asked when the family would next be under one roof. "I said soon, with the confidence of somebody who has learned not to check the calendar first."` |
+| R46-S33 | 12 + morning 2 – the spouse card, `money`, entry 0 (`SPOUSE_VIEW_SAID['money'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule – the only scene this line had was its tone, so the tone is what stays | before: `The one she married asked it without an edge. "That was a large bill, and the season sits in her account now. I am not counting anybody's money. I am asking how this house plans."` -> after: `Without an edge: "That was a large bill, and the season sits in her account now. I am not counting anybody's money. I am asking how this house plans."` |
+| R46-S34 | 12 + morning 2 – the spouse card, `money`, entry 1 (`SPOUSE_VIEW_SAID['money'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The bank letter lay opened beside the fruit bowl. "I grew up thinking a good month meant nothing broke. I am still translating what a good month means in this house."` |
+| R46-S35 | 12 + morning 2 – the spouse card, `money`, entry 2 (`SPOUSE_VIEW_SAID['money'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `"I paid for dinner and it felt like a historical reenactment. Let me have that one. Some things should still be mine to buy."` |
+| R46-S36 | 12 + morning 2 – the spouse card, `no-vacation`, entry 0 (`SPOUSE_VIEW_SAID['no-vacation'][0]` in `lifeBeat/spouseViewCopy.ts`), **RE-OPENED**, **WIRED** – the builder's re-opening by the architect's rule | before: `The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` -> after: `As the season closed: "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` |
+| R46-S37 | 12 + morning 2 – the spouse card, `no-vacation`, entry 1 (`SPOUSE_VIEW_SAID['no-vacation'][1]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `The brochure stayed on the shelf from last winter. "I am not asking for the sea. I am asking for one week where nobody's racket comes with us."` |
+| R46-S38 | 12 + morning 2 – the spouse card, `no-vacation`, entry 2 (`SPOUSE_VIEW_SAID['no-vacation'][2]` in `lifeBeat/spouseViewCopy.ts`), **NEW**, **WIRED** | `"People think being married into tennis means holidays. I showed them a photo of a car park in the rain. They stopped asking."` |
+| R46-S39 | morning 3 – the School cell's heading once it is her relationships, **WIRED** (`kidLife.ts` `RELATIONSHIPS_LABEL`; the cell changes over when she is out of school and 22) | `Relationships` – his «Отношения» |
+| R46-S40 | morning 3 – ALTERNATE for S39, NOT wired | `Love life` – warmer and shorter, and it says less about what is in the cell |
+| R46-S41 | morning 3 – the cell when the parent knows of nobody, **WIRED** (`kidLife.ts` `relationshipsTile`; two lines, each 16 characters at most) | line one `On her own`, line two `it seems` – his «кажется одинока»; «it seems» is on the cell because the parent may simply not know, and a relationship that has ended reads the same |
+| R46-S42 | morning 3 – ALTERNATE for S41, NOT wired | `Seems to be` / `on her own` – the hedge first; the cost is that the stronger line then carries the guess |
+| R46-S43 | morning 3 – the cell when the parent knows, **WIRED** (the same one function) | together: `Together for` / `1y 6m` (his own shape) · engaged: `Engaged` / `together 1y 6m` · married: `Married` / `together 1y 6m` – the span counts from the day they got together in all three, which is why «together» stays on the second line of the last two |
+| R46-S44 | morning 3 – the compact span, **WIRED** (`weddingCopy.ts` `togetherSpanShort`, the same count as S2's words) | `1y 6m` · `3y` · `7m` · `<1m` before the first whole month; the longest it can be, `99y 11m`, is what lets «together» fit in front of it |
+| R46-S45 | morning 3 – ALTERNATE for S43 + S44, NOT wired | the words form: `Together for` / `1 yr 6 mo`, `Engaged` / `1 yr 6 mo`, `Married` / `1 yr 6 mo`; the cost is that without the word «together» the number under «Married» reads as how long they have been married, which is not what it counts |
+| R46-S46 | morning 4 – the year-end Money tile's realised-loss row, **WIRED** (`SeasonSummaryDialog.vue`, the `season-key` directly under «Spent this season»; hidden at zero; the engine's `realisedLossOf`, banked as `wealth.realisedLossCents`; the shelf row S12 now prints without it, so the rows add up once) | `Sold at a loss` |
+| R46-S47 | morning 4 – ALTERNATE for S46, NOT wired | `Realised loss` – the accounting word, shorter and exact; the cost is that «realised» is a finance term a parent may not use, where the ledger's own sentences already say «Sold: … less than it cost» |
+| R46-S48 | morning 5 – ALTERNATE for S17, NOT wired (the lead control on the epilogue's last page; his «посмотреть весь путь» spirit) | `The whole road` – names what the book is rather than what it is called; the cost is that «road» is a figure of speech where `View the album` says what the control opens |
+| R46-S49 | morning 5 – ALTERNATE for S17, NOT wired | `Her whole road, page by page` – the same spirit, and it says the book is paged and hers; the cost is length – 28 characters against S17's 14, on a `PrimaryPill` sized for the short one; not measured at 320 wide, because it is not wired |
