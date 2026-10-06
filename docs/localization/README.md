@@ -61,6 +61,11 @@ last-reviewed: 2026-10-06
 | [Batch 11F – World news and business](ru-world-news-finance-2026-10.md) | Champion, junior cohort, academy review, ad-shoot clash and merch/academy income | current source templates drafted; academy text-prefix trap flagged |
 | [Batch 11G – Tournament settlement](ru-tournament-feed-2026-10.md) | Prize/staff receipts, scored result summaries, milestones and tour penalties | current source templates drafted; absolute-week display trap flagged |
 | [Batch 11H – Booking and entry history](ru-booking-entry-feed-2026-10.md) | Entry releases, practice/vacation refunds and friendly results | uncovered planner/entry writer lines drafted; RU-05 overlap cited |
+| [Batch 11I – Coaching and staff history](ru-staff-feed-2026-10.md) | Coach, masseur, hitting-partner and psychologist event and ledger rows | current source templates drafted; coach-rate gender issue flagged |
+| [Batch 11J – Medical history](ru-medical-feed-2026-10.md) | Injury onset, recovery, treatment bills and tournament medical stops | six onset paths and current medical receipt templates drafted |
+| [Batch 11K – Short world receipts](ru-world-receipts-2026-10.md) | Career start, birthday age, calendar, no-show and equipment receipts | remaining short templates drafted; prior RU-05/06/09/11G coverage cross-checked |
+| [Batch 11L – Weekly finance corpus](ru-weekly-finance-corpus-2026-10.md) | Training, light weeks, court venue/time, kit and fixed finance receipts | current recurring pools drafted; adult sparring and narrow recap issues flagged |
+| [Batch 12A – Epilogue screen](ru-ending-screen-2026-10.md) | Album/record chrome, totals, conditional notes and next-career controls | current `EndingScreen.vue` strings drafted; engine album pages remain next |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
