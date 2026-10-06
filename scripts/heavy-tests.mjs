@@ -586,6 +586,18 @@ export const HEAVY_UNIT_FILES = [
   // its own process at the 2.24x factor – under the per-test ceiling with thin margin, and if it
   // ever crosses THERE, the file splits along the §C seam exactly as coach-travel-edge did.
   'tests/wave5-elite-gate.test.ts',
+  // ⚠ ADDED 06.10 (round 47's gate) – THREE COLLEGE/WALKED-CAREER FILES, the same infrastructure
+  // outcome as every entry above: hook/test timeouts with ZERO assertion failures, twice under an
+  // LM-Studio load (38–42) and then once more at the 30 s hook budgets on a QUIET machine's bulk
+  // pool. MEASURED SOLO on the round/47 branch: college-league 15.8 s, wave9-poise 12.3 s,
+  // round27-call-up ~10 s – and the CONTROL (the same college-league on MAIN in a worktree) read
+  // 20.7 s, so the branch is ~24 % FASTER than main and the walks' growth belongs to the rounds
+  // merged this morning (46 + the succession wave), not to this branch. The budgets were written
+  // for a 4.7 s world; the honest fix is a process each, exactly as the 08.09 block above rules –
+  // never a raised budget. The walk-growth itself is a standing perf finding for a future wave.
+  'tests/college-league.test.ts',
+  'tests/round27-call-up-flow.test.ts',
+  'tests/wave9-poise.test.ts',
 ]
 
 /** THE FAMILIES – the one rule the list above has, stated so a gate can read it (T5.2 · H-05, 27.09).
