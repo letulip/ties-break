@@ -66,6 +66,8 @@ last-reviewed: 2026-10-06
 | [Batch 11K – Short world receipts](ru-world-receipts-2026-10.md) | Career start, birthday age, calendar, no-show and equipment receipts | remaining short templates drafted; prior RU-05/06/09/11G coverage cross-checked |
 | [Batch 11L – Weekly finance corpus](ru-weekly-finance-corpus-2026-10.md) | Training, light weeks, court venue/time, kit and fixed finance receipts | current recurring pools drafted; adult sparring and narrow recap issues flagged |
 | [Batch 12A – Epilogue screen](ru-ending-screen-2026-10.md) | Album/record chrome, totals, conditional notes and next-career controls | current `EndingScreen.vue` strings drafted; engine album pages remain next |
+| [Batch 12B – Ending album](ru-ending-album-2026-10.md) | Seven engine-authored pages and the full milestone record | every current slot branch and record label drafted; ending detail and college copy remain |
+| [Batch 12C – Ending doors](ru-ending-doors-2026-10.md) | Nine terminal titles/details, eight voiced exits and other kept transition rows | current ending paths drafted; stale six-ending context claim flagged |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
