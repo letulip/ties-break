@@ -136,6 +136,18 @@ export interface SeasonWealth {
   /** the holding category's net over the season window, signed as the wallet felt it: negative = cash went
    *  out to the shelf and its upkeep. `earnedCents - spentCents + shelfNetCents === fundsDeltaCents`. */
   shelfNetCents: number
+  /** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 (06.10) – THE PART OF `shelfNetCents` THAT WAS A REALISED LOSS: what the season's asset sales fetched, NET, below what the family had
+   *  put into what it sold – the owner's «инвестиция это не совсем расход, только если мы не в минусе зафиксировались». A sale that fixed a loss is a real expense and the
+   *  card gives it its own row on the expense side; a net realised GAIN is not income and is not banked here.
+   *
+   *  ⚠⚠ NAMED INSIDE `shelfNetCents`, NEVER ADDED TO IT. The shelf is the whole `'shop'` net, so the loss is already in it and
+   *  `earnedCents - spentCents + shelfNetCents === fundsDeltaCents` is exactly as it was; the card keeps its rows adding up by printing the shelf row as
+   *  `shelfNetCents + realisedLossCents`. `realisedLossOf` (engine/world/ledger.ts) carries the argument.
+   *
+   *  ⚠ ABSENT AT ZERO, and on every summary banked before this: the card then prints exactly what it printed yesterday. Optional and not a schema move –
+   *  `growthCents`' own rule. Positive cents. It cannot be recomputed from the other figures (the shelf nets purchases, sales and upkeep into one number), which is why
+   *  it is banked. */
+  realisedLossCents?: number
   /** how far `portfolioCents` moved since the PREVIOUS wrap-up – exactly one season, wrap to wrap, which is
    *  also what the player can check against last year's card. Season 0 reads from the career's opening
    *  wallet (the shelf started empty). ABSENT when there is no earlier figure to subtract – the first wrap

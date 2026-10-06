@@ -26,8 +26,8 @@
 //   5. A career that buys nothing reads exactly the gross figures it always did;
 //   6. THE COMPACT FORM («M») – a figure from $1M up is in millions, anything smaller is untouched.
 import { describe, it, expect } from 'vitest'
-import { buyAsset, createWorld, maybeFireSeasonWrapUp, type WorldState } from '../src/engine/world'
-import { accrueFinance, financeWindow, isHoldingCategory, seasonMoneyOf } from '../src/engine/world/ledger'
+import { buyAsset, createWorld, maybeFireSeasonWrapUp, sellAsset, type WorldState } from '../src/engine/world'
+import { accrueFinance, accrueRealised, financeWindow, isHoldingCategory, realisedLossOf, seasonMoneyOf } from '../src/engine/world/ledger'
 import { careerMoney } from '../src/engine/world/reckoning'
 import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { seasonYear } from '../src/shared/dates'
@@ -257,5 +257,171 @@ describe('⭐ round 46 #19 – the compact form: millions in «M», everything s
     expect(formatCentsCompact(999_999_49)).toBe('$999,999')
     expect(formatCentsCompact(1_250_000_00)).toBe('$1.3M')
     expect(formatCentsCompact(1_249_999_00)).toBe('$1.2M')
+  })
+})
+
+// ⭐⭐⭐ ROUND 46, MORNING ITEM 4 (06.10) – A SALE THAT FIXED A LOSS IS A REAL EXPENSE, AND ONLY A LOSS.
+//
+// THE OWNER, 06.10: «а) мне нужно видеть реальные расходы и доходы, мы это уже обсуждали. Инвестиция это не совсем расход, только если мы не в минусе
+// зафиксировались». B5 took the whole `'shop'` category out of «spent» (a deposit moves, it does not leave); this is the part of it that DOES leave – what a
+// sale got back below what it had cost – named as its own figure and banked beside the shelf it is inside of.
+//
+// ⚠⚠ EVERY EXPECTED FIGURE BELOW IS MEASURED OFF THE WALLET AND THE SOLD ROW (`fundsCents` before and after, the row's `paidCents` before and after), NEVER OFF THE
+// MEMO UNDER TEST, and the hand-computed literals are there so a memo that drifted with its reader could not pass. The source of the figure is the memo
+// `FinanceWeek.realisedCents`, which the two settle sites write from the very delta their ledger sentence names: the asset rows cannot say it (a whole sale
+// deletes the row; `realisedGainCents` is lifetime and part-sale-only).
+
+/** A season-0 year in which the family bought a car and sold it again at once, around ordinary money. */
+function carYear(): { world: WorldState; paid: number; fetched: number; rngBefore: string } {
+  const world = wrapWorld(0, 'r46-realised-car')
+  world.fundsCents = 5_000_000_00
+  accrueFinance(world, 10, 'prize', 300_000_00)
+  accrueFinance(world, 11, 'coaching', -100_000_00)
+  buyAsset(world, 'car-sensible')
+  const paid = world.assets.find((a) => a.id === 'car-sensible')!.paidCents
+  const before = world.fundsCents
+  const rngBefore = JSON.stringify(world.rngMain)
+  sellAsset(world, 'car-sensible')
+  return { world, paid, fetched: world.fundsCents - before, rngBefore }
+}
+
+/** Buy 4,000,000 of the index fund, let it be worth `valueCents`, and take `saleCents` out: what the part that left cost and what it fetched, off the row and the wallet. */
+function fundSale(world: WorldState, valueCents: number, saleCents: number): { purchase: number; basisReleased: number; proceeds: number } {
+  const purchase = 4_000_000_00
+  world.fundsCents += purchase
+  buyAsset(world, 'index-fund', purchase)
+  const row = world.assets.find((a) => a.id === 'index-fund')!
+  row.valueCents = valueCents
+  return withdraw(world, saleCents)
+}
+
+/** One more withdrawal from the fund the family already holds. */
+function withdraw(world: WorldState, saleCents: number): { purchase: number; basisReleased: number; proceeds: number } {
+  const row = world.assets.find((a) => a.id === 'index-fund')!
+  const paidBefore = row.paidCents
+  const before = world.fundsCents
+  sellAsset(world, 'index-fund', saleCents)
+  return { purchase: 4_000_000_00, basisReleased: paidBefore - row.paidCents, proceeds: world.fundsCents - before }
+}
+
+describe('⭐⭐⭐ round 46 morning item 4 – a sale that FIXED a loss is a real expense, and only a loss', () => {
+  it('a whole sale of a thing at a loss: the loss is proceeds-minus-cost to the cent, off the wallet and the sold row', () => {
+    const { world, paid, fetched, rngBefore } = carYear()
+    expect(fetched, 'the scenario has to be a loss year: a car resold at once fetches less than it cost').toBeLessThan(paid)
+    // ⚠⚠ THE ARM. Mutate `realisedLossOf` to return 0, or drop `accrueRealised` from `settleAssetSale`, and this goes red.
+    expect(realisedLossOf(world.financeWeeks, 0)).toBe(paid - fetched)
+    // the memo is ONE signed figure on the week's row, beside the categories and not in them
+    const week = world.financeWeeks.find((w) => w.realisedCents !== undefined)!
+    expect(week.realisedCents).toBe(fetched - paid)
+    // the booking did not move: purchase and proceeds are the one ordinary `shop` net, memo or no memo
+    expect(week.byCategory.shop).toBe(fetched - paid)
+    // zero draws: the sale never touched the MAIN stream
+    expect(JSON.stringify(world.rngMain)).toBe(rngBefore)
+  })
+
+  it('THE RELATION: the loss is NAMED INSIDE the shelf and never added to it – the identity is untouched and the card`s rows add up once', () => {
+    const { world, paid, fetched } = carYear()
+    const loss = paid - fetched
+    const window = financeWindow(world.financeWeeks, 0)
+    const money = seasonMoneyOf(window)
+    // the shelf is the whole `shop` net, the sale's proceeds netted against the purchase: -purchases + proceeds
+    expect(money.shelfNetCents).toBe(-paid + fetched)
+    // B5's identity, exactly as it stood: the loss is INSIDE the shelf figure, so nothing was added to the arithmetic
+    expect(money.earnedCents - money.spentCents + money.shelfNetCents).toBe(window.netCents)
+    // shelf = -(purchases - basis released) - loss. The sale released the WHOLE basis, so the first term is nothing: what is left on the shelf is the loss
+    expect(money.shelfNetCents + loss).toBe(0)
+    // the card prints the loss as an expense row, so its shelf row is the shelf WITHOUT it – and the rows add up exactly once
+    expect(money.earnedCents - money.spentCents - loss + (money.shelfNetCents + loss)).toBe(window.netCents)
+    // …whereas adding the loss to the identity AS IT STANDS counts it twice: this is the double count the card must never print
+    expect(money.earnedCents - money.spentCents - loss + money.shelfNetCents).toBe(window.netCents - loss)
+  })
+
+  it('a PART sale at a loss: loss = released basis - proceeds, and shelf = -(purchases - basis released) - loss', () => {
+    const world = wrapWorld(0, 'r46-realised-fund')
+    world.fundsCents = 6_000_000_00
+    accrueFinance(world, 10, 'prize', 300_000_00)
+    // the market fell 10%: 4,000,000 bought is worth 3,600,000 and a million is taken out
+    const { purchase, basisReleased, proceeds } = fundSale(world, 3_600_000_00, 1_000_000_00)
+    const loss = basisReleased - proceeds
+    // hand-computed: the cost of the million that left is 4,000,000 x 1,000,000 / 3,600,000 = 1,111,111.11 -> 111,111,111 cents, so the loss is 11,111,111 cents
+    expect(loss).toBe(11_111_111)
+    expect(realisedLossOf(world.financeWeeks, 0)).toBe(11_111_111)
+    const window = financeWindow(world.financeWeeks, 0)
+    const money = seasonMoneyOf(window)
+    expect(money.shelfNetCents).toBe(-purchase + proceeds)
+    // the relation, on the principal that STAYED on the shelf: -(4,000,000 - 1,111,111.11) = -2,888,888.89
+    expect(money.shelfNetCents + loss).toBe(-(purchase - basisReleased))
+    expect(money.shelfNetCents + loss).toBe(-288_888_889)
+    expect(money.earnedCents - money.spentCents + money.shelfNetCents).toBe(window.netCents)
+  })
+
+  it('a GAIN-fixing year is 0 – it is not income, the row hides, and the summary banks nothing for it', () => {
+    const world = wrapWorld(0, 'r46-realised-gain')
+    world.fundsCents = 6_000_000_00
+    const { basisReleased, proceeds } = fundSale(world, 4_400_000_00, 1_000_000_00)
+    expect(proceeds - basisReleased, 'the part that left was worth more than it cost').toBe(9_090_909)
+    expect(realisedLossOf(world.financeWeeks, 0)).toBe(0)
+    maybeFireSeasonWrapUp(world)
+    const s = world.lastSeasonSummary!
+    expect(s.wealth, 'the wealth block is banked as ever').toBeDefined()
+    // ABSENT at zero, not 0: a year with no loss banks exactly what it banked yesterday
+    expect('realisedLossCents' in s.wealth!).toBe(false)
+    // and B5's identity on the banked figures is as it was – a gain stays inside the shelf and joins nothing
+    expect(s.earnedCents! - s.spentCents! + s.wealth!.shelfNetCents).toBe(s.fundsDeltaCents)
+  })
+
+  it('the figure is NET over the window: a gain on one sale hides a loss on another, and what is left is the loss', () => {
+    for (const [secondValueCents, expectLoss] of [[5_000_000_00, false], [2_000_000_00, true]] as const) {
+      const world = wrapWorld(0, 'r46-realised-net')
+      world.fundsCents = 6_000_000_00
+      const first = fundSale(world, 3_600_000_00, 1_000_000_00)
+      world.assets.find((a) => a.id === 'index-fund')!.valueCents = secondValueCents
+      const second = withdraw(world, 1_000_000_00)
+      const net = first.proceeds - first.basisReleased + (second.proceeds - second.basisReleased)
+      expect(first.proceeds - first.basisReleased, 'the first sale fixed a loss').toBeLessThan(0)
+      expect(realisedLossOf(world.financeWeeks, 0)).toBe(Math.max(0, -net))
+      expect(realisedLossOf(world.financeWeeks, 0) > 0, `second sale at a fund worth ${secondValueCents / 100}`).toBe(expectLoss)
+    }
+  })
+
+  it('the window is the one `financeWindow` folds, a zero delta writes nothing, and the memo is outside every arithmetic', () => {
+    const rows: FinanceWeek[] = [
+      { week: 3, byCategory: { shop: 1_000_00 }, realisedCents: -500_00 },
+      { week: 60, byCategory: { shop: 2_000_00 }, realisedCents: -200_00 },
+    ]
+    expect(realisedLossOf(rows, 0), 'both weeks').toBe(700_00)
+    expect(realisedLossOf(rows, 52), 'a sale before the window starts is not this year`s').toBe(200_00)
+    expect(realisedLossOf(rows, 61), 'and one after the last row is nobody`s').toBe(0)
+    expect(realisedLossOf([...rows, { week: 61, byCategory: {}, realisedCents: 900_00 }], 0), 'a gain nets the loss away').toBe(0)
+    expect(realisedLossOf([], 0)).toBe(0)
+
+    const world = wrapWorld(0, 'r46-realised-zero')
+    accrueRealised(world, 5, 0)
+    expect(world.financeWeeks, 'a sale at exactly its cost writes no memo and no row').toEqual([])
+    accrueRealised(world, 5, -300_00)
+    accrueRealised(world, 5, -200_00)
+    expect(world.financeWeeks, 'a week that settles two sales accumulates').toEqual([{ week: 5, byCategory: {}, realisedCents: -500_00 }])
+
+    // outside every arithmetic: the same window folded with the memo and without it is the same window, to the cent
+    const bare = rows.map(({ realisedCents: _memo, ...rest }) => rest)
+    expect(financeWindow(rows, 0)).toEqual(financeWindow(bare, 0))
+    expect(seasonMoneyOf(financeWindow(rows, 0))).toEqual(seasonMoneyOf(financeWindow(bare, 0)))
+  })
+
+  it('banked ABSENT at zero and present when it is a loss, and the history row banked beside it is untouched', () => {
+    const { world, paid, fetched } = carYear()
+    maybeFireSeasonWrapUp(world)
+    const s = world.lastSeasonSummary!
+    expect(s.wealth!.realisedLossCents).toBe(paid - fetched)
+    // B5's identity on the banked figures, the loss still INSIDE the shelf
+    expect(s.earnedCents! - s.spentCents! + s.wealth!.shelfNetCents).toBe(s.fundsDeltaCents)
+    const row = world.seasonHistory[world.seasonHistory.length - 1]!
+    expect(Object.keys(row), 'the history row carries consumption and income as it did; the loss is the card`s').not.toContain('realisedLossCents')
+    expect(row.spentCents).toBe(s.spentCents)
+
+    const quiet = wrapWorld(0, 'r46-realised-quiet')
+    accrueFinance(quiet, 10, 'prize', 21_502_00)
+    maybeFireSeasonWrapUp(quiet)
+    expect('realisedLossCents' in quiet.lastSeasonSummary!.wealth!).toBe(false)
   })
 })

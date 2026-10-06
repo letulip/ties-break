@@ -1042,6 +1042,60 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
    the expense side (its own labeled row); principal transfers stay the shelf's. (б) mixed History
    accepted («ранние не страшно»). (в) «давай 2 колонки попробуем» – the Ranking/Matches
    half-tiles become a two-column grid. Build → **R5**.
+   - **R5 · A SALE THAT FIXED A LOSS IS A REAL EXPENSE, AND ALL THREE TILES ARE ONE LABEL|FIGURE GRID** (06.10, DRAFT rows **R46-S46, S47**; the
+     label is a draft and every other string on the card is byte for byte what it was).
+     **(а) WHERE THE LOSS COMES FROM.** Neither source the brief named can say it. The ledger's `'shop'` row nets purchases, sales and the cars'
+     upkeep into one number; a WHOLE sale deletes the row it sold; and `OwnedAsset.realisedGainCents` / `realisedCostCents` (B9) are lifetime,
+     part-sale-only and die with the row – none can answer «what did THIS season's sales realise». The honest source is one optional memo on the
+     ledger row that already exists, `FinanceWeek.realisedCents`, written by the two sites that settle a sale (`sellAsset`'s part path and
+     `settleAssetSale` – the one body the instant sale, a signed letter and the fire sale all end in) from the very delta their ledger sentence
+     already prints («– $X less than it cost»). It is the `coachCut` precedent exactly: a sibling of `byCategory`, never a key inside it, outside
+     every arithmetic (the proceeds are already the `+shop` row), optional, **no schema move** – absent means «none recorded», so a season already
+     under way has no memo for the sales it had made (his «ранние не страшно»). `realisedLossOf(financeWeeks, fromWeek)` (`world/ledger.ts`, beside
+     `seasonMoneyOf`, which is untouched – its three-key shape and B5's composition table stand) folds the memo over `financeWindow`'s own window
+     and returns the NET realised result as a loss in positive cents, 0 when the sales fixed a gain: a net gain does not join income («Portfolio
+     growth» already tells that story) and a gain on one sale hides a loss on another.
+     **THE RELATION.** The shelf is the `'shop'` net as the wallet felt it, `-purchases + proceeds - upkeep`. A sale's proceeds are the basis it
+     released plus what it realised, so `shelf = -(purchases - basis released) + realised result - upkeep`: the loss is the negative of the middle
+     term and is **already inside** `shelfNetCents`. B5's identity `earned - spent + shelf = funds` is therefore exactly as it was, and the card –
+     which now prints the loss as its own row – prints the shelf row **without** it (`shelfNetCents + realisedLossCents`), so
+     `earned - spent - loss + shelf row = funds` and the loss is counted once. Pinned on real sales from the wallet and the sold row's own basis,
+     never from the memo: a car bought and sold (whole basis released, so shelf + loss = 0) and a fund part-sold after it fell 10% (loss 11,111,111
+     cents; shelf + loss = −(4,000,000 − 1,111,111.11)); and adding the loss to the identity as it stands is shown to miss the bottom line by exactly
+     the loss. The mounted arm sums what the card PRINTS, in a whole-dollar year (earned +60,000, spent −33,000, loss −25,000, shelf row −275,000,
+     funds −273,000).
+     **BANKED, NOT RECOMPUTED.** The shelf nets four things into one number, so the loss cannot be rebuilt from the banked figures:
+     `SeasonWealth.realisedLossCents?` carries it beside the `shelfNetCents` it is named inside – B5's optional-key precedent (`wealth?`,
+     `growthCents?`). **Absent at zero** and on every summary banked before this, so a year without a loss banks byte for byte what it banked
+     yesterday. The history row is not touched: its Spent stays consumption and the loss is the card's own row. (б) is nothing to build.
+     **THE ROW.** `Sold at a loss`, on the expense side directly under «Spent this season», negative and red, hidden at zero – DRAFT **R46-S46**,
+     alternate `Realised loss` **R46-S47**.
+     **(в) «2 КОЛОНКИ» – WHAT WAS MEASURED, AND THE ONE DEPARTURE FROM THE LITERAL READING.** The literal reading (Ranking and Matches stay half
+     tiles side by side, each a label|figure grid) was built first and measured in Chromium – the dialog's own stylesheet extracted from the SFC, the
+     markup replicated, 320 / 360 / 375 / 393 / 430 – and it fails: the labels overflow their column at every width («Tournaments entered» by 52 to
+     78px at all five; five of the six rows at 375). The dialog is 360px at most, so a half tile holds 96px of content at 320 and 132px at its widest,
+     and a label|figure grid needs the longest label word («Tournaments», about 74px) and the longest value («Quarterfinalist», about 110px) side by
+     side: about 190px. So the rule is the layout the Money tile already has, for all three: the tiles are one column at full width, and every row of
+     every tile is `display: contents` in one `minmax(0, 1fr) fit-content(60%)` grid – label on the left, figure right-aligned on one edge, a note
+     under a row spanning both (`.season-summary-from`, `.season-mirror-note`). Measured the same way: no row under its label, no label or figure
+     overflowing, no page overflow, at all five widths, for `Quarterfinalist` and for `No tournaments played`. **THE COST, SAID PLAINLY:** the card is
+     about 48px taller at 375 than the (broken) side-by-side build, and the Ranking and Matches pair no longer sits side by side; he said
+     «попробуем», and the revert is one commit. At 320 «Tournaments entered» wraps to two lines inside its own column with its figure still beside
+     it. **Not seen:** the mounted component itself in a browser – the check above is the real stylesheet over replicated markup.
+     **Evidence.** Unit `tests/round46-season-money.test.ts` 19 (B5's 12 + 7: whole sale, the relation, part sale at a loss, gain year = 0 and
+     absent, NET over the window, window / zero delta / memo-outside-arithmetic, banked absent-at-zero + history row untouched); mounted
+     `tests/component/round46-season-summary-money.test.ts` 11 (B5's 6 + 5: the row and the shelf row without it, the PRINTED sum, hidden at zero,
+     the half tiles' grid, the phone with the loss row – 8 rows, still inside 375×667). **Mutations, each alone, restored byte-identical (sha-256 of
+     the four touched sources before and after; control 30 of 30):** `realisedLossOf` always 0 → 8 red; the memo write dropped from
+     `settleAssetSale` → 2, from `sellAsset`'s part path → 5; the banking spread dropped → 4; the shelf row printing the raw shelf (the double
+     count) → 2; the loss row hidden → 3; Ranking/Matches out of the grid rule → 1 (only the new arm – B5's Money arm stays green); grid → flex on
+     both kinds → 2; rows back to flex → 2; tiles back to two columns → 1. **Gates:** `vue-tsc -b --force` exit 0; 43 neighbour files (every test
+     that names `sellAsset` / `settleAssetSale` or the dialog, the barrel and import ratchets, the strings roundtrip, the golden saves, the
+     import-cycle pin) 666 tests green. No `npm run check`, no `test:sim` (brief). **RNG / schema:** zero draws (a pure integer write after a sale
+     the engine had already priced); no schema move, no migration, no golden fixture; the capture (41550 / `e6b0c709`) is untouched.
+     **Files:** `src/shared/protocol/events.ts` (`FinanceWeek.realisedCents?`), `src/shared/protocol/competition.ts`
+     (`SeasonWealth.realisedLossCents?`), `src/engine/world/ledger.ts` (`accrueRealised`, `realisedLossOf`), `src/engine/world/shop.ts` (the two sale
+     sites), `src/engine/world/milestones.ts` (the banking), `src/components/SeasonSummaryDialog.vue`, the two test files, this ledger.
 5. **Epilogue**: (а/б) his flow = the totals page with a button to the whole album and a return –
    which IS the shipped shape; no auto-open; DRAFT alternates for the button in his «посмотреть
    весь путь» spirit. (в) «снимаем, да» – the dead `EndingView.album` pages 1–6 leave the wire.
@@ -1159,3 +1213,5 @@ S1–S6, B3 holds S7–S9). A row the owner rewords changes ONE constant, named 
 | R46-S43 | morning 3 – the cell when the parent knows, **WIRED** (the same one function) | together: `Together for` / `1y 6m` (his own shape) · engaged: `Engaged` / `together 1y 6m` · married: `Married` / `together 1y 6m` – the span counts from the day they got together in all three, which is why «together» stays on the second line of the last two |
 | R46-S44 | morning 3 – the compact span, **WIRED** (`weddingCopy.ts` `togetherSpanShort`, the same count as S2's words) | `1y 6m` · `3y` · `7m` · `<1m` before the first whole month; the longest it can be, `99y 11m`, is what lets «together» fit in front of it |
 | R46-S45 | morning 3 – ALTERNATE for S43 + S44, NOT wired | the words form: `Together for` / `1 yr 6 mo`, `Engaged` / `1 yr 6 mo`, `Married` / `1 yr 6 mo`; the cost is that without the word «together» the number under «Married» reads as how long they have been married, which is not what it counts |
+| R46-S46 | morning 4 – the year-end Money tile's realised-loss row, **WIRED** (`SeasonSummaryDialog.vue`, the `season-key` directly under «Spent this season»; hidden at zero; the engine's `realisedLossOf`, banked as `wealth.realisedLossCents`; the shelf row S12 now prints without it, so the rows add up once) | `Sold at a loss` |
+| R46-S47 | morning 4 – ALTERNATE for S46, NOT wired | `Realised loss` – the accounting word, shorter and exact; the cost is that «realised» is a finance term a parent may not use, where the ledger's own sentences already say «Sold: … less than it cost» |

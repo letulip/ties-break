@@ -25,7 +25,7 @@ import {
   type TierTrophies,
   type WorldEventCategory,
 } from '../../shared/protocol'
-import { addEvent, financeWindow, isHoldingCategory, seasonIndexOf, seasonMoneyOf, seasonStartWeek } from './ledger'
+import { addEvent, financeWindow, isHoldingCategory, realisedLossOf, seasonIndexOf, seasonMoneyOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
 // ⚠ `enterprisePaidInWeekCents` was imported here for ruling 6's week arm and is not any more –
 // ruling A of 18.09 superseded it (see `captureBreakEven`). The import goes with the call: an unused
@@ -430,6 +430,11 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // to the cent (tests/round46-season-money.test.ts). `seasonMoneyOf` (world/ledger.ts) carries the argument.
   const seasonWindow = financeWindow(world.financeWeeks, yearStart)
   const { spentCents, earnedCents, shelfNetCents } = seasonMoneyOf(seasonWindow)
+  // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 (06.10) – AND THE ONE PART OF THAT SHELF THAT IS A REAL EXPENSE: a sale that FIXED a loss («инвестиция это не совсем расход,
+  // только если мы не в минусе зафиксировались»). Banked beside the shelf figure it is NAMED INSIDE OF and never subtracted from it here, so the identity above is
+  // exactly what it was, and ABSENT at zero, which keeps every year without one byte-identical to what it banked yesterday. It cannot be recomputed from the banked
+  // figures (the shelf nets purchases, sales and upkeep into one number), which is the whole reason it is banked. `realisedLossOf` (world/ledger.ts) carries the argument.
+  const realisedLossCents = realisedLossOf(world.financeWeeks, yearStart)
   const fundsDeltaCents = seasonWindow.netCents
 
   // ⭐⭐⭐ ROUND 46 #8 + #19 – AND THE INCOME SIDE'S MISSING HALF: WHAT SHE HOLDS AND HOW MUCH RICHER THE YEAR
@@ -449,6 +454,7 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     portfolioCents: heldNow.portfolioCents,
     holdingsCents: heldNow.holdingsCents,
     shelfNetCents,
+    ...(realisedLossCents > 0 ? { realisedLossCents } : {}),
     ...(openingPortfolioCents === undefined ? {} : { growthCents: heldNow.portfolioCents - openingPortfolioCents }),
   }
 
