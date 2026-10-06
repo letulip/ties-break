@@ -190,6 +190,7 @@ export type {
   AlbumTicket,
   AlbumTag,
   AlbumClubPatch,
+  AlbumFiller,
   AlbumSheetModel,
   AlbumChapter,
   AlbumBook,

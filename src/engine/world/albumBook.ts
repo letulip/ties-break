@@ -49,6 +49,7 @@ import type {
   AlbumSheetModel,
   AlbumTag,
   AlbumClubPatch,
+  AlbumFiller,
   AlbumTicket,
   AlbumTierStep,
   BuildLetterTerms,
@@ -1336,8 +1337,7 @@ export function albumChapterStep(candidates: readonly { tier?: TierId }[]): Albu
  *      re-opening the album reshuffles nothing, MAIN is untouched (invariant 2), no stream is new.
  *    * THE STEP is `albumChapterStep` – the rank the chapter reached, on the pass's own ramp. */
 export function albumPatchFor(seed: string, chapterIndex: number, step: AlbumTierStep): AlbumClubPatch {
-  const rng = rngFromSeed(`${seed}:album:flavour:patch`)
-  const start = pickInt(rng, 0, ALBUM_PATCH_POOL.length - 1)
+  const start = flavourStartOf(seed)
   return { name: ALBUM_PATCH_POOL[(start + chapterIndex) % ALBUM_PATCH_POOL.length], step }
 }
 
@@ -1353,6 +1353,79 @@ const DOODLE_BY_KIND: Partial<Record<string, AlbumDoodle>> = {
   // occasions of the life family are the two the pool's heart was drawn for.
   birth: 'heart',
   prologue: 'smile',
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 47 #14 – THE SMALL SNAPSHOT IN THE GAP
+// =================================================================================================
+
+/** ⭐ THE CAREER'S ONE FLAVOUR DRAW – the club patch's (`${seed}:album:flavour:patch`, the same key and the same single draw it has always made), now
+ *  read in one place because TWO things walk from it: the club names (by chapter) and the small snapshots (by their order in the book). Nothing new
+ *  is rolled and no key is new – a pure function of the seed, re-derived at the call site, persisting nothing, MAIN untouched (invariant 2). */
+function flavourStartOf(seed: string): number {
+  return pickInt(rngFromSeed(`${seed}:album:flavour:patch`), 0, ALBUM_PATCH_POOL.length - 1)
+}
+
+/** ⭐⭐ THE OWNER, 06.10: «у нас есть фотки, где она дома отдыхает, есть где на отдых ездила – их тоже можно небольшие добавлять на те страницы, где
+ *  убрали горизонтальный билет или боковую бирку, чтобы пустоту немного заполнить». The art is the app's own (`art/weeks.ts`); this module spells the
+ *  stems and `AlbumFillerPhoto.vue` adds the base, like every other painting on a sheet.
+ *
+ *  WHICH SHEETS: a sheet with no ticket, no tag AND no patch – layout B or C with no tournament on it (A always wears the patch). The engine says WHICH
+ *  PICTURE; whether the gap has room is the resolver's (`placeFiller`), so a sheet can carry one and show none.
+ *
+ *  WHICH PICTURES – the honest subset, and what was left out:
+ *    · HOLIDAY – the six `vac-*` paintings the family budget shows for a booked week (`VACATION_ART`).
+ *    · REST – the three `off-*` off-season paintings (a fire and a window, a frozen lake, a warm court) and the week she rests a knock at home, which the
+ *      app paints in two ages (`chores-young` for the young band, `chores-teen` for every later one – `weekHomeBand`'s own split).
+ *    · NOT `study-*` (the exam fortnight is not rest), NOT `training` (it is training), NOT the sleepy journey set (it is the §4 ladder's own rung for an
+ *      away week – a ticketless sheet is not a journey, and it already appears as a frame), and NOT on the prologue chapter (the child's chapter – a grown
+ *      woman's holiday would be somebody else's childhood).
+ *  WHICH KIND: the sheet's own mood (`ALBUM_MOOD` of its lead occasion) – a happy page gets a holiday picture, every other page a quiet one at home – and
+ *  NEVER on a page that has its own painting or is the book's last word (`FILLER_NEVER_KINDS`: lineage, prologue, wedding, birth, closing). */
+const FILLER_DIR = 'images/weeks/'
+
+export type AlbumFillerKind = 'rest' | 'holiday'
+
+export const ALBUM_FILLER_HOLIDAY: readonly string[] = ['vac-camping', 'vac-elite', 'vac-friends', 'vac-resort', 'vac-sea', 'vac-village']
+
+export const ALBUM_FILLER_REST: Record<'young' | 'teen', readonly string[]> = {
+  young: ['off-1', 'off-2', 'off-3', 'chores-young'],
+  teen: ['off-1', 'off-2', 'off-3', 'chores-teen'],
+}
+
+const FILLER_NEVER_KINDS: ReadonlySet<string> = new Set(['lineage', 'prologue', 'wedding', 'birth', 'closing'])
+
+/** Which kind of snapshot a sheet's occasions earn, or null for none. */
+export function albumFillerKind(band: AlbumBand, occasions: readonly { id: string; kind: string }[]): AlbumFillerKind | null {
+  const lead = occasions[0]
+  if (!lead || band === 'prologue' || occasions.some((o) => FILLER_NEVER_KINDS.has(o.kind))) return null
+  return ALBUM_MOOD[lead.id] === 'happy' ? 'holiday' : 'rest'
+}
+
+/** The stems a (band, kind) may draw from. */
+export function albumFillerPool(band: AlbumBand, kind: AlbumFillerKind): readonly string[] {
+  if (kind === 'holiday') return ALBUM_FILLER_HOLIDAY
+  return band === 'young' ? ALBUM_FILLER_REST.young : ALBUM_FILLER_REST.teen
+}
+
+/** ⭐ THE WALK – like the club names: the k-th snapshot of a pool in this book is `pool[(start + k) % size]`, so no pool repeats a picture until it has
+ *  shown them all, and nothing is rolled. `used` counts per pool across the whole book. */
+interface FillerWalk {
+  start: number
+  used: Map<string, number>
+}
+
+/** The k-th snapshot of a (band, kind) pool in a book whose walk starts at `start` – pure, so the walk is a function the tests can call. */
+export function albumFillerFor(start: number, band: AlbumBand, kind: AlbumFillerKind, k: number): AlbumFiller {
+  const pool = albumFillerPool(band, kind)
+  return { art: `${FILLER_DIR}${pool[(start + k) % pool.length] as string}.webp` }
+}
+
+function takeFiller(walk: FillerWalk, band: AlbumBand, kind: AlbumFillerKind): AlbumFiller {
+  const key = kind === 'holiday' ? 'holiday' : band === 'young' ? 'rest:young' : 'rest:teen'
+  const k = walk.used.get(key) ?? 0
+  walk.used.set(key, k + 1)
+  return albumFillerFor(walk.start, band, kind, k)
 }
 
 function ageLabelOf(age: number): string {
@@ -1472,6 +1545,7 @@ function sheetsOf(
   chapterIndex: number,
   voice: Temperament,
   plan: { layouts: AlbumLayout[]; takes: number[] },
+  fillers: FillerWalk,
 ): AlbumSheetModel[] {
   const { band, candidates } = chapter
   const title = ALBUM_CHAPTER_TITLES[band]
@@ -1499,6 +1573,11 @@ function sheetsOf(
     // A fact WITH a finish (a title, a final) makes the better pass than a cheque or an entry.
     const facts = own.filter((c) => c.tier !== undefined)
     const tournament = facts.find((c) => c.finish !== undefined) ?? facts[0] ?? null
+    // ⭐ ROUND 47 #14 – the three objects that fill a sheet's gap are settled first; a sheet with none of them may carry a small snapshot
+    const ticket = layout === 'B' && tournament ? ticketOf(tournament, flavour, world.startYear) : null
+    const tag = layout === 'C' && tournament ? tagOf(tournament, flavour) : null
+    const sheetPatch = layout === 'A' ? patch : null
+    const fillerKind = ticket || tag || sheetPatch ? null : albumFillerKind(band, own.map((c) => c.occasion))
     sheets.push({
       id,
       layout,
@@ -1508,9 +1587,10 @@ function sheetsOf(
       frames: distinctFramesOf(world, own, voice),
       note: noteOf(lead, hand, own, world.startYear),
       line: hand.line,
-      ticket: layout === 'B' && tournament ? ticketOf(tournament, flavour, world.startYear) : null,
-      tag: layout === 'C' && tournament ? tagOf(tournament, flavour) : null,
-      patch: layout === 'A' ? patch : null,
+      ticket,
+      tag,
+      patch: sheetPatch,
+      filler: fillerKind ? takeFiller(fillers, band, fillerKind) : null,
       doodles: [DOODLE_BY_KIND[lead.occasion.kind] ?? DOODLES[flavour.doodle]],
     })
   }
@@ -1585,10 +1665,12 @@ export function assembleAlbum(world: WorldState): AlbumBook {
   // sheets either side of a chapter break from sharing a layout (his «одинаковых подряд просто не
   // было»), and it is the one piece of state the assembly carries between chapters.
   let cursor = 0
+  // ⭐ ROUND 47 #14 – the small snapshots walk their pools from the career's one flavour draw, across the whole book (`takeFiller`)
+  const fillers: FillerWalk = { start: flavourStartOf(world.seed), used: new Map() }
   for (const [i, chapter] of chapters.entries()) {
     const plan = chapterSheetPlan(cursor, chapter.candidates.length)
     cursor = plan.next
-    const own = sheetsOf(world, chapter, i + 1, voice, plan)
+    const own = sheetsOf(world, chapter, i + 1, voice, plan, fillers)
     chapterRows.push({
       index: i + 1,
       title: ALBUM_CHAPTER_TITLES[chapter.band],

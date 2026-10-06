@@ -19,7 +19,11 @@ defineProps<{ mark: AlbumDoodle; size?: number }>()
 
 /** viewBox 24x24 for all six, so one stroke width reads the same on every mark. */
 const PATHS: Record<AlbumDoodle, string> = {
-  trophy: 'M8 4h8v5a4 4 0 0 1-8 0V4Zm0 1.5H5.5a3 3 0 0 0 3 3M16 5.5h2.5a3 3 0 0 1-3 3M12 13v4m-3 3h6',
+  // ⭐ ROUND 47 #15 – «иконка кубка у нас есть хорошая, используй ее пожалуйста вместо этого текущего немного странного кубка». THE APP'S OWN CUP,
+  // path for path: `public/icons/trophy.svg` (the Trophies tab and the «Winner points» tile – `AppIcon name="trophy"`), drawn on the same 24-grid, so
+  // this is that icon in the page's pen. The cup it replaces stood its stem 3 units ABOVE its base (the stem ended at y 17, the base sat at y 20) – a
+  // floating foot. `tests/component/r47-b3-album-cup.test.ts` holds this string against the file.
+  trophy: 'M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6',
   heart: 'M12 20c-4-3-7-5.5-7-9a3.6 3.6 0 0 1 7-1.6A3.6 3.6 0 0 1 19 11c0 3.5-3 6-7 9Z',
   sun: 'M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7ZM12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4m0-12.8-1.4 1.4m-10 10-1.4 1.4',
   smile: 'M12 3.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17ZM9 10v.8m6-.8v.8M8.5 14.5a4.5 4.5 0 0 0 7 0',

@@ -156,12 +156,37 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     min-height 118 → 8 + the unit mirror 1; **the pre-fix geometry** (`bottom: 48px`, `rotate(5deg)` about the centre, no scale) → 12 red; title back
     to tier + stage → 6; nowrap removed → 4; stub 116 → 1.
 
-- [ ] **9. «в альбоме очень крупные заголовки на страницах, можно чуть уменьшить, а еще иногда у
+- [x] **9. «в альбоме очень крупные заголовки на страницах, можно чуть уменьшить, а еще иногда у
   этих заголовков оверлап с написанным на странице случается, что тоже странновато, вроде место
   есть. Если надо детально каждую страницу альбома разобрать - скажи, я сделаю»** – album page
   headings: slightly smaller, and the heading-vs-content overlap fixed (the resolver has room –
   find why it still collides). His offer of a per-page breakdown stays in reserve if the sweep
   cannot localise it. Class: **build**.
+  - **B3 · SHIPPED – 9: THE HEADING IS ONE STEP SMALLER, AND THE OVERLAP WAS ONE CLASS – FOUND IN REAL CHROMIUM BEFORE ANY CODE.**
+    * THE SIZE (`AlbumSheetTitle.vue`, layouts A and C – B has no heading): the chapter's name **44 → 38px** (×0.86), the «– Chapter N» kicker 19 → 17, the years line 21 → 19, the gaps
+      4 / 8 → 3 / 6: the whole block **96 → 83px** tall (measured). Sizes only – no word changed.
+    * THE OVERLAP, MEASURED (Chromium, phone width, Caveat loaded; the 335 sheets of the 48 posed careers; the real text boxes of all three heading lines against the real box of every
+      photograph, caption, note, loose line, patch, tag, pass and doodle): **layout A 0 of 147, layout B has no heading, layout C 121 of 121** – the years line («Age 18 – 22») lies UNDER the hero
+      photograph, its whole width, 25.9px tall; the old page does not show it at all. «Sometimes» is A and C alternating. It is NOT a note, a caption or the loose line (0 hits of any of them).
+    * THE CLASS: a photograph's SLOT is a table entry (`LAYOUTS`), and the resolver only ever moved a note and a loose line – C's hero slot began at y 100 while the title block reserves y 26..122,
+      and nothing compared the table with its own furniture. THE FIX IS IN THE TABLE (the `passBox` lesson): `HEAD_H` = 83, the number the CSS renders, and C's hero hangs `HERO_GAP` (5px) under
+      that box (y 100 → 114) with its window giving the pixels back at the BOTTOM (196 → 182 – it still ends at y 300), so the note strip, the second photograph and round 45's counts sit where
+      they were tuned. `headBox`'s width estimate is 14.7px a character at 38px (Chromium: 181.2 / 141.7 / 233.4 / 111.8 / 224.1 for the five names; never under, at most 15 % over).
+      AFTER: Chromium **0 of 335**, the resolver's frames **0 of 335**, and the corpus's longest note, caption and loose line under all five names on A and C: 0.
+    * ⚠ THE LIVE NET FOUND A SECOND, SEPARATE THING: the mounted round-45 sweep went red on the crowded C sheet by 0.0006px once the smaller heading let the resolver find a BETTER solution there
+      (hero window at rung 0.76 instead of 0.68, the widest note exactly `GAP` from the second photograph's caption) – the page drew that note 186.0006px wide because `noteSpot` rounded the laid-out
+      width UP to the hundredth. Fixed at the cause: rounded DOWN, so the page never draws wider than the resolver reserved; the one pin that states the rounded value (`'226.83px'` in
+      `tests/round45-album-placement.test.ts`) moves to `'226.82px'` with it – a pin of what the string IS.
+    * NUMBERS (round-45 sweep, `placeSheet` at HEAD vs now, the same 335 sheets): windows at a shrunk rung **A 0 / B 22 / C 29 – identical before and after** (B at its 22 ceiling with zero slack,
+      UNCHANGED; C 29 of its 35; A 0 of 10); hero covered 0; stack-below 0; no sheet changed its scale. A note or a loose line sits elsewhere on 108 A and 24 C sheets – the smaller box frees
+      room, so they are nearer where they were drawn.
+    * TESTS: `tests/r47-b3-album-headings.test.ts` (the sizes in the CSS; their sum = `HEAD_H`; the five-name width estimate against Chromium; the table arm – every photograph slot of A and C
+      starts below the box, leaning included; the 335-sheet arm, incl. «the OLD numbers collide on every C sheet and on no A sheet»; the worst words × five names), `tests/component/r47-b3-album-filler-cup.test.ts`
+      §heading (computed 38 / 17 / 19 on A and C). MUTATIONS (each on the real file, restored byte-identical): name 38 → 44px → 2 red (unit) + 1 (mounted); **the PRE-FIX TABLE (`HEAD_H` 96 + hero y 100) →
+      5 red, the sweep says «121 of 335 sheets collide with their heading»**; hero back to y 100 alone → 4 red (121 of 335); `HEAD_CHAR` 14.7 → 12 → 1 red; `noteSpot` floor → round → the two mounted
+      round-45 tests red again + the unit pin.
+    * HIS PER-PAGE OFFER STAYS UNUSED: the sweep localised the class. If a page still looks wrong to him, the Chromium harness (a throwaway page that mounts the real `AlbumSheet` for every sheet of the 48
+      careers at 390px and intersects the text boxes – not committed) can be re-run on any page he names.
 
 - [~] **10. «фраза she played until she was done звучит довольно странно как мне кажется. У нас
   разные вариации этой фразы или одна на всех?»** – is the ending title one-per-ending-kind or
@@ -206,17 +231,54 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   volunteers. A probe tool decodes the .tsave through the app's own codec and the report reads
   like a scout's dossier. Class: **measure** (architect-led).
 
-- [ ] **14. «и еще по альбому: я увидел, что мы сделали хорошую вариативность по страницам, давай
+- [x] **14. «и еще по альбому: я увидел, что мы сделали хорошую вариативность по страницам, давай
   усилим. У нас есть фотки, где она дома отдыхает, есть где на отдых ездила - их тоже можно
   небольшие добавлять на те страница, где убрали горизонтальный билет или боковую бирку, чтобы
   пустоту немного заполнить, а остальном хорошо.»** – more sheet variety: the existing rest-at-home
   and vacation artwork joins as SMALL photos on sheets that carry no ticket/side tag, filling the
   gap. Class: **build** (composition + the placement resolver).
+  - **B3 · SHIPPED – 14: A SMALL TAPED SNAPSHOT OF HER RESTING OR ON HOLIDAY HANGS IN THE GAP A TICKETLESS OR TAGLESS SHEET LEAVES.**
+    * WHICH SHEETS: a sheet with no ticket, no tag AND no patch – layout B or C with no tournament on it (A always wears the patch). In the 335-sheet sweep that is **43 sheets (B 8 of 67, C 35 of 121):
+      before, 0 carried a snapshot; now 43 carry one and 43 are drawn – 0 skipped for lack of room, 0 for the guard**. In Chromium: 43 rendered (B 8, C 35), **0 overlaps** with any other element.
+    * WHICH PICTURES – THE HONEST SUBSET, from `public/images/weeks/`: HOLIDAY = the six `vac-*` paintings the family budget already shows (`VACATION_ART`: camping, elite, friends, resort, sea, village – the
+      test holds the set equal to the app's own); REST = the three `off-1/2/3` off-season paintings (a fire and a window, a frozen lake, a warm court) + the week she rests a knock at home, which the app paints
+      in two ages (`chores-young` for the young band, `chores-teen` for every later band – `weekHomeBand`'s own split). LEFT OUT, and why: `study-*` (the exam fortnight is not rest), `training` (it is
+      training), the sleepy journey set `…-sleepy-*` / `…-travel-sleepy-*` (it is the §4 ladder's own rung for an AWAY week and already appears as a frame – a ticketless sheet is not a journey; it also carries
+      a stray corner mark), and the whole PROLOGUE chapter (the child's chapter: a grown woman's holiday would be somebody else's childhood).
+    * WHICH KIND, FROM A TABLE THAT ALREADY EXISTS: the sheet's own mood (`ALBUM_MOOD` of its lead occasion) – a happy page gets a holiday picture, every other page a quiet day at home – and NEVER on a page
+      that has its own painting or is the book's last word (kinds `lineage`, `prologue`, `wedding`, `birth`, `closing`). The ERA is the band (young → `chores-young`, later → `chores-teen`).
+    * THE PICK IS A WALK, NOT A ROLL (`albumFillerFor`, B2's `albumPatchFor` idiom): the k-th snapshot of a pool in the book is `pool[(start + k) % size]`, `start` being the career's ONE existing flavour draw
+      (`${seed}:album:flavour:patch`, the same key and the same single draw it has always made – now read by `flavourStartOf`), so a pool never repeats a picture until it has shown them all. **No new key and no
+      new draw: `tests/life-beat-keys.test.ts` did not move.** Across the sweep the snapshots use 10 of the 11 pictures (`chores-young` needs a young-band sheet with no tournament, which the posed careers lack).
+    * WHERE: a POST-PASS IN THE RESOLVER (`placeFiller`) – it runs AFTER the photographs, the note and the line are settled and moves none of them. B: a 128×88 card in the strip the boarding pass would hang in
+      (`passBox` has always reserved it on a ticketless sheet), right to left; C: a 100×84 card in the column the tag would hang in, from beside the hero's middle down. It takes the first spot that touches no
+      card, caption band, note, loose line or piece of furniture, and a sheet with no such spot goes without. **THE GUARD, AS AN ASSERTION: with and without the snapshot every photograph, note, line and scale is
+      identical on every one of the 43 sheets – so B's 22 ceiling (zero slack) cannot move because of it, and did not** (A 0 / B 22 / C 29, the numbers under item 9).
+    * ZERO NEW STRINGS: no caption, and `alt=""` – decorative, `aria-hidden` (`AlbumFillerPhoto.vue`, a taped small `Polaroid`). ⚠ FLAGGED: a describing alt would be a string, i.e. a DRAFT for his pass; none was written.
+    * RNG: derivation only – MAIN untouched, the frozen capture untouched (no engine MAIN code was touched), nothing persisted (the book is a view; `SAVE_SCHEMA_VERSION` untouched).
+    * TESTS: `tests/r47-b3-album-filler.test.ts` (pool files on disk; holiday set = `VACATION_ART_STEMS`, rest = `WEEK_ART`'s off-*; none of study / training / journey; the kind table over the whole corpus;
+      the walk from any start; the sweep: carried only on no-ticket / no-tag / no-patch B or C sheets, the guard assertion above, drawn inside the page and inside its frame touching nothing; a crowded gap whose first
+      spot is taken by the portrait's long caption), `tests/component/r47-b3-album-filler-cup.test.ts` (mounted on B and C: position = the resolver's answer, `src` base-prefixed, `alt=""`, `aria-hidden`, crop
+      `80% 40%`, no caption; not drawn on A, not beside a drawn ticket or tag, not when the sheet carries none). MUTATIONS (restored byte-identical): the snapshot nudges the scale → 1 red; photographs not
+      obstacles → 1 red; eligibility ignores ticket / tag / patch → 2 red; no walk → 1 red; NEVER kinds ignored → 1 red; a drawn ticket / tag ignored → 1 red unit + 1 mounted; layout B / C stops drawing it →
+      2 / 1 red; `alt` a string → 2 red; crop `50% 50%` → 2 red.
+    * LOOK (Chromium screenshots): a small taped print dropped in the empty strip / column; the crop `80% 40%` keeps her in view on the wide paintings (she sits right of centre in all of them).
 
-- [ ] **15. «иконка кубка у нас есть хорошая, используй ее пожалуйста вместо этого текущего немного
+- [x] **15. «иконка кубка у нас есть хорошая, используй ее пожалуйста вместо этого текущего немного
   странного кубка»** – find where the «странный кубок» renders (the album's trophy scrap /
   trophies surface) and swap it for the good existing cup icon. Class: **build** (locate both
   first; name them in the ledger).
+  - **B3 · SHIPPED – 15: THE ALBUM'S CUP IS THE APP'S OWN CUP ICON.**
+    * THE «СТРАННЫЙ КУБОК» (located): the `trophy` marginalia doodle – `PATHS.trophy` in `src/components/album/AlbumDoodleMark.vue`, a hand-drawn pen cup that `DOODLE_BY_KIND` (`albumBook.ts`) puts on title and
+      rare sheets. Why it looked odd: its stem ended at y 17 while its base sat at y 20 – a floating foot, 3 units of nothing between them. It is the only cup in the album kit (a grep of
+      `src/components/album/`, `albumBook.ts` and the protocol for cup / trophy / 🏆 finds the doodle and its type, nothing else).
+    * THE «ХОРОШАЯ» ONE (located): `public/icons/trophy.svg` – the Trophies tab icon and the «Winner points» tile (`AppIcon name="trophy"`: `App.vue`, `NextTournamentPanel.vue`, `TournamentFlow.vue`). The tier
+      paintings `public/images/trophies/*-gold|silver.webp` are a different object (per-tier paintings, not an icon) and are not used here.
+    * THE SWAP: the doodle now draws that file's own path, `M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6`, on the same 24-grid, in the doodle's own pen (stroke 1.15, the
+      ink and the 0.78 opacity of the other five marks). ⚠ ONE CHOICE FOR HIM: the pen WEIGHT is the doodle system's (1.15), not the icon's own 1.8, so the cup reads as that icon drawn lightly beside its five
+      siblings; his icon's own weight is a one-line `stroke-width` rule for the trophy mark if he wants it bolder.
+    * TESTS: `tests/component/r47-b3-album-filler-cup.test.ts` §cup – the mounted doodle's `d` equals the `d` read out of `public/icons/trophy.svg`, alone and on all three layouts; the old cup's drawing is in no
+      file of the album kit; the other five marks' paths are untouched. MUTATION: the old path back → 2 red.
 
 - [x] **16. «whitegate club и саму бирку тоже можно сделать по аналогии с билетом разными цветами и
   с разными названиями вымышленными, иконка на эту бирку со скрещенными ракетками во вложении, или

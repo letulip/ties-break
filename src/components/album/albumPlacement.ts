@@ -36,6 +36,21 @@
 // a mounted test cannot measure an overlap and this can. The heights it works with are an ESTIMATE of
 // how Caveat wraps (`HAND_EM`), and `tests/round45-album-placement.test.ts` pins that estimate against
 // the real Chromium measurements it was taken from: it may over-count a line, it may never under-count.
+// ⭐⭐ ROUND 47 #9 – THE HEADING'S OWN BOX, AND THE PHOTOGRAPH THAT HUNG INSIDE IT (owner, 06.10: «иногда у этих заголовков оверлап с написанным на
+// странице случается … вроде место есть»). MEASURED IN REAL CHROMIUM over these same 335 sheets: layout A collides with its heading on 0 sheets, B has
+// no heading, and layout C on ALL 121 – the heading's third line, the years («Age 13 – 15»), lies UNDER the hero photograph, the whole text of it. No
+// note and no caption is involved: C's hero slot began at y 100 and the title block reserves y 26..122, so the photograph was drawn 22px into a box this
+// file itself holds for the title. The resolver never saw it because it only moves a note and a loose line – a photograph's slot is a TABLE ENTRY, and
+// nothing compared the table with its own furniture. «Sometimes» is A and C alternating. THE FIX IS IN THE TABLE: the heading is one step smaller and 83px
+// tall (`HEAD_H`, was 96), and C's hero hangs `HERO_GAP` under it with its window giving the same pixels back at the bottom edge, so nothing under the
+// hero moves – the note strip, the second photograph and round 45's guard counts are the ones that were tuned. `tests/r47-b3-album-headings.test.ts`
+// compares EVERY photograph slot, at every rung, with the heading's box (the comparison that was missing) and the placed note and line with it.
+//
+// ⭐⭐ ROUND 47 #14 – THE SMALL SNAPSHOT IN THE GAP (`placeFiller`). A sheet with no ticket (layout B) or no side tag (layout C) leaves the frame that
+// object would have hung in EMPTY – this file has always reserved it (`passBox`, the tag's box) and nothing is drawn there. The snapshot is hung in that
+// frame and only there, AFTER the note, the line and the photographs are settled and WITHOUT moving any of them: it takes the first of a short list of
+// spots that touches nothing, and a sheet with no such spot goes without. That is the whole of the guard – no window shrinks and no note moves because a
+// snapshot was asked for, so no count in round 45's sweep can change.
 import { SHEET_PX } from '../../shared/protocol'
 import type { AlbumFrame, AlbumLayout, AlbumNote, AlbumSheetModel } from '../../shared/protocol'
 
@@ -67,6 +82,33 @@ export interface SheetPlacement {
   scale: number
   /** True when neither the note nor the line touches any caption band. */
   clear: boolean
+  /** ⭐ ROUND 47 #14 – the small snapshot hung in the gap the ticket or the tag would have filled, or null (`placeFiller`). */
+  filler: FillerPlacement | null
+}
+
+/** What the resolver settles BEFORE the snapshot is asked for – the snapshot never moves any of it. */
+type PlacedCore = Omit<SheetPlacement, 'filler'>
+
+/** ⭐ ROUND 47 #14 – WHERE A SMALL SNAPSHOT MAY HANG: its card (`w` wide, a `photoH` window, leaning `tilt` degrees) and the spots to try, first free one
+ *  wins. `home` is the index in `fixed` of the object whose frame it hangs in (B's pass, C's tag) – every OTHER piece of furniture is an obstacle. Every
+ *  spot's swing box lies inside that frame; the sweep holds it. */
+export interface FillerDef {
+  w: number
+  photoH: number
+  tilt: number
+  home: number
+  spots: readonly { x: number; y: number }[]
+}
+
+/** A placed snapshot: the card as the page draws it, and `box` – the card with the swing of its lean, which is what the obstacles and the sweep are
+ *  measured against. */
+export interface FillerPlacement {
+  x: number
+  y: number
+  w: number
+  photoH: number
+  tilt: number
+  box: Box
 }
 
 /** Average advance of the app's handwriting face, in em. ⚠ MEASURED, NOT CHOSEN: the six real sheets
@@ -222,14 +264,28 @@ interface LayoutDef {
   /** The photograph whose PICTURE a note or a line must not cover (layout C's hero – «the one picture that
    *  earned the whole page»), as an index into `photos`. */
   hero?: number
+  /** ⭐ ROUND 47 #14 – where a small snapshot may hang when the object that lives in this layout's gap is not drawn (`placeFiller`). */
+  filler?: FillerDef
   fixed(sheet: AlbumSheetModel): Box[]
 }
 
-/** The title block grows with the chapter's name: 164px for «Growing up», 270px for «The breakthrough»
- *  (measured), which is 17px a character at its 44px size. */
+/** ⭐⭐ ROUND 47 #9 – THE TITLE BLOCK, ONE STEP SMALLER AND MEASURED. `AlbumSheetTitle.vue` sets it at 17 / 38 / 19px (was 19 / 44 / 21) with 3 and 6px
+ *  between the lines, all three at `line-height: 1`: 17 + 3 + 38 + 6 + 19 = 83px tall (it was 96). The block grows with the chapter's name – `HEAD_CHAR`
+ *  is 14.7px a character at 38px, which is the 17px a character the 44px name measured in Chromium (270.2px for «The breakthrough», 16 letters) scaled by
+ *  38/44 and rounded UP: the estimate may over-count a few pixels and never under-count, and `tests/r47-b3-album-headings.test.ts` holds all five
+ *  names against Chromium's own widths. */
+export const HEAD_H = 83
+const HEAD_CHAR = 14.7
 function headBox(x: number, sheet: AlbumSheetModel): Box {
-  return { x, y: 26, w: Math.max(164, Math.ceil(sheet.chapterTitle.length * 17)), h: 96 }
+  return { x, y: 26, w: Math.max(120, Math.ceil(sheet.chapterTitle.length * HEAD_CHAR)), h: HEAD_H }
 }
+
+/** ⭐⭐ ROUND 47 #9 – WHERE LAYOUT C HANGS ITS HERO: `HERO_GAP` UNDER THE HEADING'S BOX. It hung at y 100, which is 22px INTO the old 96px block and on top
+ *  of the years line on every one of the 121 C sheets measured. The window's bottom edge stays where round 45 tuned everything under it (y 300 – the
+ *  note's strip, the second photograph, the guard counts), so the pixels the hero gave up at the top come off its window, not off the page. */
+const HERO_GAP = 5
+const C_HERO_Y = 26 + HEAD_H + HERO_GAP
+const C_HERO_BOTTOM = 300
 
 /** ⭐⭐ ROUND 47 #8 – THE BOARDING PASS IS ONE HEIGHT, AND THE FRAME IS THE FLOOR UNDER WHAT IS ABOVE IT. Bottom-anchored
  *  at 34px (was 48), `PASS_H` tall (`min-height` in `AlbumLayoutB.vue` – the page and this table are mirrors, held by
@@ -254,6 +310,13 @@ function passBox(sheet: AlbumSheetModel): Box {
   if (!sheet.ticket) return { x: 22, y: PAGE - 48 - 97, w: 400, h: 97 }
   return { x: 22, y: PAGE - 34 - PASS_H, w: 400, h: PASS_H }
 }
+
+/** ⭐ ROUND 47 #14 – THE TWO PLACES A SMALL SNAPSHOT HANGS (`placeFiller`). Each spot is inside the frame the missing object leaves: B's strip under the
+ *  photographs, where the boarding pass would hang (`passBox` keeps it reserved on a ticketless sheet), and C's right-hand column, where the baggage tag
+ *  would hang (its box is in `fixed`). B's spots run RIGHT TO LEFT – the loose line and the note are on the left – and C's run down the column from beside
+ *  the hero's middle. Every spot's swing box lies inside its frame; the test holds it. */
+const B_FILLER: FillerDef = { w: 128, photoH: 72, tilt: 2.4, home: 0, spots: [288, 240, 192, 144, 96, 48].map((x) => ({ x, y: 330 })) }
+const C_FILLER: FillerDef = { w: 100, photoH: 68, tilt: -2.6, home: 1, spots: [168, 126, 210, 252, 92].map((y) => ({ x: 332, y })) }
 
 /** THE THREE DRAWINGS' OWN NUMBERS – what `AlbumLayoutA/B/C.vue` carried as CSS before this file.
  *  The photographs, the note and the line are bound from here; the furniture (`fixed`) keeps its CSS
@@ -280,11 +343,12 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
     ],
     note: { x: 167, y: 275, anchor: 'bottom', widths: [151, 220, 300] },
     line: { x: 26, y: 250, w: 132, alt: [200, 270], font: 20, lh: 26 },
+    filler: B_FILLER,
     fixed: (s) => [passBox(s), { x: 131, y: 268, w: 24, h: 24 }],
   },
   C: {
     photos: [
-      { x: 26, y: 100, w: 276, photoH: 196, tilt: -0.8 },
+      { x: 26, y: C_HERO_Y, w: 276, photoH: C_HERO_BOTTOM - POLAROID.top - C_HERO_Y, tilt: -0.8 },
       { x: 204, y: 332, w: 138, photoH: 100, tilt: 1.8 },
     ],
     // ⭐ ROUND 45 #6b: the only paper that is free in C is the strip UNDER the hero and LEFT of the second
@@ -294,6 +358,7 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
     note: { x: 12, y: 462, anchor: 'bottom', widths: [150, 186] },
     hero: 0,
     line: { x: 388, y: 368, w: 74, alt: [110], font: 19, lh: 23.75 },
+    filler: C_FILLER,
     fixed: (s) => [headBox(33, s), { x: 327, y: 77, w: 110, h: 271 }, { x: 368, y: 401, w: 24, h: 24 }],
   },
 }
@@ -440,6 +505,11 @@ function bandsOf(def: LayoutDef, sheet: AlbumSheetModel, scale: number): Box[] {
 /** ⭐ THE RESOLVER. A sheet in, the positions out. See the header for the rule. `tuning` is the prices and
  *  the hand's steps: the page always passes the default, the sweep passes B6's beside it to measure «before». */
 export function placeSheet(sheet: AlbumSheetModel, tuning: Tuning = TUNING): SheetPlacement {
+  const core = resolveSheet(sheet, tuning)
+  return { ...core, filler: placeFiller(sheet, core) }
+}
+
+function resolveSheet(sheet: AlbumSheetModel, tuning: Tuning): PlacedCore {
   const slot = tuning.slots?.[sheet.layout]
   const def = slot ? { ...LAYOUTS[sheet.layout], note: slot } : LAYOUTS[sheet.layout]
   const hands = noteHands(sheet.note, tuning.steps)
@@ -475,7 +545,7 @@ export function placeSheet(sheet: AlbumSheetModel, tuning: Tuning = TUNING): She
   // rung that merely has room is not the best one: at full size a long note's only spot can be on top of
   // the big photograph, while one rung down it fits below it.
   for (const group of [bare, ...tiers.map((tier) => [{ tier, price: 0 }])]) {
-    let best: { score: number; out: SheetPlacement } | null = null
+    let best: { score: number; out: PlacedCore } | null = null
     for (const { tier, price } of group) {
       if (!Number.isFinite(price)) continue
       for (const scale of SCALES) {
@@ -514,6 +584,28 @@ export function placeSheet(sheet: AlbumSheetModel, tuning: Tuning = TUNING): She
   return { photos, note, line, scale, clear }
 }
 
+/** ⭐⭐ ROUND 47 #14 – THE SMALL SNAPSHOT IN THE GAP. See the header. It is a POST-PASS ON PURPOSE: it reads what `resolveSheet` settled and moves none
+ *  of it, so asking for a snapshot cannot cost a photograph window a rung or a note a spot. It yields (null) on a sheet whose ticket or tag IS drawn (the
+ *  gap is not a gap), on a layout with no slot, and when no listed spot clears every card, caption band, note, loose line and piece of furniture. */
+function placeFiller(sheet: AlbumSheetModel, core: PlacedCore): FillerPlacement | null {
+  const def = LAYOUTS[sheet.layout]
+  const f = def.filler
+  if (!sheet.filler || !f) return null
+  if (sheet.layout === 'B' ? sheet.ticket : sheet.tag) return null
+  const h = POLAROID.top + f.photoH + POLAROID.bottom
+  const pad = Math.ceil((Math.max(f.w, h) / 2) * Math.sin((Math.abs(f.tilt) * Math.PI) / 180)) + 1
+  const furniture = def.fixed(sheet).filter((_, i) => i !== f.home)
+  const placed = [core.note, core.line].flatMap((m) => (m ? [m] : []))
+  const obstacles = [...core.photos.flatMap((p) => [padded(p.box), ...(p.band ? [p.band] : [])]), ...furniture, ...placed]
+  for (const s of f.spots) {
+    const box: Box = { x: s.x - pad, y: s.y - pad, w: f.w + 2 * pad, h: h + 2 * pad }
+    if (box.x < 0 || box.y < 0 || box.x + box.w > PAGE || box.y + box.h > PAGE) continue
+    if (obstacles.some((o) => touches(box, o))) continue
+    return { x: s.x, y: s.y, w: f.w, photoH: f.photoH, tilt: f.tilt, box }
+  }
+  return null
+}
+
 /** The picture window of a card – what a note over a photograph hides. */
 function pictureOf(p: PhotoPlacement): Box {
   return { x: p.x, y: p.y + POLAROID.top, w: p.w, h: p.photoH }
@@ -548,7 +640,10 @@ export function px(n: number): string {
  *  where the resolver put it. */
 export function noteSpot(b: NoteBox): Record<string, string> {
   if (b.step === 1) return spot(b)
-  return { left: px(b.x), top: px(b.y), width: px(Math.round((b.w / b.step) * 100) / 100), transform: `scale(${b.step})`, transformOrigin: '0 0' }
+  // ⭐ ROUND 47 B3 – ROUNDED DOWN, NEVER UP: the page must not draw a note wider than the resolver reserved. Rounding to the nearest hundredth drew a note
+  // 186 reserved as 186.0006 wide, and the mounted sweep (`tests/component/round45-album-placement.test.ts`) read that as touching a caption band the resolver
+  // had left exactly `GAP` of air from. Invisible – a ten-thousandth of a pixel – and still the page contradicting its own reservation.
+  return { left: px(b.x), top: px(b.y), width: px(Math.floor((b.w / b.step) * 100) / 100), transform: `scale(${b.step})`, transformOrigin: '0 0' }
 }
 
 /** The inline style that puts a box where the resolver said. */

@@ -12,6 +12,7 @@ import { computed } from 'vue'
 import AlbumPhoto from './AlbumPhoto.vue'
 import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumTicketPass from './AlbumTicketPass.vue'
+import AlbumFillerPhoto from './AlbumFillerPhoto.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import { noteSpot, placeSheet, spot } from './albumPlacement'
 import type { AlbumSheetModel } from '../../shared/protocol'
@@ -75,6 +76,15 @@ const placed = computed(() => placeSheet(props.sheet))
     />
 
     <AlbumTicketPass v-if="sheet.ticket" class="album-b-pass" :ticket="sheet.ticket" />
+
+    <!-- ⭐ ROUND 47 #14 – a ticketless sheet's strip is empty; the resolver hangs a small snapshot in it when there is room (`placeFiller`). -->
+    <AlbumFillerPhoto
+      v-if="sheet.filler && placed.filler"
+      :style="spot(placed.filler)"
+      :filler="sheet.filler"
+      :tilt="placed.filler.tilt"
+      :photo-height="placed.filler.photoH"
+    />
   </div>
 </template>
 

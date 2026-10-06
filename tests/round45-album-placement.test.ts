@@ -391,7 +391,7 @@ describe('round 45 #6b · the hand a note is written in', () => {
     const full: NoteBox = { x: 12, y: 300, w: 186, h: 120, step: 1 }
     expect(noteSpot(full)).toEqual(spot(full))
     const small: NoteBox = { x: 12, y: 300, w: 186, h: 98, step: 0.82 }
-    expect(noteSpot(small)).toEqual({ left: '12px', top: '300px', width: '226.83px', transform: 'scale(0.82)', transformOrigin: '0 0' })
+    expect(noteSpot(small)).toEqual({ left: '12px', top: '300px', width: '226.82px', transform: 'scale(0.82)', transformOrigin: '0 0' })
   })
 
   it('every resolved note is drawn at a step of the ladder – never above what its length earned, never under the floor', () => {

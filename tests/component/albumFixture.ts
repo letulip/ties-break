@@ -106,6 +106,7 @@ export function sheetOf(over: SheetOver = {}): AlbumSheetModel {
         ? { stage: 'Singles final', tier: 'World Tour 15', step: 'high', place: 'Rivermouth Open', ageLabel: 'Age 16' }
         : null,
     patch: layout === 'A' ? { name: 'Rivermouth Tennis', step: 'budget' } : null,
+    filler: null,
     doodles: layout === 'A' ? ['smile'] : layout === 'B' ? ['heart'] : ['globe'],
   }
 }
