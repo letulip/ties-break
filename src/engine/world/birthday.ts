@@ -923,6 +923,33 @@ const OWN_ACCOUNT_GIFT: BirthdayGift | undefined = BANDS.find(
   (b) => b.from === OWN_ACCOUNT_ANCHOR_AGE && b.to === OWN_ACCOUNT_ANCHOR_AGE,
 )?.gifts.find((g) => g.id === OWN_ACCOUNT_ID)
 
+// =================================================================================================
+// ⭐⭐ ROUND 46 · R6 (06.10) – THE WATCH JOINS THE ACCOUNT: THE 18 BAND LENDS NOTHING AT ALL
+// =================================================================================================
+//
+// THE OWNER, 06.10, asked whether the account's door should close for the whole band rather than for one row:
+// «наверное да». B8 (above) had closed ONE row and measured the next one through the same door: the 18 band's
+// `watch`, «The eighteenth watch» – 59 of 60 careers met it on 145 cards from nineteen to forty-five, 55 of them
+// as the ask (tests/birthday-own-account.test.ts, the every-ask walk).
+// ⚠ IT IS THE WHOLE BAND AND NOT THE WATCH, AND THE MEASUREMENT IS WHY: the same walk carried 429 cards with a row
+// of the 18 band – the watch's 145 and 284 more that carried only `trip` – and the full sweep of that file's (c)
+// (sixty seeds, both grants, both balances) 858 cards, 220 of them as the ask. After: zero of each. The owner ruled
+// the band, so `lendsNothing` is the band's one-line spelling and `lendable` (in `materialFor`) reads it.
+// ⚠ WHAT IT TOUCHES AND WHAT IT DOES NOT. Eligibility only: the filter acts on the POOL before the shuffle, so
+// `seed:birthday:<age>` is still drawn four times, `seed:birthday:cycle:<band>` is untouched and MAIN is not reached
+// (the frozen capture stays as pinned). What DOES move – and is the intent – is which row a late card's refill
+// takes: it skips the 18 band now, so the next neighbour's row stands in. The card at eighteen is untouched (a
+// band's OWN rows are never filtered), the account's corridor (rules 2 and 3 above) is untouched, and every other
+// band lends exactly as before.
+// ⚠ THE ACCOUNT'S OWN CLAUSE STAYS in `lendable`, redundant while the row lives only in the 18 band: it keeps B8's
+// guarantee from depending on the band-wide ruling, so an owner who later lets the 18 band lend `trip` again does
+// not re-open the account.
+
+/** The 18 band lends nothing – found by its own span, the spelling `isIndependenceBand` and `OWN_ACCOUNT_GIFT` use. */
+function lendsNothing(band: Band): boolean {
+  return band.from === OWN_ACCOUNT_ANCHOR_AGE && band.to === OWN_ACCOUNT_ANCHOR_AGE
+}
+
 /** Is the account's ask due at this birthday? `appearances` is the record's count for the row: zero means
  *  she has neither been asked about it nor been given it. Total: a catalogue without the row answers no. */
 function ownAccountDue(age: number, earning: boolean, atCollegeBand: boolean, appearances: number): boolean {
@@ -1108,8 +1135,11 @@ function materialFor(
   // the 18 band's own and is lent to no other card (see the block over `OWN_ACCOUNT_ID` – this filter is
   // the cause of a 29-year-old asking for it). The band's OWN rows are never filtered, so at eighteen the
   // card still holds it.
+  // ⭐⭐ ROUND 46 · R6 (06.10) – AND THE 18 BAND LENDS NOTHING: `lendsNothing` (the note under `OWN_ACCOUNT_GIFT`)
+  // widens the filter from the account's one row to the whole band, on the owner's «наверное да». The account's
+  // clause below stays on purpose – see that note.
   const lendable = (from: Band): BirthdayGift[] =>
-    from === band ? from.gifts : from.gifts.filter((g) => g.id !== OWN_ACCOUNT_ID)
+    from === band ? from.gifts : lendsNothing(from) ? [] : from.gifts.filter((g) => g.id !== OWN_ACCOUNT_ID)
   let pool = band.gifts.filter((g) => !retiredGift(g, given))
   if (pool.length < band.gifts.length) {
     const held = new Set(pool.map((g) => g.id))

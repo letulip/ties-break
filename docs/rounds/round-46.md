@@ -1123,6 +1123,24 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
      **Files:** `src/shared/protocol/career.ts`, `src/engine/world/endings.ts`, `src/components/EndingScreen.vue`, the thirteen test files above, this ledger.
 6. **The watch**: «наверное да» – the 18 band lends nothing; the leak closes with a measured
    note. Build → **R6**.
+   - **R6 · 6 SHIPPED – THE 18 BAND LENDS NOTHING: THE WATCH JOINS THE ACCOUNT, MEASURED BEFORE AND AFTER** (06.10). B8 withheld one row (`lendable` dropped `bankcard`); the filter now withholds the WHOLE band –
+     `lendsNothing(from) ? []` in `materialFor` (`world/birthday.ts`), the account's own clause left in place and the corridor logic (rule 2, the anchor at eighteen; rule 3, the sixteen/seventeen swap) untouched. Eligibility, not draws:
+     `seed:birthday:<age>` is still drawn four times, the cycle streams are untouched, MAIN is not reached. The dated note sits beside B8's in `birthday.ts`.
+     **Measured** (sixty seeds × both grants × both balances, nineteen to forty-five – the sweep of `birthday-own-account.test.ts` (c) – counted by OBJECT IDENTITY by a throwaway probe, because `watch` is an id in the 17 band AND the 18 band):
+     the every-ask walk, B8's one configuration, reproduced to the card: the watch on **145 cards, 59 of 60 careers, 55 asks** before, **0 / 0 / 0** after; ANY row of the 18 band on **429 cards, 60 of 60 careers, 110 asks** before, **0 / 0 / 0** after.
+     The full 240-walk sweep: 858 cards with a row of the 18 band (220 as the ask) before, **0** after; the watch alone 290 cards (110 asks) before, **0** after.
+     **⚠ A FINDING THE BRIEF DID NOT NAME:** the leak was wider than the watch – `trip` («A trip that is not a tournament») rode the same door on 284 further cards of that walk. «The 18 band lends nothing» closes it too, which is what the one-line widening does;
+     if he meant the watch ONLY, the filter would be per-row and `trip` would keep lending. Flagged as the one consequence of his ruling he may not have pictured.
+     **The card at eighteen is untouched:** the eighteenth watch is on it for 60 of 60 seeds before and after, and after the account was asked at sixteen it is still THE ask on 15 of 60 – the same 15. **Other bands:** the RULE is untouched; their VOLUMES move
+     where they stand in for the 18 band's slots – lendings to cards 19–45 over the sweep, before → after: 17 band 504 → 794, 16 band 872 → 988, 15 band 646 → 796, 0–14 band 586 → 836, 19–21 band 740 → 806, 22–28 band 6018 → 6042, 29+ 500 → 500; the 18 band 916 → 0.
+     That is the intended swap: late cards draw different ROWS now (which rows, never which draws).
+     **Tests** – six arms appended to `tests/birthday-own-account.test.ts`: the premise (the watch is two objects), (e) no 18-band row on any card of the sweep, (f) the watch alone, cards and asks, (g) the card at eighteen carries every row of the band and the
+     watch is still asked there, (h) the control – the 17 band and the 22–28 band still lend and the 18 band lends 0, (i) no late card short or doubled. **On the unfixed source they redden with the BEFORE counts:** (e) 858 cards, (f) 290 cards, (h) 916 lendings.
+     **Mutation:** un-widen (B8's filter back) → (e), (f) and (h) red with those counts; over-widen (no band lends) → (h)'s control line red (the 17 band lent 0) and B8's own (a) red (with nobody lending, the retired account row comes back on the card at eighteen).
+     Restored byte-identical – `cmp` exit 0 against a copy taken before the first mutation.
+     **Neighbours:** the birthday family (`birthday-announce`, `-ask`, `-career`, `-gifts`, `-own-account`, `college-birthday`, `college-birthday-wish`, `round42-birthday-durables`): 8 files, 138 tests green. **Capture:** `tests/condition.test.ts` 51 tests green –
+     **the frozen capture holds, 41550 draws / hash `e6b0c709`.** `vue-tsc -b --force` exit 0. **⚠ WORDING:** no string touched – the 18 band's rows are the same objects; what changed is that two of them (`The eighteenth watch`, `A trip that is not a tournament`) stop appearing on cards after eighteen.
+     **Spec:** `docs/specs/birthday-and-gifts.md` closes the watch paragraph with one dated sentence. **Files:** `src/engine/world/birthday.ts`, `tests/birthday-own-account.test.ts`, `docs/specs/birthday-and-gifts.md`, this ledger.
 7. **№14**: «без миграции ок» – option Б; the live row heals on the next dominating top-up.
    CLOSED.
 8. **Yacht vs Elite**: «ок, на неё сначала надо заработать» – stands as built. CLOSED.
