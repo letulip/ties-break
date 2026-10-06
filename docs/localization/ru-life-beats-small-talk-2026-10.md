@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-05
+last-reviewed: 2026-10-06
 ---
 
 # RU-10 – Life beats and small talk
@@ -18,18 +18,20 @@ projection in `src/engine/world/smallTalkCorpus.ts`.
 The generated small-talk file is never edited by hand. Its English authority is
 `docs/specs/small-talk-corpus-2026-09.md`, and the existing emitter pins that document to runtime.
 Russian needs an equivalent generated projection or a locale column in the same source document;
-manual transcription of 969 strings would recreate the drift that generation removed.
+manual transcription of 969 strings **into runtime source** would recreate the drift that
+generation removed. The editorial line-by-line drafts are in this file and the three situation
+volumes; the technical localization wave still needs a generated projection or locale column.
 
 Current small-talk shape:
 
 | layer | current size | Russian state |
 | --- | ---: | --- |
-| situations | 51 | open |
-| per-voice openers | 204 | open |
-| shared stance labels | 153 | open |
-| per-voice replies | 612 | open |
-| shared second beats | 4 | open |
-| authored situation strings | 969 + 4 | open |
+| situations | 51 | drafted across RU-10 and RU-10A/B/C |
+| per-voice openers | 204 | drafted |
+| shared stance labels | 153 | drafted |
+| per-voice replies | 612 | drafted |
+| shared second beats | 4 | drafted |
+| authored situation strings | 969 + 4 | drafted; runtime projection open |
 | presence frames | 18 | drafted below |
 | save-compatible legacy opener cells | 23 | drafted below |
 | legacy headings/card/fallback labels | 7 | drafted below |

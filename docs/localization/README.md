@@ -52,6 +52,7 @@ last-reviewed: 2026-10-06
 | [Batch 10I – School-leaving fork](ru-life-beats-fork-2026-10.md) | Her first lines, stop drivers, listen continuations, flat register and controls | current fork corpus drafted |
 | [Batch 10J – Heard headings](ru-life-beats-heard-headings-2026-10.md) | Personality-aware parent readings on relationship cards | all `MET_HEADING_HEARD` and `ENDED_HEADING_HEARD` rows drafted |
 | [Batch 10K – Kept events](ru-life-beats-kept-events-2026-10.md) | Relationship album rows and return-plan card | all current kept relationship event variants and return-plan copy drafted |
+| [Batch 10L – Other event writers](ru-life-beats-other-events-2026-10.md) | Press leak, wedding, divorce, pregnancy pause/birth/loss | remaining non-copy life-beat event prose drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
