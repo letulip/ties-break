@@ -27,6 +27,7 @@
     "tools/barrel-census.ts",
     "tools/birthday-pool.ts",
     "tools/cancel-share-bench.ts",
+    "tools/career-dossier.ts",
     "tools/chemistry-bench.ts",
     "tools/childhood-bench.ts",
     "tools/coach-court-price.ts",

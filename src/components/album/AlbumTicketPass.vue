@@ -40,7 +40,9 @@ defineProps<{ ticket: AlbumTicket }>()
   <div class="album-pass" :class="`album-pass-${ticket.step}`">
     <div class="album-pass-main">
       <p class="album-pass-venue">{{ ticket.venue }}</p>
-      <p class="album-pass-title">{{ ticket.tier }} {{ ticket.stage }}</p>
+      <!-- ⭐ ROUND 47 #8c – THE STAGE IS PRINTED ONCE: on the stub, in the album's own hand. It used to be here too
+           («World Tour 1000 Champion» over «Champion»), and he asked for only the handwritten one. -->
+      <p class="album-pass-title">{{ ticket.tier }}</p>
       <p class="album-pass-foot">
         <span>{{ ticket.dateLabel }}</span>
         <span>{{ ticket.gate }}</span>
@@ -136,6 +138,7 @@ defineProps<{ ticket: AlbumTicket }>()
 .album-pass-foot {
   display: flex;
   gap: 18px;
+  white-space: nowrap;
   margin: 0;
   font-family: var(--font-body);
   font-size: 9.5px;
@@ -147,7 +150,10 @@ defineProps<{ ticket: AlbumTicket }>()
 
 .album-pass-stub {
   flex: none;
-  width: 116px;
+  /* ⭐ ROUND 47 #8d – 134px, WAS 116: «Row» and «Seat» now stay on ONE line, and the widest pair the engine can
+     deal («Row 30» + «Seat 30D») is 105.2px wide with the 4px gap, against the 90.5px the old stub had inside its
+     padding (measured in Chromium, 06.10) – `nowrap` alone would have run it off the ticket's edge. 134 leaves 3px. */
+  width: 134px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -183,7 +189,8 @@ defineProps<{ ticket: AlbumTicket }>()
 .album-pass-row {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
+  white-space: nowrap;
   margin: 0;
   font-family: var(--font-body);
   font-size: 9.5px;
@@ -191,5 +198,12 @@ defineProps<{ ticket: AlbumTicket }>()
   letter-spacing: 0.1em;
   text-transform: uppercase;
   opacity: 0.78;
+}
+
+/* ⭐ ROUND 47 #8d – «Row …», «Gate …» ALWAYS ONE LINE. The two lines above carry it on the line AND on each word of
+   it: a flex item is its own box and would otherwise break «Row 14» into «Row» over «14». */
+.album-pass-foot span,
+.album-pass-row span {
+  white-space: nowrap;
 }
 </style>

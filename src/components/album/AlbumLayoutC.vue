@@ -13,6 +13,7 @@ import { computed } from 'vue'
 import AlbumPhoto from './AlbumPhoto.vue'
 import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumTagCard from './AlbumTagCard.vue'
+import AlbumFillerPhoto from './AlbumFillerPhoto.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import AlbumSheetTitle from './AlbumSheetTitle.vue'
 import { noteSpot, placeSheet, spot } from './albumPlacement'
@@ -46,6 +47,15 @@ const placed = computed(() => placeSheet(props.sheet))
     />
 
     <AlbumTagCard v-if="sheet.tag" class="album-c-tag" :tag="sheet.tag" />
+
+    <!-- ⭐ ROUND 47 #14 – a tagless sheet's column is empty; the resolver hangs a small snapshot in it when there is room (`placeFiller`). -->
+    <AlbumFillerPhoto
+      v-if="sheet.filler && placed.filler"
+      :style="spot(placed.filler)"
+      :filler="sheet.filler"
+      :tilt="placed.filler.tilt"
+      :photo-height="placed.filler.photoH"
+    />
 
     <AlbumNoteCard
       v-if="sheet.note && placed.note"

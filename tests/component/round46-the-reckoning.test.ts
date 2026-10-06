@@ -17,13 +17,18 @@
 // prize cheques – and he answered «да, пойдет». So the first label is now «The family's share»; the
 // FIGURE under it did not move and neither did the other four. The paragraph above is left as
 // written because it is the record of what was true before he ruled.
+// ⭐⭐⭐ RE-AIMED 06.10 BY ROUND 47 (items 2, 4, 5 and 6 – his words are quoted on docs/rounds/round-47.md): every
+// money figure on the page prints through `formatCentsCompact` now («I asked for the millions shortened»), the
+// shelf row «Still owned» left as redundant with the portfolio («one of them looks redundant»), the three
+// counting rows became ONE row in the order he named them, and the figure grid no longer counts columns («the
+// layout still moves and the numbers jump»). Each arm that moved says so beside it; the labels did not move.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import EndingScreen from '../../src/components/EndingScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { moneyOf } from '../helpers/careerMoney'
-import { formatCents } from '../../src/shared/money'
+import { formatCentsCompact } from '../../src/shared/money'
 import { dynastyOf } from '../helpers/dynastyHandover'
 import type { AlbumPage, CareerEndingType, CareerMoney, EndingView, Snapshot } from '../../src/shared/protocol'
 import '../../src/style.css'
@@ -99,23 +104,28 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     expect(totals.text(), 'the label is his and does not move').toContain('Spent')
     // ⚠⚠ THE ARM. Point the template back at `view.totals.spentCents` and this pair flips: measured
     // 18.09, 1 of the 5 tests in this file goes red (this one, on both of its assertions).
-    expect(totals.text(), 'what left for good').toContain(formatCents(1_000_000_00))
+    expect(totals.text(), 'what left for good').toContain(formatCentsCompact(1_000_000_00))
     expect(totals.text(), 'and not the gross that includes the fund and the house').not.toContain(
-      formatCents(3_000_000_00),
+      formatCentsCompact(3_000_000_00),
     )
     w.unmount()
   })
 
-  it('⭐⭐ names her own account and what the family still owns – the two figures the page never had', async () => {
+  it('⭐⭐ names her own account – and the shelf has no row of its own any more (round 47 #6)', async () => {
     patch(
       endingView({}, { heldCents: 2_000_000_00, outlayCents: 1_000_000_00, holdingsCents: 2_600_000_00, herAccountCents: 900_000_00 }),
     )
     const w = mount(EndingScreen)
     const totals = w.find('.ending-totals')
     expect(totals.text()).toContain('Her account')
-    expect(totals.text()).toContain(formatCents(900_000_00))
-    expect(totals.text()).toContain('Still owned')
-    expect(totals.text()).toContain(formatCents(2_600_000_00))
+    expect(totals.text()).toContain(formatCentsCompact(900_000_00))
+    // ⭐⭐⭐ RE-AIMED 06.10 BY HIS ROUND 47 #6: «what is the difference between still owned and the family's
+    // portfolio? it seems one is redundant». The shelf at value is NESTED inside the portfolio (wallet + shelf), so
+    // the row that said less left, and this arm used to pin it present. ⚠⚠ THE ARM. Put the row back in the
+    // template and this goes red: measured 06.10, RED [1 test, 2 assertions]. The engine still hands
+    // `holdingsCents` (the season popup reads it) – the screen just does not print it.
+    expect(totals.text(), 'the redundant row is gone').not.toContain('Still owned')
+    expect(totals.text(), 'and the shelf figure is not printed on its own').not.toContain(formatCentsCompact(2_600_000_00))
     w.unmount()
   })
 
@@ -126,7 +136,7 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     expect(totals.text(), 'no row about an account she has not got').not.toContain('Her account')
     expect(totals.text(), 'and none about holdings that do not exist').not.toContain('Still owned')
     // ...and «Spent» is the accumulator, unchanged, which is what every career before the shelf reads.
-    expect(totals.text()).toContain(formatCents(TOTALS.spentCents))
+    expect(totals.text()).toContain(formatCentsCompact(TOTALS.spentCents))
     w.unmount()
   })
 
@@ -140,12 +150,12 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // measured 18.09, RED [1 test].
     expect(totals.text(), 'the drafted label – R46-7').toContain("Family's portfolio")
     expect(totals.text(), 'and the engine\'s own figure, not a sum done in the template').toContain(
-      formatCents(2_812_340_00),
+      formatCentsCompact(2_812_340_00),
     )
-    // ...and it sits between what the family still owns and the three counting rows, so the pins
-    // below on his own five labels are untouched by it.
+    // ...and it sits after «Spent» and before the three counting rows (RE-AIMED 06.10, round 47 #6: it used to
+    // follow «Still owned», the row that left), so the pins below on his own labels are untouched by it.
     const labels = w.findAll('.ending-totals dt').map((d) => d.text())
-    expect(labels.indexOf("Family's portfolio")).toBeGreaterThan(labels.indexOf('Still owned'))
+    expect(labels.indexOf("Family's portfolio")).toBeGreaterThan(labels.indexOf('Spent'))
     expect(labels.indexOf("Family's portfolio")).toBeLessThan(labels.indexOf('Seasons'))
     w.unmount()
 
@@ -159,21 +169,21 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     w2.unmount()
   })
 
-  it('⚠ an EIGHTH row cannot push the page sideways – the property the new row leans on', async () => {
-    // ⚠⚠ THE ONE LAYOUT CLAIM RULING A MAKES, CHECKED RATHER THAN ASSUMED. The epilogue's `<dl>` now
-    // carries up to eight cells and the longest label on it is the new one. What makes that safe is
-    // not taste, it is two declarations: the grid AUTO-FITS (so cells wrap to a new line instead of
-    // narrowing past 84px) and the label may WRAP (so a long word gives ground vertically). The page
-    // itself scrolls – `.ending` is `overflow-y: auto` – so vertical growth is free. ⚠ This is NOT
-    // the dialog rule: the epilogue is a scrolling takeover, not a blocking overlay with no
-    // max-height, which is the shape that ruling exists for.
-    // ⚠⚠ THE ARM. Put `white-space: nowrap` on `.ending-totals dt`, or pin the grid to a fixed column
-    // count, and this goes red – measured 18.09, RED [1 test, 1 assertion each].
+  it('⚠ a full page of figures cannot push it sideways – the label|figure grid never depends on the width', async () => {
+    // ⭐⭐⭐ RE-AIMED 06.10 BY HIS ROUND 47 #4 («the layout still moves and the numbers jump»). THE ARM THIS
+    // REPLACES pinned `auto-fit` – a column COUNT that changed with the width, which is the dance he reported.
+    // What it protected (nothing pushes the page sideways; a long label gives ground vertically) is now carried
+    // by a grid whose columns do not depend on the width at all: `minmax(0, 1fr) auto`, row wrappers
+    // `display: contents`, the label allowed to wrap. Seven cells now: the shelf row left (#6).
+    // ⚠⚠ THE ARM. Put `auto-fit` back, or `white-space: nowrap` on the label, and this goes red: measured
+    // 06.10, RED [1 test, 1 assertion each].
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00, portfolioCents: 2_812_340_00 }))
     const w = mount(EndingScreen, { attachTo: document.body })
     const dl = document.querySelector('.ending-totals')!
-    expect(dl.querySelectorAll('dt')).toHaveLength(8)
-    expect(getComputedStyle(dl).gridTemplateColumns, 'the cells wrap rather than narrow').toContain('auto-fit')
+    expect(dl.querySelectorAll('dt')).toHaveLength(7)
+    const money = document.querySelector('.ending-money')!
+    expect(getComputedStyle(money).gridTemplateColumns, 'two stable columns, never a count').toContain('minmax(0, 1fr)')
+    expect(getComputedStyle(money).gridTemplateColumns).not.toContain('auto-fit')
     const label = [...dl.querySelectorAll('dt')].find((d) => d.textContent === "Family's portfolio")!
     expect(getComputedStyle(label).whiteSpace, 'the longest label may give ground vertically').not.toBe('nowrap')
     w.unmount()
@@ -198,7 +208,10 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     expect(labels[0], 'his own spelling, one word shorter than the one he ruled this morning').toBe("Family's share")
     expect(labels, 'and nothing else acquired the old word').not.toContain('Won')
     expect(labels[1]).toBe('Spent')
-    expect(labels.slice(-3)).toEqual(['Seasons', 'Best rank', 'Titles'])
+    // ⭐ RE-AIMED 06.10 BY HIS ROUND 47 #5 («best rank, titles and seasons are better in one row»): the three
+    // counting rows are ONE row now, in the order he named them. ⚠⚠ THE ARM. Swap two of them back in the
+    // template and this goes red: measured 06.10, RED [1 test, 1 assertion].
+    expect(labels.slice(-3)).toEqual(['Best rank', 'Titles', 'Seasons'])
     w.unmount()
   })
 })

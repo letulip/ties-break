@@ -148,14 +148,65 @@ import type { WorldState } from '../world'
  *  row goes – one term, his call. (The probe's own «HOUSEHOLD WORTH» is that wider figure, and the
  *  two differ by her account exactly.)
  *
+ *  =================================================================================================
+ *  ⭐⭐⭐ AMENDED 06.10 – ROUND 47 #3: THE MONEY THAT WENT IN AND CAME OUT AGAIN WAS NEVER THE TENNIS
+ *  =================================================================================================
+ *
+ *  THE OWNER, 06.10, off the last page of a twenty-season career (№1, 127 titles): «цифры трат снова
+ *  гросс и не пересчитаны, мы туда вроде собирались записывать сколько было именно на теннис
+ *  потрачено». The page read «Spent $254M» beside a $269M portfolio.
+ *
+ *  ⚠⚠ MEASURED ON HIS SAVE (week 1037, decoded through the app's own codec) BEFORE THIS WAS WRITTEN:
+ *
+ *      careerTotals.spentCents      $428,692,101   every cent that ever left the wallet
+ *      − heldCents (rows still held) $163,296,852   `paidCents` of the 16 shelf rows
+ *      − upkeepCents                  $11,011,692
+ *      = outlayCents                 $254,383,557   <- what the page printed
+ *
+ *  AND $237,928,148 OF THAT $254M WAS THE COST OF UNITS THE FAMILY HAD ALREADY SOLD BACK OUT OF THE
+ *  FUND ($69,590,851) AND THE DEPOSIT ($168,337,297) – money that went in as a purchase and came back
+ *  as proceeds, over and over. `sellAsset` takes the sold part's cost OUT of `paidCents` (so
+ *  `heldCents` stops excusing it) and leaves it INSIDE `spentCents`, while the proceeds go to
+ *  `earnedCents`. For a car that is exactly right (a depreciated car really was consumed – the
+ *  sold-asset arm of tests/round46-career-money.test.ts); for a MONEY RUNG it is the opposite: the
+ *  family used the fund as a till, and every round trip was counted as a spend. What is left once the
+ *  round trips are out is $16,455,409 – and that is the size a twenty-year career's coaching, travel,
+ *  entries, kit and wages actually come to (the last sixty ledger weeks of the same save carry
+ *  $783,527 of them, about $0.7M a year).
+ *
+ *  ⭐ SO THE FOLD EXCUSES A FOURTH THING: `soldCostCents`, the `realisedCostCents` every divisible row
+ *  already carries (shop.ts `sellAsset`, round 34 #15 – persisted, optional, ZERO new state). It is not
+ *  `heldCents` (the family no longer owns it) and not `upkeepCents` (it was never a bill): it is money
+ *  that MOVED twice and was consumed never, which is ruling A's «только расходы на теннис» read the way
+ *  the fund is actually used. The identity gains its fourth term and is still proved rather than
+ *  claimed:
+ *      cameInCents − outlayCents === (fundsCents − starting funds) + heldCents + herAccountCents
+ *                                   + upkeepCents + soldCostCents
+ *
+ *  ⚠⚠ THE RESIDUAL, NAMED RATHER THAN HIDDEN – IT IS AN UPPER BOUND, SO THE FIGURE CAN ONLY STILL READ
+ *  HIGH. Two things this reader cannot see, both by construction of what a save keeps:
+ *    (1) a TOP-UP AT LEAST AS BIG AS WHAT IS ALREADY HELD clears the row's realised memory on purpose
+ *        (`buyAsset`, round 34 – «the card is about THAT holding»), so cost sold before such a top-up
+ *        is forgotten here;
+ *    (2) a WHOLE sale deletes the row, and its memory with it (the car arm's reasoning).
+ *  The EXACT figure is an accumulator written at the one choke point, `accrueFinance`, for every
+ *  category that is not `'shop'` – and that is a SCHEMA move, the architect's to schedule, and what his
+ *  «мы туда вроде собирались записывать» literally asks for. What this reader has that an accumulator
+ *  would not: it is schema-free AND it reaches a career already played to its end, because the ending
+ *  view is folded on every read – his own finished save reprints correctly the day this ships.
+ *
  *  A pure read: no draw, no clock, no world mutation – the whole file's guarantee. */
 export function careerMoney(world: WorldState): CareerMoney {
   const totals = world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
   let heldCents = 0
   let holdingsCents = 0
+  // ⭐ ROUND 47 #3 – the cost of what the family has already SOLD ON out of a row it still holds (see the
+  // amendment above). Absent on every row that never had a part sold, which is every frozen career.
+  let soldCostCents = 0
   for (const owned of world.assets ?? []) {
     heldCents += owned.paidCents
     holdingsCents += owned.valueCents
+    soldCostCents += owned.realisedCostCents ?? 0
   }
   const upkeepCents = careerAssetUpkeepCents(world)
   const herAccountCents = world.kidFundsCents ?? 0
@@ -166,8 +217,9 @@ export function careerMoney(world: WorldState): CareerMoney {
     cameInCents: totals.earnedCents + herAccountCents,
     spentCents: totals.spentCents,
     heldCents,
+    soldCostCents,
     upkeepCents,
-    outlayCents: Math.max(0, totals.spentCents - heldCents - upkeepCents),
+    outlayCents: Math.max(0, totals.spentCents - heldCents - soldCostCents - upkeepCents),
     holdingsCents,
     // ⚠ NOT FLOORED, DELIBERATELY, and it is the one figure in this fold that may legitimately be
     // negative: a family in debt with nothing on the shelf really is under water, and a zero there

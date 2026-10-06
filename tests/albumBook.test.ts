@@ -55,7 +55,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { ENDING_BLURB } from '../src/engine/ending'
 import { driftWalls, type Temperament } from '../src/engine/spirit'
 import { ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
-import { ALBUM_CLOSING_FAMILY, ALBUM_TIER_STEP } from '../src/engine/world/albumBook'
+import { ALBUM_CLOSING_FAMILY, ALBUM_PATCH_POOL, ALBUM_TIER_STEP, albumChapterStep, albumPatchFor } from '../src/engine/world/albumBook'
 import { PROLOGUE_CARDS } from '../src/prologue/cards'
 import { EMPTY_RUN, traceOf, withEntry, withOpen, withPick } from '../src/prologue/run'
 import { weekSpan } from '../src/shared/dates'
@@ -885,3 +885,91 @@ describe('⭐⭐ the four scenarios: a sentence is only printed where its own fa
 function courtsCaption(world: WorldState): string {
   return ALBUM_CORPUS.find((o) => o.id === 'academy-courts')!.voices[world.temperament!].caption
 }
+
+// =================================================================================================
+// ROUND 47 #16 – THE CLUB PATCH GOES THE TICKET'S WAY: a name that varies, a cloth that carries the rank
+// =================================================================================================
+//
+// His sentence: «whitegate club и саму бирку тоже можно сделать по аналогии с билетом разными цветами и с разными
+// названиями вымышленными». The name and the step are both DERIVED (no stream is new – the one `:album:flavour:patch`
+// draw is the same single draw it always was), so every case below is a pure-function case or a read of the assembled
+// book. ⭐ MUTATION-VERIFIED (06.10), each applied to `albumBook.ts`, run, restored byte-identical:
+//   `albumPatchFor` ignores the chapter (`start` alone)             -> the walk case and the book case red;
+//   `albumChapterStep` returns 'budget' whatever the chapter holds  -> the ladder case red;
+//   `albumChapterStep` takes the LAST rung and not the highest      -> the ladder case red;
+//   one pool name replaced by a trademark (`'WTA Tennis'`)            -> the pool case red.
+describe('the club patch – a fictional name that varies from chapter to chapter, a step that carries the rank (round 47 #16)', () => {
+  const STEP_ORDER: readonly AlbumTierStep[] = ['budget', 'middle', 'high', 'elite']
+
+  it('the pool is ten FICTIONAL clubs – distinct, none a trademark or a real tournament, «Whitegate Club» still among them', () => {
+    expect(ALBUM_PATCH_POOL).toHaveLength(10)
+    expect(new Set(ALBUM_PATCH_POOL).size, 'a repeated name is a smaller pool than it says').toBe(ALBUM_PATCH_POOL.length)
+    expect(ALBUM_PATCH_POOL).toContain('Whitegate Club')
+    for (const name of ALBUM_PATCH_POOL) {
+      expect(name, `«${name}» is a trademark or a real tournament`).not.toMatch(/\b(ITF|WTA|ATP|Wimbledon|Roland|Garros|Slam|Open|Masters|Queen'?s|Davis|Grand)\b/i)
+      // two or three plain words, and short enough for the 96px cloth in two lines (measured in Chromium, 06.10)
+      expect(name.split(' ').length, name).toBeGreaterThanOrEqual(2)
+      expect(name.split(' ').length, name).toBeLessThanOrEqual(3)
+      expect(name.length, `«${name}» will not sit on the cloth in two lines`).toBeLessThanOrEqual(19)
+    }
+  })
+
+  it('every rung maps to a step through the SAME table the pass and the tag read – a chapter is as high as its highest rung', () => {
+    for (const rung of TIER_LADDER) expect(albumChapterStep([{ tier: rung }]), rung).toBe(ALBUM_TIER_STEP[rung])
+    expect(albumChapterStep([]), 'a chapter with no tournament in it is the first step').toBe('budget')
+    expect(albumChapterStep([{}, { tier: undefined }]), 'a candidate without a rung adds nothing').toBe('budget')
+    expect(albumChapterStep([{ tier: 'local' }, { tier: 'wta125' }, { tier: 'j30' }]), 'the highest wins, not the last').toBe('elite')
+    expect(albumChapterStep([{ tier: 'wta125' }, { tier: 'local' }]), 'and not the first').toBe('elite')
+  })
+
+  it('the name is a pure function of (seed, chapter): it walks the pool one place a chapter and repeats nothing inside one pool\'s worth', () => {
+    const seed = 'album-patch-walk'
+    const names = Array.from({ length: ALBUM_PATCH_POOL.length }, (_, i) => albumPatchFor(seed, i + 1, 'budget').name)
+    expect(new Set(names).size, 'ten chapters, ten different clubs').toBe(ALBUM_PATCH_POOL.length)
+    for (const n of names) expect(ALBUM_PATCH_POOL).toContain(n)
+    expect(albumPatchFor(seed, ALBUM_PATCH_POOL.length + 1, 'budget').name, 'the walk wraps round to the first').toBe(names[0])
+    expect(albumPatchFor(seed, 3, 'high'), 'asked twice, answered twice – nothing is rolled per call').toEqual(albumPatchFor(seed, 3, 'high'))
+    expect(albumPatchFor(seed, 3, 'high').step, 'the step passes through untouched').toBe('high')
+    expect(albumPatchFor(seed, 3, 'high').name, 'the name does not depend on the step').toBe(albumPatchFor(seed, 3, 'elite').name)
+  })
+
+  it('careers differ: forty seeds put at least six of the ten clubs on the first chapter', () => {
+    const first = new Set(Array.from({ length: 40 }, (_, i) => albumPatchFor(`album-patch-career-${i}`, 1, 'budget').name))
+    expect(first.size).toBeGreaterThanOrEqual(6)
+  })
+
+  it('the assembled book: only layout A wears a patch – a pool name on its own chapter\'s step, and never below a pass printed in that chapter', () => {
+    const world = probe('album-patch-book')
+    world.week = weekAtAge(world, 30)
+    for (const [age, rung] of [[14, 'local'], [17, 'j30'], [20, 'w15'], [23, 'wta125'], [26, 'slam']] as const) {
+      const at = weekAtAge(world, age)
+      world.milestones.push({ type: 'school', week: at })
+      world.milestones.push(title(at + 8, rung))
+    }
+    const book = assembleAlbum(world)
+    const openers = book.sheets.filter((s) => s.layout === 'A')
+    expect(openers.length, 'the probe book has no layout-A opener – every arm below would be vacuous').toBeGreaterThan(0)
+    for (const s of book.sheets) {
+      if (s.layout !== 'A') {
+        expect(s.patch, `sheet ${s.id} (layout ${s.layout}) wears a patch`).toBeNull()
+        continue
+      }
+      const patch = s.patch
+      expect(patch, `opener ${s.id} wears no patch`).not.toBeNull()
+      expect(ALBUM_PATCH_POOL, `«${patch!.name}» is not in the pool`).toContain(patch!.name)
+      expect(patch!.name, `${s.id}: the name is the chapter's place on the walk`).toBe(albumPatchFor(world.seed, s.chapterIndex, patch!.step).name)
+      expect(STEP_ORDER, `${s.id}: «${patch!.step}» is not a step of the ramp`).toContain(patch!.step)
+      for (const x of book.sheets.filter((o) => o.chapterIndex === s.chapterIndex)) {
+        for (const printed of [x.ticket, x.tag]) {
+          if (printed === null) continue
+          expect(
+            STEP_ORDER.indexOf(patch!.step),
+            `${s.id}: the patch (${patch!.step}) sits below a ${printed.step} pass printed in its own chapter`,
+          ).toBeGreaterThanOrEqual(STEP_ORDER.indexOf(printed.step))
+        }
+      }
+    }
+    const names = openers.map((s) => s.patch!.name)
+    expect(new Set(names).size, 'the openers of ONE book repeat a club').toBe(names.length)
+  })
+})

@@ -105,7 +105,8 @@ export function sheetOf(over: SheetOver = {}): AlbumSheetModel {
         // hand-typed the real ITF designation the protocol field names as forbidden in as many words.
         ? { stage: 'Singles final', tier: 'World Tour 15', step: 'high', place: 'Rivermouth Open', ageLabel: 'Age 16' }
         : null,
-    patch: layout === 'A' ? 'Rivermouth Tennis' : null,
+    patch: layout === 'A' ? { name: 'Rivermouth Tennis', step: 'budget' } : null,
+    filler: null,
     doodles: layout === 'A' ? ['smile'] : layout === 'B' ? ['heart'] : ['globe'],
   }
 }

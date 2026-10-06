@@ -670,12 +670,26 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // sub-stream (`seed:sponsor:cameo:gift:<week>`) is spent exactly once as it always was; and
   // `unpayableTrip` is pure arithmetic over the calendar. The frozen capture
   // (41550 / e6b0c709) cannot see this item either.
-  const gapCents = unpayableTrip(world)?.shortfallCents ?? 0
+  //
+  // ⭐ ROUND 47 B4 (06.10) – THE EXPENSIVE CONJUNCT RUNS LAST. `unpayableTrip` walks the WHOLE season
+  // calendar through `entryStatus` (every gate folds the ranking tables) and it used to be the FIRST of
+  // these four, so every tick of every career paid for it – 18 % of a junior-era tick by cpu-profile (06.10;
+  // ~0.5 % on 04.09, before round 42 #47 added it), and taking it off the weeks that cannot use it is 19 % off
+  // a 3 x 200-week walk (2.70 -> 2.19 s, median of three interleaved runs) – to learn a gap that three
+  // cheaper conjuncts below were about to veto anyway (a family not in need, a shop in its cooldown, a
+  // college freeze). Nothing else moved: the four terms are the same four, every one of
+  // them PURE (a lookup or arithmetic over state the week has already written, no draw, no write), and
+  // reordering a conjunction of pure terms cannot change its truth value – so the gift, its draw and its
+  // text are untouched and the walk is byte-identical (same seeds, `JSON.stringify(world)` and `rngMain`
+  // equal before and after: docs/rounds/round-47.md item 17, B4).
+  // ⚠ THE ORDER IS CHEAPEST-FIRST, NOT ALPHABETICAL: the need test is a few comparisons (and false for any
+  // family holding `runwayWeeks` of court), the cooldown schedule is O(52) of its own sub-stream, the trip
+  // is the whole calendar. A new term goes where its price puts it, and `unpayableTrip` stays last.
   if (
-    gapCents > 0 &&
-    sponsorCameoWilling(world.seed, world.week) &&
     !inCollege(world) &&
-    sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier })
+    sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier }) &&
+    sponsorCameoWilling(world.seed, world.week) &&
+    (unpayableTrip(world)?.shortfallCents ?? 0) > 0
   ) {
     const gift = sponsorCameoCents(world.seed, world.week)
     world.fundsCents += gift

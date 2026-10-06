@@ -12,6 +12,7 @@ import { computed } from 'vue'
 import AlbumPhoto from './AlbumPhoto.vue'
 import AlbumNoteCard from './AlbumNoteCard.vue'
 import AlbumTicketPass from './AlbumTicketPass.vue'
+import AlbumFillerPhoto from './AlbumFillerPhoto.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import { noteSpot, placeSheet, spot } from './albumPlacement'
 import type { AlbumSheetModel } from '../../shared/protocol'
@@ -75,6 +76,15 @@ const placed = computed(() => placeSheet(props.sheet))
     />
 
     <AlbumTicketPass v-if="sheet.ticket" class="album-b-pass" :ticket="sheet.ticket" />
+
+    <!-- ⭐ ROUND 47 #14 – a ticketless sheet's strip is empty; the resolver hangs a small snapshot in it when there is room (`placeFiller`). -->
+    <AlbumFillerPhoto
+      v-if="sheet.filler && placed.filler"
+      :style="spot(placed.filler)"
+      :filler="sheet.filler"
+      :tilt="placed.filler.tilt"
+      :photo-height="placed.filler.photoH"
+    />
   </div>
 </template>
 
@@ -118,21 +128,28 @@ const placed = computed(() => placeSheet(props.sheet))
 
 /* ⚠ THE ANCHOR, AND IT IS AN ANCHOR IN THE CSS TOO. Pinned to both sides rather than given a width:
    the pass is the one object on the sheet that spans it, and a width would have to be re-derived
-   every time the margins moved. */
+   every time the margins moved.
+   ⭐⭐ ROUND 47 #8 – «ниже опустить» AND «на 10% меньше». ONE transform, three words, and ONE origin:
+     * `scale(0.9)` – ten percent smaller, type and all (the box stays the 400px frame the resolver holds);
+     * `rotate(5deg)` – round 46's attitude, untouched (clockwise);
+     * `transform-origin: 0 0` – the turn is about the TOP-LEFT corner, so the swing is spent DOWNWARDS: the right
+       end drops ~31px into the page's lower margin, the left foot leans out ~9px, and nothing rises above the
+       frame's top edge. About the centre (round 46) the left end lifted 17px into the strip the loose line is
+       drawn in, and on the lower steps the box itself stood above the frame (see `passBox`) – the overlap he saw.
+       `passBox` in `albumPlacement.ts` keeps the loose line above that edge.
+     * `translateX(4px)` – the leaning foot would otherwise stand 12.5px from the page edge; 4px keeps it at 16.7
+       (round 46's own >= 15px margin).
+   `min-height` is `PASS_H`'s twin: the pass is ONE height, so the frame is one number (see `passBox`). `bottom: 34px`
+   is where that frame sits: the turned pass's lowest corner (the right end, 31px below the top-left and 108px of
+   drawn height under it) lands 15px from the page's edge – the same margin the photographs keep – and no lower.
+   `tests/component/round46-album-pass-tilt.test.ts` reads all of it off the mounted page. */
 .album-b-pass {
   position: absolute;
   left: 22px;
   right: 48px;
-  bottom: 48px;
-  /* ⭐ ROUND 46 #4 – «повернём немного вот этот цветной горизонтальный билет на на 5 градусов по часовой
-     стрелке». It lay square (0°) before, so the turn is 5°, and CSS's positive rotate is clockwise. ONE
-     transform, about the centre (the default origin), so the frame above is still the frame it hangs
-     from; anything that later scales or lifts the pass composes INTO this declaration instead of adding a
-     second one. ⚠ THE RESOLVER DOES NOT KNOW THE TURN: `passBox` in `albumPlacement.ts` is still the square
-     frame, and the left end now lifts about 17px above it (the right end drops as far). Teaching it was
-     tried, measured, and moved round-45 guards – the numbers and the open question are on `passBox` and in
-     the round-46 ledger, item 4. `tests/component/round46-album-pass-tilt.test.ts` reads this off the
-     mounted page. */
-  transform: rotate(5deg);
+  bottom: 34px;
+  min-height: 121px;
+  transform-origin: 0 0;
+  transform: translateX(4px) rotate(5deg) scale(0.9);
 }
 </style>

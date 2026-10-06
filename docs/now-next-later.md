@@ -29,8 +29,14 @@ last-reviewed: 2026-09-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 46 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 47 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 47 is the ending-screen and album round** ([round-47.md](rounds/round-47.md), 06.10) – off the
+double merge the same afternoon: the last page rebuilt (the fund-as-a-till Spent lie fixed by the
+fourth reckoning term), the album ticket/tag family, and the first full career dossier read from
+his own exported save.
+
 
 **Round 46 is a 22-item playtest round** ([round-46.md](rounds/round-46.md), 05.10) – off the
 merged round-45 build, the same day. Life events get their screens (the wedding and birth moments,

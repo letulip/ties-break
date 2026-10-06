@@ -586,6 +586,30 @@ export const HEAVY_UNIT_FILES = [
   // its own process at the 2.24x factor – under the per-test ceiling with thin margin, and if it
   // ever crosses THERE, the file splits along the §C seam exactly as coach-travel-edge did.
   'tests/wave5-elite-gate.test.ts',
+  // ⚠ ADDED 06.10 (round 47's gate) – THREE COLLEGE/WALKED-CAREER FILES, the same infrastructure
+  // outcome as every entry above: hook/test timeouts with ZERO assertion failures, twice under an
+  // LM-Studio load (38–42) and then once more at the 30 s hook budgets on a QUIET machine's bulk
+  // pool. MEASURED SOLO on the round/47 branch: college-league 15.8 s, wave9-poise 12.3 s,
+  // round27-call-up ~10 s – and the CONTROL (the same college-league on MAIN in a worktree) read
+  // 20.7 s, so the branch is ~24 % FASTER than main and the walks' growth belongs to the rounds
+  // merged this morning (46 + the succession wave), not to this branch. The budgets were written
+  // for a 4.7 s world; the honest fix is a process each, exactly as the 08.09 block above rules –
+  // never a raised budget. The walk-growth itself is a standing perf finding for a future wave.
+  // ⭐ HUNTED 06.10 (round 47 B4, docs/rounds/round-47.md item 17) – VERDICT, MEASURED, and it CORRECTS the sentence above that puts the growth on the rounds merged this morning:
+  // THE WALKS DID NOT GROW ACROSS THE MORNING'S DOUBLE MERGE (college walk, six careers, interleaved cpu-ms at load 21 -> 13:
+  // 9.4 s on the pre-merge main, 8.6 s after both merges, 9.0 s on this branch – noise, no step), and the «4.7 s quiet» in
+  // college-league's own comment is the six-career walk ALONE, while the 15.8 s it was set beside is the whole file (the same
+  // comment gives that file as 13.4 s on 04.09); the real per-tick growth since then is x1.3-1.4, not x3-4. What WAS found: round 42 #47's `unpayableTrip` (70c87aea, 16.09) ran on EVERY
+  // tick – 18 % of a junior-era tick – and is now the last conjunct of the cameo gate (phaseFinance.ts): junior-era walks
+  // -19 % (2.70 -> 2.19 s for 3 x 200 weeks), the college walk -2.7 % (her college years are frozen for it),
+  // worlds BYTE-IDENTICAL on 29 careers. Solo after the fix: college-league 16.7 -> 16.2 s; wave9-poise 12.6 -> 11.2 s; round27-call-up-flow 16.9 -> 15.9 s.
+  // None fell under 8 s, so all three STAY.
+  // The remainder is the alive world's own tick (~3.8 ms: AI tournaments ~25 %, ranking tables ~22 %, the week's
+  // field ~15 %), 242 weeks a career, ~1 s a career – the price of a living league, not a regression; hunted, verdict: the cause
+  // is the workload, and a college file stays a process of its own.
+  'tests/college-league.test.ts',
+  'tests/round27-call-up-flow.test.ts',
+  'tests/wave9-poise.test.ts',
 ]
 
 /** THE FAMILIES – the one rule the list above has, stated so a gate can read it (T5.2 · H-05, 27.09).

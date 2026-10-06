@@ -105,6 +105,25 @@ export interface AlbumTag {
   ageLabel: string
 }
 
+/** ⭐ ROUND 47 #16 – THE CLUB PATCH GOES THE TICKET'S WAY: a fictional club name that VARIES from chapter to
+ *  chapter and a cloth that carries the rank (`step`, the same `ALBUM_TIER_STEP` ramp as the pass and the tag –
+ *  «по аналогии с билетом разными цветами и с разными названиями вымышленными»). ⚠ The name is one of OUR
+ *  fictional clubs, never a real one. */
+export interface AlbumClubPatch {
+  name: string
+  /** The ramp step of the highest rung the chapter's pages show – the cloth's ink. */
+  step: AlbumTierStep
+}
+
+/** ⭐ ROUND 47 #14 – A SMALL SNAPSHOT OF HER RESTING OR ON HOLIDAY, hung in the gap a sheet leaves where its ticket or its side tag would
+ *  have been («чтобы пустоту немного заполнить»). It is a PICTURE AND NOTHING ELSE: no caption and no alt, because both are strings and the
+ *  owner's copy is his (invariant 4) – the page draws it as decoration. `art` is base-relative like `AlbumFrame.art` (`images/weeks/…`, the app's
+ *  own week and holiday paintings) and the rendering side prefixes `import.meta.env.BASE_URL`. ⚠ The engine decides WHICH picture and whether a
+ *  sheet is a candidate; WHETHER THE GAP HAS ROOM is the placement resolver's (`placeFiller`), so a sheet can carry one and show none. */
+export interface AlbumFiller {
+  art: string
+}
+
 /** One sheet – the unit of paging, and the unit the pager counts. */
 export interface AlbumSheetModel {
   id: string
@@ -120,8 +139,12 @@ export interface AlbumSheetModel {
   line: string
   ticket: AlbumTicket | null
   tag: AlbumTag | null
-  /** The club patch's fictional name, pulled from the seed (spec §8b). */
-  patch: string | null
+  /** The club patch – its fictional name, pulled from the seed (spec §8b), and the rank step it is sewn in
+   *  (round 47 #16, the pass's own ramp). */
+  patch: AlbumClubPatch | null
+  /** The small snapshot for the gap a ticketless or tagless sheet leaves (round 47 #14), or null. Never set on a sheet that carries a ticket,
+   *  a tag or a patch. */
+  filler: AlbumFiller | null
   doodles: readonly AlbumDoodle[]
 }
 

@@ -70,7 +70,7 @@ const placed = computed(() => placeSheet(props.sheet))
       :photo-height="placed.photos[1].photoH"
     />
 
-    <AlbumPatch v-if="sheet.patch" class="album-a-patch" :name="sheet.patch" />
+    <AlbumPatch v-if="sheet.patch" class="album-a-patch" :patch="sheet.patch" />
 
     <AlbumDoodleMark
       v-if="sheet.doodles[0]"
