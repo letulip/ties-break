@@ -30,7 +30,8 @@
 // for the money is the FLOOR (1.0 – an ordinary start), never a guess upward.
 import { weekYear } from '../../shared/dates'
 import { DEFAULT_PROFILE, profileShapeError } from '../../shared/protocol'
-import type { AlbumBook, CareerEndingType, DynastyHandover, FamilyBackground, OwnedAsset, PlayerProfile, PrologueHandover } from '../../shared/protocol'
+import type { AlbumBook, DynastyHandover, FamilyBackground, OwnedAsset, PlayerProfile, PrologueHandover } from '../../shared/protocol'
+import { prologueFundsOnBaseCents } from '../economy'
 import { START_AGE_YEARS } from './age'
 import { assembleAlbum } from './albumBook'
 import { assetEntryPriceCents, assetWorthCents, deliveredAssets, shopItem } from './assets'
@@ -50,9 +51,11 @@ import type { WorldState } from './state'
  *      | the career faded before the top                      | 1.3 × B        |
  *      | early/forced endings                                 | 1.0 × B        |
  *
+ *  ⭐⭐⭐ AMENDED 06.10 (W1, THE OWNER'S RULING 11): THE TABLE'S ENDING QUALIFIERS ARE SUPERSEDED. «farewell ending» in row 1 and «early/forced
+ *  endings» in row 4 are gone – the four rows are ACHIEVEMENT alone (see `legacyBandOf`), and how the career ended no longer caps the money.
+ *
  *  B is the ordinary start budget and is S2b's to multiply in: this module only names the band and the
- *  multiplier. The order of the array IS the order of the money, which is what `legacyBandOf` leans on
- *  when it takes the lower of two answers. */
+ *  multiplier. The order of the array IS the order of the money, lowest first, which the unit suite holds as a property. */
 export const LEGACY_BANDS = ['early', 'faded', 'solid', 'held'] as const
 export type LegacyBand = (typeof LEGACY_BANDS)[number]
 
@@ -77,69 +80,30 @@ export const LEGACY_SAVINGS_MULTIPLIER: Record<LegacyBand, number> = {
  *  architect's 22.09 review, which `dynastyHandoverOf` carries and this reads. */
 export const LEGACY_SOLID_RANK = 100
 
-/** ⭐⭐ WHAT EACH ENDING KIND MAY REACH – THE CEILING, kind by kind, over all nine. A TOTAL `Record`
- *  over the union, for the reason `ENDING_TITLE`, `ENDING_BLURB`, `EMOTION_BY_ENDING` and
- *  `ALBUM_CLOSING_FAMILY` are: a TENTH ending goes red here until somebody decides what its money is,
- *  which is the compiler doing the remembering.
- *
- *  The facts of the career (`legacyBandOf`) say how far SHE got; this table says how far the ENDING lets
- *  the money follow. The answer is the lower of the two – which is §4's own shape, since its rows mix
- *  achievement (a Slam, the top-100) with circumstance («farewell», «early/forced»).
- *
- *    peak       held    she left AT the top – §4 row 1's «farewell after a held №1», the case it names.
- *    natural    held    she played until she was done: a farewell on her own terms, so a champion who
- *                       ran her course is not priced below one who left early at the top.
- *    family     held    a decision about something else, «a life completed rather than a career
- *                       failed» (the album's own ruling for this kind) – a farewell by choice.
- *    plateau    solid   «she had gone as far as she was going» – the QUIET FADE the spec sets apart from
- *                       the farewell («the farewell after a held №1 and the quiet fade are different
- *                       endings»). A solid pro at most, whatever she once won.
- *    fall       solid   the same, after a collapse.
- *    injury     early   FORCED – §4 row 4 names it. ⚠ THE LITERAL READING, AND A DECISION FOR THE
- *                       ARCHITECT: it prices an injured top-100 career at 1.0. A one-word edit here
- *                       (`solid`) is the whole change if the owner wants the achievement to follow.
- *    bankruptcy early   FORCED, and the money is by definition not there to pass on.
- *    stopped    early   «School ended and the next ladder wanted more than the family had» – EARLY.
- *    college    early   she left for a degree: humbler facts, the dynasty spec's own word. ⚠ Almost
- *                       never read through this row – a college latch resumes, and a graduate leaves no
- *                       latch at all (`dynastyBackgroundFloored`'s note) – but the table is total. */
-export const LEGACY_ENDING_CEILING: Record<CareerEndingType, LegacyBand> = {
-  peak: 'held',
-  natural: 'held',
-  family: 'held',
-  plateau: 'solid',
-  fall: 'solid',
-  injury: 'early',
-  bankruptcy: 'early',
-  stopped: 'early',
-  college: 'early',
-}
-
-/** ⭐ §4 ROW BY ROW, THE ACHIEVEMENT HALF: how far her own record got, before the ending's ceiling.
+/** ⭐⭐⭐ THE BAND A CAREER'S MONEY FALLS IN – HER RECORD AND NOTHING ELSE. §4's rows, read off the two numbers the dynasty block already carries
+ *  (`motherCareer.bestRank`, `.slams`), so the band and the block cannot disagree about her peak:
  *
  *    held   a Slam title, or the best PRO rank was №1 – «held a Slam or №1»
  *    solid  the pro table's best is inside the top-100 – «top-100 reached»
  *    faded  she was ranked on the pro table and never reached the top-100 – «faded before the top»
  *    early  she never touched the pro table at all – there is no pro career to pay out
  *
- *  ⚠ THE INPUTS ARE THE DYNASTY BLOCK'S OWN TWO NUMBERS (`motherCareer.bestRank`, `.slams`), so the
- *  band and the block cannot disagree about her peak. */
-function achievedBandOf(bestRank: number | null, slams: number): LegacyBand {
+ *  ⭐⭐⭐ THE ENDING KIND NO LONGER CAPS IT (06.10, THE OWNER'S RULING 11 – W1). S2a took the LOWER of her record and a ceiling per ending kind
+ *  (`LEGACY_ENDING_CEILING`, a total record keyed on every ending kind): an injury or a bankruptcy priced even an injured top-100 career at 1.0
+ *  and a quiet fade stopped at 2.0 whatever she had won. He read the consequence off an injury and asked the question the table could not answer:
+ *  «ну если у нее на момент травмы на счету было много денег, то почему 1.0? я не вижу связи здесь особой» – what she had when the story stopped
+ *  is what she had, and HOW it stopped is no reason to take it away. So the table is DELETED rather than emptied: no ending kind appears in this
+ *  function, and a TENTH ending needs no pricing here – the compiler's total-record reminder is back to the four records that are about WORDS
+ *  (`ENDING_TITLE`, `ENDING_BLURB`, `EMOTION_BY_ENDING`, `ALBUM_CLOSING_FAMILY`, as `CareerEndingType`'s own note counts them).
+ *
+ *  ⚠ A WORLD THAT NEVER LATCHED AN ENDING IS READ BY ITS RECORD TOO. The old rule («an unknown kind reads early, the floor») existed so that a
+ *  missing fact could not guess upward; with no kind in the arithmetic nothing is missing – a Slam on the shelf is a Slam – and what is absent still
+ *  reads the floor: no pro-table presence is `early`, 1.0, and the reader never throws. Exported pure and taking plain facts, so the whole table is
+ *  testable without walking a career. */
+export function legacyBandOf(bestRank: number | null, slams: number): LegacyBand {
   if (slams >= 1 || bestRank === 1) return 'held'
   if (bestRank === null) return 'early'
   return bestRank <= LEGACY_SOLID_RANK ? 'solid' : 'faded'
-}
-
-/** The band a career's money falls in: the LOWER of what she achieved and what her ending allows.
- *
- *  ⚠ AN UNKNOWN KIND – the empty string a world with no latched ending carries, or a kind a future wave
- *  adds before its table row – reads as `early`, the floor. A reader that guessed upward on a missing
- *  fact would hand a generation-2 start more money than anything on the page justifies. Exported pure
- *  and taking plain facts so the whole nine-by-four matrix is testable without walking a career. */
-export function legacyBandOf(endingKind: string, bestRank: number | null, slams: number): LegacyBand {
-  const ceiling = (LEGACY_ENDING_CEILING as Record<string, LegacyBand | undefined>)[endingKind] ?? 'early'
-  const achieved = achievedBandOf(bestRank, slams)
-  return LEGACY_BANDS.indexOf(achieved) <= LEGACY_BANDS.indexOf(ceiling) ? achieved : ceiling
 }
 
 // --- the daughter ---------------------------------------------------------------------------------
@@ -244,7 +208,7 @@ export function legacyInputOf(world: WorldState): LegacyInput {
   // week the story stopped and the kind it stopped as – the epilogue and this reader quote one cabinet.
   const handover = dynastyHandoverOf(world)
   const career = handover.motherCareer
-  const band = legacyBandOf(career.endingKind, career.bestRank, career.slams)
+  const band = legacyBandOf(career.bestRank, career.slams)
   return {
     motherName: handover.motherName.first,
     motherPeakRank: career.bestRank,
@@ -328,8 +292,9 @@ export const LEGACY_FAMILY_BACKGROUND: FamilyBackground = 'middle'
 /** ⭐⭐⭐ S2c – WHAT RIDES BESIDE THE LEGACY WHEN THE DOOR CREATES THE CAREER: the three arguments `createWorld` takes after the career id and the
  *  ordinary `new` command already carries, each optional and each handed through untouched.
  *
- *    `prologue`       the nine years she just lived – skills, style, the rung, the trace. WITHOUT IT the childhood the player walked would be
- *                     discarded at the last card; with it a legacy career is the same childhood plus the inheritance.
+ *    `prologue`       the nine years she just lived – skills, style, the rung, the trace, and the wallet's deduction (W1, ruling 12: `spentCents`
+ *                     moves the multiplied reserve by the share it always moved an ordinary one). WITHOUT IT the childhood the player walked
+ *                     would be discarded at the last card; with it a legacy career is the same childhood plus the inheritance.
  *    `dynasty`        wave 10's line record (generation, ancestor root, the mother's temperament and career), which `createWorld` persists as
  *                     `world.dynasty`. ⚠ THIS IS THE DECISION S2b LEFT TO THE DOOR («the door decides if that ever changes»), AND IT IS YES:
  *                     that record is what makes a generation-2 career a link in the chain – her own ending reads `generation` and `ancestorSeed`
@@ -357,16 +322,32 @@ export interface LegacyCreation {
  *    THE NAME      her GIVEN name is the caller's (the door takes it from the identity card, B6's `dynastyOpeningName`); the family name
  *                  is generation 1's (§1.4). `profile` is the base the rest of her comes from, the game's default girl unless the door
  *                  passes one.
- *    THE MONEY     B x multiplier, ONE multiply, whole cents. B is `STARTING_FUNDS_CENTS` for the profile's background – what
- *                  `createWorld` seeds today. It goes to `createWorld` as the opening wallet (its eighth argument – the feed's first line
- *                  states it) and into `legacy.savingsSliceCents` as the amount GRANTED, so a later screen quotes the number the career
- *                  really got and not a recomputation off a table that may have been retuned since.
+ *    THE MONEY     B x multiplier, ONE multiply, whole cents – and, when the nine childhood years ride along, the childhood's DEDUCTION on that
+ *                  (below, W1). B is `STARTING_FUNDS_CENTS` for the profile's background – what `createWorld` seeds today. The wallet goes to
+ *                  `createWorld` as the opening wallet (its eighth argument – the feed's first line states it) and into
+ *                  `legacy.savingsSliceCents` as the amount GRANTED, so a later screen quotes the number the career really got and not a
+ *                  recomputation off a table that may have been retuned since.
  *    THE ASSETS    the house and the car arrive owned (`arriveOwned`), each null-safe, house first.
  *    THE BLOCK     `world.legacy`, persisted, in the shape S1 declared – nothing is added to it.
  *
- *  ⚠ `savingsSliceCents` IS THE WHOLE OPENING WALLET (B x multiplier) – the architect's S2b brief, «write the result» – and not the extra
- *  over an ordinary start. At the 1.0 floor the two differ by exactly B; a display that wants «what her mother's career added»
- *  subtracts `STARTING_FUNDS_CENTS[profile.background]`.
+ *  ⭐⭐⭐ W1 (06.10, THE OWNER'S RULING 12) – THE CHILDHOOD DEDUCTION RETURNS. «мне кажется нормальной логика вычета, не вижу проблем использовать ее
+ *  и здесь, отличается только начальная сумма для сида по сути, ну и дом, машина и некоторые сбережения на счете». S2b's grant REPLACED the
+ *  prologue's own wallet line, so on a legacy career the nine cards a parent walked stopped costing anything – the one thing that makes those
+ *  choices money. It is back, and it is the SAME arithmetic and not a second spelling: `prologueFundsOnBaseCents` (engine/economy.ts, the one
+ *  function behind `prologueFundsCents` too), handed the MULTIPLIED base –
+ *
+ *      wallet = round( B x m x (1 + reserveSwingShare x moved) ),    moved = clamp( (referenceSpend - spent) / spendSwing, -1, +1 )
+ *
+ *  – so the childhood moves the SHARE of the reserve it always moved (a cheap one +20 %, a dear one -20 %, the reference one nothing) and the
+ *  reserve is the multiplied one. ⚠ A SHARE OF THE MULTIPLIED BASE AND NOT A FLAT SUM, because «only the starting sum differs» says the logic is
+ *  unchanged and the logic is a share (the ordinary prologue's own ruling: «the player chooses where the family is FROM, not a sum»). The
+ *  consequence in a number: at the held band a childhood is worth +-15,000 on 75,000, where a flat reading would be +-5,000. ⚠ NO PROLOGUE, NO
+ *  DEDUCTION – the wizard's skip walks no nine years, there is nothing to deduct, and the wallet is B x m rounded once (S2b's figure).
+ *
+ *  ⚠ `savingsSliceCents` IS THE WHOLE OPENING WALLET – after the deduction when a prologue rode along – the architect's S2b brief, «write the
+ *  result», and not the extra over an ordinary start. A display that wants «what her mother's career added» compares it with the ordinary start of
+ *  the SAME childhood (`prologueFundsCents(profile.background, spentCents)`, or `STARTING_FUNDS_CENTS[profile.background]` with no prologue):
+ *  subtracting B alone stopped being right the day the deduction returned.
  *  ⚠ NO `dynasty` HANDOVER IS PASSED to `createWorld`: wave 10's block and this one both carry «who the mother was», and a world holding
  *  both would hold two spellings of one fact. By default none is, and the input carries none; S2c's door hands one through `creation.dynasty` (see `LegacyCreation` for why it must).
  *  ⚠ `profileShapeError` JUDGES THE FINAL PROFILE, so the creation cap on names binds an INHERITED surname too: a family name longer than
@@ -390,7 +371,13 @@ export function createLegacyWorld(
   // background: dynasty.background }`) and the profile's otherwise. The grant is priced against THAT, so the wallet and the world's
   // `profile.background` can never name two families. With no `creation.dynasty` it is `daughter.background`, exactly S2b's line.
   const background = creation.dynasty?.background ?? daughter.background
-  const grantCents = Math.round(STARTING_FUNDS_CENTS[background] * legacy.savingsMultiplier)
+  // ⭐⭐ W1 (06.10, ruling 12): THE WALLET IS THE PROLOGUE'S OWN DEDUCTION ON THE MULTIPLIED BASE when the nine years ride along – the arithmetic
+  // `createWorld` applies to an ordinary prologue career, on a base that is B x m instead of B – and B x m rounded once when they do not.
+  // `createWorld` is handed the finished figure (its eighth argument replaces the prologue's own wallet line there), so there is ONE wallet.
+  const multipliedBaseCents = STARTING_FUNDS_CENTS[background] * legacy.savingsMultiplier
+  const grantCents = creation.prologue
+    ? prologueFundsOnBaseCents(multipliedBaseCents, creation.prologue.spentCents)
+    : Math.round(multipliedBaseCents)
   const world = createWorld(seed, daughter, careerId, creation.prologue, creation.dynasty, creation.weightEnabled, startYear, grantCents)
 
   world.legacy = {

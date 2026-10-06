@@ -24,11 +24,18 @@
 //   · the line's handover band not forced (the card's origin honoured)                -> 1 red: the creation arm – the wealthy corner re-opens
 //   · the builder's `prologue` pass-through dropped (the nine years thrown away)      -> 1 red: the creation arm
 //   · the builder's `dynasty` pass-through dropped (the chain broken)                 -> 1 red: the creation arm
+//
+// ⭐⭐⭐ RE-AIMED 06.10 (W1 – the owner's ruling 12: «мне кажется нормальной логика вычета, не вижу проблем использовать ее и здесь, отличается только начальная сумма
+// для сида по сути…»): the creation arm's wallet used to be the ordinary family's budget times the multiplier, FLAT – the legacy grant REPLACED the prologue's own
+// wallet line. The nine years this arm sends are a REAL childhood (`completeRun`, the cheapest road), so the wallet is now `prologueFundsOnBaseCents(B x m, spent)` –
+// the prologue's own arithmetic on the multiplied base – and the arm asserts first that the childhood really moved the reserve (a deduction of nothing would leave
+// the arm unable to see a mutation that dropped it).
 import 'fake-indexeddb/auto'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
 import { START_AGE_YEARS } from '../src/engine/world/age'
 import { STARTING_FUNDS_CENTS } from '../src/engine/world/create'
+import { prologueFundsOnBaseCents } from '../src/engine/economy'
 import { createLegacyWorld, legacyInputOf, LEGACY_FAMILY_BACKGROUND, type LegacyInput } from '../src/engine/world/succession'
 import { resumeMain } from '../src/engine/rng'
 import { decodeExportFile, encodeExportFile } from '../src/engine/saveCodec'
@@ -176,9 +183,11 @@ describe('S2c – the create command', () => {
     expect(world.startYear, 'the calendar is the daughter\'s').toBe(legacy.daughterBirthYear + START_AGE_YEARS)
     expect(reply.snapshot!.startYear, 'and the snapshot says so').toBe(world.startYear)
     expect(world.profile.background, 'the origins card is set aside').toBe(LEGACY_FAMILY_BACKGROUND)
-    expect(world.fundsCents, 'the wallet is the ordinary family\'s budget times the multiplier').toBe(
-      Math.round(STARTING_FUNDS_CENTS[LEGACY_FAMILY_BACKGROUND] * legacy.savingsMultiplier),
-    )
+    // ⭐⭐ W1 (06.10, ruling 12) – RE-AIMED from «B x m, flat»; see the header.
+    const multipliedBase = STARTING_FUNDS_CENTS[LEGACY_FAMILY_BACKGROUND] * legacy.savingsMultiplier
+    const deducted = prologueFundsOnBaseCents(multipliedBase, prologue.spentCents)
+    expect(deducted, 'the childhood walked here is not the reference one, so its deduction is not nothing').not.toBe(Math.round(multipliedBase))
+    expect(world.fundsCents, 'the wallet is the ordinary family\'s budget times the multiplier, with the childhood\'s deduction on it').toBe(deducted)
     expect(world.fundsCents, 'the wealthy x multiplier corner is closed').toBeLessThan(
       Math.round(STARTING_FUNDS_CENTS.wealthy * legacy.savingsMultiplier),
     )

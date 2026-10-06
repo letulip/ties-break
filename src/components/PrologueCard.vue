@@ -163,6 +163,9 @@ const props = defineProps<{
     /** ⭐⭐ ROUND 46 #21 – HER MOTHER'S FIRST NAME, so the first-name die leaves it off the menu: a
      *  daughter's card never rolls her mother's name. Absent on every run that is not a dynasty. */
     motherFirst?: string
+    /** ⭐⭐ SUCCESSION W1 (his ruling 14, 06.10) – THE HEAD-START SENTENCE, drawn right under `note` when the caller passes one: the caller's copy
+     *  for the caller's predicate (a legacy career whose start is richer than an ordinary one), like `note`, and absent on every other run. */
+    inheritance?: string
   }
   /** ⭐ PHASE 4 – THE WAY OUT OF THE PROLOGUE ENTIRELY (build spec §6: «skip -> the existing wizard»),
    *  and it is a LABEL rather than a sentence for the reason the whole card is a table: the copy is
@@ -574,6 +577,8 @@ useDialogFocus(cardEl)
              the caller's string (see the `line` prop) and it renders on a dynasty run only, under the
              two name fields it is about. -->
         <p v-if="line" class="prologue-line-note">{{ line.note }}</p>
+        <!-- ⭐ SUCCESSION W1 – the head-start sentence, in the same note area (his ruling 14, 06.10). -->
+        <p v-if="line && line.inheritance" class="prologue-line-note">{{ line.inheritance }}</p>
 
         <!-- ONE LABEL FOR THE PAIR, which is the owner's own call on this field (30.07): it is a
              date, not two settings. The selects carry their own screen-reader names under it.

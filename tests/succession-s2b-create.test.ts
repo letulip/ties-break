@@ -17,6 +17,29 @@
 //     (2_500_000 x 1.2345679 = 3_086_419.75, which must land on 3_086_420);
 //   · the other two backgrounds scale the same way: working 800_000 x m, wealthy 12_000_000 x m.
 //
+// ⭐⭐ W1 (06.10) – THE BENCH, RE-PREDICTED FOR THE CHILDHOOD DEDUCTION'S RETURN (the owner's ruling 12: «мне кажется нормальной логика вычета, не вижу проблем
+// использовать ее и здесь, отличается только начальная сумма для сида по сути, ну и дом, машина и некоторые сбережения на счете»). WRITTEN BEFORE THE ARMS OF §2b
+// WERE RUN, from the constants and from three REAL childhoods walked through the card table's own reducers. A career that arrives with its nine years opens on
+// the prologue's own arithmetic on the MULTIPLIED base –
+//
+//     wallet = round( B x m x (1 + reserveSwingShare x moved) ),    moved = clamp( (referenceSpend - spent) / spendSwing, -1, +1 )
+//
+// with ECONOMY.prologue = { referenceSpendCents: 1_817_500, spendSwingCents: 997_500, reserveSwingShare: 0.2 } and B = 2_500_000 (middle):
+//
+//     road                  spent       moved      x (1 + 0.2 x moved)
+//     the cheapest road       820_000   +1.0000    1.2000
+//     a mixed road          1_600_000   +0.2180    1.0436   (87/399 of the swing – the interior point, the one that shows a SHARE and not a flat bonus)
+//     the dearest road      2_815_000   -1.0000    0.8000
+//
+//     band    m      cheapest road   mixed road     dearest road
+//     early   1.0     3_000_000       2_609_023      2_000_000
+//     faded   1.3     3_900_000       3_391_729      2_600_000
+//     solid   2.0     6_000_000       5_218_045      4_000_000
+//     held    3.0     9_000_000       7_827_068      6_000_000
+//
+//   · the early row IS the ordinary start of the same childhood (`createWorld` with the prologue and no legacy): the deduction is the prologue's rule, not a lookalike;
+//   · NO prologue (the wizard's skip) is the first block's figure untouched – B x m, rounded once – and every cell of the twelve-cell arm of §2 stands as written.
+//
 // ⚠ WHAT THE BENCH IS AND IS NOT (S2a's finding 2): no walked career has ever reached the 3.0 band, so the four inputs are POSED – the REAL
 // reader's output for a REAL walked bankruptcy with the multiplier set to the band's ruled value. This measures CREATION, not the walk. The
 // reader's own mapping (facts -> band) is S2a's measured arm; the one real chain here is the walked bankruptcy -> 1.0 -> an ordinary start.
@@ -42,8 +65,12 @@ import { resumeMain } from '../src/engine/rng'
 import { compressWorld, decodeExportFile, decompressWorld, encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_START_YEAR, weekLabel, weekYear } from '../src/shared/dates'
 import { formatCents } from '../src/shared/money'
-import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, profileShapeError, type FamilyBackground } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, profileShapeError, type FamilyBackground, type PrologueHandover } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
+import { ECONOMY, prologueFundsCents } from '../src/engine/economy'
+import { PROLOGUE_CARDS, TOURNAMENT_ANSWER } from '../src/prologue/cards'
+import { EMPTY_RUN, cardFor, isComplete, withEntry, withOrigin, withPick } from '../src/prologue/run'
+import { completeRun, handoverOf } from './helpers/completeRun'
 
 /** ⚠ THE CAP IS A BELT, NOT A HORIZON (S2a's note): the walk stops the moment its ending latches. */
 const CAP_WEEKS = 1600
@@ -203,6 +230,74 @@ describe('S2b 2 – the money: B x the band, one multiply, whole cents', () => {
     const world = createLegacyWorld(REAL, SEEDS[0], NAME)
     expect(world.fundsCents).toBe(createWorld(SEEDS[0]).fundsCents)
     expect(world.legacy!.endingKind).toBe('bankruptcy')
+  })
+})
+
+// =================================================================================================
+// 2b. THE CHILDHOOD'S DEDUCTION RETURNS (06.10, W1 – the owner's ruling 12): the header's twelve predicted figures, measured
+// =================================================================================================
+
+/** A REAL childhood through the card table's own reducers – `completeRun`'s road with the pick rule changed, the three tournament asks declined. */
+function roadWith(pick: (optionCount: number, age: number) => number): PrologueHandover {
+  let run = withOrigin(EMPTY_RUN, 'middle')
+  for (const row of PROLOGUE_CARDS) {
+    const card = cardFor(row.age, run)
+    if (card.options) run = withPick(run, card.age, card.options[pick(card.options.length, card.age)].id)
+  }
+  for (const age of [11, 12, 13]) run = withEntry(run, age, TOURNAMENT_ANSWER.decline)
+  if (!isComplete(run)) throw new Error('roadWith: the builder no longer yields a finished childhood – the prologue card table moved')
+  return handoverOf(run)
+}
+
+/** The header's three roads: each with its REAL spend and the four predicted wallets, in `BANDS` order (early, faded, solid, held). */
+const ROADS = [
+  { name: 'the cheapest road', handover: handoverOf(completeRun('middle')), spent: 820_000, wallets: [3_000_000, 3_900_000, 6_000_000, 9_000_000] },
+  { name: 'a mixed road', handover: roadWith((_count, age) => (age % 2 === 0 ? 0 : 1)), spent: 1_600_000, wallets: [2_609_023, 3_391_729, 5_218_045, 7_827_068] },
+  { name: 'the dearest road', handover: roadWith((count) => count - 1), spent: 2_815_000, wallets: [2_000_000, 2_600_000, 4_000_000, 6_000_000] },
+] as const
+
+describe('S2b 2b – the childhood\'s deduction returns on the multiplied base (the owner\'s ruling 12)', () => {
+  it('the three roads and the constants are the ones the header was written against (the denominators the arms below lean on)', () => {
+    for (const road of ROADS) expect(road.handover.spentCents, `${road.name}: the real spend of the walked cards`).toBe(road.spent)
+    expect(ECONOMY.prologue, 'the reference, the swing and the share – if one moved, re-predict the header').toEqual({
+      referenceSpendCents: 1_817_500,
+      spendSwingCents: 997_500,
+      reserveSwingShare: 0.2,
+    })
+  })
+
+  for (const road of ROADS) {
+    it(`⭐ ${road.name} (spent ${road.spent}): the four bands open on the predicted wallets, on every seed, granted and stated`, () => {
+      for (const [i, { band, m }] of BANDS.entries()) {
+        const cents = road.wallets[i]
+        for (const seed of SEEDS) {
+          const world = createLegacyWorld(posed({ savingsMultiplier: m, ...NO_ASSETS }), seed, NAME, undefined, undefined, { prologue: road.handover })
+          expect(world.fundsCents, `${seed} · ${band} (${m} x B) on ${road.name}`).toBe(cents)
+          expect(world.legacy!.savingsSliceCents, `${band}: the amount GRANTED is the wallet it opened with`).toBe(cents)
+          expect(world.events[0].text, `${band}: the first sentence states that wallet`).toContain(formatCents(cents))
+        }
+      }
+    })
+  }
+
+  it('⭐ the early band IS the ordinary start of the same childhood – the deduction is the prologue\'s own rule, not a lookalike', () => {
+    for (const road of ROADS) {
+      const ordinary = createWorld(SEEDS[0], { ...DEFAULT_PROFILE, kidName: NAME, kidLastName: REAL.surname }, undefined, road.handover)
+      const early = createLegacyWorld(posed({ savingsMultiplier: 1.0, ...NO_ASSETS }), SEEDS[0], NAME, undefined, undefined, { prologue: road.handover })
+      expect(early.fundsCents, road.name).toBe(ordinary.fundsCents)
+      expect(early.fundsCents, `${road.name}: and it is the prologue's own function on B`).toBe(prologueFundsCents('middle', road.spent))
+    }
+  })
+
+  it('the corridor survives the deduction: never poorer than an ordinary start of the SAME childhood, never past three times it', () => {
+    for (const road of ROADS) {
+      const ordinary = prologueFundsCents('middle', road.spent)
+      for (const { m } of BANDS) {
+        const world = createLegacyWorld(posed({ savingsMultiplier: m, ...NO_ASSETS }), SEEDS[0], NAME, undefined, undefined, { prologue: road.handover })
+        expect(world.fundsCents, `${road.name} x ${m}`).toBeGreaterThanOrEqual(ordinary)
+        expect(world.fundsCents, `${road.name} x ${m}`).toBeLessThanOrEqual(3 * ordinary)
+      }
+    }
   })
 })
 

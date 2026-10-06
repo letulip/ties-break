@@ -20,6 +20,15 @@
 //   · `injury`'s ceiling lifted from `early` to `held`: **3 red** – row 4 (the REAL injury career), the
 //     ceiling case and the injury row of the matrix.
 //
+// ⭐⭐⭐ RE-AIMED 06.10 (W1 – THE OWNER'S RULING 11): THE CEILING THIS FILE WAS WRITTEN AGAINST IS DELETED. «ну если у нее на момент травмы на счету было много
+// денег, то почему 1.0? я не вижу связи здесь особой» – the band follows her RECORD alone and the way the career ended caps nothing. The arms that pinned the
+// ending kind's cap are re-aimed to the new law and say so at each site:
+//   · ROW 4 split – the bankruptcy stays 1.0 (never on the pro table: a fact of her RECORD) and the REAL injury career is FADED, 1.3, no longer 1.0;
+//   · «the CEILING binds» became «NO ending kind binds», over every kind read off `ENDING_TITLE` (a total record, so a tenth ending joins the loop unasked);
+//   · «a world with NO latched ending reads the floor» became «is read by its record like any other» (a top-100 career with no ending is 2.0);
+//   · «the ceiling table is TOTAL» and the ten kind-by-fact matrix arms became ONE table of facts and a guard that no per-kind table is exported.
+//   · the mutation listed above (a ceiling lifted) no longer exists; its successor, the ceiling RESTORED, is counted in the spec's W1 line (§8).
+//
 // ⚠ A BIRTH IS POSED THE WAY WAVE 10'S §A POSES IT (`children.push`): no career this suite can afford
 // to walk has a child, and what the reader asks of a birth is the one row the mechanic leaves behind.
 //
@@ -27,20 +36,21 @@
 // that compared the reader with `LEGACY_SAVINGS_MULTIPLIER[band]` would stay green on a flattened
 // table – which is exactly the mutation this file exists to see.
 import { beforeAll, describe, expect, it } from 'vitest'
-import { assembleAlbum, buildEndingView, type WorldState } from '../src/engine/world'
+import { assembleAlbum, buildEndingView, createWorld, type WorldState } from '../src/engine/world'
+import { ENDING_TITLE } from '../src/engine/ending'
 import { kidAgeYears } from '../src/engine/world/age'
 import { latchEnding } from '../src/engine/world/endings'
 import { bestRankOn } from '../src/engine/world/ladder'
 import {
   LEGACY_BANDS,
   LEGACY_DAUGHTER_LAG_YEARS,
-  LEGACY_ENDING_CEILING,
   LEGACY_SAVINGS_MULTIPLIER,
   LEGACY_SOLID_RANK,
   legacyBandOf,
   legacyInputOf,
   type LegacyBand,
 } from '../src/engine/world/succession'
+import * as succession from '../src/engine/world/succession'
 import { weekYear } from '../src/shared/dates'
 import type { CareerEndingType, OwnedAsset } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
@@ -241,75 +251,80 @@ describe('S2a 3 – the savings multiplier, §4 row by row', () => {
     expect(input.savingsMultiplier).toBe(1.3)
   })
 
-  it('⭐⭐⭐ ROW 4 – early/forced: 1.0  (two REAL endings, no posing: the bankruptcy and the injury)', () => {
-    expect(legacyInputOf(BANKRUPT).savingsMultiplier).toBe(1.0)
-    // ⚠ THE INJURY IS RANKED ON THE PRO TABLE – its facts alone say «faded» (1.3). It is FORCED, and the
-    // ending's ceiling is what keeps it at 1.0: the case that tells the ceiling from the achievement.
-    const input = legacyInputOf(INJURY)
-    expect(input.motherPeakRank).not.toBe(null)
+  it('⭐⭐⭐ ROW 4 – never on the pro table: 1.0  (the REAL bankruptcy, no posing – the floor is a fact of her RECORD, not of how she stopped)', () => {
+    const input = legacyInputOf(BANKRUPT)
+    expect(input.motherPeakRank, 'never on the pro table').toBe(null)
     expect(input.savingsMultiplier).toBe(1.0)
   })
 
-  it('the CEILING binds: a forced ending prices a Slam champion at 1.0, a quiet fade at 2.0 – and neither is a farewell', () => {
-    expect(legacyInputOf(posed(SOLID, 'injury', 2)).savingsMultiplier, 'forced beats a Slam').toBe(1.0)
-    expect(legacyInputOf(posed(SOLID, 'bankruptcy', 2)).savingsMultiplier).toBe(1.0)
-    expect(legacyInputOf(posed(SOLID, 'plateau', 2)).savingsMultiplier, 'the quiet fade is a solid pro at most').toBe(2.0)
-    expect(legacyInputOf(posed(SOLID, 'fall', 2)).savingsMultiplier).toBe(2.0)
-    expect(legacyInputOf(posed(SOLID, 'family', 1)).savingsMultiplier, 'a farewell by choice follows the achievement').toBe(3.0)
+  // ⭐⭐⭐ RE-AIMED 06.10 (W1, ruling 11). This was the second half of «ROW 4 – early/forced: 1.0» and pinned the REAL injury career at 1.0 – «the case that
+  // tells the ceiling from the achievement». It is the case the owner asked about and the answer went the other way: ranked on the pro table and never inside
+  // the top-100 is FADED (1.3), whatever ended the story.
+  it('⭐⭐⭐ RULING 11 – the REAL injury career follows her record: FADED, 1.3 – no longer the 1.0 its ending used to cap it at', () => {
+    const input = legacyInputOf(INJURY)
+    expect(input.endingKind, 'a REAL injury latched').toBe('injury')
+    expect(input.motherPeakRank, 'ranked on the pro table').not.toBe(null)
+    expect(input.motherPeakRank!, 'and nowhere near the top-100').toBeGreaterThan(LEGACY_SOLID_RANK)
+    expect(input.savingsMultiplier).toBe(1.3)
   })
 
-  it('a world with NO latched ending reads the floor, never a guess upward', () => {
+  it('⭐⭐⭐ RULING 11 – the case he asked about: an injury that cut a TOP-100 career short prices SOLID (2.0), and with a Slam held (3.0)', () => {
+    expect(legacyInputOf(posed(SOLID, 'injury')).savingsMultiplier, 'the real `injury` latch on a lived top-100 career').toBe(2.0)
+    expect(legacyInputOf(posed(SOLID, 'injury', 1)).savingsMultiplier).toBe(3.0)
+  })
+
+  // RE-AIMED 06.10 (W1, ruling 11) from «the CEILING binds: a forced ending prices a Slam champion at 1.0, a quiet fade at 2.0 – and neither is a farewell».
+  it('⭐⭐⭐ RULING 11 – NO ending kind binds: over every kind, a Slam champion is 3.0 and a top-100 career 2.0, whatever the last line of the story', () => {
+    const kinds = Object.keys(ENDING_TITLE) as CareerEndingType[]
+    expect(kinds, 'the kinds the old ceiling priced low are all inside the loop').toEqual(
+      expect.arrayContaining(['peak', 'natural', 'family', 'plateau', 'fall', 'injury', 'bankruptcy', 'stopped', 'college']),
+    )
+    for (const kind of kinds) {
+      expect(legacyInputOf(posed(SOLID, kind, 2)).savingsMultiplier, `${kind} · a Slam champion`).toBe(3.0)
+      expect(legacyInputOf(posed(SOLID, kind)).savingsMultiplier, `${kind} · a top-100 career, no Slam`).toBe(2.0)
+    }
+  })
+
+  // RE-AIMED 06.10 (W1, ruling 11) from «a world with NO latched ending reads the floor, never a guess upward» – which held because an unknown kind capped at
+  // `early`. With no kind in the arithmetic nothing is guessed: the record is read as it stands, and an EMPTY record is still the floor.
+  it('RULING 11 – a world with NO latched ending is read by its record like any other: top-100 is 2.0, a Slam on the shelf 3.0, an empty record the floor', () => {
     const world = clone(SOLID)
     expect(world.ending, 'the lived career has not ended').toBe(null)
+    expect(legacyInputOf(world).endingKind, 'no kind was latched').toBe('')
+    expect(legacyInputOf(world).savingsMultiplier).toBe(2.0)
     world.trophiesByTier.slam.titles.push(world.week)
-    const input = legacyInputOf(world)
-    expect(input.endingKind).toBe('')
-    expect(input.savingsMultiplier).toBe(1.0)
+    expect(legacyInputOf(world).savingsMultiplier, 'a Slam on the shelf is a Slam').toBe(3.0)
+    expect(legacyInputOf(createWorld('s2a-empty-record')).savingsMultiplier, 'no pro table and no title: the floor').toBe(1.0)
   })
 
-  // ---- the whole matrix, over the pure classifier -----------------------------------------------
-
+  // ---- the whole table, over the pure classifier ------------------------------------------------
+  // RE-AIMED 06.10 (W1, ruling 11): the classifier takes her RECORD and nothing else, so the ten kind-by-fact matrix arms (nine kinds and the empty one, one `it`
+  // each) collapse into the four rows of FACTS – and what they pinned about the KIND is pinned above, through the reader, on lived worlds.
   type Facts = 'held' | 'solid' | 'faded' | 'none'
-  type Row = Record<Facts, LegacyBand>
-  const FAREWELL: Row = { held: 'held', solid: 'solid', faded: 'faded', none: 'early' }
-  const QUIET_FADE: Row = { held: 'solid', solid: 'solid', faded: 'faded', none: 'early' }
-  const FORCED: Row = { held: 'early', solid: 'early', faded: 'early', none: 'early' }
-  const EXPECTED: Record<CareerEndingType | '', Row> = {
-    peak: FAREWELL,
-    natural: FAREWELL,
-    family: FAREWELL,
-    plateau: QUIET_FADE,
-    fall: QUIET_FADE,
-    injury: FORCED,
-    bankruptcy: FORCED,
-    stopped: FORCED,
-    college: FORCED,
-    '': FORCED,
-  }
-  /** `[bestRank, slams]` cells. №1 alone, a Slam alone (at #37), and both – the three ways to «held»;
-   *  rank 100 is exactly the bar and 101 is the first rank outside it. */
-  const FACTS: Record<Facts, Array<[number | null, number]>> = {
-    held: [[1, 0], [37, 1], [1, 3]],
-    solid: [[2, 0], [100, 0]],
-    faded: [[101, 0], [284, 0]],
-    none: [[null, 0]],
+  /** `[bestRank, slams]` cells and the band each row prices. №1 alone, a Slam alone (at #37), and both – the three ways to «held»; rank 100 is exactly the
+   *  bar and 101 is the first rank outside it. */
+  const FACTS: Record<Facts, { band: LegacyBand; cells: Array<[number | null, number]> }> = {
+    held: { band: 'held', cells: [[1, 0], [37, 1], [1, 3]] },
+    solid: { band: 'solid', cells: [[2, 0], [100, 0]] },
+    faded: { band: 'faded', cells: [[101, 0], [284, 0]] },
+    none: { band: 'early', cells: [[null, 0]] },
   }
 
-  it('the ceiling table is TOTAL over the nine kinds', () => {
-    expect(Object.keys(LEGACY_ENDING_CEILING).sort()).toEqual(
-      ['bankruptcy', 'college', 'fall', 'family', 'injury', 'natural', 'peak', 'plateau', 'stopped'],
-    )
-  })
-
-  for (const [kind, row] of Object.entries(EXPECTED)) {
-    it(`matrix – ${kind === '' ? '(no ending)' : kind}: ${(Object.keys(row) as Facts[]).map((f) => `${f}→${row[f]}`).join('  ')}`, () => {
-      for (const facts of Object.keys(FACTS) as Facts[]) {
-        for (const [bestRank, slams] of FACTS[facts]) {
-          expect(legacyBandOf(kind, bestRank, slams), `${kind || 'no ending'} · rank ${bestRank} · ${slams} slams`).toBe(row[facts])
-        }
+  for (const facts of Object.keys(FACTS) as Facts[]) {
+    it(`table – ${facts}: ${FACTS[facts].cells.map(([rank, slams]) => `#${rank ?? '-'}/${slams}`).join(' ')} → ${FACTS[facts].band}`, () => {
+      for (const [bestRank, slams] of FACTS[facts].cells) {
+        expect(legacyBandOf(bestRank, slams), `rank ${bestRank} · ${slams} slams`).toBe(FACTS[facts].band)
       }
     })
   }
+
+  it('⭐⭐⭐ RULING 11 – the ceiling is GONE, not emptied: the classifier takes her two facts and no ending kind, and the module exports no table keyed on one', () => {
+    expect(legacyBandOf.length, 'bestRank and slams, nothing else').toBe(2)
+    expect(
+      Object.keys(succession).filter((name) => /ending|kind/i.test(name)),
+      'nothing exported is keyed on the ending – a tenth ending needs no pricing here',
+    ).toEqual([])
+  })
 })
 
 // =================================================================================================

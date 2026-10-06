@@ -557,3 +557,116 @@ describe('SUCCESSION S2c – the dynasty door carries the legacy', () => {
     plain.unmount()
   })
 })
+
+
+// =================================================================================================
+// ⭐⭐⭐ SUCCESSION W1 – «HER MOTHER'S CAREER LEAVES HER A HEAD START», THE LINE UNDER THE LOCK NOTE (docs/specs/succession-2026-10.md §8, W1 / W-S4),
+// AND THE TWENTY-CHARACTER SURNAME ON THE SAME CARD.
+//
+// His ruling 14 (06.10): «да, звучит хорошо» – the sentence is his, so it is WRITTEN OUT HERE ON PURPOSE and not read off `LEGACY_COPY` (r37-name-cap's reasoning
+// for its `CAP`): a test that compared the screen with the constant would stay green on any rewording, and the wording is the one thing an agent may not move
+// (invariant 4).
+//
+// ⚠ THE CONDITION IS THE WALLET'S AND NOT A BAND'S NAME: the line is drawn when the start is richer than an ordinary one (`savingsMultiplier` above 1.0), so it is
+// asserted at the table's three rows above the floor (1.3, 2.0, 3.0) and absent AT the floor, on a line that carries no legacy, and on an ordinary childhood.
+// ⚠ ZERO OTHER STRINGS: the identity card's whole text with the sentence taken out equals the card a plain dynasty run draws – the prop adds ONE sentence.
+// ⚠ THE POPUP LAW (round-20 #3): a sentence lengthens a blocking card, so the way on is measured inside 375x667 and 320x568 WITH the line drawn – and with a
+// TWENTY-character surname, the cap's top. His ruling 13, 06.10: «мне кажется 20 более чем достаточно, лишь бы у нас верстка нигде не сыпалась из-за этого».
+//
+// MUTATION-VERIFIED 06.10, each applied, this file run and the source restored byte-identical (`cmp`) – the counts are in the spec's W1 line (§8).
+// =================================================================================================
+describe('SUCCESSION W1 – the head-start line (his ruling 14) and the twenty-character surname (his ruling 13)', () => {
+  const HEAD_START = 'Her mother\'s career leaves her a head start.'
+  const LOCK_NOTE = 'She is born into her mother\'s family and carries her name.'
+  const MOTHER = { ...DEFAULT_PROFILE, kidName: 'Vera', kidLastName: 'Kowalski' }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  /** A real inheritance read off a real (fresh) career by the engine's own reader, with the multiplier posed. */
+  const legacyAt = (savingsMultiplier: number): LegacyInput => ({
+    ...legacyInputOf(createWorld('w1-line-mother', MOTHER, 'c-w1-mother')),
+    savingsMultiplier,
+  })
+  const lineWith = (over: Partial<DynastyHandover> = {}): DynastyHandover =>
+    dynastyOf({
+      generation: 2,
+      childSeed: 'w1-line-mother:dynasty:2',
+      background: 'middle',
+      raisedOnTour: true,
+      motherName: { first: 'Vera', last: 'Kowalski' },
+      ...over,
+    })
+  const mountPrologue = (props: { dynasty?: DynastyHandover; legacy?: LegacyInput }) =>
+    mount(ChildhoodPrologue, { props, attachTo: document.body })
+  const notesOf = (w: ReturnType<typeof mountPrologue>): string[] => w.findAll('.prologue-line-note').map((n) => n.text())
+  const squash = (text: string): string => text.replace(/\s+/g, ' ').trim()
+
+  it('⭐⭐⭐ a legacy career whose start is richer than an ordinary one says so – under the lock note, in the same note area, at every band above the floor', () => {
+    for (const m of [1.3, 2.0, 3.0]) {
+      const w = mountPrologue({ dynasty: lineWith(), legacy: legacyAt(m) })
+      expect(notesOf(w), `x${m}: the lock note first and the head start right under it`).toEqual([LOCK_NOTE, HEAD_START])
+      w.unmount()
+      document.body.innerHTML = ''
+    }
+  })
+
+  it('⭐⭐⭐ and it is ABSENT wherever nothing is richer: at the floor (an ordinary start), on an ordinary dynasty run, on an ordinary childhood, and with a legacy but no line', () => {
+    const cases: Array<[string, { dynasty?: DynastyHandover; legacy?: LegacyInput }, string[]]> = [
+      ['a legacy at 1.0 – an ordinary start', { dynasty: lineWith(), legacy: legacyAt(1.0) }, [LOCK_NOTE]],
+      ['an ordinary dynasty run – wave 10\'s line, no legacy', { dynasty: lineWith() }, [LOCK_NOTE]],
+      ['an ordinary childhood', {}, []],
+      ['a legacy with no line – the note area does not exist', { legacy: legacyAt(3.0) }, []],
+    ]
+    for (const [name, props, expected] of cases) {
+      const w = mountPrologue(props)
+      expect(notesOf(w), name).toEqual(expected)
+      expect(w.text(), `${name}: the sentence is nowhere on the card`).not.toContain(HEAD_START)
+      w.unmount()
+      document.body.innerHTML = ''
+    }
+  })
+
+  it('⭐⭐ ZERO OTHER STRINGS: the identity card\'s text with the sentence taken out is the card a plain dynasty run draws', () => {
+    const plain = mountPrologue({ dynasty: lineWith() })
+    const plainText = squash(plain.text())
+    plain.unmount()
+    document.body.innerHTML = ''
+    const rich = mountPrologue({ dynasty: lineWith(), legacy: legacyAt(3.0) })
+    const richText = squash(rich.text())
+    rich.unmount()
+    expect(richText, 'the sentence is on the card').toContain(HEAD_START)
+    expect(squash(richText.replace(HEAD_START, '')), 'and it is the only difference').toBe(plainText)
+  })
+
+  it('⭐⭐⭐ a TWENTY-character surname and the new line on the card: nothing breaks – the whole surname is in the locked field, the field can shrink in its column, and the way on stays on screen at 375x667 and 320x568', () => {
+    const SURNAME = 'W'.repeat(PROFILE_NAME_MAX_CHARS) // the widest glyph at the cap, with nothing in it for a line break to take hold of
+    expect(SURNAME, 'the cap is twenty (r37-name-cap holds the number)').toHaveLength(20)
+    for (const vp of [PHONE, NARROW_PHONE]) {
+      setViewport(vp) // BEFORE the mount: happy-dom caches a media query on the first computed-style read
+      const w = mountPrologue({ dynasty: lineWith({ motherName: { first: 'Vera', last: SURNAME } }), legacy: legacyAt(3.0) })
+      const last = w.find('#prologue-last').element as HTMLInputElement
+      expect(last.value, `${vp.width}: all twenty characters reach the field`).toBe(SURNAME)
+      expect(last.readOnly, `${vp.width}: locked`).toBe(true)
+      expect(notesOf(w), `${vp.width}: the head-start line is drawn beside it`).toEqual([LOCK_NOTE, HEAD_START])
+      // SHRINK-SAFE. A grid item and a flex item both default to `min-width: auto` – their content's width – which is the one thing that would let twenty wide
+      // letters push the card past the screen. Both are `0` in the cascade (`.prologue-names .prologue-field`, `.prologue-field-row .prologue-input`), and an
+      // unset value ('' or 'auto') does not match.
+      for (const el of [last.closest('.prologue-field')!, last]) {
+        expect(getComputedStyle(el).minWidth, `${vp.width}: ${el.className} may shrink below its content`).toMatch(/^0(px)?$/)
+      }
+      assertDismissReachable(
+        document.querySelector('.prologue-card')!,
+        document.querySelector('.prologue-answers')!,
+        vp,
+        `the identity card with a ${SURNAME.length}-letter surname and the head-start line, ${vp.width}x${vp.height}`,
+      )
+      w.unmount()
+      document.body.innerHTML = ''
+    }
+    setViewport(PHONE)
+  })
+})
