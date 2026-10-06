@@ -828,6 +828,53 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
    already healthy is NOT ok** («вводит в заблуждение») – the entry lock / planner surfaces that
    read the clinic window for a week the replay clears must follow the replay. Build → **R1**.
    The save arrives after the merge.
+   - **R1 · THE PLAYED WEEK'S GATES AND LABELS NOW FOLLOW THE REPLAY** (forecast rows untouched, as he said).
+     **Caller split** – `layoffCovering` / `layoffCoversWeek` mapped once. (a) The played week, a gate or a
+     label: `availabilityStatus` (the entry gate's display), `assertPlannable`'s practice arm (planner.ts),
+     `layoffBlock` (the planner sheet's Practice lock), `buildInjuryReport`'s `stranded` rows (a held entry is one
+     whose list has closed, so they are almost always week + 1) and B2's inline arithmetic in `arrivalPreview`.
+     (b) Forecasts and actions, UNTOUCHED: every week from week + 2 on through those same readers,
+     `lookAheadFor`'s rows, the onset sweep over practices (`rollInjury`, a cancellation – round 34's
+     asymmetry), the entries sweep (already the replay since round 34 #21) and `arrivalStatus` at the tick
+     (post-roll, so already exact).
+     **What follows the replay now:** one pure function, `layoffCoversWeekAsPlayed`, and its world twin
+     `layoffCoveringAsPlayed`, beside `layoffCovering` in world/medical.ts. The twin DELEGATES to `layoffCovering`
+     for every week but `world.week + 1`, so the clinic window keeps one spelling and the replay is the single
+     exception. `layoffBlock` takes an optional `expectedWeeks`, so the PlanWeekSheet call line is unchanged.
+     ⚠ **A finding that shapes the question:** the shipped calendar admits NO NEW ENTRY in the played week. A
+     list closes at week − 2 (calendar.ts:2072), `enterEvent` refuses on the deadline BEFORE it asks the gate,
+     and the Season card draws «Entries closed» ahead of the lock pill. So every entry lock a parent can
+     actually see on a not-yet-entered tournament sits on week + 2 or later – a row he just called forecast –
+     and the gate's played-week read is a display and a consistency guarantee, not a door. The surfaces that
+     really said injured for a fit week were the planner and the dialog's forfeit rows (plus B2's two).
+     **Needs his eye:** if «показывать injured» also covers that week + 2 lock (the LAST chance to enter before
+     the list closes), widening is two lines – but there the replay is a FORECAST, and an entry made on it is
+     non-refundable if he then fires the masseur or drops a rung (a walkover and the fee gone). Not done.
+     **Knock-on, stated:** new entries – none possible there (above). A friendly at week + 1 is bookable where
+     the replay clears her; if he then breaks the replay (fires the masseur, drops a rung, books a holiday inside
+     the layoff) `resolvePractice` re-reads `world.injury` at the tick and refunds in full – a click, not money.
+     Left as found: that injury branch does not top up the free-week recovery `accrueCondition` withheld for a
+     booked friendly (the medical branch does) – reachable only through that invalidation. The onset sweep still
+     refunds a friendly at week + 1 on the clinic window and the planner now lets her re-book it, so round 34's
+     «costs a click» is literally true. Committed entries and the tick's arrival verdict are unchanged – the
+     final gate. Careers with no masseur, or a layoff of two weeks or less: byte-identical (the replay is 0;
+     pinned). RNG: zero draws. WORDING: zero strings (the diff adds no literal; `injuredDetail` and the clinic's
+     countdown are as they were).
+     **Evidence:** tests/round46-arrival-masseur-parity.test.ts 5 → 11 tests – a 54-cell sweep of the gate, the
+     planner, the sheet and the injury report against the tick (MEASURED: 5 disagreement cells where the clinic
+     says out and the tick plays – the «10» in the brief is these five × home + grid – and with the replay off
+     the sweep lists 20 disagreeing readings, now 0), the no-masseur control, the calendar finding, a hand-built
+     late list (`enterEvent` refuses «Injured – back in 2 weeks.» without the masseur and accepts with him, then
+     the tick clears her and she plays), the fence (weeks 12–15 stay on the clinic window on the gate, the
+     planner, the sheet and the twin) and 720 comparisons of the three spellings (the twin, `layoffBlock`, B2's
+     `layoffHoldsWeek`). New mounted file tests/component/round46-planner-masseur-replay.test.ts (3 arms: the
+     owner's state reads «Book the match» with no layoff paragraph; the control and forecast week 14 keep
+     «Injured», disabled). **Mutations**, each restored (checksum + `cmp` identical): replay off in the shared
+     core → 5 red (B2's owner-state and sweep too, since the preview now shares the function); widened to every
+     week → the fence and the parity red; the report back on the clinic window → the sweep red on its `report`
+     arm; mounted: replay off → the owner arm red, widened → the fence arm red. **Neighbours:** 29 unit files /
+     865 tests and 3 component files / 19 tests green, `vue-tsc -b --force` exit 0, the frozen capture
+     (tests/condition.test.ts, 41550 draws / hash e6b0c709 – nothing draws, so unmoved) 51/51.
 2. **Spouse card**: the heading change is fine, but the TAUTOLOGY he meant remains – the heading
    says he has something to say, the first line of the card re-introduces him saying it («слова
    ради слов»). And «в) давай драфт» – the corpus batch is ordered: the architect writes new

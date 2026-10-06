@@ -122,7 +122,7 @@ import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, layoffCoversWeek, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
+import { arrivalStatus, entryStatus, layoffCoveringAsPlayed, projectedConditionAt, tierVerdict, type EntryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
@@ -265,9 +265,13 @@ export function buildInjuryReport(world: WorldState): InjuryReport | null {
   // HOLDS against the engine's own window – not off `upcoming`, which the dialog used to read and
   // which stops at UPCOMING_WEEKS, so a layoff longer than the horizon hid its own last forfeits.
   const stranded: InjuryEntryRow[] = []
+  // ⭐ ROUND 46 R1 – THESE ROWS ARE ALMOST ALWAYS THE PLAYED WEEK'S (a held entry is one whose list has
+  // closed, i.e. week + 1 or sooner), so they read the window as the tick will find it: an entry the
+  // masseur's cadence clears her for is PLAYED, and listing it as forfeited would be the same
+  // injured-when-fit lie the home preview had (owner, 06.10).
   for (const id of world.entries) {
     const e = eventById(world, id)
-    if (!e || e.week < world.week || layoffCovering(world, e.week) === null) continue
+    if (!e || e.week < world.week || layoffCoveringAsPlayed(world, e.week) === null) continue
     stranded.push({ id: e.id, label: TIERS[e.tier].label, week: e.week })
   }
   stranded.sort((a, b) => a.week - b.week)
@@ -764,19 +768,20 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
  *  `injury.expectedWeeks` already puts on the wire (round 41 #19). For THIS tick that replay is not
  *  a forecast but the arithmetic the tick will run, exact whenever nothing moves between the
  *  snapshot and the click – and every command that could (firing him, changing his rung, booking a
- *  holiday) returns a fresh snapshot. The clinic's number on the plaque, the entry gate and the
- *  planner are NOT touched (round 34, R10-17). Byte-identical for every career without a masseur
- *  (the replay is 0). Pure state, ZERO draws, no wording. */
+ *  holiday) returns a fresh snapshot. The clinic's number on the plaque is NOT touched (round 34).
+ *  Byte-identical for every career without a masseur (the replay is 0). Pure state, ZERO draws, no
+ *  wording.
+ *
+ *  ⭐ ROUND 46 R1: THAT READ IS NOW `layoffCoveringAsPlayed` (world/medical.ts) – the one function the
+ *  entry gate's display, the planner and the injury report ask as well, so the played week has one
+ *  spelling instead of this one and a second. The entry gate and the planner follow the replay for
+ *  THIS week only; every later week keeps the clinic's window (a forecast). */
 export function arrivalPreview(world: WorldState): ArrivalPreview | null {
   const next = world.week + 1
   const event = world.season.find((e) => e.week === next && world.entries.includes(e.id))
   if (!event) return null
   const status = arrivalStatus(world, event)
-  const layoff = world.injury
-  const injured =
-    status.verdict === 'injured' &&
-    layoff !== null &&
-    layoffCoversWeek(world.week, layoff.weeksRemaining - masseurRehabWeeksAhead(world), event.week)
+  const injured = status.verdict === 'injured' && layoffCoveringAsPlayed(world, event.week) !== null
   return {
     eventId: event.id,
     tier: event.tier,

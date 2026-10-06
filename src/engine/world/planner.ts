@@ -31,7 +31,7 @@ import { addEvent, seasonStartWeek } from './ledger'
 import { ageWindowStartWeek } from './age'
 import { KID_ID } from './constants'
 import { practiceForWeek, refundPractice, vacationForWeek } from './bookings'
-import { layoffCovering, medicalBlock, medicalClearance, withheldFreeWeekRecovery } from './medical'
+import { layoffCoveringAsPlayed, medicalBlock, medicalClearance, withheldFreeWeekRecovery } from './medical'
 import { retirementInjury } from './injury'
 import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
@@ -93,7 +93,12 @@ export function assertPlannable(world: WorldState, week: number, kind: 'vacation
   // IS a match, and she cannot play one while she is laid up. So the two kinds part here, as they
   // already part below.
   if (kind === 'practice') {
-    const layoff = layoffCovering(world, week) // the shared R10-17 window
+    // ⭐ ROUND 46 R1 – THE PLAYED WEEK (week + 1) IS READ AS THE TICK WILL FIND HER, so the friendly is
+    // bookable in a week the masseur's cadence clears her for and the planner never says injured for
+    // a week she is fit in (owner, 06.10). `resolvePractice` re-reads `world.injury` on the play week
+    // and refunds in full, so a booking the parent then breaks (fires him, drops a rung) costs a
+    // click and not money. Every later week is a forecast and keeps the clinic's window.
+    const layoff = layoffCoveringAsPlayed(world, week) // the shared R10-17 window, the played week as the tick finds it
     if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
   }
   if (isExamWeek(week, schoolIsOver(week, world.profile.birthMonth))) {
