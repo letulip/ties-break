@@ -29,6 +29,8 @@ last-reviewed: 2026-10-06
 | [Batch 02A – entry and onboarding](ru-onboarding-2026-10.md) | Splash, career wizard, shared identity copy and interface tour | drafted |
 | [Batch 02B – childhood and handover](ru-childhood-prologue-2026-10.md) | Ages five to thirteen, childhood tournaments, coach readings and the handover into the career | drafted |
 | [Batch 03 – Home and the weekly story](ru-home-weekly-2026-10.md) | Home, identity, dashboard cards, season strip, news, Calendar, This Week and the weekly recap | drafted |
+| [Batch 03A – Household and away notes](ru-fridge-notes-2026-10.md) | Calendar's ordinary domestic notes at home and after moving out | current home and warm-away pools drafted |
+| [Batch 03B – Distance and event notes](ru-fridge-notes-b-2026-10.md) | Strained/cold contact, exams and tournament journeys | remaining five note pools drafted; 115/115 current lines covered across 03A/B |
 | [Batch 04 – Season and tournaments](ru-season-tournaments-2026-10.md) | Season planner, tour guide, shared tournament cards and tournament flow | drafted |
 | [Batch 05 – Profile, coaching and injuries](ru-profile-coaching-2026-10.md) | Daughter profile, life stages, skills radar, coach market, week planning, knocks and injury stops | drafted |
 | [Batch 06 – Money, staff, shop and inbox](ru-money-staff-shop-inbox-2026-10.md) | Family budget, kit, staff, shop, sponsorship, academy and correspondence | drafted end to end |
@@ -65,6 +67,7 @@ last-reviewed: 2026-10-06
 | [Batch 11J – Medical history](ru-medical-feed-2026-10.md) | Recovery, treatment bills and tournament medical stops; six onset paths point to RU-05 | current uncovered medical receipt templates drafted without a competing onset catalogue |
 | [Batch 11K – Short world receipts](ru-world-receipts-2026-10.md) | Career start, birthday age, calendar, no-show and equipment receipts | remaining short templates drafted; prior RU-05/06/09/11G coverage cross-checked |
 | [Batch 11L – Weekly finance corpus](ru-weekly-finance-corpus-2026-10.md) | Training, light weeks, court venue/time, kit and fixed finance receipts | current recurring pools drafted; adult sparring and narrow recap issues flagged |
+| [Batch 11M – Spirit and public-life feed](ru-spirit-feed-2026-10.md) | Exposure, public-life and recovery receipts | three current `spirit.ts` rows drafted; event-text identity trap flagged |
 | [Batch 12A – Epilogue screen](ru-ending-screen-2026-10.md) | Album/record chrome, totals, conditional notes and next-career controls | current `EndingScreen.vue` strings drafted; engine album pages remain next |
 | [Batch 12B – Ending album](ru-ending-album-2026-10.md) | Seven engine-authored pages and the full milestone record | every current slot branch and record label drafted; ending detail and college copy remain |
 | [Batch 12C – Ending doors](ru-ending-doors-2026-10.md) | Nine terminal titles/details, eight voiced exits and other kept transition rows | current ending paths drafted; stale six-ending context claim flagged |
@@ -72,6 +75,11 @@ last-reviewed: 2026-10-06
 | [Batch 12E – School fork](ru-school-fork-2026-10.md) | Timing lead, finances/rank, three university quotes and three equal answers | current `ForkDialog.vue` strings drafted; engine college receipts remain |
 | [Batch 12F – University saved feed](ru-college-engine-feed-2026-10.md) | Tuition, championship and national-team results, kept match rows and post-college summary | current college engine templates drafted; case-safe names and zero-balance guard flagged |
 | [Batch 12G – Retirement winters](ru-retirement-dialog-2026-10.md) | Plateau, decline, performance, coach, last-winter and final-word lines | current dialog and shared narrative pools drafted |
+| [Batch 13A – Saves and careers](ru-saves-settings-2026-10.md) | More/Saves tabs, slot list, status, confirmations, import/export and destructive actions | current save-management strings drafted; locale dates/errors flagged |
+| [Batch 13B – Play and About settings](ru-play-about-settings-2026-10.md) | Sound, story, animation, match defaults, app identity and privacy link | current More/Play/About copy drafted; linked policy remains RU-13C |
+| [Batch 13C – Privacy and PWA](ru-privacy-pwa-2026-10.md) | Public privacy policy, document route, language tag and install metadata | policy and metadata drafted; locale-aware manifest is a technical decision |
+| [Batch 13D – Formatters and countries](ru-formatters-countries-2026-10.md) | Dates, week labels, money, number display and all 24 country names | current formatter shapes drafted; phone LQA remains |
+| [Batch 14 – Editorial LQA handoff](ru-lqa-handoff-2026-10.md) | Cross-batch corrections, source gaps, legacy-save obligations and acceptance routes | editorial sweep drafted; runtime LQA awaits Russian build |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

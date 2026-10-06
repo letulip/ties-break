@@ -263,13 +263,18 @@ inside the Russian pool; it must not draw again or consume the main RNG stream.
 | RU04-E02 | `Cancel entry` | `Отменить заявку` |
 | RU04-E03 | `Entries closed {week}` | `Заявки закрыты · {week}` |
 | RU04-E04 | `Enter` | `Подать заявку` |
-| RU04-E05 | accessible `Enter {event}` | `Подать заявку на турнир «{event}»` |
+| RU04-E05 | accessible `Enter the {event}, {weekRange}` (`src/composables/eventName.ts:40`) | `Подать заявку на турнир «{event}» ({weekRange})` |
 | RU04-E06 | `Not enough funds` | `Недостаточно средств` |
 | RU04-E07 | `Exhausted – race anyway? Rest would be wiser.` | `Вымоталась – всё равно играть? Отдых был бы разумнее.` |
 | RU04-E08 | `+ Plan week` | `+ Спланировать неделю` |
 | RU04-E09 | `Exams this week` | `На этой неделе экзамены` |
 | RU04-E10 | pro counter | `проф. турниры: {used} / {limit}` |
 | RU04-E11 | junior counter | `юниорские турниры: {used} / {limit}` |
+
+The accessible entry name needs the **date** as well as the event label: a season can show
+several tournaments of the same tier. This is the exact `enterActionName` source, not merely a
+generic `Enter {event}` control. The visible `Подать заявку` remains the start of the accessible
+name; `{weekRange}` uses the Russian shared formatter in RU-13D.
 | RU04-E12 | pager `Back` / `Next` | `Назад` / `Вперёд` |
 
 Lock vocabulary:

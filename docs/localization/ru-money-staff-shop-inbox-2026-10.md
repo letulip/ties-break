@@ -55,8 +55,9 @@ All counts use Russian plural categories:
 - `{n, plural, one {# сезон} few {# сезона} many {# сезонов} other {# сезона}}`.
 
 The shared `weekLabel` needs a localized display shape. The internal week index remains unchanged;
-Russian copy must not interpolate the English `W14 '31` result. A compact candidate is
-`14-я неделя · 2031`, with `Неделя 14 · 2031` as the narrow fallback to inspect on a phone.
+Russian copy must not interpolate the English `W14 '31` result. The consolidated RU-13D proposal
+is `Нед. 14 · ’31` for compact rows and `Неделя 14 · 2031` for full headings. The earlier
+`14-я неделя · 2031` candidate is superseded, not a second formatter to implement.
 `weeksLeftBracket` becomes `(осталась 1 неделя)`, `(осталось 2 недели)`, `(осталось 5 недель)` and
 `(последняя неделя)`.
 
