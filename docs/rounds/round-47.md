@@ -113,6 +113,26 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ---
 
+## The plan – bundles by collision surface, sequential dispatch (token law 29.09)
+
+Orientation: «She said one more year N times» is ENGINE copy (`engine/ending.ts:654` – the engine
+itself attributes the words to HER); Spent = `view.money.outlayCents`, Still owned =
+`holdingsCents`, portfolio = `portfolioCents` (the reckoning's readers – the gross diagnosis
+starts there); the ticket's Champion/Row/Gate lines and the «Whitegate» tag are COMPOSED in
+`engine/world/albumBook.ts`, not the component; the #14 photo pool exists in
+`public/images/weeks/` (off-1..3, vac-camping, vac-elite, chores, study) + the sleepy travel set;
+the «хорошая» cup candidate is to be located (public/icons + trophies webps).
+
+| Step | Items | Surface owned | Model · budget |
+| --- | --- | --- | --- |
+| B1 | 1 2 3 4 5 6 7 12 + DRAFTs for 10 11 | `EndingScreen.vue` + its engine money/ending readers | sonnet · 70 |
+| B2 | 8 16 | ticket+tag: `albumBook.ts` (ticketOf/tag sections), `AlbumTicketPass.vue`, the tag component, the two SVGs into the repo, the fictional-club DRAFT corpus | sonnet · 55 |
+| B3 | 9 14 15 | album composition: headings, the small-photo filler pool, the cup swap (`albumBook.ts` other sections, layouts, placement) | sonnet · 55 |
+| A13 (architect) | 13 | `tools/career-dossier.ts` + the dossier report off his save | – |
+
+B2 and B3 both touch `albumBook.ts` – they run strictly in sequence (B2 lands and commits before
+B3 starts), never side by side. The architect's probe rides tools/ + scratchpad only.
+
 ## Cross-references
 
 - #1+#2+#3+#4+#5+#6+#7+#12 are ONE surface – the ending screen (`EndingScreen.vue` + its engine
