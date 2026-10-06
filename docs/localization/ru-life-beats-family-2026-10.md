@@ -95,10 +95,15 @@ keep the heading/card next to the quote so the speaker remains legible.
 | `road-stretch` | `The one she married said it plainly, on a quiet evening. "The family has been on the road for weeks now. The house does not really get lived in between the trips."` | `Тихим вечером у них дома сказали без обиняков: «Мы неделями в разъездах. Между поездками дома толком никто не живёт».` |
 | `no-vacation` | `The one she married brought it up as the season closed. "A whole season, and not one week of it belonged to the family. Next year I would like one on the calendar before the tennis takes them all."` | `Под конец сезона у них дома заговорили о календаре: «Целый сезон прошёл, а ни одной недели для нас не нашлось. В следующем году хочется отметить хотя бы одну заранее, пока теннис не занял всё».` |
 | `money` | `The one she married asked it without an edge. "That was a large bill, and the season sits in her account now. I am not counting anybody's money. I am asking how this house plans."` | `У них дома спросили без упрёка: «Счёт вышел большой. Я не считаю чужие деньги. Просто хочу понять, как мы будем планировать расходы».` |
-| `SPOUSE_VIEW_HEADING` | `The one she married has something to say about this season` | `У них дома хотят поговорить об этом сезоне` |
+| `SPOUSE_VIEW_HEADING` | `Her spouse has something to say about this season` | `У них дома хотят поговорить об этом сезоне` |
 | `SPOUSE_VIEW_CARD` | `The one she married wants a word.` | `У них дома хотят поговорить.` |
 
 `money` deliberately drops the English claim that the season now sits in her account. The gate
 checks a large outgoing item and her greater account balance; it does **not** establish a formal
 transfer of family finances. Keeping that claim in Russian would turn a vague source line into a
 false rule. The question about planning preserves the actual tension.
+
+The four single-line source rows above describe the 30.09 pool. Current `main` rewrote those
+openings and added nine variants, without changing the four occasion gates. The **current**
+post-by-post replacement table is [RU-17](ru-life-delta-2026-10.md); use that table, not the
+historical source column above, when assembling a catalog.

@@ -8,8 +8,9 @@ last-reviewed: 2026-10-06
 
 # RU-12A – Epilogue screen and hand-off controls
 
-Source: `src/components/EndingScreen.vue`. This is the UI frame around engine-authored album
-pages and record rows; it does **not** translate those page corpora (next RU-12 packet). All
+Source: `src/components/EndingScreen.vue`. This is the UI frame around the engine-authored
+**last page**, the full milestone record and the real album book opened from this screen. It
+does **not** translate those page corpora (RU-12B and RU-07A/RU-16). All
 Russian lines are `DRAFT`, except established shared terms `Дом` and `Рейтинг`.
 
 | Surface | English | Russian draft |
@@ -19,10 +20,10 @@ Russian lines are `DRAFT`, except established shared terms `Дом` and `Рей�
 | record return | `Back to the album` | `Вернуться к альбому` |
 | record season age | `she was {ageYears}` | `ей было {ageYears} {год/года/лет}` |
 | empty record | `Nothing was ever written down. That happens.` | `Здесь не осталось записей. Бывает и так.` |
-| ordinary album heading | `The album` | `Альбом` |
 | final page heading | `The last page` | `Последняя страница` |
 | portrait alt | `Aged {stage}` | `Портрет: возрастной этап «{stageLocalized}»` |
-| previous/next | `Back` / `Next` | `Назад` / `Дальше` |
+| real album door | `View the album` | `Посмотреть альбом` |
+| visible test export | `Export save (dev)` | `Экспортировать сохранение (тест)` |
 | family's prize share | `Family's share` | `Доля семьи` |
 | permanent outlay | `Spent` | `Потрачено` |
 | daughter's account | `Her account` | `Её счёт` |
@@ -44,6 +45,10 @@ but better describes the action. Do not silently substitute one for the other: t
 dynasty actions must stay distinguishable. The dynasty variants are always available on a final
 ending, regardless of whether a child was born during the played career; availability does not
 encode parental merit.
+
+The old seven-page ending reel and its `Back`/`Next` arrows are no longer displayed. The ending
+opens on its last page; `Посмотреть альбом` opens the actual album book, whose own navigation is
+covered by RU-07. Returning from that book must restore the last page, not a deleted reel page.
 
 The `Spent` figure excludes still-owned assets; `Капитал семьи` is a **current** balance-plus-
 holdings value, not career earnings. `Доля семьи` is the family's prize share, not all prize money

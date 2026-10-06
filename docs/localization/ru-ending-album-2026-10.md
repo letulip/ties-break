@@ -6,11 +6,14 @@ canonical: false
 last-reviewed: 2026-10-06
 ---
 
-# RU-12B – The seven-page ending album and full record
+# RU-12B – Ending-page corpus and full record
 
 Source: `src/engine/world/album.ts`. The ending screen shell is RU-12A; this file owns its
 engine-authored `AlbumPage.{why,caption,fact}` and `ScrollSeason.rows`. Every Russian line is
-`DRAFT`. The seven slots and their selection rules remain exactly as the code has them.
+`DRAFT`. The engine still builds seven authored slots, but current `EndingView` sends only
+their closing page to `EndingScreen`; the other six translations here are retained for source
+coverage, **not** a claim that the old reel is still navigable. The real album book uses the
+RU-07A/RU-16 corpus.
 
 ## 1. Beginning
 

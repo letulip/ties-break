@@ -11,8 +11,9 @@ last-reviewed: 2026-10-06
 ## Current truth
 
 - This stack is the editorial source for the first Russian localization of Ties Break.
-- It is based on `origin/main` commit `d69ff15d` (30.09.2026) in branch
-  `codex/localization-ru`.
+- RU-01–RU-14 were drafted against `origin/main` commit `d69ff15d` (30.09.2026).
+  The branch `codex/localization-ru` now includes `origin/main` at `1e7b125b` (06.10.2026);
+  RU-15–RU-17 record its player-facing copy delta. The first two sets must be read together.
 - It changes no runtime copy. Every Russian line is a `DRAFT` until the owner reads it.
 - Runtime code and tests remain the authority for what a line means and when it appears.
 - The localization work covers player-facing text only: visible copy, accessibility names,
@@ -35,7 +36,7 @@ last-reviewed: 2026-10-06
 | [Batch 05 – Profile, coaching and injuries](ru-profile-coaching-2026-10.md) | Daughter profile, life stages, skills radar, coach market, week planning, knocks and injury stops | drafted |
 | [Batch 06 – Money, staff, shop and inbox](ru-money-staff-shop-inbox-2026-10.md) | Family budget, kit, staff, shop, sponsorship, academy and correspondence | drafted end to end |
 | [Batch 07 – Rankings, trophies and album](ru-stats-trophies-album-2026-10.md) | Ranking tables, season statistics, trophy cabinet and the career album interface | drafted end to end |
-| [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 34 occasions and four daughter voices | drafted end to end |
+| [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 35 baseline source IDs and four daughter voices | drafted; gender-language audit remains |
 | [Batch 08 – Match viewer and commentary](ru-match-viewer-commentary-2026-10.md) | Live/replay controls, court readouts, preview booth and deterministic commentary | drafted end to end |
 | [Batch 09 – Diary and birthdays](ru-diary-birthday-2026-10.md) | Diary chrome and memories, birthday headings, travel and weekly observations | shared frame and all four linked corpora drafted end to end |
 | [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | drafted end to end |
@@ -80,6 +81,9 @@ last-reviewed: 2026-10-06
 | [Batch 13C – Privacy and PWA](ru-privacy-pwa-2026-10.md) | Public privacy policy, document route, language tag and install metadata | policy and metadata drafted; locale-aware manifest is a technical decision |
 | [Batch 13D – Formatters and countries](ru-formatters-countries-2026-10.md) | Dates, week labels, money, number display and all 24 country names | current formatter shapes drafted; phone LQA remains |
 | [Batch 14 – Editorial LQA handoff](ru-lqa-handoff-2026-10.md) | Cross-batch corrections, source gaps, legacy-save obligations and acceptance routes | editorial sweep drafted; runtime LQA awaits Russian build |
+| [Batch 15 – Current-main UI delta](ru-current-main-delta-2026-10.md) | New feedback flow, staff raises, season-money rows and small interface additions after the 30.09 source cut | drafted against 06.10 `origin/main` |
+| [Batch 16 – Album delta](ru-album-delta-2026-10.md) | Three newly reachable rare occasions, four voices and three registers | all 36 added strings drafted |
+| [Batch 17 – Family-life delta](ru-life-delta-2026-10.md) | Expanded spouse voice, relationship tile, together-duration forms and life-moment wording | new pool and formats drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

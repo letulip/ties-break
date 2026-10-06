@@ -8,8 +8,9 @@ last-reviewed: 2026-10-06
 
 # Russian localization source inventory and sequence
 
-Baseline: `d69ff15d`. This is a routing document, not a promise that every quoted literal is
-player-facing. Each batch must verify its candidates against runtime code and mounted surfaces.
+Baseline: `d69ff15d`, with a source delta to `origin/main` `1e7b125b` in RU-15–RU-17.
+This is a routing document, not a promise that every quoted literal is player-facing. Each
+batch must verify its candidates against runtime code and mounted surfaces.
 
 ## 1. Editorial batches
 
@@ -29,6 +30,9 @@ player-facing. Each batch must verify its candidates against runtime code and mo
 | RU-12 | College, endings, epilogue and dynasty | `College*.vue`, `ForkDialog.vue`, `EndingScreen.vue`, `RetirementDialog.vue`, `world/endings.ts`, `college.ts`, dynasty copy | `ru-ending-screen-2026-10.md`; `ru-ending-album-2026-10.md`; `ru-ending-doors-2026-10.md`; `ru-college-year-2026-10.md`; `ru-school-fork-2026-10.md`; `ru-college-engine-feed-2026-10.md`; `ru-retirement-dialog-2026-10.md` | epilogue, nine endings, university UI/feed, school fork and retirement winters drafted; final coverage audit pending |
 | RU-13 | PWA metadata, privacy/about text, dates, numbers, country and name display | `index.html`, `public/**`, `MoreScreen.vue`, shared formatters and data tables | `ru-saves-settings-2026-10.md`; `ru-play-about-settings-2026-10.md`; `ru-privacy-pwa-2026-10.md`; `ru-formatters-countries-2026-10.md` | More/Saves/Play/About, linked policy, metadata and current formatter/country labels drafted; implementation/LQA remain |
 | RU-14 | Cross-screen consistency and final LQA | Russian runtime build, screenshots and complete career probes | `ru-lqa-handoff-2026-10.md` | editorial corrections and acceptance matrix drafted; runtime LQA cannot run before technical localization lands |
+| RU-15 | New feedback, staff raise, season-money and post-cut UI | `src/feedback.ts`, `FeedbackDialog.vue`, `OfferLetter.vue`, `SeasonSummaryDialog.vue`, `EndingScreen.vue`, `AlbumScreen.vue`, `identityCopy.ts` | `ru-current-main-delta-2026-10.md` | source delta drafted; phone LQA remains |
+| RU-16 | Three rare album occasions added after the cut | `world/albumCorpus.ts`, `world/albumBook.ts` | `ru-album-delta-2026-10.md` | all 36 strings drafted; original corpus gender audit remains |
+| RU-17 | Expanded spouse pool, relationship status and big life moments | `world/lifeBeat/spouseViewCopy.ts`, `weddingCopy.ts`, `kidLife.ts`, `lifeMomentCopy.ts` | `ru-life-delta-2026-10.md` | source delta drafted; compact duration needs phone LQA |
 
 ## 2. What counts as a player-facing source
 

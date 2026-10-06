@@ -10,10 +10,13 @@ last-reviewed: 2026-10-05
 
 ## 1. Purpose and source contract
 
-This companion localizes the 34 album occasions in
-`docs/specs/album-corpus-2026-09.md`: four daughter temperaments, each with a pasted `note`, a photo
-`caption` and a loose handwritten `line`. That is 408 player-facing strings, plus eight closing-arc
-cells. Every Russian line below is `DRAFT`.
+This companion localizes the **35 original source IDs** in
+`src/engine/world/albumCorpus.ts`: four daughter temperaments, each with a pasted `note`, a photo
+`caption` and a loose handwritten `line` – 420 player-facing strings, plus the 16 closing-arc
+strings. The old source header said 34/408 because it assigned `A34` to **both** `the-line`
+and `birth`; the IDs, not the repeated editorial number, are the reliable catalog keys.
+Current `main` has **38** IDs; the three new rare ones (36 strings) are in
+[RU-16](ru-album-delta-2026-10.md). Every Russian line below is `DRAFT`.
 
 The English corpus and runtime gates remain evidence for what happened. This document owns how the
 same parent's album sounds in Russian. It does not change occasion eligibility, dates, ages, facts,
@@ -614,21 +617,23 @@ of his daughter.
   reserving changes timing and ownership. Neither changes temperament.
 - Verify no-drift careers keep A32 and never receive an arc cell.
 - Render the longest deep/open and sunny/reserved notes with the closing art at every album width.
-- Verify the Russian corpus contains all 34 occasion ids, four voices and three registers, plus all
-  eight arc cells, with no English runtime fallback.
+- Verify the Russian corpus contains all **38 current source IDs** across this file and RU-16,
+  four voices and three registers, plus all eight arc cells, with no English runtime fallback.
 
 ## 25. Runtime integration contract for the corpus
 
 - Keep the English canonical corpus and this Russian corpus keyed by stable occasion id, voice and
   register. Never use the English sentence itself as a key.
-- Add a completeness test that compares locale key sets to `ALBUM_CORPUS`: 34 occasions × four
+- Add a completeness test that compares locale key sets to `ALBUM_CORPUS`: 38 occasions × four
   voices × `note/caption/line`, plus two arc directions × four voices × `note/line`.
 - The Russian catalogue is presentation data. Gate resolution, representative selection, voice
   selection, chapter assignment, layout and keyed flavour draws stay locale-independent.
 - Legacy saves contain the facts from which the album is assembled, not these corpus strings, so
   they need no prose migration. Opening the same save in Russian must rebuild every album word in
   Russian from the stable ids.
-- Preserve the parent's masculine first person throughout A1–A32 and both arcs. A34 `the-line` is
-  the sole documented mother-written page and keeps feminine first person.
+- Before catalog generation, reconcile the old masculine first-person readings in this draft
+  (`я услышал`, `я ответил` and similar) with RU-00's rule that the player's gender is unspecified.
+  The `the-line` heirloom page explicitly belongs to the heroine's mother and retains feminine
+  forms; that authored exception is not a licence to assign the present player a gender.
 - Add rendered phone fixtures for the longest note in every block, plus an automated Cyrillic-mode
   sweep that fails on any English album control, alt, chapter, ticket word, checklist or corpus row.
