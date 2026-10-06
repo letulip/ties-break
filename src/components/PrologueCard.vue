@@ -160,6 +160,9 @@ const props = defineProps<{
      *  birthday to the real birth; two or more open the chooser («давать пользователю выбор из этих
      *  двух-трех дат»); absent or empty – the epilogue variant – leaves the selects free. */
     birthdays?: readonly { month: number; day: number }[]
+    /** ⭐⭐ ROUND 46 #21 – HER MOTHER'S FIRST NAME, so the first-name die leaves it off the menu: a
+     *  daughter's card never rolls her mother's name. Absent on every run that is not a dynasty. */
+    motherFirst?: string
   }
   /** ⭐ PHASE 4 – THE WAY OUT OF THE PROLOGUE ENTIRELY (build spec §6: «skip -> the existing wizard»),
    *  and it is a LABEL rather than a sentence for the reason the whole card is a table: the copy is
@@ -235,7 +238,7 @@ function setField<K extends keyof PrologueIdentity>(key: K, value: PrologueIdent
  *  afterwards. Named for the wizard's own `reroll` / `rerollLast` in spirit but for the field in
  *  fact, because `rerollLast` only reads as "the surname" beside a `reroll` that has no noun. */
 function rollFirstName(): void {
-  setField('kidName', randomName())
+  setField('kidName', randomName(props.line?.motherFirst))
 }
 
 function rollLastName(): void {

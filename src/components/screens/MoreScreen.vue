@@ -6,6 +6,7 @@
 // copy changed) since it doesn't touch any stored data.
 // ⚠ `onMounted` IS GONE FROM THIS LIST (D-05, 28.09) – the careers refresh it carried is a
 // `watch(…, { immediate: true })` now, and `immediate` IS the mount half. Nothing else here mounts.
+import { LIFE_EVENT_BOOST_FACTOR } from '../../engine/world/lifeBoost'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
@@ -745,6 +746,19 @@ const TAB_OPTIONS = [
          documents both halves of that bargain. -->
     <hr class="card-divider" />
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+    <!-- ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST (the owner, 05.10: «wanted to wait for her to give birth, but it never
+         happened - … a switch that raises the chances of these events many times over, for debugging»; verbatim in docs/rounds/round-46.md). Same
+         bargain as the fast-forward above: ships in every build, dev-only LABEL (not player copy). It is a
+         TRANSIENT worker flag, never in a save; the checkbox shows the worker's own state off the snapshot. -->
+    <label class="dev-life-boost">
+      <input
+        type="checkbox"
+        :checked="game.snapshot?.devLifeBoost === true"
+        :disabled="game.busy || !game.snapshot"
+        @change="game.setLifeBoost(($event.target as HTMLInputElement).checked)"
+      />
+      ▶ life events ×{{ LIFE_EVENT_BOOST_FACTOR }} (dev)
+    </label>
     <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
          line catches everything else (the fast-forward refusing over an open knock/reveal), which
          previously failed silently here – More never rendered `game.error` at all.
@@ -850,12 +864,18 @@ const TAB_OPTIONS = [
   <!-- ⭐⭐⭐ v87 - THE WEIGHT, THE ONE DOOR THE 22.09 RULING PUT IN SETTINGS. Its own section for the
        reason the script side gives: it is a fact about a CAREER, not a device preference, so it is
        absent when no career is loaded rather than pretending to be settable from nowhere.
-       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read. -->
+       ⚠ THE WORDS ARE `WEIGHT_COPY`'s, the same declaration the two creation surfaces read.
+       ⚠ ROUND 46 #2: THE HEADING AND THE LABEL ARE TWO DIFFERENT WORDS ON PURPOSE. The `<h2>` is the
+       question's name (`title`, the same on both creation cards) and keeps it; the row under it used
+       to print `title` a second time as its label, and the owner read «The weight» twice in two
+       lines. The label is `settingsLabel` now – what the switch gates – and ⚠ it is also the
+       switch's accessible name (`aria-labelledby` below), so it is pinned in a11y-sweep.test.ts and
+       transcribed in two e2e files. -->
   <section v-if="screenTab === 'play' && game.snapshot">
     <h2>{{ WEIGHT_COPY.title }}</h2>
     <div class="career-row">
       <div>
-        <span id="more-weight-label">{{ WEIGHT_COPY.title }}</span>
+        <span id="more-weight-label">{{ WEIGHT_COPY.settingsLabel }}</span>
         <!-- `display: block` for the Week-story hint's own measured reason: `.hint` is styled for a
              <p>, and at 375 a <span> runs on from the label and reads as one line of nonsense. -->
         <span class="hint" style="display: block; margin: 2px 0 0">{{ WEIGHT_COPY.settingsHint }}</span>

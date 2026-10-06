@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { matchDrain, runFatigueExtra, tournamentRunStrain } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
+import { masseurTourRelief } from '../src/engine/world/masseur'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
@@ -252,8 +253,11 @@ describe('the cumulative ladder only starts on the SECOND match of a run', () =>
     // thinner and the opening rounds carry less of it. A first match still never costs MORE for
     // being first, which is the property this test has always been about.
     for (const tier of TIER_LADDER) expect(runFatigueExtra(0, tier), tier).toBeLessThanOrEqual(0)
+    // ⚠ RE-AIMED 05.10 (ROUND 46 #7, the owner's «250-12, 500-15, 1000-18, шлем-21»): the third ladder's discount is DELETED –
+    // [-2, -1, 0] became [0, 0, 0, 1, 1, 1, 1] – so the first match of a run costs EXACTLY 0 extra at every rung again, not -2 at the two
+    // deep ones. The claim this test has always been about (a first match never costs MORE, and no rung opens below zero) is unchanged.
     for (const tier of TIER_LADDER) {
-      expect(runFatigueExtra(0, tier), tier).toBe(TIERS[tier].drawSize > 32 ? -2 : 0)
+      expect(runFatigueExtra(0, tier), tier).toBe(0)
     }
   })
 
@@ -262,6 +266,7 @@ describe('the cumulative ladder only starts on the SECOND match of a run', () =>
     // special case "= matchDrain" that only held while every first rung was 0. At a deep rung the
     // opening match costs matchDrain - 2 (the owner's curve), so a first-round exit at a Slam is
     // CHEAPER than the flat surcharge implies - never dearer.
+    // ⚠ 05.10: the deep rungs' opening rung is 0 now (the discount is deleted), so the first-round exit costs EXACTLY matchDrain at every tier; the <= below still holds.
     for (const tier of TIER_LADDER) {
       expect(tournamentRunStrain(tier, [{ score: SIMPLE }]), tier).toBe(matchDrain(tier, SIMPLE) + runFatigueExtra(0, tier))
       expect(tournamentRunStrain(tier, [{ score: SIMPLE }]), tier).toBeLessThanOrEqual(matchDrain(tier, SIMPLE))
@@ -287,6 +292,10 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
   // ⚠ REGENERATED 02.10 (ROUND 45 #1): depth x (2 + the new surcharge) + the running ladder sum, each rung on its own family's ladder (C, D, or the deep [-2,-1,0]).
   // The domestic rows are byte-identical. At depth 5 – the whole 32-draw title – a straight-sets run now costs J30 21 / J60 26 / J300 31 (were 31 / 36 / 41), W15-W75 19 (were 24 / 24 / 24 / 29),
   // W100-WTA 250 24 (were 29 / 29 / 34), WTA 500 29 (was 34), and the two deep rungs 22 (were 32). The per-row comments narrate the tables this ruling replaced.
+  // ⚠ RE-AIMED 05.10 (ROUND 46 #7, the owner's «250-12, 500-15, 1000-18, шлем-21»): the 500, the 1000 and the Slam run on the third ladder
+  // [0, 0, 0, 1, 1, 1, 1] now – the discount [-2, -1, 0] is deleted and the ladder is keyed on the TIER – so their three rows are ONE row:
+  // depth x 5 + the running sum 0,0,0,1,2 = 5 / 10 / 15 / 21 / 27 (were: 500 5 / 11 / 17 / 23 / 29, 1000 and Slam 3 / 7 / 12 / 17 / 22). Every other
+  // row is byte-identical. The whole-TITLE NETS these rows produce through the masseur – his four numbers – are asserted in the last describe.
   // tier -> cost at depth 1..5, under the SHIPPED ladder C = [0,1,1,2,2].
   // Read straight off docs/specs/fatigue-reference.md. RE-PINNED for the base raise (base 1 → 2).
   // The row that matters most: at base 2 + shipped C a straight-sets TITLE costs exactly what the
@@ -330,7 +339,7 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     // the schoolgirl's. Where the Slam catches J300 is the EPIC (both 9 a match) - see the ceiling
     // assertion in the per-match block.
     wta250: [4, 9, 14, 19, 24],
-    wta500: [5, 11, 17, 23, 29],
+    wta500: [5, 10, 15, 21, 27], // ⚠ 05.10: was [5, 11, 17, 23, 29] on the W ladder D; now the third ladder
     // ⚠⚠ THE TWO DEEP RUNGS RE-PINNED 14.08, and they are the only rows in this table that moved.
     // They run on the THIRD ladder now ([-2, -1, 0] – the owner's own curve for a Slam at 128 and a
     // 1000 at 64), so the ramp makes the first two matches cheaper and the plateau is the surcharge
@@ -340,8 +349,8 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     // (39 straight-sets) and a Slam title seven (46); the columns here are the shared depth grid,
     // and the deep rungs' own whole-run numbers are in tools/deep-run-cost.ts, which prints every
     // depth each rung can actually reach.
-    wta1000: [3, 7, 12, 17, 22],
-    slam: [3, 7, 12, 17, 22],
+    wta1000: [5, 10, 15, 21, 27], // ⚠ 05.10: was [3, 7, 12, 17, 22] on the discounted ramp
+    slam: [5, 10, 15, 21, 27], // ⚠ 05.10: was [3, 7, 12, 17, 22] on the discounted ramp
   }
 
   it('the shipped ladders are C = [0,1,1,2,2] for domestic+J and D = [0,1,1,1,1] for the W family (change deliberately, never to make a test pass)', () => {
@@ -357,13 +366,20 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     // ⚠ THE TRAILING ZERO IS LOAD-BEARING, not padding: it is what makes the plateau follow
     // `tierMatchFatigue` instead of duplicating it, and `runFatigueExtra`'s repeat-last rule then
     // holds it for every deeper round. Change the surcharge and the curve follows.
-    expect(ECONOMY.condition.runFatigueLadderDeep).toEqual([-2, -1, 0])
+    // ⚠ RE-AIMED 05.10 (ROUND 46 #7): the third ladder is [0, 0, 0, 1, 1, 1, 1] – the owner's «250-12, 500-15, 1000-18, шлем-21 … в 1000 на 1 матч
+    // больше, чем в 500, а в шлеме на 2». The ramp comment above is the 14.08 chronicle; the discount it describes is deleted.
+    expect(ECONOMY.condition.runFatigueLadderDeep).toEqual([0, 0, 0, 1, 1, 1, 1])
     // ⚠ 02.10: the surcharge the ramp lands on is 3 now (the owner's tariff ruling), so a Slam straight-sets match reads 3, 4, 5, 5, 5 …; the curve is an OFFSET and was not re-cut.
-    // ...and it is exactly the rungs whose draw outgrew 32 that read it – stated as a claim rather
-    // than left to `ladderFor`, so a new deep rung cannot arrive on the wrong curve unnoticed.
-    const deep = TIER_LADDER.filter((t) => TIERS[t].drawSize > 32)
-    expect(deep).toEqual(['wta1000', 'slam'])
-    for (const t of deep) expect(runFatigueExtra(0, t), t).toBe(-2)
+    // ⚠ RE-AIMED 05.10 (ROUND 46 #7): «it is exactly the rungs whose draw outgrew 32 that read it» is RETIRED with the draw key. The third ladder is
+    // keyed on the TIER now – the 500, the 1000 and the Slam – and the claim is stated from OUTSIDE `ladderFor`, rung by rung, so a new rung cannot
+    // arrive on the wrong curve unnoticed: the 500 (a 32-draw) reads it, every other W rung reads D, juniors and domestic read C.
+    const majors = ['wta500', 'wta1000', 'slam']
+    for (const t of TIER_LADDER) {
+      const ladder = majors.includes(t) ? [0, 0, 0, 1, 1, 1, 1] : TIERS[t].track === 'wta' ? [0, 1, 1, 1, 1] : [0, 1, 1, 2, 2]
+      for (let i = 0; i < 10; i++) expect(runFatigueExtra(i, t), `${t} match #${i + 1}`).toBe(ladder[Math.min(i, ladder.length - 1)])
+    }
+    // ...and the 500 is NOT over 32, which is the whole reason the key moved from the draw to the tier: a draw test could not have said his ruling.
+    expect(TIER_LADDER.filter((t) => TIERS[t].drawSize > 32)).toEqual(['wta1000', 'slam'])
   })
 
   it('matches the reference table at every tier and every depth', () => {
@@ -391,11 +407,9 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
         // is cheaper than `depth x matchDrain` - and converges to it from below as the ramp
         // plateaus. The identity above is what actually pins the composition; this half pins the
         // SIGN, which is a different claim and now has two answers.
-        if (TIERS[tier].drawSize > 32) {
-          expect(tournamentRunStrain(tier, run)).toBeLessThanOrEqual(base)
-        } else {
-          expect(tournamentRunStrain(tier, run)).toBeGreaterThanOrEqual(base)
-        }
+        // ⚠ RE-AIMED 05.10 (ROUND 46 #7): the third ladder's ramp BELOW the flat surcharge is deleted, so «never cheaper than the matches» holds for
+        // EVERY rung again – the 14.08 split into two answers is retired and the one answer is the original claim.
+        expect(tournamentRunStrain(tier, run)).toBeGreaterThanOrEqual(base)
       }
     }
   })
@@ -605,5 +619,37 @@ describe('a PRACTICE friendly stays at the floor of 1 — and now the −1 final
       expect(friendlyDrain(score)).toBeGreaterThanOrEqual(1)
       expect(friendlyDrain(score)).toBeLessThan(matchDrain('local', score))
     }
+  })
+})
+
+describe("the owner's four title-run nets – 05.10, ROUND 46 #7: 250 12, 500 15, 1000 18, Slam 21 (the whole drain path, no dice)", () => {
+  // ⚠ THE NET TOLL OF A STRAIGHT-SETS TITLE RUN WITH THE TRAVELLING MASSEUR, priced through the two functions the engine itself composes:
+  // `tournamentRunStrain` (matchDrain + the run ladder – what `finalizeTournament` charges the kid and the rival ledger charges the cohort) minus
+  // `masseurTourRelief` (3 a night between rounds, owner 19.09). The owner, 05.10: «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18,
+  // шлем-21 … в 1000 на 1 матч больше, чем в 500, а в шлеме на 2. Мне кажется это справедливая логика.» Before the ruling the same four read
+  // 12 / 17 / 12 / 14 – a won 500 outpriced a Slam (tools/condition-drain-probe.ts, SHIPPED column, round 46 A0).
+  const run = (k: number): { score: string }[] => Array.from({ length: k }, () => ({ score: SIMPLE }))
+  const net = (tier: TierId, k: number): number => {
+    const strain = tournamentRunStrain(tier, run(k))
+    return strain - masseurTourRelief(k, strain, true)
+  }
+
+  const TITLES: [TierId, number, number][] = [['wta250', 5, 12], ['wta500', 5, 15], ['wta1000', 6, 18], ['slam', 7, 21]]
+  // one test per rung, so a reverted ladder reddens exactly the three majors and leaves the 250 green
+  it.each(TITLES)('a straight-sets %s title run of %i matches nets %i with the travelling masseur', (tier, matches, want) => {
+    expect(net(tier, matches)).toBe(want)
+  })
+
+  it('«в 1000 на 1 матч больше, чем в 500, а в шлеме на 2»: the title runs are 5 / 6 / 7 matches, each match beyond the 500 nets +3, and the majors share ONE price per match', () => {
+    expect(net('wta1000', 6) - net('wta500', 5)).toBe(3)
+    expect(net('slam', 7) - net('wta500', 5)).toBe(6)
+    for (let k = 1; k <= 7; k++) {
+      expect(net('wta1000', k), `1000 vs 500 at ${k}`).toBe(net('wta500', k))
+      expect(net('slam', k), `Slam vs 500 at ${k}`).toBe(net('wta500', k))
+    }
+  })
+
+  it('an early exit at the 500, the 1000 or the Slam costs 5 for a one-match visit – the deep-draw discount (3 / 4 a visit) is gone', () => {
+    for (const tier of ['wta500', 'wta1000', 'slam'] as TierId[]) expect(tournamentRunStrain(tier, run(1)), tier).toBe(5)
   })
 })

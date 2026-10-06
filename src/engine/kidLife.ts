@@ -35,6 +35,11 @@ import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from './economy'
 import { COLLEGE_TIER_NAME } from './collegeOffer'
 import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './season/calendar'
 import { kidBirthYear } from './world/age'
+// ⭐⭐ ROUND 46 #9 – THE SPAN WORDS, imported rather than re-spelled: the wedding announcement and the
+// personal page's relationships cell count a relationship in the SAME arithmetic, and one function is what keeps
+// the two from drifting apart. `weddingCopy` is a copy leaf (it imports a type and nothing else), so no
+// import cycle can form through it.
+import { togetherSpanShort } from './world/lifeBeat/weddingCopy'
 import { seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
 // ⭐ ROUND 42 #6 – TYPE-ONLY, so this leaf stays a leaf. `engine/spirit.ts` owns the union and the
@@ -425,6 +430,57 @@ export function collegeNote(view: KidLifeWorldView): string {
   }
   const years = college.yearsDone === 1 ? '1 year' : `${college.yearsDone} years`
   return `${place} – ${years} of the ${college.totalYears}, and she left before the course ended.`
+}
+
+/** ⭐⭐ ROUND 46 MORNING #3 – WHEN THE SCHOOL CELL HAS NOTHING LEFT TO SAY, IT IS HER RELATIONSHIPS.
+ *
+ *  The owner, 06.10: «смотри, я имел в виду, что у нас есть плашка про школу, и она не используется
+ *  после школы/колледжа примерно никак и просто место занимает. Мы можем в ней писать "Отношения" и
+ *  заполнять если знаем, что они есть и как давно, либо ставить "кажется одинока" или вроде того когда
+ *  мы НЕ знаем. Потом меняет с помолвкой, свадьбой и т.д. "Together for {span}" - очень хорошо.»
+ *  It REPLACES round 46 #9's sentence under the grid (`togetherNote`, which retired with this): that was the
+ *  first answer to his 05.10 question «А у нас где-то есть индикатор, что у неё есть отношения в данный
+ *  момент?» – and he meant the cell, not a paragraph.
+ *
+ *  ⚠ ⚠ DRAFT – every string below is the BUILDER'S DRAFT for the owner's blessing (invariant 4):
+ *  docs/rounds/round-46.md, `## DRAFT strings (R46-S…)`, rows S39–S45. `Together for` is his own phrase.
+ *
+ *  ⚠ WHEN IT OPENS: the heading ladder says `After school` (out of school and not studying – `stageLabelOf`'s own
+ *  predicate, restated nowhere) AND she is `GROWN_UP_AGE_YEARS`, the age the ladder's last rung opens on. For a
+ *  girl who never went to college that IS the rung `afterSchoolTile` calls `Grown up` (tests/round23-kid-life.test.ts
+ *  sweeps the two against each other); for one who finished a course or left it, it is the same age, because
+ *  `Graduate` / `Left college` are the same dead cell from 22 – he said «школы/колледжа». Before then
+ *  `relationshipsTile` is null and the school ladder reads exactly as it did.
+ *  ⚠ THE LADDER ITSELF IS UNTOUCHED – `lifeStageTile`, `stageLabelOf` and `STAGE_LABEL` keep every rung, and their
+ *  pins stand. The engine hands the screen a SECOND field and the screen prints it when it is there.
+ *
+ *  ⚠ THE PARENT'S ATTACHMENT, NEVER THE WORLD'S (`toSnapshot` feeds `knownPartner`): a girl who has not told him
+ *  reads `it seems` – exactly right, because he may simply not know – and an ended one reads the same. No
+ *  `together` fact is not a gap; it is the line.
+ *  ⚠ NO NAME ON THE TILE (the paragraph carried one): a name and a span do not fit a `nowrap` line, and his own
+ *  shape is `Together for {span}`.
+ *  ⚠ THE SPAN COUNTS FROM THE DAY THEY GOT TOGETHER IN EVERY STATE (`relationshipDurationWeeks`, the wedding
+ *  card's own count), so engaged and married say `together` before it: `Married` over a bare `1y 6m` would read as
+ *  a marriage that old. The compact span is what lets that word stand on a 16-character line.
+ *
+ *  Pure: the view's facts. Zero draws, nothing persisted. */
+export function relationshipsTileOpen(view: KidLifeWorldView): boolean {
+  return stageLabelOf(view) === STAGE_LABEL.after && view.ageYears >= GROWN_UP_AGE_YEARS
+}
+
+/** ⚠ ⚠ DRAFT (R46-S39) – the cell's heading once it is her relationships; his «Отношения». */
+export const RELATIONSHIPS_LABEL = 'Relationships'
+
+/** ⚠ ⚠ DRAFT (R46-S41, S43) – the cell's two lines, by what the parent knows. Null while the school ladder is
+ *  still the cell's. See `relationshipsTileOpen` for when, and why. */
+export function relationshipsTile(view: KidLifeWorldView): KidLife['relationships'] {
+  if (!relationshipsTileOpen(view)) return null
+  const together = view.together
+  if (!together) return { label: RELATIONSHIPS_LABEL, lead: 'On her own', note: 'it seems' }
+  const span = togetherSpanShort(together.weeks)
+  if (together.married) return { label: RELATIONSHIPS_LABEL, lead: 'Married', note: `together ${span}` }
+  if (together.engaged) return { label: RELATIONSHIPS_LABEL, lead: 'Engaged', note: `together ${span}` }
+  return { label: RELATIONSHIPS_LABEL, lead: 'Together for', note: span }
 }
 
 /** ⭐⭐ ROUND-23 #18 – HER OWN ACCOUNT, said on the page that is about her.
@@ -932,6 +988,27 @@ export interface KidLifeWorldView {
    *  money, so what it needs to know is whether the rule applies at all. Composed at snapshot time
    *  off the till's own ownership guard, never re-derived here. */
   ownsBrand: boolean
+  /** ⭐⭐ ROUND 46 #9 – THE ATTACHMENT THE PARENT HAS BEEN TOLD ABOUT, or null.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS NULL: a view that says nothing about love is a view with nobody in it,
+   *  so the hand-built views in the tests (and any future probe) need no edit and cannot grow a line by
+   *  accident. `toSnapshot` always passes it, and `tests/component/round23-kid-page.test.ts` pins that it
+   *  does. */
+  together?: KidLifeTogetherView | null
+}
+
+/** ⭐⭐ ROUND 46 #9 / MORNING #3 – HER ATTACHMENT AS THE PERSONAL PAGE MAY SEE IT: three facts and no episode (no
+ *  id, no name, no week of anything, no `wants`), so the cell can say what the parent knows and nothing the fog
+ *  law keeps. ⚠ `name` LEFT WITH THE PARAGRAPH (06.10): nothing prints it now, and a fact nobody reads is the one
+ *  that goes stale. */
+export interface KidLifeTogetherView {
+  /** whole weeks together – `relationshipDurationWeeks`, the count the wedding announcement prints too */
+  weeks: number
+  /** married and not over – `latchedEpisode(world) !== null`, the one spelling of «is she married» */
+  married: boolean
+  /** the wedding is announced and has not landed – `upcomingWeddingWeek(world) !== null`, the calendar's own
+   *  question, so the cell and the calendar's mark cannot disagree about whether she is engaged */
+  engaged: boolean
 }
 
 /** Her four years, as the personal page is allowed to see them (round 23 #6b). */
@@ -957,6 +1034,9 @@ export function buildKidLife(view: KidLifeWorldView): KidLife {
     schoolLabel: stageLabelOf(view),
     schoolWhy: schoolCutOffNote(view),
     collegeNote: collegeNote(view),
+    // ⭐⭐ ROUND 46 MORNING #3 – the School cell's last rung: who she is with, as the cell's own two lines. Null until
+    // she is out of school and 22, so the screen prints `school` exactly as before.
+    relationships: relationshipsTile(view),
     ownAccount: ownAccountNote(view),
     // ⭐⭐ ROUND 42 #10 – the same facts as rows, for her own page. The Money screen keeps the
     // sentence above; this is the card that replaces the hint paragraph on screen C.

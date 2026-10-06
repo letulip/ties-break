@@ -9,6 +9,8 @@ import { ECONOMY } from '../../economy'
 import { activeEpisode, loveEpisodesOf } from '../loveEpisodes'
 import { captureMilestone, fireMilestone } from '../milestones'
 import { hasBeatFor, kidAgeNow, lifeLogOf, raiseLifeBeat } from '../lifeBeat'
+// ⭐ ROUND 46 #22 – the dev life-event boost: a leaf, so this import closes no cycle.
+import { boostedChance } from '../lifeBoost'
 import type { WorldState } from '../state'
 
 // 11. THE WEDDING – ⚠⚠ THE WEEK SHE DECIDES TO MARRY (the wedding, wave 7: T2) –
@@ -53,7 +55,8 @@ export function weddingEligible(world: WorldState): boolean {
  */
 export function rollWedding(world: WorldState): void {
   if (!weddingEligible(world)) return
-  if (rngFromSeed(`${world.seed}:life:wedding:${world.week}`)() >= ECONOMY.wedding.perWeek) return
+  // ⭐ ROUND 46 #22 – `boostedChance` is `perWeek * 1` with the dev switch off (bit-identical) and `* 8` with it on; the uniform is the same either way.
+  if (rngFromSeed(`${world.seed}:life:wedding:${world.week}`)() >= boostedChance(ECONOMY.wedding.perWeek)) return
   // ⚠ THE ROW IS TAKEN AFTER THE DRAW AND IS THE GATE'S OWN – `weddingEligible` just proved it
   // non-null, and `rollEnds` runs before this at the call site, so the episode the beat is about is
   // the episode still standing this week.
@@ -119,3 +122,27 @@ export function landWedding(world: WorldState): void {
   }
 }
 
+
+/** ⭐⭐ ROUND 46 #11b – THE WEEK AN ANNOUNCED WEDDING WILL LAND, or null. The calendar's one question («поставим
+ *  ли мы свадьбу в календарь?», the owner, 05.10), asked of the engine so the screen never restates it
+ *  (CLAUDE.md's parity class).
+ *
+ *  ⚠ IT IS `landWedding`'s OWN PREDICATE READ FORWARD: the same row (`'engaged'`, ANSWERED), the same episode
+ *  gates (still standing, not yet latched) and the same arithmetic (`row.week + weeksAfterEngagement`).
+ *  `tests/life-moment-engine.test.ts` drives `landWedding` week by week and demands it latch on exactly the
+ *  week this names, so the two cannot drift. «Announced» means the parent has answered the card: until then the
+ *  week is stopped and nothing is on any calendar.
+ *  ⚠ A week that has already come (`due <= world.week`) is not «upcoming»: once the wedding has landed the
+ *  episode is latched and this returns null – the MOMENT (`lifeMomentOf`), not the calendar, carries that day.
+ *  Pure: zero draws, no writes. */
+export function upcomingWeddingWeek(world: WorldState): number | null {
+  for (const row of lifeLogOf(world)) {
+    if (row.kind !== 'engaged' || row.answer === null) continue
+    const episode = loveEpisodesOf(world).find((e) => e.id === row.detail)
+    if (episode === undefined || episode.endedWeek !== null) continue
+    if (episode.latchedWeek !== null) continue
+    const due = row.week + ECONOMY.wedding.weeksAfterEngagement
+    if (due > world.week) return due
+  }
+  return null
+}

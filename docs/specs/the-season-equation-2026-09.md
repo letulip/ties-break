@@ -1077,3 +1077,36 @@ Holidays fall by a third (7.2 → 4.8) and the 19.09 bar was «отпуска р
 1. **The Slam and the 1000 are now the cheapest big weeks, per match, on the tour.** The 14.08 ramp [-2, -1, 0] was written against a surcharge of 5 and was left alone as the ruling says; with a plateau of 3 it makes a Slam straight-sets match cost 3, 4, 5, 5, 5, 5, 5 against 5, 6, 6, 6, 6 at a 500. A first-round Slam match costs what a W15 match costs. Keep the ramp, or cut it to the new plateau?
 2. **The shape of the two top steps.** His first shape kept 1000 and Slam one step above 250 and 500 (4 against 3); the shipped one puts the 500, the 1000 and the Slam on one step. At the 500 the two shapes are the same table.
 3. Holidays came down by a third; if he wants them rarer still, the levers B1 priced in §5 (the masseur's relief, the concave depth curve) are untouched and still available.
+
+### 11g. 05.10 – the run ladder is his too: 250 12, 500 15, 1000 18, Slam 21 (round 46 #7)
+
+**This answers §11f question 1 and supersedes the 14.08 ramp the tariff ruling left alone.** With the tariff at 3 for the 500, the 1000 and the Slam, he read the next consequence off his own career: «Выигранный 1000 снимает сейчас 12 кондишина, и кажется, что 500 снимает ощутимо больше. Проверь пожалуйста». The probe agreed (round 46, A0 – `tools/condition-drain-probe.ts`, SHIPPED column, no dice): the net toll of a straight-sets TITLE run with the travelling masseur was 250 **12**, 500 **17**, 1000 **12**, Slam **14**, so a won 500 outpriced a Slam. The cause is the ramp `[-2, -1, 0]` – it opens the 1000's and the Slam's early rounds at 3 and 4 a match against the 500's flat 5, and the masseur's relief (3 a night, per match played) compounds it.
+
+**His ruling (05.10), verbatim:** «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18, шлем-21 что скажешь? это примерные цифры, посчитай по нашей математике пожалуйста. в 1000 на 1 матч больше, чем в 500, а в шлеме на 2. Мне кажется это справедливая логика.»
+
+**The shape that lands his four numbers exactly.** Nothing here is a new mechanic. The run ladder for the 500, the 1000 and the Slam becomes `[0, 0, 0, 1, 1, 1, 1]` – the first three matches of a run carry no run surcharge, every match from the fourth carries +1 – and the deep-draw discount `[-2, -1, 0]` for draws over 32 is DELETED. From the fourth match on a match nets +3 at any of the three (a gross 6, less the masseur's 3), the title runs are 5, 6 and 7 matches, and «в 1000 на 1 матч больше, чем в 500, а в шлеме на 2» is that arithmetic and nothing else. The ladder is keyed on the TIER now (`MAJOR_RUNGS` in `engine/condition.ts`), not on the draw: the 500 is a 32-draw, so a draw test could never have named it. The key keeps its old name, `runFatigueLadderDeep`, because the rival memo key, four benches and a notes anchor read it. Nothing else moves a digit: his 02.10 surcharges (W15-75 1, W100-250 2, 500 and up 3), the W-32 ladder `[0, 1, 1, 1, 1]` for 15-250, the junior ladders `[0, 1, 1, 2, 2]`, the domestic rungs. No schema, no new key, no dice – and no MAIN draw, so the frozen capture did not move.
+
+**Predicted against measured** – a straight-sets title run, masseur travelling; "measured" is the probe's SHIPPED column on the live ladder and the live tariff:
+
+| rung | title run | before (A0, measured) | predicted | measured | his number |
+|---|---|---|---|---|---|
+| WTA 250 | 5 matches | 12 | 12 | **12** | 12 |
+| WTA 500 | 5 | 17 | 15 | **15** | 15 |
+| WTA 1000 | 6 | 12 | 18 | **18** | 18 |
+| Slam | 7 | 14 | 21 | **21** | 21 |
+
+The same run by matches played k (net toll; the "before" rows are the replaced ladders' own arithmetic – the 500 on `[0, 1, 1, 1, 1]`, the two deep rungs on `[-2, -1, 0]` – anchored at the title column above, the "now" rows are the probe's):
+
+```
+                    k=1   k=2   k=3   k=4   k=5   k=6   k=7
+WTA 500   before     5     8    11    14    17
+WTA 500   now        5     7     9    12    15
+WTA 1000  before     3     4     6     8    10    12
+WTA 1000  now        5     7     9    12    15    18
+Slam      before     3     4     6     8    10    12    14
+Slam      now        5     7     9    12    15    18    21
+```
+
+**What it costs and what it buys elsewhere.** The early exit is the discount's death: a one-match visit at the 1000 or the Slam was 3 and is 5, a two-match visit was 7 gross and is 10 – the big sheets stop being the cheapest trips on the tour, which was the worry of §11f question 1. The 500 gets cheaper for a deep run (17 to 15), the 1000 and the Slam dearer (12 to 18, 14 to 21), which is the order he asked for. The rivals share the ladder through `tournamentRunStrain`, so the cohort's fatigue moves with the kid's. Not asserted here and left to the architect's gate: the corridors (econ-reach, the injury percentage, the holiday bench), which re-pin after the build, round-45 style.
+
+**What is pinned.** `tests/fatigueReference.test.ts`: the reference table's three rows, the shipped-ladder claim now stated rung by rung from outside `ladderFor`, the first-match and additive claims re-aimed (the third ladder no longer opens below zero), and a new describe that asserts his four numbers through `tournamentRunStrain` and `masseurTourRelief`, one case per rung – reverting the ladder reddens exactly the 500, the 1000 and the Slam (17, 12, 14 against 15, 18, 21) and leaves the 250 green. `tests/principles-t73-economy-identity.test.ts` is re-pinned with a dated note. The frozen capture (`tests/condition.test.ts`, 41550 draws, hash `e6b0c709`) is green with its pins untouched.

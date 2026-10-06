@@ -53,7 +53,7 @@ function endingView(over: Partial<EndingView> = {}, money: Partial<CareerMoney> 
       detail: 'she stopped at thirty-one',
       resumesWeek: null,
     },
-    album: [1, 2, 3, 4, 5, 6, 7].map(albumPage),
+    closing: albumPage(7),
     scroll: [],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: TOTALS,
@@ -88,11 +88,6 @@ function patch(view: EndingView): void {
   })
 }
 
-/** The last page is where the totals live – turn to it. */
-async function lastPage(w: ReturnType<typeof mount>): Promise<void> {
-  for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
-}
-
 describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
@@ -100,7 +95,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // A family that put $2,000,000 of its $3,000,000 outgoings into things it still owns.
     patch(endingView({}, { heldCents: 2_000_000_00, outlayCents: 1_000_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)
-    await lastPage(w)
     const totals = w.find('.ending-totals')
     expect(totals.text(), 'the label is his and does not move').toContain('Spent')
     // ⚠⚠ THE ARM. Point the template back at `view.totals.spentCents` and this pair flips: measured
@@ -117,7 +111,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
       endingView({}, { heldCents: 2_000_000_00, outlayCents: 1_000_000_00, holdingsCents: 2_600_000_00, herAccountCents: 900_000_00 }),
     )
     const w = mount(EndingScreen)
-    await lastPage(w)
     const totals = w.find('.ending-totals')
     expect(totals.text()).toContain('Her account')
     expect(totals.text()).toContain(formatCents(900_000_00))
@@ -129,7 +122,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
   it('⚠ ...and says NOTHING about either on a career that owned nothing and was never paid a cheque of her own', async () => {
     patch(endingView())
     const w = mount(EndingScreen)
-    await lastPage(w)
     const totals = w.find('.ending-totals')
     expect(totals.text(), 'no row about an account she has not got').not.toContain('Her account')
     expect(totals.text(), 'and none about holdings that do not exist').not.toContain('Still owned')
@@ -143,7 +135,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // магазине на круг» – the wallet plus the shelf at value, folded engine-side by `careerMoney`.
     patch(endingView({}, { holdingsCents: 2_600_000_00, portfolioCents: 2_812_340_00 }))
     const w = mount(EndingScreen)
-    await lastPage(w)
     const totals = w.find('.ending-totals')
     // ⚠⚠ THE ARM. Delete the row from the template and this goes red on its first assertion –
     // measured 18.09, RED [1 test].
@@ -164,7 +155,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     setActivePinia(createPinia())
     patch(endingView({}, { portfolioCents: 1234_00 }))
     const w2 = mount(EndingScreen)
-    await lastPage(w2)
     expect(w2.find('.ending-totals').text(), 'the poor career gets the row too').toContain("Family's portfolio")
     w2.unmount()
   })
@@ -181,7 +171,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // count, and this goes red – measured 18.09, RED [1 test, 1 assertion each].
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00, portfolioCents: 2_812_340_00 }))
     const w = mount(EndingScreen, { attachTo: document.body })
-    await lastPage(w)
     const dl = document.querySelector('.ending-totals')!
     expect(dl.querySelectorAll('dt')).toHaveLength(8)
     expect(getComputedStyle(dl).gridTemplateColumns, 'the cells wrap rather than narrow').toContain('auto-fit')
@@ -194,7 +183,6 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
   it('⚠ the five labels are all still on the page, in his order, and the first is the one HE renamed', async () => {
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)
-    await lastPage(w)
     const labels = w.findAll('.ending-totals dt').map((d) => d.text())
     // ⭐⭐⭐ RULING 2, 18.09 («да, пойдет» on draft R46-3) – and this is the assertion that moved with
     // it. ⚠ THE PIN ASSERTS WHAT THE STRING IS, so a pin moving is exactly what a ruled rename looks
@@ -221,14 +209,12 @@ describe('⭐⭐ round 46 #10 – the best rank the epilogue prints', () => {
   it('⭐⭐ prints the rank the engine hands it, and a dash when she never held one', async () => {
     patch(endingView({ bestRank: 17, bestRankTrack: 'wta' }))
     const w = mount(EndingScreen)
-    await lastPage(w)
     expect(w.find('.ending-totals').text()).toContain('#17')
     w.unmount()
 
     setActivePinia(createPinia())
     patch(endingView({ bestRank: null, bestRankTrack: null }))
     const w2 = mount(EndingScreen)
-    await lastPage(w2)
     const row = w2.findAll('.ending-totals div').find((d) => d.text().includes('Best rank'))
     expect(row?.text(), 'a rank she never had is a dash, never a number').toContain('–')
     w2.unmount()

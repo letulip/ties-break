@@ -315,7 +315,8 @@ const RAIL_DASHBOARD = '#app > nav.tab-bar > .rail-dash'
  *
  * ⚠⚠ THE SAME ARGUMENT AS `RAIL_DASHBOARD`, AND IT MATTERS MORE HERE. An exemption written as
  * «ignore `Back` and `Next`» would ignore those two words ANYWHERE in the app – `EndingScreen`'s
- * album pager uses exactly them – and would be one edit away from ignoring a third control somebody
+ * album pager used exactly them until round 46 #18 retired the reel for the real album book, and the
+ * argument outlives the example – and would be one edit away from ignoring a third control somebody
  * decided to call `Back`. A container cannot be widened that way: a later phase would have to move an
  * element INTO a week's pager, and `the boundary is a container` fails the moment anything but the
  * two arrows is in there.

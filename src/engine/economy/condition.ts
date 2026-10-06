@@ -112,9 +112,14 @@ export const condition = {
    *  owner (condition.runFatigueLadderDeep): «а сейчас немного некорректно получается»
    *  ⚠⚠ condition.runFatigueLadderDeep: AND THAT REJECTION IS A STANDING SHAPE RULE, WHICH THE 19.09 PASS READ OFF IT AND OBEYED.
    *  owner (condition.runFatigueLadderDeep), 19.09: «немного уменьшить усталость на глубоких турнирах»
+   *  ⚠⚠⚠ condition.runFatigueLadderDeep: 05.10 – THE CURVE ABOVE IS RETIRED, THE NAME IS HISTORY, AND THE VALUE BELOW IS HIS (round 46 #7). It runs
+   *  on the 500, the 1000 and the Slam BY TIER (`MAJOR_RUNGS`, engine/condition.ts), no longer on «a draw over 32»: three matches free of run
+   *  surcharge, +1 from the fourth. Straight-sets title runs with the travelling masseur net 250:12, 500:15, 1000:18, Slam:21 – his four numbers.
+   *  owner (condition.runFatigueLadderDeep), 05.10: «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18, шлем-21 что скажешь? это
+   *  примерные цифры, посчитай по нашей математике пожалуйста. в 1000 на 1 матч больше, чем в 500, а в шлеме на 2. Мне кажется это справедливая логика.»
    *  → docs/notes/economy/condition.md#conditionrunfatigueladderdeep
    */
-  runFatigueLadderDeep: [-2, -1, 0] as number[],
+  runFatigueLadderDeep: [0, 0, 0, 1, 1, 1, 1] as number[],
   // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
   // then linear down to `floor` at condition 0:
   //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.

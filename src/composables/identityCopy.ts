@@ -115,6 +115,18 @@ export const WEIGHT_COPY = {
   note: 'You can change this later in More. Turning it off stops what has not happened yet – it never erases what a career has already lived.',
   /** the screen-reader name for the pair, which is one question and not two controls */
   groupLabel: 'The weight',
+  /** ⭐ ROUND 46 #2 – THE SETTINGS ROW'S OWN LABEL (owner: «the weight дублирует the weight в
+   *  настройках, надо второе переписать и может немного развернуть»). The row sits under an `<h2>`
+   *  that already says `title` and used to print `title` again as its label – the same two words
+   *  twice in two lines. The heading KEEPS `title` (it is the question's name on all three
+   *  surfaces); the row now says WHAT THE SWITCH GATES, in the spec's own nouns: pregnancy loss and
+   *  bereavement are the two hazards that read `world.weightEnabled` (`pregnancyLossEligible`,
+   *  `bereavementEligible`). It also names what the hint under it calls «loss» – in a tennis game a
+   *  bare «loss» could read as a lost match.
+   *  ⚠ A DRAFT FOR HIS BLESSING (R46-S23 in docs/rounds/round-46.md, with two alternates).
+   *  ⚠ IT IS ALSO THE SWITCH'S ACCESSIBLE NAME (`aria-labelledby` on the row), so a re-word moves
+   *  the name list in `tests/component/a11y-sweep.test.ts` and the two e2e transcriptions with it. */
+  settingsLabel: 'Pregnancy loss and bereavement',
   /** the settings row's own second line. ⚠ It is the SAME promise as `note` in the shape that row's
    *  neighbours use (Week story's «Off: …»), because a settings hint that said something different
    *  from the creation card would be two answers to one question. */

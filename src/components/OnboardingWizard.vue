@@ -228,7 +228,7 @@ const props = defineProps<{ dynasty?: DynastyHandover }>()
 const recordedBirthdays = computed(() => props.dynasty?.childBirthdays ?? [])
 
 const profile = reactive<PlayerProfile>({
-  kidName: randomName(),
+  kidName: randomName(props.dynasty?.motherName.first),
   // T10: her mother's surname on a dynasty run – locked in the template, so the init IS the value.
   kidLastName: props.dynasty ? props.dynasty.motherName.last : randomSurname(),
   gender: 'girl',
@@ -301,7 +301,7 @@ function next(): void {
   if (step.value < STEP_COUNT && !nextDisabled.value) step.value++
 }
 function reroll(): void {
-  profile.kidName = randomName()
+  profile.kidName = randomName(props.dynasty?.motherName.first)
 }
 function rerollLast(): void {
   profile.kidLastName = randomSurname()

@@ -268,6 +268,8 @@ The comment essays that stood above the `condition` constants in `src/engine/eco
 
 ## `condition.runFatigueLadderDeep`
 
+⚠⚠ 05.10 – SUPERSEDED (round 46 #7). The value is now `[0, 0, 0, 1, 1, 1, 1]`; it runs on the 500, the 1000 and the Slam BY TIER (`MAJOR_RUNGS` in `engine/condition.ts`), and both the draw-over-32 key and the `[-2, -1, 0]` discount below are gone. The owner, 05.10: «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18, шлем-21 … в 1000 на 1 матч больше, чем в 500, а в шлеме на 2. Мне кажется это справедливая логика.» The name is history; the essay below is the 14.08 chronicle, kept verbatim. Measured and predicted: docs/specs/the-season-equation-2026-09.md §11.
+
 ```ts
     /** ⚠⚠ THE OWNER'S OWN CURVE FOR THE DEEP DRAWS, 14.08, given as the two bounds of a match at a
      *  Slam and a WTA 1000 round by round: min 5 6 7 7 7 7 7, max 7 8 9 9 9 9 9.

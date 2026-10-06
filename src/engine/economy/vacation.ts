@@ -125,6 +125,12 @@ export const vacation = {
       conditionGain: 48,
       buffFactor: 1,
       freeOnceGranted: true,
+      // ⭐⭐ ROUND 46 #6 – owner, 05.10: «Может для своей яхты тоже поставим -15% вероятности травмы?» «Тоже» is
+      // Elite's 0.85 on this very sheet. It rides the OWNER's week only («своей»): the charter above keeps
+      // `buffFactor` 1, so a family with no delivered yacht is byte-identical. ⚠ IT RETIRES §3f's VETO ON THE
+      // OWNER'S SIDE – free, 48 and 0.85 is Elite with the bill removed; the veto was the spec's guess and his
+      // later word outranks it. docs/specs/the-shop-2026-08.md §13h has the measurement and the one-knob revert.
+      grantedBuffFactor: 0.85,
     },
   ] as VacationPackage[],
 } as const

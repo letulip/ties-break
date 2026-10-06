@@ -517,14 +517,17 @@ const screenTab = computed(() => props.screenTab)
             <!-- ⭐⭐⭐ THE SECONDARY MARKET, S5 – ON THE MARKET. Present only while the engine says the row (for the academy, the lot) is listed
                  (`row.listing`), so a parked-cash row and an unlisted thing draw exactly what they always drew. The badge is the engine's own
                  week arithmetic read (`listingBadge`), flipping to its quiet wording in the week the engine's stale letter arrives; Withdraw is
-                 one tap and no question, because taking an ad down is free. The Sell control below stays: the exit is never locked (spec §2i). -->
+                 one tap and no question, because taking an ad down is free. The Sell control stays: the exit is never locked (spec §2i).
+                 ⭐⭐ ROUND 46 #1 – WITHDRAW AND SELL ARE ONE ROW. Both buttons are siblings inside the ONE `.shop-stake-row` every owned card
+                 already draws, Withdraw first, so a listed card is the unlisted card plus one control and the same markup serves every family
+                 that can list. The badge keeps its own line above and no button lives in it any more. Once the engine says the row is listed
+                 the Sell control reads `SALE_LABELS.sellNow` and carries `shop-action--sell-now` (the design system's warning yellow): the
+                 SAME predicate, `row.listing`, that draws the badge and nothing else. His words are in `shopSellRowNote` in
+                 composables/shop.ts (no Cyrillic in a template). -->
             <div v-if="row.listing" class="shop-row-listing" :class="{ 'is-stale': listingIsStale(row) }">
               <p class="shop-row-listing-badge">{{ listingBadge(row) }}</p>
-              <button class="shop-action" :disabled="!canWithdraw()" @click="withdrawListing(row)">
-                {{ SALE_LABELS.withdraw }}
-              </button>
             </div>
-            <div class="shop-stake-row">
+            <div class="shop-stake-row" :class="{ 'is-listed': row.listing !== undefined }">
               <!-- ⚠ `min` IS THE BUY FLOOR AND THERE IS DELIBERATELY NO `max`, which is the one
                    asymmetry a shared field creates and is left rather than "fixed". Both
                    attributes were always ADVISORY – `canBuy` / `canSell` decide what is
@@ -548,7 +551,15 @@ const screenTab = computed(() => props.screenTab)
               <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
                 Add more
               </button>
-              <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
+              <template v-if="row.listing">
+                <button class="shop-action" :disabled="!canWithdraw()" @click="withdrawListing(row)">
+                  {{ SALE_LABELS.withdraw }}
+                </button>
+                <button class="shop-action shop-action--sell-now" :disabled="!canSell(row)" @click="askSell(row)">
+                  {{ SALE_LABELS.sellNow }}
+                </button>
+              </template>
+              <button v-else class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
                 Sell
               </button>
             </div>
@@ -1310,7 +1321,8 @@ const screenTab = computed(() => props.screenTab)
   color: var(--money-out);
 }
 
-/* THE SECONDARY MARKET, S5 – the listed row's badge and its Withdraw, one line that wraps rather than overflows. */
+/* THE SECONDARY MARKET, S5 – the listed row's badge, one line that wraps rather than overflows. (Its Withdraw stands beside Sell in
+   `.shop-stake-row` since round 46 #1 – the block at the end of this stylesheet.) */
 .shop-row-listing {
   display: flex;
   flex-wrap: wrap;
@@ -1586,5 +1598,70 @@ const screenTab = computed(() => props.screenTab)
 .shop-action:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* ⭐⭐⭐ ROUND 46 #1 – THE LISTED CARD'S TWO BUTTONS ARE ONE ROW ON EVERY FAMILY, AND THE SECOND ONE IS YELLOW.
+   owner, 05.10: «Когда выбрали залистить айтем на продажу появляется кнопка withdraw выше sell на карточке машин. Предлагаю в один ряд
+   сделать, а ещё, если случился list, то sell заменять на sell now и жёлтую. На карточке домов кнопки лежат одна сверху другой. Надо
+   проверить во всех разделах и сделать одинаково.»
+
+   ⚠ TWO DIFFERENT SYMPTOMS, ONE CAUSE: THE WITHDRAW LIVED IN A BLOCK OF ITS OWN ABOVE THE ROW. On the cars (`--art-left`) that block simply
+   stacked over `.shop-stake-row` – «withdraw выше sell». On the houses, boats and planes (`--art-right`) the rule near the top of this
+   sheet stands EVERY `.shop-action` of the card on the painting at `right: 10px; bottom: 10px`, so Withdraw and Sell were two absolutely
+   positioned boxes on the same spot – «одна сверху другой» is literal there. The markup now puts both in the ONE row every owned card
+   already draws (`.shop-stake-row.is-listed`), which is the same row for car, house, boat, plane and academy; the rules below only say
+   where each family keeps it – each keeps the pair WHERE ITS OWN SELL ALREADY STOOD, so no family's ruling about its corner moved. */
+.shop-stake-row.is-listed {
+  gap: 6px;
+}
+
+/* ⚠ A touch tighter than a lone pill (9px a side, not 12px): TWO of them share the ~165px the painting leaves the words on a framed card
+   at 375px, and a pair that wraps is the stacked layout he asked to be rid of. Measured, not guessed – the numbers are in the round-46 ledger. */
+.shop-stake-row.is-listed .shop-action {
+  padding-inline: 9px;
+}
+
+/* THE CORNER FAMILIES (cars, academy): their Sell sits in the card's bottom-right corner by `margin-left: auto` on the LAST control. With
+   Withdraw in front of it that margin would split the row into its two ends, so on a LISTED row it is cleared and the row itself pushes the
+   pair right: they travel to the corner TOGETHER, the yellow Sell stands exactly where the plain one stood, and a pair that has to wrap
+   (a phone under ~345px) wraps right-aligned – two pills stacked in the corner – rather than one at each end.
+   ⚠ `justify-content: flex-end` IS SAFE HERE ALTHOUGH THE RULE ABOVE REFUSED IT FOR THE SHARED ROW: a listed row never holds a field or
+   «Add more» (only a THING lists), so there is no control on a family he did not name for the push to move. */
+.shop-row--corner-action .shop-row-owned > .shop-stake-row.is-listed {
+  justify-content: flex-end;
+}
+
+.shop-row--corner-action .shop-row-owned > .shop-stake-row.is-listed > .shop-action:last-child {
+  margin-left: 0;
+}
+
+/* THE PAINTED FAMILIES (houses, boats, planes): the ROW is what stands on the painting now, one box in its corner, and the two pills are
+   in ITS flow. The row is bounded by the band it sits on exactly as the lone pill is (`max-width`), so it can wrap before it can print
+   itself over a sentence.
+   ⚠ THE BOUND IS HALF THE CARD LESS 12px, AND IT WAS MEASURED RATHER THAN CHOSEN: the pair is 149px (74 + 6 + 69, real browser), the band is
+   the painting's own 50%, and the lone pill's `40% - 20px` would have wrapped it on every phone. `50% - 20px` fits at 375px (151px) and
+   wraps at 360px (144px) – the commonest Android width – so it is `50% - 12px`: 152px at 360px and 159px at 375px, with the row's left edge
+   still inside the painting. Narrower than ~345px the pair wraps rather than overflows, which is the intended failure. */
+.shop-row--art-right .shop-stake-row.is-listed {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  max-width: calc(50% - 12px);
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.shop-row--art-right .shop-stake-row.is-listed .shop-action {
+  position: static;
+  max-width: none;
+}
+
+/* «жёлтую» – THE DESIGN SYSTEM'S OWN YELLOW, `--warning` (an alias of `--amber`, "you may still take this": an instant sale at the fire
+   price is exactly that). Dark ink from `--on-lime`, the app's ink for a bright fill – it is the DARK half of that pair, whatever the fill.
+   ⚠ THREE CLASSES, because the painted families' frosted pill above is two and this fill has to win over it. */
+.shop-row .shop-action.shop-action--sell-now {
+  border-color: var(--warning);
+  background: var(--warning);
+  color: var(--on-lime);
 }
 </style>

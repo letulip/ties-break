@@ -259,7 +259,8 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // birthday is a date that cannot move, above 'fork' because the fork is the parent answering and
     // this is her being heard; `answerFork` refuses while her row is unanswered, so the ordering is
     // the engine's and this line is its other half. The neighbours are pinned below.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'life', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league', 'shoot-clash']
+    // ⚠ 'life-moment' JOINED AT ROUND 46 #11c (a span ends ON the day a wedding or birth lands); its cases are tests/life-moment-span.test.ts's.
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'life', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league', 'shoot-clash', 'life-moment']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     // ⚠ THE RULED SANDWICH, asserted rather than described: birthday leads the beat, the beat leads

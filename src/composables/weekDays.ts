@@ -405,6 +405,33 @@ export function layoffReturnWeek(snap: Pick<Snapshot, 'week' | 'injury'>): numbe
   return snap.injury ? snap.week + snap.injury.weeksRemaining : null
 }
 
+/** ⭐⭐ ROUND 46 #16 – IS SHE LAID UP IN `week`, as the week the button plays will find her.
+ *
+ *  The owner: «W11 в календаре показали injured, на home injured walkover, но при этом пустили играть
+ *  на W500». Both surfaces asked the CLINIC's number (`weeksRemaining`) whether the layoff covered
+ *  next week; the tick asks what is left after `rollInjury` has also paid the masseur's rehab week.
+ *  With two weeks left and his cadence landing on the next tick the clinic said «out» and the tick
+ *  cleared her – she played. The engine is right (his week is the product, round 34), so the SCREEN
+ *  follows it.
+ *
+ *  ⚠ ONLY THE PLAYED WEEK (`snap.week + 1`, the one `advance(1)` resolves) READS `expectedWeeks`, the
+ *  wire's `weeksRemaining − masseurRehabWeeksAhead` (round 41 #19). For that one week the replay is
+ *  not a forecast but the tick's own arithmetic. Every other week keeps the clinic's window, on
+ *  purpose: the countdown on screen is NOT rewritten (round 34), the entry gate and the planner read
+ *  the same window (R10-17), and the look-ahead starts the week AFTER the grid, so those rows are
+ *  forecasts by construction – widening them is an owner call (docs/rounds/round-46.md, item 16).
+ *
+ *  Absent `expectedWeeks` (no masseur, a layoff too short for his cadence) means the clinic's number
+ *  is already the truth, so this is byte-identical to `layoffCoversWeek` for every such career.
+ *  Takes the two facts a Snapshot carries, like `layoffReturnWeek`. Pure, zero draws, no wording. */
+export function layoffHoldsWeek(snap: Pick<Snapshot, 'week' | 'injury'>, week: number): boolean {
+  const injury = snap.injury
+  if (week === snap.week + 1 && injury?.expectedWeeks !== undefined) {
+    return layoffCoversWeek(snap.week, injury.expectedWeeks, week)
+  }
+  return layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)
+}
+
 /**
  * ⭐⭐ WHAT THE LAYOFF SAYS, ONCE (owner, 06.09: «layoffNote пишется трижды, причём в одном месте с
  * точкой на конце»).
@@ -654,8 +681,10 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     animates: !snap.pending,
   }
 
-  // 1. HER BODY. `layoffCoversWeek` is the engine's own arithmetic, not a third spelling of it.
-  if (layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)) {
+  // 1. HER BODY. `layoffCoversWeek` is the engine's own arithmetic, not a third spelling of it –
+  //    asked through `layoffHoldsWeek`, which reads the masseur-aware figure for the played week
+  //    only (round 46 #16: the grid used to say «On the bench» for a week the tick cleared her for).
+  if (layoffHoldsWeek(snap, week)) {
     const back = layoffReturnWeek(snap)
     return {
       ...base,
@@ -1147,4 +1176,30 @@ export function useCalendarWeek(): ComputedRef<CalendarWeek | null> {
 export function useLookAhead(): ComputedRef<LookAheadRow[]> {
   const game = useGameStore()
   return computed(() => (game.snapshot ? lookAheadFor(game.snapshot) : []))
+}
+
+/** ⭐⭐ ROUND 46 #11b – THE ANNOUNCED WEDDING'S MARK on the calendar (the owner, 05.10: «поставим ли мы свадьбу в
+ *  календарь? Картинка есть»). The WEEK is the engine's (`snapshot.weddingWeek`, `upcomingWeddingWeek` – the
+ *  parent has answered the announcement card and the day has not come); this adds the dates and the label the
+ *  other rows wear, and decides nothing – CLAUDE.md's parity class: a screen that restates an engine verdict
+ *  is how the screen and the engine come to disagree. Null on every world with no announced wedding. */
+export interface WeddingMark {
+  week: number
+  /** the shared formatter's short label */
+  label: string
+  /** the week's real days, already formatted */
+  dates: string
+  weeksAway: number
+}
+
+export function weddingMarkFor(snap: { week: number; weddingWeek?: number | null }): WeddingMark | null {
+  const w = snap.weddingWeek
+  if (w == null || w <= snap.week) return null
+  return { week: w, label: weekLabel(w), dates: weekSpan(w), weeksAway: w - snap.week }
+}
+
+/** The mark, off the live snapshot. */
+export function useWeddingMark(): ComputedRef<WeddingMark | null> {
+  const game = useGameStore()
+  return computed(() => (game.snapshot ? weddingMarkFor(game.snapshot) : null))
 }

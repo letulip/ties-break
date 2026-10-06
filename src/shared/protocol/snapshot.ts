@@ -6,6 +6,7 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+import type { LifeMoment } from './narrative'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 // ⭐ v85 T10: which pregnancy painting the week wears. Declared beside the two paintings it names,
 // in the module that already owns every «which picture is this» union the wire carries.
@@ -399,6 +400,15 @@ export interface Snapshot {
    *  the window this goes null and the ROW stays – answered, or the honest record that she came and
    *  it went unasked. */
   softBeat: SoftBeatInvite | null
+  /** ⭐⭐ ROUND 46 #11c – THE WEDDING OR THE BIRTH THAT LANDED THIS WEEK, as the full-screen moment's own
+   *  payload, or null on every other week. Derived (`lifeMomentOf`), never stored. */
+  lifeMoment: LifeMoment | null
+  /** ⭐ ROUND 46 #11b – THE WEEK AN ANNOUNCED WEDDING LANDS (`upcomingWeddingWeek`), or null: the calendar's
+   *  mark reads this and restates nothing. */
+  weddingWeek: number | null
+  /** ⭐ ROUND 46 #22 – IS THE DEV LIFE-EVENT BOOST ON in the worker right now. Transient, never saved: the More
+   *  screen's switch shows the worker's own state rather than a belief of its own. */
+  devLifeBoost: boolean
   /** ⭐⭐⭐ v85 T10 – **WHICH PREGNANCY PAINTING HER PORTRAIT WEARS THIS WEEK**, or null on every
    *  week of every career that is not inside one. The two portrait surfaces (`useKidEmotion`) read
    *  it; nothing else does.

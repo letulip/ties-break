@@ -40,17 +40,27 @@ export interface SeasonSummary {
    *  fix/wallet-and-wrapup, which moved this fold off the count-capped event feed and onto
    *  `world.results`; collapsing the first two was how a 44-19 season came to report the third. */
   bestResultText: string
-  /** signed funds delta across the season (== earnedCents - spentCents, and == the change in
-   *  `fundsCents` across the season window). R11-12a: this used to be a scrape of the CAPPED
+  /** signed funds delta across the season (== the change in `fundsCents` across the season window, and
+   *  == earnedCents - spentCents + wealth.shelfNetCents – round 46 #8/#19 moved the holding category out
+   *  of the first two, so before it the last term was simply absent). R11-12a: this used to be a scrape of the CAPPED
    *  `events` feed over a window that also excluded the wrap-up week, so it disagreed with the
    *  Money screen by hundreds of dollars a season; it is now the same `financeWindow` fold the
    *  wallet reads, over the same window. */
   fundsDeltaCents: number
-  /** GROSS spend across the season window (a positive number) – the figure the Money screen's
-   *  "This season" donut shows in its centre. OPTIONAL: summaries banked before R11-12a never
-   *  stored it, so readers must treat `undefined` as "not recorded" and show nothing. */
+  /** WHAT THE SEASON CONSUMED, over the season window (a positive number). OPTIONAL: summaries banked
+   *  before R11-12a never stored it, so readers must treat `undefined` as "not recorded" and show nothing.
+   *
+   *  ⚠ ROUND 46 #8 + #19 CHANGED WHAT «SPENT» MEANS, and the change is the whole point of the item. Until
+   *  then it was the wallet's GROSS spend – the figure the Money screen's "This season" donut shows in its
+   *  centre – and that carried the `'shop'` category: a house, a fund deposit and an academy stage (a
+   *  MOVEMENT onto `world.assets`, not a cost), the cars' upkeep, and a sale's proceeds netted into the
+   *  same row. It is now consumption only (`seasonMoneyOf`, engine/world/ledger.ts); the shelf's net rides
+   *  in `wealth.shelfNetCents`, so spent + the shelf's outflow is still the donut's centre, to the cent.
+   *  A summary banked before this change keeps the gross figure it was written with – a recap is a record
+   *  of what was said – and nothing can split the shelf back out of it. */
   spentCents?: number
-  /** GROSS income across the same window (a positive number). Same optionality as `spentCents`. */
+  /** WHAT CAME IN across the same window, the shelf's proceeds excluded (a positive number). Same
+   *  optionality as `spentCents`, and the same round 46 change of meaning. */
   earnedCents?: number
   /** weeks lost to injury inside the season (Season-Life slice C). OPTIONAL – summaries
    *  banked before slice C never stored it; readers default to 0 (no schema bump). */
@@ -102,6 +112,47 @@ export interface SeasonSummary {
    *  evidence is gone, so a season that began before the counter did carries no pair at all and the
    *  card shows no line – which is honest, where a 0 would read as "none of them". */
   entryMirror?: SeasonEntryMirror
+  /** ⭐⭐⭐ ROUND 46 #8 + #19 – WHAT THE FAMILY HOLDS AND HOW THE YEAR MOVED IT, the income side's missing half.
+   *
+   *  OPTIONAL, AND ABSENT MEANS "NOT RECORDED": a summary banked before this change never knew it, and the
+   *  card then shows no wealth rows – the `entryMirror` / `rankTrack` precedent (an optional key on an
+   *  already-banked record, no schema bump). See `SeasonWealth`. */
+  wealth?: SeasonWealth
+}
+
+/** ⭐⭐⭐ ROUND 46 #8 + #19 – THE OWNER: «в доходах общее состояние и прирост не учитываются».
+ *
+ *  The cash ledger cannot say either: a fund's appreciation is never a ledger row (`revalueAssets` rewrites
+ *  `valueCents` on the tick), and a deposit is a transfer. So they are banked beside the cash figures, off
+ *  the engine's own `careerMoney` fold, which is what makes the card's portfolio the very number the
+ *  epilogue calls «Family's portfolio». */
+export interface SeasonWealth {
+  /** the family's portfolio at the wrap: the wallet plus every holding at what it is worth that week
+   *  (`careerMoney(world).portfolioCents`). Her own account is not in it – the reckoning's ruling A. */
+  portfolioCents: number
+  /** the holdings' half of the figure above, so a reader can tell a family that holds nothing from one
+   *  that does without re-deriving it. */
+  holdingsCents: number
+  /** the holding category's net over the season window, signed as the wallet felt it: negative = cash went
+   *  out to the shelf and its upkeep. `earnedCents - spentCents + shelfNetCents === fundsDeltaCents`. */
+  shelfNetCents: number
+  /** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 (06.10) – THE PART OF `shelfNetCents` THAT WAS A REALISED LOSS: what the season's asset sales fetched, NET, below what the family had
+   *  put into what it sold – the owner's «инвестиция это не совсем расход, только если мы не в минусе зафиксировались». A sale that fixed a loss is a real expense and the
+   *  card gives it its own row on the expense side; a net realised GAIN is not income and is not banked here.
+   *
+   *  ⚠⚠ NAMED INSIDE `shelfNetCents`, NEVER ADDED TO IT. The shelf is the whole `'shop'` net, so the loss is already in it and
+   *  `earnedCents - spentCents + shelfNetCents === fundsDeltaCents` is exactly as it was; the card keeps its rows adding up by printing the shelf row as
+   *  `shelfNetCents + realisedLossCents`. `realisedLossOf` (engine/world/ledger.ts) carries the argument.
+   *
+   *  ⚠ ABSENT AT ZERO, and on every summary banked before this: the card then prints exactly what it printed yesterday. Optional and not a schema move –
+   *  `growthCents`' own rule. Positive cents. It cannot be recomputed from the other figures (the shelf nets purchases, sales and upkeep into one number), which is why
+   *  it is banked. */
+  realisedLossCents?: number
+  /** how far `portfolioCents` moved since the PREVIOUS wrap-up – exactly one season, wrap to wrap, which is
+   *  also what the player can check against last year's card. Season 0 reads from the career's opening
+   *  wallet (the shelf started empty). ABSENT when there is no earlier figure to subtract – the first wrap
+   *  after this shipped, on a career already under way – because a growth with no baseline is a guess. */
+  growthCents?: number
 }
 
 /** The pair the wrap-up prints: how many tournaments the season entered, and how many of those were
@@ -269,7 +320,12 @@ export interface SeasonHistoryEntry {
    *
    *  BOUNDARY, stated once so both readers agree: the window ENDS at the wrap-up week, so the
    *  season's last two off-season weeks are not in it. That is deliberate and is the same window
-   *  `SeasonSummary` reports – the figure describes the season she PLAYED. */
+   *  `SeasonSummary` reports – the figure describes the season she PLAYED.
+   *
+   *  ⚠ ROUND 46 #8 + #19: «cost» is now CONSUMPTION – the `'shop'` category (a purchase, the upkeep, a sale's
+   *  proceeds) no longer rides in it, so the headline reads what it cost to keep her playing and not what
+   *  the family bought. It is fed by the same local the popup banks, which is why the two cannot disagree.
+   *  Rows banked before this keep the gross figure they were written with. */
   spentCents?: number
   /** what the season brought in, gross, in positive cents. Same window, same optionality, and it is
    *  here so a year can be read as a pair: a season that cost $9k and earned $4k is a different

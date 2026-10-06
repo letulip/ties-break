@@ -323,6 +323,16 @@ const ENDS_CAP_WEEK = 8 * WEEKS_PER_YEAR
  *  than months. The walk stops at the first hit or at this cap, whichever comes first. */
 const PARTING_CAP_WEEK = 30 * WEEKS_PER_YEAR
 
+/** ⭐ round 46 R2 (ledger 23) – HOW LONG THE POST MUST BE FOR `parting` TO BE THE CAREER
+ *  tests/principles-d07-inbox-bound.test.ts MEANS. ⚠ IT IS A FLOOR THAT TEST ASSERTS AND NOT A NUMBER THIS
+ *  FILE CHOSE: d07 reads the fixture back and wants `offers.length` STRICTLY ABOVE 200 («a career of
+ *  letters twenty seasons long» – the premise every size figure in that file stands on, so a short
+ *  `parting` would make the whole file pass for the wrong reason). The recipe never asked for it, and
+ *  S1's true regeneration on 06.10 found the cost of that silence: `e2e-parting-11`, every other clause
+ *  met, holding EXACTLY 200 – one letter short of a premise nobody had written down here. The clause
+ *  below is therefore `<=`, spelled the way the test spells it. */
+const PARTING_MIN_LETTERS = 200
+
 /** ⭐ THE ANSWER BOTH LOOK-AHEADS PRESS, AND IT IS THE ONE e2e/breakup.spec.ts PRESSES TOO.
  *
  *  ⚠ IT IS **NOT** `DRAIN_ANSWER['ended']` AND MUST NOT BE. The drain's answer is `'fix-it'`, chosen
@@ -661,6 +671,17 @@ const RECIPES: Recipe[] = [
       // `itf` points here rejects every career that ever grew up. Three tables, three currencies.
       if (kidPoints(world, 'wta') <= 0) return 'unranked professionally'
       if (world.financeWeeks.length === 0) return 'no finance ledger'
+      // ⭐⭐ round 46 R2 (ledger 23) – AND THE WALLET MUST HOLD THE SHOP SCRIPT, a premise two component
+      // files stand on and this recipe never stated. tests/component/principles-e11-shop-identity.test.ts
+      // buys a fixed script through the engine's own `buyAsset` (its header: «Total outlay $1,255,000
+      // against `pro`'s $2,666,663, so both careers execute the identical script»), and `buyAsset` throws
+      // «Not enough funds for that» the moment the wallet is short. ⚠ FOUND BY THE TRUE REGENERATION, not
+      // by a suite run on the committed bytes: the regenerated `pro` (`e2e-pro-57`) held $896,938, and the
+      // two E-11 cases that buy the shelf went red on a PURCHASE rather than on a render. The figure is the
+      // test's own, copied; a retune of the shelf moves that script and THIS number together.
+      const SHOP_SCRIPT_OUTLAY_CENTS = 1_255_000_00
+      if (world.fundsCents < SHOP_SCRIPT_OUTLAY_CENTS)
+        return `the wallet holds ${money(world.fundsCents)}, short of the ${money(SHOP_SCRIPT_OUTLAY_CENTS)} the E-11 shop script spends (principles-e11-shop-identity buys it through the engine's own command)`
       // The sponsor spec needs paper on the table: either a letter she can open and sign, or a deal
       // already running that the money screen can show.
       const openLetters = world.offers.filter((o) => o.kind === 'kit' && o.state === 'open').length
@@ -755,6 +776,17 @@ const RECIPES: Recipe[] = [
           // ⚠ THE LOOK-AHEAD IS EXACT, NOT AN ESTIMATE. The clone carries `rngMain`, so resuming MAIN
           // from it walks the same sequence the browser will walk; `tickWeek` is what the worker runs
           // behind the week button. Nothing about the fixture's own world is touched.
+          // ⭐⭐ round 46 R2 (ledger 23) – AND NOTHING MAY BE STANDING IN FRONT OF THE WEEK BUTTON ON THE
+          // WEEK IT BOOTS AT, `expecting`'s and `parting`'s clause pair for their stated reason: the
+          // journey's whole act is to press it and read the week's story. ⚠ FOUND BY THE TRUE
+          // REGENERATION and by nothing else – the regenerated `e2e-sinking-1` was the ONLY red case of
+          // 139: it boots with the small-talk card (`SMALL_TALK_CARD`) standing on the hub, the press
+          // opens no week story, and the page is still on the boot week with the money unmoved
+          // (week-advance.spec.ts:196, «Week story» region not found). The old seed never met one, which
+          // is why the recipe never asked. A knock is NOT in this pair: `answerOpeningKnock` is the
+          // spec's own answer to one at boot.
+          if (pendingLifeBeat(world) !== null) return 'a blocking beat is standing at boot, whose card covers the week button'
+          if (liveSoftBeat(world) !== null) return 'a soft beat is on the hub at boot, which the stop-notice journey would be pressing past'
           const probe = structuredClone(world)
           tickWeek(probe, resumeMain(probe.rngMain))
           if (pendingKnock(probe)) return 'a knock lands on the very next week (the stop-notice journey needs a clean tick)'
@@ -1489,6 +1521,34 @@ const RECIPES: Recipe[] = [
         const pregnancy = world.pregnancy
         if (pregnancy === null) continue
         carried = true
+        // ⭐⭐ round 46 R2 (ledger 23) – THE WINDOW MUST BE THE WHOLE ONE, AND THE CLAUSE IS COPIED FROM THE
+        // ALARM RATHER THAN INVENTED: tests/e2e-fixtures.test.ts asserts BOTH distances of the record
+        // against `ECONOMY.motherhood`, EXACTLY – the pause `playsOnWeeks` after the telling and the
+        // birth `termWeeks` after the pause – and this recipe asked for neither. ⚠ THEY ARE NOT TRUE OF
+        // EVERY PREGNANCY, and that is wave 11's own doing: `pausesWeek = min(announced + playsOnWeeks,
+        // conceived + firstTrimesterWeeks)` and `dueWeek = conceived + termTotalWeeks`, so a woman who
+        // waits to tell is capped at the trimester and the stretch to the birth SHRINKS – 26 against the
+        // 31 the alarm wants, which is what S1's true regeneration on 06.10 found (`e2e-expecting-1`).
+        // 31 holds only for a ZERO window (she says it on the week she conceives).
+        // ⚠ A PURE FACT OF THE RECORD – written once at the announcement and never moved – so it costs two
+        // subtractions and skips the WEEK like every clause below, not the seed: a later pregnancy of the
+        // same career may be the whole one.
+        const pauseAfterTelling = pregnancy.pausesWeek - pregnancy.announcedWeek
+        const birthAfterPause = pregnancy.dueWeek - pregnancy.pausesWeek
+        if (
+          pauseAfterTelling !== ECONOMY.motherhood.playsOnWeeks ||
+          birthAfterPause !== ECONOMY.motherhood.termWeeks
+        ) {
+          const wrong: string[] = []
+          if (pauseAfterTelling !== ECONOMY.motherhood.playsOnWeeks) {
+            wrong.push(`the pause comes ${pauseAfterTelling} weeks after the telling, not ${ECONOMY.motherhood.playsOnWeeks}`)
+          }
+          if (birthAfterPause !== ECONOMY.motherhood.termWeeks) {
+            wrong.push(`the birth comes ${birthAfterPause} weeks after the pause, not ${ECONOMY.motherhood.termWeeks}`)
+          }
+          turnedDown = `the record's window is not the whole one (${wrong.join('; ')}) – tests/e2e-fixtures.test.ts asserts both distances exactly`
+          continue
+        }
         // ⚠ `world.week + 1` ON THE UPPER BOUND, AND THE EXTRA WEEK IS THE SPEC'S PRESS. The case
         // asserts that «the weeks still tick» – she is off tour, the household is not – and a press
         // that landed on `dueWeek` would tick into the BIRTH: a milestone row, an album entry and a
@@ -1593,6 +1653,17 @@ const RECIPES: Recipe[] = [
         // week, not the girl she was born.
         const hazard = endsHazardFor(expressedTemperamentOf(world)) * ECONOMY.wedding.latchEndFactor
         if (rngFromSeed(`${world.seed}:life:ends:${world.week + 1}`)() >= hazard) continue
+
+        // ⭐⭐ round 46 R2 (ledger 23) – AND THE POST MUST BE A LONG ONE, asked of the FIRING weeks only so
+        // that the log still tells «no ending came up» apart from «one came up too early». The floor is
+        // d07's (`PARTING_MIN_LETTERS`, strictly more), and the count is the one d07 reads back: the
+        // world's own `offers.length`, which `encodeExportFile` writes whole. ⚠ A SHORT POST IS SKIPPED
+        // AS A WEEK, NOT AS A SEED, `continue`'s usual shape here: the letters only ever grow, so the
+        // walk is free to meet a later firing week – a remarriage's – with the floor behind it.
+        if (world.offers.length <= PARTING_MIN_LETTERS) {
+          turnedDown = `a firing week (w${world.week + 1}) with only ${world.offers.length} letters on file, and principles-d07 asserts MORE than ${PARTING_MIN_LETTERS}`
+          continue
+        }
 
         // ⚠⚠ NOTHING MAY BE STANDING IN FRONT OF THE WEEK BUTTON – `engaged`'s clause set verbatim
         // and for its stated reason: the spec's first act is to press it, so a career booting behind
@@ -1851,4 +1922,27 @@ const NAMED_ON_THE_COMMAND_LINE =
   process.argv.some((a) => a.includes('e2e-fixtures')) ||
   (process.env.npm_lifecycle_script ?? '').includes('e2e-fixtures') ||
   process.env.TB_FIXTURES_RUN === '1'
-if (!process.env.VITEST && NAMED_ON_THE_COMMAND_LINE) void main()
+// ⭐ round 46 R2 (ledger 23) – AND THE REFUSAL IS LOUD. Until now a bare `npx vite-node tools/e2e-fixtures.ts`
+// fell through the `if` and EXITED 0 HAVING DONE NOTHING, so a «control run» of the generator read as green
+// without having generated anything – S1 lost a measurement to exactly that on 06.10. ⚠ IT FIRES ONLY OUTSIDE
+// VITEST, which is the whole importer list (tests/e2e-fixtures.test.ts, whose import must stay silent), and it
+// sets `exitCode` rather than calling `process.exit` so stderr is flushed before the process ends.
+if (!process.env.VITEST) {
+  if (NAMED_ON_THE_COMMAND_LINE) {
+    void main()
+  } else {
+    console.error(
+      [
+        '',
+        'e2e-fixtures: REFUSED TO RUN – nothing was generated and nothing was written.',
+        '  Nothing named this file: no `e2e-fixtures` on the command line, no `npm run e2e:fixtures` around it,',
+        '  and no TB_FIXTURES_RUN=1. This runner\'s vite-node strips the entry file from process.argv, so a bare',
+        '  `npx vite-node tools/e2e-fixtures.ts` cannot tell it was asked to run – it used to exit 0 having done nothing.',
+        '  Run:  npm run e2e:fixtures            (add  -- --only <name>  for one fixture)',
+        '   or:  TB_FIXTURES_RUN=1 npx vite-node tools/e2e-fixtures.ts',
+        '',
+      ].join('\n'),
+    )
+    process.exitCode = 2
+  }
+}

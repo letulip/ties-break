@@ -12,6 +12,8 @@ import { addEvent } from '../ledger'
 import { knockRunning } from '../constants'
 import { kidPoints, rankIn } from '../ladder'
 import { captureMilestone, fireMilestone } from '../milestones'
+// ⭐ ROUND 46 #22 – the dev life-event boost (a leaf).
+import { boostedChance } from '../lifeBoost'
 import { kidAgeNow, latchedEpisode, raiseLifeBeat } from '../lifeBeat'
 import { PREGNANT_LAST_WEEKS } from '../../../shared/avatarEmotion'
 import type { MotherhoodBand } from '../../../shared/protocol/narrative'
@@ -140,7 +142,8 @@ export function rollPregnancy(world: WorldState): void {
   if (!pregnancyEligible(world)) return
   const chance = pregnancyChanceAt(world)
   if (chance === 0) return
-  if (rngFromSeed(`${world.seed}:life:pregnancy:${world.week}`)() >= chance) return
+  // ⭐ ROUND 46 #22 – compares against `chance * 1` OFF (bit-identical) and `chance * 8` ON; `pregnancyChanceAt` itself is untouched, so its other readers still see the real figure.
+  if (rngFromSeed(`${world.seed}:life:pregnancy:${world.week}`)() >= boostedChance(chance)) return
   // ⚠ THE ROW IS TAKEN AFTER THE DRAW AND IS THE GATE'S OWN – `pregnancyEligible` just proved it
   // non-null, and `rollEnds` runs before this at the call site, so the marriage the record points at
   // is the marriage still standing this week.

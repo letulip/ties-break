@@ -83,6 +83,7 @@ import {
 } from '../prologue/run'
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
 import { DYNASTY_COPY } from '../composables/identityCopy'
+import { dynastyOpeningName } from '../composables/identityDice'
 import type { DynastyHandover } from '../shared/protocol'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
 
@@ -147,6 +148,14 @@ function openingRun(): PrologueRun {
  *  родитель» is his 20.09 ruling, and nothing in this wave may invent one – so a dynasty run opens on
  *  the same default first name every prologue career opens on, and the parent types over it.
  *
+ *  ⚠⚠ ROUND 46 #21 – ...EXCEPT WHEN THAT DEFAULT IS HER MOTHER'S OWN NAME. The owner (05.10, translated):
+ *  choosing «A daughter came later», the daughter's name must surely not be the mother's. A mother who
+ *  never touched her name field IS the default, so the card proposed her own name to her daughter.
+ *  `dynastyOpeningName` keeps the default whenever it is not the mother's and otherwise picks ONE name
+ *  off the menu less hers, on the sub-stream `${childSeed}:daughter-name` – reproducible, never MAIN.
+ *  The parent still types over it: nothing is forced, the card just stops proposing the one name that
+ *  cannot be right.
+ *
  *  ⚠ T10 – AND THE BIRTHDAY IS THE RECORDED ONE where a record exists (his 22.09 ruling, «для
  *  подлинности»): the card opens on the FIRST daughter's real date, the chooser (2+ births) swaps it
  *  through the ordinary `identity` event, and the epilogue variant – no recorded birth – opens free
@@ -156,6 +165,7 @@ function openingIdentity(): PrologueIdentity {
   const born = props.dynasty.childBirthdays[0]
   return {
     ...OPENING_IDENTITY,
+    kidName: dynastyOpeningName(props.dynasty.childSeed, props.dynasty.motherName.first, OPENING_IDENTITY.kidName),
     kidLastName: props.dynasty.motherName.last,
     country: props.dynasty.motherCountry,
     ...(born ? { birthMonth: born.month, birthDay: born.day } : {}),
@@ -465,6 +475,7 @@ const line = computed(() =>
   props.dynasty
     ? {
         surname: props.dynasty.motherName.last,
+        motherFirst: props.dynasty.motherName.first,
         note: DYNASTY_COPY.lineNote,
         birthdays: props.dynasty.childBirthdays,
       }

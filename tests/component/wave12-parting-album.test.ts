@@ -58,7 +58,7 @@ function albumPage(slot: number): AlbumPage {
 function viewWith(scroll: ScrollSeason[]): EndingView {
   return {
     ending: { type: 'stopped', week: 265, ageYears: 19, detail: 'she stopped', resumesWeek: null },
-    album: [1, 2, 3, 4, 5, 6, 7].map(albumPage),
+    closing: albumPage(7),
     scroll,
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: { earnedCents: 10000, spentCents: 5000000, prizeCents: 0, weeksLostToInjury: 0 },
@@ -79,7 +79,6 @@ async function mountWith(scroll: ScrollSeason[]) {
   // record's link lives on the foot of the seventh. `tests/component/endings-ui.test.ts` walks it
   // the same way; measured rather than assumed, because the first draft looked for the button on
   // page one and found nothing.
-  for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
   const open = w.findAll('.ending-link').find((b) => b.text() === 'The whole record')
   expect(open, 'the door to the record is on the last page').toBeDefined()
   await open!.trigger('click')

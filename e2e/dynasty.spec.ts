@@ -75,8 +75,8 @@ test('the line continues: the door, the locked name, and a career that carries i
   // ===============================================================================================
   const epilogue = page.getByRole('dialog', { name: 'Epilogue' })
   await expect(epilogue).toBeVisible()
-  // The hand-off is an offer on the LAST page, so the album has to be turned to reach it.
-  for (let i = 0; i < 6; i += 1) await epilogue.getByRole('button', { name: 'Next' }).click()
+  // ROUND 46 #18: the epilogue OPENS on its last page now – the seven-page reel and its Next button are gone –
+  // so the hand-off is already on screen and there is nothing to turn.
 
   const line = epilogue.locator('.ending-line')
   await expect(line, 'his 20.09 ruling: the door renders on EVERY ending').toHaveCount(1)

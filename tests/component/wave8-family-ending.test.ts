@@ -143,10 +143,8 @@ function open(snapshot: Snapshot) {
  *  and turns, so a comparison of the first page alone would miss seven eighths of the claim. */
 async function pages(w: ReturnType<typeof open>): Promise<string[]> {
   const out: string[] = []
-  for (let i = 0; i < 7; i++) {
-    out.push(w.find('.album-page').html())
-    if (i < 6) await w.findAll('.album-arrow')[1].trigger('click')
-  }
+  // ROUND 46 #18: the reel is ONE page now (its other six left with the pager), so «page for page» is that page.
+  out.push(w.find('.album-page').html())
   return out
 }
 
@@ -159,8 +157,7 @@ describe('T10 §A – the ninth ending draws on the screen the other eight draw 
     expect(snap.ending, 'the view assembled – nothing below is vacuous').not.toBeNull()
     const w = open(snap)
     expect(w.findAll('.album-page'), 'one page at a time, like every other ending').toHaveLength(1)
-    expect(w.text(), 'and the title is NOT on page one – it belongs to the last').not.toContain(ENDING_TITLE.family)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
+    // (the «title is NOT on page one» claim was the reel's; round 46 #18 left the last page only)
     expect(w.text(), 'slot 7 is the ending itself, whichever of the nine it was').toContain(ENDING_TITLE.family)
     expect(w.find('.ending-foot').exists(), 'and the hand-off is under it').toBe(true)
     w.unmount()
@@ -208,7 +205,6 @@ describe('T10 §A – the ninth ending draws on the screen the other eight draw 
     // titles are different strings and both are really printed, on the page that carries them.
     expect(ENDING_TITLE.family).not.toBe(ENDING_TITLE.stopped)
     const last = async (w: ReturnType<typeof open>) => {
-      for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
       return w.text()
     }
     const fam = open(toSnapshot(family))

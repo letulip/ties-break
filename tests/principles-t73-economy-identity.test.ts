@@ -57,10 +57,21 @@ import { ECONOMY } from '../src/engine/economy'
 // advertising.clashConditionPerDay 1 → 3 (two shooting days × 3 = 6 per clash; the day count is `CLASH_SHOOT_DAYS` in world/medical.ts and is NOT an ECONOMY key).
 // Only the byte-sha pin moved – 72a1461f… → 406b41b1…; one digit for one digit, so the CHARS pin (29,647) did NOT move, nor did the key paths
 // (1,917, sha ac3ad65f…) nor the 44 top-level blocks – the same tell as the 02.10 tariff re-pin just above. Taken on 5a987a8d plus the B14 commit.
-const PIN_JSON_SHA256 = '406b41b1eda831eaf799dd03ec6bbfc99cc96058cc29a909d88bead5a43f93eb'
-const PIN_JSON_CHARS = 29_647
-const PIN_PATHS_SHA256 = 'ac3ad65f6573edd2581cb9190483a4141614087ba9b7232a3268c885b7507eda'
-const PIN_PATH_COUNT = 1_917
+// RE-PINNED A SIXTH TIME 05.10, ROUND 46 #7 – THE OWNER'S TARIFF-LADDER RULING (docs/specs/the-season-equation-2026-09.md §11, the 05.10 supersession):
+// «по 7 надо сделать разумно, например: 250-12, 500-15, 1000-18, шлем-21 … в 1000 на 1 матч больше, чем в 500, а в шлеме на 2.» ONE VALUE moves and no key does:
+// condition.runFatigueLadderDeep [-2, -1, 0] → [0, 0, 0, 1, 1, 1, 1]. Its own share is +6 chars (`-2,-1,0` is 7, `0,0,0,1,1,1,1` is 13) and +4 paths (three array
+// elements become seven): 29,701 → 29,707 chars and 1,919 → 1,923 paths. ⚠ THE PIN HAD ALREADY DRIFTED BEFORE THIS COMMIT: with the old ladder patched back in
+// the object at fb7087d5 reads 29,701 chars / 1,919 paths against the 29,647 / 1,917 pinned just above – +54 chars and +2 paths from the two commits that touched
+// src/engine/economy* after the 02.10 pin (c397187e, ca9adca5) and did not re-pin, so this test was RED at HEAD before B13 changed a digit. The numbers below are
+// the WHOLE object, so they carry both; the 44 top-level blocks did not move. Taken on fb7087d5 plus the round-46 B13 commit.
+// RE-PINNED A SEVENTH TIME 06.10, ROUND 46 #3 – THE OWNER'S HOUSE-PRICE RULING (05.10; ledger item 3 in docs/rounds/round-46.md): «Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест активом,
+// пусть и небольшим, т.е. его рост должен обгонять инфляцию.» A KEY IS ADDED ON EACH OF THE FOUR HOUSE RUNGS AND NO VALUE MOVES: shop.catalogue[6..9].entryIndexBps = 200 (the +2 %/yr entry-price index, beside each
+// rung's `annualRateBps: 300`), read by `assetEntryPriceCents`. The tell of an ADDED key, as on 30.09 S2: bytes AND key paths move – 29,707 → 29,787 chars (+80, four × `,"entryIndexBps":200`), sha e2acf0a0… → 714bcb87…;
+// 1,923 → 1,927 paths (+4), sha d32bf1f8… → 301bbd43…; the 44 top-level blocks did not. Taken on 96dda9fa plus the round-46 B14 commit.
+const PIN_JSON_SHA256 = '714bcb873b31f56494e2e1b81fbadfe1435792833cea37c1d76d0d310b0d2435'
+const PIN_JSON_CHARS = 29_787
+const PIN_PATHS_SHA256 = '301bbd4393b1b4877c1e369a1a55e138c7acb1c24e408332b1dae42c8cf4a9a5'
+const PIN_PATH_COUNT = 1_927
 const PIN_TOP_LEVEL_KEYS = 44
 
 const sha = (s: string): string => createHash('sha256').update(s).digest('hex')

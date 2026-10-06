@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 155 dated entries, newest 2026-10-02. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 158 dated entries, newest 2026-10-06. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,14 +35,14 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 30 | [THIRD BATCH: THE CLASH IS TWO HEAVY DAYS, AND THE SLAM-WEEK №1 SHARES THE PAGE](#02102026--third-batch-the-clash-is-two-heavy-days-and-the-slam-week-1-shares-the-page) | 2026-10-02 |
+| general | 31 | [SUCCESSION: THE SMALL FORKS CLOSED, AND THE NIGHT ORDER](#05102026--succession-the-small-forks-closed-and-the-night-order) | 2026-10-05 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 22 | [THE CORPUS COUNTED, ROUND 44 CLOSED BY THE COUNT](#30092026--the-corpus-counted-round-44-closed-by-the-count) | 2026-09-30 |
+| process-and-git | 23 | [THE MORNING BATCH: ROUND 46'S PILE RULED, THE WAVE'S FOUR REFINED](#06102026--the-morning-batch-round-46s-pile-ruled-the-waves-four-refined) | 2026-10-06 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
-| ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
+| ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
 | simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
@@ -5813,3 +5813,104 @@ accumulated growth over every year since the fee last moved, the per-year steps 
 banked season verdicts), while the SIZE stays their own smaller 2/4/6% a year against his 5–15%
 corridor. No third branch still: nobody leaves, nobody punishes – the refusal lives only in the
 figure of the next ask. The 0.82 note floor and the letter texts wait for his eyes in play.
+
+## 05.10.2026 – ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED
+
+Round 45 merged in the morning (PR #164) and the same day he played it and sent 22 items –
+[round-46.md](rounds/round-46.md). Five rulings landed in the opening conversation, while B1 built
+the life-event screens:
+
+**The drain ladder gets his targets.** The probe confirmed his #7 to the digit (net title runs with
+the travelling masseur: 250:12, 500:17, 1000:12, Slam:14 – a won 500 outprices a Slam, the deep-draw
+discount `[-2,-1,0]` is the cause). His ruling: «по 7 надо сделать разумно, например: 250-12,
+500-15, 1000-18, шлем-21… посчитай по нашей математике… в 1000 на 1 матч больше, чем в 500, а в
+шлеме на 2. Мне кажется это справедливая логика.» The computed shape that lands EXACTLY 12/15/18/21:
+the 500+/Slam run ladder becomes `[0,0,0,1,1,1,1]` (no run surcharge for the first three matches,
++1 from the fourth), the deep-draw discount is deleted; tiers 15–250, juniors and domestic do not
+move a digit. His 02.10 tier surcharges (the lever) are untouched. Corridors re-pin after the build.
+
+**House entry prices inflate at +2 %/yr – below the family's +3 % growth.** On the #3 churn (sell
+the first house at 332k = 240k × 1.03^12 × 0.97, be re-offered the same rung at the frozen 240k,
+pocket 92k, repeat): «Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест активом,
+пусть и небольшим, т.е. его рост должен обгонять инфляцию.» So the indexation sits BELOW the
+appreciation: a quick flip goes negative (−$2.7k at year 2), the long churn shrinks to ~$28k over
+12 years (noise, not a grind), and the holder keeps beating the late buyer.
+
+**No in-browser micro LLM for the small talks (#17): «уговорил.»** The architect's case he accepted:
++100–350 MB before the prologue against an offline-first PWA funnel, cross-device float
+nondeterminism against his own reproducible-variability law, and a 135M–500M model against the
+wording law (it IS a machine for unblessed strings, off his voice, hallucinating against the
+career). The path instead: the corpus – build-time generation he blesses in batches, combinatorial
+slots, the #15 no-repeat memory, and callbacks to the career's own diary. Smalltalk-corpus
+expansion goes to the next round's list.
+
+**Every big life event gets its picture: «картинка для родов есть и для беременности две разных,
+проверь и добавляй».** Found and named: `adult-bride.webp` (the wedding – why the first grep
+missed it), `adult-birth.webp`, `adult-pregnant-early.webp` / `adult-pregnant-last.webp` (the two
+stages), `adult-funeral.webp` (wired since v87, weight mode only). B1 shipped the wedding and
+birth moments with bride/birth; the `'expecting'` card's early-pregnancy face and the late-stage
+check are B1b's one-row follow-up.
+
+**The succession seed – and he ruled its three forks the same hour.** His idea: «может быть нам в
+свежей карьере после преемственности и год делать соответствующий, а не снова 31? Можно как-то
+этот механизм передачи сделать вообще?» – a gen-2 career (her daughter) continuing the calendar
+instead of resetting to 2031. The forks, ruled: **(а)** the gen-2 player is «Александра-мать
+конечно» – the ex-star herself as the new parent. **(б)** what inherits: «символы да, но мы
+обсуждали, что она по умолчанию в богатой карьере стартует вроде, может быть разве что можно
+какой-то мультипликатор на начальные деньги делать в зависимости от того, как закончилась
+предыдущая картера, ну и дом, машину и может быть какие-то накопления тоже можно оставить, не все
+миллионы» – so: the house, the car, a SLICE of savings through a starting-money multiplier keyed
+to how the previous career ended – never the whole fortune. **(в)** «спека сейчас, стройка
+пост-лонч» – `docs/specs/succession-2026-10.md` is commissioned now (the architect writes it
+inside round 46), the build waits for after launch; the start-year parameterisation may come
+earlier, while fixtures are few.
+
+## 05.10.2026 – SUCCESSION: THE SMALL FORKS CLOSED, AND THE NIGHT ORDER
+
+The four §6 forks of [succession-2026-10](specs/succession-2026-10.md), answered within the hour:
+**the brand does not carry** («новая карьера - это карьера дочки, просто новая карьера с небольшими
+бенефитами в начале, больше ничего»); **the academy does not exist in generation 2** («она не
+продана, а не основана» – not sold off screen, simply never founded in the new world); **the door
+is not gated by the ending** – his answer reframes it as the dynasty loop: «У нас там когда-то
+позже мальчики появятся, будет больше вариативности. Но по сути, околобесконечный процесс, разве
+что может средненькая рождаться или вообще "не про теннис"» – a near-infinite process where the
+child herself varies (boys later; some generations modest, some not about tennis at all – the
+talent draw is the variability, not the door); **the paywall is one-time** («пейвол у нас 1 раз
+после первого пролога и первого года был запланирован… Он единоразовый») – succession sits behind
+no second payment by construction.
+
+And the order: «поставь себе задачу начать эту волну сразу после окончания раунда 46 в отдельной
+ветке от самого раунда… будешь шаг за шагом всю ночь работать» – the succession wave STARTS the
+night round 46 closes, on its own branch cut from the round's head (the round is unmerged until his
+morning; branching from it keeps a possible round-46 schema bump and the wave's own bump from
+colliding). Spec §7's step 1 (start-year parameterisation) goes first, step 2 (the legacy creation
+path) follows as the night allows; round questions collect separately. The earlier «стройка
+пост-лонч» now reads: the BUILD runs now, the SHIPPING decision (into launch or after) stays his
+at merge time.
+
+## 06.10.2026 – THE MORNING BATCH: ROUND 46'S PILE RULED, THE WAVE'S FOUR REFINED
+
+Off the overnight report, he answered the whole pile at once. **The misleading injured lock goes**
+(«показывать injured когда уже здорова - это не ок и вводит в заблуждение» – the entry/planner
+surfaces follow the masseur replay; forecast rows stay by round 34's rule). **The spouse card's
+real tautology named**: the heading says he has something to say, the first line says it again –
+«это слова ради слов»; and the corpus batch is ordered («давай драфт»). **№9 was about the dead
+school tile**: «мы можем в ней писать "Отношения"… либо ставить "кажется одинока"… Потом меняет с
+помолвкой, свадьбой и т.д. "Together for {span}" - очень хорошо». **The year summary**: a
+realised LOSS is a real expense («инвестиция это не совсем расход, только если мы не в минусе
+зафиксировались»); two-column half-tiles («давай 2 колонки попробуем»); mixed history accepted.
+**The epilogue**: his flow is the totals page + a whole-album button + return («посмотреть весь
+путь»), the dead wire pages 1–6 leave («снимаем, да»). **The watch joins the bank-account fix**
+(«наверное да»). **№14 closes without a migration** («без миграции ок»). **The yacht stands**
+(«на нее сначала надо заработать, так что элитный не сильно пострадает»). **The ticket overlap is
+scrapbook** («посмотрю глазами»). **The fixture generator moves INTO the round** as item 23.
+
+**The wave's four**: the ending-kind CEILING on the multiplier dies – «если у нее на момент
+травмы на счету было много денег, то почему 1.0? я не вижу связи здесь особой» – achievement
+decides the band, the exit reason stops capping it. **The childhood deduction returns on legacy
+careers** – «мне кажется нормальной логика вычета… отличается только начальная сумма для сида по
+сути». **The 20-char surname cap stands** («лишь бы верстка нигде не сыпалась»). **The
+inheritance line is approved**: «да, звучит хорошо» – «Her mother's career leaves her a head
+start.», conditional on a band above 1.0.
+
+Merge order he named: «я буду мержить начиная с раунда по готовности».

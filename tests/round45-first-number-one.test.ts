@@ -574,7 +574,11 @@ describe('D · as played – careers walked through the public commands, nothing
     // (`expectBookNamesItsLatches`, the same code as below) over a posed week that holds both. The walked set keeps every other claim.
     // ⚠⚠ 02.10, THIRD BATCH – THE RULE THESE PARAGRAPHS REPORT HAS SINCE MOVED, ON HIS RULING: that coincidence week now prints ONE combined page instead of the title's
     // page alone (B9, B10 and the property below). The paragraphs above are the history of how the coincidence was found; the walked set's own claims are untouched.
-    const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(4, 3, 340)]
+    // ⚠⚠ 05.10 – THE RUN-LADDER RULING (round 46 #7: 250-12, 500-15, 1000-18, Slam-21) RE-TIMED THE WALKS AGAIN; FIXTURE RE-AIMED, CLAIM UNCHANGED: the third career moves p4/i3 -> p6/i3. None of the three
+    // careers above latches a #1 any more, and the claim is that at least one page has to be printed. Hunted over presets 0–8 x indices 0–6, 340 weeks, with this case's own walker (63 careers): exactly ONE
+    // latches a #1 at all – p6/i3, the JUNIOR table, in week 171 – and 62 latch nothing, the world table included. So the walked set carries the junior page and two careers that touch neither; the world-table
+    // page has no walked witness on this grid any more and is exercised by this file's posed cases (the latch tests above).
+    const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(6, 3, 340)]
     let expectedTotal = 0
     for (const world of careers) expectedTotal += expectBookNamesItsLatches(world).live
     expect(expectedTotal, 'the walk produced at least one #1 page – otherwise this case proves nothing').toBeGreaterThan(0)

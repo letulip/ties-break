@@ -218,6 +218,21 @@ export function accrueCoachCut(world: WorldState, week: number, cents: number, b
   entry.coachCut = { cents: (entry.coachCut?.cents ?? 0) + cents, bps }
 }
 
+/** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – WHAT A SALE REALISED, PARKED BESIDE THE ARITHMETIC AND NOT IN IT (`FinanceWeek.realisedCents`).
+ *
+ *  ⚠⚠ THIS IS NOT `accrueFinance` AND MUST NEVER BECOME IT, `accrueCoachCut`'s warning in its situation. The sale's whole proceeds
+ *  were already booked as a `+shop` row by the same `addEvent`; the cents handed in here are only the part of them that was a gain or a
+ *  loss against cost, so booking them through `accrueFinance` would count one sale twice – in `byCategory`, in the wallet's net and in
+ *  `careerTotals`. This writes the memo and touches none of them.
+ *
+ *  Signed and ACCUMULATING (a week may settle two sales); a zero delta writes nothing, so a week that sold something at exactly its
+ *  cost is a week like any other. A pure state write on an integer already decided: no draw, no clock. */
+export function accrueRealised(world: WorldState, week: number, deltaCents: number): void {
+  if (deltaCents === 0) return
+  const entry = financeWeekEntry(world, week)
+  entry.realisedCents = (entry.realisedCents ?? 0) + deltaCents
+}
+
 /** THE SEASON'S IDENTITY: the 0-based index of the 52-week block a week belongs to.
  *
  *  Pure integer arithmetic on the absolute week – no calendar, no date, nothing that can drift.
@@ -267,6 +282,94 @@ export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): Fi
     else expenseCents += -(amt ?? 0)
   }
   return { startWeek: fromWeek, byCategory, incomeCents, expenseCents, netCents: incomeCents - expenseCents, coachCutCents }
+}
+
+/** ⭐⭐⭐ ROUND 46 #8 + #19 – A WINDOW READ A SECOND WAY: WHAT WAS CONSUMED, WHAT CAME IN, AND WHAT ONLY MOVED.
+ *  See `seasonMoneyOf` below for the argument; the three figures are what the year-end card banks. */
+export interface SeasonMoney {
+  /** consumption only: every category except the holding one whose net over the window is negative (positive cents). */
+  spentCents: number
+  /** income only: every category except the holding one whose net over the window is positive (positive cents). */
+  earnedCents: number
+  /** the holding category's net over the window, signed as the wallet felt it (negative = cash went out to the shelf). */
+  shelfNetCents: number
+}
+
+/** ⭐⭐⭐ ROUND 46 #8 + #19 – THE SEASON'S MONEY, TOLD APART THE WAY THE RECKONING ALREADY TELLS IT.
+ *
+ *  THE OWNER, 05.10: «В попапе итогов года что-то странное с доход-расход, в расходы явно что-то
+ *  лишнее попадает, а в доходах общее состояние и прирост не учитываются» and, on the same card,
+ *  «Потраченные суммы на итогах снова не соответствуют действительности».
+ *
+ *  ⚠⚠ THE DEFECT WAS IN THE ENGINE'S SEASON FOLD AND NOT IN THE CARD. `maybeFireSeasonWrapUp` banked
+ *  `financeWindow`'s `expenseCents` and `incomeCents` whole – the wallet's own GROSS arithmetic, which
+ *  sums every category – so «Spent this season» carried the entire `'shop'` row: the house, the academy
+ *  stage and the fund deposit (money that MOVED onto `world.assets` and did not leave the family), the
+ *  weekly upkeep of the cars and boats and, because a category is classified by its NET over the window,
+ *  a year of asset sales read as «Earned». The card printed exactly what it was handed.
+ *
+ *  ⚠ WHY IT WAS SUCH A SLOW MISS. R11-12a (the first time this card disagreed about spend) was about the
+ *  WINDOW and the CATEGORY COVERAGE – popup against wallet, cent for cent – and it was fixed; it never
+ *  asked whether a deposit is «spent». Round 46 #9 (18.09) asked exactly that of the CAREER-level
+ *  reckoning (`careerMoney`; the break-even week arm reads `isHoldingCategory` too) and left the season
+ *  fold alone, so the album and the year-end card told two stories about one family. This is the season
+ *  fold finally using the same rule.
+ *
+ *  ⚠ THE WALLET'S OWN FOLD IS NOT TOUCHED. `financeWindow` stays gross – the Money screen's donut sums its
+ *  slices and «The shop» is one of them – so this is a SECOND reading of the same window and never an
+ *  edit to the first. `shelfNetCents` carries the row that was taken out, which is what makes
+ *  `earnedCents - spentCents + shelfNetCents === window.netCents` hold to the cent: the card can show all
+ *  three and its rows still add up to the bottom line.
+ *
+ *  ⚠ THE UPKEEP RIDES WITH THE SHELF, NOT WITH «SPENT» – ruling 5 of 18.09 («вообще не про теннис, мимо
+ *  (машины, дома, яхты, самолеты)»). `resolveAssetUpkeep` books it under `'shop'` and `captureBreakEven`'s
+ *  week arm already excuses it together with the purchase. The ledger has no category of its own for it, so
+ *  it cannot be split back out of the row exactly: this is the engine's own rule applied to a window, not a
+ *  second approximation of it.
+ *
+ *  Pure integer arithmetic on a window already folded: no draw, no clock, no world. */
+export function seasonMoneyOf(window: FinanceWindow): SeasonMoney {
+  let spentCents = 0
+  let earnedCents = 0
+  let shelfNetCents = 0
+  for (const [cat, amt] of Object.entries(window.byCategory) as [WorldEventCategory, number | undefined][]) {
+    const cents = amt ?? 0
+    if (isHoldingCategory(cat)) shelfNetCents += cents
+    else if (cents > 0) earnedCents += cents
+    else spentCents += -cents
+  }
+  return { spentCents, earnedCents, shelfNetCents }
+}
+
+/** ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – THE YEAR'S REALISED LOSS: THE ONE PART OF THE SHELF THAT IS A REAL EXPENSE.
+ *
+ *  THE OWNER, 06.10: «а) мне нужно видеть реальные расходы и доходы, мы это уже обсуждали. Инвестиция это не совсем расход, только
+ *  если мы не в минусе зафиксировались». `seasonMoneyOf` took the whole `'shop'` category out of «spent» (round 46 #8: a deposit
+ *  moved, it did not leave) and put its net on the shelf. A sale that fixed a loss is the exception his sentence names: the family got
+ *  back less than it had put into what it sold, and that difference is gone.
+ *
+ *  THE FIGURE: the window's NET realised result (`Σ FinanceWeek.realisedCents`) read as a loss only when it is negative, so a net
+ *  realised GAIN is 0 here on purpose – it does not join income, the card's «Portfolio growth» row already tells that story – and a
+ *  gain on one sale hides a loss on another inside the same year: a family that fixed +$5M on its fund and -$1M on a boat has not fixed a
+ *  loss. Positive cents, 0 when there is none.
+ *
+ *  ⚠⚠ HOW IT RELATES TO `seasonMoneyOf`'S `shelfNetCents` – NAMED INSIDE IT, NEVER ADDED TO IT. The shelf is the `'shop'` net as the
+ *  wallet felt it: -purchases + proceeds - upkeep. A sale's proceeds are the cost basis it released plus what it realised, so
+ *      shelfNetCents = -(purchases - basis released) + realised result - upkeep
+ *  – principal that moved, plus the result, minus the upkeep. The loss is the negative of the middle term, which makes it ALREADY
+ *  INSIDE `shelfNetCents`, and `earnedCents - spentCents + shelfNetCents === window.netCents` is untouched by this function. A card that
+ *  prints the loss as an expense row keeps its rows adding up to the bottom line by printing the shelf row WITHOUT it:
+ *  `shelfNetCents + realisedLossCents`. Display decomposition – one loss, counted once. (tests/round46-season-money.test.ts pins the
+ *  relation on a real sale, from the wallet and the sold row's own basis rather than from this memo.)
+ *
+ *  The window is `financeWindow`'s own (`week >= fromWeek`, no upper bound), so the two cannot disagree about which sales were this
+ *  year's. Pure integer arithmetic over rows already written: no draw, no clock, no world. */
+export function realisedLossOf(financeWeeks: FinanceWeek[], fromWeek: number): number {
+  let netCents = 0
+  for (const w of financeWeeks) {
+    if (w.week >= fromWeek) netCents += w.realisedCents ?? 0
+  }
+  return netCents < 0 ? -netCents : 0
 }
 
 /** DENSE per-week income/expense over `[fromWeek, toWeek]` – the Home budget card's chart series.

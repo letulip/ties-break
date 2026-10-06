@@ -154,6 +154,20 @@ export interface VacationPackage {
    *  in hand, so a screen and the engine cannot price the same week two ways. A screen that forgot
    *  the list can only OVERSTATE a price; the booking itself always re-prices off the world. */
   freeOnceGranted?: boolean
+  /** ⭐⭐ ROUND 46 #6 – THE INJURY BUFF THE OWNER'S OWN WEEK CARRIES, `buffFactor`'s twin for a package the
+   *  shelf has made FREE. His 05.10 word: «Может для своей яхты тоже поставим -15% вероятности травмы?» –
+   *  «тоже» = the Elite recovery programme's `buffFactor` 0.85 on this same sheet («injury risk −15% for 4
+   *  weeks»), which the yacht row did not have.
+   *
+   *  ⚠ ON THE GRANTED WEEK ONLY, which is «своей» read literally: the charter every other family books
+   *  keeps `buffFactor` (1 on the yacht row), so a career that owns no delivered yacht is byte-identical to
+   *  before this field existed. Same pathway as every other rung – the booking's `recoveryBuff.factor` and
+   *  the ONE post-draw multiply in `injuryTau` – only the SOURCE of the factor is ownership-aware, and
+   *  `vacationBuffFactor` is the one function that says which: the booking and the sheet's «injury risk
+   *  −N%» line both ask it, with the granted list in hand.
+   *
+   *  Optional rather than `1` everywhere, so the six rungs that never had one say so by silence. */
+  grantedBuffFactor?: number
 }
 
 /** ⭐⭐⭐ ONE MARKET, DIFFERENT BASKETS – HOW A GEAR LINE IS PRICED (round 41 P1, the owner 12.09:
@@ -387,6 +401,24 @@ export function vacationPriceCents(
     background,
     !(pkg.uniformPrice ?? false),
   )
+}
+
+/** ⭐⭐ ROUND 46 #6 – THE INJURY BUFF A BOOKED WEEK CARRIES, as ONE pure rule. `grantedIds` is the shelf's
+ *  grant exactly as `vacationPriceCents` takes it (`Snapshot.shop.vacationIds` on a screen,
+ *  `grantedVacationIds(world)` in the engine): a `freeOnceGranted` package that carries a
+ *  `grantedBuffFactor` hands it over once the family has earned the week – the owner's own boat, not a
+ *  charter. Every other package, granted or not, answers its `buffFactor`, so nothing but the yacht week
+ *  can differ from the shipped table.
+ *
+ *  ⚠ THE DEFAULT IS THE CONSERVATIVE ARM, on `vacationPriceCents`' own argument: a caller that does not
+ *  know about the shelf is told the factor every family gets, so a forgetful screen can only UNDERSTATE
+ *  the buff, never promise one the booking will not pay – and the booking itself always passes the
+ *  world's own list. Pure, zero draws. */
+export function vacationBuffFactor(pkg: VacationPackage, grantedIds: readonly string[] = []): number {
+  if (pkg.freeOnceGranted && pkg.grantedBuffFactor !== undefined && grantedIds.includes(pkg.id)) {
+    return pkg.grantedBuffFactor
+  }
+  return pkg.buffFactor
 }
 
 /** THE vacation pre-highlight, as ONE pure rule (Wave-2 tuning, fatigue bench 26.07).

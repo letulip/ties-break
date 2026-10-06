@@ -27,6 +27,7 @@ The constants under measurement, all drafted 18.09 (src/engine/economy.ts, `ECON
 | `costCents` | 1 200 000 ($12,000) | the brief's – ⚠ RULED OUT 18.09 while this spec was being measured («я думаю как с подарками, никто и нисколько»); the mechanic's removal is a follow-up task, and §3c below is the record of what the drafted cost weighed on the tree that still carried it |
 | `latchEndFactor` | 0.15 | the brief's |
 | `spouseViewCooldownWeeks` | 10 | the brief's |
+| `spouseViewNoRepeatWeeks` | 52 | round 46 #15 – he does not raise the same worry twice inside a season; derived from the `lifeLog`, no schema (§6) |
 | `spouseViewSpendCents` | 250 000 ($2,500) | the previous builder's own |
 | `spouseViewHear/Level/BrushBond` | +1 / −0.5 / −1.5 | the previous builder's own, inside the brief's ±0.5..±1.5 |
 
@@ -261,3 +262,77 @@ mechanically, the deltas need an order of magnitude or a slower regress – as d
 texture (which may be exactly the intent; the spouse-view deltas ±0.5..±1.5 read the same way).
 
 *(The name pool stays a T7 review item and carries no number here.)*
+
+## §6 Round 46 #15 – the spouse does not raise the same worry twice inside a season
+
+**The complaint** (05.10): the same spouse line, verbatim, twice a month or two apart – «и вообще он очень
+разговорчивый и часто повторяется». It is §4's finding 4 arriving in play: the bench measured the surface
+SATURATED (5.13 of a possible 5.2) and left «is ~5 spousal words a season the right cadence» to the owner;
+this is his answer.
+
+**The cause.** The pool is ONE line per occasion and the pick is uniform over the occasions that are TRUE this
+week. Three of them (`distant-swing`, `road-stretch`, `money`) are true on most weeks, the 10-week cooldown is
+the only brake, and nothing remembered what had just been said – so each expiry refilled the slot, and the
+line that came back was the one just heard with probability 1/2 to 1/3.
+
+**The change.** `rollSpouseView` drops the occasions a `'spouse-view'` row already carries as `detail` inside
+`ECONOMY.wedding.spouseViewNoRepeatWeeks` (52) weeks; when none is left the week is silent. The memory is the
+`lifeLog` – append-only and never pruned, every raised row already holds its week and its occasion – so there is
+NO new state, NO schema move and NO new draw: the pick is still one draw on `<seed>:life:spouse-view:<week>`,
+over fewer candidates, and a stale-only week derives no key at all. 52 is one season, the unit the four lines
+are written in. The cooldown (10, the brief's own figure) is NOT touched.
+
+**Predicted – written before the AFTER numbers were read.** With the occasions' availability as §3 measured it
+(`no-vacation` ~0 on the bench's policy arm, the other three most weeks), each recurring occasion can speak once
+per 52 weeks, so the ceiling falls from the cooldown's 5.2 to 3.0 per latched season and the realised rate lands
+**~2.5–3.0** (a season where an occasion is simply not true loses its slot), i.e. 42–52 % under the measured
+5.18. The mix flattens toward thirds. Same-line repeats inside 52 weeks: zero by construction. The MAIN stream
+cannot move (the filter runs before the sub-stream key exists), so (g) must still hold. Second-order: fewer
+beats means fewer drain answers at −0.5, so the bond medians in (d) drift up, by a fraction of a point.
+
+**Measured – `npm run bench:wedding -- --seeds 20`** (3 presets x 20 seeds = 60 careers, the same walk in both arms,
+~5 min each). BEFORE = the tree at HEAD `afa650e5` with none of this change; AFTER = that tree plus it (the bench
+header now prints `no-repeat 52 wks`, so a log says which arm it is). Both arms print a non-empty denominator.
+
+| | BEFORE | AFTER |
+|---|---|---|
+| spouse-view beats | 607 | 342 |
+| latched seasons (identical – the walk itself did not move) | 117.2 | 117.2 |
+| **per latched season** | **5.18** | **2.92** |
+| distant-swing / road-stretch / money / no-vacation | 39.5 / 34.9 / 25.5 / 0.0 % | 37.4 / 35.7 / 26.9 / 0.0 % |
+
+Predicted 2.5–3.0, measured **2.92** – inside the band and at its top: the surface is saturated again, now at the
+memory's ceiling (three occasions, once a season each) instead of the cooldown's. A 44 % drop in the rate, and the
+mix moved by two points at most – the memory stops a repeat, it favours no occasion. **Every other line of the bench
+log is byte-identical** between the arms: (a) census, (b) latch factor, (e) cancel rate, (h) parting census, (i)
+shock arm, and (g) – the input-independence arm still shows the MAIN stream identical week for week.
+
+⚠ **One prediction failed, and the instrument is why.** The bond medians in (d) were predicted to drift up and did
+not move at all. The bench's drain loop answers only BLOCKING rows and `'spouse-view'` is soft, so no walk ever
+answers one and no bond arithmetic can see its cadence. What the player feels is the beats avoided (about 2.3 a
+season) times whatever he would have answered – each worth −1.5 to +1: small, of either sign, and unmeasured.
+`no-vacation` stays at 0 % for the reason §4 finding 4 gave (the bench's policy books a family week every season);
+a surface that is no longer saturated is free on its one wrap week more often than one that was, which the bench
+cannot show.
+
+**Levers not pulled – the owner's calls.** The cooldown (the brief's 10) is untouched. If ~2.9 a season is still too
+many, the window is the knob: each recurring occasion speaks once per window, so the ceiling is about 3 x 52 / window
+per season – 78 weeks gives about 2.0, 104 about 1.5 (predicted, not measured; one constant, one bench run). A longer
+cooldown would not lower the count, which the window already caps; it would only spread the beats. In a marriage
+where all three occasions stay true (`tests/wave7-spouse-view.test.ts` H1) the three beats of a year fall at weeks
+0, 10 and 20 and then it is silent until the window reopens; real careers are less regular, which is unmeasured.
+
+**Round 46 R3 – the line within the occasion (06.10).** The pool is no longer one line per occasion: `distant-swing` holds
+four lines, `road-stretch`, `money` and `no-vacation` three each, and entry 0 of every pool is the line the occasion had
+before with its opening re-written (the owner's tautology ruling: the heading introduces the speaker, so no line does; the
+thirteen strings are DRAFT rows R46-S26–S38 in `docs/rounds/round-46.md`). The pick is now TWO taps on the same purpose
+stream – the occasion exactly as above, then the line inside it, never the line he said last for that occasion – so «NO new
+draw» above is true of the OCCASION layer and no longer of the beat: a beat that fires takes one more tap on
+`<seed>:life:spouse-view:<week>` (still ONE key), and a week that does not fire takes none. The line is stamped on the row
+(`LifeBeatRecord.line?`, optional, absent reads as entry 0, no schema version) because a stream-derived line cannot survive
+the pool growing – `frame`'s argument.
+
+**Predicted – written before the AFTER numbers were read.** The occasion layer is untouched, so every beat keeps its week
+and its occasion: the cadence and the mix are the table above's AFTER column (342 beats, 2.92 per latched season,
+37.4 / 35.7 / 26.9 / 0.0 %), no occasion is ever told twice running on the same line (0 repeats), and each pool spreads close
+to evenly over its lines. **Measured – `npm run bench:wedding -- --seeds 20`:** 366 beats over 125.2 latched seasons = 2.92 per latched season; mix 36.6 / 35.8 / 27.6 / 0.0 %; beats on entries 0, 1, 2… – `distant-swing` 33 / 37 / 29 / 35, `road-stretch` 48 / 41 / 42, `money` 36 / 35 / 30 (`no-vacation` 0: the bench's policy books a family week every season); the same occasion twice running on the same line: 0 of 280 pairs (the bench's section (f) now prints the line spread and that count). The occasion layer is the same code on the same first tap, so the cadence holds (2.92 = 2.92); the beat and season totals differ from the AFTER column's (366 / 125.2 against 342 / 117.2) because the walk itself moved after that table was taken, and the mix wobbles by under a point with it. The prediction held.

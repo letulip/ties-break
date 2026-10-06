@@ -152,6 +152,7 @@ export type {
   BirthdayPrompt,
   BirthdayRecord,
   LifeBeatKind,
+  LifeMoment,
   SpouseViewOccasion,
   MotherhoodBand,
   LifeBeatFollowUp,

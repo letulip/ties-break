@@ -305,7 +305,7 @@ describe('round 36 phase 4 – the epilogue gets a column', () => {
   function endingView(type: CareerEndingType = 'stopped'): EndingView {
     return {
       ending: { type, week: 265, ageYears: 19, detail: 'she stopped at nineteen', resumesWeek: null },
-      album: [1, 2, 3, 4, 5, 6, 7].map(albumPage),
+      closing: albumPage(7),
       scroll: [
         { seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] },
       ],

@@ -50,6 +50,13 @@ export interface ShopItem {
    *  not where it is. That is why the fund's headline stayed at 700 when the market arrived – see
    *  `volBps` below. */
   annualRateBps: number
+  /** ⭐⭐ ROUND 46 #3 (05.10) – HOW FAST THIS RUNG'S ENTRY PRICE INDEXES from the career's first week, in basis
+   *  points a year. Absent on everything but the four house rungs; `assetEntryPriceCents` reads its presence (beside
+   *  the family) as the predicate, the way it already reads `earningsMultipleX`. It sits beside `annualRateBps` on
+   *  purpose: the two are ONE ruling, and the ORDER between them (the index strictly below the appreciation) is what
+   *  keeps a house an asset and not a grind. The ruling, the churn it closes and the arithmetic are on the
+   *  `house-first` row of `ECONOMY.shop.catalogue`. */
+  entryIndexBps?: number
   /** ⭐⭐⭐ ROUND 29 PART THREE #16 – HOW HARD THIS RUNG RIDES THE MARKET, in basis points of
    *  log-value. Absent on everything whose worth is arithmetic on its rate alone, which is every car,
    *  house, boat, plane, academy stage and the savings deposit.
@@ -741,8 +748,24 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
  *  The row this purchase writes then opens at exactly what was paid (the ramp's own law), which is
  *  the derived worth itself: bought at the market, worth the market.
  *
+ *  ⭐⭐ ROUND 46 #3 (05.10) – A HOUSE'S QUOTE INDEXES FROM THE CAREER'S FIRST WEEK, at the rung's own `entryIndexBps` (+2 % a
+ *  year, strictly below the family's +3 % appreciation – the owner's ruling and the churn it closes are on the `house-first` row
+ *  of the catalogue). THREE CHOICES HERE ARE LOAD-BEARING: (1) THE CLOCK IS THE HOLDING'S OWN – `world.week / WEEKS_PER_YEAR`,
+ *  compounded continuously like `assetValueCents` – and not annual steps, which would leave a sawtooth: a flip in the last
+ *  weeks before each step meets a quote a year stale and pockets the difference; (2) THE ROUNDING IS A WHOLE DOLLAR AND IT
+ *  HAPPENS HERE, once (the idiom `masseur` and `staffRaise` price in), so the card's figure and the till's debit are one
+ *  integer and a re-quote can never differ by cents; (3) NOTHING IS STORED – `world.week` is the world's own clock, so there
+ *  is no field, no schema move and no migration, and week 0 is the catalogue figure exactly. Every family that is not a house
+ *  walks past the branch byte-identically, and the shelf's resale (`classEntryCents`) still reads the catalogue on purpose:
+ *  the ruling is about the QUOTE.
+ *
  *  Pure: reads the world, writes nothing, draws nothing. */
 export function assetEntryPriceCents(world: WorldState, item: ShopItem): number {
+  // ⭐⭐ ROUND 46 #3 (05.10) – A HOUSE QUOTES ITS CATALOGUE PRICE GROWN FROM WEEK 0, in whole dollars. See the paragraph above.
+  if (item.family === 'house' && item.entryIndexBps !== undefined) {
+    const years = Math.max(0, world.week) / WEEKS_PER_YEAR
+    return Math.round((item.entryCents * Math.pow(1 + item.entryIndexBps / 10_000, years)) / 100) * 100
+  }
   if (item.family !== 'business' || item.earningsMultipleX === undefined) return item.entryCents
   if (world.brandFounded !== true) return item.entryCents
   const derived = brandGrossWorthCents(brandSignalsOf(world), item.earningsMultipleX)

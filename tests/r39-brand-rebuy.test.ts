@@ -110,7 +110,10 @@ describe('round 39 #5 §1 – the first founding is his round-38 law, untouched'
     w.brandFounded = true
     for (const id of ['car-good', 'house-first', 'academy-land']) {
       const item = shopItem(id)!
-      expect(assetEntryPriceCents(w, item), `${id} is not a repeat founding`).toBe(item.entryCents)
+      // ⚠ ROUND 46 #3 (05.10) – A HOUSE QUOTES ITS OWN INDEXED PRICE NOW (+2 %/yr from week 0; `round46-house-entry-index.test.ts` pins the figures), so «the catalogue price» stays the claim for
+      // the car and the academy and, for the house, the claim is the one this test is really about: the answer is the one a career that remembers NO founding gets – the brand's memory moves no other rung.
+      const expected = item.family === 'house' ? assetEntryPriceCents({ ...w, brandFounded: false }, item) : item.entryCents
+      expect(assetEntryPriceCents(w, item), `${id} is not a repeat founding`).toBe(expected)
     }
   })
 })

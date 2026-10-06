@@ -159,7 +159,7 @@ import { lastWordLine, plateauLede } from '../engine/ending'
 import { declineRung, herLastWinterLine, pastHerPeak } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
-import { facePoint } from '../art/faceRects'
+import { bandFacePoint } from '../art/faceRects'
 
 const game = useGameStore()
 const offer = computed(() => game.snapshot?.retirementOffer ?? null)
@@ -243,9 +243,17 @@ const lastWinterWord = computed(() => herLastWinterLine(game.snapshot?.lastWinte
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
+// ⭐⭐ ROUND 46 #13 – THE PICTURE SLID AND CUT THE HEAD OFF. The owner, 05.10 (translated): on this card
+// «the picture has shifted and crops the head». The band was a fixed 140px and the anchor was the
+// face CENTRE (`facePoint`), which on a short wide band leaves the top of the head above the window:
+// about 32px of it for the 31+ portrait and 10px for the 25–30 one at the card's widest. The band now
+// declares a RATIO and the anchor is solved for the head at that ratio (`bandFacePoint`), so the whole
+// head sits inside the window at every width. ⚠ BOTH COME FROM THIS ONE CONSTANT, inline, so the box
+// and the anchor cannot drift apart: change the ratio and the anchor follows.
+const ART_BAND_RATIO = 0.5
 const artStyle = computed(() => {
-  const p = facePoint(`${stage.value}-serious`)
-  return { objectPosition: `${p.x}% ${p.y}%` }
+  const p = bandFacePoint(`${stage.value}-serious`, ART_BAND_RATIO)
+  return { aspectRatio: `${1 / ART_BAND_RATIO} / 1`, objectPosition: `${p.x}% ${p.y}%` }
 })
 
 // ⚠ THE SINGLE CONTROL ON THE FINAL CARD ACKNOWLEDGES; ON EVERY OTHER CARD IT ANSWERS. It is the
@@ -393,7 +401,7 @@ useDialogFocus(card)
 .retire-art {
   display: block;
   width: 100%;
-  height: 140px;
+  height: auto; /* the HEIGHT is the inline `aspect-ratio` (ART_BAND_RATIO) – round 46 #13 */
   object-fit: cover;
   border-radius: var(--radius-panel);
   margin-bottom: 14px;

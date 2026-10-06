@@ -342,6 +342,38 @@ describe('§5 – ⭐⭐ the yacht week is a line of the vacation ladder – pri
     }
     wrapper.unmount()
   })
+
+  // ⭐⭐ ROUND 46 #6 – «Может для своей яхты тоже поставим -15% вероятности травмы?» (05.10). THE SHEET'S HALF
+  // OF THE PARITY: the line under the row is the engine's own answer (`vacationBuffFactor`, the rule the
+  // booking applies), so the owner's week must show the SAME line the clinic carries and a charter none.
+  // Asked through one snapshot each way, with the clinic as the control – a line missing from BOTH rows
+  // would otherwise compare equal.
+  it('⭐⭐ #6 – the owner\'s yacht week shows the clinic\'s injury line; the charter shows none', async () => {
+    const effectOf = (wrapper: ReturnType<typeof mountVacationTab>, label: string): string => {
+      const line = wrapper
+        .findAll('.pkg-effect')
+        .find((e) => e.element.parentElement?.querySelector('.pkg-label')?.textContent?.trim() === label)
+      expect(line, `${label} has an effect line`).toBeTruthy()
+      return line!.text()
+    }
+    const injuryPart = (effect: string): string => effect.match(/injury risk.*$/)?.[0] ?? ''
+
+    const owner = rich('r46-6-ui-owner')
+    owner.assets = [{ id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00, entries: [] }]
+    const mine = mountVacationTab(toSnapshot(owner), owner.week + 3)
+    const clinic = effectOf(mine, 'Elite recovery programme')
+    expect(clinic, 'the control: the clinic carries the line').toContain('injury risk')
+    const boat = effectOf(mine, 'A week on the yacht')
+    expect(boat, 'the owner\'s week carries it too').toContain('injury risk')
+    expect(injuryPart(boat), 'the very same line the clinic shows, not a second spelling').toBe(injuryPart(clinic))
+    mine.unmount()
+
+    const charterer = rich('r46-6-ui-charter')
+    const theirs = mountVacationTab(toSnapshot(charterer), charterer.week + 3)
+    expect(effectOf(theirs, 'A week on the yacht'), 'a charter has no after-effect').not.toContain('injury risk')
+    expect(effectOf(theirs, 'Elite recovery programme'), 'control, again').toContain('injury risk')
+    theirs.unmount()
+  })
 })
 
 describe('§6 – the order asks first, and the question fits a phone', () => {

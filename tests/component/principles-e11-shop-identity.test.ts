@@ -69,6 +69,17 @@
 // ones the `title` attributes already held, character for character, which
 // `tests/component/a11y-sweep.test.ts`'s E-P12 block pins against each other rather than against a
 // literal.
+//
+// ⚠⚠ THE RECORD WAS REGENERATED A SECOND TIME, ON 06.10 (ROUND 46 #3), AND HERE IS THE FINDING IT ASKS FOR.
+// The owner ruled that a house's ENTRY PRICE indexes at +2 %/yr from the career's first week («Дом на 3% в год - смотри, чтобы он всё ещё при этом остался инвест активом, пусть и небольшим, т.е. его рост
+// должен обгонять инфляцию.», ledger item 3 in docs/rounds/round-46.md), so the shelf's four house cards no longer print the catalogue figure on a career that is not in week 0 – and these fixtures stand at
+// weeks 412 and 1133. A PRICE ON THE SHELF MOVED, which is exactly what this net is for.
+// ⚠ WHAT WAS VERIFIED BEFORE IT MOVED: the old and the new record were diffed structurally, leaf by leaf, 700 leaves. EXACTLY NINE CHANGED – the four `hash`es (the consequence) and the Property text of
+// each arm (4), where the ONLY differing tokens are the four house prices, each equal to the engine's own rule (`round(price × 1.02^(week / 52))` in whole dollars: $240,000 → $280,770, $590,000 → $690,227,
+// $1,400,000 → $1,637,826, $3,000,000 → $3,509,628 at week 412; → $369,484, $908,315, $2,155,324, $4,618,551 at week 1133) – plus ONE control: the `pro-bought` arm's third house Buy button (the villa)
+// gained `disabled`, which can only mean the arm's wallet sits between the old price and the new one: the gate reading the same figure as the card, which is arm 6 of
+// `tests/round46-house-entry-index.test.ts`. Every other sentence, family title, «Worth now» figure, wait sentence, `aria-*` attribute, `placeholder`, `min` and computed-style probe is IDENTICAL, and no
+// wording moved: the four prices are numbers the cards already printed.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'

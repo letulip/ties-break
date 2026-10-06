@@ -470,10 +470,17 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              school", and it comes from the engine for this screen's own standing rule: screen C
              derives no fact of its own. A cell hard-coded "School" above "Year 2 of 4" would be the
              frozen tense the tile itself just lost, one line higher up. -->
+        <!-- ⭐⭐ ROUND 46 MORNING #3 – THE CELL'S LAST RUNG. Once school and college are behind her and she is the
+             age the ladder above ends on, the engine hands this cell a SECOND field, `life.relationships` (a
+             heading and the same two lines), and the cell prints that in place of the three above; until then it
+             is null and every word above is exactly what it was.
+             ⚠ THE SCREEN CHOOSES NOTHING: both lines are the engine's (`kidLife.relationshipsTile`), and they are
+             the same `kid-tile-line` pair, so the `nowrap` rule and the 16-character budget below hold for them
+             unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template. -->
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">{{ life?.schoolLabel ?? 'School' }}</p>
-          <p class="kid-tile-line">{{ life?.school.lead }}</p>
-          <p class="kid-tile-line kid-tile-line-soft">{{ life?.school.note }}</p>
+          <p class="kid-tile-label">{{ life?.relationships?.label ?? life?.schoolLabel ?? 'School' }}</p>
+          <p class="kid-tile-line">{{ life?.relationships?.lead ?? life?.school.lead }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ life?.relationships?.note ?? life?.school.note }}</p>
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">

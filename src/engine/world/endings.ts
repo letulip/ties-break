@@ -100,7 +100,7 @@ import { kidAgeYears } from './age'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
 import { physicalMean, resolveAgeCurve } from '../development'
-import { buildAlbum, buildScroll } from './album'
+import { buildScroll, slotLastWeek } from './album'
 import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood, UNKNOWN_CHOICE_REFUSAL } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
 // has to hand back the entries the college answer strands, and every rule about what a release
@@ -1267,7 +1267,9 @@ export function buildEndingView(world: WorldState): EndingView | null {
   }
   return {
     ending,
-    album: buildAlbum(world),
+    // ⭐ ROUND 46 · R6 (06.10) – ONE PAGE, NOT SEVEN: the reel's last, the only one the screen reads. See
+    // `EndingView.closing`; `buildAlbum` still composes all seven for the engine's own tests and probes.
+    closing: slotLastWeek(world),
     scroll: buildScroll(world),
     handoff: {
       // ⚠ THE SEAM THAT ALWAYS ANSWERS NO IN v1 (§5.6). Pregnancy is post-v1 (§5.4), so there is no

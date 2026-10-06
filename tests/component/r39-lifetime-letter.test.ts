@@ -122,7 +122,7 @@ function albumPage(slot: number, over: Partial<AlbumPage> = {}): AlbumPage {
 function endingView(type: CareerEndingType = 'natural', over: Partial<EndingView> = {}): EndingView {
   return {
     ending: { type, week: 900, ageYears: 31, detail: 'she stopped at thirty-one', resumesWeek: null },
-    album: [1, 2, 3, 4, 5, 6, 7].map((s) => albumPage(s)),
+    closing: albumPage(7),
     scroll: [{ seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] }],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
     totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },
@@ -156,7 +156,6 @@ describe('EndingScreen – the lifetime deal survives into the epilogue', () => 
       ending: endingView('natural', { lifetimeDeal: { brand: 'Baseline Athletic', cashCents: AD.lifetime.cashCents } }),
     })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.text()).toContain('The Baseline Athletic deal never ran out – $2,500,000 a year, for life.')
     w.unmount()
   })
@@ -164,7 +163,6 @@ describe('EndingScreen – the lifetime deal survives into the epilogue', () => 
   it('⚠ and no deal is NO line – the null arm every other epilogue fixture already carries', async () => {
     patchSnapshot({ ending: endingView('natural') })
     const w = mount(EndingScreen)
-    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     expect(w.text()).not.toContain('never ran out')
     expect(w.text()).not.toContain('for life')
     w.unmount()

@@ -62,9 +62,11 @@
 // buttons: Home's floating pill and this screen's CTA read the same label, the same mode and the same
 // blocked state, and the press routes into the shell's one handler. See that file for the whole
 // argument and for the arrival-gate bug it is written against.
+import { useKidEmotion } from '../../composables/kidEmotion'
+import { portraitUrl } from '../../art/preload'
 import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { useCalendarWeek, useLookAhead, layoffNoteFor, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
+import { useCalendarWeek, useLookAhead, useWeddingMark, layoffNoteFor, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 // The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
 // like across a morning and an afternoon is a rule with content in it, so it lives in a pure module
 // beside the day layout rather than in this template - see composables/weekGrid.ts for the owner's
@@ -134,6 +136,11 @@ const game = useGameStore()
 
 const calendar = useCalendarWeek()
 const lookAhead = useLookAhead()
+// ⭐ ROUND 46 #11b – the announced wedding's mark: the week is the engine's (`snapshot.weddingWeek`), the picture is the
+// bride painting `portraitUrl` resolves to the one band it is painted in.
+const weddingMark = useWeddingMark()
+const { stage: kidStage } = useKidEmotion()
+const brideArt = computed(() => portraitUrl(kidStage.value, 'bride'))
 const action = useWeekAction()
 
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -491,6 +498,16 @@ const showGo = computed(() => !game.snapshot?.pending)
            the sim has no day resolution past the plan - see composables/weekDays.ts. A row
            carrying a tournament she can act on is a button; every other row is a statement.
            ============================================================================ -->
+      <!-- ⭐ ROUND 46 #11b – THE ANNOUNCED WEDDING (the owner, 05.10: «do we put the wedding in the calendar? There is a
+           picture»; verbatim in docs/rounds/round-46.md). One band above the look-ahead, shown from the week she is announced until the day lands – the
+           week is the engine's (`weddingWeek`), so it is also right on the week the grid itself plays. -->
+      <section v-if="weddingMark" class="bare cal-wedding">
+        <img v-if="brideArt" class="cal-wedding-art" :src="brideArt" alt="" />
+        <p class="cal-wedding-body">
+          <span class="cal-wedding-name">Her wedding</span>
+          <span class="hint">{{ weddingMark.label }}, {{ weddingMark.dates }}</span>
+        </p>
+      </section>
       <section class="bare cal-ahead-block">
         <h2>Weeks after that</h2>
         <ul class="cal-ahead">
@@ -1417,5 +1434,30 @@ const showGo = computed(() => !game.snapshot?.pending)
 .cal-card-broke,
 .cal-card-done {
   margin: 0;
+}
+/* ⭐ ROUND 46 #11b – the announced wedding's band. */
+.cal-wedding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.cal-wedding-art {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 22%;
+}
+.cal-wedding-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+}
+.cal-wedding-name {
+  font-weight: 600;
 }
 </style>
