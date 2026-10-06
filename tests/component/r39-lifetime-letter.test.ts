@@ -156,7 +156,11 @@ describe('EndingScreen – the lifetime deal survives into the epilogue', () => 
       ending: endingView('natural', { lifetimeDeal: { brand: 'Baseline Athletic', cashCents: AD.lifetime.cashCents } }),
     })
     const w = mount(EndingScreen)
-    expect(w.text()).toContain('The Baseline Athletic deal never ran out – $2,500,000 a year, for life.')
+    // ⭐ RE-AIMED 06.10 BY HIS ROUND 47 #2 («I asked for the millions shortened to 40.5M, 254.3M and so on»): a
+    // yearly fee of $2,500,000 is a figure of a million or more, so the last page prints the compact form. The
+    // words around the figure did not move. ⚠⚠ THE ARM. Print the long form again and this goes red: measured
+    // 06.10, RED [1 test, 1 assertion].
+    expect(w.text()).toContain('The Baseline Athletic deal never ran out – $2.5M a year, for life.')
     w.unmount()
   })
 

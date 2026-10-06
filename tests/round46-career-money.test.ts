@@ -490,3 +490,70 @@ describe('⭐⭐⭐ round 46 #9, ruling A – the family\'s portfolio, and the r
     expect(m.outlayCents, 'so founding it never was inside «spent», before this ruling or after').toBe(spentBefore)
   })
 })
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 47 #3 – THE FUND IS A TILL, AND A ROUND TRIP THROUGH IT WAS NEVER A SPEND
+// =================================================================================================
+//
+// THE OWNER, 06.10, off the last page of a twenty-season career: «цифры трат снова гросс и не
+// пересчитаны, мы туда вроде собирались записывать сколько было именно на теннис потрачено». His
+// «Spent» read $254,383,557 and $237,928,148 of it – 93.5% – was the cost of units the family had
+// bought into the index fund and the deposit and later taken back out. `sellAsset` leaves that cost
+// inside `spentCents` (the proceeds go to `earnedCents`), and `heldCents` only excuses what is STILL
+// held, so a family that used the fund as a till read as having spent every round trip. The
+// measurement and the fix are on the amendment in engine/world/reckoning.ts.
+//
+// ⚠ THE ARMS BELOW ARE POSED WITH THE ENGINE'S OWN COMMANDS (`buyAsset`, `sellAsset`), never with
+// hand-written totals: a fixture that stated the figures itself would prove nothing about the fold.
+describe('⭐⭐⭐ round 47 #3 – money that went into the fund and came back out was never spent', () => {
+  it('⭐⭐⭐ a family that parks cash in the fund and takes part of it back out spent NOTHING by doing it', () => {
+    const { world, openingFundsCents } = career('r47-money-roundtrip', 40)
+    const before = careerMoney(world)
+    world.fundsCents += 200_000_00
+    buyAsset(world, 'index-fund', 100_000_00)
+    sellAsset(world, 'index-fund', 40_000_00)
+
+    const m = careerMoney(world)
+    expect(m.spentCents - before.spentCents, 'the purchase really did cross the ledger').toBe(100_000_00)
+    expect(m.heldCents, 'what is still in the fund').toBe(60_000_00)
+    expect(m.soldCostCents, 'what came back out of it, at what it cost').toBe(40_000_00)
+    // ⚠⚠ THE ARM. Drop `- soldCostCents` from `outlayCents` and the first assertion reads 40,000_00
+    // too high and the second reads the gross: measured 06.10, RED [2 assertions].
+    expect(m.outlayCents, 'the round trip moved NOTHING in the tennis spend').toBe(before.outlayCents)
+    expect(
+      m.spentCents - m.heldCents - m.upkeepCents,
+      'and the pre-fix reading is gross by exactly the cost that came back out',
+    ).toBe(before.outlayCents + 40_000_00)
+    // ⭐ THE IDENTITY, with the term that is no longer zero: growth + held + hers + upkeep + sold-on.
+    expect(m.cameInCents - m.outlayCents, 'the books still add up, with the fourth term').toBe(
+      // the $200,000 top-up is hand-injected cash that never crossed the ledger (the first identity arm says so)
+      world.fundsCents - openingFundsCents - 200_000_00 + m.heldCents + m.herAccountCents + m.upkeepCents + m.soldCostCents,
+    )
+  })
+
+  it('⭐⭐ ...and a family that never took money out reads byte-identically, so every frozen career and bench does', () => {
+    const { world } = career('r47-money-never-sold', 40)
+    world.fundsCents += 200_000_00
+    buyAsset(world, 'index-fund', 100_000_00)
+    const m = careerMoney(world)
+    expect(m.soldCostCents).toBe(0)
+    expect(m.outlayCents, 'the pre-fix formula, to the cent').toBe(m.spentCents - m.heldCents - m.upkeepCents)
+  })
+
+  it('⚠⚠ THE NAMED RESIDUAL, pinned so it can be seen moving: a WHOLE sale deletes the row and its memory with it', () => {
+    // The reader sees the cost of what was sold OUT OF a row the family still holds. A whole sale leaves
+    // no row, so that round trip falls back into «spent» – the same shape as the car arm above, and the
+    // reason the printed figure is an UPPER bound. The exact answer is a career accumulator at
+    // `accrueFinance` (a schema move – engine/world/reckoning.ts, ROUND 47 #3). When that lands this
+    // assertion flips on purpose.
+    const { world } = career('r47-money-whole-sale', 40)
+    const before = careerMoney(world)
+    world.fundsCents += 200_000_00
+    buyAsset(world, 'index-fund', 100_000_00)
+    sellAsset(world, 'index-fund')
+    const m = careerMoney(world)
+    expect(world.assets.some((a) => a.id === 'index-fund'), 'the row is gone').toBe(false)
+    expect(m.soldCostCents, 'and so is its memory').toBe(0)
+    expect(m.outlayCents, 'so the round trip is still counted – the documented upper bound').toBe(before.outlayCents + 100_000_00)
+  })
+})

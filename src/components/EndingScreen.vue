@@ -17,7 +17,7 @@ import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
-import { formatCents } from '../shared/money'
+import { formatCentsCompact } from '../shared/money'
 import type { AlbumBook, DynastyHandover } from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
@@ -77,6 +77,38 @@ function raiseAnother(): void {
   emit('newCareer')
 }
 
+// --- ⭐⭐⭐ ROUND 47 B1 – THE FIGURES ON THE LAST PAGE, REBUILT (06.10; items 1-7 and 12 of docs/rounds/round-47.md) ---
+//
+// THE OWNER, 06.10, off the last page of a twenty-season career (translated; a `.vue` file carries no
+// Cyrillic): (1) take away the wrapper the whole content lies on, it frees some width; (2) «I asked for the
+// millions to be shortened to 40.5M, 254.3M and so on»; (3) the spend figures are gross again; (4) the layout
+// still moves and the numbers jump; (5) best rank, titles and seasons in one row, bigger, Sora, bolder; (6)
+// what is the difference between «Still owned» and «Family's portfolio», one of them looks redundant; (7)
+// every number: bold, larger, Sora; (12) «The whole record» to the very bottom, only the export under it.
+//
+// ⚠ NOT ONE LABEL MOVED (invariant 4). «Family's share», «Spent», «Her account», «Family's portfolio», «Best
+// rank», «Titles» and «Seasons» are byte-identical; only the numbers around them changed form.
+//
+// (1) THE WRAPPER WAS THE GLOBAL `section` RULE, not anything in this file: style.css paints every `section` as a
+// panel (the panel colour, a 1px line, `--tb-card-pad` + 2px = 16px of padding), and this page's
+// `section.ending-album` was one – so the content lay on a card 17px inside the takeover's own 16px gutter on each
+// side (309px of column at 375). `section.bare` is the app's existing opt-out; the page is `bare` now and the
+// column is 343px. The ground stays: it is the takeover's `--celebration-bg`, not the panel's.
+// (2) EVERY MONEY FIGURE HERE GOES THROUGH `formatCentsCompact` (shared/money.ts – round 46 #19 wired it to
+// the season popup only): "$40.6M" from one million up, `formatCents`' own form below it. His example spells
+// the decimal with a comma and truncates (40,5); the shipped form is the app's dot and rounds.
+// (3) «Spent» IS STILL `view.money.outlayCents` – the figure moved in the ENGINE (`careerMoney`'s fourth
+// term, engine/world/reckoning.ts), because this page only ever printed what the fold handed it.
+// (6) «Still owned» LEFT. It is the shelf at value; the portfolio is the wallet PLUS the shelf, so on his
+// screen they differed by exactly the wallet ($268,755,069 against $269,490,541 – $735,472). Nested, so the
+// row that said less is the one that went; the portfolio is the line ruling A of 18.09 asked for. The
+// engine's `holdingsCents` stays on the wire (the season popup reads it).
+// (4)(5)(7) ONE GRID, TWO SHAPES. The money rows are a label|figure grid whose row wrappers are
+// `display: contents` (round 46 R5's idiom on the season popup): the figure column is as wide as the widest
+// figure and the label column takes the rest, so no row re-flows against another and nothing depends on a
+// column count that changes with the width. The three career facts are ONE row of three equal columns at
+// every width. Every figure – the numbers inside the three notes too – is Sora (`--font-heading`), bold, larger.
+// (12) «The whole record» is under the doors now; only the dev export is below it.
 const view = computed(() => game.snapshot?.ending ?? null)
 
 /** false = the last page, true = the record underneath (§9.3). */
@@ -297,8 +329,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
     </section>
 
     <!-- THE LAST PAGE. ⚠ `ending-album` IS THE CLASS THE REEL'S SECTION WORE, KEPT ON PURPOSE: this section is
-         still the card the fit tests measure, and a rename would be a diff with no behaviour in it. -->
-    <section v-else class="ending-album">
+         still the card the fit tests measure, and a rename would be a diff with no behaviour in it.
+         ⭐⭐⭐ ROUND 47 B1 #1 – AND IT IS `bare` NOW. The wrapper he asked to lose was never a rule of this file:
+         style.css paints EVERY `section` as a panel (the panel colour, a 1px line, 16px of padding), so the
+         content lay on a card 17px inside the takeover's own gutter on each side. `section.bare` is the app's
+         existing opt-out (the Season screen's strips use it) – the ground behind the page is the takeover's own
+         and stays. The record layer and the book layer above keep the panel: he asked about the last page. -->
+    <section v-else class="ending-album bare">
       <header class="ending-head">
         <Eyebrow as="h2">The last page</Eyebrow>
       </header>
@@ -360,35 +397,44 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              surface on this figure is `ForkDialog.vue`, whose label is «The tennis has paid» and was
              never the string he ruled on; the album's slot 6 says «$X won against $Y spent» in
              PROSE. Neither is «Won», so neither moves on either ruling. -->
-        <dl class="ending-totals">
-          <div><dt>Family's share</dt><dd>{{ formatCents(view.money.prizeCents) }}</dd></div>
-          <div><dt>Spent</dt><dd>{{ formatCents(view.money.outlayCents) }}</dd></div>
-          <div v-if="view.money.herAccountCents > 0">
-            <dt>Her account</dt><dd>{{ formatCents(view.money.herAccountCents) }}</dd>
-          </div>
-          <div v-if="view.money.holdingsCents > 0">
-            <dt>Still owned</dt><dd>{{ formatCents(view.money.holdingsCents) }}</dd>
-          </div>
-          <!-- ⭐⭐⭐ RULING A, 18.09 – THE ONE LINE THE TWO FIGURES ABOVE IT CANNOT SAY. His ask is on
-               `careerMoney` in engine/world/reckoning.ts (no Cyrillic may appear in a template): the
-               reckoning stays TENNIS ONLY, and the family's whole portfolio – the wallet plus every
-               shelf row at what it is worth – gets a separate line of its own. A point-in-time read,
-               not a lifetime total, which is why it costs no schema.
-               ⚠ THE LABEL IS A DRAFT – docs/plans/life-wave-7-strings-2026-09.md, id R46-7. The
-               article is dropped to match the row he renamed four lines up, and both spellings are
-               his to move.
-               ⚠ IT RENDERS ALWAYS, unlike the two draft rows above it, because a family that owns
-               nothing and holds nothing still HAS a portfolio and the honest figure for it is the
-               wallet. A row that vanished on a poor career would answer his question for rich
-               careers only. -->
-          <div><dt>Family's portfolio</dt><dd>{{ formatCents(view.money.portfolioCents) }}</dd></div>
-          <div><dt>Seasons</dt><dd>{{ view.seasonsPlayed }}</dd></div>
-          <div><dt>Best rank</dt><dd>{{ view.bestRank === null ? '–' : `#${view.bestRank}` }}</dd></div>
-          <div><dt>Titles</dt><dd>{{ view.titles }}</dd></div>
-        </dl>
+        <div class="ending-totals">
+          <dl class="ending-money">
+            <div><dt>Family's share</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.prizeCents) }}</dd></div>
+            <div><dt>Spent</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.outlayCents) }}</dd></div>
+            <div v-if="view.money.herAccountCents > 0">
+              <dt>Her account</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.herAccountCents) }}</dd>
+            </div>
+            <!-- ⭐⭐⭐ RULING A, 18.09 – THE ONE LINE THE TWO FIGURES ABOVE IT CANNOT SAY. His ask is on
+                 `careerMoney` in engine/world/reckoning.ts (no Cyrillic may appear in a template): the
+                 reckoning stays TENNIS ONLY, and the family's whole portfolio – the wallet plus every
+                 shelf row at what it is worth – gets a separate line of its own. A point-in-time read,
+                 not a lifetime total, which is why it costs no schema.
+                 ⚠ THE LABEL IS A DRAFT – docs/plans/life-wave-7-strings-2026-09.md, id R46-7. The
+                 article is dropped to match the row he renamed four lines up, and both spellings are
+                 his to move.
+                 ⚠ IT RENDERS ALWAYS, unlike the two draft rows above it, because a family that owns
+                 nothing and holds nothing still HAS a portfolio and the honest figure for it is the
+                 wallet. A row that vanished on a poor career would answer his question for rich
+                 careers only.
+                 ⭐⭐⭐ ROUND 47 B1 #6 – AND THE ROW THAT STOOD BETWEEN THEM, «STILL OWNED», IS GONE. It was
+                 the shelf at value; this is the wallet PLUS the shelf, so it is the more complete of the
+                 two and the one ruling A asked for. On his screen they differed by exactly the wallet.
+                 His ask: one of the two looks redundant. «The two figures above it» in the paragraph
+                 before this one is the record of the page as it was: Spent and Her account are what
+                 stand above it now. -->
+            <div>
+              <dt>Family's portfolio</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.portfolioCents) }}</dd>
+            </div>
+          </dl>
+          <!-- ⭐⭐⭐ ROUND 47 B1 #5 – THE THREE CAREER FACTS ARE ONE ROW, in the order he named them. -->
+          <dl class="ending-facts">
+            <div><dt>Best rank</dt><dd class="ending-fig">{{ view.bestRank === null ? '–' : `#${view.bestRank}` }}</dd></div>
+            <div><dt>Titles</dt><dd class="ending-fig">{{ view.titles }}</dd></div>
+            <div><dt>Seasons</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
+          </dl>
+        </div>
         <p v-if="view.oneMoreYearCount > 0" class="ending-note">
-          She said one more year {{ view.oneMoreYearCount }}
-          {{ view.oneMoreYearCount === 1 ? 'time' : 'times' }}.
+          She said one more year <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? 'time' : 'times' }}.
         </p>
 
         <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
@@ -402,11 +448,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              earn yet (only the land, a field). -->
         <p v-if="view.academy" class="ending-note">
           <template v-if="view.academy.weeklyIncomeCents > 0">
-            Her academy stands – {{ view.academy.stagesBuilt }} of {{ view.academy.totalStages }}
-            stages built – and it earns {{ formatCents(view.academy.weeklyIncomeCents) }} a week.
+            Her academy stands – <b class="ending-fig">{{ view.academy.stagesBuilt }}</b> of <b class="ending-fig">{{ view.academy.totalStages }}</b>
+            stages built – and it earns <b class="ending-fig">{{ formatCentsCompact(view.academy.weeklyIncomeCents) }}</b> a week.
           </template>
           <template v-else>
-            Her academy is begun – {{ view.academy.stagesBuilt }} of {{ view.academy.totalStages }}
+            Her academy is begun – <b class="ending-fig">{{ view.academy.stagesBuilt }}</b> of <b class="ending-fig">{{ view.academy.totalStages }}</b>
             stages built.
           </template>
         </p>
@@ -420,10 +466,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              loud. DRAFT copy, like every new sentence in this wave. -->
         <p v-if="view.lifetimeDeal" class="ending-note">
           The {{ view.lifetimeDeal.brand }} deal never ran out –
-          {{ formatCents(view.lifetimeDeal.cashCents) }} a year, for life.
+          <b class="ending-fig">{{ formatCentsCompact(view.lifetimeDeal.cashCents) }}</b> a year, for life.
         </p>
-
-        <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
 
         <!-- ⚠⚠ E-09 / T4.8 (27.09) – THE REFUSAL HAD NOWHERE TO GO ON A BLOCKING TAKEOVER. This screen
              issues `resumeFromCollege` from the pill below and `newCareer` used to come from here too,
@@ -488,6 +532,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         >
           {{ continueLabel }}
         </PrimaryPill>
+
+        <!-- ⭐⭐⭐ ROUND 47 B1 #12 – «THE WHOLE RECORD» IS UNDER THE DOORS NOW, and only the service export is
+             below it. It stood above the doors, between the notes and the pills; the owner asked for it at
+             the very bottom (his words are on the script block, translated). The label is his and unmoved. -->
+        <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
 
         <!-- ⭐⭐⭐ ROUND 46 #20 – THE SERVICE EXPORT (see the script block). Last, small, a link: it is a tool for
              the person testing the build, and it must be reachable BEFORE «Raise another» drops the career.
@@ -606,19 +655,68 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   text-align: center;
 }
 
+/* ⭐⭐⭐ ROUND 47 B1 #4/#5/#7 – ONE GRID, TWO SHAPES, AND EVERY FIGURE IS SORA, BOLD AND LARGER.
+   The owner, 06.10 (translated): the layout still moves and the numbers jump; the three career facts in one
+   row, bigger, Sora, bolder; every number bold, larger, Sora. The old list was `repeat(auto-fit, minmax(84px,
+   1fr))` – a column COUNT that changed with the width, so a figure that was the third of a row at 375 became
+   the second at 360 and the whole page re-flowed under his thumb.
+
+   THE MONEY ROWS are a two-column grid, `minmax(0, 1fr) auto`: the figure column is as wide as the widest
+   figure and the label column takes the rest, and every row wrapper is `display: contents` (round 46 R5's idiom
+   on the season popup) so the label and the figure of ALL rows are items of the same grid and line up. A long
+   label wraps in its own column; nothing can push the page sideways, and nothing depends on the width.
+   THE FACTS are one row of three equal columns at every width. */
 .ending-totals {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-  gap: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   margin: 0;
   width: 100%;
   max-width: 460px;
 }
 
-.ending-totals div {
+.ending-money,
+.ending-facts {
+  margin: 0;
+}
+
+.ending-money {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 10px;
+  align-items: baseline;
+}
+
+.ending-money > div {
+  display: contents;
+}
+
+.ending-money dt {
+  text-align: left;
+}
+
+.ending-money dd {
+  font-size: 22px;
+  line-height: 1.15;
+  text-align: right;
+}
+
+.ending-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ending-facts > div {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+}
+
+.ending-facts dd {
+  font-size: 30px;
+  line-height: 1.1;
 }
 
 .ending-totals dt {
@@ -630,9 +728,19 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
 
 .ending-totals dd {
   margin: 0;
-  font-size: 16px;
+}
+
+/* The ONE figure style: Sora, bold, tabular. It is on every `dd` above and, inline, on the numbers inside the
+   three notes below – `b` because it is a figure and nothing else, larger than the 14px prose around it. */
+.ending-fig {
+  font-family: var(--font-heading);
+  font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+b.ending-fig {
+  font-size: 1.15em;
 }
 
 .ending-note {

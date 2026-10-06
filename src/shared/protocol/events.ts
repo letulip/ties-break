@@ -921,6 +921,16 @@ export interface CareerMoney {
   spentCents: number
   /** the part of `spentCents` that bought something the family STILL OWNS, at what it cost. */
   heldCents: number
+  /** ⭐⭐⭐ ROUND 47 #3 (06.10) – the part of `spentCents` that bought something the family has since SOLD ON:
+   *  the `realisedCostCents` of every row it still holds (a fund or a deposit it took money back out of).
+   *  It left the wallet as a purchase and came back as proceeds, so it MOVED twice and was consumed never –
+   *  which is why it is not in `outlayCents`. Not `heldCents` (the family no longer owns it) and not
+   *  `upkeepCents` (it was never a bill): a fourth thing, and the identity carries it as a fourth term.
+   *
+   *  ⚠ A LOWER BOUND OF THE ROUND TRIPS, never an upper one: a whole sale deletes the row and a top-up at
+   *  least as big as the holding clears its memory (engine/world/reckoning.ts names both). Zero on every
+   *  career that never took money back out of a fund. */
+  soldCostCents: number
   /** ⭐ RULING 5, 18.09 – what the family's own things have cost to KEEP over the whole career: the
    *  crews, the berths, the insurance and the services of the cars, the boats and the planes.
    *
@@ -930,7 +940,7 @@ export interface CareerMoney {
    *  retains a career total of upkeep: see `careerAssetUpkeepCents` (engine/world/assets.ts) for the
    *  replay's exactness and for the one residual it names (a thing already sold). */
   upkeepCents: number
-  /** `spentCents − heldCents − upkeepCents`, floored at zero: money that left the family for good
+  /** `spentCents − heldCents − soldCostCents − upkeepCents`, floored at zero: money that left the family for good
    *  AND was part of this life. THE number the word «spent» means – coaching, courts, fares,
    *  entries, kit, physio, salaries, the weeks away, the vacations and the tuition.
    *

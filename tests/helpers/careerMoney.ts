@@ -23,6 +23,7 @@ export function moneyOf(totals: CareerTotals, over: Partial<CareerMoney> = {}): 
     cameInCents: totals.earnedCents,
     spentCents: totals.spentCents,
     heldCents: 0,
+    soldCostCents: 0,
     upkeepCents: 0,
     outlayCents: totals.spentCents,
     holdingsCents: 0,

@@ -637,3 +637,19 @@ standings. Both are his. Drafts R46-4/5/6 stand exactly where they were.
 
 ⚠ So the answer to «show the secondary ones only if that costs no layout decision» is: **it costs
 one**, measurably more than it did this morning, and the primary shipped alone.
+
+## Amendment 06.10 – round 47 #3: the fund is a till (a fourth term)
+
+His words (06.10, off the last page of a twenty-season career): the spend figures are gross again and were not recomputed – the plan was
+to record how much went on the tennis specifically. Measured on his save before any change: gross spent $428,692,101, held $163,296,852,
+upkeep $11,011,692, so `outlayCents` = $254,383,557 – of which **$237,928,148 was the cost of units sold back out of the index fund and the
+deposit** (`realisedCostCents`: $69,590,851 + $168,337,297). The fund had been used as a till; every round trip read as spending.
+
+`careerMoney` now excuses a fourth thing, `soldCostCents` (the sum of `realisedCostCents` over the rows still held; persisted since round 34 #15,
+so no schema move and no RNG). `outlayCents` = `spentCents − heldCents − soldCostCents − upkeepCents` (floored at zero) and the identity gains the
+term: `cameInCents − outlayCents = (fundsCents − starting funds) + heldCents + herAccountCents + upkeepCents + soldCostCents`. His career reads
+**$16,455,409**. A career that never took money back out of a fund reads to the cent what it read before.
+
+**Residual, named:** the figure is an upper bound – a whole sale deletes the row and a top-up at least as large as the holding clears its
+memory, so those round trips stay inside «Spent». The exact figure is a career accumulator written at `accrueFinance` for every non-`'shop'`
+outflow – a schema move, not taken here. Tests: `tests/round46-career-money.test.ts` (round-47 describe), `tests/component/r47-b1-ending-figures.test.ts`.
