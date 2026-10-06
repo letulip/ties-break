@@ -47,6 +47,8 @@ last-reviewed: 2026-10-06
 | [Batch 10D – Family life beats](ru-life-beats-family-2026-10.md) | Her own key, engagement, pregnancy, bereavement and spouse's view | five typed copy modules drafted |
 | [Batch 10E – Relationships and parting](ru-life-beats-relationships-2026-10.md) | Someone new, relationship ending and marriage ending | `metCopy`, `endedCopy` and `divorcedCopy` drafted |
 | [Batch 10F – Counsel](ru-life-beats-counsel-2026-10.md) | Coach and psychologist lines after she says she wants to stop | both reachable counsel pools and headings drafted |
+| [Batch 10G – Life-beat actions](ru-life-beats-actions-2026-10.md) | All parent choice labels in `LIFE_BEAT_OPTIONS` | every current option drafted |
+| [Batch 10H – Answer history](ru-life-beats-answer-feed-2026-10.md) | Durable feed rows written after parent choices | every non-null `ANSWER_EVENT` row drafted; one source discrepancy flagged |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
