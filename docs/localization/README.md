@@ -44,6 +44,7 @@ last-reviewed: 2026-10-05
 | [Batch 10A – Small-talk situations](ru-small-talk-situations-2026-10.md) | Continuation of the generated situation corpus after R1–R6 | R7–R18 drafted; later rows open |
 | [Batch 10B – Small-talk situations](ru-small-talk-situations-b-2026-10.md) | Continuation of the generated situation corpus after R18 | R19–R25 and R27–R29 drafted; later rows open |
 | [Batch 10C – Small-talk situations](ru-small-talk-situations-c-2026-10.md) | Final generated situation rows, starting at R30 | R30–R44 drafted; 51/51 situation rows complete |
+| [Batch 10D – Family life beats](ru-life-beats-family-2026-10.md) | Her own key, engagement, pregnancy and bereavement; later family beats to follow | first four typed copy modules drafted |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
