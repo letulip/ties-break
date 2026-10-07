@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-04
+last-reviewed: 2026-10-07
 ---
 
 # RU-06 – Money, staff, shop, sponsors and inbox
@@ -644,6 +644,8 @@ Release confirmation:
 | booked suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
 | on aria | `Поездки спарринг-партнёра включены. Нажмите, чтобы спарринг-партнёр оставался в домашнем клубе.` |
 | off aria | `Поездки спарринг-партнёра выключены. Нажмите, чтобы брать спарринг-партнёра в тур; каждая поездка добавит один билет.` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `on aria` of this table (the unnamed hitting partner is masculine in `оставался`; the hitting partner's gender is not stored, unlike the masseur's).
 
 ### 19.3 Hitting-partner events
 

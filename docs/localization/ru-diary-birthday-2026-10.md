@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-05
+last-reviewed: 2026-10-07
 ---
 
 # RU-09 – Diary and birthdays
@@ -28,8 +28,9 @@ but it does not absorb a dialog merely because both speakers are family.
 
 ## 2. Voice and invariants
 
-- Diary writing is the parent's private voice: warm, observant and compact, with masculine parent
-  forms where the English source says `I` and project context already establishes them.
+- Diary writing is the parent's private voice: warm, observant and compact. The parent has no
+  gender: where the English source says `I` and Russian would need a gendered form, the diary
+  speaks as the family, `мы` (owner's 07.10 order №10, [RU-19](ru-family-voice-pass-2026-10.md)).
 - Daughter quotations use intimate `ты` only when she addresses the parent. Diary captions about
   her remain third person.
 - `school`, `after-school`, `college` and `independent` are facts, not age synonyms. A line about a

@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-06
+last-reviewed: 2026-10-07
 ---
 
 # RU-10H – Life-beat answer history
@@ -45,6 +45,8 @@ invented feed line.
 | `expecting.career-first` | `She is expecting a child. We said it was too early.` | `Она ждёт ребёнка. Мы сказали, что сейчас рано.` |
 | `return-plan.small-first` | `She is entering again. We start with the small draws and build from there.` | `Она снова заявляется на турниры. Мы решили начать с небольших и двигаться дальше.` |
 | `return-plan.straight-back` | `She is entering again. We put her straight back in the big ones.` | `Она снова заявляется на турниры. Мы решили сразу подать заявки на крупные.` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `fork-counsel.heard`, `fork-counsel.weigh` (the unnamed coach is masculine in `позвонил`), `fork-psy.straight`, `fork-psy.keep` (the unnamed psychologist is masculine in `позвонил`; `fork-psy.keep` also in `его слова`).
 
 ### Source discrepancy to resolve at implementation
 

@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-04
+last-reviewed: 2026-10-07
 ---
 
 # Russian voice and terminology
@@ -39,6 +39,10 @@ as repeated passive voice in English. Pronouns may be dropped when the subject r
 
 - The player is the parent, not explicitly mother or father. Prefer impersonal controls and family
   `мы`; do not introduce `мама`, `папа`, masculine past tense or feminine past tense for the player.
+- The parent self-refers as the family, `мы` – `мы купили`, `мы видели`, `мы гордимся`,
+  `мы не разобрали` – never as a singular `я` with a gendered past. Owner's ruling 07.10 (order №10
+  in `docs/decisions.md`; the pass is [RU-19](ru-family-voice-pass-2026-10.md)). The one exception
+  is the album page `the-line`, written by the previous heroine's mother in her own feminine first person.
 - The heroine is grammatically feminine: `она`, `её`, `сыграла`, `устала`.
 - Direct daughter-to-parent speech uses `ты` only when Russian needs an address. Do not add an
   address merely because English `you` is present.

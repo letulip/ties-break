@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-06
+last-reviewed: 2026-10-07
 ---
 
 # RU-10F – Coach and psychologist counsel
@@ -26,6 +26,8 @@ each driver changes what the coach can see beyond the court.
 | own | `Her coach rang the same evening, and did not argue any of it. "The tennis is not the question. She is not running from anything, and I would think less of her if she stayed to please us."` | `Тренер позвонил тем же вечером и не стал спорить. «Дело не в теннисе. Она ни от чего не убегает. Если бы осталась только ради нас, я бы меньше её уважал».` |
 | `COUNSEL_HEADING` | `She wants to stop, and her coach has asked for a word before we answer` | `Она хочет закончить с теннисом. Прежде чем мы ответим, тренер попросил поговорить` |
 
+RU-19 staff flag – нужна форма по полу говорящего (select): `worn`, `strained`, `own`, `COUNSEL_HEADING` (the unnamed coach is masculine in `зашёл`, `позвонил`, `остался`, `не стал`, `попросил`; in `own` also in her first person, `уважал`).
+
 `worn` is depletion rather than a formal medical diagnosis. `strained` knows no cause and names
 none. `own` respects her agency without grading the parent's future answer.
 
@@ -45,6 +47,8 @@ new source-authored lines and separate Russian review, not a fallback translatio
 | breakup/strained | `Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has nowhere easy to set it down, and a weight with nowhere to go starts to feel permanent when it is not."` | `Вечером, после тренера, позвонил её психолог. «За пределами корта с ней что-то случилось, и это до сих пор её держит. Ей негде спокойно с этим побыть. Когда тяжесть некуда положить, кажется, будто она навсегда. Но это не так».` |
 | breakup/own | `Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a month like this one does some of the wanting."` | `Вечером, после тренера, позвонил её психолог. «За пределами корта с ней что-то случилось, и это до сих пор её держит. Её желание – её собственное, и я не стану с ним спорить. Просто такой месяц тоже влияет на то, чего хочется».` |
 | `PSY_HEADING` | `She wants to stop, and her psychologist has asked for a word too, before we answer` | `Она хочет закончить с теннисом. Прежде чем мы ответим, её психолог тоже попросил поговорить` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `plain/worn`, `plain/strained`, `plain/own`, `breakup/worn`, `breakup/strained`, `breakup/own`, `PSY_HEADING` (the unnamed psychologist is masculine in `позвонил`, `попросил`).
 
 The repeated frames and openings are structural, not a lack of variety: both tables deliberately
 make the two professional perspectives comparable. The `breakup` register never names the

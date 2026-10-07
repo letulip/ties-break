@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-04
+last-reviewed: 2026-10-07
 ---
 
 # RU-04 – Season, tournament cards and tournament flow
@@ -294,6 +294,8 @@ Lock vocabulary:
 | old/outgrown | `Возрастной уровень пройден` |
 | scheduled | `Доступен – есть в календаре` |
 | unscheduled | `Доступен – в ближайшие {weeks} его нет` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `medical veto` (the unnamed doctor is masculine in `не разрешил`).
 
 Engine refusal details must become semantic reason plus arguments before entering the snapshot.
 Rendering the existing `ineligibleDetail` in Russian is impossible at the component boundary, and

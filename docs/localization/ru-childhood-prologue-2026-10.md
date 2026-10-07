@@ -3,7 +3,7 @@ type: corpus
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-04
+last-reviewed: 2026-10-07
 ---
 
 # RU-02B – childhood prologue, walk and ages five to thirteen
@@ -106,7 +106,7 @@ the prose above it cannot pretend to know which road the player is about to take
 | RU02B-09-04 | `cards.ts:462` | `She is doing what the group does and no more.` | `Она делает то же, что группа, – и не больше.` | cool path; no judgement beyond observed effort |
 | RU02B-09-05 | `cards.ts:463` | `She is one of the ones who stays behind afterwards.` | `Она из тех, кто остаётся после занятия.` | warm path; behaviour, not hidden talent |
 | RU02B-09-06 | `cards.ts:466` | `The coach says she is fine, and says it about all eight of them.` | `Тренер говорит, что она справляется, – и то же самое говорит про всех восьмерых.` | deliberately generic assessment |
-| RU02B-09-07 | `cards.ts:467` | `The coach is the one who offered you the hour.` | `Именно тренер предложил вам этот час.` | warm path makes the offer personal without naming the professional |
+| RU02B-09-07 | `cards.ts:467` | `The coach is the one who offered you the hour.` | `Именно тренер предложил вам этот час.` | warm path makes the offer personal without naming the professional; нужна форма по полу говорящего (select) |
 | RU02B-09-A1 | `cards.ts:473` | `Keep her in the group` | `Оставить её в группе` | |
 | RU02B-09-A2 | `cards.ts:474` | `The same money as this year. She keeps her place in the queue.` | `Столько же, сколько в этом году. Она сохраняет место в очереди.` | the dry queue image is intentional |
 | RU02B-09-B1 | `cards.ts:482` | `Buy the hour, one to one` | `Взять индивидуальный час` | natural Russian service wording |
@@ -127,7 +127,7 @@ a protected English name. Internal tier IDs remain unchanged.
 | RU02B-10-03 | `cards.ts:497` | tournament setup | `Турнир для игроков до двенадцати лет: одни выходные и сорок минут по трассе. Заявочный взнос, ночь в отеле, если в субботу она победит, и турнирная сетка с её именем.` | every practical consequence stays visible |
 | RU02B-10-04 | `cards.ts:501` | `She plays on Tuesdays and she thinks about it on Tuesdays.` | `На корт она выходит по вторникам и о теннисе думает тоже только по вторникам.` | cool path: tennis has not filled the rest of her week |
 | RU02B-10-05 | `cards.ts:502` | `She has started watching how other people serve.` | `Она начала следить за тем, как подают другие.` | warm path: observable curiosity |
-| RU02B-10-06 | `cards.ts:505` | `The coach has not mentioned the tournament to you.` | `Тренер не говорил с вами об этом турнире.` | absence of a recommendation is information |
+| RU02B-10-06 | `cards.ts:505` | `The coach has not mentioned the tournament to you.` | `Тренер не говорил с вами об этом турнире.` | absence of a recommendation is information; нужна форма по полу говорящего (select) |
 | RU02B-10-07 | `cards.ts:506` | `The coach thinks she would not embarrass herself in a draw.` | `Тренер говорит, что в этой сетке она не потеряется.` | preserves the modest endorsement without humiliating the child |
 | RU02B-10-A1 | `cards.ts:512` | `Not this year` | `В этом году не ехать` | declines this year only; later cards may ask again |
 | RU02B-10-A2 | `cards.ts:513` | `Nothing extra. She practises that weekend like any other.` | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` | no implication that the tournament route closes |
@@ -167,6 +167,8 @@ the age-ten instance and creating a second wording for the same screens.
 | RU02B-11-T4 | `cards.ts:581` | `Not this year` | `В этом году не ехать` |
 | RU02B-11-T5 | `cards.ts:582` | `Nothing extra. She practises that weekend like any other.` | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
 
+RU-19 staff flag – нужна форма по полу говорящего (select): `RU02B-11-T1` (the unnamed coach is masculine in `упомянул`).
+
 The action labels remain the same as at ten. The escalation belongs in who asks and how often, not
 in a button that pressures the player toward one answer.
 
@@ -184,7 +186,7 @@ Russian copy must not imply diagnosis, fate or a permanent personality trait.
 | RU02B-12Q-03 | `cards.ts:600` | three quiet weeks | `Так уже три недели. Ни сцены, ни объяснений. Просто к шести часам у неё каждый раз находится другое дело.` | quiet avoidance, not melodrama |
 | RU02B-12Q-04 | `cards.ts:603` | `She has stopped talking about it at dinner.` | `За ужином она больше не говорит о теннисе.` | names the subject instead of leaving a Russian pronoun hanging |
 | RU02B-12Q-05 | `cards.ts:604` | `She is not tired of tennis. She is tired of this week.` | `Она устала не от тенниса. Она устала от такого расписания.` | clarifies that the repeating week is the problem |
-| RU02B-12Q-06 | `cards.ts:607` | `The coach has seen it before and is not surprised by it.` | `Тренер видел такое раньше и не удивляется.` | no diagnosis |
+| RU02B-12Q-06 | `cards.ts:607` | `The coach has seen it before and is not surprised by it.` | `Тренер видел такое раньше и не удивляется.` | no diagnosis; нужна форма по полу говорящего (select) |
 | RU02B-12Q-07 | `cards.ts:608` | `The coach says she is not the first to go quiet at twelve.` | `Тренер говорит, что в двенадцать так замолкают многие.` | normalizes without dismissing her |
 | RU02B-12Q-A1 | `cards.ts:614` | `Let her stop for a season` | `Дать ей отдохнуть сезон` | a pause, not retirement |
 | RU02B-12Q-A2 | `cards.ts:615` | `A quarter of what this year was going to cost. She keeps her Thursdays.` | `Четверть от запланированной стоимости года. Четверги снова её.` | the one-quarter comparison matches the stored costs |
@@ -200,6 +202,8 @@ The coach asks again on this face:
 | RU02B-12Q-T3 | `cards.ts:640` | entry note | `Взнос и поездка на выходные – сверх расходов за год.` |
 | RU02B-12Q-T4 | `cards.ts:642` | decline note | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
 
+RU-19 staff flag – нужна форма по полу говорящего (select): `RU02B-12Q-T1` (the unnamed coach is masculine in `спросил`, `попросил`).
+
 ### 9B. She asks for more
 
 | id | source | English | Russian | note |
@@ -210,7 +214,7 @@ The coach asks again on this face:
 | RU02B-12M-04 | `cards.ts:709` | `She is asking for a year bigger than any she has had.` | `Она просит, чтобы следующий год вместил больше тенниса, чем любой прежний.` | cool path; scale rather than certainty |
 | RU02B-12M-05 | `cards.ts:710` | `She has worked out what the next step is and she wants it.` | `Она поняла, каким будет следующий шаг, и хочет его сделать.` | warm path |
 | RU02B-12M-06 | `cards.ts:713` | `The coach says she is asking the right question a little early.` | `Тренер говорит, что вопрос правильный – просто задан чуть рано.` | candid, not discouraging |
-| RU02B-12M-07 | `cards.ts:714` | `The coach has been waiting for her to ask.` | `Тренер только и ждал этого вопроса.` | role only; no invented name |
+| RU02B-12M-07 | `cards.ts:714` | `The coach has been waiting for her to ask.` | `Тренер только и ждал этого вопроса.` | role only; no invented name; нужна форма по полу говорящего (select) |
 | RU02B-12M-A1 | `cards.ts:720` | `Keep it the size it is` | `Оставить всё как есть` | refers to the year, not to her ambition |
 | RU02B-12M-A2 | `cards.ts:721` | `What you are paying now. She stays where she is for a year.` | `Текущие расходы. Ещё год на том же уровне.` | says what remains unchanged |
 | RU02B-12M-B1 | `cards.ts:729` | `Give her the year she is asking for` | `Дать ей год, о котором она просит` | meets her explicit ask |
@@ -452,6 +456,8 @@ English band label.
 | RU02B-HO-R5 | near | `She is near what she has. I have been wrong before – but not often about this.` | `Она уже близко к тому, что в ней заложено. Я и раньше ошибался – но в таком ошибаюсь редко.` |
 | RU02B-HO-R6 | near | `What you see is close to what you get. Some find another gear at seventeen. Most do not.` | `Почти всё, что у неё есть, уже видно. Некоторые в семнадцать делают ещё один скачок. Большинство – нет.` |
 | RU02B-HO-R7 | near | `There is not much more in there. She can have a good life in this sport. She will not have a famous one.` | `Большого запаса уже нет. У неё может быть хорошая жизнь в этом спорте. Знаменитой она не станет.` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `RU02B-HO-R5` (the unnamed coach speaks in her own first person, masculine in `ошибался`).
 
 R5–R7 are intentionally hard lines, not general interface terminology. They preserve the coach's
 fallibility and the fog around the actual ceiling, but R7 still lands as a near-final verdict about a

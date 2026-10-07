@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-05
+last-reviewed: 2026-10-07
 ---
 
 # RU-08 – Match viewer and commentary
@@ -61,15 +61,16 @@ third resolution beside `Все` and `Ключевые`.
 
 | English source | Russian draft |
 | --- | --- |
-| `Still here.` | `Я рядом.` |
+| `Still here.` | `Мы рядом.` |
 | `Take your time.` | `Не спеши.` |
-| `I saw that.` | `Я видел.` |
+| `I saw that.` | `Мы видели.` |
 | `Next one.` | `Следующий мяч.` |
 | `Drink something.` | `Попей воды.` |
 | `Enjoy it.` | `Играй в удовольствие.` |
 
-The parent's masculine `видел` follows the album and project narrator. These lines are spoken to
-the daughter, so intimate imperatives are correct. They remain presentation-only: localization must
+The parent speaks as the family, `мы` (`Мы видели.`, `Мы рядом.`), by the owner's 07.10 order №10
+([RU-19](ru-family-voice-pass-2026-10.md)): no shout assigns the player a gender. These lines are
+spoken to the daughter, so intimate imperatives are correct. They remain presentation-only: localization must
 not imply a tactical instruction or a guaranteed effect on the already-resolved match.
 
 ## 4. Court chrome and player rows

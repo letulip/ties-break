@@ -3,7 +3,7 @@ type: plan
 status: current
 area: localization
 canonical: true
-last-reviewed: 2026-10-06
+last-reviewed: 2026-10-07
 ---
 
 # Russian localization editorial stack
@@ -84,6 +84,7 @@ last-reviewed: 2026-10-06
 | [Batch 15 – Current-main UI delta](ru-current-main-delta-2026-10.md) | New feedback flow, staff raises, season-money rows and small interface additions after the 30.09 source cut | drafted against 06.10 `origin/main` |
 | [Batch 16 – Album delta](ru-album-delta-2026-10.md) | Three newly reachable rare occasions, four voices and three registers | all 36 added strings drafted |
 | [Batch 17 – Family-life delta](ru-life-delta-2026-10.md) | Expanded spouse voice, relationship tile, together-duration forms and life-moment wording | new pool and formats drafted |
+| [RU-19 – Family-voice pass](ru-family-voice-pass-2026-10.md) | The parent speaks as the family `мы` (owner's order №10, 07.10): every gendered parent-`я` cell converted by his formula, with the full before→after table, the staff gender-param flags and the unconverted singular remainder | applied as `DRAFT` for the owner's read |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →

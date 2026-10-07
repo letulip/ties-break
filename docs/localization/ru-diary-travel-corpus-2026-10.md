@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-05
+last-reviewed: 2026-10-07
 ---
 
 # RU-09B – Journey-home diary corpus
@@ -197,6 +197,8 @@ These lines are additive presence, not competitors in the journey pool. Russian 
 | `We paid for the second seat and she used it – a word at every change of ends.` | `Мы оплатили второе место, и она им воспользовалась – несколько слов на каждой смене сторон.` |
 | `Her coach travelled down with the bags and stayed to the last match.` | `Тренер ехал вместе с сумками и остался до последнего матча.` |
 | `The coach was in the row behind us all week, and she knew it without looking.` | `Тренер всю неделю сидел в ряду за нами, а она знала это, не оборачиваясь.` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): the four `Тренер …` rows of this table, by their English source – `Her coach came with us…` (`ехал`), `Her coach was there all week…` (`был`), `Her coach travelled down with the bags…` (`ехал`, `остался`), `The coach was in the row behind us…` (`сидел`).
 
 The second variant's `кто-то` is licensed by the coach-presence packet and does not introduce a new
 person. The strings say nothing about advice, effect or the coach's gender.

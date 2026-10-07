@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-05
+last-reviewed: 2026-10-07
 ---
 
 # RU-09D – Weekly voice-note corpus
@@ -382,6 +382,8 @@ an exhibition or ranking match.
 | RU09D-F050 | `She asked twice if she could go in for an hour. Twice we said no.` | `Дважды просила час на корте. Дважды мы отказали.` |
 | RU09D-F051 | `Rest week. She asked the physio twice. The answer stayed no.` | `Неделя отдыха. Дважды спросила физиотерапевта. Ответ – нет.` |
 
+RU-19 staff flag – нужна форма по полу говорящего (select): `RU09D-F048` (the unnamed doctor is masculine in `велел`).
+
 ### 19.2 Pushed knock – four
 
 | id | English source | Russian draft |
@@ -390,6 +392,8 @@ an exhibition or ranking match.
 | RU09D-F053 | `Full week on court. She strapped it up herself before every session.` | `Полная неделя на корте. Перед каждым занятием сама накладывала тейп.` |
 | RU09D-F054 | `The {knockPart} held. We watched her serve more closely than usual.` | `С {knockPart.ins} всё обошлось. За подачей следили внимательнее.` |
 | RU09D-F055 | `She trained through it. The coach said nothing and watched everything.` | `Тренировалась через боль. Тренер молчал и следил за всем.` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `RU09D-F055` (the unnamed coach is masculine in `молчал`, `следил`).
 
 `{knockPart.gen}`, `.ins` and `.nomCap` are localization requirements, not suggested text to show
 the player. The Russian body-part catalogue needs genitive, instrumental and a sentence-initial
@@ -575,6 +579,8 @@ every independent-stage residence is owned rather than rented.
 | RU09D-F114 | scar, open | `She told the club which season it went, and that she played on anyway.` | `Сказала в клубе, в каком сезоне это случилось и что всё равно играла.` |
 | RU09D-F115 | name, private | `Two parents asked her to sign something. She signed and said nothing.` | `Двое родителей попросили автограф. Она расписалась и промолчала.` |
 | RU09D-F116 | name, open | `The coach used her whole name, and the court went quiet, then loud.` | `Тренер назвал её полным именем. Корт затих, потом зашумел.` |
+
+RU-19 staff flag – нужна форма по полу говорящего (select): `RU09D-F116` (the unnamed coach is masculine in `назвал`).
 
 These lines describe the previous heroine as the mother inside the next career; they are not a fifth
 daughter temperament. F113–F114 retain the hurt-ending gate, and F115–F116 retain the positive
