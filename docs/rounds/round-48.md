@@ -21,7 +21,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   раунда 47 №9. Первая правка: B3 убил коллизию заголовок/ГЕРОЙ на 121 C-листе через таблицу
   размещения – но пара заголовок/ПОДПИСЬ («The Tour» / рукописная «Straight back to the planning»)
   в тот свип не входила. Правка: подпись дальше вправо. Класс: build.
-- [ ] **3. «Spent на первое место, Family's share мне кажется некорректно посчитано (40.6 млн
+- [x] **3. «Spent на первое место, Family's share мне кажется некорректно посчитано (40.6 млн
   против ее аккаунта 321.1 млн) проверь пожалуйста и поставь на 2 место, потом Family's portfolio
   на 3м и последний ее аккаунт»** – **3a** порядок денежных строк концовки: Spent → Family's share
   → Family's portfolio → её аккаунт; **3b** ПРОВЕРИТЬ математику Family's share на его сейве
@@ -34,17 +34,88 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     её аккаунт). 3b расширяется: проверить, что цифра – вся карьера и ВСЕ теннисные расходы,
     включая всех тренеров (состав `outlayCents` по категориям + сверка с банкованными
     посезонными spentCents).
-- [!] **4. «She said one more year - всё еще осталось и не исправлено, это не она говорила, а мы
+  - **B1 · 3a [x] (07.10, sonnet).** The money list is THREE rows: «Tennis & trips» → «Family's portfolio»
+    → «Her account» (last). «Family's share» is REMOVED – no `v-if`, no `display: none`, its figure is not
+    in the DOM. The source label is `Tennis & trips`, not his literal caps: `.ending-totals dt` already
+    carries `text-transform: uppercase`, so the page shows his TENNIS & TRIPS (Chromium `innerText`,
+    375x667). The figure is untouched – `outlayCents`; the sum check is the architect's (3b-2). «Her
+    account» stays conditional (no cheque on her account → two rows), the facts row is untouched, and the
+    first ruling's four-row reorder was never built. Evidence: `tests/component/r48-b1-ending-page.test.ts`,
+    «round 48 #3a» (the three-label sequence, the share label and figure ABSENT, the old «Spent» absent,
+    every figure with its own label, the caps) – mutation-proven both ways: swap two rows RED (3 tests here
+    + 1 in r47-b1), share row put back RED (5 + 1 + 2), `Spent` put back RED, `uppercase` removed RED (1).
+- [x] **4. «She said one more year - всё еще осталось и не исправлено, это не она говорила, а мы
   предлагали, надо переформулировать»** – REOPEN раунда 47 №11. Первая правка: раунд закрыл пункт
   как `[~]` – «отвечено, драфты S4–S6 ждут выбора» – но для владельца неизменённый экран есть
   неисправленный пункт; `[~]` на видимой неверной строке пункт не закрывает. Решение теперь дано:
   говорила НЕ она – предлагали МЫ; все пять мест (дневник, нота под кнопкой, плато-леде, lastWord,
   страница) переводятся в голос родителя-предложившего. Класс: build.
-- [ ] **5. «for life выделить жирным (если есть)»** – найти строку с «for life» на поверхности
+  - **B1 · [x] (07.10, sonnet) – the five final strings, verbatim** (N is her count; `time` at 1):
+    1. page line (`EndingScreen.vue`): `You said one more year N times.`
+    2. diary (`engine/world/endings.ts`, `answerRetirement`): `One more year, you said. Same as last time.`
+    3. note under the button (`RetirementDialog.vue`): `The same answer you gave last winter.`
+    4. plateau lede (`engine/ending.ts`, `plateauLede`) – band 1: `She brought it up before the airport
+       this time. You have said one more year once already, and she has stopped pretending the next season
+       is different. She would still play a year for you – she said that too.` – band 3+: `This time she said
+       it looking out of the window. You have said one more year N times, and the <table> table has not
+       moved. She will not fight you on one more – but you both know what she wants.` (bands 0 and 2 never
+       credited her with the answer and are byte-identical)
+    5. `lastWordLine` (`engine/ending.ts`): `Nobody asked her this time. She said it herself, and she said it
+       steadily. You have said one more year N times, and this season was the last one.` (count 0 is
+       unchanged: `… This season was the last one.`)
+
+    ⚠ UNTOUCHED, as ruled: the final age offer – `LAST_WORD_OPENING`, «Nobody asked her this time. She said
+    it herself, and she said it steadily.» – and its refusal `LAST_OFFER_NOT_A_QUESTION`. Kept as hers on
+    purpose: «she said that too» (band 1 – her offer to play on) and «she said it looking out of the window»
+    (band 3+ – her doubt, the card's own «She said it in the car» voice).
+    Evidence: `tests/r48-b1-voice-flip.test.ts` (the literals above, her opening and bands 0/2 to the byte,
+    the diary through the real `answerRetirement`, a «she said one more» tripwire over counts 0–40) and
+    `tests/component/r48-b1-ending-page.test.ts`, «round 48 #4» (page line at 1/2/5/27, the note on the age
+    and plateau cards, the final card, the plateau bands on screen). Mutation-proven, each site put back to
+    «she»: page line RED (2 here + 1 endings-ui + 1 r47-b1), note RED (1 + 1 last-word), `lastWordLine` RED 3,
+    band 3+ RED 3, band 1 RED 3, diary RED 1; flipping HER opening too RED 2.
+    Not touched, for the owner's eye: `ENDING_BLURB.natural` (`engine/ending.ts`) reads «…for years she said
+    one more. This year she did not.» – rendered by NOTHING today (`wave8-family-ending` pins that), so it is
+    not one of the five; `docs/specs/the-long-goodbye-2026-08.md` still quotes the old strings, as history.
+- [x] **5. «for life выделить жирным (если есть)»** – найти строку с «for life» на поверхности
   концовки; если есть – жирным. Класс: build (если строки нет – answer).
-- [ ] **6. «Кнопки Raise another, A daughter (child лучше) came later в один ряд давай
+  - **B1 · [x] (07.10, sonnet).** The line exists – the lifetime-deal note in `.ending-note` (`The {brand}
+    deal never ran out – $X a year, for life.`, shown when a lifetime deal was signed). It is `a year,
+    <b>for life</b>.` now: a plain `<b>` (they are words; `ending-fig` is the figure style), the sentence
+    byte-identical. Chromium (375x667): `for life` computes to weight 700, Manrope 14px, against 400 around
+    it. Evidence: `tests/component/r48-b1-ending-page.test.ts`, «round 48 #5» – the text node `for life`
+    stands alone inside a `b`/`strong` holding exactly those two words, and the bold set is [`$2.5M`,
+    `for life`]; mutation-proven (`<b>` removed RED 2, bold widened to «a year, for life» RED 2). happy-dom
+    reports `normal` for a bare `<b>`, so the proof is the element and the weight is the browser measure.
+- [x] **6. «Кнопки Raise another, A daughter (child лучше) came later в один ряд давай
   поставим»** – **6a** две кнопки-двери концовки в один ряд; **6b** вординг-руллинг владельца:
   «A daughter came later» → «A child came later». Класс: build.
+  - **B1 · [x] (07.10, sonnet).** `DYNASTY_AFTER` is `A child came later` (his own «child is better»; the
+    lived label `Raise her daughter` is untouched). The two doors are ONE ROW: a new `.ending-doors` flex row
+    – always present, so the college ending's lone `Another year –` keeps its content width; the equal halves
+    are declared for the pair only (`:not(:only-child)`): `flex-grow 1`, `flex-shrink 1`, `flex-basis 50%`,
+    `min-width 0`, 12px sides, 12px gap, 460px cap. A wrapper and not a grid on the footer, because fits.ts
+    models flex rows only. **Measured in Chromium (07.10):** 375x667 – row 343px (16..359), doors 165.46 and
+    165.54px, same top (733.37) and height (40.5), one line each, no horizontal overflow; 320x568 – row
+    288px, doors 137.95 and 138.05px, same top and height (50), `Raise another` on one line and the line door
+    on two (the label wraps INSIDE its pill, as designed), no overflow; the college lone pill 151.5px,
+    centred. (The first spelling, `flex-basis: 0`, measured 164.5 / 166.5 – the ghost pill's 1px border – and
+    became 50%.) Evidence: `tests/component/r48-b1-ending-page.test.ts`, «round 48 #6» (the label; a flex row,
+    no wrap; equal shares with `min-width: 0`; at 375 and 320, for both labels, `assertInlineRowFits`, a
+    gutter-aware half-width check, `assertDismissReachable` for both doors and ONE shared bottom) –
+    mutation-proven: `display: block` and `flex-direction: column` (RED 6 here + 1 wave10 each),
+    `flex-wrap: wrap` (RED 2), `min-width` 206 and 170 (RED 5 each – the 170 passes the shared instrument at
+    375 and is caught by the gutter-aware check), the pair rule on the lone pill (RED 1), the record link
+    above the row (RED 3), the old label (RED 2 + 1).
+    Pins re-aimed with a ⚠ 07.10 note: `e2e/dynasty.spec.ts` (the literal), `wave10-dynasty-door` (the label;
+    the «stacked» assertion became one shared bottom + the row above the record link – the tail-walk arm in
+    its header reddens it, verified), `r47-b1-ending-figures` (footer order read through the row;
+    `.ending-foot > button` → `.ending-foot button`), and the wave-10 strings table D2 row
+    (`docs/plans/life-wave-10-strings-2026-09.md`; status kept `DRAFT` because `wave1011-strings-roundtrip`
+    parses DRAFT rows only).
+    Instrument finding: `fits.ts`' `availableWidth` returns the WHOLE viewport for this takeover (happy-dom
+    cannot resolve `.ending`'s `var(--app-pad-x)` padding), so `assertInlineRowFits` reads «a 375px row» where
+    the column is 343 – the new test subtracts the `:root` gutters itself; `fits.ts` is untouched.
 - [ ] **7. «The whole record - там какая-то ерунда в каждом season close написана, а еще с 2036
   начиная нет никаких титулов вообще»** – **7a** строка season close на странице полной летописи
   показывает ерунду – воспроизвести на его сейве, найти источник; **7b** титулы с 2036 отсутствуют –
