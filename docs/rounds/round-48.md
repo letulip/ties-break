@@ -14,7 +14,7 @@ last-reviewed: 2026-10-07
 Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]` in flight, agent named
 · `[ ]` open · `[?]` waiting on the owner's answer · `[!]` REOPENED (was reported done, was not)
 
-- [!] **1. «пара моментов в альбоме пустых на последних страницах осталась (для горизонтальных
+- [x] **1. «пара моментов в альбоме пустых на последних страницах осталась (для горизонтальных
   пустых мест можно еще фото добавить какое-то, например из vacation второе рядом, на последней
   странице и предпоследней всё ещё остались пропуски, на последней повесь вертикальную бирку w1000
   справа, а на предпоследней зеленый билет на Шлем внизу)»** – REOPEN раунда 47 №14 (филлеры).
@@ -23,11 +23,64 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   остались с пропусками. Три под-пункта: **1a** горизонтальные пустоты – ВТОРОЕ фото рядом
   (vacation-пара); **1b** последний лист – вертикальная бирка W1000 справа; **1c** предпоследний –
   зелёный билет на Шлем внизу. Класс: build.
-- [!] **2. «оверлап текста и заголовка на одной из страниц всё еще есть - эти надо точно поправить
+  - **B3 · 1 [x] (07.10, sonnet, commit `3ea5e6b0`) – 1a, 1b and 1c shipped, on his save and on the sweep; ONE design call (the tag's rung) and ONE coverage limit (the other tails) are for his eye, below.**
+    * **1a – THE SECOND SNAPSHOT.** A layout-B sheet whose snapshot has room for two now hangs a second one BESIDE the first: the NEXT picture of the same pool on the career's walk (`AlbumFiller.pair`; `takeFiller` is
+      called twice, so a holiday page gets a vacation pair and the two are different paintings by construction – zero draws, no key), placed by the same post-pass (`placeFiller`'s second pass) against the
+      same obstacles plus the first one, leaning the other way. Layout C's 110px column keeps one. **Sweep (335 sheets): the 8 B sheets that carry a snapshot all carry a pair and all 8 draw both** – inside the
+      strip, touching nothing, two different files on disk – and **the first snapshot is exactly where it was**: photographs, note, line, scale identical with and without the pair (the r47 guard, re-asserted). His
+      `adult-2` (Chromium): off-2 and off-3, swing boxes [284,326] and [140,326], 136x96 each.
+    * **1b / 1c – THE W1000 TAG ON THE LAST SHEET, THE GREEN SLAM PASS ON THE ONE BEFORE IT.** `hangTail` (`albumBook.ts`, a derivation – zero draws, nothing persisted, schema untouched). **THE GATE (the
+      variability law): the fact is the cabinet's own** (`albumTailFact` – the LATEST title at the rung, else the latest lost final, else nothing; `trophiesByTier` is the never-pruned dated ledger): no W1000
+      title or final, no tag; no Slam, no pass – **0 tail objects in all 96 books built without a record** (48 posed + 48 tier-stripped); a record at one rung hangs only that rung's object. What prints is that
+      appearance's own: the rung's label (`World Tour 1000`, `Grand Slam`), the stage (`Champion`, or `Runner-up` for a lost final), her age that week or the calendar week; seat, gate, row and venue are the
+      sheet's own flavour (`flavourFor(seed, sheet.id)` – the key every ticket already uses). **WHERE:** the tag on the LAST sheet when it is layout C, the pass on the SECOND-TO-LAST when it is layout B – the two
+      frames those layouts keep – and only when the sheet has no tag or pass of its own, never on the childhood chapter. **His save:** `lateCareer-3` (C) hangs a `World Tour 1000` tag (`Champion`, Age 32; his
+      cabinet holds 31 W1000 titles and 9 finals), `lateCareer-2` (B) hangs a `Grand Slam` pass (`Champion`, Aug 30 – Sep 5; 6 Slam titles, 1 final).
+    * **THE GREEN:** `AlbumTicket.paint: 'slam'`, set only on the hung pass (a name, not a colour – the rule `step` lives by); `AlbumTicketPass.vue` paints it the app's own `--surface-grass` (#5fb05a) ×0.38 for the
+      face (#244322) and ×0.27 for the deep end (#1a3018) – the pass's own two factors, so the album still adds no colour (re-derived from the token in the mounted test). AA at the lightest end: title and stub
+      9.70:1, venue (.82) 7.11:1, date and gate (.78) 6.60:1. Every other Slam pass keeps the elite ink – asserted. ⚠ He said «зеленый билет на Шлем» for THIS page; whether every Slam pass in a book should be green
+      is one line in `ticketOf` – not taken (his words named one page).
+    * ⚠ **THE ONE DESIGN CALL – THE HUNG OBJECT IS AN ASK, NOT A GIVEN.** His last page's loose line is the ARC's (the closing sheet of a career whose walls drifted): **68 characters against a base corpus whose
+      longest is 52**, and the page is already full. Hung at its own size the tag's column has no clear paper – **measured in real Chromium: the W1000 tag draws 284.1px tall (the tier's name wraps to three lines at
+      26px) against the table's 271px frame, and the line lay at y 327.5 across its hatch.** So the engine marks both objects `tail: true` and `placeSheet` draws one only where the note and the loose line leave its
+      frame clear: the tag tries 1, 0.9, 0.8 (`TAIL_TAG_RUNGS`, shrunk about its string) and then goes without; a pass the strip cannot hold goes without and the sheet is resolved again as the ticketless sheet it was
+      (asserted equal to it). **His last page draws the tag at 0.8** – Chromium: 88x227.3 at x 338..426, y 77..304.3, the line stays at 327.5, **23.2px of clear paper under it**; all 21 tags of the sweep clear at full
+      size. A smaller tag where the page is full is my call (the alternative – the full-size tag and a smaller hand for that one long line, as notes have – is a different change and was not built); a sheet's OWN
+      tag or pass never goes through the gate and is always drawn, as before.
+    * ⚠ **THE COVERAGE LIMIT, FOR HIS WORD.** The tag and the pass hang only where the layout owns the frame. Of the 48 posed careers given an ending (tournaments stripped, so no sheet has a pass or tag of its own),
+      **21 end «B then C» – his save's shape – and get both objects (21 tags, 21 passes)**; the other 27 end A-then-B (22) or C-then-A (5) and keep what they had. As posed, with their own tournaments, 18 tails are «B then C»
+      and 16 of those B sheets already earned a pass, so 2 hang. **22 of 48 finish on a layout-B sheet** (17 of them as posed with the bottom strip empty – the closing kinds are barred from snapshots): nothing of this
+      item fills that strip. A ticket for it is the natural object, and which rung it carries is his word. Not built.
+    * **EVIDENCE.** `tests/r48-b3-album-tail.test.ts` (29 arms: the pair – not vacuous, B only, different paintings of one pool, drawn inside the strip touching nothing, the guard, derived and pure; the fact – title
+      first, latest, lost final, none; the gate on the posed and the tier-stripped populations; WHERE, exactly (the tag iff the last sheet is a C, the pass iff the second-to-last is a B, nowhere else); what they print;
+      a drawn tag docks on the RIGHT inside the sheet and the note, line, heading and hero touch none of it, a drawn pass sits along the bottom clear of the note and line; **his last page rebuilt from the corpus's own
+      words – rung 0.8, 23px clear**; no room at any rung → no tag and the sheet is exactly what it was) and `tests/component/r48-b3-album-tail.test.ts` (the green derived from the token, legible, only on the hung
+      pass; the tag at its own size, at 0.8 with `transform-origin: 50% 0`, and not drawn; the pair mounted; declined → not in the tree). **Real Chromium over the 42 hung sheets of the sweep (21 tags, 21 passes):
+      all drawn, 0 overlaps with a note, loose line, heading, hero or snapshot** – the only intersections are the collage's own, identical on his own-tag and own-pass sheets: the second photograph's corner over
+      the tag's hatch (15x16; 15x29 on three) and the portrait's box over the turned pass's box (46x11); the tail pass's turned edge is 18px under the note on `lateCareer-2`.
+    * **THE GUARD: NOT MOVED.** Photograph windows are at a shrunk rung on **A 0 / B 22 / C 29 sheets before and after** (asserted; B's 22 is the ceiling, untouched – no re-derivation), because the 335 sweep has no
+      cabinet and so no tail object; on the 21 tail passes a hung pass costs no extra rung (5 sheets at a shrunk rung with it, the same 5 without) and no tag sheet is at one. A ticketed tail B reserves the 121 frame
+      (97 without) – what every ticketed B sheet does.
+    * **MUTATIONS (07.10, restored byte-identical, each arm red):** `HEAD_AIR` and the air flag are item 2's; pair off → 1 + 2 mounted red; the pair a copy of its neighbour → 2; the second ignores the first → 2; a pair on
+      C too → 3; layout B draws no second → 2; **gate removed (a career with no record still gets a fact) → 7**; **tag footprint shifted off the sheet → 1**; tag on a last sheet of any layout → 2; pass on a
+      second-to-last of any layout → 2; the hung pass loses its Slam paint → 1; the green back to the elite purple → 1 mounted; the paint class never set → 2; the resolver never finds a column crowded → 3 + 3 mounted;
+      no smaller rung → 1 + 1; layout C ignores the drawn flag → 1; layout C never applies the rung → 1; layout B ignores the drawn flag → 1.
+- [x] **2. «оверлап текста и заголовка на одной из страниц всё еще есть - эти надо точно поправить
   (The Tour/Straight back to the planning - надо отодвинуть последний дальше вправо)»** – REOPEN
   раунда 47 №9. Первая правка: B3 убил коллизию заголовок/ГЕРОЙ на 121 C-листе через таблицу
   размещения – но пара заголовок/ПОДПИСЬ («The Tour» / рукописная «Straight back to the planning»)
   в тот свип не входила. Правка: подпись дальше вправо. Класс: build.
+  - **B3 · 2 [x] (07.10, sonnet, commit `3ea5e6b0`).** ⚠ **The colliding thing is the LOOSE LINE, not the pasted note** – «Straight back to the planning.» is `sheet.line` (`.album-a-line`, bare handwriting like the heading), the note is a paper
+    card; the sweep never puts a NOTE nearer than 26.6px of real text to any heading, and the 54 placements within 3px of a heading box are all loose lines. **Reproduced in real Chromium on his save** (`adult-1`,
+    layout A, «The tour»): the name's text is 111.8px in a 120px box (`headBox`'s floor) and the resolver put the line at x 156 – exactly `GAP` past that box – in the heading's own band (line y 37..90, heading 26..109),
+    so the two read as ONE run: **before (leaf px): heading [34,26 120x83], name text ends x 145.8, line [156,37 200x53] – 10.2px past the last letter** (556px sheet: 172.4 / 184.5 = 12.1px on screen).
+    **Fix:** `HEAD_AIR` = 24 – a strip 24px wide on the heading box's right that only the loose line must clear (`settle`'s `lineAir`), in the tiers where the heading itself is avoided; placement only, no word, no
+    colour. **After: line [180,37 200x53], name ends 145.8, line text starts 180 – 34.2px (Chromium: 34.2)**; nothing else on the sheet moved (asserted). 24 is measured against the note: the nearest a note sits to a
+    heading's real text is 26.6px; the line now keeps 24 + 2 + the box's own slack – 28.6px at the very tightest title – so no bare line sits nearer a heading than a pasted note ever does.
+    **Sweep (335 sheets, 147 A + 121 C = 268 with a heading): 54 loose lines against a heading before → 0 after**; no note or caption meets a heading box (as before); «The tour» is among the 54. Before-arm = the same code
+    with `headAir: 0`, run live. **THE GUARD: NOT MOVED – photograph windows at a shrunk rung on A 0 / B 22 / C 29 sheets before and after** (asserted: the air moves no window; B has no heading, so its 22/22 ceiling is
+    untouched – no re-derivation). Evidence: `tests/r48-b3-album-tail.test.ts` §2 (the sheet rebuilt from the corpus's own words reproduces his placement to the pixel). **Mutations:** `HEAD_AIR` 24 → 0 → 3 red; the air flag
+    false in every tier → 2; `HEAD_AIR` 60 → 1 red (the «no window moved» arm – round 45's guard counts and r47's arms stay green at 60, so this arm is the only holder).
 - [x] **3. «Spent на первое место, Family's share мне кажется некорректно посчитано (40.6 млн
   против ее аккаунта 321.1 млн) проверь пожалуйста и поставь на 2 место, потом Family's portfolio
   на 3м и последний ее аккаунт»** – **3a** порядок денежных строк концовки: Spent → Family's share
@@ -168,9 +221,21 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     **A wording question for him (invariant 4 – asked, not changed):** the close line carries no table name, and
     the table can change between seasons – his 2031 is National #1, his 2032 is Professional #158 – so the number's
     scale jumps with it. A table word on that line would settle it; it is his copy.
-- [ ] **8. «А и в самом альбоме тоже подложка не нужна, она лишняя и место ест, пусть он на весь
+- [x] **8. «А и в самом альбоме тоже подложка не нужна, она лишняя и место ест, пусть он на весь
   экран будет, как и THE LAST PAGE по принципу»** – снять подложку-панель с экрана альбома,
   фуллскрин по механизму `bare` страницы (раунд 47 B1, экран концовки). Класс: build.
+  - **B3 · 8 [x] (07.10, sonnet, commit `3ea5e6b0`).** The mechanism is the last page's: `section.bare`. `EndingScreen.vue`'s book layer is `<section class="ending-book bare">` now, and the comment beside the last page that said «the record layer and
+    the book layer above keep the panel» is rewritten honestly (the book half is overturned; the record layer, `ending-scroll`, KEEPS its panel – he did not ask, and a mounted arm holds it). **The in-career host never had one:**
+    `App.vue` puts `AlbumScreen` straight into `main.app-content` and its root is a plain `div` – nothing to opt out of (asserted: a div, no padding, no card colour, no `section` inside). AlbumScreen's own wrapper carries no
+    panel padding; the film's `.album-stage` already cancels the app's side gutter, which is exactly what the panel was eating. **Real Chromium, 375x667, before → after:** book section 343px at x 16 (the takeover's 16px gutters –
+    unchanged); the panel (rgb(15,23,32), 1px line, 10px radius, 16px padding) → none; **the film's window 341px at x 17 → 375px at x 0; the first sheet at x 33 → x 16; the section 683.3 → 649.3px tall; the document does not
+    scroll sideways (375).** The fit and scale math is untouched: the sheet is 470px (`--album-sheet`, `flex: none`) at 375 whatever the container, `readStep` reads the same `--album-step`, `scrollWidth` 5848 before and after
+    (12 sheets × 486 + 16) – the container never fed either. Mounted (`tests/component/r48-b3-album-tail.test.ts`, `setViewport` before the mount; happy-dom applies no scoped CSS, so the gutter cancellation is held as a source
+    claim on `AlbumScreen.vue` and the pixels by the Chromium run above): at 375 and 320 the section is `bare` – padding `0px`, no line, no card corners, background not `--panel` – and the column is the screen less the two
+    gutters with nothing taken off the inside; the record layer is still the panel (`--panel`, solid line, padding not 0). **Mutation:** `bare` removed → 2 red (both phone widths).
+    ⚠ **FOUND, NOT TOUCHED (for his eye):** at ≥768 the book layer inherits `.ending > section { max-width: 480px }` (round 36's reading column, meant for the last page), while the album's own wide layout is 540/556px
+    plus its arrows and chapter strip – at 1024x768 the film's right edge is 109px past the 480 column's (88px without the panel) and the sheet's centre is 63px right of the screen's (42px without it). That was true
+    with the panel and is true without it; he asked about the backing, not the column, and the last page keeps the same 480 cap «по принципу», so it is left. Lifting the cap for the book layer is one rule.
 
 ## Разбор до билдеров (архитектор, 07.10, зонд `r48-probe.ts` на его сейве)
 
