@@ -91,7 +91,10 @@ last-reviewed: 2026-10-06
 | M05 | `Portfolio growth` | `Изменение капитала` | Может быть убылью; буквальный «Рост» был бы ложным при минусе. |
 
 Проверка на телефоне особенно важна для M02/M03: сейчас денежные значения намеренно не
-переносятся на вторую строку. Числовые сокращения (`M`) тоже должны идти через RU-13D.
+переносятся на вторую строку. ~~Числовые сокращения (`M`) тоже должны идти через RU-13D.~~
+⚙ 07.10 ([RU-18](ru-main-delta-2-2026-10.md) D18): superseded – the compact figures (`$40.6M`) are
+locale-invariant by the owner's ruling (spec §9.6 and §9.8). There is no RU-13D row for them and
+none is needed; see the ruling note in [RU-13D](ru-formatters-countries-2026-10.md).
 
 ## Остальные новые интерфейсные и сохранённые строки
 

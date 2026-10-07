@@ -139,11 +139,11 @@ class names literally. The IDs and budgets do not change.
 | id | source | English | Russian | note |
 | --- | --- | --- | --- | --- |
 | RU02A-F01 | `OnboardingWizard.vue:598,611` | `Family background` | `Условия семьи` | visible heading and accessible group name |
-| RU02A-F02 | `OnboardingWizard.vue:70` | `Wealthy` | `Обеспеченная семья` | `wealthy` ID stays unchanged |
+| RU02A-F02 | `OnboardingWizard.vue:70` | `Wealthy` | `Обеспеченная семья` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · `wealthy` ID stays unchanged |
 | RU02A-F03 | `OnboardingWizard.vue:70` | `Top academies are within reach.` | `Лучшие академии по карману.` | names the actual advantage |
-| RU02A-F04 | `OnboardingWizard.vue:71` | `Middle class` | `Средний достаток` | compact card label |
+| RU02A-F04 | `OnboardingWizard.vue:71` | `Middle class` | `Средний достаток` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · compact card label |
 | RU02A-F05 | `OnboardingWizard.vue:71` | `Smart choices, steady progress.` | `Придётся считать расходы и выбирать.` | avoids promising steady success |
-| RU02A-F06 | `OnboardingWizard.vue:72` | `Working class` | `Скромный бюджет` | names the gameplay condition without a clumsy class label |
+| RU02A-F06 | `OnboardingWizard.vue:72` | `Working class` | `Скромный бюджет` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · names the gameplay condition without a clumsy class label |
 | RU02A-F07 | `OnboardingWizard.vue:72` | `Big dreams, hard mode.` | `Мечта та же, путь гораздо труднее.` | warm, but honest about difficulty |
 | RU02A-F08 | `OnboardingWizard.vue:638` | `{budget} starting budget` | `Стартовый бюджет – {budget}` | do not append an inflected fragment after the number |
 | RU02A-F09 | `OnboardingWizard.vue:647,648` | `Coaching` | `Тренер` | screen section and accessible group name |

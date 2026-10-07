@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-06
+last-reviewed: 2026-10-07
 ---
 
 # RU-12G – Retirement winters and her last word
@@ -27,7 +27,7 @@ are `DRAFT`.
 | retire acceptance | `That is enough` | `На этом достаточно` |
 | retire note | `She stops here, on her own terms.` | `Она останавливается здесь – на своих условиях.` |
 | defer answer | `One more year` | `Ещё один год` |
-| defer note | `The same answer she gave last winter.` | `Так она ответила и в прошлое межсезонье.` |
+| defer note | `The same answer you gave last winter.` | `Так мы ответили и в прошлое межсезонье.` |
 
 The final card has **no** `Ещё один год` button. Neither a scrim click nor Escape may file an
 answer. `StoreError` belongs above the buttons on all three branches and must itself be
@@ -42,14 +42,20 @@ not a lowercased English label.
 | Prior “one more year” answers | English source | Russian draft |
 | --- | --- | --- |
 | 0 / defensive fallback | `Three seasons on the {table} table and it has not moved. If she cannot reach the top, she would rather go now – that is how she put it. She will keep playing if you want her to.` | `Три сезона в рейтинге {table} без движения. Она говорит: если вершины не достичь, лучше уйти сейчас. Но если мы попросим, она сыграет ещё год.` |
-| 1 | `She brought it up before the airport this time. She has said one more year once already, and she has stopped pretending the next season is different. She would still play a year for you – she said that too.` | `На этот раз заговорила об этом перед аэропортом. Один раз она уже согласилась на «ещё один год» и больше не делает вид, что следующий сезон всё изменит. Ради нас готова сыграть ещё год – это она тоже сказала.` |
+| 1 | `She brought it up before the airport this time. You have said one more year once already, and she has stopped pretending the next season is different. She would still play a year for you – she said that too.` | `На этот раз заговорила об этом перед аэропортом. Один раз мы уже согласились на «ещё один год», и она больше не делает вид, что следующий сезон всё изменит. Ради нас готова сыграть ещё год – это она тоже сказала.` |
 | 2 | `She did not argue and she did not ask. She put the season on the table – where it started, where it ended – and waited. If you want another year, she will give you one more.` | `Она не спорила и не просила. Показала, с какого места начала сезон и на каком закончила, и ждала. Если мы захотим, она даст ещё один год.` |
-| 3+ | `This time she said it looking out of the window. She has said one more year {count} times, and the {table} table has not moved. She will not fight you on one more – but you both know what she wants.` | `На этот раз сказала, глядя в окно. «Ещё один год» прозвучало уже {count} {раз/раза/раз}, а место в рейтинге {table} не сдвинулось. Если попросим ещё, спорить не станет. Но мы и так знаем, чего она хочет.` |
+| 3+ | `This time she said it looking out of the window. You have said one more year {count} times, and the {table} table has not moved. She will not fight you on one more – but you both know what she wants.` | `На этот раз сказала, глядя в окно. «Ещё один год» прозвучало уже {count} {раз/раза/раз}, а место в рейтинге {table} не сдвинулось. Если попросим ещё, спорить не станет. Но мы и так знаем, чего она хочет.` |
 
 These are her doubts and offers, **not forecasts** that the ranking will never improve. All
 four leave both answer buttons legal. The first line's “three seasons” is source-authored,
 whereas the later count is the real answer count; do not infer a number of consecutive flat
 seasons from it. `мы и так знаем` avoids a gendered assumption about the parent.
+
+Round 48 #4 (07.10, [RU-18](ru-main-delta-2-2026-10.md)): bands 1 and 3+ now say `You have said one
+more year …` – the parent answered, so the parent said it. In band 1 the Russian subject of that
+clause moved from `она` to the family `мы` (the owner's formula); in band 3+ `прозвучало` names no
+sayer and stands as drafted. What stays **hers**: `she said that too` (her offer to play on) and
+`she said it looking out of the window` (her doubt).
 
 ## Body, ranking, coach and future-winter observations
 
@@ -77,4 +83,6 @@ render here, **without** the feed's `Ей {age}` prefix because the card's kicke
 her age. Zero previous answers: `На этот раз никто не спрашивал. Она сказала сама, спокойно:
 этот сезон был последним.` Prior answers: `На этот раз никто не спрашивал. Она сказала сама,
 спокойно: «Ещё один год» прозвучало уже {count} {раз/раза/раз}, но этот сезон был последним.`
-No new random draw or re-opening variation is allowed.
+No new random draw or re-opening variation is allowed. The English source of the prior-answers
+branch reads `You have said one more year {count} time/times, and this season was the last one.`
+since round 48 #4 (RU-18 D09); `прозвучало` names no sayer, so the Russian stands as drafted.

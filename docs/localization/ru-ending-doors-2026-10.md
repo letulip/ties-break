@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-06
+last-reviewed: 2026-10-07
 ---
 
 # RU-12C – The nine ending doors and her leaving voice
@@ -88,13 +88,20 @@ does not claim she will keep playing tennis after the career ends.
 | --- | --- | --- |
 | school-fork, university place held | `A college place is reserved. She leaves when the academic year starts – {departsWeek} – and plays until then.` | `Место в университете за ней закреплено. Учебный год начнётся на неделе {departsWeek}; до этого она продолжит играть.` |
 | school-fork, professional path | `She is turning professional. Every entry from here has a cheque behind it, and a bill in front of it.` | `Она переходит в профессиональный тур. Теперь за каждым турниром – возможные призовые и неизбежные расходы.` |
-| retirement offer deferred | `One more year, she said. Same as last time.` | `«Ещё один год», – сказала она. Как и в прошлый раз.` |
+| retirement offer deferred | `One more year, you said. Same as last time.` | `«Ещё один год», – сказали мы. Как и в прошлый раз.` |
 | after child, she returns | `She has decided to go back. From this week she can enter tournaments again.` | `Она решила вернуться. С этой недели снова может подавать заявки на турниры.` |
 | school-end milestone | `School is over. The junior ladder closes at nineteen, and the next one has to be paid for.` | `Школа закончилась. Юниорский тур закроется для неё в девятнадцать; следующий уровень придётся оплачивать семье.` |
 | natural retirement offer, first ask | `Another off-season, and the same question: is there another year in this?` | `Снова межсезонье и тот же вопрос: будет ли ещё один год?` |
 | plateau retirement offer | `She said it out loud in the car – if she cannot reach the top, she would rather go.` | `Она сказала это в машине: если вершины не достичь, лучше уйти.` |
 | final offer, no prior year refrain | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. This season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: этот сезон был последним.` |
-| final offer, prior refrains | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. She has said one more year {count} time/times, and this season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: «Ещё один год» прозвучало уже {count} {раз/раза/раз}, но этот сезон был последним.` |
+| final offer, prior refrains | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year {count} time/times, and this season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: «Ещё один год» прозвучало уже {count} {раз/раза/раз}, но этот сезон был последним.` |
+
+Round 48 #4 (07.10, [RU-18](ru-main-delta-2-2026-10.md)): the one-more-year lines now credit the
+**parent** – `One more year, you said.` and `You have said one more year {count} time/times` –
+because it was the parent who answered. Only the diary row above needed its Russian subject
+moved (`она` to the family `мы`, the owner's formula); the final-offer row's `прозвучало` names no
+sayer, so its Russian stands as drafted. What stays **hers** is unchanged: `Nobody asked her this
+time. She said it herself, and she said it steadily.`
 
 The reserved place is **not departure**; the final junior season still runs before the academic
 year. The professional row does not promise every entry pays a cheque. The return row grants the

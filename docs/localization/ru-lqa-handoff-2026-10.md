@@ -67,12 +67,27 @@ last-reviewed: 2026-10-06
 ## Открытые решения владельца
 
 - RU-12A: подпись `Raise another` – `Начать новую историю` или `Вырастить другую`.
+  ⚙ ANSWERED 07.10 (spec §9.9a; `docs/decisions.md`): `Новая история` – his own wording, in place
+  of both options. The RU-12A row is `APPROVED`.
 - RU-02A: три названия семейных ресурсных коридоров.
+  ⚙ ANSWERED 07.10 (spec §9.9b): the three labels stand – `Обеспеченная семья` / `Средний
+  достаток` / `Скромный бюджет`. Rows RU02A-F02, F04 and F06 are `APPROVED`, wording unchanged.
 - RU-13C: рекламное описание установленного приложения; выбирать по видимому установочному
   экрану, не только по строке в конфиге.
+  ⚙ RULED 07.10 (spec §9.9c): deferred to L4, with a proposal owed – his «предложи что-то, но
+  если не критично, то можно отложить». A deferral, not a wording answer: the row stays open.
 - RU-13D: короткий вид года `’31` против полного `2031` после телефонной LQA.
+  ⚙ ANSWERED 07.10 (spec §9.9d): the short year stands – «а чем плох короткий год?». The RU-13D
+  row `W14 '31` is `APPROVED`; its phone-width check stays in the row text.
 - RU-03A/B: голос коротких сообщений, особенно холодный регистр и три намеренно рубленых
   строки тёплой away-переписки.
+  ⚙ ANSWERED 07.10 (spec §9.9e): the cold register stays in the cold band only – «я бы холод
+  оставил в cold-полосе если это возможно». The warm rows that leaked the chill await HIS
+  editorial re-read (task RU-03A′); no row was changed.
 
 До этих решений редакторский стек остаётся готовым к читке, **не** помечается `APPROVED` или
 `LANDED`.
+
+⚙ 07.10: all five are now answered or ruled (above), so the sentence before this note predates the
+rulings. The rows they approve are flipped `APPROVED` in their own tables – RU-12A `Raise another`,
+RU02A-F02/F04/F06 and the RU-13D short-year row – and every other row stays `DRAFT` for his read.

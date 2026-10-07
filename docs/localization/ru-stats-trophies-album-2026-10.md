@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-05
+last-reviewed: 2026-10-07
 ---
 
 # RU-07 – Rankings, trophies and album
@@ -367,11 +367,13 @@ Album dates reuse the Russian range formatter established in RU-03: `3–9 ию�
 февраля`. A pasted note already sits inside a dated career chapter, so it keeps the current no-year
 shape unless the product later adds a year to every locale.
 
-Tickets and luggage tags use RU-04's localized tier and finish projections. Examples:
+Tickets and luggage tags use RU-04's localized tier and finish projections. Since round 47 #8c
+(07.10, [RU-18](ru-main-delta-2-2026-10.md) D19) the ticket's title line prints the **tier alone**;
+the stage – the finish – lives on the stub, in the album's own hand. Examples:
 
-- `Юниорский тур 60 · Победительница`;
-- `Мировой тур 100 · Финалистка`;
-- an early exit uses the compact stage `1/8 финала`, not the sentence `Выбыла в…`;
+- ticket `Юниорский тур 60`, stub `Победительница`;
+- ticket `Мировой тур 100`, stub `Финалистка`;
+- an early exit puts the compact stage `1/8 финала` on the stub, not the sentence `Выбыла в…`;
 - a tag age is `17 лет`, not `Возраст 17`.
 
 The model must carry semantic tier and finish ids through the worker boundary. `tier`, `stage`,
@@ -390,32 +392,43 @@ Russian book.
 
 Seat letters `A–F` remain Latin because they are an invented ticket coordinate, not prose.
 
-The seeded fictional names need locale resources too. Their selected index remains deterministic;
-only its displayed name changes.
+The seeded fictional names are **generated proper nouns**, and the owner ruled on 07.10 (spec
+§9.5, [RU-18](ru-main-delta-2-2026-10.md)) that they are not translated: the Russian column of
+both tables below carries the same Latin name as the source. A language sweep must treat these
+cells as lawful Latin, like tier codes and the product mark. The selected index stays
+deterministic and nothing is localized, so the locale cannot change which name the seed picked.
+Tier vocabulary (`Мировой тур {n}`, `местный открытый турнир`) is glossary, not a generated name,
+and stays translated.
 
-| English venue | Russian venue |
-| --- | --- |
-| `Centre Court` | `Центральный корт` |
-| `Court One` | `Корт № 1` |
-| `The River Court` | `Речной корт` |
-| `Garden Arena` | `Садовая арена` |
-| `Harbour Stadium` | `Стадион у гавани` |
-| `The Old Clay` | `Старый грунт` |
+| English venue | Russian venue | Note |
+| --- | --- | --- |
+| `Centre Court` | `Centre Court` | ⚙ reverted to source 07.10 (§9.5) |
+| `Court One` | `Court One` | ⚙ reverted to source 07.10 (§9.5) |
+| `The River Court` | `The River Court` | ⚙ reverted to source 07.10 (§9.5) |
+| `Garden Arena` | `Garden Arena` | ⚙ reverted to source 07.10 (§9.5) |
+| `Harbour Stadium` | `Harbour Stadium` | ⚙ reverted to source 07.10 (§9.5) |
+| `The Old Clay` | `The Old Clay` | ⚙ reverted to source 07.10 (§9.5) |
 
-The embroidered childhood patch has very little width. Use compact fictional proper names rather
-than squeezing translated organisation types onto it:
+The embroidered childhood patch has very little width. `ALBUM_PATCH_POOL` holds ten names since
+round 47 #16 (it held six); each was measured to fit the patch in two lines at 96px of cloth, and
+the Russian build shows the same Latin names, so that is the fit that applies – the phone LQA
+below re-checks it if the Russian build changes the patch's face:
 
-| English seed entry | Russian patch |
-| --- | --- |
-| `Rivermouth Tennis` | `Ривермут` |
-| `Northfield Club` | `Нортфилд` |
-| `Harbour Lane Tennis` | `Харбор-Лейн` |
-| `Old Mill Courts` | `Олд-Милл` |
-| `Cedar Park Tennis` | `Сидар-Парк` |
-| `Whitegate Club` | `Уайтгейт` |
+| English seed entry | Russian patch | Note |
+| --- | --- | --- |
+| `Rivermouth Tennis` | `Rivermouth Tennis` | ⚙ reverted to source 07.10 (§9.5) |
+| `Northfield Club` | `Northfield Club` | ⚙ reverted to source 07.10 (§9.5) |
+| `Harbour Lane Tennis` | `Harbour Lane Tennis` | ⚙ reverted to source 07.10 (§9.5) |
+| `Old Mill Courts` | `Old Mill Courts` | ⚙ reverted to source 07.10 (§9.5) |
+| `Cedar Park Tennis` | `Cedar Park Tennis` | ⚙ reverted to source 07.10 (§9.5) |
+| `Whitegate Club` | `Whitegate Club` | ⚙ reverted to source 07.10 (§9.5) |
+| `Larkfield Tennis` | `Larkfield Tennis` | new 07.10 – round 47 #16, RU-18 D11; Latin by §9.5 |
+| `Fairhaven Club` | `Fairhaven Club` | new 07.10 – round 47 #16, RU-18 D12; Latin by §9.5 |
+| `Elmwood Courts` | `Elmwood Courts` | new 07.10 – round 47 #16, RU-18 D13; Latin by §9.5 |
+| `Stoneleigh Tennis` | `Stoneleigh Tennis` | new 07.10 – round 47 #16, RU-18 D14; Latin by §9.5 |
 
-These are localized forms of invented ambience, not real clubs. The locale must never change which
-pool index the seed selected.
+These are invented ambience, not real clubs, and the ruling leaves them as they are. The locale
+must never change which pool index the seed selected.
 
 ## 20. Image alternatives
 
@@ -450,11 +463,13 @@ result without praising or grading it and emits no row when the save contains no
 - Build `AlbumBook` from semantic facts plus locale resources, or carry ids to the UI. Do not use
   finished English wire strings as localization keys.
 - Locale-aware formatting must cover chapter titles, ages and age ranges, week spans, tiers,
-  finishes, ticket words, fictional place names, image alternatives and college checklist lines.
-- Keep the seeded flavour draws and draw order unchanged. Choosing Russian `Садовая арена` for
-  English `Garden Arena` must consume no RNG and must not select another venue.
+  finishes, ticket words, image alternatives and college checklist lines. Fictional place names
+  are not on that list: they stay Latin by the 07.10 ruling (§9.5).
+- Keep the seeded flavour draws and draw order unchanged. Showing the venue in Russian mode – the
+  same Latin `Garden Arena`, by the 07.10 ruling – must consume no RNG and must not select
+  another venue.
 - At 320 and 390 px, inspect the back-button accessible name, chapter header, `Левая/Правая
-  страница`, page counter, phone chapter rows, longest chapter title and translated patch names.
+  страница`, page counter, phone chapter rows, longest chapter title and the Latin patch names.
 - At 768 and 1024 px, inspect the complete chapter rail and ensure `Как она росла` plus an age range
   does not force illegible plates.
 - Exercise one/few/many page counts, ages 21/22/25, a cross-month week, all ticket coordinate words,
