@@ -91,7 +91,7 @@ const pairFiller = computed(() => (props.sheet.filler?.pair ? { art: props.sheet
       :photo-height="placed.filler.photoH"
     />
 
-    <!-- ⭐ ROUND 48 #1a – «для горизонтальных пустых мест можно еще фото добавить … второе рядом»: the strip is 400px wide and holds two. -->
+    <!-- ⭐ ROUND 48 #1a – a horizontal gap wide enough for two takes a SECOND snapshot beside the first (his vacation-pair ask, quoted in docs/rounds/round-48.md item 1): the strip is 400px wide and holds two. -->
     <AlbumFillerPhoto
       v-if="pairFiller && placed.filler?.pair"
       :style="spot(placed.filler.pair)"

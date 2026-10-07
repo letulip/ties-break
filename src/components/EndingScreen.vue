@@ -312,8 +312,9 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
     <!-- ⭐⭐⭐ ROUND 46 #18 – THE REAL ALBUM, laid over this takeover. The `section` is what puts it in the
          same column as everything else here on a wide screen (`.ending > section`). Its Back arrow is the
          book's own control and returns to the last page; nothing is rebuilt.
-         ⭐⭐ ROUND 48 #8 – AND IT IS `bare` TOO (owner, 07.10: «в самом альбоме тоже подложка не нужна, она лишняя и место ест, пусть он на весь экран будет, как и THE LAST
-         PAGE по принципу»). The same mechanism as the last page below: style.css paints EVERY `section` as a panel, so the book lay on a card whose 16px padding and 1px
+         ⭐⭐ ROUND 48 #8 – AND IT IS `bare` TOO, on the owner's 07.10 ruling: the album itself sheds its backing and goes full-screen, THE LAST PAGE's own principle – his
+         words are quoted in docs/rounds/round-48.md item 8 (a template comment may not carry them: no Cyrillic in templates, tests/template-copy-rules.test.ts).
+         The same mechanism as the last page below: style.css paints EVERY `section` as a panel, so the book lay on a card whose 16px padding and 1px
          border took 17px off EACH side of the film – at 375 the film's window was 341px of a 375px screen and the first sheet began 33px in. `section.bare` removes the
          card; the film's own `.album-stage` already cancels the takeover's 16px gutter (the in-career host, `App.vue`, never had a section round the screen at all), so
          the book now spans the whole screen, like the in-career album – 375px, the first sheet at the gutter. -->

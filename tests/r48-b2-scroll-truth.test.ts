@@ -392,7 +392,9 @@ describe('⭐⭐⭐ round 48 #7b – Title and Final rows come from the cabinet,
     // ⚠ NON-VACUITY: the careers this walks must hold milestones of both kinds and a cabinet that outgrew them
     expect(milestoneTitles).toBeGreaterThanOrEqual(4)
     expect(milestoneFinals).toBeGreaterThanOrEqual(4)
-  }, 120_000)
+    // ⚠ 60 s is birpc's own window and the bulk-pool guard's ceiling (tests/sim-serialisation.test.ts);
+    // the whole FILE runs in 6.6 s solo (measured 07.10), so the ceiling is headroom, not a budget.
+  }, 60_000)
 })
 
 // --- the read stays a read -------------------------------------------------------------------------
