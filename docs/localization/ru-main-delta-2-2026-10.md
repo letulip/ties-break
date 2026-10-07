@@ -36,11 +36,11 @@ so a language sweep and the importer must skip it, exactly as they skip
 
 | id | live source (07.10) | old English (dead key) | new English (live) | owning row | outcome |
 | --- | --- | --- | --- | --- | --- |
-| D01 | `EndingScreen.vue:437` | `Spent` | `Tennis & trips` (renders `TENNIS & TRIPS`) | RU-12A permanent-outlay row | **DONE** – re-keyed; Russian cell `QUESTION` (§4) |
+| D01 | `EndingScreen.vue:437` | `Spent` | `Tennis & trips` (renders `TENNIS & TRIPS`) | RU-12A permanent-outlay row | **DONE** – re-keyed; ⚙ Russian ruled 08.10 (§4) |
 | D02 | `EndingScreen.vue` – row removed, round 48 #3 | `Family's share` | – (the row and its figure are off the DOM) | RU-12A prize-share row | **DONE** – kept, marked `⚙ removed 07.10 (round 48 #3)` |
 | D03 | `EndingScreen.vue` – row removed, round 47 B1 #6 | `Still owned` | – | RU-12A still-owned row | **DONE** – kept, marked `⚙ removed 07.10 (round 47 #6)` |
 | D04 | `EndingScreen.vue:480` | `She said one more year {count} time/times.` | `You said one more year {count} time/times.` | RU-12A refrain row | **DONE** – re-keyed; Russian flipped (§3 №1) |
-| D05 | `EndingScreen.vue:243` | `A daughter came later` | `A child came later` (`Raise her daughter` unchanged) | RU-12A dynasty-after row | **DONE** – re-keyed; Russian cell `QUESTION` (§4) |
+| D05 | `EndingScreen.vue:243` | `A daughter came later` | `A child came later` (`Raise her daughter` unchanged) | RU-12A dynasty-after row | **DONE** – re-keyed; ⚙ Russian ruled 08.10 (§4) |
 | D06 | `RetirementDialog.vue:394` | `The same answer she gave last winter.` | `The same answer you gave last winter.` | RU-12G defer note | **DONE** – re-keyed; Russian flipped (§3 №3) |
 | D07 | `ending.ts:720` (plateau, count 1) | `…She has said one more year once already…` | `…You have said one more year once already…` | RU-12G plateau band 1 | **DONE** – re-keyed; Russian flipped (§3 №4) |
 | D08 | `ending.ts:743` (plateau, count 3+) | `…She has said one more year {count} times…` | `…You have said one more year {count} times…` | RU-12G plateau band 3+ | **DONE** – English re-keyed; the Russian names no sayer and stands (§7) |
@@ -94,10 +94,14 @@ time. She said it herself, and she said it steadily.` (RU-12C and RU-12G final s
 that too` (her offer to play on, band 1) and `she said it looking out of the window` (her doubt,
 band 3+).
 
-## 4. QUESTION rows awaiting his Russian
+## 4. QUESTION rows awaiting his Russian – ⚙ BOTH ANSWERED 08.10
 
 Two English labels were renamed by the owner himself, so the old Russian no longer translates them.
-Neither row has an invented replacement: the Russian cell carries `QUESTION` and the reason.
+Neither row received an invented replacement; he answered the next day: `Tennis & trips` =
+`Теннис и поездки` (`APPROVED`), `A child came later` = `Ребёнок позже` – his own, with a stated
+reservation, one-word cross-language alternatives (`Dynasty`/`Династия`, `Legacy`/`Наследие`)
+offered for his pick. The same message moved the YELLOW to the line door (EndingScreen.vue,
+mutation-pinned in wave10-dynasty-door).
 
 | id | English now | what the label names, and what the draft must respect | retired draft (history only) |
 | --- | --- | --- | --- |

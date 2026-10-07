@@ -31,7 +31,7 @@ compiles nowhere.
 | real album door | `View the album` | `Посмотреть альбом` |
 | visible test export | `Export save (dev)` | `Экспортировать сохранение (тест)` |
 | family's prize share | `Family's share` | `Доля семьи` · ⚙ removed 07.10 (round 48 #3) |
-| permanent outlay | `Tennis & trips` | `QUESTION` – awaiting his draft: renamed in round 48 #3, the retired draft translated the old label |
+| permanent outlay | `Tennis & trips` | `Теннис и поездки` · `APPROVED` 08.10 (his own wording; `docs/decisions.md`) |
 | daughter's account | `Her account` | `Её счёт` |
 | still owned holdings | `Still owned` | `Осталось в собственности` · ⚙ removed 07.10 (round 47 #6) |
 | current portfolio value | `Family's portfolio` | `Капитал семьи` |
@@ -42,7 +42,7 @@ compiles nowhere.
 | resume college fallback | `Another year –` | `Ещё один год –` |
 | new unrelated childhood | `Raise another` | `Новая история` · `APPROVED` 07.10 (his own wording, spec §9.9a) |
 | dynasty, daughter lived during tour | `Raise her daughter` | `Вырастить её дочь` |
-| dynasty, child born after career | `A child came later` | `QUESTION` – awaiting his draft: renamed in round 48 #6 (his «child»), the retired draft translated the old label |
+| dynasty, child born after career | `A child came later` | `Ребёнок позже` · `DRAFT` 08.10, HIS OWN with a stated reservation («вообще не нравится как звучит, но „Продолжить династию“ очень длинно»); cross-language one-word alternatives offered for his pick – `Dynasty`/`Династия` (the mechanic's own name) or `Legacy`/`Наследие` (the engine's own term) – either would change the ENGLISH label too, his call |
 
 `Новая история` is the owner's own wording (ruled 07.10, spec §9.9a, in place of both drafted
 options – the retired pair is quoted in RU-18). It names a **new, unrelated** career routed to the

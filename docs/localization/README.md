@@ -71,7 +71,7 @@ last-reviewed: 2026-10-07
 | [Batch 11K – Short world receipts](ru-world-receipts-2026-10.md) | Career start, birthday age, calendar, no-show and equipment receipts | remaining short templates drafted; prior RU-05/06/09/11G coverage cross-checked |
 | [Batch 11L – Weekly finance corpus](ru-weekly-finance-corpus-2026-10.md) | Training, light weeks, court venue/time, kit and fixed finance receipts | current recurring pools drafted; adult sparring and narrow recap issues flagged |
 | [Batch 11M – Spirit and public-life feed](ru-spirit-feed-2026-10.md) | Exposure, public-life and recovery receipts | three current `spirit.ts` rows drafted; event-text identity trap flagged |
-| [Batch 12A – Epilogue screen](ru-ending-screen-2026-10.md) | Album/record chrome, totals, conditional notes and next-career controls | current `EndingScreen.vue` strings drafted; re-keyed 07.10 per [RU-18](ru-main-delta-2-2026-10.md): 2 rows await his Russian for renamed labels (`Tennis & trips`, `A child came later`), `Raise another` `APPROVED`; engine album pages remain next |
+| [Batch 12A – Epilogue screen](ru-ending-screen-2026-10.md) | Album/record chrome, totals, conditional notes and next-career controls | current `EndingScreen.vue` strings drafted; re-keyed 07.10 per [RU-18](ru-main-delta-2-2026-10.md); 08.10: `Теннис и поездки` `APPROVED`, `Ребёнок позже` his standing draft (alternatives await his pick), `Raise another` = `Новая история` `APPROVED`; engine album pages remain next |
 | [Batch 12B – Ending album](ru-ending-album-2026-10.md) | Seven engine-authored pages and the full milestone record | every current slot branch and record label drafted; ending detail and college copy remain |
 | [Batch 12C – Ending doors](ru-ending-doors-2026-10.md) | Nine terminal titles/details, eight voiced exits and other kept transition rows | current ending paths drafted; re-keyed 07.10 per [RU-18](ru-main-delta-2-2026-10.md) (the deferred-offer row flipped to the family `мы`); no row awaits his Russian; stale six-ending context claim flagged |
 | [Batch 12D – University years](ru-college-year-2026-10.md) | Live year card, student championship, national calls, calendar, replay and departure dialog | current component copy drafted; fork and engine receipts remain |
@@ -86,7 +86,7 @@ last-reviewed: 2026-10-07
 | [Batch 15 – Current-main UI delta](ru-current-main-delta-2026-10.md) | New feedback flow, staff raises, season-money rows and small interface additions after the 30.09 source cut | drafted against 06.10 `origin/main` |
 | [Batch 16 – Album delta](ru-album-delta-2026-10.md) | Three newly reachable rare occasions, four voices and three registers | all 36 added strings drafted |
 | [Batch 17 – Family-life delta](ru-life-delta-2026-10.md) | Expanded spouse voice, relationship tile, together-duration forms and life-moment wording | new pool and formats drafted |
-| [RU-18 – Rounds 47/48 delta](ru-main-delta-2-2026-10.md) | The string drift of rounds 47 and 48 applied (owner's order №11, 07.10): re-keys, removals, the Latin name rows, the family `мы` flips and the day's `APPROVED` rows – a record, not a replacement table | applied; 2 rows await his Russian for renamed labels |
+| [RU-18 – Rounds 47/48 delta](ru-main-delta-2-2026-10.md) | The string drift of rounds 47 and 48 applied (owner's order №11, 07.10): re-keys, removals, the Latin name rows, the family `мы` flips and the day's `APPROVED` rows – a record, not a replacement table | applied; both renamed-label rows ruled 08.10 |
 | [RU-19 – Family-voice pass](ru-family-voice-pass-2026-10.md) | The parent speaks as the family `мы` (owner's order №10, 07.10): every gendered parent-`я` cell converted by his formula, with the full before→after table, the staff gender-param flags and the unconverted singular remainder | applied as `DRAFT` for the owner's read |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
@@ -136,6 +136,6 @@ diary corpora → endings → metadata and final LQA.
 ## Open editorial reads
 
 ⚙ 07.10: the three family-resource labels were APPROVED (spec §9.9b) – no editorial read is open
-today except the two `QUESTION` rows RU-18 left for his drafts (`Tennis & trips`, `A child came
-later`, both RU-12A) and the RU-03A′ warm-row re-read (§9.9e). Later batches may add questions
+today except the standing `Ребёнок позже` draft he dislikes (RU-12A – one-word cross-language alternatives
+await his pick; `Теннис и поездки` was APPROVED 08.10) and the RU-03A′ warm-row re-read (§9.9e). Later batches may add questions
 where a product term or a character relationship genuinely has more than one reading.
