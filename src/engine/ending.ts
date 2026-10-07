@@ -639,19 +639,28 @@ export function retirementDue(view: PlateauView): RetirementOffer | null {
  *  that can tell them apart. It counts BOTH questions – the plateau's and the age one – which is
  *  correct: the sentence says how often she has said those words, not which reading prompted them.
  *
+ *  ⭐⭐⭐ ROUND 48 #4 (07.10) – THE COUNT SENTENCE IS THE PARENT'S NOW, AND THE OPENING IS STILL HERS. The paragraph
+ *  just above is the record of what the line said when it was written, and «she has said those words» was the
+ *  defect: «One more year» is the button the PARENT presses on the retirement card (`answerRetirement(world,
+ *  false)`), and this count is what those presses add up to. The owner, 07.10 (translated): it was not her who said
+ *  it, it was us who proposed it. So the sentence after the opening reads «You have said one more year N times».
+ *  ⚠ THE OPENING IS UNTOUCHED, BYTE FOR BYTE: the decision at the FINAL offer has no refuse button and genuinely
+ *  belongs to her – «Nobody asked her this time. She said it herself» is the one place the voice IS hers.
+ *
  *  ⚠ IT GRADES NOTHING (the house rule, «мы ни за что не наказываем»). It does not say the career
  *  was good or wasted, it does not console, and it does not tell the player they should have done
  *  something else. It reports who spoke and how. */
 export const LAST_WORD_OPENING = 'Nobody asked her this time. She said it herself, and she said it steadily.'
 
-/** Her line, with the one piece of state it reads. `oneMoreYearCount` is defensive against a poked
+/** Her line, with the one piece of state it reads: her opening, then – in the parent's voice since round 48 #4 –
+ *  how many times the parent said «one more year». `oneMoreYearCount` is defensive against a poked
  *  save: a count of 0 is unreachable in normal play (she is asked from 29 and the share cannot reach
  *  the threshold until her forties) but it is a number on a save file, so it gets its own branch
  *  rather than printing «one more year 0 times». */
 export function lastWordLine(oneMoreYearCount: number): string {
   if (oneMoreYearCount <= 0) return `${LAST_WORD_OPENING} This season was the last one.`
   const times = oneMoreYearCount === 1 ? 'time' : 'times'
-  return `${LAST_WORD_OPENING} She has said one more year ${oneMoreYearCount} ${times}, and this season was the last one.`
+  return `${LAST_WORD_OPENING} You have said one more year ${oneMoreYearCount} ${times}, and this season was the last one.`
 }
 
 /** ⭐⭐⭐ ROUND 39 #14a – THE PLATEAU CARD'S LEDE, AND IT ESCALATES WITH HER OWN ANSWERS.
@@ -701,12 +710,14 @@ export function lastWordLine(oneMoreYearCount: number): string {
  *  plateau offer draws two answers and either is legal, so a lede that closed the question would
  *  contradict the controls under it. */
 export function plateauLede(oneMoreYearCount: number, tableName: string): string {
-  // 1 – SHE HAS SAID IT ONCE ALREADY, and the count is spelled as a word because this branch is
-  // reachable at exactly one value. «Four seasons at the same table» was the draft here and is the
-  // sentence the header refuses: it counts a thing the save does not carry.
+  // 1 – IT HAS BEEN SAID ONCE ALREADY, and by the PARENT (round 48 #4, 07.10: this line used to credit her with
+  // the parent's answer, «She has said one more year once already»; the owner's ruling is on `lastWordLine`).
+  // The count is spelled as a word because this branch is reachable at exactly one value. «Four seasons at the
+  // same table» was the draft here and is the sentence the header refuses: it counts a thing the save does not
+  // carry. ⚠ «she said that too» at the end is truly HERS – it is her offer to play on – and stays.
   if (oneMoreYearCount === 1) {
     return (
-      'She brought it up before the airport this time. She has said one more year once already, and she has ' +
+      'She brought it up before the airport this time. You have said one more year once already, and she has ' +
       'stopped pretending the next season is different. She would still play a year for you – she said that too.'
     )
   }
@@ -721,13 +732,15 @@ export function plateauLede(oneMoreYearCount: number, tableName: string): string
   }
   // 3+ – THE OPEN BAND, AND THE ONLY ONE THAT MAY CARRY A NUMBER, because it is the only one whose
   // value its own band does not pin. The number is `oneMoreYearCount` itself and not a count of
-  // seasons or winters, in the engine's existing idiom («She has said one more year 4 times»,
-  // `lastWordLine`) so the two surfaces count the same thing in the same words. Always plural: the
+  // seasons or winters, in the engine's existing idiom («You have said one more year 4 times»,
+  // `lastWordLine` – both read «She has said…» until round 48 #4 put the parent's word in the parent's mouth)
+  // so the two surfaces count the same thing in the same words. Always plural: the
   // band starts at three. The table clause is a PRESENT reading and says nothing about the years in
-  // between – whether it moved and came back is not on the save either.
+  // between – whether it moved and came back is not on the save either. ⚠ «she said it looking out of the
+  // window» is HER doubt – the table clause that follows – and stays hers.
   if (oneMoreYearCount >= 3) {
     return (
-      `This time she said it looking out of the window. She has said one more year ${oneMoreYearCount} times, ` +
+      `This time she said it looking out of the window. You have said one more year ${oneMoreYearCount} times, ` +
       `and the ${tableName} table has not moved. She will not fight you on one more – but you both know what she wants.`
     )
   }

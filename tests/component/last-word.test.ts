@@ -115,7 +115,12 @@ describe('the last offer is hers', () => {
     expect(said(controls[0].get('strong').text())).toBe('That is enough')
     expect(said(controls[0].get('span').text())).toBe('She stops here, on her own terms.')
     expect(said(controls[1].get('strong').text())).toBe('One more year')
-    expect(said(controls[1].get('span').text())).toBe('The same answer she gave last winter.')
+    // ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #4 – THE FUTURE WAVE THE NOTE ABOVE PREDICTED AGAIN, AND EXACTLY ONE LINE OF THIS ARM
+    // MOVED: the note under «One more year» read «The same answer she gave last winter.» and it was not her who gave it –
+    // «One more year» is the button the PARENT presses, so the answer last winter was the parent's. His ruling, 07.10: it
+    // was not her who said it, it was us who proposed it. The label, both of the first control's lines, the kicker, the
+    // title and the lede are the bytes they were and are still written out here for that reason.
+    expect(said(controls[1].get('span').text())).toBe('The same answer you gave last winter.')
     w.unmount()
   })
 

@@ -26,6 +26,12 @@
 //     the pair non-vacuous – a single label would have passed both.
 //   · the `v-if`'s `resumes === null` dropped: **1 red** – the college case; an ending that can
 //     still be resumed must not offer a line beside its own way forward.
+//
+// ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 (docs/rounds/round-48.md): the epilogue label is 'A child came later' (his own ruling,
+// «child is better»), and the two doors stand in ONE ROW (`.ending-doors`) – so the stacking assertion in the round-20 case
+// below became «one shared bottom» plus «the row sits above the record link», and the arm recorded above for the stacking line
+// is the one that now reddens the second. Each moved line says so beside it. The row's own claims (flex row, equal halves, the
+// phone fit at 375 and 320) are in tests/component/r48-b1-ending-page.test.ts.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
@@ -112,7 +118,11 @@ describe('wave 10 T4 – the door never closes', () => {
     const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour: false }) }))
     const line = w.find('.ending-line')
     expect(line.exists(), 'his 20.09 ruling: a player who had no luck still gets the door').toBe(true)
-    expect(line.text()).toBe('A daughter came later')
+    // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6: it read 'A daughter came later' – the owner's own ruling is that «child» is better
+    // (docs/decisions.md, 07.10), so the epilogue label is 'A child came later'. Only this variant moved; the lived one below
+    // is still 'Raise her daughter'. This is a pin that asserts what the string IS, so it moved with it – the dated note is
+    // what makes that accountable.
+    expect(line.text()).toBe('A child came later')
     // ...beside «Raise another», never instead of it: two different things.
     expect(w.text()).toContain('Raise another')
     w.unmount()
@@ -202,14 +212,28 @@ describe('wave 10 T4 – the door never closes', () => {
         ).toBeLessThanOrEqual(room)
         return fit
       })
-      // ⚠⚠ AND THE TWO CONTROLS ARE REALLY STACKED, WHICH IS WHAT GIVES THE HELPER'S NEW TAIL WALK ITS
-      // TEETH. «Raise another» is second-to-last in the footer and the line is last; the old model
+      // ⚠⚠ AND THE TWO CONTROLS WERE REALLY STACKED, WHICH WAS WHAT GAVE THE HELPER'S NEW TAIL WALK ITS
+      // TEETH. «Raise another» was second-to-last in the footer and the line was last; the old model
       // could only read a control that was last, so it would have placed BOTH of them on the card's
-      // bottom edge and reported the same box twice. This line is the one that notices.
+      // bottom edge and reported the same box twice. That line was the one that noticed.
+      //
+      // ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 («Raise another» and the succession door in one row): THEY ARE NOT STACKED ANY
+      // MORE, BY HIS ASK, so «the first door's bottom is above the second door's top» is false by design – both doors sit
+      // in ONE `.ending-doors` row and share one bottom. The tail walk's teeth did not go anywhere; they MOVED to the next
+      // control down. The two claims that replace the one: (1) the doors share a bottom – one row; (2) that row sits ABOVE
+      // the record link under it – which a tail walk that stopped at the control's own margin would still get wrong
+      // (it would put the doors and the link on the card's bottom edge together), so the arm that used to redden the
+      // stacking line reddens (2).
       expect(
         fits[0].dismissBottom,
-        'the two ways off this screen are drawn on top of each other – the tail walk is not seeing the line',
-      ).toBeLessThan(fits[1].dismissTop)
+        'the two doors are not on one line – they should share ONE row now',
+      ).toBeCloseTo(fits[1].dismissBottom, 6)
+      const recordLink = w.findAll('button').find((b) => b.text() === 'The whole record')!
+      const recordFit = assertDismissReachable(card, recordLink.element, vp, 'epilogue record link')
+      expect(
+        fits[0].dismissBottom,
+        'the doors row is drawn on top of the record link – the tail walk is not seeing what is under the row',
+      ).toBeLessThan(recordFit.dismissTop)
       w.unmount()
     }
   })

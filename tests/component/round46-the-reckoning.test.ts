@@ -22,6 +22,11 @@
 // shelf row «Still owned» left as redundant with the portfolio («one of them looks redundant»), the three
 // counting rows became ONE row in the order he named them, and the figure grid no longer counts columns («the
 // layout still moves and the numbers jump»). Each arm that moved says so beside it; the labels did not move.
+// ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #3 – HIS SECOND RULING OF THAT DAY (docs/decisions.md, 07.10 second batch), AND BY HIM
+// RATHER THAN BY THIS FILE: the «Family's share» row LEFT the money list and «Spent» became «Tennis & trips», leaving three
+// numbers. «The labels did not move» above was true of round 47 and is the record of it. Every arm below that asserted either
+// label moved with the date beside it; the new claims (the three-label sequence, the absence, the caps) live in
+// tests/component/r48-b1-ending-page.test.ts.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -93,7 +98,7 @@ function patch(view: EndingView): void {
   })
 }
 
-describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () => {
+describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent» (now «Tennis & trips», 07.10)', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('⭐⭐⭐ prints the money that LEFT, never the total that counts the family\'s own holdings', async () => {
@@ -101,7 +106,9 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     patch(endingView({}, { heldCents: 2_000_000_00, outlayCents: 1_000_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)
     const totals = w.find('.ending-totals')
-    expect(totals.text(), 'the label is his and does not move').toContain('Spent')
+    // ⭐ RE-AIMED 07.10 (round 48 #3): it asserted «Spent» – «the label is his and does not move» – and he moved it himself
+    // in his second ruling of that day: the row reads «Tennis & trips» now, over the same figure.
+    expect(totals.text(), 'the label is his: «Spent» until 07.10, «Tennis & trips» since his ruling').toContain('Tennis & trips')
     // ⚠⚠ THE ARM. Point the template back at `view.totals.spentCents` and this pair flips: measured
     // 18.09, 1 of the 5 tests in this file goes red (this one, on both of its assertions).
     expect(totals.text(), 'what left for good').toContain(formatCentsCompact(1_000_000_00))
@@ -135,7 +142,8 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     const totals = w.find('.ending-totals')
     expect(totals.text(), 'no row about an account she has not got').not.toContain('Her account')
     expect(totals.text(), 'and none about holdings that do not exist').not.toContain('Still owned')
-    // ...and «Spent» is the accumulator, unchanged, which is what every career before the shelf reads.
+    // ...and «Spent» (now «Tennis & trips», 07.10) is the accumulator, unchanged, which is what every career before the
+    // shelf reads.
     expect(totals.text()).toContain(formatCentsCompact(TOTALS.spentCents))
     w.unmount()
   })
@@ -154,8 +162,12 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     )
     // ...and it sits after «Spent» and before the three counting rows (RE-AIMED 06.10, round 47 #6: it used to
     // follow «Still owned», the row that left), so the pins below on his own labels are untouched by it.
+    // ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #3: the first label is «Tennis & trips» now. ⚠⚠ THIS ONE HAD TO MOVE FOR A REASON
+    // BEYOND THE WORDING: left on 'Spent', `indexOf` returns -1 and «greater than -1» passes for ANY position of the row –
+    // the arm would have gone VACUOUS and stayed green, which is the failure a renamed label hides in a pin like this.
     const labels = w.findAll('.ending-totals dt').map((d) => d.text())
-    expect(labels.indexOf("Family's portfolio")).toBeGreaterThan(labels.indexOf('Spent'))
+    expect(labels.indexOf('Tennis & trips'), 'the label this arm measures from is on the page at all').toBe(0)
+    expect(labels.indexOf("Family's portfolio")).toBeGreaterThan(labels.indexOf('Tennis & trips'))
     expect(labels.indexOf("Family's portfolio")).toBeLessThan(labels.indexOf('Seasons'))
     w.unmount()
 
@@ -175,12 +187,14 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // What it protected (nothing pushes the page sideways; a long label gives ground vertically) is now carried
     // by a grid whose columns do not depend on the width at all: `minmax(0, 1fr) auto`, row wrappers
     // `display: contents`, the label allowed to wrap. Seven cells now: the shelf row left (#6).
+    // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #3: SIX cells now – the «Family's share» row left too (his second ruling of that day),
+    // so the page is three money rows and the three facts.
     // ⚠⚠ THE ARM. Put `auto-fit` back, or `white-space: nowrap` on the label, and this goes red: measured
     // 06.10, RED [1 test, 1 assertion each].
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00, portfolioCents: 2_812_340_00 }))
     const w = mount(EndingScreen, { attachTo: document.body })
     const dl = document.querySelector('.ending-totals')!
-    expect(dl.querySelectorAll('dt')).toHaveLength(7)
+    expect(dl.querySelectorAll('dt')).toHaveLength(6)
     const money = document.querySelector('.ending-money')!
     expect(getComputedStyle(money).gridTemplateColumns, 'two stable columns, never a count').toContain('minmax(0, 1fr)')
     expect(getComputedStyle(money).gridTemplateColumns).not.toContain('auto-fit')
@@ -190,7 +204,10 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     document.body.innerHTML = ''
   })
 
-  it('⚠ the five labels are all still on the page, in his order, and the first is the one HE renamed', async () => {
+  // ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #3 – this test was «the five labels are all still on the page, in his order, and the
+  // first is the one HE renamed», and neither half is true of the page any more: «Family's share» left and «Spent» became
+  // «Tennis & trips». The assertions below are the record of what he ruled, in the order he ruled it.
+  it('⚠ the money labels are on the page in his order – Tennis & trips first, the share row gone – and the three facts follow', async () => {
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)
     const labels = w.findAll('.ending-totals dt').map((d) => d.text())
@@ -205,9 +222,16 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     // because it is the record of the first spelling; this is the second, and the figure under the
     // label has still never moved. ⚠⚠ THE ARM. Put the article back and this goes red: measured
     // 18.09, RED [1 test, 1 assertion].
-    expect(labels[0], 'his own spelling, one word shorter than the one he ruled this morning').toBe("Family's share")
+    //
+    // ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #3 – HIS SECOND RULING OF THAT DAY (docs/decisions.md, 07.10 second batch), AND AGAIN BY
+    // HIM: the share row «can simply go», «Spent» is renamed TENNIS & TRIPS, and three numbers are left. The two paragraphs above
+    // are left as written – they are the record of 18.09, spelling included, for the row that has now left. It read
+    // `labels[0]` toBe("Family's share") and `labels[1]` toBe('Spent'). The label he spelled on 18.09 is asserted ABSENT now, and
+    // the first label is the one he typed (the page shows it in capitals – the caps are asserted in r48-b1-ending-page.test.ts).
+    expect(labels, 'the row he spelled on 18.09 has left the page').not.toContain("Family's share")
     expect(labels, 'and nothing else acquired the old word').not.toContain('Won')
-    expect(labels[1]).toBe('Spent')
+    expect(labels, '«Spent» is renamed, not duplicated').not.toContain('Spent')
+    expect(labels[0]).toBe('Tennis & trips')
     // ⭐ RE-AIMED 06.10 BY HIS ROUND 47 #5 («best rank, titles and seasons are better in one row»): the three
     // counting rows are ONE row now, in the order he named them. ⚠⚠ THE ARM. Swap two of them back in the
     // template and this goes red: measured 06.10, RED [1 test, 1 assertion].
