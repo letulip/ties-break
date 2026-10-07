@@ -570,8 +570,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
                three capital cards that used to stand here left with the career this file no longer
                creates; the script block above says why the route retired the question rather than an
                agent retiring the words, and the strings table's §8 carries the removal for his pass.
-               `Raise another` is his label and is untouched. -->
-          <PrimaryPill v-else variant="cta" :disabled="game.busy" @click="raiseAnother">
+               `Raise another` is his label and is untouched.
+               ⭐⭐ 08.10 – THE ACCENT LEFT THIS PILL: «наверное эту кнопку надо желтой сделать, а не
+               соседнюю, которая про новый старт» – the yellow belongs to the door that CONTINUES her
+               line, not to the unrelated fresh start, so this one is `ghost` now and the dynasty door
+               below carries `cta`. The college branch above keeps its `cta`: it stands alone there and
+               is the way forward. `ending-door-start` is a TEST HOOK, not a style. -->
+          <PrimaryPill v-else class="ending-door-start" variant="ghost" :disabled="game.busy" @click="raiseAnother">
             Raise another
           </PrimaryPill>
 
@@ -586,7 +591,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           <PrimaryPill
             v-if="resumes === null && dynasty"
             class="ending-line"
-            variant="ghost"
+            variant="cta"
             :disabled="game.busy"
             @click="continueLine"
           >
