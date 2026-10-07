@@ -31,7 +31,7 @@ batch must verify its candidates against runtime code and mounted surfaces.
 | RU-13 | PWA metadata, privacy/about text, dates, numbers, country and name display | `index.html`, `public/**`, `MoreScreen.vue`, shared formatters and data tables | `ru-saves-settings-2026-10.md`; `ru-play-about-settings-2026-10.md`; `ru-privacy-pwa-2026-10.md`; `ru-formatters-countries-2026-10.md` | More/Saves/Play/About, linked policy, metadata and current formatter/country labels drafted; implementation/LQA remain |
 | RU-14 | Cross-screen consistency and final LQA | Russian runtime build, screenshots and complete career probes | `ru-lqa-handoff-2026-10.md` | editorial corrections and acceptance matrix drafted; runtime LQA cannot run before technical localization lands |
 | RU-15 | New feedback, staff raise, season-money and post-cut UI | `src/feedback.ts`, `FeedbackDialog.vue`, `OfferLetter.vue`, `SeasonSummaryDialog.vue`, `EndingScreen.vue`, `AlbumScreen.vue`, `identityCopy.ts` | `ru-current-main-delta-2026-10.md` | source delta drafted; phone LQA remains |
-| RU-16 | Three rare album occasions added after the cut | `world/albumCorpus.ts`, `world/albumBook.ts` | `ru-album-delta-2026-10.md` | all 36 strings drafted; original corpus gender audit remains |
+| RU-16 | Three rare album occasions added after the cut | `world/albumCorpus.ts`, `world/albumBook.ts` | `ru-album-delta-2026-10.md` | all 36 strings drafted; the corpus gender pass is done 07.10 (RU-19) |
 | RU-17 | Expanded spouse pool, relationship status and big life moments | `world/lifeBeat/spouseViewCopy.ts`, `weddingCopy.ts`, `kidLife.ts`, `lifeMomentCopy.ts` | `ru-life-delta-2026-10.md` | source delta drafted; compact duration needs phone LQA |
 
 ## 2. What counts as a player-facing source

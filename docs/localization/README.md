@@ -36,7 +36,7 @@ last-reviewed: 2026-10-07
 | [Batch 05 – Profile, coaching and injuries](ru-profile-coaching-2026-10.md) | Daughter profile, life stages, skills radar, coach market, week planning, knocks and injury stops | drafted |
 | [Batch 06 – Money, staff, shop and inbox](ru-money-staff-shop-inbox-2026-10.md) | Family budget, kit, staff, shop, sponsorship, academy and correspondence | drafted end to end |
 | [Batch 07 – Rankings, trophies and album](ru-stats-trophies-album-2026-10.md) | Ranking tables, season statistics, trophy cabinet and the career album interface | drafted end to end |
-| [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 35 baseline source IDs and four daughter voices | drafted; gender-language audit remains |
+| [Batch 07A – Album corpus](ru-album-corpus-2026-10.md) | The parent's album handwriting across 35 baseline source IDs and four daughter voices | drafted; gender-language pass done 07.10 ([RU-19](ru-family-voice-pass-2026-10.md)) |
 | [Batch 08 – Match viewer and commentary](ru-match-viewer-commentary-2026-10.md) | Live/replay controls, court readouts, preview booth and deterministic commentary | drafted end to end |
 | [Batch 09 – Diary and birthdays](ru-diary-birthday-2026-10.md) | Diary chrome and memories, birthday headings, travel and weekly observations | shared frame and all four linked corpora drafted end to end |
 | [Batch 09A – Birthday corpus](ru-birthday-corpus-2026-10.md) | Every gift label, clue, note, repeat, history noun and event line | drafted end to end |

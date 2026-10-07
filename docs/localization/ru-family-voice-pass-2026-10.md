@@ -124,18 +124,18 @@ Aliases used in the tables of §3–§5:
 
 Kind C rows and the G rows they sit beside: row 5 beside 6; row 9 beside 8; row 13 beside 12; row 31 beside 30.
 
-## 4. The remainder: ungendered singular parent cells – NOT converted, the owner's call
+## 4. The ungendered singular parent cells – ⚙ APPLIED the same day, same formula
 
 His order asks for the family voice «везде», and one of his own examples, `мы гордимся`, is ungendered: the
-singular it replaces, `Горжусь тобой.`, needs no gender at all (fridge notes, two rows ★ below). This pass was scoped
-to cells that carry a gendered parent form, so these 40 cells were left exactly as drafted and are listed instead,
-each with the form the same formula gives. Today these sheets mix persons: the album already writes `Мы её
-отговорили.` for a family act and `Мне пришлось этому научиться.` for a private one.
+singular it replaces, `Горжусь тобой.`, needs no gender at all (fridge notes, two rows ★ below). The first pass
+was scoped to cells carrying a gendered parent form and LISTED these 40 with the form the formula gives;
+⚙ THE ARCHITECT APPLIED ALL 40 THE SAME DAY by exact match (longest-first per file, each old string asserted to
+occur exactly once) – the order's «надо всё везде проверить и переписать» plus his own ungendered example cover
+them, and leaving them singular would have split one album's voice between persons. Total converted by this pass:
+**71** (27 gendered + 4 coherence + these 40). Every line stays `DRAFT` for his read; the `old` column below is
+the retired wording, kept as the record.
 
-If he wants the whole voice flipped, these rows are the whole job: apply each `proposed` by exact match, no other
-file is affected. If he wants them kept, nothing needs to happen. Either way they stay `DRAFT`.
-
-| # | file | row | old (unchanged) | proposed (not applied) |
+| # | file | row | old (retired) | applied |
 | --- | --- | --- | --- | --- |
 | 1 | album-corpus | A3 `first-win` · `sunny` · note | `Ты выиграла матч. И рассказала мне про один розыгрыш, а не про счёт.` | `Ты выиграла матч. И рассказала нам про один розыгрыш, а не про счёт.` |
 | 2 | album-corpus | A3 `first-win` · `deep` · line | `Хорошее она складывает куда-то, где мне не видно.` | `Хорошее она складывает куда-то, где нам не видно.` |

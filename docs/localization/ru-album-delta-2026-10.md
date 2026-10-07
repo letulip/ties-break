@@ -21,7 +21,7 @@ last-reviewed: 2026-10-06
 
 | Голос / регистр | Английский источник | Русский черновик |
 | --- | --- | --- |
-| sunny / note | `Number one in the world. You rang to read me the list down the phone, and then you read it again to be sure.` | `Первая ракетка мира. Ты позвонила прочитать мне рейтинг – и потом прочитала ещё раз, на всякий случай.` |
+| sunny / note | `Number one in the world. You rang to read me the list down the phone, and then you read it again to be sure.` | `Первая ракетка мира. Ты позвонила прочитать нам рейтинг – и потом прочитала ещё раз, на всякий случай.` |
 | sunny / caption | `She read us the list, and then read it again.` | `Она прочитала нам рейтинг – и прочитала снова.` |
 | sunny / line | `Top of the list, and she still checked.` | `Первая в списке, а всё равно проверила.` |
 | fiery / note | `Number one in the world. You said you had never doubted it, and dared me to say that I had.` | `Первая ракетка мира. Ты сказала, что никогда в этом не сомневалась, и тут же спросила, кто из нас с тобой поспорит.` |
@@ -30,7 +30,7 @@ last-reviewed: 2026-10-06
 | deep / note | `Number one in the world. You said you kept waiting to feel different, and that you mostly felt the same.` | `Первая ракетка мира. Ты всё ждала, когда почувствуешь себя иначе. А чувствуешь почти то же.` |
 | deep / caption | `She waited to feel different.` | `Она ждала, что внутри что-то изменится.` |
 | deep / line | `Mostly the same, she said.` | `«Почти всё по-прежнему», – сказала она.` |
-| quiet / note | `Number one in the world. You mentioned it after the practical things, and only because I asked.` | `Первая ракетка мира. Ты упомянула об этом после всех бытовых дел. И только после моего вопроса.` |
+| quiet / note | `Number one in the world. You mentioned it after the practical things, and only because I asked.` | `Первая ракетка мира. Ты упомянула об этом после всех бытовых дел. И только после нашего вопроса.` |
 | quiet / caption | `She mentioned it last, and only when asked.` | `Сказала в самом конце – когда спросили.` |
 | quiet / line | `After the practical things.` | `После всех насущных дел.` |
 

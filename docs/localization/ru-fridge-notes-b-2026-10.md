@@ -21,7 +21,7 @@ last-reviewed: 2026-10-06
 | `Your post is here. Say when.` | `Твоё письмо здесь. Скажи, когда передать.` |
 | `The dentist sent forms. I filled in most of it.` | `Из клиники прислали анкеты. Почти всё уже заполнено.` |
 | `Spare key is still under the mat.` | `Запасной ключ всё ещё под ковриком.` |
-| `Grandma asks for your address. I said I would check.` | `Бабушка просит твой адрес. Сначала спрошу у тебя.` |
+| `Grandma asks for your address. I said I would check.` | `Бабушка просит твой адрес. Сначала спросим у тебя.` |
 | `The boiler man came. Your old room is fine.` | `С отоплением разобрались. В твоей бывшей комнате всё в порядке.` |
 | `Sunday lunch stands, if ever.` | `Воскресный обед никуда не делся. Если захочешь.` |
 | `Half the photos here are yours. Say which half.` | `Половина фотографий здесь твои. Скажи, какие забрать.` |
@@ -37,7 +37,7 @@ last-reviewed: 2026-10-06
 | --- | --- |
 | `Still the same address, if needed.` | `Адрес всё тот же. Если понадобится.` |
 | `The last two went unanswered. This is a third.` | `На два прошлых сообщения ответа не было. Вот третье.` |
-| `No reply needed. Just checking the line works.` | `Отвечать не нужно. Просто проверяю, доходит ли.` |
+| `No reply needed. Just checking the line works.` | `Отвечать не нужно. Просто проверяем, доходит ли.` |
 | `Draft, never sent: come home for a weekend.` | `Черновик, не отправлено: приезжай на выходные.` |
 | `Your grandmother turned eighty. She asked.` | `Бабушке исполнилось восемьдесят. Она спрашивала о тебе.` |
 | `The house key still fits. Checked it myself.` | `Ключ от дома всё ещё подходит. Проверено лично.` |
@@ -88,7 +88,7 @@ last-reviewed: 2026-10-06
 | `Whatever happens, send a sign of life.` | `Как бы ни сыграла, дай знать, что ты на связи.` |
 | `We are all thinking of you. No reply required.` | `Мы все думаем о тебе. Отвечать не обязательно.` |
 | `Play, eat, sleep. Call when the order changes.` | `Играй, ешь, спи. Позвони, когда порядок собьётся.` |
-| `The family chat has started. You have been warned.` | `Семейный чат уже оживился. Предупреждаю.` |
+| `The family chat has started. You have been warned.` | `Семейный чат уже оживился. Предупреждаем.` |
 | `Home when you can. Dinner when you get here.` | `Приезжай, когда сможешь. Ужин будет.` |
 
 `Hotel` в английском источнике – конкретная дверь, но не каждая оплаченная поездка

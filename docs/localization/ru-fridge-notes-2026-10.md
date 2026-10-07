@@ -29,18 +29,18 @@ last-reviewed: 2026-10-06
 | `Remember to pack the rain jacket.` | `Не забудь дождевик.` |
 | `Water the plants. They are drooping again.` | `Полей цветы. Опять повесили головы.` |
 | `Milk, bread, eggs – if you pass the shop.` | `Если будешь у магазина: молоко, хлеб, яйца.` |
-| `Back late tonight. Dinner is in the oven.` | `Вернусь поздно. Ужин в духовке.` |
+| `Back late tonight. Dinner is in the oven.` | `Вернёмся поздно. Ужин в духовке.` |
 | `Grandma called. Ring her back when you can.` | `Бабушка звонила. Перезвони ей, когда сможешь.` |
 | `Your washing is dry. It is on your bed.` | `Твои вещи высохли. Лежат на кровати.` |
 | `The dishwasher is clean. Please empty it.` | `Посудомойка закончила. Разгрузи, пожалуйста.` |
-| `Do not forget your keys again.` | `Ключи. Да, опять напоминаю.` |
+| `Do not forget your keys again.` | `Ключи. Да, опять напоминаем.` |
 | `Lock the door if you go out.` | `Уходя, закрой дверь на ключ.` |
 | `Left the umbrella by the door for you.` | `Зонт для тебя у двери.` |
 | `Apples in the bowl. Eat one.` | `Яблоки в миске. Хоть одно съешь.` |
 | `Please tidy your room today.` | `Прибери сегодня у себя, пожалуйста.` |
 | `Your bag is by the stairs.` | `Твоя сумка у лестницы.` |
 | `Charge your phone. It was on two percent again.` | `Заряди телефон. Там опять было два процента.` |
-| `Love you. Have a good day.` | `Люблю тебя. Хорошего дня.` |
+| `Love you. Have a good day.` | `Любим тебя. Хорошего дня.` |
 | `Text me when you get home.` | `Напиши, когда доберёшься домой.` |
 | `Sandwiches are in the blue box.` | `Бутерброды в синем контейнере.` |
 | `Do not touch the cake. It is for Sunday.` | `Торт не трогай – он на воскресенье.` |
@@ -54,8 +54,8 @@ last-reviewed: 2026-10-06
 | `Wear something warm. It is colder than it looks.` | `Оденься теплее. На улице холоднее, чем кажется.` |
 | `Your lunch is on the middle shelf.` | `Твой обед на средней полке.` |
 | `Socks belong in the basket, not the hallway.` | `Носки – в корзину, не в коридор.` |
-| `Home around six. Help yourself to anything.` | `Буду дома около шести. Пока бери что хочешь.` |
-| `Bed before eleven, please. Both of us.` | `Давай сегодня до одиннадцати уже спать. Это и меня касается.` |
+| `Home around six. Help yourself to anything.` | `Будем дома около шести. Пока бери что хочешь.` |
+| `Bed before eleven, please. Both of us.` | `Давай сегодня до одиннадцати уже спать. Это и нас касается.` |
 | `Plate in the sink, not on the table.` | `Тарелку – в раковину, не на стол.` |
 | `I moved your shoes to the cupboard.` | `Твоя обувь теперь в шкафу.` |
 | `Post came for you. It is on the table.` | `Тебе пришло письмо. Лежит на столе.` |
@@ -67,11 +67,11 @@ last-reviewed: 2026-10-06
 | `Please answer the phone if it rings.` | `Если телефон зазвонит, возьми трубку, пожалуйста.` |
 | `Left the spare key under the mat. Again.` | `Запасной ключ снова под ковриком.` |
 | `The tap in the bathroom drips. Turn it hard.` | `Кран в ванной капает. Закручивай посильнее.` |
-| `Biscuits are gone. Do not blame me.` | `Печенье кончилось. Только не вини меня.` |
+| `Biscuits are gone. Do not blame me.` | `Печенье кончилось. Только не вини нас.` |
 | `Bring the washing basket down when you come.` | `Когда спустишься, захвати корзину для белья.` |
 | `Do the shopping list on the pad, not on your hand.` | `Список покупок пиши в блокноте, не на ладони.` |
-| `Sorry about this morning. Tea when I am back.` | `Прости за утро. Вернусь – попьём чаю.` |
-| `Proud of you. Just so you know.` | `Горжусь тобой. Просто чтобы ты знала.` |
+| `Sorry about this morning. Tea when I am back.` | `Прости за утро. Вернёмся – попьём чаю.` |
+| `Proud of you. Just so you know.` | `Гордимся тобой. Просто чтобы ты знала.` |
 | `Feed the sourdough or it will sulk.` | `Подкорми закваску, а то обидится.` |
 | `Dentist appointment on the calendar. Do not forget.` | `Запись к стоматологу есть в календаре. Не забудь.` |
 
@@ -84,24 +84,24 @@ last-reviewed: 2026-10-06
 | --- | --- |
 | `Call when you have a minute. No emergency, for once.` | `Позвони, когда будет минутка. На этот раз ничего срочного.` |
 | `Your post came here again. I did not open it.` | `Тебе опять пришло письмо сюда. Оно закрыто, честно.` |
-| `Dinner Sunday? This is me booking early.` | `Поужинаем в воскресенье? Зову заранее.` |
+| `Dinner Sunday? This is me booking early.` | `Поужинаем в воскресенье? Зовём заранее.` |
 | `The spare key is still where you left it.` | `Запасной ключ всё там же, где ты его оставила.` |
 | `Grandma says you never ring. She told me by ringing.` | `Бабушка говорит, ты ей не звонишь. Сама позвонила сообщить.` |
 | `Soup here if you are passing. No questions asked.` | `Будешь рядом – заходи за супом. Без расспросов.` |
 | `You left a charger here. Of course you did.` | `Ты оставила зарядку. Конечно, оставила.` |
 | `Come over when you can. Bring nothing.` | `Заезжай, когда сможешь. Ничего не привози.` |
-| `You called while I was out. Call again; I liked it.` | `Ты звонила, когда меня не было. Позвони ещё – мне понравилось.` |
+| `You called while I was out. Call again; I liked it.` | `Ты звонила, когда нас не было. Позвони ещё – нам понравилось.` |
 | `The family chat needs a reply, even one full stop.` | `Ответь в семейном чате. Хоть точку поставь.` |
 | `We are home Sunday. The kettle will be on.` | `В воскресенье мы дома. Чайник поставим.` |
 | `No advice today. Just eat something.` | `Сегодня без советов. Только поешь что-нибудь.` |
-| `Proud of you. Not because of anything in particular.` | `Горжусь тобой. Не за что-то конкретное.` |
-| `Parcel here for you. It can wait. I apparently cannot.` | `Тебе посылка сюда пришла. Она подождёт. Я, похоже, нет.` |
-| `Saw your message. I was asleep at nine. Roles reversed.` | `Твоё сообщение пришло в девять, а я уже спать. Теперь всё наоборот.` |
+| `Proud of you. Not because of anything in particular.` | `Гордимся тобой. Не за что-то конкретное.` |
+| `Parcel here for you. It can wait. I apparently cannot.` | `Тебе посылка сюда пришла. Она подождёт. Мы, похоже, нет.` |
+| `Saw your message. I was asleep at nine. Roles reversed.` | `Твоё сообщение пришло в девять, а мы уже спать. Теперь всё наоборот.` |
 | `Your keys are not here. I checked before you asked.` | `Твоих ключей здесь нет. Уже проверено – до твоего вопроса.` |
 | `Sunday lunch still counts if you arrive at three.` | `Воскресный обед считается и в три часа.` |
-| `The hall is quieter. I am not saying that is better.` | `В прихожей стало тише. Не говорю, что лучше.` |
+| `The hall is quieter. I am not saying that is better.` | `В прихожей стало тише. Не говорим, что лучше.` |
 | `Blue mug found. You did not take everything after all.` | `Синяя кружка нашлась. Значит, не всё ты забрала.` |
-| `Text when you get in. Yes, I know you are grown.` | `Напиши, когда доберёшься. Да, знаю, что ты уже взрослая.` |
+| `Text when you get in. Yes, I know you are grown.` | `Напиши, когда доберёшься. Да, знаем, что ты уже взрослая.` |
 | `I put the old photos in a box. Come and veto it.` | `Старые фотографии теперь в коробке. Приезжай и разбирай.` |
 | `The plant you left us is doing suspiciously well.` | `Цветок, который ты нам оставила, подозрительно хорошо себя чувствует.` |
 | `Nothing urgent. I just wanted to hear your voice.` | `Ничего срочного. Просто хотелось услышать твой голос.` |
