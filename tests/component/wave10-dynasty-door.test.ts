@@ -27,7 +27,7 @@
 //   · the `v-if`'s `resumes === null` dropped: **1 red** – the college case; an ending that can
 //     still be resumed must not offer a line beside its own way forward.
 //
-// ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 (docs/rounds/round-48.md): the epilogue label is 'A child came later' (his own ruling,
+// ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 (docs/rounds/round-48.md): the epilogue label is 'Dynasty' (⚠ 08.10 second ruling; before it, briefly, 'A child came later' –
 // «child is better»), and the two doors stand in ONE ROW (`.ending-doors`) – so the stacking assertion in the round-20 case
 // below became «one shared bottom» plus «the row sits above the record link», and the arm recorded above for the stacking line
 // is the one that now reddens the second. Each moved line says so beside it. The row's own claims (flex row, equal halves, the
@@ -122,7 +122,7 @@ describe('wave 10 T4 – the door never closes', () => {
     // (docs/decisions.md, 07.10), so the epilogue label is 'A child came later'. Only this variant moved; the lived one below
     // is still 'Raise her daughter'. This is a pin that asserts what the string IS, so it moved with it – the dated note is
     // what makes that accountable.
-    expect(line.text()).toBe('A child came later')
+    expect(line.text()).toBe('Dynasty')
     // ...beside «Raise another», never instead of it: two different things.
     expect(w.text()).toContain('Raise another')
     w.unmount()

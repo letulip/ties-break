@@ -42,7 +42,7 @@ compiles nowhere.
 | resume college fallback | `Another year –` | `Ещё один год –` |
 | new unrelated childhood | `Raise another` | `Новая история` · `APPROVED` 07.10 (his own wording, spec §9.9a) |
 | dynasty, daughter lived during tour | `Raise her daughter` | `Вырастить её дочь` |
-| dynasty, child born after career | `A child came later` | `Ребёнок позже` · `DRAFT` 08.10, HIS OWN with a stated reservation («вообще не нравится как звучит, но „Продолжить династию“ очень длинно»); cross-language one-word alternatives offered for his pick – `Dynasty`/`Династия` (the mechanic's own name) or `Legacy`/`Наследие` (the engine's own term) – either would change the ENGLISH label too, his call |
+| dynasty, child born after career | `Dynasty` | `Династия` · `APPROVED` 08.10 («Династия берём, меняй обе стороны» – the cross-language one-word pick; it superseded his «Ребёнок позже» of the same morning, offered with a stated reservation) |
 
 `Новая история` is the owner's own wording (ruled 07.10, spec §9.9a, in place of both drafted
 options – the retired pair is quoted in RU-18). It names a **new, unrelated** career routed to the
@@ -51,7 +51,7 @@ adjacent dynasty actions must stay distinguishable from it. The dynasty variants
 available on a final ending, regardless of whether a child was born during the played career;
 availability does not encode parental merit.
 
-`A child came later` is gender-neutral by the owner's own word (round 48 #6: «child» is better;
+`Dynasty` is the owner's 08.10 cross-language pick (one word, identical in both languages, the mechanic's own name; before it round 48 #6 had the gender-neutral «A child came later» –
 `Raise her daughter` is unchanged and still says «daughter»), so a Russian line that names a
 daughter does not translate it. Nothing on the page names or ages the child.
 

@@ -86,7 +86,8 @@ test('the line continues: the door, the locked name, and a career that carries i
   // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 – EXACTLY THE MOVE THIS COMMENT PREDICTED: «A daughter came later» became «A child
   // came later», his own ruling («child is better», docs/decisions.md 07.10). The same round put this door and «Raise another»
   // in ONE ROW (`.ending-doors`); a locator by class or by role is unaffected by that, which is why only the literal moved.
-  await expect(line).toHaveText('A child came later')
+  // ⚠ 08.10: the label became his cross-language «Dynasty» (decisions.md)
+  await expect(line).toHaveText('Dynasty')
   await expect(epilogue.getByRole('button', { name: 'Raise another' }), 'beside it, never instead of it')
     .toHaveCount(1)
 

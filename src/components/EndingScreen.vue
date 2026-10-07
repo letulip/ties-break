@@ -240,7 +240,9 @@ const DYNASTY_LIVED = 'Raise her daughter'
  *  round ledger and in docs/decisions.md under 07.10 – a `.vue` file carries no Cyrillic, comments included), so the
  *  spelling is his and this is no longer a draft. ⚠ ONLY THIS LABEL MOVED: the lived variant above still says
  *  «daughter», and nothing on this page names or ages her. */
-const DYNASTY_AFTER = 'A child came later'
+// ⭐⭐ 08.10 SECOND RULING ON THIS LABEL, same morning («Династия берём, меняй обе стороны»): his
+// «Ребёнок позже» stood one message with a stated dislike; the cross-language one-word option won.
+const DYNASTY_AFTER = 'Dynasty'
 
 const continueLabel = computed(() => (dynasty.value?.raisedOnTour ? DYNASTY_LIVED : DYNASTY_AFTER))
 
@@ -560,7 +562,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              a snapshot that carries no dynasty block): the equal halves are declared for the PAIR only
              (`.ending-doors > .tb-pill:not(:only-child)` below), so a lone pill keeps the width its label gives it,
              which is the page it was before. ⚠ ONE WORDING MOVED HERE AND HE ASKED FOR IT: the line door's epilogue
-             label is «A child came later» (the script block above carries the ruling). Everything else is a box. -->
+             label is «Dynasty» (the script block above carries both rulings). Everything else is a box. -->
         <div class="ending-doors">
           <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
             Another year –

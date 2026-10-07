@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 163 dated entries, newest 2026-10-08. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 164 dated entries, newest 2026-10-08. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 32 | [THE TWO RENAMED-LABEL ROWS RULED, AND THE YELLOW MOVES TO THE LINE DOOR](#08102026--the-two-renamed-label-rows-ruled-and-the-yellow-moves-to-the-line-door) | 2026-10-08 |
+| general | 33 | [«ДИНАСТИЯ» БЕРЁМ: THE DOOR IS ONE WORD IN BOTH LANGUAGES](#08102026--династия-берём-the-door-is-one-word-in-both-languages) | 2026-10-08 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -6016,3 +6016,11 @@ term; either would change the ENGLISH label too). **And the accent swaps doors**
 кнопку надо желтой сделать, а не соседнюю, которая про новый старт» – the dynasty/line pill
 carries `cta` now, «Raise another» goes `ghost`; the college ending's lone «Another year –» keeps
 its `cta` as the only way forward there. Mutation-pinned in wave10-dynasty-door.
+
+## 08.10.2026 – «ДИНАСТИЯ» БЕРЁМ: THE DOOR IS ONE WORD IN BOTH LANGUAGES
+
+«Династия берём, меняй обе стороны и мержу здесь же» – the cross-language option won within the
+hour: `DYNASTY_AFTER` = `Dynasty`, the RU row = «Династия», both `APPROVED`; «Ребёнок позже»
+lived one message and is recorded in RU-18 as the superseded draft. Wired in the same intake
+branch: the code literal, the e2e click, four component pins re-aimed with the dated note, the
+wave-10 strings table's D2 row, RU-12A, README and the records.

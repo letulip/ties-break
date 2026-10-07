@@ -98,9 +98,9 @@ band 3+).
 
 Two English labels were renamed by the owner himself, so the old Russian no longer translates them.
 Neither row received an invented replacement; he answered the next day: `Tennis & trips` =
-`Теннис и поездки` (`APPROVED`), `A child came later` = `Ребёнок позже` – his own, with a stated
-reservation, one-word cross-language alternatives (`Dynasty`/`Династия`, `Legacy`/`Наследие`)
-offered for his pick. The same message moved the YELLOW to the line door (EndingScreen.vue,
+`Теннис и поездки` (`APPROVED`), `A child came later` briefly became his «Ребёнок позже» (stated reservation) and within the hour
+the cross-language pick won: **`Dynasty` / «Династия»**, both sides, `APPROVED` («Династия берём,
+меняй обе стороны»). The same message moved the YELLOW to the line door (EndingScreen.vue,
 mutation-pinned in wave10-dynasty-door).
 
 | id | English now | what the label names, and what the draft must respect | retired draft (history only) |
