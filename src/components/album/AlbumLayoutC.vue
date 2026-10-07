@@ -25,6 +25,8 @@ const props = defineProps<{ sheet: AlbumSheetModel }>()
 // `albumPlacement.ts`): the drawing's own numbers live in its table and a note or a line that would sit
 // on a photograph's caption is moved off it. This file binds the answer and owns no coordinate of them.
 const placed = computed(() => placeSheet(props.sheet))
+
+const tagStyle = computed(() => (placed.value.tagScale < 1 ? { transform: `scale(${placed.value.tagScale})`, transformOrigin: '50% 0' } : undefined))
 </script>
 
 <template>
@@ -46,7 +48,9 @@ const placed = computed(() => placeSheet(props.sheet))
       :photo-height="placed.photos[0].photoH"
     />
 
-    <AlbumTagCard v-if="sheet.tag" class="album-c-tag" :tag="sheet.tag" />
+    <!-- ⭐ ROUND 48 #1b – a tag the book's TAIL hung is drawn only where the column is clear, at the rung the resolver found (`placed.tagDrawn`, `placed.tagScale`);
+         a tag of the sheet's own is always drawn at its own size. It hangs from its string, so the rung shrinks it about the top edge's middle. -->
+    <AlbumTagCard v-if="sheet.tag && placed.tagDrawn" class="album-c-tag" :style="tagStyle" :tag="sheet.tag" />
 
     <!-- ⭐ ROUND 47 #14 – a tagless sheet's column is empty; the resolver hangs a small snapshot in it when there is room (`placeFiller`). -->
     <AlbumFillerPhoto

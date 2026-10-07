@@ -93,6 +93,13 @@ export interface AlbumTicket {
   row: string
   /** Bar widths in px, seed-derived. The barcode is drawn from this and nothing else. */
   bars: readonly number[]
+  /** ⭐ ROUND 48 #1c – THE SLAM'S OWN PAINT (owner, 07.10: «на предпоследней зеленый билет на Шлем внизу»). Set, to `'slam'`, ONLY on the ticket the book's tail
+   *  hangs for a Grand Slam the career really reached (`albumBook.ts`, `hangTail`); every other ticket leaves it out and wears its `step`'s ink. A NAME and not a
+   *  colour, the same rule as `step`: the engine says WHICH paint, `AlbumTicketPass.vue` owns the green. Optional and wire-only – nothing persisted. */
+  paint?: 'slam'
+  /** ⭐ ROUND 48 #1c – HUNG BY THE BOOK'S TAIL (`albumBook.ts`, `hangTail`) rather than earned by the sheet's own tournament. Such a pass is drawn only where the resolver
+   *  finds the gap clear of the note and the loose line (`placeSheet` – a sheet with no room goes without it); a pass of the sheet's own is always drawn. Optional, wire-only. */
+  tail?: true
 }
 
 /** The tall baggage tag of layout C, on its drawn string. Same rule about names as the ticket. */
@@ -103,6 +110,10 @@ export interface AlbumTag {
   step: AlbumTierStep
   place: string
   ageLabel: string
+  /** ⭐ ROUND 48 #1b – HUNG BY THE BOOK'S TAIL (`albumBook.ts`, `hangTail`) rather than earned by the sheet's own tournament. Such a tag is drawn only where the resolver
+   *  finds the column clear – at its own size, or a rung smaller (`placeSheet`'s `tagScale`) – and a sheet with no room goes without it; a tag of the sheet's own is
+   *  always drawn. Optional, wire-only. */
+  tail?: true
 }
 
 /** ⭐ ROUND 47 #16 – THE CLUB PATCH GOES THE TICKET'S WAY: a fictional club name that VARIES from chapter to
@@ -122,6 +133,11 @@ export interface AlbumClubPatch {
  *  sheet is a candidate; WHETHER THE GAP HAS ROOM is the placement resolver's (`placeFiller`), so a sheet can carry one and show none. */
 export interface AlbumFiller {
   art: string
+  /** ⭐ ROUND 48 #1a – A SECOND SMALL SNAPSHOT BESIDE THE FIRST (owner, 07.10: «для горизонтальных пустых мест можно еще фото добавить … второе рядом»). Carried only
+   *  by a layout whose gap is a WIDE strip (layout B's – 400px, wide enough for two), and a DIFFERENT picture of the SAME pool as `art`: the next one on the
+   *  career's walk (`takeFiller`), so nothing is rolled. Base-relative like `art`. ⚠ Whether the strip has room for TWO is the resolver's (`placeFiller`) –
+   *  a sheet can carry a pair and show one. Optional and wire-only. */
+  pair?: string
 }
 
 /** One sheet – the unit of paging, and the unit the pager counts. */
@@ -143,7 +159,8 @@ export interface AlbumSheetModel {
    *  (round 47 #16, the pass's own ramp). */
   patch: AlbumClubPatch | null
   /** The small snapshot for the gap a ticketless or tagless sheet leaves (round 47 #14), or null. Never set on a sheet that carries a ticket,
-   *  a tag or a patch. */
+   *  a tag or a patch of its OWN – ⭐ ROUND 48: except that a sheet the book's tail hung a `tail` ticket or tag on keeps its snapshot too, and the resolver draws
+   *  whichever the gap can hold (the hung object first; `placeSheet`). */
   filler: AlbumFiller | null
   doodles: readonly AlbumDoodle[]
 }

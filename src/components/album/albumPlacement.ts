@@ -51,6 +51,14 @@
 // frame and only there, AFTER the note, the line and the photographs are settled and WITHOUT moving any of them: it takes the first of a short list of
 // spots that touches nothing, and a sheet with no such spot goes without. That is the whole of the guard – no window shrinks and no note moves because a
 // snapshot was asked for, so no count in round 45's sweep can change.
+//
+// ⭐⭐ ROUND 48 B3 – THREE THINGS MORE IN THIS FILE (owner, 07.10 – docs/rounds/round-48.md, items 1 and 2), and none of them moves a photograph window:
+//   #2  `HEAD_AIR` – the LOOSE LINE keeps 24px to the right of the heading's box. On his save it sat 10px from the last letter of «The tour», in the heading's own band, and
+//       read as one run of handwriting; a box that merely does not touch is clear to this resolver and is not clear to a reader.
+//   #1a `placeFiller`'s SECOND PASS – layout B's strip is 400px wide, so a snapshot that carries a `pair` hangs the second one beside the first, leaning the other way.
+//   #1b/#1c `placeSheet`'s TAIL GATE – a tag or pass the book's tail hung (`tail: true`, `albumBook.ts`'s `hangTail`) is an ask, not a fact of the sheet: it is drawn only where the
+//       note and the loose line leave its frame clear, the tag trying a rung smaller first (`TAIL_TAG_RUNGS`), and a page with no room goes without it – exactly the placement it had.
+// A 335-sheet sweep holds the guard: windows are at a shrunk rung on A 0 / B 22 / C 29 sheets before and after (`tests/r48-b3-album-tail.test.ts`; B's ceiling of 22 is untouched).
 import { SHEET_PX } from '../../shared/protocol'
 import type { AlbumFrame, AlbumLayout, AlbumNote, AlbumSheetModel } from '../../shared/protocol'
 
@@ -84,10 +92,15 @@ export interface SheetPlacement {
   clear: boolean
   /** ⭐ ROUND 47 #14 – the small snapshot hung in the gap the ticket or the tag would have filled, or null (`placeFiller`). */
   filler: FillerPlacement | null
+  /** ⭐ ROUND 48 #1b / #1c – WHETHER THE SHEET'S TAG / TICKET IS DRAWN. Always, for one of the sheet's own; for one the book's tail HUNG (`tail`) only where the gap is
+   *  clear of the note and the loose line – a page with no room goes without it and its snapshot (if any) takes the gap. `tagScale` is the rung the tag hangs at. */
+  tagDrawn: boolean
+  ticketDrawn: boolean
+  tagScale: number
 }
 
 /** What the resolver settles BEFORE the snapshot is asked for – the snapshot never moves any of it. */
-type PlacedCore = Omit<SheetPlacement, 'filler'>
+type PlacedCore = Omit<SheetPlacement, 'filler' | 'tagDrawn' | 'ticketDrawn' | 'tagScale'>
 
 /** ⭐ ROUND 47 #14 – WHERE A SMALL SNAPSHOT MAY HANG: its card (`w` wide, a `photoH` window, leaning `tilt` degrees) and the spots to try, first free one
  *  wins. `home` is the index in `fixed` of the object whose frame it hangs in (B's pass, C's tag) – every OTHER piece of furniture is an obstacle. Every
@@ -98,6 +111,9 @@ export interface FillerDef {
   tilt: number
   home: number
   spots: readonly { x: number; y: number }[]
+  /** ⭐ ROUND 48 #1a – the gap is a WIDE strip: a sheet whose snapshot carries a `pair` may hang the second one beside the first, leaning the other way
+   *  (`-tilt`), at the first of the same `spots` that touches neither the first nor anything else. Layout B's strip is 400px; C's column is 110 and has none. */
+  pair?: boolean
 }
 
 /** A placed snapshot: the card as the page draws it, and `box` – the card with the swing of its lean, which is what the obstacles and the sweep are
@@ -109,6 +125,8 @@ export interface FillerPlacement {
   photoH: number
   tilt: number
   box: Box
+  /** ⭐ ROUND 48 #1a – the second snapshot beside this one, placed only where the strip really had room for two (`FillerDef.pair`); absent otherwise. */
+  pair?: FillerPlacement
 }
 
 /** Average advance of the app's handwriting face, in em. ⚠ MEASURED, NOT CHOSEN: the six real sheets
@@ -178,6 +196,9 @@ export interface Tuning {
   protectHero: boolean
   /** A layout's note slot, replaced – the page never sets it; the sweep runs B6's old C slot beside today's. */
   slots?: Partial<Record<AlbumLayout, NoteSlot>>
+  /** ⭐ ROUND 48 #2 – the air the LOOSE LINE keeps to the right of the heading's box (`HEAD_AIR`; absent = that). `0` is the geometry before round 48: the sweep runs it
+   *  beside today's so the «before» is measured live and cannot go idle. */
+  headAir?: number
 }
 export const TUNING: Tuning = { steps: NOTE_STEPS, shrinkCost: 40, widenCost: 20, coverCost: 0.02, stepCost: 30, borderCost: 150, protectHero: true }
 
@@ -266,6 +287,9 @@ interface LayoutDef {
   hero?: number
   /** ⭐ ROUND 47 #14 – where a small snapshot may hang when the object that lives in this layout's gap is not drawn (`placeFiller`). */
   filler?: FillerDef
+  /** ⭐ ROUND 48 #2 – the index in `fixed` of the chapter heading, for the layouts that draw one (A and C – B opens nothing): the box whose right-hand side the loose
+   *  line keeps `HEAD_AIR` clear of. */
+  head?: number
   fixed(sheet: AlbumSheetModel): Box[]
 }
 
@@ -276,6 +300,19 @@ interface LayoutDef {
  *  names against Chromium's own widths. */
 export const HEAD_H = 83
 const HEAD_CHAR = 14.7
+
+/** ⭐⭐ ROUND 48 #2 – THE AIR A LOOSE LINE KEEPS TO THE RIGHT OF THE HEADING (owner, 07.10: «оверлап текста и заголовка на одной из страниц всё еще есть … The Tour /
+ *  Straight back to the planning – надо отодвинуть последний дальше вправо»). REPRODUCED IN REAL CHROMIUM on his own save (`adult-1`, layout A): the heading «The tour»
+ *  is 111.8px of Caveat in a 120px box (`headBox`'s floor) and the loose line – the `season-recovery` occasion's, quiet voice; a corpus sentence, read and never retyped – was placed by the resolver at x 156 – exactly `GAP`
+ *  past that box, 10px past the last letter – in the SAME BAND (y 37..90 against the heading's 26..109), so the two read as ONE run of handwriting. The model called it
+ *  clear because a box that merely does not TOUCH is clear to a resolver; to a reader two bare lines of the same hand 10px apart are not.
+ *  ⚠ IT IS THE LOOSE LINE'S AND NOT THE NOTE'S: the line is bare handwriting like the heading, the note is a paper card with an edge of its own, and the sweep never
+ *  puts a note closer than 10px of BOX (26.6px of real text) to any heading – the 54 placements within 3px of a heading box are all loose lines. So the air is a strip
+ *  `HEAD_AIR` wide on the heading's right that only the line must clear (`settle`'s `lineAir`), and only in the tiers where the heading itself is avoided.
+ *  ⭐ 24 IS MEASURED AGAINST THE NOTE: the nearest a note sits to a heading is 26.6px of real text (the breakthrough chapter's 233.4px name against a note at x 294); the
+ *  line now keeps `HEAD_AIR + GAP` plus the box's own slack (2.6px at the tightest title, 8.2px at «The tour») – at least 28.6px, so no bare line sits nearer to a heading
+ *  than a pasted note ever does. `tests/r48-b3-album-tail.test.ts` runs the sweep with it and with 0, the before-arm. */
+export const HEAD_AIR = 24
 function headBox(x: number, sheet: AlbumSheetModel): Box {
   return { x, y: 26, w: Math.max(120, Math.ceil(sheet.chapterTitle.length * HEAD_CHAR)), h: HEAD_H }
 }
@@ -315,7 +352,7 @@ function passBox(sheet: AlbumSheetModel): Box {
  *  photographs, where the boarding pass would hang (`passBox` keeps it reserved on a ticketless sheet), and C's right-hand column, where the baggage tag
  *  would hang (its box is in `fixed`). B's spots run RIGHT TO LEFT – the loose line and the note are on the left – and C's run down the column from beside
  *  the hero's middle. Every spot's swing box lies inside its frame; the test holds it. */
-const B_FILLER: FillerDef = { w: 128, photoH: 72, tilt: 2.4, home: 0, spots: [288, 240, 192, 144, 96, 48].map((x) => ({ x, y: 330 })) }
+const B_FILLER: FillerDef = { w: 128, photoH: 72, tilt: 2.4, home: 0, spots: [288, 240, 192, 144, 96, 48].map((x) => ({ x, y: 330 })), pair: true }
 const C_FILLER: FillerDef = { w: 100, photoH: 68, tilt: -2.6, home: 1, spots: [168, 126, 210, 252, 92].map((y) => ({ x: 332, y })) }
 
 /** THE THREE DRAWINGS' OWN NUMBERS – what `AlbumLayoutA/B/C.vue` carried as CSS before this file.
@@ -329,6 +366,7 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
     ],
     note: { x: SHEET_PX, y: 92, anchor: 'top', widths: [176, 200, 230], right: true },
     line: { x: 120, y: 422, w: 200, alt: [150, 110], font: 21, lh: 26.25 },
+    head: 0,
     fixed: (s) => [
       headBox(34, s),
       { x: 28, y: 368, w: 96, h: 83 },
@@ -359,6 +397,7 @@ export const LAYOUTS: Record<AlbumLayout, LayoutDef> = {
     hero: 0,
     line: { x: 388, y: 368, w: 74, alt: [110], font: 19, lh: 23.75 },
     filler: C_FILLER,
+    head: 0,
     fixed: (s) => [headBox(33, s), { x: 327, y: 77, w: 110, h: 271 }, { x: 368, y: 401, w: 24, h: 24 }],
   },
 }
@@ -459,6 +498,8 @@ function settle(
   step: number,
   soft: readonly Box[],
   tuning: Tuning,
+  /** ⭐ ROUND 48 #2 – extra obstacles for the LOOSE LINE alone: the air to the right of the heading (`headAirOf`). */
+  lineAir: readonly Box[] = [],
 ): { note: NoteBox | null; line: Box | null; cost: number } | null {
   const noteAt = sheet.note ? noteDrawnAt(def, sheet, noteW, step) : null
   const notes = noteAt ? freeSpots(noteAt, obstacles, soft, tuning.coverCost, NOTE_SPOTS) : [null]
@@ -471,7 +512,7 @@ function settle(
     if (sheet.line) {
       for (let li = 0; li < widths.length; li++) {
         const at = lineDrawnAt(def, sheet, widths[li] as number)
-        const f = at ? freeSpot(at, n ? [...obstacles, n.box] : obstacles, soft, tuning.coverCost) : null
+        const f = at ? freeSpot(at, n ? [...obstacles, ...lineAir, n.box] : [...obstacles, ...lineAir], soft, tuning.coverCost) : null
         if (f && (!l || f.cost + tuning.widenCost * li < l.cost)) l = { box: f.box, cost: f.cost + tuning.widenCost * li }
       }
       if (!l) continue
@@ -480,6 +521,13 @@ function settle(
     if (!best || cost < best.cost) best = { note: n ? { ...n.box, step } : null, line: l?.box ?? null, cost }
   }
   return best
+}
+
+/** ⭐ ROUND 48 #2 – THE AIR STRIP: `air` px wide, as tall as the heading's box, on its right-hand side – or none, for a layout with no heading (B) or an air of 0. */
+function headAirOf(def: LayoutDef, sheet: AlbumSheetModel, air: number): Box[] {
+  if (def.head === undefined || air <= 0) return []
+  const head = def.fixed(sheet)[def.head]
+  return head ? [{ x: head.x + head.w, y: head.y, w: air, h: head.h }] : []
 }
 
 /** Where the note and the line would be with NO resolving at all – the layout's own drawing. The
@@ -505,8 +553,38 @@ function bandsOf(def: LayoutDef, sheet: AlbumSheetModel, scale: number): Box[] {
 /** ⭐ THE RESOLVER. A sheet in, the positions out. See the header for the rule. `tuning` is the prices and
  *  the hand's steps: the page always passes the default, the sweep passes B6's beside it to measure «before». */
 export function placeSheet(sheet: AlbumSheetModel, tuning: Tuning = TUNING): SheetPlacement {
-  const core = resolveSheet(sheet, tuning)
-  return { ...core, filler: placeFiller(sheet, core) }
+  // ⭐⭐ ROUND 48 #1b / #1c – THE TAIL'S TAG AND TICKET ARE ASKS, NOT GIVENS. The sheet is resolved WITH the object in its frame (that is the geometry the page will
+  // draw); if the note or the loose line ended up on that frame the object is not drawn – the tag first tries a rung smaller (`TAIL_TAG_RUNGS`: a page too full for a
+  // tag at 110px has room for one at 88) – and the sheet is resolved again WITHOUT it, which is exactly the placement it had before the tail was asked for. A tag or a
+  // ticket of the sheet's own never goes through this: it is a fact of the sheet and is always drawn (that is the old behaviour, untouched).
+  let seen = sheet
+  let core = resolveSheet(seen, tuning)
+  let tagScale = 1
+  if (sheet.tag?.tail) {
+    const rung = TAIL_TAG_RUNGS.find((r) => !crowds(core, tailTagBox(r)))
+    if (rung === undefined) seen = { ...seen, tag: null }
+    else tagScale = rung
+  }
+  if (sheet.ticket?.tail && crowds(core, passBox(sheet))) {
+    seen = { ...seen, ticket: null }
+    core = resolveSheet(seen, tuning)
+  }
+  return { ...core, filler: placeFiller(seen, core), tagDrawn: seen.tag != null, ticketDrawn: seen.ticket != null, tagScale }
+}
+
+/** ⭐ ROUND 48 #1b – THE TAIL TAG'S FOOTPRINT: layout C's column, as tall as «World Tour 1000» really draws it – MEASURED in real Chromium on his own save's last page
+ *  (07.10): the tier's name wraps to THREE lines at 26px in the tag's 90px of ink, so the element is 284.1px tall (y 77..361.1) where `LAYOUTS.C`'s frame says 271. The
+ *  frame is what the resolver reserves for every tag and is not touched; this is what a tag the TAIL hangs is checked against. The rungs shrink it about its top
+ *  edge's middle (`transform-origin: 50% 0` – it hangs from its string) and never below 0.8, where the tier's name is still 20px. */
+const TAIL_TAG: Box = { x: 327, y: 77, w: 110, h: 285 }
+export const TAIL_TAG_RUNGS: readonly number[] = [1, 0.9, 0.8]
+export function tailTagBox(scale: number): Box {
+  return { x: TAIL_TAG.x + (TAIL_TAG.w * (1 - scale)) / 2, y: TAIL_TAG.y, w: TAIL_TAG.w * scale, h: TAIL_TAG.h * scale }
+}
+
+/** True when the resolved note or loose line touches `box`. */
+function crowds(core: PlacedCore, box: Box): boolean {
+  return [core.note, core.line].some((m) => m && touches(m, box))
 }
 
 function resolveSheet(sheet: AlbumSheetModel, tuning: Tuning): PlacedCore {
@@ -528,25 +606,28 @@ function resolveSheet(sheet: AlbumSheetModel, tuning: Tuning): PlacedCore {
     return h ? [pictureOf(h)] : []
   }
   type Tier = (k: { photos: PhotoPlacement[]; bands: Box[] }) => Box[]
+  // ⭐ ROUND 48 #2 – `air`: the tiers that avoid the heading (all furniture, or every piece but a sticker) also keep the loose line `HEAD_AIR` off its right side; the two
+  // give-up tiers that ignore furniture ignore the air with it.
+  const headAir = headAirOf(def, sheet, tuning.headAir ?? HEAD_AIR)
   // The first tier is two kinds of bare paper priced against each other: clear of every CARD, and – at
   // `borderCost` – clear of every PICTURE and caption but resting on a white border.
-  const bare: { tier: Tier; price: number }[] = [
-    { tier: ({ photos, bands }) => [...bands, ...photos.map((p) => padded(p.box)), ...furniture], price: 0 },
-    { tier: ({ photos, bands }) => [...bands, ...photos.map((p) => padded(pictureOf(p))), ...furniture], price: tuning.borderCost },
+  const bare: { tier: Tier; price: number; air: boolean }[] = [
+    { tier: ({ photos, bands }) => [...bands, ...photos.map((p) => padded(p.box)), ...furniture], price: 0, air: true },
+    { tier: ({ photos, bands }) => [...bands, ...photos.map((p) => padded(pictureOf(p))), ...furniture], price: tuning.borderCost, air: true },
   ]
-  const tiers: Tier[] = [
-    ({ photos, bands }) => [...bands, ...furniture, ...kept(photos)],
-    ({ photos, bands }) => [...bands, ...solid, ...kept(photos)],
-    ({ photos, bands }) => [...bands, ...kept(photos)],
+  const tiers: { tier: Tier; air: boolean }[] = [
+    { tier: ({ photos, bands }) => [...bands, ...furniture, ...kept(photos)], air: true },
+    { tier: ({ photos, bands }) => [...bands, ...solid, ...kept(photos)], air: true },
+    { tier: ({ photos, bands }) => [...bands, ...kept(photos)], air: false },
   ]
-  if (hero !== null) tiers.push(({ bands }) => bands)
+  if (hero !== null) tiers.push({ tier: ({ bands }) => bands, air: false })
   // Within a tier EVERY rung is tried and the cheapest wins – pixels walked, plus a price for each picture
   // covered, plus a price for each step the photographs were shrunk and for a wider note – because the first
   // rung that merely has room is not the best one: at full size a long note's only spot can be on top of
   // the big photograph, while one rung down it fits below it.
-  for (const group of [bare, ...tiers.map((tier) => [{ tier, price: 0 }])]) {
+  for (const group of [bare, ...tiers.map((t) => [{ ...t, price: 0 }])]) {
     let best: { score: number; out: PlacedCore } | null = null
-    for (const { tier, price } of group) {
+    for (const { tier, price, air } of group) {
       if (!Number.isFinite(price)) continue
       for (const scale of SCALES) {
         const photos = photosOf(def, sheet, scale)
@@ -554,7 +635,7 @@ function resolveSheet(sheet: AlbumSheetModel, tuning: Tuning): PlacedCore {
         const soft = photos.map(pictureOf)
         for (let hi = 0; hi < hands.length; hi++) {
           for (let wi = 0; wi < def.note.widths.length; wi++) {
-            const got = settle(def, sheet, tier({ photos, bands }), def.note.widths[wi] as number, hands[hi] as number, soft, tuning)
+            const got = settle(def, sheet, tier({ photos, bands }), def.note.widths[wi] as number, hands[hi] as number, soft, tuning, air ? headAir : [])
             if (!got) continue
             const score = got.cost + price + tuning.shrinkCost * Math.round((1 - scale) * 100) + tuning.widenCost * wi + tuning.stepCost * hi
             if (!best || score < best.score) best = { score, out: { photos, note: got.note, line: got.line, scale, clear: true } }
@@ -597,13 +678,22 @@ function placeFiller(sheet: AlbumSheetModel, core: PlacedCore): FillerPlacement 
   const furniture = def.fixed(sheet).filter((_, i) => i !== f.home)
   const placed = [core.note, core.line].flatMap((m) => (m ? [m] : []))
   const obstacles = [...core.photos.flatMap((p) => [padded(p.box), ...(p.band ? [p.band] : [])]), ...furniture, ...placed]
-  for (const s of f.spots) {
-    const box: Box = { x: s.x - pad, y: s.y - pad, w: f.w + 2 * pad, h: h + 2 * pad }
-    if (box.x < 0 || box.y < 0 || box.x + box.w > PAGE || box.y + box.h > PAGE) continue
-    if (obstacles.some((o) => touches(box, o))) continue
-    return { x: s.x, y: s.y, w: f.w, photoH: f.photoH, tilt: f.tilt, box }
+  /** The first of `f.spots` whose swing box lies on the page and touches no obstacle (and nothing in `extra`). */
+  const fit = (tilt: number, extra: readonly Box[]): FillerPlacement | null => {
+    for (const s of f.spots) {
+      const box: Box = { x: s.x - pad, y: s.y - pad, w: f.w + 2 * pad, h: h + 2 * pad }
+      if (box.x < 0 || box.y < 0 || box.x + box.w > PAGE || box.y + box.h > PAGE) continue
+      if (obstacles.some((o) => touches(box, o)) || extra.some((o) => touches(box, o))) continue
+      return { x: s.x, y: s.y, w: f.w, photoH: f.photoH, tilt, box }
+    }
+    return null
   }
-  return null
+  const first = fit(f.tilt, [])
+  if (!first || !f.pair || !sheet.filler.pair) return first
+  // ⭐ ROUND 48 #1a – THE SECOND SNAPSHOT, BESIDE THE FIRST. Placed AFTER it, against the same obstacles plus the first one's swing box, and leaning the OTHER way –
+  // so it moves nothing the first settled, and a strip with no room for two simply shows one. The mirrored lean has the same magnitude, so the same swing pad holds.
+  const second = fit(-f.tilt, [first.box])
+  return second ? { ...first, pair: second } : first
 }
 
 /** The picture window of a card – what a note over a photograph hides. */

@@ -23,6 +23,10 @@ const props = defineProps<{ sheet: AlbumSheetModel }>()
 // `albumPlacement.ts`): the drawing's own numbers live in its table and a note or a line that would sit
 // on a photograph's caption is moved off it. This file binds the answer and owns no coordinate of them.
 const placed = computed(() => placeSheet(props.sheet))
+
+// ⭐ ROUND 48 #1a – the SECOND small snapshot of a wide strip, as the `AlbumFillerPhoto` it draws with (`filler.pair` is its picture's path, `placed.filler.pair` where
+// the resolver found room for two).
+const pairFiller = computed(() => (props.sheet.filler?.pair ? { art: props.sheet.filler.pair } : null))
 </script>
 
 <template>
@@ -75,7 +79,8 @@ const placed = computed(() => placeSheet(props.sheet))
       :size="24"
     />
 
-    <AlbumTicketPass v-if="sheet.ticket" class="album-b-pass" :ticket="sheet.ticket" />
+    <!-- ⭐ ROUND 48 #1c – a pass the book's TAIL hung is drawn only where the strip is clear (`placed.ticketDrawn`); a pass of the sheet's own is always drawn. -->
+    <AlbumTicketPass v-if="sheet.ticket && placed.ticketDrawn" class="album-b-pass" :ticket="sheet.ticket" />
 
     <!-- ⭐ ROUND 47 #14 – a ticketless sheet's strip is empty; the resolver hangs a small snapshot in it when there is room (`placeFiller`). -->
     <AlbumFillerPhoto
@@ -84,6 +89,15 @@ const placed = computed(() => placeSheet(props.sheet))
       :filler="sheet.filler"
       :tilt="placed.filler.tilt"
       :photo-height="placed.filler.photoH"
+    />
+
+    <!-- ⭐ ROUND 48 #1a – «для горизонтальных пустых мест можно еще фото добавить … второе рядом»: the strip is 400px wide and holds two. -->
+    <AlbumFillerPhoto
+      v-if="pairFiller && placed.filler?.pair"
+      :style="spot(placed.filler.pair)"
+      :filler="pairFiller"
+      :tilt="placed.filler.pair.tilt"
+      :photo-height="placed.filler.pair.photoH"
     />
   </div>
 </template>

@@ -311,8 +311,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
          album, for the player who wants the record rather than the story. -->
     <!-- ⭐⭐⭐ ROUND 46 #18 – THE REAL ALBUM, laid over this takeover. The `section` is what puts it in the
          same column as everything else here on a wide screen (`.ending > section`). Its Back arrow is the
-         book's own control and returns to the last page; nothing is rebuilt. -->
-    <section v-if="albumOpen" class="ending-book">
+         book's own control and returns to the last page; nothing is rebuilt.
+         ⭐⭐ ROUND 48 #8 – AND IT IS `bare` TOO (owner, 07.10: «в самом альбоме тоже подложка не нужна, она лишняя и место ест, пусть он на весь экран будет, как и THE LAST
+         PAGE по принципу»). The same mechanism as the last page below: style.css paints EVERY `section` as a panel, so the book lay on a card whose 16px padding and 1px
+         border took 17px off EACH side of the film – at 375 the film's window was 341px of a 375px screen and the first sheet began 33px in. `section.bare` removes the
+         card; the film's own `.album-stage` already cancels the takeover's 16px gutter (the in-career host, `App.vue`, never had a section round the screen at all), so
+         the book now spans the whole screen, like the in-career album – 375px, the first sheet at the gutter. -->
+    <section v-if="albumOpen" class="ending-book bare">
       <AlbumScreen :book="book" @back="closeAlbum" />
     </section>
 
@@ -344,7 +349,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
          style.css paints EVERY `section` as a panel (the panel colour, a 1px line, 16px of padding), so the
          content lay on a card 17px inside the takeover's own gutter on each side. `section.bare` is the app's
          existing opt-out (the Season screen's strips use it) – the ground behind the page is the takeover's own
-         and stays. The record layer and the book layer above keep the panel: he asked about the last page. -->
+         and stays. ⚠ THAT SENTENCE USED TO END «the record layer and the book layer above keep the panel: he asked about the last page» – the BOOK layer's half is
+         overturned (round 48 #8, above: he asked about the album the next day); the record layer (`ending-scroll`) still keeps its panel – he did not ask about it. -->
     <section v-else class="ending-album bare">
       <header class="ending-head">
         <Eyebrow as="h2">The last page</Eyebrow>

@@ -10,6 +10,11 @@
 // without it on every sheet that carries one, so no count of round 45's sweep (B's shrunk windows sit AT their ceiling of 22) can move because of it.
 //
 // ⭐ MUTATION-VERIFIED (06.10), each run on the real file and restored byte-identical – the list is in the round-47 ledger, item 14.
+//
+// ⚠ 07.10 (round 48 B3, item 1 – `tests/r48-b3-album-tail.test.ts`; NO ASSERTION BELOW MOVED): two things grew beside this file's «ONE small snapshot». (1) A layout-B sheet whose snapshot has
+// room for two now carries a PAIR (`AlbumFiller.pair` – the next picture of the same pool, hung by the same post-pass beside the first); the first snapshot is exactly where it always was,
+// which is what the guard arm below still asserts. (2) A sheet the book's TAIL hung a W1000 tag or a Slam pass on keeps its snapshot as well – the resolver draws whichever the gap can hold –
+// so «carried only by a sheet with NO ticket, NO tag and NO patch» is a claim about THIS sweep, whose posed careers have no cabinet and so no tail object.
 import { describe, it, expect } from 'vitest'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
