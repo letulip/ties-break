@@ -1,0 +1,532 @@
+---
+type: spec
+status: draft
+area: localization
+canonical: false
+last-reviewed: 2026-10-05
+---
+
+# RU-10A – Small-talk situation corpus, continued
+
+This is the next editorial slice after [RU-10](ru-life-beats-small-talk-2026-10.md). It follows
+the generated runtime order in `src/engine/world/smallTalkCorpus.ts` and records every opener,
+shared parent stance and per-voice answer. The English authority remains
+`docs/specs/small-talk-corpus-2026-09.md`; the runtime file is generated and must not be edited by
+hand. All Russian lines are `DRAFT`. Situation IDs and draw order are never localized.
+
+## 1. Situation R7 – `one-meal`
+
+Subject `decision`; stages `college`, `independent`; no fact gate. This is her small cooking
+question, with no nutrition judgment or budget consequence.
+
+### 1.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I can make ONE thing now. Properly. I'm deciding whether to learn a second or just accept that this is who I am."` | `«Я теперь умею готовить ОДНО блюдо. По-настоящему. Думаю, выучить второе или принять себя такой».` |
+| fiery | `"I can cook one meal. Either I learn another this week or I eat this one until I die. Those are the options."` | `«Я умею готовить одно блюдо. Или на этой неделе выучу второе, или буду есть это до смерти. Других вариантов нет».` |
+| deep | `"I've made the same meal eleven times. I'm trying to work out whether that's competence or hiding."` | `«Я приготовила одно и то же блюдо одиннадцать раз. Думаю, это умение или я просто прячусь за привычкой».` |
+| quiet | `"I've been eating the same thing most nights. It's fine. I might learn another one."` | `«Вечерами я обычно ем одно и то же. Нормально. Может, научусь готовить ещё что-нибудь».` |
+
+### 1.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the meal is` | `Спросить, что это за блюдо` |
+| respond | `Say you lived on two meals for years` | `Сказать, что вы годами жили на двух блюдах` |
+| space | `Say nobody is marking her on this` | `Сказать, что за это ей никто оценку не ставит` |
+
+### 1.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Rice and eggs. That's it. But it's good rice and they're good eggs."` | `«Рис и яйца. Всё. Зато рис вкусный. И яйца тоже».` |
+| sunny | respond | `"Two. You were ahead of me. That's actually quite encouraging."` | `«Два? Даже тогда у тебя было больше, чем у меня сейчас. Это обнадёживает».` |
+| sunny | space | `"Nobody's marking me. I might learn a second one anyway."` | `«Никто не ставит. Но второе блюдо я, может, всё-таки освою».` |
+| fiery | invite | `"Rice and eggs. Don't laugh. I can do it without thinking now."` | `«Рис и яйца. Не смейся. Теперь могу приготовить с закрытыми глазами».` |
+| fiery | respond | `"Two is one more than me. So one of us got somewhere."` | `«Два – это на одно больше, чем у меня. Значит, кто-то из нас продвинулся».` |
+| fiery | space | `"I'm marking me. That's usually enough."` | `«Я сама себе ставлю. Обычно этого хватает».` |
+| deep | invite | `"Rice and eggs. I got good at it because I stopped trying anything else."` | `«Рис и яйца. Я научилась, потому что перестала пробовать что-то ещё».` |
+| deep | respond | `"You've never said that. I assumed you'd always been able to cook."` | `«От тебя я такого не слышала. Думала, тебе всегда легко давалась готовка».` |
+| deep | space | `"I know. I've still been counting how many times I've made it."` | `«Знаю. И всё равно считала, сколько раз это готовила».` |
+| quiet | invite | `"Rice and eggs. It's quick."` | `«Рис и яйца. Быстро».` |
+| quiet | respond | `"Two's fine, then. I'll stop worrying about it."` | `«Тогда и двух достаточно. Не буду из-за этого переживать».` |
+| quiet | space | `"No. I'll learn another one sometime."` | `«Не ставит. Когда-нибудь научусь ещё чему-то».` |
+
+The replies to the parent's cooking history avoid gendering the player-parent. Her eleven identical
+meals are an authored anecdote, not a count derived from the food system.
+
+## 2. Situation R8 – `alone-or-with-them`
+
+Subject `decision`; stages `college`, `independent`; fact gate `march-entry-open`. The gate
+licenses an open entry and time to decide; the authored travel group is part of this conversation.
+No line promises a price or a booked seat.
+
+### 2.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Everyone's going a day early. I could go with them or go on my own the morning after. I genuinely can't decide."` | `«Все едут на день раньше. Можно с ними, а можно одной на следующее утро. Правда не могу решить».` |
+| fiery | `"I'm going on my own. Probably. A whole day of sitting around with everyone would finish me before I started."` | `«Поеду одна. Наверное. Если день просижу со всеми, устану ещё до начала».` |
+| deep | `"A day early with them, or alone the next morning. I've picked it up and put it down about six times since lunch."` | `«На день раньше с ними или одной на следующее утро. После обеда я уже раз шесть к этому возвращалась».` |
+| quiet | `"The group goes a day before. I could go after. Either works."` | `«Группа едет на день раньше. Я могу позже. Оба варианта подходят».` |
+
+### 2.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask which one she keeps coming back to` | `Спросить, к какому варианту она возвращается` |
+| respond | `Say arriving rested is worth something` | `Сказать, что приехать отдохнувшей тоже важно` |
+| space | `Say either is fine and she should pick the easy one` | `Сказать, что оба варианта годятся; пусть выберет более простой` |
+
+### 2.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Going on my own. Every time. And then I feel bad about it, every time."` | `«К поездке одной. Каждый раз. А потом каждый раз чувствую себя виноватой».` |
+| sunny | respond | `"That's a point. Going with them is probably the restful one, annoyingly."` | `«Это правда. И, как назло, с ними, наверное, будет спокойнее».` |
+| sunny | space | `"Then I'll go with them. Deciding was the hard part, honestly."` | `«Тогда поеду с ними. Если честно, труднее всего было решить».` |
+| fiery | invite | `"On my own. I keep landing there and then talking myself out of it."` | `«К поездке одной. Каждый раз выбираю её, а потом сама себя отговариваю».` |
+| fiery | respond | `"Rested doing what? Sitting around with all of them for an extra day?"` | `«Отдохнувшей? После лишнего дня сидения со всеми?»` |
+| fiery | space | `"Neither of them is the easy one. That's why I'm still going round it."` | `«Ни один не простой. Поэтому я всё ещё выбираю».` |
+| deep | invite | `"Alone. I keep coming back to alone and I keep not booking it."` | `«К поездке одной. Всё возвращаюсь к ней и никак не бронирую».` |
+| deep | respond | `"It is. I'm not sure rested is what I'm choosing between."` | `«Важно. Только не уверена, что именно в этом мой выбор».` |
+| deep | space | `"That's the one I keep trying to find."` | `«Его-то я и пытаюсь найти».` |
+| quiet | invite | `"The morning after. I keep looking at that one."` | `«Следующим утром. Всё смотрю на этот вариант».` |
+| quiet | respond | `"It is. That's the argument for going early."` | `«Важно. Это довод за поездку пораньше».` |
+| quiet | space | `"All right. I'll take the later one."` | `«Хорошо. Выберу более поздний».` |
+
+The three parent stances remain zero-bond. Their replies differ because she may accept, resist or
+quietly use the parent's thought; none of them scores the parent's answer.
+
+## 3. Situation R9 – `the-routine-she-dropped`
+
+Subject `decision`; stages `after-school`, `college`, `independent`; no fact gate. The water
+bottle's former ritual stays unspecified. Dropping it does not change any actual match mechanic.
+
+### 3.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've stopped doing the thing with the water bottle. I only just noticed I'd stopped!"` | `«Я больше не делаю ту штуку с бутылкой. Только сейчас заметила, что перестала!»` |
+| fiery | `"I dropped the bottle thing. It was superstition and I'm not superstitious. I think."` | `«Я бросила эту штуку с бутылкой. Это же суеверие, а я не суеверная. Кажется».` |
+| deep | `"There was a thing I did before matches. I stopped weeks ago and only worked out this week that I'd stopped."` | `«Раньше я кое-что делала перед матчами. Перестала несколько недель назад, а заметила только сейчас».` |
+| quiet | `"I don't do the bottle thing any more. No particular reason."` | `«Я больше не делаю ту штуку с бутылкой. Без особой причины».` |
+
+### 3.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask when she thinks she stopped` | `Спросить, когда она перестала` |
+| respond | `Say she can start again if she misses it` | `Сказать, что она может вернуться к этому, если захочет` |
+| space | `Say it clearly wasn't load-bearing` | `Сказать, что без этого ничего не рухнуло` |
+
+### 3.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"No idea. That's the strange bit. I can't find the day I stopped."` | `«Понятия не имею. В этом и странность: не могу вспомнить день, когда перестала».` |
+| sunny | respond | `"I could. I'm not sure I do miss it, which surprised me."` | `«Могу. Только я, кажется, и не скучаю по этому. Сама удивилась».` |
+| sunny | space | `"Apparently not. It held nothing up at all."` | `«Похоже, нет. Ничего и правда не рухнуло».` |
+| fiery | invite | `"I don't know. That's what's annoying. It just went and I didn't notice."` | `«Не знаю. Вот что бесит: ритуал исчез, а я даже не заметила».` |
+| fiery | respond | `"I could. I'd feel ridiculous starting it again now."` | `«Могу. Но сейчас начать снова было бы ужасно глупо».` |
+| fiery | space | `"Then why did I do it for so long?"` | `«Тогда зачем я столько времени это делала?»` |
+| deep | invite | `"I can't find the day. I've gone back through the weeks and it isn't there."` | `«Не могу найти тот день. Мысленно перебрала недели – нигде его нет».` |
+| deep | respond | `"I could. I've reached for it since and stopped myself."` | `«Могу. Несколько раз рука уже тянулась, но я себя останавливала».` |
+| deep | space | `"No. I'd still like to know why I started."` | `«Нет. Но мне всё равно интересно, почему я когда-то начала».` |
+| quiet | invite | `"Couldn't say. Sometime before this week."` | `«Не скажу. Где-то до этой недели».` |
+| quiet | respond | `"I might. It's not really a decision."` | `«Может быть. Это ведь не такое уж решение».` |
+| quiet | space | `"Seems not. I've been fine without it."` | `«Похоже, нет. И без этого всё нормально».` |
+
+The `nothing collapsed` parent reply is deliberately light, not a claim that the old habit was
+pointless. Deep and fiery are allowed to care about why it mattered.
+
+## 4. Situation R10 – `advice-she-did-not-ask-for`
+
+Subject `decision`; stages `college`, `independent`; no fact gate. The advice concerns return
+position; the writer does not certify that the stranger's technical suggestion is correct.
+
+### 4.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Someone I've never spoken to told me to change how I stand to return. Do I... do that?"` | `«Незнакомая женщина сказала мне иначе вставать на приёме подачи. Мне... попробовать?»` |
+| fiery | `"A woman I don't know told me how to return. I haven't decided whether that was kind or rude and I've had all week."` | `«Незнакомка объяснила мне, как принимать подачу. Всю неделю думаю: это было по-доброму или нагло?»` |
+| deep | `"Unasked-for advice, from someone with no reason to help me. I've been trying to work out what she wanted from it."` | `«Совет, которого я не просила, от женщины, которой незачем мне помогать. Пытаюсь понять, чего она хотела».` |
+| quiet | `"Somebody said something about my return. I wrote it down."` | `«Мне кое-что сказали про приём подачи. Я записала».` |
+
+### 4.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what exactly she said` | `Спросить, что именно она сказала` |
+| respond | `Say she can try it and drop it` | `Сказать, что можно попробовать и отказаться` |
+| space | `Say she doesn't owe a stranger a change` | `Сказать, что она не обязана менять стойку ради незнакомки` |
+
+### 4.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"That I stand too square. She showed me, then walked off. Very brisk."` | `«Что я стою слишком прямо. Показала, как развернуться, и быстро ушла».` |
+| sunny | respond | `"That's what I'll do. Try it once and see if I hate it."` | `«Так и сделаю. Раз попробую и пойму, бесит меня это или нет».` |
+| sunny | space | `"I know. I'd quite like to try it anyway."` | `«Знаю. Но мне всё равно хочется попробовать».` |
+| fiery | invite | `"That I'm square to the net when I should be turned. Then she left."` | `«Что я стою лицом к сетке, а надо развернуться. И ушла».` |
+| fiery | respond | `"I'll try it. If it's wrong, I'll know straight away."` | `«Попробую. Если ерунда, сразу почувствую».` |
+| fiery | space | `"I don't owe her anything. I still can't stop thinking about it."` | `«Ничего я ей не должна. Но из головы это всё равно не выходит».` |
+| deep | invite | `"That I stand square. She said it, showed me once, and went."` | `«Сказала, что я стою слишком прямо. Один раз показала и ушла».` |
+| deep | respond | `"I can. I keep wondering why she bothered telling me at all."` | `«Могу. Только всё думаю, зачем она вообще решила мне сказать».` |
+| deep | space | `"No. It's sitting there whether I owe her or not."` | `«Не обязана. Но мысль никуда не девается».` |
+| quiet | invite | `"Something about being too square. It's in my phone."` | `«Что-то про то, что стою слишком прямо. У меня в телефоне записано».` |
+| quiet | respond | `"I might try it in practice."` | `«Может, попробую на тренировке».` |
+| quiet | space | `"No. I'll leave it for now."` | `«Не обязана. Пока оставлю как есть».` |
+
+`Приём подачи` is the tennis action in this exchange. The Russian does not turn the stranger into
+her coach or present the advice as a verified correction.
+
+## 5. Situation R11 – `five-coffees`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. Five orders are the story's
+own count, not a reading of current friendships or travel companions.
+
+### 5.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I remembered five coffee orders. FIVE. Including the complicated one."` | `«Я запомнила пять заказов кофе. ПЯТЬ. Даже тот, сложный».` |
+| fiery | `"Got every coffee right. Every one. Somebody should have been filming."` | `«Ни один кофе не перепутала. Ни один. Кто-нибудь мог бы это снять».` |
+| deep | `"I remembered all five without writing them down. It is a stupid thing to be pleased about and I am pleased about it."` | `«Запомнила все пять, даже не записала. Глупая причина радоваться, а я радуюсь».` |
+| quiet | `"I did the coffee run. Got them all right."` | `«Сходила за кофе для всех. Ничего не перепутала».` |
+
+### 5.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the complicated one was` | `Спросить, какой заказ был сложным` |
+| respond | `Say that's a useful kind of memory` | `Сказать, что такая память пригодится` |
+| space | `Laugh and say nothing else` | `Посмеяться и ничего не добавлять` |
+
+### 5.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Oat flat white, extra shot, and please don't stir it. I got it right."` | `«Флэт уайт на овсяном, ещё один шот и, пожалуйста, не размешивать. Я всё запомнила».` |
+| sunny | respond | `"Is it? I can't remember where I put my keys, so it's a mixed gift."` | `«Правда? Ключи я вечно теряю, так что дар сомнительный».` |
+| sunny | space | `"You're laughing. Good. That's exactly what it deserved."` | `«Ты смеёшься. Отлично. Именно этого история и заслуживает».` |
+| fiery | invite | `"Oat flat white, extra shot, unstirred. Who orders that? I remembered it anyway."` | `«Флэт уайт на овсяном, лишний шот, не размешивать. Кто такое заказывает? А я запомнила».` |
+| fiery | respond | `"It's useful for coffee. Nothing else has ever stayed in there."` | `«Для кофе пригодится. Больше у меня в голове ничего так не задерживается».` |
+| fiery | space | `"Laugh away. I'd have been furious if I'd got one wrong."` | `«Смейся. Если бы хоть один перепутала, я бы взбесилась».` |
+| deep | invite | `"Oat milk, extra shot, not stirred. I repeated it the whole way there."` | `«Овсяное молоко, лишний шот, не размешивать. Повторяла всю дорогу».` |
+| deep | respond | `"For coffee, apparently. I've lost whole conversations this week."` | `«Для кофе – похоже. А разговоры на этой неделе вылетали из головы целиком».` |
+| deep | space | `"Mm. I'll take the laugh."` | `«Угу. Пусть будет смех».` |
+| quiet | invite | `"Oat flat white, extra shot. She didn't want it stirred."` | `«Флэт уайт на овсяном, дополнительный шот. Она просила не размешивать».` |
+| quiet | respond | `"Sometimes. It works better for other people's things."` | `«Иногда. Чужие просьбы я запоминаю лучше».` |
+| quiet | space | `"That's fair. It's only coffee."` | `«Справедливо. Это всего лишь кофе».` |
+
+`Флэт уайт` and `шот` are contemporary coffee words; the quiet voice uses the fuller
+`дополнительный шот`. The same unusual order remains recognizable in all four voices.
+
+## 6. Situation R12 – `the-grip-she-did-herself`
+
+Subject `good-news`; stages `after-school`, `college`, `independent`; no fact gate. The established
+RU kit term is `обмотка`. Her achievement is doing the small repair herself.
+
+### 6.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"My grip came off and I just... did it. Myself. Badly, but myself."` | `«Обмотка слетела, и я просто... намотала её заново. Криво, но сама».` |
+| fiery | `"I re-gripped it myself. Didn't ask, didn't need to, and it held."` | `«Сама перемотала ручку ракетки. Не просила помощи, не понадобилось. И держится».` |
+| deep | `"The grip went halfway through. I sat down and did it myself."` | `«Обмотка начала отходить. Я села и перемотала ручку сама».` |
+| quiet | `"Re-wrapped a grip this week. It held."` | `«На этой неделе сменила обмотку. Держится».` |
+
+### 6.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how bad it looks` | `Спросить, сильно ли неровно получилось` |
+| respond | `Say that's one less thing she needs anyone for` | `Сказать, что теперь и с этим она справляется сама` |
+| space | `Say you still can't do it either` | `Сказать, что вы до сих пор этого не умеете` |
+
+### 6.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Bad. There's a lump near the bottom. But it's my lump."` | `«Сильно. Внизу бугорок. Зато мой бугорок».` |
+| sunny | respond | `"I suppose so. Mostly I just didn't want to interrupt anybody."` | `«Наверное. Просто не хотелось никого отвлекать».` |
+| sunny | space | `"You can't. I've watched you. It's the one thing I'm ahead on."` | `«Да, ты не умеешь. Я видела. Хоть в чём-то я впереди».` |
+| fiery | invite | `"It's lumpy at the end. I'm not redoing it. It held, didn't it?"` | `«На конце бугры. Переделывать не буду. Держится же?»` |
+| fiery | respond | `"It's one. I'd like the rest of the list as well."` | `«С одним разобралась. Теперь бы весь остальной список».` |
+| fiery | space | `"You've never tried. That's not the same as can't."` | `«А пробовать доводилось? Не уметь – другое дело».` |
+| deep | invite | `"There's a ridge near the bottom. I can feel it every time."` | `«Внизу складка. Чувствую её каждый раз».` |
+| deep | respond | `"Maybe. I did it because asking felt like more effort than doing it."` | `«Может быть. Просто попросить казалось труднее, чем сделать самой».` |
+| deep | space | `"You've never had to. That's the difference."` | `«Тебе просто не приходилось. Вот в чём разница».` |
+| quiet | invite | `"Uneven at the bottom. You wouldn't notice from across a court."` | `«Снизу неровно. С другой стороны корта не заметишь».` |
+| quiet | respond | `"Suppose so. It wasn't a big thing."` | `«Наверное. Ничего сложного».` |
+| quiet | space | `"It's not hard. I'll show you sometime."` | `«Это не трудно. Как-нибудь покажу».` |
+
+The parent replies and daughter answers do not assign a gender to the player-parent. `Обмотка`
+matches the RU diary and birthday drafts; no separate tennis synonym is introduced here.
+
+## 7. Situation R13 – `the-call-she-made`
+
+Subject `good-news`; stages `college`, `independent`; no fact gate. The booking and call are an
+authored everyday story, not a mutation of the game's tournament entry or travel state.
+
+### 7.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I made a phone call. In an actual other language. And the person understood me!"` | `«Я позвонила. На другом языке. И меня поняли!»` |
+| fiery | `"I made the call myself. I'd been putting it off for a week and it took four minutes, which is the annoying part."` | `«Сама позвонила. Неделю откладывала, а заняло четыре минуты. Вот что бесит».` |
+| deep | `"I rang them and did it in their language. Badly. It worked, and I've been quietly pleased about it since."` | `«Позвонила им и говорила на их языке. Плохо. Но меня поняли, и я с тех пор тихо этому радуюсь».` |
+| quiet | `"The booking's changed. I called."` | `«Бронь поменяли. Я позвонила».` |
+
+### 7.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how much of it she understood` | `Спросить, сколько она поняла` |
+| respond | `Say the week of dreading it was the hard part` | `Сказать, что труднее всего было неделю бояться звонка` |
+| space | `Say well done and leave it` | `Похвалить её и не расспрашивать дальше` |
+
+### 7.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"About half? I understood the important half. The booking's changed, so something worked."` | `«Половину? Главное я поняла. Бронь изменили – значит, сработало».` |
+| sunny | respond | `"It really was. The call was nothing. The dreading took everything."` | `«Точно. Сам звонок – ерунда. А ожидание съело все силы».` |
+| sunny | space | `"Thank you. I'm going to be smug about this for a bit."` | `«Спасибо. Я теперь немного погоржусь собой».` |
+| fiery | invite | `"Enough. I understood enough, and she understood me, which is all it needed."` | `«Достаточно. Я поняла её, она поняла меня. Больше и не требовалось».` |
+| fiery | respond | `"That's the annoying part. All that dread for something that short."` | `«Вот именно. Столько боялась ради четырёх минут».` |
+| fiery | space | `"I'll leave it. I'm making the next one straight away, though."` | `«Ладно. Зато следующий звонок сделаю сразу».` |
+| deep | invite | `"Less than she thought I did. I said yes to things I'm not certain about."` | `«Меньше, чем ей показалось. Я на что-то согласилась и теперь не уверена, на что».` |
+| deep | respond | `"It was. I'd rather have made the call the day I started dreading it."` | `«Так и было. Лучше бы позвонила в тот же день, когда начала бояться».` |
+| deep | space | `"Thank you. That's all I wanted to do with it."` | `«Спасибо. Мне и хотелось только сказать об этом».` |
+| quiet | invite | `"Most of it. Enough to answer."` | `«Большую часть. Ответить смогла».` |
+| quiet | respond | `"Probably. I kept meaning to do it."` | `«Наверное. Всё собиралась позвонить».` |
+| quiet | space | `"Thanks. It's done now."` | `«Спасибо. Теперь это сделано».` |
+
+The `бронь` story remains outside the actual travel economy. The deep answer keeps her uncertainty
+about what she agreed to; the Russian draft does not declare the changed booking safe or final.
+
+## 8. Situation R14 – `the-calm-loss`
+
+Subject `observation`; stages `after-school`, `college`, `independent`; fact gate
+`played-recently`. The daughter saw another player's loss. Nothing says the daughter herself won
+or lost that week.
+
+### 8.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A girl lost and was genuinely fine about it. Shook hands, packed up, left. Is that something you learn?"` | `«Одна девушка проиграла и правда спокойно это приняла. Пожала руку, собрала вещи и ушла. Этому учатся?»` |
+| fiery | `"She lost and just walked off. No argument, nothing. How?"` | `«Она проиграла и просто ушла. Без спора, без всего. Как?»` |
+| deep | `"She shook hands like losing was only Tuesday. I watched her pack, and I still don't understand it."` | `«Она пожала руку так, будто поражение – просто вторник. Я смотрела, как она собирается, и до сих пор не понимаю».` |
+| quiet | `"She shook hands, packed her bag and left. I stayed and watched the next one."` | `«Она пожала руку, собрала сумку и ушла. А я осталась смотреть следующий матч».` |
+
+### 8.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she'd have done` | `Спросить, что бы она сделала` |
+| respond | `Say losing might get easier to carry` | `Сказать, что со временем поражения, возможно, переживаются легче` |
+| space | `Say she doesn't have to have a view on it` | `Сказать, что ей не обязательно об этом судить` |
+
+### 8.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Not that. I'd have sat there for ages. I'd probably still be sitting there."` | `«Точно не так. Я бы сидела там вечность. Наверное, до сих пор сидела бы».` |
+| sunny | respond | `"Does it? I'd like that. I'd also like to know when it starts."` | `«Правда? Хотелось бы. Ещё бы знать, когда это начинается».` |
+| sunny | space | `"I know. I've got one anyway."` | `«Знаю. Но мнение у меня всё равно есть».` |
+| fiery | invite | `"Sat down. Said something I'd regret. Definitely not packed my bag neatly."` | `«Села бы. Сказала что-нибудь, о чём потом пожалела бы. Сумку точно не стала бы аккуратно собирать».` |
+| fiery | respond | `"I don't want it easier. I want to know how she does it."` | `«Не хочу, чтобы было легче. Хочу понять, как ей это удаётся».` |
+| fiery | space | `"I've got a view. I've had one since I watched her walk off."` | `«У меня есть мнение. С той самой минуты, как увидела, как она ушла».` |
+| deep | invite | `"I'd have stayed in the chair a long time. I know that much."` | `«Я бы ещё долго сидела на стуле. Это я точно знаю».` |
+| deep | respond | `"Might. She didn't look like somebody carrying anything."` | `«Может быть. Только она выглядела так, будто ей и не пришлось ничего переживать».` |
+| deep | space | `"No. I keep seeing her zip the bag."` | `«Не обязательно. Но у меня перед глазами, как она застёгивает сумку».` |
+| quiet | invite | `"Taken longer. I'd have packed slowly."` | `«Дольше собиралась бы. Не торопясь».` |
+| quiet | respond | `"Maybe. She made it look ordinary."` | `«Может быть. У неё это выглядело обычно».` |
+| quiet | space | `"No. It was only something I noticed."` | `«Не обязательно. Просто заметила».` |
+
+The daughter reads the other player's composure differently in each voice. Russian keeps that
+reading subjective, with no moral for the player to choose.
+
+## 9. Situation R15 – `the-bag-she-repacked`
+
+Subject `worry`; stages `after-school`, `college`, `independent`; no fact gate. Three repacks
+belong to the authored scene. The line never claims that a game inventory item is missing.
+
+### 9.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've packed this bag three times and I still think I've forgotten something."` | `«Я три раза собрала сумку и всё равно думаю, что что-то забыла».` |
+| fiery | `"Three times. I've packed it three times and it's still wrong somehow."` | `«Три раза. Три раза собрала сумку, а всё равно что-то не так».` |
+| deep | `"I keep repacking. I don't think it's about the bag."` | `«Всё перекладываю вещи. Кажется, дело не в сумке».` |
+| quiet | `"I've repacked it three times. It's fine now."` | `«Три раза переложила вещи. Теперь нормально».` |
+
+### 9.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she thinks is missing` | `Спросить, чего, по её мнению, не хватает` |
+| respond | `Say you do that before trips too` | `Сказать, что вы тоже так делаете перед поездками` |
+| space | `Say the bag is packed and she can stop` | `Сказать, что сумка собрана и можно остановиться` |
+
+### 9.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"I don't know. That's the whole problem. Everything's in there and it still feels wrong."` | `«Не знаю. В этом вся беда. Всё на месте, а мне всё равно кажется, что нет».` |
+| sunny | respond | `"Do you? That helps, weirdly. I thought it was only me."` | `«Да? Как ни странно, мне легче. Думала, это только у меня».` |
+| sunny | space | `"It is packed. I'll leave it alone. Probably."` | `«Собрана. Больше не трону. Наверное».` |
+| fiery | invite | `"Nothing. I know nothing's missing. I'm going to open it again anyway."` | `«Ничего. Я знаю, что всё там. И всё равно снова открою».` |
+| fiery | respond | `"You do it once. I've done it three times. It's not the same thing."` | `«Ты делаешь это один раз. Я – три. Это совсем другое».` |
+| fiery | space | `"I'll stop when I'm out of the door and not before."` | `«Остановлюсь, когда выйду за дверь. Не раньше».` |
+| deep | invite | `"Nothing is missing. I've checked three times and I'm still going to check."` | `«Ничего не забыто. Я проверила три раза и всё равно проверю ещё».` |
+| deep | respond | `"You do. You don't do it three times."` | `«Делаешь. Но не три раза».` |
+| deep | space | `"It's packed. I'm going to open it once more."` | `«Собрана. Я всё равно ещё раз открою».` |
+| quiet | invite | `"Couldn't tell you. Everything's on the list."` | `«Не скажу. По списку всё на месте».` |
+| quiet | respond | `"I know. I've watched you do it."` | `«Знаю. Я видела, как ты собираешься».` |
+| quiet | space | `"It's packed. I'll leave it by the door."` | `«Собрана. Оставлю её у двери».` |
+
+The parent's shared habit may comfort one daughter and irritate another. No line diagnoses anxiety
+or asserts an actual forgotten object.
+
+## 10. Situation R16 – `the-one-who-stopped`
+
+Subject `worry`; stages `college`, `independent`; no fact gate. A familiar name is absent from a
+draw. The daughter does not know why, and the Russian lines do not settle that mystery.
+
+### 10.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"There's a name I expected to see in the draw and it isn't there."` | `«Я думала, увижу в сетке одну фамилию. А её нет».` |
+| fiery | `"She's not in the draw. Nobody will say why, and I hate that."` | `«Её нет в сетке. Никто не говорит почему, и меня это бесит».` |
+| deep | `"A name I looked for isn't there. Nobody has mentioned it."` | `«Искала в сетке одно имя. Не нашла. И никто об этом не говорит».` |
+| quiet | `"There's a name missing from the draw."` | `«В сетке не хватает одной фамилии».` |
+
+### 10.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whether she knew her well` | `Спросить, хорошо ли она её знала` |
+| respond | `Say people leave for ordinary reasons too` | `Сказать, что люди уходят и по обычным причинам` |
+| space | `Say she does not have to find out` | `Сказать, что ей не обязательно выяснять причину` |
+
+### 10.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Not really. I'd know her to look at and that's honestly the whole of it."` | `«Не очень. Узнала бы в лицо, и, честно говоря, это всё».` |
+| sunny | respond | `"They do. I'd just like one of the ordinary reasons to be the reason."` | `«Уходят. Я бы хотела, чтобы и здесь причина была обычной».` |
+| sunny | space | `"I don't. I'll probably look at the next draw anyway."` | `«Не обязательно. Но следующую сетку я, наверное, всё равно посмотрю».` |
+| fiery | invite | `"Not well. Well enough to notice she's gone, which is apparently not the same."` | `«Не близко. Но достаточно, чтобы заметить её отсутствие. Оказывается, это не одно и то же».` |
+| fiery | respond | `"Then somebody could say which ordinary reason. That's all I want."` | `«Тогда кто-нибудь мог бы сказать, какая именно причина. Мне больше ничего не нужно».` |
+| fiery | space | `"I don't have to. I'm going to ask somebody."` | `«Не обязательно. Но я всё равно кого-нибудь спрошу».` |
+| deep | invite | `"Not well. I'd have said hello. I don't think I ever did."` | `«Не близко. Я могла бы с ней поздороваться. Кажется, так ни разу и не сделала».` |
+| deep | respond | `"They do. I'd still like to know which one it was."` | `«Уходят. И всё же мне хочется знать причину».` |
+| deep | space | `"No. I'll keep looking for her name, though."` | `«Не обязательно. Но я всё равно буду искать её имя».` |
+| quiet | invite | `"Enough to say hello. Not much past that."` | `«Могла поздороваться. Не больше».` |
+| quiet | respond | `"Probably. It isn't my business."` | `«Наверное. Это не моё дело».` |
+| quiet | space | `"No. I'll notice if she's not in the next one."` | `«Не обязательно. Но замечу, если её не будет и в следующей сетке».` |
+
+`Уходят` retains the parent's gentle possibility; the daughter has no evidence whether the absent
+player left the sport, skipped an event or had another reason. No answer makes that reason a fact.
+
+## 11. Situation R17 – `the-week-with-nothing-in-it`
+
+Subject `worry`; stages `college`, `independent`; fact gate `clear-next-week`. Runtime confirms
+there is a season week ahead and no entered tournament that week. It does not certify that training,
+work or domestic obligations are absent. The English says `empty week`; the Russian draft narrows
+the factual claim to a week without a tournament while preserving her reaction to open time.
+
+### 11.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I've got a completely empty week and I don't know what to do with myself."` | `«На следующей неделе нет турнира, и я не знаю, куда себя деть».` |
+| fiery | `"An empty week. I'll go mad. I already know I'll go mad."` | `«Неделя без турнира. Я с ума сойду. Уже чувствую».` |
+| deep | `"There's nothing in next week. I keep looking at it and I can't tell if I'm relieved."` | `«В календаре на следующей неделе нет турнира. Смотрю и не понимаю, рада ли».` |
+| quiet | `"Next week's clear. I might catch up on some things."` | `«На следующей неделе нет турнира. Может, займусь тем, что откладывала».` |
+
+### 11.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she would do with it` | `Спросить, чем она хотела бы заняться` |
+| respond | `Say an empty week is allowed to be empty` | `Сказать, что неделю без турнира можно оставить спокойной` |
+| space | `Say she can have it as an empty week` | `Сказать, что не обязательно заполнять её ещё чем-то` |
+
+### 11.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Sleep, mostly. And then panic halfway through it and go and find a court."` | `«В основном спать. А потом среди недели запаниковать и побежать искать корт».` |
+| sunny | respond | `"It is. I'll try to let it be one. I'm not promising."` | `«Можно. Попробую так и оставить. Не обещаю».` |
+| sunny | space | `"Then I'll have it. I might even enjoy it."` | `«Тогда так и сделаю. Может, даже понравится».` |
+| fiery | invite | `"Train. Obviously train. That's the problem with giving me an empty week."` | `«Тренироваться. Конечно, тренироваться. Вот что со мной бывает без турнира».` |
+| fiery | respond | `"Allowed by who? I'm the one who has to sit in it."` | `«Кто разрешил? Мне же потом сидеть и ждать».` |
+| fiery | space | `"Fine. Ask me at the end of it how empty it stayed."` | `«Ладно. В конце недели спроси, насколько она осталась свободной».` |
+| deep | invite | `"I don't know. That's what's bothering me, not the week itself."` | `«Не знаю. Меня тревожит именно это, а не сама неделя».` |
+| deep | respond | `"It's allowed. I'm not sure I know how to have one."` | `«Можно. Только я не уверена, что умею так проводить неделю».` |
+| deep | space | `"All right. I'll try it as rest and see what it turns into."` | `«Хорошо. Попробую считать её отдыхом и посмотрю, что получится».` |
+| quiet | invite | `"Laundry. Sleep. The things that don't fit anywhere else."` | `«Стирка. Сон. Всё, для чего обычно не находится места».` |
+| quiet | respond | `"That's true. I'll find something quiet to do."` | `«Верно. Найду себе что-нибудь спокойное».` |
+| quiet | space | `"All right. Nothing in it, then."` | `«Ладно. Ничего лишнего на эту неделю».` |
+
+This is a deliberate fidelity correction relative to the English. Any future implementation of RU
+must preserve the `clear-next-week` gate and should consider narrowing the English claim as well.
+
+## 12. Situation R18 – `the-match-she-is-still-carrying`
+
+Subject `worry`; stages `after-school`, `college`, `independent`; fact gate `played-recently`.
+The gate proves a recent match, but not its result. All Russian lines remain result-neutral.
+
+### 12.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I'm still thinking about that match and I can't work out which bit."` | `«Я всё ещё думаю о том матче, но даже не пойму, о каком моменте».` |
+| fiery | `"That match is still in my head. I want it out."` | `«Тот матч всё ещё в голове. Хочу, чтобы он оттуда ушёл».` |
+| deep | `"It isn't one point I'm stuck on. It's the shape of the whole thing."` | `«Я застряла не на одном розыгрыше. Меня держит весь матч целиком».` |
+| quiet | `"I keep coming back to the last match. It's fine."` | `«Всё возвращаюсь к последнему матчу. Всё нормально».` |
+
+### 12.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask which part she keeps returning to` | `Спросить, к какому моменту она возвращается` |
+| respond | `Say some matches take a week to put down` | `Сказать, что от некоторых матчей отходят неделю` |
+| space | `Say you can talk about something else` | `Предложить поговорить о чём-нибудь другом` |
+
+### 12.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"That's the thing – I can't find a part. It's all of it, just sitting there."` | `«В том-то и дело: не нахожу такого момента. В голове сидит весь матч».` |
+| sunny | respond | `"Do they? Then I'm not behind. That's quite a relief, actually."` | `«Правда? Значит, ничего страшного, что я ещё думаю о нём. Даже легче стало».` |
+| sunny | space | `"Can we? Yes. Tell me something that isn't a match."` | `«Можно? Да. Расскажи что-нибудь совсем не про матч».` |
+| fiery | invite | `"I can't pick one. If I could pick one I'd have dealt with it by now."` | `«Не могу выбрать один. Если бы могла, давно бы с ним разобралась».` |
+| fiery | respond | `"I don't want to give it a week. I want it gone."` | `«Не хочу давать ему неделю. Хочу, чтобы он исчез сейчас».` |
+| fiery | space | `"No. I brought it up, so I'd rather finish it."` | `«Нет. Раз я начала, хочу договорить».` |
+| deep | invite | `"There isn't a part. I've gone looking for one and there isn't."` | `«Нет одного момента. Я искала – не нашла».` |
+| deep | respond | `"Some do. This one hasn't started going anywhere yet."` | `«Бывает. Только этот пока никуда не уходит».` |
+| deep | space | `"Not yet. I haven't got anything else in my head."` | `«Пока нет. У меня в голове сейчас ничего другого».` |
+| quiet | invite | `"Not one bit in particular. The whole thing, I suppose."` | `«Не к одному моменту. Наверное, ко всему матчу».` |
+| quiet | respond | `"Maybe. I'll give it a bit longer, then."` | `«Может быть. Тогда дам себе ещё немного времени».` |
+| quiet | space | `"Yes. What's been happening with you?"` | `«Да. Что у тебя нового?»` |
+
+The parent can offer another topic; the daughter may take it or decline. The fiery and deep lines
+do not assign a loss to the recent match.
+
+## 13. Corpus progress
+
+| rows | ordinary authored strings | shared second beats | state |
+| ---: | ---: | ---: | --- |
+| 26 / 51 | 494 / 969 | 4 / 4 | R45–R52 and R1–R18 complete as DRAFT |
+
+The next rows continue in [RU-10B](ru-small-talk-situations-b-2026-10.md). This volume ends at
+R18 so the situation corpus stays reviewable in bounded slices.
