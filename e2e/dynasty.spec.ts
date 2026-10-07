@@ -83,7 +83,10 @@ test('the line continues: the door, the locked name, and a career that carries i
   // This career had no child, so the epilogue variant is the true one. ⚠ The label is a DRAFT and is
   // named here for the same reason prologue.spec.ts names the wizard's heading: it is the thing under
   // test, and a red here after his pass means the string moved and this line has to move with it.
-  await expect(line).toHaveText('A daughter came later')
+  // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 – EXACTLY THE MOVE THIS COMMENT PREDICTED: «A daughter came later» became «A child
+  // came later», his own ruling («child is better», docs/decisions.md 07.10). The same round put this door and «Raise another»
+  // in ONE ROW (`.ending-doors`); a locator by class or by role is unaffected by that, which is why only the literal moved.
+  await expect(line).toHaveText('A child came later')
   await expect(epilogue.getByRole('button', { name: 'Raise another' }), 'beside it, never instead of it')
     .toHaveCount(1)
 

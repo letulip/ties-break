@@ -22,12 +22,15 @@ import { seasonYear, weekLabel } from '../../shared/dates'
 import { formatCents } from '../../shared/money'
 import { portraitStage } from '../../shared/avatarEmotion'
 import type { AvatarEmotion } from '../../shared/avatarEmotion'
-import type {
-  AlbumPage,
-  CareerEndingType,
-  Milestone,
-  ScrollSeason,
+import {
+  LADDER_TRACKS,
+  type AlbumPage,
+  type CareerEndingType,
+  type Milestone,
+  type ScrollSeason,
+  type SeasonTrackRow,
 } from '../../shared/protocol'
+import type { LadderTrack } from '../season/types'
 import { ENDING_TITLE } from '../ending'
 import { kidAgeAt } from './age'
 import { seasonIndexOf } from './ledger'
@@ -474,8 +477,80 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   divorce: 'The marriage ended',
 }
 
-function scrollDetail(m: Milestone): string | null {
+/** ⭐⭐⭐ ROUND 48 #7a – THE TABLE A BANKED SEASON WAS ABOUT, which is `dominantTrackOfSeason`'s
+ *  question (world/milestones.ts) asked of the row the wrap WROTE instead of the counters it READ.
+ *
+ *  THE OWNER, 07.10, on «The whole record»: «там какая-то ерунда в каждом season close написана». The
+ *  line printed `Milestone.rank`, which is `world.kidRank` at the wrap – the INTERNATIONAL table,
+ *  always and by construction – so a professional's record carried her stale junior placing: the
+ *  season she went 97-11 and finished world #1 read «#71», and her third-in-the-world year «#79».
+ *
+ *  ⚠ MIRRORED, NOT IMPORTED, AND THE REASON IS THE INPUT. `dominantTrackOfSeason` reads the LIVE
+ *  counters (`seasonRecord`, `seasonPointsByTrack`), and the wrap resets them nine lines after it
+ *  banks a row – so a reader that arrives a season later has nothing live to ask. `byTrack` holds the
+ *  same figures frozen at the same instant (`seasonHistoryByTrack` copies `seasonRecord`'s W-L and
+ *  `seasonPointsByTrack`'s points out of the very calls the comparator makes), so the SAME rule on
+ *  the banked row names the SAME table the season card named. `tests/r48-b2-scroll-truth.test.ts`
+ *  holds the two together on real wraps.
+ *
+ *  THE RULE, copied from its source: most matches (wins + losses) wins; a tie goes to the table with
+ *  more points; and the walk runs lowest table first with `>=` on the tie-break, so on a dead heat the
+ *  HIGHER table speaks (`LADDER_TRACKS`' order is meaning – see its note in shared/protocol/ladder.ts).
+ *
+ *  ⚠ NOBODY PLAYED – no table has a match – is the one arm that cannot be copied: the comparator falls
+ *  back to `activeLadderOf(world)`, a read of her live points. Its banked twin is the HIGHEST table she
+ *  held a rank in at the wrap, because `endRank` is written exactly where `kidPoints > 0`, which is the
+ *  test `activeLadderOf` makes. (Its one other term, the `wtaEverCounted` latch, is not banked; it only
+ *  differs for a once-professional with no professional point left, and there it can only name a table
+ *  she IS ranked in.) None ranked at all answers `null`: the card says «Unranked» and so does this. */
+function closeTrackOf(byTrack: Record<LadderTrack, SeasonTrackRow>): LadderTrack | null {
+  let best: LadderTrack | null = null
+  let bestMatches = 0
+  for (const track of LADDER_TRACKS) {
+    const played = (byTrack[track]?.wins ?? 0) + (byTrack[track]?.losses ?? 0)
+    if (played === 0) continue
+    if (
+      best === null ||
+      played > bestMatches ||
+      (played === bestMatches && (byTrack[track]?.points ?? 0) >= (byTrack[best]?.points ?? 0))
+    ) {
+      best = track
+      bestMatches = played
+    }
+  }
+  if (best !== null) return best
+  for (let i = LADDER_TRACKS.length - 1; i >= 0; i--) {
+    if (byTrack[LADDER_TRACKS[i]]?.endRank !== undefined) return LADDER_TRACKS[i]
+  }
+  return null
+}
+
+/** A season close's detail: HER place in the table the season was about, as the wrap banked it.
+ *
+ *  ⚠ ABSENT IS SILENCE, NEVER A NUMBER – «unranked is not a number», the house rule. A dominant table
+ *  with no `endRank` means she held no counting result in it, so the cell is `null` and the label row
+ *  stands alone; it does NOT reach for another table's rank, which is the defect this function repairs.
+ *
+ *  ⚠ TWO CASES HAVE NOTHING BANKED TO READ, and both keep the line this scroll has always printed
+ *  rather than inventing a table: a season that fell out of `SEASON_HISTORY_CAP`, and a row banked
+ *  before v46, which has no `byTrack` and none can be recovered (the v45 -> v46 step in
+ *  engine/migrations.ts back-filled nothing, on purpose). The milestone's own rank is also that old
+ *  row's bare `endRank` – both are `world.kidRank` at the one wrap. */
+function seasonCloseDetail(world: WorldState, m: Milestone): string | null {
+  const row =
+    m.seasonIndex === undefined ? undefined : world.seasonHistory.find((h) => h.seasonIndex === m.seasonIndex)
+  const byTrack = row?.byTrack
+  if (byTrack === undefined) return m.rank === undefined ? null : `#${m.rank}`
+  const track = closeTrackOf(byTrack)
+  const endRank = track === null ? undefined : byTrack[track]?.endRank
+  return endRank === undefined ? null : `#${endRank}`
+}
+
+function scrollDetail(m: Milestone, world: WorldState): string | null {
   switch (m.type) {
+    // ⚠ 07.10 (round 48 #7b): `buildScroll` no longer walks `title` and `final` – the trophy cabinet
+    // speaks for them – so these two arms are reached by no caller today. They stay because this is a
+    // pure function of a milestone and a milestone of either type is still a legal argument.
     case 'title':
     case 'final':
     case 'prize':
@@ -483,8 +558,9 @@ function scrollDetail(m: Milestone): string | null {
       return m.tier ? TIERS[m.tier].label : null
     case 'injury':
       return m.kind ?? null
+    // ⚠ 07.10 (round 48 #7a): read off the banked season row, not off `m.rank` – see `closeTrackOf`.
     case 'season-rank':
-      return m.rank === undefined ? null : `#${m.rank}`
+      return seasonCloseDetail(world, m)
     case 'break-even':
       // Two crossings, one type – say which. See `milestoneKey` in diary/facts.ts.
       return m.kind === 'week' ? 'one week of it' : 'the whole of it'
@@ -518,9 +594,40 @@ function scrollDetail(m: Milestone): string | null {
  *  wants the record rather than the story. */
 export function buildScroll(world: WorldState): ScrollSeason[] {
   const bySeason = new Map<number, ScrollSeason>()
-  const rows = [...world.milestones].sort((a, b) => a.week - b.week)
-  for (const m of rows) {
-    const seasonIndex = seasonIndexOf(m.week)
+  // ⭐⭐⭐ ROUND 48 #7b – THE ROWS HAVE TWO SOURCES AND ARE UNIFIED BEFORE THEY ARE GROUPED, so a season
+  // that holds only a cabinet week still gets its page.
+  //
+  // THE OWNER, 07.10: «а еще с 2036 начиная нет никаких титулов вообще». He was right and the data was
+  // never missing: `title` and `final` milestones are FIRST-PER-TIER (identity `title:<tier>`), so his
+  // 127-title career had fourteen of them and the scroll's 2036 – four real titles – showed none. The
+  // never-pruned `trophiesByTier` holds EVERY title and lost-final week per tier, and every first-per-tier
+  // milestone is one of those weeks (the capture writes both from the same `kidFinish`), so the two
+  // walks are swapped rather than added: nothing is lost and nothing prints twice.
+  //
+  // ⚠ ONE VISIBLE CONSEQUENCE, SAID HERE SO IT IS NOT A SURPRISE: the cabinet's `finals` are LOST finals
+  // (`TierTrophies.finals`), while the `final` milestone fires for `kidFinish <= 1`, a title week
+  // included. A first-ever title used to print a `Final` row beside its `Title` row on the same week; it
+  // prints the `Title` alone now, and every `Final` row is a final she lost.
+  //
+  // ⚠ ALL THE OTHER MILESTONE TYPES ARE UNTOUCHED, label and detail. And this stays a PURE READ: no
+  // stream is drawn, nothing on `world` is written, and the same world yields the same scroll.
+  const rows: { week: number; label: string; detail: string | null }[] = []
+  for (const m of world.milestones) {
+    if (m.type === 'title' || m.type === 'final') continue
+    rows.push({ week: m.week, label: SCROLL_LABEL[m.type], detail: scrollDetail(m, world) })
+  }
+  for (const tier of TIER_LADDER) {
+    const cabinet = world.trophiesByTier?.[tier]
+    if (!cabinet) continue
+    for (const week of cabinet.titles) rows.push({ week, label: SCROLL_LABEL.title, detail: TIERS[tier].label })
+    for (const week of cabinet.finals) rows.push({ week, label: SCROLL_LABEL.final, detail: TIERS[tier].label })
+  }
+  // A STABLE sort, so a tie keeps the order the rows were pushed in: the milestones in their capture
+  // order, then the cabinet's – which is the order a week really happened in (a first cheque is
+  // captured before the title that follows it in `finalizeTournament`).
+  rows.sort((a, b) => a.week - b.week)
+  for (const row of rows) {
+    const seasonIndex = seasonIndexOf(row.week)
     let season = bySeason.get(seasonIndex)
     if (!season) {
       season = {
@@ -531,7 +638,7 @@ export function buildScroll(world: WorldState): ScrollSeason[] {
       }
       bySeason.set(seasonIndex, season)
     }
-    season.rows.push({ week: m.week, label: SCROLL_LABEL[m.type], detail: scrollDetail(m) })
+    season.rows.push(row)
   }
   return [...bySeason.values()].sort((a, b) => a.seasonIndex - b.seasonIndex)
 }

@@ -602,7 +602,10 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     // name on it: this walk answers every non-final offer with «one more year», so the count is real
     // and the branch that spends it is the one that ran.
     expect(world.oneMoreYearCount, 'the walk filed real refusals').toBeGreaterThan(0)
-    expect(said[0].text).toContain(`She has said one more year ${world.oneMoreYearCount} times`)
+    // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #4: «She has said one more year N times» became «You have said one more year N times» –
+    // the count sentence after her opening is the PARENT's (his ruling: it was us who proposed it, not her who said it);
+    // the opening, `LAST_WORD_OPENING`, is truly hers and is the substring asserted a few lines up.
+    expect(said[0].text).toContain(`You have said one more year ${world.oneMoreYearCount} times`)
 
     // ...and the epilogue's own detail line, through the real answer.
     world.week = last.week

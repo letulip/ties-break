@@ -287,7 +287,7 @@ to rule on. A draft, if he wants the row renamed rather than explained:
 
 | # | home | today | the draft | |
 | ---: | --- | --- | --- | --- |
-| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `Family's share` | ⭐ **RULED 18.09 – twice. «да, пойдет» took the draft; «давай Family's share напишем?» is the SPELLING, and it is what ships.** The figure has never moved |
+| R46-3 | `EndingScreen.vue` · the first totals label | `Won` | `Family's share` | ⭐ **RULED 18.09 – twice. «да, пойдет» took the draft; «давай Family's share напишем?» is the SPELLING, and it is what ships.** The figure has never moved. ⚠ 07.10 (round 48): the row LEFT the screen on a third ruling – «Family's share вообще можно убрать … останется всего 3 цифры» – so this line is history, not what ships |
 
 ⚠ **R46-3 was ruled twice in one day and the second ruling is the one in the tree.** The draft put to
 him read `The family's share`; his own sentence later that day dropped the article, and a spelling he

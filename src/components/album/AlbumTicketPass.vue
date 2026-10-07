@@ -37,7 +37,7 @@ defineProps<{ ticket: AlbumTicket }>()
 </script>
 
 <template>
-  <div class="album-pass" :class="`album-pass-${ticket.step}`">
+  <div class="album-pass" :class="[`album-pass-${ticket.step}`, ticket.paint ? `album-pass-${ticket.paint}` : '']">
     <div class="album-pass-main">
       <p class="album-pass-venue">{{ ticket.venue }}</p>
       <!-- ⭐ ROUND 47 #8c – THE STAGE IS PRINTED ONCE: on the stub, in the album's own hand. It used to be here too
@@ -103,6 +103,16 @@ defineProps<{ ticket: AlbumTicket }>()
 .album-pass.album-pass-elite {
   --album-pass-ink: #3b3051;
   --album-pass-ink-deep: #2a2239;
+}
+
+/* ⭐ ROUND 48 #1c – THE SLAM TICKET'S GREEN (owner, 07.10: «на предпоследней зеленый билет на Шлем внизу»). The engine names the paint (`ticket.paint === 'slam'`,
+   set only on the ticket the book's tail hangs for a Grand Slam the career reached) and this file owns the colour – and it is STILL no new colour: the app's own
+   grass-court token `--surface-grass` (#5fb05a) times the pass's two factors, ×0.38 for the face and ×0.27 for the deep end. The hexes are written out for the same
+   reason as the four steps' (`color-mix()` computes to the empty string under happy-dom), and `tests/component/r48-b3-album-tail.test.ts` re-derives both from the
+   token. It sits AFTER the four steps at the same specificity, so it wins over the `elite` pair the Slam's step would otherwise paint. */
+.album-pass.album-pass-slam {
+  --album-pass-ink: #244322;
+  --album-pass-ink-deep: #1a3018;
 }
 
 .album-pass-main {

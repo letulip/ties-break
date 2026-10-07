@@ -1475,7 +1475,10 @@ export const ALBUM_TIER_STEP: Record<TierId, AlbumTierStep> = {
   slam: 'elite',
 }
 
-function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>, startYear: number = DEFAULT_START_YEAR): AlbumTicket {
+/** What a ticket or a tag READS of a tournament: the rung, how far she went, when. A candidate is one; so is the book's tail fact (`albumTailFact`). */
+type TournamentFact = Pick<AlbumCandidate, 'week' | 'ageYears' | 'tier' | 'finish'>
+
+function ticketOf(c: TournamentFact, flavour: ReturnType<typeof flavourFor>, startYear: number = DEFAULT_START_YEAR): AlbumTicket {
   return {
     tier: TIERS[c.tier!].label,
     step: ALBUM_TIER_STEP[c.tier!],
@@ -1489,7 +1492,7 @@ function ticketOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>, sta
   }
 }
 
-function tagOf(c: AlbumCandidate, flavour: ReturnType<typeof flavourFor>): AlbumTag {
+function tagOf(c: TournamentFact, flavour: ReturnType<typeof flavourFor>): AlbumTag {
   return {
     stage: c.finish === undefined ? '' : finishLabel(c.finish),
     tier: TIERS[c.tier!].label,
@@ -1578,6 +1581,10 @@ function sheetsOf(
     const tag = layout === 'C' && tournament ? tagOf(tournament, flavour) : null
     const sheetPatch = layout === 'A' ? patch : null
     const fillerKind = ticket || tag || sheetPatch ? null : albumFillerKind(band, own.map((c) => c.occasion))
+    // ⭐ ROUND 48 #1a – layout B's gap is a 400px strip and holds TWO snapshots: a B sheet takes the NEXT picture of its pool as well, so the pair is two
+    // different paintings by construction (the walk never repeats before the pool is shown). Layout C's gap is a narrow column – it keeps one.
+    const filler = fillerKind ? takeFiller(fillers, band, fillerKind) : null
+    const pair = filler && fillerKind && layout === 'B' ? takeFiller(fillers, band, fillerKind).art : null
     sheets.push({
       id,
       layout,
@@ -1590,7 +1597,7 @@ function sheetsOf(
       ticket,
       tag,
       patch: sheetPatch,
-      filler: fillerKind ? takeFiller(fillers, band, fillerKind) : null,
+      filler: filler && pair ? { ...filler, pair } : filler,
       doodles: [DOODLE_BY_KIND[lead.occasion.kind] ?? DOODLES[flavour.doodle]],
     })
   }
@@ -1602,6 +1609,81 @@ function sheetsOf(
 function bandOfAge(age: number): AlbumBand {
   const stage = portraitStage(age)
   return stage === 'jun' ? 'young' : stage
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 48 #1b / #1c – THE BOOK'S LAST TWO SHEETS WEAR WHAT THE CAREER REALLY WON
+// =================================================================================================
+//
+// THE OWNER, 07.10 (round 47 №14 reopened – the small snapshots left the tail still empty): «на последней странице и предпоследней всё ещё остались пропуски,
+// на последней повесь вертикальную бирку w1000 справа, а на предпоследней зеленый билет на Шлем внизу».
+//
+// WHY THE TAIL IS THE ONE PLACE A SNAPSHOT NEVER FILLED: `FILLER_NEVER_KINDS` keeps a small holiday picture off «the book's last word» (the closing kinds), and in a
+// finished career the closing frames sit on exactly the last two sheets. So the gap the sheet's layout leaves – layout C's right-hand column where the baggage tag
+// would hang, layout B's bottom strip where the boarding pass would – stayed EMPTY on those two pages and only there. The owner's answer is to hang the real
+// object in the real gap: the vertical tag on the LAST sheet, the ticket on the one before it.
+//
+// ⭐ THE TRUTHFULNESS GATE – the variability law (a page may only carry a fact the career has). The tag is a WORLD TOUR 1000 tag and the ticket is a GRAND SLAM ticket,
+// so each is hung only for a career whose never-pruned cabinet (`trophiesByTier`, the one dated per-tier ledger – `lastProvenCourtWeek`'s own note) holds a title or a
+// lost final at that rung; a career without one keeps the sheet exactly as it was (a snapshot, or the empty gap). What it prints is that appearance's own: the stage
+// it reached (`finishLabel`), the rung's label, the calendar week (`weekSpan`) and her age that week.
+//
+// ⭐ DERIVED, NEVER DRAWN: the fact is a read of the cabinet, and the seat, gate, row, venue and barcode are the SHEET'S OWN flavour (`flavourFor(seed, sheet.id)` – the
+// key every ticket of the book already uses, re-derived at the call site). No stream is new, nothing is rolled, nothing persists, MAIN is untouched (invariant 2).
+//
+// ⚠ IT HANGS WHERE THE LAYOUT HAS THE FRAME AND NOWHERE ELSE: a C last sheet (that is where a tag lives) and a B second-to-last sheet (that is where a pass lives), and
+// only when the sheet carries no tag or ticket of its own (it would not be a gap). A tail of other layouts keeps what it had – an A sheet is full (its patch), and a
+// tag cannot hang in B's strip nor a pass in C's column. The childhood chapter never wears them (a grown woman's keepsake on a child's page).
+// ⚠ AND IT IS AN ASK, NOT A GIVEN (`tail: true` on the wire): the closing sheet of a career whose walls drifted carries the ARC's words, and the longest of those
+// (a 68-character loose line against a corpus whose longest is 52 – measured on his own save's last page) leaves the tag's column no clear paper. The resolver decides
+// per sheet whether the gap is clear – at the tag's size, or one rung smaller – and a page with no room goes without it rather than put a line over a tag.
+// ⚠ THE GREEN IS THE SLAM TICKET'S ALONE (`AlbumTicket.paint`): the tag is a W1000 tag on its own tier's paper, and every other Slam ticket in a book keeps the
+// elite ink it has always had – he asked for this one page's ticket.
+
+/** The two rungs the tail hangs: the tag's and the ticket's. */
+export const ALBUM_TAIL_TAG_TIER: TierId = 'wta1000'
+export const ALBUM_TAIL_TICKET_TIER: TierId = 'slam'
+
+/** ⭐ HER LATEST TITLE AT `tier` – and, for a career that reached the rung and never won it, her latest LOST FINAL – read off the cabinet; null when the cabinet holds
+ *  neither (the gate). `finish` is the ticket's own index (0 champion, 1 runner-up). A pure read: no draw, no write. */
+export function albumTailFact(world: WorldState, tier: TierId): { week: number; finish: number } | null {
+  const cabinet = world.trophiesByTier?.[tier]
+  if (!cabinet) return null
+  if (cabinet.titles.length > 0) return { week: Math.max(...cabinet.titles), finish: 0 }
+  if (cabinet.finals.length > 0) return { week: Math.max(...cabinet.finals), finish: 1 }
+  return null
+}
+
+/** The childhood chapter's sheets (`prologue-N`). */
+function isChildhoodSheet(sheet: AlbumSheetModel): boolean {
+  return sheet.id.startsWith('prologue-')
+}
+
+/** ⭐ THE TAIL. Mutates the assembled `sheets` array (a local the assembly owns), never the world. See the header above. Both objects carry `tail: true`, which tells
+ *  the resolver they are an ASK and not a fact of the sheet: it draws one only where the gap is clear (`placeSheet`), so a page too full to hold it goes without it.
+ *  ⚠ THE SHEET KEEPS ITS SMALL SNAPSHOT: the resolver draws whichever the gap can hold – the hung object first – so a page that declines the object still gets its
+ *  picture, and the engine does not guess at room (that is the resolver's, `placeFiller`'s own rule). */
+function hangTail(world: WorldState, sheets: AlbumSheetModel[]): void {
+  const factAt = (tier: TierId): TournamentFact | null => {
+    const fact = albumTailFact(world, tier)
+    return fact ? { week: fact.week, ageYears: kidAgeAt(world, fact.week), tier, finish: fact.finish } : null
+  }
+  const last = sheets.length - 1
+  const lastSheet = sheets[last]
+  if (lastSheet && lastSheet.layout === 'C' && !lastSheet.tag && !isChildhoodSheet(lastSheet)) {
+    const fact = factAt(ALBUM_TAIL_TAG_TIER)
+    if (fact) sheets[last] = { ...lastSheet, tag: { ...tagOf(fact, flavourFor(world.seed, lastSheet.id)), tail: true } }
+  }
+  const prevSheet = sheets[last - 1]
+  if (prevSheet && prevSheet.layout === 'B' && !prevSheet.ticket && !isChildhoodSheet(prevSheet)) {
+    const fact = factAt(ALBUM_TAIL_TICKET_TIER)
+    if (fact) {
+      sheets[last - 1] = {
+        ...prevSheet,
+        ticket: { ...ticketOf(fact, flavourFor(world.seed, prevSheet.id), world.startYear), paint: 'slam', tail: true },
+      }
+    }
+  }
 }
 
 // =================================================================================================
@@ -1734,6 +1816,9 @@ export function assembleAlbum(world: WorldState): AlbumBook {
       line: arc.line,
     }
   }
+
+  // ⭐ ROUND 48 #1b / #1c – the two last sheets hang the career's W1000 tag and Slam ticket in the gaps their layouts leave (`hangTail`)
+  hangTail(world, sheets)
 
   return { chapters: chapterRows, sheets }
 }

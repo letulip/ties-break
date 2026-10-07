@@ -29,13 +29,22 @@ last-reviewed: 2026-09-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 47 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 48 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 47 is the ending-screen and album round** ([round-47.md](rounds/round-47.md), 06.10) – off the
-double merge the same afternoon: the last page rebuilt (the fund-as-a-till Spent lie fixed by the
-fourth reckoning term), the album ticket/tag family, and the first full career dossier read from
-his own exported save.
+**Round 48 is the first detailed pass on the merged 47** ([round-48.md](rounds/round-48.md),
+07.10) – eight items off the live build the same day: the album's tail-page gaps closed by name
+(a vertical W1000 tag, a green Slam ticket, a second vacation photo for horizontal holes), the
+heading/caption overlap, the backing off – the album full-screen like the last page, the ending's
+money rows in his order with Family's share VERIFIED against his save before it keeps its name,
+the «one more year» rephrase into the parent's offer (round 47's `[~]` REOPENED), and the whole
+record's season-close nonsense plus the titles missing from 2036.
+
+**Round 47 shipped and merged 07.10 as PR #167** ([round-47.md](rounds/round-47.md), 06.10) – off
+the double merge the same afternoon: the last page rebuilt (the fund-as-a-till Spent lie fixed by
+the fourth reckoning term), the album ticket/tag/patch family, the heading-over-hero sweep, the
+first full career dossier read from his own exported save, and the walk-slowdown hunt that killed
+its own premise – one true grower fixed byte-identically, junior walks −19 %.
 
 
 **Round 46 is a 22-item playtest round** ([round-46.md](rounds/round-46.md), 05.10) – off the

@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 158 dated entries, newest 2026-10-06. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 160 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 23 | [THE MORNING BATCH: ROUND 46'S PILE RULED, THE WAVE'S FOUR REFINED](#06102026--the-morning-batch-round-46s-pile-ruled-the-waves-four-refined) | 2026-10-06 |
+| process-and-git | 25 | [ROUND 48, SECOND BATCH: THE RECKONING KEEPS THREE FIGURES](#07102026--round-48-second-batch-the-reckoning-keeps-three-figures) | 2026-10-07 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -5914,3 +5914,32 @@ inheritance line is approved**: «да, звучит хорошо» – «Her mo
 start.», conditional on a band above 1.0.
 
 Merge order he named: «я буду мержить начиная с раунда по готовности».
+
+## 07.10.2026 – ROUND 48 OPENS: THE FIRST DETAILED PASS ON THE MERGED 47
+
+«всё смержено, я посмотрю детально, но вроде стало сильно лучше» – and the first eight items off
+the live build the same day, as their own round ([round-48.md](rounds/round-48.md)) on his word
+(«сделай отдельный раунд пожалуйста для всех этих пунктов»). The rulings inside the list:
+
+**The ending's money order is his**: Spent first, Family's share second, Family's portfolio third,
+her account last – and Family's share is to be VERIFIED against his save before it keeps its name
+(«мне кажется некорректно посчитано (40.6 млн против ее аккаунта 321.1 млн) проверь пожалуйста»).
+**The «one more year» voice is settled**: «это не она говорила, а мы предлагали, надо
+переформулировать» – the five sites leave her voice for the parent-offer framing; round 47's
+`[~]`-with-drafts close is REOPENED, a visible wrong string is not closed by an answer. **The
+succession door is renamed by him**: «A daughter came later» → «A child came later» («child
+лучше»), and the two ending doors go into one row. **The album sheds its backing**: «подложка не
+нужна, она лишняя и место ест, пусть он на весь экран будет, как и THE LAST PAGE по принципу».
+**The tail pages get named decorations**: a vertical W1000 tag right on the last sheet, a green
+Slam ticket at the bottom of the second-to-last, and horizontal gaps may take a second photo
+(«например из vacation второе рядом»).
+
+## 07.10.2026 – ROUND 48, SECOND BATCH: THE RECKONING KEEPS THREE FIGURES
+
+On the architect's 3b verdict (the share is correct by construction – the family's part of the
+prize cheques against her whole bank): «наверное Family's share вообще можно убрать, а spent
+переименовать TENNIS & TRIPS и проверить их сумму за все года, здесь я имею в виду вообще все
+расходы на теннис, конечно, включая всех тренеров. останется всего 3 цифры в итоге.» So the
+ending's money block is three rows – Tennis & trips (the renamed outlay, HIS label), Family's
+portfolio, her account – the Family's share row leaves the screen, and the outlay figure owes a
+verification that it is the WHOLE career and ALL the tennis, coaches included.

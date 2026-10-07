@@ -26,7 +26,14 @@ Two labels on the one continue control – lived career and epilogue variants.
 | id | home | text | status |
 | --- | --- | --- | --- |
 | D1 | `src/components/EndingScreen.vue` | Raise her daughter | `DRAFT` |
-| D2 | `src/components/EndingScreen.vue` | A daughter came later | `DRAFT` |
+| D2 | `src/components/EndingScreen.vue` | A child came later | `DRAFT` |
+
+⭐ **D2 re-spelled by him, 07.10 (round 48 #6).** The row read `A daughter came later`; the owner's own ruling on the
+epilogue door is that «child» is better (docs/decisions.md, 07.10; docs/rounds/round-48.md item 6), so the shipped label and
+this row are `A child came later`. ⚠ **The status column keeps `DRAFT` on purpose, and only because of the pin:**
+`tests/wave1011-strings-roundtrip.test.ts` parses `DRAFT` rows alone, so moving D2 to a ruled status would drop it from the
+table the code is held against and quietly shrink the count. The string is his spelling; D1 is still a draft. The same round
+put this door and `Raise another` in one row – a layout move, no wording.
 
 ## 2. The identity card and the wizard (`DYNASTY_COPY`)
 

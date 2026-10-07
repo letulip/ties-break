@@ -384,8 +384,14 @@ useDialogFocus(card)
           :disabled="game.busy"
           @click="answer(false)"
         >
+          <!-- ⭐⭐⭐ ROUND 48 #4 – THE NOTE UNDER THE BUTTON IS THE PARENT'S ANSWER, NOT HERS. It read «The same
+               answer she gave last winter.» The owner, 07.10 (translated – no Cyrillic may appear in a template):
+               it was not her who said it, it was us who proposed it. This is the control the PARENT presses, so the
+               answer last winter was the parent's too. The label above it is his and is untouched; the final card
+               has no such control at all, which is exactly why «Nobody asked her this time. She said it herself»
+               (engine/ending.ts) stays hers. -->
           <strong>One more year</strong>
-          <span>The same answer she gave last winter.</span>
+          <span>The same answer you gave last winter.</span>
         </button>
       </div>
     </div>

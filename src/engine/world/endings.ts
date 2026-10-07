@@ -1195,7 +1195,11 @@ export const LAST_OFFER_NOT_A_QUESTION = 'She has already said this one – ther
 
 /** ⭐⭐⭐ THE FINAL OFFER IS NOT A QUESTION, SO THIS COMMAND IS NOT AN ANSWER TO IT (the long
  *  goodbye step 4, §4). Every NON-final offer is untouched and stays exactly what it was: the
- *  parent's question, the parent's answer, «One more year, she said. Same as last time.»
+ *  parent's question, the parent's answer, «One more year, you said. Same as last time.»
+ *  ⭐⭐⭐ ROUND 48 #4 (07.10): THE DIARY LINE READ «One more year, she said.» AND THAT WAS THE DEFECT. «One more
+ *  year» is the button the PARENT presses on the retirement card and this very command is what counts the press,
+ *  so the line files the parent's words. The owner, 07.10 (translated): it was not her who said it, it was us
+ *  who proposed it. Only the sayer moved – «Same as last time.» and the whole shape of the line are as they were.
  *
  *  ⚠⚠ WHAT THIS HEADER USED TO SAY, AND WHY IT IS GONE. It read «AT 38 THE ONLY ANSWER IS YES, AND
  *  THAT IS NOT A RETIREMENT RULE … the copy on the card has to carry the difference between "we are
@@ -1209,7 +1213,7 @@ export const LAST_OFFER_NOT_A_QUESTION = 'She has already said this one – ther
  *  It is no longer «she may not refuse» – it is «there is nothing here to answer». The guard is not
  *  about her: the worker is not the gate (CLAUDE.md invariant 1), so a hand-built message or a poked
  *  save can still put `retire: false` against a final offer, and a command that accepted it would
- *  increment `oneMoreYearCount` and write «One more year, she said» over a career whose card never
+ *  increment `oneMoreYearCount` and write «One more year, you said» over a career whose card never
  *  offered those words. That is an illegal state, and the house rule for an illegal command in this
  *  engine is a LOUD refusal, never a silent no-op (`guardNotEnded`'s own note above, and round 24's
  *  `COLLEGE_REVEAL_REFUSAL`: «a silent no-op was the failure and a loud refusal was the fix»).
@@ -1233,7 +1237,7 @@ export function answerRetirement(world: WorldState, retire: boolean): void {
       week: world.week,
       type: 'milestone',
       keep: true,
-      text: 'One more year, she said. Same as last time.',
+      text: 'One more year, you said. Same as last time.',
     })
     return
   }

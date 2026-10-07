@@ -253,7 +253,10 @@ describe('the album', () => {
       expect(w.findAll('.album-page'), `${type}: no page rendered`).toHaveLength(1)
       // The hand-off foot is the last page's own block, and it is the half a mount alone would miss.
       expect(w.text(), `${type}: the record never opened`).toContain('The whole record')
-      expect(w.text(), `${type}: the count on the foot is not hers`).toContain('She said one more year 4 times')
+      // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #4: it read «She said one more year 4 times» and the failure message said the count
+      // «is not hers» – and it was not her who said it, it was the parent who proposed it (the owner's ruling, the draft
+      // R47-S4 of round 47's ledger). The page line is the parent's now; the count is the same count.
+      expect(w.text(), `${type}: the count on the foot is not the parent's`).toContain('You said one more year 4 times')
       w.unmount()
     }
   })
@@ -409,7 +412,10 @@ describe('the natural end', () => {
     expect(controls).toHaveLength(1)
     expect(w.text(), 'the card printed something other than the engine\'s line').toContain(lastWordLine(4))
     // ⭐ ...and it really is reading the state rather than printing a fixed sentence.
-    expect(w.text()).toContain('She has said one more year 4 times')
+    // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #4: «She has said one more year 4 times» became «You have said one more year 4 times» –
+    // the count sentence after her opening is the parent's (his ruling); the opening itself, «Nobody asked her this time.
+    // She said it herself», is truly hers and is asserted untouched in tests/r48-b1-voice-flip.test.ts.
+    expect(w.text()).toContain('You have said one more year 4 times')
     // ⚠ THE CONTROL ACKNOWLEDGES, IT DOES NOT ANSWER, and there is no refusal to press.
     expect(controls[0].find('strong').text()).toBe('All right')
     // It must NOT read as a rule that retires her, and it must not grade her either.

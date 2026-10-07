@@ -88,6 +88,9 @@ function raiseAnother(): void {
 //
 // ⚠ NOT ONE LABEL MOVED (invariant 4). «Family's share», «Spent», «Her account», «Family's portfolio», «Best
 // rank», «Titles» and «Seasons» are byte-identical; only the numbers around them changed form.
+// ⚠⚠ AND THAT SENTENCE IS THE RECORD OF ROUND 47, NOT OF TODAY'S PAGE (07.10, round 48 #3): two of those labels
+// have since moved BECAUSE HE MOVED THEM – «Family's share» left the page and «Spent» became «Tennis & trips».
+// «Her account», «Family's portfolio», «Best rank», «Titles» and «Seasons» are still byte-identical.
 //
 // (1) THE WRAPPER WAS THE GLOBAL `section` RULE, not anything in this file: style.css paints every `section` as a
 // panel (the panel colour, a 1px line, `--tb-card-pad` + 2px = 16px of padding), and this page's
@@ -225,12 +228,19 @@ const resumes = computed(() => view.value?.handoff.resumesWeek ?? null)
 // ⚠ BOTH LABELS ARE DRAFTS awaiting his pass (invariant 4): they are new strings, written once, and
 // listed verbatim in the wave's report. Nothing existing is reworded – `Raise another` beside them
 // is his and is untouched.
+// ⭐ ROUND 48 #6 (07.10): THE EPILOGUE LABEL IS RULED NOW – «A daughter came later» became «A child came
+// later» by his own word, and the lived label is still a draft. See `DYNASTY_AFTER` below; the two doors
+// stand in ONE ROW since the same round (`.ending-doors`).
 const dynasty = computed(() => view.value?.dynasty ?? null)
 
 /** DRAFT · the lived variant: a daughter who was born while her mother was still on tour. */
 const DYNASTY_LIVED = 'Raise her daughter'
-/** DRAFT · the epilogue variant: the birth came after the career did. */
-const DYNASTY_AFTER = 'A daughter came later'
+/** ⭐ RULED 07.10 (round 48 #6) · the epilogue variant: the birth came after the career did. It shipped as a draft
+ *  reading «A daughter came later»; the owner's own ruling on it is that «child» is better (his words are in the
+ *  round ledger and in docs/decisions.md under 07.10 – a `.vue` file carries no Cyrillic, comments included), so the
+ *  spelling is his and this is no longer a draft. ⚠ ONLY THIS LABEL MOVED: the lived variant above still says
+ *  «daughter», and nothing on this page names or ages her. */
+const DYNASTY_AFTER = 'A child came later'
 
 const continueLabel = computed(() => (dynasty.value?.raisedOnTour ? DYNASTY_LIVED : DYNASTY_AFTER))
 
@@ -301,8 +311,14 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
          album, for the player who wants the record rather than the story. -->
     <!-- ⭐⭐⭐ ROUND 46 #18 – THE REAL ALBUM, laid over this takeover. The `section` is what puts it in the
          same column as everything else here on a wide screen (`.ending > section`). Its Back arrow is the
-         book's own control and returns to the last page; nothing is rebuilt. -->
-    <section v-if="albumOpen" class="ending-book">
+         book's own control and returns to the last page; nothing is rebuilt.
+         ⭐⭐ ROUND 48 #8 – AND IT IS `bare` TOO, on the owner's 07.10 ruling: the album itself sheds its backing and goes full-screen, THE LAST PAGE's own principle – his
+         words are quoted in docs/rounds/round-48.md item 8 (a template comment may not carry them: no Cyrillic in templates, tests/template-copy-rules.test.ts).
+         The same mechanism as the last page below: style.css paints EVERY `section` as a panel, so the book lay on a card whose 16px padding and 1px
+         border took 17px off EACH side of the film – at 375 the film's window was 341px of a 375px screen and the first sheet began 33px in. `section.bare` removes the
+         card; the film's own `.album-stage` already cancels the takeover's 16px gutter (the in-career host, `App.vue`, never had a section round the screen at all), so
+         the book now spans the whole screen, like the in-career album – 375px, the first sheet at the gutter. -->
+    <section v-if="albumOpen" class="ending-book bare">
       <AlbumScreen :book="book" @back="closeAlbum" />
     </section>
 
@@ -334,7 +350,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
          style.css paints EVERY `section` as a panel (the panel colour, a 1px line, 16px of padding), so the
          content lay on a card 17px inside the takeover's own gutter on each side. `section.bare` is the app's
          existing opt-out (the Season screen's strips use it) – the ground behind the page is the takeover's own
-         and stays. The record layer and the book layer above keep the panel: he asked about the last page. -->
+         and stays. ⚠ THAT SENTENCE USED TO END «the record layer and the book layer above keep the panel: he asked about the last page» – the BOOK layer's half is
+         overturned (round 48 #8, above: he asked about the album the next day); the record layer (`ending-scroll`) still keeps its panel – he did not ask about it. -->
     <section v-else class="ending-album bare">
       <header class="ending-head">
         <Eyebrow as="h2">The last page</Eyebrow>
@@ -397,22 +414,37 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              surface on this figure is `ForkDialog.vue`, whose label is «The tennis has paid» and was
              never the string he ruled on; the album's slot 6 says «$X won against $Y spent» in
              PROSE. Neither is «Won», so neither moves on either ruling. -->
+        <!-- ⭐⭐⭐ ROUND 48 #3 – THE MONEY LIST IS THREE ROWS NOW, AND TWO OF THE OLD LABELS ARE GONE FROM IT.
+             The owner, 07.10 (translated – no Cyrillic may appear in a template). His first ask was an ORDER
+             – spent first, the family's share second, the portfolio third, her account last – and a doubt about
+             the share (40.6M beside her 321.1M). The architect's probe on his own save settled the doubt: the share
+             is the family's part of the prize money and nothing else, while her account is fed by her prize share,
+             the whole gross of her sponsor cheques and her merch share – a part set beside a bank, correct by
+             construction. And then, the same day, his second ruling REPLACED the order: the share row can simply go,
+             «Spent» is renamed TENNIS & TRIPS (every tennis cost over all the years, the coaches included), and
+             three numbers are left. (docs/rounds/round-48.md item 3; docs/decisions.md, 07.10.)
+             ⚠ «Family's share» IS REMOVED, NOT HIDDEN – no `v-if`, no `display: none` – so its figure is nowhere in
+             the DOM either. `view.money.prizeCents` stays on the wire (`ForkDialog.vue` prints it under its own
+             label), and the paragraphs above are left as written: they are the record of the page as it was.
+             ⚠ THE RENAME IS HIS WORD, SPELLED AS A LABEL. He typed capitals, and the `dt` rule below already sets
+             `text-transform: uppercase` for every label in this block, so the source says «Tennis & trips» like its
+             neighbours and the page SHOWS what he typed. ⚠ THE FIGURE UNDER IT IS UNTOUCHED – `outlayCents`, exactly
+             as it was under the old label. Whether that sum is every tennis cost across the whole career is the
+             architect's check against the banked seasons, and not a question for this file.
+             ⚠ HER ACCOUNT IS STILL CONDITIONAL (R46-1, below): «three numbers» is the career that has one. -->
         <div class="ending-totals">
           <dl class="ending-money">
-            <div><dt>Family's share</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.prizeCents) }}</dd></div>
-            <div><dt>Spent</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.outlayCents) }}</dd></div>
-            <div v-if="view.money.herAccountCents > 0">
-              <dt>Her account</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.herAccountCents) }}</dd>
-            </div>
+            <div><dt>Tennis & trips</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.outlayCents) }}</dd></div>
             <!-- ⭐⭐⭐ RULING A, 18.09 – THE ONE LINE THE TWO FIGURES ABOVE IT CANNOT SAY. His ask is on
                  `careerMoney` in engine/world/reckoning.ts (no Cyrillic may appear in a template): the
                  reckoning stays TENNIS ONLY, and the family's whole portfolio – the wallet plus every
                  shelf row at what it is worth – gets a separate line of its own. A point-in-time read,
                  not a lifetime total, which is why it costs no schema.
                  ⚠ THE LABEL IS A DRAFT – docs/plans/life-wave-7-strings-2026-09.md, id R46-7. The
-                 article is dropped to match the row he renamed four lines up, and both spellings are
-                 his to move.
-                 ⚠ IT RENDERS ALWAYS, unlike the two draft rows above it, because a family that owns
+                 article is dropped to match the row he renamed that day (round 48 #3 has since removed
+                 that row, so the spelling has nothing beside it to match), and both spellings are his
+                 to move.
+                 ⚠ IT RENDERS ALWAYS, unlike the draft row under it, because a family that owns
                  nothing and holds nothing still HAS a portfolio and the honest figure for it is the
                  wallet. A row that vanished on a poor career would answer his question for rich
                  careers only.
@@ -420,10 +452,14 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
                  the shelf at value; this is the wallet PLUS the shelf, so it is the more complete of the
                  two and the one ruling A asked for. On his screen they differed by exactly the wallet.
                  His ask: one of the two looks redundant. «The two figures above it» in the paragraph
-                 before this one is the record of the page as it was: Spent and Her account are what
-                 stand above it now. -->
+                 before this one is the record of the page as it was.
+                 ⭐⭐⭐ ROUND 48 #3 – THE ORDER IS HIS AGAIN, AND IT IS THE THIRD ONE: Tennis & trips is the one row
+                 above this now (the old «Spent»; the share row left), and Her account stands UNDER it, last. -->
             <div>
               <dt>Family's portfolio</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.portfolioCents) }}</dd>
+            </div>
+            <div v-if="view.money.herAccountCents > 0">
+              <dt>Her account</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.herAccountCents) }}</dd>
             </div>
           </dl>
           <!-- ⭐⭐⭐ ROUND 47 B1 #5 – THE THREE CAREER FACTS ARE ONE ROW, in the order he named them. -->
@@ -433,8 +469,15 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
             <div><dt>Seasons</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
           </dl>
         </div>
+        <!-- ⭐⭐⭐ ROUND 48 #4 – THE VOICE FLIPPED TO THE PARENT, AND THIS IS THE LINE THAT WAS SHOWN TO HIM. It read
+             «She said one more year N times.» The owner, 07.10 (translated – no Cyrillic may appear in a template):
+             it was not her who said it, it was us who proposed it, so reword it. «One more year» is the button the
+             PARENT presses on the retirement card and `oneMoreYearCount` counts those presses, so the line credits
+             the one who said it. The sentence is the draft R47-S4 of round 47's ledger – the one marked as his own
+             reading – verbatim, and the pluralisation is as it was. ⚠ THE FINAL OFFER IS NOT HERE: «Nobody asked
+             her this time. She said it herself» lives in engine/ending.ts and is truly hers. -->
         <p v-if="view.oneMoreYearCount > 0" class="ending-note">
-          She said one more year <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? 'time' : 'times' }}.
+          You said one more year <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? 'time' : 'times' }}.
         </p>
 
         <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
@@ -464,9 +507,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              (his words are on `ECONOMY.advertising.lifetime` – no Cyrillic may appear in a template):
              an ended world no longer ticks, so what survives the retirement is the fact, said out
              loud. DRAFT copy, like every new sentence in this wave. -->
+        <!-- ⭐ ROUND 48 #5 – «for life» IS BOLD. The owner, 07.10 (translated): make «for life» bold, if the line
+             exists. It does – this one – and it is those two words and nothing else: a plain `<b>`, because they are
+             WORDS, and `ending-fig` is the figure style (Sora, larger, tabular) for numbers. The sentence is
+             byte-identical around it; only the weight moved. -->
         <p v-if="view.lifetimeDeal" class="ending-note">
           The {{ view.lifetimeDeal.brand }} deal never ran out –
-          <b class="ending-fig">{{ formatCentsCompact(view.lifetimeDeal.cashCents) }}</b> a year, for life.
+          <b class="ending-fig">{{ formatCentsCompact(view.lifetimeDeal.cashCents) }}</b> a year, <b>for life</b>.
         </p>
 
         <!-- ⚠⚠ E-09 / T4.8 (27.09) – THE REFUSAL HAD NOWHERE TO GO ON A BLOCKING TAKEOVER. This screen
@@ -502,36 +549,50 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              whose branches are not exhaustive is a dead end on a blocking takeover (the round-20
              failure with a different cause). If a resume week ever arrives without a progress view,
              the way back is still one tap. -->
-        <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
-          Another year –
-        </PrimaryPill>
+        <!-- ⭐⭐⭐ ROUND 48 #6 – THE TWO DOORS ARE ONE ROW. The owner, 07.10 (translated – no Cyrillic may appear in
+             a template): put «Raise another» and the succession door in one row. They were two stacked pills; a
+             pair of ways off a blocking takeover is exactly what a row of equal halves is for.
+             ⚠ A WRAPPER AND NOT A GRID ON THE FOOTER, for the instrument's sake: tests/component/fits.ts models a
+             `display: flex` row (the tallest item decides, and what sits beside a control is not its tail) and knows
+             nothing of a grid, so a grid on `.ending-foot` would have turned every verdict about this footer into a
+             guess – the phone law's own measure of the page.
+             ⚠ THE WRAPPER IS ALWAYS THERE, even with a single pill in it (the college ending's «Another year –», or
+             a snapshot that carries no dynasty block): the equal halves are declared for the PAIR only
+             (`.ending-doors > .tb-pill:not(:only-child)` below), so a lone pill keeps the width its label gives it,
+             which is the page it was before. ⚠ ONE WORDING MOVED HERE AND HE ASKED FOR IT: the line door's epilogue
+             label is «A child came later» (the script block above carries the ruling). Everything else is a box. -->
+        <div class="ending-doors">
+          <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
+            Another year –
+          </PrimaryPill>
 
-        <!-- ⭐⭐⭐ ROUND 47 #12 – ONE TAP, AND IT GOES TO THE BEGINNING. The lead sentence and the
-             three capital cards that used to stand here left with the career this file no longer
-             creates; the script block above says why the route retired the question rather than an
-             agent retiring the words, and the strings table's §8 carries the removal for his pass.
-             `Raise another` is his label and is untouched. -->
-        <PrimaryPill v-else variant="cta" :disabled="game.busy" @click="raiseAnother">
-          Raise another
-        </PrimaryPill>
+          <!-- ⭐⭐⭐ ROUND 47 #12 – ONE TAP, AND IT GOES TO THE BEGINNING. The lead sentence and the
+               three capital cards that used to stand here left with the career this file no longer
+               creates; the script block above says why the route retired the question rather than an
+               agent retiring the words, and the strings table's §8 carries the removal for his pass.
+               `Raise another` is his label and is untouched. -->
+          <PrimaryPill v-else variant="cta" :disabled="game.busy" @click="raiseAnother">
+            Raise another
+          </PrimaryPill>
 
-        <!-- ⭐⭐⭐ v86 – THE SECOND AFFORDANCE, AND IT IS BESIDE «Raise another» RATHER THAN INSTEAD OF
-             IT. Two different things: one starts an unrelated story, the other continues this one.
-             The script block says why it renders on every ending and why neither label names or
-             ages the girl; both labels are DRAFTS for his pass.
-             ⚠ IT SITS INSIDE THE SAME `v-else` FOOTER BRANCH, so a college ending that can still be
-             resumed shows its own way forward and not this – that footer's exhaustiveness is what
-             keeps a blocking takeover from becoming a dead end, and this control must not be the
-             thing that breaks it. -->
-        <PrimaryPill
-          v-if="resumes === null && dynasty"
-          class="ending-line"
-          variant="ghost"
-          :disabled="game.busy"
-          @click="continueLine"
-        >
-          {{ continueLabel }}
-        </PrimaryPill>
+          <!-- ⭐⭐⭐ v86 – THE SECOND AFFORDANCE, AND IT IS BESIDE «Raise another» RATHER THAN INSTEAD OF
+               IT. Two different things: one starts an unrelated story, the other continues this one.
+               The script block says why it renders on every ending and why neither label names or
+               ages the girl; both labels are DRAFTS for his pass.
+               ⚠ IT SITS INSIDE THE SAME `v-else` FOOTER BRANCH, so a college ending that can still be
+               resumed shows its own way forward and not this – that footer's exhaustiveness is what
+               keeps a blocking takeover from becoming a dead end, and this control must not be the
+               thing that breaks it. -->
+          <PrimaryPill
+            v-if="resumes === null && dynasty"
+            class="ending-line"
+            variant="ghost"
+            :disabled="game.busy"
+            @click="continueLine"
+          >
+            {{ continueLabel }}
+          </PrimaryPill>
+        </div>
 
         <!-- ⭐⭐⭐ ROUND 47 B1 #12 – «THE WHOLE RECORD» IS UNDER THE DOORS NOW, and only the service export is
              below it. It stood above the doors, between the notes and the pills; the owner asked for it at
@@ -653,6 +714,42 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   align-items: center;
   gap: 14px;
   text-align: center;
+}
+
+/* ⭐⭐⭐ ROUND 48 #6 – THE TWO DOORS ARE ONE ROW (the owner, 07.10, translated: «Raise another» and the succession
+   door in one row). A flex row of two EQUAL halves. `flex-basis: 50%` is what makes the halves equal whatever the
+   labels' lengths are (a basis of `auto` would hand the longer label the wider pill), and `flex-shrink: 1` with
+   `min-width: 0` is what lets a label wrap INSIDE its pill when the half is narrower than the text – so neither door
+   can push the other off the row, at 375 or at 320, and the row never turns into two. The two halves and the gap are
+   12px over the row, so each pill shrinks by exactly 6px and they come out the same width.
+   ⚠ NOT `flex-basis: 0`, which was the first spelling and was MEASURED in Chromium (07.10, 375x667): a zero basis
+   still leaves each pill its own padding and border, and the ghost pill has a 1px border the CTA has not, so the
+   halves came out 164.5 and 166.5px. Buttons are `box-sizing: border-box` in every browser, so a 50% basis counts
+   the border too and the shrink is the same for both.
+   The CTA's own `padding: 12px 26px` would leave a half of ~165px (a 375 phone) about 110px of label, so inside
+   the pair the sides are 12px.
+   ⚠ THE LONGHANDS AND NOT `flex: 1 1 0`, because happy-dom does not expand every shorthand, and a rule the mounted
+   layer cannot read is a rule the next wave can delete (style.css says the same of the CTA's two margin longhands).
+   ⚠ FOR THE PAIR ONLY: a lone pill – the college ending's «Another year –», or a snapshot with no dynasty block –
+   is NOT stretched, it keeps the width its label gives it, as it did before the wrapper existed.
+   ⚠ 460 IS THE CAP `.ending-totals` already uses, the widest thing left on this page. */
+.ending-doors {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.ending-doors > .tb-pill:not(:only-child) {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 50%;
+  min-width: 0;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 /* ⭐⭐⭐ ROUND 47 B1 #4/#5/#7 – ONE GRID, TWO SHAPES, AND EVERY FIGURE IS SORA, BOLD AND LARGER.
