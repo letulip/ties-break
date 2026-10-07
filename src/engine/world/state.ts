@@ -1411,6 +1411,20 @@ export interface WorldState {
    *  T3's `habituationScale` inside `accrueSpirit`'s own term; nothing on this tree can move it off
    *  `0`, which is what «the schema move is inert» means and what the frozen careers measure. */
   spotlightHabituation: number
+  /** ⭐⭐ WHICH SEASON THE SPOTLIGHT ROW LAST EARNED ITS `keep` (the localization intake, 07.10 –
+   *  the owner: «и это тоже чиним безусловно»). The first-of-season question used to be asked of
+   *  the FEED by text identity (`e.text === EXPOSURE_ROW`), which the RU work would break: a
+   *  translated stored row stops matching and every week becomes «first». It could not simply move
+   *  to `lifeKind === 'exposure'` either – the press leak (`lifeBeat/leak.ts`) writes the SAME kind
+   *  with `keep: true`, and a leak would silently eat the season's spotlight keep. So the answer
+   *  lives in STATE (the repo's own law: a reason a later pass needs must be readable from state),
+   *  keyed by season index.
+   *
+   *  ⚠ OPTIONAL WITH NO SCHEMA BUMP – the `rankTrack`/`heard` precedent: absent means «no keep this
+   *  season yet», which is the truthful default for every old save. The one acknowledged cost: an
+   *  old save loaded MID-season whose spotlight row already fired keeps ONE extra row that season
+   *  (the field was not there to remember it); bounded, cosmetic, once per career. */
+  spotlightKeepSeason?: number
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.
