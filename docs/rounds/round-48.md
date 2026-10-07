@@ -123,10 +123,51 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     Instrument finding: `fits.ts`' `availableWidth` returns the WHOLE viewport for this takeover (happy-dom
     cannot resolve `.ending`'s `var(--app-pad-x)` padding), so `assertInlineRowFits` reads «a 375px row» where
     the column is 343 – the new test subtracts the `:root` gutters itself; `fits.ts` is untouched.
-- [ ] **7. «The whole record - там какая-то ерунда в каждом season close написана, а еще с 2036
+- [x] **7. «The whole record - там какая-то ерунда в каждом season close написана, а еще с 2036
   начиная нет никаких титулов вообще»** – **7a** строка season close на странице полной летописи
   показывает ерунду – воспроизвести на его сейве, найти источник; **7b** титулы с 2036 отсутствуют –
   выяснить: данные (сейв не хранит) или рендер (экран читает не то поле). Класс: measure → build.
+  - **B2 · [x] (07.10, sonnet, commit `01e8fb3f`).** Both halves were data the save already held; neither was a
+    render bug. Both are derivation-at-read in `engine/world/album.ts`, and `buildScroll` stays a pure read: no
+    stream drawn, nothing on `world` written (it sorts a local array, never `world.milestones`). The labels
+    `Season close`, `Title`, `Final` and every detail string are untouched.
+    **7a** – a Season close row reads `seasonHistory[season].byTrack[dominant].endRank` (`seasonCloseDetail`,
+    `closeTrackOf`). The dominant table is `dominantTrackOfSeason`'s own rule run on the banked row – most matches,
+    then points, the higher table on a dead heat – MIRRORED and not imported, because the live function reads
+    counters the wrap resets. An unranked dominant table is silence (`null`), never another table's number;
+    nobody played = the highest table she held a rank in (the banked twin of `activeLadderOf`); a season past the
+    cap or a pre-v46 row (no `byTrack`, nothing recoverable) keeps today's `m.rank` line.
+    **7b** – Title and Final rows come from `trophiesByTier`, one per week, detail `TIERS[tier].label`, merged with
+    the other milestones and week-sorted BEFORE the season grouping; the `title` and `final` milestones leave the
+    walk. One visible consequence: the `final` milestone also fires on a title week (`kidFinish <= 1`) while the
+    cabinet's finals are LOST finals, so a first title prints `Title` alone where it used to print `Title` +
+    `Final` on the same week.
+    **His save (read-only, the architect's `r48-probe.ts`, after the change):** 2044 close `#1` (was `#71`; banked
+    wta 97-11 #1), 2035 close `#3` (was `#79`; wta 66-13 #3), and 2036 shows its 4 titles (World Tour 500, 1000,
+    500, 500; it showed 0). All 20 closes equal their dominant table's banked rank. The cabinet's 127 titles and 30
+    lost finals are 127 Title and 30 Final rows (184 rows in all, every `week-label` UI key unique); all 14 title
+    and 16 final milestones are cabinet weeks (11 of the finals on a title week) – nothing is lost.
+    Evidence: `tests/r48-b2-scroll-truth.test.ts`, 15 arms – the 50-10 #4 / milestone 83 construction; matches
+    before points; the dead heat on matches, then points, then the higher table; unranked dominant = silence;
+    nothing banked = today's line (absent season, no season index, pre-v46 row); nobody played; PARITY on real
+    wraps (two walked careers, 9+ wraps: the scroll equals the table and rank `lastSeasonSummary` banked at the
+    same wrap, with a non-vacuity guard that the old line and the card disagreed in 3+ of them); 3 titles + 1
+    final over two seasons with the old walk as the red control; a season with only a cabinet week; nothing prints
+    twice; week order across tiers; the other milestone types row for row; real careers (every title/final
+    milestone is a cabinet week, counts equal, keys unique); purity. Mutation-proven in a worktree, control 15/15
+    green: detail back at `m.rank` RED 6, `>=` to `>` RED 1, points before matches RED 3, old walk RED 5,
+    milestones walked beside the cabinet RED 3, no-`byTrack` fallback removed RED 1, nobody-played fallback
+    removed RED 1, cabinet finals dropped RED 4.
+    Targeted gates (verdicts read from files): the new file 15/15; 18 unit files / 473 tests (every pin-query hit
+    plus the ending-view callers); `endings-bench` solo 4/4; 3 component files 28/28; `vue-tsc -b --force` clean;
+    `engine-purity`, `map:world:check` (539 symbols, no new export) and `pins:check` ok. No pin needed re-aiming:
+    nothing moved, and no test read the changed lines.
+    Flagged, not touched: `albumBook.ts` `seasonCandidates` routes the album's season pages (first / best / held /
+    recovery / down) on the same ITF `m.rank` – a routing read, never printed, but for a professional it routes on
+    junior numbers; `diary.ts` prints `#N international` from it – labelled, round-17 #16's ruling, left alone.
+    **A wording question for him (invariant 4 – asked, not changed):** the close line carries no table name, and
+    the table can change between seasons – his 2031 is National #1, his 2032 is Professional #158 – so the number's
+    scale jumps with it. A table word on that line would settle it; it is his copy.
 - [ ] **8. «А и в самом альбоме тоже подложка не нужна, она лишняя и место ест, пусть он на весь
   экран будет, как и THE LAST PAGE по принципу»** – снять подложку-панель с экрана альбома,
   фуллскрин по механизму `bare` страницы (раунд 47 B1, экран концовки). Класс: build.
