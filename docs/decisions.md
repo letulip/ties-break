@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 160 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 161 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 25 | [ROUND 48, SECOND BATCH: THE RECKONING KEEPS THREE FIGURES](#07102026--round-48-second-batch-the-reckoning-keeps-three-figures) | 2026-10-07 |
+| process-and-git | 26 | [THE LOCALIZATION STACK RECEIVED: CODEX/LOCALIZATION-RU INTAKEN, THE SPEC RE-PLANNED](#07102026--the-localization-stack-received-codexlocalization-ru-intaken-the-spec-re-planned) | 2026-10-07 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -5943,3 +5943,22 @@ prize cheques against her whole bank): «наверное Family's share воо�
 ending's money block is three rows – Tennis & trips (the renamed outlay, HIS label), Family's
 portfolio, her account – the Family's share row leaves the screen, and the outlay figure owes a
 verification that it is the WHOLE career and ALL the tennis, coaches included.
+
+## 07.10.2026 – THE LOCALIZATION STACK RECEIVED: CODEX/LOCALIZATION-RU INTAKEN, THE SPEC RE-PLANNED
+
+«возьми на изучение пока что ветку codex/localization-ru, проверь всё детально, сравни с нашим
+тон-оф-войс, вернись к спеке и плану локализации и обнови исполнителей и задачи если нужно.
+Проверь, что всё локализовано как положено. Выбери и возьми агентов если нужно, задача большая.»
+Received by `/review-intake` as [review 15](review-codex/15-localization-ru-response.md): the
+stack is real and careful – RU-01…RU-17, 61 docs-only files, claims spot-checked and HOLDING
+(38 album ids, 115 notes, 36 options, 24 countries, nine endings; the `EXPOSURE_ROW` text-identity
+trap CONFIRMED in code and adopted as pre-task L1c). The measured drift: rounds 47/48 changed 14
+English join keys after the branch's audit base – 10 dead rows, 12 missing, 3 same-key markup
+moves, the compact-money formatter unrowed – written up as **RU-18**, his table to fill. The voice
+audit: four voices distinct, prologue holds the benchmark, `ё`/dash/quotes clean – and the album
+corpus writes the parent MALE in 26 cells (its own doc calls it design; his standing law says the
+parent has no gender), so **RU-07A′** joins RU-18 as an editorial prerequisite. The i18n spec's §8
+is refreshed (L1c, RU-18, RU-07A′, importer ctx-flag + `—` lint, compact money, L4 = RU-14's
+matrix) and §9 grew to nine pending rulings. The 61 files are deliberately NOT copied into main –
+the living editorial source merges once, with L1b. **Nothing is launched: the L-waves wait on his
+approve and the §9 answers.**
