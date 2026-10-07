@@ -139,12 +139,12 @@ class names literally. The IDs and budgets do not change.
 | id | source | English | Russian | note |
 | --- | --- | --- | --- | --- |
 | RU02A-F01 | `OnboardingWizard.vue:598,611` | `Family background` | `Условия семьи` | visible heading and accessible group name |
-| RU02A-F02 | `OnboardingWizard.vue:70` | `Wealthy` | `Обеспеченная семья` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · `wealthy` ID stays unchanged |
-| RU02A-F03 | `OnboardingWizard.vue:70` | `Top academies are within reach.` | `Лучшие академии по карману.` | names the actual advantage |
-| RU02A-F04 | `OnboardingWizard.vue:71` | `Middle class` | `Средний достаток` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · compact card label |
-| RU02A-F05 | `OnboardingWizard.vue:71` | `Smart choices, steady progress.` | `Придётся считать расходы и выбирать.` | avoids promising steady success |
-| RU02A-F06 | `OnboardingWizard.vue:72` | `Working class` | `Скромный бюджет` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · names the gameplay condition without a clumsy class label |
-| RU02A-F07 | `OnboardingWizard.vue:72` | `Big dreams, hard mode.` | `Мечта та же, путь гораздо труднее.` | warm, but honest about difficulty |
+| RU02A-F02 | `OnboardingWizard.vue:71` | `Wealthy` | `Обеспеченная семья` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · `wealthy` ID stays unchanged |
+| RU02A-F03 | `OnboardingWizard.vue:71` | `Top academies are within reach.` | `Лучшие академии по карману.` | names the actual advantage |
+| RU02A-F04 | `OnboardingWizard.vue:72` | `Middle class` | `Средний достаток` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · compact card label |
+| RU02A-F05 | `OnboardingWizard.vue:72` | `Smart choices, steady progress.` | `Придётся считать расходы и выбирать.` | avoids promising steady success |
+| RU02A-F06 | `OnboardingWizard.vue:73` | `Working class` | `Скромный бюджет` | `APPROVED` 07.10 (spec §9.9b; `docs/decisions.md`) · names the gameplay condition without a clumsy class label |
+| RU02A-F07 | `OnboardingWizard.vue:73` | `Big dreams, hard mode.` | `Мечта та же, путь гораздо труднее.` | warm, but honest about difficulty |
 | RU02A-F08 | `OnboardingWizard.vue:638` | `{budget} starting budget` | `Стартовый бюджет – {budget}` | do not append an inflected fragment after the number |
 | RU02A-F09 | `OnboardingWizard.vue:647,648` | `Coaching` | `Тренер` | screen section and accessible group name |
 | RU02A-F10 | `OnboardingWizard.vue:99` | `Coach yourself` | `Тренировать её самостоятельно` | the parent, not the girl, is the coach |
@@ -248,6 +248,9 @@ owner-approved and therefore appear here as settled terminology.
    any other English fallback.
 
 ## 11. Owner reads still needed
+
+⚙ ANSWERED 07.10: he read the three labels and they stand – `APPROVED` on RU02A-F02/F04/F06
+(spec §9.9b). The paragraph below is kept as the question that was put to him.
 
 Read the three economic labels together: `Обеспеченная семья` / `Средний достаток` / `Скромный
    бюджет`. They are intentionally about playable means, not a literal Russian class taxonomy.

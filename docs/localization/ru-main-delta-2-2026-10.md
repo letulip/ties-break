@@ -226,3 +226,11 @@ git grep -n "Tennis & trips\|A child came later" -- src/components/EndingScreen.
 git grep -nE "She said one more year|She has said one more year|One more year, she said|same answer she gave|A daughter came later" -- docs/localization ':!docs/localization/ru-main-delta-2-2026-10.md' ':!docs/localization/ru-family-voice-pass-2026-10.md'
 git grep -nE "Family's share|Still owned" -- docs/localization ':!docs/localization/ru-main-delta-2-2026-10.md' ':!docs/localization/ru-family-voice-pass-2026-10.md'
 ```
+
+## The §9.5 sweep beyond RU-07 – closed by the architect, same day
+
+The ruling reaches every table; only RU-07 held compiled name rows. Verified by grep over all 61
+files: the venue/patch pool names (`Rivermouth`, `Centre Court`, `Harbour …`) appear nowhere
+outside RU-07 and the two record files, and the sponsor/news/match tables carry generated names
+only as `{placeholders}` – a placeholder passes the engine's Latin value through untouched, so
+those surfaces obey the ruling by construction. No further revert exists to do.

@@ -117,7 +117,9 @@ the tonal benchmark, and the fridge notes are the most natural corpus of the six
    gender); the English rows are neutral. The branch's RU-14 already flags the album corpus for
    exactly this re-read («RU-07A местами задаёт мужской пол родителю… нужна отдельная строковая
    вычитка»; `the-line` is its lawful exception – the previous heroine's mother) – R2 turns the
-   flag into a count. **Blocks the album landing batch the way RU-18 blocks the ending ones.**
+   flag into a count. ~~Blocks the album landing batch the way RU-18 blocks the ending ones.~~
+   ⚙ EXECUTED the same day on his order №10 («мы говорим от лица семьи»): 71 cells converted by
+   his formula – the record is `docs/localization/ru-family-voice-pass-2026-10.md` (RU-19).
 2. ⚠ **Masculine agreement forced on unnamed staff** in ≥25 rows (тренер/психолог/врач with
    masculine past, zero alternatives) – against R15-7's own engine law (no pronoun names the
    coach; a woman sits on every roster by construction). Russian past tense forces the choice, so

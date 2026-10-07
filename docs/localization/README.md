@@ -14,7 +14,9 @@ last-reviewed: 2026-10-07
 - RU-01–RU-14 were drafted against `origin/main` commit `d69ff15d` (30.09.2026).
   The branch `codex/localization-ru` now includes `origin/main` at `1e7b125b` (06.10.2026);
   RU-15–RU-17 record its player-facing copy delta. The first two sets must be read together.
-- It changes no runtime copy. Every Russian line is a `DRAFT` until the owner reads it.
+- It changes no runtime copy. Every Russian line is a `DRAFT` until the owner reads it – the
+  rows he ruled on 07.10 carry `APPROVED` with the date (`Новая история`, the three family
+  labels, the short year; `docs/decisions.md`).
 - Runtime code and tests remain the authority for what a line means and when it appears.
 - The localization work covers player-facing text only: visible copy, accessibility names,
   generated narrative, letters, match commentary and formatters. Developer comments and historical
@@ -133,5 +135,7 @@ diary corpora → endings → metadata and final LQA.
 
 ## Open editorial reads
 
-The current open editorial read is the three family-resource labels in RU-02A. Later batches may add
-questions where a product term or a character relationship genuinely has more than one reading.
+⚙ 07.10: the three family-resource labels were APPROVED (spec §9.9b) – no editorial read is open
+today except the two `QUESTION` rows RU-18 left for his drafts (`Tennis & trips`, `A child came
+later`, both RU-12A) and the RU-03A′ warm-row re-read (§9.9e). Later batches may add questions
+where a product term or a character relationship genuinely has more than one reading.
